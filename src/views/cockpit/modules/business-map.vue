@@ -1,0 +1,350 @@
+<template>
+  <ElCard
+    class="cockpit-panel cockpit-map-panel"
+    :class="{ 'cockpit-map-panel--dark': isDark }"
+    shadow="never"
+  >
+    <template #header>
+      <span>业务分布地图</span>
+      <ElRadioGroup v-model="mapMetric" size="small" class="map-metric-tabs">
+        <ElRadioButton label="revenue">收入</ElRadioButton>
+        <ElRadioButton label="spend">消耗</ElRadioButton>
+        <ElRadioButton label="user">用户</ElRadioButton>
+      </ElRadioGroup>
+    </template>
+    <div v-loading="mapLoading" class="map-wrap">
+      <div ref="mapChartRef" class="map-chart"></div>
+    </div>
+    <div class="map-legend">
+      <div v-for="r in regionList" :key="r.name" class="legend-item">
+        <span class="dot" :style="{ background: r.color }"></span>
+        <span>{{ r.name }}（{{ r.value }} {{ r.trend }}）</span>
+      </div>
+    </div>
+  </ElCard>
+</template>
+
+<script setup lang="ts">
+  import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import { useSettingStore } from '@/store/modules/setting'
+  import { useChart } from '@/hooks/core/useChart'
+  import { echarts, type EChartsOption } from '@/plugins/echarts'
+  import type { CockpitMapCountry, CockpitMapLegendItem } from '../types'
+  import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
+
+  defineOptions({ name: 'CockpitBusinessMap' })
+
+  const WORLD_JSON_URL = '/geo/world.json'
+  const { isDark } = storeToRefs(useSettingStore())
+
+  const props = withDefaults(
+    defineProps<{
+      mapCountries?: CockpitMapCountry[]
+      mapLegend?: CockpitMapLegendItem[]
+    }>(),
+    { mapCountries: () => [], mapLegend: () => [] }
+  )
+
+  const countryData = computed(() =>
+    props.mapCountries.length ? props.mapCountries : MOCK_COCKPIT_OVERVIEW.mapCountries
+  )
+  const regionList = computed(() =>
+    props.mapLegend.length ? props.mapLegend : MOCK_COCKPIT_OVERVIEW.mapLegend
+  )
+
+  const mapChartRef = ref<HTMLElement | null>(null)
+  const mapLoading = ref(true)
+  const mapMetric = ref<'revenue' | 'spend' | 'user'>('revenue')
+  const { chartRef, initChart, updateChart, destroyChart } = useChart()
+
+  function getValueByMetric(item: CockpitMapCountry) {
+    switch (mapMetric.value) {
+      case 'revenue':
+        return item.revenue
+      case 'spend':
+        return item.spend
+      default:
+        return item.user
+    }
+  }
+
+  /** 解析趋势字符串，返回是否为正（用于显示 ↑ 绿色 / ↓ 红色） */
+  function isTrendUp(trend: string | undefined): boolean {
+    if (!trend) return true
+    return trend.startsWith('+') || !trend.includes('-')
+  }
+
+  function fmtValue(v: number, isK = false): string {
+    if (v >= 1000) return `${(v / 1000).toFixed(2)}M`
+    return isK ? `${v}K` : v.toLocaleString()
+  }
+
+  function buildTooltipFormatter(isDarkTheme: boolean) {
+    return (params: any) => {
+      const d = params.data
+      if (!d) return params.name
+      const upClass = isDarkTheme ? 'color:#34d399' : 'color:var(--el-color-success)'
+      const downClass = isDarkTheme ? 'color:#f87171' : 'color:var(--el-color-danger)'
+      const revenueUp = isTrendUp(d.trend)
+      const newUserTrend = d.newUserTrend ?? d.trend
+      const ecpmTrend = d.ecpmTrend ?? d.trend
+      const revArrow = revenueUp ? `↑${d.trend}` : `↓${d.trend}`
+      const spendVal = d.spend ?? 0
+      const spendTrend = spendVal > 500 ? '↓-5%' : `↑${d.trend}`
+      const spendUp = isTrendUp(spendTrend)
+      const newUserStr =
+        d.newUser != null
+          ? `${d.newUser.toLocaleString()} ${isTrendUp(newUserTrend) ? '↑' : '↓'}${newUserTrend}`
+          : `${(d.user ?? 0).toLocaleString()} ↑${d.trend}`
+      const ecpmStr =
+        d.ecpm != null ? `$${d.ecpm} ${isTrendUp(ecpmTrend) ? '↑' : '↓'}${ecpmTrend}` : ''
+      const lines = [
+        `<div class="cockpit-map-tt-title">${d.nameCn || params.name}</div>`,
+        `<div class="cockpit-map-tt-row"><span>收入:</span> <span style="${revenueUp ? upClass : downClass}">$${fmtValue(d.revenue, true)} ${revArrow}</span></div>`,
+        `<div class="cockpit-map-tt-row"><span>广告支出:</span> <span style="${spendUp ? upClass : downClass}">$${fmtValue(spendVal, true)} ${spendTrend}</span></div>`,
+        `<div class="cockpit-map-tt-row"><span>活跃用户:</span> <span style="${upClass}">${(d.user ?? 0).toLocaleString()} ↑${d.trend}</span></div>`,
+        d.newUser != null
+          ? `<div class="cockpit-map-tt-row"><span>新增用户:</span> <span style="${upClass}">${newUserStr}</span></div>`
+          : '',
+        ecpmStr
+          ? `<div class="cockpit-map-tt-row"><span>eCPM:</span> <span style="${upClass}">${ecpmStr}</span></div>`
+          : '',
+        `<div class="cockpit-map-tt-link">查看${d.nameCn || params.name}详情 →</div>`
+      ].filter(Boolean)
+      return lines.join('')
+    }
+  }
+
+  function buildOption(): EChartsOption {
+    const dark = isDark.value
+    const mapData = countryData.value.map((item) => ({
+      name: item.nameEn,
+      value: getValueByMetric(item),
+      revenue: item.revenue,
+      spend: item.spend,
+      user: item.user,
+      nameCn: item.name,
+      trend: item.trend,
+      newUser: item.newUser,
+      newUserTrend: item.newUserTrend,
+      ecpm: item.ecpm,
+      ecpmTrend: item.ecpmTrend
+    }))
+
+    // 参考图配色：深色主题 = 红/橙/绿 渐变，浅色 = 柔和红橙绿
+    const visualMapColors = dark
+      ? ['#c23531', '#e6a23c', '#67c23a']
+      : ['#feb2b2', '#fbd38d', '#9ae6b4']
+
+    const unhighlightedArea = dark ? 'rgba(51,65,85,0.85)' : 'var(--el-fill-color-light)'
+    const borderColor = dark ? 'rgba(71,85,105,0.55)' : 'var(--el-border-color)'
+    const emphasisArea = dark ? 'rgba(52,211,153,0.35)' : 'var(--el-color-primary-light-5)'
+    const emphasisBorder = dark ? 'rgba(52,211,153,0.8)' : 'var(--el-color-primary)'
+    const emphasisShadow = dark ? 'rgba(52,211,153,0.35)' : 'rgba(0,0,0,0.15)'
+
+    return {
+      animation: true,
+      animationDuration: 800,
+      animationEasing: 'cubicOut',
+      tooltip: {
+        trigger: 'item',
+        confine: true,
+        transitionDuration: 0.2,
+        backgroundColor: dark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.98)',
+        borderColor: dark ? 'rgba(71,85,105,0.6)' : 'var(--el-border-color-lighter)',
+        borderWidth: 1,
+        padding: [12, 16],
+        textStyle: {
+          fontSize: 12,
+          color: dark ? '#e2e8f0' : 'var(--el-text-color-primary)'
+        },
+        formatter: buildTooltipFormatter(dark)
+      },
+      visualMap: {
+        type: 'continuous',
+        min: Math.min(...mapData.map((d) => d.value)),
+        max: Math.max(...mapData.map((d) => d.value)),
+        text: ['高', '低'],
+        realtime: false,
+        calculable: true,
+        inRange: { color: visualMapColors },
+        left: 12,
+        bottom: 24,
+        textStyle: {
+          fontSize: 11,
+          color: dark ? '#94a3b8' : 'var(--el-text-color-secondary)'
+        },
+        padding: 6
+      },
+      series: [
+        {
+          type: 'map',
+          map: 'world',
+          roam: true,
+          zoom: 1.15,
+          scaleLimit: { min: 0.6, max: 4 },
+          name: '业务分布',
+          data: mapData,
+          itemStyle: {
+            areaColor: unhighlightedArea,
+            borderColor,
+            borderWidth: 0.9
+          },
+          emphasis: {
+            itemStyle: {
+              areaColor: emphasisArea,
+              borderColor: emphasisBorder,
+              borderWidth: 1.4,
+              shadowBlur: dark ? 18 : 12,
+              shadowColor: emphasisShadow
+            },
+            label: {
+              show: true,
+              color: dark ? '#f1f5f9' : 'var(--el-text-color-primary)',
+              fontSize: 11,
+              fontWeight: 600
+            }
+          },
+          select: {
+            itemStyle: { areaColor: emphasisArea },
+            label: { show: true }
+          },
+          label: { show: false }
+        }
+      ]
+    }
+  }
+
+  watch(mapMetric, () => updateChart(buildOption()))
+  watch(isDark, () => updateChart(buildOption()))
+
+  async function initWorldMap() {
+    if (!mapChartRef.value) return
+    try {
+      const res = await fetch(WORLD_JSON_URL)
+      const worldJson = await res.json()
+      echarts.registerMap('world', worldJson)
+      ;(chartRef as { value: HTMLElement | null }).value = mapChartRef.value
+      nextTick(() => {
+        initChart(buildOption())
+        mapLoading.value = false
+      })
+    } catch (e) {
+      console.error('[Cockpit] 世界地图 GeoJSON 加载失败', e)
+      mapLoading.value = false
+    }
+  }
+
+  onMounted(() => {
+    initWorldMap()
+  })
+
+  onUnmounted(() => {
+    destroyChart()
+  })
+</script>
+
+<style scoped lang="scss">
+  .cockpit-map-panel {
+    height: 100%;
+
+    :deep(.el-card__header) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    :deep(.el-card__body) {
+      padding: 12px;
+    }
+  }
+
+  .map-metric-tabs {
+    :deep(.el-radio-button__inner) {
+      margin-left: 4px;
+      border-radius: 6px;
+    }
+
+    :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+      color: #fff;
+      background: var(--el-color-primary);
+      border-color: var(--el-color-primary);
+    }
+  }
+
+  .cockpit-map-panel--dark {
+    .map-metric-tabs {
+      :deep(.el-radio-button__inner) {
+        color: #cbd5e1;
+        background: rgb(51 65 85 / 80%);
+        border-color: rgb(71 85 105 / 60%);
+      }
+
+      :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+        color: #fff;
+        background: rgb(59 130 246 / 90%);
+        border-color: rgb(96 165 250 / 80%);
+      }
+    }
+
+    .map-legend {
+      color: #94a3b8;
+    }
+  }
+
+  .map-wrap {
+    position: relative;
+    min-height: 280px;
+  }
+
+  .map-chart {
+    width: 100%;
+    height: 280px;
+  }
+
+  .map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--el-text-color-regular);
+
+    .legend-item {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+  }
+</style>
+
+<style lang="scss">
+  /* 地图 tooltip 全局样式（渲染在 body，需非 scoped） */
+  .cockpit-map-tt-title {
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .cockpit-map-tt-row {
+    margin-bottom: 4px;
+
+    span:first-child {
+      margin-right: 6px;
+    }
+  }
+
+  .cockpit-map-tt-link {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--el-color-primary);
+    cursor: pointer;
+  }
+</style>
