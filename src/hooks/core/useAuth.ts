@@ -27,7 +27,7 @@
  * ```
  *
  * @module useAuth
- * @author Art Design Pro Team
+ * @author VeGoo Team
  */
 
 import { useRoute } from 'vue-router'
