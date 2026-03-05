@@ -8,7 +8,7 @@
       <div v-for="(item, index) in displayList" :key="index" class="pace-item">
         <div class="pace-name">{{ item.name }}</div>
         <ElProgress
-          :percentage="item.percent"
+          :percentage="Math.min(100, Math.max(0, item.percent))"
           :stroke-width="8"
           :color="item.color ?? tagTypeColor[item.tagType]"
           :format="() => `${item.current}/${item.budget}`"
