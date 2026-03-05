@@ -302,7 +302,7 @@
           <ElTableColumn label="操作" width="160" fixed="right">
             <!-- eslint-disable-next-line vue/no-unused-vars -->
             <template #default="{ row }">
-              <span class="action-link">暂停{{ row.campaignName }}</span>
+              <span class="action-link">暂停{{ row.id }}</span>
               <span class="action-divider">|</span>
               <span class="action-link">编辑</span>
               <span class="action-divider">|</span>
