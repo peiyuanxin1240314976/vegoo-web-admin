@@ -9,33 +9,43 @@
       />
     </div>
 
-    <!-- 2. 顶部核心指标 KPI 卡片 -->
+    <!-- 第一排：顶部核心指标 KPI 卡片 -->
     <MonetizationKpiCards :kpi-list="overview?.kpi ?? []" />
 
-    <!-- 3. 收入与 eCPM 趋势 -->
-    <MonetizationRevenueEcpMTrend :data="overview?.revenueEcpMTrend ?? null" />
+    <!-- 第二排：Grid 3 列 2 行；第1列=收入eCPM(上)+IAP(下)，第2列=填充率(上)+eCPM按类型(下)，第3列=Waterfall(整列) -->
+    <div class="monetization-row-2">
+      <div class="monetization-grid-cell monetization-grid-cell--c1-r1">
+        <div class="monetization-grid-cell-inner">
+          <MonetizationRevenueEcpMTrend :data="overview?.revenueEcpMTrend ?? null" />
+        </div>
+      </div>
+      <div class="monetization-grid-cell monetization-grid-cell--c2-r1">
+        <div class="monetization-grid-cell-inner">
+          <MonetizationFillRateMonitoring :data="overview?.fillRateTrend ?? null" />
+        </div>
+      </div>
+      <div class="monetization-grid-cell monetization-grid-cell--c3-r1-r2">
+        <div class="monetization-grid-cell-inner">
+          <MonetizationWaterfallConfig :data="overview?.waterfallLevels ?? []" />
+        </div>
+      </div>
+      <div class="monetization-grid-cell monetization-grid-cell--c1-r2">
+        <div class="monetization-grid-cell-inner">
+          <MonetizationIapRevenueAnalysis :data="overview?.iapAnalysis ?? null" />
+        </div>
+      </div>
+      <div class="monetization-grid-cell monetization-grid-cell--c2-r2">
+        <div class="monetization-grid-cell-inner">
+          <MonetizationEcpmTrendByAdType :data="overview?.ecpmByAdType ?? null" />
+        </div>
+      </div>
+    </div>
 
-    <!-- 4. 填充率监控 -->
-    <MonetizationFillRateMonitoring :data="overview?.fillRateTrend ?? null" />
-
-    <!-- 5. Waterfall 配置 + IAP 收入分析 -->
-    <ElRow :gutter="16" class="monetization-body">
-      <ElCol :xs="24" :md="12">
-        <MonetizationWaterfallConfig :data="overview?.waterfallLevels ?? []" />
-      </ElCol>
-      <ElCol :xs="24" :md="12">
-        <MonetizationIapRevenueAnalysis :data="overview?.iapAnalysis ?? null" />
-      </ElCol>
-    </ElRow>
-
-    <!-- 6. eCPM 趋势 - 按广告类型 -->
-    <MonetizationEcpmTrendByAdType :data="overview?.ecpmByAdType ?? null" />
-
-    <!-- 7. 广告平台表现表格 -->
-    <MonetizationAdPlatformPerformance :data="overview?.adPlatformPerformance ?? []" />
-
-    <!-- 8. AI 洞察与建议 -->
-    <MonetizationAiInsights :data="overview?.aiInsights ?? []" />
+    <!-- 第三排：广告平台表现、AI 洞察与建议 -->
+    <div class="monetization-row-3">
+      <MonetizationAdPlatformPerformance :data="overview?.adPlatformPerformance ?? []" />
+      <MonetizationAiInsights :data="overview?.aiInsights ?? []" />
+    </div>
   </div>
 </template>
 
@@ -75,7 +85,78 @@
     margin-bottom: 16px;
   }
 
-  .monetization-body {
+  /* 第二排：固定整体高度，第一/二列 4 块各占 50%，第三列 1 块占 100%，实现上下对齐 */
+  .monetization-row-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    gap: 16px;
+    min-height: 0;
     margin-bottom: 16px;
+
+    @media (width >= 768px) {
+      grid-template-rows: 50% 50%;
+      grid-template-columns: repeat(3, 1fr);
+      height: 560px;
+    }
+  }
+
+  .monetization-grid-cell {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    @media (width >= 768px) {
+      min-height: 0;
+      overflow: hidden;
+
+      &--c1-r1 {
+        grid-row: 1;
+        grid-column: 1;
+      }
+
+      &--c2-r1 {
+        grid-row: 1;
+        grid-column: 2;
+      }
+
+      &--c3-r1-r2 {
+        grid-row: 1 / -1;
+        grid-column: 3;
+        height: 100%;
+      }
+
+      &--c1-r2 {
+        grid-row: 2;
+        grid-column: 1;
+      }
+
+      &--c2-r2 {
+        grid-row: 2;
+        grid-column: 2;
+      }
+    }
+  }
+
+  .monetization-grid-cell-inner {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+
+    @media (width >= 768px) {
+      overflow: auto;
+    }
+  }
+
+  /* 第三列 Waterfall：内层占满整列 100% 高度 */
+  .monetization-grid-cell--c3-r1-r2 .monetization-grid-cell-inner {
+    @media (width >= 768px) {
+      height: 100%;
+    }
+  }
+
+  .monetization-row-3 > * + * {
+    margin-top: 16px;
   }
 </style>
