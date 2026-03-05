@@ -132,13 +132,13 @@
       ecpmTrend: item.ecpmTrend
     }))
 
-    // 参考图配色：深色主题 = 红/橙/绿 渐变，浅色 = 柔和红橙绿
+    // 深色模式：低值端用较亮色避免“全黑”；浅色模式：边框更浅、低值/无数据区域更亮，避免发黑
     const visualMapColors = dark
-      ? ['#c23531', '#e6a23c', '#67c23a']
-      : ['#feb2b2', '#fbd38d', '#9ae6b4']
+      ? ['#f87171', '#fbbf24', '#34d399'] // 亮红→琥珀→翠绿
+      : ['#fecaca', '#fde047', '#86efac'] // 浅粉红→浅黄→浅绿，低值更亮
 
-    const unhighlightedArea = dark ? 'rgba(51,65,85,0.85)' : 'var(--el-fill-color-light)'
-    const borderColor = dark ? 'rgba(71,85,105,0.55)' : 'var(--el-border-color)'
+    const unhighlightedArea = dark ? 'rgba(71,85,105,0.75)' : '#f1f5f9'
+    const borderColor = dark ? 'rgba(100,116,139,0.65)' : 'rgba(0,0,0,0.12)'
     const emphasisArea = dark ? 'rgba(52,211,153,0.35)' : 'var(--el-color-primary-light-5)'
     const emphasisBorder = dark ? 'rgba(52,211,153,0.8)' : 'var(--el-color-primary)'
     const emphasisShadow = dark ? 'rgba(52,211,153,0.35)' : 'rgba(0,0,0,0.15)'
@@ -163,8 +163,8 @@
       },
       visualMap: {
         type: 'continuous',
-        min: Math.min(...mapData.map((d) => d.value)),
-        max: Math.max(...mapData.map((d) => d.value)),
+        min: mapData.length ? Math.min(...mapData.map((d) => d.value)) : 0,
+        max: mapData.length ? Math.max(...mapData.map((d) => d.value)) : 100,
         text: ['高', '低'],
         realtime: false,
         calculable: true,
@@ -201,7 +201,7 @@
             },
             label: {
               show: true,
-              color: dark ? '#f1f5f9' : 'var(--el-text-color-primary)',
+              color: dark ? '#f1f5f9' : '#1f2937',
               fontSize: 11,
               fontWeight: 600
             }
