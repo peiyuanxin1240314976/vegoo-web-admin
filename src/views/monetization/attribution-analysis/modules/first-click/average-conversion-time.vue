@@ -1,16 +1,17 @@
 <template>
   <div class="metric-card art-card">
-    <div class="metric-header">
+    <h3 class="metric-title">平均转化时间</h3>
+    <div class="metric-row">
       <span class="metric-value">{{ value }}</span>
+      <div ref="chartRef" class="metric-chart" />
     </div>
     <p class="metric-desc">{{ description }}</p>
-    <div ref="chartRef" class="metric-chart" />
   </div>
 </template>
 
 <script setup lang="ts">
   import { type EChartsOption } from '@/plugins/echarts'
-  import { useChartComponent, useChartOps } from '@/hooks/core/useChart'
+  import { useChartComponent } from '@/hooks/core/useChart'
 
   defineOptions({ name: 'AverageConversionTime' })
 
@@ -27,6 +28,9 @@
     }
   )
 
+  // 图例：左绿、中蓝、右黄，高度约 60%、100%、75%
+  const BAR_COLORS = ['#67c23a', '#409eff', '#fac858']
+
   const { chartRef } = useChartComponent({
     props: {
       height: '60px',
@@ -35,29 +39,26 @@
     },
     checkEmpty: () => !props.chartData?.length || props.chartData.every((v) => v === 0),
     watchSources: [() => props.chartData],
-    generateOptions: (): EChartsOption => {
-      const color = useChartOps().themeColor
-      return {
-        grid: { top: 8, right: 8, bottom: 20, left: 8, containLabel: false },
-        xAxis: {
-          type: 'category',
-          data: ['0-1d', '1-3d', '3-7d'],
-          show: true,
-          axisLabel: { fontSize: 10, color: 'var(--el-text-color-secondary)' },
-          axisLine: { show: false },
-          axisTick: { show: false }
-        },
-        yAxis: { type: 'value', show: false },
-        series: [
-          {
-            data: props.chartData,
-            type: 'bar',
-            barWidth: '50%',
-            itemStyle: { color, borderRadius: [4, 4, 0, 0] }
-          }
-        ]
-      }
-    }
+    generateOptions: (): EChartsOption => ({
+      grid: { top: 2, right: 2, bottom: 2, left: 2, containLabel: false },
+      xAxis: {
+        type: 'category',
+        data: ['0-1d', '1-3d', '3-7d'],
+        show: false,
+        boundaryGap: true
+      },
+      yAxis: { type: 'value', show: false, max: 'dataMax' },
+      series: [
+        {
+          data: props.chartData.map((val, i) => ({
+            value: val,
+            itemStyle: { color: BAR_COLORS[i % 3], borderRadius: [3, 3, 0, 0] }
+          })),
+          type: 'bar',
+          barWidth: '50%'
+        }
+      ]
+    })
   })
 </script>
 
@@ -65,29 +66,46 @@
   .metric-card {
     display: flex;
     flex-direction: column;
-    min-height: 140px;
-    padding: 16px;
+    min-height: 128px;
+    padding: 12px;
   }
 
-  .metric-header {
-    margin-bottom: 6px;
+  .metric-title {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--el-text-color-regular);
+  }
+
+  .metric-row {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 0;
   }
 
   .metric-value {
-    font-size: 22px;
-    font-weight: 600;
+    flex-shrink: 0;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
     color: var(--el-text-color-primary);
-  }
-
-  .metric-desc {
-    margin: 0 0 8px;
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
   }
 
   .metric-chart {
     flex: 1;
-    min-height: 60px;
-    margin-top: auto;
+    min-width: 0;
+    max-width: 45%;
+    height: 48px;
+  }
+
+  .metric-desc {
+    margin: 0;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
   }
 </style>

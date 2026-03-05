@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, nextTick } from 'vue'
+  import { computed, nextTick, ref, onMounted, onBeforeUnmount } from 'vue'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
   import { hexToRgba } from '@/utils/ui'
   import { useChart } from '@/hooks/core/useChart'
@@ -67,6 +67,7 @@
     chartRef,
     initChart,
     updateChart,
+    handleResize,
     isDark,
     getAxisLineStyle,
     getAxisLabelStyle,
@@ -128,12 +129,57 @@
     }
   })
 
+  const hasInited = ref(false)
+  let resizeObserver: ResizeObserver | null = null
+  let intersectionObserver: IntersectionObserver | null = null
+
+  function isInViewport(el: HTMLElement) {
+    const rect = el.getBoundingClientRect()
+    return rect.top < window.innerHeight && rect.bottom > 0
+  }
+
+  function tryInit() {
+    if (!chartRef.value || hasInited.value) return
+    const rect = chartRef.value.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return
+    if (!isInViewport(chartRef.value)) return
+    hasInited.value = true
+    initChart(option.value)
+  }
+
   onMounted(() => {
     nextTick(() => {
-      initChart(option.value)
+      tryInit()
+      if (!chartRef.value) return
+      resizeObserver = new ResizeObserver(() => {
+        if (hasInited.value) handleResize()
+        else tryInit()
+      })
+      resizeObserver.observe(chartRef.value)
+      intersectionObserver = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting) tryInit()
+        },
+        { root: null, threshold: 0.01 }
+      )
+      intersectionObserver.observe(chartRef.value)
+      setTimeout(tryInit, 100)
+      setTimeout(tryInit, 400)
     })
   })
-  watch(option, (v) => updateChart(v), { deep: true })
+
+  onBeforeUnmount(() => {
+    resizeObserver?.disconnect()
+    intersectionObserver?.disconnect()
+  })
+
+  watch(
+    option,
+    (v) => {
+      if (hasInited.value) updateChart(v)
+    },
+    { deep: true }
+  )
 </script>
 
 <style scoped lang="scss">

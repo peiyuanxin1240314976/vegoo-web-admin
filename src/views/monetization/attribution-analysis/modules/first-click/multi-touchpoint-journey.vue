@@ -71,7 +71,7 @@
           lineStyle: { color: 'gradient', opacity: 0.4 },
           itemStyle: {
             borderWidth: 0,
-            borderRadius: 999
+            borderRadius: 5
           },
           label: {
             color: 'var(--el-text-color-regular)',
