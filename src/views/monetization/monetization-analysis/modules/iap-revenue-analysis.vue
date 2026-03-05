@@ -4,7 +4,7 @@
       <span>IAP 收入分析</span>
     </template>
     <div class="iap-chart-wrap">
-      <div ref="chartRef" class="chart-container" />
+      <div ref="containerRef" class="chart-container" />
       <div class="iap-total-center">{{ iapData?.total ?? '--' }}</div>
     </div>
     <div class="iap-legend">
@@ -17,8 +17,10 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, watch, computed } from 'vue'
-  import { useChart } from '@/hooks/core/useChart'
+  import { onMounted, onUnmounted, watch, computed, nextTick, ref } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import { useSettingStore } from '@/store/modules/setting'
+  import { echarts } from '@/plugins/echarts'
   import type { EChartsOption } from 'echarts'
   import type { MonetizationIapAnalysis } from '../types'
   import { MOCK_MONETIZATION_ANALYSIS } from '../mock/data'
@@ -29,30 +31,59 @@
     data: null
   })
 
-  const { chartRef, initChart, updateChart } = useChart()
+  const { isDark } = storeToRefs(useSettingStore())
+  const containerRef = ref<HTMLElement | null>(null)
+  let chartInstance: ReturnType<typeof echarts.init> | null = null
   const iapData = computed(() => props.data ?? MOCK_MONETIZATION_ANALYSIS.iapAnalysis)
 
   const colors = ['#409eff', '#67c23a', '#e6a23c', '#f56c6c', '#909399']
 
+  /** 随深色/浅色模式区分的文字颜色 */
+  const textColor = computed(() => (isDark.value ? 'rgba(255,255,255,0.85)' : '#303133'))
+
   function buildOption(): EChartsOption {
     const d = iapData.value
     if (!d?.items?.length) return {}
+    const color = textColor.value
     return {
       tooltip: {
         trigger: 'item',
         formatter: '{b}: {c}%'
       },
+      legend: {
+        show: true,
+        orient: 'vertical',
+        right: 10,
+        top: 'middle',
+        textStyle: {
+          fontSize: 12,
+          color,
+          textBorderWidth: 0,
+          textShadowColor: 'transparent',
+          textShadowBlur: 0
+        }
+      },
       series: [
         {
           type: 'pie',
-          radius: ['50%', '75%'],
-          center: ['50%', '50%'],
-          avoidLabelOverlap: false,
+          radius: ['45%', '70%'],
+          center: ['45%', '50%'],
+          avoidLabelOverlap: true,
           itemStyle: {
-            borderColor: 'var(--el-bg-color-page)',
-            borderWidth: 2
+            borderWidth: 0
           },
-          label: { show: false },
+          label: {
+            show: true,
+            formatter: '{d}%',
+            color,
+            textBorderWidth: 0,
+            textShadowColor: 'transparent',
+            textShadowBlur: 0
+          },
+          labelLine: {
+            show: true,
+            lineStyle: { color: isDark.value ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }
+          },
           data: d.items.map((item, i) => ({
             name: item.name,
             value: item.percent,
@@ -63,10 +94,47 @@
     }
   }
 
+  function initIapChart() {
+    if (!containerRef.value) return
+    chartInstance = echarts.init(containerRef.value)
+    const option = buildOption()
+    if (option && Object.keys(option).length) {
+      chartInstance.setOption(option)
+    }
+  }
+
+  function updateIapChart() {
+    if (!chartInstance) return
+    const option = buildOption()
+    if (option && Object.keys(option).length) {
+      chartInstance.setOption(option)
+    }
+  }
+
   onMounted(() => {
-    initChart(buildOption())
+    nextTick(() => {
+      initIapChart()
+    })
   })
-  watch(iapData, () => updateChart(buildOption()), { deep: true })
+
+  onUnmounted(() => {
+    if (chartInstance) {
+      chartInstance.dispose()
+      chartInstance = null
+    }
+  })
+
+  watch(
+    iapData,
+    () => {
+      updateIapChart()
+    },
+    { deep: true }
+  )
+
+  watch(isDark, () => {
+    updateIapChart()
+  })
 </script>
 
 <style scoped lang="scss">
@@ -84,6 +152,7 @@
   }
 
   .chart-container {
+    width: 100%;
     height: 220px;
   }
 
