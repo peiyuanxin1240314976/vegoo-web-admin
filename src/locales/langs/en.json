@@ -231,6 +231,14 @@
       "financeScreen": "Channel Analysis",
       "deepAnalysis": "Deep Analysis"
     },
+    "monetization": {
+      "title": "Monetization",
+      "monetizationAnalysis": "Monetization Analysis",
+      "appHealth": "App Health",
+      "deepAnalysis": "Deep Analysis",
+      "attributionAnalysis": "Attribution Analysis",
+      "ltvPrediction": "LTV Prediction & User Segmentation"
+    },
     "result": {
       "title": "Result Page",
       "success": "Success",

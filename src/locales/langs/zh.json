@@ -231,6 +231,14 @@
       "financeScreen": "渠道分析",
       "deepAnalysis": "深度分析"
     },
+    "monetization": {
+      "title": "变现管理",
+      "monetizationAnalysis": "变现分析",
+      "appHealth": "App健康管理",
+      "deepAnalysis": "深度分析",
+      "attributionAnalysis": "归因分析",
+      "ltvPrediction": "LTV预测与用户分层"
+    },
     "result": {
       "title": "结果页面",
       "success": "成功页",
