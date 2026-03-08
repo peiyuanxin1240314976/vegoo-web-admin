@@ -73,7 +73,13 @@ export const getColumnChecks = <T>(columns: ColumnOption<T>[]) =>
     const visibility = getColumnVisibility(col)
 
     if (special) {
-      return { ...col, prop: special.prop, label: special.label, checked: true, visible: true }
+      return {
+        ...col,
+        prop: special.prop,
+        label: special.label,
+        checked: visibility,
+        visible: visibility
+      }
     }
     return { ...col, checked: visibility, visible: visibility }
   })

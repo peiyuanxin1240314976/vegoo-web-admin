@@ -1,43 +1,55 @@
-<!-- 用户管理页面 -->
-<!-- art-full-height 自动计算出页面剩余高度 -->
-<!-- art-table-card 一个符合系统样式的 class，同时自动撑满剩余高度 -->
-<!-- 更多 useTable 使用示例请移步至 功能示例 下面的高级表格示例或者查看官方文档 -->
-<!-- useTable 文档：https://www.artd.pro/docs/zh/guide/hooks/use-table.html -->
+<!-- 用户管理页面 - 左右分栏：左侧统计/筛选/列表，右侧详情占位 -->
 <template>
-  <div class="user-page art-full-height">
-    <!-- 搜索栏 -->
-    <UserSearch v-model="searchForm" @search="handleSearch" @reset="resetSearchParams"></UserSearch>
-
-    <ElCard class="art-table-card" shadow="never">
-      <!-- 表格头部 -->
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
-        <template #left>
-          <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>新增用户</ElButton>
-          </ElSpace>
-        </template>
-      </ArtTableHeader>
-
-      <!-- 表格 -->
-      <ArtTable
-        :loading="loading"
-        :data="data"
-        :columns="columns"
-        :pagination="pagination"
-        @selection-change="handleSelectionChange"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
+  <div class="user-page art-full-height flex">
+    <!-- 左侧：统计卡片 + 筛选 + 列表 -->
+    <div class="user-page-left flex-1 min-w-0 flex flex-col">
+      <UserLeftPanel
+        :stats="userStats"
+        :filter-form="filterForm"
+        :batch-mode="batchMode"
+        @add-user="showDialog('add')"
+        @search="handleSearch"
+        @reset="resetSearchParams"
+        @toggle-batch="toggleBatchMode"
       >
-      </ArtTable>
+        <template #table>
+          <ArtTableHeader
+            v-model:columns="columnChecks"
+            :loading="loading"
+            @refresh="refreshData"
+          />
+          <ArtTable
+            :loading="loading"
+            :data="data"
+            :columns="columns"
+            :pagination="pagination"
+            @row-click="handleTableRowClick"
+            @selection-change="handleSelectionChange"
+            @pagination:size-change="handleSizeChange"
+            @pagination:current-change="handleCurrentChange"
+          />
+        </template>
+      </UserLeftPanel>
+    </div>
 
-      <!-- 用户弹窗 -->
-      <UserDialog
-        v-model:visible="dialogVisible"
-        :type="dialogType"
-        :user-data="currentUserData"
-        @submit="handleDialogSubmit"
+    <!-- 右侧：用户详情 -->
+    <div class="user-page-right">
+      <UserRightPanel
+        :user="currentDetailUser"
+        @save="handleRightPanelSave"
+        @cancel="currentDetailUser = null"
+        @edit="() => currentDetailUser && showDialog('edit', currentDetailUser)"
+        @disable="handleRightPanelDisable"
       />
-    </ElCard>
+    </div>
+
+    <!-- 用户弹窗 -->
+    <UserDialog
+      v-model:visible="dialogVisible"
+      :type="dialogType"
+      :user-data="currentUserData"
+      @submit="handleDialogSubmit"
+    />
   </div>
 </template>
 
@@ -46,10 +58,12 @@
   import { ACCOUNT_TABLE_DATA } from '@/mock/temp/formData'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchGetUserList } from '@/api/system-manage'
-  import UserSearch from './modules/user-search.vue'
+  import UserLeftPanel from './modules/user-left-panel.vue'
+  import UserRightPanel from './modules/user-right-panel.vue'
   import UserDialog from './modules/user-dialog.vue'
-  import { ElTag, ElMessageBox, ElImage } from 'element-plus'
+  import { ElTag, ElMessageBox, ElImage, ElMessage } from 'element-plus'
   import { DialogType } from '@/types'
+  import type { UserStats, UserFilterForm } from './modules/user-left-panel.vue'
 
   defineOptions({ name: 'User' })
 
@@ -63,13 +77,17 @@
   // 选中行
   const selectedRows = ref<UserListItem[]>([])
 
-  // 搜索表单
-  const searchForm = ref({
+  // 右侧详情当前选中的用户（点击表格行时设置）
+  const currentDetailUser = ref<UserListItem | null>(null)
+
+  // 批量选择模式：为 true 时表格显示勾选列，可批量选择
+  const batchMode = ref(false)
+
+  // 筛选表单（左侧面板：姓名、角色、状态）
+  const filterForm = ref<UserFilterForm>({
     userName: undefined,
-    userGender: undefined,
-    userPhone: undefined,
-    userEmail: undefined,
-    status: '1'
+    role: undefined,
+    status: undefined
   })
 
   // 用户状态配置
@@ -103,7 +121,8 @@
     resetSearchParams,
     handleSizeChange,
     handleCurrentChange,
-    refreshData
+    refreshData,
+    toggleColumn
   } = useTable({
     // 核心配置
     core: {
@@ -111,7 +130,7 @@
       apiParams: {
         current: 1,
         size: 20,
-        ...searchForm.value
+        ...filterForm.value
       },
       // 自定义分页字段映射，未设置时将使用全局配置 tableConfig.ts 中的 paginationKey
       // paginationKey: {
@@ -119,8 +138,7 @@
       //   size: 'pageSize'
       // },
       columnsFactory: () => [
-        { type: 'selection' }, // 勾选列
-        { type: 'index', width: 60, label: '序号' }, // 序号
+        { type: 'selection', visible: false }, // 勾选列，默认隐藏，点击「批量操作」后显示
         {
           prop: 'userInfo',
           label: '用户名',
@@ -202,15 +220,41 @@
     }
   })
 
+  // 用户统计（左侧面板展示，可与接口对齐后改为接口数据）
+  const userStats = computed<UserStats>(() => {
+    const list = data?.value ?? []
+    const totalCount = pagination?.total ?? 0
+    return {
+      total: totalCount,
+      active: list.filter((r: UserListItem) => r.status === '1').length,
+      disabled: list.filter((r: UserListItem) => r.status === '4').length,
+      pending: list.filter((r: UserListItem) => r.status === '2' || r.status === '3').length
+    }
+  })
+
   /**
    * 搜索处理
-   * @param params 参数
+   * @param params 筛选参数（姓名、角色、状态）
    */
-  const handleSearch = (params: Record<string, any>) => {
-    console.log(params)
-    // 搜索参数赋值
-    Object.assign(searchParams, params)
+  const handleSearch = (params: UserFilterForm) => {
+    Object.assign(searchParams, {
+      userName: params.userName,
+      status: params.status
+      // role 若接口支持可在此传入
+    })
+    if (params.role != null && params.role !== '') {
+      Object.assign(searchParams, { role: params.role })
+    }
     getData()
+  }
+
+  /** 切换批量选择模式：显示/隐藏表格勾选列 */
+  const toggleBatchMode = () => {
+    batchMode.value = !batchMode.value
+    toggleColumn?.('__selection__', batchMode.value)
+    if (!batchMode.value) {
+      selectedRows.value = []
+    }
   }
 
   /**
@@ -258,4 +302,62 @@
     selectedRows.value = selection
     console.log('选中行数据:', selectedRows.value)
   }
+
+  /** 列表有数据时默认选中第一行，在右侧展示 */
+  watch(
+    () => data.value,
+    (list) => {
+      if (list?.length && list[0]) {
+        currentDetailUser.value = list[0]
+      }
+    },
+    { immediate: true, deep: true }
+  )
+
+  /** 点击表格行：在右侧展示该用户详情 */
+  const handleTableRowClick = (row: UserListItem) => {
+    currentDetailUser.value = row
+  }
+
+  /** 右侧面板保存（角色、可访问应用、备注） */
+  const handleRightPanelSave = (payload: { role: string; apps: string[]; remark: string }) => {
+    console.log('保存用户详情:', currentDetailUser.value?.id, payload)
+    ElMessage.success('保存成功')
+  }
+
+  /** 右侧面板禁用当前用户 */
+  const handleRightPanelDisable = () => {
+    if (!currentDetailUser.value) return
+    ElMessageBox.confirm(`确定要禁用用户「${currentDetailUser.value.userName}」吗？`, '禁用用户', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(() => {
+      ElMessage.success('已禁用')
+      currentDetailUser.value = null
+    })
+  }
 </script>
+
+<style scoped lang="scss">
+  /* 覆盖 art-full-height 的 flex-direction: column，改为左右分栏 */
+  .user-page {
+    flex-direction: row;
+    gap: 16px;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .user-page-left {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .user-page-right {
+    flex-shrink: 0;
+    width: 360px;
+    min-width: 360px;
+    overflow: auto;
+  }
+</style>
