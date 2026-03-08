@@ -13,7 +13,7 @@
       <!-- 左侧：用户概览 + 导航 -->
       <div class="user-center-left w-72 shrink-0 max-md:w-full max-md:mr-0">
         <div class="art-card-sm p-6">
-          <!-- 用户概览（与原型一致：左头像 + 右信息） -->
+          <!-- 用户概览 -->
           <div class="user-overview flex items-center gap-4">
             <div
               class="user-overview-avatar w-20 h-20 shrink-0 rounded-full flex items-center justify-center text-xl font-medium text-white bg-[var(--el-color-primary)]"
@@ -560,7 +560,8 @@
   }
 
   .dark .user-center-page .nav-item--active {
-    color: var(--el-color-primary);
+    /* color: var(--el-color-primary); */
+    color: #fff;
     background: var(--el-color-primary-dark-2);
   }
 </style>
