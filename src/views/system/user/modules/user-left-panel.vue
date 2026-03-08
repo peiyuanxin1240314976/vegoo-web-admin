@@ -22,9 +22,9 @@
         :class="`stat-card--${item.key}`"
       >
         <div class="stat-icon">
-          <ElIcon :size="28"><component :is="item.icon" /></ElIcon>
+          <ElIcon :size="44"><component :is="item.icon" /></ElIcon>
         </div>
-        <div class="stat-content">
+        <div class="stat-right">
           <span class="stat-value">{{ item.value }}</span>
           <span class="stat-label">{{ item.label }}</span>
         </div>
@@ -234,11 +234,13 @@
   }
 
   .stat-card {
+    display: flex;
     flex: 1 1 140px;
+    flex-direction: row;
     gap: 16px;
-    align-items: center;
+    align-items: stretch;
     min-width: 0;
-    min-height: 80px;
+    min-height: 88px;
     padding: 20px;
     background: var(--el-bg-color);
     border: 1px solid var(--el-border-color);
@@ -249,25 +251,29 @@
       flex-shrink: 0;
       align-items: center;
       justify-content: center;
-      width: 56px;
-      height: 56px;
-      border-radius: 10px;
+      width: 72px;
+      height: 72px;
+      border-radius: 12px;
     }
 
-    .stat-content {
+    .stat-right {
       display: flex;
+      flex: 1;
       flex-direction: column;
-      gap: 4px;
+      justify-content: space-between;
+      min-width: 0;
+      min-height: 72px;
     }
 
     .stat-value {
-      font-size: 26px;
+      font-size: 30px;
       font-weight: 600;
       line-height: 1.2;
     }
 
     .stat-label {
-      font-size: 14px;
+      font-size: 16px;
+      line-height: 1.3;
       color: var(--el-text-color-secondary);
     }
 
