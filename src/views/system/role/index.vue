@@ -1,242 +1,225 @@
-<!-- 角色管理页面 -->
+<!-- 权限管理 - 三列：角色列表 | 权限配置 | 用户列表 -->
 <template>
-  <div class="art-full-height">
-    <RoleSearch
-      v-show="showSearchBar"
-      v-model="searchForm"
-      @search="handleSearch"
-      @reset="resetSearchParams"
-    ></RoleSearch>
+  <div class="role-page art-full-height flex">
+    <!-- 第一列：角色列表 -->
+    <div class="role-page-left">
+      <RoleListPanel
+        :role-list="roleList"
+        :selected-role="selectedRole"
+        :role-user-count-map="roleUserCountMap"
+        @add-role="showDialog('add')"
+        @select-role="selectedRole = $event"
+      />
+    </div>
 
-    <ElCard
-      class="art-table-card"
-      shadow="never"
-      :style="{ 'margin-top': showSearchBar ? '12px' : '0' }"
-    >
-      <ArtTableHeader
-        v-model:columns="columnChecks"
-        v-model:showSearchBar="showSearchBar"
-        :loading="loading"
-        @refresh="refreshData"
-      >
-        <template #left>
-          <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>新增角色</ElButton>
-          </ElSpace>
-        </template>
-      </ArtTableHeader>
+    <!-- 第二列：权限配置 -->
+    <div class="role-page-center">
+      <RolePermissionPanel
+        :selected-role="selectedRole"
+        @save="handleSavePermission"
+        @compare="showCompareDialog"
+      />
+    </div>
 
-      <!-- 表格 -->
-      <ArtTable
-        :loading="loading"
-        :data="data"
-        :columns="columns"
-        :pagination="pagination"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
-      >
-      </ArtTable>
-    </ElCard>
+    <!-- 第三列：用户列表 -->
+    <div class="role-page-right">
+      <RoleUserPanel
+        :selected-role="selectedRole"
+        :role-users="currentRoleUsers"
+        :permission-summary="permissionSummary"
+        :role-description="roleDescription"
+        @edit-user="handleEditUser"
+        @disable-user="handleDisableUser"
+        @batch-assign="handleBatchAssign"
+        @batch-export="handleBatchExport"
+        @batch-disable="handleBatchDisable"
+        @edit-desc="handleEditDesc"
+      />
+    </div>
 
-    <!-- 角色编辑弹窗 -->
+    <!-- 角色新增/编辑弹窗 -->
     <RoleEditDialog
       v-model="dialogVisible"
       :dialog-type="dialogType"
       :role-data="currentRoleData"
-      @success="refreshData"
+      @success="refreshRoleList"
     />
 
-    <!-- 菜单权限弹窗 -->
+    <!-- 对比其他角色（可选，沿用原菜单权限弹窗或新弹窗） -->
     <RolePermissionDialog
-      v-model="permissionDialog"
+      v-model="permissionDialogVisible"
       :role-data="currentRoleData"
-      @success="refreshData"
+      @success="refreshRoleList"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ButtonMoreItem } from '@/components/core/forms/art-button-more/index.vue'
-  import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetRoleList } from '@/api/system-manage'
-  import ArtButtonMore from '@/components/core/forms/art-button-more/index.vue'
-  import RoleSearch from './modules/role-search.vue'
+  import RoleListPanel from './modules/role-list-panel.vue'
+  import RolePermissionPanel from './modules/role-permission-panel.vue'
+  import RoleUserPanel from './modules/role-user-panel.vue'
+  import type { RoleUserItem } from './modules/role-user-panel.vue'
   import RoleEditDialog from './modules/role-edit-dialog.vue'
   import RolePermissionDialog from './modules/role-permission-dialog.vue'
-  import { ElTag, ElMessageBox } from 'element-plus'
+  import {
+    getMockRoleUsers,
+    getMockPermissionSummary,
+    getMockRoleDescription,
+    MOCK_ROLE_LIST
+  } from './mock/data'
+  import { ElMessage } from 'element-plus'
 
   defineOptions({ name: 'Role' })
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
-  // 搜索表单
-  const searchForm = ref({
-    roleName: undefined,
-    roleCode: undefined,
-    description: undefined,
-    enabled: undefined,
-    daterange: undefined
-  })
-
-  const showSearchBar = ref(false)
-
+  /** 左侧角色列表：使用假数据，见 @/views/system/role/mock/data.ts */
+  const roleList = ref<RoleListItem[]>(MOCK_ROLE_LIST as RoleListItem[])
+  /** 当前选中的角色，默认选中第一项以保证中间列、右侧列有内容展示 */
+  const selectedRole = ref<RoleListItem | null>(MOCK_ROLE_LIST[0] as RoleListItem)
   const dialogVisible = ref(false)
-  const permissionDialog = ref(false)
+  const permissionDialogVisible = ref(false)
+  const dialogType = ref<'add' | 'edit'>('add')
   const currentRoleData = ref<RoleListItem | undefined>(undefined)
 
-  const {
-    columns,
-    columnChecks,
-    data,
-    loading,
-    pagination,
-    getData,
-    searchParams,
-    resetSearchParams,
-    handleSizeChange,
-    handleCurrentChange,
-    refreshData
-  } = useTable({
-    // 核心配置
-    core: {
-      apiFn: fetchGetRoleList,
-      apiParams: {
-        current: 1,
-        size: 20
-      },
-      // 排除 apiParams 中的属性
-      excludeParams: ['daterange'],
-      columnsFactory: () => [
-        {
-          prop: 'roleId',
-          label: '角色ID',
-          width: 100
-        },
-        {
-          prop: 'roleName',
-          label: '角色名称',
-          minWidth: 120
-        },
-        {
-          prop: 'roleCode',
-          label: '角色编码',
-          minWidth: 120
-        },
-        {
-          prop: 'description',
-          label: '角色描述',
-          minWidth: 150,
-          showOverflowTooltip: true
-        },
-        {
-          prop: 'enabled',
-          label: '角色状态',
-          width: 100,
-          formatter: (row) => {
-            const statusConfig = row.enabled
-              ? { type: 'success', text: '启用' }
-              : { type: 'warning', text: '禁用' }
-            return h(
-              ElTag,
-              { type: statusConfig.type as 'success' | 'warning' },
-              () => statusConfig.text
-            )
-          }
-        },
-        {
-          prop: 'createTime',
-          label: '创建日期',
-          width: 180,
-          sortable: true
-        },
-        {
-          prop: 'operation',
-          label: '操作',
-          width: 80,
-          fixed: 'right',
-          formatter: (row) =>
-            h('div', [
-              h(ArtButtonMore, {
-                list: [
-                  {
-                    key: 'permission',
-                    label: '菜单权限',
-                    icon: 'ri:user-3-line'
-                  },
-                  {
-                    key: 'edit',
-                    label: '编辑角色',
-                    icon: 'ri:edit-2-line'
-                  },
-                  {
-                    key: 'delete',
-                    label: '删除角色',
-                    icon: 'ri:delete-bin-4-line',
-                    color: '#f56c6c'
-                  }
-                ],
-                onClick: (item: ButtonMoreItem) => buttonMoreClick(item, row)
-              })
-            ])
-        }
-      ]
-    }
+  /** 角色对应用户数（若接口未返回，可来自单独接口或 mock） */
+  const roleUserCountMap = ref<Record<number, number>>({
+    1: 1,
+    2: 3,
+    3: 3,
+    4: 3,
+    5: 3,
+    6: 3
   })
 
-  const dialogType = ref<'add' | 'edit'>('add')
+  /** 当前选中角色下的用户（假数据，见 @/views/system/role/mock/data.ts） */
+  const currentRoleUsers = computed<RoleUserItem[]>(() => {
+    if (!selectedRole.value) return []
+    return getMockRoleUsers(selectedRole.value.roleId)
+  })
 
-  const showDialog = (type: 'add' | 'edit', row?: RoleListItem) => {
-    dialogVisible.value = true
-    dialogType.value = type
-    currentRoleData.value = row
-  }
+  /** 权限摘要（假数据，见 @/views/system/role/mock/data.ts） */
+  const permissionSummary = computed(() => getMockPermissionSummary(selectedRole.value?.roleId))
 
-  /**
-   * 搜索处理
-   * @param params 搜索参数
-   */
-  const handleSearch = (params: Record<string, any>) => {
-    // 处理日期区间参数，把 daterange 转换为 startTime 和 endTime
-    const { daterange, ...filtersParams } = params
-    const [startTime, endTime] = Array.isArray(daterange) ? daterange : [null, null]
+  /** 角色说明（假数据，见 @/views/system/role/mock/data.ts） */
+  const roleDescription = computed(() => {
+    if (!selectedRole.value) return ''
+    return selectedRole.value.description || getMockRoleDescription(selectedRole.value.roleName)
+  })
 
-    // 搜索参数赋值
-    Object.assign(searchParams, { ...filtersParams, startTime, endTime })
-    getData()
-  }
-
-  const buttonMoreClick = (item: ButtonMoreItem, row: RoleListItem) => {
-    switch (item.key) {
-      case 'permission':
-        showPermissionDialog(row)
-        break
-      case 'edit':
-        showDialog('edit', row)
-        break
-      case 'delete':
-        deleteRole(row)
-        break
+  /** 刷新角色列表（当前用假数据，仅重置为 mock 列表并选中第一项） */
+  function loadRoleList() {
+    roleList.value = MOCK_ROLE_LIST as RoleListItem[]
+    if (roleList.value.length && !selectedRole.value) {
+      selectedRole.value = roleList.value[0]
     }
   }
 
-  const showPermissionDialog = (row?: RoleListItem) => {
-    permissionDialog.value = true
-    currentRoleData.value = row
+  function refreshRoleList() {
+    loadRoleList()
   }
 
-  const deleteRole = (row: RoleListItem) => {
-    ElMessageBox.confirm(`确定删除角色"${row.roleName}"吗？此操作不可恢复！`, '删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-      .then(() => {
-        // TODO: 调用删除接口
-        ElMessage.success('删除成功')
-        refreshData()
-      })
-      .catch(() => {
-        ElMessage.info('已取消删除')
-      })
+  function showDialog(type: 'add' | 'edit', row?: RoleListItem) {
+    dialogType.value = type
+    currentRoleData.value = row
+    dialogVisible.value = true
   }
+
+  function showCompareDialog() {
+    currentRoleData.value = selectedRole.value ?? undefined
+    permissionDialogVisible.value = true
+  }
+
+  function handleSavePermission() {
+    ElMessage.success('权限配置已保存')
+  }
+
+  function handleEditUser() {
+    ElMessage.info('编辑用户（可跳转用户管理或打开弹窗）')
+  }
+
+  function handleDisableUser() {
+    ElMessage.info('禁用用户')
+  }
+
+  function handleBatchAssign() {
+    ElMessage.info('批量分配角色')
+  }
+
+  function handleBatchExport() {
+    ElMessage.info('批量导出')
+  }
+
+  function handleBatchDisable() {
+    ElMessage.info('批量禁用')
+  }
+
+  function handleEditDesc() {
+    ElMessage.info('编辑角色说明（可打开弹窗或内联编辑）')
+  }
+
+  onMounted(() => {
+    loadRoleList()
+  })
 </script>
+
+<style scoped lang="scss">
+  /* 覆盖 art-full-height 的 flex-direction: column，改为三列左右排布；小屏再改为上下布局 */
+  .role-page {
+    flex-direction: row;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .role-page-left {
+    flex-shrink: 0;
+    width: 280px;
+    min-width: 240px;
+    overflow: hidden;
+  }
+
+  .role-page-center {
+    flex: 1;
+    min-width: 320px;
+    overflow: hidden;
+  }
+
+  .role-page-right {
+    flex-shrink: 0;
+    width: 380px;
+    min-width: 320px;
+    max-width: 420px;
+    overflow: hidden;
+  }
+
+  @media (width <= 1280px) {
+    .role-page-right {
+      width: 340px;
+      min-width: 300px;
+    }
+  }
+
+  @media (width <= 1024px) {
+    .role-page {
+      flex-direction: column;
+      overflow: auto;
+    }
+
+    .role-page-left {
+      width: 100%;
+      min-height: 240px;
+    }
+
+    .role-page-center {
+      min-height: 360px;
+    }
+
+    .role-page-right {
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+      min-height: 360px;
+    }
+  }
+</style>
