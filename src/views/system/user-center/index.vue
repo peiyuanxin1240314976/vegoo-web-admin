@@ -1,54 +1,64 @@
-<!-- 个人中心页面 -->
+<!-- 个人中心页面：左侧用户概览+导航，右侧按 Tab 展示内容 -->
 <template>
-  <div class="w-full h-full p-0 bg-transparent border-none shadow-none">
-    <div class="relative flex-b mt-2.5 max-md:block max-md:mt-1">
-      <div class="w-112 mr-5 max-md:w-full max-md:mr-0">
-        <div class="art-card-sm relative p-9 pb-6 overflow-hidden text-center">
-          <img class="absolute top-0 left-0 w-full h-50 object-cover" src="@imgs/user/bg.webp" />
-          <img
-            class="relative z-10 w-20 h-20 mt-30 mx-auto object-cover border-2 border-white rounded-full"
-            src="@imgs/user/avatar.webp"
-          />
-          <h2 class="mt-5 text-xl font-normal">{{ userInfo.userName }}</h2>
-          <p class="mt-5 text-sm">专注于用户体验跟视觉设计</p>
+  <div class="user-center-page w-full h-full p-0 bg-transparent border-none shadow-none">
+    <!-- 顶部标题 -->
+    <div class="panel-row header-row mb-5">
+      <div class="header-title-wrap">
+        <h1 class="page-title">个人中心</h1>
+        <p class="page-desc">管理个人信息、密码与通知设置</p>
+      </div>
+    </div>
 
-          <div class="w-75 mx-auto mt-7.5 text-left">
-            <div class="mt-2.5">
-              <ArtSvgIcon icon="ri:mail-line" class="text-g-700" />
-              <span class="ml-2 text-sm">jdkjjfnndf@mall.com</span>
+    <div class="relative flex gap-5 max-md:flex-col max-md:mt-1">
+      <!-- 左侧：用户概览 + 导航 -->
+      <div class="user-center-left w-72 shrink-0 max-md:w-full max-md:mr-0">
+        <div class="art-card-sm p-6">
+          <!-- 用户概览（与原型一致：左头像 + 右信息） -->
+          <div class="user-overview flex items-center gap-4">
+            <div
+              class="user-overview-avatar w-20 h-20 shrink-0 rounded-full flex items-center justify-center text-xl font-medium text-white bg-[var(--el-color-primary)]"
+            >
+              {{ userInitials }}
             </div>
-            <div class="mt-2.5">
-              <ArtSvgIcon icon="ri:user-3-line" class="text-g-700" />
-              <span class="ml-2 text-sm">交互专家</span>
-            </div>
-            <div class="mt-2.5">
-              <ArtSvgIcon icon="ri:map-pin-line" class="text-g-700" />
-              <span class="ml-2 text-sm">广东省深圳市</span>
-            </div>
-            <div class="mt-2.5">
-              <ArtSvgIcon icon="ri:dribbble-fill" class="text-g-700" />
-              <span class="ml-2 text-sm">字节跳动－某某平台部－UED</span>
-            </div>
-          </div>
-
-          <div class="mt-10">
-            <h3 class="text-sm font-medium">标签</h3>
-            <div class="flex flex-wrap justify-center mt-3.5">
-              <div
-                v-for="item in lableList"
-                :key="item"
-                class="py-1 px-1.5 mr-2.5 mb-2.5 text-xs border border-g-300 rounded"
-              >
-                {{ item }}
+            <div class="user-overview-info flex-1 min-w-0 flex flex-col gap-1.5 text-left">
+              <h2 class="user-overview-name text-base font-medium leading-tight">{{
+                displayName
+              }}</h2>
+              <ElTag type="warning" size="small" class="user-overview-role w-fit rounded-md">
+                {{ roleLabel }}
+              </ElTag>
+              <div class="user-overview-email flex items-center gap-1.5 text-sm text-g-600">
+                <ArtSvgIcon icon="ri:mail-line" class="shrink-0" />
+                <span class="truncate">{{ userInfo?.email || '—' }}</span>
+              </div>
+              <div class="user-overview-status flex items-center gap-1.5 text-sm text-g-600">
+                <span class="w-2 h-2 rounded-full bg-[var(--el-color-success)] shrink-0" />
+                <span>活跃</span>
               </div>
             </div>
           </div>
+
+          <!-- 导航菜单 -->
+          <nav class="mt-6 border-t border-g-300 pt-4">
+            <div
+              v-for="item in navItems"
+              :key="item.key"
+              class="nav-item flex items-center gap-3 py-2.5 px-3 rounded-lg cursor-pointer transition-colors"
+              :class="activeTab === item.key ? 'nav-item--active' : ''"
+              @click="activeTab = item.key"
+            >
+              <ArtSvgIcon :icon="item.icon" class="text-lg shrink-0" />
+              <span class="text-sm">{{ item.label }}</span>
+            </div>
+          </nav>
         </div>
       </div>
-      <div class="flex-1 overflow-hidden max-md:w-full max-md:mt-3.5">
-        <div class="art-card-sm">
-          <h1 class="p-4 text-xl font-normal border-b border-g-300">基本设置</h1>
 
+      <!-- 右侧：内容区 -->
+      <div class="user-center-right flex-1 min-w-0 max-md:w-full max-md:mt-3.5">
+        <!-- 基本信息 -->
+        <div v-show="activeTab === 'basic'" class="art-card-sm">
+          <h2 class="p-4 text-lg font-medium border-b border-g-300">基本信息</h2>
           <ElForm
             :model="form"
             class="box-border p-5 [&>.el-row_.el-form-item]:w-[calc(50%-10px)] [&>.el-row_.el-input]:w-full [&>.el-row_.el-select]:w-full"
@@ -62,7 +72,7 @@
                 <ElInput v-model="form.realName" :disabled="!isEdit" />
               </ElFormItem>
               <ElFormItem label="性别" prop="sex" class="ml-5">
-                <ElSelect v-model="form.sex" placeholder="Select" :disabled="!isEdit">
+                <ElSelect v-model="form.sex" placeholder="请选择" :disabled="!isEdit">
                   <ElOption
                     v-for="item in options"
                     :key="item.value"
@@ -72,7 +82,6 @@
                 </ElSelect>
               </ElFormItem>
             </ElRow>
-
             <ElRow>
               <ElFormItem label="昵称" prop="nikeName">
                 <ElInput v-model="form.nikeName" :disabled="!isEdit" />
@@ -81,7 +90,6 @@
                 <ElInput v-model="form.email" :disabled="!isEdit" />
               </ElFormItem>
             </ElRow>
-
             <ElRow>
               <ElFormItem label="手机" prop="mobile">
                 <ElInput v-model="form.mobile" :disabled="!isEdit" />
@@ -90,12 +98,10 @@
                 <ElInput v-model="form.address" :disabled="!isEdit" />
               </ElFormItem>
             </ElRow>
-
             <ElFormItem label="个人介绍" prop="des" class="h-32">
               <ElInput type="textarea" :rows="4" v-model="form.des" :disabled="!isEdit" />
             </ElFormItem>
-
-            <div class="flex-c justify-end [&_.el-button]:!w-27.5">
+            <div class="flex justify-end [&_.el-button]:!w-27.5">
               <ElButton type="primary" class="w-22.5" v-ripple @click="edit">
                 {{ isEdit ? '保存' : '编辑' }}
               </ElButton>
@@ -103,9 +109,170 @@
           </ElForm>
         </div>
 
-        <div class="art-card-sm my-5">
-          <h1 class="p-4 text-xl font-normal border-b border-g-300">更改密码</h1>
+        <!-- 通知设置：左右两列 -->
+        <div v-show="activeTab === 'notification'" class="art-card-sm">
+          <h2 class="p-4 text-lg font-medium border-b border-g-300">通知设置</h2>
+          <div class="p-5">
+            <div class="notification-two-cols grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- 左列：飞书通知 + 预警级别配置 -->
+              <div class="flex flex-col gap-8">
+                <!-- 飞书通知 -->
+                <div>
+                  <div class="flex items-center gap-2 mb-4">
+                    <span class="text-base font-medium">飞书通知</span>
+                    <ArtSvgIcon icon="ri:notification-3-line" class="text-lg text-g-600" />
+                  </div>
+                  <ElTable :data="feishuNotifyList" border stripe class="feishu-notify-table">
+                    <ElTableColumn label="通知类型" min-width="120">
+                      <template #default="{ row }">
+                        <div class="flex items-center gap-2">
+                          <ArtSvgIcon icon="ri:message-2-line" class="text-g-600 shrink-0" />
+                          <span class="font-medium">{{ row.label }}</span>
+                        </div>
+                      </template>
+                    </ElTableColumn>
+                    <ElTableColumn label="说明" min-width="160" prop="desc">
+                      <template #default="{ row }">
+                        <span class="text-g-600">{{ row.desc }}</span>
+                      </template>
+                    </ElTableColumn>
+                    <ElTableColumn label="开关" width="70" align="center">
+                      <template #default="{ row }">
+                        <ElSwitch
+                          :model-value="
+                            notificationForm.feishu[(row as { key: FeishuNotifyKey }).key]
+                          "
+                          @update:model-value="
+                            setFeishuNotify(
+                              (row as { key: FeishuNotifyKey }).key,
+                              $event as boolean
+                            )
+                          "
+                        />
+                      </template>
+                    </ElTableColumn>
+                  </ElTable>
+                </div>
 
+                <!-- 预警级别配置 -->
+                <div>
+                  <div class="text-base font-medium mb-4">预警级别配置</div>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div
+                      v-for="level in alertLevels"
+                      :key="level.key"
+                      class="rounded-lg border border-g-300 p-3"
+                      :class="level.bgClass"
+                    >
+                      <div class="text-sm font-medium mb-2" :class="level.labelClass">
+                        {{ level.label }}
+                      </div>
+                      <ElCheckboxGroup
+                        v-model="notificationForm.alertChannels[level.key]"
+                        class="flex flex-col gap-1.5"
+                      >
+                        <ElCheckbox value="feishu" size="small" class="!mr-0">飞书卡片</ElCheckbox>
+                        <ElCheckbox value="email" size="small" class="!mr-0">邮件</ElCheckbox>
+                        <ElCheckbox value="platform" size="small" class="!mr-0"
+                          >平台内消息</ElCheckbox
+                        >
+                      </ElCheckboxGroup>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 右列：推送时间设置 + 订阅的报表 -->
+              <div class="flex flex-col gap-8">
+                <!-- 推送时间设置 -->
+                <div>
+                  <div class="text-base font-medium mb-4">推送时间设置</div>
+                  <div class="flex flex-col gap-4">
+                    <div class="flex flex-wrap items-center gap-4">
+                      <ElRadioGroup v-model="notificationForm.pushInWorkTime">
+                        <ElRadio :value="true">工作时间内推送</ElRadio>
+                      </ElRadioGroup>
+                      <ElTimePicker
+                        v-model="notificationForm.pushStartTime"
+                        format="HH:mm"
+                        value-format="HH:mm"
+                        placeholder="开始"
+                        class="w-28"
+                      />
+                      <span class="text-g-600">至</span>
+                      <ElTimePicker
+                        v-model="notificationForm.pushEndTime"
+                        format="HH:mm"
+                        value-format="HH:mm"
+                        placeholder="结束"
+                        class="w-28"
+                      />
+                    </div>
+                    <div class="flex items-center gap-4">
+                      <span class="text-sm text-g-600 shrink-0">推送日期：</span>
+                      <ElCheckboxGroup
+                        v-model="notificationForm.pushWeekdays"
+                        class="flex flex-wrap gap-2"
+                      >
+                        <ElCheckbox
+                          v-for="(label, idx) in weekdayLabels"
+                          :key="idx"
+                          :value="idx + 1"
+                          class="!mr-0"
+                        >
+                          {{ label }}
+                        </ElCheckbox>
+                      </ElCheckboxGroup>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 订阅的报表 -->
+                <div>
+                  <div class="text-base font-medium mb-4">订阅的报表</div>
+                  <ElTable :data="subscribedReports" border stripe class="subscribed-reports-table">
+                    <ElTableColumn label="报表名称" min-width="140" prop="name">
+                      <template #default="{ row }">
+                        <span class="font-medium">{{ row.name }}</span>
+                      </template>
+                    </ElTableColumn>
+                    <ElTableColumn label="推送时间" min-width="120" prop="pushTime">
+                      <template #default="{ row }">
+                        <span class="text-g-600">{{ row.pushTime }}</span>
+                      </template>
+                    </ElTableColumn>
+                    <ElTableColumn label="推送渠道" min-width="100" prop="channel">
+                      <template #default="{ row }">
+                        <span class="text-g-600">{{ row.channel }}</span>
+                      </template>
+                    </ElTableColumn>
+                    <ElTableColumn label="开关" width="70" align="center">
+                      <template #default="{ row }">
+                        <ElSwitch v-model="row.enabled" />
+                      </template>
+                    </ElTableColumn>
+                    <ElTableColumn label="操作" width="80" align="center">
+                      <template #default="{ row }">
+                        <ElButton link type="primary" size="small" @click="editReport(row)">
+                          编辑
+                        </ElButton>
+                      </template>
+                    </ElTableColumn>
+                  </ElTable>
+                  <ElButton class="mt-3" :icon="Plus" @click="addReport"> 添加订阅 </ElButton>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-6 mt-2 border-t border-g-300">
+              <ElButton type="primary" v-ripple @click="saveNotification"> 保存设置 </ElButton>
+            </div>
+          </div>
+        </div>
+
+        <!-- 密码安全 -->
+        <div v-show="activeTab === 'password'" class="art-card-sm">
+          <h2 class="p-4 text-lg font-medium border-b border-g-300">密码安全</h2>
           <ElForm :model="pwdForm" class="box-border p-5" label-width="86px" label-position="top">
             <ElFormItem label="当前密码" prop="password">
               <ElInput
@@ -115,7 +282,6 @@
                 show-password
               />
             </ElFormItem>
-
             <ElFormItem label="新密码" prop="newPassword">
               <ElInput
                 v-model="pwdForm.newPassword"
@@ -124,7 +290,6 @@
                 show-password
               />
             </ElFormItem>
-
             <ElFormItem label="确认新密码" prop="confirmPassword">
               <ElInput
                 v-model="pwdForm.confirmPassword"
@@ -133,13 +298,24 @@
                 show-password
               />
             </ElFormItem>
-
-            <div class="flex-c justify-end [&_.el-button]:!w-27.5">
+            <div class="flex justify-end [&_.el-button]:!w-27.5">
               <ElButton type="primary" class="w-22.5" v-ripple @click="editPwd">
                 {{ isEditPwd ? '保存' : '编辑' }}
               </ElButton>
             </div>
           </ElForm>
+        </div>
+
+        <!-- 飞书绑定 -->
+        <div v-show="activeTab === 'feishu'" class="art-card-sm">
+          <h2 class="p-4 text-lg font-medium border-b border-g-300">飞书绑定</h2>
+          <div class="p-8 text-center text-g-600"> 飞书账号绑定功能开发中，敬请期待。 </div>
+        </div>
+
+        <!-- 登录记录 -->
+        <div v-show="activeTab === 'login-log'" class="art-card-sm">
+          <h2 class="p-4 text-lg font-medium border-b border-g-300">登录记录</h2>
+          <div class="p-8 text-center text-g-600"> 登录记录功能开发中，敬请期待。 </div>
         </div>
       </div>
     </div>
@@ -149,42 +325,58 @@
 <script setup lang="ts">
   import { useUserStore } from '@/store/modules/user'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { ElMessage } from 'element-plus'
+  import { Plus } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'UserCenter' })
 
   const userStore = useUserStore()
   const userInfo = computed(() => userStore.getUserInfo)
 
+  type TabKey = 'basic' | 'notification' | 'password' | 'feishu' | 'login-log'
+  const activeTab = ref<TabKey>('notification')
+  const navItems: { key: TabKey; label: string; icon: string }[] = [
+    { key: 'basic', label: '基本信息', icon: 'ri:user-3-line' },
+    { key: 'notification', label: '通知设置', icon: 'ri:notification-3-line' },
+    { key: 'password', label: '密码安全', icon: 'ri:lock-line' },
+    { key: 'feishu', label: '飞书绑定', icon: 'ri:link' },
+    { key: 'login-log', label: '登录记录', icon: 'ri:file-list-3-line' }
+  ]
+
+  const userInitials = computed(() => {
+    const name = userInfo.value?.userName || ''
+    if (!name) return 'U'
+    if (/[\u4e00-\u9fa5]/.test(name)) return name.slice(0, 2)
+    return name.slice(0, 2).toUpperCase()
+  })
+
+  const displayName = computed(() => form.realName || userInfo.value?.userName || '—')
+  const roleLabel = computed(() => {
+    const roles = userInfo.value?.roles
+    if (roles?.length) return roles.join(' / ')
+    return 'R_SUPER'
+  })
+
   const isEdit = ref(false)
   const isEditPwd = ref(false)
-  const date = ref('')
   const ruleFormRef = ref<FormInstance>()
 
-  /**
-   * 用户信息表单
-   */
   const form = reactive({
-    realName: 'John Snow',
+    realName: '张三',
     nikeName: '皮卡丘',
-    email: '59301283@mall.com',
+    email: 'zhangsan@vegoo.com',
     mobile: '18888888888',
     address: '广东省深圳市宝安区西乡街道101栋201',
     sex: '2',
     des: 'VeGoo 是一款兼具设计美学与高效开发的后台系统.'
   })
 
-  /**
-   * 密码修改表单
-   */
   const pwdForm = reactive({
-    password: '123456',
-    newPassword: '123456',
-    confirmPassword: '123456'
+    password: '',
+    newPassword: '',
+    confirmPassword: ''
   })
 
-  /**
-   * 表单验证规则
-   */
   const rules = reactive<FormRules>({
     realName: [
       { required: true, message: '请输入姓名', trigger: 'blur' },
@@ -200,48 +392,175 @@
     sex: [{ required: true, message: '请选择性别', trigger: 'blur' }]
   })
 
-  /**
-   * 性别选项
-   */
   const options = [
     { value: '1', label: '男' },
     { value: '2', label: '女' }
   ]
 
-  /**
-   * 用户标签列表
-   */
-  const lableList: Array<string> = ['专注设计', '很有想法', '辣~', '大长腿', '川妹子', '海纳百川']
+  type FeishuNotifyKey = 'alert' | 'daily' | 'weekly' | 'approval' | 'dataAbnormal'
+  const feishuNotifyList: { key: FeishuNotifyKey; label: string; desc: string }[] = [
+    { key: 'alert', label: '预警通知', desc: '当系统检测到异常时推送' },
+    { key: 'daily', label: '日报推送', desc: '每日 08:00 推送经营日报' },
+    { key: 'weekly', label: '周报推送', desc: '每周一 09:00 推送周报' },
+    { key: 'approval', label: '审批通知', desc: '有待审批事项时推送' },
+    { key: 'dataAbnormal', label: '数据异常', desc: '数据质量问题时推送' }
+  ]
 
-  onMounted(() => {
-    getDate()
+  const weekdayLabels = ['一', '二', '三', '四', '五', '六', '日']
+
+  type AlertLevelKey = 'high' | 'medium' | 'low'
+  const notificationForm = reactive<{
+    feishu: Record<FeishuNotifyKey, boolean>
+    pushInWorkTime: boolean
+    pushStartTime: string
+    pushEndTime: string
+    pushWeekdays: number[]
+    alertChannels: Record<AlertLevelKey, string[]>
+  }>({
+    feishu: {
+      alert: true,
+      daily: true,
+      weekly: false,
+      approval: true,
+      dataAbnormal: false
+    },
+    pushInWorkTime: true,
+    pushStartTime: '08:00',
+    pushEndTime: '22:00',
+    pushWeekdays: [1, 2, 3, 4, 5],
+    alertChannels: {
+      high: ['feishu', 'email', 'platform'],
+      medium: ['feishu', 'platform'],
+      low: ['feishu', 'platform']
+    }
   })
 
-  /**
-   * 根据当前时间获取问候语
-   */
-  const getDate = () => {
-    const h = new Date().getHours()
+  const alertLevels: { key: AlertLevelKey; label: string; bgClass: string; labelClass: string }[] =
+    [
+      {
+        key: 'high',
+        label: '高优先级',
+        bgClass: 'bg-red-50 dark:bg-red-950/30',
+        labelClass: 'text-red-600'
+      },
+      {
+        key: 'medium',
+        label: '中优先级',
+        bgClass: 'bg-amber-50 dark:bg-amber-950/30',
+        labelClass: 'text-amber-600'
+      },
+      {
+        key: 'low',
+        label: '低优先级',
+        bgClass: 'bg-sky-50 dark:bg-sky-950/30',
+        labelClass: 'text-sky-600'
+      }
+    ]
 
-    if (h >= 6 && h < 9) date.value = '早上好'
-    else if (h >= 9 && h < 11) date.value = '上午好'
-    else if (h >= 11 && h < 13) date.value = '中午好'
-    else if (h >= 13 && h < 18) date.value = '下午好'
-    else if (h >= 18 && h < 24) date.value = '晚上好'
-    else date.value = '很晚了，早点睡'
+  interface SubscribedReport {
+    id: number
+    name: string
+    pushTime: string
+    channel: string
+    enabled: boolean
   }
 
-  /**
-   * 切换用户信息编辑状态
-   */
+  const subscribedReports = ref<SubscribedReport[]>([
+    { id: 1, name: '每日经营快报', pushTime: '每日 08:00', channel: '飞书卡片', enabled: true },
+    { id: 2, name: '每周投放复盘', pushTime: '每周一 09:00', channel: '飞书卡片', enabled: true },
+    { id: 3, name: '月度经营分析', pushTime: '每月1日 09:00', channel: '飞书卡片', enabled: true }
+  ])
+
+  let reportIdCounter = 4
+
   const edit = () => {
     isEdit.value = !isEdit.value
   }
 
-  /**
-   * 切换密码编辑状态
-   */
   const editPwd = () => {
     isEditPwd.value = !isEditPwd.value
   }
+
+  const setFeishuNotify = (key: FeishuNotifyKey, value: boolean) => {
+    notificationForm.feishu[key] = value
+  }
+
+  const saveNotification = () => {
+    ElMessage.success('通知设置已保存')
+  }
+
+  const addReport = () => {
+    subscribedReports.value.push({
+      id: reportIdCounter++,
+      name: '新订阅报表',
+      pushTime: '每日 08:00',
+      channel: '飞书卡片',
+      enabled: true
+    })
+    ElMessage.info('请点击「编辑」设置报表与推送时间')
+  }
+
+  const editReport = (report: SubscribedReport) => {
+    ElMessage.info(`编辑订阅「${report.name}」功能开发中`)
+  }
 </script>
+
+<style scoped>
+  .user-overview-name {
+    color: var(--art-gray-900);
+  }
+
+  .dark .user-overview-name {
+    color: var(--art-gray-900);
+  }
+
+  .user-overview-email,
+  .user-overview-status {
+    color: var(--art-gray-600);
+  }
+
+  .dark .user-overview-email,
+  .dark .user-overview-status {
+    color: var(--art-gray-700);
+  }
+
+  .user-center-page .header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .user-center-page .header-title-wrap {
+    flex: 1;
+  }
+
+  .user-center-page .page-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+  }
+
+  .user-center-page .page-desc {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    color: var(--art-gray-600);
+  }
+
+  .user-center-page .nav-item {
+    color: var(--art-gray-700);
+  }
+
+  .user-center-page .nav-item:hover {
+    background: var(--art-hover-color);
+  }
+
+  .user-center-page .nav-item--active {
+    color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
+  }
+
+  .dark .user-center-page .nav-item--active {
+    color: var(--el-color-primary);
+    background: var(--el-color-primary-dark-2);
+  }
+</style>
