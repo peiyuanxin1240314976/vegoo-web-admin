@@ -227,14 +227,14 @@
 
   .stats-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 16px;
     align-items: stretch;
     width: 100%;
   }
 
   .stat-card {
-    display: flex;
-    flex: 1;
+    flex: 1 1 140px;
     gap: 16px;
     align-items: center;
     min-width: 0;

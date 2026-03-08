@@ -340,11 +340,12 @@
 </script>
 
 <style scoped lang="scss">
-  /* 覆盖 art-full-height 的 flex-direction: column，改为左右分栏 */
+  /* 覆盖 art-full-height 的 flex-direction: column，改为左右分栏；小屏自适应为上下布局 */
   .user-page {
     flex-direction: row;
     gap: 16px;
     width: 100%;
+    min-width: 0;
     overflow: hidden;
   }
 
@@ -357,7 +358,45 @@
   .user-page-right {
     flex-shrink: 0;
     width: 360px;
-    min-width: 360px;
+    min-width: 320px;
+    max-width: 420px;
     overflow: auto;
+  }
+
+  /* 中等屏：右侧略收窄 */
+  @media (width <= 1280px) {
+    .user-page-right {
+      width: 320px;
+      min-width: 280px;
+      max-width: 360px;
+    }
+  }
+
+  /* 小屏：改为上下布局，右侧占满宽 */
+  @media (width <= 1024px) {
+    .user-page {
+      flex-direction: column;
+      overflow: auto;
+    }
+
+    .user-page-left {
+      flex: none;
+      min-height: 400px;
+    }
+
+    .user-page-right {
+      flex-shrink: 0;
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+      min-height: 360px;
+    }
+  }
+
+  /* 超小屏：整体紧凑 */
+  @media (width <= 640px) {
+    .user-page {
+      gap: 12px;
+    }
   }
 </style>
