@@ -15,18 +15,18 @@
       :alert-banners="overview?.alertBanners ?? []"
     />
 
-    <!-- 第二排：三列（收入与成本趋势 | 业务分布地图 | Top3 + 智能预警） -->
+    <!-- 第二排：三列（左25% | 中50% 业务分布地图 | 右25%） -->
     <ElRow :gutter="16" class="cockpit-body cockpit-row-2">
-      <ElCol :xs="24" :md="8">
-        <CockpitRevenueCostTrend :trend-data="overview?.revenueCostTrend" />
+      <ElCol :xs="24" :md="6">
+        <CockpitSpendPaceMonitor :list="overview?.spendPace ?? []" />
       </ElCol>
-      <ElCol :xs="24" :md="8">
+      <ElCol :xs="24" :md="12">
         <CockpitBusinessMap
           :map-countries="overview?.mapCountries ?? []"
           :map-legend="overview?.mapLegend ?? []"
         />
       </ElCol>
-      <ElCol :xs="24" :md="8">
+      <ElCol :xs="24" :md="6">
         <div class="cockpit-col3-row1">
           <CockpitTop3Panels
             :top-revenue="overview?.topRevenue ?? []"
@@ -40,15 +40,15 @@
       </ElCol>
     </ElRow>
 
-    <!-- 第三排：三列（消耗节奏监控 | 收入 Top 5 Apps | Top10 Campaigns） -->
+    <!-- 第三排：三列（左25% | 中50% 收入 Top 5 Apps | 右25%） -->
     <ElRow :gutter="16" class="cockpit-body cockpit-row-3">
-      <ElCol :xs="24" :md="8">
-        <CockpitSpendPaceMonitor :list="overview?.spendPace ?? []" />
+      <ElCol :xs="24" :md="6">
+        <CockpitRevenueCostTrend :trend-data="overview?.revenueCostTrend" />
       </ElCol>
-      <ElCol :xs="24" :md="8">
+      <ElCol :xs="24" :md="12">
         <CockpitTop5AppsRevenue :list="overview?.top5Apps ?? []" />
       </ElCol>
-      <ElCol :xs="24" :md="8">
+      <ElCol :xs="24" :md="6">
         <CockpitTop10Campaigns :table-data="overview?.top10Campaigns ?? []" />
       </ElCol>
     </ElRow>

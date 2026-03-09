@@ -112,31 +112,78 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
   ],
   spendPace: [
     {
-      name: 'USA_Android_T1_Purchase',
-      current: 7200,
+      name: 'Google Ads',
+      platform: 'google',
+      current: 7500,
       budget: 10000,
-      percent: 72,
+      percent: 75,
       status: '节奏正常',
-      tagType: 'success',
-      color: '#67c23a'
+      tagType: 'success'
     },
     {
-      name: 'USA_Android_T1_Purchase',
-      current: 8500,
-      budget: 8000,
-      percent: 106,
+      name: 'Facebook',
+      platform: 'facebook',
+      current: 7000,
+      budget: 10000,
+      percent: 70,
+      status: '节奏正常',
+      tagType: 'success'
+    },
+    {
+      name: 'TikTok',
+      platform: 'tiktok',
+      current: 4600,
+      budget: 5000,
+      percent: 92,
       status: '预算预警',
-      tagType: 'danger',
-      color: '#f56c6c'
+      tagType: 'danger'
     },
     {
-      name: 'USA_Android_T1_Purchase',
+      name: 'Mintefral',
+      platform: 'mintefral',
+      current: 5500,
+      budget: 10000,
+      percent: 55,
+      status: '节奏正常',
+      tagType: 'success'
+    },
+    {
+      name: 'Kwai',
+      platform: 'kwai',
+      current: 4500,
+      budget: 10000,
+      percent: 45,
+      status: '节奏较慢',
+      tagType: 'warning'
+    },
+    {
+      name: 'NewsBreak',
+      platform: 'newsbreak',
+      current: 3600,
+      budget: 8000,
+      percent: 45,
+      status: '节奏较慢',
+      tagType: 'warning'
+    },
+    {
+      name: 'Google Ads',
+      platform: 'google',
       current: 3200,
       budget: 10000,
       percent: 32,
       status: '节奏较慢',
       tagType: 'warning',
-      color: '#e6a23c'
+      section: 'managed'
+    },
+    {
+      name: 'Facebook',
+      platform: 'facebook',
+      current: 2800,
+      budget: 10000,
+      percent: 28,
+      status: '节奏较慢',
+      tagType: 'warning',
+      section: 'managed'
     }
   ],
   mapCountries: [

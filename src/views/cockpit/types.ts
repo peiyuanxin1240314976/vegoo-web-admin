@@ -76,6 +76,10 @@ export interface CockpitSpendPaceItem {
   tagType: 'success' | 'warning' | 'danger'
   /** 进度条颜色，可选，不传时可由 tagType 推导 */
   color?: string
+  /** 平台标识，用于展示图标：google | facebook | tiktok | mintefral | kwai | newsbreak 等 */
+  platform?: string
+  /** 是否归入「代投」区块 */
+  section?: 'default' | 'managed'
 }
 
 /** 业务分布地图：国家数据（nameEn 需与 GeoJSON 一致） */
