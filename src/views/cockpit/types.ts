@@ -55,6 +55,16 @@ export interface CockpitRevenueCostTrend {
   cost: number[]
 }
 
+/** 渠道 ROI&安装量表格行：近7日为折线图数据 */
+export interface CockpitChannelRoiInstallItem {
+  channel: string
+  spend: number
+  installs: number
+  cpi: number
+  /** 近7日趋势，用于最后一列迷你折线图 */
+  trend: number[]
+}
+
 /** 用户质量仪表盘单项 */
 export interface CockpitUserQualityItem {
   key: string
@@ -156,6 +166,8 @@ export interface CockpitOverview {
   alertSummaryMetrics?: CockpitAlertSummaryMetric[]
   alertBanners: CockpitAlertBanner[]
   revenueCostTrend: CockpitRevenueCostTrend
+  /** 渠道 ROI&安装量表格数据 */
+  channelRoiInstall?: CockpitChannelRoiInstallItem[]
   userQuality: CockpitUserQualityItem[]
   spendPace: CockpitSpendPaceItem[]
   mapCountries: CockpitMapCountry[]

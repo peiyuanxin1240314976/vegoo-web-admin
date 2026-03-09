@@ -381,12 +381,12 @@
 
   .map-wrap {
     position: relative;
-    min-height: 280px;
+    min-height: 400px;
   }
 
   .map-chart {
     width: 100%;
-    height: 280px;
+    height: 400px;
   }
 
   .map-legend {

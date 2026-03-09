@@ -43,7 +43,7 @@
     <!-- 第三排：三列（左25% | 中50% 收入 Top 5 Apps | 右25%） -->
     <ElRow :gutter="16" class="cockpit-body cockpit-row-3">
       <ElCol :xs="24" :md="6">
-        <CockpitRevenueCostTrend :trend-data="overview?.revenueCostTrend" />
+        <CockpitRevenueCostTrend :list="overview?.channelRoiInstall" />
       </ElCol>
       <ElCol :xs="24" :md="12">
         <CockpitTop5AppsRevenue :list="overview?.top5Apps ?? []" />

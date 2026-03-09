@@ -84,6 +84,50 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
     revenue: [620, 732, 601, 634, 590, 730, 620],
     cost: [520, 632, 501, 534, 490, 630, 560]
   },
+  channelRoiInstall: [
+    {
+      channel: 'Google Ads',
+      spend: 7500,
+      installs: 42500,
+      cpi: 1.2,
+      trend: [3200, 3800, 4200, 5800, 6200, 6500, 6800]
+    },
+    {
+      channel: 'Facebook',
+      spend: 7500,
+      installs: 18500,
+      cpi: 1.4,
+      trend: [2200, 2400, 2600, 2500, 2700, 2600, 2800]
+    },
+    {
+      channel: 'TikTok',
+      spend: 7500,
+      installs: 7500,
+      cpi: 0.82,
+      trend: [900, 950, 1100, 1050, 1150, 1200, 1150]
+    },
+    {
+      channel: 'Mintefral',
+      spend: 7500,
+      installs: 4500,
+      cpi: 1.2,
+      trend: [500, 580, 620, 650, 680, 720, 750]
+    },
+    {
+      channel: 'Kwai',
+      spend: 7500,
+      installs: 3500,
+      cpi: 1.35,
+      trend: [480, 460, 520, 500, 510, 530, 500]
+    },
+    {
+      channel: 'NewsBreak',
+      spend: 7500,
+      installs: 2500,
+      cpi: 1.5,
+      trend: [320, 350, 360, 340, 380, 370, 380]
+    }
+  ],
   userQuality: [
     {
       key: 'retention',
