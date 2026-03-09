@@ -40,13 +40,13 @@
       </ElCol>
     </ElRow>
 
-    <!-- 第三排：三列（左25% | 中50% 收入 Top 5 Apps | 右25%） -->
+    <!-- 第三排：三列（左25% | 中50% 近7日收入结构流向 | 右25%） -->
     <ElRow :gutter="16" class="cockpit-body cockpit-row-3">
       <ElCol :xs="24" :md="6">
         <CockpitRevenueCostTrend :list="overview?.channelRoiInstall" />
       </ElCol>
       <ElCol :xs="24" :md="12">
-        <CockpitTop5AppsRevenue :list="overview?.top5Apps ?? []" />
+        <CockpitRevenueStructureFlow :flow-data="overview?.revenueStructureFlow" />
       </ElCol>
       <ElCol :xs="24" :md="6">
         <CockpitTop10Campaigns :table-data="overview?.top10Campaigns ?? []" />
@@ -67,7 +67,7 @@
   import CockpitBusinessMap from './modules/business-map.vue'
   import CockpitTop3Panels from './modules/top3-panels.vue'
   import CockpitSmartAlerts from './modules/smart-alerts.vue'
-  import CockpitTop5AppsRevenue from './modules/top5-apps-revenue.vue'
+  import CockpitRevenueStructureFlow from './modules/revenue-structure-flow.vue'
   import CockpitTop10Campaigns from './modules/top10-campaigns.vue'
 
   defineOptions({ name: 'Cockpit' })

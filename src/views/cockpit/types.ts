@@ -150,6 +150,43 @@ export interface CockpitTop5AppItem {
   roas: string
 }
 
+/** 近7日收入结构流向 - 桑基图节点 */
+export interface CockpitRevenueStructureNode {
+  name: string
+  depth?: number
+  value?: number
+  /** 节点内显示的金额文案，如 '$41,353'、'$1.03M' */
+  valueDisplay?: string
+  /** 节点内显示的占比，如 '89.5%' */
+  percent?: string
+  /** 图标：Unicode 字符（如 emoji、图标字体）或简单符号 */
+  icon?: string
+  /** 节点内图标/图片 URL，显示在文字上方或左侧 */
+  iconImage?: string
+  label?: { formatter?: string }
+  itemStyle?: { color?: string; borderRadius?: number }
+}
+
+/** 近7日收入结构流向 - 桑基图连线 */
+export interface CockpitRevenueStructureLink {
+  source: string
+  target: string
+  value: number
+}
+
+/** 近7日收入结构流向 - 底部洞察项 */
+export interface CockpitRevenueStructureInsight {
+  color: string
+  text: string
+}
+
+/** 近7日收入结构流向（桑基图 + 洞察） */
+export interface CockpitRevenueStructureFlow {
+  nodes: CockpitRevenueStructureNode[]
+  links: CockpitRevenueStructureLink[]
+  insights: CockpitRevenueStructureInsight[]
+}
+
 /** Top10 Campaign 行 */
 export interface CockpitTop10CampaignItem {
   campaign: string
@@ -177,5 +214,7 @@ export interface CockpitOverview {
   topUser: CockpitTopUserItem[]
   smartAlerts: CockpitSmartAlertItem[]
   top5Apps: CockpitTop5AppItem[]
+  /** 近7日收入结构流向（桑基图） */
+  revenueStructureFlow?: CockpitRevenueStructureFlow
   top10Campaigns: CockpitTop10CampaignItem[]
 }

@@ -396,6 +396,118 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
     { name: 'FaceMe', revenue: '285K', roas: '1.22' },
     { name: 'YearCam', revenue: '245K', roas: '1.18' }
   ],
+  revenueStructureFlow: {
+    nodes: [
+      {
+        name: '广告收入',
+        depth: 0,
+        valueDisplay: '$41,353',
+        percent: '89.5%',
+        icon: '📢',
+        itemStyle: { color: '#14DEBA', borderRadius: 6 }
+      },
+      {
+        name: '内购收入',
+        depth: 0,
+        valueDisplay: '$4,828',
+        percent: '10.5%',
+        icon: '💰',
+        itemStyle: { color: '#409eff', borderRadius: 6 }
+      },
+      {
+        name: '美国',
+        depth: 1,
+        valueDisplay: '$1.03M',
+        icon: '🇺🇸',
+        itemStyle: { color: '#67c23a', borderRadius: 6 }
+      },
+      {
+        name: '日本',
+        depth: 1,
+        valueDisplay: '$650K',
+        icon: '🇯🇵',
+        itemStyle: { color: '#409eff', borderRadius: 6 }
+      },
+      {
+        name: '英国',
+        depth: 1,
+        valueDisplay: '$600K',
+        icon: '🇬🇧',
+        itemStyle: { color: '#7230b3', borderRadius: 6 }
+      },
+      {
+        name: '巴西',
+        depth: 1,
+        valueDisplay: '$500K',
+        icon: '🇧🇷',
+        itemStyle: { color: '#e6a23c', borderRadius: 6 }
+      },
+      {
+        name: '其他',
+        depth: 1,
+        valueDisplay: '$200K',
+        itemStyle: { color: '#909399', borderRadius: 6 }
+      },
+      {
+        name: 'Weather5',
+        depth: 2,
+        valueDisplay: '$580K',
+        itemStyle: { color: '#67c23a', borderRadius: 6 }
+      },
+      {
+        name: 'BloodPressure2',
+        depth: 2,
+        valueDisplay: '$425K',
+        itemStyle: { color: '#409eff', borderRadius: 6 }
+      },
+      {
+        name: 'HealthTracker3',
+        depth: 2,
+        valueDisplay: '$320K',
+        itemStyle: { color: '#7230b3', borderRadius: 6 }
+      },
+      {
+        name: '其他Apps',
+        depth: 2,
+        valueDisplay: '$1.85M',
+        itemStyle: { color: '#909399', borderRadius: 6 }
+      }
+    ],
+    links: [
+      { source: '广告收入', target: '美国', value: 18000 },
+      { source: '广告收入', target: '日本', value: 11000 },
+      { source: '广告收入', target: '英国', value: 10000 },
+      { source: '广告收入', target: '巴西', value: 8500 },
+      { source: '广告收入', target: '其他', value: 3853 },
+      { source: '内购收入', target: '美国', value: 1500 },
+      { source: '内购收入', target: '日本', value: 1200 },
+      { source: '内购收入', target: '英国', value: 800 },
+      { source: '内购收入', target: '巴西', value: 828 },
+      { source: '内购收入', target: '其他', value: 500 },
+      { source: '美国', target: 'Weather5', value: 5800 },
+      { source: '美国', target: 'BloodPressure2', value: 2500 },
+      { source: '美国', target: 'HealthTracker3', value: 1200 },
+      { source: '美国', target: '其他Apps', value: 11000 },
+      { source: '日本', target: 'Weather5', value: 2200 },
+      { source: '日本', target: 'BloodPressure2', value: 1800 },
+      { source: '日本', target: 'HealthTracker3', value: 1500 },
+      { source: '日本', target: '其他Apps', value: 6700 },
+      { source: '英国', target: 'Weather5', value: 1800 },
+      { source: '英国', target: 'BloodPressure2', value: 1500 },
+      { source: '英国', target: 'HealthTracker3', value: 1200 },
+      { source: '英国', target: '其他Apps', value: 6300 },
+      { source: '巴西', target: 'Weather5', value: 1500 },
+      { source: '巴西', target: 'BloodPressure2', value: 1200 },
+      { source: '巴西', target: 'HealthTracker3', value: 800 },
+      { source: '巴西', target: '其他Apps', value: 5828 },
+      { source: '其他', target: '其他Apps', value: 4353 }
+    ],
+    insights: [
+      { color: '#67c23a', text: '美国共享收入最高$1.03M (22.3%)' },
+      { color: '#409eff', text: 'Weather5跨市场表现最佳' },
+      { color: '#e6a23c', text: '内购收入占比偏低10.5%' }
+    ]
+  },
   top10Campaigns: [
     { campaign: 'IOS_Traffic_New', channel: 'FB', spend: '$7,500', revenue: '$9,000', roi: '1.20' },
     {
