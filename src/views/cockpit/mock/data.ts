@@ -370,19 +370,24 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
     { name: '澳大利亚', value: '$400K', trend: '↑+9%', color: '#67c23a' }
   ],
   topRevenue: [
-    { name: 'Weather5', roas: '$580 ROAS 1.45' },
-    { name: 'Weather5', roas: '$580 ROAS 1.45' },
-    { name: 'Weather5', roas: '$580 ROAS 1.45' }
+    { name: 'Weather5', revenue: '$580K', trendPercent: '+8%' },
+    { name: 'Weather5', revenue: '$580K', trendPercent: '+5%' },
+    { name: 'Weather5', revenue: '$580K', trendPercent: '+3%' }
   ],
   topSpend: [
     { name: 'Google Ads', roi: '$45K ROI 1.58' },
     { name: 'Meta Ads', roi: '$580 ROI 1.45' },
     { name: 'TikTok', roi: '$580 ROI 1.45' }
   ],
+  topBadReview: [
+    { name: 'Weather5', reasonTag: '变现下降18%', metric: 'DAU ↓ 12%', trend: 'down' },
+    { name: 'Weather5', reasonTag: '安装成本过高', metric: 'CPI ↑ 23%', trend: 'up' },
+    { name: 'Weather5', reasonTag: '用户流失', metric: '留存 ↓ 15%', trend: 'down' }
+  ],
   topUser: [
-    { name: 'Weather5', dau: '+8,200 DAU' },
-    { name: 'FaceMe', dau: '+8,200 DAU' },
-    { name: 'Weather5', dau: '+8,200 DAU' }
+    { name: 'Weather5', growth: '+8,200', trendPercent: '+8%' },
+    { name: 'Weather5', growth: '+6,200', trendPercent: '+5%' },
+    { name: 'Weather5', growth: '+3,100', trendPercent: '+3%' }
   ],
   smartAlerts: [
     { type: 'risk', msg: '美国区ROI下降15%' },

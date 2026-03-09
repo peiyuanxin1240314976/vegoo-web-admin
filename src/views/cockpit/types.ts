@@ -122,19 +122,40 @@ export interface CockpitMapLegendItem {
 /** Top3 收入应用 */
 export interface CockpitTopRevenueItem {
   name: string
-  roas: string
+  /** 收入金额展示，如 '$580K' */
+  revenue?: string
+  /** 收入趋势百分比，如 '+8%'、'+5%' */
+  trendPercent?: string
+  /** 兼容旧字段 */
+  roas?: string
 }
 
-/** Top3 消耗渠道 */
+/** Top3 消耗渠道（保留兼容） */
 export interface CockpitTopSpendItem {
   name: string
   roi: string
 }
 
+/** Top3 差评产品 */
+export interface CockpitTopBadReviewItem {
+  name: string
+  /** 差评原因标签，如 '变现下降18%'、'安装成本过高'、'用户流失' */
+  reasonTag: string
+  /** 指标文案，如 'DAU ↓ 12%'、'CPI ↑ 23%'、'留存 ↓ 15%' */
+  metric: string
+  /** 指标趋势：上升/下降，用于箭头颜色 */
+  trend: 'up' | 'down'
+}
+
 /** Top3 用户增长 */
 export interface CockpitTopUserItem {
   name: string
-  dau: string
+  /** 增长数值展示，如 '+8,200'、'+6,200' */
+  growth?: string
+  /** 增长趋势百分比，如 '+8%'、'+5%' */
+  trendPercent?: string
+  /** 兼容旧字段 */
+  dau?: string
 }
 
 /** 智能预警单项 */
@@ -211,6 +232,8 @@ export interface CockpitOverview {
   mapLegend: CockpitMapLegendItem[]
   topRevenue: CockpitTopRevenueItem[]
   topSpend: CockpitTopSpendItem[]
+  /** Top3 差评产品（差评原因 + 指标趋势） */
+  topBadReview?: CockpitTopBadReviewItem[]
   topUser: CockpitTopUserItem[]
   smartAlerts: CockpitSmartAlertItem[]
   top5Apps: CockpitTop5AppItem[]

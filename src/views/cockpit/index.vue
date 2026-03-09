@@ -30,12 +30,9 @@
         <div class="cockpit-col3-row1">
           <CockpitTop3Panels
             :top-revenue="overview?.topRevenue ?? []"
-            :top-spend="overview?.topSpend ?? []"
+            :top-bad-review="overview?.topBadReview ?? []"
             :top-user="overview?.topUser ?? []"
           />
-        </div>
-        <div class="cockpit-col3-row2">
-          <CockpitSmartAlerts :alerts="overview?.smartAlerts ?? []" />
         </div>
       </ElCol>
     </ElRow>
@@ -49,7 +46,7 @@
         <CockpitRevenueStructureFlow :flow-data="overview?.revenueStructureFlow" />
       </ElCol>
       <ElCol :xs="24" :md="6">
-        <CockpitTop10Campaigns :table-data="overview?.top10Campaigns ?? []" />
+        <CockpitSmartAlerts :alerts="overview?.smartAlerts ?? []" />
       </ElCol>
     </ElRow>
   </div>
@@ -68,7 +65,6 @@
   import CockpitTop3Panels from './modules/top3-panels.vue'
   import CockpitSmartAlerts from './modules/smart-alerts.vue'
   import CockpitRevenueStructureFlow from './modules/revenue-structure-flow.vue'
-  import CockpitTop10Campaigns from './modules/top10-campaigns.vue'
 
   defineOptions({ name: 'Cockpit' })
 
@@ -105,9 +101,5 @@
 
   .cockpit-row-2 .cockpit-col3-row1 {
     margin-bottom: 16px;
-  }
-
-  .cockpit-row-2 .cockpit-col3-row2 {
-    margin-bottom: 0;
   }
 </style>
