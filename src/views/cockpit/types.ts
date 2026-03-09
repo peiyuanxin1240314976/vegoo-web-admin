@@ -39,6 +39,15 @@ export interface CockpitAlertBanner {
   suggestion: string
 }
 
+/** 警示模块左侧摘要指标单项（带升降趋势） */
+export interface CockpitAlertSummaryMetric {
+  label: string
+  value: string
+  /** 变化数值，与 trend 同时存在时显示箭头与数字 */
+  change?: number
+  trend?: 'up' | 'down'
+}
+
 /** 收入与成本趋势图 */
 export interface CockpitRevenueCostTrend {
   dates: string[]
@@ -139,6 +148,8 @@ export interface CockpitTop10CampaignItem {
 /** 驾驶舱全量数据（与后端 /api/cockpit/overview 返回结构对齐） */
 export interface CockpitOverview {
   kpi: CockpitKpiCard[]
+  /** 警示模块左侧：运营摘要指标（DNU、自然量、买带应用等） */
+  alertSummaryMetrics?: CockpitAlertSummaryMetric[]
   alertBanners: CockpitAlertBanner[]
   revenueCostTrend: CockpitRevenueCostTrend
   userQuality: CockpitUserQualityItem[]

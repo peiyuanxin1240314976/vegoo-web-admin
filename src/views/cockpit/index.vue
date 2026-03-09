@@ -10,7 +10,10 @@
     <CockpitGlobalKpiCards :kpi-list="overview?.kpi ?? []" />
 
     <!-- 4. 警示与提示 -->
-    <CockpitAlertMessages :alert-banners="overview?.alertBanners ?? []" />
+    <CockpitAlertMessages
+      :alert-summary-metrics="overview?.alertSummaryMetrics"
+      :alert-banners="overview?.alertBanners ?? []"
+    />
 
     <!-- 第二排：三列（收入与成本趋势 | 业务分布地图 | Top3 + 智能预警） -->
     <ElRow :gutter="16" class="cockpit-body cockpit-row-2">

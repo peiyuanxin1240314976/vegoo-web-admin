@@ -158,14 +158,15 @@
   }
 }
 
-// 元素全屏
+// 元素全屏（body 已 overflow:hidden，由本容器负责滚动）
 .el-full-screen {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   width: 100vw !important;
-  height: 100% !important;
+  height: 100vh !important;
+  max-height: 100vh;
   z-index: 2300;
   margin-top: 0;
   padding: 15px;
@@ -173,6 +174,8 @@
   background-color: var(--default-box-color);
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 // 表格卡片

@@ -55,18 +55,29 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       compareUp: false
     }
   ],
+  alertSummaryMetrics: [
+    { label: 'DNU', value: '374,920', change: 8649, trend: 'down' },
+    { label: '自然量', value: '50,372', change: 649, trend: 'up' },
+    { label: '买带应用', value: '23个' },
+    { label: '广告系列', value: '604个', change: 47, trend: 'down' },
+    { label: '广告账户', value: '97个', change: 3, trend: 'up' }
+  ],
   alertBanners: [
     {
       type: 'warning',
-      text: 'ROI下降原因:',
-      suggestion: 'Facebook渠道CPI上涨25%, 建议优化投放策略'
+      text: 'Facebook渠道CPI上涨25%',
+      suggestion: '建议优化投放策略'
     },
     {
       type: 'opportunity',
-      text: '机会发现:',
-      suggestion: 'Google-墨西哥市场ROI达180%, 建议加大投入'
+      text: 'Google-墨西哥市场ROI达180%',
+      suggestion: '建议加大投入'
     },
-    { type: 'risk', text: '风险提示:', suggestion: 'Weather8应用变现收入环比下降18%, 需关注' }
+    {
+      type: 'risk',
+      text: 'Weather8应用变现收入环比下降18%',
+      suggestion: '需关注'
+    }
   ],
   revenueCostTrend: {
     dates: ['10.15', '10.20', '10.25', '10.30', '11.05', '11.10', '11.15'],
