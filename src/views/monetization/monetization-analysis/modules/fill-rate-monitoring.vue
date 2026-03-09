@@ -32,9 +32,9 @@
 
   function buildOption(): EChartsOption {
     const d = data.value
-    const series = d.series.map((s, i) => ({
+    const series: EChartsOption['series'] = d.series.map((s, i) => ({
       name: s.name,
-      type: 'line',
+      type: 'line' as const,
       stack: 'Total',
       areaStyle: { color: colors[i % colors.length] },
       emphasis: { focus: 'series' },

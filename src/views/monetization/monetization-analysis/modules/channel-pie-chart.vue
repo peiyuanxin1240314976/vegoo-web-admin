@@ -17,7 +17,7 @@
     data: () => []
   })
 
-  const chartRef = ref<HTMLElement | null>(null)
+  const { chartRef, initChart, updateChart } = useChart()
   const pieData = computed(() =>
     props.data?.length ? props.data : MOCK_MONETIZATION_ANALYSIS.channelPie
   )
@@ -55,7 +55,8 @@
     ]
   }))
 
-  useChart(chartRef, option)
+  onMounted(() => initChart(option.value))
+  watch(option, (opt) => updateChart(opt), { deep: true })
 </script>
 
 <style scoped lang="scss">

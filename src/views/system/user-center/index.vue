@@ -139,15 +139,8 @@
                     <ElTableColumn label="开关" width="70" align="center">
                       <template #default="{ row }">
                         <ElSwitch
-                          :model-value="
-                            notificationForm.feishu[(row as { key: FeishuNotifyKey }).key]
-                          "
-                          @update:model-value="
-                            setFeishuNotify(
-                              (row as { key: FeishuNotifyKey }).key,
-                              $event as boolean
-                            )
-                          "
+                          :model-value="getFeishuNotifyValue(row)"
+                          @update:model-value="onFeishuNotifyChange(row, $event)"
                         />
                       </template>
                     </ElTableColumn>
@@ -483,6 +476,17 @@
 
   const setFeishuNotify = (key: FeishuNotifyKey, value: boolean) => {
     notificationForm.feishu[key] = value
+  }
+
+  const getFeishuNotifyValue = (row: { key: FeishuNotifyKey }) => {
+    return notificationForm.feishu[row.key]
+  }
+
+  const onFeishuNotifyChange = (
+    row: { key: FeishuNotifyKey },
+    value: string | number | boolean
+  ) => {
+    setFeishuNotify(row.key, Boolean(value))
   }
 
   const saveNotification = () => {
