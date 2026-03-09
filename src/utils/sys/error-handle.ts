@@ -40,6 +40,9 @@ export function vueErrorHandler(err: unknown, instance: any, info: string) {
   // reportError({ type: 'vue', err, info })
 }
 
+/** ResizeObserver 良性循环提示，ECharts/图表库在路由切换时可能触发，可安全忽略 */
+const RESIZE_OBSERVER_LOOP_MSG = 'ResizeObserver loop completed with undelivered notifications.'
+
 /**
  * 全局脚本错误处理
  */
@@ -50,6 +53,14 @@ export function scriptErrorHandler(
   colno?: number,
   error?: Error
 ): boolean {
+  const msg = typeof message === 'string' ? message : ((message as ErrorEvent)?.message ?? '')
+  if (
+    msg.includes(RESIZE_OBSERVER_LOOP_MSG) ||
+    error?.message?.includes(RESIZE_OBSERVER_LOOP_MSG)
+  ) {
+    // 浏览器安全机制触发的良性提示，不影响渲染，忽略以免打断图表等逻辑
+    return true
+  }
   console.error('[ScriptError]', { message, source, lineno, colno, error })
   // reportError({ type: 'script', message, source, lineno, colno, error })
   return true // 阻止默认控制台报错，可根据需求改

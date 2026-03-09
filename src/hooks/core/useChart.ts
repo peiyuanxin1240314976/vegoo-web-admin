@@ -380,7 +380,7 @@ export function useChart(options: UseChartOptions = {}) {
     }
   }
 
-  // 创建IntersectionObserver
+  // 创建IntersectionObserver（路由切换后容器可能尚未布局，宽高为 0，走此分支）
   const createIntersectionObserver = () => {
     if (intersectionObserver || !chartRef.value) return
 
@@ -388,26 +388,30 @@ export function useChart(options: UseChartOptions = {}) {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && pendingOptions && !isDestroyed) {
-            // 使用 requestAnimationFrame 确保在下一帧初始化图表
+            const optionsToSet = pendingOptions
+            pendingOptions = null
+            cleanupIntersectionObserver()
+
             requestAnimationFrame(() => {
-              if (!isDestroyed && pendingOptions) {
-                try {
-                  // 元素变为可见，初始化图表
-                  if (!chart) {
-                    chart = echarts.init(entry.target as HTMLElement)
-                  }
-
-                  // 触发自定义事件，让组件处理动画逻辑
-                  const event = new CustomEvent('chartVisible', {
-                    detail: { options: pendingOptions }
-                  })
-                  entry.target.dispatchEvent(event)
-
-                  pendingOptions = null
-                  cleanupIntersectionObserver()
-                } catch (error) {
-                  console.error('图表初始化失败:', error)
+              if (isDestroyed || !optionsToSet) return
+              try {
+                if (!chart && chartRef.value) {
+                  chart = echarts.init(entry.target as HTMLElement)
+                  setupMenuWatchers()
+                  setupThemeWatcher()
                 }
+                if (chart && !isDestroyed) {
+                  chart.setOption(optionsToSet)
+                  requestAnimationFrame(() => {
+                    if (chart && !isDestroyed) handleResize()
+                  })
+                }
+                const event = new CustomEvent('chartVisible', {
+                  detail: { options: optionsToSet }
+                })
+                entry.target.dispatchEvent(event)
+              } catch (error) {
+                console.error('图表初始化失败:', error)
               }
             })
           }
@@ -444,6 +448,11 @@ export function useChart(options: UseChartOptions = {}) {
     if (chart && !isDestroyed) {
       chart.setOption(options)
       pendingOptions = null
+      // 延迟到下一帧再 resize，避免与 ECharts 内部 ResizeObserver 同帧触发导致
+      // "ResizeObserver loop completed with undelivered notifications" 并影响渲染
+      requestAnimationFrame(() => {
+        if (chart && !isDestroyed) handleResize()
+      })
     }
   }
 

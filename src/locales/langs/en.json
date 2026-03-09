@@ -139,8 +139,12 @@
       "admin": "Admin",
       "user": "User"
     },
+    "label": {
+      "username": "Account",
+      "password": "Password"
+    },
     "placeholder": {
-      "username": "Please enter your account",
+      "username": "Please enter your email/phone number",
       "password": "Please enter your password",
       "slider": "Please slide to verify"
     },
@@ -150,7 +154,7 @@
     "forgetPwd": "Forgot password",
     "btnText": "Login",
     "noAccount": "No account yet?",
-    "register": "Register",
+    "register": "Contact administrator",
     "success": {
       "title": "Login successful",
       "message": "Welcome back"

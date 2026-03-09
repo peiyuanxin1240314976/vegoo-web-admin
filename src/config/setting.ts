@@ -35,10 +35,10 @@ export const SETTING_DEFAULT_CONFIG = {
   menuOpen: true,
   /** 双菜单是否显示文本 */
   dualMenuShowText: false,
-  /** 系统主题类型 */
-  systemThemeType: SystemThemeEnum.AUTO,
-  /** 系统主题模式 */
-  systemThemeMode: SystemThemeEnum.AUTO,
+  /** 系统主题类型（默认深色） */
+  systemThemeType: SystemThemeEnum.DARK,
+  /** 系统主题模式（默认深色） */
+  systemThemeMode: SystemThemeEnum.DARK,
   /** 菜单风格 */
   menuThemeType: MenuThemeEnum.DESIGN,
   /** 系统主题颜色 */

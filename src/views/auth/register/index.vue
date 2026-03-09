@@ -4,7 +4,7 @@
     <LoginLeftView />
 
     <div class="relative flex-1">
-      <AuthTopBar />
+      <!-- <AuthTopBar /> -->
 
       <div class="auth-right-wrap">
         <div class="form">

@@ -1,24 +1,30 @@
-<!-- 登录页面 -->
+<!-- 登录页面（统一深色模式） -->
 <template>
-  <div class="flex w-full h-screen">
+  <div class="login-page login-page--dark flex w-full h-screen">
     <LoginLeftView />
 
     <div class="relative flex-1">
-      <AuthTopBar />
+      <!-- <AuthTopBar /> -->
 
       <div class="auth-right-wrap">
         <div class="form">
-          <h3 class="title">{{ $t('login.title') }}</h3>
-          <p class="sub-title">{{ $t('login.subTitle') }}</p>
+          <div class="login-brand">
+            <img :src="loginBrandImg" alt="Vegoo" class="login-brand-img" />
+            <div class="login-brand-text">
+              <h3 class="title">Vegoo</h3>
+              <p class="sub-title">经营数据分析平台</p>
+            </div>
+          </div>
           <ElForm
             ref="formRef"
             :model="formData"
             :rules="rules"
             :key="formKey"
+            label-position="top"
             @keyup.enter="handleSubmit"
             style="margin-top: 25px"
           >
-            <ElFormItem prop="account">
+            <!-- <ElFormItem prop="account">
               <ElSelect v-model="formData.account" @change="setupAccount">
                 <ElOption
                   v-for="account in accounts"
@@ -29,15 +35,19 @@
                   <span>{{ account.label }}</span>
                 </ElOption>
               </ElSelect>
-            </ElFormItem>
-            <ElFormItem prop="username">
+            </ElFormItem> -->
+            <ElFormItem prop="username" :label="$t('login.label.username')">
               <ElInput
                 class="custom-height"
                 :placeholder="$t('login.placeholder.username')"
                 v-model.trim="formData.username"
-              />
+              >
+                <template #prefix>
+                  <ElIcon><User /></ElIcon>
+                </template>
+              </ElInput>
             </ElFormItem>
-            <ElFormItem prop="password">
+            <ElFormItem prop="password" :label="$t('login.label.password')">
               <ElInput
                 class="custom-height"
                 :placeholder="$t('login.placeholder.password')"
@@ -45,11 +55,15 @@
                 type="password"
                 autocomplete="off"
                 show-password
-              />
+              >
+                <template #prefix>
+                  <ElIcon><Lock /></ElIcon>
+                </template>
+              </ElInput>
             </ElFormItem>
 
-            <!-- 推拽验证 -->
-            <div class="relative pb-5 mt-6">
+            <!-- 滑块拖动验证（暂时不需要，注释保留） -->
+            <!-- <div class="relative pb-5 mt-6">
               <div
                 class="relative z-[2] overflow-hidden select-none rounded-lg border border-transparent tad-300"
                 :class="{ '!border-[#FF4E4F]': !isPassing && isClickPass }"
@@ -58,10 +72,10 @@
                   ref="dragVerify"
                   v-model:value="isPassing"
                   :text="$t('login.sliderText')"
-                  textColor="var(--art-gray-700)"
+                  textColor="#e2e8f0"
                   :successText="$t('login.sliderSuccessText')"
                   progressBarBg="var(--main-color)"
-                  :background="isDark ? '#26272F' : '#F1F1F4'"
+                  background="#26272F"
                   handlerBg="var(--default-box-color)"
                 />
               </div>
@@ -71,7 +85,7 @@
               >
                 {{ $t('login.placeholder.slider') }}
               </p>
-            </div>
+            </div> -->
 
             <div class="flex-cb mt-2 text-sm">
               <ElCheckbox v-model="formData.rememberPassword">{{
@@ -94,7 +108,7 @@
               </ElButton>
             </div>
 
-            <div class="mt-5 text-sm text-gray-600">
+            <div class="mt-5 text-sm login-page-footer-tip">
               <span>{{ $t('login.noAccount') }}</span>
               <RouterLink class="text-theme" :to="{ name: 'Register' }">{{
                 $t('login.register')
@@ -109,17 +123,15 @@
 
 <script setup lang="ts">
   import AppConfig from '@/config'
+  import loginBrandImg from '@imgs/login/u205.png'
   import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
   import { fetchLogin } from '@/api/auth'
-  import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
-  import { useSettingStore } from '@/store/modules/setting'
-
+  import { ElIcon, ElNotification, type FormInstance, type FormRules } from 'element-plus'
+  import { Lock, User } from '@element-plus/icons-vue'
   defineOptions({ name: 'Login' })
 
-  const settingStore = useSettingStore()
-  const { isDark } = storeToRefs(settingStore)
   const { t, locale } = useI18n()
   const formKey = ref(0)
 
@@ -162,19 +174,20 @@
     }
   ])
 
-  const dragVerify = ref()
+  // 滑块拖动验证（暂时不需要，注释保留）
+  // const dragVerify = ref()
+  // const isPassing = ref(false)
+  // const isClickPass = ref(false)
 
   const userStore = useUserStore()
   const router = useRouter()
   const route = useRoute()
-  const isPassing = ref(false)
-  const isClickPass = ref(false)
 
   const systemName = AppConfig.systemInfo.name
   const formRef = ref<FormInstance>()
 
   const formData = reactive({
-    account: '',
+    // account: '',
     username: '',
     password: '',
     rememberPassword: true
@@ -194,7 +207,7 @@
   // 设置账号
   const setupAccount = (key: AccountKey) => {
     const selectedAccount = accounts.value.find((account: Account) => account.key === key)
-    formData.account = key
+    // formData.account = key
     formData.username = selectedAccount?.userName ?? ''
     formData.password = selectedAccount?.password ?? ''
   }
@@ -208,11 +221,11 @@
       const valid = await formRef.value.validate()
       if (!valid) return
 
-      // 拖拽验证
-      if (!isPassing.value) {
-        isClickPass.value = true
-        return
-      }
+      // 拖拽验证（暂时不需要，注释保留）
+      // if (!isPassing.value) {
+      //   isClickPass.value = true
+      //   return
+      // }
 
       loading.value = true
 
@@ -250,14 +263,14 @@
       }
     } finally {
       loading.value = false
-      resetDragVerify()
+      // resetDragVerify() // 滑块暂时不需要
     }
   }
 
-  // 重置拖拽验证
-  const resetDragVerify = () => {
-    dragVerify.value.reset()
-  }
+  // 重置拖拽验证（暂时不需要，注释保留）
+  // const resetDragVerify = () => {
+  //   dragVerify.value.reset()
+  // }
 
   // 登录成功提示
   const showLoginSuccessNotice = () => {
