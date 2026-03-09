@@ -35,7 +35,66 @@
 
   defineOptions({ name: 'CockpitBusinessMap' })
 
-  const WORLD_JSON_URL = '/geo/world.json'
+  // 使用 base 路径，打包部署到子路径（如 /admin/）时也能正确加载
+  const WORLD_JSON_URL = `${import.meta.env.BASE_URL}geo/world.json`
+
+  /** 国家英文名 → ISO 3166-1 alpha-2（与常见 GeoJSON 名称一致，便于 tooltip 显示国旗） */
+  const COUNTRY_NAME_TO_ISO: Record<string, string> = {
+    'United States of America': 'US',
+    'United States': 'US',
+    Brazil: 'BR',
+    Japan: 'JP',
+    India: 'IN',
+    Australia: 'AU',
+    'United Kingdom': 'GB',
+    Germany: 'DE',
+    France: 'FR',
+    China: 'CN',
+    Canada: 'CA',
+    Mexico: 'MX',
+    Russia: 'RU',
+    'South Korea': 'KR',
+    Korea: 'KR',
+    Italy: 'IT',
+    Spain: 'ES',
+    Indonesia: 'ID',
+    Turkey: 'TR',
+    Netherlands: 'NL',
+    Vietnam: 'VN',
+    Thailand: 'TH',
+    Philippines: 'PH',
+    Malaysia: 'MY',
+    Singapore: 'SG',
+    'South Africa': 'ZA',
+    Egypt: 'EG',
+    Nigeria: 'NG',
+    Argentina: 'AR',
+    Chile: 'CL',
+    Colombia: 'CO',
+    Poland: 'PL',
+    'Saudi Arabia': 'SA',
+    'United Arab Emirates': 'AE',
+    Pakistan: 'PK',
+    Bangladesh: 'BD',
+    Taiwan: 'TW',
+    'Hong Kong': 'HK',
+    'New Zealand': 'NZ',
+    Sweden: 'SE',
+    Norway: 'NO',
+    Switzerland: 'CH',
+    Belgium: 'BE',
+    Austria: 'AT',
+    Israel: 'IL',
+    Ukraine: 'UA',
+    Romania: 'RO',
+    'Czech Republic': 'CZ',
+    Greece: 'GR',
+    Portugal: 'PT',
+    Ireland: 'IE',
+    Denmark: 'DK',
+    Finland: 'FI',
+    Hungary: 'HU'
+  }
   const { isDark } = storeToRefs(useSettingStore())
 
   const props = withDefaults(
@@ -80,6 +139,27 @@
     return isK ? `${v}K` : v.toLocaleString()
   }
 
+  /** ISO 3166-1 alpha-2 转国旗 emoji（无网络、兼容性好） */
+  function getFlagEmoji(code: string): string {
+    if (!code || code.length !== 2) return ''
+    return code
+      .toUpperCase()
+      .split('')
+      .map((c) => String.fromCodePoint(0x1f1e6 - 65 + c.charCodeAt(0)))
+      .join('')
+  }
+
+  /** 根据国家英文名解析 ISO 代码（与 GeoJSON 常用名称对齐） */
+  function getCountryCode(nameEn: string): string {
+    const code = COUNTRY_NAME_TO_ISO[nameEn]
+    if (code) return code
+    // 尝试去掉 "of X" 等后缀再匹配
+    const key = Object.keys(COUNTRY_NAME_TO_ISO).find(
+      (k) => k.startsWith(nameEn) || nameEn.startsWith(k)
+    )
+    return key ? COUNTRY_NAME_TO_ISO[key] : ''
+  }
+
   function buildTooltipFormatter(isDarkTheme: boolean) {
     return (params: any) => {
       const d = params.data
@@ -99,8 +179,13 @@
           : `${(d.user ?? 0).toLocaleString()} ↑${d.trend}`
       const ecpmStr =
         d.ecpm != null ? `$${d.ecpm} ${isTrendUp(ecpmTrend) ? '↑' : '↓'}${ecpmTrend}` : ''
+      const isoCode = d.code || getCountryCode(params.name)
+      const flagEmoji = getFlagEmoji(isoCode)
+      const titleHtml = flagEmoji
+        ? `<div class="cockpit-map-tt-title"><span class="cockpit-map-tt-flag">${flagEmoji}</span> ${d.nameCn || params.name}</div>`
+        : `<div class="cockpit-map-tt-title">${d.nameCn || params.name}</div>`
       const lines = [
-        `<div class="cockpit-map-tt-title">${d.nameCn || params.name}</div>`,
+        titleHtml,
         `<div class="cockpit-map-tt-row"><span>收入:</span> <span style="${revenueUp ? upClass : downClass}">$${fmtValue(d.revenue, true)} ${revArrow}</span></div>`,
         `<div class="cockpit-map-tt-row"><span>广告支出:</span> <span style="${spendUp ? upClass : downClass}">$${fmtValue(spendVal, true)} ${spendTrend}</span></div>`,
         `<div class="cockpit-map-tt-row"><span>活跃用户:</span> <span style="${upClass}">${(d.user ?? 0).toLocaleString()} ↑${d.trend}</span></div>`,
@@ -126,6 +211,7 @@
       user: item.user,
       nameCn: item.name,
       trend: item.trend,
+      code: item.code || getCountryCode(item.nameEn),
       newUser: item.newUser,
       newUserTrend: item.newUserTrend,
       ecpm: item.ecpm,
@@ -328,9 +414,17 @@
 <style lang="scss">
   /* 地图 tooltip 全局样式（渲染在 body，需非 scoped） */
   .cockpit-map-tt-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
     margin-bottom: 8px;
     font-size: 13px;
     font-weight: 600;
+  }
+
+  .cockpit-map-tt-flag {
+    font-size: 20px;
+    line-height: 1;
   }
 
   .cockpit-map-tt-row {

@@ -69,6 +69,8 @@ export interface CockpitMapCountry {
   user: number
   trend: string
   color?: string
+  /** 国家 ISO 3166-1 alpha-2 代码（可选，用于悬浮显示国旗） */
+  code?: string
   /** 新增用户（可选，用于悬浮详情） */
   newUser?: number
   newUserTrend?: string
