@@ -11,9 +11,18 @@ export interface CockpitOverviewParams {
   dateRange?: CockpitDateRange
 }
 
+/** KPI 卡片类型：总收入、付费收入、广告支出、有效订阅、DAU、预估利润 */
+export type CockpitKpiCardType =
+  | 'income' // 总收入
+  | 'paidRevenue' // 付费收入
+  | 'adSpend' // 广告支出
+  | 'subscriptions' // 有效订阅
+  | 'dau' // DAU
+  | 'profit' // 预估利润
+
 /** KPI 卡片单项 */
 export interface CockpitKpiCard {
-  type: 'income' | 'spend' | 'dau' | 'profit'
+  type: CockpitKpiCardType
   label: string
   value: string
   detail?: string

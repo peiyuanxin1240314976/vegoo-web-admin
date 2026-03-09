@@ -34,6 +34,20 @@
         margin-right: 4px;
         border-radius: 4px;
       }
+
+      /* 未选中：深灰背景 */
+      :deep(.el-radio-button:not(.is-active) .el-radio-button__inner) {
+        color: var(--el-text-color-primary);
+        background: var(--el-fill-color-dark);
+        border-color: var(--el-fill-color-dark);
+      }
+
+      /* 选中：深蓝背景 */
+      :deep(.el-radio-button.is-active .el-radio-button__inner) {
+        color: #fff;
+        background: var(--el-color-primary);
+        border-color: var(--el-color-primary);
+      }
     }
   }
 </style>

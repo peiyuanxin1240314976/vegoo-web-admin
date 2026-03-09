@@ -1,6 +1,6 @@
 <template>
   <ElRow :gutter="16" class="cockpit-kpi-row">
-    <ElCol v-for="(item, index) in kpiList" :key="index" :xs="24" :sm="12" :md="6" :lg="6">
+    <ElCol v-for="(item, index) in kpiList" :key="index" :xs="24" :sm="12" :md="8" :lg="4">
       <div
         class="cockpit-kpi-card cockpit-kpi-card--theme"
         :class="`cockpit-kpi-card--${item.type}`"
@@ -133,7 +133,7 @@
       opacity: 0.35;
     }
 
-    /* 四个颜色主题：收入-绿、花费-橙、DAU-蓝、盈亏-紫 */
+    /* 六个颜色主题：总收入-绿、付费收入-橙、广告支出-蓝、有效订阅-橙蓝、DAU-蓝、预估利润-紫 */
     &--theme.cockpit-kpi-card--income {
       background: linear-gradient(135deg, rgb(103 194 58 / 12%) 0%, rgb(103 194 58 / 4%) 100%);
       border-color: rgb(103 194 58 / 25%);
@@ -161,7 +161,7 @@
       }
     }
 
-    &--theme.cockpit-kpi-card--spend {
+    &--theme.cockpit-kpi-card--paidRevenue {
       background: linear-gradient(135deg, rgb(230 162 60 / 14%) 0%, rgb(230 162 60 / 4%) 100%);
       border-color: rgb(230 162 60 / 30%);
 
@@ -185,6 +185,60 @@
 
       .mini-trend {
         background: linear-gradient(135deg, #e6a23c 0%, transparent 100%);
+      }
+    }
+
+    &--theme.cockpit-kpi-card--adSpend {
+      background: linear-gradient(135deg, rgb(64 158 255 / 14%) 0%, rgb(64 158 255 / 4%) 100%);
+      border-color: rgb(64 158 255 / 28%);
+
+      .kpi-label,
+      .kpi-detail,
+      .kpi-sub {
+        color: rgb(0 0 0 / 70%);
+      }
+
+      .kpi-value {
+        color: #409eff;
+      }
+
+      .kpi-compare.up {
+        color: #67c23a;
+      }
+
+      .kpi-compare.down {
+        color: #f56c6c;
+      }
+
+      .mini-trend {
+        background: linear-gradient(135deg, #409eff 0%, transparent 100%);
+      }
+    }
+
+    &--theme.cockpit-kpi-card--subscriptions {
+      background: linear-gradient(135deg, rgb(230 162 60 / 12%) 0%, rgb(64 158 255 / 6%) 100%);
+      border-color: rgb(230 162 60 / 25%);
+
+      .kpi-label,
+      .kpi-detail,
+      .kpi-sub {
+        color: rgb(0 0 0 / 70%);
+      }
+
+      .kpi-value {
+        color: #e6a23c;
+      }
+
+      .kpi-compare.up {
+        color: #67c23a;
+      }
+
+      .kpi-compare.down {
+        color: #f56c6c;
+      }
+
+      .mini-trend {
+        background: linear-gradient(135deg, #e6a23c 0%, #409eff 100%);
       }
     }
 
@@ -247,9 +301,15 @@
   html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--income .kpi-label,
   html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--income .kpi-detail,
   html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--income .kpi-sub,
-  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--spend .kpi-label,
-  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--spend .kpi-detail,
-  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--spend .kpi-sub,
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--paidRevenue .kpi-label,
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--paidRevenue .kpi-detail,
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--paidRevenue .kpi-sub,
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--adSpend .kpi-label,
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--adSpend .kpi-detail,
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--adSpend .kpi-sub,
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--subscriptions .kpi-label,
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--subscriptions .kpi-detail,
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--subscriptions .kpi-sub,
   html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--dau .kpi-label,
   html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--dau .kpi-detail,
   html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--dau .kpi-sub,

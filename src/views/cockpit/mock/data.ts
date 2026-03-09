@@ -8,35 +8,51 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
   kpi: [
     {
       type: 'income',
-      label: '今日总收入',
+      label: '总收入',
       value: '$125,680.00',
-      detail: '广告:$98,240 | 内购: $27,440',
-      compare: '昨日VS 前日:$125,245 -2.6%',
+      detail: '广告: $98,240 | 内购: $27,440',
+      compare: '昨日: $125,245 -2.6%↓',
       compareUp: false
     },
     {
-      type: 'spend',
-      label: '今日总花费',
+      type: 'paidRevenue',
+      label: '付费收入',
       value: '$89,240',
-      sub: '日预算($81,000)',
-      detail: '自投 $34,552，代投 $34,552',
-      progressPercent: 55,
-      compare: '昨日VS 前日:$66,692 +14.8%',
+      detail: '未扣平台费用',
+      compare: '昨日: $125,245 -2.6%↓',
+      compareUp: false
+    },
+    {
+      type: 'adSpend',
+      label: '广告支出',
+      value: '$25,420',
+      detail: '白投 $34,552  代股 $34,552',
+      compare: '昨日: $66,692 +14.8%↑',
+      compareUp: true
+    },
+    {
+      type: 'subscriptions',
+      label: '有效订阅',
+      value: '36,440',
+      detail: '新增 +1,240 流失 -380',
+      compare: '昨日: 36,200 +14.8%↑',
       compareUp: true
     },
     {
       type: 'dau',
-      label: '今日DAU',
-      value: '125,420',
-      detail: '新增用户: 6,180 (+9.2%)，自然量: 2,240个，买量: 2,240↑'
+      label: 'DAU',
+      value: '1,349,931',
+      detail: 'DNU 374,920 ↓ 8,645',
+      compare: '昨日: 1,358,576 -0.6%↓',
+      compareUp: false
     },
     {
       type: 'profit',
-      label: '今日盈亏【预估】',
-      value: '+$36,440',
-      detail: '当前广告|内购收入-广告支出',
-      compare: '昨日VS 前日: +$8,123 (+14.8%)',
-      compareUp: true
+      label: '预估利润',
+      value: '+$11,021',
+      detail: '当前广告 | 内购收入 - 广告支出',
+      compare: '昨日: $125,245 -2.6%↓',
+      compareUp: false
     }
   ],
   alertBanners: [

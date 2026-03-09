@@ -6,7 +6,7 @@
       <CockpitTopBarActions />
     </div>
 
-    <!-- 3. 全局 KPI 卡片（4 个） -->
+    <!-- 3. 全局 KPI 卡片（6 个：总收入、付费收入、广告支出、有效订阅、DAU、预估利润） -->
     <CockpitGlobalKpiCards :kpi-list="overview?.kpi ?? []" />
 
     <!-- 4. 警示与提示 -->
