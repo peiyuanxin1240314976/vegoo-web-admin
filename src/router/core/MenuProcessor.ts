@@ -36,17 +36,20 @@ export class MenuProcessor {
     return this.normalizeMenuPaths(menuList)
   }
 
+  /** 超级管理员权限标识：permissions 包含此值时可见全部页面 */
+  private static readonly SUPER_ADMIN = 'SuperAdmin'
+
   /**
    * 处理前端控制模式的菜单
    */
   private async processFrontendMenu(): Promise<AppRouteRecord[]> {
     const userStore = useUserStore()
-    const roles = userStore.info?.roles
+    const roles = userStore.info?.roles ?? []
 
     let menuList = [...asyncRoutes]
 
-    // 根据角色过滤菜单
-    if (roles && roles.length > 0) {
+    // 根据接口返回的 permissions（已映射到 roles）过滤菜单；包含 SuperAdmin 时不做过滤，展示全部
+    if (roles.length > 0 && !roles.includes(MenuProcessor.SUPER_ADMIN)) {
       menuList = this.filterMenuByRoles(menuList, roles)
     }
 

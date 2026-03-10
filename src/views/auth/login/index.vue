@@ -24,18 +24,6 @@
             @keyup.enter="handleSubmit"
             style="margin-top: 25px"
           >
-            <!-- <ElFormItem prop="account">
-              <ElSelect v-model="formData.account" @change="setupAccount">
-                <ElOption
-                  v-for="account in accounts"
-                  :key="account.key"
-                  :label="account.label"
-                  :value="account.key"
-                >
-                  <span>{{ account.label }}</span>
-                </ElOption>
-              </ElSelect>
-            </ElFormItem> -->
             <ElFormItem prop="username" :label="$t('login.label.username')">
               <ElInput
                 class="custom-height"
@@ -140,40 +128,6 @@
     formKey.value++
   })
 
-  type AccountKey = 'super' | 'admin' | 'user'
-
-  export interface Account {
-    key: AccountKey
-    label: string
-    userName: string
-    password: string
-    roles: string[]
-  }
-
-  const accounts = computed<Account[]>(() => [
-    {
-      key: 'super',
-      label: t('login.roles.super'),
-      userName: 'Super',
-      password: '123456',
-      roles: ['R_SUPER']
-    },
-    {
-      key: 'admin',
-      label: t('login.roles.admin'),
-      userName: 'Admin',
-      password: '123456',
-      roles: ['R_ADMIN']
-    },
-    {
-      key: 'user',
-      label: t('login.roles.user'),
-      userName: 'User',
-      password: '123456',
-      roles: ['R_USER']
-    }
-  ])
-
   // 滑块拖动验证（暂时不需要，注释保留）
   // const dragVerify = ref()
   // const isPassing = ref(false)
@@ -187,7 +141,6 @@
   const formRef = ref<FormInstance>()
 
   const formData = reactive({
-    // account: '',
     username: '',
     password: '',
     rememberPassword: true
@@ -199,18 +152,6 @@
   }))
 
   const loading = ref(false)
-
-  onMounted(() => {
-    setupAccount('super')
-  })
-
-  // 设置账号
-  const setupAccount = (key: AccountKey) => {
-    const selectedAccount = accounts.value.find((account: Account) => account.key === key)
-    // formData.account = key
-    formData.username = selectedAccount?.userName ?? ''
-    formData.password = selectedAccount?.password ?? ''
-  }
 
   // 登录
   const handleSubmit = async () => {
@@ -230,12 +171,16 @@
       loading.value = true
 
       // 登录请求
-      const { username, password } = formData
+      const { username, password, rememberPassword } = formData
 
-      const { token, refreshToken } = await fetchLogin({
-        userName: username,
-        password
+      // 调用真实登录接口，返回 token 字符串
+      const token = await fetchLogin({
+        username,
+        password,
+        rememberMe: rememberPassword
       })
+
+      const refreshToken = ''
 
       // 验证token
       if (!token) {
@@ -246,7 +191,7 @@
       userStore.setToken(token, refreshToken)
       userStore.setLoginStatus(true)
 
-      // 登录成功处理
+      // 登录成功：跳转后由路由守卫统一拉取用户信息并 setUserInfo/checkAndClearWorktabs，避免重复请求
       showLoginSuccessNotice()
 
       // 获取 redirect 参数，如果存在则跳转到指定页面，否则跳转到首页

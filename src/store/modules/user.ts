@@ -75,11 +75,17 @@ export const useUserStore = defineStore(
     const getWorktabState = computed(() => useWorktabStore().$state)
 
     /**
-     * 设置用户信息
-     * @param newInfo 新的用户信息
+     * 设置用户信息（自动填充 userId/userName/roles 以兼容现有逻辑）
+     * @param newInfo 新的用户信息（来自 get user 接口）
      */
     const setUserInfo = (newInfo: Api.Auth.UserInfo) => {
-      info.value = newInfo
+      info.value = {
+        ...newInfo,
+        userId: newInfo.userId ?? newInfo.id,
+        userName: newInfo.userName ?? newInfo.username,
+        roles: newInfo.roles ?? newInfo.permissions ?? [],
+        buttons: newInfo.buttons ?? newInfo.permissions ?? []
+      }
     }
 
     /**

@@ -24,7 +24,7 @@
  * ## 使用方式
  *
  * ```typescript
- * const params: Api.Auth.LoginParams = { userName: 'admin', password: '123456' }
+ * const params: Api.Auth.LoginParams = { username: 'admin', password: '123456' }
  * const response: Api.Auth.UserInfo = await fetchUserInfo()
  * ```
  *
@@ -62,26 +62,34 @@ declare namespace Api {
 
   /** 认证类型 */
   namespace Auth {
-    /** 登录参数 */
+    /** 登录参数（与后端接口字段一致，使用 username） */
     interface LoginParams {
-      userName: string
+      username: string
       password: string
+      /** 记住我 */
+      rememberMe?: boolean
     }
 
-    /** 登录响应 */
-    interface LoginResponse {
-      token: string
-      refreshToken: string
-    }
+    /** 登录响应：后端返回的 token 字符串 */
+    type LoginResponse = string
 
-    /** 用户信息 */
+    /** 用户信息（与 GET /api/v1/datacenter/biz/user/get 响应一致） */
     interface UserInfo {
-      buttons: string[]
-      roles: string[]
-      userId: number
-      userName: string
+      id: number
+      username: string
       email: string
-      avatar?: string
+      phone: string
+      /** 0 非管理员，1 管理员 */
+      isAdmin: number
+      permissions: string[]
+      /** 兼容：与 id 相同，用于 store 等 */
+      userId?: number
+      /** 兼容：与 username 相同 */
+      userName?: string
+      /** 兼容：与 permissions 一致，用于角色/权限判断 */
+      roles?: string[]
+      /** 兼容：与 permissions 一致，用于 useAuth 按钮权限 */
+      buttons?: string[]
     }
   }
 

@@ -65,7 +65,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (request: InternalAxiosRequestConfig) => {
     const { accessToken } = useUserStore()
-    if (accessToken) request.headers.set('Authorization', accessToken)
+    if (accessToken) request.headers.set('Authorization', `Bearer ${accessToken}`)
 
     if (request.data && !(request.data instanceof FormData) && !request.headers['Content-Type']) {
       request.headers.set('Content-Type', 'application/json')
@@ -80,13 +80,22 @@ axiosInstance.interceptors.request.use(
   }
 )
 
+/** 从响应中取错误文案（兼容 msg / message），无值时返回空字符串 */
+function getResponseErrorMessage(data: BaseResponse & { message?: string }): string {
+  const text = data.msg ?? data.message ?? ''
+  return typeof text === 'string' ? text.trim() : ''
+}
+
 /** 响应拦截器 */
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse<BaseResponse>) => {
-    const { code, msg } = response.data
-    if (code === ApiStatus.success) return response
-    if (code === ApiStatus.unauthorized) handleUnauthorizedError(msg)
-    throw createHttpError(msg || $t('httpMsg.requestFailed'), code)
+    const data = response.data as BaseResponse & { message?: string }
+    const { code } = data
+    // 部分后端成功返回 code: 0，与 200 均视为成功
+    if (code === ApiStatus.success || code === 0) return response
+    const errMsg = getResponseErrorMessage(data)
+    if (code === ApiStatus.unauthorized) handleUnauthorizedError(errMsg || undefined)
+    throw createHttpError(errMsg || $t('httpMsg.requestFailed'), code)
   },
   (error) => {
     if (error.response?.status === ApiStatus.unauthorized) handleUnauthorizedError()

@@ -59,8 +59,9 @@ export const useAuth = () => {
    * @returns 是否有权限
    */
   const hasAuth = (auth: string): boolean => {
-    // 前端模式
+    // 前端模式：permissions 包含 SuperAdmin 时视为拥有全部按钮权限
     if (isFrontendMode.value) {
+      if (frontendAuthList.includes('SuperAdmin')) return true
       return frontendAuthList.includes(auth)
     }
 

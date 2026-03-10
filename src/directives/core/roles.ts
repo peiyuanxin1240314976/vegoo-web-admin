@@ -51,13 +51,21 @@ interface RolesBinding extends DirectiveBinding {
   value: string | string[]
 }
 
+/** 超级管理员权限标识：permissions 包含此值时视为拥有全部角色 */
+const SUPER_ADMIN = 'SuperAdmin'
+
 function checkRolePermission(el: HTMLElement, binding: RolesBinding): void {
   const userStore = useUserStore()
-  const userRoles = userStore.getUserInfo.roles
+  const userRoles = userStore.getUserInfo.roles ?? []
 
   // 如果用户角色为空或未定义，移除元素
-  if (!userRoles?.length) {
+  if (!userRoles.length) {
     removeElement(el)
+    return
+  }
+
+  // 包含 SuperAdmin 时视为拥有全部角色，保留元素
+  if (userRoles.includes(SUPER_ADMIN)) {
     return
   }
 
@@ -67,7 +75,6 @@ function checkRolePermission(el: HTMLElement, binding: RolesBinding): void {
   // 检查用户是否具有所需角色之一
   const hasPermission = requiredRoles.some((role: string) => userRoles.includes(role))
 
-  // 如果没有权限，安全地移除元素
   if (!hasPermission) {
     removeElement(el)
   }

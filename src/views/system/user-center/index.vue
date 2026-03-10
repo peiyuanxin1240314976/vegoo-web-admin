@@ -56,54 +56,42 @@
 
       <!-- 右侧：内容区 -->
       <div class="user-center-right flex-1 min-w-0 max-md:w-full max-md:mt-3.5">
-        <!-- 基本信息 -->
+        <!-- 基本信息（与用户接口一致：仅邮箱可编辑） -->
         <div v-show="activeTab === 'basic'" class="art-card-sm">
           <h2 class="p-4 text-lg font-medium border-b border-g-300">基本信息</h2>
           <ElForm
             :model="form"
-            class="box-border p-5 [&>.el-row_.el-form-item]:w-[calc(50%-10px)] [&>.el-row_.el-input]:w-full [&>.el-row_.el-select]:w-full"
+            class="box-border p-5 [&>.el-row_.el-form-item]:w-[calc(50%-10px)] [&>.el-row_.el-input]:w-full"
             ref="ruleFormRef"
             :rules="rules"
             label-width="86px"
             label-position="top"
           >
             <ElRow>
-              <ElFormItem label="姓名" prop="realName">
-                <ElInput v-model="form.realName" :disabled="!isEdit" />
+              <ElFormItem label="用户名">
+                <ElInput :model-value="form.username" disabled />
               </ElFormItem>
-              <ElFormItem label="性别" prop="sex" class="ml-5">
-                <ElSelect v-model="form.sex" placeholder="请选择" :disabled="!isEdit">
-                  <ElOption
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </ElSelect>
+              <ElFormItem label="手机号" class="ml-5">
+                <ElInput :model-value="form.phone" disabled />
               </ElFormItem>
             </ElRow>
             <ElRow>
-              <ElFormItem label="昵称" prop="nikeName">
-                <ElInput v-model="form.nikeName" :disabled="!isEdit" />
+              <ElFormItem label="角色">
+                <ElInput :model-value="form.isAdminLabel" disabled />
               </ElFormItem>
               <ElFormItem label="邮箱" prop="email" class="ml-5">
-                <ElInput v-model="form.email" :disabled="!isEdit" />
+                <ElInput v-model="form.email" placeholder="选填" />
               </ElFormItem>
             </ElRow>
-            <ElRow>
-              <ElFormItem label="手机" prop="mobile">
-                <ElInput v-model="form.mobile" :disabled="!isEdit" />
-              </ElFormItem>
-              <ElFormItem label="地址" prop="address" class="ml-5">
-                <ElInput v-model="form.address" :disabled="!isEdit" />
-              </ElFormItem>
-            </ElRow>
-            <ElFormItem label="个人介绍" prop="des" class="h-32">
-              <ElInput type="textarea" :rows="4" v-model="form.des" :disabled="!isEdit" />
-            </ElFormItem>
             <div class="flex justify-end [&_.el-button]:!w-27.5">
-              <ElButton type="primary" class="w-22.5" v-ripple @click="edit">
-                {{ isEdit ? '保存' : '编辑' }}
+              <ElButton
+                type="primary"
+                class="w-22.5"
+                v-ripple
+                :disabled="!canSaveBasicInfo"
+                @click="saveBasicInfo"
+              >
+                保存
               </ElButton>
             </div>
           </ElForm>
@@ -263,7 +251,7 @@
           </div>
         </div>
 
-        <!-- 密码安全 -->
+        <!-- 密码安全：三项均需填写且不能为纯空格，才可点击保存 -->
         <div v-show="activeTab === 'password'" class="art-card-sm">
           <h2 class="p-4 text-lg font-medium border-b border-g-300">密码安全</h2>
           <ElForm :model="pwdForm" class="box-border p-5" label-width="86px" label-position="top">
@@ -271,29 +259,35 @@
               <ElInput
                 v-model="pwdForm.password"
                 type="password"
-                :disabled="!isEditPwd"
                 show-password
+                placeholder="请输入当前密码"
               />
             </ElFormItem>
             <ElFormItem label="新密码" prop="newPassword">
               <ElInput
                 v-model="pwdForm.newPassword"
                 type="password"
-                :disabled="!isEditPwd"
                 show-password
+                placeholder="请输入新密码"
               />
             </ElFormItem>
             <ElFormItem label="确认新密码" prop="confirmPassword">
               <ElInput
                 v-model="pwdForm.confirmPassword"
                 type="password"
-                :disabled="!isEditPwd"
                 show-password
+                placeholder="请再次输入新密码"
               />
             </ElFormItem>
             <div class="flex justify-end [&_.el-button]:!w-27.5">
-              <ElButton type="primary" class="w-22.5" v-ripple @click="editPwd">
-                {{ isEditPwd ? '保存' : '编辑' }}
+              <ElButton
+                type="primary"
+                class="w-22.5"
+                v-ripple
+                :disabled="!canSavePwd"
+                @click="savePwd"
+              >
+                保存
               </ElButton>
             </div>
           </ElForm>
@@ -317,8 +311,9 @@
 
 <script setup lang="ts">
   import { useUserStore } from '@/store/modules/user'
+  import { fetchChangeEmail, fetchChangePwd } from '@/api/auth'
   import type { FormInstance, FormRules } from 'element-plus'
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import { Plus } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'UserCenter' })
@@ -337,32 +332,49 @@
   ]
 
   const userInitials = computed(() => {
-    const name = userInfo.value?.userName || ''
+    const name = userInfo.value?.username || userInfo.value?.userName || ''
     if (!name) return 'U'
     if (/[\u4e00-\u9fa5]/.test(name)) return name.slice(0, 2)
     return name.slice(0, 2).toUpperCase()
   })
 
-  const displayName = computed(() => form.realName || userInfo.value?.userName || '—')
+  const displayName = computed(() => userInfo.value?.username || userInfo.value?.userName || '—')
   const roleLabel = computed(() => {
-    const roles = userInfo.value?.roles
-    if (roles?.length) return roles.join(' / ')
-    return 'R_SUPER'
+    const isAdmin = userInfo.value?.isAdmin
+    return isAdmin === 1 ? '管理员' : '非管理员'
   })
 
-  const isEdit = ref(false)
-  const isEditPwd = ref(false)
   const ruleFormRef = ref<FormInstance>()
 
   const form = reactive({
-    realName: '张三',
-    nikeName: '皮卡丘',
-    email: 'zhangsan@vegoo.com',
-    mobile: '18888888888',
-    address: '广东省深圳市宝安区西乡街道101栋201',
-    sex: '2',
-    des: 'VeGoo 是一款兼具设计美学与高效开发的后台系统.'
+    username: '',
+    phone: '',
+    isAdminLabel: '',
+    email: ''
   })
+
+  /** 已填写邮箱时才允许点击保存；格式校验由表单 rules 在点击保存时触发 */
+  const canSaveBasicInfo = computed(() => (form.email ?? '').trim().length > 0)
+
+  /** 密码三项均填写且去除首尾空格后非空时才允许点击保存（不允许纯空格） */
+  const canSavePwd = computed(() => {
+    const a = (pwdForm.password ?? '').trim()
+    const b = (pwdForm.newPassword ?? '').trim()
+    const c = (pwdForm.confirmPassword ?? '').trim()
+    return a.length > 0 && b.length > 0 && c.length > 0
+  })
+
+  /** 从 store 用户信息同步到表单（仅邮箱可编辑） */
+  function syncFormFromUserInfo() {
+    const info = userStore.getUserInfo
+    form.username = info?.username || info?.userName || ''
+    form.phone = info?.phone ?? ''
+    form.isAdminLabel = (info?.isAdmin === 1 ? '管理员' : '非管理员') as string
+    form.email = info?.email ?? ''
+  }
+
+  onMounted(syncFormFromUserInfo)
+  watch(userInfo, syncFormFromUserInfo, { deep: true })
 
   const pwdForm = reactive({
     password: '',
@@ -371,24 +383,8 @@
   })
 
   const rules = reactive<FormRules>({
-    realName: [
-      { required: true, message: '请输入姓名', trigger: 'blur' },
-      { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
-    ],
-    nikeName: [
-      { required: true, message: '请输入昵称', trigger: 'blur' },
-      { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
-    ],
-    email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
-    mobile: [{ required: true, message: '请输入手机号码', trigger: 'blur' }],
-    address: [{ required: true, message: '请输入地址', trigger: 'blur' }],
-    sex: [{ required: true, message: '请选择性别', trigger: 'blur' }]
+    email: [{ type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }]
   })
-
-  const options = [
-    { value: '1', label: '男' },
-    { value: '2', label: '女' }
-  ]
 
   type FeishuNotifyKey = 'alert' | 'daily' | 'weekly' | 'approval' | 'dataAbnormal'
   const feishuNotifyList: { key: FeishuNotifyKey; label: string; desc: string }[] = [
@@ -466,12 +462,50 @@
 
   let reportIdCounter = 4
 
-  const edit = () => {
-    isEdit.value = !isEdit.value
+  /** 保存基本信息：二次确认后调用修改邮箱接口并更新本地 */
+  const saveBasicInfo = async () => {
+    const valid = await ruleFormRef.value?.validate().catch(() => false)
+    if (!valid) return
+    try {
+      await ElMessageBox.confirm('确定要保存当前修改吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      })
+    } catch {
+      return
+    }
+    const email = form.email.trim()
+    await fetchChangeEmail(email)
+    userStore.setUserInfo({
+      ...userStore.getUserInfo,
+      email
+    } as Api.Auth.UserInfo)
+    ElMessage.success('保存成功')
   }
 
-  const editPwd = () => {
-    isEditPwd.value = !isEditPwd.value
+  /** 保存密码：校验后调用修改密码接口 */
+  const savePwd = async () => {
+    const oldPassword = (pwdForm.password ?? '').trim()
+    const newPwd = (pwdForm.newPassword ?? '').trim()
+    const confirm = (pwdForm.confirmPassword ?? '').trim()
+    if (!oldPassword || !newPwd || !confirm) {
+      ElMessage.warning('请填写完整且不能为纯空格')
+      return
+    }
+    if (newPwd !== confirm) {
+      ElMessage.warning('两次输入的新密码不一致')
+      return
+    }
+    const id = userStore.getUserInfo?.id ?? userStore.getUserInfo?.userId
+    if (id == null) {
+      ElMessage.warning('无法获取用户信息，请重新登录')
+      return
+    }
+    await fetchChangePwd({ id, oldPassword, newPassword: newPwd })
+    ElMessage.success('密码修改成功')
+    pwdForm.password = ''
+    pwdForm.newPassword = ''
+    pwdForm.confirmPassword = ''
   }
 
   const setFeishuNotify = (key: FeishuNotifyKey, value: boolean) => {

@@ -64,6 +64,7 @@
   import { useRouter } from 'vue-router'
   import { ElMessageBox } from 'element-plus'
   import { useUserStore } from '@/store/modules/user'
+  import { fetchLogout } from '@/api/auth'
   // import { WEB_LINKS } from '@/utils/constants'
   // import { mittBus } from '@/utils/sys'
 
@@ -106,7 +107,7 @@
   // }
 
   /**
-   * 用户登出确认
+   * 用户登出确认：调用退出接口后清空本地状态并跳转登录页
    */
   const loginOut = (): void => {
     closeUserMenu()
@@ -115,7 +116,12 @@
         confirmButtonText: t('common.confirm'),
         cancelButtonText: t('common.cancel'),
         customClass: 'login-out-dialog'
-      }).then(() => {
+      }).then(async () => {
+        try {
+          await fetchLogout()
+        } catch {
+          // 接口失败也继续清空本地并跳转，保证能退出
+        }
         userStore.logOut()
       })
     }, 200)
