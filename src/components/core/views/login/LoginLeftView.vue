@@ -2,13 +2,17 @@
 <template>
   <div class="login-left-view">
     <div class="left-img">
-      <img :src="loginIcon" alt="" class="w-full h-full object-cover" />
+      <picture class="block w-full h-full">
+        <source :srcset="loginIconWebp" type="image/webp" />
+        <img :src="loginIcon" alt="" class="w-full h-full object-cover" />
+      </picture>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
   import loginIcon from '@imgs/login/u6443.png'
+  import loginIconWebp from '@imgs/login/u6443.webp'
 </script>
 
 <style lang="scss" scoped>

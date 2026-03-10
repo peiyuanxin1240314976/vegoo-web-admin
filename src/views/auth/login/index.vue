@@ -9,7 +9,17 @@
       <div class="auth-right-wrap">
         <div class="form">
           <div class="login-brand">
-            <img :src="loginBrandImg" alt="Vegoo" class="login-brand-img" />
+            <picture>
+              <source :srcset="loginBrandImgWebp" type="image/webp" />
+              <img
+                :src="loginBrandImg"
+                alt="Vegoo"
+                class="login-brand-img"
+                width="160"
+                height="80"
+                fetchpriority="high"
+              />
+            </picture>
             <div class="login-brand-text">
               <h3 class="title">Vegoo</h3>
               <p class="sub-title">经营数据分析平台</p>
@@ -112,6 +122,7 @@
 <script setup lang="ts">
   import AppConfig from '@/config'
   import loginBrandImg from '@imgs/login/u205.png'
+  import loginBrandImgWebp from '@imgs/login/u205.webp'
   import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
