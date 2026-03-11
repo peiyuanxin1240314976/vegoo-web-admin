@@ -5,10 +5,11 @@
       {{ dateText }}
     </span>
     <div class="actions">
-      <ElButton size="small" type="primary">
+      <ElButton size="small" type="primary" @click="showSimulationDialog = true">
         <ElIcon class="btn-icon"><DataAnalysis /></ElIcon>
         模拟分析
       </ElButton>
+      <ScenarioSimulationDialog v-model="showSimulationDialog" />
       <ElButton size="small" @click="toggleFullScreen">
         <ElIcon class="btn-icon"><FullScreen /></ElIcon>
         {{ isFullScreen ? '退出全屏' : '全屏' }}
@@ -21,8 +22,11 @@
   import { computed, ref, onMounted, onUnmounted } from 'vue'
   import { Calendar, DataAnalysis, FullScreen } from '@element-plus/icons-vue'
   import { useTableStore } from '@/store/modules/table'
+  import ScenarioSimulationDialog from './scenario-simulation-dialog.vue'
 
   defineOptions({ name: 'CockpitTopBarActions' })
+
+  const showSimulationDialog = ref(false)
 
   const props = withDefaults(defineProps<{ fullClass?: string }>(), { fullClass: 'cockpit-page' })
 
