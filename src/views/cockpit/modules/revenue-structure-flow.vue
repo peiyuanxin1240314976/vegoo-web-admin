@@ -51,7 +51,7 @@
   /** 单行在节点内占用的近似像素高度（含 lineHeight + 间距） */
   const PIXEL_HEIGHT_PER_LINE = 20
   /** 节点区域预估可用高度（扣除 padding），用于按比例算最小 value */
-  const SANKEY_NODE_AREA_HEIGHT = 260
+  const SANKEY_NODE_AREA_HEIGHT = 60
   /** 按行数非线性权重的底数（lineCount^2.5 * WEIGHT_BASE），使多行节点占比更大、避免文字溢出 */
   const HEIGHT_WEIGHT_BASE = 600
 
@@ -98,10 +98,25 @@
       const minValueFromWeight = Math.pow(lineCount, 2.5) * HEIGHT_WEIGHT_BASE
       const minValue = Math.max(minValueFromRatio, minValueFromWeight, linkSum * 0.4)
 
+      /** 无 percent 的节点用黑色字，有 percent 的用白色字 */
+      const hasPercent = !!(n.percent != null && n.percent !== '')
+      // const textColor = hasPercent ? '#fff' : '#000'
+      // const pctColor = hasPercent ? 'rgba(255,255,255,0.9)' : '#000'
+
       const rich: Record<string, any> = {
-        name: { color: '#fff', fontSize: labelFontSize, lineHeight: 16 },
-        value: { color: '#fff', fontSize: labelFontSize - 1, lineHeight: 14 },
-        pct: { color: 'rgba(255,255,255,0.9)', fontSize: labelFontSize - 1, lineHeight: 14 }
+        name: {
+          color: '#fff',
+          fontSize: labelFontSize,
+          lineHeight: 16,
+          ...(hasPercent ? {} : { padding: [15, 0, 0, 0] })
+        },
+        value: {
+          color: '#fff',
+          fontSize: labelFontSize - 1,
+          lineHeight: 14,
+          ...(hasPercent ? {} : { padding: [15, 0, 0, 0] })
+        },
+        pct: { color: '#fff', fontSize: labelFontSize - 1, lineHeight: 14 }
       }
       if (n.iconImage) {
         rich.img = {
@@ -116,7 +131,7 @@
           color: '#fff',
           fontSize: iconSize,
           lineHeight: iconSize,
-          padding: [0, 0, 2, 0]
+          ...(hasPercent ? { padding: [0, 0, 2, 0] } : { padding: [15, 0, 2, 0] })
         }
       }
 
