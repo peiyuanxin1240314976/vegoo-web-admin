@@ -195,7 +195,7 @@
         ecpmStr
           ? `<div class="cockpit-map-tt-row"><span>eCPM:</span> <span style="${upClass}">${ecpmStr}</span></div>`
           : '',
-        `<div class="cockpit-map-tt-link">查看${d.nameCn || params.name}详情 →</div>`
+        `<div class="cockpit-map-tt-link" data-country-en="${(d.name || params.name || '').replace(/"/g, '&quot;')}" data-country-cn="${(d.nameCn || params.name || '').replace(/"/g, '&quot;')}">查看${d.nameCn || params.name}详情 →</div>`
       ].filter(Boolean)
       return lines.join('')
     }
@@ -235,7 +235,9 @@
       animationEasing: 'cubicOut',
       tooltip: {
         trigger: 'item',
+        triggerOn: 'click', // 改为点击显示，避免悬浮时盖住邻国误触
         confine: true,
+        enterable: true, // 允许鼠标移入 tooltip，便于点击「查看详情」
         transitionDuration: 0.2,
         backgroundColor: dark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.98)',
         borderColor: dark ? 'rgba(71,85,105,0.6)' : 'var(--el-border-color-lighter)',
@@ -322,11 +324,26 @@
     }
   }
 
+  /** 点击 tooltip 内「查看详情」时触发（事件委托） */
+  function handleTooltipLinkClick(e: MouseEvent) {
+    const link = (e.target as HTMLElement).closest('.cockpit-map-tt-link')
+    if (!link) return
+    e.preventDefault()
+    const countryEn = link.getAttribute('data-country-en') ?? ''
+    const countryCn = link.getAttribute('data-country-cn') ?? ''
+    console.log('查看详情', { countryEn, countryCn })
+    // TODO: 跳转详情页等，例如：router.push({ name: 'CockpitCountry', params: { country: countryEn } })
+  }
+
   onMounted(() => {
     initWorldMap()
+    const el = mapChartRef.value
+    if (el) el.addEventListener('click', handleTooltipLinkClick)
   })
 
   onUnmounted(() => {
+    const el = mapChartRef.value
+    if (el) el.removeEventListener('click', handleTooltipLinkClick)
     destroyChart()
   })
 </script>
