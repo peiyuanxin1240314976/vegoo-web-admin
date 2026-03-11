@@ -60,14 +60,21 @@ export class RoutePermissionValidator {
     }
 
     for (const menuItem of menuList) {
-      // 跳过隐藏的菜单项
-      if (menuItem.meta?.isHide || !menuItem.path) {
+      // 仅跳过无 path 的项；isHide 的路由不显示在菜单，但需加入权限集合以便直接访问（如地区详情）
+      if (!menuItem.path) {
         continue
       }
 
       // 标准化路径并添加到集合
       const menuPath = menuItem.path.startsWith('/') ? menuItem.path : `/${menuItem.path}`
-      pathSet.add(menuPath)
+
+      // 带动态参数的路由（如 /cockpit-map-detail/:country）需加入前缀，以便 /cockpit-map-detail/SA 等能通过前缀匹配
+      if (menuPath.includes(':')) {
+        const basePath = menuPath.slice(0, menuPath.indexOf(':')).replace(/\/$/, '')
+        if (basePath) pathSet.add(basePath)
+      } else {
+        pathSet.add(menuPath)
+      }
 
       // 递归处理子菜单
       if (menuItem.children?.length) {

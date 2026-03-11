@@ -3,70 +3,133 @@
     <template #header>
       <span>变现分析</span>
     </template>
+
+    <!-- A: 收入构成 - 固定宽高横向色块，上 label 下数值(占比)，无 echarts -->
     <div class="revenue-composition">
-      <div ref="chartRef" class="revenue-chart"></div>
+      <div class="composition-bar-wrap">
+        <div class="panel-header section-header">
+          <span class="section-badge">A</span>
+          <span class="section-title">收入构成</span>
+        </div>
+        <div class="composition-labels">
+          <div
+            v-for="(s, i) in compositionData"
+            :key="i"
+            class="composition-label"
+            :style="{ width: s.percent + '%' }"
+          >
+            {{ s.label }}
+          </div>
+        </div>
+        <div class="composition-bar">
+          <div
+            v-for="(s, i) in compositionData"
+            :key="i"
+            class="composition-segment"
+            :style="{
+              width: s.percent + '%',
+              backgroundColor: s.color,
+              animationDelay: i * 0.08 + 's'
+            }"
+          />
+        </div>
+        <div class="composition-values">
+          <div
+            v-for="(s, i) in compositionData"
+            :key="i"
+            class="composition-value"
+            :style="{ width: s.percent + '%' }"
+          >
+            {{ s.value }} ({{ s.percent }}%)
+          </div>
+        </div>
+      </div>
       <div class="revenue-metrics">
         <span>eCPM: {{ metrics.ecpm }} {{ metrics.ecpmTrend }}</span>
         <span>广告充展率: {{ metrics.fillRate }}</span>
         <span>ARPU: {{ metrics.arpu }}</span>
       </div>
     </div>
+
+    <!-- B: 各 App 表现 - art-table -->
+    <div class="app-performance-block">
+      <div class="panel-header section-header">
+        <span class="section-badge">B</span>
+        <span class="section-title">各 App 在{{ regionLabel }}表现</span>
+      </div>
+      <ArtTable :data="appTableData" :columns="appColumns" size="small" height="220" />
+    </div>
   </ElCard>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, watch } from 'vue'
-  import { echarts, type EChartsOption } from '@/plugins/echarts'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import type { ColumnOption } from '@/types'
 
   defineOptions({ name: 'MapDetailRevenuePanel' })
 
-  const CHART_COLOR = '#3984F1'
+  export interface RevenueCompositionItem {
+    label: string
+    value: string
+    percent: number
+    color: string
+  }
 
-  const props = withDefaults(
+  export interface AppPerformanceRow {
+    appName: string
+    adRevenue: number
+    iap: number
+    arpu: number
+    d7Retention: string
+  }
+
+  withDefaults(
     defineProps<{
       metrics?: { ecpm: string; ecpmTrend: string; fillRate: string; arpu: string }
-      chartData?: [number, number]
+      compositionData?: RevenueCompositionItem[]
+      appTableData?: AppPerformanceRow[]
+      regionLabel?: string
     }>(),
     {
       metrics: () => ({ ecpm: '$8.20', ecpmTrend: '↑+3%', fillRate: '94%', arpu: '$22.8' }),
-      chartData: () => [780, 250]
+      compositionData: () => [
+        { label: '广告收入', value: '$780K', percent: 76, color: '#3984F1' },
+        { label: '内购收入', value: '$250K', percent: 24, color: '#f59e0b' }
+      ],
+      appTableData: () => [],
+      regionLabel: '美国'
     }
   )
 
-  const chartRef = ref<HTMLElement | null>(null)
-  let chart: ReturnType<typeof echarts.init> | null = null
-
-  function initChart() {
-    if (!chartRef.value) return
-    chart = echarts.init(chartRef.value)
-    const [ad, iap] = props.chartData
-    const opt: EChartsOption = {
-      grid: { left: 16, right: 16, top: 16, bottom: 24 },
-      xAxis: { type: 'category', show: false, data: ['收入'] },
-      yAxis: { type: 'value', show: false },
-      series: [
-        { data: [ad], stack: 'a', itemStyle: { color: CHART_COLOR }, type: 'bar' },
-        { data: [iap], stack: 'a', itemStyle: { color: '#f59e0b' }, type: 'bar' }
-      ]
-    }
-    chart.setOption(opt)
+  function fmtMoneyK(n: number) {
+    return `$${(n / 1000).toFixed(0)}K`
   }
 
-  function resize() {
-    chart?.resize()
-  }
-
-  onMounted(() => {
-    initChart()
-    window.addEventListener('resize', resize)
-  })
-  watch(() => props.chartData, initChart, { deep: true })
-
-  onUnmounted(() => {
-    window.removeEventListener('resize', resize)
-    chart?.dispose()
-    chart = null
-  })
+  const appColumns: ColumnOption<AppPerformanceRow>[] = [
+    { prop: 'appName', label: 'App名称', minWidth: 120 },
+    {
+      prop: 'adRevenue',
+      label: '广告收入',
+      minWidth: 90,
+      align: 'right',
+      formatter: (row: AppPerformanceRow) => fmtMoneyK(row.adRevenue)
+    },
+    {
+      prop: 'iap',
+      label: '内购',
+      minWidth: 80,
+      align: 'right',
+      formatter: (row: AppPerformanceRow) => fmtMoneyK(row.iap)
+    },
+    {
+      prop: 'arpu',
+      label: 'ARPU',
+      width: 80,
+      align: 'right',
+      formatter: (row: AppPerformanceRow) => `$${row.arpu}`
+    },
+    { prop: 'd7Retention', label: 'D7留存', width: 80, align: 'right' }
+  ]
 </script>
 
 <style scoped lang="scss">
@@ -77,17 +140,129 @@
   }
 
   .revenue-composition {
-    .revenue-chart {
-      height: 80px;
-      margin-bottom: 12px;
+    min-height: 190px;
+    margin-bottom: 16px;
+  }
+
+  .composition-bar-wrap {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .composition-labels,
+  .composition-bar,
+  .composition-values {
+    display: flex;
+    width: 100%;
+  }
+
+  .composition-labels {
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--el-text-color-primary);
+  }
+
+  .composition-label {
+    flex-shrink: 0;
+    padding: 0 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .composition-bar {
+    height: 32px;
+    overflow: hidden;
+    border-radius: 6px;
+  }
+
+  .composition-segment {
+    flex-shrink: 0;
+    height: 100%;
+    transform-origin: left;
+    animation: segment-slide-in 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+
+    &:not(:first-child) {
+      border-left: 1px solid rgba(255 255 255 / 20%);
+    }
+  }
+
+  @keyframes segment-slide-in {
+    from {
+      opacity: 0.7;
+      transform: scaleX(0);
     }
 
-    .revenue-metrics {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      font-size: 13px;
-      color: var(--el-text-color-regular);
+    to {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+  }
+
+  .composition-values {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--el-text-color-regular);
+  }
+
+  .composition-value {
+    flex-shrink: 0;
+    padding: 0 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .revenue-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--el-text-color-regular);
+
+    span {
+      width: 30%;
+      padding: 5px 0;
+      text-align: center;
+      background-color: var(--el-fill-color-light);
+      border-radius: 6px;
+    }
+  }
+
+  .section-header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .section-badge {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    color: #fff;
+    background: linear-gradient(135deg, #29b6f6 0%, #039be5 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgb(41 182 246 / 25%);
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+  }
+
+  .app-performance-block {
+    .panel-header {
+      margin-bottom: 8px;
     }
   }
 </style>

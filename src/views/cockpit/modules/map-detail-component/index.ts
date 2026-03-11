@@ -8,4 +8,5 @@ export { default as MapDetailSegmentChart } from './map-detail-segment-chart.vue
 
 export type { StatCardItem } from './map-detail-stats-cards.vue'
 export type { ChannelRow, CampaignRow } from './map-detail-spend-panel.vue'
+export type { RevenueCompositionItem, AppPerformanceRow } from './map-detail-revenue-panel.vue'
 export type { SegmentItem } from './map-detail-segment-chart.vue'

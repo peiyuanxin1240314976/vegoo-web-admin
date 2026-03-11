@@ -4,23 +4,18 @@
       <span>投放分析</span>
     </template>
     <div class="panel-block">
-      <div class="panel-header">
-        <span class="panel-title">渠道投放效果对比</span>
+      <div class="panel-header section-header">
+        <span class="section-badge">A</span>
+        <span class="section-title">渠道投放效果对比</span>
       </div>
-      <ArtTable
-        :data="channelData"
-        :columns="channelColumns"
-        size="small"
-        height="220"
-        show-summary
-        :summary-method="channelSummaries"
-      />
+      <ArtTable :data="channelData" :columns="channelColumns" size="small" height="150" />
     </div>
     <div class="panel-block">
-      <div class="panel-header">
-        <span class="panel-title">当前投放中 Campaign (Top 5)</span>
+      <div class="panel-header section-header">
+        <span class="section-badge">B</span>
+        <span class="section-title">当前投放中 Campaign (Top 5)</span>
       </div>
-      <ArtTable :data="campaignData" :columns="campaignColumns" size="small" height="200">
+      <ArtTable :data="campaignData" :columns="campaignColumns" size="small" height="150">
         <template #roi="{ row }">
           <span class="roi-dot" :class="getRoiClass(row.roi)"></span>
           <span>{{ row.roi }}</span>
@@ -54,7 +49,7 @@
     status: string
   }
 
-  const props = withDefaults(
+  withDefaults(
     defineProps<{
       channelData?: ChannelRow[]
       campaignData?: CampaignRow[]
@@ -108,11 +103,11 @@
     { prop: 'status', label: '状态', width: 70 }
   ]
 
-  function channelSummaries(): string[] {
-    const total = props.channelData.reduce((a, b) => a + b.spend, 0)
-    const totalInstalls = props.channelData.reduce((a, b) => a + b.installs, 0)
-    return ['合计', fmtMoneyK(total), String(totalInstalls.toLocaleString()), '—', '—', '—', '']
-  }
+  // function channelSummaries(): string[] {
+  //   const total = props.channelData.reduce((a, b) => a + b.spend, 0)
+  //   const totalInstalls = props.channelData.reduce((a, b) => a + b.installs, 0)
+  //   return ['合计', fmtMoneyK(total), String(totalInstalls.toLocaleString()), '—', '—', '—', '']
+  // }
 
   function getRoiClass(roi: number): string {
     if (roi >= 1.5) return 'roi-good'
@@ -131,13 +126,33 @@
       margin-top: 16px;
     }
 
-    .panel-header {
-      margin-bottom: 8px;
+    .panel-header.section-header {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
 
-      .panel-title {
-        font-size: 13px;
-        color: var(--el-text-color-secondary);
-      }
+    .section-badge {
+      display: inline-flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1;
+      color: #fff;
+      background: linear-gradient(135deg, #29b6f6 0%, #039be5 100%);
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgb(41 182 246 / 25%);
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
     }
 
     .roi-dot {

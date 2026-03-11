@@ -41,7 +41,12 @@
             :channel-data="channelTableData"
             :campaign-data="campaignTableData"
           />
-          <MapDetailRevenuePanel :metrics="revenueMetrics" :chart-data="revenueChartData" />
+          <MapDetailRevenuePanel
+            :metrics="revenueMetrics"
+            :composition-data="revenueCompositionData"
+            :app-table-data="appPerformanceData"
+            :region-label="countryName"
+          />
         </div>
 
         <div class="section-row">
@@ -71,6 +76,7 @@
   } from './map-detail-component'
   import type { StatCardItem } from './map-detail-component'
   import type { ChannelRow, CampaignRow } from './map-detail-component'
+  import type { RevenueCompositionItem, AppPerformanceRow } from './map-detail-component'
   import type { SegmentItem } from './map-detail-component'
 
   defineOptions({ name: 'CockpitMapDetail' })
@@ -205,7 +211,15 @@
     fillRate: '94%',
     arpu: '$22.8'
   })
-  const revenueChartData = ref<[number, number]>([780, 250])
+  const revenueCompositionData = ref<RevenueCompositionItem[]>([
+    { label: '广告收入', value: '$780K', percent: 76, color: '#3984F1' },
+    { label: '内购收入', value: '$250K', percent: 24, color: '#f59e0b' }
+  ])
+  const appPerformanceData = ref<AppPerformanceRow[]>([
+    { appName: 'Weather5', adRevenue: 420000, iap: 95000, arpu: 28.5, d7Retention: '42%' },
+    { appName: 'BloodPressure2', adRevenue: 198000, iap: 88000, arpu: 19.2, d7Retention: '38%' },
+    { appName: 'HealthTracker3', adRevenue: 162000, iap: 67000, arpu: 15.8, d7Retention: '35%' }
+  ])
 
   const retentionLocalData = ref([72, 58, 45, 38, 32])
   const retentionGlobalData = ref([66, 52, 39, 32, 26])
@@ -271,7 +285,7 @@
     position: relative;
     z-index: 1;
     flex: 1;
-    min-width: 72px;
+    min-width: 80px;
     padding: 6px 14px;
     font-size: 13px;
     color: var(--el-text-color-regular);

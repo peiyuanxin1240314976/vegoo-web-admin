@@ -1,7 +1,7 @@
 <template>
   <div class="map-detail-header">
     <div class="header-left">
-      <ElButton text type="primary" class="back-btn" @click="goBack">
+      <ElButton type="primary" plain class="back-btn" @click="goBack">
         <template #icon><ArrowLeft /></template>
         返回
       </ElButton>
