@@ -26,6 +26,7 @@
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
+  import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useSettingStore } from '@/store/modules/setting'
   import { useChart } from '@/hooks/core/useChart'
@@ -195,7 +196,7 @@
         ecpmStr
           ? `<div class="cockpit-map-tt-row"><span>eCPM:</span> <span style="${upClass}">${ecpmStr}</span></div>`
           : '',
-        `<div class="cockpit-map-tt-link" data-country-en="${(d.name || params.name || '').replace(/"/g, '&quot;')}" data-country-cn="${(d.nameCn || params.name || '').replace(/"/g, '&quot;')}">查看${d.nameCn || params.name}详情 →</div>`
+        `<div class="cockpit-map-tt-link" data-country-code="${(isoCode || '').replace(/"/g, '&quot;')}" data-country-en="${(d.name || params.name || '').replace(/"/g, '&quot;')}" data-country-cn="${(d.nameCn || params.name || '').replace(/"/g, '&quot;')}">查看${d.nameCn || params.name}详情 →</div>`
       ].filter(Boolean)
       return lines.join('')
     }
@@ -324,15 +325,16 @@
     }
   }
 
-  /** 点击 tooltip 内「查看详情」时触发（事件委托） */
+  const router = useRouter()
+  /** 点击 tooltip 内「查看详情」时跳转地区详情页 */
   function handleTooltipLinkClick(e: MouseEvent) {
     const link = (e.target as HTMLElement).closest('.cockpit-map-tt-link')
     if (!link) return
     e.preventDefault()
-    const countryEn = link.getAttribute('data-country-en') ?? ''
-    const countryCn = link.getAttribute('data-country-cn') ?? ''
-    console.log('查看详情', { countryEn, countryCn })
-    // TODO: 跳转详情页等，例如：router.push({ name: 'CockpitCountry', params: { country: countryEn } })
+    const countryCode = link.getAttribute('data-country-code') ?? ''
+    if (countryCode) {
+      router.push({ name: 'CockpitMapDetail', params: { country: countryCode } })
+    }
   }
 
   onMounted(() => {
