@@ -234,15 +234,67 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
     {
       nameEn: 'United States of America',
       name: '美国',
-      revenue: 1030,
-      spend: 652,
-      user: 45200,
+      revenue: 8200,
+      spend: 5800,
+      user: 125000,
       trend: '+12%',
       color: '#67c23a',
       newUser: 3840,
       newUserTrend: '+22%',
       ecpm: 8.2,
       ecpmTrend: '+3%'
+    },
+    {
+      nameEn: 'China',
+      name: '中国',
+      revenue: 7500,
+      spend: 5200,
+      user: 98000,
+      trend: '+10%',
+      color: '#67c23a',
+      newUser: 8200,
+      newUserTrend: '+15%',
+      ecpm: 7.5,
+      ecpmTrend: '+4%'
+    },
+    {
+      nameEn: 'Japan',
+      name: '日本',
+      revenue: 6800,
+      spend: 4800,
+      user: 85000,
+      trend: '+4%',
+      color: '#f56c6c',
+      newUser: 980,
+      newUserTrend: '+3%',
+      ecpm: 7.8,
+      ecpmTrend: '+2%'
+    },
+    {
+      nameEn: 'United Kingdom',
+      name: '英国',
+      revenue: 5200,
+      spend: 3800,
+      user: 62000,
+      trend: '+6%',
+      color: '#409eff',
+      newUser: 420,
+      newUserTrend: '+7%',
+      ecpm: 6.5,
+      ecpmTrend: '+4%'
+    },
+    {
+      nameEn: 'Russia',
+      name: '俄罗斯',
+      revenue: 3800,
+      spend: 2800,
+      user: 48000,
+      trend: '+5%',
+      color: '#E2C33D',
+      newUser: 2100,
+      newUserTrend: '+9%',
+      ecpm: 5.5,
+      ecpmTrend: '+2%'
     },
     {
       nameEn: 'Brazil',
@@ -256,19 +308,6 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       newUserTrend: '+8%',
       ecpm: 5.1,
       ecpmTrend: '+5%'
-    },
-    {
-      nameEn: 'Japan',
-      name: '日本',
-      revenue: 650,
-      spend: 520,
-      user: 19000,
-      trend: '+4%',
-      color: '#f56c6c',
-      newUser: 980,
-      newUserTrend: '+3%',
-      ecpm: 7.8,
-      ecpmTrend: '+2%'
     },
     {
       nameEn: 'India',
@@ -295,19 +334,6 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       newUserTrend: '+15%',
       ecpm: 9.2,
       ecpmTrend: '+6%'
-    },
-    {
-      nameEn: 'United Kingdom',
-      name: '英国',
-      revenue: 380,
-      spend: 290,
-      user: 8500,
-      trend: '+6%',
-      color: '#409eff',
-      newUser: 420,
-      newUserTrend: '+7%',
-      ecpm: 6.5,
-      ecpmTrend: '+4%'
     },
     {
       nameEn: 'Germany',
@@ -363,11 +389,11 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
     }
   ],
   mapLegend: [
-    { name: '美国', value: '$1.03M', trend: '++12%', color: '#67c23a' },
-    { name: '巴西', value: '$500K', trend: '↑+15%', color: '#e6a23c' },
-    { name: '日本', value: '$650K', trend: '↑+4%', color: '#f56c6c' },
-    { name: '印度', value: '$150K', trend: '++2%', color: '#e6a23c' },
-    { name: '澳大利亚', value: '$400K', trend: '↑+9%', color: '#67c23a' }
+    { name: '美国', value: '$8.2M', trend: '++12%', color: '#67c23a' },
+    { name: '中国', value: '$7.5M', trend: '↑+10%', color: '#67c23a' },
+    { name: '日本', value: '$6.8M', trend: '↑+4%', color: '#f56c6c' },
+    { name: '英国', value: '$5.2M', trend: '↑+6%', color: '#409eff' },
+    { name: '印度', value: '$150K', trend: '++2%', color: '#e6a23c' }
   ],
   topRevenue: [
     { name: 'Weather5', revenue: '$580K', trendPercent: '+8%' },

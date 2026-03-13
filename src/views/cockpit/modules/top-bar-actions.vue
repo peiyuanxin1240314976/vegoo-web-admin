@@ -1,16 +1,22 @@
 <template>
   <div class="cockpit-top-bar">
-    <span class="current-date">
-      <ElIcon class="date-icon"><Calendar /></ElIcon>
-      {{ dateText }}
-    </span>
+    <ElDatePicker
+      v-model="selectedDate"
+      type="date"
+      size="default"
+      class="cockpit-date-picker"
+      placeholder="选择日期"
+      format="YYYY年MM月DD日"
+      value-format="YYYY-MM-DD"
+      :prefix-icon="Calendar"
+    />
     <div class="actions">
-      <ElButton size="small" type="primary" @click="showSimulationDialog = true">
+      <ElButton size="default" type="primary" @click="showSimulationDialog = true">
         <ElIcon class="btn-icon"><DataAnalysis /></ElIcon>
         模拟分析
       </ElButton>
       <ScenarioSimulationDialog v-model="showSimulationDialog" />
-      <ElButton size="small" @click="toggleFullScreen">
+      <ElButton size="default" @click="toggleFullScreen">
         <ElIcon class="btn-icon"><FullScreen /></ElIcon>
         {{ isFullScreen ? '退出全屏' : '全屏' }}
       </ElButton>
@@ -19,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, onMounted, onUnmounted } from 'vue'
+  import { ref, onMounted, onUnmounted } from 'vue'
   import { Calendar, DataAnalysis, FullScreen } from '@element-plus/icons-vue'
   import { useTableStore } from '@/store/modules/table'
   import ScenarioSimulationDialog from './scenario-simulation-dialog.vue'
@@ -34,13 +40,12 @@
   const isFullScreen = ref(false)
   const originalOverflow = ref('')
 
-  const dateText = computed(() => {
-    const d = new Date()
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `今天, ${y}年${m}月${day}日`
-  })
+  const selectedDate = ref(
+    (() => {
+      const d = new Date()
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    })()
+  )
 
   const toggleFullScreen = () => {
     const el = document.querySelector(`.${props.fullClass}`)
@@ -89,17 +94,8 @@
     align-items: center;
     justify-content: space-between;
 
-    .current-date {
-      display: inline-flex;
-      gap: 6px;
-      align-items: center;
-      font-size: 14px;
-      color: var(--el-text-color-regular);
-
-      .date-icon {
-        font-size: 16px;
-        color: var(--el-text-color-secondary);
-      }
+    :deep(.cockpit-date-picker) {
+      width: 160px !important;
     }
 
     .actions {

@@ -15,12 +15,12 @@
     <div v-loading="mapLoading" class="map-wrap">
       <div ref="mapChartRef" class="map-chart"></div>
     </div>
-    <div class="map-legend">
+    <!-- <div class="map-legend">
       <div v-for="r in regionList" :key="r.name" class="legend-item">
         <span class="dot" :style="{ background: r.color }"></span>
         <span>{{ r.name }}（{{ r.value }} {{ r.trend }}）</span>
       </div>
-    </div>
+    </div> -->
   </ElCard>
 </template>
 
@@ -275,9 +275,9 @@
   const countryData = computed(() =>
     props.mapCountries.length ? props.mapCountries : MOCK_COCKPIT_OVERVIEW.mapCountries
   )
-  const regionList = computed(() =>
-    props.mapLegend.length ? props.mapLegend : MOCK_COCKPIT_OVERVIEW.mapLegend
-  )
+  // const regionList = computed(() =>
+  //   props.mapLegend.length ? props.mapLegend : MOCK_COCKPIT_OVERVIEW.mapLegend
+  // )
 
   const mapChartRef = ref<HTMLElement | null>(null)
   const mapLoading = ref(true)
@@ -557,12 +557,12 @@
 
   .map-wrap {
     position: relative;
-    min-height: 400px;
+    min-height: 500px;
   }
 
   .map-chart {
     width: 100%;
-    height: 400px;
+    height: 500px;
   }
 
   .map-legend {
