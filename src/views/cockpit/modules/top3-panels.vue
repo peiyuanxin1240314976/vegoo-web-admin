@@ -218,9 +218,10 @@
     }
 
     &--revenue {
-      &::before {
-        background: linear-gradient(180deg, #e6a23c 0%, rgb(230 162 60 / 35%) 100%);
-      }
+      // &::before {
+      //   background: linear-gradient(180deg, #e6a23c 0%, rgb(230 162 60 / 35%) 100%);
+      // }
+      background: linear-gradient(180deg, #6a4e00, #000, #000, #000, #000, transparent);
 
       .top3-module__header {
         color: #e6a23c;
@@ -232,9 +233,10 @@
     }
 
     &--badreview {
-      &::before {
-        background: linear-gradient(180deg, #f56c6c 0%, rgb(245 108 108 / 35%) 100%);
-      }
+      // &::before {
+      //   background: linear-gradient(180deg, #f56c6c 0%, rgb(245 108 108 / 35%) 100%);
+      // }
+      background: linear-gradient(180deg, #700, #000, #000, #000, #000, transparent);
 
       .top3-module__header {
         color: #f56c6c;
@@ -246,9 +248,10 @@
     }
 
     &--growth {
-      &::before {
-        background: linear-gradient(180deg, #67c23a 0%, rgb(103 194 58 / 35%) 100%);
-      }
+      // &::before {
+      //   background: linear-gradient(180deg, #67c23a 0%, rgb(103 194 58 / 35%) 100%);
+      // }
+      background: linear-gradient(180deg, #003a24, #000, #000, #000, #000, transparent);
 
       .top3-module__header {
         color: #67c23a;

@@ -449,28 +449,28 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
         name: '美国',
         depth: 1,
         valueDisplay: '$1.03M',
-        icon: '🇺🇸',
+        code: 'us',
         itemStyle: { color: '#67c23a', borderRadius: 6 }
       },
       {
         name: '日本',
         depth: 1,
         valueDisplay: '$650K',
-        icon: '🇯🇵',
+        code: 'jp',
         itemStyle: { color: '#409eff', borderRadius: 6 }
       },
       {
         name: '英国',
         depth: 1,
         valueDisplay: '$600K',
-        icon: '🇬🇧',
+        code: 'gb',
         itemStyle: { color: '#7230b3', borderRadius: 6 }
       },
       {
         name: '巴西',
         depth: 1,
         valueDisplay: '$500K',
-        icon: '🇧🇷',
+        code: 'br',
         itemStyle: { color: '#e6a23c', borderRadius: 6 }
       },
       {

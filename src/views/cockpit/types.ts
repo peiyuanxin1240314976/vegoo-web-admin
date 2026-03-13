@@ -184,6 +184,8 @@ export interface CockpitRevenueStructureNode {
   icon?: string
   /** 节点内图标/图片 URL，显示在文字上方或左侧 */
   iconImage?: string
+  /** 国家 ISO 3166-1 alpha-2 代码（小写），用于显示 flag-icons 国旗，如 'us'、'jp' */
+  code?: string
   label?: { formatter?: string }
   itemStyle?: { color?: string; borderRadius?: number }
 }

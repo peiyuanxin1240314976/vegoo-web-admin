@@ -6,11 +6,22 @@
   >
     <template #header>
       <span>业务分布地图</span>
-      <ElRadioGroup v-model="mapMetric" size="small" class="map-metric-tabs">
-        <ElRadioButton label="revenue">收入</ElRadioButton>
-        <ElRadioButton label="spend">消耗</ElRadioButton>
-        <ElRadioButton label="user">用户</ElRadioButton>
-      </ElRadioGroup>
+      <div class="map-metric-box">
+        <div
+          class="map-metric-slider"
+          :style="{ transform: `translateX(${metricIndex * 100}%)` }"
+        />
+        <button
+          v-for="opt in metricOptions"
+          :key="opt.value"
+          type="button"
+          class="map-metric-btn"
+          :class="{ active: mapMetric === opt.value }"
+          @click="selectMetric(opt.value)"
+        >
+          {{ opt.label }}
+        </button>
+      </div>
     </template>
     <div v-loading="mapLoading" class="map-wrap">
       <div ref="mapChartRef" class="map-chart"></div>
@@ -284,6 +295,16 @@
   const mapMetric = ref<'revenue' | 'spend' | 'user'>('revenue')
   const { chartRef, initChart, updateChart, destroyChart } = useChart()
 
+  const metricOptions: { value: 'revenue' | 'spend' | 'user'; label: string }[] = [
+    { value: 'revenue', label: '收入' },
+    { value: 'spend', label: '消耗' },
+    { value: 'user', label: '用户' }
+  ]
+  const metricIndex = computed(() => metricOptions.findIndex((o) => o.value === mapMetric.value))
+  function selectMetric(value: 'revenue' | 'spend' | 'user') {
+    mapMetric.value = value
+  }
+
   function getValueByMetric(item: CockpitMapCountry) {
     switch (mapMetric.value) {
       case 'revenue':
@@ -510,43 +531,86 @@
 <style scoped lang="scss">
   .cockpit-map-panel {
     height: 100%;
+    border-radius: 10px;
 
     :deep(.el-card__header) {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 5px 15px;
     }
 
     :deep(.el-card__body) {
-      padding: 12px;
+      padding: 5px;
     }
   }
 
-  .map-metric-tabs {
-    :deep(.el-radio-button__inner) {
-      margin-left: 4px;
-      border-radius: 6px;
-    }
+  .map-metric-box {
+    position: relative;
+    display: inline-flex;
+    padding: 3px;
+    // background: var(--el-fill-color-light);
+    // border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
+  }
 
-    :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+  .map-metric-slider {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: calc((100% - 6px) / 3);
+    height: calc(100% - 6px);
+    pointer-events: none;
+    background: var(--el-color-primary);
+    border-radius: 6px;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .map-metric-btn {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    min-width: 52px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: var(--el-text-color-regular);
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 6px;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: var(--el-text-color-primary);
+    }
+    // margin-right: 2px;
+
+    &.active {
       color: #fff;
-      background: var(--el-color-primary);
-      border-color: var(--el-color-primary);
+      border-width: 0;
     }
   }
 
   .cockpit-map-panel--dark {
-    .map-metric-tabs {
-      :deep(.el-radio-button__inner) {
-        color: #cbd5e1;
-        background: rgb(51 65 85 / 80%);
-        border-color: rgb(71 85 105 / 60%);
+    // .map-metric-box {
+    //   background: rgb(51 65 85 / 80%);
+    //   border-color: rgb(71 85 105 / 60%);
+    // }
+
+    .map-metric-slider {
+      background: rgb(59 130 246 / 90%);
+    }
+
+    .map-metric-btn {
+      color: #cbd5e1;
+
+      &:hover {
+        color: #f1f5f9;
       }
 
-      :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+      &.active {
         color: #fff;
-        background: rgb(59 130 246 / 90%);
-        border-color: rgb(96 165 250 / 80%);
       }
     }
 

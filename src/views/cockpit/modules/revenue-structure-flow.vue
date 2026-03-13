@@ -20,8 +20,15 @@
   import type { EChartsOption } from 'echarts'
   import type { CockpitRevenueStructureFlow } from '../types'
   import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
+  import 'flag-icons/css/flag-icons.min.css'
 
   defineOptions({ name: 'CockpitRevenueStructureFlow' })
+
+  /** flag-icons 国旗图 CDN（与项目安装的 flag-icons 版本一致，ECharts 需图片 URL） */
+  const FLAG_ICONS_CDN = 'https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3'
+  function getFlagIconUrl(code: string): string {
+    return `${FLAG_ICONS_CDN}/${String(code).toLowerCase()}.svg`
+  }
 
   const props = withDefaults(defineProps<{ flowData?: CockpitRevenueStructureFlow | null }>(), {
     flowData: null
@@ -55,6 +62,13 @@
   /** 按行数非线性权重的底数（lineCount^2.5 * WEIGHT_BASE），使多行节点占比更大、避免文字溢出 */
   const HEIGHT_WEIGHT_BASE = 600
 
+  /** 节点内图标样式：尺寸、圆角等，统一控制国旗图与 emoji 大小 */
+  const NODE_ICON_STYLE = {
+    size: 14,
+    imgBorderRadius: 2,
+    iconColor: '#fff'
+  }
+
   function buildOption(): EChartsOption {
     const { nodes, links } = flowData.value
     if (!nodes?.length || !links?.length) {
@@ -73,13 +87,14 @@
     }
 
     const defaultBorderRadius = 6
-    const iconSize = 14
+    const iconSize = NODE_ICON_STYLE.size
 
     const totalLinkValue = links.reduce((sum, l) => sum + l.value, 0)
 
     const data = nodes.map((n) => {
+      const resolvedIconImage = n.iconImage ?? (n.code ? getFlagIconUrl(n.code) : undefined)
       const lines = [n.name, n.valueDisplay, n.percent].filter(Boolean) as string[]
-      const hasIcon = !!(n.icon || n.iconImage)
+      const hasIcon = !!(n.icon || resolvedIconImage)
       const lineCount = hasIcon
         ? 1 + (n.valueDisplay ? 1 : 0) + (n.percent ? 1 : 0)
         : Math.max(1, lines.length)
@@ -108,7 +123,7 @@
           color: '#fff',
           fontSize: labelFontSize,
           lineHeight: 16,
-          ...(hasPercent ? {} : { padding: [15, 0, 0, 0] })
+          ...(hasPercent ? {} : { padding: [8, 0, 0, 0] })
         },
         value: {
           color: '#fff',
@@ -118,17 +133,30 @@
         },
         pct: { color: '#fff', fontSize: labelFontSize - 1, lineHeight: 14 }
       }
-      if (n.iconImage) {
+      // 以下 rich 片段（图标块）支持 ECharts 富文本全部样式，可任选使用：
+      // 尺寸与间距: width, height, lineHeight, padding（注意：无 margin，仅 padding）
+      // 背景: backgroundColor（色值或 { image: url, repeat?: 'repeat'|'no-repeat'|'repeat-x'|'repeat-y' ）, borderRadius
+      // 边框: borderColor, borderWidth, borderRadius
+      // 对齐: align（'left'|'center'|'right'）, verticalAlign（'top'|'middle'|'bottom'）
+      // 文字（对图片块影响小）: color, fontSize, fontStyle, fontWeight, fontFamily
+      // 文字描边: textBorderColor, textBorderWidth
+      // 文字阴影: textShadowColor, textShadowBlur, textShadowOffsetX, textShadowOffsetY
+      // 块阴影: shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY
+      if (resolvedIconImage) {
+        // const nameLineHeight = 16
         rich.img = {
-          backgroundColor: { image: n.iconImage },
+          backgroundColor: { image: resolvedIconImage, repeat: 'no-repeat' },
           width: iconSize,
-          height: iconSize,
-          borderRadius: 2
+          height: 10,
+          borderRadius: NODE_ICON_STYLE.imgBorderRadius,
+          padding: [0, 0, 0, 0],
+          align: 'left',
+          verticalAlign: 'bottom'
         }
       }
       if (n.icon) {
         rich.icon = {
-          color: '#fff',
+          color: NODE_ICON_STYLE.iconColor,
           fontSize: iconSize,
           lineHeight: iconSize,
           ...(hasPercent ? { padding: [0, 0, 2, 0] } : { padding: [15, 0, 2, 0] })
@@ -136,7 +164,7 @@
       }
 
       let formatterStr = ''
-      if (n.iconImage) formatterStr += `{img| } {name|${escapeRich(n.name)}}\n`
+      if (resolvedIconImage) formatterStr += `{img| } {name|${escapeRich(n.name)}}\n`
       else if (n.icon) formatterStr += `{icon|${n.icon}} {name|${escapeRich(n.name)}}\n`
       else formatterStr += `{name|${escapeRich(n.name)}}\n`
       if (n.valueDisplay) formatterStr += `{value|${escapeRich(n.valueDisplay)}}\n`
