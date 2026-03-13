@@ -95,7 +95,7 @@
     justify-content: space-between;
 
     :deep(.cockpit-date-picker) {
-      width: 160px !important;
+      width: 150px !important;
     }
 
     .actions {
