@@ -100,6 +100,11 @@
     border-radius: 10px;
   }
 
+  /* 深色模式：渐变色背景 */
+  html.dark .cockpit-pace-panel {
+    background: linear-gradient(320deg, #000e29, #000);
+  }
+
   .pace-header {
     display: flex;
     align-items: center;

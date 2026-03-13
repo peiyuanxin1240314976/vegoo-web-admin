@@ -221,7 +221,7 @@
       // &::before {
       //   background: linear-gradient(180deg, #e6a23c 0%, rgb(230 162 60 / 35%) 100%);
       // }
-      background: linear-gradient(180deg, #6a4e00, #000, #000, #000, #000, transparent);
+      background: #fff;
 
       .top3-module__header {
         color: #e6a23c;
@@ -236,7 +236,7 @@
       // &::before {
       //   background: linear-gradient(180deg, #f56c6c 0%, rgb(245 108 108 / 35%) 100%);
       // }
-      background: linear-gradient(180deg, #700, #000, #000, #000, #000, transparent);
+      background: #fff;
 
       .top3-module__header {
         color: #f56c6c;
@@ -251,7 +251,7 @@
       // &::before {
       //   background: linear-gradient(180deg, #67c23a 0%, rgb(103 194 58 / 35%) 100%);
       // }
-      background: linear-gradient(180deg, #003a24, #000, #000, #000, #000, transparent);
+      background: #fff;
 
       .top3-module__header {
         color: #67c23a;
@@ -261,6 +261,36 @@
         color: #67c23a;
       }
     }
+  }
+
+  /* 浅色模式：纯白底、深色字 */
+  html:not(.dark) .top3-module {
+    background: #fff;
+
+    .top3-module__title {
+      color: #303133;
+    }
+
+    .top3-row__name {
+      color: #303133;
+    }
+
+    .top3-row__value {
+      color: #606266;
+    }
+  }
+
+  /* 深色模式：渐变落到底色 #000 */
+  html.dark .top3-module--revenue {
+    background: linear-gradient(180deg, #6a4e00, #000, #000, #000, #000, transparent);
+  }
+
+  html.dark .top3-module--badreview {
+    background: linear-gradient(180deg, #700, #000, #000, #000, #000, transparent);
+  }
+
+  html.dark .top3-module--growth {
+    background: linear-gradient(180deg, #003a24, #000, #000, #000, #000, transparent);
   }
 
   .top3-row {

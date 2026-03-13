@@ -597,6 +597,7 @@
     //   background: rgb(51 65 85 / 80%);
     //   border-color: rgb(71 85 105 / 60%);
     // }
+    background: linear-gradient(320deg, #000e29, #000);
 
     .map-metric-slider {
       background: rgb(59 130 246 / 90%);
