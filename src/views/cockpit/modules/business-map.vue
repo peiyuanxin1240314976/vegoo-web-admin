@@ -621,12 +621,12 @@
 
   .map-wrap {
     position: relative;
-    min-height: 500px;
+    min-height: 470px;
   }
 
   .map-chart {
     width: 100%;
-    height: 500px;
+    height: 470px;
   }
 
   .map-legend {

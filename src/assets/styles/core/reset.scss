@@ -1,5 +1,39 @@
 @charset "UTF-8";
 
+/* 设计规范 2.2：全局字体 */
+html,
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+}
+
+/* 设计规范 2.2：标题字号（供 class 或组件使用） */
+.art-text-h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+}
+
+.art-text-h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+}
+
+.art-text-h3 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+}
+
+.art-text-body {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+}
+
+.art-text-aux {
+  font-size: var(--font-size-aux);
+  font-weight: var(--font-weight-regular);
+}
+
 /*滚动条*/
 /*滚动条整体部分,必须要设置*/
 ::-webkit-scrollbar {

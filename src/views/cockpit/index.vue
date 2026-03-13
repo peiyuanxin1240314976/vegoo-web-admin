@@ -100,6 +100,6 @@
   }
 
   .cockpit-row-2 .cockpit-col3-row1 {
-    margin-bottom: 16px;
+    margin-bottom: 0;
   }
 </style>

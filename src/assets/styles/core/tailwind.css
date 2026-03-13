@@ -1,6 +1,23 @@
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ==================== 设计规范 2.2 字体与字号 ==================== */
+:root {
+  /* 中文字体 macOS: PingFang SC / Windows: Microsoft YaHei；英文与数字: Inter, DIN */
+  --font-family-base: 'PingFang SC', 'Microsoft YaHei', Inter, 'DIN Alternate', DIN, sans-serif;
+
+  /* 字号体系 */
+  --font-size-h1: 24px; /* 页面主标题 - Bold */
+  --font-size-h2: 20px; /* 模块主标题 - Bold */
+  --font-size-h3: 16px; /* 卡片/图表标题 - Semi-bold */
+  --font-size-body: 14px; /* 正文、表格、段落 - Regular */
+  --font-size-aux: 12px; /* 图例、标签、注释 - Regular */
+
+  --font-weight-bold: 700;
+  --font-weight-semibold: 600;
+  --font-weight-regular: 400;
+}
+
 /* ==================== Light Mode Variables ==================== */
 :root {
   /* Base Colors */
@@ -47,44 +64,58 @@
   --art-el-active-color: #f2f4f5;
 }
 
-/* ==================== Dark Mode Variables ==================== */
+/* ==================== Dark Mode Variables（设计规范 2.1）==================== */
 .dark {
   /* Base Colors */
   --art-color: #000000;
 
-  /* Gray Scale - Dark Mode */
-  --art-gray-100: #110f0f;
-  --art-gray-200: #17171c;
-  --art-gray-300: #393946;
-  --art-gray-400: #505062;
-  --art-gray-500: #73738c;
-  --art-gray-600: #8f8fa3;
-  --art-gray-700: #ababba;
-  --art-gray-800: #c7c7d1;
-  --art-gray-900: #e3e3e8;
+  /* 主品牌色 / 高亮 - 关键指标、按钮、选中、图表主色 */
+  --art-primary: #3b82f6;
+  /* 辅助色：增长/积极、警告、危险 */
+  --art-success: #10b981;
+  --art-warning: #f97316;
+  --art-danger: #ef4444;
+  --art-error: #ef4444;
 
-  /* Border Colors */
-  --art-card-border: rgba(255, 255, 255, 0.08);
+  /* Gray Scale - 与正文/辅助文字规范对齐 */
+  --art-gray-100: #09090b;
+  --art-gray-200: #18181b;
+  --art-gray-300: #27272a;
+  --art-gray-400: #3f3f46;
+  --art-gray-500: #71717a;
+  --art-gray-600: #a1a1aa; /* 常规/辅助文字 */
+  --art-gray-700: #d4d4d8;
+  --art-gray-800: #e4e4e7;
+  --art-gray-900: #f4f4f5; /* 正文/标题文字 */
 
-  --default-border: rgba(255, 255, 255, 0.1);
-  --default-border-dashed: #363843;
+  /* Border - 边框/分割线 */
+  --art-card-border: #27272a;
+  --default-border: #27272a;
+  --default-border-dashed: #27272a;
 
-  /* Background Colors */
-  --default-bg-color: #070707;
-  --default-box-color: #161618;
+  /* Background - 主背景 & 容器/卡片背景 */
+  --default-bg-color: #0a0a0a;
+  --default-box-color: #18181b;
 
-  /* Hover Color */
-  --art-hover-color: #252530;
+  /* Hover / Active */
+  --art-hover-color: #27272a;
+  --art-active-color: #27272a;
+  --art-el-active-color: #3f3f46;
 
-  /* Active Color */
-  --art-active-color: #202226;
-
-  /* Element Component Active Color */
-  --art-el-active-color: #2e2e38;
+  /* Element Plus 主色与设计规范主品牌色一致 */
+  --el-color-primary: #3b82f6;
 }
 
 /* ==================== Tailwind Theme Configuration ==================== */
 @theme {
+  /* 设计规范 2.2 字体与字号 */
+  --font-sans: var(--font-family-base);
+  --font-size-h1: var(--font-size-h1);
+  --font-size-h2: var(--font-size-h2);
+  --font-size-h3: var(--font-size-h3);
+  --font-size-body: var(--font-size-body);
+  --font-size-aux: var(--font-size-aux);
+
   /* Box Color (Light: white / Dark: black) */
   --color-box: var(--default-box-color);
 
@@ -187,17 +218,21 @@
 
 /* ==================== Custom Component Classes ==================== */
 @layer components {
-  /* Art Card Header Component */
+  /* Art Card Header Component（设计规范 2.2：H2 模块标题 + 辅助文字） */
   .art-card-header {
     @apply flex justify-between pr-6 pb-1;
 
     .title {
       h4 {
-        @apply text-lg font-medium text-g-900;
+        font-size: var(--font-size-h2);
+        font-weight: var(--font-weight-bold);
+        @apply text-g-900;
       }
 
       p {
-        @apply mt-1 text-sm text-g-600;
+        font-size: var(--font-size-aux);
+        font-weight: var(--font-weight-regular);
+        @apply mt-1 text-g-600;
 
         span {
           @apply ml-2 font-medium;
