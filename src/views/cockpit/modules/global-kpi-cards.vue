@@ -11,7 +11,22 @@
           <div v-if="item.sub" class="kpi-sub">{{ item.sub }}</div>
         </div>
         <div v-if="item.detail" class="kpi-detail">{{ item.detail }}</div>
-
+        <div class="kpi-mini-chart">
+          <svg viewBox="0 0 100 40" class="mini-chart-svg" preserveAspectRatio="none">
+            <defs>
+              <linearGradient :id="`kpi-grad-${index}`" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--kpi-chart-color)" stop-opacity="0.35" />
+                <stop offset="100%" stop-color="var(--kpi-chart-color)" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+            <path
+              :d="getChartAreaPath(item, index)"
+              class="mini-chart-area"
+              :style="{ fill: `url(#kpi-grad-${index})` }"
+            />
+            <path :d="getChartLinePath(item, index)" class="mini-chart-line" />
+          </svg>
+        </div>
         <ElProgress
           v-if="item.progressPercent != null"
           :percentage="item.progressPercent"
@@ -22,9 +37,6 @@
         <div v-if="item.compare" class="kpi-compare" :class="item.compareUp ? 'up' : 'down'">{{
           item.compare
         }}</div>
-        <div class="kpi-mini-chart">
-          <div class="mini-trend" />
-        </div>
       </div>
     </ElCol>
   </ElRow>
@@ -42,6 +54,39 @@
   const kpiList = computed(() =>
     props.kpiList?.length ? props.kpiList : MOCK_COCKPIT_OVERVIEW.kpi
   )
+
+  /** 根据卡片数据生成迷你图趋势点（0~1），上升/下降 + 轻微波动 */
+  function getTrendPoints(item: CockpitKpiCard, index: number): number[] {
+    const n = 10
+    const up = item.compareUp !== false
+    const seed = index * 7 + (item.type?.length ?? 0)
+    const wobble = (i: number) => ((i * 3 + seed) % 5) / 80 - 0.025
+    const points: number[] = []
+    for (let i = 0; i < n; i++) {
+      const t = i / (n - 1)
+      const base = up ? 0.35 + t * 0.45 : 0.75 - t * 0.45
+      points.push(Math.max(0.1, Math.min(0.95, base + wobble(i))))
+    }
+    return points
+  }
+
+  function getChartLinePath(item: CockpitKpiCard, index: number): string {
+    const points = getTrendPoints(item, index)
+    const w = 100
+    const h = 36
+    const pad = 2
+    const coords = points.map((p, i) => {
+      const x = (i / (points.length - 1)) * w
+      const y = pad + (1 - p) * h
+      return `${x},${y}`
+    })
+    return `M ${coords.join(' L ')}`
+  }
+
+  function getChartAreaPath(item: CockpitKpiCard, index: number): string {
+    const linePath = getChartLinePath(item, index)
+    return `${linePath} L 100,40 L 0,40 Z`
+  }
 </script>
 
 <style scoped lang="scss">
@@ -54,8 +99,8 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    height: 140px;
-    min-height: 140px;
+    height: 188px;
+    min-height: 188px;
     padding: 16px;
     border: 1px solid transparent;
     border-radius: 10px;
@@ -119,18 +164,40 @@
     }
 
     .kpi-mini-chart {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 48px;
-      height: 28px;
+      flex-shrink: 0;
+      width: 100%;
+      height: 48px;
+      padding: 6px 0;
+      margin: 8px 0;
+      // background: rgb(0 0 0 / 6%);
+      border-radius: 8px;
+
+      --kpi-chart-color: var(--el-color-primary);
     }
 
-    .mini-trend {
+    // html.dark & .kpi-mini-chart {
+    //   background: rgb(255 255 255 / 8%);
+    // }
+
+    .mini-chart-svg {
+      display: block;
       width: 100%;
       height: 100%;
       border-radius: 6px;
-      opacity: 0.35;
+    }
+
+    .mini-chart-area {
+      vector-effect: non-scaling-stroke;
+    }
+
+    .mini-chart-line {
+      opacity: 0.9;
+      fill: none;
+      stroke: var(--kpi-chart-color);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.5;
+      vector-effect: non-scaling-stroke;
     }
 
     /* 六个颜色主题：总收入-绿、付费收入-橙、广告支出-蓝、有效订阅-橙蓝、DAU-蓝、预估利润-紫 */
@@ -156,8 +223,8 @@
         color: #f56c6c;
       }
 
-      .mini-trend {
-        background: linear-gradient(135deg, #67c23a 0%, transparent 100%);
+      .kpi-mini-chart {
+        --kpi-chart-color: #67c23a;
       }
     }
 
@@ -183,8 +250,8 @@
         color: #f56c6c;
       }
 
-      .mini-trend {
-        background: linear-gradient(135deg, #e6a23c 0%, transparent 100%);
+      .kpi-mini-chart {
+        --kpi-chart-color: #e6a23c;
       }
     }
 
@@ -210,8 +277,8 @@
         color: #f56c6c;
       }
 
-      .mini-trend {
-        background: linear-gradient(135deg, #409eff 0%, transparent 100%);
+      .kpi-mini-chart {
+        --kpi-chart-color: #409eff;
       }
     }
 
@@ -237,8 +304,8 @@
         color: #f56c6c;
       }
 
-      .mini-trend {
-        background: linear-gradient(135deg, #e6a23c 0%, #409eff 100%);
+      .kpi-mini-chart {
+        --kpi-chart-color: #e6a23c;
       }
     }
 
@@ -264,8 +331,8 @@
         color: #f56c6c;
       }
 
-      .mini-trend {
-        background: linear-gradient(135deg, #409eff 0%, transparent 100%);
+      .kpi-mini-chart {
+        --kpi-chart-color: #409eff;
       }
     }
 
@@ -291,8 +358,8 @@
         color: #f56c6c;
       }
 
-      .mini-trend {
-        background: linear-gradient(135deg, #722ed1 0%, transparent 100%);
+      .kpi-mini-chart {
+        --kpi-chart-color: #722ed1;
       }
     }
   }
