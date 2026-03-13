@@ -33,68 +33,234 @@
   import { echarts, type EChartsOption } from '@/plugins/echarts'
   import type { CockpitMapCountry, CockpitMapLegendItem } from '../types'
   import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
+  import 'flag-icons/css/flag-icons.min.css'
 
   defineOptions({ name: 'CockpitBusinessMap' })
 
   // 使用 base 路径，打包部署到子路径（如 /admin/）时也能正确加载
   const WORLD_JSON_URL = `${import.meta.env.BASE_URL}geo/world.json`
 
-  /** 国家英文名 → ISO 3166-1 alpha-2（与常见 GeoJSON 名称一致，便于 tooltip 显示国旗） */
+  /** 国家/地区英文名 → ISO 3166-1 alpha-2（与 world.json GeoJSON 的 name 字段一致，覆盖全部地图区域以显示国旗） */
   const COUNTRY_NAME_TO_ISO: Record<string, string> = {
     'United States of America': 'US',
     'United States': 'US',
-    Brazil: 'BR',
-    Japan: 'JP',
-    India: 'IN',
-    Australia: 'AU',
-    'United Kingdom': 'GB',
-    Germany: 'DE',
-    France: 'FR',
-    China: 'CN',
-    Canada: 'CA',
-    Mexico: 'MX',
-    Russia: 'RU',
-    'South Korea': 'KR',
-    Korea: 'KR',
-    Italy: 'IT',
-    Spain: 'ES',
-    Indonesia: 'ID',
-    Turkey: 'TR',
-    Netherlands: 'NL',
-    Vietnam: 'VN',
-    Thailand: 'TH',
-    Philippines: 'PH',
-    Malaysia: 'MY',
-    Singapore: 'SG',
-    'South Africa': 'ZA',
-    Egypt: 'EG',
-    Nigeria: 'NG',
+    Afghanistan: 'AF',
+    Aland: 'AX',
+    Albania: 'AL',
+    Algeria: 'DZ',
+    'American Samoa': 'AS',
+    Andorra: 'AD',
+    Angola: 'AO',
+    'Antigua and Barb.': 'AG',
     Argentina: 'AR',
-    Chile: 'CL',
-    Colombia: 'CO',
-    Poland: 'PL',
-    'Saudi Arabia': 'SA',
-    'United Arab Emirates': 'AE',
-    Pakistan: 'PK',
-    Bangladesh: 'BD',
-    Taiwan: 'TW',
-    'Hong Kong': 'HK',
-    'New Zealand': 'NZ',
-    Sweden: 'SE',
-    Norway: 'NO',
-    Switzerland: 'CH',
-    Belgium: 'BE',
+    Armenia: 'AM',
+    Australia: 'AU',
     Austria: 'AT',
-    Israel: 'IL',
-    Ukraine: 'UA',
-    Romania: 'RO',
+    Azerbaijan: 'AZ',
+    Bahamas: 'BS',
+    Bahrain: 'BH',
+    Bangladesh: 'BD',
+    Barbados: 'BB',
+    Belarus: 'BY',
+    Belgium: 'BE',
+    Belize: 'BZ',
+    Benin: 'BJ',
+    Bermuda: 'BM',
+    Bhutan: 'BT',
+    Bolivia: 'BO',
+    'Bosnia and Herz.': 'BA',
+    Botswana: 'BW',
+    'Br. Indian Ocean Ter.': 'IO',
+    Brazil: 'BR',
+    Brunei: 'BN',
+    Bulgaria: 'BG',
+    'Burkina Faso': 'BF',
+    Burundi: 'BI',
+    Cambodia: 'KH',
+    Cameroon: 'CM',
+    Canada: 'CA',
+    'Cape Verde': 'CV',
+    'Cayman Is.': 'KY',
+    'Central African Rep.': 'CF',
+    Chad: 'TD',
+    Chile: 'CL',
+    China: 'CN',
+    Colombia: 'CO',
+    Comoros: 'KM',
+    Congo: 'CG',
+    'Costa Rica': 'CR',
+    "Côte d'Ivoire": 'CI',
+    Croatia: 'HR',
+    Cuba: 'CU',
+    Curaçao: 'CW',
+    Cyprus: 'CY',
+    'Czech Rep.': 'CZ',
     'Czech Republic': 'CZ',
-    Greece: 'GR',
-    Portugal: 'PT',
-    Ireland: 'IE',
+    'Dem. Rep. Congo': 'CD',
+    'Dem. Rep. Korea': 'KP',
     Denmark: 'DK',
+    Djibouti: 'DJ',
+    Dominica: 'DM',
+    'Dominican Rep.': 'DO',
+    Ecuador: 'EC',
+    Egypt: 'EG',
+    'El Salvador': 'SV',
+    'Eq. Guinea': 'GQ',
+    Eritrea: 'ER',
+    Estonia: 'EE',
+    Ethiopia: 'ET',
+    'Faeroe Is.': 'FO',
+    'Falkland Is.': 'FK',
+    Fiji: 'FJ',
     Finland: 'FI',
-    Hungary: 'HU'
+    'Fr. Polynesia': 'PF',
+    'Fr. S. Antarctic Lands': 'TF',
+    France: 'FR',
+    Gabon: 'GA',
+    Gambia: 'GM',
+    Georgia: 'GE',
+    Germany: 'DE',
+    Ghana: 'GH',
+    Greece: 'GR',
+    Greenland: 'GL',
+    Grenada: 'GD',
+    Guam: 'GU',
+    Guatemala: 'GT',
+    Guinea: 'GN',
+    'Guinea-Bissau': 'GW',
+    Guyana: 'GY',
+    Haiti: 'HT',
+    'Heard I. and McDonald Is.': 'HM',
+    Honduras: 'HN',
+    'Hong Kong': 'HK',
+    Hungary: 'HU',
+    Iceland: 'IS',
+    India: 'IN',
+    Indonesia: 'ID',
+    Iran: 'IR',
+    Iraq: 'IQ',
+    Ireland: 'IE',
+    'Isle of Man': 'IM',
+    Israel: 'IL',
+    Italy: 'IT',
+    Jamaica: 'JM',
+    Japan: 'JP',
+    Jersey: 'JE',
+    Jordan: 'JO',
+    Kazakhstan: 'KZ',
+    Kenya: 'KE',
+    Kiribati: 'KI',
+    Korea: 'KR',
+    'South Korea': 'KR',
+    Kuwait: 'KW',
+    Kyrgyzstan: 'KG',
+    'Lao PDR': 'LA',
+    Latvia: 'LV',
+    Lebanon: 'LB',
+    Lesotho: 'LS',
+    Liberia: 'LR',
+    Libya: 'LY',
+    Liechtenstein: 'LI',
+    Lithuania: 'LT',
+    Luxembourg: 'LU',
+    Macedonia: 'MK',
+    Madagascar: 'MG',
+    Malawi: 'MW',
+    Malaysia: 'MY',
+    Mali: 'ML',
+    Malta: 'MT',
+    Mauritania: 'MR',
+    Mauritius: 'MU',
+    Mexico: 'MX',
+    Micronesia: 'FM',
+    Moldova: 'MD',
+    Mongolia: 'MN',
+    Montenegro: 'ME',
+    Montserrat: 'MS',
+    Morocco: 'MA',
+    Mozambique: 'MZ',
+    Myanmar: 'MM',
+    'N. Cyprus': 'CY',
+    'N. Mariana Is.': 'MP',
+    Namibia: 'NA',
+    Nepal: 'NP',
+    Netherlands: 'NL',
+    'New Caledonia': 'NC',
+    'New Zealand': 'NZ',
+    Nicaragua: 'NI',
+    Niger: 'NE',
+    Nigeria: 'NG',
+    Niue: 'NU',
+    Norway: 'NO',
+    Oman: 'OM',
+    Pakistan: 'PK',
+    Palau: 'PW',
+    Palestine: 'PS',
+    Panama: 'PA',
+    'Papua New Guinea': 'PG',
+    Paraguay: 'PY',
+    Peru: 'PE',
+    Philippines: 'PH',
+    Poland: 'PL',
+    Portugal: 'PT',
+    'Puerto Rico': 'PR',
+    Qatar: 'QA',
+    Romania: 'RO',
+    Russia: 'RU',
+    Rwanda: 'RW',
+    'São Tomé and Príncipe': 'ST',
+    'S. Geo. and S. Sandw. Is.': 'GS',
+    'S. Sudan': 'SS',
+    'Saint Helena': 'SH',
+    'Saint Lucia': 'LC',
+    Samoa: 'WS',
+    'Saudi Arabia': 'SA',
+    Senegal: 'SN',
+    Serbia: 'RS',
+    Seychelles: 'SC',
+    'Sierra Leone': 'SL',
+    Singapore: 'SG',
+    Slovakia: 'SK',
+    Slovenia: 'SI',
+    'Solomon Is.': 'SB',
+    Somalia: 'SO',
+    'South Africa': 'ZA',
+    Spain: 'ES',
+    'Sri Lanka': 'LK',
+    'St. Pierre and Miquelon': 'PM',
+    'St. Vin. and Gren.': 'VC',
+    Sudan: 'SD',
+    Suriname: 'SR',
+    Swaziland: 'SZ',
+    Sweden: 'SE',
+    Switzerland: 'CH',
+    Syria: 'SY',
+    Taiwan: 'TW',
+    Tajikistan: 'TJ',
+    Tanzania: 'TZ',
+    Thailand: 'TH',
+    'Timor-Leste': 'TL',
+    Togo: 'TG',
+    Tonga: 'TO',
+    'Trinidad and Tobago': 'TT',
+    Tunisia: 'TN',
+    Turkey: 'TR',
+    Turkmenistan: 'TM',
+    'Turks and Caicos Is.': 'TC',
+    'U.S. Virgin Is.': 'VI',
+    Uganda: 'UG',
+    Ukraine: 'UA',
+    'United Arab Emirates': 'AE',
+    'United Kingdom': 'GB',
+    Uruguay: 'UY',
+    Uzbekistan: 'UZ',
+    Vanuatu: 'VU',
+    Venezuela: 'VE',
+    Vietnam: 'VN',
+    'W. Sahara': 'EH',
+    Yemen: 'YE',
+    Zambia: 'ZM',
+    Zimbabwe: 'ZW'
   }
   const { isDark } = storeToRefs(useSettingStore())
 
@@ -140,16 +306,6 @@
     return isK ? `${v}K` : v.toLocaleString()
   }
 
-  /** ISO 3166-1 alpha-2 转国旗 emoji（无网络、兼容性好） */
-  function getFlagEmoji(code: string): string {
-    if (!code || code.length !== 2) return ''
-    return code
-      .toUpperCase()
-      .split('')
-      .map((c) => String.fromCodePoint(0x1f1e6 - 65 + c.charCodeAt(0)))
-      .join('')
-  }
-
   /** 根据国家英文名解析 ISO 代码（与 GeoJSON 常用名称对齐） */
   function getCountryCode(nameEn: string): string {
     const code = COUNTRY_NAME_TO_ISO[nameEn]
@@ -180,10 +336,11 @@
           : `${(d.user ?? 0).toLocaleString()} ↑${d.trend}`
       const ecpmStr =
         d.ecpm != null ? `$${d.ecpm} ${isTrendUp(ecpmTrend) ? '↑' : '↓'}${ecpmTrend}` : ''
-      const isoCode = d.code || getCountryCode(params.name)
-      const flagEmoji = getFlagEmoji(isoCode)
-      const titleHtml = flagEmoji
-        ? `<div class="cockpit-map-tt-title"><span class="cockpit-map-tt-flag">${flagEmoji}</span> ${d.nameCn || params.name}</div>`
+      const isoCodeRaw = d.code || getCountryCode(params.name) || ''
+      const isoCode = isoCodeRaw.toLowerCase()
+      const hasFlag = /^[a-z]{2}$/.test(isoCode)
+      const titleHtml = hasFlag
+        ? `<div class="cockpit-map-tt-title"><span class="cockpit-map-tt-flag fi fi-${isoCode}"></span> ${d.nameCn || params.name}</div>`
         : `<div class="cockpit-map-tt-title">${d.nameCn || params.name}</div>`
       const lines = [
         titleHtml,
@@ -196,7 +353,7 @@
         ecpmStr
           ? `<div class="cockpit-map-tt-row"><span>eCPM:</span> <span style="${upClass}">${ecpmStr}</span></div>`
           : '',
-        `<div class="cockpit-map-tt-link" data-country-code="${(isoCode || '').replace(/"/g, '&quot;')}" data-country-en="${(d.name || params.name || '').replace(/"/g, '&quot;')}" data-country-cn="${(d.nameCn || params.name || '').replace(/"/g, '&quot;')}">查看${d.nameCn || params.name}详情 →</div>`
+        `<div class="cockpit-map-tt-link" data-country-code="${(isoCodeRaw || '').replace(/"/g, '&quot;')}" data-country-en="${(d.name || params.name || '').replace(/"/g, '&quot;')}" data-country-cn="${(d.nameCn || params.name || '').replace(/"/g, '&quot;')}">查看${d.nameCn || params.name}详情 →</div>`
       ].filter(Boolean)
       return lines.join('')
     }
@@ -441,9 +598,14 @@
     font-weight: 600;
   }
 
-  .cockpit-map-tt-flag {
-    font-size: 20px;
-    line-height: 1;
+  .cockpit-map-tt-flag.fi {
+    display: inline-block;
+    width: 1.25em;
+    min-width: 20px;
+    height: 0.9em;
+    min-height: 14px;
+    vertical-align: middle;
+    background-size: cover;
   }
 
   .cockpit-map-tt-row {
