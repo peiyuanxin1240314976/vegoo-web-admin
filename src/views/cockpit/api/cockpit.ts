@@ -33,6 +33,8 @@ import type {
   CockpitAlertBanner,
   CockpitAlertSummaryMetric,
   CockpitWarnListItem,
+  CockpitAppSimulationParams,
+  CockpitAppSimulationData,
   CountryInfoChannelLaunchItem,
   CountryInfoLtvData,
   CountryInfoOverallData,
@@ -85,6 +87,9 @@ const COCKPIT_BUSINESS_MAP_URL = '/api/v1/datacenter/analysis/cockpit/businessMa
 
 /** 收入结构接口（近7日收入结构流向桑基图） */
 const COCKPIT_INCOME_STRUCTURE_URL = '/api/v1/datacenter/analysis/cockpit/incomeStructure'
+
+/** 情景模拟接口 */
+const COCKPIT_APP_SIMULATION_URL = '/api/v1/datacenter/analysis/cockpit/appSimulation'
 
 /** 收入结构接口单项（/api/v1/datacenter/analysis/cockpit/incomeStructure） */
 interface CockpitIncomeStructureRow {
@@ -438,10 +443,10 @@ const WARN_TYPE_MAP: Record<1 | 2 | 3, CockpitAlertBanner['type']> = {
 
 export function mapWarnListToAlertBanners(warnList: CockpitWarnListItem[]): CockpitAlertBanner[] {
   if (!Array.isArray(warnList) || warnList.length === 0) return []
-  return warnList.map((item) => ({
-    type: WARN_TYPE_MAP[item.type] ?? 'warning',
-    text: item.msg ?? ''
-  }))
+  return warnList.map((item: CockpitWarnListItem) => {
+    const type = WARN_TYPE_MAP[item.type as 1 | 2 | 3] ?? 'warning'
+    return { type, text: item.msg ?? '', suggestion: '' }
+  })
 }
 
 /**
@@ -509,6 +514,19 @@ export async function fetchCockpitOverall(): Promise<CockpitOverallApiResponse> 
   return request.post<CockpitOverallApiResponse>({
     url: COCKPIT_OVERALL_URL,
     data: {}
+  })
+}
+
+/**
+ * 情景模拟分析 POST /api/v1/datacenter/analysis/cockpit/appSimulation
+ * 注意：request 层返回的是 res.data.data，即接口的 data 字段
+ */
+export async function fetchAppSimulation(
+  params: CockpitAppSimulationParams
+): Promise<CockpitAppSimulationData> {
+  return request.post<CockpitAppSimulationData>({
+    url: COCKPIT_APP_SIMULATION_URL,
+    data: params
   })
 }
 

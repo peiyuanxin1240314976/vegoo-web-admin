@@ -93,6 +93,14 @@ export interface CockpitOverallData {
   /** 可选：同一接口返回的警示摘要与横幅 */
   alertSummaryMetrics?: CockpitAlertSummaryMetric[]
   alertBanners?: CockpitAlertBanner[]
+  /** 后端警示列表：type 1=warning 2=opportunity 3=risk，msg 为展示文案 */
+  warnList?: CockpitWarnListItem[]
+}
+
+/** overall 接口返回的警示项：type 1=warning 2=opportunity 3=risk */
+export interface CockpitWarnListItem {
+  type: 1 | 2 | 3
+  msg: string
 }
 
 /** 经营驾驶舱 overall 新接口：HTTP 响应（code/message/data） */
@@ -106,6 +114,49 @@ export interface CockpitOverallApiResponse {
 export interface CockpitOverallParams {
   startTime: string
   endTime: string
+}
+
+/** 情景模拟接口请求体 POST /api/v1/datacenter/analysis/cockpit/appSimulation */
+export interface CockpitAppSimulationParams {
+  /** 广告预算变化百分比（对应 Meta Ads 预算调整） */
+  adsChange: number
+  /** CPI 变化百分比（对应 Google Ads CPI） */
+  cplChange: number
+  /** eCPM 变化百分比（对应 Admob eCPM） */
+  eCpmChange: number
+  /** 留存率变化百分比 */
+  retentionChange: number
+}
+
+/** 情景模拟-单项指标（predict 当前预测 / result 模拟结果 / change 变化值） */
+export interface CockpitAppSimulationInfluenceItem {
+  predict: number
+  result: number
+  change: number
+}
+
+/** 情景模拟-预测影响 */
+export interface CockpitAppSimulationPredictInfluence {
+  endMouthRevenue: CockpitAppSimulationInfluenceItem
+  endMouthCost: CockpitAppSimulationInfluenceItem
+  endMouthRoi: CockpitAppSimulationInfluenceItem
+  endMouthProfit: CockpitAppSimulationInfluenceItem
+}
+
+/** 情景模拟接口响应 data */
+export interface CockpitAppSimulationData {
+  predictInfluence: CockpitAppSimulationPredictInfluence
+  revenueComparisonCost: {
+    cost: number[]
+    revenue: number[]
+  }
+}
+
+/** 情景模拟接口 HTTP 响应 */
+export interface CockpitAppSimulationResponse {
+  code: number
+  message?: string
+  data?: CockpitAppSimulationData
 }
 
 /** 国家详情第一排总数据 - 单周期（last/now 结构） */

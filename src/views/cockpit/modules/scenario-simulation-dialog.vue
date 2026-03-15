@@ -88,20 +88,38 @@
         </div>
       </div>
 
-      <!-- 右侧：预测影响 -->
+      <!-- 右侧：预测影响（固定四项：月末总收入/总成本/ROI/利润，数据来自接口 predictInfluence） -->
       <div class="panel-right">
         <div class="panel-title">预测影响</div>
-        <div class="impact-table-wrap">
-          <ArtTable :data="impactTableData" :columns="impactColumns" size="small" height="160">
-            <template #change="{ row }">
-              <span :class="row.changeClass"> {{ row.changeText }} {{ row.change }} </span>
-            </template>
-          </ArtTable>
+        <div class="impact-list-wrap" v-loading="simulationLoading">
+          <template v-if="impactRows.length">
+            <div class="impact-list-header">
+              <span class="impact-col-metric">指标</span>
+              <span class="impact-col-value">当前预测</span>
+              <span class="impact-col-value">模拟结果</span>
+              <span class="impact-col-change">变化</span>
+            </div>
+            <div v-for="row in impactRows" :key="row.metric" class="impact-row">
+              <span class="impact-col-metric">{{ row.metric }}</span>
+              <span class="impact-col-value">{{ row.current }}</span>
+              <span class="impact-col-value">{{ row.simulated }}</span>
+              <span :class="['impact-col-change', row.changeClass]">
+                {{ row.changeText }} {{ row.change }}
+              </span>
+            </div>
+          </template>
+          <div v-else class="impact-empty">暂无数据，请点击「应用模拟」获取结果</div>
         </div>
         <div class="chart-title">收入与成本趋势对比</div>
         <div ref="chartRef" class="trend-chart" />
-        <ElAlert type="warning" :closable="false" show-icon class="simulation-warning">
-          注意：模拟结果显示ROI下降，建议谨慎调整预算分配
+        <ElAlert
+          v-if="simulationWarning"
+          type="warning"
+          :closable="false"
+          show-icon
+          class="simulation-warning"
+        >
+          {{ simulationWarning }}
         </ElAlert>
       </div>
     </div>
@@ -112,8 +130,12 @@
   import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from 'echarts'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import type { ColumnOption } from '@/types'
+  import { fetchAppSimulation } from '../api/cockpit'
+  import type {
+    CockpitAppSimulationData,
+    CockpitAppSimulationPredictInfluence,
+    CockpitAppSimulationInfluenceItem
+  } from '../types'
 
   defineOptions({ name: 'ScenarioSimulationDialog' })
 
@@ -130,11 +152,14 @@
   }
 
   const sliders = ref({
-    googleCpi: 15,
-    metaBudget: 15,
-    admobEcpm: 15,
-    retention: 15
+    googleCpi: 0,
+    metaBudget: 0,
+    admobEcpm: 0,
+    retention: 0
   })
+
+  const simulationData = ref<CockpitAppSimulationData | null>(null)
+  const simulationLoading = ref(false)
 
   const applyPercent = (val: number, pct: number) => val * (1 + pct / 100)
 
@@ -153,20 +178,73 @@
     return formatNum(k) + 'K'
   }
 
+  /** 金额格式：大于等于 1e6 显示 $X.XM，否则 $X.XK */
+  function formatMoney(v: number): string {
+    if (v >= 1e6) return '$' + (v / 1e6).toFixed(1) + 'M'
+    return '$' + (v / 1e3).toFixed(1) + 'K'
+  }
+
+  /** ROI 格式：X.XXx */
+  function formatRoi(v: number): string {
+    return Number(v).toFixed(2) + 'x'
+  }
+
+  /** 根据 predict/result 计算变化百分比并返回展示用箭头与样式（成本：正为负面；收入/利润/ROI：正为正面） */
+  function getChangeDisplay(
+    item: CockpitAppSimulationInfluenceItem,
+    isCost: boolean
+  ): { change: string; changeText: string; changeClass: string } {
+    const { predict, result } = item
+    const pct = predict !== 0 ? ((result - predict) / Math.abs(predict)) * 100 : 0
+    const sign = pct >= 0 ? '+' : ''
+    const change = `${sign}${pct.toFixed(1)}%`
+    const changeText = pct >= 0 ? '▲' : '▼'
+    const positiveGood = !isCost
+    const isGood = (pct > 0 && positiveGood) || (pct < 0 && !positiveGood)
+    const changeClass = isGood ? 'change-up' : 'change-down'
+    return { change, changeText, changeClass }
+  }
+
   function onSliderChange() {
-    // 可在此触发模拟结果更新
+    // 仅前端滑块联动，需点击「应用模拟」才请求接口
   }
 
   function handleReset() {
     sliders.value = { googleCpi: 0, metaBudget: 0, admobEcpm: 0, retention: 0 }
   }
 
-  function handleApply() {
-    // 应用当前滑块值，表格与图表已通过 computed 响应
+  async function handleApply() {
+    simulationLoading.value = true
+    try {
+      // request 层已返回接口的 data 字段，直接使用
+      const data = await fetchAppSimulation({
+        adsChange: sliders.value.metaBudget,
+        cplChange: sliders.value.googleCpi,
+        eCpmChange: sliders.value.admobEcpm,
+        retentionChange: sliders.value.retention
+      })
+      if (data?.predictInfluence != null) {
+        simulationData.value = data
+      }
+    } finally {
+      simulationLoading.value = false
+    }
   }
 
-  // 预测影响表格
-  interface ImpactRow {
+  // 固定四项：月末总收入、月末总成本、月末ROI、月末利润（顺序与接口 predictInfluence 一致）
+  const METRIC_KEYS: {
+    key: keyof CockpitAppSimulationPredictInfluence
+    label: string
+    formatValue: (v: number) => string
+    isCost: boolean
+  }[] = [
+    { key: 'endMouthRevenue', label: '月末总收入', formatValue: formatMoney, isCost: false },
+    { key: 'endMouthCost', label: '月末总成本', formatValue: formatMoney, isCost: true },
+    { key: 'endMouthRoi', label: '月末ROI', formatValue: formatRoi, isCost: false },
+    { key: 'endMouthProfit', label: '月末利润', formatValue: formatMoney, isCost: false }
+  ]
+
+  interface ImpactRowDisplay {
     metric: string
     current: string
     simulated: string
@@ -175,98 +253,104 @@
     changeClass: string
   }
 
-  const impactColumns: ColumnOption<ImpactRow>[] = [
-    { prop: 'metric', label: '指标', minWidth: 100 },
-    { prop: 'current', label: '当前预测', minWidth: 90, align: 'right' },
-    { prop: 'simulated', label: '模拟结果', minWidth: 90, align: 'right' },
-    { prop: 'change', label: '变化', width: 100, align: 'right', useSlot: true, slotName: 'change' }
-  ]
-
-  const impactTableData = computed<ImpactRow[]>(() => {
-    // const pct = sliders.value.googleCpi
-    return [
-      {
-        metric: '月末总收入',
-        current: '$8.5M',
-        simulated: '$9.2M',
-        change: '+8.2%',
-        changeText: '▲',
-        changeClass: 'change-up'
-      },
-      {
-        metric: '月末总成本',
-        current: '$4.2M',
-        simulated: '$4.8M',
-        change: '+14.3%',
-        changeText: '▲',
-        changeClass: 'change-down'
-      },
-      {
-        metric: '月末ROI',
-        current: '2.02x',
-        simulated: '1.92x',
-        change: '-5.0%',
-        changeText: '▼',
-        changeClass: 'change-down'
-      },
-      {
-        metric: '月末利润',
-        current: '$4.3M',
-        simulated: '$4.4M',
-        change: '+2.3%',
-        changeText: '▲',
-        changeClass: 'change-up'
+  const impactRows = computed<ImpactRowDisplay[]>(() => {
+    const data = simulationData.value?.predictInfluence
+    if (!data) return []
+    return METRIC_KEYS.map(({ key, label, formatValue, isCost }) => {
+      const item = data[key]
+      if (!item)
+        return {
+          metric: label,
+          current: '-',
+          simulated: '-',
+          change: '-',
+          changeText: '',
+          changeClass: ''
+        }
+      const { change, changeText, changeClass } = getChangeDisplay(item, isCost)
+      return {
+        metric: label,
+        current: formatValue(item.predict),
+        simulated: formatValue(item.result),
+        change,
+        changeText,
+        changeClass
       }
-    ]
+    })
+  })
+
+  /** 当 ROI 下降时显示警示文案 */
+  const simulationWarning = computed(() => {
+    const pi = simulationData.value?.predictInfluence
+    if (!pi?.endMouthRoi) return ''
+    const { predict, result } = pi.endMouthRoi
+    if (result < predict) return '注意：模拟结果显示ROI下降，建议谨慎调整预算分配'
+    return ''
   })
 
   // 趋势图
   const { chartRef, initChart, handleResize, destroyChart } = useChart()
 
-  const trendOption = computed<EChartsOption>(() => ({
-    grid: { top: 24, right: 24, bottom: 28, left: 48, containLabel: true },
-    xAxis: {
-      type: 'category',
-      data: [0, 6, 10, 15, 22, 27, 30].map((d) => `${d}天`),
-      axisLabel: { fontSize: 11 }
-    },
-    yAxis: {
-      type: 'value',
-      min: 2.3,
-      max: 10,
-      axisLabel: {
-        fontSize: 11,
-        formatter: (value: number) => '$' + Number(value).toFixed(2) + 'M'
-      }
-    },
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'cross' }
-    },
-    legend: {
-      data: ['收入', '成本'],
-      bottom: 0,
-      textStyle: { fontSize: 11 }
-    },
-    series: [
-      {
-        name: '成本',
-        type: 'line',
-        smooth: true,
-        data: [2.5, 3.2, 3.8, 4.2, 4.5, 4.7, 4.8],
-        lineStyle: { color: '#4ABEFF' },
-        areaStyle: { color: 'rgba(74, 190, 255, 0.25)' }
+  const trendOption = computed<EChartsOption>(() => {
+    const rc = simulationData.value?.revenueComparisonCost
+    const costData = rc?.cost ?? []
+    const revenueData = rc?.revenue ?? []
+    const len = Math.max(costData.length, revenueData.length, 1)
+    const xData = Array.from({ length: len }, (_, i) => `${i}天`)
+    const cost = costData.length ? costData : [0]
+    const revenue = revenueData.length ? revenueData : [0]
+    const allValues = [...cost, ...revenue].filter(Number.isFinite)
+    const minVal = allValues.length ? Math.min(...allValues) : 0
+    const maxVal = allValues.length ? Math.max(...allValues) : 10
+    const padding = (maxVal - minVal) * 0.1 || 1
+    return {
+      grid: { top: 24, right: 24, bottom: 28, left: 48, containLabel: true },
+      xAxis: {
+        type: 'category',
+        data: xData,
+        axisLabel: { fontSize: 11 }
       },
-      {
-        name: '收入',
-        type: 'line',
-        smooth: true,
-        data: [3.2, 4.5, 5.8, 6.8, 7.8, 8.8, 9.2],
-        lineStyle: { color: '#FFAF20' },
-        areaStyle: { color: 'rgba(255, 175, 32, 0.25)' }
-      }
-    ]
-  }))
+      yAxis: {
+        type: 'value',
+        min: minVal - padding,
+        max: maxVal + padding,
+        axisLabel: {
+          fontSize: 11,
+          formatter: (value: number) =>
+            value >= 1e6
+              ? '$' + (value / 1e6).toFixed(1) + 'M'
+              : '$' + (value / 1e3).toFixed(0) + 'K'
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'cross' }
+      },
+      legend: {
+        data: ['收入', '成本'],
+        bottom: 0,
+        textStyle: { fontSize: 11 }
+      },
+      series: [
+        {
+          name: '成本',
+          type: 'line',
+          smooth: true,
+          data: cost,
+          lineStyle: { color: '#4ABEFF' },
+          areaStyle: { color: 'rgba(74, 190, 255, 0.25)' }
+        },
+        {
+          name: '收入',
+          type: 'line',
+          smooth: true,
+          data: revenue,
+          lineStyle: { color: '#FFAF20' },
+          areaStyle: { color: 'rgba(255, 175, 32, 0.25)' }
+        }
+      ]
+    }
+  })
 
   function initTrendChart() {
     if (chartRef.value && props.modelValue) {
@@ -278,11 +362,23 @@
     () => props.modelValue,
     (visible) => {
       if (visible) {
+        // 打开窗口即用当前滑块值（默认 0,0,0,0）调用接口拉取预测影响与趋势数据
+        handleApply()
         nextTick(() => {
           setTimeout(initTrendChart, 80)
         })
       }
     }
+  )
+
+  watch(
+    () => simulationData.value,
+    () => {
+      nextTick(() => {
+        if (chartRef.value && props.modelValue) initTrendChart()
+      })
+    },
+    { deep: true }
   )
 
   onMounted(() => {
@@ -379,8 +475,49 @@
       color: var(--el-text-color-primary);
     }
 
-    .impact-table-wrap {
+    .impact-list-wrap {
       flex-shrink: 0;
+      min-height: 160px;
+    }
+
+    .impact-list-header,
+    .impact-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 13px;
+    }
+
+    .impact-list-header {
+      font-weight: 500;
+      color: var(--el-text-color-secondary);
+      border-bottom: 1px solid var(--el-border-color-lighter);
+    }
+
+    .impact-row {
+      color: var(--el-text-color-regular);
+    }
+
+    .impact-col-metric {
+      flex: 0 0 100px;
+    }
+
+    .impact-col-value {
+      flex: 0 0 90px;
+      text-align: right;
+    }
+
+    .impact-col-change {
+      flex: 0 0 100px;
+      text-align: right;
+    }
+
+    .impact-empty {
+      padding: 24px;
+      font-size: 13px;
+      color: var(--el-text-color-secondary);
+      text-align: center;
     }
 
     .chart-title {
