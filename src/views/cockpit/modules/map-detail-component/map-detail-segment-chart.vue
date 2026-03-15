@@ -10,9 +10,13 @@
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted, watch } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import { useSettingStore } from '@/store/modules/setting'
   import { echarts, type EChartsOption } from '@/plugins/echarts'
 
   defineOptions({ name: 'MapDetailSegmentChart' })
+
+  const { isDark } = storeToRefs(useSettingStore())
 
   const CHART_COLOR = '#3984F1'
 
@@ -47,7 +51,12 @@
           radius: ['45%', '70%'],
           center: ['50%', '50%'],
           data: props.data,
-          label: { formatter: '{b} {d}%' }
+          label: {
+            formatter: '{b} {d}%',
+            color: isDark.value ? '#fff' : undefined,
+            textShadowColor: 'transparent',
+            textShadowBlur: 0
+          }
         }
       ]
     }
@@ -63,6 +72,7 @@
     window.addEventListener('resize', resize)
   })
   watch(() => props.data, initChart, { deep: true })
+  watch(isDark, initChart)
 
   onUnmounted(() => {
     window.removeEventListener('resize', resize)
