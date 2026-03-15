@@ -81,9 +81,11 @@
   import {
     fetchCountryInfoOverall,
     fetchCountryInfoTop5Campaign,
+    fetchCountryInfoChannelLaunch,
     fetchCountryInfoRemain,
     fetchCountryInfoUserPayLaunch,
     mapCountryInfoOverallToStatCards,
+    mapChannelLaunchToChannelRows,
     mapRemainDataToSeries,
     mapUserPayLaunchToSegment
   } from '../api/cockpit'
@@ -210,12 +212,21 @@
     } catch {
       // 接口失败时保留默认占位
     }
+    // 渠道投放效果对比：/api/v1/datacenter/analysis/countryInfo/channelLaunch
+    try {
+      const channelList = await fetchCountryInfoChannelLaunch()
+      if (Array.isArray(channelList)) {
+        channelTableData.value = mapChannelLaunchToChannelRows(channelList)
+      }
+    } catch {
+      // 接口失败时保持空列表
+    }
     // 当前投放中 Campaign (Top 5)：/api/v1/datacenter/analysis/countryInfo/top5Campaign
     try {
       const list = await fetchCountryInfoTop5Campaign()
       if (Array.isArray(list)) {
         campaignTableData.value = list.map((item) => ({
-          name: item.name ?? '—',
+          name: item.campaign ?? '—',
           amount: item.cost ?? 0,
           count: item.install ?? 0,
           roi: item.roi ?? 0,
@@ -223,7 +234,7 @@
         }))
         // 同一接口用于变现分析「各 App 在区域表现」表格
         appPerformanceData.value = list.map((item) => ({
-          appName: item.name ?? '—',
+          appName: item.campaign ?? '—',
           amount: item.cost ?? 0,
           count: item.install ?? 0,
           roi: item.roi ?? 0
@@ -266,35 +277,8 @@
     if (thirdRowTimer != null) clearTimeout(thirdRowTimer)
   })
 
-  const channelTableData = ref<ChannelRow[]>([
-    {
-      channel: 'Google Ads',
-      spend: 320000,
-      installs: 12400,
-      cpi: 25.8,
-      roi: 1.82,
-      roas: '2.1x',
-      trend: '↑'
-    },
-    {
-      channel: 'TikTok Ads',
-      spend: 89000,
-      installs: 3100,
-      cpi: 28.7,
-      roi: 1.21,
-      roas: '1.4x',
-      trend: '↓'
-    },
-    {
-      channel: 'Meta Ads',
-      spend: 180000,
-      installs: 6200,
-      cpi: 29.0,
-      roi: 1.45,
-      roas: '1.6x',
-      trend: '↑'
-    }
-  ])
+  /** 渠道投放效果对比来自 /api/v1/datacenter/analysis/countryInfo/channelLaunch（仅展示 now） */
+  const channelTableData = ref<ChannelRow[]>([])
 
   const campaignTableData = ref<CampaignRow[]>([])
 

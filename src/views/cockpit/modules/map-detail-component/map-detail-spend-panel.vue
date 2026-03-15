@@ -8,7 +8,11 @@
         <span class="section-badge">A</span>
         <span class="section-title">渠道投放效果对比</span>
       </div>
-      <ArtTable :data="channelData" :columns="channelColumns" size="small" height="150" />
+      <ArtTable :data="channelData" :columns="channelColumns" size="small" height="150">
+        <template #trend="{ row }">
+          <span class="trend-cell" :class="row.trendClass ?? 'trend-empty'">{{ row.trend }}</span>
+        </template>
+      </ArtTable>
     </div>
     <div class="panel-block">
       <div class="panel-header section-header">
@@ -39,6 +43,8 @@
     roi: number
     roas: string
     trend: string
+    /** 趋势样式：trend-up 绿，trend-down 红，trend-right/trend-empty 灰 */
+    trendClass?: 'trend-up' | 'trend-right' | 'trend-down' | 'trend-empty'
   }
 
   export interface CampaignRow {
@@ -80,7 +86,7 @@
     { prop: 'cpi', label: 'CPI', width: 70, align: 'right' },
     { prop: 'roi', label: 'ROI', width: 70, align: 'right' },
     { prop: 'roas', label: 'ROAS', width: 70, align: 'right' },
-    { prop: 'trend', label: '趋势', width: 60, align: 'center' }
+    { prop: 'trend', label: '趋势', width: 60, align: 'center', useSlot: true }
   ]
 
   const campaignColumns: ColumnOption[] = [
@@ -173,6 +179,21 @@
 
       &.roi-low {
         background: #ef4444;
+      }
+    }
+
+    .trend-cell {
+      &.trend-up {
+        color: #10b981;
+      }
+
+      &.trend-down {
+        color: #ef4444;
+      }
+
+      &.trend-right,
+      &.trend-empty {
+        color: var(--el-text-color-secondary);
       }
     }
   }

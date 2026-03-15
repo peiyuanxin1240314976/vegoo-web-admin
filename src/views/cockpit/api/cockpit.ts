@@ -31,6 +31,7 @@ import type {
   CockpitRevenueStructureLink,
   CockpitRevenueStructureInsight,
   CockpitAlertSummaryMetric,
+  CountryInfoChannelLaunchItem,
   CountryInfoOverallData,
   CountryInfoRemainData,
   CountryInfoRemainDataItem,
@@ -59,6 +60,9 @@ const COUNTRY_INFO_REMAIN_URL = '/api/v1/datacenter/analysis/countryInfo/remain'
 
 /** 国家详情用户分层接口 */
 const COUNTRY_INFO_USER_PAY_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo/userPayLaunch'
+
+/** 国家详情渠道投放效果对比接口 */
+const COUNTRY_INFO_CHANNEL_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo/channelLaunch'
 
 /** 消耗节奏监控接口（自投/代投） */
 const COCKPIT_CONSUMPTION_RHYTHM_URL =
@@ -572,12 +576,73 @@ export async function fetchCountryInfoOverall(params?: {
 /**
  * 获取国家详情当前投放中 Campaign Top5
  * POST /api/v1/datacenter/analysis/countryInfo/top5Campaign，请求体：{}
- * 返回 data 数组，项为 { cost, install, roi }（及可选的 name、status）
+ * 返回 data 数组，项为 { cost, install, roi, campaign } 等
  */
 export async function fetchCountryInfoTop5Campaign(): Promise<CountryInfoTop5CampaignItem[]> {
   return request.post<CountryInfoTop5CampaignItem[]>({
     url: COUNTRY_INFO_TOP5_CAMPAIGN_URL,
     data: {}
+  })
+}
+
+/**
+ * 获取国家详情渠道投放效果对比
+ * POST /api/v1/datacenter/analysis/countryInfo/channelLaunch，请求体：{}
+ * 返回 data 数组，项为 { now, last, cplChange [, channel] }
+ */
+export async function fetchCountryInfoChannelLaunch(): Promise<CountryInfoChannelLaunchItem[]> {
+  return request.post<CountryInfoChannelLaunchItem[]>({
+    url: COUNTRY_INFO_CHANNEL_LAUNCH_URL,
+    data: {}
+  })
+}
+
+/** 渠道投放表格行（与 map-detail-spend-panel ChannelRow 一致） */
+export interface ChannelLaunchRow {
+  channel: string
+  spend: number
+  installs: number
+  cpi: number
+  roi: number
+  roas: string
+  trend: string
+  trendClass: 'trend-up' | 'trend-right' | 'trend-down' | 'trend-empty'
+}
+
+/** 根据 cplChange 返回趋势符号与样式类 */
+function getCplChangeTrend(cplChange: number | null): {
+  trend: string
+  trendClass: ChannelLaunchRow['trendClass']
+} {
+  if (cplChange === null || cplChange === undefined)
+    return { trend: '—', trendClass: 'trend-empty' }
+  if (cplChange > 0) return { trend: '↑', trendClass: 'trend-up' }
+  if (cplChange < 0) return { trend: '↓', trendClass: 'trend-down' }
+  return { trend: '→', trendClass: 'trend-right' }
+}
+
+/** 将 channelLaunch 接口 data 转为渠道投放效果对比表格行（仅展示 now） */
+export function mapChannelLaunchToChannelRows(
+  list: CountryInfoChannelLaunchItem[]
+): ChannelLaunchRow[] {
+  return list.map((item, index) => {
+    const now = item.now || {}
+    const cost = Number(now.cost) || 0
+    const install = Number(now.install) || 0
+    const cpl = Number(now.cpl) || 0
+    const roi = Number(now.roi) || 0
+    const roas = now.roas != null ? Number(now.roas) : 0
+    const { trend, trendClass } = getCplChangeTrend(item.cplChange)
+    return {
+      channel: item.channel ?? `渠道${index + 1}`,
+      spend: cost,
+      installs: install,
+      cpi: cpl,
+      roi,
+      roas: roas >= 0 ? (roas >= 1 ? `${roas.toFixed(1)}x` : String(roas)) : '—',
+      trend,
+      trendClass
+    }
   })
 }
 

@@ -152,10 +152,35 @@ export interface CountryInfoTop5CampaignItem {
   install: number
   /** ROI */
   roi: number
-  /** Campaign 名称（若后端返回） */
-  name?: string
+  /** 活动名称 */
+  campaign?: string
   /** 状态（若后端返回） */
   status?: string
+}
+
+/** 国家详情渠道投放效果对比 - 单条 data 的 now/last 结构 */
+export interface CountryInfoChannelLaunchPeriod {
+  cost?: number
+  install?: number
+  roi?: number
+  cpl?: number
+  roas?: number
+  arpu?: number
+  dAdRevenue?: number
+  dCost?: number
+  dau?: number
+  eCpm?: number
+  nNewUserCount?: number
+}
+
+/** 国家详情渠道投放效果对比 data 数组单项 /api/v1/datacenter/analysis/countryInfo/channelLaunch */
+export interface CountryInfoChannelLaunchItem {
+  now: CountryInfoChannelLaunchPeriod
+  last: CountryInfoChannelLaunchPeriod
+  /** CPL 变化趋势，用于展示箭头：>0 上箭头绿，=0 右箭头灰，<0 下箭头红，null 显示 '-' 灰 */
+  cplChange: number | null
+  /** 渠道名称（若后端返回） */
+  channel?: string
 }
 
 /** 国家详情用户留存曲线单条（currentCountry / globalAvg） */
