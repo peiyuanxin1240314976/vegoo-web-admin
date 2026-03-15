@@ -383,6 +383,12 @@
   .main-content {
     flex: 1;
     min-width: 0;
+
+    /* 投放分析、变现分析、用户留存曲线、LTV 预测、用户分层 等模块标题：字体变大并加粗 */
+    :deep(.el-card__header) {
+      font-size: 16px;
+      font-weight: bold;
+    }
   }
 
   .detail-filters {
