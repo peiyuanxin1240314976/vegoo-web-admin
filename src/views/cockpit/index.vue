@@ -6,7 +6,7 @@
       <CockpitTopBarActions />
     </div>
 
-    <!-- 3. 全局 KPI 卡片（6 个：总收入、付费收入、广告支出、有效订阅、DAU、预估利润） -->
+    <!-- 3. 全局 KPI 卡片：数据来自 POST /api/v1/datacenter/analysis/cockpit/overall；其余子模块可接独立接口，加载速度不同时可做骨架屏 -->
     <CockpitGlobalKpiCards :kpi-list="overview?.kpi ?? []" />
 
     <!-- 4. 警示与提示 -->

@@ -1,5 +1,5 @@
 <template>
-  <ElRow :gutter="16" class="cockpit-kpi-row">
+  <ElRow v-if="kpiList.length" :gutter="16" class="cockpit-kpi-row">
     <ElCol v-for="(item, index) in kpiList" :key="index" :xs="24" :sm="12" :md="8" :lg="4">
       <div
         class="cockpit-kpi-card cockpit-kpi-card--theme"
@@ -40,6 +40,7 @@
       </div>
     </ElCol>
   </ElRow>
+  <div v-else class="cockpit-kpi-empty">暂无数据</div>
 </template>
 
 <script setup lang="ts">
@@ -52,7 +53,7 @@
   const props = withDefaults(defineProps<{ kpiList?: CockpitKpiCard[] }>(), { kpiList: () => [] })
 
   const kpiList = computed(() =>
-    props.kpiList?.length ? props.kpiList : MOCK_COCKPIT_OVERVIEW.kpi
+    Array.isArray(props.kpiList) ? props.kpiList : MOCK_COCKPIT_OVERVIEW.kpi
   )
 
   /** 根据卡片数据生成迷你图趋势点（0~1），上升/下降 + 轻微波动 */
@@ -92,6 +93,16 @@
 <style scoped lang="scss">
   .cockpit-kpi-row {
     margin-bottom: 16px;
+  }
+
+  .cockpit-kpi-empty {
+    padding: 32px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
+    background: var(--el-fill-color-dark);
+    border-radius: 10px;
   }
 
   .cockpit-kpi-card {

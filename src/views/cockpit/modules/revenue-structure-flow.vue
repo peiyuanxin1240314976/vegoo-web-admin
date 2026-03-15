@@ -4,13 +4,16 @@
       <span class="panel-title">近7日收入结构流向</span>
       <ElButton type="primary" link size="small">查看更多</ElButton>
     </div>
-    <div ref="chartRef" class="sankey-chart" />
-    <div v-if="flowData.insights?.length" class="panel-insights">
-      <div v-for="(item, index) in flowData.insights" :key="index" class="insight-item">
-        <span class="insight-dot" :style="{ background: item.color }" />
-        <span class="insight-text">{{ item.text }}</span>
+    <template v-if="hasFlowData">
+      <div ref="chartRef" class="sankey-chart" />
+      <div v-if="flowData.insights?.length" class="panel-insights">
+        <div v-for="(item, index) in flowData.insights" :key="index" class="insight-item">
+          <span class="insight-dot" :style="{ background: item.color }" />
+          <span class="insight-text">{{ item.text }}</span>
+        </div>
       </div>
-    </div>
+    </template>
+    <div v-else class="flow-empty">暂无数据</div>
   </div>
 </template>
 
@@ -35,9 +38,17 @@
   })
 
   const flowData = computed(() =>
-    props.flowData && props.flowData.nodes?.length
-      ? props.flowData
+    props.flowData != null
+      ? {
+          nodes: props.flowData?.nodes ?? [],
+          links: props.flowData?.links ?? [],
+          insights: props.flowData?.insights ?? []
+        }
       : (MOCK_COCKPIT_OVERVIEW.revenueStructureFlow ?? { nodes: [], links: [], insights: [] })
+  )
+
+  const hasFlowData = computed(
+    () => (flowData.value.nodes?.length ?? 0) > 0 || (flowData.value.links?.length ?? 0) > 0
   )
 
   const { chartRef, initChart, updateChart } = useChart()
@@ -266,6 +277,13 @@
       font-weight: 500;
       color: var(--el-text-color-primary);
     }
+  }
+
+  .flow-empty {
+    padding: 32px 16px;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
   }
 
   .sankey-chart {

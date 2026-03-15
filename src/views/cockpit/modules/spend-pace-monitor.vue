@@ -5,51 +5,54 @@
       <a class="pace-more" href="javascript:;">查看更多</a>
     </div>
     <div class="pace-body">
-      <!-- 第一区块：自投 -->
-      <div class="pace-section">
-        <div v-for="(item, index) in mainList" :key="'main-' + index" class="pace-item">
-          <div class="pace-item-top">
-            <span class="pace-name">{{ item.name }}</span>
-            <span class="pace-budget" :class="{ 'is-warning': item.tagType === 'danger' }">
-              {{ formatMoney(item.current) }} / {{ formatMoney(item.budget) }}
-            </span>
-          </div>
-          <div class="pace-item-bottom">
-            <div class="pace-icon-placeholder" title="APP 图标占位" />
-            <div class="pace-bar-wrap">
-              <div class="pace-bar-track" :style="barFillStyle(item)">
-                <span class="pace-bar-percent">{{ Math.round(item.percent) }}%</span>
-              </div>
+      <template v-if="mainList.length || managedList.length">
+        <!-- 第一区块：自投 -->
+        <div class="pace-section">
+          <div v-for="(item, index) in mainList" :key="'main-' + index" class="pace-item">
+            <div class="pace-item-top">
+              <span class="pace-name">{{ item.name }}</span>
+              <span class="pace-budget" :class="{ 'is-warning': item.tagType === 'danger' }">
+                {{ formatMoney(item.current) }} / {{ formatMoney(item.budget) }}
+              </span>
             </div>
-            <span class="pace-tag" :class="'pace-tag--' + item.tagType">
-              {{ item.status }}
-            </span>
+            <div class="pace-item-bottom">
+              <div class="pace-icon-placeholder" title="APP 图标占位" />
+              <div class="pace-bar-wrap">
+                <div class="pace-bar-track" :style="barFillStyle(item)">
+                  <span class="pace-bar-percent">{{ Math.round(item.percent) }}%</span>
+                </div>
+              </div>
+              <span class="pace-tag" :class="'pace-tag--' + item.tagType">
+                {{ item.status }}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-      <!-- 第二区块：代投 -->
-      <div v-if="managedList.length" class="pace-section">
-        <div class="pace-section-title">代投</div>
-        <div v-for="(item, index) in managedList" :key="'managed-' + index" class="pace-item">
-          <div class="pace-item-top">
-            <span class="pace-name">{{ item.name }}</span>
-            <span class="pace-budget" :class="{ 'is-warning': item.tagType === 'danger' }">
-              {{ formatMoney(item.current) }} / {{ formatMoney(item.budget) }}
-            </span>
-          </div>
-          <div class="pace-item-bottom">
-            <div class="pace-icon-placeholder" title="APP 图标占位" />
-            <div class="pace-bar-wrap">
-              <div class="pace-bar-track" :style="barFillStyle(item)">
-                <span class="pace-bar-percent">{{ Math.round(item.percent) }}%</span>
-              </div>
+        <!-- 第二区块：代投 -->
+        <div v-if="managedList.length" class="pace-section">
+          <div class="pace-section-title">代投</div>
+          <div v-for="(item, index) in managedList" :key="'managed-' + index" class="pace-item">
+            <div class="pace-item-top">
+              <span class="pace-name">{{ item.name }}</span>
+              <span class="pace-budget" :class="{ 'is-warning': item.tagType === 'danger' }">
+                {{ formatMoney(item.current) }} / {{ formatMoney(item.budget) }}
+              </span>
             </div>
-            <span class="pace-tag" :class="'pace-tag--' + item.tagType">
-              {{ item.status }}
-            </span>
+            <div class="pace-item-bottom">
+              <div class="pace-icon-placeholder" title="APP 图标占位" />
+              <div class="pace-bar-wrap">
+                <div class="pace-bar-track" :style="barFillStyle(item)">
+                  <span class="pace-bar-percent">{{ Math.round(item.percent) }}%</span>
+                </div>
+              </div>
+              <span class="pace-tag" :class="'pace-tag--' + item.tagType">
+                {{ item.status }}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
+      <div v-else class="pace-empty">暂无数据</div>
     </div>
   </div>
 </template>
@@ -66,7 +69,7 @@
   })
 
   const displayList = computed(() =>
-    props.list?.length ? props.list : MOCK_COCKPIT_OVERVIEW.spendPace
+    Array.isArray(props.list) ? props.list : MOCK_COCKPIT_OVERVIEW.spendPace
   )
 
   const mainList = computed(() => displayList.value.filter((i) => i.section !== 'managed'))
@@ -133,6 +136,13 @@
     flex: 1;
     padding: 12px 16px;
     overflow-y: auto;
+  }
+
+  .pace-empty {
+    padding: 32px 16px;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
   }
 
   .pace-section {

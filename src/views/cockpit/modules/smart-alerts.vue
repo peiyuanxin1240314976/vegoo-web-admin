@@ -5,15 +5,18 @@
       <ElButton type="primary" link size="small">查看更多</ElButton>
     </template>
     <div class="alert-list">
-      <div v-for="(item, index) in alerts" :key="index" class="alert-row">
-        <span class="alert-icon" :class="item.type">
-          <ElIcon v-if="item.type === 'risk'"><CircleCloseFilled /></ElIcon>
-          <ElIcon v-else-if="item.type === 'warning'"><WarningFilled /></ElIcon>
-          <ElIcon v-else><Top /></ElIcon>
-        </span>
-        <span class="alert-msg">{{ item.msg }}</span>
-        <ElButton type="primary" link size="small">查看详情</ElButton>
-      </div>
+      <template v-if="alerts.length">
+        <div v-for="(item, index) in alerts" :key="index" class="alert-row">
+          <span class="alert-icon" :class="item.type">
+            <ElIcon v-if="item.type === 'risk'"><CircleCloseFilled /></ElIcon>
+            <ElIcon v-else-if="item.type === 'warning'"><WarningFilled /></ElIcon>
+            <ElIcon v-else><Top /></ElIcon>
+          </span>
+          <span class="alert-msg">{{ item.msg }}</span>
+          <ElButton type="primary" link size="small">查看详情</ElButton>
+        </div>
+      </template>
+      <div v-else class="alert-empty">暂无数据</div>
     </div>
   </ElCard>
 </template>
@@ -31,7 +34,7 @@
   })
 
   const alerts = computed(() =>
-    props.alerts?.length ? props.alerts : MOCK_COCKPIT_OVERVIEW.smartAlerts
+    Array.isArray(props.alerts) ? props.alerts : MOCK_COCKPIT_OVERVIEW.smartAlerts
   )
 </script>
 
@@ -54,6 +57,13 @@
   /* 深色模式：渐变色背景 */
   html.dark .cockpit-panel {
     background: linear-gradient(320deg, #000e29, #000);
+  }
+
+  .alert-empty {
+    padding: 24px;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
   }
 
   .alert-list {

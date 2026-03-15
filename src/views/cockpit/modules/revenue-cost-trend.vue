@@ -5,37 +5,40 @@
       <a class="panel-more" href="javascript:;">查看更多</a>
     </div>
     <div class="panel-body">
-      <ArtTable
-        :data="list"
-        :columns="roiColumns"
-        size="small"
-        height="calc(100% + 45px)"
-        show-summary
-        :summary-method="getSummaries"
-        class="roi-table"
-      >
-        <template #channel="{ row }">
-          <div class="col-channel">
-            <span class="channel-icon" />
-            <span class="channel-name">{{ row.channel }}</span>
-          </div>
-        </template>
-        <template #spend="{ row }">
-          <span class="col-number">{{ formatMoney(row.spend) }}</span>
-        </template>
-        <template #installs="{ row }">
-          <span class="col-number">{{ formatNumber(row.installs) }}</span>
-        </template>
-        <template #cpi="{ row }">
-          <span class="col-cpi" :class="getCpiClass(row.cpi)">{{ row.cpi.toFixed(2) }}</span>
-        </template>
-        <template #trend="{ $index }">
-          <div
-            :ref="(el) => $index >= 0 && setTrendChartRef(el as HTMLElement, $index)"
-            class="trend-chart-cell"
-          />
-        </template>
-      </ArtTable>
+      <template v-if="list.length">
+        <ArtTable
+          :data="list"
+          :columns="roiColumns"
+          size="small"
+          height="calc(100% + 45px)"
+          show-summary
+          :summary-method="getSummaries"
+          class="roi-table"
+        >
+          <template #channel="{ row }">
+            <div class="col-channel">
+              <span class="channel-icon" />
+              <span class="channel-name">{{ row.channel }}</span>
+            </div>
+          </template>
+          <template #spend="{ row }">
+            <span class="col-number">{{ formatMoney(row.spend) }}</span>
+          </template>
+          <template #installs="{ row }">
+            <span class="col-number">{{ formatNumber(row.installs) }}</span>
+          </template>
+          <template #cpi="{ row }">
+            <span class="col-cpi" :class="getCpiClass(row.cpi)">{{ row.cpi.toFixed(2) }}</span>
+          </template>
+          <template #trend="{ $index }">
+            <div
+              :ref="(el) => $index >= 0 && setTrendChartRef(el as HTMLElement, $index)"
+              class="trend-chart-cell"
+            />
+          </template>
+        </ArtTable>
+      </template>
+      <div v-else class="roi-empty">暂无数据</div>
     </div>
   </div>
 </template>
@@ -62,11 +65,8 @@
     list: null
   })
 
-  const list = computed(
-    () =>
-      (props.list && props.list.length > 0
-        ? props.list
-        : MOCK_COCKPIT_OVERVIEW.channelRoiInstall) ?? []
+  const list = computed(() =>
+    Array.isArray(props.list) ? props.list : (MOCK_COCKPIT_OVERVIEW.channelRoiInstall ?? [])
   )
 
   const totals = computed(() => {
@@ -225,6 +225,13 @@
     flex: 1;
     padding: 12px 16px;
     overflow: auto;
+  }
+
+  .roi-empty {
+    padding: 32px 16px;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
   }
 
   .roi-table {

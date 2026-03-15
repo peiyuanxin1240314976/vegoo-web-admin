@@ -11,6 +11,34 @@ export interface CockpitOverviewParams {
   dateRange?: CockpitDateRange
 }
 
+/** 经营驾驶舱「第一排总数据」接口：单周期指标（last / now 结构相同） */
+export interface CockpitOverallPeriodItem {
+  activeSubscription: number
+  dAdRevenue: number
+  dCost: number
+  dIapRevenue: number
+  dau: number
+  ninstalls: number
+  nNatural: number
+  nNewUserCount: number
+  payRevenue: number
+  profit: number
+  proxyCost: number
+  totalRevenue: number
+}
+
+/** 经营驾驶舱第一排总数据接口响应（/api/v1/datacenter/analysis/cockpit/overall） */
+export interface CockpitOverallResponse {
+  last: CockpitOverallPeriodItem
+  now: CockpitOverallPeriodItem
+}
+
+/** 经营驾驶舱第一排总数据请求体 */
+export interface CockpitOverallParams {
+  startTime: string
+  endTime: string
+}
+
 /** KPI 卡片类型：总收入、付费收入、广告支出、有效订阅、DAU、预估利润 */
 export type CockpitKpiCardType =
   | 'income' // 总收入
@@ -65,6 +93,22 @@ export interface CockpitChannelRoiInstallItem {
   trend: number[]
 }
 
+/** 渠道 ROI&安装量接口：单日数据（list 中每个元素，接口可能返回 null） */
+export interface CockpitChannelRoiInstallDayItem {
+  cost?: number | null
+  cpl?: number | null
+  install?: number | null
+}
+
+/** 渠道 ROI&安装量接口：单渠道（data 数组中每个元素，list 为近 7 日数据） */
+export interface CockpitChannelRoiInstallApiItem {
+  channel: string
+  list: CockpitChannelRoiInstallDayItem[]
+}
+
+/** 渠道 ROI&安装量接口响应（/api/v1/datacenter/analysis/cockpit/installAndRoiOfChannel） */
+export type CockpitChannelRoiInstallResponse = CockpitChannelRoiInstallApiItem[]
+
 /** 用户质量仪表盘单项 */
 export interface CockpitUserQualityItem {
   key: string
@@ -76,7 +120,21 @@ export interface CockpitUserQualityItem {
   gaugeValue: number
 }
 
-/** 消耗节奏监控单项 */
+/** 消耗节奏监控接口：单条（proxy/self 元素结构相同） */
+export interface CockpitConsumptionRhythmItem {
+  channel: string
+  status: string
+  total: number
+  used: number
+}
+
+/** 消耗节奏监控接口响应（/api/v1/datacenter/analysis/cockpit/consumptionRhythmMonitoring） */
+export interface CockpitConsumptionRhythmResponse {
+  proxy: CockpitConsumptionRhythmItem[]
+  self: CockpitConsumptionRhythmItem[]
+}
+
+/** 消耗节奏监控单项（组件展示用） */
 export interface CockpitSpendPaceItem {
   name: string
   current: number
@@ -119,7 +177,39 @@ export interface CockpitMapLegendItem {
   color: string
 }
 
-/** Top3 收入应用 */
+/** Top3 接口：收入应用单项（app 数组元素） */
+export interface CockpitTop3AppItem {
+  sAppName: string
+  last: { dAdRevenue: number; roas: number }
+  now: { dAdRevenue: number; roas: number }
+}
+
+/** Top3 接口：差评产品单项（badApp 数组元素） */
+export interface CockpitTop3BadAppItem {
+  sAppName: string
+  cplChange: number
+  dauChange: number
+  roiChange: number
+  last: { cpl: number; dau: number; roi: number; note: string }
+  now: { cpl: number; dau: number; roi: number }
+}
+
+/** Top3 接口：用户增长单项（user 数组元素） */
+export interface CockpitTop3UserItem {
+  sAppName: string
+  dauChange: number
+  last: { dau: number }
+  now: { dau: number }
+}
+
+/** Top3 接口响应（/api/v1/datacenter/analysis/cockpit/top3） */
+export interface CockpitTop3Response {
+  app: CockpitTop3AppItem[]
+  badApp: CockpitTop3BadAppItem[]
+  user: CockpitTop3UserItem[]
+}
+
+/** Top3 收入应用（组件展示用） */
 export interface CockpitTopRevenueItem {
   name: string
   /** 收入金额展示，如 '$580K' */

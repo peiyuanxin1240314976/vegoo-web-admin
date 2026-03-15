@@ -10,15 +10,18 @@
         <a class="top3-module__more" href="javascript:;">查看更多</a>
       </div>
       <div class="top3-module__list">
-        <div v-for="(item, i) in displayTopRevenue" :key="'revenue-' + i" class="top3-row">
-          <span class="top3-row__medal">{{ i + 1 }}</span>
-          <div class="top3-row__app-icon" title="应用" />
-          <span class="top3-row__name">{{ item.name }}</span>
-          <span class="top3-row__value">{{ item.revenue ?? item.roas }}</span>
-          <span v-if="item.trendPercent" class="top3-row__trend up">
-            <ElIcon><Top /></ElIcon>{{ item.trendPercent }}
-          </span>
-        </div>
+        <template v-if="displayTopRevenue.length">
+          <div v-for="(item, i) in displayTopRevenue" :key="'revenue-' + i" class="top3-row">
+            <span class="top3-row__medal">{{ i + 1 }}</span>
+            <div class="top3-row__app-icon" title="应用" />
+            <span class="top3-row__name">{{ item.name }}</span>
+            <span class="top3-row__value">{{ item.revenue ?? item.roas }}</span>
+            <span v-if="item.trendPercent" class="top3-row__trend up">
+              <ElIcon><Top /></ElIcon>{{ item.trendPercent }}
+            </span>
+          </div>
+        </template>
+        <div v-else class="top3-empty">暂无数据</div>
       </div>
     </div>
 
@@ -32,16 +35,22 @@
         <a class="top3-module__more" href="javascript:;">查看更多</a>
       </div>
       <div class="top3-module__list">
-        <div v-for="(item, i) in displayTopBadReview" :key="'bad-' + i" class="top3-row">
-          <div class="top3-row__app-icon" title="应用" />
-          <span class="top3-row__name">{{ item.name }}</span>
-          <span class="top3-row__tag" :class="item.trend === 'up' ? 'tag-orange' : 'tag-red'">
-            {{ item.reasonTag }}
-          </span>
-          <span class="top3-row__metric" :class="item.trend === 'up' ? 'metric-up' : 'metric-down'">
-            {{ item.metric }}
-          </span>
-        </div>
+        <template v-if="displayTopBadReview.length">
+          <div v-for="(item, i) in displayTopBadReview" :key="'bad-' + i" class="top3-row">
+            <div class="top3-row__app-icon" title="应用" />
+            <span class="top3-row__name">{{ item.name }}</span>
+            <span class="top3-row__tag" :class="item.trend === 'up' ? 'tag-orange' : 'tag-red'">
+              {{ item.reasonTag }}
+            </span>
+            <span
+              class="top3-row__metric"
+              :class="item.trend === 'up' ? 'metric-up' : 'metric-down'"
+            >
+              {{ item.metric }}
+            </span>
+          </div>
+        </template>
+        <div v-else class="top3-empty">暂无数据</div>
       </div>
     </div>
 
@@ -55,15 +64,18 @@
         <a class="top3-module__more" href="javascript:;">查看更多</a>
       </div>
       <div class="top3-module__list">
-        <div v-for="(item, i) in displayTopUser" :key="'user-' + i" class="top3-row">
-          <span class="top3-row__medal">{{ i + 1 }}</span>
-          <div class="top3-row__app-icon" title="应用" />
-          <span class="top3-row__name">{{ item.name }}</span>
-          <span class="top3-row__value">{{ item.growth ?? item.dau }}</span>
-          <span v-if="item.trendPercent" class="top3-row__trend up">
-            <ElIcon><Top /></ElIcon>{{ item.trendPercent }}
-          </span>
-        </div>
+        <template v-if="displayTopUser.length">
+          <div v-for="(item, i) in displayTopUser" :key="'user-' + i" class="top3-row">
+            <span class="top3-row__medal">{{ i + 1 }}</span>
+            <div class="top3-row__app-icon" title="应用" />
+            <span class="top3-row__name">{{ item.name }}</span>
+            <span class="top3-row__value">{{ item.growth ?? item.dau }}</span>
+            <span v-if="item.trendPercent" class="top3-row__trend up">
+              <ElIcon><Top /></ElIcon>{{ item.trendPercent }}
+            </span>
+          </div>
+        </template>
+        <div v-else class="top3-empty">暂无数据</div>
       </div>
     </div>
   </div>
@@ -145,15 +157,15 @@
   )
 
   const displayTopRevenue = computed(() =>
-    props.topRevenue?.length ? props.topRevenue : MOCK_COCKPIT_OVERVIEW.topRevenue
+    Array.isArray(props.topRevenue) ? props.topRevenue : MOCK_COCKPIT_OVERVIEW.topRevenue
   )
   const displayTopBadReview = computed(() =>
-    props.topBadReview?.length
+    Array.isArray(props.topBadReview)
       ? props.topBadReview
       : ((MOCK_COCKPIT_OVERVIEW as { topBadReview?: CockpitTopBadReviewItem[] }).topBadReview ?? [])
   )
   const displayTopUser = computed(() =>
-    props.topUser?.length ? props.topUser : MOCK_COCKPIT_OVERVIEW.topUser
+    Array.isArray(props.topUser) ? props.topUser : MOCK_COCKPIT_OVERVIEW.topUser
   )
 </script>
 
@@ -215,6 +227,13 @@
 
     &__list {
       padding: 8px 12px 12px;
+    }
+
+    .top3-empty {
+      padding: 24px 12px;
+      font-size: 13px;
+      color: var(--el-text-color-secondary);
+      text-align: center;
     }
 
     &--revenue {

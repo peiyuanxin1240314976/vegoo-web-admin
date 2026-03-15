@@ -24,7 +24,10 @@
       </div>
     </template>
     <div v-loading="mapLoading" class="map-wrap">
-      <div ref="mapChartRef" class="map-chart"></div>
+      <template v-if="countryData.length">
+        <div ref="mapChartRef" class="map-chart"></div>
+      </template>
+      <div v-else class="map-empty">暂无数据</div>
     </div>
     <!-- <div class="map-legend">
       <div v-for="r in regionList" :key="r.name" class="legend-item">
@@ -284,7 +287,7 @@
   )
 
   const countryData = computed(() =>
-    props.mapCountries.length ? props.mapCountries : MOCK_COCKPIT_OVERVIEW.mapCountries
+    Array.isArray(props.mapCountries) ? props.mapCountries : MOCK_COCKPIT_OVERVIEW.mapCountries
   )
   // const regionList = computed(() =>
   //   props.mapLegend.length ? props.mapLegend : MOCK_COCKPIT_OVERVIEW.mapLegend
@@ -486,6 +489,15 @@
   watch(mapMetric, () => updateChart(buildOption()))
   watch(isDark, () => updateChart(buildOption()))
 
+  /** 父组件 overview 异步加载，首次 onMounted 时 mapChartRef 可能尚未渲染（countryData 为空）；数据到达后再初始化 */
+  watch(
+    () => countryData.value.length,
+    (len) => {
+      if (len > 0) nextTick(initWorldMap)
+    }
+  )
+
+  let mapInitialized = false
   async function initWorldMap() {
     if (!mapChartRef.value) return
     try {
@@ -496,6 +508,10 @@
       nextTick(() => {
         initChart(buildOption())
         mapLoading.value = false
+        if (!mapInitialized) {
+          mapChartRef.value?.addEventListener('click', handleTooltipLinkClick)
+          mapInitialized = true
+        }
       })
     } catch (e) {
       console.error('[Cockpit] 世界地图 GeoJSON 加载失败', e)
@@ -517,13 +533,12 @@
 
   onMounted(() => {
     initWorldMap()
-    const el = mapChartRef.value
-    if (el) el.addEventListener('click', handleTooltipLinkClick)
   })
 
   onUnmounted(() => {
-    const el = mapChartRef.value
-    if (el) el.removeEventListener('click', handleTooltipLinkClick)
+    if (mapChartRef.value) {
+      mapChartRef.value.removeEventListener('click', handleTooltipLinkClick)
+    }
     destroyChart()
   })
 </script>
@@ -623,6 +638,16 @@
   .map-wrap {
     position: relative;
     min-height: 470px;
+  }
+
+  .map-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 470px;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
   }
 
   .map-chart {

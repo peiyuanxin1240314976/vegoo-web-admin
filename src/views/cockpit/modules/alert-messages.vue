@@ -2,7 +2,7 @@
   <div class="cockpit-alerts">
     <!-- 左块：运营摘要指标 -->
     <div class="alert-block alert-block--metrics">
-      <div class="metrics-inner">
+      <div v-if="summaryMetrics.length" class="metrics-inner">
         <template v-for="(metric, index) in summaryMetrics" :key="metric.label">
           <span v-if="index > 0" class="metric-sep">|</span>
           <span class="metric-item">
@@ -18,14 +18,23 @@
           </span>
         </template>
       </div>
+      <span v-else class="alert-empty">暂无数据</span>
     </div>
 
     <!-- 右块：警示列表（带彩色图标） -->
     <div class="alert-block alert-block--list">
-      <div v-for="(item, index) in alertBanners" :key="index" class="alert-item" :class="item.type">
-        <component :is="iconMap[item.type]" class="alert-icon" />
-        <span class="alert-text">{{ item.text }}</span>
-      </div>
+      <template v-if="alertBanners.length">
+        <div
+          v-for="(item, index) in alertBanners"
+          :key="index"
+          class="alert-item"
+          :class="item.type"
+        >
+          <component :is="iconMap[item.type]" class="alert-icon" />
+          <span class="alert-text">{{ item.text }}</span>
+        </div>
+      </template>
+      <span v-else class="alert-empty">暂无数据</span>
     </div>
   </div>
 </template>
@@ -47,13 +56,13 @@
   )
 
   const summaryMetrics = computed(() =>
-    props.alertSummaryMetrics?.length
+    Array.isArray(props.alertSummaryMetrics)
       ? props.alertSummaryMetrics
       : (MOCK_COCKPIT_OVERVIEW.alertSummaryMetrics ?? [])
   )
 
   const alertBanners = computed(() =>
-    props.alertBanners?.length ? props.alertBanners : MOCK_COCKPIT_OVERVIEW.alertBanners
+    Array.isArray(props.alertBanners) ? props.alertBanners : MOCK_COCKPIT_OVERVIEW.alertBanners
   )
 
   const iconMap = {
@@ -68,6 +77,11 @@
 </script>
 
 <style scoped lang="scss">
+  .alert-empty {
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+  }
+
   .cockpit-alerts {
     display: flex;
     flex-wrap: wrap;
