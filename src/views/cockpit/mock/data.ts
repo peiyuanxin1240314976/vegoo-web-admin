@@ -431,11 +431,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
     { name: 'Weather5', growth: '+6,200', trendPercent: '+5%' },
     { name: 'Weather5', growth: '+3,100', trendPercent: '+3%' }
   ],
-  smartAlerts: [
-    { type: 'risk', msg: '美国区ROI下降15%' },
-    { type: 'warning', msg: 'Facebook消耗速度超预算20%' },
-    { type: 'growth', msg: 'Weather5 DAU增长8%' }
-  ],
+  smartAlerts: [],
   top5Apps: [
     { name: 'Weather5', revenue: '580K', roas: '1.45' },
     { name: 'BloodPressure2', revenue: '425K', roas: '1.38' },

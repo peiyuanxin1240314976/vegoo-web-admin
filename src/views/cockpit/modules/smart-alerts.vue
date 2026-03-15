@@ -16,7 +16,7 @@
           <ElButton type="primary" link size="small">查看详情</ElButton>
         </div>
       </template>
-      <div v-else class="alert-empty">暂无数据</div>
+      <ElEmpty v-else description="暂无数据" :image-size="80" />
     </div>
   </ElCard>
 </template>
@@ -57,13 +57,6 @@
   /* 深色模式：渐变色背景 */
   html.dark .cockpit-panel {
     background: linear-gradient(320deg, #000e29, #000);
-  }
-
-  .alert-empty {
-    padding: 24px;
-    font-size: 13px;
-    color: var(--el-text-color-secondary);
-    text-align: center;
   }
 
   .alert-list {
