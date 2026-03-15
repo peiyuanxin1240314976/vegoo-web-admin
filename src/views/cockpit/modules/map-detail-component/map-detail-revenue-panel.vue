@@ -74,6 +74,7 @@
                   width: s.percent + '%',
                   minWidth: '8px',
                   backgroundColor: s.color,
+                  '--segment-color': s.color,
                   animationDelay: i * 0.08 + 's'
                 }"
               />
@@ -84,6 +85,7 @@
               :style="{
                 width: s.percent + '%',
                 backgroundColor: s.color,
+                '--segment-color': s.color,
                 animationDelay: i * 0.08 + 's'
               }"
             />
@@ -91,7 +93,10 @@
         </div>
       </div>
       <div class="revenue-metrics">
-        <span>eCPM: {{ metrics.ecpm }} {{ metrics.ecpmTrend }}</span>
+        <span
+          >eCPM: {{ metrics.ecpm }}
+          <span :class="ecpmTrendClass">{{ metrics.ecpmTrend }}</span></span
+        >
         <span>广告充展率: {{ metrics.fillRate }}</span>
         <span>ARPU: {{ metrics.arpu }}</span>
       </div>
@@ -110,6 +115,7 @@
 </template>
 
 <script setup lang="ts">
+  import { computed } from 'vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import type { ColumnOption } from '@/types'
 
@@ -130,7 +136,7 @@
     roi: number
   }
 
-  withDefaults(
+  const props = withDefaults(
     defineProps<{
       metrics?: { ecpm: string; ecpmTrend: string; fillRate: string; arpu: string }
       compositionData?: RevenueCompositionItem[]
@@ -149,6 +155,15 @@
       appLoading: false
     }
   )
+
+  /** 根据 ecpmTrend 文案判断上升/下降/持平，用于颜色 */
+  const ecpmTrendClass = computed(() => {
+    const t = props.metrics?.ecpmTrend ?? ''
+    if (!t || t === '—') return 'revenue-metric-trend--flat'
+    if (t.startsWith('↑') || /^\+/.test(t)) return 'revenue-metric-trend--up'
+    if (t.startsWith('↓') || (t.includes('-') && t !== '—')) return 'revenue-metric-trend--down'
+    return 'revenue-metric-trend--flat'
+  })
 
   function fmtMoneyK(n: number) {
     return `$${(n / 1000).toFixed(0)}K`
@@ -224,18 +239,30 @@
 
   .composition-bar {
     height: 32px;
-    overflow: hidden;
+    overflow: visible;
     border-radius: 6px;
   }
 
   .composition-segment {
     flex-shrink: 0;
     height: 100%;
-    transform-origin: left;
+    transition:
+      box-shadow 0.25s ease,
+      transform 0.25s ease;
+    transform-origin: left center;
     animation: segment-slide-in 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 
     &:not(:first-child) {
       border-left: 1px solid rgba(255 255 255 / 20%);
+    }
+
+    &:hover {
+      /* 仅上下描边，不增加左右视觉宽度 */
+      box-shadow:
+        0 -2px 0 0 var(--segment-color),
+        0 2px 0 0 var(--segment-color);
+      transform: scaleX(1) scaleY(1.12);
+      transform-origin: center center;
     }
   }
 
@@ -288,6 +315,18 @@
       text-align: center;
       background-color: var(--el-fill-color-light);
       border-radius: 6px;
+    }
+
+    .revenue-metric-trend--up {
+      color: var(--el-color-success);
+    }
+
+    .revenue-metric-trend--down {
+      color: var(--el-color-danger);
+    }
+
+    .revenue-metric-trend--flat {
+      color: var(--el-text-color-secondary);
     }
   }
 
