@@ -55,7 +55,7 @@
             :global-data="retentionGlobalData"
           />
           <MapDetailLtvChart :data="ltvData" />
-          <MapDetailSegmentChart :data="segmentData" />
+          <MapDetailSegmentChart :data="segmentData" :note="segmentNote" />
         </div>
       </div>
     </div>
@@ -78,7 +78,15 @@
   import type { ChannelRow, CampaignRow } from './map-detail-component'
   import type { RevenueCompositionItem, AppPerformanceRow } from './map-detail-component'
   import type { SegmentItem } from './map-detail-component'
-  import { fetchCountryInfoOverall, mapCountryInfoOverallToStatCards } from '../api/cockpit'
+  import {
+    fetchCountryInfoOverall,
+    fetchCountryInfoTop5Campaign,
+    fetchCountryInfoRemain,
+    fetchCountryInfoUserPayLaunch,
+    mapCountryInfoOverallToStatCards,
+    mapRemainDataToSeries,
+    mapUserPayLaunchToSegment
+  } from '../api/cockpit'
   import type { CountryInfoOverallData } from '../types'
 
   defineOptions({ name: 'CockpitMapDetail' })
@@ -202,6 +210,50 @@
     } catch {
       // 接口失败时保留默认占位
     }
+    // 当前投放中 Campaign (Top 5)：/api/v1/datacenter/analysis/countryInfo/top5Campaign
+    try {
+      const list = await fetchCountryInfoTop5Campaign()
+      if (Array.isArray(list)) {
+        campaignTableData.value = list.map((item) => ({
+          name: item.name ?? '—',
+          amount: item.cost ?? 0,
+          count: item.install ?? 0,
+          roi: item.roi ?? 0,
+          status: item.status ?? '投放中'
+        }))
+        // 同一接口用于变现分析「各 App 在区域表现」表格
+        appPerformanceData.value = list.map((item) => ({
+          appName: item.name ?? '—',
+          amount: item.cost ?? 0,
+          count: item.install ?? 0,
+          roi: item.roi ?? 0
+        }))
+      }
+    } catch {
+      // 接口失败时保持空列表
+    }
+    // 用户留存曲线：/api/v1/datacenter/analysis/countryInfo/remain（currentCountry + globalAvg）
+    try {
+      const remain = await fetchCountryInfoRemain()
+      if (remain?.currentCountry && remain?.globalAvg) {
+        const { local, global } = mapRemainDataToSeries(remain)
+        retentionLocalData.value = local
+        retentionGlobalData.value = global
+      }
+    } catch {
+      // 接口失败时保持空数组
+    }
+    // 用户分层：/api/v1/datacenter/analysis/countryInfo/userPayLaunch
+    try {
+      const userPay = await fetchCountryInfoUserPayLaunch()
+      if (userPay && typeof userPay === 'object') {
+        const { segmentData: seg, note } = mapUserPayLaunchToSegment(userPay)
+        segmentData.value = seg
+        segmentNote.value = note
+      }
+    } catch {
+      // 接口失败时保持默认
+    }
     // 下一帧再展示第三排，避免首屏同时渲染图表，提升首屏渲染与用户体感
     await nextTick()
     thirdRowTimer = window.setTimeout(() => {
@@ -244,11 +296,7 @@
     }
   ])
 
-  const campaignTableData = ref<CampaignRow[]>([
-    { name: 'USA_Android_T1_Purchase', amount: 125000, count: 4200, roi: 1.92, status: '投放中' },
-    { name: 'USA_iOS_Retarget', amount: 98000, count: 2100, roi: 1.75, status: '投放中' },
-    { name: 'USA_Broad_Test', amount: 45000, count: 1800, roi: 0.89, status: '投放中' }
-  ])
+  const campaignTableData = ref<CampaignRow[]>([])
 
   const revenueMetrics = ref({
     ecpm: '$8.20',
@@ -260,22 +308,17 @@
     { label: '广告收入', value: '$780K', percent: 76, color: '#3984F1' },
     { label: '内购收入', value: '$250K', percent: 24, color: '#f59e0b' }
   ])
-  const appPerformanceData = ref<AppPerformanceRow[]>([
-    { appName: 'Weather5', adRevenue: 420000, iap: 95000, arpu: 28.5, d7Retention: '42%' },
-    { appName: 'BloodPressure2', adRevenue: 198000, iap: 88000, arpu: 19.2, d7Retention: '38%' },
-    { appName: 'HealthTracker3', adRevenue: 162000, iap: 67000, arpu: 15.8, d7Retention: '35%' }
-  ])
+  const appPerformanceData = ref<AppPerformanceRow[]>([])
 
-  const retentionLocalData = ref([72, 58, 45, 38, 32])
-  const retentionGlobalData = ref([66, 52, 39, 32, 26])
+  /** 用户留存曲线：本地区 + 全局平均均来自 /api/v1/datacenter/analysis/countryInfo/remain */
+  const retentionLocalData = ref<number[]>([])
+  const retentionGlobalData = ref<number[]>([])
 
   const ltvData = ref([8.2, 18.5, 32.1, 48.6])
 
-  const segmentData = ref<SegmentItem[]>([
-    { value: 52, name: '活跃免费' },
-    { value: 30, name: '流失风险' },
-    { value: 18, name: '付费用户' }
-  ])
+  /** 用户分层饼图数据与底部文案来自 /api/v1/datacenter/analysis/countryInfo/userPayLaunch */
+  const segmentData = ref<SegmentItem[]>([])
+  const segmentNote = ref('')
 </script>
 
 <style scoped lang="scss">

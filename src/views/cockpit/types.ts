@@ -144,6 +144,51 @@ export interface CountryInfoOverallApiResponse {
   data?: CountryInfoOverallData
 }
 
+/** 国家详情当前投放中 Campaign Top5 接口 data 单项 /api/v1/datacenter/analysis/countryInfo/top5Campaign */
+export interface CountryInfoTop5CampaignItem {
+  /** 消耗 */
+  cost: number
+  /** 安装量 */
+  install: number
+  /** ROI */
+  roi: number
+  /** Campaign 名称（若后端返回） */
+  name?: string
+  /** 状态（若后端返回） */
+  status?: string
+}
+
+/** 国家详情用户留存曲线单条（currentCountry / globalAvg） */
+export interface CountryInfoRemainDataItem {
+  day1: number | null
+  day3: number | null
+  day7: number | null
+  day14: number | null
+  day30: number | null
+}
+
+/** 国家详情用户留存曲线接口 data /api/v1/datacenter/analysis/countryInfo/remain */
+export interface CountryInfoRemainData {
+  /** 当前国家留存 */
+  currentCountry: CountryInfoRemainDataItem
+  /** 全局平均留存 */
+  globalAvg: CountryInfoRemainDataItem
+}
+
+/** 国家详情用户分层接口 data /api/v1/datacenter/analysis/countryInfo/userPayLaunch */
+export interface CountryInfoUserPayLaunchData {
+  /** 活跃免费用户 */
+  freeAndActiveUserCount: number
+  /** 免费用户 */
+  freeUserCount: number
+  /** 付费用户 */
+  payUserCount: number
+  /** 付费转换率 */
+  payConversionRate: number
+  /** 全局付费转换率 */
+  payConversionGlobalAvgRate: number
+}
+
 /** KPI 卡片类型：总收入、付费收入、广告支出、有效订阅、DAU、预估利润 */
 export type CockpitKpiCardType =
   | 'income' // 总收入

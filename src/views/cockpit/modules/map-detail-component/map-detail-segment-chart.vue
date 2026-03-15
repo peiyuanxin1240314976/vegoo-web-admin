@@ -21,18 +21,15 @@
     value: number
   }
 
+  /** data、note 来自接口 countryInfo/userPayLaunch */
   const props = withDefaults(
     defineProps<{
       data?: SegmentItem[]
       note?: string
     }>(),
     {
-      data: () => [
-        { value: 52, name: '活跃免费' },
-        { value: 30, name: '流失风险' },
-        { value: 18, name: '付费用户' }
-      ],
-      note: '付费转化率 4.8% (vs 全局 3.2%)'
+      data: () => [],
+      note: ''
     }
   )
 
@@ -85,9 +82,30 @@
     }
 
     .chart-note {
-      margin-top: 8px;
+      position: relative;
+      padding: 10px 14px;
+      margin-top: 14px;
       font-size: 12px;
-      color: var(--el-text-color-secondary);
+      font-weight: bold;
+      color: #439872;
+      text-align: center;
+      background: #00ff8a17;
+      border: 1px solid rgb(67 152 114 / 25%);
+      border-radius: 8px;
+
+      /* 气泡三角在上方、居中 */
+      &::before {
+        position: absolute;
+        top: -6px;
+        left: 50%;
+        width: 0;
+        height: 0;
+        content: '';
+        border-right: 6px solid transparent;
+        border-bottom: 6px solid #00ff8a17;
+        border-left: 6px solid transparent;
+        transform: translateX(-50%);
+      }
     }
   }
 </style>

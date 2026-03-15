@@ -31,7 +31,11 @@ import type {
   CockpitRevenueStructureLink,
   CockpitRevenueStructureInsight,
   CockpitAlertSummaryMetric,
-  CountryInfoOverallData
+  CountryInfoOverallData,
+  CountryInfoRemainData,
+  CountryInfoRemainDataItem,
+  CountryInfoTop5CampaignItem,
+  CountryInfoUserPayLaunchData
 } from '../types'
 import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
@@ -46,6 +50,15 @@ const COCKPIT_OVERALL_URL = '/api/v1/datacenter/analysis/cockpit/overall'
 
 /** 国家详情第一排总数据接口（地图进入国家详情页顶部卡片） */
 const COUNTRY_INFO_OVERALL_URL = '/api/v1/datacenter/analysis/countryInfo/overall'
+
+/** 国家详情当前投放中 Campaign Top5 接口 */
+const COUNTRY_INFO_TOP5_CAMPAIGN_URL = '/api/v1/datacenter/analysis/countryInfo/top5Campaign'
+
+/** 国家详情用户留存曲线接口 */
+const COUNTRY_INFO_REMAIN_URL = '/api/v1/datacenter/analysis/countryInfo/remain'
+
+/** 国家详情用户分层接口 */
+const COUNTRY_INFO_USER_PAY_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo/userPayLaunch'
 
 /** 消耗节奏监控接口（自投/代投） */
 const COCKPIT_CONSUMPTION_RHYTHM_URL =
@@ -554,6 +567,85 @@ export async function fetchCountryInfoOverall(params?: {
     url: COUNTRY_INFO_OVERALL_URL,
     data: params && params.countryCode != null ? { countryCode: params.countryCode } : {}
   })
+}
+
+/**
+ * 获取国家详情当前投放中 Campaign Top5
+ * POST /api/v1/datacenter/analysis/countryInfo/top5Campaign，请求体：{}
+ * 返回 data 数组，项为 { cost, install, roi }（及可选的 name、status）
+ */
+export async function fetchCountryInfoTop5Campaign(): Promise<CountryInfoTop5CampaignItem[]> {
+  return request.post<CountryInfoTop5CampaignItem[]>({
+    url: COUNTRY_INFO_TOP5_CAMPAIGN_URL,
+    data: {}
+  })
+}
+
+/**
+ * 获取国家详情用户留存曲线
+ * POST /api/v1/datacenter/analysis/countryInfo/remain，请求体：{}
+ * 返回 data：{ currentCountry: { day1, day3, day7, day14, day30 }, globalAvg: { ... } }
+ */
+export async function fetchCountryInfoRemain(): Promise<CountryInfoRemainData> {
+  return request.post<CountryInfoRemainData>({
+    url: COUNTRY_INFO_REMAIN_URL,
+    data: {}
+  })
+}
+
+/** 将单条留存项转为图表 series [D1, D3, D7, D14, D30]，null 转为 0 */
+function remainItemToSeries(item: CountryInfoRemainDataItem): number[] {
+  return [item.day1 ?? 0, item.day3 ?? 0, item.day7 ?? 0, item.day14 ?? 0, item.day30 ?? 0]
+}
+
+/** 将 remain 接口 data 转为图表的本地区 + 全局平均两条曲线 */
+export function mapRemainDataToSeries(data: CountryInfoRemainData): {
+  local: number[]
+  global: number[]
+} {
+  return {
+    local: remainItemToSeries(data.currentCountry),
+    global: remainItemToSeries(data.globalAvg)
+  }
+}
+
+/**
+ * 获取国家详情用户分层（用户分层饼图 + 付费转化率文案）
+ * POST /api/v1/datacenter/analysis/countryInfo/userPayLaunch，请求体：{}
+ */
+export async function fetchCountryInfoUserPayLaunch(): Promise<CountryInfoUserPayLaunchData> {
+  return request.post<CountryInfoUserPayLaunchData>({
+    url: COUNTRY_INFO_USER_PAY_LAUNCH_URL,
+    data: {}
+  })
+}
+
+/** 用户分层饼图单项（与 map-detail-segment-chart SegmentItem 一致） */
+export interface UserPayLaunchSegmentItem {
+  name: string
+  value: number
+}
+
+/** 将 userPayLaunch 接口 data 转为用户分层饼图数据 + 底部说明文案 */
+export function mapUserPayLaunchToSegment(data: CountryInfoUserPayLaunchData): {
+  segmentData: UserPayLaunchSegmentItem[]
+  note: string
+} {
+  const activeFree = Number(data.freeAndActiveUserCount) || 0
+  const freeTotal = Number(data.freeUserCount) || 0
+  const pay = Number(data.payUserCount) || 0
+  const riskFree = Math.max(0, freeTotal - activeFree)
+  const segmentData: UserPayLaunchSegmentItem[] = [
+    { name: '活跃免费', value: activeFree },
+    { name: '流失风险', value: riskFree },
+    { name: '付费用户', value: pay }
+  ]
+  const rate = Number(data.payConversionRate) || 0
+  const globalRate = Number(data.payConversionGlobalAvgRate) || 0
+  const ratePct = rate <= 1 && rate >= 0 ? rate * 100 : rate
+  const globalPct = globalRate <= 1 && globalRate >= 0 ? globalRate * 100 : globalRate
+  const note = `付费转化率 ${ratePct.toFixed(1)}% (vs 全局 ${globalPct.toFixed(1)}%)`
+  return { segmentData, note }
 }
 
 /** 将节奏状态文案映射为 tagType（success | warning | danger） */

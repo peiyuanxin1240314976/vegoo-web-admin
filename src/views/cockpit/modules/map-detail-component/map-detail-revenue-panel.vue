@@ -75,12 +75,12 @@
     color: string
   }
 
+  /** 各 App 在区域表现（与 top5Campaign 接口一致：消耗、安装量、ROI） */
   export interface AppPerformanceRow {
     appName: string
-    adRevenue: number
-    iap: number
-    arpu: number
-    d7Retention: string
+    amount: number
+    count: number
+    roi: number
   }
 
   withDefaults(
@@ -108,27 +108,20 @@
   const appColumns: ColumnOption<AppPerformanceRow>[] = [
     { prop: 'appName', label: 'App名称', minWidth: 120 },
     {
-      prop: 'adRevenue',
-      label: '广告收入',
+      prop: 'amount',
+      label: '消耗',
       minWidth: 90,
       align: 'right',
-      formatter: (row: AppPerformanceRow) => fmtMoneyK(row.adRevenue)
+      formatter: (row: AppPerformanceRow) => fmtMoneyK(row.amount)
     },
     {
-      prop: 'iap',
-      label: '内购',
+      prop: 'count',
+      label: '安装量',
       minWidth: 80,
       align: 'right',
-      formatter: (row: AppPerformanceRow) => fmtMoneyK(row.iap)
+      formatter: (row: AppPerformanceRow) => row.count?.toLocaleString()
     },
-    {
-      prop: 'arpu',
-      label: 'ARPU',
-      width: 80,
-      align: 'right',
-      formatter: (row: AppPerformanceRow) => `$${row.arpu}`
-    },
-    { prop: 'd7Retention', label: 'D7留存', width: 80, align: 'right' }
+    { prop: 'roi', label: 'ROI', width: 80, align: 'right' }
   ]
 </script>
 
