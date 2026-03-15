@@ -33,29 +33,86 @@
   }
 
   .stat-card {
+    position: relative;
     padding: 16px;
+    overflow: hidden;
     color: #fff;
+    border: 1px solid rgb(255 255 255 / 25%);
     border-radius: 10px;
     transition:
       transform 0.25s ease,
       box-shadow 0.25s ease;
+
+    /* 透明背景装饰：圆（数据点）+ 趋势线，浅色模式 */
+    &::before {
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 120px;
+      height: 120px;
+      pointer-events: none;
+      content: '';
+      background: rgb(255 255 255 / 8%);
+      border-radius: 50%;
+    }
+
+    /* 高低不一的柱状装饰，暗示柱状图/数据 */
+    &::after {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      width: 44px;
+      height: 28px;
+      pointer-events: none;
+      content: '';
+      background:
+        linear-gradient(
+            to top,
+            transparent 45%,
+            rgb(255 255 255 / 12%) 45%,
+            rgb(255 255 255 / 12%) 100%
+          )
+          0 0 / 28% 100%,
+        linear-gradient(
+            to top,
+            transparent 15%,
+            rgb(255 255 255 / 12%) 15%,
+            rgb(255 255 255 / 12%) 100%
+          )
+          36% 0 / 28% 100%,
+        linear-gradient(
+            to top,
+            transparent 55%,
+            rgb(255 255 255 / 12%) 55%,
+            rgb(255 255 255 / 12%) 100%
+          )
+          72% 0 / 28% 100%;
+      background-repeat: no-repeat;
+      border-radius: 4px;
+    }
 
     &:hover {
       animation: stat-card-bounce 0.4s ease-out forwards;
     }
 
     .stat-label {
+      position: relative;
+      z-index: 1;
       margin-bottom: 6px;
       font-size: 12px;
       opacity: 0.9;
     }
 
     .stat-value {
+      position: relative;
+      z-index: 1;
       font-size: 20px;
       font-weight: 600;
     }
 
     .stat-compare {
+      position: relative;
+      z-index: 1;
       margin-top: 4px;
       font-size: 12px;
 
@@ -108,6 +165,41 @@
           0 4px 8px rgb(0 0 0 / 12%);
       }
     }
+  }
+
+  /* 深色模式：装饰与边框略提高对比度 */
+  :deep(html.dark) .stat-card {
+    border-color: rgb(255 255 255 / 35%);
+  }
+
+  :deep(html.dark) .stat-card::before {
+    background: rgb(255 255 255 / 12%);
+  }
+
+  :deep(html.dark) .stat-card::after {
+    background:
+      linear-gradient(
+          to top,
+          transparent 45%,
+          rgb(255 255 255 / 16%) 45%,
+          rgb(255 255 255 / 16%) 100%
+        )
+        0 0 / 28% 100%,
+      linear-gradient(
+          to top,
+          transparent 15%,
+          rgb(255 255 255 / 16%) 15%,
+          rgb(255 255 255 / 16%) 100%
+        )
+        36% 0 / 28% 100%,
+      linear-gradient(
+          to top,
+          transparent 55%,
+          rgb(255 255 255 / 16%) 55%,
+          rgb(255 255 255 / 16%) 100%
+        )
+        72% 0 / 28% 100%;
+    background-repeat: no-repeat;
   }
 
   @keyframes stat-card-bounce {
