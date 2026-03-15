@@ -56,8 +56,15 @@
     Array.isArray(props.kpiList) ? props.kpiList : MOCK_COCKPIT_OVERVIEW.kpi
   )
 
-  /** 根据卡片数据生成迷你图趋势点（0~1），上升/下降 + 轻微波动 */
+  /** 有 chartData 时归一化到 0~1 作为趋势点；否则用 compareUp 生成模拟点 */
   function getTrendPoints(item: CockpitKpiCard, index: number): number[] {
+    if (Array.isArray(item.chartData) && item.chartData.length > 0) {
+      const arr = item.chartData
+      const min = Math.min(...arr)
+      const max = Math.max(...arr)
+      const range = max - min || 1
+      return arr.map((v) => Math.max(0.05, Math.min(0.95, (v - min) / range)))
+    }
     const n = 10
     const up = item.compareUp !== false
     const seed = index * 7 + (item.type?.length ?? 0)
@@ -77,11 +84,11 @@
     const h = 36
     const pad = 2
     const coords = points.map((p, i) => {
-      const x = (i / (points.length - 1)) * w
+      const x = points.length > 1 ? (i / (points.length - 1)) * w : 0
       const y = pad + (1 - p) * h
       return `${x},${y}`
     })
-    return `M ${coords.join(' L ')}`
+    return coords.length ? `M ${coords.join(' L ')}` : ''
   }
 
   function getChartAreaPath(item: CockpitKpiCard, index: number): string {

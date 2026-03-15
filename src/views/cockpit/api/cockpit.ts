@@ -8,7 +8,10 @@ import request from '@/utils/http'
 import type {
   CockpitOverview,
   CockpitOverviewParams,
-  CockpitOverallResponse,
+  CockpitOverallData,
+  CockpitOverallDataPeriod,
+  CockpitOverallApiResponse,
+  CockpitOverallSeriesItem,
   CockpitKpiCard,
   CockpitKpiCardType,
   CockpitOverallPeriodItem,
@@ -23,11 +26,11 @@ import type {
   CockpitBusinessMapApiItem,
   CockpitMapCountry,
   CockpitMapLegendItem,
-  CockpitIncomeStructureItem,
   CockpitRevenueStructureFlow,
   CockpitRevenueStructureNode,
   CockpitRevenueStructureLink,
-  CockpitRevenueStructureInsight
+  CockpitRevenueStructureInsight,
+  CockpitAlertSummaryMetric
 } from '../types'
 import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
@@ -55,6 +58,14 @@ const COCKPIT_BUSINESS_MAP_URL = '/api/v1/datacenter/analysis/cockpit/businessMa
 
 /** 收入结构接口（近7日收入结构流向桑基图） */
 const COCKPIT_INCOME_STRUCTURE_URL = '/api/v1/datacenter/analysis/cockpit/incomeStructure'
+
+/** 收入结构接口单项（/api/v1/datacenter/analysis/cockpit/incomeStructure） */
+interface CockpitIncomeStructureRow {
+  app?: string
+  country?: string
+  dAdRevenue?: number
+  dIapRevenue?: number
+}
 
 /** 国家中文名 → 英文名（与 public/geo/world.json 的 properties.name 一致，美国用 United States、韩国用 Korea） */
 const COUNTRY_CN_TO_EN: Record<string, string> = {
@@ -180,17 +191,21 @@ function formatChangeToTrend(change: number, lastVal: number): string {
   return `${sign}${Number(pct.toFixed(1))}%`
 }
 
-function formatMoney(n: number): string {
+/** 金额格式化，null/undefined 按 0 展示 */
+function formatMoney(n: number | null | undefined): string {
+  const val = n == null ? 0 : n
   return (
     '$' +
-    (Number.isFinite(n)
-      ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    (Number.isFinite(val)
+      ? val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
       : '0.00')
   )
 }
 
-function formatInt(n: number): string {
-  return Number.isFinite(n) ? Math.round(n).toLocaleString('en-US') : '0'
+/** 整数格式化，null/undefined 按 0 展示 */
+function formatInt(n: number | null | undefined): string {
+  const val = n == null ? 0 : n
+  return Number.isFinite(val) ? Math.round(val).toLocaleString('en-US') : '0'
 }
 
 function percentChange(curr: number, last: number): number | null {
@@ -204,8 +219,191 @@ function buildCompare(lastVal: string, percent: number | null, compareUp: boolea
   return `上周期: ${lastVal}${p}`
 }
 
+/** 将后端 *List 转为 number[]，用于 KPI 迷你折线 */
+function seriesToChartData(list: CockpitOverallSeriesItem[] | undefined): number[] {
+  if (!Array.isArray(list) || list.length === 0) return []
+  return list.map((item) => (typeof item === 'number' ? item : (item && Number(item.value)) || 0))
+}
+
+/** 用后端返回的 change 生成对比文案（上升/下降直接使用，不再前端计算） */
+function buildCompareFromChange(
+  change: number | undefined,
+  lastVal: string,
+  format: 'money' | 'int'
+): { compare: string; compareUp: boolean } {
+  const hasChange = change != null && Number.isFinite(change)
+  const compareUp = !hasChange || change >= 0
+  const changeStr = hasChange
+    ? format === 'money'
+      ? formatMoney(change)
+      : (change >= 0 ? '+' : '') + formatInt(change)
+    : ''
+  const compare = changeStr
+    ? `上周期: ${lastVal} 较上期 ${changeStr}${compareUp ? '↑' : '↓'}`
+    : `上周期: ${lastVal}`
+  return { compare, compareUp }
+}
+
 /**
- * 将 overall 接口的 last/now 转为 KPI 卡片列表（6 项：总收入、付费收入、广告支出、有效订阅、DAU、预估利润）
+ * 将 overall 新接口的 data（now + *Change + *List）转为 KPI 卡片列表
+ * 展示用 now，升降用后端 *Change，折线用 *List
+ */
+export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCard[] {
+  const now = data.now
+  const last = data.last
+  const cards: {
+    type: CockpitKpiCardType
+    label: string
+    valueKey: keyof CockpitOverallDataPeriod
+    format: 'money' | 'int'
+    changeKey?: keyof CockpitOverallData
+    listKey?: keyof CockpitOverallData
+    detail?: (n: CockpitOverallDataPeriod) => string | undefined
+  }[] = [
+    {
+      type: 'income',
+      label: '总收入',
+      valueKey: 'totalRevenue',
+      format: 'money',
+      changeKey: 'totalRevenueChange',
+      listKey: 'totalRevenueList',
+      detail: (n) => `广告: ${formatMoney(n.adRevenue)} | 付费: ${formatMoney(n.payRevenue)}`
+    },
+    {
+      type: 'paidRevenue',
+      label: '付费收入',
+      valueKey: 'payRevenue',
+      format: 'money',
+      changeKey: 'payRevenueChange',
+      listKey: 'payRevenueList'
+    },
+    {
+      type: 'adSpend',
+      label: '广告支出',
+      valueKey: 'dCost',
+      format: 'money',
+      changeKey: 'adCostChange',
+      listKey: 'dCostList',
+      detail: (n) => `安装 ${formatInt(n.installCount)}`
+    },
+    {
+      type: 'subscriptions',
+      label: '有效订阅',
+      valueKey: 'activeSubscription',
+      format: 'int',
+      changeKey: 'activeSubscriptionChange',
+      listKey: 'activeSubscriptionList'
+    },
+    {
+      type: 'dau',
+      label: 'DAU',
+      valueKey: 'dau',
+      format: 'int',
+      changeKey: 'dauChange',
+      listKey: 'dauList',
+      detail: (n) => `新增 ${formatInt(n.newUsers)}`
+    },
+    {
+      type: 'profit',
+      label: '预估利润',
+      valueKey: 'profit',
+      format: 'money',
+      changeKey: 'profitChange',
+      listKey: 'profitList'
+    }
+  ]
+  return cards.map(({ type, label, valueKey, format, changeKey, listKey, detail }) => {
+    const curr = (now[valueKey] as number | null | undefined) ?? 0
+    const prev = (last[valueKey] as number | null | undefined) ?? 0
+    const value = format === 'money' ? formatMoney(curr) : formatInt(curr)
+    const lastStr = format === 'money' ? formatMoney(prev) : formatInt(prev)
+    const change = changeKey ? (data[changeKey] as number | undefined) : undefined
+    const { compare, compareUp } = buildCompareFromChange(change, lastStr, format)
+    const chartData = listKey
+      ? seriesToChartData(data[listKey] as CockpitOverallSeriesItem[] | undefined)
+      : undefined
+    return {
+      type,
+      label,
+      value,
+      detail: detail ? detail(now) : undefined,
+      compare,
+      compareUp,
+      chartData: chartData?.length ? chartData : undefined
+    }
+  })
+}
+
+/**
+ * 从 overall 接口的 now + *Change 组装警示摘要指标（DNU、自然量、买带应用、广告系列、广告账户）
+ * 返回 null 的字段默认按 0 展示
+ */
+export function mapOverallDataToAlertSummaryMetrics(
+  data: CockpitOverallData
+): CockpitAlertSummaryMetric[] {
+  const now = data.now
+  const metrics: CockpitAlertSummaryMetric[] = []
+
+  // DNU：取值 now.dnu，null 按 0 展示；变化 dnuChange
+  const dnuChange = data.dnuChange
+  metrics.push({
+    label: 'DNU',
+    value: formatInt(now.dnu),
+    ...(dnuChange != null && Number.isFinite(dnuChange)
+      ? { change: Math.abs(dnuChange), trend: (dnuChange >= 0 ? 'up' : 'down') as 'up' | 'down' }
+      : {})
+  })
+
+  // 自然量：取值 now.naturalCount，null 按 0 展示
+  const naturalCountChange = data.naturalCountChange
+  metrics.push({
+    label: '自然量',
+    value: formatInt(now.naturalCount),
+    ...(naturalCountChange != null && Number.isFinite(naturalCountChange)
+      ? {
+          change: Math.abs(naturalCountChange),
+          trend: (naturalCountChange >= 0 ? 'up' : 'down') as 'up' | 'down'
+        }
+      : {})
+  })
+
+  // 买带应用：取值 now.buyAppCount，null 按 0 展示
+  metrics.push({
+    label: '买带应用',
+    value: `${formatInt(now.buyAppCount)}个`
+  })
+
+  // 广告系列：取值 now.campaignCount，null 按 0 展示
+  const campaignCountChange = data.campaignCountChange
+  metrics.push({
+    label: '广告系列',
+    value: `${formatInt(now.campaignCount)}个`,
+    ...(campaignCountChange != null && Number.isFinite(campaignCountChange)
+      ? {
+          change: Math.abs(campaignCountChange),
+          trend: (campaignCountChange >= 0 ? 'up' : 'down') as 'up' | 'down'
+        }
+      : {})
+  })
+
+  // 广告账户：取值 now.adAccountCount，null 按 0 展示
+  const adAccountCountChange = data.adAccountCountChange
+  metrics.push({
+    label: '广告账户',
+    value: `${formatInt(now.adAccountCount)}个`,
+    ...(adAccountCountChange != null && Number.isFinite(adAccountCountChange)
+      ? {
+          change: Math.abs(adAccountCountChange),
+          trend: (adAccountCountChange >= 0 ? 'up' : 'down') as 'up' | 'down'
+        }
+      : {})
+  })
+
+  return metrics
+}
+
+/**
+ * 将 overall 接口的 last/now 转为 KPI 卡片列表（旧结构兼容，6 项）
  */
 export function mapOverallToKpiCards(
   last: CockpitOverallPeriodItem,
@@ -262,11 +460,11 @@ export function mapOverallToKpiCards(
 }
 
 /**
- * 获取经营驾驶舱第一排总数据（last/now 周期对比）
- * 请求体：{ startTime, endTime }，用于 KPI 卡片数据源
+ * 获取经营驾驶舱第一排总数据（新结构：code/data，data 含 now、*Change、*List，供 KPI + 警示同接口）
+ * 请求体：传空对象 {} 即可
  */
-export async function fetchCockpitOverall(): Promise<CockpitOverallResponse> {
-  return request.post<CockpitOverallResponse>({
+export async function fetchCockpitOverall(): Promise<CockpitOverallApiResponse> {
+  return request.post<CockpitOverallApiResponse>({
     url: COCKPIT_OVERALL_URL,
     data: {}
   })
@@ -536,7 +734,7 @@ export async function fetchCockpitBusinessMap(): Promise<CockpitBusinessMapApiIt
  * 结构：广告收入/内购收入(depth0) -> 国家(depth1) -> 应用(depth2)
  */
 export function mapIncomeStructureToFlow(
-  data: CockpitIncomeStructureItem[] | null
+  data: CockpitIncomeStructureRow[] | null
 ): CockpitRevenueStructureFlow {
   if (!Array.isArray(data) || !data.length) {
     return { nodes: [], links: [], insights: [] }
@@ -643,8 +841,8 @@ export function mapIncomeStructureToFlow(
  * POST /api/v1/datacenter/analysis/cockpit/incomeStructure，请求体：{}
  * 响应 data: [{ app, country, dAdRevenue, dIapRevenue }, ...]
  */
-export async function fetchIncomeStructure(): Promise<CockpitIncomeStructureItem[]> {
-  const list = await request.post<CockpitIncomeStructureItem[]>({
+export async function fetchIncomeStructure(): Promise<CockpitIncomeStructureRow[]> {
+  const list = await request.post<CockpitIncomeStructureRow[]>({
     url: COCKPIT_INCOME_STRUCTURE_URL,
     data: {}
   })

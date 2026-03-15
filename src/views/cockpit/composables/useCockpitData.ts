@@ -1,6 +1,6 @@
 /**
  * 驾驶舱数据 Composable
- * - 第一排 KPI：真实接口 POST /api/v1/datacenter/analysis/cockpit/overall（startTime/endTime）
+ * - 只调用一次 POST /api/v1/datacenter/analysis/cockpit/overall，第一排 KPI 卡片与警示与提示均使用该次返回的 data
  * - 其余模块：Mock 或各子组件独立接口，结构清晰便于后续按模块接独立接口与骨架屏
  */
 import { ref, onMounted } from 'vue'
@@ -8,6 +8,8 @@ import {
   fetchCockpitOverview,
   fetchCockpitOverall,
   mapOverallToKpiCards,
+  mapOverallDataToKpiCards,
+  mapOverallDataToAlertSummaryMetrics,
   fetchConsumptionRhythmMonitoring,
   mapConsumptionRhythmToSpendPace,
   fetchCockpitTop3,
@@ -24,7 +26,9 @@ import type {
   CockpitOverview,
   CockpitOverviewParams,
   CockpitDateRange,
-  CockpitOverallParams
+  CockpitOverallParams,
+  CockpitOverallResponse,
+  CockpitOverallData
 } from '../types'
 
 function toYYYYMMDD(d: Date): string {
@@ -94,9 +98,23 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
         fetchIncomeStructure().catch(() => []),
         fetchCockpitOverview({ dateRange: range })
       ])
-      const kpi = overallRes
-        ? mapOverallToKpiCards(overallRes.last, overallRes.now)
-        : restOverview.kpi
+      // 仅此一次 overall 请求，第一排数据 + 警示与提示 共用 data（注意：http 层成功时返回的是 res.data.data，即接口的 data 字段，故 overallRes 本身就是 data）
+      const data: CockpitOverallData | undefined =
+        overallRes && typeof overallRes === 'object' && 'now' in overallRes && 'last' in overallRes
+          ? (overallRes as unknown as CockpitOverallData)
+          : (overallRes as { data?: CockpitOverallData })?.data
+      const isOldOverall = (r: unknown): r is CockpitOverallResponse =>
+        r != null && typeof r === 'object' && 'last' in r && 'now' in r
+      const kpi = data
+        ? mapOverallDataToKpiCards(data)
+        : isOldOverall(overallRes)
+          ? mapOverallToKpiCards(overallRes.last, overallRes.now)
+          : restOverview.kpi
+      // 警示摘要：DNU/自然量/买带应用/广告系列/广告账户 均从 overall 的 now + *Change 取值
+      const alertSummaryMetrics = data
+        ? mapOverallDataToAlertSummaryMetrics(data)
+        : (restOverview.alertSummaryMetrics ?? [])
+      const alertBanners = data?.alertBanners ?? restOverview.alertBanners
       const spendPace = rhythmRes
         ? mapConsumptionRhythmToSpendPace(rhythmRes)
         : restOverview.spendPace
@@ -119,6 +137,8 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
       overview.value = {
         ...restOverview,
         kpi,
+        alertSummaryMetrics,
+        alertBanners,
         spendPace,
         topRevenue: top3.topRevenue,
         topBadReview: top3.topBadReview,

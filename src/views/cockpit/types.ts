@@ -27,10 +27,79 @@ export interface CockpitOverallPeriodItem {
   totalRevenue: number
 }
 
-/** 经营驾驶舱第一排总数据接口响应（/api/v1/datacenter/analysis/cockpit/overall） */
+/** 经营驾驶舱第一排总数据接口响应（/api/v1/datacenter/analysis/cockpit/overall）旧结构，保留兼容 */
 export interface CockpitOverallResponse {
   last: CockpitOverallPeriodItem
   now: CockpitOverallPeriodItem
+}
+
+/** 经营驾驶舱 overall 新接口：单周期指标（展示用 now） */
+export interface CockpitOverallDataPeriod {
+  activeSubscription: number
+  adAccountCount?: number
+  adCost?: number
+  adRevenue?: number
+  dCost: number
+  dnu?: number
+  dau: number
+  installCount?: number
+  newUsers?: number
+  payRevenue: number
+  profit: number
+  totalRevenue: number
+  /** 自然量（警示摘要用） */
+  naturalCount?: number
+  /** 买带应用数（警示摘要用，单位：个） */
+  buyAppCount?: number
+  /** 广告系列数（警示摘要用，单位：个） */
+  campaignCount?: number
+}
+
+/** 折线统计单项（后端 *List 元素，可能是数值或带日期） */
+export type CockpitOverallSeriesItem = number | { value?: number; date?: string }
+
+/** 经营驾驶舱 overall 新接口：data 主体（同一接口供 KPI 卡片 + 警示使用） */
+export interface CockpitOverallData {
+  /** 当前周期汇总，展示用 */
+  now: CockpitOverallDataPeriod
+  /** 上一周期汇总 */
+  last: CockpitOverallDataPeriod
+  /** 变化量（后端已算好，直接用于升降展示） */
+  activeSubscriptionChange?: number
+  adAccountCountChange?: number
+  adCostChange?: number
+  dauChange?: number
+  dnuChange?: number
+  installCountChange?: number
+  payRevenueChange?: number
+  profitChange?: number
+  totalRevenueChange?: number
+  /** 自然量变化（警示摘要用） */
+  naturalCountChange?: number
+  /** 广告系列数变化（警示摘要用） */
+  campaignCountChange?: number
+  /** 第一排折线统计：运营成本/广告支出 */
+  dCostList?: CockpitOverallSeriesItem[]
+  /** 有效订阅明细 */
+  activeSubscriptionList?: CockpitOverallSeriesItem[]
+  /** DAU 明细 */
+  dauList?: CockpitOverallSeriesItem[]
+  /** 付费收入明细 */
+  payRevenueList?: CockpitOverallSeriesItem[]
+  /** 利润明细 */
+  profitList?: CockpitOverallSeriesItem[]
+  /** 总收入明细 */
+  totalRevenueList?: CockpitOverallSeriesItem[]
+  /** 可选：同一接口返回的警示摘要与横幅 */
+  alertSummaryMetrics?: CockpitAlertSummaryMetric[]
+  alertBanners?: CockpitAlertBanner[]
+}
+
+/** 经营驾驶舱 overall 新接口：HTTP 响应（code/message/data） */
+export interface CockpitOverallApiResponse {
+  code: number
+  message?: string
+  data?: CockpitOverallData
 }
 
 /** 经营驾驶舱第一排总数据请求体 */
@@ -55,9 +124,12 @@ export interface CockpitKpiCard {
   value: string
   detail?: string
   sub?: string
+  /** 较上期等对比文案，可由后端 *Change 直接生成 */
   compare?: string
   compareUp?: boolean
   progressPercent?: number
+  /** 第一排折线数据（来自 *List），有则用真实数据绘图，无则按 compareUp 兜底 */
+  chartData?: number[]
 }
 
 /** 顶部警示/机会/风险条 */

@@ -6,10 +6,10 @@
       <CockpitTopBarActions />
     </div>
 
-    <!-- 3. 全局 KPI 卡片：数据来自 POST /api/v1/datacenter/analysis/cockpit/overall；其余子模块可接独立接口，加载速度不同时可做骨架屏 -->
+    <!-- 3. 第一排 KPI 卡片 + 4. 警示与提示：只调一次 POST .../cockpit/overall，两处共用该次返回的 data -->
     <CockpitGlobalKpiCards :kpi-list="overview?.kpi ?? []" />
 
-    <!-- 4. 警示与提示 -->
+    <!-- 4. 警示与提示（与 KPI 同接口，data.alertSummaryMetrics / data.alertBanners） -->
     <CockpitAlertMessages
       :alert-summary-metrics="overview?.alertSummaryMetrics"
       :alert-banners="overview?.alertBanners ?? []"
