@@ -16,7 +16,9 @@ import {
   mapChannelRoiInstallToItems,
   fetchCockpitBusinessMap,
   mapBusinessMapToMapCountries,
-  mapCountriesToLegend
+  mapCountriesToLegend,
+  fetchIncomeStructure,
+  mapIncomeStructureToFlow
 } from '../api/cockpit'
 import type {
   CockpitOverview,
@@ -75,15 +77,23 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
     loading.value = true
     const range = params?.dateRange ?? dateRange.value
     try {
-      const [overallRes, rhythmRes, top3Res, channelRoiRes, businessMapRes, restOverview] =
-        await Promise.all([
-          fetchCockpitOverall().catch(() => null),
-          fetchConsumptionRhythmMonitoring().catch(() => null),
-          fetchCockpitTop3().catch(() => null),
-          fetchChannelRoiInstall().catch(() => null),
-          fetchCockpitBusinessMap().catch(() => null),
-          fetchCockpitOverview({ dateRange: range })
-        ])
+      const [
+        overallRes,
+        rhythmRes,
+        top3Res,
+        channelRoiRes,
+        businessMapRes,
+        incomeStructureRes,
+        restOverview
+      ] = await Promise.all([
+        fetchCockpitOverall().catch(() => null),
+        fetchConsumptionRhythmMonitoring().catch(() => null),
+        fetchCockpitTop3().catch(() => null),
+        fetchChannelRoiInstall().catch(() => null),
+        fetchCockpitBusinessMap().catch(() => null),
+        fetchIncomeStructure().catch(() => []),
+        fetchCockpitOverview({ dateRange: range })
+      ])
       const kpi = overallRes
         ? mapOverallToKpiCards(overallRes.last, overallRes.now)
         : restOverview.kpi
@@ -101,6 +111,11 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
           : restOverview.mapCountries
       const mapLegend =
         businessMapRes != null ? mapCountriesToLegend(mapCountries) : (restOverview.mapLegend ?? [])
+      // 收入结构仅用真实接口：有数据则转换，无数据或失败则展示空（暂无数据）
+      const revenueStructureFlow =
+        Array.isArray(incomeStructureRes) && incomeStructureRes.length > 0
+          ? mapIncomeStructureToFlow(incomeStructureRes)
+          : mapIncomeStructureToFlow([])
       overview.value = {
         ...restOverview,
         kpi,
@@ -110,7 +125,8 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
         topUser: top3.topUser,
         channelRoiInstall,
         mapCountries,
-        mapLegend
+        mapLegend,
+        revenueStructureFlow
       }
 
       console.log('mapCountries', mapCountries)

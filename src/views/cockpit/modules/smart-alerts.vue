@@ -5,8 +5,8 @@
       <ElButton type="primary" link size="small">查看更多</ElButton>
     </template>
     <div class="alert-list">
-      <template v-if="alerts.length">
-        <div v-for="(item, index) in alerts" :key="index" class="alert-row">
+      <template v-if="displayAlerts.length">
+        <div v-for="(item, index) in displayAlerts" :key="index" class="alert-row">
           <span class="alert-icon" :class="item.type">
             <ElIcon v-if="item.type === 'risk'"><CircleCloseFilled /></ElIcon>
             <ElIcon v-else-if="item.type === 'warning'"><WarningFilled /></ElIcon>
@@ -33,7 +33,7 @@
     alerts: () => []
   })
 
-  const alerts = computed(() =>
+  const displayAlerts = computed(() =>
     Array.isArray(props.alerts) ? props.alerts : MOCK_COCKPIT_OVERVIEW.smartAlerts
   )
 </script>

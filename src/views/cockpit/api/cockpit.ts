@@ -22,7 +22,12 @@ import type {
   CockpitChannelRoiInstallItem,
   CockpitBusinessMapApiItem,
   CockpitMapCountry,
-  CockpitMapLegendItem
+  CockpitMapLegendItem,
+  CockpitIncomeStructureItem,
+  CockpitRevenueStructureFlow,
+  CockpitRevenueStructureNode,
+  CockpitRevenueStructureLink,
+  CockpitRevenueStructureInsight
 } from '../types'
 import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
@@ -47,6 +52,9 @@ const COCKPIT_CHANNEL_ROI_URL = '/api/v1/datacenter/analysis/cockpit/installAndR
 
 /** 业务分布地图接口 */
 const COCKPIT_BUSINESS_MAP_URL = '/api/v1/datacenter/analysis/cockpit/businessMap'
+
+/** 收入结构接口（近7日收入结构流向桑基图） */
+const COCKPIT_INCOME_STRUCTURE_URL = '/api/v1/datacenter/analysis/cockpit/incomeStructure'
 
 /** 国家中文名 → 英文名（与 public/geo/world.json 的 properties.name 一致，美国用 United States、韩国用 Korea） */
 const COUNTRY_CN_TO_EN: Record<string, string> = {
@@ -100,6 +108,59 @@ const COUNTRY_CN_TO_EN: Record<string, string> = {
   烏克蘭: 'Ukraine',
   尼日利亞: 'Nigeria',
   孟加拉國: 'Bangladesh'
+}
+
+/** 国家中文名 → ISO 3166-1 alpha-2（小写），用于收入结构桑基图国旗展示 */
+const COUNTRY_CN_TO_ISO: Record<string, string> = {
+  美国: 'us',
+  中國: 'cn',
+  中国: 'cn',
+  日本: 'jp',
+  英国: 'gb',
+  英國: 'gb',
+  俄罗斯: 'ru',
+  俄羅斯: 'ru',
+  巴西: 'br',
+  印度: 'in',
+  澳大利亚: 'au',
+  澳大利亞: 'au',
+  澳洲: 'au',
+  德国: 'de',
+  德國: 'de',
+  法国: 'fr',
+  法國: 'fr',
+  加拿大: 'ca',
+  韩国: 'kr',
+  韓國: 'kr',
+  墨西哥: 'mx',
+  印度尼西亚: 'id',
+  土耳其: 'tr',
+  沙特阿拉伯: 'sa',
+  南非: 'za',
+  意大利: 'it',
+  西班牙: 'es',
+  越南: 'vn',
+  泰国: 'th',
+  菲律宾: 'ph',
+  马来西亚: 'my',
+  新加坡: 'sg',
+  香港: 'hk',
+  台湾: 'tw',
+  台灣: 'tw',
+  荷兰: 'nl',
+  荷蘭: 'nl',
+  波兰: 'pl',
+  波蘭: 'pl',
+  阿根廷: 'ar',
+  哥伦比亚: 'co',
+  埃及: 'eg',
+  尼日利亚: 'ng',
+  尼日利亞: 'ng',
+  巴基斯坦: 'pk',
+  孟加拉国: 'bd',
+  孟加拉國: 'bd',
+  乌克兰: 'ua',
+  烏克蘭: 'ua'
 }
 
 /** 按收入区间映射颜色（与 mock 色板一致），minRevenue=150, maxRevenue=8200 */
@@ -463,6 +524,131 @@ export async function fetchCockpitBusinessMap(): Promise<CockpitBusinessMapApiIt
     url: COCKPIT_BUSINESS_MAP_URL,
     data: {}
   })
+}
+
+/** 收入结构接口响应体（后端返回 code/data/message，request 会解包为 data 数组） */
+
+/**
+ * 将收入结构接口 data[] 转为桑基图 nodes/links/insights
+ *
+ * 接口语义：每条记录的 dAdRevenue、dIapRevenue 是该 APP 在该国家的值；
+ * 同一国家下多条记录（不同 APP）需汇总为该国家的总和；顶层为全局汇总。
+ * 结构：广告收入/内购收入(depth0) -> 国家(depth1) -> 应用(depth2)
+ */
+export function mapIncomeStructureToFlow(
+  data: CockpitIncomeStructureItem[] | null
+): CockpitRevenueStructureFlow {
+  if (!Array.isArray(data) || !data.length) {
+    return { nodes: [], links: [], insights: [] }
+  }
+  const num = (v: unknown) => (v != null && Number.isFinite(Number(v)) ? Number(v) : 0)
+  /** 按国家汇总：该国下所有 APP 的广告收入之和 */
+  const byCountryAd: Record<string, number> = {}
+  /** 按国家汇总：该国下所有 APP 的内购收入之和 */
+  const byCountryIap: Record<string, number> = {}
+  /** 按国家+APP 汇总：该 APP 在该国家的广告+内购收入（APP 维度的值） */
+  const byCountryApp: Record<string, number> = {}
+  let totalAd = 0
+  let totalIap = 0
+  data.forEach((row) => {
+    const countryKey = String(row.country ?? '')
+    const app = (row.app ?? '').trim() || '—'
+    const ad = num(row.dAdRevenue)
+    const iap = num(row.dIapRevenue)
+    byCountryAd[countryKey] = (byCountryAd[countryKey] ?? 0) + ad
+    byCountryIap[countryKey] = (byCountryIap[countryKey] ?? 0) + iap
+    const key = `${countryKey}\t${app}`
+    byCountryApp[key] = (byCountryApp[key] ?? 0) + ad + iap
+    totalAd += ad
+    totalIap += iap
+  })
+  const total = totalAd + totalIap
+  const countries = [...new Set(Object.keys(byCountryAd).concat(Object.keys(byCountryIap)))]
+  const apps = [...new Set(data.map((r) => (r.app ?? '').trim() || '—'))]
+  /** 每个 APP 在所有国家的收入总和（APP 节点展示用） */
+  const byAppTotal: Record<string, number> = {}
+  Object.entries(byCountryApp).forEach(([key, value]) => {
+    const appName = key.split('\t')[1]
+    byAppTotal[appName] = (byAppTotal[appName] ?? 0) + value
+  })
+  const nodeAd = '广告收入'
+  const nodeIap = '内购收入'
+  const nodes: CockpitRevenueStructureNode[] = []
+  const links: CockpitRevenueStructureLink[] = []
+
+  const adPct = total > 0 ? ((totalAd / total) * 100).toFixed(1) : '0'
+  const iapPct = total > 0 ? ((totalIap / total) * 100).toFixed(1) : '0'
+  nodes.push({
+    name: nodeAd,
+    depth: 0,
+    valueDisplay: formatMoney(totalAd),
+    percent: `${adPct}%`,
+    itemStyle: { color: '#14DEBA', borderRadius: 6 }
+  })
+  nodes.push({
+    name: nodeIap,
+    depth: 0,
+    valueDisplay: formatMoney(totalIap),
+    percent: `${iapPct}%`,
+    itemStyle: { color: '#409eff', borderRadius: 6 }
+  })
+  const colorByDepth1 = ['#67c23a', '#409eff', '#7230b3', '#e6a23c', '#909399']
+  countries.forEach((c, i) => {
+    const adVal = byCountryAd[c] ?? 0
+    const iapVal = byCountryIap[c] ?? 0
+    const sum = adVal + iapVal
+    const isoCode = COUNTRY_CN_TO_ISO[c]
+    nodes.push({
+      name: c,
+      depth: 1,
+      code: isoCode,
+      valueDisplay: formatMoney(sum),
+      itemStyle: { color: colorByDepth1[i % colorByDepth1.length], borderRadius: 6 }
+    })
+    if (adVal > 0) links.push({ source: nodeAd, target: c, value: adVal })
+    if (iapVal > 0) links.push({ source: nodeIap, target: c, value: iapVal })
+  })
+  const colorByDepth2 = ['#67c23a', '#409eff', '#7230b3', '#e6a23c', '#909399']
+  apps.forEach((app, i) => {
+    const appSum = byAppTotal[app] ?? 0
+    nodes.push({
+      name: app,
+      depth: 2,
+      valueDisplay: formatMoney(appSum),
+      itemStyle: { color: colorByDepth2[i % colorByDepth2.length], borderRadius: 6 }
+    })
+  })
+  Object.entries(byCountryApp).forEach(([key, value]) => {
+    if (value <= 0) return
+    const [countryKey, appName] = key.split('\t')
+    if (countries.includes(countryKey) && apps.includes(appName))
+      links.push({ source: countryKey, target: appName, value })
+  })
+  const insights: CockpitRevenueStructureInsight[] = []
+  if (total > 0) {
+    insights.push({
+      color: '#67c23a',
+      text: `广告收入占比 ${adPct}%`
+    })
+    insights.push({
+      color: '#409eff',
+      text: `内购收入占比 ${iapPct}%`
+    })
+  }
+  return { nodes, links, insights }
+}
+
+/**
+ * 获取收入结构数据（近7日收入结构流向）
+ * POST /api/v1/datacenter/analysis/cockpit/incomeStructure，请求体：{}
+ * 响应 data: [{ app, country, dAdRevenue, dIapRevenue }, ...]
+ */
+export async function fetchIncomeStructure(): Promise<CockpitIncomeStructureItem[]> {
+  const list = await request.post<CockpitIncomeStructureItem[]>({
+    url: COCKPIT_INCOME_STRUCTURE_URL,
+    data: {}
+  })
+  return Array.isArray(list) ? list : []
 }
 
 /**
