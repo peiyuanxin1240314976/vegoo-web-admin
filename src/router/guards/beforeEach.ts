@@ -348,12 +348,18 @@ async function handleDynamicRoutes(
 
 /**
  * 获取用户信息
+ * 若 store 中已有用户信息（如从 localStorage 恢复的刷新场景），不再请求接口，仅做工作台检查
+ * 仅在登录后首次进入时（info 为空）才请求接口
  */
 async function fetchUserInfo(): Promise<void> {
   const userStore = useUserStore()
+  const hasCachedUserInfo = userStore.info?.id != null || userStore.info?.userId != null
+  if (hasCachedUserInfo) {
+    userStore.checkAndClearWorktabs()
+    return
+  }
   const data = await fetchGetUserInfo()
   userStore.setUserInfo(data)
-  // 检查并清理工作台标签页（如果是不同用户登录）
   userStore.checkAndClearWorktabs()
 }
 
