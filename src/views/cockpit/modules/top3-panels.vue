@@ -4,7 +4,7 @@
     <div class="top3-module top3-module--revenue">
       <div class="top3-module__header">
         <span class="top3-module__icon top3-module__icon--trophy">
-          <TrophyIcon />
+          <i class="iconfont icon-jinjiangbei" />
         </span>
         <span class="top3-module__title">Top3收入应用</span>
         <a class="top3-module__more" href="javascript:;">查看更多</a>
@@ -12,7 +12,7 @@
       <div class="top3-module__list">
         <template v-if="displayTopRevenue.length">
           <div v-for="(item, i) in displayTopRevenue" :key="'revenue-' + i" class="top3-row">
-            <span class="top3-row__medal">{{ i + 1 }}</span>
+            <span class="top3-row__medal iconfont" :class="medalIconClasses[i]"></span>
             <div class="top3-row__app-icon" title="应用" />
             <span class="top3-row__name">{{ item.name }}</span>
             <span class="top3-row__value">{{ item.revenue ?? item.roas }}</span>
@@ -66,7 +66,7 @@
       <div class="top3-module__list">
         <template v-if="displayTopUser.length">
           <div v-for="(item, i) in displayTopUser" :key="'user-' + i" class="top3-row">
-            <span class="top3-row__medal">{{ i + 1 }}</span>
+            <span class="top3-row__medal iconfont" :class="medalIconClasses[i]"></span>
             <div class="top3-row__app-icon" title="应用" />
             <span class="top3-row__name">{{ item.name }}</span>
             <span class="top3-row__value">{{ item.growth ?? item.dau }}</span>
@@ -89,25 +89,9 @@
 
   defineOptions({ name: 'CockpitTop3Panels' })
 
-  const TrophyIcon = defineComponent({
-    render() {
-      return h(
-        'svg',
-        {
-          xmlns: 'http://www.w3.org/2000/svg',
-          viewBox: '0 0 24 24',
-          fill: 'currentColor',
-          width: '18',
-          height: '18'
-        },
-        [
-          h('path', {
-            d: 'M12 2C10.9 2 10 2.9 10 4v1H6c-1.1 0-2 .9-2 2v2c0 2.2 1.8 4 4 4 .6 1.5 1.9 2.5 3.5 2.5V19H8v2h8v-2h-2v-3.5c1.6-.5 2.9-1.5 3.5-2.5 2.2 0 4-1.8 4-4V7c0-1.1-.9-2-2-2h-4V4c0-1.1-.9-2-2-2zm-2 6.5c1.2-.4 2.5-.9 3.5-1.5V7H4v2c0 1.1.9 2 2 2h4.5zM12 13c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6-5h-2v1.5c.9.6 2.3 1.1 3.5 1.5H20V8z'
-          })
-        ]
-      )
-    }
-  })
+  /** 奖牌图标：第一、二、三名对应阿里 iconfont */
+  const medalIconClasses = ['icon-jiangbei-', 'icon-jiangbei-1', 'icon-jiangbei-2']
+
   const TrendIcon = defineComponent({
     render() {
       return h(
@@ -321,16 +305,19 @@
     font-size: 13px;
 
     &__medal {
-      flex-shrink: 0;
-      width: 20px;
-      height: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      line-height: 20px;
-      color: #b8860b;
-      text-align: center;
-      background: linear-gradient(180deg, #f0e68c 0%, #daa520 100%);
-      border-radius: 50%;
+      display: inline-flex;
+      // flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      // width: 20px;
+      // height: 20px;
+      font-size: 22px;
+      font-style: normal;
+      // font-weight: 700;
+      // color: #b8860b;
+      // text-align: center;
+      // background: linear-gradient(180deg, #f0e68c 0%, #daa520 100%);
+      // border-radius: 50%;
     }
 
     &__app-icon {

@@ -3,8 +3,12 @@
     <ElCol v-for="(item, index) in kpiList" :key="index" :xs="24" :sm="12" :md="8" :lg="4">
       <div
         class="cockpit-kpi-card cockpit-kpi-card--theme"
-        :class="`cockpit-kpi-card--${item.type}`"
+        :class="[`cockpit-kpi-card--${item.type}`, { 'is-hovered': hoveredIndex === index }]"
+        :style="getCardTransitionStyle(index)"
+        @mouseenter="hoveredIndex = index"
+        @mouseleave="hoveredIndex = null"
       >
+        <div class="kpi-card-corner-circle" aria-hidden="true" />
         <div class="kpi-label">{{ item.label }}</div>
         <div class="kpi-value-row">
           <div class="kpi-value">{{ item.value }}</div>
@@ -44,7 +48,8 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
+  import { computed, ref } from 'vue'
+  import { useTransition, TransitionPresets } from '@vueuse/core'
   import type { CockpitKpiCard } from '../types'
   import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
@@ -55,6 +60,25 @@
   const kpiList = computed(() =>
     Array.isArray(props.kpiList) ? props.kpiList : MOCK_COCKPIT_OVERVIEW.kpi
   )
+
+  const hoveredIndex = ref<number | null>(null)
+  const MAX_KPI_CARDS = 12
+  const transitionOptions = {
+    duration: 220,
+    transition: TransitionPresets.easeOutCubic
+  }
+  const hoverProgress = Array.from({ length: MAX_KPI_CARDS }, (_, i) =>
+    useTransition(
+      computed(() => (hoveredIndex.value === i ? 1 : 0)),
+      transitionOptions
+    )
+  )
+
+  function getCardTransitionStyle(index: number) {
+    const t = hoverProgress[index]?.value ?? 0
+    const y = -8 * t
+    return { transform: `translateY(${y}px)` }
+  }
 
   /** 有 chartData 时归一化到 0~1 作为趋势点；否则用 compareUp 生成模拟点 */
   function getTrendPoints(item: CockpitKpiCard, index: number): number[] {
@@ -113,6 +137,10 @@
   }
 
   .cockpit-kpi-card {
+    --kpi-card-accent: var(--el-color-primary);
+    --kpi-glass-border: rgb(0 0 0 / 10%);
+    --kpi-glass-highlight: rgb(255 255 255 / 28%);
+
     position: relative;
     box-sizing: border-box;
     display: flex;
@@ -120,8 +148,39 @@
     height: 188px;
     min-height: 188px;
     padding: 16px;
-    border: 1px solid transparent;
-    border-radius: 10px;
+    overflow: hidden;
+    cursor: default;
+    isolation: isolate;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--kpi-glass-border);
+    border-radius: 12px;
+    box-shadow:
+      inset 0 1px 0 0 var(--kpi-glass-highlight),
+      0 4px 16px -4px rgb(0 0 0 / 8%);
+    transition:
+      box-shadow 0.22s ease,
+      border-color 0.22s ease;
+
+    &.is-hovered {
+      box-shadow:
+        inset 0 1px 0 0 var(--kpi-glass-highlight),
+        0 12px 28px -8px rgb(0 0 0 / 18%),
+        0 0 0 1px rgb(0 0 0 / 6%),
+        0 0 24px -6px var(--kpi-card-accent);
+    }
+
+    /* 右上角装饰：透明圆，仅露出 1/4（3/4 被裁切） */
+    .kpi-card-corner-circle {
+      position: absolute;
+      top: -48px;
+      right: -48px;
+      width: 96px;
+      height: 96px;
+      pointer-events: none;
+      background: rgb(255 255 255 / 4%);
+      border-radius: 50%;
+    }
 
     .kpi-label {
       margin-bottom: 6px;
@@ -218,10 +277,14 @@
       vector-effect: non-scaling-stroke;
     }
 
-    /* 六个颜色主题：总收入-绿、付费收入-橙、广告支出-蓝、有效订阅-橙蓝、DAU-蓝、预估利润-紫 */
+    /* 浅色模式：更实，不透明感强 */
     &--theme.cockpit-kpi-card--income {
-      background: linear-gradient(135deg, rgb(103 194 58 / 12%) 0%, rgb(103 194 58 / 4%) 100%);
-      border-color: rgb(103 194 58 / 25%);
+      --kpi-card-accent: rgb(103 194 58 / 45%);
+
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 72%) 0%, rgb(255 255 255 / 50%) 100%),
+        linear-gradient(135deg, rgb(103 194 58 / 18%) 0%, rgb(103 194 58 / 8%) 100%);
+      border-color: rgb(0 0 0 / 10%);
 
       .kpi-label,
       .kpi-detail,
@@ -247,8 +310,12 @@
     }
 
     &--theme.cockpit-kpi-card--paidRevenue {
-      background: linear-gradient(135deg, rgb(230 162 60 / 14%) 0%, rgb(230 162 60 / 4%) 100%);
-      border-color: rgb(230 162 60 / 30%);
+      --kpi-card-accent: rgb(230 162 60 / 45%);
+
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 70%) 0%, rgb(255 255 255 / 48%) 100%),
+        linear-gradient(135deg, rgb(230 162 60 / 20%) 0%, rgb(230 162 60 / 8%) 100%);
+      border-color: rgb(0 0 0 / 10%);
 
       .kpi-label,
       .kpi-detail,
@@ -274,8 +341,12 @@
     }
 
     &--theme.cockpit-kpi-card--adSpend {
-      background: linear-gradient(135deg, rgb(64 158 255 / 14%) 0%, rgb(64 158 255 / 4%) 100%);
-      border-color: rgb(64 158 255 / 28%);
+      --kpi-card-accent: rgb(64 158 255 / 45%);
+
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 70%) 0%, rgb(255 255 255 / 48%) 100%),
+        linear-gradient(135deg, rgb(64 158 255 / 18%) 0%, rgb(64 158 255 / 8%) 100%);
+      border-color: rgb(0 0 0 / 10%);
 
       .kpi-label,
       .kpi-detail,
@@ -301,8 +372,12 @@
     }
 
     &--theme.cockpit-kpi-card--subscriptions {
-      background: linear-gradient(135deg, rgb(230 162 60 / 12%) 0%, rgb(64 158 255 / 6%) 100%);
-      border-color: rgb(230 162 60 / 25%);
+      --kpi-card-accent: rgb(230 162 60 / 45%);
+
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 70%) 0%, rgb(255 255 255 / 48%) 100%),
+        linear-gradient(135deg, rgb(230 162 60 / 18%) 0%, rgb(64 158 255 / 8%) 100%);
+      border-color: rgb(0 0 0 / 10%);
 
       .kpi-label,
       .kpi-detail,
@@ -328,8 +403,12 @@
     }
 
     &--theme.cockpit-kpi-card--dau {
-      background: linear-gradient(135deg, rgb(64 158 255 / 12%) 0%, rgb(64 158 255 / 4%) 100%);
-      border-color: rgb(64 158 255 / 28%);
+      --kpi-card-accent: rgb(64 158 255 / 45%);
+
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 70%) 0%, rgb(255 255 255 / 48%) 100%),
+        linear-gradient(135deg, rgb(64 158 255 / 18%) 0%, rgb(64 158 255 / 8%) 100%);
+      border-color: rgb(0 0 0 / 10%);
 
       .kpi-label,
       .kpi-detail,
@@ -355,8 +434,12 @@
     }
 
     &--theme.cockpit-kpi-card--profit {
-      background: linear-gradient(135deg, rgb(114 46 209 / 12%) 0%, rgb(114 46 209 / 4%) 100%);
-      border-color: rgb(114 46 209 / 28%);
+      --kpi-card-accent: rgb(114 46 209 / 45%);
+
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 68%) 0%, rgb(255 255 255 / 45%) 100%),
+        linear-gradient(135deg, rgb(114 46 209 / 18%) 0%, rgb(114 46 209 / 8%) 100%);
+      border-color: rgb(0 0 0 / 10%);
 
       .kpi-label,
       .kpi-detail,
@@ -380,6 +463,103 @@
         --kpi-chart-color: #722ed1;
       }
     }
+  }
+
+  html.dark .cockpit-kpi-card .kpi-card-corner-circle {
+    background: rgb(255 255 255 / 2%);
+  }
+
+  /* 深色主题：更透 + 渐变玻璃质感 */
+  html.dark .cockpit-kpi-card {
+    --kpi-glass-border: rgb(255 255 255 / 6%);
+    --kpi-glass-highlight: rgb(255 255 255 / 3%);
+
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+    box-shadow:
+      inset 0 1px 0 0 var(--kpi-glass-highlight),
+      0 4px 20px -4px rgb(0 0 0 / 15%);
+  }
+
+  /* 玻璃层：左上高光 → 右下透明，更透 */
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--income {
+    background:
+      linear-gradient(
+        145deg,
+        rgb(255 255 255 / 4%) 0%,
+        rgb(255 255 255 / 1%) 30%,
+        transparent 60%,
+        rgb(103 194 58 / 1.5%) 100%
+      ),
+      linear-gradient(135deg, rgb(103 194 58 / 7%) 0%, rgb(103 194 58 / 1%) 100%);
+  }
+
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--paidRevenue {
+    background:
+      linear-gradient(
+        145deg,
+        rgb(255 255 255 / 4%) 0%,
+        rgb(255 255 255 / 1%) 30%,
+        transparent 60%,
+        rgb(230 162 60 / 1.5%) 100%
+      ),
+      linear-gradient(135deg, rgb(230 162 60 / 7%) 0%, rgb(230 162 60 / 1%) 100%);
+  }
+
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--adSpend {
+    background:
+      linear-gradient(
+        145deg,
+        rgb(255 255 255 / 4%) 0%,
+        rgb(255 255 255 / 1%) 30%,
+        transparent 60%,
+        rgb(64 158 255 / 1.5%) 100%
+      ),
+      linear-gradient(135deg, rgb(64 158 255 / 7%) 0%, rgb(64 158 255 / 1%) 100%);
+  }
+
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--subscriptions {
+    background:
+      linear-gradient(
+        145deg,
+        rgb(255 255 255 / 4%) 0%,
+        rgb(255 255 255 / 1%) 30%,
+        transparent 60%,
+        rgb(230 162 60 / 1.5%) 100%
+      ),
+      linear-gradient(135deg, rgb(230 162 60 / 6%) 0%, rgb(64 158 255 / 1.5%) 100%);
+  }
+
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--dau {
+    background:
+      linear-gradient(
+        145deg,
+        rgb(255 255 255 / 4%) 0%,
+        rgb(255 255 255 / 1%) 30%,
+        transparent 60%,
+        rgb(64 158 255 / 1.5%) 100%
+      ),
+      linear-gradient(135deg, rgb(64 158 255 / 7%) 0%, rgb(64 158 255 / 1%) 100%);
+  }
+
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--profit {
+    background:
+      linear-gradient(
+        145deg,
+        rgb(255 255 255 / 4%) 0%,
+        rgb(255 255 255 / 1%) 30%,
+        transparent 60%,
+        rgb(114 46 209 / 1.5%) 100%
+      ),
+      linear-gradient(135deg, rgb(114 46 209 / 7%) 0%, rgb(114 46 209 / 1%) 100%);
+  }
+
+  html.dark .cockpit-kpi-card.is-hovered {
+    box-shadow:
+      inset 0 1px 0 0 var(--kpi-glass-highlight),
+      0 12px 28px -8px rgb(0 0 0 / 35%),
+      0 0 0 1px rgb(255 255 255 / 8%),
+      0 0 24px -6px var(--kpi-card-accent);
   }
 
   /* 深色主题下 KPI 卡片次要文字颜色（与项目 html.dark 一致） */

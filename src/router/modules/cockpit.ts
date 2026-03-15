@@ -10,7 +10,8 @@ export const cockpitRoutes: AppRouteRecord = {
   meta: {
     title: 'menus.cockpit.title',
     icon: 'ri:dashboard-line',
-    roles: ['R_SUPER', 'R_ADMIN']
+    roles: ['R_SUPER', 'R_ADMIN'],
+    keepAlive: true
   }
 }
 
@@ -24,7 +25,7 @@ export const cockpitMapDetailRoute: AppRouteRecord = {
   meta: {
     title: '地区详情',
     isHide: true,
-    keepAlive: false,
+    keepAlive: true,
     roles: ['R_SUPER', 'R_ADMIN']
   }
 }
