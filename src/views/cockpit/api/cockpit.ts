@@ -32,6 +32,7 @@ import type {
   CockpitRevenueStructureInsight,
   CockpitAlertSummaryMetric,
   CountryInfoChannelLaunchItem,
+  CountryInfoLtvData,
   CountryInfoOverallData,
   CountryInfoRemainData,
   CountryInfoRemainDataItem,
@@ -63,6 +64,9 @@ const COUNTRY_INFO_USER_PAY_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInf
 
 /** 国家详情渠道投放效果对比接口 */
 const COUNTRY_INFO_CHANNEL_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo/channelLaunch'
+
+/** 国家详情 LTV 预测接口 */
+const COUNTRY_INFO_LTV_URL = '/api/v1/datacenter/analysis/countryInfo/ltv'
 
 /** 消耗节奏监控接口（自投/代投） */
 const COCKPIT_CONSUMPTION_RHYTHM_URL =
@@ -672,6 +676,31 @@ export function mapRemainDataToSeries(data: CountryInfoRemainData): {
     local: remainItemToSeries(data.currentCountry),
     global: remainItemToSeries(data.globalAvg)
   }
+}
+
+/**
+ * 获取国家详情 LTV 预测
+ * POST /api/v1/datacenter/analysis/countryInfo/ltv，请求体：{}
+ * 返回 data：{ d7, d30, d90, d180, days }（days 为预计回收周期天数）
+ */
+export async function fetchCountryInfoLtv(): Promise<CountryInfoLtvData> {
+  return request.post<CountryInfoLtvData>({
+    url: COUNTRY_INFO_LTV_URL,
+    data: {}
+  })
+}
+
+/** 将 ltv 接口 data 转为图表柱状数据 + 头部说明文案 */
+export function mapLtvToChart(data: CountryInfoLtvData): { data: number[]; note: string } {
+  const dataArr = [
+    Number(data.d7) || 0,
+    Number(data.d30) || 0,
+    Number(data.d90) || 0,
+    Number(data.d180) || 0
+  ]
+  const days = data.days != null ? Number(data.days) : 0
+  const note = `预计回收周期: ${days}天`
+  return { data: dataArr, note }
 }
 
 /**

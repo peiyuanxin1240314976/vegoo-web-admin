@@ -121,6 +121,10 @@ export interface CountryInfoOverallPeriod {
   nNewUserCount: number
   roas: number
   roi: number
+  /** 内购收入（变现分析-收入构成） */
+  dIapRevenue?: number
+  /** 广告充展率（变现分析-指标） */
+  adExpansionRate?: number
   /** 仅 last 可能返回 */
   nNewUserCountChange?: number
 }
@@ -133,6 +137,7 @@ export interface CountryInfoOverallData {
   dauChange?: number
   eCpmChange?: number
   roiChange?: number
+  nNewUserCountChange?: number
   last: CountryInfoOverallPeriod
   now: CountryInfoOverallPeriod
 }
@@ -181,6 +186,16 @@ export interface CountryInfoChannelLaunchItem {
   cplChange: number | null
   /** 渠道名称（若后端返回） */
   channel?: string
+}
+
+/** 国家详情 LTV 预测接口 data /api/v1/datacenter/analysis/countryInfo/ltv */
+export interface CountryInfoLtvData {
+  d7: number
+  d30: number
+  d90: number
+  d180: number
+  /** 预计回收周期天数 */
+  days: number
 }
 
 /** 国家详情用户留存曲线单条（currentCountry / globalAvg） */

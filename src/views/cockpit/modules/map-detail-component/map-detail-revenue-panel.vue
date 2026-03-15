@@ -57,7 +57,8 @@
         <span class="section-badge">B</span>
         <span class="section-title">各 App 在{{ regionLabel }}表现</span>
       </div>
-      <ArtTable :data="appTableData" :columns="appColumns" size="small" height="220" />
+      <ElSkeleton v-if="appLoading" :rows="6" animated class="table-skeleton" />
+      <ArtTable v-else :data="appTableData" :columns="appColumns" size="small" height="220" />
     </div>
   </ElCard>
 </template>
@@ -89,6 +90,7 @@
       compositionData?: RevenueCompositionItem[]
       appTableData?: AppPerformanceRow[]
       regionLabel?: string
+      appLoading?: boolean
     }>(),
     {
       metrics: () => ({ ecpm: '$8.20', ecpmTrend: '↑+3%', fillRate: '94%', arpu: '$22.8' }),
@@ -97,7 +99,8 @@
         { label: '内购收入', value: '$250K', percent: 24, color: '#f59e0b' }
       ],
       appTableData: () => [],
-      regionLabel: '美国'
+      regionLabel: '美国',
+      appLoading: false
     }
   )
 
@@ -256,6 +259,11 @@
   .app-performance-block {
     .panel-header {
       margin-bottom: 8px;
+    }
+
+    .table-skeleton {
+      height: 220px;
+      padding: 8px 0;
     }
   }
 </style>

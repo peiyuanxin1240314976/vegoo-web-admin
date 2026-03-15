@@ -8,7 +8,8 @@
         <span class="section-badge">A</span>
         <span class="section-title">渠道投放效果对比</span>
       </div>
-      <ArtTable :data="channelData" :columns="channelColumns" size="small" height="150">
+      <ElSkeleton v-if="channelLoading" :rows="5" animated class="table-skeleton" />
+      <ArtTable v-else :data="channelData" :columns="channelColumns" size="small" height="150">
         <template #trend="{ row }">
           <span class="trend-cell" :class="row.trendClass ?? 'trend-empty'">{{ row.trend }}</span>
         </template>
@@ -19,7 +20,8 @@
         <span class="section-badge">B</span>
         <span class="section-title">当前投放中 Campaign (Top 5)</span>
       </div>
-      <ArtTable :data="campaignData" :columns="campaignColumns" size="small" height="150">
+      <ElSkeleton v-if="campaignLoading" :rows="5" animated class="table-skeleton" />
+      <ArtTable v-else :data="campaignData" :columns="campaignColumns" size="small" height="150">
         <template #roi="{ row }">
           <span class="roi-dot" :class="getRoiClass(row.roi)"></span>
           <span>{{ row.roi }}</span>
@@ -59,8 +61,15 @@
     defineProps<{
       channelData?: ChannelRow[]
       campaignData?: CampaignRow[]
+      channelLoading?: boolean
+      campaignLoading?: boolean
     }>(),
-    { channelData: () => [], campaignData: () => [] }
+    {
+      channelData: () => [],
+      campaignData: () => [],
+      channelLoading: false,
+      campaignLoading: false
+    }
   )
 
   function fmtMoneyK(n: number) {
@@ -195,6 +204,11 @@
       &.trend-empty {
         color: var(--el-text-color-secondary);
       }
+    }
+
+    .table-skeleton {
+      height: 150px;
+      padding: 8px 0;
     }
   }
 </style>

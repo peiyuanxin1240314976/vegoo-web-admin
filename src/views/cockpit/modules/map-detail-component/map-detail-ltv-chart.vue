@@ -1,10 +1,12 @@
 <template>
   <ElCard class="map-detail-ltv-chart" shadow="never">
     <template #header>
-      <span>LTV 预测</span>
+      <div class="card-header-inner">
+        <span class="card-title">LTV 预测</span>
+        <span v-if="note" class="card-note">{{ note }}</span>
+      </div>
     </template>
     <div ref="chartRef" class="chart-box"></div>
-    <div v-if="note" class="chart-note">{{ note }}</div>
   </ElCard>
 </template>
 
@@ -16,6 +18,7 @@
 
   const CHART_COLOR = '#3984F1'
 
+  /** data、note 来自接口 countryInfo/ltv */
   const props = withDefaults(
     defineProps<{
       data?: number[]
@@ -23,9 +26,9 @@
       note?: string
     }>(),
     {
-      data: () => [8.2, 18.5, 32.1, 48.6],
+      data: () => [],
       xAxisData: () => ['LTV D7', 'LTV D30', 'LTV D90', 'LTV D180'],
-      note: '预计回收周期: 45天'
+      note: ''
     }
   )
 
@@ -38,6 +41,18 @@
     const opt: EChartsOption = {
       color: [CHART_COLOR],
       grid: { left: 56, right: 24, top: 24, bottom: 32 },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: (params: unknown) => {
+          const list = Array.isArray(params) ? params : []
+          const axis = list[0]?.axisValue ?? ''
+          const lines = list.map(
+            (p: { value?: number }) => `LTV: ${p.value != null ? `$${p.value}` : '—'}`
+          )
+          return [axis, ...lines].join('<br/>')
+        }
+      },
       xAxis: { type: 'category', data: props.xAxisData },
       yAxis: { type: 'value', axisLabel: { formatter: '${value}' } },
       series: [{ type: 'bar', data: props.data, barWidth: '50%' }]
@@ -68,14 +83,25 @@
       font-weight: 500;
     }
 
-    .chart-box {
-      height: 240px;
+    .card-header-inner {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
     }
 
-    .chart-note {
-      margin-top: 8px;
+    .card-title {
+      flex-shrink: 0;
+    }
+
+    .card-note {
       font-size: 12px;
       color: var(--el-text-color-secondary);
+    }
+
+    .chart-box {
+      height: 240px;
     }
   }
 </style>

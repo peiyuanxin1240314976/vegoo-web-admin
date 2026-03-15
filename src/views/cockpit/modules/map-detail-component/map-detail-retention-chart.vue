@@ -50,6 +50,19 @@
     const opt: EChartsOption = {
       color: [CHART_COLOR, '#94a3b8'],
       grid: { left: 48, right: 24, top: 16, bottom: 24 },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'line' },
+        formatter: (params: unknown) => {
+          const list = Array.isArray(params) ? params : []
+          const axis = list[0]?.axisValue ?? ''
+          const lines = list.map(
+            (p: { seriesName?: string; value?: number }) =>
+              `${p.seriesName ?? ''}: ${p.value != null ? p.value + '%' : '—'}`
+          )
+          return [axis, ...lines].join('<br/>')
+        }
+      },
       xAxis: { type: 'category', data: props.xAxisData },
       yAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
       series: [

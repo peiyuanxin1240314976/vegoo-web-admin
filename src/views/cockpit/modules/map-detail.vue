@@ -40,12 +40,15 @@
           <MapDetailSpendPanel
             :channel-data="channelTableData"
             :campaign-data="campaignTableData"
+            :channel-loading="channelLoading"
+            :campaign-loading="campaignLoading"
           />
           <MapDetailRevenuePanel
             :metrics="revenueMetrics"
             :composition-data="revenueCompositionData"
             :app-table-data="appPerformanceData"
             :region-label="countryName"
+            :app-loading="appPerformanceLoading"
           />
         </div>
 
@@ -54,7 +57,7 @@
             :local-data="retentionLocalData"
             :global-data="retentionGlobalData"
           />
-          <MapDetailLtvChart :data="ltvData" />
+          <MapDetailLtvChart :data="ltvData" :note="ltvNote" />
           <MapDetailSegmentChart :data="segmentData" :note="segmentNote" />
         </div>
       </div>
@@ -82,10 +85,12 @@
     fetchCountryInfoOverall,
     fetchCountryInfoTop5Campaign,
     fetchCountryInfoChannelLaunch,
+    fetchCountryInfoLtv,
     fetchCountryInfoRemain,
     fetchCountryInfoUserPayLaunch,
     mapCountryInfoOverallToStatCards,
     mapChannelLaunchToChannelRows,
+    mapLtvToChart,
     mapRemainDataToSeries,
     mapUserPayLaunchToSegment
   } from '../api/cockpit'
@@ -208,11 +213,46 @@
         lastCountryOverallData.value = res
         const periodLabel = rangeOptions.find((o) => o.value === rangeType.value)?.label
         statCards.value = mapCountryInfoOverallToStatCards(res, periodLabel) as StatCardItem[]
+        // 变现分析（收入构成 + 指标）复用 overall 的 now：dAdRevenue, dIapRevenue, eCpm, adExpansionRate, arpu
+        const now = res.now
+        const adRev = Number(now.dAdRevenue) || 0
+        const iapRev = Number(now.dIapRevenue) || 0
+        const totalRev = adRev + iapRev
+        const adPct = totalRev > 0 ? Math.round((adRev / totalRev) * 100) : 0
+        const iapPct = totalRev > 0 ? 100 - adPct : 0
+        revenueCompositionData.value = [
+          {
+            label: '广告收入',
+            value: `$${(adRev / 1000).toFixed(0)}K`,
+            percent: adPct,
+            color: '#3984F1'
+          },
+          {
+            label: '内购收入',
+            value: `$${(iapRev / 1000).toFixed(0)}K`,
+            percent: iapPct,
+            color: '#f59e0b'
+          }
+        ]
+        const eCpmVal = now.eCpm != null ? Number(now.eCpm) : null
+        const eCpmChangeVal = res.eCpmChange != null ? Number(res.eCpmChange) : null
+        revenueMetrics.value = {
+          ecpm: eCpmVal != null ? `$${eCpmVal.toFixed(2)}` : '—',
+          ecpmTrend:
+            eCpmChangeVal != null
+              ? eCpmChangeVal >= 0
+                ? `↑+${eCpmChangeVal}`
+                : `↓${eCpmChangeVal}`
+              : '—',
+          fillRate: now.adExpansionRate != null ? `${Number(now.adExpansionRate)}%` : '—',
+          arpu: now.arpu != null ? `$${Number(now.arpu).toFixed(2)}` : '—'
+        }
       }
     } catch {
       // 接口失败时保留默认占位
     }
     // 渠道投放效果对比：/api/v1/datacenter/analysis/countryInfo/channelLaunch
+    channelLoading.value = true
     try {
       const channelList = await fetchCountryInfoChannelLaunch()
       if (Array.isArray(channelList)) {
@@ -220,8 +260,12 @@
       }
     } catch {
       // 接口失败时保持空列表
+    } finally {
+      channelLoading.value = false
     }
     // 当前投放中 Campaign (Top 5)：/api/v1/datacenter/analysis/countryInfo/top5Campaign
+    campaignLoading.value = true
+    appPerformanceLoading.value = true
     try {
       const list = await fetchCountryInfoTop5Campaign()
       if (Array.isArray(list)) {
@@ -242,6 +286,9 @@
       }
     } catch {
       // 接口失败时保持空列表
+    } finally {
+      campaignLoading.value = false
+      appPerformanceLoading.value = false
     }
     // 用户留存曲线：/api/v1/datacenter/analysis/countryInfo/remain（currentCountry + globalAvg）
     try {
@@ -253,6 +300,17 @@
       }
     } catch {
       // 接口失败时保持空数组
+    }
+    // LTV 预测：/api/v1/datacenter/analysis/countryInfo/ltv
+    try {
+      const ltvRes = await fetchCountryInfoLtv()
+      if (ltvRes && typeof ltvRes === 'object') {
+        const { data: ltvArr, note: ltvNoteStr } = mapLtvToChart(ltvRes)
+        ltvData.value = ltvArr
+        ltvNote.value = ltvNoteStr
+      }
+    } catch {
+      // 接口失败时保持默认
     }
     // 用户分层：/api/v1/datacenter/analysis/countryInfo/userPayLaunch
     try {
@@ -279,26 +337,32 @@
 
   /** 渠道投放效果对比来自 /api/v1/datacenter/analysis/countryInfo/channelLaunch（仅展示 now） */
   const channelTableData = ref<ChannelRow[]>([])
+  const channelLoading = ref(true)
 
   const campaignTableData = ref<CampaignRow[]>([])
+  const campaignLoading = ref(true)
 
+  /** 变现分析指标与收入构成来自 countryInfo/overall 的 now（与第一排共用一次请求） */
   const revenueMetrics = ref({
-    ecpm: '$8.20',
-    ecpmTrend: '↑+3%',
-    fillRate: '94%',
-    arpu: '$22.8'
+    ecpm: '—',
+    ecpmTrend: '—',
+    fillRate: '—',
+    arpu: '—'
   })
   const revenueCompositionData = ref<RevenueCompositionItem[]>([
-    { label: '广告收入', value: '$780K', percent: 76, color: '#3984F1' },
-    { label: '内购收入', value: '$250K', percent: 24, color: '#f59e0b' }
+    { label: '广告收入', value: '—', percent: 0, color: '#3984F1' },
+    { label: '内购收入', value: '—', percent: 0, color: '#f59e0b' }
   ])
   const appPerformanceData = ref<AppPerformanceRow[]>([])
+  const appPerformanceLoading = ref(true)
 
   /** 用户留存曲线：本地区 + 全局平均均来自 /api/v1/datacenter/analysis/countryInfo/remain */
   const retentionLocalData = ref<number[]>([])
   const retentionGlobalData = ref<number[]>([])
 
-  const ltvData = ref([8.2, 18.5, 32.1, 48.6])
+  /** LTV 预测图表与头部文案来自 /api/v1/datacenter/analysis/countryInfo/ltv */
+  const ltvData = ref<number[]>([])
+  const ltvNote = ref('')
 
   /** 用户分层饼图数据与底部文案来自 /api/v1/datacenter/analysis/countryInfo/userPayLaunch */
   const segmentData = ref<SegmentItem[]>([])
