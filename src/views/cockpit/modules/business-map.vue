@@ -344,7 +344,9 @@
   function buildTooltipFormatter(isDarkTheme: boolean) {
     return (params: any) => {
       const d = params.data
-      if (!d) return params.name
+      if (!d) {
+        return `<div class="cockpit-map-tt-title">${params.name}</div><div class="cockpit-map-tt-row" style="color:var(--el-text-color-secondary)">暂无数据</div>`
+      }
       const upClass = isDarkTheme ? 'color:#34d399' : 'color:var(--el-color-success)'
       const downClass = isDarkTheme ? 'color:#f87171' : 'color:var(--el-color-danger)'
       const revenueUp = isTrendUp(d.trend)
@@ -411,6 +413,13 @@
     const emphasisBorder = dark ? 'rgba(52,211,153,0.8)' : 'var(--el-color-primary)'
     const emphasisShadow = dark ? 'rgba(52,211,153,0.35)' : 'rgba(0,0,0,0.15)'
 
+    const dataValues = mapData.map((d) => d.value).filter((v) => Number.isFinite(v))
+    const dataMin = dataValues.length ? Math.min(...dataValues) : 0
+    const dataMax = dataValues.length ? Math.max(...dataValues) : 100
+    const hasPositive = dataMax > 0
+    const visualMin = hasPositive && dataMin >= 0 ? 0.5 : dataMin
+    const visualMax = dataMax
+
     return {
       animation: true,
       animationDuration: 800,
@@ -419,7 +428,7 @@
         trigger: 'item',
         triggerOn: 'click', // 改为点击显示，避免悬浮时盖住邻国误触
         confine: true,
-        enterable: true, // 允许鼠标移入 tooltip，便于点击「查看详情」
+        enterable: true, // 允许鼠标移入 tooltip，便于点击「查看详情」（仅在有数据的国家显示链接）
         transitionDuration: 0.2,
         backgroundColor: dark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.98)',
         borderColor: dark ? 'rgba(71,85,105,0.6)' : 'var(--el-border-color-lighter)',
@@ -433,12 +442,13 @@
       },
       visualMap: {
         type: 'continuous',
-        min: mapData.length ? Math.min(...mapData.map((d) => d.value)) : 0,
-        max: mapData.length ? Math.max(...mapData.map((d) => d.value)) : 100,
+        min: visualMin,
+        max: visualMax,
         text: ['高', '低'],
         realtime: false,
         calculable: true,
         inRange: { color: visualMapColors },
+        outOfRange: { color: [unhighlightedArea] },
         left: 12,
         bottom: 24,
         textStyle: {

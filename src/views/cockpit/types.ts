@@ -177,6 +177,27 @@ export interface CockpitMapLegendItem {
   color: string
 }
 
+/** 业务分布地图接口：last/now 周期内单指标 */
+export interface CockpitBusinessMapPeriodItem {
+  dAdRevenue: number
+  dCost: number
+  eCPM: number
+  nActiveUserCount: number
+  nNewUserCount: number
+}
+
+/** 业务分布地图接口：后端返回单项（与 mock mapCountries 转换用） */
+export interface CockpitBusinessMapApiItem {
+  country: string
+  dAdRevenueChange?: number
+  dCostChange?: number
+  eCPMChange?: number
+  nActiveUserCountChange?: number
+  nNewUserCountChange?: number
+  last: CockpitBusinessMapPeriodItem
+  now: CockpitBusinessMapPeriodItem
+}
+
 /** Top3 接口：收入应用单项（app 数组元素） */
 export interface CockpitTop3AppItem {
   sAppName: string

@@ -19,7 +19,10 @@ import type {
   CockpitTopBadReviewItem,
   CockpitTopUserItem,
   CockpitChannelRoiInstallResponse,
-  CockpitChannelRoiInstallItem
+  CockpitChannelRoiInstallItem,
+  CockpitBusinessMapApiItem,
+  CockpitMapCountry,
+  CockpitMapLegendItem
 } from '../types'
 import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
@@ -41,6 +44,80 @@ const COCKPIT_TOP3_URL = '/api/v1/datacenter/analysis/cockpit/top3'
 
 /** 渠道 ROI&安装量接口（消耗/安装量/CPI 取 list[0]，近 7 日折线取 list 的 7 个对象） */
 const COCKPIT_CHANNEL_ROI_URL = '/api/v1/datacenter/analysis/cockpit/installAndRoiOfChannel'
+
+/** 业务分布地图接口 */
+const COCKPIT_BUSINESS_MAP_URL = '/api/v1/datacenter/analysis/cockpit/businessMap'
+
+/** 国家中文名 → 英文名（与 public/geo/world.json 的 properties.name 一致，美国用 United States、韩国用 Korea） */
+const COUNTRY_CN_TO_EN: Record<string, string> = {
+  美国: 'United States',
+  中国: 'China',
+  日本: 'Japan',
+  英国: 'United Kingdom',
+  俄罗斯: 'Russia',
+  巴西: 'Brazil',
+  印度: 'India',
+  澳大利亚: 'Australia',
+  德国: 'Germany',
+  法国: 'France',
+  加拿大: 'Canada',
+  韩国: 'Korea',
+  墨西哥: 'Mexico',
+  印度尼西亚: 'Indonesia',
+  土耳其: 'Turkey',
+  沙特阿拉伯: 'Saudi Arabia',
+  南非: 'South Africa',
+  意大利: 'Italy',
+  西班牙: 'Spain',
+  越南: 'Vietnam',
+  泰国: 'Thailand',
+  菲律宾: 'Philippines',
+  马来西亚: 'Malaysia',
+  新加坡: 'Singapore',
+  香港: 'Hong Kong',
+  台湾: 'Taiwan',
+  荷兰: 'Netherlands',
+  波兰: 'Poland',
+  阿根廷: 'Argentina',
+  哥伦比亚: 'Colombia',
+  埃及: 'Egypt',
+  尼日利亚: 'Nigeria',
+  巴基斯坦: 'Pakistan',
+  孟加拉国: 'Bangladesh',
+  乌克兰: 'Ukraine',
+  美國: 'United States',
+  中國: 'China',
+  英國: 'United Kingdom',
+  俄羅斯: 'Russia',
+  澳洲: 'Australia',
+  澳大利亞: 'Australia',
+  德國: 'Germany',
+  法國: 'France',
+  韓國: 'Korea',
+  台灣: 'Taiwan',
+  荷蘭: 'Netherlands',
+  波蘭: 'Poland',
+  烏克蘭: 'Ukraine',
+  尼日利亞: 'Nigeria',
+  孟加拉國: 'Bangladesh'
+}
+
+/** 按收入区间映射颜色（与 mock 色板一致），minRevenue=150, maxRevenue=8200 */
+function getColorByRevenue(revenue: number, minRevenue = 150, maxRevenue = 8200): string {
+  const colors = ['#f56c6c', '#e6a23c', '#E2C33D', '#409eff', '#67c23a']
+  if (!Number.isFinite(revenue) || maxRevenue <= minRevenue) return colors[0]
+  const t = Math.max(0, Math.min(1, (revenue - minRevenue) / (maxRevenue - minRevenue)))
+  const index = Math.min(colors.length - 1, Math.floor(t * colors.length))
+  return colors[index] ?? colors[0]
+}
+
+/** 将变化量格式化为趋势文案，如 "+12%"、"-5%" */
+function formatChangeToTrend(change: number, lastVal: number): string {
+  if (!Number.isFinite(lastVal) || lastVal === 0) return '—'
+  const pct = Number.isFinite(change) ? (change / lastVal) * 100 : 0
+  const sign = pct >= 0 ? '+' : ''
+  return `${sign}${Number(pct.toFixed(1))}%`
+}
 
 function formatMoney(n: number): string {
   return (
@@ -295,6 +372,85 @@ export function mapChannelRoiInstallToItems(
 export async function fetchChannelRoiInstall(): Promise<CockpitChannelRoiInstallResponse> {
   return request.post<CockpitChannelRoiInstallResponse>({
     url: COCKPIT_CHANNEL_ROI_URL,
+    data: {}
+  })
+}
+
+/**
+ * 将业务分布地图后端 data[] 转为与 mock mapCountries 一致的结构
+ * 仅输出能映射到 world.json 的国家（nameEn 有效）
+ */
+export function mapBusinessMapToMapCountries(
+  data: CockpitBusinessMapApiItem[] | null
+): CockpitMapCountry[] {
+  if (!Array.isArray(data) || !data.length) return []
+  const list: CockpitMapCountry[] = []
+  const num = (v: unknown) => (v != null && Number.isFinite(Number(v)) ? Number(v) : 0)
+  data.forEach((item) => {
+    const countryKey = (item.country ?? '').trim()
+    const nameEn = COUNTRY_CN_TO_EN[countryKey]
+    if (!nameEn) return
+    const { last, now } = item
+    const revenue = num(now.dAdRevenue)
+    const spend = num(now.dCost)
+    const user = num(now.nActiveUserCount)
+    const trend =
+      item.dAdRevenueChange != null
+        ? formatChangeToTrend(num(item.dAdRevenueChange), num(last.dAdRevenue))
+        : formatChangeToTrend(revenue - num(last.dAdRevenue), num(last.dAdRevenue))
+    const newUser = now.nNewUserCount
+    const newUserTrend =
+      item.nNewUserCountChange != null
+        ? formatChangeToTrend(num(item.nNewUserCountChange), num(last.nNewUserCount))
+        : formatChangeToTrend(
+            num(now.nNewUserCount) - num(last.nNewUserCount),
+            num(last.nNewUserCount)
+          )
+    const ecpmVal = num((now as { eCPM?: number }).eCPM ?? (now as { ecpm?: number }).ecpm)
+    const lastEcpm = num((last as { eCPM?: number }).eCPM ?? (last as { ecpm?: number }).ecpm)
+    const ecpmTrend =
+      item.eCPMChange != null
+        ? formatChangeToTrend(num(item.eCPMChange), lastEcpm)
+        : formatChangeToTrend(ecpmVal - lastEcpm, lastEcpm)
+    list.push({
+      nameEn,
+      name: countryKey || '—',
+      revenue,
+      spend,
+      user,
+      trend,
+      color: getColorByRevenue(revenue, 150, 8200),
+      newUser,
+      newUserTrend: newUserTrend === '—' ? undefined : newUserTrend,
+      ecpm: Number.isFinite(ecpmVal) ? ecpmVal : undefined,
+      ecpmTrend: ecpmTrend === '—' ? undefined : ecpmTrend
+    })
+  })
+  return list
+}
+
+/**
+ * 从 mapCountries 生成图例（按收入取前 5，与 mock mapLegend 结构一致）
+ */
+export function mapCountriesToLegend(
+  mapCountries: CockpitMapCountry[],
+  maxItems = 5
+): CockpitMapLegendItem[] {
+  const sorted = [...mapCountries].sort((a, b) => b.revenue - a.revenue).slice(0, maxItems)
+  return sorted.map((item) => ({
+    name: item.name,
+    value: item.revenue >= 1000 ? `$${(item.revenue / 1000).toFixed(1)}M` : `$${item.revenue}K`,
+    trend: item.trend,
+    color: item.color ?? '#67c23a'
+  }))
+}
+
+/**
+ * 获取业务分布地图数据，请求体：空对象 {}
+ */
+export async function fetchCockpitBusinessMap(): Promise<CockpitBusinessMapApiItem[]> {
+  return request.post<CockpitBusinessMapApiItem[]>({
+    url: COCKPIT_BUSINESS_MAP_URL,
     data: {}
   })
 }

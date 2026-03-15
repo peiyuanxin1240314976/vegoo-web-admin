@@ -13,7 +13,10 @@ import {
   fetchCockpitTop3,
   mapTop3ResponseToOverview,
   fetchChannelRoiInstall,
-  mapChannelRoiInstallToItems
+  mapChannelRoiInstallToItems,
+  fetchCockpitBusinessMap,
+  mapBusinessMapToMapCountries,
+  mapCountriesToLegend
 } from '../api/cockpit'
 import type {
   CockpitOverview,
@@ -72,13 +75,15 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
     loading.value = true
     const range = params?.dateRange ?? dateRange.value
     try {
-      const [overallRes, rhythmRes, top3Res, channelRoiRes, restOverview] = await Promise.all([
-        fetchCockpitOverall().catch(() => null),
-        fetchConsumptionRhythmMonitoring().catch(() => null),
-        fetchCockpitTop3().catch(() => null),
-        fetchChannelRoiInstall().catch(() => null),
-        fetchCockpitOverview({ dateRange: range })
-      ])
+      const [overallRes, rhythmRes, top3Res, channelRoiRes, businessMapRes, restOverview] =
+        await Promise.all([
+          fetchCockpitOverall().catch(() => null),
+          fetchConsumptionRhythmMonitoring().catch(() => null),
+          fetchCockpitTop3().catch(() => null),
+          fetchChannelRoiInstall().catch(() => null),
+          fetchCockpitBusinessMap().catch(() => null),
+          fetchCockpitOverview({ dateRange: range })
+        ])
       const kpi = overallRes
         ? mapOverallToKpiCards(overallRes.last, overallRes.now)
         : restOverview.kpi
@@ -90,6 +95,12 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
         channelRoiRes != null
           ? mapChannelRoiInstallToItems(channelRoiRes)
           : (restOverview.channelRoiInstall ?? [])
+      const mapCountries =
+        businessMapRes != null
+          ? mapBusinessMapToMapCountries(businessMapRes)
+          : restOverview.mapCountries
+      const mapLegend =
+        businessMapRes != null ? mapCountriesToLegend(mapCountries) : (restOverview.mapLegend ?? [])
       overview.value = {
         ...restOverview,
         kpi,
@@ -97,8 +108,12 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
         topRevenue: top3.topRevenue,
         topBadReview: top3.topBadReview,
         topUser: top3.topUser,
-        channelRoiInstall
+        channelRoiInstall,
+        mapCountries,
+        mapLegend
       }
+
+      console.log('mapCountries', mapCountries)
     } finally {
       loading.value = false
     }

@@ -230,9 +230,11 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       section: 'managed'
     }
   ],
+  // mapCountries[].nameEn 必须与 public/geo/world.json 的 properties.name 完全一致才能在地图上高亮
+  // 注意：美国用 "United States"（非 United States of America）；韩国用 "Korea"（非 South Korea）
   mapCountries: [
     {
-      nameEn: 'United States of America',
+      nameEn: 'United States',
       name: '美国',
       revenue: 8200,
       spend: 5800,
