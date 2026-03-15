@@ -11,37 +11,83 @@
           <span class="section-badge">A</span>
           <span class="section-title">收入构成</span>
         </div>
+        <!-- 统计条上方两排：名称 + 金额(占比) -->
         <div class="composition-labels">
-          <div
-            v-for="(s, i) in compositionData"
-            :key="i"
-            class="composition-label"
-            :style="{ width: s.percent + '%' }"
-          >
-            {{ s.label }}
-          </div>
-        </div>
-        <div class="composition-bar">
-          <div
-            v-for="(s, i) in compositionData"
-            :key="i"
-            class="composition-segment"
-            :style="{
-              width: s.percent + '%',
-              backgroundColor: s.color,
-              animationDelay: i * 0.08 + 's'
-            }"
-          />
+          <template v-for="(s, i) in compositionData" :key="'label-' + i">
+            <ElTooltip
+              v-if="s.percent < 10"
+              :content="`${s.label} ${s.value} (${s.percent}%)`"
+              placement="top"
+              :show-after="0"
+            >
+              <div
+                class="composition-label composition-label--hidden"
+                :style="{ width: s.percent + '%', minWidth: '28px', color: s.color }"
+              >
+                {{ s.label }}
+              </div>
+            </ElTooltip>
+            <div
+              v-else
+              class="composition-label"
+              :style="{ width: s.percent + '%', color: s.color }"
+            >
+              {{ s.label }}
+            </div>
+          </template>
         </div>
         <div class="composition-values">
-          <div
-            v-for="(s, i) in compositionData"
-            :key="i"
-            class="composition-value"
-            :style="{ width: s.percent + '%' }"
-          >
-            {{ s.value }} ({{ s.percent }}%)
-          </div>
+          <template v-for="(s, i) in compositionData" :key="'value-' + i">
+            <ElTooltip
+              v-if="s.percent < 10"
+              :content="`${s.label} ${s.value} (${s.percent}%)`"
+              placement="top"
+              :show-after="0"
+            >
+              <div
+                class="composition-value composition-value--hidden"
+                :style="{ width: s.percent + '%', minWidth: '28px', color: s.color }"
+              >
+                {{ s.value }} ({{ s.percent }}%)
+              </div>
+            </ElTooltip>
+            <div
+              v-else
+              class="composition-value"
+              :style="{ width: s.percent + '%', color: s.color }"
+            >
+              {{ s.value }} ({{ s.percent }}%)
+            </div>
+          </template>
+        </div>
+        <div class="composition-bar">
+          <template v-for="(s, i) in compositionData" :key="'segment-' + i">
+            <ElTooltip
+              v-if="s.percent < 10"
+              :content="`${s.label} ${s.value} (${s.percent}%)`"
+              placement="top"
+              :show-after="0"
+            >
+              <div
+                class="composition-segment"
+                :style="{
+                  width: s.percent + '%',
+                  minWidth: '8px',
+                  backgroundColor: s.color,
+                  animationDelay: i * 0.08 + 's'
+                }"
+              />
+            </ElTooltip>
+            <div
+              v-else
+              class="composition-segment"
+              :style="{
+                width: s.percent + '%',
+                backgroundColor: s.color,
+                animationDelay: i * 0.08 + 's'
+              }"
+            />
+          </template>
         </div>
       </div>
       <div class="revenue-metrics">
@@ -153,7 +199,7 @@
   }
 
   .composition-labels {
-    margin-bottom: 6px;
+    margin-bottom: 0;
     font-size: 13px;
     font-weight: 500;
     color: var(--el-text-color-primary);
@@ -161,10 +207,19 @@
 
   .composition-label {
     flex-shrink: 0;
+    min-width: 0;
     padding: 0 4px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: default;
+
+    &.composition-label--hidden {
+      min-width: 28px;
+      cursor: help;
+      visibility: hidden;
+      user-select: none;
+    }
   }
 
   .composition-bar {
@@ -197,17 +252,26 @@
   }
 
   .composition-values {
-    margin-top: 6px;
+    margin-bottom: 6px;
     font-size: 12px;
     color: var(--el-text-color-regular);
   }
 
   .composition-value {
     flex-shrink: 0;
+    min-width: 0;
     padding: 0 4px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: default;
+
+    &.composition-value--hidden {
+      min-width: 28px;
+      cursor: help;
+      visibility: hidden;
+      user-select: none;
+    }
   }
 
   .revenue-metrics {
