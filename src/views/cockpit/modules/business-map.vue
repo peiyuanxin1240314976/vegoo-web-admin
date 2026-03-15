@@ -296,7 +296,7 @@
   const mapChartRef = ref<HTMLElement | null>(null)
   const mapLoading = ref(true)
   const mapMetric = ref<'revenue' | 'spend' | 'user'>('revenue')
-  const { chartRef, initChart, updateChart, destroyChart } = useChart()
+  const { chartRef, initChart, updateChart, destroyChart, getChartInstance } = useChart()
 
   const metricOptions: { value: 'revenue' | 'spend' | 'user'; label: string }[] = [
     { value: 'revenue', label: '收入' },
@@ -341,12 +341,14 @@
     return key ? COUNTRY_NAME_TO_ISO[key] : ''
   }
 
-  function buildTooltipFormatter(isDarkTheme: boolean) {
+  /** 仅当区域名称在有数据的国家集合中时才显示 tooltip */
+  function buildTooltipFormatter(isDarkTheme: boolean, regionNamesWithData: Set<string>) {
     return (params: any) => {
-      const d = params.data
-      if (!d) {
-        return `<div class="cockpit-map-tt-title">${params.name}</div><div class="cockpit-map-tt-row" style="color:var(--el-text-color-secondary)">暂无数据</div>`
+      if (!regionNamesWithData.has(params.name)) {
+        return '' // 数据中无此国家时不显示 tooltip
       }
+      const d = params.data
+      if (!d) return ''
       const upClass = isDarkTheme ? 'color:#34d399' : 'color:var(--el-color-success)'
       const downClass = isDarkTheme ? 'color:#f87171' : 'color:var(--el-color-danger)'
       const revenueUp = isTrendUp(d.trend)
@@ -419,6 +421,7 @@
     const hasPositive = dataMax > 0
     const visualMin = hasPositive && dataMin >= 0 ? 0.5 : dataMin
     const visualMax = dataMax
+    const regionNamesWithData = new Set(mapData.map((d) => d.name))
 
     return {
       animation: true,
@@ -438,9 +441,10 @@
           fontSize: 12,
           color: dark ? '#e2e8f0' : 'var(--el-text-color-primary)'
         },
-        formatter: buildTooltipFormatter(dark)
+        formatter: buildTooltipFormatter(dark, regionNamesWithData)
       },
       visualMap: {
+        show: false,
         type: 'continuous',
         min: visualMin,
         max: visualMax,
@@ -519,6 +523,8 @@
         initChart(buildOption())
         mapLoading.value = false
         if (!mapInitialized) {
+          const chart = getChartInstance()
+          if (chart) chart.on('click', handleMapItemClick)
           mapChartRef.value?.addEventListener('click', handleTooltipLinkClick)
           mapInitialized = true
         }
@@ -530,6 +536,13 @@
   }
 
   const router = useRouter()
+  /** 点击地图区域时，若该国家不在数据中则隐藏 tooltip，使点击显示 tooltip 不生效 */
+  function handleMapItemClick(params: any) {
+    const namesWithData = new Set(countryData.value.map((c) => c.nameEn))
+    if (!params?.name || !namesWithData.has(params.name)) {
+      getChartInstance()?.dispatchAction({ type: 'hideTip' })
+    }
+  }
   /** 点击 tooltip 内「查看详情」时跳转地区详情页 */
   function handleTooltipLinkClick(e: MouseEvent) {
     const link = (e.target as HTMLElement).closest('.cockpit-map-tt-link')
