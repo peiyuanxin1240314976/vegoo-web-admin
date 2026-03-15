@@ -108,6 +108,42 @@ export interface CockpitOverallParams {
   endTime: string
 }
 
+/** 国家详情第一排总数据 - 单周期（last/now 结构） */
+export interface CountryInfoOverallPeriod {
+  arpu: number
+  cost: number
+  cpl: number
+  dAdRevenue: number
+  dCost: number
+  dau: number
+  eCpm: number
+  Install: number
+  nNewUserCount: number
+  roas: number
+  roi: number
+  /** 仅 last 可能返回 */
+  nNewUserCountChange?: number
+}
+
+/** 国家详情第一排总数据 - data 主体 */
+export interface CountryInfoOverallData {
+  arpuChange?: number
+  dAdRevenueChange?: number
+  dCostChange?: number
+  dauChange?: number
+  eCpmChange?: number
+  roiChange?: number
+  last: CountryInfoOverallPeriod
+  now: CountryInfoOverallPeriod
+}
+
+/** 国家详情第一排总数据接口响应 /api/v1/datacenter/analysis/countryInfo/overall */
+export interface CountryInfoOverallApiResponse {
+  code: number
+  message?: string
+  data?: CountryInfoOverallData
+}
+
 /** KPI 卡片类型：总收入、付费收入、广告支出、有效订阅、DAU、预估利润 */
 export type CockpitKpiCardType =
   | 'income' // 总收入

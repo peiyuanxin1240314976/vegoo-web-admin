@@ -30,7 +30,8 @@ import type {
   CockpitRevenueStructureNode,
   CockpitRevenueStructureLink,
   CockpitRevenueStructureInsight,
-  CockpitAlertSummaryMetric
+  CockpitAlertSummaryMetric,
+  CountryInfoOverallData
 } from '../types'
 import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
@@ -42,6 +43,9 @@ const COCKPIT_OVERVIEW_URL = '/api/cockpit/overview'
 
 /** 经营驾驶舱第一排总数据接口（KPI 卡片数据源） */
 const COCKPIT_OVERALL_URL = '/api/v1/datacenter/analysis/cockpit/overall'
+
+/** 国家详情第一排总数据接口（地图进入国家详情页顶部卡片） */
+const COUNTRY_INFO_OVERALL_URL = '/api/v1/datacenter/analysis/countryInfo/overall'
 
 /** 消耗节奏监控接口（自投/代投） */
 const COCKPIT_CONSUMPTION_RHYTHM_URL =
@@ -467,6 +471,88 @@ export async function fetchCockpitOverall(): Promise<CockpitOverallApiResponse> 
   return request.post<CockpitOverallApiResponse>({
     url: COCKPIT_OVERALL_URL,
     data: {}
+  })
+}
+
+/** 国家详情页顶部卡片项（与 MapDetailStatsCards 的 StatCardItem 一致） */
+export interface CountryInfoStatCardItem {
+  label: string
+  value: string
+  compare: string
+  compareUp: boolean
+  bgClass: string
+}
+
+/**
+ * 将国家详情 overall 接口的 data 转为顶部 5 张卡片（广告收入、广告支出、ROI、DAU、新增用户）
+ * @param periodLabel 与页头范围按钮一致：如「昨天」「过去7天」「本月」，用于对比文案「vs昨天」等；不传则用「上周期」
+ */
+export function mapCountryInfoOverallToStatCards(
+  data: CountryInfoOverallData,
+  periodLabel?: string
+): CountryInfoStatCardItem[] {
+  const now = data.now
+  const last = data.last
+  const cycleText = periodLabel ?? '上周期'
+  const fmtPct = (change: number | undefined): string => {
+    if (change == null || !Number.isFinite(change)) return '—'
+    const sign = change >= 0 ? '+' : ''
+    return `${sign}${Number(change).toFixed(1)}%`
+  }
+  const compareStr = (change: number | undefined, up: boolean): string => {
+    const pct = fmtPct(change)
+    return pct === '—' ? `${cycleText}数据` : `${up ? '↑' : '↓'}${pct} vs${cycleText}`
+  }
+  return [
+    {
+      label: '广告收入 (Ad Revenue)',
+      value: formatMoney(now?.dAdRevenue),
+      compare: compareStr(data.dAdRevenueChange, (data.dAdRevenueChange ?? 0) >= 0),
+      compareUp: (data.dAdRevenueChange ?? 0) >= 0,
+      bgClass: 'bg-green'
+    },
+    {
+      label: '广告支出 (Ad Spend)',
+      value: formatMoney(now?.dCost),
+      compare: compareStr(data.dCostChange, (data.dCostChange ?? 0) >= 0),
+      compareUp: (data.dCostChange ?? 0) >= 0,
+      bgClass: 'bg-orange'
+    },
+    {
+      label: 'ROI',
+      value: now?.roi != null ? String(Number(now.roi).toFixed(2)) : '0.00',
+      compare: compareStr(data.roiChange, (data.roiChange ?? 0) >= 0),
+      compareUp: (data.roiChange ?? 0) >= 0,
+      bgClass: 'bg-blue'
+    },
+    {
+      label: '活跃用户 DAU',
+      value: formatInt(now?.dau),
+      compare: compareStr(data.dauChange, (data.dauChange ?? 0) >= 0),
+      compareUp: (data.dauChange ?? 0) >= 0,
+      bgClass: 'bg-purple'
+    },
+    {
+      label: '新增用户',
+      value: formatInt(now?.nNewUserCount),
+      compare: compareStr(last?.nNewUserCountChange, (last?.nNewUserCountChange ?? 0) >= 0),
+      compareUp: (last?.nNewUserCountChange ?? 0) >= 0,
+      bgClass: 'bg-green'
+    }
+  ]
+}
+
+/**
+ * 获取国家详情第一排总数据（顶部卡片）
+ * 请求体：空对象 {}；若后端需要国家维度可传 { countryCode: string }
+ * 注意：http 层成功时返回的是接口的 data 字段，即 CountryInfoOverallData
+ */
+export async function fetchCountryInfoOverall(params?: {
+  countryCode?: string
+}): Promise<CountryInfoOverallData> {
+  return request.post<CountryInfoOverallData>({
+    url: COUNTRY_INFO_OVERALL_URL,
+    data: params && params.countryCode != null ? { countryCode: params.countryCode } : {}
   })
 }
 

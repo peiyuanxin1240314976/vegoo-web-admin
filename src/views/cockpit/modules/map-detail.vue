@@ -49,7 +49,7 @@
           />
         </div>
 
-        <div class="section-row">
+        <div v-if="showThirdRow" class="section-row">
           <MapDetailRetentionChart
             :local-data="retentionLocalData"
             :global-data="retentionGlobalData"
@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import { useRoute } from 'vue-router'
   import {
     MapDetailHeader,
@@ -78,6 +78,8 @@
   import type { ChannelRow, CampaignRow } from './map-detail-component'
   import type { RevenueCompositionItem, AppPerformanceRow } from './map-detail-component'
   import type { SegmentItem } from './map-detail-component'
+  import { fetchCountryInfoOverall, mapCountryInfoOverallToStatCards } from '../api/cockpit'
+  import type { CountryInfoOverallData } from '../types'
 
   defineOptions({ name: 'CockpitMapDetail' })
 
@@ -142,32 +144,75 @@
     FR: '法国'
   }
 
-  // 第一排：5 个统计卡片（可后续改为接口数据）
+  // 第一排：5 个统计卡片（来自接口 /api/v1/datacenter/analysis/countryInfo/overall）
   const statCards = ref<StatCardItem[]>([
     {
       label: '广告收入 (Ad Revenue)',
-      value: '$1.03M',
-      compare: '↑+12% vs昨日',
+      value: '—',
+      compare: '—',
       compareUp: true,
       bgClass: 'bg-green'
     },
     {
       label: '广告支出 (Ad Spend)',
-      value: '$652K',
-      compare: '↑+5% vs昨日',
+      value: '—',
+      compare: '—',
       compareUp: true,
       bgClass: 'bg-orange'
     },
-    { label: 'ROI', value: '1.58', compare: '↑+8% vs昨日', compareUp: true, bgClass: 'bg-blue' },
+    { label: 'ROI', value: '—', compare: '—', compareUp: true, bgClass: 'bg-blue' },
     {
       label: '活跃用户 DAU',
-      value: '45,200',
-      compare: '↑+18%',
+      value: '—',
+      compare: '—',
       compareUp: true,
       bgClass: 'bg-purple'
     },
-    { label: '新增用户', value: '3,840', compare: '↑+22%', compareUp: true, bgClass: 'bg-green' }
+    { label: '新增用户', value: '—', compare: '—', compareUp: true, bgClass: 'bg-green' }
   ])
+
+  /** 缓存最近一次国家详情 overall 接口数据，用于切换范围时只更新对比文案（vs昨天/vs过去7天/vs本月） */
+  const lastCountryOverallData = ref<CountryInfoOverallData | null>(null)
+
+  /** 切换范围按钮时，用当前周期文案重新生成卡片对比文案 */
+  watch(rangeType, () => {
+    const data = lastCountryOverallData.value
+    if (data && typeof data === 'object' && 'now' in data && 'last' in data) {
+      const periodLabel = rangeOptions.find((o) => o.value === rangeType.value)?.label
+      statCards.value = mapCountryInfoOverallToStatCards(data, periodLabel) as StatCardItem[]
+    }
+  })
+
+  /** 第三排（用户留存、LTV、用户分层）延后渲染，先让首屏卡片+投放/变现展示，提升首屏效率 */
+  const showThirdRow = ref(false)
+
+  onMounted(async () => {
+    // 优先加载顶部卡片数据（与投放分析、变现分析同屏，先请求）
+    try {
+      const code = countryCode.value
+      const res = await fetchCountryInfoOverall(
+        code && code !== '—' ? { countryCode: code } : undefined
+      )
+      // 注意：http 层成功时返回的是接口的 data 字段，故 res 即为 { last, now, *Change }，无 code
+      if (res && typeof res === 'object' && 'now' in res && 'last' in res) {
+        lastCountryOverallData.value = res
+        const periodLabel = rangeOptions.find((o) => o.value === rangeType.value)?.label
+        statCards.value = mapCountryInfoOverallToStatCards(res, periodLabel) as StatCardItem[]
+      }
+    } catch {
+      // 接口失败时保留默认占位
+    }
+    // 下一帧再展示第三排，避免首屏同时渲染图表，提升首屏渲染与用户体感
+    await nextTick()
+    thirdRowTimer = window.setTimeout(() => {
+      showThirdRow.value = true
+    }, 120)
+  })
+
+  let thirdRowTimer: number | undefined
+  onUnmounted(() => {
+    if (thirdRowTimer != null) clearTimeout(thirdRowTimer)
+  })
 
   const channelTableData = ref<ChannelRow[]>([
     {
