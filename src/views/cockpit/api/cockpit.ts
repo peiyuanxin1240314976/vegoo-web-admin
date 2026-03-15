@@ -30,7 +30,9 @@ import type {
   CockpitRevenueStructureNode,
   CockpitRevenueStructureLink,
   CockpitRevenueStructureInsight,
+  CockpitAlertBanner,
   CockpitAlertSummaryMetric,
+  CockpitWarnListItem,
   CountryInfoChannelLaunchItem,
   CountryInfoLtvData,
   CountryInfoOverallData,
@@ -425,6 +427,21 @@ export function mapOverallDataToAlertSummaryMetrics(
   })
 
   return metrics
+}
+
+/** overall 接口 warnList：type 1=warning 2=opportunity 3=risk → 组件用 type + text */
+const WARN_TYPE_MAP: Record<1 | 2 | 3, CockpitAlertBanner['type']> = {
+  1: 'warning',
+  2: 'opportunity',
+  3: 'risk'
+}
+
+export function mapWarnListToAlertBanners(warnList: CockpitWarnListItem[]): CockpitAlertBanner[] {
+  if (!Array.isArray(warnList) || warnList.length === 0) return []
+  return warnList.map((item) => ({
+    type: WARN_TYPE_MAP[item.type] ?? 'warning',
+    text: item.msg ?? ''
+  }))
 }
 
 /**

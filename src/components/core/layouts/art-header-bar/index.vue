@@ -341,6 +341,9 @@
   const openChat = (): void => {
     mittBus.emit('openChat')
   }
+
+  // 暴露给模板与父组件，避免被误判为未使用
+  defineExpose({ changeLanguage, visibleNotice })
 </script>
 
 <style lang="scss" scoped>
