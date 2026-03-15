@@ -36,6 +36,13 @@
     padding: 16px;
     color: #fff;
     border-radius: 10px;
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease;
+
+    &:hover {
+      animation: stat-card-bounce 0.4s ease-out forwards;
+    }
 
     .stat-label {
       margin-bottom: 6px;
@@ -60,18 +67,60 @@
 
     &.bg-green {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 4px 14px rgb(16 185 129 / 35%);
+
+      &:hover {
+        box-shadow:
+          0 12px 28px rgb(16 185 129 / 45%),
+          0 4px 8px rgb(0 0 0 / 12%);
+      }
     }
 
     &.bg-orange {
       background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 4px 14px rgb(245 158 11 / 35%);
+
+      &:hover {
+        box-shadow:
+          0 12px 28px rgb(245 158 11 / 45%),
+          0 4px 8px rgb(0 0 0 / 12%);
+      }
     }
 
     &.bg-blue {
       background: linear-gradient(135deg, #3984f1 0%, #2563eb 100%);
+      box-shadow: 0 4px 14px rgb(57 132 241 / 35%);
+
+      &:hover {
+        box-shadow:
+          0 12px 28px rgb(57 132 241 / 45%),
+          0 4px 8px rgb(0 0 0 / 12%);
+      }
     }
 
     &.bg-purple {
       background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      box-shadow: 0 4px 14px rgb(139 92 246 / 35%);
+
+      &:hover {
+        box-shadow:
+          0 12px 28px rgb(139 92 246 / 45%),
+          0 4px 8px rgb(0 0 0 / 12%);
+      }
+    }
+  }
+
+  @keyframes stat-card-bounce {
+    0% {
+      transform: translateY(0);
+    }
+
+    60% {
+      transform: translateY(-10px);
+    }
+
+    100% {
+      transform: translateY(-6px);
     }
   }
 
