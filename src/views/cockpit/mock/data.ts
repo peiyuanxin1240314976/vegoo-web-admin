@@ -243,6 +243,8 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       color: '#67c23a',
       newUser: 3840,
       newUserTrend: '+22%',
+      spendTrend: '+8%',
+      userTrend: '+5%',
       ecpm: 8.2,
       ecpmTrend: '+3%'
     },
@@ -256,6 +258,8 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       color: '#67c23a',
       newUser: 8200,
       newUserTrend: '+15%',
+      spendTrend: '+6%',
+      userTrend: '+4%',
       ecpm: 7.5,
       ecpmTrend: '+4%'
     },
@@ -269,6 +273,8 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       color: '#f56c6c',
       newUser: 980,
       newUserTrend: '+3%',
+      spendTrend: '+3%',
+      userTrend: '+2%',
       ecpm: 7.8,
       ecpmTrend: '+2%'
     },
@@ -282,6 +288,8 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       color: '#409eff',
       newUser: 420,
       newUserTrend: '+7%',
+      spendTrend: '+5%',
+      userTrend: '+3%',
       ecpm: 6.5,
       ecpmTrend: '+4%'
     },
@@ -295,6 +303,8 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       color: '#E2C33D',
       newUser: 2100,
       newUserTrend: '+9%',
+      spendTrend: '+4%',
+      userTrend: '+6%',
       ecpm: 5.5,
       ecpmTrend: '+2%'
     },
@@ -308,6 +318,8 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       color: '#e6a23c',
       newUser: 1200,
       newUserTrend: '+8%',
+      spendTrend: '+10%',
+      userTrend: '+7%',
       ecpm: 5.1,
       ecpmTrend: '+5%'
     },
@@ -321,6 +333,8 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       color: '#e6a23c',
       newUser: 5200,
       newUserTrend: '+12%',
+      spendTrend: '+1%',
+      userTrend: '+8%',
       ecpm: 0.9,
       ecpmTrend: '-1%'
     },

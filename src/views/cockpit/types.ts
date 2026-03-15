@@ -164,6 +164,10 @@ export interface CockpitMapCountry {
   /** 新增用户（可选，用于悬浮详情） */
   newUser?: number
   newUserTrend?: string
+  /** 广告支出变化（可选，用于悬浮 tooltip 消耗） */
+  spendTrend?: string
+  /** 活跃用户数量变化（可选，用于悬浮 tooltip 用户） */
+  userTrend?: string
   /** eCPM（可选） */
   ecpm?: number
   ecpmTrend?: string

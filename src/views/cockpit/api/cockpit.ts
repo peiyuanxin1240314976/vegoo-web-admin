@@ -406,6 +406,14 @@ export function mapBusinessMapToMapCountries(
             num(now.nNewUserCount) - num(last.nNewUserCount),
             num(last.nNewUserCount)
           )
+    const spendTrendVal =
+      item.dCostChange != null
+        ? formatChangeToTrend(num(item.dCostChange), num(last.dCost))
+        : formatChangeToTrend(spend - num(last.dCost), num(last.dCost))
+    const userTrendVal =
+      item.nActiveUserCountChange != null
+        ? formatChangeToTrend(num(item.nActiveUserCountChange), num(last.nActiveUserCount))
+        : formatChangeToTrend(user - num(last.nActiveUserCount), num(last.nActiveUserCount))
     const ecpmVal = num((now as { eCPM?: number }).eCPM ?? (now as { ecpm?: number }).ecpm)
     const lastEcpm = num((last as { eCPM?: number }).eCPM ?? (last as { ecpm?: number }).ecpm)
     const ecpmTrend =
@@ -422,6 +430,8 @@ export function mapBusinessMapToMapCountries(
       color: getColorByRevenue(revenue, 150, 8200),
       newUser,
       newUserTrend: newUserTrend === '—' ? undefined : newUserTrend,
+      spendTrend: spendTrendVal === '—' ? undefined : spendTrendVal,
+      userTrend: userTrendVal === '—' ? undefined : userTrendVal,
       ecpm: Number.isFinite(ecpmVal) ? ecpmVal : undefined,
       ecpmTrend: ecpmTrend === '—' ? undefined : ecpmTrend
     })

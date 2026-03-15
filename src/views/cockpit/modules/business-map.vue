@@ -26,6 +26,14 @@
     <div v-loading="mapLoading" class="map-wrap">
       <template v-if="countryData.length">
         <div ref="mapChartRef" class="map-chart"></div>
+        <!-- 悬浮 tooltip：按收入/消耗/用户按钮显示简版内容，点击时会被隐藏 -->
+        <div
+          v-show="hoverTooltipVisible"
+          class="cockpit-map-hover-tt"
+          :class="{ 'cockpit-map-hover-tt--dark': isDark }"
+          :style="{ left: hoverTooltipX + 'px', top: hoverTooltipY + 'px' }"
+          v-html="hoverTooltipHtml"
+        />
       </template>
       <div v-else class="map-empty">暂无数据</div>
     </div>
@@ -298,6 +306,16 @@
   const mapMetric = ref<'revenue' | 'spend' | 'user'>('revenue')
   const { chartRef, initChart, updateChart, destroyChart, getChartInstance } = useChart()
 
+  /** 悬浮 tooltip：仅在有数据国家显示，按收入/消耗/用户切换内容 */
+  const hoverTooltipVisible = ref(false)
+  const hoverTooltipX = ref(0)
+  const hoverTooltipY = ref(0)
+  const hoverTooltipHtml = ref('')
+  const lastMouseX = ref(0)
+  const lastMouseY = ref(0)
+  /** 当前悬浮的国家名（用于切换收入/消耗/用户时刷新悬浮 tooltip 内容） */
+  const hoveredCountryNameEn = ref<string | null>(null)
+
   const metricOptions: { value: 'revenue' | 'spend' | 'user'; label: string }[] = [
     { value: 'revenue', label: '收入' },
     { value: 'spend', label: '消耗' },
@@ -339,6 +357,40 @@
       (k) => k.startsWith(nameEn) || nameEn.startsWith(k)
     )
     return key ? COUNTRY_NAME_TO_ISO[key] : ''
+  }
+
+  /** 无数据国家悬浮时只显示国旗+国家名（使用 GeoJSON 英文名） */
+  function getMinimalHoverTooltipHtml(nameEn: string): string {
+    const isoCode = getCountryCode(nameEn).toLowerCase()
+    const hasFlag = /^[a-z]{2}$/.test(isoCode)
+    const title = hasFlag
+      ? `<div class="cockpit-map-tt-title"><span class="cockpit-map-tt-flag fi fi-${isoCode}"></span> ${nameEn}</div>`
+      : `<div class="cockpit-map-tt-title">${nameEn}</div>`
+    return title
+  }
+
+  /** 悬浮 tooltip 内容：第一排国旗+中文名，第二/三排按收入/消耗/用户按钮切换 */
+  function getHoverTooltipHtml(c: CockpitMapCountry): string {
+    const isoCode = (c.code || getCountryCode(c.nameEn) || '').toLowerCase()
+    const hasFlag = /^[a-z]{2}$/.test(isoCode)
+    const title = hasFlag
+      ? `<div class="cockpit-map-tt-title"><span class="cockpit-map-tt-flag fi fi-${isoCode}"></span> ${c.name}</div>`
+      : `<div class="cockpit-map-tt-title">${c.name}</div>`
+    const upClass = isDark.value ? 'color:#34d399' : 'color:var(--el-color-success)'
+    const downClass = isDark.value ? 'color:#f87171' : 'color:var(--el-color-danger)'
+    if (mapMetric.value === 'revenue') {
+      const up = isTrendUp(c.trend)
+      return `${title}<div class="cockpit-map-tt-row"><span>收入:</span> <span style="${up ? upClass : downClass}">$${fmtValue(c.revenue, true)} ${c.trend}</span></div>`
+    }
+    if (mapMetric.value === 'spend') {
+      const spendTrend = c.spendTrend ?? c.trend
+      const up = isTrendUp(spendTrend)
+      return `${title}<div class="cockpit-map-tt-row"><span>广告支出:</span> <span style="${up ? upClass : downClass}">$${fmtValue(c.spend, true)} ${spendTrend}</span></div>`
+    }
+    // 用户：第二排新增用户+变化，第三排活跃用户+变化
+    const newUserTrend = c.newUserTrend ?? c.trend
+    const userTrendVal = c.userTrend ?? c.trend
+    return `${title}<div class="cockpit-map-tt-row"><span>新增用户:</span> <span style="${isTrendUp(newUserTrend) ? upClass : downClass}">${(c.newUser ?? 0).toLocaleString()} ${newUserTrend}</span></div><div class="cockpit-map-tt-row"><span>活跃用户:</span> <span style="${isTrendUp(userTrendVal) ? upClass : downClass}">${(c.user ?? 0).toLocaleString()} ${userTrendVal}</span></div>`
   }
 
   /** 仅当区域名称在有数据的国家集合中时才显示 tooltip */
@@ -500,7 +552,13 @@
     }
   }
 
-  watch(mapMetric, () => updateChart(buildOption()))
+  watch(mapMetric, () => {
+    updateChart(buildOption())
+    if (hoverTooltipVisible.value && hoveredCountryNameEn.value) {
+      const country = countryData.value.find((c) => c.nameEn === hoveredCountryNameEn.value)
+      if (country) hoverTooltipHtml.value = getHoverTooltipHtml(country)
+    }
+  })
   watch(isDark, () => updateChart(buildOption()))
 
   /** 父组件 overview 异步加载，首次 onMounted 时 mapChartRef 可能尚未渲染（countryData 为空）；数据到达后再初始化 */
@@ -524,8 +582,14 @@
         mapLoading.value = false
         if (!mapInitialized) {
           const chart = getChartInstance()
-          if (chart) chart.on('click', handleMapItemClick)
+          if (chart) {
+            chart.on('click', handleMapItemClick)
+            chart.on('mouseover', handleMapMouseOver)
+            chart.on('mouseout', handleMapMouseOut)
+            chart.on('globalOut', handleMapGlobalOut)
+          }
           mapChartRef.value?.addEventListener('click', handleTooltipLinkClick)
+          mapChartRef.value?.addEventListener('mousemove', handleMapContainerMouseMove)
           mapInitialized = true
         }
       })
@@ -536,8 +600,41 @@
   }
 
   const router = useRouter()
-  /** 点击地图区域时，若该国家不在数据中则隐藏 tooltip，使点击显示 tooltip 不生效 */
+  /** 悬浮到任意国家时显示 tooltip：有数据则按收入/消耗/用户显示指标，无数据则仅显示国旗+国家名 */
+  function handleMapMouseOver(params: any) {
+    if (params?.componentSubType !== 'map' || !params?.name) return
+    const country = countryData.value.find((c) => c.nameEn === params.name)
+    hoveredCountryNameEn.value = country ? params.name : null
+    hoverTooltipHtml.value = country
+      ? getHoverTooltipHtml(country)
+      : getMinimalHoverTooltipHtml(params.name)
+    hoverTooltipX.value = lastMouseX.value
+    hoverTooltipY.value = lastMouseY.value
+    hoverTooltipVisible.value = true
+  }
+  /** 鼠标离开某个地图区域时先隐藏，进入新区域时 mouseover 会再显示新国家的 tooltip */
+  function handleMapMouseOut() {
+    hoverTooltipVisible.value = false
+    hoveredCountryNameEn.value = null
+  }
+  /** 鼠标离开整个图表时隐藏悬浮 tooltip */
+  function handleMapGlobalOut() {
+    hoverTooltipVisible.value = false
+    hoveredCountryNameEn.value = null
+  }
+  /** 地图容器 mousemove：更新鼠标位置，悬浮 tooltip 显示时跟随 */
+  function handleMapContainerMouseMove(e: MouseEvent) {
+    const offset = 12
+    lastMouseX.value = e.clientX + offset
+    lastMouseY.value = e.clientY + offset
+    if (hoverTooltipVisible.value) {
+      hoverTooltipX.value = e.clientX + offset
+      hoverTooltipY.value = e.clientY + offset
+    }
+  }
+  /** 点击地图区域时，若该国家不在数据中则隐藏 tooltip，使点击显示 tooltip 不生效；并隐藏悬浮 tooltip */
   function handleMapItemClick(params: any) {
+    hoverTooltipVisible.value = false
     const namesWithData = new Set(countryData.value.map((c) => c.nameEn))
     if (!params?.name || !namesWithData.has(params.name)) {
       getChartInstance()?.dispatchAction({ type: 'hideTip' })
@@ -561,6 +658,7 @@
   onUnmounted(() => {
     if (mapChartRef.value) {
       mapChartRef.value.removeEventListener('click', handleTooltipLinkClick)
+      mapChartRef.value.removeEventListener('mousemove', handleMapContainerMouseMove)
     }
     destroyChart()
   })
@@ -676,6 +774,27 @@
   .map-chart {
     width: 100%;
     height: 470px;
+  }
+
+  .cockpit-map-hover-tt {
+    position: fixed;
+    z-index: 2000;
+    min-width: 140px;
+    padding: 10px 14px;
+    font-size: 12px;
+    line-height: 1.4;
+    pointer-events: none;
+    background: rgb(255 255 255 / 98%);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+
+    &.cockpit-map-hover-tt--dark {
+      color: #e2e8f0;
+      background: rgb(30 41 59 / 95%);
+      border-color: rgb(71 85 105 / 60%);
+      box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+    }
   }
 
   .map-legend {
