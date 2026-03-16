@@ -1,7 +1,7 @@
 <template>
   <div class="cockpit-alerts">
     <!-- 左块：运营摘要指标 -->
-    <div class="alert-block alert-block--metrics">
+    <div class="cockpit-panel alert-block alert-block--metrics">
       <div v-if="summaryMetrics.length" class="metrics-inner">
         <template v-for="(metric, index) in summaryMetrics" :key="metric.label">
           <span v-if="index > 0" class="metric-sep">|</span>
@@ -22,7 +22,7 @@
     </div>
 
     <!-- 右块：警示列表（带彩色图标） -->
-    <div class="alert-block alert-block--list">
+    <div class="cockpit-panel alert-block alert-block--list">
       <template v-if="alertBanners.length">
         <div
           v-for="(item, index) in alertBanners"
@@ -101,7 +101,6 @@
 
   .alert-block--metrics {
     color: var(--el-text-color-primary);
-    background: var(--el-fill-color-dark);
 
     .metrics-inner {
       display: flex;

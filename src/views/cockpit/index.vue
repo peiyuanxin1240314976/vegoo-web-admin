@@ -103,3 +103,62 @@
     margin-bottom: 0;
   }
 </style>
+
+<style lang="scss">
+  /* Cockpit 通用面板样式：统一圆角 / 边框 / 背景 / 阴影 */
+  .cockpit-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at top left, rgb(56 189 248 / 14%), transparent 55%),
+      radial-gradient(circle at bottom right, rgb(59 130 246 / 12%), transparent 55%), #020617;
+    border: 1px solid rgb(148 163 184 / 35%);
+    border-radius: 10px;
+    box-shadow:
+      0 18px 45px rgb(15 23 42 / 65%),
+      inset 0 0 0 1px rgb(15 23 42 / 90%);
+  }
+
+  html:not(.dark) .cockpit-panel {
+    background:
+      radial-gradient(circle at top left, rgb(37 99 235 / 6%), transparent 55%),
+      radial-gradient(circle at bottom right, rgb(14 116 144 / 4%), transparent 55%), #0b1120;
+    border-color: rgb(148 163 184 / 25%);
+    box-shadow:
+      0 10px 30px rgb(15 23 42 / 40%),
+      inset 0 0 0 1px rgb(15 23 42 / 85%);
+  }
+
+  /* 面板头部：左标题 + 右侧操作区 */
+  .cockpit-panel__header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #e5e7eb;
+    background: linear-gradient(
+      90deg,
+      rgb(15 23 42 / 90%),
+      rgb(15 23 42 / 75%),
+      rgb(15 23 42 / 90%)
+    );
+    border-bottom: 1px solid rgb(30 64 175 / 55%);
+  }
+
+  .cockpit-panel__title {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .cockpit-panel__actions {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+</style>

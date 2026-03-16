@@ -1,7 +1,7 @@
 <template>
   <div class="cockpit-top3-panels">
     <!-- Top3 收入应用 - 黄色 -->
-    <div class="top3-module top3-module--revenue">
+    <div class="cockpit-panel top3-module top3-module--revenue">
       <div class="top3-module__header">
         <span class="top3-module__icon top3-module__icon--trophy">
           <i class="iconfont icon-jinjiangbei" />
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Top3 差评产品 - 红色 -->
-    <div class="top3-module top3-module--badreview">
+    <div class="cockpit-panel top3-module top3-module--badreview">
       <div class="top3-module__header">
         <span class="top3-module__icon top3-module__icon--dislike">
           <DislikeIcon />
@@ -55,7 +55,7 @@
     </div>
 
     <!-- Top3 用户增长 - 绿色 -->
-    <div class="top3-module top3-module--growth">
+    <div class="cockpit-panel top3-module top3-module--growth">
       <div class="top3-module__header">
         <span class="top3-module__icon top3-module__icon--trend">
           <TrendIcon />

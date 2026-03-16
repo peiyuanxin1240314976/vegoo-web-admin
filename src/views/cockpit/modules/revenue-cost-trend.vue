@@ -1,5 +1,5 @@
 <template>
-  <div class="channel-roi-panel">
+  <div class="cockpit-panel channel-roi-panel">
     <div class="panel-header">
       <span class="panel-title">渠道ROI&安装量</span>
       <a class="panel-more" href="javascript:;">查看更多</a>
@@ -187,14 +187,6 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    background: var(--el-bg-color);
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 10px;
-  }
-
-  /* 深色模式：渐变色背景 */
-  html.dark .channel-roi-panel {
-    background: linear-gradient(320deg, #000e29, #000);
   }
 
   .panel-header {
