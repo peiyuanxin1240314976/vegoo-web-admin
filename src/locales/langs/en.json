@@ -254,6 +254,15 @@
       "notFound": "404",
       "serverError": "500"
     },
+    "userGrowth": {
+      "title": "User Growth",
+      "accountPerformance": "Account Performance",
+      "adPlatformAnalysis": "Ad Platform Analysis",
+      "myAds": "My Ads",
+      "adPlatformDetail": "Ad Platform Detail",
+      "adPerformance": "Ad Performance",
+      "conversionManagement": "Conversion Management"
+    },
     "system": {
       "title": "System Settings",
       "user": "User Manage",

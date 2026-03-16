@@ -11,6 +11,13 @@ import { AppRouteRecordRaw } from '@/utils/router'
  * 2、静态路由不管是否登录都可以访问
  */
 export const staticRoutes: AppRouteRecordRaw[] = [
+  // 根路径：匹配 "/" 避免 Vue Router 报 No match found，实际跳转由守卫或 RedirectHome 组件处理
+  {
+    path: '/',
+    name: 'Root',
+    component: () => import('@views/redirect-home/index.vue'),
+    meta: { title: '首页', isHideTab: true }
+  },
   // 不需要登录就能访问的路由示例
   // {
   //   path: '/welcome',
