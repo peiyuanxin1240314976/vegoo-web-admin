@@ -254,6 +254,15 @@
       "notFound": "404",
       "serverError": "500"
     },
+    "userGrowth": {
+      "title": "用户增长",
+      "accountPerformance": "账户成效",
+      "adPlatformAnalysis": "广告平台分析",
+      "myAds": "我的广告",
+      "adPlatformDetail": "广告平台详情",
+      "adPerformance": "广告成效",
+      "conversionManagement": "转化管理"
+    },
     "system": {
       "title": "系统管理",
       "user": "用户管理",
