@@ -140,4 +140,53 @@ declare namespace Api {
         Api.Common.CommonSearchParams
     >
   }
+
+  /** 用户增长 - 转化管理 */
+  namespace UserGrowth {
+    /** 转化映射列表项 */
+    interface ConversionMappingItem {
+      id: string
+      platform: 'android' | 'ios'
+      mccAccount: string
+      appPackage: string
+      conversionName: string
+      conversionId: string
+      platformConversionType: string
+      systemDisplayName: string
+      billingType: string
+      status: 'enabled' | 'duplicate' | 'unmapped'
+    }
+
+    /** 转化映射列表响应 */
+    type ConversionMappingList = Api.Common.PaginatedResponse<ConversionMappingItem>
+
+    /** 转化映射列表请求参数 */
+    interface ConversionMappingListParams extends Api.Common.CommonSearchParams {
+      platform?: string
+      app?: string
+      conversionType?: string
+      status?: string
+      keyword?: string
+    }
+
+    /** 右侧统计 - 转化类型分布 */
+    interface ConversionTypeDistributionItem {
+      name: string
+      value: number
+      count?: number
+    }
+
+    /** 右侧统计 - 映射状态 */
+    interface MappingStats {
+      mapped: number
+      duplicate: number
+      unmapped: number
+    }
+
+    /** 右侧统计 - 平台分布 */
+    interface PlatformStats {
+      android: number
+      ios: number
+    }
+  }
 }
