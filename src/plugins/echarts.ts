@@ -25,7 +25,8 @@ import {
   CandlestickChart,
   FunnelChart,
   HeatmapChart,
-  SankeyChart
+  SankeyChart,
+  CustomChart
 } from 'echarts/charts'
 
 // 导入组件
@@ -63,6 +64,7 @@ echarts.use([
   FunnelChart,
   HeatmapChart,
   SankeyChart,
+  CustomChart,
 
   // 组件
   TitleComponent,

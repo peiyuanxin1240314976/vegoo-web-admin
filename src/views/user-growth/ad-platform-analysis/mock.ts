@@ -13,8 +13,6 @@ export interface ChannelKpiCard {
   cost: string
   revenue: string
   cpi: string
-  qualityScore: number
-  qualityMax: number
   trendData: number[]
 }
 
@@ -28,8 +26,6 @@ export const MOCK_CHANNEL_KPI_CARDS: ChannelKpiCard[] = [
     cost: '$850K',
     revenue: '$1.29M',
     cpi: '$2.15',
-    qualityScore: 4.5,
-    qualityMax: 5,
     trendData: [1.2, 1.35, 1.28, 1.42, 1.48, 1.52]
   },
   {
@@ -41,8 +37,6 @@ export const MOCK_CHANNEL_KPI_CARDS: ChannelKpiCard[] = [
     cost: '$850K',
     revenue: '$1.29M',
     cpi: '$2.15',
-    qualityScore: 4.5,
-    qualityMax: 5,
     trendData: [1.1, 1.22, 1.3, 1.25, 1.35, 1.38]
   },
   {
@@ -54,8 +48,6 @@ export const MOCK_CHANNEL_KPI_CARDS: ChannelKpiCard[] = [
     cost: '$850K',
     revenue: '$1.29M',
     cpi: '$2.15',
-    qualityScore: 4.5,
-    qualityMax: 5,
     trendData: [1.35, 1.32, 1.28, 1.25, 1.26, 1.28]
   },
   {
@@ -67,8 +59,6 @@ export const MOCK_CHANNEL_KPI_CARDS: ChannelKpiCard[] = [
     cost: '$850K',
     revenue: '$1.29M',
     cpi: '$2.15',
-    qualityScore: 4.5,
-    qualityMax: 5,
     trendData: [1.0, 1.08, 1.12, 1.1, 1.12, 1.15]
   },
   {
@@ -80,8 +70,6 @@ export const MOCK_CHANNEL_KPI_CARDS: ChannelKpiCard[] = [
     cost: '$850K',
     revenue: '$1.29M',
     cpi: '$2.15',
-    qualityScore: 4.5,
-    qualityMax: 5,
     trendData: [1.05, 1.08, 1.1, 1.09, 1.11, 1.12]
   }
 ]
@@ -103,7 +91,7 @@ export const MOCK_CHANNEL_ROI_TREND: ChannelRoiTrend = {
   ]
 }
 
-/** 用户质量热力图：行=渠道，列=D1/D7/D30留存、支付比例、ARPU */
+/** 用户质量热力图：行=渠道，列=D1/D7/D30留存、付费率、ARPU */
 export interface UserQualityHeatmapRow {
   channel: string
   d1Retention: number
