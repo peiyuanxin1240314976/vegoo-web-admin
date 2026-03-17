@@ -45,7 +45,7 @@ export const MOCK_ACCOUNT_PERFORMANCE: AccountPerformanceMock = {
       type: 'alert',
       label: '预警账户',
       value: '3个',
-      sub: '超预算/低活跃/余额不足',
+      sub: '超预算/余额不足',
       alert: true
     }
   ],

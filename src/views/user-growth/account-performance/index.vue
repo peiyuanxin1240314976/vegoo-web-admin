@@ -3,13 +3,13 @@
     <!-- 顶部：筛选 + 日期 + 导出 -->
     <div class="ap-header">
       <div class="ap-filters">
-        <ElSelect v-model="filterChannel" placeholder="渠道" class="ap-filter-select">
+        <ElSelect v-model="source" placeholder="渠道" class="ap-filter-select">
           <ElOption label="全部" value="" />
           <ElOption label="TikTok" value="tiktok" />
           <ElOption label="Facebook" value="facebook" />
           <ElOption label="Google" value="google" />
         </ElSelect>
-        <ElSelect v-model="filterApp" placeholder="应用" class="ap-filter-select">
+        <ElSelect v-model="platform" placeholder="应用" class="ap-filter-select">
           <ElOption label="全部" value="" />
           <ElOption v-for="app in appOptions" :key="app" :label="app" :value="app" />
         </ElSelect>
@@ -24,6 +24,7 @@
           end-placeholder="结束日期"
           value-format="YYYY-MM-DD"
           class="ap-date-picker"
+          style="width: 100px"
         />
         <ElButton type="primary" @click="onExport">导出</ElButton>
       </div>
@@ -36,8 +37,8 @@
         :key="index"
         :xs="24"
         :sm="12"
-        :md="8"
-        :lg="8"
+        :md="4"
+        :lg="4"
         :xl="4"
       >
         <div class="ap-kpi-card" :class="{ 'ap-kpi-card--alert': item.alert }">
@@ -55,15 +56,21 @@
     <!-- 主体：左侧表格 + 右侧图表 -->
     <ElRow :gutter="16" class="ap-body">
       <!-- 左侧：应用×平台×账户明细表（min-width:0 让列可收缩，表格内部横向滚动） -->
-      <ElCol :xs="24" :xl="17" class="ap-table-col">
+      <ElCol :xs="24" :md="16" :lg="17" :xl="17" class="ap-table-col">
         <ElCard class="ap-table-card" shadow="never">
           <template #header>
             <span class="ap-table-title">应用 × 平台 × 账户明细</span>
             <div class="ap-table-actions">
-              <ElButton size="small" text @click="toggleExpandAll">
+              <ElButton
+                size="default"
+                color="#13deb9"
+                plain
+                :dark="isDark"
+                @click="toggleExpandAll"
+              >
                 {{ expandAll ? '收起全部' : '展开全部' }}
               </ElButton>
-              <ElButton size="small" text>自定义列</ElButton>
+              <ElButton size="default" color="#13deb9" plain :dark="isDark">自定义列</ElButton>
               <ElInput
                 v-model="tableSearch"
                 placeholder="Q 搜索账户..."
@@ -78,7 +85,9 @@
               :data="tableData"
               row-key="id"
               :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-              :default-expand-all="expandAll"
+              :expand-row-keys="expandedRowKeys"
+              :row-style="getRowStyle"
+              :cell-style="getCellStyle"
               stripe
               size="default"
               class="ap-detail-table"
@@ -95,22 +104,24 @@
                     >
                       <Iphone />
                     </ElIcon>
-                    <span :class="row.type === 'account' ? 'ap-cell-account' : ''">{{
-                      row.name
-                    }}</span>
+                    <span
+                      :class="row.type === 'account' ? 'ap-cell-account' : ''"
+                      :style="getNameStyle(row)"
+                    >
+                      {{ row.name }}
+                    </span>
                   </span>
                 </template>
               </ElTableColumn>
-              <ElTableColumn label="广告支出" width="100" align="right">
+              <ElTableColumn label="广告支出" width="100" align="center">
                 <template #default="{ row }">{{ formatMoney(row.spend) }}</template>
               </ElTableColumn>
-              <ElTableColumn label="预算" width="90" align="right">
+              <ElTableColumn label="预算" width="90" align="center">
                 <template #default="{ row }">{{ formatMoney(row.budget) }}</template>
               </ElTableColumn>
-              <ElTableColumn label="使用率" width="95" align="right">
+              <ElTableColumn label="使用率" width="115" align="center">
                 <template #default="{ row }">
                   <div class="ap-usage-cell">
-                    <span class="ap-usage-value">{{ row.usageRate }}%</span>
                     <ElProgress
                       :percentage="Math.min(100, row.usageRate)"
                       :color="getUsageRateColor(row.usageRate)"
@@ -118,26 +129,27 @@
                       :stroke-width="6"
                       class="ap-usage-bar"
                     />
+                    <span class="ap-usage-value">{{ row.usageRate }}%</span>
                   </div>
                 </template>
               </ElTableColumn>
-              <ElTableColumn label="CPI" width="70" align="right">
+              <ElTableColumn label="CPI" width="70" align="center">
                 <template #default="{ row }">{{ row.cpi.toFixed(2) }}</template>
               </ElTableColumn>
-              <ElTableColumn label="安装数" width="95" align="right">
+              <ElTableColumn label="安装数" width="95" align="center">
                 <template #default="{ row }">{{ formatNumber(row.installs) }}</template>
               </ElTableColumn>
-              <ElTableColumn label="首日ROI" width="90" align="right">
+              <ElTableColumn label="首日ROI" width="90" align="center">
                 <template #default="{ row }">
                   <span :class="getRoiClass(row.roi1)">{{ row.roi1 }}%</span>
                 </template>
               </ElTableColumn>
-              <ElTableColumn label="3日ROI" width="80" align="right">
+              <ElTableColumn label="3日ROI" width="80" align="center">
                 <template #default="{ row }">
                   <span :class="getRoiClass(row.roi3)">{{ row.roi3 }}%</span>
                 </template>
               </ElTableColumn>
-              <ElTableColumn label="7日ROI" width="80" align="right">
+              <ElTableColumn label="7日ROI" width="80" align="center">
                 <template #default="{ row }">
                   <span :class="getRoiClass(row.roi7)">{{ row.roi7 }}%</span>
                 </template>
@@ -174,7 +186,7 @@
       </ElCol>
 
       <!-- 右侧：图表与预警（宽度缩小约 1/3 与原型一致） -->
-      <ElCol :xs="24" :xl="7" class="ap-charts-col">
+      <ElCol :xs="24" :md="8" :lg="7" :xl="7" class="ap-charts-col">
         <div class="ap-charts">
           <!-- 渠道消耗分布 -->
           <ElCard class="ap-chart-card" shadow="never">
@@ -219,21 +231,27 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch } from 'vue'
+  import { ref, computed, onMounted, watch, watchEffect } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { Monitor, Iphone } from '@element-plus/icons-vue'
   import { useChart } from '@/hooks/core/useChart'
+  import { useSettingStore } from '@/store/modules/setting'
   import type { AccountDetailRow } from './types'
   import { MOCK_ACCOUNT_PERFORMANCE } from './mock/data'
 
   defineOptions({ name: 'AccountPerformance' })
 
+  const settingStore = useSettingStore()
+  const { isDark } = storeToRefs(settingStore)
+
   const mock = ref(MOCK_ACCOUNT_PERFORMANCE)
-  const filterChannel = ref('')
-  const filterApp = ref('')
+  const source = ref('')
+  const platform = ref('')
   const filterOwner = ref('')
   const dateRange = ref<[string, string]>([...MOCK_ACCOUNT_PERFORMANCE.dateRange])
   const tableSearch = ref('')
-  const expandAll = ref(false)
+  const expandAll = ref(true)
+  const expandedRowKeys = ref<string[]>([])
   const tableRef = ref()
 
   const appOptions = computed(() => {
@@ -247,7 +265,114 @@
     if (kw) {
       list = filterTreeByName(list, kw)
     }
-    return list
+    return attachAppMeta(list)
+  })
+
+  type TableRowWithMeta = AccountDetailRow & { __appId?: string }
+
+  function attachAppMeta(rows: AccountDetailRow[], currentAppId?: string): TableRowWithMeta[] {
+    return rows.map((row) => {
+      const appId = row.type === 'app' ? row.id : currentAppId
+      const next: TableRowWithMeta = { ...(row as TableRowWithMeta), __appId: appId }
+      if (row.children?.length) {
+        next.children = attachAppMeta(row.children, appId) as unknown as AccountDetailRow[]
+      }
+      return next
+    })
+  }
+
+  /**
+   * 基色调色板：背景/字体都用同一 RGB，只靠透明度区分（plain 风格且稳定）
+   * 你想换色或减少到 5 个颜色，改这里即可。
+   */
+  const BASE_RGB_COLORS = [
+    { r: 64, g: 158, b: 255 }, // 蓝
+    { r: 103, g: 194, b: 58 }, // 绿
+    { r: 230, g: 162, b: 60 }, // 橙
+    { r: 245, g: 108, b: 108 }, // 红
+    { r: 144, g: 147, b: 153 } // 灰
+  ]
+
+  /** 背景透明度（plain） */
+  const ROW_BG_ALPHA_LIGHT = 0.14
+  const ROW_BG_ALPHA_DARK = 0.22
+  /** “应用/平台”名称字体透明度（强调） */
+  const NAME_TEXT_ALPHA_LIGHT = 0.95
+  const NAME_TEXT_ALPHA_DARK = 0.92
+
+  function getRowBgAlpha() {
+    return isDark.value ? ROW_BG_ALPHA_DARK : ROW_BG_ALPHA_LIGHT
+  }
+
+  function getNameTextAlpha() {
+    return isDark.value ? NAME_TEXT_ALPHA_DARK : NAME_TEXT_ALPHA_LIGHT
+  }
+
+  const appRowBaseColorMap = ref<Record<string, { r: number; g: number; b: number }>>({})
+
+  function hashStringToIndex(input: string, mod: number) {
+    // djb2 hash（确定性），用于稳定分配颜色
+    let h = 5381
+    for (let i = 0; i < input.length; i++) {
+      h = (h * 33) ^ input.charCodeAt(i)
+    }
+    return Math.abs(h) % mod
+  }
+
+  function rgba(c: { r: number; g: number; b: number }, a: number) {
+    return `rgba(${c.r}, ${c.g}, ${c.b}, ${a})`
+  }
+
+  function ensureAppRowColors() {
+    const next = { ...appRowBaseColorMap.value }
+    const appIds = (mock.value.tableTree || []).filter((r) => r.type === 'app').map((r) => r.id)
+    for (const id of appIds) {
+      if (next[id]) continue
+      const base = BASE_RGB_COLORS[hashStringToIndex(id, BASE_RGB_COLORS.length)]
+      next[id] = base
+    }
+    appRowBaseColorMap.value = next
+  }
+
+  watchEffect(() => {
+    ensureAppRowColors()
+  })
+
+  function getRowStyle({ row }: { row: TableRowWithMeta }) {
+    if (row.type === 'account') return {}
+    const appId = row.__appId
+    if (!appId) return {}
+    const base = appRowBaseColorMap.value[appId]
+    if (!base) return {}
+    return { backgroundColor: rgba(base, getRowBgAlpha()) }
+  }
+
+  const WHITE_VALUE_COLUMNS = new Set(['广告支出', '预算', '使用率', 'CPI', '安装数'])
+
+  function getCellStyle({ row, column }: { row: TableRowWithMeta; column: { label?: string } }) {
+    // stripe 的底色在 td 上，使用 cell-style 才能稳定覆盖到二级平台行
+    const base = getRowStyle({ row })
+    if (row.type === 'account') return base
+
+    const label = column?.label
+    if (label && WHITE_VALUE_COLUMNS.has(label)) {
+      return { ...base, color: '#ffffff' }
+    }
+    return base
+  }
+
+  function getNameStyle(row: TableRowWithMeta) {
+    if (row.type === 'account') return {}
+    const appId = row.__appId
+    if (!appId) return {}
+    const base = appRowBaseColorMap.value[appId]
+    if (!base) return {}
+    return { color: rgba(base, getNameTextAlpha()), fontWeight: 600 }
+  }
+
+  watchEffect(() => {
+    if (!expandAll.value) return
+    expandedRowKeys.value = collectExpandableRowKeys(tableData.value)
   })
 
   function filterTreeByName(rows: AccountDetailRow[], keyword: string): AccountDetailRow[] {
@@ -264,8 +389,23 @@
       .filter(Boolean) as AccountDetailRow[]
   }
 
+  function collectExpandableRowKeys(rows: AccountDetailRow[]): string[] {
+    const keys: string[] = []
+    const walk = (list: AccountDetailRow[]) => {
+      for (const row of list) {
+        if (row.children?.length) {
+          keys.push(String(row.id))
+        }
+        if (row.children?.length) walk(row.children)
+      }
+    }
+    walk(rows)
+    return keys
+  }
+
   function toggleExpandAll() {
     expandAll.value = !expandAll.value
+    expandedRowKeys.value = expandAll.value ? collectExpandableRowKeys(tableData.value) : []
   }
 
   function formatMoney(n: number) {
@@ -500,6 +640,7 @@
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
+    max-width: 50%;
 
     @media (width <= 768px) {
       gap: 8px;
@@ -507,7 +648,7 @@
   }
 
   .ap-filter-select {
-    width: 120px;
+    width: 150px;
     min-width: 100px;
     max-width: 100%;
 
@@ -518,7 +659,7 @@
   }
 
   .ap-date-picker {
-    width: 240px;
+    width: 200px;
     max-width: 100%;
 
     @media (width <= 768px) {
@@ -588,7 +729,13 @@
   }
 
   .ap-body {
+    /* 桌面端固定左右布局；小屏仍上下排列 */
+    flex-wrap: nowrap;
     margin-bottom: 16px;
+
+    @media (width <= 991px) {
+      flex-wrap: wrap;
+    }
 
     /* 左侧列允许被挤压，表格在内部横向滚动，避免把右侧挤掉 */
     .ap-table-col {
@@ -596,9 +743,10 @@
       overflow: hidden;
     }
 
-    /* 右侧列不参与收缩，始终保留约 7/24 宽度 */
+    /* 右侧列允许收缩，避免被内容撑爆导致换行 */
     .ap-charts-col {
-      flex-shrink: 0;
+      flex-shrink: 1;
+      min-width: 0;
     }
   }
 
@@ -624,7 +772,8 @@
   }
 
   .ap-table-title {
-    font-weight: 500;
+    font-size: 20px;
+    font-weight: 600;
     color: var(--el-text-color-primary);
     word-break: break-word;
   }
@@ -632,7 +781,6 @@
   .ap-table-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
     align-items: center;
 
     @media (width <= 576px) {
@@ -643,6 +791,7 @@
   .ap-table-search {
     width: 160px;
     min-width: 0;
+    margin-left: 10px;
 
     @media (width <= 576px) {
       flex: 1;
@@ -669,6 +818,14 @@
   html.dark .ap-detail-table {
     --el-table-border-color: var(--el-border-color);
     --el-table-header-bg-color: var(--el-fill-color-dark);
+    --el-table-header-text-color: #fff;
+
+    /* 深色模式：表头文字/排序图标强制纯白（避免被主题变量覆盖） */
+    :deep(.el-table__header-wrapper th),
+    :deep(.el-table__header-wrapper th .cell),
+    :deep(.el-table__header-wrapper th .sort-caret) {
+      color: #fff;
+    }
   }
 
   .ap-cell-name {
