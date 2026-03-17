@@ -1,0 +1,127 @@
+{
+  "_comment": "转化管理（name Tab）- 映射详情（可选但强烈建议）。用于编辑弹窗回显完整字段（列表行通常不包含 remarks/source/conversionDisplayType 等）。",
+  "fieldDescription": {
+    "pathParam": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "映射记录 ID。"
+      }
+    },
+    "response": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "映射记录 ID。"
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["android", "ios"],
+        "description": "终端平台。"
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "enum": ["google", "meta", "tiktok", "mintegral"],
+        "description": "广告平台（推荐字段）。"
+      },
+      "adPlatform": {
+        "type": "string",
+        "required": false,
+        "description": "历史兼容字段，语义同 source（如后端仍保留）。"
+      },
+      "mccAccount": {
+        "type": "string",
+        "required": true,
+        "description": "MCC 账号。"
+      },
+      "appPackage": {
+        "type": "string",
+        "required": true,
+        "description": "应用包名。"
+      },
+      "conversionName": {
+        "type": "string",
+        "required": true,
+        "description": "平台侧转化名称。"
+      },
+      "conversionId": {
+        "type": "string",
+        "required": true,
+        "description": "平台侧转化 ID（string）。"
+      },
+      "platformConversionType": {
+        "type": "string",
+        "required": true,
+        "description": "平台转化类型。"
+      },
+      "systemDisplayName": {
+        "type": "string",
+        "required": true,
+        "description": "系统内展示名称。"
+      },
+      "conversionDisplayType": {
+        "type": "string",
+        "required": false,
+        "enum": ["paid", "activation", "behavior", "revenue"],
+        "description": "系统展示分类（付费/激活/行为/收入）。"
+      },
+      "billingType": {
+        "type": "string",
+        "required": true,
+        "enum": ["CPA", "CPI", "CPE", ""],
+        "description": "计费类型。"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["enabled", "duplicate", "unmapped"],
+        "description": "映射状态。"
+      },
+      "remarks": {
+        "type": "string",
+        "required": false,
+        "description": "备注（编辑弹窗可填写）。"
+      },
+      "createdAt": {
+        "type": "string",
+        "required": false,
+        "description": "创建时间（ISO 字符串，可选）。"
+      },
+      "updatedAt": {
+        "type": "string",
+        "required": false,
+        "description": "更新时间（ISO 字符串，可选）。"
+      }
+    },
+    "whyNeeded": {
+      "description": "原因：列表接口为性能通常只返回表格所需字段；编辑弹窗需要回显更完整的表单字段（例如 remarks、conversionDisplayType、source）。若后端保证列表 records 已包含这些字段，则可不提供该接口。"
+    }
+  },
+  "sampleResponse": {
+    "id": "2",
+    "platform": "android",
+    "source": "google",
+    "mccAccount": "560-369-9741",
+    "appPackage": "com.locate.phone.track",
+    "conversionName": "Phone Tracker install",
+    "conversionId": "7217482985",
+    "platformConversionType": "DOWNLOAD",
+    "systemDisplayName": "首次安装",
+    "conversionDisplayType": "activation",
+    "billingType": "CPI",
+    "status": "enabled",
+    "remarks": "用于买量激活统计",
+    "createdAt": "2026-03-01T08:00:00Z",
+    "updatedAt": "2026-03-17T09:30:00Z"
+  },
+  "apiSuggestion": {
+    "method": "GET",
+    "path": "/ugc/conversion/mappings/{id}",
+    "notes": [
+      "如果你们接口网关统一包裹 code/message/data，请将 sampleResponse 放到 data 内。",
+      "conversionId 必须返回 string。"
+    ]
+  }
+}

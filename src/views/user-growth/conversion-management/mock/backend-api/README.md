@@ -13,10 +13,12 @@
 - `03-mappings-create.json`：新增映射
 - `04-mappings-update.json`：编辑映射
 - `05-mappings-delete.json`：删除映射
+- `12-mappings-detail.json`：映射详情（可选但强烈建议，用于编辑回显完整字段）
 - `06-mappings-batch-update-status.json`：批量启用/禁用
 - `07-mappings-export.json`：导出映射表
 - `08-meta-filter-options.json`：筛选下拉选项（平台/应用/转化类型/状态）
 - `09-meta-dialog-options.json`：弹窗级联（广告平台→MCC→App→Conversion）
+- `13-meta-conversion-display-type-options.json`：转化展示分类选项（可选，后端统一配置时使用）
 - `10-data-tab.json`：Data Tab 总接口（KPI+树表+右侧面板）
 - `11-data-export.json`：Data Tab 导出（可选）
 

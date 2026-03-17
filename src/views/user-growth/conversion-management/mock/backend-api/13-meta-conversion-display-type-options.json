@@ -1,0 +1,44 @@
+{
+  "_comment": "转化管理（name Tab 弹窗）- 转化展示分类选项（付费/激活/行为/收入）。当前前端写死常量；若后端希望统一配置或按权限控制，可提供该接口。",
+  "fieldDescription": {
+    "response": {
+      "options": {
+        "type": "Option[]",
+        "required": true,
+        "description": "转化展示分类选项列表。"
+      }
+    },
+    "Option": {
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "展示文案。也可返回 i18nKey 让前端翻译。"
+      },
+      "value": {
+        "type": "string",
+        "required": true,
+        "enum": ["paid", "activation", "behavior", "revenue"],
+        "description": "展示分类值（入库值）。"
+      }
+    },
+    "usageNote": {
+      "description": "该字段对应表单 ConversionMappingForm.conversionDisplayType；用于把不同平台转化归类展示（与平台侧 platformConversionType 不同）。"
+    }
+  },
+  "sampleResponse": {
+    "options": [
+      { "label": "付费转化", "value": "paid" },
+      { "label": "激活转化", "value": "activation" },
+      { "label": "行为转化", "value": "behavior" },
+      { "label": "收入转化", "value": "revenue" }
+    ]
+  },
+  "apiSuggestion": {
+    "method": "GET",
+    "path": "/ugc/conversion/meta/conversion-display-type-options",
+    "notes": [
+      "若后端不提供该接口，前端可继续写死枚举，不影响主流程。",
+      "若需要 i18n，建议返回 i18nKey（例如 conversionManagement.conversionTypePaid）。"
+    ]
+  }
+}
