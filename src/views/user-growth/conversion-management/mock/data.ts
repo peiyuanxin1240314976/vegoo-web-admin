@@ -140,7 +140,7 @@ export const MOCK_CONVERSION_LIST = _MOCK_ROWS
 
 /** 筛选 - 平台选项 */
 export const MOCK_PLATFORM_OPTIONS = [
-  { label: '全部平台', value: '' },
+  { label: '全部终端平台', value: '' },
   { label: '安卓', value: 'android' },
   { label: 'iOS', value: 'ios' }
 ]
@@ -221,10 +221,20 @@ export const MOCK_PLATFORM_STATS: PlatformStats = {
 export function fetchConversionMappingListMock(
   params: ConversionFilterParams
 ): Promise<Api.Common.PaginatedResponse<ConversionMappingItem>> {
-  const { current = 1, size = 20, platform, app, conversionType, status, keyword } = params
+  const {
+    current = 1,
+    size = 20,
+    platform,
+    appPackage,
+    app,
+    conversionType,
+    status,
+    keyword
+  } = params
   let list = [...MOCK_CONVERSION_LIST]
   if (platform) list = list.filter((r) => r.platform === platform)
-  if (app) list = list.filter((r) => r.appPackage === app)
+  const appFilter = appPackage || app
+  if (appFilter) list = list.filter((r) => r.appPackage === appFilter)
   if (conversionType) list = list.filter((r) => r.platformConversionType === conversionType)
   if (status) list = list.filter((r) => r.status === status)
   if (keyword) {

@@ -1,0 +1,176 @@
+{
+  "_comment": "转化管理（name Tab）- 转化映射列表：分页 + 筛选 + 关键字。用于主表格数据源。",
+  "fieldDescription": {
+    "request": {
+      "current": {
+        "type": "number",
+        "required": false,
+        "default": 1,
+        "description": "页码，从 1 开始。"
+      },
+      "size": {
+        "type": "number",
+        "required": false,
+        "default": 20,
+        "description": "每页条数。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "android", "ios"],
+        "description": "终端平台筛选。空字符串表示全部。"
+      },
+      "appPackage": {
+        "type": "string",
+        "required": false,
+        "description": "应用包名筛选（推荐字段）。空字符串表示全部。"
+      },
+      "app": {
+        "type": "string",
+        "required": false,
+        "description": "历史兼容字段，语义同 appPackage。前端目前会同时传 app/appPackage，后端优先取 appPackage。"
+      },
+      "conversionType": {
+        "type": "string",
+        "required": false,
+        "description": "平台转化类型筛选（如 PHONE_CALL_LEAD/DOWNLOAD/...）。空字符串表示全部。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "enabled", "duplicate", "unmapped"],
+        "description": "映射状态筛选。空字符串表示全部。"
+      },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "关键字搜索（建议匹配 conversionName/appPackage/systemDisplayName/conversionId 等）。空字符串表示不筛选。"
+      }
+    },
+    "response": {
+      "records": {
+        "type": "ConversionMappingItem[]",
+        "required": true,
+        "description": "当前页数据列表。"
+      },
+      "current": {
+        "type": "number",
+        "required": true,
+        "description": "当前页码。"
+      },
+      "size": {
+        "type": "number",
+        "required": true,
+        "description": "每页条数。"
+      },
+      "total": {
+        "type": "number",
+        "required": true,
+        "description": "符合条件的数据总量（用于分页）。"
+      }
+    },
+    "ConversionMappingItem": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "映射记录 ID（字符串主键）。"
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["android", "ios"],
+        "description": "终端平台。"
+      },
+      "mccAccount": {
+        "type": "string",
+        "required": true,
+        "example": "560-369-9741",
+        "description": "MCC 账号（广告账户归属标识）。"
+      },
+      "appPackage": {
+        "type": "string",
+        "required": true,
+        "example": "com.locate.phone.track",
+        "description": "应用包名（唯一标识应用）。"
+      },
+      "conversionName": {
+        "type": "string",
+        "required": true,
+        "description": "平台侧转化名称（可能很长，来自 Google/Meta 等平台）。"
+      },
+      "conversionId": {
+        "type": "string",
+        "required": true,
+        "description": "平台侧转化 ID。必须为字符串，避免长整型精度问题。"
+      },
+      "platformConversionType": {
+        "type": "string",
+        "required": true,
+        "description": "平台转化类型（与设计稿/业务枚举一致）。"
+      },
+      "systemDisplayName": {
+        "type": "string",
+        "required": true,
+        "description": "系统内展示名称（业务侧自定义，如：订阅转化/首次安装/IAP购买）。"
+      },
+      "billingType": {
+        "type": "string",
+        "required": true,
+        "enum": ["CPA", "CPI", "CPE", ""],
+        "description": "计费类型。空字符串表示未知/不适用。"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["enabled", "duplicate", "unmapped"],
+        "description": "映射状态：enabled 启用 | duplicate 重复 | unmapped 未映射。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "current": 1,
+    "size": 20,
+    "platform": "android",
+    "appPackage": "com.locate.phone.track",
+    "app": "com.locate.phone.track",
+    "conversionType": "DOWNLOAD",
+    "status": "enabled",
+    "keyword": "install"
+  },
+  "sampleResponse": {
+    "records": [
+      {
+        "id": "2",
+        "platform": "android",
+        "mccAccount": "560-369-9741",
+        "appPackage": "com.locate.phone.track",
+        "conversionName": "Phone Tracker install",
+        "conversionId": "7217482985",
+        "platformConversionType": "DOWNLOAD",
+        "systemDisplayName": "首次安装",
+        "billingType": "CPI",
+        "status": "enabled"
+      }
+    ],
+    "current": 1,
+    "size": 20,
+    "total": 1
+  },
+  "apiSuggestion": {
+    "method": "GET",
+    "path": "/ugc/conversion/mappings",
+    "queryParams": [
+      "current",
+      "size",
+      "platform",
+      "appPackage|app",
+      "conversionType",
+      "status",
+      "keyword"
+    ],
+    "notes": [
+      "前端兼容字段：appPackage 与 app 语义相同；后端优先取 appPackage。",
+      "conversionId 必须返回 string（不要返回 number）。"
+    ]
+  }
+}

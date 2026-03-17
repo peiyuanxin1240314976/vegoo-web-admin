@@ -145,6 +145,7 @@
   function doSearch() {
     emit('search', {
       platform: form.platform,
+      appPackage: form.app,
       app: form.app,
       conversionType: form.conversionType,
       status: form.status,

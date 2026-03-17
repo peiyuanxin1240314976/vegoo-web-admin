@@ -1,0 +1,131 @@
+{
+  "_comment": "转化管理（name Tab）- 右侧统计：类型分布 / 映射状态统计 / 终端平台分布。建议与列表筛选参数保持一致。",
+  "fieldDescription": {
+    "request": {
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "android", "ios"],
+        "description": "终端平台筛选。空字符串表示全部。"
+      },
+      "appPackage": {
+        "type": "string",
+        "required": false,
+        "description": "应用包名筛选（推荐字段）。空字符串表示全部。"
+      },
+      "app": {
+        "type": "string",
+        "required": false,
+        "description": "历史兼容字段，语义同 appPackage。"
+      },
+      "conversionType": {
+        "type": "string",
+        "required": false,
+        "description": "平台转化类型筛选。空字符串表示全部。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "enabled", "duplicate", "unmapped"],
+        "description": "映射状态筛选。空字符串表示全部。"
+      },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "关键字搜索（与列表一致）。"
+      }
+    },
+    "response": {
+      "typeDistribution": {
+        "type": "ConversionTypeDistributionItem[]",
+        "required": true,
+        "description": "转化类型分布（用于甜甜圈图）。"
+      },
+      "mappingStats": {
+        "type": "MappingStats",
+        "required": true,
+        "description": "映射状态统计（用于右侧统计卡片）。"
+      },
+      "platformStats": {
+        "type": "PlatformStats",
+        "required": true,
+        "description": "终端平台分布（android/ios 数量）。"
+      }
+    },
+    "ConversionTypeDistributionItem": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "类型名称（例如 PHONE_CALL_LEAD）。"
+      },
+      "value": {
+        "type": "number",
+        "required": true,
+        "description": "占比（0-100）。可返回整数或小数；前端可统一格式化。"
+      },
+      "count": {
+        "type": "number",
+        "required": false,
+        "description": "可选：该类型数量（条数）。用于图例或明细展示。"
+      }
+    },
+    "MappingStats": {
+      "mapped": {
+        "type": "number",
+        "required": true,
+        "description": "已映射数量。注意：当前前端命名为 mapped，但实际 UI 文案可按产品口径定义（例如“启用”或“已映射”）。"
+      },
+      "duplicate": {
+        "type": "number",
+        "required": true,
+        "description": "重复数量。通常由后端校验产生（同一平台转化被多条映射引用等）。"
+      },
+      "unmapped": {
+        "type": "number",
+        "required": true,
+        "description": "未映射数量。"
+      }
+    },
+    "PlatformStats": {
+      "android": {
+        "type": "number",
+        "required": true,
+        "description": "android 记录数量。"
+      },
+      "ios": {
+        "type": "number",
+        "required": true,
+        "description": "ios 记录数量。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "platform": "",
+    "appPackage": "",
+    "app": "",
+    "conversionType": "",
+    "status": "",
+    "keyword": ""
+  },
+  "sampleResponse": {
+    "typeDistribution": [
+      { "name": "PHONE_CALL_LEAD", "value": 44, "count": 8 },
+      { "name": "DOWNLOAD", "value": 11, "count": 2 },
+      { "name": "PURCHASE", "value": 11, "count": 2 },
+      { "name": "ADD_TO_CART", "value": 11, "count": 2 },
+      { "name": "PAGE_VIEW", "value": 17, "count": 3 },
+      { "name": "BEGIN_CHECKOUT", "value": 6, "count": 1 }
+    ],
+    "mappingStats": { "mapped": 15, "duplicate": 2, "unmapped": 1 },
+    "platformStats": { "android": 18, "ios": 0 }
+  },
+  "apiSuggestion": {
+    "method": "GET",
+    "path": "/ugc/conversion/mappings/stats",
+    "queryParams": ["platform", "appPackage|app", "conversionType", "status", "keyword"],
+    "notes": [
+      "建议统计口径与列表筛选完全一致，前端按同一套筛选值调用两个接口。",
+      "typeDistribution.value 建议后端保证总和约等于 100（允许四舍五入误差）。"
+    ]
+  }
+}

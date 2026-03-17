@@ -1,0 +1,69 @@
+{
+  "_comment": "转化管理（name Tab）- 编辑转化映射。对应弹窗提交（type=edit）。UI 禁用 source/appPackage/conversionName 等不可变字段。",
+  "fieldDescription": {
+    "pathParam": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "映射记录 ID。"
+      }
+    },
+    "request": {
+      "systemDisplayName": {
+        "type": "string",
+        "required": true,
+        "description": "系统内展示名称（可编辑，必填）。"
+      },
+      "conversionDisplayType": {
+        "type": "string",
+        "required": false,
+        "enum": ["paid", "activation", "behavior", "revenue"],
+        "description": "系统展示分类（可编辑）。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["enabled", "unmapped"],
+        "description": "启用状态（UI 开关）。duplicate 不建议通过该接口强制改。"
+      },
+      "remarks": {
+        "type": "string",
+        "required": false,
+        "description": "备注（可编辑）。"
+      }
+    },
+    "response": {
+      "success": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否保存成功。"
+      },
+      "message": {
+        "type": "string",
+        "required": false,
+        "description": "提示信息。"
+      }
+    },
+    "immutableFieldsNote": {
+      "description": "建议后端保护不可变字段（即使前端误传也忽略）：source/mccAccount/appPackage/conversionName/conversionId/platformConversionType/billingType 等。"
+    }
+  },
+  "sampleRequest": {
+    "systemDisplayName": "IAP购买",
+    "conversionDisplayType": "paid",
+    "status": "enabled",
+    "remarks": "编辑后的备注"
+  },
+  "sampleResponse": {
+    "success": true,
+    "message": "保存成功"
+  },
+  "apiSuggestion": {
+    "method": "PUT",
+    "path": "/ugc/conversion/mappings/{id}",
+    "notes": [
+      "后端建议只允许更新白名单字段（systemDisplayName/conversionDisplayType/status/remarks）。",
+      "如存在审计要求，可返回 updatedAt/updatedBy 等字段，但不影响前端展示。"
+    ]
+  }
+}

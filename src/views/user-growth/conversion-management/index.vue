@@ -32,11 +32,21 @@
       </ElRow>
     </template>
     <template v-else>
-      <div class="conversion-management-page__placeholder">
-        <p class="conversion-management-page__placeholder-text">
-          {{ $t('conversionManagement.dataTabPlaceholder') }}
-        </p>
-      </div>
+      <ElRow :gutter="16" class="conversion-management-page__body">
+        <ElCol :xs="24" :xl="15" class="conversion-management-page__left">
+          <ConversionDataFilters :filter="dataFilterForForm" @search="handleDataSearch" />
+          <ConversionDataKpiCards :kpi="dataKpi" />
+          <ConversionDataTable :data="dataTableRows" :loading="dataLoading" />
+        </ElCol>
+        <ElCol :xs="24" :xl="9" class="conversion-management-page__right">
+          <ConversionDataSidePanel
+            :type-distribution="dataSidePanels.typeDistribution"
+            :top10="dataSidePanels.top10"
+            :value-trend30d="dataSidePanels.valueTrend30d"
+            :account-share="dataSidePanels.accountShare"
+          />
+        </ElCol>
+      </ElRow>
     </template>
     <ConversionMappingDialog
       v-model:visible="dialogVisible"
@@ -54,10 +64,15 @@
 
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
+  import { useIntervalFn } from '@vueuse/core'
   import ConversionTabs from './modules/conversion-tabs.vue'
   import ConversionFilters from './modules/conversion-filters.vue'
   import ConversionTable from './modules/conversion-table.vue'
   import ConversionSidePanel from './modules/conversion-side-panel.vue'
+  import ConversionDataFilters from './modules/conversion-data-filters.vue'
+  import ConversionDataKpiCards from './modules/conversion-data-kpi-cards.vue'
+  import ConversionDataTable from './modules/conversion-data-table.vue'
+  import ConversionDataSidePanel from './modules/conversion-data-side-panel.vue'
   import ConversionMappingDialog from './modules/conversion-mapping-dialog.vue'
   import ConversionDeleteDialog from './modules/conversion-delete-dialog.vue'
   import {
@@ -66,8 +81,13 @@
     MOCK_MAPPING_STATS,
     MOCK_PLATFORM_STATS
   } from './mock/data'
+  import { fetchConversionDataMock } from './mock/data-tab'
   import type {
+    ConversionDataFilterParams,
+    ConversionDataSidePanels,
+    ConversionDataRow,
     ConversionFilterParams,
+    ConversionKpi,
     ConversionMappingItem,
     ConversionMappingForm
   } from './types'
@@ -92,6 +112,7 @@
         current: 1,
         size: 20,
         platform: '',
+        appPackage: '',
         app: '',
         conversionType: '',
         status: '',
@@ -112,7 +133,8 @@
   function handleSearch(payload: ConversionFilterParams) {
     Object.assign(searchParams, {
       platform: payload.platform ?? '',
-      app: payload.app ?? '',
+      appPackage: payload.appPackage ?? payload.app ?? '',
+      app: payload.appPackage ?? payload.app ?? '',
       conversionType: payload.conversionType ?? '',
       status: payload.status ?? '',
       keyword: payload.keyword ?? ''
@@ -160,6 +182,101 @@
   function handleExport() {
     ElMessage.info('导出映射表（待接接口）')
   }
+
+  /**
+   * 转化数据（Data Tab）
+   */
+  const refreshIntervalMs = 30_000
+
+  function getDefaultDateRange(): [string, string] {
+    const end = new Date()
+    const start = new Date()
+    start.setDate(end.getDate() - 6)
+    const toYmd = (d: Date) => {
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    }
+    return [toYmd(start), toYmd(end)]
+  }
+
+  const dataFilter = reactive<ConversionDataFilterParams>({
+    dateRange: getDefaultDateRange(),
+    platform: '',
+    app: '',
+    appPackage: '',
+    source: '',
+    adPlatform: '',
+    conversionType: ''
+  })
+
+  const dataFilterForForm = computed(() => dataFilter as ConversionDataFilterParams)
+
+  const dataLoading = ref(false)
+  const dataKpi = ref<ConversionKpi | null>(null)
+  const dataTableRows = ref<ConversionDataRow[]>([])
+  const dataSidePanels = ref<ConversionDataSidePanels>({
+    typeDistribution: [],
+    top10: [],
+    valueTrend30d: [],
+    accountShare: []
+  })
+
+  async function loadDataTab() {
+    dataLoading.value = true
+    try {
+      const res = await fetchConversionDataMock({ ...dataFilter })
+      dataKpi.value = res.kpi
+      dataTableRows.value = res.tableRows
+      dataSidePanels.value = res.sidePanels
+    } finally {
+      dataLoading.value = false
+    }
+  }
+
+  const interval = useIntervalFn(
+    () => {
+      if (activeTab.value !== 'data') return
+      void loadDataTab()
+    },
+    refreshIntervalMs,
+    { immediate: false }
+  )
+
+  function restartInterval() {
+    interval.pause()
+    interval.resume()
+  }
+
+  function handleDataSearch(payload: ConversionDataFilterParams) {
+    Object.assign(dataFilter, {
+      dateRange: payload.dateRange ?? getDefaultDateRange(),
+      platform: payload.platform ?? '',
+      appPackage: payload.appPackage ?? payload.app ?? '',
+      app: payload.appPackage ?? payload.app ?? '',
+      source: payload.source ?? payload.adPlatform ?? '',
+      adPlatform: payload.source ?? payload.adPlatform ?? '',
+      conversionType: payload.conversionType ?? ''
+    })
+    void loadDataTab().then(() => restartInterval())
+  }
+
+  watch(
+    () => activeTab.value,
+    (tab) => {
+      if (tab === 'data') {
+        void loadDataTab().then(() => restartInterval())
+      } else {
+        interval.pause()
+      }
+    },
+    { immediate: true }
+  )
+
+  onBeforeUnmount(() => {
+    interval.pause()
+  })
 </script>
 
 <style scoped lang="scss">
@@ -172,17 +289,13 @@
     min-height: 0;
   }
 
-  .conversion-management-page__placeholder {
+  .conversion-management-page__left {
     display: flex;
-    flex: 1;
-    align-items: center;
-    justify-content: center;
-    min-height: 200px;
+    flex-direction: column;
+    min-height: 0;
   }
 
-  .conversion-management-page__placeholder-text {
-    margin: 0;
-    font-size: 14px;
-    color: var(--el-text-color-secondary);
+  .conversion-management-page__right {
+    min-height: 0;
   }
 </style>

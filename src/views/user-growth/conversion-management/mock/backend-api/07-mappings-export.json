@@ -1,0 +1,92 @@
+{
+  "_comment": "转化管理（name Tab）- 导出映射表。支持按筛选条件导出，返回文件流或下载链接二选一。",
+  "fieldDescription": {
+    "request": {
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "android", "ios"],
+        "description": "终端平台筛选。空字符串表示全部。"
+      },
+      "appPackage": {
+        "type": "string",
+        "required": false,
+        "description": "应用包名筛选（推荐字段）。"
+      },
+      "app": {
+        "type": "string",
+        "required": false,
+        "description": "历史兼容字段，语义同 appPackage。"
+      },
+      "conversionType": {
+        "type": "string",
+        "required": false,
+        "description": "平台转化类型筛选。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "enabled", "duplicate", "unmapped"],
+        "description": "映射状态筛选。"
+      },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "关键字筛选。"
+      },
+      "format": {
+        "type": "string",
+        "required": false,
+        "default": "xlsx",
+        "enum": ["xlsx", "csv"],
+        "description": "导出格式。"
+      }
+    },
+    "responseOptionA_fileStream": {
+      "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet 或 text/csv",
+      "contentDisposition": "attachment; filename=conversion-mappings.xlsx",
+      "description": "方案 A：直接返回文件流（浏览器下载）。"
+    },
+    "responseOptionB_downloadUrl": {
+      "type": "object",
+      "description": "方案 B：返回可下载链接（适合异步生成）。",
+      "fields": {
+        "downloadUrl": {
+          "type": "string",
+          "required": true,
+          "description": "可下载链接（可带签名/有效期）。"
+        },
+        "expireAt": {
+          "type": "string",
+          "required": false,
+          "description": "过期时间（ISO 字符串）。"
+        }
+      }
+    },
+    "exportColumnsSuggestion": {
+      "description": "建议导出列（与表格/弹窗一致）：platform、source、mccAccount、appPackage、conversionName、conversionId、platformConversionType、systemDisplayName、conversionDisplayType、billingType、status、remarks、createdAt、updatedAt。"
+    }
+  },
+  "sampleRequest": {
+    "platform": "",
+    "appPackage": "",
+    "app": "",
+    "conversionType": "",
+    "status": "",
+    "keyword": "",
+    "format": "xlsx"
+  },
+  "sampleResponse": {
+    "downloadUrl": "https://files.example.com/download/conversion-mappings.xlsx?sign=yyy",
+    "expireAt": "2026-03-17T12:00:00Z"
+  },
+  "apiSuggestion": {
+    "method": "GET",
+    "path": "/ugc/conversion/mappings/export",
+    "queryParams": ["platform", "appPackage|app", "conversionType", "status", "keyword", "format"],
+    "notes": [
+      "数据量大时建议异步导出：先返回 taskId，再轮询 task 状态拿 downloadUrl。",
+      "conversionId 仍需按 string 导出，避免 Excel 科学计数法/精度丢失。"
+    ]
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "_comment": "转化管理（name Tab）- 批量启用/禁用。当前 UI 无多选，更偏向按筛选条件批量；也支持按 id 列表批量（便于后续扩展）。",
+  "fieldDescription": {
+    "request": {
+      "mode": {
+        "type": "string",
+        "required": true,
+        "enum": ["byFilter", "byIds"],
+        "description": "批量模式：byFilter 按筛选条件 | byIds 按 id 列表。"
+      },
+      "filters": {
+        "type": "object",
+        "required": false,
+        "description": "当 mode=byFilter 时必填：与列表接口一致的筛选参数集合。",
+        "fields": {
+          "platform": {
+            "type": "string",
+            "required": false,
+            "enum": ["", "android", "ios"],
+            "description": "终端平台筛选。"
+          },
+          "appPackage": {
+            "type": "string",
+            "required": false,
+            "description": "应用包名筛选（推荐字段）。"
+          },
+          "app": {
+            "type": "string",
+            "required": false,
+            "description": "历史兼容字段，语义同 appPackage。"
+          },
+          "conversionType": {
+            "type": "string",
+            "required": false,
+            "description": "平台转化类型筛选。"
+          },
+          "status": {
+            "type": "string",
+            "required": false,
+            "enum": ["", "enabled", "duplicate", "unmapped"],
+            "description": "映射状态筛选。"
+          },
+          "keyword": {
+            "type": "string",
+            "required": false,
+            "description": "关键字筛选。"
+          }
+        }
+      },
+      "ids": {
+        "type": "string[]",
+        "required": false,
+        "description": "当 mode=byIds 时必填：要批量更新的映射记录 id 列表。"
+      },
+      "targetStatus": {
+        "type": "string",
+        "required": true,
+        "enum": ["enabled", "unmapped"],
+        "description": "目标状态：enabled 批量启用 | unmapped 批量禁用/取消映射。"
+      }
+    },
+    "response": {
+      "success": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否执行成功。"
+      },
+      "affectedCount": {
+        "type": "number",
+        "required": true,
+        "description": "实际被更新的条数。"
+      },
+      "skippedCount": {
+        "type": "number",
+        "required": false,
+        "description": "跳过的条数（例如 duplicate 记录不允许修改，或无权限）。"
+      },
+      "skippedReason": {
+        "type": "string",
+        "required": false,
+        "description": "可选：统一跳过原因说明（若需要更细粒度可返回 skippedIds）。"
+      },
+      "skippedIds": {
+        "type": "string[]",
+        "required": false,
+        "description": "可选：被跳过的记录 id 列表。用于前端提示或日志。"
+      },
+      "message": {
+        "type": "string",
+        "required": false,
+        "description": "提示信息。"
+      }
+    },
+    "ruleSuggestion": {
+      "description": "建议规则：duplicate 状态由后端判定且不可被批量启用/禁用；若必须允许改动，请明确产品口径并调整前端展示。"
+    }
+  },
+  "sampleRequest": {
+    "mode": "byFilter",
+    "filters": {
+      "platform": "android",
+      "appPackage": "",
+      "app": "",
+      "conversionType": "",
+      "status": "",
+      "keyword": ""
+    },
+    "targetStatus": "enabled"
+  },
+  "sampleResponse": {
+    "success": true,
+    "affectedCount": 18,
+    "skippedCount": 0,
+    "message": "已批量启用"
+  },
+  "apiSuggestion": {
+    "method": "POST",
+    "path": "/ugc/conversion/mappings/batch-update-status",
+    "notes": [
+      "也可拆成两个接口：/batch-enable 与 /batch-disable，但合并后更易维护。",
+      "请保证批量接口与列表筛选口径一致，否则前端无法保证“看到什么就批量什么”。"
+    ]
+  }
+}

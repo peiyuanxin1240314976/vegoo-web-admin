@@ -25,14 +25,14 @@
       label-width="120px"
       class="conversion-dialog__form"
     >
-      <ElFormItem :label="$t('conversionManagement.adPlatform')" prop="adPlatform" required>
+      <ElFormItem :label="$t('conversionManagement.adPlatform')" prop="source" required>
         <ElSelect
-          v-model="form.adPlatform"
+          v-model="form.source"
           :placeholder="$t('conversionManagement.selectAdPlatform')"
           :disabled="type === 'edit'"
           popper-class="conversion-dialog-select-dropdown"
           style="width: 100%"
-          @change="onAdPlatformChange"
+          @change="onSourceChange"
         >
           <ElOption
             v-for="opt in adPlatformOptions"
@@ -220,7 +220,7 @@
   })
 
   const mccPlaceholder = computed(() =>
-    form.adPlatform ? '' : t('conversionManagement.hintAfterSelectPlatform')
+    form.source ? '' : t('conversionManagement.hintAfterSelectPlatform')
   )
 
   const conversionIdDisplay = computed(
@@ -228,6 +228,7 @@
   )
 
   const defaultForm: ConversionMappingForm = {
+    source: undefined,
     adPlatform: undefined,
     mccAccount: '',
     appPackage: '',
@@ -243,16 +244,18 @@
   const form = reactive<ConversionMappingForm>({ ...defaultForm })
 
   const rules: FormRules = {
-    adPlatform: [{ required: true, message: '请选择广告平台', trigger: 'change' }],
+    source: [{ required: true, message: '请选择广告平台', trigger: 'change' }],
     mccAccount: [{ required: true, message: '请先选择广告平台以加载 MCC 账户', trigger: 'change' }],
     appPackage: [{ required: true, message: '请选择应用', trigger: 'change' }],
     conversionName: [{ required: true, message: '请选择或输入转化名称', trigger: 'change' }],
     systemDisplayName: [{ required: true, message: '请输入系统显示名称', trigger: 'blur' }]
   }
 
-  function onAdPlatformChange() {
-    const list = form.adPlatform ? MOCK_MCC_BY_PLATFORM[form.adPlatform] : []
+  function onSourceChange() {
+    const key = form.source || form.adPlatform
+    const list = key ? MOCK_MCC_BY_PLATFORM[key] : []
     form.mccAccount = list?.[0]?.value ?? ''
+    form.adPlatform = form.source
   }
 
   function onConversionNameChange() {
@@ -285,7 +288,8 @@
           const row = props.rowData as ConversionMappingForm
           const mcc = props.rowData.mccAccount ?? ''
           Object.assign(form, {
-            adPlatform: row.adPlatform ?? getAdPlatformByMcc(mcc),
+            source: row.source ?? row.adPlatform ?? getAdPlatformByMcc(mcc),
+            adPlatform: row.source ?? row.adPlatform ?? getAdPlatformByMcc(mcc),
             mccAccount: props.rowData.mccAccount ?? '',
             appPackage: props.rowData.appPackage ?? '',
             conversionName: props.rowData.conversionName ?? '',
@@ -306,8 +310,8 @@
   )
 
   watch(
-    () => form.adPlatform,
-    () => onAdPlatformChange()
+    () => form.source,
+    () => onSourceChange()
   )
 
   function handleClose() {
@@ -319,7 +323,7 @@
     await formRef.value.validate((valid) => {
       if (valid) {
         submitLoading.value = true
-        emit('submit', { ...form })
+        emit('submit', { ...form, adPlatform: form.source })
         submitLoading.value = false
         handleClose()
       }
