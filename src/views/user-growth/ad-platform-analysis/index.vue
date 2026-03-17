@@ -72,7 +72,6 @@
               :border="false"
               size="default"
               :header-cell-style="{
-                background: 'transparent',
                 color: '#94A3B8',
                 fontSize: '12px',
                 padding: '6px 0',
@@ -970,6 +969,23 @@
       height: 0;
     }
 
+    /* 表头整行渐变（从左到右） */
+    :deep(.el-table__header thead tr) {
+      background: linear-gradient(
+        90deg,
+        #204493 0%,
+        #374188 12.5%,
+        #503f7d 25%,
+        #663c73 37.5%,
+        #733b6d 50%,
+        #7d3a69 62.5%,
+        #863964 75%,
+        #8c3861 87.5%,
+        #8f3860 100%
+      );
+    }
+
+    /* 让每个 th 透出整行渐变 */
     :deep(.el-table th.el-table__cell) {
       padding: 6px 0;
       font-size: 12px;
