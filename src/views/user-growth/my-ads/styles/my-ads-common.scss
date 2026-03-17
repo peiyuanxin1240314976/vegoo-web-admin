@@ -1,0 +1,131 @@
+/**
+ * 我的广告 - 公共样式
+ * 供页面及子组件复用，便于后期维护
+ */
+
+/* ---------- 颜色变量 ---------- */
+$my-ads-panel-bg: #020617;
+$my-ads-panel-border: rgb(148 163 184 / 35%);
+$my-ads-panel-radius: 10px;
+$my-ads-text-primary: #e5e7eb;
+$my-ads-text-secondary: #9ca3af;
+$my-ads-success: #67c23a;
+$my-ads-warning: #e6a23c;
+$my-ads-danger: #f56c6c;
+$my-ads-primary: #38bdf8;
+$my-ads-info: #60a5fa;
+
+/* 浅色主题覆盖（如需要） */
+html:not(.dark) {
+  .my-ads-panel {
+    --my-ads-panel-bg: #0b1120;
+    --my-ads-panel-border: rgb(148 163 184 / 25%);
+  }
+}
+
+/* ---------- 通用面板 ---------- */
+.my-ads-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: $my-ads-panel-bg;
+  border: 1px solid $my-ads-panel-border;
+  border-radius: $my-ads-panel-radius;
+  box-shadow: 0 18px 45px rgb(15 23 42 / 65%);
+
+  .my-ads-panel__header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: $my-ads-text-primary;
+    background: linear-gradient(
+      90deg,
+      rgb(15 23 42 / 90%),
+      rgb(15 23 42 / 75%),
+      rgb(15 23 42 / 90%)
+    );
+    border-bottom: 1px solid rgb(30 64 175 / 55%);
+  }
+
+  .my-ads-panel__title {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .my-ads-panel__body {
+    flex: 1;
+    padding: 14px 16px;
+    overflow: auto;
+  }
+}
+
+/* ---------- 数值颜色类 ---------- */
+.my-ads-value--success {
+  color: $my-ads-success !important;
+}
+
+.my-ads-value--warning {
+  color: $my-ads-warning !important;
+}
+
+.my-ads-value--danger {
+  color: $my-ads-danger !important;
+}
+
+.my-ads-value--primary {
+  color: $my-ads-primary !important;
+}
+
+/* ---------- 状态点 ---------- */
+.my-ads-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 4px;
+  vertical-align: middle;
+  border-radius: 50%;
+
+  &.is-active {
+    background: $my-ads-success;
+  }
+
+  &.is-inactive {
+    background: $my-ads-text-secondary;
+  }
+
+  &.is-warning {
+    background: $my-ads-warning;
+  }
+}
+
+/* ---------- 进度条轨道 ---------- */
+.my-ads-progress-track {
+  height: 8px;
+  overflow: hidden;
+  background: rgb(148 163 184 / 20%);
+  border-radius: 4px;
+
+  .my-ads-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.2s ease;
+  }
+
+  .my-ads-progress-fill--normal {
+    background: linear-gradient(90deg, $my-ads-success, $my-ads-warning);
+  }
+
+  .my-ads-progress-fill--danger {
+    background: linear-gradient(90deg, $my-ads-success, $my-ads-warning 50%, $my-ads-danger 100%);
+  }
+}
+
+/* ---------- 卡片边框警告 ---------- */
+.my-ads-card--warning {
+  border-color: $my-ads-warning !important;
+  box-shadow: 0 0 0 1px rgb(230 166 60 / 30%);
+}

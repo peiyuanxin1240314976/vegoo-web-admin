@@ -271,6 +271,77 @@
       "menu": "菜单管理"
     }
   },
+  "myAds": {
+    "header": {
+      "person": "人员",
+      "period": "期间",
+      "exportReport": "导出报表"
+    },
+    "userCard": {
+      "responsible": "负责"
+    },
+    "tabs": {
+      "summary": "汇总",
+      "appPlatform": "应用+广告平台",
+      "campaignDetail": "广告系列明细"
+    },
+    "summary": {
+      "adSpendTrend": "广告支出与利润趋势 (7天)",
+      "byDay": "按日",
+      "channelDistribution": "广告支出渠道分布",
+      "appSpendShare": "应用广告支出占比",
+      "paceMonitor": "消耗进度监控",
+      "remainingDays": "当前周期剩余{n}天"
+    },
+    "appPlatform": {
+      "groupByApp": "按应用分组",
+      "groupByPlatform": "按平台分组",
+      "viewDesc": "应用视角 | 展示各应用在各广告平台的广告数据",
+      "totalSpend": "总广告支出",
+      "avgRoi": "平均首日ROI",
+      "platformCount": "平台数",
+      "appsSummary": "应用汇总",
+      "appsUnit": "个应用",
+      "campaignsCount": "个广告组合",
+      "overBudget": "超预算预警",
+      "roiBelow": "ROI未达标",
+      "notStarted": "未启动",
+      "estimatedProfit": "预估总利润",
+      "minProfit": "最低总利润"
+    },
+    "campaignDetail": {
+      "searchPlaceholder": "搜索广告系列名称",
+      "filterApp": "应用",
+      "filterPlatform": "广告平台",
+      "filterCountry": "国家",
+      "filterStatus": "状态",
+      "filterType": "投放类型",
+      "all": "全部",
+      "adSpendBudget": "广告支出/预算",
+      "calculatedConsumption": "计算消耗",
+      "commissionConsumption": "代投消耗",
+      "firstDayRoi": "首日ROI",
+      "minConsumption": "最低消耗",
+      "estimatedProfit": "预估利润",
+      "minProfit": "最低利润",
+      "trend": "趋势",
+      "operation": "操作",
+      "detail": "详情",
+      "campaignName": "广告系列名称",
+      "channel": "渠道",
+      "country": "国家",
+      "totalCampaigns": "共{n} 条广告系列",
+      "adSpendSubtotal": "广告支出小计",
+      "difference": "差异",
+      "commissionSubtotal": "代投消耗小计",
+      "directConsumption": "直投消耗",
+      "commissionRatio": "代投占比",
+      "profitSubtotal": "利润小计",
+      "estimated": "预估",
+      "minimum": "最低",
+      "nonProfitable": "不盈利"
+    }
+  },
   "table": {
     "form": {
       "reset": "重置",

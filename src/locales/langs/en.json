@@ -271,6 +271,77 @@
       "menu": "Menu Manage"
     }
   },
+  "myAds": {
+    "header": {
+      "person": "Person",
+      "period": "Period",
+      "exportReport": "Export Report"
+    },
+    "userCard": {
+      "responsible": "Responsible"
+    },
+    "tabs": {
+      "summary": "Summary",
+      "appPlatform": "App + Ad Platform",
+      "campaignDetail": "Campaign Detail"
+    },
+    "summary": {
+      "adSpendTrend": "Ad Spend & Profit Trend (7 days)",
+      "byDay": "By Day",
+      "channelDistribution": "Ad Spend by Channel",
+      "appSpendShare": "App Ad Spend Share",
+      "paceMonitor": "Spend Pace Monitor",
+      "remainingDays": "{n} days left in current period"
+    },
+    "appPlatform": {
+      "groupByApp": "By App",
+      "groupByPlatform": "By Platform",
+      "viewDesc": "App view | Ad data per app per platform",
+      "totalSpend": "Total Ad Spend",
+      "avgRoi": "Avg First Day ROI",
+      "platformCount": "Platforms",
+      "appsSummary": "App Summary",
+      "appsUnit": " apps",
+      "campaignsCount": " campaigns",
+      "overBudget": "Over Budget",
+      "roiBelow": "ROI Below Target",
+      "notStarted": "Not Started",
+      "estimatedProfit": "Estimated Total Profit",
+      "minProfit": "Min Total Profit"
+    },
+    "campaignDetail": {
+      "searchPlaceholder": "Search campaign name",
+      "filterApp": "App",
+      "filterPlatform": "Ad Platform",
+      "filterCountry": "Country",
+      "filterStatus": "Status",
+      "filterType": "Type",
+      "all": "All",
+      "adSpendBudget": "Ad Spend/Budget",
+      "calculatedConsumption": "Calculated Consumption",
+      "commissionConsumption": "Commission Consumption",
+      "firstDayRoi": "First Day ROI",
+      "minConsumption": "Min Consumption",
+      "estimatedProfit": "Estimated Profit",
+      "minProfit": "Min Profit",
+      "trend": "Trend",
+      "operation": "Operation",
+      "detail": "Detail",
+      "campaignName": "Campaign Name",
+      "channel": "Channel",
+      "country": "Country",
+      "totalCampaigns": "{n} campaigns",
+      "adSpendSubtotal": "Ad Spend Subtotal",
+      "difference": "Difference",
+      "commissionSubtotal": "Commission Subtotal",
+      "directConsumption": "Direct Consumption",
+      "commissionRatio": "Commission Ratio",
+      "profitSubtotal": "Profit Subtotal",
+      "estimated": "Estimated",
+      "minimum": "Minimum",
+      "nonProfitable": "Non-profitable"
+    }
+  },
   "table": {
     "form": {
       "reset": "Reset",
