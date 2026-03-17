@@ -5,7 +5,7 @@ import type { AccountPerformanceMock } from '../types'
 
 export const MOCK_ACCOUNT_PERFORMANCE: AccountPerformanceMock = {
   dateRange: ['2026-02-26', '2026-03-04'],
-  summaryText: '共6个应用 / 31个广告账户',
+  summaryText: '共 6 个应用 / 31 个广告账户',
 
   kpi: [
     {

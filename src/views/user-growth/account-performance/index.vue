@@ -54,8 +54,8 @@
 
     <!-- 主体：左侧表格 + 右侧图表 -->
     <ElRow :gutter="16" class="ap-body">
-      <!-- 左侧：应用×平台×账户明细表 -->
-      <ElCol :xs="24" :xl="14">
+      <!-- 左侧：应用×平台×账户明细表（min-width:0 让列可收缩，表格内部横向滚动） -->
+      <ElCol :xs="24" :xl="17" class="ap-table-col">
         <ElCard class="ap-table-card" shadow="never">
           <template #header>
             <span class="ap-table-title">应用 × 平台 × 账户明细</span>
@@ -66,7 +66,7 @@
               <ElButton size="small" text>自定义列</ElButton>
               <ElInput
                 v-model="tableSearch"
-                placeholder="搜索账户..."
+                placeholder="Q 搜索账户..."
                 clearable
                 class="ap-table-search"
               />
@@ -85,9 +85,20 @@
             >
               <ElTableColumn label="应用 / 平台 / 账户" min-width="200">
                 <template #default="{ row }">
-                  <span :class="row.type === 'account' ? 'ap-cell-account' : ''">{{
-                    row.name
-                  }}</span>
+                  <span class="ap-cell-name">
+                    <ElIcon v-if="row.type === 'app'" class="ap-row-icon ap-row-icon--app">
+                      <Monitor />
+                    </ElIcon>
+                    <ElIcon
+                      v-else-if="row.type === 'platform'"
+                      class="ap-row-icon ap-row-icon--platform"
+                    >
+                      <Iphone />
+                    </ElIcon>
+                    <span :class="row.type === 'account' ? 'ap-cell-account' : ''">{{
+                      row.name
+                    }}</span>
+                  </span>
                 </template>
               </ElTableColumn>
               <ElTableColumn label="广告支出" width="100" align="right">
@@ -96,8 +107,19 @@
               <ElTableColumn label="预算" width="90" align="right">
                 <template #default="{ row }">{{ formatMoney(row.budget) }}</template>
               </ElTableColumn>
-              <ElTableColumn label="使用率" width="85" align="right">
-                <template #default="{ row }">{{ row.usageRate }}%</template>
+              <ElTableColumn label="使用率" width="95" align="right">
+                <template #default="{ row }">
+                  <div class="ap-usage-cell">
+                    <span class="ap-usage-value">{{ row.usageRate }}%</span>
+                    <ElProgress
+                      :percentage="Math.min(100, row.usageRate)"
+                      :color="getUsageRateColor(row.usageRate)"
+                      :show-text="false"
+                      :stroke-width="6"
+                      class="ap-usage-bar"
+                    />
+                  </div>
+                </template>
               </ElTableColumn>
               <ElTableColumn label="CPI" width="70" align="right">
                 <template #default="{ row }">{{ row.cpi.toFixed(2) }}</template>
@@ -120,12 +142,12 @@
                   <span :class="getRoiClass(row.roi7)">{{ row.roi7 }}%</span>
                 </template>
               </ElTableColumn>
-              <ElTableColumn label="状态" width="90" align="center">
+              <ElTableColumn label="状态" width="100" align="center">
                 <template #default="{ row }">
-                  <span v-if="row.status === 'normal'" class="ap-status-dot ap-status--normal"
+                  <span v-if="row.status === 'normal'" class="ap-status ap-status--normal"
                     >正常</span
                   >
-                  <span v-else class="ap-status-dot ap-status--warning">{{
+                  <span v-else class="ap-status ap-status--warning">{{
                     row.statusText || 'ROI偏低'
                   }}</span>
                 </template>
@@ -151,14 +173,14 @@
         </ElCard>
       </ElCol>
 
-      <!-- 右侧：图表与预警 -->
-      <ElCol :xs="24" :xl="10">
+      <!-- 右侧：图表与预警（宽度缩小约 1/3 与原型一致） -->
+      <ElCol :xs="24" :xl="7" class="ap-charts-col">
         <div class="ap-charts">
           <!-- 渠道消耗分布 -->
           <ElCard class="ap-chart-card" shadow="never">
             <template #header>渠道消耗分布</template>
             <div ref="channelChartRef" class="ap-chart-wrap ap-chart-donut"></div>
-            <div class="ap-donut-center">$17,022</div>
+            <div class="ap-donut-center">{{ donutCenterText }}</div>
           </ElCard>
 
           <!-- 账户预算使用率分布 -->
@@ -198,6 +220,7 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, watch } from 'vue'
+  import { Monitor, Iphone } from '@element-plus/icons-vue'
   import { useChart } from '@/hooks/core/useChart'
   import type { AccountDetailRow } from './types'
   import { MOCK_ACCOUNT_PERFORMANCE } from './mock/data'
@@ -257,6 +280,20 @@
     if (roi >= ROI_TARGET) return 'ap-roi-green'
     return 'ap-roi-red'
   }
+
+  /** 使用率进度条颜色：0-20 红，20-40 橙，40-60 黄，60+ 绿 */
+  function getUsageRateColor(rate: number): string {
+    if (rate < 20) return '#f56c6c'
+    if (rate < 40) return '#e6a23c'
+    if (rate < 60) return '#e6df44'
+    return '#67c23a'
+  }
+
+  /** 甜甜圈图中心金额，从 KPI 近7天广告支出取 */
+  const donutCenterText = computed(() => {
+    const k = mock.value.kpi.find((item) => item.type === 'spend')
+    return k?.value ?? '$0'
+  })
 
   function onExport() {
     console.log('导出', dateRange.value)
@@ -370,7 +407,14 @@
             symbol: 'circle',
             symbolSize: 6,
             lineStyle: { width: 2 },
-            itemStyle: { color: '#67c23a' }
+            itemStyle: { color: '#67c23a' },
+            label: {
+              show: true,
+              position: 'top',
+              formatter: '{c}%',
+              fontSize: 11,
+              color: isDark ? '#9ca3af' : '#666'
+            }
           }
         ],
         markLine: {
@@ -545,6 +589,17 @@
 
   .ap-body {
     margin-bottom: 16px;
+
+    /* 左侧列允许被挤压，表格在内部横向滚动，避免把右侧挤掉 */
+    .ap-table-col {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    /* 右侧列不参与收缩，始终保留约 7/24 宽度 */
+    .ap-charts-col {
+      flex-shrink: 0;
+    }
   }
 
   .ap-table-card {
@@ -616,9 +671,76 @@
     --el-table-header-bg-color: var(--el-fill-color-dark);
   }
 
+  .ap-cell-name {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .ap-row-icon {
+    flex-shrink: 0;
+    font-size: 16px;
+    color: var(--el-text-color-secondary);
+
+    &.ap-row-icon--app {
+      color: var(--el-color-primary);
+    }
+
+    &.ap-row-icon--platform {
+      color: var(--el-text-color-regular);
+    }
+  }
+
   .ap-cell-account {
     font-family: ui-monospace, monospace;
     font-size: 12px;
+  }
+
+  .ap-usage-cell {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .ap-usage-value {
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
+  .ap-usage-bar {
+    flex-shrink: 0;
+    width: 48px;
+
+    :deep(.el-progress-bar) {
+      width: 100%;
+    }
+  }
+
+  .ap-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+
+    &--normal {
+      color: var(--el-color-success);
+
+      &::before {
+        margin-right: 4px;
+        font-size: 10px;
+        content: '●';
+      }
+    }
+
+    &--warning {
+      color: var(--el-color-warning);
+
+      &::before {
+        margin-right: 4px;
+        font-size: 10px;
+        content: '▲';
+      }
+    }
   }
 
   .ap-roi-green {
@@ -629,28 +751,21 @@
     color: var(--el-color-danger);
   }
 
-  .ap-status-dot {
-    font-size: 12px;
-
-    &.ap-status--normal {
-      color: var(--el-color-success);
-    }
-
-    &.ap-status--warning {
-      color: var(--el-color-warning);
-    }
-  }
-
   .ap-table-footer {
     margin-top: 12px;
     font-size: 12px;
     color: var(--el-text-color-secondary);
   }
 
+  /* 右侧列整体缩小约 1/3 与原型一致 */
+  .ap-charts-col {
+    max-width: 100%;
+  }
+
   .ap-charts {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 10px;
   }
 
   .ap-chart-card {
@@ -658,11 +773,14 @@
     background: var(--el-bg-color);
 
     :deep(.el-card__header) {
+      padding: 8px 12px;
+      font-size: 13px;
       color: var(--el-text-color-primary);
     }
 
     :deep(.el-card__body) {
       position: relative;
+      padding: 8px 12px;
       background: var(--el-bg-color);
     }
   }
@@ -672,27 +790,27 @@
   }
 
   .ap-chart-wrap {
-    height: 200px;
-    min-height: 160px;
+    height: 133px;
+    min-height: 107px;
 
     &.ap-chart-donut {
-      height: 220px;
-      min-height: 200px;
+      height: 147px;
+      min-height: 133px;
     }
 
     &.ap-chart-bar {
-      height: 180px;
-      min-height: 160px;
+      height: 120px;
+      min-height: 107px;
     }
 
     &.ap-chart-line {
-      height: 200px;
-      min-height: 180px;
+      height: 133px;
+      min-height: 120px;
     }
 
     &.ap-chart-pace {
-      height: 160px;
-      min-height: 140px;
+      height: 107px;
+      min-height: 93px;
     }
 
     @media (width <= 768px) {
@@ -705,7 +823,7 @@
     position: absolute;
     top: 50%;
     left: 35%;
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--el-text-color-primary);
     pointer-events: none;
@@ -721,10 +839,10 @@
   .ap-alert-item {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     align-items: flex-start;
-    padding: 10px 0;
-    font-size: 13px;
+    padding: 6px 0;
+    font-size: 12px;
     border-bottom: 1px solid var(--el-border-color-lighter);
 
     &:last-child {
