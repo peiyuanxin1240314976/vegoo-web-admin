@@ -44,6 +44,11 @@
       :row-data="dialogRowData"
       @submit="handleDialogSubmit"
     />
+    <ConversionDeleteDialog
+      v-model:visible="deleteDialogVisible"
+      :row="deleteRow"
+      @confirm="handleDeleteConfirm"
+    />
   </div>
 </template>
 
@@ -54,6 +59,7 @@
   import ConversionTable from './modules/conversion-table.vue'
   import ConversionSidePanel from './modules/conversion-side-panel.vue'
   import ConversionMappingDialog from './modules/conversion-mapping-dialog.vue'
+  import ConversionDeleteDialog from './modules/conversion-delete-dialog.vue'
   import {
     fetchConversionMappingListMock,
     MOCK_TYPE_DISTRIBUTION,
@@ -65,7 +71,7 @@
     ConversionMappingItem,
     ConversionMappingForm
   } from './types'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessage } from 'element-plus'
 
   defineOptions({ name: 'ConversionManagement' })
 
@@ -130,17 +136,17 @@
     getData()
   }
 
+  const deleteDialogVisible = ref(false)
+  const deleteRow = ref<ConversionMappingItem | null>(null)
+
   function handleDelete(row: ConversionMappingItem) {
-    ElMessageBox.confirm('确定删除该映射？', '提示', {
-      type: 'warning',
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-      .then(() => {
-        console.log('Delete (mock):', row.id)
-        getData()
-      })
-      .catch(() => {})
+    deleteRow.value = row
+    deleteDialogVisible.value = true
+  }
+
+  function handleDeleteConfirm(row: ConversionMappingItem) {
+    console.log('Delete (mock):', row.id)
+    getData()
   }
 
   function handleBatchEnable() {

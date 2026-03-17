@@ -153,6 +153,33 @@ export const MOCK_APP_OPTIONS = [
   { label: 'com.other.app', value: 'com.other.app' }
 ]
 
+/** 弹窗 - 广告平台选项 */
+export const MOCK_AD_PLATFORM_OPTIONS = [
+  { label: 'Google Ads', value: 'google' },
+  { label: 'Meta', value: 'meta' },
+  { label: 'TikTok', value: 'tiktok' },
+  { label: 'Mintegral', value: 'mintegral' }
+]
+
+/** 弹窗 - MCC 账户（按广告平台加载，mock 写死一条） */
+export const MOCK_MCC_BY_PLATFORM: Record<string, { label: string; value: string }[]> = {
+  google: [{ label: '560-369-9741', value: '560-369-9741' }],
+  meta: [{ label: '560-369-9742', value: '560-369-9742' }],
+  tiktok: [{ label: '560-369-9743', value: '560-369-9743' }],
+  mintegral: [{ label: '560-369-9744', value: '560-369-9744' }]
+}
+
+/** 弹窗 - 应用包名下拉（从广告平台接口获取，复用应用选项去掉“全部”） */
+export const MOCK_APP_OPTIONS_FOR_DIALOG = MOCK_APP_OPTIONS.filter((o) => o.value !== '')
+
+/** 弹窗 - 转化类型展示选项（付费/激活/行为/收入） */
+export const MOCK_CONVERSION_DISPLAY_TYPE_OPTIONS = [
+  { label: '付费转化', value: 'paid' },
+  { label: '激活转化', value: 'activation' },
+  { label: '行为转化', value: 'behavior' },
+  { label: '收入转化', value: 'revenue' }
+]
+
 /** 筛选 - 转化类型选项 */
 export const MOCK_CONVERSION_TYPE_OPTIONS = [
   { label: '全部转化类型', value: '' },

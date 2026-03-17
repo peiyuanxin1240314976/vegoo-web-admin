@@ -19,6 +19,12 @@ export type MappingStatus = 'enabled' | 'duplicate' | 'unmapped'
 /** 平台 */
 export type PlatformType = 'android' | 'ios'
 
+/** 广告平台（弹窗用） */
+export type AdPlatformType = 'google' | 'meta' | 'tiktok' | 'mintegral'
+
+/** 转化类型展示（付费/激活/行为/收入，弹窗用） */
+export type ConversionDisplayType = 'paid' | 'activation' | 'behavior' | 'revenue'
+
 /** 计费类型 */
 export type BillingType = 'CPA' | 'CPI' | 'CPE' | ''
 
@@ -77,12 +83,16 @@ export interface ConversionSideStats {
 /** 新增/编辑映射表单 */
 export interface ConversionMappingForm {
   platform?: PlatformType
+  adPlatform?: AdPlatformType
+  mccAccount?: string
   app?: string
   appPackage?: string
   conversionName?: string
   conversionId?: string
   platformConversionType?: PlatformConversionType
+  conversionDisplayType?: ConversionDisplayType
   systemDisplayName?: string
   billingType?: BillingType
   status?: MappingStatus
+  remarks?: string
 }
