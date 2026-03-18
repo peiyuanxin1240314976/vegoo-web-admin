@@ -28,9 +28,14 @@
     "success": true,
     "message": "删除成功"
   },
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/mappings-delete",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "id (必填)",
+    "responseBody": "success, message?"
+  },
   "apiSuggestion": {
-    "method": "DELETE",
-    "path": "/ugc/conversion/mappings/{id}",
     "notes": [
       "若存在回收站/审计：建议软删字段 deletedAt/deletedBy，不影响前端。",
       "如需二次确认逻辑（例如：该映射已绑定活动），建议返回明确 message。"

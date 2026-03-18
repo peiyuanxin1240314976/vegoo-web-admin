@@ -107,9 +107,14 @@
     "id": "19",
     "message": "新增成功"
   },
-  "apiSuggestion": {
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/mappings-create",
     "method": "POST",
-    "path": "/ugc/conversion/mappings",
+    "priority": "P2",
+    "requestBody": "source, adPlatform, mccAccount, appPackage, conversionName, conversionId?, platformConversionType?, conversionDisplayType?, systemDisplayName, billingType?, status?, remarks?",
+    "responseBody": "success, id, message?"
+  },
+  "apiSuggestion": {
     "notes": [
       "source/adPlatform 兼容：后端优先使用 source。",
       "如需防重：建议后端以 (source,mccAccount,appPackage,conversionId|conversionName) 做唯一性校验，并在冲突时返回明确 message。",

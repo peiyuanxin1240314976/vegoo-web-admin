@@ -1,0 +1,89 @@
+{
+  "_comment": "广告成效 - 主表格（Country tab）。由原 03 的 tab=country 拆分而来。",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "关键字搜索（country 等）。空字符串表示不筛选。"
+      },
+      "current": {
+        "type": "number",
+        "required": false,
+        "default": 1,
+        "description": "页码，从 1 开始。"
+      },
+      "size": { "type": "number", "required": false, "default": 10, "description": "每页条数。" },
+      "dateRange": {
+        "type": "string",
+        "required": true,
+        "enum": ["today", "yesterday", "last7d", "month"],
+        "description": "日期范围（与 overview 一致）。"
+      },
+      "app": { "type": "string", "required": false, "description": "应用筛选。空字符串表示全部。" },
+      "adPlatform": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选。空字符串表示全部。"
+      },
+      "account": {
+        "type": "string",
+        "required": false,
+        "description": "账户筛选。空字符串表示全部。"
+      },
+      "country": {
+        "type": "string",
+        "required": false,
+        "description": "国家筛选。空字符串表示全部。"
+      }
+    },
+    "response": {
+      "rows": {
+        "type": "AdPerformanceCountryRow[]",
+        "required": true,
+        "description": "国家维度明细。"
+      },
+      "pagination": {
+        "type": "AdPerformancePagination",
+        "required": true,
+        "description": "分页信息。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "current": 1,
+    "size": 10,
+    "dateRange": "today",
+    "app": "",
+    "adPlatform": "",
+    "account": "",
+    "country": ""
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "id": "ct1",
+        "country": "US",
+        "spend": 5674,
+        "spendSharePercent": 16,
+        "cpi": 1.01,
+        "ctr": 3.7,
+        "cvr": 30.6,
+        "roi1": 90,
+        "roi3": 95,
+        "roi7": 101,
+        "roiTotal": 108,
+        "estimatedProfit": 1620
+      }
+    ],
+    "pagination": { "current": 1, "size": 10, "total": 38 }
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-performance/table/country",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?, current?, size?, dateRange, app?, adPlatform?, account?, country?",
+    "responseBody": "rows, pagination"
+  }
+}

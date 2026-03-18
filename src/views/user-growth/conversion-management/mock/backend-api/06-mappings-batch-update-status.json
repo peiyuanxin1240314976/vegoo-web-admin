@@ -113,9 +113,14 @@
     "skippedCount": 0,
     "message": "已批量启用"
   },
-  "apiSuggestion": {
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/mappings-batch-update-status",
     "method": "POST",
-    "path": "/ugc/conversion/mappings/batch-update-status",
+    "priority": "P2",
+    "requestBody": "mode (byFilter|byIds), filters? (与列表一致), ids? (string[]), targetStatus (enabled|unmapped)",
+    "responseBody": "success, affectedCount, skippedCount?, skippedReason?, skippedIds?, message?"
+  },
+  "apiSuggestion": {
     "notes": [
       "也可拆成两个接口：/batch-enable 与 /batch-disable，但合并后更易维护。",
       "请保证批量接口与列表筛选口径一致，否则前端无法保证“看到什么就批量什么”。"

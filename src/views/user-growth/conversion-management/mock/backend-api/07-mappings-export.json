@@ -80,10 +80,14 @@
     "downloadUrl": "https://files.example.com/download/conversion-mappings.xlsx?sign=yyy",
     "expireAt": "2026-03-17T12:00:00Z"
   },
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/mappings-export",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "platform, appPackage|app, conversionType, status, keyword, format? (xlsx|csv)",
+    "responseBody": "方案A: 文件流 | 方案B: downloadUrl, expireAt?"
+  },
   "apiSuggestion": {
-    "method": "GET",
-    "path": "/ugc/conversion/mappings/export",
-    "queryParams": ["platform", "appPackage|app", "conversionType", "status", "keyword", "format"],
     "notes": [
       "数据量大时建议异步导出：先返回 taskId，再轮询 task 状态拿 downloadUrl。",
       "conversionId 仍需按 string 导出，避免 Excel 科学计数法/精度丢失。"

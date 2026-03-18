@@ -1,0 +1,247 @@
+{
+  "_comment": "广告成效 - 广告系列详情（抽屉）：顶部 KPI + ROI 汇总 + 三维度 tabs（广告组/日期/国家）。对应 types.ts: AdPerformanceCampaignDetail。",
+  "fieldDescription": {
+    "request": {
+      "campaignId": {
+        "type": "string",
+        "required": true,
+        "description": "广告系列 ID（对应表格 campaign 行 id）。"
+      },
+      "dateRange": {
+        "type": "string",
+        "required": false,
+        "enum": ["today", "yesterday", "last7d", "month"],
+        "description": "可选：与主页面筛选同步的日期范围；若不传，后端可用默认值。"
+      }
+    },
+    "response": {
+      "header": {
+        "type": "AdPerformanceDetailHeader",
+        "required": true,
+        "description": "抽屉头部信息。"
+      },
+      "topKpi": {
+        "type": "AdPerformanceDetailTopKpi",
+        "required": true,
+        "description": "抽屉顶部 KPI（总消耗/CPI/首日ROI/预算进度）。"
+      },
+      "roiSummary": {
+        "type": "AdPerformanceDetailRoiSummary",
+        "required": true,
+        "description": "ROI 汇总与预估利润。"
+      },
+      "tabs": {
+        "type": "{ adGroup: AdPerformanceDetailAdGroupTabData, date: AdPerformanceDetailDateTabData, country: AdPerformanceDetailCountryTabData }",
+        "required": true,
+        "description": "三维度数据集合。"
+      }
+    },
+    "AdPerformanceDetailAdGroupTabData": {
+      "marketSummaryText": { "type": "string", "required": true, "description": "顶部提示文案。" },
+      "sortHintText": { "type": "string", "required": true, "description": "排序提示文案。" },
+      "adGroups": {
+        "type": "AdPerformanceDetailAdGroupRow[]",
+        "required": true,
+        "description": "广告组明细列表。"
+      },
+      "spendDistribution": {
+        "type": "AdPerformanceDetailSpendDistributionItem[]",
+        "required": true,
+        "description": "广告组消耗占比（0-100）。"
+      },
+      "quickCards": {
+        "type": "AdPerformanceDetailQuickMetricCard[]",
+        "required": true,
+        "description": "右侧快捷指标卡。"
+      },
+      "insightTitle": { "type": "string", "required": true, "description": "洞察标题。" },
+      "insightText": { "type": "string", "required": true, "description": "洞察内容。" }
+    },
+    "AdPerformanceDetailDateTabData": {
+      "range": {
+        "type": "string",
+        "required": true,
+        "enum": ["last7d", "last14d", "month"],
+        "description": "日期维度范围（抽屉内部 tab）。"
+      },
+      "spendRoiTrend": {
+        "type": "AdPerformanceDetailTrendPoint[]",
+        "required": true,
+        "description": "消耗/首日ROI 双轴趋势。"
+      },
+      "cpiTrend": {
+        "type": "AdPerformanceDetailTrendPoint[]",
+        "required": true,
+        "description": "CPI 趋势。"
+      },
+      "dailyRows": {
+        "type": "AdPerformanceDetailDailyRow[]",
+        "required": true,
+        "description": "每日明细表格。"
+      },
+      "roiTarget": { "type": "number", "required": true, "description": "ROI 目标线（百分比）。" },
+      "cpiTarget": { "type": "number", "required": true, "description": "CPI 目标线（数值）。" }
+    },
+    "AdPerformanceDetailCountryTabData": {
+      "marketSummaryText": { "type": "string", "required": true, "description": "顶部提示文案。" },
+      "sortHintText": { "type": "string", "required": true, "description": "排序提示文案。" },
+      "spendRows": {
+        "type": "AdPerformanceDetailCountrySpendRow[]",
+        "required": true,
+        "description": "各市场广告支出分布条。"
+      },
+      "marketRows": {
+        "type": "AdPerformanceDetailMarketRow[]",
+        "required": true,
+        "description": "市场详情表格行（含 sparkline 趋势点可选）。"
+      },
+      "insightTitle": { "type": "string", "required": true, "description": "洞察标题。" },
+      "insightText": { "type": "string", "required": true, "description": "洞察内容。" }
+    }
+  },
+  "sampleRequest": { "campaignId": "c1", "dateRange": "today" },
+  "sampleResponse": {
+    "header": { "title": "天气预报_US_Google_CRE001", "statusText": "激活" },
+    "topKpi": { "totalSpend": 12500, "cpi": 2.38, "roi1": 83, "budgetProgressPercent": 85 },
+    "roiSummary": { "roi1": 83, "roi3": 93, "roi7": 94, "roiTotal": 94, "estimatedProfit": 1240 },
+    "tabs": {
+      "adGroup": {
+        "marketSummaryText": "投放市场：5个广告组",
+        "sortHintText": "按广告支出排序",
+        "adGroups": [
+          {
+            "id": "ag1",
+            "name": "AdGroup_US_Interest",
+            "statusText": "激活",
+            "spend": 5125,
+            "cpi": 2.21,
+            "ctr": 3.2,
+            "cvr": 32.1,
+            "roi1": 86,
+            "roiTotal": 96,
+            "actionText": "详情"
+          },
+          {
+            "id": "ag2",
+            "name": "AdGroup_US_Broad",
+            "statusText": "激活",
+            "spend": 4125,
+            "cpi": 2.38,
+            "ctr": 2.8,
+            "cvr": 28.9,
+            "roi1": 82,
+            "roiTotal": 92,
+            "actionText": "详情"
+          },
+          {
+            "id": "ag3",
+            "name": "AdGroup_US_Retarget",
+            "statusText": "暂停",
+            "spend": 3250,
+            "cpi": 2.55,
+            "ctr": 1.9,
+            "cvr": 22.4,
+            "roi1": 79,
+            "roiTotal": 89,
+            "actionText": "启用"
+          }
+        ],
+        "spendDistribution": [
+          { "name": "AdGroup_US_Interest", "percent": 41 },
+          { "name": "AdGroup_US_Broad", "percent": 33 },
+          { "name": "AdGroup_US_Retarget", "percent": 26 }
+        ],
+        "quickCards": [
+          { "title": "今日消耗", "value": "$1,500", "sub": "↑2.3%", "tone": "success" },
+          { "title": "账户余额", "value": "$2,380", "sub": "充足", "tone": "success" },
+          { "title": "CPI趋势", "value": "$2.38", "sub": "目标$2.50 已达", "tone": "info" },
+          { "title": "预算跑完", "value": "3天后", "sub": "按当前速度", "tone": "warning" }
+        ],
+        "insightTitle": "AI洞察与建议",
+        "insightText": "AdGroup_US_Interest近3日CPI持续下降至$2.12，建议提升预算15%以扩大规模"
+      },
+      "date": {
+        "range": "last7d",
+        "roiTarget": 80,
+        "cpiTarget": 2.5,
+        "spendRoiTrend": [
+          { "date": "2/22", "spend": 1650, "roi1": 81 },
+          { "date": "2/23", "spend": 1720, "roi1": 84 },
+          { "date": "2/24", "spend": 1580, "roi1": 78 },
+          { "date": "2/25", "spend": 1890, "roi1": 88 },
+          { "date": "2/26", "spend": 1760, "roi1": 82 },
+          { "date": "2/27", "spend": 1830, "roi1": 87 },
+          { "date": "2/28", "spend": 1780, "roi1": 85 }
+        ],
+        "cpiTrend": [
+          { "date": "2/22", "cpi": 2.45 },
+          { "date": "2/23", "cpi": 2.38 },
+          { "date": "2/24", "cpi": 2.52 },
+          { "date": "2/25", "cpi": 2.31 },
+          { "date": "2/26", "cpi": 2.38 },
+          { "date": "2/27", "cpi": 2.35 },
+          { "date": "2/28", "cpi": 2.38 }
+        ],
+        "dailyRows": [
+          {
+            "date": "2026-02-28",
+            "spend": 1780,
+            "cpi": 2.38,
+            "ctr": 3.1,
+            "cvr": 31.2,
+            "roi1": 85,
+            "wowPercent": 2.3,
+            "statusText": "稳定"
+          }
+        ]
+      },
+      "country": {
+        "marketSummaryText": "投放市场：8个国家",
+        "sortHintText": "按广告支出排序",
+        "spendRows": [
+          {
+            "countryCode": "US",
+            "countryName": "United States",
+            "spend": 5674,
+            "percent": 16,
+            "cpi": 1.01
+          },
+          { "countryCode": "CA", "countryName": "Canada", "spend": 2866, "percent": 8, "cpi": 2.38 }
+        ],
+        "marketRows": [
+          {
+            "countryCode": "US",
+            "countryName": "United States",
+            "spend": 5674,
+            "cpi": 1.01,
+            "ctr": 3.7,
+            "cvr": 30.6,
+            "roi1": 90,
+            "roi3": 95,
+            "roi7": 101,
+            "roiTotal": 108,
+            "estimatedProfit": 1620,
+            "trendDirection": "up",
+            "trendPoints": [72, 74, 76, 77, 79, 81, 83]
+          }
+        ],
+        "insightTitle": "市场洞察",
+        "insightText": "US 市场 ROI 表现优于目标线，建议优先扩量并观察 CPI 波动。"
+      }
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-performance/campaign-detail",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "campaignId (必填), dateRange?",
+    "responseBody": "AdPerformanceCampaignDetail（header/topKpi/roiSummary/tabs）"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "tabs.date.dailyRows 的 date 使用 YYYY-MM-DD，趋势点可用短日期（如 2/22）或同样用 YYYY-MM-DD，但需前后端统一。",
+      "roiTarget/cpiTarget 建议由后端按业务规则下发（不同应用/平台/国家可能不同）。",
+      "country.marketRows.trendPoints 可选；为空时前端会按 trendDirection 生成占位趋势线。"
+    ]
+  }
+}

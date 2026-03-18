@@ -82,18 +82,14 @@
     "downloadUrl": "https://files.example.com/download/conversion-data.xlsx?sign=yyy",
     "expireAt": "2026-03-17T12:00:00Z"
   },
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/data-export",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "dateRange?, platform, appPackage|app, source|adPlatform, conversionType, format? (xlsx|csv)",
+    "responseBody": "方案A: 文件流 | 方案B: downloadUrl, expireAt?"
+  },
   "apiSuggestion": {
-    "method": "GET",
-    "path": "/ugc/conversion/data/export",
-    "queryParams": [
-      "dateRangeStart",
-      "dateRangeEnd",
-      "platform",
-      "appPackage|app",
-      "source|adPlatform",
-      "conversionType",
-      "format"
-    ],
     "notes": [
       "若导出生成耗时较长，建议异步任务导出并返回 taskId。",
       "导出树表时建议增加 level 字段列（group/account/conversion），便于数据透视分析。"

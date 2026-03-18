@@ -1,0 +1,91 @@
+{
+  "_comment": "广告成效 - 主表格数据（按 tab 拆分接口）。03 为说明文件；实际接口契约见：03-a/03-b/03-c/03-d。",
+  "fieldDescription": {
+    "requestCommon": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "关键字搜索。建议后端支持模糊匹配（name/campaignName/accountName/ownerName/country 等）。空字符串表示不筛选。"
+      },
+      "current": {
+        "type": "number",
+        "required": false,
+        "default": 1,
+        "description": "页码，从 1 开始。"
+      },
+      "size": { "type": "number", "required": false, "default": 10, "description": "每页条数。" },
+      "dateRange": {
+        "type": "string",
+        "required": true,
+        "enum": ["today", "yesterday", "last7d", "month"],
+        "description": "日期范围（与 overview 一致）。"
+      },
+      "app": { "type": "string", "required": false, "description": "应用筛选。空字符串表示全部。" },
+      "adPlatform": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选。空字符串表示全部。"
+      },
+      "account": {
+        "type": "string",
+        "required": false,
+        "description": "账户筛选。空字符串表示全部。"
+      },
+      "country": {
+        "type": "string",
+        "required": false,
+        "description": "国家筛选。空字符串表示全部。"
+      }
+    },
+    "responseCommon": {
+      "rows": {
+        "type": "按 tab 不同返回对应 rows（见 03-a/03-b/03-c/03-d）",
+        "required": true,
+        "description": "表格数据行数组。campaign/owner/account 支持树表 children。"
+      },
+      "summary": {
+        "type": "OwnerTeamSummary | AccountSummary | null（仅 owner/account）",
+        "required": false,
+        "description": "汇总条：仅 owner/account tab 需要；其它 tab 可省略或返回 null。"
+      },
+      "pagination": {
+        "type": "AdPerformancePagination",
+        "required": true,
+        "description": "分页信息。total 建议为筛选后总量。"
+      }
+    }
+  },
+  "apiList": [
+    {
+      "url": "POST /api/user-growth/ad-performance/table/campaign",
+      "method": "POST",
+      "priority": "P0",
+      "ref": "03-a"
+    },
+    {
+      "url": "POST /api/user-growth/ad-performance/table/country",
+      "method": "POST",
+      "priority": "P0",
+      "ref": "03-b"
+    },
+    {
+      "url": "POST /api/user-growth/ad-performance/table/owner",
+      "method": "POST",
+      "priority": "P0",
+      "ref": "03-c"
+    },
+    {
+      "url": "POST /api/user-growth/ad-performance/table/account",
+      "method": "POST",
+      "priority": "P0",
+      "ref": "03-d"
+    }
+  ],
+  "apiSuggestion": {
+    "notes": [
+      "建议后端在分页时只对“顶层行”分页：campaign=系列、owner=投放师、account=账户；children 不参与分页。",
+      "owner/account 的 children 建议按 spend 降序返回，便于 UI 阅读。",
+      "若后端需要排序/筛选更复杂，建议扩展字段 sortBy/sortOrder，并与前端列 key 对齐。"
+    ]
+  }
+}

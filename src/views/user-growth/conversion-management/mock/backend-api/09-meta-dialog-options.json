@@ -124,10 +124,14 @@
       }
     ]
   },
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/meta-dialog-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "source|adPlatform?, mccAccount?, appPackage?",
+    "responseBody": "adPlatforms, mccAccounts?, apps?, conversions? (ConversionOption[]，含 conversionId string)"
+  },
   "apiSuggestion": {
-    "method": "GET",
-    "path": "/ugc/conversion/meta/dialog-options",
-    "queryParams": ["source|adPlatform", "mccAccount", "appPackage"],
     "notes": [
       "可拆成 4 个更清晰的接口：ad-platforms、mccs、apps、conversions；但合并接口能减少联调成本。",
       "conversionId 必须返回 string。",

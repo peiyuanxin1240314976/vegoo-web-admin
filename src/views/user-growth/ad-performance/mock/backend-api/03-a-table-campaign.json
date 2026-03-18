@@ -1,0 +1,111 @@
+{
+  "_comment": "广告成效 - 主表格（Campaign tab）。由原 03 的 tab=campaign 拆分而来。",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "关键字搜索（name/appName/channel/country 等）。空字符串表示不筛选。"
+      },
+      "current": {
+        "type": "number",
+        "required": false,
+        "default": 1,
+        "description": "页码，从 1 开始。"
+      },
+      "size": { "type": "number", "required": false, "default": 10, "description": "每页条数。" },
+      "dateRange": {
+        "type": "string",
+        "required": true,
+        "enum": ["today", "yesterday", "last7d", "month"],
+        "description": "日期范围（与 overview 一致）。"
+      },
+      "app": { "type": "string", "required": false, "description": "应用筛选。空字符串表示全部。" },
+      "adPlatform": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选。空字符串表示全部。"
+      },
+      "account": {
+        "type": "string",
+        "required": false,
+        "description": "账户筛选。空字符串表示全部。"
+      },
+      "country": {
+        "type": "string",
+        "required": false,
+        "description": "国家筛选。空字符串表示全部。"
+      }
+    },
+    "response": {
+      "rows": {
+        "type": "AdPerformanceCampaignRow[]",
+        "required": true,
+        "description": "系列维度明细。支持树表 children（AdGroup 行）。"
+      },
+      "pagination": {
+        "type": "AdPerformancePagination",
+        "required": true,
+        "description": "分页信息。建议只对顶层 campaign 行分页。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "current": 1,
+    "size": 10,
+    "dateRange": "today",
+    "app": "",
+    "adPlatform": "",
+    "account": "",
+    "country": ""
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "id": "c1",
+        "appName": "Weather5",
+        "name": "Weather5_US_Google_CRE001",
+        "channel": "google",
+        "country": "US",
+        "status": "active",
+        "spend": 12450,
+        "budget": 13000,
+        "spendBudgetPercent": 83,
+        "cpi": 2.37,
+        "ctr": 3.1,
+        "cvr": 31.2,
+        "roi1": 85,
+        "roi7": 94,
+        "estimatedProfit": 1240,
+        "children": [
+          {
+            "id": "c1-1",
+            "appName": "Weather5",
+            "name": "AdGroup_US_Interest_Broad",
+            "channel": "google",
+            "country": "US",
+            "status": "active",
+            "spend": 4200,
+            "budget": 4500,
+            "spendBudgetPercent": 93,
+            "cpi": 2.2,
+            "ctr": 3.2,
+            "cvr": 32,
+            "roi1": 86,
+            "roi7": 95,
+            "estimatedProfit": 420
+          }
+        ]
+      }
+    ],
+    "pagination": { "current": 1, "size": 10, "total": 604 }
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-performance/table/campaign",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?, current?, size?, dateRange, app?, adPlatform?, account?, country?",
+    "responseBody": "rows, pagination"
+  }
+}

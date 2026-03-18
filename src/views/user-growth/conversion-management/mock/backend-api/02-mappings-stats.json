@@ -119,10 +119,14 @@
     "mappingStats": { "mapped": 15, "duplicate": 2, "unmapped": 1 },
     "platformStats": { "android": 18, "ios": 0 }
   },
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/mappings-stats",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "platform, appPackage|app, conversionType, status, keyword",
+    "responseBody": "typeDistribution, mappingStats { mapped, duplicate, unmapped }, platformStats { android, ios }"
+  },
   "apiSuggestion": {
-    "method": "GET",
-    "path": "/ugc/conversion/mappings/stats",
-    "queryParams": ["platform", "appPackage|app", "conversionType", "status", "keyword"],
     "notes": [
       "建议统计口径与列表筛选完全一致，前端按同一套筛选值调用两个接口。",
       "typeDistribution.value 建议后端保证总和约等于 100（允许四舍五入误差）。"

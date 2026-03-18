@@ -64,9 +64,14 @@
       { "label": "未映射", "value": "unmapped" }
     ]
   },
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/meta-filter-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "无（或 {}）",
+    "responseBody": "platformOptions, appOptions, conversionTypeOptions, statusOptions? (均为 { label, value }[])"
+  },
   "apiSuggestion": {
-    "method": "GET",
-    "path": "/ugc/conversion/meta/filter-options",
     "notes": [
       "若 label 需要 i18n，建议返回 i18nKey（例如 conversionManagement.filterPlatformAll），前端再翻译；否则直接返回中文 label 即可。",
       "appOptions 建议根据用户权限/组织过滤，只下发可见应用。"

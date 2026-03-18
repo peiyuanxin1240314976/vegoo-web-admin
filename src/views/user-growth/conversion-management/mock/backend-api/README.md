@@ -1,86 +1,170 @@
-## 转化管理（Conversion Management）接口 Mock 规范（给后端/联调用）
+# 转化管理（Conversion Management）接口 Mock 规范
 
-本目录为「用户增长 / 转化管理」页面整理的接口样例与字段说明，目标是：
+本目录为「用户增长 / 转化管理」页面的接口定义，供后端实现与前端联调使用。
 
-- 每个接口 1 个 JSON 文件，统一结构：`fieldDescription` + `sampleRequest` + `sampleResponse` + `apiSuggestion`
-- **字段解释尽量细**：说明类型、枚举、是否必填、业务含义与展示用途
-- 前端可直接用 `sampleResponse` 作为联调对照；后端可按该结构实现真实接口
+## 一、URL 与请求规范
 
-### 目录结构
+- **规则**：采用 **模块 + 功能名称** 的路径，**全部使用 POST**，请求体为 JSON。
+- **父级路径**：与前端路由一致，为 `/api/user-growth/conversion-management`（对应路由 `/user-growth/conversion-management`）。
+- **功能路径**：kebab-case，见下表。
 
-- `01-mappings-list.json`：转化映射列表（分页+筛选）
-- `02-mappings-stats.json`：右侧统计（类型分布/映射状态/平台分布）
-- `03-mappings-create.json`：新增映射
-- `04-mappings-update.json`：编辑映射
-- `05-mappings-delete.json`：删除映射
-- `12-mappings-detail.json`：映射详情（可选但强烈建议，用于编辑回显完整字段）
-- `06-mappings-batch-update-status.json`：批量启用/禁用
-- `07-mappings-export.json`：导出映射表
-- `08-meta-filter-options.json`：筛选下拉选项（平台/应用/转化类型/状态）
-- `09-meta-dialog-options.json`：弹窗级联（广告平台→MCC→App→Conversion）
-- `13-meta-conversion-display-type-options.json`：转化展示分类选项（可选，后端统一配置时使用）
-- `10-data-tab.json`：Data Tab 总接口（KPI+树表+右侧面板）
-- `11-data-export.json`：Data Tab 导出（可选）
+| 优先级 | 功能说明 | URL（POST） | 对应文件 |
+| --- | --- | --- | --- |
+| **P0** | 筛选下拉选项 | `/api/user-growth/conversion-management/meta-filter-options` | 08 |
+| **P0** | 映射列表（分页） | `/api/user-growth/conversion-management/mappings-list` | 01 |
+| **P0** | 映射统计 | `/api/user-growth/conversion-management/mappings-stats` | 02 |
+| **P0** | 弹窗级联选项 | `/api/user-growth/conversion-management/meta-dialog-options` | 09 |
+| **P0** | 映射详情（编辑回显） | `/api/user-growth/conversion-management/mappings-detail` | 12 |
+| **P0** | Data Tab 总数据 | `/api/user-growth/conversion-management/data-tab` | 10 |
+| **P1** | 转化展示分类选项 | `/api/user-growth/conversion-management/meta-conversion-display-type-options` | 13 |
+| **P2** | 新增映射 | `/api/user-growth/conversion-management/mappings-create` | 03 |
+| **P2** | 编辑映射 | `/api/user-growth/conversion-management/mappings-update` | 04 |
+| **P2** | 删除映射 | `/api/user-growth/conversion-management/mappings-delete` | 05 |
+| **P2** | 批量启用/禁用 | `/api/user-growth/conversion-management/mappings-batch-update-status` | 06 |
+| **P2** | 导出映射表 | `/api/user-growth/conversion-management/mappings-export` | 07 |
+| **P2** | Data Tab 导出 | `/api/user-growth/conversion-management/data-export` | 11 |
 
-### 统一约定（非常重要）
+**优先级规则**：**先获取数据为主（P0/P1），后操作数据为辅助（P2）**。
 
-#### 1) ID/数字字段类型
+- **P0**：页面首屏或 Tab 切换必须的查询（列表、统计、筛选选项、详情、Data 总接口）。
+- **P1**：非首屏必需但常用的配置类获取（如展示分类选项）。
+- **P2**：增删改、批量操作、导出等写操作。
 
-- **`conversionId` 必须用字符串**：广告平台侧 ID 可能是长整型，前端/Excel 会有精度问题，统一用 string。
-- 列表行 `id` 用 string。
+---
 
-#### 2) 空值/全选的表达
+## 二、各接口入参与出参概要
 
-前端筛选项目前采用“空字符串表示全部”：
+### P0 - 获取数据（主）
 
-- `platform: ''` 表示全部终端平台
-- `appPackage: ''` 表示全部应用
-- `conversionType: ''` 表示全部转化类型
-- `status: ''` 表示全部状态
+#### 1. 筛选下拉选项 `POST /api/user-growth/conversion-management/meta-filter-options`
 
-如果后端更倾向于用 `null/undefined`，也可以兼容；但请在接口实现中统一处理。
+- **入参**：无（或空 body `{}`）。
+- **出参**：
+  - `platformOptions`: `{ label: string, value: string }[]` — 终端平台
+  - `appOptions`: `{ label: string, value: string }[]` — 应用
+  - `conversionTypeOptions`: `{ label: string, value: string }[]` — 转化类型
+  - `statusOptions`: `{ label: string, value: string }[]` — 映射状态（可选）
 
-#### 3) 字段兼容（历史字段）
+---
 
-前端类型定义里保留了兼容字段（避免接口切换时页面崩）：
+#### 2. 映射列表 `POST /api/user-growth/conversion-management/mappings-list`
 
-- `appPackage`（推荐）与 `app`（历史兼容）语义相同
-- `source`（推荐，广告平台）与 `adPlatform`（历史兼容）语义相同
+- **入参**：
+  - `current?: number` — 页码，默认 1
+  - `size?: number` — 每页条数，默认 20
+  - `platform?: string` — `''` | `android` | `ios`
+  - `appPackage?: string`、`app?: string` — 应用（空为全部，后端优先取 appPackage）
+  - `conversionType?: string` — 转化类型，空为全部
+  - `status?: string` — `''` | `enabled` | `duplicate` | `unmapped`
+  - `keyword?: string` — 关键字搜索
+- **出参**：
+  - `records`: 列表项数组（见 01 的 ConversionMappingItem）
+  - `current`, `size`, `total`: 分页信息
 
-后端建议：
+---
 
-- 优先读取 `appPackage/source`
-- 若缺失则回退读取 `app/adPlatform`
+#### 3. 映射统计 `POST /api/user-growth/conversion-management/mappings-stats`
 
-#### 4) 枚举值口径
+- **入参**：与列表筛选一致（无分页）：`platform`、`appPackage`/`app`、`conversionType`、`status`、`keyword`。
+- **出参**：
+  - `typeDistribution`: `{ name: string, value: number, count?: number }[]` — 类型分布（value 0–100）
+  - `mappingStats`: `{ mapped: number, duplicate: number, unmapped: number }`
+  - `platformStats`: `{ android: number, ios: number }`
 
-- **终端平台 `platform`**：`android` | `ios`
-- **广告平台 `source`**：`google` | `meta` | `tiktok` | `mintegral`
-- **映射状态 `status`**：
-  - `enabled`：启用（可参与统计/上报）
-  - `unmapped`：未映射（UI 开关关闭时对应）
-  - `duplicate`：重复（通常由后端规则判定；建议前端只展示不可手动改）
-- **计费类型 `billingType`**：`CPA` | `CPI` | `CPE` | `''`（空表示未知/不适用）
-- **转化展示分类 `conversionDisplayType`**：`paid` | `activation` | `behavior` | `revenue`
+---
 
-#### 5) 百分比与占比
+#### 4. 弹窗级联选项 `POST /api/user-growth/conversion-management/meta-dialog-options`
 
-本模块中存在两类占比字段：
+- **入参**：
+  - `source?: string`（或 `adPlatform`）— `google` | `meta` | `tiktok` | `mintegral`
+  - `mccAccount?: string`、`appPackage?: string` — 级联筛选
+- **出参**：
+  - `adPlatforms`: `{ label, value }[]`
+  - `mccAccounts`、`apps`: `{ label, value }[]`
+  - `conversions`: `{ conversionName, conversionId, billingType?, platformConversionType?, extra? }[]`（conversionId 必须为 string）
 
-- `typeDistribution[].value`：类型占比（0-100），可整数或小数；前端会格式化展示
-- `ConversionDataRow.share`：树表行占比（0-100），当前 mock 以 `conversionCount` 口径计算（后端如要改为 value 口径需明确字段名或补充字段）
+---
 
-#### 6) 时间格式
+#### 5. 映射详情 `POST /api/user-growth/conversion-management/mappings-detail`
 
-- 统一 `YYYY-MM-DD`（例如 `2026-03-17`）
-- `dateRange` 为 `[start,end]`（含起止日）
+- **入参**：`{ id: string }` — 映射记录 ID。
+- **出参**：单条映射完整字段（id、platform、source、mccAccount、appPackage、conversionName、conversionId、platformConversionType、systemDisplayName、conversionDisplayType、billingType、status、remarks、createdAt、updatedAt 等），用于编辑回显。conversionId 为 string。
 
-### 返回包裹（是否需要通用 Code/Msg）
+---
 
-当前 JSON 使用“业务数据直出”便于阅读；若你们网关统一包裹为：
+#### 6. Data Tab 总数据 `POST /api/user-growth/conversion-management/data-tab`
 
-```json
-{ "code": 0, "message": "ok", "data": {...} }
-```
+- **入参**：
+  - `dateRange?: [string, string]` — 日期范围 YYYY-MM-DD
+  - `platform`、`appPackage`/`app`、`source`/`adPlatform`、`conversionType` — 筛选，空为全部
+- **出参**：
+  - `kpi`: `{ conversionCount, conversionValue, averageValue, activeTypeCount }`，每项 `{ value, deltaPercent }`
+  - `tableRows`: 三层树表 `ConversionDataRow[]`（level: group | account | conversion，含 conversionCount、conversionValue、share、trendPoints、children）
+  - `sidePanels`: `{ typeDistribution, top10, valueTrend30d, accountShare }`
 
-请在实现时将 `sampleResponse` 放到 `data` 内即可，字段结构不变。
+---
+
+### P1 - 获取数据（辅）
+
+#### 7. 转化展示分类选项 `POST /api/user-growth/conversion-management/meta-conversion-display-type-options`
+
+- **入参**：无或 `{}`。
+- **出参**：`options`: `{ label: string, value: 'paid'|'activation'|'behavior'|'revenue' }[]`。
+- 若不提供，前端可写死枚举。
+
+---
+
+### P2 - 操作数据（辅助）
+
+#### 8. 新增映射 `POST /api/user-growth/conversion-management/mappings-create`
+
+- **入参**：source、adPlatform、mccAccount、appPackage、conversionName、conversionId?、platformConversionType?、conversionDisplayType?、systemDisplayName、billingType?、status?、remarks?。
+- **出参**：`{ success: boolean, id: string, message?: string }`。
+
+---
+
+#### 9. 编辑映射 `POST /api/user-growth/conversion-management/mappings-update`
+
+- **入参**：`{ id: string, systemDisplayName: string, conversionDisplayType?: string, status?: string, remarks?: string }`。
+- **出参**：`{ success: boolean, message?: string }`。
+
+---
+
+#### 10. 删除映射 `POST /api/user-growth/conversion-management/mappings-delete`
+
+- **入参**：`{ id: string }`。
+- **出参**：`{ success: boolean, message?: string }`。
+
+---
+
+#### 11. 批量启用/禁用 `POST /api/user-growth/conversion-management/mappings-batch-update-status`
+
+- **入参**：`mode: 'byFilter'|'byIds'`；`byFilter` 时传 `filters`（与列表一致），`byIds` 时传 `ids: string[]`；`targetStatus: 'enabled'|'unmapped'`。
+- **出参**：`{ success: boolean, affectedCount: number, skippedCount?, skippedReason?, skippedIds?, message? }`。
+
+---
+
+#### 12. 导出映射表 `POST /api/user-growth/conversion-management/mappings-export`
+
+- **入参**：与列表筛选一致 + `format?: 'xlsx'|'csv'`。
+- **出参**：方案 A 文件流；或方案 B `{ downloadUrl: string, expireAt?: string }`。
+
+---
+
+#### 13. Data Tab 导出 `POST /api/user-growth/conversion-management/data-export`
+
+- **入参**：与 data-tab 筛选一致 + `dateRange` + `format?: 'xlsx'|'csv'`。
+- **出参**：同 mappings-export（文件流或 downloadUrl）。
+
+---
+
+## 三、统一约定（与各 JSON 一致）
+
+- **conversionId** 一律使用 **string**，避免长整型精度问题。
+- **空/全选**：筛选字段用空字符串 `''` 表示全部；若后端用 null/undefined 需在实现中统一兼容。
+- **兼容字段**：`appPackage`（推荐）与 `app`、`source`（推荐）与 `adPlatform` 语义相同，后端优先取推荐字段。
+- **枚举**：platform `android`|`ios`；source `google`|`meta`|`tiktok`|`mintegral`；status `enabled`|`unmapped`|`duplicate`；conversionDisplayType `paid`|`activation`|`behavior`|`revenue`。
+- **日期**：YYYY-MM-DD；dateRange 为 `[start, end]` 含起止。
+- 若网关统一包裹为 `{ code, message, data }`，将上述出参放入 `data` 即可。
+
+每个接口的字段详解与示例见对应编号的 JSON 文件（`fieldDescription`、`sampleRequest`、`sampleResponse`）。

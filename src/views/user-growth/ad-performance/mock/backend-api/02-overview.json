@@ -1,0 +1,181 @@
+{
+  "_comment": "广告成效 - 页面概览数据：顶部 KPI、趋势图、右侧分布、异常预警、数据时间。建议首屏与筛选变化时调用。",
+  "fieldDescription": {
+    "request": {
+      "dateRange": {
+        "type": "string",
+        "required": true,
+        "enum": ["today", "yesterday", "last7d", "month"],
+        "description": "日期范围（当前 UI 为枚举）。"
+      },
+      "app": {
+        "type": "string",
+        "required": false,
+        "description": "应用筛选。空字符串表示全部。"
+      },
+      "adPlatform": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选。空字符串表示全部。"
+      },
+      "account": {
+        "type": "string",
+        "required": false,
+        "description": "账户筛选。空字符串表示全部。"
+      },
+      "country": {
+        "type": "string",
+        "required": false,
+        "description": "国家筛选。空字符串表示全部。"
+      }
+    },
+    "response": {
+      "dataTime": {
+        "type": "string",
+        "required": true,
+        "description": "数据更新时间（展示用），格式 HH:mm:ss。"
+      },
+      "kpi": {
+        "type": "AdPerformanceKpi[]",
+        "required": true,
+        "description": "顶部 KPI 卡片列表（建议固定 6 张卡）。"
+      },
+      "spendTrend": {
+        "type": "SpendTrendItem[]",
+        "required": true,
+        "description": "花费趋势（折线）。"
+      },
+      "roi7dTrend": {
+        "type": "Roi7dTrendItem[]",
+        "required": true,
+        "description": "7日 ROI 趋势（折线）。"
+      },
+      "channelDistribution": {
+        "type": "ChannelDistributionItem[]",
+        "required": true,
+        "description": "广告平台分布（环形图）。percent 用于图表值，value 用于金额汇总。"
+      },
+      "appDistribution": {
+        "type": "AppDistributionItem[]",
+        "required": true,
+        "description": "应用分布（列表条形）。"
+      },
+      "ownerShareDistribution": {
+        "type": "OwnerShareDistributionItem[]",
+        "required": true,
+        "description": "投放师占比分布（列表条形）。"
+      },
+      "alerts": {
+        "type": "AdPerformanceAlertItem[]",
+        "required": true,
+        "description": "异常预警列表。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "dateRange": "today",
+    "app": "",
+    "adPlatform": "",
+    "account": "",
+    "country": ""
+  },
+  "sampleResponse": {
+    "dataTime": "14:40:23",
+    "kpi": [
+      {
+        "type": "totalSpend",
+        "label": "总花费",
+        "value": "$34,858",
+        "compare": "+8.5%",
+        "compareUp": true
+      },
+      {
+        "type": "avgCpi",
+        "label": "平均CPI",
+        "value": "$2.28",
+        "compare": "+3.2%",
+        "compareUp": true
+      },
+      {
+        "type": "activeCampaigns",
+        "label": "活跃系列",
+        "value": "604",
+        "compare": "↓42",
+        "compareUp": false
+      },
+      { "type": "alertCampaigns", "label": "异常系列", "value": "3", "alert": true },
+      {
+        "type": "todayRoi1",
+        "label": "今日首日ROI",
+        "value": "83%",
+        "compare": "↑2.1%",
+        "compareUp": true
+      },
+      {
+        "type": "todayProfit",
+        "label": "今日利润(预估)",
+        "value": "+$11,021",
+        "compare": "+5.2%",
+        "compareUp": true
+      }
+    ],
+    "spendTrend": [
+      { "date": "2/23", "value": 28000 },
+      { "date": "2/24", "value": 31000 },
+      { "date": "2/25", "value": 28000 },
+      { "date": "2/26", "value": 33000 },
+      { "date": "2/27", "value": 35000 },
+      { "date": "2/28", "value": 32000 },
+      { "date": "3/1", "value": 35000 }
+    ],
+    "roi7dTrend": [
+      { "date": "2/23", "roi": 79 },
+      { "date": "2/24", "roi": 82 },
+      { "date": "2/25", "roi": 78 },
+      { "date": "2/26", "roi": 85 },
+      { "date": "2/27", "roi": 87 },
+      { "date": "2/28", "roi": 83 },
+      { "date": "3/1", "roi": 83 }
+    ],
+    "channelDistribution": [
+      { "name": "Google", "value": 18128, "percent": 52 },
+      { "name": "Facebook", "value": 10808, "percent": 31 },
+      { "name": "TikTok", "value": 2789, "percent": 8 },
+      { "name": "Mintegral", "value": 2091, "percent": 6 },
+      { "name": "Kwai", "value": 1046, "percent": 3 }
+    ],
+    "appDistribution": [
+      { "appName": "Weather5", "spend": 15686, "percent": 43, "ownerShare": 38 },
+      { "appName": "BloodSugar2", "spend": 9760, "percent": 33, "ownerShare": 29 },
+      { "appName": "PhoneTracker", "spend": 4850, "percent": 14, "ownerShare": 19 },
+      { "appName": "FaceMe", "spend": 2789, "percent": 5, "ownerShare": 9 },
+      { "appName": "其他", "spend": 1743, "percent": 5, "ownerShare": 5 }
+    ],
+    "ownerShareDistribution": [
+      { "ownerName": "张三", "percent": 45, "spend": 15686 },
+      { "ownerName": "李四", "percent": 22, "spend": 7716 },
+      { "ownerName": "王五", "percent": 18, "spend": 6234 },
+      { "ownerName": "赵六", "percent": 10, "spend": 3480 },
+      { "ownerName": "其他", "percent": 5, "spend": 1742 }
+    ],
+    "alerts": [
+      { "id": "a1", "title": "PhoneTracker_CA_TikTok", "desc": "超预算96%", "actionType": "pause" },
+      { "id": "a2", "title": "BloodSugar2_UK_Facebook", "desc": "超预算79%", "actionType": "view" },
+      { "id": "a3", "title": "FaceMe_US_Meta", "desc": "CPI偏高$2.65", "actionType": "optimize" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-performance/overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "dateRange, app?, adPlatform?, account?, country?",
+    "responseBody": "dataTime, kpi, spendTrend, roi7dTrend, channelDistribution, appDistribution, ownerShareDistribution, alerts"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "kpi.value/compare 为展示字符串，若后端希望返回数值型（spend/cpi/roi/profit），建议新增 valueNumber/compareNumber 字段或改为数值并由前端格式化。",
+      "channelDistribution.percent 建议总和≈100（允许四舍五入误差），value 口径建议与“总花费”一致。",
+      "alerts.actionType 建议只允许枚举 pause/view/optimize，便于前端按钮样式与行为绑定。"
+    ]
+  }
+}
