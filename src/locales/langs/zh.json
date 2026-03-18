@@ -288,7 +288,7 @@
     "summary": {
       "adSpendTrend": "广告支出与利润趋势 (7天)",
       "byDay": "按日",
-      "channelDistribution": "广告支出渠道分布",
+      "channelDistribution": "广告支出广告平台分布",
       "appSpendShare": "应用广告支出占比",
       "paceMonitor": "消耗进度监控",
       "remainingDays": "当前周期剩余{n}天",
@@ -320,7 +320,8 @@
     "campaignDetail": {
       "searchPlaceholder": "搜索广告系列名称",
       "filterApp": "应用",
-      "filterPlatform": "广告平台",
+      "filterSource": "广告平台",
+      "filterPlatform": "终端平台",
       "filterCountry": "国家",
       "filterStatus": "状态",
       "filterType": "投放类型",
@@ -336,7 +337,8 @@
       "operation": "操作",
       "detail": "详情",
       "campaignName": "广告系列名称",
-      "channel": "渠道",
+      "source": "广告平台",
+      "platform": "终端平台",
       "country": "国家",
       "totalCampaigns": "共{n} 条广告系列",
       "adSpendSubtotal": "广告支出小计",

@@ -1,0 +1,20 @@
+{
+  "_comment": "汇总 Tab - 广告平台分布（饼图）。独立接口。",
+  "fieldDescription": {
+    "item": {
+      "name": "广告平台名称",
+      "value": "数值",
+      "percent": "占比百分比"
+    }
+  },
+  "sampleResponse": [
+    { "name": "谷歌", "value": 5200, "percent": 42 },
+    { "name": "Meta", "value": 3400, "percent": 28 },
+    { "name": "TikTok", "value": 1700, "percent": 14 },
+    { "name": "ASA", "value": 1220, "percent": 10 },
+    { "name": "其他", "value": 680, "percent": 6 }
+  ],
+  "apiSuggestion": {
+    "description": "汇总 Tab - 广告平台分布接口。查询条件：人员ID、日期范围。"
+  }
+}

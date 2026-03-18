@@ -1,0 +1,28 @@
+{
+  "_comment": "应用+广告平台 Tab - 底部汇总。独立接口。",
+  "fieldDescription": {
+    "appCount": "应用总数",
+    "campaignCount": "广告系列总数",
+    "totalSpend": "总广告支出",
+    "overBudgetCount": "超预算数量",
+    "roiBelowCount": "ROI未达标数量",
+    "notStartedCount": "未启动数量",
+    "avgFirstDayRoi": "平均首日ROI",
+    "estimatedTotalProfit": "预估总利润",
+    "minTotalProfit": "最低总利润"
+  },
+  "sampleResponse": {
+    "appCount": 3,
+    "campaignCount": 6,
+    "totalSpend": 12200,
+    "overBudgetCount": 1,
+    "roiBelowCount": 1,
+    "notStartedCount": 1,
+    "avgFirstDayRoi": 38.2,
+    "estimatedTotalProfit": 4660,
+    "minTotalProfit": 2100
+  },
+  "apiSuggestion": {
+    "description": "应用+广告平台 Tab - 底部汇总接口。可与列表同条件或独立查询。"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "_comment": "广告系列明细 Tab - 底部汇总条。独立接口。",
+  "fieldDescription": {
+    "adSpendSubtotal": "广告支出小计",
+    "calculatedConsumption": "计算消耗",
+    "difference": "差异",
+    "commissionSubtotal": "代投消耗小计",
+    "directConsumption": "直投消耗",
+    "commissionRatio": "代投占比百分比",
+    "estimatedProfitSubtotal": "预估利润小计",
+    "minProfit": "最低利润",
+    "nonProfitableCount": "不盈利条数"
+  },
+  "sampleResponse": {
+    "adSpendSubtotal": 12200,
+    "calculatedConsumption": 11480,
+    "difference": -720,
+    "commissionSubtotal": 8960,
+    "directConsumption": 2520,
+    "commissionRatio": 73.4,
+    "estimatedProfitSubtotal": 4660,
+    "minProfit": 2100,
+    "nonProfitableCount": 1
+  },
+  "apiSuggestion": {
+    "description": "广告系列明细 Tab - 底部汇总条接口。可与列表同筛选条件或独立查询。"
+  }
+}

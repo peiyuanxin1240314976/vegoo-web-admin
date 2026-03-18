@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <!-- 第二行：趋势图 + 渠道分布饼图 -->
+    <!-- 第二行：趋势图 + 广告平台分布饼图 -->
     <ElRow :gutter="16" class="summary-charts-row">
       <ElCol :xs="24" :lg="14">
         <div class="my-ads-panel">

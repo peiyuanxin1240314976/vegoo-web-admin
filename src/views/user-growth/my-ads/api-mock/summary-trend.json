@@ -1,0 +1,23 @@
+{
+  "_comment": "汇总 Tab - 7 天趋势图。规范字段可含 t_date、cost（花费）。独立接口。",
+  "fieldDescription": {
+    "item": {
+      "date": "日期展示（或 t_date）",
+      "adSpend": "广告支出（或 cost）",
+      "estimatedProfit": "预估利润",
+      "firstDayRoi": "首日ROI"
+    }
+  },
+  "sampleResponse": [
+    { "date": "2/23", "adSpend": 1650, "estimatedProfit": 620, "firstDayRoi": 36 },
+    { "date": "2/24", "adSpend": 1720, "estimatedProfit": 680, "firstDayRoi": 39 },
+    { "date": "2/25", "adSpend": 1580, "estimatedProfit": 590, "firstDayRoi": 35 },
+    { "date": "2/26", "adSpend": 1890, "estimatedProfit": 720, "firstDayRoi": 41 },
+    { "date": "2/27", "adSpend": 1840, "estimatedProfit": 680, "firstDayRoi": 40 },
+    { "date": "2/28", "adSpend": 1760, "estimatedProfit": 710, "firstDayRoi": 38 },
+    { "date": "3/1", "adSpend": 1760, "estimatedProfit": 660, "firstDayRoi": 38 }
+  ],
+  "apiSuggestion": {
+    "description": "汇总 Tab - 趋势图接口。查询条件：人员ID、日期范围。"
+  }
+}

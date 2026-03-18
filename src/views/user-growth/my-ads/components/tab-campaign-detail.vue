@@ -13,8 +13,8 @@
         <ElOption label="手机追踪" value="phone" />
       </ElSelect>
       <ElSelect
-        v-model="filterPlatform"
-        :placeholder="$t('myAds.campaignDetail.filterPlatform')"
+        v-model="filterSource"
+        :placeholder="$t('myAds.campaignDetail.filterSource')"
         clearable
         class="filter-item"
       >
@@ -22,6 +22,16 @@
         <ElOption label="Google" value="google" />
         <ElOption label="Meta" value="meta" />
         <ElOption label="TikTok" value="tiktok" />
+      </ElSelect>
+      <ElSelect
+        v-model="filterPlatform"
+        :placeholder="$t('myAds.campaignDetail.filterPlatform')"
+        clearable
+        class="filter-item"
+      >
+        <ElOption :label="$t('myAds.campaignDetail.all')" value="" />
+        <ElOption label="Android" value="Android" />
+        <ElOption label="iOS" value="iOS" />
       </ElSelect>
       <ElSelect
         v-model="filterCountry"
@@ -84,9 +94,14 @@
           :label="$t('myAds.campaignDetail.campaignName')"
           min-width="180"
         />
-        <ElTableColumn :label="$t('myAds.campaignDetail.channel')" width="90">
+        <ElTableColumn :label="$t('myAds.campaignDetail.source')" width="90">
           <template #default="{ row }">
-            <span class="channel-tag">{{ row.channel }}</span>
+            <span class="source-tag">{{ row.source }}</span>
+          </template>
+        </ElTableColumn>
+        <ElTableColumn :label="$t('myAds.campaignDetail.platform')" width="90">
+          <template #default="{ row }">
+            <span class="platform-tag">{{ row.platform }}</span>
           </template>
         </ElTableColumn>
         <ElTableColumn :label="$t('myAds.campaignDetail.country')" width="80">
@@ -261,6 +276,7 @@
   )
 
   const filterApp = ref('')
+  const filterSource = ref('')
   const filterPlatform = ref('')
   const filterCountry = ref('')
   const filterStatus = ref('')
@@ -303,6 +319,7 @@
 
   function onReset() {
     filterApp.value = ''
+    filterSource.value = ''
     filterPlatform.value = ''
     filterCountry.value = ''
     filterStatus.value = ''
@@ -466,7 +483,8 @@
       border-radius: 2px;
     }
 
-    .channel-tag {
+    .source-tag,
+    .platform-tag {
       font-size: 12px;
       color: $my-ads-text-primary;
     }
