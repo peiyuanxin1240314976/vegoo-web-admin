@@ -296,6 +296,16 @@ function buildCompareFromChange(
   return { compare, compareUp }
 }
 
+function pickFirstNumber(obj: unknown, keys: string[]): number {
+  if (obj == null || typeof obj !== 'object') return 0
+  const record = obj as Record<string, unknown>
+  for (const k of keys) {
+    const v = record[k]
+    if (typeof v === 'number' && Number.isFinite(v)) return v
+  }
+  return 0
+}
+
 /**
  * 将 overall 新接口的 data（now + *Change + *List）转为 KPI 卡片列表
  * 展示用 now，升降用后端 *Change，折线用 *List
@@ -319,7 +329,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'money',
       changeKey: 'totalRevenueChange',
       listKey: 'totalRevenueList',
-      detail: (n) => `广告: ${formatMoney(n.adRevenue)} | 付费: ${formatMoney(n.payRevenue)}`
+      detail: (n) => `广告 ${formatMoney(n.adRevenue ?? 0)}  付费 ${formatMoney(n.payRevenue ?? 0)}`
     },
     {
       type: 'paidRevenue',
@@ -327,7 +337,8 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       valueKey: 'payRevenue',
       format: 'money',
       changeKey: 'payRevenueChange',
-      listKey: 'payRevenueList'
+      listKey: 'payRevenueList',
+      detail: () => '未扣平台费用'
     },
     {
       type: 'adSpend',
@@ -336,7 +347,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'money',
       changeKey: 'adCostChange',
       listKey: 'dCostList',
-      detail: (n) => `安装 ${formatInt(n.installCount)}`
+      detail: () => undefined
     },
     {
       type: 'subscriptions',
@@ -344,7 +355,30 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       valueKey: 'activeSubscription',
       format: 'int',
       changeKey: 'activeSubscriptionChange',
-      listKey: 'activeSubscriptionList'
+      listKey: 'activeSubscriptionList',
+      detail: (n) => {
+        const inc = pickFirstNumber(n, [
+          'activeSubscriptionNew',
+          'activeSubscriptionIncrease',
+          'activeSubscriptionAdd',
+          'subscriptionNew',
+          'subscriptionIncrease',
+          'subscriptionAdd',
+          'newSubscription',
+          'subscriptionIn'
+        ])
+        const dec = pickFirstNumber(n, [
+          'activeSubscriptionLost',
+          'activeSubscriptionDecrease',
+          'activeSubscriptionChurn',
+          'subscriptionLost',
+          'subscriptionDecrease',
+          'subscriptionChurn',
+          'lostSubscription',
+          'subscriptionOut'
+        ])
+        return `新增 +${formatInt(inc)}  流失 -${formatInt(dec)}`
+      }
     },
     {
       type: 'dau',
@@ -353,7 +387,12 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'int',
       changeKey: 'dauChange',
       listKey: 'dauList',
-      detail: (n) => `新增 ${formatInt(n.newUsers)}`
+      detail: () => {
+        const dnu = formatInt(now.dnu)
+        const change = data.dnuChange
+        const hasChange = change != null && Number.isFinite(change)
+        return hasChange ? `DNU ${dnu}` : `DNU ${dnu}`
+      }
     },
     {
       type: 'profit',
@@ -361,7 +400,8 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       valueKey: 'profit',
       format: 'money',
       changeKey: 'profitChange',
-      listKey: 'profitList'
+      listKey: 'profitList',
+      detail: () => '当前广告｜内购收入-广告支出'
     }
   ]
   return cards.map(({ type, label, valueKey, format, changeKey, listKey, detail }) => {
@@ -374,11 +414,31 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
     const chartData = listKey
       ? seriesToChartData(data[listKey] as CockpitOverallSeriesItem[] | undefined)
       : undefined
+    const subItems =
+      type === 'adSpend'
+        ? [
+            { label: '自投', value: formatMoney(now.selfCost ?? 0), tone: 'default' as const },
+            { label: '代投', value: formatMoney(now.proxyCost ?? 0), tone: 'info' as const }
+          ]
+        : undefined
+    const detailChange =
+      type === 'dau' && data.dnuChange != null && Number.isFinite(data.dnuChange)
+        ? `${data.dnuChange >= 0 ? '↑' : '↓'} ${formatInt(Math.abs(data.dnuChange))}`
+        : undefined
+    const detailTrend =
+      type === 'dau' && data.dnuChange != null && Number.isFinite(data.dnuChange)
+        ? data.dnuChange >= 0
+          ? 'up'
+          : 'down'
+        : undefined
     return {
       type,
       label,
       value,
       detail: detail ? detail(now) : undefined,
+      detailChange,
+      detailTrend,
+      subItems,
       compare,
       compareUp,
       chartData: chartData?.length ? chartData : undefined
@@ -482,33 +542,78 @@ export function mapOverallToKpiCards(
     valueKey: keyof CockpitOverallPeriodItem
     format: 'money' | 'int'
     detail?: (n: CockpitOverallPeriodItem) => string
+    subItems?: (n: CockpitOverallPeriodItem) => CockpitKpiCard['subItems']
   }[] = [
     {
       type: 'income',
       label: '总收入',
       valueKey: 'totalRevenue',
       format: 'money',
-      detail: (n) => `广告: ${formatMoney(n.dAdRevenue)} | 内购: ${formatMoney(n.dIapRevenue)}`
+      detail: (n) =>
+        `广告 ${formatMoney(n.dAdRevenue ?? 0)}  付费 ${formatMoney(n.dIapRevenue ?? 0)}`
     },
-    { type: 'paidRevenue', label: '付费收入', valueKey: 'payRevenue', format: 'money' },
+    {
+      type: 'paidRevenue',
+      label: '付费收入',
+      valueKey: 'payRevenue',
+      format: 'money',
+      detail: () => '未扣平台费用'
+    },
     {
       type: 'adSpend',
       label: '广告支出',
       valueKey: 'dCost',
       format: 'money',
-      detail: (n) => `买量 ${formatInt(n.ninstalls)}  代投 ${formatMoney(n.proxyCost)}`
+      subItems: (n) => [
+        { label: '自投', value: formatMoney(n.selfCost ?? 0), tone: 'default' },
+        { label: '代投', value: formatMoney(n.proxyCost ?? 0), tone: 'info' }
+      ]
     },
-    { type: 'subscriptions', label: '有效订阅', valueKey: 'activeSubscription', format: 'int' },
+    {
+      type: 'subscriptions',
+      label: '有效订阅',
+      valueKey: 'activeSubscription',
+      format: 'int',
+      detail: (n) => {
+        const inc = pickFirstNumber(n, [
+          'activeSubscriptionNew',
+          'activeSubscriptionIncrease',
+          'activeSubscriptionAdd',
+          'subscriptionNew',
+          'subscriptionIncrease',
+          'subscriptionAdd',
+          'newSubscription',
+          'subscriptionIn'
+        ])
+        const dec = pickFirstNumber(n, [
+          'activeSubscriptionLost',
+          'activeSubscriptionDecrease',
+          'activeSubscriptionChurn',
+          'subscriptionLost',
+          'subscriptionDecrease',
+          'subscriptionChurn',
+          'lostSubscription',
+          'subscriptionOut'
+        ])
+        return `新增 +${formatInt(inc)}  流失 -${formatInt(dec)}`
+      }
+    },
     {
       type: 'dau',
       label: 'DAU',
       valueKey: 'dau',
       format: 'int',
-      detail: (n) => `新增 ${formatInt(n.nNewUserCount)}`
+      detail: (n) => `DNU ${formatInt(n.nNewUserCount)}`
     },
-    { type: 'profit', label: '预估利润', valueKey: 'profit', format: 'money' }
+    {
+      type: 'profit',
+      label: '预估利润',
+      valueKey: 'profit',
+      format: 'money',
+      detail: () => '当前广告｜内购收入-广告支出'
+    }
   ]
-  return cards.map(({ type, label, valueKey, format, detail }) => {
+  return cards.map(({ type, label, valueKey, format, detail, subItems }) => {
     const curr = now[valueKey] as number
     const prev = last[valueKey] as number
     const value = format === 'money' ? formatMoney(curr) : formatInt(curr)
@@ -520,6 +625,7 @@ export function mapOverallToKpiCards(
       label,
       value,
       detail: detail ? detail(now) : undefined,
+      subItems: subItems ? subItems(now) : undefined,
       compare: buildCompare(lastStr, pct, compareUp),
       compareUp
     }

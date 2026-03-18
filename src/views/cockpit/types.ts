@@ -25,6 +25,8 @@ export interface CockpitOverallPeriodItem {
   nNewUserCount: number
   payRevenue: number
   profit: number
+  /** 自投消耗（广告支出拆分） */
+  selfCost?: number
   proxyCost: number
   totalRevenue: number
 }
@@ -49,6 +51,10 @@ export interface CockpitOverallDataPeriod {
   payRevenue: number
   profit: number
   totalRevenue: number
+  /** 自投消耗（广告支出拆分） */
+  selfCost?: number
+  /** 代投消耗（广告支出拆分） */
+  proxyCost?: number
   /** 自然量（警示摘要用） */
   naturalCount?: number
   /** 买量应用数（警示摘要用，单位：个） */
@@ -312,6 +318,11 @@ export interface CockpitKpiCard {
   value: string
   detail?: string
   sub?: string
+  /** KPI 值右侧的标签组（如“自投 / 代投”），有则优先渲染它 */
+  subItems?: { label: string; value: string; tone?: 'default' | 'info' | 'success' | 'warning' }[]
+  /** detail 后缀变化（用于 DAU 卡片的 DNU ↑/↓ 数值着色） */
+  detailChange?: string
+  detailTrend?: 'up' | 'down'
   /** 较上期等对比文案，可由后端 *Change 直接生成 */
   compare?: string
   compareUp?: boolean

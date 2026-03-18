@@ -12,9 +12,45 @@
         <div class="kpi-label">{{ item.label }}</div>
         <div class="kpi-value-row">
           <div class="kpi-value">{{ item.value }}</div>
-          <div v-if="item.sub" class="kpi-sub">{{ item.sub }}</div>
+          <div
+            v-if="item.type !== 'adSpend' && Array.isArray(item.subItems) && item.subItems.length"
+            class="kpi-sub-items"
+          >
+            <span
+              v-for="(sub, i) in item.subItems"
+              :key="i"
+              class="kpi-sub-badge"
+              :class="sub.tone ? `is-${sub.tone}` : ''"
+            >
+              <span class="kpi-sub-badge__label">{{ sub.label }}</span>
+              <span class="kpi-sub-badge__value">{{ sub.value }}</span>
+            </span>
+          </div>
+          <div v-else-if="item.sub" class="kpi-sub">{{ item.sub }}</div>
         </div>
-        <div v-if="item.detail" class="kpi-detail">{{ item.detail }}</div>
+        <div
+          v-if="item.type === 'adSpend' && Array.isArray(item.subItems) && item.subItems.length"
+          class="kpi-detail kpi-detail--badges"
+        >
+          <span
+            v-for="(sub, i) in item.subItems"
+            :key="i"
+            class="kpi-detail-badge"
+            :class="sub.label === '代投' ? 'is-proxy' : 'is-self'"
+          >
+            {{ sub.label }} {{ sub.value }}
+          </span>
+        </div>
+        <div v-else-if="item.detail" class="kpi-detail">
+          <span>{{ item.detail }}</span>
+          <span
+            v-if="item.type === 'dau' && item.detailChange"
+            class="kpi-detail-change"
+            :class="item.detailTrend === 'down' ? 'down' : 'up'"
+          >
+            {{ item.detailChange }}
+          </span>
+        </div>
         <div class="kpi-mini-chart">
           <svg viewBox="0 0 100 40" class="mini-chart-svg" preserveAspectRatio="none">
             <defs>
@@ -214,10 +250,102 @@
       transform: translateY(-50%);
     }
 
+    .kpi-sub-items {
+      position: absolute;
+      top: 50%;
+      right: 0;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      max-width: 72%;
+      transform: translateY(-50%);
+    }
+
+    .kpi-sub-badge {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      padding: 4px 8px;
+      overflow: hidden;
+      font-size: 12px;
+      line-height: 1;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      background: rgb(0 0 0 / 10%);
+      border: 1px solid rgb(0 0 0 / 10%);
+      border-radius: 999px;
+
+      &__label {
+        opacity: 0.9;
+      }
+
+      &__value {
+        font-weight: 600;
+      }
+
+      &.is-info {
+        color: #a5b4fc;
+        background: rgb(99 102 241 / 18%);
+        border-color: rgb(99 102 241 / 22%);
+      }
+
+      &.is-warning {
+        color: #fbbf24;
+        background: rgb(245 158 11 / 16%);
+        border-color: rgb(245 158 11 / 22%);
+      }
+
+      &.is-success {
+        color: #34d399;
+        background: rgb(16 185 129 / 14%);
+        border-color: rgb(16 185 129 / 20%);
+      }
+    }
+
     .kpi-detail {
       margin-bottom: 2px;
       font-size: 12px;
       opacity: 0.85;
+    }
+
+    .kpi-detail-change {
+      margin-left: 8px;
+      font-weight: 600;
+
+      &.up {
+        color: #67c23a;
+      }
+
+      &.down {
+        color: #f56c6c;
+      }
+    }
+
+    .kpi-detail--badges {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      opacity: 1;
+    }
+
+    .kpi-detail-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      font-size: 12px;
+      line-height: 1;
+      color: rgb(255 255 255 / 88%);
+      background: rgb(15 23 42 / 55%);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgb(148 163 184 / 22%);
+      border-radius: 999px;
+    }
+
+    .kpi-detail-badge.is-proxy {
+      color: rgb(216 180 254 / 95%);
+      background: rgb(124 58 237 / 22%);
+      border-color: rgb(124 58 237 / 28%);
     }
 
     .kpi-progress {
