@@ -76,6 +76,22 @@ const COUNTRY_INFO_CHANNEL_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo
 /** 国家详情 LTV 预测接口 */
 const COUNTRY_INFO_LTV_URL = '/api/v1/datacenter/analysis/countryInfo/ltv'
 
+export interface CountryInfoQueryParams {
+  countryCode: string
+  startDate: string
+  endDate: string
+}
+
+function buildCountryInfoQueryParams(
+  params?: Partial<CountryInfoQueryParams>
+): CountryInfoQueryParams {
+  return {
+    countryCode: params?.countryCode ?? '',
+    startDate: params?.startDate ?? '',
+    endDate: params?.endDate ?? ''
+  }
+}
+
 /** 消耗节奏监控接口（自投/代投） */
 const COCKPIT_CONSUMPTION_RHYTHM_URL =
   '/api/v1/datacenter/analysis/cockpit/consumptionRhythmMonitoring'
@@ -611,10 +627,12 @@ export function mapCountryInfoOverallToStatCards(
  */
 export async function fetchCountryInfoOverall(params?: {
   countryCode?: string
+  startDate?: string
+  endDate?: string
 }): Promise<CountryInfoOverallData> {
   return request.post<CountryInfoOverallData>({
     url: COUNTRY_INFO_OVERALL_URL,
-    data: params && params.countryCode != null ? { countryCode: params.countryCode } : {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -623,10 +641,12 @@ export async function fetchCountryInfoOverall(params?: {
  * POST /api/v1/datacenter/analysis/countryInfo/top5Campaign，请求体：{}
  * 返回 data 数组，项为 { cost, install, roi, campaign } 等
  */
-export async function fetchCountryInfoTop5Campaign(): Promise<CountryInfoTop5CampaignItem[]> {
+export async function fetchCountryInfoTop5Campaign(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoTop5CampaignItem[]> {
   return request.post<CountryInfoTop5CampaignItem[]>({
     url: COUNTRY_INFO_TOP5_CAMPAIGN_URL,
-    data: {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -635,10 +655,12 @@ export async function fetchCountryInfoTop5Campaign(): Promise<CountryInfoTop5Cam
  * POST /api/v1/datacenter/analysis/countryInfo/appLaunch，请求体：{}
  * 返回 data 数组，项为 { app, arpu, dAdRevenue, dIapRevenue, remainDay7 }
  */
-export async function fetchCountryInfoAppLaunch(): Promise<CountryInfoAppLaunchItem[]> {
+export async function fetchCountryInfoAppLaunch(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoAppLaunchItem[]> {
   return request.post<CountryInfoAppLaunchItem[]>({
     url: COUNTRY_INFO_APP_LAUNCH_URL,
-    data: {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -647,10 +669,12 @@ export async function fetchCountryInfoAppLaunch(): Promise<CountryInfoAppLaunchI
  * POST /api/v1/datacenter/analysis/countryInfo/channelLaunch，请求体：{}
  * 返回 data 数组，项为 { now, last, cplChange [, channel] }
  */
-export async function fetchCountryInfoChannelLaunch(): Promise<CountryInfoChannelLaunchItem[]> {
+export async function fetchCountryInfoChannelLaunch(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoChannelLaunchItem[]> {
   return request.post<CountryInfoChannelLaunchItem[]>({
     url: COUNTRY_INFO_CHANNEL_LAUNCH_URL,
-    data: {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -708,10 +732,12 @@ export function mapChannelLaunchToChannelRows(
  * POST /api/v1/datacenter/analysis/countryInfo/remain，请求体：{}
  * 返回 data：{ currentCountry: { day1, day3, day7, day14, day30 }, globalAvg: { ... } }
  */
-export async function fetchCountryInfoRemain(): Promise<CountryInfoRemainData> {
+export async function fetchCountryInfoRemain(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoRemainData> {
   return request.post<CountryInfoRemainData>({
     url: COUNTRY_INFO_REMAIN_URL,
-    data: {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -736,10 +762,12 @@ export function mapRemainDataToSeries(data: CountryInfoRemainData): {
  * POST /api/v1/datacenter/analysis/countryInfo/ltv，请求体：{}
  * 返回 data：{ d7, d30, d90, d180, days }（days 为预计回收周期天数）
  */
-export async function fetchCountryInfoLtv(): Promise<CountryInfoLtvData> {
+export async function fetchCountryInfoLtv(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoLtvData> {
   return request.post<CountryInfoLtvData>({
     url: COUNTRY_INFO_LTV_URL,
-    data: {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -760,10 +788,12 @@ export function mapLtvToChart(data: CountryInfoLtvData): { data: number[]; note:
  * 获取国家详情用户分层（用户分层饼图 + 付费转化率文案）
  * POST /api/v1/datacenter/analysis/countryInfo/userPayLaunch，请求体：{}
  */
-export async function fetchCountryInfoUserPayLaunch(): Promise<CountryInfoUserPayLaunchData> {
+export async function fetchCountryInfoUserPayLaunch(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoUserPayLaunchData> {
   return request.post<CountryInfoUserPayLaunchData>({
     url: COUNTRY_INFO_USER_PAY_LAUNCH_URL,
-    data: {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
