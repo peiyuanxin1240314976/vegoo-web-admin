@@ -101,10 +101,16 @@
     const iconSize = NODE_ICON_STYLE.size
 
     const totalLinkValue = links.reduce((sum, l) => sum + l.value, 0)
+    /** 节点 name → 展示名（用于 tooltip 与避免重复名报错） */
+    const nameToDisplay: Record<string, string> = {}
+    nodes.forEach((n) => {
+      nameToDisplay[n.name] = n.displayName ?? n.name
+    })
 
     const data = nodes.map((n) => {
+      const displayLabel = n.displayName ?? n.name
       const resolvedIconImage = n.iconImage ?? (n.code ? getFlagIconUrl(n.code) : undefined)
-      const lines = [n.name, n.valueDisplay, n.percent].filter(Boolean) as string[]
+      const lines = [displayLabel, n.valueDisplay, n.percent].filter(Boolean) as string[]
       const hasIcon = !!(n.icon || resolvedIconImage)
       const lineCount = hasIcon
         ? 1 + (n.valueDisplay ? 1 : 0) + (n.percent ? 1 : 0)
@@ -175,9 +181,9 @@
       }
 
       let formatterStr = ''
-      if (resolvedIconImage) formatterStr += `{img| } {name|${escapeRich(n.name)}}\n`
-      else if (n.icon) formatterStr += `{icon|${n.icon}} {name|${escapeRich(n.name)}}\n`
-      else formatterStr += `{name|${escapeRich(n.name)}}\n`
+      if (resolvedIconImage) formatterStr += `{img| } {name|${escapeRich(displayLabel)}}\n`
+      else if (n.icon) formatterStr += `{icon|${n.icon}} {name|${escapeRich(displayLabel)}}\n`
+      else formatterStr += `{name|${escapeRich(displayLabel)}}\n`
       if (n.valueDisplay) formatterStr += `{value|${escapeRich(n.valueDisplay)}}\n`
       if (n.percent) formatterStr += `{pct|${escapeRich(n.percent)}}`
 
@@ -206,9 +212,11 @@
         triggerOn: 'mousemove',
         formatter: (params: any) => {
           if (params.dataType === 'edge') {
-            return `${params.data.source} → ${params.data.target}<br/>${params.data.value?.toLocaleString?.() ?? params.data.value}`
+            const src = nameToDisplay[params.data.source] ?? params.data.source
+            const tgt = nameToDisplay[params.data.target] ?? params.data.target
+            return `${src} → ${tgt}<br/>${params.data.value?.toLocaleString?.() ?? params.data.value}`
           }
-          return params.name
+          return nameToDisplay[params.name] ?? params.name
         }
       },
       series: [

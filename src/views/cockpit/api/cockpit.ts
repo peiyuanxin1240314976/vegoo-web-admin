@@ -1078,6 +1078,10 @@ export function mapIncomeStructureToFlow(
   })
   const nodeAd = '广告收入'
   const nodeIap = '内购收入'
+  /** 国家节点唯一 id（避免与 app 同名如「其他」导致 ECharts 报 duplicate name） */
+  const countryId = (c: string) => `country:${c}`
+  /** 应用节点唯一 id */
+  const appId = (a: string) => `app:${a}`
   const nodes: CockpitRevenueStructureNode[] = []
   const links: CockpitRevenueStructureLink[] = []
 
@@ -1103,21 +1107,25 @@ export function mapIncomeStructureToFlow(
     const iapVal = byCountryIap[c] ?? 0
     const sum = adVal + iapVal
     const isoCode = COUNTRY_CN_TO_ISO[c]
+    const cId = countryId(c)
     nodes.push({
-      name: c,
+      name: cId,
+      displayName: c,
       depth: 1,
       code: isoCode,
       valueDisplay: formatMoney(sum),
       itemStyle: { color: colorByDepth1[i % colorByDepth1.length], borderRadius: 6 }
     })
-    if (adVal > 0) links.push({ source: nodeAd, target: c, value: adVal })
-    if (iapVal > 0) links.push({ source: nodeIap, target: c, value: iapVal })
+    if (adVal > 0) links.push({ source: nodeAd, target: cId, value: adVal })
+    if (iapVal > 0) links.push({ source: nodeIap, target: cId, value: iapVal })
   })
   const colorByDepth2 = ['#67c23a', '#409eff', '#7230b3', '#e6a23c', '#909399']
   apps.forEach((app, i) => {
     const appSum = byAppTotal[app] ?? 0
+    const aId = appId(app)
     nodes.push({
-      name: app,
+      name: aId,
+      displayName: app,
       depth: 2,
       valueDisplay: formatMoney(appSum),
       itemStyle: { color: colorByDepth2[i % colorByDepth2.length], borderRadius: 6 }
@@ -1127,7 +1135,7 @@ export function mapIncomeStructureToFlow(
     if (value <= 0) return
     const [countryKey, appName] = key.split('\t')
     if (countries.includes(countryKey) && apps.includes(appName))
-      links.push({ source: countryKey, target: appName, value })
+      links.push({ source: countryId(countryKey), target: appId(appName), value })
   })
   const insights: CockpitRevenueStructureInsight[] = []
   if (total > 0) {

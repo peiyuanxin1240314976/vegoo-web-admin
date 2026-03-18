@@ -532,7 +532,10 @@ export interface CockpitTop5AppItem {
 
 /** 近7日收入结构流向 - 桑基图节点 */
 export interface CockpitRevenueStructureNode {
+  /** 唯一标识，用于 ECharts 与 links 的 source/target（避免与 country/app 同名冲突） */
   name: string
+  /** 展示用名称，无则用 name；用于解决「其他」同时作为国家与应用名时的重复报错 */
+  displayName?: string
   depth?: number
   value?: number
   /** 节点内显示的金额文案，如 '$41,353'、'$1.03M' */
