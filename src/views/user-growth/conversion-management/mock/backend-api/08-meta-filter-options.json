@@ -1,0 +1,75 @@
+{
+  "_comment": "转化管理（name/data Tab）- 筛选区域下拉选项。建议一次返回全部筛选选项，前端缓存即可。",
+  "fieldDescription": {
+    "response": {
+      "platformOptions": {
+        "type": "Option[]",
+        "required": true,
+        "description": "终端平台选项（android/ios）。"
+      },
+      "appOptions": {
+        "type": "Option[]",
+        "required": true,
+        "description": "应用选项（包名）。"
+      },
+      "conversionTypeOptions": {
+        "type": "Option[]",
+        "required": true,
+        "description": "平台转化类型选项（PHONE_CALL_LEAD/DOWNLOAD/...）。"
+      },
+      "statusOptions": {
+        "type": "Option[]",
+        "required": false,
+        "description": "映射状态选项（仅 name Tab 需要；data Tab 可不使用）。"
+      }
+    },
+    "Option": {
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "展示文案。可返回中文或 i18n key，需与前端约定。"
+      },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "实际值（传给接口的值）。空字符串通常代表“全部”。"
+      }
+    }
+  },
+  "sampleResponse": {
+    "platformOptions": [
+      { "label": "全部终端平台", "value": "" },
+      { "label": "安卓", "value": "android" },
+      { "label": "iOS", "value": "ios" }
+    ],
+    "appOptions": [
+      { "label": "全部应用", "value": "" },
+      { "label": "com.locate.phone.track", "value": "com.locate.phone.track" },
+      { "label": "com.example.shop", "value": "com.example.shop" },
+      { "label": "com.other.app", "value": "com.other.app" }
+    ],
+    "conversionTypeOptions": [
+      { "label": "全部转化类型", "value": "" },
+      { "label": "PHONE_CALL_LEAD", "value": "PHONE_CALL_LEAD" },
+      { "label": "DOWNLOAD", "value": "DOWNLOAD" },
+      { "label": "PURCHASE", "value": "PURCHASE" },
+      { "label": "ADD_TO_CART", "value": "ADD_TO_CART" },
+      { "label": "PAGE_VIEW", "value": "PAGE_VIEW" },
+      { "label": "BEGIN_CHECKOUT", "value": "BEGIN_CHECKOUT" }
+    ],
+    "statusOptions": [
+      { "label": "全部状态", "value": "" },
+      { "label": "启用", "value": "enabled" },
+      { "label": "重复", "value": "duplicate" },
+      { "label": "未映射", "value": "unmapped" }
+    ]
+  },
+  "apiSuggestion": {
+    "method": "GET",
+    "path": "/ugc/conversion/meta/filter-options",
+    "notes": [
+      "若 label 需要 i18n，建议返回 i18nKey（例如 conversionManagement.filterPlatformAll），前端再翻译；否则直接返回中文 label 即可。",
+      "appOptions 建议根据用户权限/组织过滤，只下发可见应用。"
+    ]
+  }
+}

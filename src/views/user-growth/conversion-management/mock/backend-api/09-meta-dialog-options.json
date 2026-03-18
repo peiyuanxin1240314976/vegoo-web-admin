@@ -1,0 +1,137 @@
+{
+  "_comment": "转化管理（name Tab）- 新增/编辑弹窗级联数据：广告平台 → MCC → App → Conversion。用于填充弹窗下拉与自动回填 conversionId/billingType。",
+  "fieldDescription": {
+    "request": {
+      "source": {
+        "type": "string",
+        "required": false,
+        "enum": ["google", "meta", "tiktok", "mintegral"],
+        "description": "广告平台（推荐字段）。传了就返回该平台下的 MCC/apps/conversions。"
+      },
+      "adPlatform": {
+        "type": "string",
+        "required": false,
+        "description": "历史兼容字段，语义同 source。"
+      },
+      "mccAccount": {
+        "type": "string",
+        "required": false,
+        "description": "MCC 账号。传了可进一步过滤 apps/conversions。"
+      },
+      "appPackage": {
+        "type": "string",
+        "required": false,
+        "description": "应用包名。传了可进一步过滤 conversions。"
+      }
+    },
+    "response": {
+      "adPlatforms": {
+        "type": "Option[]",
+        "required": true,
+        "description": "广告平台选项。通常为静态配置，但建议走接口便于权限控制与扩展。"
+      },
+      "mccAccounts": {
+        "type": "Option[]",
+        "required": false,
+        "description": "MCC 账号选项（受 source 影响）。"
+      },
+      "apps": {
+        "type": "Option[]",
+        "required": false,
+        "description": "应用选项（受 source+mccAccount 影响）。"
+      },
+      "conversions": {
+        "type": "ConversionOption[]",
+        "required": false,
+        "description": "转化选项（受 source+mccAccount+appPackage 影响）。"
+      }
+    },
+    "Option": {
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "展示文案。"
+      },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "实际值。"
+      }
+    },
+    "ConversionOption": {
+      "conversionName": {
+        "type": "string",
+        "required": true,
+        "description": "平台侧转化名称（弹窗下拉 label/value）。"
+      },
+      "conversionId": {
+        "type": "string",
+        "required": true,
+        "description": "平台侧转化 ID（只读展示）。必须为字符串。"
+      },
+      "billingType": {
+        "type": "string",
+        "required": false,
+        "enum": ["CPA", "CPI", "CPE", ""],
+        "description": "计费类型（只读展示）。建议由后端从平台侧转化属性推导。"
+      },
+      "platformConversionType": {
+        "type": "string",
+        "required": false,
+        "description": "平台转化类型（可选）。若后端能识别/映射，则返回；否则留空由用户在后续环节选择（如产品需要）。"
+      },
+      "extra": {
+        "type": "object",
+        "required": false,
+        "description": "平台原始扩展字段（可选）。用于排查/回溯，不建议直接展示给用户。"
+      }
+    },
+    "uiBehaviorNote": {
+      "description": "当前前端弹窗：选择 source 后会自动取该平台 MCC 列表的第一项填入 mccAccount；真实场景可能需要用户选择 MCC（多账号）。若要支持多 MCC，请后端返回完整列表并允许前端选择。"
+    }
+  },
+  "sampleRequest": {
+    "source": "google",
+    "mccAccount": "560-369-9741",
+    "appPackage": "com.locate.phone.track"
+  },
+  "sampleResponse": {
+    "adPlatforms": [
+      { "label": "Google Ads", "value": "google" },
+      { "label": "Meta", "value": "meta" },
+      { "label": "TikTok", "value": "tiktok" },
+      { "label": "Mintegral", "value": "mintegral" }
+    ],
+    "mccAccounts": [{ "label": "560-369-9741", "value": "560-369-9741" }],
+    "apps": [
+      { "label": "com.locate.phone.track", "value": "com.locate.phone.track" },
+      { "label": "com.example.shop", "value": "com.example.shop" }
+    ],
+    "conversions": [
+      {
+        "conversionName": "Phone Tracker install",
+        "conversionId": "7217482985",
+        "billingType": "CPI",
+        "platformConversionType": "DOWNLOAD",
+        "extra": { "source": "google", "category": "APP_INSTALL" }
+      },
+      {
+        "conversionName": "IAP purchase complete",
+        "conversionId": "7217482986",
+        "billingType": "CPA",
+        "platformConversionType": "PURCHASE",
+        "extra": { "source": "google", "category": "IN_APP_PURCHASE" }
+      }
+    ]
+  },
+  "apiSuggestion": {
+    "method": "GET",
+    "path": "/ugc/conversion/meta/dialog-options",
+    "queryParams": ["source|adPlatform", "mccAccount", "appPackage"],
+    "notes": [
+      "可拆成 4 个更清晰的接口：ad-platforms、mccs、apps、conversions；但合并接口能减少联调成本。",
+      "conversionId 必须返回 string。",
+      "若 conversions 数据量大，建议分页或支持 keyword 搜索（conversionName 模糊匹配）。"
+    ]
+  }
+}

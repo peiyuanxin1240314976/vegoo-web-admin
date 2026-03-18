@@ -1,0 +1,119 @@
+{
+  "_comment": "转化管理（name Tab）- 新增转化映射。对应“新增映射”弹窗提交（type=add）。",
+  "fieldDescription": {
+    "request": {
+      "source": {
+        "type": "string",
+        "required": true,
+        "enum": ["google", "meta", "tiktok", "mintegral"],
+        "description": "广告平台（推荐字段）。"
+      },
+      "adPlatform": {
+        "type": "string",
+        "required": false,
+        "enum": ["google", "meta", "tiktok", "mintegral"],
+        "description": "历史兼容字段，语义同 source。后端优先取 source。"
+      },
+      "mccAccount": {
+        "type": "string",
+        "required": true,
+        "example": "560-369-9741",
+        "description": "MCC 账号（选中广告平台后加载得到）。"
+      },
+      "appPackage": {
+        "type": "string",
+        "required": true,
+        "example": "com.locate.phone.track",
+        "description": "应用包名（选中广告平台后从平台侧/配置侧获取）。"
+      },
+      "conversionName": {
+        "type": "string",
+        "required": true,
+        "description": "平台侧转化名称（可从下拉选择或手动输入）。"
+      },
+      "conversionId": {
+        "type": "string",
+        "required": false,
+        "description": "平台侧转化 ID。若后端可通过 conversionName 反查，可不传；但返回时应补齐。必须为字符串。"
+      },
+      "platformConversionType": {
+        "type": "string",
+        "required": false,
+        "description": "平台转化类型（如 DOWNLOAD）。若后端可推导也可不传，由后端最终确定。"
+      },
+      "conversionDisplayType": {
+        "type": "string",
+        "required": false,
+        "enum": ["paid", "activation", "behavior", "revenue"],
+        "description": "系统展示分类（用于业务分组展示）。"
+      },
+      "systemDisplayName": {
+        "type": "string",
+        "required": true,
+        "description": "系统内展示名称（业务侧自定义，必填）。"
+      },
+      "billingType": {
+        "type": "string",
+        "required": false,
+        "enum": ["CPA", "CPI", "CPE", ""],
+        "description": "计费类型。建议由后端最终判定并回填（前端展示为只读）。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["enabled", "unmapped"],
+        "description": "启用状态。UI 当前用开关表示 enabled/未映射。duplicate 通常由后端校验产生。"
+      },
+      "remarks": {
+        "type": "string",
+        "required": false,
+        "description": "备注（可选）。"
+      }
+    },
+    "response": {
+      "success": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否新增成功。"
+      },
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "新建记录 ID。"
+      },
+      "message": {
+        "type": "string",
+        "required": false,
+        "description": "提示信息（用于前端 toast）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "source": "google",
+    "adPlatform": "google",
+    "mccAccount": "560-369-9741",
+    "appPackage": "com.locate.phone.track",
+    "conversionName": "Phone Tracker install",
+    "conversionId": "7217482985",
+    "platformConversionType": "DOWNLOAD",
+    "conversionDisplayType": "activation",
+    "systemDisplayName": "首次安装",
+    "billingType": "CPI",
+    "status": "enabled",
+    "remarks": "用于买量激活统计"
+  },
+  "sampleResponse": {
+    "success": true,
+    "id": "19",
+    "message": "新增成功"
+  },
+  "apiSuggestion": {
+    "method": "POST",
+    "path": "/ugc/conversion/mappings",
+    "notes": [
+      "source/adPlatform 兼容：后端优先使用 source。",
+      "如需防重：建议后端以 (source,mccAccount,appPackage,conversionId|conversionName) 做唯一性校验，并在冲突时返回明确 message。",
+      "conversionId 必须返回 string。"
+    ]
+  }
+}

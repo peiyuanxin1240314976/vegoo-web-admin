@@ -1,18 +1,301 @@
 <template>
-  <div class="user-growth-placeholder art-full-height flex items-center justify-center">
-    <div class="placeholder-content text-center">
-      <p class="text-lg text-gray-500">{{ $t('menus.userGrowth.conversionManagement') }}</p>
-      <p class="text-sm text-gray-400 mt-2">占位页面，待开发</p>
-    </div>
+  <div class="conversion-management-page art-full-height flex flex-col">
+    <ConversionTabs v-model="activeTab" />
+    <template v-if="activeTab === 'name'">
+      <ElRow :gutter="16" class="conversion-management-page__body">
+        <ElCol :xs="24" :xl="19">
+          <ConversionFilters
+            :filter="filterForForm"
+            @search="handleSearch"
+            @add-mapping="openDialog('add')"
+          />
+          <ConversionTable
+            :data="data"
+            :loading="loading"
+            :pagination="pagination"
+            @edit="openDialog('edit', $event)"
+            @delete="handleDelete"
+            @pagination:size-change="handleSizeChange"
+            @pagination:current-change="handleCurrentChange"
+          />
+        </ElCol>
+        <ElCol :xs="24" :xl="5">
+          <ConversionSidePanel
+            :type-distribution="sideStats.typeDistribution"
+            :mapping-stats="sideStats.mappingStats"
+            :platform-stats="sideStats.platformStats"
+            @batch-enable="handleBatchEnable"
+            @batch-disable="handleBatchDisable"
+            @export="handleExport"
+          />
+        </ElCol>
+      </ElRow>
+    </template>
+    <template v-else>
+      <ElRow :gutter="16" class="conversion-management-page__body">
+        <ElCol :xs="24" :xl="15" class="conversion-management-page__left">
+          <ConversionDataFilters :filter="dataFilterForForm" @search="handleDataSearch" />
+          <ConversionDataKpiCards :kpi="dataKpi" />
+          <ConversionDataTable :data="dataTableRows" :loading="dataLoading" />
+        </ElCol>
+        <ElCol :xs="24" :xl="9" class="conversion-management-page__right">
+          <ConversionDataSidePanel
+            :type-distribution="dataSidePanels.typeDistribution"
+            :top10="dataSidePanels.top10"
+            :value-trend30d="dataSidePanels.valueTrend30d"
+            :account-share="dataSidePanels.accountShare"
+          />
+        </ElCol>
+      </ElRow>
+    </template>
+    <ConversionMappingDialog
+      v-model:visible="dialogVisible"
+      :type="dialogType"
+      :row-data="dialogRowData"
+      @submit="handleDialogSubmit"
+    />
+    <ConversionDeleteDialog
+      v-model:visible="deleteDialogVisible"
+      :row="deleteRow"
+      @confirm="handleDeleteConfirm"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+  import { useTable } from '@/hooks/core/useTable'
+  import { useIntervalFn } from '@vueuse/core'
+  import ConversionTabs from './modules/conversion-tabs.vue'
+  import ConversionFilters from './modules/conversion-filters.vue'
+  import ConversionTable from './modules/conversion-table.vue'
+  import ConversionSidePanel from './modules/conversion-side-panel.vue'
+  import ConversionDataFilters from './modules/conversion-data-filters.vue'
+  import ConversionDataKpiCards from './modules/conversion-data-kpi-cards.vue'
+  import ConversionDataTable from './modules/conversion-data-table.vue'
+  import ConversionDataSidePanel from './modules/conversion-data-side-panel.vue'
+  import ConversionMappingDialog from './modules/conversion-mapping-dialog.vue'
+  import ConversionDeleteDialog from './modules/conversion-delete-dialog.vue'
+  import {
+    fetchConversionMappingListMock,
+    MOCK_TYPE_DISTRIBUTION,
+    MOCK_MAPPING_STATS,
+    MOCK_PLATFORM_STATS
+  } from './mock/data'
+  import { fetchConversionDataMock } from './mock/data-tab'
+  import type {
+    ConversionDataFilterParams,
+    ConversionDataSidePanels,
+    ConversionDataRow,
+    ConversionFilterParams,
+    ConversionKpi,
+    ConversionMappingItem,
+    ConversionMappingForm
+  } from './types'
+  import { ElMessage } from 'element-plus'
+
   defineOptions({ name: 'ConversionManagement' })
+
+  const activeTab = ref<'name' | 'data'>('name')
+
+  const {
+    data,
+    loading,
+    pagination,
+    searchParams,
+    getData,
+    handleSizeChange,
+    handleCurrentChange
+  } = useTable({
+    core: {
+      apiFn: fetchConversionMappingListMock,
+      apiParams: {
+        current: 1,
+        size: 20,
+        platform: '',
+        appPackage: '',
+        app: '',
+        conversionType: '',
+        status: '',
+        keyword: ''
+      },
+      columnsFactory: () => []
+    }
+  })
+
+  const filterForForm = computed(() => searchParams as ConversionFilterParams)
+
+  const sideStats = computed(() => ({
+    typeDistribution: MOCK_TYPE_DISTRIBUTION,
+    mappingStats: MOCK_MAPPING_STATS,
+    platformStats: MOCK_PLATFORM_STATS
+  }))
+
+  function handleSearch(payload: ConversionFilterParams) {
+    Object.assign(searchParams, {
+      platform: payload.platform ?? '',
+      appPackage: payload.appPackage ?? payload.app ?? '',
+      app: payload.appPackage ?? payload.app ?? '',
+      conversionType: payload.conversionType ?? '',
+      status: payload.status ?? '',
+      keyword: payload.keyword ?? ''
+    })
+    getData()
+  }
+
+  const dialogVisible = ref(false)
+  const dialogType = ref<'add' | 'edit'>('add')
+  const dialogRowData = ref<Partial<ConversionMappingItem> | null>(null)
+
+  function openDialog(type: 'add' | 'edit', row?: ConversionMappingItem) {
+    dialogType.value = type
+    dialogRowData.value = row ?? null
+    dialogVisible.value = true
+  }
+
+  function handleDialogSubmit(form: ConversionMappingForm) {
+    console.log('Mapping submit (mock):', form)
+    dialogVisible.value = false
+    getData()
+  }
+
+  const deleteDialogVisible = ref(false)
+  const deleteRow = ref<ConversionMappingItem | null>(null)
+
+  function handleDelete(row: ConversionMappingItem) {
+    deleteRow.value = row
+    deleteDialogVisible.value = true
+  }
+
+  function handleDeleteConfirm(row: ConversionMappingItem) {
+    console.log('Delete (mock):', row.id)
+    getData()
+  }
+
+  function handleBatchEnable() {
+    ElMessage.info('批量启用（待接接口）')
+  }
+
+  function handleBatchDisable() {
+    ElMessage.info('批量禁用（待接接口）')
+  }
+
+  function handleExport() {
+    ElMessage.info('导出映射表（待接接口）')
+  }
+
+  /**
+   * 转化数据（Data Tab）
+   */
+  const refreshIntervalMs = 30_000
+
+  function getDefaultDateRange(): [string, string] {
+    const end = new Date()
+    const start = new Date()
+    start.setDate(end.getDate() - 6)
+    const toYmd = (d: Date) => {
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    }
+    return [toYmd(start), toYmd(end)]
+  }
+
+  const dataFilter = reactive<ConversionDataFilterParams>({
+    dateRange: getDefaultDateRange(),
+    platform: '',
+    app: '',
+    appPackage: '',
+    source: '',
+    adPlatform: '',
+    conversionType: ''
+  })
+
+  const dataFilterForForm = computed(() => dataFilter as ConversionDataFilterParams)
+
+  const dataLoading = ref(false)
+  const dataKpi = ref<ConversionKpi | null>(null)
+  const dataTableRows = ref<ConversionDataRow[]>([])
+  const dataSidePanels = ref<ConversionDataSidePanels>({
+    typeDistribution: [],
+    top10: [],
+    valueTrend30d: [],
+    accountShare: []
+  })
+
+  async function loadDataTab() {
+    dataLoading.value = true
+    try {
+      const res = await fetchConversionDataMock({ ...dataFilter })
+      dataKpi.value = res.kpi
+      dataTableRows.value = res.tableRows
+      dataSidePanels.value = res.sidePanels
+    } finally {
+      dataLoading.value = false
+    }
+  }
+
+  const interval = useIntervalFn(
+    () => {
+      if (activeTab.value !== 'data') return
+      void loadDataTab()
+    },
+    refreshIntervalMs,
+    { immediate: false }
+  )
+
+  function restartInterval() {
+    interval.pause()
+    interval.resume()
+  }
+
+  function handleDataSearch(payload: ConversionDataFilterParams) {
+    Object.assign(dataFilter, {
+      dateRange: payload.dateRange ?? getDefaultDateRange(),
+      platform: payload.platform ?? '',
+      appPackage: payload.appPackage ?? payload.app ?? '',
+      app: payload.appPackage ?? payload.app ?? '',
+      source: payload.source ?? payload.adPlatform ?? '',
+      adPlatform: payload.source ?? payload.adPlatform ?? '',
+      conversionType: payload.conversionType ?? ''
+    })
+    void loadDataTab().then(() => restartInterval())
+  }
+
+  watch(
+    () => activeTab.value,
+    (tab) => {
+      if (tab === 'data') {
+        void loadDataTab().then(() => restartInterval())
+      } else {
+        interval.pause()
+      }
+    },
+    { immediate: true }
+  )
+
+  onBeforeUnmount(() => {
+    interval.pause()
+  })
 </script>
 
-<style scoped>
-  .user-growth-placeholder {
-    min-height: 200px;
+<style scoped lang="scss">
+  .conversion-management-page {
+    padding: 0;
+  }
+
+  .conversion-management-page__body {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .conversion-management-page__left {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .conversion-management-page__right {
+    min-height: 0;
   }
 </style>

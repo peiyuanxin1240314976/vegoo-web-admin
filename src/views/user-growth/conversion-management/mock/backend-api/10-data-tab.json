@@ -1,0 +1,342 @@
+{
+  "_comment": "转化管理（data Tab）- 总接口：KPI + 三层树表 + 右侧面板。页面会 30s 刷新一次（仅 data Tab 激活时）。",
+  "fieldDescription": {
+    "request": {
+      "dateRange": {
+        "type": "[string,string]",
+        "required": false,
+        "example": ["2026-03-11", "2026-03-17"],
+        "description": "日期范围（YYYY-MM-DD）。不传时后端可默认最近 7 天，但前端通常会传默认值。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "android", "ios"],
+        "description": "终端平台筛选。空字符串表示全部。"
+      },
+      "appPackage": {
+        "type": "string",
+        "required": false,
+        "description": "应用包名筛选（推荐字段）。"
+      },
+      "app": {
+        "type": "string",
+        "required": false,
+        "description": "历史兼容字段，语义同 appPackage。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "google", "meta", "tiktok", "mintegral"],
+        "description": "广告平台筛选（推荐字段）。当前 UI 未暴露该筛选，但类型已预留，建议后端支持。"
+      },
+      "adPlatform": {
+        "type": "string",
+        "required": false,
+        "description": "历史兼容字段，语义同 source。"
+      },
+      "conversionType": {
+        "type": "string",
+        "required": false,
+        "description": "平台转化类型筛选。空字符串表示全部。"
+      }
+    },
+    "response": {
+      "kpi": {
+        "type": "ConversionKpi",
+        "required": true,
+        "description": "顶部 KPI 指标。"
+      },
+      "tableRows": {
+        "type": "ConversionDataRow[]",
+        "required": true,
+        "description": "三层树表：group → account → conversion。"
+      },
+      "sidePanels": {
+        "type": "ConversionDataSidePanels",
+        "required": true,
+        "description": "右侧面板数据集合：类型占比/Top10/30天趋势/账户占比。"
+      }
+    },
+    "ConversionKpi": {
+      "conversionCount": {
+        "type": "ConversionKpiItem",
+        "required": true,
+        "description": "转化次数 KPI。"
+      },
+      "conversionValue": {
+        "type": "ConversionKpiItem",
+        "required": true,
+        "description": "转化价值 KPI。价值口径需业务约定（金额/收入/价值点）。"
+      },
+      "averageValue": {
+        "type": "ConversionKpiItem",
+        "required": true,
+        "description": "平均价值 KPI（通常=conversionValue/conversionCount）。"
+      },
+      "activeTypeCount": {
+        "type": "ConversionKpiItem",
+        "required": true,
+        "description": "活跃转化类型数量 KPI。"
+      }
+    },
+    "ConversionKpiItem": {
+      "value": {
+        "type": "number",
+        "required": true,
+        "description": "当前值。"
+      },
+      "deltaPercent": {
+        "type": "number",
+        "required": true,
+        "description": "变化百分比（可正可负）。示例：-5.2 表示下降 5.2%。"
+      }
+    },
+    "ConversionDataRow": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "行 ID（树表 row-key）。建议稳定、可复用。"
+      },
+      "level": {
+        "type": "string",
+        "required": true,
+        "enum": ["group", "account", "conversion"],
+        "description": "层级：group=账户组 | account=账户 | conversion=转化。"
+      },
+      "accountGroupName": {
+        "type": "string",
+        "required": false,
+        "description": "账户组名称。"
+      },
+      "accountName": {
+        "type": "string",
+        "required": false,
+        "description": "账户名称。"
+      },
+      "appPackage": {
+        "type": "string",
+        "required": false,
+        "description": "应用包名（通常仅 conversion 层级需要）。"
+      },
+      "conversionName": {
+        "type": "string",
+        "required": false,
+        "description": "转化名称（conversion 层级）。"
+      },
+      "platformConversionType": {
+        "type": "string",
+        "required": false,
+        "description": "平台转化类型（conversion 层级）。"
+      },
+      "conversionCount": {
+        "type": "number",
+        "required": true,
+        "description": "转化次数。"
+      },
+      "conversionValue": {
+        "type": "number",
+        "required": true,
+        "description": "转化价值。"
+      },
+      "share": {
+        "type": "number",
+        "required": true,
+        "description": "占比（0-100）。当前前端 mock 以 conversionCount 口径计算；若后端改口径需明确。"
+      },
+      "trendPoints": {
+        "type": "number[]",
+        "required": true,
+        "description": "趋势点数组。当前 UI 使用 14 个点（无日期，仅用于小折线展示）。"
+      },
+      "children": {
+        "type": "ConversionDataRow[]",
+        "required": false,
+        "description": "子节点列表：group 下为 account；account 下为 conversion。"
+      }
+    },
+    "ConversionDataSidePanels": {
+      "typeDistribution": {
+        "type": "ConversionTypeDistributionItem[]",
+        "required": true,
+        "description": "类型分布（甜甜圈图，结构同 name Tab）。"
+      },
+      "top10": {
+        "type": "ConversionTop10Item[]",
+        "required": true,
+        "description": "Top10 列表。需约定 value 口径（次数或价值）。"
+      },
+      "valueTrend30d": {
+        "type": "ConversionValueTrendPoint[]",
+        "required": true,
+        "description": "近 30 天价值趋势（带日期）。"
+      },
+      "accountShare": {
+        "type": "ConversionAccountShareItem[]",
+        "required": true,
+        "description": "账户占比（分段堆叠）。"
+      }
+    },
+    "ConversionTypeDistributionItem": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "类型名称。"
+      },
+      "value": {
+        "type": "number",
+        "required": true,
+        "description": "占比（0-100）。"
+      },
+      "count": {
+        "type": "number",
+        "required": false,
+        "description": "可选：该类型数量。"
+      }
+    },
+    "ConversionTop10Item": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "名称（转化名/事件名等）。"
+      },
+      "value": {
+        "type": "number",
+        "required": true,
+        "description": "数值（需约定口径：count/value）。"
+      }
+    },
+    "ConversionValueTrendPoint": {
+      "date": {
+        "type": "string",
+        "required": true,
+        "description": "日期 YYYY-MM-DD。"
+      },
+      "value": {
+        "type": "number",
+        "required": true,
+        "description": "当天 value。"
+      }
+    },
+    "ConversionAccountShareItem": {
+      "accountName": {
+        "type": "string",
+        "required": true,
+        "description": "账户名称。"
+      },
+      "segments": {
+        "type": "{type:string,percent:number}[]",
+        "required": true,
+        "description": "该账户在各转化类型上的占比段列表。",
+        "fields": {
+          "type": {
+            "type": "string",
+            "required": true,
+            "description": "转化类型（如 DOWNLOAD）。"
+          },
+          "percent": {
+            "type": "number",
+            "required": true,
+            "description": "占比（0-100）。建议总和=100（允许四舍五入误差）。"
+          }
+        }
+      }
+    }
+  },
+  "sampleRequest": {
+    "dateRange": ["2026-03-11", "2026-03-17"],
+    "platform": "",
+    "appPackage": "",
+    "app": "",
+    "source": "",
+    "adPlatform": "",
+    "conversionType": ""
+  },
+  "sampleResponse": {
+    "kpi": {
+      "conversionCount": { "value": 286532, "deltaPercent": 6.3 },
+      "conversionValue": { "value": 1523401, "deltaPercent": -3.1 },
+      "averageValue": { "value": 5.31, "deltaPercent": -5.2 },
+      "activeTypeCount": { "value": 8, "deltaPercent": 2.4 }
+    },
+    "tableRows": [
+      {
+        "id": "g-1",
+        "level": "group",
+        "accountGroupName": "ACCOUNT GROUP 1",
+        "conversionCount": 123456,
+        "conversionValue": 654321,
+        "share": 43.1,
+        "trendPoints": [48, 52, 49, 60, 55, 51, 58, 62, 57, 59, 63, 61, 64, 66],
+        "children": [
+          {
+            "id": "g-1-a-1",
+            "level": "account",
+            "accountGroupName": "ACCOUNT GROUP 1",
+            "accountName": "PT_262__bgeoo_0903_b",
+            "conversionCount": 56789,
+            "conversionValue": 321000,
+            "share": 19.8,
+            "trendPoints": [20, 22, 21, 25, 24, 23, 26, 27, 26, 28, 29, 30, 31, 32],
+            "children": [
+              {
+                "id": "g-1-a-1-c-1",
+                "level": "conversion",
+                "accountGroupName": "ACCOUNT GROUP 1",
+                "accountName": "PT_262__bgeoo_0903_b",
+                "appPackage": "com.locate.phone.track",
+                "conversionName": "PT_262__bgeoo_0903_b | DOWNLOAD | main",
+                "platformConversionType": "DOWNLOAD",
+                "conversionCount": 12000,
+                "conversionValue": 98000,
+                "share": 4.2,
+                "trendPoints": [10, 12, 11, 13, 14, 13, 15, 16, 15, 17, 18, 18, 19, 20]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sidePanels": {
+      "typeDistribution": [
+        { "name": "PHONE_CALL_LEAD", "value": 44, "count": 8800 },
+        { "name": "DOWNLOAD", "value": 11, "count": 2200 }
+      ],
+      "top10": [
+        { "name": "purchase", "value": 22000 },
+        { "name": "PHONE_CALL_LEAD", "value": 20500 }
+      ],
+      "valueTrend30d": [
+        { "date": "2026-02-16", "value": 860 },
+        { "date": "2026-02-17", "value": 872 }
+      ],
+      "accountShare": [
+        {
+          "accountName": "PT_262__bgeoo_0903_b",
+          "segments": [
+            { "type": "PHONE_CALL_LEAD", "percent": 32.4 },
+            { "type": "DOWNLOAD", "percent": 18.7 },
+            { "type": "PURCHASE", "percent": 48.9 }
+          ]
+        }
+      ]
+    }
+  },
+  "apiSuggestion": {
+    "method": "GET",
+    "path": "/ugc/conversion/data",
+    "queryParams": [
+      "dateRangeStart",
+      "dateRangeEnd",
+      "platform",
+      "appPackage|app",
+      "source|adPlatform",
+      "conversionType"
+    ],
+    "notes": [
+      "如使用 querystring：建议将 dateRange 拆为 dateRangeStart/dateRangeEnd，避免数组传参差异；或改为 POST JSON body。",
+      "页面会每 30s 刷新：建议接口支持缓存或增量计算，避免高频全量聚合压力。",
+      "tree 表格层级固定 3 层；若后端返回更多层级，前端当前展示不支持。"
+    ]
+  }
+}

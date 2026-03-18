@@ -1,0 +1,39 @@
+{
+  "_comment": "转化管理（name Tab）- 删除转化映射。对应删除确认弹窗。",
+  "fieldDescription": {
+    "pathParam": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "映射记录 ID。"
+      }
+    },
+    "response": {
+      "success": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否删除成功。"
+      },
+      "message": {
+        "type": "string",
+        "required": false,
+        "description": "提示信息（例如：删除成功 / 无权限 / 已被引用无法删除）。"
+      }
+    },
+    "behaviorNote": {
+      "description": "如删除会影响历史报表口径，建议后端采用软删并在 message 中明确提示；也可返回业务错误码供前端特殊处理。"
+    }
+  },
+  "sampleResponse": {
+    "success": true,
+    "message": "删除成功"
+  },
+  "apiSuggestion": {
+    "method": "DELETE",
+    "path": "/ugc/conversion/mappings/{id}",
+    "notes": [
+      "若存在回收站/审计：建议软删字段 deletedAt/deletedBy，不影响前端。",
+      "如需二次确认逻辑（例如：该映射已绑定活动），建议返回明确 message。"
+    ]
+  }
+}
