@@ -201,6 +201,7 @@
   import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
+  import { getAppNow } from '@/utils/app-now'
   import {
     MOCK_CHANNEL_KPI_CARDS,
     MOCK_CHANNEL_ROI_TREND,
@@ -231,7 +232,7 @@
 
   const currentTime = ref('')
   const updateTime = () => {
-    const now = new Date()
+    const now = getAppNow()
     const week = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][now.getDay()]
     currentTime.value = `今天${week}, ${now.getFullYear()}年${String(now.getMonth() + 1).padStart(2, '0')}月${String(now.getDate()).padStart(2, '0')}日`
   }

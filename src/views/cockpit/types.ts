@@ -9,6 +9,8 @@ export type CockpitDateRange = 'today' | 'yesterday' | 'week' | 'month'
 /** 请求参数：按日期范围拉取驾驶舱数据 */
 export interface CockpitOverviewParams {
   dateRange?: CockpitDateRange
+  /** 单一筛选字段：YYYY-MM-DD */
+  date?: string
 }
 
 /** 经营驾驶舱「第一排总数据」接口：单周期指标（last / now 结构相同） */

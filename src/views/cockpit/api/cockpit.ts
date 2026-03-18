@@ -512,12 +512,14 @@ export function mapOverallToKpiCards(
 
 /**
  * 获取经营驾驶舱第一排总数据（新结构：code/data，data 含 now、*Change、*List，供 KPI + 警示同接口）
- * 请求体：传空对象 {} 即可
+ * 请求体：{ date: 'YYYY-MM-DD' }（若不传则按 {} 兜底）
  */
-export async function fetchCockpitOverall(): Promise<CockpitOverallApiResponse> {
+export async function fetchCockpitOverall(params?: {
+  date?: string
+}): Promise<CockpitOverallApiResponse> {
   return request.post<CockpitOverallApiResponse>({
     url: COCKPIT_OVERALL_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
 }
 
@@ -831,12 +833,14 @@ export function mapConsumptionRhythmToSpendPace(
 
 /**
  * 获取消耗节奏监控数据（自投 + 代投）
- * 请求体：空对象 {}
+ * 请求体：{ date: 'YYYY-MM-DD' }
  */
-export async function fetchConsumptionRhythmMonitoring(): Promise<CockpitConsumptionRhythmResponse> {
+export async function fetchConsumptionRhythmMonitoring(params?: {
+  date?: string
+}): Promise<CockpitConsumptionRhythmResponse> {
   return request.post<CockpitConsumptionRhythmResponse>({
     url: COCKPIT_CONSUMPTION_RHYTHM_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
 }
 
@@ -913,12 +917,12 @@ export function mapTop3ResponseToOverview(res: CockpitTop3Response | null): {
 
 /**
  * 获取 Top3 数据（收入应用、差评产品、用户增长）
- * 请求体：空对象 {}
+ * 请求体：{ date: 'YYYY-MM-DD' }
  */
-export async function fetchCockpitTop3(): Promise<CockpitTop3Response> {
+export async function fetchCockpitTop3(params?: { date?: string }): Promise<CockpitTop3Response> {
   return request.post<CockpitTop3Response>({
     url: COCKPIT_TOP3_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
 }
 
@@ -949,12 +953,14 @@ export function mapChannelRoiInstallToItems(
 
 /**
  * 获取渠道 ROI&安装量（经营驾驶舱大屏 渠道ROI&安装量）
- * 请求体：空对象 {}
+ * 请求体：{ date: 'YYYY-MM-DD' }
  */
-export async function fetchChannelRoiInstall(): Promise<CockpitChannelRoiInstallResponse> {
+export async function fetchChannelRoiInstall(params?: {
+  date?: string
+}): Promise<CockpitChannelRoiInstallResponse> {
   return request.post<CockpitChannelRoiInstallResponse>({
     url: COCKPIT_CHANNEL_ROI_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
 }
 
@@ -1040,10 +1046,12 @@ export function mapCountriesToLegend(
 /**
  * 获取业务分布地图数据，请求体：空对象 {}
  */
-export async function fetchCockpitBusinessMap(): Promise<CockpitBusinessMapApiItem[]> {
+export async function fetchCockpitBusinessMap(params?: {
+  date?: string
+}): Promise<CockpitBusinessMapApiItem[]> {
   return request.post<CockpitBusinessMapApiItem[]>({
     url: COCKPIT_BUSINESS_MAP_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
 }
 
@@ -1169,13 +1177,15 @@ export function mapIncomeStructureToFlow(
 
 /**
  * 获取收入结构数据（近7日收入结构流向）
- * POST /api/v1/datacenter/analysis/cockpit/incomeStructure，请求体：{}
+ * POST /api/v1/datacenter/analysis/cockpit/incomeStructure，请求体：{ date: 'YYYY-MM-DD' }
  * 响应 data: [{ app, country, dAdRevenue, dIapRevenue }, ...]
  */
-export async function fetchIncomeStructure(): Promise<CockpitIncomeStructureRow[]> {
+export async function fetchIncomeStructure(params?: {
+  date?: string
+}): Promise<CockpitIncomeStructureRow[]> {
   const list = await request.post<CockpitIncomeStructureRow[]>({
     url: COCKPIT_INCOME_STRUCTURE_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
   return Array.isArray(list) ? list : []
 }

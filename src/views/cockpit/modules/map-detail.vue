@@ -68,6 +68,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import { useRoute } from 'vue-router'
+  import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import {
     MapDetailHeader,
     MapDetailStatsCards,
@@ -104,12 +105,11 @@
   type RangeType = 'yesterday' | 'past7' | 'month'
 
   function todayStr(): string {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    return formatYYYYMMDD(getAppNow())
   }
 
   function getDateByRange(type: RangeType): string {
-    const d = new Date()
+    const d = getAppNow()
     if (type === 'yesterday') {
       d.setDate(d.getDate() - 1)
     } else if (type === 'past7') {
@@ -117,7 +117,7 @@
     } else {
       d.setDate(1)
     }
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    return formatYYYYMMDD(d)
   }
 
   const rangeOptions: { value: RangeType; label: string }[] = [

@@ -46,6 +46,7 @@ import { computed } from 'vue'
 import { useSettingStore } from '@/store/modules/setting'
 import { mittBus } from '@/utils/sys'
 import { festivalConfigList } from '@/config/modules/festival'
+import { getAppNow } from '@/utils/app-now'
 
 /**
  * 节日庆祝配置常量
@@ -99,7 +100,7 @@ export function useCeremony() {
    * 获取当前日期对应的节日数据
    */
   const currentFestivalData = computed(() => {
-    const currentDate = useDateFormat(new Date(), 'YYYY-MM-DD').value
+    const currentDate = useDateFormat(getAppNow(), 'YYYY-MM-DD').value
     return festivalConfigList.find((item) => isDateInRange(currentDate, item.date, item.endDate))
   })
 
