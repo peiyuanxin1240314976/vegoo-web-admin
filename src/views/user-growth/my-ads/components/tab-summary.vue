@@ -54,40 +54,76 @@
       </ElCol>
       <ElCol :xs="24" :lg="12">
         <div class="my-ads-panel">
-          <div class="my-ads-panel__header">
+          <div class="my-ads-panel__header my-ads-panel__header--pace">
             <span class="my-ads-panel__title">{{ $t('myAds.summary.paceMonitor') }}</span>
-            <span v-if="summary.paceRemainingDays != null" class="remaining-days">
-              {{ $t('myAds.summary.remainingDays', { n: summary.paceRemainingDays }) }}
-            </span>
+            <template v-if="summary.paceRemainingDays != null">
+              <span class="pace-header-divider">|</span>
+              <span class="remaining-days">
+                {{ $t('myAds.summary.remainingDays', { n: summary.paceRemainingDays }) }}
+              </span>
+            </template>
           </div>
           <div class="my-ads-panel__body">
-            <div class="pace-list">
-              <div v-for="(row, idx) in summary.paceMonitor" :key="idx" class="pace-item">
-                <div class="pace-item-top">
+            <div class="pace-table">
+              <div class="pace-table__head">
+                <div class="pace-table__cell pace-table__cell--campaign">
+                  {{ $t('myAds.summary.paceColCampaign') }}
+                </div>
+                <div class="pace-table__cell pace-table__cell--spend">
+                  {{ $t('myAds.summary.paceColSpendBudget') }}
+                </div>
+                <div class="pace-table__cell pace-table__cell--progress">
+                  {{ $t('myAds.summary.paceColProgress') }}
+                </div>
+                <div class="pace-table__cell pace-table__cell--roi">
+                  {{ $t('myAds.summary.paceColRoi') }}
+                </div>
+                <div class="pace-table__cell pace-table__cell--status">
+                  {{ $t('myAds.summary.paceColStatus') }}
+                </div>
+              </div>
+              <div v-for="(row, idx) in summary.paceMonitor" :key="idx" class="pace-table__row">
+                <div class="pace-table__cell pace-table__cell--campaign">
                   <span class="pace-name">{{ row.name }}</span>
-                  <span class="pace-meta">
-                    ${{ formatNum(row.spend) }} / ${{ formatNum(row.budget) }}
+                </div>
+                <div class="pace-table__cell pace-table__cell--spend">
+                  ${{ formatNum(row.spend) }} / ${{ formatNum(row.budget) }}
+                </div>
+                <div class="pace-table__cell pace-table__cell--progress">
+                  <div class="pace-progress-wrap">
+                    <div class="my-ads-progress-track">
+                      <div
+                        class="my-ads-progress-fill"
+                        :class="progressFillClass(row)"
+                        :style="{ width: Math.min(100, row.progress) + '%' }"
+                      />
+                    </div>
                     <span class="pace-percent">{{ row.progress }}%</span>
+                  </div>
+                </div>
+                <div class="pace-table__cell pace-table__cell--roi">
+                  <span class="pace-roi" :class="roiClass(row)">
+                    {{ row.firstDayRoi != null ? row.firstDayRoi + '%' : '--' }}
                   </span>
                 </div>
-                <div class="pace-item-bottom">
-                  <div class="my-ads-progress-track">
-                    <div
-                      class="my-ads-progress-fill"
-                      :class="
-                        row.status === 'over_budget'
-                          ? 'my-ads-progress-fill--danger'
-                          : 'my-ads-progress-fill--normal'
-                      "
-                      :style="{ width: Math.min(100, row.progress) + '%' }"
+                <div class="pace-table__cell pace-table__cell--status">
+                  <span class="pace-status" :class="'pace-status--' + row.status">
+                    <span
+                      v-if="row.status === 'over_budget'"
+                      class="pace-status-icon pace-status-icon--warning"
+                    >
+                      <ElIcon><WarningFilled /></ElIcon>
+                    </span>
+                    <span
+                      v-else
+                      class="pace-status-dot"
+                      :class="{
+                        'pace-status-dot--normal': row.status === 'normal',
+                        'pace-status-dot--gray': row.status === 'not_started'
+                      }"
                     />
-                  </div>
-                  <span class="pace-roi">{{
-                    row.firstDayRoi != null ? row.firstDayRoi + '%' : '--'
-                  }}</span>
-                  <span class="pace-status" :class="'pace-status--' + row.status">{{
-                    row.statusText
-                  }}</span>
+                    <span class="pace-status-text">{{ paceStatusLabel(row.status) }}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -100,6 +136,9 @@
 
 <script setup lang="ts">
   import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+  import { ElIcon } from 'element-plus'
+  import { WarningFilled } from '@element-plus/icons-vue'
+  import { useI18n } from 'vue-i18n'
   import { echarts, type EChartsOption } from '@/plugins/echarts'
   import type {
     MyAdsTrendPoint,
@@ -158,8 +197,35 @@
   let donutChart: ReturnType<typeof echarts.init> | null = null
   let barChart: ReturnType<typeof echarts.init> | null = null
 
+  const { t } = useI18n()
+
   function formatNum(n: number) {
     return n.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  }
+
+  function paceStatusLabel(status: 'normal' | 'over_budget' | 'not_started') {
+    const key =
+      status === 'normal'
+        ? 'statusNormal'
+        : status === 'over_budget'
+          ? 'statusOverBudget'
+          : 'statusNotStarted'
+    return t('myAds.summary.' + key)
+  }
+
+  function progressFillClass(row: { status: string; progress: number }) {
+    if (row.status === 'over_budget') return 'my-ads-progress-fill--danger'
+    if (row.status === 'not_started' || row.progress === 0) return 'my-ads-progress-fill--gray'
+    if (row.progress >= 90) return 'my-ads-progress-fill--warning'
+    return 'my-ads-progress-fill--normal'
+  }
+
+  function roiClass(row: { firstDayRoi: number | null; status: string }) {
+    if (row.firstDayRoi == null) return 'pace-roi--empty'
+    if (row.status === 'over_budget') return 'pace-roi--danger'
+    if (row.firstDayRoi >= 36) return 'pace-roi--success'
+    if (row.firstDayRoi >= 30) return 'pace-roi--warning'
+    return 'pace-roi--danger'
   }
 
   const COLORS = {
@@ -430,68 +496,132 @@
     height: 260px;
   }
 
-  .remaining-days {
-    font-size: 12px;
+  .my-ads-panel__header--pace {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .pace-header-divider {
+    margin: 0 2px;
     color: $my-ads-text-secondary;
   }
 
-  .pace-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  .remaining-days {
+    font-size: 12px;
+    color: $my-ads-warning;
   }
 
-  .pace-item {
-    .pace-item-top {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 6px;
-      font-size: 13px;
+  .pace-table {
+    font-size: 13px;
+  }
 
-      .pace-name {
-        color: $my-ads-text-primary;
+  .pace-table__head,
+  .pace-table__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 140px 72px 80px;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .pace-table__head {
+    padding-bottom: 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: $my-ads-text-secondary;
+    border-bottom: 1px solid $my-ads-panel-border;
+  }
+
+  .pace-table__row {
+    min-height: 36px;
+    padding: 8px 0;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid rgb(148 163 184 / 15%);
+    }
+  }
+
+  .pace-table__cell--campaign .pace-name {
+    color: $my-ads-text-primary;
+  }
+
+  .pace-table__cell--spend {
+    color: $my-ads-text-secondary;
+  }
+
+  .pace-progress-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    .my-ads-progress-track {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .pace-percent {
+      flex-shrink: 0;
+      font-size: 12px;
+      color: $my-ads-text-secondary;
+    }
+  }
+
+  .pace-roi {
+    font-size: 13px;
+
+    &.pace-roi--success {
+      color: $my-ads-success;
+    }
+
+    &.pace-roi--warning {
+      color: $my-ads-warning;
+    }
+
+    &.pace-roi--danger {
+      color: $my-ads-danger;
+    }
+
+    &.pace-roi--empty {
+      color: $my-ads-text-secondary;
+    }
+  }
+
+  .pace-status {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    font-size: 12px;
+
+    .pace-status-icon {
+      display: inline-flex;
+      font-size: 14px;
+      color: $my-ads-warning;
+    }
+
+    .pace-status-dot {
+      flex-shrink: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+
+      &.pace-status-dot--normal {
+        background: $my-ads-success;
       }
 
-      .pace-meta {
-        color: $my-ads-text-secondary;
-
-        .pace-percent {
-          margin-left: 6px;
-        }
+      &.pace-status-dot--gray {
+        background: $my-ads-text-secondary;
       }
     }
 
-    .pace-item-bottom {
-      display: flex;
-      gap: 10px;
-      align-items: center;
+    &.pace-status--normal .pace-status-text {
+      color: $my-ads-success;
+    }
 
-      .my-ads-progress-track {
-        flex: 1;
-        max-width: 120px;
-      }
+    &.pace-status--over_budget .pace-status-text {
+      color: $my-ads-warning;
+    }
 
-      .pace-roi {
-        min-width: 36px;
-        font-size: 13px;
-        color: $my-ads-text-primary;
-      }
-
-      .pace-status {
-        font-size: 12px;
-
-        &.pace-status--normal {
-          color: $my-ads-success;
-        }
-
-        &.pace-status--over_budget {
-          color: $my-ads-warning;
-        }
-
-        &.pace-status--not_started {
-          color: $my-ads-text-secondary;
-        }
-      }
+    &.pace-status--not_started .pace-status-text {
+      color: $my-ads-text-secondary;
     }
   }
 

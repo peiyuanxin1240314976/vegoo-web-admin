@@ -116,11 +116,19 @@ html:not(.dark) {
   }
 
   .my-ads-progress-fill--normal {
-    background: linear-gradient(90deg, $my-ads-success, $my-ads-warning);
+    background: $my-ads-primary;
+  }
+
+  .my-ads-progress-fill--warning {
+    background: $my-ads-warning;
   }
 
   .my-ads-progress-fill--danger {
-    background: linear-gradient(90deg, $my-ads-success, $my-ads-warning 50%, $my-ads-danger 100%);
+    background: $my-ads-danger;
+  }
+
+  .my-ads-progress-fill--gray {
+    background: $my-ads-text-secondary;
   }
 }
 

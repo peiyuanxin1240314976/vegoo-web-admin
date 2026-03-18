@@ -291,7 +291,15 @@
       "channelDistribution": "Ad Spend by Channel",
       "appSpendShare": "App Ad Spend Share",
       "paceMonitor": "Spend Pace Monitor",
-      "remainingDays": "{n} days left in current period"
+      "remainingDays": "{n} days left in current period",
+      "paceColCampaign": "Campaign",
+      "paceColSpendBudget": "Ad Spend/Budget",
+      "paceColProgress": "Progress",
+      "paceColRoi": "First Day ROI",
+      "paceColStatus": "Status",
+      "statusNormal": "Normal",
+      "statusOverBudget": "Over Budget",
+      "statusNotStarted": "Not Started"
     },
     "appPlatform": {
       "groupByApp": "By App",
