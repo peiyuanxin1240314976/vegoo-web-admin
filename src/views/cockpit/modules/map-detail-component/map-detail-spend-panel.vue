@@ -21,7 +21,7 @@
         <span class="section-title">当前投放中 Campaign (Top 5)</span>
       </div>
       <ElSkeleton v-if="campaignLoading" :rows="5" animated class="table-skeleton" />
-      <ArtTable v-else :data="campaignData" :columns="campaignColumns" size="small" height="150">
+      <ArtTable v-else :data="campaignData" :columns="campaignColumns" size="small" height="200">
         <template #roi="{ row }">
           <span class="roi-dot" :class="getRoiClass(row.roi)"></span>
           <span>{{ row.roi }}</span>
@@ -77,45 +77,52 @@
   }
 
   const channelColumns: ColumnOption[] = [
-    { prop: 'channel', label: '渠道', minWidth: 100 },
+    { prop: 'channel', label: '渠道', minWidth: 100, showOverflowTooltip: true },
     {
       prop: 'spend',
       label: '消耗',
       minWidth: 80,
-      align: 'right',
+      align: 'left',
       formatter: (row: ChannelRow) => fmtMoneyK(row.spend)
     },
     {
       prop: 'installs',
       label: '安装量',
       minWidth: 80,
-      align: 'right',
+      align: 'left',
       formatter: (row: ChannelRow) => row.installs?.toLocaleString()
     },
-    { prop: 'cpi', label: 'CPI', width: 70, align: 'right' },
-    { prop: 'roi', label: 'ROI', width: 70, align: 'right' },
-    { prop: 'roas', label: 'ROAS', width: 70, align: 'right' },
+    { prop: 'cpi', label: 'CPI', width: 70, align: 'left ', showOverflowTooltip: true },
+    { prop: 'roi', label: 'ROI', width: 'auto', align: 'left', showOverflowTooltip: true },
+    { prop: 'roas', label: 'ROAS', width: 70, align: 'left', showOverflowTooltip: true },
     { prop: 'trend', label: '趋势', width: 60, align: 'center', useSlot: true }
   ]
 
   const campaignColumns: ColumnOption[] = [
-    { prop: 'name', label: 'Campaign Name', minWidth: 180 },
+    { prop: 'name', label: 'Campaign Name', width: 180, showOverflowTooltip: true },
     {
       prop: 'amount',
       label: '金额',
       width: 90,
-      align: 'right',
+      align: 'left',
       formatter: (row: CampaignRow) => fmtMoneyK(row.amount)
     },
     {
       prop: 'count',
       label: '数量',
       width: 80,
-      align: 'right',
+      align: 'left',
       formatter: (row: CampaignRow) => row.count?.toLocaleString()
     },
-    { prop: 'roi', label: 'ROI', width: 80, align: 'right', useSlot: true },
-    { prop: 'status', label: '状态', width: 70 }
+    {
+      prop: 'roi',
+      label: 'ROI',
+      width: 'auto',
+      align: 'left',
+      useSlot: true,
+      showOverflowTooltip: true
+    },
+    { prop: 'status', label: '状态', width: 70, showOverflowTooltip: true }
   ]
 
   // function channelSummaries(): string[] {

@@ -84,6 +84,7 @@
   import {
     fetchCountryInfoOverall,
     fetchCountryInfoTop5Campaign,
+    fetchCountryInfoAppLaunch,
     fetchCountryInfoChannelLaunch,
     fetchCountryInfoLtv,
     fetchCountryInfoRemain,
@@ -265,7 +266,6 @@
     }
     // 当前投放中 Campaign (Top 5)：/api/v1/datacenter/analysis/countryInfo/top5Campaign
     campaignLoading.value = true
-    appPerformanceLoading.value = true
     try {
       const list = await fetchCountryInfoTop5Campaign()
       if (Array.isArray(list)) {
@@ -276,18 +276,29 @@
           roi: item.roi ?? 0,
           status: item.status ?? '投放中'
         }))
-        // 同一接口用于变现分析「各 App 在区域表现」表格
-        appPerformanceData.value = list.map((item) => ({
-          appName: item.campaign ?? '—',
-          amount: item.cost ?? 0,
-          count: item.install ?? 0,
-          roi: item.roi ?? 0
-        }))
       }
     } catch {
       // 接口失败时保持空列表
     } finally {
       campaignLoading.value = false
+    }
+
+    // 各 APP 在区域表现：/api/v1/datacenter/analysis/countryInfo/appLaunch
+    appPerformanceLoading.value = true
+    try {
+      const list = await fetchCountryInfoAppLaunch()
+      if (Array.isArray(list)) {
+        appPerformanceData.value = list.map((item) => ({
+          app: item.app ?? '—',
+          arpu: item.arpu ?? 0,
+          dAdRevenue: item.dAdRevenue ?? 0,
+          dIapRevenue: item.dIapRevenue ?? 0,
+          remainDay7: item.remainDay7 ?? 0
+        }))
+      }
+    } catch {
+      // 接口失败时保持空列表
+    } finally {
       appPerformanceLoading.value = false
     }
     // 用户留存曲线：/api/v1/datacenter/analysis/countryInfo/remain（currentCountry + globalAvg）

@@ -214,6 +214,20 @@ export interface CountryInfoTop5CampaignItem {
   status?: string
 }
 
+/** 国家详情各 APP 表现接口 data 单项 /api/v1/datacenter/analysis/countryInfo/appLaunch */
+export interface CountryInfoAppLaunchItem {
+  /** APP 名称 */
+  app: string
+  /** ARPU */
+  arpu: number
+  /** 广告收入 */
+  dAdRevenue: number
+  /** 内购收入 */
+  dIapRevenue: number
+  /** 七日留存 */
+  remainDay7: number
+}
+
 /** 国家详情渠道投放效果对比 - 单条 data 的 now/last 结构 */
 export interface CountryInfoChannelLaunchPeriod {
   cost?: number

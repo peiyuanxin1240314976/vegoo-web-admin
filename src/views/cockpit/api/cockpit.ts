@@ -36,6 +36,7 @@ import type {
   CockpitAppSimulationParams,
   CockpitAppSimulationData,
   CountryInfoChannelLaunchItem,
+  CountryInfoAppLaunchItem,
   CountryInfoLtvData,
   CountryInfoOverallData,
   CountryInfoRemainData,
@@ -59,6 +60,9 @@ const COUNTRY_INFO_OVERALL_URL = '/api/v1/datacenter/analysis/countryInfo/overal
 
 /** 国家详情当前投放中 Campaign Top5 接口 */
 const COUNTRY_INFO_TOP5_CAMPAIGN_URL = '/api/v1/datacenter/analysis/countryInfo/top5Campaign'
+
+/** 国家详情各 APP 表现接口 */
+const COUNTRY_INFO_APP_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo/appLaunch'
 
 /** 国家详情用户留存曲线接口 */
 const COUNTRY_INFO_REMAIN_URL = '/api/v1/datacenter/analysis/countryInfo/remain'
@@ -620,6 +624,18 @@ export async function fetchCountryInfoOverall(params?: {
 export async function fetchCountryInfoTop5Campaign(): Promise<CountryInfoTop5CampaignItem[]> {
   return request.post<CountryInfoTop5CampaignItem[]>({
     url: COUNTRY_INFO_TOP5_CAMPAIGN_URL,
+    data: {}
+  })
+}
+
+/**
+ * 获取国家详情各 APP 表现
+ * POST /api/v1/datacenter/analysis/countryInfo/appLaunch，请求体：{}
+ * 返回 data 数组，项为 { app, arpu, dAdRevenue, dIapRevenue, remainDay7 }
+ */
+export async function fetchCountryInfoAppLaunch(): Promise<CountryInfoAppLaunchItem[]> {
+  return request.post<CountryInfoAppLaunchItem[]>({
+    url: COUNTRY_INFO_APP_LAUNCH_URL,
     data: {}
   })
 }
