@@ -1,0 +1,117 @@
+{
+  "_comment": "广告成效 - 主表格（Owner tab）。由原 03 的 tab=owner 拆分而来。",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "关键字搜索（ownerName/campaignName/channel/country 等）。空字符串表示不筛选。"
+      },
+      "current": {
+        "type": "number",
+        "required": false,
+        "default": 1,
+        "description": "页码，从 1 开始。"
+      },
+      "size": { "type": "number", "required": false, "default": 10, "description": "每页条数。" },
+      "dateRange": {
+        "type": "string",
+        "required": true,
+        "enum": ["today", "yesterday", "last7d", "month"],
+        "description": "日期范围（与 overview 一致）。"
+      },
+      "app": { "type": "string", "required": false, "description": "应用筛选。空字符串表示全部。" },
+      "adPlatform": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选。空字符串表示全部。"
+      },
+      "account": {
+        "type": "string",
+        "required": false,
+        "description": "账户筛选。空字符串表示全部。"
+      },
+      "country": {
+        "type": "string",
+        "required": false,
+        "description": "国家筛选。空字符串表示全部。"
+      }
+    },
+    "response": {
+      "rows": {
+        "type": "AdPerformanceOwnerRow[]",
+        "required": true,
+        "description": "投放师维度明细。支持树表 children（投放师下的 campaign）。"
+      },
+      "summary": {
+        "type": "OwnerTeamSummary",
+        "required": true,
+        "description": "团队汇总。"
+      },
+      "pagination": {
+        "type": "AdPerformancePagination",
+        "required": true,
+        "description": "分页信息。建议只对顶层 owner 行分页。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "current": 1,
+    "size": 10,
+    "dateRange": "today",
+    "app": "",
+    "adPlatform": "",
+    "account": "",
+    "country": ""
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "id": "ow1",
+        "ownerName": "张三",
+        "level": "senior",
+        "appCount": 3,
+        "spend": 15686,
+        "activeCampaignCount": 3,
+        "avgCpi": 2.37,
+        "avgCtr": 3.1,
+        "avgCvr": 31.2,
+        "roi1": 85,
+        "roi7": 94,
+        "estimatedProfit": 2130,
+        "children": [
+          {
+            "id": "ow1-c1",
+            "campaignName": "Weather5_US_Google_CRE001",
+            "channel": "google",
+            "country": "US",
+            "status": "active",
+            "spend": 12450,
+            "cpi": 2.37,
+            "ctr": 3.1,
+            "cvr": 31.2,
+            "roi1": 85,
+            "roi7": 94,
+            "estimatedProfit": 1240
+          }
+        ]
+      }
+    ],
+    "summary": {
+      "totalSpend": 34858,
+      "avgCpi": 2.38,
+      "avgRoi1": 83,
+      "avgCvr": 28.6,
+      "estimatedProfit": 2205
+    },
+    "pagination": { "current": 1, "size": 10, "total": 18 }
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-performance/table/owner",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?, current?, size?, dateRange, app?, adPlatform?, account?, country?",
+    "responseBody": "rows, summary, pagination"
+  }
+}

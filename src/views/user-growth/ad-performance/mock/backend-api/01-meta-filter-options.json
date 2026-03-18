@@ -1,0 +1,85 @@
+{
+  "_comment": "广告成效 - 筛选区域下拉选项。用于 Filters：应用/广告平台/账户/国家；dateRange 目前是枚举按钮，可一并由接口下发（可选）。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "dateRangeOptions": {
+        "type": "{ label: string, value: 'today'|'yesterday'|'last7d'|'month' }[]",
+        "required": false,
+        "description": "日期范围枚举选项。若不返回，前端可按固定枚举渲染。"
+      },
+      "appOptions": {
+        "type": "Option[]",
+        "required": true,
+        "description": "应用选项，对应筛选字段 filter.app。value 建议为应用唯一标识（当前 UI 用应用名）。"
+      },
+      "adPlatformOptions": {
+        "type": "Option[]",
+        "required": true,
+        "description": "广告平台选项，对应 filter.adPlatform。"
+      },
+      "accountOptions": {
+        "type": "Option[]",
+        "required": false,
+        "description": "账户选项（可选）。当前 UI 有账户筛选但未接数据源；建议后端按权限下发。"
+      },
+      "countryOptions": {
+        "type": "Option[]",
+        "required": false,
+        "description": "国家选项（可选）。value 建议为国家代码（US/CA/JP...）。"
+      }
+    },
+    "Option": {
+      "label": { "type": "string", "required": true, "description": "展示文案。" },
+      "value": { "type": "string", "required": true, "description": "实际值。空字符串表示全部。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "dateRangeOptions": [
+      { "label": "今日", "value": "today" },
+      { "label": "昨日", "value": "yesterday" },
+      { "label": "近7天", "value": "last7d" },
+      { "label": "本月", "value": "month" }
+    ],
+    "appOptions": [
+      { "label": "全部(53)", "value": "" },
+      { "label": "Weather5", "value": "Weather5" },
+      { "label": "BloodSugar2", "value": "BloodSugar2" },
+      { "label": "PhoneTracker", "value": "PhoneTracker" },
+      { "label": "FaceMe", "value": "FaceMe" },
+      { "label": "HealthTracker", "value": "HealthTracker" }
+    ],
+    "adPlatformOptions": [
+      { "label": "全部", "value": "" },
+      { "label": "Google", "value": "google" },
+      { "label": "Facebook", "value": "facebook" },
+      { "label": "TikTok", "value": "tiktok" },
+      { "label": "Meta", "value": "meta" },
+      { "label": "Kwai", "value": "kwai" },
+      { "label": "Mintegral", "value": "mintegral" }
+    ],
+    "accountOptions": [{ "label": "全部", "value": "" }],
+    "countryOptions": [
+      { "label": "全部", "value": "" },
+      { "label": "US", "value": "US" },
+      { "label": "UK", "value": "UK" },
+      { "label": "CA", "value": "CA" },
+      { "label": "JP", "value": "JP" },
+      { "label": "BR", "value": "BR" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-performance/meta-filter-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "无（或 {}）",
+    "responseBody": "dateRangeOptions?, appOptions, adPlatformOptions, accountOptions?, countryOptions?"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "筛选“全部”建议统一用空字符串 value=''，避免前端额外兼容 null/undefined。",
+      "accountOptions/countryOptions 可按 filter.app/filter.adPlatform 的联动进一步过滤（可选）。"
+    ]
+  }
+}

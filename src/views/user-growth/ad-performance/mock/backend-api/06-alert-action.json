@@ -1,0 +1,67 @@
+{
+  "_comment": "广告成效 - 异常预警操作：暂停/查看/优化。用于 AdPerformanceAlerts 的 action 事件回调。",
+  "fieldDescription": {
+    "request": {
+      "alertId": {
+        "type": "string",
+        "required": true,
+        "description": "预警项 ID（来自 overview.alerts[].id）。"
+      },
+      "actionType": {
+        "type": "string",
+        "required": true,
+        "enum": ["pause", "view", "optimize"],
+        "description": "操作类型。pause=暂停（可能触发投放暂停）；view=查看（可用于记录行为/跳转）；optimize=优化（可创建任务/建议）。"
+      },
+      "target": {
+        "type": "object",
+        "required": false,
+        "description": "可选：操作目标补充信息（便于后端定位对象）。",
+        "fields": {
+          "campaignId": {
+            "type": "string",
+            "required": false,
+            "description": "广告系列 ID（若预警与系列绑定）。"
+          },
+          "adPlatform": {
+            "type": "string",
+            "required": false,
+            "description": "广告平台（如 google/meta/tiktok）。"
+          },
+          "accountId": {
+            "type": "string",
+            "required": false,
+            "description": "账户 ID（若预警与账户绑定）。"
+          }
+        }
+      }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否操作成功。" },
+      "message": {
+        "type": "string",
+        "required": false,
+        "description": "提示信息（用于前端 toast）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "alertId": "a1",
+    "actionType": "pause",
+    "target": { "campaignId": "c3", "adPlatform": "tiktok" }
+  },
+  "sampleResponse": { "success": true, "message": "已暂停该系列" },
+  "api": {
+    "url": "POST /api/user-growth/ad-performance/alert-action",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "alertId, actionType, target?",
+    "responseBody": "success, message?"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "pause 属于有副作用操作：建议后端做权限校验，并返回明确 message（无权限/已暂停/平台接口失败等）。",
+      "view/optimize 若只是跳转或打开抽屉，前端也可不调用该接口；若需要审计/埋点/创建优化任务，则建议保留。"
+    ]
+  }
+}
