@@ -417,7 +417,11 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
     const subItems =
       type === 'adSpend'
         ? [
-            { label: '自投', value: formatMoney(now.selfCost ?? 0), tone: 'default' as const },
+            {
+              label: '自投',
+              value: formatMoney(Math.max(0, (now.dCost ?? 0) - (now.proxyCost ?? 0))),
+              tone: 'default' as const
+            },
             { label: '代投', value: formatMoney(now.proxyCost ?? 0), tone: 'info' as const }
           ]
         : undefined
@@ -565,7 +569,11 @@ export function mapOverallToKpiCards(
       valueKey: 'dCost',
       format: 'money',
       subItems: (n) => [
-        { label: '自投', value: formatMoney(n.selfCost ?? 0), tone: 'default' },
+        {
+          label: '自投',
+          value: formatMoney(Math.max(0, (n.dCost ?? 0) - (n.proxyCost ?? 0))),
+          tone: 'default'
+        },
         { label: '代投', value: formatMoney(n.proxyCost ?? 0), tone: 'info' }
       ]
     },
