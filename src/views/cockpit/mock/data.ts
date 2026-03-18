@@ -58,7 +58,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
   alertSummaryMetrics: [
     { label: 'DNU', value: '374,920', change: 8649, trend: 'down' },
     { label: '自然量', value: '50,372', change: 649, trend: 'up' },
-    { label: '买带应用', value: '23个' },
+    { label: '买量应用', value: '23个' },
     { label: '广告系列', value: '604个', change: 47, trend: 'down' },
     { label: '广告账户', value: '97个', change: 3, trend: 'up' }
   ],

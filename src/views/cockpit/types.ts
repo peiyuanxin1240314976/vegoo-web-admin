@@ -49,10 +49,10 @@ export interface CockpitOverallDataPeriod {
   totalRevenue: number
   /** 自然量（警示摘要用） */
   naturalCount?: number
-  /** 买带应用数（警示摘要用，单位：个） */
-  buyAppCount?: number
+  /** 买量应用数（警示摘要用，单位：个） */
+  initialCount?: number
   /** 广告系列数（警示摘要用，单位：个） */
-  campaignCount?: number
+  adGroupCount?: number
 }
 
 /** 折线统计单项（后端 *List 元素，可能是数值或带日期） */
@@ -77,7 +77,7 @@ export interface CockpitOverallData {
   /** 自然量变化（警示摘要用） */
   naturalCountChange?: number
   /** 广告系列数变化（警示摘要用） */
-  campaignCountChange?: number
+  adGroupCountChange?: number
   /** 第一排折线统计：运营成本/广告支出 */
   dCostList?: CockpitOverallSeriesItem[]
   /** 有效订阅明细 */
@@ -581,7 +581,7 @@ export interface CockpitTop10CampaignItem {
 /** 驾驶舱全量数据（与后端 /api/cockpit/overview 返回结构对齐） */
 export interface CockpitOverview {
   kpi: CockpitKpiCard[]
-  /** 警示模块左侧：运营摘要指标（DNU、自然量、买带应用等） */
+  /** 警示模块左侧：运营摘要指标（DNU、自然量、买量应用等） */
   alertSummaryMetrics?: CockpitAlertSummaryMetric[]
   alertBanners: CockpitAlertBanner[]
   revenueCostTrend: CockpitRevenueCostTrend

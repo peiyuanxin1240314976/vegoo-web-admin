@@ -110,7 +110,7 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
         : isOldOverall(overallRes)
           ? mapOverallToKpiCards(overallRes.last, overallRes.now)
           : restOverview.kpi
-      // 警示摘要：DNU/自然量/买带应用/广告系列/广告账户 均从 overall 的 now + *Change 取值
+      // 警示摘要：DNU/自然量/买量应用/广告系列/广告账户 均从 overall 的 now + *Change 取值
       const alertSummaryMetrics = data
         ? mapOverallDataToAlertSummaryMetrics(data)
         : (restOverview.alertSummaryMetrics ?? [])

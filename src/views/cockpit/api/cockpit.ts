@@ -367,7 +367,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
 }
 
 /**
- * 从 overall 接口的 now + *Change 组装警示摘要指标（DNU、自然量、买带应用、广告系列、广告账户）
+ * 从 overall 接口的 now + *Change 组装警示摘要指标（DNU、自然量、买量应用、广告系列、广告账户）
  * 返回 null 的字段默认按 0 展示
  */
 export function mapOverallDataToAlertSummaryMetrics(
@@ -399,21 +399,21 @@ export function mapOverallDataToAlertSummaryMetrics(
       : {})
   })
 
-  // 买带应用：取值 now.buyAppCount，null 按 0 展示
+  // 买量应用：取值 now.initialCount，null 按 0 展示
   metrics.push({
-    label: '买带应用',
-    value: `${formatInt(now.buyAppCount)}个`
+    label: '买量应用',
+    value: `${formatInt(now.initialCount)}个`
   })
 
-  // 广告系列：取值 now.campaignCount，null 按 0 展示
-  const campaignCountChange = data.campaignCountChange
+  // 广告系列：取值 now.adGroupCount，null 按 0 展示
+  const adGroupCountChange = data.adGroupCountChange
   metrics.push({
     label: '广告系列',
-    value: `${formatInt(now.campaignCount)}个`,
-    ...(campaignCountChange != null && Number.isFinite(campaignCountChange)
+    value: `${formatInt(now.adGroupCount)}个`,
+    ...(adGroupCountChange != null && Number.isFinite(adGroupCountChange)
       ? {
-          change: Math.abs(campaignCountChange),
-          trend: (campaignCountChange >= 0 ? 'up' : 'down') as 'up' | 'down'
+          change: Math.abs(adGroupCountChange),
+          trend: (adGroupCountChange >= 0 ? 'up' : 'down') as 'up' | 'down'
         }
       : {})
   })
