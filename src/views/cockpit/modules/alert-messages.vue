@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
-  import { ReadingLamp, TrendCharts, WarningFilled, Top, Bottom } from '@element-plus/icons-vue'
+  import { Opportunity, TrendCharts, WarningFilled, Top, Bottom } from '@element-plus/icons-vue'
   import type { CockpitAlertBanner, CockpitAlertSummaryMetric } from '../types'
   import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
@@ -66,7 +66,7 @@
   )
 
   const iconMap = {
-    warning: ReadingLamp,
+    warning: Opportunity,
     opportunity: TrendCharts,
     risk: WarningFilled
   } as const

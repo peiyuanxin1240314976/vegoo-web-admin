@@ -36,6 +36,7 @@ import type {
   CockpitAppSimulationParams,
   CockpitAppSimulationData,
   CountryInfoChannelLaunchItem,
+  CountryInfoAppLaunchItem,
   CountryInfoLtvData,
   CountryInfoOverallData,
   CountryInfoRemainData,
@@ -60,6 +61,9 @@ const COUNTRY_INFO_OVERALL_URL = '/api/v1/datacenter/analysis/countryInfo/overal
 /** 国家详情当前投放中 Campaign Top5 接口 */
 const COUNTRY_INFO_TOP5_CAMPAIGN_URL = '/api/v1/datacenter/analysis/countryInfo/top5Campaign'
 
+/** 国家详情各 APP 表现接口 */
+const COUNTRY_INFO_APP_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo/appLaunch'
+
 /** 国家详情用户留存曲线接口 */
 const COUNTRY_INFO_REMAIN_URL = '/api/v1/datacenter/analysis/countryInfo/remain'
 
@@ -71,6 +75,22 @@ const COUNTRY_INFO_CHANNEL_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo
 
 /** 国家详情 LTV 预测接口 */
 const COUNTRY_INFO_LTV_URL = '/api/v1/datacenter/analysis/countryInfo/ltv'
+
+export interface CountryInfoQueryParams {
+  countryCode: string
+  startDate: string
+  endDate: string
+}
+
+function buildCountryInfoQueryParams(
+  params?: Partial<CountryInfoQueryParams>
+): CountryInfoQueryParams {
+  return {
+    countryCode: params?.countryCode ?? '',
+    startDate: params?.startDate ?? '',
+    endDate: params?.endDate ?? ''
+  }
+}
 
 /** 消耗节奏监控接口（自投/代投） */
 const COCKPIT_CONSUMPTION_RHYTHM_URL =
@@ -276,6 +296,16 @@ function buildCompareFromChange(
   return { compare, compareUp }
 }
 
+function pickFirstNumber(obj: unknown, keys: string[]): number {
+  if (obj == null || typeof obj !== 'object') return 0
+  const record = obj as Record<string, unknown>
+  for (const k of keys) {
+    const v = record[k]
+    if (typeof v === 'number' && Number.isFinite(v)) return v
+  }
+  return 0
+}
+
 /**
  * 将 overall 新接口的 data（now + *Change + *List）转为 KPI 卡片列表
  * 展示用 now，升降用后端 *Change，折线用 *List
@@ -299,7 +329,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'money',
       changeKey: 'totalRevenueChange',
       listKey: 'totalRevenueList',
-      detail: (n) => `广告: ${formatMoney(n.adRevenue)} | 付费: ${formatMoney(n.payRevenue)}`
+      detail: (n) => `广告 ${formatMoney(n.adRevenue ?? 0)}  付费 ${formatMoney(n.payRevenue ?? 0)}`
     },
     {
       type: 'paidRevenue',
@@ -307,7 +337,8 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       valueKey: 'payRevenue',
       format: 'money',
       changeKey: 'payRevenueChange',
-      listKey: 'payRevenueList'
+      listKey: 'payRevenueList',
+      detail: () => '未扣平台费用'
     },
     {
       type: 'adSpend',
@@ -316,7 +347,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'money',
       changeKey: 'adCostChange',
       listKey: 'dCostList',
-      detail: (n) => `安装 ${formatInt(n.installCount)}`
+      detail: () => undefined
     },
     {
       type: 'subscriptions',
@@ -324,7 +355,30 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       valueKey: 'activeSubscription',
       format: 'int',
       changeKey: 'activeSubscriptionChange',
-      listKey: 'activeSubscriptionList'
+      listKey: 'activeSubscriptionList',
+      detail: (n) => {
+        const inc = pickFirstNumber(n, [
+          'activeSubscriptionNew',
+          'activeSubscriptionIncrease',
+          'activeSubscriptionAdd',
+          'subscriptionNew',
+          'subscriptionIncrease',
+          'subscriptionAdd',
+          'newSubscription',
+          'subscriptionIn'
+        ])
+        const dec = pickFirstNumber(n, [
+          'activeSubscriptionLost',
+          'activeSubscriptionDecrease',
+          'activeSubscriptionChurn',
+          'subscriptionLost',
+          'subscriptionDecrease',
+          'subscriptionChurn',
+          'lostSubscription',
+          'subscriptionOut'
+        ])
+        return `新增 +${formatInt(inc)}  流失 -${formatInt(dec)}`
+      }
     },
     {
       type: 'dau',
@@ -333,7 +387,12 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'int',
       changeKey: 'dauChange',
       listKey: 'dauList',
-      detail: (n) => `新增 ${formatInt(n.newUsers)}`
+      detail: () => {
+        const dnu = formatInt(now.dnu)
+        const change = data.dnuChange
+        const hasChange = change != null && Number.isFinite(change)
+        return hasChange ? `DNU ${dnu}` : `DNU ${dnu}`
+      }
     },
     {
       type: 'profit',
@@ -341,7 +400,8 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       valueKey: 'profit',
       format: 'money',
       changeKey: 'profitChange',
-      listKey: 'profitList'
+      listKey: 'profitList',
+      detail: () => '当前广告｜内购收入-广告支出'
     }
   ]
   return cards.map(({ type, label, valueKey, format, changeKey, listKey, detail }) => {
@@ -354,11 +414,31 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
     const chartData = listKey
       ? seriesToChartData(data[listKey] as CockpitOverallSeriesItem[] | undefined)
       : undefined
+    const subItems =
+      type === 'adSpend'
+        ? [
+            { label: '自投', value: formatMoney(now.selfCost ?? 0), tone: 'default' as const },
+            { label: '代投', value: formatMoney(now.proxyCost ?? 0), tone: 'info' as const }
+          ]
+        : undefined
+    const detailChange =
+      type === 'dau' && data.dnuChange != null && Number.isFinite(data.dnuChange)
+        ? `${data.dnuChange >= 0 ? '↑' : '↓'} ${formatInt(Math.abs(data.dnuChange))}`
+        : undefined
+    const detailTrend =
+      type === 'dau' && data.dnuChange != null && Number.isFinite(data.dnuChange)
+        ? data.dnuChange >= 0
+          ? 'up'
+          : 'down'
+        : undefined
     return {
       type,
       label,
       value,
       detail: detail ? detail(now) : undefined,
+      detailChange,
+      detailTrend,
+      subItems,
       compare,
       compareUp,
       chartData: chartData?.length ? chartData : undefined
@@ -367,7 +447,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
 }
 
 /**
- * 从 overall 接口的 now + *Change 组装警示摘要指标（DNU、自然量、买带应用、广告系列、广告账户）
+ * 从 overall 接口的 now + *Change 组装警示摘要指标（DNU、自然量、买量应用、广告系列、广告账户）
  * 返回 null 的字段默认按 0 展示
  */
 export function mapOverallDataToAlertSummaryMetrics(
@@ -399,21 +479,21 @@ export function mapOverallDataToAlertSummaryMetrics(
       : {})
   })
 
-  // 买带应用：取值 now.buyAppCount，null 按 0 展示
+  // 买量应用：取值 now.initialCount，null 按 0 展示
   metrics.push({
-    label: '买带应用',
-    value: `${formatInt(now.buyAppCount)}个`
+    label: '买量应用',
+    value: `${formatInt(now.initialCount)}个`
   })
 
-  // 广告系列：取值 now.campaignCount，null 按 0 展示
-  const campaignCountChange = data.campaignCountChange
+  // 广告系列：取值 now.adGroupCount，null 按 0 展示
+  const adGroupCountChange = data.adGroupCountChange
   metrics.push({
     label: '广告系列',
-    value: `${formatInt(now.campaignCount)}个`,
-    ...(campaignCountChange != null && Number.isFinite(campaignCountChange)
+    value: `${formatInt(now.adGroupCount)}个`,
+    ...(adGroupCountChange != null && Number.isFinite(adGroupCountChange)
       ? {
-          change: Math.abs(campaignCountChange),
-          trend: (campaignCountChange >= 0 ? 'up' : 'down') as 'up' | 'down'
+          change: Math.abs(adGroupCountChange),
+          trend: (adGroupCountChange >= 0 ? 'up' : 'down') as 'up' | 'down'
         }
       : {})
   })
@@ -462,33 +542,78 @@ export function mapOverallToKpiCards(
     valueKey: keyof CockpitOverallPeriodItem
     format: 'money' | 'int'
     detail?: (n: CockpitOverallPeriodItem) => string
+    subItems?: (n: CockpitOverallPeriodItem) => CockpitKpiCard['subItems']
   }[] = [
     {
       type: 'income',
       label: '总收入',
       valueKey: 'totalRevenue',
       format: 'money',
-      detail: (n) => `广告: ${formatMoney(n.dAdRevenue)} | 内购: ${formatMoney(n.dIapRevenue)}`
+      detail: (n) =>
+        `广告 ${formatMoney(n.dAdRevenue ?? 0)}  付费 ${formatMoney(n.dIapRevenue ?? 0)}`
     },
-    { type: 'paidRevenue', label: '付费收入', valueKey: 'payRevenue', format: 'money' },
+    {
+      type: 'paidRevenue',
+      label: '付费收入',
+      valueKey: 'payRevenue',
+      format: 'money',
+      detail: () => '未扣平台费用'
+    },
     {
       type: 'adSpend',
       label: '广告支出',
       valueKey: 'dCost',
       format: 'money',
-      detail: (n) => `买量 ${formatInt(n.ninstalls)}  代投 ${formatMoney(n.proxyCost)}`
+      subItems: (n) => [
+        { label: '自投', value: formatMoney(n.selfCost ?? 0), tone: 'default' },
+        { label: '代投', value: formatMoney(n.proxyCost ?? 0), tone: 'info' }
+      ]
     },
-    { type: 'subscriptions', label: '有效订阅', valueKey: 'activeSubscription', format: 'int' },
+    {
+      type: 'subscriptions',
+      label: '有效订阅',
+      valueKey: 'activeSubscription',
+      format: 'int',
+      detail: (n) => {
+        const inc = pickFirstNumber(n, [
+          'activeSubscriptionNew',
+          'activeSubscriptionIncrease',
+          'activeSubscriptionAdd',
+          'subscriptionNew',
+          'subscriptionIncrease',
+          'subscriptionAdd',
+          'newSubscription',
+          'subscriptionIn'
+        ])
+        const dec = pickFirstNumber(n, [
+          'activeSubscriptionLost',
+          'activeSubscriptionDecrease',
+          'activeSubscriptionChurn',
+          'subscriptionLost',
+          'subscriptionDecrease',
+          'subscriptionChurn',
+          'lostSubscription',
+          'subscriptionOut'
+        ])
+        return `新增 +${formatInt(inc)}  流失 -${formatInt(dec)}`
+      }
+    },
     {
       type: 'dau',
       label: 'DAU',
       valueKey: 'dau',
       format: 'int',
-      detail: (n) => `新增 ${formatInt(n.nNewUserCount)}`
+      detail: (n) => `DNU ${formatInt(n.nNewUserCount)}`
     },
-    { type: 'profit', label: '预估利润', valueKey: 'profit', format: 'money' }
+    {
+      type: 'profit',
+      label: '预估利润',
+      valueKey: 'profit',
+      format: 'money',
+      detail: () => '当前广告｜内购收入-广告支出'
+    }
   ]
-  return cards.map(({ type, label, valueKey, format, detail }) => {
+  return cards.map(({ type, label, valueKey, format, detail, subItems }) => {
     const curr = now[valueKey] as number
     const prev = last[valueKey] as number
     const value = format === 'money' ? formatMoney(curr) : formatInt(curr)
@@ -500,6 +625,7 @@ export function mapOverallToKpiCards(
       label,
       value,
       detail: detail ? detail(now) : undefined,
+      subItems: subItems ? subItems(now) : undefined,
       compare: buildCompare(lastStr, pct, compareUp),
       compareUp
     }
@@ -508,12 +634,14 @@ export function mapOverallToKpiCards(
 
 /**
  * 获取经营驾驶舱第一排总数据（新结构：code/data，data 含 now、*Change、*List，供 KPI + 警示同接口）
- * 请求体：传空对象 {} 即可
+ * 请求体：{ date: 'YYYY-MM-DD' }（若不传则按 {} 兜底）
  */
-export async function fetchCockpitOverall(): Promise<CockpitOverallApiResponse> {
+export async function fetchCockpitOverall(params?: {
+  date?: string
+}): Promise<CockpitOverallApiResponse> {
   return request.post<CockpitOverallApiResponse>({
     url: COCKPIT_OVERALL_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
 }
 
@@ -605,10 +733,12 @@ export function mapCountryInfoOverallToStatCards(
  */
 export async function fetchCountryInfoOverall(params?: {
   countryCode?: string
+  startDate?: string
+  endDate?: string
 }): Promise<CountryInfoOverallData> {
   return request.post<CountryInfoOverallData>({
     url: COUNTRY_INFO_OVERALL_URL,
-    data: params && params.countryCode != null ? { countryCode: params.countryCode } : {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -617,10 +747,26 @@ export async function fetchCountryInfoOverall(params?: {
  * POST /api/v1/datacenter/analysis/countryInfo/top5Campaign，请求体：{}
  * 返回 data 数组，项为 { cost, install, roi, campaign } 等
  */
-export async function fetchCountryInfoTop5Campaign(): Promise<CountryInfoTop5CampaignItem[]> {
+export async function fetchCountryInfoTop5Campaign(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoTop5CampaignItem[]> {
   return request.post<CountryInfoTop5CampaignItem[]>({
     url: COUNTRY_INFO_TOP5_CAMPAIGN_URL,
-    data: {}
+    data: buildCountryInfoQueryParams(params)
+  })
+}
+
+/**
+ * 获取国家详情各 APP 表现
+ * POST /api/v1/datacenter/analysis/countryInfo/appLaunch，请求体：{}
+ * 返回 data 数组，项为 { app, arpu, dAdRevenue, dIapRevenue, remainDay7 }
+ */
+export async function fetchCountryInfoAppLaunch(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoAppLaunchItem[]> {
+  return request.post<CountryInfoAppLaunchItem[]>({
+    url: COUNTRY_INFO_APP_LAUNCH_URL,
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -629,10 +775,12 @@ export async function fetchCountryInfoTop5Campaign(): Promise<CountryInfoTop5Cam
  * POST /api/v1/datacenter/analysis/countryInfo/channelLaunch，请求体：{}
  * 返回 data 数组，项为 { now, last, cplChange [, channel] }
  */
-export async function fetchCountryInfoChannelLaunch(): Promise<CountryInfoChannelLaunchItem[]> {
+export async function fetchCountryInfoChannelLaunch(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoChannelLaunchItem[]> {
   return request.post<CountryInfoChannelLaunchItem[]>({
     url: COUNTRY_INFO_CHANNEL_LAUNCH_URL,
-    data: {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -690,10 +838,12 @@ export function mapChannelLaunchToChannelRows(
  * POST /api/v1/datacenter/analysis/countryInfo/remain，请求体：{}
  * 返回 data：{ currentCountry: { day1, day3, day7, day14, day30 }, globalAvg: { ... } }
  */
-export async function fetchCountryInfoRemain(): Promise<CountryInfoRemainData> {
+export async function fetchCountryInfoRemain(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoRemainData> {
   return request.post<CountryInfoRemainData>({
     url: COUNTRY_INFO_REMAIN_URL,
-    data: {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -718,10 +868,12 @@ export function mapRemainDataToSeries(data: CountryInfoRemainData): {
  * POST /api/v1/datacenter/analysis/countryInfo/ltv，请求体：{}
  * 返回 data：{ d7, d30, d90, d180, days }（days 为预计回收周期天数）
  */
-export async function fetchCountryInfoLtv(): Promise<CountryInfoLtvData> {
+export async function fetchCountryInfoLtv(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoLtvData> {
   return request.post<CountryInfoLtvData>({
     url: COUNTRY_INFO_LTV_URL,
-    data: {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -742,10 +894,12 @@ export function mapLtvToChart(data: CountryInfoLtvData): { data: number[]; note:
  * 获取国家详情用户分层（用户分层饼图 + 付费转化率文案）
  * POST /api/v1/datacenter/analysis/countryInfo/userPayLaunch，请求体：{}
  */
-export async function fetchCountryInfoUserPayLaunch(): Promise<CountryInfoUserPayLaunchData> {
+export async function fetchCountryInfoUserPayLaunch(
+  params?: Partial<CountryInfoQueryParams>
+): Promise<CountryInfoUserPayLaunchData> {
   return request.post<CountryInfoUserPayLaunchData>({
     url: COUNTRY_INFO_USER_PAY_LAUNCH_URL,
-    data: {}
+    data: buildCountryInfoQueryParams(params)
   })
 }
 
@@ -815,12 +969,14 @@ export function mapConsumptionRhythmToSpendPace(
 
 /**
  * 获取消耗节奏监控数据（自投 + 代投）
- * 请求体：空对象 {}
+ * 请求体：{ date: 'YYYY-MM-DD' }
  */
-export async function fetchConsumptionRhythmMonitoring(): Promise<CockpitConsumptionRhythmResponse> {
+export async function fetchConsumptionRhythmMonitoring(params?: {
+  date?: string
+}): Promise<CockpitConsumptionRhythmResponse> {
   return request.post<CockpitConsumptionRhythmResponse>({
     url: COCKPIT_CONSUMPTION_RHYTHM_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
 }
 
@@ -897,12 +1053,12 @@ export function mapTop3ResponseToOverview(res: CockpitTop3Response | null): {
 
 /**
  * 获取 Top3 数据（收入应用、差评产品、用户增长）
- * 请求体：空对象 {}
+ * 请求体：{ date: 'YYYY-MM-DD' }
  */
-export async function fetchCockpitTop3(): Promise<CockpitTop3Response> {
+export async function fetchCockpitTop3(params?: { date?: string }): Promise<CockpitTop3Response> {
   return request.post<CockpitTop3Response>({
     url: COCKPIT_TOP3_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
 }
 
@@ -933,12 +1089,14 @@ export function mapChannelRoiInstallToItems(
 
 /**
  * 获取渠道 ROI&安装量（经营驾驶舱大屏 渠道ROI&安装量）
- * 请求体：空对象 {}
+ * 请求体：{ date: 'YYYY-MM-DD' }
  */
-export async function fetchChannelRoiInstall(): Promise<CockpitChannelRoiInstallResponse> {
+export async function fetchChannelRoiInstall(params?: {
+  date?: string
+}): Promise<CockpitChannelRoiInstallResponse> {
   return request.post<CockpitChannelRoiInstallResponse>({
     url: COCKPIT_CHANNEL_ROI_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
 }
 
@@ -1024,10 +1182,12 @@ export function mapCountriesToLegend(
 /**
  * 获取业务分布地图数据，请求体：空对象 {}
  */
-export async function fetchCockpitBusinessMap(): Promise<CockpitBusinessMapApiItem[]> {
+export async function fetchCockpitBusinessMap(params?: {
+  date?: string
+}): Promise<CockpitBusinessMapApiItem[]> {
   return request.post<CockpitBusinessMapApiItem[]>({
     url: COCKPIT_BUSINESS_MAP_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
 }
 
@@ -1078,6 +1238,10 @@ export function mapIncomeStructureToFlow(
   })
   const nodeAd = '广告收入'
   const nodeIap = '内购收入'
+  /** 国家节点唯一 id（避免与 app 同名如「其他」导致 ECharts 报 duplicate name） */
+  const countryId = (c: string) => `country:${c}`
+  /** 应用节点唯一 id */
+  const appId = (a: string) => `app:${a}`
   const nodes: CockpitRevenueStructureNode[] = []
   const links: CockpitRevenueStructureLink[] = []
 
@@ -1103,21 +1267,25 @@ export function mapIncomeStructureToFlow(
     const iapVal = byCountryIap[c] ?? 0
     const sum = adVal + iapVal
     const isoCode = COUNTRY_CN_TO_ISO[c]
+    const cId = countryId(c)
     nodes.push({
-      name: c,
+      name: cId,
+      displayName: c,
       depth: 1,
       code: isoCode,
       valueDisplay: formatMoney(sum),
       itemStyle: { color: colorByDepth1[i % colorByDepth1.length], borderRadius: 6 }
     })
-    if (adVal > 0) links.push({ source: nodeAd, target: c, value: adVal })
-    if (iapVal > 0) links.push({ source: nodeIap, target: c, value: iapVal })
+    if (adVal > 0) links.push({ source: nodeAd, target: cId, value: adVal })
+    if (iapVal > 0) links.push({ source: nodeIap, target: cId, value: iapVal })
   })
   const colorByDepth2 = ['#67c23a', '#409eff', '#7230b3', '#e6a23c', '#909399']
   apps.forEach((app, i) => {
     const appSum = byAppTotal[app] ?? 0
+    const aId = appId(app)
     nodes.push({
-      name: app,
+      name: aId,
+      displayName: app,
       depth: 2,
       valueDisplay: formatMoney(appSum),
       itemStyle: { color: colorByDepth2[i % colorByDepth2.length], borderRadius: 6 }
@@ -1127,7 +1295,7 @@ export function mapIncomeStructureToFlow(
     if (value <= 0) return
     const [countryKey, appName] = key.split('\t')
     if (countries.includes(countryKey) && apps.includes(appName))
-      links.push({ source: countryKey, target: appName, value })
+      links.push({ source: countryId(countryKey), target: appId(appName), value })
   })
   const insights: CockpitRevenueStructureInsight[] = []
   if (total > 0) {
@@ -1145,13 +1313,15 @@ export function mapIncomeStructureToFlow(
 
 /**
  * 获取收入结构数据（近7日收入结构流向）
- * POST /api/v1/datacenter/analysis/cockpit/incomeStructure，请求体：{}
+ * POST /api/v1/datacenter/analysis/cockpit/incomeStructure，请求体：{ date: 'YYYY-MM-DD' }
  * 响应 data: [{ app, country, dAdRevenue, dIapRevenue }, ...]
  */
-export async function fetchIncomeStructure(): Promise<CockpitIncomeStructureRow[]> {
+export async function fetchIncomeStructure(params?: {
+  date?: string
+}): Promise<CockpitIncomeStructureRow[]> {
   const list = await request.post<CockpitIncomeStructureRow[]>({
     url: COCKPIT_INCOME_STRUCTURE_URL,
-    data: {}
+    data: params?.date ? { date: params.date } : {}
   })
   return Array.isArray(list) ? list : []
 }

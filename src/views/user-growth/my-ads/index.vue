@@ -8,10 +8,12 @@
       @update:date-range="data.dateRange = $event"
     />
 
-    <div class="my-ads-top">
-      <MyAdsUserCard :user="data.user" />
-      <div class="my-ads-kpi-wrap">
-        <MyAdsKpiRow :kpi-list="data.kpi" />
+    <div class="my-ads-top-card my-ads-panel">
+      <div class="my-ads-top-card__body">
+        <MyAdsUserCard :user="data.user" embedded />
+        <div class="my-ads-kpi-wrap">
+          <MyAdsKpiRow :kpi-list="data.kpi" embedded />
+        </div>
       </div>
     </div>
 
@@ -81,18 +83,34 @@
     padding: 16px 20px 24px;
   }
 
-  .my-ads-top {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: flex-start;
+  .my-ads-top-card {
     margin-bottom: 16px;
+
+    .my-ads-top-card__body {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      padding: 14px 16px;
+    }
   }
 
   .my-ads-kpi-wrap {
     flex: 1;
     min-width: 0;
-    min-width: 400px;
+    min-width: 420px;
+  }
+
+  @media (width <= 1200px) {
+    .my-ads-top-card {
+      .my-ads-top-card__body {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
+    .my-ads-kpi-wrap {
+      min-width: 0;
+    }
   }
 </style>
 

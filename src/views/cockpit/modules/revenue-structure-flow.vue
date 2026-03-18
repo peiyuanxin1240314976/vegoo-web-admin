@@ -72,6 +72,15 @@
   const SANKEY_NODE_AREA_HEIGHT = 60
   /** 按行数非线性权重的底数（lineCount^2.5 * WEIGHT_BASE），使多行节点占比更大、避免文字溢出 */
   const HEIGHT_WEIGHT_BASE = 600
+  /** 节点整体高度缩放（不改 links.value，仅让节点更“高”） */
+  const NODE_HEIGHT_SCALE = 5
+  /** 节点名称最大展示长度（超出将显示省略号） */
+  const MAX_NODE_NAME_LEN = 10
+
+  function truncateNodeName(name: string): string {
+    const s = String(name ?? '')
+    return s.length > MAX_NODE_NAME_LEN ? `${s.slice(0, MAX_NODE_NAME_LEN)}…` : s
+  }
 
   /** 节点内图标样式：尺寸、圆角等，统一控制国旗图与 emoji 大小 */
   const NODE_ICON_STYLE = {
@@ -101,10 +110,17 @@
     const iconSize = NODE_ICON_STYLE.size
 
     const totalLinkValue = links.reduce((sum, l) => sum + l.value, 0)
+    /** 节点 name → 展示名（用于 tooltip 与避免重复名报错） */
+    const nameToDisplay: Record<string, string> = {}
+    nodes.forEach((n) => {
+      nameToDisplay[n.name] = n.displayName ?? n.name
+    })
 
     const data = nodes.map((n) => {
+      const rawDisplayLabel = n.displayName ?? n.name
+      const displayLabel = truncateNodeName(rawDisplayLabel)
       const resolvedIconImage = n.iconImage ?? (n.code ? getFlagIconUrl(n.code) : undefined)
-      const lines = [n.name, n.valueDisplay, n.percent].filter(Boolean) as string[]
+      const lines = [displayLabel, n.valueDisplay, n.percent].filter(Boolean) as string[]
       const hasIcon = !!(n.icon || resolvedIconImage)
       const lineCount = hasIcon
         ? 1 + (n.valueDisplay ? 1 : 0) + (n.percent ? 1 : 0)
@@ -175,15 +191,15 @@
       }
 
       let formatterStr = ''
-      if (resolvedIconImage) formatterStr += `{img| } {name|${escapeRich(n.name)}}\n`
-      else if (n.icon) formatterStr += `{icon|${n.icon}} {name|${escapeRich(n.name)}}\n`
-      else formatterStr += `{name|${escapeRich(n.name)}}\n`
+      if (resolvedIconImage) formatterStr += `{img| } {name|${escapeRich(displayLabel)}}\n`
+      else if (n.icon) formatterStr += `{icon|${n.icon}} {name|${escapeRich(displayLabel)}}\n`
+      else formatterStr += `{name|${escapeRich(displayLabel)}}\n`
       if (n.valueDisplay) formatterStr += `{value|${escapeRich(n.valueDisplay)}}\n`
       if (n.percent) formatterStr += `{pct|${escapeRich(n.percent)}}`
 
       return {
         ...n,
-        value: Math.max(linkSum, minValue),
+        value: Math.max(linkSum, minValue) * NODE_HEIGHT_SCALE,
         itemStyle: {
           borderRadius: n.itemStyle?.borderRadius ?? defaultBorderRadius,
           ...n.itemStyle
@@ -197,7 +213,8 @@
     })
 
     const nodeWidth = Math.max(32, Math.min(Math.ceil(maxLabelWidth) + 28, 88))
-    const nodeGap = Math.max(8, Math.min(16, Math.ceil(nodeWidth * 0.35)))
+    // 想让节点“更高/更厚”：优先减少节点间距（nodeGap）与上下留白，而不是整体放大 value（会被布局归一化）
+    const nodeGap = Math.max(2, Math.min(10, Math.ceil(nodeWidth * 0.2)))
 
     return {
       title: { text: '', show: false },
@@ -206,9 +223,11 @@
         triggerOn: 'mousemove',
         formatter: (params: any) => {
           if (params.dataType === 'edge') {
-            return `${params.data.source} → ${params.data.target}<br/>${params.data.value?.toLocaleString?.() ?? params.data.value}`
+            const src = nameToDisplay[params.data.source] ?? params.data.source
+            const tgt = nameToDisplay[params.data.target] ?? params.data.target
+            return `${src} → ${tgt}<br/>${params.data.value?.toLocaleString?.() ?? params.data.value}`
           }
-          return params.name
+          return nameToDisplay[params.name] ?? params.name
         }
       },
       series: [
@@ -219,8 +238,8 @@
           nodeGap,
           left: '2%',
           right: '2%',
-          top: 24,
-          bottom: 8,
+          top: 12,
+          bottom: 4,
           data,
           links,
           lineStyle: {

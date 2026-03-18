@@ -9,6 +9,8 @@ export type CockpitDateRange = 'today' | 'yesterday' | 'week' | 'month'
 /** 请求参数：按日期范围拉取驾驶舱数据 */
 export interface CockpitOverviewParams {
   dateRange?: CockpitDateRange
+  /** 单一筛选字段：YYYY-MM-DD */
+  date?: string
 }
 
 /** 经营驾驶舱「第一排总数据」接口：单周期指标（last / now 结构相同） */
@@ -23,6 +25,8 @@ export interface CockpitOverallPeriodItem {
   nNewUserCount: number
   payRevenue: number
   profit: number
+  /** 自投消耗（广告支出拆分） */
+  selfCost?: number
   proxyCost: number
   totalRevenue: number
 }
@@ -47,12 +51,16 @@ export interface CockpitOverallDataPeriod {
   payRevenue: number
   profit: number
   totalRevenue: number
+  /** 自投消耗（广告支出拆分） */
+  selfCost?: number
+  /** 代投消耗（广告支出拆分） */
+  proxyCost?: number
   /** 自然量（警示摘要用） */
   naturalCount?: number
-  /** 买带应用数（警示摘要用，单位：个） */
-  buyAppCount?: number
+  /** 买量应用数（警示摘要用，单位：个） */
+  initialCount?: number
   /** 广告系列数（警示摘要用，单位：个） */
-  campaignCount?: number
+  adGroupCount?: number
 }
 
 /** 折线统计单项（后端 *List 元素，可能是数值或带日期） */
@@ -77,7 +85,7 @@ export interface CockpitOverallData {
   /** 自然量变化（警示摘要用） */
   naturalCountChange?: number
   /** 广告系列数变化（警示摘要用） */
-  campaignCountChange?: number
+  adGroupCountChange?: number
   /** 第一排折线统计：运营成本/广告支出 */
   dCostList?: CockpitOverallSeriesItem[]
   /** 有效订阅明细 */
@@ -214,6 +222,20 @@ export interface CountryInfoTop5CampaignItem {
   status?: string
 }
 
+/** 国家详情各 APP 表现接口 data 单项 /api/v1/datacenter/analysis/countryInfo/appLaunch */
+export interface CountryInfoAppLaunchItem {
+  /** APP 名称 */
+  app: string
+  /** ARPU */
+  arpu: number
+  /** 广告收入 */
+  dAdRevenue: number
+  /** 内购收入 */
+  dIapRevenue: number
+  /** 七日留存 */
+  remainDay7: number
+}
+
 /** 国家详情渠道投放效果对比 - 单条 data 的 now/last 结构 */
 export interface CountryInfoChannelLaunchPeriod {
   cost?: number
@@ -296,6 +318,11 @@ export interface CockpitKpiCard {
   value: string
   detail?: string
   sub?: string
+  /** KPI 值右侧的标签组（如“自投 / 代投”），有则优先渲染它 */
+  subItems?: { label: string; value: string; tone?: 'default' | 'info' | 'success' | 'warning' }[]
+  /** detail 后缀变化（用于 DAU 卡片的 DNU ↑/↓ 数值着色） */
+  detailChange?: string
+  detailTrend?: 'up' | 'down'
   /** 较上期等对比文案，可由后端 *Change 直接生成 */
   compare?: string
   compareUp?: boolean
@@ -532,7 +559,10 @@ export interface CockpitTop5AppItem {
 
 /** 近7日收入结构流向 - 桑基图节点 */
 export interface CockpitRevenueStructureNode {
+  /** 唯一标识，用于 ECharts 与 links 的 source/target（避免与 country/app 同名冲突） */
   name: string
+  /** 展示用名称，无则用 name；用于解决「其他」同时作为国家与应用名时的重复报错 */
+  displayName?: string
   depth?: number
   value?: number
   /** 节点内显示的金额文案，如 '$41,353'、'$1.03M' */
@@ -581,7 +611,7 @@ export interface CockpitTop10CampaignItem {
 /** 驾驶舱全量数据（与后端 /api/cockpit/overview 返回结构对齐） */
 export interface CockpitOverview {
   kpi: CockpitKpiCard[]
-  /** 警示模块左侧：运营摘要指标（DNU、自然量、买带应用等） */
+  /** 警示模块左侧：运营摘要指标（DNU、自然量、买量应用等） */
   alertSummaryMetrics?: CockpitAlertSummaryMetric[]
   alertBanners: CockpitAlertBanner[]
   revenueCostTrend: CockpitRevenueCostTrend

@@ -3,7 +3,7 @@
     <!-- 1. 日期范围 + 2. 顶部操作栏 -->
     <div class="cockpit-header">
       <CockpitDateRangeTabs :model-value="dateRange" @update:model-value="onDateRangeChange" />
-      <CockpitTopBarActions />
+      <CockpitTopBarActions v-model="date" />
     </div>
 
     <!-- 3. 第一排 KPI 卡片 + 4. 警示与提示：只调一次 POST .../cockpit/overall，两处共用该次返回的 data -->
@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+  import { ref, watch } from 'vue'
   import { useCockpitData } from './composables/useCockpitData'
   import type { CockpitDateRange } from './types'
   import CockpitDateRangeTabs from './modules/date-range-tabs.vue'
@@ -68,12 +69,29 @@
   // dev测试提交
   defineOptions({ name: 'Cockpit' })
 
-  const { overview, loading, dateRange, load } = useCockpitData()
+  const { overview, loading, dateRange, date, load } = useCockpitData()
+  const suppressNextDateWatch = ref(false)
 
   function onDateRangeChange(value: CockpitDateRange) {
     dateRange.value = value
+    // 让「日期范围 tabs」也驱动同一个 date，从而触发全局刷新
+    suppressNextDateWatch.value = true
     load({ dateRange: value })
   }
+
+  // 顶部日期选择器（单日）变更时，刷新全量模块接口
+  watch(
+    date,
+    (v, oldV) => {
+      if (!v || v === oldV) return
+      if (suppressNextDateWatch.value) {
+        suppressNextDateWatch.value = false
+        return
+      }
+      load({ date: v, dateRange: dateRange.value })
+    },
+    { flush: 'post' }
+  )
 </script>
 
 <style scoped lang="scss">

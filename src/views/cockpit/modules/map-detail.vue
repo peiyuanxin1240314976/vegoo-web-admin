@@ -4,9 +4,11 @@
       <template #right>
         <div class="detail-filters">
           <ElDatePicker
-            v-model="filterDate"
-            type="date"
-            placeholder="选择日期"
+            v-model="filterDateRange"
+            type="daterange"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
             format="YYYY-MM-DD"
             value-format="YYYY-MM-DD"
             class="detail-date-picker"
@@ -30,7 +32,7 @@
         </div>
       </template>
     </MapDetailHeader>
-    <div class="detail-date-display">今日, {{ currentDateLabel }}</div>
+    <div class="detail-date-display">区间, {{ currentDateLabel }}</div>
 
     <MapDetailStatsCards :cards="statCards" />
 
@@ -68,6 +70,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import { useRoute } from 'vue-router'
+  import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import {
     MapDetailHeader,
     MapDetailStatsCards,
@@ -84,6 +87,7 @@
   import {
     fetchCountryInfoOverall,
     fetchCountryInfoTop5Campaign,
+    fetchCountryInfoAppLaunch,
     fetchCountryInfoChannelLaunch,
     fetchCountryInfoLtv,
     fetchCountryInfoRemain,
@@ -103,43 +107,53 @@
   type RangeType = 'yesterday' | 'past7' | 'month'
 
   function todayStr(): string {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    return formatYYYYMMDD(getAppNow())
   }
 
-  function getDateByRange(type: RangeType): string {
-    const d = new Date()
+  type DateRange = [string, string]
+
+  function getDateRangeByQuick(type: RangeType): DateRange {
+    const end = getAppNow()
+    const start = new Date(end)
+
     if (type === 'yesterday') {
-      d.setDate(d.getDate() - 1)
+      start.setDate(start.getDate() - 1)
+      end.setDate(end.getDate() - 1)
     } else if (type === 'past7') {
-      d.setDate(d.getDate() - 6)
+      start.setDate(start.getDate() - 6)
     } else {
-      d.setDate(1)
+      start.setDate(1)
     }
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+    return [formatYYYYMMDD(start), formatYYYYMMDD(end)]
   }
 
   const rangeOptions: { value: RangeType; label: string }[] = [
     { value: 'yesterday', label: '昨天' },
-    { value: 'past7', label: '过去7天' },
-    { value: 'month', label: '本月' }
+    { value: 'past7', label: '过去7天' }
+    // { value: 'month', label: '本月' }
   ]
 
   const rangeType = ref<RangeType>('yesterday')
-  const filterDate = ref(getDateByRange('yesterday'))
+  const filterDateRange = ref<DateRange>(getDateRangeByQuick('yesterday'))
 
   const rangeIndex = computed(() => rangeOptions.findIndex((o) => o.value === rangeType.value))
 
   function selectRange(value: RangeType) {
     rangeType.value = value
-    filterDate.value = getDateByRange(value)
+    filterDateRange.value = getDateRangeByQuick(value)
   }
 
-  /** 下方展示的当前日期：今日, YYYY年MM月DD日 */
-  const currentDateLabel = computed(() => {
-    const s = filterDate.value || todayStr()
-    const [y, m, d] = s.split('-')
+  function toCnDateLabel(s: string): string {
+    const [y, m, d] = String(s || '').split('-')
+    if (!y || !m || !d) return '—'
     return `${y}年${m}月${d}日`
+  }
+
+  /** 下方展示的当前日期：区间, YYYY年MM月DD日 ~ YYYY年MM月DD日 */
+  const currentDateLabel = computed(() => {
+    const [start, end] = filterDateRange.value || [todayStr(), todayStr()]
+    return `${toCnDateLabel(start)} ~ ${toCnDateLabel(end)}`
   })
 
   const countryCode = computed(() => String(route.params.country || '').toUpperCase() || '—')
@@ -147,6 +161,16 @@
     const c = String(route.params.country || '')
     return countryNameMap[c] || c || '—'
   })
+
+  function buildCountryDateParams(): { countryCode: string; startDate: string; endDate: string } {
+    const code = countryCode.value
+    const [startDate, endDate] = filterDateRange.value || ['', '']
+    return {
+      countryCode: code && code !== '—' ? code : '',
+      startDate: startDate || '',
+      endDate: endDate || ''
+    }
+  }
 
   const countryNameMap: Record<string, string> = {
     US: '美国',
@@ -201,13 +225,23 @@
   /** 第三排（用户留存、LTV、用户分层）延后渲染，先让首屏卡片+投放/变现展示，提升首屏效率 */
   const showThirdRow = ref(false)
 
-  onMounted(async () => {
+  async function reloadAll() {
+    const params = buildCountryDateParams()
+    const hasDateRange = Boolean(params.startDate && params.endDate)
+    if (!hasDateRange) return
+
+    // 刷新时重置 loading
+    channelLoading.value = true
+    campaignLoading.value = true
+    appPerformanceLoading.value = true
+
+    // 刷新时：第三排延后展示（避免一次性渲染太多图表）
+    showThirdRow.value = false
+    if (thirdRowTimer != null) clearTimeout(thirdRowTimer)
+
     // 优先加载顶部卡片数据（与投放分析、变现分析同屏，先请求）
     try {
-      const code = countryCode.value
-      const res = await fetchCountryInfoOverall(
-        code && code !== '—' ? { countryCode: code } : undefined
-      )
+      const res = await fetchCountryInfoOverall(params)
       // 注意：http 层成功时返回的是接口的 data 字段，故 res 即为 { last, now, *Change }，无 code
       if (res && typeof res === 'object' && 'now' in res && 'last' in res) {
         lastCountryOverallData.value = res
@@ -252,9 +286,8 @@
       // 接口失败时保留默认占位
     }
     // 渠道投放效果对比：/api/v1/datacenter/analysis/countryInfo/channelLaunch
-    channelLoading.value = true
     try {
-      const channelList = await fetchCountryInfoChannelLaunch()
+      const channelList = await fetchCountryInfoChannelLaunch(params)
       if (Array.isArray(channelList)) {
         channelTableData.value = mapChannelLaunchToChannelRows(channelList)
       }
@@ -264,10 +297,8 @@
       channelLoading.value = false
     }
     // 当前投放中 Campaign (Top 5)：/api/v1/datacenter/analysis/countryInfo/top5Campaign
-    campaignLoading.value = true
-    appPerformanceLoading.value = true
     try {
-      const list = await fetchCountryInfoTop5Campaign()
+      const list = await fetchCountryInfoTop5Campaign(params)
       if (Array.isArray(list)) {
         campaignTableData.value = list.map((item) => ({
           name: item.campaign ?? '—',
@@ -276,23 +307,33 @@
           roi: item.roi ?? 0,
           status: item.status ?? '投放中'
         }))
-        // 同一接口用于变现分析「各 App 在区域表现」表格
-        appPerformanceData.value = list.map((item) => ({
-          appName: item.campaign ?? '—',
-          amount: item.cost ?? 0,
-          count: item.install ?? 0,
-          roi: item.roi ?? 0
-        }))
       }
     } catch {
       // 接口失败时保持空列表
     } finally {
       campaignLoading.value = false
+    }
+
+    // 各 APP 在区域表现：/api/v1/datacenter/analysis/countryInfo/appLaunch
+    try {
+      const list = await fetchCountryInfoAppLaunch(params)
+      if (Array.isArray(list)) {
+        appPerformanceData.value = list.map((item) => ({
+          app: item.app ?? '—',
+          arpu: item.arpu ?? 0,
+          dAdRevenue: item.dAdRevenue ?? 0,
+          dIapRevenue: item.dIapRevenue ?? 0,
+          remainDay7: item.remainDay7 ?? 0
+        }))
+      }
+    } catch {
+      // 接口失败时保持空列表
+    } finally {
       appPerformanceLoading.value = false
     }
     // 用户留存曲线：/api/v1/datacenter/analysis/countryInfo/remain（currentCountry + globalAvg）
     try {
-      const remain = await fetchCountryInfoRemain()
+      const remain = await fetchCountryInfoRemain(params)
       if (remain?.currentCountry && remain?.globalAvg) {
         const { local, global } = mapRemainDataToSeries(remain)
         retentionLocalData.value = local
@@ -303,7 +344,7 @@
     }
     // LTV 预测：/api/v1/datacenter/analysis/countryInfo/ltv
     try {
-      const ltvRes = await fetchCountryInfoLtv()
+      const ltvRes = await fetchCountryInfoLtv(params)
       if (ltvRes && typeof ltvRes === 'object') {
         const { data: ltvArr, note: ltvNoteStr } = mapLtvToChart(ltvRes)
         ltvData.value = ltvArr
@@ -314,7 +355,7 @@
     }
     // 用户分层：/api/v1/datacenter/analysis/countryInfo/userPayLaunch
     try {
-      const userPay = await fetchCountryInfoUserPayLaunch()
+      const userPay = await fetchCountryInfoUserPayLaunch(params)
       if (userPay && typeof userPay === 'object') {
         const { segmentData: seg, note } = mapUserPayLaunchToSegment(userPay)
         segmentData.value = seg
@@ -328,11 +369,27 @@
     thirdRowTimer = window.setTimeout(() => {
       showThirdRow.value = true
     }, 120)
+  }
+
+  // 日期 / 国家变更后自动刷新（防抖，避免频繁请求）
+  let reloadTimer: number | undefined
+  function scheduleReload() {
+    if (reloadTimer != null) window.clearTimeout(reloadTimer)
+    reloadTimer = window.setTimeout(() => {
+      void reloadAll()
+    }, 300)
+  }
+
+  watch([filterDateRange, countryCode], scheduleReload, { deep: true })
+
+  onMounted(() => {
+    void reloadAll()
   })
 
   let thirdRowTimer: number | undefined
   onUnmounted(() => {
     if (thirdRowTimer != null) clearTimeout(thirdRowTimer)
+    if (reloadTimer != null) window.clearTimeout(reloadTimer)
   })
 
   /** 渠道投放效果对比来自 /api/v1/datacenter/analysis/countryInfo/channelLaunch（仅展示 now） */
@@ -399,7 +456,7 @@
   }
 
   .detail-date-picker {
-    width: 140px;
+    width: 260px;
   }
 
   .detail-range-box {
@@ -415,7 +472,7 @@
     position: absolute;
     top: 3px;
     left: 3px;
-    width: calc((100% - 6px) / 3);
+    width: calc((100% - 6px) / 2);
     height: calc(100% - 6px);
     pointer-events: none;
     background: var(--el-color-primary);

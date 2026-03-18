@@ -1,5 +1,5 @@
 <template>
-  <div class="my-ads-user-card">
+  <div class="my-ads-user-card" :class="{ 'is-embedded': embedded }">
     <div class="my-ads-user-card__avatar">{{ user?.avatarLetter ?? '?' }}</div>
     <div class="my-ads-user-card__info">
       <div class="name">{{ user?.name ?? '--' }}</div>
@@ -24,6 +24,7 @@
   const props = defineProps<{
     user: MyAdsUserInfo | null
     appsLabel?: string
+    embedded?: boolean
   }>()
 
   const displayAppsLabel = computed(() => props.appsLabel ?? t('myAds.userCard.responsible'))
@@ -41,6 +42,14 @@
     border: 1px solid $my-ads-panel-border;
     border-radius: $my-ads-panel-radius;
     box-shadow: 0 10px 30px rgb(15 23 42 / 40%);
+  }
+
+  .my-ads-user-card.is-embedded {
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .my-ads-user-card__avatar {

@@ -128,12 +128,13 @@
     color: string
   }
 
-  /** 各 App 在区域表现（与 top5Campaign 接口一致：消耗、安装量、ROI） */
+  /** 各 App 在区域表现（/api/v1/datacenter/analysis/countryInfo/appLaunch） */
   export interface AppPerformanceRow {
-    appName: string
-    amount: number
-    count: number
-    roi: number
+    app: string
+    arpu: number
+    dAdRevenue: number
+    dIapRevenue: number
+    remainDay7: number
   }
 
   const props = withDefaults(
@@ -170,22 +171,39 @@
   }
 
   const appColumns: ColumnOption<AppPerformanceRow>[] = [
-    { prop: 'appName', label: 'App名称', minWidth: 120 },
+    { prop: 'app', label: 'App名称', minWidth: 120 },
     {
-      prop: 'amount',
-      label: '消耗',
+      prop: 'arpu',
+      label: 'ARPU',
       minWidth: 90,
       align: 'right',
-      formatter: (row: AppPerformanceRow) => fmtMoneyK(row.amount)
+      formatter: (row: AppPerformanceRow) => `$${Number(row.arpu ?? 0).toFixed(2)}`
     },
     {
-      prop: 'count',
-      label: '安装量',
-      minWidth: 80,
+      prop: 'dAdRevenue',
+      label: '广告收入',
+      minWidth: 90,
       align: 'right',
-      formatter: (row: AppPerformanceRow) => row.count?.toLocaleString()
+      formatter: (row: AppPerformanceRow) => fmtMoneyK(row.dAdRevenue)
     },
-    { prop: 'roi', label: 'ROI', width: 80, align: 'right' }
+    {
+      prop: 'dIapRevenue',
+      label: '内购收入',
+      minWidth: 90,
+      align: 'right',
+      formatter: (row: AppPerformanceRow) => fmtMoneyK(row.dIapRevenue)
+    },
+    {
+      prop: 'remainDay7',
+      label: '7日留存',
+      width: 90,
+      align: 'right',
+      formatter: (row: AppPerformanceRow) => {
+        const v = Number(row.remainDay7 ?? 0)
+        const pct = v <= 1 && v >= 0 ? v * 100 : v
+        return `${pct.toFixed(1)}%`
+      }
+    }
   ]
 </script>
 
