@@ -58,9 +58,14 @@
     "success": true,
     "message": "保存成功"
   },
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/mappings-update",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "id (必填), systemDisplayName, conversionDisplayType?, status?, remarks?",
+    "responseBody": "success, message?"
+  },
   "apiSuggestion": {
-    "method": "PUT",
-    "path": "/ugc/conversion/mappings/{id}",
     "notes": [
       "后端建议只允许更新白名单字段（systemDisplayName/conversionDisplayType/status/remarks）。",
       "如存在审计要求，可返回 updatedAt/updatedBy 等字段，但不影响前端展示。"

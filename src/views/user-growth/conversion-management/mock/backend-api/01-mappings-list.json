@@ -156,18 +156,14 @@
     "size": 20,
     "total": 1
   },
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/mappings-list",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "current, size, platform, appPackage|app, conversionType, status, keyword（均为 body 字段）",
+    "responseBody": "records (ConversionMappingItem[]), current, size, total"
+  },
   "apiSuggestion": {
-    "method": "GET",
-    "path": "/ugc/conversion/mappings",
-    "queryParams": [
-      "current",
-      "size",
-      "platform",
-      "appPackage|app",
-      "conversionType",
-      "status",
-      "keyword"
-    ],
     "notes": [
       "前端兼容字段：appPackage 与 app 语义相同；后端优先取 appPackage。",
       "conversionId 必须返回 string（不要返回 number）。"

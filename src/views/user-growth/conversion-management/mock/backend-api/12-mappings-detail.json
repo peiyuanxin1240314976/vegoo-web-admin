@@ -116,9 +116,14 @@
     "createdAt": "2026-03-01T08:00:00Z",
     "updatedAt": "2026-03-17T09:30:00Z"
   },
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/mappings-detail",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "id (必填)",
+    "responseBody": "单条映射完整对象：id, platform, source, mccAccount, appPackage, conversionName, conversionId, platformConversionType, systemDisplayName, conversionDisplayType?, billingType, status, remarks?, createdAt?, updatedAt?"
+  },
   "apiSuggestion": {
-    "method": "GET",
-    "path": "/ugc/conversion/mappings/{id}",
     "notes": [
       "如果你们接口网关统一包裹 code/message/data，请将 sampleResponse 放到 data 内。",
       "conversionId 必须返回 string。"

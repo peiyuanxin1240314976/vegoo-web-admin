@@ -322,19 +322,16 @@
       ]
     }
   },
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/data-tab",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "dateRange? [start,end], platform, appPackage|app, source|adPlatform, conversionType",
+    "responseBody": "kpi (conversionCount/conversionValue/averageValue/activeTypeCount), tableRows (树表), sidePanels (typeDistribution, top10, valueTrend30d, accountShare)"
+  },
   "apiSuggestion": {
-    "method": "GET",
-    "path": "/ugc/conversion/data",
-    "queryParams": [
-      "dateRangeStart",
-      "dateRangeEnd",
-      "platform",
-      "appPackage|app",
-      "source|adPlatform",
-      "conversionType"
-    ],
     "notes": [
-      "如使用 querystring：建议将 dateRange 拆为 dateRangeStart/dateRangeEnd，避免数组传参差异；或改为 POST JSON body。",
+      "dateRange 为 body 数组 [start, end]，格式 YYYY-MM-DD。",
       "页面会每 30s 刷新：建议接口支持缓存或增量计算，避免高频全量聚合压力。",
       "tree 表格层级固定 3 层；若后端返回更多层级，前端当前展示不支持。"
     ]

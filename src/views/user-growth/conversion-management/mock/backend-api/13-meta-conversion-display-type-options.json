@@ -33,9 +33,14 @@
       { "label": "收入转化", "value": "revenue" }
     ]
   },
+  "api": {
+    "url": "POST /api/user-growth/conversion-management/meta-conversion-display-type-options",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "无（或 {}）",
+    "responseBody": "options: { label, value }[]，value 为 paid|activation|behavior|revenue"
+  },
   "apiSuggestion": {
-    "method": "GET",
-    "path": "/ugc/conversion/meta/conversion-display-type-options",
     "notes": [
       "若后端不提供该接口，前端可继续写死枚举，不影响主流程。",
       "若需要 i18n，建议返回 i18nKey（例如 conversionManagement.conversionTypePaid）。"
