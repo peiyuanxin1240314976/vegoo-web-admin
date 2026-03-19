@@ -288,10 +288,18 @@
     "summary": {
       "adSpendTrend": "Ad Spend & Profit Trend (7 days)",
       "byDay": "By Day",
-      "channelDistribution": "Ad Spend by Channel",
+      "channelDistribution": "Ad Spend by Ad Platform",
       "appSpendShare": "App Ad Spend Share",
       "paceMonitor": "Spend Pace Monitor",
-      "remainingDays": "{n} days left in current period"
+      "remainingDays": "{n} days left in current period",
+      "paceColCampaign": "Campaign",
+      "paceColSpendBudget": "Ad Spend/Budget",
+      "paceColProgress": "Progress",
+      "paceColRoi": "First Day ROI",
+      "paceColStatus": "Status",
+      "statusNormal": "Normal",
+      "statusOverBudget": "Over Budget",
+      "statusNotStarted": "Not Started"
     },
     "appPlatform": {
       "groupByApp": "By App",
@@ -312,7 +320,8 @@
     "campaignDetail": {
       "searchPlaceholder": "Search campaign name",
       "filterApp": "App",
-      "filterPlatform": "Ad Platform",
+      "filterSource": "Ad Platform",
+      "filterPlatform": "Device Platform",
       "filterCountry": "Country",
       "filterStatus": "Status",
       "filterType": "Type",
@@ -328,7 +337,8 @@
       "operation": "Operation",
       "detail": "Detail",
       "campaignName": "Campaign Name",
-      "channel": "Channel",
+      "source": "Ad Platform",
+      "platform": "Device Platform",
       "country": "Country",
       "totalCampaigns": "{n} campaigns",
       "adSpendSubtotal": "Ad Spend Subtotal",

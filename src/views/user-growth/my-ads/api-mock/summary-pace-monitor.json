@@ -1,0 +1,60 @@
+{
+  "_comment": "汇总 Tab - 消耗进度监控。独立接口。",
+  "fieldDescription": {
+    "paceMonitor": "监控行列表。每项含 name、spend、budget、progress、firstDayRoi、status、statusText",
+    "paceRemainingDays": "剩余天数"
+  },
+  "sampleResponse": {
+    "paceMonitor": [
+      {
+        "name": "Weather5 US Google",
+        "spend": 5200,
+        "budget": 6500,
+        "progress": 80,
+        "firstDayRoi": 41.2,
+        "status": "normal",
+        "statusText": "● 正常"
+      },
+      {
+        "name": "Weather5 JP Meta",
+        "spend": 2100,
+        "budget": 2800,
+        "progress": 75,
+        "firstDayRoi": 35.8,
+        "status": "normal",
+        "statusText": "● 正常"
+      },
+      {
+        "name": "BloodSugar2 UK Google",
+        "spend": 3200,
+        "budget": 3500,
+        "progress": 91,
+        "firstDayRoi": 29.4,
+        "status": "over_budget",
+        "statusText": "▲ 超预算"
+      },
+      {
+        "name": "Phone Tracker CA TikTok",
+        "spend": 1700,
+        "budget": 2200,
+        "progress": 77,
+        "firstDayRoi": 36.5,
+        "status": "normal",
+        "statusText": "● 正常"
+      },
+      {
+        "name": "Weather5 AU Google",
+        "spend": 0,
+        "budget": 1000,
+        "progress": 0,
+        "firstDayRoi": null,
+        "status": "not_started",
+        "statusText": "● 未启动"
+      }
+    ],
+    "paceRemainingDays": 3
+  },
+  "apiSuggestion": {
+    "description": "汇总 Tab - 消耗进度监控接口。查询条件：人员ID、日期范围。"
+  }
+}

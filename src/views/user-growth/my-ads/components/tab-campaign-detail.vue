@@ -13,8 +13,8 @@
         <ElOption label="手机追踪" value="phone" />
       </ElSelect>
       <ElSelect
-        v-model="filterPlatform"
-        :placeholder="$t('myAds.campaignDetail.filterPlatform')"
+        v-model="filterSource"
+        :placeholder="$t('myAds.campaignDetail.filterSource')"
         clearable
         class="filter-item"
       >
@@ -22,6 +22,16 @@
         <ElOption label="Google" value="google" />
         <ElOption label="Meta" value="meta" />
         <ElOption label="TikTok" value="tiktok" />
+      </ElSelect>
+      <ElSelect
+        v-model="filterPlatform"
+        :placeholder="$t('myAds.campaignDetail.filterPlatform')"
+        clearable
+        class="filter-item"
+      >
+        <ElOption :label="$t('myAds.campaignDetail.all')" value="" />
+        <ElOption label="Android" value="Android" />
+        <ElOption label="iOS" value="iOS" />
       </ElSelect>
       <ElSelect
         v-model="filterCountry"
@@ -64,7 +74,7 @@
       <ElButton @click="onReset">{{ $t('table.searchBar.reset') }}</ElButton>
     </div>
 
-    <div class="table-wrap">
+    <div ref="tableWrapRef" class="table-wrap">
       <ElTable
         :data="tableData"
         stripe
@@ -84,9 +94,14 @@
           :label="$t('myAds.campaignDetail.campaignName')"
           min-width="180"
         />
-        <ElTableColumn :label="$t('myAds.campaignDetail.channel')" width="90">
+        <ElTableColumn :label="$t('myAds.campaignDetail.source')" width="90">
           <template #default="{ row }">
-            <span class="channel-tag">{{ row.channel }}</span>
+            <span class="source-tag">{{ row.source }}</span>
+          </template>
+        </ElTableColumn>
+        <ElTableColumn :label="$t('myAds.campaignDetail.platform')" width="90">
+          <template #default="{ row }">
+            <span class="platform-tag">{{ row.platform }}</span>
           </template>
         </ElTableColumn>
         <ElTableColumn :label="$t('myAds.campaignDetail.country')" width="80">
@@ -176,11 +191,7 @@
         </ElTableColumn>
         <ElTableColumn :label="$t('myAds.campaignDetail.trend')" width="80" align="center">
           <template #default="{ row }">
-            <div
-              :data-trend-id="row.id"
-              ref="(el) => setTrendRef(el as HTMLElement, row.id)"
-              class="trend-sparkline"
-            ></div>
+            <div :data-trend-id="row.id" class="trend-sparkline"></div>
           </template>
         </ElTableColumn>
         <ElTableColumn :label="$t('myAds.campaignDetail.operation')" width="80" fixed="right">
@@ -265,6 +276,7 @@
   )
 
   const filterApp = ref('')
+  const filterSource = ref('')
   const filterPlatform = ref('')
   const filterCountry = ref('')
   const filterStatus = ref('')
@@ -277,15 +289,9 @@
   const total = computed(() => props.total)
   const summaryBar = computed(() => props.summaryBar)
 
-  const trendRefs = new Map<string, HTMLElement>()
+  const tableWrapRef = ref<HTMLElement | null>(null)
   const chartInstances = new Map<string, ReturnType<typeof echarts.init>>()
-
-  /* 用于表格趋势列 ref 回调，在模板 ref="(el) => setTrendRef(...)" 中调用 */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used in template ref callback
-  function setTrendRef(el: HTMLElement | null, id: string) {
-    if (el) trendRefs.set(id, el)
-    else trendRefs.delete(id)
-  }
+  let resizeObserver: ResizeObserver | null = null
 
   function getAppIcon(appName: string): string {
     if (appName.includes('天气')) return 'weather'
@@ -313,6 +319,7 @@
 
   function onReset() {
     filterApp.value = ''
+    filterSource.value = ''
     filterPlatform.value = ''
     filterCountry.value = ''
     filterStatus.value = ''
@@ -320,45 +327,89 @@
     searchKeyword.value = ''
   }
 
+  /** 根据趋势数据判断方向，用于折线/面积图颜色 */
+  function getTrendColor(row: MyAdsCampaignRow): string {
+    const arr = row.trend
+    if (!arr?.length) return '#94a3b8'
+    const first = arr[0]
+    const last = arr[arr.length - 1]
+    if (last > first) return '#67c23a' // 上升-绿色
+    if (last < first) return '#f56c6c' // 下降-红色
+    return '#e6a23c' // 平稳-黄/橙
+  }
+
   function initTrendCharts() {
+    const wrap = tableWrapRef.value
+    if (!wrap) return
+    chartInstances.forEach((c) => c.dispose())
+    chartInstances.clear()
     const rows = tableData.value
-    rows.forEach((row) => {
-      const el = trendRefs.get(row.id)
-      if (!el || !row.trend?.length) return
-      let chart = chartInstances.get(row.id)
-      if (!chart) {
-        chart = echarts.init(el)
-        chartInstances.set(row.id, chart)
-      }
+    const cells = wrap.querySelectorAll<HTMLElement>('[data-trend-id]')
+    cells.forEach((el) => {
+      const id = el.getAttribute('data-trend-id')
+      if (!id) return
+      const row = rows.find((r) => r.id === id)
+      if (!row) return
+      const chart = echarts.init(el)
+      chartInstances.set(id, chart)
+      const hasData = (row.trend?.length ?? 0) > 0
+      const trendData = hasData ? row.trend! : [0, 0]
+      const color = getTrendColor(row)
       const option: EChartsOption = {
         grid: { top: 2, right: 2, bottom: 2, left: 2 },
-        xAxis: { type: 'category', show: false, data: row.trend.map((_, i) => i) },
+        xAxis: { type: 'category', show: false, data: trendData.map((_, i) => i) },
         yAxis: { type: 'value', show: false, scale: true },
         series: [
           {
             type: 'line',
-            data: row.trend,
-            smooth: true,
-            showSymbol: false,
-            lineStyle: {
-              color: row.estimatedProfit >= 0 ? '#67c23a' : '#f56c6c',
-              width: 1
-            }
+            data: trendData,
+            smooth: hasData,
+            showSymbol: hasData,
+            symbolSize: 4,
+            lineStyle: { color, width: 1 },
+            ...(hasData && {
+              areaStyle: {
+                color: {
+                  type: 'linear',
+                  x: 0,
+                  y: 0,
+                  x2: 0,
+                  y2: 1,
+                  colorStops: [
+                    { offset: 0, color: color + '80' },
+                    { offset: 1, color: color + '08' }
+                  ]
+                }
+              }
+            })
           }
         ]
       }
       chart.setOption(option)
+      chart.resize()
+    })
+  }
+
+  function scheduleInitTrendCharts() {
+    nextTick(() => {
+      nextTick(() => initTrendCharts())
     })
   }
 
   onMounted(() => {
-    nextTick(() => initTrendCharts())
+    scheduleInitTrendCharts()
     window.addEventListener('resize', () => chartInstances.forEach((c) => c.resize()))
+    if (tableWrapRef.value && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => chartInstances.forEach((c) => c.resize()))
+      resizeObserver.observe(tableWrapRef.value)
+    }
   })
 
-  watch(tableData, () => nextTick(() => initTrendCharts()), { deep: true })
+  watch(tableData, scheduleInitTrendCharts, { deep: true })
 
   onBeforeUnmount(() => {
+    resizeObserver?.disconnect()
+    resizeObserver = null
     chartInstances.forEach((c) => c.dispose())
     chartInstances.clear()
   })
@@ -432,7 +483,8 @@
       border-radius: 2px;
     }
 
-    .channel-tag {
+    .source-tag,
+    .platform-tag {
       font-size: 12px;
       color: $my-ads-text-primary;
     }
@@ -474,6 +526,7 @@
 
     .trend-sparkline {
       width: 100%;
+      min-width: 56px;
       height: 24px;
     }
   }

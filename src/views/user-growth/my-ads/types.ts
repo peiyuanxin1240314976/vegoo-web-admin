@@ -37,7 +37,7 @@ export interface MyAdsTrendPoint {
   firstDayRoi: number
 }
 
-/** 渠道分布（饼图） */
+/** 广告平台分布（饼图） */
 export interface MyAdsChannelItem {
   name: string
   value: number
@@ -114,8 +114,10 @@ export interface MyAdsCampaignRow {
   appName: string
   appIcon?: string
   campaignName: string
-  channel: string
-  channelIcon?: string
+  /** 广告平台，如 Google、TikTok（对应接口 source/n_source） */
+  source: string
+  /** 终端平台，如 Android、iOS（对应接口 platform） */
+  platform: string
   country: string
   countryCode?: string
   status: 'active' | 'inactive' | 'over_budget'
