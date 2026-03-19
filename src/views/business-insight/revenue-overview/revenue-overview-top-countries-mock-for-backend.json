@@ -1,0 +1,93 @@
+{
+  "_comment": "收入概览-Top 国家收入：用于中下「Top 5 国家收入」表格数据源。",
+  "fieldDescription": {
+    "request": {
+      "t_date": { "type": "string", "required": true, "description": "日期（YYYY-MM-DD）。" },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "description": "应用。\"all\" 表示全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["all", "android", "ios"],
+        "description": "终端平台。"
+      },
+      "app_version": {
+        "type": "string",
+        "required": false,
+        "description": "应用版本。\"all\" 表示全部。"
+      },
+      "n_top": {
+        "type": "number",
+        "required": false,
+        "default": 5,
+        "description": "Top N（默认 5）。"
+      },
+      "s_metric": {
+        "type": "string",
+        "required": false,
+        "enum": ["total", "iaa", "iap"],
+        "description": "排序口径。"
+      }
+    },
+    "response": {
+      "top_country_list": {
+        "type": "RevenueOverviewTopCountryItem[]",
+        "required": true,
+        "description": "Top 国家列表。"
+      }
+    },
+    "RevenueOverviewTopCountryItem": {
+      "s_country_name": { "type": "string", "required": true, "description": "国家名称。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家代码。" },
+      "money_iaa_revenue": {
+        "type": "number",
+        "required": true,
+        "description": "IAA 收入（金额）。"
+      },
+      "money_iap_revenue": {
+        "type": "number",
+        "required": true,
+        "description": "IAP 收入（金额）。"
+      },
+      "money_total_revenue": {
+        "type": "number",
+        "required": true,
+        "description": "总收入（金额）。"
+      },
+      "d_percent": { "type": "number", "required": true, "description": "占比（百分数）。" }
+    }
+  },
+  "sampleRequest": {
+    "t_date": "2026-03-05",
+    "s_app_id": "weather5",
+    "platform": "all",
+    "app_version": "all",
+    "n_top": 5,
+    "s_metric": "total"
+  },
+  "sampleResponse": {
+    "top_country_list": [
+      {
+        "s_country_name": "美国",
+        "s_country_code": "US",
+        "money_iaa_revenue": 1026,
+        "money_iap_revenue": 28.5,
+        "money_total_revenue": 1054,
+        "d_percent": 36.9
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-overview/top-countries",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_date, s_app_id, platform, app_version, n_top, s_metric（均为 body 字段）",
+    "responseBody": "top_country_list (RevenueOverviewTopCountryItem[])"
+  },
+  "apiSuggestion": {
+    "notes": ["建议后端在本接口内完成排序与 TopN 截断，避免前端重复实现排序规则。"]
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "_comment": "收入概览-广告平台分布：饼图 + 列表。用于左下「广告平台分布」模块数据源。",
+  "fieldDescription": {
+    "request": {
+      "t_date": { "type": "string", "required": true, "description": "日期（YYYY-MM-DD）。" },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "description": "应用。\"all\" 表示全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["all", "android", "ios"],
+        "description": "终端平台。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码。\"all\" 表示全部。"
+      },
+      "app_version": {
+        "type": "string",
+        "required": false,
+        "description": "应用版本。\"all\" 表示全部。"
+      },
+      "source": {
+        "type": "number",
+        "required": false,
+        "enum": [0, 1, 2, 3, 4, 5, 6, 7],
+        "description": "广告平台（0-全部；1-Google,2-Facebook,3-Unity,4-Applovin,5-IronSource,6-AdColony,7-Pangle）。"
+      }
+    },
+    "response": {
+      "money_total_iaa_revenue": {
+        "type": "number",
+        "required": true,
+        "description": "IAA 总收入（饼图中心展示）。"
+      },
+      "platform_pie_list": {
+        "type": "RevenueOverviewPlatformPieItem[]",
+        "required": true,
+        "description": "平台分布列表。"
+      }
+    },
+    "RevenueOverviewPlatformPieItem": {
+      "s_platform_name": {
+        "type": "string",
+        "required": true,
+        "description": "平台名称（Admob/Facebook/...）。"
+      },
+      "d_percent": { "type": "number", "required": true, "description": "占比（百分数）。" },
+      "money_revenue": { "type": "number", "required": true, "description": "收入（金额）。" },
+      "s_color": { "type": "string", "required": true, "description": "扇区颜色（hex/rgb）。" }
+    }
+  },
+  "sampleRequest": {
+    "t_date": "2026-03-05",
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "source": 0
+  },
+  "sampleResponse": {
+    "money_total_iaa_revenue": 2768.58,
+    "platform_pie_list": [
+      {
+        "s_platform_name": "Admob",
+        "d_percent": 71.7,
+        "money_revenue": 1985,
+        "s_color": "#22c55e"
+      },
+      {
+        "s_platform_name": "Facebook",
+        "d_percent": 9.3,
+        "money_revenue": 257,
+        "s_color": "#38bdf8"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-overview/platform-pie",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_date, s_app_id, platform, s_country_code, app_version, source（均为 body 字段）",
+    "responseBody": "money_total_iaa_revenue, platform_pie_list (RevenueOverviewPlatformPieItem[])"
+  },
+  "apiSuggestion": {
+    "notes": ["source=0 时返回所有平台；否则返回指定广告平台的分布（可用于下钻）。"]
+  }
+}

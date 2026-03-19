@@ -1,0 +1,88 @@
+{
+  "_comment": "收入概览-IAA 收入构成：表格 + 顶部占比条。用于左侧「IAA 广告收入构成分析」模块数据源。",
+  "fieldDescription": {
+    "request": {
+      "t_date": { "type": "string", "required": true, "description": "日期（YYYY-MM-DD）。" },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "description": "应用（含部署版本与终端）。空字符串/\"all\" 表示全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["all", "android", "ios"],
+        "description": "终端平台。all 表示全部。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码。\"all\" 表示全部。"
+      },
+      "app_version": {
+        "type": "string",
+        "required": false,
+        "description": "应用版本。\"all\" 表示全部。"
+      },
+      "s_dim_key": {
+        "type": "string",
+        "required": false,
+        "enum": ["ad_type", "platform", "ad_unit", "country", "version"],
+        "description": "当前切换的维度 key。"
+      }
+    },
+    "response": {
+      "iaa_breakdown_list": {
+        "type": "RevenueOverviewIaaBreakdownItem[]",
+        "required": true,
+        "description": "IAA 构成行列表（用于表格 + 占比条）。"
+      }
+    },
+    "RevenueOverviewIaaBreakdownItem": {
+      "s_dim_name": { "type": "string", "required": true, "description": "维度项名称。" },
+      "money_revenue": { "type": "number", "required": true, "description": "IAA 收入（金额）。" },
+      "d_percent": { "type": "number", "required": true, "description": "占比（百分数）。" },
+      "n_users": { "type": "number", "required": true, "description": "广告用户数。" },
+      "n_impression": { "type": "number", "required": true, "description": "展示次数。" },
+      "d_avg_impression": {
+        "type": "number",
+        "required": true,
+        "description": "人均展示（展示/用户）。"
+      },
+      "d_ecpm": { "type": "number", "required": true, "description": "eCPM。" },
+      "d_arpdau": { "type": "number", "required": true, "description": "ARPDAU。" }
+    }
+  },
+  "sampleRequest": {
+    "t_date": "2026-03-05",
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "s_dim_key": "ad_type"
+  },
+  "sampleResponse": {
+    "iaa_breakdown_list": [
+      {
+        "s_dim_name": "插屏广告",
+        "money_revenue": 2014,
+        "d_percent": 72.8,
+        "n_users": 61587,
+        "n_impression": 102551,
+        "d_avg_impression": 1.7,
+        "d_ecpm": 3.33,
+        "d_arpdau": 0.033
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-overview/iaa-breakdown",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_date, s_app_id, platform, s_country_code, app_version, s_dim_key（均为 body 字段）",
+    "responseBody": "iaa_breakdown_list (RevenueOverviewIaaBreakdownItem[])"
+  },
+  "apiSuggestion": {
+    "notes": ["d_percent 建议后端直接返回（避免前端自行归一导致精度差异）。"]
+  }
+}

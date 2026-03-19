@@ -1,0 +1,77 @@
+{
+  "_comment": "收入概览-ECPM 趋势（7天，预估 vs 真实）：用于右侧 ECPM 趋势折线图数据源。",
+  "fieldDescription": {
+    "request": {
+      "t_date": {
+        "type": "string",
+        "required": true,
+        "description": "查询结束日期（YYYY-MM-DD）。近7天范围由后端计算。"
+      },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "description": "应用。\"all\" 表示全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["all", "android", "ios"],
+        "description": "终端平台。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码。\"all\" 表示全部。"
+      },
+      "app_version": {
+        "type": "string",
+        "required": false,
+        "description": "应用版本。\"all\" 表示全部。"
+      }
+    },
+    "response": {
+      "ecpm7d": {
+        "type": "RevenueOverviewEcpm7d",
+        "required": true,
+        "description": "7天 eCPM 序列。"
+      }
+    },
+    "RevenueOverviewEcpm7d": {
+      "s_dates_list": { "type": "string[]", "required": true, "description": "近7天日期标签。" },
+      "d_predicted_ecpm_list": {
+        "type": "number[]",
+        "required": true,
+        "description": "预估 eCPM 序列。"
+      },
+      "d_actual_ecpm_list": {
+        "type": "number[]",
+        "required": true,
+        "description": "真实 eCPM 序列。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_date": "2026-03-05",
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all"
+  },
+  "sampleResponse": {
+    "ecpm7d": {
+      "s_dates_list": ["Feb27", "Feb28", "Mar1", "Mar2", "Mar3", "Mar4", "Mar5"],
+      "d_predicted_ecpm_list": [2.98, 2.92, 2.95, 2.93, 2.99, 3.01, 3.06],
+      "d_actual_ecpm_list": [2.9, 2.88, 2.91, 2.94, 2.97, 3.02, 3.32]
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-overview/ecpm7d",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_date, s_app_id, platform, s_country_code, app_version（均为 body 字段）",
+    "responseBody": "ecpm7d (RevenueOverviewEcpm7d)"
+  },
+  "apiSuggestion": {
+    "notes": ["预估与真实应使用同一口径，避免偏差率误判（如是否包含补量/延迟回传）。"]
+  }
+}
