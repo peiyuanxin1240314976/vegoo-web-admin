@@ -1,0 +1,59 @@
+{
+  "_comment": "利润分析（国家）-筛选：用于顶部筛选项候选值（应用、国家）。若前端已内置候选项可不实现该接口。",
+  "fieldDescription": {
+    "request": {
+      "t_date_start": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期（YYYY-MM-DD）。"
+      },
+      "t_date_end": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期（YYYY-MM-DD）。"
+      }
+    },
+    "response": {
+      "app_list": {
+        "type": "AppOption[]",
+        "required": true,
+        "description": "应用候选项（含 all）。"
+      },
+      "country_list": {
+        "type": "CountryOption[]",
+        "required": true,
+        "description": "国家候选项（含 all）。"
+      }
+    },
+    "AppOption": {
+      "s_label": { "type": "string", "required": true, "description": "显示名称。" },
+      "s_value": { "type": "string", "required": true, "description": "值（应用ID或 all）。" }
+    },
+    "CountryOption": {
+      "s_label": { "type": "string", "required": true, "description": "国家中文名或 全部。" },
+      "s_value": { "type": "string", "required": true, "description": "国家代码（ISO2）或 all。" }
+    }
+  },
+  "sampleRequest": { "t_date_start": "2026-03-01", "t_date_end": "2026-03-05" },
+  "sampleResponse": {
+    "app_list": [
+      { "s_label": "全部", "s_value": "all" },
+      { "s_label": "Weather5", "s_value": "weather5" },
+      { "s_label": "PhoneTracker", "s_value": "phonetracker" }
+    ],
+    "country_list": [
+      { "s_label": "全部", "s_value": "all" },
+      { "s_label": "美国", "s_value": "US" },
+      { "s_label": "德国", "s_value": "DE" },
+      { "s_label": "南非", "s_value": "ZA" },
+      { "s_label": "韩国", "s_value": "KR" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/profit-analysis/filters",
+    "method": "POST",
+    "priority": "P3",
+    "requestBody": "t_date_start, t_date_end",
+    "responseBody": "app_list, country_list"
+  }
+}

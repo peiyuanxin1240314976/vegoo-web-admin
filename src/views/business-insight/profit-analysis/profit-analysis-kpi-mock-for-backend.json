@@ -1,0 +1,100 @@
+{
+  "_comment": "利润分析（国家）-KPI：用于顶部5张指标卡片。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": false, "description": "应用。all 表示全部。" },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码。all 表示全部。"
+      },
+      "t_date_start": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期（YYYY-MM-DD）。"
+      },
+      "t_date_end": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期（YYYY-MM-DD）。"
+      }
+    },
+    "response": {
+      "kpi_list": {
+        "type": "ProfitKpiCard[]",
+        "required": true,
+        "description": "KPI 卡片列表（固定5张）。"
+      }
+    },
+    "ProfitKpiCard": {
+      "s_id": { "type": "string", "required": true, "description": "卡片ID。" },
+      "s_title": { "type": "string", "required": true, "description": "标题。" },
+      "s_value_text": {
+        "type": "string",
+        "required": true,
+        "description": "主值文本（含$、%等格式）。"
+      },
+      "s_sub_text": { "type": "string", "required": true, "description": "副说明。" },
+      "s_accent": {
+        "type": "string",
+        "required": true,
+        "enum": ["purple", "green", "amber", "blue", "cyan"],
+        "description": "颜色主题。"
+      },
+      "b_warning": { "type": "boolean", "required": false, "description": "是否显示提示标识。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "all",
+    "s_country_code": "all",
+    "t_date_start": "2026-03-01",
+    "t_date_end": "2026-03-05"
+  },
+  "sampleResponse": {
+    "kpi_list": [
+      {
+        "s_id": "kpi_profit",
+        "s_title": "预估利润",
+        "s_value_text": "$36,440",
+        "s_sub_text": "广告收入+付费 - 广告支出",
+        "s_accent": "purple",
+        "b_warning": true
+      },
+      {
+        "s_id": "kpi_total",
+        "s_title": "总收入",
+        "s_value_text": "$125,680",
+        "s_sub_text": "广告$98,240 + 付费$27,440",
+        "s_accent": "green"
+      },
+      {
+        "s_id": "kpi_spend",
+        "s_title": "广告支出",
+        "s_value_text": "$89,240",
+        "s_sub_text": "自投$88,934 + 代投$306",
+        "s_accent": "amber"
+      },
+      {
+        "s_id": "kpi_roi",
+        "s_title": "广告收益率",
+        "s_value_text": "40.8%",
+        "s_sub_text": "(广告收入 - 广告支出) / 广告支出",
+        "s_accent": "blue"
+      },
+      {
+        "s_id": "kpi_iap_ratio",
+        "s_title": "付费收入占比",
+        "s_value_text": "21.8%",
+        "s_sub_text": "付费$27,440 / 总$125,680",
+        "s_accent": "cyan"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/profit-analysis/kpi",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "s_app_id, s_country_code, t_date_start, t_date_end",
+    "responseBody": "kpi_list"
+  }
+}
