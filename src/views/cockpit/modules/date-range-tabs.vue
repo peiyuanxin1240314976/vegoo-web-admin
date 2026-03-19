@@ -32,9 +32,9 @@
 
   const rangeOptions: { value: CockpitDateRange; label: string }[] = [
     { value: 'today', label: '今日' },
-    { value: 'yesterday', label: '昨日' },
-    { value: 'week', label: '本周' },
-    { value: 'month', label: '本月' }
+    { value: 'yesterday', label: '昨日' }
+    // { value: 'week', label: '本周' },
+    // { value: 'month', label: '本月' }
   ]
 
   const rangeIndex = computed(() => rangeOptions.findIndex((o) => o.value === props.modelValue))
@@ -59,7 +59,7 @@
       position: absolute;
       top: 3px;
       left: 3px;
-      width: calc((100% - 6px) / 4);
+      width: calc((100% - 6px) / 2);
       height: calc(100% - 6px);
       pointer-events: none;
       background: var(--el-color-primary);

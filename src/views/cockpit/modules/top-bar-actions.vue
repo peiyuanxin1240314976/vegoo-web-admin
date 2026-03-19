@@ -25,27 +25,48 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted } from 'vue'
+  import { ref, onMounted, onUnmounted, watch } from 'vue'
   import { Calendar, DataAnalysis, FullScreen } from '@element-plus/icons-vue'
   import { useTableStore } from '@/store/modules/table'
+  import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import ScenarioSimulationDialog from './scenario-simulation-dialog.vue'
 
   defineOptions({ name: 'CockpitTopBarActions' })
 
   const showSimulationDialog = ref(false)
 
-  const props = withDefaults(defineProps<{ fullClass?: string }>(), { fullClass: 'cockpit-page' })
+  const props = withDefaults(
+    defineProps<{
+      modelValue?: string
+      fullClass?: string
+    }>(),
+    {
+      modelValue: undefined,
+      fullClass: 'cockpit-page'
+    }
+  )
+  const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
   const tableStore = useTableStore()
   const isFullScreen = ref(false)
   const originalOverflow = ref('')
 
-  const selectedDate = ref(
-    (() => {
-      const d = new Date()
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    })()
+  function todayStr(): string {
+    return formatYYYYMMDD(getAppNow())
+  }
+
+  const selectedDate = ref(props.modelValue || todayStr())
+
+  watch(
+    () => props.modelValue,
+    (v) => {
+      if (v && v !== selectedDate.value) selectedDate.value = v
+    }
   )
+
+  watch(selectedDate, (v) => {
+    if (v && v !== props.modelValue) emit('update:modelValue', v)
+  })
 
   const toggleFullScreen = () => {
     const el = document.querySelector(`.${props.fullClass}`)

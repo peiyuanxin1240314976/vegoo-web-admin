@@ -10,7 +10,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       type: 'income',
       label: '总收入',
       value: '$125,680.00',
-      detail: '广告: $98,240 | 内购: $27,440',
+      detail: '广告 $98,240  付费 $27,440',
       compare: '昨日: $125,245 -2.6%↓',
       compareUp: false
     },
@@ -26,7 +26,10 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       type: 'adSpend',
       label: '广告支出',
       value: '$25,420',
-      detail: '白投 $34,552  代股 $34,552',
+      subItems: [
+        { label: '自投', value: '$34,552', tone: 'default' },
+        { label: '代投', value: '$34,552', tone: 'info' }
+      ],
       compare: '昨日: $66,692 +14.8%↑',
       compareUp: true
     },
@@ -58,7 +61,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
   alertSummaryMetrics: [
     { label: 'DNU', value: '374,920', change: 8649, trend: 'down' },
     { label: '自然量', value: '50,372', change: 649, trend: 'up' },
-    { label: '买带应用', value: '23个' },
+    { label: '买量应用', value: '23个' },
     { label: '广告系列', value: '604个', change: 47, trend: 'down' },
     { label: '广告账户', value: '97个', change: 3, trend: 'up' }
   ],

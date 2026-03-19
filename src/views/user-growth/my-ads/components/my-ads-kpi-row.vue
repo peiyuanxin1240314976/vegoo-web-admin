@@ -1,5 +1,5 @@
 <template>
-  <div class="my-ads-kpi-row">
+  <div class="my-ads-kpi-row" :class="{ 'is-embedded': embedded }">
     <div
       v-for="(item, index) in kpiList"
       :key="index"
@@ -28,8 +28,9 @@
   withDefaults(
     defineProps<{
       kpiList?: MyAdsKpiItem[]
+      embedded?: boolean
     }>(),
-    { kpiList: () => [] }
+    { kpiList: () => [], embedded: false }
   )
 </script>
 
@@ -99,6 +100,39 @@
 
     &.my-ads-kpi-item--warning .kpi-value {
       color: $my-ads-warning;
+    }
+  }
+
+  .my-ads-kpi-row.is-embedded {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px 22px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0;
+
+    .my-ads-kpi-item {
+      flex: 1 1 140px;
+      padding: 0;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+
+      .kpi-label {
+        margin-bottom: 4px;
+        font-size: 12px;
+        color: $my-ads-text-secondary;
+      }
+
+      .kpi-value {
+        font-size: 18px;
+        font-weight: 650;
+      }
+
+      .kpi-sub {
+        font-size: 12px;
+      }
     }
   }
 
