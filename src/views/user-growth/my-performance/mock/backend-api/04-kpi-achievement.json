@@ -1,0 +1,96 @@
+{
+  "_comment": "我的绩效 - KPI 达成（圆环 + 明细表）。对应 types.ts: MyPerformanceKpiAchievement。",
+  "fieldDescription": {
+    "request": {
+      "personId": { "type": "string", "required": true, "description": "人员 ID。" },
+      "periodType": {
+        "type": "string",
+        "required": true,
+        "enum": ["quarter", "month"],
+        "description": "统计口径类型。"
+      },
+      "periodValue": { "type": "string", "required": true, "description": "口径值。" }
+    },
+    "response": {
+      "kpiAchievement": {
+        "type": "MyPerformanceKpiAchievement",
+        "required": true,
+        "description": "KPI 达成数据。"
+      }
+    },
+    "MyPerformanceKpiAchievement": {
+      "score": { "type": "number", "required": true, "description": "达成评分，范围 0-100。" },
+      "label": { "type": "string", "required": true, "description": "评分名称，如 月度达成。" },
+      "hint": { "type": "string", "required": false, "description": "评分说明（展示用）。" },
+      "breakdown": {
+        "type": "Array",
+        "required": true,
+        "description": "KPI 拆分明细。",
+        "fields": {
+          "label": { "type": "string", "required": true, "description": "指标名。" },
+          "target": {
+            "type": "string",
+            "required": true,
+            "description": "目标值（格式化后的字符串）。"
+          },
+          "actual": {
+            "type": "string",
+            "required": true,
+            "description": "实际值（格式化后的字符串）。"
+          },
+          "rate": {
+            "type": "string",
+            "required": true,
+            "description": "达成率（字符串，建议带 %）。"
+          },
+          "score": { "type": "string", "required": true, "description": "该项评分（字符串）。" }
+        }
+      },
+      "totalScoreLabel": {
+        "type": "string",
+        "required": false,
+        "description": "总评分文案（展示用）。"
+      }
+    }
+  },
+  "sampleRequest": { "personId": "u_001", "periodType": "month", "periodValue": "2026-03" },
+  "sampleResponse": {
+    "kpiAchievement": {
+      "score": 88,
+      "label": "月度达成",
+      "hint": "月度综合评分",
+      "breakdown": [
+        {
+          "label": "花费目标",
+          "target": "$13,000",
+          "actual": "$12,200",
+          "rate": "94%",
+          "score": "25分"
+        },
+        {
+          "label": "ROI 达标率",
+          "target": "≥ 85%",
+          "actual": "83%",
+          "rate": "98%",
+          "score": "20分"
+        },
+        {
+          "label": "CPI 控制",
+          "target": "≤ $2.40",
+          "actual": "$2.38",
+          "rate": "99%",
+          "score": "20分"
+        },
+        { "label": "异常预警", "target": "≤ 0", "actual": "0", "rate": "100%", "score": "15分" }
+      ],
+      "totalScoreLabel": "88分"
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-performance/kpi-achievement",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "personId, periodType, periodValue",
+    "responseBody": "kpiAchievement"
+  }
+}

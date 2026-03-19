@@ -1,0 +1,69 @@
+{
+  "_comment": "POST kpi-achievement",
+  "sampleResponse": {
+    "month": {
+      "kpiAchievement": {
+        "score": 88,
+        "label": "月度达成",
+        "hint": "月度综合评分",
+        "breakdown": [
+          {
+            "label": "花费目标",
+            "target": "$13,000",
+            "actual": "$12,200",
+            "rate": "94%",
+            "score": "25分"
+          },
+          {
+            "label": "ROI 达标率",
+            "target": "≥ 85%",
+            "actual": "83%",
+            "rate": "98%",
+            "score": "20分"
+          },
+          {
+            "label": "CPI 控制",
+            "target": "≤ $2.40",
+            "actual": "$2.38",
+            "rate": "99%",
+            "score": "20分"
+          },
+          { "label": "异常预警", "target": "≤ 0", "actual": "0", "rate": "100%", "score": "15分" }
+        ],
+        "totalScoreLabel": "88分"
+      }
+    },
+    "quarter": {
+      "kpiAchievement": {
+        "score": 84,
+        "label": "季度达成",
+        "hint": "季度综合评分",
+        "breakdown": [
+          {
+            "label": "花费目标",
+            "target": "$36,000",
+            "actual": "$32,800",
+            "rate": "91%",
+            "score": "22分"
+          },
+          {
+            "label": "ROI 达标率",
+            "target": "≥ 85%",
+            "actual": "79%",
+            "rate": "93%",
+            "score": "18分"
+          },
+          {
+            "label": "CPI 控制",
+            "target": "≤ $2.40",
+            "actual": "$2.45",
+            "rate": "98%",
+            "score": "20分"
+          },
+          { "label": "异常预警", "target": "≤ 1", "actual": "1", "rate": "100%", "score": "14分" }
+        ],
+        "totalScoreLabel": "84分"
+      }
+    }
+  }
+}

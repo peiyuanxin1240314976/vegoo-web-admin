@@ -1,0 +1,53 @@
+{
+  "_comment": "我的绩效 - 人员选项与默认值。对应 types.ts: MyPerformancePersonOption。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "personOptions": {
+        "type": "MyPerformancePersonOption[]",
+        "required": true,
+        "description": "可选择的人员列表。"
+      },
+      "selectedPersonId": {
+        "type": "string",
+        "required": true,
+        "description": "默认选中的人员 ID。"
+      }
+    },
+    "MyPerformancePersonOption": {
+      "id": { "type": "string", "required": true, "description": "人员 ID。" },
+      "name": { "type": "string", "required": true, "description": "人员姓名。" },
+      "role": { "type": "string", "required": true, "description": "角色名称，如 优化师。" },
+      "avatarLetter": {
+        "type": "string",
+        "required": true,
+        "description": "头像圆形内展示的首字，如“张”。"
+      },
+      "apps": {
+        "type": "string[]",
+        "required": true,
+        "description": "负责的应用列表（展示用）。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "personOptions": [
+      {
+        "id": "u_001",
+        "name": "张三",
+        "role": "高级优化师",
+        "avatarLetter": "张",
+        "apps": ["Weather5", "BloodSugar2", "PhoneTracker"]
+      }
+    ],
+    "selectedPersonId": "u_001"
+  },
+  "api": {
+    "url": "GET /api/user-growth/my-performance/meta-person-options",
+    "method": "GET",
+    "priority": "P0",
+    "requestBody": "无",
+    "responseBody": "personOptions[], selectedPersonId"
+  }
+}

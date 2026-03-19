@@ -1,0 +1,64 @@
+{
+  "_comment": "我的绩效 - 顶部 KPI 行（随季度/月度切换刷新）。对应 types.ts: MyPerformanceTopKpiItem。",
+  "fieldDescription": {
+    "request": {
+      "personId": { "type": "string", "required": true, "description": "人员 ID。" },
+      "periodType": {
+        "type": "string",
+        "required": true,
+        "enum": ["quarter", "month"],
+        "description": "统计口径类型：季度/月份（二选一）。"
+      },
+      "periodValue": {
+        "type": "string",
+        "required": true,
+        "description": "统计口径值：如 2026-Q1 或 2026-03。"
+      }
+    },
+    "response": {
+      "topKpis": {
+        "type": "MyPerformanceTopKpiItem[]",
+        "required": true,
+        "description": "顶部 KPI 行数据。"
+      }
+    },
+    "MyPerformanceTopKpiItem": {
+      "label": { "type": "string", "required": true, "description": "指标名称。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "展示值（可含 $ / % / + 等格式）。"
+      },
+      "type": {
+        "type": "string",
+        "required": false,
+        "enum": ["primary", "success", "warning", "default"],
+        "description": "展示强调色类型。"
+      },
+      "sub": { "type": "string", "required": false, "description": "辅助说明（可选）。" },
+      "highlight": {
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "description": "是否为综合评分等重点项（前端会用更大字号与徽标展示）。"
+      }
+    }
+  },
+  "sampleRequest": { "personId": "u_001", "periodType": "month", "periodValue": "2026-03" },
+  "sampleResponse": {
+    "topKpis": [
+      { "label": "月度广告支出", "value": "$12,200", "type": "primary" },
+      { "label": "计算消耗", "value": "$11,400" },
+      { "label": "月度 ROI", "value": "83%", "type": "warning" },
+      { "label": "预估利润", "value": "+$2,180", "type": "success" },
+      { "label": "月度综合评分", "value": "88分", "type": "primary", "highlight": true }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-performance/overview-kpi",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "personId, periodType, periodValue",
+    "responseBody": "topKpis"
+  }
+}
