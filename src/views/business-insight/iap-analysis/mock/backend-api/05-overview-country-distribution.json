@@ -1,0 +1,114 @@
+{
+  "_comment": "IAP Dashboard - 按国家/地区收入分布表。对应 types.ts: IapCountryRow[]。",
+  "fieldDescription": {
+    "request": {
+      "timeRange": { "type": "string", "required": true, "description": "时间范围。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID。" },
+      "productType": { "type": "string", "required": false, "description": "产品类型。" },
+      "s_country_code": { "type": "string", "required": false, "description": "国家代码。" },
+      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+    },
+    "response": {
+      "list": { "type": "IapCountryRow[]", "required": true, "description": "国家收入分布行。" }
+    },
+    "IapCountryRow": {
+      "s_country_code": { "type": "string", "required": true, "description": "国家代码。" },
+      "country": { "type": "string", "required": true, "description": "国家名称。" },
+      "flag": { "type": "string", "required": false, "description": "国旗 emoji。" },
+      "orders": { "type": "number", "required": true, "description": "订单数。" },
+      "revenue": { "type": "string", "required": true, "description": "收入展示。" },
+      "ratio": { "type": "string", "required": true, "description": "占比。" },
+      "arpu": { "type": "string", "required": true, "description": "ARPU 展示。" }
+    }
+  },
+  "sampleRequest": {
+    "timeRange": "30",
+    "s_app_id": "all",
+    "productType": "all",
+    "s_country_code": "all",
+    "platform": "all"
+  },
+  "sampleResponse": {
+    "list": [
+      {
+        "s_country_code": "US",
+        "country": "美国",
+        "flag": "🇺🇸",
+        "orders": 12450,
+        "revenue": "$1.2M",
+        "ratio": "41.7%",
+        "arpu": "$96.38"
+      },
+      {
+        "s_country_code": "KR",
+        "country": "韩国",
+        "flag": "🇰🇷",
+        "orders": 8320,
+        "revenue": "$650K",
+        "ratio": "22.6%",
+        "arpu": "$78.12"
+      },
+      {
+        "s_country_code": "DE",
+        "country": "德国",
+        "flag": "🇩🇪",
+        "orders": 6820,
+        "revenue": "$660K",
+        "ratio": "10.2%",
+        "arpu": "$96.38"
+      },
+      {
+        "s_country_code": "JP",
+        "country": "日本",
+        "flag": "🇯🇵",
+        "orders": 8500,
+        "revenue": "$350K",
+        "ratio": "6.5%",
+        "arpu": "$41.18"
+      },
+      {
+        "s_country_code": "GB",
+        "country": "英国",
+        "flag": "🇬🇧",
+        "orders": 4800,
+        "revenue": "$280K",
+        "ratio": "6.5%",
+        "arpu": "$58.33"
+      },
+      {
+        "s_country_code": "FR",
+        "country": "法国",
+        "flag": "🇫🇷",
+        "orders": 1200,
+        "revenue": "$230K",
+        "ratio": "2.7%",
+        "arpu": "$191.67"
+      },
+      {
+        "s_country_code": "BR",
+        "country": "巴西",
+        "flag": "🇧🇷",
+        "orders": 900,
+        "revenue": "$145K",
+        "ratio": "2.3%",
+        "arpu": "$161.11"
+      },
+      {
+        "s_country_code": "IN",
+        "country": "印度",
+        "flag": "🇮🇳",
+        "orders": 200,
+        "revenue": "$12K",
+        "ratio": "0.3%",
+        "arpu": "$60.00"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/iap-analysis/overview/country-distribution",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "timeRange, s_app_id?, productType?, s_country_code?, platform",
+    "responseBody": "list (IapCountryRow[])"
+  }
+}

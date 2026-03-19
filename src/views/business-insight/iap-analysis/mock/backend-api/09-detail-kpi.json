@@ -1,0 +1,79 @@
+{
+  "_comment": "IAP Detail - 详情页顶部 6 个 KPI。对应 types.ts: IapKpiCard[]。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID 或应用标识。" },
+      "timeRange": { "type": "string", "required": true, "description": "时间范围。" },
+      "s_country_code": { "type": "string", "required": false, "description": "国家代码。" },
+      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+    },
+    "response": {
+      "kpis": { "type": "IapKpiCard[]", "required": true, "description": "6 个 KPI 卡片。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "phonetracker",
+    "timeRange": "30",
+    "s_country_code": "all",
+    "platform": "all"
+  },
+  "sampleResponse": {
+    "kpis": [
+      {
+        "label": "订单数",
+        "value": "8,950",
+        "change": "12.3%",
+        "up": true,
+        "borderColor": "#00c9a7",
+        "sparkColor": "#00c9a7"
+      },
+      {
+        "label": "总收入",
+        "value": "$560K",
+        "change": "15.2%",
+        "up": true,
+        "borderColor": "#6c63ff",
+        "sparkColor": "#a78bfa"
+      },
+      {
+        "label": "ARPU",
+        "value": "$11.20",
+        "change": "2.8%",
+        "up": true,
+        "borderColor": "#3b82f6",
+        "sparkColor": "#60a5fa"
+      },
+      {
+        "label": "转化率",
+        "value": "4.12%",
+        "change": "0.8%",
+        "up": false,
+        "borderColor": "#f59e0b",
+        "sparkColor": "#fbbf24"
+      },
+      {
+        "label": "续费率",
+        "value": "48.5%",
+        "change": "3.2%",
+        "up": true,
+        "borderColor": "#10b981",
+        "sparkColor": "#34d399"
+      },
+      {
+        "label": "退款率",
+        "value": "1.85%",
+        "change": "0.3%",
+        "up": false,
+        "borderColor": "#ef4444",
+        "sparkColor": "#f87171"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/iap-analysis/detail/kpi",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_app_id, timeRange, s_country_code?, platform?",
+    "responseBody": "kpis (IapKpiCard[])"
+  }
+}

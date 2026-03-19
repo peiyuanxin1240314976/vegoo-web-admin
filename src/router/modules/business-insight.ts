@@ -32,6 +32,38 @@ export const businessInsightRoutes: AppRouteRecord = {
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
+    },
+    {
+      path: 'iap-analysis',
+      name: 'IapAnalysis',
+      component: '/business-insight/iap-analysis',
+      meta: {
+        title: 'menus.businessInsight.iapAnalysis',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'iap-analysis/detail',
+      name: 'IapAnalysisDetail',
+      component: '/business-insight/iap-analysis/detail',
+      meta: {
+        title: 'menus.businessInsight.iapAnalysis',
+        keepAlive: false,
+        isHide: true,
+        activePath: '/business-insight/iap-analysis',
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'iaa-analysis',
+      name: 'IaaAnalysis',
+      component: '/business-insight/iaa-analysis',
+      meta: {
+        title: 'menus.businessInsight.iaaAnalysis',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
     }
   ]
 }

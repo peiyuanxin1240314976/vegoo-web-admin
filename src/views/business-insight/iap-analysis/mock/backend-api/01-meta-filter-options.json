@@ -1,0 +1,72 @@
+{
+  "_comment": "IAP 分析 - 全局筛选下拉选项。对应 types.ts: IapFilterOptions。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "appOptions": {
+        "type": "IapSelectOption[]",
+        "required": true,
+        "description": "应用下拉选项。"
+      },
+      "platformOptions": {
+        "type": "IapSelectOption[]",
+        "required": true,
+        "description": "终端平台下拉选项。"
+      },
+      "countryOptions": {
+        "type": "IapSelectOption[]",
+        "required": true,
+        "description": "国家下拉选项。"
+      },
+      "productTypeOptions": {
+        "type": "IapSelectOption[]",
+        "required": true,
+        "description": "产品类型下拉选项。"
+      },
+      "timeRangeOptions": {
+        "type": "IapSelectOption[]",
+        "required": true,
+        "description": "时间范围下拉选项。"
+      }
+    },
+    "IapSelectOption": {
+      "label": { "type": "string", "required": true, "description": "展示文案。" },
+      "value": { "type": "string", "required": true, "description": "选项值，如 all、7、30、90。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "appOptions": [
+      { "label": "全部应用", "value": "all" },
+      { "label": "PhoneTracker", "value": "phonetracker" },
+      { "label": "YearCam", "value": "yearcam" }
+    ],
+    "platformOptions": [
+      { "label": "全部", "value": "all" },
+      { "label": "Android", "value": "android" },
+      { "label": "iOS", "value": "ios" }
+    ],
+    "countryOptions": [
+      { "label": "全部", "value": "all" },
+      { "label": "美国", "value": "US" },
+      { "label": "韩国", "value": "KR" }
+    ],
+    "productTypeOptions": [
+      { "label": "全部", "value": "all" },
+      { "label": "内购", "value": "iap" },
+      { "label": "订阅", "value": "sub" }
+    ],
+    "timeRangeOptions": [
+      { "label": "最近7天", "value": "7" },
+      { "label": "最近30天", "value": "30" },
+      { "label": "最近90天", "value": "90" }
+    ]
+  },
+  "api": {
+    "url": "GET /api/business-insight/iap-analysis/meta-filter-options",
+    "method": "GET",
+    "priority": "P0",
+    "requestBody": "无",
+    "responseBody": "IapFilterOptions"
+  }
+}

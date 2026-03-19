@@ -246,7 +246,17 @@
     "businessInsight": {
       "title": "Business Insight",
       "revenueOverview": "Revenue Overview",
-      "profitAnalysis": "Profit Analysis"
+      "profitAnalysis": "Profit Analysis",
+      "iapAnalysis": "IAP Analysis",
+      "iaaAnalysis": "IAA Analysis",
+      "iaaTabs": {
+        "adType": "Ad Type",
+        "adPlatform": "Ad Platform",
+        "adPlacement": "Ad Placement",
+        "adUnit": "Ad Unit",
+        "country": "Country",
+        "version": "Version"
+      }
     },
     "result": {
       "title": "Result Page",

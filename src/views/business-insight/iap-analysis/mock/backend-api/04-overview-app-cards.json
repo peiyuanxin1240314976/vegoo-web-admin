@@ -1,0 +1,103 @@
+{
+  "_comment": "IAP Dashboard - 应用分析卡片列表。对应 types.ts: IapAppCard[]。",
+  "fieldDescription": {
+    "request": {
+      "timeRange": { "type": "string", "required": true, "description": "时间范围。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID。" },
+      "productType": { "type": "string", "required": false, "description": "产品类型。" },
+      "s_country_code": { "type": "string", "required": false, "description": "国家代码。" },
+      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+    },
+    "response": {
+      "list": {
+        "type": "IapAppCard[]",
+        "required": true,
+        "description": "应用卡片列表，按收入排序。"
+      }
+    },
+    "IapAppCard": {
+      "name": { "type": "string", "required": true, "description": "应用名称。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台 Android/iOS。" },
+      "orders": { "type": "string", "required": true, "description": "订单数展示。" },
+      "revenue": { "type": "string", "required": true, "description": "收入展示。" },
+      "arpu": { "type": "string", "required": true, "description": "ARPU 展示。" },
+      "change": { "type": "string", "required": true, "description": "环比。" },
+      "up": { "type": "boolean", "required": true, "description": "是否上升。" },
+      "icon": { "type": "string", "required": true, "description": "图标组件名。" },
+      "iconBg": { "type": "string", "required": true, "description": "图标背景样式。" }
+    }
+  },
+  "sampleRequest": {
+    "timeRange": "30",
+    "s_app_id": "all",
+    "productType": "all",
+    "s_country_code": "all",
+    "platform": "all"
+  },
+  "sampleResponse": {
+    "list": [
+      {
+        "name": "PhoneTracker",
+        "platform": "Android",
+        "orders": "8,950",
+        "revenue": "$560K",
+        "arpu": "$11.20",
+        "change": "12.3%",
+        "up": true,
+        "icon": "Iphone",
+        "iconBg": "linear-gradient(135deg,#6366f1,#8b5cf6)"
+      },
+      {
+        "name": "YearCam",
+        "platform": "iOS",
+        "orders": "7,200",
+        "revenue": "$480K",
+        "arpu": "$12.10",
+        "change": "8.5%",
+        "up": true,
+        "icon": "Camera",
+        "iconBg": "linear-gradient(135deg,#0ea5e9,#38bdf8)"
+      },
+      {
+        "name": "FaceMe",
+        "platform": "iOS",
+        "orders": "6,500",
+        "revenue": "$390K",
+        "arpu": "$10.50",
+        "change": "4.2%",
+        "up": true,
+        "icon": "VideoCamera",
+        "iconBg": "linear-gradient(135deg,#3b82f6,#60a5fa)"
+      },
+      {
+        "name": "Weather5",
+        "platform": "Android",
+        "orders": "5,800",
+        "revenue": "$310K",
+        "arpu": "$9.80",
+        "change": "2.1%",
+        "up": true,
+        "icon": "Sunny",
+        "iconBg": "linear-gradient(135deg,#f59e0b,#fbbf24)"
+      },
+      {
+        "name": "VideoDownloader",
+        "platform": "Android",
+        "orders": "4,100",
+        "revenue": "$220K",
+        "arpu": "$13.20",
+        "change": "6.7%",
+        "up": true,
+        "icon": "Download",
+        "iconBg": "linear-gradient(135deg,#ef4444,#f87171)"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/iap-analysis/overview/app-cards",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "timeRange, s_app_id?, productType?, s_country_code?, platform",
+    "responseBody": "list (IapAppCard[])"
+  }
+}

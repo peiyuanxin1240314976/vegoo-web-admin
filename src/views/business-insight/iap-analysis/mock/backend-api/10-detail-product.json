@@ -1,0 +1,124 @@
+{
+  "_comment": "IAP Detail - 产品统计 Tab 数据。对应 types.ts: IapDetailProduct。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "timeRange": { "type": "string", "required": true, "description": "时间范围。" },
+      "s_country_code": { "type": "string", "required": false, "description": "国家代码。" },
+      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+    },
+    "response": {
+      "skuList": { "type": "IapSkuRow[]", "required": true, "description": "SKU 订单表。" },
+      "userSegments": {
+        "type": "IapUserSegment[]",
+        "required": true,
+        "description": "用户分层分布。"
+      },
+      "subscriptionDonut": {
+        "type": "IapSubscriptionDonutItem[]",
+        "required": true,
+        "description": "订阅周期分布。"
+      },
+      "subscriptionTotal": { "type": "string", "required": false, "description": "订阅人数汇总。" },
+      "renewChart": { "type": "IapRenewChart", "required": true, "description": "续费周期分析。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "phonetracker",
+    "timeRange": "30",
+    "s_country_code": "all",
+    "platform": "all"
+  },
+  "sampleResponse": {
+    "skuList": [
+      {
+        "name": "Annual Premium",
+        "type": "订阅",
+        "orders": 1280,
+        "revenue": "$192K",
+        "ratio": "34.3%",
+        "arpu": "$45.20",
+        "conversion": "4.2%",
+        "retention": "68.5%",
+        "churn": "0.8%",
+        "trend": "↑",
+        "trendUp": true
+      },
+      {
+        "name": "Monthly Premium",
+        "type": "订阅",
+        "orders": 3450,
+        "revenue": "$138K",
+        "ratio": "24.6%",
+        "arpu": "$8.50",
+        "conversion": "3.8%",
+        "retention": "52.3%",
+        "churn": "1.2%",
+        "trend": "↓",
+        "trendUp": false
+      },
+      {
+        "name": "Lifetime Unlock",
+        "type": "内购",
+        "orders": 890,
+        "revenue": "$133.5K",
+        "ratio": "23.8%",
+        "arpu": "$89.99",
+        "conversion": "2.1%",
+        "retention": "N/A",
+        "churn": "1.5%",
+        "trend": "↑",
+        "trendUp": true
+      }
+    ],
+    "userSegments": [
+      {
+        "label": "高价值(Top10%)",
+        "count": "895人",
+        "pct": "78%",
+        "arpu": "ARPU $45.20",
+        "color": "#6c63ff"
+      },
+      {
+        "label": "中高价值(10-30%)",
+        "count": "1,790人",
+        "pct": "55%",
+        "arpu": "ARPU $18.50",
+        "color": "#3b82f6"
+      },
+      {
+        "label": "中低价值(30-60%)",
+        "count": "2,685人",
+        "pct": "38%",
+        "arpu": "ARPU $8.80",
+        "color": "#10b981"
+      },
+      {
+        "label": "低价值(Bottom40%)",
+        "count": "3,580人",
+        "pct": "20%",
+        "arpu": "ARPU $2.10",
+        "color": "#f59e0b"
+      }
+    ],
+    "subscriptionDonut": [
+      { "name": "周订阅", "pct": "15%", "value": 15, "color": "#6c63ff" },
+      { "name": "月订阅", "pct": "38%", "value": 38, "color": "#3b82f6" },
+      { "name": "季订阅", "pct": "22%", "value": 22, "color": "#10b981" },
+      { "name": "年订阅", "pct": "25%", "value": 25, "color": "#f59e0b" }
+    ],
+    "subscriptionTotal": "5,990",
+    "renewChart": {
+      "categories": ["第1次", "第2次", "第3次", "第4次+"],
+      "counts": [2650, 1710, 1026, 718],
+      "rates": [100, 65, 39, 27]
+    }
+  },
+  "api": {
+    "url": "POST /api/business-insight/iap-analysis/detail/product",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_app_id, timeRange, s_country_code?, platform?",
+    "responseBody": "IapDetailProduct"
+  }
+}
