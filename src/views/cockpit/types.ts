@@ -16,6 +16,10 @@ export interface CockpitOverviewParams {
 /** 经营驾驶舱「第一排总数据」接口：单周期指标（last / now 结构相同） */
 export interface CockpitOverallPeriodItem {
   activeSubscription: number
+  /** 有效订阅：新增（真实接口字段） */
+  activeSubscriptionNew?: number
+  /** 有效订阅：流失（真实接口字段） */
+  activeSubscriptionLost?: number
   dAdRevenue: number
   dCost: number
   dIapRevenue: number
@@ -40,6 +44,10 @@ export interface CockpitOverallResponse {
 /** 经营驾驶舱 overall 新接口：单周期指标（展示用 now） */
 export interface CockpitOverallDataPeriod {
   activeSubscription: number
+  /** 有效订阅：新增（真实接口字段） */
+  activeSubscriptionNew?: number
+  /** 有效订阅：流失（真实接口字段） */
+  activeSubscriptionLost?: number
   adAccountCount?: number
   adCost?: number
   adRevenue?: number
@@ -72,6 +80,10 @@ export interface CockpitOverallData {
   now: CockpitOverallDataPeriod
   /** 上一周期汇总 */
   last: CockpitOverallDataPeriod
+  /** 有效订阅：新增（真实接口字段，返回在 data 根层） */
+  activeSubscriptionNew?: number
+  /** 有效订阅：流失（真实接口字段，返回在 data 根层） */
+  activeSubscriptionLost?: number
   /** 变化量（后端已算好，直接用于升降展示） */
   activeSubscriptionChange?: number
   adAccountCountChange?: number

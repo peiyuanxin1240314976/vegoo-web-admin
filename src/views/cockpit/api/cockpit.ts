@@ -302,6 +302,10 @@ function pickFirstNumber(obj: unknown, keys: string[]): number {
   for (const k of keys) {
     const v = record[k]
     if (typeof v === 'number' && Number.isFinite(v)) return v
+    if (typeof v === 'string') {
+      const n = Number(v)
+      if (Number.isFinite(n)) return n
+    }
   }
   return 0
 }
@@ -356,27 +360,9 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'int',
       changeKey: 'activeSubscriptionChange',
       listKey: 'activeSubscriptionList',
-      detail: (n) => {
-        const inc = pickFirstNumber(n, [
-          'activeSubscriptionNew',
-          'activeSubscriptionIncrease',
-          'activeSubscriptionAdd',
-          'subscriptionNew',
-          'subscriptionIncrease',
-          'subscriptionAdd',
-          'newSubscription',
-          'subscriptionIn'
-        ])
-        const dec = pickFirstNumber(n, [
-          'activeSubscriptionLost',
-          'activeSubscriptionDecrease',
-          'activeSubscriptionChurn',
-          'subscriptionLost',
-          'subscriptionDecrease',
-          'subscriptionChurn',
-          'lostSubscription',
-          'subscriptionOut'
-        ])
+      detail: () => {
+        const inc = pickFirstNumber(data, ['activeSubscriptionNew'])
+        const dec = pickFirstNumber(data, ['activeSubscriptionLost'])
         return `新增 +${formatInt(inc)}  流失 -${formatInt(dec)}`
       }
     },
@@ -583,26 +569,8 @@ export function mapOverallToKpiCards(
       valueKey: 'activeSubscription',
       format: 'int',
       detail: (n) => {
-        const inc = pickFirstNumber(n, [
-          'activeSubscriptionNew',
-          'activeSubscriptionIncrease',
-          'activeSubscriptionAdd',
-          'subscriptionNew',
-          'subscriptionIncrease',
-          'subscriptionAdd',
-          'newSubscription',
-          'subscriptionIn'
-        ])
-        const dec = pickFirstNumber(n, [
-          'activeSubscriptionLost',
-          'activeSubscriptionDecrease',
-          'activeSubscriptionChurn',
-          'subscriptionLost',
-          'subscriptionDecrease',
-          'subscriptionChurn',
-          'lostSubscription',
-          'subscriptionOut'
-        ])
+        const inc = pickFirstNumber(n, ['activeSubscriptionNew'])
+        const dec = pickFirstNumber(n, ['activeSubscriptionLost'])
         return `新增 +${formatInt(inc)}  流失 -${formatInt(dec)}`
       }
     },
