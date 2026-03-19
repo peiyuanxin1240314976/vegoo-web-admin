@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="my-ads-page">
     <MyAdsHeader
       :title="pageTitle"
@@ -152,4 +152,11 @@
       overflow: visible;
     }
   }
-</style>
+</style> -->
+<script setup name="MyAds" lang="ts">
+  import MyAds from './component/MyAds.vue'
+</script>
+
+<template>
+  <MyAds />
+</template>

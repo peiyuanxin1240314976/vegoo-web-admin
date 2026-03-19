@@ -246,7 +246,8 @@
     "businessInsight": {
       "title": "Business Insight",
       "revenueOverview": "Revenue Overview",
-      "profitAnalysis": "Profit Analysis"
+      "profitAnalysis": "Profit Analysis",
+      "agencyAnalysis": "Agency Analysis"
     },
     "result": {
       "title": "Result Page",

@@ -246,7 +246,8 @@
     "businessInsight": {
       "title": "商业洞察",
       "revenueOverview": "收入概览",
-      "profitAnalysis": "利润分析"
+      "profitAnalysis": "利润分析",
+      "agencyAnalysis": "代投分析"
     },
     "result": {
       "title": "结果页面",
