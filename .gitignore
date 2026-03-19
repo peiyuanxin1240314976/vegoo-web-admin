@@ -3,8 +3,6 @@ node_modules
 dist
 dist-ssr
 *.local
-.cursorrules
-.cursor
 
 # Auto-generated files
 src/types/import/auto-imports.d.ts
