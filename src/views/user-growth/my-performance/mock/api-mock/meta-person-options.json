@@ -1,0 +1,15 @@
+{
+  "_comment": "GET meta-person-options",
+  "sampleResponse": {
+    "personOptions": [
+      {
+        "id": "u_001",
+        "name": "张三",
+        "role": "高级优化师",
+        "avatarLetter": "张",
+        "apps": ["Weather5", "BloodSugar2", "PhoneTracker"]
+      }
+    ],
+    "selectedPersonId": "u_001"
+  }
+}

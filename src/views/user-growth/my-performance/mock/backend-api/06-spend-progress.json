@@ -1,0 +1,40 @@
+{
+  "_comment": "我的绩效 - 消耗进度。对应 types.ts: MyPerformanceSpendProgress。",
+  "fieldDescription": {
+    "request": {
+      "personId": { "type": "string", "required": true, "description": "人员 ID。" },
+      "periodType": {
+        "type": "string",
+        "required": true,
+        "enum": ["quarter", "month"],
+        "description": "统计口径类型。"
+      },
+      "periodValue": { "type": "string", "required": true, "description": "口径值。" }
+    },
+    "response": {
+      "title": { "type": "string", "required": true, "description": "面板标题。" },
+      "data": {
+        "type": "MyPerformanceSpendProgress",
+        "required": true,
+        "description": "进度数据。"
+      }
+    },
+    "MyPerformanceSpendProgress": {
+      "spend": { "type": "number", "required": true, "description": "已消耗金额，单位 $。" },
+      "target": { "type": "number", "required": true, "description": "目标金额，单位 $。" },
+      "rate": { "type": "number", "required": true, "description": "达成率，单位 %，范围 0-100。" }
+    }
+  },
+  "sampleRequest": { "personId": "u_001", "periodType": "month", "periodValue": "2026-03" },
+  "sampleResponse": {
+    "title": "月度花费达成",
+    "data": { "spend": 12200, "target": 13000, "rate": 94 }
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-performance/spend-progress",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "personId, periodType, periodValue",
+    "responseBody": "title, data"
+  }
+}

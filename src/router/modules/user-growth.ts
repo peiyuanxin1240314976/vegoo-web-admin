@@ -44,6 +44,16 @@ export const userGrowthRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'my-performance',
+      name: 'MyPerformance',
+      component: '/user-growth/my-performance',
+      meta: {
+        title: 'menus.userGrowth.myPerformance',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
       path: 'ad-platform-detail',
       name: 'AdPlatformDetail',
       component: '/user-growth/ad-platform-detail',

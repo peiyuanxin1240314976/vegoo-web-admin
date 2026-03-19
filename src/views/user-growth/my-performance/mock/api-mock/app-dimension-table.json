@@ -1,0 +1,457 @@
+{
+  "_comment": "POST app-dimension-table",
+  "sampleResponse": {
+    "month": {
+      "title": "应用维度绩效评估",
+      "list": [
+        {
+          "id": "app_weather5",
+          "type": "app",
+          "name": "Weather5",
+          "children": [
+            {
+              "id": "app_weather5_google",
+              "type": "source",
+              "name": "Google",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 53,
+              "minRate": 50,
+              "deviationCoef": 1.2,
+              "minProfit": null,
+              "adSpend": 12450,
+              "calculatedSpend": 11800,
+              "roi": 91,
+              "commissionSpend": 2100,
+              "estimatedProfit": 3240,
+              "cpa": 2.21,
+              "score": 28,
+              "status": "running",
+              "statusText": "投放中"
+            }
+          ]
+        },
+        {
+          "id": "app_weather8",
+          "type": "app",
+          "name": "Weather8（汇总）",
+          "children": [
+            {
+              "id": "app_weather8_all",
+              "type": "source",
+              "name": "全部",
+              "platform": "安卓",
+              "windowLabel": null,
+              "reachRate": null,
+              "minRate": null,
+              "deviationCoef": null,
+              "minProfit": 46000,
+              "adSpend": 8200,
+              "calculatedSpend": 7600,
+              "roi": 53,
+              "commissionSpend": 1200,
+              "estimatedProfit": 1840,
+              "cpa": null,
+              "score": null,
+              "status": "running",
+              "statusText": "投放中"
+            },
+            {
+              "id": "app_weather8_facebook",
+              "type": "source",
+              "name": "Facebook",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 53,
+              "minRate": 50,
+              "deviationCoef": 1.2,
+              "minProfit": 5100,
+              "adSpend": 4800,
+              "calculatedSpend": 4800,
+              "roi": 53,
+              "commissionSpend": 800,
+              "estimatedProfit": -340,
+              "cpa": 2.45,
+              "score": 0,
+              "status": "running",
+              "statusText": "投放中"
+            }
+          ]
+        },
+        {
+          "id": "app_phonetracker2",
+          "type": "app",
+          "name": "PhoneTracker2",
+          "children": [
+            {
+              "id": "app_phonetracker2_google",
+              "type": "source",
+              "name": "Google",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 100,
+              "minRate": 97,
+              "deviationCoef": 1,
+              "minProfit": null,
+              "adSpend": 6800,
+              "calculatedSpend": 6400,
+              "roi": 98,
+              "commissionSpend": 1100,
+              "estimatedProfit": 2180,
+              "cpa": 1.89,
+              "score": 25,
+              "status": "running",
+              "statusText": "投放中"
+            },
+            {
+              "id": "app_phonetracker2_facebook",
+              "type": "source",
+              "name": "Facebook",
+              "platform": "安卓",
+              "windowLabel": "1天",
+              "reachRate": 97,
+              "minRate": 92,
+              "deviationCoef": 1,
+              "minProfit": null,
+              "adSpend": 4200,
+              "calculatedSpend": 3900,
+              "roi": 94,
+              "commissionSpend": 680,
+              "estimatedProfit": 1240,
+              "cpa": 2.12,
+              "score": 22,
+              "status": "running",
+              "statusText": "投放中"
+            }
+          ]
+        },
+        {
+          "id": "app_bloodsugar2",
+          "type": "app",
+          "name": "BloodSugar2",
+          "children": [
+            {
+              "id": "app_bloodsugar2_google",
+              "type": "source",
+              "name": "Google",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 100,
+              "minRate": 95,
+              "deviationCoef": 1,
+              "minProfit": null,
+              "adSpend": 9760,
+              "calculatedSpend": 9200,
+              "roi": 96,
+              "commissionSpend": 1800,
+              "estimatedProfit": 3120,
+              "cpa": 2.08,
+              "score": 26,
+              "status": "running",
+              "statusText": "投放中"
+            }
+          ]
+        },
+        {
+          "id": "app_cpumonitor",
+          "type": "app",
+          "name": "CPUMonitor",
+          "children": [
+            {
+              "id": "app_cpumonitor_google",
+              "type": "source",
+              "name": "Google",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 95,
+              "minRate": 93,
+              "deviationCoef": 1,
+              "minProfit": null,
+              "adSpend": 3200,
+              "calculatedSpend": 3000,
+              "roi": 98,
+              "commissionSpend": 480,
+              "estimatedProfit": -120,
+              "cpa": 2.38,
+              "score": 0,
+              "status": "running",
+              "statusText": "投放中（变更: 2026-02-28）"
+            }
+          ]
+        },
+        {
+          "id": "app_dressup",
+          "type": "app",
+          "name": "Dressup",
+          "children": [
+            {
+              "id": "app_dressup_google",
+              "type": "source",
+              "name": "Google",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 75,
+              "minRate": 70,
+              "deviationCoef": 0.7,
+              "minProfit": 45000,
+              "adSpend": 4850,
+              "calculatedSpend": 4500,
+              "roi": 72,
+              "commissionSpend": 620,
+              "estimatedProfit": 1890,
+              "cpa": 18.5,
+              "score": 18,
+              "status": "running",
+              "statusText": "投放中（CPA≤$25）"
+            }
+          ]
+        },
+        {
+          "id": "app_focusbuddy",
+          "type": "app",
+          "name": "FocusBuddy"
+        },
+        {
+          "id": "app_sleeptracker",
+          "type": "app",
+          "name": "SleepTracker"
+        }
+      ],
+      "summary": {
+        "adSpend": 36600,
+        "calculatedSpend": 34200,
+        "roi": 88,
+        "commissionSpend": 6180,
+        "estimatedProfit": 8450,
+        "cpa": 2.21,
+        "score": 92
+      }
+    },
+    "quarter": {
+      "title": "应用维度绩效评估",
+      "list": [
+        {
+          "id": "app_weather5",
+          "type": "app",
+          "name": "Weather5",
+          "children": [
+            {
+              "id": "app_weather5_google",
+              "type": "source",
+              "name": "Google",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 53,
+              "minRate": 50,
+              "deviationCoef": 1.2,
+              "minProfit": null,
+              "adSpend": 12450,
+              "calculatedSpend": 11800,
+              "roi": 91,
+              "commissionSpend": 2100,
+              "estimatedProfit": 3240,
+              "cpa": 2.21,
+              "score": 28,
+              "status": "running",
+              "statusText": "投放中"
+            }
+          ]
+        },
+        {
+          "id": "app_weather8",
+          "type": "app",
+          "name": "Weather8",
+          "children": [
+            {
+              "id": "app_weather8_all",
+              "type": "source",
+              "name": "全部",
+              "platform": "安卓",
+              "windowLabel": "--",
+              "reachRate": null,
+              "minRate": null,
+              "deviationCoef": null,
+              "minProfit": null,
+              "adSpend": 46000,
+              "calculatedSpend": 8200,
+              "roi": 53,
+              "commissionSpend": 1200,
+              "estimatedProfit": 1840,
+              "cpa": null,
+              "score": null,
+              "status": "warning",
+              "statusText": "投放中"
+            },
+            {
+              "id": "app_weather8_facebook",
+              "type": "source",
+              "name": "Facebook",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 53,
+              "minRate": 50,
+              "deviationCoef": 1.2,
+              "minProfit": 5100,
+              "adSpend": 4800,
+              "calculatedSpend": 4800,
+              "roi": 53,
+              "commissionSpend": 800,
+              "estimatedProfit": -340,
+              "cpa": 2.45,
+              "score": 0,
+              "status": "warning",
+              "statusText": "投放中"
+            }
+          ]
+        },
+        {
+          "id": "app_phonetracker2",
+          "type": "app",
+          "name": "PhoneTracker2",
+          "children": [
+            {
+              "id": "app_phonetracker2_google",
+              "type": "source",
+              "name": "Google",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 100,
+              "minRate": 97,
+              "deviationCoef": 1,
+              "minProfit": null,
+              "adSpend": 6800,
+              "calculatedSpend": 6400,
+              "roi": 98,
+              "commissionSpend": 1100,
+              "estimatedProfit": 2180,
+              "cpa": 1.89,
+              "score": 25,
+              "status": "running",
+              "statusText": "投放中"
+            },
+            {
+              "id": "app_phonetracker2_facebook",
+              "type": "source",
+              "name": "Facebook",
+              "platform": "安卓",
+              "windowLabel": "1天",
+              "reachRate": 97,
+              "minRate": 92,
+              "deviationCoef": 1,
+              "minProfit": null,
+              "adSpend": 4200,
+              "calculatedSpend": 3900,
+              "roi": 94,
+              "commissionSpend": 680,
+              "estimatedProfit": 1240,
+              "cpa": 2.12,
+              "score": 22,
+              "status": "running",
+              "statusText": "投放中"
+            }
+          ]
+        },
+        {
+          "id": "app_bloodsugar2",
+          "type": "app",
+          "name": "BloodSugar2",
+          "children": [
+            {
+              "id": "app_bloodsugar2_google",
+              "type": "source",
+              "name": "Google",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 100,
+              "minRate": 95,
+              "deviationCoef": 1,
+              "minProfit": null,
+              "adSpend": 9760,
+              "calculatedSpend": 9200,
+              "roi": 96,
+              "commissionSpend": 1800,
+              "estimatedProfit": 3120,
+              "cpa": 2.08,
+              "score": 26,
+              "status": "running",
+              "statusText": "投放中"
+            }
+          ]
+        },
+        {
+          "id": "app_cpumonitor",
+          "type": "app",
+          "name": "CPUMonitor",
+          "children": [
+            {
+              "id": "app_cpumonitor_google",
+              "type": "source",
+              "name": "Google",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 95,
+              "minRate": 93,
+              "deviationCoef": 1,
+              "minProfit": null,
+              "adSpend": 3200,
+              "calculatedSpend": 3000,
+              "roi": 98,
+              "commissionSpend": 480,
+              "estimatedProfit": -120,
+              "cpa": 2.38,
+              "score": 0,
+              "status": "warning",
+              "statusText": "投放中"
+            }
+          ]
+        },
+        {
+          "id": "app_dressup",
+          "type": "app",
+          "name": "Dressup",
+          "children": [
+            {
+              "id": "app_dressup_google",
+              "type": "source",
+              "name": "Google",
+              "platform": "安卓",
+              "windowLabel": "3天",
+              "reachRate": 75,
+              "minRate": 70,
+              "deviationCoef": 0.7,
+              "minProfit": 45000,
+              "adSpend": 4850,
+              "calculatedSpend": 4500,
+              "roi": 72,
+              "commissionSpend": 620,
+              "estimatedProfit": 1890,
+              "cpa": 18.5,
+              "score": 18,
+              "status": "running",
+              "statusText": "投放中"
+            }
+          ]
+        },
+        {
+          "id": "app_focusbuddy",
+          "type": "app",
+          "name": "FocusBuddy"
+        },
+        {
+          "id": "app_sleeptracker",
+          "type": "app",
+          "name": "SleepTracker"
+        }
+      ],
+      "summary": {
+        "adSpend": 36600,
+        "calculatedSpend": 34200,
+        "roi": 88,
+        "commissionSpend": 6180,
+        "estimatedProfit": 8450,
+        "cpa": 2.21,
+        "score": 92
+      }
+    }
+  }
+}

@@ -256,6 +256,7 @@
     },
     "userGrowth": {
       "title": "User Growth",
+      "myPerformance": "My Performance",
       "accountPerformance": "Account Performance",
       "adPlatformAnalysis": "Ad Platform Analysis",
       "myAds": "My Ads",
@@ -455,6 +456,68 @@
     "panelAccountShare": "Account Conversion Share",
     "panelEmpty": "No data",
     "dataTableSummary": "{a} accounts / {s} series / {c} conversions"
+  },
+  "myPerformance": {
+    "header": {
+      "person": "Person",
+      "export": "Export Performance Report",
+      "quarter": "Current Quarter",
+      "month": "Current Month"
+    },
+    "personCard": {
+      "responsible": "Responsible"
+    },
+    "panels": {
+      "kpiAchievement": "KPI Achievement",
+      "performanceHistory": "Performance History",
+      "spendAchievement": "Monthly Spending Achievement",
+      "spendHint": "Calendar month/quarter baseline; mock data for now."
+    },
+    "spendAchievement": {
+      "hint": "Need {amount} more to reach monthly target",
+      "hintReached": "Monthly target reached"
+    },
+    "kpiTable": {
+      "col": {
+        "label": "Metric",
+        "target": "Target",
+        "actual": "Actual",
+        "rate": "Rate",
+        "score": "Score"
+      }
+    },
+    "table": {
+      "col": {
+        "app": "App",
+        "platform": "Platform",
+        "source": "Ad Platform",
+        "window": "Days",
+        "reachRate": "Target",
+        "minRate": "Min",
+        "deviationCoef": "Coef",
+        "minProfit": "Min Profit",
+        "adSpend": "Ad Spend",
+        "calculatedSpend": "Calculated",
+        "roi": "ROI",
+        "commissionSpend": "Commission",
+        "estimatedProfit": "Est. Profit",
+        "cpa": "CPA",
+        "score": "Score",
+        "status": "Status"
+      }
+    },
+    "appTableHeader": {
+      "hint": "Calc period: 2026-01-01 to 2026-03-04 | App-level est. profit is based on actual revenue; ad-platform est. profit is based on payback."
+    },
+    "tableHint": {
+      "title": "Notes:",
+      "items": [
+        "Estimated profit at the app level is calculated from actual revenue; ad platform level estimated profit requires post-back validation.",
+        "For LAP apps evaluated by ROI, the app-level ROI is used to determine whether the target is met.",
+        "Cycles follow calendar month/quarter; history data is mock for now and can be replaced by real APIs later.",
+        "Geo-level / segmentation rules (ranges, criteria) may change with media segmentation strategy and evaluation framework."
+      ]
+    }
   },
   "table": {
     "form": {
