@@ -23,20 +23,20 @@ export interface MonetizationKpiCard {
   compareUp?: boolean
 }
 
-/** 渠道总数/主机卡片 */
+/** 广告平台总数/主机卡片 */
 export interface MonetizationChannelTotal {
   label: string
   value: string
 }
 
-/** 环图分类项（渠道或平台占比） */
+/** 环图分类项（广告平台或平台占比） */
 export interface MonetizationPieItem {
   name: string
   value: number
   percent: number
 }
 
-/** 渠道/平台表格行 */
+/** 广告平台/平台表格行 */
 export interface MonetizationChannelPlatformRow {
   channel: string
   platform?: string

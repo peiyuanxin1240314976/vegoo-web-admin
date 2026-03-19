@@ -1,6 +1,6 @@
 <template>
   <div class="channel-pie-panel cockpit-panel">
-    <div class="panel-title">渠道/分类占比</div>
+    <div class="panel-title">广告平台/分类占比</div>
     <div ref="chartRef" class="chart-container" />
   </div>
 </template>

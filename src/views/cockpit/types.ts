@@ -16,6 +16,10 @@ export interface CockpitOverviewParams {
 /** 经营驾驶舱「第一排总数据」接口：单周期指标（last / now 结构相同） */
 export interface CockpitOverallPeriodItem {
   activeSubscription: number
+  /** 有效订阅：新增（真实接口字段） */
+  activeSubscriptionNew?: number
+  /** 有效订阅：流失（真实接口字段） */
+  activeSubscriptionLost?: number
   dAdRevenue: number
   dCost: number
   dIapRevenue: number
@@ -40,6 +44,10 @@ export interface CockpitOverallResponse {
 /** 经营驾驶舱 overall 新接口：单周期指标（展示用 now） */
 export interface CockpitOverallDataPeriod {
   activeSubscription: number
+  /** 有效订阅：新增（真实接口字段） */
+  activeSubscriptionNew?: number
+  /** 有效订阅：流失（真实接口字段） */
+  activeSubscriptionLost?: number
   adAccountCount?: number
   adCost?: number
   adRevenue?: number
@@ -72,6 +80,10 @@ export interface CockpitOverallData {
   now: CockpitOverallDataPeriod
   /** 上一周期汇总 */
   last: CockpitOverallDataPeriod
+  /** 有效订阅：新增（真实接口字段，返回在 data 根层） */
+  activeSubscriptionNew?: number
+  /** 有效订阅：流失（真实接口字段，返回在 data 根层） */
+  activeSubscriptionLost?: number
   /** 变化量（后端已算好，直接用于升降展示） */
   activeSubscriptionChange?: number
   adAccountCountChange?: number
@@ -236,7 +248,7 @@ export interface CountryInfoAppLaunchItem {
   remainDay7: number
 }
 
-/** 国家详情渠道投放效果对比 - 单条 data 的 now/last 结构 */
+/** 国家详情广告平台投放效果对比 - 单条 data 的 now/last 结构 */
 export interface CountryInfoChannelLaunchPeriod {
   cost?: number
   install?: number
@@ -251,13 +263,13 @@ export interface CountryInfoChannelLaunchPeriod {
   nNewUserCount?: number
 }
 
-/** 国家详情渠道投放效果对比 data 数组单项 /api/v1/datacenter/analysis/countryInfo/channelLaunch */
+/** 国家详情广告平台投放效果对比 data 数组单项 /api/v1/datacenter/analysis/countryInfo/channelLaunch */
 export interface CountryInfoChannelLaunchItem {
   now: CountryInfoChannelLaunchPeriod
   last: CountryInfoChannelLaunchPeriod
   /** CPL 变化趋势，用于展示箭头：>0 上箭头绿，=0 右箭头灰，<0 下箭头红，null 显示 '-' 灰 */
   cplChange: number | null
-  /** 渠道名称（若后端返回） */
+  /** 广告平台名称（若后端返回） */
   channel?: string
 }
 
@@ -354,7 +366,7 @@ export interface CockpitRevenueCostTrend {
   cost: number[]
 }
 
-/** 渠道 ROI&安装量表格行：近7日为折线图数据 */
+/** 广告平台 ROI&安装量表格行：近7日为折线图数据 */
 export interface CockpitChannelRoiInstallItem {
   channel: string
   spend: number
@@ -364,20 +376,20 @@ export interface CockpitChannelRoiInstallItem {
   trend: number[]
 }
 
-/** 渠道 ROI&安装量接口：单日数据（list 中每个元素，接口可能返回 null） */
+/** 广告平台 ROI&安装量接口：单日数据（list 中每个元素，接口可能返回 null） */
 export interface CockpitChannelRoiInstallDayItem {
   cost?: number | null
   cpl?: number | null
   install?: number | null
 }
 
-/** 渠道 ROI&安装量接口：单渠道（data 数组中每个元素，list 为近 7 日数据） */
+/** 广告平台 ROI&安装量接口：单广告平台（data 数组中每个元素，list 为近 7 日数据） */
 export interface CockpitChannelRoiInstallApiItem {
   channel: string
   list: CockpitChannelRoiInstallDayItem[]
 }
 
-/** 渠道 ROI&安装量接口响应（/api/v1/datacenter/analysis/cockpit/installAndRoiOfChannel） */
+/** 广告平台 ROI&安装量接口响应（/api/v1/datacenter/analysis/cockpit/installAndRoiOfChannel） */
 export type CockpitChannelRoiInstallResponse = CockpitChannelRoiInstallApiItem[]
 
 /** 用户质量仪表盘单项 */
@@ -516,7 +528,7 @@ export interface CockpitTopRevenueItem {
   roas?: string
 }
 
-/** Top3 消耗渠道（保留兼容） */
+/** Top3 消耗广告平台（保留兼容） */
 export interface CockpitTopSpendItem {
   name: string
   roi: string
@@ -615,7 +627,7 @@ export interface CockpitOverview {
   alertSummaryMetrics?: CockpitAlertSummaryMetric[]
   alertBanners: CockpitAlertBanner[]
   revenueCostTrend: CockpitRevenueCostTrend
-  /** 渠道 ROI&安装量表格数据 */
+  /** 广告平台 ROI&安装量表格数据 */
   channelRoiInstall?: CockpitChannelRoiInstallItem[]
   userQuality: CockpitUserQualityItem[]
   spendPace: CockpitSpendPaceItem[]

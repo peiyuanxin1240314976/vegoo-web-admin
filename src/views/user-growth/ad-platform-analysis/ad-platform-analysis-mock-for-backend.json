@@ -1,25 +1,25 @@
 {
-  "_comment": "广告平台分析大屏（Ad Platform Analysis）接口结构说明文件：用于后端快速理解前端所需字段、返回结构与枚举口径。后端按 sampleResponse 的结构返回，即可与当前页面 mock 对齐并直接渲染：顶部渠道 KPI 卡片、渠道 ROI 趋势（最近30天，折线面积图，图例隐藏）、用户质量热力图、渠道指标对比详情表（支持全字段排序与分页）。注意：当前前端 mock 仅包含「渠道维度」，App/平台筛选目前是入口占位；后端接入后可根据 appId/platform/channelKey 返回对应维度数据。",
+  "_comment": "广告平台分析大屏（Ad Platform Analysis）接口结构说明文件：用于后端快速理解前端所需字段、返回结构与枚举口径。后端按 sampleResponse 的结构返回，即可与当前页面 mock 对齐并直接渲染：顶部广告平台 KPI 卡片、广告平台 ROI 趋势（最近30天，折线面积图，图例隐藏）、用户质量热力图、广告平台指标对比详情表（支持全字段排序与分页）。注意：当前前端 mock 仅包含「广告平台维度」，App/平台筛选目前是入口占位；后端接入后可根据 appId/platform/channelKey 返回对应维度数据。",
   "fieldDescription": {
     "root": {
-      "groupBy": "聚合维度（建议：'channel' | 'platform' | 'app'），当前页面主要按渠道展示",
-      "viewDesc": "视图描述（便于排查/对齐口径，例如：'最近30天，按渠道汇总'）",
+      "groupBy": "聚合维度（建议：'channel' | 'platform' | 'app'），当前页面主要按广告平台展示",
+      "viewDesc": "视图描述（便于排查/对齐口径，例如：'最近30天，按广告平台汇总'）",
       "filtersMeta": "筛选项元数据（可选；用于前端下拉选项渲染）",
-      "kpiCards": "顶部 KPI 卡片（渠道维度）",
-      "roiTrend": "渠道 ROI 趋势（最近30天）",
-      "qualityHeatmap": "用户质量热力图（行=渠道，列=D1/D7/D30留存、付费率、ARPU）",
-      "metricsTable": "渠道指标对比详情表（表格行数据）",
+      "kpiCards": "顶部 KPI 卡片（广告平台维度）",
+      "roiTrend": "广告平台 ROI 趋势（最近30天）",
+      "qualityHeatmap": "用户质量热力图（行=广告平台，列=D1/D7/D30留存、付费率、ARPU）",
+      "metricsTable": "广告平台指标对比详情表（表格行数据）",
       "footer": "底部汇总（可选，用于后续扩展或全局校验）"
     },
     "filtersMeta": {
       "apps": "App 下拉选项数组（label/value），value 建议用 appId",
       "platforms": "平台下拉选项数组（label/value），value 建议用 'ios'/'android'/'all' 等",
-      "channels": "渠道下拉选项数组（label/value），value 建议用规范化 channelKey，如 google/facebook/tiktok"
+      "channels": "广告平台下拉选项数组（label/value），value 建议用规范化 channelKey，如 google/facebook/tiktok"
     },
     "kpiCard": {
       "id": "卡片唯一 id（建议同 channelKey）",
-      "name": "渠道展示名（如 Google Ads / Facebook）",
-      "logo": "渠道 logo（可选）",
+      "name": "广告平台展示名（如 Google Ads / Facebook）",
+      "logo": "广告平台 logo（可选）",
       "roi": "ROI 数值（例如 1.52）",
       "roiChange": "ROI 环比变化百分比（例如 8.5 表示 +8.5%）",
       "roiChangeUp": "ROI 是否上升（true=上升，false=下降）",
@@ -30,14 +30,14 @@
     },
     "roiTrend": {
       "dates": "横轴日期数组（string[]，展示用，可为 'YYYY-MM-DD' 由前端格式化）",
-      "series": "折线序列数组（每个渠道一条线）"
+      "series": "折线序列数组（每个广告平台一条线）"
     },
     "roiTrendSeries": {
-      "name": "序列名（渠道名）",
+      "name": "序列名（广告平台名）",
       "data": "与 dates 对齐的 ROI 数值数组（number[]）"
     },
     "qualityHeatmapRow": {
-      "channel": "渠道名称（行名）",
+      "channel": "广告平台名称（行名）",
       "d1Retention": "D1 留存（百分比数值，例如 58 表示 58%）",
       "d7Retention": "D7 留存（百分比数值）",
       "d30Retention": "D30 留存（百分比数值）",
@@ -45,7 +45,7 @@
       "arpu": "ARPU（数值，例如 3.28；单位可约定为 USD）"
     },
     "metricRow": {
-      "channel": "渠道名称（表格行 key）",
+      "channel": "广告平台名称（表格行 key）",
       "cost": "花费（展示值，如 '$850K'）",
       "revenue": "收入（展示值，如 '$1.29M'）",
       "roi": "ROI（数值）",
@@ -64,7 +64,7 @@
       "statusText": "状态中文（可选；也可由前端映射）"
     },
     "footer": {
-      "channelCount": "渠道数量",
+      "channelCount": "广告平台数量",
       "totalSpend": "总花费（数值，建议最小单位：美元）",
       "avgRoi": "平均 ROI（数值）",
       "generatedAt": "数据生成时间（ISO 字符串，可选）"
@@ -72,7 +72,7 @@
   },
   "sampleResponse": {
     "groupBy": "channel",
-    "viewDesc": "最近30天，按渠道汇总",
+    "viewDesc": "最近30天，按广告平台汇总",
     "filtersMeta": {
       "apps": [
         { "label": "全部Apps", "value": "all" },
@@ -85,7 +85,7 @@
         { "label": "Android", "value": "android" }
       ],
       "channels": [
-        { "label": "全部渠道", "value": "all" },
+        { "label": "全部广告平台", "value": "all" },
         { "label": "Google Ads", "value": "google" },
         { "label": "Facebook", "value": "facebook" },
         { "label": "TikTok", "value": "tiktok" },
@@ -342,7 +342,7 @@
       "groupBy": "聚合维度：channel/platform/app（可选，默认 channel）",
       "appId": "App 筛选（可选，空=全部）",
       "platform": "平台筛选（可选：ios/android/all）",
-      "channelKey": "渠道筛选（可选，空=全部）"
+      "channelKey": "广告平台筛选（可选，空=全部）"
     },
     "response": "直接返回 sampleResponse 结构（root 同名字段）",
     "enumSuggestion": {

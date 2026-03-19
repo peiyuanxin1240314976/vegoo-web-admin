@@ -232,7 +232,7 @@
       "title": "投放管理",
       "console": "工作台",
       "bigScreen": "投放分析",
-      "financeScreen": "渠道分析",
+      "financeScreen": "广告平台分析",
       "deepAnalysis": "深度分析"
     },
     "monetization": {
@@ -242,6 +242,11 @@
       "deepAnalysis": "深度分析",
       "attributionAnalysis": "归因分析",
       "ltvPrediction": "LTV预测与用户分层"
+    },
+    "businessInsight": {
+      "title": "商业洞察",
+      "revenueOverview": "收入概览",
+      "profitAnalysis": "利润分析"
     },
     "result": {
       "title": "结果页面",

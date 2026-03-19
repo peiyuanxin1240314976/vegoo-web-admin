@@ -207,7 +207,7 @@
   const STORAGE_KEY_COLUMNS = 'ad-performance:table:owner:visible-columns'
 
   const ALL_COLUMNS: ColumnDef[] = [
-    { key: 'ownerName', label: '投放师', minWidth: 220, required: true },
+    { key: 'ownerName', label: '优化师', minWidth: 220, required: true },
     { key: 'level', label: '职级', width: 120, align: 'center' },
     { key: 'appCount', label: '负责应用数', width: 120, align: 'center' },
     { key: 'spend', label: '广告支出', width: 110, align: 'right', required: true },
@@ -353,9 +353,9 @@
 
   function levelLabel(level: OwnerLevel) {
     const map: Record<OwnerLevel, string> = {
-      junior: '初级投放师',
-      mid: '中级投放师',
-      senior: '高级投放师'
+      junior: '初级优化师',
+      mid: '中级优化师',
+      senior: '高级优化师'
     }
     return map[level] ?? level
   }

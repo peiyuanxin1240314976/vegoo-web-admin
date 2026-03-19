@@ -70,7 +70,7 @@ const COUNTRY_INFO_REMAIN_URL = '/api/v1/datacenter/analysis/countryInfo/remain'
 /** 国家详情用户分层接口 */
 const COUNTRY_INFO_USER_PAY_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo/userPayLaunch'
 
-/** 国家详情渠道投放效果对比接口 */
+/** 国家详情广告平台投放效果对比接口 */
 const COUNTRY_INFO_CHANNEL_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo/channelLaunch'
 
 /** 国家详情 LTV 预测接口 */
@@ -99,7 +99,7 @@ const COCKPIT_CONSUMPTION_RHYTHM_URL =
 /** Top3 数据接口（收入应用 / 差评产品 / 用户增长） */
 const COCKPIT_TOP3_URL = '/api/v1/datacenter/analysis/cockpit/top3'
 
-/** 渠道 ROI&安装量接口（消耗/安装量/CPI 取 list[0]，近 7 日折线取 list 的 7 个对象） */
+/** 广告平台 ROI&安装量接口（消耗/安装量/CPI 取 list[0]，近 7 日折线取 list 的 7 个对象） */
 const COCKPIT_CHANNEL_ROI_URL = '/api/v1/datacenter/analysis/cockpit/installAndRoiOfChannel'
 
 /** 业务分布地图接口 */
@@ -302,6 +302,10 @@ function pickFirstNumber(obj: unknown, keys: string[]): number {
   for (const k of keys) {
     const v = record[k]
     if (typeof v === 'number' && Number.isFinite(v)) return v
+    if (typeof v === 'string') {
+      const n = Number(v)
+      if (Number.isFinite(n)) return n
+    }
   }
   return 0
 }
@@ -356,27 +360,9 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'int',
       changeKey: 'activeSubscriptionChange',
       listKey: 'activeSubscriptionList',
-      detail: (n) => {
-        const inc = pickFirstNumber(n, [
-          'activeSubscriptionNew',
-          'activeSubscriptionIncrease',
-          'activeSubscriptionAdd',
-          'subscriptionNew',
-          'subscriptionIncrease',
-          'subscriptionAdd',
-          'newSubscription',
-          'subscriptionIn'
-        ])
-        const dec = pickFirstNumber(n, [
-          'activeSubscriptionLost',
-          'activeSubscriptionDecrease',
-          'activeSubscriptionChurn',
-          'subscriptionLost',
-          'subscriptionDecrease',
-          'subscriptionChurn',
-          'lostSubscription',
-          'subscriptionOut'
-        ])
+      detail: () => {
+        const inc = pickFirstNumber(data, ['activeSubscriptionNew'])
+        const dec = pickFirstNumber(data, ['activeSubscriptionLost'])
         return `新增 +${formatInt(inc)}  流失 -${formatInt(dec)}`
       }
     },
@@ -583,26 +569,8 @@ export function mapOverallToKpiCards(
       valueKey: 'activeSubscription',
       format: 'int',
       detail: (n) => {
-        const inc = pickFirstNumber(n, [
-          'activeSubscriptionNew',
-          'activeSubscriptionIncrease',
-          'activeSubscriptionAdd',
-          'subscriptionNew',
-          'subscriptionIncrease',
-          'subscriptionAdd',
-          'newSubscription',
-          'subscriptionIn'
-        ])
-        const dec = pickFirstNumber(n, [
-          'activeSubscriptionLost',
-          'activeSubscriptionDecrease',
-          'activeSubscriptionChurn',
-          'subscriptionLost',
-          'subscriptionDecrease',
-          'subscriptionChurn',
-          'lostSubscription',
-          'subscriptionOut'
-        ])
+        const inc = pickFirstNumber(n, ['activeSubscriptionNew'])
+        const dec = pickFirstNumber(n, ['activeSubscriptionLost'])
         return `新增 +${formatInt(inc)}  流失 -${formatInt(dec)}`
       }
     },
@@ -779,7 +747,7 @@ export async function fetchCountryInfoAppLaunch(
 }
 
 /**
- * 获取国家详情渠道投放效果对比
+ * 获取国家详情广告平台投放效果对比
  * POST /api/v1/datacenter/analysis/countryInfo/channelLaunch，请求体：{}
  * 返回 data 数组，项为 { now, last, cplChange [, channel] }
  */
@@ -792,7 +760,7 @@ export async function fetchCountryInfoChannelLaunch(
   })
 }
 
-/** 渠道投放表格行（与 map-detail-spend-panel ChannelRow 一致） */
+/** 广告平台投放表格行（与 map-detail-spend-panel ChannelRow 一致） */
 export interface ChannelLaunchRow {
   channel: string
   spend: number
@@ -816,7 +784,7 @@ function getCplChangeTrend(cplChange: number | null): {
   return { trend: '→', trendClass: 'trend-right' }
 }
 
-/** 将 channelLaunch 接口 data 转为渠道投放效果对比表格行（仅展示 now） */
+/** 将 channelLaunch 接口 data 转为广告平台投放效果对比表格行（仅展示 now） */
 export function mapChannelLaunchToChannelRows(
   list: CountryInfoChannelLaunchItem[]
 ): ChannelLaunchRow[] {
@@ -829,7 +797,7 @@ export function mapChannelLaunchToChannelRows(
     const roas = now.roas != null ? Number(now.roas) : 0
     const { trend, trendClass } = getCplChangeTrend(item.cplChange)
     return {
-      channel: item.channel ?? `渠道${index + 1}`,
+      channel: item.channel ?? `广告平台${index + 1}`,
       spend: cost,
       installs: install,
       cpi: cpl,
@@ -1071,8 +1039,8 @@ export async function fetchCockpitTop3(params?: { date?: string }): Promise<Cock
 }
 
 /**
- * 将渠道 ROI&安装量接口数据转为表格/折线用结构
- * - 渠道名称：使用 channel 字段
+ * 将广告平台 ROI&安装量接口数据转为表格/折线用结构
+ * - 广告平台名称：使用 channel 字段
  * - 消耗、安装量、CPI：使用 list 数组中索引为 0 的对象（list[0]）的 cost、install、cpl（接口可能返回 null，已做兼容）
  * - 近七日折线图：使用 list 中每日的 install（安装量）按顺序组成 trend 数组
  */
@@ -1096,7 +1064,7 @@ export function mapChannelRoiInstallToItems(
 }
 
 /**
- * 获取渠道 ROI&安装量（经营驾驶舱大屏 渠道ROI&安装量）
+ * 获取广告平台 ROI&安装量（经营驾驶舱大屏 广告平台ROI&安装量）
  * 请求体：{ date: 'YYYY-MM-DD' }
  */
 export async function fetchChannelRoiInstall(params?: {

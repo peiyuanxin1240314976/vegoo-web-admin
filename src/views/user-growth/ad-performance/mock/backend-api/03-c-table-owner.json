@@ -41,7 +41,7 @@
       "rows": {
         "type": "AdPerformanceOwnerRow[]",
         "required": true,
-        "description": "投放师维度明细。支持树表 children（投放师下的 campaign）。"
+        "description": "优化师维度明细。支持树表 children（优化师下的 campaign）。"
       },
       "summary": {
         "type": "OwnerTeamSummary",

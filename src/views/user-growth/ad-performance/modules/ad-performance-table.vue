@@ -209,7 +209,7 @@
           <template v-else-if="drawerTab === 'owner'">
             <div class="ad-performance-detail__grid">
               <div class="ad-performance-detail__item">
-                <span class="ad-performance-detail__k">投放师</span>
+                <span class="ad-performance-detail__k">优化师</span>
                 <span class="ad-performance-detail__v">{{
                   drawerRow?.ownerName ?? drawerRow?.campaignName
                 }}</span>
@@ -561,7 +561,7 @@
 
   const totalText = computed(() => {
     if (activeTab.value === 'country') return `共 ${props.countryRows.length} 个国家`
-    if (activeTab.value === 'owner') return `共 ${props.ownerRows.length} 位投放师`
+    if (activeTab.value === 'owner') return `共 ${props.ownerRows.length} 位优化师`
     if (activeTab.value === 'account') return `共 ${props.accountRows.length} 个账户`
     return `共 ${props.pagination.total} 条`
   })

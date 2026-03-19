@@ -4,7 +4,7 @@
       <span>广告平台表现</span>
     </template>
     <ElTable :data="tableData" stripe size="default" class="monetization-table" style="width: 100%">
-      <ElTableColumn prop="channel" label="渠道/平台" min-width="120">
+      <ElTableColumn prop="channel" label="广告平台/平台" min-width="120">
         <template #default="{ row }">
           <span>{{ row.channel }}</span>
           <span v-if="row.platform" class="platform-sub">({{ row.platform }})</span>

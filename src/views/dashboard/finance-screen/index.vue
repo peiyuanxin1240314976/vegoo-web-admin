@@ -17,14 +17,14 @@
           <span class="filter-divider">|</span>
           <span class="filter-item">IOS & Android</span>
           <span class="filter-divider">|</span>
-          <span class="filter-item">全部渠道</span>
+          <span class="filter-item">全部广告平台</span>
         </div>
         <div class="header-right">
           <button type="button" class="btn-export">导出报表</button>
         </div>
       </header>
 
-      <!-- 第一排：渠道 KPI 卡片 -->
+      <!-- 第一排：广告平台 KPI 卡片 -->
       <section class="row row-1">
         <div v-for="card in channelKpiCards" :key="card.id" class="kpi-card">
           <div class="kpi-card-head">
@@ -48,10 +48,10 @@
         </div>
       </section>
 
-      <!-- 第二排：ROI 趋势 | 用户质量热力图 | 渠道质量雷达 -->
+      <!-- 第二排：ROI 趋势 | 用户质量热力图 | 广告平台质量雷达 -->
       <section class="row row-2">
         <div class="panel panel-trend">
-          <div class="panel-title">渠道ROI趋势分析 (最近30天)</div>
+          <div class="panel-title">广告平台ROI趋势分析 (最近30天)</div>
           <div ref="roiTrendRef" class="chart-dom"></div>
         </div>
         <div class="panel panel-heatmap">
@@ -60,7 +60,7 @@
             <table class="heatmap-table">
               <thead>
                 <tr>
-                  <th>渠道</th>
+                  <th>广告平台</th>
                   <th>D1留存</th>
                   <th>D7留存</th>
                   <th>D30留存</th>
@@ -82,20 +82,20 @@
           </div>
         </div>
         <div class="panel panel-radar">
-          <div class="panel-title">渠道质量得分</div>
+          <div class="panel-title">广告平台质量得分</div>
           <div ref="radarRef" class="chart-dom"></div>
         </div>
       </section>
 
-      <!-- 第三排：渠道指标比较详情表格 -->
+      <!-- 第三排：广告平台指标比较详情表格 -->
       <section class="row row-3">
         <div class="panel panel-table">
-          <div class="panel-title">渠道指标比较详情</div>
+          <div class="panel-title">广告平台指标比较详情</div>
           <div class="table-wrap">
             <table class="detail-table">
               <thead>
                 <tr>
-                  <th>渠道名称</th>
+                  <th>广告平台名称</th>
                   <th>花费</th>
                   <th>收入</th>
                   <th>ROI</th>

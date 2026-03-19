@@ -222,7 +222,7 @@
                         <span class="text-g-600">{{ row.pushTime }}</span>
                       </template>
                     </ElTableColumn>
-                    <ElTableColumn label="推送渠道" min-width="100" prop="channel">
+                    <ElTableColumn label="推送广告平台" min-width="100" prop="channel">
                       <template #default="{ row }">
                         <span class="text-g-600">{{ row.channel }}</span>
                       </template>

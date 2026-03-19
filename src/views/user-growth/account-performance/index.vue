@@ -3,7 +3,7 @@
     <!-- 顶部：筛选 + 日期 + 导出 -->
     <div class="ap-header">
       <div class="ap-filters">
-        <ElSelect v-model="source" placeholder="渠道" class="ap-filter-select">
+        <ElSelect v-model="source" placeholder="广告平台" class="ap-filter-select">
           <ElOption label="全部" value="" />
           <ElOption label="TikTok" value="tiktok" />
           <ElOption label="Facebook" value="facebook" />
@@ -188,9 +188,9 @@
       <!-- 右侧：图表与预警（宽度缩小约 1/3 与原型一致） -->
       <ElCol :xs="24" :md="8" :lg="7" :xl="7" class="ap-charts-col">
         <div class="ap-charts">
-          <!-- 渠道消耗分布 -->
+          <!-- 广告平台消耗分布 -->
           <ElCard class="ap-chart-card" shadow="never">
-            <template #header>渠道消耗分布</template>
+            <template #header>广告平台消耗分布</template>
             <div ref="channelChartRef" class="ap-chart-wrap ap-chart-donut"></div>
             <div class="ap-donut-center">{{ donutCenterText }}</div>
           </ElCard>
@@ -439,7 +439,7 @@
     console.log('导出', dateRange.value)
   }
 
-  // --- 渠道消耗环形图 ---
+  // --- 广告平台消耗环形图 ---
   const channelChart = useChart()
   const channelChartRef = channelChart.chartRef
   function renderChannelChart() {

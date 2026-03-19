@@ -1,0 +1,35 @@
+{
+  "_comment": "商业洞察-利润分析（国家）：接口索引说明。本页面按模块拆分为多个接口（KPI、应用利润表、国家利润分布、30天趋势、利润构成桑基）。后端对接时请按模块分别实现。",
+  "endpoints": [
+    {
+      "name": "顶部筛选项（可选：应用/国家候选项）",
+      "suggestedMethod": "POST",
+      "file": "profit-analysis-filters-mock-for-backend.json"
+    },
+    {
+      "name": "KPI 卡片",
+      "suggestedMethod": "POST",
+      "file": "profit-analysis-kpi-mock-for-backend.json"
+    },
+    {
+      "name": "应用利润详情（表格）",
+      "suggestedMethod": "POST",
+      "file": "profit-analysis-app-profit-table-mock-for-backend.json"
+    },
+    {
+      "name": "国家利润分布（地图 + Top10）",
+      "suggestedMethod": "POST",
+      "file": "profit-analysis-country-profit-mock-for-backend.json"
+    },
+    {
+      "name": "利润趋势（近30天）",
+      "suggestedMethod": "POST",
+      "file": "profit-analysis-trend30d-mock-for-backend.json"
+    },
+    {
+      "name": "利润构成分析（桑基）",
+      "suggestedMethod": "POST",
+      "file": "profit-analysis-sankey-mock-for-backend.json"
+    }
+  ]
+}

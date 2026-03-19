@@ -36,7 +36,7 @@ export interface AccountPerformanceKpi {
   alert?: boolean
 }
 
-/** 渠道消耗分布 */
+/** 广告平台消耗分布 */
 export interface ChannelSpendItem {
   name: string
   value: number

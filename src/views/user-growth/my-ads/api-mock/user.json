@@ -3,7 +3,7 @@
   "fieldDescription": {
     "user": {
       "name": "用户姓名/昵称",
-      "role": "角色名称（如：高级投放师）",
+      "role": "角色名称（如：高级优化师）",
       "avatarLetter": "头像展示用首字母（单字）",
       "apps": "用户关联的应用名称列表（如产品名 Weather5、BloodSugar2）"
     },
@@ -12,7 +12,7 @@
   "sampleResponse": {
     "user": {
       "name": "张三",
-      "role": "高级投放师",
+      "role": "高级优化师",
       "avatarLetter": "张",
       "apps": ["Weather5", "BloodSugar2", "PhoneTracker"]
     },

@@ -285,7 +285,7 @@
     } catch {
       // 接口失败时保留默认占位
     }
-    // 渠道投放效果对比：/api/v1/datacenter/analysis/countryInfo/channelLaunch
+    // 广告平台投放效果对比：/api/v1/datacenter/analysis/countryInfo/channelLaunch
     try {
       const channelList = await fetchCountryInfoChannelLaunch(params)
       if (Array.isArray(channelList)) {
@@ -392,7 +392,7 @@
     if (reloadTimer != null) window.clearTimeout(reloadTimer)
   })
 
-  /** 渠道投放效果对比来自 /api/v1/datacenter/analysis/countryInfo/channelLaunch（仅展示 now） */
+  /** 广告平台投放效果对比来自 /api/v1/datacenter/analysis/countryInfo/channelLaunch（仅展示 now） */
   const channelTableData = ref<ChannelRow[]>([])
   const channelLoading = ref(true)
 

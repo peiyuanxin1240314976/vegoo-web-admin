@@ -1,0 +1,41 @@
+{
+  "_comment": "利润分析（国家）-利润趋势（近30天）：用于左下折线图（总收入/广告支出/预估利润）。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": false, "description": "应用。all 表示全部。" },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家。all 表示全部。"
+      },
+      "t_date_end": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期（YYYY-MM-DD）。默认取最近30天截止日期。"
+      }
+    },
+    "response": {
+      "list": { "type": "Trend30dPoint[]", "required": true, "description": "近30天序列点。" }
+    },
+    "Trend30dPoint": {
+      "n_day": { "type": "integer", "required": true, "description": "第N天（1~30）。" },
+      "d_total_revenue": { "type": "decimal", "required": true, "description": "总收入。" },
+      "d_ad_spend": { "type": "decimal", "required": true, "description": "广告支出。" },
+      "d_est_profit": { "type": "decimal", "required": true, "description": "预估利润（可为负）。" }
+    }
+  },
+  "sampleRequest": { "s_app_id": "all", "s_country_code": "all", "t_date_end": "2026-03-05" },
+  "sampleResponse": {
+    "list": [
+      { "n_day": 1, "d_total_revenue": 2400, "d_ad_spend": 1560, "d_est_profit": 600 },
+      { "n_day": 2, "d_total_revenue": 2620, "d_ad_spend": 1630, "d_est_profit": 720 }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/profit-analysis/trend30d",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "s_app_id, s_country_code, t_date_end",
+    "responseBody": "list"
+  }
+}

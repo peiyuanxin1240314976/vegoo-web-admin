@@ -1,6 +1,6 @@
 <template>
   <div class="conversion-time-by-channel art-card">
-    <h3 class="chart-title">分渠道转化时间</h3>
+    <h3 class="chart-title">分广告平台转化时间</h3>
     <div ref="chartRef" class="chart-container" />
   </div>
 </template>
