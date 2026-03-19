@@ -328,13 +328,7 @@
                 </svg>
                 下载 PNG
               </button>
-              <button
-                class="btn-copy"
-                @click="
-                  $emit('copy')
-                  close()
-                "
-              >
+              <button class="btn-copy" @click="($emit('copy'), close())">
                 <svg
                   width="13"
                   height="13"

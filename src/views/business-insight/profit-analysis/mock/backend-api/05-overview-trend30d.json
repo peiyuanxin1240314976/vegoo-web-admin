@@ -1,0 +1,63 @@
+{
+  "_comment": "利润分析 - 利润趋势近 30 天（总收入、广告支出、预估利润）。对应 types.ts: ProfitTrend30d。",
+  "fieldDescription": {
+    "request": {
+      "dateRange": {
+        "type": "string",
+        "required": true,
+        "description": "日期范围，或传 endDate 与 days=30。"
+      },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码，全部传 all。"
+      },
+      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+    },
+    "response": {
+      "days": {
+        "type": "string[]",
+        "required": true,
+        "description": "X 轴标签，如 01天、02天 … 30天，或日期字符串。"
+      },
+      "revenue": {
+        "type": "number[]",
+        "required": true,
+        "description": "总收入序列，与 days 一一对应，单位美元。"
+      },
+      "adSpend": {
+        "type": "number[]",
+        "required": true,
+        "description": "广告支出序列，单位美元。"
+      },
+      "profit": {
+        "type": "number[]",
+        "required": true,
+        "description": "预估利润序列，单位美元，可为 revenue - adSpend。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "dateRange": "2026-03-01,2026-03-05",
+    "s_app_id": "all",
+    "s_country_code": "all",
+    "platform": "all"
+  },
+  "sampleResponse": {
+    "days": ["01天", "02天", "03天", "04天", "05天"],
+    "revenue": [3842, 4120, 3980, 4210, 4050],
+    "adSpend": [2720, 2880, 2780, 2920, 2820],
+    "profit": [1122, 1240, 1200, 1290, 1230]
+  },
+  "api": {
+    "url": "POST /api/business-insight/profit-analysis/overview/trend30d",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "dateRange, s_app_id?, s_country_code?, platform",
+    "responseBody": "days[], revenue[], adSpend[], profit[]"
+  },
+  "apiSuggestion": {
+    "notes": ["数值可为日汇总；前端负责格式化与图表展示。"]
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "_comment": "利润分析 - 全局筛选下拉选项。对应 types：筛选区展示与下拉选项。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "appOptions": {
+        "type": "ProfitSelectOption[]",
+        "required": true,
+        "description": "应用下拉选项。"
+      },
+      "platformOptions": {
+        "type": "ProfitSelectOption[]",
+        "required": true,
+        "description": "终端平台下拉选项（Android/iOS/全部）。"
+      },
+      "countryOptions": {
+        "type": "ProfitSelectOption[]",
+        "required": true,
+        "description": "国家下拉选项。"
+      },
+      "datePresets": {
+        "type": "ProfitDatePreset[]",
+        "required": false,
+        "description": "日期范围快捷选项（如近7天、近30天、自定义）。"
+      }
+    },
+    "ProfitSelectOption": {
+      "label": { "type": "string", "required": true, "description": "展示文案。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "选项值，如 all、US、weather5。"
+      }
+    },
+    "ProfitDatePreset": {
+      "label": { "type": "string", "required": true, "description": "展示文案，如 近7天。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "如 7、30、90 或 dateRange 字符串。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "appOptions": [
+      { "label": "全部", "value": "all" },
+      { "label": "Weather5", "value": "weather5" },
+      { "label": "PhoneTracker", "value": "phonetracker" }
+    ],
+    "platformOptions": [
+      { "label": "全部", "value": "all" },
+      { "label": "Android", "value": "android" },
+      { "label": "iOS", "value": "ios" }
+    ],
+    "countryOptions": [
+      { "label": "全部", "value": "all" },
+      { "label": "美国", "value": "US" },
+      { "label": "韩国", "value": "KR" },
+      { "label": "德国", "value": "DE" }
+    ],
+    "datePresets": [
+      { "label": "近7天", "value": "7" },
+      { "label": "近30天", "value": "30" },
+      { "label": "近90天", "value": "90" }
+    ]
+  },
+  "api": {
+    "url": "GET /api/business-insight/profit-analysis/meta-filter-options",
+    "method": "GET",
+    "priority": "P0",
+    "requestBody": "无",
+    "responseBody": "appOptions[], platformOptions[], countryOptions[], datePresets[]?"
+  }
+}

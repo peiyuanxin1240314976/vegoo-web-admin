@@ -19,18 +19,24 @@ export class ComponentLoader {
 
   /**
    * 加载组件
+   * componentPath 与路由约定一致：如 '/business-insight/iaa-analysis' 对应 src/views/business-insight/iaa-analysis/index.vue
    */
   load(componentPath: string): () => Promise<any> {
     if (!componentPath) {
       return this.createEmptyComponent()
     }
 
-    // 构建可能的路径
-    const fullPath = `../../views${componentPath}.vue`
-    const fullPathWithIndex = `../../views${componentPath}/index.vue`
+    // 统一为正斜杠，避免 Windows 下 glob 键与拼接结果不一致
+    const normalized = componentPath.replace(/\\/g, '/')
+    const fullPath = `../../views${normalized}.vue`
+    const fullPathWithIndex = `../../views${normalized}/index.vue`
 
-    // 先尝试直接路径，再尝试添加/index的路径
-    const module = this.modules[fullPath] || this.modules[fullPathWithIndex]
+    // 先尝试直接路径，再尝试添加/index的路径；兼容 glob 可能返回的多种路径形式
+    const module =
+      this.modules[fullPath] ||
+      this.modules[fullPathWithIndex] ||
+      this.modules[fullPath.replace(/\//g, '\\')] ||
+      this.modules[fullPathWithIndex.replace(/\//g, '\\')]
 
     if (!module) {
       console.error(

@@ -1,0 +1,90 @@
+{
+  "_comment": "利润分析 - 国家利润分布：地图层数据 + 散点层 + Top10 表。对应 types: ProfitMapDataItem[], ProfitMapScatterItem[], ProfitCountryRow[]。",
+  "fieldDescription": {
+    "request": {
+      "dateRange": { "type": "string", "required": true, "description": "日期范围。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
+      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+    },
+    "response": {
+      "mapData": {
+        "type": "ProfitMapDataItem[]",
+        "required": true,
+        "description": "地图 choropleth 用，name 英文国家名，value 利润数值。"
+      },
+      "mapScatter": {
+        "type": "ProfitMapScatterItem[]",
+        "required": true,
+        "description": "地图散点层，name 展示文案，value 为 [lng, lat, value]。"
+      },
+      "countryRows": {
+        "type": "ProfitCountryRow[]",
+        "required": true,
+        "description": "国家利润详情 Top10 表。"
+      }
+    },
+    "ProfitMapDataItem": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "英文国家名，与 geo 地图 name 一致，如 United States。"
+      },
+      "value": { "type": "number", "required": true, "description": "利润数值，用于地图着色。" }
+    },
+    "ProfitMapScatterItem": {
+      "name": { "type": "string", "required": true, "description": "展示文案，如 美国 +$18,200。" },
+      "value": {
+        "type": "array",
+        "required": true,
+        "description": "[经度, 纬度, 数值]，如 [-95, 38, 18200]。"
+      }
+    },
+    "ProfitCountryRow": {
+      "flag": { "type": "string", "required": true, "description": "国旗 emoji 或图标码。" },
+      "name": { "type": "string", "required": true, "description": "国家中文名或本地化名。" },
+      "adRev": { "type": "string", "required": true, "description": "广告收入展示值。" },
+      "paidRev": { "type": "string", "required": true, "description": "付费收入展示值。" },
+      "adSpend": { "type": "string", "required": true, "description": "广告支出展示值。" },
+      "profit": { "type": "string", "required": true, "description": "利润展示值。" },
+      "profitColor": { "type": "string", "required": true, "description": "利润颜色 HEX。" },
+      "rate": { "type": "string", "required": true, "description": "利润率。" },
+      "rateColor": { "type": "string", "required": true, "description": "利润率颜色 HEX。" }
+    }
+  },
+  "sampleRequest": {
+    "dateRange": "2026-03-01,2026-03-05",
+    "s_app_id": "all",
+    "platform": "all"
+  },
+  "sampleResponse": {
+    "mapData": [
+      { "name": "United States", "value": 27700 },
+      { "name": "South Korea", "value": 5900 },
+      { "name": "Germany", "value": 3900 }
+    ],
+    "mapScatter": [
+      { "name": "美国 +$18,200", "value": [-95, 38, 18200] },
+      { "name": "韩国 +$4,800", "value": [127, 37, 4800] }
+    ],
+    "countryRows": [
+      {
+        "flag": "🇺🇸",
+        "name": "美国",
+        "adRev": "$52,000",
+        "paidRev": "$14,200",
+        "adSpend": "$38,500",
+        "profit": "+$27,700",
+        "profitColor": "#4ade80",
+        "rate": "53.3%",
+        "rateColor": "#4ade80"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/profit-analysis/overview/country-profit",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "dateRange, s_app_id?, platform",
+    "responseBody": "mapData[], mapScatter[], countryRows[]"
+  }
+}
