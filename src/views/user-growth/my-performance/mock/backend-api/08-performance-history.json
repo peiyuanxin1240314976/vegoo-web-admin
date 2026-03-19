@@ -1,0 +1,71 @@
+{
+  "_comment": "我的绩效 - 绩效历史（时间轴）。对应 types.ts: MyPerformanceHistoryItem。",
+  "fieldDescription": {
+    "request": {
+      "personId": { "type": "string", "required": true, "description": "人员 ID。" },
+      "periodType": {
+        "type": "string",
+        "required": true,
+        "enum": ["quarter", "month"],
+        "description": "统计口径类型：季度/月度（决定展示季度或月度历史）。"
+      },
+      "periodValue": {
+        "type": "string",
+        "required": true,
+        "description": "口径值，如 2026-Q1 或 2026-03。"
+      }
+    },
+    "response": {
+      "title": {
+        "type": "string",
+        "required": true,
+        "description": "面板标题，如 月度绩效历史 / 季度绩效历史。"
+      },
+      "list": {
+        "type": "MyPerformanceHistoryItem[]",
+        "required": true,
+        "description": "历史记录，按时间正序；用于时间轴展示。"
+      }
+    },
+    "MyPerformanceHistoryItem": {
+      "period": {
+        "type": "string",
+        "required": true,
+        "description": "周期标识：月度如 2026-03，季度如 2026-Q1。"
+      },
+      "score": {
+        "type": "number",
+        "required": true,
+        "description": "该周期绩效分数，范围 0-100。"
+      },
+      "levelText": {
+        "type": "string",
+        "required": true,
+        "description": "等级文案，如 优秀 / 良好 / 待提升。"
+      }
+    }
+  },
+  "sampleRequest": { "personId": "u_001", "periodType": "month", "periodValue": "2026-03" },
+  "sampleResponse": {
+    "title": "月度绩效历史",
+    "list": [
+      { "period": "2025-11", "score": 79, "levelText": "良好" },
+      { "period": "2025-12", "score": 84, "levelText": "优秀" },
+      { "period": "2026-01", "score": 81, "levelText": "优秀" },
+      { "period": "2026-02", "score": 86, "levelText": "优秀" },
+      { "period": "2026-03", "score": 88, "levelText": "优秀" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-performance/performance-history",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "personId, periodType, periodValue",
+    "responseBody": "title, list"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "前端按 periodType 请求后取对应 title/list；若后端按口径分接口或返回 { month: {...}, quarter: {...} }，需与前端 data.ts 约定一致。"
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "_comment": "我的绩效 - 统计口径（季度/月度）可选项。对应 types.ts: MyPerformancePeriodOption。",
+  "fieldDescription": {
+    "request": {
+      "personId": {
+        "type": "string",
+        "required": false,
+        "description": "人员 ID。可选：后端可基于人员权限过滤口径范围。"
+      }
+    },
+    "response": {
+      "periodOptions": {
+        "type": "{ quarter: MyPerformancePeriodOption[]; month: MyPerformancePeriodOption[] }",
+        "required": true,
+        "description": "按口径类型返回可选项。"
+      },
+      "selectedPeriod": {
+        "type": "{ periodType: 'quarter' | 'month'; periodValue: string }",
+        "required": true,
+        "description": "默认选中的口径类型与值。"
+      }
+    },
+    "MyPerformancePeriodOption": {
+      "label": { "type": "string", "required": true, "description": "展示文案。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "值：季度如 2026-Q1；月份如 2026-03。"
+      }
+    }
+  },
+  "sampleRequest": { "personId": "u_001" },
+  "sampleResponse": {
+    "periodOptions": {
+      "quarter": [
+        { "label": "当前季度 Q1 2026", "value": "2026-Q1" },
+        { "label": "上一季度 Q4 2025", "value": "2025-Q4" }
+      ],
+      "month": [
+        { "label": "当前月份 2026-03", "value": "2026-03" },
+        { "label": "上月 2026-02", "value": "2026-02" }
+      ]
+    },
+    "selectedPeriod": { "periodType": "month", "periodValue": "2026-03" }
+  },
+  "api": {
+    "url": "GET /api/user-growth/my-performance/meta-period-options",
+    "method": "GET",
+    "priority": "P0",
+    "requestBody": "personId?",
+    "responseBody": "periodOptions, selectedPeriod"
+  }
+}

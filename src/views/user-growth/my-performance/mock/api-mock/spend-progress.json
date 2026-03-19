@@ -1,0 +1,7 @@
+{
+  "_comment": "POST spend-progress",
+  "sampleResponse": {
+    "month": { "title": "月度花费达成", "data": { "spend": 12200, "target": 13000, "rate": 94 } },
+    "quarter": { "title": "季度花费达成", "data": { "spend": 32800, "target": 36000, "rate": 91 } }
+  }
+}

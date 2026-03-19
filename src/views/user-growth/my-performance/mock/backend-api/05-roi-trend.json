@@ -1,0 +1,47 @@
+{
+  "_comment": "我的绩效 - ROI 趋势（近 3 周）。对应 types.ts: MyPerformanceRoiTrendPoint。",
+  "fieldDescription": {
+    "request": {
+      "personId": { "type": "string", "required": true, "description": "人员 ID。" },
+      "periodType": {
+        "type": "string",
+        "required": true,
+        "enum": ["quarter", "month"],
+        "description": "统计口径类型。"
+      },
+      "periodValue": { "type": "string", "required": true, "description": "口径值。" }
+    },
+    "response": {
+      "title": { "type": "string", "required": true, "description": "面板标题。" },
+      "points": {
+        "type": "MyPerformanceRoiTrendPoint[]",
+        "required": true,
+        "description": "趋势点。"
+      }
+    },
+    "MyPerformanceRoiTrendPoint": {
+      "date": { "type": "string", "required": true, "description": "日期，建议 YYYY-MM-DD。" },
+      "roi": { "type": "number", "required": true, "description": "ROI，单位 %，范围 0-100。" }
+    }
+  },
+  "sampleRequest": { "personId": "u_001", "periodType": "month", "periodValue": "2026-03" },
+  "sampleResponse": {
+    "title": "月度 ROI 趋势（近 3 周）",
+    "points": [
+      { "date": "2026-03-03", "roi": 85 },
+      { "date": "2026-03-05", "roi": 87 },
+      { "date": "2026-03-10", "roi": 82 },
+      { "date": "2026-03-15", "roi": 88 },
+      { "date": "2026-03-20", "roi": 91 },
+      { "date": "2026-03-25", "roi": 83 },
+      { "date": "2026-03-31", "roi": 86 }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-performance/roi-trend",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "personId, periodType, periodValue",
+    "responseBody": "title, points"
+  }
+}

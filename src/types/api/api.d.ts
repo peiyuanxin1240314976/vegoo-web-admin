@@ -189,4 +189,35 @@ declare namespace Api {
       ios: number
     }
   }
+
+  /** 商业洞察 - IAA 分析 */
+  namespace BusinessInsight {
+    namespace IaaAnalysis {
+      /** 筛选下拉选项 */
+      interface FilterOptions {
+        appOptions: { label: string; value: string }[]
+        platformOptions: { label: string; value: string }[]
+        countryOptions: { label: string; value: string }[]
+      }
+      /** 概览 KPI 请求 */
+      interface OverviewKpiParams {
+        tab: string
+        s_app_id?: string
+        platform?: string
+        s_country_code?: string
+        t_date: string
+      }
+      /** 概览 KPI 响应 */
+      interface OverviewKpiResponse {
+        kpis: Array<{
+          id: string
+          title: string
+          primaryValue: string
+          subText?: string
+          trendUp?: boolean
+          accent?: string
+        }>
+      }
+    }
+  }
 }

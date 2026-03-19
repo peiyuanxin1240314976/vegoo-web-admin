@@ -1,0 +1,64 @@
+{
+  "_comment": "IAP Detail - 趋势分析 Tab 数据。对应 types.ts: IapDetailTrend。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "timeRange": { "type": "string", "required": true, "description": "时间范围。" },
+      "s_country_code": { "type": "string", "required": false, "description": "国家代码。" },
+      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+    },
+    "response": {
+      "ordersRevenue": {
+        "type": "IapTrendOrdersRevenue",
+        "required": true,
+        "description": "订单数 vs 收入日趋势。"
+      },
+      "arpuTrend": { "type": "IapTrendSingle", "required": true, "description": "ARPU 日趋势。" },
+      "conversionRetention": {
+        "type": "object",
+        "required": true,
+        "description": "转化率、续费率趋势。"
+      },
+      "churnTrend": { "type": "IapTrendSingle", "required": true, "description": "退款率趋势。" },
+      "churnThreshold": {
+        "type": "number",
+        "required": false,
+        "description": "退款率预警线，如 2。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "phonetracker",
+    "timeRange": "30",
+    "s_country_code": "all",
+    "platform": "all"
+  },
+  "sampleResponse": {
+    "ordersRevenue": {
+      "dates": ["03/01", "03/02", "03/03", "03/04", "03/05"],
+      "orders": [280, 310, 290, 320, 300],
+      "revenue": [12500, 14200, 13800, 15100, 14500]
+    },
+    "arpuTrend": {
+      "dates": ["03/01", "03/02", "03/03", "03/04", "03/05"],
+      "values": [11.2, 11.5, 11.8, 11.6, 12.0]
+    },
+    "conversionRetention": {
+      "dates": ["03/01", "03/02", "03/03", "03/04", "03/05"],
+      "conversion": [4.0, 4.2, 4.1, 4.3, 4.2],
+      "retention": [47, 48, 49, 48.5, 50]
+    },
+    "churnTrend": {
+      "dates": ["03/01", "03/02", "03/03", "03/04", "03/05"],
+      "values": [1.8, 1.9, 1.7, 2.0, 1.85]
+    },
+    "churnThreshold": 2
+  },
+  "api": {
+    "url": "POST /api/business-insight/iap-analysis/detail/trend",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_app_id, timeRange, s_country_code?, platform?",
+    "responseBody": "IapDetailTrend"
+  }
+}

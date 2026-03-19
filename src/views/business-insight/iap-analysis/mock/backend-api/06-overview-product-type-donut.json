@@ -1,0 +1,43 @@
+{
+  "_comment": "IAP Dashboard - 产品类型分布甜甜圈。对应 types.ts: IapProductTypeDonutItem[]。",
+  "fieldDescription": {
+    "request": {
+      "timeRange": { "type": "string", "required": true, "description": "时间范围。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID。" },
+      "s_country_code": { "type": "string", "required": false, "description": "国家代码。" },
+      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+    },
+    "response": {
+      "list": {
+        "type": "IapProductTypeDonutItem[]",
+        "required": true,
+        "description": "内购/订阅占比。"
+      }
+    },
+    "IapProductTypeDonutItem": {
+      "name": { "type": "string", "required": true, "description": "类型名称。" },
+      "value": { "type": "number", "required": true, "description": "占比数值 0-100。" },
+      "percent": { "type": "number", "required": true, "description": "占比。" },
+      "amount": { "type": "string", "required": false, "description": "金额展示。" }
+    }
+  },
+  "sampleRequest": {
+    "timeRange": "30",
+    "s_app_id": "all",
+    "s_country_code": "all",
+    "platform": "all"
+  },
+  "sampleResponse": {
+    "list": [
+      { "name": "内购", "value": 42, "percent": 42, "amount": "$1.21M" },
+      { "name": "订阅", "value": 58, "percent": 58, "amount": "$1.67M" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/iap-analysis/overview/product-type-donut",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "timeRange, s_app_id?, s_country_code?, platform",
+    "responseBody": "list (IapProductTypeDonutItem[])"
+  }
+}

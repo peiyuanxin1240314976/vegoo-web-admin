@@ -1,0 +1,25 @@
+---
+description: 允许保留 @ts-ignore；不要为了 ban-ts-comment 去改代码
+alwaysApply: true
+---
+
+# Lint 处理约定：@ts-ignore 例外
+
+## 适用场景
+
+当出现 ESLint 规则 `@typescript-eslint/ban-ts-comment` 报错，提示将 `@ts-ignore` 替换为 `@ts-expect-error`（或删除注释）时。
+
+## 规则
+
+- **不要**为了通过 `@typescript-eslint/ban-ts-comment` 去修改现有代码（包括但不限于把 `@ts-ignore` 改成 `@ts-expect-error`、删除注释、重排 import）。
+- **允许保留**项目里已有的 `@ts-ignore`（尤其是为兼容 Vetur / `script setup` 的历史原因）。
+- 若你新增代码确实需要抑制类型错误，优先通过**修复类型/导入/声明**来解决；只有在确有必要且无法快速修复时才新增 `@ts-ignore`。
+
+## 示例
+
+```ts
+// ✅ 允许（不为了 lint 强行改动）
+// @ts-ignore Vetur 对 <script setup> 的误报
+import Foo from './foo.vue'
+```
+

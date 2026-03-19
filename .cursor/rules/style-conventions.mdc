@@ -1,0 +1,79 @@
+---
+description: 样式规范（基于驾驶舱 cockpit 的布局、类名、SCSS、深色模式）
+globs: "**/*.vue,**/*.scss,**/*.css"
+alwaysApply: false
+---
+
+# 样式规范（参考驾驶舱 cockpit）
+
+## 页面布局结构
+
+- **页面根节点**: 使用模块前缀 + `-page`，如 `cockpit-page`、`user-page`；需要占满内容区高度时加 `art-full-height`。
+- **顶部区域**: 如 `cockpit-header`，内部用 `display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 16px`。
+- **内容区**: 用 `ElRow` + `ElCol` 做栅格，统一 `:gutter="16"`，给 Row 加语义类如 `cockpit-body cockpit-row-2`；列内再包一层时用子类如 `cockpit-col3-row1` 控制 margin。
+- **区块间距**: 区块之间 `margin-bottom: 16px`；面板内部用 `padding: 12px` 或 `14px 16px`。
+
+## 类名命名（BEM 风格 + 模块前缀）
+
+- **模块前缀**: 以业务模块为前缀，避免裸通用名。驾驶舱用 `cockpit-`，如 `cockpit-panel`、`cockpit-kpi-card`、`cockpit-date-range`、`cockpit-top-bar`、`cockpit-alerts`、`cockpit-map-panel`。
+- **块—修饰符**: 使用 `block--modifier`，如 `cockpit-kpi-card--theme`、`cockpit-kpi-card--income`、`cockpit-map-panel--dark`、`alert-block--metrics`。
+- **状态类**: 用 `is-*` 或语义名，如 `is-hovered`、`active`、`pace-tag--danger`；可与动态 `:class` 绑定。
+- **子元素**: 块内子元素用简短语义类名，如 `kpi-label`、`kpi-value`、`pace-header`、`pace-body`、`alert-row`、`map-legend`。
+
+## 面板与卡片
+
+- **通用面板**: 使用 `ElCard` 时加模块类，如 `class="cockpit-panel"`，并设 `shadow="never"`。需要等高时设 `height: 100%`。
+- **面板基础样式**: `background: var(--el-bg-color)`、`border-radius: 10px` 或 `12px`；边框可用 `border: 1px solid var(--el-border-color-lighter)`。
+- **覆盖 Element 内部**: 用 `:deep(.el-card__header)`、`:deep(.el-card__body)` 调整 padding/布局，保持 scoped。
+
+## 颜色与变量
+
+- **优先使用 Element 变量**: `var(--el-bg-color)`、`var(--el-text-color-primary)`、`var(--el-text-color-regular)`、`var(--el-text-color-secondary)`、`var(--el-border-color-lighter)`、`var(--el-color-primary)`、`var(--el-color-danger)`、`var(--el-color-success)`、`var(--el-fill-color-light)`、`var(--el-fill-color-dark)` 等。
+- **组件内局部变量**: 可在块内定义 CSS 变量，如 `--kpi-card-accent`、`--kpi-glass-border`，便于主题与深色统一。
+
+## 深色模式
+
+- **选择器**: 使用 `html.dark .block-name { ... }` 为同一类名写深色样式，与亮色并列写在同一 scoped 块内。
+- **背景**: 驾驶舱深色常用 `background: linear-gradient(320deg, #000e29, #000)`；可配合调整边框、文字颜色（如 `#cbd5e1`、`#f1f5f9`、`#94a3b8`）。
+- **保持变量**: 深色下仍尽量用 `var(--el-*)` 以跟随主题切换；仅当需要固定深色渐变或品牌色时用十六进制。
+
+## SCSS 写法
+
+- **单文件组件**: 使用 `<style scoped lang="scss">`；需要覆盖子组件或 Element 内部时用 `:deep()`。
+- **嵌套**: 块内子元素可嵌套书写，修饰符用 `&.is-hovered`、`&--modifier`；注意 stylelint 的 recess-order（属性顺序）。
+- **非 scoped 样式**: 仅当样式作用于挂载到 body 的节点（如 ECharts tooltip、Popper）时，单独写一个 `<style lang="scss">`（无 scoped），类名保持模块前缀如 `cockpit-map-tt-title`，避免污染全局。
+- **全局 mixin/变量**: 已在 Vite 中注入 `@styles/core/el-light.scss`、`@styles/core/mixin.scss`，可直接使用 `@include ellipsis(2)`、`@include userSelect(none)` 等。
+
+## 栅格与响应式
+
+- **ElCol**: 驾驶舱使用 `:xs="24" :md="6"` 或 `:md="12"` 等，小屏单列、中屏多列；保持 `gutter="16"` 一致。
+- **Tailwind**: 可与 SCSS 混用，如 `flex`、`min-w-0`、`flex-col`、`items-center`、`justify-center`；布局类优先用 Tailwind 时保持同一页面风格统一。
+
+## 圆角与间距
+
+- **圆角**: 面板/卡片 `10px` 或 `12px`；按钮组、输入组等小控件 `6px`、`8px`。
+- **间距**: 区块间 16px；卡片内 12px～16px；表单项、列表项 8px～12px。
+
+## 示例（驾驶舱面板 + 深色）
+
+```scss
+.cockpit-panel {
+  height: 100%;
+  background: var(--el-bg-color);
+  border-radius: 10px;
+
+  :deep(.el-card__header) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  :deep(.el-card__body) {
+    padding: 12px;
+  }
+}
+
+html.dark .cockpit-panel {
+  background: linear-gradient(320deg, #000e29, #000);
+}
+```

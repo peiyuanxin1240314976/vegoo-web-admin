@@ -1,0 +1,32 @@
+{
+  "_comment": "IAP Dashboard - 平台对比柱状图。对应 types.ts: IapPlatformCompare。",
+  "fieldDescription": {
+    "request": {
+      "timeRange": { "type": "string", "required": true, "description": "时间范围。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID。" },
+      "s_country_code": { "type": "string", "required": false, "description": "国家代码。" }
+    },
+    "response": {
+      "dimensions": {
+        "type": "string[]",
+        "required": true,
+        "description": "维度名，如 订单数、收入、ARPU。"
+      },
+      "ios": { "type": "number[]", "required": true, "description": "iOS 各维度值。" },
+      "android": { "type": "number[]", "required": true, "description": "Android 各维度值。" }
+    }
+  },
+  "sampleRequest": { "timeRange": "30", "s_app_id": "all", "s_country_code": "all" },
+  "sampleResponse": {
+    "dimensions": ["订单数", "收入", "ARPU"],
+    "ios": [28, 32, 38],
+    "android": [22, 26, 30]
+  },
+  "api": {
+    "url": "POST /api/business-insight/iap-analysis/overview/platform-compare",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "timeRange, s_app_id?, s_country_code?",
+    "responseBody": "dimensions, ios[], android[]"
+  }
+}

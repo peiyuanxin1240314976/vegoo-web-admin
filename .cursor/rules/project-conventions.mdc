@@ -1,0 +1,154 @@
+---
+description: vegoo-web-admin 项目规范（技术栈、目录、命名、风格）
+alwaysApply: true
+---
+
+# vegoo-web-admin 项目规范
+
+## 技术栈
+
+- **框架**: Vue 3 (Composition API) + TypeScript
+- **构建**: Vite 7，Node >= 20.19.0，pnpm >= 8.8.0
+- **UI**: Element Plus（按需）、Tailwind CSS 4、SCSS（@styles 变量与 mixin 已全局注入）
+- **状态/路由**: Pinia、Vue Router 4
+- **请求**: 封装在 `@/utils/http`，基于 axios
+- **国际化**: vue-i18n，文案 key 如 `menus.system.user`
+- **自动导入**: unplugin-auto-import（vue/router/pinia/@vueuse/core）、unplugin-vue-components（Element Plus）
+
+## 路径别名（tsconfig + vite 一致）
+
+| 别名 | 指向 |
+|------|------|
+| `@/*` | `src/*` |
+| `@views/*` | `src/views/*` |
+| `@imgs/*` | `src/assets/images/*` |
+| `@icons/*` | `src/assets/icons/*` |
+| `@utils/*` | `src/utils/*` |
+| `@stores/*` | `src/store/*` |
+| `@plugins/*` | `src/plugins/*` |
+| `@styles/*` | `src/assets/styles/*` |
+
+导入时优先使用别名，例如：`import { useUserStore } from '@/store/modules/user'`、`@/api/auth`。
+
+## 代码风格（ESLint + Prettier）
+
+- **引号**: 单引号 `'`
+- **分号**: 不使用分号
+- **缩进**: 2 空格，不用 Tab
+- **行宽**: 100 字符（Prettier printWidth）
+- **尾逗号**: 无（trailingComma: none）
+- 使用 `const`/`let`，禁止 `var`
+- 连续空行最多 1 行
+
+## 术语与文案统一（非常重要）
+
+新开发/新页面/新模块涉及字段展示、筛选项、表头、占位符、按钮、i18n 文案时，必须统一使用以下术语（避免同一概念多种叫法，影响联调与认知一致性）：
+
+- **广告平台**：全平台范围内，UI 文案中原“渠道”一律改为“广告平台”
+- **优化师**：UI 文案中原“投放师”一律改为“优化师”
+
+适用范围包括但不限于：`menus.*`、页面标题、表格列 `label`、筛选表单 `label/placeholder`、统计卡片字段名、导出字段名等。
+
+## 字段命名统一（重要）
+
+后续开发中（新开发或重构）涉及 **接口入参/出参类型**、**请求参数**、**表格列 prop**、**筛选表单 v-model**、**Mock 契约（mock/backend-api）** 时，字段名必须统一：
+
+- **终端平台**：使用 `platform` 字段名
+- **广告平台**：使用 `source` 字段名
+
+### 常见 Lint 与格式注意点（避免重复报错）
+
+- **模板禁止 TypeScript 语法**：`<template>` 里不能写 `as` 类型断言（如 `:filter="(x as Type)"`），会触发 vue/no-parsing-error。需在 script 里用 `computed(() => x as Type)` 得到值后再绑定到模板。
+- **行宽 100 字符**：单行超长会被 Prettier/ESLint 要求换行。需拆行的典型场景：
+  - 模板中的三元表达式（如 `:title="a ? b : c"` 过长时改为多行，运算符换行）。
+  - 组件多属性（如 `ElSelect` 的 `v-model`、`:placeholder`、`style` 等拆成多行）。
+  - `ElFormItem` 的 `:label`、`prop` 等过长时拆行。
+  - 表单校验 `rules` 中对象字面量（如 `{ required: true, message: '...', trigger: '...' }`）过长时，将对象或数组项拆成多行。
+  - 常量对象（如 `STATUS_CONFIG`、列配置）中单行过长的项要换行。
+- **script 中使用的 Element 组件须显式导入**：在 `formatter`、`h()` 渲染或普通 JS 里用到的（如 `ElTag`、`ElMessageBox`、`ElMessage`）需 `import { ElTag, ElMessageBox, ElMessage } from 'element-plus'`，否则 ESLint 报 “is not defined”（模板里用的已自动导入，可不写）。
+- **defineProps 未使用勿赋值**：若只在模板里用 props、script 里不引用，不要写 `const props = defineProps<...>()`，否则报 “assigned but never used”。只写 `defineProps<...>()` 即可。
+- **Promise 链式调用格式**：`.then(...).catch(...)` 需按 Prettier 换行，例如写成 `.then(...)` 换行后 `.catch(...)`，并保持缩进一致。
+- **.vue 默认导出**：已在 `src/env.d.ts` 中声明 `declare module '*.vue'`，所有 `.vue` 文件均视为有 default export；无需在各组件内再写单独的 `<script lang="ts"> export default { name } </script>`。
+- **多行 import / type**：同一 import 或 `import type { A, B, C }` 项过多、超行宽时，按 Prettier 拆成多行（如 type 每项一行或合理折行）。
+
+## 类型与 API
+
+- **全局 API 类型**: 使用命名空间 `Api.*`，定义在 `src/types/api/api.d.ts`，无需 import（如 `Api.Auth.LoginParams`、`Api.SystemManage.UserListItem`）。
+- **后端字段与业务概念**: 与报表、用户增长、广告数据等相关的字段命名与语义须遵循规则 `backend-fields.mdc`（数据字典），定义类型、API、表格列、筛选器时与该表一致。
+- **通用类型**: 从 `@/types` 或 `@/types/router`、`@/types/store` 等按需导入。
+- **接口请求**: 使用 `request.get/post/put/delete`（来自 `@/utils/http`），方法命名以 `fetch` 开头，如 `fetchLogin`、`fetchGetUserList`；泛型使用 `Api.*` 类型。
+
+## 页面与组件
+
+- **页面入口**: 每个业务模块在 `src/views/<模块>/<页面>/index.vue`，路由 component 配置为路径形式如 `'/system/user'`，对应 `src/views/system/user/index.vue`。
+- **子组件**: 放在同目录下 `modules/`，如 `views/system/user/modules/user-dialog.vue`；文件名 kebab-case，组件名 PascalCase。
+- **组件名**: 必须在 `<script setup>` 中写 `defineOptions({ name: 'PascalCaseName' })`，与路由 name 或功能一致，例如 `ResultSuccess`、`UserRightPanel`；公共组件使用 `Art` 前缀（如 `ArtTable`）。
+- **模板**: 使用 Element Plus 组件时用自动导入的短名（如 `ElButton`）；项目内公共组件如 `ArtTable`、`ArtResultPage` 等按项目已有用法引用。
+
+## 组件设计结构（概要）
+
+- **详细约定** 见规则 `component-design.mdc`（编辑 .vue 或 components/、views 下 composables 时生效）。
+- **目录**: 公共组件在 `src/components/core/<分类>/<组件名>/index.vue`，可含 `style.scss`、`composables/`、`widget/`；页面子组件在 `views/<模块>/<页面>/modules/`。
+- **Props/Emits**: 用 TypeScript 接口 + `defineProps<Props>()`、`defineEmits<Emits>()`，默认值用 `withDefaults`；v-model 用 `update:visible` + computed get/set。
+- **Slots**: 具名插槽（#content、#buttons）或动态插槽；需要父调子时用 `defineExpose({ method, ref })`。
+- **逻辑拆分**: 复杂组件用同目录 `composables/`；页面数据与请求用 `views/.../composables/`（如 `useCockpitData`）。
+
+## 路由
+
+- **类型**: 使用 `AppRouteRecord`、`RouteMeta`（来自 `@/types/router`）。
+- **模块化**: 路由按业务拆在 `src/router/modules/*.ts`，在 `modules/index.ts` 中合并为 `routeModules`。
+- **meta**: `title` 使用 i18n key（如 `menus.system.user`），`icon` 使用 Iconify 码（如 `ri:user-3-line`）；可配置 `keepAlive`、`roles`、`authList`、`isHide`、`isHideTab` 等。
+
+## 目录约定
+
+- `src/api`：按业务拆分接口（如 `auth.ts`、`system-manage.ts`）。
+- `src/store`：Pinia 模块，如 `modules/user`。
+- `src/utils`：公共工具（含 `http`、`table` 等）。
+- `src/types`：全局类型与 API 命名空间；自动生成的导入类型在 `types/import/`。
+- `src/views/<模块>/<页面>/mock`：该页面 mock 数据（如需要）。
+- `src/views/<模块>/<页面>/composables`：页面级组合式函数（如需要）。
+
+## 数据与开发流程规范
+
+- **先 Mock 再开发组件**：开发大模块时，先在该模块下建立/完善 **Mock 数据**（如 `views/<模块>/<页面>/mock/data.ts` 或 `mock.ts`），并同步定义好 **类型**（`types.ts` 或类型与 mock 同文件）。待大模块的数据结构与字段约定清晰后，再进行页面入口与 `modules/` 内子组件的开发；组件内优先用 mock 做展示与联调，接口就绪后再切换为真实请求。
+- **先查公共组件再写模块**：开发新模块或新页面时，**先检查** `src/components/core/` 下是否有可复用的公共组件（表格 `art-table`、表单 `art-form`、图表、卡片、结果页 `ArtResultPage`、搜索栏、上传等），优先使用或基于其扩展，避免重复实现；若需新能力，再考虑在公共组件上扩展或新增组件。
+
+## 提交规范（Commitlint + cz-git）
+
+- 使用 `pnpm commit` 或符合 Conventional Commits 的 message。
+- type 枚举：`feat`、`fix`、`docs`、`style`、`refactor`、`perf`、`test`、`build`、`ci`、`revert`、`chore`、`wip`。
+- 示例：`feat(system): 用户管理增加导出`、`fix(auth): 登录 401 重复弹窗`。
+
+## 样式规范（概要）
+
+- **详细约定** 见规则 `style-conventions.mdc`（编辑 .vue/.scss/.css 时生效），以驾驶舱 cockpit 为参考。
+- **按钮圆角**：开发时按钮统一使用**全圆角**。使用 `ElButton` 时加上 `round` 属性（如 `<ElButton round>`）；自定义按钮或需覆盖样式时使用 `border-radius: 9999px` 或 `var(--el-border-radius-round)`，保持全项目按钮风格一致。
+- **页面布局**: 根节点 `{模块}-page`，全高用 `art-full-height`；栅格用 `ElRow` + `:gutter="16"`；区块间距 16px。
+- **类名**: 模块前缀（如 `cockpit-`）+ BEM 风格（`block--modifier`、`is-*`）；面板用 `ElCard` + `shadow="never"`。
+- **颜色**: 必须遵循下方 **颜色规范**；实现时优先使用 `src/assets/styles/core/tailwind.css` 中已定义的 CSS 变量（如 `var(--default-bg-color)`、`var(--art-primary)` 等），深色模式在 `.dark` 下生效。
+- **SCSS**: `<style scoped lang="scss">`，覆盖子组件用 `:deep()`；挂到 body 的节点可单独无 scoped 块，类名带模块前缀。
+
+### 颜色规范（设计调色板）
+
+界面颜色须按以下角色使用，确保一致性与可维护性。色值以深色模式为准；对应 CSS 变量见 `tailwind.css` 中 `.dark` 块。
+
+| 角色 | 色码 (HEX) | RGB | 用途说明 | 推荐变量（深色） |
+|------|------------|-----|----------|------------------|
+| 主背景色 | `#0A0A0A` | 10, 10, 10 | 页面最底层背景，营造深邃感 | `--default-bg-color` |
+| 容器/卡片背景 | `#18181B` | 24, 24, 27 | 各内容模块、卡片、图表的背景 | `--default-box-color` |
+| 主品牌色/高亮 | `#3B82F6` | 59, 130, 246 | 关键指标、按钮、选中状态、图表主色 | `--art-primary` / `--el-color-primary` |
+| 辅助色 1（增长/积极） | `#10B981` | 16, 185, 129 | 增长、健康、完成等积极状态的图表与指示灯 | `--art-success` |
+| 辅助色 2（下降/警告） | `#F97316` | 249, 115, 22 | 下降、警告、待处理等中性或警示状态 | `--art-warning` |
+| 辅助色 3（异常/危险） | `#EF4444` | 239, 68, 68 | 异常、失败、严重亏损等危险状态 | `--art-danger` / `--art-error` |
+| 正文/标题文字 | `#F4F4F5` | 244, 244, 245 | 主要标题和段落文字 | `--art-gray-900` |
+| 常规/辅助文字 | `#A1A1AA` | 161, 161, 170 | 辅助性说明、标签、图例文字 | `--art-gray-600` |
+| 边框/分割线 | `#27272A` | 39, 39, 42 | 卡片边框、表格分割线 | `--default-border` / `--art-gray-300` |
+
+- 写样式时**优先使用上表中的 CSS 变量**，避免硬编码 HEX；若需在 JS/图表配置中引用，可使用 `getComputedStyle(document.documentElement).getPropertyValue('--art-primary')` 等。
+- 浅色模式由 `:root` 与现有 gray/primary 变量控制，与深色角色语义一致，具体色值见 `tailwind.css`。
+
+## 其他
+
+- **环境变量**: 以 `VITE_` 开头，在 `src/env.d.ts` 或代码中通过 `import.meta.env` 使用；勿提交敏感信息。
+- **生产构建**: `pnpm build` 会先执行 `vue-tsc --noEmit`，再 Vite 构建；生产会 drop console/debugger。
+- **Stylelint**: 遵循 `stylelint-config-recess-order` 等；Vue 内 `<style lang="scss">` 可与 Tailwind 混用。

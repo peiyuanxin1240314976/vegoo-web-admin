@@ -1,0 +1,155 @@
+---
+description: 后端数据字段表与业务概念，定义类型、API、表格列、筛选器时须与此一致
+alwaysApply: true
+---
+
+# 后端字段规范（数据字典）
+
+与后端接口、报表、用户增长等模块相关的字段命名与业务含义须遵循下表。定义 TypeScript 类型、API 入参/出参、表格列、筛选器选项时，**遇到以下概念必须使用表中给出的字段名与语义**。
+
+## 字段前缀约定
+
+| 前缀 | 含义 | 示例 |
+|------|------|------|
+| `t_` | 时间/日期 | `t_date` |
+| `s_` | 字符串/ID | `s_app_id`, `s_ad_account_id`, `s_campaign_id`, `s_country_code` |
+| `n_` | 数值/枚举 | `n_platform`, `n_source`, `n_ad_type` |
+| `d_` | 时间类型或 bit 类型 | 按后端具体表定义 |
+
+## 表字段与业务概念
+
+### 时间与维度
+
+| 字段 | 业务概念 |
+|------|----------|
+| `date` | 日期 |
+| `year` | 年 |
+| `month` | 月 |
+| `hour` | 小时 |
+| `initial_date` | 初始日期（买量日期） |
+
+### 应用与平台
+
+| 字段 | 业务概念 |
+|------|----------|
+| `platform` | 终端平台：安卓 / iOS |
+| `appId` / `s_app_id` | 应用 ID（自有 ID），含不同部署版本与联动平台 |
+| `app_store` | 应用商店 |
+| `app_version` / `version` | 版本 |
+| `source` / `n_source` | 广告平台：1-Google, 2-Facebook, 3-Unity, 4-AppLovin, 5-IronSource, 6-AdColony, 7-Pangle |
+| `media_source` | 媒体来源 |
+| `channel` | 广告平台 |
+
+### 广告层级
+
+| 字段 | 业务概念 |
+|------|----------|
+| `ad_account` / `s_ad_account_id` | 广告账号 |
+| `campaign` / `s_campaign_id` | 广告系列 |
+| `group` / `s_group_id` | 广告组 |
+| `ad_network` / `s_ad_network_type` | 广告网络 |
+| `ad_type` / `n_ad_type` | 广告类型（仅收入表 `t_ad_revenue_detail`） |
+| `ad_unit` / `s_ad_unit_id` | 广告单元（仅收入表 `t_ad_revenue_detail`） |
+
+### 地域
+
+| 字段 | 业务概念 |
+|------|----------|
+| `country_code` / `s_country_code` | 国家代码 |
+
+### 消耗与展示
+
+| 字段 | 业务概念 |
+|------|----------|
+| `cost` | 花费 |
+| `impressions` | 展示次数 |
+| `clicks` | 点击量 |
+| `installs` | 安装量 |
+| `from` | 数据来源 |
+| `budget` | 预算 |
+
+### 收入与价值
+
+| 字段 | 业务概念 |
+|------|----------|
+| `revenue` | 收入 |
+| `request_quantity` | 请求数量 |
+| `filled_request` | 填充数量 |
+| `firebase_ad_revenue` | Firebase 记录的 Ad_Impression 累计广告价值 |
+| `ad_revenue` | 广告价值 |
+| `lap_revenue` | 内购价值（含订阅） |
+| `subscription_revenue` | 订阅收入 |
+| `current_ar` | 当前广告价值 |
+| `current_arp` | 当前广告+内购价值 |
+| `current_far` | 当前 Firebase 广告价值 |
+| `ar1` | 1 日广告价值 |
+| `arp1` | 1 日广告+内购价值 |
+| `far1` | 1 日 Firebase 广告价值 |
+
+### 用户与行为
+
+| 字段 | 业务概念 |
+|------|----------|
+| `active_user_count` | 活跃用户数 |
+| `new_user_count` | 新增用户数 |
+| `sessions` | 总会话次数 |
+| `event_count` | 事件数 |
+| `avg_play_time` | 人均使用时长（秒） |
+| `user_count_day1` | day1 留存用户数 |
+| `register_user_count` | 注册用户数 |
+| `day0` | 当日活跃用户 |
+| `day1` | 次留（第二天留存） |
+| `day7` | 7 日留存 |
+| `mau` | 月活跃用户 |
+| `play_time` | 用户每天游戏时长（分钟） |
+
+### 订单与支付
+
+| 字段 | 业务概念 |
+|------|----------|
+| `amount` | 实收金额（已去除平台抽成） |
+| `money` | 金额（未去除平台抽成） |
+| `quantity` | 数量 |
+| `sku` | 商品 |
+| `order` | 订单 |
+| `times` | 订阅次数 |
+| `payment_platform` | 支付平台 |
+| `product` | 商品 |
+
+### 其他
+
+| 字段 | 业务概念 |
+|------|----------|
+| `notification` | 通知 |
+| `advertising` | 用户广告 |
+
+## 数据维度与字段关系
+
+- **时间**: `t_date`
+- **应用**: `s_app_id`
+- **终端平台**: `n_platform`
+- **广告平台（渠道）**: `n_source`
+- **广告账号**: `s_ad_account_id`
+- **广告系列**: `s_campaign_id`
+- **广告组**: `s_group_id`
+- **广告网络**: `s_ad_network_type`
+- **应用版本**: `app_version`
+- **国家代码**: `s_country_code`
+- **广告类型**: `n_ad_type`（仅存在于收入表 `t_ad_revenue_detail`）
+- **广告单元**: `s_ad_unit_id`（仅存在于收入表 `t_ad_revenue_detail`）
+
+**层级关系（一对多）：**
+
+- `n_ad_type` ↔ `s_ad_unit_id` 一对多
+- `(s_app_id, n_platform)` 作为准唯一键 ↔ `s_country_code` 一对多
+- `(s_app_id, n_platform)` 作为准唯一键 ↔ `n_source` 一对多
+- `n_source` ↔ `s_ad_account_id` 一对多
+- `n_source` ↔ `s_ad_network_type` 一对多
+- `s_ad_account_id` ↔ `s_campaign_id` 一对多
+- `s_campaign_id` ↔ `s_group_id` 一对多
+
+## 使用说明
+
+- 在 `src/types/api/api.d.ts` 或页面 `types.ts` 中定义接口类型时，字段名与上表一致。
+- 表格列 `prop`、筛选表单项 `v-model` 绑定的字段、请求参数名，优先使用上表中的字段名（如 `s_source` 对应后端 `n_source` 时以实际接口为准，但业务概念对应「广告平台」）。
+- 文案与 i18n：展示给用户的标签、筛选项文案使用表中的「业务概念」列（如「广告系列」「国家代码」），保持与后端字段表一致。

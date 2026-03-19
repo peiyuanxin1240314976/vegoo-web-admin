@@ -1,0 +1,146 @@
+{
+  "_comment": "我的绩效 - 应用维度绩效评估表（树形：应用 -> 广告平台）。对应 types.ts: MyPerformanceAppTreeRow, MyPerformanceAppTableSummary。",
+  "fieldDescription": {
+    "request": {
+      "personId": { "type": "string", "required": true, "description": "人员 ID。" },
+      "periodType": {
+        "type": "string",
+        "required": true,
+        "enum": ["quarter", "month"],
+        "description": "统计口径类型。"
+      },
+      "periodValue": { "type": "string", "required": true, "description": "口径值，如 2026-03。" }
+    },
+    "response": {
+      "title": { "type": "string", "required": true, "description": "表格标题。" },
+      "list": {
+        "type": "MyPerformanceAppTreeRow[]",
+        "required": true,
+        "description": "树形表格数据：顶层为应用行(type=app)，children 为广告平台行(type=source)。"
+      },
+      "summary": {
+        "type": "MyPerformanceAppTableSummary",
+        "required": true,
+        "description": "底部汇总（合计/均值）。"
+      }
+    },
+    "MyPerformanceAppTreeRow": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "行唯一标识，如 app_weather5、app_weather5_google。"
+      },
+      "type": {
+        "type": "string",
+        "required": true,
+        "enum": ["app", "source"],
+        "description": "app=应用汇总行，source=广告平台明细行。"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "展示名称：应用名或广告平台名（如 Google/Facebook/全部）。"
+      },
+      "children": {
+        "type": "MyPerformanceAppTreeRow[]",
+        "required": false,
+        "description": "仅 type=app 时存在，为下属广告平台行。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台，如 安卓/iOS；source 行必填。"
+      },
+      "windowLabel": {
+        "type": "string",
+        "required": false,
+        "description": "统计窗口，如 3天/7天；source 行常用。"
+      },
+      "reachRate": { "type": "number", "required": false, "description": "达标要求，0-100。" },
+      "minRate": { "type": "number", "required": false, "description": "最低要求，0-100。" },
+      "deviationCoef": { "type": "number", "required": false, "description": "难度系数。" },
+      "minProfit": { "type": "number", "required": false, "description": "最低利润，$。" },
+      "adSpend": { "type": "number", "required": false, "description": "广告支出，$。" },
+      "calculatedSpend": { "type": "number", "required": false, "description": "计算消耗，$。" },
+      "roi": { "type": "number", "required": false, "description": "ROI，0-100。" },
+      "commissionSpend": { "type": "number", "required": false, "description": "代投消耗，$。" },
+      "estimatedProfit": {
+        "type": "number",
+        "required": false,
+        "description": "预估利润，$，可负。"
+      },
+      "cpa": { "type": "number", "required": false, "description": "CPA，$。" },
+      "score": { "type": "number", "required": false, "description": "分数。" },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["running", "paused", "warning"],
+        "description": "状态枚举。"
+      },
+      "statusText": { "type": "string", "required": false, "description": "状态文案，如 投放中。" }
+    },
+    "MyPerformanceAppTableSummary": {
+      "adSpend": { "type": "number", "required": true, "description": "广告支出合计，$。" },
+      "calculatedSpend": { "type": "number", "required": true, "description": "计算消耗合计，$。" },
+      "roi": { "type": "number", "required": true, "description": "平均 ROI，%。" },
+      "commissionSpend": { "type": "number", "required": true, "description": "代投消耗合计，$。" },
+      "estimatedProfit": { "type": "number", "required": true, "description": "预估利润合计，$。" },
+      "cpa": { "type": "number", "required": true, "description": "平均 CPA，$。" },
+      "score": { "type": "number", "required": true, "description": "绩效分数汇总/均值。" }
+    }
+  },
+  "sampleRequest": { "personId": "u_001", "periodType": "month", "periodValue": "2026-03" },
+  "sampleResponse": {
+    "title": "应用维度绩效评估",
+    "list": [
+      {
+        "id": "app_weather5",
+        "type": "app",
+        "name": "Weather5",
+        "children": [
+          {
+            "id": "app_weather5_google",
+            "type": "source",
+            "name": "Google",
+            "platform": "安卓",
+            "windowLabel": "3天",
+            "reachRate": 53,
+            "minRate": 50,
+            "deviationCoef": 1.2,
+            "adSpend": 12450,
+            "calculatedSpend": 11800,
+            "roi": 91,
+            "commissionSpend": 2100,
+            "estimatedProfit": 3240,
+            "cpa": 2.21,
+            "score": 28,
+            "status": "running",
+            "statusText": "投放中"
+          }
+        ]
+      }
+    ],
+    "summary": {
+      "adSpend": 36600,
+      "calculatedSpend": 34200,
+      "roi": 88,
+      "commissionSpend": 6180,
+      "estimatedProfit": 8450,
+      "cpa": 2.21,
+      "score": 92
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-performance/app-dimension-table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "personId, periodType, periodValue",
+    "responseBody": "title, list, summary"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "list 为树形：每行 type=app 时可有 children（type=source）。前端可对 app 行按 children 聚合计算展示；无 children 的应用行可仅展示应用名与汇总或由前端按规则生成占位。",
+      "字段命名遵循数据字典：platform=终端平台，source 语义=广告平台（name 存 Google/Facebook 等）。"
+    ]
+  }
+}

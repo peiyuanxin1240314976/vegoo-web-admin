@@ -1,0 +1,44 @@
+---
+description: Git 联网操作的一次性代理用法（pull/fetch/push）
+alwaysApply: true
+---
+
+# Git 联网操作：一次性代理（Windows / PowerShell）
+
+适用场景：公司网络无法直连 GitHub，需要临时走本机代理，但**不想写入全局 git config**。
+
+说明：
+
+- `git commit` 是本地操作，不需要代理
+- 需要代理的是 `git pull / fetch / push` 等联网操作
+- 将下方端口（示例 `7897`）替换为你本机代理软件实际监听端口
+
+## 方式一：仅对单条 git 命令生效（推荐）
+
+HTTP 代理（常见）：
+
+```bash
+git -c http.proxy=http://127.0.0.1:7897 -c https.proxy=http://127.0.0.1:7897 pull --tags origin dev
+git -c http.proxy=http://127.0.0.1:7897 -c https.proxy=http://127.0.0.1:7897 push
+```
+
+SOCKS5 代理（如你的代理只提供 socks 端口）：
+
+```bash
+git -c http.proxy=socks5h://127.0.0.1:7897 -c https.proxy=socks5h://127.0.0.1:7897 pull --tags origin dev
+git -c http.proxy=socks5h://127.0.0.1:7897 -c https.proxy=socks5h://127.0.0.1:7897 push
+```
+
+## 方式二：仅对当前终端会话生效（适合连续多条命令）
+
+PowerShell：
+
+```powershell
+$env:HTTP_PROXY="http://127.0.0.1:7897"
+$env:HTTPS_PROXY="http://127.0.0.1:7897"
+
+git pull --tags origin dev
+git push
+
+Remove-Item Env:HTTP_PROXY,Env:HTTPS_PROXY
+```

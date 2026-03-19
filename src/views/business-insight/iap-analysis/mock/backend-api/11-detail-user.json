@@ -1,0 +1,96 @@
+{
+  "_comment": "IAP Detail - 用户分析 Tab 数据。对应 types.ts: IapDetailUser。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "timeRange": { "type": "string", "required": true, "description": "时间范围。" },
+      "s_country_code": { "type": "string", "required": false, "description": "国家代码。" },
+      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+    },
+    "response": {
+      "userValueTable": {
+        "type": "IapUserValueRow[]",
+        "required": true,
+        "description": "用户分层价值表。"
+      },
+      "countryChartData": {
+        "type": "object",
+        "required": false,
+        "description": "Top10 国家分布图数据。"
+      },
+      "userCompareData": {
+        "type": "object",
+        "required": false,
+        "description": "新老用户付费对比。"
+      },
+      "firstPayData": { "type": "object", "required": false, "description": "首次付费时间分布。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "phonetracker",
+    "timeRange": "30",
+    "s_country_code": "all",
+    "platform": "all"
+  },
+  "sampleResponse": {
+    "userValueTable": [
+      {
+        "segment": "高价值(Top10%)",
+        "count": "895",
+        "ratio": "10%",
+        "arpu": "$45.20",
+        "conversion": "7.8%",
+        "retention": "78.3%",
+        "churn": "0.6%"
+      },
+      {
+        "segment": "中高价值(10-30%)",
+        "count": "1,790",
+        "ratio": "20%",
+        "arpu": "$18.50",
+        "conversion": "5.2%",
+        "retention": "55.2%",
+        "churn": "1.2%"
+      },
+      {
+        "segment": "中低价值(30-60%)",
+        "count": "2,685",
+        "ratio": "30%",
+        "arpu": "$8.80",
+        "conversion": "3.1%",
+        "retention": "38.5%",
+        "churn": "1.8%"
+      },
+      {
+        "segment": "低价值(Bottom40%)",
+        "count": "3,580",
+        "ratio": "40%",
+        "arpu": "$2.10",
+        "conversion": "1.6%",
+        "retention": "15.9%",
+        "churn": "9.8%"
+      }
+    ],
+    "countryChartData": {
+      "countries": ["美国", "韩国", "德国", "英国", "法国", "日本", "澳大利亚", "加拿大", "墨西哥"],
+      "counts": [3500, 2800, 1200, 980, 750, 500, 310, 280, 250],
+      "arpu": [14.5, 13.2, 15.8, 11.2, 9.8, 8.5, 13.4, 12.1, 7.2]
+    },
+    "userCompareData": {
+      "categories": ["新用户", "老用户", "回归用户"],
+      "conversion": [2.1, 5.8, 4.2],
+      "arpu": [6.5, 15.2, 11.8]
+    },
+    "firstPayData": {
+      "categories": ["安装当天", "D1-03", "D4-07", "D8-14", "D15-030", "D30+"],
+      "values": [28, 15, 22, 18, 12, 5]
+    }
+  },
+  "api": {
+    "url": "POST /api/business-insight/iap-analysis/detail/user",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_app_id, timeRange, s_country_code?, platform?",
+    "responseBody": "IapDetailUser"
+  }
+}

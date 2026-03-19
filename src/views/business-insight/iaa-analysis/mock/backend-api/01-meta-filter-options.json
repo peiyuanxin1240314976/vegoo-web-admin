@@ -1,0 +1,56 @@
+{
+  "_comment": "IAA 分析 - 全局筛选下拉选项。对应 types.ts: IaaFilterOptions。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "appOptions": {
+        "type": "IaaSelectOption[]",
+        "required": true,
+        "description": "应用下拉选项。"
+      },
+      "platformOptions": {
+        "type": "IaaSelectOption[]",
+        "required": true,
+        "description": "终端平台下拉选项（Android/iOS/全部）。"
+      },
+      "countryOptions": {
+        "type": "IaaSelectOption[]",
+        "required": true,
+        "description": "国家下拉选项。"
+      }
+    },
+    "IaaSelectOption": {
+      "label": { "type": "string", "required": true, "description": "展示文案。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "选项值，如 all、US、weather5。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "appOptions": [
+      { "label": "全部", "value": "all" },
+      { "label": "Weather5", "value": "weather5" }
+    ],
+    "platformOptions": [
+      { "label": "Android&iOS", "value": "all" },
+      { "label": "Android", "value": "android" },
+      { "label": "iOS", "value": "ios" }
+    ],
+    "countryOptions": [
+      { "label": "全部", "value": "all" },
+      { "label": "美国", "value": "US" },
+      { "label": "韩国", "value": "KR" },
+      { "label": "日本", "value": "JP" }
+    ]
+  },
+  "api": {
+    "url": "GET /api/business-insight/iaa-analysis/meta-filter-options",
+    "method": "GET",
+    "priority": "P0",
+    "requestBody": "无",
+    "responseBody": "appOptions[], platformOptions[], countryOptions[]"
+  }
+}

@@ -1,0 +1,148 @@
+---
+description: 数据接口抽象与 Mock 契约（路由→模块→功能拆分，backend-api 文档与字段解释）
+alwaysApply: true
+---
+
+# 数据接口抽象与 Mock 契约规范（必读）
+
+本规则用于约束 **接口地址如何抽象**、**接口如何按模块/功能拆分**、以及 **Mock 契约如何沉淀到 `mock/backend-api`**，以保证后期可优化渲染、可拆分、可联调。
+
+## 一、接口地址抽象：路由 → 模块 → 功能
+
+### 1）先根据路由定义父级 API 地址
+
+- **父级 API 路径**：与前端路由保持一致的层级结构（route path + 页面语义）。
+- **示例**：
+  - 路由：`/user-growth/ad-performance`
+  - 父级 API：`/api/user-growth/ad-performance`
+
+> 原则：**看到 API 路径即可反推页面路由**；避免一个“业务大杂烩”路径塞所有能力。
+
+### 2）再根据项目模块定义分组（子路径）
+
+在父级 API 下按页面内部模块进行分组（通常对应：筛选/概览/表格/详情/操作等），常见分组：
+
+- `meta-*`：页面元信息/下拉选项/枚举字典
+- `overview`：页面概览聚合（KPI/趋势/分布/预警/数据时间等）
+- `table/<tab>`：主表格按 tab/维度拆分
+- `<entity>-detail`：详情抽屉/弹窗（单一实体、维度清晰）
+- `export`：导出
+- `*-action`：操作类接口（暂停/启用/确认等）
+
+### 3）最后根据具体功能定义 endpoint（kebab-case）
+
+- endpoint 使用 **kebab-case**
+- endpoint 命名必须体现“做什么”，不要使用含糊词（如 `getData` / `list`）
+- **禁止**在单一 endpoint 中通过 `type/tab` 参数复用过多不同形态的响应；优先拆 endpoint（例如按 tab 拆 4 个接口）
+
+## 二、接口拆分原则：禁止 1 个接口获取过多数据
+
+### 目标
+
+- 防止后期因单接口 payload 过大导致 **首屏/切换卡顿**、**渲染难优化**、**缓存粒度过粗**。
+
+### 强约束
+
+- **一个接口只服务一个明确的 UI 场景**（一个页面模块/一个 tab/一个抽屉）。
+- **禁止**“一口气返回整页所有数据且不可按需裁剪”的设计。
+- **禁止**把多种结构差异很大的数据塞进一个数组/对象里靠前端分流。
+
+### 推荐拆分方式（按 UI 边界）
+
+- **筛选项**：`meta-filter-options`
+- **概览聚合**：`overview`（若仍过大，继续拆：`overview/kpi`、`overview/trend`、`overview/distribution`、`overview/alerts`）
+- **表格**：按 tab/维度拆 `table/campaign`、`table/country`、`table/owner`、`table/account`
+- **详情**：按实体 + 维度拆（例如 `campaign-detail`；若详情内含多 tab 且数据量大，可继续拆 `campaign-detail/ad-group`、`campaign-detail/date`、`campaign-detail/country`）
+- **导出/操作**：独立接口（`export`、`alert-action` 等）
+
+## 三、开发前必须定义：Mock 契约与字段解释（backend-api）
+
+### 目录要求（每个业务页面/模块都要具备）
+
+在对应页面目录下创建（或补齐）：
+
+```
+src/views/<模块>/<页面>/
+  mock/
+    README.md                 # mock 总说明（必需）
+    backend-api/
+      README.md               # 接口清单与 URL 说明（必需）
+      01-*.json               # 按接口拆分的契约文件（必需）
+      02-*.json
+      ...
+```
+
+### “每个文件夹都要有 md 解释”的约束
+
+- `mock/README.md`：说明本页面 mock 的用途、与类型/页面的关联、mock 数据来源等。
+- `mock/backend-api/README.md`：说明 **父级 API 路径**、**接口清单（表格）**、**拆分原则**、优先级（P0/P1/P2）等。
+
+> 若在 `mock/backend-api/` 下新增二级目录（如 `table/`、`detail/`），则该二级目录也必须有 `README.md`。
+
+## 四、backend-api JSON 契约格式（必须包含字段解释）
+
+每个接口对应一个 JSON 文件，至少包含：
+
+- `_comment`：一句话描述接口与页面模块的对应关系（可引用对应类型）
+- `fieldDescription`：
+  - `request`：每个字段必须有 `type`、`required`、`description`；有枚举就写 `enum`；有默认值就写 `default`
+  - `response`：顶层字段同样必须解释；复杂对象可引用类型名，并在同一文件中补充该类型的字段解释（或在子节点处给出 `fields`）
+- `sampleRequest`：示例请求体（JSON）
+- `sampleResponse`：示例响应体（JSON，若网关统一包裹则仅写 `data` 内结构或在说明中注明）
+- `api`：接口元信息（url/method/priority/requestBody/responseBody）
+- `apiSuggestion`：实现建议/注意点（可选但推荐）
+
+### 字段解释的颗粒度要求
+
+- **禁止**只写“见后端返回”或只给一个大对象示例不解释字段。
+- 每个字段的 `description` 要能直接用于联调沟通：含义、单位、范围（例如百分比是 0-100 还是 0-1）、空值策略、格式（日期格式等）。
+
+### JSON 模板（新接口可直接复制）
+
+```json
+{
+  "_comment": "模块 - 功能说明。对应 types.ts: SomeType。",
+  "fieldDescription": {
+    "request": {
+      "foo": { "type": "string", "required": true, "description": "字段含义。" },
+      "bar": {
+        "type": "string",
+        "required": false,
+        "enum": ["a", "b"],
+        "default": "a",
+        "description": "枚举含义与默认值。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "SomeType",
+        "required": true,
+        "description": "响应主体（如网关包裹则为 data）。"
+      }
+    },
+    "SomeType": {
+      "id": { "type": "string", "required": true, "description": "主键/唯一标识。" },
+      "name": { "type": "string", "required": true, "description": "名称。" }
+    }
+  },
+  "sampleRequest": { "foo": "x", "bar": "a" },
+  "sampleResponse": { "data": { "id": "1", "name": "demo" } },
+  "api": {
+    "url": "POST /api/<模块>/<页面>/<endpoint>",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "foo (必填), bar?",
+    "responseBody": "SomeType"
+  },
+  "apiSuggestion": {
+    "notes": ["补充实现建议、边界条件、格式约定等。"]
+  }
+}
+```
+
+## 五、与代码实现的绑定建议（落地）
+
+- **类型先行**：接口契约字段需与页面 `types.ts`（或 `src/types/api/api.d.ts` 的 `Api.*`）保持一致，避免“文档一套、代码一套”。
+- **请求方法命名**：在 `src/api/<业务>.ts` 内，方法名以 `fetch` 开头，体现模块与功能（如 `fetchAdPerformanceOverview`）。
+- **字段命名**：涉及广告/增长/报表等概念时，字段命名与语义必须遵循 `backend-fields.mdc`（数据字典）。
+
