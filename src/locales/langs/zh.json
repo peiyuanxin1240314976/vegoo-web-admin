@@ -243,6 +243,11 @@
       "attributionAnalysis": "归因分析",
       "ltvPrediction": "LTV预测与用户分层"
     },
+    "businessInsight": {
+      "title": "商业洞察",
+      "revenueOverview": "收入概览",
+      "profitAnalysis": "利润分析"
+    },
     "result": {
       "title": "结果页面",
       "success": "成功页",

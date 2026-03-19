@@ -243,6 +243,11 @@
       "attributionAnalysis": "Attribution Analysis",
       "ltvPrediction": "LTV Prediction & User Segmentation"
     },
+    "businessInsight": {
+      "title": "Business Insight",
+      "revenueOverview": "Revenue Overview",
+      "profitAnalysis": "Profit Analysis"
+    },
     "result": {
       "title": "Result Page",
       "success": "Success",

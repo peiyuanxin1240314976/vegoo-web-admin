@@ -14,7 +14,7 @@
   const { homePath } = useCommon()
 
   onMounted(() => {
-    const target = homePath.value || '/dashboard'
+    const target = homePath.value || '/cockpit'
     if (target && target !== '/') {
       router.replace(target)
     }

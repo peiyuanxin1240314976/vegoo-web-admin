@@ -38,7 +38,7 @@
   const { homePath } = useCommon()
 
   const backHome = () => {
-    const target = homePath.value || '/'
+    const target = homePath.value || '/cockpit'
     router.push(target)
   }
 </script>
