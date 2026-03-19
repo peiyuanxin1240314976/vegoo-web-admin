@@ -1,0 +1,57 @@
+---
+description: Vue 页面与组件约定（views、defineOptions、Api 类型）
+globs: "**/*.vue"
+alwaysApply: false
+---
+
+# Vue 与 views 约定
+
+## 页面组件（views 下）
+
+- 入口文件统一为 `index.vue`，路由中 component 填路径如 `'/system/user'` 对应 `src/views/system/user/index.vue`。
+- 子组件放在同目录 `modules/` 下，文件名 kebab-case（如 `user-dialog.vue`），组件名 PascalCase（如 `UserDialog`）。
+
+## 必须的 defineOptions
+
+每个 `.vue` 文件在 `<script setup lang="ts">` 内声明组件名，便于 keep-alive 与调试：
+
+```vue
+<script setup lang="ts">
+  defineOptions({ name: 'ResultSuccess' })
+  // ...
+</script>
+```
+
+命名与路由 name 或功能一致：页面用单名或模块前缀（如 `User`、`AccountPerformance`），子组件用描述性 PascalCase（如 `UserRightPanel`、`RolePermissionDialog`）。
+
+## 类型使用
+
+- 接口参数/返回值使用全局命名空间 `Api.*`，无需导入，例如：`Api.Auth.LoginParams`、`Api.SystemManage.UserListItem`。
+- 页面内可做类型别名：`type UserListItem = Api.SystemManage.UserListItem`。
+- 其他类型从 `@/types` 或 `@/types/router` 等按需导入。
+
+## 模板与样式
+
+- Element Plus 组件已自动按需注册，直接使用 `ElButton`、`ElTable` 等。
+- 项目公共组件如 `ArtTable`、`ArtResultPage`、`ArtTableHeader` 等从 `@/components` 或已有引用路径导入。
+- 需要 scoped 样式时使用 `<style lang="scss" scoped>`；可使用 `@use "@styles/core/..."` 及项目 mixin，或 Tailwind 类。
+
+## 示例（页面入口）
+
+```vue
+<template>
+  <div class="xxx-page art-full-height flex">
+    <!-- 布局与 modules 组件 -->
+  </div>
+</template>
+
+<script setup lang="ts">
+  defineOptions({ name: 'User' })
+  type UserListItem = Api.SystemManage.UserListItem
+  // ref、computed、接口调用等
+</script>
+
+<style lang="scss" scoped>
+  .xxx-page { /* ... */ }
+</style>
+```

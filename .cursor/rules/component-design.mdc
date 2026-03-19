@@ -1,0 +1,106 @@
+---
+description: 组件设计结构规范（目录、Props/Emits、Slots、Expose、Composables）
+globs: "**/*.vue,src/components/**/*.ts,src/views/**/composables/**/*.ts"
+alwaysApply: false
+---
+
+# 组件设计结构规范
+
+## 组件分类与目录
+
+- **公共组件**（`src/components/core/`）：按功能分子目录，如 `tables/art-table`、`forms/art-form`、`views/result/ArtResultPage.vue`。每个组件一个文件夹时，入口为 `index.vue`；若带样式或子模块，同目录可含 `style.scss`、`composables/`、`widget/`。
+- **业务页面子组件**（`src/views/<模块>/<页面>/modules/`）：仅当前页面使用，文件名 kebab-case（如 `user-dialog.vue`、`role-permission-panel.vue`），与页面同级或放在 `modules/` 下；复杂页面可再建 `composables/`（如 `useCockpitData.ts`）和 `types.ts`、`mock/`。
+- **复合公共组件的子部件**：放在该组件目录下的 `widget/`，如 `art-settings-panel/widget/SettingDrawer.vue`，仅被父组件引用。
+
+## 组件名与 defineOptions
+
+- 所有单文件组件必须在 `<script setup>` 中写 `defineOptions({ name: 'PascalCaseName' })`。
+- 公共组件使用 `Art` 前缀 + PascalCase（如 `ArtResultPage`、`ArtTable`）；业务 modules 用功能语义名（如 `UserDialog`、`CockpitGlobalKpiCards`）。
+
+## Props 定义
+
+- 使用 TypeScript 接口 + `defineProps<Props>()`；需要默认值时用 `withDefaults(defineProps<Props>(), { ... })`。
+- 接口建议写在 script 内、defineProps 上方，或抽到同目录/类型文件中；复杂公共组件可为 Props 起语义名（如 `ArtTableProps`、`ResultPageProps`）。
+- 必填项不加默认值；可选项在接口中写 `?`，并在 `withDefaults` 中给出合理默认值（数组/对象用 `() => []`、`() => ({})`）。
+- 使用全局类型时直接写 `Api.SystemManage.UserListItem`；业务类型从同模块 `types` 或 composables 导入。
+
+```ts
+interface Props {
+  visible: boolean
+  type: 'add' | 'edit'
+  userData?: Partial<Api.SystemManage.UserListItem>
+}
+const props = defineProps<Props>()
+// 或带默认值
+withDefaults(defineProps<ResultPageProps>(), {
+  type: 'success',
+  title: '',
+  message: '',
+  iconCode: ''
+})
+```
+
+## Emits 定义
+
+- 使用类型化 `defineEmits<Emits>()`，接口中列出所有事件及 payload 类型。
+- 与 v-model 配套时：`(e: 'update:visible', value: boolean): void`；业务事件写清语义，如 `(e: 'submit'): void`、`(e: 'row-click', row: T): void`。
+
+```ts
+interface Emits {
+  (e: 'update:visible', value: boolean): void
+  (e: 'submit'): void
+}
+const emit = defineEmits<Emits>()
+```
+
+## v-model 与双向绑定
+
+- 弹窗、抽屉等“显示状态”优先用 `v-model:visible`：子组件用 `computed({ get: () => props.visible, set: (v) => emit('update:visible', v) })` 驱动 `ElDialog`/`ElDrawer` 的显示。
+- 表单数据若需双向绑定，可用 `v-model:modelValue` 或具名 `v-model:xxx`，子组件内对应 `emit('update:xxx', value)`。
+
+## Slots
+
+- 具名插槽：在模板中用 `<slot name="content">`、`<slot name="buttons">` 等；父组件使用 `#content`、`#buttons`。插槽名用简短语义词。
+- 动态插槽：表格列、表单字段等可用动态 slot 名（如 `col.slotName || col.prop`），并通过 `v-bind` 向插槽传入作用域数据。
+- 默认插槽：需要时提供 `<slot />` 或 `<slot></slot>`；若组件同时支持多种插槽，在文档或注释中说明用途。
+
+## defineExpose
+
+- 仅当父组件需要调用子组件方法或访问子组件 ref 时使用 `defineExpose`。
+- 暴露内容：表单的 `validate`、表格的 `elTableRef`/`scrollToTop`、编辑器的 `getEditor`、可重置组件的 `reset` 等。尽量只暴露必要 API，并保持稳定命名。
+- 业务 modules 若需父组件调用（如“重置权限勾选”），可 `defineExpose({ reset })`。
+
+```ts
+defineExpose({
+  scrollToTop,
+  elTableRef
+})
+// 或
+defineExpose({ reset })
+```
+
+## 公共组件的逻辑拆分（Composables）
+
+- 逻辑较重的公共组件（如设置面板、复杂表格）可将状态与逻辑抽到同目录 `composables/` 下，如 `useSettingsPanel.ts`、`useSettingsHandlers.ts`。组件内通过 `useXxx()` 获取方法或响应式状态。
+- 业务页面的数据拉取、参数转换等放在 `views/<模块>/<页面>/composables/`，如 `useCockpitData.ts`：返回 `{ overview, loading, dateRange, load }` 等，页面只做组装与展示。
+
+## 属性透传与 attrs
+
+- 包装 Element 组件的公共组件（如 ArtTable 包装 ElTable）时，可用 `v-bind="{ ...$attrs, ...props }"` 在符合需求的前提下透传属性；注意与自身 props 的合并顺序和冲突处理（通常自身 props 优先）。
+- 不需要透传时在 `defineOptions` 中设置 `inheritAttrs: false`，并在模板中按需绑定。
+
+## 模板与脚本顺序
+
+- 单文件内顺序建议：`<template>` → `<script setup lang="ts">` → `<style scoped lang="scss">`；若有非 scoped 样式块，放在最后。
+- 组件顶部可加简短 HTML 注释说明组件用途、支持的 props/事件/插槽（如 ArtTable、ArtResultPage 的注释）。
+
+## 小结
+
+| 场景 | 建议 |
+|------|------|
+| 公共组件目录 | `components/core/<分类>/<组件名>/index.vue`，可选 `style.scss`、`composables/`、`widget/` |
+| 页面子组件 | `views/<模块>/<页面>/modules/`，kebab-case 文件名 |
+| Props/Emits | 接口 + defineProps/defineEmits，可选 withDefaults |
+| v-model | 用 `update:visible` 等 + computed get/set |
+| 父调子 | defineExpose 暴露方法或 ref |
+| 复杂逻辑 | 同目录 composables/，页面级 composables 做数据与请求 |
