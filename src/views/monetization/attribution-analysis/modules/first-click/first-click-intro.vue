@@ -3,7 +3,7 @@
     <div class="intro-left">
       <h2 class="intro-title">首次点击归因(First Click Attribution)</h2>
       <p class="intro-desc">将100%的转化归因于用户的第一个接触点。</p>
-      <p class="intro-best">Best for: 了解哪些渠道在吸引新用户方面最有效</p>
+      <p class="intro-best">Best for: 了解哪些广告平台在吸引新用户方面最有效</p>
       <p class="intro-limitations">Limitations: 忽略了后续的转化驱动因素</p>
     </div>
     <div class="intro-right">

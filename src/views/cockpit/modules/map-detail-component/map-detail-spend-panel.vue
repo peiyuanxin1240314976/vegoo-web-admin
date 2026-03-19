@@ -6,7 +6,7 @@
     <div class="panel-block">
       <div class="panel-header section-header">
         <span class="section-badge">A</span>
-        <span class="section-title">渠道投放效果对比</span>
+        <span class="section-title">广告平台投放效果对比</span>
       </div>
       <ElSkeleton v-if="channelLoading" :rows="5" animated class="table-skeleton" />
       <ArtTable v-else :data="channelData" :columns="channelColumns" size="small" height="150">
@@ -77,7 +77,7 @@
   }
 
   const channelColumns: ColumnOption[] = [
-    { prop: 'channel', label: '渠道', minWidth: 100, showOverflowTooltip: true },
+    { prop: 'channel', label: '广告平台', minWidth: 100, showOverflowTooltip: true },
     {
       prop: 'spend',
       label: '消耗',

@@ -15,7 +15,7 @@ export const MOCK_MONETIZATION_ANALYSIS: MonetizationAnalysisOverview = {
     { type: 'dau', label: 'DAU', value: '12.0M', compare: '+2.3%', compareUp: true }
   ],
   channelTotal: {
-    label: '渠道总数',
+    label: '广告平台总数',
     value: '200台'
   },
   channelPie: [

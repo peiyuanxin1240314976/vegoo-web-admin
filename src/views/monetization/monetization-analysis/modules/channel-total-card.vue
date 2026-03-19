@@ -1,6 +1,6 @@
 <template>
   <div class="channel-total-card cockpit-panel">
-    <div class="card-label">{{ data?.label ?? '渠道总数' }}</div>
+    <div class="card-label">{{ data?.label ?? '广告平台总数' }}</div>
     <div class="card-value">{{ data?.value ?? '--' }}</div>
   </div>
 </template>

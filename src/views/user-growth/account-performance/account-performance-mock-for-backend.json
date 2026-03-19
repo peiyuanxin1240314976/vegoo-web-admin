@@ -1,12 +1,12 @@
 {
-  "_comment": "账户成效页（Account Performance）接口结构说明文件：用于后端快速理解前端所需字段、返回结构与枚举口径。后端按 sampleResponse 的结构返回，即可与当前页面 mock 对齐并直接渲染：顶部 KPI、左侧应用×平台×账户树表、右侧渠道分布/预算使用率分布/首日ROI趋势/预警事项/今日消耗节奏。",
+  "_comment": "账户成效页（Account Performance）接口结构说明文件：用于后端快速理解前端所需字段、返回结构与枚举口径。后端按 sampleResponse 的结构返回，即可与当前页面 mock 对齐并直接渲染：顶部 KPI、左侧应用×平台×账户树表、右侧广告平台分布/预算使用率分布/首日ROI趋势/预警事项/今日消耗节奏。",
   "fieldDescription": {
     "root": {
       "dateRange": "默认日期范围（前端日期选择器回显用），格式：['YYYY-MM-DD','YYYY-MM-DD']",
       "summaryText": "表格底部汇总文案（可由后端计算后直接返回，或前端拼接）",
       "kpi": "顶部 KPI 卡片数组",
       "tableTree": "左侧树形表格数据：应用（一级）→ 平台（二级）→ 账户（三级）",
-      "channelSpend": "右侧「渠道消耗分布」环形图数据（percent 可选）",
+      "channelSpend": "右侧「广告平台消耗分布」环形图数据（percent 可选）",
       "budgetUsageBuckets": "右侧「账户预算使用率分布」条形图分桶数据",
       "day1RoiTrend": "右侧「首日ROI趋势（7天）」折线图数据（按日/按点）",
       "alerts": "右侧「预警事项」列表",
@@ -39,7 +39,7 @@
       "children": "子节点数组（可选，app 下是 platform；platform 下是 account）"
     },
     "channelSpendItem": {
-      "name": "渠道名称（如 TikTok / Facebook / Google）",
+      "name": "广告平台名称（如 TikTok / Facebook / Google）",
       "value": "占比数值（当前 mock 里直接为百分比值）",
       "percent": "占比（可选；与 value 同口径时可省略）"
     },
@@ -410,7 +410,7 @@
   "apiSuggestion": {
     "endpoint": "GET /api/user-growth/account-performance",
     "query": {
-      "source": "渠道筛选（tiktok/facebook/google 或空=全部）",
+      "source": "广告平台筛选（tiktok/facebook/google 或空=全部）",
       "platform": "应用筛选（应用名或应用ID，空=全部）",
       "ownerId": "负责人 ID（可选，空=全部）",
       "dateStart": "开始日期（YYYY-MM-DD）",

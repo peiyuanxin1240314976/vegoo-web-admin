@@ -196,7 +196,7 @@
               <ElOption v-for="app in appOptions" :key="app" :label="app" :value="app" />
             </ElSelect>
             <div class="campaigns-filter-tabs">
-              <span class="filter-tabs-label">渠道</span>
+              <span class="filter-tabs-label">广告平台</span>
               <button
                 v-for="ch in channelOptions"
                 :key="ch.value"
@@ -251,7 +251,7 @@
             show-overflow-tooltip
           />
           <ElTableColumn prop="region" label="区域/国家" width="100" />
-          <ElTableColumn prop="channel" label="渠道/Channel" width="120" />
+          <ElTableColumn prop="channel" label="广告平台/Channel" width="120" />
           <ElTableColumn label="当前支出/Cost" width="120" sortable prop="cost">
             <template #default="{ row }">
               <span :class="{ 'cost-highlight': row.costHighlight }">{{

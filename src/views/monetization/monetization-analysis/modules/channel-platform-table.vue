@@ -1,8 +1,8 @@
 <template>
   <div class="channel-platform-panel cockpit-panel">
-    <div class="panel-title">渠道/平台</div>
+    <div class="panel-title">广告平台/平台</div>
     <ElTable :data="tableData" stripe size="default" class="monetization-table" style="width: 100%">
-      <ElTableColumn prop="channel" label="渠道" min-width="120" />
+      <ElTableColumn prop="channel" label="广告平台" min-width="120" />
       <ElTableColumn prop="platform" label="平台" min-width="120" />
       <ElTableColumn prop="spend" label="消耗" min-width="100" />
       <ElTableColumn prop="revenue" label="收入" min-width="100" />

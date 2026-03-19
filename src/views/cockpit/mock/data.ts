@@ -68,7 +68,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
   alertBanners: [
     {
       type: 'warning',
-      text: 'Facebook渠道CPI上涨25%',
+      text: 'Facebook广告平台CPI上涨25%',
       suggestion: '建议优化投放策略'
     },
     {

@@ -11,7 +11,7 @@
       <AverageTouchpoints />
     </div>
 
-    <!-- 第三排：左 60%（渠道对比+洞察） 右 40%（桑基+转化时间） -->
+    <!-- 第三排：左 60%（广告平台对比+洞察） 右 40%（桑基+转化时间） -->
     <div class="first-click-row-3">
       <div class="first-click-col-left">
         <ChannelAttributionWithInsights />

@@ -43,7 +43,7 @@
               :aria-selected="activeTab === 'owner'"
               @click="activeTab = 'owner'"
             >
-              {{ tr('adPerformance.ownerShare', '投放师占比') }}
+              {{ tr('adPerformance.ownerShare', '优化师占比') }}
             </button>
           </div>
         </template>

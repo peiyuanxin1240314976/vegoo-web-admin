@@ -113,16 +113,16 @@
     },
     {
       key: 'channelScope',
-      label: '渠道范围',
-      desc: '可查看哪些投放渠道的数据',
+      label: '广告平台范围',
+      desc: '可查看哪些投放广告平台的数据',
       options: [
-        { value: 'all_channels', label: '全部渠道' },
-        { value: 'my_channels', label: '仅自己负责的渠道' },
+        { value: 'all_channels', label: '全部广告平台' },
+        { value: 'my_channels', label: '仅自己负责的广告平台' },
         { value: 'google_readonly', label: 'Google Ads 只读' },
         { value: 'meta_readonly', label: 'Meta Ads 只读' },
         { value: 'tiktok_readonly', label: 'TikTok Ads 只读' },
         { value: 'unity_readonly', label: 'Unity Ads 只读' },
-        { value: 'custom_channels', label: '自定义选择[多选渠道]' }
+        { value: 'custom_channels', label: '自定义选择[多选广告平台]' }
       ]
     },
     {

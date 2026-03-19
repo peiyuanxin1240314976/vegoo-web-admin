@@ -50,11 +50,11 @@ export interface AppDistributionItem {
   appName: string
   spend: number
   percent: number
-  /** 预留字段：后续若需要按应用维度展示投放师占比 */
+  /** 预留字段：后续若需要按应用维度展示优化师占比 */
   ownerShare?: number
 }
 
-/** 投放师占比分布项（列表） */
+/** 优化师占比分布项（列表） */
 export interface OwnerShareDistributionItem {
   ownerName: string
   percent: number
@@ -110,7 +110,7 @@ export interface AdPerformanceCountryRow {
   estimatedProfit: number
 }
 
-/** 优化师职级（截图里显示“初级/中级/高级投放师”等） */
+/** 优化师职级（截图里显示“初级/中级/高级优化师”等） */
 export type OwnerLevel = 'junior' | 'mid' | 'senior'
 
 /** 按投放优化师：子行（广告系列） */

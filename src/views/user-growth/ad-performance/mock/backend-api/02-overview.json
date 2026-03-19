@@ -63,7 +63,7 @@
       "ownerShareDistribution": {
         "type": "OwnerShareDistributionItem[]",
         "required": true,
-        "description": "投放师占比分布（列表条形）。"
+        "description": "优化师占比分布（列表条形）。"
       },
       "alerts": {
         "type": "AdPerformanceAlertItem[]",

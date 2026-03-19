@@ -83,7 +83,7 @@
   ],
   "apiSuggestion": {
     "notes": [
-      "建议后端在分页时只对“顶层行”分页：campaign=系列、owner=投放师、account=账户；children 不参与分页。",
+      "建议后端在分页时只对“顶层行”分页：campaign=系列、owner=优化师、account=账户；children 不参与分页。",
       "owner/account 的 children 建议按 spend 降序返回，便于 UI 阅读。",
       "若后端需要排序/筛选更复杂，建议扩展字段 sortBy/sortOrder，并与前端列 key 对齐。"
     ]

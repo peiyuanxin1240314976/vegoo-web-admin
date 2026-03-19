@@ -1,6 +1,6 @@
 <template>
   <div class="channel-attribution-chart art-card">
-    <h3 class="chart-title">渠道归因-模型对比图表</h3>
+    <h3 class="chart-title">广告平台归因-模型对比图表</h3>
     <div ref="chartRef" class="chart-container" />
   </div>
 </template>

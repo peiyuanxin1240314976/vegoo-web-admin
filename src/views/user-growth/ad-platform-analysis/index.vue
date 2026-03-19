@@ -67,7 +67,7 @@
         </div>
       </header>
 
-      <!-- 第一排：渠道 KPI 卡片 -->
+      <!-- 第一排：广告平台 KPI 卡片 -->
       <section class="row row-1">
         <div v-for="card in filteredChannelKpiCards" :key="card.id" class="kpi-card">
           <div class="kpi-card-head">
@@ -88,10 +88,10 @@
         </div>
       </section>
 
-      <!-- 第二排：ROI 趋势 | 用户质量热力图 | 渠道质量雷达 -->
+      <!-- 第二排：ROI 趋势 | 用户质量热力图 | 广告平台质量雷达 -->
       <section class="row row-2">
         <div class="panel panel-trend">
-          <div class="panel-title">渠道ROI趋势分析 (最近30天)</div>
+          <div class="panel-title">广告平台ROI趋势分析 (最近30天)</div>
           <div ref="roiTrendRef" class="chart-dom"></div>
         </div>
         <div class="panel panel-heatmap">
@@ -102,10 +102,10 @@
         </div>
       </section>
 
-      <!-- 第三排：渠道指标比较详情表格 -->
+      <!-- 第三排：广告平台指标比较详情表格 -->
       <section class="row row-3">
         <div class="panel panel-table">
-          <div class="panel-title">渠道指标比较详情</div>
+          <div class="panel-title">广告平台指标比较详情</div>
           <div class="table-wrap">
             <ArtTable
               :data="paginatedMetrics"
@@ -237,7 +237,7 @@
   const filtersPlaceholders = {
     app: '全部Apps',
     platform: 'IOS & Android',
-    channel: '全部渠道'
+    channel: '全部广告平台'
   } as const
 
   const appOptions = computed<SelectOption[]>(() => [
@@ -272,7 +272,7 @@
       .map(([key, label]) => ({ label, value: key }))
       .sort((a, b) => a.label.localeCompare(b.label))
 
-    return [{ label: '全部渠道', value: 'all' }, ...items]
+    return [{ label: '全部广告平台', value: 'all' }, ...items]
   })
 
   const selectedChannelKey = computed(() =>
@@ -378,7 +378,7 @@
   const detailColumns = computed(() => {
     const customSortable = 'custom' as const
     return [
-      { label: '渠道名称', prop: 'channel', minWidth: 140, sortable: customSortable },
+      { label: '广告平台名称', prop: 'channel', minWidth: 140, sortable: customSortable },
       { label: '花费', prop: 'cost', minWidth: 90, sortable: customSortable },
       { label: '收入', prop: 'revenue', minWidth: 90, sortable: customSortable },
       { label: 'ROI', prop: 'roi', minWidth: 90, useSlot: true, sortable: customSortable },
@@ -491,7 +491,7 @@
     ]
 
     const channels = filteredUserQualityHeatmap.value.map((r) => r.channel)
-    // value: [x, y, 展示文本, 颜色档位, 渠道, 指标名, 原始数值]
+    // value: [x, y, 展示文本, 颜色档位, 广告平台, 指标名, 原始数值]
     const data: [number, number, string, string, string, string, number][] = []
     filteredUserQualityHeatmap.value.forEach((row, y) => {
       metrics.forEach((m, x) => {

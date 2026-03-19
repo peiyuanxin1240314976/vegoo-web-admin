@@ -1,8 +1,8 @@
 /**
- * 渠道 ROI / 用户质量分析大屏 - Mock 数据
+ * 广告平台 ROI / 用户质量分析大屏 - Mock 数据
  */
 
-/** 渠道 KPI 卡片 */
+/** 广告平台 KPI 卡片 */
 export interface ChannelKpiCard {
   id: string
   name: string
@@ -74,7 +74,7 @@ export const MOCK_CHANNEL_KPI_CARDS: ChannelKpiCard[] = [
   }
 ]
 
-/** 渠道 ROI 趋势（最近 30 天） */
+/** 广告平台 ROI 趋势（最近 30 天） */
 export interface ChannelRoiTrend {
   dates: string[]
   series: { name: string; data: number[] }[]
@@ -91,7 +91,7 @@ export const MOCK_CHANNEL_ROI_TREND: ChannelRoiTrend = {
   ]
 }
 
-/** 用户质量热力图：行=渠道，列=D1/D7/D30留存、付费率、ARPU */
+/** 用户质量热力图：行=广告平台，列=D1/D7/D30留存、付费率、ARPU */
 export interface UserQualityHeatmapRow {
   channel: string
   d1Retention: number
@@ -138,7 +138,7 @@ export const MOCK_USER_QUALITY_HEATMAP: UserQualityHeatmapRow[] = [
   { channel: 'Bigo', d1Retention: 38, d7Retention: 28, d30Retention: 12, payRate: 2.8, arpu: 2.12 }
 ]
 
-/** 渠道质量雷达图维度 */
+/** 广告平台质量雷达图维度 */
 export const MOCK_RADAR_INDICATORS = [
   { name: '成本效益', max: 100 },
   { name: '用户留存', max: 100 },
@@ -147,7 +147,7 @@ export const MOCK_RADAR_INDICATORS = [
   { name: '稳定性', max: 100 }
 ]
 
-/** 渠道质量雷达图系列 */
+/** 广告平台质量雷达图系列 */
 export interface ChannelRadarSeries {
   name: string
   value: number[]
@@ -162,7 +162,7 @@ export const MOCK_CHANNEL_RADAR: ChannelRadarSeries[] = [
   { name: '其他', value: [60, 58, 55, 65, 62] }
 ]
 
-/** 渠道指标比较详情表 */
+/** 广告平台指标比较详情表 */
 export type ChannelStatus = 'excellent' | 'average' | 'poor'
 
 export interface ChannelMetricRow {
