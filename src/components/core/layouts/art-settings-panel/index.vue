@@ -5,7 +5,7 @@
       <!-- 头部关闭按钮 -->
       <SettingHeader @close="closeDrawer" />
       <!-- 主题风格 -->
-      <ThemeSettings />
+      <!-- <ThemeSettings /> -->
       <!-- 菜单布局 -->
       <MenuLayoutSettings />
       <!-- 菜单风格 -->
@@ -29,7 +29,7 @@
 
   import SettingDrawer from './widget/SettingDrawer.vue'
   import SettingHeader from './widget/SettingHeader.vue'
-  import ThemeSettings from './widget/ThemeSettings.vue'
+  // import ThemeSettings from './widget/ThemeSettings.vue'
   import MenuLayoutSettings from './widget/MenuLayoutSettings.vue'
   import MenuStyleSettings from './widget/MenuStyleSettings.vue'
   import ColorSettings from './widget/ColorSettings.vue'
