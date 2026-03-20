@@ -1,0 +1,116 @@
+{
+  "_comment": "我的广告页 - 应用 + 广告平台 Tab：按应用分组的卡片与底部汇总。对应 types.ts: MyAdsPlatformTabMock。",
+  "fieldDescription": {
+    "request": {
+      "staff_id": { "type": "string", "required": true, "description": "优化师 ID。" },
+      "start_date": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "end_date": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "group_by": {
+        "type": "string",
+        "required": false,
+        "enum": ["app", "source"],
+        "default": "app",
+        "description": "分组维度：应用 / 广告平台（终端预留）。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "MyAdsPlatformTabMock",
+        "required": true,
+        "description": "appGroups + footer 汇总指标。"
+      },
+      "CampaignCard": {
+        "platform": {
+          "type": "string",
+          "required": true,
+          "description": "广告平台展示名（如谷歌广告）。"
+        },
+        "status": {
+          "type": "string",
+          "required": true,
+          "enum": ["active", "warn"],
+          "description": "卡片状态，影响预警样式。"
+        },
+        "progress": {
+          "type": "number",
+          "required": true,
+          "description": "预算消耗进度 0-100。"
+        }
+      },
+      "footer": {
+        "appCount": { "type": "number", "required": true, "description": "应用数量。" },
+        "campaignCount": {
+          "type": "number",
+          "required": true,
+          "description": "广告系列/投放单元数量（与产品定义一致）。"
+        },
+        "totalSpend": { "type": "string", "required": true, "description": "总广告支出展示。" },
+        "overBudgetCount": {
+          "type": "number",
+          "required": true,
+          "description": "超预算预警数量。"
+        },
+        "roiBelowTargetCount": {
+          "type": "number",
+          "required": true,
+          "description": "ROI 未达标数量。"
+        }
+      }
+    }
+  },
+  "sampleRequest": {
+    "staff_id": "1",
+    "start_date": "2026-02-23",
+    "end_date": "2026-03-01",
+    "group_by": "app"
+  },
+  "sampleResponse": {
+    "data": {
+      "appGroups": [
+        {
+          "name": "天气预报",
+          "nameEn": "Weather5",
+          "icon": "🌤️",
+          "color": "#f59e0b",
+          "totalSpend": "$7,300",
+          "avgRoi": "39.2%",
+          "platformCount": 2,
+          "campaigns": [
+            {
+              "platform": "谷歌广告",
+              "platformIcon": "G",
+              "status": "active",
+              "spend": "$5,200",
+              "budget": "$6,500",
+              "roi": "41.2%",
+              "roiTarget": "35%",
+              "progress": 80,
+              "minSpend": "$4,100",
+              "cpi": "$2.37"
+            }
+          ]
+        }
+      ],
+      "footer": {
+        "appCount": 3,
+        "campaignCount": 5,
+        "totalSpend": "$12,200",
+        "overBudgetCount": 1,
+        "roiBelowTargetCount": 1,
+        "avgRoi": "38.2%",
+        "estTotalProfit": "$4,660",
+        "minTotalProfit": "$2,100"
+      }
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-ads/table/platform",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "staff_id, start_date, end_date, group_by?",
+    "responseBody": "MyAdsPlatformTabMock"
+  },
+  "apiSuggestion": {
+    "notes": ["对接时广告平台枚举字段建议与后端 `n_source` 映射；本 Mock 使用展示名以贴合当前 UI。"]
+  }
+}
