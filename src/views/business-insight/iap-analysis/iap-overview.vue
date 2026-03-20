@@ -145,7 +145,7 @@
             <span class="iap-overview-cell-green">{{ row.adSpend }}</span>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="计算消耗" width="90" prop="calcCost" align="right">
+        <ElTableColumn label="预算" width="90" prop="calcCost" align="right">
           <template #default="{ row }">
             <span class="iap-overview-cell-green">{{ row.calcCost }}</span>
           </template>
@@ -216,7 +216,7 @@
             <div class="iap-overview-s-val iap-overview-s-val--green">$36,600</div>
           </div>
           <div class="iap-overview-s-cell iap-overview-s-cell--head" style="width: 90px">
-            <div class="iap-overview-s-sub">计算消耗</div>
+            <div class="iap-overview-s-sub">预算</div>
             <div class="iap-overview-s-val iap-overview-s-val--green">$34,200</div>
           </div>
           <div class="iap-overview-s-cell iap-overview-s-cell--head" style="width: 72px">

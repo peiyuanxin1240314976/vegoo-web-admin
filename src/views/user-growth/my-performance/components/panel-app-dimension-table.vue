@@ -163,7 +163,7 @@
               <span class="sf-v is-primary">{{ money(summary.adSpend) }}</span>
             </div>
             <div class="sf-item">
-              <span class="sf-k">计算消耗</span>
+              <span class="sf-k">预算</span>
               <span class="sf-v is-info">{{ money(summary.calculatedSpend) }}</span>
             </div>
             <div class="sf-item">
@@ -239,7 +239,7 @@
       colDeviationCoef: '违度系数',
       colMinProfit: '最低利润',
       colAdSpend: '广告支出',
-      colCalculatedSpend: '计算消耗',
+      colCalculatedSpend: '预算',
       colRoi: 'ROI',
       colCommissionSpend: '代投消耗',
       colEstimatedProfit: '预估利润',

@@ -5,8 +5,8 @@ import { monetizationRoutes } from './monetization'
 import { businessInsightRoutes } from './business-insight'
 import { userGrowthRoutes } from './user-growth'
 import { systemRoutes } from './system'
-import { resultRoutes } from './result'
-import { exceptionRoutes } from './exception'
+// import { resultRoutes } from './result'
+// import { exceptionRoutes } from './exception'
 
 /**
  * 导出所有模块化路由（顺序即侧边栏菜单顺序）
@@ -16,10 +16,10 @@ export const routeModules: AppRouteRecord[] = [
   cockpitRoutes,
   cockpitMapDetailRoute,
   userGrowthRoutes,
+  businessInsightRoutes,
   dashboardRoutes,
   monetizationRoutes,
-  businessInsightRoutes,
-  systemRoutes,
-  resultRoutes,
-  exceptionRoutes
+  systemRoutes
+  // resultRoutes,
+  // exceptionRoutes
 ]

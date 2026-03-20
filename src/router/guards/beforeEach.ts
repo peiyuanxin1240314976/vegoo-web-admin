@@ -206,6 +206,17 @@ function handleLoginStatus(
   userStore: ReturnType<typeof useUserStore>,
   next: NavigationGuardNext
 ): boolean {
+  // 持久化异常：仅有 isLogin 标记但没有 token，视为未登录，避免走动态路由初始化后接口失败进入 500
+  if (userStore.isLogin && !userStore.accessToken?.trim()) {
+    userStore.setLoginStatus(false)
+  }
+
+  // 根路径「/」虽挂在静态路由上，但未登录时不应放行到 RedirectHome → 业务首页，应先进登录页
+  if (to.path === '/' && !userStore.isLogin) {
+    next({ name: 'Login', replace: true })
+    return false
+  }
+
   // 已登录或访问登录页或静态路由，直接放行
   if (userStore.isLogin || to.path === RoutesAlias.Login || isStaticRoute(to.path)) {
     return true

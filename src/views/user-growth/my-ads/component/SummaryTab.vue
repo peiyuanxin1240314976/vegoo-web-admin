@@ -273,7 +273,7 @@
         <div class="stat-title">本期广告支出</div>
         <div class="stat-main" style="color: #10b981">$12,200</div>
         <div class="stat-row">
-          <span class="label-dim">计算消耗</span>
+          <span class="label-dim">预算</span>
           <span style="color: #f1f5f9">$11,480</span>
           <span class="sep">|</span>
           <span class="label-dim">差异</span>
@@ -332,9 +332,6 @@
           <span class="sep">|</span>
           <span class="label-dim">利润率</span>
           <span style="color: #f1f5f9">38.2%</span>
-        </div>
-        <div class="stat-row mt4">
-          <span style="color: #f97316">不盈利广告 1 条</span>
         </div>
       </div>
     </div>

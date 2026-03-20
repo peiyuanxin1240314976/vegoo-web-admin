@@ -4,7 +4,7 @@
     "month": {
       "topKpis": [
         { "label": "月度广告支出", "value": "$12,200", "type": "primary" },
-        { "label": "计算消耗", "value": "$11,400" },
+        { "label": "预算", "value": "$11,400" },
         { "label": "月度 ROI", "value": "83%", "type": "warning" },
         { "label": "预估利润", "value": "+$2,180", "type": "success" },
         { "label": "月度综合评分", "value": "88分", "type": "primary", "highlight": true }
@@ -13,7 +13,7 @@
     "quarter": {
       "topKpis": [
         { "label": "季度广告支出", "value": "$32,800", "type": "primary" },
-        { "label": "计算消耗", "value": "$30,600" },
+        { "label": "预算", "value": "$30,600" },
         { "label": "季度 ROI", "value": "79%", "type": "warning" },
         { "label": "预估利润", "value": "+$5,420", "type": "success" },
         { "label": "季度综合评分", "value": "84分", "type": "primary", "highlight": true }

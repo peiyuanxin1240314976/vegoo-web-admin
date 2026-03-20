@@ -1,16 +1,37 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, computed } from 'vue'
   import SummaryTab from './SummaryTab.vue'
   import PlatformTab from './PlatformTab.vue'
   import CampaignTab from './CampaignTab.vue'
 
-  const activeTab = ref<'summary' | 'platform' | 'campaign'>('summary')
+  defineOptions({ name: 'MyAdsPageContent' })
+
+  type StaffOption = { id: string; name: string }
+
+  /** 顶部筛选：优化师/人员（示例数据，接口就绪后替换） */
+  const staffList: StaffOption[] = [
+    { id: '1', name: '张三' },
+    { id: '2', name: '李四' },
+    { id: '3', name: '王五' }
+  ]
+
+  const selectedStaffId = ref(staffList[0]!.id)
+
+  const staffAvatarLetter = computed(() => {
+    const name = staffList.find((s) => s.id === selectedStaffId.value)?.name ?? ''
+    return name ? name[0]! : '—'
+  })
+
+  /** 顶部筛选：统计期间 */
+  const dateRange = ref<[string, string]>(['2026-02-23', '2026-03-01'])
+
+  const activeTab = ref<string>('summary')
 
   const tabs = [
     { key: 'summary', label: '汇总' },
     { key: 'platform', label: '应用+广告平台' },
     { key: 'campaign', label: '广告系列明细' }
-  ]
+  ] as const
 
   const metrics = [
     {
@@ -21,7 +42,7 @@
       valueColor: '#ffffff'
     },
     {
-      label: '计算消耗',
+      label: '预算',
       value: '$11,480',
       sub: '差异 -$720',
       subColor: '#f97316',
@@ -56,6 +77,10 @@
       valueColor: '#a78bfa'
     }
   ]
+
+  const handleTabClick = (key: 'summary' | 'platform' | 'campaign') => {
+    activeTab.value = key
+  }
 </script>
 
 <template>
@@ -63,17 +88,38 @@
     <!-- ── 顶部标题栏 ── -->
     <div class="top-bar">
       <h1 class="page-title">我的广告</h1>
-      <div class="top-actions">
-        <div class="user-pill">
-          <span class="pill-avatar">Z</span>
-          <span class="pill-label">人员: 张三</span>
-          <span class="pill-caret">∨</span>
+      <div class="top-actions filter-bar" aria-label="页面筛选">
+        <div class="user-pill user-pill--select">
+          <ElSelect
+            v-model="selectedStaffId"
+            class="filter-staff-select"
+            popper-class="my-ads-filter-select-popper"
+            :teleported="true"
+          >
+            <template #prefix>
+              <span class="pill-avatar">{{ staffAvatarLetter }}</span>
+            </template>
+            <ElOption v-for="s in staffList" :key="s.id" :label="`人员: ${s.name}`" :value="s.id" />
+          </ElSelect>
         </div>
-        <div class="date-pill">
-          <span class="date-icon">📅</span>
-          <span>期间: 2026-02-23 ~ 2026-03-01</span>
+        <div class="date-pill date-pill--range">
+          <span class="date-icon" aria-hidden="true">📅</span>
+          <span class="date-pill__prefix">期间:</span>
+          <ElDatePicker
+            v-model="dateRange"
+            type="daterange"
+            range-separator="~"
+            start-placeholder="开始"
+            end-placeholder="结束"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            class="filter-date-range"
+            popper-class="my-ads-filter-date-popper"
+            :teleported="true"
+            :clearable="false"
+          />
         </div>
-        <button class="export-btn">导出报表</button>
+        <button type="button" class="export-btn">导出报表</button>
       </div>
     </div>
 
@@ -102,7 +148,7 @@
         v-for="tab in tabs"
         :key="tab.key"
         :class="['tab-item', activeTab === tab.key ? 'active' : '']"
-        @click="activeTab = tab.key as any"
+        @click="handleTabClick(tab.key)"
       >
         {{ tab.label }}
       </div>
@@ -179,6 +225,46 @@
     border-radius: 20px;
   }
 
+  .user-pill--select {
+    padding: 0;
+    cursor: default;
+  }
+
+  .filter-staff-select {
+    min-width: 168px;
+  }
+
+  .user-pill--select :deep(.el-select__wrapper) {
+    gap: 6px;
+    min-height: 32px;
+    padding: 5px 28px 5px 6px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .user-pill--select :deep(.el-select__wrapper.is-hovering),
+  .user-pill--select :deep(.el-select__wrapper.is-focused) {
+    box-shadow: none;
+  }
+
+  .user-pill--select :deep(.el-select__selected-item) {
+    font-size: 12px;
+    font-weight: 600;
+    color: #000;
+  }
+
+  .user-pill--select :deep(.el-select__placeholder) {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(0 0 0 / 55%);
+  }
+
+  .user-pill--select :deep(.el-select__caret) {
+    font-size: 10px;
+    color: #000;
+  }
+
   .pill-avatar {
     display: flex;
     align-items: center;
@@ -187,6 +273,7 @@
     height: 22px;
     font-size: 11px;
     font-weight: 700;
+    color: #fff;
     background: rgb(0 0 0 / 25%);
     border-radius: 50%;
   }
@@ -206,6 +293,62 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 6px;
+  }
+
+  .date-pill--range {
+    padding: 3px 10px 3px 12px;
+    cursor: default;
+  }
+
+  .date-pill__prefix {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .filter-date-range {
+    flex: 1;
+    width: 220px;
+    min-width: 200px;
+  }
+
+  .date-pill--range :deep(.el-date-editor.el-date-editor--daterange) {
+    --el-date-editor-width: 100%;
+    --el-date-editor-daterange-width: 100%;
+
+    flex: 1;
+    min-width: 0;
+  }
+
+  .date-pill--range :deep(.el-date-editor .el-input__wrapper) {
+    padding: 2px 4px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .date-pill--range :deep(.el-date-editor .el-input__wrapper.is-focus) {
+    box-shadow: none;
+  }
+
+  .date-pill--range :deep(.el-range-input) {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .date-pill--range :deep(.el-range-separator) {
+    flex: 0 0 auto;
+    padding: 0 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .date-pill--range :deep(.el-range__icon) {
+    display: none;
+  }
+
+  .date-pill--range :deep(.el-range__close-icon) {
+    color: var(--text-dim);
   }
 
   .export-btn {
@@ -348,5 +491,39 @@
   /* ── Tab 内容区域 ── */
   .tab-content {
     padding-top: 16px;
+  }
+</style>
+
+<style lang="scss">
+  /* Teleport 到 body 的下拉/面板，与顶部深色条协调 */
+  .my-ads-filter-select-popper.el-popper {
+    background: #0f1929;
+    border: 1px solid #1e2f45;
+  }
+
+  .my-ads-filter-select-popper .el-select-dropdown__item {
+    font-size: 12px;
+    color: #e2e8f0;
+  }
+
+  .my-ads-filter-select-popper .el-select-dropdown__item.is-hovering {
+    background: rgb(0 212 170 / 12%);
+  }
+
+  .my-ads-filter-select-popper .el-select-dropdown__item.is-selected {
+    font-weight: 600;
+    color: #00d4aa;
+  }
+
+  .my-ads-filter-date-popper.el-popper {
+    --el-datepicker-border-color: #1e2f45;
+    --el-datepicker-text-color: #e2e8f0;
+    --el-datepicker-off-text-color: #64748b;
+    --el-datepicker-header-text-color: #e2e8f0;
+    --el-datepicker-active-color: #00d4aa;
+    --el-datepicker-hover-text-color: #00d4aa;
+
+    background: #0f1929;
+    border: 1px solid #1e2f45;
   }
 </style>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
 
+  defineOptions({ name: 'CampaignTab' })
+
   /* ── 类型 ── */
   interface Campaign {
     id: string
@@ -154,21 +156,89 @@
   ]
 
   /* ── 筛选 ── */
-  const filterAll = ref('全部')
-  const filterApp = ref('应用')
-  const filterPlatform = ref('广告平台')
-  const filterCountry = ref('国家')
-  const filterStatus = ref('状态')
-  const filterType = ref('投放类型')
+  const scopeOptions = [
+    { value: '全部', label: '全部' },
+    { value: '我负责的', label: '我负责的' }
+  ]
+
+  const filterScope = ref<string | undefined>(undefined)
+
+  const filterApp = ref<string | undefined>(undefined)
+  const filterPlatform = ref<string | undefined>(undefined)
+  const filterCountry = ref<string | undefined>(undefined)
+  const filterStatus = ref<Campaign['status'] | undefined>(undefined)
+  const filterType = ref<'with_agency' | 'pure' | undefined>(undefined)
+
+  const statusOptions = [
+    { value: 'active' as const, label: '激活' },
+    { value: 'warn' as const, label: '超预算' },
+    { value: 'inactive' as const, label: '未启动' }
+  ]
+
+  const typeOptions = [
+    { value: 'with_agency' as const, label: '含代投' },
+    { value: 'pure' as const, label: '仅直投' }
+  ]
+
+  const appOptions = computed(() => {
+    const names = [...new Set(campaigns.map((c) => c.appName))].sort()
+    return names.map((n) => ({ value: n, label: n }))
+  })
+
+  const platformOptions = computed(() => {
+    const ps = [...new Set(campaigns.map((c) => c.platform))].sort()
+    return ps.map((p) => ({ value: p, label: p }))
+  })
+
+  const countryOptions = computed(() => {
+    const cs = [...new Set(campaigns.map((c) => c.country))].sort()
+    return cs.map((c) => ({ value: c, label: c }))
+  })
+
   const searchText = ref('')
   const currentPage = ref(1)
   const pageSize = ref(10)
-  const totalCampaigns = 185
 
   /* ── 分页数据 ── */
   const displayedCampaigns = computed(() => {
-    return campaigns
+    let list = campaigns.slice()
+
+    if (filterApp.value) {
+      list = list.filter((c) => c.appName === filterApp.value)
+    }
+    if (filterPlatform.value) {
+      list = list.filter((c) => c.platform === filterPlatform.value)
+    }
+    if (filterCountry.value) {
+      list = list.filter((c) => c.country === filterCountry.value)
+    }
+    if (filterStatus.value) {
+      list = list.filter((c) => c.status === filterStatus.value)
+    }
+    if (filterType.value === 'with_agency') {
+      list = list.filter((c) => c.agencySpend > 0)
+    } else if (filterType.value === 'pure') {
+      list = list.filter((c) => c.agencySpend === 0)
+    }
+
+    const q = searchText.value.trim().toLowerCase()
+    if (q) {
+      list = list.filter((c) => c.name.toLowerCase().includes(q))
+    }
+
+    return list
   })
+
+  function resetFilters() {
+    filterScope.value = undefined
+    filterApp.value = undefined
+    filterPlatform.value = undefined
+    filterCountry.value = undefined
+    filterStatus.value = undefined
+    filterType.value = undefined
+    searchText.value = ''
+    currentPage.value = 1
+  }
 
   /* ── 格式化 ── */
   function fmtNum(v: number | null): string {
@@ -242,16 +312,92 @@
     <!-- ── 筛选栏 ── -->
     <div class="filter-bar">
       <div class="filter-selects">
-        <div class="filter-select">{{ filterAll }} <span class="caret">∨</span></div>
-        <div class="filter-select">{{ filterApp }} <span class="caret">∨</span></div>
-        <div class="filter-select">{{ filterPlatform }} <span class="caret">∨</span></div>
-        <div class="filter-select">{{ filterCountry }} <span class="caret">∨</span></div>
-        <div class="filter-select">{{ filterStatus }} <span class="caret">∨</span></div>
-        <div class="filter-select">{{ filterType }} <span class="caret">∨</span></div>
+        <div class="filter-select-wrap">
+          <ElSelect
+            v-model="filterScope"
+            class="filter-el"
+            placeholder="请选择数据范围"
+            clearable
+            popper-class="campaign-tab-filter-popper"
+            :teleported="true"
+          >
+            <ElOption v-for="o in scopeOptions" :key="o.value" :label="o.label" :value="o.value" />
+          </ElSelect>
+        </div>
+        <div class="filter-select-wrap">
+          <ElSelect
+            v-model="filterApp"
+            class="filter-el filter-el--app"
+            placeholder="请选择应用"
+            clearable
+            popper-class="campaign-tab-filter-popper"
+            :teleported="true"
+          >
+            <ElOption v-for="o in appOptions" :key="o.value" :label="o.label" :value="o.value" />
+          </ElSelect>
+        </div>
+        <div class="filter-select-wrap">
+          <ElSelect
+            v-model="filterPlatform"
+            class="filter-el"
+            placeholder="请选择广告平台"
+            clearable
+            popper-class="campaign-tab-filter-popper"
+            :teleported="true"
+          >
+            <ElOption
+              v-for="o in platformOptions"
+              :key="o.value"
+              :label="o.label"
+              :value="o.value"
+            />
+          </ElSelect>
+        </div>
+        <div class="filter-select-wrap">
+          <ElSelect
+            v-model="filterCountry"
+            class="filter-el"
+            placeholder="请选择国家或地区"
+            clearable
+            popper-class="campaign-tab-filter-popper"
+            :teleported="true"
+          >
+            <ElOption
+              v-for="o in countryOptions"
+              :key="o.value"
+              :label="o.label"
+              :value="o.value"
+            />
+          </ElSelect>
+        </div>
+        <div class="filter-select-wrap">
+          <ElSelect
+            v-model="filterStatus"
+            class="filter-el"
+            placeholder="请选择状态"
+            clearable
+            popper-class="campaign-tab-filter-popper"
+            :teleported="true"
+          >
+            <ElOption v-for="o in statusOptions" :key="o.value" :label="o.label" :value="o.value" />
+          </ElSelect>
+        </div>
+        <div class="filter-select-wrap">
+          <ElSelect
+            v-model="filterType"
+            class="filter-el"
+            placeholder="请选择投放类型"
+            clearable
+            popper-class="campaign-tab-filter-popper"
+            :teleported="true"
+          >
+            <ElOption v-for="o in typeOptions" :key="o.value" :label="o.label" :value="o.value" />
+          </ElSelect>
+        </div>
       </div>
       <div class="filter-right">
-        <input v-model="searchText" class="search-input" placeholder="搜索广告系列名称" />
-        <button class="reset-btn">重置</button>
+        <input v-model="searchText" class="search-input" placeholder="输入广告系列名称搜索" />
+        <button type="button" class="reset-btn" @click="resetFilters">重置</button>
       </div>
     </div>
 
@@ -266,7 +412,7 @@
             <th>国家</th>
             <th>状态</th>
             <th class="th-budget">广告支出/预算</th>
-            <th>计算消耗</th>
+            <th>预算</th>
             <th>代投消耗</th>
             <th>首日ROI</th>
             <th>最低消耗</th>
@@ -343,7 +489,7 @@
               </div>
             </td>
 
-            <!-- 计算消耗 -->
+            <!-- 预算 -->
             <td :style="{ color: c.status === 'inactive' ? '#4b5563' : '#94a3b8' }">
               {{ c.calcSpend > 0 ? fmtNum(c.calcSpend) : '--' }}
             </td>
@@ -396,7 +542,7 @@
 
     <!-- ── 分页 ── -->
     <div class="pagination-bar">
-      <span class="page-info">共 {{ totalCampaigns }} 条广告系列</span>
+      <span class="page-info">共 {{ displayedCampaigns.length }} 条广告系列</span>
       <div class="page-nums">
         <button :class="['page-btn', currentPage === 1 ? 'active' : '']" @click="currentPage = 1"
           >1</button
@@ -422,7 +568,7 @@
           <span class="bar-val" style="color: #10b981">$12,200</span>
         </div>
         <div class="bar-item">
-          <span class="bar-label">计算消耗</span>
+          <span class="bar-label">预算</span>
           <span class="bar-val" style="color: #e2e8f0">$11,480</span>
         </div>
         <div class="bar-item">
@@ -486,26 +632,52 @@
     gap: 8px;
   }
 
-  .filter-select {
-    display: flex;
+  .filter-select-wrap {
+    display: inline-flex;
+  }
+
+  .filter-el {
+    min-width: 104px;
+  }
+
+  .filter-el--app {
+    min-width: 120px;
+  }
+
+  .filter-select-wrap :deep(.el-select__wrapper) {
     gap: 6px;
-    align-items: center;
-    padding: 5px 12px;
+    min-height: 30px;
+    padding: 5px 28px 5px 12px;
     font-size: 12px;
     color: var(--text-secondary);
-    white-space: nowrap;
-    cursor: pointer;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 6px;
+    box-shadow: none;
     transition: border-color 0.2s;
   }
 
-  .filter-select:hover {
+  .filter-select-wrap :deep(.el-select__wrapper.is-hovering) {
     border-color: #2a4060;
   }
 
-  .caret {
+  .filter-select-wrap :deep(.el-select__wrapper.is-focused) {
+    border-color: var(--teal);
+    box-shadow: none;
+  }
+
+  .filter-select-wrap :deep(.el-select__selected-item) {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+
+  .filter-select-wrap :deep(.el-select__placeholder) {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .filter-select-wrap :deep(.el-select__caret) {
     font-size: 10px;
     color: var(--text-dim);
   }
@@ -837,5 +1009,26 @@
   .bar-val {
     font-size: 18px;
     font-weight: 700;
+  }
+</style>
+
+<style lang="scss">
+  .campaign-tab-filter-popper.el-popper {
+    background: #0f1929;
+    border: 1px solid #1e2f45;
+  }
+
+  .campaign-tab-filter-popper .el-select-dropdown__item {
+    font-size: 12px;
+    color: #e2e8f0;
+  }
+
+  .campaign-tab-filter-popper .el-select-dropdown__item.is-hovering {
+    background: rgb(0 212 170 / 12%);
+  }
+
+  .campaign-tab-filter-popper .el-select-dropdown__item.is-selected {
+    font-weight: 600;
+    color: #00d4aa;
   }
 </style>

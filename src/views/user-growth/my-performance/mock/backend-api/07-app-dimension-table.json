@@ -61,7 +61,7 @@
       "deviationCoef": { "type": "number", "required": false, "description": "难度系数。" },
       "minProfit": { "type": "number", "required": false, "description": "最低利润，$。" },
       "adSpend": { "type": "number", "required": false, "description": "广告支出，$。" },
-      "calculatedSpend": { "type": "number", "required": false, "description": "计算消耗，$。" },
+      "calculatedSpend": { "type": "number", "required": false, "description": "预算，$。" },
       "roi": { "type": "number", "required": false, "description": "ROI，0-100。" },
       "commissionSpend": { "type": "number", "required": false, "description": "代投消耗，$。" },
       "estimatedProfit": {
@@ -81,7 +81,7 @@
     },
     "MyPerformanceAppTableSummary": {
       "adSpend": { "type": "number", "required": true, "description": "广告支出合计，$。" },
-      "calculatedSpend": { "type": "number", "required": true, "description": "计算消耗合计，$。" },
+      "calculatedSpend": { "type": "number", "required": true, "description": "预算合计，$。" },
       "roi": { "type": "number", "required": true, "description": "平均 ROI，%。" },
       "commissionSpend": { "type": "number", "required": true, "description": "代投消耗合计，$。" },
       "estimatedProfit": { "type": "number", "required": true, "description": "预估利润合计，$。" },
