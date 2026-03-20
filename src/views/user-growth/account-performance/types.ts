@@ -64,9 +64,9 @@ export interface AccountAlertItem {
   targetName?: string
 }
 
-/** 今日消耗节奏（按时间段） */
+/** 近七日消耗节奏（按天） */
 export interface SpendPaceItem {
-  time: string
+  date: string
   value: number
 }
 
@@ -78,7 +78,7 @@ export interface AccountPerformanceMock {
   budgetUsageBuckets: BudgetUsageBucket[]
   day1RoiTrend: Day1RoiTrendItem[]
   alerts: AccountAlertItem[]
-  todaySpendPace: SpendPaceItem[]
+  spendPace7Days: SpendPaceItem[]
   dateRange: [string, string]
   summaryText: string
 }

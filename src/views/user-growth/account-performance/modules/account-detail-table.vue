@@ -1,3 +1,4 @@
+<!-- 我是应用页面 -->
 <template>
   <div>
     <div class="ap-table-scroll">
@@ -12,7 +13,7 @@
         size="default"
         class="ap-detail-table"
       >
-        <ElTableColumn label="应用 / 平台 / 账户" min-width="200">
+        <ElTableColumn label="应用 / 平台 / 账户" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">
             <span class="ap-cell-name">
               <ElIcon v-if="row.type === 'app'" class="ap-row-icon ap-row-icon--app">
@@ -31,65 +32,88 @@
           </template>
         </ElTableColumn>
 
-        <ElTableColumn label="广告支出" width="100" align="center">
+        <ElTableColumn label="广告支出" width="100" align="center" show-overflow-tooltip>
           <template #default="{ row }">{{ formatMoney(row.spend) }}</template>
         </ElTableColumn>
 
-        <ElTableColumn label="预算" width="90" align="center">
+        <ElTableColumn label="预算" width="90" align="center" show-overflow-tooltip>
           <template #default="{ row }">{{ formatMoney(row.budget) }}</template>
         </ElTableColumn>
 
-        <ElTableColumn label="使用率" width="115" align="center">
+        <ElTableColumn label="使用率" width="115" align="center" show-overflow-tooltip>
           <template #default="{ row }">
             <div class="ap-usage-cell">
               <ElProgress
-                :percentage="Math.min(100, row.usageRate)"
-                :color="getUsageRateColor(row.usageRate)"
+                v-if="hasFiniteNumber(row.usageRate)"
+                :percentage="Math.min(100, round2Number(row.usageRate) ?? 0)"
+                :color="getUsageRateColor(round2Number(row.usageRate) ?? 0)"
                 :show-text="false"
                 :stroke-width="6"
                 class="ap-usage-bar"
               />
-              <span class="ap-usage-value">{{ row.usageRate }}%</span>
+              <span class="ap-usage-value">{{ formatPercentFixed2OrEmpty(row.usageRate) }}</span>
             </div>
           </template>
         </ElTableColumn>
 
-        <ElTableColumn label="CPI" width="70" align="center">
-          <template #default="{ row }">{{ row.cpi.toFixed(2) }}</template>
+        <ElTableColumn label="CPI" width="70" align="center" show-overflow-tooltip>
+          <template #default="{ row }">{{ formatFixed2OrEmpty(row.cpi) }}</template>
         </ElTableColumn>
 
-        <ElTableColumn label="安装数" width="95" align="center">
+        <ElTableColumn label="安装数" width="95" align="center" show-overflow-tooltip>
           <template #default="{ row }">{{ formatNumber(row.installs) }}</template>
         </ElTableColumn>
 
-        <ElTableColumn label="首日ROI" width="90" align="center">
+        <ElTableColumn label="首日ROI" width="90" align="center" show-overflow-tooltip>
           <template #default="{ row }">
-            <span :class="getRoiClass(row.roi1)">{{ row.roi1 }}%</span>
+            <span
+              v-if="hasFiniteNumber(row.roi1)"
+              :class="getRoiClass(round2Number(row.roi1) ?? 0)"
+            >
+              {{ formatPercentFixed2OrEmpty(row.roi1) }}
+            </span>
+            <span v-else>无数据</span>
           </template>
         </ElTableColumn>
 
-        <ElTableColumn label="3日ROI" width="80" align="center">
+        <ElTableColumn label="3日ROI" width="80" align="center" show-overflow-tooltip>
           <template #default="{ row }">
-            <span :class="getRoiClass(row.roi3)">{{ row.roi3 }}%</span>
+            <span
+              v-if="hasFiniteNumber(row.roi3)"
+              :class="getRoiClass(round2Number(row.roi3) ?? 0)"
+            >
+              {{ formatPercentFixed2OrEmpty(row.roi3) }}
+            </span>
+            <span v-else>无数据</span>
           </template>
         </ElTableColumn>
 
-        <ElTableColumn label="7日ROI" width="80" align="center">
+        <ElTableColumn label="7日ROI" width="80" align="center" show-overflow-tooltip>
           <template #default="{ row }">
-            <span :class="getRoiClass(row.roi7)">{{ row.roi7 }}%</span>
+            <span
+              v-if="hasFiniteNumber(row.roi7)"
+              :class="getRoiClass(round2Number(row.roi7) ?? 0)"
+            >
+              {{ formatPercentFixed2OrEmpty(row.roi7) }}
+            </span>
+            <span v-else>无数据</span>
           </template>
         </ElTableColumn>
 
-        <ElTableColumn label="状态" width="100" align="center">
+        <ElTableColumn label="状态" width="100" align="center" show-overflow-tooltip>
           <template #default="{ row }">
             <span v-if="row.status === 'normal'" class="ap-status ap-status--normal">正常</span>
-            <span v-else class="ap-status ap-status--warning">{{
+            <span v-else-if="row.status === 'warning'" class="ap-status ap-status--warning"
+              >注意</span
+            >
+            <span v-else-if="row.status === 'roi_low'" class="ap-status ap-status--warning">{{
               row.statusText || 'ROI偏低'
             }}</span>
+            <span v-else>无数据</span>
           </template>
         </ElTableColumn>
 
-        <ElTableColumn label="操作" width="100" align="center" fixed="right">
+        <ElTableColumn label="操作" width="100" align="center" fixed="right" show-overflow-tooltip>
           <template #default="{ row }">
             <template v-if="row.type === 'account'">
               <ElButton link type="primary" size="small">系列</ElButton>
@@ -126,11 +150,38 @@
     getRowStyle: (arg: any) => any
     getCellStyle: (arg: any) => any
     getNameStyle: (row: any) => any
-    formatMoney: (n: number) => string
-    formatNumber: (n: number) => string
+    formatMoney: (n: number | null | undefined) => string
+    formatNumber: (n: number | null | undefined) => string
     getRoiClass: (roi: number) => string
     getUsageRateColor: (rate: number) => string
   }>()
+
+  const EMPTY_TEXT = '无数据'
+
+  function toFiniteNumber(v: unknown): number | null {
+    if (v === null || v === undefined || v === '') return null
+    const n = typeof v === 'number' ? v : Number(v)
+    return Number.isFinite(n) ? n : null
+  }
+
+  function round2Number(v: unknown): number | null {
+    const n = toFiniteNumber(v)
+    return n === null ? null : Number(n.toFixed(2))
+  }
+
+  function hasFiniteNumber(v: unknown): boolean {
+    return toFiniteNumber(v) !== null
+  }
+
+  function formatFixed2OrEmpty(v: unknown): string {
+    const n = toFiniteNumber(v)
+    return n === null ? EMPTY_TEXT : n.toFixed(2)
+  }
+
+  function formatPercentFixed2OrEmpty(v: unknown): string {
+    const n = toFiniteNumber(v)
+    return n === null ? EMPTY_TEXT : `${n.toFixed(2)}%`
+  }
 </script>
 
 <style scoped lang="scss">

@@ -1,0 +1,255 @@
+{
+  "_comment": "账户成效页 - 平台维度占位表（对应 modules/platform-performance-placeholder.vue）。",
+  "fieldDescription": {
+    "request": {
+      "dateRangeStart": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期（YYYY-MM-DD）。"
+      },
+      "dateRangeEnd": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期（YYYY-MM-DD）。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选。空字符串表示全部。"
+      },
+      "app": {
+        "type": "string",
+        "required": false,
+        "description": "应用筛选。空字符串表示全部。"
+      },
+      "owner": {
+        "type": "string",
+        "required": false,
+        "description": "负责人筛选。空字符串表示全部。"
+      }
+    },
+    "response": {
+      "platformTotal": {
+        "type": "number",
+        "required": true,
+        "description": "广告平台总数。"
+      },
+      "accountTotal": {
+        "type": "number",
+        "required": true,
+        "description": "广告账户总数（用于底部文案）。"
+      },
+      "platforms": {
+        "type": "PlatformPerformancePlatformRow[]",
+        "required": true,
+        "description": "表格平台行数据。"
+      }
+    },
+    "PlatformPerformancePlatformRow": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "表格行唯一标识（前端仅用于 key）。"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台名称（TikTok/Facebook/Google/Mintegral/Kwai/NewsBreak）。"
+      },
+      "iconBg": {
+        "type": "string",
+        "required": true,
+        "description": "平台图标背景色（hex）。"
+      },
+      "iconColor": {
+        "type": "string",
+        "required": true,
+        "description": "平台图标文字颜色（hex）。"
+      },
+      "iconChar": {
+        "type": "string",
+        "required": true,
+        "description": "平台图标字符（展示在圆形徽章中）。"
+      },
+      "accountCount": {
+        "type": "number",
+        "required": true,
+        "description": "该平台广告账户数。"
+      },
+      "spend": {
+        "type": "number",
+        "required": true,
+        "description": "广告支出花费（数值）。"
+      },
+      "budget": {
+        "type": "number",
+        "required": true,
+        "description": "预算（数值）。"
+      },
+      "usageRate": {
+        "type": "number",
+        "required": true,
+        "description": "预算使用率百分比（0-100）。"
+      },
+      "cpi": {
+        "type": "number",
+        "required": true,
+        "description": "CPI（展示到 2 位小数）。"
+      },
+      "installs": {
+        "type": "number",
+        "required": true,
+        "description": "安装数。"
+      },
+      "roi1": {
+        "type": "number",
+        "required": true,
+        "description": "首日 ROI（百分比数值）。"
+      },
+      "roi3": {
+        "type": "number",
+        "required": true,
+        "description": "3 日 ROI（百分比数值）。"
+      },
+      "roi7": {
+        "type": "number",
+        "required": true,
+        "description": "7 日 ROI（百分比数值）。"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["normal", "warning", "roi_low"],
+        "description": "平台状态：normal=正常，warning=注意，roi_low=ROI 偏低。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "dateRangeStart": "2026-02-26",
+    "dateRangeEnd": "2026-03-04",
+    "source": "",
+    "app": "",
+    "owner": ""
+  },
+  "sampleResponse": {
+    "platformTotal": 6,
+    "accountTotal": 32,
+    "platforms": [
+      {
+        "id": "p1",
+        "name": "TikTok",
+        "iconBg": "#010101",
+        "iconColor": "#ffffff",
+        "iconChar": "♪",
+        "accountCount": 18,
+        "spend": 8847,
+        "budget": 18400,
+        "usageRate": 48.1,
+        "cpi": 0.12,
+        "installs": 143210,
+        "roi1": 103,
+        "roi3": 99,
+        "roi7": 97,
+        "status": "normal"
+      },
+      {
+        "id": "p2",
+        "name": "Facebook",
+        "iconBg": "#1877f2",
+        "iconColor": "#ffffff",
+        "iconChar": "f",
+        "accountCount": 7,
+        "spend": 5274,
+        "budget": 9800,
+        "usageRate": 53.8,
+        "cpi": 0.17,
+        "installs": 43820,
+        "roi1": 94,
+        "roi3": 91,
+        "roi7": 89,
+        "status": "normal"
+      },
+      {
+        "id": "p3",
+        "name": "Google",
+        "iconBg": "#4285f4",
+        "iconColor": "#ffffff",
+        "iconChar": "G",
+        "accountCount": 3,
+        "spend": 1361,
+        "budget": 3200,
+        "usageRate": 42.5,
+        "cpi": 0.21,
+        "installs": 12450,
+        "roi1": 88,
+        "roi3": 85,
+        "roi7": 83,
+        "status": "normal"
+      },
+      {
+        "id": "p4",
+        "name": "Mintegral",
+        "iconBg": "#7c3aed",
+        "iconColor": "#ffffff",
+        "iconChar": "M",
+        "accountCount": 2,
+        "spend": 851,
+        "budget": 2100,
+        "usageRate": 40.5,
+        "cpi": 0.19,
+        "installs": 5890,
+        "roi1": 82,
+        "roi3": 75,
+        "roi7": 74,
+        "status": "warning"
+      },
+      {
+        "id": "p5",
+        "name": "Kwai",
+        "iconBg": "#ff6d00",
+        "iconColor": "#ffffff",
+        "iconChar": "K",
+        "accountCount": 1,
+        "spend": 511,
+        "budget": 1500,
+        "usageRate": 34.1,
+        "cpi": 0.23,
+        "installs": 3244,
+        "roi1": 79,
+        "roi3": 75,
+        "roi7": 71,
+        "status": "warning"
+      },
+      {
+        "id": "p6",
+        "name": "NewsBreak",
+        "iconBg": "#e53e3e",
+        "iconColor": "#ffffff",
+        "iconChar": "N",
+        "accountCount": 1,
+        "spend": 178,
+        "budget": 800,
+        "usageRate": 22.3,
+        "cpi": 0.41,
+        "installs": 180,
+        "roi1": 61,
+        "roi3": 55,
+        "roi7": 49,
+        "status": "roi_low"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/account-performance/platform-performance-placeholder-table",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "dateRangeStart, dateRangeEnd, source?, app?, owner?",
+    "responseBody": "platformTotal, accountTotal, platforms"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "iconBg/iconColor/iconChar 在占位实现中用于前端徽章展示；真实接口可返回枚举后由前端映射颜色。",
+      "若前端将底部文案改为由 platforms 求和，请确保 accountTotal 与各平台 accountCount 一致。"
+    ]
+  }
+}

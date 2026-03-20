@@ -32,25 +32,43 @@
 
     <!-- 6 个 KPI 卡片 -->
     <ElRow :gutter="16" class="ap-kpi-row">
-      <ElCol
-        v-for="(item, index) in mock.kpi"
-        :key="index"
-        :xs="24"
-        :sm="12"
-        :md="4"
-        :lg="4"
-        :xl="4"
-      >
-        <div class="ap-kpi-card" :class="{ 'ap-kpi-card--alert': item.alert }">
-          <div class="ap-kpi-label">{{ item.label }}</div>
-          <div class="ap-kpi-value">{{ item.value }}</div>
-          <div v-if="item.sub" class="ap-kpi-sub">{{ item.sub }}</div>
-          <div v-if="item.detail" class="ap-kpi-detail">{{ item.detail }}</div>
-          <div v-if="item.compare" class="ap-kpi-compare" :class="item.compareUp ? 'up' : 'down'">
-            {{ item.compare }}
+      <template v-if="kpiLoading">
+        <ElCol v-for="i in KPI_CARD_COUNT" :key="i" :xs="24" :sm="12" :md="4" :lg="4" :xl="4">
+          <div class="ap-kpi-card ap-kpi-card--skeleton">
+            <ElSkeleton animated :rows="3" />
           </div>
-        </div>
-      </ElCol>
+        </ElCol>
+      </template>
+
+      <template v-else>
+        <ElCol
+          v-for="(item, index) in kpiCards"
+          :key="item.type || index"
+          :xs="24"
+          :sm="12"
+          :md="4"
+          :lg="4"
+          :xl="4"
+        >
+          <div
+            class="ap-kpi-card"
+            :class="{
+              'ap-kpi-card--alert': item.alert,
+              'ap-kpi-card--roi1': item.type === 'roi1',
+              [`ap-kpi-card--${item.type}`]: true
+            }"
+          >
+            <div class="ap-kpi-label">{{ item.label }}</div>
+            <div class="ap-kpi-value">{{ item.value }}</div>
+            <div v-if="item.sub && item.type !== 'roi1'" class="ap-kpi-sub">{{ item.sub }}</div>
+            <div v-else-if="item.detail" class="ap-kpi-detail">{{ item.detail }}</div>
+            <div v-if="item.compare" class="ap-kpi-compare" :class="item.compareUp ? 'up' : 'down'">
+              {{ item.compare }}
+            </div>
+            <div v-else class="ap-kpi-compare ap-kpi-compare--placeholder" />
+          </div>
+        </ElCol>
+      </template>
     </ElRow>
 
     <!-- 主体：左侧表格 + 右侧图表 -->
@@ -84,6 +102,7 @@
 
             <div class="ap-table-actions">
               <ElButton
+                v-if="modelValue === '应用'"
                 size="default"
                 color="#13deb9"
                 plain
@@ -92,31 +111,63 @@
               >
                 {{ expandAll ? '收起全部' : '展开全部' }}
               </ElButton>
-              <ElButton size="default" color="#13deb9" plain :dark="isDark">自定义列</ElButton>
+              <!-- <ElButton size="default" color="#13deb9" plain :dark="isDark">自定义列</ElButton> -->
               <ElInput
                 v-model="tableSearch"
-                placeholder="Q 搜索账户..."
+                :placeholder="'Q 搜索' + modelValue"
                 clearable
                 class="ap-table-search"
               />
             </div>
           </template>
           <div>
-            <AccountDetailTable
-              v-if="modelValue === '应用'"
-              :table-data="tableData"
-              :expanded-row-keys="expandedRowKeys"
-              :summary-text="mock.summaryText"
-              :get-row-style="getRowStyle as any"
-              :get-cell-style="getCellStyle as any"
-              :get-name-style="getNameStyle as any"
-              :format-money="formatMoney"
-              :format-number="formatNumber"
-              :get-roi-class="getRoiClass"
-              :get-usage-rate-color="getUsageRateColor"
+            <template v-if="modelValue === '应用'">
+              <div class="ap-app-table-wrapper">
+                <div class="ap-app-table-scroll-area">
+                  <AccountDetailTable
+                    v-if="!appTableLoading"
+                    :table-data="tableData"
+                    :expanded-row-keys="expandedRowKeys"
+                    :summary-text="tableSummaryText"
+                    :get-row-style="getRowStyle as any"
+                    :get-cell-style="getCellStyle as any"
+                    :get-name-style="getNameStyle as any"
+                    :format-money="formatMoney"
+                    :format-number="formatNumber"
+                    :get-roi-class="getRoiClass"
+                    :get-usage-rate-color="getUsageRateColor"
+                  />
+                  <div v-else class="ap-table-loading-block">
+                    <ElSkeleton animated :rows="11" />
+                  </div>
+                </div>
+                <ElPagination
+                  v-if="!appTableLoading"
+                  v-model:current-page="appCurrentPage"
+                  v-model:page-size="appPageSize"
+                  :total="appTotal"
+                  :page-sizes="appPageSizes"
+                  layout="prev, pager, next, sizes"
+                  small
+                  class="ap-app-pagination"
+                />
+              </div>
+            </template>
+
+            <AppPerformancePlaceholder
+              v-else-if="modelValue === '账户'"
+              :date-range="dateRange"
+              :source="source"
+              :platform="platform"
+              :filter-owner="filterOwner"
             />
-            <AppPerformancePlaceholder v-else-if="modelValue === '账户'" />
-            <PlatformPerformancePlaceholder v-else />
+            <PlatformPerformancePlaceholder
+              v-else
+              :date-range="dateRange"
+              :source="source"
+              :platform="platform"
+              :filter-owner="filterOwner"
+            />
           </div>
         </ElCard>
       </ElCol>
@@ -129,25 +180,37 @@
             <template #header>广告平台消耗分布</template>
             <div ref="channelChartRef" class="ap-chart-wrap ap-chart-donut"></div>
             <div class="ap-donut-center">{{ donutCenterText }}</div>
+            <div v-if="channelLoading" class="ap-chart-loading-overlay">
+              <ElSkeleton animated :rows="2" />
+            </div>
           </ElCard>
 
           <!-- 账户预算使用率分布 -->
           <ElCard class="ap-chart-card" shadow="never">
             <template #header>账户预算使用率分布</template>
             <div ref="usageChartRef" class="ap-chart-wrap ap-chart-bar"></div>
+            <div v-if="usageLoading" class="ap-chart-loading-overlay">
+              <ElSkeleton animated :rows="2" />
+            </div>
           </ElCard>
 
           <!-- 首日ROI趋势(7天) -->
           <ElCard class="ap-chart-card" shadow="never">
             <template #header>首日ROI趋势 (7天)</template>
             <div ref="roiTrendChartRef" class="ap-chart-wrap ap-chart-line"></div>
+            <div v-if="roiTrendLoading" class="ap-chart-loading-overlay">
+              <ElSkeleton animated :rows="2" />
+            </div>
           </ElCard>
 
           <!-- 预警事项 -->
           <ElCard class="ap-chart-card ap-alert-card" shadow="never">
-            <template #header>预警事项 ({{ mock.alerts.length }}项)</template>
-            <ul class="ap-alert-list">
-              <li v-for="a in mock.alerts" :key="a.id" class="ap-alert-item">
+            <template #header>预警事项 ({{ alertsLoading ? 3 : alerts.length }}项)</template>
+            <div v-if="alertsLoading" class="ap-alert-skeleton">
+              <ElSkeleton animated :rows="3" />
+            </div>
+            <ul v-else class="ap-alert-list">
+              <li v-for="a in alerts" :key="a.id" class="ap-alert-item">
                 <span class="ap-alert-title">{{ a.title }}</span>
                 <span class="ap-alert-desc">{{ a.desc }}</span>
                 <ElButton link type="primary" size="small">查看</ElButton>
@@ -155,10 +218,13 @@
             </ul>
           </ElCard>
 
-          <!-- 今日消耗节奏 -->
+          <!-- 近七日消耗节奏 -->
           <ElCard class="ap-chart-card" shadow="never">
-            <template #header>今日消耗节奏</template>
+            <template #header>近七日消耗节奏</template>
             <div ref="paceChartRef" class="ap-chart-wrap ap-chart-pace"></div>
+            <div v-if="paceLoading" class="ap-chart-loading-overlay">
+              <ElSkeleton animated :rows="2" />
+            </div>
           </ElCard>
         </div>
       </ElCol>
@@ -171,10 +237,19 @@
   import { storeToRefs } from 'pinia'
   import { useChart } from '@/hooks/core/useChart'
   import { useSettingStore } from '@/store/modules/setting'
+  import request from '@/utils/http'
   import AccountDetailTable from './modules/account-detail-table.vue'
   import AppPerformancePlaceholder from './modules/app-performance-placeholder.vue'
   import PlatformPerformancePlaceholder from './modules/platform-performance-placeholder.vue'
-  import type { AccountDetailRow } from './types'
+  import type {
+    AccountDetailRow,
+    AccountAlertItem,
+    SpendPaceItem,
+    AccountPerformanceKpi,
+    ChannelSpendItem,
+    BudgetUsageBucket,
+    Day1RoiTrendItem
+  } from './types'
   import { MOCK_ACCOUNT_PERFORMANCE } from './mock/data'
 
   defineOptions({ name: 'AccountPerformance' })
@@ -197,28 +272,343 @@
   ]
 
   // 顶部区间 tab：用于控制 active 状态 + 背景滑块位移
-  const modelValue = ref(
-    rangeOptions.find((o) => o.value === '账户')?.value ?? rangeOptions[0].value
-  )
+  // 默认展示第一个 Tab：应用
+  const modelValue = ref(rangeOptions[0].value)
   const rangeIndex = computed(() => rangeOptions.findIndex((o) => o.value === modelValue.value))
 
   function selectRange(value: string) {
     modelValue.value = value
   }
 
+  // 应用×平台×账户明细树形表：独立请求 + 局部骨架屏
+  const appTableTreeFallback = mock.value.tableTree
+  const appTableTree = ref<AccountDetailRow[]>(appTableTreeFallback)
+  const appTableLoading = ref(false)
+  // 应用列表分页（前端分页：由于 tree-tree 响应结构未包含 total，这里以当前树根数量为分页总数）
+  const appCurrentPage = ref(1)
+  const appPageSize = ref(10)
+  const appPageSizes = [10, 20, 50]
+  let appTableRequestSeq = 0
+
+  function countTreeNodes(rows: AccountDetailRow[], type: AccountDetailRow['type']): number {
+    let total = 0
+    const walk = (list: AccountDetailRow[]) => {
+      for (const r of list) {
+        if (r.type === type) total += 1
+        if (r.children?.length) walk(r.children)
+      }
+    }
+    walk(rows)
+    return total
+  }
+
+  const tableSummaryText = computed(() => {
+    if (appTableLoading.value) return mock.value.summaryText
+    const appCount = countTreeNodes(appTableTree.value, 'app')
+    const accountCount = countTreeNodes(appTableTree.value, 'account')
+    if (!appCount && !accountCount) return mock.value.summaryText
+    return `共 ${appCount} 个应用 / ${accountCount} 个广告账户`
+  })
+
   const appOptions = computed(() => {
-    const rows = mock.value.tableTree
+    const rows = appTableTree.value
     return rows.map((r) => r.name)
   })
 
-  const tableData = computed(() => {
-    let list = mock.value.tableTree
+  const filteredAppRoots = computed(() => {
+    let list = appTableTree.value
     const kw = tableSearch.value?.trim()
-    if (kw) {
-      list = filterTreeByName(list, kw)
-    }
-    return attachAppMeta(list)
+    if (kw) list = filterTreeByName(list, kw)
+    // 根节点期望是 app，兜底仍按 type=app 过滤，避免接口变化
+    return list.filter((r) => r.type === 'app')
   })
+
+  const pagedAppRoots = computed(() => {
+    const start = (appCurrentPage.value - 1) * appPageSize.value
+    return filteredAppRoots.value.slice(start, start + appPageSize.value)
+  })
+
+  const appTotal = computed(() => filteredAppRoots.value.length)
+
+  const tableData = computed(() => {
+    return attachAppMeta(pagedAppRoots.value)
+  })
+
+  async function loadAppTableTree() {
+    const [dateStart, dateEnd] = dateRange.value
+    if (!dateStart || !dateEnd) return
+
+    const requestSeq = ++appTableRequestSeq
+    appTableLoading.value = true
+
+    try {
+      const list = await request.post<AccountDetailRow[]>({
+        url: '/api/v1/datacenter/analysis/account-performance/table-tree',
+        data: {
+          currentPage: 0,
+          dateEnd,
+          dateStart,
+          kw: '',
+          ownerId: filterOwner.value,
+          pageSize: 0,
+          platform: platform.value,
+          source: source.value
+        }
+      })
+
+      if (requestSeq !== appTableRequestSeq) return
+      appTableTree.value = Array.isArray(list) ? (list as AccountDetailRow[]) : appTableTreeFallback
+    } catch {
+      if (requestSeq !== appTableRequestSeq) return
+      appTableTree.value = appTableTreeFallback
+    } finally {
+      if (requestSeq === appTableRequestSeq) appTableLoading.value = false
+    }
+  }
+
+  let appTableDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  watch(
+    [modelValue, dateRange, source, platform, filterOwner],
+    () => {
+      if (modelValue.value !== '应用') return
+
+      // 切换到「应用」或筛选条件变化时，立即进入 loading 态
+      // 避免 debounce 这段时间内渲染旧 DOM
+      appTableLoading.value = true
+      appCurrentPage.value = 1
+
+      if (appTableDebounceTimer) clearTimeout(appTableDebounceTimer)
+      appTableDebounceTimer = setTimeout(() => {
+        void loadAppTableTree()
+      }, 300)
+    },
+    { deep: true }
+  )
+
+  watch(tableSearch, () => {
+    if (modelValue.value !== '应用') return
+    appCurrentPage.value = 1
+  })
+
+  // KPI 卡片：独立请求并用局部骨架屏避免整页等待
+  type AccountPerformanceKpiApiItem = AccountPerformanceKpi & { status?: string }
+
+  const KPI_CARD_COUNT = 6
+  const kpiFallbackCards = mock.value.kpi
+  const kpiCards = ref<AccountPerformanceKpi[]>(kpiFallbackCards)
+  const kpiLoading = ref(true)
+
+  let kpiRequestSeq = 0
+
+  async function loadKpiCards() {
+    const [dateStart, dateEnd] = dateRange.value
+    if (!dateStart || !dateEnd) return
+
+    const requestSeq = ++kpiRequestSeq
+    kpiLoading.value = true
+
+    try {
+      const list = await request.post<AccountPerformanceKpiApiItem[]>({
+        url: '/api/v1/datacenter/analysis/account-performance/kpi',
+        data: {
+          currentPage: 0,
+          dateEnd,
+          dateStart,
+          kw: '',
+          ownerId: filterOwner.value,
+          pageSize: 0,
+          platform: platform.value,
+          source: source.value
+        }
+      })
+
+      // 防止参数快速切换时，后发请求覆盖先发结果
+      if (requestSeq !== kpiRequestSeq) return
+
+      kpiCards.value = (Array.isArray(list) ? list : kpiFallbackCards) as AccountPerformanceKpi[]
+    } catch {
+      if (requestSeq !== kpiRequestSeq) return
+      kpiCards.value = kpiFallbackCards
+    } finally {
+      if (requestSeq === kpiRequestSeq) kpiLoading.value = false
+    }
+  }
+
+  // 仅 KPI 联动筛选条件，避免其它模块（表格/图表）未联动造成认知不一致
+  let kpiDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  watch(
+    [dateRange, source, platform, filterOwner],
+    () => {
+      if (kpiDebounceTimer) clearTimeout(kpiDebounceTimer)
+      kpiDebounceTimer = setTimeout(() => {
+        void loadKpiCards()
+      }, 300)
+    },
+    { deep: true }
+  )
+
+  // 广告平台消耗分布：独立请求 + 局部骨架屏避免整页等待
+  const channelSpend = ref<ChannelSpendItem[]>([])
+  const channelLoading = ref(true)
+
+  let channelRequestSeq = 0
+
+  async function loadChannelSpend() {
+    const [dateStart, dateEnd] = dateRange.value
+    if (!dateStart || !dateEnd) return
+
+    const requestSeq = ++channelRequestSeq
+    channelLoading.value = true
+    channelSpend.value = []
+
+    try {
+      const list = await request.post<ChannelSpendItem[]>({
+        url: '/api/v1/datacenter/analysis/account-performance/channel-spend',
+        data: {
+          currentPage: 0,
+          dateEnd,
+          dateStart,
+          kw: '',
+          ownerId: filterOwner.value,
+          pageSize: 0,
+          platform: platform.value,
+          source: source.value
+        }
+      })
+
+      if (requestSeq !== channelRequestSeq) return
+      channelSpend.value = Array.isArray(list) ? list : []
+    } catch {
+      if (requestSeq !== channelRequestSeq) return
+      channelSpend.value = []
+    } finally {
+      if (requestSeq === channelRequestSeq) {
+        channelLoading.value = false
+        renderChannelChart()
+      }
+    }
+  }
+
+  // 只联动右侧该张图，避免其它区域（表格/图表）在 KPI 未就绪时来回闪烁
+  let channelDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  watch(
+    [dateRange, source, platform, filterOwner],
+    () => {
+      if (channelDebounceTimer) clearTimeout(channelDebounceTimer)
+      channelDebounceTimer = setTimeout(() => {
+        void loadChannelSpend()
+      }, 300)
+    },
+    { deep: true }
+  )
+
+  // 账户预算使用率分布：独立请求 + 局部骨架屏
+  const usageBuckets = ref<BudgetUsageBucket[]>([])
+  const usageLoading = ref(true)
+
+  let usageRequestSeq = 0
+
+  async function loadUsageBuckets() {
+    const [dateStart, dateEnd] = dateRange.value
+    if (!dateStart || !dateEnd) return
+
+    const requestSeq = ++usageRequestSeq
+    usageLoading.value = true
+    usageBuckets.value = []
+
+    try {
+      const list = await request.post<BudgetUsageBucket[]>({
+        url: '/api/v1/datacenter/analysis/account-performance/budget-usage-buckets',
+        data: {
+          currentPage: 0,
+          dateEnd,
+          dateStart,
+          kw: '',
+          ownerId: filterOwner.value,
+          pageSize: 0,
+          platform: platform.value,
+          source: source.value
+        }
+      })
+
+      if (requestSeq !== usageRequestSeq) return
+      usageBuckets.value = Array.isArray(list) ? list : []
+    } catch {
+      if (requestSeq !== usageRequestSeq) return
+      usageBuckets.value = []
+    } finally {
+      if (requestSeq === usageRequestSeq) {
+        usageLoading.value = false
+        renderUsageChart()
+      }
+    }
+  }
+
+  let usageDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  watch(
+    [dateRange, source, platform, filterOwner],
+    () => {
+      if (usageDebounceTimer) clearTimeout(usageDebounceTimer)
+      usageDebounceTimer = setTimeout(() => {
+        void loadUsageBuckets()
+      }, 300)
+    },
+    { deep: true }
+  )
+
+  // 首日ROI趋势（7天）：独立请求 + 局部骨架屏
+  const roiTrend = ref<Day1RoiTrendItem[]>([])
+  const roiTrendLoading = ref(true)
+
+  let roiTrendRequestSeq = 0
+
+  async function loadDay1RoiTrend() {
+    const [dateStart, dateEnd] = dateRange.value
+    if (!dateStart || !dateEnd) return
+
+    const requestSeq = ++roiTrendRequestSeq
+    roiTrendLoading.value = true
+    roiTrend.value = []
+
+    try {
+      const list = await request.post<Day1RoiTrendItem[]>({
+        url: '/api/v1/datacenter/analysis/account-performance/day1-roi-trend',
+        data: {
+          currentPage: 0,
+          dateEnd,
+          dateStart,
+          kw: '',
+          ownerId: filterOwner.value,
+          pageSize: 0,
+          platform: platform.value,
+          source: source.value
+        }
+      })
+
+      if (requestSeq !== roiTrendRequestSeq) return
+      roiTrend.value = Array.isArray(list) ? list : []
+    } catch {
+      if (requestSeq !== roiTrendRequestSeq) return
+      roiTrend.value = []
+    } finally {
+      if (requestSeq === roiTrendRequestSeq) {
+        roiTrendLoading.value = false
+        renderRoiTrendChart()
+      }
+    }
+  }
+
+  let roiTrendDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  watch(
+    [dateRange, source, platform, filterOwner],
+    () => {
+      if (roiTrendDebounceTimer) clearTimeout(roiTrendDebounceTimer)
+      roiTrendDebounceTimer = setTimeout(() => {
+        void loadDay1RoiTrend()
+      }, 300)
+    },
+    { deep: true }
+  )
 
   type TableRowWithMeta = AccountDetailRow & { __appId?: string }
 
@@ -277,7 +667,7 @@
 
   function ensureAppRowColors() {
     const next = { ...appRowBaseColorMap.value }
-    const appIds = (mock.value.tableTree || []).filter((r) => r.type === 'app').map((r) => r.id)
+    const appIds = (appTableTree.value || []).filter((r) => r.type === 'app').map((r) => r.id)
     for (const id of appIds) {
       if (next[id]) continue
       const base = BASE_RGB_COLORS[hashStringToIndex(id, BASE_RGB_COLORS.length)]
@@ -360,11 +750,21 @@
     expandedRowKeys.value = expandAll.value ? collectExpandableRowKeys(tableData.value) : []
   }
 
-  function formatMoney(n: number) {
-    return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  function toFiniteNumber(v: unknown): number | null {
+    if (v === null || v === undefined || v === '') return null
+    const n = typeof v === 'number' ? v : Number(v)
+    return Number.isFinite(n) ? n : null
   }
-  function formatNumber(n: number) {
-    return n.toLocaleString('en-US', { maximumFractionDigits: 0 })
+
+  function formatMoney(n: number | null | undefined) {
+    const value = toFiniteNumber(n)
+    return value === null
+      ? '无数据'
+      : '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  }
+  function formatNumber(n: number | null | undefined) {
+    const value = toFiniteNumber(n)
+    return value === null ? '无数据' : value.toLocaleString('en-US', { maximumFractionDigits: 0 })
   }
 
   const ROI_TARGET = 85
@@ -383,7 +783,8 @@
 
   /** 甜甜圈图中心金额，从 KPI 近7天广告支出取 */
   const donutCenterText = computed(() => {
-    const k = mock.value.kpi.find((item) => item.type === 'spend')
+    if (channelLoading.value) return '$0'
+    const k = kpiCards.value.find((item) => item.type === 'spend')
     return k?.value ?? '$0'
   })
 
@@ -395,7 +796,11 @@
   const channelChart = useChart()
   const channelChartRef = channelChart.chartRef
   function renderChannelChart() {
-    const data = mock.value.channelSpend.map((d) => ({ name: d.name, value: d.value }))
+    // 骨架屏加载阶段不要初始化图表，避免 ECharts 先渲染出“默认圆”
+    if (channelLoading.value) return
+
+    // 接口同时返回 `percent` 和 `value`：饼图用于“占比”，优先用 percent
+    const data = channelSpend.value.map((d) => ({ name: d.name, value: d.percent ?? d.value }))
     const isDark = channelChart.isDark.value
     /* 环形图边框需传具体颜色，canvas 不解析 CSS 变量 */
     const pieBorderColor = isDark ? '#1d1e1f' : '#fff'
@@ -435,7 +840,9 @@
   const usageChart = useChart()
   const usageChartRef = usageChart.chartRef
   function renderUsageChart() {
-    const buckets = mock.value.budgetUsageBuckets
+    if (usageLoading.value) return
+
+    const buckets = usageBuckets.value
     const isDark = usageChart.isDark.value
     const colors = ['#f56c6c', '#e6a23c', '#e6df44', '#67c23a', '#67c23a']
     usageChart.initChart(
@@ -472,7 +879,9 @@
   const roiTrendChart = useChart()
   const roiTrendChartRef = roiTrendChart.chartRef
   function renderRoiTrendChart() {
-    const trend = mock.value.day1RoiTrend
+    if (roiTrendLoading.value) return
+
+    const trend = roiTrend.value
     const isDark = roiTrendChart.isDark.value
     roiTrendChart.initChart(
       {
@@ -521,19 +930,142 @@
     )
   }
 
-  // --- 今日消耗节奏面积图 ---
+  // --- 近七日消耗节奏面积图 ---
   const paceChart = useChart()
   const paceChartRef = paceChart.chartRef
+
+  const pace = ref<SpendPaceItem[]>([])
+  const paceLoading = ref(true)
+
+  let paceRequestSeq = 0
+
+  async function loadTodaySpendPace() {
+    const [dateStart, dateEnd] = dateRange.value
+    if (!dateStart || !dateEnd) return
+
+    const requestSeq = ++paceRequestSeq
+    paceLoading.value = true
+    pace.value = []
+
+    try {
+      const list = await request.post<SpendPaceItem[]>({
+        url: '/api/v1/datacenter/analysis/account-performance/today-spend-pace',
+        data: {
+          currentPage: 0,
+          dateEnd,
+          dateStart,
+          kw: '',
+          ownerId: filterOwner.value,
+          pageSize: 0,
+          platform: platform.value,
+          source: source.value
+        }
+      })
+
+      if (requestSeq !== paceRequestSeq) return
+      pace.value = Array.isArray(list) ? list : []
+    } catch {
+      if (requestSeq !== paceRequestSeq) return
+      pace.value = []
+    } finally {
+      if (requestSeq === paceRequestSeq) {
+        paceLoading.value = false
+        renderPaceChart()
+      }
+    }
+  }
+
+  let paceDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  watch(
+    [dateRange, source, platform, filterOwner],
+    () => {
+      if (paceDebounceTimer) clearTimeout(paceDebounceTimer)
+      paceDebounceTimer = setTimeout(() => {
+        void loadTodaySpendPace()
+      }, 300)
+    },
+    { deep: true }
+  )
+
+  // 预警事项（3项）：独立请求 + 局部骨架屏
+  const alerts = ref<AccountAlertItem[]>([])
+  const alertsLoading = ref(true)
+
+  let alertsRequestSeq = 0
+
+  async function loadAlerts() {
+    const [dateStart, dateEnd] = dateRange.value
+    if (!dateStart || !dateEnd) return
+
+    const requestSeq = ++alertsRequestSeq
+    alertsLoading.value = true
+    alerts.value = []
+
+    try {
+      const list = await request.post<AccountAlertItem[]>({
+        url: '/api/v1/datacenter/analysis/account-performance/alerts',
+        data: {
+          currentPage: 0,
+          dateEnd,
+          dateStart,
+          kw: '',
+          ownerId: filterOwner.value,
+          pageSize: 0,
+          platform: platform.value,
+          source: source.value
+        }
+      })
+
+      if (requestSeq !== alertsRequestSeq) return
+      alerts.value = Array.isArray(list) ? list : []
+    } catch {
+      if (requestSeq !== alertsRequestSeq) return
+      alerts.value = []
+    } finally {
+      if (requestSeq === alertsRequestSeq) alertsLoading.value = false
+    }
+  }
+
+  let alertsDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  watch(
+    [dateRange, source, platform, filterOwner],
+    () => {
+      if (alertsDebounceTimer) clearTimeout(alertsDebounceTimer)
+      alertsDebounceTimer = setTimeout(() => {
+        void loadAlerts()
+      }, 300)
+    },
+    { deep: true }
+  )
+
   function renderPaceChart() {
-    const pace = mock.value.todaySpendPace
+    if (paceLoading.value) return
+
+    const paceList = pace.value
     const isDark = paceChart.isDark.value
+    const successColor =
+      getComputedStyle(document.documentElement).getPropertyValue('--art-success').trim() ||
+      '#10B981'
+
+    const areaGradient = {
+      type: 'linear' as const,
+      x: 0,
+      y: 0,
+      x2: 0,
+      y2: 1,
+      colorStops: [
+        { offset: 0, color: 'rgba(16, 185, 129, 0.55)' },
+        { offset: 1, color: 'rgba(16, 185, 129, 0.02)' }
+      ]
+    }
+
     paceChart.initChart(
       {
         tooltip: { trigger: 'axis' },
         grid: { left: 40, right: 16, top: 16, bottom: 28 },
         xAxis: {
           type: 'category',
-          data: pace.map((p) => p.time),
+          data: paceList.map((p) => p.date),
           axisLabel: { color: isDark ? '#999' : '#666', fontSize: 11 },
           axisLine: { lineStyle: { color: isDark ? '#444' : '#eee' } }
         },
@@ -545,15 +1077,18 @@
         series: [
           {
             type: 'line',
-            data: pace.map((p) => p.value),
+            data: paceList.map((p) => p.value),
             smooth: true,
-            areaStyle: { opacity: 0.35 },
-            lineStyle: { width: 2 },
-            itemStyle: { color: '#409eff' }
+            symbol: 'circle',
+            symbolSize: 6,
+            // ECharts 渐变在 TS 类型里有点难对齐，这里通过类型兜底确保可编译
+            areaStyle: { color: areaGradient as any },
+            lineStyle: { width: 2, color: successColor },
+            itemStyle: { color: successColor }
           }
         ]
       },
-      pace.length === 0
+      paceList.length === 0
     )
   }
 
@@ -566,6 +1101,15 @@
 
   onMounted(() => {
     renderAllCharts()
+    void loadKpiCards()
+    void loadChannelSpend()
+    void loadUsageBuckets()
+    void loadDay1RoiTrend()
+    void loadTodaySpendPace()
+    void loadAlerts()
+
+    // 默认初始化：如果初始就是「应用」，首次进入页面也需要拉取 table-tree
+    if (modelValue.value === '应用') void loadAppTableTree()
   })
 
   /* 深色/浅色切换时重绘图表，保证坐标轴、图例、边框等颜色正确 */
@@ -683,11 +1227,72 @@
   }
 
   .ap-kpi-card {
-    min-height: 100px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 123px;
     padding: 16px;
-    background: var(--el-fill-color-blank);
+    overflow: hidden;
+    background: linear-gradient(180deg, rgb(255 255 255 / 4%), rgb(255 255 255 / 1.5%));
     border: 1px solid var(--el-border-color-lighter);
     border-radius: 10px;
+    box-shadow: 0 0 0 rgb(0 0 0 / 0%);
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+
+    --kpi-accent-rgb: 16, 185, 129;
+
+    &::after {
+      position: absolute;
+      inset: -1px;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(60% 60% at 20% 10%, rgba(var(--kpi-accent-rgb), 0.22), transparent 60%),
+        linear-gradient(
+          135deg,
+          rgba(var(--kpi-accent-rgb), 0.18),
+          rgba(var(--kpi-accent-rgb), 0.05)
+        );
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    & > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    &:hover {
+      border-color: rgba(var(--kpi-accent-rgb), 0.62);
+      box-shadow: 0 18px 50px rgba(var(--kpi-accent-rgb), 0.12);
+      transform: translateY(-6px);
+    }
+
+    &:hover::after {
+      opacity: 1;
+    }
+
+    &--skeleton {
+      cursor: default;
+
+      &:hover {
+        border-color: var(--el-border-color-lighter);
+        box-shadow: 0 0 0 rgb(0 0 0 / 0%);
+        transform: none;
+      }
+
+      &::after {
+        opacity: 0;
+      }
+
+      :deep(.el-skeleton) {
+        width: 100%;
+      }
+    }
 
     .ap-kpi-label {
       margin-bottom: 6px;
@@ -709,7 +1314,7 @@
     }
 
     .ap-kpi-compare {
-      margin-top: 6px;
+      margin-top: auto;
       font-size: 12px;
 
       &.up {
@@ -722,15 +1327,93 @@
     }
 
     &--alert {
+      --kpi-accent-rgb: 230, 162, 60;
+
       background: rgb(230 162 60 / 8%);
       border-color: rgb(230 162 60 / 35%);
+    }
+
+    &--accounts {
+      --kpi-accent-rgb: 59, 130, 246;
+    }
+
+    &--spend {
+      --kpi-accent-rgb: 59, 130, 246;
+    }
+
+    &--installs {
+      --kpi-accent-rgb: 59, 130, 246;
+    }
+
+    &--apps {
+      --kpi-accent-rgb: 59, 130, 246;
+    }
+
+    &--roi1 {
+      --kpi-accent-rgb: 16, 185, 129;
+
+      background: linear-gradient(180deg, rgb(16 185 129 / 14%), rgb(16 185 129 / 3%));
+      border-color: rgb(16 185 129 / 55%);
+
+      .ap-kpi-label {
+        color: rgb(16 185 129 / 95%);
+      }
+
+      .ap-kpi-value {
+        color: var(--art-success);
+      }
+
+      .ap-kpi-roi-status {
+        color: var(--art-success);
+        background: rgb(16 185 129 / 14%);
+        border-color: rgb(16 185 129 / 45%);
+      }
+
+      /* 首日 ROI 均值样式已很好看：不让占位元素影响其垂直排版 */
+      .ap-kpi-compare--placeholder {
+        height: 0;
+        margin-top: 0;
+      }
+    }
+
+    .ap-kpi-roi-target {
+      overflow: hidden;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ap-kpi-roi-status {
+      flex-shrink: 0;
+      padding: 2px 10px;
+      font-size: 11px;
+      color: var(--art-success);
+      background: rgb(16 185 129 / 14%);
+      border: 1px solid rgb(16 185 129 / 45%);
+      border-radius: 9999px;
+    }
+
+    .ap-kpi-roi-status.is-bad {
+      color: var(--el-color-danger);
+      background: rgb(239 68 68 / 14%);
+      border-color: rgb(239 68 68 / 45%);
+    }
+
+    .ap-kpi-compare--placeholder {
+      visibility: hidden;
     }
   }
 
   /* 深色模式：KPI 卡片与预警卡片 */
   html.dark .ap-kpi-card {
-    background: var(--el-bg-color);
+    background: linear-gradient(180deg, rgb(255 255 255 / 4%), rgb(255 255 255 / 1.5%));
     border-color: var(--el-border-color);
+  }
+
+  html.dark .ap-kpi-card--roi1 {
+    background: linear-gradient(180deg, rgb(16 185 129 / 18%), rgb(16 185 129 / 4%));
+    border-color: rgb(16 185 129 / 65%);
   }
 
   html.dark .ap-kpi-card--alert {
@@ -936,6 +1619,7 @@
   }
 
   .ap-chart-card {
+    position: relative;
     margin-bottom: 0;
     background: var(--el-bg-color);
 
@@ -997,10 +1681,88 @@
     transform: translate(-50%, -50%);
   }
 
+  .ap-chart-loading-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    background: rgb(0 0 0 / 3%);
+
+    :deep(.el-skeleton) {
+      width: 80%;
+    }
+  }
+
+  html.dark .ap-chart-loading-overlay {
+    background: rgb(0 0 0 / 18%);
+  }
+
+  .ap-app-table-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 480px;
+  }
+
+  .ap-app-table-scroll-area {
+    max-height: 560px;
+    overflow: auto;
+  }
+
+  .ap-app-pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  .ap-table-loading-block {
+    box-sizing: border-box;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 480px;
+    padding-top: 12px;
+    pointer-events: none;
+
+    :deep(.el-skeleton) {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .ap-table-loading-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12px;
+    pointer-events: none;
+    background: rgb(0 0 0 / 3%);
+
+    :deep(.el-skeleton) {
+      width: 100%;
+    }
+  }
+
+  html.dark .ap-table-loading-overlay {
+    background: rgb(0 0 0 / 18%);
+  }
+
   .ap-alert-card .ap-alert-list {
     padding: 0;
     margin: 0;
     list-style: none;
+  }
+
+  .ap-alert-skeleton {
+    padding: 8px 0;
   }
 
   .ap-alert-item {

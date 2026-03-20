@@ -4,7 +4,7 @@
 import type { AccountPerformanceMock } from '../types'
 
 export const MOCK_ACCOUNT_PERFORMANCE: AccountPerformanceMock = {
-  dateRange: ['2026-02-26', '2026-03-04'],
+  dateRange: ['2026-03-05', '2026-03-05'],
   summaryText: '共 6 个应用 / 31 个广告账户',
 
   kpi: [
@@ -267,12 +267,13 @@ export const MOCK_ACCOUNT_PERFORMANCE: AccountPerformanceMock = {
     }
   ],
 
-  todaySpendPace: [
-    { time: '0-5h', value: 12 },
-    { time: '5-10h', value: 28 },
-    { time: '10-14h', value: 45 },
-    { time: '14h', value: 85 },
-    { time: '14-20h', value: 62 },
-    { time: '20-24h', value: 38 }
+  spendPace7Days: [
+    { date: '2/26', value: 180 },
+    { date: '2/27', value: 210 },
+    { date: '2/28', value: 235 },
+    { date: '3/1', value: 260 },
+    { date: '3/2', value: 245 },
+    { date: '3/3', value: 225 },
+    { date: '3/4', value: 255 }
   ]
 }

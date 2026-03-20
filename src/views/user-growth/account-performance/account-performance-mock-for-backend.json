@@ -1,5 +1,5 @@
 {
-  "_comment": "账户成效页（Account Performance）接口结构说明文件：用于后端快速理解前端所需字段、返回结构与枚举口径。后端按 sampleResponse 的结构返回，即可与当前页面 mock 对齐并直接渲染：顶部 KPI、左侧应用×平台×账户树表、右侧广告平台分布/预算使用率分布/首日ROI趋势/预警事项/今日消耗节奏。",
+  "_comment": "账户成效页（Account Performance）接口结构说明文件：用于后端快速理解前端所需字段、返回结构与枚举口径。后端按 sampleResponse 的结构返回，即可与当前页面 mock 对齐并直接渲染：顶部 KPI、左侧应用×平台×账户树表、右侧广告平台分布/预算使用率分布/首日ROI趋势/预警事项/近七日消耗节奏。",
   "fieldDescription": {
     "root": {
       "dateRange": "默认日期范围（前端日期选择器回显用），格式：['YYYY-MM-DD','YYYY-MM-DD']",
@@ -10,7 +10,7 @@
       "budgetUsageBuckets": "右侧「账户预算使用率分布」条形图分桶数据",
       "day1RoiTrend": "右侧「首日ROI趋势（7天）」折线图数据（按日/按点）",
       "alerts": "右侧「预警事项」列表",
-      "todaySpendPace": "右侧「今日消耗节奏」面积折线图数据（按时间段）"
+      "spendPace7Days": "右侧「近七日消耗节奏」面积折线图数据（按天）"
     },
     "kpiItem": {
       "type": "KPI 类型标识（前端用于选择图标/中间圆环取 spend）",
@@ -58,9 +58,9 @@
       "desc": "预警描述（中文）",
       "targetName": "命中对象名称（可选，如应用名/账户名）"
     },
-    "todaySpendPaceItem": {
-      "time": "时间段（如 '0-5h' / '14h' / '20-24h'）",
-      "value": "该时间段消耗值（数值，单位由业务决定）"
+    "spendPace7DaysItem": {
+      "date": "日期展示文案（如 '2/26'；由前端按需格式化或直接返回展示值）",
+      "value": "该日期消耗值（数值，单位由业务决定）"
     }
   },
   "sampleResponse": {
@@ -380,30 +380,34 @@
         "targetName": "BV_ZL_PT_04"
       }
     ],
-    "todaySpendPace": [
+    "spendPace7Days": [
       {
-        "time": "0-5h",
-        "value": 12
+        "date": "2/26",
+        "value": 180
       },
       {
-        "time": "5-10h",
-        "value": 28
+        "date": "2/27",
+        "value": 210
       },
       {
-        "time": "10-14h",
-        "value": 45
+        "date": "2/28",
+        "value": 235
       },
       {
-        "time": "14h",
-        "value": 85
+        "date": "3/1",
+        "value": 260
       },
       {
-        "time": "14-20h",
-        "value": 62
+        "date": "3/2",
+        "value": 245
       },
       {
-        "time": "20-24h",
-        "value": 38
+        "date": "3/3",
+        "value": 225
+      },
+      {
+        "date": "3/4",
+        "value": 255
       }
     ]
   },
