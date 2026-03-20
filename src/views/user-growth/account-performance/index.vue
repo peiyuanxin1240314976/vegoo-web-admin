@@ -59,7 +59,29 @@
       <ElCol :xs="24" :md="16" :lg="17" :xl="17" class="ap-table-col">
         <ElCard class="ap-table-card" shadow="never">
           <template #header>
-            <span class="ap-table-title">应用 × 平台 × 账户明细</span>
+            <div class="flex items-center">
+              <span class="ap-table-title">应用 × 平台 × 账户明细</span>
+              <div class="date-range-box">
+                <div
+                  class="date-range-slider"
+                  :style="{
+                    transform: `translateX(${Math.max(0, rangeIndex) * 100}%)`,
+                    width: `calc((100% - 6px) / ${rangeOptions.length})`
+                  }"
+                />
+                <button
+                  v-for="opt in rangeOptions"
+                  :key="opt.value"
+                  class="date-range-btn"
+                  :class="{ active: modelValue === opt.value }"
+                  type="button"
+                  @click="selectRange(opt.value)"
+                >
+                  {{ opt.label }}
+                </button>
+              </div>
+            </div>
+
             <div class="ap-table-actions">
               <ElButton
                 size="default"
@@ -79,109 +101,23 @@
               />
             </div>
           </template>
-          <div class="ap-table-scroll">
-            <ElTable
-              ref="tableRef"
-              :data="tableData"
-              row-key="id"
-              :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-              :expand-row-keys="expandedRowKeys"
-              :row-style="getRowStyle"
-              :cell-style="getCellStyle"
-              stripe
-              size="default"
-              class="ap-detail-table"
-            >
-              <ElTableColumn label="应用 / 平台 / 账户" min-width="200">
-                <template #default="{ row }">
-                  <span class="ap-cell-name">
-                    <ElIcon v-if="row.type === 'app'" class="ap-row-icon ap-row-icon--app">
-                      <Monitor />
-                    </ElIcon>
-                    <ElIcon
-                      v-else-if="row.type === 'platform'"
-                      class="ap-row-icon ap-row-icon--platform"
-                    >
-                      <Iphone />
-                    </ElIcon>
-                    <span
-                      :class="row.type === 'account' ? 'ap-cell-account' : ''"
-                      :style="getNameStyle(row)"
-                    >
-                      {{ row.name }}
-                    </span>
-                  </span>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn label="广告支出" width="100" align="center">
-                <template #default="{ row }">{{ formatMoney(row.spend) }}</template>
-              </ElTableColumn>
-              <ElTableColumn label="预算" width="90" align="center">
-                <template #default="{ row }">{{ formatMoney(row.budget) }}</template>
-              </ElTableColumn>
-              <ElTableColumn label="使用率" width="115" align="center">
-                <template #default="{ row }">
-                  <div class="ap-usage-cell">
-                    <ElProgress
-                      :percentage="Math.min(100, row.usageRate)"
-                      :color="getUsageRateColor(row.usageRate)"
-                      :show-text="false"
-                      :stroke-width="6"
-                      class="ap-usage-bar"
-                    />
-                    <span class="ap-usage-value">{{ row.usageRate }}%</span>
-                  </div>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn label="CPI" width="70" align="center">
-                <template #default="{ row }">{{ row.cpi.toFixed(2) }}</template>
-              </ElTableColumn>
-              <ElTableColumn label="安装数" width="95" align="center">
-                <template #default="{ row }">{{ formatNumber(row.installs) }}</template>
-              </ElTableColumn>
-              <ElTableColumn label="首日ROI" width="90" align="center">
-                <template #default="{ row }">
-                  <span :class="getRoiClass(row.roi1)">{{ row.roi1 }}%</span>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn label="3日ROI" width="80" align="center">
-                <template #default="{ row }">
-                  <span :class="getRoiClass(row.roi3)">{{ row.roi3 }}%</span>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn label="7日ROI" width="80" align="center">
-                <template #default="{ row }">
-                  <span :class="getRoiClass(row.roi7)">{{ row.roi7 }}%</span>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn label="状态" width="100" align="center">
-                <template #default="{ row }">
-                  <span v-if="row.status === 'normal'" class="ap-status ap-status--normal"
-                    >正常</span
-                  >
-                  <span v-else class="ap-status ap-status--warning">{{
-                    row.statusText || 'ROI偏低'
-                  }}</span>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn label="操作" width="100" align="center" fixed="right">
-                <template #default="{ row }">
-                  <template v-if="row.type === 'account'">
-                    <ElButton link type="primary" size="small">系列</ElButton>
-                    <ElButton link type="primary" size="small">详情</ElButton>
-                  </template>
-                  <template v-else-if="row.type === 'platform'">
-                    <ElButton link type="primary" size="small">系列</ElButton>
-                    <ElButton link type="primary" size="small">详情</ElButton>
-                  </template>
-                  <template v-else>
-                    <ElButton link type="primary" size="small">详情</ElButton>
-                  </template>
-                </template>
-              </ElTableColumn>
-            </ElTable>
+          <div>
+            <AccountDetailTable
+              v-if="modelValue === '应用'"
+              :table-data="tableData"
+              :expanded-row-keys="expandedRowKeys"
+              :summary-text="mock.summaryText"
+              :get-row-style="getRowStyle as any"
+              :get-cell-style="getCellStyle as any"
+              :get-name-style="getNameStyle as any"
+              :format-money="formatMoney"
+              :format-number="formatNumber"
+              :get-roi-class="getRoiClass"
+              :get-usage-rate-color="getUsageRateColor"
+            />
+            <AppPerformancePlaceholder v-else-if="modelValue === '账户'" />
+            <PlatformPerformancePlaceholder v-else />
           </div>
-          <div class="ap-table-footer">{{ mock.summaryText }}</div>
         </ElCard>
       </ElCol>
 
@@ -233,9 +169,11 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, watch, watchEffect } from 'vue'
   import { storeToRefs } from 'pinia'
-  import { Monitor, Iphone } from '@element-plus/icons-vue'
   import { useChart } from '@/hooks/core/useChart'
   import { useSettingStore } from '@/store/modules/setting'
+  import AccountDetailTable from './modules/account-detail-table.vue'
+  import AppPerformancePlaceholder from './modules/app-performance-placeholder.vue'
+  import PlatformPerformancePlaceholder from './modules/platform-performance-placeholder.vue'
   import type { AccountDetailRow } from './types'
   import { MOCK_ACCOUNT_PERFORMANCE } from './mock/data'
 
@@ -252,7 +190,21 @@
   const tableSearch = ref('')
   const expandAll = ref(true)
   const expandedRowKeys = ref<string[]>([])
-  const tableRef = ref()
+  const rangeOptions: { value: string; label: string }[] = [
+    { value: '应用', label: '应用' },
+    { value: '平台', label: '平台' },
+    { value: '账户', label: '账户' }
+  ]
+
+  // 顶部区间 tab：用于控制 active 状态 + 背景滑块位移
+  const modelValue = ref(
+    rangeOptions.find((o) => o.value === '账户')?.value ?? rangeOptions[0].value
+  )
+  const rangeIndex = computed(() => rangeOptions.findIndex((o) => o.value === modelValue.value))
+
+  function selectRange(value: string) {
+    modelValue.value = value
+  }
 
   const appOptions = computed(() => {
     const rows = mock.value.tableTree
@@ -627,8 +579,66 @@
 
 <style scoped lang="scss">
   .account-performance-page {
-    min-width: 0; /* 参与 flex 收缩，避免小屏溢出 */
+    min-width: 0;
+
+    /* 参与 flex 收缩，避免小屏溢出 */
     padding-bottom: 24px;
+
+    .date-range-box {
+      position: relative;
+      display: flex;
+      width: 240px;
+      max-width: 100%;
+      padding: 0;
+      margin-left: 8px;
+      background: var(--el-fill-color-light);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: 8px;
+
+      @media (width <=768px) {
+        width: 100%;
+      }
+    }
+
+    .date-range-slider {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      height: calc(100% - 6px);
+      pointer-events: none;
+      background: #13deb9;
+      border-radius: 6px;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .date-range-btn {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex: 1 1 0;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      height: 38px;
+      padding: 0 !important;
+      font-size: 13px !important;
+      line-height: 1;
+      color: var(--el-text-color-regular);
+      white-space: nowrap;
+      cursor: pointer;
+      background: transparent !important;
+      border: none !important;
+      border-radius: 6px !important;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #13deb9;
+      }
+
+      &.active {
+        color: #fff;
+      }
+    }
   }
 
   .ap-header {
@@ -642,7 +652,7 @@
     align-items: center;
     max-width: 50%;
 
-    @media (width <= 768px) {
+    @media (width <=768px) {
       gap: 8px;
     }
   }
@@ -652,7 +662,7 @@
     min-width: 100px;
     max-width: 100%;
 
-    @media (width <= 768px) {
+    @media (width <=768px) {
       flex: 1 1 120px;
       min-width: 0;
     }
@@ -662,7 +672,7 @@
     width: 200px;
     max-width: 100%;
 
-    @media (width <= 768px) {
+    @media (width <=768px) {
       width: 100%;
       min-width: 0;
     }
@@ -733,7 +743,7 @@
     flex-wrap: nowrap;
     margin-bottom: 16px;
 
-    @media (width <= 991px) {
+    @media (width <=991px) {
       flex-wrap: wrap;
     }
 
@@ -783,7 +793,7 @@
     flex-wrap: wrap;
     align-items: center;
 
-    @media (width <= 576px) {
+    @media (width <=576px) {
       width: 100%;
     }
   }
@@ -793,7 +803,7 @@
     min-width: 0;
     margin-left: 10px;
 
-    @media (width <= 576px) {
+    @media (width <=576px) {
       flex: 1;
       min-width: 120px;
     }
@@ -970,7 +980,7 @@
       min-height: 93px;
     }
 
-    @media (width <= 768px) {
+    @media (width <=768px) {
       height: 200px;
       min-height: 180px;
     }
