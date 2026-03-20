@@ -2,13 +2,15 @@
   <div class="conversion-management-page art-full-height flex flex-col">
     <ConversionTabs v-model="activeTab" />
     <template v-if="activeTab === 'name'">
+      <div class="conversion-management-page__section conversion-management-page__section--filters">
+        <ConversionFilters
+          :filter="filterForForm"
+          @search="handleSearch"
+          @add-mapping="openDialog('add')"
+        />
+      </div>
       <ElRow :gutter="16" class="conversion-management-page__body">
-        <ElCol :xs="24" :xl="19">
-          <ConversionFilters
-            :filter="filterForForm"
-            @search="handleSearch"
-            @add-mapping="openDialog('add')"
-          />
+        <ElCol :xs="24" :md="17" :xl="19" class="conversion-management-page__main">
           <ConversionTable
             :data="data"
             :loading="loading"
@@ -19,7 +21,7 @@
             @pagination:current-change="handleCurrentChange"
           />
         </ElCol>
-        <ElCol :xs="24" :xl="5">
+        <ElCol :xs="24" :md="7" :xl="5" class="conversion-management-page__side">
           <ConversionSidePanel
             :type-distribution="sideStats.typeDistribution"
             :mapping-stats="sideStats.mappingStats"
@@ -32,13 +34,15 @@
       </ElRow>
     </template>
     <template v-else>
+      <div class="conversion-management-page__section conversion-management-page__section--filters">
+        <ConversionDataFilters :filter="dataFilterForForm" @search="handleDataSearch" />
+      </div>
       <ElRow :gutter="16" class="conversion-management-page__body">
-        <ElCol :xs="24" :xl="15" class="conversion-management-page__left">
-          <ConversionDataFilters :filter="dataFilterForForm" @search="handleDataSearch" />
+        <ElCol :xs="24" :md="15" :xl="15" class="conversion-management-page__left">
           <ConversionDataKpiCards :kpi="dataKpi" />
           <ConversionDataTable :data="dataTableRows" :loading="dataLoading" />
         </ElCol>
-        <ElCol :xs="24" :xl="9" class="conversion-management-page__right">
+        <ElCol :xs="24" :md="9" :xl="9" class="conversion-management-page__right">
           <ConversionDataSidePanel
             :type-distribution="dataSidePanels.typeDistribution"
             :top10="dataSidePanels.top10"
@@ -284,18 +288,32 @@
     padding: 0;
   }
 
+  .conversion-management-page__section--filters {
+    margin-bottom: 16px;
+  }
+
   .conversion-management-page__body {
     flex: 1;
     min-height: 0;
   }
 
+  .conversion-management-page__main {
+    min-width: 0;
+  }
+
+  .conversion-management-page__side {
+    min-width: 0;
+  }
+
   .conversion-management-page__left {
     display: flex;
     flex-direction: column;
+    min-width: 0;
     min-height: 0;
   }
 
   .conversion-management-page__right {
+    min-width: 0;
     min-height: 0;
   }
 </style>

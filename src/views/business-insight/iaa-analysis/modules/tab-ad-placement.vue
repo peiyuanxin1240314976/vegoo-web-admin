@@ -1,15 +1,23 @@
 <template>
   <div class="iaa-tab-content iaa-tab-ad-placement">
-    <section class="iaa-kpi-grid">
-      <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
-        <div class="iaa-kpi__title">{{ k.title }}</div>
-        <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
-        <div class="iaa-kpi__sub">{{ k.subText }}</div>
-      </article>
-    </section>
-
     <section class="iaa-main-grid">
+      <!-- ——— 左列 ——— -->
       <div class="iaa-main-left">
+        <!-- KPI 4列横排（在左列内） -->
+        <section class="iaa-kpi-grid">
+          <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
+            <div class="iaa-kpi__title">{{ k.title }}</div>
+            <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
+            <div
+              class="iaa-kpi__sub"
+              :class="k.trendUp !== undefined ? (k.trendUp ? 'up' : 'down') : ''"
+            >
+              {{ k.subText }}
+            </div>
+          </article>
+        </section>
+
+        <!-- Top10 排行 -->
         <ElCard class="iaa-panel" shadow="never">
           <template #header>
             <span>广告位 Top10 收入排行</span>
@@ -26,8 +34,10 @@
               </button>
             </div>
           </template>
-          <div ref="top10ChartRef" class="iaa-chart iaa-chart--hbar"></div>
+          <div ref="top10ChartRef" class="iaa-chart iaa-chart--top10"></div>
         </ElCard>
+
+        <!-- 详细数据表 -->
         <ElCard class="iaa-panel" shadow="never">
           <template #header>
             <span>广告位详细数据表</span>
@@ -36,10 +46,11 @@
             :data="tableData"
             :columns="tableColumns"
             row-key="placementName"
-            :stripe="false"
+            :stripe="true"
             :border="false"
             size="default"
             :pagination="undefined"
+            class="iaa-table"
           >
             <template #status="{ row }">
               <span class="iaa-status" :class="row.status">
@@ -49,40 +60,42 @@
             </template>
           </ArtTable>
         </ElCard>
-        <ElCard class="iaa-panel" shadow="never">
-          <template #header>
-            <span>广告位展示次数 vs 收入散点图</span>
-          </template>
-          <div ref="scatterChartRef" class="iaa-chart iaa-chart--scatter"></div>
-        </ElCard>
       </div>
+
+      <!-- ——— 右列 ——— -->
       <div class="iaa-main-right">
+        <!-- 广告位收入分布 donut -->
         <ElCard class="iaa-panel" shadow="never">
-          <template #header>
-            <span>广告位收入分布</span>
-          </template>
-          <div class="iaa-donut-wrap">
-            <div class="iaa-donut-center">$2,768</div>
-            <div ref="donutChartRef" class="iaa-chart iaa-chart--donut"></div>
-          </div>
-          <div class="iaa-donut-legend">
-            <div v-for="(item, i) in donutList" :key="item.name" class="iaa-donut-legend__item">
-              <span
-                class="iaa-donut-legend__dot"
-                :style="{ background: PLACEMENT_COLORS[i] }"
-              ></span>
-              <span>{{ item.name }} {{ item.percent.toFixed(1) }}%</span>
+          <template #header><span>广告位收入分布</span></template>
+          <div class="iaa-donut-body">
+            <div class="iaa-donut-wrap">
+              <div ref="donutChartRef" class="iaa-chart iaa-chart--donut"></div>
+              <div class="iaa-donut-center">{{ donutTotal }}</div>
+            </div>
+            <div class="iaa-donut-legend">
+              <div v-for="(item, i) in donutList" :key="item.name" class="iaa-donut-legend__item">
+                <span class="iaa-donut-legend__dot" :style="{ background: PLACEMENT_COLORS[i] }" />
+                <span class="iaa-donut-legend__name">{{ item.name }}</span>
+                <span class="iaa-donut-legend__pct">{{ item.percent.toFixed(1) }}%</span>
+              </div>
             </div>
           </div>
         </ElCard>
-        <ElCard class="iaa-panel" shadow="never">
-          <template #header>
-            <span>广告位 ECPM 排行</span>
-          </template>
+
+        <!-- ECPM 排行 -->
+        <ElCard class="iaa-panel iaa-panel--with-footer" shadow="never">
+          <template #header><span>广告位 ECPM 排行</span></template>
           <div ref="ecpmChartRef" class="iaa-chart iaa-chart--hbar"></div>
-          <div class="iaa-insight-banner iaa-insight-banner--amber">
-            插页式广告位普遍ECPM较高，建议优先保障展示频次
+          <div v-if="placementInsight" class="iaa-insight-banner">
+            <span>💡</span>
+            <span>{{ placementInsight }}</span>
           </div>
+        </ElCard>
+
+        <!-- 展示次数 vs 收入散点图 -->
+        <ElCard class="iaa-panel" shadow="never">
+          <template #header><span>广告位展示次数 vs 收入散点图</span></template>
+          <div ref="scatterChartRef" class="iaa-chart iaa-chart--scatter"></div>
         </ElCard>
       </div>
     </section>
@@ -90,15 +103,16 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch } from 'vue'
+  import { ref, computed, onMounted, watch, nextTick } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { ColumnOption } from '@/types'
-  import type { IaaFilterState, IaaKpiCard, IaaPlacementTableRow } from '../types'
+  import type { IaaFilterState, IaaPlacementTabData, IaaPlacementTableRow } from '../types'
+  import { fetchIaaPlacementTabData } from '@/api/business-insight'
 
   defineOptions({ name: 'IaaTabAdPlacement' })
 
-  defineProps<{ filter: IaaFilterState }>()
+  const props = defineProps<{ filter: IaaFilterState }>()
 
   const metricTabs = [
     { key: 'revenue', label: '收入' },
@@ -108,118 +122,24 @@
   ]
   const metricKey = ref('revenue')
 
-  const kpis = ref<IaaKpiCard[]>([
-    {
-      id: '1',
-      title: '广告位总数',
-      primaryValue: '47个',
-      subText: '已开启43个 | 关闭4个',
-      accent: 'default'
-    },
-    {
-      id: '2',
-      title: '广告位总收入',
-      primaryValue: '$2,768.58',
-      subText: '平均每个 $58.91 ↑ 12.3%',
-      trendUp: true,
-      accent: 'teal'
-    },
-    {
-      id: '3',
-      title: '广告位平均ECPM',
-      primaryValue: '3.32',
-      subText: 'Top广告位: WeatherRadar 19.16',
-      accent: 'default'
-    },
-    {
-      id: '4',
-      title: '广告位展示总次',
-      primaryValue: '833,607',
-      subText: '广告位平均展示 17,736次',
-      accent: 'default'
-    }
-  ])
+  const tabData = ref<IaaPlacementTabData | null>(null)
 
-  const tableData = ref<IaaPlacementTableRow[]>([
-    {
-      placementName: 'Splash',
-      adTypeName: '开屏',
-      sourceName: 'Admob',
-      revenue: 1452,
-      impressions: 280000,
-      ecpmEst: 19.16,
-      ecpmReal: 18.2,
-      impressionUsers: 65000,
-      fillRate: 98,
-      status: 'normal'
-    },
-    {
-      placementName: 'HomeResume',
-      adTypeName: '插页式',
-      sourceName: 'Admob',
-      revenue: 446,
-      impressions: 95000,
-      ecpmEst: 4.7,
-      ecpmReal: 4.5,
-      impressionUsers: 42000,
-      fillRate: 95,
-      status: 'normal'
-    },
-    {
-      placementName: 'Native_AdMainWall',
-      adTypeName: '原生',
-      sourceName: 'Facebook',
-      revenue: 332,
-      impressions: 120000,
-      ecpmEst: 2.77,
-      ecpmReal: 2.6,
-      impressionUsers: 38000,
-      fillRate: 92,
-      status: 'normal'
-    }
-  ])
+  const kpis = computed(() => tabData.value?.kpis ?? [])
+  const tableData = computed(() => tabData.value?.tableRows ?? [])
+  const placementInsight = computed(() => tabData.value?.placementInsight ?? '')
+  const donutList = computed(() => tabData.value?.donut ?? [])
 
   const PLACEMENT_COLORS = ['#26C2AD', '#3B82F6', '#8B5CF6', '#F59E0B', '#10B981', '#94A3B8']
-  const top10Placements = [
-    {
-      name: 'Splash',
-      revenue: 1452,
-      percent: 52.4,
-      impressions: 280000,
-      ecpm: 19.16,
-      users: 65000
-    },
-    {
-      name: 'HomeResume',
-      revenue: 446,
-      percent: 16.1,
-      impressions: 95000,
-      ecpm: 4.7,
-      users: 42000
-    },
-    {
-      name: 'Native_AdMainWall',
-      revenue: 332,
-      percent: 12.0,
-      impressions: 120000,
-      ecpm: 2.77,
-      users: 38000
-    }
-  ]
 
-  const donutList = computed(() => {
-    const total = top10Placements.reduce((s, r) => s + r.revenue, 0)
-    return top10Placements.map((r) => ({
-      name: r.name,
-      value: r.revenue,
-      percent: total ? (r.revenue / total) * 100 : 0
-    }))
+  const donutTotal = computed(() => {
+    const total = donutList.value.reduce((s, d) => s + d.value, 0)
+    return `$${total.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
   })
 
   const tableColumns = computed<ColumnOption[]>(() => [
     { prop: 'placementName', label: '广告位', minWidth: 140 },
-    { prop: 'adTypeName', label: '广告类型', minWidth: 88 },
-    { prop: 'sourceName', label: '广告平台', minWidth: 88 },
+    { prop: 'adTypeName', label: '广告类型', minWidth: 80 },
+    { prop: 'sourceName', label: '广告平台', minWidth: 80 },
     {
       prop: 'revenue',
       label: '收入',
@@ -229,7 +149,7 @@
     {
       prop: 'impressions',
       label: '展示次数',
-      minWidth: 96,
+      minWidth: 90,
       formatter: (r: IaaPlacementTableRow) => r.impressions.toLocaleString()
     },
     {
@@ -247,7 +167,7 @@
     {
       prop: 'impressionUsers',
       label: '展示用户',
-      minWidth: 88,
+      minWidth: 80,
       formatter: (r: IaaPlacementTableRow) => r.impressionUsers.toLocaleString()
     },
     {
@@ -270,27 +190,62 @@
 
   function buildTop10Option(): EChartsOption {
     const key = metricKey.value
-    const names = top10Placements.map((p) => p.name)
-    const data = top10Placements.map((p) =>
-      key === 'revenue'
-        ? p.revenue
-        : key === 'impressions'
-          ? p.impressions
-          : key === 'ecpm'
-            ? p.ecpm
-            : p.users
-    )
-    const colors = data.map((_, i) => (i === 0 ? '#26C2AD' : i === 1 ? '#3B82F6' : '#94A3B8'))
+    const top10 = tabData.value?.top10 ?? []
+    const names = top10.map((p, i) => `${i + 1}. ${p.name}`)
+    const values = top10.map((p) => ({
+      revenue: p.revenue,
+      impressions: p.impressions,
+      ecpm: p.ecpm,
+      users: p.users,
+      percent: p.percent
+    }))
+    const data = values.map((v, i) => ({
+      value:
+        key === 'revenue'
+          ? v.revenue
+          : key === 'impressions'
+            ? v.impressions
+            : key === 'ecpm'
+              ? v.ecpm
+              : v.users,
+      itemStyle: { color: PLACEMENT_COLORS[i % PLACEMENT_COLORS.length] },
+      _percent: v.percent
+    }))
     return {
-      grid: { left: 100, right: 48, top: 16, bottom: 24 },
-      xAxis: { type: 'value' },
-      yAxis: { type: 'category', data: names },
+      backgroundColor: 'transparent',
+      grid: { left: 160, right: 64, top: 8, bottom: 8, containLabel: false },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' }
+      },
+      xAxis: {
+        type: 'value',
+        axisLabel: { show: false },
+        splitLine: { show: false },
+        axisLine: { show: false }
+      },
+      yAxis: {
+        type: 'category',
+        data: names,
+        inverse: false,
+        axisLabel: { color: '#94a3b8', fontSize: 11 },
+        axisLine: { show: false },
+        axisTick: { show: false }
+      },
       series: [
         {
           type: 'bar',
           data,
-          itemStyle: { color: (params: any) => colors[params.dataIndex] },
-          barMaxWidth: 24
+          barMaxWidth: 20,
+          label: {
+            show: true,
+            position: 'right',
+            color: '#94a3b8',
+            fontSize: 11,
+            formatter: (p: { data: { _percent: number; value: number } }) => `${p.data._percent}%`
+          }
         }
       ]
     }
@@ -303,48 +258,159 @@
       itemStyle: { color: PLACEMENT_COLORS[i] }
     }))
     return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' },
+        formatter: (p: { name: string; value: number; percent: number }) =>
+          `${p.name}<br/>$${p.value.toFixed(2)} (${p.percent?.toFixed(1)}%)`
+      },
       series: [
         {
           type: 'pie',
-          radius: ['60%', '85%'],
-          center: ['50%', '50%'],
+          radius: ['50%', '74%'],
+          center: ['44%', '50%'],
           data,
-          label: { show: false }
+          label: {
+            show: true,
+            position: 'outside',
+            formatter: (p: { name: string; percent: number }) =>
+              `${p.name}\n${p.percent?.toFixed(1)}%`,
+            color: '#94a3b8',
+            fontSize: 10,
+            lineHeight: 16
+          },
+          labelLine: {
+            show: true,
+            lineStyle: { color: '#334155', width: 1 }
+          },
+          emphasis: { scale: true, scaleSize: 4 }
         }
       ]
     }
   }
 
   function buildEcpmOption(): EChartsOption {
-    const names = top10Placements.map((p) => p.name)
-    const ecpms = top10Placements.map((p) => p.ecpm)
+    const ranking = tabData.value?.ecpmRanking ?? []
+    const names = ranking.map((r) => r.name)
+    const ecpms = ranking.map((r) => r.ecpm)
     return {
-      grid: { left: 72, right: 24, top: 16, bottom: 24 },
-      xAxis: { type: 'value' },
-      yAxis: { type: 'category', data: names },
-      series: [{ type: 'bar', data: ecpms, itemStyle: { color: '#26C2AD' }, barMaxWidth: 20 }]
+      backgroundColor: 'transparent',
+      grid: { left: 100, right: 48, top: 8, bottom: 8, containLabel: false },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' }
+      },
+      xAxis: {
+        type: 'value',
+        axisLabel: { show: false },
+        splitLine: { show: false },
+        axisLine: { show: false }
+      },
+      yAxis: {
+        type: 'category',
+        data: names,
+        axisLabel: { color: '#94a3b8', fontSize: 11 },
+        axisLine: { show: false },
+        axisTick: { show: false }
+      },
+      series: [
+        {
+          type: 'bar',
+          data: ecpms.map((v, i) => ({
+            value: v,
+            itemStyle: { color: PLACEMENT_COLORS[i % PLACEMENT_COLORS.length] }
+          })),
+          barMaxWidth: 18,
+          label: {
+            show: true,
+            position: 'right',
+            color: '#94a3b8',
+            fontSize: 10,
+            formatter: (p: { value?: number }) => Number(p.value ?? 0).toFixed(2)
+          }
+        }
+      ]
     }
   }
 
   function buildScatterOption(): EChartsOption {
-    const data = top10Placements.map((p) => [p.impressions / 1000, p.revenue])
+    const scatter = tabData.value?.scatterData ?? []
     return {
-      grid: { left: 56, right: 24, top: 16, bottom: 32 },
-      xAxis: { type: 'value', name: '展示次数(K)' },
-      yAxis: { type: 'value', name: '收入($)' },
-      series: [{ type: 'scatter', data, symbolSize: 16, itemStyle: { color: '#26C2AD' } }]
+      backgroundColor: 'transparent',
+      grid: { left: 56, right: 24, top: 16, bottom: 32, containLabel: true },
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' },
+        formatter: (p: { data: (string | number)[] }) =>
+          `${p.data[2]}<br/>展示: ${Number(p.data[0]).toFixed(0)}K<br/>收入: $${Number(p.data[1]).toFixed(0)}`
+      },
+      xAxis: {
+        type: 'value',
+        name: 'Impressions (K)',
+        nameTextStyle: { color: '#64748b', fontSize: 10 },
+        axisLabel: { color: '#94a3b8', fontSize: 10, formatter: '{value}K' },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
+      yAxis: {
+        type: 'value',
+        name: 'Revenue ($)',
+        nameTextStyle: { color: '#64748b', fontSize: 10 },
+        axisLabel: { color: '#94a3b8', fontSize: 10, formatter: '${value}' },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
+      series: [
+        {
+          type: 'scatter',
+          data: scatter.map((p) => [p.impressions / 1000, p.revenue, p.name]),
+          symbolSize: (val: number[]) => Math.max(12, Math.min(40, val[1] / 40)),
+          itemStyle: { color: '#26C2AD', opacity: 0.75 },
+          label: {
+            show: true,
+            position: 'right',
+            formatter: (p: { data: (string | number)[] }) => String(p.data[2]),
+            color: '#94a3b8',
+            fontSize: 10
+          }
+        }
+      ]
     }
   }
 
+  function refreshCharts() {
+    if (!tabData.value) return
+    useTop10.updateChart(buildTop10Option())
+    useDonut.updateChart(buildDonutOption())
+    useEcpm.updateChart(buildEcpmOption())
+    useScatter.updateChart(buildScatterOption())
+  }
+
+  async function loadTabData() {
+    tabData.value = await fetchIaaPlacementTabData(props.filter)
+    await nextTick()
+    refreshCharts()
+  }
+
   onMounted(() => {
-    useTop10.initChart(buildTop10Option())
-    useDonut.initChart(buildDonutOption())
-    useEcpm.initChart(buildEcpmOption())
-    useScatter.initChart(buildScatterOption())
+    loadTabData()
   })
 
+  watch(
+    () => props.filter,
+    () => {
+      loadTabData()
+    },
+    { deep: true }
+  )
+
   watch(metricKey, () => {
-    useTop10.updateChart(buildTop10Option())
+    if (tabData.value) useTop10.updateChart(buildTop10Option())
   })
 </script>
 
@@ -352,18 +418,47 @@
   .iaa-tab-ad-placement {
     display: flex;
     flex-direction: column;
-    gap: 16px;
     min-height: 100%;
   }
 
+  /* ——— 主网格：左宽右窄 ——— */
+  .iaa-main-grid {
+    display: grid;
+    flex: 1;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+    gap: 16px;
+    min-height: 0;
+  }
+
+  .iaa-main-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .iaa-main-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+
+    /* donut 和散点图等分剩余空间，ECPM 卡自然高度 */
+    .iaa-panel:not(.iaa-panel--with-footer) {
+      flex: 1;
+    }
+  }
+
+  /* ——— KPI 在左列内 4列 ——— */
   .iaa-kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 12px;
   }
 
   .iaa-kpi {
-    padding: 16px;
+    min-width: 0;
+    padding: 14px 16px;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
     border-radius: 8px;
@@ -373,14 +468,15 @@
     }
 
     &__title {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       font-size: 12px;
       color: var(--art-gray-600);
     }
 
     &__value {
       font-size: 20px;
-      font-weight: 600;
+      font-weight: 700;
+      line-height: 1.2;
       color: var(--art-gray-900);
     }
 
@@ -388,43 +484,60 @@
       margin-top: 4px;
       font-size: 12px;
       color: var(--art-gray-600);
+
+      &.up {
+        color: var(--art-success);
+      }
+
+      &.down {
+        color: var(--art-danger);
+      }
     }
   }
 
-  .iaa-main-grid {
-    display: grid;
-    flex: 1;
-    grid-template-columns: 1fr 360px;
-    gap: 16px;
-    min-height: 0;
-  }
-
-  .iaa-main-left,
-  .iaa-main-right {
+  /* ——— Panel 通用 ——— */
+  .iaa-panel {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    min-height: 0;
-  }
-
-  .iaa-panel {
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
 
     :deep(.el-card__header) {
       display: flex;
+      flex-shrink: 0;
       align-items: center;
       justify-content: space-between;
       padding: 12px 16px;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--art-gray-900);
       border-bottom: 1px solid var(--default-border);
     }
 
     :deep(.el-card__body) {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
       padding: 16px;
+      overflow: hidden;
     }
   }
 
+  /* ECPM 卡：自然高度，图表固定，banner 始终可见 */
+  .iaa-panel--with-footer {
+    flex: none;
+
+    :deep(.el-card__body) {
+      overflow: visible;
+    }
+
+    .iaa-chart--hbar {
+      flex: none;
+      height: 180px;
+    }
+  }
+
+  /* ——— Metric 切换 ——— */
   .iaa-metric-tabs {
     display: flex;
     gap: 4px;
@@ -436,78 +549,141 @@
     color: var(--art-gray-600);
     cursor: pointer;
     background: transparent;
-    border: none;
+    border: 1px solid var(--default-border);
     border-radius: 9999px;
 
     &.is-active {
-      color: var(--art-primary);
-      background: rgb(38 194 173 / 15%);
+      color: #fff;
+      background: var(--art-primary);
+      border-color: var(--art-primary);
     }
   }
 
+  /* ——— 图表 ——— */
   .iaa-chart {
+    flex: 1;
     width: 100%;
-    height: 260px;
+    min-height: 0;
+
+    &--top10 {
+      min-height: 240px;
+    }
+
+    &--hbar {
+      min-height: 180px;
+    }
+
+    &--scatter {
+      min-height: 200px;
+    }
+
+    &--donut {
+      flex: none;
+      width: 100%;
+      height: 100%;
+    }
   }
 
-  .iaa-chart--donut {
-    height: 200px;
-  }
-
-  .iaa-chart--scatter {
-    height: 280px;
+  /* ——— 环形图 ——— */
+  .iaa-donut-body {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    align-items: center;
+    min-height: 160px;
   }
 
   .iaa-donut-wrap {
     position: relative;
-    height: 200px;
+    flex: 1;
+    min-width: 0;
+    height: 160px;
   }
 
   .iaa-donut-center {
     position: absolute;
     top: 50%;
-    left: 50%;
+    left: 44%;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--art-gray-900);
+    white-space: nowrap;
+    pointer-events: none;
     transform: translate(-50%, -50%);
   }
 
   .iaa-donut-legend {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px 16px;
-    margin-top: 12px;
-    font-size: 12px;
-    color: var(--art-gray-600);
+    flex-direction: column;
+    flex-shrink: 0;
+    gap: 7px;
+    width: 120px;
   }
 
   .iaa-donut-legend__item {
-    display: inline-flex;
+    display: flex;
     gap: 6px;
     align-items: center;
+    font-size: 12px;
   }
 
   .iaa-donut-legend__dot {
+    flex-shrink: 0;
     width: 8px;
     height: 8px;
     border-radius: 50%;
   }
 
+  .iaa-donut-legend__name {
+    flex: 1;
+    overflow: hidden;
+    color: var(--art-gray-600);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .iaa-donut-legend__pct {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: var(--art-gray-900);
+  }
+
+  /* ——— 洞察条 ——— */
   .iaa-insight-banner {
-    padding: 10px 12px;
-    margin-top: 12px;
+    display: flex;
+    flex-shrink: 0;
+    gap: 6px;
+    align-items: flex-start;
+    padding: 8px 12px;
+    margin-top: 10px;
     font-size: 12px;
-    background: rgb(38 194 173 / 15%);
-    border: 1px solid rgb(38 194 173 / 30%);
-    border-radius: 8px;
+    color: #f59e0b;
+    background: rgb(245 158 11 / 10%);
+    border: 1px solid rgb(245 158 11 / 25%);
+    border-radius: 6px;
   }
 
-  .iaa-insight-banner--amber {
-    background: rgb(245 158 11 / 15%);
-    border-color: rgb(245 158 11 / 30%);
+  /* ——— 表格 ——— */
+  .iaa-table {
+    /* 表头底色 */
+    :deep(.el-table__header-wrapper th.el-table__cell) {
+      font-weight: 500;
+      color: var(--art-gray-600);
+      background: rgb(255 255 255 / 6%);
+    }
+
+    /* 斑马纹（偶数行） */
+    :deep(.el-table__body tr.el-table__row--striped td.el-table__cell) {
+      background: rgb(255 255 255 / 3%);
+    }
+
+    /* 悬停行 */
+    :deep(.el-table__body tr:hover td.el-table__cell) {
+      background: rgb(59 130 246 / 8%) !important;
+    }
   }
 
+  /* ——— 状态 ——— */
   .iaa-status {
     display: inline-flex;
     gap: 6px;

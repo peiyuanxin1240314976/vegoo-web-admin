@@ -52,10 +52,10 @@
 
     <!-- KPI 指标卡片行 -->
     <div class="iap-kpi-row">
-      <div v-for="kpi in kpiList" :key="kpi.label" class="iap-kpi-card">
+      <div v-for="(kpi, i) in kpiList" :key="kpi.label" class="iap-kpi-card">
         <div class="iap-kpi-top">
           <span class="iap-kpi-label">{{ kpi.label }}</span>
-          <div class="iap-kpi-sparkline" :style="{ background: kpi.color }"></div>
+          <div :ref="(el) => setKpiSparklineRef(i, el)" class="iap-kpi-sparkline" />
         </div>
         <div class="iap-kpi-value">{{ kpi.value }}</div>
         <div class="iap-kpi-change" :class="kpi.trend === 'up' ? 'is-up' : 'is-down'">
@@ -84,18 +84,18 @@
     <main v-if="activeTab === 'product'" class="iap-tab-content">
       <div class="iap-section-card">
         <div class="iap-section-title">产品SKU订单分析</div>
-        <ElTable :data="skuData" class="iap-dark-table" size="small">
-          <ElTableColumn prop="name" label="产品名称" min-width="140" />
-          <ElTableColumn prop="type" label="类型" width="70">
+        <ElTable :data="skuData" class="iap-dark-table" size="small" row-key="name">
+          <ElTableColumn prop="name" label="产品名称" min-width="145" show-overflow-tooltip />
+          <ElTableColumn prop="type" label="类型" width="75">
             <template #default="{ row }">
               <ElTag :class="row.type === '订阅' ? 'iap-tag--sub' : 'iap-tag--iap'" size="small">
                 {{ row.type }}
               </ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn prop="orders" label="订单数" width="80" />
-          <ElTableColumn prop="revenue" label="收入(USD)" width="90" />
-          <ElTableColumn prop="ratio" label="占比" width="130">
+          <ElTableColumn prop="orders" label="订单数" width="100" />
+          <ElTableColumn prop="revenue" label="收入(USD)" width="110" />
+          <ElTableColumn prop="ratio" label="占比" width="180">
             <template #default="{ row }">
               <div class="iap-ratio-wrap">
                 <div class="iap-ratio-bar" :style="{ width: row.ratio }"></div>
@@ -103,13 +103,22 @@
               </div>
             </template>
           </ElTableColumn>
-          <ElTableColumn prop="arpu" label="ARPU" width="75" />
-          <ElTableColumn prop="conversion" label="转化率" width="75" />
-          <ElTableColumn prop="retention" label="续费率" width="75" />
-          <ElTableColumn prop="churn" label="退款率" width="75" />
-          <ElTableColumn prop="trend" label="趋势" width="80">
+          <ElTableColumn prop="arpu" label="ARPU" width="110" />
+          <ElTableColumn prop="conversion" label="转化率" width="110" />
+          <ElTableColumn prop="retention" label="续费率" width="110">
             <template #default="{ row }">
-              <span :class="row.trendUp ? 'iap-trend-up' : 'iap-trend-down'">{{ row.trend }}</span>
+              <span :class="parseFloat(row.retention) > 60 ? 'iap-text-green' : 'iap-text-orange'">
+                {{ row.retention }}
+              </span>
+            </template>
+          </ElTableColumn>
+          <ElTableColumn prop="churn" label="退款率" width="110" />
+          <ElTableColumn prop="trend" label="趋势" width="130">
+            <template #default="{ row }">
+              <div
+                class="iap-sku-trend-spark"
+                :ref="(el) => setSkuTrendSparklineRef(row.name, el)"
+              />
             </template>
           </ElTableColumn>
         </ElTable>
@@ -267,7 +276,9 @@
       value: k.value,
       change: k.change,
       trend: (k.up ? 'up' : 'down') as 'up' | 'down',
-      color: `linear-gradient(90deg,${k.borderColor},${k.sparkColor ?? k.borderColor})`
+      borderColor: k.borderColor,
+      sparkColor: k.sparkColor ?? k.borderColor,
+      sparklineValues: k.sparklineValues
     }))
   )
 
@@ -293,6 +304,9 @@
   const churnTrendRef = ref<HTMLElement>()
 
   const chartInstances: echarts.ECharts[] = []
+
+  const kpiSparklineRefs = ref<(HTMLElement | null)[]>([])
+  const skuTrendSparklineRefs = ref<Record<string, HTMLElement | null>>({})
 
   function initChart(el: HTMLElement | undefined, option: echarts.EChartsOption) {
     if (!el) return
@@ -362,6 +376,12 @@
                 yAxisIndex: 0,
                 smooth: true,
                 lineStyle: { color: '#f59e0b' },
+                areaStyle: {
+                  color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: 'rgba(245,158,11,0.35)' },
+                    { offset: 1, color: 'rgba(245,158,11,0)' }
+                  ])
+                },
                 symbol: 'circle',
                 symbolSize: 5,
                 itemStyle: { color: '#f59e0b' }
@@ -370,6 +390,97 @@
           : [])
       ]
     })
+  }
+
+  function initKpiSparklines() {
+    kpiList.value.forEach((kpi, i) => {
+      const el = kpiSparklineRefs.value[i]
+      if (!el) return
+
+      const vals =
+        kpi.sparklineValues?.length && kpi.sparklineValues.length >= 2
+          ? kpi.sparklineValues
+          : Array.from({ length: 12 }, () => Math.random())
+
+      const lineColor = kpi.sparkColor
+      initChart(el, {
+        backgroundColor: 'transparent',
+        grid: { top: 0, right: 0, bottom: 0, left: 0 },
+        xAxis: { type: 'category', show: false, data: vals.map((_, j) => j) },
+        yAxis: { type: 'value', show: false },
+        series: [
+          {
+            type: 'line',
+            data: vals,
+            smooth: true,
+            showSymbol: false,
+            lineStyle: { color: lineColor, width: 2 },
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: `${lineColor}55` },
+                { offset: 1, color: `${lineColor}00` }
+              ])
+            },
+            itemStyle: { color: lineColor }
+          }
+        ]
+      })
+    })
+  }
+
+  function initSkuTrendSparklines() {
+    const list = skuData.value
+    list.forEach((row) => {
+      const el = skuTrendSparklineRefs.value[row.name]
+      if (!el) return
+
+      const vals =
+        row.sparklineValues?.length && row.sparklineValues.length >= 2
+          ? row.sparklineValues
+          : Array.from({ length: 12 }, () => Math.random())
+
+      const upColor = '#14b8a6'
+      const downColor = '#ef4444'
+      const lineColor = row.trendUp ? upColor : downColor
+      const lineColor2 = row.trendUp ? '#3b82f6' : '#f97316'
+
+      initChart(el, {
+        backgroundColor: 'transparent',
+        grid: { top: 0, right: 0, bottom: 0, left: 0 },
+        xAxis: { type: 'category', show: false, data: vals.map((_, j) => j) },
+        yAxis: { type: 'value', show: false },
+        series: [
+          {
+            type: 'line',
+            data: vals,
+            smooth: true,
+            showSymbol: false,
+            lineStyle: {
+              width: 2,
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: lineColor },
+                { offset: 1, color: lineColor2 }
+              ])
+            },
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: `${lineColor}55` },
+                { offset: 1, color: `${lineColor}00` }
+              ])
+            },
+            itemStyle: { color: lineColor }
+          }
+        ]
+      })
+    })
+  }
+
+  function setKpiSparklineRef(i: number, el: unknown) {
+    kpiSparklineRefs.value[i] = (el as HTMLElement) ?? null
+  }
+
+  function setSkuTrendSparklineRef(key: string, el: unknown) {
+    skuTrendSparklineRefs.value[key] = (el as HTMLElement) ?? null
   }
 
   function initCountry() {
@@ -624,9 +735,11 @@
 
   function initAllCharts() {
     nextTick(() => {
+      initKpiSparklines()
       if (activeTab.value === 'product') {
         initDonut()
         initRenew()
+        initSkuTrendSparklines()
       } else if (activeTab.value === 'user') {
         initCountry()
         initUserCompare()
@@ -666,6 +779,8 @@
     nextTick(() => {
       chartInstances.forEach((c) => c.dispose())
       chartInstances.length = 0
+      kpiSparklineRefs.value = []
+      skuTrendSparklineRefs.value = {}
       initAllCharts()
     })
   }
@@ -830,9 +945,10 @@
   }
 
   .iap-kpi-top {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
     align-items: center;
-    justify-content: space-between;
     margin-bottom: 6px;
   }
 
@@ -842,10 +958,10 @@
   }
 
   .iap-kpi-sparkline {
-    width: 50px;
-    height: 20px;
+    width: 100%;
+    height: 36px;
     border-radius: 4px;
-    opacity: 0.6;
+    opacity: 1;
   }
 
   .iap-kpi-value {
@@ -937,6 +1053,19 @@
   :deep(.iap-dark-table) {
     background: transparent !important;
 
+    .el-table__inner {
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .el-table__header-wrapper th {
       font-size: 12px;
       color: var(--art-gray-600) !important;
@@ -973,6 +1102,11 @@
     color: #2dd4bf !important;
     background: #134e4a !important;
     border-color: #0f766e !important;
+  }
+
+  .iap-sku-trend-spark {
+    width: 120px;
+    height: 22px;
   }
 
   .iap-ratio-wrap {
@@ -1014,11 +1148,47 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 10px;
+    align-items: stretch;
+    min-height: 340px;
     margin-top: 10px;
   }
 
   .iap-flex-1 {
     flex: 1;
+  }
+
+  .iap-bottom-three-col .iap-section-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .iap-bottom-three-col .iap-segment-list {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 0;
+  }
+
+  .iap-bottom-three-col .iap-donut-wrap {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+  }
+
+  .iap-bottom-three-col .iap-donut-chart {
+    height: 100%;
+  }
+
+  .iap-bottom-three-col .iap-renew-chart {
+    flex: 1;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .iap-bottom-three-col .iap-segment-row:last-child {
+    margin-bottom: 0;
   }
 
   .iap-segment-row {
@@ -1068,12 +1238,14 @@
 
   .iap-donut-wrap {
     position: relative;
-    height: 140px;
+    flex: 1;
+    height: auto;
+    min-height: 0;
   }
 
   .iap-donut-chart {
     width: 100%;
-    height: 140px;
+    height: 100%;
   }
 
   .iap-donut-center {
@@ -1119,7 +1291,9 @@
   }
 
   .iap-renew-chart {
-    height: 160px;
+    flex: 1;
+    height: 100%;
+    min-height: 0;
   }
 
   .iap-two-col-grid {

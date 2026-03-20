@@ -1,17 +1,19 @@
 <template>
   <div class="ad-performance-page art-full-height flex flex-col">
+    <!-- 筛选通栏：独占一行，不参与左右分栏 -->
+    <div class="ad-performance-page__section ad-performance-page__section--filters">
+      <AdPerformanceFilters
+        :filter="mock.filter"
+        :app-count="53"
+        @search="onFilterSearch"
+        @export="onExport"
+        @refresh="onRefresh"
+      />
+    </div>
+
     <ElRow :gutter="16" class="ad-performance-page__body">
-      <!-- 左侧：筛选、数据展示、趋势图、表格 -->
-      <ElCol :xs="24" :xl="19" class="ad-performance-page__left">
-        <div class="ad-performance-page__section ad-performance-page__section--filters">
-          <AdPerformanceFilters
-            :filter="mock.filter"
-            :app-count="53"
-            @search="onFilterSearch"
-            @export="onExport"
-            @refresh="onRefresh"
-          />
-        </div>
+      <!-- 左侧：数据展示、趋势图、表格 -->
+      <ElCol :xs="24" :md="17" :xl="19" class="ad-performance-page__left">
         <div class="ad-performance-page__section ad-performance-page__section--kpi">
           <AdPerformanceKpiCards :kpi="mock.kpi" />
         </div>
@@ -34,7 +36,7 @@
         </div>
       </ElCol>
       <!-- 右侧：广告平台分布、应用分布、异常预警 -->
-      <ElCol :xs="24" :xl="5" class="ad-performance-page__right">
+      <ElCol :xs="24" :md="7" :xl="5" class="ad-performance-page__right">
         <AdPerformanceDistribution
           :channel-distribution="mock.channelDistribution"
           :app-distribution="mock.appDistribution"

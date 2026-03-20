@@ -1,200 +1,229 @@
 <template>
   <div class="iaa-tab-content iaa-tab-ad-type">
-    <section class="iaa-kpi-grid">
-      <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
-        <div class="iaa-kpi__title">{{ k.title }}</div>
-        <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
-        <div
-          class="iaa-kpi__sub"
-          :class="k.trendUp !== undefined ? (k.trendUp ? 'up' : 'down') : ''"
-        >
-          {{ k.subText }}
+    <!-- KPI 卡片行（通栏） -->
+    <section v-if="kpi" class="iaa-kpi-grid">
+      <article class="iaa-kpi" data-accent="teal">
+        <div class="iaa-kpi__title">广告总收入</div>
+        <div class="iaa-kpi__value">{{ formatUsd(kpi.revenueTotal) }}</div>
+        <div class="iaa-kpi__sub warn">
+          <el-icon><Warning /></el-icon>
+          真实 {{ formatUsd(kpi.revenueReal) }}
+        </div>
+      </article>
+
+      <article class="iaa-kpi">
+        <div class="iaa-kpi__title">广告用户渗透率</div>
+        <div class="iaa-kpi__value">{{ kpi.penetrationPct.toFixed(1) }}%</div>
+        <div class="iaa-kpi__sub">
+          {{ kpi.adUsers.toLocaleString() }}/{{ kpi.dau.toLocaleString() }} DAU
+        </div>
+      </article>
+
+      <article class="iaa-kpi">
+        <div class="iaa-kpi__title">人均展示次数</div>
+        <div class="iaa-kpi__value">{{ kpi.impressionsPerUser.toFixed(1) }}次</div>
+        <div class="iaa-kpi__sub">广告展示 {{ kpi.impressions.toLocaleString() }}</div>
+      </article>
+
+      <article class="iaa-kpi">
+        <div class="iaa-kpi__title">ECPM</div>
+        <div class="iaa-kpi__value ecpm-value">
+          <span class="ecpm-est">{{ kpi.ecpmEst.toFixed(2) }}</span>
+          <span class="ecpm-label">（预估）</span>
+          <span class="ecpm-sep">/</span>
+          <span class="ecpm-real">{{ kpi.ecpmReal.toFixed(2) }}</span>
+          <span class="ecpm-label">（真实）</span>
+        </div>
+        <div class="iaa-kpi__sub" :class="kpi.ecpmVariancePct >= 0 ? 'up' : 'down'">
+          <el-icon><Top v-if="kpi.ecpmVariancePct >= 0" /><Bottom v-else /></el-icon>
+          偏差 {{ kpi.ecpmVariancePct >= 0 ? '+' : '' }}{{ kpi.ecpmVariancePct.toFixed(1) }}%
         </div>
       </article>
     </section>
 
+    <!-- 主内容区：三列上 + 两列下 -->
     <section class="iaa-main-grid">
-      <div class="iaa-main-left">
+      <!-- 左列：广告类型详细对比 -->
+      <div class="iaa-col iaa-col--left">
         <ElCard class="iaa-panel" shadow="never">
           <template #header>
-            <span>广告类型详细对比</span>
+            <div class="panel-header-row">
+              <span>广告类型详细对比</span>
+              <div class="radar-tabs">
+                <span
+                  v-for="t in radarTabs"
+                  :key="t.key"
+                  class="radar-tab"
+                  :class="{ active: activeRadarTab === t.key }"
+                  @click="activeRadarTab = t.key"
+                  >{{ t.label }}</span
+                >
+              </div>
+            </div>
           </template>
-          <div class="iaa-ad-type-row">
-            <div ref="radarChartRef" class="iaa-chart iaa-chart--radar"></div>
-            <ArtTable
-              :data="adTypeTableData"
-              :columns="adTypeColumns"
-              row-key="adTypeName"
-              :stripe="false"
-              :border="false"
-              size="default"
-              :pagination="undefined"
-            />
+          <div ref="radarChartRef" class="iaa-chart iaa-chart--radar"></div>
+          <table class="ad-type-table">
+            <thead>
+              <tr>
+                <th>名称</th>
+                <th>收入</th>
+                <th>%</th>
+                <th>Users</th>
+                <th>ECPM</th>
+                <th>Impressions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in adTypeTableData" :key="row.adTypeName">
+                <td class="name-cell">{{ row.adTypeName }}</td>
+                <td>收入 ${{ row.revenue.toLocaleString() }}</td>
+                <td>{{ row.revenueShare }}%</td>
+                <td>用户 {{ row.users.toLocaleString() }}</td>
+                <td>{{ row.ecpm.toFixed(2) }}</td>
+                <td>展示 {{ row.impressions.toLocaleString() }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </ElCard>
+      </div>
+
+      <!-- 中列：广告平台效果排行 -->
+      <div class="iaa-col iaa-col--mid">
+        <ElCard class="iaa-panel" shadow="never">
+          <template #header><span>广告平台效果排行</span></template>
+          <div ref="platformBarRef" class="iaa-chart iaa-chart--bar"></div>
+          <div v-if="platformInsight" class="iaa-insight-banner">
+            <el-icon><Sunny /></el-icon>
+            {{ platformInsight }}
           </div>
         </ElCard>
+      </div>
+
+      <!-- 右列：广告位 Top10 收入 -->
+      <div class="iaa-col iaa-col--right">
         <ElCard class="iaa-panel" shadow="never">
-          <template #header>
-            <span>广告平台效果排行</span>
-          </template>
-          <div ref="platformBarRef" class="iaa-chart iaa-chart--bar"></div>
-        </ElCard>
-        <ElCard class="iaa-panel" shadow="never">
-          <template #header>
-            <span>广告位 Top10 收入</span>
-          </template>
+          <template #header><span>广告位 Top10收入</span></template>
           <div class="iaa-top10-list">
-            <div v-for="(item, i) in placementTop10" :key="item.name" class="iaa-top10-item">
-              <span class="iaa-top10-rank">{{ i + 1 }}</span>
-              <span class="iaa-top10-name">{{ item.name }}</span>
+            <div
+              v-for="(item, i) in placementTop10View"
+              :key="item.placementName"
+              class="iaa-top10-item"
+            >
+              <span class="iaa-top10-rank" :class="getRankClass(i)">{{ i + 1 }}</span>
+              <span class="iaa-top10-name">{{ item.placementName }}</span>
+              <span class="iaa-top10-dot" :style="{ background: item.dotColor }"></span>
               <span class="iaa-top10-value">${{ item.revenue.toFixed(2) }}</span>
               <div class="iaa-top10-bar">
-                <div class="iaa-top10-bar__fill" :style="{ width: item.percent + '%' }" />
+                <div
+                  class="iaa-top10-bar__fill"
+                  :style="{ width: item.percent + '%', background: item.barColor }"
+                />
               </div>
               <span class="iaa-top10-pct">{{ item.percent.toFixed(1) }}%</span>
             </div>
           </div>
         </ElCard>
       </div>
-      <div class="iaa-main-right">
-        <ElCard class="iaa-panel" shadow="never">
-          <template #header>
+    </section>
+
+    <!-- 下方两列 -->
+    <section class="iaa-bottom-grid">
+      <!-- 广告类型趋势 -->
+      <ElCard class="iaa-panel" shadow="never">
+        <template #header>
+          <div class="panel-header-row">
             <span>广告类型趋势(近7天)</span>
-          </template>
-          <div ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
-        </ElCard>
-        <ElCard class="iaa-panel" shadow="never">
-          <template #header>
-            <span>用户拆分分析(安装天数)</span>
-          </template>
-          <div ref="userBreakdownRef" class="iaa-chart iaa-chart--bar"></div>
-          <div class="iaa-insight-banner">
-            新用户(0天)广告收入 $228.29 (8.2%)，老用户为核心变现群体
+            <div class="trend-legend">
+              <span v-for="l in trendLegend" :key="l.name" class="legend-item">
+                <i :style="{ background: l.color }"></i>{{ l.name }}
+              </span>
+            </div>
           </div>
-        </ElCard>
-      </div>
+        </template>
+        <div ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
+      </ElCard>
+
+      <!-- 用户拆分分析 -->
+      <ElCard class="iaa-panel" shadow="never">
+        <template #header>
+          <div class="panel-header-row">
+            <span>用户拆分分析(安装天数)</span>
+            <div class="trend-legend">
+              <span class="legend-item"><i style="background: #3b82f6"></i>广告收入</span>
+              <span class="legend-item hollow"
+                ><i style="border: 2px solid #10b981"></i>活动性用户</span
+              >
+            </div>
+          </div>
+        </template>
+        <div ref="userBreakdownRef" class="iaa-chart iaa-chart--bar"></div>
+        <div v-if="userBreakdownInsight" class="iaa-insight-banner">
+          <el-icon><Sunny /></el-icon>
+          {{ userBreakdownInsight }}
+        </div>
+      </ElCard>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted } from 'vue'
+  import { ref, computed, onMounted, watch, nextTick } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
-  import type { ColumnOption } from '@/types'
-  import type { IaaFilterState, IaaKpiCard, IaaAdTypeCompareRow } from '../types'
+  import type { IaaFilterState, IaaAdTypeTabData } from '../types'
+  import { fetchIaaAdTypeTabData } from '@/api/business-insight'
+  import { Warning, Top, Bottom, Sunny } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'IaaTabAdType' })
 
-  defineProps<{ filter: IaaFilterState }>()
+  const props = defineProps<{ filter: IaaFilterState }>()
 
-  const kpis = ref<IaaKpiCard[]>([
-    {
-      id: '1',
-      title: '广告总收入',
-      primaryValue: '$2,768.58',
-      subText: '真实 $1,861.23',
-      accent: 'teal'
-    },
-    {
-      id: '2',
-      title: '广告用户渗透率',
-      primaryValue: '68.6%',
-      subText: '117,483/171,334 DAU',
-      accent: 'default'
-    },
-    {
-      id: '3',
-      title: '人均展示次数',
-      primaryValue: '4.9次',
-      subText: '广告展示 833,597',
-      accent: 'default'
-    },
-    {
-      id: '4',
-      title: 'ECPM',
-      primaryValue: '3.32 (预估) / 3.06 (真实)',
-      subText: '偏差 +8.5%',
-      accent: 'default'
-    }
-  ])
+  const tabData = ref<IaaAdTypeTabData | null>(null)
 
-  const adTypeTableData = ref<IaaAdTypeCompareRow[]>([
-    {
-      adTypeName: '插页式',
-      revenue: 2014,
-      revenueShare: 72.8,
-      users: 95000,
-      ecpm: 3.8,
-      impressions: 530000
-    },
-    {
-      adTypeName: '原生',
-      revenue: 484,
-      revenueShare: 17.5,
-      users: 88000,
-      ecpm: 2.2,
-      impressions: 220000
-    },
-    {
-      adTypeName: '横幅',
-      revenue: 191,
-      revenueShare: 6.9,
-      users: 102000,
-      ecpm: 0.9,
-      impressions: 212000
-    },
-    {
-      adTypeName: '开屏',
-      revenue: 79,
-      revenueShare: 2.9,
-      users: 65000,
-      ecpm: 1.2,
-      impressions: 66000
-    }
-  ])
+  const kpi = computed(() => tabData.value?.kpi ?? null)
+  const platformInsight = computed(() => tabData.value?.platformInsight ?? '')
+  const userBreakdownInsight = computed(() => tabData.value?.userBreakdown?.insight ?? '')
 
-  const placementTop10 = ref([
-    { name: 'Splash', revenue: 1452, percent: 52.4 },
-    { name: 'HomeResume', revenue: 446, percent: 16.1 },
-    { name: 'Native_AdMainWall', revenue: 332, percent: 12.0 },
-    { name: 'Interstitial_LevelEnd', revenue: 221, percent: 8.0 },
-    { name: 'Banner_Home', revenue: 166, percent: 6.0 }
-  ])
+  const adTypeTableData = computed(() => tabData.value?.compareRows ?? [])
 
-  const adTypeColumns = computed<ColumnOption[]>(() => [
-    { prop: 'adTypeName', label: '名称', minWidth: 90 },
-    {
-      prop: 'revenue',
-      label: '收入',
-      minWidth: 90,
-      formatter: (r: IaaAdTypeCompareRow) => `$${r.revenue}`
-    },
-    {
-      prop: 'revenueShare',
-      label: '%',
-      minWidth: 64,
-      formatter: (r: IaaAdTypeCompareRow) => `${r.revenueShare}%`
-    },
-    {
-      prop: 'users',
-      label: '用户',
-      minWidth: 80,
-      formatter: (r: IaaAdTypeCompareRow) => r.users.toLocaleString()
-    },
-    {
-      prop: 'ecpm',
-      label: 'ECPM',
-      minWidth: 72,
-      formatter: (r: IaaAdTypeCompareRow) => r.ecpm.toFixed(2)
-    },
-    {
-      prop: 'impressions',
-      label: '展示',
-      minWidth: 90,
-      formatter: (r: IaaAdTypeCompareRow) => r.impressions.toLocaleString()
-    }
-  ])
+  const TOP10_DOT = '#10B981'
+  const TOP10_BAR = '#10B981'
 
+  const placementTop10View = computed(() => {
+    const list = tabData.value?.placementTop10 ?? []
+    return list.map((row) => ({
+      ...row,
+      dotColor: TOP10_DOT,
+      barColor: TOP10_BAR
+    }))
+  })
+
+  function formatUsd(n: number) {
+    return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+
+  // ——— Radar Tab ———
+  const radarTabs = [
+    { key: 'revenue' as const, label: '收入' },
+    { key: 'users' as const, label: '用户' },
+    { key: 'impressions' as const, label: '展示数' },
+    { key: 'avgRevenue' as const, label: '平均收入' }
+  ]
+  const activeRadarTab = ref<(typeof radarTabs)[number]['key']>('revenue')
+
+  function getRankClass(i: number) {
+    if (i === 0) return 'rank-gold'
+    if (i === 1) return 'rank-silver'
+    if (i === 2) return 'rank-bronze'
+    return 'rank-default'
+  }
+
+  const trendLegend = computed(() => {
+    const series = tabData.value?.trend7d.series ?? []
+    return series.map((s) => ({ name: s.name, color: s.color }))
+  })
+
+  // ——— ECharts ———
   const useRadar = useChart()
   const usePlatformBar = useChart()
   const useTrend = useChart()
@@ -204,20 +233,74 @@
   const trendChartRef = useTrend.chartRef
   const userBreakdownRef = useUserBreakdown.chartRef
 
+  function radarSeriesValues(): number[] {
+    const r = tabData.value?.radar
+    if (!r) return []
+    const v = r.values
+    switch (activeRadarTab.value) {
+      case 'revenue':
+        return v.revenue
+      case 'users':
+        return v.users
+      case 'impressions':
+        return v.impressions
+      case 'avgRevenue':
+        return v.avgRevenue
+      default:
+        return v.revenue
+    }
+  }
+
+  function radarMetricMax(): number {
+    const r = tabData.value?.radar
+    if (!r) return 1
+    const m = r.maxByMetric
+    switch (activeRadarTab.value) {
+      case 'revenue':
+        return m.revenue
+      case 'users':
+        return m.users
+      case 'impressions':
+        return m.impressions
+      case 'avgRevenue':
+        return m.avgRevenue
+      default:
+        return m.revenue
+    }
+  }
+
+  function radarSeriesName(): string {
+    return radarTabs.find((t) => t.key === activeRadarTab.value)?.label ?? ''
+  }
+
   function buildRadarOption(): EChartsOption {
-    const maxRevenue = Math.max(...adTypeTableData.value.map((r) => r.revenue))
-    const indicators = adTypeTableData.value.map((r) => ({
-      name: r.adTypeName,
-      max: maxRevenue * 1.2
-    }))
-    const values = adTypeTableData.value.map((r) => r.revenue)
+    const names = tabData.value?.radar.indicatorNames ?? []
+    const max = radarMetricMax()
+    const vals = radarSeriesValues()
     return {
-      radar: { indicator: indicators, center: ['50%', '55%'], radius: '68%' },
+      backgroundColor: 'transparent',
+      radar: {
+        indicator: names.map((n) => ({ name: n, max })),
+        center: ['50%', '52%'],
+        radius: '62%',
+        axisName: { color: '#94a3b8', fontSize: 12 },
+        splitLine: { lineStyle: { color: 'rgba(148,163,184,0.15)' } },
+        axisLine: { lineStyle: { color: 'rgba(148,163,184,0.2)' } },
+        splitArea: { show: false }
+      },
       series: [
         {
           type: 'radar',
           data: [
-            { value: values, name: '收入', areaStyle: { opacity: 0.3 }, lineStyle: { width: 2 } }
+            {
+              value: vals.length ? vals : [0, 0, 0, 0],
+              name: radarSeriesName(),
+              areaStyle: { color: 'rgba(59,130,246,0.25)', opacity: 1 },
+              lineStyle: { color: '#3B82F6', width: 2 },
+              itemStyle: { color: '#3B82F6' },
+              symbol: 'circle',
+              symbolSize: 5
+            }
           ]
         }
       ]
@@ -225,101 +308,207 @@
   }
 
   function buildPlatformBarOption(): EChartsOption {
-    const names = ['Admob', 'Facebook', 'Applovin', 'Vungle', 'Pangle', 'Mintegral']
-    const revenues = [1985, 257, 166, 198, 98, 62]
+    const rows = tabData.value?.platformRanking ?? []
+    const names = rows.map((r) => r.sourceName)
+    const revenues = rows.map((r) => r.revenue)
+    const ecpms = rows.map((r) => r.ecpm.toFixed(2))
+    const n = names.length || 1
     return {
-      grid: { left: 56, right: 24, top: 16, bottom: 48 },
-      xAxis: { type: 'category', data: names },
-      yAxis: { type: 'value' },
-      series: [{ type: 'bar', data: revenues, itemStyle: { color: '#26C2AD' }, barMaxWidth: 32 }]
+      backgroundColor: 'transparent',
+      grid: { left: 40, right: 16, top: 40, bottom: 56 },
+      xAxis: {
+        type: 'category',
+        data: names,
+        axisLabel: { color: '#94a3b8', fontSize: 11 },
+        axisLine: { lineStyle: { color: '#1e293b' } }
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: { color: '#94a3b8', fontSize: 10, formatter: '${value}' },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
+      series: [
+        {
+          type: 'bar',
+          data: revenues,
+          itemStyle: { color: '#3B82F6', borderRadius: [3, 3, 0, 0] },
+          barMaxWidth: 40,
+          label: {
+            show: true,
+            position: 'top',
+            formatter: (p: any) => `$${Number(p.value ?? 0).toFixed(2)}`,
+            color: '#f1f5f9',
+            fontSize: 11
+          }
+        }
+      ],
+      graphic: names.map((_, i) => ({
+        type: 'text',
+        left: `${8 + i * (100 / n)}%`,
+        bottom: 14,
+        style: {
+          text: `ECPM ${ecpms[i] ?? ''}`,
+          fill: '#64748b',
+          fontSize: 10
+        }
+      }))
     }
   }
 
-  const trend7dDates = ['02-27', '02-29', '03-01', '03-02', '03-03', '03-04', '03-05']
+  const TREND_AREA: Record<string, string> = {
+    '#3B82F6': 'rgba(59,130,246,0.35)',
+    '#10B981': 'rgba(16,185,129,0.35)',
+    '#8B5CF6': 'rgba(139,92,246,0.35)',
+    '#F59E0B': 'rgba(245,158,11,0.35)'
+  }
+
   function buildTrendOption(): EChartsOption {
+    const dates = tabData.value?.trend7d.dates ?? []
+    const series = tabData.value?.trend7d.series ?? []
     return {
-      grid: { left: 48, right: 24, top: 16, bottom: 28 },
-      tooltip: { trigger: 'axis' },
-      legend: { data: ['插页式', '原生', '横幅', '开屏'], bottom: 0 },
-      xAxis: { type: 'category', data: trend7dDates },
-      yAxis: { type: 'value' },
-      series: [
-        {
-          name: '插页式',
-          type: 'line',
-          stack: 'total',
-          data: [580, 620, 590, 650, 680, 700, 720],
-          areaStyle: {},
-          itemStyle: { color: '#3B82F6' }
-        },
-        {
-          name: '原生',
-          type: 'line',
-          stack: 'total',
-          data: [120, 135, 128, 142, 138, 145, 148],
-          areaStyle: {},
-          itemStyle: { color: '#10B981' }
-        },
-        {
-          name: '横幅',
-          type: 'line',
-          stack: 'total',
-          data: [50, 52, 48, 55, 58, 60, 62],
-          areaStyle: {},
-          itemStyle: { color: '#8B5CF6' }
-        },
-        {
-          name: '开屏',
-          type: 'line',
-          stack: 'total',
-          data: [20, 22, 21, 23, 24, 25, 26],
-          areaStyle: {},
-          itemStyle: { color: '#F59E0B' }
-        }
-      ]
+      backgroundColor: 'transparent',
+      grid: { left: 52, right: 24, top: 16, bottom: 28 },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' }
+      },
+      xAxis: {
+        type: 'category',
+        data: dates,
+        axisLabel: { color: '#64748b', fontSize: 10 },
+        axisLine: { lineStyle: { color: '#1e293b' } }
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: { color: '#64748b', fontSize: 10, formatter: '${value}K' },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
+      series: series.map((s) => ({
+        name: s.name,
+        type: 'line' as const,
+        stack: 'total',
+        data: s.data,
+        areaStyle: { color: TREND_AREA[s.color] ?? 'rgba(59,130,246,0.35)' },
+        lineStyle: { color: s.color, width: 2 },
+        symbol: 'none',
+        itemStyle: { color: s.color },
+        smooth: true
+      }))
     }
   }
 
   function buildUserBreakdownOption(): EChartsOption {
-    const categories = [
-      '0天',
-      '1天',
-      '2-7天',
-      '8-30天',
-      '31-90天',
-      '91-180天',
-      '181-360天',
-      '360+天'
-    ]
-    const revenue = [228, 185, 312, 398, 425, 380, 440, 1380]
-    const users = [12000, 9500, 18000, 22000, 24000, 21000, 23000, 85000]
+    const buckets = tabData.value?.userBreakdown?.buckets ?? []
+    const categories = buckets.map((b) => b.installDays)
+    const revenue = buckets.map((b) => b.revenue)
+    const users = buckets.map((b) => b.activeUsers)
+    const lastIdx = Math.max(0, categories.length - 1)
+    const highlightPct = tabData.value?.userBreakdown?.highlightRevenueSharePct
     return {
-      grid: { left: 56, right: 48, top: 16, bottom: 28 },
-      tooltip: { trigger: 'axis' },
-      legend: { data: ['广告收入', '活动性用户'], bottom: 0 },
-      xAxis: { type: 'category', data: categories },
+      backgroundColor: 'transparent',
+      grid: { left: 56, right: 56, top: 32, bottom: 28 },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' },
+        formatter: (params: any) => {
+          const list = (Array.isArray(params) ? params : []) as {
+            dataIndex: number
+            marker: string
+            seriesName: string
+            value: number
+          }[]
+          const idx = list[0]?.dataIndex ?? 0
+          let html = `<div style="font-size:12px;margin-bottom:4px;color:#94a3b8">${categories[idx]}</div>`
+          list.forEach((p) => {
+            html += `<div>${p.marker}${p.seriesName}: <b>${p.value}</b></div>`
+          })
+          if (idx === lastIdx && highlightPct != null) {
+            html += `<div style="margin-top:6px;padding:6px;background:#1a3a5c;border-radius:4px;font-size:11px;color:#60a5fa">${categories[idx]}老用户贡献<b style="color:#f59e0b">${highlightPct}%</b>广告收入</div>`
+          }
+          return html
+        }
+      },
+      xAxis: {
+        type: 'category',
+        data: categories,
+        axisLabel: { color: '#64748b', fontSize: 10 },
+        axisLine: { lineStyle: { color: '#1e293b' } }
+      },
       yAxis: [
-        { type: 'value', name: '收入' },
-        { type: 'value', name: '用户' }
+        {
+          type: 'value',
+          name: 'Ad Revenue',
+          nameTextStyle: { color: '#3B82F6', fontSize: 10 },
+          axisLabel: { color: '#64748b', fontSize: 10, formatter: '${value}' },
+          splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+        },
+        {
+          type: 'value',
+          name: 'Active Users',
+          nameTextStyle: { color: '#10B981', fontSize: 10 },
+          axisLabel: { color: '#64748b', fontSize: 10, formatter: '{value}' },
+          splitLine: { show: false }
+        }
       ],
       series: [
-        { name: '广告收入', type: 'bar', data: revenue, itemStyle: { color: '#3B82F6' } },
+        {
+          name: '广告收入',
+          type: 'bar',
+          data: revenue,
+          itemStyle: { color: '#3B82F6', borderRadius: [3, 3, 0, 0] },
+          barWidth: '35%'
+        },
         {
           name: '活动性用户',
           type: 'bar',
           data: users,
           yAxisIndex: 1,
-          itemStyle: { color: '#10B981', borderColor: '#10B981' }
+          barWidth: '35%',
+          itemStyle: {
+            color: 'transparent',
+            borderColor: '#10B981',
+            borderWidth: 2,
+            borderRadius: [3, 3, 0, 0]
+          }
         }
       ]
     }
   }
 
+  function refreshCharts() {
+    if (!tabData.value) return
+    useRadar.updateChart(buildRadarOption())
+    usePlatformBar.updateChart(buildPlatformBarOption())
+    useTrend.updateChart(buildTrendOption())
+    useUserBreakdown.updateChart(buildUserBreakdownOption())
+  }
+
+  async function loadTabData() {
+    tabData.value = await fetchIaaAdTypeTabData(props.filter)
+    await nextTick()
+    refreshCharts()
+  }
+
   onMounted(() => {
-    useRadar.initChart(buildRadarOption())
-    usePlatformBar.initChart(buildPlatformBarOption())
-    useTrend.initChart(buildTrendOption())
-    useUserBreakdown.initChart(buildUserBreakdownOption())
+    loadTabData()
+  })
+
+  watch(
+    () => props.filter,
+    () => {
+      loadTabData()
+    },
+    { deep: true }
+  )
+
+  watch(activeRadarTab, () => {
+    if (tabData.value) {
+      useRadar.updateChart(buildRadarOption())
+    }
   })
 </script>
 
@@ -331,13 +520,15 @@
     min-height: 100%;
   }
 
+  /* ——— KPI 行 ——— */
   .iaa-kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 12px;
   }
 
   .iaa-kpi {
+    min-width: 0;
     padding: 16px;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
@@ -354,122 +545,335 @@
     }
 
     &__value {
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
       color: var(--art-gray-900);
     }
 
     &__sub {
-      margin-top: 4px;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin-top: 6px;
       font-size: 12px;
       color: var(--art-gray-600);
+
+      &.warn {
+        color: #f59e0b;
+      }
+
+      &.up {
+        color: #10b981;
+      }
+
+      &.down {
+        color: #ef4444;
+      }
     }
   }
 
+  /* ECPM 特殊值样式 */
+  .ecpm-value {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    align-items: baseline;
+    font-size: 20px !important;
+  }
+
+  .ecpm-est {
+    font-size: 26px;
+    font-weight: 700;
+    color: #f59e0b;
+  }
+
+  .ecpm-real {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--art-gray-900);
+  }
+
+  .ecpm-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--art-gray-600);
+  }
+
+  .ecpm-sep {
+    font-size: 18px;
+    color: var(--art-gray-600);
+  }
+
+  /* ——— 主三列 ——— */
   .iaa-main-grid {
     display: grid;
-    flex: 1;
-    grid-template-columns: 1fr 360px;
-    gap: 16px;
-    min-height: 0;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    align-items: stretch;
   }
 
-  .iaa-main-left,
-  .iaa-main-right {
+  .iaa-col {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    min-height: 0;
+    gap: 12px;
+    min-width: 0;
   }
 
+  /* ——— Panel 通用 ——— */
   .iaa-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
 
     :deep(.el-card__header) {
-      padding: 12px 16px;
-      font-size: 14px;
+      flex-shrink: 0;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
       border-bottom: 1px solid var(--default-border);
     }
 
     :deep(.el-card__body) {
-      padding: 16px;
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      padding: 14px;
+      overflow: hidden;
     }
   }
 
-  .iaa-ad-type-row {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 16px;
+  /* Panel header 内部行 */
+  .panel-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
+  /* ——— Radar Tabs ——— */
+  .radar-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    background: var(--default-border);
+    border-radius: 6px;
+  }
+
+  .radar-tab {
+    padding: 3px 10px;
+    font-size: 12px;
+    color: var(--art-gray-600);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+
+    &.active {
+      color: #fff;
+      background: var(--art-primary);
+    }
+
+    &:not(.active):hover {
+      color: var(--art-gray-900);
+    }
+  }
+
+  /* ——— 图表通用：撑满卡片剩余高度 ——— */
   .iaa-chart {
+    flex: 1;
     width: 100%;
-    height: 240px;
+    min-height: 0;
 
     &--radar {
-      height: 260px;
+      min-height: 160px;
     }
 
     &--bar {
-      height: 280px;
+      min-height: 200px;
     }
 
     &--line {
-      height: 220px;
+      min-height: 160px;
     }
   }
 
+  /* ——— 广告类型表格 ——— */
+  .ad-type-table {
+    width: 100%;
+    margin-top: 4px;
+    font-size: 12px;
+    border-collapse: collapse;
+
+    th {
+      padding: 5px 6px;
+      font-weight: 500;
+      color: var(--art-gray-600);
+      text-align: left;
+      border-bottom: 1px solid var(--default-border);
+    }
+
+    td {
+      padding: 5px 6px;
+      color: var(--art-gray-700);
+      border-bottom: 1px solid var(--default-border);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgb(255 255 255 / 3%);
+    }
+
+    .name-cell {
+      color: var(--art-primary);
+      cursor: pointer;
+    }
+  }
+
+  /* ——— Top10 列表 ——— */
   .iaa-top10-list {
     display: flex;
+    flex: 1;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
+    justify-content: space-between;
+    overflow-y: auto;
   }
 
   .iaa-top10-item {
     display: grid;
-    grid-template-columns: 28px 1fr 80px 100px 48px;
-    gap: 8px;
+    grid-template-columns: 22px 1fr 8px 64px 80px 42px;
+    gap: 6px;
     align-items: center;
     font-size: 12px;
   }
 
   .iaa-top10-rank {
-    color: var(--art-gray-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 4px;
+
+    &.rank-gold {
+      color: #fbbf24;
+      background: #92400e;
+    }
+
+    &.rank-silver {
+      color: #94a3b8;
+      background: #334155;
+    }
+
+    &.rank-bronze {
+      color: #fb923c;
+      background: #431407;
+    }
+
+    &.rank-default {
+      font-weight: 400;
+      color: var(--art-gray-600);
+    }
+  }
+
+  .iaa-top10-dot {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
   }
 
   .iaa-top10-name {
-    color: var(--art-gray-900);
+    overflow: hidden;
+    color: var(--art-gray-800);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .iaa-top10-value {
+    font-weight: 500;
     color: var(--art-primary);
+    text-align: right;
   }
 
   .iaa-top10-bar {
-    height: 8px;
+    height: 6px;
     overflow: hidden;
     background: var(--default-border);
-    border-radius: 4px;
+    border-radius: 3px;
   }
 
   .iaa-top10-bar__fill {
     height: 100%;
-    background: var(--art-primary);
-    border-radius: 4px;
+    border-radius: 3px;
+    transition: width 0.4s ease;
   }
 
   .iaa-top10-pct {
     font-size: 11px;
     color: var(--art-gray-600);
+    text-align: right;
   }
 
-  .iaa-insight-banner {
-    padding: 10px 12px;
-    margin-top: 12px;
+  /* ——— 下方两列 ——— */
+  .iaa-bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ——— 趋势图 legend ——— */
+  .trend-legend {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .legend-item {
+    display: flex;
+    gap: 5px;
+    align-items: center;
     font-size: 12px;
-    background: rgb(38 194 173 / 15%);
-    border: 1px solid rgb(38 194 173 / 30%);
-    border-radius: 8px;
+    font-weight: 400;
+    color: var(--art-gray-600);
+
+    i {
+      display: inline-block;
+      flex-shrink: 0;
+      width: 24px;
+      height: 3px;
+      border-radius: 2px;
+    }
+
+    &.hollow i {
+      height: 0;
+      background: transparent !important;
+      border-top: 2px solid;
+    }
+  }
+
+  /* ——— 洞察条 ——— */
+  .iaa-insight-banner {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #67e8f9;
+    background: rgb(6 182 212 / 10%);
+    border: 1px solid rgb(6 182 212 / 25%);
+    border-radius: 6px;
+
+    .el-icon {
+      flex-shrink: 0;
+      color: #22d3ee;
+    }
   }
 </style>

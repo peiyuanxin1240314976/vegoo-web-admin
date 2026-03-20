@@ -1,6 +1,6 @@
 <template>
   <ElRow :gutter="16" class="ad-performance-kpi-cards">
-    <ElCol v-for="(item, index) in kpi" :key="item.type" :xs="24" :sm="12" :md="8" :lg="8" :xl="4">
+    <ElCol v-for="(item, index) in kpi" :key="item.type" :xs="24" :sm="12" :md="8" :lg="4">
       <div
         class="ad-performance-kpi-cards__card"
         :class="[

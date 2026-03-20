@@ -1,44 +1,53 @@
 <template>
   <div class="iaa-tab-content iaa-tab-ad-unit">
-    <section class="iaa-kpi-grid">
-      <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
-        <div class="iaa-kpi__title">{{ k.title }}</div>
-        <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
-        <div class="iaa-kpi__sub">{{ k.subText }}</div>
-      </article>
-    </section>
-
     <section class="iaa-main-grid">
       <div class="iaa-main-left">
+        <!-- KPI 卡片行：属于左栏 -->
+        <div class="iaa-kpi-grid">
+          <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
+            <div class="iaa-kpi__title">{{ k.title }}</div>
+            <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
+            <div class="iaa-kpi__sub">{{ k.subText }}</div>
+          </article>
+        </div>
+
         <ElCard class="iaa-panel" shadow="never">
           <template #header>
             <span>广告单元 Top15 收入表</span>
             <div class="iaa-unit-filters">
-              <ElSelect
-                v-model="localFilter.source"
-                placeholder="广告平台"
-                size="small"
-                class="iaa-filter-select"
-              >
-                <ElOption label="Admob" value="admob" />
-                <ElOption label="全部" value="all" />
-              </ElSelect>
-              <ElSelect
-                v-model="localFilter.placement"
-                placeholder="广告位"
-                size="small"
-                class="iaa-filter-select"
-              >
-                <ElOption label="全部" value="all" />
-              </ElSelect>
-              <ElSelect
-                v-model="localFilter.adType"
-                placeholder="广告类型"
-                size="small"
-                class="iaa-filter-select"
-              >
-                <ElOption label="全部" value="all" />
-              </ElSelect>
+              <div class="iaa-filter-item">
+                <span class="iaa-filter-label">广告平台</span>
+                <ElSelect v-model="localFilter.source" size="small" class="iaa-filter-select">
+                  <ElOption
+                    v-for="opt in sourceOptions"
+                    :key="opt.value"
+                    :label="opt.label"
+                    :value="opt.value"
+                  />
+                </ElSelect>
+              </div>
+              <div class="iaa-filter-item">
+                <span class="iaa-filter-label">广告位</span>
+                <ElSelect v-model="localFilter.placement" size="small" class="iaa-filter-select">
+                  <ElOption
+                    v-for="opt in placementOptions"
+                    :key="opt.value"
+                    :label="opt.label"
+                    :value="opt.value"
+                  />
+                </ElSelect>
+              </div>
+              <div class="iaa-filter-item">
+                <span class="iaa-filter-label">广告类型</span>
+                <ElSelect v-model="localFilter.adType" size="small" class="iaa-filter-select">
+                  <ElOption
+                    v-for="opt in adTypeOptions"
+                    :key="opt.value"
+                    :label="opt.label"
+                    :value="opt.value"
+                  />
+                </ElSelect>
+              </div>
               <ElInput
                 v-model="localFilter.keyword"
                 placeholder="搜索"
@@ -59,7 +68,11 @@
             :stripe="false"
             :border="false"
             size="default"
-            :pagination="undefined"
+            :show-table-header="false"
+            :pagination="pagination"
+            :pagination-options="{ align: 'right', pageSizes: [10, 15], size: 'small' }"
+            @pagination:current-change="onPageChange"
+            @pagination:size-change="onSizeChange"
           >
             <template #status="{ row }">
               <span class="iaa-unit-status" :class="row.status">
@@ -69,16 +82,17 @@
               </span>
             </template>
           </ArtTable>
-        </ElCard>
-      </div>
+        </ElCard> </div
+      ><!-- iaa-main-left -->
       <div class="iaa-main-right">
         <ElCard class="iaa-panel" shadow="never">
           <template #header>
             <span>广告单元充填率分布</span>
           </template>
           <div ref="fillRateChartRef" class="iaa-chart iaa-chart--bar"></div>
-          <div class="iaa-insight-banner iaa-insight-banner--amber">
-            12个单元充填率&lt;80%，建议检查广告位设置
+          <div v-if="fillRateInsight" class="iaa-insight-banner">
+            <ElIcon><WarningFilled /></ElIcon>
+            {{ fillRateInsight }}
           </div>
         </ElCard>
         <ElCard class="iaa-panel" shadow="never">
@@ -99,100 +113,77 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, reactive, onMounted } from 'vue'
+  import { ref, computed, reactive, onMounted, watch, nextTick } from 'vue'
   import { Search, WarningFilled } from '@element-plus/icons-vue'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { ColumnOption } from '@/types'
-  import type { IaaFilterState, IaaKpiCard, IaaAdUnitTableRow } from '../types'
+  import type { IaaFilterState, IaaAdUnitTabData, IaaAdUnitTableRow } from '../types'
+  import { fetchIaaAdUnitTabData } from '@/api/business-insight'
 
   defineOptions({ name: 'IaaTabAdUnit' })
 
-  defineProps<{ filter: IaaFilterState }>()
+  const props = defineProps<{ filter: IaaFilterState }>()
 
   const localFilter = reactive({ source: 'all', placement: 'all', adType: 'all', keyword: '' })
 
-  const kpis = ref<IaaKpiCard[]>([
-    {
-      id: '1',
-      title: '广告单元总数',
-      primaryValue: '284个',
-      subText: '已开启256个 | 关闭28个',
-      accent: 'default'
-    },
-    {
-      id: '2',
-      title: '广告单元总收入',
-      primaryValue: '$2,768.58',
-      subText: '平均每单元$10.81',
-      accent: 'teal'
-    },
-    {
-      id: '3',
-      title: '广告单元平均ECPM',
-      primaryValue: '3.32',
-      subText: 'Top单元: Splash_Admob_001 ECPM 19.2',
-      accent: 'teal'
-    },
-    {
-      id: '4',
-      title: '广告单元充填率',
-      primaryValue: '94.8%',
-      subText: '充填率较差(<80%): 12个',
-      accent: 'amber'
-    }
-  ])
+  const tabData = ref<IaaAdUnitTabData | null>(null)
 
-  const tableData = ref<IaaAdUnitTableRow[]>([
-    {
-      s_ad_unit_id: 'Splash_Admob_001',
-      placementName: 'Splash',
-      adTypeName: '开屏',
-      sourceName: 'Admob',
-      revenue: 520,
-      ecpmEst: 19.2,
-      ecpmReal: 18.5,
-      impressions: 27000,
-      fillRate: 98,
-      status: 'normal'
-    },
-    {
-      s_ad_unit_id: 'HomeResume_Admob_001',
-      placementName: 'HomeResume',
-      adTypeName: '插页式',
-      sourceName: 'Admob',
-      revenue: 446,
-      ecpmEst: 4.7,
-      ecpmReal: 4.5,
-      impressions: 95000,
-      fillRate: 95,
-      status: 'normal'
-    },
-    {
-      s_ad_unit_id: 'Native_FB_002',
-      placementName: 'Native_AdMainWall',
-      adTypeName: '原生',
-      sourceName: 'Facebook',
-      revenue: 332,
-      ecpmEst: 2.77,
-      ecpmReal: 2.6,
-      impressions: 120000,
-      fillRate: 92,
-      status: 'normal'
-    },
-    {
-      s_ad_unit_id: 'Banner_Admob_003',
-      placementName: 'Banner_Home',
-      adTypeName: '横幅',
-      sourceName: 'Admob',
-      revenue: 88,
-      ecpmEst: 0.9,
-      ecpmReal: 0.85,
-      impressions: 98000,
-      fillRate: 76,
-      status: 'low'
-    }
-  ])
+  const kpis = computed(() => tabData.value?.kpis ?? [])
+  const fillRateInsight = computed(() => tabData.value?.fillRateInsight ?? '')
+
+  const allRows = computed(() => tabData.value?.tableRows ?? [])
+
+  const sourceOptions = computed(() => {
+    const unique = [...new Set(allRows.value.map((r) => r.sourceName))].sort()
+    return [{ label: '全部', value: 'all' }, ...unique.map((s) => ({ label: s, value: s }))]
+  })
+
+  const placementOptions = computed(() => {
+    const unique = [...new Set(allRows.value.map((r) => r.placementName))].sort()
+    return [{ label: '全部', value: 'all' }, ...unique.map((p) => ({ label: p, value: p }))]
+  })
+
+  const adTypeOptions = computed(() => {
+    const unique = [...new Set(allRows.value.map((r) => r.adTypeName))]
+    return [{ label: '全部', value: 'all' }, ...unique.map((t) => ({ label: t, value: t }))]
+  })
+
+  const filteredRows = computed(() => {
+    const kw = localFilter.keyword.toLowerCase()
+    return allRows.value.filter((r) => {
+      const matchSrc = localFilter.source === 'all' || r.sourceName === localFilter.source
+      const matchPlacement =
+        localFilter.placement === 'all' || r.placementName === localFilter.placement
+      const matchAdType = localFilter.adType === 'all' || r.adTypeName === localFilter.adType
+      const matchKw =
+        !kw ||
+        r.s_ad_unit_id.toLowerCase().includes(kw) ||
+        r.placementName.toLowerCase().includes(kw)
+      return matchSrc && matchPlacement && matchAdType && matchKw
+    })
+  })
+
+  const pagination = reactive({ current: 1, size: 10, total: 0 })
+
+  watch(filteredRows, (rows) => {
+    pagination.total = rows.length
+    pagination.current = 1
+  })
+
+  const tableData = computed(() => {
+    const start = (pagination.current - 1) * pagination.size
+    return filteredRows.value.slice(start, start + pagination.size)
+  })
+
+  function onPageChange(page: number) {
+    pagination.current = page
+  }
+
+  function onSizeChange(size: number) {
+    pagination.size = size
+    pagination.current = 1
+  }
 
   const tableColumns = computed<ColumnOption[]>(() => [
     { prop: 's_ad_unit_id', label: '广告单元ID', minWidth: 140 },
@@ -232,14 +223,13 @@
     { prop: 'status', label: '状态', minWidth: 72, useSlot: true, slotName: 'status' }
   ])
 
-  const fillRateBuckets = [
-    { range: '<70%', count: 2 },
-    { range: '70-80%', count: 10 },
-    { range: '80-90%', count: 45 },
-    { range: '90-95%', count: 120 },
-    { range: '>95%', count: 107 }
-  ]
   const FILL_RATE_COLORS = ['#EF4444', '#F59E0B', '#EAB308', '#26C2AD', '#0D9488']
+  const AD_TYPE_COLORS: Record<string, string> = {
+    开屏: '#26C2AD',
+    插页式: '#3B82F6',
+    原生: '#8B5CF6',
+    横幅: '#F59E0B'
+  }
 
   const useFillRate = useChart()
   const useScatter = useChart()
@@ -249,124 +239,183 @@
   const trendChartRef = useTrend.chartRef
 
   function buildFillRateOption(): EChartsOption {
+    const buckets = tabData.value?.fillRateBuckets ?? []
     return {
-      grid: { left: 72, right: 24, top: 16, bottom: 40 },
-      xAxis: { type: 'category', data: fillRateBuckets.map((b) => b.range) },
-      yAxis: { type: 'value' },
+      backgroundColor: 'transparent',
+      grid: { left: 56, right: 16, top: 16, bottom: 40 },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' }
+      },
+      xAxis: {
+        type: 'category',
+        data: buckets.map((b) => b.range),
+        axisLabel: { color: '#94a3b8', fontSize: 11 },
+        axisLine: { lineStyle: { color: '#1e293b' } }
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: { color: '#94a3b8', fontSize: 10 },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
       series: [
         {
           type: 'bar',
-          data: fillRateBuckets.map((b, i) => ({
+          data: buckets.map((b, i) => ({
             value: b.count,
-            itemStyle: { color: FILL_RATE_COLORS[i] }
+            itemStyle: { color: FILL_RATE_COLORS[i], borderRadius: [3, 3, 0, 0] }
           })),
-          barMaxWidth: 36
+          barMaxWidth: 40,
+          label: {
+            show: true,
+            position: 'top',
+            color: '#94a3b8',
+            fontSize: 11,
+            formatter: (p: { value?: number }) => String(p.value ?? '')
+          }
         }
       ]
     }
   }
 
   function buildScatterOption(): EChartsOption {
+    const scatter = tabData.value?.scatterData ?? []
+    const typeMap: Record<string, [number, number][]> = {}
+    scatter.forEach((p) => {
+      if (!typeMap[p.adType]) typeMap[p.adType] = []
+      typeMap[p.adType].push([p.ecpm, p.fillRate])
+    })
     return {
-      grid: { left: 56, right: 24, top: 16, bottom: 32 },
-      xAxis: { type: 'value', name: 'ECPM', min: 0, max: 20 },
-      yAxis: { type: 'value', name: '充填率%', min: 60, max: 100 },
-      legend: { data: ['插页式', '原生', '横幅'], bottom: 0 },
-      series: [
-        {
-          name: '插页式',
-          type: 'scatter',
-          data: [
-            [19.2, 98],
-            [4.7, 95]
-          ],
-          symbolSize: 12,
-          itemStyle: { color: '#26C2AD' }
-        },
-        {
-          name: '原生',
-          type: 'scatter',
-          data: [[2.77, 92]],
-          symbolSize: 12,
-          itemStyle: { color: '#3B82F6' }
-        },
-        {
-          name: '横幅',
-          type: 'scatter',
-          data: [[0.85, 76]],
-          symbolSize: 12,
-          itemStyle: { color: '#F59E0B' }
-        }
-      ]
+      backgroundColor: 'transparent',
+      grid: { left: 56, right: 24, top: 16, bottom: 40 },
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' }
+      },
+      legend: {
+        data: Object.keys(typeMap),
+        bottom: 0,
+        textStyle: { color: '#64748b', fontSize: 11 }
+      },
+      xAxis: {
+        type: 'value',
+        name: 'ECPM',
+        nameTextStyle: { color: '#64748b' },
+        axisLabel: { color: '#94a3b8', fontSize: 10 },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
+      yAxis: {
+        type: 'value',
+        name: '充填率%',
+        nameTextStyle: { color: '#64748b' },
+        axisLabel: { color: '#94a3b8', fontSize: 10, formatter: '{value}%' },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
+      series: Object.entries(typeMap).map(([type, pts]) => ({
+        name: type,
+        type: 'scatter' as const,
+        data: pts,
+        symbolSize: 12,
+        itemStyle: { color: AD_TYPE_COLORS[type] ?? '#94A3B8' }
+      }))
     }
   }
 
   function buildTrendOption(): EChartsOption {
-    const dates = ['02-27', '02-29', '03-01', '03-02', '03-03', '03-04', '03-05']
+    const { dates, series } = tabData.value?.trend7d ?? { dates: [], series: [] }
     return {
-      grid: { left: 48, right: 48, top: 16, bottom: 28 },
-      tooltip: { trigger: 'axis' },
-      xAxis: { type: 'category', data: dates },
-      yAxis: { type: 'value' },
-      legend: { data: ['单元A', '单元B', '单元C'], bottom: 0 },
-      series: [
-        {
-          name: '单元A',
-          type: 'line',
-          data: [98, 99, 98.5, 99.2, 98.4, 99, 98.4],
-          symbol: 'circle',
-          symbolSize: 6,
-          itemStyle: { color: '#26C2AD' }
-        },
-        {
-          name: '单元B',
-          type: 'line',
-          data: [23, 25, 24, 26, 23.8, 25.2, 23.8],
-          symbol: 'circle',
-          symbolSize: 6,
-          itemStyle: { color: '#3B82F6' }
-        },
-        {
-          name: '单元C',
-          type: 'line',
-          data: [18, 19, 18.5, 20, 19.2, 19.5, 18.8],
-          symbol: 'circle',
-          symbolSize: 6,
-          itemStyle: { color: '#8B5CF6' }
-        }
-      ]
+      backgroundColor: 'transparent',
+      grid: { left: 56, right: 48, top: 16, bottom: 36 },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' }
+      },
+      legend: {
+        data: series.map((s) => s.name),
+        bottom: 0,
+        textStyle: { color: '#64748b', fontSize: 11 }
+      },
+      xAxis: {
+        type: 'category',
+        data: dates,
+        axisLabel: { color: '#64748b', fontSize: 10 },
+        axisLine: { lineStyle: { color: '#1e293b' } }
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: { color: '#64748b', fontSize: 10, formatter: '${value}' },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
+      series: series.map((s) => ({
+        name: s.name,
+        type: 'line' as const,
+        data: s.data,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 5,
+        lineStyle: { color: s.color, width: 2 },
+        itemStyle: { color: s.color }
+      }))
     }
   }
 
+  function refreshCharts() {
+    if (!tabData.value) return
+    useFillRate.updateChart(buildFillRateOption())
+    useScatter.updateChart(buildScatterOption())
+    useTrend.updateChart(buildTrendOption())
+  }
+
+  async function loadTabData() {
+    tabData.value = await fetchIaaAdUnitTabData(props.filter)
+    pagination.total = tabData.value?.tableRows.length ?? 0
+    pagination.current = 1
+    await nextTick()
+    refreshCharts()
+  }
+
   onMounted(() => {
-    useFillRate.initChart(buildFillRateOption())
-    useScatter.initChart(buildScatterOption())
-    useTrend.initChart(buildTrendOption())
+    loadTabData()
   })
+
+  watch(
+    () => props.filter,
+    () => {
+      loadTabData()
+    },
+    { deep: true }
+  )
 </script>
 
 <style scoped lang="scss">
   .iaa-tab-ad-unit {
     display: flex;
     flex-direction: column;
-    gap: 16px;
     min-height: 100%;
   }
 
   .iaa-kpi-grid {
     display: grid;
+    flex-shrink: 0;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 12px;
   }
 
   .iaa-kpi {
+    min-width: 0;
     padding: 16px;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
     border-radius: 8px;
 
     &[data-accent='teal'] .iaa-kpi__value {
-      color: var(--art-primary);
+      color: #26c2ad;
     }
 
     &[data-accent='amber'] .iaa-kpi__value {
@@ -380,13 +429,17 @@
     }
 
     &__value {
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
       color: var(--art-gray-900);
     }
 
     &__sub {
-      margin-top: 4px;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin-top: 6px;
       font-size: 12px;
       color: var(--art-gray-600);
     }
@@ -395,20 +448,31 @@
   .iaa-main-grid {
     display: grid;
     flex: 1;
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: 1fr minmax(0, 380px);
     gap: 16px;
     min-height: 0;
   }
 
-  .iaa-main-left,
+  .iaa-main-left {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    min-height: 0;
+  }
+
   .iaa-main-right {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+    min-width: 0;
     min-height: 0;
   }
 
   .iaa-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
 
@@ -418,13 +482,18 @@
       gap: 8px;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 16px;
-      font-size: 14px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
       border-bottom: 1px solid var(--default-border);
     }
 
     :deep(.el-card__body) {
-      padding: 16px;
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      padding: 14px;
+      overflow: hidden;
     }
   }
 
@@ -435,8 +504,31 @@
     align-items: center;
   }
 
+  .iaa-filter-item {
+    display: inline-flex;
+    gap: 0;
+    align-items: center;
+    padding: 0 8px 0 10px;
+    background: var(--default-bg-color);
+    border: 1px solid var(--default-border);
+    border-radius: 6px;
+  }
+
+  .iaa-filter-label {
+    margin-right: 2px;
+    font-size: 12px;
+    color: var(--art-gray-600);
+    white-space: nowrap;
+  }
+
   .iaa-filter-select {
-    width: 120px;
+    width: 72px;
+
+    :deep(.el-input__wrapper) {
+      padding: 0 4px;
+      background: transparent;
+      box-shadow: none;
+    }
   }
 
   .iaa-filter-search {
@@ -444,21 +536,35 @@
   }
 
   .iaa-chart {
+    flex: 1;
     width: 100%;
-    height: 240px;
-  }
+    min-height: 0;
 
-  .iaa-chart--scatter {
-    height: 260px;
+    &--bar {
+      min-height: 180px;
+    }
+
+    &--scatter {
+      min-height: 220px;
+    }
+
+    &--line {
+      min-height: 160px;
+    }
   }
 
   .iaa-insight-banner {
-    padding: 10px 12px;
-    margin-top: 12px;
+    display: flex;
+    flex-shrink: 0;
+    gap: 6px;
+    align-items: center;
+    padding: 8px 12px;
+    margin-top: 10px;
     font-size: 12px;
-    background: rgb(245 158 11 / 15%);
-    border: 1px solid rgb(245 158 11 / 30%);
-    border-radius: 8px;
+    color: #f59e0b;
+    background: rgb(245 158 11 / 12%);
+    border: 1px solid rgb(245 158 11 / 28%);
+    border-radius: 6px;
   }
 
   .iaa-unit-status {

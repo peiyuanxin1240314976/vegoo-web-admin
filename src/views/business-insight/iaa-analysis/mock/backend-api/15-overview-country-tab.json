@@ -1,0 +1,272 @@
+{
+  "_comment": "IAA 分析 - 国家 Tab 整页数据（KPI/地图热力/Top10表/ECPM对比/7天趋势/渗透率）。对应 types.ts: IaaCountryTabData。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台：all/android/ios。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码，全部传 all。"
+      },
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" }
+    },
+    "response": {
+      "data": {
+        "type": "IaaCountryTabData",
+        "required": true,
+        "description": "国家 Tab 全模块数据。"
+      }
+    },
+    "IaaCountryTabData": {
+      "kpis": {
+        "type": "IaaKpiCard[]",
+        "required": true,
+        "description": "顶部4个KPI：覆盖国家数/Top1收入/平均ECPM/ARPDAU差异倍数。"
+      },
+      "mapData": {
+        "type": "IaaCountryMapItem[]",
+        "required": true,
+        "description": "国家收入地图热力数据，按 ECPM 着色。name 必须与 /geo/world.json GeoJSON 的 properties.name 一致（英文）。"
+      },
+      "tableRows": {
+        "type": "IaaCountryTableRow[]",
+        "required": true,
+        "description": "国家收入 Top10 表行，含 rank/s_country_code/s_country_name/revenue/revenueShare/ecpmEst/ecpmReal/impressions/adUsers/arpdau/trend/trendPercent。"
+      },
+      "ecpmComparison": {
+        "type": "object[]",
+        "required": true,
+        "description": "国家 ECPM 水平柱状图，fields: name(中文)/ecpm，按 ecpm 降序。"
+      },
+      "trend7d": {
+        "type": "object",
+        "required": true,
+        "description": "近7天国家收入趋势（Top3国家拆线）。dates: string[], series: {name,color,data}[]。"
+      },
+      "penetrationData": {
+        "type": "object[]",
+        "required": true,
+        "description": "国家广告用户渗透率，fields: name(中文)/penetration（0-100）。"
+      }
+    },
+    "IaaCountryMapItem": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "英文国家名，与 world.json GeoJSON properties.name 完全一致，用于地图高亮映射。特殊值：美国→United States，韩国→Korea，英国→United Kingdom。"
+      },
+      "value": {
+        "type": "number",
+        "required": true,
+        "description": "ECPM 值，用于热力着色（颜色梯度：低→深蓝，高→青色 #26C2AD）。"
+      },
+      "cnName": {
+        "type": "string",
+        "required": false,
+        "description": "中文国家名，用于地图标签和 tooltip 展示。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "ISO 3166-1 alpha-2 国家代码，如 US/KR/JP。"
+      }
+    },
+    "IaaCountryTableRow": {
+      "rank": { "type": "number", "required": true, "description": "收入排名，从1开始。" },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "ISO 3166-1 alpha-2 国家代码，用于显示国旗（flag-icons）。"
+      },
+      "s_country_name": { "type": "string", "required": true, "description": "国家中文名。" },
+      "revenue": { "type": "number", "required": true, "description": "广告收入（USD）。" },
+      "revenueShare": { "type": "number", "required": true, "description": "收入占比（0-100）。" },
+      "ecpmEst": { "type": "number", "required": true, "description": "预估 ECPM（USD）。" },
+      "ecpmReal": { "type": "number", "required": true, "description": "真实 ECPM（USD）。" },
+      "impressions": { "type": "number", "required": true, "description": "广告展示次数。" },
+      "adUsers": { "type": "number", "required": true, "description": "广告用户数。" },
+      "arpdau": {
+        "type": "number",
+        "required": true,
+        "description": "每日活跃用户广告收入（USD），精度4位小数，如 0.0228。"
+      },
+      "trend": { "type": "string", "required": true, "description": "环比趋势：up/flat/down。" },
+      "trendPercent": {
+        "type": "number",
+        "required": false,
+        "description": "环比变化百分比（绝对值），trend=flat时可不传。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "all",
+    "platform": "all",
+    "s_country_code": "all",
+    "t_date": "2026-03-05"
+  },
+  "sampleResponse": {
+    "data": {
+      "kpis": [
+        {
+          "id": "1",
+          "title": "覆盖国家数",
+          "primaryValue": "68个",
+          "subText": "收入贡献国家",
+          "accent": "default"
+        },
+        {
+          "id": "2",
+          "title": "Top1国家收入",
+          "primaryValue": "美国 $1,026.41",
+          "subText": "占比41.6% ↑8.2%",
+          "trendUp": true,
+          "accent": "teal"
+        },
+        {
+          "id": "3",
+          "title": "平均ECPM",
+          "primaryValue": "3.32",
+          "subText": "美国ECPM 8.23 | 韩国 7.44",
+          "accent": "default"
+        },
+        {
+          "id": "4",
+          "title": "国家ARPDAU差异",
+          "primaryValue": "8.23x",
+          "subText": "美国 vs 乌兹别克斯坦最高差异",
+          "accent": "amber"
+        }
+      ],
+      "mapData": [
+        { "name": "United States", "value": 8.23, "cnName": "美国", "s_country_code": "US" },
+        { "name": "Korea", "value": 7.44, "cnName": "韩国", "s_country_code": "KR" },
+        { "name": "United Kingdom", "value": 6.82, "cnName": "英国", "s_country_code": "GB" },
+        { "name": "Japan", "value": 6.12, "cnName": "日本", "s_country_code": "JP" },
+        { "name": "Germany", "value": 5.34, "cnName": "德国", "s_country_code": "DE" },
+        { "name": "France", "value": 4.82, "cnName": "法国", "s_country_code": "FR" },
+        { "name": "Australia", "value": 4.92, "cnName": "澳大利亚", "s_country_code": "AU" },
+        { "name": "Canada", "value": 4.51, "cnName": "加拿大", "s_country_code": "CA" },
+        { "name": "China", "value": 2.84, "cnName": "中国", "s_country_code": "CN" },
+        { "name": "South Africa", "value": 2.18, "cnName": "南非", "s_country_code": "ZA" },
+        { "name": "India", "value": 1.92, "cnName": "印度", "s_country_code": "IN" },
+        { "name": "Uzbekistan", "value": 0.63, "cnName": "乌兹别克斯坦", "s_country_code": "UZ" }
+      ],
+      "tableRows": [
+        {
+          "rank": 1,
+          "s_country_code": "US",
+          "s_country_name": "美国",
+          "revenue": 1026.41,
+          "revenueShare": 41.6,
+          "ecpmEst": 8.23,
+          "ecpmReal": 7.82,
+          "impressions": 131234,
+          "adUsers": 45000,
+          "arpdau": 0.0228,
+          "trend": "up",
+          "trendPercent": 8.2
+        },
+        {
+          "rank": 2,
+          "s_country_code": "KR",
+          "s_country_name": "韩国",
+          "revenue": 302.2,
+          "revenueShare": 10.9,
+          "ecpmEst": 7.44,
+          "ecpmReal": 7.1,
+          "impressions": 43254,
+          "adUsers": 22000,
+          "arpdau": 0.0137,
+          "trend": "up",
+          "trendPercent": 5.1
+        },
+        {
+          "rank": 3,
+          "s_country_code": "JP",
+          "s_country_name": "日本",
+          "revenue": 185.52,
+          "revenueShare": 6.7,
+          "ecpmEst": 6.12,
+          "ecpmReal": 5.82,
+          "impressions": 31908,
+          "adUsers": 18000,
+          "arpdau": 0.0103,
+          "trend": "flat"
+        },
+        {
+          "rank": 4,
+          "s_country_code": "DE",
+          "s_country_name": "德国",
+          "revenue": 135.78,
+          "revenueShare": 4.9,
+          "ecpmEst": 5.34,
+          "ecpmReal": 5.12,
+          "impressions": 26515,
+          "adUsers": 15000,
+          "arpdau": 0.009,
+          "trend": "down",
+          "trendPercent": 2.1
+        },
+        {
+          "rank": 5,
+          "s_country_code": "GB",
+          "s_country_name": "英国",
+          "revenue": 120.78,
+          "revenueShare": 4.4,
+          "ecpmEst": 6.82,
+          "ecpmReal": 6.54,
+          "impressions": 18484,
+          "adUsers": 12000,
+          "arpdau": 0.0101,
+          "trend": "up",
+          "trendPercent": 3.2
+        }
+      ],
+      "ecpmComparison": [
+        { "name": "美国", "ecpm": 8.23 },
+        { "name": "韩国", "ecpm": 7.44 },
+        { "name": "英国", "ecpm": 6.82 },
+        { "name": "日本", "ecpm": 6.12 },
+        { "name": "德国", "ecpm": 5.34 },
+        { "name": "法国", "ecpm": 4.82 }
+      ],
+      "trend7d": {
+        "dates": ["Feb27", "Feb28", "Mar1", "Mar2", "Mar3", "Mar4", "Mar5"],
+        "series": [
+          { "name": "美国", "color": "#26C2AD", "data": [320, 350, 340, 380, 400, 420, 440] },
+          { "name": "韩国", "color": "#3B82F6", "data": [120, 130, 125, 138, 142, 145, 148] },
+          { "name": "日本", "color": "#8B5CF6", "data": [95, 100, 98, 105, 108, 110, 112] }
+        ]
+      },
+      "penetrationData": [
+        { "name": "美国", "penetration": 68.6 },
+        { "name": "韩国", "penetration": 65.2 },
+        { "name": "日本", "penetration": 60.1 },
+        { "name": "德国", "penetration": 58.4 },
+        { "name": "英国", "penetration": 55.9 },
+        { "name": "澳大利亚", "penetration": 52.3 }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/business-insight/iaa-analysis/overview/country-tab",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_app_id?, platform?, s_country_code?, t_date",
+    "responseBody": "IaaCountryTabData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "mapData.name 必须与前端 /geo/world.json 中 GeoJSON properties.name 完全一致，否则无法高亮。特殊值：美国→United States，韩国→Korea，英国→United Kingdom，南非→South Africa",
+      "mapData.value 使用 ecpmEst（预估ECPM），用于地图热力着色，颜色梯度由低（深蓝）到高（#26C2AD青色）",
+      "arpdau 精度为小数点后4位（单位：美元），如 0.0228",
+      "ARPDAU差异倍数 = 最高国家arpdau / 最低国家arpdau，由后端计算后放在 kpis[3].primaryValue",
+      "trend7d 仅返回 Top3 国家的数据，series[i].name 与 tableRows[i].s_country_name 一致"
+    ]
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "_comment": "IAA 分析 - 广告平台 Tab 整页数据（KPI/平台排行/对比表/ECPM对比/收入占比/7天趋势）。对应 types.ts: IaaPlatformTabData。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台：all/android/ios。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码，全部传 all。"
+      },
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" }
+    },
+    "response": {
+      "data": {
+        "type": "IaaPlatformTabData",
+        "required": true,
+        "description": "广告平台 Tab 全模块数据。"
+      }
+    },
+    "IaaPlatformTabData": {
+      "kpis": { "type": "IaaKpiCard[]", "required": true, "description": "顶部4个KPI卡片。" },
+      "platformRanking": {
+        "type": "IaaPlatformRankItem[]",
+        "required": true,
+        "description": "广告平台效果排行，柱状图数据。"
+      },
+      "platformInsight": {
+        "type": "string",
+        "required": true,
+        "description": "平台排行洞察文案。"
+      },
+      "tableRows": {
+        "type": "IaaPlatformTableRow[]",
+        "required": true,
+        "description": "平台详细对比表行，含收入/展示/用户/ECPM/充填率/趋势。"
+      },
+      "ecpmComparison": {
+        "type": "object[]",
+        "required": true,
+        "description": "各平台预估与真实 ECPM 对比，水平柱状图。fields: name/ecpmEst/ecpmReal。"
+      },
+      "trend7d": {
+        "type": "object",
+        "required": true,
+        "description": "近7天平台收入趋势。dates: string[], series: {name,color,data}[]。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "all",
+    "platform": "all",
+    "s_country_code": "all",
+    "t_date": "2026-03-05"
+  },
+  "sampleResponse": {
+    "data": {
+      "kpis": [
+        {
+          "id": "1",
+          "title": "广告总收入",
+          "primaryValue": "$2,768.58",
+          "subText": "广告平台上报 ↑12.3%",
+          "trendUp": true,
+          "accent": "teal"
+        }
+      ],
+      "platformRanking": [{ "sourceName": "Admob", "revenue": 1985.86, "ecpm": 18.54 }],
+      "platformInsight": "Admob收入占71.7%，建议优先保障Admob展示质量",
+      "tableRows": [
+        { "sourceName": "Admob", "source": 1, "revenue": 1985.86, "revenueShare": 71.7 }
+      ],
+      "ecpmComparison": [{ "name": "Admob", "ecpmEst": 18.54, "ecpmReal": 17.2 }],
+      "trend7d": {
+        "dates": ["Feb27", "Mar5"],
+        "series": [{ "name": "Admob", "color": "#26C2AD", "data": [420, 620] }]
+      }
+    }
+  },
+  "api": {
+    "url": "POST /api/business-insight/iaa-analysis/overview/platform-tab",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_app_id?, platform?, s_country_code?, t_date",
+    "responseBody": "IaaPlatformTabData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "tableRows 中的 revenueShare/impressionShare/userShare 由后端汇总计算，前端仅展示",
+      "trend7d 每条 series 的颜色由前端固定映射（广告平台枚举固定），后端只需返回 sourceName 和 data[]",
+      "ecpmComparison 与 tableRows 中的 ecpmEst/ecpmReal 一致，可复用同一查询"
+    ]
+  }
+}

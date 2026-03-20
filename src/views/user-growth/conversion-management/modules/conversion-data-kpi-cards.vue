@@ -1,6 +1,6 @@
 <template>
   <ElRow :gutter="16" class="conversion-data-kpi">
-    <ElCol v-for="card in cards" :key="card.key" :xs="24" :sm="12" :xl="6">
+    <ElCol v-for="card in cards" :key="card.key" :xs="24" :sm="12" :lg="6" :xl="6">
       <ElCard
         shadow="never"
         class="conversion-data-kpi__card"

@@ -1,0 +1,241 @@
+{
+  "_comment": "IAA 分析 - 版本 Tab 整页数据（KPI/收入对比/版本表/ECPM趋势/升级进度/渗透率/AI洞察）。对应 types.ts: IaaVersionTabData。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台：all/android/ios。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码，全部传 all。"
+      },
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" }
+    },
+    "response": {
+      "data": {
+        "type": "IaaVersionTabData",
+        "required": true,
+        "description": "版本 Tab 全模块数据。"
+      }
+    },
+    "IaaVersionTabData": {
+      "kpis": {
+        "type": "IaaKpiCard[]",
+        "required": true,
+        "description": "顶部4个KPI：版本数/最高收入版本/平均ECPM/最新版用户占比。"
+      },
+      "tableRows": {
+        "type": "IaaVersionTableRow[]",
+        "required": true,
+        "description": "版本详细数据表，含 app_version/releaseDate/userShare/revenue/ecpmEst/ecpmReal/impressions/adPenetration/crashRate/versionRating/isCurrent。"
+      },
+      "revenueComparison": {
+        "type": "IaaVersionRevenueItem[]",
+        "required": true,
+        "description": "版本收入对比横向柱图，含 app_version/revenue/userShare，按 revenue 降序。"
+      },
+      "versionInsight": { "type": "string", "required": true, "description": "版本数据洞察文案。" },
+      "ecpmTrend": {
+        "type": "object",
+        "required": true,
+        "description": "各版本 ECPM 趋势，fields: versions(string[])/est(number[])/real(number[])，与 versions 数组一一对应。"
+      },
+      "upgradeProgress": {
+        "type": "object",
+        "required": true,
+        "description": "版本升级进度（按日堆叠面积图）。dates: string[], series: {version, color, data}[]。"
+      },
+      "penetrationCrash": {
+        "type": "object",
+        "required": true,
+        "description": "各版本广告渗透率与崩溃率对比（双轴：柱+线）。versions: string[], penetration: number[], crash: number[]。"
+      },
+      "aiInsight": {
+        "type": "IaaVersionInsight",
+        "required": true,
+        "description": "AI 版本洞察，bullets: string[]（3~5条）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "all",
+    "platform": "all",
+    "s_country_code": "all",
+    "t_date": "2026-03-05"
+  },
+  "sampleResponse": {
+    "data": {
+      "kpis": [
+        { "id": "1", "title": "版本总数", "primaryValue": "6个", "subText": "近90天活跃版本" },
+        {
+          "id": "2",
+          "title": "最高收入版本",
+          "primaryValue": "v3.2.1",
+          "subText": "$1,124.8 (+18.4%)",
+          "trendUp": true
+        },
+        {
+          "id": "3",
+          "title": "平均ECPM",
+          "primaryValue": "$12.84",
+          "subText": "vsCurrent -3.2%",
+          "trendUp": false
+        },
+        {
+          "id": "4",
+          "title": "最新版用户占比",
+          "primaryValue": "44.2%",
+          "subText": "v3.3.0上线7天",
+          "accent": "teal"
+        }
+      ],
+      "tableRows": [
+        {
+          "app_version": "v3.3.0",
+          "releaseDate": "2026-02-27",
+          "userShare": 44.2,
+          "revenue": 1020.5,
+          "ecpmEst": 13.5,
+          "ecpmReal": 12.9,
+          "impressions": 78420,
+          "adPenetration": 71.3,
+          "crashRate": 0.8,
+          "versionRating": 4.6,
+          "isCurrent": true
+        },
+        {
+          "app_version": "v3.2.1",
+          "releaseDate": "2026-01-15",
+          "userShare": 28.6,
+          "revenue": 1124.8,
+          "ecpmEst": 14.2,
+          "ecpmReal": 13.8,
+          "impressions": 82160,
+          "adPenetration": 68.9,
+          "crashRate": 1.1,
+          "versionRating": 4.5
+        },
+        {
+          "app_version": "v3.2.0",
+          "releaseDate": "2025-12-20",
+          "userShare": 14.3,
+          "revenue": 445.2,
+          "ecpmEst": 11.8,
+          "ecpmReal": 11.2,
+          "impressions": 39540,
+          "adPenetration": 65.4,
+          "crashRate": 2.3,
+          "versionRating": 4.2
+        },
+        {
+          "app_version": "v3.1.5",
+          "releaseDate": "2025-11-08",
+          "userShare": 7.8,
+          "revenue": 198.4,
+          "ecpmEst": 10.5,
+          "ecpmReal": 9.8,
+          "impressions": 19840,
+          "adPenetration": 62.1,
+          "crashRate": 3.1,
+          "versionRating": 4.0
+        },
+        {
+          "app_version": "v3.1.0",
+          "releaseDate": "2025-10-01",
+          "userShare": 3.6,
+          "revenue": 85.6,
+          "ecpmEst": 9.8,
+          "ecpmReal": 9.1,
+          "impressions": 9120,
+          "adPenetration": 58.7,
+          "crashRate": 4.2,
+          "versionRating": 3.8
+        },
+        {
+          "app_version": "v3.0.x",
+          "releaseDate": "2025-08-01",
+          "userShare": 1.5,
+          "revenue": 28.2,
+          "ecpmEst": 8.4,
+          "ecpmReal": 7.9,
+          "impressions": 3540,
+          "adPenetration": 52.3,
+          "crashRate": 5.8,
+          "versionRating": 3.5
+        }
+      ],
+      "revenueComparison": [
+        { "app_version": "v3.2.1", "revenue": 1124.8, "userShare": 28.6 },
+        { "app_version": "v3.3.0", "revenue": 1020.5, "userShare": 44.2 },
+        { "app_version": "v3.2.0", "revenue": 445.2, "userShare": 14.3 },
+        { "app_version": "v3.1.5", "revenue": 198.4, "userShare": 7.8 },
+        { "app_version": "v3.1.0", "revenue": 85.6, "userShare": 3.6 },
+        { "app_version": "v3.0.x", "revenue": 28.2, "userShare": 1.5 }
+      ],
+      "versionInsight": "v3.2.1 单用户创收最高，建议引导 v3.2.0 用户尽快升级；v3.3.0 崩溃率已低于1%，可加大推广力度",
+      "ecpmTrend": {
+        "versions": ["v3.0.x", "v3.1.0", "v3.1.5", "v3.2.0", "v3.2.1", "v3.3.0"],
+        "est": [8.4, 9.8, 10.5, 11.8, 14.2, 13.5],
+        "real": [7.9, 9.1, 9.8, 11.2, 13.8, 12.9]
+      },
+      "upgradeProgress": {
+        "dates": ["Feb20", "Feb22", "Feb24", "Feb27", "Mar01", "Mar03", "Mar05"],
+        "series": [
+          {
+            "version": "v3.3.0",
+            "color": "#26C2AD",
+            "data": [0, 5.2, 18.6, 31.4, 38.7, 42.1, 44.2]
+          },
+          {
+            "version": "v3.2.1",
+            "color": "#3B82F6",
+            "data": [38.2, 36.5, 33.8, 31.0, 29.8, 29.2, 28.6]
+          },
+          {
+            "version": "v3.2.0",
+            "color": "#8B5CF6",
+            "data": [22.4, 20.1, 18.3, 16.5, 15.4, 14.8, 14.3]
+          },
+          {
+            "version": "其他",
+            "color": "#64748B",
+            "data": [39.4, 38.2, 29.3, 21.1, 16.1, 13.9, 12.9]
+          }
+        ]
+      },
+      "penetrationCrash": {
+        "versions": ["v3.0.x", "v3.1.0", "v3.1.5", "v3.2.0", "v3.2.1", "v3.3.0"],
+        "penetration": [52.3, 58.7, 62.1, 65.4, 68.9, 71.3],
+        "crash": [5.8, 4.2, 3.1, 2.3, 1.1, 0.8]
+      },
+      "aiInsight": {
+        "bullets": [
+          "v3.3.0 已成为用户量最大版本（44.2%），但 ECPM 略低于 v3.2.1，建议检查新版广告配置",
+          "v3.2.1 单用户 ARPDAU 最优，可作为广告策略基准版本参考",
+          "v3.2.0 及以下版本崩溃率均 >2%，广告渗透率显著偏低，建议通过强制升级减少老版本占比",
+          "近7天 v3.3.0 渗透率日均增长 +2.1%，预计3日内超过 v3.2.1 成为创收主力版本"
+        ]
+      }
+    }
+  },
+  "api": {
+    "url": "POST /api/business-insight/iaa-analysis/overview/version-tab",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_app_id?, platform?, s_country_code?, t_date",
+    "responseBody": "IaaVersionTabData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "tableRows 按 revenue 降序返回，isCurrent 标记当前最新版本（仅一条）",
+      "revenueComparison 与 tableRows 同源，前端用于横向柱图展示，后端可复用同一查询",
+      "ecpmTrend.versions 与 penetrationCrash.versions 数组顺序一致（均按版本升序），前端直接映射 X 轴",
+      "upgradeProgress.series 颜色由后端返回固定色值，前端不做映射",
+      "aiInsight.bullets 为 3~5 条 AI 生成洞察，若 AI 服务不可用则返回空数组 []"
+    ]
+  }
+}

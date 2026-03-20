@@ -36,6 +36,7 @@ export interface IapKpiCard {
   warn?: boolean
   borderColor: string
   sparkColor?: string
+  sparklineValues?: number[]
 }
 
 /** 趋势图 - 订单 vs 收入 */
@@ -151,6 +152,7 @@ export interface IapSkuRow {
   churn: string
   trend: string
   trendUp: boolean
+  sparklineValues?: number[]
 }
 
 /** Detail - 用户分层项 */
@@ -200,7 +202,7 @@ export interface IapUserValueRow {
 /** Detail - 用户 Tab 聚合 */
 export interface IapDetailUser {
   userValueTable: IapUserValueRow[]
-  countryChartData?: { countries: string[]; arpu: number[]; counts: number[] }
+  countryChartData?: { countries: string[]; counts: number[]; arpu: number[] }
   userCompareData?: { categories: string[]; conversion: number[]; arpu: number[] }
   firstPayData?: { categories: string[]; values: number[] }
 }

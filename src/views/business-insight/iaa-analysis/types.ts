@@ -68,12 +68,6 @@ export interface IaaRevenueDonutItem {
   percent: number
 }
 
-/** 近 7 天趋势点 */
-export interface IaaTrend7dPoint {
-  date: string
-  [key: string]: number | string
-}
-
 /** 广告位 Tab - 详细数据表行 */
 export interface IaaPlacementTableRow {
   placementName: string
@@ -140,10 +134,11 @@ export interface IaaCountryTableRow {
   trendPercent?: number
 }
 
-/** 国家地图热力项（name 与 GeoJSON 一致或国家代码） */
+/** 国家地图热力项（name 与 GeoJSON 一致） */
 export interface IaaCountryMapItem {
-  name: string
-  value: number
+  name: string // 英文名，与 world.json GeoJSON name 字段一致
+  value: number // ECPM 值（用于热力着色）
+  cnName?: string // 中文名（用于标签/tooltip）
   s_country_code?: string
 }
 
@@ -169,15 +164,73 @@ export interface IaaVersionRevenueItem {
   userShare: number
 }
 
-/** 版本升级进度（按日堆叠） */
-export interface IaaVersionUpgradePoint {
-  date: string
-  versions: { version: string; percent: number }[]
-}
-
 /** AI 版本洞察 */
 export interface IaaVersionInsight {
   bullets: string[]
+}
+
+/** 广告位 Top10 项（带多维指标） */
+export interface IaaPlacementTop10Item {
+  name: string
+  revenue: number
+  impressions: number
+  ecpm: number
+  users: number
+  percent: number
+}
+
+/** 广告平台 Tab - 整页数据 */
+export interface IaaPlatformTabData {
+  kpis: IaaKpiCard[]
+  platformRanking: IaaPlatformRankItem[]
+  platformInsight: string
+  tableRows: IaaPlatformTableRow[]
+  donut: IaaRevenueDonutItem[]
+  ecpmComparison: { name: string; ecpmEst: number; ecpmReal: number }[]
+  trend7d: { dates: string[]; series: IaaAdTypeTrend7dSeries[] }
+}
+
+/** 广告位 Tab - 整页数据 */
+export interface IaaPlacementTabData {
+  kpis: IaaKpiCard[]
+  top10: IaaPlacementTop10Item[]
+  tableRows: IaaPlacementTableRow[]
+  donut: IaaRevenueDonutItem[]
+  ecpmRanking: { name: string; ecpm: number }[]
+  placementInsight: string
+  scatterData: { name: string; impressions: number; revenue: number }[]
+}
+
+/** 广告单元 Tab - 整页数据 */
+export interface IaaAdUnitTabData {
+  kpis: IaaKpiCard[]
+  tableRows: IaaAdUnitTableRow[]
+  fillRateBuckets: IaaFillRateBucket[]
+  fillRateInsight: string
+  scatterData: IaaEcpmFillPoint[]
+  trend7d: { dates: string[]; series: IaaAdTypeTrend7dSeries[] }
+}
+
+/** 国家 Tab - 整页数据 */
+export interface IaaCountryTabData {
+  kpis: IaaKpiCard[]
+  mapData: IaaCountryMapItem[]
+  tableRows: IaaCountryTableRow[]
+  ecpmComparison: { name: string; ecpm: number }[]
+  trend7d: { dates: string[]; series: IaaAdTypeTrend7dSeries[] }
+  penetrationData: { name: string; penetration: number }[]
+}
+
+/** 版本 Tab - 整页数据 */
+export interface IaaVersionTabData {
+  kpis: IaaKpiCard[]
+  tableRows: IaaVersionTableRow[]
+  revenueComparison: IaaVersionRevenueItem[]
+  versionInsight: string
+  ecpmTrend: { versions: string[]; est: number[]; real: number[] }
+  upgradeProgress: { dates: string[]; series: { version: string; color: string; data: number[] }[] }
+  penetrationCrash: { versions: string[]; penetration: number[]; crash: number[] }
+  aiInsight: IaaVersionInsight
 }
 
 /** 广告类型 Tab - 类型对比表行 */
@@ -195,4 +248,68 @@ export interface IaaUserBreakdownItem {
   installDays: string
   revenue: number
   activeUsers: number
+}
+
+/** 广告类型 Tab - 雷达图各维度数值（与 compareRows 行顺序一致） */
+export interface IaaAdTypeRadarValues {
+  revenue: number[]
+  users: number[]
+  impressions: number[]
+  avgRevenue: number[]
+}
+
+/** 广告类型 Tab - 近 7 天趋势（按广告类型拆线） */
+export interface IaaAdTypeTrend7dSeries {
+  name: string
+  color: string
+  data: number[]
+}
+
+/** 广告类型 Tab - 聚合数据（单接口或合并 Mock，供 tab-ad-type 全页使用） */
+export interface IaaAdTypeTabData {
+  kpi: {
+    /** 广告总收入（预估/上报，USD） */
+    revenueTotal: number
+    /** Firebase/真实收入（USD） */
+    revenueReal: number
+    /** 广告用户渗透率 0–100 */
+    penetrationPct: number
+    adUsers: number
+    dau: number
+    impressions: number
+    /** 人均展示次数 */
+    impressionsPerUser: number
+    ecpmEst: number
+    ecpmReal: number
+    /** ECPM 偏差百分比（预估相对真实，正数表示预估偏高） */
+    ecpmVariancePct: number
+  }
+  compareRows: IaaAdTypeCompareRow[]
+  radar: {
+    /** 雷达轴名称，与 compareRows 顺序一致 */
+    indicatorNames: string[]
+    /** 当前选中的雷达维度（收入/用户/展示/平均收入）对应的坐标轴最大值 */
+    maxByMetric: {
+      revenue: number
+      users: number
+      impressions: number
+      avgRevenue: number
+    }
+    values: IaaAdTypeRadarValues
+  }
+  platformRanking: IaaPlatformRankItem[]
+  /** 广告平台效果排行下方洞察文案 */
+  platformInsight: string
+  placementTop10: IaaPlacementTopItem[]
+  trend7d: {
+    dates: string[]
+    series: IaaAdTypeTrend7dSeries[]
+  }
+  userBreakdown: {
+    buckets: IaaUserBreakdownItem[]
+    /** 底部洞察条 */
+    insight: string
+    /** 360+ 天等末项在 tooltip 中展示的「占广告收入比」提示（0–100） */
+    highlightRevenueSharePct?: number
+  }
 }

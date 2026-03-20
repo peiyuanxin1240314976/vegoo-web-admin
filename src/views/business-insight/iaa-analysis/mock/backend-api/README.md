@@ -20,6 +20,12 @@
 | `08-chart-platform-ranking.json` | 广告平台效果排行（柱状） | `/chart/platform-ranking` | POST | P0 |
 | `09-chart-revenue-donut.json` | 广告平台收入占比（环形图） | `/chart/revenue-donut` | POST | P0 |
 | `10-chart-revenue-trend-7d.json` | 近 7 天收入趋势（多线/堆叠） | `/chart/revenue-trend-7d` | POST | P0 |
+| `11-overview-ad-type-tab.json` | 广告类型 Tab 整页（KPI/表格/多图） | `/overview/ad-type-tab` | POST | P0 |
+| `12-overview-platform-tab.json` | 广告平台 Tab 整页（KPI/排行/对比表/ECPM/趋势） | `/overview/platform-tab` | POST | P0 |
+| `13-overview-placement-tab.json` | 广告位 Tab 整页（KPI/Top10/详表/环形/ECPM/散点） | `/overview/placement-tab` | POST | P0 |
+| `14-overview-ad-unit-tab.json` | 广告单元 Tab 整页（KPI/Top15表/充填率/散点/趋势） | `/overview/ad-unit-tab` | POST | P0 |
+| `15-overview-country-tab.json` | 国家 Tab 整页（KPI/地图热力mapData/Top10表/ECPM对比/7天趋势/渗透率） | `/overview/country-tab` | POST | P0 |
+| `16-overview-version-tab.json` | 版本 Tab 整页（KPI/收入对比/版本表/ECPM趋势/升级进度/AI洞察） | `/overview/version-tab` | POST | P0 |
 
 ## 拆分原则
 

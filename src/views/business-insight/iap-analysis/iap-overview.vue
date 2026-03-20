@@ -213,31 +213,31 @@
           <div class="iap-overview-s-cell" style="width: 170px"></div>
           <div class="iap-overview-s-cell iap-overview-s-cell--head" style="width: 90px">
             <div class="iap-overview-s-sub">广告支出</div>
-            <div class="iap-overview-s-val iap-overview-s-val--green">$36,600</div>
+            <div class="iap-overview-s-val iap-overview-s-val--green">{{ summary?.adSpend }}</div>
           </div>
           <div class="iap-overview-s-cell iap-overview-s-cell--head" style="width: 90px">
             <div class="iap-overview-s-sub">预算</div>
-            <div class="iap-overview-s-val iap-overview-s-val--green">$34,200</div>
+            <div class="iap-overview-s-val iap-overview-s-val--green">{{ summary?.calcCost }}</div>
           </div>
           <div class="iap-overview-s-cell iap-overview-s-cell--head" style="width: 72px">
             <div class="iap-overview-s-sub">平均ROI</div>
-            <div class="iap-overview-s-val">88%</div>
+            <div class="iap-overview-s-val">{{ summary?.avgRoi }}</div>
           </div>
           <div class="iap-overview-s-cell iap-overview-s-cell--head" style="width: 90px">
             <div class="iap-overview-s-sub">代投消耗</div>
-            <div class="iap-overview-s-val">$6,180</div>
+            <div class="iap-overview-s-val">{{ summary?.proxyCost }}</div>
           </div>
           <div class="iap-overview-s-cell iap-overview-s-cell--head" style="width: 90px">
             <div class="iap-overview-s-sub">预估利润</div>
-            <div class="iap-overview-s-val iap-overview-s-val--green">$8,450</div>
+            <div class="iap-overview-s-val iap-overview-s-val--green">{{ summary?.estProfit }}</div>
           </div>
           <div class="iap-overview-s-cell iap-overview-s-cell--head" style="width: 72px">
             <div class="iap-overview-s-sub">平均CPA</div>
-            <div class="iap-overview-s-val">$2.21</div>
+            <div class="iap-overview-s-val">{{ summary?.avgCpa }}</div>
           </div>
           <div class="iap-overview-s-cell iap-overview-s-cell--head" style="width: 65px">
             <div class="iap-overview-s-sub">绩效分数</div>
-            <div class="iap-overview-s-val iap-overview-s-val--score">92分</div>
+            <div class="iap-overview-s-val iap-overview-s-val--score">{{ summary?.score }}</div>
           </div>
         </div>
       </div>
@@ -246,9 +246,14 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, onMounted, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import { Download, Refresh } from '@element-plus/icons-vue'
+  import { fetchIapOverviewTable } from '@/api/business-insight'
+  import type {
+    IapOverviewRow,
+    IapOverviewSummary
+  } from '@/views/business-insight/iap-analysis/types'
 
   defineOptions({ name: 'IapOverview' })
 
@@ -262,199 +267,25 @@
     platform: 'all'
   })
 
-  interface RowData {
-    id: string
-    name: string
-    platform: string
-    adPlatform: string
-    evalDays?: string
-    targetReq?: string
-    minReq?: string
-    difficulty?: string
-    minProfit?: string
-    adSpend: string
-    calcCost: string
-    roi?: string
-    proxyCost: string
-    estProfit: string
-    cpa?: string
-    score?: number | null
-    status?: string
-    statusNote?: string
-    statusBadge?: string
-    icon: string
-    iconBg: string
-    isChild?: boolean
-    children?: RowData[]
-    hasChildren?: boolean
+  const tableData = ref<IapOverviewRow[]>([])
+  const summary = ref<IapOverviewSummary | null>(null)
+
+  async function loadTable() {
+    const res = await fetchIapOverviewTable({
+      timeRange: filters.value.time,
+      s_app_id: filters.value.app,
+      productType: filters.value.type,
+      s_country_code: filters.value.country,
+      platform: filters.value.platform
+    })
+    tableData.value = res.list
+    summary.value = res.summary
   }
 
-  const tableData = ref<RowData[]>([
-    {
-      id: '1',
-      name: 'Weather5',
-      platform: '安卓',
-      adPlatform: 'google',
-      evalDays: '3天',
-      targetReq: '53%',
-      minReq: '50%',
-      difficulty: '1.2',
-      minProfit: '—',
-      adSpend: '$12,450',
-      calcCost: '$11,800',
-      roi: '91%',
-      proxyCost: '$2,100',
-      estProfit: '+$3,240',
-      cpa: '$2.21',
-      score: 28,
-      status: '投放中',
-      icon: 'Cloudy',
-      iconBg: 'linear-gradient(135deg,#0ea5e9,#38bdf8)'
-    },
-    {
-      id: '2',
-      name: 'Weather8',
-      platform: '安卓',
-      adPlatform: 'all',
-      adSpend: '$8,200',
-      calcCost: '$7,600',
-      roi: '53%',
-      proxyCost: '$1,200',
-      estProfit: '+$1,840',
-      status: '投放中',
-      icon: 'Cloudy',
-      iconBg: 'linear-gradient(135deg,#f59e0b,#fbbf24)',
-      hasChildren: true,
-      children: [
-        {
-          id: '2-1',
-          name: 'Weather8',
-          platform: '安卓',
-          adPlatform: 'facebook',
-          evalDays: '3天',
-          targetReq: '53%',
-          minReq: '50%',
-          difficulty: '1.2',
-          adSpend: '$4,800',
-          calcCost: '$4,800',
-          roi: '53%',
-          proxyCost: '$800',
-          estProfit: '-$340',
-          cpa: '$2.45',
-          score: 0,
-          status: '投放中',
-          icon: 'Cloudy',
-          iconBg: 'linear-gradient(135deg,#f59e0b,#fbbf24)',
-          isChild: true
-        }
-      ]
-    },
-    {
-      id: '3',
-      name: 'PhoneTracker2',
-      platform: '安卓',
-      adPlatform: 'google',
-      evalDays: '3天',
-      targetReq: '100%',
-      minReq: '97%',
-      difficulty: '1',
-      adSpend: '$6,800',
-      calcCost: '$6,400',
-      roi: '98%',
-      proxyCost: '$1,100',
-      estProfit: '+$2,180',
-      cpa: '$1.89',
-      score: 25,
-      status: '投放中',
-      icon: 'Iphone',
-      iconBg: 'linear-gradient(135deg,#6c63ff,#a78bfa)'
-    },
-    {
-      id: '4',
-      name: 'PhoneTracker2',
-      platform: '安卓',
-      adPlatform: 'facebook',
-      evalDays: '1天',
-      targetReq: '97%',
-      minReq: '92%',
-      difficulty: '1',
-      adSpend: '$4,200',
-      calcCost: '$3,900',
-      roi: '94%',
-      proxyCost: '$680',
-      estProfit: '+$1,240',
-      cpa: '$2.12',
-      score: 22,
-      status: '投放中',
-      icon: 'Iphone',
-      iconBg: 'linear-gradient(135deg,#6c63ff,#a78bfa)'
-    },
-    {
-      id: '5',
-      name: 'BloodSugar2',
-      platform: '安卓',
-      adPlatform: 'google',
-      evalDays: '3天',
-      targetReq: '100%',
-      minReq: '95%',
-      difficulty: '1',
-      adSpend: '$9,760',
-      calcCost: '$9,200',
-      roi: '96%',
-      proxyCost: '$1,800',
-      estProfit: '+$3,120',
-      cpa: '$2.08',
-      score: 26,
-      status: '投放中',
-      icon: 'Sugar',
-      iconBg: 'linear-gradient(135deg,#ef4444,#f87171)'
-    },
-    {
-      id: '6',
-      name: 'CPUMonitor',
-      platform: '安卓',
-      adPlatform: 'google',
-      evalDays: '3天',
-      targetReq: '95%',
-      minReq: '93%',
-      difficulty: '1',
-      adSpend: '$3,200',
-      calcCost: '$3,000',
-      roi: '98%',
-      proxyCost: '$480',
-      estProfit: '-$120',
-      cpa: '$2.38',
-      score: 0,
-      status: '投放中',
-      statusNote: '变更: 2026-02-28',
-      icon: 'Monitor',
-      iconBg: 'linear-gradient(135deg,#10b981,#34d399)'
-    },
-    {
-      id: '7',
-      name: 'Dressup',
-      platform: '安卓',
-      adPlatform: 'google',
-      evalDays: '3天',
-      targetReq: '75%',
-      minReq: '70%',
-      difficulty: '0.7',
-      minProfit: '$45,000',
-      adSpend: '$4,850',
-      calcCost: '$4,500',
-      roi: '72%',
-      proxyCost: '$620',
-      estProfit: '+$1,890',
-      cpa: '$18.50',
-      score: 18,
-      status: '投放中',
-      statusBadge: 'CPA≤$25',
-      icon: 'Brush',
-      iconBg: 'linear-gradient(135deg,#ec4899,#f472b6)'
-    }
-  ])
+  onMounted(loadTable)
+  watch(filters, loadTable, { deep: true })
 
-  function goToDetail(row: RowData) {
+  function goToDetail(row: IapOverviewRow) {
     if (row.isChild) return
     router.push({
       name: 'IapAnalysisDetail',
@@ -464,6 +295,7 @@
 
   function getRoiClass(roi: string) {
     const val = parseInt(roi)
+    if (isNaN(val)) return 'is-low'
     if (val >= 90) return 'is-high'
     if (val >= 70) return 'is-mid'
     return 'is-low'

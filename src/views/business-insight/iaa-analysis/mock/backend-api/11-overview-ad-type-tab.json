@@ -1,0 +1,203 @@
+{
+  "_comment": "IAA 分析 - 广告类型 Tab 整页数据（KPI/类型对比表/雷达/平台排行/广告位Top10/近7天趋势/用户拆分）。对应 types.ts: IaaAdTypeTabData。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台：all/android/ios。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码，全部传 all。"
+      },
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" }
+    },
+    "response": {
+      "data": {
+        "type": "IaaAdTypeTabData",
+        "required": true,
+        "description": "广告类型 Tab 全模块数据。"
+      }
+    },
+    "IaaAdTypeTabData": {
+      "kpi": {
+        "type": "object",
+        "required": true,
+        "description": "顶部4个KPI（单对象）：revenueTotal/revenueReal/penetrationPct/adUsers/dau/impressions/impressionsPerUser/ecpmEst/ecpmReal/ecpmVariancePct。"
+      },
+      "compareRows": {
+        "type": "IaaAdTypeCompareRow[]",
+        "required": true,
+        "description": "广告类型详细对比表，含 adTypeName/revenue/revenueShare/users/ecpm/impressions。"
+      },
+      "radar": {
+        "type": "object",
+        "required": true,
+        "description": "雷达图数据：indicatorNames(string[])/maxByMetric({revenue,users,impressions,avgRevenue})/values({revenue[],users[],impressions[],avgRevenue[]})。各数组顺序与 indicatorNames 一致。"
+      },
+      "platformRanking": {
+        "type": "IaaPlatformRankItem[]",
+        "required": true,
+        "description": "广告平台效果排行柱图，含 sourceName/revenue/ecpm，按 revenue 降序。"
+      },
+      "platformInsight": {
+        "type": "string",
+        "required": true,
+        "description": "平台排行下方洞察文案。"
+      },
+      "placementTop10": {
+        "type": "IaaPlacementTopItem[]",
+        "required": true,
+        "description": "广告位 Top10 收入列表，含 rank/placementName/revenue/percent。"
+      },
+      "trend7d": {
+        "type": "object",
+        "required": true,
+        "description": "近7天广告类型收入趋势（按广告类型拆线）。dates: string[], series: {name,color,data}[]。"
+      },
+      "userBreakdown": {
+        "type": "object",
+        "required": true,
+        "description": "用户拆分（安装天数）双轴图。buckets: {installDays,revenue,activeUsers}[], insight: string, highlightRevenueSharePct?: number。"
+      }
+    },
+    "IaaAdTypeCompareRow": {
+      "adTypeName": {
+        "type": "string",
+        "required": true,
+        "description": "广告类型名：插页式/原生/横幅/开屏/激励视频。"
+      },
+      "revenue": { "type": "number", "required": true, "description": "该类型广告收入（USD）。" },
+      "revenueShare": { "type": "number", "required": true, "description": "收入占比（0-100）。" },
+      "users": { "type": "number", "required": true, "description": "广告用户数。" },
+      "ecpm": { "type": "number", "required": true, "description": "预估 ECPM（USD）。" },
+      "impressions": { "type": "number", "required": true, "description": "广告展示次数。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "all",
+    "platform": "all",
+    "s_country_code": "all",
+    "t_date": "2026-03-05"
+  },
+  "sampleResponse": {
+    "data": {
+      "kpi": {
+        "revenueTotal": 2768.58,
+        "revenueReal": 1861.23,
+        "penetrationPct": 68.6,
+        "adUsers": 117483,
+        "dau": 171334,
+        "impressions": 833597,
+        "impressionsPerUser": 4.9,
+        "ecpmEst": 3.32,
+        "ecpmReal": 3.06,
+        "ecpmVariancePct": 8.5
+      },
+      "compareRows": [
+        {
+          "adTypeName": "插页式",
+          "revenue": 2014.2,
+          "revenueShare": 72.7,
+          "users": 61587,
+          "ecpm": 19.64,
+          "impressions": 102551
+        },
+        {
+          "adTypeName": "原生",
+          "revenue": 484.1,
+          "revenueShare": 17.5,
+          "users": 88891,
+          "ecpm": 1.76,
+          "impressions": 275249
+        },
+        {
+          "adTypeName": "横幅",
+          "revenue": 191.3,
+          "revenueShare": 6.9,
+          "users": 99582,
+          "ecpm": 0.47,
+          "impressions": 405545
+        },
+        {
+          "adTypeName": "开屏",
+          "revenue": 79.0,
+          "revenueShare": 2.9,
+          "users": 38044,
+          "ecpm": 1.57,
+          "impressions": 50252
+        }
+      ],
+      "radar": {
+        "indicatorNames": ["插页式", "原生", "横幅", "开屏"],
+        "maxByMetric": {
+          "revenue": 2500,
+          "users": 100000,
+          "impressions": 450000,
+          "avgRevenue": 0.05
+        },
+        "values": {
+          "revenue": [2014, 484, 191, 79],
+          "users": [61587, 88891, 99582, 38044],
+          "impressions": [102551, 275249, 405545, 50262],
+          "avgRevenue": [0.0327, 0.0054, 0.0019, 0.0021]
+        }
+      },
+      "platformRanking": [
+        { "sourceName": "Admob", "revenue": 1985.86, "ecpm": 18.54 },
+        { "sourceName": "Facebook", "revenue": 312.4, "ecpm": 12.8 },
+        { "sourceName": "Applovin", "revenue": 284.2, "ecpm": 9.6 },
+        { "sourceName": "IronSource", "revenue": 186.1, "ecpm": 7.2 }
+      ],
+      "platformInsight": "Admob收入占71.7%，建议优先保障Admob展示质量",
+      "placementTop10": [
+        { "rank": 1, "placementName": "Splash", "revenue": 1451.8, "percent": 52.4 },
+        { "rank": 2, "placementName": "HomeResume", "revenue": 512.6, "percent": 18.5 },
+        { "rank": 3, "placementName": "Native_AdMainWall", "revenue": 284.3, "percent": 10.3 },
+        { "rank": 4, "placementName": "Banner_HomeWeather", "revenue": 198.4, "percent": 7.2 },
+        { "rank": 5, "placementName": "DailyDetail", "revenue": 112.6, "percent": 4.1 }
+      ],
+      "trend7d": {
+        "dates": ["Feb27", "Feb28", "Mar1", "Mar2", "Mar3", "Mar4", "Mar5"],
+        "series": [
+          { "name": "插页式", "color": "#3B82F6", "data": [280, 292, 285, 305, 315, 310, 320] },
+          { "name": "原生", "color": "#8B5CF6", "data": [65, 68, 66, 72, 74, 70, 75] },
+          { "name": "横幅", "color": "#F59E0B", "data": [26, 28, 27, 29, 30, 28, 31] },
+          { "name": "开屏", "color": "#26C2AD", "data": [11, 12, 11, 13, 13, 12, 14] }
+        ]
+      },
+      "userBreakdown": {
+        "buckets": [
+          { "installDays": "1-7天", "revenue": 284.2, "activeUsers": 48200 },
+          { "installDays": "8-30天", "revenue": 512.6, "activeUsers": 38600 },
+          { "installDays": "31-90天", "revenue": 698.4, "activeUsers": 22800 },
+          { "installDays": "91-180天", "revenue": 584.1, "activeUsers": 14200 },
+          { "installDays": "181-360天", "revenue": 412.8, "activeUsers": 8400 },
+          { "installDays": "360+天", "revenue": 276.5, "activeUsers": 3800 }
+        ],
+        "insight": "360+天老用户人均广告收入最高，ARPDAU约为新用户的3.2倍",
+        "highlightRevenueSharePct": 49.9
+      }
+    }
+  },
+  "api": {
+    "url": "POST /api/business-insight/iaa-analysis/overview/ad-type-tab",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_app_id?, platform?, s_country_code?, t_date",
+    "responseBody": "IaaAdTypeTabData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "kpi 为单对象（非数组），与其他 Tab 的 kpis[] 结构不同，请注意区分",
+      "compareRows 与 radar.indicatorNames 顺序须一致，前端直接按序映射雷达图",
+      "radar.maxByMetric 为各维度的坐标轴最大值，由后端计算（通常为该维度最大值的 1.2 倍取整），前端不做计算",
+      "placementTop10.rank 从1开始，percent 为该广告位收入占总收入的百分比",
+      "trend7d.series 颜色建议由后端返回固定色值（广告类型枚举固定），前端按 name 映射",
+      "userBreakdown.highlightRevenueSharePct 为最后一个安装天数桶（360+天）贡献的广告收入占比，用于 tooltip 强调展示"
+    ]
+  }
+}

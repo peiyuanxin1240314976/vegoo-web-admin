@@ -127,10 +127,6 @@
 </script>
 
 <style scoped lang="scss">
-  .conversion-data-filters {
-    margin-bottom: 16px;
-  }
-
   .conversion-data-filters__row {
     display: inline-flex;
     flex-wrap: wrap;

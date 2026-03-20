@@ -14,16 +14,63 @@
         "description": "用户分层价值表。"
       },
       "countryChartData": {
-        "type": "object",
+        "type": "IapCountryChartData",
         "required": false,
         "description": "Top10 国家分布图数据。"
       },
       "userCompareData": {
-        "type": "object",
+        "type": "IapUserCompareData",
         "required": false,
         "description": "新老用户付费对比。"
       },
-      "firstPayData": { "type": "object", "required": false, "description": "首次付费时间分布。" }
+      "firstPayData": {
+        "type": "IapFirstPayData",
+        "required": false,
+        "description": "首次付费时间分布。"
+      }
+    },
+    "IapUserValueRow": {
+      "segment": { "type": "string", "required": true, "description": "用户分层名称。" },
+      "count": { "type": "string", "required": true, "description": "用户数展示。" },
+      "ratio": { "type": "string", "required": true, "description": "占比展示（如 10%）。" },
+      "arpu": { "type": "string", "required": true, "description": "ARPU 展示。" },
+      "conversion": { "type": "string", "required": true, "description": "转化率展示。" },
+      "retention": { "type": "string", "required": true, "description": "续费率展示。" },
+      "churn": { "type": "string", "required": true, "description": "退款率/流失率展示。" }
+    },
+    "IapCountryChartData": {
+      "countries": { "type": "string[]", "required": true, "description": "国家/地区名称。" },
+      "arpu": {
+        "type": "number[]",
+        "required": true,
+        "description": "各国家 ARPU（数值，非带 $ 的字符串）。"
+      },
+      "counts": { "type": "number[]", "required": true, "description": "各国家用户数/计数。" }
+    },
+    "IapUserCompareData": {
+      "categories": {
+        "type": "string[]",
+        "required": true,
+        "description": "用户分组标签（新/老/回归等）。"
+      },
+      "conversion": {
+        "type": "number[]",
+        "required": true,
+        "description": "转化率（百分比数值，如 2.1）。"
+      },
+      "arpu": { "type": "number[]", "required": true, "description": "ARPU 数值。" }
+    },
+    "IapFirstPayData": {
+      "categories": {
+        "type": "string[]",
+        "required": true,
+        "description": "首次付费时间分组标签。"
+      },
+      "values": {
+        "type": "number[]",
+        "required": true,
+        "description": "各分组占比/比例（百分比数值，如 28）。"
+      }
     }
   },
   "sampleRequest": {

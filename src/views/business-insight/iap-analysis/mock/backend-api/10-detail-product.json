@@ -21,6 +21,58 @@
       },
       "subscriptionTotal": { "type": "string", "required": false, "description": "订阅人数汇总。" },
       "renewChart": { "type": "IapRenewChart", "required": true, "description": "续费周期分析。" }
+    },
+    "IapSkuRow": {
+      "name": { "type": "string", "required": true, "description": "SKU 产品名称。" },
+      "type": { "type": "string", "required": true, "description": "产品类型（内购/订阅等）。" },
+      "orders": { "type": "number", "required": true, "description": "订单数。" },
+      "revenue": { "type": "string", "required": true, "description": "收入展示（USD）。" },
+      "ratio": { "type": "string", "required": true, "description": "占比展示（如 34.3%）。" },
+      "arpu": { "type": "string", "required": true, "description": "ARPU 展示。" },
+      "conversion": { "type": "string", "required": true, "description": "转化率展示。" },
+      "retention": {
+        "type": "string",
+        "required": true,
+        "description": "续费率展示（可为 N/A）。"
+      },
+      "churn": { "type": "string", "required": true, "description": "退款率/流失率展示。" },
+      "trend": { "type": "string", "required": true, "description": "趋势文案（如 ↑/↓）。" },
+      "trendUp": { "type": "boolean", "required": true, "description": "趋势方向（true=上升）。" },
+      "sparklineValues": {
+        "type": "number[]",
+        "required": false,
+        "description": "迷你图折线数据，可选。"
+      }
+    },
+    "IapUserSegment": {
+      "label": { "type": "string", "required": true, "description": "用户分层名称。" },
+      "count": { "type": "string", "required": true, "description": "用户数展示。" },
+      "pct": { "type": "string", "required": true, "description": "占比展示（如 78%）。" },
+      "arpu": { "type": "string", "required": true, "description": "该分层 ARPU 展示。" },
+      "color": {
+        "type": "string",
+        "required": true,
+        "description": "该分层颜色，用于进度条/标记。"
+      }
+    },
+    "IapSubscriptionDonutItem": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "订阅周期名称（周/月/季/年）。"
+      },
+      "pct": { "type": "string", "required": true, "description": "占比展示（如 15%）。" },
+      "value": { "type": "number", "required": false, "description": "甜甜圈数值（可选）。" },
+      "color": { "type": "string", "required": false, "description": "颜色（可选）。" }
+    },
+    "IapRenewChart": {
+      "categories": { "type": "string[]", "required": true, "description": "续费次数/周期标签。" },
+      "counts": { "type": "number[]", "required": true, "description": "各周期续费人数/数量。" },
+      "rates": {
+        "type": "number[]",
+        "required": false,
+        "description": "各周期续费率（可选，0-100）。"
+      }
     }
   },
   "sampleRequest": {
@@ -42,7 +94,8 @@
         "retention": "68.5%",
         "churn": "0.8%",
         "trend": "↑",
-        "trendUp": true
+        "trendUp": true,
+        "sparklineValues": [12, 14, 13, 16, 18, 17, 19, 21, 20, 22, 23, 24]
       },
       {
         "name": "Monthly Premium",
@@ -55,7 +108,8 @@
         "retention": "52.3%",
         "churn": "1.2%",
         "trend": "↓",
-        "trendUp": false
+        "trendUp": false,
+        "sparklineValues": [22, 20, 19, 18, 17, 16, 15, 14, 14.5, 13.5, 13, 12.5]
       },
       {
         "name": "Lifetime Unlock",
@@ -68,7 +122,8 @@
         "retention": "N/A",
         "churn": "1.5%",
         "trend": "↑",
-        "trendUp": true
+        "trendUp": true,
+        "sparklineValues": [9, 10, 10.5, 11, 12, 12.5, 13, 14, 13.8, 14.5, 15, 15.5]
       }
     ],
     "userSegments": [

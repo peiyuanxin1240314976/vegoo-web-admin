@@ -551,7 +551,7 @@
             areaStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                 { offset: 0, color: (colors[i] ?? '#0ea5e9') + '66' },
-                { offset: 1, color: (colors[i] ?? '#0ea5e9') + '05' }
+                { offset: 1, color: (colors[i] ?? '#0ea5e9') + '00' }
               ])
             },
             itemStyle: { color: colors[i] ?? '#0ea5e9' }
@@ -581,6 +581,12 @@
             smooth: true,
             lineStyle: { color: colors[i] ?? '#6366f1', width: 1.5 },
             symbol: 'none',
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: (colors[i] ?? '#6366f1') + '66' },
+                { offset: 1, color: (colors[i] ?? '#6366f1') + '00' }
+              ])
+            },
             itemStyle: { color: colors[i] ?? '#6366f1' }
           }
         ]
@@ -644,9 +650,10 @@
     )
     countryData.value = countryRes.list.map((r) => {
       const pct = parseFloat(String(r.ratio).replace('%', ''))
+      const safeWidth = isNaN(pct) ? 0 : Math.round((pct / maxRatio) * 100)
       return {
         ...r,
-        barWidth: `${Math.round((pct / maxRatio) * 100)}%`,
+        barWidth: `${safeWidth}%`,
         barColor: '#3b82f6'
       }
     })
@@ -834,9 +841,10 @@
   }
 
   .iap-dashboard-kpi-header {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
     align-items: center;
-    justify-content: space-between;
     margin-bottom: 6px;
   }
 
@@ -846,8 +854,8 @@
   }
 
   .iap-dashboard-kpi-sparkline {
-    width: 60px;
-    height: 28px;
+    width: 100%;
+    height: 36px;
   }
 
   .iap-dashboard-kpi-value {
@@ -886,6 +894,8 @@
   }
 
   .iap-dashboard-trend-card {
+    display: flex;
+    flex-direction: column;
     padding: 12px 14px;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
@@ -897,7 +907,8 @@
   }
 
   .iap-dashboard-chart-area {
-    height: 130px;
+    flex: 1;
+    min-height: 130px;
   }
 
   .iap-dashboard-section {
@@ -1033,6 +1044,8 @@
   }
 
   .iap-dashboard-bottom-card {
+    display: flex;
+    flex-direction: column;
     padding: 12px 14px;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
@@ -1157,7 +1170,8 @@
   }
 
   .iap-dashboard-donut-area {
-    height: 150px;
+    flex: 1;
+    min-height: 130px;
   }
 
   .iap-dashboard-donut-legend {
@@ -1188,6 +1202,7 @@
   }
 
   .iap-dashboard-platform-area {
-    height: 160px;
+    flex: 1;
+    min-height: 140px;
   }
 </style>

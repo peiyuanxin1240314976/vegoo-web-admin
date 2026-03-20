@@ -1,21 +1,22 @@
 <template>
   <div class="iaa-tab-content iaa-tab-country">
-    <section class="iaa-kpi-grid">
-      <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
-        <div class="iaa-kpi__title">{{ k.title }}</div>
-        <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
-        <div class="iaa-kpi__sub">{{ k.subText }}</div>
-      </article>
-    </section>
-
     <section class="iaa-main-grid">
       <div class="iaa-main-left">
+        <div class="iaa-kpi-grid">
+          <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
+            <div class="iaa-kpi__title">{{ k.title }}</div>
+            <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
+            <div class="iaa-kpi__sub">{{ k.subText }}</div>
+          </article>
+        </div>
+
         <ElCard class="iaa-panel" shadow="never">
           <template #header>
             <span>国家收入地图</span>
           </template>
           <div ref="mapChartRef" class="iaa-chart iaa-chart--map"></div>
         </ElCard>
+
         <ElCard class="iaa-panel" shadow="never">
           <template #header>
             <span>国家收入 Top10 表格</span>
@@ -26,8 +27,12 @@
             row-key="s_country_code"
             :stripe="false"
             :border="false"
-            size="default"
-            :pagination="undefined"
+            size="small"
+            :show-table-header="false"
+            :pagination="pagination"
+            :pagination-options="{ align: 'right', pageSizes: [8, 15], size: 'small' }"
+            @pagination:current-change="onPageChange"
+            @pagination:size-change="onSizeChange"
           >
             <template #country="{ row }">
               <span class="iaa-country-cell">
@@ -48,6 +53,7 @@
           </ArtTable>
         </ElCard>
       </div>
+
       <div class="iaa-main-right">
         <ElCard class="iaa-panel" shadow="never">
           <template #header>
@@ -73,153 +79,99 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted } from 'vue'
+  import { ref, computed, reactive, onMounted, watch, nextTick } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
-  import type { EChartsOption } from '@/plugins/echarts'
+  import { echarts, type EChartsOption } from '@/plugins/echarts'
   import type { ColumnOption } from '@/types'
-  import type { IaaFilterState, IaaKpiCard, IaaCountryTableRow } from '../types'
+  import type { IaaFilterState, IaaCountryTabData, IaaCountryTableRow } from '../types'
+  import { fetchIaaCountryTabData } from '@/api/business-insight'
   import 'flag-icons/css/flag-icons.min.css'
+
+  const WORLD_JSON_URL = `${import.meta.env.BASE_URL}geo/world.json`
+  let mapRegistered = false
+  async function ensureMapRegistered() {
+    if (mapRegistered) return
+    const res = await fetch(WORLD_JSON_URL)
+    const geoJson = await res.json()
+    echarts.registerMap('world', geoJson)
+    mapRegistered = true
+  }
 
   defineOptions({ name: 'IaaTabCountry' })
 
-  defineProps<{ filter: IaaFilterState }>()
+  const props = defineProps<{ filter: IaaFilterState }>()
 
-  const kpis = ref<IaaKpiCard[]>([
-    {
-      id: '1',
-      title: '覆盖国家数',
-      primaryValue: '68个',
-      subText: '收入贡献国家',
-      accent: 'default'
-    },
-    {
-      id: '2',
-      title: 'Top1国家收入',
-      primaryValue: '美国 $1,026.41',
-      subText: '占比41.6% ↑ 8.2%',
-      trendUp: true,
-      accent: 'teal'
-    },
-    {
-      id: '3',
-      title: '平均ECPM',
-      primaryValue: '3.32',
-      subText: '美国 ECPM 8.23 | 韩国 7.44',
-      accent: 'default'
-    },
-    {
-      id: '4',
-      title: '国家ARPDAU差异',
-      primaryValue: '8.23x',
-      subText: '美国 vs 乌兹别克斯坦最高差异',
-      accent: 'amber'
-    }
-  ])
+  const tabData = ref<IaaCountryTabData | null>(null)
 
-  const tableData = ref<IaaCountryTableRow[]>([
-    {
-      rank: 1,
-      s_country_code: 'US',
-      s_country_name: '美国',
-      revenue: 1026.41,
-      revenueShare: 41.6,
-      ecpmEst: 8.23,
-      ecpmReal: 7.9,
-      impressions: 130000,
-      adUsers: 45000,
-      arpdau: 0.0228,
-      trend: 'up',
-      trendPercent: 8.2
-    },
-    {
-      rank: 2,
-      s_country_code: 'KR',
-      s_country_name: '韩国',
-      revenue: 412.2,
-      revenueShare: 14.9,
-      ecpmEst: 7.44,
-      ecpmReal: 7.1,
-      impressions: 58000,
-      adUsers: 22000,
-      arpdau: 0.0187,
-      trend: 'up',
-      trendPercent: 5.1
-    },
-    {
-      rank: 3,
-      s_country_code: 'JP',
-      s_country_name: '日本',
-      revenue: 318.5,
-      revenueShare: 11.5,
-      ecpmEst: 6.82,
-      ecpmReal: 6.5,
-      impressions: 47000,
-      adUsers: 18000,
-      arpdau: 0.0177,
-      trend: 'flat'
-    },
-    {
-      rank: 4,
-      s_country_code: 'DE',
-      s_country_name: '德国',
-      revenue: 210.2,
-      revenueShare: 7.6,
-      ecpmEst: 4.51,
-      ecpmReal: 4.3,
-      impressions: 46600,
-      adUsers: 15000,
-      arpdau: 0.014,
-      trend: 'down',
-      trendPercent: 2.1
-    }
-  ])
+  const kpis = computed(() => tabData.value?.kpis ?? [])
+  const allRows = computed(() => tabData.value?.tableRows ?? [])
+
+  const pagination = reactive({ current: 1, size: 8, total: 0 })
+
+  watch(allRows, (rows) => {
+    pagination.total = rows.length
+    pagination.current = 1
+  })
+
+  const tableData = computed(() => {
+    const start = (pagination.current - 1) * pagination.size
+    return allRows.value.slice(start, start + pagination.size)
+  })
+
+  function onPageChange(page: number) {
+    pagination.current = page
+  }
+  function onSizeChange(size: number) {
+    pagination.size = size
+    pagination.current = 1
+  }
 
   const tableColumns = computed<ColumnOption[]>(() => [
-    { prop: 'rank', label: '#', width: 48 },
-    { prop: 's_country_name', label: '国家', minWidth: 100, useSlot: true, slotName: 'country' },
+    { prop: 'rank', label: '#', width: 40 },
+    { prop: 's_country_name', label: '国家', minWidth: 90, useSlot: true, slotName: 'country' },
     {
       prop: 'revenue',
       label: '收入',
-      minWidth: 100,
-      formatter: (r: IaaCountryTableRow) => `$${r.revenue.toFixed(2)}`
+      minWidth: 80,
+      formatter: (r: IaaCountryTableRow) => `$${r.revenue.toFixed(0)}`
     },
     {
       prop: 'revenueShare',
       label: '占比',
-      minWidth: 72,
+      minWidth: 60,
       formatter: (r: IaaCountryTableRow) => `${r.revenueShare}%`
     },
     {
       prop: 'ecpmEst',
-      label: 'ECPM(预)',
-      minWidth: 88,
+      label: 'ECPM预',
+      minWidth: 68,
       formatter: (r: IaaCountryTableRow) => r.ecpmEst.toFixed(2)
     },
     {
       prop: 'ecpmReal',
-      label: 'ECPM(真)',
-      minWidth: 88,
+      label: 'ECPM真',
+      minWidth: 68,
       formatter: (r: IaaCountryTableRow) => r.ecpmReal.toFixed(2)
     },
     {
       prop: 'impressions',
-      label: '展示次数',
-      minWidth: 96,
+      label: '展示数',
+      minWidth: 72,
       formatter: (r: IaaCountryTableRow) => r.impressions.toLocaleString()
     },
     {
       prop: 'adUsers',
       label: '广告用户',
-      minWidth: 88,
+      minWidth: 72,
       formatter: (r: IaaCountryTableRow) => r.adUsers.toLocaleString()
     },
     {
       prop: 'arpdau',
       label: 'ARPDAU',
-      minWidth: 80,
+      minWidth: 72,
       formatter: (r: IaaCountryTableRow) => r.arpdau.toFixed(4)
     },
-    { prop: 'trend', label: '环比', minWidth: 72, useSlot: true, slotName: 'trend' }
+    { prop: 'trend', label: '环比', minWidth: 64, useSlot: true, slotName: 'trend' }
   ])
 
   const useMapChart = useChart()
@@ -232,124 +184,257 @@
   const penetrationChartRef = usePenetration.chartRef
 
   function buildMapOption(): EChartsOption {
-    const names = tableData.value.map((r) => r.s_country_name)
-    const values = tableData.value.map((r) => r.ecpmReal)
+    const mapData = tabData.value?.mapData ?? []
+    const values = mapData.map((d) => d.value).filter((v) => Number.isFinite(v))
+    const dataMin = values.length ? Math.min(...values) : 0
+    const dataMax = values.length ? Math.max(...values) : 10
+
     return {
-      grid: { left: 72, right: 24, top: 16, bottom: 40 },
-      tooltip: { trigger: 'axis' },
-      xAxis: { type: 'value', name: 'ECPM' },
-      yAxis: { type: 'category', data: names },
-      series: [{ type: 'bar', data: values, itemStyle: { color: '#26C2AD' }, barMaxWidth: 24 }]
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        borderColor: 'rgba(38,194,173,0.4)',
+        borderWidth: 1,
+        padding: [10, 14],
+        textStyle: { color: '#f1f5f9', fontSize: 12 },
+        formatter: (params: any) => {
+          const item = mapData.find((d) => d.name === params.name)
+          if (!item) return `<div style="color:#94a3b8">${params.name}</div>`
+          return [
+            `<div style="font-weight:600;margin-bottom:4px">${item.cnName ?? params.name}</div>`,
+            `<div style="color:#26c2ad">ECPM：${item.value.toFixed(2)}</div>`
+          ].join('')
+        }
+      },
+      visualMap: {
+        type: 'continuous',
+        show: true,
+        min: dataMin,
+        max: dataMax,
+        text: ['High', 'Low'],
+        realtime: false,
+        calculable: false,
+        inRange: { color: ['#0d2137', '#0e4d6e', '#26C2AD'] },
+        outOfRange: { color: ['#0d1f35'] },
+        left: 10,
+        bottom: 16,
+        itemWidth: 14,
+        itemHeight: 80,
+        textStyle: { color: '#64748b', fontSize: 11 },
+        formatter: (val: number) => val.toFixed(1)
+      },
+      series: [
+        {
+          type: 'map',
+          map: 'world',
+          roam: true,
+          zoom: 1.2,
+          scaleLimit: { min: 0.8, max: 5 },
+          data: mapData.map((d) => ({
+            name: d.name,
+            value: d.value,
+            cnName: d.cnName
+          })),
+          itemStyle: {
+            areaColor: '#0d1f35',
+            borderColor: '#1e3a5f',
+            borderWidth: 0.6
+          },
+          emphasis: {
+            itemStyle: {
+              areaColor: 'rgba(38,194,173,0.4)',
+              borderColor: '#26C2AD',
+              borderWidth: 1.2,
+              shadowBlur: 12,
+              shadowColor: 'rgba(38,194,173,0.3)'
+            },
+            label: { show: false }
+          },
+          select: { disabled: true },
+          label: {
+            show: true,
+            color: '#e2e8f0',
+            fontSize: 10,
+            fontWeight: 500,
+            formatter: (params: any) => {
+              const item = mapData.find((d) => d.name === params.name)
+              if (!item) return ''
+              return `{name|${item.cnName ?? params.name}}\n{ecpm|${item.value.toFixed(2)}}`
+            },
+            rich: {
+              name: { color: '#e2e8f0', fontSize: 10, fontWeight: 600, lineHeight: 16 },
+              ecpm: { color: '#26C2AD', fontSize: 10, lineHeight: 14 }
+            }
+          }
+        }
+      ]
     }
   }
 
   function buildEcpmOption(): EChartsOption {
-    const names = tableData.value.map((r) => r.s_country_name)
-    const values = tableData.value.map((r) => r.ecpmReal)
+    const comparison = tabData.value?.ecpmComparison?.slice(0, 6) ?? []
+    const names = comparison.map((r) => r.name)
+    const values = comparison.map((r) => r.ecpm)
     return {
-      grid: { left: 72, right: 24, top: 16, bottom: 24 },
-      xAxis: { type: 'value' },
-      yAxis: { type: 'category', data: names },
-      series: [{ type: 'bar', data: values, itemStyle: { color: '#26C2AD' }, barMaxWidth: 20 }]
+      backgroundColor: 'transparent',
+      grid: { left: 72, right: 56, top: 16, bottom: 16 },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' }
+      },
+      xAxis: {
+        type: 'value',
+        axisLabel: { color: '#94a3b8', fontSize: 10 },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
+      yAxis: { type: 'category', data: names, axisLabel: { color: '#94a3b8', fontSize: 11 } },
+      series: [
+        {
+          type: 'bar',
+          data: values,
+          itemStyle: { color: '#3B82F6' },
+          barMaxWidth: 18
+        }
+      ]
     }
   }
 
   function buildTrendOption(): EChartsOption {
-    const dates = ['02-27', '02-29', '03-01', '03-02', '03-03', '03-04', '03-05']
+    const { dates, series } = tabData.value?.trend7d ?? { dates: [], series: [] }
     return {
-      grid: { left: 48, right: 24, top: 16, bottom: 28 },
-      tooltip: { trigger: 'axis' },
-      xAxis: { type: 'category', data: dates },
-      yAxis: { type: 'value' },
-      legend: { data: ['美国', '韩国', '日本'], bottom: 0 },
-      series: [
-        {
-          name: '美国',
-          type: 'line',
-          data: [320, 350, 340, 380, 400, 420, 440],
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          itemStyle: { color: '#26C2AD' }
-        },
-        {
-          name: '韩国',
-          type: 'line',
-          data: [120, 130, 125, 138, 142, 145, 148],
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          itemStyle: { color: '#3B82F6' }
-        },
-        {
-          name: '日本',
-          type: 'line',
-          data: [95, 100, 98, 105, 108, 110, 112],
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          itemStyle: { color: '#8B5CF6' }
-        }
-      ]
+      backgroundColor: 'transparent',
+      grid: { left: 48, right: 24, top: 16, bottom: 36 },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' }
+      },
+      legend: {
+        data: series.map((s) => s.name),
+        bottom: 0,
+        textStyle: { color: '#64748b', fontSize: 11 }
+      },
+      xAxis: {
+        type: 'category',
+        data: dates,
+        axisLabel: { color: '#64748b', fontSize: 10 },
+        axisLine: { lineStyle: { color: '#1e293b' } }
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: { color: '#64748b', fontSize: 10, formatter: '${value}' },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
+      series: series.map((s) => ({
+        name: s.name,
+        type: 'line' as const,
+        data: s.data,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 5,
+        lineStyle: { color: s.color, width: 2 },
+        itemStyle: { color: s.color }
+      }))
     }
   }
 
   function buildPenetrationOption(): EChartsOption {
-    const names = tableData.value.map((r) => r.s_country_name)
-    const penetration = tableData.value.map(
-      (r) =>
-        Math.round((r.adUsers / (r.impressions / Math.max(r.impressions / 5000, 1))) * 100) || 68
-    )
+    const data = tabData.value?.penetrationData ?? []
+    const names = data.map((r) => r.name)
+    const values = data.map((r) => r.penetration)
     return {
-      grid: { left: 72, right: 48, top: 16, bottom: 24 },
-      xAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
-      yAxis: { type: 'category', data: names },
+      backgroundColor: 'transparent',
+      grid: { left: 72, right: 56, top: 16, bottom: 16 },
+      xAxis: {
+        type: 'value',
+        max: 100,
+        axisLabel: { color: '#94a3b8', fontSize: 10, formatter: '{value}%' },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
+      yAxis: { type: 'category', data: names, axisLabel: { color: '#94a3b8', fontSize: 11 } },
       series: [
         {
           type: 'bar',
-          data: penetration,
+          data: values,
           itemStyle: { color: '#26C2AD' },
-          barMaxWidth: 20,
-          label: { show: true, position: 'right', formatter: (p: any) => p.value + '%' }
+          barMaxWidth: 18,
+          label: {
+            show: true,
+            position: 'right',
+            color: '#94a3b8',
+            fontSize: 10,
+            formatter: (p: { value?: number }) => `${p.value ?? 0}%`
+          }
         }
       ]
     }
   }
 
+  function refreshCharts() {
+    if (!tabData.value) return
+    useMapChart.updateChart(buildMapOption())
+    useEcpm.updateChart(buildEcpmOption())
+    useTrend.updateChart(buildTrendOption())
+    usePenetration.updateChart(buildPenetrationOption())
+  }
+
+  async function loadTabData() {
+    await ensureMapRegistered()
+    tabData.value = await fetchIaaCountryTabData(props.filter)
+    pagination.total = tabData.value?.tableRows.length ?? 0
+    pagination.current = 1
+    await nextTick()
+    refreshCharts()
+  }
+
   onMounted(() => {
-    useMapChart.initChart(buildMapOption())
-    useEcpm.initChart(buildEcpmOption())
-    useTrend.initChart(buildTrendOption())
-    usePenetration.initChart(buildPenetrationOption())
+    loadTabData()
   })
+
+  watch(
+    () => props.filter,
+    () => {
+      loadTabData()
+    },
+    { deep: true }
+  )
 </script>
 
 <style scoped lang="scss">
   .iaa-tab-country {
     display: flex;
     flex-direction: column;
-    gap: 16px;
     min-height: 100%;
   }
 
   .iaa-kpi-grid {
     display: grid;
+    flex-shrink: 0;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 12px;
   }
 
   .iaa-kpi {
+    min-width: 0;
     padding: 16px;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
     border-radius: 8px;
 
     &[data-accent='teal'] .iaa-kpi__value {
-      color: var(--art-primary);
+      color: #26c2ad;
     }
 
     &[data-accent='amber'] .iaa-kpi__value {
       color: var(--art-warning);
+    }
+
+    &[data-accent='green'] .iaa-kpi__value {
+      color: var(--art-success);
     }
 
     &__title {
@@ -359,13 +444,17 @@
     }
 
     &__value {
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
       color: var(--art-gray-900);
     }
 
     &__sub {
-      margin-top: 4px;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin-top: 6px;
       font-size: 12px;
       color: var(--art-gray-600);
     }
@@ -374,8 +463,8 @@
   .iaa-main-grid {
     display: grid;
     flex: 1;
-    grid-template-columns: 1fr 360px;
-    gap: 16px;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 12px;
     min-height: 0;
   }
 
@@ -383,32 +472,51 @@
   .iaa-main-right {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+    min-width: 0;
     min-height: 0;
   }
 
   .iaa-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
 
     :deep(.el-card__header) {
-      padding: 12px 16px;
-      font-size: 14px;
+      flex-shrink: 0;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
       border-bottom: 1px solid var(--default-border);
     }
 
     :deep(.el-card__body) {
-      padding: 16px;
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      padding: 14px;
+      overflow: hidden;
     }
   }
 
   .iaa-chart {
+    flex: 1;
     width: 100%;
-    height: 260px;
-  }
+    min-height: 0;
 
-  .iaa-chart--map {
-    height: 280px;
+    &--map {
+      min-height: 240px;
+    }
+
+    &--hbar {
+      min-height: 160px;
+    }
+
+    &--line {
+      min-height: 160px;
+    }
   }
 
   .iaa-country-cell {
@@ -424,15 +532,17 @@
     border-radius: 2px;
   }
 
-  .iaa-trend.up {
-    color: var(--art-success);
-  }
+  .iaa-trend {
+    &.up {
+      color: var(--art-success);
+    }
 
-  .iaa-trend.down {
-    color: var(--art-danger);
-  }
+    &.down {
+      color: var(--art-danger);
+    }
 
-  .iaa-trend:not(.up, .down) {
-    color: var(--art-gray-600);
+    &:not(.up, .down) {
+      color: var(--art-gray-600);
+    }
   }
 </style>

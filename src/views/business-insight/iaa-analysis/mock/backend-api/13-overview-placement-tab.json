@@ -1,0 +1,92 @@
+{
+  "_comment": "IAA 分析 - 广告位 Tab 整页数据（KPI/Top10/详表/收入占比/ECPM排行/洞察/散点）。对应 types.ts: IaaPlacementTabData。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台：all/android/ios。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码，全部传 all。"
+      },
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" }
+    },
+    "response": {
+      "data": {
+        "type": "IaaPlacementTabData",
+        "required": true,
+        "description": "广告位 Tab 全模块数据。"
+      }
+    },
+    "IaaPlacementTabData": {
+      "kpis": {
+        "type": "IaaKpiCard[]",
+        "required": true,
+        "description": "顶部4个KPI：总数/总收入/平均ECPM/展示总次。"
+      },
+      "top10": {
+        "type": "IaaPlacementTop10Item[]",
+        "required": true,
+        "description": "Top10广告位，含revenue/impressions/ecpm/users/percent，支持前端按维度切换。"
+      },
+      "tableRows": {
+        "type": "IaaPlacementTableRow[]",
+        "required": true,
+        "description": "广告位详细数据表行。"
+      },
+      "donut": {
+        "type": "IaaRevenueDonutItem[]",
+        "required": true,
+        "description": "收入占比环形图数据。"
+      },
+      "ecpmRanking": {
+        "type": "object[]",
+        "required": true,
+        "description": "ECPM排行，fields: name/ecpm。水平柱状图。"
+      },
+      "placementInsight": { "type": "string", "required": true, "description": "广告位洞察文案。" },
+      "scatterData": {
+        "type": "object[]",
+        "required": true,
+        "description": "展示次数 vs 收入散点数据，fields: name/impressions/revenue。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "all",
+    "platform": "all",
+    "s_country_code": "all",
+    "t_date": "2026-03-05"
+  },
+  "sampleResponse": {
+    "data": {
+      "kpis": [{ "id": "1", "title": "广告位总数", "primaryValue": "47个" }],
+      "top10": [
+        {
+          "name": "Splash",
+          "revenue": 1451.8,
+          "impressions": 280000,
+          "ecpm": 19.16,
+          "users": 65000,
+          "percent": 52.4
+        }
+      ],
+      "tableRows": [],
+      "donut": [{ "name": "Splash", "value": 1451.8, "percent": 52.4 }],
+      "ecpmRanking": [{ "name": "WeatherRadar", "ecpm": 19.16 }],
+      "placementInsight": "插页式广告位普遍ECPM较高，建议优先保障Splash展示频次",
+      "scatterData": [{ "name": "Splash", "impressions": 280000, "revenue": 1451.8 }]
+    }
+  },
+  "api": {
+    "url": "POST /api/business-insight/iaa-analysis/overview/placement-tab",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_app_id?, platform?, s_country_code?, t_date",
+    "responseBody": "IaaPlacementTabData"
+  }
+}

@@ -118,7 +118,7 @@
     { key: 'version' }
   ]
 
-  const activeTab = ref<IaaTabKey>('adPlatform')
+  const activeTab = ref<IaaTabKey>('adType')
 
   const filters = reactive<IaaFilterState>({
     s_app_id: 'all',

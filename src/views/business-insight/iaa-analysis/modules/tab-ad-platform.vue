@@ -1,35 +1,35 @@
 <template>
   <div class="iaa-tab-content iaa-tab-ad-platform">
-    <!-- KPI 卡片 -->
-    <section class="iaa-kpi-grid">
-      <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
-        <div class="iaa-kpi__title">{{ k.title }}</div>
-        <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
-        <div
-          class="iaa-kpi__sub"
-          :class="k.trendUp !== undefined ? (k.trendUp ? 'up' : 'down') : ''"
-        >
-          {{ k.subText }}
-        </div>
-      </article>
-    </section>
-
-    <!-- 主内容：左 2/3 + 右 1/3 -->
     <section class="iaa-main-grid">
+      <!-- ——— 左列 ——— -->
       <div class="iaa-main-left">
+        <!-- KPI 4列横排 -->
+        <section class="iaa-kpi-grid">
+          <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
+            <div class="iaa-kpi__title">{{ k.title }}</div>
+            <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
+            <div
+              class="iaa-kpi__sub"
+              :class="k.trendUp !== undefined ? (k.trendUp ? 'up' : 'down') : ''"
+            >
+              {{ k.subText }}
+            </div>
+          </article>
+        </section>
+
         <!-- 广告平台效果排行 -->
         <ElCard class="iaa-panel" shadow="never">
-          <template #header>
-            <span>广告平台效果排行</span>
-          </template>
+          <template #header><span>广告平台效果排行</span></template>
           <div ref="rankingChartRef" class="iaa-chart iaa-chart--bar"></div>
-          <div class="iaa-insight-banner"> ✅ Admob收入占比 71.7%，建议优先保障Admob展示质量 </div>
+          <div v-if="platformInsight" class="iaa-insight-banner">
+            <el-icon><SuccessFilled /></el-icon>
+            <span v-html="platformInsight"></span>
+          </div>
         </ElCard>
+
         <!-- 平台详细对比表 -->
         <ElCard class="iaa-panel" shadow="never">
-          <template #header>
-            <span>平台详细对比表</span>
-          </template>
+          <template #header><span>平台详细对比表</span></template>
           <ArtTable
             :data="tableData"
             :columns="tableColumns"
@@ -54,32 +54,36 @@
           </ArtTable>
         </ElCard>
       </div>
+
+      <!-- ——— 右列 ——— -->
       <div class="iaa-main-right">
+        <!-- 广告平台收入占比 -->
         <ElCard class="iaa-panel" shadow="never">
-          <template #header>
-            <span>广告平台收入占比</span>
-          </template>
-          <div class="iaa-donut-wrap">
-            <div class="iaa-donut-center">$2,768</div>
-            <div ref="donutChartRef" class="iaa-chart iaa-chart--donut"></div>
-          </div>
-          <div class="iaa-donut-legend">
-            <div v-for="(item, i) in donutData" :key="item.name" class="iaa-donut-legend__item">
-              <span class="iaa-donut-legend__dot" :style="{ background: DONUT_COLORS[i] }" />
-              <span>{{ item.name }} {{ item.percent.toFixed(1) }}%</span>
+          <template #header><span>广告平台收入占比</span></template>
+          <div class="iaa-donut-body">
+            <div class="iaa-donut-wrap">
+              <div ref="donutChartRef" class="iaa-chart iaa-chart--donut"></div>
+              <div class="iaa-donut-center">{{ donutTotal }}</div>
+            </div>
+            <div class="iaa-donut-legend">
+              <div v-for="(item, i) in donutData" :key="item.name" class="iaa-donut-legend__item">
+                <span class="iaa-donut-legend__dot" :style="{ background: DONUT_COLORS[i] }" />
+                <span class="iaa-donut-legend__name">{{ item.name }}</span>
+                <span class="iaa-donut-legend__pct">{{ item.percent.toFixed(1) }}%</span>
+              </div>
             </div>
           </div>
         </ElCard>
+
+        <!-- 平台ECPM对比 -->
         <ElCard class="iaa-panel" shadow="never">
-          <template #header>
-            <span>平台ECPM对比</span>
-          </template>
+          <template #header><span>平台ECPM对比</span></template>
           <div ref="ecpmChartRef" class="iaa-chart iaa-chart--hbar"></div>
         </ElCard>
+
+        <!-- 平台收入趋势 -->
         <ElCard class="iaa-panel" shadow="never">
-          <template #header>
-            <span>平台收入趋势(近7天)</span>
-          </template>
+          <template #header><span>平台收入趋势(近7天)</span></template>
           <div ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
         </ElCard>
       </div>
@@ -88,210 +92,91 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch } from 'vue'
+  import { ref, computed, onMounted, watch, nextTick } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
+  import { SuccessFilled } from '@element-plus/icons-vue'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { ColumnOption } from '@/types'
-  import type { IaaFilterState, IaaKpiCard, IaaPlatformTableRow } from '../types'
+  import type { IaaFilterState, IaaPlatformTabData, IaaPlatformTableRow } from '../types'
+  import { fetchIaaPlatformTabData } from '@/api/business-insight'
 
   defineOptions({ name: 'IaaTabAdPlatform' })
 
   const props = defineProps<{ filter: IaaFilterState }>()
 
-  const kpis = ref<IaaKpiCard[]>([
-    {
-      id: '1',
-      title: '广告总收入',
-      primaryValue: '$2,768.58',
-      subText: '广告平台上报 ↑12.3%',
-      trendUp: true,
-      accent: 'teal'
-    },
-    {
-      id: '2',
-      title: '平均ECPM',
-      primaryValue: '3.32 / 3.06',
-      subText: '预估/真实 | 偏差 +8.5%',
-      accent: 'default'
-    },
-    {
-      id: '3',
-      title: '广告展示次数',
-      primaryValue: '833,607',
-      subText: '人均展示4.9次',
-      accent: 'default'
-    },
-    {
-      id: '4',
-      title: '广告用户',
-      primaryValue: '117,483',
-      subText: '渗透率68.6%',
-      accent: 'default'
-    }
-  ])
+  const tabData = ref<IaaPlatformTabData | null>(null)
 
-  const tableData = ref<IaaPlatformTableRow[]>([
-    {
-      sourceName: 'Admob',
-      source: 1,
-      revenue: 1985.86,
-      revenueShare: 71.7,
-      impressions: 520000,
-      impressionShare: 62.4,
-      adUsers: 85000,
-      userShare: 72.4,
-      ecpmEst: 18.54,
-      ecpmReal: 17.2,
-      variance: 7.8,
-      fillRate: 96.2,
-      trend: 'up'
-    },
-    {
-      sourceName: 'Facebook',
-      source: 2,
-      revenue: 257.5,
-      revenueShare: 9.3,
-      impressions: 120000,
-      impressionShare: 14.4,
-      adUsers: 22000,
-      userShare: 18.7,
-      ecpmEst: 2.14,
-      ecpmReal: 2.0,
-      variance: 7.0,
-      fillRate: 92,
-      trend: 'flat'
-    },
-    {
-      sourceName: 'Applovin',
-      source: 4,
-      revenue: 166.1,
-      revenueShare: 6.0,
-      impressions: 95000,
-      impressionShare: 11.4,
-      adUsers: 18000,
-      userShare: 15.3,
-      ecpmEst: 1.75,
-      ecpmReal: 1.62,
-      variance: 8.0,
-      fillRate: 94,
-      trend: 'up'
-    },
-    {
-      sourceName: 'Vungle',
-      source: 5,
-      revenue: 198.2,
-      revenueShare: 7.2,
-      impressions: 58000,
-      impressionShare: 7.0,
-      adUsers: 12000,
-      userShare: 10.2,
-      ecpmEst: 3.42,
-      ecpmReal: 3.2,
-      variance: 6.9,
-      fillRate: 91,
-      trend: 'down'
-    },
-    {
-      sourceName: 'Pangle',
-      source: 7,
-      revenue: 98.5,
-      revenueShare: 3.6,
-      impressions: 40000,
-      impressionShare: 4.8,
-      adUsers: 8000,
-      userShare: 6.8,
-      ecpmEst: 2.46,
-      ecpmReal: 2.3,
-      variance: 7.0,
-      fillRate: 88,
-      trend: 'flat'
-    },
-    {
-      sourceName: 'Mintegral',
-      source: 8,
-      revenue: 62.4,
-      revenueShare: 2.3,
-      impressions: 20000,
-      impressionShare: 2.4,
-      adUsers: 4483,
-      userShare: 3.8,
-      ecpmEst: 3.12,
-      ecpmReal: 2.9,
-      variance: 7.6,
-      fillRate: 90,
-      trend: 'up'
-    }
-  ])
+  const kpis = computed(() => tabData.value?.kpis ?? [])
+  const tableData = computed(() => tabData.value?.tableRows ?? [])
+  const platformInsight = computed(() => tabData.value?.platformInsight ?? '')
+  const donutData = computed(() => tabData.value?.donut ?? [])
 
-  const DONUT_COLORS = ['#26C2AD', '#3B82F6', '#8B5CF6', '#F59E0B', '#10B981', '#94A3B8']
+  const PLATFORM_COLORS = ['#26C2AD', '#3B82F6', '#8B5CF6', '#F59E0B', '#10B981', '#64748B']
+  const DONUT_COLORS = PLATFORM_COLORS
 
-  const donutData = computed(() => {
-    const total = tableData.value.reduce((s, r) => s + r.revenue, 0)
-    return tableData.value.map((r) => ({
-      name: r.sourceName,
-      value: r.revenue,
-      percent: total ? (r.revenue / total) * 100 : 0
-    }))
+  const donutTotal = computed(() => {
+    const total = donutData.value.reduce((s, d) => s + d.value, 0)
+    return `$${total.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
   })
 
   const tableColumns = computed<ColumnOption[]>(() => [
-    { prop: 'sourceName', label: '平台', minWidth: 100 },
+    { prop: 'sourceName', label: '平台', minWidth: 90 },
     {
       prop: 'revenue',
       label: '广告收入',
-      minWidth: 100,
+      minWidth: 96,
       formatter: (row: IaaPlatformTableRow) => `$${row.revenue.toFixed(2)}`
     },
     {
       prop: 'revenueShare',
       label: '占比',
-      minWidth: 72,
+      minWidth: 60,
       formatter: (row: IaaPlatformTableRow) => `${row.revenueShare}%`
     },
     {
       prop: 'impressions',
       label: '展示次数',
-      minWidth: 100,
+      minWidth: 90,
       formatter: (row: IaaPlatformTableRow) => row.impressions.toLocaleString()
     },
     {
       prop: 'impressionShare',
       label: '展示占比',
-      minWidth: 80,
+      minWidth: 74,
       formatter: (row: IaaPlatformTableRow) => `${row.impressionShare}%`
     },
     {
       prop: 'adUsers',
       label: '广告用户',
-      minWidth: 90,
+      minWidth: 80,
       formatter: (row: IaaPlatformTableRow) => row.adUsers.toLocaleString()
     },
     {
       prop: 'userShare',
       label: '用户占比',
-      minWidth: 80,
+      minWidth: 70,
       formatter: (row: IaaPlatformTableRow) => `${row.userShare}%`
     },
     {
       prop: 'ecpmEst',
       label: 'ECPM(预)',
-      minWidth: 88,
+      minWidth: 80,
       formatter: (row: IaaPlatformTableRow) => row.ecpmEst.toFixed(2)
     },
     {
       prop: 'ecpmReal',
       label: 'ECPM(真)',
-      minWidth: 88,
+      minWidth: 80,
       formatter: (row: IaaPlatformTableRow) => row.ecpmReal.toFixed(2)
     },
-    { prop: 'variance', label: '偏差', minWidth: 72, useSlot: true, slotName: 'variance' },
+    { prop: 'variance', label: '偏差', minWidth: 68, useSlot: true, slotName: 'variance' },
     {
       prop: 'fillRate',
       label: '充填率',
-      minWidth: 80,
+      minWidth: 70,
       formatter: (row: IaaPlatformTableRow) => `${row.fillRate}%`
     },
-    { prop: 'trend', label: '趋势', minWidth: 64, useSlot: true, slotName: 'trend' }
+    { prop: 'trend', label: '趋势', minWidth: 56, useSlot: true, slotName: 'trend' }
   ])
 
   const useRankingChart = useChart()
@@ -304,28 +189,53 @@
   const trendChartRef = useTrendChart.chartRef
 
   function buildRankingOption(): EChartsOption {
-    const names = tableData.value.map((r) => r.sourceName)
-    const revenues = tableData.value.map((r) => r.revenue)
+    const rows = tabData.value?.platformRanking ?? []
+    const names = rows.map((r) => r.sourceName)
+    const revenues = rows.map((r) => r.revenue)
+    const ecpms = rows.map((r) => r.ecpm.toFixed(2))
     return {
-      grid: { left: 56, right: 24, top: 16, bottom: 48 },
-      tooltip: { trigger: 'axis' },
-      xAxis: { type: 'category', data: names, axisLabel: { fontSize: 11 } },
+      backgroundColor: 'transparent',
+      grid: { left: 48, right: 16, top: 32, bottom: 52 },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' }
+      },
+      xAxis: {
+        type: 'category',
+        data: names,
+        axisLine: { lineStyle: { color: '#1e293b' } },
+        axisTick: { show: false },
+        axisLabel: {
+          color: '#94a3b8',
+          fontSize: 11,
+          interval: 0,
+          formatter: (_val: string, idx: number) => `${names[idx]}\nECPM ${ecpms[idx]}`
+        }
+      },
       yAxis: {
         type: 'value',
-        name: '',
-        axisLabel: { fontSize: 11 },
-        splitLine: { lineStyle: { type: 'dashed', opacity: 0.3 } }
+        axisLabel: { color: '#94a3b8', fontSize: 10, formatter: '${value}' },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
       },
       series: [
         {
           type: 'bar',
-          data: revenues,
-          itemStyle: { color: '#26C2AD' },
-          barMaxWidth: 36,
+          barMaxWidth: 44,
+          data: revenues.map((v, i) => ({
+            value: v,
+            itemStyle: {
+              color: PLATFORM_COLORS[i % PLATFORM_COLORS.length],
+              borderRadius: [3, 3, 0, 0]
+            }
+          })),
           label: {
             show: true,
             position: 'top',
-            formatter: (p: any) => `$${Number(p.value ?? 0).toFixed(2)}`
+            formatter: (p: { value?: number }) => `$${Number(p.value ?? 0).toFixed(2)}`,
+            color: '#f1f5f9',
+            fontSize: 11
           }
         }
       ]
@@ -339,105 +249,173 @@
       itemStyle: { color: DONUT_COLORS[i] }
     }))
     return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' },
+        formatter: (p: { name: string; value: number; percent: number }) =>
+          `${p.name}<br/>$${p.value.toFixed(2)} (${p.percent?.toFixed(1)}%)`
+      },
       series: [
         {
           type: 'pie',
-          radius: ['60%', '85%'],
-          center: ['50%', '50%'],
+          radius: ['48%', '72%'],
+          center: ['46%', '50%'],
           data,
-          label: { show: false },
-          emphasis: { scale: false }
+          label: {
+            show: true,
+            position: 'outside',
+            formatter: (p: { percent: number }) => `${p.percent?.toFixed(1)}%`,
+            color: '#94a3b8',
+            fontSize: 11
+          },
+          labelLine: {
+            show: true,
+            lineStyle: { color: '#334155', width: 1 }
+          },
+          emphasis: { scale: true, scaleSize: 4 }
         }
       ]
     }
   }
 
   function buildEcpmOption(): EChartsOption {
-    const names = tableData.value.map((r) => r.sourceName)
-    const est = tableData.value.map((r) => r.ecpmEst)
-    const real = tableData.value.map((r) => r.ecpmReal)
+    const rows = tabData.value?.ecpmComparison ?? []
+    const names = rows.map((r) => r.name)
+    const est = rows.map((r) => r.ecpmEst)
+    const real = rows.map((r) => r.ecpmReal)
     return {
-      grid: { left: 72, right: 24, top: 16, bottom: 24 },
-      tooltip: { trigger: 'axis' },
-      legend: { data: ['预估ECPM', '真实ECPM'], bottom: 0 },
-      xAxis: { type: 'value', axisLabel: { fontSize: 11 } },
-      yAxis: { type: 'category', data: names, axisLabel: { fontSize: 11 } },
+      backgroundColor: 'transparent',
+      grid: { left: 72, right: 48, top: 36, bottom: 8, containLabel: false },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' }
+      },
+      legend: {
+        data: ['预估ECPM', '真实ECPM'],
+        top: 4,
+        right: 0,
+        textStyle: { color: '#64748b', fontSize: 11 },
+        itemWidth: 12,
+        itemHeight: 8
+      },
+      xAxis: {
+        type: 'value',
+        axisLabel: { show: false },
+        splitLine: { show: false },
+        axisLine: { show: false }
+      },
+      yAxis: {
+        type: 'category',
+        data: names,
+        axisLabel: { color: '#94a3b8', fontSize: 11 },
+        axisLine: { show: false },
+        axisTick: { show: false }
+      },
       series: [
         {
           name: '预估ECPM',
           type: 'bar',
           data: est,
-          itemStyle: { color: '#26C2AD' },
-          barMaxWidth: 14
+          barMaxWidth: 12,
+          itemStyle: { color: '#26C2AD', borderRadius: [0, 2, 2, 0] },
+          label: {
+            show: true,
+            position: 'right',
+            formatter: (p: { value?: number }) => `${Number(p.value ?? 0).toFixed(2)}`,
+            color: '#94a3b8',
+            fontSize: 10
+          }
         },
         {
           name: '真实ECPM',
           type: 'bar',
           data: real,
-          itemStyle: { color: '#3B82F6' },
-          barMaxWidth: 14
+          barMaxWidth: 12,
+          itemStyle: { color: '#3B82F6', borderRadius: [0, 2, 2, 0] },
+          label: {
+            show: true,
+            position: 'right',
+            formatter: (p: { value?: number }) => `${Number(p.value ?? 0).toFixed(2)}`,
+            color: '#94a3b8',
+            fontSize: 10
+          }
         }
       ]
     }
   }
 
-  const trend7dDates = ['02-27', '02-29', '03-01', '03-02', '03-03', '03-04', '03-05']
-  const trend7dAdmob = [420, 480, 450, 520, 580, 610, 620]
-  const trend7dFacebook = [80, 85, 82, 90, 88, 92, 95]
-  const trend7dOthers = [120, 115, 130, 125, 135, 140, 138]
-
   function buildTrendOption(): EChartsOption {
+    const { dates, series } = tabData.value?.trend7d ?? { dates: [], series: [] }
     return {
-      grid: { left: 48, right: 24, top: 16, bottom: 28 },
-      tooltip: { trigger: 'axis' },
-      legend: { data: ['Admob', 'Facebook', '其他'], bottom: 0 },
-      xAxis: { type: 'category', data: trend7dDates, axisLabel: { fontSize: 11 } },
-      yAxis: { type: 'value', axisLabel: { fontSize: 11 } },
-      series: [
-        {
-          name: 'Admob',
-          type: 'line',
-          data: trend7dAdmob,
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          itemStyle: { color: '#26C2AD' }
-        },
-        {
-          name: 'Facebook',
-          type: 'line',
-          data: trend7dFacebook,
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          itemStyle: { color: '#3B82F6' }
-        },
-        {
-          name: '其他',
-          type: 'line',
-          data: trend7dOthers,
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          itemStyle: { color: '#8B5CF6' }
-        }
-      ]
+      backgroundColor: 'transparent',
+      grid: { left: 32, right: 16, top: 40, bottom: 20, containLabel: true },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' }
+      },
+      legend: {
+        data: series.map((s) => s.name),
+        top: 4,
+        left: 0,
+        textStyle: { color: '#64748b', fontSize: 10 },
+        itemWidth: 16,
+        itemHeight: 3,
+        icon: 'rect'
+      },
+      xAxis: {
+        type: 'category',
+        data: dates,
+        axisLabel: { color: '#64748b', fontSize: 10 },
+        axisLine: { lineStyle: { color: '#1e293b' } },
+        axisTick: { show: false }
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: { color: '#64748b', fontSize: 10 },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
+      series: series.map((s) => ({
+        name: s.name,
+        type: 'line' as const,
+        data: s.data,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 4,
+        lineStyle: { color: s.color, width: 2 },
+        itemStyle: { color: s.color }
+      }))
     }
+  }
+
+  function refreshCharts() {
+    if (!tabData.value) return
+    useRankingChart.updateChart(buildRankingOption())
+    useDonutChart.updateChart(buildDonutOption())
+    useEcpmChart.updateChart(buildEcpmOption())
+    useTrendChart.updateChart(buildTrendOption())
+  }
+
+  async function loadTabData() {
+    tabData.value = await fetchIaaPlatformTabData(props.filter)
+    await nextTick()
+    refreshCharts()
   }
 
   onMounted(() => {
-    useRankingChart.initChart(buildRankingOption())
-    useDonutChart.initChart(buildDonutOption())
-    useEcpmChart.initChart(buildEcpmOption())
-    useTrendChart.initChart(buildTrendOption())
+    loadTabData()
   })
 
   watch(
-    () => [tableData.value, props.filter],
+    () => props.filter,
     () => {
-      useRankingChart.updateChart(buildRankingOption())
-      useDonutChart.updateChart(buildDonutOption())
-      useEcpmChart.updateChart(buildEcpmOption())
+      loadTabData()
     },
     { deep: true }
   )
@@ -447,18 +425,46 @@
   .iaa-tab-ad-platform {
     display: flex;
     flex-direction: column;
-    gap: 16px;
     min-height: 100%;
   }
 
+  /* ——— 主网格 ——— */
+  .iaa-main-grid {
+    display: grid;
+    flex: 1;
+    grid-template-columns: 3fr 2fr;
+    gap: 16px;
+    min-height: 0;
+  }
+
+  .iaa-main-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .iaa-main-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+
+    .iaa-panel {
+      flex: 1;
+    }
+  }
+
+  /* ——— KPI 4列横排 ——— */
   .iaa-kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 12px;
   }
 
   .iaa-kpi {
-    padding: 16px;
+    min-width: 0;
+    padding: 14px 16px;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
     border-radius: 8px;
@@ -468,14 +474,15 @@
     }
 
     &__title {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       font-size: 12px;
       color: var(--art-gray-600);
     }
 
     &__value {
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.2;
       color: var(--art-gray-900);
     }
 
@@ -494,128 +501,162 @@
     }
   }
 
-  .iaa-main-grid {
-    display: grid;
-    flex: 1;
-    grid-template-columns: 1fr 360px;
-    gap: 16px;
-    min-height: 0;
-  }
-
-  .iaa-main-left {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-height: 0;
-  }
-
-  .iaa-main-right {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-height: 0;
-  }
-
+  /* ——— Panel 通用 ——— */
   .iaa-panel {
+    display: flex;
+    flex-direction: column;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
 
     :deep(.el-card__header) {
+      flex-shrink: 0;
       padding: 12px 16px;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 600;
       color: var(--art-gray-900);
       border-bottom: 1px solid var(--default-border);
     }
 
     :deep(.el-card__body) {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
       padding: 16px;
+      overflow: hidden;
     }
   }
 
+  /* ——— 图表高度 ——— */
   .iaa-chart {
+    flex: 1;
     width: 100%;
-    height: 280px;
+    min-height: 0;
 
     &--bar {
-      height: 320px;
-    }
-
-    &--donut {
-      height: 200px;
+      min-height: 200px;
     }
 
     &--hbar {
-      height: 240px;
+      min-height: 180px;
     }
 
     &--line {
-      height: 220px;
+      min-height: 160px;
     }
+
+    &--donut {
+      flex: none;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  /* ——— 环形图 ——— */
+  .iaa-donut-body {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    align-items: center;
+    min-height: 160px;
   }
 
   .iaa-donut-wrap {
     position: relative;
-    height: 200px;
+    flex: 1;
+    min-width: 0;
+    height: 160px;
   }
 
   .iaa-donut-center {
     position: absolute;
     top: 50%;
-    left: 50%;
+    left: 46%;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--art-gray-900);
+    white-space: nowrap;
+    pointer-events: none;
     transform: translate(-50%, -50%);
   }
 
   .iaa-donut-legend {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px 16px;
-    margin-top: 12px;
-    font-size: 12px;
-    color: var(--art-gray-600);
+    flex-direction: column;
+    flex-shrink: 0;
+    gap: 7px;
+    width: 130px;
   }
 
   .iaa-donut-legend__item {
-    display: inline-flex;
+    display: flex;
     gap: 6px;
     align-items: center;
+    font-size: 12px;
   }
 
   .iaa-donut-legend__dot {
+    flex-shrink: 0;
     width: 8px;
     height: 8px;
     border-radius: 50%;
   }
 
-  .iaa-insight-banner {
-    padding: 10px 12px;
-    margin-top: 12px;
-    font-size: 12px;
-    color: var(--art-gray-900);
-    background: rgb(38 194 173 / 15%);
-    border: 1px solid rgb(38 194 173 / 30%);
-    border-radius: 8px;
-  }
-
-  .iaa-trend.up {
-    color: var(--art-success);
-  }
-
-  .iaa-trend.down {
-    color: var(--art-danger);
-  }
-
-  .iaa-trend:not(.up, .down) {
+  .iaa-donut-legend__name {
+    flex: 1;
+    overflow: hidden;
     color: var(--art-gray-600);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .iaa-variance.up {
-    color: var(--art-warning);
+  .iaa-donut-legend__pct {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: var(--art-gray-900);
   }
 
-  .iaa-variance.down {
-    color: var(--art-success);
+  /* ——— 洞察条 ——— */
+  .iaa-insight-banner {
+    display: flex;
+    flex-shrink: 0;
+    gap: 6px;
+    align-items: center;
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #67e8f9;
+    background: rgb(6 182 212 / 10%);
+    border: 1px solid rgb(6 182 212 / 25%);
+    border-radius: 6px;
+
+    .el-icon {
+      flex-shrink: 0;
+      color: #22d3ee;
+    }
+  }
+
+  /* ——— 表格趋势/偏差 ——— */
+  .iaa-trend {
+    &.up {
+      color: var(--art-success);
+    }
+
+    &.down {
+      color: var(--art-danger);
+    }
+
+    &:not(.up, .down) {
+      color: var(--art-gray-600);
+    }
+  }
+
+  .iaa-variance {
+    &.up {
+      color: var(--art-warning);
+    }
+
+    &.down {
+      color: var(--art-success);
+    }
   }
 </style>

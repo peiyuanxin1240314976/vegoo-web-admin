@@ -203,6 +203,7 @@
 
   .ad-performance-filters__left {
     display: flex;
+    flex: 1;
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
@@ -310,14 +311,9 @@
   }
 
   .ad-performance-date-slider {
-    --date-slider-height: 30px;
-    --date-slider-pad: 4px;
-    --date-slider-thumb-radius: 9999px;
-    --date-slider-inner-width: calc(100% - var(--date-slider-pad) * 2);
-    --date-slider-step: calc(var(--date-slider-inner-width) / var(--date-slider-count));
-
     position: relative;
     display: inline-grid;
+    flex-shrink: 0;
     grid-template-columns: repeat(var(--date-slider-count), 1fr);
     align-items: center;
     height: var(--date-slider-height);
@@ -327,6 +323,12 @@
     background: rgb(255 255 255 / 6%);
     border: 1px solid var(--default-border);
     border-radius: 9999px;
+
+    --date-slider-height: 30px;
+    --date-slider-pad: 4px;
+    --date-slider-thumb-radius: 9999px;
+    --date-slider-inner-width: calc(100% - var(--date-slider-pad) * 2);
+    --date-slider-step: calc(var(--date-slider-inner-width) / var(--date-slider-count));
   }
 
   .ad-performance-date-slider__thumb {

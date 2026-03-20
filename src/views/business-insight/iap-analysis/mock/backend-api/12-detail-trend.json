@@ -15,7 +15,7 @@
       },
       "arpuTrend": { "type": "IapTrendSingle", "required": true, "description": "ARPU 日趋势。" },
       "conversionRetention": {
-        "type": "object",
+        "type": "IapConversionRetention",
         "required": true,
         "description": "转化率、续费率趋势。"
       },
@@ -24,6 +24,28 @@
         "type": "number",
         "required": false,
         "description": "退款率预警线，如 2。"
+      }
+    },
+    "IapTrendOrdersRevenue": {
+      "dates": { "type": "string[]", "required": true, "description": "日期轴（如 03/01）。" },
+      "orders": { "type": "number[]", "required": true, "description": "订单数序列。" },
+      "revenue": { "type": "number[]", "required": true, "description": "收入序列（USD）。" }
+    },
+    "IapTrendSingle": {
+      "dates": { "type": "string[]", "required": true, "description": "日期轴。" },
+      "values": { "type": "number[]", "required": true, "description": "指标值序列。" }
+    },
+    "IapConversionRetention": {
+      "dates": { "type": "string[]", "required": true, "description": "日期轴。" },
+      "conversion": {
+        "type": "number[]",
+        "required": true,
+        "description": "转化率序列（百分比数值）。"
+      },
+      "retention": {
+        "type": "number[]",
+        "required": true,
+        "description": "续费率序列（百分比数值）。"
       }
     }
   },

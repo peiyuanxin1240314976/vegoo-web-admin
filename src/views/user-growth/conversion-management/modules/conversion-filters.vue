@@ -155,10 +155,6 @@
 </script>
 
 <style scoped lang="scss">
-  .conversion-filters {
-    margin-bottom: 16px;
-  }
-
   .conversion-filters__header {
     display: flex;
     flex-wrap: wrap;
