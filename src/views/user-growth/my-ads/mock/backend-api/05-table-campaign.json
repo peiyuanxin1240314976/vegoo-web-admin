@@ -1,0 +1,128 @@
+{
+  "_comment": "我的广告页 - 广告系列明细 Tab 表格数据。对应 types.ts: MyAdsCampaignRowMock[]。",
+  "fieldDescription": {
+    "request": {
+      "staff_id": { "type": "string", "required": true, "description": "优化师 ID。" },
+      "start_date": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "end_date": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "page": { "type": "number", "required": false, "default": 1, "description": "页码。" },
+      "page_size": {
+        "type": "number",
+        "required": false,
+        "default": 10,
+        "description": "每页条数。"
+      },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "description": "按应用 ID 筛选；空为全部。"
+      },
+      "n_source": {
+        "type": "number",
+        "required": false,
+        "description": "按广告平台枚举筛选；与 backend-fields 一致。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码。"
+      },
+      "keyword": { "type": "string", "required": false, "description": "广告系列名称模糊搜索。" }
+    },
+    "response": {
+      "data": {
+        "type": "object",
+        "required": true,
+        "description": "分页列表。"
+      },
+      "listItem": {
+        "id": { "type": "string", "required": true, "description": "行唯一键/广告系列 ID。" },
+        "appName": { "type": "string", "required": true, "description": "应用简称。" },
+        "name": { "type": "string", "required": true, "description": "广告系列名称。" },
+        "platform": {
+          "type": "string",
+          "required": true,
+          "description": "广告平台展示名（接口亦可返回 n_source 由前端映射）。"
+        },
+        "s_country_code": {
+          "type": "string",
+          "required": true,
+          "description": "ISO 3166-1 alpha-2 国家代码（如 US、GB）；国旗由前端用 flag-icons 映射，接口不返回 emoji。"
+        },
+        "status": {
+          "type": "string",
+          "required": true,
+          "enum": ["active", "inactive", "warn"],
+          "description": "投放状态。"
+        },
+        "spend": { "type": "number", "required": true, "description": "广告支出（原币种）。" },
+        "budget": { "type": "number", "required": true, "description": "预算。" },
+        "agencySpend": { "type": "number", "required": true, "description": "代投消耗。" },
+        "roi": {
+          "type": "number | null",
+          "required": true,
+          "description": "首日 ROI 百分比；null 表示无数据/未启动。"
+        },
+        "estProfit": {
+          "type": "number | null",
+          "required": true,
+          "description": "预估利润；可负。"
+        },
+        "trend": {
+          "type": "string",
+          "required": true,
+          "enum": ["up", "down", "flat", "none"],
+          "description": "环比趋势指示。"
+        }
+      }
+    }
+  },
+  "sampleRequest": {
+    "staff_id": "1",
+    "start_date": "2026-02-23",
+    "end_date": "2026-03-01",
+    "page": 1,
+    "page_size": 10
+  },
+  "sampleResponse": {
+    "data": {
+      "total": 6,
+      "list": [
+        {
+          "id": "CRE001",
+          "appIcon": "🌤️",
+          "appName": "Weather5",
+          "name": "Weather5_US_Google_CRE001",
+          "platform": "Google",
+          "platformIcon": "G",
+          "s_country_code": "US",
+          "status": "active",
+          "spend": 5200,
+          "budget": 6500,
+          "calcSpend": 4890,
+          "agencySpend": 3580,
+          "roi": 41.2,
+          "minSpend": 4100,
+          "estProfit": 1640,
+          "minProfit": 820,
+          "cpi": 2.37,
+          "trend": "up"
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-ads/table/campaign",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "staff_id, start_date, end_date, 筛选与分页",
+    "responseBody": "{ total, list: MyAdsCampaignRowMock[] }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "当前 UI 使用本地筛选+分页；接入接口时建议后端分页，前端用 total 驱动 ElPagination。",
+      "完整列表示例见 `MOCK_MY_ADS_CAMPAIGN_ROWS`。",
+      "国家列：仅返回 `s_country_code`，国旗用 `flag-icons` 在前端映射，见项目规范「国旗与 flag-icons」。"
+    ]
+  }
+}

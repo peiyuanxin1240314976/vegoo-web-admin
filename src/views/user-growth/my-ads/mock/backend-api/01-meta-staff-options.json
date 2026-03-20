@@ -1,0 +1,43 @@
+{
+  "_comment": "我的广告页 - 顶部优化师（人员）下拉选项。对应 types.ts: MyAdsStaffOption[]。",
+  "fieldDescription": {
+    "request": {
+      "s_owner_id": {
+        "type": "string",
+        "required": false,
+        "description": "当前登录用户或上下文 ID，预留。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "object",
+        "required": true,
+        "description": "下拉列表数据。"
+      },
+      "StaffOption": {
+        "id": { "type": "string", "required": true, "description": "人员唯一标识。" },
+        "name": { "type": "string", "required": true, "description": "显示名称。" }
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "data": {
+      "list": [
+        { "id": "1", "name": "张三" },
+        { "id": "2", "name": "李四" },
+        { "id": "3", "name": "王五" }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-ads/meta-staff-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_owner_id?",
+    "responseBody": "{ list: StaffOption[] }"
+  },
+  "apiSuggestion": {
+    "notes": ["与页面头部 `staffList` 结构一致；选中项影响各 Tab 汇总范围（由后端约定）。"]
+  }
+}

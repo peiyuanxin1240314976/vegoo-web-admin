@@ -1,0 +1,99 @@
+{
+  "_comment": "我的广告页 - 页面头部：默认统计期间、用户卡文案、KPI 横条。对应 types.ts: MyAdsPageHeaderMock。",
+  "fieldDescription": {
+    "request": {
+      "staff_id": {
+        "type": "string",
+        "required": true,
+        "description": "当前选中的优化师 ID，与 meta-staff-options 的 id 对应。"
+      },
+      "start_date": {
+        "type": "string",
+        "required": false,
+        "description": "统计开始日期 YYYY-MM-DD；缺省时由后端返回默认区间。"
+      },
+      "end_date": {
+        "type": "string",
+        "required": false,
+        "description": "统计结束日期 YYYY-MM-DD。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "MyAdsPageHeaderMock",
+        "required": true,
+        "description": "见 types.ts；含 staffList、defaultStaffId、dateRange、userCard、metrics。"
+      },
+      "userCard": {
+        "avatarLetter": {
+          "type": "string",
+          "required": true,
+          "description": "头像展示首字。"
+        },
+        "name": { "type": "string", "required": true, "description": "姓名。" },
+        "role": { "type": "string", "required": true, "description": "职级/角色文案。" },
+        "appsLine": {
+          "type": "string",
+          "required": true,
+          "description": "负责应用摘要一行文案。"
+        }
+      },
+      "metrics": {
+        "type": "array",
+        "required": true,
+        "description": "KPI 横条项；label/value/sub 为已格式化展示字符串；subColor/valueColor 为 HEX。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "staff_id": "1",
+    "start_date": "2026-02-23",
+    "end_date": "2026-03-01"
+  },
+  "sampleResponse": {
+    "data": {
+      "staffList": [
+        { "id": "1", "name": "张三" },
+        { "id": "2", "name": "李四" },
+        { "id": "3", "name": "王五" }
+      ],
+      "defaultStaffId": "1",
+      "dateRange": ["2026-02-23", "2026-03-01"],
+      "userCard": {
+        "avatarLetter": "张",
+        "name": "张三",
+        "role": "高级优化师",
+        "appsLine": "负责应用：Weather5、BloodSugar2、PhoneTracker"
+      },
+      "metrics": [
+        {
+          "label": "广告支出",
+          "value": "$12,200",
+          "sub": "↑ 8.5%",
+          "subColor": "#10b981",
+          "valueColor": "#ffffff"
+        },
+        {
+          "label": "预算",
+          "value": "$11,480",
+          "sub": "差异 -$720",
+          "subColor": "#f97316",
+          "valueColor": "#f97316"
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-ads/overview/page-header",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "staff_id, start_date?, end_date?",
+    "responseBody": "MyAdsPageHeaderMock"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "metrics 可为后端格式化后的展示串，或前端按数值+币种再格式化；需统一货币与百分比精度。",
+      "与 `MOCK_MY_ADS_PAGE_HEADER` 结构一致。"
+    ]
+  }
+}

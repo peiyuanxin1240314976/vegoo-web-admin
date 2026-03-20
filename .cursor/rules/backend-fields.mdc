@@ -153,3 +153,4 @@ alwaysApply: true
 - 在 `src/types/api/api.d.ts` 或页面 `types.ts` 中定义接口类型时，字段名与上表一致。
 - 表格列 `prop`、筛选表单项 `v-model` 绑定的字段、请求参数名，优先使用上表中的字段名（如 `s_source` 对应后端 `n_source` 时以实际接口为准，但业务概念对应「广告平台」）。
 - 文案与 i18n：展示给用户的标签、筛选项文案使用表中的「业务概念」列（如「广告系列」「国家代码」），保持与后端字段表一致。
+- 国家代码需展示国旗时：仅用 `s_country_code`（ISO 3166-1 alpha-2），前端用依赖 `flag-icons` 映射为 `fi fi-xx` 样式类；**不要**在接口/Mock 中返回国旗 emoji 或图片 URL（详见 `project-conventions.mdc`「国旗与 flag-icons」）。

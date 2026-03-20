@@ -154,6 +154,7 @@
   }
 </style> -->
 <script setup name="MyAds" lang="ts">
+  import 'flag-icons/css/flag-icons.min.css'
   import MyAds from './component/MyAds.vue'
 </script>
 

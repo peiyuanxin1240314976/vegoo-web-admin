@@ -50,6 +50,12 @@ alwaysApply: true
 
 适用范围包括但不限于：`menus.*`、页面标题、表格列 `label`、筛选表单 `label/placeholder`、统计卡片字段名、导出字段名等。
 
+## 国旗与 flag-icons
+
+- 国家 **ISO 3166-1 alpha-2** 代码（数据字典字段如 `s_country_code`）由接口返回即可；**不要**在接口或 Mock 中返回国旗 emoji、国旗图片 URL 等纯展示字段。
+- 前端使用项目依赖 **flag-icons**：在需要展示国旗的页面/组件或**页面入口** `index.vue` 中 `import 'flag-icons/css/flag-icons.min.css'`（入口引入可保证样式与 `url(../flags/...)` 经构建正确解析），用 `<span :class="'fi fi-' + 小写码"></span>` 或与 `class="fi fi-xx"` 等价写法。若代码非法或为空，则不渲染国旗。
+- 历史别名（如 `UK`）可在前端映射为 `gb` 等标准码后再套 `fi-*` 类名。
+
 ## 字段命名统一（重要）
 
 后续开发中（新开发或重构）涉及 **接口入参/出参类型**、**请求参数**、**表格列 prop**、**筛选表单 v-model**、**Mock 契约（mock/backend-api）** 时，字段名必须统一：

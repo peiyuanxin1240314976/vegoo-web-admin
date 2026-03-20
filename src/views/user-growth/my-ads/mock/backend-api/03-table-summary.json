@@ -1,0 +1,140 @@
+{
+  "_comment": "我的广告页 - 汇总 Tab：统计卡、趋势序列、广告平台分布、应用支出占比条、消耗进度表。对应 types.ts: MyAdsSummaryTabMock。",
+  "fieldDescription": {
+    "request": {
+      "staff_id": { "type": "string", "required": true, "description": "优化师 ID。" },
+      "start_date": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "end_date": { "type": "string", "required": true, "description": "YYYY-MM-DD。" }
+    },
+    "response": {
+      "data": {
+        "type": "MyAdsSummaryTabMock",
+        "required": true,
+        "description": "汇总 Tab 全量展示数据。"
+      },
+      "trend": {
+        "days": { "type": "string[]", "required": true, "description": "横轴标签，如 M/D。" },
+        "spend": {
+          "type": "number[]",
+          "required": true,
+          "description": "广告支出序列（与货币轴一致）。"
+        },
+        "profit": { "type": "number[]", "required": true, "description": "预估利润序列。" },
+        "roiPct": {
+          "type": "number[]",
+          "required": true,
+          "description": "首日 ROI 百分比数值（非 0-1）；与右侧 Y 轴一致。"
+        }
+      },
+      "sourcePie": {
+        "type": "array",
+        "required": true,
+        "description": "广告平台分布；value 为金额，name 为展示名，color 为图表色。"
+      },
+      "statCards": {
+        "type": "object",
+        "required": true,
+        "description": "四张统计卡的文案与强调色，值为已格式化或待绑定的展示串。"
+      },
+      "progressList": {
+        "type": "array",
+        "required": true,
+        "description": "消耗进度表行；progress 为 0-100；statusType: ok|warn|inactive。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "staff_id": "1",
+    "start_date": "2026-02-23",
+    "end_date": "2026-03-01"
+  },
+  "sampleResponse": {
+    "data": {
+      "chartPieTitle": "各广告平台支出占比",
+      "pieCenterTitle": "总支出",
+      "pieCenterValue": "$12,200",
+      "trend": {
+        "days": ["2/23", "2/24", "2/25"],
+        "spend": [1650, 1720, 1580],
+        "profit": [620, 680, 590],
+        "roiPct": [36, 39, 35]
+      },
+      "sourcePie": [
+        { "value": 5200, "name": "谷歌", "color": "#3b82f6" },
+        { "value": 3400, "name": "Meta", "color": "#60a5fa" }
+      ],
+      "statCards": {
+        "spend": {
+          "main": "$12,200",
+          "budget": "$11,480",
+          "diff": "-$720",
+          "diffColor": "#f97316",
+          "prevLine": "上期 $11,250",
+          "momLine": "环比 +8.5%",
+          "momColor": "#10b981",
+          "borderColor": "#0d9488",
+          "mainColor": "#10b981"
+        },
+        "agencyRatio": {
+          "main": "73.4%",
+          "mainColor": "#60a5fa",
+          "agency": "$8,960",
+          "direct": "$2,520",
+          "prevLine": "上期占比 71.3%",
+          "momLine": "环比 +2.1%",
+          "momColor": "#10b981",
+          "borderColor": "#2563eb"
+        },
+        "roi": {
+          "main": "38.2%",
+          "target": "35.0%",
+          "overTarget": "+3.2%",
+          "prevLine": "上期 36.1%",
+          "momLine": "环比 +2.1pp",
+          "momColor": "#10b981",
+          "borderColor": "#d97706",
+          "mainColor": "#f59e0b"
+        },
+        "estProfit": {
+          "main": "$4,660",
+          "minProfit": "$2,100",
+          "margin": "38.2%",
+          "borderColor": "#059669",
+          "mainColor": "#10b981"
+        }
+      },
+      "appBars": [
+        {
+          "label": "天气预报",
+          "widthPct": 59,
+          "barColor": "#10b981",
+          "pct": "59%",
+          "amt": "$7,300",
+          "roiText": "首日ROI 39.2% ▲",
+          "roiColor": "#10b981"
+        }
+      ],
+      "progressList": [
+        {
+          "name": "Weather5 US Google",
+          "spend": "$5,200",
+          "budget": "$6,500",
+          "progress": 80,
+          "roi": "41.2%",
+          "status": "正常",
+          "statusType": "ok"
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/my-ads/table/summary",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "staff_id, start_date, end_date",
+    "responseBody": "MyAdsSummaryTabMock"
+  },
+  "apiSuggestion": {
+    "notes": ["完整示例与 `MOCK_MY_ADS_SUMMARY_TAB` 对齐；生产环境可改为原始数值由前端统一格式化。"]
+  }
+}

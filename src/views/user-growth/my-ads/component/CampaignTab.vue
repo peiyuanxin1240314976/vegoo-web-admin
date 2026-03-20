@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, watch } from 'vue'
+  import { MOCK_MY_ADS_CAMPAIGN_ROWS } from '../mock/data'
 
   defineOptions({ name: 'CampaignTab' })
 
@@ -11,8 +12,8 @@
     name: string
     platform: string
     platformIcon: string
-    country: string
-    countryFlag: string
+    /** ISO 3166-1 alpha-2；国旗由 flag-icons 映射，不依赖接口返回 emoji */
+    s_country_code: string
     status: 'active' | 'inactive' | 'warn'
     spend: number
     budget: number
@@ -26,134 +27,7 @@
     trend: 'up' | 'down' | 'flat' | 'none'
   }
 
-  const campaigns: Campaign[] = [
-    {
-      id: 'CRE001',
-      appIcon: '🌤️',
-      appName: 'Weather5',
-      name: 'Weather5_US_Google_CRE001',
-      platform: 'Google',
-      platformIcon: 'G',
-      country: 'US',
-      countryFlag: '🇺🇸',
-      status: 'active',
-      spend: 5200,
-      budget: 6500,
-      calcSpend: 4890,
-      agencySpend: 3580,
-      roi: 41.2,
-      minSpend: 4100,
-      estProfit: 1640,
-      minProfit: 820,
-      cpi: 2.37,
-      trend: 'up'
-    },
-    {
-      id: 'CRE002',
-      appIcon: '🌤️',
-      appName: 'Weather5',
-      name: 'Weather5_JP_Facebook_CRE002',
-      platform: 'Facebook',
-      platformIcon: 'f',
-      country: 'JP',
-      countryFlag: '🇯🇵',
-      status: 'active',
-      spend: 2100,
-      budget: 2800,
-      calcSpend: 1980,
-      agencySpend: 1450,
-      roi: 35.8,
-      minSpend: 1680,
-      estProfit: 580,
-      minProfit: 290,
-      cpi: 2.38,
-      trend: 'flat'
-    },
-    {
-      id: 'CRE003',
-      appIcon: '🩸',
-      appName: 'BloodSugar2',
-      name: 'BloodSugar2_UK_Google_CRE003',
-      platform: 'Google',
-      platformIcon: 'G',
-      country: 'UK',
-      countryFlag: '🇬🇧',
-      status: 'warn',
-      spend: 3200,
-      budget: 3500,
-      calcSpend: 3010,
-      agencySpend: 2200,
-      roi: 29.4,
-      minSpend: 2450,
-      estProfit: -340,
-      minProfit: -680,
-      cpi: 2.38,
-      trend: 'down'
-    },
-    {
-      id: 'CRE004',
-      appIcon: '📱',
-      appName: 'PhoneTracker',
-      name: 'PhoneTracker_CA_TikTok_CRE004',
-      platform: 'TikTok',
-      platformIcon: 'T',
-      country: 'CA',
-      countryFlag: '🇨🇦',
-      status: 'active',
-      spend: 1700,
-      budget: 2200,
-      calcSpend: 1600,
-      agencySpend: 1170,
-      roi: 36.5,
-      minSpend: 1280,
-      estProfit: 420,
-      minProfit: 210,
-      cpi: 2.26,
-      trend: 'up'
-    },
-    {
-      id: 'CRE005',
-      appIcon: '🌤️',
-      appName: 'Weather5',
-      name: 'Weather5_AU_Google_CRE005',
-      platform: 'Google',
-      platformIcon: 'G',
-      country: 'AU',
-      countryFlag: '🇦🇺',
-      status: 'inactive',
-      spend: 0,
-      budget: 1000,
-      calcSpend: 0,
-      agencySpend: 0,
-      roi: null,
-      minSpend: 750,
-      estProfit: null,
-      minProfit: null,
-      cpi: null,
-      trend: 'none'
-    },
-    {
-      id: 'CRE006',
-      appIcon: '🩸',
-      appName: 'BloodSugar2',
-      name: 'BloodSugar2_US_Meta_CRE006',
-      platform: 'Facebook',
-      platformIcon: 'f',
-      country: 'US',
-      countryFlag: '🇺🇸',
-      status: 'active',
-      spend: 890,
-      budget: 1200,
-      calcSpend: 840,
-      agencySpend: 615,
-      roi: 38.9,
-      minSpend: 670,
-      estProfit: 230,
-      minProfit: 115,
-      cpi: 2.41,
-      trend: 'up'
-    }
-  ]
+  const campaigns: Campaign[] = MOCK_MY_ADS_CAMPAIGN_ROWS
 
   /* ── 筛选 ── */
   const scopeOptions = [
@@ -191,7 +65,7 @@
   })
 
   const countryOptions = computed(() => {
-    const cs = [...new Set(campaigns.map((c) => c.country))].sort()
+    const cs = [...new Set(campaigns.map((c) => c.s_country_code))].sort()
     return cs.map((c) => ({ value: c, label: c }))
   })
 
@@ -199,8 +73,8 @@
   const currentPage = ref(1)
   const pageSize = ref(10)
 
-  /* ── 分页数据 ── */
-  const displayedCampaigns = computed(() => {
+  /** 筛选后的全量（不分页）；接接口时等价于服务端在筛选条件下的 total 条数对应的完整列表，或由接口直接返回当前页数据 */
+  const filteredCampaigns = computed(() => {
     let list = campaigns.slice()
 
     if (filterApp.value) {
@@ -210,7 +84,7 @@
       list = list.filter((c) => c.platform === filterPlatform.value)
     }
     if (filterCountry.value) {
-      list = list.filter((c) => c.country === filterCountry.value)
+      list = list.filter((c) => c.s_country_code === filterCountry.value)
     }
     if (filterStatus.value) {
       list = list.filter((c) => c.status === filterStatus.value)
@@ -227,6 +101,24 @@
     }
 
     return list
+  })
+
+  const filteredTotal = computed(() => filteredCampaigns.value.length)
+
+  /** 当前表格行（前端分页切片）；接接口后改为接口返回的 list，total 用接口 total */
+  const pagedCampaigns = computed(() => {
+    const list = filteredCampaigns.value
+    const start = (currentPage.value - 1) * pageSize.value
+    return list.slice(start, start + pageSize.value)
+  })
+
+  watch([filterApp, filterPlatform, filterCountry, filterStatus, filterType, searchText], () => {
+    currentPage.value = 1
+  })
+
+  watch([filteredTotal, pageSize], () => {
+    const maxPage = Math.max(1, Math.ceil(filteredTotal.value / pageSize.value) || 1)
+    if (currentPage.value > maxPage) currentPage.value = maxPage
   })
 
   function resetFilters() {
@@ -304,6 +196,20 @@
     if (trend === 'down') return '#ef4444'
     if (trend === 'flat') return '#f59e0b'
     return '#4b5563'
+  }
+
+  /** flag-icons 的 `fi-xx` 后缀（小写）；非 ISO 两位码返回空不展示旗 */
+  function countryFlagCode(code: string | undefined): string {
+    const raw = (code || '').trim().toUpperCase()
+    if (raw === 'UK') return 'gb'
+    if (/^[A-Z]{2}$/.test(raw)) return raw.toLowerCase()
+    return ''
+  }
+
+  /** 与业务页一致：`class="fi fi-xx"`（见 iaa-analysis tab-country） */
+  function countryFlagFiClass(code: string | undefined): string {
+    const suffix = countryFlagCode(code)
+    return suffix ? `fi fi-${suffix}` : ''
   }
 </script>
 
@@ -408,14 +314,13 @@
           <tr>
             <th class="th-app">应用</th>
             <th class="th-name">广告系列名称</th>
-            <th>渠道</th>
+            <th>广告平台</th>
             <th>国家</th>
             <th>状态</th>
             <th class="th-budget">广告支出/预算</th>
             <th>预算</th>
             <th>代投消耗</th>
             <th>首日ROI</th>
-            <th>最低消耗</th>
             <th>预估利润</th>
             <th>最低利润</th>
             <th>CPI</th>
@@ -425,7 +330,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="c in displayedCampaigns"
+            v-for="c in pagedCampaigns"
             :key="c.id"
             :class="[
               'data-row',
@@ -440,7 +345,7 @@
             <!-- 广告系列名称 -->
             <td class="name-cell">{{ c.name }}</td>
 
-            <!-- 渠道 -->
+            <!-- 广告平台 -->
             <td>
               <span
                 class="plat-badge"
@@ -452,8 +357,13 @@
             <!-- 国家 -->
             <td>
               <span class="country-cell">
-                <span>{{ c.countryFlag }}</span>
-                <span class="country-code">{{ c.country }}</span>
+                <span
+                  v-if="countryFlagFiClass(c.s_country_code)"
+                  class="campaign-tab-flag"
+                  :class="countryFlagFiClass(c.s_country_code)"
+                  :title="c.s_country_code"
+                ></span>
+                <span class="country-code">{{ c.s_country_code || '—' }}</span>
               </span>
             </td>
 
@@ -504,9 +414,6 @@
               <span :style="roiStyle(c.roi)" style="font-weight: 600">{{ fmtRoi(c.roi) }}</span>
             </td>
 
-            <!-- 最低消耗 -->
-            <td style="color: #a78bfa">{{ fmtNum(c.minSpend) }}</td>
-
             <!-- 预估利润 -->
             <td>
               <span :style="profitStyle(c.estProfit)" style="font-weight: 600">
@@ -540,24 +447,18 @@
       </table>
     </div>
 
-    <!-- ── 分页 ── -->
+    <!-- ── 分页：Mock 下为前端切片；接接口后 total/page/page_size 与后端一致即可 -->
     <div class="pagination-bar">
-      <span class="page-info">共 {{ displayedCampaigns.length }} 条广告系列</span>
-      <div class="page-nums">
-        <button :class="['page-btn', currentPage === 1 ? 'active' : '']" @click="currentPage = 1"
-          >1</button
-        >
-        <button class="page-btn" @click="currentPage = 2">2</button>
-        <button class="page-btn" @click="currentPage = 3">3</button>
-        <span class="page-ellipsis">...</span>
-        <button class="page-btn">[19]</button>
-        <span class="page-sep">19</span>
-      </div>
-      <select class="page-size-select" v-model="pageSize">
-        <option :value="10">10条/页</option>
-        <option :value="20">20条/页</option>
-        <option :value="50">50条/页</option>
-      </select>
+      <ElPagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="filteredTotal"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next, jumper"
+        small
+        background
+        class="campaign-tab-pagination"
+      />
     </div>
 
     <!-- ── 底部汇总栏 ── -->
@@ -600,10 +501,6 @@
         <div class="bar-item">
           <span class="bar-label">最低</span>
           <span class="bar-val" style="color: #a78bfa">$2,100</span>
-        </div>
-        <div class="bar-item">
-          <span class="bar-label">不盈利</span>
-          <span class="bar-val" style="color: #ef4444">1条 ⚠</span>
         </div>
       </div>
     </div>
@@ -811,9 +708,17 @@
     align-items: center;
   }
 
+  /* 勿覆盖 .fi 的宽高/line-height，否则 flag-icons 背景图不可见 */
+  .campaign-tab-flag {
+    flex-shrink: 0;
+    margin-right: 2px;
+    border-radius: 1px;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 12%);
+  }
+
   .country-code {
     font-size: 11px;
-    color: var(--text-secondary);
+    color: var(--text-secondary, #94a3b8);
   }
 
   .status-cell {
@@ -903,66 +808,123 @@
     border-color: var(--teal);
   }
 
-  /* ── 分页 ── */
+  /* ── 分页（对齐原自定义 .page-info / .page-btn / .page-size-select 视觉） ── */
   .pagination-bar {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
     justify-content: flex-end;
     font-size: 12px;
   }
 
-  .page-info {
-    margin-right: 8px;
-    color: var(--text-dim);
-  }
+  .campaign-tab-pagination {
+    justify-content: flex-end;
+    width: 100%;
 
-  .page-nums {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
+    :deep(.el-pagination) {
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
 
-  .page-btn {
-    min-width: 28px;
-    height: 28px;
-    padding: 0 8px;
-    font-size: 12px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    transition: all 0.2s;
-  }
+    :deep(.el-pagination__total) {
+      margin-right: 8px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
 
-  .page-btn:hover {
-    color: var(--teal);
-    border-color: var(--teal);
-  }
+    :deep(.el-pagination__sizes) {
+      margin-right: 0;
+    }
 
-  .page-btn.active {
-    font-weight: 600;
-    color: #000;
-    background: var(--teal);
-    border-color: var(--teal);
-  }
+    :deep(.el-pagination__jump) {
+      margin-left: 0;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
 
-  .page-ellipsis,
-  .page-sep {
-    padding: 0 4px;
-    color: var(--text-dim);
-  }
+    :deep(.el-pagination__goto),
+    :deep(.el-pagination__classifier) {
+      color: var(--text-dim);
+    }
 
-  .page-size-select {
-    padding: 4px 8px;
-    font-size: 12px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    outline: none;
+    :deep(.el-pagination__editor.el-input) {
+      width: 48px;
+    }
+
+    :deep(.el-pagination__editor .el-input__wrapper) {
+      min-height: 28px;
+      padding: 0 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: none;
+    }
+
+    :deep(.el-pagination__editor .el-input__inner) {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    :deep(.el-select .el-select__wrapper) {
+      gap: 4px;
+      min-height: 28px;
+      padding: 4px 28px 4px 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: none;
+    }
+
+    :deep(.el-select:hover .el-select__wrapper) {
+      border-color: #2a4060;
+    }
+
+    :deep(.el-select .el-select__caret) {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    :deep(.el-pagination.is-background .btn-prev),
+    :deep(.el-pagination.is-background .btn-next),
+    :deep(.el-pagination.is-background .el-pager li) {
+      min-width: 28px;
+      height: 28px;
+      margin: 0 2px;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: none;
+    }
+
+    :deep(.el-pagination.is-background .btn-prev:not(:disabled):hover),
+    :deep(.el-pagination.is-background .btn-next:not(:disabled):hover),
+    :deep(.el-pagination.is-background .el-pager li:not(.is-active):hover) {
+      color: #00d4aa;
+      border-color: #00d4aa;
+    }
+
+    :deep(.el-pagination.is-background .el-pager li.is-active) {
+      font-weight: 600;
+      color: #000;
+      background: var(--teal);
+      border-color: var(--teal);
+    }
+
+    :deep(.el-pagination.is-background .btn-prev.is-disabled),
+    :deep(.el-pagination.is-background .btn-next.is-disabled) {
+      color: var(--text-dim);
+      background: var(--bg-card);
+      border-color: var(--border);
+      opacity: 0.55;
+    }
   }
 
   /* ── 底部汇总栏 ── */

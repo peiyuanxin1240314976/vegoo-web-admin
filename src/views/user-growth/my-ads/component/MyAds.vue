@@ -3,27 +3,21 @@
   import SummaryTab from './SummaryTab.vue'
   import PlatformTab from './PlatformTab.vue'
   import CampaignTab from './CampaignTab.vue'
+  import { MOCK_MY_ADS_PAGE_HEADER } from '../mock/data'
 
   defineOptions({ name: 'MyAdsPageContent' })
 
-  type StaffOption = { id: string; name: string }
+  const pageHeader = MOCK_MY_ADS_PAGE_HEADER
+  const staffList = pageHeader.staffList
 
-  /** 顶部筛选：优化师/人员（示例数据，接口就绪后替换） */
-  const staffList: StaffOption[] = [
-    { id: '1', name: '张三' },
-    { id: '2', name: '李四' },
-    { id: '3', name: '王五' }
-  ]
-
-  const selectedStaffId = ref(staffList[0]!.id)
+  const selectedStaffId = ref(pageHeader.defaultStaffId)
 
   const staffAvatarLetter = computed(() => {
     const name = staffList.find((s) => s.id === selectedStaffId.value)?.name ?? ''
     return name ? name[0]! : '—'
   })
 
-  /** 顶部筛选：统计期间 */
-  const dateRange = ref<[string, string]>(['2026-02-23', '2026-03-01'])
+  const dateRange = ref<[string, string]>(pageHeader.dateRange)
 
   const activeTab = ref<string>('summary')
 
@@ -33,50 +27,8 @@
     { key: 'campaign', label: '广告系列明细' }
   ] as const
 
-  const metrics = [
-    {
-      label: '广告支出',
-      value: '$12,200',
-      sub: '↑ 8.5%',
-      subColor: '#10b981',
-      valueColor: '#ffffff'
-    },
-    {
-      label: '预算',
-      value: '$11,480',
-      sub: '差异 -$720',
-      subColor: '#f97316',
-      valueColor: '#f97316'
-    },
-    {
-      label: '代投消耗',
-      value: '$8,960',
-      sub: '占比73.4%',
-      subColor: '#9ca3af',
-      valueColor: '#f59e0b'
-    },
-    {
-      label: '首日ROI',
-      value: '38.2%',
-      sub: '目标 35% ↑',
-      subColor: '#10b981',
-      valueColor: '#f59e0b'
-    },
-    {
-      label: '预估利润',
-      value: '$4,660',
-      sub: '利润率0.2%',
-      subColor: '#9ca3af',
-      valueColor: '#10b981'
-    },
-    {
-      label: '最低利润',
-      value: '$2,100',
-      sub: '安全边界',
-      subColor: '#9ca3af',
-      valueColor: '#a78bfa'
-    }
-  ]
+  const userCard = pageHeader.userCard
+  const metrics = pageHeader.metrics
 
   const handleTabClick = (key: 'summary' | 'platform' | 'campaign') => {
     activeTab.value = key
@@ -126,11 +78,11 @@
     <!-- ── 用户信息卡 ── -->
     <div class="user-card">
       <div class="user-left">
-        <div class="user-avatar">张</div>
+        <div class="user-avatar">{{ userCard.avatarLetter }}</div>
         <div class="user-info">
-          <div class="user-name">张三</div>
-          <div class="user-role">高级投放师</div>
-          <div class="user-apps">负责应用：Weather5、BloodSugar2、PhoneTracker</div>
+          <div class="user-name">{{ userCard.name }}</div>
+          <div class="user-role">{{ userCard.role }}</div>
+          <div class="user-apps">{{ userCard.appsLine }}</div>
         </div>
       </div>
       <div class="user-metrics">
