@@ -149,11 +149,11 @@
         </div>
 
         <!-- 主题切换按钮 -->
-        <ArtIconButton
+        <!-- <ArtIconButton
           v-if="shouldShowThemeToggle"
           @click="themeAnimation"
           :icon="isDark ? 'ri:sun-fill' : 'ri:moon-line'"
-        />
+        /> -->
 
         <!-- 用户头像、菜单 -->
         <ArtUserMenu />
@@ -179,7 +179,7 @@
   import AppConfig from '@/config'
   // import { languageOptions } from '@/locales'
   import { mittBus } from '@/utils/sys'
-  import { themeAnimation } from '@/utils/ui/animation'
+  // import { themeAnimation } from '@/utils/ui/animation'
   import { useCommon } from '@/hooks/core/useCommon'
   import { useHeaderBar } from '@/hooks/core/useHeaderBar'
   import ArtUserMenu from './widget/ArtUserMenu.vue'
@@ -208,13 +208,19 @@
     // shouldShowNotification,
     // shouldShowChat,
     // shouldShowLanguage,
-    shouldShowSettings,
-    shouldShowThemeToggle
+    shouldShowSettings
+    // shouldShowThemeToggle
     // fastEnterMinWidth: headerBarFastEnterMinWidth
   } = useHeaderBar()
 
-  const { menuOpen, systemThemeColor, showSettingGuide, menuType, isDark, tabStyle } =
-    storeToRefs(settingStore)
+  const {
+    menuOpen,
+    systemThemeColor,
+    showSettingGuide,
+    menuType,
+    // isDark,
+    tabStyle
+  } = storeToRefs(settingStore)
 
   const { language } = storeToRefs(userStore)
   const { menuList } = storeToRefs(menuStore)
