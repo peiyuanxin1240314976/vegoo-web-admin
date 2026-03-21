@@ -71,7 +71,27 @@
       <section class="row row-1">
         <div v-for="card in filteredChannelKpiCards" :key="card.id" class="kpi-card">
           <div class="kpi-card-head">
-            <span class="kpi-card-name">{{ card.name }}</span>
+            <div class="kpi-card-head-main">
+              <div
+                class="kpi-card-logo"
+                :class="[
+                  `kpi-card-logo--${card.id}`,
+                  { 'is-placeholder': !shouldShowKpiLogoImg(card) }
+                ]"
+              >
+                <img
+                  v-if="shouldShowKpiLogoImg(card)"
+                  class="kpi-card-logo-img"
+                  :src="kpiCardLogoUrl(card)"
+                  alt=""
+                  @error="onKpiCardLogoError(card.id)"
+                />
+                <span v-else class="kpi-card-logo-fallback">{{
+                  kpiCardLogoFallbackChar(card)
+                }}</span>
+              </div>
+              <span class="kpi-card-name">{{ card.name }}</span>
+            </div>
           </div>
           <div class="kpi-card-roi">
             <span class="roi-value">{{ card.roi }}</span>
@@ -100,6 +120,70 @@
             <div ref="qualityHeatmapRef" class="chart-dom quality-heatmap-dom"></div>
           </div>
         </div>
+
+        <div class="panel panel-top10">
+          <div class="panel-title">Top10 广告系列</div>
+          <div class="top10-table-wrap">
+            <ElTable
+              :data="filteredTopCampaigns"
+              :stripe="false"
+              size="small"
+              :header-cell-style="{
+                color: 'var(--aps-table-header-text)',
+                fontSize: '12px',
+                padding: '6px 0',
+                borderBottom: '1px solid var(--aps-table-divider-strong)'
+              }"
+              :cell-style="{
+                background: 'transparent',
+                color: 'var(--aps-text-secondary)',
+                fontSize: '12px',
+                padding: '6px 0',
+                borderBottom: '1px solid var(--aps-table-divider-weak)'
+              }"
+            >
+              <ElTableColumn
+                prop="campaign"
+                label="Campaign"
+                min-width="80"
+                show-overflow-tooltip
+              />
+              <ElTableColumn label="广告平台" width="80" align="center">
+                <template #default="{ row }">
+                  <span
+                    class="top10-source-badge"
+                    :class="`top10-source-badge--${row.sourceKey}`"
+                    :title="row.channel"
+                  >
+                    {{ sourceBadgeShort(row.sourceKey) }}
+                  </span>
+                </template>
+              </ElTableColumn>
+              <ElTableColumn label="花费" width="80" align="left">
+                <template #default="{ row }">{{ formatTopCurrency(row.cost) }}</template>
+              </ElTableColumn>
+              <ElTableColumn label="CPI" width="80" align="left">
+                <template #default="{ row }">
+                  <span class="top10-cpi">{{ row.cpi.toFixed(2) }}</span>
+                </template>
+              </ElTableColumn>
+              <ElTableColumn label="ROI" width="80" align="left">
+                <template #default="{ row }">
+                  <span class="top10-roi" :class="topCampaignRoiTone(row.roi)">{{
+                    row.roi.toFixed(2)
+                  }}</span>
+                </template>
+              </ElTableColumn>
+              <ElTableColumn label="操作" width="48" align="center">
+                <template #default="{ row }">
+                  <ElButton type="primary" link round @click="onViewTopCampaign(row)"
+                    >查看</ElButton
+                  >
+                </template>
+              </ElTableColumn>
+            </ElTable>
+          </div>
+        </div>
       </section>
 
       <!-- 第三排：广告平台指标比较详情表格 -->
@@ -109,7 +193,7 @@
           <div class="table-wrap">
             <ArtTable
               :data="paginatedMetrics"
-              :columns="detailColumns as any"
+              :columns="detailColumns"
               row-key="channel"
               :stripe="false"
               :border="false"
@@ -138,34 +222,70 @@
               @sort-change="onSortChange"
             >
               <template #roi="{ row }">
-                <span class="detail-cell">
-                  <span>{{ row.roi }}</span>
-                  <span class="mini-bar" :class="row.roiTrendUp ? 'up' : 'down'"></span>
+                <span class="detail-cell detail-cell--metric">
+                  <span class="detail-metric-value">{{ row.roi }}</span>
+                  <div
+                    class="detail-sparkline"
+                    :class="row.roiTrendUp ? 'is-good' : 'is-bad'"
+                    role="img"
+                    :aria-label="`ROI 趋势 ${row.roi}`"
+                  >
+                    <span
+                      v-for="(h, i) in metricSparklineBars(row, 'roi')"
+                      :key="i"
+                      class="detail-sparkline__bar"
+                      :style="{ height: `${Math.round(h * 20)}px` }"
+                    />
+                  </div>
                 </span>
               </template>
               <template #cpi="{ row }">
-                <span class="detail-cell">
-                  <span>${{ row.cpi }}</span>
-                  <span class="mini-bar" :class="row.cpiTrendUp ? 'down' : 'up'"></span>
+                <span class="detail-cell detail-cell--metric">
+                  <span class="detail-metric-value">${{ row.cpi }}</span>
+                  <div
+                    class="detail-sparkline"
+                    :class="!row.cpiTrendUp ? 'is-good' : 'is-bad'"
+                    role="img"
+                    :aria-label="`CPI 趋势 ${row.cpi}`"
+                  >
+                    <span
+                      v-for="(h, i) in metricSparklineBars(row, 'cpi')"
+                      :key="i"
+                      class="detail-sparkline__bar"
+                      :style="{ height: `${Math.round(h * 20)}px` }"
+                    />
+                  </div>
                 </span>
               </template>
               <template #userQualityD7="{ row }">
-                <span class="detail-cell">
-                  <span>{{ row.userQualityD7 }}%</span>
+                <div class="detail-uq-cell">
+                  <span class="detail-uq-value">{{ row.userQualityD7 }}%</span>
                   <span class="arrow" :class="row.userQualityD7TrendUp ? 'up' : 'down'">{{
                     row.userQualityD7TrendUp ? '↑' : '↓'
                   }}</span>
-                  <span class="mini-bar" :class="row.userQualityD7TrendUp ? 'up' : 'down'"></span>
-                </span>
+                  <ElProgress
+                    :percentage="userQualityProgressPercent(row.userQualityD7)"
+                    :stroke-width="4"
+                    :show-text="false"
+                    :color="userQualityProgressColor(row.userQualityD7TrendUp)"
+                    class="detail-uq-progress"
+                  />
+                </div>
               </template>
               <template #userQualityPay="{ row }">
-                <span class="detail-cell">
-                  <span>{{ row.userQualityPay }}%</span>
+                <div class="detail-uq-cell">
+                  <span class="detail-uq-value">{{ row.userQualityPay }}%</span>
                   <span class="arrow" :class="row.userQualityPayTrendUp ? 'up' : 'down'">{{
                     row.userQualityPayTrendUp ? '↑' : '↓'
                   }}</span>
-                  <span class="mini-bar" :class="row.userQualityPayTrendUp ? 'up' : 'down'"></span>
-                </span>
+                  <ElProgress
+                    :percentage="userQualityProgressPercent(row.userQualityPay)"
+                    :stroke-width="4"
+                    :show-text="false"
+                    :color="userQualityProgressColor(row.userQualityPayTrendUp)"
+                    class="detail-uq-progress"
+                  />
+                </div>
               </template>
               <template #status="{ row }">
                 <span class="detail-cell">
@@ -187,14 +307,17 @@
   import { graphic, type EChartsOption } from '@/plugins/echarts'
   import type { ColumnOption } from '@/types'
   import { getAppNow } from '@/utils/app-now'
+  import { ElMessage } from 'element-plus'
   import {
     MOCK_CHANNEL_KPI_CARDS,
     MOCK_CHANNEL_ROI_TREND,
     MOCK_USER_QUALITY_HEATMAP,
     MOCK_CHANNEL_METRICS,
+    MOCK_TOP_CAMPAIGNS,
     type ChannelKpiCard,
     type ChannelMetricRow,
-    type ChannelStatus
+    type ChannelStatus,
+    type TopCampaignRow
   } from './mock'
 
   defineOptions({ name: 'FinanceScreen' })
@@ -223,8 +346,43 @@
   let timeTimer: ReturnType<typeof setInterval> | null = null
 
   const channelKpiCards = ref<ChannelKpiCard[]>(MOCK_CHANNEL_KPI_CARDS)
+
+  /** 有地址但加载失败时回退为占位块 */
+  const kpiLogoLoadFailedIds = ref<string[]>([])
+
+  function kpiCardLogoUrl(card: ChannelKpiCard) {
+    return (card.logo ?? '').trim()
+  }
+
+  function shouldShowKpiLogoImg(card: ChannelKpiCard) {
+    const url = kpiCardLogoUrl(card)
+    return url.length > 0 && !kpiLogoLoadFailedIds.value.includes(card.id)
+  }
+
+  function onKpiCardLogoError(id: string) {
+    if (!kpiLogoLoadFailedIds.value.includes(id)) {
+      kpiLogoLoadFailedIds.value = [...kpiLogoLoadFailedIds.value, id]
+    }
+  }
+
+  function kpiCardLogoFallbackChar(card: ChannelKpiCard) {
+    const map: Record<string, string> = {
+      google: 'G',
+      facebook: 'f',
+      tiktok: 'T',
+      unity: 'U',
+      kwai: 'K'
+    }
+    return (
+      map[card.id] ??
+      String(card.name ?? '')
+        .slice(0, 1)
+        .toUpperCase()
+    )
+  }
   const userQualityHeatmap = ref(MOCK_USER_QUALITY_HEATMAP)
   const channelMetrics = ref<ChannelMetricRow[]>(MOCK_CHANNEL_METRICS)
+  const topCampaigns = ref<TopCampaignRow[]>(MOCK_TOP_CAMPAIGNS)
 
   type SelectOption<T extends string = string> = { label: string; value: T }
 
@@ -266,6 +424,7 @@
     channelKpiCards.value.forEach((c) => labels.set(normalizeChannelKey(c.name), c.name))
     userQualityHeatmap.value.forEach((r) => labels.set(normalizeChannelKey(r.channel), r.channel))
     channelMetrics.value.forEach((r) => labels.set(normalizeChannelKey(r.channel), r.channel))
+    topCampaigns.value.forEach((r) => labels.set(normalizeChannelKey(r.channel), r.channel))
     MOCK_CHANNEL_ROI_TREND.series.forEach((s) => labels.set(normalizeChannelKey(s.name), s.name))
 
     const items = Array.from(labels.entries())
@@ -300,6 +459,81 @@
     )
   })
 
+  const filteredTopCampaigns = computed(() => {
+    if (selectedChannelKey.value === 'all') return topCampaigns.value
+    return topCampaigns.value.filter(
+      (r) => normalizeChannelKey(r.channel) === selectedChannelKey.value
+    )
+  })
+
+  function formatTopCurrency(n: number) {
+    return (
+      '$' +
+      n.toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      })
+    )
+  }
+
+  function sourceBadgeShort(key: string) {
+    const map: Record<string, string> = {
+      google: 'G',
+      facebook: 'f',
+      tiktok: 'T',
+      unity: 'U',
+      kwai: 'K',
+      bigo: 'B',
+      meta: 'M',
+      applovin: 'A'
+    }
+    const k = String(key ?? '').toLowerCase()
+    return map[k] ?? String(k).slice(0, 1).toUpperCase()
+  }
+
+  /** ROI 配色：高绿 / 中橙 / 低红（与热力图档位语义一致） */
+  function topCampaignRoiTone(roi: number) {
+    if (roi >= 1.25) return 'is-good'
+    if (roi >= 1.0) return 'is-mid'
+    return 'is-bad'
+  }
+
+  function onViewTopCampaign(row: TopCampaignRow) {
+    ElMessage.info(`查看广告系列：${row.campaign}（${row.channel}）`)
+  }
+
+  const METRIC_SPARKLINE_LEN = 5
+
+  function clampSparklineHeight(n: number) {
+    return Math.min(1, Math.max(0.08, n))
+  }
+
+  /** ROI / CPI 列迷你柱图（5 根）；接口可传 roiSparkline / cpiSparkline，否则按 channel 确定性生成 */
+  function metricSparklineBars(row: ChannelMetricRow, kind: 'roi' | 'cpi'): number[] {
+    const fromRow = kind === 'roi' ? row.roiSparkline : row.cpiSparkline
+    if (fromRow && fromRow.length === METRIC_SPARKLINE_LEN) {
+      return fromRow.map((v) => clampSparklineHeight(Number(v)))
+    }
+    const key = `${row.channel}:${kind}`
+    let hash = 0
+    for (let i = 0; i < key.length; i++) {
+      hash = (hash * 31 + key.charCodeAt(i)) >>> 0
+    }
+    const base = [0.22, 0.52, 0.28, 0.92, 0.48]
+    return base.map((b, i) => {
+      const jitter = ((hash >> (i * 3)) & 31) / 200
+      return clampSparklineHeight(b + jitter - 0.05)
+    })
+  }
+
+  function userQualityProgressPercent(value: number) {
+    return Math.min(100, Math.max(0, Number.isFinite(value) ? value : 0))
+  }
+
+  function userQualityProgressColor(trendUp: boolean) {
+    return trendUp ? 'var(--art-success)' : 'var(--art-danger)'
+  }
+
   type SortOrder = 'ascending' | 'descending' | null
   const sortState = ref<{ prop: keyof ChannelMetricRow | null; order: SortOrder }>({
     prop: null,
@@ -322,7 +556,7 @@
     return n * factor
   }
 
-  function getSortValue(row: ChannelMetricRow, prop: keyof ChannelMetricRow) {
+  function getSortValue(row: ChannelMetricRow, prop: keyof ChannelMetricRow): string | number {
     switch (prop) {
       case 'cost':
       case 'revenue':
@@ -332,8 +566,12 @@
         const rank: Record<ChannelStatus, number> = { excellent: 3, average: 2, poor: 1 }
         return rank[row.status] ?? 0
       }
-      default:
-        return row[prop] as any
+      default: {
+        const val = row[prop]
+        if (typeof val === 'number') return val
+        if (typeof val === 'boolean') return val ? 1 : 0
+        return String(val ?? '')
+      }
     }
   }
 
@@ -372,45 +610,41 @@
     return sortedChannelMetrics.value.slice(start, start + pageSize.value)
   })
 
-  type SortableColumnOption<T = any> = Omit<ColumnOption<T>, 'sortable'> & {
-    sortable?: boolean | 'custom'
-  }
-  const detailColumns = computed(() => {
-    const customSortable = 'custom' as const
+  const detailColumns = computed((): ColumnOption<ChannelMetricRow>[] => {
     return [
-      { label: '广告平台名称', prop: 'channel', minWidth: 140, sortable: customSortable },
-      { label: '花费', prop: 'cost', minWidth: 90, sortable: customSortable },
-      { label: '收入', prop: 'revenue', minWidth: 90, sortable: customSortable },
-      { label: 'ROI', prop: 'roi', minWidth: 90, useSlot: true, sortable: customSortable },
-      { label: 'ROAS', prop: 'roas', minWidth: 80, sortable: customSortable },
-      { label: 'CPI', prop: 'cpi', minWidth: 90, useSlot: true, sortable: customSortable },
-      { label: '安装量', prop: 'installs', minWidth: 80, sortable: customSortable },
+      { label: '广告平台名称', prop: 'channel', minWidth: 140, sortable: 'custom' },
+      { label: '花费', prop: 'cost', minWidth: 90, sortable: 'custom' },
+      { label: '收入', prop: 'revenue', minWidth: 90, sortable: 'custom' },
+      { label: 'ROI', prop: 'roi', minWidth: 90, useSlot: true, sortable: 'custom' },
+      { label: 'ROAS', prop: 'roas', minWidth: 80, sortable: 'custom' },
+      { label: 'CPI', prop: 'cpi', minWidth: 90, useSlot: true, sortable: 'custom' },
+      { label: '安装量', prop: 'installs', minWidth: 80, sortable: 'custom' },
       {
         label: 'User Quality (D7)',
         prop: 'userQualityD7',
         minWidth: 140,
         useSlot: true,
-        sortable: customSortable
+        sortable: 'custom'
       },
       {
         label: 'User Quality(Pay%)',
         prop: 'userQualityPay',
         minWidth: 160,
         useSlot: true,
-        sortable: customSortable
+        sortable: 'custom'
       },
       {
         label: 'LTV_7',
         prop: 'ltv7',
         minWidth: 90,
-        sortable: customSortable,
+        sortable: 'custom',
         formatter: (row: ChannelMetricRow) => `$${row.ltv7.toFixed(2)}`
       },
       {
         label: 'LTV_30',
         prop: 'ltv30',
         minWidth: 90,
-        sortable: customSortable,
+        sortable: 'custom',
         formatter: (row: ChannelMetricRow) => `$${row.ltv30.toFixed(2)}`
       },
       {
@@ -418,9 +652,9 @@
         prop: 'status',
         minWidth: 110,
         useSlot: true,
-        sortable: customSortable
+        sortable: 'custom'
       }
-    ] as SortableColumnOption<ChannelMetricRow>[]
+    ]
   })
 
   function onPageSizeChange(size: number) {
@@ -520,8 +754,11 @@
         borderColor: 'rgba(51, 65, 85, 1)',
         borderWidth: 1,
         textStyle: { color: '#E2E8F0', fontSize: 12 },
-        formatter: (p: any) => {
-          const v = (p?.value ?? []) as any[]
+        formatter: (p: unknown) => {
+          const item = Array.isArray(p) ? p[0] : p
+          if (!item || typeof item !== 'object') return ''
+          const raw = Reflect.get(item, 'value')
+          const v = Array.isArray(raw) ? raw : []
           const channel = String(v[4] ?? '')
           const metric = String(v[5] ?? '')
           const text = String(v[2] ?? '')
@@ -1172,8 +1409,89 @@
       margin-bottom: 8px;
     }
 
+    .kpi-card-head-main {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .kpi-card-logo {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      overflow: hidden;
+      border-radius: 8px;
+
+      &:not(.is-placeholder) {
+        background: rgb(255 255 255 / 12%);
+      }
+
+      /* 占位默认色；--google 等品牌选择器优先级更高 */
+      &.is-placeholder {
+        color: $color-text-primary;
+        background: rgb(255 255 255 / 10%);
+        border: 1px solid rgb(255 255 255 / 12%);
+      }
+    }
+
+    .kpi-card-logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .kpi-card-logo-fallback {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .kpi-card-logo--google.is-placeholder {
+      color: #4285f4;
+      background: #fff;
+      border-color: rgb(255 255 255 / 25%);
+    }
+
+    .kpi-card-logo--facebook.is-placeholder {
+      font-size: 20px;
+      color: #fff;
+      background: #1877f2;
+      border-color: rgb(255 255 255 / 18%);
+    }
+
+    .kpi-card-logo--tiktok.is-placeholder {
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      background: #010101;
+      border-color: rgb(255 255 255 / 15%);
+    }
+
+    .kpi-card-logo--unity.is-placeholder {
+      font-size: 14px;
+      font-weight: 800;
+      color: #1e1e1e;
+      background: #fff;
+      border-color: rgb(255 255 255 / 25%);
+    }
+
+    .kpi-card-logo--kwai.is-placeholder {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      background: #f97316;
+      border-color: rgb(255 255 255 / 18%);
+    }
+
     .kpi-card-name {
       @include section-title;
+
+      flex: 1;
+      min-width: 0;
     }
 
     .kpi-card-roi {
@@ -1234,7 +1552,7 @@
 
   .row-2 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     min-height: 320px;
   }
 
@@ -1266,6 +1584,126 @@
   .quality-heatmap-dom {
     height: 260px;
     min-height: 200px;
+  }
+
+  .panel-top10 {
+    .top10-table-wrap {
+      max-height: 260px;
+      overflow: auto;
+    }
+
+    :deep(.el-table) {
+      margin-top: 6px;
+      background: transparent;
+    }
+
+    :deep(.el-table__inner-wrapper::before) {
+      height: 0;
+    }
+
+    :deep(.el-table__header thead tr) {
+      background: var(--aps-table-header-gradient);
+    }
+
+    :deep(.el-table th.el-table__cell) {
+      padding: 6px 0;
+      font-size: 12px;
+      color: var(--aps-table-header-text);
+      background: transparent !important;
+      border-bottom: 1px solid var(--aps-table-divider-strong);
+    }
+
+    :deep(.el-table td.el-table__cell) {
+      padding: 6px 0;
+      font-size: 12px;
+      color: $color-text-secondary;
+      background: transparent;
+      border-bottom: 1px solid var(--aps-table-divider-weak);
+    }
+
+    :deep(.el-table__cell .cell) {
+      padding: 0 6px;
+    }
+
+    :deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {
+      background: var(--aps-bg-row-hover);
+    }
+
+    :deep(.el-button.is-link) {
+      padding: 0;
+      font-size: 12px;
+    }
+  }
+
+  .top10-source-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 4px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    color: #fff;
+    border-radius: 4px;
+
+    &--google {
+      background: #4285f4;
+    }
+
+    &--facebook {
+      font-size: 13px;
+      font-weight: 700;
+      background: #1877f2;
+    }
+
+    &--tiktok {
+      background: #010101;
+    }
+
+    &--unity {
+      font-size: 10px;
+      font-weight: 700;
+      background: #1e1e1e;
+    }
+
+    &--kwai {
+      background: #f97316;
+    }
+
+    &--bigo {
+      background: #6366f1;
+    }
+
+    &--meta {
+      background: #8b5cf6;
+    }
+
+    &--applovin {
+      background: #ec4899;
+    }
+  }
+
+  .top10-cpi {
+    font-weight: 600;
+    color: var(--art-warning);
+  }
+
+  .top10-roi {
+    font-weight: 600;
+
+    &.is-good {
+      color: var(--art-success);
+    }
+
+    &.is-mid {
+      color: var(--art-warning);
+    }
+
+    &.is-bad {
+      color: var(--art-danger);
+    }
   }
 
   /* ========== 表格通用（热力图 + 详情表） ========== */
@@ -1341,6 +1779,76 @@
     gap: 4px;
     align-items: center;
     white-space: nowrap;
+  }
+
+  .detail-cell--metric {
+    gap: 8px;
+  }
+
+  .detail-metric-value {
+    min-width: 2.25em;
+  }
+
+  .detail-sparkline {
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 2px;
+    align-items: flex-end;
+    width: 40px;
+    height: 20px;
+    margin-left: 2px;
+    vertical-align: middle;
+
+    &__bar {
+      flex: 1;
+      min-width: 0;
+      min-height: 2px;
+      background: currentcolor;
+      border-radius: 1px;
+    }
+
+    &.is-good {
+      color: var(--art-success);
+    }
+
+    &.is-bad {
+      color: var(--art-danger);
+    }
+  }
+
+  .detail-uq-cell {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .detail-uq-value {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: $color-text-secondary;
+  }
+
+  .detail-uq-cell .arrow {
+    flex-shrink: 0;
+    margin-left: 0;
+  }
+
+  .detail-uq-progress {
+    flex-shrink: 0;
+    width: 48px;
+    margin: 0;
+
+    :deep(.el-progress-bar__outer) {
+      height: 4px;
+      background-color: rgb(255 255 255 / 8%);
+      border-radius: 9999px;
+    }
+
+    :deep(.el-progress-bar__inner) {
+      border-radius: 9999px;
+    }
   }
 
   .mini-bar {

@@ -6,6 +6,7 @@
 export interface ChannelKpiCard {
   id: string
   name: string
+  /** 广告平台 / App 图标 URL；为空则前端显示圆角占位块 */
   logo?: string
   roi: number
   roiChange: number
@@ -174,6 +175,9 @@ export interface ChannelMetricRow {
   roas: number
   cpi: number
   cpiTrendUp: boolean
+  /** 迷你柱图高度（0–1），5 个点；缺省由前端按 channel 生成 */
+  roiSparkline?: number[]
+  cpiSparkline?: number[]
   installs: string
   userQualityD7: number
   userQualityD7TrendUp: boolean
@@ -183,6 +187,103 @@ export interface ChannelMetricRow {
   ltv30: number
   status: ChannelStatus
 }
+
+/** Top10 广告系列（大屏第二排右侧） */
+export interface TopCampaignRow {
+  /** 广告系列名称（展示，对应业务概念 campaign） */
+  campaign: string
+  /** 广告平台展示名（用于筛选联动，与热力图等平台名一致） */
+  channel: string
+  /** 广告平台标识（用于角标样式）：google / facebook / tiktok / unity / kwai / bigo 等 */
+  sourceKey: string
+  /** 花费（美元） */
+  cost: number
+  cpi: number
+  roi: number
+}
+
+export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
+  {
+    campaign: 'IOS_Traffic_New',
+    channel: 'Google',
+    sourceKey: 'google',
+    cost: 7500,
+    cpi: 1.2,
+    roi: 1.4
+  },
+  {
+    campaign: 'IOS_Traffic_New',
+    channel: 'Facebook',
+    sourceKey: 'facebook',
+    cost: 7500,
+    cpi: 1.2,
+    roi: 1.2
+  },
+  {
+    campaign: 'IOS_Traffic_New',
+    channel: 'TikTok',
+    sourceKey: 'tiktok',
+    cost: 7500,
+    cpi: 1.2,
+    roi: 1.35
+  },
+  {
+    campaign: 'IOS_Traffic_New',
+    channel: 'Unity',
+    sourceKey: 'unity',
+    cost: 7500,
+    cpi: 1.2,
+    roi: 0.82
+  },
+  {
+    campaign: 'IOS_Retarget_Core',
+    channel: 'Google',
+    sourceKey: 'google',
+    cost: 6200,
+    cpi: 1.08,
+    roi: 1.52
+  },
+  {
+    campaign: 'Android_UAC_Brand',
+    channel: 'Facebook',
+    sourceKey: 'facebook',
+    cost: 5800,
+    cpi: 1.35,
+    roi: 1.18
+  },
+  {
+    campaign: 'SEA_Launch_Phase1',
+    channel: 'TikTok',
+    sourceKey: 'tiktok',
+    cost: 9100,
+    cpi: 1.45,
+    roi: 1.05
+  },
+  {
+    campaign: 'LATAM_Test_A',
+    channel: 'Kwai',
+    sourceKey: 'kwai',
+    cost: 4200,
+    cpi: 1.55,
+    roi: 0.88
+  },
+  {
+    campaign: 'EU_Search_SKAG',
+    channel: 'Unity',
+    sourceKey: 'unity',
+    cost: 5100,
+    cpi: 1.28,
+    roi: 1.12
+  },
+  {
+    campaign: 'Global_Pangle_Run',
+    channel: 'Bigo',
+    sourceKey: 'bigo',
+    cost: 6800,
+    cpi: 1.42,
+    roi: 0.95
+  }
+]
 
 export const MOCK_CHANNEL_METRICS: ChannelMetricRow[] = [
   {

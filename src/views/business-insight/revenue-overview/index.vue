@@ -124,9 +124,9 @@
       <section class="rev-main">
         <!-- 上排：左 IAA / 中 IAP / 右 7天 IAA vs IAP -->
         <div class="rev-panel rev-panel--iaa">
-          <div class="rev-panel__header">
+          <div class="rev-panel__header rev-panel__header--iaa">
             <div class="rev-panel__title">IAA 广告收入构成分析</div>
-            <div class="rev-tabs">
+            <div class="rev-tabs rev-tabs--iaa">
               <button
                 v-for="t in iaaTabs"
                 :key="t.key"
@@ -140,36 +140,133 @@
             </div>
           </div>
 
-          <div class="rev-iaa-bar">
-            <div class="rev-iaa-bar__track">
-              <div
-                v-for="seg in iaaSegments"
-                :key="seg.key"
-                class="rev-iaa-bar__seg"
-                :style="{ width: `${seg.percent}%`, background: seg.color }"
-              />
-            </div>
-            <div class="rev-iaa-bar__labels">
-              <span v-for="seg in iaaSegments" :key="seg.key" class="rev-iaa-bar__label">
-                <span class="rev-dot" :style="{ background: seg.color }" />
-                {{ seg.label }} {{ seg.percent.toFixed(1) }}%
-              </span>
-            </div>
-          </div>
+          <div class="rev-iaa-main" :class="{ 'rev-iaa-main--stacked': iaaTab === 'ad_type' }">
+            <div class="rev-iaa-viz">
+              <!-- 广告类型 / 广告平台：堆叠条 + 图例 -->
+              <div v-show="iaaTab === 'ad_type' || iaaTab === 'platform'" class="rev-iaa-bar">
+                <div class="rev-iaa-bar__track">
+                  <div
+                    v-for="seg in iaaSegments"
+                    :key="seg.key"
+                    class="rev-iaa-bar__seg"
+                    :style="{ width: `${seg.percent}%`, background: seg.color }"
+                  />
+                </div>
+                <div class="rev-iaa-bar__labels">
+                  <span v-for="seg in iaaSegments" :key="seg.key" class="rev-iaa-bar__label">
+                    <span class="rev-dot" :style="{ background: seg.color }" />
+                    {{ seg.percent.toFixed(1) }}% {{ seg.label }}
+                  </span>
+                </div>
+              </div>
 
-          <div class="rev-table-wrap rev-table-wrap--iaa">
-            <ArtTable
-              class="rev-art-table"
-              :data="iaaRowsWithTotal"
-              :columns="iaaColumns"
-              row-key="s_ad_type_name"
-              :stripe="false"
-              :border="false"
-              size="default"
-              :pagination="undefined"
-              :header-cell-style="iaaHeaderCellStyle"
-              :cell-style="iaaCellStyle"
-            />
+              <!-- 广告位：环形图 -->
+              <div v-show="iaaTab === 'ad_unit'" class="rev-iaa-donut-wrap">
+                <div ref="iaaDonutRef" class="rev-iaa-donut" />
+                <div class="rev-iaa-donut-center">
+                  <div class="rev-iaa-donut-center-val">{{ iaaVizTotalMoney }}</div>
+                </div>
+                <div class="rev-iaa-donut-legend">
+                  <span v-for="seg in iaaSegments" :key="seg.key" class="rev-iaa-bar__label">
+                    <span class="rev-dot" :style="{ background: seg.color }" />
+                    {{ seg.label }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- 国家：横向排名条 -->
+              <div v-show="iaaTab === 'country'" class="rev-iaa-country">
+                <div
+                  v-for="item in iaaCountryBarItems"
+                  :key="item._rowKey"
+                  class="rev-iaa-country-row"
+                  :class="{ 'is-other': item.isOther }"
+                >
+                  <div class="rev-iaa-country-bar-track">
+                    <div class="rev-iaa-country-bar-fill" :style="{ width: `${item.pctWidth}%` }" />
+                  </div>
+                  <div class="rev-iaa-country-meta">
+                    <span
+                      v-if="item.flagClass"
+                      class="fi"
+                      :class="item.flagClass"
+                      aria-hidden="true"
+                    />
+                    <span class="rev-iaa-country-name">{{ item.label }}</span>
+                    <span class="rev-iaa-country-rev">: ${{ formatMoneyInt(item.revenue) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 版本：柱状图 -->
+              <div v-show="iaaTab === 'version'" class="rev-iaa-version-wrap">
+                <div ref="iaaVersionBarRef" class="rev-iaa-version-chart" />
+              </div>
+            </div>
+
+            <div class="rev-table-wrap rev-table-wrap--iaa">
+              <ArtTable
+                class="rev-art-table"
+                :data="iaaRowsWithTotal"
+                :columns="iaaColumns"
+                row-key="_rowKey"
+                :stripe="false"
+                :border="false"
+                size="default"
+                :pagination="undefined"
+                :header-cell-style="iaaHeaderCellStyle"
+                :cell-style="iaaCellStyle"
+                :row-class-name="iaaRowClassName"
+              >
+                <template #s_name="{ row }">
+                  <span
+                    v-if="iaaTab === 'country' && row.s_country_code"
+                    class="rev-iaa-cell-country"
+                  >
+                    <span
+                      v-if="iaaCountryFlagClass(row.s_country_code)"
+                      class="fi"
+                      :class="iaaCountryFlagClass(row.s_country_code)"
+                      aria-hidden="true"
+                    />
+                    {{ row.s_name }}
+                  </span>
+                  <span v-else-if="iaaTab === 'version'" class="rev-iaa-cell-version">
+                    <span :class="{ 'is-current': row.is_current }">{{ row.s_name }}</span>
+                    <span v-if="row.is_current" class="rev-iaa-ver-badge">当前</span>
+                  </span>
+                  <span v-else>{{ row.s_name }}</span>
+                </template>
+                <template #revenue="{ row }">
+                  <span class="rev-iaa-money">{{ iaaFmtRevenue(row) }}</span>
+                </template>
+                <template #d_fill_rate="{ row }">
+                  <span class="rev-iaa-fill">{{ formatFixed(row.d_fill_rate, 1) }}%</span>
+                </template>
+                <template #d_mom_pct="{ row }">
+                  <span v-if="row.s_name === '合计'" class="rev-iaa-mom is-muted">—</span>
+                  <span
+                    v-else
+                    class="rev-iaa-mom"
+                    :class="row.d_mom_pct >= 0 ? 'is-up' : 'is-down'"
+                  >
+                    {{ row.d_mom_pct >= 0 ? '+' : '' }}{{ formatFixed(row.d_mom_pct, 1) }}%
+                    {{ row.d_mom_pct >= 0 ? '↑' : '↓' }}
+                  </span>
+                </template>
+                <template #d_crash_rate="{ row }">
+                  <span
+                    class="rev-iaa-crash"
+                    :class="iaaCrashToneClass(row.d_crash_rate, row.s_name === '合计')"
+                  >
+                    {{ formatFixed(row.d_crash_rate, 2) }}%
+                  </span>
+                </template>
+              </ArtTable>
+              <p v-if="iaaTab === 'version'" class="rev-iaa-version-foot">
+                版本分布反映用户升级进度，v4.2.1 已覆盖 66.5% 用户
+              </p>
+            </div>
           </div>
         </div>
 
@@ -394,6 +491,7 @@
 
 <script setup lang="ts">
   import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+  import 'flag-icons/css/flag-icons.min.css'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
   import type { ColumnOption } from '@/types'
@@ -401,8 +499,13 @@
     MOCK_REVENUE_OVERVIEW_AI_INSIGHT,
     MOCK_REVENUE_OVERVIEW_ECPM_7D,
     MOCK_REVENUE_OVERVIEW_FILTERS,
+    MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS,
+    MOCK_REVENUE_OVERVIEW_IAA_COLORS,
+    MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS,
+    MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS,
     MOCK_REVENUE_OVERVIEW_IAA_ROWS,
     MOCK_REVENUE_OVERVIEW_IAA_TABS,
+    MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS,
     MOCK_REVENUE_OVERVIEW_IAP_ROWS,
     MOCK_REVENUE_OVERVIEW_IAP_TABS,
     MOCK_REVENUE_OVERVIEW_KPIS,
@@ -499,35 +602,249 @@
     return Number.isFinite(v) ? v.toFixed(digits) : '0'
   }
 
+  const IAA_COLORS = [...MOCK_REVENUE_OVERVIEW_IAA_COLORS]
+
+  function iaaWeightedEcpm(rows: { revenue: number; n_impression: number }[]) {
+    const sumR = rows.reduce((a, r) => a + r.revenue, 0)
+    const sumI = rows.reduce((a, r) => a + r.n_impression, 0)
+    return sumI > 0 ? (sumR / sumI) * 1000 : 0
+  }
+
+  function iaaWeightedAvgDisplay(rows: { d_avg_display: number; n_impression: number }[]) {
+    const sumI = rows.reduce((a, r) => a + r.n_impression, 0)
+    if (sumI <= 0) return 0
+    return rows.reduce((a, r) => a + r.d_avg_display * r.n_impression, 0) / sumI
+  }
+
+  function iaaWeightedFillRate(rows: { n_impression: number; d_fill_rate: number }[]) {
+    const sumI = rows.reduce((a, r) => a + r.n_impression, 0)
+    if (sumI <= 0) return 0
+    return rows.reduce((a, r) => a + r.d_fill_rate * r.n_impression, 0) / sumI
+  }
+
+  function iaaWeightedCrash(rows: { n_dau: number; d_crash_rate: number }[]) {
+    const sumD = rows.reduce((a, r) => a + r.n_dau, 0)
+    if (sumD <= 0) return 0
+    return rows.reduce((a, r) => a + r.d_crash_rate * r.n_dau, 0) / sumD
+  }
+
   const iaaSegments = computed(() => {
-    const rows = MOCK_REVENUE_OVERVIEW_IAA_ROWS
-    const colors = ['#20d6b5', '#5ad6ff', '#8b5cf6', '#f59e0b']
-    return rows.map((r, idx) => ({
-      key: r.s_ad_type_name,
-      label: r.s_ad_type_name,
-      percent: r.percent,
-      color: colors[idx % colors.length]
+    const colors = IAA_COLORS
+    const tab = iaaTab.value
+    if (tab === 'ad_type') {
+      return MOCK_REVENUE_OVERVIEW_IAA_ROWS.map((r, idx) => ({
+        key: r.s_ad_type_name,
+        label: r.s_ad_type_name,
+        percent: r.percent,
+        color: colors[idx % colors.length]
+      }))
+    }
+    if (tab === 'platform') {
+      return MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS.map((r, idx) => ({
+        key: r.s_platform_name,
+        label: r.s_platform_name,
+        percent: r.percent,
+        color: colors[idx % colors.length]
+      }))
+    }
+    if (tab === 'ad_unit') {
+      return MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS.map((r, idx) => ({
+        key: r.s_ad_unit_name,
+        label: r.s_ad_unit_name,
+        percent: r.percent,
+        color: colors[idx % colors.length]
+      }))
+    }
+    return []
+  })
+
+  const iaaVizTotalMoney = computed(() => {
+    const tab = iaaTab.value
+    let rows: { revenue: number }[] = []
+    if (tab === 'ad_type') rows = MOCK_REVENUE_OVERVIEW_IAA_ROWS
+    else if (tab === 'platform') rows = MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS
+    else if (tab === 'ad_unit') rows = MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS
+    else if (tab === 'country') rows = MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS
+    else if (tab === 'version') rows = MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS
+    const sum = rows.reduce((a, r) => a + r.revenue, 0)
+    return `$${formatMoneyInt(sum)}`
+  })
+
+  function iaaCountryFlagClass(code: string) {
+    const raw = String(code || '')
+      .trim()
+      .toUpperCase()
+    if (!raw || raw === 'ZZ') return ''
+    const mapped = raw === 'UK' ? 'gb' : raw.toLowerCase()
+    if (!/^[a-z]{2}$/.test(mapped)) return ''
+    return `fi-${mapped}`
+  }
+
+  const iaaCountryBarItems = computed(() => {
+    const rows = MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS
+    const maxRev = Math.max(...rows.map((r) => r.revenue), 1)
+    return rows.map((r) => ({
+      _rowKey: `ct-${r.s_country_code}`,
+      label: r.s_country_name,
+      revenue: r.revenue,
+      pctWidth: (r.revenue / maxRev) * 100,
+      flagClass: iaaCountryFlagClass(r.s_country_code),
+      isOther: r.s_country_code === 'ZZ'
     }))
   })
 
   const iaaRowsWithTotal = computed(() => {
-    const rows = [...MOCK_REVENUE_OVERVIEW_IAA_ROWS]
-    const sumRevenue = rows.reduce((acc, r) => acc + r.revenue, 0)
-    const sumUsers = rows.reduce((acc, r) => acc + r.n_users, 0)
-    const sumImp = rows.reduce((acc, r) => acc + r.n_impression, 0)
-    const avgEcpm = rows.length ? rows.reduce((acc, r) => acc + r.d_ecpm, 0) / rows.length : 0
-    const avgArpdau = rows.length ? rows.reduce((acc, r) => acc + r.d_arpdau, 0) / rows.length : 0
+    const tab = iaaTab.value
+    if (tab === 'ad_type') {
+      const rows = MOCK_REVENUE_OVERVIEW_IAA_ROWS.map((r) => ({
+        _rowKey: `ad_type-${r.s_ad_type_name}`,
+        s_name: r.s_ad_type_name,
+        revenue: r.revenue,
+        percent: r.percent,
+        n_users: r.n_users,
+        n_impression: r.n_impression,
+        d_avg_display: r.d_avg_display,
+        d_avg_revenue: r.d_avg_revenue
+      }))
+      const sumR = rows.reduce((a, r) => a + r.revenue, 0)
+      const sumU = rows.reduce((a, r) => a + r.n_users, 0)
+      const sumI = rows.reduce((a, r) => a + r.n_impression, 0)
+      rows.push({
+        _rowKey: 'ad_type-total',
+        s_name: '合计',
+        revenue: sumR,
+        percent: 100,
+        n_users: sumU,
+        n_impression: sumI,
+        d_avg_display: iaaWeightedAvgDisplay(MOCK_REVENUE_OVERVIEW_IAA_ROWS),
+        d_avg_revenue: sumU > 0 ? sumR / sumU : 0
+      })
+      return rows
+    }
+    if (tab === 'platform') {
+      const rows = MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS.map((r) => ({
+        _rowKey: `pf-${r.s_platform_name}`,
+        s_name: r.s_platform_name,
+        revenue: r.revenue,
+        percent: r.percent,
+        n_impression: r.n_impression,
+        d_ecpm: r.d_ecpm,
+        n_users: r.n_users
+      }))
+      const sumR = rows.reduce((a, r) => a + r.revenue, 0)
+      const sumU = rows.reduce((a, r) => a + r.n_users, 0)
+      const sumI = rows.reduce((a, r) => a + r.n_impression, 0)
+      rows.push({
+        _rowKey: 'pf-total',
+        s_name: '合计',
+        revenue: sumR,
+        percent: 100,
+        n_impression: sumI,
+        d_ecpm: iaaWeightedEcpm(MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS),
+        n_users: sumU
+      })
+      return rows
+    }
+    if (tab === 'ad_unit') {
+      const rows = MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS.map((r) => ({
+        _rowKey: `unit-${r.s_ad_unit_name}`,
+        s_name: r.s_ad_unit_name,
+        revenue: r.revenue,
+        percent: r.percent,
+        n_impression: r.n_impression,
+        d_ecpm: r.d_ecpm,
+        d_fill_rate: r.d_fill_rate,
+        n_users: r.n_users
+      }))
+      const sumR = rows.reduce((a, r) => a + r.revenue, 0)
+      const sumU = rows.reduce((a, r) => a + r.n_users, 0)
+      const sumI = rows.reduce((a, r) => a + r.n_impression, 0)
+      rows.push({
+        _rowKey: 'unit-total',
+        s_name: '合计',
+        revenue: sumR,
+        percent: 100,
+        n_impression: sumI,
+        d_ecpm: iaaWeightedEcpm(MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS),
+        d_fill_rate: iaaWeightedFillRate(MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS),
+        n_users: sumU
+      })
+      return rows
+    }
+    if (tab === 'country') {
+      const rows = MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS.map((r) => ({
+        _rowKey: `ct-${r.s_country_code}`,
+        s_name: r.s_country_name,
+        s_country_code: r.s_country_code,
+        revenue: r.revenue,
+        percent: r.percent,
+        n_impression: r.n_impression,
+        d_ecpm: r.d_ecpm,
+        n_users: r.n_users,
+        d_mom_pct: r.d_mom_pct
+      }))
+      const sumR = rows.reduce((a, r) => a + r.revenue, 0)
+      const sumU = rows.reduce((a, r) => a + r.n_users, 0)
+      const sumI = rows.reduce((a, r) => a + r.n_impression, 0)
+      rows.push({
+        _rowKey: 'ct-total',
+        s_name: '合计',
+        s_country_code: '',
+        revenue: sumR,
+        percent: 100,
+        n_impression: sumI,
+        d_ecpm: iaaWeightedEcpm(MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS),
+        n_users: sumU,
+        d_mom_pct: 0
+      })
+      return rows
+    }
+    const rows = MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS.map((r) => ({
+      _rowKey: `ver-${r.s_app_version}`,
+      s_name: r.s_app_version,
+      revenue: r.revenue,
+      percent: r.percent,
+      n_impression: r.n_impression,
+      d_ecpm: r.d_ecpm,
+      n_users: r.n_dau,
+      n_dau: r.n_dau,
+      d_crash_rate: r.d_crash_rate,
+      is_current: r.is_current
+    }))
+    const sumR = rows.reduce((a, r) => a + r.revenue, 0)
+    const sumDau = rows.reduce((a, r) => a + r.n_dau, 0)
+    const sumI = rows.reduce((a, r) => a + r.n_impression, 0)
     rows.push({
-      s_ad_type_name: '合计',
-      revenue: sumRevenue,
+      _rowKey: 'ver-total',
+      s_name: '合计',
+      revenue: sumR,
       percent: 100,
-      n_users: sumUsers,
-      n_impression: sumImp,
-      d_ecpm: avgEcpm,
-      d_arpdau: avgArpdau
+      n_impression: sumI,
+      d_ecpm: iaaWeightedEcpm(MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS),
+      n_users: sumDau,
+      n_dau: sumDau,
+      d_crash_rate: iaaWeightedCrash(MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS),
+      is_current: false
     })
     return rows
   })
+
+  function iaaFmtRevenue(row: { revenue: number; s_name?: string }) {
+    return `$${formatMoneyInt(row.revenue)}`
+  }
+
+  function iaaCrashToneClass(rate: number, isTotal: boolean) {
+    if (isTotal) return 'is-neutral'
+    if (rate <= 0.2) return 'is-good'
+    if (rate <= 0.5) return 'is-warn'
+    return 'is-bad'
+  }
+
+  function iaaRowClassName({ row }: { row: { s_name?: string; is_current?: boolean } }) {
+    if (row.s_name === '合计') return 'is-iaa-total'
+    if (row.is_current) return 'is-iaa-current'
+    return ''
+  }
 
   const iapRowsWithTotal = computed(() => {
     const rows = [...MOCK_REVENUE_OVERVIEW_IAP_ROWS]
@@ -566,45 +883,177 @@
     borderBottom: '1px solid var(--rev-border-soft)'
   } as const
 
-  const iaaColumns = computed<ColumnOption[]>(() => [
-    { label: '广告类型', prop: 's_ad_type_name', minWidth: 100 },
-    {
-      label: '收入',
-      prop: 'revenue',
-      minWidth: 88,
-      formatter: (row: any) => `$${formatMoneyInt(row.revenue)}`
-    },
-    {
-      label: '占比',
-      prop: 'percent',
-      minWidth: 70,
-      formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
-    },
-    {
-      label: '广告用户',
-      prop: 'n_users',
-      minWidth: 90,
-      formatter: (row: any) => formatInt(row.n_users)
-    },
-    {
-      label: '展示次数',
-      prop: 'n_impression',
-      minWidth: 90,
-      formatter: (row: any) => formatInt(row.n_impression)
-    },
-    {
-      label: '平均展示',
-      prop: 'd_ecpm',
-      minWidth: 80,
-      formatter: (row: any) => formatFixed(row.d_ecpm, 1)
-    },
-    {
-      label: '平均 eCPM',
-      prop: 'd_arpdau',
-      minWidth: 88,
-      formatter: (row: any) => `$${formatFixed(row.d_arpdau, 3)}`
+  const iaaColumns = computed<ColumnOption[]>(() => {
+    const tab = iaaTab.value
+    const dimLabel =
+      tab === 'ad_type'
+        ? '广告类型'
+        : tab === 'platform'
+          ? '广告平台'
+          : tab === 'ad_unit'
+            ? '广告位'
+            : tab === 'country'
+              ? '国家'
+              : '版本'
+
+    const baseDim: ColumnOption = { label: dimLabel, prop: 's_name', minWidth: 100, useSlot: true }
+
+    if (tab === 'ad_type') {
+      return [
+        baseDim,
+        { label: '收入', prop: 'revenue', minWidth: 72, useSlot: true },
+        {
+          label: '占比',
+          prop: 'percent',
+          minWidth: 64,
+          formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
+        },
+        {
+          label: '广告用户',
+          prop: 'n_users',
+          minWidth: 84,
+          formatter: (row: any) => formatInt(row.n_users)
+        },
+        {
+          label: '展示次数',
+          prop: 'n_impression',
+          minWidth: 84,
+          formatter: (row: any) => formatInt(row.n_impression)
+        },
+        {
+          label: '平均展示',
+          prop: 'd_avg_display',
+          minWidth: 80,
+          formatter: (row: any) => formatFixed(row.d_avg_display, 1)
+        },
+        {
+          label: '平均收入',
+          prop: 'd_avg_revenue',
+          minWidth: 88,
+          formatter: (row: any) => `$${formatFixed(row.d_avg_revenue, 3)}`
+        }
+      ]
     }
-  ])
+
+    if (tab === 'platform') {
+      return [
+        baseDim,
+        { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true },
+        {
+          label: '占比',
+          prop: 'percent',
+          minWidth: 64,
+          formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
+        },
+        {
+          label: '展示数',
+          prop: 'n_impression',
+          minWidth: 84,
+          formatter: (row: any) => formatInt(row.n_impression)
+        },
+        {
+          label: '平均 eCPM',
+          prop: 'd_ecpm',
+          minWidth: 88,
+          formatter: (row: any) => `$${formatFixed(row.d_ecpm, 2)}`
+        },
+        {
+          label: '广告用户',
+          prop: 'n_users',
+          minWidth: 84,
+          formatter: (row: any) => formatInt(row.n_users)
+        }
+      ]
+    }
+
+    if (tab === 'ad_unit') {
+      return [
+        baseDim,
+        { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true },
+        {
+          label: '展示数',
+          prop: 'n_impression',
+          minWidth: 84,
+          formatter: (row: any) => formatInt(row.n_impression)
+        },
+        {
+          label: '平均 eCPM',
+          prop: 'd_ecpm',
+          minWidth: 88,
+          formatter: (row: any) => `$${formatFixed(row.d_ecpm, 2)}`
+        },
+        { label: '填充率', prop: 'd_fill_rate', minWidth: 72, useSlot: true },
+        {
+          label: '广告用户',
+          prop: 'n_users',
+          minWidth: 84,
+          formatter: (row: any) => formatInt(row.n_users)
+        }
+      ]
+    }
+
+    if (tab === 'country') {
+      return [
+        baseDim,
+        { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true },
+        {
+          label: '占比',
+          prop: 'percent',
+          minWidth: 64,
+          formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
+        },
+        {
+          label: '展示数',
+          prop: 'n_impression',
+          minWidth: 84,
+          formatter: (row: any) => formatInt(row.n_impression)
+        },
+        {
+          label: '平均 eCPM',
+          prop: 'd_ecpm',
+          minWidth: 88,
+          formatter: (row: any) => `$${formatFixed(row.d_ecpm, 2)}`
+        },
+        {
+          label: '广告用户',
+          prop: 'n_users',
+          minWidth: 84,
+          formatter: (row: any) => formatInt(row.n_users)
+        },
+        { label: '环比', prop: 'd_mom_pct', minWidth: 92, useSlot: true }
+      ]
+    }
+
+    return [
+      baseDim,
+      { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true },
+      {
+        label: '占比',
+        prop: 'percent',
+        minWidth: 64,
+        formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
+      },
+      {
+        label: '展示数',
+        prop: 'n_impression',
+        minWidth: 84,
+        formatter: (row: any) => formatInt(row.n_impression)
+      },
+      {
+        label: '平均 eCPM',
+        prop: 'd_ecpm',
+        minWidth: 88,
+        formatter: (row: any) => `$${formatFixed(row.d_ecpm, 2)}`
+      },
+      {
+        label: 'DAU',
+        prop: 'n_dau',
+        minWidth: 80,
+        formatter: (row: any) => formatInt(row.n_dau)
+      },
+      { label: '崩溃率', prop: 'd_crash_rate', minWidth: 80, useSlot: true }
+    ]
+  })
 
   const iapHeaderCellStyle = {
     color: 'var(--rev-muted)',
@@ -765,14 +1214,20 @@
     }
   }
 
-  // --- 图表：趋势 / 饼图 / eCPM ---
+  // --- 图表：趋势 / 饼图 / eCPM / IAA 构成 ---
   const trend7dRef = ref<HTMLElement>()
   const pieRef = ref<HTMLElement>()
   const ecpmRef = ref<HTMLElement>()
+  const iaaDonutRef = ref<HTMLElement>()
+  const iaaVersionBarRef = ref<HTMLElement>()
 
   const chartTrend7d = useChart({ autoTheme: true })
   const chartPie = useChart({ autoTheme: true })
   const chartEcpm = useChart({ autoTheme: true })
+  const chartIaaDonut = useChart({ autoTheme: true })
+  const chartIaaVersion = useChart({ autoTheme: true })
+  const iaaDonutInited = ref(false)
+  const iaaVersionInited = ref(false)
 
   function buildTrend7dOption(): EChartsOption {
     const el = trend7dRef.value ?? null
@@ -939,6 +1394,110 @@
     }
   }
 
+  function buildIaaDonutOption(): EChartsOption {
+    const rows = MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS
+    const colors = IAA_COLORS
+    return {
+      tooltip: chartIaaDonut.getTooltipStyle('item', {
+        formatter: (p: any) => {
+          const name = p?.name ?? ''
+          const v = Number(p?.value ?? 0)
+          return `${name}<br/>$${formatMoneyInt(v)}`
+        }
+      }),
+      series: [
+        {
+          type: 'pie',
+          radius: ['56%', '80%'],
+          center: ['50%', '50%'],
+          avoidLabelOverlap: true,
+          label: { show: false },
+          labelLine: { show: false },
+          data: rows.map((r, i) => ({
+            name: r.s_ad_unit_name,
+            value: r.revenue,
+            itemStyle: { color: colors[i % colors.length] }
+          }))
+        }
+      ]
+    }
+  }
+
+  function buildIaaVersionBarOption(): EChartsOption {
+    const el = iaaVersionBarRef.value ?? null
+    const axis = getVar(el, '--rev-chart-axis', '#94a3b8')
+    const split = getVar(el, '--rev-chart-split', 'rgba(255,255,255,0.08)')
+    const teal = getVar(el, '--rev-c-teal', '#20d6b5')
+    const rows = MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS
+    return {
+      tooltip: chartIaaVersion.getTooltipStyle('axis'),
+      grid: { left: 36, right: 10, top: 22, bottom: 30, containLabel: true },
+      xAxis: {
+        type: 'category',
+        data: rows.map((r) => r.s_app_version),
+        axisLine: { lineStyle: { color: axis } },
+        axisLabel: { color: axis, fontSize: 10 },
+        axisTick: { show: false }
+      },
+      yAxis: {
+        type: 'value',
+        name: 'USD',
+        nameTextStyle: { color: axis, fontSize: 10 },
+        axisLine: { show: false },
+        axisLabel: { color: axis, fontSize: 10 },
+        splitLine: { lineStyle: { color: split } }
+      },
+      series: [
+        {
+          type: 'bar',
+          data: rows.map((r) => r.revenue),
+          barWidth: 22,
+          itemStyle: {
+            color: new graphic.LinearGradient(0, 0, 1, 0, [
+              { offset: 0, color: teal },
+              { offset: 1, color: 'rgba(32,214,181,0.25)' }
+            ])
+          },
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 12,
+              shadowColor: 'rgba(32,214,181,0.45)'
+            }
+          },
+          label: {
+            show: true,
+            position: 'top',
+            color: axis,
+            fontSize: 10,
+            formatter: (p: any) => `$${formatMoneyInt(Number(p.value))}`
+          }
+        }
+      ]
+    }
+  }
+
+  async function syncIaaCharts() {
+    await nextTick()
+    if (iaaTab.value === 'ad_unit' && iaaDonutRef.value) {
+      chartIaaDonut.chartRef!.value = iaaDonutRef.value
+      if (!iaaDonutInited.value) {
+        chartIaaDonut.initChart(buildIaaDonutOption())
+        iaaDonutInited.value = true
+      } else {
+        chartIaaDonut.updateChart(buildIaaDonutOption())
+      }
+    }
+    if (iaaTab.value === 'version' && iaaVersionBarRef.value) {
+      chartIaaVersion.chartRef!.value = iaaVersionBarRef.value
+      if (!iaaVersionInited.value) {
+        chartIaaVersion.initChart(buildIaaVersionBarOption())
+        iaaVersionInited.value = true
+      } else {
+        chartIaaVersion.updateChart(buildIaaVersionBarOption())
+      }
+    }
+  }
+
   function onExport() {
     // Mock 页面：仅模拟交互
     // 后端接入后在 api 层实现导出
@@ -983,6 +1542,7 @@
       chartPie.chartRef!.value = pieRef.value
       chartPie.initChart(buildPieOption())
     }
+    await syncIaaCharts()
   }
 
   onMounted(() => {
@@ -1008,6 +1568,7 @@
       chartTrend7d.updateChart(buildTrend7dOption())
       chartEcpm.updateChart(buildEcpmOption())
       chartPie.updateChart(buildPieOption())
+      void syncIaaCharts()
       kpis.value.forEach((k) => {
         const dom = sparkRefs.value[k.id]
         const chart = sparkCharts.get(k.id)
@@ -1029,6 +1590,10 @@
     }
   )
 
+  watch(iaaTab, () => {
+    void syncIaaCharts()
+  })
+
   onUnmounted(() => {
     if (resizeObserver && rootRef.value) {
       resizeObserver.unobserve(rootRef.value)
@@ -1039,6 +1604,8 @@
     chartTrend7d.destroyChart?.()
     chartEcpm.destroyChart?.()
     chartPie.destroyChart?.()
+    chartIaaDonut.destroyChart?.()
+    chartIaaVersion.destroyChart?.()
   })
 </script>
 
@@ -1278,15 +1845,270 @@
     overflow: hidden;
   }
 
-  .rev-panel--iaa .rev-panel__header,
-  .rev-panel--iaa .rev-iaa-bar {
+  .rev-panel--iaa .rev-panel__header--iaa {
     flex: 0 0 auto;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-bottom: 6px;
+  }
+
+  .rev-tabs--iaa {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .rev-iaa-main {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(0, 40%) minmax(0, 60%);
+    gap: 12px;
+    align-items: stretch;
+    min-height: 0;
+    padding: 0 12px 12px;
+  }
+
+  /* 广告平台 / 广告位 / 国家 / 版本：左图右表对称，左 40% 右 60% */
+  .rev-iaa-main:not(.rev-iaa-main--stacked) .rev-iaa-viz {
+    box-sizing: border-box;
+    min-height: 0;
+    padding: 10px 12px 12px;
+    background: rgb(255 255 255 / 5%);
+    border: 1px solid var(--rev-border-soft);
+    border-radius: 10px;
+  }
+
+  .rev-iaa-main:not(.rev-iaa-main--stacked) .rev-table-wrap--iaa {
+    box-sizing: border-box;
+    min-height: 0;
+    padding: 0;
+    background: rgb(0 0 0 / 18%);
+    border: 1px solid var(--rev-border-soft);
+    border-radius: 10px;
+  }
+
+  .rev-iaa-main:not(.rev-iaa-main--stacked) .rev-iaa-version-wrap {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .rev-iaa-main:not(.rev-iaa-main--stacked) .rev-iaa-version-chart {
+    height: 100%;
+    min-height: 200px;
+  }
+
+  .rev-iaa-main:not(.rev-iaa-main--stacked) .rev-iaa-country {
+    flex: 1;
+    align-self: stretch;
+    width: 100%;
+    min-height: 0;
+  }
+
+  :global(html:not(.dark) .rev-iaa-main:not(.rev-iaa-main--stacked) .rev-iaa-viz) {
+    background: rgb(15 23 42 / 5%);
+  }
+
+  :global(html:not(.dark) .rev-iaa-main:not(.rev-iaa-main--stacked) .rev-table-wrap--iaa) {
+    background: rgb(255 255 255 / 72%);
+  }
+
+  /* 广告类型：比例条全宽在上，表格全宽在下 */
+  .rev-iaa-main--stacked {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .rev-iaa-main--stacked .rev-iaa-viz {
+    flex: 0 0 auto;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .rev-iaa-main--stacked .rev-table-wrap--iaa {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .rev-iaa-viz {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  .rev-iaa-donut-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 200px;
+  }
+
+  .rev-iaa-donut {
+    height: 200px;
+  }
+
+  .rev-iaa-donut-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    text-align: center;
+    pointer-events: none;
+    transform: translate(-50%, -52%);
+  }
+
+  .rev-iaa-donut-center-val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--rev-c-teal);
+  }
+
+  .rev-iaa-donut-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    justify-content: center;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--rev-muted);
+  }
+
+  .rev-iaa-country {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 100%;
+    padding: 4px 0;
+    overflow: auto;
+  }
+
+  .rev-iaa-country-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .rev-iaa-country-row.is-other .rev-iaa-country-bar-fill {
+    opacity: 0.88;
+  }
+
+  .rev-iaa-country-bar-track {
+    height: 8px;
+    overflow: hidden;
+    background: rgb(0 0 0 / 35%);
+    border-radius: 999px;
+  }
+
+  .rev-iaa-country-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #20d6b5, #22c55e);
+    border-radius: 999px;
+  }
+
+  .rev-iaa-country-meta {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 11px;
+    color: var(--rev-muted);
+  }
+
+  .rev-iaa-country-name {
+    color: var(--rev-text);
+  }
+
+  .rev-iaa-country-rev {
+    margin-left: auto;
+    font-weight: 700;
+    color: var(--rev-c-teal);
+  }
+
+  .rev-iaa-version-wrap {
+    flex: 1;
+    min-height: 210px;
+  }
+
+  .rev-iaa-version-chart {
+    height: 210px;
+  }
+
+  .rev-iaa-version-foot {
+    margin: 8px 0 0;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--rev-muted);
+    text-align: right;
+  }
+
+  .rev-iaa-money {
+    font-weight: 700;
+    color: var(--rev-c-teal);
+  }
+
+  .rev-iaa-fill {
+    font-weight: 600;
+    color: var(--rev-c-amber);
+  }
+
+  .rev-iaa-mom.is-up {
+    color: var(--rev-c-green);
+  }
+
+  .rev-iaa-mom.is-down {
+    color: #ef4444;
+  }
+
+  .rev-iaa-mom.is-muted {
+    color: var(--rev-muted);
+  }
+
+  .rev-iaa-crash.is-good {
+    color: var(--rev-c-teal);
+  }
+
+  .rev-iaa-crash.is-warn {
+    color: var(--rev-c-amber);
+  }
+
+  .rev-iaa-crash.is-bad {
+    color: #ef4444;
+  }
+
+  .rev-iaa-crash.is-neutral {
+    color: var(--rev-text);
+  }
+
+  .rev-iaa-ver-badge {
+    display: inline-block;
+    padding: 0 6px;
+    margin-left: 6px;
+    font-size: 10px;
+    line-height: 18px;
+    color: var(--rev-c-teal);
+    border: 1px solid rgb(32 214 181 / 35%);
+    border-radius: 999px;
+  }
+
+  .rev-iaa-cell-version .is-current {
+    font-weight: 700;
+    color: var(--rev-c-teal);
+  }
+
+  .rev-panel--iaa :deep(tr.is-iaa-total td) {
+    font-weight: 800;
+    border-top: 1px solid rgb(148 163 184 / 28%);
+  }
+
+  .rev-panel--iaa :deep(tr.is-iaa-current td) {
+    background: rgb(32 214 181 / 8%);
   }
 
   .rev-table-wrap--iaa {
-    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
     min-height: 0;
-    padding-bottom: 12px;
+    padding: 0;
     overflow: hidden;
   }
 
@@ -1505,8 +2327,8 @@
     height: 170px;
   }
 
-  .rev-iaa-bar {
-    padding: 0 12px 10px;
+  .rev-panel--iaa .rev-iaa-bar {
+    padding: 0 0 10px;
   }
 
   .rev-iaa-bar__track {
@@ -1537,6 +2359,10 @@
 
   .rev-table-wrap {
     padding: 0 12px 12px;
+  }
+
+  .rev-table-wrap.rev-table-wrap--iaa {
+    padding: 0;
   }
 
   .rev-table {

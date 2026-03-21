@@ -31,8 +31,56 @@ export type RevenueOverviewIaaBreakdownRow = {
   percent: number
   n_users: number
   n_impression: number
+  /** 平均展示 */
+  d_avg_display: number
+  /** 平均收入（USD） */
+  d_avg_revenue: number
+}
+
+/** IAA 构成：广告平台维度 */
+export type RevenueOverviewIaaPlatformRow = {
+  s_platform_name: string
+  revenue: number
+  percent: number
+  n_impression: number
   d_ecpm: number
-  d_arpdau: number
+  n_users: number
+}
+
+/** IAA 构成：广告位维度 */
+export type RevenueOverviewIaaAdUnitRow = {
+  s_ad_unit_name: string
+  revenue: number
+  percent: number
+  n_impression: number
+  d_ecpm: number
+  d_fill_rate: number
+  n_users: number
+}
+
+/** IAA 构成：国家维度 */
+export type RevenueOverviewIaaCountryRow = {
+  s_country_code: string
+  s_country_name: string
+  revenue: number
+  percent: number
+  n_impression: number
+  d_ecpm: number
+  n_users: number
+  /** 环比（%），正为增长 */
+  d_mom_pct: number
+}
+
+/** IAA 构成：版本维度 */
+export type RevenueOverviewIaaVersionRow = {
+  s_app_version: string
+  revenue: number
+  percent: number
+  n_impression: number
+  d_ecpm: number
+  n_dau: number
+  d_crash_rate: number
+  is_current: boolean
 }
 
 export type RevenueOverviewIapBreakdownRow = {
@@ -176,40 +224,285 @@ export const MOCK_REVENUE_OVERVIEW_IAA_TABS = [
 
 export const MOCK_REVENUE_OVERVIEW_IAA_ROWS: RevenueOverviewIaaBreakdownRow[] = [
   {
-    s_ad_type_name: '插屏广告',
+    s_ad_type_name: '插屏式广告',
     revenue: 2014,
     percent: 72.8,
     n_users: 61587,
     n_impression: 102551,
-    d_ecpm: 1.7,
-    d_arpdau: 0.033
+    d_avg_display: 1.7,
+    d_avg_revenue: 0.033
   },
   {
     s_ad_type_name: '原生广告',
     revenue: 484,
     percent: 17.5,
-    n_users: 8891,
+    n_users: 88891,
     n_impression: 275249,
-    d_ecpm: 3.1,
-    d_arpdau: 0.005
+    d_avg_display: 3.1,
+    d_avg_revenue: 0.005
   },
   {
     s_ad_type_name: '横幅广告',
     revenue: 191,
     percent: 6.9,
-    n_users: 9582,
+    n_users: 99582,
     n_impression: 405545,
-    d_ecpm: 4.1,
-    d_arpdau: 0.002
+    d_avg_display: 4.1,
+    d_avg_revenue: 0.002
   },
   {
     s_ad_type_name: '开屏广告',
     revenue: 79,
-    percent: 2.9,
+    percent: 2.8,
     n_users: 38044,
     n_impression: 50262,
-    d_ecpm: 1.3,
-    d_arpdau: 0.002
+    d_avg_display: 1.3,
+    d_avg_revenue: 0.002
+  }
+]
+
+/** IAA 构成分析：调色板（堆叠条 / 环形图 / 图例复用） */
+export const MOCK_REVENUE_OVERVIEW_IAA_COLORS = [
+  '#20d6b5',
+  '#38bdf8',
+  '#8b5cf6',
+  '#f59e0b',
+  '#22c55e',
+  '#ec4899',
+  '#94a3b8'
+] as const
+
+export const MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS: RevenueOverviewIaaPlatformRow[] = [
+  {
+    s_platform_name: 'AdMob',
+    revenue: 1985,
+    percent: 71.7,
+    n_impression: 308742,
+    d_ecpm: 6.43,
+    n_users: 45210
+  },
+  {
+    s_platform_name: 'AppLovin',
+    revenue: 257,
+    percent: 9.3,
+    n_impression: 102400,
+    d_ecpm: 2.51,
+    n_users: 18420
+  },
+  {
+    s_platform_name: 'Facebook',
+    revenue: 166,
+    percent: 6.0,
+    n_impression: 88500,
+    d_ecpm: 1.88,
+    n_users: 12200
+  },
+  {
+    s_platform_name: 'Aumob',
+    revenue: 102,
+    percent: 3.7,
+    n_impression: 41200,
+    d_ecpm: 2.48,
+    n_users: 9100
+  },
+  {
+    s_platform_name: 'Vungle',
+    revenue: 102,
+    percent: 3.7,
+    n_impression: 39800,
+    d_ecpm: 2.56,
+    n_users: 8800
+  },
+  {
+    s_platform_name: 'Pangle',
+    revenue: 86,
+    percent: 3.1,
+    n_impression: 35600,
+    d_ecpm: 2.42,
+    n_users: 7600
+  },
+  {
+    s_platform_name: 'Other',
+    revenue: 70,
+    percent: 2.5,
+    n_impression: 24365,
+    d_ecpm: 2.87,
+    n_users: 6153
+  }
+]
+
+export const MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS: RevenueOverviewIaaAdUnitRow[] = [
+  {
+    s_ad_unit_name: '插屏广告',
+    revenue: 2014,
+    percent: 72.8,
+    n_impression: 102551,
+    d_ecpm: 19.64,
+    d_fill_rate: 94.2,
+    n_users: 61587
+  },
+  {
+    s_ad_unit_name: '原生广告',
+    revenue: 484,
+    percent: 17.5,
+    n_impression: 275249,
+    d_ecpm: 1.76,
+    d_fill_rate: 96.8,
+    n_users: 8891
+  },
+  {
+    s_ad_unit_name: '横幅广告',
+    revenue: 191,
+    percent: 6.9,
+    n_impression: 405545,
+    d_ecpm: 0.47,
+    d_fill_rate: 98.7,
+    n_users: 9582
+  },
+  {
+    s_ad_unit_name: '开屏广告',
+    revenue: 79,
+    percent: 2.8,
+    n_impression: 50262,
+    d_ecpm: 1.57,
+    d_fill_rate: 91.3,
+    n_users: 38044
+  }
+]
+
+export const MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS: RevenueOverviewIaaCountryRow[] = [
+  {
+    s_country_code: 'US',
+    s_country_name: '美国',
+    revenue: 1026,
+    percent: 37.1,
+    n_impression: 308742,
+    d_ecpm: 3.32,
+    n_users: 43521,
+    d_mom_pct: 5.2
+  },
+  {
+    s_country_code: 'KR',
+    s_country_name: '韩国',
+    revenue: 412,
+    percent: 14.9,
+    n_impression: 124500,
+    d_ecpm: 3.31,
+    n_users: 18200,
+    d_mom_pct: 2.1
+  },
+  {
+    s_country_code: 'DE',
+    s_country_name: '德国',
+    revenue: 318,
+    percent: 11.5,
+    n_impression: 96500,
+    d_ecpm: 3.29,
+    n_users: 14100,
+    d_mom_pct: -0.8
+  },
+  {
+    s_country_code: 'TW',
+    s_country_name: '台湾',
+    revenue: 265,
+    percent: 9.6,
+    n_impression: 80200,
+    d_ecpm: 3.3,
+    n_users: 11800,
+    d_mom_pct: 1.4
+  },
+  {
+    s_country_code: 'JP',
+    s_country_name: '日本',
+    revenue: 241,
+    percent: 8.7,
+    n_impression: 73100,
+    d_ecpm: 3.3,
+    n_users: 10600,
+    d_mom_pct: -1.3
+  },
+  {
+    s_country_code: 'GB',
+    s_country_name: '英国',
+    revenue: 198,
+    percent: 7.2,
+    n_impression: 59800,
+    d_ecpm: 3.31,
+    n_users: 8900,
+    d_mom_pct: 0.6
+  },
+  {
+    s_country_code: 'AU',
+    s_country_name: '澳大利亚',
+    revenue: 173,
+    percent: 6.2,
+    n_impression: 52100,
+    d_ecpm: 3.32,
+    n_users: 7600,
+    d_mom_pct: 3.0
+  },
+  {
+    s_country_code: 'ZZ',
+    s_country_name: 'Other',
+    revenue: 135,
+    percent: 4.8,
+    n_impression: 40665,
+    d_ecpm: 3.32,
+    n_users: 6162,
+    d_mom_pct: 0.4
+  }
+]
+
+export const MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS: RevenueOverviewIaaVersionRow[] = [
+  {
+    s_app_version: 'v4.2.1',
+    revenue: 1842,
+    percent: 66.5,
+    n_impression: 554551,
+    d_ecpm: 3.32,
+    n_dau: 78142,
+    d_crash_rate: 0.12,
+    is_current: true
+  },
+  {
+    s_app_version: 'v4.2.0',
+    revenue: 654,
+    percent: 23.6,
+    n_impression: 196931,
+    d_ecpm: 3.32,
+    n_dau: 27782,
+    d_crash_rate: 0.18,
+    is_current: false
+  },
+  {
+    s_app_version: 'v4.1.9',
+    revenue: 187,
+    percent: 6.8,
+    n_impression: 56285,
+    d_ecpm: 3.32,
+    n_dau: 7954,
+    d_crash_rate: 0.31,
+    is_current: false
+  },
+  {
+    s_app_version: 'v4.1.8',
+    revenue: 65,
+    percent: 2.3,
+    n_impression: 19573,
+    d_ecpm: 3.32,
+    n_dau: 2767,
+    d_crash_rate: 0.45,
+    is_current: false
+  },
+  {
+    s_app_version: 'v4.1.7',
+    revenue: 20,
+    percent: 0.8,
+    n_impression: 6267,
+    d_ecpm: 3.32,
+    n_dau: 838,
+    d_crash_rate: 0.67,
+    is_current: false
   }
 ]
 

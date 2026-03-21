@@ -59,8 +59,8 @@ export interface ColumnOption<T = any> {
   minWidth?: string | number
   // 固定列
   fixed?: boolean | 'left' | 'right'
-  // 是否可排序
-  sortable?: boolean
+  // 是否可排序（与 ElTableColumn `sortable` 一致，含自定义排序 `custom`）
+  sortable?: boolean | 'custom'
   // 过滤器选项
   filters?: any[]
   // 过滤方法
