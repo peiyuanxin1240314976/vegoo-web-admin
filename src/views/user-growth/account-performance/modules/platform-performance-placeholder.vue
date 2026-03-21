@@ -146,6 +146,7 @@
         :page-sizes="pageSizes"
         layout="prev, pager, next, sizes"
         small
+        background
         class="ap-platform-pagination"
       />
     </div>

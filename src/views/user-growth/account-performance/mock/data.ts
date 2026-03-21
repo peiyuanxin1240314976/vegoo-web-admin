@@ -243,29 +243,8 @@ export const MOCK_ACCOUNT_PERFORMANCE: AccountPerformanceMock = {
     { date: '3/4', roi: 108 }
   ],
 
-  alerts: [
-    {
-      id: 'a1',
-      type: 'low_roi',
-      title: '超预算',
-      desc: 'PhoneTracker3 首日ROI仅 64%,建议暂停投放。',
-      targetName: 'PhoneTracker3'
-    },
-    {
-      id: 'a2',
-      type: 'low_usage',
-      title: '预算使用率低',
-      desc: 'VideoDownloader3 预算使用率 34.7%,远低于目标。',
-      targetName: 'VideoDownloader3'
-    },
-    {
-      id: 'a3',
-      type: 'roi_drop',
-      title: 'ROI异常下滑',
-      desc: 'BV_ZL_PT_04 账户3日ROI 74%,异常下滑。',
-      targetName: 'BV_ZL_PT_04'
-    }
-  ],
+  /** 预警事项：待真实接口联调后再补示例；当前保持空数组 */
+  alerts: [],
 
   spendPace7Days: [
     { date: '2/26', value: 180 },

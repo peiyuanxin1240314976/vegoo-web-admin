@@ -152,6 +152,7 @@
         :page-sizes="[10, 20, 50]"
         layout="prev, pager, next, sizes"
         small
+        background
         class="ap-pagination"
       />
     </div>

@@ -23,6 +23,7 @@
                 <Iphone />
               </ElIcon>
               <span
+                class="ap-name-text"
                 :class="row.type === 'account' ? 'ap-cell-account' : ''"
                 :style="getNameStyle(row)"
               >
@@ -32,7 +33,7 @@
           </template>
         </ElTableColumn>
 
-        <ElTableColumn label="广告支出" width="100" align="center" show-overflow-tooltip>
+        <ElTableColumn label="广告支出" width="100" align="left" show-overflow-tooltip>
           <template #default="{ row }">{{ formatMoney(row.spend) }}</template>
         </ElTableColumn>
 
@@ -191,13 +192,27 @@
     -webkit-overflow-scrolling: touch;
 
     :deep(.el-table) {
-      min-width: 960px;
+      /* 与列宽合计大致一致，避免首列被压成仅显示省略号 */
+      min-width: 1120px;
     }
   }
 
   .ap-detail-table {
     --el-table-border-color: var(--el-border-color-lighter);
     --el-table-header-bg-color: var(--el-fill-color-light);
+
+    /* 树形列：缩进 / 占位 / 展开图标与自定义内容同一行，避免 width:100% 把内容挤到第二行 */
+    :deep(.el-table__header th:first-child .cell),
+    :deep(.el-table__body td:first-child .cell) {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 4px;
+      align-items: center;
+    }
+
+    :deep(.el-table__body td:first-child .el-table__expand-icon) {
+      flex-shrink: 0;
+    }
   }
 
   html.dark .ap-detail-table {
@@ -213,9 +228,21 @@
   }
 
   .ap-cell-name {
-    display: inline-flex;
+    box-sizing: border-box;
+    display: flex;
+    flex: 1 1 0;
     gap: 6px;
     align-items: center;
+    min-width: 0;
+  }
+
+  /* flex 子项默认 min-width:auto，不设 0 时无法收缩，tooltip 会几乎整格都是 … */
+  .ap-name-text {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .ap-row-icon {

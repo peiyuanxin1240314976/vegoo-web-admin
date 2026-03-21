@@ -26,7 +26,7 @@
           class="ap-date-picker"
           style="width: 100px"
         />
-        <ElButton type="primary" @click="onExport">导出</ElButton>
+        <ElButton color="#13deb9" @click="onExport">导出</ElButton>
       </div>
     </div>
 
@@ -54,13 +54,13 @@
             class="ap-kpi-card"
             :class="{
               'ap-kpi-card--alert': item.alert,
-              'ap-kpi-card--roi1': item.type === 'roi1',
+              'ap-kpi-card--roi1': isRoi1KpiCard(item),
               [`ap-kpi-card--${item.type}`]: true
             }"
           >
             <div class="ap-kpi-label">{{ item.label }}</div>
             <div class="ap-kpi-value">{{ item.value }}</div>
-            <div v-if="item.sub && item.type !== 'roi1'" class="ap-kpi-sub">{{ item.sub }}</div>
+            <div v-if="item.sub && !isRoi1KpiCard(item)" class="ap-kpi-sub">{{ item.sub }}</div>
             <div v-else-if="item.detail" class="ap-kpi-detail">{{ item.detail }}</div>
             <div v-if="item.compare" class="ap-kpi-compare" :class="item.compareUp ? 'up' : 'down'">
               {{ item.compare }}
@@ -149,6 +149,7 @@
                   :page-sizes="appPageSizes"
                   layout="prev, pager, next, sizes"
                   small
+                  background
                   class="ap-app-pagination"
                 />
               </div>
@@ -205,17 +206,20 @@
 
           <!-- 预警事项 -->
           <ElCard class="ap-chart-card ap-alert-card" shadow="never">
-            <template #header>预警事项 ({{ alertsLoading ? 3 : alerts.length }}项)</template>
+            <template #header>
+              预警事项 ({{ alertsLoading ? '—' : `${alerts.length}项` }})
+            </template>
             <div v-if="alertsLoading" class="ap-alert-skeleton">
               <ElSkeleton animated :rows="3" />
             </div>
-            <ul v-else class="ap-alert-list">
+            <ul v-else-if="alerts.length" class="ap-alert-list">
               <li v-for="a in alerts" :key="a.id" class="ap-alert-item">
                 <span class="ap-alert-title">{{ a.title }}</span>
                 <span class="ap-alert-desc">{{ a.desc }}</span>
                 <ElButton link type="primary" size="small">查看</ElButton>
               </li>
             </ul>
+            <ElEmpty v-else class="ap-alert-empty" description="暂无预警数据" :image-size="80" />
           </ElCard>
 
           <!-- 近七日消耗节奏 -->
@@ -263,7 +267,7 @@
   const filterOwner = ref('')
   const dateRange = ref<[string, string]>([...MOCK_ACCOUNT_PERFORMANCE.dateRange])
   const tableSearch = ref('')
-  const expandAll = ref(true)
+  const expandAll = ref(false)
   const expandedRowKeys = ref<string[]>([])
   const rangeOptions: { value: string; label: string }[] = [
     { value: '应用', label: '应用' },
@@ -394,6 +398,19 @@
   type AccountPerformanceKpiApiItem = AccountPerformanceKpi & { status?: string }
 
   const KPI_CARD_COUNT = 6
+
+  /** 与接口约定 type=roi1 一致；兼容 camelCase / 下划线及按标题兜底，避免丢失绿色主题修饰类 */
+  function isRoi1KpiCard(item: Pick<AccountPerformanceKpi, 'type' | 'label'>): boolean {
+    const raw = item.type
+    const t = (typeof raw === 'string' ? raw : String(raw ?? ''))
+      .trim()
+      .toLowerCase()
+      .replace(/_/g, '')
+    if (['roi1', 'day1roi'].includes(t)) return true
+    const label = item.label ?? ''
+    return label.includes('首日') && /roi/i.test(label)
+  }
+
   const kpiFallbackCards = mock.value.kpi
   const kpiCards = ref<AccountPerformanceKpi[]>(kpiFallbackCards)
   const kpiLoading = ref(true)
@@ -987,43 +1004,14 @@
     { deep: true }
   )
 
-  // 预警事项（3项）：独立请求 + 局部骨架屏
+  // 预警事项：暂无真实数据，不请求接口（避免开发环境 mock 仍展示）；联调后恢复 request 赋值
   const alerts = ref<AccountAlertItem[]>([])
-  const alertsLoading = ref(true)
-
-  let alertsRequestSeq = 0
+  const alertsLoading = ref(false)
 
   async function loadAlerts() {
     const [dateStart, dateEnd] = dateRange.value
     if (!dateStart || !dateEnd) return
-
-    const requestSeq = ++alertsRequestSeq
-    alertsLoading.value = true
     alerts.value = []
-
-    try {
-      const list = await request.post<AccountAlertItem[]>({
-        url: '/api/v1/datacenter/analysis/account-performance/alerts',
-        data: {
-          currentPage: 0,
-          dateEnd,
-          dateStart,
-          kw: '',
-          ownerId: filterOwner.value,
-          pageSize: 0,
-          platform: platform.value,
-          source: source.value
-        }
-      })
-
-      if (requestSeq !== alertsRequestSeq) return
-      alerts.value = Array.isArray(list) ? list : []
-    } catch {
-      if (requestSeq !== alertsRequestSeq) return
-      alerts.value = []
-    } finally {
-      if (requestSeq === alertsRequestSeq) alertsLoading.value = false
-    }
   }
 
   let alertsDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -1405,22 +1393,6 @@
     }
   }
 
-  /* 深色模式：KPI 卡片与预警卡片 */
-  html.dark .ap-kpi-card {
-    background: linear-gradient(180deg, rgb(255 255 255 / 4%), rgb(255 255 255 / 1.5%));
-    border-color: var(--el-border-color);
-  }
-
-  html.dark .ap-kpi-card--roi1 {
-    background: linear-gradient(180deg, rgb(16 185 129 / 18%), rgb(16 185 129 / 4%));
-    border-color: rgb(16 185 129 / 65%);
-  }
-
-  html.dark .ap-kpi-card--alert {
-    background: rgb(230 162 60 / 12%);
-    border-color: rgb(230 162 60 / 400%);
-  }
-
   .ap-body {
     /* 桌面端固定左右布局；小屏仍上下排列 */
     flex-wrap: nowrap;
@@ -1458,10 +1430,6 @@
     :deep(.el-card__body) {
       padding: 12px 16px;
     }
-  }
-
-  html.dark .ap-table-card {
-    border-color: var(--el-border-color);
   }
 
   .ap-table-title {
@@ -1506,19 +1474,6 @@
   .ap-detail-table {
     --el-table-border-color: var(--el-border-color-lighter);
     --el-table-header-bg-color: var(--el-fill-color-light);
-  }
-
-  html.dark .ap-detail-table {
-    --el-table-border-color: var(--el-border-color);
-    --el-table-header-bg-color: var(--el-fill-color-dark);
-    --el-table-header-text-color: #fff;
-
-    /* 深色模式：表头文字/排序图标强制纯白（避免被主题变量覆盖） */
-    :deep(.el-table__header-wrapper th),
-    :deep(.el-table__header-wrapper th .cell),
-    :deep(.el-table__header-wrapper th .sort-caret) {
-      color: #fff;
-    }
   }
 
   .ap-cell-name {
@@ -1636,8 +1591,19 @@
     }
   }
 
-  html.dark .ap-chart-card {
-    border-color: var(--el-border-color);
+  /* 与顶部 KPI「预警账户」(.ap-kpi-card--alert) 同系透明黄底与边框 */
+  .ap-chart-card.ap-alert-card {
+    background: rgb(230 162 60 / 8%);
+    border-color: rgb(230 162 60 / 35%);
+
+    :deep(.el-card__header) {
+      background: transparent;
+      border-bottom: 1px solid rgb(230 162 60 / 22%);
+    }
+
+    :deep(.el-card__body) {
+      background: transparent;
+    }
   }
 
   .ap-chart-wrap {
@@ -1696,10 +1662,6 @@
     }
   }
 
-  html.dark .ap-chart-loading-overlay {
-    background: rgb(0 0 0 / 18%);
-  }
-
   .ap-app-table-wrapper {
     position: relative;
     display: flex;
@@ -1751,10 +1713,6 @@
     }
   }
 
-  html.dark .ap-table-loading-overlay {
-    background: rgb(0 0 0 / 18%);
-  }
-
   .ap-alert-card .ap-alert-list {
     padding: 0;
     margin: 0;
@@ -1763,6 +1721,10 @@
 
   .ap-alert-skeleton {
     padding: 8px 0;
+  }
+
+  .ap-alert-empty {
+    padding: 8px 0 16px;
   }
 
   .ap-alert-item {
@@ -1791,7 +1753,62 @@
     }
   }
 
-  html.dark .ap-alert-item {
-    border-bottom-color: var(--el-border-color);
+  /* 深色模式：用 :global(html.dark) 避免 scoped 误伤；限定在本页根节点下以免污染同名类 */
+  :global(html.dark) .account-performance-page {
+    .ap-kpi-card {
+      background: linear-gradient(180deg, rgb(255 255 255 / 4%), rgb(255 255 255 / 1.5%));
+      border-color: var(--el-border-color);
+    }
+
+    .ap-kpi-card--roi1 {
+      background: linear-gradient(180deg, rgb(16 185 129 / 18%), rgb(16 185 129 / 4%));
+      border-color: rgb(16 185 129 / 65%);
+    }
+
+    .ap-kpi-card--alert {
+      background: rgb(230 162 60 / 12%);
+      border-color: rgb(230 162 60 / 40%);
+    }
+
+    .ap-table-card {
+      border-color: var(--el-border-color);
+    }
+
+    .ap-detail-table {
+      --el-table-border-color: var(--el-border-color);
+      --el-table-header-bg-color: var(--el-fill-color-dark);
+      --el-table-header-text-color: #fff;
+
+      :deep(.el-table__header-wrapper th),
+      :deep(.el-table__header-wrapper th .cell),
+      :deep(.el-table__header-wrapper th .sort-caret) {
+        color: #fff;
+      }
+    }
+
+    .ap-chart-card {
+      border-color: var(--el-border-color);
+    }
+
+    .ap-chart-card.ap-alert-card {
+      background: rgb(230 162 60 / 12%);
+      border-color: rgb(230 162 60 / 40%);
+
+      :deep(.el-card__header) {
+        border-bottom: 1px solid rgb(230 162 60 / 28%);
+      }
+    }
+
+    .ap-chart-loading-overlay {
+      background: rgb(0 0 0 / 18%);
+    }
+
+    .ap-table-loading-overlay {
+      background: rgb(0 0 0 / 18%);
+    }
+
+    .ap-alert-item {
+      border-bottom-color: var(--el-border-color);
+    }
   }
 </style>
