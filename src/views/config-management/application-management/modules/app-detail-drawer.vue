@@ -227,11 +227,11 @@
             </div>
             <div class="info-item">
               <span class="info-key">最后修改人</span>
-              <span class="info-val">{{ appData?.lastModifier || '李四' }}</span>
+              <span class="info-val">{{ appData?.lastModifier || '—' }}</span>
             </div>
             <div class="info-item">
               <span class="info-key">最后修改时间</span>
-              <span class="info-val">{{ appData?.lastModifyTime || '2024-03-15 14:30:22' }}</span>
+              <span class="info-val">{{ appData?.lastModifyTime || '—' }}</span>
             </div>
           </div>
         </section>

@@ -1,24 +1,24 @@
 {
-  "_comment": "综合分析 - 筛选下拉。对应 types.ts: ComprehensiveAnalysisFilterOptions。",
+  "_comment": "整体回收 - 筛选下拉。对应 types.ts: OverallRecoveryFilterOptions。",
   "fieldDescription": {
     "request": {},
     "response": {
       "data": {
-        "type": "ComprehensiveAnalysisFilterOptions",
+        "type": "OverallRecoveryFilterOptions",
         "required": true,
-        "description": "三组 options，value 与 overview 请求中 s_app_id / source / s_country_code 对应（全部为空字符串时选 all 选项）。"
+        "description": "三组 options，value 与 overall-tab / organic-tab 请求中对应字段一致（全部为 all，发请求时转为空字符串）。"
       }
     },
-    "ComprehensiveAnalysisFilterOptions": {
+    "OverallRecoveryFilterOptions": {
       "appOptions": {
         "type": "{ label: string; value: string }[]",
         "required": true,
-        "description": "应用列表；通常含「全部」value=all。"
+        "description": "应用列表。"
       },
       "sourceOptions": {
         "type": "{ label: string; value: string }[]",
         "required": true,
-        "description": "广告平台列表（字段名 sourceOptions，与请求字段 source 对应）。"
+        "description": "广告平台列表；与请求字段 source 对应。"
       },
       "countryOptions": {
         "type": "{ label: string; value: string }[]",
@@ -36,22 +36,22 @@
       ],
       "sourceOptions": [
         { "label": "全部", "value": "all" },
-        { "label": "Google Ads", "value": "google" }
+        { "label": "Google", "value": "google" },
+        { "label": "Facebook", "value": "facebook" },
+        { "label": "TikTok", "value": "tiktok" }
       ],
       "countryOptions": [
         { "label": "全部", "value": "all" },
-        { "label": "美国", "value": "US" }
+        { "label": "美国", "value": "US" },
+        { "label": "德国", "value": "DE" }
       ]
     }
   },
   "api": {
-    "url": "POST /api/user-growth/comprehensive-analysis/meta-filter-options",
+    "url": "POST /api/user-growth/overall-recovery/meta-filter-options",
     "method": "POST",
     "priority": "P0",
     "requestBody": "无（空 JSON 对象）",
-    "responseBody": "ComprehensiveAnalysisFilterOptions"
-  },
-  "apiSuggestion": {
-    "notes": ["options 的 value 需与 overview 入参一致（all 由前端转为空字符串）。"]
+    "responseBody": "OverallRecoveryFilterOptions"
   }
 }

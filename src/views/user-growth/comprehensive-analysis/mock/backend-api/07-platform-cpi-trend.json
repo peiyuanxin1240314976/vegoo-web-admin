@@ -1,0 +1,56 @@
+{
+  "_comment": "综合分析 - 广告平台 CPI 趋势折线图。对应 types.ts: PlatformCpiTrend。",
+  "fieldDescription": {
+    "request": {
+      "date_start": { "type": "string", "required": true },
+      "date_end": { "type": "string", "required": true },
+      "s_app_id": { "type": "string", "required": true },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "'' 全部平台；非空则仅返回对应平台的 series。"
+      },
+      "s_country_code": { "type": "string", "required": true }
+    },
+    "response": {
+      "data": {
+        "type": "PlatformCpiTrend",
+        "required": true,
+        "description": "dates（x 轴日期）/ target（目标参考线值）/ series（每个平台折线：name/color/data/dashed?）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "date_start": "2026-03-14",
+    "date_end": "2026-03-20",
+    "s_app_id": "",
+    "source": "",
+    "s_country_code": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "dates": ["03-14", "03-15", "03-16", "03-17", "03-18", "03-19", "03-20"],
+      "target": 2.5,
+      "series": [
+        {
+          "name": "Google Ads",
+          "color": "#4B8EF1",
+          "data": [2.1, 2.2, 2.15, 2.35, 2.48, 2.9, 3.21]
+        },
+        {
+          "name": "Facebook",
+          "color": "#1877F2",
+          "data": [2.4, 2.38, 2.42, 2.45, 2.46, 2.47, 2.48]
+        },
+        { "name": "TikTok", "color": "#22c55e", "data": [2.05, 2.08, 2.1, 2.11, 2.12, 2.11, 2.12] }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/comprehensive-analysis/platform-cpi-trend",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
+    "responseBody": "PlatformCpiTrend"
+  }
+}

@@ -9,7 +9,7 @@ const DEFAULT_APP_OPTIONS: SelectOption[] = [
   { label: '全部', value: 'all' },
   { label: 'Weather5', value: 'weather5' }
 ]
-const DEFAULT_CHANNEL_OPTIONS: SelectOption[] = [
+const DEFAULT_SOURCE_OPTIONS: SelectOption[] = [
   { label: '全部', value: 'all' },
   { label: 'Google', value: 'google' },
   { label: 'Facebook', value: 'facebook' },
@@ -25,13 +25,13 @@ const DEFAULT_COUNTRY_OPTIONS: SelectOption[] = [
 
 export function useOverallRecoveryFilters() {
   const appOptions = ref<SelectOption[]>(DEFAULT_APP_OPTIONS)
-  const channelOptions = ref<SelectOption[]>(DEFAULT_CHANNEL_OPTIONS)
+  const sourceOptions = ref<SelectOption[]>(DEFAULT_SOURCE_OPTIONS)
   const countryOptions = ref<SelectOption[]>(DEFAULT_COUNTRY_OPTIONS)
 
   async function loadFilterOptions() {
     const res = await fetchOverallRecoveryFilterOptions()
     appOptions.value = res.appOptions
-    channelOptions.value = res.channelOptions
+    sourceOptions.value = res.sourceOptions
     countryOptions.value = res.countryOptions
   }
 
@@ -39,5 +39,5 @@ export function useOverallRecoveryFilters() {
     loadFilterOptions()
   })
 
-  return { appOptions, channelOptions, countryOptions, loadFilterOptions }
+  return { appOptions, sourceOptions, countryOptions, loadFilterOptions }
 }

@@ -1,0 +1,42 @@
+{
+  "_comment": "综合分析 - 应用 CPI 排行榜。对应 types.ts: AppCpiRankItem[]。",
+  "fieldDescription": {
+    "request": {
+      "date_start": { "type": "string", "required": true },
+      "date_end": { "type": "string", "required": true },
+      "s_app_id": { "type": "string", "required": true },
+      "source": { "type": "string", "required": true },
+      "s_country_code": { "type": "string", "required": true }
+    },
+    "response": {
+      "data": {
+        "type": "AppCpiRankItem[]",
+        "required": true,
+        "description": "id/name/cpi/trend（up|down|flat）；按 cpi 降序排列。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "date_start": "2026-03-14",
+    "date_end": "2026-03-20",
+    "s_app_id": "",
+    "source": "",
+    "s_country_code": ""
+  },
+  "sampleResponse": {
+    "data": [
+      { "id": "app1", "name": "PhoneTracker", "cpi": 3.21, "trend": "down" },
+      { "id": "app2", "name": "Weather5", "cpi": 2.88, "trend": "up" },
+      { "id": "app3", "name": "BloodSugar2", "cpi": 2.54, "trend": "flat" },
+      { "id": "app4", "name": "StepCounter", "cpi": 2.31, "trend": "up" },
+      { "id": "app5", "name": "SleepTrack", "cpi": 2.09, "trend": "down" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/comprehensive-analysis/app-cpi-rank",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
+    "responseBody": "AppCpiRankItem[]"
+  }
+}

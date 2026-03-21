@@ -100,9 +100,9 @@
           class="kfactor-table"
           style="width: 100%"
         >
-          <ElTableColumn prop="channel" label="渠道" min-width="80">
+          <ElTableColumn prop="source" label="广告平台" min-width="80">
             <template #default="{ row }">
-              <span :class="row.channel === '合计' ? 'row-total' : ''">{{ row.channel }}</span>
+              <span :class="row.source === '合计' ? 'row-total' : ''">{{ row.source }}</span>
             </template>
           </ElTableColumn>
           <ElTableColumn prop="paidInstall" label="付费安装" min-width="75" />
@@ -441,7 +441,7 @@
     tabData.value = await fetchOrganicTabData({
       dateRange: props.filter.dateRange,
       s_app_id: props.filter.s_app_id,
-      channel: props.filter.channel,
+      source: props.filter.source,
       s_country_code: props.filter.s_country_code
     })
     trendChart.initChart(buildTrendOption())

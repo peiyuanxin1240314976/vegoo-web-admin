@@ -225,7 +225,12 @@
     <!-- 底部 -->
     <template #footer>
       <div class="dialog-footer">
-        <div v-if="isEdit" class="last-modify-info"> 最后修改：李四 2024-03-15 14:30 </div>
+        <div
+          v-if="isEdit && (editData?.lastModifier || editData?.lastModifyTime)"
+          class="last-modify-info"
+        >
+          最后修改：{{ editData?.lastModifier }} {{ editData?.lastModifyTime }}
+        </div>
         <div class="footer-btns">
           <span class="required-hint">标有 * 为必填项</span>
           <ElButton round class="btn-cancel" @click="handleClose">取消</ElButton>

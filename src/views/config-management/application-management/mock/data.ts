@@ -15,8 +15,15 @@ export const applicationMockList: ApplicationAppItem[] = [
     status: '正常',
     creator: '张三',
     createTime: '2024-01-15',
+    storeId: 'com.accurate.weather.forecast.live',
+    url: 'https://play.google.com/store/apps/details?id=com.accurate.weather.forecast.live',
+    dataIsolation: false,
     toolEnabled: true,
-    preGenReport: true
+    preGenReport: true,
+    useOrderDetail: false,
+    showOrderReport: false,
+    lastModifier: '张三',
+    lastModifyTime: '2024-03-10 10:22:35'
   },
   {
     id: 'Weather5I',
@@ -31,7 +38,16 @@ export const applicationMockList: ApplicationAppItem[] = [
     priority: 13,
     status: '正常',
     creator: '张三',
-    createTime: '2024-01-15'
+    createTime: '2024-01-15',
+    storeId: '6478123001',
+    url: 'https://apps.apple.com/app/id6478123001',
+    dataIsolation: false,
+    toolEnabled: true,
+    preGenReport: true,
+    useOrderDetail: false,
+    showOrderReport: false,
+    lastModifier: '李四',
+    lastModifyTime: '2024-03-12 14:05:18'
   },
   {
     id: 'Weather6A',
@@ -46,7 +62,16 @@ export const applicationMockList: ApplicationAppItem[] = [
     priority: 14,
     status: '正常',
     creator: '李四',
-    createTime: '2024-01-20'
+    createTime: '2024-01-20',
+    storeId: 'com.accurate.local.weather.forecast.live',
+    url: 'https://play.google.com/store/apps/details?id=com.accurate.local.weather.forecast.live',
+    dataIsolation: true,
+    toolEnabled: false,
+    preGenReport: false,
+    useOrderDetail: false,
+    showOrderReport: false,
+    lastModifier: '李四',
+    lastModifyTime: '2024-02-28 09:15:44'
   },
   {
     id: 'Weather8A',
@@ -59,9 +84,18 @@ export const applicationMockList: ApplicationAppItem[] = [
     category: 'Weather',
     timezone: 'PST',
     priority: 15,
-    status: '正常',
+    status: '禁用',
     creator: '张三',
-    createTime: '2024-02-01'
+    createTime: '2024-02-01',
+    storeId: 'com.accurate.live.weather.widget',
+    url: 'https://play.google.com/store/apps/details?id=com.accurate.live.weather.widget',
+    dataIsolation: false,
+    toolEnabled: false,
+    preGenReport: false,
+    useOrderDetail: false,
+    showOrderReport: false,
+    lastModifier: '王五',
+    lastModifyTime: '2024-03-01 16:30:00'
   },
   {
     id: 'HealthBP2A',
@@ -72,11 +106,20 @@ export const applicationMockList: ApplicationAppItem[] = [
     packageId: 'com.blood.pressure.bptracker',
     shortName: 'BP2',
     category: 'Health',
-    timezone: 'PST',
+    timezone: 'EST',
     priority: 51,
     status: '正常',
     creator: '王五',
-    createTime: '2024-02-10'
+    createTime: '2024-02-10',
+    storeId: 'com.blood.pressure.bptracker',
+    url: 'https://play.google.com/store/apps/details?id=com.blood.pressure.bptracker',
+    dataIsolation: true,
+    toolEnabled: true,
+    preGenReport: true,
+    useOrderDetail: true,
+    showOrderReport: true,
+    lastModifier: '王五',
+    lastModifyTime: '2024-03-15 11:40:22'
   },
   {
     id: 'HealthBS2A',
@@ -87,11 +130,20 @@ export const applicationMockList: ApplicationAppItem[] = [
     packageId: 'com.blood.sugar.monitor',
     shortName: 'BS2',
     category: 'Health',
-    timezone: 'PST',
+    timezone: 'EST',
     priority: 52,
     status: '正常',
     creator: '王五',
-    createTime: '2024-02-10'
+    createTime: '2024-02-10',
+    storeId: 'com.blood.sugar.monitor',
+    url: 'https://play.google.com/store/apps/details?id=com.blood.sugar.monitor',
+    dataIsolation: true,
+    toolEnabled: true,
+    preGenReport: false,
+    useOrderDetail: true,
+    showOrderReport: false,
+    lastModifier: '张三',
+    lastModifyTime: '2024-03-18 08:55:11'
   },
   {
     id: 'HealthHT2A',
@@ -102,11 +154,20 @@ export const applicationMockList: ApplicationAppItem[] = [
     packageId: 'com.bloodpressure.health.healthtracker',
     shortName: 'HT2',
     category: 'Health',
-    timezone: 'PST',
+    timezone: 'GMT+8',
     priority: 53,
     status: '正常',
     creator: '李四',
-    createTime: '2024-03-01'
+    createTime: '2024-03-01',
+    storeId: 'com.bloodpressure.health.healthtracker',
+    url: 'https://play.google.com/store/apps/details?id=com.bloodpressure.health.healthtracker',
+    dataIsolation: false,
+    toolEnabled: true,
+    preGenReport: true,
+    useOrderDetail: false,
+    showOrderReport: true,
+    lastModifier: '李四',
+    lastModifyTime: '2024-03-20 17:02:49'
   },
   {
     id: 'HealthHRA',
@@ -117,11 +178,20 @@ export const applicationMockList: ApplicationAppItem[] = [
     packageId: 'com.pulse.heartrate',
     shortName: 'HR',
     category: 'Health',
-    timezone: 'PST',
+    timezone: 'GMT+8',
     priority: 56,
     status: '正常',
     creator: '张三',
-    createTime: '2024-03-05'
+    createTime: '2024-03-05',
+    storeId: 'com.pulse.heartrate',
+    url: 'https://play.google.com/store/apps/details?id=com.pulse.heartrate',
+    dataIsolation: false,
+    toolEnabled: false,
+    preGenReport: false,
+    useOrderDetail: false,
+    showOrderReport: false,
+    lastModifier: '张三',
+    lastModifyTime: '2024-03-22 13:18:07'
   }
 ]
 

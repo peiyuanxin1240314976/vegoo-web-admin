@@ -28,7 +28,7 @@
             <span class="ca-pill__k">广告平台:</span>
             <ElSelect v-model="filters.adPlatform" class="ca-select" :teleported="false">
               <ElOption
-                v-for="opt in adPlatformOptions"
+                v-for="opt in sourceOptions"
                 :key="opt.value"
                 :label="opt.label"
                 :value="opt.value"
@@ -133,7 +133,7 @@
     { key: 'report', label: '报表' }
   ]
 
-  const { appOptions, adPlatformOptions, countryOptions } = useComprehensiveAnalysisFilters()
+  const { appOptions, sourceOptions, countryOptions } = useComprehensiveAnalysisFilters()
   const pageData = ref<ComprehensiveAnalysisData | null>(null)
   const loading = ref(false)
 
