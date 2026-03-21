@@ -55,8 +55,8 @@ export const userGrowthRoutes: AppRouteRecord = {
     },
     {
       path: 'ad-platform-detail',
-      name: 'AdPlatformDetail',
-      component: '/user-growth/ad-platform-detail',
+      name: 'UserGrowthAdPlatformDetail',
+      component: '/business-insight/ad-platform-detail',
       meta: {
         title: 'menus.userGrowth.adPlatformDetail',
         keepAlive: true,
@@ -164,6 +164,18 @@ export const userGrowthRoutes: AppRouteRecord = {
         keepAlive: false,
         isHide: true,
         activePath: '/user-growth/comprehensive-analysis',
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'ad-performance/campaign-detail',
+      name: 'CampaignDetail',
+      component: '/user-growth/ad-performance/campaign-detail',
+      meta: {
+        title: 'menus.userGrowth.campaignDetail',
+        keepAlive: false,
+        isHide: true,
+        activePath: '/user-growth/ad-performance',
         roles: ['R_SUPER', 'R_ADMIN']
       }
     }

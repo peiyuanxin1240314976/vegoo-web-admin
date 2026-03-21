@@ -139,6 +139,7 @@
 
 <script setup lang="ts">
   import { ref } from 'vue'
+  import { useRouter } from 'vue-router'
   import DetailTabAdGroup from './detail-tabs/detail-tab-adgroup.vue'
   import DetailTabDate from './detail-tabs/detail-tab-date.vue'
   import DetailTabCountry from './detail-tabs/detail-tab-country.vue'
@@ -150,10 +151,12 @@
 
   defineOptions({ name: 'AdPerformanceDetailDrawer' })
 
-  defineProps<{
+  const props = defineProps<{
     campaignRow: AdPerformanceCampaignRow
     detail: AdPerformanceCampaignDetail | null
   }>()
+
+  const router = useRouter()
 
   defineEmits<{
     (e: 'close'): void
@@ -180,7 +183,10 @@
   }
 
   function onEdit() {
-    // 占位：后续接编辑逻辑
+    router.push({
+      path: '/user-growth/ad-performance/campaign-detail',
+      query: { id: props.campaignRow.id, name: props.campaignRow.name }
+    })
   }
 
   function onPause() {

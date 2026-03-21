@@ -1,0 +1,82 @@
+{
+  "_comment": "广告系列详情 - 素材表现 Top5（按 ROI 降序）。对应 types.ts: CreativeTop5Item[]。",
+  "fieldDescription": {
+    "request": {
+      "campaignId": { "type": "string", "required": true, "description": "广告系列唯一标识。" }
+    },
+    "response": {
+      "items": {
+        "type": "CreativeTop5Item[]",
+        "required": true,
+        "description": "素材列表，最多返回5条，按 ROI 降序。"
+      }
+    },
+    "CreativeTop5Item": {
+      "id": { "type": "string", "required": true, "description": "素材唯一标识。" },
+      "thumbnail": {
+        "type": "string",
+        "required": true,
+        "description": "缩略图 URL（视频封面图或图片素材）。空字符串时前端展示占位图。"
+      },
+      "roi": {
+        "type": "number",
+        "required": true,
+        "description": "素材 ROI，百分比值（如 155 表示 155%）。"
+      },
+      "ctr": {
+        "type": "number",
+        "required": true,
+        "description": "点击率，百分比值，保留一位小数（如 3.2 表示 3.2%）。"
+      }
+    }
+  },
+  "sampleRequest": { "campaignId": "0032021863838Z7" },
+  "sampleResponse": {
+    "items": [
+      {
+        "id": "c1",
+        "thumbnail": "https://cdn.example.com/creatives/c1.jpg",
+        "roi": 155,
+        "ctr": 3.2
+      },
+      {
+        "id": "c2",
+        "thumbnail": "https://cdn.example.com/creatives/c2.jpg",
+        "roi": 155,
+        "ctr": 3.2
+      },
+      {
+        "id": "c3",
+        "thumbnail": "https://cdn.example.com/creatives/c3.jpg",
+        "roi": 155,
+        "ctr": 3.2
+      },
+      {
+        "id": "c4",
+        "thumbnail": "https://cdn.example.com/creatives/c4.jpg",
+        "roi": 155,
+        "ctr": 3.2
+      },
+      {
+        "id": "c5",
+        "thumbnail": "https://cdn.example.com/creatives/c5.jpg",
+        "roi": 155,
+        "ctr": 3.2
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-performance/campaign-detail/creative-top5",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "campaignId (必填)",
+    "responseBody": "items: CreativeTop5Item[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "thumbnail 返回可直接访问的 CDN URL，前端不做二次拼接。",
+      "thumbnail 为空字符串时前端渲染占位背景，不报错。",
+      "固定返回最多 5 条，后端控制排序（ROI 降序）。"
+    ]
+  }
+}

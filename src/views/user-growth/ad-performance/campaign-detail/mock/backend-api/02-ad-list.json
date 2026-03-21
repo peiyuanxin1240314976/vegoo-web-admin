@@ -1,0 +1,94 @@
+{
+  "_comment": "广告系列详情 - 广告列表（广告组明细，支持状态筛选）。对应 types.ts: CampaignAdRow[]。",
+  "fieldDescription": {
+    "request": {
+      "campaignId": { "type": "string", "required": true, "description": "广告系列唯一标识。" },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["all", "active", "paused", "completed"],
+        "default": "all",
+        "description": "按状态筛选。空或 all 返回全部。"
+      }
+    },
+    "response": {
+      "rows": { "type": "CampaignAdRow[]", "required": true, "description": "广告组列表。" }
+    },
+    "CampaignAdRow": {
+      "id": { "type": "string", "required": true, "description": "广告组唯一标识。" },
+      "adGroupName": { "type": "string", "required": true, "description": "广告组名称。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["active", "paused", "completed"],
+        "description": "广告组状态。active=启用，paused=暂停，completed=完成。"
+      },
+      "spend": {
+        "type": "number",
+        "required": true,
+        "description": "消耗金额，单位美元（原始值）。"
+      },
+      "installs": { "type": "number", "required": true, "description": "安装量（原始值）。" },
+      "cpi": { "type": "number", "required": true, "description": "CPI，单位美元，保留两位小数。" },
+      "roi": {
+        "type": "number",
+        "required": true,
+        "description": "ROI，百分比值（如 142 表示 142%）。"
+      }
+    }
+  },
+  "sampleRequest": { "campaignId": "0032021863838Z7", "status": "all" },
+  "sampleResponse": {
+    "rows": [
+      {
+        "id": "1",
+        "adGroupName": "AdGroup_Android_Male_25-35",
+        "status": "active",
+        "spend": 45000,
+        "installs": 28000,
+        "cpi": 1.61,
+        "roi": 142
+      },
+      {
+        "id": "2",
+        "adGroupName": "AdGroup_Android_Female_25-35",
+        "status": "active",
+        "spend": 38000,
+        "installs": 24000,
+        "cpi": 1.72,
+        "roi": 128
+      },
+      {
+        "id": "3",
+        "adGroupName": "AdGroup_Android_All_18-24",
+        "status": "active",
+        "spend": 29000,
+        "installs": 19000,
+        "cpi": 1.68,
+        "roi": 115
+      },
+      {
+        "id": "4",
+        "adGroupName": "AdGroup_Android_Male_35-44",
+        "status": "paused",
+        "spend": 18000,
+        "installs": 11000,
+        "cpi": 1.83,
+        "roi": 92
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-performance/campaign-detail/ad-list",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "campaignId (必填), status? (枚举筛选)",
+    "responseBody": "rows: CampaignAdRow[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "状态筛选在后端完成，前端 Tab 切换时带 status 参数重新请求，避免前端在大数据量时全量过滤。",
+      "spend/installs 返回原始数值，前端格式化。"
+    ]
+  }
+}
