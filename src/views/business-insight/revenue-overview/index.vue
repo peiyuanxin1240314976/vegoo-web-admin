@@ -160,17 +160,19 @@
                 </div>
               </div>
 
-              <!-- 广告位：环形图 -->
+              <!-- 广告位：左图例（竖排）+ 右环形图 -->
               <div v-show="iaaTab === 'ad_unit'" class="rev-iaa-donut-wrap">
-                <div ref="iaaDonutRef" class="rev-iaa-donut" />
-                <div class="rev-iaa-donut-center">
-                  <div class="rev-iaa-donut-center-val">{{ iaaVizTotalMoney }}</div>
-                </div>
                 <div class="rev-iaa-donut-legend">
                   <span v-for="seg in iaaSegments" :key="seg.key" class="rev-iaa-bar__label">
                     <span class="rev-dot" :style="{ background: seg.color }" />
                     {{ seg.label }}
                   </span>
+                </div>
+                <div class="rev-iaa-donut-chart">
+                  <div ref="iaaDonutRef" class="rev-iaa-donut" />
+                  <div class="rev-iaa-donut-center">
+                    <div class="rev-iaa-donut-center-val">{{ iaaVizTotalMoney }}</div>
+                  </div>
                 </div>
               </div>
 
@@ -1408,7 +1410,7 @@
       series: [
         {
           type: 'pie',
-          radius: ['56%', '80%'],
+          radius: ['60%', '92%'],
           center: ['50%', '50%'],
           avoidLabelOverlap: true,
           label: { show: false },
@@ -1431,7 +1433,7 @@
     const rows = MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS
     return {
       tooltip: chartIaaVersion.getTooltipStyle('axis'),
-      grid: { left: 36, right: 10, top: 22, bottom: 30, containLabel: true },
+      grid: { left: 6, right: 10, top: 22, bottom: 30, containLabel: true },
       xAxis: {
         type: 'category',
         data: rows.map((r) => r.s_app_version),
@@ -1821,7 +1823,7 @@
   .rev-main {
     display: grid;
     grid-template-rows: 420px 480px;
-    grid-template-columns: 650px 480px 536px;
+    grid-template-columns: 700px 480px 476px;
     grid-auto-flow: row;
     gap: 12px;
     align-items: start;
@@ -1879,14 +1881,14 @@
     border-radius: 10px;
   }
 
-  .rev-iaa-main:not(.rev-iaa-main--stacked) .rev-table-wrap--iaa {
-    box-sizing: border-box;
-    min-height: 0;
-    padding: 0;
-    background: rgb(0 0 0 / 18%);
-    border: 1px solid var(--rev-border-soft);
-    border-radius: 10px;
-  }
+  // .rev-iaa-main:not(.rev-iaa-main--stacked) .rev-table-wrap--iaa {
+  //   box-sizing: border-box;
+  //   min-height: 0;
+  //   padding: 0;
+  //   background: rgb(0 0 0 / 18%);
+  //   border: 1px solid var(--rev-border-soft);
+  //   border-radius: 10px;
+  // }
 
   .rev-iaa-main:not(.rev-iaa-main--stacked) .rev-iaa-version-wrap {
     flex: 1;
@@ -1940,13 +1942,48 @@
   }
 
   .rev-iaa-donut-wrap {
-    position: relative;
+    display: flex;
     flex: 1;
-    min-height: 200px;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 0;
+  }
+
+  .rev-iaa-donut-legend {
+    display: flex;
+    flex: 0 0 38%;
+    flex-flow: column nowrap;
+    gap: 8px;
+    align-items: flex-start;
+    justify-content: center;
+    max-height: 100%;
+    padding-right: 4px;
+    overflow: hidden auto;
+    font-size: 11px;
+    color: var(--rev-muted);
+    scrollbar-width: thin;
+  }
+
+  .rev-iaa-donut-legend .rev-iaa-bar__label {
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 6px;
+    align-items: center;
+    line-height: 1.35;
+    white-space: nowrap;
+  }
+
+  .rev-iaa-donut-chart {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    height: 213px;
   }
 
   .rev-iaa-donut {
-    height: 200px;
+    height: 100%;
   }
 
   .rev-iaa-donut-center {
@@ -1955,23 +1992,13 @@
     left: 50%;
     text-align: center;
     pointer-events: none;
-    transform: translate(-50%, -52%);
+    transform: translate(-50%, -50%);
   }
 
   .rev-iaa-donut-center-val {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 800;
     color: var(--rev-c-teal);
-  }
-
-  .rev-iaa-donut-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 12px;
-    justify-content: center;
-    margin-top: 6px;
-    font-size: 11px;
-    color: var(--rev-muted);
   }
 
   .rev-iaa-country {
@@ -2034,11 +2061,12 @@
   }
 
   .rev-iaa-version-foot {
-    margin: 8px 0 0;
+    padding-top: 10px;
+    margin: 8px 10px 0;
     font-size: 11px;
     line-height: 1.4;
     color: var(--rev-muted);
-    text-align: right;
+    text-align: left;
   }
 
   .rev-iaa-money {
@@ -2117,7 +2145,9 @@
   }
 
   .rev-panel--iaa :deep(.el-table) {
+    margin-top: 0;
     background: transparent;
+    border-radius: 10px 10px 0 0;
   }
 
   .rev-panel--iaa :deep(.el-table__inner-wrapper::before) {
