@@ -104,6 +104,16 @@ export const userGrowthRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'alert-management',
+      name: 'AlertManagement',
+      component: '/user-growth/alert-management',
+      meta: {
+        title: 'menus.userGrowth.alertManagement',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
       path: 'platform-analysis-detail',
       name: 'PlatformAnalysisDetail',
       component: '/user-growth/platform-analysis-detail',

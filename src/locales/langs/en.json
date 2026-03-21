@@ -270,6 +270,10 @@
       "notFound": "404",
       "serverError": "500"
     },
+    "configManagement": {
+      "title": "Configuration",
+      "applicationManagement": "Application Management"
+    },
     "userGrowth": {
       "title": "User Growth",
       "myPerformance": "My Performance",
@@ -281,6 +285,7 @@
       "conversionManagement": "Conversion Management",
       "overallRecovery": "Overall Recovery",
       "comprehensiveAnalysis": "Comprehensive Analysis",
+      "alertManagement": "Alert Management",
       "platformAnalysisDetail": "Platform Analysis Detail"
     },
     "system": {

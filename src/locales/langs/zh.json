@@ -270,6 +270,10 @@
       "notFound": "404",
       "serverError": "500"
     },
+    "configManagement": {
+      "title": "配置管理",
+      "applicationManagement": "应用管理"
+    },
     "userGrowth": {
       "title": "用户增长",
       "myPerformance": "我的绩效",
@@ -281,6 +285,7 @@
       "conversionManagement": "转化管理",
       "overallRecovery": "整体回收",
       "comprehensiveAnalysis": "综合分析",
+      "alertManagement": "预警管理",
       "platformAnalysisDetail": "广告平台分析详情"
     },
     "system": {

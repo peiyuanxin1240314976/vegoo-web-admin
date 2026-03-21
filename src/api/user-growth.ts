@@ -1,6 +1,6 @@
 /**
  * 用户增长 - 转化管理 & 整体回收 & 综合分析 & 广告平台分析详情 API
- * 综合分析 / 广告平台分析详情：当前返回 `mock/data.ts` 本地数据；接入真实接口时在下方方法内改为 `request.post`
+ * 综合分析 / 广告平台分析详情 / 预警管理：当前返回 `mock/data.ts` 本地数据；接入真实接口时在下方方法内改为 `request.post`
  */
 /* eslint-disable @typescript-eslint/no-unused-vars -- Mock 接口参数保留供后端联调使用 */
 import request from '@/utils/http'
@@ -16,6 +16,11 @@ import {
   MOCK_COMPREHENSIVE_ANALYSIS_FILTER_OPTIONS
 } from '@/views/user-growth/comprehensive-analysis/mock/data'
 import { buildMockPlatformAnalysisDetailData } from '@/views/user-growth/platform-analysis-detail/mock/data'
+import type {
+  AlertManagementOverview,
+  AlertManagementOverviewParams
+} from '@/views/user-growth/alert-management/types'
+import { buildMockAlertManagementOverview } from '@/views/user-growth/alert-management/mock/data'
 
 // ─── 整体回收 ──────────────────────────────────────────────────
 
@@ -559,4 +564,14 @@ export function fetchComprehensiveAnalysisData(
 /** 广告平台分析详情页（从综合分析 drill-down 进入）（当前：mock；后端：`POST /api/user-growth/platform-analysis-detail/overview`） */
 export function fetchPlatformAnalysisDetailData(params: { name: string; from: string }) {
   return Promise.resolve(buildMockPlatformAnalysisDetailData(params))
+}
+
+// ─── 预警管理 ──────────────────────────────────────────────────
+
+/** 预警管理 - 整页聚合（当前：mock；后端：`POST /api/user-growth/alert-management/overview`） */
+export function fetchAlertManagementOverview(
+  params: AlertManagementOverviewParams
+): Promise<AlertManagementOverview> {
+  return Promise.resolve(buildMockAlertManagementOverview(params))
+  // return request.post<AlertManagementOverview>('/api/user-growth/alert-management/overview', params)
 }
