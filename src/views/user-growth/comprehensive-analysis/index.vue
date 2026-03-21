@@ -16,25 +16,51 @@
           <div class="ca-pill">
             <span class="ca-pill__k">应用:</span>
             <ElSelect v-model="filters.s_app_id" class="ca-select" :teleported="false">
-              <ElOption v-for="opt in appOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+              <ElOption
+                v-for="opt in appOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
             </ElSelect>
           </div>
           <div class="ca-pill">
             <span class="ca-pill__k">广告平台:</span>
             <ElSelect v-model="filters.adPlatform" class="ca-select" :teleported="false">
-              <ElOption v-for="opt in adPlatformOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+              <ElOption
+                v-for="opt in adPlatformOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
             </ElSelect>
           </div>
           <div class="ca-pill">
             <span class="ca-pill__k">国家:</span>
-            <ElSelect v-model="filters.s_country_code" class="ca-select" :teleported="false" filterable>
-              <ElOption v-for="opt in countryOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <ElSelect
+              v-model="filters.s_country_code"
+              class="ca-select"
+              :teleported="false"
+              filterable
+            >
+              <ElOption
+                v-for="opt in countryOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
             </ElSelect>
           </div>
         </div>
         <div class="ca-view-tabs">
-          <button v-for="v in viewModes" :key="v.key" type="button" class="ca-view-tab"
-            :class="{ 'is-active': filters.viewMode === v.key }" @click="filters.viewMode = v.key">
+          <button
+            v-for="v in viewModes"
+            :key="v.key"
+            type="button"
+            class="ca-view-tab"
+            :class="{ 'is-active': filters.viewMode === v.key }"
+            @click="filters.viewMode = v.key"
+          >
             {{ v.label }}
           </button>
         </div>
@@ -55,8 +81,20 @@
         </article>
       </section>
 
-      <!-- 主内容区 -->
-      <SectionPlatform :data="pageData" @drill-down="handleDrillDown" />
+      <!-- 主内容区：数据 / 看板 / 图表 / 报表 -->
+      <SectionPlatform
+        v-if="filters.viewMode === 'data' || filters.viewMode === 'chart'"
+        :data="pageData"
+        @drill-down="handleDrillDown"
+      />
+      <SectionApp
+        v-else-if="filters.viewMode === 'board'"
+        :data="sectionAppData"
+        @drill-down="handleDrillDown"
+      />
+      <ElCard v-else shadow="never" class="ca-view-placeholder">
+        <ElEmpty :description="viewModePlaceholderText" />
+      </ElCard>
     </main>
   </div>
 </template>
@@ -68,8 +106,13 @@
   import type { ComprehensiveAnalysisFilterState, ComprehensiveAnalysisData } from './types'
   import { useComprehensiveAnalysisFilters } from './composables/useComprehensiveAnalysisFilters'
   import { fetchComprehensiveAnalysisData } from '@/api/user-growth'
-  import { resolveDateRangeFromPreset } from './utils/buildApiParams'
+  import {
+    buildComprehensiveAnalysisApiParams,
+    resolveDateRangeFromPreset
+  } from './utils/buildApiParams'
+  import { buildMockSectionAppData } from './mock/data'
   import SectionPlatform from './modules/section-platform.vue'
+  import SectionApp from './modules/section-app.vue'
 
   defineOptions({ name: 'ComprehensiveAnalysis' })
 
@@ -101,6 +144,12 @@
     }
     return `${date_start} ~ ${date_end}`
   })
+
+  const sectionAppData = computed(() =>
+    buildMockSectionAppData(buildComprehensiveAnalysisApiParams(filters))
+  )
+
+  const viewModePlaceholderText = '报表视图：导出与订阅能力联调后开放'
 
   function handleDrillDown(name: string) {
     router.push({
@@ -197,12 +246,35 @@
   }
 
   .ca-select {
-    :deep(.el-select__wrapper) { background: transparent; box-shadow: none !important; padding-inline: 0; }
-    :deep(.el-select__selection) { flex-wrap: nowrap; min-width: 0; }
-    :deep(.el-select__selected-item) { overflow: visible; white-space: nowrap; }
-    :deep(.el-select__placeholder) { white-space: nowrap; }
-    :deep(.el-input__wrapper) { background: transparent; box-shadow: none !important; }
-    :deep(.el-input__inner) { width: 64px; min-width: 64px; }
+    :deep(.el-select__wrapper) {
+      padding-inline: 0;
+      background: transparent;
+      box-shadow: none !important;
+    }
+
+    :deep(.el-select__selection) {
+      flex-wrap: nowrap;
+      min-width: 0;
+    }
+
+    :deep(.el-select__selected-item) {
+      overflow: visible;
+      white-space: nowrap;
+    }
+
+    :deep(.el-select__placeholder) {
+      white-space: nowrap;
+    }
+
+    :deep(.el-input__wrapper) {
+      background: transparent;
+      box-shadow: none !important;
+    }
+
+    :deep(.el-input__inner) {
+      width: 64px;
+      min-width: 64px;
+    }
   }
 
   .ca-view-tabs {
@@ -222,9 +294,14 @@
     background: transparent;
     border: none;
     border-radius: 6px;
-    transition: color 0.2s, background 0.2s;
+    transition:
+      color 0.2s,
+      background 0.2s;
 
-    &:hover { color: var(--art-gray-900); }
+    &:hover {
+      color: var(--art-gray-900);
+    }
+
     &.is-active {
       color: var(--art-primary);
       background: color-mix(in srgb, var(--art-primary) 12%, var(--default-box-color));
@@ -232,21 +309,21 @@
   }
 
   .ca-main {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 14px;
+    min-height: 0;
     padding-bottom: 20px;
+    overflow: auto;
   }
 
   // ── KPI 行 ────────────────────────────────────────────────────
   .ca-kpi-grid {
     display: grid;
+    flex-shrink: 0;
     grid-template-columns: repeat(5, 1fr);
     gap: 12px;
-    flex-shrink: 0;
   }
 
   .ca-kpi {
@@ -264,8 +341,8 @@
     &__value {
       font-size: 26px;
       font-weight: 700;
-      color: var(--art-gray-900);
       line-height: 1.2;
+      color: var(--art-gray-900);
     }
 
     &__sub {
@@ -280,8 +357,28 @@
       align-items: center;
       font-size: 12px;
 
-      &.trend-up   { color: #22c55e; }
-      &.trend-down { color: #ef4444; }
+      &.trend-up {
+        color: #22c55e;
+      }
+
+      &.trend-down {
+        color: #ef4444;
+      }
+    }
+  }
+
+  .ca-view-placeholder {
+    flex: 1;
+    min-height: 240px;
+    background: var(--default-box-color);
+    border: 1px solid var(--default-border);
+    border-radius: 10px;
+
+    :deep(.el-card__body) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
     }
   }
 </style>

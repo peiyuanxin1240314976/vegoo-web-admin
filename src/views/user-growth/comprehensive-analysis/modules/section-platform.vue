@@ -2,13 +2,18 @@
   <div class="ca-dashboard">
     <!-- ── 中部四列 ─────────────────────────────────────────── -->
     <div class="ca-mid-grid">
-
       <!-- Col 1: 广告平台 CPI 对比 -->
       <ElCard class="ca-panel" shadow="never">
         <template #header>
           <span>广告平台 CPI 对比</span>
         </template>
-        <div class="target-label">目标 ${{ data?.platformCpiBar.target.toFixed(2) }}</div>
+        <div class="target-label">
+          目标 ${{
+            data?.platformCpiBar?.target != null
+              ? Number(data.platformCpiBar.target).toFixed(2)
+              : '--'
+          }}
+        </div>
         <div ref="platformBarRef" class="ca-chart ca-chart--platform-bar"></div>
       </ElCard>
 
@@ -17,16 +22,22 @@
         <template #header>
           <div class="panel-header-row">
             <span>应用 CPI 排行</span>
-            <ElSelect v-model="appRankPlatform" size="small" style="width: 88px" :teleported="false">
+            <ElSelect
+              v-model="appRankPlatform"
+              size="small"
+              style="width: 102px"
+              :teleported="false"
+            >
               <ElOption label="按广告平台" value="all" />
               <ElOption label="Google Ads" value="google" />
+              <ElOption label="Facebook" value="facebook" />
               <ElOption label="TikTok" value="tiktok" />
             </ElSelect>
           </div>
         </template>
         <div class="app-rank-list">
           <div
-            v-for="item in data?.appCpiRank ?? []"
+            v-for="item in displayedAppCpiRank"
             :key="item.id"
             class="app-rank-item"
             @click="emit('drill-down', item.name)"
@@ -36,10 +47,18 @@
               <span class="app-name">{{ item.name }}</span>
             </div>
             <div class="app-rank-item__right">
-              <span class="app-cpi" :class="cpiColorClass(item.cpi, data?.platformCpiBar.target ?? 2.5)">
+              <span
+                class="app-cpi"
+                :class="cpiColorClass(item.cpi, data?.platformCpiBar?.target ?? 2.5)"
+              >
                 ${{ item.cpi.toFixed(2) }}
               </span>
-              <el-icon class="trend-icon" :class="item.trend === 'up' ? 'trend-up' : item.trend === 'down' ? 'trend-down' : ''">
+              <el-icon
+                class="trend-icon"
+                :class="
+                  item.trend === 'up' ? 'trend-up' : item.trend === 'down' ? 'trend-down' : ''
+                "
+              >
                 <Top v-if="item.trend === 'up'" />
                 <Bottom v-else-if="item.trend === 'down'" />
                 <Minus v-else />
@@ -64,7 +83,8 @@
                 class="map-metric-tab"
                 :class="{ 'is-active': activeMapMetric === m }"
                 @click="activeMapMetric = m"
-              >{{ m }}</button>
+                >{{ m }}</button
+              >
             </div>
           </div>
         </template>
@@ -81,10 +101,16 @@
               <div class="top8-bar-wrap">
                 <div
                   class="top8-bar"
-                  :style="{ width: barWidth(item.cpi) + '%', background: cpiBarColor(item.cpi, data?.platformCpiBar.target ?? 2.5) }"
+                  :style="{
+                    width: barWidth(item.cpi) + '%',
+                    background: cpiBarColor(item.cpi, data?.platformCpiBar?.target ?? 2.5)
+                  }"
                 ></div>
               </div>
-              <span class="top8-cpi" :class="cpiColorClass(item.cpi, data?.platformCpiBar.target ?? 2.5)">
+              <span
+                class="top8-cpi"
+                :class="cpiColorClass(item.cpi, data?.platformCpiBar?.target ?? 2.5)"
+              >
                 ${{ item.cpi.toFixed(2) }}
               </span>
             </div>
@@ -139,7 +165,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch, onMounted } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import { Top, Bottom, ArrowRight, Minus } from '@element-plus/icons-vue'
   import { useChart } from '@/hooks/core/useChart'
   import { echarts, type EChartsOption } from '@/plugins/echarts'
@@ -187,6 +213,23 @@
   }
 
   const appRankPlatform = ref('all')
+  /** 应用 CPI 排行：按所选广告平台切换展示（本地口径模拟） */
+  const PLATFORM_RANK_FACTOR: Record<string, number> = {
+    all: 1,
+    google: 1.08,
+    facebook: 1.02,
+    tiktok: 0.93
+  }
+  const displayedAppCpiRank = computed(() => {
+    const list = props.data?.appCpiRank ?? []
+    const factor = PLATFORM_RANK_FACTOR[appRankPlatform.value] ?? 1
+    const mapped = list.map((item, i) => ({
+      ...item,
+      cpi: +(item.cpi * factor * (1 + (i % 5) * 0.006)).toFixed(2)
+    }))
+    if (appRankPlatform.value === 'all') return mapped
+    return [...mapped].sort((a, b) => b.cpi - a.cpi)
+  })
   const activeMapMetric = ref('CPI')
   const mapMetrics = ['CPI', 'ECPM', 'ROI']
 
@@ -223,7 +266,7 @@
     return { good: '#22c55e', near: '#f97316', over: '#ef4444' }[status]
   }
 
-  const top8Max = () => Math.max(...(props.data?.countryTop8.map((c) => c.cpi) ?? [1]))
+  const top8Max = () => Math.max(...(props.data?.countryTop8?.map((c) => c.cpi) ?? [1]))
   function barWidth(cpi: number) {
     return Math.round((cpi / top8Max()) * 100)
   }
@@ -233,7 +276,8 @@
   function buildPlatformBarOption(): EChartsOption {
     const d = props.data?.platformCpiBar
     if (!d) return {}
-    const { getAxisLineStyle, getSplitLineStyle, getAxisLabelStyle, getTooltipStyle } = platformBarChart
+    const { getAxisLineStyle, getSplitLineStyle, getAxisLabelStyle, getTooltipStyle } =
+      platformBarChart
     const items = d.items
 
     return {
@@ -250,7 +294,7 @@
         min: 0,
         max: Math.max(...items.map((i) => i.cpi)) * 1.3,
         axisLabel: { ...getAxisLabelStyle(), formatter: '${value}' },
-        splitLine: getSplitLineStyle(),
+        splitLine: getSplitLineStyle()
         // 目标线用 markLine 实现
       },
       yAxis: {
@@ -302,9 +346,21 @@
   }
 
   const MAP_METRIC_CONFIG: Record<string, MapMetricConfig> = {
-    CPI:  { valueKey: 'cpi',  unit: '$', goodMax: 2.5,  nearMax: 3.0,  labels: ['达标', '接近', '超标'] },
-    ECPM: { valueKey: 'ecpm', unit: '$', goodMax: 18,   nearMax: 22,   labels: ['偏低', '正常', '偏高'] },
-    ROI:  { valueKey: 'roi',  unit: '%', goodMax: 40,   nearMax: 25,   labels: ['优秀', '一般', '偏低'] }
+    CPI: {
+      valueKey: 'cpi',
+      unit: '$',
+      goodMax: 2.5,
+      nearMax: 3.0,
+      labels: ['达标', '接近', '超标']
+    },
+    ECPM: {
+      valueKey: 'ecpm',
+      unit: '$',
+      goodMax: 18,
+      nearMax: 22,
+      labels: ['偏低', '正常', '偏高']
+    },
+    ROI: { valueKey: 'roi', unit: '%', goodMax: 40, nearMax: 25, labels: ['优秀', '一般', '偏低'] }
   }
 
   /** 根据 CPI 值派生各国其他指标（mock，保证幂等） */
@@ -339,14 +395,30 @@
 
     const pieces = isHighGood
       ? [
-          { min: cfg.goodMax, color: goodColor, label: `≥${cfg.goodMax}${cfg.unit} ${cfg.labels[0]}` },
+          {
+            min: cfg.goodMax,
+            color: goodColor,
+            label: `≥${cfg.goodMax}${cfg.unit} ${cfg.labels[0]}`
+          },
           { min: cfg.nearMax, max: cfg.goodMax, color: nearColor, label: cfg.labels[1] },
-          { max: cfg.nearMax, color: badColor, label: `<${cfg.nearMax}${cfg.unit} ${cfg.labels[2]}` }
+          {
+            max: cfg.nearMax,
+            color: badColor,
+            label: `<${cfg.nearMax}${cfg.unit} ${cfg.labels[2]}`
+          }
         ]
       : [
-          { max: cfg.goodMax, color: goodColor, label: `≤${cfg.goodMax}${cfg.unit} ${cfg.labels[0]}` },
+          {
+            max: cfg.goodMax,
+            color: goodColor,
+            label: `≤${cfg.goodMax}${cfg.unit} ${cfg.labels[0]}`
+          },
           { min: cfg.goodMax, max: cfg.nearMax, color: nearColor, label: cfg.labels[1] },
-          { min: cfg.nearMax, color: badColor, label: `>${cfg.nearMax}${cfg.unit} ${cfg.labels[2]}` }
+          {
+            min: cfg.nearMax,
+            color: badColor,
+            label: `>${cfg.nearMax}${cfg.unit} ${cfg.labels[2]}`
+          }
         ]
 
     return {
@@ -404,7 +476,8 @@
   function buildCpiTrendOption(): EChartsOption {
     const d = props.data?.platformCpiTrend
     if (!d) return {}
-    const { getAxisLineStyle, getSplitLineStyle, getAxisLabelStyle, getTooltipStyle } = cpiTrendChart
+    const { getAxisLineStyle, getSplitLineStyle, getAxisLabelStyle, getTooltipStyle } =
+      cpiTrendChart
     return {
       tooltip: { ...getTooltipStyle('axis') },
       legend: {
@@ -556,10 +629,21 @@
   .ca-chart {
     width: 100%;
 
-    &--platform-bar { height: 220px; }
-    &--map          { height: 280px; }
-    &--trend        { height: 220px; }
-    &--ecpm         { height: 160px; }
+    &--platform-bar {
+      height: 220px;
+    }
+
+    &--map {
+      height: 280px;
+    }
+
+    &--trend {
+      height: 220px;
+    }
+
+    &--ecpm {
+      height: 160px;
+    }
   }
 
   .panel-header-row {
@@ -615,6 +699,7 @@
 
   .app-icon {
     display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
     width: 26px;
@@ -624,13 +709,12 @@
     color: #fff;
     background: var(--art-primary);
     border-radius: 6px;
-    flex-shrink: 0;
   }
 
   .app-name {
+    overflow: hidden;
     font-size: 12px;
     color: var(--art-gray-800);
-    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -649,12 +733,25 @@
     color: var(--art-gray-400);
   }
 
-  .cpi-good { color: #22c55e; }
-  .cpi-near { color: #f97316; }
-  .cpi-over { color: #ef4444; }
+  .cpi-good {
+    color: #22c55e;
+  }
 
-  .trend-up   { color: #ef4444; }
-  .trend-down { color: #22c55e; }
+  .cpi-near {
+    color: #f97316;
+  }
+
+  .cpi-over {
+    color: #ef4444;
+  }
+
+  .trend-up {
+    color: #ef4444;
+  }
+
+  .trend-down {
+    color: #22c55e;
+  }
 
   .app-rank-hint {
     margin-top: 8px;
@@ -692,8 +789,13 @@
     gap: 12px;
   }
 
-  .ca-panel--top8 :deep(.el-card__body) { padding: 8px 12px; }
-  .ca-panel--alerts :deep(.el-card__body) { padding: 8px 12px; }
+  .ca-panel--top8 :deep(.el-card__body) {
+    padding: 8px 12px;
+  }
+
+  .ca-panel--alerts :deep(.el-card__body) {
+    padding: 8px 12px;
+  }
 
   .top8-list {
     display: flex;
@@ -710,17 +812,17 @@
   }
 
   .top8-country {
-    color: var(--art-gray-700);
-    white-space: nowrap;
     overflow: hidden;
+    color: var(--art-gray-700);
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .top8-bar-wrap {
     height: 8px;
+    overflow: hidden;
     background: var(--default-border);
     border-radius: 4px;
-    overflow: hidden;
   }
 
   .top8-bar {
@@ -730,9 +832,9 @@
   }
 
   .top8-cpi {
-    text-align: right;
-    font-weight: 600;
     font-size: 11px;
+    font-weight: 600;
+    text-align: right;
   }
 
   // ── 投放预警 ──────────────────────────────────────────────────
@@ -758,15 +860,31 @@
     margin-top: 3px;
     border-radius: 50%;
 
-    &--danger  { background: #ef4444; }
-    &--warning { background: #f97316; }
-    &--info    { background: #3b82f6; }
+    &--danger {
+      background: #ef4444;
+    }
+
+    &--warning {
+      background: #f97316;
+    }
+
+    &--info {
+      background: #3b82f6;
+    }
   }
 
   .alert-text {
-    &--danger  { color: #ef4444; }
-    &--warning { color: #f97316; }
-    &--info    { color: #3b82f6; }
+    &--danger {
+      color: #ef4444;
+    }
+
+    &--warning {
+      color: #f97316;
+    }
+
+    &--info {
+      color: #3b82f6;
+    }
   }
 
   // ── ECPM 底部指标 ─────────────────────────────────────────────
@@ -779,8 +897,8 @@
 
   .ecpm-metric {
     padding: 8px 10px;
-    border-radius: 8px;
     text-align: center;
+    border-radius: 8px;
 
     &__label {
       margin-bottom: 4px;
@@ -795,8 +913,16 @@
       color: #fff;
     }
 
-    &--teal   { background: #0d9488; }
-    &--orange { background: #ea580c; }
-    &--red    { background: #dc2626; }
+    &--teal {
+      background: #0d9488;
+    }
+
+    &--orange {
+      background: #ea580c;
+    }
+
+    &--red {
+      background: #dc2626;
+    }
   }
 </style>

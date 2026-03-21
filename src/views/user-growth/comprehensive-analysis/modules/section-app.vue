@@ -38,9 +38,7 @@
               </template>
             </ElTableColumn>
             <ElTableColumn prop="cpi" label="CPI" width="72">
-              <template #default="{ row }">
-                ${{ row.cpi.toFixed(2) }}
-              </template>
+              <template #default="{ row }"> ${{ row.cpi.toFixed(2) }} </template>
             </ElTableColumn>
             <ElTableColumn prop="change" label="变化" width="72">
               <template #default="{ row }">
@@ -73,7 +71,7 @@
               <tr>
                 <th class="th-platform">广告平台</th>
                 <th
-                  v-for="country in data?.platformCountryMatrix.countries ?? []"
+                  v-for="country in data?.platformCountryMatrix?.countries ?? []"
                   :key="country"
                   class="th-country"
                   colspan="2"
@@ -84,7 +82,7 @@
               <tr>
                 <th class="th-platform"></th>
                 <template
-                  v-for="country in data?.platformCountryMatrix.countries ?? []"
+                  v-for="country in data?.platformCountryMatrix?.countries ?? []"
                   :key="country"
                 >
                   <th class="th-sub">CPI</th>
@@ -93,25 +91,16 @@
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="row in data?.platformCountryMatrix.rows ?? []"
-                :key="row.platform"
-              >
+              <tr v-for="row in data?.platformCountryMatrix?.rows ?? []" :key="row.platform">
                 <td class="td-platform">{{ row.platform }}</td>
                 <template
-                  v-for="country in data?.platformCountryMatrix.countries ?? []"
+                  v-for="country in data?.platformCountryMatrix?.countries ?? []"
                   :key="country"
                 >
-                  <td
-                    class="td-cell"
-                    :class="cellClass(row.cells[country]?.highlight)"
-                  >
+                  <td class="td-cell" :class="cellClass(row.cells[country]?.highlight)">
                     {{ row.cells[country]?.value ?? '—' }}
                   </td>
-                  <td
-                    class="td-cell td-change"
-                    :class="cellClass(row.cells[country]?.highlight)"
-                  >
+                  <td class="td-cell td-change" :class="cellClass(row.cells[country]?.highlight)">
                     {{ row.cells[country]?.changeRate ?? '—' }}
                   </td>
                 </template>
@@ -127,7 +116,9 @@
       <el-icon class="alert-icon"><Warning /></el-icon>
       <span>
         国家层级 红色问题提示：可点击进入智能预警
-        <el-button text size="small" type="warning" @click="emit('drill-down', '__alert__')">查看预警 →</el-button>
+        <el-button text size="small" type="warning" @click="emit('drill-down', '__alert__')"
+          >查看预警 →</el-button
+        >
       </span>
       <span class="alert-sep">|</span>
       <span>广告平台层级可点击查看详细数据</span>
@@ -177,7 +168,8 @@
   function buildAppTrendOption(): EChartsOption {
     const d = props.data?.appCpiTrend
     if (!d) return {}
-    const { getAxisLineStyle, getSplitLineStyle, getAxisLabelStyle, getTooltipStyle } = appTrendChart
+    const { getAxisLineStyle, getSplitLineStyle, getAxisLabelStyle, getTooltipStyle } =
+      appTrendChart
     return {
       tooltip: { ...getTooltipStyle('axis') },
       legend: {
@@ -211,7 +203,11 @@
     }
   }
 
-  watch(() => props.data, () => appTrendChart.initChart(buildAppTrendOption()), { deep: true })
+  watch(
+    () => props.data,
+    () => appTrendChart.initChart(buildAppTrendOption()),
+    { deep: true }
+  )
   onMounted(() => appTrendChart.initChart(buildAppTrendOption()))
 </script>
 
@@ -236,11 +232,14 @@
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
     border-radius: 9999px;
-    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    transition:
+      color 0.2s,
+      border-color 0.2s,
+      background 0.2s;
 
     &:hover {
-      border-color: var(--art-primary);
       color: var(--art-primary);
+      border-color: var(--art-primary);
     }
 
     &.is-active {
@@ -293,16 +292,15 @@
 
   // 矩阵表
   .matrix-scroll {
-    overflow-x: auto;
-    overflow-y: auto;
     max-height: 400px;
+    overflow: auto;
   }
 
   .matrix-table {
     width: max-content;
     min-width: 100%;
-    border-collapse: collapse;
     font-size: 12px;
+    border-collapse: collapse;
 
     th,
     td {
@@ -314,19 +312,19 @@
     th {
       font-weight: 600;
       color: var(--art-gray-700);
-      background: var(--default-box-color);
       text-align: center;
+      background: var(--default-box-color);
     }
 
     .th-platform,
     .td-platform {
+      position: sticky;
+      left: 0;
+      z-index: 1;
       min-width: 100px;
       font-weight: 600;
       color: var(--art-gray-800);
       background: var(--default-box-color);
-      position: sticky;
-      left: 0;
-      z-index: 1;
     }
 
     .th-country {
@@ -339,8 +337,8 @@
     }
 
     .td-cell {
-      text-align: right;
       color: var(--art-gray-700);
+      text-align: right;
     }
 
     .td-change {
@@ -364,8 +362,8 @@
   }
 
   .app-name.is-highlight {
-    color: var(--art-primary);
     font-weight: 600;
+    color: var(--art-primary);
   }
 
   .text-up {
