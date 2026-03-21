@@ -278,7 +278,10 @@
       "myAds": "My Ads",
       "adPlatformDetail": "Ad Platform Detail",
       "adPerformance": "Ad Performance",
-      "conversionManagement": "Conversion Management"
+      "conversionManagement": "Conversion Management",
+      "overallRecovery": "Overall Recovery",
+      "comprehensiveAnalysis": "Comprehensive Analysis",
+      "platformAnalysisDetail": "Platform Analysis Detail"
     },
     "system": {
       "title": "System Settings",

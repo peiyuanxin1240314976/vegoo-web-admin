@@ -278,7 +278,10 @@
       "myAds": "我的广告",
       "adPlatformDetail": "广告平台详情",
       "adPerformance": "广告成效",
-      "conversionManagement": "转化管理"
+      "conversionManagement": "转化管理",
+      "overallRecovery": "整体回收",
+      "comprehensiveAnalysis": "综合分析",
+      "platformAnalysisDetail": "广告平台分析详情"
     },
     "system": {
       "title": "系统管理",

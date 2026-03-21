@@ -1,0 +1,157 @@
+{
+  "_comment": "综合分析 - 主屏数据。对应 types.ts: ComprehensiveAnalysisData。",
+  "fieldDescription": {
+    "request": {
+      "date_start": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期 YYYY-MM-DD。"
+      },
+      "date_end": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期 YYYY-MM-DD。"
+      },
+      "s_app_id": {
+        "type": "string",
+        "required": true,
+        "description": "应用 ID；空字符串表示全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台标识；空字符串表示全部（项目约定字段名 source）。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码；空字符串表示全部。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "ComprehensiveAnalysisData",
+        "required": true,
+        "description": "KPI、平台 CPI 条、应用排行、地图点、Top8、预警、趋势、ECPM。"
+      }
+    },
+    "ComprehensiveAnalysisData": {
+      "kpis": {
+        "type": "KpiCard[]",
+        "required": true,
+        "description": "顶部 KPI 卡片（id/title/subTitle/primaryValue/trendText/trendUp）。"
+      },
+      "platformCpiBar": {
+        "type": "PlatformCpiBarData",
+        "required": true,
+        "description": "广告平台 CPI 横向柱图 target + items(name/cpi/color/status)。"
+      },
+      "appCpiRank": {
+        "type": "AppCpiRankItem[]",
+        "required": true,
+        "description": "应用 CPI 排行 id/name/cpi/trend。"
+      },
+      "countryCpiMap": {
+        "type": "CountryCpiMapItem[]",
+        "required": true,
+        "description": "地图国家点 country/code/cpi/x/y。"
+      },
+      "countryTop8": {
+        "type": "CountryCpiTopItem[]",
+        "required": true,
+        "description": "右侧 Top8 国家。"
+      },
+      "alerts": {
+        "type": "AlertItem[]",
+        "required": true,
+        "description": "投放预警列表。"
+      },
+      "platformCpiTrend": {
+        "type": "PlatformCpiTrend",
+        "required": true,
+        "description": "广告平台 CPI 折线 dates/target/series。"
+      },
+      "ecpmAnalysis": {
+        "type": "EcpmAnalysis",
+        "required": true,
+        "description": "ECPM 面积图 dates/estimated/actual/metrics。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "date_start": "2026-03-14",
+    "date_end": "2026-03-20",
+    "s_app_id": "",
+    "source": "",
+    "s_country_code": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "kpis": [
+        {
+          "id": "totalInstall",
+          "title": "总安装量",
+          "subTitle": "近7天",
+          "primaryValue": "12,485",
+          "trendText": "+8.5%",
+          "trendUp": true
+        }
+      ],
+      "platformCpiBar": {
+        "target": 2.5,
+        "items": [
+          { "name": "Google Ads", "cpi": 3.21, "color": "#4B8EF1", "status": "over" }
+        ]
+      },
+      "appCpiRank": [
+        { "id": "app1", "name": "PhoneTracker", "cpi": 3.21, "trend": "down" }
+      ],
+      "countryCpiMap": [
+        { "country": "美国", "code": "US", "cpi": 3.12, "x": 20, "y": 34 }
+      ],
+      "countryTop8": [{ "country": "美国", "code": "US", "cpi": 3.12 }],
+      "alerts": [
+        {
+          "id": "a1",
+          "level": "danger",
+          "text": "Google Ads × US: CPI $3.21 超标 28.4%，ROI D1 仅 22%"
+        }
+      ],
+      "platformCpiTrend": {
+        "dates": ["03-14", "03-15", "03-16"],
+        "target": 2.5,
+        "series": [
+          {
+            "name": "Google Ads",
+            "color": "#4B8EF1",
+            "data": [2.1, 2.2, 2.15]
+          }
+        ]
+      },
+      "ecpmAnalysis": {
+        "dates": ["03-14", "03-15", "03-16"],
+        "estimated": [18.2, 18.5, 18.8],
+        "actual": [17.9, 18.1, 18.3],
+        "metrics": {
+          "estimatedEcpm": "$19.8",
+          "actualEcpm": "$18.6",
+          "biasRate": "-6.1%",
+          "biasAmount": "-$1.2"
+        }
+      }
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/comprehensive-analysis/overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
+    "responseBody": "ComprehensiveAnalysisData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "响应体字段名建议与前端 types.ts 完全一致（camelCase），便于零适配。",
+      "若后端使用 snake_case，需在 request 层或 adapter 中转换后再赋给页面。"
+    ]
+  }
+}

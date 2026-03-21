@@ -1,0 +1,59 @@
+{
+  "_comment": "综合分析 - 筛选下拉。对应 types.ts: ComprehensiveAnalysisFilterOptions。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "data": {
+        "type": "ComprehensiveAnalysisFilterOptions",
+        "required": true,
+        "description": "三组 options，value 与 overview 请求中 s_app_id / source / s_country_code 对应（全部为空字符串时选 all 选项）。"
+      }
+    },
+    "ComprehensiveAnalysisFilterOptions": {
+      "appOptions": {
+        "type": "{ label: string; value: string }[]",
+        "required": true,
+        "description": "应用列表；通常含「全部」value=all。"
+      },
+      "adPlatformOptions": {
+        "type": "{ label: string; value: string }[]",
+        "required": true,
+        "description": "广告平台列表；与请求字段 source 对应。"
+      },
+      "countryOptions": {
+        "type": "{ label: string; value: string }[]",
+        "required": true,
+        "description": "国家列表；与 s_country_code 对应。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "data": {
+      "appOptions": [
+        { "label": "全部", "value": "all" },
+        { "label": "Weather5", "value": "weather5" }
+      ],
+      "adPlatformOptions": [
+        { "label": "全部", "value": "all" },
+        { "label": "Google Ads", "value": "google" }
+      ],
+      "countryOptions": [
+        { "label": "全部", "value": "all" },
+        { "label": "美国", "value": "US" }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/comprehensive-analysis/meta-filter-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "无（空 JSON 对象）",
+    "responseBody": "ComprehensiveAnalysisFilterOptions"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "options 的 value 需与 overview 入参一致（all 由前端转为空字符串）。"
+    ]
+  }
+}
