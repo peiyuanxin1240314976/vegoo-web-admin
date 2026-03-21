@@ -82,6 +82,16 @@ export const userGrowthRoutes: AppRouteRecord = {
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
+    },
+    {
+      path: 'paid-analysis',
+      name: 'UserGrowthPaidAnalysis',
+      component: '/user-growth/paid-analysis/IAPAnalysis',
+      meta: {
+        title: 'menus.userGrowth.paidAnalysis',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
     }
   ]
 }

@@ -279,7 +279,8 @@
       "myAds": "My Ads",
       "adPlatformDetail": "Ad Platform Detail",
       "adPerformance": "Ad Performance",
-      "conversionManagement": "Conversion Management"
+      "conversionManagement": "Conversion Management",
+      "paidAnalysis": "Paid Analysis"
     },
     "system": {
       "title": "System Settings",
