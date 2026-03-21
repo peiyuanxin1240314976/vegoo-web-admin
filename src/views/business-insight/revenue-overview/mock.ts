@@ -94,6 +94,34 @@ export type RevenueOverviewIapBreakdownRow = {
   d_purchase_rate: number
 }
 
+/** IAP 渠道分析表格行 */
+export type RevenueOverviewIapChannelRow = {
+  s_channel_name: string
+  revenue: number
+  percent: number
+  n_orders: number
+  d_arppu: number
+  d_conversion_rate: number
+  d_refund_rate: number
+}
+
+/** IAP 渠道占比条（堆叠图例） */
+export type RevenueOverviewIapChannelSegment = {
+  key: string
+  label: string
+  percent: number
+  color: string
+}
+
+/** IAP 趋势 Tab 底部 KPI 卡片 */
+export type RevenueOverviewIapTrendKpiCard = {
+  title: string
+  valueText: string
+  subText?: string
+  trendText?: string
+  trendUp?: boolean
+}
+
 export type RevenueOverviewPieSlice = {
   name: string
   value: number
@@ -508,7 +536,7 @@ export const MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS: RevenueOverviewIaaVersionRo
 
 export const MOCK_REVENUE_OVERVIEW_IAP_TABS = [
   { key: 'product', label: '商品构成' },
-  { key: 'channel', label: '渠道分析' },
+  { key: 'channel', label: '广告平台分析' },
   { key: 'trend', label: '趋势' }
 ] as const
 
@@ -562,6 +590,114 @@ export const MOCK_REVENUE_OVERVIEW_IAP_ROWS: RevenueOverviewIapBreakdownRow[] = 
     n_users: 196,
     d_arppu: 2.99,
     d_purchase_rate: 10.0
+  }
+]
+
+export const MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_SEGMENTS: RevenueOverviewIapChannelSegment[] = [
+  { key: 'fb', label: 'Facebook Ads', percent: 35.2, color: '#20d6b5' },
+  { key: 'gg', label: 'Google Ads', percent: 28.0, color: '#38bdf8' },
+  { key: 'tt', label: 'TikTok Ads', percent: 18.5, color: '#a78bfa' },
+  { key: 'og', label: 'Organic', percent: 12.3, color: '#f59e0b' },
+  { key: 'ot', label: 'Other', percent: 6.0, color: '#94a3b8' }
+]
+
+export const MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_ROWS: RevenueOverviewIapChannelRow[] = [
+  {
+    s_channel_name: 'Facebook Ads',
+    revenue: 30.42,
+    percent: 35.2,
+    n_orders: 3120,
+    d_arppu: 13.76,
+    d_conversion_rate: 2.4,
+    d_refund_rate: 1.2
+  },
+  {
+    s_channel_name: 'Google Ads',
+    revenue: 24.19,
+    percent: 28.0,
+    n_orders: 2480,
+    d_arppu: 12.15,
+    d_conversion_rate: 2.1,
+    d_refund_rate: 1.5
+  },
+  {
+    s_channel_name: 'TikTok Ads',
+    revenue: 15.98,
+    percent: 18.5,
+    n_orders: 1650,
+    d_arppu: 11.2,
+    d_conversion_rate: 1.9,
+    d_refund_rate: 2.1
+  },
+  {
+    s_channel_name: 'Organic',
+    revenue: 10.64,
+    percent: 12.3,
+    n_orders: 980,
+    d_arppu: 14.5,
+    d_conversion_rate: 1.6,
+    d_refund_rate: 0.8
+  },
+  {
+    s_channel_name: 'Other',
+    revenue: 5.17,
+    percent: 6.0,
+    n_orders: 420,
+    d_arppu: 9.8,
+    d_conversion_rate: 1.1,
+    d_refund_rate: 3.2
+  }
+]
+
+export const MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_LEFT_METRICS = [
+  { title: '广告平台转化率', valueText: '2.1%', accent: 'purple' as const },
+  { title: '平均 ARPPU', valueText: '$13.76', accent: 'green' as const },
+  { title: '退款率', valueText: '1.8%', accent: 'amber' as const }
+]
+
+export const MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES = {
+  revenue: [62, 68, 55, 72, 80, 88, 86],
+  orders: [4200, 4510, 3800, 4900, 5100, 5231, 4980]
+} as const
+
+export const MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS: RevenueOverviewIapTrendKpiCard[] = [
+  {
+    title: '订阅收入',
+    valueText: '$52.30',
+    subText: '占比 60.5%',
+    trendText: '+5.2%↑',
+    trendUp: true
+  },
+  {
+    title: '一次性购买',
+    valueText: '$34.17',
+    subText: '占比 39.5%',
+    trendText: '-2.1%↓',
+    trendUp: false
+  },
+  {
+    title: 'ARPPU',
+    valueText: '$13.76',
+    trendText: '+1.8%↑',
+    trendUp: true
+  },
+  {
+    title: '日均订单',
+    valueText: '898单',
+    trendText: '+3.2%↑',
+    trendUp: true
+  },
+  {
+    title: '付费转化率',
+    valueText: '2.1%',
+    trendText: '-0.3%↓',
+    trendUp: false
+  },
+  {
+    title: '订阅续费率',
+    valueText: '78.4%',
+    trendText: '+1.2%↑',
+    trendUp: true
   }
 ]
 

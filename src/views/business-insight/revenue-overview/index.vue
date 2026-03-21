@@ -1,7 +1,7 @@
 <template>
-  <div ref="rootRef" class="revenue-overview-root art-full-height">
+  <div ref="rootRef" class="revenue-overview-root art-full-height revenue-overview-page">
     <div
-      class="revenue-overview-wrap revenue-overview-page"
+      class="revenue-overview-wrap"
       :style="{
         width: `${designWidth}px`,
         height: `${designHeight}px`,
@@ -104,7 +104,14 @@
 
       <!-- KPI 卡片 -->
       <section class="rev-kpi-grid">
-        <article v-for="k in kpis" :key="k.id" class="rev-kpi" :data-accent="k.accent">
+        <article
+          v-for="k in kpis"
+          :key="k.id"
+          class="rev-kpi"
+          :data-accent="k.accent"
+          role="group"
+          :aria-label="`${k.title} ${k.primaryValue}`"
+        >
           <div class="rev-kpi__head">
             <div class="rev-kpi__title">{{ k.title }}</div>
             <div class="rev-kpi__trend" :class="k.trendUp ? 'up' : 'down'">
@@ -273,9 +280,9 @@
         </div>
 
         <div class="rev-panel rev-panel--iap">
-          <div class="rev-panel__header">
+          <div class="rev-panel__header rev-panel__header--iap">
             <div class="rev-panel__title">IAP 付费收入分析</div>
-            <div class="rev-tabs">
+            <div class="rev-tabs rev-tabs--iap">
               <button
                 v-for="t in iapTabs"
                 :key="t.key"
@@ -289,58 +296,178 @@
             </div>
           </div>
 
-          <div class="rev-iap-top">
-            <div class="rev-iap-kpi">
-              <div class="rev-iap-kpi__k">订阅收入</div>
-              <div class="rev-iap-kpi__v">$52.30</div>
-              <div class="rev-iap-kpi__p">60.5%</div>
-            </div>
-            <div class="rev-iap-kpi">
-              <div class="rev-iap-kpi__k">一次性购买</div>
-              <div class="rev-iap-kpi__v">$34.17</div>
-              <div class="rev-iap-kpi__p">39.5%</div>
-            </div>
-          </div>
+          <div class="rev-iap-body">
+            <!-- 商品构成 -->
+            <div v-show="iapTab === 'product'" class="rev-iap-tab rev-iap-tab--product">
+              <div class="rev-iap-top">
+                <div class="rev-iap-kpi">
+                  <div class="rev-iap-kpi__k">订阅收入</div>
+                  <div class="rev-iap-kpi__row">
+                    <span class="rev-iap-kpi__v rev-iap-kpi__v--accent">$52.30</span>
+                    <span class="rev-iap-kpi__tag">60.5%</span>
+                  </div>
+                </div>
+                <div class="rev-iap-kpi">
+                  <div class="rev-iap-kpi__k">一次性购买</div>
+                  <div class="rev-iap-kpi__row">
+                    <span class="rev-iap-kpi__v rev-iap-kpi__v--accent">$34.17</span>
+                    <span class="rev-iap-kpi__tag">39.5%</span>
+                  </div>
+                </div>
+              </div>
 
-          <div class="rev-table-wrap rev-table-wrap--iap">
-            <ArtTable
-              height="150px"
-              class="rev-art-table"
-              :data="iapRowsWithTotal"
-              :columns="iapColumns"
-              row-key="s_product"
-              :stripe="false"
-              :border="false"
-              size="default"
-              :pagination="undefined"
-              :header-cell-style="iapHeaderCellStyle"
-              :cell-style="iapCellStyle"
-            >
-              <template #d_purchase_rate="{ row }">
-                <span
-                  class="rev-pill-metric"
-                  :class="
-                    row.d_purchase_rate >= 70 ? 'good' : row.d_purchase_rate >= 30 ? 'mid' : 'bad'
-                  "
+              <div class="rev-table-wrap rev-table-wrap--iap">
+                <ArtTable
+                  height="300px"
+                  class="rev-art-table"
+                  :data="iapRowsWithTotal"
+                  :columns="iapColumns"
+                  row-key="s_product"
+                  :stripe="false"
+                  :border="false"
+                  size="default"
+                  :pagination="undefined"
+                  :header-cell-style="iapHeaderCellStyle"
+                  :cell-style="iapCellStyle"
                 >
-                  {{ row.d_purchase_rate.toFixed(1) }}%
-                </span>
-              </template>
-            </ArtTable>
-          </div>
+                  <template #d_purchase_rate="{ row }">
+                    <span
+                      class="rev-pill-metric"
+                      :class="
+                        row.d_purchase_rate >= 70
+                          ? 'good'
+                          : row.d_purchase_rate >= 30
+                            ? 'mid'
+                            : 'bad'
+                      "
+                    >
+                      {{ row.d_purchase_rate.toFixed(1) }}%
+                    </span>
+                  </template>
+                </ArtTable>
+              </div>
 
-          <div class="rev-iap-bottom">
-            <div class="rev-mini-kpi">
-              <div class="rev-mini-kpi__k">付费转化率</div>
-              <div class="rev-mini-kpi__v">2.1%</div>
+              <div class="rev-iap-bottom">
+                <div class="rev-mini-kpi">
+                  <div class="rev-mini-kpi__k">付费转化率</div>
+                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">2.1%</div>
+                </div>
+                <div class="rev-mini-kpi">
+                  <div class="rev-mini-kpi__k">ARPPU</div>
+                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">$9.99</div>
+                </div>
+                <div class="rev-mini-kpi">
+                  <div class="rev-mini-kpi__k">订阅续费率</div>
+                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">78.4%</div>
+                </div>
+              </div>
             </div>
-            <div class="rev-mini-kpi">
-              <div class="rev-mini-kpi__k">ARPPU</div>
-              <div class="rev-mini-kpi__v">$9.99</div>
+
+            <!-- 广告平台分析：上比例条、中表格、下指标 -->
+            <div v-show="iapTab === 'channel'" class="rev-iap-tab rev-iap-tab--channel">
+              <div class="rev-iap-channel-viz">
+                <div class="rev-iaa-bar__track">
+                  <div
+                    v-for="seg in iapChannelSegments"
+                    :key="seg.key"
+                    class="rev-iaa-bar__seg"
+                    :style="{ width: `${seg.percent}%`, background: seg.color }"
+                  />
+                </div>
+                <div class="rev-iaa-bar__labels">
+                  <span v-for="seg in iapChannelSegments" :key="seg.key" class="rev-iaa-bar__label">
+                    <span class="rev-dot" :style="{ background: seg.color }" />
+                    {{ seg.percent.toFixed(1) }}% {{ seg.label }}
+                  </span>
+                </div>
+              </div>
+              <div class="rev-table-wrap rev-table-wrap--iap-channel">
+                <ArtTable
+                  height="200px"
+                  class="rev-art-table"
+                  :data="iapChannelRowsWithTotal"
+                  :columns="iapChannelColumns"
+                  row-key="s_channel_name"
+                  :stripe="false"
+                  :border="false"
+                  size="default"
+                  :pagination="undefined"
+                  :header-cell-style="iapHeaderCellStyle"
+                  :cell-style="iapCellStyle"
+                  :row-class-name="iapChannelRowClassName"
+                >
+                  <template #revenue="{ row }">
+                    <span class="rev-iap-money">${{ formatFixed(row.revenue, 2) }}</span>
+                  </template>
+                  <template #d_conversion_rate="{ row }">
+                    <span
+                      class="rev-pill-metric"
+                      :class="
+                        row.s_channel_name === '合计'
+                          ? 'mid'
+                          : row.d_conversion_rate >= 2.2
+                            ? 'good'
+                            : row.d_conversion_rate >= 1.8
+                              ? 'mid'
+                              : 'bad'
+                      "
+                    >
+                      {{ formatFixed(row.d_conversion_rate, 1) }}%
+                    </span>
+                  </template>
+                  <template #d_refund_rate="{ row }">
+                    <span
+                      class="rev-pill-metric"
+                      :class="
+                        row.s_channel_name === '合计'
+                          ? 'mid'
+                          : row.d_refund_rate <= 1.5
+                            ? 'good'
+                            : row.d_refund_rate <= 2.5
+                              ? 'mid'
+                              : 'bad'
+                      "
+                    >
+                      {{ formatFixed(row.d_refund_rate, 1) }}%
+                    </span>
+                  </template>
+                </ArtTable>
+              </div>
+              <div class="rev-iap-channel-metrics">
+                <div
+                  v-for="(m, idx) in iapChannelLeftMetrics"
+                  :key="idx"
+                  class="rev-iap-channel-metric"
+                >
+                  <div class="rev-iap-channel-metric__k">{{ m.title }}</div>
+                  <div class="rev-iap-channel-metric__v" :class="`is-accent-${m.accent}`">
+                    {{ m.valueText }}
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="rev-mini-kpi">
-              <div class="rev-mini-kpi__k">订阅续费率</div>
-              <div class="rev-mini-kpi__v">78.4%</div>
+
+            <!-- 趋势：双轴图 + KPI -->
+            <div v-show="iapTab === 'trend'" class="rev-iap-tab rev-iap-tab--trend">
+              <div class="rev-iap-trend-chart-wrap">
+                <div ref="iapTrendRef" class="rev-chart rev-chart--iap-trend" />
+              </div>
+              <div class="rev-iap-trend-kpis">
+                <div v-for="(card, idx) in iapTrendKpis" :key="idx" class="rev-iap-trend-kpi">
+                  <div class="rev-iap-trend-kpi__head">
+                    <span class="rev-iap-trend-kpi__title">{{ card.title }}</span>
+                    <span
+                      v-if="card.trendText"
+                      class="rev-iap-trend-kpi__trend"
+                      :class="card.trendUp ? 'up' : 'down'"
+                    >
+                      {{ card.trendText }}
+                    </span>
+                  </div>
+                  <div class="rev-iap-trend-kpi__value">{{ card.valueText }}</div>
+                  <div v-if="card.subText" class="rev-iap-trend-kpi__sub">{{ card.subText }}</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -357,7 +484,7 @@
               >
             </div>
           </div>
-          <div ref="trend7dRef" class="rev-chart" />
+          <div ref="trend7dRef" class="rev-chart rev-chart--trend7d" />
         </div>
 
         <!-- 下排：左 饼图 / 中 Top5 / 右 ECPM + AI + 质量 -->
@@ -374,29 +501,15 @@
               </div>
             </div>
             <div class="rev-pie__list">
-              <div class="rev-pie__col">
-                <div v-for="s in platformPieLeft" :key="s.name" class="rev-pie__item">
-                  <span class="rev-dot" :style="{ background: s.color }" />
-                  <div class="rev-pie__item-text">
-                    <span class="rev-pie__name">{{ s.name }}</span>
-                    <span class="rev-pie__percent" :style="{ color: s.color }">{{
-                      s.percentText
-                    }}</span>
-                  </div>
-                  <div class="rev-pie__money">{{ s.moneyText }}</div>
+              <div v-for="s in platformPie" :key="s.name" class="rev-pie__item">
+                <span class="rev-dot" :style="{ background: s.color }" />
+                <div class="rev-pie__item-text">
+                  <span class="rev-pie__name">{{ s.name }}</span>
+                  <span class="rev-pie__percent" :style="{ color: s.color }">{{
+                    s.percentText
+                  }}</span>
                 </div>
-              </div>
-              <div class="rev-pie__col">
-                <div v-for="s in platformPieRight" :key="s.name" class="rev-pie__item">
-                  <span class="rev-dot" :style="{ background: s.color }" />
-                  <div class="rev-pie__item-text">
-                    <span class="rev-pie__name">{{ s.name }}</span>
-                    <span class="rev-pie__percent" :style="{ color: s.color }">{{
-                      s.percentText
-                    }}</span>
-                  </div>
-                  <div class="rev-pie__money">{{ s.moneyText }}</div>
-                </div>
+                <div class="rev-pie__money">{{ s.moneyText }}</div>
               </div>
             </div>
           </div>
@@ -458,7 +571,9 @@
                 <div class="rev-panel__title">{{ aiInsight.title }}</div>
               </div>
               <ul class="rev-ai">
-                <li v-for="(b, i) in aiInsight.bullets" :key="i">{{ b }}</li>
+                <li v-for="(b, i) in aiInsight.bullets" :key="i" class="rev-ai__item" :data-idx="i">
+                  {{ b }}
+                </li>
               </ul>
             </div>
 
@@ -508,8 +623,13 @@
     MOCK_REVENUE_OVERVIEW_IAA_ROWS,
     MOCK_REVENUE_OVERVIEW_IAA_TABS,
     MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS,
+    MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_LEFT_METRICS,
+    MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_ROWS,
+    MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_SEGMENTS,
     MOCK_REVENUE_OVERVIEW_IAP_ROWS,
     MOCK_REVENUE_OVERVIEW_IAP_TABS,
+    MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS,
+    MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES,
     MOCK_REVENUE_OVERVIEW_KPIS,
     MOCK_REVENUE_OVERVIEW_7D_DATES,
     MOCK_REVENUE_OVERVIEW_7D_TREND,
@@ -570,6 +690,10 @@
   const iaaTab = ref<(typeof MOCK_REVENUE_OVERVIEW_IAA_TABS)[number]['key']>('ad_type')
   const iapTab = ref<(typeof MOCK_REVENUE_OVERVIEW_IAP_TABS)[number]['key']>('product')
 
+  const iapChannelSegments = MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_SEGMENTS
+  const iapChannelLeftMetrics = MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_LEFT_METRICS
+  const iapTrendKpis = MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS
+
   const platformPie = ref(MOCK_REVENUE_OVERVIEW_PLATFORM_PIE)
   const platformPieCenterTotal = computed(() => {
     const list = platformPie.value
@@ -578,16 +702,6 @@
       return sum + num
     }, 0)
     return total ? `$${Math.round(total).toLocaleString()}` : '$0'
-  })
-  const platformPieLeft = computed(() => {
-    const list = platformPie.value
-    const mid = Math.ceil(list.length / 2)
-    return list.slice(0, mid)
-  })
-  const platformPieRight = computed(() => {
-    const list = platformPie.value
-    const mid = Math.ceil(list.length / 2)
-    return list.slice(mid)
   })
   const topCountries = ref(MOCK_REVENUE_OVERVIEW_TOP_COUNTRIES)
   const aiInsight = ref(MOCK_REVENUE_OVERVIEW_AI_INSIGHT)
@@ -869,6 +983,28 @@
     return rows
   })
 
+  const iapChannelRowsWithTotal = computed(() => {
+    const rows = [...MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_ROWS]
+    const sumRev = rows.reduce((a, r) => a + r.revenue, 0)
+    const sumOrders = rows.reduce((a, r) => a + r.n_orders, 0)
+    const sumPct = rows.reduce((a, r) => a + r.percent, 0)
+    const n = rows.length
+    rows.push({
+      s_channel_name: '合计',
+      revenue: sumRev,
+      percent: sumPct,
+      n_orders: sumOrders,
+      d_arppu: n ? rows.reduce((a, r) => a + r.d_arppu, 0) / n : 0,
+      d_conversion_rate: n ? rows.reduce((a, r) => a + r.d_conversion_rate, 0) / n : 0,
+      d_refund_rate: n ? rows.reduce((a, r) => a + r.d_refund_rate, 0) / n : 0
+    })
+    return rows
+  })
+
+  function iapChannelRowClassName({ row }: { row: { s_channel_name?: string } }) {
+    return row?.s_channel_name === '合计' ? 'is-iap-channel-total' : ''
+  }
+
   const iaaHeaderCellStyle = {
     color: 'var(--rev-muted)',
     fontSize: '12px',
@@ -1074,32 +1210,82 @@
   } as const
 
   const iapColumns = computed<ColumnOption[]>(() => [
-    { label: '商品', prop: 's_product', minWidth: 80, fixed: 'left' },
+    { label: '商品', prop: 's_product', minWidth: 80, fixed: 'left', showOverflowTooltip: true },
     {
       label: '价格',
       prop: 'd_arppu',
       minWidth: 70,
+      showOverflowTooltip: true,
       formatter: (row: any) => `$${formatFixed(row.d_arppu, 2)}`
     },
     {
       label: '购买次数',
       prop: 'n_buy_times',
       minWidth: 80,
+      showOverflowTooltip: true,
       formatter: (row: any) => formatInt(row.n_buy_times)
     },
     {
       label: '收入',
       prop: 'revenue',
       minWidth: 80,
+      showOverflowTooltip: true,
       formatter: (row: any) => `$${formatFixed(row.revenue, 2)}`
     },
     {
       label: '占比',
       prop: 'percent',
       minWidth: 60,
+      showOverflowTooltip: true,
       formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
     },
-    { label: '续费率', prop: 'd_purchase_rate', minWidth: 60, useSlot: true }
+    {
+      label: '续费率',
+      prop: 'd_purchase_rate',
+      minWidth: 60,
+      useSlot: true,
+      showOverflowTooltip: true
+    }
+  ])
+
+  const iapChannelColumns = computed<ColumnOption[]>(() => [
+    { label: '广告平台', prop: 's_channel_name', minWidth: 100, showOverflowTooltip: true },
+    { label: '收入', prop: 'revenue', minWidth: 72, useSlot: true, showOverflowTooltip: true },
+    {
+      label: '占比',
+      prop: 'percent',
+      minWidth: 70,
+      showOverflowTooltip: true,
+      formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
+    },
+    {
+      label: '订单数',
+      prop: 'n_orders',
+      minWidth: 72,
+      showOverflowTooltip: true,
+      formatter: (row: any) => formatInt(row.n_orders)
+    },
+    {
+      label: 'ARPPU',
+      prop: 'd_arppu',
+      minWidth: 72,
+      showOverflowTooltip: true,
+      formatter: (row: any) => `$${formatFixed(row.d_arppu, 2)}`
+    },
+    {
+      label: '转化率',
+      prop: 'd_conversion_rate',
+      minWidth: 88,
+      useSlot: true,
+      showOverflowTooltip: true
+    },
+    {
+      label: '退款率',
+      prop: 'd_refund_rate',
+      minWidth: 88,
+      useSlot: true,
+      showOverflowTooltip: true
+    }
   ])
 
   const top5HeaderCellStyle = {
@@ -1222,14 +1408,17 @@
   const ecpmRef = ref<HTMLElement>()
   const iaaDonutRef = ref<HTMLElement>()
   const iaaVersionBarRef = ref<HTMLElement>()
+  const iapTrendRef = ref<HTMLElement>()
 
   const chartTrend7d = useChart({ autoTheme: true })
   const chartPie = useChart({ autoTheme: true })
   const chartEcpm = useChart({ autoTheme: true })
   const chartIaaDonut = useChart({ autoTheme: true })
   const chartIaaVersion = useChart({ autoTheme: true })
+  const chartIapTrend = useChart({ autoTheme: true })
   const iaaDonutInited = ref(false)
   const iaaVersionInited = ref(false)
+  const iapTrendInited = ref(false)
 
   function buildTrend7dOption(): EChartsOption {
     const el = trend7dRef.value ?? null
@@ -1253,6 +1442,7 @@
           type: 'value',
           axisLine: { show: false },
           axisLabel: { color: axis, fontSize: 11 },
+          splitNumber: 8,
           splitLine: { lineStyle: { color: split } }
         },
         {
@@ -1295,6 +1485,104 @@
             ]),
             opacity: 0.12
           }
+        }
+      ]
+    }
+  }
+
+  function buildIapTrendOption(): EChartsOption {
+    const el = iapTrendRef.value ?? null
+    const axis = getVar(el, '--rev-chart-axis', '#94a3b8')
+    const split = getVar(el, '--rev-chart-split', 'rgba(255,255,255,0.08)')
+    const purple = getVar(el, '--rev-c-purple', '#a78bfa')
+    const amber = getVar(el, '--rev-c-amber', '#f59e0b')
+
+    const revData = [...MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES.revenue]
+    const orderData = [...MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES.orders]
+
+    return {
+      tooltip: {
+        ...chartIapTrend.getTooltipStyle('axis'),
+        formatter: (params: unknown) => {
+          const list = Array.isArray(params) ? params : [params]
+          const first = list[0] as { axisValue?: string } | undefined
+          const head = first?.axisValue ?? ''
+          const lines = list.map((p: any) => {
+            const n = Number(p?.value ?? 0)
+            const name = String(p?.seriesName ?? '')
+            if (name.includes('收入')) return `${name}: $${formatFixed(n, 0)}`
+            return `${name}: ${formatInt(n)}`
+          })
+          return `${head}<br/>${lines.join('<br/>')}`
+        }
+      },
+      legend: {
+        show: true,
+        top: 0,
+        right: 4,
+        itemWidth: 8,
+        itemHeight: 8,
+        textStyle: { color: axis, fontSize: 10 }
+      },
+      grid: { left: 34, right: 30, top: 42, bottom: 20, containLabel: true },
+      xAxis: {
+        type: 'category',
+        data: [...MOCK_REVENUE_OVERVIEW_7D_DATES],
+        axisLine: { lineStyle: { color: axis } },
+        axisLabel: { color: axis, fontSize: 11 },
+        axisTick: { show: false }
+      },
+      yAxis: [
+        {
+          type: 'value',
+          name: '收入(USD)',
+          nameTextStyle: { color: purple, fontSize: 11 },
+          axisLine: { show: false },
+          axisLabel: {
+            color: purple,
+            fontSize: 11,
+            formatter: (v: number) => `$${formatFixed(v, 0)}`
+          },
+          splitLine: { lineStyle: { color: split } }
+        },
+        {
+          type: 'value',
+          name: '订单数',
+          nameTextStyle: { color: axis, fontSize: 11 },
+          axisLine: { show: false },
+          axisLabel: { color: axis, fontSize: 11, formatter: (v: number) => formatInt(v) },
+          splitLine: { show: false }
+        }
+      ],
+      series: [
+        {
+          name: '收入(USD)',
+          type: 'line',
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 6,
+          data: revData,
+          yAxisIndex: 0,
+          lineStyle: { color: purple, width: 2 },
+          itemStyle: { color: purple },
+          areaStyle: {
+            color: new graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: purple },
+              { offset: 1, color: 'rgba(0,0,0,0)' }
+            ]),
+            opacity: 0.2
+          }
+        },
+        {
+          name: '订单数',
+          type: 'line',
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 5,
+          yAxisIndex: 1,
+          data: orderData,
+          lineStyle: { color: amber, width: 2, type: 'dashed' },
+          itemStyle: { color: amber }
         }
       ]
     }
@@ -1507,6 +1795,21 @@
     console.log('[RevenueOverview] export', { ...filters })
   }
 
+  async function syncIapTrendChart() {
+    await nextTick()
+    if (iapTab.value !== 'trend' || !iapTrendRef.value) return
+    chartIapTrend.chartRef!.value = iapTrendRef.value
+    if (!iapTrendInited.value) {
+      chartIapTrend.initChart(buildIapTrendOption())
+      iapTrendInited.value = true
+    } else {
+      chartIapTrend.updateChart(buildIapTrendOption())
+    }
+    requestAnimationFrame(() => {
+      chartIapTrend.handleResize()
+    })
+  }
+
   async function initCharts() {
     await nextTick()
 
@@ -1545,6 +1848,7 @@
       chartPie.initChart(buildPieOption())
     }
     await syncIaaCharts()
+    await syncIapTrendChart()
   }
 
   onMounted(() => {
@@ -1571,6 +1875,9 @@
       chartEcpm.updateChart(buildEcpmOption())
       chartPie.updateChart(buildPieOption())
       void syncIaaCharts()
+      if (iapTrendInited.value && iapTab.value === 'trend') {
+        chartIapTrend.updateChart(buildIapTrendOption())
+      }
       kpis.value.forEach((k) => {
         const dom = sparkRefs.value[k.id]
         const chart = sparkCharts.get(k.id)
@@ -1596,6 +1903,10 @@
     void syncIaaCharts()
   })
 
+  watch(iapTab, () => {
+    void syncIapTrendChart()
+  })
+
   onUnmounted(() => {
     if (resizeObserver && rootRef.value) {
       resizeObserver.unobserve(rootRef.value)
@@ -1608,20 +1919,13 @@
     chartPie.destroyChart?.()
     chartIaaDonut.destroyChart?.()
     chartIaaVersion.destroyChart?.()
+    chartIapTrend.destroyChart?.()
   })
 </script>
 
 <style scoped lang="scss">
-  .revenue-overview-root {
-    position: relative;
-    box-sizing: border-box;
-    width: 100%;
-    height: var(--art-full-height, calc(100vh - 120px));
-    overflow: auto;
-    background: transparent;
-  }
-
-  .revenue-overview-page {
+  /* 背景与主题变量在外层 root，保证铺满可视区；内层 scale 后视觉缩小，不再依赖透明底露边 */
+  .revenue-overview-root.revenue-overview-page {
     /* 默认深色（对齐原型），在 light 模式覆盖 */
     --rev-bg: #0f1419;
     --rev-panel-bg: #0b0f14;
@@ -1643,7 +1947,11 @@
 
     position: relative;
     box-sizing: border-box;
+    width: 100%;
+    height: var(--art-full-height, calc(100vh - 120px));
+    min-height: var(--art-full-height, calc(100vh - 120px));
     padding: 14px 14px 0;
+    overflow: auto;
     color: var(--rev-text);
     background: var(--rev-bg);
     border-radius: 12px;
@@ -1651,8 +1959,8 @@
 
   .revenue-overview-wrap {
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 14px;
+    left: 14px;
   }
 
   :global(html:not(.dark) .revenue-overview-page) {
@@ -1761,15 +2069,117 @@
 
   .rev-kpi {
     position: relative;
-    padding: 12px 12px 10px;
+    box-sizing: border-box;
+    padding: 12px 12px 10px 15px;
     overflow: hidden;
-    background: linear-gradient(135deg, rgb(255 255 255 / 6%), rgb(255 255 255 / 2%));
-    border: 2px solid var(--rev-border);
+    cursor: pointer;
+    background:
+      radial-gradient(ellipse 130% 95% at 0% 48%, var(--rev-kpi-glow) 0%, transparent 55%),
+      linear-gradient(148deg, rgb(26 26 28 / 96%), rgb(12 12 14 / 99%));
+    isolation: isolate;
+    border: 1px solid rgb(51 65 85 / 38%);
     border-radius: 12px;
+    box-shadow: 0 1px 0 rgb(255 255 255 / 4%) inset;
+    transition:
+      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.22s ease,
+      border-color 0.22s ease,
+      filter 0.22s ease,
+      background 0.22s ease;
+  }
+
+  .rev-kpi::before {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 0;
+    width: 4px;
+    content: '';
+    background: var(--rev-kpi-edge);
+    border-radius: 11px 0 0 11px;
+    box-shadow: 2px 0 18px var(--rev-kpi-edge-glow);
+  }
+
+  .rev-kpi > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .rev-kpi[data-accent='blue'] {
+    --rev-kpi-edge: #e2e8f0;
+    --rev-kpi-edge-glow: rgb(226 232 240 / 45%);
+    --rev-kpi-glow: rgb(96 165 250 / 22%);
+  }
+
+  .rev-kpi[data-accent='teal'] {
+    --rev-kpi-edge: var(--rev-c-teal);
+    --rev-kpi-edge-glow: rgb(32 214 181 / 45%);
+    --rev-kpi-glow: rgb(32 214 181 / 20%);
+  }
+
+  .rev-kpi[data-accent='purple'] {
+    --rev-kpi-edge: var(--rev-c-purple);
+    --rev-kpi-edge-glow: rgb(167 139 250 / 45%);
+    --rev-kpi-glow: rgb(167 139 250 / 22%);
+  }
+
+  .rev-kpi[data-accent='amber'] {
+    --rev-kpi-edge: var(--rev-c-amber);
+    --rev-kpi-edge-glow: rgb(245 158 11 / 45%);
+    --rev-kpi-glow: rgb(245 158 11 / 20%);
+  }
+
+  .rev-kpi[data-accent='green'] {
+    --rev-kpi-edge: var(--rev-c-green);
+    --rev-kpi-edge-glow: rgb(34 197 94 / 45%);
+    --rev-kpi-glow: rgb(34 197 94 / 20%);
+  }
+
+  .rev-kpi[data-accent='indigo'] {
+    --rev-kpi-edge: var(--rev-c-indigo);
+    --rev-kpi-edge-glow: rgb(56 189 248 / 45%);
+    --rev-kpi-glow: rgb(56 189 248 / 22%);
+  }
+
+  .rev-kpi:hover {
+    z-index: 2;
+    filter: brightness(1.07);
+    border-color: rgb(100 116 139 / 42%);
+    box-shadow:
+      0 14px 36px rgb(0 0 0 / 42%),
+      0 0 0 1px rgb(255 255 255 / 6%) inset,
+      0 0 32px var(--rev-kpi-glow);
+    transform: translateY(-3px) scale(1.02);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rev-kpi {
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        filter 0.15s ease;
+    }
+
+    .rev-kpi:hover {
+      transform: none;
+    }
   }
 
   :global(html:not(.dark) .rev-kpi) {
-    background: linear-gradient(135deg, rgb(37 99 235 / 8%), rgb(255 255 255 / 90%));
+    background:
+      radial-gradient(ellipse 130% 95% at 0% 48%, var(--rev-kpi-glow) 0%, transparent 55%),
+      linear-gradient(148deg, rgb(255 255 255 / 94%), rgb(248 250 252 / 98%));
+    border-color: rgb(15 23 42 / 10%);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 80%) inset;
+  }
+
+  :global(html:not(.dark) .rev-kpi:hover) {
+    filter: brightness(1.02);
+    box-shadow:
+      0 12px 28px rgb(15 23 42 / 10%),
+      0 0 0 1px rgb(255 255 255 / 70%) inset,
+      0 0 28px var(--rev-kpi-glow);
   }
 
   .rev-kpi__head {
@@ -1783,7 +2193,7 @@
   .rev-kpi__title {
     font-size: 13px;
     font-weight: 600;
-    color: var(--rev-text);
+    color: var(--rev-muted);
   }
 
   .rev-kpi__trend {
@@ -1806,6 +2216,30 @@
     letter-spacing: 0.01em;
   }
 
+  .rev-kpi[data-accent='blue'] .rev-kpi__value {
+    color: var(--rev-c-blue);
+  }
+
+  .rev-kpi[data-accent='teal'] .rev-kpi__value {
+    color: var(--rev-c-teal);
+  }
+
+  .rev-kpi[data-accent='purple'] .rev-kpi__value {
+    color: var(--rev-c-purple);
+  }
+
+  .rev-kpi[data-accent='amber'] .rev-kpi__value {
+    color: var(--rev-c-amber);
+  }
+
+  .rev-kpi[data-accent='green'] .rev-kpi__value {
+    color: var(--rev-c-green);
+  }
+
+  .rev-kpi[data-accent='indigo'] .rev-kpi__value {
+    color: var(--rev-c-indigo);
+  }
+
   .rev-kpi__sub {
     display: flex;
     flex-wrap: wrap;
@@ -1820,13 +2254,16 @@
     margin-top: 6px;
   }
 
+  /* 与 align-items:stretch + 子项 height:100% 配合，第二排拉高时卡片才随行变高 */
   .rev-main {
     display: grid;
-    grid-template-rows: 420px 480px;
-    grid-template-columns: 700px 480px 476px;
+    grid-template-rows: 480px 420px;
+
+    /* 第 3 列宽 ≈「近7天 IAA vs IAP 收入趋势」面板宽；折线图在其内铺满（再扣 .rev-chart padding） */
+    grid-template-columns: 700px 500px 456px;
     grid-auto-flow: row;
     gap: 12px;
-    align-items: start;
+    align-items: stretch;
   }
 
   .rev-panel {
@@ -1838,7 +2275,9 @@
   .rev-panel--iaa,
   .rev-panel--iap,
   .rev-panel--trend7d {
-    height: 420px;
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 420px;
   }
 
   .rev-panel--iaa {
@@ -2172,11 +2611,36 @@
     overflow: hidden;
   }
 
-  .rev-panel--iap .rev-panel__header {
+  .rev-panel--iap .rev-panel__header--iap {
     flex: 0 0 auto;
+    flex-flow: row wrap;
+    gap: 8px 12px;
+    align-items: center;
+    justify-content: space-between;
   }
 
-  .rev-panel--iap .rev-iap-top {
+  .rev-tabs--iap {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    margin-left: auto;
+  }
+
+  .rev-iap-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .rev-iap-tab {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .rev-panel--iap .rev-iap-tab--product .rev-iap-top {
     flex: 0 0 auto;
     padding-bottom: 8px;
   }
@@ -2188,9 +2652,168 @@
     overflow: hidden;
   }
 
-  .rev-panel--iap .rev-iap-bottom {
+  .rev-panel--iap .rev-iap-tab--product .rev-iap-bottom {
     flex: 0 0 auto;
     padding-top: 0;
+  }
+
+  .rev-iap-tab--channel {
+    gap: 10px;
+    padding: 0 12px 12px;
+  }
+
+  .rev-iap-channel-viz {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    padding: 10px 12px 12px;
+    background: rgb(255 255 255 / 5%);
+    border: 1px solid var(--rev-border-soft);
+    border-radius: 10px;
+  }
+
+  :global(html:not(.dark) .rev-iap-channel-viz) {
+    background: rgb(15 23 42 / 5%);
+  }
+
+  .rev-iap-channel-metrics {
+    display: grid;
+    flex: 0 0 auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .rev-iap-channel-metric {
+    padding: 12px 14px;
+    background: rgb(255 255 255 / 4%);
+    border: 1px solid var(--rev-border-soft);
+    border-radius: 12px;
+  }
+
+  :global(html:not(.dark) .rev-iap-channel-metric) {
+    background: rgb(15 23 42 / 4%);
+  }
+
+  .rev-iap-channel-metric__k {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rev-muted);
+  }
+
+  .rev-iap-channel-metric__v {
+    margin-top: 8px;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .rev-iap-channel-metric__v.is-accent-purple {
+    color: var(--rev-c-purple);
+  }
+
+  .rev-iap-channel-metric__v.is-accent-green {
+    color: var(--rev-c-green);
+  }
+
+  .rev-iap-channel-metric__v.is-accent-amber {
+    color: var(--rev-c-amber);
+  }
+
+  .rev-table-wrap--iap-channel {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .rev-table-wrap--iap-channel .rev-art-table {
+    flex: 0 0 auto;
+  }
+
+  .rev-iap-trend-chart-wrap {
+    flex: 0 0 auto;
+    padding: 0 4px;
+  }
+
+  .rev-iap-tab--trend {
+    gap: 8px;
+  }
+
+  .rev-iap-trend-kpis {
+    display: grid;
+    flex: 0 0 auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0 12px 12px;
+  }
+
+  .rev-iap-trend-kpi {
+    padding: 8px 10px;
+    background: rgb(255 255 255 / 4%);
+    border: 1px solid var(--rev-border-soft);
+    border-radius: 10px;
+  }
+
+  :global(html:not(.dark) .rev-iap-trend-kpi) {
+    background: rgb(15 23 42 / 4%);
+  }
+
+  .rev-iap-trend-kpi__head {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .rev-iap-trend-kpi__title {
+    font-size: 11px;
+    color: var(--rev-muted);
+  }
+
+  .rev-iap-trend-kpi__trend {
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .rev-iap-trend-kpi__trend.up {
+    color: var(--rev-c-green);
+  }
+
+  .rev-iap-trend-kpi__trend.down {
+    color: #ef4444;
+  }
+
+  .rev-iap-trend-kpi__value {
+    margin-top: 4px;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--rev-c-purple);
+  }
+
+  .rev-iap-trend-kpi__sub {
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--rev-muted);
+  }
+
+  .rev-iap-kpi__v--accent {
+    color: var(--rev-c-purple);
+  }
+
+  .rev-mini-kpi__v--accent {
+    color: var(--rev-c-purple);
+  }
+
+  .rev-iap-money {
+    font-weight: 700;
+    color: rgb(167 139 250 / 95%);
+  }
+
+  .rev-panel--iap :deep(tr.is-iap-channel-total td) {
+    font-weight: 800;
+    border-top: 1px solid rgb(148 163 184 / 28%);
   }
 
   .rev-panel--iap .rev-table th,
@@ -2231,7 +2854,20 @@
 
   .rev-panel--pie,
   .rev-panel--top5 {
-    height: 480px;
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 480px;
+  }
+
+  .rev-panel--pie {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .rev-panel--pie .rev-pie {
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   .rev-panel--top5 {
@@ -2245,10 +2881,12 @@
   }
 
   .rev-right-stack {
+    box-sizing: border-box;
     display: grid;
     grid-template-rows: auto 1fr;
     gap: 12px;
-    height: 480px;
+    height: 100%;
+    min-height: 480px;
   }
 
   .rev-panel--ecpm {
@@ -2349,12 +2987,22 @@
   }
 
   .rev-chart {
-    height: 290px;
     padding: 0 10px 10px;
+  }
+
+  /* 近7天 IAA vs IAP 收入趋势：图表画布高度（宽度由 .rev-main 第三列与下方 padding 决定） */
+  .rev-chart.rev-chart--trend7d {
+    height: 420px;
   }
 
   .rev-chart--sm {
     height: 170px;
+  }
+
+  /* 双类提高优先级，否则会被上方 .rev-chart 的 height:290px 覆盖 */
+  .rev-chart.rev-chart--iap-trend {
+    height: 240px;
+    padding: 0 0 2px;
   }
 
   .rev-panel--iaa .rev-iaa-bar {
@@ -2519,15 +3167,15 @@
   .rev-iap-top {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 0 12px 10px;
+    gap: 8px;
+    padding: 0 12px 8px;
   }
 
   .rev-iap-kpi {
-    padding: 10px;
+    padding: 6px 8px;
     background: rgb(255 255 255 / 4%);
     border: 1px solid var(--rev-border-soft);
-    border-radius: 12px;
+    border-radius: 10px;
   }
 
   :global(html:not(.dark) .rev-iap-kpi) {
@@ -2535,20 +3183,43 @@
   }
 
   .rev-iap-kpi__k {
-    font-size: 12px;
+    font-size: 11px;
+    line-height: 1.3;
     color: var(--rev-muted);
   }
 
-  .rev-iap-kpi__v {
-    margin-top: 6px;
-    font-size: 22px;
-    font-weight: 800;
+  .rev-iap-kpi__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-top: 4px;
   }
 
-  .rev-iap-kpi__p {
-    margin-top: 4px;
-    font-size: 12px;
+  .rev-iap-kpi__v {
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .rev-iap-kpi__tag {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
     color: var(--rev-c-amber);
+    white-space: nowrap;
+    background: rgb(245 158 11 / 14%);
+    border: 1px solid rgb(245 158 11 / 22%);
+    border-radius: 999px;
+  }
+
+  :global(html:not(.dark) .rev-iap-kpi__tag) {
+    background: rgb(245 158 11 / 12%);
+    border-color: rgb(245 158 11 / 18%);
   }
 
   .rev-pill-metric {
@@ -2607,16 +3278,20 @@
   }
 
   .rev-pie {
-    display: grid;
-    grid-template-columns: 1fr 1.1fr;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
     align-items: center;
+    justify-content: center;
     padding: 0 8px 12px;
   }
 
   .rev-pie__chart-wrap {
     position: relative;
-    height: 300px;
+    flex: 0 0 auto;
+    width: min(100%, 360px);
+    height: 260px;
+    margin: 0 auto;
   }
 
   .rev-pie__chart {
@@ -2650,23 +3325,24 @@
   }
 
   .rev-pie__list {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 20px;
-    padding: 0 6px;
-  }
-
-  .rev-pie__col {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    padding: 0 8px;
+    margin: 0 auto;
   }
 
   .rev-pie__item {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px 8px;
-    align-items: baseline;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+    min-width: 0;
+    max-width: 200px;
     padding: 4px 0;
     font-size: 12px;
   }
@@ -2687,10 +3363,10 @@
 
   .rev-pie__money {
     width: 100%;
-    padding-left: 18px;
     font-size: 12px;
     font-weight: 700;
     color: var(--rev-text);
+    text-align: center;
   }
 
   .rev-flag {
@@ -2700,16 +3376,112 @@
     text-align: center;
   }
 
-  .rev-ai {
-    padding: 0 14px 14px 28px;
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.6;
-    color: var(--rev-muted);
+  /* AI 洞察建议：深橄榄底 + 金边 + 标题琥珀金 + 三色圆点（对齐图一） */
+  .rev-panel.rev-panel--ai {
+    background: linear-gradient(165deg, rgb(28 27 17 / 98%), rgb(16 15 10 / 99%));
+    border: 1px solid rgb(139 109 49 / 88%);
+    box-shadow: 0 0 0 1px rgb(230 162 60 / 8%) inset;
+    transition:
+      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.22s ease,
+      filter 0.22s ease,
+      border-color 0.22s ease;
   }
 
-  .rev-ai li {
-    margin: 6px 0;
+  .rev-panel.rev-panel--ai:hover {
+    z-index: 1;
+    filter: brightness(1.06);
+    border-color: rgb(230 162 60 / 55%);
+    box-shadow:
+      0 10px 28px rgb(0 0 0 / 45%),
+      0 0 32px rgb(230 162 60 / 14%),
+      0 0 0 1px rgb(255 255 255 / 5%) inset;
+    transform: translateY(-2px);
+  }
+
+  .rev-panel--ai .rev-panel__title {
+    font-weight: 700;
+    color: #e6a23c;
+  }
+
+  .rev-ai {
+    padding: 2px 14px 14px;
+    margin: 0;
+    list-style: none;
+  }
+
+  .rev-ai__item {
+    position: relative;
+    padding-left: 18px;
+    margin: 10px 0;
+    font-size: 12px;
+    line-height: 1.65;
+    color: #e0e0e0;
+  }
+
+  .rev-ai__item::before {
+    position: absolute;
+    top: 0.42em;
+    left: 0;
+    width: 8px;
+    height: 8px;
+    content: '';
+    border-radius: 50%;
+    box-shadow: 0 0 10px currentcolor;
+  }
+
+  .rev-ai__item[data-idx='0']::before {
+    color: #26c6da;
+    background: #26c6da;
+  }
+
+  .rev-ai__item[data-idx='1']::before {
+    color: #9575cd;
+    background: #9575cd;
+  }
+
+  .rev-ai__item[data-idx='2']::before {
+    color: #ffb74d;
+    background: #ffb74d;
+  }
+
+  :global(html:not(.dark) .rev-panel.rev-panel--ai) {
+    background: linear-gradient(165deg, rgb(255 252 240 / 98%), rgb(250 246 230 / 99%));
+    border-color: rgb(180 140 60 / 45%);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 80%) inset;
+  }
+
+  :global(html:not(.dark) .rev-panel.rev-panel--ai:hover) {
+    filter: brightness(1.02);
+    box-shadow: 0 8px 22px rgb(15 23 42 / 12%);
+  }
+
+  :global(html:not(.dark) .rev-ai__item) {
+    color: rgb(51 65 85 / 95%);
+  }
+
+  /* 收入质量指标：外层面板 + 四宫格分色（对齐图二） */
+  .rev-panel.rev-panel--quality {
+    background: linear-gradient(150deg, rgb(22 22 24 / 96%), rgb(12 12 14 / 99%));
+    border: 1px solid rgb(51 65 85 / 38%);
+    transition:
+      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.22s ease,
+      filter 0.22s ease,
+      border-color 0.22s ease;
+  }
+
+  .rev-panel.rev-panel--quality:hover {
+    z-index: 1;
+    filter: brightness(1.05);
+    border-color: rgb(100 116 139 / 45%);
+    box-shadow: 0 10px 28px rgb(0 0 0 / 38%);
+    transform: translateY(-2px);
+  }
+
+  :global(html:not(.dark) .rev-panel.rev-panel--quality) {
+    background: linear-gradient(150deg, rgb(248 250 252 / 98%), rgb(255 255 255 / 99%));
+    border-color: rgb(15 23 42 / 10%);
   }
 
   .rev-quality-grid {
@@ -2720,19 +3492,88 @@
   }
 
   .rev-quality {
-    padding: 10px;
-    background: rgb(255 255 255 / 3%);
-    border: 1px solid var(--rev-border-soft);
+    padding: 10px 12px;
+    cursor: pointer;
     border-radius: 12px;
+    transition:
+      transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.2s ease,
+      filter 0.2s ease,
+      border-color 0.2s ease;
   }
 
-  :global(html:not(.dark) .rev-quality) {
-    background: rgb(15 23 42 / 4%);
+  .rev-quality:nth-child(1),
+  .rev-quality:nth-child(2) {
+    background: linear-gradient(155deg, rgb(14 38 30 / 96%), rgb(8 26 20 / 99%));
+    border: 1px solid rgb(52 211 153 / 22%);
+  }
+
+  .rev-quality:nth-child(1) .rev-quality__v,
+  .rev-quality:nth-child(2) .rev-quality__v {
+    color: #34d399;
+  }
+
+  .rev-quality:nth-child(3) {
+    background: linear-gradient(155deg, rgb(42 32 18 / 96%), rgb(26 20 12 / 99%));
+    border: 1px solid rgb(251 191 36 / 22%);
+  }
+
+  .rev-quality:nth-child(3) .rev-quality__v {
+    color: #fbbf24;
+  }
+
+  .rev-quality:nth-child(4) {
+    background: linear-gradient(155deg, rgb(15 23 42 / 96%), rgb(10 16 32 / 99%));
+    border: 1px solid rgb(56 189 248 / 22%);
+  }
+
+  .rev-quality:nth-child(4) .rev-quality__v {
+    color: #38bdf8;
+  }
+
+  .rev-quality:hover {
+    z-index: 1;
+    filter: brightness(1.09);
+    box-shadow: 0 8px 22px rgb(0 0 0 / 35%);
+    transform: scale(1.02);
+  }
+
+  :global(html:not(.dark) .rev-quality:nth-child(1)),
+  :global(html:not(.dark) .rev-quality:nth-child(2)) {
+    background: linear-gradient(155deg, rgb(236 253 245 / 98%), rgb(220 252 231 / 99%));
+    border-color: rgb(16 185 129 / 22%);
+  }
+
+  :global(html:not(.dark) .rev-quality:nth-child(3)) {
+    background: linear-gradient(155deg, rgb(255 251 235 / 98%), rgb(254 243 199 / 99%));
+    border-color: rgb(245 158 11 / 25%);
+  }
+
+  :global(html:not(.dark) .rev-quality:nth-child(4)) {
+    background: linear-gradient(155deg, rgb(239 246 255 / 98%), rgb(224 242 254 / 99%));
+    border-color: rgb(56 189 248 / 28%);
+  }
+
+  :global(html:not(.dark) .rev-quality:nth-child(1) .rev-quality__v),
+  :global(html:not(.dark) .rev-quality:nth-child(2) .rev-quality__v) {
+    color: rgb(5 150 105);
+  }
+
+  :global(html:not(.dark) .rev-quality:nth-child(3) .rev-quality__v) {
+    color: rgb(180 83 9);
+  }
+
+  :global(html:not(.dark) .rev-quality:nth-child(4) .rev-quality__v) {
+    color: rgb(2 132 199);
   }
 
   .rev-quality__k {
     font-size: 12px;
-    color: var(--rev-muted);
+    color: rgb(203 213 225 / 92%);
+  }
+
+  :global(html:not(.dark) .rev-quality__k) {
+    color: rgb(71 85 105);
   }
 
   .rev-quality__v {
@@ -2749,7 +3590,11 @@
     justify-content: space-between;
     margin-top: 6px;
     font-size: 12px;
-    color: var(--rev-muted);
+    color: rgb(148 163 184 / 95%);
+  }
+
+  :global(html:not(.dark) .rev-quality__sub) {
+    color: rgb(100 116 139);
   }
 
   .rev-quality__trend.up {
@@ -2758,6 +3603,23 @@
 
   .rev-quality__trend.down {
     color: #ef4444;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rev-panel.rev-panel--ai,
+    .rev-panel.rev-panel--quality,
+    .rev-quality {
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        filter 0.15s ease;
+    }
+
+    .rev-panel.rev-panel--ai:hover,
+    .rev-panel.rev-panel--quality:hover,
+    .rev-quality:hover {
+      transform: none;
+    }
   }
 
   /* 固定画布布局：不做响应式重排，保持原型一致 */
