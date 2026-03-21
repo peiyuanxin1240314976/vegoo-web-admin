@@ -277,6 +277,10 @@
       "notFound": "404",
       "serverError": "500"
     },
+    "configManagement": {
+      "title": "配置管理",
+      "applicationManagement": "应用管理"
+    },
     "userGrowth": {
       "title": "用户增长",
       "myPerformance": "我的绩效",
@@ -289,7 +293,11 @@
       "paidAnalysis": "付费分析",
       "performanceAnalysis": "人员成效",
       "performanceComparison": "对比分析",
-      "realTimeData": "实时数据"
+      "realTimeData": "实时数据",
+      "overallRecovery": "整体回收",
+      "comprehensiveAnalysis": "综合分析",
+      "alertManagement": "预警管理",
+      "platformAnalysisDetail": "广告平台分析详情"
     },
     "system": {
       "title": "系统管理",
@@ -450,17 +458,14 @@
     "conversionTypeBehavior": "行为转化",
     "conversionTypeRevenue": "收入转化",
     "recordUnit": "条",
-
     "dataFilterStart": "开始日期",
     "dataFilterEnd": "结束日期",
     "dataFilterAdPlatform": "全部广告平台",
     "dataFilterSearch": "查询",
-
     "kpiConversionCount": "总转化次数",
     "kpiConversionValue": "总转化价值",
     "kpiAverageValue": "平均转化价值",
     "kpiActiveTypeCount": "活跃转化类型",
-
     "dataTableTitle": "转化数据明细",
     "dataTableSubtotal": "小计",
     "actionExpandAll": "展开全部",
@@ -469,14 +474,12 @@
     "dataSourceLabel": "数据来源：",
     "dataSourceGoogleAdsApi": "Google Ads API",
     "actionTodo": "功能待接入",
-
     "dataTableDimension": "广告账户 / 转化名称",
     "dataTableConversionType": "转化类型",
     "dataTableConversionCount": "转化次数",
     "dataTableConversionValue": "转化价值($)",
     "dataTableShare": "占比",
     "dataTableTrend": "趋势",
-
     "panelTypeDistribution": "转化类型占比",
     "panelTop10": "转化次数 Top 10 名称",
     "panelValueTrend30d": "转化价值趋势（30天）",

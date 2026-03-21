@@ -104,6 +104,16 @@ export const userGrowthRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'overall-recovery',
+      name: 'OverallRecovery',
+      component: '/user-growth/overall-recovery',
+      meta: {
+        title: 'menus.userGrowth.overallRecovery',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
       path: 'performance-analysis',
       name: 'PerformanceAnalysis',
       component: '/user-growth/performance-analysis/PerformanceList',
@@ -122,6 +132,38 @@ export const userGrowthRoutes: AppRouteRecord = {
         keepAlive: false,
         isHide: true,
         activePath: '/user-growth/performance-analysis',
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'comprehensive-analysis',
+      name: 'ComprehensiveAnalysis',
+      component: '/user-growth/comprehensive-analysis',
+      meta: {
+        title: 'menus.userGrowth.comprehensiveAnalysis',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'alert-management',
+      name: 'AlertManagement',
+      component: '/user-growth/alert-management',
+      meta: {
+        title: 'menus.userGrowth.alertManagement',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'platform-analysis-detail',
+      name: 'PlatformAnalysisDetail',
+      component: '/user-growth/platform-analysis-detail',
+      meta: {
+        title: 'menus.userGrowth.platformAnalysisDetail',
+        keepAlive: false,
+        isHide: true,
+        activePath: '/user-growth/comprehensive-analysis',
         roles: ['R_SUPER', 'R_ADMIN']
       }
     }

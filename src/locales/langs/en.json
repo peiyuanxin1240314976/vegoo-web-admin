@@ -277,6 +277,10 @@
       "notFound": "404",
       "serverError": "500"
     },
+    "configManagement": {
+      "title": "Configuration",
+      "applicationManagement": "Application Management"
+    },
     "userGrowth": {
       "title": "User Growth",
       "myPerformance": "My Performance",
@@ -289,7 +293,11 @@
       "paidAnalysis": "Paid Analysis",
       "performanceAnalysis": "Performance Analysis",
       "performanceComparison": "Comparison Analysis",
-      "realTimeData": "Real-time Data"
+      "realTimeData": "Real-time Data",
+      "overallRecovery": "Overall Recovery",
+      "comprehensiveAnalysis": "Comprehensive Analysis",
+      "alertManagement": "Alert Management",
+      "platformAnalysisDetail": "Platform Analysis Detail"
     },
     "system": {
       "title": "System Settings",
@@ -450,17 +458,14 @@
     "conversionTypeBehavior": "Behavior Conversion",
     "conversionTypeRevenue": "Revenue Conversion",
     "recordUnit": "",
-
     "dataFilterStart": "Start date",
     "dataFilterEnd": "End date",
     "dataFilterAdPlatform": "All Ad Platforms",
     "dataFilterSearch": "Search",
-
     "kpiConversionCount": "Total Conversions",
     "kpiConversionValue": "Total Conversion Value",
     "kpiAverageValue": "Avg. Conversion Value",
     "kpiActiveTypeCount": "Active Conversion Types",
-
     "dataTableTitle": "Conversion Data Details",
     "dataTableSubtotal": "Subtotal",
     "actionExpandAll": "Expand All",
@@ -469,14 +474,12 @@
     "dataSourceLabel": "Data Source:",
     "dataSourceGoogleAdsApi": "Google Ads API",
     "actionTodo": "Coming soon",
-
     "dataTableDimension": "Account / Conversion",
     "dataTableConversionType": "Conversion Type",
     "dataTableConversionCount": "Conversions",
     "dataTableConversionValue": "Value ($)",
     "dataTableShare": "Share",
     "dataTableTrend": "Trend",
-
     "panelTypeDistribution": "Conversion Type Share",
     "panelTop10": "Top 10 by Conversions",
     "panelValueTrend30d": "Value Trend (30 Days)",

@@ -1,0 +1,264 @@
+{
+  "_comment": "预警管理 - 整页聚合。对应 types.ts: AlertManagementOverview。",
+  "fieldDescription": {
+    "request": {
+      "_note": "对应 types.ts: AlertManagementOverviewParams；前端 POST 时建议四键齐全。",
+      "severity": {
+        "type": "string",
+        "required": true,
+        "enum": ["all", "high", "medium", "low"],
+        "default": "all",
+        "description": "严重性筛选；all 表示不限。"
+      },
+      "category": {
+        "type": "string",
+        "required": true,
+        "enum": ["all", "roi", "cost", "traffic", "revenue", "retention", "other"],
+        "default": "all",
+        "description": "异常分类筛选；all 表示不限。"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["all", "pending", "processing", "closed"],
+        "default": "all",
+        "description": "处理状态筛选；all 表示不限。"
+      },
+      "date": {
+        "type": "string | null",
+        "required": true,
+        "description": "统计日 YYYY-MM-DD，与「时间范围」一致；清空选择器时为 null，由后端约定默认统计日。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "AlertManagementOverview",
+        "required": true,
+        "description": "顶部四宫格摘要、右侧单列趋势、异常分类环形图（含中心文案）、规则折叠列表、预警卡片列表。"
+      }
+    },
+    "AlertManagementOverview": {
+      "summaryCards": {
+        "type": "AlertSummaryCard[]",
+        "required": true,
+        "description": "顶部四宫格：今日预警、未处理、已处理、预警规则；含 accent、badge、icon。"
+      },
+      "trendPrimary": {
+        "type": "AlertTrendBlock",
+        "required": true,
+        "description": "右侧「预警趋势分析」单图：日期轴与高/中/低优先级多折线。"
+      },
+      "classification": {
+        "type": "ClassificationSlice[]",
+        "required": true,
+        "description": "异常分类环形图：name/value/color（value 为占比百分比数值）。"
+      },
+      "classificationCenterTitle": {
+        "type": "string",
+        "required": true,
+        "description": "环形图中心主标题，如「总收入」。"
+      },
+      "classificationCenterValue": {
+        "type": "string",
+        "required": true,
+        "description": "环形图中心数值展示，如「$2.45M」。"
+      },
+      "ruleGroups": {
+        "type": "AlertRuleGroup[]",
+        "required": true,
+        "description": "预警规则管理：分组名 + 规则行（名称、描述、优先级、通知渠道）。"
+      },
+      "alerts": {
+        "type": "AlertFeedItem[]",
+        "required": true,
+        "description": "预警卡片列表，含严重性、分类、状态、指标行与可操作按钮类型。"
+      }
+    },
+    "AlertSummaryCard": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "卡片业务键，如 today / pending。"
+      },
+      "title": { "type": "string", "required": true, "description": "标题文案。" },
+      "value": { "type": "string", "required": true, "description": "主数字展示。" },
+      "accent": {
+        "type": "string",
+        "required": true,
+        "enum": ["danger", "warning", "success", "primary"],
+        "description": "左侧强调色/语义。"
+      },
+      "badge": {
+        "type": "string",
+        "required": false,
+        "description": "角标，如 +3、启用中；无则前端不展示角标区。"
+      },
+      "icon": {
+        "type": "string",
+        "required": true,
+        "enum": ["bell", "clock", "check", "setting"],
+        "description": "与前端图标映射一致。"
+      }
+    },
+    "AlertTrendBlock": {
+      "title": {
+        "type": "string",
+        "required": true,
+        "description": "图表标题，如「预警趋势分析」。"
+      },
+      "dates": {
+        "type": "string[]",
+        "required": true,
+        "description": "X 轴类目；与各 series.data 长度一致。"
+      },
+      "series": {
+        "type": "TrendSeriesLine[]",
+        "required": true,
+        "description": "多条折线：通常高/中/低优先级三条。"
+      }
+    },
+    "TrendSeriesLine": {
+      "name": { "type": "string", "required": true, "description": "系列名（图例）。" },
+      "color": { "type": "string", "required": true, "description": "HEX 色值。" },
+      "data": { "type": "number[]", "required": true, "description": "与 dates 等长的数值序列。" }
+    },
+    "ClassificationSlice": {
+      "name": { "type": "string", "required": true, "description": "分类名称。" },
+      "value": {
+        "type": "number",
+        "required": true,
+        "description": "占比百分比数值（如 40 表示 40%）；环形图与图例用。"
+      },
+      "color": { "type": "string", "required": true, "description": "扇区颜色 HEX。" }
+    },
+    "AlertRuleGroup": {
+      "name": { "type": "string", "required": true, "description": "折叠分组标题。" },
+      "rules": { "type": "AlertRuleRow[]", "required": true, "description": "组内规则列表。" }
+    },
+    "AlertRuleRow": {
+      "name": { "type": "string", "required": true, "description": "规则名称。" },
+      "desc": { "type": "string", "required": true, "description": "规则说明/触发条件摘要。" },
+      "priority": {
+        "type": "string",
+        "required": true,
+        "description": "优先级展示文案，如 高、中。"
+      },
+      "notify": { "type": "string", "required": true, "description": "通知渠道，如 飞书、Email。" }
+    },
+    "AlertMetricLine": {
+      "label": { "type": "string", "required": true, "description": "指标前缀，如「ROI：」。" },
+      "value": { "type": "string", "required": true, "description": "展示值（可含括号涨跌）。" },
+      "tone": {
+        "type": "string",
+        "required": false,
+        "enum": ["danger", "warning", "success", "primary"],
+        "description": "数值强调色；无则默认正文色。"
+      }
+    },
+    "AlertFeedItem": {
+      "id": { "type": "string", "required": true, "description": "唯一标识。" },
+      "severity": {
+        "type": "string",
+        "required": true,
+        "enum": ["high", "medium", "low"],
+        "description": "严重性。"
+      },
+      "category": {
+        "type": "string",
+        "required": true,
+        "enum": ["roi", "cost", "traffic", "revenue", "retention", "other"],
+        "description": "异常分类。"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["pending", "processing", "closed"],
+        "description": "处理状态。"
+      },
+      "actions": {
+        "type": "string[]",
+        "required": true,
+        "description": "可用操作：detail | markDone | ignore | reopen。"
+      },
+      "title": { "type": "string", "required": true, "description": "预警标题。" },
+      "summary": { "type": "string", "required": true, "description": "摘要说明。" },
+      "timeLabel": {
+        "type": "string",
+        "required": true,
+        "description": "相对时间文案，如 2小时前。"
+      },
+      "metrics": { "type": "AlertMetricLine[]", "required": true, "description": "关键指标行。" }
+    }
+  },
+  "sampleRequest": {
+    "severity": "all",
+    "category": "all",
+    "status": "all",
+    "date": "2026-03-01"
+  },
+  "sampleResponse": {
+    "data": {
+      "summaryCards": [
+        {
+          "id": "today",
+          "title": "今日预警",
+          "value": "12",
+          "accent": "danger",
+          "badge": "+3",
+          "icon": "bell"
+        }
+      ],
+      "trendPrimary": {
+        "title": "预警趋势分析",
+        "dates": ["1/1", "1/5"],
+        "series": [
+          { "name": "高优先级", "color": "#EF4444", "data": [4, 5] },
+          { "name": "中优先级", "color": "#F97316", "data": [5, 4] },
+          { "name": "低优先级", "color": "#3B82F6", "data": [1, 2] }
+        ]
+      },
+      "classification": [{ "name": "ROI异常", "value": 40, "color": "#22C55E" }],
+      "classificationCenterTitle": "总收入",
+      "classificationCenterValue": "$2.45M",
+      "ruleGroups": [
+        {
+          "name": "ROI 异常监控",
+          "rules": [
+            {
+              "name": "ROAS 低于阈值",
+              "desc": "ROAS < 1.2 持续 >1 小时",
+              "priority": "高",
+              "notify": "飞书、Email"
+            }
+          ]
+        }
+      ],
+      "alerts": [
+        {
+          "id": "1",
+          "title": "示例预警",
+          "summary": "说明文案",
+          "severity": "high",
+          "category": "roi",
+          "status": "pending",
+          "timeLabel": "2小时前",
+          "metrics": [{ "label": "ROI：", "value": "135%", "tone": "danger" }],
+          "actions": ["detail", "markDone", "ignore"]
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/alert-management/overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "AlertManagementOverviewParams：severity, category, status, date（见 fieldDescription.request）",
+    "responseBody": "AlertManagementOverview"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "响应字段名建议与前端 types.ts 一致（camelCase）。",
+      "筛选若改为服务端分页，可另拆 table/alerts 接口。"
+    ]
+  }
+}

@@ -188,6 +188,35 @@ declare namespace Api {
       android: number
       ios: number
     }
+
+    /** 综合分析 - 筛选下拉（meta-filter-options 响应，与页面 types 一致） */
+    interface ComprehensiveAnalysisFilterOptionsDto {
+      appOptions: { label: string; value: string }[]
+      adPlatformOptions: { label: string; value: string }[]
+      countryOptions: { label: string; value: string }[]
+    }
+
+    /** 综合分析 - overview 请求体（与 `ComprehensiveAnalysisApiParams` 一致） */
+    interface ComprehensiveAnalysisOverviewRequest {
+      /** 区间开始 YYYY-MM-DD */
+      date_start: string
+      /** 区间结束 YYYY-MM-DD */
+      date_end: string
+      /** 应用；空字符串表示全部 */
+      s_app_id: string
+      /** 广告平台；空字符串表示全部（字段名 `source`） */
+      source: string
+      /** 国家代码；空字符串表示全部 */
+      s_country_code: string
+    }
+
+    /** 广告平台分析详情 - overview 请求 */
+    interface PlatformAnalysisDetailOverviewRequest {
+      /** 钻取实体名称（与路由 query `name` 一致，如应用名） */
+      name: string
+      /** 来源页面标识，如 comprehensive-analysis */
+      from: string
+    }
   }
 
   /** 商业洞察 - IAA 分析 */
