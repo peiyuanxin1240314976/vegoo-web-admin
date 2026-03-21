@@ -1,0 +1,184 @@
+{
+  "_comment": "广告系列详情 - 概览数据（基本信息/预算排期/目标出价/核心指标趋势）。对应 types.ts: CampaignDetailData 中的 basicInfo / budgetInfo / targetInfo / trendData。",
+  "fieldDescription": {
+    "request": {
+      "campaignId": { "type": "string", "required": true, "description": "广告系列唯一标识。" }
+    },
+    "response": {
+      "campaignName": {
+        "type": "string",
+        "required": true,
+        "description": "广告系列名称，用于页面标题展示。"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["active", "paused", "completed", "archived"],
+        "description": "系列状态。active=进行中，paused=已暂停，completed=已完成，archived=已归档。"
+      },
+      "basicInfo": {
+        "type": "CampaignBasicInfo",
+        "required": true,
+        "description": "基本信息卡片数据。"
+      },
+      "budgetInfo": {
+        "type": "CampaignBudgetInfo",
+        "required": true,
+        "description": "预算与排期卡片数据。"
+      },
+      "targetInfo": {
+        "type": "CampaignTargetInfo",
+        "required": true,
+        "description": "目标与出价卡片数据。"
+      },
+      "trendData": {
+        "type": "CampaignTrendPoint[]",
+        "required": true,
+        "description": "核心指标趋势，按日期升序排列。"
+      }
+    },
+    "CampaignBasicInfo": {
+      "campaignId": {
+        "type": "string",
+        "required": true,
+        "description": "系列ID，用于展示（如 #0032021863838Z7）。"
+      },
+      "channel": {
+        "type": "string",
+        "required": true,
+        "enum": ["google", "facebook", "tiktok", "mintegral", "kwai", "meta"],
+        "description": "投放渠道标识。"
+      },
+      "channelName": {
+        "type": "string",
+        "required": true,
+        "description": "投放渠道展示名称（如 Google Ads）。"
+      },
+      "appName": { "type": "string", "required": true, "description": "目标应用名称。" },
+      "createdAt": {
+        "type": "string",
+        "required": true,
+        "description": "创建时间，格式 YYYY-MM-DD。"
+      }
+    },
+    "CampaignBudgetInfo": {
+      "budgetType": {
+        "type": "string",
+        "required": true,
+        "description": "预算类型，如「日预算」/「总预算」。"
+      },
+      "budgetAmount": { "type": "number", "required": true, "description": "预算金额，单位美元。" },
+      "todaySpend": { "type": "number", "required": true, "description": "今日消耗，单位美元。" },
+      "todaySpendPercent": {
+        "type": "number",
+        "required": true,
+        "description": "今日消耗占预算百分比，范围 0-100。"
+      },
+      "totalSpend": { "type": "number", "required": true, "description": "累计总消耗，单位美元。" },
+      "scheduleStart": {
+        "type": "string",
+        "required": true,
+        "description": "投放开始日期，格式 YYYY-MM-DD。"
+      },
+      "scheduleEnd": {
+        "type": "string",
+        "required": true,
+        "description": "投放结束日期，格式 YYYY-MM-DD。"
+      }
+    },
+    "CampaignTargetInfo": {
+      "region": {
+        "type": "string",
+        "required": true,
+        "description": "目标区域名称（如「美国」）。"
+      },
+      "regionCode": {
+        "type": "string",
+        "required": true,
+        "description": "目标区域代码（如 US）。"
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["android", "ios", "all"],
+        "description": "目标平台。"
+      },
+      "bidStrategy": {
+        "type": "string",
+        "required": true,
+        "description": "出价策略名称（如 Maximize Conversions）。"
+      },
+      "targetCpi": { "type": "number", "required": true, "description": "目标CPI，单位美元。" }
+    },
+    "CampaignTrendPoint": {
+      "date": { "type": "string", "required": true, "description": "日期标签，格式 MM-DD。" },
+      "spend": {
+        "type": "number",
+        "required": true,
+        "description": "当日花费，单位美元（原始值，前端格式化为 K）。"
+      },
+      "installs": {
+        "type": "number",
+        "required": true,
+        "description": "当日安装量（原始值，前端格式化为 K）。"
+      },
+      "cpi": {
+        "type": "number",
+        "required": true,
+        "description": "当日 CPI，单位美元，保留两位小数。"
+      },
+      "roi": {
+        "type": "number",
+        "required": true,
+        "description": "当日 ROI，百分比值（如 130 表示 130%）。"
+      }
+    }
+  },
+  "sampleRequest": { "campaignId": "0032021863838Z7" },
+  "sampleResponse": {
+    "campaignName": "USA_Android_T1_Purchase",
+    "status": "active",
+    "basicInfo": {
+      "campaignId": "0032021863838Z7",
+      "channel": "google",
+      "channelName": "Google Ads",
+      "appName": "Weather8",
+      "createdAt": "2026-01-15"
+    },
+    "budgetInfo": {
+      "budgetType": "日预算",
+      "budgetAmount": 5000,
+      "todaySpend": 3250,
+      "todaySpendPercent": 65,
+      "totalSpend": 83250,
+      "scheduleStart": "2026-01-15",
+      "scheduleEnd": "2026-03-15"
+    },
+    "targetInfo": {
+      "region": "美国",
+      "regionCode": "US",
+      "platform": "android",
+      "bidStrategy": "Maximize Conversions",
+      "targetCpi": 1.65
+    },
+    "trendData": [
+      { "date": "01-01", "spend": 42000, "installs": 18000, "cpi": 1.82, "roi": 98 },
+      { "date": "01-15", "spend": 85000, "installs": 38000, "cpi": 1.63, "roi": 130 },
+      { "date": "01-29", "spend": 92000, "installs": 43000, "cpi": 1.58, "roi": 142 }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-performance/campaign-detail/overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "campaignId (必填)",
+    "responseBody": "campaignName, status, basicInfo, budgetInfo, targetInfo, trendData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "trendData 按日期升序返回，日期格式建议统一为 MM-DD（页面展示用），或返回完整 YYYY-MM-DD 由前端截取。",
+      "spend/installs 返回原始数值，前端负责格式化（≥1000 显示为 K）。",
+      "todaySpendPercent 由后端计算（todaySpend/budgetAmount*100），避免前端重复计算。"
+    ]
+  }
+}

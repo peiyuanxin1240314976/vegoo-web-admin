@@ -1,0 +1,71 @@
+{
+  "_comment": "广告系列详情 - AI 洞察与建议列表。对应 types.ts: AiInsightItem[]。",
+  "fieldDescription": {
+    "request": {
+      "campaignId": { "type": "string", "required": true, "description": "广告系列唯一标识。" }
+    },
+    "response": {
+      "insights": {
+        "type": "AiInsightItem[]",
+        "required": true,
+        "description": "AI 洞察列表，按优先级排序（danger > warning > info）。"
+      }
+    },
+    "AiInsightItem": {
+      "id": { "type": "string", "required": true, "description": "洞察唯一标识。" },
+      "level": {
+        "type": "string",
+        "required": true,
+        "enum": ["info", "warning", "danger"],
+        "description": "洞察级别。danger=异常提醒（红色），warning=素材洞察（橙色），info=优化建议（绿色）。"
+      },
+      "title": {
+        "type": "string",
+        "required": true,
+        "description": "洞察标题（简短，如「优化建议」/「异常提醒」）。"
+      },
+      "content": {
+        "type": "string",
+        "required": true,
+        "description": "洞察详细内容，支持纯文本，前端按行展示。"
+      }
+    }
+  },
+  "sampleRequest": { "campaignId": "0032021863838Z7" },
+  "sampleResponse": {
+    "insights": [
+      {
+        "id": "a1",
+        "level": "info",
+        "title": "优化建议",
+        "content": "广告组 AdGroup_Android_Female_25-35 CPI ($1.72) 高于平均水平，但ROI尚可。建议将预算向ROI更高的 AdGroup_Android_Male_25-35 倾斜。"
+      },
+      {
+        "id": "a2",
+        "level": "warning",
+        "title": "素材洞察",
+        "content": "视频素材 (ID: #CR58392) 的点击率和转化率远超图片素材。建议增加此类视频素材的投放量。"
+      },
+      {
+        "id": "a3",
+        "level": "danger",
+        "title": "异常提醒",
+        "content": "过去24小时内，来自加拿大的安装成本上涨了30%，请关注。"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-performance/campaign-detail/ai-insights",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "campaignId (必填)",
+    "responseBody": "insights: AiInsightItem[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "insights 按 level 优先级降序返回（danger 优先），便于用户第一眼看到最紧急的问题。",
+      "content 为纯文本，不含 HTML 标签；若后续需要支持加粗等格式，再协商 Markdown 子集。",
+      "数量不固定，前端不做裁剪；若条目过多（>10条），建议后端只返回最高优先级 N 条。"
+    ]
+  }
+}

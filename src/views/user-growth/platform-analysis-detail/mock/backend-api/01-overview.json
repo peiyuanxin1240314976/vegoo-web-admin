@@ -1,0 +1,50 @@
+{
+  "_comment": "广告平台分析详情 - 整页数据。对应 types.ts: PlatformAnalysisDetailData。",
+  "fieldDescription": {
+    "request": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "钻取实体名称，与路由 query `name` 一致。"
+      },
+      "from": {
+        "type": "string",
+        "required": false,
+        "description": "来源页面标识，如 comprehensive-analysis。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "PlatformAnalysisDetailData",
+        "required": true,
+        "description": "KPI、平台卡片、矩阵表、CPI/ECPM 趋势、预警条等。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "name": "PhoneTracker",
+    "from": "comprehensive-analysis"
+  },
+  "sampleResponse": {
+    "data": {
+      "sourceName": "PhoneTracker",
+      "kpis": [],
+      "statCards": [],
+      "matrixTable": { "rows": [], "total": {} },
+      "cpiTrend": { "dates": [], "series": [] },
+      "ecpmTrend": { "dates": [], "series": [] },
+      "ecpmMetrics": {},
+      "alertBar": []
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/platform-analysis-detail/overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "name (必填), from?",
+    "responseBody": "PlatformAnalysisDetailData"
+  },
+  "apiSuggestion": {
+    "notes": ["完整字段结构以 `platform-analysis-detail/types.ts` 为准；此处为占位示例。"]
+  }
+}

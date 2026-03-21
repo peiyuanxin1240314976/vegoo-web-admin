@@ -4,6 +4,7 @@ import { dashboardRoutes } from './dashboard'
 import { monetizationRoutes } from './monetization'
 import { businessInsightRoutes } from './business-insight'
 import { userGrowthRoutes } from './user-growth'
+import { configManagementRoutes } from './config-management'
 import { systemRoutes } from './system'
 // import { resultRoutes } from './result'
 // import { exceptionRoutes } from './exception'
@@ -16,6 +17,7 @@ export const routeModules: AppRouteRecord[] = [
   cockpitRoutes,
   cockpitMapDetailRoute,
   userGrowthRoutes,
+  configManagementRoutes,
   businessInsightRoutes,
   dashboardRoutes,
   monetizationRoutes,
