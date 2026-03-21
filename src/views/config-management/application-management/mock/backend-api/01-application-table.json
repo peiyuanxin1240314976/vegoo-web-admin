@@ -1,0 +1,54 @@
+{
+  "_comment": "应用管理 - 分页列表。对应 types.ts: ApplicationTableQuery / ApplicationAppItem。",
+  "fieldDescription": {
+    "request": {
+      "current": { "type": "number", "required": true, "description": "当前页，从 1 开始。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "应用名称或业务 ID 模糊搜索。"
+      },
+      "category": { "type": "string", "required": false, "description": "类别。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台：Android / iOS。"
+      },
+      "status": { "type": "string", "required": false, "description": "状态，如 正常 / 禁用。" },
+      "creator": { "type": "string", "required": false, "description": "创建人。" }
+    },
+    "response": {
+      "records": {
+        "type": "ApplicationAppItem[]",
+        "required": true,
+        "description": "当前页数据。"
+      },
+      "current": { "type": "number", "required": true, "description": "当前页码。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" },
+      "total": { "type": "number", "required": true, "description": "总条数。" }
+    },
+    "ApplicationAppItem": {
+      "id": { "type": "string", "required": true, "description": "应用业务 ID。" },
+      "appName": { "type": "string", "required": true, "description": "应用名称。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "bundleId": { "type": "string", "required": true, "description": "Bundle ID。" },
+      "packageId": { "type": "string", "required": true, "description": "软件包 ID。" },
+      "status": { "type": "string", "required": true, "description": "状态。" }
+    }
+  },
+  "sampleRequest": { "current": 1, "size": 20, "keyword": "" },
+  "sampleResponse": {
+    "records": [],
+    "current": 1,
+    "size": 20,
+    "total": 0
+  },
+  "api": {
+    "url": "POST /api/config-management/application/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "current, size, keyword?, category?, platform?, status?, creator?",
+    "responseBody": "Api.Common.PaginatedResponse<ApplicationAppItem>"
+  }
+}

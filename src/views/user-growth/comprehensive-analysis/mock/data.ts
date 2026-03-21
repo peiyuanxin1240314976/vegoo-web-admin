@@ -16,7 +16,7 @@ export const MOCK_COMPREHENSIVE_ANALYSIS_FILTER_OPTIONS: ComprehensiveAnalysisFi
     { label: 'Weather5', value: 'weather5' },
     { label: 'PhoneTracker', value: 'phonetracker' }
   ],
-  adPlatformOptions: [
+  sourceOptions: [
     { label: '全部', value: 'all' },
     { label: 'Google Ads', value: 'google' },
     { label: 'Facebook', value: 'facebook' },

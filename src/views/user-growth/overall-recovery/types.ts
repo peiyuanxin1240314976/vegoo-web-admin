@@ -9,7 +9,7 @@ export type OverallRecoveryTabKey = 'overall' | 'organic'
 export interface OverallRecoveryFilterState {
   dateRange: string
   s_app_id: string
-  channel: string
+  source: string
   s_country_code: string
 }
 
@@ -22,7 +22,7 @@ export interface SelectOption {
 /** 筛选下拉选项 */
 export interface OverallRecoveryFilterOptions {
   appOptions: SelectOption[]
-  channelOptions: SelectOption[]
+  sourceOptions: SelectOption[]
   countryOptions: SelectOption[]
 }
 
@@ -130,7 +130,7 @@ export interface TrafficSourceItem {
 
 /** K-factor 渠道分析表行 */
 export interface KfactorChannelRow {
-  channel: string
+  source: string
   paidInstall: number
   organicDriven: number
   total: number

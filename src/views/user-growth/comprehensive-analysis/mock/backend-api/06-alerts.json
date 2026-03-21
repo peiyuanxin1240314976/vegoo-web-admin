@@ -1,0 +1,44 @@
+{
+  "_comment": "综合分析 - 投放预警列表。对应 types.ts: AlertItem[]。",
+  "fieldDescription": {
+    "request": {
+      "date_start": { "type": "string", "required": true },
+      "date_end": { "type": "string", "required": true },
+      "s_app_id": { "type": "string", "required": true },
+      "source": { "type": "string", "required": true },
+      "s_country_code": { "type": "string", "required": true }
+    },
+    "response": {
+      "data": {
+        "type": "AlertItem[]",
+        "required": true,
+        "description": "预警列表（id/level/text）；level: danger | warning | info。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "date_start": "2026-03-14",
+    "date_end": "2026-03-20",
+    "s_app_id": "",
+    "source": "",
+    "s_country_code": ""
+  },
+  "sampleResponse": {
+    "data": [
+      {
+        "id": "a1",
+        "level": "danger",
+        "text": "Google Ads × US: CPI $3.21 超标 28.4%，ROI D1 仅 22%"
+      },
+      { "id": "a2", "level": "warning", "text": "Facebook × DE: 预算消耗 92%，建议关注次日转化" },
+      { "id": "a3", "level": "info", "text": "TikTok × JP: CPI 低于目标 15%，可适度放量" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/comprehensive-analysis/alerts",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
+    "responseBody": "AlertItem[]"
+  }
+}

@@ -281,7 +281,10 @@
     },
     "configManagement": {
       "title": "Configuration",
-      "applicationManagement": "Application Management"
+      "applicationManagement": "Application Management",
+      "appAssignment": "App Assignment",
+      "optimizerManagement": "Optimizer Management",
+      "userManagement": "User Management"
     },
     "userGrowth": {
       "title": "User Growth",

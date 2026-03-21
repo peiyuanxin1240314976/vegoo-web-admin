@@ -89,21 +89,22 @@
     <!-- 数据表格 -->
     <div class="table-wrapper">
       <el-table
-        :data="filteredTableData"
+        :data="pagedTableData"
         class="app-table"
+        table-layout="fixed"
         row-class-name="app-table-row"
         @row-click="handleRowClick"
       >
-        <el-table-column prop="id" label="ID" min-width="110" />
-        <el-table-column prop="appName" label="应用名" min-width="120" />
-        <el-table-column label="图标" width="70">
+        <el-table-column prop="id" label="ID" min-width="100" show-overflow-tooltip />
+        <el-table-column prop="appName" label="应用名" min-width="100" show-overflow-tooltip />
+        <el-table-column label="图标" min-width="100" align="center">
           <template #default="{ row }">
             <div class="app-icon" :style="{ background: row.iconColor }">
               {{ row.appName.charAt(0) }}
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="平台" width="110">
+        <el-table-column label="平台" min-width="100">
           <template #default="{ row }">
             <span
               :class="[
@@ -115,13 +116,13 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="bundleId" label="Bundle ID" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="packageId" label="软件包ID" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="shortName" label="应用简称" width="90" />
-        <el-table-column prop="category" label="类别" width="90" />
-        <el-table-column prop="timezone" label="报表时区" width="90" />
-        <el-table-column prop="priority" label="优先级" width="80" />
-        <el-table-column label="状态" width="80">
+        <el-table-column prop="bundleId" label="Bundle ID" min-width="100" show-overflow-tooltip />
+        <el-table-column prop="packageId" label="软件包ID" min-width="100" show-overflow-tooltip />
+        <el-table-column prop="shortName" label="应用简称" min-width="100" show-overflow-tooltip />
+        <el-table-column prop="category" label="类别" min-width="100" show-overflow-tooltip />
+        <el-table-column prop="timezone" label="报表时区" min-width="100" show-overflow-tooltip />
+        <el-table-column prop="priority" label="优先级" min-width="100" />
+        <el-table-column label="状态" min-width="100" align="center">
           <template #default="{ row }">
             <span
               :class="[
@@ -133,9 +134,9 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="creator" label="创建人" width="80" />
-        <el-table-column prop="createTime" label="创建时间" width="110" />
-        <el-table-column label="操作" width="140" fixed="right">
+        <el-table-column prop="creator" label="创建人" min-width="100" show-overflow-tooltip />
+        <el-table-column prop="createTime" label="创建时间" min-width="100" show-overflow-tooltip />
+        <el-table-column label="操作" width="260" fixed="right" align="center">
           <template #default="{ row }">
             <div class="action-btns">
               <button class="action-btn action-btn--edit" @click.stop="handleEdit(row)">
@@ -201,25 +202,37 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, reactive, ref } from 'vue'
+  import { computed, reactive, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { Plus, Download, Search, EditPen, Delete, View } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
+  import {
+    createApplication,
+    deleteApplication,
+    exportApplicationList,
+    updateApplication
+  } from '@/api/config-management'
+  import { useUserStore } from '@/store/modules/user'
   import AppDetailDrawer from './modules/app-detail-drawer.vue'
   import AppFormDialog from './modules/app-form-dialog.vue'
   import AppDeleteDialog from './modules/app-delete-dialog.vue'
   import {
-    applicationMockList,
+    cloneApplicationMockList,
     applicationCategoryOptions,
     applicationCreatorOptions
   } from './mock/data'
-  import type { ApplicationAppItem } from './types'
+  import {
+    deriveIconColorFromId,
+    type ApplicationAppItem,
+    type ApplicationFormPayload
+  } from './types'
 
   defineOptions({ name: 'ApplicationManagement' })
 
   const { t } = useI18n()
+  const userStore = useUserStore()
 
-  /** 筛选（后续可对接 meta-filter-options） */
+  /** 筛选（可与 meta-filter-options 对齐） */
   const filterForm = reactive({
     keyword: '',
     category: '',
@@ -228,10 +241,11 @@
     creator: ''
   })
 
+  const appList = ref<ApplicationAppItem[]>(cloneApplicationMockList())
+
   const currentPage = ref(1)
   const pageSize = ref(20)
   const jumpPage = ref('')
-  const total = ref(42)
   const drawerVisible = ref(false)
   const formVisible = ref(false)
   const deleteVisible = ref(false)
@@ -239,13 +253,11 @@
   const editData = ref<ApplicationAppItem | null>(null)
   const deleteData = ref<ApplicationAppItem | null>(null)
 
-  const stats = reactive({ total: 42, ios: 18, android: 24, pending: 3 })
-
   const categoryOptions = applicationCategoryOptions
   const creatorOptions = applicationCreatorOptions
 
   const filteredTableData = computed(() => {
-    return applicationMockList.filter((item) => {
+    return appList.value.filter((item) => {
       const kw = filterForm.keyword.toLowerCase()
       if (kw && !item.id.toLowerCase().includes(kw) && !item.appName.toLowerCase().includes(kw)) {
         return false
@@ -257,6 +269,42 @@
       return true
     })
   })
+
+  const total = computed(() => filteredTableData.value.length)
+
+  const pagedTableData = computed(() => {
+    const list = filteredTableData.value
+    const start = (currentPage.value - 1) * pageSize.value
+    return list.slice(start, start + pageSize.value)
+  })
+
+  const stats = computed(() => {
+    const list = appList.value
+    return {
+      total: list.length,
+      ios: list.filter((i) => i.platform === 'iOS').length,
+      android: list.filter((i) => i.platform === 'Android').length,
+      pending: list.filter((i) => i.status === '禁用').length
+    }
+  })
+
+  watch(
+    () => ({ ...filterForm }),
+    () => {
+      currentPage.value = 1
+    },
+    { deep: true }
+  )
+
+  watch(pagedTableData, (rows) => {
+    if (rows.length === 0 && currentPage.value > 1) {
+      currentPage.value = Math.max(1, currentPage.value - 1)
+    }
+  })
+
+  function formatNow(): string {
+    return new Date().toISOString().slice(0, 19).replace('T', ' ')
+  }
 
   const handleAdd = () => {
     editData.value = null
@@ -284,7 +332,53 @@
     drawerVisible.value = true
   }
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    const rows = filteredTableData.value
+    const header = [
+      'id',
+      'appName',
+      'platform',
+      'bundleId',
+      'packageId',
+      'shortName',
+      'category',
+      'timezone',
+      'priority',
+      'status',
+      'creator',
+      'createTime'
+    ]
+    const lines = [header.join(',')]
+    for (const r of rows) {
+      const cells = header.map((key) => {
+        const v = r[key as keyof ApplicationAppItem]
+        const s = v === undefined || v === null ? '' : String(v)
+        return `"${s.replace(/"/g, '""')}"`
+      })
+      lines.push(cells.join(','))
+    }
+    const bom = '\uFEFF'
+    const blob = new Blob([bom + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `applications_${Date.now()}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    try {
+      await exportApplicationList({
+        current: currentPage.value,
+        size: pageSize.value,
+        keyword: filterForm.keyword || undefined,
+        category: filterForm.category || undefined,
+        platform: filterForm.platform || undefined,
+        status: filterForm.status || undefined,
+        creator: filterForm.creator || undefined
+      })
+    } catch {
+      // 后端未就绪时仅本地下载 CSV
+    }
     ElMessage.success('导出成功')
   }
 
@@ -297,22 +391,93 @@
   }
 
   const handleJump = () => {
-    const p = parseInt(jumpPage.value, 10)
-    if (p > 0) {
-      currentPage.value = p
-      jumpPage.value = ''
+    const raw = parseInt(jumpPage.value, 10)
+    jumpPage.value = ''
+    if (Number.isNaN(raw) || raw < 1) return
+    const maxPage = Math.max(1, Math.ceil(total.value / pageSize.value))
+    currentPage.value = Math.min(raw, maxPage)
+  }
+
+  const handleFormSuccess = async (payload: ApplicationFormPayload) => {
+    const userName = userStore.getUserInfo?.userName || userStore.getUserInfo?.username || '系统'
+    const editing = !!editData.value
+    const editingId = editData.value?.id
+
+    try {
+      if (editing && editingId) {
+        await updateApplication(payload)
+      } else {
+        await createApplication(payload)
+      }
+    } catch {
+      // 后端未就绪时仍合并本地列表
     }
-  }
 
-  const handleFormSuccess = () => {
+    const now = formatNow()
+    const dateStr = now.slice(0, 10)
+
+    if (editing && editingId) {
+      const idx = appList.value.findIndex((i) => i.id === editingId)
+      if (idx >= 0) {
+        const prev = appList.value[idx]
+        appList.value[idx] = {
+          ...prev,
+          ...payload,
+          iconColor: payload.iconColor ?? prev.iconColor,
+          packageId: payload.packageId ?? payload.bundleId ?? prev.packageId,
+          lastModifier: userName,
+          lastModifyTime: now
+        }
+      }
+      if (currentApp.value?.id === editingId) {
+        const row = appList.value.find((i) => i.id === editingId)
+        if (row) currentApp.value = row
+      }
+      ElMessage.success('保存成功')
+    } else {
+      const item: ApplicationAppItem = {
+        ...payload,
+        iconColor: payload.iconColor ?? deriveIconColorFromId(payload.id),
+        packageId: payload.packageId ?? payload.bundleId,
+        shortName: payload.shortName ?? '',
+        timezone: payload.timezone ?? 'PST',
+        priority: payload.priority ?? 1,
+        status: payload.status ?? '正常',
+        creator: userName,
+        createTime: dateStr,
+        lastModifier: userName,
+        lastModifyTime: now
+      }
+      appList.value.unshift(item)
+      ElMessage.success('创建成功')
+    }
+
     formVisible.value = false
-    ElMessage.success('操作成功')
+    editData.value = null
   }
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
+    const id = deleteData.value?.id
     deleteVisible.value = false
+    if (!id) {
+      deleteData.value = null
+      return
+    }
+
+    try {
+      await deleteApplication(id)
+    } catch {
+      // 后端未就绪时仍删除本地
+    }
+
+    const idx = appList.value.findIndex((i) => i.id === id)
+    if (idx >= 0) appList.value.splice(idx, 1)
+    if (currentApp.value?.id === id) {
+      currentApp.value = null
+      drawerVisible.value = false
+    }
+    deleteData.value = null
     ElMessage.success('删除成功')
-    if (drawerVisible.value) drawerVisible.value = false
   }
 </script>
 
@@ -580,6 +745,8 @@
   }
 
   .app-table {
+    width: 100%;
+
     --el-table-bg-color: transparent;
     --el-table-header-bg-color: #0f1829;
     --el-table-row-hover-bg-color: var(--bg-row-hover);
@@ -681,8 +848,10 @@
 
   .action-btns {
     display: flex;
-    gap: 2px;
+    flex-wrap: wrap;
+    gap: 4px;
     align-items: center;
+    justify-content: center;
   }
 
   .action-btn {

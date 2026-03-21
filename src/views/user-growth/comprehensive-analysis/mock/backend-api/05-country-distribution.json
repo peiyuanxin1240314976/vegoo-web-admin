@@ -1,0 +1,64 @@
+{
+  "_comment": "综合分析 - 国家 CPI 地图分布 + Top8 列表。对应 types.ts: CountryCpiMapItem[] + CountryCpiTopItem[]。",
+  "fieldDescription": {
+    "request": {
+      "date_start": { "type": "string", "required": true },
+      "date_end": { "type": "string", "required": true },
+      "s_app_id": { "type": "string", "required": true },
+      "source": { "type": "string", "required": true },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "'' 全部；非空则仅返回指定国家数据。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "{ mapItems: CountryCpiMapItem[]; top8: CountryCpiTopItem[] }",
+        "required": true,
+        "description": "地图气泡点（country/code/cpi/x/y）+ 右侧 Top8 列表（country/code/cpi）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "date_start": "2026-03-14",
+    "date_end": "2026-03-20",
+    "s_app_id": "",
+    "source": "",
+    "s_country_code": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "mapItems": [
+        { "country": "美国", "code": "US", "cpi": 3.12, "x": 22, "y": 36 },
+        { "country": "英国", "code": "GB", "cpi": 2.76, "x": 48, "y": 28 },
+        { "country": "日本", "code": "JP", "cpi": 2.45, "x": 88, "y": 38 },
+        { "country": "德国", "code": "DE", "cpi": 2.91, "x": 52, "y": 30 },
+        { "country": "巴西", "code": "BR", "cpi": 3.45, "x": 32, "y": 72 }
+      ],
+      "top8": [
+        { "country": "美国", "code": "US", "cpi": 3.12 },
+        { "country": "英国", "code": "GB", "cpi": 2.76 },
+        { "country": "日本", "code": "JP", "cpi": 2.45 },
+        { "country": "德国", "code": "DE", "cpi": 2.91 },
+        { "country": "法国", "code": "FR", "cpi": 2.68 },
+        { "country": "加拿大", "code": "CA", "cpi": 2.82 },
+        { "country": "澳大利亚", "code": "AU", "cpi": 2.71 },
+        { "country": "巴西", "code": "BR", "cpi": 3.45 }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/comprehensive-analysis/country-distribution",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
+    "responseBody": "{ mapItems: CountryCpiMapItem[]; top8: CountryCpiTopItem[] }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "地图与 Top8 同属一个地理维度视图，合为一接口可减少请求次数。",
+      "x/y 为前端渲染坐标（百分比），若后端不存储坐标可由前端维护 code→坐标映射表。"
+    ]
+  }
+}

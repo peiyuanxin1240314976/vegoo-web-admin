@@ -1,0 +1,52 @@
+{
+  "_comment": "综合分析 - 广告平台 CPI 横向柱图。对应 types.ts: PlatformCpiBarData。",
+  "fieldDescription": {
+    "request": {
+      "date_start": { "type": "string", "required": true },
+      "date_end": { "type": "string", "required": true },
+      "s_app_id": { "type": "string", "required": true },
+      "source": { "type": "string", "required": true },
+      "s_country_code": { "type": "string", "required": true }
+    },
+    "response": {
+      "data": {
+        "type": "PlatformCpiBarData",
+        "required": true,
+        "description": "target（目标 CPI）+ items（每个广告平台的 name/cpi/color/status）。"
+      }
+    },
+    "PlatformCpiBarData": {
+      "target": { "type": "number", "description": "目标 CPI 阈值，用于画参考线。" },
+      "items": {
+        "type": "PlatformCpiBarItem[]",
+        "description": "name/cpi/color/status（good|near|over）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "date_start": "2026-03-14",
+    "date_end": "2026-03-20",
+    "s_app_id": "",
+    "source": "",
+    "s_country_code": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "target": 2.5,
+      "items": [
+        { "name": "Google Ads", "cpi": 3.21, "color": "#4B8EF1", "status": "over" },
+        { "name": "Facebook", "cpi": 2.48, "color": "#1877F2", "status": "near" },
+        { "name": "TikTok", "cpi": 2.12, "color": "#000000", "status": "good" },
+        { "name": "Unity", "cpi": 2.89, "color": "#A855F7", "status": "over" },
+        { "name": "AppLovin", "cpi": 2.35, "color": "#FF6B6B", "status": "good" }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/comprehensive-analysis/platform-cpi-bar",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
+    "responseBody": "PlatformCpiBarData"
+  }
+}

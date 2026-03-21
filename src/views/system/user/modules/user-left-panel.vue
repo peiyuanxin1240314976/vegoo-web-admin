@@ -27,6 +27,7 @@
         <div class="stat-right">
           <span class="stat-value">{{ item.value }}</span>
           <span class="stat-label">{{ item.label }}</span>
+          <span v-if="item.sublabel" class="stat-sublabel">{{ item.sublabel }}</span>
         </div>
       </div>
     </div>
@@ -127,7 +128,7 @@
         { label: '在线', value: '1' },
         { label: '离线', value: '2' },
         { label: '异常', value: '3' },
-        { label: '注销', value: '4' }
+        { label: '已禁用', value: '4' }
       ]
     }
   )
@@ -152,25 +153,29 @@
   const statCards = computed(() => [
     {
       key: 'total',
-      label: '总用户数',
+      label: '用户总数',
+      sublabel: '全量',
       value: props.stats.total,
       icon: User
     },
     {
       key: 'active',
-      label: '活跃用户',
+      label: '在线',
+      sublabel: '当前页',
       value: props.stats.active,
       icon: UserFilled
     },
     {
       key: 'disabled',
-      label: '禁用用户',
+      label: '已禁用',
+      sublabel: '当前页',
       value: props.stats.disabled,
       icon: CircleCloseFilled
     },
     {
       key: 'pending',
-      label: '待激活用户',
+      label: '离线 / 异常',
+      sublabel: '当前页',
       value: props.stats.pending,
       icon: Clock
     }
@@ -269,6 +274,14 @@
       font-size: 30px;
       font-weight: 600;
       line-height: 1.2;
+    }
+
+    .stat-sublabel {
+      display: block;
+      margin-top: 2px;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--el-text-color-placeholder);
     }
 
     .stat-label {

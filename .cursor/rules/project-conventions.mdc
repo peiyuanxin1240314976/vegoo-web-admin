@@ -129,6 +129,7 @@ alwaysApply: true
 ## 样式规范（概要）
 
 - **详细约定** 见规则 `style-conventions.mdc`（编辑 .vue/.scss/.css 时生效），以驾驶舱 cockpit 为参考。
+- **配置管理深色弹窗**：`ElDialog` 公共配色变量（`--cm-dialog-*`）与 teleport + `:has` 写法见规则 `config-management-dialog.mdc`；变量定义在 `src/assets/styles/core/config-management-dialog.scss`。
 - **按钮圆角**：开发时按钮统一使用**全圆角**。使用 `ElButton` 时加上 `round` 属性（如 `<ElButton round>`）；自定义按钮或需覆盖样式时使用 `border-radius: 9999px` 或 `var(--el-border-radius-round)`，保持全项目按钮风格一致。
 - **页面布局**: 根节点 `{模块}-page`，全高用 `art-full-height`；栅格用 `ElRow` + `:gutter="16"`；区块间距 16px。
 - **类名**: 模块前缀（如 `cockpit-`）+ BEM 风格（`block--modifier`、`is-*`）；面板用 `ElCard` + `shadow="never"`。

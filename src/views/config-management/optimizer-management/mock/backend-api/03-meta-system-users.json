@@ -1,0 +1,32 @@
+{
+  "_comment": "优化师管理 - 新建弹窗关联用户下拉。对应 Api.ConfigManagement.Optimizer.MetaSystemUserItem[]。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "data": {
+        "type": "MetaSystemUserItem[]",
+        "required": true,
+        "description": "可选用户列表；网关若包裹则在 data 内。"
+      }
+    },
+    "MetaSystemUserItem": {
+      "id": { "type": "string", "required": true, "description": "用户 ID。" },
+      "userName": { "type": "string", "required": true, "description": "用户名。" },
+      "email": { "type": "string", "required": true, "description": "邮箱。" },
+      "avatarColor": { "type": "string", "required": true, "description": "头像底色 HEX。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "data": [
+      { "id": "u001", "userName": "张三", "email": "zhang@example.com", "avatarColor": "#2dd4bf" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/optimizer/meta-system-users",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "空对象",
+    "responseBody": "MetaSystemUserItem[]"
+  }
+}

@@ -2,9 +2,11 @@
   <el-dialog
     v-model="dialogVisible"
     :title="isEdit ? '编辑应用' : '新增应用'"
-    class="app-form-dialog"
     width="760px"
     :close-on-click-modal="false"
+    header-class="app-form-dialog-hd"
+    body-class="app-form-dialog-bd"
+    footer-class="app-form-dialog-ft"
     @close="handleClose"
   >
     <el-form ref="formRef" :model="form" :rules="rules" label-width="0" class="app-form">
@@ -46,7 +48,12 @@
                 placeholder="请选择类别"
                 class="dark-select full-width"
               >
-                <el-option v-for="opt in categoryOptions" :key="opt" :label="opt" :value="opt" />
+                <el-option
+                  v-for="opt in APPLICATION_CATEGORY_VALUES"
+                  :key="opt"
+                  :label="opt"
+                  :value="opt"
+                />
               </el-select>
             </el-form-item>
           </div>
@@ -225,7 +232,12 @@
     <!-- 底部 -->
     <template #footer>
       <div class="dialog-footer">
-        <div v-if="isEdit" class="last-modify-info"> 最后修改：李四 2024-03-15 14:30 </div>
+        <div
+          v-if="isEdit && (editData?.lastModifier || editData?.lastModifyTime)"
+          class="last-modify-info"
+        >
+          最后修改：{{ editData?.lastModifier }} {{ editData?.lastModifyTime }}
+        </div>
         <div class="footer-btns">
           <span class="required-hint">标有 * 为必填项</span>
           <ElButton round class="btn-cancel" @click="handleClose">取消</ElButton>
@@ -242,6 +254,8 @@
   import { ref, reactive, computed, watch } from 'vue'
   import { Upload } from '@element-plus/icons-vue'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { APPLICATION_CATEGORY_VALUES } from '../mock/data'
+  import { deriveIconColorFromId } from '../types'
   import type { ApplicationFormModel, ApplicationFormPayload } from '../types'
 
   defineOptions({ name: 'AppFormDialog' })
@@ -304,7 +318,6 @@
   )
 
   // ─── 选项配置 ──────────────────────────────────────────
-  const categoryOptions = ['Weather', 'Health', 'Finance', 'Travel', 'Shopping', 'Entertainment']
   const timezoneOptions = ['PST', 'EST', 'CST', 'MST', 'UTC', 'GMT+8']
 
   // ─── 表单校验 ──────────────────────────────────────────
@@ -335,7 +348,12 @@
   const handleSubmit = async () => {
     if (!formRef.value) return
     await formRef.value.validate((valid) => {
-      if (valid) emit('success', { ...form } as ApplicationFormPayload)
+      if (!valid) return
+      const iconColor =
+        props.editData?.iconColor && !iconPreview.value
+          ? props.editData.iconColor
+          : deriveIconColorFromId(form.id)
+      emit('success', { ...form, iconColor } as ApplicationFormPayload)
     })
   }
 
@@ -347,85 +365,76 @@
 </script>
 
 <style lang="scss">
-  // ─── 弹窗全局样式（非 scoped 以覆盖 el-dialog） ────────
-  .app-form-dialog {
-    --bg-dialog: #131c2e;
-    --bg-inner: #0f1829;
-    --border: rgb(255 255 255 / 8%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #2dd4bf;
-    --accent-dim: rgb(45 212 191 / 12%);
-    --android-green: #22c55e;
-    --ios-blue: #60a5fa;
-    --red: #ef4444;
+  /*
+   * ElDialog teleport 到 body，写在 el-dialog 上的 class 往往挂不到根节点；
+   * 用 header/body/footer class + :has 锁定「新增/编辑应用」弹窗。
+   * 配色使用全局变量：config-management-dialog.scss / .cursor/rules/config-management-dialog.mdc
+   */
+  .el-dialog:has(.app-form-dialog-bd) {
+    background: var(--cm-dialog-bg-inner) !important;
+    border: 1px solid var(--cm-dialog-border);
+    border-radius: 12px !important;
+    box-shadow: var(--cm-dialog-shadow) !important;
+  }
 
-    .el-dialog {
-      background: var(--bg-dialog) !important;
-      border: 1px solid var(--border);
-      border-radius: 12px !important;
-      box-shadow: 0 24px 80px rgb(0 0 0 / 60%) !important;
+  .el-dialog:has(.app-form-dialog-bd) .el-dialog__header.app-form-dialog-hd {
+    padding: 18px 24px 16px;
+    margin: 0;
+    background: var(--cm-dialog-bg-inner);
+    border-bottom: 1px solid var(--cm-dialog-border);
+    border-radius: 12px 12px 0 0;
+  }
+
+  .el-dialog:has(.app-form-dialog-bd) .el-dialog__title {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: var(--cm-dialog-text-primary) !important;
+  }
+
+  .el-dialog:has(.app-form-dialog-bd) .el-dialog__headerbtn .el-icon {
+    font-size: 16px;
+    color: var(--cm-dialog-text-muted) !important;
+
+    &:hover {
+      color: var(--cm-dialog-text-primary) !important;
+    }
+  }
+
+  .el-dialog:has(.app-form-dialog-bd) .el-dialog__body.app-form-dialog-bd {
+    max-height: 68vh;
+    padding: 0 !important;
+    overflow-y: auto;
+    background: var(--cm-dialog-bg-inner);
+
+    &::-webkit-scrollbar {
+      width: 4px;
     }
 
-    .el-dialog__header {
-      padding: 18px 24px 16px;
-      margin: 0;
-      background: var(--bg-inner);
-      border-bottom: 1px solid var(--border);
-      border-radius: 12px 12px 0 0;
+    &::-webkit-scrollbar-track {
+      background: transparent;
     }
 
-    .el-dialog__title {
-      font-size: 16px !important;
-      font-weight: 600 !important;
-      color: var(--text-primary) !important;
+    &::-webkit-scrollbar-thumb {
+      background: var(--cm-dialog-border);
+      border-radius: 2px;
     }
+  }
 
-    .el-dialog__headerbtn .el-icon {
-      font-size: 16px;
-      color: var(--text-muted) !important;
+  .el-dialog:has(.app-form-dialog-bd) .el-dialog__footer.app-form-dialog-ft {
+    padding: 0 !important;
+    background: var(--cm-dialog-bg-inner);
+    border-top: 1px solid var(--cm-dialog-border);
+    border-radius: 0 0 12px 12px;
+  }
 
-      &:hover {
-        color: var(--text-primary) !important;
-      }
-    }
+  .el-dialog:has(.app-form-dialog-bd) .el-form-item {
+    margin-bottom: 0;
+  }
 
-    .el-dialog__body {
-      max-height: 68vh;
-      padding: 0 !important;
-      overflow-y: auto;
-
-      &::-webkit-scrollbar {
-        width: 4px;
-      }
-
-      &::-webkit-scrollbar-track {
-        background: transparent;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background: rgb(255 255 255 / 10%);
-        border-radius: 2px;
-      }
-    }
-
-    .el-dialog__footer {
-      padding: 0 !important;
-      background: var(--bg-inner);
-      border-top: 1px solid var(--border);
-      border-radius: 0 0 12px 12px;
-    }
-
-    .el-form-item {
-      margin-bottom: 0;
-    }
-
-    .el-form-item__error {
-      margin-top: 2px;
-      font-size: 11px;
-      color: var(--red);
-    }
+  .el-dialog:has(.app-form-dialog-bd) .el-form-item__error {
+    margin-top: 2px;
+    font-size: 11px;
+    color: #ef4444;
   }
 
   // ─── 下拉选项层 ────────────────────────────────────────

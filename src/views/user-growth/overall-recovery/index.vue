@@ -23,10 +23,10 @@
           </ElSelect>
         </div>
         <div class="or-pill">
-          <span class="or-pill__k">渠道:</span>
-          <ElSelect v-model="filters.channel" class="or-select" :teleported="false">
+          <span class="or-pill__k">广告平台:</span>
+          <ElSelect v-model="filters.source" class="or-select" :teleported="false">
             <ElOption
-              v-for="opt in channelOptions"
+              v-for="opt in sourceOptions"
               :key="opt.value"
               :label="opt.label"
               :value="opt.value"
@@ -92,11 +92,11 @@
   const filters = reactive<OverallRecoveryFilterState>({
     dateRange: '30d',
     s_app_id: 'all',
-    channel: 'all',
+    source: 'all',
     s_country_code: 'all'
   })
 
-  const { appOptions, channelOptions, countryOptions } = useOverallRecoveryFilters()
+  const { appOptions, sourceOptions, countryOptions } = useOverallRecoveryFilters()
 
   const tabComponents: Record<OverallRecoveryTabKey, typeof TabOverall> = {
     overall: TabOverall,
