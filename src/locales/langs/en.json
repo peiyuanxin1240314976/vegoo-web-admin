@@ -257,6 +257,8 @@
       "appAdPlatformPerformance": "App Ad Platform Performance",
       "appAdPlatformPerformanceEmpty": "Page under construction",
       "revenueDeviation": "Estimated Revenue Deviation",
+      "businessReport": "Report Management",
+      "businessReportPlaceholder": "Page under construction",
       "iaaTabs": {
         "adType": "Ad Type",
         "adPlatform": "Ad Platform",

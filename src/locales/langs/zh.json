@@ -257,6 +257,8 @@
       "appAdPlatformPerformance": "应用广告平台表现",
       "appAdPlatformPerformanceEmpty": "页面内容建设中",
       "revenueDeviation": "预估收入偏差",
+      "businessReport": "报告管理",
+      "businessReportPlaceholder": "页面内容建设中",
       "iaaTabs": {
         "adType": "广告类型",
         "adPlatform": "广告平台",
