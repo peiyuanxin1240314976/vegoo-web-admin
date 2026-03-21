@@ -250,6 +250,7 @@
       "agencyAnalysis": "Agency Analysis",
       "iapAnalysis": "IAP Analysis",
       "iaaAnalysis": "IAA Analysis",
+      "ecpmAnalysis": "eCPM Analysis",
       "iaaTabs": {
         "adType": "Ad Type",
         "adPlatform": "Ad Platform",

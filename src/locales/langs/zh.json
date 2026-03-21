@@ -250,6 +250,7 @@
       "agencyAnalysis": "代投分析",
       "iapAnalysis": "IAP 分析",
       "iaaAnalysis": "IAA 分析",
+      "ecpmAnalysis": "ECPM分析",
       "iaaTabs": {
         "adType": "广告类型",
         "adPlatform": "广告平台",

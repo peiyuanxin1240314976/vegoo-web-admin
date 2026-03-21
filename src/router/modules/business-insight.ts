@@ -1,7 +1,7 @@
 import { AppRouteRecord } from '@/types/router'
 
 /**
- * 商业洞察 - 一级菜单，含 收入概览、利润分析、代投分析
+ * 商业洞察 - 一级菜单，含 收入概览、利润分析、IAP/IAA、代投、ECPM 等
  */
 export const businessInsightRoutes: AppRouteRecord = {
   name: 'BusinessInsight',
@@ -71,6 +71,16 @@ export const businessInsightRoutes: AppRouteRecord = {
       component: '/business-insight/agency-analysis',
       meta: {
         title: 'menus.businessInsight.agencyAnalysis',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'ecpm-analysis',
+      name: 'EcpmAnalysis',
+      component: '/business-insight/ecpm-analysis/EcpmDashboard',
+      meta: {
+        title: 'menus.businessInsight.ecpmAnalysis',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
