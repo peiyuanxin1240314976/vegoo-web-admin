@@ -249,13 +249,16 @@
                   v-for="col in matrixCols"
                   :key="col.name"
                   class="rd-matrix-cell"
-                  :class="getMatrixClass(row[col.key]?.deviation)"
+                  :class="getMatrixClass(matrixCell(row, col.key)?.deviation ?? '')"
                 >
-                  <template v-if="row[col.key]">
-                    <span class="rd-matrix-est">{{ row[col.key].estimated }}</span>
-                    <span class="rd-matrix-real">/{{ row[col.key].real }}</span>
-                    <span class="rd-matrix-dev" :class="getDeviationClass(row[col.key].deviation)">
-                      /{{ row[col.key].deviation }}
+                  <template v-if="matrixCell(row, col.key)">
+                    <span class="rd-matrix-est">{{ matrixCell(row, col.key)?.estimated }}</span>
+                    <span class="rd-matrix-real">/{{ matrixCell(row, col.key)?.real }}</span>
+                    <span
+                      class="rd-matrix-dev"
+                      :class="getDeviationClass(matrixCell(row, col.key)?.deviation ?? '')"
+                    >
+                      /{{ matrixCell(row, col.key)?.deviation }}
                     </span>
                   </template>
                 </td>
@@ -284,6 +287,30 @@
   import { ref, onMounted, onUnmounted, watch } from 'vue'
   import { ArrowRight, Filter, TopRight } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
+
+  type MatrixPlatformKey = 'admob' | 'facebook' | 'applovin' | 'vungle'
+
+  interface MatrixCell {
+    estimated: string
+    real: string
+    deviation: string
+  }
+
+  type MatrixRow = {
+    app: string
+    icon: string
+    iconColor: string
+  } & Record<MatrixPlatformKey, MatrixCell>
+
+  interface MatrixColDef {
+    name: string
+    key: MatrixPlatformKey
+    total: MatrixCell
+  }
+
+  function matrixCell(row: MatrixRow, key: MatrixPlatformKey): MatrixCell | undefined {
+    return row[key]
+  }
 
   // ── State ────────────────────────────────────────────────────────────────────
   const dateRange = ref(['2024-05-01', '2024-05-31'])
@@ -333,7 +360,7 @@
     { label: '日期', value: 'date', active: false }
   ]
 
-  const matrixCols = [
+  const matrixCols: MatrixColDef[] = [
     {
       name: 'Admob',
       key: 'admob',
@@ -356,7 +383,7 @@
     }
   ]
 
-  const matrixData = [
+  const matrixData: MatrixRow[] = [
     {
       app: 'WeatherRadar',
       icon: '🌤',
