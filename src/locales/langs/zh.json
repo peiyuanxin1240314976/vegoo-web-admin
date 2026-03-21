@@ -279,7 +279,10 @@
     },
     "configManagement": {
       "title": "配置管理",
-      "applicationManagement": "应用管理"
+      "applicationManagement": "应用管理",
+      "appAssignment": "应用分配",
+      "optimizerManagement": "优化师管理",
+      "userManagement": "用户管理"
     },
     "userGrowth": {
       "title": "用户增长",

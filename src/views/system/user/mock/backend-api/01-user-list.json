@@ -1,0 +1,97 @@
+{
+  "_comment": "系统管理 - 用户分页列表。对应 Api.SystemManage.UserSearchParams / UserList / UserListItem。",
+  "fieldDescription": {
+    "request": {
+      "current": { "type": "number", "required": true, "description": "当前页，从 1 开始。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" },
+      "userName": { "type": "string", "required": false, "description": "登录名/用户名模糊查询。" },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["1", "2", "3", "4"],
+        "description": "1=在线 2=离线 3=异常 4=已禁用。"
+      },
+      "role": {
+        "type": "string",
+        "required": false,
+        "description": "角色编码筛选，与 RoleListItem.roleCode、UserListItem.userRoles 元素一致。"
+      },
+      "userGender": { "type": "string", "required": false, "description": "性别。" },
+      "userPhone": { "type": "string", "required": false, "description": "手机号。" },
+      "userEmail": { "type": "string", "required": false, "description": "邮箱。" },
+      "id": { "type": "number", "required": false, "description": "用户主键。" }
+    },
+    "response": {
+      "records": { "type": "UserListItem[]", "required": true, "description": "当前页用户列表。" },
+      "current": { "type": "number", "required": true, "description": "当前页码。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" },
+      "total": { "type": "number", "required": true, "description": "符合条件的总条数。" }
+    },
+    "UserListItem": {
+      "id": { "type": "number", "required": true, "description": "用户主键。" },
+      "avatar": {
+        "type": "string",
+        "required": false,
+        "description": "头像 URL；缺省时前端使用占位图。"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["1", "2", "3", "4"],
+        "description": "1=在线 2=离线 3=异常 4=已禁用。"
+      },
+      "userName": { "type": "string", "required": true, "description": "用户名（登录名）。" },
+      "nickName": { "type": "string", "required": true, "description": "昵称，可为空串。" },
+      "userGender": { "type": "string", "required": true, "description": "性别展示文案。" },
+      "userPhone": { "type": "string", "required": true, "description": "手机号。" },
+      "userEmail": { "type": "string", "required": true, "description": "邮箱。" },
+      "userRoles": {
+        "type": "string[]",
+        "required": true,
+        "description": "角色编码数组，与 roleCode 一致。"
+      },
+      "accessibleApps": {
+        "type": "string[]",
+        "required": false,
+        "description": "可访问应用标识列表。"
+      },
+      "remark": { "type": "string", "required": false, "description": "备注。" },
+      "createBy": { "type": "string", "required": true, "description": "创建人。" },
+      "createTime": { "type": "string", "required": true, "description": "创建时间。" },
+      "updateBy": { "type": "string", "required": true, "description": "最后更新人。" },
+      "updateTime": { "type": "string", "required": true, "description": "最后更新时间。" }
+    }
+  },
+  "sampleRequest": { "current": 1, "size": 20, "userName": "", "status": "", "role": "" },
+  "sampleResponse": {
+    "records": [
+      {
+        "id": 1,
+        "avatar": "",
+        "status": "1",
+        "userName": "demo",
+        "nickName": "演示",
+        "userGender": "男",
+        "userPhone": "13800138000",
+        "userEmail": "demo@example.com",
+        "userRoles": ["ops"],
+        "accessibleApps": [],
+        "remark": "",
+        "createBy": "admin",
+        "createTime": "2024-01-01 10:00:00",
+        "updateBy": "admin",
+        "updateTime": "2024-01-02 10:00:00"
+      }
+    ],
+    "current": 1,
+    "size": 20,
+    "total": 1
+  },
+  "api": {
+    "url": "GET /api/user/list",
+    "method": "GET",
+    "priority": "P0",
+    "requestBody": "Query: current, size, userName?, status?, role?, ...",
+    "responseBody": "Api.Common.PaginatedResponse<UserListItem>"
+  }
+}

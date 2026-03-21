@@ -1,0 +1,64 @@
+{
+  "_comment": "优化师管理 - 新增。对应 Api.ConfigManagement.Optimizer.FormPayload（无 id）。",
+  "fieldDescription": {
+    "request": {
+      "userId": { "type": "string", "required": true, "description": "关联系统用户 ID。" },
+      "version": { "type": "number", "required": true, "description": "版本号。" },
+      "sCode": { "type": "string", "required": true, "description": "代号。" },
+      "sCode2": { "type": "string", "required": false, "description": "副代号。" },
+      "minConsumption": {
+        "type": "number",
+        "required": true,
+        "description": "最低消耗要求（美元）。"
+      },
+      "checkCode": { "type": "string", "required": true, "description": "检验码，≤200 字符。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["在职", "离职"],
+        "description": "状态，新建默认多为在职。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "ListItem",
+        "required": true,
+        "description": "新建完成后的完整行；与列表项结构一致。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "userId": "u001",
+    "version": 0,
+    "sCode": "FB-OPT-099",
+    "sCode2": "",
+    "minConsumption": 500,
+    "checkCode": "CHK-XXXX",
+    "status": "在职"
+  },
+  "sampleResponse": {
+    "data": {
+      "id": "opt099",
+      "no": 99,
+      "userId": "u001",
+      "userName": "张三",
+      "email": "zhang@example.com",
+      "avatarColor": "#2dd4bf",
+      "version": 0,
+      "sCode": "FB-OPT-099",
+      "minConsumption": 500,
+      "checkCode": "CHK-XXXX",
+      "status": "在职",
+      "apps": [],
+      "recentLogs": [],
+      "createTime": "2026-03-21"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/optimizer",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "FormPayload（无 id）",
+    "responseBody": "ListItem"
+  }
+}

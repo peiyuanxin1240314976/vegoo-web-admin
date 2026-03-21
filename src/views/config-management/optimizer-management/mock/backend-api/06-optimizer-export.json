@@ -1,0 +1,29 @@
+{
+  "_comment": "优化师管理 - 导出。筛选条件与列表一致；实际返回文件流或异步任务 ID 由网关约定。",
+  "fieldDescription": {
+    "request": {
+      "keyword": { "type": "string", "required": false, "description": "与列表一致。" },
+      "status": { "type": "string", "required": false, "description": "与列表一致。" },
+      "current": { "type": "number", "required": false, "description": "若后端支持按页导出。" },
+      "size": { "type": "number", "required": false, "description": "若后端支持按页导出。" }
+    },
+    "response": {
+      "data": { "type": "blob | string", "required": false, "description": "文件流或任务 ID。" }
+    }
+  },
+  "sampleRequest": { "keyword": "", "status": "在职" },
+  "sampleResponse": {},
+  "api": {
+    "url": "POST /api/config-management/optimizer/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "keyword?, status?, current?, size?",
+    "responseBody": "文件流或业务自定义"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "前端需在 http 层设置 responseType: 'blob' 若返回二进制。",
+      "若改为异步导出，可返回 taskId 并另配查询进度接口。"
+    ]
+  }
+}

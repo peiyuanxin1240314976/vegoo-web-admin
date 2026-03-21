@@ -1,7 +1,10 @@
 import request from '@/utils/http'
 import { AppRouteRecord } from '@/types/router'
 
-// 获取用户列表
+/**
+ * 用户管理 - 分页列表
+ * @param params 查询条件见 `Api.SystemManage.UserSearchParams`（含 current、size、userName、status、role 等）
+ */
 export function fetchGetUserList(params: Api.SystemManage.UserSearchParams) {
   return request.get<Api.SystemManage.UserList>({
     url: '/api/user/list',

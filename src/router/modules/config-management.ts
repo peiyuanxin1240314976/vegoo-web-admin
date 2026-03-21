@@ -23,6 +23,36 @@ export const configManagementRoutes: AppRouteRecord = {
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
+    },
+    {
+      path: 'app-assignment',
+      name: 'AppAssignment',
+      component: '/config-management/app-assignment',
+      meta: {
+        title: 'menus.configManagement.appAssignment',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'optimizer-management',
+      name: 'OptimizerManagement',
+      component: '/config-management/optimizer-management',
+      meta: {
+        title: 'menus.configManagement.optimizerManagement',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'user-management',
+      name: 'ConfigUserManagement',
+      component: '/config-management/user-management',
+      meta: {
+        title: 'menus.configManagement.userManagement',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
     }
   ]
 }

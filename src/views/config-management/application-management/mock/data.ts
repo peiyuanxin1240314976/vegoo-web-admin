@@ -1,6 +1,22 @@
 import type { ApplicationAppItem } from '../types'
 
-export const applicationMockList: ApplicationAppItem[] = [
+/** 与表单、筛选下拉共用（单一数据源） */
+export const APPLICATION_CATEGORY_OPTIONS = [
+  { label: 'Weather', value: 'Weather' },
+  { label: 'Health', value: 'Health' },
+  { label: 'Finance', value: 'Finance' },
+  { label: 'Travel', value: 'Travel' },
+  { label: 'Shopping', value: 'Shopping' },
+  { label: 'Entertainment', value: 'Entertainment' }
+]
+
+export const applicationCategoryOptions = APPLICATION_CATEGORY_OPTIONS
+
+/** 表单 el-option 使用的纯字符串列表（与 APPLICATION_CATEGORY_OPTIONS 一致） */
+export const APPLICATION_CATEGORY_VALUES = APPLICATION_CATEGORY_OPTIONS.map((o) => o.value)
+
+/** 初始 Mock 数据（只读种子） */
+const APPLICATION_MOCK_SEED: ApplicationAppItem[] = [
   {
     id: 'Weather5A',
     appName: 'Weather5',
@@ -195,11 +211,13 @@ export const applicationMockList: ApplicationAppItem[] = [
   }
 ]
 
-export const applicationCategoryOptions = [
-  { label: 'Weather', value: 'Weather' },
-  { label: 'Health', value: 'Health' },
-  { label: 'Finance', value: 'Finance' }
-]
+/** 兼容静态引用（与种子内容一致） */
+export const applicationMockList: ApplicationAppItem[] = APPLICATION_MOCK_SEED
+
+/** 页面内可变的列表请使用深拷贝 */
+export function cloneApplicationMockList(): ApplicationAppItem[] {
+  return JSON.parse(JSON.stringify(APPLICATION_MOCK_SEED)) as ApplicationAppItem[]
+}
 
 export const applicationCreatorOptions = [
   { label: '张三', value: '张三' },
