@@ -5,7 +5,7 @@
       <div class="breadcrumb">
         <span class="bc-parent">商业洞察</span>
         <span class="bc-sep"> &rsaquo; </span>
-        <span class="bc-current">IAP分析</span>
+        <span class="bc-current">付费分析</span>
       </div>
       <div class="header-filters">
         <div class="filter-item">

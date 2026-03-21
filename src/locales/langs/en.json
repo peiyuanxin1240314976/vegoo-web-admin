@@ -251,6 +251,12 @@
       "iapAnalysis": "IAP Analysis",
       "iaaAnalysis": "IAA Analysis",
       "ecpmAnalysis": "eCPM Analysis",
+      "adPlatformDetail": "Ad Platform Details",
+      "adPlatformDetailEmpty": "Aggregate ad platform metrics here, or open the view below for app-level performance.",
+      "backToAdPlatformDetail": "Back to Ad Platform Details",
+      "appAdPlatformPerformance": "App Ad Platform Performance",
+      "appAdPlatformPerformanceEmpty": "Page under construction",
+      "revenueDeviation": "Estimated Revenue Deviation",
       "iaaTabs": {
         "adType": "Ad Type",
         "adPlatform": "Ad Platform",
@@ -280,7 +286,10 @@
       "adPlatformDetail": "Ad Platform Detail",
       "adPerformance": "Ad Performance",
       "conversionManagement": "Conversion Management",
-      "paidAnalysis": "Paid Analysis"
+      "paidAnalysis": "Paid Analysis",
+      "performanceAnalysis": "Performance Analysis",
+      "performanceComparison": "Comparison Analysis",
+      "realTimeData": "Real-time Data"
     },
     "system": {
       "title": "System Settings",

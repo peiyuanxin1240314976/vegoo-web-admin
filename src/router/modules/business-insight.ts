@@ -84,6 +84,38 @@ export const businessInsightRoutes: AppRouteRecord = {
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
+    },
+    {
+      path: 'revenue-deviation',
+      name: 'RevenueDeviation',
+      component: '/business-insight/revenue-deviation/RevenueDeviation',
+      meta: {
+        title: 'menus.businessInsight.revenueDeviation',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'ad-platform-detail',
+      name: 'AdPlatformDetail',
+      component: '/business-insight/ad-platform-detail',
+      meta: {
+        title: 'menus.businessInsight.adPlatformDetail',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'ad-platform-detail/app-ad-platform-performance',
+      name: 'AppAdPlatformPerformance',
+      component: '/business-insight/ad-platform-detail/app-ad-platform-performance',
+      meta: {
+        title: 'menus.businessInsight.appAdPlatformPerformance',
+        keepAlive: false,
+        isHide: true,
+        activePath: '/business-insight/ad-platform-detail',
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
     }
   ]
 }

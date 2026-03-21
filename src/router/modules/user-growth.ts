@@ -64,6 +64,16 @@ export const userGrowthRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'real-time-data',
+      name: 'AdMobDetail',
+      component: '/user-growth/real-time-data',
+      meta: {
+        title: 'menus.userGrowth.realTimeData',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
       path: 'ad-performance',
       name: 'AdPerformance',
       component: '/user-growth/ad-performance',
@@ -90,6 +100,28 @@ export const userGrowthRoutes: AppRouteRecord = {
       meta: {
         title: 'menus.userGrowth.paidAnalysis',
         keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'performance-analysis',
+      name: 'PerformanceAnalysis',
+      component: '/user-growth/performance-analysis/PerformanceList',
+      meta: {
+        title: 'menus.userGrowth.performanceAnalysis',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'performance-analysis/comparison',
+      name: 'PerformanceComparison',
+      component: '/user-growth/performance-analysis/PerformanceComparison',
+      meta: {
+        title: 'menus.userGrowth.performanceComparison',
+        keepAlive: false,
+        isHide: true,
+        activePath: '/user-growth/performance-analysis',
         roles: ['R_SUPER', 'R_ADMIN']
       }
     }
