@@ -2,7 +2,7 @@
   <div class="admob-dashboard">
     <!-- 顶部导航栏 -->
     <div class="top-nav">
-      <button class="back-btn" @click="$emit('back')">
+      <button class="back-btn" @click="goBack">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <circle cx="8" cy="8" r="7.5" stroke="currentColor" stroke-opacity="0.4" />
           <path
@@ -15,13 +15,6 @@
         </svg>
         返回
       </button>
-      <div class="breadcrumb">
-        <span>变现分析</span>
-        <span class="sep">/</span>
-        <span>AdMob 表现详情</span>
-        <span class="sep">/</span>
-        <span class="active">Weather8</span>
-      </div>
     </div>
 
     <!-- 页面标题 + 筛选器 -->
@@ -341,10 +334,14 @@
 
 <script setup lang="ts">
   import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+  import { useRouter } from 'vue-router'
   import * as echarts from 'echarts'
 
-  // ─── emits ────────────────────────────────────────────────────
-  defineEmits<{ (e: 'back'): void }>()
+  const router = useRouter()
+
+  function goBack() {
+    router.push({ name: 'AdPlatformDetail' })
+  }
 
   // ─── 筛选器状态 ───────────────────────────────────────────────
   const dateRange = ref('2025-12')
@@ -833,7 +830,7 @@
 ═══════════════════════════════════════════════ */
   .main-layout {
     display: grid;
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: 1fr 440px;
     gap: 16px;
     padding: 0 24px;
   }
