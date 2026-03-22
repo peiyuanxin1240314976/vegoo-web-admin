@@ -219,7 +219,7 @@
   }
 
   const trendLegend = computed(() => {
-    const series = tabData.value?.trend7d.series ?? []
+    const series = tabData.value?.trend7d?.series ?? []
     return series.map((s) => ({ name: s.name, color: s.color }))
   })
 
@@ -235,37 +235,40 @@
 
   function radarSeriesValues(): number[] {
     const r = tabData.value?.radar
-    if (!r) return []
-    const v = r.values
+    const v = r?.values
+    if (!v) return []
+    const pick = (a: number[] | undefined) => (Array.isArray(a) ? a : [])
     switch (activeRadarTab.value) {
       case 'revenue':
-        return v.revenue
+        return pick(v.revenue)
       case 'users':
-        return v.users
+        return pick(v.users)
       case 'impressions':
-        return v.impressions
+        return pick(v.impressions)
       case 'avgRevenue':
-        return v.avgRevenue
+        return pick(v.avgRevenue)
       default:
-        return v.revenue
+        return pick(v.revenue)
     }
   }
 
   function radarMetricMax(): number {
     const r = tabData.value?.radar
-    if (!r) return 1
-    const m = r.maxByMetric
+    const m = r?.maxByMetric
+    if (!m) return 1
+    const pick = (n: number | undefined) =>
+      Number.isFinite(n) && (n as number) > 0 ? (n as number) : 1
     switch (activeRadarTab.value) {
       case 'revenue':
-        return m.revenue
+        return pick(m.revenue)
       case 'users':
-        return m.users
+        return pick(m.users)
       case 'impressions':
-        return m.impressions
+        return pick(m.impressions)
       case 'avgRevenue':
-        return m.avgRevenue
+        return pick(m.avgRevenue)
       default:
-        return m.revenue
+        return pick(m.revenue)
     }
   }
 
@@ -274,13 +277,27 @@
   }
 
   function buildRadarOption(): EChartsOption {
-    const names = tabData.value?.radar.indicatorNames ?? []
+    const names = tabData.value?.radar?.indicatorNames ?? []
     const max = radarMetricMax()
-    const vals = radarSeriesValues()
+    let vals = radarSeriesValues()
+
+    // 雷达图要求 indicator 数量与 data.value 长度严格一致；空轴 + 非空 value 会触发 ECharts 内部报错
+    let indicators = names.map((n) => ({ name: n, max }))
+    if (indicators.length === 0) {
+      indicators = [{ name: ' ', max }]
+      vals = [0]
+    } else {
+      if (vals.length < indicators.length) {
+        vals = [...vals, ...Array(indicators.length - vals.length).fill(0)]
+      } else if (vals.length > indicators.length) {
+        vals = vals.slice(0, indicators.length)
+      }
+    }
+
     return {
       backgroundColor: 'transparent',
       radar: {
-        indicator: names.map((n) => ({ name: n, max })),
+        indicator: indicators,
         center: ['50%', '52%'],
         radius: '62%',
         axisName: { color: '#94a3b8', fontSize: 12 },
@@ -293,7 +310,7 @@
           type: 'radar',
           data: [
             {
-              value: vals.length ? vals : [0, 0, 0, 0],
+              value: vals,
               name: radarSeriesName(),
               areaStyle: { color: 'rgba(59,130,246,0.25)', opacity: 1 },
               lineStyle: { color: '#3B82F6', width: 2 },
@@ -363,8 +380,8 @@
   }
 
   function buildTrendOption(): EChartsOption {
-    const dates = tabData.value?.trend7d.dates ?? []
-    const series = tabData.value?.trend7d.series ?? []
+    const dates = tabData.value?.trend7d?.dates ?? []
+    const series = tabData.value?.trend7d?.series ?? []
     return {
       backgroundColor: 'transparent',
       grid: { left: 52, right: 24, top: 16, bottom: 28 },
@@ -488,7 +505,12 @@
   }
 
   async function loadTabData() {
-    tabData.value = await fetchIaaAdTypeTabData(props.filter)
+    try {
+      const data = await fetchIaaAdTypeTabData(props.filter)
+      tabData.value = data ?? null
+    } catch {
+      tabData.value = null
+    }
     await nextTick()
     refreshCharts()
   }
