@@ -54,6 +54,23 @@
         "description": "国家广告用户渗透率，fields: name(中文)/penetration（0-100）。"
       }
     },
+    "IaaKpiCard": {
+      "id": { "type": "string", "required": true, "description": "卡片 ID。" },
+      "title": { "type": "string", "required": true, "description": "标题。" },
+      "primaryValue": {
+        "type": "string",
+        "required": true,
+        "description": "主展示值（可含国家名、倍数等）。"
+      },
+      "subText": { "type": "string", "required": false, "description": "副文案。" },
+      "trendUp": { "type": "boolean", "required": false, "description": "趋势向上。" },
+      "accent": {
+        "type": "string",
+        "required": false,
+        "enum": ["teal", "blue", "amber", "green", "default"],
+        "description": "强调色。"
+      }
+    },
     "IaaCountryMapItem": {
       "name": {
         "type": "string",
@@ -225,6 +242,74 @@
           "arpdau": 0.0101,
           "trend": "up",
           "trendPercent": 3.2
+        },
+        {
+          "rank": 6,
+          "s_country_code": "FR",
+          "s_country_name": "法国",
+          "revenue": 98.42,
+          "revenueShare": 3.6,
+          "ecpmEst": 4.82,
+          "ecpmReal": 4.58,
+          "impressions": 21020,
+          "adUsers": 10500,
+          "arpdau": 0.0094,
+          "trend": "flat"
+        },
+        {
+          "rank": 7,
+          "s_country_code": "AU",
+          "s_country_name": "澳大利亚",
+          "revenue": 86.15,
+          "revenueShare": 3.1,
+          "ecpmEst": 4.92,
+          "ecpmReal": 4.71,
+          "impressions": 18620,
+          "adUsers": 9200,
+          "arpdau": 0.0094,
+          "trend": "up",
+          "trendPercent": 2.4
+        },
+        {
+          "rank": 8,
+          "s_country_code": "CA",
+          "s_country_name": "加拿大",
+          "revenue": 72.3,
+          "revenueShare": 2.6,
+          "ecpmEst": 4.51,
+          "ecpmReal": 4.28,
+          "impressions": 17240,
+          "adUsers": 8800,
+          "arpdau": 0.0082,
+          "trend": "down",
+          "trendPercent": 1.1
+        },
+        {
+          "rank": 9,
+          "s_country_code": "CN",
+          "s_country_name": "中国",
+          "revenue": 58.64,
+          "revenueShare": 2.1,
+          "ecpmEst": 2.84,
+          "ecpmReal": 2.62,
+          "impressions": 22480,
+          "adUsers": 14200,
+          "arpdau": 0.0041,
+          "trend": "up",
+          "trendPercent": 4.8
+        },
+        {
+          "rank": 10,
+          "s_country_code": "IN",
+          "s_country_name": "印度",
+          "revenue": 42.18,
+          "revenueShare": 1.5,
+          "ecpmEst": 1.92,
+          "ecpmReal": 1.78,
+          "impressions": 23880,
+          "adUsers": 16800,
+          "arpdau": 0.0025,
+          "trend": "flat"
         }
       ],
       "ecpmComparison": [
@@ -233,7 +318,11 @@
         { "name": "英国", "ecpm": 6.82 },
         { "name": "日本", "ecpm": 6.12 },
         { "name": "德国", "ecpm": 5.34 },
-        { "name": "法国", "ecpm": 4.82 }
+        { "name": "澳大利亚", "ecpm": 4.92 },
+        { "name": "法国", "ecpm": 4.82 },
+        { "name": "加拿大", "ecpm": 4.51 },
+        { "name": "中国", "ecpm": 2.84 },
+        { "name": "印度", "ecpm": 1.92 }
       ],
       "trend7d": {
         "dates": ["Feb27", "Feb28", "Mar1", "Mar2", "Mar3", "Mar4", "Mar5"],

@@ -161,6 +161,7 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue'
   import request from '@/utils/http'
+  import { ANALYSIS_API_BASE, ANALYSIS_API_MIDDLE_PREFIX } from '@/api/analysis-api-base'
 
   defineOptions({ name: 'PlatformPerformancePlaceholder' })
 
@@ -246,7 +247,7 @@
         accountTotal: number
         platforms: PlatformApiRow[]
       }>({
-        url: '/api/v1/datacenter/analysis/account-performance/platform-performance-placeholder-table',
+        url: `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PREFIX}/platform-performance-placeholder-table`,
         data: {
           currentPage: Math.max(0, currentPage.value - 1),
           dateEnd,

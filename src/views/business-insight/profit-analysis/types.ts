@@ -155,3 +155,60 @@ export interface ProfitFilterMeta {
   appLabel: string
   countryLabel: string
 }
+
+/** 下拉项（应用 / 国家 / 终端平台） */
+export interface ProfitSelectOption {
+  label: string
+  value: string
+}
+
+/** 日期快捷预设（与 ElDatePicker shortcuts 数据源一致） */
+export interface ProfitDatePresetOption {
+  label: string
+  value: string
+}
+
+/** GET .../meta-filter-options */
+export interface ProfitFilterOptions {
+  appOptions?: ProfitSelectOption[]
+  countryOptions?: ProfitSelectOption[]
+  platformOptions?: ProfitSelectOption[]
+  datePresets?: ProfitDatePresetOption[]
+}
+
+/**
+ * 利润分析各 POST 接口统一请求体（扁平字段，与 backend-api 契约一致）
+ */
+export interface ProfitAnalysisQueryParams {
+  currentPage: number
+  pageSize: number
+  /** 逗号分隔 YYYY-MM-DD，如 2026-03-01,2026-03-05 */
+  dateRange: string
+  platform: string
+  sAppId: string
+  sCountryCode: string
+}
+
+/** POST .../overview/kpi */
+export interface ProfitKpiOverviewDto {
+  kpis?: ProfitKpiCard[]
+}
+
+/** POST .../table/app-profit */
+export interface ProfitAppProfitResponseDto {
+  rows?: ProfitAppRow[]
+  total?: ProfitAppTotal
+}
+
+/** POST .../overview/country-profit */
+export interface ProfitCountryProfitResponseDto {
+  mapData?: ProfitMapDataItem[]
+  mapScatter?: ProfitMapScatterItem[]
+  countryRows?: ProfitCountryRow[]
+}
+
+/** POST .../overview/sankey */
+export interface ProfitSankeyDto {
+  nodes?: ProfitSankeyNode[]
+  links?: ProfitSankeyLink[]
+}

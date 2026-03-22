@@ -1,5 +1,5 @@
 <template>
-  <div class="cd-page art-full-height">
+  <div v-loading="loading" class="cd-page art-full-height">
     <!-- ── 顶部导航栏 ─────────────────────────────────────── -->
     <div class="cd-topbar">
       <div class="cd-topbar__left">
@@ -67,20 +67,30 @@
 </template>
 
 <script setup lang="ts">
-  import { reactive } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { onMounted, reactive, ref } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { ElMessage } from 'element-plus'
   import { ArrowLeft, SuccessFilled, Edit, VideoPause } from '@element-plus/icons-vue'
+  import {
+    fetchCampaignDetailAdList,
+    fetchCampaignDetailAiInsights,
+    fetchCampaignDetailCreativeTop5,
+    fetchCampaignDetailOverview
+  } from '@/api/ad-performance'
   import CampaignInfoCards from './modules/campaign-info-cards.vue'
   import CampaignCoreTrend from './modules/campaign-core-trend.vue'
   import CampaignAdList from './modules/campaign-ad-list.vue'
   import CampaignCreativeTop5 from './modules/campaign-creative-top5.vue'
   import CampaignAiInsights from './modules/campaign-ai-insights.vue'
   import { MOCK_CAMPAIGN_DETAIL } from './mock/data'
-  import type { CampaignStatus } from './types'
+  import type { CampaignDetailData, CampaignStatus } from './types'
 
   defineOptions({ name: 'CampaignDetail' })
 
   const router = useRouter()
+  const route = useRoute()
+  const loading = ref(true)
+  const data = reactive<CampaignDetailData>({ ...MOCK_CAMPAIGN_DETAIL })
 
   function statusText(s: CampaignStatus): string {
     const map: Record<CampaignStatus, string> = {
@@ -92,7 +102,37 @@
     return map[s] ?? s
   }
 
-  const data = reactive({ ...MOCK_CAMPAIGN_DETAIL })
+  onMounted(async () => {
+    const campaignId = String(route.query.id ?? '')
+    if (!campaignId) {
+      ElMessage.error('缺少广告系列 ID')
+      loading.value = false
+      return
+    }
+    try {
+      const [o, ads, cr, ai] = await Promise.all([
+        fetchCampaignDetailOverview({ campaignId }),
+        fetchCampaignDetailAdList({ campaignId, status: 'all' }),
+        fetchCampaignDetailCreativeTop5({ campaignId }),
+        fetchCampaignDetailAiInsights({ campaignId })
+      ])
+      Object.assign(data, {
+        campaignName: o.campaignName,
+        status: o.status,
+        basicInfo: o.basicInfo,
+        budgetInfo: o.budgetInfo,
+        targetInfo: o.targetInfo,
+        trendData: o.trendData,
+        adRows: ads.rows,
+        creativeTop5: cr.items,
+        aiInsights: ai.insights
+      })
+    } catch {
+      ElMessage.error('加载系列详情失败')
+    } finally {
+      loading.value = false
+    }
+  })
 </script>
 
 <style scoped lang="scss">

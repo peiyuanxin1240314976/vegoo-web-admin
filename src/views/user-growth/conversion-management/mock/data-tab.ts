@@ -14,6 +14,7 @@ import type {
   ConversionValueTrendPoint,
   PlatformConversionType
 } from '../types'
+import { getAppNow, cloneAppDate } from '@/utils/app-now'
 
 const CONVERSION_TYPES: PlatformConversionType[] = [
   'PHONE_CALL_LEAD',
@@ -51,8 +52,8 @@ function formatDateYmd(d: Date) {
 function buildDateRange(end: Date, days: number) {
   const list: string[] = []
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(end)
-    d.setDate(end.getDate() - i)
+    const d = cloneAppDate(end)
+    d.setDate(d.getDate() - i)
     list.push(formatDateYmd(d))
   }
   return list
@@ -128,7 +129,7 @@ function buildTop10(seed: number): ConversionTop10Item[] {
 
 function buildValueTrend30d(seed: number): ConversionValueTrendPoint[] {
   const r = pseudoRand(seed + 37)
-  const end = new Date()
+  const end = getAppNow()
   const dates = buildDateRange(end, 30)
   let v = 820 + r() * 120
   return dates.map((date, idx) => {

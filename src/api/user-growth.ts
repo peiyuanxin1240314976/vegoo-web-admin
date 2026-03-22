@@ -4,6 +4,7 @@
  */
 /* eslint-disable @typescript-eslint/no-unused-vars -- Mock 接口参数保留供后端联调使用 */
 import request from '@/utils/http'
+import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
 import type {
   OverallRecoveryFilterOptions,
   OverallTabData,
@@ -26,6 +27,8 @@ import type {
   AlertManagementOverviewParams
 } from '@/views/user-growth/alert-management/types'
 import { buildMockAlertManagementOverview } from '@/views/user-growth/alert-management/mock/data'
+
+const USER_GROWTH_ANALYSIS_BASE = `${ANALYSIS_API_BASE}/user-growth`
 
 // ─── 整体回收 ──────────────────────────────────────────────────
 
@@ -57,7 +60,7 @@ export function fetchOrganicTabData(_params: {
 /** 获取转化映射列表（占位：可先使用 views 下 mock 的 fetchConversionMappingListMock） */
 export function fetchConversionMappingList(params: Api.UserGrowth.ConversionMappingListParams) {
   return request.get<Api.UserGrowth.ConversionMappingList>({
-    url: '/api/user-growth/conversion-mapping/list',
+    url: `${USER_GROWTH_ANALYSIS_BASE}/conversion-mapping/list`,
     params
   })
 }
@@ -65,14 +68,14 @@ export function fetchConversionMappingList(params: Api.UserGrowth.ConversionMapp
 /** 获取转化映射详情（占位） */
 export function fetchConversionMappingDetail(id: string) {
   return request.get<Api.UserGrowth.ConversionMappingItem>({
-    url: `/api/user-growth/conversion-mapping/${id}`
+    url: `${USER_GROWTH_ANALYSIS_BASE}/conversion-mapping/${id}`
   })
 }
 
 /** 新增转化映射（占位） */
 export function createConversionMapping(data: Record<string, unknown>) {
   return request.post<unknown>({
-    url: '/api/user-growth/conversion-mapping',
+    url: `${USER_GROWTH_ANALYSIS_BASE}/conversion-mapping`,
     data
   })
 }
@@ -80,7 +83,7 @@ export function createConversionMapping(data: Record<string, unknown>) {
 /** 更新转化映射（占位） */
 export function updateConversionMapping(id: string, data: Record<string, unknown>) {
   return request.put<unknown>({
-    url: `/api/user-growth/conversion-mapping/${id}`,
+    url: `${USER_GROWTH_ANALYSIS_BASE}/conversion-mapping/${id}`,
     data
   })
 }
@@ -88,7 +91,7 @@ export function updateConversionMapping(id: string, data: Record<string, unknown
 /** 删除转化映射（占位） */
 export function deleteConversionMapping(id: string) {
   return request.del<unknown>({
-    url: `/api/user-growth/conversion-mapping/${id}`
+    url: `${USER_GROWTH_ANALYSIS_BASE}/conversion-mapping/${id}`
   })
 }
 
@@ -99,14 +102,14 @@ export function fetchConversionStats() {
     mappingStats: Api.UserGrowth.MappingStats
     platformStats: Api.UserGrowth.PlatformStats
   }>({
-    url: '/api/user-growth/conversion-mapping/stats'
+    url: `${USER_GROWTH_ANALYSIS_BASE}/conversion-mapping/stats`
   })
 }
 
 /** 导出映射表（占位） */
 export function exportMappingTable(params: Api.UserGrowth.ConversionMappingListParams) {
   return request.get<Blob>({
-    url: '/api/user-growth/conversion-mapping/export',
+    url: `${USER_GROWTH_ANALYSIS_BASE}/conversion-mapping/export`,
     params,
     responseType: 'blob'
   })
@@ -149,7 +152,7 @@ export function fetchAlertManagementOverview(
 /** 广告平台分析大屏 - 筛选下拉元数据 POST /api/v1/datacenter/analysis/ad-platform/filters/meta（请求体 `{}`） */
 export function fetchAdPlatformAnalysisFiltersMeta() {
   return request.post<Api.UserGrowth.AdPlatformFiltersMetaDto>({
-    url: '/api/v1/datacenter/analysis/ad-platform/filters/meta',
+    url: `${ANALYSIS_API_BASE}/ad-platform/filters/meta`,
     data: {}
   })
 }
@@ -159,7 +162,7 @@ export function fetchAdPlatformAnalysisKpiCards(
   params: Api.UserGrowth.AdPlatformAnalysisRequestParams
 ) {
   return request.post<Api.UserGrowth.AdPlatformKpiCardDto[]>({
-    url: '/api/v1/datacenter/analysis/ad-platform/kpi/cards',
+    url: `${ANALYSIS_API_BASE}/ad-platform/kpi/cards`,
     data: params
   })
 }
@@ -169,7 +172,7 @@ export function fetchAdPlatformAnalysisRoiTrend(
   params: Api.UserGrowth.AdPlatformAnalysisRequestParams
 ) {
   return request.post<Api.UserGrowth.AdPlatformRoiTrendDto>({
-    url: '/api/v1/datacenter/analysis/ad-platform/roi/trend',
+    url: `${ANALYSIS_API_BASE}/ad-platform/roi/trend`,
     data: params
   })
 }
@@ -179,7 +182,7 @@ export function fetchAdPlatformAnalysisQualityHeatmap(
   params: Api.UserGrowth.AdPlatformAnalysisRequestParams
 ) {
   return request.post<Api.UserGrowth.AdPlatformQualityHeatmapRowDto[]>({
-    url: '/api/v1/datacenter/analysis/ad-platform/quality/heatmap',
+    url: `${ANALYSIS_API_BASE}/ad-platform/quality/heatmap`,
     data: params
   })
 }
@@ -189,7 +192,7 @@ export function fetchAdPlatformAnalysisCampaignTop10(
   params: Api.UserGrowth.AdPlatformAnalysisRequestParams
 ) {
   return request.post<Api.UserGrowth.AdPlatformCampaignTop10RowDto[]>({
-    url: '/api/v1/datacenter/analysis/ad-platform/campaign/top10',
+    url: `${ANALYSIS_API_BASE}/ad-platform/campaign/top10`,
     data: params
   })
 }
@@ -199,7 +202,7 @@ export function fetchAdPlatformAnalysisMetricsTable(
   params: Api.UserGrowth.AdPlatformAnalysisRequestParams
 ) {
   return request.post<Api.UserGrowth.AdPlatformMetricsTableDto>({
-    url: '/api/v1/datacenter/analysis/ad-platform/metrics/table',
+    url: `${ANALYSIS_API_BASE}/ad-platform/metrics/table`,
     data: params
   })
 }

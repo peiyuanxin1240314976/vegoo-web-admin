@@ -100,5 +100,11 @@
     "priority": "P0",
     "requestBody": "tab, s_app_id?, platform?, s_country_code?, t_date",
     "responseBody": "kpis (IaaKpiCard[])"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "须固定返回 4 条 KPI，顺序与前端卡片占位一致；tab 切换时仅文案与数值变化。",
+      "若与各 Tab 的 overview/*-tab 整页接口合并，本接口可下线，但 IaaKpiCard 结构仍与整页中的 kpis[] 一致。"
+    ]
   }
 }

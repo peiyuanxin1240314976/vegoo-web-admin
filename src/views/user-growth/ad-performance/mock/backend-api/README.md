@@ -5,7 +5,7 @@
 ## 一、URL 与请求规范
 
 - **规则**：采用 **模块 + 功能名称** 的路径，**全部使用 POST**，请求体为 JSON。
-- **父级路径**：与前端路由一致，为 `/api/user-growth/ad-performance`（对应路由 `/user-growth/ad-performance`）。
+- **父级路径（当前前端默认）**：`/api/v1/datacenter/analysis/user-growth/ad-performance`（与「我的绩效」同级，见 [`src/api/ad-performance.ts`](../../../../../api/ad-performance.ts) 的 `AD_PERFORMANCE_BASE`）。下表历史示例仍为 `/api/user-growth/ad-performance/...`，联调以前端常量为准。
 - **功能路径**：kebab-case，见下表。
 
 ## 二、接口清单（按功能模块拆分）

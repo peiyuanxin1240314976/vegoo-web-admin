@@ -5,6 +5,7 @@
  * - 其余子模块（警示、花费节奏、地图、Top3、收入趋势等）：仍走 Mock 或各自独立接口，结构清晰便于后续按模块接独立接口与骨架屏
  */
 import request from '@/utils/http'
+import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
 import type {
   CockpitOverview,
   CockpitOverviewParams,
@@ -50,31 +51,31 @@ import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 const COCKPIT_USE_MOCK = true
 
 /** 驾驶舱概览接口路径（其余模块对接时替换） */
-const COCKPIT_OVERVIEW_URL = '/api/cockpit/overview'
+const COCKPIT_OVERVIEW_URL = `${ANALYSIS_API_BASE}/cockpit/overview`
 
 /** 经营驾驶舱第一排总数据接口（KPI 卡片数据源） */
-const COCKPIT_OVERALL_URL = '/api/v1/datacenter/analysis/cockpit/overall'
+const COCKPIT_OVERALL_URL = `${ANALYSIS_API_BASE}/cockpit/overall`
 
 /** 国家详情第一排总数据接口（地图进入国家详情页顶部卡片） */
-const COUNTRY_INFO_OVERALL_URL = '/api/v1/datacenter/analysis/countryInfo/overall'
+const COUNTRY_INFO_OVERALL_URL = `${ANALYSIS_API_BASE}/countryInfo/overall`
 
 /** 国家详情当前投放中 Campaign Top5 接口 */
-const COUNTRY_INFO_TOP5_CAMPAIGN_URL = '/api/v1/datacenter/analysis/countryInfo/top5Campaign'
+const COUNTRY_INFO_TOP5_CAMPAIGN_URL = `${ANALYSIS_API_BASE}/countryInfo/top5Campaign`
 
 /** 国家详情各 APP 表现接口 */
-const COUNTRY_INFO_APP_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo/appLaunch'
+const COUNTRY_INFO_APP_LAUNCH_URL = `${ANALYSIS_API_BASE}/countryInfo/appLaunch`
 
 /** 国家详情用户留存曲线接口 */
-const COUNTRY_INFO_REMAIN_URL = '/api/v1/datacenter/analysis/countryInfo/remain'
+const COUNTRY_INFO_REMAIN_URL = `${ANALYSIS_API_BASE}/countryInfo/remain`
 
 /** 国家详情用户分层接口 */
-const COUNTRY_INFO_USER_PAY_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo/userPayLaunch'
+const COUNTRY_INFO_USER_PAY_LAUNCH_URL = `${ANALYSIS_API_BASE}/countryInfo/userPayLaunch`
 
 /** 国家详情广告平台投放效果对比接口 */
-const COUNTRY_INFO_CHANNEL_LAUNCH_URL = '/api/v1/datacenter/analysis/countryInfo/channelLaunch'
+const COUNTRY_INFO_CHANNEL_LAUNCH_URL = `${ANALYSIS_API_BASE}/countryInfo/channelLaunch`
 
 /** 国家详情 LTV 预测接口 */
-const COUNTRY_INFO_LTV_URL = '/api/v1/datacenter/analysis/countryInfo/ltv'
+const COUNTRY_INFO_LTV_URL = `${ANALYSIS_API_BASE}/countryInfo/ltv`
 
 export interface CountryInfoQueryParams {
   countryCode: string
@@ -93,23 +94,22 @@ function buildCountryInfoQueryParams(
 }
 
 /** 消耗节奏监控接口（自投/代投） */
-const COCKPIT_CONSUMPTION_RHYTHM_URL =
-  '/api/v1/datacenter/analysis/cockpit/consumptionRhythmMonitoring'
+const COCKPIT_CONSUMPTION_RHYTHM_URL = `${ANALYSIS_API_BASE}/cockpit/consumptionRhythmMonitoring`
 
 /** Top3 数据接口（收入应用 / 差评产品 / 用户增长） */
-const COCKPIT_TOP3_URL = '/api/v1/datacenter/analysis/cockpit/top3'
+const COCKPIT_TOP3_URL = `${ANALYSIS_API_BASE}/cockpit/top3`
 
 /** 广告平台 ROI&安装量接口（消耗/安装量/CPI 取 list[0]，近 7 日折线取 list 的 7 个对象） */
-const COCKPIT_CHANNEL_ROI_URL = '/api/v1/datacenter/analysis/cockpit/installAndRoiOfChannel'
+const COCKPIT_CHANNEL_ROI_URL = `${ANALYSIS_API_BASE}/cockpit/installAndRoiOfChannel`
 
 /** 业务分布地图接口 */
-const COCKPIT_BUSINESS_MAP_URL = '/api/v1/datacenter/analysis/cockpit/businessMap'
+const COCKPIT_BUSINESS_MAP_URL = `${ANALYSIS_API_BASE}/cockpit/businessMap`
 
 /** 收入结构接口（近7日收入结构流向桑基图） */
-const COCKPIT_INCOME_STRUCTURE_URL = '/api/v1/datacenter/analysis/cockpit/incomeStructure'
+const COCKPIT_INCOME_STRUCTURE_URL = `${ANALYSIS_API_BASE}/cockpit/incomeStructure`
 
 /** 情景模拟接口 */
-const COCKPIT_APP_SIMULATION_URL = '/api/v1/datacenter/analysis/cockpit/appSimulation'
+const COCKPIT_APP_SIMULATION_URL = `${ANALYSIS_API_BASE}/cockpit/appSimulation`
 
 /** 收入结构接口单项（/api/v1/datacenter/analysis/cockpit/incomeStructure） */
 interface CockpitIncomeStructureRow {

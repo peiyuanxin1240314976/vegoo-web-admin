@@ -171,6 +171,7 @@ alwaysApply: true
 
 ## 其他
 
+- **应用当前时间**：业务里表示「今天/此刻」或基于今天算日期时，**禁止**裸 `new Date()`，统一使用 `@/utils/app-now` 的 `getAppNow` / `cloneAppDate` / `offsetAppNowMs` 等；细则与例外见 **`app-now-date.mdc`**。
 - **环境变量**: 以 `VITE_` 开头，在 `src/env.d.ts` 或代码中通过 `import.meta.env` 使用；勿提交敏感信息。
 - **生产构建**: `pnpm build` 会先执行 `vue-tsc --noEmit`，再 Vite 构建；生产会 drop console/debugger。
 - **Stylelint**: 遵循 `stylelint-config-recess-order` 等；Vue 内 `<style lang="scss">` 可与 Tailwind 混用。

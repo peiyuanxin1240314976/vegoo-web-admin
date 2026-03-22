@@ -1,5 +1,5 @@
 {
-  "_comment": "IAA 分析 - 广告平台 Tab 整页数据（KPI/平台排行/对比表/ECPM对比/收入占比/7天趋势）。对应 types.ts: IaaPlatformTabData。",
+  "_comment": "IAA 分析 - 广告平台 Tab 整页数据（KPI/平台排行/对比表/收入占比环图/ECPM对比/7天趋势）。对应 types.ts: IaaPlatformTabData。",
   "fieldDescription": {
     "request": {
       "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
@@ -23,11 +23,11 @@
       }
     },
     "IaaPlatformTabData": {
-      "kpis": { "type": "IaaKpiCard[]", "required": true, "description": "顶部4个KPI卡片。" },
+      "kpis": { "type": "IaaKpiCard[]", "required": true, "description": "顶部 4 个 KPI 卡片。" },
       "platformRanking": {
         "type": "IaaPlatformRankItem[]",
         "required": true,
-        "description": "广告平台效果排行，柱状图数据。"
+        "description": "广告平台效果排行，柱状图数据，按 revenue 降序。"
       },
       "platformInsight": {
         "type": "string",
@@ -39,15 +39,100 @@
         "required": true,
         "description": "平台详细对比表行，含收入/展示/用户/ECPM/充填率/趋势。"
       },
+      "donut": {
+        "type": "IaaRevenueDonutItem[]",
+        "required": true,
+        "description": "各广告平台收入占比环形图，name/value/percent 与 tableRows 汇总一致。"
+      },
       "ecpmComparison": {
         "type": "object[]",
         "required": true,
-        "description": "各平台预估与真实 ECPM 对比，水平柱状图。fields: name/ecpmEst/ecpmReal。"
+        "description": "各平台预估与真实 ECPM 对比（水平柱状图）。fields: name, ecpmEst, ecpmReal，与 tableRows 同平台对齐。"
       },
       "trend7d": {
         "type": "object",
         "required": true,
-        "description": "近7天平台收入趋势。dates: string[], series: {name,color,data}[]。"
+        "description": "近 7 天按广告平台拆线的收入趋势。dates: string[]（7 个刻度）, series: IaaAdTypeTrend7dSeries[]（name/color/data[]）。"
+      }
+    },
+    "IaaKpiCard": {
+      "id": { "type": "string", "required": true, "description": "卡片唯一标识。" },
+      "title": { "type": "string", "required": true, "description": "卡片标题。" },
+      "primaryValue": {
+        "type": "string",
+        "required": true,
+        "description": "主数值展示，如 $2,768.58。"
+      },
+      "subText": {
+        "type": "string",
+        "required": false,
+        "description": "副文案，如 广告平台上报 ↑12.3%。"
+      },
+      "trendUp": {
+        "type": "boolean",
+        "required": false,
+        "description": "趋势是否上升（用于样式）。"
+      },
+      "accent": {
+        "type": "string",
+        "required": false,
+        "enum": ["teal", "blue", "amber", "green", "default"],
+        "description": "强调色。"
+      }
+    },
+    "IaaPlatformRankItem": {
+      "sourceName": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "revenue": { "type": "number", "required": true, "description": "该平台收入（USD）。" },
+      "ecpm": {
+        "type": "number",
+        "required": true,
+        "description": "该平台 ECPM（USD，可与预估或真实口径一致，需与前端约定）。"
+      }
+    },
+    "IaaPlatformTableRow": {
+      "sourceName": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "source": { "type": "number", "required": true, "description": "广告平台枚举 n_source。" },
+      "revenue": { "type": "number", "required": true, "description": "广告收入（USD）。" },
+      "revenueShare": { "type": "number", "required": true, "description": "收入占比 0–100。" },
+      "impressions": { "type": "number", "required": true, "description": "展示次数。" },
+      "impressionShare": { "type": "number", "required": true, "description": "展示占比 0–100。" },
+      "adUsers": { "type": "number", "required": true, "description": "广告用户数。" },
+      "userShare": { "type": "number", "required": true, "description": "用户占比 0–100。" },
+      "ecpmEst": { "type": "number", "required": true, "description": "预估 ECPM（USD）。" },
+      "ecpmReal": { "type": "number", "required": true, "description": "真实 ECPM（USD）。" },
+      "variance": {
+        "type": "number",
+        "required": true,
+        "description": "预估相对真实的偏差百分比。"
+      },
+      "fillRate": { "type": "number", "required": true, "description": "充填率 0–100。" },
+      "trend": {
+        "type": "string",
+        "required": true,
+        "enum": ["up", "flat", "down"],
+        "description": "环比趋势。"
+      }
+    },
+    "IaaRevenueDonutItem": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "平台名称，与 sourceName 一致。"
+      },
+      "value": { "type": "number", "required": true, "description": "收入金额（USD）。" },
+      "percent": { "type": "number", "required": true, "description": "占总收入百分比 0–100。" }
+    },
+    "IaaAdTypeTrend7dSeries": {
+      "name": { "type": "string", "required": true, "description": "系列名，与广告平台名称一致。" },
+      "color": {
+        "type": "string",
+        "required": true,
+        "description": "折线颜色 HEX，建议按平台固定映射。"
+      },
+      "data": {
+        "type": "number[]",
+        "required": true,
+        "description": "7 个点，与 trend7d.dates 一一对应，单位为收入或与前端约定的度量。"
       }
     }
   },
@@ -61,23 +146,174 @@
     "data": {
       "kpis": [
         {
-          "id": "1",
+          "id": "kpi_1",
           "title": "广告总收入",
           "primaryValue": "$2,768.58",
           "subText": "广告平台上报 ↑12.3%",
           "trendUp": true,
           "accent": "teal"
+        },
+        {
+          "id": "kpi_2",
+          "title": "平均ECPM",
+          "primaryValue": "3.32 / 3.06",
+          "subText": "预估/真实 | 偏差 +8.5%",
+          "accent": "default"
+        },
+        {
+          "id": "kpi_3",
+          "title": "广告展示次数",
+          "primaryValue": "833,607",
+          "subText": "人均展示4.9次",
+          "accent": "default"
+        },
+        {
+          "id": "kpi_4",
+          "title": "广告用户",
+          "primaryValue": "117,483",
+          "subText": "渗透率68.6%",
+          "accent": "default"
         }
       ],
-      "platformRanking": [{ "sourceName": "Admob", "revenue": 1985.86, "ecpm": 18.54 }],
-      "platformInsight": "Admob收入占71.7%，建议优先保障Admob展示质量",
-      "tableRows": [
-        { "sourceName": "Admob", "source": 1, "revenue": 1985.86, "revenueShare": 71.7 }
+      "platformRanking": [
+        { "sourceName": "Admob", "revenue": 1985.86, "ecpm": 18.54 },
+        { "sourceName": "Facebook", "revenue": 312.4, "ecpm": 12.8 },
+        { "sourceName": "Applovin", "revenue": 284.2, "ecpm": 9.6 },
+        { "sourceName": "IronSource", "revenue": 186.1, "ecpm": 7.2 }
       ],
-      "ecpmComparison": [{ "name": "Admob", "ecpmEst": 18.54, "ecpmReal": 17.2 }],
+      "platformInsight": "Admob 收入占 71.7%，建议优先保障 Admob 展示质量与充填稳定。",
+      "tableRows": [
+        {
+          "sourceName": "Admob",
+          "source": 1,
+          "revenue": 1985.86,
+          "revenueShare": 71.7,
+          "impressions": 520000,
+          "impressionShare": 62.4,
+          "adUsers": 85000,
+          "userShare": 72.4,
+          "ecpmEst": 18.54,
+          "ecpmReal": 17.2,
+          "variance": 7.8,
+          "fillRate": 96.2,
+          "trend": "up"
+        },
+        {
+          "sourceName": "Facebook",
+          "source": 2,
+          "revenue": 257.5,
+          "revenueShare": 9.3,
+          "impressions": 120000,
+          "impressionShare": 14.4,
+          "adUsers": 22000,
+          "userShare": 18.7,
+          "ecpmEst": 2.14,
+          "ecpmReal": 2.0,
+          "variance": 7.0,
+          "fillRate": 92.0,
+          "trend": "flat"
+        },
+        {
+          "sourceName": "Unity",
+          "source": 3,
+          "revenue": 198.4,
+          "revenueShare": 7.2,
+          "impressions": 98000,
+          "impressionShare": 11.8,
+          "adUsers": 18500,
+          "userShare": 15.7,
+          "ecpmEst": 2.02,
+          "ecpmReal": 1.95,
+          "variance": 3.6,
+          "fillRate": 89.5,
+          "trend": "down"
+        },
+        {
+          "sourceName": "AppLovin",
+          "source": 4,
+          "revenue": 156.2,
+          "revenueShare": 5.6,
+          "impressions": 76000,
+          "impressionShare": 9.1,
+          "adUsers": 14200,
+          "userShare": 12.1,
+          "ecpmEst": 2.05,
+          "ecpmReal": 1.98,
+          "variance": 3.5,
+          "fillRate": 88.0,
+          "trend": "flat"
+        },
+        {
+          "sourceName": "IronSource",
+          "source": 5,
+          "revenue": 98.72,
+          "revenueShare": 3.6,
+          "impressions": 45000,
+          "impressionShare": 5.4,
+          "adUsers": 9800,
+          "userShare": 8.3,
+          "ecpmEst": 2.19,
+          "ecpmReal": 2.08,
+          "variance": 5.0,
+          "fillRate": 85.2,
+          "trend": "up"
+        },
+        {
+          "sourceName": "其他",
+          "source": 0,
+          "revenue": 71.9,
+          "revenueShare": 2.6,
+          "impressions": 22000,
+          "impressionShare": 2.6,
+          "adUsers": 5100,
+          "userShare": 4.3,
+          "ecpmEst": 3.27,
+          "ecpmReal": 3.1,
+          "variance": 5.5,
+          "fillRate": 78.0,
+          "trend": "flat"
+        }
+      ],
+      "donut": [
+        { "name": "Admob", "value": 1985.86, "percent": 71.7 },
+        { "name": "Facebook", "value": 257.5, "percent": 9.3 },
+        { "name": "Unity", "value": 198.4, "percent": 7.2 },
+        { "name": "AppLovin", "value": 156.2, "percent": 5.6 },
+        { "name": "IronSource", "value": 98.72, "percent": 3.6 },
+        { "name": "其他", "value": 71.9, "percent": 2.6 }
+      ],
+      "ecpmComparison": [
+        { "name": "Admob", "ecpmEst": 18.54, "ecpmReal": 17.2 },
+        { "name": "Facebook", "ecpmEst": 2.14, "ecpmReal": 2.0 },
+        { "name": "Unity", "ecpmEst": 2.02, "ecpmReal": 1.95 },
+        { "name": "AppLovin", "ecpmEst": 2.05, "ecpmReal": 1.98 },
+        { "name": "IronSource", "ecpmEst": 2.19, "ecpmReal": 2.08 },
+        { "name": "其他", "ecpmEst": 3.27, "ecpmReal": 3.1 }
+      ],
       "trend7d": {
-        "dates": ["Feb27", "Mar5"],
-        "series": [{ "name": "Admob", "color": "#26C2AD", "data": [420, 620] }]
+        "dates": ["Feb27", "Feb28", "Mar1", "Mar2", "Mar3", "Mar4", "Mar5"],
+        "series": [
+          {
+            "name": "Admob",
+            "color": "#26C2AD",
+            "data": [1720, 1750, 1810, 1880, 1920, 1950, 1985]
+          },
+          {
+            "name": "Facebook",
+            "color": "#3B82F6",
+            "data": [220, 228, 235, 242, 248, 252, 257]
+          },
+          {
+            "name": "Unity",
+            "color": "#8B5CF6",
+            "data": [185, 188, 192, 194, 196, 197, 198]
+          },
+          {
+            "name": "AppLovin",
+            "color": "#F59E0B",
+            "data": [142, 145, 148, 150, 152, 154, 156]
+          }
+        ]
       }
     }
   },
@@ -90,9 +326,10 @@
   },
   "apiSuggestion": {
     "notes": [
-      "tableRows 中的 revenueShare/impressionShare/userShare 由后端汇总计算，前端仅展示",
-      "trend7d 每条 series 的颜色由前端固定映射（广告平台枚举固定），后端只需返回 sourceName 和 data[]",
-      "ecpmComparison 与 tableRows 中的 ecpmEst/ecpmReal 一致，可复用同一查询"
+      "donut 与 tableRows 的 revenue、percent 须自洽，percent 之和建议为 100（允许末位四舍五入误差）。",
+      "tableRows 中的 revenueShare/impressionShare/userShare 由后端汇总计算，前端仅展示。",
+      "trend7d 每条 series 的 data 长度必须等于 dates 长度；颜色可由后端返回或与前端按平台名映射二选一。",
+      "ecpmComparison 与 tableRows 中同名的 ecpmEst/ecpmReal 应一致，可同源查询。"
     ]
   }
 }

@@ -4,6 +4,66 @@
 
 export type MyPerformancePeriodType = 'quarter' | 'month'
 
+/** POST 业务接口统一请求体（与 mock/backend-api 契约一致） */
+export interface MyPerformanceQueryBody {
+  personId: string
+  periodType: MyPerformancePeriodType
+  periodValue: string
+}
+
+/** GET meta-person-options 响应 */
+export interface MyPerformanceMetaPersonResponse {
+  personOptions: MyPerformancePersonOption[]
+  selectedPersonId: string
+}
+
+/** GET meta-period-options 响应 */
+export interface MyPerformanceMetaPeriodResponse {
+  periodOptions: {
+    quarter: MyPerformancePeriodOption[]
+    month: MyPerformancePeriodOption[]
+  }
+  selectedPeriod: {
+    periodType: MyPerformancePeriodType
+    periodValue: string
+  }
+}
+
+/** POST overview-kpi 响应 */
+export interface MyPerformanceOverviewKpiResponse {
+  topKpis: MyPerformanceTopKpiItem[]
+}
+
+/** POST kpi-achievement 响应 */
+export interface MyPerformanceKpiAchievementResponse {
+  kpiAchievement: MyPerformanceKpiAchievement
+}
+
+/** POST roi-trend 响应 */
+export interface MyPerformanceRoiTrendResponse {
+  title: string
+  points: MyPerformanceRoiTrendPoint[]
+}
+
+/** POST spend-progress 响应 */
+export interface MyPerformanceSpendProgressResponse {
+  title: string
+  data: MyPerformanceSpendProgress
+}
+
+/** POST performance-history 响应 */
+export interface MyPerformancePerformanceHistoryResponse {
+  title: string
+  list: MyPerformanceHistoryItem[]
+}
+
+/** POST app-dimension-table 响应 */
+export interface MyPerformanceAppDimensionTableResponse {
+  title: string
+  list: MyPerformanceAppTreeRow[]
+  summary: MyPerformanceAppTableSummary
+}
+
 export interface MyPerformancePersonOption {
   id: string
   name: string

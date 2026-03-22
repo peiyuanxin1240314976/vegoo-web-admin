@@ -24,9 +24,9 @@
     },
     "IaaAdTypeTabData": {
       "kpi": {
-        "type": "object",
+        "type": "IaaAdTypeKpiSummary",
         "required": true,
-        "description": "顶部4个KPI（单对象）：revenueTotal/revenueReal/penetrationPct/adUsers/dau/impressions/impressionsPerUser/ecpmEst/ecpmReal/ecpmVariancePct。"
+        "description": "顶部 KPI 区使用的聚合指标（单对象），前端由此拼出 4 张卡片文案。"
       },
       "compareRows": {
         "type": "IaaAdTypeCompareRow[]",
@@ -64,6 +64,34 @@
         "description": "用户拆分（安装天数）双轴图。buckets: {installDays,revenue,activeUsers}[], insight: string, highlightRevenueSharePct?: number。"
       }
     },
+    "IaaAdTypeKpiSummary": {
+      "revenueTotal": {
+        "type": "number",
+        "required": true,
+        "description": "广告总收入（预估/上报，USD）。"
+      },
+      "revenueReal": {
+        "type": "number",
+        "required": true,
+        "description": "Firebase/真实收入（USD）。"
+      },
+      "penetrationPct": {
+        "type": "number",
+        "required": true,
+        "description": "广告用户渗透率 0–100。"
+      },
+      "adUsers": { "type": "number", "required": true, "description": "广告用户数。" },
+      "dau": { "type": "number", "required": true, "description": "日活。" },
+      "impressions": { "type": "number", "required": true, "description": "展示次数。" },
+      "impressionsPerUser": { "type": "number", "required": true, "description": "人均展示次数。" },
+      "ecpmEst": { "type": "number", "required": true, "description": "预估 ECPM（USD）。" },
+      "ecpmReal": { "type": "number", "required": true, "description": "真实 ECPM（USD）。" },
+      "ecpmVariancePct": {
+        "type": "number",
+        "required": true,
+        "description": "ECPM 偏差百分比（预估相对真实，正数表示预估偏高）。"
+      }
+    },
     "IaaAdTypeCompareRow": {
       "adTypeName": {
         "type": "string",
@@ -75,6 +103,39 @@
       "users": { "type": "number", "required": true, "description": "广告用户数。" },
       "ecpm": { "type": "number", "required": true, "description": "预估 ECPM（USD）。" },
       "impressions": { "type": "number", "required": true, "description": "广告展示次数。" }
+    },
+    "IaaPlatformRankItem": {
+      "sourceName": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "revenue": { "type": "number", "required": true, "description": "收入（USD）。" },
+      "ecpm": { "type": "number", "required": true, "description": "ECPM（USD）。" }
+    },
+    "IaaPlacementTopItem": {
+      "rank": { "type": "number", "required": true, "description": "排名，从 1 开始。" },
+      "placementName": {
+        "type": "string",
+        "required": true,
+        "description": "广告位名称/ID 展示名。"
+      },
+      "revenue": { "type": "number", "required": true, "description": "该广告位收入（USD）。" },
+      "percent": { "type": "number", "required": true, "description": "占广告总收入百分比 0–100。" }
+    },
+    "IaaAdTypeTrend7dSeries": {
+      "name": { "type": "string", "required": true, "description": "系列名（广告类型名）。" },
+      "color": { "type": "string", "required": true, "description": "折线颜色 HEX。" },
+      "data": {
+        "type": "number[]",
+        "required": true,
+        "description": "与 trend7d.dates 等长的数据点。"
+      }
+    },
+    "IaaUserBreakdownItem": {
+      "installDays": {
+        "type": "string",
+        "required": true,
+        "description": "安装天数分桶文案，如 1-7天。"
+      },
+      "revenue": { "type": "number", "required": true, "description": "该桶广告收入（USD）。" },
+      "activeUsers": { "type": "number", "required": true, "description": "该桶活跃用户数。" }
     }
   },
   "sampleRequest": {
@@ -154,11 +215,16 @@
       ],
       "platformInsight": "Admob收入占71.7%，建议优先保障Admob展示质量",
       "placementTop10": [
-        { "rank": 1, "placementName": "Splash", "revenue": 1451.8, "percent": 52.4 },
-        { "rank": 2, "placementName": "HomeResume", "revenue": 512.6, "percent": 18.5 },
+        { "rank": 1, "placementName": "Splash", "revenue": 1451.8, "percent": 52.0 },
+        { "rank": 2, "placementName": "HomeResume", "revenue": 512.6, "percent": 18.1 },
         { "rank": 3, "placementName": "Native_AdMainWall", "revenue": 284.3, "percent": 10.3 },
         { "rank": 4, "placementName": "Banner_HomeWeather", "revenue": 198.4, "percent": 7.2 },
-        { "rank": 5, "placementName": "DailyDetail", "revenue": 112.6, "percent": 4.1 }
+        { "rank": 5, "placementName": "DailyDetail", "revenue": 112.6, "percent": 4.1 },
+        { "rank": 6, "placementName": "Interstitial_GameOver", "revenue": 86.2, "percent": 3.1 },
+        { "rank": 7, "placementName": "Rewarded_LevelUp", "revenue": 64.5, "percent": 2.3 },
+        { "rank": 8, "placementName": "Native_FeedRow", "revenue": 48.9, "percent": 1.8 },
+        { "rank": 9, "placementName": "Banner_Settings", "revenue": 32.1, "percent": 1.1 },
+        { "rank": 10, "placementName": "AppOpen_ColdStart", "revenue": 18.4, "percent": 0.0 }
       ],
       "trend7d": {
         "dates": ["Feb27", "Feb28", "Mar1", "Mar2", "Mar3", "Mar4", "Mar5"],

@@ -43,3 +43,7 @@
 ## 字段约定
 
 - 遵循 `backend-fields.mdc`：终端平台 `platform`，国家 `s_country_code`，应用 `s_app_id`，收入 `revenue`，实收 `amount`，数量 `quantity`，商品 `sku`，订单 `order`，订阅收入 `subscription_revenue`，内购价值 `lap_revenue` 等
+
+## 契约示例与 Mock 一致
+
+与仓库根目录 [README.md](../../../../../../README.md) **「契约示例与 Mock 一致」**相同：本目录各 `*.json` 的 **`sampleRequest` / `sampleResponse` 须与 IAP 相关 Mock 实际返回一致**（见 `src/api/iap-analysis.ts` Mock 分支及 `business-insight-api-mock` 等）；改 Mock 或改示例时请同步。**具体样例正文只在各 JSON 文件内。**
