@@ -461,58 +461,60 @@
         <div v-if="!progressList.length" class="progress-table-empty">
           <ElEmpty description="暂无数据" :image-size="80" />
         </div>
-        <table v-else class="progress-table">
-          <thead>
-            <tr>
-              <th>广告系列</th>
-              <th>广告支出/预算</th>
-              <th>进度</th>
-              <th>首日ROI</th>
-              <th>状态</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in progressList" :key="row.id || row.name">
-              <td class="camp-name">{{ row.name }}</td>
-              <td>
-                <span style="color: #e2e8f0">{{ row.spend }}</span>
-                <span class="budget-sep">/</span>
-                <span class="text-dim">{{ row.budget }}</span>
-              </td>
-              <td>
-                <div class="prog-wrap">
-                  <div class="prog-track">
-                    <div
-                      class="prog-fill"
-                      :style="{
-                        width: row.progress + '%',
-                        background: progressColor(row.progress, row.statusType)
-                      }"
-                    ></div>
+        <div v-else class="progress-table-scroll">
+          <table class="progress-table">
+            <thead>
+              <tr>
+                <th>广告系列</th>
+                <th>广告支出/预算</th>
+                <th>进度</th>
+                <th>首日ROI</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in progressList" :key="row.id || row.name">
+                <td class="camp-name">{{ row.name }}</td>
+                <td>
+                  <span style="color: #e2e8f0">{{ row.spend }}</span>
+                  <span class="budget-sep">/</span>
+                  <span class="text-dim">{{ row.budget }}</span>
+                </td>
+                <td>
+                  <div class="prog-wrap">
+                    <div class="prog-track">
+                      <div
+                        class="prog-fill"
+                        :style="{
+                          width: row.progress + '%',
+                          background: progressColor(row.progress, row.statusType)
+                        }"
+                      ></div>
+                    </div>
+                    <span class="prog-pct">{{ row.progress }}%</span>
                   </div>
-                  <span class="prog-pct">{{ row.progress }}%</span>
-                </div>
-              </td>
-              <td
-                :style="{
-                  color:
-                    row.statusType === 'warn'
-                      ? '#f97316'
-                      : row.statusType === 'inactive'
-                        ? '#64748b'
-                        : '#f59e0b'
-                }"
-              >
-                {{ progressDisplayRoi(row) }}
-              </td>
-              <td>
-                <span :class="['status-dot', row.statusType]">
-                  <i class="dot"></i>{{ progressDisplayStatus(row) }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+                <td
+                  :style="{
+                    color:
+                      row.statusType === 'warn'
+                        ? '#f97316'
+                        : row.statusType === 'inactive'
+                          ? '#64748b'
+                          : '#f59e0b'
+                  }"
+                >
+                  {{ progressDisplayRoi(row) }}
+                </td>
+                <td>
+                  <span :class="['status-dot', row.statusType]">
+                    <i class="dot"></i>{{ progressDisplayStatus(row) }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </template>
   </div>
@@ -681,6 +683,18 @@
   }
 
   /* ── 进度表 ── */
+  .progress-table-scroll {
+    max-height: 280px;
+    overflow: auto;
+  }
+
+  .progress-table-scroll .progress-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bg-card);
+  }
+
   .progress-table {
     width: 100%;
     font-size: 12px;
