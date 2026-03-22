@@ -1515,10 +1515,16 @@
     await nextTick()
     if (!roiTrendRef.value) return
     chartRoiTrend.chartRef!.value = roiTrendRef.value
+    const opt = buildRoiTrendOption()
     if (chartRoiTrend.isChartInitialized()) {
-      chartRoiTrend.updateChart(buildRoiTrendOption())
+      const instance = chartRoiTrend.getChartInstance()
+      if (instance) {
+        instance.setOption(opt, { replaceMerge: ['series'] })
+      } else {
+        chartRoiTrend.updateChart(opt)
+      }
     } else {
-      chartRoiTrend.initChart(buildRoiTrendOption())
+      chartRoiTrend.initChart(opt)
     }
   }
 
