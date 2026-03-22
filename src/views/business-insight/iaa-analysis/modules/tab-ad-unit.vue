@@ -277,7 +277,7 @@
           }
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function buildScatterOption(): EChartsOption {

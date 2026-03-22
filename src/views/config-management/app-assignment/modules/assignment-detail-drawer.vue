@@ -194,12 +194,13 @@
     (props.assignment?.changeLogs ?? []).filter((l) => l.status === '有效').slice(0, 3)
   )
 
+  const STATUS_BADGE_CLASS: Record<AssignmentStatus, string> = {
+    活跃: 'status-badge--active',
+    草稿配置: 'status-badge--draft',
+    已归档: 'status-badge--archived'
+  }
   const statusClass = (status?: AssignmentStatus) =>
-    ({
-      活跃: 'status-badge--active',
-      草稿配置: 'status-badge--draft',
-      已归档: 'status-badge--archived'
-    })[status ?? ''] ?? ''
+    status ? (STATUS_BADGE_CLASS[status] ?? '') : ''
 
   const typeColorClass = (type: ChangeLogType) =>
     ({

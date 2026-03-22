@@ -80,14 +80,14 @@
     'update:date': [v: string | null]
   }>()
 
-  const severityOpts = [
+  const severityOpts: { label: string; value: AlertFilterSeverity }[] = [
     { label: '全部', value: 'all' },
     { label: '高优先级', value: 'high' },
     { label: '中优先级', value: 'medium' },
     { label: '低优先级', value: 'low' }
   ]
 
-  const categoryOpts = [
+  const categoryOpts: { label: string; value: AlertFilterCategory }[] = [
     { label: '全部', value: 'all' },
     { label: '成本异常', value: 'cost' },
     { label: '收入异常', value: 'revenue' },
@@ -97,7 +97,7 @@
     { label: '其他', value: 'other' }
   ]
 
-  const statusOpts = [
+  const statusOpts: { label: string; value: AlertFilterStatus }[] = [
     { label: '全部', value: 'all' },
     { label: '未处理', value: 'pending' },
     { label: '处理中', value: 'processing' },

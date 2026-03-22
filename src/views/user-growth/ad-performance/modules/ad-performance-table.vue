@@ -162,45 +162,47 @@
             <div class="ad-performance-detail__grid">
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">国家</span>
-                <span class="ad-performance-detail__v">{{ drawerRow?.country }}</span>
+                <span class="ad-performance-detail__v">{{ drawerRowAny?.country }}</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">广告支出</span>
                 <span class="ad-performance-detail__v">{{
-                  formatMoney(drawerRow?.spend ?? 0)
+                  formatMoney(drawerRowAny?.spend ?? 0)
                 }}</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">支出占比</span>
-                <span class="ad-performance-detail__v">{{ drawerRow?.spendSharePercent }}%</span>
+                <span class="ad-performance-detail__v">{{ drawerRowAny?.spendSharePercent }}%</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">CPI</span>
-                <span class="ad-performance-detail__v">{{ formatMoney(drawerRow?.cpi ?? 0) }}</span>
+                <span class="ad-performance-detail__v">{{
+                  formatMoney(drawerRowAny?.cpi ?? 0)
+                }}</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">点击率</span>
-                <span class="ad-performance-detail__v">{{ drawerRow?.ctr }}%</span>
+                <span class="ad-performance-detail__v">{{ drawerRowAny?.ctr }}%</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">转化率</span>
-                <span class="ad-performance-detail__v">{{ drawerRow?.cvr }}%</span>
+                <span class="ad-performance-detail__v">{{ drawerRowAny?.cvr }}%</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">ROI(1/3/7/累)</span>
                 <span class="ad-performance-detail__v">
-                  {{ drawerRow?.roi1 }}% / {{ drawerRow?.roi3 }}% / {{ drawerRow?.roi7 }}% /
-                  {{ drawerRow?.roiTotal }}%
+                  {{ drawerRowAny?.roi1 }}% / {{ drawerRowAny?.roi3 }}% / {{ drawerRowAny?.roi7 }}%
+                  / {{ drawerRowAny?.roiTotal }}%
                 </span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">预估利润</span>
                 <span
                   class="ad-performance-detail__v"
-                  :class="profitClass(drawerRow?.estimatedProfit ?? 0)"
+                  :class="profitClass(drawerRowAny?.estimatedProfit ?? 0)"
                 >
-                  {{ (drawerRow?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
-                  {{ formatMoney(drawerRow?.estimatedProfit ?? 0) }}
+                  {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
+                  {{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
                 </span>
               </div>
             </div>
@@ -211,57 +213,57 @@
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">优化师</span>
                 <span class="ad-performance-detail__v">{{
-                  drawerRow?.ownerName ?? drawerRow?.campaignName
+                  drawerRowAny?.ownerName ?? drawerRowAny?.campaignName
                 }}</span>
               </div>
-              <div v-if="drawerRow?.ownerName" class="ad-performance-detail__item">
+              <div v-if="drawerRowAny?.ownerName" class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">负责应用数</span>
-                <span class="ad-performance-detail__v">{{ drawerRow?.appCount }} 个</span>
+                <span class="ad-performance-detail__v">{{ drawerRowAny?.appCount }} 个</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">广告支出</span>
                 <span class="ad-performance-detail__v">{{
-                  formatMoney(drawerRow?.spend ?? 0)
+                  formatMoney(drawerRowAny?.spend ?? 0)
                 }}</span>
               </div>
-              <div v-if="drawerRow?.ownerName" class="ad-performance-detail__item">
+              <div v-if="drawerRowAny?.ownerName" class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">活跃系列数</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRow?.activeCampaignCount }} 个</span
+                  >{{ drawerRowAny?.activeCampaignCount }} 个</span
                 >
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">平均CPI</span>
                 <span class="ad-performance-detail__v">
-                  {{ formatMoney(drawerRow?.avgCpi ?? drawerRow?.cpi ?? 0) }}
+                  {{ formatMoney(drawerRowAny?.avgCpi ?? drawerRowAny?.cpi ?? 0) }}
                 </span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">平均点击率</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRow?.avgCtr ?? drawerRow?.ctr }}%</span
+                  >{{ drawerRowAny?.avgCtr ?? drawerRowAny?.ctr }}%</span
                 >
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">平均转化率</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRow?.avgCvr ?? drawerRow?.cvr }}%</span
+                  >{{ drawerRowAny?.avgCvr ?? drawerRowAny?.cvr }}%</span
                 >
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">ROI(首日/7日)</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRow?.roi1 }}% / {{ drawerRow?.roi7 }}%</span
+                  >{{ drawerRowAny?.roi1 }}% / {{ drawerRowAny?.roi7 }}%</span
                 >
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">预估利润</span>
                 <span
                   class="ad-performance-detail__v"
-                  :class="profitClass(drawerRow?.estimatedProfit ?? 0)"
+                  :class="profitClass(drawerRowAny?.estimatedProfit ?? 0)"
                 >
-                  {{ (drawerRow?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
-                  {{ formatMoney(drawerRow?.estimatedProfit ?? 0) }}
+                  {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
+                  {{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
                 </span>
               </div>
             </div>
@@ -272,69 +274,69 @@
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">账户</span>
                 <span class="ad-performance-detail__v">
-                  {{ drawerRow?.accountName ?? drawerRow?.campaignName }}
+                  {{ drawerRowAny?.accountName ?? drawerRowAny?.campaignName }}
                 </span>
               </div>
-              <div v-if="drawerRow?.accountName" class="ad-performance-detail__item">
+              <div v-if="drawerRowAny?.accountName" class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">平台</span>
-                <span class="ad-performance-detail__v">{{ drawerRow?.platform }}</span>
+                <span class="ad-performance-detail__v">{{ drawerRowAny?.platform }}</span>
               </div>
-              <div v-if="drawerRow?.accountName" class="ad-performance-detail__item">
+              <div v-if="drawerRowAny?.accountName" class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">余额</span>
                 <span class="ad-performance-detail__v">{{
-                  formatMoney(drawerRow?.balance ?? 0)
+                  formatMoney(drawerRowAny?.balance ?? 0)
                 }}</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">广告支出</span>
                 <span class="ad-performance-detail__v">{{
-                  formatMoney(drawerRow?.spend ?? 0)
+                  formatMoney(drawerRowAny?.spend ?? 0)
                 }}</span>
               </div>
-              <div v-if="drawerRow?.accountName" class="ad-performance-detail__item">
+              <div v-if="drawerRowAny?.accountName" class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">预算进度</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRow?.budgetProgressPercent }}%</span
+                  >{{ drawerRowAny?.budgetProgressPercent }}%</span
                 >
               </div>
-              <div v-if="drawerRow?.accountName" class="ad-performance-detail__item">
+              <div v-if="drawerRowAny?.accountName" class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">活跃系列数</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRow?.activeCampaignCount }} 个</span
+                  >{{ drawerRowAny?.activeCampaignCount }} 个</span
                 >
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">平均CPI</span>
                 <span class="ad-performance-detail__v">
-                  {{ formatMoney(drawerRow?.avgCpi ?? drawerRow?.cpi ?? 0) }}
+                  {{ formatMoney(drawerRowAny?.avgCpi ?? drawerRowAny?.cpi ?? 0) }}
                 </span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">平均点击率</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRow?.avgCtr ?? drawerRow?.ctr }}%</span
+                  >{{ drawerRowAny?.avgCtr ?? drawerRowAny?.ctr }}%</span
                 >
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">平均转化率</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRow?.avgCvr ?? drawerRow?.cvr }}%</span
+                  >{{ drawerRowAny?.avgCvr ?? drawerRowAny?.cvr }}%</span
                 >
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">ROI(首日/7日)</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRow?.roi1 }}% / {{ drawerRow?.roi7 }}%</span
+                  >{{ drawerRowAny?.roi1 }}% / {{ drawerRowAny?.roi7 }}%</span
                 >
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">预估利润</span>
                 <span
                   class="ad-performance-detail__v"
-                  :class="profitClass(drawerRow?.estimatedProfit ?? 0)"
+                  :class="profitClass(drawerRowAny?.estimatedProfit ?? 0)"
                 >
-                  {{ (drawerRow?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
-                  {{ formatMoney(drawerRow?.estimatedProfit ?? 0) }}
+                  {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
+                  {{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
                 </span>
               </div>
             </div>
@@ -344,50 +346,50 @@
             <div class="ad-performance-detail__grid">
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">系列</span>
-                <span class="ad-performance-detail__v">{{ drawerRow?.name }}</span>
+                <span class="ad-performance-detail__v">{{ drawerRowAny?.name }}</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">应用</span>
-                <span class="ad-performance-detail__v">{{ drawerRow?.appName }}</span>
+                <span class="ad-performance-detail__v">{{ drawerRowAny?.appName }}</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">平台</span>
-                <span class="ad-performance-detail__v">{{ drawerRow?.channel }}</span>
+                <span class="ad-performance-detail__v">{{ drawerRowAny?.channel }}</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">国家</span>
-                <span class="ad-performance-detail__v">{{ drawerRow?.country }}</span>
+                <span class="ad-performance-detail__v">{{ drawerRowAny?.country }}</span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">花费/预算</span>
                 <span class="ad-performance-detail__v">
-                  {{ formatMoney(drawerRow?.spend ?? 0) }}/{{
-                    formatMoney(drawerRow?.budget ?? 0)
+                  {{ formatMoney(drawerRowAny?.spend ?? 0) }}/{{
+                    formatMoney(drawerRowAny?.budget ?? 0)
                   }}
-                  ({{ drawerRow?.spendBudgetPercent }}%)
+                  ({{ drawerRowAny?.spendBudgetPercent }}%)
                 </span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">CPI / CTR / CVR</span>
                 <span class="ad-performance-detail__v">
-                  {{ formatMoney(drawerRow?.cpi ?? 0) }} / {{ drawerRow?.ctr }}% /
-                  {{ drawerRow?.cvr }}%
+                  {{ formatMoney(drawerRowAny?.cpi ?? 0) }} / {{ drawerRowAny?.ctr }}% /
+                  {{ drawerRowAny?.cvr }}%
                 </span>
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">ROI(首日/7日)</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRow?.roi1 }}% / {{ drawerRow?.roi7 }}%</span
+                  >{{ drawerRowAny?.roi1 }}% / {{ drawerRowAny?.roi7 }}%</span
                 >
               </div>
               <div class="ad-performance-detail__item">
                 <span class="ad-performance-detail__k">预估利润</span>
                 <span
                   class="ad-performance-detail__v"
-                  :class="profitClass(drawerRow?.estimatedProfit ?? 0)"
+                  :class="profitClass(drawerRowAny?.estimatedProfit ?? 0)"
                 >
-                  {{ (drawerRow?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
-                  {{ formatMoney(drawerRow?.estimatedProfit ?? 0) }}
+                  {{ (drawerRowAny?.estimatedProfit ?? 0) >= 0 ? '+' : '' }}
+                  {{ formatMoney(drawerRowAny?.estimatedProfit ?? 0) }}
                 </span>
               </div>
             </div>
@@ -486,6 +488,9 @@
     | AdPerformanceAccountCampaignRow
     | null
   const drawerRow = ref<DrawerRow>(null)
+
+  /** 抽屉内多 Tab 行结构不同，避免联合类型在模板中报缺失字段 */
+  const drawerRowAny = computed(() => drawerRow.value as Record<string, any> | null)
 
   const drawerCampaignRow = computed(() => {
     if (drawerTab.value !== 'campaign') return null

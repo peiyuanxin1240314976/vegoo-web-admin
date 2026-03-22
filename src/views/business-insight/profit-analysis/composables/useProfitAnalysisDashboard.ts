@@ -1,6 +1,10 @@
 import { computed, reactive, ref } from 'vue'
 import type { ComputedRef, Reactive, Ref } from 'vue'
-import type { ShortcutProps } from 'element-plus'
+/** ElDatePicker shortcuts（element-plus 未导出 ShortcutProps 时的本地形状） */
+interface ProfitDatePickerShortcut {
+  text: string
+  value: () => [Date, Date]
+}
 import type {
   ProfitAnalysisQueryParams,
   ProfitAppTotal,
@@ -68,7 +72,7 @@ export interface UseProfitAnalysisDashboardReturn {
   filterOptions: Ref<ProfitFilterOptions>
   pendingMeta: Ref<boolean>
   dateRangePicker: ComputedRef<[string, string] | null>
-  dateShortcuts: ComputedRef<ShortcutProps[]>
+  dateShortcuts: ComputedRef<ProfitDatePickerShortcut[]>
   kpiCards: Ref<ProfitKpiCard[]>
   appRows: Ref<ProfitAppRow[]>
   appTotal: Ref<ProfitAppTotal>
@@ -131,7 +135,7 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
     }
   })
 
-  const dateShortcuts = computed<ShortcutProps[]>(() => {
+  const dateShortcuts = computed<ProfitDatePickerShortcut[]>(() => {
     const presets = filterOptions.value.datePresets
     if (!presets?.length) return []
     return presets
@@ -147,9 +151,9 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
             start.setDate(start.getDate() - (n - 1))
             return [start, end]
           }
-        } as ShortcutProps
+        }
       })
-      .filter(Boolean) as ShortcutProps[]
+      .filter((x): x is ProfitDatePickerShortcut => x != null)
   })
 
   function buildParams(): ProfitAnalysisQueryParams {

@@ -512,7 +512,7 @@
         axisLine: { lineStyle: { color: '#1f2d47' } },
         splitLine: { lineStyle: { color: '#1f2d47' } },
         splitArea: { areaStyle: { color: ['rgba(31,45,71,0.3)', 'rgba(31,45,71,0.1)'] } },
-        name: { textStyle: { color: '#64748b', fontSize: 11 } }
+        axisName: { color: '#64748b', fontSize: 11 }
       },
       series: [
         {

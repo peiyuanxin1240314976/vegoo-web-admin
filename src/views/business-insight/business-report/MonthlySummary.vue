@@ -53,8 +53,8 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in retentionMetrics" :key="row.name">
-                <td class="metric-name">{{ row.name }}</td>
+              <tr v-for="row in retentionMetrics" :key="row.day">
+                <td class="metric-name">{{ row.day }}</td>
                 <td>{{ row.current }}</td>
                 <td class="muted">{{ row.previous }}</td>
                 <td :class="changeClass(row.changeType)">{{ row.change }}</td>
@@ -82,7 +82,7 @@
                 <td class="metric-name">{{ row.type }}</td>
                 <td :class="roiValueClass(row.current)">{{ row.current }}</td>
                 <td class="muted">{{ row.previous }}</td>
-                <td :class="changeClass(row.changeType)">{{ row.change }}</td>
+                <td :class="changeClass(row.changeType ?? 'neutral')">{{ row.change }}</td>
               </tr>
             </tbody>
           </table>

@@ -24,6 +24,7 @@
 
 <script setup lang="ts">
   import { ref, watch, onMounted } from 'vue'
+  import type { EChartsOption } from 'echarts'
   import { useChart } from '@/hooks/core/useChart'
   import type { CampaignTrendPoint } from '../types'
 
@@ -80,7 +81,7 @@
 
     return {
       tooltip: {
-        trigger: 'axis',
+        trigger: 'axis' as const,
         axisPointer: { type: 'cross', crossStyle: { color: axisColor } },
         backgroundColor: isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)',
         borderColor: isDark ? '#444' : '#e5e7eb',
@@ -176,7 +177,7 @@
           itemStyle: { color: COLORS.roi }
         }
       ]
-    }
+    } as EChartsOption
   }
 
   function render() {

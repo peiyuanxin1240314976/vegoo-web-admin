@@ -312,7 +312,6 @@
           top: '38%',
           style: {
             text: '自然量',
-            textAlign: 'center',
             fill: isDark.value ? '#aaa' : '#666',
             fontSize: 11
           }
@@ -323,7 +322,6 @@
           top: '48%',
           style: {
             text: total,
-            textAlign: 'center',
             fill: isDark.value ? '#fff' : '#333',
             fontSize: 14,
             fontWeight: 'bold'
@@ -335,7 +333,6 @@
           top: '58%',
           style: {
             text: '个',
-            textAlign: 'center',
             fill: isDark.value ? '#aaa' : '#666',
             fontSize: 11
           }
@@ -355,7 +352,7 @@
           labelLine: { show: false }
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function buildRadarOption(): EChartsOption {
@@ -370,7 +367,7 @@
         shape: 'polygon',
         splitNumber: 4,
         axisName: { color: isDark.value ? '#aaa' : '#666', fontSize: 11 },
-        splitArea: { areaStyle: { color: 'transparent' } },
+        splitArea: { areaStyle: { color: ['transparent'] } },
         splitLine: { lineStyle: { color: isDark.value ? '#444' : '#ddd' } },
         axisLine: { lineStyle: { color: isDark.value ? '#444' : '#ddd' } }
       },
@@ -395,7 +392,7 @@
           ]
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function buildKfactorOption(): EChartsOption {

@@ -239,7 +239,7 @@
           }
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function buildDonutOption(): EChartsOption {
@@ -278,7 +278,7 @@
           emphasis: { scale: true, scaleSize: 4 }
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function buildEcpmOption(): EChartsOption {
@@ -346,7 +346,7 @@
           }
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function buildTrendOption(): EChartsOption {
@@ -391,7 +391,7 @@
         lineStyle: { color: s.color, width: 2 },
         itemStyle: { color: s.color }
       }))
-    }
+    } as unknown as EChartsOption
   }
 
   function refreshCharts() {

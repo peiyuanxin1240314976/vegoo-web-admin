@@ -222,7 +222,7 @@
         itemWidth: 14,
         itemHeight: 80,
         textStyle: { color: '#64748b', fontSize: 11 },
-        formatter: (val: number) => val.toFixed(1)
+        formatter: (val: unknown) => Number(val ?? 0).toFixed(1)
       },
       series: [
         {
@@ -269,7 +269,7 @@
           }
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function buildEcpmOption(): EChartsOption {
@@ -371,7 +371,7 @@
           }
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function refreshCharts() {

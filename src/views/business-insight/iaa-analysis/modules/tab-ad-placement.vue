@@ -248,7 +248,7 @@
           }
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function buildDonutOption(): EChartsOption {
@@ -289,7 +289,7 @@
           emphasis: { scale: true, scaleSize: 4 }
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function buildEcpmOption(): EChartsOption {
@@ -335,7 +335,7 @@
           }
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function buildScatterOption(): EChartsOption {
@@ -380,7 +380,7 @@
           }
         }
       ]
-    }
+    } as unknown as EChartsOption
   }
 
   function refreshCharts() {
