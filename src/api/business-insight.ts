@@ -3,6 +3,7 @@
  * IAP 分片接口见 ./iap-analysis.ts（与 iap-analysis/mock/backend-api 契约对齐）
  */
 import request from '@/utils/http'
+import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
 import {
   IaaAnalysisEndpoint,
   isIaaAnalysisEndpointMock
@@ -25,12 +26,12 @@ import type {
 } from '@/views/business-insight/iaa-analysis/types'
 import type {
   ProfitAnalysisQueryParams,
-  ProfitFilterOptions,
-  ProfitKpiOverviewDto,
   ProfitAppProfitResponseDto,
   ProfitCountryProfitResponseDto,
-  ProfitTrend30d,
-  ProfitSankeyDto
+  ProfitFilterOptions,
+  ProfitKpiOverviewDto,
+  ProfitSankeyDto,
+  ProfitTrend30d
 } from '@/views/business-insight/profit-analysis/types'
 
 export {
@@ -50,7 +51,7 @@ export {
 } from './iap-analysis'
 export type { IapOverviewTableQuery } from './iap-analysis'
 
-const IAA_BASE = '/api/v1/datacenter/analysis/business-insight/iaa-analysis'
+const IAA_BASE = `${ANALYSIS_API_BASE}/business-insight/iaa-analysis`
 
 function emptyIfAll(v: string | undefined, all = 'all') {
   if (v === undefined || v === '' || v === all) return ''
@@ -265,7 +266,7 @@ export async function fetchIaaMetaFilterOptions() {
   return normalizeIaaFilterOptions(unwrapIaaPayload<IaaFilterOptions>(raw))
 }
 
-const PROFIT_BASE = '/api/v1/datacenter/analysis/business-insight/profit-analysis'
+const PROFIT_BASE = `${ANALYSIS_API_BASE}/business-insight/profit-analysis`
 
 /** 利润分析 - 顶栏筛选项 GET .../meta-filter-options（仅依赖全局 Token，无 query/body） */
 export function fetchProfitMetaFilterOptions() {

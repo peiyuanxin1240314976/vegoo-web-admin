@@ -246,6 +246,101 @@ export interface AdPerformanceMock {
   pagination: AdPerformancePagination
 }
 
+/** 筛选项（下拉） */
+export interface AdPerformanceSelectOption {
+  label: string
+  value: string
+}
+
+/** 日期范围筛选项（meta 可选下发） */
+export interface AdPerformanceDateRangeOption {
+  label: string
+  value: AdPerformanceDateRange
+}
+
+/** POST meta-filter-options 响应 */
+export interface AdPerformanceMetaFilterResponse {
+  dateRangeOptions?: AdPerformanceDateRangeOption[]
+  appOptions: AdPerformanceSelectOption[]
+  adPlatformOptions: AdPerformanceSelectOption[]
+  accountOptions?: AdPerformanceSelectOption[]
+  countryOptions?: AdPerformanceSelectOption[]
+}
+
+/** POST overview 响应 */
+export type AdPerformanceOverviewResponse = Pick<
+  AdPerformanceMock,
+  | 'dataTime'
+  | 'kpi'
+  | 'spendTrend'
+  | 'roi7dTrend'
+  | 'channelDistribution'
+  | 'appDistribution'
+  | 'ownerShareDistribution'
+  | 'alerts'
+>
+
+/** 主表格请求：筛选 + 关键字 + 分页 */
+export interface AdPerformanceTableQuery extends AdPerformanceFilter {
+  keyword?: string
+  current?: number
+  size?: number
+}
+
+export type AdPerformanceTableTab = 'campaign' | 'country' | 'owner' | 'account'
+
+export interface AdPerformanceTableCampaignResponse {
+  rows: AdPerformanceCampaignRow[]
+  pagination: AdPerformancePagination
+}
+
+export interface AdPerformanceTableCountryResponse {
+  rows: AdPerformanceCountryRow[]
+  pagination: AdPerformancePagination
+}
+
+export interface AdPerformanceTableOwnerResponse {
+  rows: AdPerformanceOwnerRow[]
+  summary: OwnerTeamSummary
+  pagination: AdPerformancePagination
+}
+
+export interface AdPerformanceTableAccountResponse {
+  rows: AdPerformanceAccountRow[]
+  summary: AccountSummary
+  pagination: AdPerformancePagination
+}
+
+export interface AdPerformanceCampaignDetailDrawerBody {
+  campaignId: string
+  dateRange?: AdPerformanceDateRange
+}
+
+export interface AdPerformanceExportBody extends AdPerformanceFilter {
+  tab?: AdPerformanceTableTab
+  format?: 'xlsx' | 'csv'
+}
+
+export interface AdPerformanceExportJsonResponse {
+  downloadUrl?: string
+  expireAt?: string
+}
+
+export interface AdPerformanceAlertActionBody {
+  alertId: string
+  actionType: AdPerformanceAlertItem['actionType']
+  target?: {
+    campaignId?: string
+    adPlatform?: string
+    accountId?: string
+  }
+}
+
+export interface AdPerformanceAlertActionResponse {
+  success: boolean
+  message?: string
+}
+
 /** =========================
  *  详情抽屉（Campaign Detail）
  *  ========================= */

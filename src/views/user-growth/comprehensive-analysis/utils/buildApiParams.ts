@@ -1,4 +1,5 @@
 import type { ComprehensiveAnalysisApiParams, ComprehensiveAnalysisFilterState } from '../types'
+import { getAppNow, cloneAppDate } from '@/utils/app-now'
 
 function pad2(n: number) {
   return String(n).padStart(2, '0')
@@ -16,9 +17,9 @@ export function resolveDateRangeFromPreset(dateRange: string): {
   date_start: string
   date_end: string
 } {
-  const end = new Date()
+  const end = cloneAppDate(getAppNow())
   end.setHours(0, 0, 0, 0)
-  const start = new Date(end)
+  const start = cloneAppDate(end)
   if (dateRange === '7d') {
     start.setDate(start.getDate() - 6)
   }

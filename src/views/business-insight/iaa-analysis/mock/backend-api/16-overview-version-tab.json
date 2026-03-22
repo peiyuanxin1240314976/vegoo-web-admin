@@ -59,6 +59,52 @@
         "required": true,
         "description": "AI 版本洞察，bullets: string[]（3~5条）。"
       }
+    },
+    "IaaKpiCard": {
+      "id": { "type": "string", "required": true, "description": "卡片 ID。" },
+      "title": { "type": "string", "required": true, "description": "标题。" },
+      "primaryValue": { "type": "string", "required": true, "description": "主展示值。" },
+      "subText": { "type": "string", "required": false, "description": "副文案。" },
+      "trendUp": { "type": "boolean", "required": false, "description": "趋势向上。" },
+      "accent": {
+        "type": "string",
+        "required": false,
+        "enum": ["teal", "blue", "amber", "green", "default"],
+        "description": "强调色。"
+      }
+    },
+    "IaaVersionTableRow": {
+      "app_version": {
+        "type": "string",
+        "required": true,
+        "description": "版本号展示串，如 v3.3.0。"
+      },
+      "releaseDate": { "type": "string", "required": true, "description": "发布日期 YYYY-MM-DD。" },
+      "userShare": { "type": "number", "required": true, "description": "用户占比 0–100。" },
+      "revenue": { "type": "number", "required": true, "description": "收入（USD）。" },
+      "ecpmEst": { "type": "number", "required": true, "description": "预估 ECPM。" },
+      "ecpmReal": { "type": "number", "required": true, "description": "真实 ECPM。" },
+      "impressions": { "type": "number", "required": true, "description": "展示次数。" },
+      "adPenetration": { "type": "number", "required": true, "description": "广告渗透率 0–100。" },
+      "crashRate": { "type": "number", "required": true, "description": "崩溃率 0–100。" },
+      "versionRating": { "type": "number", "required": true, "description": "版本评分 0–5。" },
+      "isCurrent": {
+        "type": "boolean",
+        "required": false,
+        "description": "是否为当前最新版本（至多一条 true）。"
+      }
+    },
+    "IaaVersionRevenueItem": {
+      "app_version": { "type": "string", "required": true, "description": "版本号。" },
+      "revenue": { "type": "number", "required": true, "description": "收入（USD）。" },
+      "userShare": { "type": "number", "required": true, "description": "用户占比。" }
+    },
+    "IaaVersionInsight": {
+      "bullets": {
+        "type": "string[]",
+        "required": true,
+        "description": "洞察要点列表，3～5 条；无 AI 时可返回 []。"
+      }
     }
   },
   "sampleRequest": {

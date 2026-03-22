@@ -208,6 +208,7 @@
     type UserFormPayload,
     type UserRole
   } from './types'
+  import { getAppNow } from '@/utils/app-now'
 
   defineOptions({ name: 'UserManagement' })
 
@@ -400,7 +401,7 @@
         role: payload.role,
         status: '待激活',
         lastLogin: '未登录',
-        joinTime: new Date().toISOString().slice(0, 10),
+        joinTime: getAppNow().toISOString().slice(0, 10),
         accessibleApps: payload.accessibleApps,
         remark: payload.remark
       })

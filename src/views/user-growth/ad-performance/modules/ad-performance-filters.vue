@@ -18,7 +18,7 @@
       >
         <ElOption :label="appAllLabel" value="" />
         <ElOption
-          v-for="opt in appOptions"
+          v-for="opt in appOptionsForSelect"
           :key="opt.value"
           :label="opt.label"
           :value="opt.value"
@@ -34,7 +34,7 @@
       >
         <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
         <ElOption
-          v-for="opt in adPlatformOptions"
+          v-for="opt in adPlatformOptionsForSelect"
           :key="opt.value"
           :label="opt.label"
           :value="opt.value"
@@ -49,6 +49,12 @@
         @update:model-value="onAccountChange"
       >
         <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
+        <ElOption
+          v-for="opt in accountOptionsForSelect"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
       </ElSelect>
 
       <ElSelect
@@ -59,6 +65,12 @@
         @update:model-value="onCountryChange"
       >
         <ElOption :label="tr('adPerformance.filterAll', '全部')" value="" />
+        <ElOption
+          v-for="opt in countryOptionsForSelect"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
       </ElSelect>
 
       <ElButton
@@ -103,7 +115,7 @@
   import { Calendar, Flag, Grid, Promotion, RefreshRight, User } from '@element-plus/icons-vue'
   import { computed } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import type { AdPerformanceFilter } from '../types'
+  import type { AdPerformanceFilter, AdPerformanceMetaFilterResponse } from '../types'
 
   defineOptions({ name: 'AdPerformanceFilters' })
 
@@ -114,8 +126,10 @@
     defineProps<{
       filter: AdPerformanceFilter
       appCount?: number
+      /** 来自 meta-filter-options；未就绪时用本地默认选项 */
+      metaOptions?: AdPerformanceMetaFilterResponse | null
     }>(),
-    { appCount: 0 }
+    { appCount: 0, metaOptions: null }
   )
 
   const emit = defineEmits<{
@@ -148,41 +162,46 @@
     emitSearch({ country: v ?? '' })
   }
 
-  const dateRangeOptions = [
+  const defaultDateRangeOptions = [
     { value: 'today' as const, label: '今日' },
     { value: 'yesterday' as const, label: '昨日' },
     { value: 'last7d' as const, label: '近7天' },
     { value: 'month' as const, label: '本月' }
   ]
 
+  const dateRangeOptions = computed(() => {
+    const m = props.metaOptions?.dateRangeOptions
+    return m?.length ? m : defaultDateRangeOptions
+  })
+
   const dateRangeLabel = computed(() => {
-    const hit = dateRangeOptions.find((item) => item.value === props.filter.dateRange)
+    const hit = dateRangeOptions.value.find((item) => item.value === props.filter.dateRange)
     return hit?.label ?? '-'
   })
 
   const activeDateIndex = computed(() => {
-    const idx = dateRangeOptions.findIndex((item) => item.value === props.filter.dateRange)
+    const idx = dateRangeOptions.value.findIndex((item) => item.value === props.filter.dateRange)
     return idx >= 0 ? idx : 0
   })
 
   const dateSliderStyle = computed(() => {
     return {
-      '--date-slider-count': String(dateRangeOptions.length),
+      '--date-slider-count': String(dateRangeOptions.value.length),
       '--date-slider-index': String(activeDateIndex.value)
     } as Record<string, string>
   })
 
   const appAllLabel = computed(() => (props.appCount ? `全部(${props.appCount})` : '全部'))
 
-  const appOptions = computed(() => [
+  const defaultAppOptions = [
     { value: 'Weather5', label: 'Weather5' },
     { value: 'BloodSugar2', label: 'BloodSugar2' },
     { value: 'PhoneTracker', label: 'PhoneTracker' },
     { value: 'FaceMe', label: 'FaceMe' },
     { value: 'HealthTracker', label: 'HealthTracker' }
-  ])
+  ]
 
-  const adPlatformOptions = [
+  const defaultAdPlatformOptions = [
     { value: 'google', label: 'Google' },
     { value: 'facebook', label: 'Facebook' },
     { value: 'tiktok', label: 'TikTok' },
@@ -190,6 +209,35 @@
     { value: 'kwai', label: 'Kwai' },
     { value: 'mintegral', label: 'Mintegral' }
   ]
+
+  const appOptionsForSelect = computed(() => {
+    const m = props.metaOptions?.appOptions?.filter((o) => o.value !== '')
+    if (m?.length) return m
+    return defaultAppOptions
+  })
+
+  const adPlatformOptionsForSelect = computed(() => {
+    const m = props.metaOptions?.adPlatformOptions?.filter((o) => o.value !== '')
+    if (m?.length) return m
+    return defaultAdPlatformOptions
+  })
+
+  const accountOptionsForSelect = computed(() => {
+    const m = props.metaOptions?.accountOptions?.filter((o) => o.value !== '')
+    return m ?? []
+  })
+
+  const countryOptionsForSelect = computed(() => {
+    const m = props.metaOptions?.countryOptions?.filter((o) => o.value !== '')
+    if (m?.length) return m
+    return [
+      { label: 'US', value: 'US' },
+      { label: 'UK', value: 'UK' },
+      { label: 'CA', value: 'CA' },
+      { label: 'JP', value: 'JP' },
+      { label: 'BR', value: 'BR' }
+    ]
+  })
 </script>
 
 <style scoped lang="scss">

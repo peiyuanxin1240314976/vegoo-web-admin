@@ -316,10 +316,12 @@ declare namespace Api {
       source: string
     }
 
+    type AdPlatformMetricStatus = 'excellent' | 'average' | 'poor'
+
     /** 指标比较详情表单行（响应 data.rows[]，POST .../metrics/table） */
     interface AdPlatformMetricsTableRowDto {
       source: string
-      status: string
+      status: string | AdPlatformMetricStatus
       statusText?: string
       cost: string
       revenue: string
@@ -335,6 +337,8 @@ declare namespace Api {
       userQualityD7TrendUp: boolean
       userQualityPay: number
       userQualityPayTrendUp: boolean
+      roiSparkline?: number[]
+      cpiSparkline?: number[]
     }
 
     /** 指标比较详情分页（响应 data） */

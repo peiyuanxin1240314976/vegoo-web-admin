@@ -22,6 +22,7 @@
  * @author VeGoo Team
  */
 import { AxiosError } from 'axios'
+import { getAppNow } from '@/utils/app-now'
 import { ApiStatus } from './status'
 import { $t } from '@/locales'
 
@@ -74,7 +75,7 @@ export class HttpError extends Error {
     this.name = 'HttpError'
     this.code = code
     this.data = options?.data
-    this.timestamp = new Date().toISOString()
+    this.timestamp = getAppNow().toISOString()
     this.url = options?.url
     this.method = options?.method
   }

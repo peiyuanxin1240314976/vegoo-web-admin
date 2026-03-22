@@ -37,6 +37,10 @@ pnpm serve
 
 业务页面在 `src/views/<模块>/<页面>/mock/backend-api/` 下用 JSON 描述接口契约（含字段说明与示例请求/响应）。**契约由前端在仓库内维护，后端按该 JSON 实现**；路径拆分、字段模板、变更流程等见 Cursor 规则 [`.cursor/rules/api-contract-and-mock-conventions.mdc`](.cursor/rules/api-contract-and-mock-conventions.mdc)。
 
+**契约示例与 Mock 一致（全项目适用）**：`mock/backend-api/*.json` 里的 **`sampleRequest` / `sampleResponse` 应与该接口的 Mock 实现保持一致**——即：`src/api` 在走 Mock 分支时实际返回（或聚合出）的结构、字段、数组长度与示例相同；改 Mock 时同步改契约里的示例，改契约示例时也要核对 Mock，避免两套不一致导致后端按 JSON 实现、前端 Mock 却是另一套。**`fieldDescription` 仍须解释字段含义**（与 [`.cursor/rules/api-contract-and-mock-conventions.mdc`](.cursor/rules/api-contract-and-mock-conventions.mdc) 一致）；详细样例正文以契约为准时可与 Mock 同源维护。
+
+各业务若 Mock 入口分散（如 `views/.../mocks/*.ts`），以**该页面** `mock/README.md` 或 `mock/backend-api/README.md` 说明为准（例：IAP / IAA 见 `business-insight` 下对应目录）。
+
 使用 Mock 开发时，须在 **`src/api`** 按契约写好真实 **`fetch*`**，并在**该业务模块目录下**的 **`config/`** 中为每个接口配置 mock/remote 开关（禁止把仅本模块用的开关散落在无归属位置）。详见 [`.cursor/rules/module-api-mock-config.mdc`](.cursor/rules/module-api-mock-config.mdc)。
 
 **默认值**：各业务 mock/remote 的默认取值写在**该小模块**的 **`config/`** 内（常量或导出配置），**不要**在仓库根目录的 **`.env` / `.env.development`** 里为单个业务模块增加 `VITE_*` 数据源类开关，以免环境文件与模块归属脱节；开发机临时切换可在该模块 `config` 内扩展 **localStorage** 等（商业洞察示例：`iap-analysis/config/data-source.ts`、`iaa-analysis/config/data-source.ts`）。

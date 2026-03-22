@@ -39,3 +39,13 @@ export function getAppTodayYYYYMMDD(): string {
 export function getAppNowMs(): number {
   return getAppNow().getTime()
 }
+
+/** 复制指定时刻，便于在应用时间上做大字日历运算且不改动原 Date */
+export function cloneAppDate(d: Date): Date {
+  return new Date(d.getTime())
+}
+
+/** 应用当前时刻 + 偏移毫秒（如一周前：offsetAppNowMs(-604800000)） */
+export function offsetAppNowMs(deltaMs: number): Date {
+  return new Date(getAppNowMs() + deltaMs)
+}

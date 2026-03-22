@@ -96,6 +96,7 @@
     ConversionMappingForm
   } from './types'
   import { ElMessage } from 'element-plus'
+  import { getAppNow, cloneAppDate } from '@/utils/app-now'
 
   defineOptions({ name: 'ConversionManagement' })
 
@@ -193,8 +194,8 @@
   const refreshIntervalMs = 30_000
 
   function getDefaultDateRange(): [string, string] {
-    const end = new Date()
-    const start = new Date()
+    const end = getAppNow()
+    const start = cloneAppDate(end)
     start.setDate(end.getDate() - 6)
     const toYmd = (d: Date) => {
       const y = d.getFullYear()

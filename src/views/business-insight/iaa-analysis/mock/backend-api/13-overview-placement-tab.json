@@ -26,34 +26,81 @@
       "kpis": {
         "type": "IaaKpiCard[]",
         "required": true,
-        "description": "顶部4个KPI：总数/总收入/平均ECPM/展示总次。"
+        "description": "顶部 4 个 KPI：总数/总收入/平均 ECPM/展示总次等。"
       },
       "top10": {
         "type": "IaaPlacementTop10Item[]",
         "required": true,
-        "description": "Top10广告位，含revenue/impressions/ecpm/users/percent，支持前端按维度切换。"
+        "description": "Top10 广告位，含 revenue/impressions/ecpm/users/percent。"
       },
       "tableRows": {
         "type": "IaaPlacementTableRow[]",
         "required": true,
-        "description": "广告位详细数据表行。"
+        "description": "广告位详细数据表（可多于 Top10，供表格滚动）。"
       },
       "donut": {
         "type": "IaaRevenueDonutItem[]",
         "required": true,
-        "description": "收入占比环形图数据。"
+        "description": "收入占比环形图，name/value/percent 与总收入自洽。"
       },
       "ecpmRanking": {
         "type": "object[]",
         "required": true,
-        "description": "ECPM排行，fields: name/ecpm。水平柱状图。"
+        "description": "ECPM 排行水平柱图，fields: name, ecpm（USD）。"
       },
       "placementInsight": { "type": "string", "required": true, "description": "广告位洞察文案。" },
       "scatterData": {
         "type": "object[]",
         "required": true,
-        "description": "展示次数 vs 收入散点数据，fields: name/impressions/revenue。"
+        "description": "展示次数 vs 收入散点，fields: name, impressions, revenue。"
       }
+    },
+    "IaaKpiCard": {
+      "id": { "type": "string", "required": true, "description": "卡片 ID。" },
+      "title": { "type": "string", "required": true, "description": "标题。" },
+      "primaryValue": {
+        "type": "string",
+        "required": true,
+        "description": "主展示值（可预格式化）。"
+      },
+      "subText": { "type": "string", "required": false, "description": "副文案。" },
+      "trendUp": { "type": "boolean", "required": false, "description": "趋势向上。" },
+      "accent": {
+        "type": "string",
+        "required": false,
+        "enum": ["teal", "blue", "amber", "green", "default"],
+        "description": "强调色。"
+      }
+    },
+    "IaaPlacementTop10Item": {
+      "name": { "type": "string", "required": true, "description": "广告位名称。" },
+      "revenue": { "type": "number", "required": true, "description": "收入（USD）。" },
+      "impressions": { "type": "number", "required": true, "description": "展示次数。" },
+      "ecpm": { "type": "number", "required": true, "description": "ECPM（USD）。" },
+      "users": { "type": "number", "required": true, "description": "触达用户数。" },
+      "percent": { "type": "number", "required": true, "description": "收入占比 0–100。" }
+    },
+    "IaaPlacementTableRow": {
+      "placementName": { "type": "string", "required": true, "description": "广告位名称。" },
+      "adTypeName": { "type": "string", "required": true, "description": "广告类型中文名。" },
+      "sourceName": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "revenue": { "type": "number", "required": true, "description": "收入（USD）。" },
+      "impressions": { "type": "number", "required": true, "description": "展示次数。" },
+      "ecpmEst": { "type": "number", "required": true, "description": "预估 ECPM（USD）。" },
+      "ecpmReal": { "type": "number", "required": true, "description": "真实 ECPM（USD）。" },
+      "impressionUsers": { "type": "number", "required": true, "description": "有展示的用户数。" },
+      "fillRate": { "type": "number", "required": true, "description": "充填率 0–100。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["normal", "low"],
+        "description": "充填率偏低等为 low。"
+      }
+    },
+    "IaaRevenueDonutItem": {
+      "name": { "type": "string", "required": true, "description": "图例名称（广告位或聚合项）。" },
+      "value": { "type": "number", "required": true, "description": "收入（USD）。" },
+      "percent": { "type": "number", "required": true, "description": "占比 0–100。" }
     }
   },
   "sampleRequest": {
@@ -64,7 +111,37 @@
   },
   "sampleResponse": {
     "data": {
-      "kpis": [{ "id": "1", "title": "广告位总数", "primaryValue": "47个" }],
+      "kpis": [
+        {
+          "id": "pl_kpi_1",
+          "title": "广告位总数",
+          "primaryValue": "47个",
+          "subText": "已开启 42 个 | 关闭 5 个",
+          "accent": "default"
+        },
+        {
+          "id": "pl_kpi_2",
+          "title": "广告位总收入",
+          "primaryValue": "$2,810.80",
+          "subText": "环比 ↑6.2%",
+          "trendUp": true,
+          "accent": "teal"
+        },
+        {
+          "id": "pl_kpi_3",
+          "title": "平均 ECPM",
+          "primaryValue": "$11.82",
+          "subText": "预估 / 真实 12.04 / 11.60",
+          "accent": "default"
+        },
+        {
+          "id": "pl_kpi_4",
+          "title": "展示总次数",
+          "primaryValue": "208,560",
+          "subText": "Top10 占 78.4%",
+          "accent": "default"
+        }
+      ],
       "top10": [
         {
           "name": "Splash",
@@ -73,13 +150,184 @@
           "ecpm": 19.16,
           "users": 65000,
           "percent": 52.4
+        },
+        {
+          "name": "HomeResume",
+          "revenue": 512.6,
+          "impressions": 185000,
+          "ecpm": 14.82,
+          "users": 42000,
+          "percent": 18.5
+        },
+        {
+          "name": "Native_AdMainWall",
+          "revenue": 284.3,
+          "impressions": 165000,
+          "ecpm": 8.64,
+          "users": 38000,
+          "percent": 10.3
+        },
+        {
+          "name": "Banner_HomeWeather",
+          "revenue": 198.4,
+          "impressions": 142000,
+          "ecpm": 6.12,
+          "users": 31000,
+          "percent": 7.2
+        },
+        {
+          "name": "DailyDetail",
+          "revenue": 112.6,
+          "impressions": 68000,
+          "ecpm": 5.88,
+          "users": 22000,
+          "percent": 4.1
+        },
+        {
+          "name": "Interstitial_GameOver",
+          "revenue": 86.2,
+          "impressions": 52000,
+          "ecpm": 7.05,
+          "users": 18000,
+          "percent": 3.1
+        },
+        {
+          "name": "Rewarded_LevelUp",
+          "revenue": 64.5,
+          "impressions": 31000,
+          "ecpm": 9.22,
+          "users": 12000,
+          "percent": 2.3
+        },
+        {
+          "name": "Native_FeedRow",
+          "revenue": 48.9,
+          "impressions": 89000,
+          "ecpm": 2.18,
+          "users": 25000,
+          "percent": 1.8
+        },
+        {
+          "name": "Banner_Settings",
+          "revenue": 32.1,
+          "impressions": 54000,
+          "ecpm": 1.78,
+          "users": 19000,
+          "percent": 1.2
+        },
+        {
+          "name": "AppOpen_ColdStart",
+          "revenue": 18.4,
+          "impressions": 22000,
+          "ecpm": 4.02,
+          "users": 11000,
+          "percent": 0.7
         }
       ],
-      "tableRows": [],
-      "donut": [{ "name": "Splash", "value": 1451.8, "percent": 52.4 }],
-      "ecpmRanking": [{ "name": "WeatherRadar", "ecpm": 19.16 }],
-      "placementInsight": "插页式广告位普遍ECPM较高，建议优先保障Splash展示频次",
-      "scatterData": [{ "name": "Splash", "impressions": 280000, "revenue": 1451.8 }]
+      "tableRows": [
+        {
+          "placementName": "Splash",
+          "adTypeName": "开屏",
+          "sourceName": "Admob",
+          "revenue": 1451.8,
+          "impressions": 280000,
+          "ecpmEst": 19.5,
+          "ecpmReal": 19.16,
+          "impressionUsers": 65000,
+          "fillRate": 97.2,
+          "status": "normal"
+        },
+        {
+          "placementName": "HomeResume",
+          "adTypeName": "插页式",
+          "sourceName": "Admob",
+          "revenue": 512.6,
+          "impressions": 185000,
+          "ecpmEst": 15.1,
+          "ecpmReal": 14.82,
+          "impressionUsers": 42000,
+          "fillRate": 94.8,
+          "status": "normal"
+        },
+        {
+          "placementName": "Native_AdMainWall",
+          "adTypeName": "原生",
+          "sourceName": "Facebook",
+          "revenue": 284.3,
+          "impressions": 165000,
+          "ecpmEst": 8.8,
+          "ecpmReal": 8.64,
+          "impressionUsers": 38000,
+          "fillRate": 91.2,
+          "status": "normal"
+        },
+        {
+          "placementName": "Banner_HomeWeather",
+          "adTypeName": "横幅",
+          "sourceName": "Admob",
+          "revenue": 198.4,
+          "impressions": 142000,
+          "ecpmEst": 6.2,
+          "ecpmReal": 6.12,
+          "impressionUsers": 31000,
+          "fillRate": 88.5,
+          "status": "normal"
+        },
+        {
+          "placementName": "WeatherRadar",
+          "adTypeName": "原生",
+          "sourceName": "Admob",
+          "revenue": 165.2,
+          "impressions": 72000,
+          "ecpmEst": 20.1,
+          "ecpmReal": 19.45,
+          "impressionUsers": 28000,
+          "fillRate": 76.2,
+          "status": "low"
+        },
+        {
+          "placementName": "DailyDetail",
+          "adTypeName": "插页式",
+          "sourceName": "AppLovin",
+          "revenue": 112.6,
+          "impressions": 68000,
+          "ecpmEst": 6.0,
+          "ecpmReal": 5.88,
+          "impressionUsers": 22000,
+          "fillRate": 82.4,
+          "status": "low"
+        }
+      ],
+      "donut": [
+        { "name": "Splash", "value": 1451.8, "percent": 51.7 },
+        { "name": "HomeResume", "value": 512.6, "percent": 18.2 },
+        { "name": "Native_AdMainWall", "value": 284.3, "percent": 10.1 },
+        { "name": "Banner_HomeWeather", "value": 198.4, "percent": 7.1 },
+        { "name": "其他", "value": 363.7, "percent": 12.9 }
+      ],
+      "ecpmRanking": [
+        { "name": "WeatherRadar", "ecpm": 19.45 },
+        { "name": "Splash", "ecpm": 19.16 },
+        { "name": "HomeResume", "ecpm": 14.82 },
+        { "name": "Rewarded_LevelUp", "ecpm": 9.22 },
+        { "name": "Native_AdMainWall", "ecpm": 8.64 },
+        { "name": "Interstitial_GameOver", "ecpm": 7.05 },
+        { "name": "DailyDetail", "ecpm": 5.88 },
+        { "name": "AppOpen_ColdStart", "ecpm": 4.02 }
+      ],
+      "placementInsight": "插页式与开屏广告位 ECPM 较高，WeatherRadar 虽 ECPM 领先但充填率偏低，建议检查底价与瀑布配置；横幅类建议控制展示频次避免疲劳。",
+      "scatterData": [
+        { "name": "Splash", "impressions": 280000, "revenue": 1451.8 },
+        { "name": "HomeResume", "impressions": 185000, "revenue": 512.6 },
+        { "name": "Native_AdMainWall", "impressions": 165000, "revenue": 284.3 },
+        { "name": "Banner_HomeWeather", "impressions": 142000, "revenue": 198.4 },
+        { "name": "DailyDetail", "impressions": 68000, "revenue": 112.6 },
+        { "name": "WeatherRadar", "impressions": 72000, "revenue": 165.2 },
+        { "name": "Interstitial_GameOver", "impressions": 52000, "revenue": 86.2 },
+        { "name": "Rewarded_LevelUp", "impressions": 31000, "revenue": 64.5 },
+        { "name": "Native_FeedRow", "impressions": 89000, "revenue": 48.9 },
+        { "name": "Banner_Settings", "impressions": 54000, "revenue": 32.1 }
+      ]
     }
   },
   "api": {
@@ -88,5 +336,12 @@
     "priority": "P0",
     "requestBody": "s_app_id?, platform?, s_country_code?, t_date",
     "responseBody": "IaaPlacementTabData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "donut 可与 top10 同源：前 N 项展开，其余合并为「其他」，percent 合计 100（允许四舍五入误差）。",
+      "tableRows 建议按 revenue 降序，status=low 通常表示 fillRate < 80（与广告单元 Tab 约定一致时可复用）。",
+      "scatterData 与 tableRows 可同源裁剪列，便于联调对照。"
+    ]
   }
 }

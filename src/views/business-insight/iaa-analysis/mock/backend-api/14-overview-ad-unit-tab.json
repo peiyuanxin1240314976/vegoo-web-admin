@@ -26,17 +26,17 @@
       "kpis": {
         "type": "IaaKpiCard[]",
         "required": true,
-        "description": "顶部4个KPI：总数/总收入/平均ECPM/充填率。accent=amber时充填率KPI高亮警告。"
+        "description": "顶部 4 个 KPI：总数/总收入/平均 ECPM/充填率；充填率偏低时 accent=amber。"
       },
       "tableRows": {
         "type": "IaaAdUnitTableRow[]",
         "required": true,
-        "description": "广告单元 Top15 收入表行，含 s_ad_unit_id/placementName/adTypeName/sourceName/revenue/ecpmEst/ecpmReal/impressions/fillRate/status。"
+        "description": "广告单元收入表，建议按 revenue 降序返回前 15 条。"
       },
       "fillRateBuckets": {
         "type": "IaaFillRateBucket[]",
         "required": true,
-        "description": "充填率区间分布，fields: range/count。如 '<70%'/10。"
+        "description": "充填率区间分布，range 枚举固定见 apiSuggestion。"
       },
       "fillRateInsight": {
         "type": "string",
@@ -46,13 +46,62 @@
       "scatterData": {
         "type": "IaaEcpmFillPoint[]",
         "required": true,
-        "description": "ECPM vs 充填率散点，fields: unitId/ecpm/fillRate/adType。"
+        "description": "ECPM vs 充填率散点。"
       },
       "trend7d": {
         "type": "object",
         "required": true,
-        "description": "近7天收入趋势（按 Top 广告单元拆线）。dates: string[], series: {name,color,data}[]。"
+        "description": "近 7 天收入趋势，按 Top 单元拆线。dates 长度 7，series[].data 同长度。"
       }
+    },
+    "IaaKpiCard": {
+      "id": { "type": "string", "required": true, "description": "卡片 ID。" },
+      "title": { "type": "string", "required": true, "description": "标题。" },
+      "primaryValue": { "type": "string", "required": true, "description": "主展示值。" },
+      "subText": { "type": "string", "required": false, "description": "副文案。" },
+      "trendUp": { "type": "boolean", "required": false, "description": "趋势。" },
+      "accent": {
+        "type": "string",
+        "required": false,
+        "enum": ["teal", "blue", "amber", "green", "default"],
+        "description": "强调色。"
+      }
+    },
+    "IaaAdUnitTableRow": {
+      "s_ad_unit_id": { "type": "string", "required": true, "description": "广告单元 ID。" },
+      "placementName": { "type": "string", "required": true, "description": "所属广告位名。" },
+      "adTypeName": { "type": "string", "required": true, "description": "广告类型。" },
+      "sourceName": { "type": "string", "required": true, "description": "广告平台。" },
+      "revenue": { "type": "number", "required": true, "description": "收入（USD）。" },
+      "ecpmEst": { "type": "number", "required": true, "description": "预估 ECPM。" },
+      "ecpmReal": { "type": "number", "required": true, "description": "真实 ECPM。" },
+      "impressions": { "type": "number", "required": true, "description": "展示次数。" },
+      "fillRate": { "type": "number", "required": true, "description": "充填率 0–100。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["normal", "low"],
+        "description": "fillRate < 80 为 low。"
+      }
+    },
+    "IaaFillRateBucket": {
+      "range": { "type": "string", "required": true, "description": "区间标签。" },
+      "count": { "type": "number", "required": true, "description": "该区间单元数量。" }
+    },
+    "IaaEcpmFillPoint": {
+      "unitId": {
+        "type": "string",
+        "required": true,
+        "description": "单元短名或 ID 后缀，用于散点标签。"
+      },
+      "ecpm": { "type": "number", "required": true, "description": "ECPM（USD）。" },
+      "fillRate": { "type": "number", "required": true, "description": "充填率。" },
+      "adType": { "type": "string", "required": true, "description": "广告类型。" }
+    },
+    "IaaAdTypeTrend7dSeries": {
+      "name": { "type": "string", "required": true, "description": "系列名（单元标识）。" },
+      "color": { "type": "string", "required": true, "description": "颜色 HEX。" },
+      "data": { "type": "number[]", "required": true, "description": "7 日数据点。" }
     }
   },
   "sampleRequest": {
@@ -65,10 +114,33 @@
     "data": {
       "kpis": [
         {
-          "id": "1",
+          "id": "au_kpi_1",
           "title": "广告单元总数",
           "primaryValue": "284个",
-          "subText": "已开启256个 | 关闭28个"
+          "subText": "已开启 256 个 | 关闭 28 个",
+          "accent": "default"
+        },
+        {
+          "id": "au_kpi_2",
+          "title": "单元总收入",
+          "primaryValue": "$1,842.60",
+          "subText": "Top15 占 89.4%",
+          "trendUp": true,
+          "accent": "teal"
+        },
+        {
+          "id": "au_kpi_3",
+          "title": "平均 ECPM",
+          "primaryValue": "$8.42",
+          "subText": "预估 / 真实 8.65 / 8.20",
+          "accent": "default"
+        },
+        {
+          "id": "au_kpi_4",
+          "title": "平均充填率",
+          "primaryValue": "88.6%",
+          "subText": "12 个单元 <80%",
+          "accent": "amber"
         }
       ],
       "tableRows": [
@@ -83,17 +155,134 @@
           "impressions": 27335,
           "fillRate": 97.6,
           "status": "normal"
+        },
+        {
+          "s_ad_unit_id": "ca-app-pub-xxx/HomeResume_IS",
+          "placementName": "HomeResume",
+          "adTypeName": "插页式",
+          "sourceName": "Admob",
+          "revenue": 312.4,
+          "ecpmEst": 14.8,
+          "ecpmReal": 14.2,
+          "impressions": 22100,
+          "fillRate": 94.2,
+          "status": "normal"
+        },
+        {
+          "s_ad_unit_id": "fb-xxx/native_main",
+          "placementName": "Native_AdMainWall",
+          "adTypeName": "原生",
+          "sourceName": "Facebook",
+          "revenue": 198.6,
+          "ecpmEst": 6.2,
+          "ecpmReal": 5.95,
+          "impressions": 33400,
+          "fillRate": 90.1,
+          "status": "normal"
+        },
+        {
+          "s_ad_unit_id": "ca-app-pub-xxx/banner_home",
+          "placementName": "Banner_HomeWeather",
+          "adTypeName": "横幅",
+          "sourceName": "Admob",
+          "revenue": 142.8,
+          "ecpmEst": 1.95,
+          "ecpmReal": 1.82,
+          "impressions": 78500,
+          "fillRate": 86.4,
+          "status": "normal"
+        },
+        {
+          "s_ad_unit_id": "al-xxx/interstitial_go",
+          "placementName": "Interstitial_GameOver",
+          "adTypeName": "插页式",
+          "sourceName": "AppLovin",
+          "revenue": 118.2,
+          "ecpmEst": 9.1,
+          "ecpmReal": 8.65,
+          "impressions": 13650,
+          "fillRate": 72.3,
+          "status": "low"
+        },
+        {
+          "s_ad_unit_id": "is-xxx/rewarded_lv",
+          "placementName": "Rewarded_LevelUp",
+          "adTypeName": "激励视频",
+          "sourceName": "IronSource",
+          "revenue": 96.5,
+          "ecpmEst": 22.4,
+          "ecpmReal": 21.1,
+          "impressions": 4320,
+          "fillRate": 68.8,
+          "status": "low"
+        },
+        {
+          "s_ad_unit_id": "ca-app-pub-xxx/appopen_cold",
+          "placementName": "AppOpen_ColdStart",
+          "adTypeName": "开屏",
+          "sourceName": "Admob",
+          "revenue": 84.1,
+          "ecpmEst": 12.6,
+          "ecpmReal": 12.05,
+          "impressions": 6720,
+          "fillRate": 91.7,
+          "status": "normal"
+        },
+        {
+          "s_ad_unit_id": "unity-xxx/banner_settings",
+          "placementName": "Banner_Settings",
+          "adTypeName": "横幅",
+          "sourceName": "Unity",
+          "revenue": 56.3,
+          "ecpmEst": 1.42,
+          "ecpmReal": 1.35,
+          "impressions": 41800,
+          "fillRate": 79.2,
+          "status": "low"
         }
       ],
       "fillRateBuckets": [
         { "range": "<70%", "count": 2 },
+        { "range": "70-80%", "count": 10 },
+        { "range": "80-90%", "count": 45 },
+        { "range": "90-95%", "count": 88 },
         { "range": ">95%", "count": 107 }
       ],
-      "fillRateInsight": "12个单元充填率<80%，建议检查广告位配置",
-      "scatterData": [{ "unitId": "Splash_001", "ecpm": 19.2, "fillRate": 97.6, "adType": "开屏" }],
+      "fillRateInsight": "12 个单元充填率低于 80%，其中激励视频与部分插页集中在 IronSource / AppLovin 瀑布，建议检查底价与并行请求数。",
+      "scatterData": [
+        { "unitId": "Splash_001", "ecpm": 19.2, "fillRate": 97.6, "adType": "开屏" },
+        { "unitId": "HomeResume_IS", "ecpm": 14.8, "fillRate": 94.2, "adType": "插页式" },
+        { "unitId": "native_main", "ecpm": 6.2, "fillRate": 90.1, "adType": "原生" },
+        { "unitId": "banner_home", "ecpm": 1.95, "fillRate": 86.4, "adType": "横幅" },
+        { "unitId": "interstitial_go", "ecpm": 9.1, "fillRate": 72.3, "adType": "插页式" },
+        { "unitId": "rewarded_lv", "ecpm": 22.4, "fillRate": 68.8, "adType": "激励视频" },
+        { "unitId": "appopen_cold", "ecpm": 12.6, "fillRate": 91.7, "adType": "开屏" },
+        { "unitId": "banner_settings", "ecpm": 1.42, "fillRate": 79.2, "adType": "横幅" }
+      ],
       "trend7d": {
-        "dates": ["Feb27", "Mar5"],
-        "series": [{ "name": "Splash_001", "color": "#26C2AD", "data": [480, 488] }]
+        "dates": ["Feb27", "Feb28", "Mar1", "Mar2", "Mar3", "Mar4", "Mar5"],
+        "series": [
+          {
+            "name": "Splash_001",
+            "color": "#26C2AD",
+            "data": [465, 472, 480, 478, 485, 482, 488]
+          },
+          {
+            "name": "HomeResume_IS",
+            "color": "#3B82F6",
+            "data": [298, 302, 305, 308, 310, 311, 312]
+          },
+          {
+            "name": "native_main",
+            "color": "#8B5CF6",
+            "data": [188, 190, 192, 195, 196, 197, 198]
+          },
+          {
+            "name": "interstitial_go",
+            "color": "#F59E0B",
+            "data": [112, 114, 115, 116, 117, 118, 118]
+          }
+        ]
       }
     }
   },
@@ -106,9 +295,10 @@
   },
   "apiSuggestion": {
     "notes": [
-      "tableRows 应按 revenue 降序返回前15条，前端直接展示",
-      "fillRateBuckets 的 range 枚举固定为 ['<70%','70-80%','80-90%','90-95%','>95%']",
-      "status 字段：fillRate < 80 时为 low，否则为 normal"
+      "tableRows 应按 revenue 降序返回前 15 条，前端直接展示。",
+      "fillRateBuckets 的 range 枚举固定为 ['<70%','70-80%','80-90%','90-95%','>95%']，count 之和应等于开启单元数（或与产品约定一致）。",
+      "status：fillRate < 80 时为 low，否则为 normal。",
+      "trend7d.series 建议取当日收入最高的 3～5 个单元，避免折线过多。"
     ]
   }
 }
