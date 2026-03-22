@@ -9,7 +9,7 @@ import {
   fetchMyPerformancePerformanceHistory,
   fetchMyPerformanceRoiTrend,
   fetchMyPerformanceSpendProgress
-} from '@/api/my-performance'
+} from '@/api/user-growth/my-performance'
 import type {
   MyPerformancePageData,
   MyPerformancePeriodType,

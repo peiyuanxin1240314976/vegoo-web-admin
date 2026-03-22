@@ -411,7 +411,7 @@
   import { ElMessage } from 'element-plus'
   import { computed, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import { fetchAdPerformanceCampaignDetailDrawer } from '@/api/ad-performance'
+  import { fetchAdPerformanceCampaignDetailDrawer } from '@/api/user-growth/ad-performance'
   import CampaignTab from './table-tabs/campaign-tab.vue'
   import CountryTab from './table-tabs/country-tab.vue'
   import OwnerTab from './table-tabs/owner-tab.vue'

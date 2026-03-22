@@ -90,6 +90,23 @@ alwaysApply: true
 - **通用类型**: 从 `@/types` 或 `@/types/router`、`@/types/store` 等按需导入。
 - **接口请求**: 使用 `request.get/post/put/delete`（来自 `@/utils/http`），方法命名以 `fetch` 开头，如 `fetchLogin`、`fetchGetUserList`；泛型使用 `Api.*` 类型。
 
+### 用户增长 API 目录拆分（`src/api/user-growth/`）
+
+- **位置**：用户增长相关 `fetch*` 放在 **`src/api/user-growth/`** 目录下，按子业务**分文件**，**不要**再使用单文件 `src/api/user-growth.ts`。
+- **粒度**：**一个子业务对应一个 `*.ts` 文件**，文件名使用 kebab-case，与 `views/user-growth/<子目录>` 或业务语义对齐，例如：
+  - `conversion-management.ts` — 转化管理
+  - `overall-recovery.ts` — 整体回收
+  - `comprehensive-analysis.ts` — 综合分析
+  - `platform-analysis-detail.ts` — 广告平台分析详情（从综合分析钻取）
+  - `alert-management.ts` — 预警管理
+  - `ad-platform-analysis.ts` — 广告平台分析大屏
+  - `my-ads.ts` — 我的广告
+  - `ad-performance.ts` — 广告成效（含广告系列详情分片）
+  - `my-performance.ts` — 我的绩效
+- **聚合入口**：`src/api/user-growth/index.ts` 使用 `export * from './...'` 汇总导出，使 **`import { ... } from '@/api/user-growth'`** 仍解析到该目录的 `index.ts`（与 `views` 下 `user-growth` 模块一一对应）。
+- **按需引用**：只依赖单个子业务时，优先 **`import { ... } from '@/api/user-growth/<文件名>'`**（无 `.ts` 后缀），减少 barrel 耦合、职责更清晰。
+- **路径常量与子模块 config**：若某子业务需要**独立网关前缀**（例如广告成效），在 **`src/views/user-growth/<页面>/config/api-base.ts`**（或同目录 `data-source.ts` 旁）维护常量；`src/api/user-growth/*.ts` 中 `fetch*` 从该 config 引用。**不要**为单个子业务改全局 `analysis-api-base.ts` 而牵连其他模块的 URL。
+
 ## 页面与组件
 
 - **页面入口**: 每个业务模块在 `src/views/<模块>/<页面>/index.vue`，路由 component 配置为路径形式如 `'/system/user'`，对应 `src/views/system/user/index.vue`。
@@ -113,7 +130,7 @@ alwaysApply: true
 
 ## 目录约定
 
-- `src/api`：按业务拆分接口（如 `auth.ts`、`system-manage.ts`）。
+- `src/api`：按业务拆分接口（如 `auth.ts`、`system-manage.ts`）；**用户增长**见上文「用户增长 API 目录拆分」，目录为 `src/api/user-growth/`。
 - `src/store`：Pinia 模块，如 `modules/user`。
 - `src/utils`：公共工具（含 `http`、`table` 等）。
 - `src/types`：全局类型与 API 命名空间；自动生成的导入类型在 `types/import/`。

@@ -9,7 +9,7 @@ import {
   fetchAdPerformanceTableCampaign,
   fetchAdPerformanceTableCountry,
   fetchAdPerformanceTableOwner
-} from '@/api/ad-performance'
+} from '@/api/user-growth/ad-performance'
 import type {
   AdPerformanceAlertItem,
   AdPerformanceFilter,

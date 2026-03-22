@@ -1,6 +1,6 @@
 /**
  * 整体回收页本地 Mock（与 `mock/backend-api` 契约、`types.ts` 一致）
- * 由 `src/api/user-growth.ts` 中整体回收相关方法引用（接入真实接口前）
+ * 由 `src/api/user-growth/overall-recovery.ts` 中整体回收相关方法引用（接入真实接口前）
  */
 import type { OverallRecoveryFilterOptions, OverallTabData, OrganicTabData } from '../types'
 

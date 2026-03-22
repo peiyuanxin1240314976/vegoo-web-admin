@@ -1,6 +1,6 @@
 /**
  * 广告平台分析详情页本地 Mock（与 `types.ts`、`mock/backend-api` 契约一致）
- * 由 `src/api/user-growth.ts` 中 `fetchPlatformAnalysisDetailData` 引用（接入真实接口前）
+ * 由 `src/api/user-growth/platform-analysis-detail.ts` 中 `fetchPlatformAnalysisDetailData` 引用（接入真实接口前）
  */
 import type { CountryRow, PlatformAnalysisDetailData, PlatformRow } from '../types'
 
