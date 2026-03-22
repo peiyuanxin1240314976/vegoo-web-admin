@@ -76,7 +76,7 @@
     fetchCampaignDetailAiInsights,
     fetchCampaignDetailCreativeTop5,
     fetchCampaignDetailOverview
-  } from '@/api/ad-performance'
+  } from '@/api/user-growth/ad-performance'
   import CampaignInfoCards from './modules/campaign-info-cards.vue'
   import CampaignCoreTrend from './modules/campaign-core-trend.vue'
   import CampaignAdList from './modules/campaign-ad-list.vue'

@@ -43,4 +43,6 @@ pnpm serve
 
 使用 Mock 开发时，须在 **`src/api`** 按契约写好真实 **`fetch*`**，并在**该业务模块目录下**的 **`config/`** 中为每个接口配置 mock/remote 开关（禁止把仅本模块用的开关散落在无归属位置）。详见 [`.cursor/rules/module-api-mock-config.mdc`](.cursor/rules/module-api-mock-config.mdc)。
 
+**用户增长**：`fetch*` 按子业务拆在 **`src/api/user-growth/`** 下（一子模块一文件），由 **`index.ts`** 聚合；按需也可 `import` 子路径如 `@/api/user-growth/ad-performance`。约定见 [`.cursor/rules/project-conventions.mdc`](.cursor/rules/project-conventions.mdc) 中「用户增长 API 目录拆分」。
+
 **默认值**：各业务 mock/remote 的默认取值写在**该小模块**的 **`config/`** 内（常量或导出配置），**不要**在仓库根目录的 **`.env` / `.env.development`** 里为单个业务模块增加 `VITE_*` 数据源类开关，以免环境文件与模块归属脱节；开发机临时切换可在该模块 `config` 内扩展 **localStorage** 等（商业洞察示例：`iap-analysis/config/data-source.ts`、`iaa-analysis/config/data-source.ts`）。

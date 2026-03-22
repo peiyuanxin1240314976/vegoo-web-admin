@@ -2,7 +2,7 @@
  * 我的绩效 - 数据源开关（小模块内 config，与 `mock/backend-api` 契约 1:1）
  *
  * - `true` = 使用本地 Mock（`views/user-growth/my-performance/mock/my-performance-api-mock.ts`）
- * - `false` = 走真实 HTTP（`src/api/my-performance.ts` 内 `MY_PERFORMANCE_BASE`）
+ * - `false` = 走真实 HTTP（`src/api/user-growth/my-performance.ts` 内 `MY_PERFORMANCE_BASE`）
  *
  * 默认全部为 `false`，统一走线上 HTTP；本地调试可将对应项改为 `true`。
  */

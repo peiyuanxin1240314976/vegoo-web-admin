@@ -1,6 +1,6 @@
 /**
  * 综合分析页本地 Mock（与 `mock/backend-api` 契约、`types.ts` 一致）
- * 由 `src/api/user-growth.ts` 中综合分析相关方法引用（接入真实接口前）
+ * 由 `src/api/user-growth/comprehensive-analysis.ts` 中综合分析相关方法引用（接入真实接口前）
  */
 import type {
   ComprehensiveAnalysisApiParams,

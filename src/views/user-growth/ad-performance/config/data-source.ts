@@ -2,7 +2,7 @@
  * 广告成效 - 数据源开关（小模块内 config，与 `mock/backend-api` 契约 1:1）
  *
  * - `true` = 本地 Mock（`mock/ad-performance-api-mock.ts`）
- * - `false` = 真实 HTTP（`src/api/ad-performance.ts`）
+ * - `false` = 真实 HTTP（`src/api/user-growth/ad-performance.ts`）
  *
  * `true` = Mock；`false` = HTTP。无后端时可将对应项改回 `true`。
  */

@@ -2,7 +2,10 @@
  * 用户增长 - 广告成效 API（Mock / 远程由 `views/user-growth/ad-performance/config/data-source` 切换）
  */
 import request from '@/utils/http'
-import { ANALYSIS_API_BASE, ANALYSIS_API_MIDDLE_PREFIX } from '@/api/analysis-api-base'
+import {
+  AD_PERFORMANCE_BASE,
+  AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE
+} from '@/views/user-growth/ad-performance/config/api-base'
 import {
   AdPerformanceCampaignDetailEndpoint,
   AdPerformanceEndpoint,
@@ -33,10 +36,8 @@ import type {
   CampaignDetailOverviewResponse
 } from '@/views/user-growth/ad-performance/campaign-detail/types'
 
-/** 中间段见 `ANALYSIS_API_MIDDLE_PREFIX` */
-export const AD_PERFORMANCE_BASE = `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PREFIX}/ad-performance`
-
-export const AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE = `${AD_PERFORMANCE_BASE}/campaign-detail`
+/** 再导出便于其它文件引用（实际定义见 `ad-performance/config/api-base`） */
+export { AD_PERFORMANCE_BASE, AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE }
 
 function filterBody(f: AdPerformanceFilter) {
   return {
