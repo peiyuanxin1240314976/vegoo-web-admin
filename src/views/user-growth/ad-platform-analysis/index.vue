@@ -10,7 +10,20 @@
     >
       <!-- 顶栏：日期 + 筛选 + 导出（常驻，不随数据骨架整页隐藏） -->
       <header class="finance-header">
-        <div class="header-left">{{ currentTime }}</div>
+        <div class="header-left">
+          <ElDatePicker
+            v-model="dateRange"
+            type="daterange"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
+            class="aps-date-picker"
+            :teleported="false"
+            popper-class="aps-filter-popper"
+          />
+        </div>
         <div class="header-right">
           <div class="header-filters">
             <el-select
@@ -384,13 +397,16 @@
     scale.value = w / designWidth
   }
 
-  const currentTime = ref('')
-  const updateTime = () => {
+  function getDefaultDateRange(): [string, string] {
     const now = getAppNow()
-    const week = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][now.getDay()]
-    currentTime.value = `今天${week}, ${now.getFullYear()}年${String(now.getMonth() + 1).padStart(2, '0')}月${String(now.getDate()).padStart(2, '0')}日`
+    const end = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    const startDate = new Date(now)
+    startDate.setDate(startDate.getDate() - 29)
+    const start = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`
+    return [start, end]
   }
-  let timeTimer: ReturnType<typeof setInterval> | null = null
+
+  const dateRange = ref<[string, string]>(getDefaultDateRange())
 
   const channelKpiCards = ref<ChannelKpiCard[]>([])
 
@@ -546,11 +562,13 @@
     const ck = f.channelKey
     const source = ck == null || String(ck).trim() === '' || ck === 'all' ? '' : String(ck).trim()
 
+    const [dateStart = '', dateEnd = ''] = dateRange.value ?? []
+
     return {
       appId,
       currentPage: 0,
-      dateEnd: '',
-      dateStart: '',
+      dateEnd,
+      dateStart,
       groupBy: '',
       pageSize: 0,
       platform,
@@ -1517,8 +1535,6 @@
 
   onMounted(() => {
     updateScale()
-    updateTime()
-    timeTimer = setInterval(updateTime, 1000)
     if (rootRef.value) {
       resizeObserver = new ResizeObserver(() => updateScale())
       resizeObserver.observe(rootRef.value)
@@ -1536,7 +1552,7 @@
   })
 
   watch(
-    () => [filters.value.app, filters.value.platform, filters.value.channelKey],
+    () => [filters.value.app, filters.value.platform, filters.value.channelKey, dateRange.value],
     () => {
       currentPage.value = 1
       void loadKpiCards()
@@ -1548,7 +1564,6 @@
   )
 
   onUnmounted(() => {
-    if (timeTimer) clearInterval(timeTimer)
     if (resizeObserver && rootRef.value) {
       resizeObserver.unobserve(rootRef.value)
       resizeObserver = null
@@ -1861,6 +1876,33 @@
       sans-serif;
     font-size: 14px;
     color: $color-text-axure;
+
+    :deep(.aps-date-picker) {
+      width: 240px;
+
+      .el-range-editor {
+        min-height: 36px;
+        padding: 0 10px;
+        color: $color-text-axure;
+        background: $color-slate-700;
+        border: 1px solid $color-slate-700;
+        border-radius: 12px;
+        box-shadow: none;
+      }
+
+      .el-range-input {
+        color: $color-text-axure;
+      }
+
+      .el-range-separator {
+        color: $color-text-axure;
+      }
+
+      .el-range__icon,
+      .el-range__close-icon {
+        color: $color-text-axure;
+      }
+    }
   }
 
   .header-right {
