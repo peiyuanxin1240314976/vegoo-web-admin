@@ -4,7 +4,7 @@
  * - `IaaAnalysisEndpoint`：每个 `fetchIaa*` 一个枚举值。
  * - `true` = Mock；`false` = 走 HTTP
  *
- * 当前默认全部为 `true`（IAA 走 Mock）；联调远程时把对应项改为 `false`。
+ * 当前默认全部为 `false`（走线上 HTTP）；本地只 Mock 某接口时把对应项改为 `true`。
  *
  * 说明：契约 03～10 为细粒度文档，当前实现为 Tab 聚合接口（11～16 对应各 `overview/*-tab`），无单独 fetch。
  */
@@ -30,15 +30,15 @@ export enum IaaAnalysisEndpoint {
 }
 
 export const IAA_ANALYSIS_USE_MOCK: Record<IaaAnalysisEndpoint, boolean> = {
-  [IaaAnalysisEndpoint.MetaFilterOptions]: true,
-  [IaaAnalysisEndpoint.OverviewKpi]: true,
-  [IaaAnalysisEndpoint.TableAdPlatform]: true,
-  [IaaAnalysisEndpoint.AdTypeTab]: true,
+  [IaaAnalysisEndpoint.MetaFilterOptions]: false,
+  [IaaAnalysisEndpoint.OverviewKpi]: false,
+  [IaaAnalysisEndpoint.TableAdPlatform]: false,
+  [IaaAnalysisEndpoint.AdTypeTab]: false,
   [IaaAnalysisEndpoint.PlatformTab]: true,
-  [IaaAnalysisEndpoint.PlacementTab]: true,
-  [IaaAnalysisEndpoint.AdUnitTab]: true,
-  [IaaAnalysisEndpoint.CountryTab]: true,
-  [IaaAnalysisEndpoint.VersionTab]: true
+  [IaaAnalysisEndpoint.PlacementTab]: false,
+  [IaaAnalysisEndpoint.AdUnitTab]: false,
+  [IaaAnalysisEndpoint.CountryTab]: false,
+  [IaaAnalysisEndpoint.VersionTab]: false
 }
 
 export function isIaaAnalysisEndpointMock(endpoint: IaaAnalysisEndpoint): boolean {

@@ -47,8 +47,8 @@
               </span>
             </template>
             <template #variance="{ row }">
-              <span class="iaa-variance" :class="row.variance > 0 ? 'up' : 'down'">
-                {{ row.variance > 0 ? '+' : '' }}{{ row.variance }}%
+              <span class="iaa-variance" :class="(row.variance ?? 0) > 0 ? 'up' : 'down'">
+                {{ (row.variance ?? 0) > 0 ? '+' : '' }}{{ row.variance ?? 0 }}%
               </span>
             </template>
           </ArtTable>
@@ -69,7 +69,7 @@
               <div v-for="(item, i) in donutData" :key="item.name" class="iaa-donut-legend__item">
                 <span class="iaa-donut-legend__dot" :style="{ background: DONUT_COLORS[i] }" />
                 <span class="iaa-donut-legend__name">{{ item.name }}</span>
-                <span class="iaa-donut-legend__pct">{{ item.percent.toFixed(1) }}%</span>
+                <span class="iaa-donut-legend__pct">{{ (item.percent ?? 0).toFixed(1) }}%</span>
               </div>
             </div>
           </div>
@@ -115,9 +115,14 @@
   const DONUT_COLORS = PLATFORM_COLORS
 
   const donutTotal = computed(() => {
-    const total = donutData.value.reduce((s, d) => s + d.value, 0)
+    const total = donutData.value.reduce((s, d) => s + Number(d.value ?? 0), 0)
     return `$${total.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
   })
+
+  const n = (v: unknown, fallback = 0) => {
+    const x = Number(v)
+    return Number.isFinite(x) ? x : fallback
+  }
 
   const tableColumns = computed<ColumnOption[]>(() => [
     { prop: 'sourceName', label: '平台', minWidth: 90 },
@@ -125,56 +130,56 @@
       prop: 'revenue',
       label: '广告收入',
       minWidth: 96,
-      formatter: (row: IaaPlatformTableRow) => `$${row.revenue.toFixed(2)}`
+      formatter: (row: IaaPlatformTableRow) => `$${n(row.revenue).toFixed(2)}`
     },
     {
       prop: 'revenueShare',
       label: '占比',
       minWidth: 60,
-      formatter: (row: IaaPlatformTableRow) => `${row.revenueShare}%`
+      formatter: (row: IaaPlatformTableRow) => `${n(row.revenueShare)}%`
     },
     {
       prop: 'impressions',
       label: '展示次数',
       minWidth: 90,
-      formatter: (row: IaaPlatformTableRow) => row.impressions.toLocaleString()
+      formatter: (row: IaaPlatformTableRow) => n(row.impressions).toLocaleString()
     },
     {
       prop: 'impressionShare',
       label: '展示占比',
       minWidth: 74,
-      formatter: (row: IaaPlatformTableRow) => `${row.impressionShare}%`
+      formatter: (row: IaaPlatformTableRow) => `${n(row.impressionShare)}%`
     },
     {
       prop: 'adUsers',
       label: '广告用户',
       minWidth: 80,
-      formatter: (row: IaaPlatformTableRow) => row.adUsers.toLocaleString()
+      formatter: (row: IaaPlatformTableRow) => n(row.adUsers).toLocaleString()
     },
     {
       prop: 'userShare',
       label: '用户占比',
       minWidth: 70,
-      formatter: (row: IaaPlatformTableRow) => `${row.userShare}%`
+      formatter: (row: IaaPlatformTableRow) => `${n(row.userShare)}%`
     },
     {
       prop: 'ecpmEst',
       label: 'ECPM(预)',
       minWidth: 80,
-      formatter: (row: IaaPlatformTableRow) => row.ecpmEst.toFixed(2)
+      formatter: (row: IaaPlatformTableRow) => n(row.ecpmEst).toFixed(2)
     },
     {
       prop: 'ecpmReal',
       label: 'ECPM(真)',
       minWidth: 80,
-      formatter: (row: IaaPlatformTableRow) => row.ecpmReal.toFixed(2)
+      formatter: (row: IaaPlatformTableRow) => n(row.ecpmReal).toFixed(2)
     },
     { prop: 'variance', label: '偏差', minWidth: 68, useSlot: true, slotName: 'variance' },
     {
       prop: 'fillRate',
       label: '充填率',
       minWidth: 70,
-      formatter: (row: IaaPlatformTableRow) => `${row.fillRate}%`
+      formatter: (row: IaaPlatformTableRow) => `${n(row.fillRate)}%`
     },
     { prop: 'trend', label: '趋势', minWidth: 56, useSlot: true, slotName: 'trend' }
   ])
@@ -192,7 +197,7 @@
     const rows = tabData.value?.platformRanking ?? []
     const names = rows.map((r) => r.sourceName)
     const revenues = rows.map((r) => r.revenue)
-    const ecpms = rows.map((r) => r.ecpm.toFixed(2))
+    const ecpms = rows.map((r) => n(r.ecpm).toFixed(2))
     return {
       backgroundColor: 'transparent',
       grid: { left: 48, right: 16, top: 32, bottom: 52 },
@@ -350,7 +355,9 @@
   }
 
   function buildTrendOption(): EChartsOption {
-    const { dates, series } = tabData.value?.trend7d ?? { dates: [], series: [] }
+    const trend = tabData.value?.trend7d
+    const dates = trend?.dates ?? []
+    const series = trend?.series ?? []
     return {
       backgroundColor: 'transparent',
       grid: { left: 32, right: 16, top: 40, bottom: 20, containLabel: true },
