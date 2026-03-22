@@ -7,7 +7,7 @@ export interface SelectOption {
 
 export interface ComprehensiveAnalysisFilterOptions {
   appOptions: SelectOption[]
-  adPlatformOptions: SelectOption[]
+  sourceOptions: SelectOption[]
   countryOptions: SelectOption[]
 }
 

@@ -26,19 +26,14 @@ export class ComponentLoader {
       return this.createEmptyComponent()
     }
 
-    // 统一为正斜杠，避免 Windows 下 glob 键与拼接结果不一致
-    const normalized = componentPath.replace(/\\/g, '/')
-    const fullPath = `../../views${normalized}.vue`
-    const fullPathWithIndex = `../../views${normalized}/index.vue`
-
-    // 先尝试直接路径，再尝试添加/index的路径；兼容 glob 可能返回的多种路径形式
-    const module =
-      this.modules[fullPath] ||
-      this.modules[fullPathWithIndex] ||
-      this.modules[fullPath.replace(/\//g, '\\')] ||
-      this.modules[fullPathWithIndex.replace(/\//g, '\\')]
+    // 统一为正斜杠；保证以 / 开头，避免拼成 ../../viewsxxx.vue 导致精确键匹配失败
+    const trimmed = componentPath.replace(/\\/g, '/').trim()
+    const normalized = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+    const module = this.resolveViewModule(normalized)
 
     if (!module) {
+      const fullPath = `../../views${normalized}.vue`
+      const fullPathWithIndex = `../../views${normalized}/index.vue`
       console.error(
         `[ComponentLoader] 未找到组件: ${componentPath}，尝试过的路径: ${fullPath} 和 ${fullPathWithIndex}`
       )
@@ -46,6 +41,32 @@ export class ComponentLoader {
     }
 
     return module
+  }
+
+  /**
+   * 按约定路径解析 glob 中的视图模块；先精确键名，再按 `views/...` 后缀匹配（兼容 Vite 在不同系统下生成的键差异）
+   */
+  private resolveViewModule(normalized: string): (() => Promise<any>) | undefined {
+    const fullPath = `../../views${normalized}.vue`
+    const fullPathWithIndex = `../../views${normalized}/index.vue`
+    const direct =
+      this.modules[fullPath] ||
+      this.modules[fullPathWithIndex] ||
+      this.modules[fullPath.replace(/\//g, '\\')] ||
+      this.modules[fullPathWithIndex.replace(/\//g, '\\')]
+    if (direct) return direct
+
+    const rel = normalized.replace(/^\//, '')
+    if (!rel) return undefined
+    const indexSuffix = `${rel}/index.vue`
+    const vueSuffix = `${rel}.vue`
+    for (const key of Object.keys(this.modules)) {
+      const k = key.replace(/\\/g, '/')
+      if (k.endsWith(indexSuffix) || k.endsWith(vueSuffix)) {
+        return this.modules[key]
+      }
+    }
+    return undefined
   }
 
   /**

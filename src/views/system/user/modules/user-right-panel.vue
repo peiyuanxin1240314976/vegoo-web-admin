@@ -9,6 +9,7 @@
         </template>
         <div class="user-info">
           <div class="user-name">{{ user.userName }}</div>
+          <div v-if="user.nickName" class="user-nick">昵称：{{ user.nickName }}</div>
           <div class="user-email">{{ user.userEmail }}</div>
           <div class="user-meta">
             <span class="status-dot" :class="statusDotClass"></span>
@@ -128,7 +129,7 @@
   })
 
   const statusMap: Record<string, { text: string; dot: string }> = {
-    '1': { text: '活跃', dot: 'active' },
+    '1': { text: '在线', dot: 'active' },
     '2': { text: '离线', dot: 'offline' },
     '3': { text: '异常', dot: 'warning' },
     '4': { text: '已禁用', dot: 'disabled' }
@@ -146,8 +147,8 @@
     (u) => {
       if (u) {
         form.value.role = u.userRoles?.[0] ?? ''
-        form.value.apps = ['Weather1', 'Weather2'] // 示例，后续可来自接口
-        form.value.remark = ''
+        form.value.apps = u.accessibleApps?.length ? [...u.accessibleApps] : []
+        form.value.remark = u.remark ?? ''
       } else {
         form.value = { role: '', apps: [], remark: '' }
       }
@@ -198,6 +199,12 @@
       margin-bottom: 4px;
       font-size: 15px;
       font-weight: 500;
+    }
+
+    .user-nick {
+      margin-bottom: 4px;
+      font-size: 13px;
+      color: var(--el-text-color-secondary);
     }
 
     .user-email {

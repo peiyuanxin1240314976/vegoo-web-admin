@@ -2,10 +2,12 @@
   <el-dialog
     v-model="dialogVisible"
     title="删除应用"
-    class="app-delete-dialog"
     width="520px"
     :close-on-click-modal="false"
     align-center
+    header-class="app-delete-dialog-hd"
+    body-class="app-delete-dialog-bd"
+    footer-class="app-delete-dialog-ft"
   >
     <div class="delete-body">
       <!-- 警告图标 -->
@@ -119,59 +121,50 @@
 </script>
 
 <style lang="scss">
-  // ─── 全局覆盖（非 scoped） ─────────────────────────────
-  .app-delete-dialog {
-    --bg-dialog: #131c2e;
-    --bg-inner: #0f1829;
-    --border: rgb(255 255 255 / 8%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #2dd4bf;
-    --amber: #f59e0b;
-    --android-green: #22c55e;
-    --ios-blue: #60a5fa;
-    --red: #ef4444;
-    --red-dim: rgb(239 68 68 / 15%);
+  /*
+   * ElDialog teleport 到 body 时，外层 class 往往挂不到 .el-dialog 根上；
+   * 用 header/body/footer class + :has 命中本弹窗；配色见 config-management-dialog.scss。
+   */
+  .el-dialog:has(.app-delete-dialog-bd) {
+    overflow: hidden;
+    background: var(--cm-dialog-bg-inner) !important;
+    border: 1px solid var(--cm-dialog-border);
+    border-radius: 14px !important;
+    box-shadow: var(--cm-dialog-shadow-lg) !important;
+  }
 
-    .el-dialog {
-      overflow: hidden;
-      background: var(--bg-dialog) !important;
-      border: 1px solid var(--border);
-      border-radius: 14px !important;
-      box-shadow: 0 32px 80px rgb(0 0 0 / 65%) !important;
+  .el-dialog:has(.app-delete-dialog-bd) .el-dialog__header.app-delete-dialog-hd {
+    padding: 18px 24px 16px;
+    margin: 0;
+    background: var(--cm-dialog-bg-inner);
+    border-bottom: 1px solid var(--cm-dialog-border);
+    border-radius: 14px 14px 0 0;
+  }
+
+  .el-dialog:has(.app-delete-dialog-bd) .el-dialog__title {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--cm-dialog-text-primary) !important;
+  }
+
+  .el-dialog:has(.app-delete-dialog-bd) .el-dialog__headerbtn .el-icon {
+    color: var(--cm-dialog-text-muted) !important;
+
+    &:hover {
+      color: var(--cm-dialog-text-primary) !important;
     }
+  }
 
-    .el-dialog__header {
-      padding: 18px 24px 16px;
-      margin: 0;
-      background: var(--bg-inner);
-      border-bottom: 1px solid var(--border);
-    }
+  .el-dialog:has(.app-delete-dialog-bd) .el-dialog__body.app-delete-dialog-bd {
+    padding: 0 !important;
+    background: var(--cm-dialog-bg-inner);
+  }
 
-    .el-dialog__title {
-      font-size: 15px !important;
-      font-weight: 600 !important;
-      color: var(--text-primary) !important;
-    }
-
-    .el-dialog__headerbtn .el-icon {
-      color: var(--text-muted) !important;
-
-      &:hover {
-        color: var(--text-primary) !important;
-      }
-    }
-
-    .el-dialog__body {
-      padding: 0 !important;
-    }
-
-    .el-dialog__footer {
-      padding: 0 !important;
-      background: var(--bg-inner);
-      border-top: 1px solid var(--border);
-    }
+  .el-dialog:has(.app-delete-dialog-bd) .el-dialog__footer.app-delete-dialog-ft {
+    padding: 0 !important;
+    background: var(--cm-dialog-bg-inner);
+    border-top: 1px solid var(--cm-dialog-border);
+    border-radius: 0 0 14px 14px;
   }
 </style>
 

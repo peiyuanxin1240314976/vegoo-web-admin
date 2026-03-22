@@ -1,0 +1,41 @@
+{
+  "_comment": "优化师管理 - 页头 KPI。独立聚合，与列表分页无关。对应 Api.ConfigManagement.Optimizer.OverviewResponse。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "data": {
+        "type": "OverviewResponse",
+        "required": true,
+        "description": "若网关统一包裹则为 data 内字段；否则响应体即下述对象。"
+      }
+    },
+    "OverviewResponse": {
+      "total": { "type": "number", "required": true, "description": "优化师总数。" },
+      "active": { "type": "number", "required": true, "description": "在职人数。" },
+      "avgMinConsumption": {
+        "type": "number",
+        "required": true,
+        "description": "在职人员最低消耗要求均值（美元）。"
+      },
+      "monthNew": {
+        "type": "number",
+        "required": true,
+        "description": "本月新增人数（按创建时间所在自然月）。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "total": 12,
+    "active": 10,
+    "avgMinConsumption": 856,
+    "monthNew": 2
+  },
+  "api": {
+    "url": "POST /api/config-management/optimizer/overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "空对象或无需 body",
+    "responseBody": "OverviewResponse"
+  }
+}

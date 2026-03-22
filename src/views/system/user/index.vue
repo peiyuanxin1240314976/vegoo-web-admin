@@ -55,7 +55,6 @@
 
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import { ACCOUNT_TABLE_DATA } from '@/mock/temp/formData'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchGetUserList } from '@/api/system-manage'
   import UserLeftPanel from './modules/user-left-panel.vue'
@@ -90,13 +89,33 @@
     status: undefined
   })
 
-  // 用户状态配置
+  /** 列表状态标签（与 Api.SystemManage.UserListItem.status 约定一致） */
   const USER_STATUS_CONFIG = {
     '1': { type: 'success' as const, text: '在线' },
     '2': { type: 'info' as const, text: '离线' },
     '3': { type: 'warning' as const, text: '异常' },
-    '4': { type: 'danger' as const, text: '注销' }
+    '4': { type: 'danger' as const, text: '已禁用' }
   } as const
+
+  /** 无头像或空 URL 时使用 SVG 占位（不发起网络请求） */
+  const USER_AVATAR_PLACEHOLDER =
+    'data:image/svg+xml,' +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">' +
+        '<rect width="80" height="80" rx="10" fill="#E4E4E7"/>' +
+        '<circle cx="40" cy="32" r="14" fill="#A1A1AA"/>' +
+        '<ellipse cx="40" cy="72" rx="26" ry="18" fill="#A1A1AA"/>' +
+        '</svg>'
+    )
+
+  function resolveUserAvatarUrl(avatar?: string | null): string {
+    const u = avatar?.trim()
+    return u && u.length > 0 ? u : USER_AVATAR_PLACEHOLDER
+  }
+
+  function hasRealUserAvatar(avatar?: string | null): boolean {
+    return Boolean(avatar?.trim())
+  }
 
   /**
    * 获取用户状态配置
@@ -145,13 +164,14 @@
           width: 280,
           // visible: false, // 默认是否显示列
           formatter: (row) => {
+            const src = resolveUserAvatarUrl(row.avatar)
             return h('div', { class: 'user flex-c' }, [
               h(ElImage, {
                 class: 'size-9.5 rounded-md',
-                src: row.avatar,
-                previewSrcList: [row.avatar],
-                // 图片预览是否插入至 body 元素上，用于解决表格内部图片预览样式异常
-                previewTeleported: true
+                src,
+                previewSrcList: hasRealUserAvatar(row.avatar) ? [row.avatar!.trim()] : [src],
+                previewTeleported: true,
+                fit: 'cover'
               }),
               h('div', { class: 'ml-2' }, [
                 h('p', { class: 'user-name' }, row.userName),
@@ -159,6 +179,13 @@
               ])
             ])
           }
+        },
+        {
+          prop: 'nickName',
+          label: '昵称',
+          width: 100,
+          showOverflowTooltip: true,
+          formatter: (row) => row.nickName || '—'
         },
         {
           prop: 'userGender',
@@ -198,29 +225,12 @@
             ])
         }
       ]
-    },
-    // 数据处理
-    transform: {
-      // 数据转换器 - 替换头像
-      dataTransformer: (records) => {
-        // 类型守卫检查
-        if (!Array.isArray(records)) {
-          console.warn('数据转换器: 期望数组类型，实际收到:', typeof records)
-          return []
-        }
-
-        // 使用本地头像替换接口返回的头像
-        return records.map((item, index: number) => {
-          return {
-            ...item,
-            avatar: ACCOUNT_TABLE_DATA[index % ACCOUNT_TABLE_DATA.length].avatar
-          }
-        })
-      }
     }
   })
 
-  // 用户统计（左侧面板展示，可与接口对齐后改为接口数据）
+  /**
+   * 用户统计：total 为服务端分页总数；其余三项为「当前页」条数（与接口未返回全局分布时对齐）
+   */
   const userStats = computed<UserStats>(() => {
     const list = data?.value ?? []
     const totalCount = pagination?.total ?? 0
@@ -240,10 +250,12 @@
     Object.assign(searchParams, {
       userName: params.userName,
       status: params.status
-      // role 若接口支持可在此传入
     })
+    const sp = searchParams as Record<string, unknown>
     if (params.role != null && params.role !== '') {
-      Object.assign(searchParams, { role: params.role })
+      sp.role = params.role
+    } else {
+      delete sp.role
     }
     getData()
   }
@@ -274,12 +286,12 @@
    */
   const deleteUser = (row: UserListItem): void => {
     console.log('删除用户:', row)
-    ElMessageBox.confirm(`确定要注销该用户吗？`, '注销用户', {
+    ElMessageBox.confirm(`确定要禁用该用户吗？`, '禁用用户', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'error'
     }).then(() => {
-      ElMessage.success('注销成功')
+      ElMessage.success('已禁用')
     })
   }
 

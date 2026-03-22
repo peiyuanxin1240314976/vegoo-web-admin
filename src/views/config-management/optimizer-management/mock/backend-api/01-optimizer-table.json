@@ -1,0 +1,88 @@
+{
+  "_comment": "优化师管理 - 分页列表。对应 types.ts: OptimizerTableQuery / OptimizerItem；Api.ConfigManagement.Optimizer.ListItem。",
+  "fieldDescription": {
+    "request": {
+      "current": { "type": "number", "required": true, "description": "当前页，从 1 开始。" },
+      "size": {
+        "type": "number",
+        "required": true,
+        "description": "每页条数；前端「全部」时用上限（如 5000）由网关约定。"
+      },
+      "keyword": { "type": "string", "required": false, "description": "名称或代号模糊搜索。" },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["在职", "离职"],
+        "description": "状态筛选。"
+      }
+    },
+    "response": {
+      "records": { "type": "ListItem[]", "required": true, "description": "当前页数据。" },
+      "current": { "type": "number", "required": true, "description": "当前页码。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" },
+      "total": { "type": "number", "required": true, "description": "总条数。" }
+    },
+    "ListItem": {
+      "id": { "type": "string", "required": true, "description": "优化师业务主键。" },
+      "no": { "type": "number", "required": true, "description": "展示序号。" },
+      "userId": { "type": "string", "required": true, "description": "关联系统用户 ID。" },
+      "userName": { "type": "string", "required": true, "description": "展示名称。" },
+      "email": { "type": "string", "required": true, "description": "邮箱。" },
+      "avatarColor": {
+        "type": "string",
+        "required": true,
+        "description": "头像底色 HEX，前端渲染首字。"
+      },
+      "version": { "type": "number", "required": true, "description": "版本号，展示 v{n}。" },
+      "sCode": { "type": "string", "required": true, "description": "代号，对应业务 s_code。" },
+      "sCode2": { "type": "string", "required": false, "description": "副代号。" },
+      "minConsumption": {
+        "type": "number",
+        "required": true,
+        "description": "最低消耗要求（美元）。"
+      },
+      "checkCode": { "type": "string", "required": true, "description": "检验码，最长 200 字符。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["在职", "离职"],
+        "description": "状态。"
+      },
+      "apps": {
+        "type": "string[]",
+        "required": true,
+        "description": "负责应用名称列表（详情展示）。"
+      },
+      "recentLogs": {
+        "type": "OperationLogItem[]",
+        "required": true,
+        "description": "最近操作摘要。"
+      },
+      "createTime": {
+        "type": "string",
+        "required": true,
+        "description": "创建日期或时间，ISO 或 YYYY-MM-DD。"
+      },
+      "lastModifyTime": { "type": "string", "required": false, "description": "最后修改时间。" }
+    },
+    "OperationLogItem": {
+      "id": { "type": "string", "required": true, "description": "日志项 ID。" },
+      "timeLabel": { "type": "string", "required": true, "description": "展示用时间文案。" },
+      "content": { "type": "string", "required": true, "description": "摘要内容。" }
+    }
+  },
+  "sampleRequest": { "current": 1, "size": 20, "keyword": "", "status": "在职" },
+  "sampleResponse": {
+    "records": [],
+    "current": 1,
+    "size": 20,
+    "total": 0
+  },
+  "api": {
+    "url": "POST /api/config-management/optimizer/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "current, size, keyword?, status?",
+    "responseBody": "Api.Common.PaginatedResponse<Api.ConfigManagement.Optimizer.ListItem>"
+  }
+}

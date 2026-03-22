@@ -34,6 +34,30 @@ export type ApplicationFormPayload = Partial<ApplicationAppItem> & {
   category: string
   id: string
   bundleId: string
+  /** 列表色块；未上传图标时由 id 派生 */
+  iconColor?: string
+}
+
+/** 由应用 ID 生成稳定色值（HSL），用于列表首字母色块 */
+export function deriveIconColorFromId(id: string): string {
+  let h = 0
+  for (let i = 0; i < id.length; i++) {
+    h = id.charCodeAt(i) + ((h << 5) - h)
+  }
+  const hue = Math.abs(h) % 360
+  return `hsl(${hue} 42% 46%)`
+}
+
+/** 列表查询（与 table 接口对齐） */
+export interface ApplicationTableQuery {
+  current: number
+  size: number
+  keyword?: string
+  category?: string
+  /** 终端平台：Android / iOS */
+  platform?: string
+  status?: string
+  creator?: string
 }
 
 /** 表单内部模型（与 ElForm 绑定） */

@@ -1,0 +1,10 @@
+// 配置管理模块 · 深色 ElDialog 公共配色（teleport 到 body 的弹窗）
+// 使用说明见：.cursor/rules/config-management-dialog.mdc
+:root {
+  --cm-dialog-bg-inner: #0f1829;
+  --cm-dialog-border: rgb(255 255 255 / 10%);
+  --cm-dialog-text-primary: #e2e8f0;
+  --cm-dialog-text-muted: #64748b;
+  --cm-dialog-shadow: 0 24px 80px rgb(0 0 0 / 55%);
+  --cm-dialog-shadow-lg: 0 32px 80px rgb(0 0 0 / 55%);
+}

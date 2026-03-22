@@ -1,0 +1,78 @@
+---
+description: 配置管理模块深色 ElDialog 弹窗：teleport 写法、公共 CSS 变量与类名约定
+globs: src/views/config-management/**/*.vue,src/assets/styles/core/config-management-dialog.scss
+alwaysApply: false
+---
+
+# 配置管理 · 深色弹窗（公共配色与结构）
+
+## 公共变量（全局）
+
+弹窗背景、边框、文字与阴影使用 **`src/assets/styles/core/config-management-dialog.scss`** 在 `:root` 中定义的变量，**不要**在各弹窗内重复写死 `#0f1829` 等色值。
+
+| 变量 | 用途 |
+|------|------|
+| `var(--cm-dialog-bg-inner)` | 弹窗外壳、header、body、footer 背景 |
+| `var(--cm-dialog-border)` | 外框与头尾分隔线 |
+| `var(--cm-dialog-text-primary)` | 标题主文字 |
+| `var(--cm-dialog-text-muted)` | 关闭按钮等次要文字 |
+| `var(--cm-dialog-shadow)` | 常规弹窗阴影（表单等） |
+| `var(--cm-dialog-shadow-lg)` | 强调阴影（如删除确认） |
+
+需要调整整模块弹窗风格时，**只改** `config-management-dialog.scss` 一处即可。
+
+## 为什么不能用 `class="foo"` + `.foo .el-dialog`
+
+`ElDialog` 默认 **teleport 到 `body`**，写在 `<el-dialog class="foo">` 上的自定义 class **往往不会**作为 `.el-dialog` 的父级存在，选择器 `.foo .el-dialog` 会**匹配不到**，样式不生效。
+
+## 推荐写法（与现有一致）
+
+1. 在 `<el-dialog>` 上使用 Element Plus 官方属性（不要用单层自定义 class 代替）：
+   - `header-class="<模块>-<弹窗名>-hd"`
+   - `body-class="<模块>-<弹窗名>-bd"`（**锚点类**，用于 `:has`）
+   - `footer-class="<模块>-<弹窗名>-ft"`（有 footer 时）
+
+2. 在**无 scoped** 的 `<style lang="scss">` 中，用 **`:has(.…-bd)`** 限定仅本弹窗，避免污染全局：
+
+```scss
+.el-dialog:has(.app-form-dialog-bd) {
+  background: var(--cm-dialog-bg-inner) !important;
+  border: 1px solid var(--cm-dialog-border);
+  box-shadow: var(--cm-dialog-shadow) !important;
+}
+
+.el-dialog:has(.app-form-dialog-bd) .el-dialog__header.app-form-dialog-hd {
+  background: var(--cm-dialog-bg-inner);
+  border-bottom: 1px solid var(--cm-dialog-border);
+}
+
+.el-dialog:has(.app-form-dialog-bd) .el-dialog__title {
+  color: var(--cm-dialog-text-primary) !important;
+}
+
+.el-dialog:has(.app-form-dialog-bd) .el-dialog__headerbtn .el-icon {
+  color: var(--cm-dialog-text-muted) !important;
+  &:hover {
+    color: var(--cm-dialog-text-primary) !important;
+  }
+}
+
+.el-dialog:has(.app-form-dialog-bd) .el-dialog__body.app-form-dialog-bd {
+  background: var(--cm-dialog-bg-inner);
+}
+
+.el-dialog:has(.app-form-dialog-bd) .el-dialog__footer.app-form-dialog-ft {
+  background: var(--cm-dialog-bg-inner);
+  border-top: 1px solid var(--cm-dialog-border);
+}
+```
+
+3. **圆角**与业务弹窗宽度在各自块内设定；背景与边框颜色**优先**使用上表变量。
+
+## 已对齐的参考实现
+
+- `application-management/modules/app-form-dialog.vue`
+- `application-management/modules/app-delete-dialog.vue`
+- `optimizer-management/modules/optimizer-form-dialog.vue`
+
+其他配置管理弹窗（如应用分配、用户表单）若仍为旧写法，迁移时遵循本节与上述变量文件。

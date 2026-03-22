@@ -98,27 +98,44 @@ declare namespace Api {
     /** 用户列表 */
     type UserList = Api.Common.PaginatedResponse<UserListItem>
 
-    /** 用户列表项 */
+    /**
+     * 用户列表项（系统管理 · 用户管理）
+     *
+     * status 约定：1=在线 2=离线 3=异常 4=已禁用（与列表筛选、标签展示一致）
+     */
     interface UserListItem {
       id: number
-      avatar: string
+      /** 头像 URL；缺省、空串或无效时前端使用统一占位图，不参与业务校验 */
+      avatar?: string
+      /** 1=在线 2=离线 3=异常 4=已禁用 */
       status: string
       userName: string
       userGender: string
       nickName: string
       userPhone: string
       userEmail: string
+      /** 角色编码列表，与 RoleListItem.roleCode 一致 */
       userRoles: string[]
       createBy: string
       createTime: string
       updateBy: string
       updateTime: string
+      /** 可访问应用标识列表（业务自定义，如包名或应用 ID） */
+      accessibleApps?: string[]
+      /** 运营备注 */
+      remark?: string
     }
 
-    /** 用户搜索参数 */
+    /**
+     * 用户列表查询参数
+     *
+     * role：按角色编码筛选，与 RoleListItem.roleCode、userRoles 元素一致
+     */
     type UserSearchParams = Partial<
       Pick<UserListItem, 'id' | 'userName' | 'userGender' | 'userPhone' | 'userEmail' | 'status'> &
-        Api.Common.CommonSearchParams
+        Api.Common.CommonSearchParams & {
+          role?: string
+        }
     >
 
     /** 角色列表 */
@@ -354,6 +371,71 @@ declare namespace Api {
           trendUp?: boolean
           accent?: string
         }>
+      }
+    }
+  }
+
+  /** 配置管理（应用 / 用户 / 优化师等） */
+  namespace ConfigManagement {
+    /** 优化师管理 */
+    namespace Optimizer {
+      interface OperationLogItem {
+        id: string
+        timeLabel: string
+        content: string
+      }
+
+      /** 列表/详情行（与 views 下 OptimizerItem 字段一致，便于联调） */
+      interface ListItem {
+        id: string
+        no: number
+        userId: string
+        userName: string
+        email: string
+        avatarColor: string
+        version: number
+        sCode: string
+        sCode2?: string
+        minConsumption: number
+        checkCode: string
+        status: '在职' | '离职'
+        apps: string[]
+        recentLogs: OperationLogItem[]
+        createTime: string
+        lastModifyTime?: string
+      }
+
+      interface TableQuery extends Api.Common.CommonSearchParams {
+        keyword?: string
+        status?: string
+      }
+
+      interface FormPayload {
+        id?: string
+        userId: string
+        version: number
+        sCode: string
+        sCode2?: string
+        minConsumption: number
+        checkCode: string
+        status: '在职' | '离职'
+      }
+
+      /** 页头统计卡片（独立聚合，避免仅靠当前分页推算） */
+      interface OverviewResponse {
+        total: number
+        active: number
+        /** 在职优化师最低消耗要求均值（美元，整数或一位小数由后端约定） */
+        avgMinConsumption: number
+        monthNew: number
+      }
+
+      /** 新建时「关联用户」下拉候选 */
+      interface MetaSystemUserItem {
+        id: string
+        userName: string
+        email: string
+        avatarColor: string
       }
     }
   }

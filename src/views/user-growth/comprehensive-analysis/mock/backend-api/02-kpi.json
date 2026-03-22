@@ -1,0 +1,77 @@
+{
+  "_comment": "综合分析 - 顶部 KPI 卡片。对应 types.ts: KpiCard[]。",
+  "fieldDescription": {
+    "request": {
+      "date_start": { "type": "string", "required": true, "description": "开始日期 YYYY-MM-DD。" },
+      "date_end": { "type": "string", "required": true, "description": "结束日期 YYYY-MM-DD。" },
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID；'' 全部。" },
+      "source": { "type": "string", "required": true, "description": "广告平台；'' 全部。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家代码；'' 全部。" }
+    },
+    "response": {
+      "data": {
+        "type": "KpiCard[]",
+        "required": true,
+        "description": "顶部 KPI 卡片列表（id/title/subTitle/primaryValue/trendText/trendUp）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "date_start": "2026-03-14",
+    "date_end": "2026-03-20",
+    "s_app_id": "",
+    "source": "",
+    "s_country_code": ""
+  },
+  "sampleResponse": {
+    "data": [
+      {
+        "id": "totalInstall",
+        "title": "总安装量",
+        "subTitle": "近7天",
+        "primaryValue": "12,485",
+        "trendText": "+8.5%",
+        "trendUp": true
+      },
+      {
+        "id": "totalSpend",
+        "title": "总花费",
+        "subTitle": "近7天",
+        "primaryValue": "$48.2k",
+        "trendText": "+3.2%",
+        "trendUp": false
+      },
+      {
+        "id": "avgCpi",
+        "title": "平均 CPI",
+        "subTitle": "近7天",
+        "primaryValue": "$2.65",
+        "trendText": "-2.1%",
+        "trendUp": true
+      },
+      {
+        "id": "roiD1",
+        "title": "ROI D1",
+        "subTitle": "近7天",
+        "primaryValue": "112%",
+        "trendText": "+4.0%",
+        "trendUp": true
+      },
+      {
+        "id": "newUsers",
+        "title": "新增用户",
+        "subTitle": "近7天",
+        "primaryValue": "9,820",
+        "trendText": "+6.1%",
+        "trendUp": true
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/comprehensive-analysis/kpi",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
+    "responseBody": "KpiCard[]"
+  }
+}

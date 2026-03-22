@@ -1,5 +1,5 @@
 ---
-description: vegoo-web-admin 项目规范（技术栈、目录、命名、风格）
+description: vegoo-web-admin 项目规范（技术栈、目录、命名、风格；含小模块 config 与 Mock 按接口开关约定）
 alwaysApply: true
 ---
 
@@ -118,11 +118,20 @@ alwaysApply: true
 - `src/utils`：公共工具（含 `http`、`table` 等）。
 - `src/types`：全局类型与 API 命名空间；自动生成的导入类型在 `types/import/`。
 - `src/views/<模块>/<页面>/mock`：该页面 mock 数据（如需要）。
+- `src/views/<模块>/<页面>/config`：**小模块（页面/子业务）**内的 **数据源开关**（mock / 远程按**接口粒度**配置）。**必须**落在该页面目录下，**禁止**放在上一级大模块根目录与多个子业务混用（例如商业洞察下 IAA、IAP 须各有独立 `config/`，勿用 `views/business-insight/config` 一类路径统管）。细则与完整流程见 **`module-api-mock-config.mdc`**。
 - `src/views/<模块>/<页面>/composables`：页面级组合式函数（如需要）。
 
 ## 数据与开发流程规范
 
-- **先 Mock 再开发组件**：开发大模块时，先在该模块下建立/完善 **Mock 与接口契约**（`views/<模块>/<页面>/mock/README.md`、`mock/backend-api/README.md`、按接口拆分的 `mock/backend-api/*.json`，推荐同步 `mock/api-mock/*.json`；聚合数据可放 `mock/data.ts`），并同步定义好 **类型**（`types.ts` 等）。细则见 `api-contract-and-mock-conventions.mdc` 第六节。待结构与字段约定清晰后，再开发页面入口与子组件；接口就绪后在 `api/` 与 composable 中切换真实请求。
+- **先 Mock 再开发组件**：开发大模块时，先在该模块下建立/完善 **Mock 数据**（如 `views/<模块>/<页面>/mock/data.ts` 或 `mock.ts`），并同步定义好 **类型**（`types.ts` 或类型与 mock 同文件）。待大模块的数据结构与字段约定清晰后，再进行页面入口与 `modules/` 内子组件的开发；组件内优先用 mock 做展示与联调，接口就绪后再切换为真实请求。
+- **契约 + 真实请求 + 小模块 config 开关**：使用 Mock 开发时，须按 **`mock/backend-api` 契约**在 `src/api` 写好 **`fetch*`**，并在 **该小模块** `config/` 内维护开关；契约格式与协作见 **`api-contract-and-mock-conventions.mdc`**，实现细则见 **`module-api-mock-config.mdc`**。
+
+### Mock 与数据源开关（与 module-api-mock-config 一致）
+
+- **放置位置**：config 放在 **`src/views/<模块>/<页面>/config/`**（如 `data-source.ts`），与**当前页面/子业务**一一对应；同一父模块下的不同子业务（如 `iap-analysis` 与 `iaa-analysis`）**各自一份 config**，互不合并到父级 `views/<模块>/config`。商业洞察示例：`business-insight/iap-analysis/config/data-source.ts`、`business-insight/iaa-analysis/config/data-source.ts`。
+- **开关粒度**：**每个契约接口 / 每个 `fetch*` 对应一项开关**，便于单独切 Mock 或远程。推荐在 config 中用 **TypeScript `enum`（或 const 枚举式对象）列出端点**，再配 **`Record<Endpoint, boolean>`**（或 `'mock' | 'remote'`）集中维护默认值；`src/api` 内按枚举分支走 `request` 或 mock 实现。
+- **环境变量**：**不要**在仓库根目录 `.env` / `.env.development` 等为**单个业务模块**增加 `VITE_*` 类数据源总开关；默认值以模块 `config` 内导出常量为准。若需开发机临时覆盖，在**该小模块** `config` 内自行扩展（如 localStorage），且仍须保持**每接口显式 key**。
+- **禁止**：将按接口开关散落在全局 `store`、无归属 `utils`，或仅在 `.vue` 内写死 `useMock = true` 而无集中、可枚举的配置表。
 - **先查公共组件再写模块**：开发新模块或新页面时，**先检查** `src/components/core/` 下是否有可复用的公共组件（表格 `art-table`、表单 `art-form`、图表、卡片、结果页 `ArtResultPage`、搜索栏、上传等），优先使用或基于其扩展，避免重复实现；若需新能力，再考虑在公共组件上扩展或新增组件。
 
 ## 提交规范（Commitlint + cz-git）
@@ -134,7 +143,7 @@ alwaysApply: true
 ## 样式规范（概要）
 
 - **详细约定** 见规则 `style-conventions.mdc`（编辑 .vue/.scss/.css 时生效），以驾驶舱 cockpit 为参考。
-- **加载骨架**：按模块拆分骨架、表格/列表在数据未返回前隐藏真实内容并在固定尺寸容器内占位，见 `component-design.mdc`「加载与骨架屏」。
+- **配置管理深色弹窗**：`ElDialog` 公共配色变量（`--cm-dialog-*`）与 teleport + `:has` 写法见规则 `config-management-dialog.mdc`；变量定义在 `src/assets/styles/core/config-management-dialog.scss`。
 - **按钮圆角**：开发时按钮统一使用**全圆角**。使用 `ElButton` 时加上 `round` 属性（如 `<ElButton round>`）；自定义按钮或需覆盖样式时使用 `border-radius: 9999px` 或 `var(--el-border-radius-round)`，保持全项目按钮风格一致。
 - **页面布局**: 根节点 `{模块}-page`，全高用 `art-full-height`；栅格用 `ElRow` + `:gutter="16"`；区块间距 16px。
 - **类名**: 模块前缀（如 `cockpit-`）+ BEM 风格（`block--modifier`、`is-*`）；面板用 `ElCard` + `shadow="never"`。

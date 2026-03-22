@@ -331,7 +331,7 @@
     tabData.value = await fetchOverallTabData({
       dateRange: props.filter.dateRange,
       s_app_id: props.filter.s_app_id,
-      channel: props.filter.channel,
+      source: props.filter.source,
       s_country_code: props.filter.s_country_code
     })
     curveChart.initChart(buildCurveOption())

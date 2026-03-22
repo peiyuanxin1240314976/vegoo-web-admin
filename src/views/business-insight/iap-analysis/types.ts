@@ -103,6 +103,8 @@ export interface IapPlatformCompare {
 /** Overview 表格行（树形，含 children） */
 export interface IapOverviewRow {
   id: string
+  /** 应用 ID（远程接口优先；无则详情页可用 id / name 回退） */
+  s_app_id?: string
   name: string
   platform: string
   adPlatform: string
