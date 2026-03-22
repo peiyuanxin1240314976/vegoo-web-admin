@@ -800,6 +800,15 @@
     if (id && (id === s || normalizeChannelKey(id) === normalizeChannelKey(s))) return true
     if (normalizeChannelKey(name) === normalizeChannelKey(s)) return true
     if (normalizeChannelKey(name) === s) return true
+    // 下拉 value 常为 n_source 等编码，与 KPI 卡 id（如 facebook）不一致：用 /filters/meta 的 label 与名称对齐
+    const srcOpt = metaSourceOptions.value.find((o) => o.value === s)
+    if (srcOpt) {
+      const labelNorm = normalizeChannelKey(String(srcOpt.label ?? ''))
+      if (labelNorm) {
+        if (labelNorm === normalizeChannelKey(name)) return true
+        if (labelNorm === normalizeChannelKey(id)) return true
+      }
+    }
     return name === s
   }
 
