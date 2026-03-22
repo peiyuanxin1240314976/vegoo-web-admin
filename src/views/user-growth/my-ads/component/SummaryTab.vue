@@ -159,84 +159,110 @@
     })
   }
 
+  /**
+   * 環形洞心垂直位置（相對容器高度 0～1）。調上下居中主要改這個。
+   */
+  const PIE_CENTER_Y_RATIO = 0.45
+  /**
+   * 洞心像素 cy 到兩行文字的 top（像素）：rich 多行錨點易偏下，改為兩個 text + 像素定位。
+   * 若整體仍偏下：略減小 gap（例如 -15 / 5）；偏上則略增大。
+   */
+  const PIE_CENTER_LABEL_TOP_OFFSET = -13
+  const PIE_CENTER_VALUE_TOP_OFFSET = 7
+  /** 略向右修正（洞內文字略偏左時調） */
+  const PIE_CENTER_TEXT_X_NUDGE = 2
+
   function updatePieChart() {
     if (!pieChartEl.value || !props.data) return
     if (!pieChart) {
       pieChart = echarts.init(pieChartEl.value, 'dark')
     }
     const cd = channelData.value
-    pieChart.setOption({
-      backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: '#1e2f45',
-        borderColor: '#2a3f5a',
-        textStyle: { color: '#e2e8f0' },
-        formatter: '{b}: ${c} ({d}%)'
-      },
-      legend: {
-        orient: 'horizontal',
-        bottom: 0,
-        textStyle: { color: '#94a3b8', fontSize: 11 },
-        icon: 'circle',
-        itemWidth: 8,
-        itemHeight: 8,
-        formatter: (name: string) => {
-          const item = cd.find((d) => d.name === name)
-          return `${name} $${item ? item.value.toLocaleString() : ''}`
-        }
-      },
-      series: [
-        {
-          type: 'pie',
-          radius: ['45%', '70%'],
-          center: ['50%', '42%'],
-          data: cd,
-          label: {
-            show: true,
-            formatter: '{d}%',
-            color: '#e2e8f0',
-            fontSize: 11
-          },
-          labelLine: { lineStyle: { color: '#2a3f5a' } },
-          emphasis: {
-            itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.5)' }
+    const centerAmount = pieCenterValue.value.replace(/[{}]/g, '')
+    const el = pieChartEl.value
+    const h = Math.max(el.clientHeight || el.offsetHeight || 220, 1)
+    const cy = h * PIE_CENTER_Y_RATIO
+    const centerYPercent = `${(cy / h) * 100}%`
+    const labelTopPx = cy + PIE_CENTER_LABEL_TOP_OFFSET
+    const valueTopPx = cy + PIE_CENTER_VALUE_TOP_OFFSET
+
+    pieChart.setOption(
+      {
+        backgroundColor: 'transparent',
+        title: { show: false },
+        tooltip: {
+          trigger: 'item',
+          backgroundColor: '#1e2f45',
+          borderColor: '#2a3f5a',
+          textStyle: { color: '#e2e8f0' },
+          formatter: '{b}: ${c} ({d}%)'
+        },
+        legend: {
+          orient: 'horizontal',
+          bottom: 0,
+          textStyle: { color: '#94a3b8', fontSize: 11 },
+          icon: 'circle',
+          itemWidth: 8,
+          itemHeight: 8,
+          formatter: (name: string) => {
+            const item = cd.find((d) => d.name === name)
+            return `${name} $${item ? item.value.toLocaleString() : ''}`
           }
-        }
-      ],
-      graphic: [
-        {
-          type: 'group',
-          left: 'center',
-          top: '30%',
-          children: [
-            {
-              type: 'text',
-              style: {
-                text: '总支出',
-                fill: '#94a3b8',
-                fontSize: 11,
-                textAlign: 'center'
-              },
-              left: 'center',
-              top: -12
+        },
+        series: [
+          {
+            type: 'pie',
+            radius: ['45%', '68%'],
+            center: ['50%', centerYPercent],
+            data: cd,
+            label: {
+              show: true,
+              formatter: '{d}%',
+              color: '#e2e8f0',
+              fontSize: 11
             },
-            {
-              type: 'text',
-              style: {
-                text: pieCenterValue.value,
-                fill: '#e2e8f0',
-                fontSize: 15,
-                fontWeight: 'bold',
-                textAlign: 'center'
-              },
-              left: 'center',
-              top: 6
+            labelLine: { lineStyle: { color: '#2a3f5a' } },
+            emphasis: {
+              itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.5)' }
             }
-          ]
-        }
-      ]
-    })
+          }
+        ],
+        graphic: [
+          {
+            type: 'text',
+            left: 'center',
+            top: labelTopPx,
+            x: PIE_CENTER_TEXT_X_NUDGE,
+            z: 10,
+            style: {
+              text: '总支出',
+              fill: '#94a3b8',
+              fontSize: 11,
+              textAlign: 'center',
+              textVerticalAlign: 'top'
+            }
+          },
+          {
+            type: 'text',
+            left: 'center',
+            top: valueTopPx,
+            x: PIE_CENTER_TEXT_X_NUDGE,
+            z: 10,
+            style: {
+              text: centerAmount,
+              fill: '#e2e8f0',
+              fontSize: 15,
+              fontWeight: 'bold',
+              textAlign: 'center',
+              textVerticalAlign: 'top'
+            }
+          }
+        ]
+      },
+      /** 整份覆寫，避免 merge 導致改百分比也不生效 */
+      { notMerge: true }
+    )
+    pieChart.resize()
   }
 
   watch(
@@ -423,7 +449,7 @@
           <div v-if="sourcePieIsEmpty" class="chart-body chart-body--empty">
             <ElEmpty description="暂无数据" :image-size="80" />
           </div>
-          <div v-else ref="pieChartEl" class="chart-body"></div>
+          <div v-else ref="pieChartEl" class="chart-body chart-body--pie"></div>
         </div>
       </div>
 
@@ -620,6 +646,10 @@
 
   .chart-body {
     height: 220px;
+  }
+
+  .chart-body--pie {
+    box-sizing: border-box;
   }
 
   .chart-body--empty {
