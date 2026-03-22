@@ -203,43 +203,81 @@
 
     <!-- ──────────────────────────── MAIN CONTENT ────────────── -->
     <div :class="['br-content', { 'no-sidebar': compareMode && period === 'monthly' }]">
-      <aside v-if="!(compareMode && period === 'monthly')" class="br-sidebar">
-        <AppSidebar
-          :app-list="appList"
-          :selected-id="selectedAppId"
-          @select="selectedAppId = $event"
-          @compare-mode="compareMode = true"
-        />
-      </aside>
+      <!-- Monthly compare mode: no sidebar -->
+      <template v-if="compareMode && period === 'monthly'">
+        <main class="br-main">
+          <MonthlyCompareMode />
+        </main>
+      </template>
 
-      <main class="br-main">
-        <template v-if="period === 'daily'">
+      <!-- Daily: each tab has its own independent sidebar instance -->
+      <template v-else-if="period === 'daily'">
+        <aside class="br-sidebar">
+          <div class="sidebar-card">
+            <AppSidebar
+              :key="`daily-${activeTab}`"
+              :app-list="appList"
+              :selected-id="selectedAppId"
+              :show-field="tabShowField"
+              @select="selectApp"
+              @compare-mode="compareMode = true"
+            />
+          </div>
+        </aside>
+        <main class="br-main">
           <DailySummary v-if="activeTab === 'summary'" />
           <DailyAdPlatform v-else-if="activeTab === 'adPlatform'" />
           <DailyByCountry v-else-if="activeTab === 'byCountry'" />
           <AdPlatformByCountry v-else-if="activeTab === 'platformCountry'" period="daily" />
           <DailyCampaigns v-else-if="activeTab === 'campaigns'" />
-        </template>
+        </main>
+      </template>
 
-        <template v-else-if="period === 'weekly'">
+      <!-- Weekly: each tab has its own independent sidebar instance -->
+      <template v-else-if="period === 'weekly'">
+        <aside class="br-sidebar">
+          <div class="sidebar-card">
+            <AppSidebar
+              :key="`weekly-${activeTab}`"
+              :app-list="appList"
+              :selected-id="selectedAppId"
+              :show-field="tabShowField"
+              @select="selectApp"
+              @compare-mode="compareMode = true"
+            />
+          </div>
+        </aside>
+        <main class="br-main">
           <WeeklySummary v-if="activeTab === 'summary'" />
           <WeeklyAdPlatform v-else-if="activeTab === 'adPlatform'" />
           <WeeklyByCountry v-else-if="activeTab === 'byCountry'" />
           <AdPlatformByCountry v-else-if="activeTab === 'platformCountry'" period="weekly" />
           <WeeklyCampaigns v-else-if="activeTab === 'campaigns'" />
-        </template>
+        </main>
+      </template>
 
-        <template v-else>
-          <template v-if="activeTab === 'summary'">
-            <MonthlyCompareMode v-if="compareMode" />
-            <MonthlySummary v-else />
-          </template>
+      <!-- Monthly: each tab has its own independent sidebar instance -->
+      <template v-else>
+        <aside class="br-sidebar">
+          <div class="sidebar-card">
+            <AppSidebar
+              :key="`monthly-${activeTab}`"
+              :app-list="appList"
+              :selected-id="selectedAppId"
+              :show-field="tabShowField"
+              @select="selectApp"
+              @compare-mode="compareMode = true"
+            />
+          </div>
+        </aside>
+        <main class="br-main">
+          <MonthlySummary v-if="activeTab === 'summary'" />
           <WeeklyAdPlatform v-else-if="activeTab === 'adPlatform'" />
           <WeeklyByCountry v-else-if="activeTab === 'byCountry'" />
           <AdPlatformByCountry v-else-if="activeTab === 'platformCountry'" period="monthly" />
           <WeeklyCampaigns v-else-if="activeTab === 'campaigns'" />
-        </template>
-      </main>
+        </main>
+      </template>
     </div>
 
     <!-- ──────────────────────── BOTTOM STATUS BAR ───────────── -->
@@ -300,7 +338,7 @@
     'TikTok'
   ] as const
 
-  const period = ref<ReportPeriod>('monthly')
+  const period = ref<ReportPeriod>('daily')
   const activeTab = ref<ReportTab>('summary')
   const compareMode = ref(false)
   const switching = ref(false)
@@ -425,7 +463,23 @@
   function prevDate() {}
   function nextDate() {}
 
-  const selectedAppId = ref('overall')
+  // Per-tab independent app selection state: key = `${period}-${tab}`
+  const selectedAppIds = ref<Record<string, string>>({})
+
+  const selectedAppId = computed(
+    () => selectedAppIds.value[`${period.value}-${activeTab.value}`] ?? 'overall'
+  )
+
+  function selectApp(id: string) {
+    selectedAppIds.value[`${period.value}-${activeTab.value}`] = id
+  }
+
+  // Each tab shows a different secondary metric in the sidebar
+  const tabShowField = computed((): 'dau' | 'mau' | 'adSpend' => {
+    if (activeTab.value === 'adPlatform' || activeTab.value === 'campaigns') return 'adSpend'
+    if (period.value === 'monthly') return 'mau'
+    return 'dau'
+  })
   const showLarkModal = ref(false)
 
   const lastPushTime = computed(() =>
@@ -487,6 +541,7 @@
 
   .header-left {
     display: flex;
+    flex: 1;
     flex-shrink: 0;
     gap: 8px;
     align-items: center;
@@ -515,9 +570,9 @@
 
   .period-toggle {
     display: flex;
+    flex-shrink: 0;
     gap: 4px;
     padding: 3px;
-    margin: 0 auto;
     background: rgb(255 255 255 / 5%);
     border-radius: 8px;
   }
@@ -546,9 +601,10 @@
 
   .header-right {
     display: flex;
+    flex: 1;
     gap: 10px;
     align-items: center;
-    margin-left: auto;
+    justify-content: flex-end;
   }
 
   .compare-mode-label {
@@ -844,17 +900,20 @@
 
   .br-sidebar {
     flex-shrink: 0;
-    width: 288px;
-    overflow: hidden auto;
-    border-right: 1px solid var(--rp-border);
+    align-self: flex-start;
+    width: 340px;
+    max-height: 100%;
+    padding: 16px 0 16px 16px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 10%) transparent;
   }
 
-  .br-sidebar::-webkit-scrollbar {
-    width: 3px;
-  }
-
-  .br-sidebar::-webkit-scrollbar-thumb {
-    background: rgb(255 255 255 / 8%);
+  .sidebar-card {
+    overflow: hidden;
+    background: rgb(255 255 255 / 3%);
+    border: 1px solid rgb(255 255 255 / 7%);
+    border-radius: 10px;
   }
 
   .br-main {

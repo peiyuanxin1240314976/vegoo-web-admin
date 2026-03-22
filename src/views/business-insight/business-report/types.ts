@@ -25,6 +25,9 @@ export interface AppListItem {
   pausedCampaigns?: number
   countries?: number
   isOverall?: boolean
+  sparkline?: number[]
+  paidUsers?: number // 买量用户 (万)
+  platformBreakdown?: Array<{ name: string; color: string; percent: number }>
   children?: AppListItem[]
 }
 

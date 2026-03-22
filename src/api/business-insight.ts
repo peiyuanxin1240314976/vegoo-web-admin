@@ -3,7 +3,10 @@
  * IAP 分片接口见 ./iap-analysis.ts（与 iap-analysis/mock/backend-api 契约对齐）
  */
 import request from '@/utils/http'
-import { isBusinessInsightIaaIapUsingMock } from '@/views/business-insight/config/data-source'
+import {
+  IaaAnalysisEndpoint,
+  isIaaAnalysisEndpointMock
+} from '@/views/business-insight/iaa-analysis/config/data-source'
 import * as insightMock from '@/views/business-insight/mocks/business-insight-api-mock'
 import type {
   IaaFilterOptions,
@@ -52,7 +55,9 @@ function normalizeIaaBody(state: IaaFilterState) {
 }
 
 export function fetchIaaMetaFilterOptions() {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIaaMetaFilterOptions()
+  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.MetaFilterOptions)) {
+    return insightMock.mockFetchIaaMetaFilterOptions()
+  }
   return request.get<IaaFilterOptions>({ url: `${IAA_BASE}/meta-filter-options` })
 }
 
@@ -63,7 +68,9 @@ export function fetchIaaOverviewKpi(params: {
   s_country_code?: string
   t_date: string
 }) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIaaOverviewKpi(params)
+  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.OverviewKpi)) {
+    return insightMock.mockFetchIaaOverviewKpi(params)
+  }
   const body = {
     tab: params.tab,
     ...normalizeIaaBody({
@@ -77,7 +84,9 @@ export function fetchIaaOverviewKpi(params: {
 }
 
 export function fetchIaaTableAdPlatform(params: IaaFilterState) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIaaTableAdPlatform(params)
+  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.TableAdPlatform)) {
+    return insightMock.mockFetchIaaTableAdPlatform(params)
+  }
   return request.post<{ list: IaaPlatformTableRow[] }>({
     url: `${IAA_BASE}/table/ad-platform`,
     data: normalizeIaaBody(params)
@@ -85,7 +94,9 @@ export function fetchIaaTableAdPlatform(params: IaaFilterState) {
 }
 
 export function fetchIaaAdTypeTabData(params: IaaFilterState) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIaaAdTypeTabData(params)
+  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.AdTypeTab)) {
+    return insightMock.mockFetchIaaAdTypeTabData(params)
+  }
   return request.post<IaaAdTypeTabData>({
     url: `${IAA_BASE}/overview/ad-type-tab`,
     data: normalizeIaaBody(params)
@@ -93,7 +104,9 @@ export function fetchIaaAdTypeTabData(params: IaaFilterState) {
 }
 
 export function fetchIaaPlatformTabData(params: IaaFilterState) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIaaPlatformTabData(params)
+  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.PlatformTab)) {
+    return insightMock.mockFetchIaaPlatformTabData(params)
+  }
   return request.post<IaaPlatformTabData>({
     url: `${IAA_BASE}/overview/platform-tab`,
     data: normalizeIaaBody(params)
@@ -101,7 +114,9 @@ export function fetchIaaPlatformTabData(params: IaaFilterState) {
 }
 
 export function fetchIaaPlacementTabData(params: IaaFilterState) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIaaPlacementTabData(params)
+  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.PlacementTab)) {
+    return insightMock.mockFetchIaaPlacementTabData(params)
+  }
   return request.post<IaaPlacementTabData>({
     url: `${IAA_BASE}/overview/placement-tab`,
     data: normalizeIaaBody(params)
@@ -109,7 +124,9 @@ export function fetchIaaPlacementTabData(params: IaaFilterState) {
 }
 
 export function fetchIaaAdUnitTabData(params: IaaFilterState) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIaaAdUnitTabData(params)
+  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.AdUnitTab)) {
+    return insightMock.mockFetchIaaAdUnitTabData(params)
+  }
   return request.post<IaaAdUnitTabData>({
     url: `${IAA_BASE}/overview/ad-unit-tab`,
     data: normalizeIaaBody(params)
@@ -117,7 +134,9 @@ export function fetchIaaAdUnitTabData(params: IaaFilterState) {
 }
 
 export function fetchIaaCountryTabData(params: IaaFilterState) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIaaCountryTabData(params)
+  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.CountryTab)) {
+    return insightMock.mockFetchIaaCountryTabData(params)
+  }
   return request.post<IaaCountryTabData>({
     url: `${IAA_BASE}/overview/country-tab`,
     data: normalizeIaaBody(params)
@@ -125,7 +144,9 @@ export function fetchIaaCountryTabData(params: IaaFilterState) {
 }
 
 export function fetchIaaVersionTabData(params: IaaFilterState) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIaaVersionTabData(params)
+  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.VersionTab)) {
+    return insightMock.mockFetchIaaVersionTabData(params)
+  }
   return request.post<IaaVersionTabData>({
     url: `${IAA_BASE}/overview/version-tab`,
     data: normalizeIaaBody(params)

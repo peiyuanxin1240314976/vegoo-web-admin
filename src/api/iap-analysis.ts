@@ -3,7 +3,10 @@
  * 网关路径前缀与 business-insight 其它接口一致
  */
 import request from '@/utils/http'
-import { isBusinessInsightIaaIapUsingMock } from '@/views/business-insight/config/data-source'
+import {
+  IapAnalysisEndpoint,
+  isIapAnalysisEndpointMock
+} from '@/views/business-insight/iap-analysis/config/data-source'
 import * as insightMock from '@/views/business-insight/mocks/business-insight-api-mock'
 import type {
   IapFilterOptions,
@@ -67,13 +70,17 @@ export type IapOverviewTableQuery = {
 
 /** 契约 01-meta-filter-options.json — GET meta-filter-options */
 export function fetchIapMetaFilterOptions() {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIapMetaFilterOptions()
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.MetaFilterOptions)) {
+    return insightMock.mockFetchIapMetaFilterOptions()
+  }
   return request.get<IapFilterOptions>({ url: `${IAP_BASE}/meta-filter-options` })
 }
 
 /** 契约 02-overview-kpi.json — POST overview/kpi */
 export function fetchIapOverviewKpi(params: IapOverviewTableQuery) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIapOverviewKpi(params)
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.OverviewKpi)) {
+    return insightMock.mockFetchIapOverviewKpi(params)
+  }
   return request.post<{ kpis: IapKpiCard[] }>({
     url: `${IAP_BASE}/overview/kpi`,
     data: normalizeIapOverviewBody(params)
@@ -82,7 +89,9 @@ export function fetchIapOverviewKpi(params: IapOverviewTableQuery) {
 
 /** 契约 03-overview-trend.json — POST overview/trend */
 export function fetchIapOverviewTrend(params: IapOverviewTableQuery) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIapOverviewTrend(params)
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.OverviewTrend)) {
+    return insightMock.mockFetchIapOverviewTrend(params)
+  }
   return request.post<IapOverviewTrend>({
     url: `${IAP_BASE}/overview/trend`,
     data: normalizeIapOverviewBody(params)
@@ -91,7 +100,9 @@ export function fetchIapOverviewTrend(params: IapOverviewTableQuery) {
 
 /** 契约 04-overview-app-cards.json — POST overview/app-cards */
 export function fetchIapOverviewAppCards(params: IapOverviewTableQuery) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIapOverviewAppCards(params)
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.OverviewAppCards)) {
+    return insightMock.mockFetchIapOverviewAppCards(params)
+  }
   return request.post<{ list: IapAppCard[] }>({
     url: `${IAP_BASE}/overview/app-cards`,
     data: normalizeIapOverviewBody(params)
@@ -100,7 +111,7 @@ export function fetchIapOverviewAppCards(params: IapOverviewTableQuery) {
 
 /** 契约 05-overview-country-distribution.json — POST overview/country-distribution */
 export function fetchIapOverviewCountryDistribution(params: IapOverviewTableQuery) {
-  if (isBusinessInsightIaaIapUsingMock()) {
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.OverviewCountryDistribution)) {
     return insightMock.mockFetchIapOverviewCountryDistribution(params)
   }
   return request.post<{ list: IapCountryRow[] }>({
@@ -111,7 +122,7 @@ export function fetchIapOverviewCountryDistribution(params: IapOverviewTableQuer
 
 /** 契约 06-overview-product-type-donut.json — POST overview/product-type-donut（入参与 KPI/趋势一致，含 productType、platform） */
 export function fetchIapOverviewProductTypeDonut(params: IapOverviewTableQuery) {
-  if (isBusinessInsightIaaIapUsingMock()) {
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.OverviewProductTypeDonut)) {
     return insightMock.mockFetchIapOverviewProductTypeDonut(params)
   }
   return request.post<{ list: IapProductTypeDonutItem[] }>({
@@ -122,7 +133,7 @@ export function fetchIapOverviewProductTypeDonut(params: IapOverviewTableQuery) 
 
 /** 契约 07-overview-platform-compare.json — POST overview/platform-compare（入参与 KPI/趋势一致；选单端 platform 时由后端决定展示逻辑） */
 export function fetchIapOverviewPlatformCompare(params: IapOverviewTableQuery) {
-  if (isBusinessInsightIaaIapUsingMock()) {
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.OverviewPlatformCompare)) {
     return insightMock.mockFetchIapOverviewPlatformCompare(params)
   }
   return request.post<IapPlatformCompare>({
@@ -133,7 +144,9 @@ export function fetchIapOverviewPlatformCompare(params: IapOverviewTableQuery) {
 
 /** 契约 08-overview-table.json — POST overview/table（与 table/overview 并存时选其一联调） */
 export function fetchIapOverviewTable(params: IapOverviewTableQuery) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIapOverviewTable(params)
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.OverviewTable)) {
+    return insightMock.mockFetchIapOverviewTable(params)
+  }
   return request.post<{ list: IapOverviewRow[]; summary: IapOverviewSummary }>({
     url: `${IAP_BASE}/overview/table`,
     data: normalizeIapOverviewBody(params)
@@ -142,7 +155,9 @@ export function fetchIapOverviewTable(params: IapOverviewTableQuery) {
 
 /** 契约 08-table-overview.json — POST table/overview（README 清单中的 Overview 树表） */
 export function fetchIapTableOverview(params: IapOverviewTableQuery) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIapOverviewTable(params)
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.TableOverview)) {
+    return insightMock.mockFetchIapOverviewTable(params)
+  }
   return request.post<{ list: IapOverviewRow[]; summary: IapOverviewSummary }>({
     url: `${IAP_BASE}/table/overview`,
     data: normalizeIapOverviewBody(params)
@@ -156,7 +171,9 @@ export function fetchIapDetailKpi(params: {
   s_country_code?: string
   platform?: string
 }) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIapDetailKpi(params)
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.DetailKpi)) {
+    return insightMock.mockFetchIapDetailKpi(params)
+  }
   return request.post<{ kpis: IapKpiCard[] }>({
     url: `${IAP_BASE}/detail/kpi`,
     data: normalizeIapDetailBody(params)
@@ -170,7 +187,9 @@ export function fetchIapDetailProduct(params: {
   s_country_code?: string
   platform?: string
 }) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIapDetailProduct(params)
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.DetailProduct)) {
+    return insightMock.mockFetchIapDetailProduct(params)
+  }
   return request.post<IapDetailProduct>({
     url: `${IAP_BASE}/detail/product`,
     data: normalizeIapDetailBody(params)
@@ -184,7 +203,9 @@ export function fetchIapDetailUser(params: {
   s_country_code?: string
   platform?: string
 }) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIapDetailUser(params)
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.DetailUser)) {
+    return insightMock.mockFetchIapDetailUser(params)
+  }
   return request.post<IapDetailUser>({
     url: `${IAP_BASE}/detail/user`,
     data: normalizeIapDetailBody(params)
@@ -198,7 +219,9 @@ export function fetchIapDetailTrend(params: {
   s_country_code?: string
   platform?: string
 }) {
-  if (isBusinessInsightIaaIapUsingMock()) return insightMock.mockFetchIapDetailTrend(params)
+  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.DetailTrend)) {
+    return insightMock.mockFetchIapDetailTrend(params)
+  }
   return request.post<IapDetailTrend>({
     url: `${IAP_BASE}/detail/trend`,
     data: normalizeIapDetailBody(params)

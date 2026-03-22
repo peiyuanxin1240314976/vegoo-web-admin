@@ -1,0 +1,39 @@
+---
+description: 业务模块内 config 数据源开关；按 mock/backend-api 契约写真实请求并按接口切换 mock/remote
+alwaysApply: true
+---
+
+# 模块内 Mock 与真实接口对接（config 必放模块下）
+
+开发**使用 Mock 的业务模块**时，须便于后续接真接口：**契约 JSON、正常 HTTP 封装、模块内可切换配置**三者一起落地。
+
+## 1. 按契约写「正常接口调用」
+
+- 在对应页面目录维护 **`mock/backend-api/*.json`**（字段说明、`sampleRequest` / `sampleResponse`），契约归属与协作流程见 `api-contract-and-mock-conventions.mdc`。
+- 在 **`src/api/<业务>.ts`**（或按业务拆分的 api 文件）中为每个契约提供 **`fetch*` 方法**：使用 `@/utils/http` 的 `request`，URL / 方法 / 请求体字段与 JSON 契约一致，泛型或类型引用页面 **`types.ts`**，**禁止**只在组件里写死 `axios` 路径而不走统一封装。
+- Mock 数据实现放在 **`src/views/.../mocks/`** 或与契约并行的 mock 模块中，由开关决定走 `request` 还是 mock 函数（见下）。
+
+## 2. config 必须放在「该业务模块」目录下
+
+- **必须**使用**小模块（页面/子业务）**目录，例如：
+  - `src/views/<模块>/<页面>/config/data-source.ts`（或 `api-source.ts`）
+  - 商业洞察示例：**IAP** → `src/views/business-insight/iap-analysis/config/data-source.ts`；**IAA** → `src/views/business-insight/iaa-analysis/config/data-source.ts`（**不要**放在 `business-insight/config` 等大模块根下与多子业务混用）。
+- **禁止**把「仅该业务使用」的**按接口开关**散落在：全局 `store`、无模块归属的随机 `utils`、或仅在 `.vue` 内硬编码 `useMock = true` 而无集中配置。
+- **默认值**：mock/remote 及按接口的开关须在模块 `config/` 内用**常量或导出结构**维护，**勿**在根目录 `.env*` 中为单一业务模块增加 `VITE_*` 数据源类开关（避免环境文件臃肿、与模块归属脱节）。**每个接口对应的 mock/remote 开关**须在该模块 config 中**可查、可改**；若需开发机临时覆盖，可在**该模块** `config` 内自行扩展 **localStorage** 等机制。
+
+## 3. 开关粒度：每个接口（每个 fetch 能力）一项
+
+- 在 config 中为 **`mock/backend-api` 中每个接口**（或每个 `fetch*`）定义独立开关，例如：
+  - 一组 `Record<ApiKey, 'mock' | 'remote'>`，或
+  - 每个 key 对应契约文件名 / `fetch` 名（如 `overviewKpi`、`overviewTrend`、`detailProduct`）。
+- 页面、`composables` 或 **`src/api` 内分支**读取该 config，决定调用 **`request`** 还是 **mock 实现**。
+- 允许在「全部 remote」之上做 **dev 环境 localStorage 覆盖**（便于联调单接口）；须在**对应小模块** `config` 内实现，且**每个 `fetch*` 对应显式 key**（枚举或 `Record`），不得长期只保留一个总开关却声称已按接口可配。
+
+## 4. 实现注意
+
+- **`src/api` 引用 `@/views/<模块>/config/...`** 在本仓库可接受（与现有 `iap-analysis.ts` 一致）；若团队希望 api 层不依赖 views，可将「是否 mock」判断上移到 **`composables`**，由 composable 调 `fetch` 或 `mockFetch`，config 仍放在 **模块目录下**。
+- 新增接口时：**先改契约 JSON → 再改 types / api / 模块 config 开关表 → 再改 mock 实现**。
+
+## 5. 目录与文档
+
+- 若模块新增 `config/`，可在同模块 **`mock/README.md`** 中一句话说明：「数据源开关见 `../config/xxx.ts`，与 `backend-api` 接口一一对应。」

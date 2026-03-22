@@ -7,6 +7,13 @@ alwaysApply: true
 
 本规则用于约束 **接口地址如何抽象**、**接口如何按模块/功能拆分**、以及 **Mock 契约如何沉淀到 `mock/backend-api`**，以保证后期可优化渲染、可拆分、可联调。
 
+## 契约归属与前后端协作（必读）
+
+- **`mock/backend-api/*.json` 为接口契约的源文件**：由**前端**在仓库内维护，在 JSON 中定义 `fieldDescription`（请求/响应字段说明）、`sampleRequest`、`sampleResponse`、`api`（路径、方法、requestBody/responseBody 摘要）等。**后端按该契约实现**接口路径、入参、出参结构与语义，**不是**由后端先定一套字段再要求前端改契约迁就。
+- **联调顺序建议**：先有契约 JSON（及同目录 `README.md` 接口清单）→ 前端 `types.ts` / `src/api/*.ts` 与契约对齐 → 后端按 JSON 开发与自测 → 前后端联调。
+- **变更流程**：增删改字段或业务含义时，须**前后端协商一致**后，**优先更新契约 JSON**（及 README），再同步改前端类型与请求封装、Mock、后端实现；禁止长期存在「文档一套、接口一套、前端一套」。
+- 网关真实路径与示例 URL 不一致时，在对应 `mock/backend-api/README.md` 或 JSON `_comment` 中注明；以前端 `src/api` 实际请求为准联调。
+
 ## 一、接口地址抽象：路由 → 模块 → 功能
 
 ### 1）先根据路由定义父级 API 地址
@@ -145,4 +152,5 @@ src/views/<模块>/<页面>/
 - **类型先行**：接口契约字段需与页面 `types.ts`（或 `src/types/api/api.d.ts` 的 `Api.*`）保持一致，避免“文档一套、代码一套”。
 - **请求方法命名**：在 `src/api/<业务>.ts` 内，方法名以 `fetch` 开头，体现模块与功能（如 `fetchAdPerformanceOverview`）。
 - **字段命名**：涉及广告/增长/报表等概念时，字段命名与语义必须遵循 `backend-fields.mdc`（数据字典）。
+- **Mock 与真实接口切换**：在**小模块** `views/<模块>/<页面>/config/` 中按**接口粒度**配置开关（推荐 `enum` + `Record`），并在 `src/api` 中写齐与契约一致的 `fetch*`；详见 `module-api-mock-config.mdc` 与 `project-conventions.mdc`「Mock 与数据源开关」。
 

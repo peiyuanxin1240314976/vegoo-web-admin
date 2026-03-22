@@ -1,82 +1,192 @@
 <template>
   <div class="app-sidebar">
+    <!-- ─── Header ─── -->
     <div class="sidebar-header">
       <span class="sidebar-title">应用列表</span>
       <button class="sort-btn" @click="toggleSort">
-        {{ sortLabel }} <i :class="['sort-icon', sortDir === 'desc' ? 'asc' : '']">↓</i>
+        {{ sortLabel }} <i :class="['sort-icon', sortDir === 'desc' ? '' : 'asc']">↓</i>
       </button>
     </div>
 
-    <!-- Overall item -->
-    <div
-      v-for="item in sortedApps"
-      :key="item.id"
-      class="app-item"
-      :class="{ selected: selectedId === item.id, overall: item.isOverall }"
-      @click="$emit('select', item.id)"
-    >
-      <!-- Overall special layout -->
-      <template v-if="item.isOverall">
-        <div class="overall-content">
-          <div class="overall-top">
-            <div class="overall-info">
-              <span class="overall-name">整体 <span class="overall-cat">全部平台</span></span>
-              <span v-if="selectedId === item.id" class="selected-badge">SELECTED</span>
+    <!-- ═══════════════════════════════════════════════════════
+         AD-SPEND MODE – special layered layout
+         ═══════════════════════════════════════════════════ -->
+    <template v-if="showField === 'adSpend'">
+      <!-- Overall card -->
+      <div
+        v-if="overallItem"
+        class="app-item overall ad-overall"
+        :class="{ selected: selectedId === overallItem.id }"
+        @click="$emit('select', overallItem.id)"
+      >
+        <!-- title row -->
+        <div class="ad-overall-title">
+          <span class="ad-overall-name">整体</span>
+          <span class="ad-overall-cat">全部平台</span>
+        </div>
+
+        <!-- 4-metric grid: 广告支出 | 环比 | 买量用户 | 广告系列数 -->
+        <div class="ad-metrics-grid">
+          <div class="ad-metric">
+            <div class="ad-metric-label">广告支出</div>
+            <div class="ad-metric-value ad-green"> ${{ formatNum(overallItem.adSpend ?? 0) }} </div>
+          </div>
+          <div class="ad-metric">
+            <div class="ad-metric-label">环比</div>
+            <div class="ad-metric-value" :class="changeClass(overallItem.adSpendChange ?? 0)">
+              {{ changeStr(overallItem.adSpendChange ?? 0) }}
             </div>
           </div>
-          <div class="overall-value" :style="{ color: valueColor(item.revenueChange) }">
-            ${{ formatRevenue(item.revenue) }}
-            <span class="overall-change" :style="{ color: valueColor(item.revenueChange) }">
+          <div class="ad-metric">
+            <div class="ad-metric-label">买量用户</div>
+            <div class="ad-metric-value">{{ overallItem.paidUsers }}万</div>
+          </div>
+          <div class="ad-metric">
+            <div class="ad-metric-label">广告系列数</div>
+            <div class="ad-metric-value">{{ overallItem.activeCampaigns }}</div>
+          </div>
+        </div>
+
+        <!-- Platform distribution bar -->
+        <div class="platform-bar">
+          <div
+            v-for="seg in overallItem.platformBreakdown ?? []"
+            :key="seg.name"
+            class="platform-seg"
+            :style="{ width: seg.percent + '%', background: seg.color }"
+          >
+            <template v-if="seg.percent >= 10">
+              <div class="seg-name">{{ seg.name }}</div>
+              <div class="seg-pct">{{ seg.percent }}%</div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Legend (top 3 platforms) -->
+        <div class="platform-legend">
+          <span
+            v-for="seg in (overallItem.platformBreakdown ?? []).slice(0, 3)"
+            :key="seg.name"
+            class="legend-item"
+          >
+            <span class="legend-dot" :style="{ background: seg.color }" />
+            {{ seg.name }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Major apps (has sparkline) -->
+      <div
+        v-for="item in majorAppsSorted"
+        :key="item.id"
+        class="app-item major-app-ad"
+        :class="{ selected: selectedId === item.id }"
+        @click="$emit('select', item.id)"
+      >
+        <div class="major-app-header">
+          <div class="app-icon" :style="{ background: item.iconBg }">
+            {{ item.iconEmoji }}
+          </div>
+          <span class="app-name">{{ item.name }}</span>
+          <span class="app-category">{{ item.category }}</span>
+        </div>
+        <div class="major-app-metrics">
+          <div class="major-metric">
+            <div class="major-metric-label">广告支出</div>
+            <div class="major-metric-row">
+              <span class="major-metric-value"> ${{ formatNum(item.adSpend ?? 0) }} </span>
+              <span :class="['major-metric-change', changeClass(item.adSpendChange ?? 0)]">
+                {{ changeStr(item.adSpendChange ?? 0) }}
+              </span>
+            </div>
+          </div>
+          <div class="major-metric major-metric-right">
+            <div class="major-metric-label">买量用户</div>
+            <div class="major-metric-value">{{ item.paidUsers }}万</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-apps 2-column grid -->
+      <div v-if="subAppsSorted.length" class="sub-apps-grid">
+        <div
+          v-for="item in subAppsSorted"
+          :key="item.id"
+          class="sub-app-item"
+          :class="{ selected: selectedId === item.id }"
+          @click="$emit('select', item.id)"
+        >
+          <div class="sub-app-name">{{ item.name }}</div>
+          <div class="sub-app-cat">{{ item.category }}</div>
+          <div class="sub-app-spend">${{ formatNum(item.adSpend ?? 0) }}</div>
+          <div :class="['sub-app-change', changeClass(item.adSpendChange ?? 0)]">
+            {{ changeStr(item.adSpendChange ?? 0) }}
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ═══════════════════════════════════════════════════════
+         NORMAL MODE – 2-column grid layout
+         ═══════════════════════════════════════════════════ -->
+    <template v-else>
+      <div class="nm-grid">
+        <!-- Group cards: isOverall or has dau (category-level apps) -->
+        <div
+          v-for="item in groupApps"
+          :key="item.id"
+          :class="['nm-card', 'nm-card--group', { 'is-selected': selectedId === item.id }]"
+          @click="$emit('select', item.id)"
+        >
+          <div class="nm-gc-head">
+            <span class="nm-gc-dot" :style="{ background: item.iconColor }" />
+            <span class="nm-gc-name">{{ item.name }}</span>
+            <span class="nm-gc-cat">{{ item.category }}</span>
+          </div>
+          <div class="nm-gc-revenue">
+            <span class="nm-gc-amount">${{ formatNum(item.revenue) }}</span>
+            <span :class="['nm-gc-change', item.revenueChange >= 0 ? 'is-up' : 'is-down']">
+              环比 {{ item.revenueChange >= 0 ? '+' : '' }}{{ item.revenueChange }}%
+            </span>
+          </div>
+          <div class="nm-gc-meta">
+            <div>预估利润 ${{ formatNum(item.profit) }}</div>
+            <div>{{ showField === 'mau' ? 'MAU' : 'DAU' }} {{ item.dau }}万</div>
+          </div>
+          <SparklineChart
+            class="nm-gc-spark"
+            :data="item.sparkline ?? sparkData"
+            :color="item.iconColor"
+            :width="110"
+            :height="26"
+          />
+          <div v-if="item.platforms?.length" class="nm-gc-tags">
+            <span v-for="p in item.platforms" :key="p" class="nm-gc-tag">{{ p }}</span>
+          </div>
+        </div>
+
+        <!-- Simple cards: individual apps (no dau) -->
+        <div
+          v-for="item in singleApps"
+          :key="item.id"
+          :class="['nm-card', 'nm-card--single', { 'is-selected': selectedId === item.id }]"
+          @click="$emit('select', item.id)"
+        >
+          <div class="nm-sc-name">
+            {{ item.name }}
+            <span class="nm-sc-cat">{{ item.category }}</span>
+          </div>
+          <div class="nm-sc-bottom">
+            <span class="nm-sc-amount">${{ formatNum(item.revenue) }}</span>
+            <span :class="['nm-sc-change', item.revenueChange >= 0 ? 'is-up' : 'is-down']">
               {{ item.revenueChange >= 0 ? '+' : '' }}{{ item.revenueChange }}%
             </span>
           </div>
-          <div class="overall-meta">
-            <span v-if="showField === 'mau' && item.mau"
-              >预估利润 ${{ formatRevenue(item.profit) }}&nbsp;&nbsp;MAU {{ item.mau }}万</span
-            >
-            <span v-else-if="showField === 'dau' && item.dau">DAU {{ item.dau }}万</span>
-            <span v-else-if="showField === 'adSpend'"
-              >广告支出 ${{ formatRevenue(item.adSpend ?? 0) }}&nbsp;&nbsp;买量用户
-              {{ item.mau }}万</span
-            >
-          </div>
-          <div class="overall-platforms">
-            <span v-for="p in item.platforms" :key="p" class="platform-tag">{{ p }}</span>
-          </div>
-          <SparklineChart :data="sparkData" color="#00D4A1" :width="100" :height="28" />
         </div>
-      </template>
+      </div>
+    </template>
 
-      <!-- Regular app item -->
-      <template v-else>
-        <div class="app-icon" :style="{ background: item.iconBg }">
-          <span>{{ item.iconEmoji }}</span>
-        </div>
-        <div class="app-info">
-          <div class="app-name-row">
-            <span class="app-name">{{ item.name }}</span>
-            <span class="app-category">{{ item.category }}</span>
-          </div>
-          <div class="app-metrics">
-            <span class="app-revenue" :style="{ color: valueColor(item.revenueChange) }">
-              ${{ formatRevenue(item.revenue) }}
-              <span class="app-change" :style="{ color: valueColor(item.revenueChange) }">
-                {{ item.revenueChange >= 0 ? '+' : '' }}{{ item.revenueChange }}%
-              </span>
-            </span>
-            <span v-if="showField === 'mau' && item.mau" class="app-dau">MAU {{ item.mau }}万</span>
-            <span v-else-if="showField === 'dau' && item.dau" class="app-dau"
-              >DAU {{ item.dau }}万</span
-            >
-            <span v-else-if="showField === 'adSpend' && item.adSpend" class="app-dau"
-              >买量 {{ item.activeCampaigns ?? '-' }}个</span
-            >
-          </div>
-        </div>
-      </template>
-    </div>
-
-    <!-- Footer -->
+    <!-- ─── Footer ─── -->
     <div class="sidebar-footer">
       <span class="app-count">共 {{ appList.length - 1 }} 个应用</span>
       <button class="compare-btn" @click="$emit('compareMode')"> <span>+</span> 对比模式 </button>
@@ -113,44 +223,65 @@
     sortDir.value = sortDir.value === 'desc' ? 'asc' : 'desc'
   }
 
-  const sortedApps = computed(() => {
-    const overall = props.appList.filter((a) => a.isOverall)
-    const rest = props.appList.filter((a) => !a.isOverall)
-    const sorted = [...rest].sort((a, b) => {
-      const va = props.showField === 'adSpend' ? (a.adSpend ?? 0) : a.revenue
-      const vb = props.showField === 'adSpend' ? (b.adSpend ?? 0) : b.revenue
-      return sortDir.value === 'desc' ? vb - va : va - vb
+  // ── Normal mode: group cards (has dau) vs simple cards ───────
+  const groupApps = computed(() => {
+    const items = props.appList.filter((a) => a.isOverall || a.dau !== undefined)
+    return [...items].sort((a, b) => {
+      if (a.isOverall) return -1
+      if (b.isOverall) return 1
+      return sortDir.value === 'desc' ? b.revenue - a.revenue : a.revenue - b.revenue
     })
-    return [...overall, ...sorted]
   })
 
+  const singleApps = computed(() => {
+    const items = props.appList.filter((a) => !a.isOverall && a.dau === undefined)
+    return [...items].sort((a, b) =>
+      sortDir.value === 'desc' ? b.revenue - a.revenue : a.revenue - b.revenue
+    )
+  })
+
+  // ── Ad-spend mode separated lists ───────────────────────────
+  const overallItem = computed(() => props.appList.find((a) => a.isOverall))
+
+  const majorAppsSorted = computed(() => {
+    const major = props.appList.filter((a) => !a.isOverall && !!a.sparkline)
+    return [...major].sort((a, b) => {
+      const va = a.adSpend ?? 0
+      const vb = b.adSpend ?? 0
+      return sortDir.value === 'desc' ? vb - va : va - vb
+    })
+  })
+
+  const subAppsSorted = computed(() => {
+    const subs = props.appList.filter((a) => !a.isOverall && !a.sparkline)
+    return [...subs].sort((a, b) => {
+      const va = a.adSpend ?? 0
+      const vb = b.adSpend ?? 0
+      return sortDir.value === 'desc' ? vb - va : va - vb
+    })
+  })
+
+  // ── Helpers ──────────────────────────────────────────────────
   const sparkData = [3800, 4000, 3900, 4200, 4100, 4350, 4400, 4521]
 
-  const formatRevenue = (v: number) => {
-    if (v >= 1_000_000) return (v / 1_000_000).toFixed(2) + 'M'
-    if (v >= 1000) return (v / 1000).toFixed(0) + ',000'
-    return v.toString()
+  /** Format with commas: 41100 → "41,100" */
+  const formatNum = (v: number) => {
+    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M'
+    return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   }
 
-  const valueColor = (change: number) => (change >= 0 ? '#00D4A1' : '#FF5C5C')
+  const changeStr = (change: number) => (change >= 0 ? '+' : '') + change + '%'
+  const changeClass = (change: number) => (change >= 0 ? 'ad-positive' : 'ad-negative')
 </script>
 
 <style scoped>
+  /* ── Shell ─────────────────────────────────────────────────── */
   .app-sidebar {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    overflow: hidden auto;
-
-    /* width: 240px;
-  min-width: 220px;
-  max-width: 260px; */
-    background: var(--rp-surface, #0d1529);
-    border-right: 1px solid var(--rp-border, rgb(255 255 255 / 6%));
-    scrollbar-width: thin;
-    scrollbar-color: rgb(255 255 255 / 10%) transparent;
   }
 
+  /* ── Header ────────────────────────────────────────────────── */
   .sidebar-header {
     display: flex;
     flex-shrink: 0;
@@ -193,15 +324,9 @@
     transform: rotate(180deg);
   }
 
-  /* Scrollable list */
-  .app-sidebar > .app-item,
-  .app-sidebar > .overall-item {
-    flex-shrink: 0;
-  }
-
+  /* ── Shared item base ───────────────────────────────────────── */
   .app-item {
     position: relative;
-    padding: 10px 14px;
     cursor: pointer;
     border-left: 2px solid transparent;
     transition:
@@ -218,150 +343,406 @@
     border-left-color: #00d4a1;
   }
 
-  .app-item.overall {
+  /* ════════════════════════════════════════════════════════════
+     AD-SPEND MODE STYLES
+     ════════════════════════════════════════════════════════ */
+
+  /* ── Overall card ───────────────────────────────────────── */
+  .ad-overall {
+    padding: 12px 14px;
     margin-bottom: 4px;
+    background: rgb(0 212 161 / 6%);
     border-bottom: 1px solid rgb(255 255 255 / 6%);
   }
 
-  .overall-content {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  .ad-overall.selected {
+    background: rgb(0 212 161 / 12%);
+    border-left-color: #00d4a1;
   }
 
-  .overall-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  .ad-overall-title {
+    margin-bottom: 10px;
   }
 
-  .overall-info {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }
-
-  .overall-name {
-    font-size: 13px;
-    font-weight: 600;
+  .ad-overall-name {
+    font-size: 14px;
+    font-weight: 700;
     color: rgb(255 255 255 / 90%);
   }
 
-  .overall-cat {
+  .ad-overall-cat {
+    margin-left: 6px;
     font-size: 11px;
-    font-weight: 400;
     color: rgb(255 255 255 / 40%);
   }
 
-  .selected-badge {
-    padding: 1px 5px;
+  /* 4-metric grid */
+  .ad-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .ad-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .ad-metric-label {
     font-size: 9px;
+    color: rgb(255 255 255 / 40%);
+    white-space: nowrap;
+  }
+
+  .ad-metric-value {
+    font-size: 12px;
     font-weight: 700;
+    color: rgb(255 255 255 / 90%);
+    white-space: nowrap;
+  }
+
+  .ad-green {
     color: #00d4a1;
-    letter-spacing: 0.05em;
-    background: rgb(0 212 161 / 20%);
+  }
+
+  .ad-positive {
+    color: #00d4a1;
+  }
+
+  .ad-negative {
+    color: #ff5c5c;
+  }
+
+  /* Platform bar */
+  .platform-bar {
+    display: flex;
+    height: 36px;
+    margin-bottom: 6px;
+    overflow: hidden;
     border-radius: 4px;
   }
 
-  .overall-value {
+  .platform-seg {
     display: flex;
-    gap: 6px;
-    align-items: baseline;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  .overall-change {
-    font-size: 11px;
-    font-weight: 500;
-  }
-
-  .overall-meta {
-    font-size: 11px;
-    color: rgb(255 255 255 / 40%);
-  }
-
-  .overall-platforms {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-
-  .platform-tag {
-    padding: 1px 5px;
-    font-size: 10px;
-    color: rgb(255 255 255 / 50%);
-    background: rgb(255 255 255 / 8%);
-    border-radius: 3px;
-  }
-
-  .app-icon {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    font-size: 16px;
-    border-radius: 8px;
+    padding: 0 4px;
+    overflow: hidden;
   }
 
-  .app-item:not(.overall) {
+  .seg-name {
+    overflow: hidden;
+    font-size: 9px;
+    font-weight: 600;
+    color: rgb(255 255 255 / 90%);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seg-pct {
+    font-size: 9px;
+    color: rgb(255 255 255 / 70%);
+    white-space: nowrap;
+  }
+
+  /* Platform legend */
+  .platform-legend {
     display: flex;
     gap: 10px;
     align-items: center;
   }
 
-  .app-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .app-name-row {
+  .legend-item {
     display: flex;
     gap: 4px;
     align-items: center;
-    margin-bottom: 2px;
+    font-size: 10px;
+    color: rgb(255 255 255 / 55%);
   }
 
-  .app-name {
+  .legend-dot {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  /* ── Major app items ────────────────────────────────────── */
+  .major-app-ad {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgb(255 255 255 / 4%);
+  }
+
+  .major-app-header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .major-app-metrics {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .major-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .major-metric-right {
+    text-align: right;
+  }
+
+  .major-metric-label {
+    font-size: 10px;
+    color: rgb(255 255 255 / 40%);
+  }
+
+  .major-metric-row {
+    display: flex;
+    gap: 5px;
+    align-items: baseline;
+  }
+
+  .major-metric-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(255 255 255 / 88%);
+  }
+
+  .major-metric-change {
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  /* ── Sub-apps 2-column grid ─────────────────────────────── */
+  .sub-apps-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin-top: 1px;
+    background: rgb(255 255 255 / 4%);
+  }
+
+  .sub-app-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    background: var(--rp-surface, #0d1529);
+    border-left: 2px solid transparent;
+    transition: background 0.15s;
+  }
+
+  .sub-app-item:hover {
+    background: rgb(255 255 255 / 4%);
+  }
+
+  .sub-app-item.selected {
+    background: rgb(0 212 161 / 8%);
+    border-left-color: #00d4a1;
+  }
+
+  .sub-app-name {
+    margin-bottom: 1px;
     overflow: hidden;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: rgb(255 255 255 / 85%);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .app-category {
-    font-size: 10px;
-    color: rgb(255 255 255 / 40%);
-    white-space: nowrap;
+  .sub-app-cat {
+    margin-bottom: 4px;
+    font-size: 9px;
+    color: rgb(255 255 255 / 35%);
   }
 
-  .app-metrics {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .app-revenue {
+  .sub-app-spend {
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
+    color: rgb(255 255 255 / 88%);
   }
 
-  .app-change {
-    margin-left: 4px;
+  .sub-app-change {
     font-size: 10px;
     font-weight: 500;
   }
 
-  .app-dau {
-    font-size: 10px;
-    color: rgb(255 255 255 / 45%);
+  /* ════════════════════════════════════════════════════════════
+     NORMAL MODE STYLES – 2-column grid
+     ════════════════════════════════════════════════════════ */
+
+  .nm-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 10px 10px;
   }
 
+  /* Base card */
+  .nm-card {
+    padding: 10px;
+    cursor: pointer;
+    background: rgb(255 255 255 / 4%);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    transition:
+      background 0.15s,
+      border-color 0.15s;
+  }
+
+  .nm-card:hover {
+    background: rgb(255 255 255 / 7%);
+  }
+
+  .nm-card.is-selected {
+    background: rgb(0 212 161 / 8%);
+    border-color: #00d4a1;
+  }
+
+  /* Group card */
+  .nm-card--group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .nm-gc-head {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .nm-gc-dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .nm-gc-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(255 255 255 / 85%);
+    white-space: nowrap;
+  }
+
+  .nm-gc-cat {
+    overflow: hidden;
+    font-size: 10px;
+    color: rgb(255 255 255 / 40%);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nm-gc-revenue {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .nm-gc-amount {
+    font-size: 15px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 90%);
+    letter-spacing: -0.02em;
+  }
+
+  .nm-gc-change {
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .nm-gc-change.is-up {
+    color: #00d4a1;
+  }
+
+  .nm-gc-change.is-down {
+    color: #ff5c5c;
+  }
+
+  .nm-gc-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    font-size: 10px;
+    color: rgb(255 255 255 / 40%);
+  }
+
+  .nm-gc-spark {
+    display: block;
+    width: 100%;
+  }
+
+  .nm-gc-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .nm-gc-tag {
+    padding: 1px 4px;
+    font-size: 9px;
+    color: rgb(255 255 255 / 45%);
+    background: rgb(255 255 255 / 8%);
+    border-radius: 3px;
+  }
+
+  /* Simple card */
+  .nm-card--single {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .nm-sc-name {
+    overflow: hidden;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgb(255 255 255 / 80%);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nm-sc-cat {
+    margin-left: 3px;
+    font-size: 10px;
+    font-weight: 400;
+    color: rgb(255 255 255 / 40%);
+  }
+
+  .nm-sc-bottom {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .nm-sc-amount {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 88%);
+    letter-spacing: -0.02em;
+  }
+
+  .nm-sc-change {
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .nm-sc-change.is-up {
+    color: #00d4a1;
+  }
+
+  .nm-sc-change.is-down {
+    color: #ff5c5c;
+  }
+
+  /* ── Footer ─────────────────────────────────────────────── */
   .sidebar-footer {
     display: flex;
     flex-shrink: 0;
