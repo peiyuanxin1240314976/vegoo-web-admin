@@ -31,6 +31,8 @@
   const summaryData = ref<Api.UserGrowth.MyAdsSummaryResponseDto | null>(null)
   const platformLoading = ref(false)
   const platformData = ref<Api.UserGrowth.MyAdsPlatformResponseDto | null>(null)
+  /** 應用+廣告平台 Tab：按應用 / 按廣告平台，僅影響 platform 接口的 groupBy */
+  const platformGroupByApp = ref(true)
   const activeTab = ref<string>('summary')
 
   /** 构建与顶部筛选联动的通用请求参数（除 currentPage、pageSize 外，未填一律 null） */
@@ -66,8 +68,14 @@
       if (data.defaultStaffId && !hasMounted.value) {
         selectedStaffId.value = data.defaultStaffId
       }
+      // 僅在與當前區間字串不一致時再賦值，避免新陣列引用觸發 watch → 重複請求
       if (data.dateRange?.length === 2) {
-        dateRange.value = [data.dateRange[0]!, data.dateRange[1]!]
+        const nextStart = data.dateRange[0]!.trim()
+        const nextEnd = data.dateRange[1]!.trim()
+        const [curStart = '', curEnd = ''] = dateRange.value
+        if (curStart !== nextStart || curEnd !== nextEnd) {
+          dateRange.value = [nextStart, nextEnd]
+        }
       }
       if (data.userCard && Array.isArray(data.metrics)) {
         pageHeaderData.value = {
@@ -98,10 +106,18 @@
     }
   }
 
+  function buildPlatformParams(): Api.UserGrowth.MyAdsPageHeaderRequestParams {
+    const base = buildPageHeaderParams()
+    return {
+      ...base,
+      groupBy: platformGroupByApp.value ? 'app' : 'source'
+    }
+  }
+
   async function loadPlatform() {
     platformLoading.value = true
     try {
-      const params = buildPageHeaderParams()
+      const params = buildPlatformParams()
       const data = await fetchMyAdsPlatform(params)
       platformData.value = data ?? null
     } catch {
@@ -137,6 +153,12 @@
     if (tab === 'summary') {
       loadSummary()
     } else if (tab === 'platform') {
+      loadPlatform()
+    }
+  })
+
+  watch(platformGroupByApp, () => {
+    if (hasMounted.value && activeTab.value === 'platform') {
       loadPlatform()
     }
   })
@@ -273,6 +295,7 @@
       <SummaryTab v-if="activeTab === 'summary'" :data="summaryData" :loading="summaryLoading" />
       <PlatformTab
         v-else-if="activeTab === 'platform'"
+        v-model:group-by-app="platformGroupByApp"
         :data="platformData"
         :loading="platformLoading"
       />

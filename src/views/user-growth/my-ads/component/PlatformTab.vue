@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { computed } from 'vue'
 
   defineOptions({ name: 'PlatformTab' })
 
@@ -8,7 +8,8 @@
     loading: boolean
   }>()
 
-  const groupByApp = ref(true)
+  /** 與父級雙向綁定，切換時父組件以 groupBy 重新請求 platform 接口 */
+  const groupByApp = defineModel<boolean>('groupByApp', { default: true })
 
   const showSkeleton = computed(() => props.loading || !props.data)
 
