@@ -243,6 +243,13 @@
       "attributionAnalysis": "Attribution Analysis",
       "ltvPrediction": "LTV Prediction & User Segmentation"
     },
+    "productOperations": {
+      "title": "Product Operations",
+      "reviewsRatingsMonitor": "Reviews & Ratings Monitor",
+      "orderRefundAnalysis": "Order Refund Analysis",
+      "thirdPartyStores": "Third-party Stores",
+      "placeholder": "Under construction"
+    },
     "businessInsight": {
       "title": "Business Insight",
       "revenueOverview": "Revenue Overview",

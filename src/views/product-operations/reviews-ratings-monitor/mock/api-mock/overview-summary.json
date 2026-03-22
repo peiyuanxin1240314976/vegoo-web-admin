@@ -1,0 +1,62 @@
+{
+  "kpi": {
+    "avgRating": 4.2,
+    "avgRatingDelta": 0.1,
+    "newReviews": 1284,
+    "newReviewsPct": 18,
+    "positiveRate": 78.5,
+    "positiveRateDelta": 2.3,
+    "negativeRate": 8.2,
+    "negativeRateDelta": -0.5,
+    "pendingReply": 23
+  },
+  "ratingDistribution": [
+    { "star": 5, "count": 619, "percent": 62 },
+    { "star": 4, "count": 160, "percent": 16 },
+    { "star": 3, "count": 79, "percent": 8 },
+    { "star": 2, "count": 60, "percent": 6 },
+    { "star": 1, "count": 79, "percent": 8 }
+  ],
+  "dailyReviews": [
+    {
+      "date": "2/28",
+      "star1": 14,
+      "star2": 10,
+      "star3": 20,
+      "star4": 50,
+      "star5": 87,
+      "total": 181
+    },
+    {
+      "date": "2/29",
+      "star1": 18,
+      "star2": 12,
+      "star3": 25,
+      "star4": 58,
+      "star5": 90,
+      "total": 203
+    }
+  ],
+  "appTopList": [
+    { "appName": "ClapFinder", "count": 219 },
+    { "appName": "CRMonitor", "count": 191 }
+  ],
+  "trend30Days": [
+    { "date": "2/6", "rating": 4.05 },
+    { "date": "3/6", "rating": 4.2 }
+  ],
+  "reviewTypes": [
+    { "type": "正面评价", "count": 658, "color": "#00d4aa" },
+    { "type": "其他", "count": 104, "color": "#4e8ef7" }
+  ],
+  "languageDistribution": [{ "language": "en", "displayName": "English", "percent": 26.9 }],
+  "deviceDistribution": [{ "device": "未知", "percent": 23.7 }],
+  "topicWords": [
+    { "word": "smooth", "weight": 8, "sentiment": "positive" },
+    { "word": "crash", "weight": 10, "sentiment": "negative" }
+  ],
+  "complaintTopics": [
+    { "topic": "崩溃", "count": 625 },
+    { "topic": "卡顿", "count": 380 }
+  ]
+}

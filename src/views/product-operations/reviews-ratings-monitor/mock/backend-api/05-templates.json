@@ -1,0 +1,34 @@
+{
+  "_comment": "评论与评分监控 - 回复模板列表。对应 api/reviewMonitor.ts: ReplyTemplate[]。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "description": "ReplyTemplate[] 数组。"
+    },
+    "ReplyTemplate": {
+      "id": { "type": "string", "description": "模板 ID。" },
+      "title": { "type": "string", "description": "模板标题。" },
+      "content": { "type": "string", "description": "模板内容。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": [
+    {
+      "id": "t1",
+      "title": "崩溃问题回复",
+      "content": "非常抱歉给您带来不便，我们已经注意到这个问题，正在紧急修复中，预计下个版本更新时解决。感谢您的反馈！"
+    },
+    {
+      "id": "t2",
+      "title": "好评感谢模板",
+      "content": "感谢您的五星好评！您的支持是我们前进的动力，我们会持续优化产品体验。"
+    }
+  ],
+  "api": {
+    "url": "GET /api/product-operations/reviews-ratings-monitor/templates",
+    "method": "GET",
+    "priority": "P1",
+    "requestBody": "无",
+    "responseBody": "ReplyTemplate[]"
+  }
+}

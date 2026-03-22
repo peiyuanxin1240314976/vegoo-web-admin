@@ -1,0 +1,26 @@
+{
+  "_comment": "评论与评分监控 - AI 自动生成回复。",
+  "fieldDescription": {
+    "request": {
+      "reviewId": { "type": "string", "required": true, "description": "评论 ID。" },
+      "content": { "type": "string", "required": true, "description": "评论内容（用于生成回复）。" }
+    },
+    "response": {
+      "reply": { "type": "string", "required": true, "description": "AI 生成的回复文案。" }
+    }
+  },
+  "sampleRequest": {
+    "reviewId": "1",
+    "content": "应用经常崩溃，希望尽快修复"
+  },
+  "sampleResponse": {
+    "reply": "感谢您的反馈！针对您提到的「应用经常崩溃」问题，我们团队已收到并正在处理，感谢您的耐心等待。"
+  },
+  "api": {
+    "url": "POST /api/product-operations/reviews-ratings-monitor/auto-reply",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "reviewId (必填), content (必填)",
+    "responseBody": "{ reply: string }"
+  }
+}
