@@ -7,20 +7,20 @@
  * 全页接口统一 POST 请求体（扁平 JSON，与数据中心 camelCase 一致）
  */
 export interface ProfitAnalysisQueryParams {
-  /** 必填，如 2026-03-01,2026-03-05 */
+  currentPage: number
+  pageSize: number
+  /** 逗号分隔 YYYY-MM-DD，如 2026-03-01,2026-03-05 */
   dateRange: string
-  currentPage?: number
-  pageSize?: number
-  platform?: string
+  platform: string
   /** 应用 ID，全部传 all */
-  sAppId?: string
+  sAppId: string
   /** 国家代码，全部传 all */
-  sCountryCode?: string
+  sCountryCode: string
 }
 
 /** KPI 概览接口 data 包裹层 */
 export interface ProfitKpiOverviewDto {
-  kpis: ProfitKpiCard[]
+  kpis?: ProfitKpiCard[]
 }
 
 export interface ProfitSelectOption {
@@ -30,6 +30,7 @@ export interface ProfitSelectOption {
 
 export interface ProfitDatePreset {
   label: string
+  /** 近 N 天数字字符串，供 shortcuts 解析 */
   value: string
 }
 
@@ -83,8 +84,8 @@ export interface ProfitAppTotal {
 
 /** 应用利润详情表 table/app-profit 的 data 结构 */
 export interface ProfitAppProfitResponseDto {
-  rows: ProfitAppRow[]
-  total: ProfitAppTotal
+  rows?: ProfitAppRow[]
+  total?: ProfitAppTotal
 }
 
 /** 国家利润 Top10 表行（对齐 ProfitCountryRowDto） */
@@ -117,9 +118,9 @@ export interface ProfitMapScatterItem {
 
 /** 国家利润分布 overview/country-profit 的 data 结构 */
 export interface ProfitCountryProfitResponseDto {
-  countryRows: ProfitCountryRow[]
-  mapData: ProfitMapDataItem[]
-  mapScatter: ProfitMapScatterItem[]
+  countryRows?: ProfitCountryRow[]
+  mapData?: ProfitMapDataItem[]
+  mapScatter?: ProfitMapScatterItem[]
 }
 
 /** 利润趋势近 30 天（overview/trend30d 的 data 内结构） */
@@ -145,8 +146,8 @@ export interface ProfitSankeyLink {
 
 /** 桑基图 overview/sankey 的 data（对齐 ProfitSankeyDto） */
 export interface ProfitSankeyDto {
-  nodes: ProfitSankeyNode[]
-  links: ProfitSankeyLink[]
+  nodes?: ProfitSankeyNode[]
+  links?: ProfitSankeyLink[]
 }
 
 /** 筛选区展示用（日期范围、应用、国家当前值） */
@@ -154,61 +155,4 @@ export interface ProfitFilterMeta {
   dateRange: string
   appLabel: string
   countryLabel: string
-}
-
-/** 下拉项（应用 / 国家 / 终端平台） */
-export interface ProfitSelectOption {
-  label: string
-  value: string
-}
-
-/** 日期快捷预设（与 ElDatePicker shortcuts 数据源一致） */
-export interface ProfitDatePresetOption {
-  label: string
-  value: string
-}
-
-/** GET .../meta-filter-options */
-export interface ProfitFilterOptions {
-  appOptions?: ProfitSelectOption[]
-  countryOptions?: ProfitSelectOption[]
-  platformOptions?: ProfitSelectOption[]
-  datePresets?: ProfitDatePresetOption[]
-}
-
-/**
- * 利润分析各 POST 接口统一请求体（扁平字段，与 backend-api 契约一致）
- */
-export interface ProfitAnalysisQueryParams {
-  currentPage: number
-  pageSize: number
-  /** 逗号分隔 YYYY-MM-DD，如 2026-03-01,2026-03-05 */
-  dateRange: string
-  platform: string
-  sAppId: string
-  sCountryCode: string
-}
-
-/** POST .../overview/kpi */
-export interface ProfitKpiOverviewDto {
-  kpis?: ProfitKpiCard[]
-}
-
-/** POST .../table/app-profit */
-export interface ProfitAppProfitResponseDto {
-  rows?: ProfitAppRow[]
-  total?: ProfitAppTotal
-}
-
-/** POST .../overview/country-profit */
-export interface ProfitCountryProfitResponseDto {
-  mapData?: ProfitMapDataItem[]
-  mapScatter?: ProfitMapScatterItem[]
-  countryRows?: ProfitCountryRow[]
-}
-
-/** POST .../overview/sankey */
-export interface ProfitSankeyDto {
-  nodes?: ProfitSankeyNode[]
-  links?: ProfitSankeyLink[]
 }
