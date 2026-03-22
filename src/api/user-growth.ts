@@ -229,3 +229,19 @@ export function fetchMyAdsSummary(params: Api.UserGrowth.MyAdsPageHeaderRequestP
     data: params
   })
 }
+
+/** 我的广告 - 应用+广告平台 Tab POST /api/v1/datacenter/analysis/my-ads/overview/platform */
+export function fetchMyAdsPlatform(params: Api.UserGrowth.MyAdsPageHeaderRequestParams) {
+  return request.post<Api.UserGrowth.MyAdsPlatformResponseDto>({
+    url: '/api/v1/datacenter/analysis/my-ads/overview/platform',
+    data: params
+  })
+}
+
+/** 我的广告 - 广告系列明细 Tab POST /api/v1/datacenter/analysis/my-ads/overview/campaign */
+export function fetchMyAdsCampaign(params: Api.UserGrowth.MyAdsPageHeaderRequestParams) {
+  return request.post<Api.UserGrowth.MyAdsCampaignTableDto>({
+    url: '/api/v1/datacenter/analysis/my-ads/overview/campaign',
+    data: params
+  })
+}

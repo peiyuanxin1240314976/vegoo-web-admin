@@ -347,17 +347,22 @@ declare namespace Api {
      * 我的广告 - 頁頭通用請求體（與頂部篩選聯動，後續接口參數一致）
      * POST /api/v1/datacenter/analysis/my-ads/overview/page-header
      */
+    /** 除 currentPage、pageSize 外，未傳或空值建議送 null（與後端約定一致） */
     interface MyAdsPageHeaderRequestParams {
-      appId?: string
-      countryCode?: string
+      appId?: string | null
+      countryCode?: string | null
       currentPage?: number
-      endDate?: string
-      groupBy?: 'app' | 'source'
-      keyword?: string
+      endDate?: string | null
+      groupBy?: 'app' | 'source' | null
+      keyword?: string | null
       pageSize?: number
-      source?: number
-      staffId?: string
-      startDate?: string
+      source?: number | null
+      staffId?: string | null
+      startDate?: string | null
+      /** Campaign 篩選：狀態 active|warn|inactive */
+      status?: string | null
+      /** Campaign 篩選：投放類型 with_agency=含代投 pure=僅直投 */
+      agencyType?: 'with_agency' | 'pure' | null
     }
 
     /** 我的广告 - 頁頭列表單行（與 MyAdsCampaignRowDto 一致） */
@@ -380,10 +385,30 @@ declare namespace Api {
       roi: number
     }
 
-    /** 我的广告 - 頁頭響應 data */
+    /** 我的广告 - 頁頭 userCard（與後端約定） */
+    interface MyAdsPageHeaderUserCardDto {
+      avatarLetter: string
+      name: string
+      role: string
+      appsLine: string
+    }
+
+    /** 我的广告 - 頁頭 metric 單項 */
+    interface MyAdsPageHeaderMetricDto {
+      label: string
+      value: string
+      sub: string
+      subColor: string
+      valueColor: string
+    }
+
+    /** 我的广告 - 頁頭響應 data（與 POST .../overview/page-header 約定一致） */
     interface MyAdsPageHeaderResponseDto {
-      total: number
-      list: Api.UserGrowth.MyAdsPageHeaderRowDto[]
+      staffList: { id: string; name: string }[]
+      defaultStaffId: string
+      dateRange: [string, string]
+      userCard: Api.UserGrowth.MyAdsPageHeaderUserCardDto
+      metrics: Api.UserGrowth.MyAdsPageHeaderMetricDto[]
     }
 
     /** 我的广告 - Summary 消耗进度單行 POST .../overview/summary */
@@ -439,6 +464,79 @@ declare namespace Api {
       sourcePie: Api.UserGrowth.MyAdsSummarySourcePieItemDto[]
       statCards: Record<string, Api.UserGrowth.MyAdsSummaryStatCardDto>
       trend: Api.UserGrowth.MyAdsSummaryTrendDto
+    }
+
+    /** 我的广告 - Platform 廣告系列卡片 POST .../overview/platform */
+    interface MyAdsPlatformCampaignCardDto {
+      platform: string
+      platformIcon: string
+      status: string
+      spend: string
+      budget: string
+      roi: string
+      roiTarget: string
+      progress: number
+      minSpend: string
+      cpi: string
+    }
+
+    /** 我的广告 - Platform 應用分組 */
+    interface MyAdsPlatformAppGroupDto {
+      name: string
+      nameEn: string
+      icon: string
+      color: string
+      totalSpend: string
+      avgRoi: string
+      platformCount: number
+      campaigns: Api.UserGrowth.MyAdsPlatformCampaignCardDto[]
+    }
+
+    /** 我的广告 - Platform 底部匯總 */
+    interface MyAdsPlatformFooterDto {
+      appCount: number
+      campaignCount: number
+      totalSpend: string
+      overBudgetCount: number
+      roiBelowTargetCount: number
+      avgRoi: string
+      estTotalProfit: string
+      minTotalProfit: string
+    }
+
+    /** 我的广告 - Platform 響應 data */
+    interface MyAdsPlatformResponseDto {
+      appGroups: Api.UserGrowth.MyAdsPlatformAppGroupDto[]
+      footer: Api.UserGrowth.MyAdsPlatformFooterDto
+    }
+
+    /** 我的广告 - Campaign 列表單行 POST .../overview/campaign */
+    interface MyAdsCampaignRowDto {
+      id: string
+      name: string
+      appName: string
+      appIcon: string
+      platform: string
+      platformIcon: string
+      s_country_code: string
+      status: string
+      trend: string
+      budget: number
+      spend: number
+      calcSpend: number
+      agencySpend: number
+      minSpend: number
+      estProfit: number
+      roi: number
+      /** 可選，部分接口可能不返回 */
+      minProfit?: number
+      cpi?: number
+    }
+
+    /** 我的广告 - Campaign 響應 data */
+    interface MyAdsCampaignTableDto {
+      list: Api.UserGrowth.MyAdsCampaignRowDto[]
+      total: number
     }
   }
 

@@ -1,56 +1,43 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
-  import { MOCK_MY_ADS_PLATFORM_TAB } from '../mock/data'
+  import { ref, computed } from 'vue'
 
   defineOptions({ name: 'PlatformTab' })
 
+  const props = defineProps<{
+    data: Api.UserGrowth.MyAdsPlatformResponseDto | null
+    loading: boolean
+  }>()
+
   const groupByApp = ref(true)
 
-  const platformMock = MOCK_MY_ADS_PLATFORM_TAB
+  const showSkeleton = computed(() => props.loading || !props.data)
 
-  /* ── 数据 ── */
-  interface CampaignCard {
-    platform: string
-    platformIcon: string
-    status: 'active' | 'warn'
-    spend: string
-    budget: string
-    roi: string
-    roiTarget: string
-    progress: number
-    minSpend: string
-    cpi: string
-    warn?: string
-  }
+  const appGroups = computed(() => props.data?.appGroups ?? [])
 
-  interface AppGroup {
-    name: string
-    nameEn: string
-    icon: string
-    color: string
-    totalSpend: string
-    avgRoi: string
-    platformCount: number
-    campaigns: CampaignCard[]
-  }
+  const footer = computed(() => props.data?.footer)
 
-  const apps: AppGroup[] = platformMock.appGroups
+  const appGroupsIsEmpty = computed(() => !appGroups.value.length)
 
-  function progressColor(c: CampaignCard) {
+  function progressColor(c: Api.UserGrowth.MyAdsPlatformCampaignCardDto) {
     if (c.status === 'warn') return '#f59e0b'
     return '#10b981'
   }
 
-  function roiColor(c: CampaignCard) {
+  function roiColor(c: Api.UserGrowth.MyAdsPlatformCampaignCardDto) {
     if (c.status === 'warn') return '#f97316'
     return '#f59e0b'
   }
 
-  function platformIconStyle(p: string) {
+  function platformIconStyle(p: string | null | undefined) {
+    if (p == null || typeof p !== 'string') return { background: '#6b7280', color: '#fff' }
     if (p.includes('谷歌')) return { background: '#4285f4', color: '#fff' }
     if (p.includes('Meta')) return { background: '#1877f2', color: '#fff' }
     if (p.includes('TikTok')) return { background: '#000', color: '#fff' }
     return { background: '#6b7280', color: '#fff' }
+  }
+
+  function statusDisplay(status: string) {
+    return status === 'warn' ? '⚠ 超预算' : '● 激活'
   }
 </script>
 
@@ -60,137 +47,166 @@
     <div class="tab-sub-header">
       <span class="sub-desc">应用视角 | 展示各应用在各广告平台的广告数据</span>
       <div class="toggle-group">
-        <div :class="['toggle-btn', groupByApp ? 'active' : '']" @click="groupByApp = true"
-          >按应用分组</div
-        >
-        <div :class="['toggle-btn', !groupByApp ? 'active' : '']" @click="groupByApp = false"
-          >按平台分组</div
-        >
+        <div :class="['toggle-btn', groupByApp ? 'active' : '']" @click="groupByApp = true">
+          按应用分组
+        </div>
+        <div :class="['toggle-btn', !groupByApp ? 'active' : '']" @click="groupByApp = false">
+          按平台分组
+        </div>
       </div>
     </div>
 
-    <!-- ── 应用组列表 ── -->
-    <div class="app-groups">
-      <div v-for="app in apps" :key="app.nameEn" class="app-group">
-        <!-- 应用标题行 -->
-        <div class="app-group-header">
-          <span class="app-icon">{{ app.icon }}</span>
-          <span class="app-name">{{ app.name }}（{{ app.nameEn }}）</span>
-          <span class="app-meta"
-            >总广告支出: <b style="color: #e2e8f0">{{ app.totalSpend }}</b></span
-          >
-          <span class="app-meta"
-            >平均首日ROI: <b style="color: #f59e0b">{{ app.avgRoi }}</b></span
-          >
-          <span class="app-meta"
-            >平台数: <b style="color: #e2e8f0">{{ app.platformCount }}个</b></span
-          >
+    <template v-if="showSkeleton">
+      <!-- 骨架屏 -->
+      <div class="platform-skeleton">
+        <ElSkeleton animated :rows="6" />
+      </div>
+      <div class="bottom-summary platform-skeleton-footer">
+        <ElSkeleton animated :rows="2" />
+      </div>
+    </template>
+
+    <template v-else-if="data">
+      <!-- ── 应用组列表 ── -->
+      <div class="app-groups">
+        <div v-if="appGroupsIsEmpty" class="app-groups-empty">
+          <ElEmpty description="暂无数据" :image-size="80" />
         </div>
-
-        <!-- 平台卡片网格 -->
-        <div class="campaign-cards">
-          <div
-            v-for="c in app.campaigns"
-            :key="c.platform"
-            :class="['camp-card', c.status === 'warn' ? 'card-warn' : '']"
-          >
-            <!-- 卡片头 -->
-            <div class="camp-card-head">
-              <div class="platform-badge">
-                <span class="plat-icon" :style="platformIconStyle(c.platform)">{{
-                  c.platformIcon
-                }}</span>
-                <span class="plat-name">{{ c.platform }}</span>
-              </div>
-              <div class="card-head-right">
-                <span :class="['status-badge', c.status === 'warn' ? 'badge-warn' : 'badge-ok']">
-                  {{ c.status === 'warn' ? '⚠ 超预算' : '● 激活' }}
-                </span>
-              </div>
+        <template v-else>
+          <div v-for="app in appGroups" :key="app.nameEn || app.name" class="app-group">
+            <!-- 应用标题行 -->
+            <div class="app-group-header">
+              <span class="app-icon">{{ app.icon || '📱' }}</span>
+              <span class="app-name">{{ app.name }}（{{ app.nameEn }}）</span>
+              <span class="app-meta">
+                总广告支出: <b style="color: #e2e8f0">{{ app.totalSpend || '—' }}</b>
+              </span>
+              <span class="app-meta">
+                平均首日ROI: <b style="color: #f59e0b">{{ app.avgRoi || '—' }}</b>
+              </span>
+              <span class="app-meta">
+                平台数: <b style="color: #e2e8f0">{{ app.platformCount }}个</b>
+              </span>
             </div>
 
-            <!-- 数据网格 -->
-            <div class="card-data-grid">
-              <div class="data-cell">
-                <span class="cell-label">广告支出</span>
-                <span class="cell-val" style="color: #e2e8f0">{{ c.spend }}</span>
+            <!-- 平台卡片网格 -->
+            <div class="campaign-cards">
+              <div v-if="!app.campaigns?.length" class="camp-cards-empty">
+                <ElEmpty description="暂无数据" :image-size="60" />
               </div>
-              <div class="data-cell">
-                <span class="cell-label">预算</span>
-                <span class="cell-val" style="color: #e2e8f0">{{ c.budget }}</span>
-              </div>
-              <div class="data-cell">
-                <span class="cell-label">首日ROI</span>
-                <span class="cell-val" :style="{ color: roiColor(c) }">{{ c.roi }}</span>
-              </div>
-              <div class="data-cell">
-                <span class="cell-label">目标</span>
-                <span class="cell-val" style="color: #94a3b8">{{ c.roiTarget }}</span>
-              </div>
-            </div>
-
-            <!-- 进度条 -->
-            <div class="card-progress">
-              <div class="prog-track">
+              <template v-else>
                 <div
-                  class="prog-fill"
-                  :style="{ width: c.progress + '%', background: progressColor(c) }"
-                ></div>
-              </div>
-              <span class="prog-pct" :style="{ color: progressColor(c) }">{{ c.progress }}%</span>
-            </div>
+                  v-for="(c, idx) in app.campaigns"
+                  :key="c.platform + '-' + idx"
+                  :class="['camp-card', c.status === 'warn' ? 'card-warn' : '']"
+                >
+                  <!-- 卡片头 -->
+                  <div class="camp-card-head">
+                    <div class="platform-badge">
+                      <span class="plat-icon" :style="platformIconStyle(c.platform)">{{
+                        c.platformIcon || '—'
+                      }}</span>
+                      <span class="plat-name">{{ c.platform || '—' }}</span>
+                    </div>
+                    <div class="card-head-right">
+                      <span
+                        :class="['status-badge', c.status === 'warn' ? 'badge-warn' : 'badge-ok']"
+                      >
+                        {{ statusDisplay(c.status) }}
+                      </span>
+                    </div>
+                  </div>
 
-            <!-- 次要数据行 -->
-            <div class="card-sub-row">
-              <div class="data-cell">
-                <span class="cell-label">最低利润</span>
-                <span class="cell-val" style="color: #a78bfa">{{ c.minSpend }}</span>
-              </div>
-              <div class="data-cell">
-                <span class="cell-label">CPI</span>
-                <span class="cell-val" style="color: #e2e8f0">{{ c.cpi }}</span>
-              </div>
-            </div>
+                  <!-- 数据网格 -->
+                  <div class="card-data-grid">
+                    <div class="data-cell">
+                      <span class="cell-label">广告支出</span>
+                      <span class="cell-val" style="color: #e2e8f0">{{ c.spend || '—' }}</span>
+                    </div>
+                    <div class="data-cell">
+                      <span class="cell-label">预算</span>
+                      <span class="cell-val" style="color: #e2e8f0">{{ c.budget || '—' }}</span>
+                    </div>
+                    <div class="data-cell">
+                      <span class="cell-label">首日ROI</span>
+                      <span class="cell-val" :style="{ color: roiColor(c) }">{{
+                        c.roi || '—'
+                      }}</span>
+                    </div>
+                    <div class="data-cell">
+                      <span class="cell-label">目标</span>
+                      <span class="cell-val" style="color: #94a3b8">{{ c.roiTarget || '—' }}</span>
+                    </div>
+                  </div>
 
-            <!-- 警告行 -->
-            <div v-if="c.warn" class="card-warn-row"> ⚠ {{ c.warn }} </div>
+                  <!-- 进度条 -->
+                  <div class="card-progress">
+                    <div class="prog-track">
+                      <div
+                        class="prog-fill"
+                        :style="{ width: (c.progress ?? 0) + '%', background: progressColor(c) }"
+                      ></div>
+                    </div>
+                    <span class="prog-pct" :style="{ color: progressColor(c) }"
+                      >{{ c.progress ?? 0 }}%</span
+                    >
+                  </div>
+
+                  <!-- 次要数据行 -->
+                  <div class="card-sub-row">
+                    <div class="data-cell">
+                      <span class="cell-label">最低利润</span>
+                      <span class="cell-val" style="color: #a78bfa">{{ c.minSpend || '—' }}</span>
+                    </div>
+                    <div class="data-cell">
+                      <span class="cell-label">CPI</span>
+                      <span class="cell-val" style="color: #e2e8f0">{{ c.cpi || '—' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
           </div>
+        </template>
+      </div>
+
+      <!-- ── 底部汇总栏 ── -->
+      <div class="bottom-summary">
+        <template v-if="footer">
+          <div class="summary-left">
+            <span class="s-label">
+              应用汇总: {{ footer.appCount }}个应用 | {{ footer.campaignCount }}个广告系列
+            </span>
+            <span class="s-label">
+              总广告支出 <b style="color: #10b981">{{ footer.totalSpend || '—' }}</b>
+            </span>
+          </div>
+          <div class="summary-alerts">
+            <span class="alert-item warn">
+              超预算预警: <b>{{ footer.overBudgetCount }}个</b>
+            </span>
+            <span class="sep">|</span>
+            <span class="alert-item orange">
+              ROI未达标: <b>{{ footer.roiBelowTargetCount }}个</b>
+            </span>
+          </div>
+          <div class="summary-right">
+            <span class="s-label">
+              平均首日ROI <b style="color: #f59e0b">{{ footer.avgRoi || '—' }}</b>
+            </span>
+            <span class="s-label">
+              预估总利润 <b style="color: #10b981">{{ footer.estTotalProfit || '—' }}</b>
+            </span>
+            <span class="s-label">
+              最低总利润 <b style="color: #a78bfa">{{ footer.minTotalProfit || '—' }}</b>
+            </span>
+          </div>
+        </template>
+        <div v-else class="footer-empty">
+          <ElEmpty description="暂无数据" :image-size="60" />
         </div>
       </div>
-    </div>
-
-    <!-- ── 底部汇总栏 ── -->
-    <div class="bottom-summary">
-      <div class="summary-left">
-        <span class="s-label"
-          >应用汇总: {{ platformMock.footer.appCount }}个应用 |
-          {{ platformMock.footer.campaignCount }}个广告系列</span
-        >
-        <span class="s-label"
-          >总广告支出 <b style="color: #10b981">{{ platformMock.footer.totalSpend }}</b></span
-        >
-      </div>
-      <div class="summary-alerts">
-        <span class="alert-item warn"
-          >超预算预警: <b>{{ platformMock.footer.overBudgetCount }}个</b></span
-        >
-        <span class="sep">|</span>
-        <span class="alert-item orange"
-          >ROI未达标: <b>{{ platformMock.footer.roiBelowTargetCount }}个</b></span
-        >
-      </div>
-      <div class="summary-right">
-        <span class="s-label"
-          >平均首日ROI <b style="color: #f59e0b">{{ platformMock.footer.avgRoi }}</b></span
-        >
-        <span class="s-label"
-          >预估总利润 <b style="color: #10b981">{{ platformMock.footer.estTotalProfit }}</b></span
-        >
-        <span class="s-label"
-          >最低总利润 <b style="color: #a78bfa">{{ platformMock.footer.minTotalProfit }}</b></span
-        >
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -199,6 +215,67 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+  }
+
+  .platform-skeleton {
+    min-height: 240px;
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .platform-skeleton :deep(.el-skeleton) {
+    padding: 0;
+  }
+
+  .platform-skeleton-footer {
+    min-height: 60px;
+  }
+
+  .platform-skeleton-footer :deep(.el-skeleton) {
+    padding: 0;
+  }
+
+  .app-groups-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    padding: 40px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .app-groups-empty :deep(.el-empty__description) {
+    color: var(--text-secondary);
+  }
+
+  .camp-cards-empty {
+    display: flex;
+    grid-column: 1 / -1;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+  }
+
+  .camp-cards-empty :deep(.el-empty__description) {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .footer-empty {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+  }
+
+  .footer-empty :deep(.el-empty__description) {
+    font-size: 12px;
+    color: var(--text-secondary);
   }
 
   /* ── 副标题 ── */
@@ -328,15 +405,6 @@
     align-items: center;
   }
 
-  .flag {
-    font-size: 14px;
-  }
-
-  .country-code {
-    font-size: 11px;
-    color: var(--text-secondary);
-  }
-
   .status-badge {
     padding: 1px 6px;
     font-size: 11px;
@@ -408,16 +476,6 @@
     min-width: 30px;
     font-size: 12px;
     font-weight: 600;
-  }
-
-  /* ── 警告行 ── */
-  .card-warn-row {
-    padding: 4px 8px;
-    font-size: 11px;
-    color: #f97316;
-    background: rgb(249 115 22 / 10%);
-    border: 1px solid rgb(249 115 22 / 20%);
-    border-radius: 4px;
   }
 
   /* ── 底部汇总 ── */

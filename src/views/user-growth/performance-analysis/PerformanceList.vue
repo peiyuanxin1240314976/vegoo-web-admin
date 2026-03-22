@@ -71,7 +71,7 @@
                 <th class="col-check">
                   <input type="checkbox" :checked="allSelected" @change="toggleAll" />
                 </th>
-                <th class="col-name">投放师</th>
+                <th class="col-name">优化师</th>
                 <th>职级</th>
                 <th class="sortable" @click="handleSort('adSpend')">
                   广告支出
@@ -264,7 +264,7 @@
       surname: '赵',
       name: '赵六',
       avatarBg: '#f97316',
-      level: '高级投放师',
+      level: '高级优化师',
       levelClass: 'senior',
       adSpend: 52100,
       calcCost: 50800,
@@ -284,7 +284,7 @@
       surname: '张',
       name: '张三',
       avatarBg: '#06b6d4',
-      level: '高级投放师',
+      level: '高级优化师',
       levelClass: 'senior',
       adSpend: 49279,
       calcCost: 49840,
@@ -304,7 +304,7 @@
       surname: '刘',
       name: '刘七',
       avatarBg: '#3b82f6',
-      level: '投放师',
+      level: '优化师',
       levelClass: 'mid',
       adSpend: 33500,
       calcCost: 31200,
@@ -324,7 +324,7 @@
       surname: '李',
       name: '李四',
       avatarBg: '#6366f1',
-      level: '投放师',
+      level: '优化师',
       levelClass: 'mid',
       adSpend: 37838,
       calcCost: 27159,
@@ -344,7 +344,7 @@
       surname: '陈',
       name: '陈八',
       avatarBg: '#8b5cf6',
-      level: '投放师',
+      level: '优化师',
       levelClass: 'mid',
       adSpend: 29600,
       calcCost: 28400,
@@ -364,7 +364,7 @@
       surname: '周',
       name: '周九',
       avatarBg: '#0ea5e9',
-      level: '投放师',
+      level: '优化师',
       levelClass: 'mid',
       adSpend: 24100,
       calcCost: 22800,
@@ -384,7 +384,7 @@
       surname: '吴',
       name: '吴十',
       avatarBg: '#64748b',
-      level: '初级投放师',
+      level: '初级优化师',
       levelClass: 'junior',
       adSpend: 18200,
       calcCost: 16900,
@@ -404,7 +404,7 @@
       surname: '王',
       name: '王五',
       avatarBg: '#a855f7',
-      level: '投放师',
+      level: '优化师',
       levelClass: 'mid',
       adSpend: 28450,
       calcCost: 26100,

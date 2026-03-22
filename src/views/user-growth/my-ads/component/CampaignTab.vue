@@ -1,47 +1,122 @@
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
-  import { MOCK_MY_ADS_CAMPAIGN_ROWS } from '../mock/data'
+  import { ref, computed, watch, onMounted } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { fetchMyAdsCampaign } from '@/api/user-growth'
 
   defineOptions({ name: 'CampaignTab' })
 
-  /* ── 类型 ── */
-  interface Campaign {
-    id: string
-    appIcon: string
-    appName: string
-    name: string
-    platform: string
-    platformIcon: string
-    /** ISO 3166-1 alpha-2；国旗由 flag-icons 映射，不依赖接口返回 emoji */
-    s_country_code: string
-    status: 'active' | 'inactive' | 'warn'
-    spend: number
-    budget: number
-    calcSpend: number
-    agencySpend: number
-    roi: number | null
-    minSpend: number
-    estProfit: number | null
-    minProfit: number | null
-    cpi: number | null
-    trend: 'up' | 'down' | 'flat' | 'none'
+  const router = useRouter()
+
+  const props = defineProps<{
+    staffId: string
+    dateRange: [string, string]
+  }>()
+
+  type CampaignRow = Api.UserGrowth.MyAdsCampaignRowDto
+
+  const loading = ref(false)
+  const campaignData = ref<Api.UserGrowth.MyAdsCampaignTableDto | null>(null)
+  const filterScope = ref<string | undefined>(undefined)
+  const filterApp = ref<string | undefined>(undefined)
+  const filterPlatform = ref<string | undefined>(undefined)
+  const filterCountry = ref<string | undefined>(undefined)
+  const filterStatus = ref<string | undefined>(undefined)
+  const filterType = ref<'with_agency' | 'pure' | undefined>(undefined)
+  const searchText = ref('')
+  const currentPage = ref(1)
+  const pageSize = ref(10)
+
+  const campaigns = computed(() => campaignData.value?.list ?? [])
+  const total = computed(() => campaignData.value?.total ?? 0)
+
+  /** 廣告平台名稱 → n_source（backend-fields：1-Google 2-Facebook 3-Unity 4-AppLovin 5-IronSource 6-AdColony 7-Pangle） */
+  const PLATFORM_TO_SOURCE: Record<string, number> = {
+    Google: 1,
+    谷歌: 1,
+    Facebook: 2,
+    Meta: 2,
+    Unity: 3,
+    AppLovin: 4,
+    IronSource: 5,
+    AdColony: 6,
+    Pangle: 7,
+    TikTok: 8,
+    Mintegral: 9,
+    Kwai: 10
   }
 
-  const campaigns: Campaign[] = MOCK_MY_ADS_CAMPAIGN_ROWS
+  function buildParams() {
+    const [startDate = '', endDate = ''] = props.dateRange
+    const app = (filterApp.value ?? '').trim()
+    const country = (filterCountry.value ?? '').trim()
+    const kw = searchText.value.trim()
+    const staff = (props.staffId ?? '').trim()
+    const scope = filterScope.value
+    const platform = filterPlatform.value
+    const statusVal = filterStatus.value
+    const agencyVal = filterType.value
+    const sourceNum =
+      platform && PLATFORM_TO_SOURCE[platform] != null ? PLATFORM_TO_SOURCE[platform] : null
+    const staffIdVal = scope === '全部' ? '' : staff
+    return {
+      appId: app || '',
+      countryCode: country || '',
+      currentPage: Math.max(1, currentPage.value),
+      endDate: endDate.trim() || '',
+      groupBy: 'app' as const,
+      keyword: kw || '',
+      pageSize: Math.max(1, pageSize.value),
+      source: sourceNum,
+      staffId: staffIdVal || '',
+      startDate: startDate.trim() || '',
+      status: statusVal ?? null,
+      agencyType: agencyVal ?? null
+    }
+  }
+
+  async function loadCampaigns() {
+    loading.value = true
+    try {
+      const data = await fetchMyAdsCampaign(buildParams())
+      campaignData.value = data ?? null
+    } catch {
+      campaignData.value = null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  onMounted(() => {
+    loadCampaigns()
+  })
+
+  watch(
+    () => [
+      props.staffId,
+      props.dateRange,
+      filterScope.value,
+      filterApp.value,
+      filterPlatform.value,
+      filterCountry.value,
+      filterStatus.value,
+      filterType.value,
+      searchText.value
+    ],
+    () => {
+      currentPage.value = 1
+      loadCampaigns()
+    }
+  )
+
+  watch([currentPage, pageSize], () => {
+    loadCampaigns()
+  })
 
   /* ── 筛选 ── */
   const scopeOptions = [
     { value: '全部', label: '全部' },
     { value: '我负责的', label: '我负责的' }
   ]
-
-  const filterScope = ref<string | undefined>(undefined)
-
-  const filterApp = ref<string | undefined>(undefined)
-  const filterPlatform = ref<string | undefined>(undefined)
-  const filterCountry = ref<string | undefined>(undefined)
-  const filterStatus = ref<Campaign['status'] | undefined>(undefined)
-  const filterType = ref<'with_agency' | 'pure' | undefined>(undefined)
 
   const statusOptions = [
     { value: 'active' as const, label: '激活' },
@@ -55,71 +130,36 @@
   ]
 
   const appOptions = computed(() => {
-    const names = [...new Set(campaigns.map((c) => c.appName))].sort()
+    const names = [...new Set(campaigns.value.map((c) => c.appName).filter(Boolean))].sort()
     return names.map((n) => ({ value: n, label: n }))
   })
 
   const platformOptions = computed(() => {
-    const ps = [...new Set(campaigns.map((c) => c.platform))].sort()
+    const ps = [...new Set(campaigns.value.map((c) => c.platform).filter(Boolean))].sort()
     return ps.map((p) => ({ value: p, label: p }))
   })
 
   const countryOptions = computed(() => {
-    const cs = [...new Set(campaigns.map((c) => c.s_country_code))].sort()
+    const cs = [...new Set(campaigns.value.map((c) => c.s_country_code).filter(Boolean))].sort()
     return cs.map((c) => ({ value: c, label: c }))
   })
 
-  const searchText = ref('')
-  const currentPage = ref(1)
-  const pageSize = ref(10)
+  /** 接口返回當前頁列表 */
+  const pagedCampaigns = computed(() => campaigns.value)
 
-  /** 筛选后的全量（不分页）；接接口时等价于服务端在筛选条件下的 total 条数对应的完整列表，或由接口直接返回当前页数据 */
-  const filteredCampaigns = computed(() => {
-    let list = campaigns.slice()
-
-    if (filterApp.value) {
-      list = list.filter((c) => c.appName === filterApp.value)
-    }
-    if (filterPlatform.value) {
-      list = list.filter((c) => c.platform === filterPlatform.value)
-    }
-    if (filterCountry.value) {
-      list = list.filter((c) => c.s_country_code === filterCountry.value)
-    }
-    if (filterStatus.value) {
-      list = list.filter((c) => c.status === filterStatus.value)
-    }
-    if (filterType.value === 'with_agency') {
-      list = list.filter((c) => c.agencySpend > 0)
-    } else if (filterType.value === 'pure') {
-      list = list.filter((c) => c.agencySpend === 0)
-    }
-
-    const q = searchText.value.trim().toLowerCase()
-    if (q) {
-      list = list.filter((c) => c.name.toLowerCase().includes(q))
-    }
-
-    return list
-  })
-
-  const filteredTotal = computed(() => filteredCampaigns.value.length)
-
-  /** 当前表格行（前端分页切片）；接接口后改为接口返回的 list，total 用接口 total */
-  const pagedCampaigns = computed(() => {
-    const list = filteredCampaigns.value
-    const start = (currentPage.value - 1) * pageSize.value
-    return list.slice(start, start + pageSize.value)
-  })
-
-  watch([filterApp, filterPlatform, filterCountry, filterStatus, filterType, searchText], () => {
-    currentPage.value = 1
-  })
+  const filteredTotal = computed(() => total.value)
 
   watch([filteredTotal, pageSize], () => {
     const maxPage = Math.max(1, Math.ceil(filteredTotal.value / pageSize.value) || 1)
     if (currentPage.value > maxPage) currentPage.value = maxPage
   })
+
+  function goToCampaignDetail(id: string, name: string) {
+    router.push({
+      path: '/user-growth/ad-performance/campaign-detail',
+      query: { id, name }
+    })
+  }
 
   function resetFilters() {
     filterScope.value = undefined
@@ -133,34 +173,43 @@
   }
 
   /* ── 格式化 ── */
-  function fmtNum(v: number | null): string {
-    if (v === null) return '--'
-    if (v === 0) return '$0'
-    return `$${v.toLocaleString()}`
+  function fmtNum(v: number | null | undefined): string {
+    if (v == null) return '--'
+    if (v === 0) return '$0.00'
+    const s = Math.abs(v).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+    return v < 0 ? `-$${s}` : `$${s}`
   }
-  function fmtRoi(v: number | null): string {
-    if (v === null) return '--'
+  function fmtRoi(v: number | null | undefined): string {
+    if (v == null) return '--'
     return v + '%'
   }
 
+  function fmtCpi(v: number | null | undefined): string {
+    if (v == null) return '--'
+    return `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+
   /* ── 颜色逻辑 ── */
-  function statusStyle(s: Campaign['status']) {
+  function statusStyle(s: string) {
     if (s === 'active') return { color: '#10b981' }
     if (s === 'warn') return { color: '#f59e0b' }
     return { color: '#4b5563' }
   }
-  function roiStyle(v: number | null) {
-    if (v === null) return { color: '#4b5563' }
+  function roiStyle(v: number | null | undefined) {
+    if (v == null) return { color: '#4b5563' }
     if (v >= 35) return { color: '#f59e0b' }
     return { color: '#f97316' }
   }
-  function profitStyle(v: number | null) {
-    if (v === null) return { color: '#4b5563' }
+  function profitStyle(v: number | null | undefined) {
+    if (v == null) return { color: '#4b5563' }
     if (v < 0) return { color: '#ef4444' }
     return { color: '#10b981' }
   }
-  function minProfitStyle(v: number | null) {
-    if (v === null) return { color: '#4b5563' }
+  function minProfitStyle(v: number | null | undefined) {
+    if (v == null) return { color: '#4b5563' }
     if (v < 0) return { color: '#ef4444' }
     return { color: '#a78bfa' }
   }
@@ -172,7 +221,7 @@
     return '#6b7280'
   }
 
-  function progressColor(c: Campaign) {
+  function progressColor(c: CampaignRow) {
     if (c.status === 'warn') return '#f59e0b'
     if (c.status === 'inactive') return '#374151'
     const pct = c.budget > 0 ? c.spend / c.budget : 0
@@ -180,18 +229,18 @@
     return '#10b981'
   }
 
-  function progressPct(c: Campaign) {
+  function progressPct(c: CampaignRow) {
     if (c.budget === 0) return 0
     return Math.round((c.spend / c.budget) * 100)
   }
 
-  function trendSvg(trend: Campaign['trend']) {
+  function trendSvg(trend: string) {
     if (trend === 'up') return '↗'
     if (trend === 'down') return '↘'
     if (trend === 'flat') return '→'
     return '—'
   }
-  function trendColor(trend: Campaign['trend']) {
+  function trendColor(trend: string) {
     if (trend === 'up') return '#10b981'
     if (trend === 'down') return '#ef4444'
     if (trend === 'flat') return '#f59e0b'
@@ -211,6 +260,28 @@
     const suffix = countryFlagCode(code)
     return suffix ? `fi fi-${suffix}` : ''
   }
+
+  /** 底部 bar 本頁彙總（接口無單獨 summary，從當前頁 list 計算） */
+  const barTotals = computed(() => {
+    const list = pagedCampaigns.value
+    const spend = list.reduce((s, c) => s + (c.spend ?? 0), 0)
+    const budget = list.reduce((s, c) => s + (c.budget ?? 0), 0)
+    const agencySpend = list.reduce((s, c) => s + (c.agencySpend ?? 0), 0)
+    const directSpend = spend - agencySpend
+    const agencyRatio = spend > 0 ? (agencySpend / spend) * 100 : 0
+    const estProfit = list.reduce((s, c) => s + (c.estProfit ?? 0), 0)
+    const minTotal = list.reduce((s, c) => s + (c.minSpend ?? 0), 0)
+    return {
+      spend,
+      budget,
+      diff: budget - spend,
+      agencySpend,
+      directSpend,
+      agencyRatio,
+      estProfit,
+      minTotal
+    }
+  })
 </script>
 
 <template>
@@ -309,7 +380,13 @@
 
     <!-- ── 数据表格 ── -->
     <div class="table-wrap">
-      <table class="data-table">
+      <template v-if="loading">
+        <div class="table-skeleton">
+          <ElSkeleton :rows="6" animated />
+        </div>
+      </template>
+      <ElEmpty v-else-if="pagedCampaigns.length === 0" description="暂无数据" />
+      <table v-else class="data-table">
         <thead>
           <tr>
             <th class="th-app">应用</th>
@@ -322,7 +399,7 @@
             <th>代投消耗</th>
             <th>首日ROI</th>
             <th>预估利润</th>
-            <th>最低利润</th>
+            <th>最低消耗</th>
             <th>CPI</th>
             <th>趋势</th>
             <th>操作</th>
@@ -421,14 +498,14 @@
               </span>
             </td>
 
-            <!-- 最低利润 -->
+            <!-- 最低消耗（API: minSpend） -->
             <td>
-              <span :style="minProfitStyle(c.minProfit)">{{ fmtNum(c.minProfit) }}</span>
+              <span :style="minProfitStyle(c.minSpend)">{{ fmtNum(c.minSpend) }}</span>
             </td>
 
-            <!-- CPI -->
-            <td :style="{ color: c.cpi === null ? '#4b5563' : '#94a3b8' }">
-              {{ c.cpi === null ? '--' : '$' + c.cpi }}
+            <!-- CPI（API 可選） -->
+            <td :style="{ color: c.cpi == null ? '#4b5563' : '#94a3b8' }">
+              {{ fmtCpi(c.cpi) }}
             </td>
 
             <!-- 趋势 -->
@@ -440,7 +517,7 @@
 
             <!-- 操作 -->
             <td>
-              <button class="detail-btn">详情</button>
+              <button class="detail-btn" @click="goToCampaignDetail(c.id, c.name)"> 详情 </button>
             </td>
           </tr>
         </tbody>
@@ -461,46 +538,55 @@
       />
     </div>
 
-    <!-- ── 底部汇总栏 ── -->
-    <div class="bottom-bar">
+    <!-- ── 底部汇总栏（本页小计） ── -->
+    <div v-if="!loading && pagedCampaigns.length > 0" class="bottom-bar">
       <div class="bar-group">
         <div class="bar-item">
           <span class="bar-label">广告支出小计</span>
-          <span class="bar-val" style="color: #10b981">$12,200</span>
+          <span class="bar-val" style="color: #10b981">{{ fmtNum(barTotals.spend) }}</span>
         </div>
         <div class="bar-item">
           <span class="bar-label">预算</span>
-          <span class="bar-val" style="color: #e2e8f0">$11,480</span>
+          <span class="bar-val" style="color: #e2e8f0">{{ fmtNum(barTotals.budget) }}</span>
         </div>
         <div class="bar-item">
           <span class="bar-label">差异</span>
-          <span class="bar-val" style="color: #f97316">-$720</span>
+          <span class="bar-val" :style="{ color: barTotals.diff >= 0 ? '#10b981' : '#f97316' }">
+            {{ fmtNum(barTotals.diff) }}
+          </span>
         </div>
       </div>
       <div class="bar-divider"></div>
       <div class="bar-group">
         <div class="bar-item">
           <span class="bar-label">代投消耗小计</span>
-          <span class="bar-val" style="color: #f59e0b">$8,960</span>
+          <span class="bar-val" style="color: #f59e0b">{{ fmtNum(barTotals.agencySpend) }}</span>
         </div>
         <div class="bar-item">
           <span class="bar-label">直投消耗</span>
-          <span class="bar-val" style="color: #e2e8f0">$2,520</span>
+          <span class="bar-val" style="color: #e2e8f0">{{ fmtNum(barTotals.directSpend) }}</span>
         </div>
         <div class="bar-item">
           <span class="bar-label">代投占比</span>
-          <span class="bar-val" style="color: #60a5fa">73.4%</span>
+          <span class="bar-val" style="color: #60a5fa">
+            {{ barTotals.spend > 0 ? barTotals.agencyRatio.toFixed(2) + '%' : '--' }}
+          </span>
         </div>
       </div>
       <div class="bar-divider"></div>
       <div class="bar-group">
         <div class="bar-item">
           <span class="bar-label">利润小计预估</span>
-          <span class="bar-val" style="color: #10b981">$4,660</span>
+          <span
+            class="bar-val"
+            :style="{ color: barTotals.estProfit >= 0 ? '#10b981' : '#ef4444' }"
+          >
+            {{ fmtNum(barTotals.estProfit) }}
+          </span>
         </div>
         <div class="bar-item">
-          <span class="bar-label">最低</span>
-          <span class="bar-val" style="color: #a78bfa">$2,100</span>
+          <span class="bar-label">最低消耗</span>
+          <span class="bar-val" style="color: #a78bfa">{{ fmtNum(barTotals.minTotal) }}</span>
         </div>
       </div>
     </div>
@@ -534,7 +620,7 @@
   }
 
   .filter-el {
-    min-width: 104px;
+    min-width: 154px;
   }
 
   .filter-el--app {
@@ -622,10 +708,15 @@
 
   /* ── 表格 ── */
   .table-wrap {
+    padding: 16px;
     overflow: auto;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
+  }
+
+  .table-skeleton {
+    min-height: 200px;
   }
 
   .data-table {
