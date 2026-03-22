@@ -578,13 +578,48 @@ export const monthlyUserMetrics: UserMetricRow[] = [
 
 // ── ROI Metrics ────────────────────────────────────────────────
 export const roiMetrics: RoiRow[] = [
-  { type: '首日ROI', current: '36%', previous: '34%', change: '+2pp', isHighlighted: false },
-  { type: '3日ROI', current: '66%', previous: '64%', change: '+2pp', isHighlighted: false },
-  { type: '7日ROI', current: '96%', previous: '94%', change: '+2pp', isHighlighted: false },
-  { type: '14日ROI', current: '101%', previous: '99%', change: '+2pp', isHighlighted: true },
-  { type: '30日ROI', current: '113%', previous: '113%', change: '0pp', isHighlighted: true },
-  { type: '60日ROI', current: '-', previous: '-', change: '-' },
-  { type: '90日ROI', current: '-', previous: '-', change: '-' }
+  {
+    type: '首日ROI',
+    current: '36%',
+    previous: '34%',
+    change: '+2pp',
+    changeType: 'positive',
+    isHighlighted: false
+  },
+  {
+    type: '3日ROI',
+    current: '66%',
+    previous: '64%',
+    change: '+2pp',
+    changeType: 'positive',
+    isHighlighted: false
+  },
+  {
+    type: '7日ROI',
+    current: '96%',
+    previous: '94%',
+    change: '+2pp',
+    changeType: 'positive',
+    isHighlighted: false
+  },
+  {
+    type: '14日ROI',
+    current: '101%',
+    previous: '99%',
+    change: '+2pp',
+    changeType: 'positive',
+    isHighlighted: true
+  },
+  {
+    type: '30日ROI',
+    current: '113%',
+    previous: '113%',
+    change: '0pp',
+    changeType: 'neutral',
+    isHighlighted: true
+  },
+  { type: '60日ROI', current: '-', previous: '-', change: '-', changeType: 'neutral' },
+  { type: '90日ROI', current: '-', previous: '-', change: '-', changeType: 'neutral' }
 ]
 
 // ── Retention ──────────────────────────────────────────────────

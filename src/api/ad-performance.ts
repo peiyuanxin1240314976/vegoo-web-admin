@@ -4,8 +4,12 @@
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE, ANALYSIS_API_MIDDLE_PREFIX } from '@/api/analysis-api-base'
 import {
+  AdPerformanceAdDetailEndpoint,
+  AdPerformanceAdEditEndpoint,
   AdPerformanceCampaignDetailEndpoint,
   AdPerformanceEndpoint,
+  isAdPerformanceAdDetailEndpointMock,
+  isAdPerformanceAdEditEndpointMock,
   isAdPerformanceCampaignDetailEndpointMock,
   isAdPerformanceEndpointMock
 } from '@/views/user-growth/ad-performance/config/data-source'
@@ -32,6 +36,8 @@ import type {
   CampaignDetailCreativeTop5Response,
   CampaignDetailOverviewResponse
 } from '@/views/user-growth/ad-performance/campaign-detail/types'
+import type { AdDetailOverviewResponse } from '@/views/user-growth/ad-performance/campaign-detail/ad-detail/types'
+import type { AdEditFormResponse } from '@/views/user-growth/ad-performance/campaign-detail/ad-edit/types'
 
 /** 中间段见 `ANALYSIS_API_MIDDLE_PREFIX` */
 export const AD_PERFORMANCE_BASE = `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PREFIX}/ad-performance`
@@ -195,6 +201,28 @@ export function fetchCampaignDetailAiInsights(body: { campaignId: string }) {
   }
   return request.post<CampaignDetailAiInsightsResponse>({
     url: `${AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE}/ai-insights`,
+    data: body
+  })
+}
+
+/** 单广告详情页概览（路由：campaign-detail/ad-detail） */
+export function fetchAdDetailOverview(body: { adId: string; campaignId: string }) {
+  if (isAdPerformanceAdDetailEndpointMock(AdPerformanceAdDetailEndpoint.Overview)) {
+    return adPerfMock.mockFetchAdDetailOverview(body)
+  }
+  return request.post<AdDetailOverviewResponse>({
+    url: `${AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE}/ad-detail/overview`,
+    data: body
+  })
+}
+
+/** 编辑 Campaign 表单拉取 */
+export function fetchAdEditForm(body: { campaignId: string; adId?: string }) {
+  if (isAdPerformanceAdEditEndpointMock(AdPerformanceAdEditEndpoint.Form)) {
+    return adPerfMock.mockFetchAdEditForm(body)
+  }
+  return request.post<AdEditFormResponse>({
+    url: `${AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE}/ad-edit/form`,
     data: body
   })
 }

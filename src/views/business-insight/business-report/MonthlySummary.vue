@@ -53,8 +53,8 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in retentionMetrics" :key="row.name">
-                <td class="metric-name">{{ row.name }}</td>
+              <tr v-for="row in retentionMetrics" :key="row.day">
+                <td class="metric-name">{{ row.day }}</td>
                 <td>{{ row.current }}</td>
                 <td class="muted">{{ row.previous }}</td>
                 <td :class="changeClass(row.changeType)">{{ row.change }}</td>
@@ -175,7 +175,7 @@
 
   const feeItems = feeDeductions
 
-  function changeClass(type: string) {
+  function changeClass(type?: string) {
     if (type === 'positive') return 'positive'
     if (type === 'negative') return 'negative'
     return 'neutral'

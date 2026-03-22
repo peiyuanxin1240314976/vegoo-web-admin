@@ -58,6 +58,8 @@ export interface RoiRow {
   current: string
   previous: string
   change: string
+  /** 月环比样式（与 UserMetricRow / RevenueRow 一致） */
+  changeType?: 'positive' | 'negative' | 'neutral'
   isHighlighted?: boolean // green highlight for 101%+ rows
 }
 

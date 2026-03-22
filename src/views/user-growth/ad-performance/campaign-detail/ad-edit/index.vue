@@ -71,7 +71,7 @@
   import EditCreatives from './modules/edit-creatives.vue'
   import EditSidebar from './modules/edit-sidebar.vue'
   import { MOCK_AD_EDIT_FORM } from './mock/data'
-  import type { AdEditFormData } from './types'
+  import type { AdEditCreativeItem, AdEditFormData, AdEditSidebarRefItem } from './types'
 
   defineOptions({ name: 'AdEdit' })
 
@@ -97,13 +97,13 @@
       Object.assign(form.basic, res.basic)
       Object.assign(form.budget, res.budget)
       Object.assign(form.targeting, res.targeting)
-      form.creatives.items = res.creatives.items.map((x) => ({ ...x }))
+      form.creatives.items = res.creatives.items.map((x: AdEditCreativeItem) => ({ ...x }))
       form.creatives.selectedIds.splice(
         0,
         form.creatives.selectedIds.length,
         ...res.creatives.selectedIds
       )
-      form.sidebar.refItems = res.sidebar.refItems.map((x) => ({ ...x }))
+      form.sidebar.refItems = res.sidebar.refItems.map((x: AdEditSidebarRefItem) => ({ ...x }))
       form.sidebar.tips = [...res.sidebar.tips]
       form.sidebar.budgetForecastValues = res.sidebar.budgetForecastValues
         ? [...res.sidebar.budgetForecastValues]
