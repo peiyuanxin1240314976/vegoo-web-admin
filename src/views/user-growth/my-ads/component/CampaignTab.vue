@@ -246,13 +246,13 @@
     return Math.round((c.spend / c.budget) * 100)
   }
 
-  function trendSvg(trend: string) {
+  function trendSvg(trend: string | null | undefined) {
     if (trend === 'up') return '↗'
     if (trend === 'down') return '↘'
     if (trend === 'flat') return '→'
     return '—'
   }
-  function trendColor(trend: string) {
+  function trendColor(trend: string | null | undefined) {
     if (trend === 'up') return '#10b981'
     if (trend === 'down') return '#ef4444'
     if (trend === 'flat') return '#f59e0b'
@@ -271,6 +271,27 @@
   function countryFlagFiClass(code: string | undefined): string {
     const suffix = countryFlagCode(code)
     return suffix ? `fi fi-${suffix}` : ''
+  }
+
+  /** 國家：規範字段 `s_country_code` 與後端 camelCase `countryCode` 兼容 */
+  function rowCountryCode(c: CampaignRow): string {
+    const raw = c.s_country_code ?? c.countryCode
+    if (raw == null || String(raw).trim() === '') return ''
+    return String(raw).trim()
+  }
+
+  function appIconDisplay(c: CampaignRow): string {
+    if (c.appIcon != null && String(c.appIcon).trim() !== '') return String(c.appIcon)
+    const name = (c.appName || '').trim()
+    return name ? name.slice(0, 2) : '—'
+  }
+
+  function platformBadgeDisplay(c: CampaignRow): string {
+    if (c.platformIcon != null && String(c.platformIcon).trim() !== '') {
+      return String(c.platformIcon)
+    }
+    const p = (c.platform || '').trim()
+    return p ? p.slice(0, 1).toUpperCase() : '—'
   }
 
   /** 底部 bar 本頁彙總（接口無單獨 summary，從當前頁 list 計算） */
@@ -428,7 +449,7 @@
           >
             <!-- 应用图标 -->
             <td
-              ><span class="app-icon-sm">{{ c.appIcon }}</span></td
+              ><span class="app-icon-sm">{{ appIconDisplay(c) }}</span></td
             >
 
             <!-- 广告系列名称 -->
@@ -439,7 +460,7 @@
               <span
                 class="plat-badge"
                 :style="{ background: platformColor(c.platform), color: '#fff' }"
-                >{{ c.platformIcon }}</span
+                >{{ platformBadgeDisplay(c) }}</span
               >
             </td>
 
@@ -447,12 +468,12 @@
             <td>
               <span class="country-cell">
                 <span
-                  v-if="countryFlagFiClass(c.s_country_code)"
+                  v-if="countryFlagFiClass(rowCountryCode(c))"
                   class="campaign-tab-flag"
-                  :class="countryFlagFiClass(c.s_country_code)"
-                  :title="c.s_country_code"
+                  :class="countryFlagFiClass(rowCountryCode(c))"
+                  :title="rowCountryCode(c)"
                 ></span>
-                <span class="country-code">{{ c.s_country_code || '—' }}</span>
+                <span class="country-code">{{ rowCountryCode(c) || '—' }}</span>
               </span>
             </td>
 
@@ -490,12 +511,12 @@
 
             <!-- 预算 -->
             <td :style="{ color: c.status === 'inactive' ? '#4b5563' : '#94a3b8' }">
-              {{ c.calcSpend > 0 ? fmtNum(c.calcSpend) : '--' }}
+              {{ (c.calcSpend ?? 0) > 0 ? fmtNum(c.calcSpend) : '--' }}
             </td>
 
             <!-- 代投消耗 -->
             <td :style="{ color: c.status === 'inactive' ? '#4b5563' : '#94a3b8' }">
-              {{ c.agencySpend > 0 ? fmtNum(c.agencySpend) : '--' }}
+              {{ (c.agencySpend ?? 0) > 0 ? fmtNum(c.agencySpend) : '--' }}
             </td>
 
             <!-- 首日ROI -->
@@ -522,8 +543,8 @@
 
             <!-- 趋势 -->
             <td>
-              <span class="trend-cell" :style="{ color: trendColor(c.trend) }">{{
-                trendSvg(c.trend)
+              <span class="trend-cell" :style="{ color: trendColor(c.trend ?? undefined) }">{{
+                trendSvg(c.trend ?? undefined)
               }}</span>
             </td>
 

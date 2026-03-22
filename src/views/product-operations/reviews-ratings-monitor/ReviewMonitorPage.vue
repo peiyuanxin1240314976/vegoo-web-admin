@@ -7,9 +7,9 @@
    * router: { path: '/shop/review-monitor', component: ReviewMonitorPage }
    */
   import { ref, reactive, computed } from 'vue'
-  import ReviewMonitorSummary from '../components/ReviewMonitorSummary.vue'
-  import ReviewMonitorDetail from '../components/ReviewMonitorDetail.vue'
-  import type { GlobalFilter } from '../api/reviewMonitor'
+  import ReviewMonitorSummary from './components/ReviewMonitorSummary.vue'
+  import ReviewMonitorDetail from './components/ReviewMonitorDetail.vue'
+  import type { GlobalFilter } from './api/reviewMonitor'
 
   // ─────────────────────────────────────────────
   // 全局过滤条件（传给两个子 Tab）

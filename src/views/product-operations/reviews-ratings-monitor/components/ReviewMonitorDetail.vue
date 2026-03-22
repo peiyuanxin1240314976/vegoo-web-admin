@@ -222,10 +222,7 @@
             v-for="(star, i) in starRatings"
             :key="i"
             :class="['star-tab', localFilter.starRating === star ? 'active' : '']"
-            @click="
-              localFilter.starRating = star
-              onFilterChange()
-            "
+            @click="((localFilter.starRating = star), onFilterChange())"
             >{{ starLabels[i] }}</button
           >
         </div>

@@ -532,17 +532,20 @@ declare namespace Api {
       id: string
       name: string
       appName: string
-      appIcon: string
+      appIcon: string | null
       platform: string
-      platformIcon: string
-      s_country_code: string
+      platformIcon: string | null
+      /** 國家代碼（規範字段）；與 `countryCode` 擇一 */
+      s_country_code?: string | null
+      /** 與 `s_country_code` 同義，部分後端返回 camelCase */
+      countryCode?: string | null
       status: string
-      trend: string
+      trend: string | null
       budget: number
       spend: number
-      calcSpend: number
-      agencySpend: number
-      minSpend: number
+      calcSpend: number | null
+      agencySpend: number | null
+      minSpend: number | null
       estProfit: number
       roi: number
       /** 可選，部分接口可能不返回 */

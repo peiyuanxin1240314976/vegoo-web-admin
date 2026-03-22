@@ -265,7 +265,7 @@
             fontSize: 14
           },
           markPoint: {
-            data: [{ type: 'max' }],
+            data: [{ type: 'max', name: 'max' }],
             itemStyle: { color: '#00d4aa' },
             label: { color: '#fff', fontSize: 10 },
             symbolSize: 30
@@ -436,14 +436,14 @@
             fill: '#e8eaed',
             fontSize: 18,
             fontWeight: 'bold',
-            textAlign: 'center'
+            align: 'center'
           }
         },
         {
           type: 'text',
           left: '26%',
           top: '57%',
-          style: { text: '总评论', fill: '#9ca3af', fontSize: 11, textAlign: 'center' }
+          style: { text: '总评论', fill: '#9ca3af', fontSize: 11, align: 'center' }
         }
       ],
       tooltip: {
