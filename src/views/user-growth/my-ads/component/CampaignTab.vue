@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
-  import { fetchMyAdsCampaign } from '@/api/user-growth'
+  import { fetchMyAdsCampaign, fetchMyAdsMetaFilterOptions } from '@/api/user-growth'
 
   defineOptions({ name: 'CampaignTab' })
 
@@ -45,6 +45,16 @@
     Kwai: 10
   }
 
+  function resolveSourceFromPlatformFilter(platform: string | undefined | null): number | null {
+    if (platform == null || platform === '') return null
+    const p = String(platform).trim()
+    if (/^\d+$/.test(p)) {
+      const n = Number(p)
+      return Number.isFinite(n) ? n : null
+    }
+    return PLATFORM_TO_SOURCE[p] != null ? PLATFORM_TO_SOURCE[p] : null
+  }
+
   function buildParams() {
     const [startDate = '', endDate = ''] = props.dateRange
     const app = (filterApp.value ?? '').trim()
@@ -55,8 +65,7 @@
     const platform = filterPlatform.value
     const statusVal = filterStatus.value
     const agencyVal = filterType.value
-    const sourceNum =
-      platform && PLATFORM_TO_SOURCE[platform] != null ? PLATFORM_TO_SOURCE[platform] : null
+    const sourceNum = resolveSourceFromPlatformFilter(platform)
     const staffIdVal = scope === '全部' ? '' : staff
     return {
       appId: app || '',
@@ -86,7 +95,25 @@
     }
   }
 
+  const appOptions = ref<Api.UserGrowth.MyAdsFilterOptionDto[]>([])
+  const platformOptions = ref<Api.UserGrowth.MyAdsFilterOptionDto[]>([])
+  const countryOptions = ref<Api.UserGrowth.MyAdsFilterOptionDto[]>([])
+
+  async function loadMetaFilterOptions() {
+    try {
+      const data = await fetchMyAdsMetaFilterOptions()
+      appOptions.value = data?.appOptions ?? []
+      platformOptions.value = data?.adPlatformOptions ?? []
+      countryOptions.value = data?.countryOptions ?? []
+    } catch {
+      appOptions.value = []
+      platformOptions.value = []
+      countryOptions.value = []
+    }
+  }
+
   onMounted(() => {
+    loadMetaFilterOptions()
     loadCampaigns()
   })
 
@@ -128,21 +155,6 @@
     { value: 'with_agency' as const, label: '含代投' },
     { value: 'pure' as const, label: '仅直投' }
   ]
-
-  const appOptions = computed(() => {
-    const names = [...new Set(campaigns.value.map((c) => c.appName).filter(Boolean))].sort()
-    return names.map((n) => ({ value: n, label: n }))
-  })
-
-  const platformOptions = computed(() => {
-    const ps = [...new Set(campaigns.value.map((c) => c.platform).filter(Boolean))].sort()
-    return ps.map((p) => ({ value: p, label: p }))
-  })
-
-  const countryOptions = computed(() => {
-    const cs = [...new Set(campaigns.value.map((c) => c.s_country_code).filter(Boolean))].sort()
-    return cs.map((c) => ({ value: c, label: c }))
-  })
 
   /** 接口返回當前頁列表 */
   const pagedCampaigns = computed(() => campaigns.value)

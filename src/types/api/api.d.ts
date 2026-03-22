@@ -369,6 +369,19 @@ declare namespace Api {
       agencyType?: 'with_agency' | 'pure' | null
     }
 
+    /** 我的广告 - 筛选项下拉项 POST .../meta-filter-options */
+    interface MyAdsFilterOptionDto {
+      label: string
+      value: string
+    }
+
+    /** 我的广告 - 筛选项 POST /api/v1/datacenter/analysis/my-ads/meta-filter-options */
+    interface MyAdsMetaFilterOptionsDto {
+      adPlatformOptions: Api.UserGrowth.MyAdsFilterOptionDto[]
+      appOptions: Api.UserGrowth.MyAdsFilterOptionDto[]
+      countryOptions: Api.UserGrowth.MyAdsFilterOptionDto[]
+    }
+
     /** 我的广告 - 頁頭列表單行（與 MyAdsCampaignRowDto 一致） */
     interface MyAdsPageHeaderRowDto {
       id: string
