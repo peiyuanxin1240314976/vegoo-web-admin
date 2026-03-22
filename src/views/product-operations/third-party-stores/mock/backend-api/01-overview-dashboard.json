@@ -1,0 +1,144 @@
+{
+  "_comment": "商品运营 - 三方商店管理：概览仪表盘（平台卡、摘要 KPI、应用商店表、渠道表、图表）。对应 types.ts: ThirdPartyStoresDashboardPayload。",
+  "fieldDescription": {
+    "request": {
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台筛选：空为全部；android / ios。"
+      },
+      "app_store": {
+        "type": "string",
+        "required": false,
+        "description": "应用商店维度，空为全部。"
+      },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "description": "应用 ID 或名称，空为全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台（与数据字典 n_source 语义一致），空为全部。"
+      },
+      "channel": {
+        "type": "string",
+        "required": false,
+        "description": "推广渠道，空为全部。"
+      },
+      "t_date_start": {
+        "type": "string",
+        "required": false,
+        "description": "统计开始日期 YYYY-MM-DD。"
+      },
+      "t_date_end": {
+        "type": "string",
+        "required": false,
+        "description": "统计结束日期 YYYY-MM-DD。"
+      },
+      "currency": {
+        "type": "string",
+        "required": false,
+        "description": "展示货币代码，如 USD。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "ThirdPartyStoresDashboardPayload",
+        "required": true,
+        "description": "网关包裹时位于 data 内；与前端类型一致。"
+      }
+    },
+    "ThirdPartyStoresDashboardPayload": {
+      "platformCards": {
+        "type": "PlatformCard[]",
+        "required": true,
+        "description": "各应用商店平台接入状态卡片。"
+      },
+      "statusSummary": {
+        "type": "ThirdPartyStoresStatusSummary",
+        "required": true,
+        "description": "顶部四张摘要统计。"
+      },
+      "summary": {
+        "type": "ThirdPartyStoresSummaryMetrics",
+        "required": true,
+        "description": "中部 KPI 数值（原始数，前端格式化）。"
+      },
+      "appStoreData": {
+        "type": "AppStoreRecord[]",
+        "required": true,
+        "description": "应用商店数据明细树形表。"
+      },
+      "channelData": {
+        "type": "ChannelRecord[]",
+        "required": true,
+        "description": "推广渠道数据明细树形表。"
+      },
+      "donut": {
+        "type": "object",
+        "required": true,
+        "description": "广告平台收入占比环形图数据。"
+      },
+      "bar": {
+        "type": "object",
+        "required": true,
+        "description": "推广渠道应用收入分布条形图数据。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "platform": "",
+    "app_store": "",
+    "s_app_id": "",
+    "source": "",
+    "channel": "",
+    "t_date_start": "2026-02-26",
+    "t_date_end": "2026-03-05",
+    "currency": "USD"
+  },
+  "sampleResponse": {
+    "data": {
+      "statusSummary": {
+        "connectedPlatforms": 6,
+        "totalApps": 42,
+        "pendingSync": 3,
+        "newPlatformsThisMonth": 1,
+        "newPlatformName": "Amazon Appstore"
+      },
+      "summary": {
+        "newUsers": 496,
+        "totalRevenue": 6187,
+        "adRevenue": 4046,
+        "paidRevenue": 2141,
+        "arpu": 12.47
+      },
+      "platformCards": [],
+      "appStoreData": [],
+      "channelData": [],
+      "donut": {
+        "legend": ["自然流量", "TikTok", "Mintegral", "Kwai"],
+        "slices": [{ "value": 45, "name": "自然流量", "color": "#22c55e" }]
+      },
+      "bar": {
+        "apps": ["WeatherPro"],
+        "values": [300],
+        "ratios": [13]
+      }
+    }
+  },
+  "api": {
+    "url": "POST /api/product-operations/third-party-stores/overview/dashboard",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "platform?, app_store?, s_app_id?, source?, channel?, t_date_start?, t_date_end?, currency?",
+    "responseBody": "ThirdPartyStoresDashboardPayload（或网关包裹于 data）"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "完整示例数据见 mocks/third-party-stores-default-payload.ts 与页面加载逻辑。",
+      "列表筛选与聚合规则需与后端一致后再对齐字段。"
+    ]
+  }
+}

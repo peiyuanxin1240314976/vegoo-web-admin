@@ -1,66 +1,45 @@
 <script setup lang="ts">
   /**
-   * ThirdPartyStoreManagement.vue
-   * 三方商店管理 — 完整可接入组件
-   *
-   * 依赖：vue@3, element-plus, echarts@6, tailwindcss@4
-   * 使用：<ThirdPartyStoreManagement />
+   * 三方商店管理 — 數據由 API / Mock 注入（樣式保持不變）
    */
   import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
   import * as echarts from 'echarts'
   import { Plus, Download } from '@element-plus/icons-vue'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { thirdPartyStoresApi } from './api/third-party-stores'
+  import type {
+    AppStoreRecord,
+    ChannelRecord,
+    FilterState,
+    PlatformCard,
+    ThirdPartyStoresDashboardPayload,
+    ThirdPartyStoresQueryParams,
+    ThirdPartyStoresStatusSummary,
+    ThirdPartyStoresSummaryMetrics
+  } from './types'
 
-  // ─── Types ────────────────────────────────────────────────────────────────────
-  interface PlatformCard {
-    id: string
-    name: string
-    icon: string
-    iconBg: string
-    status: 'connected' | 'warning' | 'pending'
-    appCount: number
-    lastSync: string
+  defineOptions({ name: 'ThirdPartyStores' })
+
+  function createDefaultDateRange(): [Date, Date] {
+    const end = cloneAppDate(getAppNow())
+    end.setHours(0, 0, 0, 0)
+    const start = cloneAppDate(end)
+    start.setDate(start.getDate() - 6)
+    return [start, end]
   }
 
-  interface FilterState {
-    platform: string
-    appStore: string
-    app: string
-    adPlatform: string
-    channel: string
-    dateRange: [Date, Date] | null
-    currency: string
-  }
-
-  interface AppStoreRecord {
-    key: string
-    app: string
-    platform: string
-    adStore: string
-    adPlatform: string
-    newUsers: number
-    totalRevenue: number
-    adRevenue: number
-    paidRevenue: number
-    adRatio: number
-    isGroup?: boolean
-    expanded?: boolean
-    children?: AppStoreRecord[]
-  }
-
-  interface ChannelRecord {
-    key: string
-    app: string
-    platform: string
-    channel: string
-    adCampaign: string
-    newUsers: number
-    totalRevenue: number
-    adRevenue: number
-    paidRevenue: number
-    channelRatio: number
-    isGroup?: boolean
-    expanded?: boolean
-    children?: ChannelRecord[]
+  function buildQueryParams(f: FilterState): ThirdPartyStoresQueryParams {
+    const [start, end] = f.dateRange || []
+    return {
+      platform: f.platform || undefined,
+      app_store: f.appStore || undefined,
+      s_app_id: f.app || undefined,
+      source: f.adPlatform || undefined,
+      channel: f.channel || undefined,
+      t_date_start: start ? formatYYYYMMDD(start) : undefined,
+      t_date_end: end ? formatYYYYMMDD(end) : undefined,
+      currency: f.currency || undefined
+    }
   }
 
   // ─── Options ──────────────────────────────────────────────────────────────────
@@ -108,439 +87,27 @@
     app: '',
     adPlatform: '',
     channel: '',
-    dateRange: [new Date('2026-02-26'), new Date('2026-03-04')],
+    dateRange: createDefaultDateRange(),
     currency: 'USD'
   })
 
   const activeFilters = ref<FilterState>({ ...filters.value })
   const loading = ref(false)
 
-  // ─── Platform Cards ───────────────────────────────────────────────────────────
-  const platformCards = ref<PlatformCard[]>([
-    {
-      id: 'google',
-      name: 'Google Play',
-      icon: 'google-play',
-      iconBg: '#1a73e8',
-      status: 'connected',
-      appCount: 38,
-      lastSync: '5min ago'
-    },
-    {
-      id: 'apple',
-      name: 'App Store',
-      icon: 'app-store',
-      iconBg: '#555',
-      status: 'connected',
-      appCount: 32,
-      lastSync: '3min ago'
-    },
-    {
-      id: 'huawei',
-      name: 'Huawei AppGallery',
-      icon: 'huawei',
-      iconBg: '#e31837',
-      status: 'connected',
-      appCount: 18,
-      lastSync: '10min ago'
-    },
-    {
-      id: 'samsung',
-      name: 'Samsung Galaxy Store',
-      icon: 'samsung',
-      iconBg: '#1428a0',
-      status: 'warning',
-      appCount: 12,
-      lastSync: 'Sync Error - Auth expired'
-    },
-    {
-      id: 'xiaomi',
-      name: 'Xiaomi App Store',
-      icon: 'xiaomi',
-      iconBg: '#ff6900',
-      status: 'connected',
-      appCount: 15,
-      lastSync: '20min ago'
-    },
-    {
-      id: 'amazon',
-      name: 'Amazon Appstore',
-      icon: 'amazon',
-      iconBg: '#232f3e',
-      status: 'pending',
-      appCount: 0,
-      lastSync: 'Not configured'
-    }
-  ])
+  const platformCards = ref<PlatformCard[]>([])
+  const statusSummary = ref<ThirdPartyStoresStatusSummary>({
+    connectedPlatforms: 0,
+    totalApps: 0,
+    pendingSync: 0,
+    newPlatformsThisMonth: 0,
+    newPlatformName: ''
+  })
+  const summaryPayload = ref<ThirdPartyStoresSummaryMetrics | null>(null)
+  const chartDonut = ref<ThirdPartyStoresDashboardPayload['donut'] | null>(null)
+  const chartBar = ref<ThirdPartyStoresDashboardPayload['bar'] | null>(null)
 
-  // ─── Raw Data ─────────────────────────────────────────────────────────────────
-  const rawAppStoreData: AppStoreRecord[] = [
-    {
-      key: 'weather8',
-      app: 'Weather8',
-      platform: '安卓',
-      adStore: 'XIAOMI',
-      adPlatform: '—',
-      newUsers: 297,
-      totalRevenue: 380,
-      adRevenue: 0,
-      paidRevenue: 0,
-      adRatio: 0,
-      isGroup: true,
-      expanded: true,
-      children: [
-        {
-          key: 'w8-1',
-          app: '',
-          platform: '',
-          adStore: 'XIAOMI',
-          adPlatform: 'organic',
-          newUsers: 297,
-          totalRevenue: 380,
-          adRevenue: 0,
-          paidRevenue: 0,
-          adRatio: 0
-        },
-        {
-          key: 'w8-2',
-          app: '',
-          platform: '',
-          adStore: 'XIAOMI',
-          adPlatform: 'TikTok',
-          newUsers: 0,
-          totalRevenue: 862,
-          adRevenue: 862,
-          paidRevenue: 0,
-          adRatio: 100
-        }
-      ]
-    },
-    {
-      key: 'health2',
-      app: 'HealthTracker2',
-      platform: '安卓',
-      adStore: 'XIAOMI',
-      adPlatform: '—',
-      newUsers: 80,
-      totalRevenue: 540,
-      adRevenue: 240,
-      paidRevenue: 0,
-      adRatio: 44,
-      isGroup: true,
-      expanded: true,
-      children: [
-        {
-          key: 'h2-1',
-          app: '',
-          platform: '',
-          adStore: 'XIAOMI',
-          adPlatform: 'organic',
-          newUsers: 80,
-          totalRevenue: 440,
-          adRevenue: 0,
-          paidRevenue: 0,
-          adRatio: 0
-        },
-        {
-          key: 'h2-2',
-          app: '',
-          platform: '',
-          adStore: 'XIAOMI',
-          adPlatform: 'TikTok',
-          newUsers: 0,
-          totalRevenue: 48,
-          adRevenue: 48,
-          paidRevenue: 0,
-          adRatio: 100
-        },
-        {
-          key: 'h2-3',
-          app: '',
-          platform: '',
-          adStore: 'XIAOMI',
-          adPlatform: 'Mintegral',
-          newUsers: 0,
-          totalRevenue: 52,
-          adRevenue: 52,
-          paidRevenue: 0,
-          adRatio: 100
-        }
-      ]
-    },
-    {
-      key: 'cpu',
-      app: 'CPUMonitor',
-      platform: '安卓',
-      adStore: 'XIAOMI+OPPO',
-      adPlatform: '—',
-      newUsers: 69,
-      totalRevenue: 320,
-      adRevenue: 180,
-      paidRevenue: 0,
-      adRatio: 56,
-      isGroup: true,
-      expanded: true,
-      children: [
-        {
-          key: 'cpu-1',
-          app: '',
-          platform: '',
-          adStore: 'XIAOMI',
-          adPlatform: 'organic',
-          newUsers: 63,
-          totalRevenue: 240,
-          adRevenue: 0,
-          paidRevenue: 0,
-          adRatio: 0
-        },
-        {
-          key: 'cpu-2',
-          app: '',
-          platform: '',
-          adStore: 'XIAOMI',
-          adPlatform: 'TikTok',
-          newUsers: 0,
-          totalRevenue: 60,
-          adRevenue: 60,
-          paidRevenue: 0,
-          adRatio: 100
-        },
-        {
-          key: 'cpu-3',
-          app: '',
-          platform: '',
-          adStore: 'XIAOMI',
-          adPlatform: 'Mintegral',
-          newUsers: 0,
-          totalRevenue: 40,
-          adRevenue: 40,
-          paidRevenue: 0,
-          adRatio: 100
-        },
-        {
-          key: 'cpu-4',
-          app: '',
-          platform: '',
-          adStore: 'OPPO',
-          adPlatform: 'organic',
-          newUsers: 6,
-          totalRevenue: 0,
-          adRevenue: 0,
-          paidRevenue: 0,
-          adRatio: 0
-        }
-      ]
-    },
-    {
-      key: 'bp2',
-      app: 'BloodPressure2',
-      platform: '安卓',
-      adStore: 'XIAOMI',
-      adPlatform: '—',
-      newUsers: 43,
-      totalRevenue: 285,
-      adRevenue: 150,
-      paidRevenue: 0,
-      adRatio: 53,
-      isGroup: true,
-      expanded: false
-    },
-    {
-      key: 'weather5',
-      app: 'Weather5',
-      platform: '安卓',
-      adStore: 'XIAOMI+OPPO',
-      adPlatform: '—',
-      newUsers: 38,
-      totalRevenue: 203,
-      adRevenue: 0,
-      paidRevenue: 0,
-      adRatio: 0,
-      isGroup: true,
-      expanded: false
-    },
-    {
-      key: 'faceme',
-      app: 'FaceMe',
-      platform: '安卓',
-      adStore: 'XIAOMI',
-      adPlatform: 'organic',
-      newUsers: 7,
-      totalRevenue: 60,
-      adRevenue: 0,
-      paidRevenue: 0,
-      adRatio: 0
-    },
-    {
-      key: 'weather6',
-      app: 'Weather6',
-      platform: '安卓',
-      adStore: 'XIAOMI',
-      adPlatform: '—',
-      newUsers: 2,
-      totalRevenue: 243,
-      adRevenue: 0,
-      paidRevenue: 0,
-      adRatio: 0,
-      isGroup: true,
-      expanded: false
-    }
-  ]
-
-  const rawChannelData: ChannelRecord[] = [
-    {
-      key: 'faceme-ch',
-      app: 'FaceMe',
-      platform: '—',
-      channel: 'InAppShare',
-      adCampaign: '—',
-      newUsers: 0,
-      totalRevenue: 680,
-      adRevenue: 580,
-      paidRevenue: 100,
-      channelRatio: 29,
-      isGroup: true,
-      expanded: true,
-      children: [
-        {
-          key: 'f-1',
-          app: '',
-          platform: 'iOS',
-          channel: 'InAppShare',
-          adCampaign: 'FaceMe_InAppShare',
-          newUsers: 0,
-          totalRevenue: 340,
-          adRevenue: 290,
-          paidRevenue: 50,
-          channelRatio: 0
-        },
-        {
-          key: 'f-2',
-          app: '',
-          platform: '安卓',
-          channel: 'InAppShare',
-          adCampaign: 'FaceMe_InAppShare',
-          newUsers: 0,
-          totalRevenue: 340,
-          adRevenue: 290,
-          paidRevenue: 50,
-          channelRatio: 0
-        }
-      ]
-    },
-    {
-      key: 'yearcam-ch',
-      app: 'YearCam',
-      platform: '安卓',
-      channel: 'InAppShare',
-      adCampaign: '—',
-      newUsers: 0,
-      totalRevenue: 520,
-      adRevenue: 420,
-      paidRevenue: 100,
-      channelRatio: 22,
-      isGroup: true,
-      expanded: true,
-      children: [
-        {
-          key: 'y-1',
-          app: '',
-          platform: '安卓',
-          channel: 'InAppShare',
-          adCampaign: 'YearCam_InAppShare',
-          newUsers: 0,
-          totalRevenue: 520,
-          adRevenue: 420,
-          paidRevenue: 100,
-          channelRatio: 0
-        }
-      ]
-    },
-    {
-      key: 'dressup-ch',
-      app: 'Dressup',
-      platform: '安卓',
-      channel: 'InAppShare',
-      adCampaign: '—',
-      newUsers: 0,
-      totalRevenue: 480,
-      adRevenue: 380,
-      paidRevenue: 100,
-      channelRatio: 21,
-      isGroup: true,
-      expanded: true,
-      children: [
-        {
-          key: 'd-1',
-          app: '',
-          platform: '安卓',
-          channel: 'InAppShare',
-          adCampaign: 'Dressup_InAppShare',
-          newUsers: 0,
-          totalRevenue: 480,
-          adRevenue: 380,
-          paidRevenue: 100,
-          channelRatio: 0
-        }
-      ]
-    },
-    {
-      key: 'clapfinder-ch',
-      app: 'ClapFinder',
-      platform: '—',
-      channel: 'InAppShare',
-      adCampaign: '—',
-      newUsers: 0,
-      totalRevenue: 360,
-      adRevenue: 290,
-      paidRevenue: 70,
-      channelRatio: 15,
-      isGroup: true,
-      expanded: true,
-      children: [
-        {
-          key: 'c-1',
-          app: '',
-          platform: 'iOS',
-          channel: 'InAppShare',
-          adCampaign: 'ClapFinder_InAppShare',
-          newUsers: 0,
-          totalRevenue: 200,
-          adRevenue: 160,
-          paidRevenue: 40,
-          channelRatio: 0
-        },
-        {
-          key: 'c-2',
-          app: '',
-          platform: '安卓',
-          channel: 'InAppShare',
-          adCampaign: 'ClapFinder_InAppShare',
-          newUsers: 0,
-          totalRevenue: 160,
-          adRevenue: 130,
-          paidRevenue: 30,
-          channelRatio: 0
-        }
-      ]
-    },
-    {
-      key: 'weatherpro-ch',
-      app: 'WeatherPro',
-      platform: '安卓',
-      channel: 'InAppShare',
-      adCampaign: 'WeatherPro_InAppShare',
-      newUsers: 0,
-      totalRevenue: 300,
-      adRevenue: 220,
-      paidRevenue: 80,
-      channelRatio: 13
-    }
-  ]
-
-  // ─── Filtered Data ────────────────────────────────────────────────────────────
-  const appStoreData = ref<AppStoreRecord[]>(JSON.parse(JSON.stringify(rawAppStoreData)))
-  const channelData = ref<ChannelRecord[]>(JSON.parse(JSON.stringify(rawChannelData)))
+  const appStoreData = ref<AppStoreRecord[]>([])
+  const channelData = ref<ChannelRecord[]>([])
 
   // Flatten for rendering with expand logic
   const flatAppStoreRows = computed(() => {
@@ -569,42 +136,99 @@
     return rows
   })
 
+  const fmtUsd2 = (n: number) =>
+    '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
   // ─── Summary Metrics ──────────────────────────────────────────────────────────
   const summaryMetrics = computed(() => {
-    // Simulate filter-dependent aggregation
     const suffix = activeFilters.value.app ? ' (筛选)' : ''
+    const s = summaryPayload.value
+    if (!s) {
+      return {
+        newUsers: { value: '—', label: '总新用户', sublabel: '商店自然流量为主' + suffix },
+        totalRevenue: { value: '—', label: '总收入', sublabel: '应用商店+推广渠道' },
+        adRevenue: { value: '—', label: '广告收入', sublabel: '含商店内广告' },
+        paidRevenue: { value: '—', label: '付费收入', sublabel: '应用内购买' },
+        arpu: { value: '—', label: '平均每用户收入', sublabel: '总收入/总新用户' }
+      }
+    }
     return {
-      newUsers: { value: '496', label: '总新用户', sublabel: '商店自然流量为主' + suffix },
-      totalRevenue: { value: '$6,187', label: '总收入', sublabel: '应用商店+推广渠道' },
-      adRevenue: { value: '$4,046', label: '广告收入', sublabel: '含商店内广告' },
-      paidRevenue: { value: '$2,141', label: '付费收入', sublabel: '应用内购买' },
-      arpu: { value: '$12.47', label: '平均每用户收入', sublabel: '总收入/总新用户' }
+      newUsers: {
+        value: s.newUsers.toLocaleString('en-US'),
+        label: '总新用户',
+        sublabel: '商店自然流量为主' + suffix
+      },
+      totalRevenue: {
+        value: fmtUsd2(s.totalRevenue),
+        label: '总收入',
+        sublabel: '应用商店+推广渠道'
+      },
+      adRevenue: {
+        value: fmtUsd2(s.adRevenue),
+        label: '广告收入',
+        sublabel: '含商店内广告'
+      },
+      paidRevenue: {
+        value: fmtUsd2(s.paidRevenue),
+        label: '付费收入',
+        sublabel: '应用内购买'
+      },
+      arpu: {
+        value: fmtUsd2(s.arpu),
+        label: '平均每用户收入',
+        sublabel: '总收入/总新用户'
+      }
+    }
+  })
+
+  const appStoreTotals = computed(() => {
+    const tops = appStoreData.value
+    const nu = tops.reduce((acc, r) => acc + r.newUsers, 0)
+    const tr = tops.reduce((acc, r) => acc + r.totalRevenue, 0)
+    const ar = tops.reduce((acc, r) => acc + r.adRevenue, 0)
+    const pr = tops.reduce((acc, r) => acc + r.paidRevenue, 0)
+    const adPct = tr > 0 ? Math.round((ar / tr) * 100) : 0
+    return { newUsers: nu, totalRevenue: tr, adRevenue: ar, paidRevenue: pr, adRatioPct: adPct }
+  })
+
+  const channelTotals = computed(() => {
+    const tops = channelData.value
+    const nu = tops.reduce((acc, r) => acc + r.newUsers, 0)
+    const tr = tops.reduce((acc, r) => acc + r.totalRevenue, 0)
+    const ar = tops.reduce((acc, r) => acc + r.adRevenue, 0)
+    const pr = tops.reduce((acc, r) => acc + r.paidRevenue, 0)
+    return {
+      newUsers: nu,
+      totalRevenue: tr,
+      adRevenue: ar,
+      paidRevenue: pr,
+      ratioPct: tr > 0 ? 100 : 0
     }
   })
 
   // ─── Filter / Search Logic ───────────────────────────────────────────────────
-  const applyFilters = () => {
+  const loadDashboard = async () => {
     loading.value = true
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const params = buildQueryParams(filters.value)
+      const data = await thirdPartyStoresApi.getOverviewDashboard(params)
       activeFilters.value = { ...filters.value }
-      // Filter appStoreData
-      const filtered = rawAppStoreData.filter((row) => {
-        if (activeFilters.value.app && row.app !== activeFilters.value.app && row.app !== '')
-          return false
-        if (activeFilters.value.platform) {
-          const map: Record<string, string> = { android: '安卓', ios: 'iOS' }
-          if (row.platform && row.platform !== map[activeFilters.value.platform]) return false
-        }
-        return true
-      })
-      appStoreData.value = JSON.parse(
-        JSON.stringify(filtered.length > 0 ? filtered : rawAppStoreData)
-      )
-      channelData.value = JSON.parse(JSON.stringify(rawChannelData))
+      platformCards.value = data.platformCards
+      statusSummary.value = data.statusSummary
+      summaryPayload.value = data.summary
+      appStoreData.value = data.appStoreData
+      channelData.value = data.channelData
+      chartDonut.value = data.donut
+      chartBar.value = data.bar
+      await nextTick()
+      initCharts()
+    } finally {
       loading.value = false
-      nextTick(() => initCharts())
-    }, 600)
+    }
+  }
+
+  const applyFilters = () => {
+    loadDashboard()
   }
 
   const resetFilters = () => {
@@ -614,10 +238,10 @@
       app: '',
       adPlatform: '',
       channel: '',
-      dateRange: [new Date('2026-02-26'), new Date('2026-03-04')],
+      dateRange: createDefaultDateRange(),
       currency: 'USD'
     }
-    applyFilters()
+    loadDashboard()
   }
 
   const toggleExpand = (key: string, type: 'app' | 'channel') => {
@@ -637,7 +261,10 @@
   let barChart: echarts.ECharts | null = null
 
   const initCharts = () => {
-    if (donutChartRef.value) {
+    const d = chartDonut.value
+    const b = chartBar.value
+
+    if (donutChartRef.value && d) {
       if (!donutChart) donutChart = echarts.init(donutChartRef.value, 'dark')
       donutChart.setOption({
         backgroundColor: 'transparent',
@@ -649,19 +276,18 @@
           textStyle: { color: '#9ca3af', fontSize: 12 },
           itemWidth: 10,
           itemHeight: 10,
-          data: ['自然流量', 'TikTok', 'Mintegral', 'Kwai']
+          data: d.legend
         },
         series: [
           {
             type: 'pie',
             radius: ['45%', '70%'],
             center: ['40%', '50%'],
-            data: [
-              { value: 45, name: '自然流量', itemStyle: { color: '#22c55e' } },
-              { value: 30, name: 'TikTok', itemStyle: { color: '#3b82f6' } },
-              { value: 15, name: 'Mintegral', itemStyle: { color: '#8b5cf6' } },
-              { value: 10, name: 'Kwai', itemStyle: { color: '#f59e0b' } }
-            ],
+            data: d.slices.map((s) => ({
+              value: s.value,
+              name: s.name,
+              itemStyle: { color: s.color }
+            })),
             label: { show: false },
             emphasis: {
               itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.5)' }
@@ -671,11 +297,11 @@
       })
     }
 
-    if (barChartRef.value) {
+    if (barChartRef.value && b) {
       if (!barChart) barChart = echarts.init(barChartRef.value, 'dark')
-      const apps = ['WeatherPro', 'ClapFinder', 'Dressup', 'YearCam', 'FaceMe']
-      const values = [300, 360, 480, 520, 680]
-      const ratios = [13, 15, 21, 22, 29]
+      const apps = b.apps
+      const values = b.values
+      const ratios = b.ratios
       barChart.setOption({
         backgroundColor: 'transparent',
         tooltip: { trigger: 'axis', axisPointer: { type: 'none' } },
@@ -716,7 +342,7 @@
   }
 
   onMounted(() => {
-    nextTick(() => initCharts())
+    loadDashboard()
     window.addEventListener('resize', () => {
       donutChart?.resize()
       barChart?.resize()
@@ -771,24 +397,32 @@
       <!-- Summary cards -->
       <div class="status-summary-grid">
         <div class="summary-card blue">
-          <div class="summary-value">6<span class="summary-unit">个</span></div>
+          <div class="summary-value"
+            >{{ statusSummary.connectedPlatforms }}<span class="summary-unit">个</span></div
+          >
           <div class="summary-label">已接入平台</div>
           <div class="summary-sub green-dot">● 全部正常</div>
         </div>
         <div class="summary-card">
-          <div class="summary-value">42<span class="summary-unit">个</span></div>
+          <div class="summary-value"
+            >{{ statusSummary.totalApps }}<span class="summary-unit">个</span></div
+          >
           <div class="summary-label">总应用数</div>
           <div class="summary-sub">覆盖 6 个平台</div>
         </div>
         <div class="summary-card orange">
-          <div class="summary-value">3<span class="summary-unit">个</span></div>
+          <div class="summary-value"
+            >{{ statusSummary.pendingSync }}<span class="summary-unit">个</span></div
+          >
           <div class="summary-label">待同步</div>
           <div class="summary-sub warning-dot">▲ 需处理</div>
         </div>
         <div class="summary-card purple">
-          <div class="summary-value">1<span class="summary-unit">个</span></div>
+          <div class="summary-value"
+            >{{ statusSummary.newPlatformsThisMonth }}<span class="summary-unit">个</span></div
+          >
           <div class="summary-label">本月新增平台</div>
-          <div class="summary-sub">Amazon Appstore</div>
+          <div class="summary-sub">{{ statusSummary.newPlatformName }}</div>
         </div>
       </div>
 
@@ -977,11 +611,15 @@
             <!-- Total row -->
             <tr class="total-row">
               <td>合计</td><td>—</td><td>—</td><td>—</td>
-              <td class="num val-highlight">496</td>
-              <td class="num val-green">$3,847</td>
-              <td class="num val-teal">$2,156</td>
-              <td class="num val-purple">$1,691</td>
-              <td class="num">56%</td>
+              <td class="num val-highlight">{{ appStoreTotals.newUsers }}</td>
+              <td class="num val-green"
+                >${{ appStoreTotals.totalRevenue.toLocaleString('en-US') }}</td
+              >
+              <td class="num val-teal">${{ appStoreTotals.adRevenue.toLocaleString('en-US') }}</td>
+              <td class="num val-purple"
+                >${{ appStoreTotals.paidRevenue.toLocaleString('en-US') }}</td
+              >
+              <td class="num">{{ appStoreTotals.adRatioPct }}%</td>
             </tr>
           </tbody>
         </table>
@@ -1048,11 +686,15 @@
             <!-- Total -->
             <tr class="total-row">
               <td>合计</td><td>—</td><td>—</td><td>—</td>
-              <td class="num">0</td>
-              <td class="num val-green">$2,340</td>
-              <td class="num val-teal">$1,890</td>
-              <td class="num val-purple">$450</td>
-              <td class="num">100%</td>
+              <td class="num">{{ channelTotals.newUsers }}</td>
+              <td class="num val-green"
+                >${{ channelTotals.totalRevenue.toLocaleString('en-US') }}</td
+              >
+              <td class="num val-teal">${{ channelTotals.adRevenue.toLocaleString('en-US') }}</td>
+              <td class="num val-purple"
+                >${{ channelTotals.paidRevenue.toLocaleString('en-US') }}</td
+              >
+              <td class="num">{{ channelTotals.ratioPct }}%</td>
             </tr>
           </tbody>
         </table>

@@ -1,0 +1,44 @@
+{
+  "data": {
+    "kpi": {
+      "totalAmount": 12450,
+      "totalAmountChange": -8,
+      "refundRate": 3.2,
+      "refundRateChange": 0.5,
+      "orderCount": 1847,
+      "orderCountChange": -12,
+      "avgAmount": 6.74,
+      "revenueRatio": 4.8
+    },
+    "trend": [{ "date": "1/1", "refundAmount": 28000, "ma7": 30000 }],
+    "reasonData": [
+      { "name": "用户主动取消", "value": 45 },
+      { "name": "功能不符预期", "value": 28 },
+      { "name": "订阅重复扣费", "value": 12 },
+      { "name": "支付失败", "value": 8 },
+      { "name": "其他", "value": 7 }
+    ],
+    "countryData": [
+      { "country": "US", "rate": 2.8, "level": "good", "badge": "Acceptable" },
+      { "country": "UK", "rate": 3.1, "level": "warning" },
+      { "country": "DE", "rate": 4.2, "level": "warning" },
+      { "country": "FR", "rate": 5.8, "level": "danger", "badge": "High" },
+      { "country": "JP", "rate": 2.1, "level": "good" },
+      { "country": "CN", "rate": 6.2, "level": "critical", "badge": "Highest" },
+      { "country": "AU", "rate": 3.5, "level": "warning" },
+      { "country": "CA", "rate": 2.9, "level": "good" }
+    ],
+    "orderData": [
+      {
+        "orderId": "ORD-123456",
+        "user": "john.doe@...",
+        "amount": 15.0,
+        "reason": "用户主动取消",
+        "platform": "Google Play",
+        "date": "2024-01-23",
+        "status": "refunded"
+      }
+    ],
+    "alertMessage": "高退款率预警：法国地区退款率达5.8%，超过预警阈值5%，建议检查当地付费渠道和定价策略"
+  }
+}

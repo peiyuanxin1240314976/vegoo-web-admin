@@ -1,0 +1,125 @@
+{
+  "_comment": "订单退款分析 - 看板聚合。对应 types.ts: DashboardPayload、api/order-refund-analysis.ts: getDashboard。",
+  "fieldDescription": {
+    "request": {
+      "app": {
+        "type": "string",
+        "required": true,
+        "description": "应用筛选，all 表示全部。"
+      },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，YYYY-MM-DD。"
+      },
+      "compareType": {
+        "type": "string",
+        "required": true,
+        "enum": ["last_month", "last_week", "last_year"],
+        "description": "对比期间类型。"
+      },
+      "country": {
+        "type": "string",
+        "required": true,
+        "description": "国家，all 或 ISO 3166-1 alpha-2。"
+      },
+      "payment_platform": {
+        "type": "string",
+        "required": true,
+        "description": "支付平台筛选：all、google_play、app_store、stripe 等。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "DashboardPayload",
+        "required": true,
+        "description": "网关包裹时为 data 内结构。"
+      }
+    },
+    "DashboardPayload": {
+      "kpi": { "type": "OrderRefundKpiBlock", "required": true, "description": "KPI 数值块。" },
+      "trend": {
+        "type": "TrendPoint[]",
+        "required": true,
+        "description": "退款趋势点（通常 30 天）。"
+      },
+      "reasonData": {
+        "type": "{ name: string; value: number }[]",
+        "required": true,
+        "description": "退款原因占比（与饼图一致，value 可为百分比或相对权重）。"
+      },
+      "countryData": {
+        "type": "CountryRate[]",
+        "required": true,
+        "description": "国家退款率对比。"
+      },
+      "orderData": {
+        "type": "OrderRecord[]",
+        "required": true,
+        "description": "退款订单明细表。"
+      },
+      "alertMessage": {
+        "type": "string",
+        "required": true,
+        "description": "底部预警条文案；空字符串表示不展示。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "app": "all",
+    "startDate": "2024-01-01",
+    "endDate": "2024-01-31",
+    "compareType": "last_month",
+    "country": "all",
+    "payment_platform": "all"
+  },
+  "sampleResponse": {
+    "data": {
+      "kpi": {
+        "totalAmount": 12450,
+        "totalAmountChange": -8,
+        "refundRate": 3.2,
+        "refundRateChange": 0.5,
+        "orderCount": 1847,
+        "orderCountChange": -12,
+        "avgAmount": 6.74,
+        "revenueRatio": 4.8
+      },
+      "trend": [{ "date": "1/1", "refundAmount": 28000, "ma7": 30000 }],
+      "reasonData": [
+        { "name": "用户主动取消", "value": 45 },
+        { "name": "功能不符预期", "value": 28 }
+      ],
+      "countryData": [{ "country": "US", "rate": 2.8, "level": "good", "badge": "Acceptable" }],
+      "orderData": [
+        {
+          "orderId": "ORD-123456",
+          "user": "john.doe@...",
+          "amount": 15.0,
+          "reason": "用户主动取消",
+          "platform": "Google Play",
+          "date": "2024-01-23",
+          "status": "refunded"
+        }
+      ],
+      "alertMessage": "高退款率预警：法国地区退款率达5.8%，超过预警阈值5%，建议检查当地付费渠道和定价策略"
+    }
+  },
+  "api": {
+    "url": "POST /api/product-operations/order-refund-analysis/overview/dashboard",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "OrderRefundDashboardParams",
+    "responseBody": "DashboardPayload（网关包裹于 data）"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "成功响应需符合项目 BaseResponse：`{ code, data, msg }`，`request` 拦截器返回 `data` 字段。"
+    ]
+  }
+}
