@@ -91,8 +91,9 @@ axiosInstance.interceptors.response.use(
   (response: AxiosResponse<BaseResponse>) => {
     const data = response.data as BaseResponse & { message?: string }
     const { code } = data
-    // 部分后端成功返回 code: 0，与 200 均视为成功
-    if (code === ApiStatus.success || code === 0) return response
+    const codeNum = typeof code === 'number' && !Number.isNaN(code) ? code : Number(code)
+    // 部分后端成功返回 code: 0，与 200 均视为成功；兼容字符串 "200" / "0"
+    if (codeNum === ApiStatus.success || codeNum === 0) return response
     const errMsg = getResponseErrorMessage(data)
     if (code === ApiStatus.unauthorized) handleUnauthorizedError(errMsg || undefined)
     throw createHttpError(errMsg || $t('httpMsg.requestFailed'), code)

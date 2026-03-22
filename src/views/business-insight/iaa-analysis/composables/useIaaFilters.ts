@@ -28,10 +28,14 @@ export function useIaaFilters() {
   const countryOptions = ref<IaaSelectOption[]>(DEFAULT_COUNTRY_OPTIONS)
 
   async function loadFilterOptions() {
-    const res = await fetchIaaMetaFilterOptions()
-    appOptions.value = res.appOptions
-    platformOptions.value = res.platformOptions
-    countryOptions.value = res.countryOptions
+    try {
+      const res = await fetchIaaMetaFilterOptions()
+      if (res.appOptions.length) appOptions.value = res.appOptions
+      if (res.platformOptions.length) platformOptions.value = res.platformOptions
+      if (res.countryOptions.length) countryOptions.value = res.countryOptions
+    } catch {
+      // 保持默认选项，避免请求失败或未登录时整页因 undefined 崩溃
+    }
   }
 
   onMounted(() => {
