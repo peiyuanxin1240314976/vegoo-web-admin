@@ -1,0 +1,61 @@
+{
+  "_comment": "文本管理 - 审核用词库（违禁词、品牌词）。供文本审核步骤拉取配置；与前端本地兜底逻辑二选一或合并策略由产品约定。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "data": {
+        "type": "AuditWordLists",
+        "required": true,
+        "description": "词库配置。"
+      }
+    },
+    "AuditWordLists": {
+      "bannedWords": {
+        "type": "string[]",
+        "required": true,
+        "description": "违禁词列表，匹配时不区分大小写（由服务端或前端统一约定）。"
+      },
+      "brandWords": {
+        "type": "string[]",
+        "required": true,
+        "description": "品牌/竞品敏感词列表，用于高亮提示。"
+      },
+      "version": {
+        "type": "string",
+        "required": false,
+        "description": "词库版本号，便于缓存失效。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "data": {
+      "bannedWords": ["fucking", "shit", "damn", "bitch", "crap", "asshole"],
+      "brandWords": [
+        "Facebook",
+        "TikTok",
+        "Disney",
+        "Google",
+        "Apple",
+        "Amazon",
+        "Microsoft",
+        "YouTube",
+        "Instagram",
+        "Twitter",
+        "WhatsApp",
+        "Netflix"
+      ],
+      "version": "2026-03-22"
+    }
+  },
+  "api": {
+    "url": "GET /api/product-operations/text-management/meta/audit-word-lists",
+    "method": "GET",
+    "priority": "P1",
+    "requestBody": "无",
+    "responseBody": "AuditWordLists"
+  },
+  "apiSuggestion": {
+    "notes": ["列表体量较小时可整包下发；若词库很大建议分页或增量接口另拆。"]
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "_comment": "文本管理 - 单语种 AI 译化。对应 AutoFill 中单条执行；返回三项商店字段译文。",
+  "fieldDescription": {
+    "request": {
+      "model": {
+        "type": "string",
+        "required": true,
+        "enum": ["claude-sonnet", "gpt4o", "gemini-15-pro"],
+        "description": "选用的 AI 模型标识。"
+      },
+      "agent": {
+        "type": "string",
+        "required": true,
+        "description": "Agent 配置名称或 ID。"
+      },
+      "targetLang": {
+        "type": "string",
+        "required": true,
+        "description": "目标语言 BCP 47 码，如 ja、pt-BR。"
+      },
+      "content": {
+        "type": "AppContent",
+        "required": true,
+        "description": "源语言主文案（应用名、短描述、完整描述）。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "TranslateResult",
+        "required": true,
+        "description": "译化结果。"
+      }
+    },
+    "AppContent": {
+      "appName": { "type": "string", "required": true, "description": "应用名称。" },
+      "shortDesc": { "type": "string", "required": true, "description": "简短描述。" },
+      "fullDesc": { "type": "string", "required": true, "description": "完整描述。" }
+    },
+    "TranslateResult": {
+      "appName": { "type": "string", "required": true, "description": "译后应用名。" },
+      "shortDesc": { "type": "string", "required": true, "description": "译后短描述。" },
+      "fullDesc": { "type": "string", "required": true, "description": "译后完整描述。" }
+    }
+  },
+  "sampleRequest": {
+    "model": "claude-sonnet",
+    "agent": "Store Listing Agent 1",
+    "targetLang": "ja",
+    "content": {
+      "appName": "People Search, People Finder",
+      "shortDesc": "AI People Search, People Finder",
+      "fullDesc": "information across multiple open sources."
+    }
+  },
+  "sampleResponse": {
+    "data": {
+      "appName": "人物検索、人物ファインダー",
+      "shortDesc": "AI人物検索、名前で人物を探す、スマート検索",
+      "fullDesc": "複数のオープンソースからの情報を提供します。名前を入力するだけで、関連する公開データを発見し、整理して提示します。"
+    }
+  },
+  "api": {
+    "url": "POST /api/product-operations/text-management/action/translate",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "model, agent, targetLang, content",
+    "responseBody": "TranslateResult"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "长文本译化可能耗时较长，可配合任务队列与轮询接口；当前 UI 为同步等待时可设合理超时。",
+      "超限状态由前端根据字数与 limit 字段计算，或由服务端额外返回 flags。"
+    ]
+  }
+}
