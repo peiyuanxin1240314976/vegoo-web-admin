@@ -234,6 +234,93 @@ declare namespace Api {
       /** 来源页面标识，如 comprehensive-analysis */
       from: string
     }
+
+    /** 广告平台分析大屏 - 各分片接口通用请求体（与页面 filters 对齐） */
+    interface AdPlatformAnalysisRequestParams {
+      app?: string
+      platform?: string
+      channelKey?: string
+    }
+
+    /** POST .../ad-platform/filters/meta 响应 */
+    interface AdPlatformFiltersMetaDto {
+      apps?: { label: string; value: string }[]
+      platforms?: { label: string; value: string }[]
+      channels?: { label: string; value: string }[]
+    }
+
+    /** KPI 卡片单项 */
+    interface AdPlatformKpiCardDto {
+      id: string
+      name: string
+      logo?: string
+      roi: number
+      roiChange: number
+      roiChangeUp: boolean
+      cost: string
+      revenue: string
+      cpi: string
+      trendData: number[]
+    }
+
+    /** ROI 趋势 */
+    interface AdPlatformRoiTrendDto {
+      dates: string[]
+      series: { name: string; data: number[] }[]
+    }
+
+    /** 用户质量热力图行 */
+    interface AdPlatformQualityHeatmapRowDto {
+      channel: string
+      d1Retention: number
+      d7Retention: number
+      d30Retention: number
+      payRate: number
+      arpu: number
+    }
+
+    /** Top10 广告系列行 */
+    interface AdPlatformCampaignTop10RowDto {
+      campaign: string
+      channel: string
+      sourceKey: string
+      cost: number
+      cpi: number
+      roi: number
+    }
+
+    type AdPlatformMetricStatus = 'excellent' | 'average' | 'poor'
+
+    /** 指标对比表行 */
+    interface AdPlatformMetricsTableRowDto {
+      channel: string
+      cost: string
+      revenue: string
+      roi: number
+      roiTrendUp: boolean
+      roas: number
+      cpi: number
+      cpiTrendUp: boolean
+      installs: string
+      userQualityD7: number
+      userQualityD7TrendUp: boolean
+      userQualityPay: number
+      userQualityPayTrendUp: boolean
+      ltv7: number
+      ltv30: number
+      status: AdPlatformMetricStatus
+      statusText?: string
+      roiSparkline?: number[]
+      cpiSparkline?: number[]
+    }
+
+    /** POST .../ad-platform/metrics/table 响应 */
+    interface AdPlatformMetricsTableDto {
+      list: AdPlatformMetricsTableRowDto[]
+      total: number
+      current?: number
+      size?: number
+    }
   }
 
   /** 商业洞察 - IAA 分析 */

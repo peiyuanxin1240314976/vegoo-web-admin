@@ -1,0 +1,38 @@
+---
+description: 业务代码获取「应用当前时间」须走 @/utils/app-now，禁止用裸 new Date() 表示「今天/此刻」
+alwaysApply: true
+---
+
+# 应用当前时间（禁止业务侧裸 `new Date()`）
+
+## 规则
+
+- 凡业务含义为 **「当前时间」「今天」「此刻」** 或 **基于「今天」做日期加减**（默认日期范围、快捷选项、Mock 里的「截止到今日」、错误时间戳等），**一律**使用 `@/utils/app-now`，**不要**写 `new Date()`（无参）或 `Date.now()` 作为业务「当前时间」来源。
+- 导入：`import { getAppNow, getAppNowMs, getAppTodayYYYYMMDD, formatYYYYMMDD, cloneAppDate, offsetAppNowMs } from '@/utils/app-now'`（按需选用）。
+
+## API 说明（`src/utils/app-now.ts`）
+
+| 方法 | 用途 |
+|------|------|
+| `getAppNow()` | 返回应用约定的「当前」`Date`（测试环境可固定日历日 + 真实时分秒，见文件内注释） |
+| `getAppNowMs()` | 当前时刻毫秒时间戳 |
+| `getAppTodayYYYYMMDD()` / `formatYYYYMMDD(d)` | 格式化为 `YYYY-MM-DD` |
+| `cloneAppDate(d)` | 复制某个 `Date`，在**不改动原对象**的前提下 `setDate` / `setHours` 等 |
+| `offsetAppNowMs(deltaMs)` | 相对应用当前时刻偏移（如一周前：`offsetAppNowMs(-604800000)`） |
+
+## 典型写法
+
+- 默认今天字符串：`formatDateYmd(getAppNow())` 或 `getAppTodayYYYYMMDD()`
+- ISO 时间戳：`getAppNow().toISOString()`
+- 以今天 0 点起算范围：`const end = cloneAppDate(getAppNow()); end.setHours(0, 0, 0, 0); const start = cloneAppDate(end); …`
+
+## 例外（允许保留 `new Date(...)`）
+
+- **`src/utils/app-now.ts` 内部**：实现固定「今天」与真实时钟的封装，此处可使用 `new Date()`。
+- **解析非「当前时间」的字符串**：如节日日期、接口返回的日期字符串，可用 `new Date('2026-01-01')` 等（如 `useCeremony`）。
+- **结构克隆**：如菜单/配置 JSON 反序列化时对已有 `Date` 的拷贝（如 `new Date(obj)`），与「当前时刻」无关，可保留。
+- **第三方库要求**：若 API 必须传入原生 `Date` 且语义已是「应用当前」，应传入 `getAppNow()` 的返回值，而非 `new Date()`。
+
+## 上线注意
+
+`app-now.ts` 内 `getFixedNow()` 可按环境改为真实今天；业务代码**无需**再批量替换。

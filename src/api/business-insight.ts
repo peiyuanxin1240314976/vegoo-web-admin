@@ -24,6 +24,15 @@ import type {
   IaaCountryTabData,
   IaaVersionTabData
 } from '@/views/business-insight/iaa-analysis/types'
+import type {
+  ProfitAnalysisQueryParams,
+  ProfitAppProfitResponseDto,
+  ProfitCountryProfitResponseDto,
+  ProfitFilterOptions,
+  ProfitKpiOverviewDto,
+  ProfitSankeyDto,
+  ProfitTrend30d
+} from '@/views/business-insight/profit-analysis/types'
 
 export {
   fetchIapMetaFilterOptions,
