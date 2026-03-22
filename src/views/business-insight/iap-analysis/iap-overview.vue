@@ -249,7 +249,7 @@
   import { ref, onMounted, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import { Download, Refresh } from '@element-plus/icons-vue'
-  import { fetchIapOverviewTable } from '@/api/business-insight'
+  import { fetchIapTableOverview } from '@/api/iap-analysis'
   import type {
     IapOverviewRow,
     IapOverviewSummary
@@ -271,7 +271,7 @@
   const summary = ref<IapOverviewSummary | null>(null)
 
   async function loadTable() {
-    const res = await fetchIapOverviewTable({
+    const res = await fetchIapTableOverview({
       timeRange: filters.value.time,
       s_app_id: filters.value.app,
       productType: filters.value.type,
@@ -287,9 +287,13 @@
 
   function goToDetail(row: IapOverviewRow) {
     if (row.isChild) return
+    const sid = (row.s_app_id ?? row.id ?? '').toString().trim()
     router.push({
       name: 'IapAnalysisDetail',
-      query: { app: row.name }
+      query: {
+        app: row.name,
+        ...(sid ? { s_app_id: sid } : {})
+      }
     })
   }
 

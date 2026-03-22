@@ -2,7 +2,8 @@
 
 ## 父级 API 路径
 
-`/api/business-insight/iap-analysis/<endpoint>`
+文档示例：`/api/business-insight/iap-analysis/<endpoint>`  
+当前网关实现：`/api/v1/datacenter/analysis/business-insight/iap-analysis/<endpoint>`（见 `src/api/iap-analysis.ts`，与下表一一对应）
 
 （GET 用于 meta，POST 用于带筛选的查询）
 
@@ -23,10 +24,20 @@
 | `11-detail-user.json` | Detail 用户分析 Tab 数据 | `/detail/user` | POST | P0 |
 | `12-detail-trend.json` | Detail 趋势分析 Tab 数据 | `/detail/trend` | POST | P0 |
 
+## 前端分片调用
+
+- 各契约对应方法集中在 `src/api/iap-analysis.ts`（按文件名注释可查）
+- Dashboard 01～07：`composables/useIapDashboardModules.ts` 内并行拉取
+- Overview 树表：`fetchIapTableOverview` → `08-table-overview.json`；另备 `fetchIapOverviewTable` → `08-overview-table.json`
+- 详情 09～12：按 Tab 懒加载，见 `detail.vue`（进入页仅 KPI + 当前 Tab，切换 Tab 再请求对应接口）
+
 ## 拆分原则
 
 - 一个接口只服务一个明确 UI 模块（一块 KPI、一张图、一张表或一个 Tab 聚合）
-- 全局筛选参数（timeRange、s_app_id、productType、s_country_code、platform）由各 POST 接口统一接收
+- **Dashboard 带筛选的 POST（02～07）**：请求体与 `02-overview-kpi.json` 的 `request` **一致**，均接收五维筛选  
+  `timeRange`（必填）、`s_app_id`、`productType`、`s_country_code`、`platform`（可选，未选或「全部」时传 `all` 或空由网关约定；前端见 `normalizeIapOverviewBody`）。  
+  各图/KPI/卡片/分布/甜甜圈/平台对比的后端实现须 **按同一语义过滤**，避免「只有表格跟着筛、图不跟筛」。
+- **Mock 模式**：`business-insight-api-mock.ts` 内 Dashboard Mock 已按上述入参做 **演示级** 变化（非真实聚合）；接真接口后以服务端为准。
 - Detail 接口需带 s_app_id（或应用标识）以按应用拉取详情
 
 ## 字段约定

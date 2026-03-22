@@ -242,8 +242,13 @@
     fetchIapDetailProduct,
     fetchIapDetailUser,
     fetchIapDetailTrend
-  } from '@/api/business-insight'
-  import type { IapKpiCard } from '@/views/business-insight/iap-analysis/types'
+  } from '@/api/iap-analysis'
+  import type {
+    IapKpiCard,
+    IapDetailProduct,
+    IapDetailUser,
+    IapDetailTrend
+  } from '@/views/business-insight/iap-analysis/types'
 
   defineOptions({ name: 'IapAnalysisDetail' })
 
@@ -251,8 +256,13 @@
   const router = useRouter()
 
   const appName = computed(() => (route.query.app as string) || 'PhoneTracker')
-  /** 用于接口的 s_app_id，与 route.query.app 一致（如 PhoneTracker）或转小写 */
-  const s_app_id = computed(() => (route.query.app as string) || 'phonetracker')
+  /** 详情接口入参：优先 query.s_app_id（Overview 跳转），否则回退 app（历史链接） */
+  const s_app_id = computed(() => {
+    const sid = (route.query.s_app_id as string)?.trim()
+    if (sid) return sid
+    const legacy = (route.query.app as string)?.trim()
+    return legacy || 'phonetracker'
+  })
 
   function goBack() {
     router.push({ name: 'IapAnalysis' })
@@ -282,16 +292,16 @@
     }))
   )
 
-  const detailProduct = ref<Awaited<ReturnType<typeof fetchIapDetailProduct>> | null>(null)
+  const detailProduct = ref<IapDetailProduct | null>(null)
   const skuData = computed(() => detailProduct.value?.skuList ?? [])
   const userSegments = computed(() => detailProduct.value?.userSegments ?? [])
   const donutData = computed(() => detailProduct.value?.subscriptionDonut ?? [])
   const subscriptionTotal = computed(() => detailProduct.value?.subscriptionTotal ?? '—')
 
-  const detailUser = ref<Awaited<ReturnType<typeof fetchIapDetailUser>> | null>(null)
+  const detailUser = ref<IapDetailUser | null>(null)
   const userValueData = computed(() => detailUser.value?.userValueTable ?? [])
 
-  const detailTrend = ref<Awaited<ReturnType<typeof fetchIapDetailTrend>> | null>(null)
+  const detailTrend = ref<IapDetailTrend | null>(null)
 
   const donutRef = ref<HTMLElement>()
   const renewRef = ref<HTMLElement>()
@@ -308,11 +318,40 @@
   const kpiSparklineRefs = ref<(HTMLElement | null)[]>([])
   const skuTrendSparklineRefs = ref<Record<string, HTMLElement | null>>({})
 
-  function initChart(el: HTMLElement | undefined, option: echarts.EChartsOption) {
+  /** 主图表：入场 + 数据更新动效（option 可覆盖 animation*） */
+  const iapChartAnim: echarts.EChartsOption = {
+    animation: true,
+    animationDuration: 880,
+    animationEasing: 'cubicOut',
+    animationDelay: (idx: number) => idx * 48,
+    animationDurationUpdate: 420,
+    animationEasingUpdate: 'cubicOut'
+  }
+
+  /** KPI / SKU 迷你图：更短，避免列表里拖沓 */
+  const iapSparklineAnim: echarts.EChartsOption = {
+    animation: true,
+    animationDuration: 480,
+    animationEasing: 'cubicOut',
+    animationDelay: (idx: number) => idx * 28,
+    animationDurationUpdate: 260,
+    animationEasingUpdate: 'cubicOut'
+  }
+
+  function initChart(
+    el: HTMLElement | undefined,
+    option: echarts.EChartsOption,
+    animVariant: 'full' | 'spark' = 'full'
+  ) {
     if (!el) return
-    const chart = echarts.init(el, 'dark')
-    chart.setOption(option)
-    chartInstances.push(chart)
+    try {
+      const chart = echarts.init(el, 'dark')
+      const anim = animVariant === 'spark' ? iapSparklineAnim : iapChartAnim
+      chart.setOption({ ...anim, ...option })
+      chartInstances.push(chart)
+    } catch {
+      /* ECharts 在异常数据下仍可能抛错，避免打断 Tab 切换 */
+    }
   }
 
   const commonGrid = { top: 30, right: 16, bottom: 30, left: 50, containLabel: true }
@@ -320,6 +359,94 @@
     axisLine: { lineStyle: { color: '#334155' } },
     splitLine: { lineStyle: { color: '#1e293b' } },
     axisLabel: { color: '#94a3b8', fontSize: 11 }
+  }
+
+  /** 类目横轴：展示全部刻度，必要时倾斜避免重叠（勿用大 interval，否则只剩少量/看似只有第一个） */
+  function iapCategoryXAxisLabel(len: number, fontSize = 10) {
+    const rotate = len > 16 ? 38 : len > 10 ? 24 : 0
+    return {
+      color: '#94a3b8',
+      fontSize: rotate ? 9 : fontSize,
+      interval: 0,
+      hideOverlap: false,
+      rotate,
+      margin: rotate ? 12 : 8
+    }
+  }
+
+  function iapGridBottomForCategoryLen(len: number) {
+    if (len > 16) return 52
+    if (len > 10) return 40
+    return 30
+  }
+
+  /** 坐标轴悬浮：指示线 + 轴上高亮类目文案 */
+  const iapTooltipAxis: echarts.TooltipComponentOption = {
+    trigger: 'axis',
+    confine: true,
+    backgroundColor: 'rgba(24, 24, 27, 0.96)',
+    borderColor: '#52525b',
+    borderWidth: 1,
+    padding: [10, 14],
+    textStyle: { color: '#f4f4f5', fontSize: 12 },
+    axisPointer: {
+      type: 'line',
+      lineStyle: { color: '#3b82f6', width: 1, type: 'dashed' },
+      label: {
+        show: true,
+        color: '#e4e4e7',
+        backgroundColor: '#27272a',
+        borderColor: '#3f3f46',
+        borderWidth: 1,
+        padding: [4, 8]
+      }
+    }
+  }
+
+  const iapTooltipAxisShadow: echarts.TooltipComponentOption = {
+    trigger: 'axis',
+    confine: true,
+    backgroundColor: 'rgba(24, 24, 27, 0.96)',
+    borderColor: '#52525b',
+    borderWidth: 1,
+    padding: [10, 14],
+    textStyle: { color: '#f4f4f5', fontSize: 12 },
+    axisPointer: {
+      type: 'shadow',
+      shadowStyle: { color: 'rgba(59, 130, 246, 0.14)' },
+      label: {
+        show: true,
+        color: '#e4e4e7',
+        backgroundColor: '#27272a',
+        borderColor: '#3f3f46',
+        borderWidth: 1,
+        padding: [4, 8]
+      }
+    }
+  }
+
+  const iapTooltipItem: echarts.TooltipComponentOption = {
+    trigger: 'item',
+    confine: true,
+    backgroundColor: 'rgba(24, 24, 27, 0.96)',
+    borderColor: '#52525b',
+    borderWidth: 1,
+    padding: [10, 14],
+    textStyle: { color: '#f4f4f5', fontSize: 12 }
+  }
+
+  /** 类目轴与数值列等长且为有限数字（远程接口错列/空数组时避免 setOption） */
+  function canRenderCategoryValueSeries(
+    categories: unknown[] | undefined,
+    values: unknown[] | undefined,
+    minPoints = 2
+  ) {
+    if (!Array.isArray(categories) || !Array.isArray(values)) return false
+    if (categories.length < minPoints || values.length !== categories.length) return false
+    return values.every((v) => {
+      const n = Number(v)
+      return Number.isFinite(n)
+    })
   }
 
   function initDonut() {
@@ -333,11 +460,14 @@
     }
     initChart(donutRef.value, {
       backgroundColor: 'transparent',
+      tooltip: { ...iapTooltipItem },
       series: [
         {
           type: 'pie',
           radius: ['55%', '80%'],
           center: ['50%', '50%'],
+          animationType: 'scale',
+          animationEasing: 'cubicOut',
           label: { show: false },
           data: list.map((item) => ({
             value: item.value ?? (Number(String(item.pct).replace('%', '')) || 0),
@@ -352,10 +482,17 @@
   function initRenew() {
     const renew = detailProduct.value?.renewChart
     if (!renew || !renewRef.value) return
+    const renewLen = renew.categories.length
     initChart(renewRef.value, {
       backgroundColor: 'transparent',
-      grid: { top: 20, right: 10, bottom: 30, left: 40 },
-      xAxis: { type: 'category', data: renew.categories, ...axisStyle },
+      tooltip: { ...iapTooltipAxis },
+      grid: { top: 20, right: 10, bottom: iapGridBottomForCategoryLen(renewLen), left: 40 },
+      xAxis: {
+        type: 'category',
+        data: renew.categories,
+        ...axisStyle,
+        axisLabel: iapCategoryXAxisLabel(renewLen, 11)
+      },
       yAxis: { type: 'value', ...axisStyle },
       series: [
         {
@@ -368,7 +505,7 @@
           barWidth: '40%',
           label: { show: true, position: 'top', color: '#e2e8f0', fontSize: 11 }
         },
-        ...(renew.rates
+        ...(renew.rates && canRenderCategoryValueSeries(renew.categories, renew.rates)
           ? [
               {
                 type: 'line' as const,
@@ -397,34 +534,41 @@
       const el = kpiSparklineRefs.value[i]
       if (!el) return
 
-      const vals =
+      let vals =
         kpi.sparklineValues?.length && kpi.sparklineValues.length >= 2
-          ? kpi.sparklineValues
-          : Array.from({ length: 12 }, () => Math.random())
+          ? kpi.sparklineValues.map((v) => Number(v)).filter((n) => Number.isFinite(n))
+          : []
+      if (vals.length < 2) {
+        vals = Array.from({ length: 12 }, () => Math.random())
+      }
 
       const lineColor = kpi.sparkColor
-      initChart(el, {
-        backgroundColor: 'transparent',
-        grid: { top: 0, right: 0, bottom: 0, left: 0 },
-        xAxis: { type: 'category', show: false, data: vals.map((_, j) => j) },
-        yAxis: { type: 'value', show: false },
-        series: [
-          {
-            type: 'line',
-            data: vals,
-            smooth: true,
-            showSymbol: false,
-            lineStyle: { color: lineColor, width: 2 },
-            areaStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: `${lineColor}55` },
-                { offset: 1, color: `${lineColor}00` }
-              ])
-            },
-            itemStyle: { color: lineColor }
-          }
-        ]
-      })
+      initChart(
+        el,
+        {
+          backgroundColor: 'transparent',
+          grid: { top: 0, right: 0, bottom: 0, left: 0 },
+          xAxis: { type: 'category', show: false, data: vals.map((_, j) => j) },
+          yAxis: { type: 'value', show: false },
+          series: [
+            {
+              type: 'line',
+              data: vals,
+              smooth: true,
+              showSymbol: false,
+              lineStyle: { color: lineColor, width: 2 },
+              areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  { offset: 0, color: `${lineColor}55` },
+                  { offset: 1, color: `${lineColor}00` }
+                ])
+              },
+              itemStyle: { color: lineColor }
+            }
+          ]
+        },
+        'spark'
+      )
     })
   }
 
@@ -444,34 +588,38 @@
       const lineColor = row.trendUp ? upColor : downColor
       const lineColor2 = row.trendUp ? '#3b82f6' : '#f97316'
 
-      initChart(el, {
-        backgroundColor: 'transparent',
-        grid: { top: 0, right: 0, bottom: 0, left: 0 },
-        xAxis: { type: 'category', show: false, data: vals.map((_, j) => j) },
-        yAxis: { type: 'value', show: false },
-        series: [
-          {
-            type: 'line',
-            data: vals,
-            smooth: true,
-            showSymbol: false,
-            lineStyle: {
-              width: 2,
-              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: lineColor },
-                { offset: 1, color: lineColor2 }
-              ])
-            },
-            areaStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: `${lineColor}55` },
-                { offset: 1, color: `${lineColor}00` }
-              ])
-            },
-            itemStyle: { color: lineColor }
-          }
-        ]
-      })
+      initChart(
+        el,
+        {
+          backgroundColor: 'transparent',
+          grid: { top: 0, right: 0, bottom: 0, left: 0 },
+          xAxis: { type: 'category', show: false, data: vals.map((_, j) => j) },
+          yAxis: { type: 'value', show: false },
+          series: [
+            {
+              type: 'line',
+              data: vals,
+              smooth: true,
+              showSymbol: false,
+              lineStyle: {
+                width: 2,
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                  { offset: 0, color: lineColor },
+                  { offset: 1, color: lineColor2 }
+                ])
+              },
+              areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  { offset: 0, color: `${lineColor}55` },
+                  { offset: 1, color: `${lineColor}00` }
+                ])
+              },
+              itemStyle: { color: lineColor }
+            }
+          ]
+        },
+        'spark'
+      )
     })
   }
 
@@ -487,11 +635,34 @@
     const data = detailUser.value?.countryChartData
     if (!data || !countryRef.value) return
     const { countries, counts, arpu } = data
+    if (
+      !Array.isArray(countries) ||
+      !Array.isArray(counts) ||
+      !Array.isArray(arpu) ||
+      countries.length !== counts.length ||
+      countries.length !== arpu.length
+    ) {
+      return
+    }
     initChart(countryRef.value, {
       backgroundColor: 'transparent',
+      tooltip: { ...iapTooltipAxisShadow },
       grid: { top: 10, right: 80, bottom: 10, left: 60, containLabel: true },
       xAxis: { type: 'value', ...axisStyle },
-      yAxis: { type: 'category', data: countries, ...axisStyle },
+      yAxis: {
+        type: 'category',
+        data: countries,
+        ...axisStyle,
+        axisLabel: {
+          color: '#94a3b8',
+          fontSize: 10,
+          interval: 0,
+          hideOverlap: false,
+          width: 72,
+          overflow: 'truncate',
+          ellipsis: '…'
+        }
+      },
       series: [
         {
           type: 'bar',
@@ -518,11 +689,18 @@
   function initUserCompare() {
     const data = detailUser.value?.userCompareData
     if (!data || !userCompareRef.value) return
+    const ucLen = data.categories.length
     initChart(userCompareRef.value, {
       backgroundColor: 'transparent',
-      grid: commonGrid,
+      tooltip: { ...iapTooltipAxis },
+      grid: { ...commonGrid, bottom: iapGridBottomForCategoryLen(ucLen) },
       legend: { data: ['转化率', 'ARPU'], textStyle: { color: '#94a3b8' }, top: 0 },
-      xAxis: { type: 'category', data: data.categories, ...axisStyle },
+      xAxis: {
+        type: 'category',
+        data: data.categories,
+        ...axisStyle,
+        axisLabel: iapCategoryXAxisLabel(ucLen, 11)
+      },
       yAxis: [
         { type: 'value', name: '转化率%', ...axisStyle },
         { type: 'value', name: 'ARPU$', ...axisStyle }
@@ -550,10 +728,17 @@
   function initFirstPay() {
     const data = detailUser.value?.firstPayData
     if (!data || !firstPayRef.value) return
+    const fpLen = data.categories.length
     initChart(firstPayRef.value, {
       backgroundColor: 'transparent',
-      grid: commonGrid,
-      xAxis: { type: 'category', data: data.categories, ...axisStyle },
+      tooltip: { ...iapTooltipAxis },
+      grid: { ...commonGrid, bottom: iapGridBottomForCategoryLen(fpLen) },
+      xAxis: {
+        type: 'category',
+        data: data.categories,
+        ...axisStyle,
+        axisLabel: iapCategoryXAxisLabel(fpLen, 11)
+      },
       yAxis: { type: 'value', ...axisStyle },
       series: [
         {
@@ -572,15 +757,25 @@
   function initTrend() {
     const data = detailTrend.value?.ordersRevenue
     if (!data || !trendRef.value) return
+    if (
+      !canRenderCategoryValueSeries(data.dates, data.revenue) ||
+      !Array.isArray(data.orders) ||
+      data.orders.length !== data.dates!.length ||
+      !data.orders.every((v) => Number.isFinite(Number(v)))
+    ) {
+      return
+    }
+    const trLen = data.dates.length
     initChart(trendRef.value, {
       backgroundColor: 'transparent',
-      grid: { top: 30, right: 60, bottom: 30, left: 60 },
-      legend: { data: ['订单数', '收入'], textStyle: { color: '#94a3b8' }, right: 0, top: 0 },
+      tooltip: { ...iapTooltipAxis },
+      grid: { top: 20, right: 60, bottom: iapGridBottomForCategoryLen(trLen), left: 60 },
+      legend: { show: false },
       xAxis: {
         type: 'category',
         data: data.dates,
         ...axisStyle,
-        axisLabel: { color: '#94a3b8', fontSize: 10, interval: 4 }
+        axisLabel: iapCategoryXAxisLabel(trLen, 10)
       },
       yAxis: [
         { type: 'value', name: '订单', ...axisStyle },
@@ -606,12 +801,6 @@
           data: data.revenue,
           smooth: true,
           lineStyle: { color: '#a78bfa', width: 2 },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(167,139,250,0.3)' },
-              { offset: 1, color: 'rgba(167,139,250,0.01)' }
-            ])
-          },
           symbol: 'none',
           itemStyle: { color: '#a78bfa' }
         }
@@ -622,14 +811,17 @@
   function initArpuTrend() {
     const data = detailTrend.value?.arpuTrend
     if (!data || !arpuTrendRef.value) return
+    if (!canRenderCategoryValueSeries(data.dates, data.values)) return
+    const arpuLen = data.dates.length
     initChart(arpuTrendRef.value, {
       backgroundColor: 'transparent',
-      grid: { top: 20, right: 16, bottom: 30, left: 50 },
+      tooltip: { ...iapTooltipAxis },
+      grid: { top: 20, right: 16, bottom: iapGridBottomForCategoryLen(arpuLen), left: 50 },
       xAxis: {
         type: 'category',
         data: data.dates,
         ...axisStyle,
-        axisLabel: { color: '#94a3b8', fontSize: 9, interval: 6 }
+        axisLabel: iapCategoryXAxisLabel(arpuLen, 9)
       },
       yAxis: { type: 'value', ...axisStyle },
       series: [
@@ -639,12 +831,6 @@
           smooth: true,
           lineStyle: { color: '#3b82f6', width: 2 },
           symbol: 'none',
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(59,130,246,0.3)' },
-              { offset: 1, color: 'rgba(59,130,246,0.01)' }
-            ])
-          },
           itemStyle: { color: '#3b82f6' }
         }
       ]
@@ -654,15 +840,24 @@
   function initConvTrend() {
     const data = detailTrend.value?.conversionRetention
     if (!data || !convTrendRef.value) return
+    if (
+      !canRenderCategoryValueSeries(data.dates, data.conversion) ||
+      data.retention?.length !== data.dates!.length ||
+      !data.retention!.every((v) => Number.isFinite(Number(v)))
+    ) {
+      return
+    }
+    const crLen = data.dates.length
     initChart(convTrendRef.value, {
       backgroundColor: 'transparent',
-      grid: { top: 20, right: 16, bottom: 30, left: 50 },
+      tooltip: { ...iapTooltipAxis },
+      grid: { top: 20, right: 16, bottom: iapGridBottomForCategoryLen(crLen), left: 50 },
       legend: { data: ['转化率', '续费率'], textStyle: { color: '#94a3b8', fontSize: 10 }, top: 0 },
       xAxis: {
         type: 'category',
         data: data.dates,
         ...axisStyle,
-        axisLabel: { color: '#94a3b8', fontSize: 9, interval: 6 }
+        axisLabel: iapCategoryXAxisLabel(crLen, 9)
       },
       yAxis: { type: 'value', ...axisStyle },
       series: [
@@ -692,37 +887,27 @@
     const data = detailTrend.value?.churnTrend
     const threshold = detailTrend.value?.churnThreshold ?? 2
     if (!data || !churnTrendRef.value) return
+    if (!canRenderCategoryValueSeries(data.dates, data.values)) return
+    const chLen = data.dates.length
     initChart(churnTrendRef.value, {
       backgroundColor: 'transparent',
-      grid: { top: 20, right: 16, bottom: 30, left: 50 },
+      tooltip: { ...iapTooltipAxis },
+      grid: { top: 20, right: 16, bottom: iapGridBottomForCategoryLen(chLen), left: 50 },
       xAxis: {
         type: 'category',
         data: data.dates,
         ...axisStyle,
-        axisLabel: { color: '#94a3b8', fontSize: 9, interval: 6 }
+        axisLabel: iapCategoryXAxisLabel(chLen, 9)
       },
       yAxis: { type: 'value', ...axisStyle },
-      visualMap: {
-        show: false,
-        dimension: 1,
-        pieces: [
-          { lte: threshold, color: '#ef4444' },
-          { gt: threshold, color: '#f87171' }
-        ]
-      },
       series: [
         {
           type: 'line',
           data: data.values,
           smooth: true,
-          lineStyle: { width: 2 },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(239,68,68,0.4)' },
-              { offset: 1, color: 'rgba(239,68,68,0.01)' }
-            ])
-          },
+          lineStyle: { color: '#ef4444', width: 2 },
           symbol: 'none',
+          itemStyle: { color: '#ef4444' },
           markLine: {
             data: [{ yAxis: threshold }],
             lineStyle: { color: '#f59e0b', type: 'dashed' },
@@ -764,18 +949,19 @@
     platform: platform.value
   })
 
-  async function loadDetail() {
+  /** 按 Tab 分片：10-detail-product / 11-detail-user / 12-detail-trend */
+  async function ensureActiveTabLoaded() {
     const p = params()
-    const [kpiRes, productRes, userRes, trendRes] = await Promise.all([
-      fetchIapDetailKpi(p),
-      fetchIapDetailProduct(p),
-      fetchIapDetailUser(p),
-      fetchIapDetailTrend(p)
-    ])
-    detailKpis.value = kpiRes.kpis
-    detailProduct.value = productRes
-    detailUser.value = userRes
-    detailTrend.value = trendRes
+    if (activeTab.value === 'product' && !detailProduct.value) {
+      detailProduct.value = await fetchIapDetailProduct(p)
+    } else if (activeTab.value === 'user' && !detailUser.value) {
+      detailUser.value = await fetchIapDetailUser(p)
+    } else if (activeTab.value === 'trend' && !detailTrend.value) {
+      detailTrend.value = await fetchIapDetailTrend(p)
+    }
+  }
+
+  function resetChartsAndRedraw() {
     nextTick(() => {
       chartInstances.forEach((c) => c.dispose())
       chartInstances.length = 0
@@ -785,14 +971,38 @@
     })
   }
 
-  watch(activeTab, () => {
+  /** 09-detail-kpi + 当前 Tab 对应契约接口 */
+  async function refreshDetailScope() {
+    const p = params()
+    detailKpis.value = (await fetchIapDetailKpi(p)).kpis
+    detailProduct.value = null
+    detailUser.value = null
+    detailTrend.value = null
+    await ensureActiveTabLoaded()
+    resetChartsAndRedraw()
+  }
+
+  watch(activeTab, async () => {
+    await ensureActiveTabLoaded()
+    await nextTick()
     chartInstances.forEach((c) => c.dispose())
     chartInstances.length = 0
+    await nextTick()
     initAllCharts()
   })
 
+  watch([timeRange, country, platform], refreshDetailScope)
+
+  watch(
+    () => route.query,
+    () => {
+      refreshDetailScope()
+    },
+    { deep: true }
+  )
+
   onMounted(() => {
-    loadDetail().then(() => {
+    refreshDetailScope().then(() => {
       window.addEventListener('resize', resizeCharts)
     })
   })

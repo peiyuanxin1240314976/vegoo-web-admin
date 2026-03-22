@@ -284,21 +284,16 @@
     Sunny
   } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
-  import {
-    fetchIapMetaFilterOptions,
-    fetchIapOverviewKpi,
-    fetchIapOverviewTrend,
-    fetchIapOverviewAppCards,
-    fetchIapOverviewCountryDistribution,
-    fetchIapOverviewProductTypeDonut,
-    fetchIapOverviewPlatformCompare
-  } from '@/api/business-insight'
+  import { loadIapDashboardOverviewModules } from './composables/useIapDashboardModules'
   import type {
     IapFilterState,
+    IapFilterOptions,
     IapKpiCard,
     IapAppCard,
     IapCountryRow,
-    IapProductTypeDonutItem
+    IapProductTypeDonutItem,
+    IapOverviewTrend,
+    IapPlatformCompare
   } from '@/views/business-insight/iap-analysis/types'
 
   defineOptions({ name: 'IapDashboard' })
@@ -322,15 +317,13 @@
   }
   const filters = ref<IapFilterState>({ ...defaultFilters })
 
-  const filterOptions = ref<Awaited<ReturnType<typeof fetchIapMetaFilterOptions>> | null>(null)
+  const filterOptions = ref<IapFilterOptions | null>(null)
   const kpiList = ref<IapKpiCard[]>([])
-  const trendData = ref<Awaited<ReturnType<typeof fetchIapOverviewTrend>> | null>(null)
+  const trendData = ref<IapOverviewTrend | null>(null)
   const appList = ref<IapAppCard[]>([])
   const countryData = ref<(IapCountryRow & { barWidth?: string; barColor?: string })[]>([])
   const productTypeDonut = ref<IapProductTypeDonutItem[]>([])
-  const platformCompare = ref<Awaited<ReturnType<typeof fetchIapOverviewPlatformCompare>> | null>(
-    null
-  )
+  const platformCompare = ref<IapPlatformCompare | null>(null)
 
   const donutColors: Record<string, string> = { 内购: '#0ea5e9', 订阅: '#a78bfa' }
 
@@ -346,10 +339,28 @@
 
   const charts: echarts.ECharts[] = []
 
+  const dashChartAnim: echarts.EChartsOption = {
+    animation: true,
+    animationDuration: 880,
+    animationEasing: 'cubicOut',
+    animationDelay: (idx: number) => idx * 48,
+    animationDurationUpdate: 420,
+    animationEasingUpdate: 'cubicOut'
+  }
+
+  const dashSparklineAnim: echarts.EChartsOption = {
+    animation: true,
+    animationDuration: 480,
+    animationEasing: 'cubicOut',
+    animationDelay: (idx: number) => idx * 28,
+    animationDurationUpdate: 260,
+    animationEasingUpdate: 'cubicOut'
+  }
+
   function initChart(el: HTMLElement | undefined, opt: echarts.EChartsOption) {
     if (!el) return
     const c = echarts.init(el, 'dark')
-    c.setOption(opt)
+    c.setOption({ ...dashChartAnim, ...opt })
     charts.push(c)
   }
 
@@ -359,18 +370,90 @@
     axisLabel: { color: '#4b5563', fontSize: 10 }
   }
 
+  function dashCategoryXAxisLabel(len: number, fontSize = 10) {
+    const rotate = len > 16 ? 38 : len > 10 ? 24 : 0
+    return {
+      color: '#94a3b8',
+      fontSize: rotate ? 9 : fontSize,
+      interval: 0,
+      hideOverlap: false,
+      rotate,
+      margin: rotate ? 12 : 8
+    }
+  }
+
+  function dashGridBottomForCategoryLen(len: number) {
+    if (len > 16) return 44
+    if (len > 10) return 36
+    return 28
+  }
+
+  const dashTooltipAxis: echarts.TooltipComponentOption = {
+    trigger: 'axis',
+    confine: true,
+    backgroundColor: 'rgba(24, 24, 27, 0.96)',
+    borderColor: '#52525b',
+    borderWidth: 1,
+    padding: [10, 14],
+    textStyle: { color: '#f4f4f5', fontSize: 12 },
+    axisPointer: {
+      type: 'line',
+      lineStyle: { color: '#3b82f6', width: 1, type: 'dashed' },
+      label: {
+        show: true,
+        color: '#e4e4e7',
+        backgroundColor: '#27272a',
+        borderColor: '#3f3f46',
+        borderWidth: 1,
+        padding: [4, 8]
+      }
+    }
+  }
+
+  const dashTooltipItem: echarts.TooltipComponentOption = {
+    trigger: 'item',
+    confine: true,
+    backgroundColor: 'rgba(24, 24, 27, 0.96)',
+    borderColor: '#52525b',
+    borderWidth: 1,
+    padding: [10, 14],
+    textStyle: { color: '#f4f4f5', fontSize: 12 }
+  }
+
+  function canRenderLineAreaAxis(
+    categories: unknown[] | undefined,
+    values: unknown[] | undefined,
+    minPoints = 2
+  ) {
+    if (!Array.isArray(categories) || !Array.isArray(values)) return false
+    if (categories.length < minPoints || values.length !== categories.length) return false
+    return values.every((v) => v !== undefined && v !== null && !Number.isNaN(Number(v)))
+  }
+
   function initChart1() {
     const data = trendData.value?.ordersRevenue
     if (!data || !chart1Ref.value) return
+    if (
+      !Array.isArray(data.dates) ||
+      data.dates.length < 1 ||
+      !Array.isArray(data.orders) ||
+      !Array.isArray(data.revenue) ||
+      data.orders.length !== data.dates.length ||
+      data.revenue.length !== data.dates.length
+    ) {
+      return
+    }
+    const d1 = data.dates.length
     initChart(chart1Ref.value, {
       backgroundColor: 'transparent',
-      grid: { top: 20, right: 50, bottom: 28, left: 48 },
+      tooltip: { ...dashTooltipAxis },
+      grid: { top: 20, right: 50, bottom: dashGridBottomForCategoryLen(d1), left: 48 },
       legend: { show: false },
       xAxis: {
         type: 'category',
         data: data.dates,
         ...axCfg,
-        axisLabel: { color: '#4b5563', fontSize: 9, interval: 4 }
+        axisLabel: dashCategoryXAxisLabel(d1, 9)
       },
       yAxis: [
         { type: 'value', name: '', ...axCfg, axisLabel: { color: '#4b5563', fontSize: 9 } },
@@ -405,14 +488,17 @@
   function initChart2() {
     const data = trendData.value?.conversion
     if (!data || !chart2Ref.value) return
+    if (!canRenderLineAreaAxis(data.dates, data.values)) return
+    const d2 = data.dates.length
     initChart(chart2Ref.value, {
       backgroundColor: 'transparent',
-      grid: { top: 16, right: 10, bottom: 28, left: 40 },
+      tooltip: { ...dashTooltipAxis },
+      grid: { top: 16, right: 10, bottom: dashGridBottomForCategoryLen(d2), left: 40 },
       xAxis: {
         type: 'category',
         data: data.dates,
         ...axCfg,
-        axisLabel: { color: '#4b5563', fontSize: 9, interval: 5 }
+        axisLabel: dashCategoryXAxisLabel(d2, 9)
       },
       yAxis: {
         type: 'value',
@@ -441,14 +527,17 @@
   function initChart3() {
     const data = trendData.value?.arpu
     if (!data || !chart3Ref.value) return
+    if (!canRenderLineAreaAxis(data.dates, data.values)) return
+    const d3 = data.dates.length
     initChart(chart3Ref.value, {
       backgroundColor: 'transparent',
-      grid: { top: 16, right: 10, bottom: 28, left: 40 },
+      tooltip: { ...dashTooltipAxis },
+      grid: { top: 16, right: 10, bottom: dashGridBottomForCategoryLen(d3), left: 40 },
       xAxis: {
         type: 'category',
         data: data.dates,
         ...axCfg,
-        axisLabel: { color: '#4b5563', fontSize: 9, interval: 5 }
+        axisLabel: dashCategoryXAxisLabel(d3, 9)
       },
       yAxis: {
         type: 'value',
@@ -480,11 +569,14 @@
     const colors: Record<string, string> = { 内购: '#0ea5e9', 订阅: '#a78bfa' }
     initChart(donutRef.value, {
       backgroundColor: 'transparent',
+      tooltip: { ...dashTooltipItem },
       series: [
         {
           type: 'pie',
           radius: ['52%', '75%'],
           center: ['50%', '48%'],
+          animationType: 'scale',
+          animationEasing: 'cubicOut',
           label: { show: false },
           data: list.map((item) => ({
             value: item.value,
@@ -500,10 +592,17 @@
   function initPlatform() {
     const data = platformCompare.value
     if (!data || !platformRef.value) return
+    const pd = data.dimensions.length
     initChart(platformRef.value, {
       backgroundColor: 'transparent',
-      grid: { top: 20, right: 10, bottom: 28, left: 36 },
-      xAxis: { type: 'category', data: data.dimensions, ...axCfg },
+      tooltip: { ...dashTooltipAxis },
+      grid: { top: 20, right: 10, bottom: dashGridBottomForCategoryLen(pd), left: 36 },
+      xAxis: {
+        type: 'category',
+        data: data.dimensions,
+        ...axCfg,
+        axisLabel: dashCategoryXAxisLabel(pd, 9)
+      },
       yAxis: {
         type: 'value',
         ...axCfg,
@@ -537,6 +636,7 @@
       const vals = Array.from({ length: 12 }, () => Math.random())
       const c = echarts.init(el, 'dark')
       c.setOption({
+        ...dashSparklineAnim,
         backgroundColor: 'transparent',
         grid: { top: 0, right: 0, bottom: 0, left: 0 },
         xAxis: { type: 'category', show: false, data: vals.map((_, j) => j) },
@@ -570,6 +670,7 @@
       const vals = Array.from({ length: 10 }, () => Math.random())
       const c = echarts.init(el, 'dark')
       c.setOption({
+        ...dashSparklineAnim,
         backgroundColor: 'transparent',
         grid: { top: 0, right: 0, bottom: 0, left: 0 },
         xAxis: { type: 'category', show: false, data: vals.map((_, j) => j) },
@@ -621,34 +722,17 @@
 
   async function loadDashboard() {
     const p = params()
-    const [metaRes, kpiRes, trendRes, appCardsRes, countryRes, donutRes, platformRes] =
-      await Promise.all([
-        fetchIapMetaFilterOptions(),
-        fetchIapOverviewKpi(p),
-        fetchIapOverviewTrend(p),
-        fetchIapOverviewAppCards(p),
-        fetchIapOverviewCountryDistribution(p),
-        fetchIapOverviewProductTypeDonut({
-          timeRange: p.timeRange,
-          s_app_id: p.s_app_id,
-          s_country_code: p.s_country_code,
-          platform: p.platform
-        }),
-        fetchIapOverviewPlatformCompare({
-          timeRange: p.timeRange,
-          s_app_id: p.s_app_id,
-          s_country_code: p.s_country_code
-        })
-      ])
-    filterOptions.value = metaRes
-    kpiList.value = kpiRes.kpis
-    trendData.value = trendRes
-    appList.value = appCardsRes.list
+    const { meta, kpi, trend, appCards, country, donut, platform } =
+      await loadIapDashboardOverviewModules(p)
+    filterOptions.value = meta
+    kpiList.value = kpi.kpis
+    trendData.value = trend
+    appList.value = appCards.list
     const maxRatio = Math.max(
-      ...countryRes.list.map((r) => parseFloat(String(r.ratio).replace('%', ''))),
+      ...country.list.map((r) => parseFloat(String(r.ratio).replace('%', ''))),
       1
     )
-    countryData.value = countryRes.list.map((r) => {
+    countryData.value = country.list.map((r) => {
       const pct = parseFloat(String(r.ratio).replace('%', ''))
       const safeWidth = isNaN(pct) ? 0 : Math.round((pct / maxRatio) * 100)
       return {
@@ -657,8 +741,8 @@
         barColor: '#3b82f6'
       }
     })
-    productTypeDonut.value = donutRes.list
-    platformCompare.value = platformRes
+    productTypeDonut.value = donut.list
+    platformCompare.value = platform
     nextTick(() => {
       charts.forEach((c) => c.dispose())
       charts.length = 0
