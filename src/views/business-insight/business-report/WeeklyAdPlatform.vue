@@ -1,141 +1,169 @@
 <template>
   <div class="weekly-ad-platform">
-    <!-- Platform Cards 3-column layout -->
-    <div class="platforms-grid">
-      <div
-        v-for="p in mainPlatforms"
-        :key="p.id"
-        class="platform-card"
-        :style="{ '--accent': p.color }"
-      >
-        <div class="pc-header">
-          <div class="pc-logo" :style="{ background: p.color + '22', color: p.color }">{{
-            p.logo
-          }}</div>
-          <div class="pc-title">
+    <!-- ── 页面标题行（与周报汇总一致）──────────────────────────── -->
+    <div class="wap-title-row">
+      <div class="wap-title-left">
+        <span class="wap-title-app">整体</span>
+        <span class="wap-title-app">全部平台</span>
+        <span class="wap-title-badge">周报</span>
+        <span class="wap-title-date">2026年第10周 （3/9-3/15）</span>
+      </div>
+    </div>
+
+    <!-- ── 模块一：各广告平台卡片 ─────────────────────────────── -->
+    <div class="section-block">
+      <div class="section-title">各广告平台核心指标</div>
+      <div class="platforms-grid">
+        <div
+          v-for="p in mainPlatforms"
+          :key="p.id"
+          class="platform-card"
+          :style="{ '--accent': p.color }"
+        >
+          <div class="pc-header">
+            <div class="pc-logo" :style="{ background: p.color + '22', color: p.color }">{{
+              p.logo
+            }}</div>
             <span class="pc-name">{{ p.name }}</span>
-            <span :class="['pc-change', p.adSpendChange >= 0 ? 'pos' : 'neg']">
+          </div>
+
+          <div class="pc-label-row">
+            <span class="pc-label">广告支出</span>
+            <span class="pc-label">周环比</span>
+          </div>
+          <div class="pc-value-row">
+            <span class="pc-spend-val">{{ p.adSpend }}</span>
+            <span :class="['pc-chg', p.adSpendChange >= 0 ? 'pos' : 'neg']">
               {{ p.adSpendChange >= 0 ? '+' : '' }}{{ p.adSpendChange }}%
             </span>
           </div>
-        </div>
-        <div class="pc-spend-row">
-          <span class="pc-label">广告支出</span>
-          <span class="pc-spend-val">{{ p.adSpend }}</span>
-        </div>
-        <div class="pc-stats">
-          <div class="pc-stat">
-            <span class="ps-label">买量用户</span>
-            <span class="ps-val">{{ p.acquisitions }}</span>
-          </div>
-          <div class="pc-stat">
-            <span class="ps-label">{{ p.campaigns }} 系列</span>
-          </div>
-        </div>
-        <div class="pc-costs">
-          <span
-            >CPI <b>{{ p.cpi }}</b></span
-          >
-          <span
-            >CPM <b>{{ p.cpm }}</b></span
-          >
-          <span
-            >CPC <b>{{ p.cpc }}</b></span
-          >
-        </div>
-        <div class="pc-roi">
-          <span class="roi-label"
-            >首日ROI <b :class="roiColor(p.roi1d)">{{ p.roi1d }}</b></span
-          >
-          <span class="roi-label"
-            >7日ROI <b :class="roiColor(p.roi7d)">{{ p.roi7d }}</b></span
-          >
-          <span v-if="p.roi14d" class="roi-label"
-            >14日ROI <b :class="roiColor(p.roi14d)">{{ p.roi14d }}</b></span
-          >
-        </div>
-        <div class="pc-share">
-          <span class="pc-share-label">占总支出 {{ p.sharePercent }}%</span>
-          <div class="pc-share-bar">
-            <div
-              class="pc-share-fill"
-              :style="{ width: p.sharePercent + '%', background: p.color }"
-            ></div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Others card -->
-      <div class="platform-card others-card">
-        <div class="pc-name-h">其他平台</div>
-        <div class="pc-spend-row">
-          <span class="pc-label">广告支出</span>
-          <span class="pc-spend-val">$17,100</span>
-          <span class="pos">+4.2%</span>
+          <div class="pc-label-row pc-label-row--stats">
+            <span class="pc-label">买量用户</span>
+            <span class="pc-label">广告系列数</span>
+          </div>
+          <div class="pc-value-row">
+            <span class="pc-val">{{ p.acquisitions }}</span>
+            <span class="pc-val">{{ p.campaigns }}</span>
+          </div>
+
+          <div class="pc-label-row pc-label-row--triple">
+            <span class="pc-label">CPI</span>
+            <span class="pc-label">CPM</span>
+            <span class="pc-label">CPC</span>
+          </div>
+          <div class="pc-value-row pc-value-row--triple">
+            <span class="pc-val">{{ p.cpi }}</span>
+            <span class="pc-val">{{ p.cpm }}</span>
+            <span class="pc-val">{{ p.cpc }}</span>
+          </div>
+
+          <div class="pc-roi">
+            <span
+              >首日ROI <b class="roi-d1">{{ p.roi1d }}</b></span
+            >
+            <span
+              >7日ROI <b class="roi-d7">{{ p.roi7d }}</b></span
+            >
+            <span v-if="p.roi14d" class="roi-14-wrap"
+              >14日ROI <b class="roi-d14">{{ p.roi14d }}</b></span
+            >
+          </div>
+
+          <div class="pc-share">
+            <span class="pc-share-label">占总支出 {{ p.sharePercent }}%</span>
+            <div class="pc-share-bar">
+              <div
+                class="pc-share-fill"
+                :style="{ width: p.sharePercent + '%', background: p.color }"
+              ></div>
+            </div>
+          </div>
         </div>
-        <div v-for="p in otherPlatforms" :key="p.id" class="other-row">
-          <div class="other-logo" :style="{ background: p.color + '22', color: p.color }">{{
-            p.logo
-          }}</div>
-          <span class="other-name">{{ p.name }}</span>
-          <span class="other-spend">{{ p.adSpend }}</span>
-          <span class="other-share">{{ p.sharePercent }}%</span>
-        </div>
-        <div class="pc-share" style="margin-top: auto">
-          <span class="pc-share-label">占总支出 6%</span>
-          <div class="pc-share-bar">
-            <div class="pc-share-fill" style="width: 6%; background: #6b7280"></div>
+
+        <!-- 其他平台 -->
+        <div class="platform-card others-card" :style="{ '--accent': '#6b7280' }">
+          <div class="others-h">其他平台</div>
+          <div class="pc-label-row">
+            <span class="pc-label">广告支出</span>
+            <span class="pc-label">周环比</span>
+          </div>
+          <div class="pc-value-row">
+            <span class="pc-spend-val">$17,100</span>
+            <span class="pc-chg pos">+4.2%</span>
+          </div>
+          <div v-for="p in otherPlatforms" :key="p.id" class="other-row">
+            <div class="other-logo" :style="{ background: p.color + '22', color: p.color }">{{
+              p.logo
+            }}</div>
+            <span class="other-name">{{ p.name }}</span>
+            <span class="other-spend">{{ p.weeklySpend }}</span>
+            <span class="other-share">{{ p.sharePercent }}%</span>
+          </div>
+          <div class="pc-share" style="margin-top: auto">
+            <span class="pc-share-label">占总支出 6%</span>
+            <div class="pc-share-bar">
+              <div class="pc-share-fill" style="width: 6%; background: #6b7280"></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Weekly Platform Comparison Table -->
+    <!-- ── 模块二：指标对比表 ─────────────────────────────────── -->
     <div class="data-card">
       <div class="card-title">周报广告平台指标对比</div>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>平台</th>
-            <th>广告支出</th>
-            <th>周环比</th>
-            <th>买量用户</th>
-            <th>广告系列数</th>
-            <th>CPI</th>
-            <th>CPM</th>
-            <th>CPC</th>
-            <th>首日ROI</th>
-            <th>7日ROI</th>
-            <th>14日ROI</th>
-            <th>预估利润</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in tableData" :key="row.id">
-            <td>
-              <div class="platform-cell">
-                <div class="tc-logo" :style="{ background: row.color + '22', color: row.color }">{{
-                  row.logo
-                }}</div>
-                <span>{{ row.name }}</span>
-              </div>
-            </td>
-            <td>{{ row.spend }}</td>
-            <td :class="row.change >= 0 ? 'chg-pos' : 'chg-neg'">
-              {{ row.change >= 0 ? '+' : '' }}{{ row.change }}%
-            </td>
-            <td>{{ row.acquisitions }}</td>
-            <td>{{ row.campaigns }}</td>
-            <td>{{ row.cpi }}</td>
-            <td>{{ row.cpm }}</td>
-            <td>{{ row.cpc }}</td>
-            <td :class="roiColor(row.roi1d)">{{ row.roi1d }}</td>
-            <td :class="roiColor(row.roi7d)">{{ row.roi7d }}</td>
-            <td :class="roiColor(row.roi14d)">{{ row.roi14d }}</td>
-            <td>{{ row.profit }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>平台</th>
+              <th>广告支出</th>
+              <th>周环比</th>
+              <th>买量用户</th>
+              <th>广告系列数</th>
+              <th>CPI</th>
+              <th>CPM</th>
+              <th>CPC</th>
+              <th>首日ROI</th>
+              <th>7日ROI</th>
+              <th>14日ROI</th>
+              <th>预估利润</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in tableData" :key="row.id">
+              <td>
+                <div class="platform-cell">
+                  <div class="tc-logo" :style="{ background: row.color + '22', color: row.color }">
+                    {{ row.logo }}
+                  </div>
+                  <span>{{ row.name }}</span>
+                </div>
+              </td>
+              <td>{{ row.spend }}</td>
+              <td :class="row.change >= 0 ? 'chg-pos' : 'chg-neg'">
+                {{ row.change >= 0 ? '+' : '' }}{{ row.change }}%
+              </td>
+              <td>{{ row.acquisitions }}</td>
+              <td>{{ row.campaigns }}</td>
+              <td>{{ row.cpi }}</td>
+              <td>{{ row.cpm }}</td>
+              <td>{{ row.cpc }}</td>
+              <td class="roi-d1">{{ row.roi1d }}</td>
+              <td class="roi-d7">{{ row.roi7d }}</td>
+              <td class="roi-d14">{{ row.roi14d }}</td>
+              <td>{{ row.profit }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 底部推送（与周报汇总一致）──────────────────────────── -->
+    <div class="wap-push-bar">
+      <span class="wap-push-last">上次推送：本周一 08:30 飞书群《经营周报》</span>
+      <button class="wap-push-btn" type="button">立即推送</button>
     </div>
   </div>
 </template>
@@ -144,17 +172,38 @@
   import { computed } from 'vue'
   import { adPlatformCards } from './mockData'
 
+  defineOptions({ name: 'WeeklyAdPlatform' })
+
+  function parseWanToNumber(s: string): number {
+    const n = parseFloat(String(s).replace(/[^\d.]/g, ''))
+    return Number.isFinite(n) ? n : 0
+  }
+
   const mainPlatforms = computed(() =>
-    adPlatformCards.slice(0, 5).map((p) => ({
-      ...p,
-      adSpend: '$' + (parseInt(p.adSpend.replace(/[$,]/g, '')) * 7).toLocaleString(),
-      acquisitions: (parseFloat(p.acquisitions) * 7).toFixed(1) + '万',
-      cpm: p.cpm ?? '$9.80',
-      cpc: p.cpc ?? '$0.38',
-      roi14d: p.roi14d ?? '93%'
-    }))
+    adPlatformCards.slice(0, 5).map((p) => {
+      const base = parseInt(p.adSpend.replace(/[$,]/g, ''), 10)
+      const accent = p.id === 'facebook' ? '#8B5CF6' : p.color
+      return {
+        ...p,
+        color: accent,
+        adSpend: '$' + (base * 7).toLocaleString('en-US'),
+        acquisitions: (parseWanToNumber(p.acquisitions) * 7).toFixed(1) + '万',
+        cpm: p.cpm ?? '$9.80',
+        cpc: p.cpc ?? '$0.38',
+        roi14d: p.roi14d ?? '93%'
+      }
+    })
   )
-  const otherPlatforms = computed(() => adPlatformCards.slice(5))
+
+  const otherPlatforms = computed(() =>
+    adPlatformCards.slice(5).map((p) => {
+      const base = parseInt(p.adSpend.replace(/[$,]/g, ''), 10)
+      return {
+        ...p,
+        weeklySpend: '$' + (base * 7).toLocaleString('en-US')
+      }
+    })
+  )
 
   const tableData = [
     {
@@ -178,7 +227,7 @@
       id: 'facebook',
       name: 'Facebook',
       logo: 'f',
-      color: '#1877F2',
+      color: '#8B5CF6',
       spend: '$74,800',
       change: 7.4,
       acquisitions: '46.9万',
@@ -260,23 +309,69 @@
       profit: '$30,100'
     }
   ]
-
-  const roiColor = (val: string) => {
-    const n = parseInt(val)
-    if (n >= 100) return 'roi-green'
-    if (n >= 80) return 'roi-orange'
-    return 'roi-normal'
-  }
 </script>
 
 <style scoped>
   .weekly-ad-platform {
+    position: relative;
     display: flex;
     flex: 1;
     flex-direction: column;
     gap: 14px;
-    padding: 14px;
+    padding: 14px 14px 52px;
     overflow-y: auto;
+    background: rgb(255 255 255 / 3%);
+    border: 1px solid rgb(255 255 255 / 7%);
+    border-radius: 12px;
+  }
+
+  /* ── 标题行（对齐周报汇总）────────────────────────────────── */
+  .wap-title-row {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 0 4px;
+  }
+
+  .wap-title-left {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .wap-title-app {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 90%);
+  }
+
+  .wap-title-badge {
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #000;
+    background: #00d4a1;
+    border-radius: 4px;
+  }
+
+  .wap-title-date {
+    font-size: 13px;
+    color: rgb(255 255 255 / 55%);
+  }
+
+  /* ── 区块标题 ─────────────────────────────────────────────── */
+  .section-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 88%);
   }
 
   .platforms-grid {
@@ -294,10 +389,14 @@
   .platform-card {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0;
     padding: 14px;
-    background: rgb(255 255 255 / 3%);
-    border: 1px solid rgb(255 255 255 / 7%);
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--accent) 18%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 5%, #0d1529) 100%
+    );
+    border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
     border-radius: 12px;
     transition:
       border-color 0.2s,
@@ -305,7 +404,7 @@
   }
 
   .platform-card:hover {
-    border-color: var(--accent, rgb(255 255 255 / 15%));
+    border-color: color-mix(in srgb, var(--accent) 58%, transparent);
     transform: translateY(-2px);
   }
 
@@ -313,6 +412,7 @@
     display: flex;
     gap: 10px;
     align-items: center;
+    margin-bottom: 10px;
   }
 
   .pc-logo {
@@ -327,38 +427,53 @@
     border-radius: 8px;
   }
 
-  .pc-title {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
   .pc-name {
     font-size: 15px;
     font-weight: 700;
-    color: rgb(255 255 255 / 90%);
+    color: rgb(255 255 255 / 92%);
   }
 
-  .pc-change {
-    font-size: 11px;
-    font-weight: 500;
-  }
-
-  .pc-name-h {
-    font-size: 14px;
-    font-weight: 700;
-    color: rgb(255 255 255 / 70%);
-  }
-
-  .pc-spend-row {
+  .pc-label-row {
     display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
+  }
+
+  .pc-label-row--stats {
+    margin-top: 6px;
+  }
+
+  .pc-label-row--triple {
     gap: 8px;
-    align-items: baseline;
+    justify-content: flex-start;
+  }
+
+  .pc-label-row--triple .pc-label {
+    flex: 1;
+    text-align: left;
   }
 
   .pc-label {
-    font-size: 11px;
-    color: rgb(255 255 255 / 40%);
+    flex: 1;
+    font-size: 10px;
+    color: rgb(255 255 255 / 42%);
+  }
+
+  .pc-value-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .pc-value-row--triple {
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+  .pc-value-row--triple .pc-val {
+    flex: 1;
+    min-width: 0;
   }
 
   .pc-spend-val {
@@ -368,71 +483,59 @@
     letter-spacing: -0.02em;
   }
 
+  .pc-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(255 255 255 / 88%);
+  }
+
+  .pc-chg {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
   .pos {
-    font-size: 11px;
-    color: #00d4a1;
+    color: #4caf50;
   }
 
   .neg {
-    font-size: 11px;
-    color: #ff5c5c;
-  }
-
-  .pc-stats {
-    display: flex;
-    gap: 16px;
-  }
-
-  .pc-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .ps-label {
-    font-size: 10px;
-    color: rgb(255 255 255 / 35%);
-  }
-
-  .ps-val {
-    font-size: 14px;
-    font-weight: 600;
-    color: rgb(255 255 255 / 85%);
-  }
-
-  .pc-costs {
-    display: flex;
-    gap: 12px;
-    font-size: 11px;
-    color: rgb(255 255 255 / 45%);
-  }
-
-  .pc-costs b {
-    font-weight: 500;
-    color: rgb(255 255 255 / 80%);
+    color: #f44336;
   }
 
   .pc-roi {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px 12px;
+    margin-bottom: 10px;
     font-size: 11px;
-    color: rgb(255 255 255 / 45%);
+    color: rgb(255 255 255 / 48%);
   }
 
-  .roi-label b {
+  .pc-roi b {
     font-weight: 600;
+  }
+
+  .roi-d1 {
+    color: #fb923c;
+  }
+
+  .roi-d7 {
+    color: #60a5fa;
+  }
+
+  .roi-d14 {
+    color: #4ade80;
   }
 
   .pc-share-label {
     display: block;
     margin-bottom: 4px;
     font-size: 10px;
-    color: rgb(255 255 255 / 40%);
+    color: rgb(255 255 255 / 42%);
   }
 
   .pc-share-bar {
-    height: 3px;
+    height: 4px;
     overflow: hidden;
     background: rgb(255 255 255 / 8%);
     border-radius: 2px;
@@ -444,13 +547,22 @@
   }
 
   .others-card {
-    justify-content: flex-start;
+    min-height: 100%;
+    padding-bottom: 12px;
+  }
+
+  .others-h {
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 75%);
   }
 
   .other-row {
     display: flex;
     gap: 8px;
     align-items: center;
+    margin-bottom: 8px;
   }
 
   .other-logo {
@@ -478,7 +590,7 @@
   }
 
   .other-share {
-    width: 30px;
+    width: 36px;
     font-size: 11px;
     color: rgb(255 255 255 / 40%);
     text-align: right;
@@ -486,7 +598,7 @@
 
   .data-card {
     padding: 14px;
-    overflow-x: auto;
+    overflow: hidden;
     background: rgb(255 255 255 / 3%);
     border: 1px solid rgb(255 255 255 / 7%);
     border-radius: 10px;
@@ -499,39 +611,41 @@
     color: rgb(255 255 255 / 90%);
   }
 
+  .table-wrap {
+    overflow-x: auto;
+  }
+
   .data-table {
     width: 100%;
-    min-width: 900px;
+    min-width: 960px;
     font-size: 12px;
     border-collapse: collapse;
   }
 
   .data-table th {
-    padding: 6px 10px;
+    padding: 8px 10px;
     font-weight: 500;
-    color: rgb(255 255 255 / 40%);
+    color: rgb(255 255 255 / 45%);
     text-align: left;
     white-space: nowrap;
-    border-bottom: 1px solid rgb(255 255 255 / 7%);
+    background: rgb(255 255 255 / 4%);
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
   }
 
   .data-table td {
-    padding: 7px 10px;
-    color: rgb(255 255 255 / 85%);
+    padding: 8px 10px;
+    color: rgb(255 255 255 / 88%);
     white-space: nowrap;
+    border-bottom: 1px solid rgb(255 255 255 / 5%);
   }
 
-  .data-table tr:not(:last-child) td {
-    border-bottom: 1px solid rgb(255 255 255 / 4%);
-  }
-
-  .data-table tr:hover td {
+  .data-table tbody tr:hover td {
     background: rgb(255 255 255 / 3%);
   }
 
   .platform-cell {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
   }
 
@@ -540,8 +654,8 @@
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     font-size: 10px;
     font-weight: 700;
     border-radius: 5px;
@@ -549,25 +663,44 @@
 
   .chg-pos {
     font-weight: 500;
-    color: #00d4a1;
+    color: #4caf50;
   }
 
   .chg-neg {
     font-weight: 500;
-    color: #ff5c5c;
+    color: #f44336;
   }
 
-  .roi-green {
+  /* ── 底部推送 ─────────────────────────────────────────────── */
+  .wap-push-bar {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+    left: 14px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .wap-push-last {
+    font-size: 12px;
+    color: rgb(255 255 255 / 38%);
+  }
+
+  .wap-push-btn {
+    padding: 6px 16px;
+    font-size: 12px;
     font-weight: 600;
-    color: #4ade80;
+    color: #000;
+    cursor: pointer;
+    background: #00d4a1;
+    border: none;
+    border-radius: 9999px;
+    transition: filter 0.15s;
   }
 
-  .roi-orange {
-    font-weight: 600;
-    color: #fb923c;
-  }
-
-  .roi-normal {
-    color: rgb(255 255 255 / 75%);
+  .wap-push-btn:hover {
+    filter: brightness(1.08);
   }
 </style>

@@ -1,31 +1,39 @@
 <template>
   <div class="daily-campaigns">
-    <!-- Summary bar -->
-    <div class="summary-bar">
-      <div class="summary-item">
-        <span class="s-dot active"></span>
-        <span class="s-label">在投系列</span>
-        <span class="s-val">{{ activeCampaigns }}个</span>
+    <!-- ── 页面标题行 ──────────────────────────────────────────── -->
+    <div class="dc-title-row">
+      <div class="dc-title-left">
+        <span class="dc-title-app">整体</span>
+        <span class="dc-title-app">全部平台</span>
+        <span class="dc-title-badge">日报</span>
+        <span class="dc-title-date">2026-3-13</span>
       </div>
-      <div class="summary-item">
-        <span class="s-dot paused"></span>
-        <span class="s-label">已暂停</span>
-        <span class="s-val">{{ pausedCampaigns }}个</span>
-      </div>
-      <div class="summary-sep"></div>
-      <div class="summary-item">
-        <span class="s-label">总广告支出</span>
-        <span class="s-val highlight">$41,100</span>
+      <div class="dc-title-stats">
+        <div class="dc-stat">
+          <span class="dc-stat-dot active"></span>
+          <span class="dc-stat-label">在投系列</span>
+          <span class="dc-stat-val">{{ activeCampaigns }}个</span>
+        </div>
+        <div class="dc-stat">
+          <span class="dc-stat-dot paused"></span>
+          <span class="dc-stat-label">已暂停</span>
+          <span class="dc-stat-val paused">{{ pausedCampaigns }}个</span>
+        </div>
+        <div class="dc-stat-sep"></div>
+        <div class="dc-stat">
+          <span class="dc-stat-label">总广告支出</span>
+          <span class="dc-stat-val spend">$41,100</span>
+        </div>
       </div>
     </div>
 
-    <!-- Campaigns Table -->
+    <!-- ── 数据表格 ───────────────────────────────────────────── -->
     <div class="data-card">
       <div class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>应用</th>
+              <th class="sticky-col">应用</th>
               <th>平台</th>
               <th>广告平台</th>
               <th>广告系列名称</th>
@@ -45,13 +53,30 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in campaigns" :key="row.id" :class="{ paused: row.status === 'paused' }">
-              <td>{{ row.app }}</td>
-              <td>{{ row.platform }}</td>
+            <tr
+              v-for="row in campaigns"
+              :key="row.id"
+              :class="{ 'row-paused': row.status === 'paused' }"
+            >
+              <td class="sticky-col app-cell">{{ row.app }}</td>
+              <td class="platform-os">{{ row.platform }}</td>
               <td>
-                <div class="platform-cell">
-                  <div class="pl-dot" :style="{ background: row.adPlatformColor }"></div>
-                  {{ row.adPlatform }}
+                <div
+                  class="ad-platform-badge"
+                  :style="{
+                    '--ap-color': row.adPlatformColor,
+                    background: row.adPlatformColor + '22',
+                    border: '1px solid ' + row.adPlatformColor + '55'
+                  }"
+                >
+                  <span
+                    class="ap-icon"
+                    :style="{ background: row.adPlatformColor + '44', color: row.adPlatformColor }"
+                    >{{ row.adPlatform[0] }}</span
+                  >
+                  <span class="ap-name" :style="{ color: row.adPlatformColor }">{{
+                    row.adPlatform
+                  }}</span>
                 </div>
               </td>
               <td class="campaign-name">{{ row.campaignName }}</td>
@@ -61,10 +86,11 @@
                   {{ row.status === 'active' ? '在投中' : '已暂停' }}
                 </span>
               </td>
-              <td>
-                <span class="flag">{{ row.countryFlag }}</span> {{ row.country }}
+              <td class="country-cell">
+                <span class="flag">{{ row.countryFlag }}</span>
+                <span>{{ row.country }}</span>
               </td>
-              <td :class="row.status === 'paused' ? 'muted' : ''">{{ row.adSpend }}</td>
+              <td class="spend-cell">{{ row.adSpend }}</td>
               <td :class="changeColor(row.adSpendChange)">
                 {{
                   row.adSpendChange === -100
@@ -72,9 +98,9 @@
                     : (row.adSpendChange >= 0 ? '+' : '') + row.adSpendChange + '%'
                 }}
               </td>
-              <td class="muted-val">{{ row.cpi ?? '-' }}</td>
-              <td class="muted-val">{{ row.cpm ?? '-' }}</td>
-              <td class="muted-val">{{ row.cpc ?? '-' }}</td>
+              <td class="dim-val">{{ row.cpi ?? '-' }}</td>
+              <td class="dim-val">{{ row.cpm ?? '-' }}</td>
+              <td class="dim-val">{{ row.cpc ?? '-' }}</td>
               <td>{{ row.acquisitions }}</td>
               <td :class="roiClass(row.roi1d)">{{ row.roi1d }}</td>
               <td :class="roiClass(row.roi3d)">{{ row.roi3d }}</td>
@@ -85,8 +111,17 @@
           </tbody>
         </table>
       </div>
-      <div class="table-footer">
-        在投 {{ activeCampaigns }} 个 | 已暂停 {{ pausedCampaigns }} 个 | 总广告支出 $41,100
+    </div>
+
+    <!-- ── 底部推送栏 ─────────────────────────────────────────── -->
+    <div class="dc-push-bar">
+      <span class="dc-push-summary">
+        在投 {{ activeCampaigns }} 个 &nbsp;|&nbsp; 已暂停 {{ pausedCampaigns }} 个 &nbsp;|&nbsp;
+        总广告支出 $41,100
+      </span>
+      <div class="dc-push-right">
+        <span class="dc-push-last">上次推送：今日 08:30 飞书群《经营日报》</span>
+        <button class="dc-push-btn">立即推送</button>
       </div>
     </div>
   </div>
@@ -101,81 +136,123 @@
   const pausedCampaigns = computed(() => campaigns.filter((c) => c.status === 'paused').length)
 
   const changeColor = (v: number) => (v >= 0 ? 'chg-pos' : 'chg-neg')
+
   const roiClass = (val: string) => {
-    if (val === '-') return 'muted-val'
+    if (!val || val === '-') return 'dim-val'
     const n = parseInt(val)
     if (n >= 100) return 'roi-green'
     if (n >= 80) return 'roi-orange'
-    if (n >= 50) return 'roi-yellow'
-    return 'roi-red'
+    return ''
   }
 </script>
 
 <style scoped>
   .daily-campaigns {
+    position: relative;
     display: flex;
     flex: 1;
     flex-direction: column;
-    gap: 12px;
-    padding: 14px;
+    gap: 14px;
+    padding: 14px 14px 52px;
     overflow-y: auto;
-  }
-
-  .summary-bar {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    padding: 10px 16px;
     background: rgb(255 255 255 / 3%);
     border: 1px solid rgb(255 255 255 / 7%);
-    border-radius: 10px;
+    border-radius: 12px;
   }
 
-  .summary-item {
+  /* ── 标题行 ────────────────────────────────────────────────── */
+  .dc-title-row {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 0;
+  }
+
+  .dc-title-left {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .dc-title-app {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 90%);
+  }
+
+  .dc-title-badge {
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #000;
+    background: #00d4a1;
+    border-radius: 4px;
+  }
+
+  .dc-title-date {
+    font-size: 13px;
+    color: rgb(255 255 255 / 55%);
+  }
+
+  /* 右侧统计 */
+  .dc-title-stats {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .dc-stat {
     display: flex;
     gap: 6px;
     align-items: center;
   }
 
-  .s-dot {
+  .dc-stat-dot {
+    flex-shrink: 0;
     width: 8px;
     height: 8px;
     border-radius: 50%;
   }
 
-  .s-dot.active {
+  .dc-stat-dot.active {
     background: #00d4a1;
   }
 
-  .s-dot.paused {
-    background: #f59e0b;
+  .dc-stat-dot.paused {
+    background: #fb923c;
   }
 
-  .s-label {
-    font-size: 12px;
+  .dc-stat-label {
+    font-size: 11px;
     color: rgb(255 255 255 / 45%);
   }
 
-  .s-val {
-    font-size: 14px;
+  .dc-stat-val {
+    font-size: 20px;
     font-weight: 700;
-    color: rgb(255 255 255 / 90%);
+    color: rgb(255 255 255 / 92%);
   }
 
-  .s-val.highlight {
-    color: #00d4a1;
+  .dc-stat-val.paused {
+    color: #fb923c;
   }
 
-  .summary-sep {
+  .dc-stat-val.spend {
+    font-size: 20px;
+    color: rgb(255 255 255 / 92%);
+  }
+
+  .dc-stat-sep {
     width: 1px;
-    height: 20px;
-    margin: 0 4px;
+    height: 28px;
     background: rgb(255 255 255 / 10%);
   }
 
+  /* ── 数据卡片 ───────────────────────────────────────────────── */
   .data-card {
-    flex: 1;
-    padding: 14px;
+    padding: 0;
+    overflow: hidden;
     background: rgb(255 255 255 / 2%);
     border: 1px solid rgb(255 255 255 / 7%);
     border-radius: 10px;
@@ -185,21 +262,24 @@
     overflow-x: auto;
   }
 
+  /* ── 表格 ──────────────────────────────────────────────────── */
   .data-table {
     width: 100%;
-    min-width: 1400px;
+    min-width: 1500px;
     font-size: 12px;
     border-collapse: collapse;
   }
 
+  .data-table thead {
+    background: rgb(255 255 255 / 6%);
+  }
+
   .data-table th {
-    padding: 7px 10px;
-    font-weight: 500;
-    color: rgb(255 255 255 / 40%);
+    padding: 8px 10px;
+    font-weight: 600;
+    color: rgb(255 255 255 / 45%);
     text-align: left;
     white-space: nowrap;
-    background: rgb(255 255 255 / 2%);
-    border-bottom: 1px solid rgb(255 255 255 / 7%);
   }
 
   .data-table td {
@@ -208,46 +288,85 @@
     white-space: nowrap;
   }
 
-  .data-table tr:not(:last-child) td {
+  .data-table tbody tr:not(:last-child) td {
     border-bottom: 1px solid rgb(255 255 255 / 4%);
   }
 
-  .data-table tr:hover td {
+  .data-table tbody tr:hover td {
     background: rgb(255 255 255 / 3%);
   }
 
-  .data-table tr.paused {
-    opacity: 0.55;
+  /* ── 暂停行变暗 ─────────────────────────────────────────────── */
+  .row-paused td {
+    opacity: 0.5;
   }
 
-  .platform-cell {
-    display: flex;
-    gap: 6px;
-    align-items: center;
+  /* ── 固定列 ─────────────────────────────────────────────────── */
+  .sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #0d1529 !important;
+    border-right: 1px solid rgb(255 255 255 / 7%);
   }
 
-  .pl-dot {
-    flex-shrink: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+  .data-table thead .sticky-col {
+    z-index: 3;
+    background: rgb(22 32 58) !important;
   }
 
-  .campaign-name {
-    font-family: monospace;
+  /* ── 应用名列 ───────────────────────────────────────────────── */
+  .app-cell {
+    font-weight: 600;
+    color: rgb(255 255 255 / 90%);
+  }
+
+  .platform-os {
     font-size: 11px;
-    color: rgb(255 255 255 / 65%);
+    color: rgb(255 255 255 / 55%);
   }
 
-  .flag {
-    font-size: 14px;
+  /* ── 广告平台徽章 ───────────────────────────────────────────── */
+  .ad-platform-badge {
+    display: inline-flex;
+    gap: 0;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 5px;
   }
 
+  .ap-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .ap-name {
+    padding: 0 7px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* ── 广告系列名称 ───────────────────────────────────────────── */
+  .campaign-name {
+    max-width: 200px;
+    overflow: hidden;
+    font-size: 11.5px;
+    color: rgb(255 255 255 / 70%);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── 状态徽章 ──────────────────────────────────────────────── */
   .status-badge {
     display: inline-flex;
-    gap: 4px;
+    gap: 5px;
     align-items: center;
-    padding: 2px 7px;
+    padding: 2px 8px;
     font-size: 11px;
     border-radius: 4px;
   }
@@ -258,8 +377,8 @@
   }
 
   .status-badge.paused {
-    color: #f59e0b;
-    background: rgb(245 158 11 / 12%);
+    color: #fb923c;
+    background: rgb(251 146 60 / 12%);
   }
 
   .status-dot {
@@ -269,14 +388,24 @@
     border-radius: 50%;
   }
 
-  .muted {
-    color: rgb(255 255 255 / 35%) !important;
+  /* ── 国家列 ─────────────────────────────────────────────────── */
+  .country-cell {
+    display: flex;
+    gap: 5px;
+    align-items: center;
   }
 
-  .muted-val {
-    color: rgb(255 255 255 / 50%);
+  .flag {
+    font-size: 14px;
   }
 
+  /* ── 广告支出 ───────────────────────────────────────────────── */
+  .spend-cell {
+    font-weight: 600;
+    color: #fff;
+  }
+
+  /* ── 环比 ──────────────────────────────────────────────────── */
   .chg-pos {
     font-weight: 500;
     color: #00d4a1;
@@ -287,6 +416,12 @@
     color: #ff5c5c;
   }
 
+  /* ── 暗色辅助值 ─────────────────────────────────────────────── */
+  .dim-val {
+    color: rgb(255 255 255 / 45%);
+  }
+
+  /* ── ROI 颜色 ───────────────────────────────────────────────── */
   .roi-green {
     font-weight: 600;
     color: #4ade80;
@@ -297,19 +432,46 @@
     color: #fb923c;
   }
 
-  .roi-yellow {
-    font-weight: 600;
-    color: #fcd34d;
+  /* ── 底部推送栏 ─────────────────────────────────────────────── */
+  .dc-push-bar {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    left: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
-  .roi-red {
-    font-weight: 600;
-    color: #f87171;
-  }
-
-  .table-footer {
-    margin-top: 10px;
+  .dc-push-summary {
     font-size: 11px;
     color: rgb(255 255 255 / 40%);
+  }
+
+  .dc-push-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .dc-push-last {
+    font-size: 11px;
+    color: rgb(255 255 255 / 35%);
+  }
+
+  .dc-push-btn {
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #000;
+    cursor: pointer;
+    background: #00d4a1;
+    border: none;
+    border-radius: 5px;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.85;
+    }
   }
 </style>
