@@ -273,7 +273,7 @@
                 </template>
               </ArtTable>
               <p v-if="iaaTab === 'version'" class="rev-iaa-version-foot">
-                版本分布反映用户升级进度，v4.2.1 已覆盖 66.5% 用户
+                {{ iaaVersionFootnote }}
               </p>
             </div>
           </div>
@@ -303,15 +303,19 @@
                 <div class="rev-iap-kpi">
                   <div class="rev-iap-kpi__k">订阅收入</div>
                   <div class="rev-iap-kpi__row">
-                    <span class="rev-iap-kpi__v rev-iap-kpi__v--accent">$52.30</span>
-                    <span class="rev-iap-kpi__tag">60.5%</span>
+                    <span class="rev-iap-kpi__v rev-iap-kpi__v--accent">{{
+                      iapProductHeader.subscriptionValueText
+                    }}</span>
+                    <span class="rev-iap-kpi__tag">{{ iapProductHeader.subscriptionPctText }}</span>
                   </div>
                 </div>
                 <div class="rev-iap-kpi">
                   <div class="rev-iap-kpi__k">一次性购买</div>
                   <div class="rev-iap-kpi__row">
-                    <span class="rev-iap-kpi__v rev-iap-kpi__v--accent">$34.17</span>
-                    <span class="rev-iap-kpi__tag">39.5%</span>
+                    <span class="rev-iap-kpi__v rev-iap-kpi__v--accent">{{
+                      iapProductHeader.oneTimeValueText
+                    }}</span>
+                    <span class="rev-iap-kpi__tag">{{ iapProductHeader.oneTimePctText }}</span>
                   </div>
                 </div>
               </div>
@@ -350,15 +354,21 @@
               <div class="rev-iap-bottom">
                 <div class="rev-mini-kpi">
                   <div class="rev-mini-kpi__k">付费转化率</div>
-                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">2.1%</div>
+                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
+                    iapProductFoot.conversionRateText
+                  }}</div>
                 </div>
                 <div class="rev-mini-kpi">
                   <div class="rev-mini-kpi__k">ARPPU</div>
-                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">$9.99</div>
+                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
+                    iapProductFoot.arppuText
+                  }}</div>
                 </div>
                 <div class="rev-mini-kpi">
                   <div class="rev-mini-kpi__k">订阅续费率</div>
-                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">78.4%</div>
+                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
+                    iapProductFoot.renewalRateText
+                  }}</div>
                 </div>
               </div>
             </div>
@@ -642,6 +652,8 @@
     MOCK_REVENUE_OVERVIEW_IAA_ROWS,
     MOCK_REVENUE_OVERVIEW_IAA_TABS,
     MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS,
+    MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_FOOT,
+    MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_HEADER,
     MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_LEFT_METRICS,
     MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_ROWS,
     MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_SEGMENTS,
@@ -712,6 +724,8 @@
   const iapChannelSegments = MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_SEGMENTS
   const iapChannelLeftMetrics = MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_LEFT_METRICS
   const iapTrendKpis = MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS
+  const iapProductHeader = MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_HEADER
+  const iapProductFoot = MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_FOOT
 
   const platformPie = ref(MOCK_REVENUE_OVERVIEW_PLATFORM_PIE)
   const platformPieCenterTotal = computed(() => {
@@ -748,6 +762,12 @@
     const v = Number(n || 0)
     return Number.isFinite(v) ? v.toFixed(digits) : '0'
   }
+
+  const iaaVersionFootnote = computed(() => {
+    const cur = MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS.find((r) => r.is_current)
+    if (!cur) return ''
+    return `版本分布反映用户升级进度，${cur.s_app_version} 已覆盖 ${formatFixed(cur.percent, 1)}% 用户`
+  })
 
   const IAA_COLORS = [...MOCK_REVENUE_OVERVIEW_IAA_COLORS]
 

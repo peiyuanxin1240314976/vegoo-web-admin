@@ -1,3 +1,5 @@
+import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+
 export type RevenueOverviewFilterState = {
   /** 应用 */
   s_app_id: string
@@ -153,91 +155,106 @@ export type RevenueOverviewQualityMetric = {
   accent: 'green' | 'blue' | 'amber'
 }
 
+/** IAP 商品 Tab 顶部：订阅 / 一次性摘要（与 KPI 一致） */
+export const MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_HEADER = {
+  subscriptionValueText: '$74.80',
+  subscriptionPctText: '59.1%',
+  oneTimeValueText: '$51.72',
+  oneTimePctText: '40.9%'
+} as const
+
+/** IAP 商品 Tab 底部 mini KPI */
+export const MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_FOOT = {
+  conversionRateText: '2.4%',
+  arppuText: '$10.42',
+  renewalRateText: '76.8%'
+} as const
+
 export const MOCK_REVENUE_OVERVIEW_FILTERS: RevenueOverviewFilterState = {
   s_app_id: 'weather5',
   platform: 'all',
   s_country_code: 'all',
   app_version: 'all',
-  t_date: '2026-03-05'
+  t_date: getAppTodayYYYYMMDD()
 }
 
 export const MOCK_REVENUE_OVERVIEW_KPIS: RevenueOverviewKpiCard[] = [
   {
     id: 'kpi_total',
     title: '总收入',
-    primaryValue: '$2,855.05',
+    primaryValue: '$3,068.92',
     subLeftLabel: '广告',
-    subLeftValue: '$2,768.58',
+    subLeftValue: '$2,942.40',
     subRightLabel: '付费',
-    subRightValue: '$86.47',
+    subRightValue: '$126.52',
     trendUp: true,
-    trendPercentText: '↑ 8.3% vs 昨日',
-    spark: [2100, 2250, 1980, 2400, 2650, 2768, 2855],
+    trendPercentText: '↑ 6.4% vs 昨日',
+    spark: [2680, 2720, 2650, 2810, 2890, 2920, 3069],
     accent: 'blue'
   },
   {
     id: 'kpi_iaa',
     title: 'IAA 广告收入',
-    primaryValue: '$2,768.58',
+    primaryValue: '$2,942.40',
     subLeftLabel: '真实',
-    subLeftValue: '$1,861.23',
+    subLeftValue: '$1,988.20',
     subRightLabel: '预估',
-    subRightValue: '↑ 32.7%',
+    subRightValue: '↑ 31.9%',
     trendUp: true,
-    trendPercentText: '↑ 12.3% vs 昨日',
-    spark: [1800, 1900, 1750, 2050, 2350, 2560, 2769],
+    trendPercentText: '↑ 11.2% vs 昨日',
+    spark: [2480, 2550, 2510, 2680, 2780, 2850, 2942],
     accent: 'teal'
   },
   {
     id: 'kpi_iap',
     title: 'IAP 付费收入',
-    primaryValue: '$86.47',
+    primaryValue: '$126.52',
     subLeftLabel: '订阅',
-    subLeftValue: '$52.30',
+    subLeftValue: '$74.80',
     subRightLabel: '一次性',
-    subRightValue: '$34.17',
+    subRightValue: '$51.72',
     trendUp: false,
-    trendPercentText: '↓ 3.2% vs 昨日',
-    spark: [92, 88, 81, 79, 95, 90, 86],
+    trendPercentText: '↓ 2.1% vs 昨日',
+    spark: [118, 122, 115, 128, 124, 130, 127],
     accent: 'purple'
   },
   {
     id: 'kpi_ecpm',
     title: 'ECPM',
-    primaryValue: '3.32',
+    primaryValue: '3.28',
     subLeftLabel: '预估',
-    subLeftValue: '3.06',
+    subLeftValue: '3.05',
     subRightLabel: '偏差',
-    subRightValue: '+8.5%',
+    subRightValue: '+7.5%',
     trendUp: true,
-    trendPercentText: '↑ 5.2% vs 昨日',
-    spark: [2.88, 2.92, 2.97, 2.95, 3.02, 3.12, 3.32],
+    trendPercentText: '↑ 4.8% vs 昨日',
+    spark: [2.95, 2.98, 3.01, 3.04, 3.06, 3.12, 3.28],
     accent: 'amber'
   },
   {
     id: 'kpi_users',
     title: '广告用户',
-    primaryValue: '117,483',
+    primaryValue: '120,450',
     subLeftLabel: '激活率',
-    subLeftValue: '68.6%',
+    subLeftValue: '69.2%',
     subRightLabel: 'DAU',
-    subRightValue: '171,334',
+    subRightValue: '174,120',
     trendUp: true,
-    trendPercentText: '↑ 3.1% vs 昨日',
-    spark: [101200, 104500, 108900, 112300, 114200, 116600, 117483],
+    trendPercentText: '↑ 2.6% vs 昨日',
+    spark: [112300, 114800, 116200, 117800, 118900, 119600, 120450],
     accent: 'green'
   },
   {
     id: 'kpi_arpdau',
     title: 'ARPDAU',
-    primaryValue: '$0.01616',
+    primaryValue: '$0.01688',
     subLeftLabel: '人均',
-    subLeftValue: '占展示 4.9%',
+    subLeftValue: '占展示 5.1%',
     subRightLabel: ' ',
     subRightValue: ' ',
     trendUp: true,
-    trendPercentText: '↑ 2.8% vs 昨日',
-    spark: [0.0142, 0.0146, 0.0151, 0.015, 0.0156, 0.0159, 0.01616],
+    trendPercentText: '↑ 2.2% vs 昨日',
+    spark: [0.0149, 0.0152, 0.0155, 0.0154, 0.0161, 0.0164, 0.01688],
     accent: 'indigo'
   }
 ]
@@ -253,43 +270,42 @@ export const MOCK_REVENUE_OVERVIEW_IAA_TABS = [
 export const MOCK_REVENUE_OVERVIEW_IAA_ROWS: RevenueOverviewIaaBreakdownRow[] = [
   {
     s_ad_type_name: '插屏式广告',
-    revenue: 2014,
-    percent: 72.8,
-    n_users: 61587,
-    n_impression: 102551,
-    d_avg_display: 1.7,
-    d_avg_revenue: 0.033
+    revenue: 2156,
+    percent: 73.3,
+    n_users: 62840,
+    n_impression: 105820,
+    d_avg_display: 1.68,
+    d_avg_revenue: 0.034
   },
   {
     s_ad_type_name: '原生广告',
-    revenue: 484,
-    percent: 17.5,
-    n_users: 88891,
-    n_impression: 275249,
-    d_avg_display: 3.1,
-    d_avg_revenue: 0.005
+    revenue: 498,
+    percent: 16.9,
+    n_users: 90120,
+    n_impression: 282400,
+    d_avg_display: 3.05,
+    d_avg_revenue: 0.006
   },
   {
     s_ad_type_name: '横幅广告',
-    revenue: 191,
-    percent: 6.9,
-    n_users: 99582,
-    n_impression: 405545,
-    d_avg_display: 4.1,
+    revenue: 198,
+    percent: 6.7,
+    n_users: 100200,
+    n_impression: 412000,
+    d_avg_display: 4.12,
     d_avg_revenue: 0.002
   },
   {
     s_ad_type_name: '开屏广告',
-    revenue: 79,
-    percent: 2.8,
-    n_users: 38044,
-    n_impression: 50262,
-    d_avg_display: 1.3,
+    revenue: 90,
+    percent: 3.1,
+    n_users: 39200,
+    n_impression: 51800,
+    d_avg_display: 1.32,
     d_avg_revenue: 0.002
   }
 ]
 
-/** IAA 构成分析：调色板（堆叠条 / 环形图 / 图例复用） */
 export const MOCK_REVENUE_OVERVIEW_IAA_COLORS = [
   '#20d6b5',
   '#38bdf8',
@@ -303,98 +319,98 @@ export const MOCK_REVENUE_OVERVIEW_IAA_COLORS = [
 export const MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS: RevenueOverviewIaaPlatformRow[] = [
   {
     s_platform_name: 'AdMob',
-    revenue: 1985,
-    percent: 71.7,
-    n_impression: 308742,
-    d_ecpm: 6.43,
-    n_users: 45210
+    revenue: 2088,
+    percent: 71.0,
+    n_impression: 318200,
+    d_ecpm: 6.56,
+    n_users: 46100
   },
   {
     s_platform_name: 'AppLovin',
-    revenue: 257,
-    percent: 9.3,
-    n_impression: 102400,
-    d_ecpm: 2.51,
-    n_users: 18420
+    revenue: 285,
+    percent: 9.7,
+    n_impression: 104800,
+    d_ecpm: 2.72,
+    n_users: 18800
   },
   {
     s_platform_name: 'Facebook',
-    revenue: 166,
+    revenue: 176,
     percent: 6.0,
-    n_impression: 88500,
-    d_ecpm: 1.88,
-    n_users: 12200
+    n_impression: 90200,
+    d_ecpm: 1.95,
+    n_users: 12500
   },
   {
     s_platform_name: 'Aumob',
-    revenue: 102,
+    revenue: 108,
     percent: 3.7,
-    n_impression: 41200,
-    d_ecpm: 2.48,
-    n_users: 9100
+    n_impression: 42800,
+    d_ecpm: 2.52,
+    n_users: 9200
   },
   {
     s_platform_name: 'Vungle',
-    revenue: 102,
+    revenue: 108,
     percent: 3.7,
-    n_impression: 39800,
-    d_ecpm: 2.56,
-    n_users: 8800
+    n_impression: 40500,
+    d_ecpm: 2.67,
+    n_users: 8900
   },
   {
     s_platform_name: 'Pangle',
-    revenue: 86,
+    revenue: 91,
     percent: 3.1,
-    n_impression: 35600,
-    d_ecpm: 2.42,
-    n_users: 7600
+    n_impression: 36200,
+    d_ecpm: 2.51,
+    n_users: 7700
   },
   {
     s_platform_name: 'Other',
-    revenue: 70,
-    percent: 2.5,
-    n_impression: 24365,
-    d_ecpm: 2.87,
-    n_users: 6153
+    revenue: 86,
+    percent: 2.8,
+    n_impression: 25100,
+    d_ecpm: 3.43,
+    n_users: 6250
   }
 ]
 
 export const MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS: RevenueOverviewIaaAdUnitRow[] = [
   {
     s_ad_unit_name: '插屏广告',
-    revenue: 2014,
-    percent: 72.8,
-    n_impression: 102551,
-    d_ecpm: 19.64,
-    d_fill_rate: 94.2,
-    n_users: 61587
+    revenue: 2156,
+    percent: 73.3,
+    n_impression: 105820,
+    d_ecpm: 20.36,
+    d_fill_rate: 96.1,
+    n_users: 62840
   },
   {
     s_ad_unit_name: '原生广告',
-    revenue: 484,
-    percent: 17.5,
-    n_impression: 275249,
+    revenue: 498,
+    percent: 16.9,
+    n_impression: 282400,
     d_ecpm: 1.76,
-    d_fill_rate: 96.8,
-    n_users: 8891
+    d_fill_rate: 97.4,
+    n_users: 90200
   },
   {
     s_ad_unit_name: '横幅广告',
-    revenue: 191,
-    percent: 6.9,
-    n_impression: 405545,
-    d_ecpm: 0.47,
-    d_fill_rate: 98.7,
-    n_users: 9582
+    revenue: 198,
+    percent: 6.7,
+    n_impression: 412000,
+    d_ecpm: 0.48,
+    d_fill_rate: 98.9,
+    n_users: 100200
   },
   {
     s_ad_unit_name: '开屏广告',
-    revenue: 79,
-    percent: 2.8,
-    n_impression: 50262,
-    d_ecpm: 1.57,
-    d_fill_rate: 91.3,
-    n_users: 38044
+    revenue: 90,
+    percent: 3.1,
+    n_impression: 51800,
+    d_ecpm: 1.74,
+    d_fill_rate: 92.5,
+    n_users: 39200
   }
 ]
 
@@ -402,134 +418,134 @@ export const MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS: RevenueOverviewIaaCountryRo
   {
     s_country_code: 'US',
     s_country_name: '美国',
-    revenue: 1026,
-    percent: 37.1,
-    n_impression: 308742,
-    d_ecpm: 3.32,
-    n_users: 43521,
-    d_mom_pct: 5.2
+    revenue: 1088,
+    percent: 37.0,
+    n_impression: 318200,
+    d_ecpm: 3.42,
+    n_users: 44500,
+    d_mom_pct: 4.8
   },
   {
     s_country_code: 'KR',
     s_country_name: '韩国',
-    revenue: 412,
+    revenue: 438,
     percent: 14.9,
-    n_impression: 124500,
-    d_ecpm: 3.31,
-    n_users: 18200,
-    d_mom_pct: 2.1
+    n_impression: 126200,
+    d_ecpm: 3.47,
+    n_users: 18450,
+    d_mom_pct: 1.9
   },
   {
     s_country_code: 'DE',
     s_country_name: '德国',
-    revenue: 318,
-    percent: 11.5,
-    n_impression: 96500,
-    d_ecpm: 3.29,
-    n_users: 14100,
-    d_mom_pct: -0.8
+    revenue: 336,
+    percent: 11.4,
+    n_impression: 97800,
+    d_ecpm: 3.44,
+    n_users: 14200,
+    d_mom_pct: -0.6
   },
   {
     s_country_code: 'TW',
     s_country_name: '台湾',
-    revenue: 265,
+    revenue: 282,
     percent: 9.6,
-    n_impression: 80200,
-    d_ecpm: 3.3,
-    n_users: 11800,
-    d_mom_pct: 1.4
+    n_impression: 81200,
+    d_ecpm: 3.47,
+    n_users: 11900,
+    d_mom_pct: 1.2
   },
   {
     s_country_code: 'JP',
     s_country_name: '日本',
-    revenue: 241,
+    revenue: 256,
     percent: 8.7,
-    n_impression: 73100,
-    d_ecpm: 3.3,
-    n_users: 10600,
-    d_mom_pct: -1.3
+    n_impression: 74200,
+    d_ecpm: 3.45,
+    n_users: 10700,
+    d_mom_pct: -1.1
   },
   {
     s_country_code: 'GB',
     s_country_name: '英国',
-    revenue: 198,
-    percent: 7.2,
-    n_impression: 59800,
-    d_ecpm: 3.31,
-    n_users: 8900,
+    revenue: 210,
+    percent: 7.1,
+    n_impression: 60400,
+    d_ecpm: 3.48,
+    n_users: 9000,
     d_mom_pct: 0.6
   },
   {
     s_country_code: 'AU',
     s_country_name: '澳大利亚',
-    revenue: 173,
-    percent: 6.2,
-    n_impression: 52100,
-    d_ecpm: 3.32,
-    n_users: 7600,
-    d_mom_pct: 3.0
+    revenue: 184,
+    percent: 6.3,
+    n_impression: 52800,
+    d_ecpm: 3.49,
+    n_users: 7700,
+    d_mom_pct: 2.8
   },
   {
     s_country_code: 'ZZ',
     s_country_name: 'Other',
-    revenue: 135,
-    percent: 4.8,
-    n_impression: 40665,
-    d_ecpm: 3.32,
-    n_users: 6162,
-    d_mom_pct: 0.4
+    revenue: 150,
+    percent: 5.0,
+    n_impression: 41400,
+    d_ecpm: 3.62,
+    n_users: 6300,
+    d_mom_pct: 0.3
   }
 ]
 
 export const MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS: RevenueOverviewIaaVersionRow[] = [
   {
-    s_app_version: 'v4.2.1',
-    revenue: 1842,
-    percent: 66.5,
-    n_impression: 554551,
-    d_ecpm: 3.32,
-    n_dau: 78142,
-    d_crash_rate: 0.12,
+    s_app_version: 'v4.3.2',
+    revenue: 1878,
+    percent: 63.8,
+    n_impression: 562400,
+    d_ecpm: 3.34,
+    n_dau: 79200,
+    d_crash_rate: 0.11,
     is_current: true
   },
   {
-    s_app_version: 'v4.2.0',
-    revenue: 654,
-    percent: 23.6,
-    n_impression: 196931,
-    d_ecpm: 3.32,
-    n_dau: 27782,
-    d_crash_rate: 0.18,
+    s_app_version: 'v4.3.1',
+    revenue: 668,
+    percent: 22.7,
+    n_impression: 199800,
+    d_ecpm: 3.34,
+    n_dau: 28180,
+    d_crash_rate: 0.17,
     is_current: false
   },
   {
-    s_app_version: 'v4.1.9',
-    revenue: 187,
-    percent: 6.8,
-    n_impression: 56285,
-    d_ecpm: 3.32,
-    n_dau: 7954,
-    d_crash_rate: 0.31,
+    s_app_version: 'v4.3.0',
+    revenue: 196,
+    percent: 6.7,
+    n_impression: 57100,
+    d_ecpm: 3.29,
+    n_dau: 8080,
+    d_crash_rate: 0.29,
     is_current: false
   },
   {
-    s_app_version: 'v4.1.8',
-    revenue: 65,
+    s_app_version: 'v4.2.9',
+    revenue: 68,
     percent: 2.3,
-    n_impression: 19573,
-    d_ecpm: 3.32,
-    n_dau: 2767,
-    d_crash_rate: 0.45,
+    n_impression: 19800,
+    d_ecpm: 3.29,
+    n_dau: 2800,
+    d_crash_rate: 0.44,
     is_current: false
   },
   {
-    s_app_version: 'v4.1.7',
-    revenue: 20,
+    s_app_version: 'v4.2.8',
+    revenue: 22,
     percent: 0.8,
-    n_impression: 6267,
-    d_ecpm: 3.32,
-    n_dau: 838,
-    d_crash_rate: 0.67,
+    n_impression: 6400,
+    d_ecpm: 3.29,
+    n_dau: 850,
+    d_crash_rate: 0.62,
     is_current: false
   }
 ]
@@ -544,159 +560,159 @@ export const MOCK_REVENUE_OVERVIEW_IAP_ROWS: RevenueOverviewIapBreakdownRow[] = 
   {
     s_product: '月度订阅',
     s_type: '订阅',
-    revenue: 18.02,
-    percent: 21.8,
-    n_buy_times: 1842,
-    n_users: 684,
+    revenue: 30.2,
+    percent: 23.9,
+    n_buy_times: 1920,
+    n_users: 702,
     d_arppu: 9.99,
-    d_purchase_rate: 78.4
+    d_purchase_rate: 77.2
   },
   {
     s_product: '年度订阅',
     s_type: '订阅',
-    revenue: 25.55,
-    percent: 29.4,
-    n_buy_times: 284,
-    n_users: 52,
+    revenue: 44.6,
+    percent: 35.2,
+    n_buy_times: 298,
+    n_users: 54,
     d_arppu: 89.99,
-    d_purchase_rate: 68.4
+    d_purchase_rate: 69.8
   },
   {
     s_product: '一次性高级',
     s_type: '一次性',
-    revenue: 12.25,
-    percent: 14.1,
-    n_buy_times: 2456,
-    n_users: 386,
+    revenue: 24.5,
+    percent: 19.4,
+    n_buy_times: 2520,
+    n_users: 402,
     d_arppu: 4.99,
-    d_purchase_rate: 72.1
+    d_purchase_rate: 72.5
   },
   {
     s_product: 'VIP会员',
     s_type: '一次性',
-    revenue: 9.12,
-    percent: 10.6,
-    n_buy_times: 456,
-    n_users: 164,
+    revenue: 18.0,
+    percent: 14.2,
+    n_buy_times: 468,
+    n_users: 172,
     d_arppu: 19.99,
-    d_purchase_rate: 24.4
+    d_purchase_rate: 25.6
   },
   {
     s_product: '道具包',
     s_type: '一次性',
-    revenue: 3.72,
-    percent: 4.3,
-    n_buy_times: 1245,
-    n_users: 196,
+    revenue: 9.22,
+    percent: 7.3,
+    n_buy_times: 1288,
+    n_users: 204,
     d_arppu: 2.99,
     d_purchase_rate: 10.0
   }
 ]
 
 export const MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_SEGMENTS: RevenueOverviewIapChannelSegment[] = [
-  { key: 'fb', label: 'Facebook Ads', percent: 35.2, color: '#20d6b5' },
-  { key: 'gg', label: 'Google Ads', percent: 28.0, color: '#38bdf8' },
-  { key: 'tt', label: 'TikTok Ads', percent: 18.5, color: '#a78bfa' },
-  { key: 'og', label: 'Organic', percent: 12.3, color: '#f59e0b' },
-  { key: 'ot', label: 'Other', percent: 6.0, color: '#94a3b8' }
+  { key: 'fb', label: 'Facebook Ads', percent: 34.2, color: '#20d6b5' },
+  { key: 'gg', label: 'Google Ads', percent: 28.5, color: '#38bdf8' },
+  { key: 'tt', label: 'TikTok Ads', percent: 18.0, color: '#a78bfa' },
+  { key: 'og', label: 'Organic', percent: 12.8, color: '#f59e0b' },
+  { key: 'ot', label: 'Other', percent: 6.5, color: '#94a3b8' }
 ]
 
 export const MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_ROWS: RevenueOverviewIapChannelRow[] = [
   {
     s_channel_name: 'Facebook Ads',
-    revenue: 30.42,
-    percent: 35.2,
-    n_orders: 3120,
-    d_arppu: 13.76,
-    d_conversion_rate: 2.4,
-    d_refund_rate: 1.2
+    revenue: 43.28,
+    percent: 34.2,
+    n_orders: 3180,
+    d_arppu: 14.12,
+    d_conversion_rate: 2.5,
+    d_refund_rate: 1.1
   },
   {
     s_channel_name: 'Google Ads',
-    revenue: 24.19,
-    percent: 28.0,
-    n_orders: 2480,
-    d_arppu: 12.15,
-    d_conversion_rate: 2.1,
-    d_refund_rate: 1.5
+    revenue: 36.04,
+    percent: 28.5,
+    n_orders: 2560,
+    d_arppu: 12.48,
+    d_conversion_rate: 2.2,
+    d_refund_rate: 1.4
   },
   {
     s_channel_name: 'TikTok Ads',
-    revenue: 15.98,
-    percent: 18.5,
-    n_orders: 1650,
-    d_arppu: 11.2,
-    d_conversion_rate: 1.9,
-    d_refund_rate: 2.1
+    revenue: 22.74,
+    percent: 18.0,
+    n_orders: 1688,
+    d_arppu: 11.05,
+    d_conversion_rate: 2.0,
+    d_refund_rate: 2.0
   },
   {
     s_channel_name: 'Organic',
-    revenue: 10.64,
-    percent: 12.3,
-    n_orders: 980,
-    d_arppu: 14.5,
-    d_conversion_rate: 1.6,
-    d_refund_rate: 0.8
+    revenue: 16.18,
+    percent: 12.8,
+    n_orders: 1002,
+    d_arppu: 14.88,
+    d_conversion_rate: 1.7,
+    d_refund_rate: 0.7
   },
   {
     s_channel_name: 'Other',
-    revenue: 5.17,
-    percent: 6.0,
-    n_orders: 420,
-    d_arppu: 9.8,
-    d_conversion_rate: 1.1,
-    d_refund_rate: 3.2
+    revenue: 8.28,
+    percent: 6.5,
+    n_orders: 428,
+    d_arppu: 9.95,
+    d_conversion_rate: 1.2,
+    d_refund_rate: 3.0
   }
 ]
 
 export const MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_LEFT_METRICS = [
-  { title: '广告平台转化率', valueText: '2.1%', accent: 'purple' as const },
-  { title: '平均 ARPPU', valueText: '$13.76', accent: 'green' as const },
-  { title: '退款率', valueText: '1.8%', accent: 'amber' as const }
+  { title: '广告平台转化率', valueText: '2.4%', accent: 'purple' as const },
+  { title: '平均 ARPPU', valueText: '$12.10', accent: 'green' as const },
+  { title: '退款率', valueText: '1.6%', accent: 'amber' as const }
 ]
 
 export const MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES = {
-  revenue: [62, 68, 55, 72, 80, 88, 86],
-  orders: [4200, 4510, 3800, 4900, 5100, 5231, 4980]
+  revenue: [58, 64, 52, 70, 78, 84, 82],
+  orders: [4100, 4380, 3920, 4680, 4920, 5108, 4988]
 } as const
 
 export const MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS: RevenueOverviewIapTrendKpiCard[] = [
   {
     title: '订阅收入',
-    valueText: '$52.30',
-    subText: '占比 60.5%',
-    trendText: '+5.2%↑',
+    valueText: '$74.80',
+    subText: '占比 59.1%',
+    trendText: '+4.8%↑',
     trendUp: true
   },
   {
     title: '一次性购买',
-    valueText: '$34.17',
-    subText: '占比 39.5%',
-    trendText: '-2.1%↓',
+    valueText: '$51.72',
+    subText: '占比 40.9%',
+    trendText: '-1.8%↓',
     trendUp: false
   },
   {
     title: 'ARPPU',
-    valueText: '$13.76',
-    trendText: '+1.8%↑',
+    valueText: '$12.10',
+    trendText: '+2.1%↑',
     trendUp: true
   },
   {
     title: '日均订单',
-    valueText: '898单',
-    trendText: '+3.2%↑',
+    valueText: '916单',
+    trendText: '+2.9%↑',
     trendUp: true
   },
   {
     title: '付费转化率',
-    valueText: '2.1%',
-    trendText: '-0.3%↓',
+    valueText: '2.4%',
+    trendText: '-0.2%↓',
     trendUp: false
   },
   {
     title: '订阅续费率',
-    valueText: '78.4%',
-    trendText: '+1.2%↑',
+    valueText: '76.8%',
+    trendText: '+0.9%↑',
     trendUp: true
   }
 ]
@@ -712,59 +728,87 @@ export const MOCK_REVENUE_OVERVIEW_7D_DATES = [
 ]
 
 export const MOCK_REVENUE_OVERVIEW_7D_TREND = {
-  iaa: [1820, 2100, 1950, 2300, 2500, 2768, 2855],
-  iap: [72, 85, 68, 92, 78, 95, 86]
+  iaa: [2650, 2720, 2580, 2820, 2880, 2910, 2942],
+  iap: [118, 122, 108, 128, 124, 130, 127]
 } as const
 
 export const MOCK_REVENUE_OVERVIEW_ECPM_7D = {
-  predicted: [2.98, 2.92, 2.95, 2.93, 2.99, 3.01, 3.06],
-  actual: [2.9, 2.88, 2.91, 2.94, 2.97, 3.02, 3.32]
+  predicted: [3.02, 2.98, 3.04, 3.01, 3.08, 3.11, 3.18],
+  actual: [2.9, 2.95, 3.0, 3.02, 3.12, 3.2, 3.34]
 } as const
 
 export const MOCK_REVENUE_OVERVIEW_PLATFORM_PIE: RevenueOverviewPieSlice[] = [
   {
-    name: 'Admob',
-    value: 71.7,
-    percentText: '71.7%',
+    name: 'AdMob',
+    value: 71.0,
+    percentText: '71.0%',
     color: '#22c55e',
-    moneyText: '$1,985'
+    moneyText: '$2,088'
   },
-  { name: 'Facebook', value: 9.3, percentText: '9.3%', color: '#38bdf8', moneyText: '$257' },
-  { name: 'Applovin', value: 6.0, percentText: '6.0%', color: '#a78bfa', moneyText: '$166' },
-  { name: 'Vungle', value: 3.7, percentText: '3.7%', color: '#f59e0b', moneyText: '$102' },
-  { name: 'Pangle', value: 3.1, percentText: '3.1%', color: '#fb7185', moneyText: '$86' },
-  { name: 'Aumob', value: 3.7, percentText: '3.7%', color: '#60a5fa', moneyText: '$102' },
-  { name: 'Other', value: 2.6, percentText: '2.6%', color: '#94a3b8', moneyText: '$72' }
+  { name: 'AppLovin', value: 9.7, percentText: '9.7%', color: '#38bdf8', moneyText: '$285' },
+  { name: 'Facebook', value: 6.0, percentText: '6.0%', color: '#a78bfa', moneyText: '$176' },
+  { name: 'Vungle', value: 3.7, percentText: '3.7%', color: '#f59e0b', moneyText: '$108' },
+  { name: 'Pangle', value: 3.1, percentText: '3.1%', color: '#fb7185', moneyText: '$91' },
+  { name: 'Aumob', value: 3.7, percentText: '3.7%', color: '#60a5fa', moneyText: '$108' },
+  { name: 'Other', value: 2.8, percentText: '2.8%', color: '#94a3b8', moneyText: '$86' }
 ]
 
 export const MOCK_REVENUE_OVERVIEW_TOP_COUNTRIES: RevenueOverviewTopCountryRow[] = [
   {
     s_country_name: '美国',
     s_country_code: 'US',
-    iaa: 1026,
-    iap: 28.5,
-    total: 1054,
-    percent: 36.9
+    iaa: 1088,
+    iap: 32.4,
+    total: 1120,
+    percent: 36.5
   },
-  { s_country_name: '英国', s_country_code: 'GB', iaa: 216, iap: 12.3, total: 228, percent: 8.0 },
-  { s_country_name: '德国', s_country_code: 'DE', iaa: 185, iap: 8.2, total: 193, percent: 6.8 },
-  { s_country_name: '台湾', s_country_code: 'TW', iaa: 137, iap: 6.1, total: 143, percent: 5.0 },
-  { s_country_name: '日本', s_country_code: 'JP', iaa: 124, iap: 9.8, total: 134, percent: 4.7 }
+  {
+    s_country_name: '英国',
+    s_country_code: 'GB',
+    iaa: 228,
+    iap: 14.2,
+    total: 242,
+    percent: 7.9
+  },
+  {
+    s_country_name: '德国',
+    s_country_code: 'DE',
+    iaa: 196,
+    iap: 9.8,
+    total: 206,
+    percent: 6.7
+  },
+  {
+    s_country_name: '台湾',
+    s_country_code: 'TW',
+    iaa: 146,
+    iap: 7.2,
+    total: 153,
+    percent: 5.0
+  },
+  {
+    s_country_name: '日本',
+    s_country_code: 'JP',
+    iaa: 132,
+    iap: 10.8,
+    total: 143,
+    percent: 4.7
+  }
 ]
 
 export const MOCK_REVENUE_OVERVIEW_AI_INSIGHT: RevenueOverviewAiInsight = {
   title: 'AI 洞察建议',
   bullets: [
-    'IAA：插屏广告占比 72.8%，Admob 占比 71.7%，建议优先优化 Admob 插屏的填充与竞价策略。',
-    'IAP：年度订阅贡献最高，建议增加年度订阅的展示曝光与价格锚点（$89.99）。',
-    'ECPM 偏差 +8.5%，建议对「预估 eCPM」模型按国家/版本做分桶校准。'
+    'IAA：插屏广告占比 73.3%，AdMob 在广告平台维度占 71.0%，建议优先优化 AdMob 插屏的填充与竞价策略。',
+    'IAP：年度订阅贡献最高（约 33.7%），建议强化年度订阅曝光与价格锚点（$89.99）。',
+    'eCPM 偏差约 +7.5%，建议对「预估 eCPM」模型按国家与版本做分桶校准。'
   ]
 }
 
 export const MOCK_REVENUE_OVERVIEW_QUALITY_METRICS: RevenueOverviewQualityMetric[] = [
   {
     title: '广告充率',
-    valueText: '94.2%',
+    valueText: '96.1%',
     subText: '广告填充率',
     trendText: '稳定',
     trendUp: true,
@@ -772,7 +816,7 @@ export const MOCK_REVENUE_OVERVIEW_QUALITY_METRICS: RevenueOverviewQualityMetric
   },
   {
     title: '广告请求成功率',
-    valueText: '98.7%',
+    valueText: '99.2%',
     subText: '广告请求成功率',
     trendText: '优秀',
     trendUp: true,
@@ -780,7 +824,7 @@ export const MOCK_REVENUE_OVERVIEW_QUALITY_METRICS: RevenueOverviewQualityMetric
   },
   {
     title: 'ECPM 偏差率',
-    valueText: '+8.5%',
+    valueText: '+7.5%',
     subText: 'ECPM 偏差率',
     trendText: '偏高',
     trendUp: true,
@@ -788,7 +832,7 @@ export const MOCK_REVENUE_OVERVIEW_QUALITY_METRICS: RevenueOverviewQualityMetric
   },
   {
     title: 'IAP 转化率',
-    valueText: '2.1%',
+    valueText: '2.4%',
     subText: 'IAP 转化率',
     trendText: '一般',
     trendUp: false,
