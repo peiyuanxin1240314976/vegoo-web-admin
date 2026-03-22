@@ -140,7 +140,7 @@ export const MOCK_APP_TOTAL: ProfitAppTotal = {
 
 export const MOCK_COUNTRY_ROWS: ProfitCountryRow[] = [
   {
-    flag: '🇺🇸',
+    s_country_code: 'US',
     name: '美国',
     adRev: '$52,000',
     paidRev: '$14,200',
@@ -151,7 +151,7 @@ export const MOCK_COUNTRY_ROWS: ProfitCountryRow[] = [
     rateColor: '#4ade80'
   },
   {
-    flag: '🇰🇷',
+    s_country_code: 'KR',
     name: '韩国',
     adRev: '$11,200',
     paidRev: '$3,100',
@@ -162,7 +162,7 @@ export const MOCK_COUNTRY_ROWS: ProfitCountryRow[] = [
     rateColor: '#4ade80'
   },
   {
-    flag: '🇩🇪',
+    s_country_code: 'DE',
     name: '德国',
     adRev: '$7,800',
     paidRev: '$2,200',
@@ -173,7 +173,7 @@ export const MOCK_COUNTRY_ROWS: ProfitCountryRow[] = [
     rateColor: '#4ade80'
   },
   {
-    flag: '🇿🇦',
+    s_country_code: 'ZA',
     name: '南非',
     adRev: '$9,600',
     paidRev: '$1,200',
