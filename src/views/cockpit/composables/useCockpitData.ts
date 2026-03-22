@@ -4,7 +4,7 @@
  * - 其余模块：Mock 或各子组件独立接口，结构清晰便于后续按模块接独立接口与骨架屏
  */
 import { ref, onMounted } from 'vue'
-import { getAppNow, formatYYYYMMDD } from '@/utils/app-now'
+import { getAppNow, formatYYYYMMDD, cloneAppDate } from '@/utils/app-now'
 import {
   fetchCockpitOverview,
   fetchCockpitOverall,
@@ -43,20 +43,20 @@ export function dateRangeToOverallParams(dateRange: CockpitDateRange): CockpitOv
       startTime = endTime = today
       break
     case 'yesterday': {
-      const d = new Date(now)
+      const d = cloneAppDate(now)
       d.setDate(d.getDate() - 1)
       startTime = endTime = formatYYYYMMDD(d)
       break
     }
     case 'week': {
-      const d = new Date(now)
+      const d = cloneAppDate(now)
       d.setDate(d.getDate() - 6)
       startTime = formatYYYYMMDD(d)
       endTime = today
       break
     }
     case 'month': {
-      const d = new Date(now)
+      const d = cloneAppDate(now)
       d.setDate(d.getDate() - 29)
       startTime = formatYYYYMMDD(d)
       endTime = today
@@ -70,7 +70,7 @@ function dateRangeToDate(dateRange: CockpitDateRange): string {
   const now = getAppNow()
   if (dateRange === 'today') return formatYYYYMMDD(now)
   if (dateRange === 'yesterday') {
-    const d = new Date(now)
+    const d = cloneAppDate(now)
     d.setDate(d.getDate() - 1)
     return formatYYYYMMDD(d)
   }

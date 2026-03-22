@@ -1,8 +1,13 @@
 ## 我的绩效 - backend-api 契约
 
-### 父级 API 路径（建议）
+### 父级 API 路径（与 IAP 同级，当前前端默认）
 
-`/api/user-growth/my-performance`
+`/api/v1/datacenter/analysis/user-growth/my-performance`（对齐 `iap-analysis` 的 `/api/v1/datacenter/analysis/business-insight/iap-analysis`）
+
+### 网关路径说明
+
+- 各 JSON 中 `api.url` 仍为历史示例；**联调以前端** [`src/api/my-performance.ts`](../../../../../api/my-performance.ts) **内 `MY_PERFORMANCE_BASE` 为准**。
+- 请求体字段名若后端使用 snake_case，应在 `fetch*` 内做映射并与本目录 `fieldDescription.request` 对齐。
 
 ### 接口清单
 

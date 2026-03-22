@@ -213,6 +213,7 @@
     updateApplication
   } from '@/api/config-management'
   import { useUserStore } from '@/store/modules/user'
+  import { getAppNow } from '@/utils/app-now'
   import AppDetailDrawer from './modules/app-detail-drawer.vue'
   import AppFormDialog from './modules/app-form-dialog.vue'
   import AppDeleteDialog from './modules/app-delete-dialog.vue'
@@ -303,7 +304,7 @@
   })
 
   function formatNow(): string {
-    return new Date().toISOString().slice(0, 19).replace('T', ' ')
+    return getAppNow().toISOString().slice(0, 19).replace('T', ' ')
   }
 
   const handleAdd = () => {

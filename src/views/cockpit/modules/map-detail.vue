@@ -70,7 +70,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import { useRoute } from 'vue-router'
-  import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { formatYYYYMMDD, getAppNow, cloneAppDate } from '@/utils/app-now'
   import {
     MapDetailHeader,
     MapDetailStatsCards,
@@ -114,7 +114,7 @@
 
   function getDateRangeByQuick(type: RangeType): DateRange {
     const end = getAppNow()
-    const start = new Date(end)
+    const start = cloneAppDate(end)
 
     if (type === 'yesterday') {
       start.setDate(start.getDate() - 1)

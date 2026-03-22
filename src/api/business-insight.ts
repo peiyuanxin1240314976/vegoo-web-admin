@@ -3,6 +3,7 @@
  * IAP 分片接口见 ./iap-analysis.ts（与 iap-analysis/mock/backend-api 契约对齐）
  */
 import request from '@/utils/http'
+import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
 import {
   IaaAnalysisEndpoint,
   isIaaAnalysisEndpointMock
@@ -41,7 +42,7 @@ export {
 } from './iap-analysis'
 export type { IapOverviewTableQuery } from './iap-analysis'
 
-const IAA_BASE = '/api/v1/datacenter/analysis/business-insight/iaa-analysis'
+const IAA_BASE = `${ANALYSIS_API_BASE}/business-insight/iaa-analysis`
 
 function emptyIfAll(v: string | undefined, all = 'all') {
   if (v === undefined || v === '' || v === all) return ''
@@ -254,6 +255,55 @@ export async function fetchIaaMetaFilterOptions() {
   }
   const raw = await request.get<unknown>({ url: `${IAA_BASE}/meta-filter-options` })
   return normalizeIaaFilterOptions(unwrapIaaPayload<IaaFilterOptions>(raw))
+}
+
+const PROFIT_BASE = `${ANALYSIS_API_BASE}/business-insight/profit-analysis`
+
+/** 利润分析 - 顶栏筛选项 GET .../meta-filter-options（仅依赖全局 Token，无 query/body） */
+export function fetchProfitMetaFilterOptions() {
+  return request.get<ProfitFilterOptions>({
+    url: `${PROFIT_BASE}/meta-filter-options`
+  })
+}
+
+/** 利润分析 - 顶部 KPI POST .../overview/kpi，body 扁平 ProfitAnalysisQueryParams */
+export function fetchProfitOverviewKpi(fo: ProfitAnalysisQueryParams) {
+  return request.post<ProfitKpiOverviewDto>({
+    url: `${PROFIT_BASE}/overview/kpi`,
+    data: fo
+  })
+}
+
+/** 利润分析 - 应用利润详情表 POST .../table/app-profit */
+export function fetchProfitTableAppProfit(fo: ProfitAnalysisQueryParams) {
+  return request.post<ProfitAppProfitResponseDto>({
+    url: `${PROFIT_BASE}/table/app-profit`,
+    data: fo
+  })
+}
+
+/** 利润分析 - 国家利润分布 POST .../overview/country-profit */
+export function fetchProfitOverviewCountryProfit(fo: ProfitAnalysisQueryParams) {
+  return request.post<ProfitCountryProfitResponseDto>({
+    url: `${PROFIT_BASE}/overview/country-profit`,
+    data: fo
+  })
+}
+
+/** 利润分析 - 近 30 天趋势 POST .../profit-analysis/overview/trend30d，响应 data 为 ProfitTrend30d */
+export function fetchProfitOverviewTrend30d(fo: ProfitAnalysisQueryParams) {
+  return request.post<ProfitTrend30d>({
+    url: `${PROFIT_BASE}/overview/trend30d`,
+    data: fo
+  })
+}
+
+/** 利润分析 - 利润构成桑基图 POST .../overview/sankey */
+export function fetchProfitOverviewSankey(fo: ProfitAnalysisQueryParams) {
+  return request.post<ProfitSankeyDto>({
+    url: `${PROFIT_BASE}/overview/sankey`,
+    data: fo
+  })
 }
 
 export async function fetchIaaOverviewKpi(params: {

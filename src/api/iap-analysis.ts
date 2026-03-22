@@ -3,6 +3,7 @@
  * 网关路径前缀与 business-insight 其它接口一致
  */
 import request from '@/utils/http'
+import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
 import {
   IapAnalysisEndpoint,
   isIapAnalysisEndpointMock
@@ -23,7 +24,7 @@ import type {
   IapDetailTrend
 } from '@/views/business-insight/iap-analysis/types'
 
-const IAP_BASE = '/api/v1/datacenter/analysis/business-insight/iap-analysis'
+const IAP_BASE = `${ANALYSIS_API_BASE}/business-insight/iap-analysis`
 
 function emptyIfAll(v: string | undefined, all = 'all') {
   if (v === undefined || v === '' || v === all) return ''

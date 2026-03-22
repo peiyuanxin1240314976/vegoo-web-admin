@@ -36,3 +36,29 @@
 ## 字段约定
 
 - 遵循 `backend-fields.mdc`：广告平台 `source`/`n_source`，终端平台 `platform`，国家 `s_country_code`，收入 `revenue`，展示 `impressions`，ECPM 预估/真实、充填率、版本 `app_version` 等
+
+## `sampleRequest` / `sampleResponse` 与 Mock 一致
+
+本目录每个 `*.json` 中的 **`sampleRequest`、`sampleResponse` 应与 `src/api/business-insight.ts` 在 Mock 模式下实际返回的数据结构一致**（含字段、数组长度、嵌套形状）。后端可对照 JSON 实现；前端改 Mock 或改 `business-insight-api-mock` 等实现时，**请同步更新**对应契约里的示例，避免契约与运行时不一致。
+
+- **`fieldDescription`**：字段含义、必填、枚举仍以本文件为准，并与 `types.ts` 一致。
+- **`api`**：路径与方法说明。
+- **Markdown 不重复粘贴整段 JSON**，样例以各 `*.json` 为准。
+
+### 本仓库当前已有文件
+
+`01`～`03`、`11`～`16`。新增契约时，示例同样须与 Mock 实现一致。
+
+### 清单与 `types.ts` 对应关系（整页接口）
+
+| 文件                             | `types.ts` 类型                   |
+| -------------------------------- | --------------------------------- |
+| `11-overview-ad-type-tab.json`   | `IaaAdTypeTabData`                |
+| `12-overview-platform-tab.json`  | `IaaPlatformTabData`              |
+| `13-overview-placement-tab.json` | `IaaPlacementTabData`             |
+| `14-overview-ad-unit-tab.json`   | `IaaAdUnitTabData`                |
+| `15-overview-country-tab.json`   | `IaaCountryTabData`               |
+| `16-overview-version-tab.json`   | `IaaVersionTabData`               |
+| `01-meta-filter-options.json`    | `IaaFilterOptions`                |
+| `02-overview-kpi.json`           | `IaaKpiCard[]`                    |
+| `03-table-ad-platform.json`      | `IaaPlatformTableRow[]`（`list`） |

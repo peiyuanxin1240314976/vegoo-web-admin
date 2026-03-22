@@ -242,6 +242,7 @@
   import { useChart } from '@/hooks/core/useChart'
   import { useSettingStore } from '@/store/modules/setting'
   import request from '@/utils/http'
+  import { ANALYSIS_API_BASE, ANALYSIS_API_MIDDLE_PREFIX } from '@/api/analysis-api-base'
   import AccountDetailTable from './modules/account-detail-table.vue'
   import AppPerformancePlaceholder from './modules/app-performance-placeholder.vue'
   import PlatformPerformancePlaceholder from './modules/platform-performance-placeholder.vue'
@@ -347,7 +348,7 @@
 
     try {
       const list = await request.post<AccountDetailRow[]>({
-        url: '/api/v1/datacenter/analysis/account-performance/table-tree',
+        url: `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PREFIX}/table-tree`,
         data: {
           currentPage: 0,
           dateEnd,
@@ -426,7 +427,7 @@
 
     try {
       const list = await request.post<AccountPerformanceKpiApiItem[]>({
-        url: '/api/v1/datacenter/analysis/account-performance/kpi',
+        url: `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PREFIX}/kpi`,
         data: {
           currentPage: 0,
           dateEnd,
@@ -480,7 +481,7 @@
 
     try {
       const list = await request.post<ChannelSpendItem[]>({
-        url: '/api/v1/datacenter/analysis/account-performance/channel-spend',
+        url: `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PREFIX}/channel-spend`,
         data: {
           currentPage: 0,
           dateEnd,
@@ -535,7 +536,7 @@
 
     try {
       const list = await request.post<BudgetUsageBucket[]>({
-        url: '/api/v1/datacenter/analysis/account-performance/budget-usage-buckets',
+        url: `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PREFIX}/budget-usage-buckets`,
         data: {
           currentPage: 0,
           dateEnd,
@@ -589,7 +590,7 @@
 
     try {
       const list = await request.post<Day1RoiTrendItem[]>({
-        url: '/api/v1/datacenter/analysis/account-performance/day1-roi-trend',
+        url: `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PREFIX}/day1-roi-trend`,
         data: {
           currentPage: 0,
           dateEnd,
@@ -966,7 +967,7 @@
 
     try {
       const list = await request.post<SpendPaceItem[]>({
-        url: '/api/v1/datacenter/analysis/account-performance/today-spend-pace',
+        url: `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PREFIX}/today-spend-pace`,
         data: {
           currentPage: 0,
           dateEnd,

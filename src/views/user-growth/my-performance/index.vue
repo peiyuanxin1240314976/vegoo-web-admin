@@ -1,5 +1,5 @@
 <template>
-  <div class="my-performance-page art-full-height">
+  <div v-loading="loading || detailLoading" class="my-performance-page art-full-height">
     <MyPerformanceHeader
       :person-options="data.personOptions"
       :person-id="data.selectedPersonId"
@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue'
+  import { computed } from 'vue'
   import { useI18n } from 'vue-i18n'
   import MyPerformanceHeader from './components/my-performance-header.vue'
   import MyPerformanceTopCard from './components/my-performance-top-card.vue'
@@ -103,21 +103,21 @@
   import MyPerformancePanelAppDimensionTable from './components/panel-app-dimension-table.vue'
   import MyPerformancePanelSpendProgress from './components/panel-spend-progress.vue'
   import MyPerformancePanelPerformanceHistory from './components/panel-performance-history.vue'
-  import { buildMyPerformanceMockData, DEFAULT_PERIOD, MOCK_MY_PERFORMANCE_DATA } from './mock/data'
-  import type { MyPerformancePeriodType, MyPerformancePageData } from './types'
+  import { useMyPerformancePage } from './composables/useMyPerformancePage'
 
   defineOptions({ name: 'MyPerformance' })
 
   const { t } = useI18n()
 
-  const data = ref<MyPerformancePageData>(MOCK_MY_PERFORMANCE_DATA)
-
-  const selectedPerson = computed(() => {
-    return (
-      data.value.personOptions.find((p) => p.id === data.value.selectedPersonId) ??
-      data.value.personOptions[0]
-    )
-  })
+  const {
+    data,
+    loading,
+    detailLoading,
+    selectedPerson,
+    onPersonChange,
+    onPeriodTypeChange,
+    onPeriodValueChange
+  } = useMyPerformancePage()
 
   const spendAchievementHint = computed(() => {
     const d = data.value.spendProgress?.data
@@ -127,25 +127,6 @@
     const amount = '$' + remaining.toLocaleString('en-US', { maximumFractionDigits: 0 })
     return t('myPerformance.spendAchievement.hint', { amount })
   })
-
-  function rebuild(periodType: MyPerformancePeriodType, periodValue: string, personId: string) {
-    data.value = buildMyPerformanceMockData(periodType, periodValue, personId)
-  }
-
-  function onPersonChange(personId: string) {
-    rebuild(data.value.periodType, data.value.selectedPeriodValue, personId)
-  }
-
-  function onPeriodTypeChange(periodType: MyPerformancePeriodType) {
-    const options =
-      periodType === 'quarter' ? data.value.periodOptions.quarter : data.value.periodOptions.month
-    const nextValue = options[0]?.value ?? DEFAULT_PERIOD.periodValue
-    rebuild(periodType, nextValue, data.value.selectedPersonId)
-  }
-
-  function onPeriodValueChange(periodValue: string) {
-    rebuild(data.value.periodType, periodValue, data.value.selectedPersonId)
-  }
 </script>
 
 <style scoped lang="scss">

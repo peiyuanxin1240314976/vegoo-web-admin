@@ -203,6 +203,7 @@
     fetchOptimizerTable,
     updateOptimizer
   } from '@/api/config-management'
+  import { getAppNow } from '@/utils/app-now'
   import OptimizerDetailDrawer from './modules/optimizer-detail-drawer.vue'
   import OptimizerFormDialog from './modules/optimizer-form-dialog.vue'
   import { cloneOptimizerMockList, systemUsers as seedSystemUsers } from './mock/data'
@@ -352,7 +353,7 @@
     const avg = active.length
       ? Math.round(active.reduce((s, i) => s + i.minConsumption, 0) / active.length)
       : 0
-    const thisMonth = new Date().toISOString().slice(0, 7)
+    const thisMonth = getAppNow().toISOString().slice(0, 7)
     const monthNew = list.filter((i) => i.createTime.startsWith(thisMonth)).length
     return {
       total: useRemoteTable.value ? serverTotal.value : list.length,
@@ -441,7 +442,7 @@
 
   const handleFormSuccess = async (payload: OptimizerFormPayload) => {
     const user = systemUserOptions.value.find((u) => u.id === payload.userId)
-    const now = new Date().toISOString().slice(0, 16).replace('T', ' ')
+    const now = getAppNow().toISOString().slice(0, 16).replace('T', ' ')
 
     if (useRemoteTable.value) {
       try {

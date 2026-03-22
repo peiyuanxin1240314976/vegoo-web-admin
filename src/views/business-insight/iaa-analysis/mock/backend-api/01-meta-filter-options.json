@@ -6,7 +6,7 @@
       "appOptions": {
         "type": "IaaSelectOption[]",
         "required": true,
-        "description": "应用下拉选项。"
+        "description": "应用下拉选项，首项建议固定为「全部」value=all。"
       },
       "platformOptions": {
         "type": "IaaSelectOption[]",
@@ -16,7 +16,7 @@
       "countryOptions": {
         "type": "IaaSelectOption[]",
         "required": true,
-        "description": "国家下拉选项。"
+        "description": "国家下拉选项，首项建议固定为「全部」value=all；其余 value 为 ISO 3166-1 alpha-2。"
       }
     },
     "IaaSelectOption": {
@@ -24,7 +24,7 @@
       "value": {
         "type": "string",
         "required": true,
-        "description": "选项值，如 all、US、weather5。"
+        "description": "选项值：应用为 all 或 s_app_id；平台为 all/android/ios；国家为 all 或两位国家码。"
       }
     }
   },
@@ -32,7 +32,10 @@
   "sampleResponse": {
     "appOptions": [
       { "label": "全部", "value": "all" },
-      { "label": "Weather5", "value": "weather5" }
+      { "label": "Weather5", "value": "weather5" },
+      { "label": "健康", "value": "health_app" },
+      { "label": "AI应用", "value": "ai_app" },
+      { "label": "BloodSugar2", "value": "bloodsugar2" }
     ],
     "platformOptions": [
       { "label": "Android&iOS", "value": "all" },
@@ -43,7 +46,16 @@
       { "label": "全部", "value": "all" },
       { "label": "美国", "value": "US" },
       { "label": "韩国", "value": "KR" },
-      { "label": "日本", "value": "JP" }
+      { "label": "日本", "value": "JP" },
+      { "label": "英国", "value": "GB" },
+      { "label": "德国", "value": "DE" },
+      { "label": "法国", "value": "FR" },
+      { "label": "澳大利亚", "value": "AU" },
+      { "label": "加拿大", "value": "CA" },
+      { "label": "中国", "value": "CN" },
+      { "label": "印度", "value": "IN" },
+      { "label": "巴西", "value": "BR" },
+      { "label": "乌兹别克斯坦", "value": "UZ" }
     ]
   },
   "api": {
@@ -52,5 +64,11 @@
     "priority": "P0",
     "requestBody": "无",
     "responseBody": "appOptions[], platformOptions[], countryOptions[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "GET 无请求体；若网关统一包裹为 { data: IaaFilterOptions }，须在 README 注明，前端以实际解析为准。",
+      "countryOptions 的 value 须为合法 alpha-2，与报表筛选入参 s_country_code 一致。"
+    ]
   }
 }

@@ -89,3 +89,24 @@ export interface CampaignDetailData {
   creativeTop5: CreativeTop5Item[]
   aiInsights: AiInsightItem[]
 }
+
+/** POST campaign-detail/overview 响应 */
+export type CampaignDetailOverviewResponse = Pick<
+  CampaignDetailData,
+  'campaignName' | 'status' | 'basicInfo' | 'budgetInfo' | 'targetInfo' | 'trendData'
+>
+
+/** POST campaign-detail/ad-list 响应 */
+export interface CampaignDetailAdListResponse {
+  rows: CampaignAdRow[]
+}
+
+/** POST campaign-detail/creative-top5 响应 */
+export interface CampaignDetailCreativeTop5Response {
+  items: CreativeTop5Item[]
+}
+
+/** POST campaign-detail/ai-insights 响应 */
+export interface CampaignDetailAiInsightsResponse {
+  insights: AiInsightItem[]
+}

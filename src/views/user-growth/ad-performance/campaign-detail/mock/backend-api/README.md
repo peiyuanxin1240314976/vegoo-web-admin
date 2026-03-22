@@ -1,6 +1,6 @@
 # 广告系列详情页接口规范
 
-页面路由：`/user-growth/ad-performance/campaign-detail` **父级 API 路径**：`/api/user-growth/ad-performance/campaign-detail`（与前端路由一致）
+页面路由：`/user-growth/ad-performance/campaign-detail`。**当前前端默认 API 前缀**：`/api/v1/datacenter/analysis/user-growth/ad-performance/campaign-detail`（见 [`src/api/ad-performance.ts`](../../../../../../api/ad-performance.ts) 的 `AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE`）。下表历史 URL 以前端常量为准。
 
 ## 一、接口清单
 

@@ -48,6 +48,7 @@
   import { ElMessage } from 'element-plus'
   import type { AlertManagementOverview, AlertManagementOverviewParams } from './types'
   import { fetchAlertManagementOverview } from '@/api/user-growth'
+  import { getAppNow } from '@/utils/app-now'
   import SectionKpi from './modules/section-kpi.vue'
   import AlertToolbar from './modules/alert-toolbar.vue'
   import SectionTrend from './modules/section-trend.vue'
@@ -71,7 +72,7 @@
     severity: 'all',
     category: 'all',
     status: 'all',
-    date: formatDateYmd(new Date())
+    date: formatDateYmd(getAppNow())
   })
 
   async function load() {

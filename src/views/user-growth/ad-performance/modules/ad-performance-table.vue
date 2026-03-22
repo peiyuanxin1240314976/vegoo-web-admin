@@ -5,7 +5,11 @@
         <div class="ad-performance-table__title">广告系列明细</div>
 
         <div class="ad-performance-table__header-row">
-          <ElTabs v-model="activeTab" class="ad-performance-table__tabs">
+          <ElTabs
+            :model-value="activeTab"
+            class="ad-performance-table__tabs"
+            @update:model-value="onActiveTabUpdate"
+          >
             <ElTabPane
               v-for="tab in tableTabs"
               :key="tab.value"
@@ -16,11 +20,12 @@
           <div class="ad-performance-table__actions">
             <div class="ad-performance-table__searchbar">
               <ElInput
-                v-model="searchKeyword"
+                :model-value="tableKeyword"
                 :placeholder="tr('adPerformance.searchPlaceholder', '搜索')"
                 clearable
                 class="ad-performance-table__search"
-                @keyup.enter="emitSearch"
+                @update:model-value="emit('update:tableKeyword', $event)"
+                @keyup.enter="onKeywordEnter"
               >
                 <template #prefix>
                   <ElIcon><Search /></ElIcon>
@@ -45,28 +50,28 @@
         <CampaignTab
           v-if="activeTab === 'campaign'"
           :data="props.campaignRows"
-          :keyword="searchKeyword"
+          :keyword="tableKeyword"
           @detail="onDetailCampaign"
           ref="campaignTabRef"
         />
         <CountryTab
           v-else-if="activeTab === 'country'"
           :rows="props.countryRows"
-          :keyword="searchKeyword"
+          :keyword="tableKeyword"
           @detail="onDetailCountry"
           ref="countryTabRef"
         />
         <OwnerTab
           v-else-if="activeTab === 'owner'"
           :rows="props.ownerRows"
-          :keyword="searchKeyword"
+          :keyword="tableKeyword"
           @detail="onDetailOwner"
           ref="ownerTabRef"
         />
         <AccountTab
           v-else
           :rows="props.accountRows"
-          :keyword="searchKeyword"
+          :keyword="tableKeyword"
           @detail="onDetailAccount"
           ref="accountTabRef"
         />
@@ -142,12 +147,13 @@
     </ElCard>
 
     <ElDrawer v-model="drawerVisible" :size="drawerSize" :with-header="false">
-      <AdPerformanceDetailDrawer
-        v-if="drawerTab === 'campaign' && drawerCampaignRow"
-        :campaign-row="drawerCampaignRow"
-        :detail="drawerCampaignDetail"
-        @close="drawerVisible = false"
-      />
+      <div v-if="drawerTab === 'campaign' && drawerCampaignRow" v-loading="drawerDetailLoading">
+        <AdPerformanceDetailDrawer
+          :campaign-row="drawerCampaignRow"
+          :detail="drawerCampaignDetail"
+          @close="drawerVisible = false"
+        />
+      </div>
 
       <template v-else>
         <div class="ad-performance-detail__header">
@@ -400,14 +406,15 @@
 
 <script setup lang="ts">
   import { Filter, Search } from '@element-plus/icons-vue'
+  import { ElMessage } from 'element-plus'
   import { computed, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { fetchAdPerformanceCampaignDetailDrawer } from '@/api/ad-performance'
   import CampaignTab from './table-tabs/campaign-tab.vue'
   import CountryTab from './table-tabs/country-tab.vue'
   import OwnerTab from './table-tabs/owner-tab.vue'
   import AccountTab from './table-tabs/account-tab.vue'
   import AdPerformanceDetailDrawer from './ad-performance-detail-drawer.vue'
-  import { getMockCampaignDetail } from '../mock/data'
   import type {
     AdPerformancePagination,
     AdPerformanceCampaignRow,
@@ -418,7 +425,9 @@
     AccountSummary,
     AdPerformanceOwnerCampaignRow,
     AdPerformanceAccountCampaignRow,
-    AdPerformanceCampaignDetail
+    AdPerformanceCampaignDetail,
+    AdPerformanceDateRange,
+    AdPerformanceTableTab
   } from '../types'
 
   defineOptions({ name: 'AdPerformanceTable' })
@@ -428,6 +437,10 @@
 
   const props = withDefaults(
     defineProps<{
+      activeTab: AdPerformanceTableTab
+      tableKeyword: string
+      /** 与主筛选日期同步，用于抽屉详情请求 */
+      filterDateRange: AdPerformanceDateRange
       campaignRows: AdPerformanceCampaignRow[]
       countryRows: AdPerformanceCountryRow[]
       ownerRows: AdPerformanceOwnerRow[]
@@ -465,15 +478,22 @@
   const emit = defineEmits<{
     (e: 'pagination:current-change', page: number): void
     (e: 'pagination:size-change', size: number): void
+    (e: 'update:activeTab', tab: AdPerformanceTableTab): void
+    (e: 'update:tableKeyword', v: string): void
+    (e: 'keyword-search'): void
   }>()
 
-  const activeTab = ref<'campaign' | 'country' | 'owner' | 'account'>('campaign')
-  const searchKeyword = ref('')
+  function onActiveTabUpdate(tab: string | number) {
+    emit('update:activeTab', tab as AdPerformanceTableTab)
+  }
 
   const campaignTabRef = ref<{ openCustomColumns: () => void } | null>(null)
   const countryTabRef = ref<{ openCustomColumns: () => void } | null>(null)
   const ownerTabRef = ref<{ openCustomColumns: () => void } | null>(null)
   const accountTabRef = ref<{ openCustomColumns: () => void } | null>(null)
+
+  const drawerCampaignDetail = ref<AdPerformanceCampaignDetail | null>(null)
+  const drawerDetailLoading = ref(false)
 
   const drawerVisible = ref(false)
   const drawerTab = ref<'campaign' | 'country' | 'owner' | 'account'>('campaign')
@@ -495,12 +515,6 @@
       : null
   })
 
-  const drawerCampaignDetail = computed<AdPerformanceCampaignDetail | null>(() => {
-    const row = drawerCampaignRow.value
-    if (!row) return null
-    return getMockCampaignDetail(row.id)
-  })
-
   const drawerTitle = computed(() => {
     if (drawerTab.value === 'country') return '国家地区详情'
     if (drawerTab.value === 'owner') return '优化师详情'
@@ -516,10 +530,6 @@
     { value: 'owner', label: '按优化师' },
     { value: 'account', label: '按广告账户' }
   ] as const
-
-  watch(activeTab, () => {
-    emit('pagination:current-change', 1)
-  })
 
   watch(
     () => [props.pagination.total, props.pagination.size],
@@ -544,14 +554,14 @@
     return profit >= 0 ? 'ad-performance-table__profit--up' : 'ad-performance-table__profit--down'
   }
 
-  function emitSearch() {
-    emit('pagination:current-change', 1)
+  function onKeywordEnter() {
+    emit('keyword-search')
   }
 
   function onCustomColumns() {
-    if (activeTab.value === 'campaign') campaignTabRef.value?.openCustomColumns()
-    else if (activeTab.value === 'country') countryTabRef.value?.openCustomColumns()
-    else if (activeTab.value === 'owner') ownerTabRef.value?.openCustomColumns()
+    if (props.activeTab === 'campaign') campaignTabRef.value?.openCustomColumns()
+    else if (props.activeTab === 'country') countryTabRef.value?.openCustomColumns()
+    else if (props.activeTab === 'owner') ownerTabRef.value?.openCustomColumns()
     else accountTabRef.value?.openCustomColumns()
   }
 
@@ -560,16 +570,28 @@
   }
 
   const totalText = computed(() => {
-    if (activeTab.value === 'country') return `共 ${props.countryRows.length} 个国家`
-    if (activeTab.value === 'owner') return `共 ${props.ownerRows.length} 位优化师`
-    if (activeTab.value === 'account') return `共 ${props.accountRows.length} 个账户`
+    if (props.activeTab === 'country') return `共 ${props.countryRows.length} 个国家`
+    if (props.activeTab === 'owner') return `共 ${props.ownerRows.length} 位优化师`
+    if (props.activeTab === 'account') return `共 ${props.accountRows.length} 个账户`
     return `共 ${props.pagination.total} 条`
   })
 
-  function onDetailCampaign(row: AdPerformanceCampaignRow) {
+  async function onDetailCampaign(row: AdPerformanceCampaignRow) {
     drawerTab.value = 'campaign'
     drawerRow.value = row
     drawerVisible.value = true
+    drawerCampaignDetail.value = null
+    drawerDetailLoading.value = true
+    try {
+      drawerCampaignDetail.value = await fetchAdPerformanceCampaignDetailDrawer({
+        campaignId: row.id,
+        dateRange: props.filterDateRange
+      })
+    } catch {
+      ElMessage.error('加载系列详情失败')
+    } finally {
+      drawerDetailLoading.value = false
+    }
   }
 
   function onDetailCountry(row: AdPerformanceCountryRow) {

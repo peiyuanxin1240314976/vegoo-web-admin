@@ -34,7 +34,7 @@ export const IAA_ANALYSIS_USE_MOCK: Record<IaaAnalysisEndpoint, boolean> = {
   [IaaAnalysisEndpoint.OverviewKpi]: false,
   [IaaAnalysisEndpoint.TableAdPlatform]: false,
   [IaaAnalysisEndpoint.AdTypeTab]: false,
-  [IaaAnalysisEndpoint.PlatformTab]: true,
+  [IaaAnalysisEndpoint.PlatformTab]: false,
   [IaaAnalysisEndpoint.PlacementTab]: false,
   [IaaAnalysisEndpoint.AdUnitTab]: false,
   [IaaAnalysisEndpoint.CountryTab]: false,
