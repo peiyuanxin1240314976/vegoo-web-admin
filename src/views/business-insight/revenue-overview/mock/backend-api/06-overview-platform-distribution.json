@@ -28,7 +28,7 @@
         "type": "number",
         "required": false,
         "enum": [0, 1, 2, 3, 4, 5, 6, 7],
-        "description": "广告平台（0-全部；1-Google,2-Facebook,3-Unity,4-Applovin,5-IronSource,6-AdColony,7-Pangle）。"
+        "description": "广告平台 n_source（0-全部；1-Google,2-Facebook,3-Unity,4-AppLovin,5-IronSource,6-AdColony,7-Pangle）。与请求体 `platform`（终端平台）区分。"
       }
     },
     "response": {
@@ -47,7 +47,7 @@
       "s_platform_name": {
         "type": "string",
         "required": true,
-        "description": "平台名称（Admob/Facebook/...）。"
+        "description": "广告平台展示名称（如 AdMob/Facebook），与终端 platform 无关；若后端希望与数据字典完全一致，可额外返回 n_source。"
       },
       "d_percent": { "type": "number", "required": true, "description": "占比（百分数）。" },
       "money_revenue": { "type": "number", "required": true, "description": "收入（金额）。" },

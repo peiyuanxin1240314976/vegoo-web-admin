@@ -1,5 +1,5 @@
 {
-  "_comment": "收入概览-KPI 卡片模块：顶部 6 张 KPI 卡（含迷你趋势）。用于页面第一排卡片数据源。",
+  "_comment": "收入概览-KPI 卡片模块：顶部 6 张 KPI 卡（含迷你趋势）。用于页面第一排卡片数据源。响应字段为后端 snake_case；页面当前 `mock.ts` 为 camelCase，联调时在 `fetch` 或适配层映射为前端类型。",
   "fieldDescription": {
     "request": {
       "t_date": {
@@ -108,8 +108,9 @@
   },
   "apiSuggestion": {
     "notes": [
-      "所有金额字段建议用 number（money_*/d_*）返回，前端负责格式化；本 mock 为对齐原型展示，部分字段用 string。",
-      "platform 建议只接受 all/android/ios。"
+      "所有金额字段建议用 number（money_*/d_*）返回，前端负责格式化；本契约 sample 为对齐原型，主值等可为预格式化 string。",
+      "platform 建议只接受 all/android/ios（终端平台，与广告平台 source/n_source 区分）。",
+      "与 `mock.ts` 中 `RevenueOverviewKpiCard`（id/title/primaryValue…）命名不一致时，在接入层做字段映射即可。"
     ]
   }
 }

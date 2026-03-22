@@ -6,7 +6,9 @@
 
 `POST /api/business-insight/revenue-overview/<分组>/<endpoint>`
 
-具体 URL 以各契约 JSON 的 `api.url` 为准；若网关与示例路径不一致，请在对应 JSON 的 `_comment` 或本文件注明。
+当前各契约 `api.url` 示例为 **`/api/v1/datacenter/analysis/business-insight/revenue-overview/...`**（数据中心网关前缀）；若线上网关与上述示例不一致，**以 `src/api` 实际请求路径为准**，并在对应契约 `_comment` 或本文件补充说明。
+
+若响应统一包裹 `data`，`sampleResponse` 仅描述业务体内层结构；与前端 `request` 封装对齐时在契约中补充 `fieldDescription.response.data`。
 
 ## 接口表（P0）
 

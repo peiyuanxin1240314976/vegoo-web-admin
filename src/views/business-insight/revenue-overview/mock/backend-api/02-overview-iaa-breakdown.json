@@ -28,7 +28,7 @@
         "type": "string",
         "required": false,
         "enum": ["ad_type", "platform", "ad_unit", "country", "version"],
-        "description": "当前切换的维度 key。"
+        "description": "当前切换的维度 key。取值为 platform 时表示「广告平台」维度；与请求体中终端筛选字段 platform（all/android/ios）含义不同，勿混淆。"
       }
     },
     "response": {
