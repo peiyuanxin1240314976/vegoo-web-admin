@@ -342,6 +342,104 @@ declare namespace Api {
       total: number
       rows: AdPlatformMetricsTableRowDto[]
     }
+
+    /**
+     * 我的广告 - 頁頭通用請求體（與頂部篩選聯動，後續接口參數一致）
+     * POST /api/v1/datacenter/analysis/my-ads/overview/page-header
+     */
+    interface MyAdsPageHeaderRequestParams {
+      appId?: string
+      countryCode?: string
+      currentPage?: number
+      endDate?: string
+      groupBy?: 'app' | 'source'
+      keyword?: string
+      pageSize?: number
+      source?: number
+      staffId?: string
+      startDate?: string
+    }
+
+    /** 我的广告 - 頁頭列表單行（與 MyAdsCampaignRowDto 一致） */
+    interface MyAdsPageHeaderRowDto {
+      id: string
+      name: string
+      appName: string
+      appIcon: string
+      platform: string
+      platformIcon: string
+      s_country_code: string
+      status: string
+      trend: string
+      budget: number
+      spend: number
+      calcSpend: number
+      agencySpend: number
+      minSpend: number
+      estProfit: number
+      roi: number
+    }
+
+    /** 我的广告 - 頁頭響應 data */
+    interface MyAdsPageHeaderResponseDto {
+      total: number
+      list: Api.UserGrowth.MyAdsPageHeaderRowDto[]
+    }
+
+    /** 我的广告 - Summary 消耗进度單行 POST .../overview/summary */
+    interface MyAdsSummaryProgressItemDto {
+      id: string
+      name: string
+      budget: string
+      spend: string
+      progress: number
+      platformIcon: string
+      statusType: string
+      roi?: string
+      status?: string
+    }
+
+    /** 我的广告 - Summary 饼图單項 */
+    interface MyAdsSummarySourcePieItemDto {
+      name: string
+      value: number
+      color: string
+    }
+
+    /** 我的广告 - Summary 统计卡單个 */
+    interface MyAdsSummaryStatCardDto {
+      main: string
+      mainColor?: string
+      budget?: string
+      diff?: string
+      diffColor?: string
+      prevLine?: string
+      momLine?: string
+      momColor?: string
+      borderColor?: string
+      agency?: string
+      direct?: string
+      target?: string
+      overTarget?: string
+      minProfit?: string
+      margin?: string
+    }
+
+    /** 我的广告 - Summary 趨勢 */
+    interface MyAdsSummaryTrendDto {
+      days: string[]
+      spend: number[]
+      profit: number[]
+      roiPct: number[]
+    }
+
+    /** 我的广告 - Summary 響應 data */
+    interface MyAdsSummaryResponseDto {
+      progressList: Api.UserGrowth.MyAdsSummaryProgressItemDto[]
+      sourcePie: Api.UserGrowth.MyAdsSummarySourcePieItemDto[]
+      statCards: Record<string, Api.UserGrowth.MyAdsSummaryStatCardDto>
+      trend: Api.UserGrowth.MyAdsSummaryTrendDto
+    }
   }
 
   /** 商业洞察 - IAA 分析 */

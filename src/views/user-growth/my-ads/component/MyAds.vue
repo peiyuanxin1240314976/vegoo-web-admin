@@ -1,25 +1,210 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, onMounted, watch } from 'vue'
   import SummaryTab from './SummaryTab.vue'
   import PlatformTab from './PlatformTab.vue'
   import CampaignTab from './CampaignTab.vue'
-  import { MOCK_MY_ADS_PAGE_HEADER } from '../mock/data'
+  import {
+    fetchMyAdsStaffOptions,
+    fetchMyAdsPageHeader,
+    fetchMyAdsSummary
+  } from '@/api/user-growth'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import type { MyAdsStaffOption, MyAdsUserCardMock, MyAdsMetricStripItem } from '../types'
 
   defineOptions({ name: 'MyAdsPageContent' })
 
-  const pageHeader = MOCK_MY_ADS_PAGE_HEADER
-  const staffList = pageHeader.staffList
+  function getDefaultDateRange(): [string, string] {
+    const today = getAppTodayYYYYMMDD()
+    const d = new Date(today)
+    d.setDate(d.getDate() - 7)
+    const start = d.toISOString().slice(0, 10)
+    return [start, today]
+  }
 
-  const selectedStaffId = ref(pageHeader.defaultStaffId)
+  const staffList = ref<MyAdsStaffOption[]>([])
+  const selectedStaffId = ref('')
+  const dateRange = ref<[string, string]>(getDefaultDateRange())
+  const hasMounted = ref(false)
+  const pageHeaderLoading = ref(false)
+  const pageHeaderData = ref<{
+    userCard: MyAdsUserCardMock
+    metrics: MyAdsMetricStripItem[]
+    isEmpty: boolean
+  } | null>(null)
+  const summaryLoading = ref(false)
+  const summaryData = ref<Api.UserGrowth.MyAdsSummaryResponseDto | null>(null)
+  const activeTab = ref<string>('summary')
 
-  const staffAvatarLetter = computed(() => {
-    const name = staffList.find((s) => s.id === selectedStaffId.value)?.name ?? ''
-    return name ? name[0]! : '—'
+  /** 构建与顶部筛选联动的通用请求参数（后续接口复用） */
+  function buildPageHeaderParams(): Api.UserGrowth.MyAdsPageHeaderRequestParams {
+    const [startDate = '', endDate = ''] = dateRange.value
+    return {
+      appId: '',
+      countryCode: '',
+      currentPage: 0,
+      endDate,
+      groupBy: 'app',
+      keyword: '',
+      pageSize: 0,
+      source: 0,
+      staffId: selectedStaffId.value || '',
+      startDate
+    }
+  }
+
+  /** 格式化金额，保留两位小数 */
+  function formatUsd(n: number): string {
+    return `$${n.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`
+  }
+
+  /** 格式化百分比 */
+  function formatPct(n: number): string {
+    return `${n.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}%`
+  }
+
+  /** 将接口响应映射为 userCard + metrics */
+  function mapPageHeaderResponse(
+    list: Api.UserGrowth.MyAdsPageHeaderRowDto[],
+    staffName: string
+  ): { userCard: MyAdsUserCardMock; metrics: MyAdsMetricStripItem[]; isEmpty: boolean } {
+    const totalSpend = list.reduce((s, r) => s + (r.spend ?? 0), 0)
+    const totalBudget = list.reduce((s, r) => s + (r.budget ?? 0), 0)
+    const totalAgencySpend = list.reduce((s, r) => s + (r.agencySpend ?? 0), 0)
+    const totalEstProfit = list.reduce((s, r) => s + (r.estProfit ?? 0), 0)
+    const totalMinSpend = list.reduce((s, r) => s + (r.minSpend ?? 0), 0)
+    const roiWeighted =
+      totalSpend > 0 ? list.reduce((s, r) => s + (r.roi ?? 0) * (r.spend ?? 0), 0) / totalSpend : 0
+    const diff = totalBudget - totalSpend
+    const agencyRatio = totalSpend > 0 ? (totalAgencySpend / totalSpend) * 100 : 0
+
+    const userCard: MyAdsUserCardMock = {
+      avatarLetter: staffName ? staffName[0]! : '—',
+      name: staffName || '—',
+      role: '优化师',
+      appsLine: list.length
+        ? `负责应用：${[...new Set(list.map((r) => r.appName).filter(Boolean))].join('、') || '—'}`
+        : '—'
+    }
+
+    const metrics: MyAdsMetricStripItem[] = [
+      {
+        label: '广告支出',
+        value: formatUsd(totalSpend),
+        sub: '',
+        subColor: '#9ca3af',
+        valueColor: '#ffffff'
+      },
+      {
+        label: '预算',
+        value: formatUsd(totalBudget),
+        sub: `差异 ${diff < 0 ? '-' : ''}${formatUsd(Math.abs(diff))}`,
+        subColor: diff < 0 ? '#f97316' : '#9ca3af',
+        valueColor: diff < 0 ? '#f97316' : '#ffffff'
+      },
+      {
+        label: '代投消耗',
+        value: formatUsd(totalAgencySpend),
+        sub: totalSpend > 0 ? `占比 ${agencyRatio.toFixed(1)}%` : '',
+        subColor: '#9ca3af',
+        valueColor: '#f59e0b'
+      },
+      {
+        label: '首日ROI',
+        value: formatPct(roiWeighted),
+        sub: '',
+        subColor: '#9ca3af',
+        valueColor: '#f59e0b'
+      },
+      {
+        label: '预估利润',
+        value: formatUsd(totalEstProfit),
+        sub: '',
+        subColor: '#9ca3af',
+        valueColor: totalEstProfit >= 0 ? '#10b981' : '#ef4444'
+      },
+      {
+        label: '最低利润',
+        value: formatUsd(totalMinSpend),
+        sub: '安全边界',
+        subColor: '#9ca3af',
+        valueColor: '#a78bfa'
+      }
+    ]
+
+    return { userCard, metrics, isEmpty: list.length === 0 }
+  }
+
+  async function loadPageHeader() {
+    pageHeaderLoading.value = true
+    try {
+      const params = buildPageHeaderParams()
+      const data = await fetchMyAdsPageHeader(params)
+      const list = data?.list ?? []
+      const staffName = staffList.value.find((s) => s.id === selectedStaffId.value)?.name ?? ''
+      pageHeaderData.value = mapPageHeaderResponse(list, staffName)
+    } catch {
+      pageHeaderData.value = null
+    } finally {
+      pageHeaderLoading.value = false
+    }
+  }
+
+  async function loadSummary() {
+    summaryLoading.value = true
+    try {
+      const params = buildPageHeaderParams()
+      const data = await fetchMyAdsSummary(params)
+      summaryData.value = data ?? null
+    } catch {
+      summaryData.value = null
+    } finally {
+      summaryLoading.value = false
+    }
+  }
+
+  onMounted(async () => {
+    try {
+      const list = await fetchMyAdsStaffOptions()
+      staffList.value = list ?? []
+      if (list?.length && !selectedStaffId.value) {
+        selectedStaffId.value = list[0]!.id
+      }
+    } catch {
+      staffList.value = []
+    }
+    await loadPageHeader()
+    if (activeTab.value === 'summary') {
+      await loadSummary()
+    }
+    hasMounted.value = true
   })
 
-  const dateRange = ref<[string, string]>(pageHeader.dateRange)
+  /** 僅在用戶變更篩選時觸發，避免 onMounted 中設置 selectedStaffId 時重複請求 */
+  watch([selectedStaffId, dateRange], () => {
+    if (hasMounted.value) {
+      loadPageHeader()
+      if (activeTab.value === 'summary') {
+        loadSummary()
+      }
+    }
+  })
 
-  const activeTab = ref<string>('summary')
+  watch(activeTab, (tab) => {
+    if (tab === 'summary') {
+      loadSummary()
+    }
+  })
+
+  const staffAvatarLetter = computed(() => {
+    const name = staffList.value.find((s) => s.id === selectedStaffId.value)?.name ?? ''
+    return name ? name[0]! : '—'
+  })
 
   const tabs = [
     { key: 'summary', label: '汇总' },
@@ -27,8 +212,8 @@
     { key: 'campaign', label: '广告系列明细' }
   ] as const
 
-  const userCard = pageHeader.userCard
-  const metrics = pageHeader.metrics
+  /** 頁頭區塊：初始化或無數據時顯示骨架屏，不展示 mock */
+  const showPageHeaderSkeleton = computed(() => pageHeaderLoading.value || !pageHeaderData.value)
 
   const handleTabClick = (key: 'summary' | 'platform' | 'campaign') => {
     activeTab.value = key
@@ -75,23 +260,60 @@
       </div>
     </div>
 
-    <!-- ── 用户信息卡 ── -->
-    <div class="user-card">
-      <div class="user-left">
-        <div class="user-avatar">{{ userCard.avatarLetter }}</div>
-        <div class="user-info">
-          <div class="user-name">{{ userCard.name }}</div>
-          <div class="user-role">{{ userCard.role }}</div>
-          <div class="user-apps">{{ userCard.appsLine }}</div>
-        </div>
+    <!-- ── 用户信息卡（按模块独立骨架：初始化或無數據時展示骨架屏，不展示 mock）── -->
+    <div class="user-card user-card--wrap">
+      <div v-if="showPageHeaderSkeleton" class="user-card-skeleton">
+        <ElSkeleton animated>
+          <template #template>
+            <div class="user-card-skeleton__inner">
+              <div class="user-card-skeleton__left">
+                <ElSkeletonItem variant="circle" style="width: 52px; height: 52px" />
+                <div class="user-card-skeleton__info">
+                  <ElSkeletonItem
+                    variant="h3"
+                    style="width: 80px; height: 20px; margin-bottom: 8px"
+                  />
+                  <ElSkeletonItem variant="text" style="width: 60px; margin-bottom: 6px" />
+                  <ElSkeletonItem variant="text" style="width: 180px" />
+                </div>
+              </div>
+              <div class="user-card-skeleton__metrics">
+                <ElSkeletonItem
+                  v-for="n in 6"
+                  :key="n"
+                  variant="text"
+                  style="width: 70px; height: 40px"
+                />
+              </div>
+            </div>
+          </template>
+        </ElSkeleton>
       </div>
-      <div class="user-metrics">
-        <div v-for="m in metrics" :key="m.label" class="metric-item">
-          <div class="metric-label">{{ m.label }}</div>
-          <div class="metric-value" :style="{ color: m.valueColor }">{{ m.value }}</div>
-          <div class="metric-sub" :style="{ color: m.subColor }">{{ m.sub }}</div>
+      <template v-else-if="pageHeaderData">
+        <div class="user-left">
+          <div class="user-avatar">{{ pageHeaderData.userCard.avatarLetter }}</div>
+          <div class="user-info">
+            <div class="user-name">{{ pageHeaderData.userCard.name }}</div>
+            <div class="user-role">{{ pageHeaderData.userCard.role }}</div>
+            <div class="user-apps">{{ pageHeaderData.userCard.appsLine }}</div>
+          </div>
         </div>
-      </div>
+        <div class="user-metrics">
+          <ElEmpty
+            v-if="pageHeaderData.isEmpty"
+            description="暂无广告数据"
+            :image-size="60"
+            class="user-metrics-empty"
+          />
+          <template v-else>
+            <div v-for="m in pageHeaderData.metrics" :key="m.label" class="metric-item">
+              <div class="metric-label">{{ m.label }}</div>
+              <div class="metric-value" :style="{ color: m.valueColor }">{{ m.value }}</div>
+              <div class="metric-sub" :style="{ color: m.subColor }">{{ m.sub }}</div>
+            </div>
+          </template>
+        </div>
+      </template>
     </div>
 
     <!-- ── Tabs ── -->
@@ -108,7 +330,7 @@
 
     <!-- ── Tab 内容 ── -->
     <div class="tab-content">
-      <SummaryTab v-if="activeTab === 'summary'" />
+      <SummaryTab v-if="activeTab === 'summary'" :data="summaryData" :loading="summaryLoading" />
       <PlatformTab v-else-if="activeTab === 'platform'" />
       <CampaignTab v-else-if="activeTab === 'campaign'" />
     </div>
@@ -320,6 +542,10 @@
   }
 
   /* ── 用户卡 ── */
+  .user-card--wrap {
+    min-height: 84px;
+  }
+
   .user-card {
     position: relative;
     display: flex;
@@ -331,6 +557,51 @@
     background: var(--bg-card);
     border: 1px solid var(--teal);
     border-radius: 10px;
+  }
+
+  .user-card-skeleton {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .user-card-skeleton :deep(.el-skeleton) {
+    padding: 0;
+  }
+
+  .user-card-skeleton__inner {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .user-card-skeleton__left {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    min-width: 240px;
+  }
+
+  .user-card-skeleton__info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .user-card-skeleton__metrics {
+    display: flex;
+    flex: 1;
+    gap: 16px;
+    justify-content: space-around;
+    padding-left: 24px;
+    border-left: 1px solid var(--border);
+  }
+
+  .user-metrics-empty {
+    flex: 1;
+  }
+
+  .user-metrics-empty :deep(.el-empty__description) {
+    font-size: 12px;
+    color: var(--text-secondary);
   }
 
   .user-card::before {
