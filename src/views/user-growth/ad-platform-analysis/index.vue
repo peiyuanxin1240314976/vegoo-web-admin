@@ -8,7 +8,7 @@
         transformOrigin: '0 0'
       }"
     >
-      <!-- 顶栏：日期 + 筛选 + 导出 -->
+      <!-- 顶栏：日期 + 筛选 + 导出（常驻，不随数据骨架整页隐藏） -->
       <header class="finance-header">
         <div class="header-left">{{ currentTime }}</div>
         <div class="header-right">
@@ -67,15 +67,24 @@
         </div>
       </header>
 
-      <!-- 第一排：广告平台 KPI 卡片 -->
-      <section class="row row-1">
+      <!-- 第一排：广告平台 KPI 卡片（筛选 App/终端平台时局部骨架，隐藏真实卡片） -->
+      <section v-if="showKpiRowSkeleton" class="row row-1">
+        <div
+          v-for="n in KPI_SKELETON_CARD_COUNT"
+          :key="`s-${n}`"
+          class="kpi-card kpi-card--skeleton"
+        >
+          <ElSkeleton animated :rows="5" />
+        </div>
+      </section>
+      <section v-else class="row row-1">
         <div v-for="card in filteredChannelKpiCards" :key="card.id" class="kpi-card">
           <div class="kpi-card-head">
             <div class="kpi-card-head-main">
               <div
                 class="kpi-card-logo"
                 :class="[
-                  `kpi-card-logo--${card.id}`,
+                  `kpi-card-logo--${kpiCardClassSuffix(card)}`,
                   { 'is-placeholder': !shouldShowKpiLogoImg(card) }
                 ]"
               >
@@ -94,9 +103,9 @@
             </div>
           </div>
           <div class="kpi-card-roi">
-            <span class="roi-value">{{ card.roi }}</span>
+            <span class="roi-value">{{ formatKpiRoi(card.roi) }}</span>
             <span class="roi-change" :class="card.roiChangeUp ? 'up' : 'down'">
-              {{ card.roiChangeUp ? '+' : '' }}{{ card.roiChange }}%
+              {{ card.roiChangeUp ? '+' : '' }}{{ formatNum2(card.roiChange) }}%
             </span>
           </div>
           <div class="kpi-card-metrics">
@@ -108,24 +117,47 @@
         </div>
       </section>
 
-      <!-- 第二排：ROI 趋势 | 用户质量热力图 | 广告平台质量雷达 -->
+      <!-- 第二排：各面板独立骨架，与接口一一对应 -->
       <section class="row row-2">
         <div class="panel panel-trend">
           <div class="panel-title">广告平台ROI趋势分析 (最近30天)</div>
-          <div ref="roiTrendRef" class="chart-dom"></div>
+          <div class="panel-chart-host">
+            <div v-if="roiTrendFetchPending" class="aps-module-skeleton aps-module-skeleton--chart">
+              <ElSkeleton animated :rows="10" />
+            </div>
+            <div v-show="!roiTrendFetchPending" ref="roiTrendRef" class="chart-dom"></div>
+          </div>
         </div>
         <div class="panel panel-heatmap">
           <div class="panel-title">用户质量热力图</div>
-          <div class="heatmap-wrap">
-            <div ref="qualityHeatmapRef" class="chart-dom quality-heatmap-dom"></div>
+          <div class="heatmap-wrap panel-chart-host">
+            <div
+              v-if="qualityHeatmapFetchPending"
+              class="aps-module-skeleton aps-module-skeleton--chart"
+            >
+              <ElSkeleton animated :rows="10" />
+            </div>
+            <div
+              v-show="!qualityHeatmapFetchPending"
+              ref="qualityHeatmapRef"
+              class="chart-dom quality-heatmap-dom"
+            ></div>
           </div>
         </div>
 
         <div class="panel panel-top10">
           <div class="panel-title">Top10 广告系列</div>
           <div class="top10-table-wrap">
+            <div
+              v-if="topCampaignsFetchPending"
+              class="aps-module-skeleton aps-module-skeleton--top10"
+            >
+              <ElSkeleton animated :rows="10" />
+            </div>
             <ElTable
+              v-show="!topCampaignsFetchPending"
               :data="filteredTopCampaigns"
+              :row-key="topCampaignRowKey"
               :stripe="false"
               size="small"
               :header-cell-style="{
@@ -164,13 +196,13 @@
               </ElTableColumn>
               <ElTableColumn label="CPI" width="80" align="left">
                 <template #default="{ row }">
-                  <span class="top10-cpi">{{ row.cpi.toFixed(2) }}</span>
+                  <span class="top10-cpi">{{ formatNum2(row.cpi) }}</span>
                 </template>
               </ElTableColumn>
               <ElTableColumn label="ROI" width="80" align="left">
                 <template #default="{ row }">
                   <span class="top10-roi" :class="topCampaignRoiTone(row.roi)">{{
-                    row.roi.toFixed(2)
+                    formatNum2(row.roi)
                   }}</span>
                 </template>
               </ElTableColumn>
@@ -190,110 +222,118 @@
       <section class="row row-3">
         <div class="panel panel-table">
           <div class="panel-title">广告平台指标比较详情</div>
-          <div class="table-wrap">
-            <ArtTable
-              :data="paginatedMetrics"
-              :columns="detailColumns"
-              row-key="channel"
-              :stripe="false"
-              :border="false"
-              size="default"
-              :header-cell-style="{
-                color: 'var(--aps-table-header-text)',
-                fontSize: '12px',
-                padding: '6px 0',
-                borderBottom: '1px solid var(--aps-table-divider-strong)'
-              }"
-              :cell-style="{
-                background: 'transparent',
-                color: 'var(--aps-text-secondary)',
-                fontSize: '12px',
-                padding: '6px 0',
-                borderBottom: '1px solid var(--aps-table-divider-weak)'
-              }"
-              :pagination="{
-                current: currentPage,
-                size: pageSize,
-                total: sortedChannelMetrics.length
-              }"
-              :paginationOptions="{ align: 'center', pageSizes: [10, 20, 30], background: false }"
-              @pagination:current-change="(p: number) => (currentPage = p)"
-              @pagination:size-change="onPageSizeChange"
-              @sort-change="onSortChange"
+          <div class="table-wrap aps-metrics-table-host">
+            <div
+              v-if="metricsTableFetchPending"
+              class="aps-module-skeleton aps-module-skeleton--metrics-table"
             >
-              <template #roi="{ row }">
-                <span class="detail-cell detail-cell--metric">
-                  <span class="detail-metric-value">{{ row.roi }}</span>
-                  <div
-                    class="detail-sparkline"
-                    :class="row.roiTrendUp ? 'is-good' : 'is-bad'"
-                    role="img"
-                    :aria-label="`ROI 趋势 ${row.roi}`"
-                  >
-                    <span
-                      v-for="(h, i) in metricSparklineBars(row, 'roi')"
-                      :key="i"
-                      class="detail-sparkline__bar"
-                      :style="{ height: `${Math.round(h * 20)}px` }"
+              <ElSkeleton animated :rows="metricsTableSkeletonRows" />
+            </div>
+            <div v-show="!metricsTableFetchPending" class="aps-metrics-table-real">
+              <ArtTable
+                :data="paginatedMetrics"
+                :columns="detailColumns"
+                row-key="channel"
+                :stripe="false"
+                :border="false"
+                size="default"
+                :header-cell-style="{
+                  color: 'var(--aps-table-header-text)',
+                  fontSize: '12px',
+                  padding: '6px 0',
+                  borderBottom: '1px solid var(--aps-table-divider-strong)'
+                }"
+                :cell-style="{
+                  background: 'transparent',
+                  color: 'var(--aps-text-secondary)',
+                  fontSize: '12px',
+                  padding: '6px 0',
+                  borderBottom: '1px solid var(--aps-table-divider-weak)'
+                }"
+                :pagination="{
+                  current: currentPage,
+                  size: pageSize,
+                  total: metricsTotal
+                }"
+                :paginationOptions="{ align: 'center', pageSizes: [10, 20, 30], background: false }"
+                @pagination:current-change="onMetricsCurrentChange"
+                @pagination:size-change="onPageSizeChange"
+                @sort-change="onSortChange"
+              >
+                <template #roi="{ row }">
+                  <span class="detail-cell detail-cell--metric">
+                    <span class="detail-metric-value">{{ formatNum2(row.roi) }}</span>
+                    <div
+                      class="detail-sparkline"
+                      :class="row.roiTrendUp ? 'is-good' : 'is-bad'"
+                      role="img"
+                      :aria-label="`ROI 趋势 ${formatNum2(row.roi)}`"
+                    >
+                      <span
+                        v-for="(h, i) in metricSparklineBars(row, 'roi')"
+                        :key="i"
+                        class="detail-sparkline__bar"
+                        :style="{ height: `${Math.round(h * 20)}px` }"
+                      />
+                    </div>
+                  </span>
+                </template>
+                <template #cpi="{ row }">
+                  <span class="detail-cell detail-cell--metric">
+                    <span class="detail-metric-value">{{ formatUsd2(row.cpi) }}</span>
+                    <div
+                      class="detail-sparkline"
+                      :class="!row.cpiTrendUp ? 'is-good' : 'is-bad'"
+                      role="img"
+                      :aria-label="`CPI 趋势 ${formatUsd2(row.cpi)}`"
+                    >
+                      <span
+                        v-for="(h, i) in metricSparklineBars(row, 'cpi')"
+                        :key="i"
+                        class="detail-sparkline__bar"
+                        :style="{ height: `${Math.round(h * 20)}px` }"
+                      />
+                    </div>
+                  </span>
+                </template>
+                <template #userQualityD7="{ row }">
+                  <div class="detail-uq-cell">
+                    <span class="detail-uq-value">{{ formatNum2(row.userQualityD7) }}%</span>
+                    <span class="arrow" :class="row.userQualityD7TrendUp ? 'up' : 'down'">{{
+                      row.userQualityD7TrendUp ? '↑' : '↓'
+                    }}</span>
+                    <ElProgress
+                      :percentage="userQualityProgressPercent(row.userQualityD7)"
+                      :stroke-width="4"
+                      :show-text="false"
+                      :color="userQualityProgressColor(row.userQualityD7TrendUp)"
+                      class="detail-uq-progress"
                     />
                   </div>
-                </span>
-              </template>
-              <template #cpi="{ row }">
-                <span class="detail-cell detail-cell--metric">
-                  <span class="detail-metric-value">${{ row.cpi }}</span>
-                  <div
-                    class="detail-sparkline"
-                    :class="!row.cpiTrendUp ? 'is-good' : 'is-bad'"
-                    role="img"
-                    :aria-label="`CPI 趋势 ${row.cpi}`"
-                  >
-                    <span
-                      v-for="(h, i) in metricSparklineBars(row, 'cpi')"
-                      :key="i"
-                      class="detail-sparkline__bar"
-                      :style="{ height: `${Math.round(h * 20)}px` }"
+                </template>
+                <template #userQualityPay="{ row }">
+                  <div class="detail-uq-cell">
+                    <span class="detail-uq-value">{{ formatNum2(row.userQualityPay) }}%</span>
+                    <span class="arrow" :class="row.userQualityPayTrendUp ? 'up' : 'down'">{{
+                      row.userQualityPayTrendUp ? '↑' : '↓'
+                    }}</span>
+                    <ElProgress
+                      :percentage="userQualityProgressPercent(row.userQualityPay)"
+                      :stroke-width="4"
+                      :show-text="false"
+                      :color="userQualityProgressColor(row.userQualityPayTrendUp)"
+                      class="detail-uq-progress"
                     />
                   </div>
-                </span>
-              </template>
-              <template #userQualityD7="{ row }">
-                <div class="detail-uq-cell">
-                  <span class="detail-uq-value">{{ row.userQualityD7 }}%</span>
-                  <span class="arrow" :class="row.userQualityD7TrendUp ? 'up' : 'down'">{{
-                    row.userQualityD7TrendUp ? '↑' : '↓'
-                  }}</span>
-                  <ElProgress
-                    :percentage="userQualityProgressPercent(row.userQualityD7)"
-                    :stroke-width="4"
-                    :show-text="false"
-                    :color="userQualityProgressColor(row.userQualityD7TrendUp)"
-                    class="detail-uq-progress"
-                  />
-                </div>
-              </template>
-              <template #userQualityPay="{ row }">
-                <div class="detail-uq-cell">
-                  <span class="detail-uq-value">{{ row.userQualityPay }}%</span>
-                  <span class="arrow" :class="row.userQualityPayTrendUp ? 'up' : 'down'">{{
-                    row.userQualityPayTrendUp ? '↑' : '↓'
-                  }}</span>
-                  <ElProgress
-                    :percentage="userQualityProgressPercent(row.userQualityPay)"
-                    :stroke-width="4"
-                    :show-text="false"
-                    :color="userQualityProgressColor(row.userQualityPayTrendUp)"
-                    class="detail-uq-progress"
-                  />
-                </div>
-              </template>
-              <template #status="{ row }">
-                <span class="detail-cell">
-                  <span class="status-dot" :class="row.status"></span>
-                  {{ statusText(row.status) }}
-                </span>
-              </template>
-            </ArtTable>
+                </template>
+                <template #status="{ row }">
+                  <span class="detail-cell">
+                    <span class="status-dot" :class="row.status"></span>
+                    {{ statusText(row.status) }}
+                  </span>
+                </template>
+              </ArtTable>
+            </div>
           </div>
         </div>
       </section>
@@ -309,18 +349,25 @@
   import { getAppNow } from '@/utils/app-now'
   import { ElMessage } from 'element-plus'
   import {
-    MOCK_CHANNEL_KPI_CARDS,
-    MOCK_CHANNEL_ROI_TREND,
-    MOCK_USER_QUALITY_HEATMAP,
-    MOCK_CHANNEL_METRICS,
-    MOCK_TOP_CAMPAIGNS,
+    fetchAdPlatformAnalysisCampaignTop10,
+    fetchAdPlatformAnalysisFiltersMeta,
+    fetchAdPlatformAnalysisKpiCards,
+    fetchAdPlatformAnalysisMetricsTable,
+    fetchAdPlatformAnalysisQualityHeatmap,
+    fetchAdPlatformAnalysisRoiTrend
+  } from '@/api/user-growth'
+  import {
     type ChannelKpiCard,
     type ChannelMetricRow,
+    type ChannelRoiTrend,
     type ChannelStatus,
-    type TopCampaignRow
+    type TopCampaignRow,
+    type UserQualityHeatmapRow
   } from './mock'
 
   defineOptions({ name: 'FinanceScreen' })
+
+  const KPI_SKELETON_CARD_COUNT = 5
 
   // 对齐 Axure 原型画布尺寸（styles.css: body width 1700, base height 1237）
   const designWidth = 1700
@@ -345,7 +392,21 @@
   }
   let timeTimer: ReturnType<typeof setInterval> | null = null
 
-  const channelKpiCards = ref<ChannelKpiCard[]>(MOCK_CHANNEL_KPI_CARDS)
+  const channelKpiCards = ref<ChannelKpiCard[]>([])
+
+  const kpiFetchPending = ref(false)
+
+  /** KPI 行：任意一次拉取中即显示骨架（首屏与筛选刷新一致） */
+  const showKpiRowSkeleton = computed(() => kpiFetchPending.value)
+
+  const roiTrendFetchPending = ref(false)
+  const qualityHeatmapFetchPending = ref(false)
+  const topCampaignsFetchPending = ref(false)
+  /** 首屏 true，避免在首次请求发出前闪空表 */
+  const metricsTableFetchPending = ref(true)
+
+  /** 骨架行数与当前分页条数接近，占位高度贴近真实表格 */
+  const metricsTableSkeletonRows = computed(() => Math.min(14, Math.max(8, pageSize.value + 3)))
 
   /** 有地址但加载失败时回退为占位块 */
   const kpiLogoLoadFailedIds = ref<string[]>([])
@@ -380,9 +441,12 @@
         .toUpperCase()
     )
   }
-  const userQualityHeatmap = ref(MOCK_USER_QUALITY_HEATMAP)
-  const channelMetrics = ref<ChannelMetricRow[]>(MOCK_CHANNEL_METRICS)
-  const topCampaigns = ref<TopCampaignRow[]>(MOCK_TOP_CAMPAIGNS)
+  const roiTrendData = ref<ChannelRoiTrend>({ dates: [], series: [] })
+
+  const userQualityHeatmap = ref<UserQualityHeatmapRow[]>([])
+  const channelMetrics = ref<ChannelMetricRow[]>([])
+  const metricsTotal = ref(0)
+  const topCampaigns = ref<TopCampaignRow[]>([])
 
   type SelectOption<T extends string = string> = { label: string; value: T }
 
@@ -398,18 +462,68 @@
     channel: '全部广告平台'
   } as const
 
-  const appOptions = computed<SelectOption[]>(() => [
-    { label: '全部Apps', value: 'all' },
-    // Mock 数据暂未包含 app 维度，这里先提供示例选项（后端接入时替换为接口返回）
-    { label: 'App A', value: 'app_a' },
-    { label: 'App B', value: 'app_b' }
-  ])
+  const ALL_APP_OPTION: SelectOption = { label: '全部Apps', value: 'all' }
+  const ALL_PLATFORM_OPTION: SelectOption = { label: 'IOS & Android', value: 'all' }
+  const ALL_SOURCE_OPTION: SelectOption = { label: '全部广告平台', value: 'all' }
+
+  /** 接口 /filters/meta 返回的选项（不含「全部」） */
+  const metaAppOptions = ref<SelectOption[]>([])
+  const metaPlatformOptions = ref<SelectOption[]>([])
+  const metaSourceOptions = ref<SelectOption[]>([])
+
+  function normalizeFiltersMetaOptions(
+    list: Api.UserGrowth.AdPlatformFiltersMetaOptionDto[] | null | undefined
+  ): SelectOption[] {
+    if (!Array.isArray(list)) return []
+    const out: SelectOption[] = []
+    const seen = new Set<string>()
+    for (const x of list) {
+      const label = String(x?.label ?? '').trim()
+      const valueRaw = String(x?.value ?? '').trim()
+      if (!label && !valueRaw) continue
+      const value = valueRaw || normalizeChannelKey(label)
+      if (!value || seen.has(value)) continue
+      seen.add(value)
+      out.push({ label: label || valueRaw, value })
+    }
+    return out
+  }
+
+  function ensureFilterSelectionsInMeta() {
+    const appVals = new Set([ALL_APP_OPTION, ...metaAppOptions.value].map((o) => o.value))
+    if (!appVals.has(filters.value.app)) filters.value.app = 'all'
+
+    const platVals = new Set(
+      [ALL_PLATFORM_OPTION, ...metaPlatformOptions.value].map((o) => o.value)
+    )
+    if (!platVals.has(filters.value.platform)) filters.value.platform = 'all'
+
+    const srcVals = new Set([ALL_SOURCE_OPTION, ...metaSourceOptions.value].map((o) => o.value))
+    if (!srcVals.has(filters.value.channelKey)) filters.value.channelKey = 'all'
+  }
+
+  async function loadFiltersMeta() {
+    try {
+      const data = await fetchAdPlatformAnalysisFiltersMeta()
+      metaAppOptions.value = normalizeFiltersMetaOptions(data?.apps)
+      metaPlatformOptions.value = normalizeFiltersMetaOptions(data?.platforms)
+      metaSourceOptions.value = normalizeFiltersMetaOptions(data?.sources)
+      ensureFilterSelectionsInMeta()
+    } catch {
+      metaAppOptions.value = []
+      metaPlatformOptions.value = []
+      metaSourceOptions.value = []
+      filters.value.app = 'all'
+      filters.value.platform = 'all'
+      filters.value.channelKey = 'all'
+    }
+  }
+
+  const appOptions = computed<SelectOption[]>(() => [ALL_APP_OPTION, ...metaAppOptions.value])
 
   const platformOptions = computed<SelectOption[]>(() => [
-    { label: 'IOS & Android', value: 'all' },
-    // Mock 数据暂未包含 platform 维度，这里先提供示例选项（后端接入时替换为接口返回）
-    { label: 'iOS', value: 'ios' },
-    { label: 'Android', value: 'android' }
+    ALL_PLATFORM_OPTION,
+    ...metaPlatformOptions.value
   ])
 
   function normalizeChannelKey(name: string) {
@@ -419,61 +533,300 @@
       .replace(/[^\w]+/g, '')
   }
 
-  const channelOptions = computed<SelectOption[]>(() => {
-    const labels = new Map<string, string>()
-    channelKpiCards.value.forEach((c) => labels.set(normalizeChannelKey(c.name), c.name))
-    userQualityHeatmap.value.forEach((r) => labels.set(normalizeChannelKey(r.channel), r.channel))
-    channelMetrics.value.forEach((r) => labels.set(normalizeChannelKey(r.channel), r.channel))
-    topCampaigns.value.forEach((r) => labels.set(normalizeChannelKey(r.channel), r.channel))
-    MOCK_CHANNEL_ROI_TREND.series.forEach((s) => labels.set(normalizeChannelKey(s.name), s.name))
+  /** 与后端约定：全页模块共用同一请求体；筛选项映射到 appId / platform / source */
+  function buildAdPlatformAnalysisRequestParams(): Api.UserGrowth.AdPlatformAnalysisRequestParams {
+    const f = filters.value
+    const appId = f.app === 'all' ? '' : String(f.app ?? '').trim()
+    const platform =
+      f.platform === 'all'
+        ? ''
+        : String(f.platform ?? '')
+            .trim()
+            .toLowerCase()
+    const ck = f.channelKey
+    const source = ck == null || String(ck).trim() === '' || ck === 'all' ? '' : String(ck).trim()
 
-    const items = Array.from(labels.entries())
-      .map(([key, label]) => ({ label, value: key }))
-      .sort((a, b) => a.label.localeCompare(b.label))
+    return {
+      appId,
+      currentPage: 0,
+      dateEnd: '',
+      dateStart: '',
+      groupBy: '',
+      pageSize: 0,
+      platform,
+      source,
+      userId: ''
+    }
+  }
 
-    return [{ label: '全部广告平台', value: 'all' }, ...items]
-  })
+  function normalizeAdPlatformRoiTrendDto(
+    raw: Api.UserGrowth.AdPlatformRoiTrendDto | null | undefined
+  ): ChannelRoiTrend {
+    const dates = Array.isArray(raw?.dates) ? raw!.dates.map((x) => String(x ?? '')) : []
+    const series = Array.isArray(raw?.series)
+      ? raw!.series.map((s) => ({
+          name: String(s?.name ?? ''),
+          data: Array.isArray(s?.data)
+            ? s!.data
+                .map((v) => (typeof v === 'number' ? v : Number(v)))
+                .filter((n) => Number.isFinite(n))
+            : []
+        }))
+      : []
+    return { dates, series }
+  }
+
+  function cloneRoiTrend(src: ChannelRoiTrend): ChannelRoiTrend {
+    return {
+      dates: [...src.dates],
+      series: src.series.map((s) => ({ name: s.name, data: [...s.data] }))
+    }
+  }
+
+  async function loadRoiTrend() {
+    roiTrendFetchPending.value = true
+    const prev = cloneRoiTrend(roiTrendData.value)
+    try {
+      const data = await fetchAdPlatformAnalysisRoiTrend(buildAdPlatformAnalysisRequestParams())
+      roiTrendData.value = normalizeAdPlatformRoiTrendDto(data)
+    } catch {
+      roiTrendData.value = prev
+    } finally {
+      roiTrendFetchPending.value = false
+      await tryMountRoiTrendChart()
+    }
+  }
+
+  function normalizeQualityHeatmapRow(
+    d: Api.UserGrowth.AdPlatformQualityHeatmapRowDto
+  ): UserQualityHeatmapRow {
+    const channel = String(d?.source ?? '').trim()
+    return {
+      channel: channel || '—',
+      d1Retention: Number(d?.d1Retention ?? 0),
+      d7Retention: Number(d?.d7Retention ?? 0),
+      d30Retention: Number(d?.d30Retention ?? 0),
+      payRate:
+        typeof d?.payRate === 'number' && Number.isFinite(d.payRate)
+          ? d.payRate
+          : Number.parseFloat(String(d?.payRate ?? '')) || 0,
+      arpu:
+        typeof d?.arpu === 'number' && Number.isFinite(d.arpu)
+          ? d.arpu
+          : Number.parseFloat(String(d?.arpu ?? '')) || 0
+    }
+  }
+
+  function normalizeQualityHeatmapList(
+    raw: Api.UserGrowth.AdPlatformQualityHeatmapRowDto[] | null | undefined
+  ): UserQualityHeatmapRow[] {
+    if (!Array.isArray(raw)) return []
+    return raw.map(normalizeQualityHeatmapRow).filter((r) => r.channel !== '—')
+  }
+
+  function cloneQualityHeatmapRows(src: UserQualityHeatmapRow[]): UserQualityHeatmapRow[] {
+    return src.map((r) => ({ ...r }))
+  }
+
+  async function loadQualityHeatmap() {
+    qualityHeatmapFetchPending.value = true
+    const prev = cloneQualityHeatmapRows(userQualityHeatmap.value)
+    try {
+      const list = await fetchAdPlatformAnalysisQualityHeatmap(
+        buildAdPlatformAnalysisRequestParams()
+      )
+      userQualityHeatmap.value = normalizeQualityHeatmapList(list)
+    } catch {
+      userQualityHeatmap.value = prev
+    } finally {
+      qualityHeatmapFetchPending.value = false
+      await tryMountQualityHeatmapChart()
+    }
+  }
+
+  function mapCampaignTop10Dto(d: Api.UserGrowth.AdPlatformCampaignTop10RowDto): TopCampaignRow {
+    const source = String(d?.source ?? '').trim()
+    const cid = String(d?.campaignId ?? '').trim()
+    return {
+      campaignId: cid || undefined,
+      campaign: String(d?.campaignName ?? '').trim() || '—',
+      channel: source || '—',
+      sourceKey: normalizeChannelKey(source || 'x'),
+      cost:
+        typeof d?.cost === 'number' && Number.isFinite(d.cost)
+          ? d.cost
+          : Number.parseFloat(String(d?.cost ?? '')) || 0,
+      cpi:
+        typeof d?.cpi === 'number' && Number.isFinite(d.cpi)
+          ? d.cpi
+          : Number.parseFloat(String(d?.cpi ?? '')) || 0,
+      roi:
+        typeof d?.roi === 'number' && Number.isFinite(d.roi)
+          ? d.roi
+          : Number.parseFloat(String(d?.roi ?? '')) || 0
+    }
+  }
+
+  function normalizeCampaignTop10List(
+    raw: Api.UserGrowth.AdPlatformCampaignTop10RowDto[] | null | undefined
+  ): TopCampaignRow[] {
+    if (!Array.isArray(raw)) return []
+    return raw.map(mapCampaignTop10Dto)
+  }
+
+  async function loadTopCampaigns() {
+    topCampaignsFetchPending.value = true
+    const prev = topCampaigns.value.map((r) => ({ ...r }))
+    try {
+      const list = await fetchAdPlatformAnalysisCampaignTop10(
+        buildAdPlatformAnalysisRequestParams()
+      )
+      topCampaigns.value = normalizeCampaignTop10List(list)
+    } catch {
+      topCampaigns.value = prev
+    } finally {
+      topCampaignsFetchPending.value = false
+    }
+  }
+
+  function mapKpiCardDto(d: Api.UserGrowth.AdPlatformKpiCardDto): ChannelKpiCard {
+    const name = String(d.name ?? '').trim()
+    const rawId = String(d.id ?? '').trim()
+    const id = rawId || normalizeChannelKey(name) || `kpi-${name.slice(0, 8) || 'unknown'}`
+
+    const roiRaw = d.roi
+    const roi =
+      typeof roiRaw === 'number' && Number.isFinite(roiRaw)
+        ? roiRaw
+        : Number.parseFloat(String(roiRaw ?? '').replace(/,/g, '')) || 0
+
+    const roiChRaw = d.roiChange
+    const roiChange =
+      typeof roiChRaw === 'number' && Number.isFinite(roiChRaw)
+        ? roiChRaw
+        : Number.parseFloat(String(roiChRaw ?? '').replace(/,/g, '')) || 0
+
+    const trend = Array.isArray(d.trendData)
+      ? d.trendData.map((v) => Number(v)).filter((n) => Number.isFinite(n))
+      : []
+
+    return {
+      id,
+      name,
+      logo: String(d.logo ?? '').trim() || undefined,
+      roi,
+      roiChange,
+      roiChangeUp: Boolean(d.roiChangeUp),
+      cost: d.cost ?? '',
+      revenue: d.revenue ?? '',
+      cpi: d.cpi ?? '',
+      trendData: trend.length > 0 ? trend : [roi || 0]
+    }
+  }
+
+  async function loadKpiCards() {
+    kpiFetchPending.value = true
+    const prev = [...channelKpiCards.value]
+    try {
+      const list = await fetchAdPlatformAnalysisKpiCards(buildAdPlatformAnalysisRequestParams())
+      const rows = Array.isArray(list) ? list : []
+      channelKpiCards.value = rows.map(mapKpiCardDto)
+      kpiLogoLoadFailedIds.value = []
+    } catch {
+      channelKpiCards.value = prev.length ? prev : []
+    } finally {
+      kpiFetchPending.value = false
+      await nextTick()
+      applyKpiMiniChartsToDom()
+    }
+  }
+
+  /** 页面数值统一两位小数（千分位 en-US） */
+  function formatNum2(value: unknown): string {
+    const n =
+      typeof value === 'number' && Number.isFinite(value)
+        ? value
+        : Number.parseFloat(String(value ?? '').replace(/,/g, ''))
+    if (!Number.isFinite(n)) return '—'
+    return n.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  }
+
+  function formatUsd2(value: unknown): string {
+    const n =
+      typeof value === 'number' && Number.isFinite(value)
+        ? value
+        : Number.parseFloat(String(value ?? '').replace(/,/g, ''))
+    if (!Number.isFinite(n)) return '—'
+    return (
+      '$' +
+      n.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })
+    )
+  }
+
+  function formatKpiRoi(roi: number) {
+    return formatNum2(roi)
+  }
+
+  /** CSS 类名安全后缀（接口 id 可能与历史 mock 选择器不一致，仅影响品牌占位配色） */
+  function kpiCardClassSuffix(card: ChannelKpiCard) {
+    const raw = String(card.id ?? '').trim() || normalizeChannelKey(card.name)
+    const s = raw.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/^-+|-+$/g, '')
+    return s || 'card'
+  }
+
+  const channelOptions = computed<SelectOption[]>(() => [
+    ALL_SOURCE_OPTION,
+    ...metaSourceOptions.value
+  ])
+
+  /**
+   * 前端本地筛选：接口 sources 的 value 可能与 KPI 名称/id 不完全一致，做多路匹配
+   */
+  function matchesAdPlatformSourceFilter(
+    selected: string,
+    displayName: string,
+    entityId?: string
+  ): boolean {
+    if (!selected || selected === 'all') return true
+    const s = String(selected).trim()
+    const name = String(displayName ?? '').trim()
+    const id = String(entityId ?? '').trim()
+    if (id && (id === s || normalizeChannelKey(id) === normalizeChannelKey(s))) return true
+    if (normalizeChannelKey(name) === normalizeChannelKey(s)) return true
+    if (normalizeChannelKey(name) === s) return true
+    return name === s
+  }
 
   const selectedChannelKey = computed(() =>
     filters.value.channelKey && filters.value.channelKey !== '' ? filters.value.channelKey : 'all'
   )
 
   const filteredChannelKpiCards = computed(() => {
-    if (selectedChannelKey.value === 'all') return channelKpiCards.value
-    return channelKpiCards.value.filter(
-      (c) => normalizeChannelKey(c.name) === selectedChannelKey.value
-    )
+    const sel = selectedChannelKey.value
+    if (sel === 'all') return channelKpiCards.value
+    return channelKpiCards.value.filter((c) => matchesAdPlatformSourceFilter(sel, c.name, c.id))
   })
 
   const filteredUserQualityHeatmap = computed(() => {
-    if (selectedChannelKey.value === 'all') return userQualityHeatmap.value
-    return userQualityHeatmap.value.filter(
-      (r) => normalizeChannelKey(r.channel) === selectedChannelKey.value
-    )
-  })
-
-  const filteredChannelMetrics = computed(() => {
-    if (selectedChannelKey.value === 'all') return channelMetrics.value
-    return channelMetrics.value.filter(
-      (r) => normalizeChannelKey(r.channel) === selectedChannelKey.value
-    )
+    const sel = selectedChannelKey.value
+    if (sel === 'all') return userQualityHeatmap.value
+    return userQualityHeatmap.value.filter((r) => matchesAdPlatformSourceFilter(sel, r.channel))
   })
 
   const filteredTopCampaigns = computed(() => {
-    if (selectedChannelKey.value === 'all') return topCampaigns.value
-    return topCampaigns.value.filter(
-      (r) => normalizeChannelKey(r.channel) === selectedChannelKey.value
-    )
+    const sel = selectedChannelKey.value
+    if (sel === 'all') return topCampaigns.value
+    return topCampaigns.value.filter((r) => matchesAdPlatformSourceFilter(sel, r.channel))
   })
 
   function formatTopCurrency(n: number) {
-    return (
-      '$' +
-      n.toLocaleString('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      })
-    )
+    return formatUsd2(n)
   }
 
   function sourceBadgeShort(key: string) {
@@ -500,6 +853,11 @@
 
   function onViewTopCampaign(row: TopCampaignRow) {
     ElMessage.info(`查看广告系列：${row.campaign}（${row.channel}）`)
+  }
+
+  function topCampaignRowKey(row: TopCampaignRow) {
+    if (row.campaignId) return row.campaignId
+    return [row.campaign, row.channel, row.sourceKey, row.cost, row.cpi, row.roi].join('|')
   }
 
   const METRIC_SPARKLINE_LEN = 5
@@ -576,7 +934,7 @@
   }
 
   const sortedChannelMetrics = computed(() => {
-    const list = [...filteredChannelMetrics.value]
+    const list = [...channelMetrics.value]
     const { prop, order } = sortState.value
     if (!prop || !order) return list
 
@@ -595,20 +953,77 @@
   })
 
   const filteredRoiTrend = computed(() => {
-    if (selectedChannelKey.value === 'all') return MOCK_CHANNEL_ROI_TREND
+    const base = roiTrendData.value
+    const sel = selectedChannelKey.value
+    if (sel === 'all') return base
     return {
-      dates: MOCK_CHANNEL_ROI_TREND.dates,
-      series: MOCK_CHANNEL_ROI_TREND.series.filter(
-        (s) => normalizeChannelKey(s.name) === selectedChannelKey.value
-      )
+      dates: base.dates,
+      series: base.series.filter((s) => matchesAdPlatformSourceFilter(sel, s.name))
     }
   })
 
   const currentPage = ref(1)
-  const paginatedMetrics = computed(() => {
-    const start = (currentPage.value - 1) * pageSize.value
-    return sortedChannelMetrics.value.slice(start, start + pageSize.value)
-  })
+  /** 当前页数据由接口返回；排序仅作用于本页 */
+  const paginatedMetrics = computed(() => sortedChannelMetrics.value)
+
+  /** 表格分页：后端 currentPage 为 0 起算，与 ArtTable 的 1 起算对齐 */
+  function buildMetricsTableRequestParams(): Api.UserGrowth.AdPlatformAnalysisRequestParams {
+    return {
+      ...buildAdPlatformAnalysisRequestParams(),
+      currentPage: Math.max(0, currentPage.value - 1),
+      pageSize: pageSize.value
+    }
+  }
+
+  function parseMetricNum(v: unknown): number {
+    if (typeof v === 'number' && Number.isFinite(v)) return v
+    const n = Number.parseFloat(String(v ?? ''))
+    return Number.isFinite(n) ? n : 0
+  }
+
+  function mapMetricsTableRowDto(d: Api.UserGrowth.AdPlatformMetricsTableRowDto): ChannelMetricRow {
+    const st = String(d?.status ?? '').toLowerCase()
+    const status: ChannelStatus =
+      st === 'excellent' || st === 'average' || st === 'poor' ? st : 'average'
+    return {
+      channel: String(d?.source ?? '').trim() || '—',
+      cost: String(d?.cost ?? ''),
+      revenue: String(d?.revenue ?? ''),
+      roi: parseMetricNum(d?.roi),
+      roiTrendUp: Boolean(d?.roiTrendUp),
+      roas: parseMetricNum(d?.roas),
+      cpi: parseMetricNum(d?.cpi),
+      cpiTrendUp: Boolean(d?.cpiTrendUp),
+      installs: String(d?.installs ?? ''),
+      userQualityD7: parseMetricNum(d?.userQualityD7),
+      userQualityD7TrendUp: Boolean(d?.userQualityD7TrendUp),
+      userQualityPay: parseMetricNum(d?.userQualityPay),
+      userQualityPayTrendUp: Boolean(d?.userQualityPayTrendUp),
+      ltv7: parseMetricNum(d?.ltv7),
+      ltv30: parseMetricNum(d?.ltv30),
+      status
+    }
+  }
+
+  async function loadMetricsTable() {
+    metricsTableFetchPending.value = true
+    const prevRows = channelMetrics.value.map((r) => ({ ...r }))
+    const prevTotal = metricsTotal.value
+    try {
+      const res = await fetchAdPlatformAnalysisMetricsTable(buildMetricsTableRequestParams())
+      const rows = Array.isArray(res?.rows) ? res!.rows : []
+      channelMetrics.value = rows.map(mapMetricsTableRowDto)
+      metricsTotal.value =
+        typeof res?.total === 'number' && Number.isFinite(res.total)
+          ? Math.max(0, Math.floor(res.total))
+          : 0
+    } catch {
+      channelMetrics.value = prevRows
+      metricsTotal.value = prevTotal
+    } finally {
+      metricsTableFetchPending.value = false
+    }
+  }
 
   const detailColumns = computed((): ColumnOption<ChannelMetricRow>[] => {
     return [
@@ -616,7 +1031,13 @@
       { label: '花费', prop: 'cost', minWidth: 90, sortable: 'custom' },
       { label: '收入', prop: 'revenue', minWidth: 90, sortable: 'custom' },
       { label: 'ROI', prop: 'roi', minWidth: 90, useSlot: true, sortable: 'custom' },
-      { label: 'ROAS', prop: 'roas', minWidth: 80, sortable: 'custom' },
+      {
+        label: 'ROAS',
+        prop: 'roas',
+        minWidth: 80,
+        sortable: 'custom',
+        formatter: (row: ChannelMetricRow) => formatNum2(row.roas)
+      },
       { label: 'CPI', prop: 'cpi', minWidth: 90, useSlot: true, sortable: 'custom' },
       { label: '安装量', prop: 'installs', minWidth: 80, sortable: 'custom' },
       {
@@ -638,14 +1059,14 @@
         prop: 'ltv7',
         minWidth: 90,
         sortable: 'custom',
-        formatter: (row: ChannelMetricRow) => `$${row.ltv7.toFixed(2)}`
+        formatter: (row: ChannelMetricRow) => formatUsd2(row.ltv7)
       },
       {
         label: 'LTV_30',
         prop: 'ltv30',
         minWidth: 90,
         sortable: 'custom',
-        formatter: (row: ChannelMetricRow) => `$${row.ltv30.toFixed(2)}`
+        formatter: (row: ChannelMetricRow) => formatUsd2(row.ltv30)
       },
       {
         label: '状态/Status',
@@ -660,6 +1081,12 @@
   function onPageSizeChange(size: number) {
     pageSize.value = size
     currentPage.value = 1
+    void loadMetricsTable()
+  }
+
+  function onMetricsCurrentChange(p: number) {
+    currentPage.value = p
+    void loadMetricsTable()
   }
 
   function onSortChange(payload: { column: any; prop: string; order: SortOrder }) {
@@ -667,7 +1094,6 @@
       prop: (payload.prop as keyof ChannelMetricRow) || null,
       order: payload.order ?? null
     }
-    currentPage.value = 1
   }
 
   function statusText(s: ChannelStatus) {
@@ -717,11 +1143,11 @@
 
   function buildQualityHeatmapOption(): EChartsOption {
     const metrics: { key: HeatmapMetric; label: string; format: (v: number) => string }[] = [
-      { key: 'd1', label: 'D1留存', format: (v) => `${v}%` },
-      { key: 'd7', label: 'D7留存', format: (v) => `${v}%` },
-      { key: 'd30', label: 'D30留存', format: (v) => `${v}%` },
-      { key: 'pay', label: '付费率', format: (v) => `${v}%` },
-      { key: 'arpu', label: 'ARPU', format: (v) => `$${v.toFixed(2)}` }
+      { key: 'd1', label: 'D1留存', format: (v) => `${formatNum2(v)}%` },
+      { key: 'd7', label: 'D7留存', format: (v) => `${formatNum2(v)}%` },
+      { key: 'd30', label: 'D30留存', format: (v) => `${formatNum2(v)}%` },
+      { key: 'pay', label: '付费率', format: (v) => `${formatNum2(v)}%` },
+      { key: 'arpu', label: 'ARPU', format: (v) => formatUsd2(v) }
     ]
 
     const channels = filteredUserQualityHeatmap.value.map((r) => r.channel)
@@ -883,13 +1309,45 @@
   // KPI 卡片迷你趋势图（必须在 setup 同步创建，避免 useChart 生命周期警告）
   // 注意：不要放进 reactive/ref 对象里，否则内部 chartRef 会被 Vue 解包导致 .value 赋值报错
   const kpiMiniCharts = new Map<string, ReturnType<typeof useChart>>()
-  channelKpiCards.value.forEach((card) => kpiMiniCharts.set(card.id, useChart()))
+
+  function syncKpiMiniChartInstances(cards: ChannelKpiCard[]) {
+    const nextIds = new Set(cards.map((c) => c.id))
+    for (const [id, chart] of kpiMiniCharts.entries()) {
+      if (!nextIds.has(id)) {
+        chart.destroyChart?.()
+        kpiMiniCharts.delete(id)
+      }
+    }
+    cards.forEach((card) => {
+      if (!kpiMiniCharts.has(card.id)) {
+        kpiMiniCharts.set(card.id, useChart())
+      }
+    })
+  }
+
+  function applyKpiMiniChartsToDom() {
+    syncKpiMiniChartInstances(channelKpiCards.value)
+    filteredChannelKpiCards.value.forEach((card) => {
+      const el = cardChartRefs.value[card.id]
+      const chart = kpiMiniCharts.get(card.id)
+      if (!el || !chart) return
+      chart.chartRef!.value = el
+      const td = card.trendData?.length ? card.trendData : [0]
+      const opt = buildMiniTrendOption(td)
+      if (chart.isChartInitialized()) {
+        chart.updateChart(opt)
+      } else {
+        chart.initChart(opt)
+      }
+    })
+  }
 
   function buildMiniTrendOption(data: number[]): EChartsOption {
+    const seriesData = data.length > 0 ? data : [0]
     const theme = getChartTheme()
     return {
       grid: { left: 2, right: 2, top: 2, bottom: 2 },
-      xAxis: { type: 'category', data: data.map((_, i) => i), show: false },
+      xAxis: { type: 'category', data: seriesData.map((_, i) => i), show: false },
       yAxis: {
         type: 'value',
         show: false,
@@ -900,7 +1358,7 @@
       series: [
         {
           type: 'line',
-          data,
+          data: seriesData,
           smooth: true,
           symbol: 'none',
           lineStyle: { color: theme.color1, width: 1.5 },
@@ -953,7 +1411,38 @@
     }
 
     return {
-      tooltip: { trigger: 'axis' },
+      tooltip: {
+        trigger: 'axis',
+        formatter(params: unknown) {
+          const list = Array.isArray(params) ? params : [params]
+          if (!list.length) return ''
+          const first = list[0] as {
+            axisValueLabel?: string
+            axisValue?: string
+            marker?: string
+            seriesName?: string
+            value?: unknown
+          }
+          const header = String(first.axisValueLabel ?? first.axisValue ?? '')
+          const lines = list.map((p) => {
+            const item = p as {
+              marker?: string
+              seriesName?: string
+              value?: unknown
+            }
+            const raw = item.value
+            const num =
+              Array.isArray(raw) && raw.length
+                ? Number(raw[raw.length - 1])
+                : typeof raw === 'number'
+                  ? raw
+                  : Number(raw)
+            const val = Number.isFinite(num) ? formatNum2(num) : '—'
+            return `${item.marker ?? ''}${item.seriesName ?? ''}: ${val}`
+          })
+          return [header, ...lines].filter(Boolean).join('<br/>')
+        }
+      },
       legend: { show: false },
       grid: { left: 50, right: 24, top: 24, bottom: 36 },
       xAxis: {
@@ -965,10 +1454,14 @@
       yAxis: {
         type: 'value',
         min: 0,
-        max: 2,
+        scale: true,
         axisLine: { show: false },
         splitLine: { lineStyle: { color: theme.split } },
-        axisLabel: { color: theme.axis, fontSize: 11 }
+        axisLabel: {
+          color: theme.axis,
+          fontSize: 11,
+          formatter: (value: string | number) => formatNum2(value)
+        }
       },
       series: d.series.map((s, i) => ({
         type: 'line',
@@ -991,6 +1484,28 @@
 
   let resizeObserver: ResizeObserver | null = null
 
+  async function tryMountRoiTrendChart() {
+    await nextTick()
+    if (!roiTrendRef.value) return
+    chartRoiTrend.chartRef!.value = roiTrendRef.value
+    if (chartRoiTrend.isChartInitialized()) {
+      chartRoiTrend.updateChart(buildRoiTrendOption())
+    } else {
+      chartRoiTrend.initChart(buildRoiTrendOption())
+    }
+  }
+
+  async function tryMountQualityHeatmapChart() {
+    await nextTick()
+    if (!qualityHeatmapRef.value) return
+    chartQualityHeatmap.chartRef!.value = qualityHeatmapRef.value
+    if (chartQualityHeatmap.isChartInitialized()) {
+      chartQualityHeatmap.updateChart(buildQualityHeatmapOption())
+    } else {
+      chartQualityHeatmap.initChart(buildQualityHeatmapOption())
+    }
+  }
+
   onMounted(() => {
     updateScale()
     updateTime()
@@ -1001,49 +1516,26 @@
     }
     window.addEventListener('resize', updateScale)
 
-    nextTick(() => {
-      // 每个 KPI 卡片的迷你趋势图
-      filteredChannelKpiCards.value.forEach((card) => {
-        const el = cardChartRefs.value[card.id]
-        if (el) {
-          const chart = kpiMiniCharts.get(card.id)
-          if (!chart) return
-          chart.chartRef!.value = el
-          chart.initChart(buildMiniTrendOption(card.trendData))
-        }
-      })
-      if (roiTrendRef.value) {
-        chartRoiTrend.chartRef!.value = roiTrendRef.value
-        chartRoiTrend.initChart(buildRoiTrendOption())
-      }
-      if (qualityHeatmapRef.value) {
-        chartQualityHeatmap.chartRef!.value = qualityHeatmapRef.value
-        chartQualityHeatmap.initChart(buildQualityHeatmapOption())
-      }
-    })
+    void (async () => {
+      await loadFiltersMeta()
+      void loadKpiCards()
+      void loadRoiTrend()
+      void loadQualityHeatmap()
+      void loadTopCampaigns()
+      void loadMetricsTable()
+    })()
   })
 
-  // 筛选变化：重置分页 + 更新图表（KPI mini / ROI 趋势 / 热力图）
   watch(
-    () => [filters.value.app, filters.value.platform, selectedChannelKey.value],
-    async () => {
+    () => [filters.value.app, filters.value.platform, filters.value.channelKey],
+    () => {
       currentPage.value = 1
-      await nextTick()
-
-      // KPI mini charts 仅更新当前可见卡片
-      filteredChannelKpiCards.value.forEach((card) => {
-        const el = cardChartRefs.value[card.id]
-        const chart = kpiMiniCharts.get(card.id)
-        if (el && chart) {
-          chart.chartRef!.value = el
-          chart.updateChart(buildMiniTrendOption(card.trendData))
-        }
-      })
-
-      chartRoiTrend.updateChart(buildRoiTrendOption())
-      chartQualityHeatmap.updateChart(buildQualityHeatmapOption())
-    },
-    { deep: false }
+      void loadKpiCards()
+      void loadRoiTrend()
+      void loadQualityHeatmap()
+      void loadTopCampaigns()
+      void loadMetricsTable()
+    }
   )
 
   onUnmounted(() => {
@@ -1275,6 +1767,63 @@
     /* 原型为固定画布，内部用绝对定位的“边距感” */
     padding: 0;
     background: $color-bg;
+  }
+
+  /* 第二排各面板内骨架（与 ROI / 热力图 / Top10 请求一一对应） */
+  .panel-chart-host {
+    position: relative;
+    min-height: 260px;
+  }
+
+  .aps-module-skeleton {
+    box-sizing: border-box;
+    padding: 8px 10px 0;
+
+    :deep(.el-skeleton) {
+      width: 100%;
+    }
+  }
+
+  .aps-module-skeleton--chart {
+    min-height: 260px;
+  }
+
+  .aps-module-skeleton--top10 {
+    min-height: 240px;
+  }
+
+  /* 与 .panel-table .table-wrap 同高，加载中骨架与成品占位一致，减少跳动 */
+  .aps-metrics-table-host {
+    position: relative;
+  }
+
+  .aps-module-skeleton--metrics-table {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100%;
+    padding: 6px 0 0;
+
+    :deep(.el-skeleton) {
+      flex: 1;
+      width: 100%;
+    }
+  }
+
+  .aps-metrics-table-real {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .kpi-card--skeleton {
+    @include data-card-base;
+
+    min-height: 200px;
+    border-radius: 12px;
+
+    :deep(.el-skeleton) {
+      width: 100%;
+    }
   }
 
   /* ========== 顶栏 ========== */

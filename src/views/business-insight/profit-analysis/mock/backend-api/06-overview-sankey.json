@@ -1,51 +1,50 @@
 {
-  "_comment": "利润分析 - 利润构成桑基图（节点与连线）。对应 types.ts: ProfitSankeyNode[], ProfitSankeyLink[]。",
+  "_comment": "利润分析 - 利润构成桑基图。对应 types：ProfitSankeyDto（nodes + links）。",
   "fieldDescription": {
     "request": {
-      "dateRange": { "type": "string", "required": true, "description": "日期范围。" },
-      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
-      "s_country_code": {
+      "dateRange": {
+        "type": "string",
+        "required": true,
+        "description": "日期范围，如 2026-03-01,2026-03-05。"
+      },
+      "currentPage": { "type": "integer", "required": false, "description": "分页。" },
+      "pageSize": { "type": "integer", "required": false, "description": "分页。" },
+      "platform": {
         "type": "string",
         "required": false,
-        "description": "国家代码，全部传 all。"
+        "description": "终端平台 all/android/ios。"
       },
-      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+      "sAppId": { "type": "string", "required": false, "description": "应用 ID，全部 all。" },
+      "sCountryCode": { "type": "string", "required": false, "description": "国家代码，全部 all。" }
     },
     "response": {
-      "nodes": {
-        "type": "ProfitSankeyNode[]",
+      "data": {
+        "type": "ProfitSankeyDto",
         "required": true,
-        "description": "桑基图节点，name 可含换行与金额展示。"
-      },
-      "links": {
-        "type": "ProfitSankeyLink[]",
-        "required": true,
-        "description": "连线，source/target 与 nodes[].name 一致，value 为数值。"
+        "description": "网关 data 内结构；前端 http 解包后为 nodes + links。"
       }
     },
-    "ProfitSankeyNode": {
-      "name": {
-        "type": "string",
-        "required": true,
-        "description": "节点名称，如 广告收入(IAA)\\n$98,240。"
-      },
-      "itemStyle": {
-        "type": "object",
-        "required": false,
-        "description": "节点样式，如 { color: '#38bdf8' }。"
-      }
+    "ProfitSankeyDto": {
+      "nodes": { "type": "ProfitSankeyNodeDto[]", "required": true, "description": "节点列表。" },
+      "links": { "type": "ProfitSankeyLinkDto[]", "required": true, "description": "连线列表。" }
     },
-    "ProfitSankeyLink": {
+    "ProfitSankeyNodeDto": {
+      "name": { "type": "string", "required": true, "description": "节点名称。" },
+      "itemStyle": { "type": "object", "required": false, "description": "如 { color }。" }
+    },
+    "ProfitSankeyLinkDto": {
       "source": { "type": "string", "required": true, "description": "源节点 name。" },
       "target": { "type": "string", "required": true, "description": "目标节点 name。" },
-      "value": { "type": "number", "required": true, "description": "流量/金额数值。" }
+      "value": { "type": "number", "required": true, "description": "流量数值。" }
     }
   },
   "sampleRequest": {
+    "currentPage": 0,
     "dateRange": "2026-03-01,2026-03-05",
-    "s_app_id": "all",
-    "s_country_code": "all",
-    "platform": "all"
+    "pageSize": 0,
+    "platform": "all",
+    "sAppId": "all",
+    "sCountryCode": "all"
   },
   "sampleResponse": {
     "nodes": [
@@ -63,10 +62,10 @@
     ]
   },
   "api": {
-    "url": "POST /api/business-insight/profit-analysis/overview/sankey",
+    "url": "POST /api/v1/datacenter/analysis/business-insight/profit-analysis/overview/sankey",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "dateRange, s_app_id?, s_country_code?, platform",
-    "responseBody": "nodes (ProfitSankeyNode[]), links (ProfitSankeyLink[])"
+    "requestBody": "扁平 ProfitAnalysisQueryParams（无 fo 包裹）",
+    "responseBody": "ProfitSankeyDto（nodes[], links[]）"
   }
 }

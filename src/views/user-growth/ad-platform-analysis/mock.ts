@@ -190,6 +190,8 @@ export interface ChannelMetricRow {
 
 /** Top10 广告系列（大屏第二排右侧） */
 export interface TopCampaignRow {
+  /** 广告系列 ID（接口 campaignId，可选） */
+  campaignId?: string
   /** 广告系列名称（展示，对应业务概念 campaign） */
   campaign: string
   /** 广告平台展示名（用于筛选联动，与热力图等平台名一致） */

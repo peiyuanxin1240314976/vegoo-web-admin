@@ -1,0 +1,88 @@
+{
+  "_comment": "实时数据 - 筛选栏元数据（应用、广告平台）。页面 filter-bar。无单独 types 文件时可引用本契约字段在 api 层定义。",
+  "fieldDescription": {
+    "request": {
+      "t_date": {
+        "type": "string",
+        "required": false,
+        "description": "业务日（可选），格式建议 YYYY-MM-DD；不传则默认服务端「今日」。"
+      }
+    },
+    "response": {
+      "appOptions": {
+        "type": "RealtimeFilterAppOption[]",
+        "required": true,
+        "description": "应用筛选项；value 为 s_app_id 或 all。"
+      },
+      "sourceOptions": {
+        "type": "RealtimeFilterSourceOption[]",
+        "required": true,
+        "description": "广告平台筛选项（UI 文案用「广告平台」）；value 为 n_source 或 all。"
+      }
+    },
+    "RealtimeFilterAppOption": {
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "选项值：`all` 或 `s_app_id`。"
+      },
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "展示名称。"
+      },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "description": "当 value 非 all 时与 value 一致；便于前端直接绑定数据字典字段。"
+      }
+    },
+    "RealtimeFilterSourceOption": {
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "选项值：`all` 或数字字符串形式的 n_source（如 \"1\"）。"
+      },
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台展示名（如 Google、Meta）。"
+      },
+      "n_source": {
+        "type": "number",
+        "required": false,
+        "description": "广告平台枚举：1-Google, 2-Facebook, 3-Unity, 4-AppLovin, 5-IronSource, 6-AdColony, 7-Pangle；all 时不填。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_date": "2026-03-21"
+  },
+  "sampleResponse": {
+    "appOptions": [
+      { "value": "all", "label": "全部应用" },
+      { "value": "weather5", "label": "Weather5", "s_app_id": "weather5" },
+      { "value": "phonetracker", "label": "PhoneTracker", "s_app_id": "phonetracker" },
+      { "value": "bloodsugar2", "label": "BloodSugar2", "s_app_id": "bloodsugar2" }
+    ],
+    "sourceOptions": [
+      { "value": "all", "label": "全部广告平台" },
+      { "value": "1", "label": "Google", "n_source": 1 },
+      { "value": "2", "label": "Meta", "n_source": 2 },
+      { "value": "7", "label": "Pangle", "n_source": 7 }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/real-time-data/meta-filter-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_date?",
+    "responseBody": "appOptions, sourceOptions"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "与列表接口共用同一套 s_app_id / n_source 语义，避免「全部」与具体 ID 混用不同枚举。",
+      "若网关统一包裹业务体，请在 README 中注明外层字段名（如 data）。"
+    ]
+  }
+}

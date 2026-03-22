@@ -1,27 +1,37 @@
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+  import 'flag-icons/css/flag-icons.min.css'
+  import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import * as echarts from 'echarts'
-  import {
-    MOCK_FILTER_META,
-    MOCK_KPI_CARDS,
-    MOCK_APP_ROWS,
-    MOCK_APP_TOTAL,
-    MOCK_COUNTRY_ROWS,
-    MOCK_MAP_DATA,
-    MOCK_MAP_SCATTER,
-    MOCK_TREND_30D,
-    MOCK_SANKEY_NODES,
-    MOCK_SANKEY_LINKS
-  } from './mock/data'
+  import type { ProfitMapDataItem } from './types'
+  import { useProfitAnalysisDashboard } from './composables/useProfitAnalysisDashboard'
 
-  // ─── 页面数据（来自 mock，接口就绪后可切换为请求）────────────────
-  const filterMeta = MOCK_FILTER_META
-  const kpiCards = MOCK_KPI_CARDS
-  const appRows = MOCK_APP_ROWS
-  const appTotal = MOCK_APP_TOTAL
-  const countryRows = MOCK_COUNTRY_ROWS
+  defineOptions({ name: 'BusinessInsight' })
 
-  // ─── 图表 refs ────────────────────────────────────────────────
+  const {
+    query,
+    filterOptions,
+    pendingMeta,
+    dateRangePicker,
+    dateShortcuts,
+    kpiCards,
+    appRows,
+    appTotal,
+    mapData,
+    mapScatter,
+    countryRows,
+    trend30d,
+    sankeyNodes,
+    sankeyLinks,
+    pendingKpi,
+    pendingApp,
+    pendingCountry,
+    pendingTrend,
+    pendingSankey,
+    loadFilterMeta,
+    loadDashboard,
+    reloadDashboard
+  } = useProfitAnalysisDashboard()
+
   const mapRef = ref<HTMLElement | null>(null)
   const trendRef = ref<HTMLElement | null>(null)
   const sankeyRef = ref<HTMLElement | null>(null)
@@ -29,16 +39,37 @@
   let mapChart: echarts.ECharts | null = null
   let trendChart: echarts.ECharts | null = null
   let sankeyChart: echarts.ECharts | null = null
+  let mapGeoReady = false
 
-  // ─── 世界地图 ─────────────────────────────────────────────────
-  async function initMap() {
-    if (!mapRef.value) return
+  function fiCountryClass(code: string | undefined) {
+    if (!code?.trim()) return ''
+    const c = code.trim().toUpperCase()
+    const alias: Record<string, string> = { UK: 'gb' }
+    const iso = (alias[c] || c).toLowerCase()
+    if (!/^[a-z]{2}$/.test(iso)) return ''
+    return `fi fi-${iso}`
+  }
+
+  function isFlagImgUrl(flag: string | undefined) {
+    if (!flag?.trim()) return false
+    return /^https?:\/\//i.test(flag.trim())
+  }
+
+  async function ensureWorldGeo() {
+    if (mapGeoReady) return
     const res = await fetch('/geo/world.json')
     const geoJson = await res.json()
     echarts.registerMap('world', geoJson)
+    mapGeoReady = true
+  }
 
-    mapChart = echarts.init(mapRef.value, 'dark', { renderer: 'canvas' })
-
+  async function syncMapChart() {
+    if (!mapRef.value) return
+    await ensureWorldGeo()
+    if (!mapChart) {
+      mapChart = echarts.init(mapRef.value, 'dark', { renderer: 'canvas' })
+    }
+    const maxVal = Math.max(1, ...mapData.value.map((d: ProfitMapDataItem) => d.value))
     mapChart.setOption({
       backgroundColor: 'transparent',
       geo: {
@@ -60,7 +91,7 @@
           type: 'map',
           map: 'world',
           geoIndex: 0,
-          data: MOCK_MAP_DATA,
+          data: mapData.value,
           silent: false
         },
         {
@@ -69,10 +100,10 @@
           rippleEffect: { brushType: 'stroke', scale: 3, period: 3 },
           symbolSize: 8,
           itemStyle: { color: '#4ade80' },
-          data: MOCK_MAP_SCATTER,
+          data: mapScatter.value.filter((p) => Array.isArray(p.value) && p.value.length >= 3),
           label: {
             show: true,
-            formatter: (p: any) => p.name,
+            formatter: (p: { name?: string }) => p.name ?? '',
             position: 'right',
             color: '#e2e8f0',
             fontSize: 11,
@@ -82,7 +113,7 @@
       ],
       visualMap: {
         min: 0,
-        max: 30000,
+        max: maxVal,
         show: false,
         inRange: {
           color: ['#1a2744', '#1e4080', '#1d6fa4', '#22c55e']
@@ -91,12 +122,19 @@
     })
   }
 
-  // ─── 利润趋势折线图 ────────────────────────────────────────────
-  function initTrend() {
+  function syncTrendChart() {
     if (!trendRef.value) return
-    trendChart = echarts.init(trendRef.value, 'dark', { renderer: 'canvas' })
-
-    const { days, revenue, adSpend, profit } = MOCK_TREND_30D
+    const { days, revenue, adSpend, profit } = trend30d.value
+    if (!trendChart) {
+      trendChart = echarts.init(trendRef.value, 'dark', { renderer: 'canvas' })
+    }
+    const numericMax = Math.max(
+      1,
+      ...revenue,
+      ...adSpend,
+      ...profit.map((n: number) => Math.abs(n))
+    )
+    const yMax = Math.ceil(numericMax * 1.12)
 
     trendChart.setOption({
       backgroundColor: 'transparent',
@@ -115,7 +153,7 @@
       },
       xAxis: {
         type: 'category',
-        data: days as string[],
+        data: days,
         axisLine: { lineStyle: { color: '#1e3a5f' } },
         axisTick: { show: false },
         axisLabel: { color: '#475569', fontSize: 10, interval: 1 }
@@ -123,7 +161,7 @@
       yAxis: {
         type: 'value',
         min: 0,
-        max: 5000,
+        max: yMax,
         splitLine: { lineStyle: { color: '#1e3a5f', type: 'dashed' } },
         axisLabel: { color: '#475569', fontSize: 10 }
       },
@@ -174,11 +212,15 @@
     })
   }
 
-  // ─── 桑基图（利润构成）────────────────────────────────────────
-  function initSankey() {
+  function syncSankeyChart() {
     if (!sankeyRef.value) return
-    sankeyChart = echarts.init(sankeyRef.value, 'dark', { renderer: 'canvas' })
-
+    if (!sankeyNodes.value.length || !sankeyLinks.value.length) {
+      if (sankeyChart) sankeyChart.clear()
+      return
+    }
+    if (!sankeyChart) {
+      sankeyChart = echarts.init(sankeyRef.value, 'dark', { renderer: 'canvas' })
+    }
     sankeyChart.setOption({
       backgroundColor: 'transparent',
       series: [
@@ -192,12 +234,12 @@
           right: '8%',
           top: '8%',
           bottom: '8%',
-          data: MOCK_SANKEY_NODES,
-          links: MOCK_SANKEY_LINKS,
+          data: sankeyNodes.value,
+          links: sankeyLinks.value,
           label: {
             color: '#e2e8f0',
             fontSize: 11,
-            formatter: (p: any) => p.name
+            formatter: (p: { name?: string }) => p.name ?? ''
           },
           lineStyle: {
             color: 'gradient',
@@ -215,33 +257,70 @@
     })
   }
 
-  // ─── 趋势迷你 sparkline ───────────────────────────────────────
-  function getTrendPath(type: 'up' | 'down' | 'flat' | 'none'): string {
+  type SparkTrend = 'up' | 'down' | 'flat' | 'none'
+
+  function normalizeAppTrend(raw: string | undefined): SparkTrend {
+    const v = (raw ?? '').trim().toLowerCase()
+    if (v === 'up' || v === 'down' || v === 'flat' || v === 'none') return v
+    return 'none'
+  }
+
+  function getTrendPath(raw: string | undefined): string {
+    const type = normalizeAppTrend(raw)
     if (type === 'none') return ''
     if (type === 'flat') return 'M0,10 C10,10 20,10 30,10 C40,10 50,10 60,10'
     if (type === 'up') return 'M0,18 C10,16 20,12 30,9 C40,6 50,4 60,2'
     return 'M0,2 C10,4 20,6 30,9 C40,12 50,16 60,18'
   }
-  function getTrendColor(type: 'up' | 'down' | 'flat' | 'none'): string {
+
+  function getTrendColor(raw: string | undefined): string {
+    const type = normalizeAppTrend(raw)
     if (type === 'up') return '#4ade80'
     if (type === 'down') return '#f87171'
     if (type === 'flat') return '#facc15'
     return '#475569'
   }
 
-  // ─── resize ───────────────────────────────────────────────────
   function handleResize() {
     mapChart?.resize()
     trendChart?.resize()
     sankeyChart?.resize()
   }
 
+  watch(
+    () => [pendingCountry.value, mapData.value, mapScatter.value],
+    async () => {
+      if (pendingCountry.value) return
+      await nextTick()
+      await syncMapChart()
+    },
+    { deep: true, flush: 'post' }
+  )
+
+  watch(
+    () => [pendingTrend.value, trend30d.value],
+    async () => {
+      if (pendingTrend.value) return
+      await nextTick()
+      syncTrendChart()
+    },
+    { deep: true, flush: 'post' }
+  )
+
+  watch(
+    () => [pendingSankey.value, sankeyNodes.value, sankeyLinks.value],
+    async () => {
+      if (pendingSankey.value) return
+      await nextTick()
+      syncSankeyChart()
+    },
+    { deep: true, flush: 'post' }
+  )
+
   onMounted(async () => {
-    await nextTick()
-    await initMap()
-    initTrend()
-    initSankey()
     window.addEventListener('resize', handleResize)
+    await loadFilterMeta()
+    await loadDashboard()
   })
 
   onUnmounted(() => {
@@ -249,163 +328,310 @@
     mapChart?.dispose()
     trendChart?.dispose()
     sankeyChart?.dispose()
+    mapChart = null
+    trendChart = null
+    sankeyChart = null
   })
 </script>
 
 <template>
   <div class="bi-root">
-    <!-- ─── Header ─────────────────────────────── -->
     <header class="bi-header">
       <div class="bi-breadcrumb">
-        <span class="bi-brand">商业洞察</span>
+        <span class="bi-brand">{{ $t('menus.businessInsight.title') }}</span>
         <span class="bi-sep">›</span>
-        <span class="bi-page">利用+国家)</span>
+        <span class="bi-page">{{ $t('menus.businessInsight.profitAnalysis') }}</span>
       </div>
       <div class="bi-filters">
-        <div class="filter-btn">
-          <span class="filter-icon">📅</span>
-          <span class="filter-label">日期范围：</span>
-          <span class="filter-val">{{ filterMeta.dateRange }}</span>
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">{{
+            $t('menus.businessInsight.profitAnalysisFilters.dateRange')
+          }}</span>
+          <ElDatePicker
+            v-model="dateRangePicker"
+            type="daterange"
+            unlink-panels
+            range-separator="～"
+            :start-placeholder="$t('menus.businessInsight.profitAnalysisFilters.startDate')"
+            :end-placeholder="$t('menus.businessInsight.profitAnalysisFilters.endDate')"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
+            :shortcuts="dateShortcuts"
+            :clearable="false"
+            :disabled="pendingMeta"
+            class="bi-filter-date"
+            @change="reloadDashboard"
+          />
         </div>
-        <div class="filter-btn">
-          <span class="filter-icon">⊞</span>
-          <span class="filter-label">应用：</span>
-          <span class="filter-val">{{ filterMeta.appLabel }}</span>
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">{{
+            $t('menus.businessInsight.profitAnalysisFilters.app')
+          }}</span>
+          <ElSelect
+            v-model="query.sAppId"
+            class="bi-filter-select"
+            :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
+            :disabled="pendingMeta"
+            filterable
+            @change="reloadDashboard"
+          >
+            <ElOption
+              v-for="opt in filterOptions.appOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
         </div>
-        <div class="filter-btn">
-          <span class="filter-icon">🌐</span>
-          <span class="filter-label">国家：</span>
-          <span class="filter-val">{{ filterMeta.countryLabel }}</span>
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">{{
+            $t('menus.businessInsight.profitAnalysisFilters.country')
+          }}</span>
+          <ElSelect
+            v-model="query.sCountryCode"
+            class="bi-filter-select"
+            :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
+            :disabled="pendingMeta"
+            filterable
+            @change="reloadDashboard"
+          >
+            <ElOption
+              v-for="opt in filterOptions.countryOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
+        </div>
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">{{
+            $t('menus.businessInsight.profitAnalysisFilters.platform')
+          }}</span>
+          <ElSelect
+            v-model="query.platform"
+            class="bi-filter-select bi-filter-select--platform"
+            :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
+            :disabled="pendingMeta"
+            @change="reloadDashboard"
+          >
+            <ElOption
+              v-for="opt in filterOptions.platformOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
         </div>
       </div>
     </header>
 
-    <!-- ─── KPI Row ────────────────────────────── -->
     <section class="bi-kpi-row">
-      <div
-        v-for="card in kpiCards"
-        :key="card.label"
-        class="kpi-card"
-        :style="{ background: card.bg, '--card-border': card.border }"
-      >
-        <div class="kpi-top">
-          <span class="kpi-label">{{ card.label }}</span>
-          <span
-            v-if="card.badge"
-            class="kpi-badge"
-            :style="{ color: card.badgeColor, borderColor: card.badgeColor }"
-            >{{ card.badge }}</span
-          >
+      <template v-if="pendingKpi">
+        <div v-for="i in 5" :key="i" class="kpi-card kpi-card--skeleton">
+          <ElSkeleton animated>
+            <template #template>
+              <ElSkeletonItem variant="text" style="width: 40%; margin-bottom: 12px" />
+              <ElSkeletonItem variant="h1" style="width: 70%; height: 32px; margin-bottom: 10px" />
+              <ElSkeletonItem variant="text" style="width: 90%" />
+            </template>
+          </ElSkeleton>
         </div>
-        <div class="kpi-value" :style="{ color: card.valueColor }">{{ card.value }}</div>
-        <div class="kpi-sub">{{ card.sub }}</div>
-      </div>
+      </template>
+      <template v-else>
+        <div
+          v-for="card in kpiCards"
+          :key="card.label"
+          class="kpi-card"
+          :style="{ background: card.bg, '--card-border': card.border }"
+        >
+          <div class="kpi-top">
+            <span class="kpi-label">{{ card.label }}</span>
+            <span
+              v-if="card.badge"
+              class="kpi-badge"
+              :style="{ color: card.badgeColor, borderColor: card.badgeColor }"
+              >{{ card.badge }}</span
+            >
+          </div>
+          <div class="kpi-value" :style="{ color: card.valueColor }">{{ card.value }}</div>
+          <div class="kpi-sub">{{ card.sub }}</div>
+        </div>
+      </template>
     </section>
 
-    <!-- ─── Middle Row ─────────────────────────── -->
     <section class="bi-mid-row">
-      <!-- App Table -->
       <div class="bi-card bi-app-table">
         <div class="card-title">应用利润详情</div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>应用</th>
-              <th>广告收入(预)</th>
-              <th>付费收入</th>
-              <th>总收入</th>
-              <th>广告支出</th>
-              <th>预估利润</th>
-              <th>利润率</th>
-              <th>趋势</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in appRows" :key="row.app">
-              <td class="td-app">{{ row.app }}</td>
-              <td>{{ row.adRev }}</td>
-              <td>{{ row.paidRev }}</td>
-              <td>{{ row.total }}</td>
-              <td>{{ row.adSpend }}</td>
-              <td :style="{ color: row.profitColor, fontWeight: 600 }">{{ row.profit }}</td>
-              <td :style="{ color: row.rateColor, fontWeight: 600 }">{{ row.rate }}</td>
-              <td class="td-trend">
-                <svg v-if="row.trend !== 'none'" width="60" height="20" viewBox="0 0 60 20">
-                  <path
-                    :d="getTrendPath(row.trend as any)"
-                    fill="none"
-                    :stroke="getTrendColor(row.trend as any)"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                  />
-                </svg>
-                <span v-else style="color: #475569">—</span>
-              </td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr class="tr-total">
-              <td class="td-app">Total</td>
-              <td>{{ appTotal.adRev }}</td>
-              <td>{{ appTotal.paidRev }}</td>
-              <td>{{ appTotal.total }}</td>
-              <td>{{ appTotal.adSpend }}</td>
-              <td style="font-weight: 700; color: #4ade80">{{ appTotal.profit }}</td>
-              <td style="font-weight: 700; color: #4ade80">{{ appTotal.rate }}</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
+        <div class="bi-table-host">
+          <div v-show="pendingApp" class="bi-skeleton-block">
+            <ElSkeleton animated :rows="6">
+              <template #template>
+                <ElSkeletonItem
+                  v-for="n in 6"
+                  :key="n"
+                  variant="text"
+                  style="width: 100%; height: 28px; margin-bottom: 8px"
+                />
+              </template>
+            </ElSkeleton>
+          </div>
+          <table v-show="!pendingApp" class="data-table">
+            <thead>
+              <tr>
+                <th>应用</th>
+                <th>广告收入(预)</th>
+                <th>付费收入</th>
+                <th>总收入</th>
+                <th>广告支出</th>
+                <th>预估利润</th>
+                <th>利润率</th>
+                <th>趋势</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in appRows" :key="row.app">
+                <td class="td-app">{{ row.app }}</td>
+                <td>{{ row.adRev }}</td>
+                <td>{{ row.paidRev }}</td>
+                <td>{{ row.total }}</td>
+                <td>{{ row.adSpend }}</td>
+                <td :style="{ color: row.profitColor, fontWeight: 600 }">{{ row.profit }}</td>
+                <td :style="{ color: row.rateColor, fontWeight: 600 }">{{ row.rate }}</td>
+                <td class="td-trend">
+                  <svg
+                    v-if="normalizeAppTrend(row.trend) !== 'none'"
+                    width="60"
+                    height="20"
+                    viewBox="0 0 60 20"
+                  >
+                    <path
+                      :d="getTrendPath(row.trend)"
+                      fill="none"
+                      :stroke="getTrendColor(row.trend)"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <span v-else style="color: #475569">—</span>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="tr-total">
+                <td class="td-app">Total</td>
+                <td>{{ appTotal.adRev }}</td>
+                <td>{{ appTotal.paidRev }}</td>
+                <td>{{ appTotal.total }}</td>
+                <td>{{ appTotal.adSpend }}</td>
+                <td style="font-weight: 700; color: #4ade80">{{ appTotal.profit }}</td>
+                <td style="font-weight: 700; color: #4ade80">{{ appTotal.rate }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
 
-      <!-- World Map + Country Table -->
       <div class="bi-card bi-map-panel">
         <div class="card-title">国家利润分布</div>
-        <div ref="mapRef" class="world-map"></div>
+        <div class="bi-chart-host bi-chart-host--map">
+          <div v-show="pendingCountry" class="bi-skeleton-block bi-skeleton-block--map">
+            <ElSkeleton animated :rows="0">
+              <template #template>
+                <ElSkeletonItem variant="rect" style="width: 100%; height: 200px" />
+              </template>
+            </ElSkeleton>
+          </div>
+          <div v-show="!pendingCountry" ref="mapRef" class="world-map"></div>
+        </div>
         <div class="card-title" style="margin-top: 12px">国家利润详情 Top10</div>
-        <table class="data-table country-table">
-          <thead>
-            <tr>
-              <th>国家</th>
-              <th>广告收入</th>
-              <th>付费收入</th>
-              <th>广告支出</th>
-              <th>利润</th>
-              <th>利润率</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in countryRows" :key="row.name">
-              <td class="td-country"
-                ><span class="cflag">{{ row.flag }}</span> {{ row.name }}</td
+        <div class="bi-table-host bi-table-host--country">
+          <div v-show="pendingCountry" class="bi-skeleton-block">
+            <ElSkeleton animated :rows="5">
+              <template #template>
+                <ElSkeletonItem
+                  v-for="n in 5"
+                  :key="n"
+                  variant="text"
+                  style="width: 100%; height: 24px; margin-bottom: 6px"
+                />
+              </template>
+            </ElSkeleton>
+          </div>
+          <table v-show="!pendingCountry" class="data-table country-table">
+            <thead>
+              <tr>
+                <th>国家</th>
+                <th>广告收入</th>
+                <th>付费收入</th>
+                <th>广告支出</th>
+                <th>利润</th>
+                <th>利润率</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in countryRows"
+                :key="row.name + (row.flag ?? '') + (row.s_country_code ?? '')"
               >
-              <td>{{ row.adRev }}</td>
-              <td>{{ row.paidRev }}</td>
-              <td>{{ row.adSpend }}</td>
-              <td :style="{ color: row.profitColor, fontWeight: 600 }">{{ row.profit }}</td>
-              <td :style="{ color: row.rateColor, fontWeight: 600 }">{{ row.rate }}</td>
-            </tr>
-          </tbody>
-        </table>
+                <td class="td-country">
+                  <span
+                    v-if="fiCountryClass(row.s_country_code)"
+                    :class="fiCountryClass(row.s_country_code)"
+                    class="cflag cflag--fi"
+                    aria-hidden="true"
+                  />
+                  <img
+                    v-else-if="isFlagImgUrl(row.flag)"
+                    :src="row.flag"
+                    alt=""
+                    class="cflag cflag--img"
+                  />
+                  <span v-else-if="row.flag" class="cflag">{{ row.flag }}</span>
+                  {{ row.name }}
+                </td>
+                <td>{{ row.adRev }}</td>
+                <td>{{ row.paidRev }}</td>
+                <td>{{ row.adSpend }}</td>
+                <td :style="{ color: row.profitColor, fontWeight: 600 }">{{ row.profit }}</td>
+                <td :style="{ color: row.rateColor, fontWeight: 600 }">{{ row.rate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
-    <!-- ─── Bottom Row ─────────────────────────── -->
     <section class="bi-bot-row">
-      <!-- Trend Chart -->
       <div class="bi-card bi-trend">
         <div class="card-title">利润趋势（近30天）</div>
-        <div ref="trendRef" class="chart-area"></div>
+        <div class="bi-chart-host">
+          <div v-show="pendingTrend" class="bi-skeleton-block bi-skeleton-block--chart">
+            <ElSkeleton animated :rows="0">
+              <template #template>
+                <ElSkeletonItem variant="rect" style="width: 100%; height: 240px" />
+              </template>
+            </ElSkeleton>
+          </div>
+          <div v-show="!pendingTrend" ref="trendRef" class="chart-area"></div>
+        </div>
       </div>
 
-      <!-- Sankey Chart -->
       <div class="bi-card bi-sankey">
         <div class="card-title">利润构成分析</div>
-        <div ref="sankeyRef" class="chart-area"></div>
+        <div class="bi-chart-host">
+          <div v-show="pendingSankey" class="bi-skeleton-block bi-skeleton-block--chart">
+            <ElSkeleton animated :rows="0">
+              <template #template>
+                <ElSkeletonItem variant="rect" style="width: 100%; height: 240px" />
+              </template>
+            </ElSkeleton>
+          </div>
+          <div v-show="!pendingSankey" ref="sankeyRef" class="chart-area"></div>
+        </div>
       </div>
     </section>
 
-    <!-- ─── Footer Notice ──────────────────────── -->
     <footer class="bi-footer">
       <span class="footer-warn">⚠ 真实利润需月度对账后确认，当前为预估值</span>
     </footer>
@@ -413,7 +639,6 @@
 </template>
 
 <style scoped lang="scss">
-  // ─── CSS Variables ────────────────────────────────────────────
   .bi-root {
     --bg-deep: #070f1e;
     --bg-card: #0d1b2e;
@@ -439,7 +664,6 @@
     background: var(--bg-deep);
   }
 
-  // ─── Header ───────────────────────────────────────────────────
   .bi-header {
     display: flex;
     align-items: center;
@@ -472,40 +696,57 @@
 
   .bi-filters {
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
   }
 
-  .filter-btn {
+  .bi-filter-field {
     display: flex;
-    gap: 5px;
+    gap: 8px;
     align-items: center;
-    padding: 5px 14px;
-    font-size: 12px;
-    cursor: pointer;
-    background: var(--bg-card2);
-    border: 1px solid var(--border-hl);
-    border-radius: 6px;
-    transition: border-color 0.2s;
+    min-height: 32px;
+  }
 
-    &:hover {
-      border-color: #38bdf8;
+  .bi-filter-label {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--text-sec);
+    white-space: nowrap;
+  }
+
+  .bi-filter-select {
+    width: 148px;
+
+    &--platform {
+      width: 128px;
     }
   }
 
-  .filter-label {
-    color: var(--text-sec);
+  .bi-filter-date {
+    width: 260px;
   }
 
-  .filter-val {
-    font-weight: 500;
+  :deep(.bi-filter-select .el-select__wrapper),
+  :deep(.bi-filter-date.el-date-editor) {
+    background: var(--bg-card2);
+    box-shadow: 0 0 0 1px var(--border-hl) inset;
+  }
+
+  :deep(.bi-filter-select .el-select__wrapper:hover),
+  :deep(.bi-filter-date .el-range-editor.el-input__wrapper:hover) {
+    box-shadow: 0 0 0 1px #38bdf8 inset;
+  }
+
+  :deep(.bi-filter-select .el-select__placeholder),
+  :deep(.bi-filter-date .el-range-input) {
     color: var(--text-pri);
   }
 
-  .filter-icon {
-    font-size: 13px;
+  :deep(.bi-filter-date .el-range-separator) {
+    color: var(--text-sec);
   }
 
-  // ─── KPI Row ──────────────────────────────────────────────────
   .bi-kpi-row {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -537,6 +778,53 @@
         linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
       mask-composite: exclude;
+    }
+
+    &--skeleton {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+
+      &::before {
+        display: none;
+      }
+    }
+  }
+
+  .kpi-card:not(.kpi-card--skeleton) {
+    cursor: default;
+    transition:
+      transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.32s ease,
+      filter 0.32s ease;
+
+    &:hover {
+      z-index: 1;
+      filter: brightness(1.07);
+      box-shadow:
+        0 20px 40px -14px rgb(0 0 0 / 72%),
+        0 0 0 1px rgb(56 189 248 / 28%),
+        0 0 32px -8px rgb(56 189 248 / 22%);
+      transform: translateY(-5px);
+    }
+
+    &:active {
+      transition-duration: 0.14s;
+      transform: translateY(-2px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kpi-card:not(.kpi-card--skeleton) {
+      transition:
+        box-shadow 0.2s ease,
+        filter 0.2s ease;
+
+      &:hover,
+      &:active {
+        filter: brightness(1.05);
+        box-shadow: 0 0 0 1px rgb(56 189 248 / 35%);
+        transform: none;
+      }
     }
   }
 
@@ -574,7 +862,6 @@
     color: var(--text-sec);
   }
 
-  // ─── Shared Card ──────────────────────────────────────────────
   .bi-card {
     padding: 14px 16px;
     overflow: hidden;
@@ -592,7 +879,6 @@
     border-bottom: 1px solid var(--border);
   }
 
-  // ─── Middle Row ───────────────────────────────────────────────
   .bi-mid-row {
     display: grid;
     grid-template-columns: 1fr 420px;
@@ -600,7 +886,53 @@
     padding: 14px 24px 0;
   }
 
-  // ─── Data Table ───────────────────────────────────────────────
+  .bi-table-host {
+    position: relative;
+    min-height: 280px;
+  }
+
+  .bi-app-table .bi-table-host {
+    max-height: 620px;
+    overflow-y: auto;
+  }
+
+  .bi-app-table .data-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bg-card);
+    box-shadow: 0 1px 0 var(--border);
+  }
+
+  .bi-table-host--country {
+    min-height: 220px;
+  }
+
+  .bi-skeleton-block {
+    position: absolute;
+    inset: 0;
+    padding: 4px 0;
+  }
+
+  .bi-skeleton-block--map {
+    position: relative;
+    height: 200px;
+  }
+
+  .bi-skeleton-block--chart {
+    position: relative;
+    height: 240px;
+  }
+
+  .bi-chart-host {
+    position: relative;
+    width: 100%;
+  }
+
+  .bi-chart-host--map {
+    min-height: 200px;
+  }
+
   .data-table {
     width: 100%;
     font-size: 12px;
@@ -656,6 +988,21 @@
     font-size: 14px;
   }
 
+  .cflag--fi {
+    display: inline-block;
+    width: 1.15em;
+    line-height: 1;
+    background-size: cover;
+  }
+
+  .cflag--img {
+    flex-shrink: 0;
+    width: 18px;
+    height: 13px;
+    object-fit: cover;
+    border-radius: 2px;
+  }
+
   .tr-total td {
     font-weight: 700 !important;
     color: var(--text-pri) !important;
@@ -663,7 +1010,6 @@
     border-bottom: none;
   }
 
-  // ─── World Map ────────────────────────────────────────────────
   .world-map {
     width: 100%;
     height: 200px;
@@ -676,7 +1022,6 @@
     padding: 5px 8px;
   }
 
-  // ─── Bottom Row ───────────────────────────────────────────────
   .bi-bot-row {
     display: grid;
     grid-template-columns: 1fr 420px;
@@ -689,7 +1034,6 @@
     height: 240px;
   }
 
-  // ─── Footer ───────────────────────────────────────────────────
   .bi-footer {
     padding: 8px 16px;
     margin: 14px 24px 0;
@@ -704,7 +1048,6 @@
     color: #f5a623;
   }
 
-  // ─── Responsive ───────────────────────────────────────────────
   @media (width <= 1280px) {
     .bi-kpi-row {
       grid-template-columns: repeat(3, 1fr);

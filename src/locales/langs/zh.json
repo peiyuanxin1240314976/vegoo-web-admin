@@ -247,6 +247,15 @@
       "title": "商业洞察",
       "revenueOverview": "收入概览",
       "profitAnalysis": "利润分析",
+      "profitAnalysisFilters": {
+        "dateRange": "日期范围",
+        "startDate": "开始日期",
+        "endDate": "结束日期",
+        "app": "应用",
+        "country": "国家",
+        "platform": "终端平台",
+        "selectPlaceholder": "请选择"
+      },
       "agencyAnalysis": "代投分析",
       "iapAnalysis": "IAP 分析",
       "iaaAnalysis": "IAA 分析",

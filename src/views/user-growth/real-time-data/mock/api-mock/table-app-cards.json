@@ -1,0 +1,54 @@
+{
+  "_comment": "POST table/app-cards",
+  "sampleResponse": {
+    "items": [
+      {
+        "id": "weather5",
+        "name": "Weather5",
+        "iconText": "⛅",
+        "iconBg": "#0d3d5a",
+        "isLive": false,
+        "hasWarning": false,
+        "launchLabel": "展开明细",
+        "spend": 8372,
+        "spendChange": "8.5%",
+        "spendUp": true,
+        "installs": 3518,
+        "cpi": 2.38,
+        "cpiChange": "3.2%",
+        "cpiUp": false,
+        "activeSeries": 185,
+        "roi": 94,
+        "roiGood": true,
+        "roiColor": "#00cfc0",
+        "chartData": [120, 160, 200, 280, 360, 520, 640, 720, 780, 760],
+        "chartColor": "#00cfc0",
+        "actionTag": "选择",
+        "actionTagType": "cyan"
+      },
+      {
+        "id": "phonetracker",
+        "name": "PhoneTracker",
+        "iconText": "📱",
+        "iconBg": "#3d2800",
+        "isLive": true,
+        "hasWarning": true,
+        "warningBadge": "超额",
+        "launchLabel": "实时",
+        "spend": 2886,
+        "installs": 1013,
+        "cpi": 2.85,
+        "cpiChange": "3.2%",
+        "cpiUp": true,
+        "activeSeries": 98,
+        "roi": 108,
+        "roiGood": true,
+        "roiColor": "#00cfc0",
+        "chartData": [40, 70, 110, 170, 240, 360, 490, 540, 590, 630],
+        "chartColor": "#ffa040",
+        "actionTag": "鼠标",
+        "actionTagType": "orange"
+      }
+    ]
+  }
+}

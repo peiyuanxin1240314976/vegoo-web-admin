@@ -1,0 +1,51 @@
+{
+  "_comment": "POST app-detail",
+  "sampleResponse": {
+    "detail": {
+      "id": "weather5",
+      "name": "Weather5",
+      "iconText": "⛅",
+      "iconBg": "#0d3d5a",
+      "spend": 8372,
+      "installs": 3518,
+      "cpi": 2.38,
+      "roi1d": 94,
+      "roi3d": 108,
+      "estimatedProfit": 1820,
+      "activeSeries": 185,
+      "balance": 6200,
+      "ctr": 3.2,
+      "cvr": 28.5,
+      "budgetProgress": 68,
+      "budgetDaysLeft": "~5天后",
+      "channels": [
+        {
+          "name": "Google Ads",
+          "iconColor": "#ea4335",
+          "spend": 4800,
+          "cpi": 2.25,
+          "roi": 96,
+          "n_source": 1
+        },
+        {
+          "name": "Meta Ads",
+          "iconColor": "#1877f2",
+          "spend": 2500,
+          "cpi": 2.48,
+          "roi": 91,
+          "n_source": 2
+        },
+        {
+          "name": "Pangle",
+          "iconColor": "#000000",
+          "spend": 1072,
+          "cpi": 2.61,
+          "roi": 89,
+          "n_source": 7
+        }
+      ],
+      "hourlyData": [30, 60, 100, 220, 380, 620, 520, 650],
+      "hourlyRoi": [18, 22, 38, 55, 72, 90, 92, 96]
+    }
+  }
+}

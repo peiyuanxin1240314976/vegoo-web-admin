@@ -247,6 +247,15 @@
       "title": "Business Insight",
       "revenueOverview": "Revenue Overview",
       "profitAnalysis": "Profit Analysis",
+      "profitAnalysisFilters": {
+        "dateRange": "Date range",
+        "startDate": "Start date",
+        "endDate": "End date",
+        "app": "App",
+        "country": "Country",
+        "platform": "Platform",
+        "selectPlaceholder": "Select"
+      },
       "agencyAnalysis": "Agency Analysis",
       "iapAnalysis": "IAP Analysis",
       "iaaAnalysis": "IAA Analysis",

@@ -1,25 +1,36 @@
 {
-  "_comment": "利润分析 - 利润趋势近 30 天（总收入、广告支出、预估利润）。对应 types.ts: ProfitTrend30d。",
+  "_comment": "利润分析 - 利润趋势近 30 天。网关 HTTP 体为 { code, message, data }，code=0 成功；data 即 types.ts: ProfitTrend30d。",
   "fieldDescription": {
+    "gateway": {
+      "code": {
+        "type": "integer",
+        "required": true,
+        "description": "状态码，0 表示成功（与数据中心一致）；非 0 失败。"
+      },
+      "message": { "type": "string", "required": false, "description": "提示信息。" },
+      "data": {
+        "type": "ProfitTrend30d",
+        "required": true,
+        "description": "业务载荷，字段见下「data 内字段」。"
+      }
+    },
     "request": {
       "dateRange": {
         "type": "string",
         "required": true,
-        "description": "日期范围，或传 endDate 与 days=30。"
+        "description": "日期范围，如 2026-03-01,2026-03-05。"
       },
-      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
-      "s_country_code": {
-        "type": "string",
-        "required": false,
-        "description": "国家代码，全部传 all。"
-      },
-      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+      "currentPage": { "type": "integer", "required": false, "description": "分页。" },
+      "pageSize": { "type": "integer", "required": false, "description": "分页。" },
+      "platform": { "type": "string", "required": false, "description": "终端平台。" },
+      "sAppId": { "type": "string", "required": false, "description": "应用 ID，全部 all。" },
+      "sCountryCode": { "type": "string", "required": false, "description": "国家代码，全部 all。" }
     },
-    "response": {
+    "ProfitTrend30d": {
       "days": {
         "type": "string[]",
         "required": true,
-        "description": "X 轴标签，如 01天、02天 … 30天，或日期字符串。"
+        "description": "X 轴标签，如 01天、02天 … 30天，或日期字符串；与 revenue/adSpend/profit 等长。"
       },
       "revenue": {
         "type": "number[]",
@@ -29,20 +40,22 @@
       "adSpend": {
         "type": "number[]",
         "required": true,
-        "description": "广告支出序列，单位美元。"
+        "description": "广告支出序列，与 days 等长，单位美元。"
       },
       "profit": {
         "type": "number[]",
         "required": true,
-        "description": "预估利润序列，单位美元，可为 revenue - adSpend。"
+        "description": "预估利润序列，与 days 等长，单位美元。"
       }
     }
   },
   "sampleRequest": {
+    "currentPage": 0,
     "dateRange": "2026-03-01,2026-03-05",
-    "s_app_id": "all",
-    "s_country_code": "all",
-    "platform": "all"
+    "pageSize": 0,
+    "platform": "all",
+    "sAppId": "all",
+    "sCountryCode": "all"
   },
   "sampleResponse": {
     "days": ["01天", "02天", "03天", "04天", "05天"],
@@ -50,14 +63,27 @@
     "adSpend": [2720, 2880, 2780, 2920, 2820],
     "profit": [1122, 1240, 1200, 1290, 1230]
   },
+  "sampleGatewayResponse": {
+    "code": 0,
+    "data": {
+      "adSpend": [],
+      "days": [],
+      "profit": [],
+      "revenue": []
+    },
+    "message": ""
+  },
   "api": {
-    "url": "POST /api/business-insight/profit-analysis/overview/trend30d",
+    "url": "POST /api/v1/datacenter/analysis/business-insight/profit-analysis/overview/trend30d",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "dateRange, s_app_id?, s_country_code?, platform",
-    "responseBody": "days[], revenue[], adSpend[], profit[]"
+    "requestBody": "扁平 ProfitAnalysisQueryParams",
+    "responseBody": "网关 { code, message, data: ProfitTrend30d }；data 含 days、revenue、adSpend、profit 四个数组"
   },
   "apiSuggestion": {
-    "notes": ["数值可为日汇总；前端负责格式化与图表展示。"]
+    "notes": [
+      "数值可为日汇总；前端 @/utils/http 解包后拿到 data 再赋给图表。",
+      "四数组长度应一致；无数据时可为空数组。"
+    ]
   }
 }

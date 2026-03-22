@@ -1,0 +1,12 @@
+{
+  "_comment": "POST overview-kpi-summary",
+  "sampleResponse": {
+    "onlineApps": 8,
+    "totalApps": 12,
+    "todaySpend": 34858,
+    "spendChange": "+8.3%",
+    "roiAvg": 97,
+    "roiTarget": 85,
+    "warningApps": 2
+  }
+}

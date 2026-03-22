@@ -1,47 +1,37 @@
 {
-  "_comment": "利润分析 - 全局筛选下拉选项。对应 types：筛选区展示与下拉选项。",
+  "_comment": "利润分析 - 顶栏筛选元数据。对应 types：ProfitFilterOptions（ProfitFilterOptionsDto）。GET，无 query/body；鉴权仅依赖全局 Authorization。",
   "fieldDescription": {
-    "request": {},
+    "request": {
+      "_note": "无路径参数、无 query、无 body；Token 由请求拦截器注入 Header。"
+    },
     "response": {
       "appOptions": {
-        "type": "ProfitSelectOption[]",
+        "type": "FilterOptionDto[]",
         "required": true,
         "description": "应用下拉选项。"
       },
       "platformOptions": {
-        "type": "ProfitSelectOption[]",
+        "type": "FilterOptionDto[]",
         "required": true,
-        "description": "终端平台下拉选项（Android/iOS/全部）。"
+        "description": "终端平台下拉选项。"
       },
       "countryOptions": {
-        "type": "ProfitSelectOption[]",
+        "type": "FilterOptionDto[]",
         "required": true,
         "description": "国家下拉选项。"
       },
       "datePresets": {
-        "type": "ProfitDatePreset[]",
+        "type": "FilterOptionDto[]",
         "required": false,
-        "description": "日期范围快捷选项（如近7天、近30天、自定义）。"
+        "description": "日期范围快捷选项。"
       }
     },
-    "ProfitSelectOption": {
-      "label": { "type": "string", "required": true, "description": "展示文案。" },
-      "value": {
-        "type": "string",
-        "required": true,
-        "description": "选项值，如 all、US、weather5。"
-      }
-    },
-    "ProfitDatePreset": {
-      "label": { "type": "string", "required": true, "description": "展示文案，如 近7天。" },
-      "value": {
-        "type": "string",
-        "required": true,
-        "description": "如 7、30、90 或 dateRange 字符串。"
-      }
+    "FilterOptionDto": {
+      "label": { "type": "string", "required": true, "description": "显示标签。" },
+      "value": { "type": "string", "required": true, "description": "选项值。" }
     }
   },
-  "sampleRequest": {},
+  "sampleRequest": null,
   "sampleResponse": {
     "appOptions": [
       { "label": "全部", "value": "all" },
@@ -66,10 +56,10 @@
     ]
   },
   "api": {
-    "url": "GET /api/business-insight/profit-analysis/meta-filter-options",
+    "url": "GET /api/v1/datacenter/analysis/business-insight/profit-analysis/meta-filter-options",
     "method": "GET",
     "priority": "P0",
     "requestBody": "无",
-    "responseBody": "appOptions[], platformOptions[], countryOptions[], datePresets[]?"
+    "responseBody": "ProfitFilterOptionsDto，与 sampleResponse 同构（网关包在 data 内；前端 http 已解包 data）"
   }
 }

@@ -1,0 +1,33 @@
+{
+  "_comment": "POST overview-hourly-spend-comparison；与 mock/data.ts 中 mockRealtimeHourlySpendComparison 一致",
+  "sampleResponse": {
+    "hourLabels": ["0:00", "2:00", "4:00", "6:00", "8:00", "10:00", "12:00", "14:00"],
+    "series": [
+      {
+        "s_app_id": "weather5",
+        "name": "Weather5",
+        "color": "#00cfc0",
+        "costSeries": [45, 80, 120, 280, 420, 680, 520, 720]
+      },
+      {
+        "s_app_id": "phonetracker",
+        "name": "PhoneTracker",
+        "color": "#ffa040",
+        "costSeries": [20, 40, 80, 150, 280, 420, 380, 460]
+      },
+      {
+        "s_app_id": "bloodsugar2",
+        "name": "BloodSugar2",
+        "color": "#4d9eff",
+        "costSeries": [60, 100, 180, 320, 480, 750, 600, 680]
+      },
+      {
+        "s_app_id": "phonetracker2",
+        "name": "PhoneTracker2",
+        "color": "#a855f7",
+        "costSeries": [10, 20, 40, 80, 120, 180, 160, 200]
+      }
+    ],
+    "roiPercentSeries": [20, 28, 42, 60, 78, 94, 96, 100]
+  }
+}

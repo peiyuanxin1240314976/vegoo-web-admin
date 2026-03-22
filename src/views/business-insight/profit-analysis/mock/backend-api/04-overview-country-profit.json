@@ -3,8 +3,11 @@
   "fieldDescription": {
     "request": {
       "dateRange": { "type": "string", "required": true, "description": "日期范围。" },
-      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
-      "platform": { "type": "string", "required": false, "description": "终端平台。" }
+      "currentPage": { "type": "integer", "required": false, "description": "分页。" },
+      "pageSize": { "type": "integer", "required": false, "description": "分页。" },
+      "platform": { "type": "string", "required": false, "description": "终端平台。" },
+      "sAppId": { "type": "string", "required": false, "description": "应用 ID，全部 all。" },
+      "sCountryCode": { "type": "string", "required": false, "description": "国家代码，全部 all。" }
     },
     "response": {
       "mapData": {
@@ -52,9 +55,12 @@
     }
   },
   "sampleRequest": {
+    "currentPage": 0,
     "dateRange": "2026-03-01,2026-03-05",
-    "s_app_id": "all",
-    "platform": "all"
+    "pageSize": 0,
+    "platform": "all",
+    "sAppId": "all",
+    "sCountryCode": "all"
   },
   "sampleResponse": {
     "mapData": [
@@ -84,7 +90,7 @@
     "url": "POST /api/business-insight/profit-analysis/overview/country-profit",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "dateRange, s_app_id?, platform",
+    "requestBody": "扁平 ProfitAnalysisQueryParams",
     "responseBody": "mapData[], mapScatter[], countryRows[]"
   }
 }

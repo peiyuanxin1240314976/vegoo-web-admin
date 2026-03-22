@@ -1,8 +1,9 @@
 /**
- * 商业洞察 - IAA / IAP 分析 API
+ * 商业洞察 - IAA / IAP / 利润分析 API
  * 接口路径与 mock/backend-api 契约一致，后端就绪后切换为真实 request
  */
 /* eslint-disable @typescript-eslint/no-unused-vars -- Mock 接口参数保留供后端联调使用 */
+import request from '@/utils/http'
 import type {
   IaaFilterOptions,
   IaaKpiCard,
@@ -29,6 +30,64 @@ import type {
   IapDetailUser,
   IapDetailTrend
 } from '@/views/business-insight/iap-analysis/types'
+import type {
+  ProfitAnalysisQueryParams,
+  ProfitFilterOptions,
+  ProfitKpiOverviewDto,
+  ProfitAppProfitResponseDto,
+  ProfitCountryProfitResponseDto,
+  ProfitTrend30d,
+  ProfitSankeyDto
+} from '@/views/business-insight/profit-analysis/types'
+
+const PROFIT_BASE = '/api/v1/datacenter/analysis/business-insight/profit-analysis'
+
+/** 利润分析 - 顶栏筛选项 GET .../meta-filter-options（仅依赖全局 Token，无 query/body） */
+export function fetchProfitMetaFilterOptions() {
+  return request.get<ProfitFilterOptions>({
+    url: `${PROFIT_BASE}/meta-filter-options`
+  })
+}
+
+/** 利润分析 - 顶部 KPI POST .../overview/kpi，body 扁平 ProfitAnalysisQueryParams */
+export function fetchProfitOverviewKpi(fo: ProfitAnalysisQueryParams) {
+  return request.post<ProfitKpiOverviewDto>({
+    url: `${PROFIT_BASE}/overview/kpi`,
+    data: fo
+  })
+}
+
+/** 利润分析 - 应用利润详情表 POST .../table/app-profit */
+export function fetchProfitTableAppProfit(fo: ProfitAnalysisQueryParams) {
+  return request.post<ProfitAppProfitResponseDto>({
+    url: `${PROFIT_BASE}/table/app-profit`,
+    data: fo
+  })
+}
+
+/** 利润分析 - 国家利润分布 POST .../overview/country-profit */
+export function fetchProfitOverviewCountryProfit(fo: ProfitAnalysisQueryParams) {
+  return request.post<ProfitCountryProfitResponseDto>({
+    url: `${PROFIT_BASE}/overview/country-profit`,
+    data: fo
+  })
+}
+
+/** 利润分析 - 近 30 天趋势 POST .../profit-analysis/overview/trend30d，响应 data 为 ProfitTrend30d */
+export function fetchProfitOverviewTrend30d(fo: ProfitAnalysisQueryParams) {
+  return request.post<ProfitTrend30d>({
+    url: `${PROFIT_BASE}/overview/trend30d`,
+    data: fo
+  })
+}
+
+/** 利润分析 - 利润构成桑基图 POST .../overview/sankey */
+export function fetchProfitOverviewSankey(fo: ProfitAnalysisQueryParams) {
+  return request.post<ProfitSankeyDto>({
+    url: `${PROFIT_BASE}/overview/sankey`,
+    data: fo
+  })
+}
 
 /** 全局筛选下拉选项（Mock：后端就绪后改为 request.get） */
 export function fetchIaaMetaFilterOptions() {

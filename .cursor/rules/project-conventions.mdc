@@ -40,6 +40,11 @@ alwaysApply: true
 - 使用 `const`/`let`，禁止 `var`
 - 连续空行最多 1 行
 
+## 数值展示（小数位数）
+
+- 页面内**度量类数值**（金额、比率、百分比、ROI、ROAS、CPI、图表坐标轴与 tooltip 等）若存在小数部分，展示时统一**保留小数点后两位**（推荐 `toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })`，或与项目内统一的 `formatNum2` / `formatUsd2` 等工具一致）。
+- **例外**：接口已约定为**预格式化字符串**的字段（如部分 KPI 卡片上的花费/收入文案）可原样展示，避免与后端格式冲突；**纯整数/计数类**（如安装量、条数、页码）不强制补 `.00`。
+
 ## 术语与文案统一（非常重要）
 
 新开发/新页面/新模块涉及字段展示、筛选项、表头、占位符、按钮、i18n 文案时，必须统一使用以下术语（避免同一概念多种叫法，影响联调与认知一致性）：
@@ -117,7 +122,7 @@ alwaysApply: true
 
 ## 数据与开发流程规范
 
-- **先 Mock 再开发组件**：开发大模块时，先在该模块下建立/完善 **Mock 数据**（如 `views/<模块>/<页面>/mock/data.ts` 或 `mock.ts`），并同步定义好 **类型**（`types.ts` 或类型与 mock 同文件）。待大模块的数据结构与字段约定清晰后，再进行页面入口与 `modules/` 内子组件的开发；组件内优先用 mock 做展示与联调，接口就绪后再切换为真实请求。
+- **先 Mock 再开发组件**：开发大模块时，先在该模块下建立/完善 **Mock 与接口契约**（`views/<模块>/<页面>/mock/README.md`、`mock/backend-api/README.md`、按接口拆分的 `mock/backend-api/*.json`，推荐同步 `mock/api-mock/*.json`；聚合数据可放 `mock/data.ts`），并同步定义好 **类型**（`types.ts` 等）。细则见 `api-contract-and-mock-conventions.mdc` 第六节。待结构与字段约定清晰后，再开发页面入口与子组件；接口就绪后在 `api/` 与 composable 中切换真实请求。
 - **先查公共组件再写模块**：开发新模块或新页面时，**先检查** `src/components/core/` 下是否有可复用的公共组件（表格 `art-table`、表单 `art-form`、图表、卡片、结果页 `ArtResultPage`、搜索栏、上传等），优先使用或基于其扩展，避免重复实现；若需新能力，再考虑在公共组件上扩展或新增组件。
 
 ## 提交规范（Commitlint + cz-git）
@@ -129,6 +134,7 @@ alwaysApply: true
 ## 样式规范（概要）
 
 - **详细约定** 见规则 `style-conventions.mdc`（编辑 .vue/.scss/.css 时生效），以驾驶舱 cockpit 为参考。
+- **加载骨架**：按模块拆分骨架、表格/列表在数据未返回前隐藏真实内容并在固定尺寸容器内占位，见 `component-design.mdc`「加载与骨架屏」。
 - **按钮圆角**：开发时按钮统一使用**全圆角**。使用 `ElButton` 时加上 `round` 属性（如 `<ElButton round>`）；自定义按钮或需覆盖样式时使用 `border-radius: 9999px` 或 `var(--el-border-radius-round)`，保持全项目按钮风格一致。
 - **页面布局**: 根节点 `{模块}-page`，全高用 `art-full-height`；栅格用 `ElRow` + `:gutter="16"`；区块间距 16px。
 - **类名**: 模块前缀（如 `cockpit-`）+ BEM 风格（`block--modifier`、`is-*`）；面板用 `ElCard` + `shadow="never"`。

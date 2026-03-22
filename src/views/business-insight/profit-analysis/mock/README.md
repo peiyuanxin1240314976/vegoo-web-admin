@@ -10,14 +10,14 @@
 
 ## 与页面的对应关系
 
-| 页面区块       | 数据来源（mock/backend-api）                   |
-| -------------- | ---------------------------------------------- |
-| 筛选区         | meta-filter-options、当前筛选展示用 filterMeta |
-| KPI 卡片行     | overview/kpi                                   |
-| 应用利润详情表 | table/app-profit（含合计行）                   |
-| 国家利润分布   | overview/country-profit（地图 + Top10 表）     |
-| 利润趋势图     | overview/trend30d                              |
-| 利润构成桑基图 | overview/sankey                                |
+| 页面区块       | 数据来源（mock/backend-api）                                             |
+| -------------- | ------------------------------------------------------------------------ |
+| 筛选区         | `meta-filter-options`（`GET`，无参）+ `query` 绑定顶栏 Select / 日期范围 |
+| KPI 卡片行     | overview/kpi                                                             |
+| 应用利润详情表 | table/app-profit（含合计行）                                             |
+| 国家利润分布   | overview/country-profit（地图 + Top10 表）                               |
+| 利润趋势图     | overview/trend30d                                                        |
+| 利润构成桑基图 | overview/sankey                                                          |
 
 ## 数据来源与类型
 

@@ -217,6 +217,114 @@ declare namespace Api {
       /** 来源页面标识，如 comprehensive-analysis */
       from: string
     }
+
+    /** 广告平台分析 - 筛选项元数据单项（响应 data.apps | platforms | sources[]） */
+    interface AdPlatformFiltersMetaOptionDto {
+      label: string
+      value: string
+    }
+
+    /** 广告平台分析 - 筛选项元数据（响应 data，POST .../filters/meta） */
+    interface AdPlatformFiltersMetaDto {
+      apps: AdPlatformFiltersMetaOptionDto[]
+      platforms: AdPlatformFiltersMetaOptionDto[]
+      /** 广告平台下拉，请求体字段 `source` 对应该项的 `value` */
+      sources: AdPlatformFiltersMetaOptionDto[]
+    }
+
+    /**
+     * 广告平台分析大屏通用请求体（各模块 POST 入参一致）
+     * 例：KPI 卡片 POST /api/v1/datacenter/analysis/ad-platform/kpi/cards
+     */
+    interface AdPlatformAnalysisRequestParams {
+      appId: string
+      currentPage: number
+      dateEnd: string
+      dateStart: string
+      groupBy: string
+      pageSize: number
+      /** 终端平台筛选，如 ios / android；空字符串表示全部 */
+      platform: string
+      /** 广告平台筛选；空字符串表示全部 */
+      source: string
+      userId: string
+    }
+
+    /** KPI 卡片单项（响应 data[]） */
+    interface AdPlatformKpiCardDto {
+      id: string
+      name: string
+      logo?: string
+      cost: string
+      revenue: string
+      cpi: string
+      roi: number
+      roiChange: number
+      roiChangeUp: boolean
+      trendData: number[]
+    }
+
+    /** ROI 趋势折线系列（响应 data.series[]） */
+    interface AdPlatformRoiTrendSeriesDto {
+      name: string
+      data: number[]
+    }
+
+    /** ROI 趋势（响应 data，POST .../roi/trend） */
+    interface AdPlatformRoiTrendDto {
+      /** 横轴日期，如 YYYY-MM-DD */
+      dates: string[]
+      series: AdPlatformRoiTrendSeriesDto[]
+    }
+
+    /** 用户质量热力图单行（响应 data[]，POST .../quality/heatmap） */
+    interface AdPlatformQualityHeatmapRowDto {
+      /** 广告平台名称，对应热力图行 */
+      source: string
+      d1Retention: number
+      d7Retention: number
+      d30Retention: number
+      payRate: number
+      arpu: number
+    }
+
+    /** Top10 广告系列单行（响应 data[]，POST .../campaign/top10） */
+    interface AdPlatformCampaignTop10RowDto {
+      campaignId: string
+      campaignName: string
+      cost: number
+      cpi: number
+      roi: number
+      /** 广告平台名称 */
+      source: string
+    }
+
+    /** 指标比较详情表单行（响应 data.rows[]，POST .../metrics/table） */
+    interface AdPlatformMetricsTableRowDto {
+      source: string
+      status: string
+      statusText?: string
+      cost: string
+      revenue: string
+      installs: string
+      cpi: number
+      cpiTrendUp: boolean
+      roi: number
+      roiTrendUp: boolean
+      roas: number
+      ltv7: number
+      ltv30: number
+      userQualityD7: number
+      userQualityD7TrendUp: boolean
+      userQualityPay: number
+      userQualityPayTrendUp: boolean
+    }
+
+    /** 指标比较详情分页（响应 data） */
+    interface AdPlatformMetricsTableDto {
+      total: number
+      rows: AdPlatformMetricsTableRowDto[]
+    }
   }
 
   /** 商业洞察 - IAA 分析 */

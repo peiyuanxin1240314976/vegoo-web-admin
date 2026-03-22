@@ -70,6 +70,8 @@ src/views/<模块>/<页面>/
       01-*.json               # 按接口拆分的契约文件（必需）
       02-*.json
       ...
+    api-mock/                 # （推荐）与各契约 sampleResponse 对齐的示例 JSON，便于对照与 MSW
+      *.json
 ```
 
 ### “每个文件夹都要有 md 解释”的约束
@@ -145,4 +147,15 @@ src/views/<模块>/<页面>/
 - **类型先行**：接口契约字段需与页面 `types.ts`（或 `src/types/api/api.d.ts` 的 `Api.*`）保持一致，避免“文档一套、代码一套”。
 - **请求方法命名**：在 `src/api/<业务>.ts` 内，方法名以 `fetch` 开头，体现模块与功能（如 `fetchAdPerformanceOverview`）。
 - **字段命名**：涉及广告/增长/报表等概念时，字段命名与语义必须遵循 `backend-fields.mdc`（数据字典）。
+
+## 六、新页面 / 新模块交付检查（简）
+
+新建或大幅扩展 `src/views/<模块>/<页面>` 时，在编写页面与接口联调前应完成：
+
+1. `mock/README.md`：说明用途、与 `types.ts` / 入口组件关系、数据从哪来（静态 / MSW / 聚合 `data.ts`）。
+2. `mock/backend-api/README.md`：父级 API 路径（与路由层级一致）、接口清单表、拆分原则与 P0/P1。
+3. `mock/backend-api/01-*.json` 起：一接口一文件，含完整 `fieldDescription`、`sampleRequest`、`sampleResponse`、`api`、`apiSuggestion`（推荐）。
+4. （推荐）`mock/api-mock/*.json`：与各契约 `sampleResponse` 结构一致，便于复制到联调工具或接入 MSW。
+
+参考实现：`src/views/user-growth/real-time-data/mock/`。
 

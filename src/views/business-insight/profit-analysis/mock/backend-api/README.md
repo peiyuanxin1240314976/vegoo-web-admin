@@ -2,9 +2,12 @@
 
 ## 父级 API 路径
 
-`/api/business-insight/profit-analysis/<endpoint>`
+`/api/v1/datacenter/analysis/business-insight/profit-analysis/<endpoint>`
 
-（GET 用于 meta，POST 用于带筛选的查询）
+（与 `src/api/business-insight.ts` 中 `PROFIT_BASE` 一致。）
+
+- **顶栏筛选项**：`GET .../meta-filter-options`，无 query/body（仅全局 Token），响应用于 `ElSelect`；日期范围由 `ElDatePicker` 写入 `query.dateRange`（`YYYY-MM-DD,YYYY-MM-DD`）。
+- **数据接口**：POST，请求体为**扁平对象**（`dateRange` 必填；`currentPage`、`pageSize`、`platform`、`sAppId`、`sCountryCode` 可选），**无 `fo` 包裹**；**GET meta-filter-options** 除外。
 
 ## 接口清单
 
@@ -20,9 +23,10 @@
 ## 拆分原则
 
 - 一个接口只服务一个明确 UI 模块（KPI 行、应用表、国家地图+表、趋势图、桑基图）
-- 全局筛选参数（dateRange、s_app_id、s_country_code、platform）由各 POST 接口统一接收
+- 全局筛选参数（`dateRange`、`currentPage`、`pageSize`、`platform`、`sAppId`、`sCountryCode`）由各业务 POST 接口统一接收
 - 金额/占比展示格式可由前端根据数值格式化，契约中可约定数值与单位
 
 ## 字段约定
 
-- 遵循 `backend-fields.mdc`：终端平台 `platform`，广告平台 `source`，国家 `s_country_code`，应用 `s_app_id`，收入 `revenue`，花费 `cost`，广告价值 `ad_revenue`，内购价值 `lap_revenue` 等
+- **请求体**为扁平 **ProfitAnalysisQueryParams**（camelCase：`sAppId`、`sCountryCode` 等）；业务含义仍对应数据字典中的应用、国家、终端平台等概念。
+- 响应与报表字段展示在遵守 `backend-fields.mdc` 语义的前提下，以实际 DTO 字段名为准。

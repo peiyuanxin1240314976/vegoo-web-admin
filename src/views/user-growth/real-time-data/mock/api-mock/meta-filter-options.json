@@ -1,0 +1,17 @@
+{
+  "_comment": "POST meta-filter-options，结构与 backend-api/01 的 sampleResponse 一致",
+  "sampleResponse": {
+    "appOptions": [
+      { "value": "all", "label": "全部应用" },
+      { "value": "weather5", "label": "Weather5", "s_app_id": "weather5" },
+      { "value": "phonetracker", "label": "PhoneTracker", "s_app_id": "phonetracker" },
+      { "value": "bloodsugar2", "label": "BloodSugar2", "s_app_id": "bloodsugar2" }
+    ],
+    "sourceOptions": [
+      { "value": "all", "label": "全部广告平台" },
+      { "value": "1", "label": "Google", "n_source": 1 },
+      { "value": "2", "label": "Meta", "n_source": 2 },
+      { "value": "7", "label": "Pangle", "n_source": 7 }
+    ]
+  }
+}
