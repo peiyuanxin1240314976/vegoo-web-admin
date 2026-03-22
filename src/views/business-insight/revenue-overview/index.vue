@@ -518,33 +518,43 @@
         <div class="rev-panel rev-panel--top5">
           <div class="rev-panel__header">
             <div class="rev-panel__title">Top 5 国家收入</div>
-            <div class="rev-tabs rev-tabs--compact rev-tabs--segmented">
-              <button type="button" class="rev-tab active">合计</button>
-              <button type="button" class="rev-tab">IAA</button>
-              <button type="button" class="rev-tab">IAP</button>
+            <div class="rev-tabs rev-tabs--compact rev-tabs--segmented rev-tabs--top5">
+              <span class="rev-tab-pill" :style="top5PillStyle" aria-hidden="true" />
+              <button
+                v-for="t in top5TabDefs"
+                :key="t.key"
+                type="button"
+                class="rev-tab"
+                :class="{ active: top5Tab === t.key }"
+                @click="top5Tab = t.key"
+              >
+                {{ t.label }}
+              </button>
             </div>
           </div>
 
-          <div class="rev-table-wrap rev-table-wrap--top5">
-            <ArtTable
-              class="rev-art-table rev-art-table--top5"
-              :data="topCountriesWithTotal"
-              :columns="top5Columns"
-              row-key="s_country_code"
-              :stripe="false"
-              :border="false"
-              size="default"
-              :pagination="undefined"
-              :header-cell-style="top5HeaderCellStyle"
-              :cell-style="top5CellStyle"
-              :row-class-name="top5RowClassName"
-            >
-              <template #s_country_name="{ row }">
-                <span class="rev-flag">{{ flagEmojiByCode(row.s_country_code) }}</span>
-                {{ row.s_country_name }}
-              </template>
-            </ArtTable>
-          </div>
+          <Transition name="rev-top5-panel" mode="out-in">
+            <div :key="top5Tab" class="rev-table-wrap rev-table-wrap--top5">
+              <ArtTable
+                class="rev-art-table rev-art-table--top5"
+                :data="topCountriesWithTotal"
+                :columns="top5Columns"
+                row-key="s_country_code"
+                :stripe="false"
+                :border="false"
+                size="default"
+                :pagination="undefined"
+                :header-cell-style="top5HeaderCellStyle"
+                :cell-style="top5CellStyle"
+                :row-class-name="top5RowClassName"
+              >
+                <template #s_country_name="{ row }">
+                  <span class="rev-flag">{{ flagEmojiByCode(row.s_country_code) }}</span>
+                  {{ row.s_country_name }}
+                </template>
+              </ArtTable>
+            </div>
+          </Transition>
         </div>
 
         <div class="rev-right-stack">
@@ -607,7 +617,16 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+  import {
+    computed,
+    nextTick,
+    onMounted,
+    onUnmounted,
+    reactive,
+    ref,
+    watch,
+    type CSSProperties
+  } from 'vue'
   import 'flag-icons/css/flag-icons.min.css'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
@@ -704,6 +723,18 @@
     return total ? `$${Math.round(total).toLocaleString()}` : '$0'
   })
   const topCountries = ref(MOCK_REVENUE_OVERVIEW_TOP_COUNTRIES)
+
+  type Top5TabKey = 'total' | 'iaa' | 'iap'
+  const top5Tab = ref<Top5TabKey>('total')
+  const top5TabDefs: { key: Top5TabKey; label: string }[] = [
+    { key: 'total', label: '合计' },
+    { key: 'iaa', label: 'IAA' },
+    { key: 'iap', label: 'IAP' }
+  ]
+  const top5TabIndex = computed(() => top5TabDefs.findIndex((t) => t.key === top5Tab.value))
+  const top5PillStyle = computed<CSSProperties>(() => ({
+    transform: `translateX(calc(${Math.max(0, top5TabIndex.value)} * 100%))`
+  }))
   const aiInsight = ref(MOCK_REVENUE_OVERVIEW_AI_INSIGHT)
   const qualityMetrics = ref(MOCK_REVENUE_OVERVIEW_QUALITY_METRICS)
 
@@ -1308,48 +1339,127 @@
     return row?.s_country_code === 'ALL' ? 'is-subtotal' : ''
   }
 
-  const top5Columns = computed<ColumnOption[]>(() => [
-    { label: '国家', prop: 's_country_name', minWidth: 100, useSlot: true },
-    {
-      label: 'IAA收入',
-      prop: 'iaa',
-      minWidth: 90,
-      'class-name': 'col-iaa',
-      formatter: (row: any) => `$${formatMoneyInt(row.iaa)}`
-    },
-    {
-      label: 'IAP收入',
-      prop: 'iap',
-      minWidth: 90,
-      'class-name': 'col-iap',
-      formatter: (row: any) => `$${formatFixed(row.iap, 1)}`
-    },
-    {
-      label: '合计',
-      prop: 'total',
-      minWidth: 90,
-      formatter: (row: any) => `$${formatMoneyInt(row.total)}`
-    },
-    {
-      label: '占比',
-      prop: 'percent',
-      minWidth: 70,
-      formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
+  const top5Columns = computed<ColumnOption[]>(() => {
+    const pctFmt = (row: { percent: number }) => `${Number(row.percent).toFixed(1)}%`
+
+    if (top5Tab.value === 'total') {
+      return [
+        { label: '国家', prop: 's_country_name', minWidth: 100, useSlot: true },
+        {
+          label: 'IAA收入',
+          prop: 'iaa',
+          minWidth: 90,
+          'class-name': 'col-iaa',
+          formatter: (row: any) => `$${formatMoneyInt(row.iaa)}`
+        },
+        {
+          label: 'IAP收入',
+          prop: 'iap',
+          minWidth: 90,
+          'class-name': 'col-iap',
+          formatter: (row: any) => `$${formatFixed(row.iap, 1)}`
+        },
+        {
+          label: '合计',
+          prop: 'total',
+          minWidth: 90,
+          formatter: (row: any) => `$${formatMoneyInt(row.total)}`
+        },
+        {
+          label: '占比',
+          prop: 'percent',
+          minWidth: 70,
+          formatter: (row: any) => pctFmt(row)
+        }
+      ]
     }
-  ])
+    if (top5Tab.value === 'iaa') {
+      return [
+        { label: '国家', prop: 's_country_name', minWidth: 100, useSlot: true },
+        {
+          label: 'IAA收入',
+          prop: 'iaa',
+          minWidth: 90,
+          'class-name': 'col-iaa',
+          formatter: (row: any) => `$${formatMoneyInt(row.iaa)}`
+        },
+        {
+          label: '占比',
+          prop: 'percent',
+          minWidth: 70,
+          formatter: (row: any) => pctFmt(row)
+        }
+      ]
+    }
+    return [
+      { label: '国家', prop: 's_country_name', minWidth: 100, useSlot: true },
+      {
+        label: 'IAP收入',
+        prop: 'iap',
+        minWidth: 90,
+        'class-name': 'col-iap',
+        formatter: (row: any) => `$${formatFixed(row.iap, 1)}`
+      },
+      {
+        label: '占比',
+        prop: 'percent',
+        minWidth: 70,
+        formatter: (row: any) => pctFmt(row)
+      }
+    ]
+  })
 
   const topCountriesWithTotal = computed(() => {
-    const rows = [...topCountries.value]
-    const sumIaa = rows.reduce((acc, r) => acc + r.iaa, 0)
-    const sumIap = rows.reduce((acc, r) => acc + r.iap, 0)
-    const sumTotal = rows.reduce((acc, r) => acc + r.total, 0)
+    const tab = top5Tab.value
+    const base = [...topCountries.value]
+    const sortKey: 'total' | 'iaa' | 'iap' = tab === 'iaa' ? 'iaa' : tab === 'iap' ? 'iap' : 'total'
+    base.sort((a, b) => Number(b[sortKey]) - Number(a[sortKey]))
+
+    if (tab === 'total') {
+      const rows = [...base]
+      const sumIaa = rows.reduce((acc, r) => acc + r.iaa, 0)
+      const sumIap = rows.reduce((acc, r) => acc + r.iap, 0)
+      const sumTotal = rows.reduce((acc, r) => acc + r.total, 0)
+      rows.push({
+        s_country_name: '小计',
+        s_country_code: 'ALL',
+        iaa: sumIaa,
+        iap: sumIap,
+        total: sumTotal,
+        percent: rows.reduce((acc, r) => acc + r.percent, 0)
+      })
+      return rows
+    }
+
+    if (tab === 'iaa') {
+      const sumIaa = base.reduce((acc, r) => acc + r.iaa, 0)
+      const rows = base.map((r) => ({
+        ...r,
+        percent: sumIaa > 0 ? (r.iaa / sumIaa) * 100 : 0
+      }))
+      rows.push({
+        s_country_name: '小计',
+        s_country_code: 'ALL',
+        iaa: sumIaa,
+        iap: base.reduce((a, r) => a + r.iap, 0),
+        total: base.reduce((a, r) => a + r.total, 0),
+        percent: 100
+      })
+      return rows
+    }
+
+    const sumIap = base.reduce((acc, r) => acc + r.iap, 0)
+    const rows = base.map((r) => ({
+      ...r,
+      percent: sumIap > 0 ? (r.iap / sumIap) * 100 : 0
+    }))
     rows.push({
       s_country_name: '小计',
       s_country_code: 'ALL',
-      iaa: sumIaa,
+      iaa: base.reduce((a, r) => a + r.iaa, 0),
       iap: sumIap,
-      total: sumTotal,
-      percent: rows.reduce((acc, r) => acc + r.percent, 0)
+      total: base.reduce((a, r) => a + r.total, 0),
+      percent: 100
     })
     return rows
   })
@@ -2940,6 +3050,62 @@
   :global(html:not(.dark) .rev-tabs--segmented) {
     background: rgb(15 23 42 / 6%);
     border-color: rgb(15 23 42 / 12%);
+  }
+
+  /* Top5：分段切換滑動指示條 + 三欄等寬 */
+  .rev-tabs--top5 {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    align-items: stretch;
+  }
+
+  .rev-tab-pill {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    z-index: 0;
+    width: calc((100% - 6px) / 3);
+    height: calc(100% - 6px);
+    pointer-events: none;
+    background: rgb(20 214 181 / 12%);
+    border: 1px solid rgb(20 214 181 / 20%);
+    border-radius: 999px;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  :global(html:not(.dark) .rev-tab-pill) {
+    background: rgb(37 99 235 / 12%);
+    border-color: rgb(37 99 235 / 18%);
+  }
+
+  .rev-tabs--top5 .rev-tab {
+    position: relative;
+    z-index: 1;
+    border-color: transparent;
+  }
+
+  .rev-tabs--top5 .rev-tab.active {
+    background: transparent;
+    border-color: transparent;
+  }
+
+  .rev-top5-panel-enter-active,
+  .rev-top5-panel-leave-active {
+    transition:
+      opacity 0.22s ease,
+      transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .rev-top5-panel-enter-from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+
+  .rev-top5-panel-leave-to {
+    opacity: 0;
+    transform: translateX(-12px);
   }
 
   .rev-tab {
