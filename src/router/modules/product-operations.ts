@@ -39,6 +39,15 @@ export const productOperationsRoutes: AppRouteRecord = {
         title: 'menus.productOperations.thirdPartyStores',
         keepAlive: false
       }
+    },
+    {
+      path: 'text-management',
+      name: 'TextManagement',
+      component: '/product-operations/text-management',
+      meta: {
+        title: 'menus.productOperations.textManagement',
+        keepAlive: false
+      }
     }
   ]
 }
