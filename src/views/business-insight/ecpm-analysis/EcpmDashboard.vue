@@ -46,9 +46,12 @@
           <el-icon class="kpi-icon teal"><TrendCharts /></el-icon>
           ECPM（预估）
         </div>
-        <div class="kpi-value teal">3.32</div>
+        <div class="kpi-value teal">{{ fmt2(kpis.d_ecpm_estimated) }}</div>
         <div class="kpi-meta">广告平台上报</div>
-        <div class="kpi-change up">↑ 12.3% vs 上月</div>
+        <div class="kpi-change" :class="kpis.estimated_change_pct_vs_prev_month >= 0 ? 'up' : 'dn'">
+          {{ kpis.estimated_change_pct_vs_prev_month >= 0 ? '↑' : '↓'
+          }}{{ Math.abs(kpis.estimated_change_pct_vs_prev_month) }}% vs 上月
+        </div>
       </div>
 
       <!-- 真实 ECPM -->
@@ -57,9 +60,12 @@
           <el-icon class="kpi-icon blue"><Money /></el-icon>
           ECPM（真实）
         </div>
-        <div class="kpi-value blue">3.06</div>
+        <div class="kpi-value blue">{{ fmt2(kpis.d_ecpm_real) }}</div>
         <div class="kpi-meta">实际入账</div>
-        <div class="kpi-change up">↑ 8.1% vs 上月</div>
+        <div class="kpi-change" :class="kpis.real_change_pct_vs_prev_month >= 0 ? 'up' : 'dn'">
+          {{ kpis.real_change_pct_vs_prev_month >= 0 ? '↑' : '↓'
+          }}{{ Math.abs(kpis.real_change_pct_vs_prev_month) }}% vs 上月
+        </div>
       </div>
 
       <!-- 最高 ECPM 国家 -->
@@ -68,9 +74,14 @@
           <el-icon class="kpi-icon white"><Location /></el-icon>
           最高ECPM国家
         </div>
-        <div class="kpi-value white large">美国 $8.23</div>
+        <div class="kpi-value white large">
+          {{ kpis.top_country.label_display }} ${{ fmt2(kpis.top_country.d_ecpm) }}
+        </div>
         <div class="kpi-meta">全球最高</div>
-        <div class="kpi-meta dim">韩国 $7.44 第二</div>
+        <div class="kpi-meta dim">
+          {{ kpis.top_country.second.label_display }} ${{ fmt2(kpis.top_country.second.d_ecpm) }}
+          第二
+        </div>
       </div>
 
       <!-- 最高 ECPM 广告位 -->
@@ -79,8 +90,10 @@
           <el-icon class="kpi-icon orange"><Grid /></el-icon>
           最高ECPM广告位
         </div>
-        <div class="kpi-value orange xlarge">WeatherRadar</div>
-        <div class="kpi-meta orange-dim">$19.16 插屏广告</div>
+        <div class="kpi-value orange xlarge">{{ kpis.top_ad_slot.s_app_name }}</div>
+        <div class="kpi-meta orange-dim">
+          ${{ fmt2(kpis.top_ad_slot.d_ecpm) }} {{ kpis.top_ad_slot.n_ad_type_label }}
+        </div>
         <div class="kpi-meta dim">远高于平均水平</div>
       </div>
     </div>
@@ -145,10 +158,10 @@
               </tr>
               <tr class="total-row">
                 <td>小计</td>
-                <td class="tr teal fw6">3.32</td>
-                <td class="tr blue fw6">3.06</td>
-                <td class="tr fw6">$3,201</td>
-                <td class="tr fw6">100%</td>
+                <td class="tr teal fw6">{{ fmt2(platformSubtotal.d_ecpm_estimated) }}</td>
+                <td class="tr blue fw6">{{ fmt2(platformSubtotal.d_ecpm_real) }}</td>
+                <td class="tr fw6">{{ platformSubtotal.revenue_display }}</td>
+                <td class="tr fw6">{{ platformSubtotal.share_display }}</td>
                 <td class="tr dim">--</td>
               </tr>
             </tbody>
@@ -188,7 +201,7 @@
         <!-- 提示条 -->
         <div class="alert-bar">
           <el-icon class="alert-icon"><Warning /></el-icon>
-          <span>插屏式广告位普遍ECPM较高，建议优先保障展示频次</span>
+          <span>{{ insightTip }}</span>
         </div>
 
         <!-- 广告位排行 -->
@@ -235,7 +248,7 @@
                   <span class="app-icon-box">{{ row.icon }}</span>
                   {{ row.name }}
                 </td>
-                <td class="tr teal">{{ row.ecpm }}</td>
+                <td class="tr teal">{{ fmt2(row.ecpm) }}</td>
                 <td class="tr">{{ row.revenue }}</td>
                 <td :class="['tr', row.change >= 0 ? 'up' : 'dn']">
                   {{ row.change >= 0 ? '↑' : '↓' }}{{ Math.abs(row.change) }}%
@@ -250,35 +263,43 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, watch } from 'vue'
+  import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
   import * as echarts from 'echarts'
   import type { ECharts } from 'echarts'
   import { Filter, TrendCharts, Money, Location, Grid, Warning } from '@element-plus/icons-vue'
+  import {
+    MOCK_ECPM_KPIS,
+    MOCK_ECPM_PLATFORMS,
+    MOCK_ECPM_PLATFORM_SUBTOTAL,
+    MOCK_ECPM_TREND,
+    MOCK_ECPM_MAP_COUNTRIES,
+    MOCK_ECPM_TOP_COUNTRIES,
+    MOCK_ECPM_AD_SLOTS,
+    MOCK_ECPM_APP_RANK,
+    MOCK_ECPM_INSIGHT_TIP
+  } from './mock'
 
-  // ─── Types ───────────────────────────────────────────────────────────────
-  interface PlatformRow {
-    name: string
-    estimated: number
-    real: number
-    revenue: string
-    share: string
-    trend: 'up' | 'down' | 'flat'
-    sparkData: number[]
+  defineOptions({ name: 'EcpmDashboard' })
+
+  function fmt2(n: number) {
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
-  interface AppRow {
-    name: string
-    icon: string
-    ecpm: number
-    revenue: string
-    change: number
-  }
+  const kpis = MOCK_ECPM_KPIS
+  const platformSubtotal = MOCK_ECPM_PLATFORM_SUBTOTAL
+  const platforms = MOCK_ECPM_PLATFORMS
+  const adSlots = MOCK_ECPM_AD_SLOTS
+  const insightTip = MOCK_ECPM_INSIGHT_TIP
 
-  interface AdSlot {
-    name: string
-    value: number
-    color: string
-  }
+  const apps = computed(() =>
+    MOCK_ECPM_APP_RANK.map((r) => ({
+      name: r.s_app_name,
+      icon: r.icon_text,
+      ecpm: appRankType.value === 'estimated' ? r.d_ecpm_estimated : r.d_ecpm_real,
+      revenue: r.revenue_display,
+      change: r.mom_change_pct
+    }))
+  )
 
   // ─── State ───────────────────────────────────────────────────────────────
   const dateRange = ref<[string, string]>(['2024/05/01', '2024/05/31'])
@@ -289,75 +310,6 @@
   const activeTrendTab = ref('预估ECPM')
   const trendTabs = ['预估ECPM', '真实ECPM', '广告收入']
   const appRankType = ref('estimated')
-
-  // ─── Static Data ─────────────────────────────────────────────────────────
-  const platforms: PlatformRow[] = [
-    {
-      name: 'Admob',
-      estimated: 3.32,
-      real: 3.06,
-      revenue: '$1,861',
-      share: '58.9%',
-      trend: 'up',
-      sparkData: [2.8, 2.9, 3.1, 2.9, 3.0, 3.2, 3.06]
-    },
-    {
-      name: 'Facebook',
-      estimated: 2.85,
-      real: 2.71,
-      revenue: '$285',
-      share: '9.0%',
-      trend: 'up',
-      sparkData: [2.4, 2.5, 2.6, 2.5, 2.7, 2.6, 2.71]
-    },
-    {
-      name: 'Applovin',
-      estimated: 4.12,
-      real: 3.98,
-      revenue: '$412',
-      share: '13.0%',
-      trend: 'up',
-      sparkData: [3.6, 3.7, 3.8, 3.7, 3.9, 3.9, 3.98]
-    },
-    {
-      name: 'Vungle',
-      estimated: 3.45,
-      real: 3.38,
-      revenue: '$345',
-      share: '10.9%',
-      trend: 'down',
-      sparkData: [3.6, 3.5, 3.5, 3.4, 3.4, 3.3, 3.38]
-    },
-    {
-      name: 'Pangle',
-      estimated: 2.98,
-      real: 2.94,
-      revenue: '$298',
-      share: '9.4%',
-      trend: 'flat',
-      sparkData: [2.9, 3.0, 2.9, 2.8, 2.9, 2.95, 2.94]
-    }
-  ]
-
-  const adSlots: AdSlot[] = [
-    { name: 'WeatherRadar', value: 19.16, color: '#00d4aa' },
-    { name: 'HomeResume', value: 14.35, color: '#00d4aa' },
-    { name: 'Splash', value: 13.63, color: '#00d4aa' },
-    { name: 'HourlyForecast', value: 14.03, color: '#00cfaa' },
-    { name: 'Reovu', value: 12.35, color: '#4db6e8' },
-    { name: 'DailyDetail', value: 12.32, color: '#4db6e8' },
-    { name: 'Monost', value: 9.83, color: '#52c41a' },
-    { name: 'Amesus', value: 8.04, color: '#fadb14' },
-    { name: 'South', value: 5.68, color: '#ff6b6b' }
-  ]
-
-  const apps: AppRow[] = [
-    { name: 'PhoneTracker2', icon: '📱', ecpm: 4.82, revenue: '$1,240', change: 6.2 },
-    { name: 'WeatherRadar', icon: '🌤', ecpm: 4.51, revenue: '$890', change: 3.1 },
-    { name: 'SpyApp', icon: '🔍', ecpm: 3.95, revenue: '$654', change: 1.8 },
-    { name: 'DramaVue', icon: '🎬', ecpm: 3.12, revenue: '$432', change: -0.5 },
-    { name: 'HealthTracker', icon: '❤️', ecpm: 2.87, revenue: '$321', change: 2.4 }
-  ]
 
   // ─── Chart Refs ───────────────────────────────────────────────────────────
   const trendRef = ref<HTMLDivElement>()
@@ -388,8 +340,6 @@
   const TRANSPARENT = 'transparent'
   const COLOR_TEAL = '#00d4aa'
   const COLOR_ORANGE = '#f5a623'
-  const COLOR_BLUE = '#4db6e8'
-  const COLOR_GREEN = '#52c41a'
   const AXIS_COLOR = '#243a55'
   const LABEL_COLOR = '#6a8aaa'
   const TEXT_COLOR = '#b0c8df'
@@ -405,15 +355,9 @@
     if (!trendRef.value) return
     trendChart = echarts.init(trendRef.value)
 
-    const days = Array.from({ length: 30 }, (_, i) => String(i + 1).padStart(2, '0'))
-    const estimated = [
-      3.8, 4.1, 3.9, 3.7, 3.6, 3.8, 4.0, 4.2, 3.9, 3.8, 3.7, 3.5, 3.6, 3.8, 4.0, 4.1, 4.3, 4.0, 3.9,
-      3.8, 4.0, 4.1, 4.2, 4.0, 3.9, 4.1, 4.3, 4.2, 4.1, 4.3
-    ]
-    const real = [
-      3.5, 3.7, 3.6, 3.4, 3.3, 3.5, 3.6, 3.8, 3.5, 3.4, 3.3, 3.2, 3.3, 3.4, 3.6, 3.7, 3.9, 3.6, 3.5,
-      3.5, 3.6, 3.7, 3.8, 3.7, 3.5, 3.7, 3.9, 3.8, 3.7, 3.9
-    ]
+    const days = MOCK_ECPM_TREND.x_labels
+    const estimated = MOCK_ECPM_TREND.series_estimated
+    const real = MOCK_ECPM_TREND.series_real
 
     trendChart.setOption({
       backgroundColor: TRANSPARENT,
@@ -485,6 +429,13 @@
     })
   }
 
+  function mapSeriesData() {
+    return MOCK_ECPM_MAP_COUNTRIES.map((c) => ({
+      name: c.geo_name,
+      value: mapMode.value === 'estimated' ? c.d_ecpm_estimated : c.d_ecpm_real
+    }))
+  }
+
   // ─── World Map ────────────────────────────────────────────────────────────
   async function initWorldMap() {
     if (!worldMapRef.value) return
@@ -532,19 +483,7 @@
               label: { show: false }
             },
             label: { show: false },
-            data: [
-              { name: 'United States', value: 8.23 },
-              { name: 'South Korea', value: 7.44 },
-              { name: 'Germany', value: 4.51 },
-              { name: 'United Kingdom', value: 3.89 },
-              { name: 'Japan', value: 3.72 },
-              { name: 'France', value: 3.45 },
-              { name: 'Canada', value: 3.21 },
-              { name: 'Australia', value: 2.95 },
-              { name: 'Brazil', value: 2.43 },
-              { name: 'South Africa', value: 2.18 },
-              { name: 'Kazakhstan', value: 0.63 }
-            ]
+            data: mapSeriesData()
           }
         ]
       })
@@ -558,31 +497,9 @@
     if (!top10Ref.value) return
     top10Chart = echarts.init(top10Ref.value)
 
-    const countries = [
-      '南非',
-      '巴西',
-      '澳大利亚',
-      '加拿大',
-      '法国',
-      '日本',
-      '英国',
-      '德国',
-      '韩国',
-      '美国'
-    ]
-    const values = [2.18, 2.43, 2.95, 3.21, 3.45, 3.72, 3.89, 4.51, 7.44, 8.23]
-    const colors = [
-      COLOR_GREEN,
-      COLOR_GREEN,
-      COLOR_GREEN,
-      COLOR_GREEN,
-      COLOR_GREEN,
-      COLOR_BLUE,
-      COLOR_BLUE,
-      COLOR_BLUE,
-      '#00cfb0',
-      COLOR_TEAL
-    ]
+    const countries = MOCK_ECPM_TOP_COUNTRIES.map((r) => r.label_zh)
+    const values = MOCK_ECPM_TOP_COUNTRIES.map((r) => r.d_ecpm)
+    const colors = MOCK_ECPM_TOP_COUNTRIES.map((r) => r.bar_color)
 
     top10Chart.setOption({
       backgroundColor: TRANSPARENT,
@@ -646,9 +563,12 @@
     window.removeEventListener('resize', onResize)
   })
 
-  // Re-init when switching map mode (production: swap data instead)
   watch(mapMode, () => {
-    worldMapChart?.resize()
+    if (!worldMapChart) return
+    worldMapChart.setOption({
+      series: [{ data: mapSeriesData() }]
+    })
+    worldMapChart.resize()
   })
 </script>
 

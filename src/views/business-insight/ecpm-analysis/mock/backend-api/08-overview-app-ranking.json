@@ -1,0 +1,100 @@
+{
+  "_comment": "ECPM 分析 — 应用 ECPM 排行。对应 mock.ts: MOCK_ECPM_APP_RANK。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "source": { "type": "string", "required": false, "description": "广告平台。" },
+      "s_country_code": { "type": "string", "required": false, "description": "国家码。" }
+    },
+    "response": {
+      "rows": {
+        "type": "EcpmAppRankRow[]",
+        "required": true,
+        "description": "应用维度排行。"
+      }
+    },
+    "EcpmAppRankRow": {
+      "s_app_name": { "type": "string", "required": true, "description": "应用名称。" },
+      "icon_text": {
+        "type": "string",
+        "required": false,
+        "description": "列表占位图标（演示用）；生产可改为空由前端默认图标。"
+      },
+      "d_ecpm_estimated": { "type": "number", "required": true, "description": "预估 ECPM。" },
+      "d_ecpm_real": { "type": "number", "required": true, "description": "真实 ECPM。" },
+      "revenue_display": {
+        "type": "string",
+        "required": true,
+        "description": "广告收入预格式化文案。"
+      },
+      "mom_change_pct": {
+        "type": "number",
+        "required": true,
+        "description": "环比变化百分比（可负）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "platform": "all",
+    "source": "",
+    "s_country_code": ""
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "s_app_name": "PhoneTracker2",
+        "icon_text": "📱",
+        "d_ecpm_estimated": 4.82,
+        "d_ecpm_real": 4.71,
+        "revenue_display": "$1,240",
+        "mom_change_pct": 6.2
+      },
+      {
+        "s_app_name": "WeatherRadar",
+        "icon_text": "🌤",
+        "d_ecpm_estimated": 4.51,
+        "d_ecpm_real": 4.4,
+        "revenue_display": "$890",
+        "mom_change_pct": 3.1
+      },
+      {
+        "s_app_name": "SpyApp",
+        "icon_text": "🔍",
+        "d_ecpm_estimated": 3.95,
+        "d_ecpm_real": 3.88,
+        "revenue_display": "$654",
+        "mom_change_pct": 1.8
+      },
+      {
+        "s_app_name": "DramaVue",
+        "icon_text": "🎬",
+        "d_ecpm_estimated": 3.12,
+        "d_ecpm_real": 3.05,
+        "revenue_display": "$432",
+        "mom_change_pct": -0.5
+      },
+      {
+        "s_app_name": "HealthTracker",
+        "icon_text": "❤️",
+        "d_ecpm_estimated": 2.87,
+        "d_ecpm_real": 2.8,
+        "revenue_display": "$321",
+        "mom_change_pct": 2.4
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/ecpm-analysis/overview/app-ranking",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "日期范围 + 维度筛选",
+    "responseBody": "{ rows: EcpmAppRankRow[] }"
+  },
+  "apiSuggestion": {
+    "notes": ["icon_text 为演示数据；正式环境建议用 s_app_id + 静态资源。"]
+  }
+}

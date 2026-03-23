@@ -1,0 +1,127 @@
+{
+  "_comment": "ECPM 分析 — 世界地图国家 ECPM。对应 mock.ts: MOCK_ECPM_MAP_COUNTRIES。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "source": { "type": "string", "required": false, "description": "广告平台。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID。" },
+      "map_metric": {
+        "type": "string",
+        "required": true,
+        "enum": ["estimated", "real"],
+        "description": "地图展示预估或真实 ECPM。"
+      }
+    },
+    "response": {
+      "items": {
+        "type": "EcpmMapCountryPoint[]",
+        "required": true,
+        "description": "国家点位；前端用 geo_name 绑定 ECharts map。"
+      }
+    },
+    "EcpmMapCountryPoint": {
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "ISO 3166-1 alpha-2。"
+      },
+      "geo_name": {
+        "type": "string",
+        "required": true,
+        "description": "与 ECharts geoJson 中名称一致，用于 series.data.name。"
+      },
+      "d_ecpm_estimated": { "type": "number", "required": true, "description": "预估 ECPM。" },
+      "d_ecpm_real": { "type": "number", "required": true, "description": "真实 ECPM。" }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "platform": "all",
+    "source": "",
+    "s_app_id": "",
+    "map_metric": "estimated"
+  },
+  "sampleResponse": {
+    "items": [
+      {
+        "s_country_code": "US",
+        "geo_name": "United States",
+        "d_ecpm_estimated": 8.23,
+        "d_ecpm_real": 7.95
+      },
+      {
+        "s_country_code": "KR",
+        "geo_name": "South Korea",
+        "d_ecpm_estimated": 7.44,
+        "d_ecpm_real": 7.2
+      },
+      {
+        "s_country_code": "DE",
+        "geo_name": "Germany",
+        "d_ecpm_estimated": 4.51,
+        "d_ecpm_real": 4.4
+      },
+      {
+        "s_country_code": "GB",
+        "geo_name": "United Kingdom",
+        "d_ecpm_estimated": 3.89,
+        "d_ecpm_real": 3.75
+      },
+      {
+        "s_country_code": "JP",
+        "geo_name": "Japan",
+        "d_ecpm_estimated": 3.72,
+        "d_ecpm_real": 3.6
+      },
+      {
+        "s_country_code": "FR",
+        "geo_name": "France",
+        "d_ecpm_estimated": 3.45,
+        "d_ecpm_real": 3.33
+      },
+      {
+        "s_country_code": "CA",
+        "geo_name": "Canada",
+        "d_ecpm_estimated": 3.21,
+        "d_ecpm_real": 3.1
+      },
+      {
+        "s_country_code": "AU",
+        "geo_name": "Australia",
+        "d_ecpm_estimated": 2.95,
+        "d_ecpm_real": 2.88
+      },
+      {
+        "s_country_code": "BR",
+        "geo_name": "Brazil",
+        "d_ecpm_estimated": 2.43,
+        "d_ecpm_real": 2.35
+      },
+      {
+        "s_country_code": "ZA",
+        "geo_name": "South Africa",
+        "d_ecpm_estimated": 2.18,
+        "d_ecpm_real": 2.1
+      },
+      {
+        "s_country_code": "KZ",
+        "geo_name": "Kazakhstan",
+        "d_ecpm_estimated": 0.63,
+        "d_ecpm_real": 0.6
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/ecpm-analysis/overview/map-country",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_start_date, t_end_date, platform, source?, s_app_id?, map_metric",
+    "responseBody": "{ items: EcpmMapCountryPoint[] }"
+  },
+  "apiSuggestion": {
+    "notes": ["也可返回单一 metric 的 value 列表，由前后端约定；当前为双字段便于前端切换。"]
+  }
+}

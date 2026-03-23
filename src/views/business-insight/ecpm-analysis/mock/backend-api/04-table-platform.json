@@ -1,0 +1,124 @@
+{
+  "_comment": "ECPM 分析 — 广告平台对比表。对应 mock.ts: MOCK_ECPM_PLATFORMS、MOCK_ECPM_PLATFORM_SUBTOTAL。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID。" },
+      "s_country_code": { "type": "string", "required": false, "description": "国家码。" }
+    },
+    "response": {
+      "rows": {
+        "type": "EcpmPlatformRow[]",
+        "required": true,
+        "description": "按广告平台聚合的行。"
+      },
+      "subtotal": {
+        "type": "EcpmPlatformSubtotal",
+        "required": true,
+        "description": "表尾小计。"
+      }
+    },
+    "EcpmPlatformRow": {
+      "name": { "type": "string", "required": true, "description": "广告平台展示名。" },
+      "d_ecpm_estimated": { "type": "number", "required": true, "description": "预估 ECPM。" },
+      "d_ecpm_real": { "type": "number", "required": true, "description": "真实 ECPM。" },
+      "revenue_display": {
+        "type": "string",
+        "required": true,
+        "description": "广告收入预格式化文案。"
+      },
+      "share_display": { "type": "string", "required": true, "description": "占比展示文案。" },
+      "trend": {
+        "type": "string",
+        "required": true,
+        "enum": ["up", "down", "flat"],
+        "description": "迷你趋势方向。"
+      },
+      "spark_series": {
+        "type": "number[]",
+        "required": true,
+        "description": "迷你折线 7 点。"
+      }
+    },
+    "EcpmPlatformSubtotal": {
+      "d_ecpm_estimated": { "type": "number", "required": true, "description": "预估 ECPM 小计。" },
+      "d_ecpm_real": { "type": "number", "required": true, "description": "真实 ECPM 小计。" },
+      "revenue_display": { "type": "string", "required": true, "description": "收入小计文案。" },
+      "share_display": { "type": "string", "required": true, "description": "占比展示文案。" }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "platform": "all",
+    "s_app_id": "",
+    "s_country_code": ""
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "name": "Admob",
+        "d_ecpm_estimated": 3.32,
+        "d_ecpm_real": 3.06,
+        "revenue_display": "$1,861",
+        "share_display": "58.9%",
+        "trend": "up",
+        "spark_series": [2.8, 2.9, 3.1, 2.9, 3.0, 3.2, 3.06]
+      },
+      {
+        "name": "Facebook",
+        "d_ecpm_estimated": 2.85,
+        "d_ecpm_real": 2.71,
+        "revenue_display": "$285",
+        "share_display": "9.0%",
+        "trend": "up",
+        "spark_series": [2.4, 2.5, 2.6, 2.5, 2.7, 2.6, 2.71]
+      },
+      {
+        "name": "Applovin",
+        "d_ecpm_estimated": 4.12,
+        "d_ecpm_real": 3.98,
+        "revenue_display": "$412",
+        "share_display": "13.0%",
+        "trend": "up",
+        "spark_series": [3.6, 3.7, 3.8, 3.7, 3.9, 3.9, 3.98]
+      },
+      {
+        "name": "Vungle",
+        "d_ecpm_estimated": 3.45,
+        "d_ecpm_real": 3.38,
+        "revenue_display": "$345",
+        "share_display": "10.9%",
+        "trend": "down",
+        "spark_series": [3.6, 3.5, 3.5, 3.4, 3.4, 3.3, 3.38]
+      },
+      {
+        "name": "Pangle",
+        "d_ecpm_estimated": 2.98,
+        "d_ecpm_real": 2.94,
+        "revenue_display": "$298",
+        "share_display": "9.4%",
+        "trend": "flat",
+        "spark_series": [2.9, 3.0, 2.9, 2.8, 2.9, 2.95, 2.94]
+      }
+    ],
+    "subtotal": {
+      "d_ecpm_estimated": 3.32,
+      "d_ecpm_real": 3.06,
+      "revenue_display": "$3,201",
+      "share_display": "100%"
+    }
+  },
+  "api": {
+    "url": "POST /api/business-insight/ecpm-analysis/table/platform",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "日期范围 + 维度筛选",
+    "responseBody": "EcpmPlatformTableResponse"
+  },
+  "apiSuggestion": {
+    "notes": ["行维度为广告平台（source）；展示名由后端或前端字典映射。"]
+  }
+}

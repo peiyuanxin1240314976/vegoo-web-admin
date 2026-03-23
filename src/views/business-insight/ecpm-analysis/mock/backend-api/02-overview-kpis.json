@@ -1,0 +1,85 @@
+{
+  "_comment": "ECPM 分析 — 顶部 KPI。对应 mock.ts: MOCK_ECPM_KPIS。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "终端平台：all 或 android / ios。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选，空为全部。"
+      },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" },
+      "s_country_code": { "type": "string", "required": false, "description": "国家码，空为全部。" }
+    },
+    "response": {
+      "d_ecpm_estimated": {
+        "type": "number",
+        "required": true,
+        "description": "预估 ECPM（美元计）。"
+      },
+      "d_ecpm_real": { "type": "number", "required": true, "description": "真实 ECPM（美元计）。" },
+      "estimated_change_pct_vs_prev_month": {
+        "type": "number",
+        "required": true,
+        "description": "预估环比上月变化百分比（可为负）。"
+      },
+      "real_change_pct_vs_prev_month": {
+        "type": "number",
+        "required": true,
+        "description": "真实环比上月变化百分比（可为负）。"
+      },
+      "top_country": {
+        "type": "object",
+        "required": true,
+        "description": "ECPM 最高国家摘要。"
+      },
+      "top_ad_slot": {
+        "type": "object",
+        "required": true,
+        "description": "ECPM 最高广告位（应用 + 广告类型 + 数值）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "platform": "all",
+    "source": "",
+    "s_app_id": "",
+    "s_country_code": ""
+  },
+  "sampleResponse": {
+    "d_ecpm_estimated": 3.32,
+    "d_ecpm_real": 3.06,
+    "estimated_change_pct_vs_prev_month": 12.3,
+    "real_change_pct_vs_prev_month": 8.1,
+    "top_country": {
+      "s_country_code": "US",
+      "label_display": "美国",
+      "d_ecpm": 8.23,
+      "second": { "s_country_code": "KR", "label_display": "韩国", "d_ecpm": 7.44 }
+    },
+    "top_ad_slot": {
+      "s_app_id": "weather_radar",
+      "s_app_name": "WeatherRadar",
+      "n_ad_type_label": "插屏广告",
+      "d_ecpm": 19.16
+    }
+  },
+  "api": {
+    "url": "POST /api/business-insight/ecpm-analysis/overview/kpis",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_start_date, t_end_date, platform, source?, s_app_id?, s_country_code?",
+    "responseBody": "EcpmOverviewKpis"
+  },
+  "apiSuggestion": {
+    "notes": ["环比口径与财务月一致；若与后端日历不一致需约定。"]
+  }
+}

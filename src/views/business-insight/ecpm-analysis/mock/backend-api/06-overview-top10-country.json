@@ -1,0 +1,121 @@
+{
+  "_comment": "ECPM 分析 — Top 10 国家横向条。对应 mock.ts: MOCK_ECPM_TOP_COUNTRIES。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "source": { "type": "string", "required": false, "description": "广告平台。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID。" },
+      "metric": {
+        "type": "string",
+        "required": true,
+        "enum": ["estimated", "real"],
+        "description": "排序用预估或真实 ECPM。"
+      }
+    },
+    "response": {
+      "rows": {
+        "type": "EcpmTopCountryRow[]",
+        "required": true,
+        "description": "按 ECPM 升序排列（图表自下而上递增时与前端一致）。"
+      }
+    },
+    "EcpmTopCountryRow": {
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "ISO 3166-1 alpha-2。"
+      },
+      "label_zh": { "type": "string", "required": true, "description": "中文展示名。" },
+      "d_ecpm": { "type": "number", "required": true, "description": "ECPM 数值。" },
+      "bar_color": {
+        "type": "string",
+        "required": true,
+        "description": "柱条颜色 HEX，可选由前端按序着色。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "platform": "all",
+    "source": "",
+    "s_app_id": "",
+    "metric": "estimated"
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "s_country_code": "ZA",
+        "label_zh": "南非",
+        "d_ecpm": 2.18,
+        "bar_color": "#52c41a"
+      },
+      {
+        "s_country_code": "BR",
+        "label_zh": "巴西",
+        "d_ecpm": 2.43,
+        "bar_color": "#52c41a"
+      },
+      {
+        "s_country_code": "AU",
+        "label_zh": "澳大利亚",
+        "d_ecpm": 2.95,
+        "bar_color": "#52c41a"
+      },
+      {
+        "s_country_code": "CA",
+        "label_zh": "加拿大",
+        "d_ecpm": 3.21,
+        "bar_color": "#52c41a"
+      },
+      {
+        "s_country_code": "FR",
+        "label_zh": "法国",
+        "d_ecpm": 3.45,
+        "bar_color": "#52c41a"
+      },
+      {
+        "s_country_code": "JP",
+        "label_zh": "日本",
+        "d_ecpm": 3.72,
+        "bar_color": "#4db6e8"
+      },
+      {
+        "s_country_code": "GB",
+        "label_zh": "英国",
+        "d_ecpm": 3.89,
+        "bar_color": "#4db6e8"
+      },
+      {
+        "s_country_code": "DE",
+        "label_zh": "德国",
+        "d_ecpm": 4.51,
+        "bar_color": "#4db6e8"
+      },
+      {
+        "s_country_code": "KR",
+        "label_zh": "韩国",
+        "d_ecpm": 7.44,
+        "bar_color": "#00cfb0"
+      },
+      {
+        "s_country_code": "US",
+        "label_zh": "美国",
+        "d_ecpm": 8.23,
+        "bar_color": "#00d4aa"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/ecpm-analysis/overview/top10-country",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "日期范围 + metric",
+    "responseBody": "{ rows: EcpmTopCountryRow[] }"
+  },
+  "apiSuggestion": {
+    "notes": ["若需国旗展示，仅用 s_country_code + flag-icons，勿返回 emoji URL。"]
+  }
+}
