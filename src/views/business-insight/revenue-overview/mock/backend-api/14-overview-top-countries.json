@@ -1,0 +1,92 @@
+{
+  "_comment": "收入总览 — 国家 Top 列表（IAA/IAP/合计）。对应 mock.ts: MOCK_REVENUE_OVERVIEW_TOP_COUNTRIES。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家码。" },
+      "app_version": { "type": "string", "required": true, "description": "版本。" },
+      "t_date": { "type": "string", "required": true, "description": "统计日。" }
+    },
+    "response": {
+      "rows": {
+        "type": "RevenueOverviewTopCountryRow[]",
+        "required": true,
+        "description": "Top 国家行。"
+      }
+    },
+    "RevenueOverviewTopCountryRow": {
+      "s_country_name": { "type": "string", "required": true, "description": "国家名。" },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "ISO 3166-1 alpha-2。"
+      },
+      "iaa": { "type": "number", "required": true, "description": "IAA 收入。" },
+      "iap": { "type": "number", "required": true, "description": "IAP 收入。" },
+      "total": { "type": "number", "required": true, "description": "合计。" },
+      "percent": { "type": "number", "required": true, "description": "占比 %。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "t_date": "2026-03-23"
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "s_country_name": "美国",
+        "s_country_code": "US",
+        "iaa": 1088,
+        "iap": 32.4,
+        "total": 1120,
+        "percent": 36.5
+      },
+      {
+        "s_country_name": "英国",
+        "s_country_code": "GB",
+        "iaa": 228,
+        "iap": 14.2,
+        "total": 242,
+        "percent": 7.9
+      },
+      {
+        "s_country_name": "德国",
+        "s_country_code": "DE",
+        "iaa": 196,
+        "iap": 9.8,
+        "total": 206,
+        "percent": 6.7
+      },
+      {
+        "s_country_name": "台湾",
+        "s_country_code": "TW",
+        "iaa": 146,
+        "iap": 7.2,
+        "total": 153,
+        "percent": 5.0
+      },
+      {
+        "s_country_name": "日本",
+        "s_country_code": "JP",
+        "iaa": 132,
+        "iap": 10.8,
+        "total": 143,
+        "percent": 4.7
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/revenue-overview/overview/top-countries",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "筛选五元组",
+    "responseBody": "{ rows }"
+  },
+  "apiSuggestion": {
+    "notes": ["字段顺序不影响 JSON；前端按 s_country_code 展示国旗。"]
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "_comment": "收入总览 — 7 日预估/真实 eCPM。对应 mock.ts: MOCK_REVENUE_OVERVIEW_ECPM_7D。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家码。" },
+      "app_version": { "type": "string", "required": true, "description": "版本。" },
+      "t_date": { "type": "string", "required": true, "description": "窗口结束日。" }
+    },
+    "response": {
+      "dateLabels": {
+        "type": "string[]",
+        "required": true,
+        "description": "横轴，与 11 号契约建议一致。"
+      },
+      "predicted": { "type": "number[]", "required": true, "description": "预估 eCPM 序列。" },
+      "actual": { "type": "number[]", "required": true, "description": "真实 eCPM 序列。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "t_date": "2026-03-23"
+  },
+  "sampleResponse": {
+    "dateLabels": ["Feb27", "Feb28", "Mar1", "Mar2", "Mar3", "Mar4", "Mar5"],
+    "predicted": [3.02, 2.98, 3.04, 3.01, 3.08, 3.11, 3.18],
+    "actual": [2.9, 2.95, 3.0, 3.02, 3.12, 3.2, 3.34]
+  },
+  "api": {
+    "url": "POST /api/business-insight/revenue-overview/overview/trend-7d/ecpm",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "筛选五元组",
+    "responseBody": "{ dateLabels, predicted, actual }"
+  },
+  "apiSuggestion": {
+    "notes": ["eCPM 数值保留小数位与 tooltip 一致，建议后端统一 2 位。"]
+  }
+}

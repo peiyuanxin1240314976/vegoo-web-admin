@@ -1,0 +1,149 @@
+{
+  "_comment": "收入总览 — 顶部 KPI 卡片。对应 mock.ts: RevenueOverviewKpiCard[]、MOCK_REVENUE_OVERVIEW_KPIS。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["all", "android", "ios"],
+        "description": "终端平台。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "国家码，all 表示全部。"
+      },
+      "app_version": { "type": "string", "required": true, "description": "版本，all 表示全部。" },
+      "t_date": { "type": "string", "required": true, "description": "统计日 YYYY-MM-DD。" }
+    },
+    "response": {
+      "kpis": {
+        "type": "RevenueOverviewKpiCard[]",
+        "required": true,
+        "description": "KPI 卡片列表；primaryValue/sub 等为预格式化展示文案。"
+      }
+    },
+    "RevenueOverviewKpiCard": {
+      "id": { "type": "string", "required": true, "description": "卡片唯一 id。" },
+      "title": { "type": "string", "required": true, "description": "标题。" },
+      "primaryValue": { "type": "string", "required": true, "description": "主指标（已格式化）。" },
+      "subLeftLabel": { "type": "string", "required": true, "description": "左下标签。" },
+      "subLeftValue": { "type": "string", "required": true, "description": "左下值。" },
+      "subRightLabel": { "type": "string", "required": true, "description": "右下标签。" },
+      "subRightValue": { "type": "string", "required": true, "description": "右下值。" },
+      "trendUp": { "type": "boolean", "required": true, "description": "环比是否上升。" },
+      "trendPercentText": { "type": "string", "required": true, "description": "环比文案。" },
+      "spark": {
+        "type": "number[]",
+        "required": true,
+        "description": "迷你趋势序列（近 7 点等）。"
+      },
+      "accent": {
+        "type": "string",
+        "required": true,
+        "enum": ["blue", "teal", "purple", "amber", "green", "indigo"],
+        "description": "主题色键。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "t_date": "2026-03-23"
+  },
+  "sampleResponse": {
+    "kpis": [
+      {
+        "id": "kpi_total",
+        "title": "总收入",
+        "primaryValue": "$3,068.92",
+        "subLeftLabel": "广告",
+        "subLeftValue": "$2,942.40",
+        "subRightLabel": "付费",
+        "subRightValue": "$126.52",
+        "trendUp": true,
+        "trendPercentText": "↑ 6.4% vs 昨日",
+        "spark": [2680, 2720, 2650, 2810, 2890, 2920, 3069],
+        "accent": "blue"
+      },
+      {
+        "id": "kpi_iaa",
+        "title": "IAA 广告收入",
+        "primaryValue": "$2,942.40",
+        "subLeftLabel": "真实",
+        "subLeftValue": "$1,988.20",
+        "subRightLabel": "预估",
+        "subRightValue": "↑ 31.9%",
+        "trendUp": true,
+        "trendPercentText": "↑ 11.2% vs 昨日",
+        "spark": [2480, 2550, 2510, 2680, 2780, 2850, 2942],
+        "accent": "teal"
+      },
+      {
+        "id": "kpi_iap",
+        "title": "IAP 付费收入",
+        "primaryValue": "$126.52",
+        "subLeftLabel": "订阅",
+        "subLeftValue": "$74.80",
+        "subRightLabel": "一次性",
+        "subRightValue": "$51.72",
+        "trendUp": false,
+        "trendPercentText": "↓ 2.1% vs 昨日",
+        "spark": [118, 122, 115, 128, 124, 130, 127],
+        "accent": "purple"
+      },
+      {
+        "id": "kpi_ecpm",
+        "title": "ECPM",
+        "primaryValue": "3.28",
+        "subLeftLabel": "预估",
+        "subLeftValue": "3.05",
+        "subRightLabel": "偏差",
+        "subRightValue": "+7.5%",
+        "trendUp": true,
+        "trendPercentText": "↑ 4.8% vs 昨日",
+        "spark": [2.95, 2.98, 3.01, 3.04, 3.06, 3.12, 3.28],
+        "accent": "amber"
+      },
+      {
+        "id": "kpi_users",
+        "title": "广告用户",
+        "primaryValue": "120,450",
+        "subLeftLabel": "激活率",
+        "subLeftValue": "69.2%",
+        "subRightLabel": "DAU",
+        "subRightValue": "174,120",
+        "trendUp": true,
+        "trendPercentText": "↑ 2.6% vs 昨日",
+        "spark": [112300, 114800, 116200, 117800, 118900, 119600, 120450],
+        "accent": "green"
+      },
+      {
+        "id": "kpi_arpdau",
+        "title": "ARPDAU",
+        "primaryValue": "$0.01688",
+        "subLeftLabel": "人均",
+        "subLeftValue": "占展示 5.1%",
+        "subRightLabel": " ",
+        "subRightValue": " ",
+        "trendUp": true,
+        "trendPercentText": "↑ 2.2% vs 昨日",
+        "spark": [0.0149, 0.0152, 0.0155, 0.0154, 0.0161, 0.0164, 0.01688],
+        "accent": "indigo"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/revenue-overview/overview/kpis",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_app_id, platform, s_country_code, app_version, t_date",
+    "responseBody": "{ kpis: RevenueOverviewKpiCard[] }"
+  },
+  "apiSuggestion": {
+    "notes": ["KPI 主值可为后端预格式化字符串，与现有大屏展示一致。"]
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "_comment": "收入总览 — 收入质量指标卡片。对应 mock.ts: MOCK_REVENUE_OVERVIEW_QUALITY_METRICS。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家码。" },
+      "app_version": { "type": "string", "required": true, "description": "版本。" },
+      "t_date": { "type": "string", "required": true, "description": "统计日。" }
+    },
+    "response": {
+      "metrics": {
+        "type": "RevenueOverviewQualityMetric[]",
+        "required": true,
+        "description": "质量指标卡片。"
+      }
+    },
+    "RevenueOverviewQualityMetric": {
+      "title": { "type": "string", "required": true, "description": "指标名。" },
+      "valueText": { "type": "string", "required": true, "description": "主值（预格式化）。" },
+      "subText": { "type": "string", "required": true, "description": "说明。" },
+      "trendText": { "type": "string", "required": true, "description": "趋势/评价文案。" },
+      "trendUp": { "type": "boolean", "required": true, "description": "用于样式正负。" },
+      "accent": {
+        "type": "string",
+        "required": true,
+        "enum": ["green", "blue", "amber"],
+        "description": "主题色键。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "t_date": "2026-03-23"
+  },
+  "sampleResponse": {
+    "metrics": [
+      {
+        "title": "广告充率",
+        "valueText": "96.1%",
+        "subText": "广告填充率",
+        "trendText": "稳定",
+        "trendUp": true,
+        "accent": "green"
+      },
+      {
+        "title": "广告请求成功率",
+        "valueText": "99.2%",
+        "subText": "广告请求成功率",
+        "trendText": "优秀",
+        "trendUp": true,
+        "accent": "blue"
+      },
+      {
+        "title": "ECPM 偏差率",
+        "valueText": "+7.5%",
+        "subText": "ECPM 偏差率",
+        "trendText": "偏高",
+        "trendUp": true,
+        "accent": "amber"
+      },
+      {
+        "title": "IAP 转化率",
+        "valueText": "2.4%",
+        "subText": "IAP 转化率",
+        "trendText": "一般",
+        "trendUp": false,
+        "accent": "amber"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/revenue-overview/overview/quality-metrics",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "筛选五元组",
+    "responseBody": "{ metrics }"
+  },
+  "apiSuggestion": {
+    "notes": ["文案「广告充率」与产品词典一致；若后端改名需同步 i18n。"]
+  }
+}

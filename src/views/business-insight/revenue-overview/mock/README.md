@@ -1,7 +1,16 @@
-# 收入概览（revenue-overview）Mock 说明
+# 收入总览（Revenue Overview）— Mock 说明
 
-本目录为 **商业洞察 / 收入概览** 页面的 Mock 与界面契约。
+## 用途
 
-- **页面数据来源**：`../mock.ts` 导出常量，供 `index.vue` 直接引用（开发预览与图表初始化）。
-- **后端契约（源文件）**：**仅** `backend-api/` 目录下各 JSON（含 `fieldDescription`、`sampleRequest` / `sampleResponse`、`api`）；入口索引见 `backend-api/00-endpoints-index.json`。联调以契约为准；契约与 `mock.ts` 字段风格不一致处（如 snake_case / camelCase）在对应契约 `apiSuggestion` 中说明，接入时在 `fetch` 或页面侧映射。
-- **数据源开关**：本页目前未接远端开关；若后续接入，请在 **`src/views/business-insight/revenue-overview/config/`** 按接口粒度配置（见项目 `module-api-mock-config`）。
+- 页面入口：`src/views/business-insight/revenue-overview/index.vue`
+- 当前页面数据由同级 **`mock.ts`** 提供（KPI、IAA/IAP 表格、图表序列、AI 洞察等），与筛选联动时仅刷新图表，未接远程接口。
+- **接口契约**见本目录下 **`backend-api/`**（`sampleRequest` / `sampleResponse` 与 `mock.ts` 导出常量对齐，便于后续接 `src/api` 与模块 `config` 开关）。
+
+## 与类型的关系
+
+- 业务展示类型定义在 **`mock.ts`**（如 `RevenueOverviewKpiCard`、`RevenueOverviewIaaBreakdownRow` 等）。
+- 联调时可将契约 JSON 中的字段同步到 `src/types/api/api.d.ts` 的 `Api.*` 或页面侧 `types.ts`（按团队约定）。
+
+## 国旗展示
+
+- 国家维度仅使用 **`s_country_code`（ISO 3166-1 alpha-2）**；不在接口中返回国旗 emoji 或图片 URL，前端用 `flag-icons` 渲染（见项目 `project-conventions.mdc`）。

@@ -1,0 +1,45 @@
+{
+  "_comment": "收入总览 — AI 洞察建议。对应 mock.ts: MOCK_REVENUE_OVERVIEW_AI_INSIGHT。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家码。" },
+      "app_version": { "type": "string", "required": true, "description": "版本。" },
+      "t_date": { "type": "string", "required": true, "description": "统计日。" }
+    },
+    "response": {
+      "title": { "type": "string", "required": true, "description": "区块标题。" },
+      "bullets": {
+        "type": "string[]",
+        "required": true,
+        "description": "要点列表，纯文本。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "t_date": "2026-03-23"
+  },
+  "sampleResponse": {
+    "title": "AI 洞察建议",
+    "bullets": [
+      "IAA：插屏广告占比 73.3%，AdMob 在广告平台维度占 71.0%，建议优先优化 AdMob 插屏的填充与竞价策略。",
+      "IAP：年度订阅贡献最高（约 33.7%），建议强化年度订阅曝光与价格锚点（$89.99）。",
+      "eCPM 偏差约 +7.5%，建议对「预估 eCPM」模型按国家与版本做分桶校准。"
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/revenue-overview/overview/ai-insight",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "筛选五元组",
+    "responseBody": "{ title, bullets }"
+  },
+  "apiSuggestion": {
+    "notes": ["可由 LLM 生成或规则模板；需控制长度避免撑破布局。"]
+  }
+}

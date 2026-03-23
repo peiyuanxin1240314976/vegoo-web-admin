@@ -1,3 +1,7 @@
+/**
+ * 收入总览页 Mock 常量与类型；与 `mock/backend-api/*.json` 契约中的 sampleResponse 对齐。
+ * 接入远程接口时在 `revenue-overview/config/` 按接口配置 mock/remote，并实现 `src/api` 内 fetch*。
+ */
 import { getAppTodayYYYYMMDD } from '@/utils/app-now'
 
 export type RevenueOverviewFilterState = {
