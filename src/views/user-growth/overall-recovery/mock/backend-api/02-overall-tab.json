@@ -52,6 +52,8 @@
           "id": "totalInstall",
           "title": "今日总安装",
           "primaryValue": "12,485",
+          "subLabel": "昨日",
+          "subValue": "12,097",
           "trendText": "+3.2% YoY日",
           "trendUp": true
         },
@@ -66,6 +68,8 @@
           "id": "effectiveCpi",
           "title": "整体有效CPI",
           "primaryValue": "$1.67",
+          "subLabel": "目标CPI",
+          "subValue": "$1.80",
           "trendText": "+5.2% 自然量提高",
           "trendUp": true
         },
@@ -114,7 +118,12 @@
       },
       "dailyVolume": [
         { "date": "03-01", "paid": 230, "organic": 92 },
-        { "date": "03-02", "paid": 215, "organic": 88 }
+        { "date": "03-02", "paid": 215, "organic": 88 },
+        { "date": "03-03", "paid": 238, "organic": 95 },
+        { "date": "03-04", "paid": 221, "organic": 91 },
+        { "date": "03-05", "paid": 246, "organic": 98 },
+        { "date": "03-06", "paid": 252, "organic": 101 },
+        { "date": "03-07", "paid": 244, "organic": 99 }
       ],
       "roiCompare": [
         {

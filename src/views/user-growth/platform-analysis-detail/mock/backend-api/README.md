@@ -2,7 +2,7 @@
 
 ## 父级路径
 
-与路由 `/user-growth/platform-analysis-detail` 对齐：**`/api/user-growth/platform-analysis-detail`**
+与路由 `/user-growth/comprehensive-analysis/platform-analysis-detail` 对齐：**`/api/user-growth/platform-analysis-detail`**
 
 约定：**POST**，请求体 JSON。
 

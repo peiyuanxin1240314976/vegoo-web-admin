@@ -1,107 +1,114 @@
 <template>
-  <div class="ca-page art-full-height">
-    <!-- 顶栏 -->
-    <header class="ca-header">
-      <div class="ca-header__left">
-        <span class="ca-breadcrumb">
-          {{ $t('menus.userGrowth.title') }} &gt; {{ $t('menus.userGrowth.comprehensiveAnalysis') }}
-        </span>
-      </div>
-      <div class="ca-header__right">
-        <div class="ca-filters">
-          <div class="ca-pill">
-            <el-icon style="font-size: 12px; color: var(--art-gray-500)"><Calendar /></el-icon>
-            <span class="ca-pill__k">{{ dateRangeLabel }}</span>
+  <div
+    class="ca-page art-full-height"
+    :class="{ 'is-platform-analysis-detail': isPlatformAnalysisDetail }"
+  >
+    <router-view v-if="isPlatformAnalysisDetail" />
+    <template v-else>
+      <!-- 顶栏 -->
+      <header class="ca-header">
+        <div class="ca-header__left">
+          <span class="ca-breadcrumb">
+            {{ $t('menus.userGrowth.title') }} &gt;
+            {{ $t('menus.userGrowth.comprehensiveAnalysis') }}
+          </span>
+        </div>
+        <div class="ca-header__right">
+          <div class="ca-filters">
+            <div class="ca-pill">
+              <el-icon style="font-size: 12px; color: var(--art-gray-500)"><Calendar /></el-icon>
+              <span class="ca-pill__k">{{ dateRangeLabel }}</span>
+            </div>
+            <div class="ca-pill">
+              <span class="ca-pill__k">应用:</span>
+              <ElSelect v-model="filters.s_app_id" class="ca-select" :teleported="false">
+                <ElOption
+                  v-for="opt in appOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
+              </ElSelect>
+            </div>
+            <div class="ca-pill">
+              <span class="ca-pill__k">广告平台:</span>
+              <ElSelect v-model="filters.adPlatform" class="ca-select" :teleported="false">
+                <ElOption
+                  v-for="opt in sourceOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
+              </ElSelect>
+            </div>
+            <div class="ca-pill">
+              <span class="ca-pill__k">国家:</span>
+              <ElSelect
+                v-model="filters.s_country_code"
+                class="ca-select"
+                :teleported="false"
+                filterable
+              >
+                <ElOption
+                  v-for="opt in countryOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
+              </ElSelect>
+            </div>
           </div>
-          <div class="ca-pill">
-            <span class="ca-pill__k">应用:</span>
-            <ElSelect v-model="filters.s_app_id" class="ca-select" :teleported="false">
-              <ElOption
-                v-for="opt in appOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </ElSelect>
-          </div>
-          <div class="ca-pill">
-            <span class="ca-pill__k">广告平台:</span>
-            <ElSelect v-model="filters.adPlatform" class="ca-select" :teleported="false">
-              <ElOption
-                v-for="opt in sourceOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </ElSelect>
-          </div>
-          <div class="ca-pill">
-            <span class="ca-pill__k">国家:</span>
-            <ElSelect
-              v-model="filters.s_country_code"
-              class="ca-select"
-              :teleported="false"
-              filterable
+          <div class="ca-view-tabs">
+            <button
+              v-for="v in viewModes"
+              :key="v.key"
+              type="button"
+              class="ca-view-tab"
+              :class="{ 'is-active': filters.viewMode === v.key }"
+              @click="filters.viewMode = v.key"
             >
-              <ElOption
-                v-for="opt in countryOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </ElSelect>
+              {{ v.label }}
+            </button>
           </div>
         </div>
-        <div class="ca-view-tabs">
-          <button
-            v-for="v in viewModes"
-            :key="v.key"
-            type="button"
-            class="ca-view-tab"
-            :class="{ 'is-active': filters.viewMode === v.key }"
-            @click="filters.viewMode = v.key"
-          >
-            {{ v.label }}
-          </button>
-        </div>
-      </div>
-    </header>
+      </header>
 
-    <main v-loading="loading" class="ca-main">
-      <!-- KPI 行 -->
-      <section class="ca-kpi-grid">
-        <article v-for="card in pageData?.kpis ?? []" :key="card.id" class="ca-kpi">
-          <div class="ca-kpi__title">{{ card.title }}</div>
-          <div class="ca-kpi__value">{{ card.primaryValue }}</div>
-          <div class="ca-kpi__sub">{{ card.subTitle }}</div>
-          <div class="ca-kpi__trend" :class="card.trendUp ? 'trend-up' : 'trend-down'">
-            <el-icon><Top v-if="card.trendUp" /><Bottom v-else /></el-icon>
-            {{ card.trendText }}
-          </div>
-        </article>
-      </section>
+      <main v-loading="loading" class="ca-main">
+        <!-- KPI 行 -->
+        <section class="ca-kpi-grid">
+          <article v-for="card in pageData?.kpis ?? []" :key="card.id" class="ca-kpi">
+            <div class="ca-kpi__title">{{ card.title }}</div>
+            <div class="ca-kpi__value">{{ card.primaryValue }}</div>
+            <div class="ca-kpi__sub">{{ card.subTitle }}</div>
+            <div class="ca-kpi__trend" :class="card.trendUp ? 'trend-up' : 'trend-down'">
+              <el-icon><Top v-if="card.trendUp" /><Bottom v-else /></el-icon>
+              {{ card.trendText }}
+            </div>
+          </article>
+        </section>
 
-      <!-- 主内容区：数据 / 看板 / 图表 / 报表 -->
-      <SectionPlatform
-        v-if="filters.viewMode === 'data' || filters.viewMode === 'chart'"
-        :data="pageData"
-        @drill-down="handleDrillDown"
-      />
-      <SectionApp
-        v-else-if="filters.viewMode === 'board'"
-        :data="sectionAppData"
-        @drill-down="handleDrillDown"
-      />
-      <ElCard v-else shadow="never" class="ca-view-placeholder">
-        <ElEmpty :description="viewModePlaceholderText" />
-      </ElCard>
-    </main>
+        <!-- 主内容区：数据 / 看板 / 图表 / 报表 -->
+        <SectionPlatform
+          v-if="filters.viewMode === 'data' || filters.viewMode === 'chart'"
+          :data="pageData"
+          @drill-down="handleDrillDown"
+        />
+        <SectionApp
+          v-else-if="filters.viewMode === 'board'"
+          :data="sectionAppData"
+          @drill-down="handleDrillDown"
+        />
+        <ElCard v-else shadow="never" class="ca-view-placeholder">
+          <ElEmpty :description="viewModePlaceholderText" />
+        </ElCard>
+      </main>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted, watch, computed } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { ref, reactive, onMounted, watch, computed, defineAsyncComponent } from 'vue'
+  import { useRouter, useRoute } from 'vue-router'
   import { Top, Bottom, Calendar } from '@element-plus/icons-vue'
   import type { ComprehensiveAnalysisFilterState, ComprehensiveAnalysisData } from './types'
   import { useComprehensiveAnalysisFilters } from './composables/useComprehensiveAnalysisFilters'
@@ -111,12 +118,13 @@
     resolveDateRangeFromPreset
   } from './utils/buildApiParams'
   import { buildMockSectionAppData } from './mock/data'
-  import SectionPlatform from './modules/section-platform.vue'
-  import SectionApp from './modules/section-app.vue'
+  const SectionPlatform = defineAsyncComponent(() => import('./modules/section-platform.vue'))
+  const SectionApp = defineAsyncComponent(() => import('./modules/section-app.vue'))
 
   defineOptions({ name: 'ComprehensiveAnalysis' })
 
   const router = useRouter()
+  const route = useRoute()
 
   const filters = reactive<ComprehensiveAnalysisFilterState>({
     dateRange: '7d',
@@ -151,9 +159,11 @@
 
   const viewModePlaceholderText = '报表视图：导出与订阅能力联调后开放'
 
+  const isPlatformAnalysisDetail = computed(() => route.name === 'PlatformAnalysisDetail')
+
   function handleDrillDown(name: string) {
     router.push({
-      path: '/user-growth/platform-analysis-detail',
+      path: '/user-growth/comprehensive-analysis/platform-analysis-detail',
       query: { name, from: 'comprehensive-analysis' }
     })
   }
@@ -197,6 +207,10 @@
     padding: 16px 24px;
     overflow: hidden;
     background: var(--default-bg-color);
+  }
+
+  .is-platform-analysis-detail {
+    padding: 0;
   }
 
   .ca-header {

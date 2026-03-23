@@ -98,8 +98,8 @@
         "paidValues": [88, 92, 30, 0, 85]
       },
       "kfactorTrend": {
-        "dates": ["03-01", "03-02", "03-03"],
-        "values": [0.4, 0.41, 0.42]
+        "dates": ["03-01", "03-02", "03-03", "03-04", "03-05", "03-06", "03-07"],
+        "values": [0.4, 0.41, 0.42, 0.42, 0.43, 0.43, 0.44]
       },
       "kfactorChannels": [
         {
@@ -157,6 +157,60 @@
           "kfactor": 0.38,
           "roiBoost": 32.1,
           "organicRatio": 27.8
+        },
+        {
+          "countryCode": "DE",
+          "countryName": "德国",
+          "organicInstall": 508,
+          "paidInstall": 1420,
+          "kfactor": 0.36,
+          "roiBoost": 29.4,
+          "organicRatio": 26.3
+        },
+        {
+          "countryCode": "JP",
+          "countryName": "日本",
+          "organicInstall": 476,
+          "paidInstall": 1350,
+          "kfactor": 0.35,
+          "roiBoost": 27.8,
+          "organicRatio": 26.1
+        },
+        {
+          "countryCode": "CA",
+          "countryName": "加拿大",
+          "organicInstall": 412,
+          "paidInstall": 1180,
+          "kfactor": 0.34,
+          "roiBoost": 25.9,
+          "organicRatio": 25.9
+        },
+        {
+          "countryCode": "FR",
+          "countryName": "法国",
+          "organicInstall": 395,
+          "paidInstall": 1105,
+          "kfactor": 0.33,
+          "roiBoost": 24.7,
+          "organicRatio": 26.3
+        },
+        {
+          "countryCode": "AU",
+          "countryName": "澳大利亚",
+          "organicInstall": 328,
+          "paidInstall": 960,
+          "kfactor": 0.34,
+          "roiBoost": 23.8,
+          "organicRatio": 25.5
+        },
+        {
+          "countryCode": "BR",
+          "countryName": "巴西",
+          "organicInstall": 287,
+          "paidInstall": 920,
+          "kfactor": 0.31,
+          "roiBoost": 21.2,
+          "organicRatio": 23.8
         }
       ]
     }

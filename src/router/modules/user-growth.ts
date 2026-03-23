@@ -143,7 +143,21 @@ export const userGrowthRoutes: AppRouteRecord = {
         title: 'menus.userGrowth.comprehensiveAnalysis',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
-      }
+      },
+      children: [
+        {
+          path: 'platform-analysis-detail',
+          name: 'PlatformAnalysisDetail',
+          component: '/user-growth/platform-analysis-detail',
+          meta: {
+            title: 'menus.userGrowth.platformAnalysisDetail',
+            keepAlive: false,
+            isHide: true,
+            activePath: '/user-growth/comprehensive-analysis',
+            roles: ['R_SUPER', 'R_ADMIN']
+          }
+        }
+      ]
     },
     {
       path: 'alert-management',
@@ -152,18 +166,6 @@ export const userGrowthRoutes: AppRouteRecord = {
       meta: {
         title: 'menus.userGrowth.alertManagement',
         keepAlive: true,
-        roles: ['R_SUPER', 'R_ADMIN']
-      }
-    },
-    {
-      path: 'platform-analysis-detail',
-      name: 'PlatformAnalysisDetail',
-      component: '/user-growth/platform-analysis-detail',
-      meta: {
-        title: 'menus.userGrowth.platformAnalysisDetail',
-        keepAlive: false,
-        isHide: true,
-        activePath: '/user-growth/comprehensive-analysis',
         roles: ['R_SUPER', 'R_ADMIN']
       }
     },
