@@ -176,6 +176,154 @@ export const appList: AppListItem[] = [
   }
 ]
 
+// ── Weekly App List ───────────────────────────────────────────
+export const weeklyAppList: AppListItem[] = [
+  {
+    id: 'overall',
+    name: '整体',
+    category: '全部平台',
+    platforms: ['安卓', 'iOS', '网站'],
+    iconEmoji: '📊',
+    iconColor: '#00D4A1',
+    iconBg: 'rgba(0,212,161,0.15)',
+    revenue: 1064100,
+    revenueChange: 8.4,
+    profit: 762300,
+    mau: 78.3,
+    dau: 78.3,
+    adSpend: 287700,
+    adSpendChange: 7.8,
+    activeCampaigns: 14,
+    pausedCampaigns: 3,
+    isOverall: true,
+    sparkline: [128, 138, 132, 150, 144, 158, 162, 168],
+    paidUsers: 179.9,
+    platformBreakdown: [
+      { name: 'Google', color: '#4285F4', percent: 37 },
+      { name: 'FB', color: '#8B5CF6', percent: 26 },
+      { name: 'Unity', color: '#22C55E', percent: 15 },
+      { name: 'Mintegral', color: '#F59E0B', percent: 10 },
+      { name: 'TikTok', color: '#FF4D4F', percent: 6 },
+      { name: 'Snapchat', color: '#FFFC00', percent: 3 },
+      { name: '其他', color: '#3A3A50', percent: 3 }
+    ]
+  },
+  {
+    id: 'health',
+    name: '健康',
+    category: '全部',
+    platforms: ['安卓', 'iOS', '网站'],
+    iconEmoji: '🏥',
+    iconColor: '#3B82F6',
+    iconBg: 'rgba(59,130,246,0.15)',
+    revenue: 288400,
+    revenueChange: 11.2,
+    profit: 205900,
+    dau: 29.2,
+    sparkline: [36, 38, 37, 41, 40, 43, 44, 46],
+    adSpend: 78400,
+    adSpendChange: 9.3,
+    activeCampaigns: 4,
+    paidUsers: 7.1
+  },
+  {
+    id: 'weather',
+    name: '天气',
+    category: '安卓+iOS',
+    platforms: ['安卓', 'iOS'],
+    iconEmoji: '🌤',
+    iconColor: '#94A3B8',
+    iconBg: 'rgba(148,163,184,0.15)',
+    revenue: 229600,
+    revenueChange: -3.1,
+    profit: 163900,
+    dau: 18.1,
+    sparkline: [38, 37, 39, 36, 35, 34, 36, 35],
+    adSpend: 62300,
+    adSpendChange: -2.4,
+    activeCampaigns: 3,
+    paidUsers: 5.2
+  },
+  {
+    id: 'ai',
+    name: 'AI应用',
+    category: '全部',
+    platforms: ['安卓', 'iOS', '网站'],
+    iconEmoji: '🤖',
+    iconColor: '#10B981',
+    iconBg: 'rgba(16,185,129,0.15)',
+    revenue: 203700,
+    revenueChange: 6.7,
+    profit: 145600,
+    dau: 14.4,
+    sparkline: [27, 28, 28, 30, 29, 31, 31, 32],
+    adSpend: 54600,
+    adSpendChange: 5.1,
+    activeCampaigns: 3,
+    paidUsers: 4.6
+  },
+  {
+    id: 'bloodsugar2',
+    name: 'BloodSugar2',
+    category: '安卓',
+    platforms: ['安卓'],
+    iconEmoji: '🩸',
+    iconColor: '#FF6B35',
+    iconBg: 'rgba(255,107,53,0.15)',
+    revenue: 86800,
+    revenueChange: 5.6,
+    profit: 60900,
+    adSpend: 23800,
+    adSpendChange: 4.2,
+    activeCampaigns: 2
+  },
+  {
+    id: 'healthtracker2',
+    name: 'HealthTracker2',
+    category: '安卓',
+    platforms: ['安卓'],
+    iconEmoji: '💪',
+    iconColor: '#00B894',
+    iconBg: 'rgba(0,184,148,0.15)',
+    revenue: 68600,
+    revenueChange: 8.9,
+    profit: 47900,
+    adSpend: 20300,
+    adSpendChange: 7.1,
+    activeCampaigns: 1
+  },
+  {
+    id: 'weatherapp',
+    name: 'WeatherApp',
+    category: '安卓+iOS',
+    platforms: ['安卓', 'iOS'],
+    iconEmoji: '⛅',
+    iconColor: '#74B9FF',
+    iconBg: 'rgba(116,185,255,0.15)',
+    revenue: 60900,
+    revenueChange: -1.2,
+    profit: 41300,
+    adSpend: 16800,
+    adSpendChange: -0.8,
+    activeCampaigns: 1
+  },
+  {
+    id: 'phonetracker2',
+    name: 'PhoneTracker2',
+    category: '安卓',
+    platforms: ['安卓'],
+    iconEmoji: '📱',
+    iconColor: '#00CEC9',
+    iconBg: 'rgba(0,206,201,0.15)',
+    revenue: 50400,
+    revenueChange: 3.4,
+    profit: 35700,
+    adSpend: 14700,
+    adSpendChange: 3.6,
+    activeCampaigns: 1
+  }
+]
+
 // ── Daily KPI Metrics ──────────────────────────────────────────
 export const dailyKpis: KpiMetric[] = [
   {
@@ -430,13 +578,48 @@ export const monthlyUserMetrics: UserMetricRow[] = [
 
 // ── ROI Metrics ────────────────────────────────────────────────
 export const roiMetrics: RoiRow[] = [
-  { type: '首日ROI', current: '36%', previous: '34%', change: '+2pp', isHighlighted: false },
-  { type: '3日ROI', current: '66%', previous: '64%', change: '+2pp', isHighlighted: false },
-  { type: '7日ROI', current: '96%', previous: '94%', change: '+2pp', isHighlighted: false },
-  { type: '14日ROI', current: '101%', previous: '99%', change: '+2pp', isHighlighted: true },
-  { type: '30日ROI', current: '113%', previous: '113%', change: '0pp', isHighlighted: true },
-  { type: '60日ROI', current: '-', previous: '-', change: '-' },
-  { type: '90日ROI', current: '-', previous: '-', change: '-' }
+  {
+    type: '首日ROI',
+    current: '36%',
+    previous: '34%',
+    change: '+2pp',
+    changeType: 'positive',
+    isHighlighted: false
+  },
+  {
+    type: '3日ROI',
+    current: '66%',
+    previous: '64%',
+    change: '+2pp',
+    changeType: 'positive',
+    isHighlighted: false
+  },
+  {
+    type: '7日ROI',
+    current: '96%',
+    previous: '94%',
+    change: '+2pp',
+    changeType: 'positive',
+    isHighlighted: false
+  },
+  {
+    type: '14日ROI',
+    current: '101%',
+    previous: '99%',
+    change: '+2pp',
+    changeType: 'positive',
+    isHighlighted: true
+  },
+  {
+    type: '30日ROI',
+    current: '113%',
+    previous: '113%',
+    change: '0pp',
+    changeType: 'neutral',
+    isHighlighted: true
+  },
+  { type: '60日ROI', current: '-', previous: '-', change: '-', changeType: 'neutral' },
+  { type: '90日ROI', current: '-', previous: '-', change: '-', changeType: 'neutral' }
 ]
 
 // ── Retention ──────────────────────────────────────────────────
@@ -839,8 +1022,78 @@ export const countryData: CountryRow[] = [
     campaigns: 1,
     roi1d: '37%',
     roi7d: '96%'
+  },
+  {
+    flag: '🇮🇹',
+    name: '意大利',
+    avgDau: '3.4万',
+    revenue: '$6,600',
+    paidRevenue: '$1,900',
+    profit: '$4,700',
+    calcProfit: '$4,200',
+    newUsers: '1.8万',
+    organic: '0.6万',
+    organicRate: '33%',
+    dauShare: 4,
+    ecpm: '$11.60',
+    arpdau: '1.94',
+    adSpend: '$2,200',
+    cpi: '$1.22',
+    cpm: '$8.90',
+    cpc: '$0.35',
+    acquisitions: '1.1万',
+    campaigns: 1,
+    roi1d: '36%',
+    roi7d: '95%'
+  },
+  {
+    flag: '🇪🇸',
+    name: '西班牙',
+    avgDau: '3.4万',
+    revenue: '$6,600',
+    paidRevenue: '$1,900',
+    profit: '$4,700',
+    calcProfit: '$4,200',
+    newUsers: '1.8万',
+    organic: '0.6万',
+    organicRate: '33%',
+    dauShare: 4,
+    ecpm: '$11.50',
+    arpdau: '1.92',
+    adSpend: '$2,200',
+    cpi: '$1.22',
+    cpm: '$8.80',
+    cpc: '$0.34',
+    acquisitions: '1.1万',
+    campaigns: 1,
+    roi1d: '35%',
+    roi7d: '93%'
   }
 ]
+
+export const countryOthersRow = {
+  name: '其他',
+  subLabel: '12个国家',
+  avgDau: '11.1万',
+  revenue: '$20,700',
+  paidRevenue: '$5,900',
+  profit: '$14,800',
+  calcProfit: '$13,200',
+  newUsers: '5.8万',
+  organic: '2.1万',
+  organicRate: '36%',
+  dauShare: 14,
+  ecpm: '$8.90',
+  arpdau: '1.48',
+  adSpend: '$6,900',
+  cpi: '$1.19',
+  cpm: '$7.80',
+  cpc: '$0.30',
+  acquisitions: '3.6万',
+  campaigns: 3,
+  roi1d: '34%',
+  roi7d: '90%'
+}
 
 // ── Campaign Data ──────────────────────────────────────────────
 export const campaignData: CampaignRow[] = [

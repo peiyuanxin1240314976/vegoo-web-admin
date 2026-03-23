@@ -175,7 +175,7 @@
 
   const feeItems = feeDeductions
 
-  function changeClass(type: string) {
+  function changeClass(type?: string) {
     if (type === 'positive') return 'positive'
     if (type === 'negative') return 'negative'
     return 'neutral'
