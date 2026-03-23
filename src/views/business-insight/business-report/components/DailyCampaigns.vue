@@ -121,17 +121,19 @@
       </span>
       <div class="dc-push-right">
         <span class="dc-push-last">上次推送：今日 08:30 飞书群《经营日报》</span>
-        <button class="dc-push-btn">立即推送</button>
+        <button class="dc-push-btn" @click="openPushModal()">立即推送</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
-  import { campaignData } from './mockData'
+  import { computed, inject } from 'vue'
+  import { campaignData } from '../mockData'
 
   const campaigns = campaignData
+  const openPushModal = inject<() => void>('openPushModal', () => {})
+
   const activeCampaigns = computed(() => campaigns.filter((c) => c.status === 'active').length)
   const pausedCampaigns = computed(() => campaigns.filter((c) => c.status === 'paused').length)
 

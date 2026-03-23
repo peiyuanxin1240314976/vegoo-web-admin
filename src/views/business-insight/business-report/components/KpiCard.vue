@@ -9,13 +9,13 @@
       <span class="kpi-change" :style="{ color: metric.change >= 0 ? '#00D4A1' : '#FF5C5C' }">
         {{ metric.changeLabel }}
       </span>
-      <SparklineChart :data="metric.sparkline" :color="metric.color" :width="72" :height="28" />
+      <SparklineChart :data="metric.sparkline" :color="metric.color" :width="90" :height="36" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import type { KpiMetric } from './types'
+  import type { KpiMetric } from '../types'
   import SparklineChart from './SparklineChart.vue'
 
   defineProps<{ metric: KpiMetric }>()
@@ -63,11 +63,13 @@
   }
 
   .kpi-value {
-    margin-bottom: 8px;
-    font-size: 22px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    font-size: 24px;
     font-weight: 700;
     color: #fff;
-    letter-spacing: -0.02em;
+    text-overflow: ellipsis;
+    letter-spacing: -0.03em;
     white-space: nowrap;
   }
 

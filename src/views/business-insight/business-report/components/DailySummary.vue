@@ -22,7 +22,7 @@
     <!-- ── 右下角推送 ─────────────────────────────────────── -->
     <div class="ds-push-bar">
       <span class="ds-push-last">上次推送：{{ updateTime }} 飞书群《经营日报》</span>
-      <button class="ds-push-btn">立即推送</button>
+      <button class="ds-push-btn" @click="openPushModal()">立即推送</button>
     </div>
 
     <!-- ── KPI Cards（第一排不动）────────────────────────── -->
@@ -146,14 +146,17 @@
 </template>
 
 <script setup lang="ts">
+  import { inject } from 'vue'
   import KpiCard from './KpiCard.vue'
+
+  const openPushModal = inject<() => void>('openPushModal', () => {})
   import {
     dailyKpis,
     dailyUserMetrics,
     roiMetrics,
     retentionMetrics,
     dailyRevenueMetrics
-  } from './mockData'
+  } from '../mockData'
 
   withDefaults(
     defineProps<{

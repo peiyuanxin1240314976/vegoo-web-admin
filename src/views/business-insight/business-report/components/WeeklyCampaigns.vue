@@ -119,16 +119,16 @@
       </span>
       <div class="wcc-push-right">
         <span class="wcc-push-last">上次推送：本周一 08:30 飞书群《经营周报》</span>
-        <button class="wcc-push-btn" type="button">立即推送</button>
+        <button class="wcc-push-btn" type="button" @click="openPushModal()">立即推送</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, onUnmounted } from 'vue'
+  import { ref, computed, inject, onMounted, onUnmounted } from 'vue'
   import * as echarts from 'echarts'
-  import { campaignData } from './mockData'
+  import { campaignData } from '../mockData'
 
   defineOptions({ name: 'WeeklyCampaigns' })
 
@@ -139,6 +139,8 @@
         ? '$0'
         : '$' + (parseInt(c.adSpend.replace(/[$,]/g, ''), 10) * 7).toLocaleString('en-US')
   }))
+
+  const openPushModal = inject<() => void>('openPushModal', () => {})
 
   const activeCount = computed(() => campaigns.filter((c) => c.status === 'active').length)
   const pausedCount = computed(() => campaigns.filter((c) => c.status === 'paused').length)

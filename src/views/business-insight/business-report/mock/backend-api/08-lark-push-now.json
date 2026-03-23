@@ -1,0 +1,54 @@
+{
+  "_comment": "飞书推送 - 立即推送一次。请求体与 07-lark-config-save.json 一致，触发即时推送（不保存配置）。",
+  "api": {
+    "url": "POST /api/v1/lark/push-now",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "LarkPushConfig（与 07 的 sampleRequest 结构一致）",
+    "note": "此接口仅触发一次性推送，不持久化配置；若需保存并推送，先调 07 再调本接口。"
+  },
+  "fieldDescription": {
+    "request": {
+      "groups": { "type": "LarkTarget[]", "required": true, "description": "推送目标群组" },
+      "persons": { "type": "LarkTarget[]", "required": true, "description": "推送目标人员" },
+      "daily": {
+        "type": "object",
+        "required": true,
+        "description": "本次推送的日报配置（决定推送内容）"
+      },
+      "weekly": { "type": "object", "required": true, "description": "本次推送的周报配置" },
+      "monthly": { "type": "object", "required": true, "description": "本次推送的月报配置" },
+      "content": { "type": "object", "required": true, "description": "本次推送的内容开关" }
+    },
+    "response": {
+      "code": { "type": "number", "required": true, "description": "0 = 推送成功，非 0 = 错误" },
+      "message": {
+        "type": "string",
+        "required": true,
+        "description": "成功时为 success；失败时返回具体原因"
+      },
+      "data": { "type": "null", "required": true, "description": "固定为 null" },
+      "timestamp": { "type": "number", "required": true, "description": "Unix 时间戳（ms）" }
+    }
+  },
+  "sampleRequest": {
+    "groups": [{ "id": "oc_group_daily_001", "name": "经营日报群" }],
+    "persons": [],
+    "daily": { "enabled": true, "day": "每天", "time": "09:00", "workdayOnly": false },
+    "weekly": { "enabled": false, "day": "每周一", "time": "09:00", "showChange": true },
+    "monthly": { "enabled": false, "day": "每月 1 日", "time": "09:00", "showFee": false },
+    "content": {
+      "summary": true,
+      "adPlatform": true,
+      "byCountry": false,
+      "platformCountry": false,
+      "campaigns": false
+    }
+  },
+  "sampleResponse": {
+    "code": 0,
+    "message": "success",
+    "data": null,
+    "timestamp": 1742688000000
+  }
+}

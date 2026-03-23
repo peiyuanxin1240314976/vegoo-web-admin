@@ -193,7 +193,7 @@
             ? '上次推送：本周一 08:30 飞书群《经营周报》'
             : '上次推送：今日 08:30 飞书群《经营日报》'
         }}</span>
-        <button class="dbc-push-btn" type="button">立即推送</button>
+        <button class="dbc-push-btn" type="button" @click="openPushModal()">立即推送</button>
       </div>
     </div>
   </div>
@@ -201,8 +201,8 @@
 
 <script setup lang="ts">
   import 'flag-icons/css/flag-icons.min.css'
-  import { computed } from 'vue'
-  import { countryData, countryOthersRow } from './mockData'
+  import { computed, inject } from 'vue'
+  import { countryData, countryOthersRow } from '../mockData'
 
   const props = withDefaults(
     defineProps<{
@@ -213,6 +213,8 @@
   )
 
   defineOptions({ name: 'DailyByCountry' })
+
+  const openPushModal = inject<() => void>('openPushModal', () => {})
 
   const isWeekly = computed(() => props.variant === 'weekly')
 
@@ -347,18 +349,14 @@
   /* ── 表格 ─────────────────────────────────────────────────── */
   .data-table {
     width: 100%;
-    min-width: 1600px;
+    min-width: max-content;
     font-size: 11.5px;
     border-collapse: collapse;
   }
 
-  /*
-   * 周报：勿用 width:100% 把表拉满容器；宽屏下会与 min-width 一起占满视区而不产生横向溢出。
-   * 用 max-content 保持列宽之和，容器较窄时 .table-wrap 才出现横向滚动条。
-   */
   .dbc--weekly .data-table {
-    width: max-content;
-    max-width: none;
+    width: 100%;
+    min-width: max-content;
   }
 
   .data-table thead {

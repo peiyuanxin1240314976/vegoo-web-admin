@@ -131,17 +131,20 @@
     <!-- ── 底部推送栏 ───────────────────────────────────────────── -->
     <div class="ws-push-bar">
       <span class="ws-push-last">上次推送：本周一 08:30 飞书群《经营周报》</span>
-      <button class="ws-push-btn">立即推送</button>
+      <button class="ws-push-btn" @click="openPushModal()">立即推送</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import { inject } from 'vue'
   import KpiCard from './KpiCard.vue'
-  import { weeklyKpis, weeklyUserMetrics, roiMetrics, retentionMetrics } from './mockData'
-  import type { RevenueRow } from './types'
+  import { weeklyKpis, weeklyUserMetrics, roiMetrics, retentionMetrics } from '../mockData'
+  import type { RevenueRow } from '../types'
 
   defineOptions({ name: 'WeeklySummary' })
+
+  const openPushModal = inject<() => void>('openPushModal', () => {})
 
   const kpis = weeklyKpis
   const userMetrics = weeklyUserMetrics

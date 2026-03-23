@@ -137,14 +137,16 @@
     <!-- ── 右下角推送 ─────────────────────────────────────── -->
     <div class="dap-push-bar">
       <span class="dap-push-last">上次推送：今日 08:30 飞书群《经营日报》</span>
-      <button class="dap-push-btn">立即推送</button>
+      <button class="dap-push-btn" @click="openPushModal()">立即推送</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
-  import { adPlatformCards } from './mockData'
+  import { computed, inject } from 'vue'
+  import { adPlatformCards } from '../mockData'
+
+  const openPushModal = inject<() => void>('openPushModal', () => {})
 
   const mainPlatforms = computed(() => adPlatformCards.slice(0, 5))
   const otherPlatforms = computed(() => adPlatformCards.slice(5))

@@ -1,0 +1,344 @@
+{
+  "_comment": "经营报告 - 汇总表。对应 types.ts: SummaryResponse。日报/周报/月报通用，月报额外返回 feeDeductions。",
+  "api": {
+    "url": "GET /api/v1/report/summary",
+    "method": "GET",
+    "priority": "P0",
+    "queryParams": "period, appId?, date?"
+  },
+  "fieldDescription": {
+    "request": {
+      "period": {
+        "type": "'daily' | 'weekly' | 'monthly'",
+        "required": true,
+        "description": "报告周期"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用 ID，不传返回所有应用整体数据"
+      },
+      "date": {
+        "type": "string",
+        "required": false,
+        "description": "ISO 日期（2026-03-23），不传取最新可用日期"
+      }
+    },
+    "response": {
+      "kpis": {
+        "type": "KpiMetric[]",
+        "required": true,
+        "description": "顶部 KPI 卡片，日报 6 个，周/月报同"
+      },
+      "userMetrics": {
+        "type": "UserMetricRow[]",
+        "required": true,
+        "description": "用户指标表格行"
+      },
+      "revenueMetrics": {
+        "type": "RevenueRow[]",
+        "required": true,
+        "description": "收缴指标表格行"
+      },
+      "roiMetrics": { "type": "RoiRow[]", "required": true, "description": "ROI 跟踪表格行" },
+      "retentionMetrics": {
+        "type": "RetentionRow[]",
+        "required": true,
+        "description": "留存率表格行"
+      },
+      "feeDeductions": {
+        "type": "FeeItem[]",
+        "required": false,
+        "description": "费用抄扣明细，仅 period=monthly 时返回"
+      },
+      "appList": { "type": "AppListItem[]", "required": true, "description": "左侧应用列表" }
+    },
+    "KpiMetric": {
+      "key": {
+        "type": "string",
+        "required": true,
+        "description": "唯一标识，如 revenue / dau / newUsers"
+      },
+      "label": { "type": "string", "required": true, "description": "卡片标题" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "预格式化显示值，如 $152,300 / 78.3万"
+      },
+      "change": { "type": "number", "required": true, "description": "环比变化率，8.4 代表 +8.4%" },
+      "changeLabel": {
+        "type": "string",
+        "required": true,
+        "description": "含前缀展示文本，如 环比昨日 ↑ 8.4%"
+      },
+      "color": { "type": "string", "required": true, "description": "主色（CSS 颜色）" },
+      "bg": { "type": "string", "required": true, "description": "背景渐变（CSS gradient）" },
+      "sparkline": { "type": "number[]", "required": true, "description": "8 个点的迷你图数据" },
+      "badge": { "type": "string", "required": false, "description": "徽标文字，如 MONTHLY ONLY" }
+    },
+    "UserMetricRow": {
+      "name": { "type": "string", "required": true, "description": "指标名称" },
+      "current": { "type": "string", "required": true, "description": "本期值（预格式化）" },
+      "previous": { "type": "string", "required": true, "description": "上期值（预格式化）" },
+      "change": { "type": "string", "required": true, "description": "变化，如 +8.4% / +1" },
+      "changeType": {
+        "type": "'positive' | 'negative' | 'neutral'",
+        "required": true,
+        "description": "变化类型，决定颜色"
+      }
+    },
+    "RoiRow": {
+      "type": {
+        "type": "string",
+        "required": true,
+        "description": "ROI 类型，如 首日ROI / 7日ROI"
+      },
+      "current": { "type": "string", "required": true, "description": "本期值，如 98%" },
+      "previous": { "type": "string", "required": true, "description": "上期值" },
+      "change": { "type": "string", "required": true, "description": "变化，如 +2pp / 0pp" },
+      "changeType": {
+        "type": "'positive' | 'negative' | 'neutral'",
+        "required": false,
+        "description": "变化类型"
+      },
+      "isHighlighted": {
+        "type": "boolean",
+        "required": false,
+        "description": "ROI >= 101% 时绿色高亮"
+      }
+    },
+    "FeeItem": {
+      "name": { "type": "string", "required": true, "description": "费用项目名称" },
+      "amount": {
+        "type": "string",
+        "required": true,
+        "description": "金额（带符号），如 +$6,737.28 / -$2,400.00"
+      },
+      "isPositive": { "type": "boolean", "required": true, "description": "是否为正向（收入）" }
+    }
+  },
+  "sampleRequest": {
+    "period": "monthly",
+    "appId": "all",
+    "date": "2025-12-31"
+  },
+  "sampleResponse": {
+    "kpis": [
+      {
+        "key": "revenue",
+        "label": "总收入",
+        "value": "$2,143,500",
+        "change": 12.4,
+        "changeLabel": "月环比 ↑ 12.4%",
+        "color": "#00d4a1",
+        "bg": "linear-gradient(135deg, rgba(0,212,161,0.15), rgba(0,212,161,0.05))",
+        "sparkline": [82, 91, 88, 95, 97, 102, 108, 112]
+      },
+      {
+        "key": "profit",
+        "label": "预估利润",
+        "value": "$768,200",
+        "change": 9.8,
+        "changeLabel": "月环比 ↑ 9.8%",
+        "color": "#6366f1",
+        "bg": "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05))",
+        "sparkline": [70, 75, 72, 80, 85, 88, 92, 96]
+      },
+      {
+        "key": "dau",
+        "label": "DAU",
+        "value": "78.3万",
+        "change": 6.2,
+        "changeLabel": "月环比 ↑ 6.2%",
+        "color": "#3b82f6",
+        "bg": "linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05))",
+        "sparkline": [65, 68, 70, 72, 74, 76, 77, 78]
+      },
+      {
+        "key": "adSpend",
+        "label": "广告支出",
+        "value": "$1,052,000",
+        "change": 8.1,
+        "changeLabel": "月环比 ↑ 8.1%",
+        "color": "#f59e0b",
+        "bg": "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05))",
+        "sparkline": [88, 90, 92, 94, 96, 98, 100, 104]
+      },
+      {
+        "key": "newUsers",
+        "label": "新增用户",
+        "value": "45.2万",
+        "change": 5.3,
+        "changeLabel": "月环比 ↑ 5.3%",
+        "color": "#22c55e",
+        "bg": "linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05))",
+        "sparkline": [40, 42, 43, 44, 44, 45, 45, 45]
+      },
+      {
+        "key": "mau",
+        "label": "MAU",
+        "value": "312.6万",
+        "change": 3.7,
+        "changeLabel": "月环比 ↑ 3.7%",
+        "color": "#8b5cf6",
+        "bg": "linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05))",
+        "sparkline": [295, 298, 300, 304, 307, 310, 311, 312],
+        "badge": "MONTHLY ONLY"
+      }
+    ],
+    "userMetrics": [
+      {
+        "name": "DAU",
+        "current": "78.3万",
+        "previous": "73.7万",
+        "change": "+6.2%",
+        "changeType": "positive"
+      },
+      {
+        "name": "MAU",
+        "current": "312.6万",
+        "previous": "301.4万",
+        "change": "+3.7%",
+        "changeType": "positive"
+      },
+      {
+        "name": "新增用户",
+        "current": "45.2万",
+        "previous": "42.9万",
+        "change": "+5.3%",
+        "changeType": "positive"
+      },
+      {
+        "name": "买量用户",
+        "current": "38.6万",
+        "previous": "36.5万",
+        "change": "+5.8%",
+        "changeType": "positive"
+      }
+    ],
+    "revenueMetrics": [
+      {
+        "name": "总收入",
+        "current": "$2,143,500",
+        "previous": "$1,906,100",
+        "change": "+12.4%",
+        "changeType": "positive"
+      },
+      {
+        "name": "广告收入",
+        "current": "$1,523,800",
+        "previous": "$1,356,200",
+        "change": "+12.4%",
+        "changeType": "positive"
+      },
+      {
+        "name": "IAP 收入",
+        "current": "$619,700",
+        "previous": "$549,900",
+        "change": "+12.7%",
+        "changeType": "positive"
+      }
+    ],
+    "roiMetrics": [
+      {
+        "type": "首日ROI",
+        "current": "36%",
+        "previous": "34%",
+        "change": "+2pp",
+        "changeType": "positive"
+      },
+      {
+        "type": "3日ROI",
+        "current": "64%",
+        "previous": "62%",
+        "change": "+2pp",
+        "changeType": "positive"
+      },
+      {
+        "type": "7日ROI",
+        "current": "93%",
+        "previous": "91%",
+        "change": "+2pp",
+        "changeType": "positive"
+      },
+      {
+        "type": "14日ROI",
+        "current": "96%",
+        "previous": "95%",
+        "change": "+1pp",
+        "changeType": "positive"
+      },
+      {
+        "type": "30日ROI",
+        "current": "107%",
+        "previous": "105%",
+        "change": "+2pp",
+        "changeType": "positive",
+        "isHighlighted": true
+      }
+    ],
+    "retentionMetrics": [
+      {
+        "day": "次留",
+        "current": "42.3%",
+        "previous": "41.8%",
+        "change": "+0.5pp",
+        "changeType": "positive"
+      },
+      {
+        "day": "三留",
+        "current": "28.6%",
+        "previous": "28.1%",
+        "change": "+0.5pp",
+        "changeType": "positive"
+      },
+      {
+        "day": "七留",
+        "current": "18.4%",
+        "previous": "18.2%",
+        "change": "+0.2pp",
+        "changeType": "positive"
+      }
+    ],
+    "feeDeductions": [
+      { "name": "Google Play 手续费", "amount": "-$45,672.00", "isPositive": false },
+      { "name": "App Store 手续费", "amount": "-$18,293.28", "isPositive": false },
+      { "name": "广告返点", "amount": "+$6,737.28", "isPositive": true },
+      { "name": "渠道服务费", "amount": "-$2,400.00", "isPositive": false },
+      { "name": "数据平台费", "amount": "-$19,473.52", "isPositive": false }
+    ],
+    "appList": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "category": "全部",
+        "platforms": ["安卓", "iOS", "网站"],
+        "iconEmoji": "🌐",
+        "iconColor": "#00d4a1",
+        "iconBg": "rgba(0,212,161,0.15)",
+        "revenue": 2143500,
+        "revenueChange": 12.4,
+        "profit": 768200,
+        "isOverall": true
+      },
+      {
+        "id": "app001",
+        "name": "Vegoo Travel",
+        "category": "工具",
+        "platforms": ["安卓", "iOS"],
+        "iconEmoji": "✈️",
+        "iconColor": "#3b82f6",
+        "iconBg": "rgba(59,130,246,0.15)",
+        "revenue": 1253000,
+        "revenueChange": 14.2,
+        "profit": 448500,
+        "mau": 180.3,
+        "dau": 46.2,
+        "adSpend": 612000,
+        "adSpendChange": 9.3,
+        "activeCampaigns": 42,
+        "countries": 18
+      }
+    ]
+  }
+}

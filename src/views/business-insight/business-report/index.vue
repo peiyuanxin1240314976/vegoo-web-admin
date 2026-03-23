@@ -202,7 +202,7 @@
     <div :class="['br-content', { 'no-sidebar': compareMode && period === 'monthly' }]">
       <!-- Monthly compare mode: no sidebar -->
       <template v-if="compareMode && period === 'monthly'">
-        <main class="br-main">
+        <main class="br-main br-main--compare">
           <MonthlyCompareMode />
         </main>
       </template>
@@ -257,30 +257,30 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, provide } from 'vue'
   import type { ReportPeriod, ReportTab } from './types'
 
-  import AppSidebar from './AppSidebar.vue'
-  import LarkPushModal from './LarkPushModal.vue'
+  import AppSidebar from './components/AppSidebar.vue'
+  import LarkPushModal from './components/LarkPushModal.vue'
 
-  import DailySummary from './DailySummary.vue'
-  import DailyAdPlatform from './DailyAdPlatform.vue'
-  import DailyByCountry from './DailyByCountry.vue'
-  import DailyPlatformCountry from './DailyPlatformCountry.vue'
-  import DailyCampaigns from './DailyCampaigns.vue'
+  import DailySummary from './components/DailySummary.vue'
+  import DailyAdPlatform from './components/DailyAdPlatform.vue'
+  import DailyByCountry from './components/DailyByCountry.vue'
+  import DailyPlatformCountry from './components/DailyPlatformCountry.vue'
+  import DailyCampaigns from './components/DailyCampaigns.vue'
 
-  import WeeklySummary from './WeeklySummary.vue'
-  import WeeklyAdPlatform from './WeeklyAdPlatform.vue'
-  import WeeklyByCountry from './WeeklyByCountry.vue'
-  import WeeklyPlatformCountry from './WeeklyPlatformCountry.vue'
-  import WeeklyCampaigns from './WeeklyCampaigns.vue'
+  import WeeklySummary from './components/WeeklySummary.vue'
+  import WeeklyAdPlatform from './components/WeeklyAdPlatform.vue'
+  import WeeklyByCountry from './components/WeeklyByCountry.vue'
+  import WeeklyPlatformCountry from './components/WeeklyPlatformCountry.vue'
+  import WeeklyCampaigns from './components/WeeklyCampaigns.vue'
 
-  import MonthlySummary from './MonthlySummary.vue'
-  import MonthlyAdPlatform from './MonthlyAdPlatform.vue'
-  import MonthlyByCountry from './MonthlyByCountry.vue'
-  import MonthlyPlatformCountry from './MonthlyPlatformCountry.vue'
-  import MonthlyCampaigns from './MonthlyCampaigns.vue'
-  import MonthlyCompareMode from './MonthlyCompareMode.vue'
+  import MonthlySummary from './components/MonthlySummary.vue'
+  import MonthlyAdPlatform from './components/MonthlyAdPlatform.vue'
+  import MonthlyByCountry from './components/MonthlyByCountry.vue'
+  import MonthlyPlatformCountry from './components/MonthlyPlatformCountry.vue'
+  import MonthlyCampaigns from './components/MonthlyCampaigns.vue'
+  import MonthlyCompareMode from './components/MonthlyCompareMode.vue'
 
   import { appList, weeklyAppList } from './mockData'
 
@@ -447,6 +447,9 @@
     return 'dau'
   })
   const showLarkModal = ref(false)
+  provide('openPushModal', () => {
+    showLarkModal.value = true
+  })
 </script>
 
 <style>
@@ -475,8 +478,7 @@
   .br-root {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
     color: var(--rp-text);
     background: var(--rp-bg);
   }
@@ -843,19 +845,13 @@
     display: flex;
     flex: 1;
     min-width: 0;
-    min-height: 0;
-    overflow: hidden;
   }
 
   .br-sidebar {
     flex-shrink: 0;
     align-self: flex-start;
     width: 340px;
-    max-height: 100%;
     padding: 16px 0 16px 16px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgb(255 255 255 / 10%) transparent;
   }
 
   .sidebar-card {
@@ -869,16 +865,15 @@
     flex: 1;
     min-width: 0;
     padding: 16px 20px;
-    overflow: hidden auto;
+    overflow-x: hidden;
   }
 
-  .br-main::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  .br-main::-webkit-scrollbar-thumb {
-    background: rgb(255 255 255 / 8%);
-    border-radius: 2px;
+  /* Compare mode: fixed viewport height, internal panels scroll */
+  .br-main--compare {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 142px); /* 52px header + 46px filter + 44px tab-nav */
+    overflow: hidden;
   }
 
   .br-status-bar {

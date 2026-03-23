@@ -1,0 +1,72 @@
+{
+  "_comment": "飞书推送 - 保存推送配置。请求体与 06-lark-config-get.json 的 sampleResponse 结构完全一致。",
+  "api": {
+    "url": "POST /api/v1/lark/push-config",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "LarkPushConfig（与 06 的 sampleResponse 结构一致）"
+  },
+  "fieldDescription": {
+    "request": {
+      "groups": {
+        "type": "LarkTarget[]",
+        "required": true,
+        "description": "推送群组列表，见 06-lark-config-get.json LarkTarget"
+      },
+      "persons": { "type": "LarkTarget[]", "required": true, "description": "推送人员列表" },
+      "daily": {
+        "type": "object",
+        "required": true,
+        "description": "日报配置，字段同 06 response.daily"
+      },
+      "weekly": {
+        "type": "object",
+        "required": true,
+        "description": "周报配置，字段同 06 response.weekly"
+      },
+      "monthly": {
+        "type": "object",
+        "required": true,
+        "description": "月报配置，字段同 06 response.monthly"
+      },
+      "content": {
+        "type": "object",
+        "required": true,
+        "description": "推送内容开关，字段同 06 response.content"
+      }
+    },
+    "response": {
+      "code": { "type": "number", "required": true, "description": "0 = 保存成功，非 0 = 错误" },
+      "message": {
+        "type": "string",
+        "required": true,
+        "description": "错误信息，成功时为 success"
+      },
+      "data": { "type": "null", "required": true, "description": "固定为 null" },
+      "timestamp": { "type": "number", "required": true, "description": "Unix 时间戳（ms）" }
+    }
+  },
+  "sampleRequest": {
+    "groups": [
+      { "id": "oc_group_daily_001", "name": "经营日报群" },
+      { "id": "oc_group_weekly_002", "name": "管理层周报群" }
+    ],
+    "persons": [{ "id": "ou_person_001", "name": "王总" }],
+    "daily": { "enabled": true, "day": "每天", "time": "09:00", "workdayOnly": true },
+    "weekly": { "enabled": true, "day": "每周一", "time": "09:00", "showChange": true },
+    "monthly": { "enabled": true, "day": "每月 1 日", "time": "09:00", "showFee": true },
+    "content": {
+      "summary": true,
+      "adPlatform": true,
+      "byCountry": true,
+      "platformCountry": false,
+      "campaigns": true
+    }
+  },
+  "sampleResponse": {
+    "code": 0,
+    "message": "success",
+    "data": null,
+    "timestamp": 1742688000000
+  }
+}

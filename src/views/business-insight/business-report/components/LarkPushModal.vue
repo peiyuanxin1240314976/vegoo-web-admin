@@ -18,8 +18,8 @@
             <div class="field-row">
               <label class="field-label">推送群组</label>
               <div class="tags-row">
-                <span v-for="g in config.groups" :key="g" class="tag tag-blue">
-                  💬 {{ g }} <span class="tag-remove" @click="removeGroup(g)">×</span>
+                <span v-for="g in config.groups" :key="g.id" class="tag tag-blue">
+                  💬 {{ g.name }} <span class="tag-remove" @click="removeGroup(g.id)">×</span>
                 </span>
                 <button class="tag-add" @click="addGroup">+ 添加群组</button>
               </div>
@@ -27,8 +27,8 @@
             <div class="field-row">
               <label class="field-label">指定人员</label>
               <div class="tags-row">
-                <span v-for="p in config.persons" :key="p" class="tag tag-gray">
-                  👤 {{ p }} <span class="tag-remove" @click="removePerson(p)">×</span>
+                <span v-for="p in config.persons" :key="p.id" class="tag tag-gray">
+                  👤 {{ p.name }} <span class="tag-remove" @click="removePerson(p.id)">×</span>
                 </span>
                 <button class="tag-add" @click="addPerson">+ 添加人员</button>
               </div>
@@ -111,7 +111,7 @@
 <script setup lang="ts">
   import { reactive } from 'vue'
   import { ElMessage } from 'element-plus'
-  import type { LarkPushConfig } from './types'
+  import type { LarkPushConfig, LarkTarget } from '../types'
 
   defineProps<{ visible: boolean }>()
   const emit = defineEmits<{ (e: 'close'): void; (e: 'save', config: LarkPushConfig): void }>()
@@ -119,8 +119,14 @@
   const timeOptions = ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00']
 
   const config = reactive<LarkPushConfig>({
-    groups: ['经营日报群', '管理层周报群'],
-    persons: ['王总', '李总'],
+    groups: [
+      { id: 'oc_group_daily_001', name: '经营日报群' },
+      { id: 'oc_group_weekly_002', name: '管理层周报群' }
+    ],
+    persons: [
+      { id: 'ou_person_001', name: '王总' },
+      { id: 'ou_person_002', name: '李总' }
+    ],
     daily: { enabled: true, day: '每天', time: '09:00', workdayOnly: true },
     weekly: { enabled: true, day: '每周一', time: '09:00', showChange: true },
     monthly: { enabled: true, day: '每月 1 日', time: '09:00', showFee: true },
@@ -133,17 +139,19 @@
     }
   })
 
-  const removeGroup = (g: string) => {
-    config.groups = config.groups.filter((x) => x !== g)
+  const removeGroup = (id: string) => {
+    config.groups = config.groups.filter((x) => x.id !== id)
   }
   const addGroup = () => {
-    config.groups.push('新群组')
+    const newId = `oc_group_new_${Date.now()}`
+    config.groups.push({ id: newId, name: '新群组' } as LarkTarget)
   }
-  const removePerson = (p: string) => {
-    config.persons = config.persons.filter((x) => x !== p)
+  const removePerson = (id: string) => {
+    config.persons = config.persons.filter((x) => x.id !== id)
   }
   const addPerson = () => {
-    config.persons.push('新成员')
+    const newId = `ou_person_new_${Date.now()}`
+    config.persons.push({ id: newId, name: '新成员' } as LarkTarget)
   }
   const saveConfig = () => {
     emit('save', config)

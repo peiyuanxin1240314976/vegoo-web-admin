@@ -120,15 +120,23 @@
       </template>
 
       <!-- ═══════════════════════════════════════════════════════
-         周报·广告平台 / 周报·广告平台分国家
+         周报·广告平台 / 周报·广告平台分国家 / 月报·广告平台 / 月报·广告平台分国家
          整体卡相同；分国家为两列网格 + 支出环比「增高偏警示、降低偏利好」
          ═══════════════════════════════════════════════════ -->
       <template
-        v-else-if="sidebarKey === 'weekly-adPlatform' || sidebarKey === 'weekly-platformCountry'"
+        v-else-if="
+          sidebarKey === 'weekly-adPlatform' ||
+          sidebarKey === 'weekly-platformCountry' ||
+          sidebarKey === 'monthly-adPlatform' ||
+          sidebarKey === 'monthly-platformCountry'
+        "
       >
         <div
           class="wap-section"
-          :class="{ 'wap-section--platform-country': sidebarKey === 'weekly-platformCountry' }"
+          :class="{
+            'wap-section--platform-country':
+              sidebarKey === 'weekly-platformCountry' || sidebarKey === 'monthly-platformCountry'
+          }"
         >
           <div
             v-if="overallItem"
@@ -181,7 +189,10 @@
           </div>
 
           <!-- 广告平台：左图单列卡 -->
-          <div v-if="sidebarKey === 'weekly-adPlatform'" class="wap-app-list">
+          <div
+            v-if="sidebarKey === 'weekly-adPlatform' || sidebarKey === 'monthly-adPlatform'"
+            class="wap-app-list"
+          >
             <div
               v-for="item in flatAdSpendAppsSorted"
               :key="item.id"
@@ -238,28 +249,31 @@
       </template>
 
       <!-- ═══════════════════════════════════════════════════════
-         月报·广告平台
+         日报·在投广告系列 / 周报·在投广告系列 / 月报·在投广告系列
          ═══════════════════════════════════════════════════ -->
-      <template v-else-if="sidebarKey === 'monthly-adPlatform'">
-        <!-- 独立分支，可单独定制 -->
-      </template>
-
-      <!-- ═══════════════════════════════════════════════════════
-         日报·在投广告系列 / 周报·在投广告系列
-         ═══════════════════════════════════════════════════ -->
-      <template v-else-if="sidebarKey === 'daily-campaigns' || sidebarKey === 'weekly-campaigns'">
+      <template
+        v-else-if="
+          sidebarKey === 'daily-campaigns' ||
+          sidebarKey === 'weekly-campaigns' ||
+          sidebarKey === 'monthly-campaigns'
+        "
+      >
         <!-- Overall card -->
         <div
           v-if="overallItem"
           class="camp-overall"
           :class="{
             'camp-selected': selectedId === overallItem.id,
-            'wc-camp-overall': sidebarKey === 'weekly-campaigns'
+            'wc-camp-overall':
+              sidebarKey === 'weekly-campaigns' || sidebarKey === 'monthly-campaigns'
           }"
           @click="$emit('select', overallItem.id)"
         >
-          <!-- 周报：左侧文案 + 右侧迷你分组柱 -->
-          <div v-if="sidebarKey === 'weekly-campaigns'" class="wc-camp-ov-body">
+          <!-- 周报/月报：左侧文案 + 右侧迷你分组柱 -->
+          <div
+            v-if="sidebarKey === 'weekly-campaigns' || sidebarKey === 'monthly-campaigns'"
+            class="wc-camp-ov-body"
+          >
             <div class="wc-camp-ov-main">
               <div class="camp-ov-title-row">
                 <div class="camp-ov-name-block">
@@ -338,7 +352,7 @@
           </template>
         </div>
 
-        <!-- 日报：单列列表 -->
+        <!-- 日报：单列列表 / 月报复用 -->
         <div v-if="sidebarKey === 'daily-campaigns'" class="camp-app-list">
           <div
             v-for="item in campaignAppsSorted"
@@ -378,23 +392,22 @@
       </template>
 
       <!-- ═══════════════════════════════════════════════════════
-         月报·在投广告系列
+         日报·分国家 / 周报·分国家 / 月报·分国家
          ═══════════════════════════════════════════════════ -->
-      <template v-else-if="sidebarKey === 'monthly-campaigns'">
-        <!-- 独立分支，可单独定制 -->
-      </template>
-
-      <!-- ═══════════════════════════════════════════════════════
-         日报·分国家 / 周报·分国家
-         ═══════════════════════════════════════════════════ -->
-      <template v-else-if="sidebarKey === 'daily-byCountry' || sidebarKey === 'weekly-byCountry'">
+      <template
+        v-else-if="
+          sidebarKey === 'daily-byCountry' ||
+          sidebarKey === 'weekly-byCountry' ||
+          sidebarKey === 'monthly-byCountry'
+        "
+      >
         <!-- 整体 overall card -->
         <div
           v-if="overallItem"
           class="nm-overall"
           :class="{
             'is-selected': selectedId === overallItem.id,
-            'wbc-overall': sidebarKey === 'weekly-byCountry'
+            'wbc-overall': sidebarKey === 'weekly-byCountry' || sidebarKey === 'monthly-byCountry'
           }"
           @click="$emit('select', overallItem.id)"
         >
@@ -404,14 +417,22 @@
           </div>
           <div
             class="nm-ov-revenue-row"
-            :class="{ 'wbc-rev-stack': sidebarKey === 'weekly-byCountry' }"
+            :class="{
+              'wbc-rev-stack':
+                sidebarKey === 'weekly-byCountry' || sidebarKey === 'monthly-byCountry'
+            }"
           >
             <span class="nm-ov-label">{{
-              sidebarKey === 'weekly-byCountry' ? '总收益' : '总收缴'
+              sidebarKey === 'weekly-byCountry' || sidebarKey === 'monthly-byCountry'
+                ? '总收益'
+                : '总收缴'
             }}</span>
             <span
               class="nm-ov-amount"
-              :class="{ 'wbc-ov-amount': sidebarKey === 'weekly-byCountry' }"
+              :class="{
+                'wbc-ov-amount':
+                  sidebarKey === 'weekly-byCountry' || sidebarKey === 'monthly-byCountry'
+              }"
               >${{ formatNum(overallItem.revenue) }}</span
             >
             <span :class="['nm-ov-change', overallItem.revenueChange >= 0 ? 'is-up' : 'is-down']">
@@ -462,13 +483,6 @@
             <div class="nm-sc-countries">{{ item.countries ?? 0 }}个国家</div>
           </div>
         </div>
-      </template>
-
-      <!-- ═══════════════════════════════════════════════════════
-         月报·分国家
-         ═══════════════════════════════════════════════════ -->
-      <template v-else-if="sidebarKey === 'monthly-byCountry'">
-        <!-- 独立分支，可单独定制 -->
       </template>
 
       <!-- ═══════════════════════════════════════════════════════
@@ -526,13 +540,6 @@
             </div>
           </div>
         </div>
-      </template>
-
-      <!-- ═══════════════════════════════════════════════════════
-         月报·广告平台分国家
-         ═══════════════════════════════════════════════════ -->
-      <template v-else-if="sidebarKey === 'monthly-platformCountry'">
-        <!-- 独立分支，可单独定制 -->
       </template>
 
       <!-- ═══════════════════════════════════════════════════════
@@ -703,7 +710,98 @@
          月报·汇总
          ═══════════════════════════════════════════════════ -->
       <template v-else-if="sidebarKey === 'monthly-summary'">
-        <!-- 独立分支，可单独定制 -->
+        <!-- ── 整体 overall card ── -->
+        <div
+          v-if="overallItem"
+          class="mss-overall"
+          :class="{ 'mss-overall--selected': selectedId === overallItem.id }"
+          @click="$emit('select', overallItem.id)"
+        >
+          <div class="mss-ov-title">
+            <span class="mss-ov-name">{{ overallItem.name }}</span>
+            <span class="mss-ov-cat">{{ overallItem.category }}</span>
+            <span class="mss-ov-badge">月报</span>
+          </div>
+          <div class="mss-ov-revenue-label">总收缴</div>
+          <div class="mss-ov-revenue-row">
+            <span class="mss-ov-amount">${{ formatNum(overallItem.revenue) }}</span>
+            <span :class="['mss-ov-chg', overallItem.revenueChange >= 0 ? 'is-up' : 'is-down']">
+              月环比 {{ overallItem.revenueChange >= 0 ? '+' : '' }}{{ overallItem.revenueChange }}%
+            </span>
+          </div>
+          <div class="mss-ov-sub-row">
+            <span class="mss-ov-sub">预估利润 ${{ formatNum(overallItem.profit) }}</span>
+            <span class="mss-ov-sub">MAU {{ overallItem.mau }}万</span>
+          </div>
+          <SparklineChart
+            class="mss-ov-spark"
+            :data="overallItem.sparkline ?? sparkData"
+            color="#00d4a1"
+            :width="280"
+            :height="32"
+          />
+          <div class="mss-ov-tags">
+            <span v-for="p in overallItem.platforms" :key="p" class="mss-ov-tag">{{ p }}</span>
+          </div>
+        </div>
+
+        <!-- ── 2-column grid: 分组应用 + 单体应用 ── -->
+        <div class="mss-grid">
+          <div
+            v-for="item in groupAppsNoOverall"
+            :key="item.id"
+            class="mss-card mss-card--group"
+            :class="{ 'mss-card--selected': selectedId === item.id }"
+            @click="$emit('select', item.id)"
+          >
+            <div class="mss-gc-head">
+              <span class="mss-gc-dot" :style="{ background: item.iconColor }" />
+              <span class="mss-gc-name">{{ item.name }}</span>
+              <span class="mss-gc-cat">{{ item.category }}</span>
+            </div>
+            <div class="mss-gc-revenue">
+              <span class="mss-gc-amount">${{ formatNum(item.revenue) }}</span>
+              <span :class="['mss-gc-chg', item.revenueChange >= 0 ? 'is-up' : 'is-down']">
+                月环比 {{ item.revenueChange >= 0 ? '+' : '' }}{{ item.revenueChange }}%
+              </span>
+            </div>
+            <div class="mss-gc-meta">
+              <span>利润 ${{ formatNum(item.profit) }}</span>
+              <span>MAU {{ item.mau }}万</span>
+            </div>
+            <SparklineChart
+              class="mss-gc-spark"
+              :data="item.sparkline ?? sparkData"
+              :color="item.iconColor"
+              :width="110"
+              :height="22"
+            />
+          </div>
+
+          <div
+            v-for="item in singleApps"
+            :key="item.id"
+            class="mss-card mss-card--single"
+            :class="{ 'mss-card--selected': selectedId === item.id }"
+            @click="$emit('select', item.id)"
+          >
+            <div class="mss-sc-icon-row">
+              <div class="mss-sc-icon" :style="{ background: item.iconBg }">{{
+                item.iconEmoji
+              }}</div>
+              <div class="mss-sc-name-block">
+                <span class="mss-sc-name">{{ item.name }}</span>
+                <span class="mss-sc-cat">{{ item.category }}</span>
+              </div>
+            </div>
+            <div class="mss-sc-bottom">
+              <span class="mss-sc-amount">${{ formatNum(item.revenue) }}</span>
+              <span :class="['mss-sc-chg', item.revenueChange >= 0 ? 'is-up' : 'is-down']">
+                {{ item.revenueChange >= 0 ? '+' : '' }}{{ item.revenueChange }}%
+              </span>
+            </div>
+          </div>
+        </div>
       </template> </div
     ><!-- /sidebar-scroll -->
 
@@ -732,7 +830,7 @@
 
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import type { AppListItem } from './types'
+  import type { AppListItem } from '../types'
   import SparklineChart from './SparklineChart.vue'
 
   const props = withDefaults(
@@ -2022,6 +2120,299 @@
   }
 
   .nm-sc2-change.is-down {
+    color: #ff5c5c;
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     月报·汇总 MONTHLY SUMMARY SIDEBAR
+     ════════════════════════════════════════════════════════ */
+
+  .mss-overall {
+    padding: 12px 12px 10px;
+    margin: 0 10px 10px;
+    cursor: pointer;
+    background: rgb(0 212 161 / 7%);
+    border: 1px solid rgb(0 212 161 / 20%);
+    border-radius: 10px;
+    transition:
+      background 0.15s,
+      border-color 0.15s;
+  }
+
+  .mss-overall:hover {
+    background: rgb(0 212 161 / 11%);
+  }
+
+  .mss-overall--selected {
+    background: rgb(0 212 161 / 13%);
+    border-color: #00d4a1;
+  }
+
+  .mss-ov-title {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .mss-ov-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 90%);
+  }
+
+  .mss-ov-cat {
+    font-size: 11px;
+    color: rgb(255 255 255 / 45%);
+  }
+
+  .mss-ov-badge {
+    padding: 1px 6px;
+    margin-left: auto;
+    font-size: 9px;
+    font-weight: 600;
+    color: #00d4a1;
+    letter-spacing: 0.03em;
+    background: rgb(0 212 161 / 15%);
+    border: 1px solid rgb(0 212 161 / 30%);
+    border-radius: 3px;
+  }
+
+  .mss-ov-revenue-label {
+    margin-bottom: 2px;
+    font-size: 10px;
+    color: rgb(255 255 255 / 40%);
+  }
+
+  .mss-ov-revenue-row {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+
+  .mss-ov-amount {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.03em;
+  }
+
+  .mss-ov-chg {
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .mss-ov-chg.is-up {
+    color: #00d4a1;
+  }
+
+  .mss-ov-chg.is-down {
+    color: #ff5c5c;
+  }
+
+  .mss-ov-sub-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .mss-ov-sub {
+    font-size: 11px;
+    color: rgb(255 255 255 / 45%);
+  }
+
+  .mss-ov-spark {
+    display: block;
+    width: 100%;
+    margin-bottom: 6px;
+  }
+
+  .mss-ov-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .mss-ov-tag {
+    padding: 1px 5px;
+    font-size: 9px;
+    color: rgb(255 255 255 / 45%);
+    background: rgb(255 255 255 / 8%);
+    border-radius: 3px;
+  }
+
+  /* ── 2-column grid ──────────────────────────────────────── */
+  .mss-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 10px 10px;
+  }
+
+  .mss-card {
+    padding: 10px;
+    cursor: pointer;
+    background: rgb(255 255 255 / 4%);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    transition:
+      background 0.15s,
+      border-color 0.15s;
+  }
+
+  .mss-card:hover {
+    background: rgb(255 255 255 / 7%);
+  }
+
+  .mss-card--selected {
+    background: rgb(0 212 161 / 8%);
+    border-color: #00d4a1;
+  }
+
+  /* group card */
+  .mss-card--group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mss-gc-head {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .mss-gc-dot {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  .mss-gc-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(255 255 255 / 85%);
+    white-space: nowrap;
+  }
+
+  .mss-gc-cat {
+    overflow: hidden;
+    font-size: 10px;
+    color: rgb(255 255 255 / 40%);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mss-gc-revenue {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .mss-gc-amount {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 90%);
+    letter-spacing: -0.02em;
+  }
+
+  .mss-gc-chg {
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .mss-gc-chg.is-up {
+    color: #00d4a1;
+  }
+
+  .mss-gc-chg.is-down {
+    color: #ff5c5c;
+  }
+
+  .mss-gc-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    font-size: 10px;
+    color: rgb(255 255 255 / 40%);
+  }
+
+  .mss-gc-spark {
+    display: block;
+    width: 100%;
+  }
+
+  /* single card */
+  .mss-card--single {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mss-sc-icon-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .mss-sc-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+
+  .mss-sc-name-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .mss-sc-name {
+    overflow: hidden;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgb(255 255 255 / 80%);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mss-sc-cat {
+    font-size: 9px;
+    color: rgb(255 255 255 / 35%);
+    white-space: nowrap;
+  }
+
+  .mss-sc-bottom {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .mss-sc-amount {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 88%);
+    letter-spacing: -0.02em;
+  }
+
+  .mss-sc-chg {
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .mss-sc-chg.is-up {
+    color: #00d4a1;
+  }
+
+  .mss-sc-chg.is-down {
     color: #ff5c5c;
   }
 
