@@ -1,5 +1,5 @@
 {
-  "_comment": "经营报告 - 在投广告系列表。对应 types.ts: CampaignsResponse。",
+  "_comment": "经营报告 - 在投广告系列表。对应 types.ts: CampaignsResponse。三周期结构相同，adSpendChange 分别为日/周/月环比变化率；月报可能包含更多历史系列。",
   "api": {
     "url": "GET /api/v1/report/campaigns",
     "method": "GET",
@@ -13,27 +13,75 @@
         "required": true,
         "description": "报告周期"
       },
-      "appId": { "type": "string", "required": false, "description": "应用 ID，不传返回所有应用" },
-      "date": { "type": "string", "required": false, "description": "ISO 日期，不传取最新" }
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用 ID，不传返回所有应用"
+      },
+      "date": {
+        "type": "string",
+        "required": false,
+        "description": "ISO 日期，不传取最新"
+      }
     },
     "response": {
-      "rows": { "type": "CampaignRow[]", "required": true, "description": "广告系列行列表" },
-      "appList": { "type": "AppListItem[]", "required": true, "description": "左侧应用列表" }
+      "rows": {
+        "type": "CampaignRow[]",
+        "required": true,
+        "description": "广告系列行列表"
+      },
+      "appList": {
+        "type": "AppListItem[]",
+        "required": true,
+        "description": "左侧应用列表"
+      }
     },
     "CampaignRow": {
-      "id": { "type": "string", "required": true, "description": "广告系列唯一 ID" },
-      "app": { "type": "string", "required": true, "description": "所属应用名称" },
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "广告系列唯一 ID"
+      },
+      "app": {
+        "type": "string",
+        "required": true,
+        "description": "所属应用名称"
+      },
       "platform": {
         "type": "string",
         "required": true,
         "description": "系统平台：安卓 / iOS / 安卓+iOS"
       },
-      "adPlatform": { "type": "string", "required": true, "description": "广告平台名称" },
-      "adPlatformColor": { "type": "string", "required": true, "description": "广告平台主色" },
-      "campaignName": { "type": "string", "required": true, "description": "广告系列名称" },
-      "status": { "type": "'active' | 'paused'", "required": true, "description": "投放状态" },
-      "country": { "type": "string", "required": true, "description": "投放国家" },
-      "countryFlag": { "type": "string", "required": true, "description": "国家旗帜 emoji" },
+      "adPlatform": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台名称"
+      },
+      "adPlatformColor": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台主色"
+      },
+      "campaignName": {
+        "type": "string",
+        "required": true,
+        "description": "广告系列名称"
+      },
+      "status": {
+        "type": "'active' | 'paused'",
+        "required": true,
+        "description": "投放状态"
+      },
+      "country": {
+        "type": "string",
+        "required": true,
+        "description": "投放国家"
+      },
+      "countryFlag": {
+        "type": "string",
+        "required": true,
+        "description": "国家旗帜 emoji"
+      },
       "adSpend": {
         "type": "string",
         "required": true,
@@ -44,19 +92,51 @@
         "required": true,
         "description": "环比变化率；暂停系列固定传 -100"
       },
-      "cpi": { "type": "string", "required": true, "description": "CPI；暂停系列传 '-'" },
-      "cpm": { "type": "string", "required": true, "description": "CPM" },
-      "cpc": { "type": "string", "required": true, "description": "CPC" },
+      "cpi": {
+        "type": "string",
+        "required": true,
+        "description": "CPI；暂停系列传 '-'"
+      },
+      "cpm": {
+        "type": "string",
+        "required": true,
+        "description": "CPM"
+      },
+      "cpc": {
+        "type": "string",
+        "required": true,
+        "description": "CPC"
+      },
       "acquisitions": {
         "type": "string",
         "required": true,
         "description": "买量用户数；暂停系列传 '0'"
       },
-      "roi1d": { "type": "string", "required": true, "description": "首日 ROI" },
-      "roi3d": { "type": "string", "required": true, "description": "3 日 ROI" },
-      "roi7d": { "type": "string", "required": true, "description": "7 日 ROI" },
-      "roi14d": { "type": "string", "required": true, "description": "14 日 ROI" },
-      "roi30d": { "type": "string", "required": true, "description": "30 日 ROI" }
+      "roi1d": {
+        "type": "string",
+        "required": true,
+        "description": "首日 ROI"
+      },
+      "roi3d": {
+        "type": "string",
+        "required": true,
+        "description": "3 日 ROI"
+      },
+      "roi7d": {
+        "type": "string",
+        "required": true,
+        "description": "7 日 ROI"
+      },
+      "roi14d": {
+        "type": "string",
+        "required": true,
+        "description": "14 日 ROI"
+      },
+      "roi30d": {
+        "type": "string",
+        "required": true,
+        "description": "30 日 ROI"
+      }
     }
   },
   "sampleRequest": {
@@ -147,5 +227,19 @@
         "isOverall": true
       }
     ]
+  },
+  "periodDiff": {
+    "daily": {
+      "adSpendChange": "日环比",
+      "scope": "当日在投系列"
+    },
+    "weekly": {
+      "adSpendChange": "周环比",
+      "scope": "本周有花费系列"
+    },
+    "monthly": {
+      "adSpendChange": "月环比",
+      "scope": "本月有花费系列，含暂停系列"
+    }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "_comment": "经营报告 - 广告平台卡片列表。对应 types.ts: AdPlatformResponse。",
+  "_comment": "经营报告 - 广告平台卡片列表。对应 types.ts: AdPlatformResponse。三周期结构相同，数值按 period 聚合；adSpendChange 分别为日/周/月环比变化率。",
   "api": {
     "url": "GET /api/v1/report/ad-platform",
     "method": "GET",
@@ -13,8 +13,16 @@
         "required": true,
         "description": "报告周期"
       },
-      "appId": { "type": "string", "required": false, "description": "应用 ID，不传返回整体" },
-      "date": { "type": "string", "required": false, "description": "ISO 日期，不传取最新" }
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用 ID，不传返回整体"
+      },
+      "date": {
+        "type": "string",
+        "required": false,
+        "description": "ISO 日期，不传取最新"
+      }
     },
     "response": {
       "platforms": {
@@ -22,7 +30,11 @@
         "required": true,
         "description": "广告平台卡片列表"
       },
-      "appList": { "type": "AppListItem[]", "required": true, "description": "左侧应用列表" }
+      "appList": {
+        "type": "AppListItem[]",
+        "required": true,
+        "description": "左侧应用列表"
+      }
     },
     "AdPlatformCard": {
       "id": {
@@ -30,13 +42,21 @@
         "required": true,
         "description": "平台唯一标识，如 google / facebook"
       },
-      "name": { "type": "string", "required": true, "description": "平台名称" },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "平台名称"
+      },
       "logo": {
         "type": "string",
         "required": true,
         "description": "文字缩写或 emoji，如 G / f / ♪"
       },
-      "color": { "type": "string", "required": true, "description": "主色（CSS 颜色）" },
+      "color": {
+        "type": "string",
+        "required": true,
+        "description": "主色（CSS 颜色）"
+      },
       "adSpend": {
         "type": "string",
         "required": true,
@@ -52,14 +72,46 @@
         "required": true,
         "description": "买量用户（预格式化），如 9.5万"
       },
-      "cpi": { "type": "string", "required": true, "description": "单次安装成本" },
-      "cpm": { "type": "string", "required": true, "description": "千次展示成本" },
-      "cpc": { "type": "string", "required": true, "description": "单次点击成本" },
-      "campaigns": { "type": "number", "required": true, "description": "在投广告系列数" },
-      "roi1d": { "type": "string", "required": true, "description": "首日 ROI，如 38%" },
-      "roi7d": { "type": "string", "required": true, "description": "7 日 ROI" },
-      "roi14d": { "type": "string", "required": false, "description": "14 日 ROI（可选）" },
-      "profit": { "type": "string", "required": true, "description": "预估利润（预格式化）" },
+      "cpi": {
+        "type": "string",
+        "required": true,
+        "description": "单次安装成本"
+      },
+      "cpm": {
+        "type": "string",
+        "required": true,
+        "description": "千次展示成本"
+      },
+      "cpc": {
+        "type": "string",
+        "required": true,
+        "description": "单次点击成本"
+      },
+      "campaigns": {
+        "type": "number",
+        "required": true,
+        "description": "在投广告系列数"
+      },
+      "roi1d": {
+        "type": "string",
+        "required": true,
+        "description": "首日 ROI，如 38%"
+      },
+      "roi7d": {
+        "type": "string",
+        "required": true,
+        "description": "7 日 ROI"
+      },
+      "roi14d": {
+        "type": "string",
+        "required": false,
+        "description": "14 日 ROI（可选）"
+      },
+      "profit": {
+        "type": "string",
+        "required": true,
+        "description": "预估利润（预格式化）"
+      },
       "sharePercent": {
         "type": "number",
         "required": true,
@@ -141,5 +193,16 @@
         "isOverall": true
       }
     ]
+  },
+  "periodDiff": {
+    "daily": {
+      "adSpendChange": "日环比"
+    },
+    "weekly": {
+      "adSpendChange": "周环比"
+    },
+    "monthly": {
+      "adSpendChange": "月环比"
+    }
   }
 }

@@ -678,6 +678,51 @@ export const dailyRevenueMetrics: RevenueRow[] = [
     changeType: 'positive'
   }
 ]
+export const weeklyRevenueMetrics: RevenueRow[] = [
+  {
+    name: '总收入',
+    current: '$1,023,400',
+    previous: '$952,100',
+    change: '+7.5%',
+    changeType: 'positive'
+  },
+  {
+    name: '付费收入',
+    current: '$289,600',
+    previous: '$268,200',
+    change: '+8.0%',
+    changeType: 'positive'
+  },
+  {
+    name: '广告收入',
+    current: '$733,800',
+    previous: '$683,900',
+    change: '+7.3%',
+    changeType: 'positive'
+  },
+  {
+    name: '预估利润',
+    current: '$731,200',
+    previous: '$678,900',
+    change: '+7.7%',
+    changeType: 'positive'
+  },
+  {
+    name: '计算利润',
+    current: '$653,400',
+    previous: '$607,200',
+    change: '+7.6%',
+    changeType: 'positive'
+  },
+  {
+    name: '广告支出',
+    current: '$276,300',
+    previous: '$257,100',
+    change: '+7.5%',
+    changeType: 'positive'
+  }
+]
+
 export const monthlyRevenueMetrics: RevenueRow[] = [
   {
     name: '总收缴',

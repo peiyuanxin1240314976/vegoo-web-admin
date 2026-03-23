@@ -1,5 +1,28 @@
 {
-  "_comment": "经营报告 - 汇总表。对应 types.ts: SummaryResponse。日报/周报/月报通用，月报额外返回 feeDeductions。",
+  "_comment": "经营报告 - 汇总表。对应 types.ts: SummaryResponse。三个周期共用同一接口，通过 period 参数区分，后端返回对应聚合数据。",
+  "periodDiff": {
+    "daily": {
+      "kpis.changeLabel": "环比昨日 ↑/↓ N%",
+      "userMetrics": "当日 vs 昨日",
+      "revenueMetrics": "当日 vs 昨日（含总收入/付费收入/广告收入/预估利润/计算利润/广告支出）",
+      "feeDeductions": "不返回（不传此字段或传 null）",
+      "appList": "日维度应用数据"
+    },
+    "weekly": {
+      "kpis.changeLabel": "周环比 ↑/↓ N%",
+      "userMetrics": "本周 vs 上周",
+      "revenueMetrics": "本周 vs 上周（字段同 daily）",
+      "feeDeductions": "不返回",
+      "appList": "周维度应用数据（含周活指标）"
+    },
+    "monthly": {
+      "kpis.changeLabel": "月环比 ↑/↓ N%",
+      "userMetrics": "本月 vs 上月",
+      "revenueMetrics": "本月 vs 上月，字段名改为：总收缴/付费收缴/广告收缴（与日/周报有差异）",
+      "feeDeductions": "必须返回，包含各费用抄扣明细项",
+      "appList": "月维度应用数据（含 MAU）"
+    }
+  },
   "api": {
     "url": "GET /api/v1/report/summary",
     "method": "GET",

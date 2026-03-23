@@ -22,13 +22,20 @@ import type {
 import { BusinessReportEndpoint, isBusinessReportMock } from './config/data-source'
 
 import {
+  dailyKpis,
+  weeklyKpis,
   monthlyKpis,
+  dailyUserMetrics,
+  weeklyUserMetrics,
   monthlyUserMetrics,
+  dailyRevenueMetrics,
+  weeklyRevenueMetrics,
+  monthlyRevenueMetrics,
   roiMetrics,
   retentionMetrics,
-  monthlyRevenueMetrics,
   feeDeductions,
   appList as appListData,
+  weeklyAppList,
   adPlatformCards,
   countryData as countryRows,
   countryOthersRow,
@@ -86,14 +93,25 @@ function buildQueryParams(params: ReportQueryParams): Record<string, string> {
 // ============================================================
 export async function getSummary(params: ReportQueryParams): Promise<SummaryResponse> {
   if (isBusinessReportMock(BusinessReportEndpoint.Summary)) {
+    const { period } = params
     return mockDelay<SummaryResponse>({
-      kpis: monthlyKpis,
-      userMetrics: monthlyUserMetrics,
-      revenueMetrics: monthlyRevenueMetrics,
+      kpis: period === 'daily' ? dailyKpis : period === 'weekly' ? weeklyKpis : monthlyKpis,
+      userMetrics:
+        period === 'daily'
+          ? dailyUserMetrics
+          : period === 'weekly'
+            ? weeklyUserMetrics
+            : monthlyUserMetrics,
+      revenueMetrics:
+        period === 'daily'
+          ? dailyRevenueMetrics
+          : period === 'weekly'
+            ? weeklyRevenueMetrics
+            : monthlyRevenueMetrics,
       roiMetrics,
       retentionMetrics,
-      feeDeductions: params.period === 'monthly' ? feeDeductions : undefined,
-      appList: appListData
+      feeDeductions: period === 'monthly' ? feeDeductions : undefined,
+      appList: period === 'weekly' ? weeklyAppList : appListData
     })
   }
   return request<SummaryResponse>('/report/summary', buildQueryParams(params))
@@ -105,9 +123,10 @@ export async function getSummary(params: ReportQueryParams): Promise<SummaryResp
 // ============================================================
 export async function getAdPlatform(params: ReportQueryParams): Promise<AdPlatformResponse> {
   if (isBusinessReportMock(BusinessReportEndpoint.AdPlatform)) {
+    // 广告平台结构三个周期一致，数值由后端按 period 聚合；mock 共用同一份数据
     return mockDelay<AdPlatformResponse>({
       platforms: adPlatformCards,
-      appList: appListData
+      appList: params.period === 'weekly' ? weeklyAppList : appListData
     })
   }
   return request<AdPlatformResponse>('/report/ad-platform', buildQueryParams(params))
@@ -119,10 +138,11 @@ export async function getAdPlatform(params: ReportQueryParams): Promise<AdPlatfo
 // ============================================================
 export async function getByCountry(params: ReportQueryParams): Promise<ByCountryResponse> {
   if (isBusinessReportMock(BusinessReportEndpoint.ByCountry)) {
+    // 分国家结构三个周期一致，数值由后端按 period 聚合；mock 共用同一份数据
     return mockDelay<ByCountryResponse>({
       rows: countryRows,
       othersRow: countryOthersRow,
-      appList: appListData
+      appList: params.period === 'weekly' ? weeklyAppList : appListData
     })
   }
   return request<ByCountryResponse>('/report/by-country', buildQueryParams(params))
@@ -155,9 +175,10 @@ export async function getPlatformCountry(
 // ============================================================
 export async function getCampaigns(params: ReportQueryParams): Promise<CampaignsResponse> {
   if (isBusinessReportMock(BusinessReportEndpoint.Campaigns)) {
+    // 广告系列结构三个周期一致；mock 共用同一份数据
     return mockDelay<CampaignsResponse>({
       rows: campaignRows,
-      appList: appListData
+      appList: params.period === 'weekly' ? weeklyAppList : appListData
     })
   }
   return request<CampaignsResponse>('/report/campaigns', buildQueryParams(params))
