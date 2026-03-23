@@ -1,0 +1,49 @@
+{
+  "_comment": "预估收入偏差 — 偏差原因分析（饼图）。对应 types.ts: RevenueDeviationReasonSegment[]。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "source": { "type": "string", "required": false, "description": "广告平台，空为全部。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" }
+    },
+    "response": {
+      "items": {
+        "type": "RevenueDeviationReasonSegment[]",
+        "required": true,
+        "description": "饼图扇区；n_pct 合计建议为 100。"
+      }
+    },
+    "RevenueDeviationReasonSegment": {
+      "s_label": { "type": "string", "required": true, "description": "原因名称。" },
+      "n_pct": {
+        "type": "number",
+        "required": true,
+        "description": "占比（百分比数值，如 45 表示 45%）。"
+      },
+      "s_color": { "type": "string", "required": true, "description": "扇区颜色（HEX）。" }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "source": "",
+    "s_app_id": ""
+  },
+  "sampleResponse": [
+    { "s_label": "预估收入", "n_pct": 45, "s_color": "#4ade80" },
+    { "s_label": "美国偏差", "n_pct": 28, "s_color": "#f59e0b" },
+    { "s_label": "中沪偏点贡献", "n_pct": 18, "s_color": "#60a5fa" },
+    { "s_label": "真实原因", "n_pct": 9, "s_color": "#f87171" }
+  ],
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/reason",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_start_date, t_end_date, source?, s_app_id?",
+    "responseBody": "RevenueDeviationReasonSegment[]"
+  },
+  "apiSuggestion": {
+    "notes": ["若网关统一包一层 { data: [] }，前端 unwrap 后与数组契约一致。"]
+  }
+}

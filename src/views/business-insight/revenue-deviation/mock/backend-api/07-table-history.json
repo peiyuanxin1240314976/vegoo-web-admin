@@ -1,0 +1,87 @@
+{
+  "_comment": "预估收入偏差 — 偏差历史记录（按月）。对应 types.ts: RevenueDeviationHistoryRow[]。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "source": { "type": "string", "required": false, "description": "广告平台，空为全部。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" }
+    },
+    "response": {
+      "rows": {
+        "type": "RevenueDeviationHistoryRow[]",
+        "required": true,
+        "description": "历史月份列表，按时间倒序或正序由产品约定。"
+      }
+    },
+    "RevenueDeviationHistoryRow": {
+      "t_month": { "type": "string", "required": true, "description": "月份展示，如 2024–05。" },
+      "d_estimated_usd": {
+        "type": "number",
+        "required": true,
+        "description": "预估收入（美元）。"
+      },
+      "d_real_usd": { "type": "number", "required": true, "description": "真实收入（美元）。" },
+      "d_deviation_rate_pct": {
+        "type": "number",
+        "required": true,
+        "description": "偏差率（百分比数值，可正可负）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "source": "",
+    "s_app_id": ""
+  },
+  "sampleResponse": [
+    {
+      "t_month": "2024–05",
+      "d_estimated_usd": 2.01,
+      "d_real_usd": 1.32,
+      "d_deviation_rate_pct": 8.5
+    },
+    {
+      "t_month": "2024–04",
+      "d_estimated_usd": 1.29,
+      "d_real_usd": 1.3,
+      "d_deviation_rate_pct": -6.2
+    },
+    {
+      "t_month": "2024–03",
+      "d_estimated_usd": 2.51,
+      "d_real_usd": 1.32,
+      "d_deviation_rate_pct": 5.2
+    },
+    {
+      "t_month": "2024–01",
+      "d_estimated_usd": 2.57,
+      "d_real_usd": 1.32,
+      "d_deviation_rate_pct": -5.2
+    },
+    {
+      "t_month": "2023–00",
+      "d_estimated_usd": 3.19,
+      "d_real_usd": 2.48,
+      "d_deviation_rate_pct": -6.0
+    },
+    {
+      "t_month": "2023–01",
+      "d_estimated_usd": 1.85,
+      "d_real_usd": 2.84,
+      "d_deviation_rate_pct": 0
+    },
+    { "t_month": "2023–12", "d_estimated_usd": 6.16, "d_real_usd": 3.54, "d_deviation_rate_pct": 0 }
+  ],
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/table/history",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "t_start_date, t_end_date, source?, s_app_id?",
+    "responseBody": "RevenueDeviationHistoryRow[]"
+  },
+  "apiSuggestion": {
+    "notes": ["若网关统一包一层 { rows: [] }，与前端类型对齐即可。"]
+  }
+}

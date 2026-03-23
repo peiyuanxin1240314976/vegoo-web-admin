@@ -1,0 +1,93 @@
+{
+  "_comment": "预估收入偏差 — 广告平台偏差对比表。对应 types.ts: RevenueDeviationPlatformTable。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "source": { "type": "string", "required": false, "description": "广告平台，空为全部。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" }
+    },
+    "response": {
+      "rows": {
+        "type": "RevenueDeviationPlatformRow[]",
+        "required": true,
+        "description": "各广告平台行。"
+      },
+      "total": {
+        "type": "RevenueDeviationPlatformRow",
+        "required": true,
+        "description": "合计行；s_source_label 可为「合计」。"
+      }
+    },
+    "RevenueDeviationPlatformRow": {
+      "s_source_label": { "type": "string", "required": true, "description": "广告平台展示名。" },
+      "d_estimated_usd": {
+        "type": "number",
+        "required": true,
+        "description": "预估收入（美元）。"
+      },
+      "d_real_usd": { "type": "number", "required": true, "description": "真实收入（美元）。" },
+      "d_deviation_rate_pct": {
+        "type": "number",
+        "required": true,
+        "description": "偏差率（百分比数值，可正可负）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "source": "",
+    "s_app_id": ""
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "s_source_label": "Admob",
+        "d_estimated_usd": 2768.58,
+        "d_real_usd": 1861.23,
+        "d_deviation_rate_pct": 8.5
+      },
+      {
+        "s_source_label": "Facebook",
+        "d_estimated_usd": 1778.58,
+        "d_real_usd": 1861.23,
+        "d_deviation_rate_pct": 8.5
+      },
+      {
+        "s_source_label": "Applovin",
+        "d_estimated_usd": 888.53,
+        "d_real_usd": 876.86,
+        "d_deviation_rate_pct": 5.2
+      },
+      {
+        "s_source_label": "Vungle",
+        "d_estimated_usd": 338.8,
+        "d_real_usd": 297.22,
+        "d_deviation_rate_pct": -0.3
+      },
+      {
+        "s_source_label": "Pangle",
+        "d_estimated_usd": 722.5,
+        "d_real_usd": 399.81,
+        "d_deviation_rate_pct": -0.9
+      }
+    ],
+    "total": {
+      "s_source_label": "合计",
+      "d_estimated_usd": 2798.58,
+      "d_real_usd": 1861.23,
+      "d_deviation_rate_pct": 8.5
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/table/platform",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_start_date, t_end_date, source?, s_app_id?",
+    "responseBody": "RevenueDeviationPlatformTable"
+  },
+  "apiSuggestion": {
+    "notes": ["s_source_label 与 n_source 枚举映射由网关或字典统一。"]
+  }
+}

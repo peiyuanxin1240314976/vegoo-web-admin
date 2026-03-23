@@ -40,33 +40,51 @@
     </div>
 
     <!-- ========== KPI Cards ========== -->
-    <div class="rd-kpi-grid">
+    <div v-if="kpiOverview" class="rd-kpi-grid">
       <div class="rd-kpi-card rd-kpi-card--green">
         <div class="rd-kpi-card__label">广告收入（预估）</div>
-        <div class="rd-kpi-card__value rd-kpi-card__value--green">$2,768.58</div>
+        <div class="rd-kpi-card__value rd-kpi-card__value--green">
+          {{ formatUsd2(kpiOverview.d_revenue_estimated) }}
+        </div>
         <div class="rd-kpi-card__sub">广告平台上报 / 客户端埋点展示事件计算</div>
       </div>
       <div class="rd-kpi-card rd-kpi-card--gold">
         <div class="rd-kpi-card__label">广告收入（真实）</div>
-        <div class="rd-kpi-card__value rd-kpi-card__value--gold">$1,861.23</div>
+        <div class="rd-kpi-card__value rd-kpi-card__value--gold">
+          {{ formatUsd2(kpiOverview.d_revenue_real) }}
+        </div>
         <div class="rd-kpi-card__sub">实际入账金额 / 平台对账数据</div>
       </div>
       <div class="rd-kpi-card rd-kpi-card--red">
         <div class="rd-kpi-card__header-row">
           <div class="rd-kpi-card__label">偏差金额</div>
-          <span class="rd-badge rd-badge--red">预估偏高</span>
+          <span class="rd-badge rd-badge--red">{{ kpiOverview.s_deviation_badge }}</span>
         </div>
-        <div class="rd-kpi-card__value rd-kpi-card__value--red">+$907.35</div>
+        <div class="rd-kpi-card__value rd-kpi-card__value--red">
+          {{ fmtUsdWithSign(kpiOverview.d_deviation_amount) }}
+        </div>
         <div class="rd-kpi-card__sub">待对账确认</div>
       </div>
       <div class="rd-kpi-card rd-kpi-card--red">
         <div class="rd-kpi-card__label">偏差率</div>
-        <div class="rd-kpi-card__value rd-kpi-card__value--red">+8.5%</div>
-        <div class="rd-kpi-card__sub">预估偏高，待对账 / 历史平均 6.2%</div>
+        <div class="rd-kpi-card__value rd-kpi-card__value--red">
+          {{ fmtPctSigned(kpiOverview.d_deviation_rate_pct) }}
+        </div>
+        <div class="rd-kpi-card__sub">
+          {{ kpiOverview.s_deviation_badge }}，待对账 / 历史平均
+          {{
+            kpiOverview.d_deviation_rate_history_avg_pct.toLocaleString('en-US', {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1
+            })
+          }}%
+        </div>
       </div>
       <div class="rd-kpi-card rd-kpi-card--blue">
         <div class="rd-kpi-card__label">影响ROI估算</div>
-        <div class="rd-kpi-card__value rd-kpi-card__value--blue">-8.5pp</div>
+        <div class="rd-kpi-card__value rd-kpi-card__value--blue">
+          {{ fmtRoiPp(kpiOverview.n_roi_impact_pp) }}
+        </div>
         <div class="rd-kpi-card__sub">实际ROI将低于预估 / 需校正ROI计算</div>
       </div>
     </div>
@@ -97,19 +115,25 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in platformData" :key="row.name">
-              <td>{{ row.name }}</td>
-              <td>{{ row.estimated }}</td>
-              <td>{{ row.real }}</td>
-              <td :class="getDeviationClass(row.deviation)">{{ row.deviation }}</td>
+            <tr v-for="row in platformTable?.rows ?? []" :key="row.s_source_label">
+              <td>{{ row.s_source_label }}</td>
+              <td>{{ formatUsd2(row.d_estimated_usd) }}</td>
+              <td>{{ formatUsd2(row.d_real_usd) }}</td>
+              <td :class="getDeviationClass(fmtPctSigned(row.d_deviation_rate_pct))">
+                {{ fmtPctSigned(row.d_deviation_rate_pct) }}
+              </td>
             </tr>
           </tbody>
-          <tfoot>
+          <tfoot v-if="platformTable?.total">
             <tr class="rd-table__total">
               <td>合计</td>
-              <td>$2,798.58</td>
-              <td>$1,861.23</td>
-              <td class="rd-text--red">+8.5%</td>
+              <td>{{ formatUsd2(platformTable.total.d_estimated_usd) }}</td>
+              <td>{{ formatUsd2(platformTable.total.d_real_usd) }}</td>
+              <td
+                :class="getDeviationClass(fmtPctSigned(platformTable.total.d_deviation_rate_pct))"
+              >
+                {{ fmtPctSigned(platformTable.total.d_deviation_rate_pct) }}
+              </td>
             </tr>
           </tfoot>
         </table>
@@ -133,9 +157,7 @@
         <div class="rd-card rd-advice-card">
           <div class="rd-card__title rd-card__title--gold">对账建议</div>
           <ul class="rd-advice-list">
-            <li>当前偏差率 8.5%，高于历史平均</li>
-            <li>美国偏差页贡献最大 44.2%</li>
-            <li>建议重点梳理 Admob</li>
+            <li v-for="(line, idx) in adviceLines" :key="idx">{{ line }}</li>
           </ul>
           <div class="rd-advice-actions">
             <el-button class="rd-btn-outline">查看对账记录</el-button>
@@ -180,11 +202,13 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in historyData" :key="row.month">
-              <td>{{ row.month }}</td>
-              <td>{{ row.estimated }}</td>
-              <td>{{ row.real }}</td>
-              <td :class="getDeviationClass(row.deviation)">{{ row.deviation }}</td>
+            <tr v-for="row in historyRows" :key="row.t_month">
+              <td>{{ row.t_month }}</td>
+              <td>{{ formatUsd2(row.d_estimated_usd) }}</td>
+              <td>{{ formatUsd2(row.d_real_usd) }}</td>
+              <td :class="getDeviationClass(fmtPctSigned(row.d_deviation_rate_pct))">
+                {{ fmtPctSigned(row.d_deviation_rate_pct) }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -284,9 +308,30 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, watch } from 'vue'
+  import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
   import { ArrowRight, Filter, TopRight } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
+  import {
+    fetchRevenueDeviationOverviewAdvice,
+    fetchRevenueDeviationOverviewCountryTop10,
+    fetchRevenueDeviationOverviewKpis,
+    fetchRevenueDeviationOverviewReason,
+    fetchRevenueDeviationOverviewTrend,
+    fetchRevenueDeviationTableHistory,
+    fetchRevenueDeviationTableMatrix,
+    fetchRevenueDeviationTablePlatform
+  } from '@/api/revenue-deviation'
+  import type {
+    RevenueDeviationCountryTop10,
+    RevenueDeviationHistoryRow,
+    RevenueDeviationMatrixRow as RdmRow,
+    RevenueDeviationOverviewKpis,
+    RevenueDeviationOverviewTrend,
+    RevenueDeviationPlatformTable,
+    RevenueDeviationQuery
+  } from '@/views/business-insight/revenue-deviation/types'
+
+  defineOptions({ name: 'RevenueDeviation' })
 
   type MatrixPlatformKey = 'admob' | 'facebook' | 'applovin' | 'vungle'
 
@@ -319,31 +364,15 @@
   const activeCountryTab = ref('amount')
   const matrixPlatform = ref('')
 
-  // ── Static Data ───────────────────────────────────────────────────────────────
-  const platformData = [
-    { name: 'Admob', estimated: '$2,768.58', real: '$1,861.23', deviation: '+8.5%' },
-    { name: 'Facebook', estimated: '$1,778.58', real: '$1,861.23', deviation: '+8.5%' },
-    { name: 'Applovin', estimated: '$888.53', real: '$876.86', deviation: '+5.2%' },
-    { name: 'Vungle', estimated: '$338.80', real: '$297.22', deviation: '-0.3%' },
-    { name: 'Pangle', estimated: '$722.50', real: '$399.81', deviation: '-0.9%' }
-  ]
-
-  const reasonData = [
-    { name: '预估收入', value: 45, color: '#4ade80' },
-    { name: '美国偏差', value: 28, color: '#f59e0b' },
-    { name: '中沪偏点贡献', value: 18, color: '#60a5fa' },
-    { name: '真实原因', value: 9, color: '#f87171' }
-  ]
-
-  const historyData = [
-    { month: '2024–05', estimated: '$2.01', real: '$1.32', deviation: '+8.5%' },
-    { month: '2024–04', estimated: '$1.29', real: '$1.30', deviation: '-6.2%' },
-    { month: '2024–03', estimated: '$2.51', real: '$1.32', deviation: '+5.2%' },
-    { month: '2024–01', estimated: '$2.57', real: '$1.32', deviation: '-5.2%' },
-    { month: '2023–00', estimated: '$3.19', real: '$2.48', deviation: '-6.0%' },
-    { month: '2023–01', estimated: '$1.85', real: '$2.84', deviation: '-0.0%' },
-    { month: '2023–12', estimated: '$6.16', real: '$3.54', deviation: '-0.0%' }
-  ]
+  const kpiOverview = ref<RevenueDeviationOverviewKpis | null>(null)
+  const trendData = ref<RevenueDeviationOverviewTrend | null>(null)
+  const platformTable = ref<RevenueDeviationPlatformTable | null>(null)
+  const reasonData = ref<{ name: string; value: number; color: string }[]>([])
+  const adviceLines = ref<string[]>([])
+  const countryTop10 = ref<RevenueDeviationCountryTop10 | null>(null)
+  const historyRows = ref<RevenueDeviationHistoryRow[]>([])
+  const matrixCols = ref<MatrixColDef[]>([])
+  const matrixData = ref<MatrixRow[]>([])
 
   const countryTabs = [
     { label: '偏差金额', value: 'amount' },
@@ -360,76 +389,99 @@
     { label: '日期', value: 'date', active: false }
   ]
 
-  const matrixCols: MatrixColDef[] = [
-    {
-      name: 'Admob',
-      key: 'admob',
-      total: { estimated: '$9.88', real: '$3.77', deviation: '>15%' }
-    },
-    {
-      name: 'Facebook',
-      key: 'facebook',
-      total: { estimated: '$6.28', real: '$0.00', deviation: '>15%' }
-    },
-    {
-      name: 'Applovin',
-      key: 'applovin',
-      total: { estimated: '$3.75', real: '$3.99', deviation: '>15%' }
-    },
-    {
-      name: 'Vungle',
-      key: 'vungle',
-      total: { estimated: '$0.23', real: '$9.78', deviation: '<8%' }
+  function mapAppFilterToAppId(v: string): string {
+    const m: Record<string, string> = {
+      weather: 'weather_radar',
+      phone: 'phone_tracker',
+      blood: 'blood_sugar_2',
+      health: 'health_tracker',
+      face: 'face_me'
     }
-  ]
+    return v ? (m[v] ?? v) : ''
+  }
 
-  const matrixData: MatrixRow[] = [
-    {
-      app: 'WeatherRadar',
-      icon: '🌤',
-      iconColor: '#1e3a5f',
-      admob: { estimated: '$9.33', real: '$2.79', deviation: '>15%' },
-      facebook: { estimated: '$1.90', real: '$1.18', deviation: '>15%' },
-      applovin: { estimated: '$3.96', real: '$2.98', deviation: '>15%' },
-      vungle: { estimated: '$3.92', real: '$2.21', deviation: '>15%' }
-    },
-    {
-      app: 'PhoneTracker',
-      icon: '📍',
-      iconColor: '#1a3a2a',
-      admob: { estimated: '$2.33', real: '$2.89', deviation: '8–15%' },
-      facebook: { estimated: '$1.78', real: '$1.67', deviation: '8–15%' },
-      applovin: { estimated: '$2.99', real: '$3.80', deviation: '8–15%' },
-      vungle: { estimated: '$2.38', real: '$0.65', deviation: '8–15%' }
-    },
-    {
-      app: 'BloodSugar2',
-      icon: '💉',
-      iconColor: '#3a1a1a',
-      admob: { estimated: '$3.42', real: '$1.99', deviation: '<8%' },
-      facebook: { estimated: '$1.28', real: '$0.04', deviation: '<8%' },
-      applovin: { estimated: '$9.16', real: '$4.06', deviation: '<8%' },
-      vungle: { estimated: '$1.29', real: '$0.08', deviation: '<8%' }
-    },
-    {
-      app: 'HealthTracker',
-      icon: '❤️',
-      iconColor: '#3a1a2a',
-      admob: { estimated: '$1.67', real: '$2.42', deviation: '<8%' },
-      facebook: { estimated: '$2.35', real: '$2.23', deviation: '<3%' },
-      applovin: { estimated: '$3.73', real: '$4.23', deviation: '<8%' },
-      vungle: { estimated: '$1.03', real: '$9.91', deviation: '<8%' }
-    },
-    {
-      app: 'FaceMe',
-      icon: '😊',
-      iconColor: '#1a1a3a',
-      admob: { estimated: '$1.77', real: '$2.38', deviation: '<8%' },
-      facebook: { estimated: '$3.22', real: '$2.00', deviation: '<3%' },
-      applovin: { estimated: '$191', real: '$2.04', deviation: '<5%' },
-      vungle: { estimated: '$63', real: '$80', deviation: '<5%' }
+  function buildQuery(): RevenueDeviationQuery {
+    return {
+      t_start_date: dateRange.value[0]!,
+      t_end_date: dateRange.value[1]!,
+      source: platform.value,
+      s_app_id: mapAppFilterToAppId(appFilter.value)
     }
-  ]
+  }
+
+  function toMatrixVmRows(rows: RdmRow[]): MatrixRow[] {
+    return rows.map((r) => ({
+      app: r.s_app_name,
+      icon: r.s_app_icon_emoji,
+      iconColor: r.s_icon_color,
+      admob: r.admob,
+      facebook: r.facebook,
+      applovin: r.applovin,
+      vungle: r.vungle
+    }))
+  }
+
+  async function loadRevenueDeviationData() {
+    const q = buildQuery()
+    const [kpi, trend, plat, reason, advice, country, hist, matrix] = await Promise.all([
+      fetchRevenueDeviationOverviewKpis(q),
+      fetchRevenueDeviationOverviewTrend(q),
+      fetchRevenueDeviationTablePlatform(q),
+      fetchRevenueDeviationOverviewReason(q),
+      fetchRevenueDeviationOverviewAdvice(q),
+      fetchRevenueDeviationOverviewCountryTop10(q),
+      fetchRevenueDeviationTableHistory(q),
+      fetchRevenueDeviationTableMatrix(q)
+    ])
+    kpiOverview.value = kpi
+    trendData.value = trend
+    platformTable.value = plat
+    reasonData.value = reason.map((s) => ({
+      name: s.s_label,
+      value: s.n_pct,
+      color: s.s_color
+    }))
+    adviceLines.value = advice.lines
+    countryTop10.value = country
+    historyRows.value = hist
+    matrixCols.value = matrix.cols.map((c) => ({
+      name: c.name,
+      key: c.key,
+      total: c.total
+    }))
+    matrixData.value = toMatrixVmRows(matrix.rows)
+  }
+
+  function formatUsd2(n: number) {
+    return n.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  }
+
+  function fmtUsdWithSign(n: number) {
+    const base = Math.abs(n).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+    if (n > 0) return `+${base}`
+    if (n < 0) return `-${base}`
+    return base
+  }
+
+  function fmtPctSigned(n: number) {
+    if (n === 0) return '0.0%'
+    if (n > 0) return `+${n.toFixed(1)}%`
+    return `${n.toFixed(1)}%`
+  }
+
+  function fmtRoiPp(n: number) {
+    return `${n.toFixed(1)}pp`
+  }
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
   function getDeviationClass(val: string) {
@@ -458,18 +510,13 @@
   let countryChart: echarts.ECharts | null = null
 
   function initTrendChart() {
-    if (!trendChartRef.value) return
+    if (!trendChartRef.value || !trendData.value) return
+    trendChart?.dispose()
     trendChart = echarts.init(trendChartRef.value, 'dark')
 
-    const days = Array.from({ length: 30 }, (_, i) => String(i + 1).padStart(2, '0'))
-    const estimated = [
-      2.1, 2.3, 2.5, 2.8, 3.0, 2.9, 3.2, 3.5, 3.3, 3.1, 2.8, 3.0, 3.4, 3.6, 4.0, 3.8, 3.5, 3.2, 3.0,
-      2.8, 2.6, 2.9, 3.1, 3.3, 3.0, 2.7, 2.5, 2.8, 3.0, 3.2
-    ]
-    const real = [
-      1.8, 2.0, 2.1, 2.2, 2.4, 2.3, 2.5, 2.6, 2.5, 2.4, 2.2, 2.4, 2.7, 2.8, 3.2, 3.1, 2.9, 2.7, 2.5,
-      2.3, 2.1, 2.4, 2.6, 2.7, 2.5, 2.2, 2.0, 2.3, 2.5, 2.7
-    ]
+    const days = trendData.value.t_day_labels
+    const estimated = trendData.value.n_estimated_series
+    const real = trendData.value.n_real_series
 
     trendChart.setOption({
       backgroundColor: 'transparent',
@@ -537,7 +584,8 @@
   }
 
   function initReasonChart() {
-    if (!reasonChartRef.value) return
+    if (!reasonChartRef.value || reasonData.value.length === 0) return
+    reasonChart?.dispose()
     reasonChart = echarts.init(reasonChartRef.value, 'dark')
     reasonChart.setOption({
       backgroundColor: 'transparent',
@@ -552,7 +600,7 @@
           type: 'pie',
           radius: ['55%', '80%'],
           center: ['50%', '50%'],
-          data: reasonData.map((d) => ({
+          data: reasonData.value.map((d) => ({
             name: d.name,
             value: d.value,
             itemStyle: { color: d.color }
@@ -565,21 +613,15 @@
   }
 
   function initCountryChart() {
-    if (!countryChartRef.value) return
+    if (!countryChartRef.value || !countryTop10.value) return
+    countryChart?.dispose()
     countryChart = echarts.init(countryChartRef.value, 'dark')
-    const countries = [
-      '荷兰',
-      '法国',
-      '巴西',
-      '加拿大',
-      '澳大利亚',
-      '日本',
-      '韩国',
-      '英国',
-      '德国',
-      '美国'
-    ]
-    const amounts = [10, 18, 28, 38, 50, 62, 78, 90, 108, 180]
+    const list =
+      activeCountryTab.value === 'amount'
+        ? countryTop10.value.tab_amount
+        : countryTop10.value.tab_rate
+    const countries = list.map((i) => i.label_display)
+    const amounts = list.map((i) => i.n_value)
     countryChart.setOption({
       backgroundColor: 'transparent',
       grid: { top: 5, right: 20, bottom: 5, left: 60 },
@@ -626,7 +668,9 @@
     countryChart?.resize()
   }
 
-  onMounted(() => {
+  onMounted(async () => {
+    await loadRevenueDeviationData()
+    await nextTick()
     initTrendChart()
     initReasonChart()
     initCountryChart()
@@ -641,10 +685,28 @@
   })
 
   watch(activeCountryTab, () => {
-    // 切换国家维度时可重新渲染
     countryChart?.dispose()
+    countryChart = null
     initCountryChart()
   })
+
+  watch(
+    [dateRange, platform, appFilter],
+    async () => {
+      await loadRevenueDeviationData()
+      await nextTick()
+      trendChart?.dispose()
+      trendChart = null
+      reasonChart?.dispose()
+      reasonChart = null
+      countryChart?.dispose()
+      countryChart = null
+      initTrendChart()
+      initReasonChart()
+      initCountryChart()
+    },
+    { deep: true }
+  )
 </script>
 
 <style scoped>

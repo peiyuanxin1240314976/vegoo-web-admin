@@ -1,0 +1,77 @@
+{
+  "_comment": "预估收入偏差 — 顶部 KPI。对应 types.ts: RevenueDeviationOverviewKpis、mock/data.ts: MOCK_OVERVIEW_KPIS。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台 slug，空为全部（与前端筛选一致，如 admob、facebook）。"
+      },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" }
+    },
+    "response": {
+      "d_revenue_estimated": {
+        "type": "number",
+        "required": true,
+        "description": "广告收入（预估），美元。"
+      },
+      "d_revenue_real": {
+        "type": "number",
+        "required": true,
+        "description": "广告收入（真实），美元。"
+      },
+      "d_deviation_amount": {
+        "type": "number",
+        "required": true,
+        "description": "偏差金额（预估−真实），美元；正表示预估高于真实。"
+      },
+      "d_deviation_rate_pct": {
+        "type": "number",
+        "required": true,
+        "description": "偏差率（百分比数值，如 8.5 表示 8.5%），符号与业务约定一致。"
+      },
+      "n_roi_impact_pp": {
+        "type": "number",
+        "required": true,
+        "description": "对 ROI 估算的影响（百分点），如 -8.5 表示 -8.5pp。"
+      },
+      "d_deviation_rate_history_avg_pct": {
+        "type": "number",
+        "required": true,
+        "description": "历史平均偏差率（百分比数值），用于对比展示。"
+      },
+      "s_deviation_badge": {
+        "type": "string",
+        "required": true,
+        "description": "偏差方向标签文案，如「预估偏高」「预估偏低」。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "source": "",
+    "s_app_id": ""
+  },
+  "sampleResponse": {
+    "d_revenue_estimated": 2768.58,
+    "d_revenue_real": 1861.23,
+    "d_deviation_amount": 907.35,
+    "d_deviation_rate_pct": 8.5,
+    "n_roi_impact_pp": -8.5,
+    "d_deviation_rate_history_avg_pct": 6.2,
+    "s_deviation_badge": "预估偏高"
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/kpis",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_start_date, t_end_date, source?, s_app_id?",
+    "responseBody": "RevenueDeviationOverviewKpis"
+  },
+  "apiSuggestion": {
+    "notes": ["展示层金额保留两位小数；百分比与 pp 由前端格式化。"]
+  }
+}

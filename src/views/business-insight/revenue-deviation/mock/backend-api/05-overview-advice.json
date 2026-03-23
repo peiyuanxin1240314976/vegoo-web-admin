@@ -1,0 +1,37 @@
+{
+  "_comment": "预估收入偏差 — 对账建议文案。对应 types.ts: RevenueDeviationAdvice。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "source": { "type": "string", "required": false, "description": "广告平台，空为全部。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" }
+    },
+    "response": {
+      "lines": {
+        "type": "string[]",
+        "required": true,
+        "description": "建议要点列表，顺序即展示顺序。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "source": "",
+    "s_app_id": ""
+  },
+  "sampleResponse": {
+    "lines": ["当前偏差率 8.5%，高于历史平均", "美国偏差页贡献最大 44.2%", "建议重点梳理 Admob"]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/advice",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "t_start_date, t_end_date, source?, s_app_id?",
+    "responseBody": "RevenueDeviationAdvice"
+  },
+  "apiSuggestion": {
+    "notes": ["文案由运营/策略生成时可扩展字段，当前以字符串列表为主。"]
+  }
+}
