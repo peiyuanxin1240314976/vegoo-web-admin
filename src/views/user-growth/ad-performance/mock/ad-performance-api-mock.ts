@@ -7,6 +7,9 @@ import type {
   CampaignDetailCreativeTop5Response,
   CampaignDetailOverviewResponse
 } from '../campaign-detail/types'
+import type { AdDetailOverviewResponse } from '../campaign-detail/ad-detail/types'
+import type { AdEditFormResponse } from '../campaign-detail/ad-edit/types'
+import { MOCK_AD_EDIT_FORM } from '../campaign-detail/ad-edit/mock/data'
 import type {
   AdPerformanceAccountRow,
   AdPerformanceCampaignDetail,
@@ -28,6 +31,7 @@ import type {
 } from '../types'
 import { MOCK_AD_PERFORMANCE, getMockCampaignDetail } from './data'
 import { MOCK_CAMPAIGN_DETAIL } from '../campaign-detail/mock/data'
+import { MOCK_AD_DETAIL } from '../campaign-detail/ad-detail/mock/data'
 
 const META_STATIC: AdPerformanceMetaFilterResponse = {
   dateRangeOptions: [
@@ -245,4 +249,25 @@ export function mockFetchCampaignDetailAiInsights(_body: {
 }): Promise<CampaignDetailAiInsightsResponse> {
   void _body
   return Promise.resolve({ insights: MOCK_CAMPAIGN_DETAIL.aiInsights })
+}
+
+export function mockFetchAdDetailOverview(_body: {
+  adId: string
+  campaignId: string
+}): Promise<AdDetailOverviewResponse> {
+  void _body
+  return Promise.resolve({ ...MOCK_AD_DETAIL })
+}
+
+export function mockFetchAdEditForm(body: {
+  campaignId: string
+  adId?: string
+}): Promise<AdEditFormResponse> {
+  const data = JSON.parse(JSON.stringify(MOCK_AD_EDIT_FORM)) as AdEditFormResponse
+  if (body.adId) {
+    data.basic.name = `AdGroup_Edit_${body.adId}`
+  } else if (body.campaignId) {
+    data.basic.name = `Series_${body.campaignId}`
+  }
+  return Promise.resolve(data)
 }

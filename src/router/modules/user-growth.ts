@@ -143,7 +143,21 @@ export const userGrowthRoutes: AppRouteRecord = {
         title: 'menus.userGrowth.comprehensiveAnalysis',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
-      }
+      },
+      children: [
+        {
+          path: 'platform-analysis-detail',
+          name: 'PlatformAnalysisDetail',
+          component: '/user-growth/platform-analysis-detail',
+          meta: {
+            title: 'menus.userGrowth.platformAnalysisDetail',
+            keepAlive: false,
+            isHide: true,
+            activePath: '/user-growth/comprehensive-analysis',
+            roles: ['R_SUPER', 'R_ADMIN']
+          }
+        }
+      ]
     },
     {
       path: 'alert-management',
@@ -156,23 +170,35 @@ export const userGrowthRoutes: AppRouteRecord = {
       }
     },
     {
-      path: 'platform-analysis-detail',
-      name: 'PlatformAnalysisDetail',
-      component: '/user-growth/platform-analysis-detail',
-      meta: {
-        title: 'menus.userGrowth.platformAnalysisDetail',
-        keepAlive: false,
-        isHide: true,
-        activePath: '/user-growth/comprehensive-analysis',
-        roles: ['R_SUPER', 'R_ADMIN']
-      }
-    },
-    {
       path: 'ad-performance/campaign-detail',
       name: 'CampaignDetail',
       component: '/user-growth/ad-performance/campaign-detail',
       meta: {
         title: 'menus.userGrowth.campaignDetail',
+        keepAlive: false,
+        isHide: true,
+        activePath: '/user-growth/ad-performance',
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'ad-performance/campaign-detail/ad-detail',
+      name: 'AdDetail',
+      component: '/user-growth/ad-performance/campaign-detail/ad-detail',
+      meta: {
+        title: 'menus.userGrowth.adDetail',
+        keepAlive: false,
+        isHide: true,
+        activePath: '/user-growth/ad-performance',
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'ad-performance/campaign-detail/ad-edit',
+      name: 'AdEdit',
+      component: '/user-growth/ad-performance/campaign-detail/ad-edit',
+      meta: {
+        title: 'menus.userGrowth.adEdit',
         keepAlive: false,
         isHide: true,
         activePath: '/user-growth/ad-performance',

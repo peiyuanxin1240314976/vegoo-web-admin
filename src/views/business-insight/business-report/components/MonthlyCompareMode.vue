@@ -26,46 +26,72 @@
 
       <!-- App List -->
       <div class="app-list">
+        <!-- Selected: expanded card -->
         <div
           v-for="app in filteredApps"
           :key="app.id"
           :class="[
             'app-item',
-            {
-              selected: isSelected(app.id),
-              disabled: !isSelected(app.id) && selectedApps.length >= 5
-            }
+            isSelected(app.id) ? 'app-item--selected' : 'app-item--plain',
+            { disabled: !isSelected(app.id) && selectedApps.length >= 5 }
           ]"
+          :style="
+            isSelected(app.id)
+              ? { borderColor: app.iconColor + '55', background: app.iconColor + '0d' }
+              : {}
+          "
           @click="toggleApp(app)"
         >
+          <!-- Checkbox -->
           <div class="app-check">
-            <div :class="['checkbox', { checked: isSelected(app.id) }]">
+            <div
+              :class="['checkbox', { checked: isSelected(app.id) }]"
+              :style="
+                isSelected(app.id) ? { background: app.iconColor, borderColor: app.iconColor } : {}
+              "
+            >
               <span v-if="isSelected(app.id)">✓</span>
             </div>
           </div>
+
+          <!-- Content -->
           <div class="app-info">
+            <!-- Name row -->
             <div class="app-name-row">
               <span class="app-name">{{ app.name }}</span>
               <span class="app-category">{{ app.category }}</span>
-              <span class="app-revenue">{{ formatRevenue(app.revenue) }}</span>
-              <span :class="['app-change', app.revenueChange >= 0 ? 'positive' : 'negative']">
-                {{ app.revenueChange >= 0 ? '+' : '' }}{{ app.revenueChange }}%
-              </span>
+              <template v-if="!isSelected(app.id)">
+                <span class="app-revenue plain-revenue">{{ formatRevenue(app.revenue) }}</span>
+                <span :class="['app-change', app.revenueChange >= 0 ? 'positive' : 'negative']">
+                  {{ app.revenueChange >= 0 ? '+' : '' }}{{ app.revenueChange }}%
+                </span>
+              </template>
             </div>
-            <div v-if="isSelected(app.id)" class="app-sparkline-row">
-              <SparklineChart
-                :data="app.sparklineData || []"
-                :color="app.iconColor"
-                :width="100"
-                :height="28"
-              />
+
+            <!-- Selected: revenue + sparkline -->
+            <template v-if="isSelected(app.id)">
+              <div class="app-revenue-row">
+                <span class="app-revenue-big" :style="{ color: app.iconColor }">
+                  {{ formatRevenue(app.revenue) }}
+                </span>
+                <span :class="['app-change', app.revenueChange >= 0 ? 'positive' : 'negative']">
+                  {{ app.revenueChange >= 0 ? '+' : '' }}{{ app.revenueChange }}%
+                </span>
+                <SparklineChart
+                  class="app-sparkline"
+                  :data="app.sparklineData || []"
+                  :color="app.iconColor"
+                  :width="80"
+                  :height="32"
+                />
+              </div>
               <div class="app-meta">
                 <span class="meta-label">MAU</span>
                 <span class="meta-val">{{ app.mau }}万</span>
                 <span class="meta-label">预估利润</span>
                 <span class="meta-val">{{ formatRevenue(app.profit) }}</span>
               </div>
-            </div>
+            </template>
           </div>
         </div>
       </div>
@@ -77,49 +103,65 @@
 
     <!-- Right: Compare Content -->
     <div class="compare-content" v-if="selectedApps.length > 0">
-      <!-- Top: Compare Cards + MAU Chart -->
-      <div class="top-row">
+      <!-- ── Content Header ── -->
+      <div class="content-header">
+        <span class="section-title">对比分析</span>
+        <div class="selected-tags">
+          <span
+            v-for="app in selectedApps"
+            :key="app.id"
+            class="tag"
+            :style="{
+              background: app.iconColor + '22',
+              borderColor: app.iconColor + '55',
+              color: app.iconColor
+            }"
+          >
+            {{ app.name }} <span class="tag-x" @click.stop="toggleApp(app)">×</span>
+          </span>
+        </div>
+        <div class="period-controls">
+          <button class="period-nav">‹</button>
+          <span class="period-label">2025年12月</span>
+          <button class="period-nav">›</button>
+          <span class="compare-toggle-label">对比上月</span>
+          <div class="mini-toggle active"><span class="mini-knob" /></div>
+          <span class="toggle-on-text">ON</span>
+        </div>
+      </div>
+
+      <!-- ── Top Grid: cards + MAU chart ── -->
+      <div class="top-grid">
         <!-- Compare Cards -->
-        <div class="compare-cards">
-          <div class="cards-header">
-            <span class="section-title">对比分析</span>
-            <div class="selected-tags">
-              <span
-                v-for="app in selectedApps"
-                :key="app.id"
-                :class="['tag', `tag-${app.id}`]"
-                :style="{
-                  background: app.iconColor + '22',
-                  borderColor: app.iconColor + '55',
-                  color: app.iconColor
-                }"
-              >
-                {{ app.name }} <span class="tag-x" @click.stop="toggleApp(app)">×</span>
-              </span>
-            </div>
-            <div class="period-controls">
-              <button class="period-nav">‹</button>
-              <span class="period-label">2025年12月</span>
-              <button class="period-nav">›</button>
-              <span class="compare-toggle-label">对比上月</span>
-              <div class="mini-toggle active" />
-            </div>
-          </div>
-          <div class="cards-grid">
+        <div class="compare-cards-wrap">
+          <div class="cards-grid" :style="{ '--card-count': selectedApps.length }">
             <div
               v-for="app in selectedApps"
               :key="app.id"
               class="compare-card"
-              :style="{ borderColor: app.iconColor + '40' }"
+              :style="{
+                borderColor: app.iconColor + '40',
+                background: `linear-gradient(180deg, ${app.iconColor}28 0%, ${app.iconColor}06 100%)`
+              }"
             >
               <div class="card-app-name" :style="{ color: app.iconColor }">{{ app.name }}</div>
-              <div v-for="metric in getAppMetrics(app)" :key="metric.label" class="card-metric-row">
-                <span class="card-metric-label">{{ metric.label }}</span>
-                <div class="card-metric-right">
-                  <span class="card-metric-val">{{ metric.value }}</span>
-                  <span :class="['card-metric-change', metric.changeType]">{{
-                    metric.change
-                  }}</span>
+              <div class="card-col-headers">
+                <span>总收尾</span>
+                <span>月环比</span>
+              </div>
+              <!-- Main revenue row -->
+              <div class="card-revenue-row">
+                <span class="card-revenue-val" :style="{ color: app.iconColor }">
+                  {{ formatRevenue(app.revenue) }}
+                </span>
+                <span class="card-change positive">+{{ app.revenueChange }}%</span>
+              </div>
+              <!-- Sub metrics -->
+              <div v-for="m in getSubMetrics(app)" :key="m.label" class="card-sub-metric">
+                <span class="card-sub-label">{{ m.label }}</span>
+                <div class="card-sub-row">
+                  <span class="card-sub-val">{{ m.value }}</span>
+                  <span :class="['card-change', m.changeType]">{{ m.change }}</span>
                 </div>
               </div>
             </div>
@@ -128,64 +170,67 @@
 
         <!-- MAU Chart -->
         <div class="mau-chart-panel">
-          <div class="chart-title">MAU 对比（月报专有）</div>
-          <div class="chart-legend">
-            <span v-for="app in selectedApps" :key="app.id" class="legend-item">
-              <span class="legend-dot" :style="{ background: app.iconColor }" />
-              {{ app.name }}
-            </span>
+          <div class="chart-header">
+            <span class="chart-title">MAU 对比（月报专有）</span>
+            <div class="chart-legend">
+              <span v-for="app in selectedApps" :key="app.id" class="legend-item">
+                <span class="legend-dot" :style="{ background: app.iconColor }" />
+                {{ app.name }}
+              </span>
+            </div>
           </div>
           <div ref="mauChartRef" class="echart-box" />
         </div>
       </div>
 
-      <!-- Middle: Revenue Trend Chart -->
-      <div class="trend-section">
-        <div class="trend-header">
-          <span class="section-title">总收尾走势对比（近 6 个月）</span>
-          <div class="trend-legend">
-            <span v-for="app in selectedApps" :key="app.id" class="legend-item">
-              <span class="legend-line" :style="{ background: app.iconColor }" />
-              {{ app.name }}
-            </span>
-          </div>
-        </div>
-        <div ref="trendChartRef" class="echart-trend" />
-      </div>
-
-      <!-- Bottom: Metrics Comparison Table -->
-      <div class="metrics-table-section">
-        <div class="section-title mb-10">指标对比详情</div>
-        <table class="metrics-table">
-          <thead>
-            <tr>
-              <th>指标</th>
-              <th v-for="app in selectedApps" :key="app.id" :style="{ color: app.iconColor }">
+      <!-- ── Bottom Grid: trend chart + metrics table ── -->
+      <div class="bottom-grid">
+        <!-- Trend Chart -->
+        <div class="trend-section">
+          <div class="trend-header">
+            <span class="section-title">总收尾走势对比（近 6 个月）</span>
+            <div class="trend-legend">
+              <span v-for="app in selectedApps" :key="app.id" class="legend-item">
+                <span class="legend-line" :style="{ background: app.iconColor }" />
                 {{ app.name }}
-              </th>
-              <th>最佳</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in compareMetricRows" :key="row.metric">
-              <td class="metric-name-cell">{{ row.metric }}</td>
-              <td v-for="(val, idx) in row.values" :key="idx">
-                {{ val }}
-              </td>
-              <td class="best-cell">
-                <span
-                  class="best-tag"
-                  :style="{
-                    background: getBestApp(row)?.iconColor + '22',
-                    color: getBestApp(row)?.iconColor
-                  }"
-                >
-                  {{ getBestApp(row)?.name }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </span>
+            </div>
+          </div>
+          <div ref="trendChartRef" class="echart-trend" />
+        </div>
+
+        <!-- Metrics Table -->
+        <div class="metrics-table-section">
+          <div class="section-title mb-10">指标对比详情</div>
+          <table class="metrics-table">
+            <thead>
+              <tr>
+                <th>指标</th>
+                <th v-for="app in selectedApps" :key="app.id" :style="{ color: app.iconColor }">
+                  {{ app.name }}
+                </th>
+                <th>最佳</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in compareMetricRows" :key="row.metric">
+                <td class="metric-name-cell">{{ row.metric }}</td>
+                <td v-for="(val, idx) in row.values" :key="idx">{{ val }}</td>
+                <td class="best-cell">
+                  <span
+                    class="best-tag"
+                    :style="{
+                      background: getBestApp(row)?.iconColor + '22',
+                      color: getBestApp(row)?.iconColor
+                    }"
+                  >
+                    {{ getBestApp(row)?.name }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -202,8 +247,8 @@
   import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import * as echarts from 'echarts'
   import SparklineChart from './SparklineChart.vue'
-  import { appList } from './mockData'
-  import type { AppListItem } from './types'
+  import { appList } from '../mockData'
+  import type { AppListItem } from '../types'
 
   // ── State ─────────────────────────────────────────────────────
   const platformFilter = ref('全部')
@@ -264,14 +309,9 @@
   }
 
   // ── Compare Card Metrics ──────────────────────────────────────
-  function getAppMetrics(app: AppListItem) {
+  // Sub-metrics for compare cards (revenue shown separately as main row)
+  function getSubMetrics(app: AppListItem) {
     return [
-      {
-        label: '总收尾',
-        value: formatRevenue(app.revenue),
-        change: `+${app.revenueChange}%`,
-        changeType: 'positive'
-      },
       { label: 'MAU', value: `${app.mau}万`, change: '+4.4%', changeType: 'positive' },
       {
         label: '预估利润',
@@ -500,9 +540,9 @@
 <style scoped>
   .compare-wrap {
     display: flex;
+    flex: 1; /* fill br-main--compare (flex column) */
     gap: 16px;
-    height: calc(100vh - 220px);
-    min-height: 500px;
+    min-height: 0;
     color: var(--rp-text);
   }
 
@@ -512,9 +552,10 @@
     flex-direction: column;
     flex-shrink: 0;
     gap: 10px;
-    width: 320px;
+    width: 300px;
+    min-height: 0; /* allow shrinking in flex */
     padding: 14px;
-    overflow: hidden;
+    overflow: hidden; /* header/footer fixed, app-list scrolls */
     background: var(--rp-surface);
     border: 1px solid var(--rp-border);
     border-radius: 10px;
@@ -598,7 +639,10 @@
     flex: 1;
     flex-direction: column;
     gap: 4px;
+    min-height: 0; /* critical: allow flex child to scroll */
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 12%) transparent;
   }
 
   .app-list::-webkit-scrollbar {
@@ -606,7 +650,8 @@
   }
 
   .app-list::-webkit-scrollbar-thumb {
-    background: rgb(255 255 255 / 10%);
+    background: rgb(255 255 255 / 12%);
+    border-radius: 2px;
   }
 
   .app-item {
@@ -679,26 +724,55 @@
     color: var(--rp-muted);
   }
 
-  .app-revenue {
+  /* ── App item variants ── */
+  .app-item--selected {
+    border: 1px solid;
+    border-radius: 8px;
+  }
+
+  .app-item--plain {
+    border: 1px solid transparent;
+    border-radius: 6px;
+  }
+
+  /* Plain item: name + platform left, revenue + change right */
+  .app-item--plain .app-name-row {
+    flex-wrap: nowrap;
+  }
+
+  .plain-revenue {
     margin-left: auto;
     font-size: 12px;
+    white-space: nowrap;
+  }
+
+  /* Selected item: revenue big row */
+  .app-revenue-row {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    margin: 4px 0;
+  }
+
+  .app-revenue-big {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .app-sparkline {
+    margin-left: auto;
   }
 
   .app-change {
     font-size: 11px;
   }
 
-  .app-sparkline-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-top: 6px;
-  }
-
+  /* Meta row (MAU + profit) */
   .app-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
+    margin-top: 4px;
     font-size: 10px;
   }
 
@@ -709,6 +783,11 @@
   .meta-val {
     font-weight: 500;
     color: var(--rp-text);
+  }
+
+  .app-revenue {
+    margin-left: auto;
+    font-size: 12px;
   }
 
   .sidebar-footer {
@@ -725,7 +804,15 @@
     flex: 1;
     flex-direction: column;
     gap: 14px;
+    min-width: 0;
+    min-height: 0;
+    padding: 16px;
     overflow-y: auto;
+    background: var(--rp-surface);
+    border: 1px solid var(--rp-border);
+    border-radius: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 12%) transparent;
   }
 
   .compare-content::-webkit-scrollbar {
@@ -733,27 +820,23 @@
   }
 
   .compare-content::-webkit-scrollbar-thumb {
-    background: rgb(255 255 255 / 10%);
+    background: rgb(255 255 255 / 12%);
+    border-radius: 2px;
   }
 
-  .top-row {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 14px;
-  }
-
-  /* Compare Cards */
-  .cards-header {
+  /* ── Content Header ── */
+  .content-header {
     display: flex;
+    flex-shrink: 0;
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
-    margin-bottom: 12px;
   }
 
   .section-title {
     font-size: 14px;
     font-weight: 600;
+    white-space: nowrap;
   }
 
   .selected-tags {
@@ -806,77 +889,129 @@
 
   .mini-toggle {
     position: relative;
-    width: 28px;
-    height: 14px;
-    background: rgb(255 255 255 / 10%);
-    border-radius: 7px;
+    width: 36px;
+    height: 18px;
+    cursor: pointer;
+    background: var(--rp-accent);
+    border-radius: 9px;
   }
 
-  .mini-toggle.active {
-    background: var(--rp-accent);
+  .mini-knob {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+  }
+
+  .toggle-on-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rp-accent);
+  }
+
+  /* ── Top Grid ── */
+  .top-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  /* Compare Cards */
+  .compare-cards-wrap {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
   .cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    flex: 1;
+    grid-template-columns: repeat(var(--card-count, 3), 1fr);
     gap: 10px;
   }
 
   .compare-card {
-    padding: 12px;
-    background: rgb(255 255 255 / 3%);
+    padding: 14px;
     border: 1px solid;
     border-radius: 10px;
   }
 
   .card-app-name {
-    margin-bottom: 10px;
-    font-size: 13px;
+    margin-bottom: 8px;
+    font-size: 15px;
     font-weight: 700;
   }
 
-  .card-metric-row {
+  .card-col-headers {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding: 4px 0;
-    font-size: 11px;
-    border-bottom: 1px solid rgb(255 255 255 / 4%);
-  }
-
-  .card-metric-row:last-child {
-    border-bottom: none;
-  }
-
-  .card-metric-label {
+    margin-bottom: 4px;
+    font-size: 10px;
     color: var(--rp-muted);
   }
 
-  .card-metric-right {
+  .card-revenue-row {
     display: flex;
-    gap: 6px;
-    align-items: center;
+    gap: 8px;
+    align-items: baseline;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgb(255 255 255 / 6%);
   }
 
-  .card-metric-val {
+  .card-revenue-val {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .card-change {
+    font-size: 11px;
     font-weight: 500;
   }
 
-  .card-metric-change.positive {
-    font-size: 10px;
-    color: #4ade80;
+  .card-sub-metric {
+    margin-bottom: 4px;
   }
 
-  .card-metric-change.negative {
+  .card-sub-label {
+    display: block;
+    margin-bottom: 1px;
     font-size: 10px;
-    color: #f87171;
+    color: var(--rp-muted);
+  }
+
+  .card-sub-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  .card-sub-val {
+    font-weight: 500;
   }
 
   /* MAU Chart */
   .mau-chart-panel {
     display: flex;
     flex-direction: column;
+    gap: 0;
+    padding: 14px;
+    background: rgb(255 255 255 / 2%);
+    border: 1px solid var(--rp-border);
+    border-radius: 10px;
+  }
+
+  .chart-header {
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
   }
 
   .chart-title {
@@ -887,7 +1022,7 @@
   .chart-legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
   }
 
   .legend-item {
@@ -899,24 +1034,34 @@
   }
 
   .legend-dot {
+    flex-shrink: 0;
     width: 8px;
     height: 8px;
     border-radius: 50%;
   }
 
   .legend-line {
+    flex-shrink: 0;
     width: 14px;
     height: 2px;
     border-radius: 1px;
   }
 
   .echart-box {
-    flex: 1;
-    min-height: 160px;
+    height: 200px;
+  }
+
+  /* ── Bottom Grid ── */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
   }
 
   /* Trend Section */
   .trend-section {
+    display: flex;
+    flex-direction: column;
     padding: 14px;
     background: rgb(255 255 255 / 2%);
     border: 1px solid var(--rp-border);
@@ -925,6 +1070,8 @@
 
   .trend-header {
     display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 10px;
@@ -936,15 +1083,24 @@
   }
 
   .echart-trend {
-    height: 200px;
+    height: 220px;
   }
 
   /* Metrics Table */
   .metrics-table-section {
     padding: 14px;
+    overflow-y: auto;
     background: rgb(255 255 255 / 2%);
     border: 1px solid var(--rp-border);
     border-radius: 10px;
+  }
+
+  .metrics-table-section::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  .metrics-table-section::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 10%);
   }
 
   .mb-10 {
@@ -962,6 +1118,7 @@
     font-weight: 500;
     color: var(--rp-muted);
     text-align: right;
+    white-space: nowrap;
     border-bottom: 1px solid var(--rp-border);
   }
 
@@ -972,6 +1129,7 @@
   .metrics-table td {
     padding: 7px 10px;
     text-align: right;
+    white-space: nowrap;
     border-bottom: 1px solid rgb(255 255 255 / 3%);
   }
 

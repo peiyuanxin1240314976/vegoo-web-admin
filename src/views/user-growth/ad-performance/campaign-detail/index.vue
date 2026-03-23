@@ -27,7 +27,7 @@
         </span>
       </div>
       <div class="cd-title-row__actions">
-        <ElButton type="primary" size="small" plain round>
+        <ElButton type="primary" size="small" plain round @click="goToEdit">
           <el-icon><Edit /></el-icon>
           编辑系列
         </ElButton>
@@ -54,7 +54,7 @@
       <!-- 中列：趋势图 + 广告列表 -->
       <div class="cd-col cd-col--mid">
         <CampaignCoreTrend :data="data.trendData" />
-        <CampaignAdList :rows="data.adRows" />
+        <CampaignAdList :rows="data.adRows" :campaign-id="String(route.query.id ?? '')" />
       </div>
 
       <!-- 右列：素材Top5 + AI洞察 -->
@@ -91,6 +91,13 @@
   const route = useRoute()
   const loading = ref(true)
   const data = reactive<CampaignDetailData>({ ...MOCK_CAMPAIGN_DETAIL })
+
+  function goToEdit() {
+    router.push({
+      path: '/user-growth/ad-performance/campaign-detail/ad-edit',
+      query: { campaignId: String(route.query.id ?? '') }
+    })
+  }
 
   function statusText(s: CampaignStatus): string {
     const map: Record<CampaignStatus, string> = {

@@ -2,11 +2,13 @@
   <div class="ms-wrap">
     <!-- Header Row -->
     <div class="section-header">
-      <span class="title-main">整体 全部平台</span>
+      <span class="title-main">整体</span>
+      <span class="title-main">全部平台</span>
       <span class="period-badge">月报</span>
       <span class="period-text">2025年12月</span>
-      <span class="update-time">数据更新时间：2026-01-02 09:00</span>
-      <button class="refresh-btn" title="刷新">↻</button>
+      <span class="update-time"
+        >数据更新时间：2026-01-02 09:00 <button class="refresh-btn" title="刷新">↻</button></span
+      >
     </div>
 
     <!-- KPI Cards Row -->
@@ -15,10 +17,10 @@
     </div>
 
     <!-- 3-column content area -->
-    <div class="content-grid">
+    <div class="content-grid" style="flex: 1">
       <!-- Left: 用户指标 -->
       <div class="content-col">
-        <div class="table-section">
+        <div class="table-section table-card">
           <div class="table-title"> 用户指标 </div>
           <table class="data-table">
             <thead>
@@ -41,7 +43,7 @@
         </div>
 
         <!-- 留存率 -->
-        <div class="table-section mt-16">
+        <div class="table-section table-card">
           <div class="table-title">留存率</div>
           <table class="data-table">
             <thead>
@@ -64,9 +66,9 @@
         </div>
       </div>
 
-      <!-- Middle: ROI + 收尾指标 -->
+      <!-- Middle: ROI + 收缴指标 -->
       <div class="content-col">
-        <div class="table-section">
+        <div class="table-section table-card">
           <div class="table-title">ROI 跟踪</div>
           <table class="data-table">
             <thead>
@@ -88,8 +90,8 @@
           </table>
         </div>
 
-        <div class="table-section mt-16">
-          <div class="table-title">收尾指标</div>
+        <div class="table-section table-card">
+          <div class="table-title">收缴指标</div>
           <table class="data-table">
             <thead>
               <tr>
@@ -113,7 +115,7 @@
 
       <!-- Right: 费用抄扣 -->
       <div class="content-col fee-col">
-        <div class="fee-panel">
+        <div class="fee-panel table-card">
           <div class="fee-header">
             <span class="fee-title">费用抄扣</span>
             <span class="fee-badge">月报专有</span>
@@ -159,10 +161,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Push Bar -->
+    <div class="ms-push-bar">
+      <span class="ms-push-last">上次推送：2026-01-01 09:00 飞书群《经营月报》</span>
+      <button class="ms-push-btn" type="button" @click="openPushModal()">立即推送</button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import { inject } from 'vue'
   import KpiCard from './KpiCard.vue'
   import {
     monthlyKpis,
@@ -171,11 +180,15 @@
     retentionMetrics,
     monthlyRevenueMetrics,
     feeDeductions
-  } from './mockData'
+  } from '../mockData'
+
+  defineOptions({ name: 'MonthlySummary' })
+
+  const openPushModal = inject<() => void>('openPushModal', () => {})
 
   const feeItems = feeDeductions
 
-  function changeClass(type: string) {
+  function changeClass(type?: string) {
     if (type === 'positive') return 'positive'
     if (type === 'negative') return 'negative'
     return 'neutral'
@@ -185,17 +198,22 @@
     if (!val || val === '-') return ''
     const n = parseFloat(val)
     if (n >= 100) return 'roi-green'
-    if (n >= 80) return 'roi-orange'
+    if (n > 0) return 'roi-orange'
     return ''
   }
 </script>
 
 <style scoped>
   .ms-wrap {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 16px;
+    padding: 20px 20px 56px;
     color: var(--rp-text);
+    background: var(--rp-surface);
+    border: 1px solid var(--rp-border);
+    border-radius: 12px;
   }
 
   .section-header {
@@ -205,8 +223,9 @@
   }
 
   .title-main {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 90%);
   }
 
   .period-badge {
@@ -259,11 +278,7 @@
   .content-col {
     display: flex;
     flex-direction: column;
-    gap: 0;
-  }
-
-  .mt-16 {
-    margin-top: 16px;
+    gap: 12px;
   }
 
   .table-title {
@@ -271,6 +286,13 @@
     font-size: 13px;
     font-weight: 600;
     color: var(--rp-text);
+  }
+
+  .table-card {
+    padding: 14px 16px;
+    background: var(--rp-surface);
+    border: 1px solid var(--rp-border);
+    border-radius: 10px;
   }
 
   .data-table {
@@ -308,10 +330,8 @@
 
   /* Fee Panel */
   .fee-panel {
-    padding: 16px;
     background: rgb(251 191 36 / 4%);
-    border: 1px solid rgb(251 191 36 / 35%);
-    border-radius: 10px;
+    border-color: rgb(251 191 36 / 35%);
   }
 
   .fee-header {
@@ -425,5 +445,36 @@
   .roi-orange {
     font-weight: 600;
     color: #fb923c;
+  }
+
+  /* ── Push Bar ────────────────────────────────────────────────── */
+  .ms-push-bar {
+    position: absolute;
+    right: 20px;
+    bottom: 16px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .ms-push-last {
+    font-size: 12px;
+    color: var(--rp-muted);
+  }
+
+  .ms-push-btn {
+    padding: 7px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #000;
+    cursor: pointer;
+    background: #00d4a1;
+    border: none;
+    border-radius: 9999px;
+    transition: filter 0.15s;
+  }
+
+  .ms-push-btn:hover {
+    filter: brightness(1.08);
   }
 </style>

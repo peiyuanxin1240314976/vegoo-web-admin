@@ -1,30 +1,39 @@
 <template>
   <div class="weekly-campaigns">
-    <!-- Summary bar -->
-    <div class="summary-bar">
-      <div class="summary-group">
-        <div class="s-item"
-          ><span class="s-dot active"></span><span class="s-l">在投系列</span
-          ><span class="s-v">14个</span></div
-        >
-        <div class="s-item"
-          ><span class="s-dot paused"></span><span class="s-l">已暂停</span
-          ><span class="s-v">3个</span></div
-        >
+    <!-- ── 顶栏：周期 + KPI + 迷你图（对齐日报在投结构）──────────────── -->
+    <div class="wcc-title-row">
+      <div class="wcc-title-left">
+        <span class="wcc-title-app">整体</span>
+        <span class="wcc-title-app">全部平台</span>
+        <span class="wcc-title-badge">周报</span>
+        <span class="wcc-title-date">2026年第10周（3/9-3/15）</span>
       </div>
-      <div class="s-divider"></div>
-      <div class="s-item"
-        ><span class="s-l">总广告支出</span><span class="s-v highlight">$287,700</span></div
-      >
-
-      <!-- Mini Stacked Bar Chart -->
-      <div class="mini-chart-wrap">
-        <div ref="miniChartRef" class="mini-chart"></div>
+      <div class="wcc-title-stats">
+        <div class="wcc-stat">
+          <span class="wcc-stat-dot active"></span>
+          <span class="wcc-stat-label">在投系列</span>
+          <span class="wcc-stat-val">{{ activeCount }}个</span>
+          <span class="wcc-stat-arrow up" aria-hidden="true">↑</span>
+        </div>
+        <div class="wcc-stat">
+          <span class="wcc-stat-dot paused"></span>
+          <span class="wcc-stat-label">已暂停</span>
+          <span class="wcc-stat-val paused">{{ pausedCount }}个</span>
+          <span class="wcc-stat-arrow paused-arr" aria-hidden="true">↑</span>
+        </div>
+        <div class="wcc-stat-sep"></div>
+        <div class="wcc-stat">
+          <span class="wcc-stat-label">总广告支出</span>
+          <span class="wcc-stat-val spend">{{ totalSpendDisplay }}</span>
+        </div>
+        <div class="wcc-mini-chart-wrap">
+          <div ref="miniChartRef" class="wcc-mini-chart"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Campaigns Table with heatmap ROI -->
-    <div class="data-card">
+    <!-- ── 表格区 ─────────────────────────────────────────────── -->
+    <div class="wcc-table-card">
       <div class="table-title">CAMPAIGN TABLE</div>
       <div class="table-wrap">
         <table class="data-table">
@@ -66,9 +75,9 @@
                   {{ row.status === 'active' ? '在投中' : '已暂停' }}
                 </span>
               </td>
-              <td
-                ><span class="flag">{{ row.countryFlag }}</span> {{ row.country }}</td
-              >
+              <td>
+                <span class="flag">{{ row.countryFlag }}</span> {{ row.country }}
+              </td>
               <td :class="row.status === 'paused' ? 'muted' : ''">{{ row.adSpend }}</td>
               <td :class="changeColor(row.adSpendChange)">
                 {{
@@ -81,42 +90,68 @@
               <td>{{ row.cpm ?? '-' }}</td>
               <td>{{ row.cpc ?? '-' }}</td>
               <td>{{ row.acquisitions }}</td>
-              <td
-                ><div :class="['heat-cell', heatClass(row.roi1d)]">{{ row.roi1d }}</div></td
-              >
-              <td
-                ><div :class="['heat-cell', heatClass(row.roi3d)]">{{ row.roi3d }}</div></td
-              >
-              <td
-                ><div :class="['heat-cell', heatClass(row.roi7d)]">{{ row.roi7d }}</div></td
-              >
-              <td
-                ><div :class="['heat-cell', heatClass(row.roi14d)]">{{ row.roi14d }}</div></td
-              >
-              <td
-                ><div :class="['heat-cell', heatClass(row.roi30d)]">{{ row.roi30d }}</div></td
-              >
+              <td>
+                <div :class="['heat-cell', heatClass(row.roi1d)]">{{ row.roi1d }}</div>
+              </td>
+              <td>
+                <div :class="['heat-cell', heatClass(row.roi3d)]">{{ row.roi3d }}</div>
+              </td>
+              <td>
+                <div :class="['heat-cell', heatClass(row.roi7d)]">{{ row.roi7d }}</div>
+              </td>
+              <td>
+                <div :class="['heat-cell', heatClass(row.roi14d)]">{{ row.roi14d }}</div>
+              </td>
+              <td>
+                <div :class="['heat-cell', heatClass(row.roi30d)]">{{ row.roi30d }}</div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="table-footer"> 在投 14 个 | 已暂停 3 个 | 总广告支出 $287,700 </div>
+    </div>
+
+    <!-- ── 底部推送（对齐日报在投）──────────────────────────── -->
+    <div class="wcc-push-bar">
+      <span class="wcc-push-summary">
+        在投 {{ activeCount }} 个 &nbsp;|&nbsp; 已暂停 {{ pausedCount }} 个 &nbsp;|&nbsp; 总广告支出
+        {{ totalSpendDisplay }}
+      </span>
+      <div class="wcc-push-right">
+        <span class="wcc-push-last">上次推送：本周一 08:30 飞书群《经营周报》</span>
+        <button class="wcc-push-btn" type="button" @click="openPushModal()">立即推送</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted } from 'vue'
+  import { ref, computed, inject, onMounted, onUnmounted } from 'vue'
   import * as echarts from 'echarts'
-  import { campaignData } from './mockData'
+  import { campaignData } from '../mockData'
+
+  defineOptions({ name: 'WeeklyCampaigns' })
 
   const campaigns = campaignData.map((c) => ({
     ...c,
     adSpend:
       c.adSpend === '$0'
         ? '$0'
-        : '$' + (parseInt(c.adSpend.replace(/[$,]/g, '')) * 7).toLocaleString()
+        : '$' + (parseInt(c.adSpend.replace(/[$,]/g, ''), 10) * 7).toLocaleString('en-US')
   }))
+
+  const openPushModal = inject<() => void>('openPushModal', () => {})
+
+  const activeCount = computed(() => campaigns.filter((c) => c.status === 'active').length)
+  const pausedCount = computed(() => campaigns.filter((c) => c.status === 'paused').length)
+
+  const totalSpendDisplay = computed(() => {
+    const sum = campaigns.reduce((acc, c) => {
+      if (c.adSpend === '$0') return acc
+      return acc + parseInt(c.adSpend.replace(/[$,]/g, ''), 10)
+    }, 0)
+    return '$' + sum.toLocaleString('en-US')
+  })
 
   const miniChartRef = ref<HTMLElement>()
   let chart: echarts.ECharts | null = null
@@ -179,88 +214,148 @@
 
 <style scoped>
   .weekly-campaigns {
+    position: relative;
     display: flex;
     flex: 1;
     flex-direction: column;
-    gap: 12px;
-    padding: 14px;
-    overflow-y: auto;
-  }
-
-  .summary-bar {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    padding: 10px 16px;
+    gap: 14px;
+    min-height: 0;
+    padding: 14px 14px 52px;
+    overflow: hidden;
     background: rgb(255 255 255 / 3%);
     border: 1px solid rgb(255 255 255 / 7%);
-    border-radius: 10px;
+    border-radius: 12px;
   }
 
-  .summary-group {
+  /* ── 顶栏 ─────────────────────────────────────────────────── */
+  .wcc-title-row {
     display: flex;
-    gap: 16px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 0;
   }
 
-  .s-item {
+  .wcc-title-left {
     display: flex;
-    gap: 6px;
+    flex-wrap: wrap;
+    gap: 10px;
     align-items: center;
   }
 
-  .s-dot {
+  .wcc-title-app {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 90%);
+  }
+
+  .wcc-title-badge {
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #000;
+    background: #00d4a1;
+    border-radius: 4px;
+  }
+
+  .wcc-title-date {
+    font-size: 13px;
+    color: rgb(255 255 255 / 55%);
+  }
+
+  .wcc-title-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .wcc-stat {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .wcc-stat-dot {
+    flex-shrink: 0;
     width: 8px;
     height: 8px;
     border-radius: 50%;
   }
 
-  .s-dot.active {
+  .wcc-stat-dot.active {
     background: #00d4a1;
   }
 
-  .s-dot.paused {
+  .wcc-stat-dot.paused {
     background: #f59e0b;
   }
 
-  .s-l {
+  .wcc-stat-label {
     font-size: 11px;
     color: rgb(255 255 255 / 45%);
   }
 
-  .s-v {
+  .wcc-stat-val {
     font-size: 14px;
     font-weight: 700;
     color: rgb(255 255 255 / 90%);
   }
 
-  .s-v.highlight {
+  .wcc-stat-val.paused {
+    color: #fb923c;
+  }
+
+  .wcc-stat-val.spend {
     color: #00d4a1;
   }
 
-  .s-divider {
+  .wcc-stat-arrow {
+    margin-left: 1px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .wcc-stat-arrow.up {
+    color: #4ade80;
+  }
+
+  .wcc-stat-arrow.paused-arr {
+    color: #fb923c;
+  }
+
+  .wcc-stat-sep {
     width: 1px;
-    height: 20px;
+    height: 18px;
     background: rgb(255 255 255 / 10%);
   }
 
-  .mini-chart-wrap {
-    margin-left: auto;
+  .wcc-mini-chart-wrap {
+    margin-left: 4px;
   }
 
-  .mini-chart {
+  .wcc-mini-chart {
     width: 80px;
     height: 36px;
   }
 
-  .data-card {
+  /* ── 表格卡片 ─────────────────────────────────────────────── */
+  .wcc-table-card {
+    display: flex;
     flex: 1;
+    flex-direction: column;
+    min-height: 0;
     padding: 14px;
+    overflow: hidden;
     background: rgb(255 255 255 / 2%);
     border: 1px solid rgb(255 255 255 / 7%);
     border-radius: 10px;
   }
 
   .table-title {
+    flex-shrink: 0;
     margin-bottom: 10px;
     font-size: 11px;
     font-weight: 700;
@@ -269,7 +364,9 @@
   }
 
   .table-wrap {
-    overflow-x: auto;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
   }
 
   .data-table {
@@ -372,7 +469,6 @@
     color: #ff5c5c;
   }
 
-  /* Heatmap cells */
   .heat-cell {
     display: inline-flex;
     align-items: center;
@@ -419,9 +515,49 @@
     background: rgb(0 212 161 / 22%);
   }
 
-  .table-footer {
-    margin-top: 10px;
+  /* ── 底部推送 ─────────────────────────────────────────────── */
+  .wcc-push-bar {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+    left: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .wcc-push-summary {
     font-size: 11px;
-    color: rgb(255 255 255 / 40%);
+    color: rgb(255 255 255 / 45%);
+  }
+
+  .wcc-push-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .wcc-push-last {
+    font-size: 11px;
+    color: rgb(255 255 255 / 35%);
+  }
+
+  .wcc-push-btn {
+    padding: 6px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #000;
+    cursor: pointer;
+    background: #00d4a1;
+    border: none;
+    border-radius: 9999px;
+    transition: opacity 0.2s;
+  }
+
+  .wcc-push-btn:hover {
+    opacity: 0.88;
   }
 </style>

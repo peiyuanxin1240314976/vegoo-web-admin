@@ -57,9 +57,9 @@
       </ElTableColumn>
 
       <ElTableColumn label="操作" width="70" align="center" fixed="right">
-        <template #default>
+        <template #default="{ row }">
           <div class="cal__actions">
-            <button type="button" class="cal__action-btn" title="查看">
+            <button type="button" class="cal__action-btn" title="查看" @click="goToAdDetail(row)">
               <el-icon><View /></el-icon>
             </button>
             <button type="button" class="cal__action-btn cal__action-btn--warn" title="暂停">
@@ -74,6 +74,7 @@
 
 <script setup lang="ts">
   import { ref, computed } from 'vue'
+  import { useRouter } from 'vue-router'
   import { View, VideoPause } from '@element-plus/icons-vue'
   import type { CampaignAdRow } from '../types'
 
@@ -82,9 +83,19 @@
   const props = withDefaults(
     defineProps<{
       rows?: CampaignAdRow[]
+      campaignId?: string
     }>(),
-    { rows: () => [] }
+    { rows: () => [], campaignId: '' }
   )
+
+  const router = useRouter()
+
+  function goToAdDetail(row: CampaignAdRow) {
+    router.push({
+      path: '/user-growth/ad-performance/campaign-detail/ad-detail',
+      query: { id: row.id, campaignId: props.campaignId }
+    })
+  }
 
   type StatusFilter = 'all' | 'active' | 'paused' | 'completed'
 

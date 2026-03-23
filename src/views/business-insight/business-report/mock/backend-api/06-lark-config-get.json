@@ -1,0 +1,101 @@
+{
+  "_comment": "飞书推送 - 读取推送配置。对应 types.ts: LarkPushConfig。",
+  "api": {
+    "url": "GET /api/v1/lark/push-config",
+    "method": "GET",
+    "priority": "P2",
+    "queryParams": "（无）"
+  },
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "groups": { "type": "LarkTarget[]", "required": true, "description": "飞书推送群组列表" },
+      "persons": { "type": "LarkTarget[]", "required": true, "description": "指定推送人员列表" },
+      "daily": {
+        "enabled": { "type": "boolean", "required": true, "description": "是否启用日报推送" },
+        "day": { "type": "string", "required": true, "description": "推送频率：每天 / 工作日" },
+        "time": {
+          "type": "string",
+          "required": true,
+          "description": "推送时间，格式 HH:MM，如 09:00"
+        },
+        "workdayOnly": { "type": "boolean", "required": true, "description": "是否仅工作日展示" }
+      },
+      "weekly": {
+        "enabled": { "type": "boolean", "required": true, "description": "是否启用周报推送" },
+        "day": { "type": "string", "required": true, "description": "推送星期：每周一 / 每周五" },
+        "time": { "type": "string", "required": true, "description": "推送时间" },
+        "showChange": { "type": "boolean", "required": true, "description": "是否包含周环比数据" }
+      },
+      "monthly": {
+        "enabled": { "type": "boolean", "required": true, "description": "是否启用月报推送" },
+        "day": {
+          "type": "string",
+          "required": true,
+          "description": "推送日期：每月 1 日 / 每月 2 日"
+        },
+        "time": { "type": "string", "required": true, "description": "推送时间" },
+        "showFee": { "type": "boolean", "required": true, "description": "是否包含费用抄扣明细" }
+      },
+      "content": {
+        "summary": { "type": "boolean", "required": true, "description": "是否推送汇总表" },
+        "adPlatform": { "type": "boolean", "required": true, "description": "是否推送广告平台表" },
+        "byCountry": { "type": "boolean", "required": true, "description": "是否推送分国家汇总表" },
+        "platformCountry": {
+          "type": "boolean",
+          "required": true,
+          "description": "是否推送广告平台分国家表"
+        },
+        "campaigns": {
+          "type": "boolean",
+          "required": true,
+          "description": "是否推送在投广告系列表"
+        }
+      }
+    },
+    "LarkTarget": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "飞书 open_id（群为 chat_id，人员为 user_id）"
+      },
+      "name": { "type": "string", "required": true, "description": "显示名称" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "groups": [
+      { "id": "oc_group_daily_001", "name": "经营日报群" },
+      { "id": "oc_group_weekly_002", "name": "管理层周报群" }
+    ],
+    "persons": [
+      { "id": "ou_person_001", "name": "王总" },
+      { "id": "ou_person_002", "name": "李总" }
+    ],
+    "daily": {
+      "enabled": true,
+      "day": "每天",
+      "time": "09:00",
+      "workdayOnly": true
+    },
+    "weekly": {
+      "enabled": true,
+      "day": "每周一",
+      "time": "09:00",
+      "showChange": true
+    },
+    "monthly": {
+      "enabled": true,
+      "day": "每月 1 日",
+      "time": "09:00",
+      "showFee": true
+    },
+    "content": {
+      "summary": true,
+      "adPlatform": true,
+      "byCountry": true,
+      "platformCountry": false,
+      "campaigns": true
+    }
+  }
+}

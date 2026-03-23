@@ -1,0 +1,564 @@
+{
+  "_comment": "经营报告 - 广告平台分国家。对应 types.ts: PlatformCountryResponse。三周期结构相同，change 字段分别反映日/周/月环比。",
+  "api": {
+    "url": "GET /api/v1/report/platform-country",
+    "method": "GET",
+    "priority": "P1",
+    "queryParams": "period, appId?, date?"
+  },
+  "fieldDescription": {
+    "request": {
+      "period": {
+        "type": "'daily' | 'weekly' | 'monthly'",
+        "required": true,
+        "description": "报告周期"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用 ID，不传返回整体"
+      },
+      "date": {
+        "type": "string",
+        "required": false,
+        "description": "ISO 日期，不传取最新"
+      }
+    },
+    "response": {
+      "osEntries": {
+        "type": "ApcOsEntry[]",
+        "required": true,
+        "description": "三层树形：OS → 广告平台 → 国家，供 AdPlatformByCountry 组件使用"
+      },
+      "flatRows": {
+        "type": "PlatformCountryRow[]",
+        "required": true,
+        "description": "平铺层级行，含 level 字段，供其他表格组件使用"
+      },
+      "totalPlatforms": {
+        "type": "number",
+        "required": true,
+        "description": "汇总广告平台数"
+      },
+      "totalCountries": {
+        "type": "number",
+        "required": true,
+        "description": "汇总国家数"
+      }
+    },
+    "ApcOsEntry": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "OS 标识，如 android / ios / web"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "OS 名称，如 安卓 / iOS / 网站"
+      },
+      "platforms": {
+        "type": "ApcPlatformEntry[]",
+        "required": true,
+        "description": "该 OS 下的广告平台列表"
+      }
+    },
+    "ApcPlatformEntry": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "平台唯一标识，如 android-google"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台名称"
+      },
+      "logo": {
+        "type": "string",
+        "required": true,
+        "description": "文字缩写或 emoji"
+      },
+      "color": {
+        "type": "string",
+        "required": true,
+        "description": "平台主色"
+      },
+      "spend": {
+        "type": "string",
+        "required": true,
+        "description": "广告支出（预格式化）"
+      },
+      "change": {
+        "type": "string",
+        "required": true,
+        "description": "环比字符串，如 +8.1%"
+      },
+      "users": {
+        "type": "string",
+        "required": true,
+        "description": "买量用户（预格式化）"
+      },
+      "campaigns": {
+        "type": "number",
+        "required": true,
+        "description": "广告系列数"
+      },
+      "cpi": {
+        "type": "string",
+        "required": true,
+        "description": "单次安装成本"
+      },
+      "cpm": {
+        "type": "string",
+        "required": true,
+        "description": "千次展示成本"
+      },
+      "cpc": {
+        "type": "string",
+        "required": true,
+        "description": "单次点击成本"
+      },
+      "roi1d": {
+        "type": "string",
+        "required": true,
+        "description": "首日 ROI"
+      },
+      "roi3d": {
+        "type": "string",
+        "required": true,
+        "description": "3 日 ROI"
+      },
+      "roi7d": {
+        "type": "string",
+        "required": true,
+        "description": "7 日 ROI"
+      },
+      "roi14d": {
+        "type": "string",
+        "required": true,
+        "description": "14 日 ROI"
+      },
+      "roi30d": {
+        "type": "string",
+        "required": true,
+        "description": "30 日 ROI"
+      },
+      "profit": {
+        "type": "string",
+        "required": true,
+        "description": "预估利润"
+      },
+      "subtotalSpend": {
+        "type": "string",
+        "required": true,
+        "description": "小计：广告支出合计"
+      },
+      "subtotalChange": {
+        "type": "string",
+        "required": true,
+        "description": "小计：环比"
+      },
+      "subtotalUsers": {
+        "type": "string",
+        "required": true,
+        "description": "小计：买量用户合计"
+      },
+      "subtotalCampaigns": {
+        "type": "number",
+        "required": true,
+        "description": "小计：广告系列合计"
+      },
+      "subtotalCpi": {
+        "type": "string",
+        "required": true,
+        "description": "小计：综合 CPI"
+      },
+      "subtotalCpm": {
+        "type": "string",
+        "required": true,
+        "description": "小计：综合 CPM"
+      },
+      "subtotalCpc": {
+        "type": "string",
+        "required": true,
+        "description": "小计：综合 CPC"
+      },
+      "subtotalRoi1d": {
+        "type": "string",
+        "required": true,
+        "description": "小计：综合首日 ROI"
+      },
+      "subtotalRoi3d": {
+        "type": "string",
+        "required": true,
+        "description": "小计：综合 3 日 ROI"
+      },
+      "subtotalRoi7d": {
+        "type": "string",
+        "required": true,
+        "description": "小计：综合 7 日 ROI"
+      },
+      "subtotalRoi14d": {
+        "type": "string",
+        "required": true,
+        "description": "小计：综合 14 日 ROI"
+      },
+      "subtotalRoi30d": {
+        "type": "string",
+        "required": true,
+        "description": "小计：综合 30 日 ROI"
+      },
+      "subtotalProfit": {
+        "type": "string",
+        "required": true,
+        "description": "小计：预估利润合计"
+      },
+      "countries": {
+        "type": "ApcCountryEntry[]",
+        "required": true,
+        "description": "该平台下的国家列表"
+      }
+    },
+    "ApcCountryEntry": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "国家唯一标识，如 g-de（google-德国）"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "国家名称"
+      },
+      "flag": {
+        "type": "string",
+        "required": true,
+        "description": "国家旗帜 emoji；多国合并行使用 🌐"
+      },
+      "spend": {
+        "type": "string",
+        "required": true,
+        "description": "广告支出"
+      },
+      "change": {
+        "type": "string",
+        "required": true,
+        "description": "环比字符串"
+      },
+      "users": {
+        "type": "string",
+        "required": true,
+        "description": "买量用户"
+      },
+      "campaigns": {
+        "type": "number",
+        "required": true,
+        "description": "广告系列数"
+      },
+      "cpi": {
+        "type": "string",
+        "required": true,
+        "description": "CPI"
+      },
+      "cpm": {
+        "type": "string",
+        "required": true,
+        "description": "CPM"
+      },
+      "cpc": {
+        "type": "string",
+        "required": true,
+        "description": "CPC"
+      },
+      "roi1d": {
+        "type": "string",
+        "required": true,
+        "description": "首日 ROI"
+      },
+      "roi3d": {
+        "type": "string",
+        "required": true,
+        "description": "3 日 ROI"
+      },
+      "roi7d": {
+        "type": "string",
+        "required": true,
+        "description": "7 日 ROI"
+      },
+      "roi14d": {
+        "type": "string",
+        "required": true,
+        "description": "14 日 ROI"
+      },
+      "roi30d": {
+        "type": "string",
+        "required": true,
+        "description": "30 日 ROI"
+      },
+      "profit": {
+        "type": "string",
+        "required": true,
+        "description": "预估利润"
+      }
+    },
+    "PlatformCountryRow": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "行唯一标识"
+      },
+      "level": {
+        "type": "'os' | 'platform' | 'country' | 'subtotal'",
+        "required": true,
+        "description": "行层级"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台名称（platform / subtotal 层级有值）"
+      },
+      "platformColor": {
+        "type": "string",
+        "required": false,
+        "description": "平台颜色"
+      },
+      "osPlatform": {
+        "type": "string",
+        "required": false,
+        "description": "OS：安卓 / iOS / 网站"
+      },
+      "country": {
+        "type": "string",
+        "required": false,
+        "description": "国家名称（country 层级有值）"
+      },
+      "countryFlag": {
+        "type": "string",
+        "required": false,
+        "description": "国家 emoji"
+      },
+      "adSpend": {
+        "type": "string",
+        "required": true,
+        "description": "广告支出"
+      },
+      "change": {
+        "type": "string",
+        "required": false,
+        "description": "环比字符串"
+      },
+      "acquisitions": {
+        "type": "string",
+        "required": false,
+        "description": "买量用户"
+      },
+      "campaigns": {
+        "type": "number",
+        "required": false,
+        "description": "广告系列数"
+      },
+      "cpi": {
+        "type": "string",
+        "required": true,
+        "description": "CPI"
+      },
+      "cpm": {
+        "type": "string",
+        "required": true,
+        "description": "CPM"
+      },
+      "cpc": {
+        "type": "string",
+        "required": true,
+        "description": "CPC"
+      },
+      "roi1d": {
+        "type": "string",
+        "required": true,
+        "description": "首日 ROI"
+      },
+      "roi3d": {
+        "type": "string",
+        "required": true,
+        "description": "3 日 ROI"
+      },
+      "roi7d": {
+        "type": "string",
+        "required": true,
+        "description": "7 日 ROI"
+      },
+      "roi14d": {
+        "type": "string",
+        "required": true,
+        "description": "14 日 ROI"
+      },
+      "roi30d": {
+        "type": "string",
+        "required": true,
+        "description": "30 日 ROI"
+      },
+      "profit": {
+        "type": "string",
+        "required": true,
+        "description": "预估利润"
+      }
+    }
+  },
+  "sampleRequest": {
+    "period": "daily",
+    "date": "2026-03-23"
+  },
+  "sampleResponse": {
+    "totalPlatforms": 8,
+    "totalCountries": 22,
+    "osEntries": [
+      {
+        "id": "android",
+        "name": "安卓",
+        "platforms": [
+          {
+            "id": "android-google",
+            "name": "Google",
+            "logo": "G",
+            "color": "#4285F4",
+            "spend": "$456,000",
+            "change": "+8.1%",
+            "users": "180万",
+            "campaigns": 52,
+            "cpi": "$1.26",
+            "cpm": "$9.80",
+            "cpc": "$0.38",
+            "roi1d": "38%",
+            "roi3d": "68%",
+            "roi7d": "98%",
+            "roi14d": "101%",
+            "roi30d": "113%",
+            "profit": "$1,634,000",
+            "subtotalSpend": "$1,456,000",
+            "subtotalChange": "+7.8%",
+            "subtotalUsers": "880万",
+            "subtotalCampaigns": 169,
+            "subtotalCpi": "$1.65",
+            "subtotalCpm": "$9.80",
+            "subtotalCpc": "$0.38",
+            "subtotalRoi1d": "36%",
+            "subtotalRoi3d": "65%",
+            "subtotalRoi7d": "94%",
+            "subtotalRoi14d": "97%",
+            "subtotalRoi30d": "108%",
+            "subtotalProfit": "$5,216,000",
+            "countries": [
+              {
+                "id": "g-de",
+                "name": "德国",
+                "flag": "🇩🇪",
+                "spend": "$173,000",
+                "change": "+7.4%",
+                "users": "68万",
+                "campaigns": 20,
+                "cpi": "$1.26",
+                "cpm": "$9.20",
+                "cpc": "$0.36",
+                "roi1d": "37%",
+                "roi3d": "66%",
+                "roi7d": "96%",
+                "roi14d": "99%",
+                "roi30d": "110%",
+                "profit": "$620,000"
+              },
+              {
+                "id": "g-jp",
+                "name": "日本",
+                "flag": "🇯🇵",
+                "spend": "$131,000",
+                "change": "+6.9%",
+                "users": "52万",
+                "campaigns": 15,
+                "cpi": "$1.26",
+                "cpm": "$9.10",
+                "cpc": "$0.35",
+                "roi1d": "37%",
+                "roi3d": "66%",
+                "roi7d": "96%",
+                "roi14d": "99%",
+                "roi30d": "110%",
+                "profit": "$469,000"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "flatRows": [
+      {
+        "id": "android",
+        "level": "os",
+        "osPlatform": "安卓",
+        "adSpend": "$2,247,000",
+        "cpi": "$1.62",
+        "cpm": "$9.40",
+        "cpc": "$0.37",
+        "roi1d": "35%",
+        "roi3d": "63%",
+        "roi7d": "91%",
+        "roi14d": "94%",
+        "roi30d": "104%",
+        "profit": "$8,046,500"
+      },
+      {
+        "id": "android-google",
+        "level": "platform",
+        "platform": "Google",
+        "platformColor": "#4285F4",
+        "osPlatform": "安卓",
+        "adSpend": "$456,000",
+        "change": "+8.1%",
+        "acquisitions": "180万",
+        "campaigns": 52,
+        "cpi": "$1.26",
+        "cpm": "$9.80",
+        "cpc": "$0.38",
+        "roi1d": "38%",
+        "roi3d": "68%",
+        "roi7d": "98%",
+        "roi14d": "101%",
+        "roi30d": "113%",
+        "profit": "$1,634,000"
+      },
+      {
+        "id": "android-google-de",
+        "level": "country",
+        "platform": "Google",
+        "platformColor": "#4285F4",
+        "osPlatform": "安卓",
+        "country": "德国",
+        "countryFlag": "🇩🇪",
+        "adSpend": "$173,000",
+        "change": "+7.4%",
+        "acquisitions": "68万",
+        "campaigns": 20,
+        "cpi": "$1.26",
+        "cpm": "$9.20",
+        "cpc": "$0.36",
+        "roi1d": "37%",
+        "roi3d": "66%",
+        "roi7d": "96%",
+        "roi14d": "99%",
+        "roi30d": "110%",
+        "profit": "$620,000"
+      }
+    ]
+  },
+  "periodDiff": {
+    "daily": {
+      "changeField": "日环比，如 +8.1%"
+    },
+    "weekly": {
+      "changeField": "周环比，如 +7.8%"
+    },
+    "monthly": {
+      "changeField": "月环比，如 +12.4%"
+    }
+  }
+}

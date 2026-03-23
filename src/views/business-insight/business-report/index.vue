@@ -170,10 +170,7 @@
 
       <div class="date-nav">
         <button class="nav-arrow" @click="prevDate">‹</button>
-        <span class="date-display">
-          <span class="date-icon">📅</span>
-          {{ currentDateLabel }}
-        </span>
+        <span class="date-display">{{ currentDateLabel }}</span>
         <button class="nav-arrow" @click="nextDate">›</button>
       </div>
 
@@ -205,95 +202,50 @@
     <div :class="['br-content', { 'no-sidebar': compareMode && period === 'monthly' }]">
       <!-- Monthly compare mode: no sidebar -->
       <template v-if="compareMode && period === 'monthly'">
-        <main class="br-main">
+        <main class="br-main br-main--compare">
           <MonthlyCompareMode />
         </main>
       </template>
 
-      <!-- Daily: each tab has its own independent sidebar instance -->
-      <template v-else-if="period === 'daily'">
-        <aside class="br-sidebar">
-          <div class="sidebar-card">
-            <AppSidebar
-              :key="`daily-${activeTab}`"
-              :app-list="appList"
-              :selected-id="selectedAppId"
-              :show-field="tabShowField"
-              @select="selectApp"
-              @compare-mode="compareMode = true"
-            />
-          </div>
-        </aside>
-        <main class="br-main">
-          <DailySummary v-if="activeTab === 'summary'" />
-          <DailyAdPlatform v-else-if="activeTab === 'adPlatform'" />
-          <DailyByCountry v-else-if="activeTab === 'byCountry'" />
-          <AdPlatformByCountry v-else-if="activeTab === 'platformCountry'" period="daily" />
-          <DailyCampaigns v-else-if="activeTab === 'campaigns'" />
-        </main>
-      </template>
-
-      <!-- Weekly: each tab has its own independent sidebar instance -->
-      <template v-else-if="period === 'weekly'">
-        <aside class="br-sidebar">
-          <div class="sidebar-card">
-            <AppSidebar
-              :key="`weekly-${activeTab}`"
-              :app-list="appList"
-              :selected-id="selectedAppId"
-              :show-field="tabShowField"
-              @select="selectApp"
-              @compare-mode="compareMode = true"
-            />
-          </div>
-        </aside>
-        <main class="br-main">
-          <WeeklySummary v-if="activeTab === 'summary'" />
-          <WeeklyAdPlatform v-else-if="activeTab === 'adPlatform'" />
-          <WeeklyByCountry v-else-if="activeTab === 'byCountry'" />
-          <AdPlatformByCountry v-else-if="activeTab === 'platformCountry'" period="weekly" />
-          <WeeklyCampaigns v-else-if="activeTab === 'campaigns'" />
-        </main>
-      </template>
-
-      <!-- Monthly: each tab has its own independent sidebar instance -->
+      <!-- Each period×tab combination has its own completely independent sidebar + content -->
       <template v-else>
         <aside class="br-sidebar">
           <div class="sidebar-card">
             <AppSidebar
-              :key="`monthly-${activeTab}`"
-              :app-list="appList"
+              :key="`${period}-${activeTab}`"
+              :app-list="currentAppList"
               :selected-id="selectedAppId"
               :show-field="tabShowField"
+              :tab="activeTab"
+              :period="period"
               @select="selectApp"
               @compare-mode="compareMode = true"
             />
           </div>
         </aside>
         <main class="br-main">
-          <MonthlySummary v-if="activeTab === 'summary'" />
-          <WeeklyAdPlatform v-else-if="activeTab === 'adPlatform'" />
-          <WeeklyByCountry v-else-if="activeTab === 'byCountry'" />
-          <AdPlatformByCountry v-else-if="activeTab === 'platformCountry'" period="monthly" />
-          <WeeklyCampaigns v-else-if="activeTab === 'campaigns'" />
+          <!-- ── daily ─────────────────────────────────────────── -->
+          <DailySummary v-if="contentKey === 'daily-summary'" />
+          <DailyAdPlatform v-else-if="contentKey === 'daily-adPlatform'" />
+          <DailyByCountry v-else-if="contentKey === 'daily-byCountry'" />
+          <DailyPlatformCountry v-else-if="contentKey === 'daily-platformCountry'" />
+          <DailyCampaigns v-else-if="contentKey === 'daily-campaigns'" />
+
+          <!-- ── weekly ────────────────────────────────────────── -->
+          <WeeklySummary v-else-if="contentKey === 'weekly-summary'" />
+          <WeeklyAdPlatform v-else-if="contentKey === 'weekly-adPlatform'" />
+          <WeeklyByCountry v-else-if="contentKey === 'weekly-byCountry'" />
+          <WeeklyPlatformCountry v-else-if="contentKey === 'weekly-platformCountry'" />
+          <WeeklyCampaigns v-else-if="contentKey === 'weekly-campaigns'" />
+
+          <!-- ── monthly ───────────────────────────────────────── -->
+          <MonthlySummary v-else-if="contentKey === 'monthly-summary'" />
+          <MonthlyAdPlatform v-else-if="contentKey === 'monthly-adPlatform'" />
+          <MonthlyByCountry v-else-if="contentKey === 'monthly-byCountry'" />
+          <MonthlyPlatformCountry v-else-if="contentKey === 'monthly-platformCountry'" />
+          <MonthlyCampaigns v-else-if="contentKey === 'monthly-campaigns'" />
         </main>
       </template>
-    </div>
-
-    <!-- ──────────────────────── BOTTOM STATUS BAR ───────────── -->
-    <div v-if="!(compareMode && period === 'monthly')" class="br-status-bar">
-      <span class="status-app-count">共 18 个应用</span>
-      <template v-if="activeTab === 'campaigns'">
-        <span class="status-extra">在投 14 个 | 已暂停 3 个 | 总广告支出 $41,100</span>
-      </template>
-      <template v-else-if="activeTab === 'byCountry'">
-        <span class="status-extra">共 22 个国家</span>
-      </template>
-      <button class="compare-mode-btn" @click="enterMonthlyCompareMode">+ 对比模式</button>
-      <div class="status-lark">
-        <span class="lark-last">上次推送：{{ lastPushTime }}</span>
-        <button class="push-now-btn" @click="showLarkModal = true">立即推送</button>
-      </div>
     </div>
 
     <LarkPushModal :visible="showLarkModal" @close="showLarkModal = false" />
@@ -305,27 +257,32 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, provide } from 'vue'
   import type { ReportPeriod, ReportTab } from './types'
 
-  import AppSidebar from './AppSidebar.vue'
-  import LarkPushModal from './LarkPushModal.vue'
+  import AppSidebar from './components/AppSidebar.vue'
+  import LarkPushModal from './components/LarkPushModal.vue'
 
-  import DailySummary from './DailySummary.vue'
-  import DailyAdPlatform from './DailyAdPlatform.vue'
-  import DailyByCountry from './DailyByCountry.vue'
-  import DailyCampaigns from './DailyCampaigns.vue'
+  import DailySummary from './components/DailySummary.vue'
+  import DailyAdPlatform from './components/DailyAdPlatform.vue'
+  import DailyByCountry from './components/DailyByCountry.vue'
+  import DailyPlatformCountry from './components/DailyPlatformCountry.vue'
+  import DailyCampaigns from './components/DailyCampaigns.vue'
 
-  import WeeklySummary from './WeeklySummary.vue'
-  import WeeklyAdPlatform from './WeeklyAdPlatform.vue'
-  import WeeklyByCountry from './WeeklyByCountry.vue'
-  import WeeklyCampaigns from './WeeklyCampaigns.vue'
+  import WeeklySummary from './components/WeeklySummary.vue'
+  import WeeklyAdPlatform from './components/WeeklyAdPlatform.vue'
+  import WeeklyByCountry from './components/WeeklyByCountry.vue'
+  import WeeklyPlatformCountry from './components/WeeklyPlatformCountry.vue'
+  import WeeklyCampaigns from './components/WeeklyCampaigns.vue'
 
-  import MonthlySummary from './MonthlySummary.vue'
-  import MonthlyCompareMode from './MonthlyCompareMode.vue'
+  import MonthlySummary from './components/MonthlySummary.vue'
+  import MonthlyAdPlatform from './components/MonthlyAdPlatform.vue'
+  import MonthlyByCountry from './components/MonthlyByCountry.vue'
+  import MonthlyPlatformCountry from './components/MonthlyPlatformCountry.vue'
+  import MonthlyCampaigns from './components/MonthlyCampaigns.vue'
+  import MonthlyCompareMode from './components/MonthlyCompareMode.vue'
 
-  import AdPlatformByCountry from './AdPlatformByCountry.vue'
-  import { appList } from './mockData'
+  import { appList, weeklyAppList } from './mockData'
 
   defineOptions({ name: 'BusinessReport' })
 
@@ -445,7 +402,7 @@
 
   const currentDateLabel = computed(() => {
     if (period.value === 'monthly') return '2025年12月'
-    if (period.value === 'weekly') return '2026年第10周 (3/9-3/15)'
+    if (period.value === 'weekly') return '2026年第10周 （3/9-3/15）'
     return '2026年3月13日'
   })
   const compareEnabled = ref(true)
@@ -456,7 +413,7 @@
     period.value === 'monthly'
       ? '2025年11月'
       : period.value === 'weekly'
-        ? '第9周 (3/2-3/8)'
+        ? '第9周 （3/2-3/8）'
         : '2026年3月12日'
   )
 
@@ -474,6 +431,15 @@
     selectedAppIds.value[`${period.value}-${activeTab.value}`] = id
   }
 
+  // Composite key for independent period×tab right-side content
+  const contentKey = computed(() => `${period.value}-${activeTab.value}`)
+
+  // Pass period-specific app list to sidebar
+  const currentAppList = computed(() => {
+    if (period.value === 'weekly') return weeklyAppList
+    return appList
+  })
+
   // Each tab shows a different secondary metric in the sidebar
   const tabShowField = computed((): 'dau' | 'mau' | 'adSpend' => {
     if (activeTab.value === 'adPlatform' || activeTab.value === 'campaigns') return 'adSpend'
@@ -481,20 +447,9 @@
     return 'dau'
   })
   const showLarkModal = ref(false)
-
-  const lastPushTime = computed(() =>
-    period.value === 'daily'
-      ? '今日 08:30 飞书群《经营日报》'
-      : period.value === 'weekly'
-        ? '本周一 08:30 飞书群《经营周报》'
-        : '2026-01-01 09:00 飞书群《经营月报》'
-  )
-
-  function enterMonthlyCompareMode() {
-    compareMode.value = true
-    period.value = 'monthly'
-    activeTab.value = 'summary'
-  }
+  provide('openPushModal', () => {
+    showLarkModal.value = true
+  })
 </script>
 
 <style>
@@ -523,8 +478,7 @@
   .br-root {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
     color: var(--rp-text);
     background: var(--rp-bg);
   }
@@ -827,10 +781,6 @@
     white-space: nowrap;
   }
 
-  .date-icon {
-    font-size: 12px;
-  }
-
   .compare-toggle {
     display: flex;
     gap: 6px;
@@ -894,19 +844,14 @@
   .br-content {
     display: flex;
     flex: 1;
-    min-height: 0;
-    overflow: hidden;
+    min-width: 0;
   }
 
   .br-sidebar {
     flex-shrink: 0;
     align-self: flex-start;
     width: 340px;
-    max-height: 100%;
     padding: 16px 0 16px 16px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgb(255 255 255 / 10%) transparent;
   }
 
   .sidebar-card {
@@ -918,17 +863,17 @@
 
   .br-main {
     flex: 1;
+    min-width: 0;
     padding: 16px 20px;
-    overflow: hidden auto;
+    overflow-x: hidden;
   }
 
-  .br-main::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  .br-main::-webkit-scrollbar-thumb {
-    background: rgb(255 255 255 / 8%);
-    border-radius: 2px;
+  /* Compare mode: fixed viewport height, internal panels scroll */
+  .br-main--compare {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 142px); /* 52px header + 46px filter + 44px tab-nav */
+    overflow: hidden;
   }
 
   .br-status-bar {

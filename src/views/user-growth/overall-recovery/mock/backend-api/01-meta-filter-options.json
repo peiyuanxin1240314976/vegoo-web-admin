@@ -32,18 +32,25 @@
     "data": {
       "appOptions": [
         { "label": "全部", "value": "all" },
-        { "label": "Weather5", "value": "weather5" }
+        { "label": "Weather5", "value": "weather5" },
+        { "label": "PhoneTracker", "value": "phone-tracker" },
+        { "label": "BloodSugar2", "value": "blood-sugar2" }
       ],
       "sourceOptions": [
         { "label": "全部", "value": "all" },
         { "label": "Google", "value": "google" },
         { "label": "Facebook", "value": "facebook" },
-        { "label": "TikTok", "value": "tiktok" }
+        { "label": "TikTok", "value": "tiktok" },
+        { "label": "Unity", "value": "unity" },
+        { "label": "AppLovin", "value": "applovin" }
       ],
       "countryOptions": [
         { "label": "全部", "value": "all" },
         { "label": "美国", "value": "US" },
-        { "label": "德国", "value": "DE" }
+        { "label": "德国", "value": "DE" },
+        { "label": "英国", "value": "GB" },
+        { "label": "日本", "value": "JP" },
+        { "label": "巴西", "value": "BR" }
       ]
     }
   },

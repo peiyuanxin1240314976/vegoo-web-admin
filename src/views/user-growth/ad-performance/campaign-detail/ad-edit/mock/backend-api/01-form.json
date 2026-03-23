@@ -1,0 +1,171 @@
+{
+  "_comment": "广告系列编辑页 - 拉取表单回填（结构以前端 ad-edit/types.ts: AdEditFormData 为准）。",
+  "fieldDescription": {
+    "request": {
+      "campaignId": { "type": "string", "required": true, "description": "广告系列 ID。" },
+      "adId": {
+        "type": "string",
+        "required": false,
+        "description": "广告组 ID；新建或仅从系列入口进入时可空，由后端按系列默认回填。"
+      }
+    },
+    "response": {
+      "basic": { "type": "AdEditBasicInfo", "required": true, "description": "基本信息区块。" },
+      "budget": { "type": "AdEditBudget", "required": true, "description": "预算与排期区块。" },
+      "targeting": { "type": "AdEditTargeting", "required": true, "description": "定向区块。" },
+      "creatives": {
+        "type": "AdEditCreatives",
+        "required": true,
+        "description": "可选素材库与已选 id。"
+      },
+      "sidebar": {
+        "type": "AdEditSidebar",
+        "required": true,
+        "description": "侧栏参考与提示（可选带预算预测序列）。"
+      }
+    },
+    "AdEditBasicInfo": {
+      "name": { "type": "string", "required": true, "description": "Campaign 名称。" },
+      "app": {
+        "type": "string",
+        "required": true,
+        "description": "应用枚举 value，与前端 ElOption 一致。"
+      },
+      "region": { "type": "string", "required": true, "description": "投放地区代码，如 US。" },
+      "channel": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台 value，如 google。"
+      }
+    },
+    "AdEditBudget": {
+      "dailyBudget": {
+        "type": "number",
+        "required": true,
+        "description": "日预算（与当前滑块量级一致，美元）。"
+      },
+      "totalBudget": {
+        "type": "string",
+        "required": true,
+        "description": "总预算展示字符串，可含千分位逗号。"
+      },
+      "scheduleType": {
+        "type": "string",
+        "required": true,
+        "enum": ["always", "custom"],
+        "description": "持续投放 / 自定义时间。"
+      },
+      "startDate": { "type": "string", "required": true, "description": "开始日期 YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期 YYYY-MM-DD。" },
+      "bidStrategy": {
+        "type": "string",
+        "required": true,
+        "description": "出价策略 value，如 target_cpi。"
+      },
+      "bidValue": {
+        "type": "string",
+        "required": true,
+        "description": "出价金额字符串，前端加 $ 前缀展示。"
+      }
+    },
+    "AdEditTargeting": {
+      "devicePhone": { "type": "boolean", "required": true, "description": "是否投手机。" },
+      "deviceTablet": { "type": "boolean", "required": true, "description": "是否投平板。" },
+      "iosMin": { "type": "number", "required": true, "description": "最低 iOS 主版本。" },
+      "androidMin": { "type": "number", "required": true, "description": "最低 Android 主版本。" },
+      "ageRange": {
+        "type": "[number, number]",
+        "required": true,
+        "description": "年龄区间 [min, max]。"
+      },
+      "gender": {
+        "type": "string",
+        "required": true,
+        "enum": ["all", "male", "female"],
+        "description": "性别定向。"
+      }
+    },
+    "AdEditCreativeItem": {
+      "id": { "type": "string", "required": true, "description": "素材 id。" },
+      "name": { "type": "string", "required": true, "description": "素材名称。" },
+      "thumb": { "type": "string", "required": true, "description": "缩略图 URL。" }
+    },
+    "AdEditCreatives": {
+      "items": { "type": "AdEditCreativeItem[]", "required": true, "description": "素材库列表。" },
+      "selectedIds": { "type": "string[]", "required": true, "description": "已勾选素材 id。" }
+    },
+    "AdEditSidebarRefItem": {
+      "id": { "type": "string", "required": true, "description": "参考项 id。" },
+      "name": { "type": "string", "required": true, "description": "参考 Campaign 名称。" },
+      "roi": { "type": "string", "required": true, "description": "ROI 展示文案，如 3.2x。" },
+      "cpi": { "type": "string", "required": true, "description": "CPI 展示文案。" },
+      "spend": { "type": "string", "required": true, "description": "花费展示文案。" }
+    },
+    "AdEditSidebar": {
+      "refItems": {
+        "type": "AdEditSidebarRefItem[]",
+        "required": true,
+        "description": "相似系列参考。"
+      },
+      "tips": { "type": "string[]", "required": true, "description": "创建提示列表。" },
+      "budgetForecastValues": {
+        "type": "number[]",
+        "required": false,
+        "description": "预算消耗预测折线 14 点（美元）；缺省前端用内置默认。"
+      }
+    }
+  },
+  "sampleRequest": { "campaignId": "0032021863838Z7", "adId": "1" },
+  "sampleResponse": {
+    "basic": {
+      "name": "USA_Android_T1_Purchase",
+      "app": "Weather5",
+      "region": "US",
+      "channel": "google"
+    },
+    "budget": {
+      "dailyBudget": 500,
+      "totalBudget": "15,000",
+      "scheduleType": "always",
+      "startDate": "2026-01-15",
+      "endDate": "2026-03-31",
+      "bidStrategy": "target_cpi",
+      "bidValue": "3.50"
+    },
+    "targeting": {
+      "devicePhone": true,
+      "deviceTablet": false,
+      "iosMin": 14,
+      "androidMin": 10,
+      "ageRange": [18, 45],
+      "gender": "all"
+    },
+    "creatives": {
+      "items": [
+        { "id": "c1", "name": "Banner_US_v1", "thumb": "https://picsum.photos/seed/c1/160/100" },
+        { "id": "c2", "name": "Video_30s_v2", "thumb": "https://picsum.photos/seed/c2/160/100" }
+      ],
+      "selectedIds": ["c1"]
+    },
+    "sidebar": {
+      "refItems": [
+        { "id": "r1", "name": "Weather5_US_Q4", "roi": "3.2x", "cpi": "2.80", "spend": "12,400" }
+      ],
+      "tips": ["建议将日预算设置在目标 CPI 的 10 倍以上，以获得足够的学习数据。"],
+      "budgetForecastValues": [480, 510, 495, 520, 505, 530, 515, 540, 525, 550, 535, 560, 545, 580]
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail/ad-edit/form",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "campaignId (必填), adId?",
+    "responseBody": "AdEditFormData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "响应体字段名、嵌套结构与前端 AdEditFormData 保持一致，避免前端再做 snake_case 映射层。",
+      "若网关统一包裹 data，则 sampleResponse 表示 data 内结构；以前端 request 泛型为准。"
+    ]
+  }
+}

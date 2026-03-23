@@ -1,0 +1,287 @@
+{
+  "_comment": "经营报告 - 分国家汇总表。对应 types.ts: ByCountryResponse。三周期结构相同，数值按 period 聚合。",
+  "api": {
+    "url": "GET /api/v1/report/by-country",
+    "method": "GET",
+    "priority": "P0",
+    "queryParams": "period, appId?, date?"
+  },
+  "fieldDescription": {
+    "request": {
+      "period": {
+        "type": "'daily' | 'weekly' | 'monthly'",
+        "required": true,
+        "description": "报告周期"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用 ID，不传返回整体"
+      },
+      "date": {
+        "type": "string",
+        "required": false,
+        "description": "ISO 日期，不传取最新"
+      }
+    },
+    "response": {
+      "rows": {
+        "type": "CountryRow[]",
+        "required": true,
+        "description": "主要国家行列表（按收入降序，Top N）"
+      },
+      "othersRow": {
+        "type": "CountryRow",
+        "required": true,
+        "description": "合并的「其他 N 个国家」行，flag 固定为 🌐"
+      },
+      "appList": {
+        "type": "AppListItem[]",
+        "required": true,
+        "description": "左侧应用列表"
+      }
+    },
+    "CountryRow": {
+      "flag": {
+        "type": "string",
+        "required": true,
+        "description": "国家旗帜 emoji，如 🇺🇸；合并行为 🌐"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "国家名称；合并行为 其他 N 个国家"
+      },
+      "subLabel": {
+        "type": "string",
+        "required": false,
+        "description": "仅合并行使用，如 12个国家"
+      },
+      "avgDau": {
+        "type": "string",
+        "required": true,
+        "description": "均DAU（预格式化）"
+      },
+      "revenue": {
+        "type": "string",
+        "required": true,
+        "description": "总收入"
+      },
+      "paidRevenue": {
+        "type": "string",
+        "required": true,
+        "description": "买量用户收入"
+      },
+      "profit": {
+        "type": "string",
+        "required": true,
+        "description": "预估利润"
+      },
+      "calcProfit": {
+        "type": "string",
+        "required": true,
+        "description": "计算利润（收入 - 广告支出）"
+      },
+      "newUsers": {
+        "type": "string",
+        "required": true,
+        "description": "新增用户"
+      },
+      "organic": {
+        "type": "string",
+        "required": true,
+        "description": "自然新增用户"
+      },
+      "organicRate": {
+        "type": "string",
+        "required": true,
+        "description": "自然占比，如 38.2%"
+      },
+      "dauShare": {
+        "type": "number",
+        "required": true,
+        "description": "DAU 占比 0~100，用于进度条"
+      },
+      "ecpm": {
+        "type": "string",
+        "required": true,
+        "description": "有效千次展示收入"
+      },
+      "arpdau": {
+        "type": "string",
+        "required": true,
+        "description": "每日活跃用户平均收入"
+      },
+      "adSpend": {
+        "type": "string",
+        "required": true,
+        "description": "广告支出"
+      },
+      "cpi": {
+        "type": "string",
+        "required": true,
+        "description": "单次安装成本"
+      },
+      "cpm": {
+        "type": "string",
+        "required": true,
+        "description": "千次展示成本"
+      },
+      "cpc": {
+        "type": "string",
+        "required": true,
+        "description": "单次点击成本"
+      },
+      "acquisitions": {
+        "type": "string",
+        "required": true,
+        "description": "买量用户数"
+      },
+      "campaigns": {
+        "type": "number",
+        "required": true,
+        "description": "在投广告系列数"
+      },
+      "roi1d": {
+        "type": "string",
+        "required": true,
+        "description": "首日 ROI"
+      },
+      "roi7d": {
+        "type": "string",
+        "required": true,
+        "description": "7 日 ROI"
+      }
+    }
+  },
+  "sampleRequest": {
+    "period": "weekly",
+    "date": "2026-03-15"
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "flag": "🇺🇸",
+        "name": "美国",
+        "avgDau": "18.2万",
+        "revenue": "$523,400",
+        "paidRevenue": "$312,100",
+        "profit": "$187,200",
+        "calcProfit": "$201,400",
+        "newUsers": "8.6万",
+        "organic": "3.2万",
+        "organicRate": "37.2%",
+        "dauShare": 23.3,
+        "ecpm": "$28.74",
+        "arpdau": "$0.287",
+        "adSpend": "$322,000",
+        "cpi": "$1.89",
+        "cpm": "$12.40",
+        "cpc": "$0.48",
+        "acquisitions": "5.4万",
+        "campaigns": 24,
+        "roi1d": "40%",
+        "roi7d": "102%"
+      },
+      {
+        "flag": "🇩🇪",
+        "name": "德国",
+        "avgDau": "9.4万",
+        "revenue": "$287,600",
+        "paidRevenue": "$173,200",
+        "profit": "$103,000",
+        "calcProfit": "$112,600",
+        "newUsers": "4.2万",
+        "organic": "1.8万",
+        "organicRate": "42.9%",
+        "dauShare": 12,
+        "ecpm": "$30.59",
+        "arpdau": "$0.306",
+        "adSpend": "$175,000",
+        "cpi": "$2.08",
+        "cpm": "$13.20",
+        "cpc": "$0.52",
+        "acquisitions": "2.4万",
+        "campaigns": 14,
+        "roi1d": "38%",
+        "roi7d": "98%"
+      },
+      {
+        "flag": "🇯🇵",
+        "name": "日本",
+        "avgDau": "8.1万",
+        "revenue": "$248,300",
+        "paidRevenue": "$148,900",
+        "profit": "$88,900",
+        "calcProfit": "$97,300",
+        "newUsers": "3.7万",
+        "organic": "1.5万",
+        "organicRate": "40.5%",
+        "dauShare": 10.3,
+        "ecpm": "$30.65",
+        "arpdau": "$0.307",
+        "adSpend": "$151,000",
+        "cpi": "$2.04",
+        "cpm": "$12.80",
+        "cpc": "$0.50",
+        "acquisitions": "2.2万",
+        "campaigns": 12,
+        "roi1d": "37%",
+        "roi7d": "96%"
+      }
+    ],
+    "othersRow": {
+      "flag": "🌐",
+      "name": "其他国家",
+      "subLabel": "12个国家",
+      "avgDau": "42.6万",
+      "revenue": "$1,084,200",
+      "paidRevenue": "$651,000",
+      "profit": "$389,100",
+      "calcProfit": "$404,100",
+      "newUsers": "26.7万",
+      "organic": "10.8万",
+      "organicRate": "40.4%",
+      "dauShare": 54.4,
+      "ecpm": "$25.45",
+      "arpdau": "$0.254",
+      "adSpend": "$680,000",
+      "cpi": "$1.54",
+      "cpm": "$9.80",
+      "cpc": "$0.38",
+      "acquisitions": "15.8万",
+      "campaigns": 60,
+      "roi1d": "34%",
+      "roi7d": "88%"
+    },
+    "appList": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "category": "全部",
+        "platforms": ["安卓", "iOS", "网站"],
+        "iconEmoji": "🌐",
+        "iconColor": "#00d4a1",
+        "iconBg": "rgba(0,212,161,0.15)",
+        "revenue": 2143500,
+        "revenueChange": 12.4,
+        "profit": 768200,
+        "isOverall": true
+      }
+    ]
+  },
+  "periodDiff": {
+    "daily": {
+      "tableHeaderChange": "日环比",
+      "description": "当日各国家汇总数据"
+    },
+    "weekly": {
+      "tableHeaderChange": "周环比",
+      "description": "本周各国家汇总数据"
+    },
+    "monthly": {
+      "tableHeaderChange": "月环比",
+      "description": "本月各国家汇总数据"
+    }
+  }
+}
