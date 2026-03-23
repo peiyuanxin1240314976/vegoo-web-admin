@@ -146,7 +146,17 @@
             </div>
           </div>
 
-          <div class="rev-iaa-main" :class="{ 'rev-iaa-main--stacked': iaaTab === 'ad_type' }">
+          <div
+            v-loading="
+              (iaaTab === 'ad_type' && iaaAdTypeLoading) ||
+              (iaaTab === 'platform' && iaaPlatformLoading) ||
+              (iaaTab === 'ad_unit' && iaaAdUnitLoading) ||
+              (iaaTab === 'country' && iaaCountryLoading) ||
+              (iaaTab === 'version' && iaaVersionLoading)
+            "
+            class="rev-iaa-main"
+            :class="{ 'rev-iaa-main--stacked': iaaTab === 'ad_type' }"
+          >
             <div class="rev-iaa-viz">
               <!-- 广告类型 / 广告平台：堆叠条 + 图例 -->
               <div v-show="iaaTab === 'ad_type' || iaaTab === 'platform'" class="rev-iaa-bar">
@@ -297,7 +307,11 @@
 
           <div class="rev-iap-body">
             <!-- 商品构成 -->
-            <div v-show="iapTab === 'product'" class="rev-iap-tab rev-iap-tab--product">
+            <div
+              v-show="iapTab === 'product'"
+              v-loading="iapTab === 'product' && iapProductLoading"
+              class="rev-iap-tab rev-iap-tab--product"
+            >
               <div class="rev-iap-top">
                 <div class="rev-iap-kpi">
                   <div class="rev-iap-kpi__k">订阅收入</div>
@@ -373,7 +387,11 @@
             </div>
 
             <!-- 广告平台分析：上比例条、中表格、下指标 -->
-            <div v-show="iapTab === 'channel'" class="rev-iap-tab rev-iap-tab--channel">
+            <div
+              v-show="iapTab === 'channel'"
+              v-loading="iapTab === 'channel' && iapChannelLoading"
+              class="rev-iap-tab rev-iap-tab--channel"
+            >
               <div class="rev-iap-channel-viz">
                 <div class="rev-iaa-bar__track">
                   <div
@@ -457,7 +475,11 @@
             </div>
 
             <!-- 趋势：双轴图 + KPI -->
-            <div v-show="iapTab === 'trend'" class="rev-iap-tab rev-iap-tab--trend">
+            <div
+              v-show="iapTab === 'trend'"
+              v-loading="iapTab === 'trend' && iapTrendLoading"
+              class="rev-iap-tab rev-iap-tab--trend"
+            >
               <div class="rev-iap-trend-chart-wrap">
                 <div ref="iapTrendRef" class="rev-chart rev-chart--iap-trend" />
               </div>
@@ -481,7 +503,7 @@
           </div>
         </div>
 
-        <div class="rev-panel rev-panel--trend7d">
+        <div v-loading="trend7dLoading" class="rev-panel rev-panel--trend7d">
           <div class="rev-panel__header">
             <div class="rev-panel__title">近7天 IAA vs IAP 收入趋势</div>
             <div class="rev-legend">
@@ -497,7 +519,7 @@
         </div>
 
         <!-- 下排：左 饼图 / 中 Top5 / 右 ECPM + AI + 质量 -->
-        <div class="rev-panel rev-panel--pie">
+        <div v-loading="platformPieLoading" class="rev-panel rev-panel--pie">
           <div class="rev-panel__header">
             <div class="rev-panel__title">广告平台分布</div>
           </div>
@@ -524,7 +546,7 @@
           </div>
         </div>
 
-        <div class="rev-panel rev-panel--top5">
+        <div v-loading="topCountriesLoading" class="rev-panel rev-panel--top5">
           <div class="rev-panel__header">
             <div class="rev-panel__title">Top 5 国家收入</div>
             <div class="rev-tabs rev-tabs--compact rev-tabs--segmented rev-tabs--top5">
@@ -567,7 +589,7 @@
         </div>
 
         <div class="rev-right-stack">
-          <div class="rev-panel rev-panel--ecpm">
+          <div v-loading="ecpmLoading" class="rev-panel rev-panel--ecpm">
             <div class="rev-panel__header">
               <div class="rev-panel__title">ECPM 趋势（7天）</div>
               <div class="rev-legend">
@@ -585,7 +607,7 @@
           </div>
 
           <div class="rev-right-bottom">
-            <div class="rev-panel rev-panel--ai">
+            <div v-loading="aiInsightLoading" class="rev-panel rev-panel--ai">
               <div class="rev-panel__header">
                 <div class="rev-panel__title">{{ aiInsight.title }}</div>
               </div>
@@ -596,7 +618,7 @@
               </ul>
             </div>
 
-            <div class="rev-panel rev-panel--quality">
+            <div v-loading="qualityMetricsLoading" class="rev-panel rev-panel--quality">
               <div class="rev-panel__header">
                 <div class="rev-panel__title">收入质量指标</div>
               </div>
@@ -641,6 +663,24 @@
   import { graphic, type EChartsOption } from '@/plugins/echarts'
   import type { ColumnOption } from '@/types'
   import {
+    fetchRevenueOverviewQualityMetrics,
+    fetchRevenueOverviewAiInsight,
+    fetchRevenueOverviewTopCountries,
+    fetchRevenueOverviewPlatformPie,
+    fetchRevenueOverviewTrend7dEcpm,
+    fetchRevenueOverviewTrend7dIaaIap,
+    fetchRevenueOverviewIapTrend,
+    fetchRevenueOverviewIapChannel,
+    fetchRevenueOverviewIapProduct,
+    fetchRevenueOverviewIaaVersion,
+    fetchRevenueOverviewIaaCountry,
+    fetchRevenueOverviewIaaAdUnit,
+    fetchRevenueOverviewIaaPlatform,
+    fetchRevenueOverviewMetaFilterOptions,
+    fetchRevenueOverviewIaaAdType,
+    fetchRevenueOverviewOverviewKpis
+  } from '@/api/business-insight'
+  import {
     MOCK_REVENUE_OVERVIEW_AI_INSIGHT,
     MOCK_REVENUE_OVERVIEW_ECPM_7D,
     MOCK_REVENUE_OVERVIEW_FILTERS,
@@ -666,7 +706,17 @@
     MOCK_REVENUE_OVERVIEW_PLATFORM_PIE,
     MOCK_REVENUE_OVERVIEW_TOP_COUNTRIES,
     MOCK_REVENUE_OVERVIEW_QUALITY_METRICS,
-    type RevenueOverviewFilterState
+    type RevenueOverviewIapBreakdownRow,
+    type RevenueOverviewIapChannelRow,
+    type RevenueOverviewIapChannelSegment,
+    type RevenueOverviewIapTrendKpiCard,
+    type RevenueOverviewIaaVersionRow,
+    type RevenueOverviewIaaCountryRow,
+    type RevenueOverviewIaaAdUnitRow,
+    type RevenueOverviewIaaBreakdownRow,
+    type RevenueOverviewIaaPlatformRow,
+    type RevenueOverviewFilterState,
+    type RevenueOverviewKpiCard
   } from './mock'
 
   defineOptions({ name: 'RevenueOverview' })
@@ -676,20 +726,36 @@
   const rootRef = ref<HTMLElement>()
 
   type SelectOption<T extends string = string> = { label: string; value: T }
+  type IapProductHeader = {
+    subscriptionValueText: string
+    subscriptionPctText: string
+    oneTimeValueText: string
+    oneTimePctText: string
+  }
+  type IapProductFoot = {
+    conversionRateText: string
+    arppuText: string
+    renewalRateText: string
+  }
+  type IapChannelMetric = {
+    title: string
+    valueText: string
+    accent: 'purple' | 'green' | 'amber'
+  }
 
   const filters = reactive<RevenueOverviewFilterState>({ ...MOCK_REVENUE_OVERVIEW_FILTERS })
 
-  const appOptions = computed<SelectOption[]>(() => [
+  const appOptions = ref<SelectOption[]>([
     { label: 'Weather5', value: 'weather5' },
     { label: 'App A', value: 'app_a' },
     { label: 'App B', value: 'app_b' }
   ])
-  const platformOptions = computed<SelectOption<RevenueOverviewFilterState['platform']>[]>(() => [
+  const platformOptions = ref<SelectOption<RevenueOverviewFilterState['platform']>[]>([
     { label: 'Android & iOS', value: 'all' },
     { label: 'Android', value: 'android' },
     { label: 'iOS', value: 'ios' }
   ])
-  const countryOptions = computed<SelectOption[]>(() => [
+  const countryOptions = ref<SelectOption[]>([
     { label: '全部', value: 'all' },
     { label: '美国', value: 'US' },
     { label: '英国', value: 'GB' },
@@ -697,24 +763,315 @@
     { label: '台湾', value: 'TW' },
     { label: '日本', value: 'JP' }
   ])
-  const versionOptions = computed<SelectOption[]>(() => [
+  const versionOptions = ref<SelectOption[]>([
     { label: '全部', value: 'all' },
     { label: '1.2.0', value: '1.2.0' },
     { label: '1.1.8', value: '1.1.8' },
     { label: '1.1.2', value: '1.1.2' }
   ])
 
-  const kpis = ref(MOCK_REVENUE_OVERVIEW_KPIS)
+  async function loadMetaFilterOptions() {
+    try {
+      const data = await fetchRevenueOverviewMetaFilterOptions()
+      if (data.appOptions.length) appOptions.value = data.appOptions
+      if (data.platformOptions.length) {
+        platformOptions.value = data.platformOptions as SelectOption<
+          RevenueOverviewFilterState['platform']
+        >[]
+      }
+      if (data.countryOptions.length) countryOptions.value = data.countryOptions
+      if (data.versionOptions.length) versionOptions.value = data.versionOptions
+    } catch {
+      // 保留本地默认筛选项，避免首屏不可用
+    }
+  }
+
+  const kpis = ref<RevenueOverviewKpiCard[]>(MOCK_REVENUE_OVERVIEW_KPIS)
+  const iaaAdTypeRows = ref<RevenueOverviewIaaBreakdownRow[]>(MOCK_REVENUE_OVERVIEW_IAA_ROWS)
+  const iaaAdTypeLoading = ref(false)
+  const iaaPlatformRows = ref<RevenueOverviewIaaPlatformRow[]>(
+    MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS
+  )
+  const iaaPlatformLoading = ref(false)
+  const iaaAdUnitRows = ref<RevenueOverviewIaaAdUnitRow[]>(MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS)
+  const iaaAdUnitLoading = ref(false)
+  const iaaCountryRows = ref<RevenueOverviewIaaCountryRow[]>(MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS)
+  const iaaCountryLoading = ref(false)
+  const iaaVersionRows = ref<RevenueOverviewIaaVersionRow[]>(MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS)
+  const iaaVersionLoading = ref(false)
+
+  async function loadOverviewKpis() {
+    try {
+      const data = await fetchRevenueOverviewOverviewKpis({ ...filters })
+      if (Array.isArray(data.kpis)) kpis.value = data.kpis
+      await nextTick()
+      kpis.value.forEach((k) => {
+        let isNewChart = false
+        let chart = sparkCharts.get(k.id)
+        if (!chart) {
+          chart = useChart({ autoTheme: true })
+          sparkCharts.set(k.id, chart)
+          isNewChart = true
+        }
+        const dom = sparkRefs.value[k.id]
+        if (!dom) return
+        chart.chartRef!.value = dom
+        const accent =
+          k.accent === 'blue'
+            ? getVar(dom, '--rev-c-blue', '#60a5fa')
+            : k.accent === 'teal'
+              ? getVar(dom, '--rev-c-teal', '#20d6b5')
+              : k.accent === 'purple'
+                ? getVar(dom, '--rev-c-purple', '#a78bfa')
+                : k.accent === 'amber'
+                  ? getVar(dom, '--rev-c-amber', '#f59e0b')
+                  : k.accent === 'green'
+                    ? getVar(dom, '--rev-c-green', '#22c55e')
+                    : getVar(dom, '--rev-c-indigo', '#60a5fa')
+        if (isNewChart) chart.initChart(buildSparkOption(k.spark, accent))
+        else chart.updateChart(buildSparkOption(k.spark, accent))
+      })
+    } catch {
+      // 失败时保留当前卡片，避免首屏闪断
+    }
+  }
+
+  async function loadIaaAdTypeRows() {
+    iaaAdTypeLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewIaaAdType({ ...filters })
+      if (Array.isArray(data.rows)) iaaAdTypeRows.value = data.rows
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      iaaAdTypeLoading.value = false
+    }
+  }
+
+  async function loadIaaPlatformRows() {
+    iaaPlatformLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewIaaPlatform({ ...filters })
+      if (Array.isArray(data.rows)) iaaPlatformRows.value = data.rows
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      iaaPlatformLoading.value = false
+    }
+  }
+
+  async function loadIaaAdUnitRows() {
+    iaaAdUnitLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewIaaAdUnit({ ...filters })
+      if (Array.isArray(data.rows)) iaaAdUnitRows.value = data.rows
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      iaaAdUnitLoading.value = false
+    }
+  }
+
+  async function loadIaaCountryRows() {
+    iaaCountryLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewIaaCountry({ ...filters })
+      if (Array.isArray(data.rows)) iaaCountryRows.value = data.rows
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      iaaCountryLoading.value = false
+    }
+  }
+
+  async function loadIaaVersionRows() {
+    iaaVersionLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewIaaVersion({ ...filters })
+      if (Array.isArray(data.rows)) iaaVersionRows.value = data.rows
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      iaaVersionLoading.value = false
+    }
+  }
+
+  async function loadIapProductRows() {
+    iapProductLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewIapProduct({ ...filters })
+      iapProductHeader.value = data.header
+      iapProductFoot.value = data.foot
+      iapProductRows.value = Array.isArray(data.rows) ? data.rows : []
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      iapProductLoading.value = false
+    }
+  }
+
+  async function loadIapChannelRows() {
+    iapChannelLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewIapChannel({ ...filters })
+      iapChannelSegments.value = Array.isArray(data.segments) ? data.segments : []
+      iapChannelRows.value = Array.isArray(data.rows) ? data.rows : []
+      iapChannelLeftMetrics.value = Array.isArray(data.leftMetrics) ? data.leftMetrics : []
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      iapChannelLoading.value = false
+    }
+  }
+
+  async function loadIapTrendRows() {
+    iapTrendLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewIapTrend({ ...filters })
+      iapTrendDateLabels.value = Array.isArray(data.dateLabels) ? data.dateLabels : []
+      iapTrendSeries.value = {
+        revenue: Array.isArray(data.series?.revenue) ? data.series.revenue : [],
+        orders: Array.isArray(data.series?.orders) ? data.series.orders : []
+      }
+      iapTrendKpis.value = Array.isArray(data.kpis) ? data.kpis : []
+      if (iapTrendInited.value && iapTab.value === 'trend') {
+        chartIapTrend.updateChart(buildIapTrendOption())
+      }
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      iapTrendLoading.value = false
+    }
+  }
+
+  async function loadTrend7dIaaIap() {
+    trend7dLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewTrend7dIaaIap({ ...filters })
+      trend7dDateLabels.value = Array.isArray(data.dateLabels) ? data.dateLabels : []
+      trend7dSeries.value = {
+        iaa: Array.isArray(data.iaa) ? data.iaa : [],
+        iap: Array.isArray(data.iap) ? data.iap : []
+      }
+      chartTrend7d.updateChart(buildTrend7dOption())
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      trend7dLoading.value = false
+    }
+  }
+
+  async function loadTrend7dEcpm() {
+    ecpmLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewTrend7dEcpm({ ...filters })
+      ecpmDateLabels.value = Array.isArray(data.dateLabels) ? data.dateLabels : []
+      ecpmSeries.value = {
+        predicted: Array.isArray(data.predicted) ? data.predicted : [],
+        actual: Array.isArray(data.actual) ? data.actual : []
+      }
+      chartEcpm.updateChart(buildEcpmOption())
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      ecpmLoading.value = false
+    }
+  }
+
+  async function loadPlatformPie() {
+    platformPieLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewPlatformPie({ ...filters })
+      platformPie.value = Array.isArray(data.slices) ? data.slices : []
+      chartPie.updateChart(buildPieOption())
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      platformPieLoading.value = false
+    }
+  }
+
+  async function loadTopCountries() {
+    topCountriesLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewTopCountries({ ...filters })
+      topCountries.value = Array.isArray(data.rows) ? data.rows : []
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      topCountriesLoading.value = false
+    }
+  }
+
+  async function loadAiInsight() {
+    aiInsightLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewAiInsight({ ...filters })
+      aiInsight.value = data
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      aiInsightLoading.value = false
+    }
+  }
+
+  async function loadQualityMetrics() {
+    qualityMetricsLoading.value = true
+    try {
+      const data = await fetchRevenueOverviewQualityMetrics({ ...filters })
+      qualityMetrics.value = Array.isArray(data.metrics) ? data.metrics : []
+    } catch {
+      // 失败时保留当前数据，避免主区块闪断
+    } finally {
+      qualityMetricsLoading.value = false
+    }
+  }
+
   const iaaTabs = ref(MOCK_REVENUE_OVERVIEW_IAA_TABS)
   const iapTabs = ref(MOCK_REVENUE_OVERVIEW_IAP_TABS)
   const iaaTab = ref<(typeof MOCK_REVENUE_OVERVIEW_IAA_TABS)[number]['key']>('ad_type')
   const iapTab = ref<(typeof MOCK_REVENUE_OVERVIEW_IAP_TABS)[number]['key']>('product')
 
-  const iapChannelSegments = MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_SEGMENTS
-  const iapChannelLeftMetrics = MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_LEFT_METRICS
-  const iapTrendKpis = MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS
-  const iapProductHeader = MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_HEADER
-  const iapProductFoot = MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_FOOT
+  const iapChannelSegments = ref<RevenueOverviewIapChannelSegment[]>([
+    ...MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_SEGMENTS
+  ])
+  const iapChannelRows = ref<RevenueOverviewIapChannelRow[]>([
+    ...MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_ROWS
+  ])
+  const iapChannelLeftMetrics = ref<IapChannelMetric[]>([
+    ...MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_LEFT_METRICS
+  ])
+  const iapChannelLoading = ref(false)
+  const iapTrendKpis = ref<RevenueOverviewIapTrendKpiCard[]>([
+    ...MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS
+  ])
+  const iapTrendSeries = ref<{ revenue: number[]; orders: number[] }>({
+    revenue: [...MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES.revenue],
+    orders: [...MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES.orders]
+  })
+  const iapTrendDateLabels = ref([...MOCK_REVENUE_OVERVIEW_7D_DATES])
+  const iapTrendLoading = ref(false)
+  const trend7dDateLabels = ref([...MOCK_REVENUE_OVERVIEW_7D_DATES])
+  const trend7dSeries = ref<{ iaa: number[]; iap: number[] }>({
+    iaa: [...MOCK_REVENUE_OVERVIEW_7D_TREND.iaa],
+    iap: [...MOCK_REVENUE_OVERVIEW_7D_TREND.iap]
+  })
+  const trend7dLoading = ref(false)
+  const ecpmDateLabels = ref([...MOCK_REVENUE_OVERVIEW_7D_DATES])
+  const ecpmSeries = ref<{ predicted: number[]; actual: number[] }>({
+    predicted: [...MOCK_REVENUE_OVERVIEW_ECPM_7D.predicted],
+    actual: [...MOCK_REVENUE_OVERVIEW_ECPM_7D.actual]
+  })
+  const ecpmLoading = ref(false)
+  const platformPieLoading = ref(false)
+  const iapProductHeader = ref<IapProductHeader>({
+    ...MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_HEADER
+  })
+  const iapProductFoot = ref<IapProductFoot>({
+    ...MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_FOOT
+  })
+  const iapProductRows = ref<RevenueOverviewIapBreakdownRow[]>([...MOCK_REVENUE_OVERVIEW_IAP_ROWS])
+  const iapProductLoading = ref(false)
 
   const platformPie = ref(MOCK_REVENUE_OVERVIEW_PLATFORM_PIE)
   const platformPieCenterTotal = computed(() => {
@@ -726,6 +1083,7 @@
     return total ? `$${Math.round(total).toLocaleString()}` : '$0'
   })
   const topCountries = ref(MOCK_REVENUE_OVERVIEW_TOP_COUNTRIES)
+  const topCountriesLoading = ref(false)
 
   type Top5TabKey = 'total' | 'iaa' | 'iap'
   const top5Tab = ref<Top5TabKey>('total')
@@ -739,7 +1097,9 @@
     transform: `translateX(calc(${Math.max(0, top5TabIndex.value)} * 100%))`
   }))
   const aiInsight = ref(MOCK_REVENUE_OVERVIEW_AI_INSIGHT)
+  const aiInsightLoading = ref(false)
   const qualityMetrics = ref(MOCK_REVENUE_OVERVIEW_QUALITY_METRICS)
+  const qualityMetricsLoading = ref(false)
 
   function formatInt(n: number) {
     return Number(n || 0).toLocaleString()
@@ -753,7 +1113,7 @@
   }
 
   const iaaVersionFootnote = computed(() => {
-    const cur = MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS.find((r) => r.is_current)
+    const cur = iaaVersionRows.value.find((r) => r.is_current)
     if (!cur) return ''
     return `版本分布反映用户升级进度，${cur.s_app_version} 已覆盖 ${formatFixed(cur.percent, 1)}% 用户`
   })
@@ -788,7 +1148,7 @@
     const colors = IAA_COLORS
     const tab = iaaTab.value
     if (tab === 'ad_type') {
-      return MOCK_REVENUE_OVERVIEW_IAA_ROWS.map((r, idx) => ({
+      return iaaAdTypeRows.value.map((r, idx) => ({
         key: r.s_ad_type_name,
         label: r.s_ad_type_name,
         percent: r.percent,
@@ -796,7 +1156,7 @@
       }))
     }
     if (tab === 'platform') {
-      return MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS.map((r, idx) => ({
+      return iaaPlatformRows.value.map((r, idx) => ({
         key: r.s_platform_name,
         label: r.s_platform_name,
         percent: r.percent,
@@ -804,7 +1164,7 @@
       }))
     }
     if (tab === 'ad_unit') {
-      return MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS.map((r, idx) => ({
+      return iaaAdUnitRows.value.map((r, idx) => ({
         key: r.s_ad_unit_name,
         label: r.s_ad_unit_name,
         percent: r.percent,
@@ -817,11 +1177,11 @@
   const iaaVizTotalMoney = computed(() => {
     const tab = iaaTab.value
     let rows: { revenue: number }[] = []
-    if (tab === 'ad_type') rows = MOCK_REVENUE_OVERVIEW_IAA_ROWS
-    else if (tab === 'platform') rows = MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS
-    else if (tab === 'ad_unit') rows = MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS
-    else if (tab === 'country') rows = MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS
-    else if (tab === 'version') rows = MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS
+    if (tab === 'ad_type') rows = iaaAdTypeRows.value
+    else if (tab === 'platform') rows = iaaPlatformRows.value
+    else if (tab === 'ad_unit') rows = iaaAdUnitRows.value
+    else if (tab === 'country') rows = iaaCountryRows.value
+    else if (tab === 'version') rows = iaaVersionRows.value
     const sum = rows.reduce((a, r) => a + r.revenue, 0)
     return `$${formatMoneyInt(sum)}`
   })
@@ -837,7 +1197,7 @@
   }
 
   const iaaCountryBarItems = computed(() => {
-    const rows = MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS
+    const rows = iaaCountryRows.value
     const maxRev = Math.max(...rows.map((r) => r.revenue), 1)
     return rows.map((r) => ({
       _rowKey: `ct-${r.s_country_code}`,
@@ -852,7 +1212,7 @@
   const iaaRowsWithTotal = computed(() => {
     const tab = iaaTab.value
     if (tab === 'ad_type') {
-      const rows = MOCK_REVENUE_OVERVIEW_IAA_ROWS.map((r) => ({
+      const rows = iaaAdTypeRows.value.map((r) => ({
         _rowKey: `ad_type-${r.s_ad_type_name}`,
         s_name: r.s_ad_type_name,
         revenue: r.revenue,
@@ -872,13 +1232,13 @@
         percent: 100,
         n_users: sumU,
         n_impression: sumI,
-        d_avg_display: iaaWeightedAvgDisplay(MOCK_REVENUE_OVERVIEW_IAA_ROWS),
+        d_avg_display: iaaWeightedAvgDisplay(iaaAdTypeRows.value),
         d_avg_revenue: sumU > 0 ? sumR / sumU : 0
       })
       return rows
     }
     if (tab === 'platform') {
-      const rows = MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS.map((r) => ({
+      const rows = iaaPlatformRows.value.map((r) => ({
         _rowKey: `pf-${r.s_platform_name}`,
         s_name: r.s_platform_name,
         revenue: r.revenue,
@@ -896,13 +1256,13 @@
         revenue: sumR,
         percent: 100,
         n_impression: sumI,
-        d_ecpm: iaaWeightedEcpm(MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS),
+        d_ecpm: iaaWeightedEcpm(iaaPlatformRows.value),
         n_users: sumU
       })
       return rows
     }
     if (tab === 'ad_unit') {
-      const rows = MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS.map((r) => ({
+      const rows = iaaAdUnitRows.value.map((r) => ({
         _rowKey: `unit-${r.s_ad_unit_name}`,
         s_name: r.s_ad_unit_name,
         revenue: r.revenue,
@@ -921,14 +1281,14 @@
         revenue: sumR,
         percent: 100,
         n_impression: sumI,
-        d_ecpm: iaaWeightedEcpm(MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS),
-        d_fill_rate: iaaWeightedFillRate(MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS),
+        d_ecpm: iaaWeightedEcpm(iaaAdUnitRows.value),
+        d_fill_rate: iaaWeightedFillRate(iaaAdUnitRows.value),
         n_users: sumU
       })
       return rows
     }
     if (tab === 'country') {
-      const rows = MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS.map((r) => ({
+      const rows = iaaCountryRows.value.map((r) => ({
         _rowKey: `ct-${r.s_country_code}`,
         s_name: r.s_country_name,
         s_country_code: r.s_country_code,
@@ -949,13 +1309,13 @@
         revenue: sumR,
         percent: 100,
         n_impression: sumI,
-        d_ecpm: iaaWeightedEcpm(MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS),
+        d_ecpm: iaaWeightedEcpm(iaaCountryRows.value),
         n_users: sumU,
         d_mom_pct: 0
       })
       return rows
     }
-    const rows = MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS.map((r) => ({
+    const rows = iaaVersionRows.value.map((r) => ({
       _rowKey: `ver-${r.s_app_version}`,
       s_name: r.s_app_version,
       revenue: r.revenue,
@@ -976,10 +1336,10 @@
       revenue: sumR,
       percent: 100,
       n_impression: sumI,
-      d_ecpm: iaaWeightedEcpm(MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS),
+      d_ecpm: iaaWeightedEcpm(iaaVersionRows.value),
       n_users: sumDau,
       n_dau: sumDau,
-      d_crash_rate: iaaWeightedCrash(MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS),
+      d_crash_rate: iaaWeightedCrash(iaaVersionRows.value),
       is_current: false
     })
     return rows
@@ -1003,7 +1363,7 @@
   }
 
   const iapRowsWithTotal = computed(() => {
-    const rows = [...MOCK_REVENUE_OVERVIEW_IAP_ROWS]
+    const rows = [...iapProductRows.value]
     const sumRevenue = rows.reduce((acc, r) => acc + r.revenue, 0)
     const sumTimes = rows.reduce((acc, r) => acc + r.n_buy_times, 0)
     const avgArppu = rows.length ? rows.reduce((acc, r) => acc + r.d_arppu, 0) / rows.length : 0
@@ -1024,7 +1384,7 @@
   })
 
   const iapChannelRowsWithTotal = computed(() => {
-    const rows = [...MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_ROWS]
+    const rows = [...iapChannelRows.value]
     const sumRev = rows.reduce((a, r) => a + r.revenue, 0)
     const sumOrders = rows.reduce((a, r) => a + r.n_orders, 0)
     const sumPct = rows.reduce((a, r) => a + r.percent, 0)
@@ -1551,7 +1911,7 @@
       grid: { left: 38, right: 18, top: 18, bottom: 26, containLabel: true },
       xAxis: {
         type: 'category',
-        data: MOCK_REVENUE_OVERVIEW_7D_DATES,
+        data: trend7dDateLabels.value,
         axisLine: { lineStyle: { color: axis } },
         axisLabel: { color: axis, fontSize: 11 },
         axisTick: { show: false }
@@ -1577,7 +1937,7 @@
           type: 'line',
           smooth: true,
           symbol: 'none',
-          data: [...MOCK_REVENUE_OVERVIEW_7D_TREND.iaa],
+          data: [...trend7dSeries.value.iaa],
           lineStyle: { color: teal, width: 2 },
           itemStyle: { color: teal },
           areaStyle: {
@@ -1594,7 +1954,7 @@
           smooth: true,
           symbol: 'none',
           yAxisIndex: 1,
-          data: [...MOCK_REVENUE_OVERVIEW_7D_TREND.iap],
+          data: [...trend7dSeries.value.iap],
           lineStyle: { color: purple, width: 2 },
           itemStyle: { color: purple },
           areaStyle: {
@@ -1616,8 +1976,8 @@
     const purple = getVar(el, '--rev-c-purple', '#a78bfa')
     const amber = getVar(el, '--rev-c-amber', '#f59e0b')
 
-    const revData = [...MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES.revenue]
-    const orderData = [...MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES.orders]
+    const revData = [...iapTrendSeries.value.revenue]
+    const orderData = [...iapTrendSeries.value.orders]
 
     return {
       tooltip: {
@@ -1646,7 +2006,7 @@
       grid: { left: 34, right: 30, top: 42, bottom: 20, containLabel: true },
       xAxis: {
         type: 'category',
-        data: [...MOCK_REVENUE_OVERVIEW_7D_DATES],
+        data: [...iapTrendDateLabels.value],
         axisLine: { lineStyle: { color: axis } },
         axisLabel: { color: axis, fontSize: 11 },
         axisTick: { show: false }
@@ -1719,7 +2079,7 @@
       grid: { left: 34, right: 16, top: 16, bottom: 22, containLabel: true },
       xAxis: {
         type: 'category',
-        data: MOCK_REVENUE_OVERVIEW_7D_DATES,
+        data: ecpmDateLabels.value,
         axisLine: { lineStyle: { color: axis } },
         axisLabel: { color: axis, fontSize: 11 },
         axisTick: { show: false }
@@ -1736,7 +2096,7 @@
           type: 'line',
           smooth: true,
           symbol: 'none',
-          data: [...MOCK_REVENUE_OVERVIEW_ECPM_7D.predicted],
+          data: [...ecpmSeries.value.predicted],
           lineStyle: { color: amber, width: 2, type: 'dashed' },
           itemStyle: { color: amber }
         },
@@ -1745,7 +2105,7 @@
           type: 'line',
           smooth: true,
           symbol: 'none',
-          data: [...MOCK_REVENUE_OVERVIEW_ECPM_7D.actual],
+          data: [...ecpmSeries.value.actual],
           lineStyle: { color: cyan, width: 2 },
           itemStyle: { color: cyan }
         }
@@ -1804,7 +2164,7 @@
   }
 
   function buildIaaDonutOption(): EChartsOption {
-    const rows = MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS
+    const rows = iaaAdUnitRows.value
     const colors = IAA_COLORS
     return {
       tooltip: chartIaaDonut.getTooltipStyle('item', {
@@ -1837,7 +2197,7 @@
     const axis = getVar(el, '--rev-chart-axis', '#94a3b8')
     const split = getVar(el, '--rev-chart-split', 'rgba(255,255,255,0.08)')
     const teal = getVar(el, '--rev-c-teal', '#20d6b5')
-    const rows = MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS
+    const rows = iaaVersionRows.value
     return {
       tooltip: chartIaaVersion.getTooltipStyle('axis'),
       grid: { left: 6, right: 10, top: 22, bottom: 30, containLabel: true },
@@ -1971,6 +2331,17 @@
   }
 
   onMounted(() => {
+    void loadMetaFilterOptions()
+    void loadOverviewKpis()
+    // 首屏仅加载默认 tab，其他 tab 在切换时再按需请求
+    void loadIaaAdTypeRows()
+    void loadIapProductRows()
+    void loadTrend7dIaaIap()
+    void loadTrend7dEcpm()
+    void loadPlatformPie()
+    void loadTopCountries()
+    void loadAiInsight()
+    void loadQualityMetrics()
     initCharts()
   })
 
@@ -1983,10 +2354,21 @@
       filters.t_date
     ],
     () => {
-      // mock：筛选变化仅刷新图表（真实接口接入后在此触发 load）
-      chartTrend7d.updateChart(buildTrend7dOption())
-      chartEcpm.updateChart(buildEcpmOption())
-      chartPie.updateChart(buildPieOption())
+      void loadOverviewKpis()
+      if (iaaTab.value === 'ad_type') void loadIaaAdTypeRows()
+      if (iaaTab.value === 'platform') void loadIaaPlatformRows()
+      if (iaaTab.value === 'ad_unit') void loadIaaAdUnitRows()
+      if (iaaTab.value === 'country') void loadIaaCountryRows()
+      if (iaaTab.value === 'version') void loadIaaVersionRows()
+      if (iapTab.value === 'product') void loadIapProductRows()
+      if (iapTab.value === 'channel') void loadIapChannelRows()
+      if (iapTab.value === 'trend') void loadIapTrendRows()
+      void loadTrend7dIaaIap()
+      void loadTrend7dEcpm()
+      void loadPlatformPie()
+      void loadTopCountries()
+      void loadAiInsight()
+      void loadQualityMetrics()
       void syncIaaCharts()
       if (iapTrendInited.value && iapTab.value === 'trend') {
         chartIapTrend.updateChart(buildIapTrendOption())
@@ -2013,10 +2395,18 @@
   )
 
   watch(iaaTab, () => {
+    if (iaaTab.value === 'ad_type') void loadIaaAdTypeRows()
+    if (iaaTab.value === 'platform') void loadIaaPlatformRows()
+    if (iaaTab.value === 'ad_unit') void loadIaaAdUnitRows()
+    if (iaaTab.value === 'country') void loadIaaCountryRows()
+    if (iaaTab.value === 'version') void loadIaaVersionRows()
     void syncIaaCharts()
   })
 
   watch(iapTab, () => {
+    if (iapTab.value === 'product') void loadIapProductRows()
+    if (iapTab.value === 'channel') void loadIapChannelRows()
+    if (iapTab.value === 'trend') void loadIapTrendRows()
     void syncIapTrendChart()
   })
 

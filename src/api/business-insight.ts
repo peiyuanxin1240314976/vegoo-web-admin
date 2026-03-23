@@ -8,7 +8,28 @@ import {
   IaaAnalysisEndpoint,
   isIaaAnalysisEndpointMock
 } from '@/views/business-insight/iaa-analysis/config/data-source'
+import {
+  RevenueOverviewEndpoint,
+  isRevenueOverviewEndpointMock
+} from '@/views/business-insight/revenue-overview/config/data-source'
 import * as insightMock from '@/views/business-insight/mocks/business-insight-api-mock'
+import { MOCK_REVENUE_OVERVIEW_KPIS } from '@/views/business-insight/revenue-overview/mock'
+import type {
+  RevenueOverviewIaaCountryRow,
+  RevenueOverviewFilterState,
+  RevenueOverviewIaaAdUnitRow,
+  RevenueOverviewIaaBreakdownRow,
+  RevenueOverviewIaaPlatformRow,
+  RevenueOverviewIaaVersionRow,
+  RevenueOverviewIapChannelRow,
+  RevenueOverviewIapChannelSegment,
+  RevenueOverviewIapBreakdownRow,
+  RevenueOverviewIapTrendKpiCard,
+  RevenueOverviewKpiCard
+} from '@/views/business-insight/revenue-overview/mock'
+import type { RevenueOverviewPieSlice } from '@/views/business-insight/revenue-overview/mock'
+import type { RevenueOverviewTopCountryRow } from '@/views/business-insight/revenue-overview/mock'
+import type { RevenueOverviewQualityMetric } from '@/views/business-insight/revenue-overview/mock'
 import type {
   IaaFilterOptions,
   IaaKpiCard,
@@ -52,6 +73,108 @@ export {
 export type { IapOverviewTableQuery } from './iap-analysis'
 
 const IAA_BASE = `${ANALYSIS_API_BASE}/business-insight/iaa-analysis`
+const REVENUE_OVERVIEW_BASE = `${ANALYSIS_API_BASE}/business-insight/revenue-overview`
+
+export type RevenueOverviewMetaFilterOption = {
+  label: string
+  value: string
+}
+
+export type RevenueOverviewMetaFilterOptions = {
+  countryOptions: RevenueOverviewMetaFilterOption[]
+  versionOptions: RevenueOverviewMetaFilterOption[]
+  platformOptions: RevenueOverviewMetaFilterOption[]
+  appOptions: RevenueOverviewMetaFilterOption[]
+}
+
+export type RevenueOverviewKpisResponse = {
+  kpis: RevenueOverviewKpiCard[]
+}
+
+export type RevenueOverviewIaaAdTypeResponse = {
+  rows: RevenueOverviewIaaBreakdownRow[]
+}
+
+export type RevenueOverviewIaaPlatformResponse = {
+  rows: RevenueOverviewIaaPlatformRow[]
+}
+
+export type RevenueOverviewIaaAdUnitResponse = {
+  rows: RevenueOverviewIaaAdUnitRow[]
+}
+
+export type RevenueOverviewIaaCountryResponse = {
+  rows: RevenueOverviewIaaCountryRow[]
+}
+
+export type RevenueOverviewIaaVersionResponse = {
+  rows: RevenueOverviewIaaVersionRow[]
+}
+
+export type RevenueOverviewIapProductResponse = {
+  header: {
+    subscriptionValueText: string
+    subscriptionPctText: string
+    oneTimeValueText: string
+    oneTimePctText: string
+  }
+  foot: {
+    conversionRateText: string
+    arppuText: string
+    renewalRateText: string
+  }
+  rows: RevenueOverviewIapBreakdownRow[]
+}
+
+export type RevenueOverviewIapChannelMetric = {
+  title: string
+  valueText: string
+  accent: 'purple' | 'green' | 'amber'
+}
+
+export type RevenueOverviewIapChannelResponse = {
+  segments: RevenueOverviewIapChannelSegment[]
+  rows: RevenueOverviewIapChannelRow[]
+  leftMetrics: RevenueOverviewIapChannelMetric[]
+}
+
+export type RevenueOverviewIapTrendResponse = {
+  dateLabels: string[]
+  series: {
+    revenue: number[]
+    orders: number[]
+  }
+  kpis: RevenueOverviewIapTrendKpiCard[]
+}
+
+export type RevenueOverviewTrend7dIaaIapResponse = {
+  dateLabels: string[]
+  iaa: number[]
+  iap: number[]
+}
+
+export type RevenueOverviewTrend7dEcpmResponse = {
+  dateLabels: string[]
+  predicted: number[]
+  actual: number[]
+}
+
+export type RevenueOverviewPlatformPieResponse = {
+  slices: RevenueOverviewPieSlice[]
+}
+
+export type RevenueOverviewTopCountriesResponse = {
+  rows: RevenueOverviewTopCountryRow[]
+}
+
+export type RevenueOverviewAiInsightResponse = {
+  title: string
+  bullets: string[]
+}
+
+export type RevenueOverviewQualityMetricsResponse = {
+  metrics: RevenueOverviewQualityMetric[]
+}
 
 function emptyIfAll(v: string | undefined, all = 'all') {
   if (v === undefined || v === '' || v === all) return ''
@@ -266,6 +389,49 @@ export async function fetchIaaMetaFilterOptions() {
   return normalizeIaaFilterOptions(unwrapIaaPayload<IaaFilterOptions>(raw))
 }
 
+function normalizeRevenueOverviewMetaFilterOptions(
+  raw: RevenueOverviewMetaFilterOptions | null | undefined
+): RevenueOverviewMetaFilterOptions {
+  const arr = (v: unknown) => (Array.isArray(v) ? v : []) as RevenueOverviewMetaFilterOption[]
+  const o =
+    raw !== null && raw !== undefined && typeof raw === 'object'
+      ? (raw as unknown as Record<string, unknown>)
+      : {}
+  return {
+    countryOptions: arr(o.countryOptions),
+    versionOptions: arr(o.versionOptions),
+    platformOptions: arr(o.platformOptions),
+    appOptions: arr(o.appOptions)
+  }
+}
+
+/** 收入总览 - 顶栏筛选项 GET .../meta-filter-options */
+export async function fetchRevenueOverviewMetaFilterOptions() {
+  const raw = await request.get<unknown>({ url: `${REVENUE_OVERVIEW_BASE}/meta-filter-options` })
+  return normalizeRevenueOverviewMetaFilterOptions(
+    unwrapIaaPayload<RevenueOverviewMetaFilterOptions>(raw)
+  )
+}
+
+function normalizeRevenueOverviewKpisResponse(
+  raw: RevenueOverviewKpisResponse | null | undefined
+): RevenueOverviewKpisResponse {
+  const kpis = Array.isArray(raw?.kpis) ? raw.kpis : []
+  return { kpis }
+}
+
+/** 收入总览 - 顶部 KPI 卡片 POST .../overview/kpis */
+export async function fetchRevenueOverviewOverviewKpis(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewKpis)) {
+    return { kpis: MOCK_REVENUE_OVERVIEW_KPIS }
+  }
+  const raw = await request.post<unknown>({
+    url: `${REVENUE_OVERVIEW_BASE}/overview/kpis`,
+    data: params
+  })
+  return normalizeRevenueOverviewKpisResponse(unwrapIaaPayload<RevenueOverviewKpisResponse>(raw))
+}
+
 const PROFIT_BASE = `${ANALYSIS_API_BASE}/business-insight/profit-analysis`
 
 /** 利润分析 - 顶栏筛选项 GET .../meta-filter-options（仅依赖全局 Token，无 query/body） */
@@ -273,6 +439,394 @@ export function fetchProfitMetaFilterOptions() {
   return request.get<ProfitFilterOptions>({
     url: `${PROFIT_BASE}/meta-filter-options`
   })
+}
+
+function normalizeRevenueOverviewIaaAdTypeResponse(
+  raw: RevenueOverviewIaaAdTypeResponse | null | undefined
+): RevenueOverviewIaaAdTypeResponse {
+  const rows = Array.isArray(raw?.rows) ? raw.rows : []
+  return { rows }
+}
+
+/** 收入总览 - IAA 广告类型维度 POST .../overview/iaa/ad-type */
+export async function fetchRevenueOverviewIaaAdType(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewIaaAdType)) {
+    const { MOCK_REVENUE_OVERVIEW_IAA_ROWS } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
+    return { rows: MOCK_REVENUE_OVERVIEW_IAA_ROWS }
+  }
+  const raw = await request.post<unknown>({
+    url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/ad-type`,
+    data: params
+  })
+  return normalizeRevenueOverviewIaaAdTypeResponse(
+    unwrapIaaPayload<RevenueOverviewIaaAdTypeResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewIaaPlatformResponse(
+  raw: RevenueOverviewIaaPlatformResponse | null | undefined
+): RevenueOverviewIaaPlatformResponse {
+  const rows = Array.isArray(raw?.rows) ? raw.rows : []
+  return { rows }
+}
+
+/** 收入总览 - IAA 广告平台维度 POST .../overview/iaa/platform */
+export async function fetchRevenueOverviewIaaPlatform(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewIaaPlatform)) {
+    const { MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
+    return { rows: MOCK_REVENUE_OVERVIEW_IAA_PLATFORM_ROWS }
+  }
+  const raw = await request.post<unknown>({
+    url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/platform`,
+    data: params
+  })
+  return normalizeRevenueOverviewIaaPlatformResponse(
+    unwrapIaaPayload<RevenueOverviewIaaPlatformResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewIaaAdUnitResponse(
+  raw: RevenueOverviewIaaAdUnitResponse | null | undefined
+): RevenueOverviewIaaAdUnitResponse {
+  const rows = Array.isArray(raw?.rows) ? raw.rows : []
+  return { rows }
+}
+
+/** 收入总览 - IAA 广告位维度 POST .../overview/iaa/ad-unit */
+export async function fetchRevenueOverviewIaaAdUnit(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewIaaAdUnit)) {
+    const { MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
+    return { rows: MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS }
+  }
+  const raw = await request.post<unknown>({
+    url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/ad-unit`,
+    data: params
+  })
+  return normalizeRevenueOverviewIaaAdUnitResponse(
+    unwrapIaaPayload<RevenueOverviewIaaAdUnitResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewIaaCountryResponse(
+  raw: RevenueOverviewIaaCountryResponse | null | undefined
+): RevenueOverviewIaaCountryResponse {
+  const rows = Array.isArray(raw?.rows) ? raw.rows : []
+  return { rows }
+}
+
+/** 收入总览 - IAA 国家维度 POST .../overview/iaa/country */
+export async function fetchRevenueOverviewIaaCountry(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewIaaCountry)) {
+    const { MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
+    return { rows: MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS }
+  }
+  const raw = await request.post<unknown>({
+    url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/country`,
+    data: params
+  })
+  return normalizeRevenueOverviewIaaCountryResponse(
+    unwrapIaaPayload<RevenueOverviewIaaCountryResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewIaaVersionResponse(
+  raw: RevenueOverviewIaaVersionResponse | null | undefined
+): RevenueOverviewIaaVersionResponse {
+  const rows = Array.isArray(raw?.rows) ? raw.rows : []
+  return { rows }
+}
+
+/** 收入总览 - IAA 版本维度 POST .../overview/iaa/version */
+export async function fetchRevenueOverviewIaaVersion(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewIaaVersion)) {
+    const { MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
+    return { rows: MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS }
+  }
+  const raw = await request.post<unknown>({
+    url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/version`,
+    data: params
+  })
+  return normalizeRevenueOverviewIaaVersionResponse(
+    unwrapIaaPayload<RevenueOverviewIaaVersionResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewIapProductResponse(
+  raw: RevenueOverviewIapProductResponse | null | undefined
+): RevenueOverviewIapProductResponse {
+  const header = raw?.header ?? {
+    subscriptionValueText: '$0.00',
+    subscriptionPctText: '0.0%',
+    oneTimeValueText: '$0.00',
+    oneTimePctText: '0.0%'
+  }
+  const foot = raw?.foot ?? {
+    conversionRateText: '0.0%',
+    arppuText: '$0.00',
+    renewalRateText: '0.0%'
+  }
+  const rows = Array.isArray(raw?.rows) ? raw.rows : []
+  return { header, foot, rows }
+}
+
+/** 收入总览 - IAP 商品维度 POST .../overview/iap/product */
+export async function fetchRevenueOverviewIapProduct(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewIapProduct)) {
+    const {
+      MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_HEADER,
+      MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_FOOT,
+      MOCK_REVENUE_OVERVIEW_IAP_ROWS
+    } = await import('@/views/business-insight/revenue-overview/mock')
+    return {
+      header: MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_HEADER,
+      foot: MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_FOOT,
+      rows: MOCK_REVENUE_OVERVIEW_IAP_ROWS
+    }
+  }
+  const raw = await request.post<unknown>({
+    url: `${REVENUE_OVERVIEW_BASE}/overview/iap/product`,
+    data: params
+  })
+  return normalizeRevenueOverviewIapProductResponse(
+    unwrapIaaPayload<RevenueOverviewIapProductResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewIapChannelResponse(
+  raw: RevenueOverviewIapChannelResponse | null | undefined
+): RevenueOverviewIapChannelResponse {
+  const segments = Array.isArray(raw?.segments) ? raw.segments : []
+  const rows = Array.isArray(raw?.rows) ? raw.rows : []
+  const leftMetrics = Array.isArray(raw?.leftMetrics) ? raw.leftMetrics : []
+  return { segments, rows, leftMetrics }
+}
+
+/** 收入总览 - IAP 广告平台维度 POST .../overview/iap/channel */
+export async function fetchRevenueOverviewIapChannel(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewIapChannel)) {
+    const {
+      MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_SEGMENTS,
+      MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_ROWS,
+      MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_LEFT_METRICS
+    } = await import('@/views/business-insight/revenue-overview/mock')
+    return {
+      segments: MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_SEGMENTS,
+      rows: MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_ROWS,
+      leftMetrics: MOCK_REVENUE_OVERVIEW_IAP_CHANNEL_LEFT_METRICS
+    }
+  }
+  const raw = await request.post<unknown>({
+    url: `${REVENUE_OVERVIEW_BASE}/overview/iap/channel`,
+    data: params
+  })
+  return normalizeRevenueOverviewIapChannelResponse(
+    unwrapIaaPayload<RevenueOverviewIapChannelResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewIapTrendResponse(
+  raw: RevenueOverviewIapTrendResponse | null | undefined
+): RevenueOverviewIapTrendResponse {
+  const dateLabels = Array.isArray(raw?.dateLabels) ? raw.dateLabels.map((x) => String(x)) : []
+  const revenue = Array.isArray(raw?.series?.revenue)
+    ? raw!.series.revenue.map((x) => Number(x))
+    : []
+  const orders = Array.isArray(raw?.series?.orders) ? raw!.series.orders.map((x) => Number(x)) : []
+  const kpis = Array.isArray(raw?.kpis) ? raw.kpis : []
+  return { dateLabels, series: { revenue, orders }, kpis }
+}
+
+/** 收入总览 - IAP 趋势维度 POST .../overview/iap/trend */
+export async function fetchRevenueOverviewIapTrend(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewIapTrend)) {
+    const {
+      MOCK_REVENUE_OVERVIEW_7D_DATES,
+      MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES,
+      MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS
+    } = await import('@/views/business-insight/revenue-overview/mock')
+    return {
+      dateLabels: MOCK_REVENUE_OVERVIEW_7D_DATES,
+      series: {
+        revenue: MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES.revenue,
+        orders: MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES.orders
+      },
+      kpis: MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS
+    }
+  }
+  const raw = await request.post<unknown>({
+    url: `${REVENUE_OVERVIEW_BASE}/overview/iap/trend`,
+    data: params
+  })
+  return normalizeRevenueOverviewIapTrendResponse(
+    unwrapIaaPayload<RevenueOverviewIapTrendResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewTrend7dIaaIapResponse(
+  raw: RevenueOverviewTrend7dIaaIapResponse | null | undefined
+): RevenueOverviewTrend7dIaaIapResponse {
+  const dateLabels = Array.isArray(raw?.dateLabels) ? raw.dateLabels.map((x) => String(x)) : []
+  const iaa = Array.isArray(raw?.iaa) ? raw.iaa.map((x) => Number(x)) : []
+  const iap = Array.isArray(raw?.iap) ? raw.iap.map((x) => Number(x)) : []
+  return { dateLabels, iaa, iap }
+}
+
+/** 收入总览 - 7 日 IAA vs IAP 趋势 POST .../overview/trend-7d/iaa-iap */
+export async function fetchRevenueOverviewTrend7dIaaIap(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewTrend7dIaaIap)) {
+    const { MOCK_REVENUE_OVERVIEW_7D_DATES, MOCK_REVENUE_OVERVIEW_7D_TREND } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
+    return {
+      dateLabels: MOCK_REVENUE_OVERVIEW_7D_DATES,
+      iaa: MOCK_REVENUE_OVERVIEW_7D_TREND.iaa,
+      iap: MOCK_REVENUE_OVERVIEW_7D_TREND.iap
+    }
+  }
+  const raw = await request.post<unknown>({
+    url: `${REVENUE_OVERVIEW_BASE}/overview/trend-7d/iaa-iap`,
+    data: params
+  })
+  return normalizeRevenueOverviewTrend7dIaaIapResponse(
+    unwrapIaaPayload<RevenueOverviewTrend7dIaaIapResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewTrend7dEcpmResponse(
+  raw: RevenueOverviewTrend7dEcpmResponse | null | undefined
+): RevenueOverviewTrend7dEcpmResponse {
+  const dateLabels = Array.isArray(raw?.dateLabels) ? raw.dateLabels.map((x) => String(x)) : []
+  const predicted = Array.isArray(raw?.predicted) ? raw.predicted.map((x) => Number(x)) : []
+  const actual = Array.isArray(raw?.actual) ? raw.actual.map((x) => Number(x)) : []
+  return { dateLabels, predicted, actual }
+}
+
+/** 收入总览 - 7 日 eCPM 趋势 POST .../overview/trend-7d/ecpm */
+export async function fetchRevenueOverviewTrend7dEcpm(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewTrend7dEcpm)) {
+    const { MOCK_REVENUE_OVERVIEW_7D_DATES, MOCK_REVENUE_OVERVIEW_ECPM_7D } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
+    return {
+      dateLabels: MOCK_REVENUE_OVERVIEW_7D_DATES,
+      predicted: MOCK_REVENUE_OVERVIEW_ECPM_7D.predicted,
+      actual: MOCK_REVENUE_OVERVIEW_ECPM_7D.actual
+    }
+  }
+  const raw = await request.post<unknown>({
+    url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/trend-7d/ecpm',
+    data: params
+  })
+  return normalizeRevenueOverviewTrend7dEcpmResponse(
+    unwrapIaaPayload<RevenueOverviewTrend7dEcpmResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewPlatformPieResponse(
+  raw: RevenueOverviewPlatformPieResponse | null | undefined
+): RevenueOverviewPlatformPieResponse {
+  const slices = Array.isArray(raw?.slices) ? raw.slices : []
+  return { slices }
+}
+
+/** 收入总览 - 平台分布饼图 POST .../overview/platform-pie */
+export async function fetchRevenueOverviewPlatformPie(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewPlatformPie)) {
+    const { MOCK_REVENUE_OVERVIEW_PLATFORM_PIE } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
+    return { slices: MOCK_REVENUE_OVERVIEW_PLATFORM_PIE }
+  }
+  const raw = await request.post<unknown>({
+    url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/platform-pie',
+    data: params
+  })
+  return normalizeRevenueOverviewPlatformPieResponse(
+    unwrapIaaPayload<RevenueOverviewPlatformPieResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewTopCountriesResponse(
+  raw: RevenueOverviewTopCountriesResponse | null | undefined
+): RevenueOverviewTopCountriesResponse {
+  const rows = Array.isArray(raw?.rows) ? raw.rows : []
+  return { rows }
+}
+
+/** 收入总览 - Top 国家列表 POST .../overview/top-countries */
+export async function fetchRevenueOverviewTopCountries(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewTopCountries)) {
+    const { MOCK_REVENUE_OVERVIEW_TOP_COUNTRIES } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
+    return { rows: MOCK_REVENUE_OVERVIEW_TOP_COUNTRIES }
+  }
+  const raw = await request.post<unknown>({
+    url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/top-countries',
+    data: params
+  })
+  return normalizeRevenueOverviewTopCountriesResponse(
+    unwrapIaaPayload<RevenueOverviewTopCountriesResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewAiInsightResponse(
+  raw: RevenueOverviewAiInsightResponse | null | undefined
+): RevenueOverviewAiInsightResponse {
+  const title = typeof raw?.title === 'string' ? raw.title : ''
+  const bullets = Array.isArray(raw?.bullets) ? raw.bullets.map((x) => String(x)) : []
+  return { title, bullets }
+}
+
+/** 收入总览 - AI 洞察 POST .../overview/ai-insight */
+export async function fetchRevenueOverviewAiInsight(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewAiInsight)) {
+    const { MOCK_REVENUE_OVERVIEW_AI_INSIGHT } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
+    return MOCK_REVENUE_OVERVIEW_AI_INSIGHT
+  }
+  const raw = await request.post<unknown>({
+    url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/ai-insight',
+    data: params
+  })
+  return normalizeRevenueOverviewAiInsightResponse(
+    unwrapIaaPayload<RevenueOverviewAiInsightResponse>(raw)
+  )
+}
+
+function normalizeRevenueOverviewQualityMetricsResponse(
+  raw: RevenueOverviewQualityMetricsResponse | null | undefined
+): RevenueOverviewQualityMetricsResponse {
+  const metrics = Array.isArray(raw?.metrics) ? raw.metrics : []
+  return { metrics }
+}
+
+/** 收入总览 - 质量指标 POST .../overview/quality-metrics */
+export async function fetchRevenueOverviewQualityMetrics(params: RevenueOverviewFilterState) {
+  if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewQualityMetrics)) {
+    const { MOCK_REVENUE_OVERVIEW_QUALITY_METRICS } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
+    return { metrics: MOCK_REVENUE_OVERVIEW_QUALITY_METRICS }
+  }
+  const raw = await request.post<unknown>({
+    url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/quality-metrics',
+    data: params
+  })
+  return normalizeRevenueOverviewQualityMetricsResponse(
+    unwrapIaaPayload<RevenueOverviewQualityMetricsResponse>(raw)
+  )
 }
 
 /** 利润分析 - 顶部 KPI POST .../overview/kpi，body 扁平 ProfitAnalysisQueryParams */
