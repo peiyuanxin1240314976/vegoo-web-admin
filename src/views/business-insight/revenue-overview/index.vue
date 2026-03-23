@@ -3,9 +3,8 @@
     <div
       class="revenue-overview-wrap"
       :style="{
-        width: `${designWidth}px`,
+        width: '100%',
         height: `${designHeight}px`,
-        transform: `scale(${scale})`,
         transformOrigin: '0 0'
       }"
     >
@@ -99,7 +98,7 @@
           </div>
         </div>
 
-        <button type="button" class="rev-export" @click="onExport">Export</button>
+        <!-- <button type="button" class="rev-export" @click="onExport">Export</button> -->
       </header>
 
       <!-- KPI 卡片 -->
@@ -672,19 +671,9 @@
 
   defineOptions({ name: 'RevenueOverview' })
 
-  // 对齐原型：固定画布 + 自适应缩放（与项目 big-screen/finance-screen 一致）
-  const designWidth = 1700
+  // 高度仍保留设计稿基准，宽度改为自适应容器
   const designHeight = 980
   const rootRef = ref<HTMLElement>()
-  const scale = ref(1)
-  const updateScale = () => {
-    const el = rootRef.value
-    if (!el) return
-    const w = el.clientWidth
-    if (w <= 0) return
-    scale.value = w / designWidth
-  }
-  let resizeObserver: ResizeObserver | null = null
 
   type SelectOption<T extends string = string> = { label: string; value: T }
 
@@ -1918,12 +1907,12 @@
     }
   }
 
-  function onExport() {
-    // Mock 页面：仅模拟交互
-    // 后端接入后在 api 层实现导出
+  // function onExport() {
+  //   // Mock 页面：仅模拟交互
+  //   // 后端接入后在 api 层实现导出
 
-    console.log('[RevenueOverview] export', { ...filters })
-  }
+  //   console.log('[RevenueOverview] export', { ...filters })
+  // }
 
   async function syncIapTrendChart() {
     await nextTick()
@@ -1982,12 +1971,6 @@
   }
 
   onMounted(() => {
-    updateScale()
-    if (rootRef.value) {
-      resizeObserver = new ResizeObserver(() => updateScale())
-      resizeObserver.observe(rootRef.value)
-    }
-    window.addEventListener('resize', updateScale)
     initCharts()
   })
 
@@ -2038,11 +2021,6 @@
   })
 
   onUnmounted(() => {
-    if (resizeObserver && rootRef.value) {
-      resizeObserver.unobserve(rootRef.value)
-      resizeObserver = null
-    }
-    window.removeEventListener('resize', updateScale)
     sparkCharts.forEach((c) => c.destroyChart?.())
     chartTrend7d.destroyChart?.()
     chartEcpm.destroyChart?.()
@@ -2088,9 +2066,8 @@
   }
 
   .revenue-overview-wrap {
-    position: absolute;
-    top: 14px;
-    left: 14px;
+    box-sizing: border-box;
+    width: 100%;
   }
 
   :global(html:not(.dark) .revenue-overview-page) {
@@ -2389,11 +2366,18 @@
     display: grid;
     grid-template-rows: 480px 420px;
 
-    /* 第 3 列宽 ≈「近7天 IAA vs IAP 收入趋势」面板宽；折线图在其内铺满（再扣 .rev-chart padding） */
-    grid-template-columns: 700px 500px 456px;
+    /* 保留原型三列视觉比例，但随容器宽度自适应 */
+    grid-template-columns: minmax(0, 1.535fr) minmax(0, 1.096fr) minmax(0, 1fr);
     grid-auto-flow: row;
     gap: 12px;
     align-items: stretch;
+  }
+
+  @media (width <= 1400px) {
+    .rev-main {
+      grid-template-rows: auto;
+      grid-template-columns: 1fr;
+    }
   }
 
   .rev-panel {
