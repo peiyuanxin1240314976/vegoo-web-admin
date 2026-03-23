@@ -81,87 +81,175 @@ function dateRangeToDate(dateRange: CockpitDateRange): string {
 export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
   const overview = ref<CockpitOverview | null>(null)
   const loading = ref(true)
+  const moduleLoading = ref({
+    kpiAlert: true,
+    spendPace: true,
+    map: true,
+    top3: true,
+    channelRoi: true,
+    revenueFlow: true,
+    smartAlerts: true
+  })
   const dateRange = ref<CockpitDateRange>(initialDateRange)
   /** 全局唯一筛选字段：后端要求 { date: 'YYYY-MM-DD' } */
   const date = ref<string>(dateRangeToDate(initialDateRange))
 
+  function mergeOverview(partial: Partial<CockpitOverview>) {
+    overview.value = {
+      ...(overview.value ?? ({} as CockpitOverview)),
+      ...partial
+    }
+  }
+
+  let requestSeq = 0
+
   async function load(params?: CockpitOverviewParams) {
+    const seq = ++requestSeq
     loading.value = true
+    moduleLoading.value = {
+      kpiAlert: true,
+      spendPace: true,
+      map: true,
+      top3: true,
+      channelRoi: true,
+      revenueFlow: true,
+      smartAlerts: true
+    }
     const range = params?.dateRange ?? dateRange.value
     // 统一 date：优先显式传 date，其次根据 range 计算；并回写到 state，保证两处筛选同步
     const nextDate = params?.date ?? dateRangeToDate(range)
     date.value = nextDate
-    try {
-      const [
-        overallRes,
-        rhythmRes,
-        top3Res,
-        channelRoiRes,
-        businessMapRes,
-        incomeStructureRes,
-        restOverview
-      ] = await Promise.all([
-        fetchCockpitOverall({ date: nextDate }).catch(() => null),
-        fetchConsumptionRhythmMonitoring({ date: nextDate }).catch(() => null),
-        fetchCockpitTop3({ date: nextDate }).catch(() => null),
-        fetchChannelRoiInstall({ date: nextDate }).catch(() => null),
-        fetchCockpitBusinessMap({ date: nextDate }).catch(() => null),
-        fetchIncomeStructure({ date: nextDate }).catch(() => []),
-        fetchCockpitOverview({ dateRange: range, date: nextDate })
-      ])
-      // 仅此一次 overall 请求，第一排数据 + 警示与提示 共用 data（注意：http 层成功时返回的是 res.data.data，即接口的 data 字段，故 overallRes 本身就是 data）
-      const data: CockpitOverallData | undefined =
-        overallRes && typeof overallRes === 'object' && 'now' in overallRes && 'last' in overallRes
-          ? (overallRes as unknown as CockpitOverallData)
-          : (overallRes as { data?: CockpitOverallData })?.data
-      const isOldOverall = (r: unknown): r is CockpitOverallResponse =>
-        r != null && typeof r === 'object' && 'last' in r && 'now' in r
-      const kpi = data
-        ? mapOverallDataToKpiCards(data)
-        : isOldOverall(overallRes)
-          ? mapOverallToKpiCards(overallRes.last, overallRes.now)
-          : restOverview.kpi
-      // 警示摘要：DNU/自然量/买量应用/广告系列/广告账户 均从 overall 的 now + *Change 取值
-      const alertSummaryMetrics = data
-        ? mapOverallDataToAlertSummaryMetrics(data)
-        : (restOverview.alertSummaryMetrics ?? [])
-      const alertBanners = data?.alertBanners ?? restOverview.alertBanners
-      const spendPace = rhythmRes
-        ? mapConsumptionRhythmToSpendPace(rhythmRes)
-        : restOverview.spendPace
-      const top3 = mapTop3ResponseToOverview(top3Res ?? null)
-      const channelRoiInstall =
-        channelRoiRes != null
-          ? mapChannelRoiInstallToItems(channelRoiRes)
-          : (restOverview.channelRoiInstall ?? [])
-      const mapCountries =
-        businessMapRes != null
-          ? mapBusinessMapToMapCountries(businessMapRes)
-          : restOverview.mapCountries
-      const mapLegend =
-        businessMapRes != null ? mapCountriesToLegend(mapCountries) : (restOverview.mapLegend ?? [])
-      // 收入结构仅用真实接口：有数据则转换，无数据或失败则展示空（暂无数据）
-      const revenueStructureFlow =
-        Array.isArray(incomeStructureRes) && incomeStructureRes.length > 0
-          ? mapIncomeStructureToFlow(incomeStructureRes)
-          : mapIncomeStructureToFlow([])
-      overview.value = {
-        ...restOverview,
-        kpi,
-        alertSummaryMetrics,
-        alertBanners,
-        spendPace,
-        topRevenue: top3.topRevenue,
-        topBadReview: top3.topBadReview,
-        topUser: top3.topUser,
-        channelRoiInstall,
-        mapCountries,
-        mapLegend,
-        revenueStructureFlow
-      }
+    const tasks: Promise<unknown>[] = []
 
-      console.log('mapCountries', mapCountries)
-    } finally {
+    tasks.push(
+      fetchCockpitOverview({ dateRange: range, date: nextDate })
+        .then((restOverview) => {
+          if (seq !== requestSeq) return
+          mergeOverview({
+            smartAlerts: restOverview.smartAlerts ?? [],
+            // 作为兜底基础数据，若后续独立接口返回会再覆盖
+            channelRoiInstall: restOverview.channelRoiInstall ?? [],
+            mapCountries: restOverview.mapCountries ?? [],
+            mapLegend: restOverview.mapLegend ?? [],
+            spendPace: restOverview.spendPace ?? [],
+            revenueStructureFlow: restOverview.revenueStructureFlow,
+            topRevenue: restOverview.topRevenue ?? [],
+            topBadReview: restOverview.topBadReview ?? [],
+            topUser: restOverview.topUser ?? []
+          })
+        })
+        .catch(() => null)
+        .finally(() => {
+          if (seq === requestSeq) moduleLoading.value.smartAlerts = false
+        })
+    )
+
+    tasks.push(
+      fetchCockpitOverall({ date: nextDate })
+        .then((overallRes) => {
+          if (seq !== requestSeq) return
+          const data: CockpitOverallData | undefined =
+            overallRes &&
+            typeof overallRes === 'object' &&
+            'now' in overallRes &&
+            'last' in overallRes
+              ? (overallRes as unknown as CockpitOverallData)
+              : (overallRes as { data?: CockpitOverallData })?.data
+          const isOldOverall = (r: unknown): r is CockpitOverallResponse =>
+            r != null && typeof r === 'object' && 'last' in r && 'now' in r
+          const kpi = data
+            ? mapOverallDataToKpiCards(data)
+            : isOldOverall(overallRes)
+              ? mapOverallToKpiCards(overallRes.last, overallRes.now)
+              : []
+          const alertSummaryMetrics = data ? mapOverallDataToAlertSummaryMetrics(data) : []
+          const alertBanners = data?.alertBanners ?? []
+          mergeOverview({ kpi, alertSummaryMetrics, alertBanners })
+        })
+        .catch(() => null)
+        .finally(() => {
+          if (seq === requestSeq) moduleLoading.value.kpiAlert = false
+        })
+    )
+
+    tasks.push(
+      fetchConsumptionRhythmMonitoring({ date: nextDate })
+        .then((rhythmRes) => {
+          if (seq !== requestSeq || !rhythmRes) return
+          mergeOverview({ spendPace: mapConsumptionRhythmToSpendPace(rhythmRes) })
+        })
+        .catch(() => null)
+        .finally(() => {
+          if (seq === requestSeq) moduleLoading.value.spendPace = false
+        })
+    )
+
+    tasks.push(
+      fetchCockpitTop3({ date: nextDate })
+        .then((top3Res) => {
+          if (seq !== requestSeq) return
+          const top3 = mapTop3ResponseToOverview(top3Res ?? null)
+          mergeOverview({
+            topRevenue: top3.topRevenue,
+            topBadReview: top3.topBadReview,
+            topUser: top3.topUser
+          })
+        })
+        .catch(() => null)
+        .finally(() => {
+          if (seq === requestSeq) moduleLoading.value.top3 = false
+        })
+    )
+
+    tasks.push(
+      fetchChannelRoiInstall({ date: nextDate })
+        .then((channelRoiRes) => {
+          if (seq !== requestSeq || channelRoiRes == null) return
+          mergeOverview({ channelRoiInstall: mapChannelRoiInstallToItems(channelRoiRes) })
+        })
+        .catch(() => null)
+        .finally(() => {
+          if (seq === requestSeq) moduleLoading.value.channelRoi = false
+        })
+    )
+
+    tasks.push(
+      fetchCockpitBusinessMap({ date: nextDate })
+        .then((businessMapRes) => {
+          if (seq !== requestSeq || businessMapRes == null) return
+          const mapCountries = mapBusinessMapToMapCountries(businessMapRes)
+          mergeOverview({
+            mapCountries,
+            mapLegend: mapCountriesToLegend(mapCountries)
+          })
+        })
+        .catch(() => null)
+        .finally(() => {
+          if (seq === requestSeq) moduleLoading.value.map = false
+        })
+    )
+
+    tasks.push(
+      fetchIncomeStructure({ date: nextDate })
+        .then((incomeStructureRes) => {
+          if (seq !== requestSeq) return
+          const revenueStructureFlow =
+            Array.isArray(incomeStructureRes) && incomeStructureRes.length > 0
+              ? mapIncomeStructureToFlow(incomeStructureRes)
+              : mapIncomeStructureToFlow([])
+          mergeOverview({ revenueStructureFlow })
+        })
+        .catch(() => {
+          if (seq !== requestSeq) return
+          mergeOverview({ revenueStructureFlow: mapIncomeStructureToFlow([]) })
+        })
+        .finally(() => {
+          if (seq === requestSeq) moduleLoading.value.revenueFlow = false
+        })
+    )
+
+    await Promise.allSettled(tasks)
+    if (seq === requestSeq) {
       loading.value = false
     }
   }
@@ -177,6 +265,7 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
   return {
     overview,
     loading,
+    moduleLoading,
     dateRange,
     date,
     load,

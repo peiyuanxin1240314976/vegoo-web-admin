@@ -588,6 +588,20 @@
   let mapRequestSeq = 0
   let top10RequestSeq = 0
 
+  const WORLD_GEO_COORD_MAP: Record<string, [number, number]> = {
+    'United States': [-95.7129, 37.0902],
+    'South Korea': [127.7669, 35.9078],
+    Germany: [10.4515, 51.1657],
+    'United Kingdom': [-3.436, 55.3781],
+    Japan: [138.2529, 36.2048],
+    France: [2.2137, 46.2276],
+    Canada: [-106.3468, 56.1304],
+    Australia: [133.7751, -25.2744],
+    Brazil: [-51.9253, -14.235],
+    'South Africa': [22.9375, -30.5595],
+    Kazakhstan: [66.9237, 48.0196]
+  }
+
   // ─── Spark Line Helper ────────────────────────────────────────────────────
   function toSelectValue(value: string) {
     return value === '' ? ALL_OPTION_VALUE : value
@@ -707,7 +721,7 @@
     if (!trendChart) return
     const cfg = getTrendSeriesConfig()
     trendChart.setOption({
-      legend: { data: cfg.legend },
+      legend: { show: false },
       xAxis: { data: trendData.value.x_labels },
       yAxis: {
         min: cfg.yMin,
@@ -733,7 +747,7 @@
         axisPointer: { lineStyle: { color: AXIS_COLOR } }
       },
       legend: {
-        data: ['预估ECPM'],
+        show: false,
         right: 8,
         top: 4,
         icon: 'circle',
@@ -788,6 +802,22 @@
     }))
   }
 
+  function mapPulseData() {
+    return mapCountries.value
+      .map((c) => {
+        const value = mapMode.value === 'estimated' ? c.d_ecpm_estimated : c.d_ecpm_real
+        const coord = WORLD_GEO_COORD_MAP[c.geo_name]
+        if (!coord) return null
+        return {
+          name: c.geo_name,
+          value: [...coord, value]
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => Number((b as any).value[2]) - Number((a as any).value[2]))
+      .slice(0, 8) as Array<{ name: string; value: [number, number, number] }>
+  }
+
   // ─── World Map ────────────────────────────────────────────────────────────
   async function initWorldMap() {
     if (!worldMapRef.value) return
@@ -800,10 +830,43 @@
       worldMapChart = echarts.init(worldMapRef.value)
       worldMapChart.setOption({
         backgroundColor: TRANSPARENT,
+        animationDuration: 900,
+        animationEasing: 'quarticOut',
+        animationDurationUpdate: 700,
         tooltip: {
           trigger: 'item',
           ...TOOLTIP_STYLE,
-          formatter: (params: any) => `${params.name}<br/>$${params.value ?? 'N/A'}`
+          formatter: (params: any) => {
+            const rawValue = Array.isArray(params.value) ? params.value[2] : params.value
+            return `${params.name}<br/>$${rawValue ?? 'N/A'}`
+          }
+        },
+        geo: {
+          map: 'world',
+          roam: true,
+          scaleLimit: { min: 1, max: 6 },
+          zoom: 1.12,
+          center: [20, 10],
+          itemStyle: {
+            areaColor: '#16253d',
+            borderColor: '#243b5d',
+            borderWidth: 0.7
+          },
+          emphasis: {
+            itemStyle: {
+              areaColor: '#2f6cff',
+              borderColor: '#8fb4ff',
+              borderWidth: 1.4,
+              shadowBlur: 18,
+              shadowColor: 'rgb(47 108 255 / 55%)'
+            },
+            label: { show: false }
+          },
+          select: {
+            itemStyle: {
+              areaColor: '#4f8fff'
+            }
+          }
         },
         visualMap: {
           min: 0,
@@ -811,9 +874,9 @@
           left: 'left',
           bottom: 8,
           orient: 'horizontal',
-          text: ['$10+', '$0'],
+          text: ['', ''],
           textStyle: { color: LABEL_COLOR, fontSize: 10 },
-          inRange: { color: ['#1e3250', '#00a884', '#00d4aa'] },
+          inRange: { color: ['#243b5d', '#2f6cff', '#00bcd4', '#00d4aa', '#f5a623'] },
           itemWidth: 100,
           itemHeight: 10,
           calculable: false
@@ -821,21 +884,45 @@
         series: [
           {
             type: 'map',
-            map: 'world',
-            roam: false,
-            zoom: 1.2,
-            center: [20, 10],
-            itemStyle: {
-              areaColor: '#1a2840',
-              borderColor: '#0d1420',
-              borderWidth: 0.5
-            },
-            emphasis: {
-              itemStyle: { areaColor: '#00d4aa55' },
-              label: { show: false }
-            },
+            geoIndex: 0,
             label: { show: false },
             data: mapSeriesData()
+          },
+          {
+            type: 'effectScatter',
+            coordinateSystem: 'geo',
+            zlevel: 3,
+            symbolSize: (val: number[]) => Math.max(7, Math.min(20, Number(val[2] ?? 0) * 2)),
+            rippleEffect: {
+              period: 3,
+              scale: 4,
+              brushType: 'stroke'
+            },
+            showEffectOn: 'render',
+            itemStyle: {
+              color: '#ffd166',
+              shadowBlur: 16,
+              shadowColor: 'rgb(255 209 102 / 68%)'
+            },
+            emphasis: {
+              scale: true
+            },
+            data: mapPulseData()
+          },
+          {
+            type: 'scatter',
+            coordinateSystem: 'geo',
+            zlevel: 2,
+            symbolSize: 4,
+            itemStyle: {
+              color: '#7dd3fc',
+              opacity: 0.9
+            },
+            silent: true,
+            data: mapPulseData().map((d) => ({
+              name: d.name,
+              value: d.value
+            }))
           }
         ]
       })
@@ -1003,7 +1090,7 @@
       mapCountries.value = response.items
       if (worldMapChart) {
         worldMapChart.setOption({
-          series: [{ data: mapSeriesData() }]
+          series: [{ data: mapSeriesData() }, { data: mapPulseData() }]
         })
       }
     } finally {

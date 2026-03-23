@@ -305,6 +305,7 @@
   const mapLoading = ref(true)
   const mapMetric = ref<'revenue' | 'spend' | 'user'>('revenue')
   const { chartRef, initChart, updateChart, destroyChart, getChartInstance } = useChart()
+  const geoCoordMap = ref<Record<string, [number, number]>>({})
 
   /** 悬浮 tooltip：仅在有数据国家显示，按收入/消耗/用户切换内容 */
   const hoverTooltipVisible = ref(false)
@@ -474,11 +475,58 @@
     const visualMin = hasPositive && dataMin >= 0 ? 0.5 : dataMin
     const visualMax = dataMax
     const regionNamesWithData = new Set(mapData.map((d) => d.name))
+    const pulseData = mapData
+      .map((d) => {
+        const coord = geoCoordMap.value[d.name]
+        if (!coord) return null
+        const metricValue = Number(d.value ?? 0)
+        if (!Number.isFinite(metricValue) || metricValue <= 0) return null
+        return {
+          name: d.name,
+          value: [...coord, metricValue]
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => Number((b as any).value[2]) - Number((a as any).value[2]))
+      .slice(0, 6) as Array<{ name: string; value: [number, number, number] }>
 
     return {
       animation: true,
-      animationDuration: 800,
-      animationEasing: 'cubicOut',
+      animationDuration: 900,
+      animationEasing: 'quarticOut',
+      animationDurationUpdate: 650,
+      animationEasingUpdate: 'quarticInOut',
+      geo: {
+        map: 'world',
+        roam: true,
+        zoom: 1.15,
+        scaleLimit: { min: 0.6, max: 4 },
+        itemStyle: {
+          areaColor: unhighlightedArea,
+          borderColor,
+          borderWidth: 0.9
+        },
+        emphasis: {
+          itemStyle: {
+            areaColor: emphasisArea,
+            borderColor: emphasisBorder,
+            borderWidth: 1.4,
+            shadowBlur: dark ? 18 : 12,
+            shadowColor: emphasisShadow
+          },
+          label: {
+            show: true,
+            color: dark ? '#f1f5f9' : '#1f2937',
+            fontSize: 11,
+            fontWeight: 600
+          }
+        },
+        select: {
+          itemStyle: { areaColor: emphasisArea },
+          label: { show: true }
+        },
+        label: { show: false }
+      },
       tooltip: {
         trigger: 'item',
         triggerOn: 'click', // 改为点击显示，避免悬浮时盖住邻国误触
@@ -516,37 +564,47 @@
       series: [
         {
           type: 'map',
-          map: 'world',
-          roam: true,
-          zoom: 1.15,
-          scaleLimit: { min: 0.6, max: 4 },
+          geoIndex: 0,
           name: '业务分布',
           data: mapData,
+          label: { show: false }
+        },
+        {
+          type: 'effectScatter',
+          coordinateSystem: 'geo',
+          zlevel: 3,
+          symbolSize: (val: number[]) => Math.max(4, Math.min(10, Number(val[2] ?? 0) * 0.8)),
+          rippleEffect: {
+            period: 4,
+            scale: 2.2,
+            brushType: 'stroke'
+          },
+          showEffectOn: 'render',
           itemStyle: {
-            areaColor: unhighlightedArea,
-            borderColor,
-            borderWidth: 0.9
+            color: '#ffd166',
+            opacity: 0.75,
+            shadowBlur: 8,
+            shadowColor: 'rgb(255 209 102 / 35%)'
           },
           emphasis: {
-            itemStyle: {
-              areaColor: emphasisArea,
-              borderColor: emphasisBorder,
-              borderWidth: 1.4,
-              shadowBlur: dark ? 18 : 12,
-              shadowColor: emphasisShadow
-            },
-            label: {
-              show: true,
-              color: dark ? '#f1f5f9' : '#1f2937',
-              fontSize: 11,
-              fontWeight: 600
-            }
+            scale: true
           },
-          select: {
-            itemStyle: { areaColor: emphasisArea },
-            label: { show: true }
+          data: pulseData
+        },
+        {
+          type: 'scatter',
+          coordinateSystem: 'geo',
+          zlevel: 2,
+          symbolSize: 2,
+          itemStyle: {
+            color: '#7dd3fc',
+            opacity: 0.55
           },
-          label: { show: false }
+          silent: true,
+          data: pulseData.map((d) => ({
+            name: d.name,
+            value: d.value
+          }))
         }
       ]
     }
@@ -575,6 +633,23 @@
     try {
       const res = await fetch(WORLD_JSON_URL)
       const worldJson = await res.json()
+      const coordMap: Record<string, [number, number]> = {}
+      if (Array.isArray(worldJson?.features)) {
+        worldJson.features.forEach((feature: any) => {
+          const name = feature?.properties?.name
+          const cp = feature?.properties?.cp
+          if (
+            typeof name === 'string' &&
+            Array.isArray(cp) &&
+            cp.length >= 2 &&
+            Number.isFinite(Number(cp[0])) &&
+            Number.isFinite(Number(cp[1]))
+          ) {
+            coordMap[name] = [Number(cp[0]), Number(cp[1])]
+          }
+        })
+      }
+      geoCoordMap.value = coordMap
       echarts.registerMap('world', worldJson)
       ;(chartRef as { value: HTMLElement | null }).value = mapChartRef.value
       nextTick(() => {
