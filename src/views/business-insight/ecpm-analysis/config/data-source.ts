@@ -19,15 +19,15 @@ export enum EcpmAnalysisEndpoint {
 }
 
 export const ECPM_ANALYSIS_USE_MOCK: Record<EcpmAnalysisEndpoint, boolean> = {
-  [EcpmAnalysisEndpoint.MetaFilterOptions]: true,
-  [EcpmAnalysisEndpoint.OverviewKpis]: true,
-  [EcpmAnalysisEndpoint.OverviewTrend]: true,
-  [EcpmAnalysisEndpoint.TablePlatform]: true,
-  [EcpmAnalysisEndpoint.OverviewMapCountry]: true,
-  [EcpmAnalysisEndpoint.OverviewTop10Country]: true,
-  [EcpmAnalysisEndpoint.OverviewAdSlotRanking]: true,
-  [EcpmAnalysisEndpoint.OverviewAppRanking]: true,
-  [EcpmAnalysisEndpoint.OverviewInsightTip]: true
+  [EcpmAnalysisEndpoint.MetaFilterOptions]: false,
+  [EcpmAnalysisEndpoint.OverviewKpis]: false,
+  [EcpmAnalysisEndpoint.OverviewTrend]: false,
+  [EcpmAnalysisEndpoint.TablePlatform]: false,
+  [EcpmAnalysisEndpoint.OverviewMapCountry]: false,
+  [EcpmAnalysisEndpoint.OverviewTop10Country]: false,
+  [EcpmAnalysisEndpoint.OverviewAdSlotRanking]: false,
+  [EcpmAnalysisEndpoint.OverviewAppRanking]: false,
+  [EcpmAnalysisEndpoint.OverviewInsightTip]: false
 }
 
 export function isEcpmAnalysisEndpointMock(endpoint: EcpmAnalysisEndpoint): boolean {

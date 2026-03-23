@@ -2,6 +2,45 @@
 
 export type EcpmTrendDirection = 'up' | 'down' | 'flat'
 
+export interface EcpmFilterOption {
+  value: string
+  label: string
+}
+
+export interface EcpmCountryFilterOption extends EcpmFilterOption {
+  s_country_code: string
+}
+
+export interface EcpmMetaFilterOptions {
+  apps: EcpmFilterOption[]
+  platforms_terminal: EcpmFilterOption[]
+  sources: EcpmFilterOption[]
+  countries: EcpmCountryFilterOption[]
+}
+
+export interface EcpmOverviewKpis {
+  d_ecpm_estimated: number
+  d_ecpm_real: number
+  estimated_change_pct_vs_prev_month: number
+  real_change_pct_vs_prev_month: number
+  top_country: {
+    s_country_code: string
+    label_display: string
+    d_ecpm: number
+    second: {
+      s_country_code: string
+      label_display: string
+      d_ecpm: number
+    }
+  }
+  top_ad_slot: {
+    s_app_id: string
+    s_app_name: string
+    n_ad_type_label: string
+    d_ecpm: number
+  }
+}
+
 /** 契约/API 层 — 广告平台对比行 */
 export interface EcpmPlatformRow {
   /** 广告平台展示名 */

@@ -12,6 +12,10 @@ import {
   RevenueOverviewEndpoint,
   isRevenueOverviewEndpointMock
 } from '@/views/business-insight/revenue-overview/config/data-source'
+import {
+  EcpmAnalysisEndpoint,
+  isEcpmAnalysisEndpointMock
+} from '@/views/business-insight/ecpm-analysis/config/data-source'
 import * as insightMock from '@/views/business-insight/mocks/business-insight-api-mock'
 import { MOCK_REVENUE_OVERVIEW_KPIS } from '@/views/business-insight/revenue-overview/mock'
 import type {
@@ -54,6 +58,11 @@ import type {
   ProfitSankeyDto,
   ProfitTrend30d
 } from '@/views/business-insight/profit-analysis/types'
+import type {
+  EcpmMetaFilterOptions,
+  EcpmOverviewKpis,
+  EcpmTrendBundle
+} from '@/views/business-insight/ecpm-analysis/types'
 
 export {
   fetchIapMetaFilterOptions,
@@ -74,6 +83,401 @@ export type { IapOverviewTableQuery } from './iap-analysis'
 
 const IAA_BASE = `${ANALYSIS_API_BASE}/business-insight/iaa-analysis`
 const REVENUE_OVERVIEW_BASE = `${ANALYSIS_API_BASE}/business-insight/revenue-overview`
+const ECPM_ANALYSIS_BASE = `${ANALYSIS_API_BASE}/business-insight/ecpm-analysis`
+
+function normalizeEcpmMetaFilterOptions(
+  raw: EcpmMetaFilterOptions | null | undefined
+): EcpmMetaFilterOptions {
+  const arr = (v: unknown) => (Array.isArray(v) ? v : []) as EcpmMetaFilterOptions['apps']
+  const countryArr = (v: unknown) =>
+    (Array.isArray(v) ? v : []) as EcpmMetaFilterOptions['countries']
+  const o =
+    raw !== null && raw !== undefined && typeof raw === 'object'
+      ? (raw as unknown as Record<string, unknown>)
+      : {}
+  return {
+    apps: arr(o.apps),
+    platforms_terminal: arr(o.platforms_terminal),
+    sources: arr(o.sources),
+    countries: countryArr(o.countries)
+  }
+}
+
+/** ECPM 分析 - 顶栏筛选项 GET .../meta-filter-options */
+export async function fetchEcpmMetaFilterOptions() {
+  if (isEcpmAnalysisEndpointMock(EcpmAnalysisEndpoint.MetaFilterOptions)) {
+    const { MOCK_ECPM_MAP_COUNTRIES, MOCK_ECPM_PLATFORMS, MOCK_ECPM_APP_RANK } = await import(
+      '@/views/business-insight/ecpm-analysis/mock'
+    )
+    return {
+      apps: [
+        { value: '', label: '全部应用' },
+        ...MOCK_ECPM_APP_RANK.map((item) => ({
+          value: item.s_app_name,
+          label: item.s_app_name
+        }))
+      ],
+      platforms_terminal: [
+        { value: '', label: '全部终端' },
+        { value: 'android', label: 'Android' },
+        { value: 'ios', label: 'iOS' }
+      ],
+      sources: [
+        { value: '', label: '全部广告平台' },
+        ...MOCK_ECPM_PLATFORMS.map((item) => ({ value: item.name.toLowerCase(), label: item.name }))
+      ],
+      countries: [
+        { value: '', label: '全部国家', s_country_code: '' },
+        ...MOCK_ECPM_MAP_COUNTRIES.map((item) => ({
+          value: item.s_country_code.toLowerCase(),
+          label: item.geo_name,
+          s_country_code: item.s_country_code
+        }))
+      ]
+    }
+  }
+  const raw = await request.get<unknown>({ url: `${ECPM_ANALYSIS_BASE}/meta-filter-options` })
+  return normalizeEcpmMetaFilterOptions(unwrapIaaPayload<EcpmMetaFilterOptions>(raw))
+}
+
+function normalizeEcpmOverviewKpis(raw: EcpmOverviewKpis | null | undefined): EcpmOverviewKpis {
+  return {
+    d_ecpm_estimated: Number(raw?.d_ecpm_estimated ?? 0),
+    d_ecpm_real: Number(raw?.d_ecpm_real ?? 0),
+    estimated_change_pct_vs_prev_month: Number(raw?.estimated_change_pct_vs_prev_month ?? 0),
+    real_change_pct_vs_prev_month: Number(raw?.real_change_pct_vs_prev_month ?? 0),
+    top_country: {
+      s_country_code: String(raw?.top_country?.s_country_code ?? ''),
+      label_display: String(raw?.top_country?.label_display ?? ''),
+      d_ecpm: Number(raw?.top_country?.d_ecpm ?? 0),
+      second: {
+        s_country_code: String(raw?.top_country?.second?.s_country_code ?? ''),
+        label_display: String(raw?.top_country?.second?.label_display ?? ''),
+        d_ecpm: Number(raw?.top_country?.second?.d_ecpm ?? 0)
+      }
+    },
+    top_ad_slot: {
+      s_app_id: String(raw?.top_ad_slot?.s_app_id ?? ''),
+      s_app_name: String(raw?.top_ad_slot?.s_app_name ?? ''),
+      n_ad_type_label: String(raw?.top_ad_slot?.n_ad_type_label ?? ''),
+      d_ecpm: Number(raw?.top_ad_slot?.d_ecpm ?? 0)
+    }
+  }
+}
+
+type EcpmOverviewKpiParams = {
+  t_start_date: string
+  t_end_date: string
+  platform: string
+  source?: string
+  s_app_id?: string
+  s_country_code?: string
+}
+
+/** ECPM 分析 - 顶部 KPI POST .../overview/kpis */
+export async function fetchEcpmOverviewKpis(params: EcpmOverviewKpiParams) {
+  if (isEcpmAnalysisEndpointMock(EcpmAnalysisEndpoint.OverviewKpis)) {
+    const { MOCK_ECPM_KPIS } = await import('@/views/business-insight/ecpm-analysis/mock')
+    return normalizeEcpmOverviewKpis(MOCK_ECPM_KPIS)
+  }
+  const raw = await request.post<unknown>({
+    url: `${ECPM_ANALYSIS_BASE}/overview/kpis`,
+    data: params
+  })
+  return normalizeEcpmOverviewKpis(unwrapIaaPayload<EcpmOverviewKpis>(raw))
+}
+
+function normalizeEcpmTrendBundle(raw: EcpmTrendBundle | null | undefined): EcpmTrendBundle {
+  const toNumArr = (v: unknown) => (Array.isArray(v) ? v.map((item) => Number(item)) : [])
+  const toStrArr = (v: unknown) => (Array.isArray(v) ? v.map((item) => String(item)) : [])
+  const xLabels = toStrArr(raw?.x_labels)
+  const estimated = toNumArr(raw?.series_estimated)
+  const real = toNumArr(raw?.series_real)
+  const revenue = toNumArr(raw?.series_revenue)
+  return {
+    x_labels: xLabels,
+    series_estimated: estimated,
+    series_real: real,
+    series_revenue: revenue
+  }
+}
+
+/** ECPM 分析 - 趋势图 POST .../overview/trend */
+export async function fetchEcpmOverviewTrend(params: EcpmOverviewKpiParams) {
+  if (isEcpmAnalysisEndpointMock(EcpmAnalysisEndpoint.OverviewTrend)) {
+    const { MOCK_ECPM_TREND } = await import('@/views/business-insight/ecpm-analysis/mock')
+    return normalizeEcpmTrendBundle(MOCK_ECPM_TREND)
+  }
+  const raw = await request.post<unknown>({
+    url: `${ECPM_ANALYSIS_BASE}/overview/trend`,
+    data: params
+  })
+  return normalizeEcpmTrendBundle(unwrapIaaPayload<EcpmTrendBundle>(raw))
+}
+
+type EcpmPlatformTableResponse = {
+  rows: {
+    name: string
+    d_ecpm_estimated: number
+    d_ecpm_real: number
+    revenue_display: string
+    share_display: string
+    trend: 'up' | 'down' | 'flat'
+    spark_series: number[]
+  }[]
+  subtotal: {
+    d_ecpm_estimated: number
+    d_ecpm_real: number
+    revenue_display: string
+    share_display: string
+  }
+}
+
+function normalizeEcpmPlatformTableResponse(
+  raw: EcpmPlatformTableResponse | null | undefined
+): EcpmPlatformTableResponse {
+  const rows = Array.isArray(raw?.rows)
+    ? raw.rows.map((row) => ({
+        name: String(row?.name ?? ''),
+        d_ecpm_estimated: Number(row?.d_ecpm_estimated ?? 0),
+        d_ecpm_real: Number(row?.d_ecpm_real ?? 0),
+        revenue_display: String(row?.revenue_display ?? ''),
+        share_display: String(row?.share_display ?? ''),
+        trend:
+          row?.trend === 'down' || row?.trend === 'flat' || row?.trend === 'up'
+            ? row.trend
+            : 'flat',
+        spark_series: Array.isArray(row?.spark_series)
+          ? row.spark_series.map((item) => Number(item))
+          : []
+      }))
+    : []
+  return {
+    rows,
+    subtotal: {
+      d_ecpm_estimated: Number(raw?.subtotal?.d_ecpm_estimated ?? 0),
+      d_ecpm_real: Number(raw?.subtotal?.d_ecpm_real ?? 0),
+      revenue_display: String(raw?.subtotal?.revenue_display ?? ''),
+      share_display: String(raw?.subtotal?.share_display ?? '')
+    }
+  }
+}
+
+/** ECPM 分析 - 平台对比表 POST .../table/platform */
+export async function fetchEcpmTablePlatform(params: EcpmOverviewKpiParams) {
+  if (isEcpmAnalysisEndpointMock(EcpmAnalysisEndpoint.TablePlatform)) {
+    const { MOCK_ECPM_PLATFORMS, MOCK_ECPM_PLATFORM_SUBTOTAL } = await import(
+      '@/views/business-insight/ecpm-analysis/mock'
+    )
+    return normalizeEcpmPlatformTableResponse({
+      rows: MOCK_ECPM_PLATFORMS.map((item) => ({
+        name: item.name,
+        d_ecpm_estimated: item.estimated,
+        d_ecpm_real: item.real,
+        revenue_display: item.revenue,
+        share_display: item.share,
+        trend: item.trend,
+        spark_series: item.sparkData
+      })),
+      subtotal: {
+        d_ecpm_estimated: MOCK_ECPM_PLATFORM_SUBTOTAL.d_ecpm_estimated,
+        d_ecpm_real: MOCK_ECPM_PLATFORM_SUBTOTAL.d_ecpm_real,
+        revenue_display: MOCK_ECPM_PLATFORM_SUBTOTAL.revenue_display,
+        share_display: MOCK_ECPM_PLATFORM_SUBTOTAL.share_display
+      }
+    })
+  }
+  const raw = await request.post<unknown>({
+    url: `${ECPM_ANALYSIS_BASE}/table/platform`,
+    data: params
+  })
+  return normalizeEcpmPlatformTableResponse(unwrapIaaPayload<EcpmPlatformTableResponse>(raw))
+}
+
+type EcpmMapCountryResponse = {
+  items: {
+    s_country_code: string
+    geo_name: string
+    d_ecpm_estimated: number
+    d_ecpm_real: number
+  }[]
+}
+
+type EcpmMapCountryParams = EcpmOverviewKpiParams & {
+  map_metric: 'estimated' | 'real'
+}
+
+function normalizeEcpmMapCountryResponse(
+  raw: EcpmMapCountryResponse | null | undefined
+): EcpmMapCountryResponse {
+  const items = Array.isArray(raw?.items)
+    ? raw.items.map((item) => ({
+        s_country_code: String(item?.s_country_code ?? ''),
+        geo_name: String(item?.geo_name ?? ''),
+        d_ecpm_estimated: Number(item?.d_ecpm_estimated ?? 0),
+        d_ecpm_real: Number(item?.d_ecpm_real ?? 0)
+      }))
+    : []
+  return { items }
+}
+
+/** ECPM 分析 - 地图国家分布 POST .../overview/map-country */
+export async function fetchEcpmOverviewMapCountry(params: EcpmMapCountryParams) {
+  if (isEcpmAnalysisEndpointMock(EcpmAnalysisEndpoint.OverviewMapCountry)) {
+    const { MOCK_ECPM_MAP_COUNTRIES } = await import('@/views/business-insight/ecpm-analysis/mock')
+    return normalizeEcpmMapCountryResponse({ items: MOCK_ECPM_MAP_COUNTRIES })
+  }
+  const raw = await request.post<unknown>({
+    url: `${ECPM_ANALYSIS_BASE}/overview/map-country`,
+    data: params
+  })
+  return normalizeEcpmMapCountryResponse(unwrapIaaPayload<EcpmMapCountryResponse>(raw))
+}
+
+type EcpmTop10CountryParams = EcpmOverviewKpiParams & {
+  metric: 'estimated' | 'real'
+}
+
+type EcpmTop10CountryResponse = {
+  rows: {
+    s_country_code: string
+    label_zh: string
+    d_ecpm: number
+    bar_color: string
+  }[]
+}
+
+function normalizeEcpmTop10CountryResponse(
+  raw: EcpmTop10CountryResponse | null | undefined
+): EcpmTop10CountryResponse {
+  const rows = Array.isArray(raw?.rows)
+    ? raw.rows.map((row) => ({
+        s_country_code: String(row?.s_country_code ?? ''),
+        label_zh: String(row?.label_zh ?? ''),
+        d_ecpm: Number(row?.d_ecpm ?? 0),
+        bar_color: String(row?.bar_color ?? '#4db6e8')
+      }))
+    : []
+  return { rows }
+}
+
+/** ECPM 分析 - Top10 国家 POST .../overview/top10-country */
+export async function fetchEcpmOverviewTop10Country(params: EcpmTop10CountryParams) {
+  if (isEcpmAnalysisEndpointMock(EcpmAnalysisEndpoint.OverviewTop10Country)) {
+    const { MOCK_ECPM_TOP_COUNTRIES } = await import('@/views/business-insight/ecpm-analysis/mock')
+    return normalizeEcpmTop10CountryResponse({ rows: MOCK_ECPM_TOP_COUNTRIES })
+  }
+  const raw = await request.post<unknown>({
+    url: `${ECPM_ANALYSIS_BASE}/overview/top10-country`,
+    data: params
+  })
+  return normalizeEcpmTop10CountryResponse(unwrapIaaPayload<EcpmTop10CountryResponse>(raw))
+}
+
+type EcpmAdSlotRankingResponse = {
+  rows: {
+    s_ad_unit_label: string
+    d_ecpm: number
+    bar_color: string
+  }[]
+}
+
+function normalizeEcpmAdSlotRankingResponse(
+  raw: EcpmAdSlotRankingResponse | null | undefined
+): EcpmAdSlotRankingResponse {
+  const rows = Array.isArray(raw?.rows)
+    ? raw.rows.map((row) => ({
+        s_ad_unit_label: String(row?.s_ad_unit_label ?? ''),
+        d_ecpm: Number(row?.d_ecpm ?? 0),
+        bar_color: String(row?.bar_color ?? '#4db6e8')
+      }))
+    : []
+  return { rows }
+}
+
+/** ECPM 分析 - 广告位排行 POST .../overview/ad-slot-ranking */
+export async function fetchEcpmOverviewAdSlotRanking(params: EcpmOverviewKpiParams) {
+  if (isEcpmAnalysisEndpointMock(EcpmAnalysisEndpoint.OverviewAdSlotRanking)) {
+    const { MOCK_ECPM_AD_SLOTS } = await import('@/views/business-insight/ecpm-analysis/mock')
+    return normalizeEcpmAdSlotRankingResponse({
+      rows: MOCK_ECPM_AD_SLOTS.map((item) => ({
+        s_ad_unit_label: item.name,
+        d_ecpm: item.value,
+        bar_color: item.color
+      }))
+    })
+  }
+  const raw = await request.post<unknown>({
+    url: `${ECPM_ANALYSIS_BASE}/overview/ad-slot-ranking`,
+    data: params
+  })
+  return normalizeEcpmAdSlotRankingResponse(unwrapIaaPayload<EcpmAdSlotRankingResponse>(raw))
+}
+
+type EcpmAppRankingResponse = {
+  rows: {
+    s_app_name: string
+    icon_text: string
+    d_ecpm_estimated: number
+    d_ecpm_real: number
+    revenue_display: string
+    mom_change_pct: number
+  }[]
+}
+
+function normalizeEcpmAppRankingResponse(
+  raw: EcpmAppRankingResponse | null | undefined
+): EcpmAppRankingResponse {
+  const rows = Array.isArray(raw?.rows)
+    ? raw.rows.map((row) => ({
+        s_app_name: String(row?.s_app_name ?? ''),
+        icon_text: String(row?.icon_text ?? ''),
+        d_ecpm_estimated: Number(row?.d_ecpm_estimated ?? 0),
+        d_ecpm_real: Number(row?.d_ecpm_real ?? 0),
+        revenue_display: String(row?.revenue_display ?? ''),
+        mom_change_pct: Number(row?.mom_change_pct ?? 0)
+      }))
+    : []
+  return { rows }
+}
+
+/** ECPM 分析 - 应用排行 POST .../overview/app-ranking */
+export async function fetchEcpmOverviewAppRanking(params: EcpmOverviewKpiParams) {
+  if (isEcpmAnalysisEndpointMock(EcpmAnalysisEndpoint.OverviewAppRanking)) {
+    const { MOCK_ECPM_APP_RANK } = await import('@/views/business-insight/ecpm-analysis/mock')
+    return normalizeEcpmAppRankingResponse({ rows: MOCK_ECPM_APP_RANK })
+  }
+  const raw = await request.post<unknown>({
+    url: `${ECPM_ANALYSIS_BASE}/overview/app-ranking`,
+    data: params
+  })
+  return normalizeEcpmAppRankingResponse(unwrapIaaPayload<EcpmAppRankingResponse>(raw))
+}
+
+type EcpmInsightTipResponse = {
+  message: string
+}
+
+function normalizeEcpmInsightTipResponse(
+  raw: EcpmInsightTipResponse | null | undefined
+): EcpmInsightTipResponse {
+  return {
+    message: String(raw?.message ?? '')
+  }
+}
+
+/** ECPM 分析 - 运营提示 POST .../overview/insight-tip */
+export async function fetchEcpmOverviewInsightTip(params: EcpmOverviewKpiParams) {
+  if (isEcpmAnalysisEndpointMock(EcpmAnalysisEndpoint.OverviewInsightTip)) {
+    const { MOCK_ECPM_INSIGHT_TIP } = await import('@/views/business-insight/ecpm-analysis/mock')
+    return normalizeEcpmInsightTipResponse({ message: MOCK_ECPM_INSIGHT_TIP })
+  }
+  const raw = await request.post<unknown>({
+    url: `${ECPM_ANALYSIS_BASE}/overview/insight-tip`,
+    data: params
+  })
+  return normalizeEcpmInsightTipResponse(unwrapIaaPayload<EcpmInsightTipResponse>(raw))
+}
 
 export type RevenueOverviewMetaFilterOption = {
   label: string
