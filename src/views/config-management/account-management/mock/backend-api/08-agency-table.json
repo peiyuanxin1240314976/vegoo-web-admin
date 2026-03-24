@@ -1,0 +1,66 @@
+{
+  "_comment": "代理商管理 - 分页列表。支持关键词、广告平台、合作模式、合作状态筛选。",
+  "fieldDescription": {
+    "request": {
+      "current":   { "type": "number",  "required": true,  "description": "当前页码，从 1 开始。" },
+      "size":      { "type": "number",  "required": true,  "description": "每页条数。" },
+      "keyword":   { "type": "string",  "required": false, "description": "关键词，模糊匹配代理商名称或ID。" },
+      "source":    { "type": "string",  "required": false, "description": "广告平台筛选，如 Meta Ads。" },
+      "coopMode":  { "type": "string",  "required": false, "description": "合作模式筛选：授权代理 | 直接开户。" },
+      "status":    { "type": "string",  "required": false, "description": "合作状态筛选：已合作 | 洽谈中 | 已终止。" }
+    },
+    "response": {
+      "data": {
+        "records":  { "type": "AgencyItem[]", "description": "当前页代理商列表。" },
+        "total":    { "type": "number",       "description": "符合条件的总条数。" },
+        "current":  { "type": "number",       "description": "当前页码。" },
+        "size":     { "type": "number",       "description": "每页条数。" }
+      }
+    }
+  },
+  "sampleRequest": {
+    "current": 1,
+    "size": 20,
+    "keyword": "",
+    "source": "",
+    "coopMode": "",
+    "status": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "records": [
+        {
+          "id": "AGY-001",
+          "agencyName": "星达传媒",
+          "source": "Meta Ads",
+          "coopMode": "授权代理",
+          "managedAccounts": 32,
+          "monthSpend": 128450,
+          "expireDate": "2025-01-14",
+          "status": "已合作",
+          "contact": "张三",
+          "email": "zhang3@xingda.com",
+          "phone": "+86 138-0000-1234",
+          "startDate": "2023-01-15",
+          "remark": "主要负责Meta平台开户",
+          "activeAccounts": 28,
+          "pausedAccounts": 4,
+          "monthRevenue": 8991,
+          "bcBmList": [
+            { "name": "Vegoo主务BC", "source": "Meta Ads", "type": "BC", "accountCount": 45, "status": "正常" }
+          ]
+        }
+      ],
+      "total": 8,
+      "current": 1,
+      "size": 20
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/agency/table",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "AgencyTableQuery",
+    "responseBody": "PaginatedResponse<AgencyItem>"
+  }
+}

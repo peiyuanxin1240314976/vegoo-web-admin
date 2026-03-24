@@ -293,7 +293,14 @@
       "applicationManagement": "应用管理",
       "appAssignment": "应用分配",
       "optimizerManagement": "优化师管理",
-      "userManagement": "用户管理"
+      "userManagement": "用户管理",
+      "accountManagement": "账户管理",
+      "countryManagement": "国家管理",
+      "exchangeRateManagement": "汇率管理",
+      "costCoefficient": "成本系数管理",
+      "perfConfig": "绩效配置",
+      "orderImport": "导入商店订单",
+      "orderImportReport": "导入报告"
     },
     "userGrowth": {
       "title": "用户增长",

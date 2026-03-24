@@ -1,0 +1,21 @@
+{
+  "_comment": "今日导入统计。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "todayTotal": { "type": "number", "required": true, "description": "今日任务数。" },
+      "completed": { "type": "number", "required": true, "description": "完成数。" },
+      "processing": { "type": "number", "required": true, "description": "进行中数。" },
+      "failed": { "type": "number", "required": true, "description": "失败数。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": { "data": { "todayTotal": 5, "completed": 3, "processing": 1, "failed": 1 } },
+  "api": {
+    "url": "POST /api/config-management/order-import/summary",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{}",
+    "responseBody": "{ todayTotal, completed, processing, failed }"
+  }
+}

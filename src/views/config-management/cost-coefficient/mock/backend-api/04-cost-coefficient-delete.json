@@ -1,0 +1,20 @@
+{
+  "_comment": "删除成本系数（逻辑删除）。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "记录 ID（路径参数）。" }
+    },
+    "response": {
+      "deleted": { "type": "boolean", "required": true, "description": "删除结果。" }
+    }
+  },
+  "sampleRequest": { "id": "CC-001" },
+  "sampleResponse": { "data": { "deleted": true } },
+  "api": {
+    "url": "DELETE /api/config-management/cost-coefficient/:id",
+    "method": "DELETE",
+    "priority": "P0",
+    "requestBody": "id(path)",
+    "responseBody": "{ deleted }"
+  }
+}

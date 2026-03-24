@@ -1,0 +1,25 @@
+{
+  "_comment": "账户管理 - 批量导入广告账户。",
+  "fieldDescription": {
+    "request": {
+      "items": {
+        "type": "AccountFormModel[]",
+        "required": true,
+        "description": "待导入账户列表。"
+      }
+    },
+    "response": {
+      "successCount": { "type": "number", "required": true, "description": "成功导入数量。" },
+      "failedCount": { "type": "number", "required": true, "description": "失败数量。" }
+    }
+  },
+  "sampleRequest": { "items": [] },
+  "sampleResponse": { "successCount": 0, "failedCount": 0 },
+  "api": {
+    "url": "POST /api/config-management/account/import",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "items",
+    "responseBody": "successCount, failedCount"
+  }
+}

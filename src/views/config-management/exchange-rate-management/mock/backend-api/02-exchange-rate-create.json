@@ -1,0 +1,34 @@
+{
+  "_comment": "手动新增汇率，对应 ManualRateFormModel。",
+  "fieldDescription": {
+    "request": {
+      "baseCurrency": { "type": "string", "required": true, "description": "基准币种。" },
+      "quoteCurrency": { "type": "string", "required": true, "description": "目标币种。" },
+      "rate": { "type": "number", "required": true, "description": "汇率。" },
+      "effectiveDate": { "type": "string", "required": true, "description": "生效日期。" },
+      "effectiveTime": { "type": "string", "required": true, "description": "生效时间。" },
+      "overrideAuto": { "type": "boolean", "required": true, "description": "覆盖自动同步。" },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "id": { "type": "string", "required": true, "description": "新增记录 ID。" }
+    }
+  },
+  "sampleRequest": {
+    "baseCurrency": "USD",
+    "quoteCurrency": "EUR",
+    "rate": 0.9182,
+    "effectiveDate": "2026-03-24",
+    "effectiveTime": "09:30",
+    "overrideAuto": true,
+    "remark": "运营修正"
+  },
+  "sampleResponse": { "data": { "id": "ER-009" } },
+  "api": {
+    "url": "POST /api/config-management/exchange-rate",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "ManualRateFormModel",
+    "responseBody": "{ id }"
+  }
+}

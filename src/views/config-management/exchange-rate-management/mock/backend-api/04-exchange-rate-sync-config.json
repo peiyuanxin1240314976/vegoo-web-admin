@@ -1,0 +1,33 @@
+{
+  "_comment": "保存同步设置，对应 SyncConfig。",
+  "fieldDescription": {
+    "request": {
+      "frequency": {
+        "type": "string",
+        "required": true,
+        "enum": ["hourly", "every6h", "daily"],
+        "description": "同步频率。"
+      },
+      "alertThreshold": { "type": "number", "required": true, "description": "告警阈值（%）。" },
+      "primarySource": { "type": "string", "required": true, "description": "主数据源。" },
+      "backupSourceEnabled": { "type": "boolean", "required": true, "description": "备用源开关。" }
+    },
+    "response": {
+      "saved": { "type": "boolean", "required": true, "description": "保存结果。" }
+    }
+  },
+  "sampleRequest": {
+    "frequency": "hourly",
+    "alertThreshold": 5,
+    "primarySource": "openexchange",
+    "backupSourceEnabled": true
+  },
+  "sampleResponse": { "data": { "saved": true } },
+  "api": {
+    "url": "POST /api/config-management/exchange-rate/sync-config",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "SyncConfig",
+    "responseBody": "{ saved }"
+  }
+}

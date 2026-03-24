@@ -1,0 +1,25 @@
+{
+  "_comment": "编辑成本系数。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "记录 ID（路径参数）。" },
+      "nSource": { "type": "number", "required": false, "description": "广告平台 n_source。" },
+      "tStart": { "type": "string", "required": false, "description": "生效日期。" },
+      "dCostRatio": { "type": "number", "required": false, "description": "折算比例。" },
+      "dInstallCost": { "type": "number", "required": false, "description": "安装成本。" },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "updated": { "type": "boolean", "required": true, "description": "更新结果。" }
+    }
+  },
+  "sampleRequest": { "id": "CC-001", "tStart": "2026-04-01", "dCostRatio": 1.2, "dInstallCost": 0.35678, "remark": "季度更新" },
+  "sampleResponse": { "data": { "updated": true } },
+  "api": {
+    "url": "PUT /api/config-management/cost-coefficient/:id",
+    "method": "PUT",
+    "priority": "P0",
+    "requestBody": "Partial<CostCoefficientFormModel>",
+    "responseBody": "{ updated }"
+  }
+}

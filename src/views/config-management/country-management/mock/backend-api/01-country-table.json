@@ -1,0 +1,211 @@
+{
+  "_comment": "国家管理 - 国家分页列表查询。对应 types.ts: CountryTableQuery (请求) / CountryItem (响应条目)。",
+  "fieldDescription": {
+    "request": {
+      "page": {
+        "type": "number",
+        "required": true,
+        "description": "当前页码，从 1 开始。",
+        "default": 1
+      },
+      "pageSize": {
+        "type": "number",
+        "required": true,
+        "description": "每页条数，建议 10 / 20 / 50。",
+        "default": 20
+      },
+      "region": {
+        "type": "string",
+        "required": false,
+        "enum": ["亚太", "欧洲", "北美", "其他"],
+        "default": "",
+        "description": "按地区筛选，空字符串表示全部。"
+      },
+      "currency": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "按货币筛选，传 currency 字段完整字符串如 'USD - 美元'，空字符串表示全部。"
+      },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "关键词模糊搜索，匹配 code / nameCn / nameEn / aliases。"
+      }
+    },
+    "response": {
+      "total": {
+        "type": "number",
+        "required": true,
+        "description": "满足筛选条件的总记录数。"
+      },
+      "page": {
+        "type": "number",
+        "required": true,
+        "description": "当前页码。"
+      },
+      "pageSize": {
+        "type": "number",
+        "required": true,
+        "description": "每页条数。"
+      },
+      "list": {
+        "type": "CountryItem[]",
+        "required": true,
+        "description": "当前页国家条目列表，详见 CountryItem 字段说明。"
+      }
+    },
+    "CountryItem": {
+      "code": {
+        "type": "string",
+        "required": true,
+        "description": "ISO 3166-1 alpha-2 国家代码，如 'US'。作为唯一主键。"
+      },
+      "code3": {
+        "type": "string",
+        "required": true,
+        "description": "ISO 3166-1 数字代码（3位字符串），如 '840'。"
+      },
+      "criteriaId": {
+        "type": "string",
+        "required": true,
+        "description": "Google Ads Criteria ID，如 '2840'。用于广告定向。"
+      },
+      "nameCn": {
+        "type": "string",
+        "required": true,
+        "description": "国家中文名称，如 '美国'。"
+      },
+      "nameEn": {
+        "type": "string",
+        "required": true,
+        "description": "国家英文名称，如 'United States'。"
+      },
+      "aliases": {
+        "type": "string[]",
+        "required": true,
+        "description": "国家别名列表，最多 5 个，用于搜索匹配与展示。"
+      },
+      "timezone": {
+        "type": "string",
+        "required": true,
+        "description": "主要时区，格式为 GMT±N，如 'GMT+8'、'GMT-5'。"
+      },
+      "phoneCode": {
+        "type": "string",
+        "required": true,
+        "description": "国际电话区号（不含 +），如 '86'。"
+      },
+      "currency": {
+        "type": "string",
+        "required": true,
+        "description": "货币名称，格式为 'CODE - 中文名'，如 'USD - 美元'。"
+      },
+      "currencySymbol": {
+        "type": "string",
+        "required": true,
+        "description": "货币符号，如 '$'、'¥'、'€'。"
+      },
+      "region": {
+        "type": "string",
+        "required": true,
+        "enum": ["亚太", "欧洲", "北美", "其他"],
+        "description": "所属地区，用于分组筛选。"
+      },
+      "isMainMarket": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否为主要市场。true 表示重点投放市场。"
+      },
+      "createdBy": {
+        "type": "string",
+        "required": true,
+        "description": "创建人用户名。"
+      },
+      "createdTime": {
+        "type": "string",
+        "required": true,
+        "description": "创建时间，格式 'YYYY-MM-DD HH:mm:ss'。"
+      },
+      "updatedBy": {
+        "type": "string",
+        "required": true,
+        "description": "最后更新人用户名。"
+      },
+      "updatedTime": {
+        "type": "string",
+        "required": true,
+        "description": "最后更新时间，格式 'YYYY-MM-DD HH:mm:ss'。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "page": 1,
+    "pageSize": 20,
+    "region": "",
+    "currency": "",
+    "keyword": ""
+  },
+  "sampleResponse": {
+    "code": 200,
+    "data": {
+      "total": 15,
+      "page": 1,
+      "pageSize": 20,
+      "list": [
+        {
+          "code": "US",
+          "code3": "840",
+          "criteriaId": "2840",
+          "nameCn": "美国",
+          "nameEn": "United States",
+          "aliases": ["USA", "America", "United States of America", "US"],
+          "timezone": "GMT-5",
+          "phoneCode": "1",
+          "currency": "USD - 美元",
+          "currencySymbol": "$",
+          "region": "北美",
+          "isMainMarket": true,
+          "createdBy": "admin",
+          "createdTime": "2024-01-10 09:00:00",
+          "updatedBy": "admin",
+          "updatedTime": "2024-06-15 14:30:00"
+        },
+        {
+          "code": "JP",
+          "code3": "392",
+          "criteriaId": "2392",
+          "nameCn": "日本",
+          "nameEn": "Japan",
+          "aliases": ["Japan", "日本国", "Nippon"],
+          "timezone": "GMT+9",
+          "phoneCode": "81",
+          "currency": "JPY - 日元",
+          "currencySymbol": "¥",
+          "region": "亚太",
+          "isMainMarket": true,
+          "createdBy": "admin",
+          "createdTime": "2024-01-10 09:00:00",
+          "updatedBy": "admin",
+          "updatedTime": "2024-06-15 14:30:00"
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/country/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "page (必填), pageSize (必填), region?, currency?, keyword?",
+    "responseBody": "{ total, page, pageSize, list: CountryItem[] }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "keyword 匹配范围建议包含 code、nameCn、nameEn 及 aliases 数组内任意项（模糊匹配，忽略大小写）。",
+      "region 与 currency 同时传入时取交集筛选。",
+      "分页从第 1 页开始，list 为空数组时 total 返回 0。",
+      "isMainMarket 字段建议在列表页高亮展示，便于运营快速识别重点市场。"
+    ]
+  }
+}

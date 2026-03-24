@@ -1,0 +1,20 @@
+{
+  "url": "/api/config-management/open-account/assign",
+  "method": "POST",
+  "description": "分配凭据并激活广告账户",
+  "request": {
+    "id": "OA-008",
+    "credential": "Meta-主账号Token"
+  },
+  "response": {
+    "code": 0,
+    "message": "success",
+    "data": {
+      "id": "OA-008",
+      "status": "已激活",
+      "credential": "Meta-主账号Token",
+      "credentialStatus": "验证正常",
+      "activateTime": "2024-03-23T10:00:00Z"
+    }
+  }
+}

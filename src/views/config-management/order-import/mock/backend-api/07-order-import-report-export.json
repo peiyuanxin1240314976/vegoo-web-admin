@@ -1,0 +1,20 @@
+{
+  "_comment": "导出导入报告。",
+  "fieldDescription": {
+    "request": {
+      "taskId": { "type": "string", "required": true, "description": "任务 ID。" }
+    },
+    "response": {
+      "fileToken": { "type": "string", "required": true, "description": "导出文件令牌。" }
+    }
+  },
+  "sampleRequest": { "taskId": "IMP-027" },
+  "sampleResponse": { "data": { "fileToken": "order-import-report-imp-027" } },
+  "api": {
+    "url": "POST /api/config-management/order-import/report/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "{ taskId }",
+    "responseBody": "{ fileToken }"
+  }
+}

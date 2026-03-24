@@ -1,0 +1,69 @@
+{
+  "_comment": "国家管理 - 新增国家。对应 types.ts: CountryFormModel（请求）/ CountryItem（响应）。",
+  "fieldDescription": {
+    "request": {
+      "code": { "type": "string", "required": true, "description": "国家代码（ISO alpha-2），大写，唯一。" },
+      "code3": { "type": "string", "required": true, "description": "三位数字代码字符串，如 '840'。" },
+      "criteriaId": { "type": "string", "required": true, "description": "Google Ads Criteria ID。" },
+      "nameCn": { "type": "string", "required": true, "description": "中文名称。" },
+      "nameEn": { "type": "string", "required": true, "description": "英文名称。" },
+      "aliases": { "type": "string[]", "required": true, "description": "别名数组，最多 5 项。" },
+      "timezone": { "type": "string", "required": true, "description": "时区，格式 GMT±N。" },
+      "phoneCode": { "type": "string", "required": true, "description": "电话区号（不含 +）。" },
+      "currency": { "type": "string", "required": true, "description": "货币名称，如 'USD - 美元'。" },
+      "currencySymbol": { "type": "string", "required": true, "description": "货币符号，如 '$'。" },
+      "region": {
+        "type": "string",
+        "required": true,
+        "enum": ["亚太", "欧洲", "北美", "其他"],
+        "description": "所属地区。"
+      },
+      "isMainMarket": { "type": "boolean", "required": true, "description": "是否主要市场。" }
+    },
+    "response": {
+      "data": { "type": "CountryItem", "required": true, "description": "创建后的国家完整信息。" }
+    }
+  },
+  "sampleRequest": {
+    "code": "SE",
+    "code3": "752",
+    "criteriaId": "2752",
+    "nameCn": "瑞典",
+    "nameEn": "Sweden",
+    "aliases": ["Sweden", "Sverige"],
+    "timezone": "GMT+1",
+    "phoneCode": "46",
+    "currency": "SEK - 瑞典克朗",
+    "currencySymbol": "kr",
+    "region": "欧洲",
+    "isMainMarket": false
+  },
+  "sampleResponse": {
+    "code": 200,
+    "data": {
+      "code": "SE",
+      "code3": "752",
+      "criteriaId": "2752",
+      "nameCn": "瑞典",
+      "nameEn": "Sweden",
+      "aliases": ["Sweden", "Sverige"],
+      "timezone": "GMT+1",
+      "phoneCode": "46",
+      "currency": "SEK - 瑞典克朗",
+      "currencySymbol": "kr",
+      "region": "欧洲",
+      "isMainMarket": false,
+      "createdBy": "admin",
+      "createdTime": "2026-03-24 10:00:00",
+      "updatedBy": "admin",
+      "updatedTime": "2026-03-24 10:00:00"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/country",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "CountryFormModel",
+    "responseBody": "CountryItem"
+  }
+}

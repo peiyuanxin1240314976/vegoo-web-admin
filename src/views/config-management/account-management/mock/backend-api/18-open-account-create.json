@@ -1,0 +1,38 @@
+{
+  "url": "/api/config-management/open-account",
+  "method": "POST",
+  "description": "新建开户记录",
+  "request": {
+    "source": "Meta Ads",
+    "app": "Vegoo主App",
+    "platform": "安卓",
+    "accountType": "企业户",
+    "agency": "广州媒优科技有限公司",
+    "amount": "5000",
+    "applicant": "张三",
+    "adAccountId": "",
+    "adAccountName": "",
+    "credential": "",
+    "remark": ""
+  },
+  "response": {
+    "code": 0,
+    "message": "success",
+    "data": {
+      "id": "OA-010",
+      "source": "Meta Ads",
+      "app": "Vegoo主App",
+      "platform": "安卓",
+      "accountType": "企业户",
+      "agency": "广州媒优科技有限公司",
+      "amount": 5000,
+      "applicant": "张三",
+      "registerTime": "2024-03-23T09:00:00Z",
+      "status": "待分配",
+      "remark": "",
+      "feishuRecords": [
+        { "time": "2024-03-23 09:00", "event": "开户登记", "result": "成功", "target": "广告账户群" }
+      ]
+    }
+  }
+}

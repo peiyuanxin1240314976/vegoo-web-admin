@@ -1,0 +1,24 @@
+{
+  "_comment": "成本系数修改历史。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "记录 ID。" }
+    },
+    "response": {
+      "list": { "type": "CostCoefficientHistory[]", "required": true, "description": "历史变更记录。" }
+    }
+  },
+  "sampleRequest": { "id": "CC-001" },
+  "sampleResponse": {
+    "data": {
+      "list": [{ "time": "2026-03-24 09:40", "operator": "admin", "changes": ["dCostRatio: 1.10 -> 1.20"] }]
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/cost-coefficient/history",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "id",
+    "responseBody": "{ list }"
+  }
+}

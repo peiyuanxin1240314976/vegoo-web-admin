@@ -1,0 +1,25 @@
+{
+  "_comment": "成本系数列表，对应 CostCoefficientQuery。",
+  "fieldDescription": {
+    "request": {
+      "nSource": { "type": "number", "required": false, "description": "广告平台 n_source。" },
+      "tStartYear": { "type": "string", "required": false, "description": "生效年份。" },
+      "keyword": { "type": "string", "required": false, "description": "关键词。" },
+      "page": { "type": "number", "required": true, "description": "页码。", "default": 1 },
+      "pageSize": { "type": "number", "required": true, "description": "每页条数。", "default": 10 }
+    },
+    "response": {
+      "total": { "type": "number", "required": true, "description": "总数。" },
+      "list": { "type": "CostCoefficientItem[]", "required": true, "description": "列表。" }
+    }
+  },
+  "sampleRequest": { "nSource": 1, "tStartYear": "2026", "keyword": "", "page": 1, "pageSize": 10 },
+  "sampleResponse": { "data": { "total": 1, "list": [{ "id": "CC-001", "nSource": 1 }] } },
+  "api": {
+    "url": "POST /api/config-management/cost-coefficient/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "CostCoefficientQuery",
+    "responseBody": "{ total, list }"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "url": "/api/config-management/open-account/table",
+  "method": "POST",
+  "description": "开户记录分页列表",
+  "request": {
+    "page": 1,
+    "pageSize": 20,
+    "source": "Meta Ads",
+    "status": "待分配",
+    "agency": "",
+    "app": "",
+    "keyword": ""
+  },
+  "response": {
+    "code": 0,
+    "message": "success",
+    "data": {
+      "total": 9,
+      "page": 1,
+      "pageSize": 20,
+      "list": [
+        {
+          "id": "OA-001",
+          "source": "Meta Ads",
+          "app": "Vegoo主App",
+          "platform": "安卓",
+          "accountType": "企业户",
+          "agency": "广州媒优科技有限公司",
+          "amount": 5000,
+          "applicant": "张三",
+          "registerTime": "2024-01-15T08:30:00Z",
+          "status": "已激活",
+          "remark": "",
+          "adAccountId": "act_123456789",
+          "adAccountName": "Vegoo_Meta_01",
+          "activateTime": "2024-01-16T10:00:00Z",
+          "credential": "Meta-主账号Token",
+          "credentialStatus": "验证正常",
+          "feishuRecords": [
+            { "time": "2024-01-15 08:30", "event": "开户登记", "result": "成功", "target": "广告账户群" },
+            { "time": "2024-01-16 10:00", "event": "凭据分配激活", "result": "成功", "target": "广告账户群" }
+          ]
+        }
+      ]
+    }
+  }
+}

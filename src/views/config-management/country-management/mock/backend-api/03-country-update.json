@@ -1,0 +1,57 @@
+{
+  "_comment": "国家管理 - 编辑国家。path 参数 code 为主键，body 对应 CountryFormModel。",
+  "fieldDescription": {
+    "request": {
+      "path.code": { "type": "string", "required": true, "description": "主键国家代码（ISO alpha-2）。" },
+      "body": { "type": "CountryFormModel", "required": true, "description": "编辑表单数据。" }
+    },
+    "response": {
+      "data": { "type": "CountryItem", "required": true, "description": "更新后的国家完整信息。" }
+    }
+  },
+  "sampleRequest": {
+    "path": { "code": "JP" },
+    "body": {
+      "code": "JP",
+      "code3": "392",
+      "criteriaId": "2392",
+      "nameCn": "日本",
+      "nameEn": "Japan",
+      "aliases": ["Japan", "日本国", "Nippon"],
+      "timezone": "GMT+9",
+      "phoneCode": "81",
+      "currency": "JPY - 日元",
+      "currencySymbol": "¥",
+      "region": "亚太",
+      "isMainMarket": true
+    }
+  },
+  "sampleResponse": {
+    "code": 200,
+    "data": {
+      "code": "JP",
+      "code3": "392",
+      "criteriaId": "2392",
+      "nameCn": "日本",
+      "nameEn": "Japan",
+      "aliases": ["Japan", "日本国", "Nippon"],
+      "timezone": "GMT+9",
+      "phoneCode": "81",
+      "currency": "JPY - 日元",
+      "currencySymbol": "¥",
+      "region": "亚太",
+      "isMainMarket": true,
+      "createdBy": "admin",
+      "createdTime": "2024-01-10 09:00:00",
+      "updatedBy": "admin",
+      "updatedTime": "2026-03-24 10:05:00"
+    }
+  },
+  "api": {
+    "url": "PUT /api/config-management/country/:code",
+    "method": "PUT",
+    "priority": "P0",
+    "requestBody": "CountryFormModel",
+    "responseBody": "CountryItem"
+  }
+}

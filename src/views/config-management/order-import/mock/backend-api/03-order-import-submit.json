@@ -1,0 +1,22 @@
+{
+  "_comment": "提交导入任务。",
+  "fieldDescription": {
+    "request": {
+      "file": { "type": "file", "required": true, "description": "CSV 文件。" },
+      "dataSource": { "type": "string", "required": true, "enum": ["appstore", "googleplay"], "description": "数据源。" },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "taskId": { "type": "string", "required": true, "description": "任务 ID。" }
+    }
+  },
+  "sampleRequest": { "dataSource": "appstore", "remark": "2026-03 月结数据" },
+  "sampleResponse": { "data": { "taskId": "IMP-027" } },
+  "api": {
+    "url": "POST /api/config-management/order-import/submit",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "multipart/form-data",
+    "responseBody": "{ taskId }"
+  }
+}

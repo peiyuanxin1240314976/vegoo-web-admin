@@ -1,0 +1,13 @@
+{
+  "url": "/api/config-management/open-account/delete",
+  "method": "POST",
+  "description": "删除开户记录",
+  "request": {
+    "id": "OA-007"
+  },
+  "response": {
+    "code": 0,
+    "message": "success",
+    "data": null
+  }
+}
