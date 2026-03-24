@@ -1,0 +1,20 @@
+{
+  "data": {
+    "bannedWords": ["fucking", "shit", "damn", "bitch", "crap", "asshole"],
+    "brandWords": [
+      "Facebook",
+      "TikTok",
+      "Disney",
+      "Google",
+      "Apple",
+      "Amazon",
+      "Microsoft",
+      "YouTube",
+      "Instagram",
+      "Twitter",
+      "WhatsApp",
+      "Netflix"
+    ],
+    "version": "2026-03-22"
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "_comment": "预估收入偏差 — 四维度偏差明细矩阵（应用 × 广告平台）。对应 types.ts: RevenueDeviationMatrixTable、mock/data.ts: MOCK_TABLE_MATRIX。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "source": { "type": "string", "required": false, "description": "广告平台，空为全部。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" }
+    },
+    "response": {
+      "cols": {
+        "type": "RevenueDeviationMatrixCol[]",
+        "required": true,
+        "description": "列：各广告平台 + 列合计（预估/真实/偏差率展示串）。"
+      },
+      "rows": {
+        "type": "RevenueDeviationMatrixRow[]",
+        "required": true,
+        "description": "行：各应用一行多格。"
+      }
+    },
+    "RevenueDeviationMatrixCol": {
+      "name": { "type": "string", "required": true, "description": "列头展示名。" },
+      "key": {
+        "type": "string",
+        "required": true,
+        "enum": ["admob", "facebook", "applovin", "vungle"],
+        "description": "列键，与 cells 字段名对应。"
+      },
+      "total": {
+        "type": "RevenueDeviationMatrixCell",
+        "required": true,
+        "description": "该列合计格展示。"
+      }
+    },
+    "RevenueDeviationMatrixRow": {
+      "s_app_name": { "type": "string", "required": true, "description": "应用名。" },
+      "s_app_icon_emoji": {
+        "type": "string",
+        "required": true,
+        "description": "列表图标占位符（可为 emoji）；若改产品规范可换为 s_app_id + 静态资源。"
+      },
+      "s_icon_color": { "type": "string", "required": true, "description": "图标底色。" },
+      "admob": {
+        "type": "RevenueDeviationMatrixCell",
+        "required": true,
+        "description": "Admob 格。"
+      },
+      "facebook": {
+        "type": "RevenueDeviationMatrixCell",
+        "required": true,
+        "description": "Facebook 格。"
+      },
+      "applovin": {
+        "type": "RevenueDeviationMatrixCell",
+        "required": true,
+        "description": "Applovin 格。"
+      },
+      "vungle": {
+        "type": "RevenueDeviationMatrixCell",
+        "required": true,
+        "description": "Vungle 格。"
+      }
+    },
+    "RevenueDeviationMatrixCell": {
+      "estimated": { "type": "string", "required": true, "description": "预估展示（已格式化）。" },
+      "real": { "type": "string", "required": true, "description": "真实展示（已格式化）。" },
+      "deviation": {
+        "type": "string",
+        "required": true,
+        "description": "偏差率或区间文案，如 >15%、8–15%。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "source": "",
+    "s_app_id": ""
+  },
+  "sampleResponse": {
+    "cols": [
+      {
+        "name": "Admob",
+        "key": "admob",
+        "total": { "estimated": "$9.88", "real": "$3.77", "deviation": ">15%" }
+      },
+      {
+        "name": "Facebook",
+        "key": "facebook",
+        "total": { "estimated": "$6.28", "real": "$0.00", "deviation": ">15%" }
+      },
+      {
+        "name": "Applovin",
+        "key": "applovin",
+        "total": { "estimated": "$3.75", "real": "$3.99", "deviation": ">15%" }
+      },
+      {
+        "name": "Vungle",
+        "key": "vungle",
+        "total": { "estimated": "$0.23", "real": "$9.78", "deviation": "<8%" }
+      }
+    ],
+    "rows": [
+      {
+        "s_app_name": "WeatherRadar",
+        "s_app_icon_emoji": "🌤",
+        "s_icon_color": "#1e3a5f",
+        "admob": { "estimated": "$9.33", "real": "$2.79", "deviation": ">15%" },
+        "facebook": { "estimated": "$1.90", "real": "$1.18", "deviation": ">15%" },
+        "applovin": { "estimated": "$3.96", "real": "$2.98", "deviation": ">15%" },
+        "vungle": { "estimated": "$3.92", "real": "$2.21", "deviation": ">15%" }
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/table/matrix",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_start_date, t_end_date, source?, s_app_id?",
+    "responseBody": "RevenueDeviationMatrixTable"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "矩阵格为强展示形态，允许后端直接给格式化串；若需统一切换货币单位可改为数值 + 单位枚举。"
+    ]
+  }
+}

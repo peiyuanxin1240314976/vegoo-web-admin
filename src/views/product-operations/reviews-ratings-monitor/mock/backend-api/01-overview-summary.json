@@ -1,0 +1,215 @@
+{
+  "_comment": "评论与评分监控 - 汇总分析 Tab。对应 api/reviewMonitor.ts: SummaryData。",
+  "fieldDescription": {
+    "request": {
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用 ID；空或 all 表示全应用汇总。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "google_play", "app_store"],
+        "description": "终端平台；空表示不限。"
+      },
+      "startDate": {
+        "type": "string",
+        "required": false,
+        "description": "开始日期 YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": false,
+        "description": "结束日期 YYYY-MM-DD。"
+      },
+      "language": {
+        "type": "string",
+        "required": false,
+        "description": "语言代码；空表示全部。"
+      }
+    },
+    "response": {
+      "kpi": {
+        "type": "KpiMetrics",
+        "required": true,
+        "description": "KPI 指标卡片。"
+      },
+      "ratingDistribution": {
+        "type": "RatingDistributionItem[]",
+        "required": true,
+        "description": "评分分布（1-5 星）。"
+      },
+      "dailyReviews": {
+        "type": "DailyReviewItem[]",
+        "required": true,
+        "description": "按日期评论分布。"
+      },
+      "appTopList": {
+        "type": "AppRankItem[]",
+        "required": true,
+        "description": "按应用汇总 Top 10。"
+      },
+      "trend30Days": {
+        "type": "TrendPoint[]",
+        "required": true,
+        "description": "30 天评分趋势。"
+      },
+      "reviewTypes": {
+        "type": "ReviewTypeItem[]",
+        "required": true,
+        "description": "按评论类型分布。"
+      },
+      "languageDistribution": {
+        "type": "LanguageItem[]",
+        "required": true,
+        "description": "按语言分布。"
+      },
+      "deviceDistribution": {
+        "type": "DeviceItem[]",
+        "required": true,
+        "description": "按设备分布。"
+      },
+      "topicWords": {
+        "type": "TopicWord[]",
+        "required": true,
+        "description": "评论主题词云。"
+      },
+      "complaintTopics": {
+        "type": "ComplaintTopic[]",
+        "required": true,
+        "description": "Top 5 投诉主题。"
+      }
+    },
+    "KpiMetrics": {
+      "avgRating": { "type": "number", "description": "平均评分 1-5。" },
+      "avgRatingDelta": { "type": "number", "description": "环比变化。" },
+      "newReviews": { "type": "number", "description": "新增评论数。" },
+      "newReviewsPct": { "type": "number", "description": "新增评论环比 %。" },
+      "positiveRate": { "type": "number", "description": "好评率 %（4-5 星占比）。" },
+      "positiveRateDelta": { "type": "number", "description": "好评率 pp 变化。" },
+      "negativeRate": { "type": "number", "description": "差评率 %（1-2 星占比）。" },
+      "negativeRateDelta": { "type": "number", "description": "差评率 pp 变化。" },
+      "pendingReply": { "type": "number", "description": "待回复数。" }
+    },
+    "RatingDistributionItem": {
+      "star": { "type": "number", "description": "星级 1-5。" },
+      "count": { "type": "number", "description": "条数。" },
+      "percent": { "type": "number", "description": "占比 %。" }
+    },
+    "DailyReviewItem": {
+      "date": { "type": "string", "description": "日期，如 2/28。" },
+      "star1": { "type": "number", "description": "1 星条数。" },
+      "star2": { "type": "number", "description": "2 星条数。" },
+      "star3": { "type": "number", "description": "3 星条数。" },
+      "star4": { "type": "number", "description": "4 星条数。" },
+      "star5": { "type": "number", "description": "5 星条数。" },
+      "total": { "type": "number", "description": "当日总评论数。" }
+    },
+    "AppRankItem": {
+      "appName": { "type": "string", "description": "应用名称。" },
+      "count": { "type": "number", "description": "评论数。" }
+    },
+    "TrendPoint": {
+      "date": { "type": "string", "description": "日期。" },
+      "rating": { "type": "number", "description": "当日平均评分。" }
+    },
+    "ReviewTypeItem": {
+      "type": { "type": "string", "description": "类型名称。" },
+      "count": { "type": "number", "description": "条数。" },
+      "color": { "type": "string", "required": false, "description": "展示颜色 HEX。" }
+    },
+    "LanguageItem": {
+      "language": { "type": "string", "description": "语言代码。" },
+      "displayName": { "type": "string", "description": "展示名称。" },
+      "percent": { "type": "number", "description": "占比 %。" }
+    },
+    "DeviceItem": {
+      "device": { "type": "string", "description": "设备型号。" },
+      "percent": { "type": "number", "description": "占比 %。" }
+    },
+    "TopicWord": {
+      "word": { "type": "string", "description": "主题词。" },
+      "weight": { "type": "number", "description": "权重 1-10，控制字号。" },
+      "sentiment": {
+        "type": "string",
+        "enum": ["positive", "negative", "neutral"],
+        "description": "情感倾向。"
+      }
+    },
+    "ComplaintTopic": {
+      "topic": { "type": "string", "description": "投诉主题。" },
+      "count": { "type": "number", "description": "条数。" }
+    }
+  },
+  "sampleRequest": {
+    "appId": "",
+    "platform": "",
+    "startDate": "2026-02-28",
+    "endDate": "2026-03-06",
+    "language": ""
+  },
+  "sampleResponse": {
+    "kpi": {
+      "avgRating": 4.2,
+      "avgRatingDelta": 0.1,
+      "newReviews": 1284,
+      "newReviewsPct": 18,
+      "positiveRate": 78.5,
+      "positiveRateDelta": 2.3,
+      "negativeRate": 8.2,
+      "negativeRateDelta": -0.5,
+      "pendingReply": 23
+    },
+    "ratingDistribution": [
+      { "star": 5, "count": 619, "percent": 62 },
+      { "star": 4, "count": 160, "percent": 16 },
+      { "star": 3, "count": 79, "percent": 8 },
+      { "star": 2, "count": 60, "percent": 6 },
+      { "star": 1, "count": 79, "percent": 8 }
+    ],
+    "dailyReviews": [
+      {
+        "date": "2/28",
+        "star1": 14,
+        "star2": 10,
+        "star3": 20,
+        "star4": 50,
+        "star5": 87,
+        "total": 181
+      }
+    ],
+    "appTopList": [
+      { "appName": "ClapFinder", "count": 219 },
+      { "appName": "CRMonitor", "count": 191 }
+    ],
+    "trend30Days": [
+      { "date": "2/6", "rating": 4.05 },
+      { "date": "3/6", "rating": 4.2 }
+    ],
+    "reviewTypes": [
+      { "type": "正面评价", "count": 658, "color": "#00d4aa" },
+      { "type": "其他", "count": 104, "color": "#4e8ef7" }
+    ],
+    "languageDistribution": [{ "language": "en", "displayName": "English", "percent": 26.9 }],
+    "deviceDistribution": [{ "device": "未知", "percent": 23.7 }],
+    "topicWords": [
+      { "word": "smooth", "weight": 8, "sentiment": "positive" },
+      { "word": "crash", "weight": 10, "sentiment": "negative" }
+    ],
+    "complaintTopics": [
+      { "topic": "崩溃", "count": 625 },
+      { "topic": "卡顿", "count": 380 }
+    ]
+  },
+  "api": {
+    "url": "POST /api/product-operations/reviews-ratings-monitor/overview/summary",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "appId?, platform?, startDate?, endDate?, language?",
+    "responseBody": "SummaryData"
+  },
+  "apiSuggestion": {
+    "notes": ["汇总分析 Tab 首屏加载，可与 table/list 并行请求。"]
+  }
+}

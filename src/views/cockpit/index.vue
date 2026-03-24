@@ -1,5 +1,5 @@
 <template>
-  <div class="cockpit-page" v-loading="loading">
+  <div class="cockpit-page">
     <!-- 1. 日期范围 + 2. 顶部操作栏 -->
     <div class="cockpit-header">
       <CockpitDateRangeTabs :model-value="dateRange" @update:model-value="onDateRangeChange" />
@@ -7,32 +7,87 @@
     </div>
 
     <!-- 3. 第一排 KPI 卡片 + 4. 警示与提示：只调一次 POST .../cockpit/overall，两处共用该次返回的 data -->
-    <CockpitGlobalKpiCards :kpi-list="overview?.kpi ?? []" />
+    <ElSkeleton :loading="moduleLoading.kpiAlert" animated>
+      <template #template>
+        <div class="cockpit-skeleton-card-list">
+          <ElSkeletonItem v-for="i in 4" :key="`kpi-${i}`" variant="p" class="cockpit-s-line w24" />
+        </div>
+      </template>
+      <CockpitGlobalKpiCards :kpi-list="overview?.kpi ?? []" />
+    </ElSkeleton>
 
     <!-- 4. 警示与提示（与 KPI 同接口，data.alertSummaryMetrics / data.alertBanners） -->
-    <CockpitAlertMessages
-      :alert-summary-metrics="overview?.alertSummaryMetrics"
-      :alert-banners="overview?.alertBanners ?? []"
-    />
+    <ElSkeleton :loading="moduleLoading.kpiAlert" animated>
+      <template #template>
+        <div class="cockpit-skeleton-block">
+          <ElSkeletonItem
+            v-for="i in 3"
+            :key="`alert-${i}`"
+            variant="p"
+            class="cockpit-s-line w96"
+          />
+        </div>
+      </template>
+      <CockpitAlertMessages
+        :alert-summary-metrics="overview?.alertSummaryMetrics"
+        :alert-banners="overview?.alertBanners ?? []"
+      />
+    </ElSkeleton>
 
     <!-- 第二排：三列（左25% | 中50% 业务分布地图 | 右25%） -->
     <ElRow :gutter="16" class="cockpit-body cockpit-row-2">
       <ElCol :xs="24" :md="6">
-        <CockpitSpendPaceMonitor :list="overview?.spendPace ?? []" />
+        <ElSkeleton :loading="moduleLoading.spendPace" animated>
+          <template #template>
+            <div class="cockpit-skeleton-panel">
+              <ElSkeletonItem
+                v-for="i in 8"
+                :key="`spend-${i}`"
+                variant="p"
+                class="cockpit-s-line w92"
+              />
+            </div>
+          </template>
+          <CockpitSpendPaceMonitor :list="overview?.spendPace ?? []" />
+        </ElSkeleton>
       </ElCol>
       <ElCol :xs="24" :md="12">
-        <CockpitBusinessMap
-          :map-countries="overview?.mapCountries ?? []"
-          :map-legend="overview?.mapLegend ?? []"
-        />
+        <ElSkeleton :loading="moduleLoading.map" animated>
+          <template #template>
+            <div class="cockpit-skeleton-panel">
+              <ElSkeletonItem
+                v-for="i in 10"
+                :key="`map-${i}`"
+                variant="p"
+                class="cockpit-s-line w95"
+              />
+            </div>
+          </template>
+          <CockpitBusinessMap
+            :map-countries="overview?.mapCountries ?? []"
+            :map-legend="overview?.mapLegend ?? []"
+          />
+        </ElSkeleton>
       </ElCol>
       <ElCol :xs="24" :md="6">
         <div class="cockpit-col3-row1">
-          <CockpitTop3Panels
-            :top-revenue="overview?.topRevenue ?? []"
-            :top-bad-review="overview?.topBadReview ?? []"
-            :top-user="overview?.topUser ?? []"
-          />
+          <ElSkeleton :loading="moduleLoading.top3" animated>
+            <template #template>
+              <div class="cockpit-skeleton-panel">
+                <ElSkeletonItem
+                  v-for="i in 8"
+                  :key="`top3-${i}`"
+                  variant="p"
+                  class="cockpit-s-line w92"
+                />
+              </div>
+            </template>
+            <CockpitTop3Panels
+              :top-revenue="overview?.topRevenue ?? []"
+              :top-bad-review="overview?.topBadReview ?? []"
+              :top-user="overview?.topUser ?? []"
+            />
+          </ElSkeleton>
         </div>
       </ElCol>
     </ElRow>
@@ -40,13 +95,49 @@
     <!-- 第三排：三列（左25% | 中50% 近7日收入结构流向 | 右25%） -->
     <ElRow :gutter="16" class="cockpit-body cockpit-row-3">
       <ElCol :xs="24" :md="6">
-        <CockpitRevenueCostTrend :list="overview?.channelRoiInstall" />
+        <ElSkeleton :loading="moduleLoading.channelRoi" animated>
+          <template #template>
+            <div class="cockpit-skeleton-panel">
+              <ElSkeletonItem
+                v-for="i in 8"
+                :key="`roi-${i}`"
+                variant="p"
+                class="cockpit-s-line w92"
+              />
+            </div>
+          </template>
+          <CockpitRevenueCostTrend :list="overview?.channelRoiInstall" />
+        </ElSkeleton>
       </ElCol>
       <ElCol :xs="24" :md="12">
-        <CockpitRevenueStructureFlow :flow-data="overview?.revenueStructureFlow" />
+        <ElSkeleton :loading="moduleLoading.revenueFlow" animated>
+          <template #template>
+            <div class="cockpit-skeleton-panel">
+              <ElSkeletonItem
+                v-for="i in 10"
+                :key="`flow-${i}`"
+                variant="p"
+                class="cockpit-s-line w95"
+              />
+            </div>
+          </template>
+          <CockpitRevenueStructureFlow :flow-data="overview?.revenueStructureFlow" />
+        </ElSkeleton>
       </ElCol>
       <ElCol :xs="24" :md="6">
-        <CockpitSmartAlerts :alerts="overview?.smartAlerts ?? []" />
+        <ElSkeleton :loading="moduleLoading.smartAlerts" animated>
+          <template #template>
+            <div class="cockpit-skeleton-panel">
+              <ElSkeletonItem
+                v-for="i in 8"
+                :key="`smart-${i}`"
+                variant="p"
+                class="cockpit-s-line w92"
+              />
+            </div>
+          </template>
+          <CockpitSmartAlerts :alerts="overview?.smartAlerts ?? []" />
+        </ElSkeleton>
       </ElCol>
     </ElRow>
   </div>
@@ -69,7 +160,7 @@
   // dev测试提交
   defineOptions({ name: 'Cockpit' })
 
-  const { overview, loading, dateRange, date, load } = useCockpitData()
+  const { overview, moduleLoading, dateRange, date, load } = useCockpitData()
   const suppressNextDateWatch = ref(false)
 
   function onDateRangeChange(value: CockpitDateRange) {
@@ -97,6 +188,49 @@
 <style scoped lang="scss">
   .cockpit-page {
     padding-bottom: 20px;
+  }
+
+  .cockpit-skeleton-card-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .cockpit-skeleton-block,
+  .cockpit-skeleton-panel {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    margin-bottom: 16px;
+    background: #131d2f;
+    border: 1px solid rgb(148 163 184 / 25%);
+    border-radius: 10px;
+  }
+
+  .cockpit-skeleton-panel {
+    min-height: 220px;
+  }
+
+  .cockpit-s-line {
+    height: 12px;
+    border-radius: 6px;
+  }
+
+  .w24 {
+    width: 100%;
+  }
+
+  .w92 {
+    width: 92%;
+  }
+
+  .w95 {
+    width: 95%;
+  }
+
+  .w96 {
+    width: 96%;
   }
 
   .cockpit-header {

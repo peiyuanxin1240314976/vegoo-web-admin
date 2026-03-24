@@ -1,0 +1,24 @@
+{
+  "total": 988,
+  "page": 1,
+  "pageSize": 10,
+  "list": [
+    {
+      "id": "1",
+      "userId": "u1",
+      "userName": "匿名用户",
+      "starRating": 1,
+      "content": "应用经常崩溃，希望尽快修复",
+      "date": "2026-03-05",
+      "platform": "google_play",
+      "appName": "ClapFinder",
+      "appVersion": "2.0.8",
+      "countryCode": "CN",
+      "language": "zh",
+      "sentiment": "negative",
+      "replied": true,
+      "autoReplied": false,
+      "replyContent": "感谢您的反馈，我们正在修复中。"
+    }
+  ]
+}

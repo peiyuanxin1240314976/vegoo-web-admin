@@ -1,0 +1,126 @@
+{
+  "_comment": "收入总览 — IAP 商品构成（表 + 顶栏订阅/一次性摘要 + 底部 mini KPI）。对应 mock.ts 中 IAP_PRODUCT_HEADER/FOOT 与 MOCK_REVENUE_OVERVIEW_IAP_ROWS。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家码。" },
+      "app_version": { "type": "string", "required": true, "description": "版本。" },
+      "t_date": { "type": "string", "required": true, "description": "统计日。" }
+    },
+    "response": {
+      "header": {
+        "type": "object",
+        "required": true,
+        "description": "订阅/一次性收入与占比（预格式化文案）。"
+      },
+      "foot": {
+        "type": "object",
+        "required": true,
+        "description": "付费转化率、ARPPU、订阅续费率（预格式化）。"
+      },
+      "rows": {
+        "type": "RevenueOverviewIapBreakdownRow[]",
+        "required": true,
+        "description": "商品行。"
+      }
+    },
+    "RevenueOverviewIapBreakdownRow": {
+      "s_product": { "type": "string", "required": true, "description": "商品名。" },
+      "s_type": {
+        "type": "string",
+        "required": true,
+        "enum": ["订阅", "一次性"],
+        "description": "商品类型。"
+      },
+      "revenue": { "type": "number", "required": true, "description": "收入 USD。" },
+      "percent": { "type": "number", "required": true, "description": "占比 %。" },
+      "n_buy_times": { "type": "number", "required": true, "description": "购买次数。" },
+      "n_users": { "type": "number", "required": true, "description": "用户数。" },
+      "d_arppu": { "type": "number", "required": true, "description": "ARPPU USD。" },
+      "d_purchase_rate": { "type": "number", "required": true, "description": "购买率 %。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "t_date": "2026-03-23"
+  },
+  "sampleResponse": {
+    "header": {
+      "subscriptionValueText": "$74.80",
+      "subscriptionPctText": "59.1%",
+      "oneTimeValueText": "$51.72",
+      "oneTimePctText": "40.9%"
+    },
+    "foot": {
+      "conversionRateText": "2.4%",
+      "arppuText": "$10.42",
+      "renewalRateText": "76.8%"
+    },
+    "rows": [
+      {
+        "s_product": "月度订阅",
+        "s_type": "订阅",
+        "revenue": 30.2,
+        "percent": 23.9,
+        "n_buy_times": 1920,
+        "n_users": 702,
+        "d_arppu": 9.99,
+        "d_purchase_rate": 77.2
+      },
+      {
+        "s_product": "年度订阅",
+        "s_type": "订阅",
+        "revenue": 44.6,
+        "percent": 35.2,
+        "n_buy_times": 298,
+        "n_users": 54,
+        "d_arppu": 89.99,
+        "d_purchase_rate": 69.8
+      },
+      {
+        "s_product": "一次性高级",
+        "s_type": "一次性",
+        "revenue": 24.5,
+        "percent": 19.4,
+        "n_buy_times": 2520,
+        "n_users": 402,
+        "d_arppu": 4.99,
+        "d_purchase_rate": 72.5
+      },
+      {
+        "s_product": "VIP会员",
+        "s_type": "一次性",
+        "revenue": 18.0,
+        "percent": 14.2,
+        "n_buy_times": 468,
+        "n_users": 172,
+        "d_arppu": 19.99,
+        "d_purchase_rate": 25.6
+      },
+      {
+        "s_product": "道具包",
+        "s_type": "一次性",
+        "revenue": 9.22,
+        "percent": 7.3,
+        "n_buy_times": 1288,
+        "n_users": 204,
+        "d_arppu": 2.99,
+        "d_purchase_rate": 10.0
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/revenue-overview/overview/iap/product",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "筛选五元组",
+    "responseBody": "{ header, foot, rows }"
+  },
+  "apiSuggestion": {
+    "notes": ["header/foot 为展示用格式化字符串，与 KPI 卡片规则一致时可原样展示。"]
+  }
+}

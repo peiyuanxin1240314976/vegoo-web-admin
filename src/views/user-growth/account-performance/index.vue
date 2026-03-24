@@ -4,17 +4,28 @@
     <div class="ap-header">
       <div class="ap-filters">
         <ElSelect v-model="source" placeholder="广告平台" class="ap-filter-select">
-          <ElOption label="全部" value="" />
-          <ElOption label="TikTok" value="tiktok" />
-          <ElOption label="Facebook" value="facebook" />
-          <ElOption label="Google" value="google" />
+          <ElOption
+            v-for="opt in metaAdPlatformOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </ElSelect>
         <ElSelect v-model="platform" placeholder="应用" class="ap-filter-select">
-          <ElOption label="全部" value="" />
-          <ElOption v-for="app in appOptions" :key="app" :label="app" :value="app" />
+          <ElOption
+            v-for="opt in metaAppOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </ElSelect>
-        <ElSelect v-model="filterOwner" placeholder="负责人" class="ap-filter-select">
-          <ElOption label="全部" value="" />
+        <ElSelect v-model="filterOwner" placeholder="广告账户" class="ap-filter-select">
+          <ElOption
+            v-for="opt in metaAccountOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </ElSelect>
         <ElDatePicker
           v-model="dateRange"
@@ -242,6 +253,8 @@
   import { useChart } from '@/hooks/core/useChart'
   import { useSettingStore } from '@/store/modules/setting'
   import request from '@/utils/http'
+  import { AD_PERFORMANCE_BASE } from '@/views/user-growth/ad-performance/config/api-base'
+  import type { AdPerformanceMetaFilterResponse } from '@/views/user-growth/ad-performance/types'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
   import AccountDetailTable from './modules/account-detail-table.vue'
   import AppPerformancePlaceholder from './modules/app-performance-placeholder.vue'
@@ -265,7 +278,11 @@
   const mock = ref(MOCK_ACCOUNT_PERFORMANCE)
   const source = ref('')
   const platform = ref('')
+  /** 顶部第三项：对接 meta accountOptions，请求体仍走 ownerId 字段名 */
   const filterOwner = ref('')
+  const metaAdPlatformOptions = ref<AdPerformanceMetaFilterResponse['adPlatformOptions']>([])
+  const metaAppOptions = ref<AdPerformanceMetaFilterResponse['appOptions']>([])
+  const metaAccountOptions = ref<NonNullable<AdPerformanceMetaFilterResponse['accountOptions']>>([])
   const dateRange = ref<[string, string]>([...MOCK_ACCOUNT_PERFORMANCE.dateRange])
   const tableSearch = ref('')
   const expandAll = ref(false)
@@ -315,10 +332,23 @@
     return `共 ${appCount} 个应用 / ${accountCount} 个广告账户`
   })
 
-  const appOptions = computed(() => {
-    const rows = appTableTree.value
-    return rows.map((r) => r.name)
-  })
+  async function loadMetaFilterOptions() {
+    try {
+      const data = await request.post<AdPerformanceMetaFilterResponse>({
+        url: `${AD_PERFORMANCE_BASE}/meta-filter-options`,
+        data: {}
+      })
+      metaAdPlatformOptions.value = Array.isArray(data.adPlatformOptions)
+        ? data.adPlatformOptions
+        : []
+      metaAppOptions.value = Array.isArray(data.appOptions) ? data.appOptions : []
+      metaAccountOptions.value = Array.isArray(data.accountOptions) ? data.accountOptions : []
+    } catch {
+      metaAdPlatformOptions.value = []
+      metaAppOptions.value = []
+      metaAccountOptions.value = []
+    }
+  }
 
   const filteredAppRoots = computed(() => {
     let list = appTableTree.value
@@ -1089,6 +1119,7 @@
   }
 
   onMounted(() => {
+    void loadMetaFilterOptions()
     renderAllCharts()
     void loadKpiCards()
     void loadChannelSpend()

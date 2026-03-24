@@ -1,0 +1,72 @@
+{
+  "_comment": "收入总览 — 筛选下拉选项。页面当前在 index.vue 内写死选项，接入后改为远程。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "appOptions": {
+        "type": "SelectOption[]",
+        "required": true,
+        "description": "应用下拉，value 为 s_app_id。"
+      },
+      "platformOptions": {
+        "type": "SelectOption[]",
+        "required": true,
+        "description": "终端平台：all / android / ios。"
+      },
+      "countryOptions": {
+        "type": "SelectOption[]",
+        "required": true,
+        "description": "国家；首项 all，其余 value 为 ISO 3166-1 alpha-2。"
+      },
+      "versionOptions": {
+        "type": "SelectOption[]",
+        "required": true,
+        "description": "应用版本；首项 all。"
+      }
+    },
+    "SelectOption": {
+      "label": { "type": "string", "required": true, "description": "展示文案。" },
+      "value": { "type": "string", "required": true, "description": "选项值。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "appOptions": [
+      { "label": "Weather5", "value": "weather5" },
+      { "label": "App A", "value": "app_a" },
+      { "label": "App B", "value": "app_b" }
+    ],
+    "platformOptions": [
+      { "label": "Android & iOS", "value": "all" },
+      { "label": "Android", "value": "android" },
+      { "label": "iOS", "value": "ios" }
+    ],
+    "countryOptions": [
+      { "label": "全部", "value": "all" },
+      { "label": "美国", "value": "US" },
+      { "label": "英国", "value": "GB" },
+      { "label": "德国", "value": "DE" },
+      { "label": "台湾", "value": "TW" },
+      { "label": "日本", "value": "JP" }
+    ],
+    "versionOptions": [
+      { "label": "全部", "value": "all" },
+      { "label": "1.2.0", "value": "1.2.0" },
+      { "label": "1.1.8", "value": "1.1.8" },
+      { "label": "1.1.2", "value": "1.1.2" }
+    ]
+  },
+  "api": {
+    "url": "GET /api/business-insight/revenue-overview/meta-filter-options",
+    "method": "GET",
+    "priority": "P0",
+    "requestBody": "无",
+    "responseBody": "appOptions, platformOptions, countryOptions, versionOptions"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "若网关统一包裹为 { data: ... }，前端以 http 层解析为准。",
+      "countryOptions 的 value 与筛选入参 s_country_code 一致。"
+    ]
+  }
+}

@@ -98,9 +98,9 @@ export interface ProfitCountryRow {
   profitColor: string
   rate: string
   rateColor: string
-  /** 后端可返回国旗图 URL；非 URL 时按纯文本展示 */
+  /** 後端若仍下發則忽略展示，國旗改由 s_country_code 或中文 name 前端解析 */
   flag?: string
-  /** 若后端补充 ISO 3166-1 alpha-2，可用 flag-icons */
+  /** ISO 3166-1 alpha-2，有則優先用於 flag-icons */
   s_country_code?: string
 }
 

@@ -1,0 +1,24 @@
+{
+  "_comment": "评论与评分监控 - 回复评论操作。",
+  "fieldDescription": {
+    "request": {
+      "reviewId": { "type": "string", "required": true, "description": "评论 ID。" },
+      "content": { "type": "string", "required": true, "description": "回复内容。" }
+    },
+    "response": {
+      "description": "成功时返回空或 { success: true }；失败返回错误信息。"
+    }
+  },
+  "sampleRequest": {
+    "reviewId": "1",
+    "content": "感谢您的反馈，我们正在修复中，预计下个版本更新时解决。"
+  },
+  "sampleResponse": {},
+  "api": {
+    "url": "POST /api/product-operations/reviews-ratings-monitor/reply",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "reviewId (必填), content (必填)",
+    "responseBody": "void 或 { success: boolean }"
+  }
+}

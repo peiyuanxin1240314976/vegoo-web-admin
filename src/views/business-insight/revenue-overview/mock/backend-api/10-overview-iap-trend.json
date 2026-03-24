@@ -1,0 +1,100 @@
+{
+  "_comment": "收入总览 — IAP 趋势 Tab：7 日收入/订单序列 + 底部 KPI 卡片。对应 mock.ts: MOCK_REVENUE_OVERVIEW_IAP_TREND_SERIES、MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS、MOCK_REVENUE_OVERVIEW_7D_DATES。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家码。" },
+      "app_version": { "type": "string", "required": true, "description": "版本。" },
+      "t_date": { "type": "string", "required": true, "description": "统计日（窗口结束日）。" }
+    },
+    "response": {
+      "dateLabels": {
+        "type": "string[]",
+        "required": true,
+        "description": "横轴标签，与序列等长。"
+      },
+      "series": {
+        "type": "object",
+        "required": true,
+        "description": "revenue：每日 IAP 收入；orders：每日订单数。"
+      },
+      "kpis": {
+        "type": "RevenueOverviewIapTrendKpiCard[]",
+        "required": true,
+        "description": "趋势区底部 KPI。"
+      }
+    },
+    "RevenueOverviewIapTrendKpiCard": {
+      "title": { "type": "string", "required": true, "description": "标题。" },
+      "valueText": { "type": "string", "required": true, "description": "主值。" },
+      "subText": { "type": "string", "required": false, "description": "副文案。" },
+      "trendText": { "type": "string", "required": false, "description": "环比小字。" },
+      "trendUp": { "type": "boolean", "required": false, "description": "趋势方向。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "t_date": "2026-03-23"
+  },
+  "sampleResponse": {
+    "dateLabels": ["Feb27", "Feb28", "Mar1", "Mar2", "Mar3", "Mar4", "Mar5"],
+    "series": {
+      "revenue": [58, 64, 52, 70, 78, 84, 82],
+      "orders": [4100, 4380, 3920, 4680, 4920, 5108, 4988]
+    },
+    "kpis": [
+      {
+        "title": "订阅收入",
+        "valueText": "$74.80",
+        "subText": "占比 59.1%",
+        "trendText": "+4.8%↑",
+        "trendUp": true
+      },
+      {
+        "title": "一次性购买",
+        "valueText": "$51.72",
+        "subText": "占比 40.9%",
+        "trendText": "-1.8%↓",
+        "trendUp": false
+      },
+      {
+        "title": "ARPPU",
+        "valueText": "$12.10",
+        "trendText": "+2.1%↑",
+        "trendUp": true
+      },
+      {
+        "title": "日均订单",
+        "valueText": "916单",
+        "trendText": "+2.9%↑",
+        "trendUp": true
+      },
+      {
+        "title": "付费转化率",
+        "valueText": "2.4%",
+        "trendText": "-0.2%↓",
+        "trendUp": false
+      },
+      {
+        "title": "订阅续费率",
+        "valueText": "76.8%",
+        "trendText": "+0.9%↑",
+        "trendUp": true
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/revenue-overview/overview/iap/trend",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "筛选五元组",
+    "responseBody": "{ dateLabels, series, kpis }"
+  },
+  "apiSuggestion": {
+    "notes": ["dateLabels 可与 11、12 契约共用同一套 7 日轴，避免三套不一致。"]
+  }
+}

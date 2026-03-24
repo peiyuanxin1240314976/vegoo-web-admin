@@ -1,0 +1,150 @@
+{
+  "_comment": "文本管理 - 商店列表文案草稿。对应 types.ts: AppContent、Translation；步骤完成状态用于恢复顶部步骤条。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "description": "应用 ID（自有）。空表示当前上下文默认应用。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "StoreListingDraft",
+        "required": true,
+        "description": "草稿主体。"
+      }
+    },
+    "StoreListingDraft": {
+      "appContent": {
+        "type": "AppContent",
+        "required": true,
+        "description": "主语言应用名、短描述、完整描述。"
+      },
+      "translations": {
+        "type": "Translation[]",
+        "required": true,
+        "description": "各语种译文与状态。"
+      },
+      "step1Done": {
+        "type": "boolean",
+        "required": true,
+        "description": "步骤一（文本审核）是否已完成。"
+      },
+      "step2Done": {
+        "type": "boolean",
+        "required": true,
+        "description": "步骤二（自动填充）是否已完成。"
+      },
+      "updatedAt": {
+        "type": "string",
+        "required": false,
+        "description": "服务端最后保存时间，ISO 8601。"
+      }
+    },
+    "AppContent": {
+      "appName": { "type": "string", "required": true, "description": "应用名称。" },
+      "shortDesc": { "type": "string", "required": true, "description": "简短描述。" },
+      "fullDesc": { "type": "string", "required": true, "description": "完整描述，可含换行。" }
+    },
+    "Translation": {
+      "id": { "type": "string", "required": true, "description": "译文行唯一 id。" },
+      "lang": { "type": "string", "required": true, "description": "语言展示名。" },
+      "langCode": {
+        "type": "string",
+        "required": true,
+        "description": "BCP 47 语言码，如 zh-CN、pt-BR。"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["completed", "over_limit", "translating", "pending"],
+        "description": "译化/校验状态。"
+      },
+      "appName": { "type": "string", "required": true, "description": "该语种应用名。" },
+      "shortDesc": { "type": "string", "required": true, "description": "该语种短描述。" },
+      "fullDesc": { "type": "string", "required": true, "description": "该语种完整描述。" },
+      "appNameCount": {
+        "type": "number",
+        "required": true,
+        "description": "应用名字符数（可与客户端一致）。"
+      },
+      "shortDescCount": { "type": "number", "required": true, "description": "短描述字符数。" },
+      "fullDescCount": { "type": "number", "required": true, "description": "完整描述字符数。" },
+      "appNameLimit": {
+        "type": "number",
+        "required": true,
+        "description": "应用名上限（如 30）。"
+      },
+      "shortDescLimit": { "type": "number", "required": true, "description": "短描述上限。" },
+      "fullDescLimit": { "type": "number", "required": true, "description": "完整描述上限。" },
+      "selected": { "type": "boolean", "required": true, "description": "列表多选状态。" },
+      "aiSuggestion": {
+        "type": "string",
+        "required": false,
+        "description": "可选的 AI 优化建议文案。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "data": {
+      "appContent": {
+        "appName": "People Search, People Finder",
+        "shortDesc": "AI People Search, People Finder, Find People by Name with Smart Search App",
+        "fullDesc": "information across multiple open sources. Simply enter a name, and the system will discover relevant public data."
+      },
+      "translations": [
+        {
+          "id": "1",
+          "lang": "简体中文",
+          "langCode": "zh-CN",
+          "status": "completed",
+          "appName": "人物搜索，人物查找器",
+          "shortDesc": "AI人物搜索，按姓名查找人物，智能搜索应用",
+          "fullDesc": "跨多个公开来源的信息。只需输入姓名，系统即会整理并呈现相关公开数据。",
+          "appNameCount": 8,
+          "shortDescCount": 22,
+          "fullDescCount": 32,
+          "appNameLimit": 30,
+          "shortDescLimit": 80,
+          "fullDescLimit": 4000,
+          "selected": false,
+          "aiSuggestion": "可将「智能搜索」替换为「智能查找」以更符合习惯表达"
+        },
+        {
+          "id": "8",
+          "lang": "葡萄牙语",
+          "langCode": "pt-BR",
+          "status": "translating",
+          "appName": "",
+          "shortDesc": "",
+          "fullDesc": "",
+          "appNameCount": 0,
+          "shortDescCount": 0,
+          "fullDescCount": 0,
+          "appNameLimit": 30,
+          "shortDescLimit": 80,
+          "fullDescLimit": 4000,
+          "selected": false
+        }
+      ],
+      "step1Done": false,
+      "step2Done": false,
+      "updatedAt": "2026-03-22T08:00:00.000Z"
+    }
+  },
+  "api": {
+    "url": "GET /api/product-operations/text-management/store-listing/draft",
+    "method": "GET",
+    "priority": "P0",
+    "requestBody": "s_app_id?",
+    "responseBody": "StoreListingDraft"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "保存草稿可使用同一资源 POST，body 与 GET 的 data 结构一致。",
+      "网关若统一包裹 code/msg，则业务字段在 data 内。"
+    ]
+  }
+}

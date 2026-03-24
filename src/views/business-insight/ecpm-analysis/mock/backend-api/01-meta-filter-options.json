@@ -1,0 +1,62 @@
+{
+  "_comment": "ECPM 分析 — 筛选下拉选项。对应 mock.ts 中筛选选项（若仅静态可后续接远程）。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "apps": {
+        "type": "{ value: string, label: string }[]",
+        "required": true,
+        "description": "应用列表；value 为 s_app_id 或业务约定键。"
+      },
+      "platforms_terminal": {
+        "type": "{ value: string, label: string }[]",
+        "required": true,
+        "description": "终端平台：android / ios / 全部。"
+      },
+      "sources": {
+        "type": "{ value: string, label: string }[]",
+        "required": true,
+        "description": "广告平台（source），空表示全部。"
+      },
+      "countries": {
+        "type": "{ value: string, label: string, s_country_code: string }[]",
+        "required": true,
+        "description": "国家；s_country_code 为 ISO 3166-1 alpha-2。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "apps": [
+      { "value": "", "label": "全部应用" },
+      { "value": "weather", "label": "WeatherRadar" },
+      { "value": "phone", "label": "PhoneTracker2" }
+    ],
+    "platforms_terminal": [
+      { "value": "", "label": "全部终端" },
+      { "value": "android", "label": "Android" },
+      { "value": "ios", "label": "iOS" }
+    ],
+    "sources": [
+      { "value": "", "label": "全部广告平台" },
+      { "value": "admob", "label": "Admob" },
+      { "value": "facebook", "label": "Facebook" },
+      { "value": "applovin", "label": "Applovin" }
+    ],
+    "countries": [
+      { "value": "", "label": "全部国家", "s_country_code": "" },
+      { "value": "us", "label": "美国", "s_country_code": "US" },
+      { "value": "kr", "label": "韩国", "s_country_code": "KR" }
+    ]
+  },
+  "api": {
+    "url": "GET /api/business-insight/ecpm-analysis/meta-filter-options",
+    "method": "GET",
+    "priority": "P0",
+    "requestBody": "无",
+    "responseBody": "MetaFilterOptions"
+  },
+  "apiSuggestion": {
+    "notes": ["与页面筛选器 value 对齐；若与全局字典合并可复用公共 meta 接口。"]
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "_comment": "收入总览 — IAA 构成版本维度。对应 mock.ts: MOCK_REVENUE_OVERVIEW_IAA_VERSION_ROWS。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家码。" },
+      "app_version": { "type": "string", "required": true, "description": "版本筛选。" },
+      "t_date": { "type": "string", "required": true, "description": "统计日。" }
+    },
+    "response": {
+      "rows": {
+        "type": "RevenueOverviewIaaVersionRow[]",
+        "required": true,
+        "description": "版本分布行。"
+      }
+    },
+    "RevenueOverviewIaaVersionRow": {
+      "s_app_version": { "type": "string", "required": true, "description": "应用版本号。" },
+      "revenue": { "type": "number", "required": true, "description": "收入 USD。" },
+      "percent": { "type": "number", "required": true, "description": "占比 %。" },
+      "n_impression": { "type": "number", "required": true, "description": "展示次数。" },
+      "d_ecpm": { "type": "number", "required": true, "description": "eCPM。" },
+      "n_dau": { "type": "number", "required": true, "description": "日活。" },
+      "d_crash_rate": { "type": "number", "required": true, "description": "崩溃率 %。" },
+      "is_current": { "type": "boolean", "required": true, "description": "是否当前主推版本。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "t_date": "2026-03-23"
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "s_app_version": "v4.3.2",
+        "revenue": 1878,
+        "percent": 63.8,
+        "n_impression": 562400,
+        "d_ecpm": 3.34,
+        "n_dau": 79200,
+        "d_crash_rate": 0.11,
+        "is_current": true
+      },
+      {
+        "s_app_version": "v4.3.1",
+        "revenue": 668,
+        "percent": 22.7,
+        "n_impression": 199800,
+        "d_ecpm": 3.34,
+        "n_dau": 28180,
+        "d_crash_rate": 0.17,
+        "is_current": false
+      },
+      {
+        "s_app_version": "v4.3.0",
+        "revenue": 196,
+        "percent": 6.7,
+        "n_impression": 57100,
+        "d_ecpm": 3.29,
+        "n_dau": 8080,
+        "d_crash_rate": 0.29,
+        "is_current": false
+      },
+      {
+        "s_app_version": "v4.2.9",
+        "revenue": 68,
+        "percent": 2.3,
+        "n_impression": 19800,
+        "d_ecpm": 3.29,
+        "n_dau": 2800,
+        "d_crash_rate": 0.44,
+        "is_current": false
+      },
+      {
+        "s_app_version": "v4.2.8",
+        "revenue": 22,
+        "percent": 0.8,
+        "n_impression": 6400,
+        "d_ecpm": 3.29,
+        "n_dau": 850,
+        "d_crash_rate": 0.62,
+        "is_current": false
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/revenue-overview/overview/iaa/version",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "筛选五元组",
+    "responseBody": "{ rows }"
+  },
+  "apiSuggestion": {
+    "notes": ["is_current 仅一行应为 true，或由产品规则允许多渠道灰度。"]
+  }
+}

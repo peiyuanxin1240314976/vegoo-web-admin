@@ -1,0 +1,102 @@
+{
+  "_comment": "收入总览 — 广告平台占比环形/饼图。对应 mock.ts: MOCK_REVENUE_OVERVIEW_PLATFORM_PIE。value 为占比 0-100。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家码。" },
+      "app_version": { "type": "string", "required": true, "description": "版本。" },
+      "t_date": { "type": "string", "required": true, "description": "统计日。" }
+    },
+    "response": {
+      "slices": {
+        "type": "RevenueOverviewPieSlice[]",
+        "required": true,
+        "description": "饼图扇区。"
+      }
+    },
+    "RevenueOverviewPieSlice": {
+      "name": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "value": {
+        "type": "number",
+        "required": true,
+        "description": "占比数值（与图例一致，0-100）。"
+      },
+      "percentText": { "type": "string", "required": true, "description": "占比展示文案。" },
+      "color": { "type": "string", "required": true, "description": "色值。" },
+      "moneyText": { "type": "string", "required": true, "description": "金额展示文案 USD。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "t_date": "2026-03-23"
+  },
+  "sampleResponse": {
+    "slices": [
+      {
+        "name": "AdMob",
+        "value": 71.0,
+        "percentText": "71.0%",
+        "color": "#22c55e",
+        "moneyText": "$2,088"
+      },
+      {
+        "name": "AppLovin",
+        "value": 9.7,
+        "percentText": "9.7%",
+        "color": "#38bdf8",
+        "moneyText": "$285"
+      },
+      {
+        "name": "Facebook",
+        "value": 6.0,
+        "percentText": "6.0%",
+        "color": "#a78bfa",
+        "moneyText": "$176"
+      },
+      {
+        "name": "Vungle",
+        "value": 3.7,
+        "percentText": "3.7%",
+        "color": "#f59e0b",
+        "moneyText": "$108"
+      },
+      {
+        "name": "Pangle",
+        "value": 3.1,
+        "percentText": "3.1%",
+        "color": "#fb7185",
+        "moneyText": "$91"
+      },
+      {
+        "name": "Aumob",
+        "value": 3.7,
+        "percentText": "3.7%",
+        "color": "#60a5fa",
+        "moneyText": "$108"
+      },
+      {
+        "name": "Other",
+        "value": 2.8,
+        "percentText": "2.8%",
+        "color": "#94a3b8",
+        "moneyText": "$86"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/revenue-overview/overview/platform-pie",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "筛选五元组",
+    "responseBody": "{ slices }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "ECharts data 使用 value 为占比；中心总金额可由前端对 moneyText 解析或后端另传 totalUsd。"
+    ]
+  }
+}

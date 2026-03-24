@@ -11,6 +11,14 @@ export function fetchMyAdsStaffOptions() {
   })
 }
 
+/** 我的广告 - 筛选下拉选项 POST /api/v1/datacenter/analysis/my-ads/meta-filter-options（无请求体） */
+export function fetchMyAdsMetaFilterOptions() {
+  return request.post<Api.UserGrowth.MyAdsMetaFilterOptionsDto>({
+    url: '/api/v1/datacenter/analysis/my-ads/meta-filter-options',
+    data: {}
+  })
+}
+
 /** 我的广告 - 頁頭用戶信息與指標 POST /api/v1/datacenter/analysis/my-ads/overview/page-header */
 export function fetchMyAdsPageHeader(params: Api.UserGrowth.MyAdsPageHeaderRequestParams) {
   return request.post<Api.UserGrowth.MyAdsPageHeaderResponseDto>({

@@ -1,0 +1,78 @@
+{
+  "_comment": "预估收入偏差 — 国家偏差 Top10（两套指标供 Tab 切换）。对应 types.ts: RevenueDeviationCountryTop10。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
+      "source": { "type": "string", "required": false, "description": "广告平台，空为全部。" },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" }
+    },
+    "response": {
+      "tab_amount": {
+        "type": "RevenueDeviationCountryItem[]",
+        "required": true,
+        "description": "偏差金额 Tab：横条长度用 n_value；国家顺序建议按 n_value 升序或降序与 UI 一致。"
+      },
+      "tab_rate": {
+        "type": "RevenueDeviationCountryItem[]",
+        "required": true,
+        "description": "偏差率 Tab：n_value 为偏差率相关标度（与图表轴一致）。"
+      }
+    },
+    "RevenueDeviationCountryItem": {
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "ISO 3166-1 alpha-2，小写；前端映射 flag-icons。"
+      },
+      "label_display": { "type": "string", "required": true, "description": "国家中文展示名。" },
+      "n_value": {
+        "type": "number",
+        "required": true,
+        "description": "条形图数值（金额或比率标度）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2024-05-01",
+    "t_end_date": "2024-05-31",
+    "source": "",
+    "s_app_id": ""
+  },
+  "sampleResponse": {
+    "tab_amount": [
+      { "s_country_code": "nl", "label_display": "荷兰", "n_value": 10 },
+      { "s_country_code": "fr", "label_display": "法国", "n_value": 18 },
+      { "s_country_code": "br", "label_display": "巴西", "n_value": 28 },
+      { "s_country_code": "ca", "label_display": "加拿大", "n_value": 38 },
+      { "s_country_code": "au", "label_display": "澳大利亚", "n_value": 50 },
+      { "s_country_code": "jp", "label_display": "日本", "n_value": 62 },
+      { "s_country_code": "kr", "label_display": "韩国", "n_value": 78 },
+      { "s_country_code": "gb", "label_display": "英国", "n_value": 90 },
+      { "s_country_code": "de", "label_display": "德国", "n_value": 108 },
+      { "s_country_code": "us", "label_display": "美国", "n_value": 180 }
+    ],
+    "tab_rate": [
+      { "s_country_code": "nl", "label_display": "荷兰", "n_value": 2.1 },
+      { "s_country_code": "fr", "label_display": "法国", "n_value": 3.4 },
+      { "s_country_code": "br", "label_display": "巴西", "n_value": 4.2 },
+      { "s_country_code": "ca", "label_display": "加拿大", "n_value": 5.1 },
+      { "s_country_code": "au", "label_display": "澳大利亚", "n_value": 5.8 },
+      { "s_country_code": "jp", "label_display": "日本", "n_value": 6.2 },
+      { "s_country_code": "kr", "label_display": "韩国", "n_value": 7.0 },
+      { "s_country_code": "gb", "label_display": "英国", "n_value": 7.8 },
+      { "s_country_code": "de", "label_display": "德国", "n_value": 8.4 },
+      { "s_country_code": "us", "label_display": "美国", "n_value": 12.4 }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/country-top10",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_start_date, t_end_date, source?, s_app_id?",
+    "responseBody": "RevenueDeviationCountryTop10"
+  },
+  "apiSuggestion": {
+    "notes": ["不在接口返回国旗 emoji；展示名与 ISO 码分离，便于 i18n。"]
+  }
+}

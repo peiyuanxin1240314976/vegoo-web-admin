@@ -2,7 +2,8 @@
   import 'flag-icons/css/flag-icons.min.css'
   import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import * as echarts from 'echarts'
-  import type { ProfitMapDataItem } from './types'
+  import type { ProfitCountryRow, ProfitMapDataItem } from './types'
+  import { resolveProfitCountryIso } from './country-flag-iso'
   import { useProfitAnalysisDashboard } from './composables/useProfitAnalysisDashboard'
 
   defineOptions({ name: 'BusinessInsight' })
@@ -50,9 +51,9 @@
     return `fi fi-${iso}`
   }
 
-  function isFlagImgUrl(flag: string | undefined) {
-    if (!flag?.trim()) return false
-    return /^https?:\/\//i.test(flag.trim())
+  /** 優先 s_country_code，缺省時依中文國名解析 ISO，供 flag-icons */
+  function countryRowFiClass(row: ProfitCountryRow) {
+    return fiCountryClass(resolveProfitCountryIso(row))
   }
 
   async function ensureWorldGeo() {
@@ -570,24 +571,14 @@
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="row in countryRows"
-                :key="row.name + (row.flag ?? '') + (row.s_country_code ?? '')"
-              >
+              <tr v-for="row in countryRows" :key="row.name + (row.s_country_code ?? '')">
                 <td class="td-country">
                   <span
-                    v-if="fiCountryClass(row.s_country_code)"
-                    :class="fiCountryClass(row.s_country_code)"
+                    v-if="countryRowFiClass(row)"
+                    :class="countryRowFiClass(row)"
                     class="cflag cflag--fi"
                     aria-hidden="true"
                   />
-                  <img
-                    v-else-if="isFlagImgUrl(row.flag)"
-                    :src="row.flag"
-                    alt=""
-                    class="cflag cflag--img"
-                  />
-                  <span v-else-if="row.flag" class="cflag">{{ row.flag }}</span>
                   {{ row.name }}
                 </td>
                 <td>{{ row.adRev }}</td>
@@ -995,14 +986,6 @@
     background-size: cover;
   }
 
-  .cflag--img {
-    flex-shrink: 0;
-    width: 18px;
-    height: 13px;
-    object-fit: cover;
-    border-radius: 2px;
-  }
-
   .tr-total td {
     font-weight: 700 !important;
     color: var(--text-pri) !important;
@@ -1020,6 +1003,12 @@
   .country-table th,
   .country-table td {
     padding: 5px 8px;
+  }
+
+  /* 國家列寬度：改下方 min-width 即可 */
+  .country-table th:first-child,
+  .country-table td:first-child {
+    min-width: 70px;
   }
 
   .bi-bot-row {

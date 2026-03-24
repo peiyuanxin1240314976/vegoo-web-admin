@@ -1,0 +1,138 @@
+{
+  "_comment": "收入总览 — IAA 构成国家维度。对应 mock.ts: MOCK_REVENUE_OVERVIEW_IAA_COUNTRY_ROWS。不含国旗 URL，仅 s_country_code。",
+  "fieldDescription": {
+    "request": {
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "筛选国家；分析表仍返回多国时可传 all。"
+      },
+      "app_version": { "type": "string", "required": true, "description": "版本。" },
+      "t_date": { "type": "string", "required": true, "description": "统计日。" }
+    },
+    "response": {
+      "rows": {
+        "type": "RevenueOverviewIaaCountryRow[]",
+        "required": true,
+        "description": "国家行；ZZ/Other 表示其余汇总。"
+      }
+    },
+    "RevenueOverviewIaaCountryRow": {
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "ISO 3166-1 alpha-2。"
+      },
+      "s_country_name": { "type": "string", "required": true, "description": "展示用国家名。" },
+      "revenue": { "type": "number", "required": true, "description": "收入 USD。" },
+      "percent": { "type": "number", "required": true, "description": "占比 %。" },
+      "n_impression": { "type": "number", "required": true, "description": "展示次数。" },
+      "d_ecpm": { "type": "number", "required": true, "description": "eCPM。" },
+      "n_users": { "type": "number", "required": true, "description": "用户数。" },
+      "d_mom_pct": { "type": "number", "required": true, "description": "环比 %，可负。" }
+    }
+  },
+  "sampleRequest": {
+    "s_app_id": "weather5",
+    "platform": "all",
+    "s_country_code": "all",
+    "app_version": "all",
+    "t_date": "2026-03-23"
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "s_country_code": "US",
+        "s_country_name": "美国",
+        "revenue": 1088,
+        "percent": 37.0,
+        "n_impression": 318200,
+        "d_ecpm": 3.42,
+        "n_users": 44500,
+        "d_mom_pct": 4.8
+      },
+      {
+        "s_country_code": "KR",
+        "s_country_name": "韩国",
+        "revenue": 438,
+        "percent": 14.9,
+        "n_impression": 126200,
+        "d_ecpm": 3.47,
+        "n_users": 18450,
+        "d_mom_pct": 1.9
+      },
+      {
+        "s_country_code": "DE",
+        "s_country_name": "德国",
+        "revenue": 336,
+        "percent": 11.4,
+        "n_impression": 97800,
+        "d_ecpm": 3.44,
+        "n_users": 14200,
+        "d_mom_pct": -0.6
+      },
+      {
+        "s_country_code": "TW",
+        "s_country_name": "台湾",
+        "revenue": 282,
+        "percent": 9.6,
+        "n_impression": 81200,
+        "d_ecpm": 3.47,
+        "n_users": 11900,
+        "d_mom_pct": 1.2
+      },
+      {
+        "s_country_code": "JP",
+        "s_country_name": "日本",
+        "revenue": 256,
+        "percent": 8.7,
+        "n_impression": 74200,
+        "d_ecpm": 3.45,
+        "n_users": 10700,
+        "d_mom_pct": -1.1
+      },
+      {
+        "s_country_code": "GB",
+        "s_country_name": "英国",
+        "revenue": 210,
+        "percent": 7.1,
+        "n_impression": 60400,
+        "d_ecpm": 3.48,
+        "n_users": 9000,
+        "d_mom_pct": 0.6
+      },
+      {
+        "s_country_code": "AU",
+        "s_country_name": "澳大利亚",
+        "revenue": 184,
+        "percent": 6.3,
+        "n_impression": 52800,
+        "d_ecpm": 3.49,
+        "n_users": 7700,
+        "d_mom_pct": 2.8
+      },
+      {
+        "s_country_code": "ZZ",
+        "s_country_name": "Other",
+        "revenue": 150,
+        "percent": 5.0,
+        "n_impression": 41400,
+        "d_ecpm": 3.62,
+        "n_users": 6300,
+        "d_mom_pct": 0.3
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/revenue-overview/overview/iaa/country",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "筛选五元组",
+    "responseBody": "{ rows }"
+  },
+  "apiSuggestion": {
+    "notes": ["前端 UK 可映射为 gb 展示国旗（见页面 iaaCountryFlagClass）。"]
+  }
+}

@@ -13,6 +13,7 @@
           height="calc(100% + 45px)"
           show-summary
           :summary-method="getSummaries"
+          :header-cell-style="{ background: '#131D2F' }"
           class="roi-table"
         >
           <template #channel="{ row }">
@@ -229,18 +230,32 @@
   .roi-table {
     font-size: 13px;
 
+    :deep(.el-table) {
+      --el-table-bg-color: #131d2f;
+      --el-table-tr-bg-color: #131d2f;
+      --el-table-header-bg-color: #131d2f;
+      --el-table-border-color: rgb(255 255 255 / 10%);
+      --el-table-text-color: #d4e6f5;
+      --el-table-header-text-color: #8aaac8;
+    }
+
     :deep(.el-table__header th) {
       font-weight: 500;
-      color: var(--el-text-color-secondary);
+      color: #8aaac8;
     }
 
     :deep(.el-table__body td),
     :deep(.el-table__footer td) {
-      color: var(--el-text-color-primary);
+      color: #d4e6f5;
     }
 
     :deep(.el-table__footer .cell) {
       font-weight: 500;
+    }
+
+    :deep(.el-table__footer-wrapper td.el-table__cell) {
+      background: #131d2f !important;
+      border-top: 1px solid rgb(255 255 255 / 10%);
     }
 
     .col-channel {

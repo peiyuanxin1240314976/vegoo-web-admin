@@ -1,0 +1,131 @@
+{
+  "_comment": "评论与评分监控 - 明细列表 Tab。对应 api/reviewMonitor.ts: ReviewListData。",
+  "fieldDescription": {
+    "request": {
+      "appId": { "type": "string", "required": false, "description": "应用 ID；空表示全部。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "google_play", "app_store"],
+        "description": "终端平台。"
+      },
+      "startDate": { "type": "string", "required": false, "description": "开始日期 YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": false, "description": "结束日期 YYYY-MM-DD。" },
+      "language": { "type": "string", "required": false, "description": "语言代码。" },
+      "starRating": {
+        "type": "number",
+        "required": false,
+        "description": "星级筛选；null/不传表示全部，1-5 为对应星级。"
+      },
+      "reviewType": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "positive", "negative", "ads", "feature", "bug"],
+        "description": "评论类型。"
+      },
+      "replied": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "yes", "no"],
+        "description": "已回复筛选。"
+      },
+      "autoReplied": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "yes", "no"],
+        "description": "自动回复筛选。"
+      },
+      "keyword": { "type": "string", "required": false, "description": "关键词搜索评论内容。" },
+      "sortBy": {
+        "type": "string",
+        "required": false,
+        "enum": ["latest", "oldest", "rating_asc", "rating_desc"],
+        "default": "latest",
+        "description": "排序方式。"
+      },
+      "page": { "type": "number", "required": true, "description": "页码，从 1 起。" },
+      "pageSize": { "type": "number", "required": true, "description": "每页条数。" }
+    },
+    "response": {
+      "total": { "type": "number", "required": true, "description": "总条数。" },
+      "page": { "type": "number", "required": true, "description": "当前页码。" },
+      "pageSize": { "type": "number", "required": true, "description": "每页条数。" },
+      "list": { "type": "ReviewItem[]", "required": true, "description": "评论列表。" }
+    },
+    "ReviewItem": {
+      "id": { "type": "string", "description": "评论 ID。" },
+      "userId": { "type": "string", "description": "用户 ID。" },
+      "userName": { "type": "string", "description": "用户名称。" },
+      "avatar": { "type": "string", "required": false, "description": "头像 URL。" },
+      "starRating": { "type": "number", "description": "星级 1-5。" },
+      "content": { "type": "string", "description": "评论内容。" },
+      "date": { "type": "string", "description": "评论日期 YYYY-MM-DD。" },
+      "platform": {
+        "type": "string",
+        "enum": ["google_play", "app_store"],
+        "description": "平台。"
+      },
+      "appName": { "type": "string", "description": "应用名称。" },
+      "appVersion": { "type": "string", "description": "应用版本。" },
+      "countryCode": { "type": "string", "description": "国家代码 ISO 3166-1 alpha-2。" },
+      "language": { "type": "string", "description": "语言代码。" },
+      "sentiment": {
+        "type": "string",
+        "enum": ["positive", "negative", "neutral"],
+        "description": "情感倾向。"
+      },
+      "replied": { "type": "boolean", "description": "是否已回复。" },
+      "autoReplied": { "type": "boolean", "description": "是否自动回复。" },
+      "replyContent": { "type": "string", "required": false, "description": "回复内容。" },
+      "replyDate": { "type": "string", "required": false, "description": "回复日期。" }
+    }
+  },
+  "sampleRequest": {
+    "appId": "",
+    "platform": "",
+    "startDate": "2026-02-28",
+    "endDate": "2026-03-06",
+    "starRating": null,
+    "reviewType": "",
+    "replied": "",
+    "autoReplied": "",
+    "keyword": "",
+    "sortBy": "latest",
+    "page": 1,
+    "pageSize": 10
+  },
+  "sampleResponse": {
+    "total": 988,
+    "page": 1,
+    "pageSize": 10,
+    "list": [
+      {
+        "id": "1",
+        "userId": "u1",
+        "userName": "匿名用户",
+        "starRating": 1,
+        "content": "应用经常崩溃，希望尽快修复",
+        "date": "2026-03-05",
+        "platform": "google_play",
+        "appName": "ClapFinder",
+        "appVersion": "2.0.8",
+        "countryCode": "CN",
+        "language": "zh",
+        "sentiment": "negative",
+        "replied": true,
+        "autoReplied": false,
+        "replyContent": "感谢您的反馈，我们正在修复中。"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/product-operations/reviews-ratings-monitor/table/list",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "appId?, platform?, startDate?, endDate?, language?, starRating?, reviewType?, replied?, autoReplied?, keyword?, sortBy?, page, pageSize",
+    "responseBody": "ReviewListData"
+  },
+  "apiSuggestion": {
+    "notes": ["分页从 1 开始；keyword 支持模糊匹配评论 content。"]
+  }
+}
