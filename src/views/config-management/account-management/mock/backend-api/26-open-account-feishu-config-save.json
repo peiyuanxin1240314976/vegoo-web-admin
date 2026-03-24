@@ -1,0 +1,22 @@
+{
+  "_comment": "开户管理 - 保存飞书推送设置。",
+  "fieldDescription": {
+    "request": {
+      "enabled": { "type": "boolean", "required": true, "description": "是否开启推送。" },
+      "webhook": { "type": "string", "required": false, "description": "飞书机器人 webhook。" },
+      "mentionAll": { "type": "boolean", "required": false, "description": "是否 @所有人。" }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "保存是否成功。" }
+    }
+  },
+  "sampleRequest": { "enabled": true, "webhook": "", "mentionAll": false },
+  "sampleResponse": { "success": true },
+  "api": {
+    "url": "POST /api/config-management/open-account/feishu-config/save",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "enabled, webhook?, mentionAll?",
+    "responseBody": "success"
+  }
+}

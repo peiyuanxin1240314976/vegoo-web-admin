@@ -1,0 +1,20 @@
+{
+  "_comment": "暂停导入任务。",
+  "fieldDescription": {
+    "request": {
+      "taskId": { "type": "string", "required": true, "description": "任务 ID。" }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否成功。" }
+    }
+  },
+  "sampleRequest": { "taskId": "IMP-027" },
+  "sampleResponse": { "data": { "success": true } },
+  "api": {
+    "url": "POST /api/config-management/order-import/pause",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "{ taskId }",
+    "responseBody": "{ success }"
+  }
+}

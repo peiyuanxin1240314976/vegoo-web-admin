@@ -1,0 +1,22 @@
+{
+  "_comment": "导出成本系数列表。",
+  "fieldDescription": {
+    "request": {
+      "nSource": { "type": "number", "required": false, "description": "广告平台筛选。" },
+      "tStartYear": { "type": "string", "required": false, "description": "年份筛选。" },
+      "keyword": { "type": "string", "required": false, "description": "关键词。" }
+    },
+    "response": {
+      "fileToken": { "type": "string", "required": true, "description": "导出文件令牌。" }
+    }
+  },
+  "sampleRequest": { "nSource": 1, "tStartYear": "2026", "keyword": "" },
+  "sampleResponse": { "data": { "fileToken": "cost-coefficient-export-20260324" } },
+  "api": {
+    "url": "POST /api/config-management/cost-coefficient/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "筛选参数",
+    "responseBody": "{ fileToken }"
+  }
+}

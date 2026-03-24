@@ -1,0 +1,30 @@
+{
+  "_comment": "账户管理 - 启用广告账户。重新启用已停用的账户，状态恢复为「正常」。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "账户ID，如 ACC-067。" }
+    },
+    "response": {
+      "data": {
+        "id": { "type": "string", "description": "账户ID。" },
+        "status": { "type": "string", "description": "正常。" }
+      }
+    }
+  },
+  "sampleRequest": {
+    "id": "ACC-067"
+  },
+  "sampleResponse": {
+    "data": {
+      "id": "ACC-067",
+      "status": "正常"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/account/enable",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "{ id }",
+    "responseBody": "{ id, status }"
+  }
+}

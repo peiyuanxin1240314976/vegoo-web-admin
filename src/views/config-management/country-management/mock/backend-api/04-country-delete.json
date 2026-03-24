@@ -1,0 +1,26 @@
+{
+  "_comment": "国家管理 - 删除国家。按国家代码删除。",
+  "fieldDescription": {
+    "request": {
+      "path.code": { "type": "string", "required": true, "description": "国家代码（ISO alpha-2）。" }
+    },
+    "response": {
+      "code": { "type": "number", "required": true, "description": "状态码，200 表示成功。" },
+      "message": { "type": "string", "required": true, "description": "删除结果提示。" }
+    }
+  },
+  "sampleRequest": {
+    "path": { "code": "BR" }
+  },
+  "sampleResponse": {
+    "code": 200,
+    "message": "删除成功"
+  },
+  "api": {
+    "url": "DELETE /api/config-management/country/:code",
+    "method": "DELETE",
+    "priority": "P0",
+    "requestBody": "N/A",
+    "responseBody": "{ code, message }"
+  }
+}

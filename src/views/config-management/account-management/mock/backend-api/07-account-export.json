@@ -1,0 +1,29 @@
+{
+  "_comment": "账户管理 - 导出广告账户列表。后端返回文件流，前端需在 http 层处理 responseType: blob。",
+  "fieldDescription": {
+    "request": {
+      "keyword": { "type": "string", "required": false, "description": "关键词搜索。" },
+      "source": { "type": "string", "required": false, "description": "广告平台筛选。" },
+      "accountType": { "type": "string", "required": false, "description": "账户类型筛选。" },
+      "status": { "type": "string", "required": false, "description": "状态筛选。" },
+      "app": { "type": "string", "required": false, "description": "应用筛选。" }
+    },
+    "response": {
+      "note": "后端返回二进制文件流，响应头 Content-Disposition: attachment; filename=accounts_xxx.csv"
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "source": "",
+    "accountType": "",
+    "status": "",
+    "app": ""
+  },
+  "api": {
+    "url": "POST /api/config-management/account/export",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "Partial<AccountTableQuery>",
+    "responseBody": "blob (CSV)"
+  }
+}

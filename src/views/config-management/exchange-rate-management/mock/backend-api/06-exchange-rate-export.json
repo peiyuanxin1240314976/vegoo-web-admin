@@ -1,0 +1,21 @@
+{
+  "_comment": "导出汇率列表。",
+  "fieldDescription": {
+    "request": {
+      "pair": { "type": "string", "required": false, "description": "货币对筛选。" },
+      "date": { "type": "string", "required": false, "description": "日期筛选。" }
+    },
+    "response": {
+      "fileToken": { "type": "string", "required": true, "description": "导出文件令牌。" }
+    }
+  },
+  "sampleRequest": { "pair": "", "date": "" },
+  "sampleResponse": { "data": { "fileToken": "exchange-rate-export-20260324" } },
+  "api": {
+    "url": "POST /api/config-management/exchange-rate/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "pair?, date?",
+    "responseBody": "{ fileToken }"
+  }
+}

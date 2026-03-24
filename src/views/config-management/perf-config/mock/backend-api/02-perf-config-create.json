@@ -1,0 +1,26 @@
+{
+  "_comment": "新建绩效配置。",
+  "fieldDescription": {
+    "request": {
+      "step1": { "type": "PerfStep1Form", "required": true, "description": "基础信息。" },
+      "step2": { "type": "PerfStep2Form", "required": true, "description": "绩效指标。" },
+      "saveMode": { "type": "string", "required": true, "enum": ["draft", "publish"], "description": "保存方式。" }
+    },
+    "response": {
+      "id": { "type": "string", "required": true, "description": "新增配置 ID。" }
+    }
+  },
+  "sampleRequest": {
+    "step1": { "appName": "BloodSugar", "appPlatform": "android", "adPlatforms": ["Google"], "runStatus": "running", "allowMulti": true },
+    "step2": { "evalMethod": "ROI", "evalDays": 7, "targetRate": 55, "minRate": 45, "difficultyFactor": 1.2, "minProfit": 100, "extraCondition": "" },
+    "saveMode": "publish"
+  },
+  "sampleResponse": { "data": { "id": "PF-009" } },
+  "api": {
+    "url": "POST /api/config-management/perf-config",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "step1, step2, saveMode",
+    "responseBody": "{ id }"
+  }
+}

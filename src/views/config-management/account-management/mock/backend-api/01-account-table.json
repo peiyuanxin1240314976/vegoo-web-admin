@@ -1,0 +1,47 @@
+{
+  "name": "广告账户列表",
+  "method": "POST",
+  "url": "/api/config-management/account/table",
+  "description": "获取广告账户分页列表",
+  "sampleRequest": {
+    "current": 1,
+    "size": 20,
+    "keyword": "",
+    "source": "",
+    "accountType": "",
+    "status": "",
+    "app": ""
+  },
+  "sampleResponse": {
+    "code": 200,
+    "data": {
+      "records": [
+        {
+          "id": "ACC-001",
+          "accountName": "Google-US-Main",
+          "source": "Google Ads",
+          "agency": "直投",
+          "accountType": "直投",
+          "balance": 12450,
+          "monthSpend": 85420,
+          "status": "正常",
+          "bcBm": "Vegoo Google BM",
+          "apps": ["BloodSugar2", "WeatherApp"],
+          "platform": ["安卓"],
+          "purposes": ["广告投放", "用户获取"],
+          "credential": "AdCost",
+          "spendLimit": 200000,
+          "spendProgress": 42.7,
+          "currency": "USD",
+          "lastRechargeTime": "2024-01-25",
+          "lastRechargeAmount": 2000,
+          "createTime": "2023-01-15",
+          "remark": "美国主力投放账户"
+        }
+      ],
+      "total": 248,
+      "current": 1,
+      "size": 20
+    }
+  }
+}

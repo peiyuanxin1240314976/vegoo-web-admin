@@ -1,0 +1,24 @@
+{
+  "_comment": "代理商管理 - 删除代理商。id 放入请求体，使用 POST。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "代理商ID，如 AGY-001。" }
+    },
+    "response": {
+      "data": { "type": "null", "description": "成功时 data 为 null，依赖 HTTP 200 判断。" }
+    }
+  },
+  "sampleRequest": {
+    "id": "AGY-001"
+  },
+  "sampleResponse": {
+    "data": null
+  },
+  "api": {
+    "url": "POST /api/config-management/agency/delete",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "{ id }",
+    "responseBody": "null"
+  }
+}

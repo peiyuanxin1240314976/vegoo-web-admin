@@ -53,6 +53,76 @@ export const configManagementRoutes: AppRouteRecord = {
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
+    },
+    {
+      path: 'account-management',
+      name: 'AccountManagement',
+      component: '/config-management/account-management',
+      meta: {
+        title: 'menus.configManagement.accountManagement',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'country-management',
+      name: 'CountryManagement',
+      component: '/config-management/country-management',
+      meta: {
+        title: 'menus.configManagement.countryManagement',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'exchange-rate-management',
+      name: 'ExchangeRateManagement',
+      component: '/config-management/exchange-rate-management',
+      meta: {
+        title: 'menus.configManagement.exchangeRateManagement',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'cost-coefficient',
+      name: 'CostCoefficient',
+      component: '/config-management/cost-coefficient',
+      meta: {
+        title: 'menus.configManagement.costCoefficient',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'perf-config',
+      name: 'PerfConfig',
+      component: '/config-management/perf-config',
+      meta: {
+        title: 'menus.configManagement.perfConfig',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'order-import',
+      name: 'OrderImport',
+      component: '/config-management/order-import',
+      meta: {
+        title: 'menus.configManagement.orderImport',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'order-import/import-report/:taskId',
+      name: 'OrderImportReport',
+      component: '/config-management/order-import/import-report',
+      meta: {
+        title: 'menus.configManagement.orderImportReport',
+        roles: ['R_SUPER', 'R_ADMIN'],
+        isHide: true
+      }
     }
   ]
 }

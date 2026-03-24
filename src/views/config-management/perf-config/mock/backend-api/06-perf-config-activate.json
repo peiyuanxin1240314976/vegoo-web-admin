@@ -1,0 +1,21 @@
+{
+  "_comment": "激活指定版本。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "配置 ID（路径参数）。" },
+      "version": { "type": "number", "required": true, "description": "版本号。" }
+    },
+    "response": {
+      "activeVersion": { "type": "number", "required": true, "description": "激活版本号。" }
+    }
+  },
+  "sampleRequest": { "id": "PF-001", "version": 2 },
+  "sampleResponse": { "data": { "activeVersion": 2 } },
+  "api": {
+    "url": "POST /api/config-management/perf-config/:id/activate",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "version",
+    "responseBody": "{ activeVersion }"
+  }
+}

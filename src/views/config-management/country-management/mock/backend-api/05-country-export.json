@@ -1,0 +1,37 @@
+{
+  "_comment": "国家管理 - 导出国家列表。入参与列表查询一致。",
+  "fieldDescription": {
+    "request": {
+      "page": { "type": "number", "required": false, "description": "页码，可选，导出时通常忽略分页。" },
+      "pageSize": { "type": "number", "required": false, "description": "页大小，可选。" },
+      "region": { "type": "string", "required": false, "description": "地区筛选。" },
+      "currency": { "type": "string", "required": false, "description": "货币筛选。" },
+      "keyword": { "type": "string", "required": false, "description": "关键词筛选。" }
+    },
+    "response": {
+      "downloadUrl": { "type": "string", "required": true, "description": "导出文件下载地址（示例字段）。" },
+      "fileName": { "type": "string", "required": true, "description": "导出文件名。" }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "us",
+    "region": "",
+    "currency": "",
+    "page": 1,
+    "pageSize": 9999
+  },
+  "sampleResponse": {
+    "code": 200,
+    "data": {
+      "downloadUrl": "/mock-download/countries_20260324.csv",
+      "fileName": "countries_20260324.csv"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/country/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "Partial<CountryTableQuery>",
+    "responseBody": "{ downloadUrl, fileName }"
+  }
+}

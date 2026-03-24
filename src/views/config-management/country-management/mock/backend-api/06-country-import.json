@@ -1,0 +1,66 @@
+{
+  "_comment": "国家管理 - 批量导入国家。支持按 code 覆盖更新。",
+  "fieldDescription": {
+    "request": {
+      "items": {
+        "type": "CountryFormModel[]",
+        "required": true,
+        "description": "待导入国家列表。code 重复时按覆盖更新处理。"
+      }
+    },
+    "response": {
+      "successCount": { "type": "number", "required": true, "description": "成功写入条数。" },
+      "updateCount": { "type": "number", "required": true, "description": "覆盖更新条数。" },
+      "createCount": { "type": "number", "required": true, "description": "新增条数。" },
+      "failedCount": { "type": "number", "required": true, "description": "失败条数。" }
+    }
+  },
+  "sampleRequest": {
+    "items": [
+      {
+        "code": "US",
+        "code3": "840",
+        "criteriaId": "2840",
+        "nameCn": "美国",
+        "nameEn": "United States",
+        "aliases": ["USA", "America"],
+        "timezone": "GMT-5",
+        "phoneCode": "1",
+        "currency": "USD - 美元",
+        "currencySymbol": "$",
+        "region": "北美",
+        "isMainMarket": true
+      },
+      {
+        "code": "TH",
+        "code3": "764",
+        "criteriaId": "2764",
+        "nameCn": "泰国",
+        "nameEn": "Thailand",
+        "aliases": ["Thailand"],
+        "timezone": "GMT+7",
+        "phoneCode": "66",
+        "currency": "THB - 泰铢",
+        "currencySymbol": "฿",
+        "region": "亚太",
+        "isMainMarket": false
+      }
+    ]
+  },
+  "sampleResponse": {
+    "code": 200,
+    "data": {
+      "successCount": 2,
+      "updateCount": 1,
+      "createCount": 1,
+      "failedCount": 0
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/country/import",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ items: CountryFormModel[] }",
+    "responseBody": "{ successCount, updateCount, createCount, failedCount }"
+  }
+}

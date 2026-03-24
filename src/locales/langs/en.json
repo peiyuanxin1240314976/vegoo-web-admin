@@ -247,6 +247,15 @@
       "title": "Business Insight",
       "revenueOverview": "Revenue Overview",
       "profitAnalysis": "Profit Analysis",
+      "profitAnalysisFilters": {
+        "dateRange": "Date range",
+        "startDate": "Start date",
+        "endDate": "End date",
+        "app": "App",
+        "country": "Country",
+        "platform": "Platform",
+        "selectPlaceholder": "Select"
+      },
       "agencyAnalysis": "Agency Analysis",
       "iapAnalysis": "IAP Analysis",
       "iaaAnalysis": "IAA Analysis",
@@ -284,7 +293,14 @@
       "applicationManagement": "Application Management",
       "appAssignment": "App Assignment",
       "optimizerManagement": "Optimizer Management",
-      "userManagement": "User Management"
+      "userManagement": "User Management",
+      "accountManagement": "Account Management",
+      "countryManagement": "Country Management",
+      "exchangeRateManagement": "Exchange Rate Management",
+      "costCoefficient": "Cost Coefficient",
+      "perfConfig": "Performance Config",
+      "orderImport": "Import Store Orders",
+      "orderImportReport": "Import Report"
     },
     "userGrowth": {
       "title": "User Growth",

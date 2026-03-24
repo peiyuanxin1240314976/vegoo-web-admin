@@ -1,0 +1,20 @@
+{
+  "_comment": "开户管理 - 读取飞书推送设置。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "enabled": { "type": "boolean", "required": true, "description": "当前是否开启推送。" },
+      "webhook": { "type": "string", "required": false, "description": "已配置 webhook。" },
+      "mentionAll": { "type": "boolean", "required": false, "description": "是否 @所有人。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": { "enabled": true, "webhook": "", "mentionAll": false },
+  "api": {
+    "url": "POST /api/config-management/open-account/feishu-config",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "空对象",
+    "responseBody": "enabled, webhook, mentionAll"
+  }
+}
