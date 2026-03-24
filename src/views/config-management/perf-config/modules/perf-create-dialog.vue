@@ -16,7 +16,11 @@
           <span v-else>{{ i + 1 }}</span>
         </div>
         <span class="step-label">{{ s }}</span>
-        <div v-if="i < STEPS.length - 1" class="step-line" :class="i < currentStep && 'step-line--done'" />
+        <div
+          v-if="i < STEPS.length - 1"
+          class="step-line"
+          :class="i < currentStep && 'step-line--done'"
+        />
       </div>
     </div>
 
@@ -55,7 +59,12 @@
                 :key="p.value"
                 :class="['radio-card', step1.appPlatform === p.value && 'radio-card--active']"
               >
-                <input v-model="step1.appPlatform" type="radio" :value="p.value" class="hidden-radio" />
+                <input
+                  v-model="step1.appPlatform"
+                  type="radio"
+                  :value="p.value"
+                  class="hidden-radio"
+                />
                 {{ p.label }}
               </label>
             </div>
@@ -72,7 +81,9 @@
                 {{ p }}
                 <ElIcon v-if="step1.adPlatforms.includes(p)" class="ad-tag-check"><Check /></ElIcon>
               </span>
-              <span class="ad-tag ad-tag--more" @click="showMorePlatforms = !showMorePlatforms">+ 更多</span>
+              <span class="ad-tag ad-tag--more" @click="showMorePlatforms = !showMorePlatforms"
+                >+ 更多</span
+              >
             </div>
             <div v-if="showMorePlatforms" class="ad-platform-more">
               <span
@@ -108,7 +119,12 @@
               <input v-model="step1.allowMulti" type="radio" :value="true" class="hidden-radio" />是
             </label>
             <label :class="['radio-card', step1.allowMulti === false && 'radio-card--active']">
-              <input v-model="step1.allowMulti" type="radio" :value="false" class="hidden-radio" />否
+              <input
+                v-model="step1.allowMulti"
+                type="radio"
+                :value="false"
+                class="hidden-radio"
+              />否
             </label>
           </div>
           <div class="field-hint">是否允许一个优化师同时负责该应用的多个广告平台</div>
@@ -127,7 +143,8 @@
       <!-- 已选摘要 -->
       <div class="selected-bar">
         <span class="selected-text">
-          已选择：{{ step1.appName }} | {{ step1.appPlatform === 'android' ? '安卓' : 'iOS' }} | {{ step1.adPlatforms.join('、') }}
+          已选择：{{ step1.appName }} | {{ step1.appPlatform === 'android' ? '安卓' : 'iOS' }} |
+          {{ step1.adPlatforms.join('、') }}
         </span>
         <ElIcon class="selected-edit" @click="currentStep = 0"><Edit /></ElIcon>
       </div>
@@ -142,11 +159,13 @@
               <button
                 :class="['eval-btn', step2.evalMethod === 'ROI' && 'eval-btn--active']"
                 @click="step2.evalMethod = 'ROI'"
-              >[ROI]</button>
+                >[ROI]</button
+              >
               <button
                 :class="['eval-btn', step2.evalMethod === 'CPA' && 'eval-btn--active']"
                 @click="step2.evalMethod = 'CPA'"
-              >[CPA]</button>
+                >[CPA]</button
+              >
             </div>
           </el-form-item>
 
@@ -155,7 +174,10 @@
             <div class="input-suffix-wrap">
               <el-input-number
                 v-model="step2.difficultyFactor"
-                :min="0.1" :max="5" :step="0.1" :precision="1"
+                :min="0.1"
+                :max="5"
+                :step="0.1"
+                :precision="1"
                 controls-position="right"
                 class="full-w"
               />
@@ -171,7 +193,9 @@
             <div class="input-suffix-wrap">
               <el-input-number
                 v-model="step2.evalDays"
-                :min="1" :max="365" :step="1"
+                :min="1"
+                :max="365"
+                :step="1"
                 controls-position="right"
                 class="full-w"
               />
@@ -195,7 +219,9 @@
             <div class="input-suffix-wrap">
               <el-input-number
                 v-model="step2.targetRate"
-                :min="0" :max="9999" :step="1"
+                :min="0"
+                :max="9999"
+                :step="1"
                 controls-position="right"
                 class="full-w"
               />
@@ -222,7 +248,9 @@
           <div class="input-suffix-wrap half-w">
             <el-input-number
               v-model="step2.minRate"
-              :min="0" :max="9999" :step="1"
+              :min="0"
+              :max="9999"
+              :step="1"
               controls-position="right"
               class="full-w"
             />
@@ -232,8 +260,15 @@
         </el-form-item>
 
         <!-- 校验提示 -->
-        <div :class="['validate-hint', step2.targetRate > step2.minRate ? 'validate-hint--ok' : 'validate-hint--err']">
-          <ElIcon><CircleCheckFilled v-if="step2.targetRate > step2.minRate" /><WarningFilled v-else /></ElIcon>
+        <div
+          :class="[
+            'validate-hint',
+            step2.targetRate > step2.minRate ? 'validate-hint--ok' : 'validate-hint--err'
+          ]"
+        >
+          <ElIcon
+            ><CircleCheckFilled v-if="step2.targetRate > step2.minRate" /><WarningFilled v-else
+          /></ElIcon>
           达标要求 {{ step2.targetRate > step2.minRate ? '>' : '≤' }} 最低要求
           {{ step2.targetRate > step2.minRate ? '✓' : '（达标要求需大于最低要求）' }}
         </div>
@@ -247,13 +282,18 @@
       <!-- 预览卡 -->
       <div class="preview-card">
         <div class="preview-card-header">
-          <span class="preview-app-icon" :style="{ background: APP_ICON_COLORS[step1.appName] ?? '#475569' }">
+          <span
+            class="preview-app-icon"
+            :style="{ background: APP_ICON_COLORS[step1.appName] ?? '#475569' }"
+          >
             {{ step1.appName.charAt(0) }}
           </span>
           <div class="preview-app-info">
             <span class="preview-app-name">{{ step1.appName }}</span>
             <div class="preview-app-tags">
-              <span class="preview-tag">{{ step1.appPlatform === 'android' ? '安卓' : 'iOS' }}</span>
+              <span class="preview-tag">{{
+                step1.appPlatform === 'android' ? '安卓' : 'iOS'
+              }}</span>
               <span v-for="p in step1.adPlatforms" :key="p" class="preview-tag">{{ p }}</span>
               <span class="preview-tag preview-tag--run">{{ runStatusLabel }}</span>
             </div>
@@ -275,7 +315,9 @@
           </div>
           <div class="preview-item">
             <span class="pi-label">最低利润</span>
-            <span class="pi-value">{{ step2.minProfit != null ? '$' + step2.minProfit : '-' }}</span>
+            <span class="pi-value">{{
+              step2.minProfit != null ? '$' + step2.minProfit : '-'
+            }}</span>
           </div>
           <div class="preview-item">
             <span class="pi-label">达标要求</span>
@@ -297,7 +339,7 @@
       </div>
 
       <!-- 保存方式 -->
-      <div class="step-section-title" style="margin-top: 20px;">保存方式</div>
+      <div class="step-section-title" style="margin-top: 20px">保存方式</div>
       <div class="save-cards">
         <div
           :class="['save-card', saveMode === 'draft' && 'save-card--active']"
@@ -326,28 +368,24 @@
     <template #footer>
       <ElButton class="btn-cancel" @click="emit('update:visible', false)">取消</ElButton>
       <ElButton v-if="currentStep > 0" class="btn-prev" @click="currentStep--">上一步</ElButton>
-      <ElButton
-        v-if="currentStep < 2"
-        class="btn-next"
-        @click="handleNext"
-      >
+      <ElButton v-if="currentStep < 2" class="btn-next" @click="handleNext">
         下一步：{{ STEPS[currentStep + 1] }} →
       </ElButton>
-      <ElButton
-        v-else
-        class="btn-save"
-        @click="handleSave"
-      >
-        保存配置
-      </ElButton>
+      <ElButton v-else class="btn-save" @click="handleSave"> 保存配置 </ElButton>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
   import { ref, computed, reactive } from 'vue'
+  import type { FormRules } from 'element-plus'
   import {
-    Check, InfoFilled, Edit, CircleCheckFilled, WarningFilled, Promotion
+    Check,
+    InfoFilled,
+    Edit,
+    CircleCheckFilled,
+    WarningFilled,
+    Promotion
   } from '@element-plus/icons-vue'
   import { APP_LIST, AD_PLATFORMS, APP_ICON_COLORS } from '../mock/data'
   import type { PerfConfigItem, PerfStep1Form, PerfStep2Form, SaveMode } from '../types'
@@ -355,7 +393,7 @@
 
   defineOptions({ name: 'PerfCreateDialog' })
 
-  const props = defineProps<{ visible: boolean }>()
+  defineProps<{ visible: boolean }>()
   const emit = defineEmits<{
     (e: 'update:visible', v: boolean): void
     (e: 'success', item: PerfConfigItem): void
@@ -367,7 +405,7 @@
   const saveMode = ref<SaveMode>('draft')
 
   const stepClass = (i: number) => ({
-    'step--done':    i < currentStep.value,
+    'step--done': i < currentStep.value,
     'step--current': i === currentStep.value,
     'step--pending': i > currentStep.value
   })
@@ -375,16 +413,16 @@
   // ─── 静态选项 ──────────────────────────────────────────
   const APP_PLATFORMS = [
     { value: 'android', label: '安卓 🤖' },
-    { value: 'ios',     label: 'iOS 🍎' }
+    { value: 'ios', label: 'iOS 🍎' }
   ]
   const RUN_STATUS_OPTIONS = [
     { value: 'running', label: '投放中' },
-    { value: 'paused',  label: '未投放' },
+    { value: 'paused', label: '未投放' },
     { value: 'stopped', label: '已停止' }
   ]
   const VISIBLE_AD_PLATFORMS = AD_PLATFORMS.slice(0, 6)
-  const MORE_AD_PLATFORMS    = AD_PLATFORMS.slice(6)
-  const showMorePlatforms    = ref(false)
+  const MORE_AD_PLATFORMS = AD_PLATFORMS.slice(6)
+  const showMorePlatforms = ref(false)
 
   const toggleAdPlatform = (p: string) => {
     const idx = step1.adPlatforms.indexOf(p as any)
@@ -415,28 +453,42 @@
   const form1Ref = ref()
   const form2Ref = ref()
 
-  const rules1 = {
-    appName:    [{ required: true, message: '请选择应用名称', trigger: 'change' }],
-    adPlatforms:[{ required: true, type: 'array', min: 1, message: '请至少选择一个广告平台', trigger: 'change' }]
+  const rules1: FormRules = {
+    appName: [{ required: true, message: '请选择应用名称', trigger: 'change' }],
+    adPlatforms: [
+      {
+        required: true,
+        type: 'array' as const,
+        min: 1,
+        message: '请至少选择一个广告平台',
+        trigger: 'change'
+      }
+    ]
   }
 
-  const rules2 = {
-    evalDays:   [{ required: true, message: '请输入评估天数', trigger: 'blur' }],
+  const rules2: FormRules = {
+    evalDays: [{ required: true, message: '请输入评估天数', trigger: 'blur' }],
     targetRate: [{ required: true, message: '请输入达标要求', trigger: 'blur' }],
-    minRate:    [{ required: true, message: '请输入最低要求',  trigger: 'blur' }]
+    minRate: [{ required: true, message: '请输入最低要求', trigger: 'blur' }]
   }
 
   // ─── 计算属性 ──────────────────────────────────────────
-  const runStatusLabel = computed(() =>
-    ({ running: '投放中', paused: '未投放', stopped: '已停止' }[step1.runStatus])
+  const runStatusLabel = computed(
+    () => ({ running: '投放中', paused: '未投放', stopped: '已停止' })[step1.runStatus]
   )
 
   // ─── 步骤切换 ──────────────────────────────────────────
   const handleNext = async () => {
     if (currentStep.value === 0) {
       await form1Ref.value?.validate()
-      if (!step1.appName) { ElMessage.warning('请选择应用名称'); return }
-      if (!step1.adPlatforms.length) { ElMessage.warning('请至少选择一个广告平台'); return }
+      if (!step1.appName) {
+        ElMessage.warning('请选择应用名称')
+        return
+      }
+      if (!step1.adPlatforms.length) {
+        ElMessage.warning('请至少选择一个广告平台')
+        return
+      }
     }
     if (currentStep.value === 1) {
       if (step2.targetRate <= step2.minRate) {
@@ -455,7 +507,7 @@
 
     const newVersion = {
       version: 1,
-      status: saveMode.value === 'publish' ? 'published' as const : 'draft' as const,
+      status: saveMode.value === 'publish' ? ('published' as const) : ('draft' as const),
       publishedAt: dateStr,
       publishedBy: 'admin',
       evalMethod: step2.evalMethod,
@@ -489,12 +541,20 @@
     currentStep.value = 0
     saveMode.value = 'draft'
     Object.assign(step1, {
-      appName: '', appPlatform: 'android', adPlatforms: ['Google'],
-      runStatus: 'running', allowMulti: true
+      appName: '',
+      appPlatform: 'android',
+      adPlatforms: ['Google'],
+      runStatus: 'running',
+      allowMulti: true
     })
     Object.assign(step2, {
-      evalMethod: 'ROI', evalDays: 3, targetRate: 53, minRate: 50,
-      difficultyFactor: 1.2, minProfit: null, extraCondition: ''
+      evalMethod: 'ROI',
+      evalDays: 3,
+      targetRate: 53,
+      minRate: 50,
+      difficultyFactor: 1.2,
+      minProfit: null,
+      extraCondition: ''
     })
   }
 </script>
@@ -513,79 +573,136 @@
   // ── 步骤条 ──────────────────────────────────────────────
   .stepper {
     display: flex;
+    gap: 0;
     align-items: center;
     justify-content: center;
     padding: 0 0 24px;
-    gap: 0;
   }
 
   .step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
     position: relative;
+    display: flex;
     flex: 1;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
 
-    &:last-child .step-line { display: none; }
+    &:last-child .step-line {
+      display: none;
+    }
   }
 
   .step-circle {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 600;
-    border: 2px solid;
-    transition: all 0.25s;
     z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 2px solid;
+    border-radius: 50%;
+    transition: all 0.25s;
   }
 
-  .step--done .step-circle    { border-color: var(--accent); background: var(--accent); color: #0b1120; }
-  .step--current .step-circle { border-color: var(--accent); background: transparent; color: var(--accent); }
-  .step--pending .step-circle { border-color: #334155; background: transparent; color: #334155; }
+  .step--done .step-circle {
+    color: #0b1120;
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .step--current .step-circle {
+    color: var(--accent);
+    background: transparent;
+    border-color: var(--accent);
+  }
+
+  .step--pending .step-circle {
+    color: #334155;
+    background: transparent;
+    border-color: #334155;
+  }
 
   .step-label {
     font-size: 12px;
-    &.step--done    { color: var(--accent); }
-    &.step--current { color: var(--accent); font-weight: 600; }
-    &.step--pending { color: var(--text-muted); }
+
+    &.step--done {
+      color: var(--accent);
+    }
+
+    &.step--current {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    &.step--pending {
+      color: var(--text-muted);
+    }
   }
 
-  .step--done    .step-label { color: var(--accent); }
-  .step--current .step-label { color: var(--accent); font-weight: 600; }
-  .step--pending .step-label { color: var(--text-muted); }
+  .step--done .step-label {
+    color: var(--accent);
+  }
+
+  .step--current .step-label {
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .step--pending .step-label {
+    color: var(--text-muted);
+  }
 
   .step-line {
     position: absolute;
-    top: 16px; left: 50%;
-    width: 100%; height: 2px;
-    background: #334155;
+    top: 16px;
+    left: 50%;
     z-index: 0;
+    width: 100%;
+    height: 2px;
+    background: #334155;
     transition: background 0.25s;
-    &--done { background: var(--accent); }
+
+    &--done {
+      background: var(--accent);
+    }
   }
 
   // ── 表单通用 ────────────────────────────────────────────
-  .step-body { min-height: 320px; }
+  .step-body {
+    min-height: 320px;
+  }
 
   .step-section-title {
-    font-size: 14px; font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 16px;
     padding-bottom: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
     border-bottom: 1px solid var(--cm-dialog-border);
   }
 
   .pf-form {
-    :deep(.el-form-item__label) { color: var(--text-secondary) !important; font-size: 13px; margin-bottom: 4px; }
+    :deep(.el-form-item__label) {
+      margin-bottom: 4px;
+      font-size: 13px;
+      color: var(--text-secondary) !important;
+    }
+
     :deep(.el-input__wrapper),
     :deep(.el-textarea__inner) {
+      color: var(--text-primary) !important;
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid var(--cm-dialog-border) !important;
       box-shadow: none !important;
-      color: var(--text-primary) !important;
-      &:focus, &:focus-within { border-color: var(--accent) !important; }
+
+      &:focus,
+      &:focus-within {
+        border-color: var(--accent) !important;
+      }
     }
+
     :deep(.el-input-number .el-input__wrapper) {
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid var(--cm-dialog-border) !important;
@@ -593,8 +710,13 @@
     }
   }
 
-  .full-w  { width: 100%; }
-  .half-w  { width: 50%; }
+  .full-w {
+    width: 100%;
+  }
+
+  .half-w {
+    width: 50%;
+  }
 
   .form-row-2 {
     display: grid;
@@ -603,58 +725,94 @@
   }
 
   .field-hint {
-    font-size: 11px;
-    color: var(--text-muted);
     margin-top: 4px;
+    font-size: 11px;
     line-height: 1.4;
+    color: var(--text-muted);
   }
 
   // ── Radio 卡片 ──────────────────────────────────────────
-  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 
   .radio-card {
     padding: 6px 14px;
     font-size: 13px;
     color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
     background: rgb(255 255 255 / 4%);
     border: 1px solid var(--cm-dialog-border);
     border-radius: 6px;
-    cursor: pointer;
-    user-select: none;
     transition: all 0.15s;
 
-    &:hover { border-color: var(--accent); color: var(--accent); }
-    &--active { border-color: var(--accent); color: var(--accent); background: rgb(45 212 191 / 10%); }
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    &--active {
+      color: var(--accent);
+      background: rgb(45 212 191 / 10%);
+      border-color: var(--accent);
+    }
   }
 
-  .hidden-radio { display: none; }
+  .hidden-radio {
+    display: none;
+  }
 
   // ── 广告平台 tags ───────────────────────────────────────
-  .ad-platform-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ad-platform-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
 
   .ad-tag {
+    display: flex;
+    gap: 4px;
+    align-items: center;
     padding: 4px 10px;
     font-size: 12px;
     color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
     background: rgb(255 255 255 / 4%);
     border: 1px solid var(--cm-dialog-border);
     border-radius: 5px;
-    cursor: pointer;
-    user-select: none;
-    display: flex; gap: 4px; align-items: center;
     transition: all 0.15s;
 
-    &:hover { border-color: var(--accent); color: var(--accent); }
-    &--active { border-color: var(--accent); color: var(--accent); background: rgb(45 212 191 / 12%); }
-    &--more { color: var(--text-muted); font-style: italic; }
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    &--active {
+      color: var(--accent);
+      background: rgb(45 212 191 / 12%);
+      border-color: var(--accent);
+    }
+
+    &--more {
+      font-style: italic;
+      color: var(--text-muted);
+    }
   }
 
-  .ad-tag-check { font-size: 10px; }
+  .ad-tag-check {
+    font-size: 10px;
+  }
 
   .ad-platform-more {
-    display: flex; gap: 6px; flex-wrap: wrap;
-    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
     padding: 8px;
+    margin-top: 6px;
     background: rgb(255 255 255 / 2%);
     border: 1px dashed var(--cm-dialog-border);
     border-radius: 6px;
@@ -662,89 +820,174 @@
 
   // ── 提示条 ──────────────────────────────────────────────
   .tip-bar {
-    display: flex; gap: 8px; align-items: flex-start;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
     padding: 10px 12px;
     margin-top: 16px;
-    font-size: 12px; color: var(--text-secondary);
+    font-size: 12px;
+    color: var(--text-secondary);
     background: rgb(59 130 246 / 8%);
     border: 1px solid rgb(59 130 246 / 20%);
     border-radius: 6px;
   }
 
-  .tip-icon { color: #60a5fa; flex-shrink: 0; margin-top: 1px; }
+  .tip-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #60a5fa;
+  }
 
   // ── Step2 ────────────────────────────────────────────────
   .selected-bar {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 14px; margin-bottom: 20px;
-    font-size: 13px; color: var(--text-secondary);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
     background: var(--cm-dialog-bg-inner);
     border: 1px solid var(--cm-dialog-border);
     border-radius: 8px;
   }
 
-  .selected-text { flex: 1; }
-  .selected-edit { color: var(--text-muted); cursor: pointer; &:hover { color: var(--accent); } }
-
-  .eval-toggle { display: flex; gap: 0; }
-
-  .eval-btn {
-    flex: 1; padding: 8px 0;
-    font-size: 13px; font-weight: 600;
-    color: var(--text-muted);
-    background: rgb(255 255 255 / 4%);
-    border: 1px solid var(--cm-dialog-border); cursor: pointer;
-    transition: all 0.15s;
-
-    &:first-child { border-radius: 6px 0 0 6px; }
-    &:last-child  { border-radius: 0 6px 6px 0; border-left: none; }
-
-    &--active { color: var(--accent); background: rgb(45 212 191 / 12%); border-color: var(--accent); }
+  .selected-text {
+    flex: 1;
   }
 
-  .input-suffix-wrap { display: flex; align-items: center; gap: 6px; }
-  .input-suffix { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+  .selected-edit {
+    color: var(--text-muted);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--accent);
+    }
+  }
+
+  .eval-toggle {
+    display: flex;
+    gap: 0;
+  }
+
+  .eval-btn {
+    flex: 1;
+    padding: 8px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    background: rgb(255 255 255 / 4%);
+    border: 1px solid var(--cm-dialog-border);
+    transition: all 0.15s;
+
+    &:first-child {
+      border-radius: 6px 0 0 6px;
+    }
+
+    &:last-child {
+      border-left: none;
+      border-radius: 0 6px 6px 0;
+    }
+
+    &--active {
+      color: var(--accent);
+      background: rgb(45 212 191 / 12%);
+      border-color: var(--accent);
+    }
+  }
+
+  .input-suffix-wrap {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .input-suffix {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
 
   .validate-hint {
-    display: flex; gap: 6px; align-items: center;
-    font-size: 12px; margin-top: 4px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
     justify-content: flex-end;
-    &--ok  { color: #22c55e; }
-    &--err { color: #ef4444; }
+    margin-top: 4px;
+    font-size: 12px;
+
+    &--ok {
+      color: #22c55e;
+    }
+
+    &--err {
+      color: #ef4444;
+    }
   }
 
   // ── Step3 预览卡 ────────────────────────────────────────
   .preview-card {
     padding: 18px;
+    margin-bottom: 4px;
     background: var(--cm-dialog-bg-inner);
     border: 1px solid var(--cm-dialog-border);
     border-radius: 10px;
-    margin-bottom: 4px;
   }
 
   .preview-card-header {
-    display: flex; gap: 12px; align-items: flex-start;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
     padding-bottom: 14px;
-    border-bottom: 1px solid var(--cm-dialog-border);
     margin-bottom: 14px;
+    border-bottom: 1px solid var(--cm-dialog-border);
   }
 
   .preview-app-icon {
-    width: 40px; height: 40px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; font-weight: 700; color: #fff;
-    border-radius: 10px; flex-shrink: 0;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 10px;
   }
 
-  .preview-app-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
-  .preview-app-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+  .preview-app-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .preview-app-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 4px;
+  }
+
   .preview-tag {
-    padding: 2px 7px; font-size: 11px;
-    color: var(--text-secondary); background: rgb(255 255 255 / 6%); border-radius: 4px;
-    &--run { color: #22c55e; background: rgb(34 197 94 / 12%); }
+    padding: 2px 7px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: rgb(255 255 255 / 6%);
+    border-radius: 4px;
+
+    &--run {
+      color: #22c55e;
+      background: rgb(34 197 94 / 12%);
+    }
   }
 
-  .preview-multi { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+  .preview-multi {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
 
   .preview-grid {
     display: grid;
@@ -752,34 +995,81 @@
     gap: 10px 20px;
   }
 
-  .preview-item { display: flex; flex-direction: column; gap: 2px; }
-  .pi-label { font-size: 11px; color: var(--text-muted); }
-  .pi-value { font-size: 13px; color: var(--text-primary); &--accent { color: var(--accent); font-weight: 600; } }
+  .preview-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .pi-label {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .pi-value {
+    font-size: 13px;
+    color: var(--text-primary);
+
+    &--accent {
+      font-weight: 600;
+      color: var(--accent);
+    }
+  }
 
   // ── 保存方式 ────────────────────────────────────────────
-  .save-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .save-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
 
   .save-card {
-    display: flex; gap: 12px; align-items: flex-start;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
     padding: 16px;
+    cursor: pointer;
     background: var(--cm-dialog-bg-inner);
     border: 1px solid var(--cm-dialog-border);
     border-radius: 10px;
-    cursor: pointer;
     transition: all 0.15s;
 
-    &:hover { border-color: var(--accent); }
-    &--active { border-color: var(--accent); background: rgb(45 212 191 / 8%); }
+    &:hover {
+      border-color: var(--accent);
+    }
+
+    &--active {
+      background: rgb(45 212 191 / 8%);
+      border-color: var(--accent);
+    }
   }
 
   .save-card-icon {
-    font-size: 22px; flex-shrink: 0; margin-top: 2px;
-    &--draft   { color: #f59e0b; }
-    &--publish { color: var(--accent); }
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 22px;
+
+    &--draft {
+      color: #f59e0b;
+    }
+
+    &--publish {
+      color: var(--accent);
+    }
   }
 
-  .save-card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-  .save-card-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+  .save-card-title {
+    margin-bottom: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .save-card-desc {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
 
   // ── Footer 按钮 ──────────────────────────────────────────
   .btn-cancel {
@@ -796,20 +1086,36 @@
     border-radius: 8px !important;
   }
 
-  .btn-next, .btn-save {
-    color: #0b1120 !important;
+  .btn-next,
+  .btn-save {
     font-weight: 600 !important;
+    color: #0b1120 !important;
     background: var(--accent) !important;
     border: none !important;
     border-radius: 8px !important;
-    &:hover { filter: brightness(1.1); }
+
+    &:hover {
+      filter: brightness(1.1);
+    }
   }
 
   // ── app-opt ──────────────────────────────────────────────
-  .app-opt { display: flex; gap: 8px; align-items: center; }
+  .app-opt {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
   .app-opt-icon {
-    width: 22px; height: 22px; border-radius: 5px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 5px;
   }
 </style>

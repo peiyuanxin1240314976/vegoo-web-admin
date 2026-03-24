@@ -54,7 +54,11 @@
 
           <!-- 文件上传区 -->
           <div
-            :class="['upload-zone', isDragging && 'upload-zone--drag', form.fileName && 'upload-zone--has-file']"
+            :class="[
+              'upload-zone',
+              isDragging && 'upload-zone--drag',
+              form.fileName && 'upload-zone--has-file'
+            ]"
             @dragover.prevent="isDragging = true"
             @dragleave="isDragging = false"
             @drop.prevent="handleDrop"
@@ -66,7 +70,9 @@
               </div>
               <div class="upload-text">拖拽 CSV 文件至此，或点击选择</div>
               <div class="upload-hint">
-                支持 {{ form.dataSource === 'appstore' ? 'App Store' : 'Google Play' }} 标准财务报表格式 (.csv)<br />
+                支持
+                {{ form.dataSource === 'appstore' ? 'App Store' : 'Google Play' }} 标准财务报表格式
+                (.csv)<br />
                 单文件最大 50MB
               </div>
               <ElButton class="btn-choose" @click.stop="triggerFileInput">选择文件</ElButton>
@@ -82,7 +88,13 @@
               </div>
             </template>
           </div>
-          <input ref="fileInputRef" type="file" accept=".csv" class="hidden-input" @change="handleFileChange" />
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept=".csv"
+            class="hidden-input"
+            @change="handleFileChange"
+          />
 
           <!-- 重复数据提示 -->
           <div class="dup-notice">
@@ -97,7 +109,9 @@
         <!-- 右侧：字段映射预览 -->
         <div class="select-right">
           <div class="mapping-title">字段映射预览</div>
-          <div class="mapping-sub">{{ form.dataSource === 'appstore' ? 'App Store' : 'Google Play' }} 标准字段</div>
+          <div class="mapping-sub"
+            >{{ form.dataSource === 'appstore' ? 'App Store' : 'Google Play' }} 标准字段</div
+          >
           <div class="mapping-table">
             <div class="mapping-head">
               <span>文件字段</span>
@@ -135,9 +149,7 @@
 
           <!-- 数据源标签 -->
           <div class="importing-source-tag">
-            <span class="source-badge source-badge--apple">
-              App Store (iOS)
-            </span>
+            <span class="source-badge source-badge--apple"> App Store (iOS) </span>
           </div>
 
           <!-- 环形进度 -->
@@ -145,7 +157,9 @@
             <svg class="progress-ring" viewBox="0 0 120 120">
               <circle cx="60" cy="60" r="52" class="ring-track" />
               <circle
-                cx="60" cy="60" r="52"
+                cx="60"
+                cy="60"
+                r="52"
                 class="ring-fill"
                 :stroke-dasharray="ringCirc"
                 :stroke-dashoffset="ringOffset"
@@ -243,7 +257,11 @@
   }>()
 
   // ─── 表单 ──────────────────────────────────────────────
-  const form = ref({ dataSource: 'appstore' as 'appstore' | 'googleplay' | '', fileName: '', fileSize: '' })
+  const form = ref({
+    dataSource: 'appstore' as 'appstore' | 'googleplay' | '',
+    fileName: '',
+    fileSize: ''
+  })
   const isDragging = ref(false)
   const fileInputRef = ref<HTMLInputElement>()
   const step = ref<'select' | 'importing'>('select')
@@ -307,9 +325,12 @@
   const dupCount = ref(0)
   const etaSec = ref(60)
   const speed = ref(0)
-  const logs = ref<{ time: string; msg: string; type: 'info' | 'success' | 'warn' | 'progress' }[]>([])
+  const logs = ref<{ time: string; msg: string; type: 'info' | 'success' | 'warn' | 'progress' }[]>(
+    []
+  )
   const logBoxRef = ref<HTMLElement>()
   let timer: ReturnType<typeof setInterval> | null = null
+  const remoteTaskId = ref('')
   const ringCirc = Math.PI * 2 * 52
 
   const ringOffset = computed(() => ringCirc - (ringCirc * progressPct.value) / 100)
@@ -329,16 +350,16 @@
   }
 
   const startImport = async () => {
-    let remoteTaskId = ''
+    remoteTaskId.value = ''
     if (!OrderImportApiSource.submitImport && fileInputRef.value?.files?.[0]) {
       const formData = new FormData()
       formData.append('file', fileInputRef.value.files[0])
       formData.append('dataSource', form.value.dataSource || 'appstore')
       try {
         const resp = await submitOrderImport(formData)
-        remoteTaskId = resp?.taskId || ''
+        remoteTaskId.value = resp?.taskId || ''
       } catch {
-        remoteTaskId = ''
+        remoteTaskId.value = ''
       }
     }
     step.value = 'importing'
@@ -374,11 +395,15 @@
       newCount.value = Math.floor(processed.value * 0.83)
       dupCount.value = Math.floor(processed.value * 0.17)
       progressPct.value = Math.round((processed.value / totalRows.value) * 100)
-      etaSec.value = Math.max(0, Math.round(((totalRows.value - processed.value) / speed.value)))
-      progressLabel.value = progressPct.value < 30 ? '解析中' : progressPct.value < 70 ? '比对中' : '导入中'
+      etaSec.value = Math.max(0, Math.round((totalRows.value - processed.value) / speed.value))
+      progressLabel.value =
+        progressPct.value < 30 ? '解析中' : progressPct.value < 70 ? '比对中' : '导入中'
 
       if (processed.value % (PER_TICK * 5) < PER_TICK) {
-        addLog(`已导入 ${processed.value.toLocaleString()} / ${totalRows.value.toLocaleString()} 条`, 'progress')
+        addLog(
+          `已导入 ${processed.value.toLocaleString()} / ${totalRows.value.toLocaleString()} 条`,
+          'progress'
+        )
       }
 
       if (processed.value >= totalRows.value) {
@@ -386,18 +411,24 @@
         timer = null
         progressPct.value = 100
         progressLabel.value = '完成'
-        addLog(`导入完成！新增 ${newCount.value.toLocaleString()} 条，重复跳过 ${dupCount.value.toLocaleString()} 条`, 'success')
+        addLog(
+          `导入完成！新增 ${newCount.value.toLocaleString()} 条，重复跳过 ${dupCount.value.toLocaleString()} 条`,
+          'success'
+        )
 
         if (autoJump.value) {
           const fallbackTaskId = `IMP-${String(getAppNow().getTime()).slice(-6)}`
-          setTimeout(() => emit('success', remoteTaskId || fallbackTaskId), 800)
+          setTimeout(() => emit('success', remoteTaskId.value || fallbackTaskId), 800)
         }
       }
     }, STEP)
   }
 
   const handleCancelImport = () => {
-    if (timer) { clearInterval(timer); timer = null }
+    if (timer) {
+      clearInterval(timer)
+      timer = null
+    }
     step.value = 'select'
     ElMessage.warning('已取消导入')
     handleClose()
@@ -414,16 +445,22 @@
     form.value = { dataSource: 'appstore', fileName: '', fileSize: '' }
     progressPct.value = 0
     logs.value = []
-    if (timer) { clearInterval(timer); timer = null }
+    if (timer) {
+      clearInterval(timer)
+      timer = null
+    }
   }
 
   onBeforeUnmount(() => {
     if (timer) clearInterval(timer)
   })
 
-  watch(() => props.visible, (v) => {
-    if (!v) handleClosed()
-  })
+  watch(
+    () => props.visible,
+    (v) => {
+      if (!v) handleClosed()
+    }
+  )
 </script>
 
 <style lang="scss" scoped>
@@ -479,11 +516,13 @@
     border-radius: 10px;
     transition: all 0.2s;
 
-    &:hover { border-color: var(--accent); }
+    &:hover {
+      border-color: var(--accent);
+    }
 
     &--active {
-      border-color: var(--accent) !important;
       background: rgb(45 212 191 / 8%);
+      border-color: var(--accent) !important;
     }
   }
 
@@ -491,8 +530,8 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    color: var(--accent);
     font-size: 14px;
+    color: var(--accent);
   }
 
   .source-card-icon {
@@ -505,8 +544,15 @@
     font-size: 16px;
     border-radius: 8px;
 
-    &--apple  { background: #1d6fce; color: #fff; }
-    &--google { background: #1a8a43; color: #fff; }
+    &--apple {
+      color: #fff;
+      background: #1d6fce;
+    }
+
+    &--google {
+      color: #fff;
+      background: #1a8a43;
+    }
   }
 
   .source-card-name {
@@ -528,26 +574,29 @@
     align-items: center;
     justify-content: center;
     padding: 24px 16px;
-    cursor: pointer;
     text-align: center;
+    cursor: pointer;
     background: rgb(255 255 255 / 2%);
     border: 1px dashed var(--cm-dialog-border);
     border-radius: 10px;
     transition: all 0.2s;
 
-    &:hover, &--drag {
-      border-color: var(--accent);
+    &:hover,
+    &--drag {
       background: rgb(45 212 191 / 5%);
+      border-color: var(--accent);
     }
 
     &--has-file {
       cursor: default;
-      border-style: solid;
       border-color: var(--accent);
+      border-style: solid;
     }
   }
 
-  .upload-icon { color: var(--text-muted); }
+  .upload-icon {
+    color: var(--text-muted);
+  }
 
   .upload-text {
     font-size: 15px;
@@ -562,8 +611,8 @@
   }
 
   .btn-choose {
-    margin-top: 4px;
     padding: 6px 16px !important;
+    margin-top: 4px;
     font-size: 13px !important;
     color: var(--text-secondary) !important;
     background: transparent !important;
@@ -576,7 +625,9 @@
     }
   }
 
-  .hidden-input { display: none; }
+  .hidden-input {
+    display: none;
+  }
 
   .file-info {
     display: flex;
@@ -586,18 +637,29 @@
   }
 
   .file-icon {
+    flex-shrink: 0;
     padding: 4px 6px;
     font-size: 11px;
     font-weight: 700;
     color: #fff;
     background: #e55353;
     border-radius: 4px;
-    flex-shrink: 0;
   }
 
-  .file-meta { flex: 1; text-align: left; }
-  .file-name { font-size: 13px; color: var(--text-primary); }
-  .file-size { font-size: 11px; color: var(--text-muted); }
+  .file-meta {
+    flex: 1;
+    text-align: left;
+  }
+
+  .file-name {
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .file-size {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
 
   .file-tag {
     padding: 2px 8px;
@@ -619,9 +681,22 @@
     border-radius: 8px;
   }
 
-  .dup-icon { color: #60a5fa; margin-top: 1px; flex-shrink: 0; }
-  .dup-title { font-size: 13px; color: var(--text-primary); }
-  .dup-sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .dup-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #60a5fa;
+  }
+
+  .dup-title {
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .dup-sub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
 
   // ── 字段映射 ────────────────────────────────────────────
   .select-right {
@@ -631,16 +706,16 @@
   }
 
   .mapping-title {
+    margin-bottom: 2px;
     font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 2px;
   }
 
   .mapping-sub {
+    margin-bottom: 10px;
     font-size: 12px;
     color: var(--text-muted);
-    margin-bottom: 10px;
   }
 
   .mapping-table {
@@ -665,26 +740,31 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     padding: 7px 12px;
-    border-bottom: 1px solid var(--cm-dialog-border);
     font-size: 12px;
+    border-bottom: 1px solid var(--cm-dialog-border);
 
-    &:last-child { border-bottom: none; }
+    &:last-child {
+      border-bottom: none;
+    }
   }
 
-  .mapping-file  { color: var(--text-secondary); }
+  .mapping-file {
+    color: var(--text-secondary);
+  }
+
   .mapping-target {
     display: flex;
-    align-items: center;
     gap: 6px;
+    align-items: center;
     color: var(--text-primary);
   }
 
   .mapping-dot {
+    flex-shrink: 0;
     width: 6px;
     height: 6px;
-    border-radius: 50%;
     background: var(--accent);
-    flex-shrink: 0;
+    border-radius: 50%;
   }
 
   .mapping-footer {
@@ -711,18 +791,29 @@
   }
 
   .importing-file-icon {
+    flex-shrink: 0;
     padding: 3px 6px;
     font-size: 11px;
     font-weight: 700;
     color: #fff;
     background: #e55353;
     border-radius: 4px;
-    flex-shrink: 0;
   }
 
-  .importing-file-meta { flex: 1; }
-  .importing-file-name { font-size: 13px; color: var(--text-primary); display: block; }
-  .importing-file-size { font-size: 11px; color: var(--text-muted); }
+  .importing-file-meta {
+    flex: 1;
+  }
+
+  .importing-file-name {
+    display: block;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .importing-file-size {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
 
   .importing-file-tag {
     padding: 2px 8px;
@@ -740,8 +831,17 @@
     font-size: 12px;
     border-radius: 6px;
 
-    &--apple  { color: #60a5fa; background: rgb(29 111 206 / 15%); border: 1px solid rgb(29 111 206 / 30%); }
-    &--google { color: #4ade80; background: rgb(26 138 67 / 15%);  border: 1px solid rgb(26 138 67 / 30%); }
+    &--apple {
+      color: #60a5fa;
+      background: rgb(29 111 206 / 15%);
+      border: 1px solid rgb(29 111 206 / 30%);
+    }
+
+    &--google {
+      color: #4ade80;
+      background: rgb(26 138 67 / 15%);
+      border: 1px solid rgb(26 138 67 / 30%);
+    }
   }
 
   .progress-ring-wrap {
@@ -749,9 +849,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 8px auto;
     width: 150px;
     height: 150px;
+    margin: 8px auto;
   }
 
   .progress-ring {
@@ -769,8 +869,8 @@
   .ring-fill {
     fill: none;
     stroke: var(--accent);
-    stroke-width: 8;
     stroke-linecap: round;
+    stroke-width: 8;
     transition: stroke-dashoffset 0.5s ease;
   }
 
@@ -778,8 +878,8 @@
     position: absolute;
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 2px;
+    align-items: center;
     text-align: center;
   }
 
@@ -808,9 +908,9 @@
   }
 
   .stat-label {
+    margin-bottom: 2px;
     font-size: 11px;
     color: var(--text-muted);
-    margin-bottom: 2px;
   }
 
   .stat-value {
@@ -818,15 +918,20 @@
     font-weight: 600;
     color: var(--text-primary);
 
-    &--teal  { color: var(--accent); }
-    &--amber { color: #f59e0b; }
+    &--teal {
+      color: var(--accent);
+    }
+
+    &--amber {
+      color: #f59e0b;
+    }
   }
 
   .linear-bar {
     height: 6px;
+    overflow: hidden;
     background: rgb(255 255 255 / 8%);
     border-radius: 3px;
-    overflow: hidden;
   }
 
   .linear-fill {
@@ -846,10 +951,10 @@
   .importing-right {
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     background: var(--cm-dialog-bg-inner);
     border: 1px solid var(--cm-dialog-border);
     border-radius: 10px;
-    overflow: hidden;
   }
 
   .log-header {
@@ -876,12 +981,12 @@
 
   .log-box {
     flex: 1;
-    overflow-y: auto;
+    min-height: 200px;
+    max-height: 260px;
     padding: 10px 14px;
+    overflow-y: auto;
     font-family: 'Courier New', monospace;
     font-size: 12px;
-    max-height: 260px;
-    min-height: 200px;
   }
 
   .log-line {
@@ -890,13 +995,27 @@
     margin-bottom: 4px;
     line-height: 1.5;
 
-    &--info     .log-msg { color: var(--text-secondary); }
-    &--success  .log-msg { color: #22c55e; }
-    &--warn     .log-msg { color: #f59e0b; }
-    &--progress .log-msg { color: #60a5fa; }
+    &--info .log-msg {
+      color: var(--text-secondary);
+    }
+
+    &--success .log-msg {
+      color: #22c55e;
+    }
+
+    &--warn .log-msg {
+      color: #f59e0b;
+    }
+
+    &--progress .log-msg {
+      color: #60a5fa;
+    }
   }
 
-  .log-time { color: var(--text-muted); white-space: nowrap; }
+  .log-time {
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
 
   .log-footer {
     padding: 8px 14px;
@@ -912,18 +1031,26 @@
     border: 1px solid var(--cm-dialog-border) !important;
     border-radius: 8px !important;
 
-    &:hover { border-color: var(--text-secondary) !important; }
+    &:hover {
+      border-color: var(--text-secondary) !important;
+    }
   }
 
   .btn-start {
-    color: #0b1120 !important;
     font-weight: 600 !important;
+    color: #0b1120 !important;
     background: var(--accent) !important;
     border: none !important;
     border-radius: 8px !important;
 
-    &:hover { filter: brightness(1.1); }
-    &:disabled { opacity: 0.4; cursor: not-allowed; }
+    &:hover {
+      filter: brightness(1.1);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
   }
 
   .btn-cancel-import {
@@ -939,12 +1066,15 @@
   }
 
   .footer-right {
-    margin-left: auto;
     display: flex;
     align-items: center;
+    margin-left: auto;
   }
 
   .auto-jump-cb {
-    :deep(.el-checkbox__label) { color: var(--text-secondary); font-size: 13px; }
+    :deep(.el-checkbox__label) {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
   }
 </style>

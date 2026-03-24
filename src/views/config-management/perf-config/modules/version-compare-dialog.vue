@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="visible"
-    :title="false"
+    title=""
     width="780px"
     :show-close="false"
     :close-on-click-modal="false"
@@ -107,11 +107,7 @@
         </div>
         <div class="vcd-footer-right">
           <ElButton class="btn-close" @click="handleClose">关闭</ElButton>
-          <ElButton
-            v-if="!verB.isActive"
-            class="btn-activate"
-            @click="handleActivateB"
-          >
+          <ElButton v-if="!verB.isActive" class="btn-activate" @click="handleActivateB">
             将 v{{ verB.version }} 设为激活
           </ElButton>
           <ElButton
@@ -162,7 +158,7 @@
       if (!v) return
       const versions = props.item.versions
       if (props.defaultVersion) {
-        const idx = versions.findIndex(v => v.version === props.defaultVersion!.version)
+        const idx = versions.findIndex((v) => v.version === props.defaultVersion!.version)
         verBIdx.value = idx >= 0 ? idx : 0
         verAIdx.value = verBIdx.value === 0 ? Math.min(1, versions.length - 1) : 0
       } else {
@@ -270,8 +266,8 @@
 
   watch([verA, verB], buildDiff, { immediate: true })
 
-  const changedCount = computed(() => diffRows.value.filter(r => r.changed).length)
-  const sameCount    = computed(() => diffRows.value.filter(r => !r.changed).length)
+  const changedCount = computed(() => diffRows.value.filter((r) => r.changed).length)
+  const sameCount = computed(() => diffRows.value.filter((r) => !r.changed).length)
 
   // ─── 操作 ─────────────────────────────────────────────
   const handleActivateA = () => {
@@ -296,18 +292,21 @@
 <style lang="scss" scoped>
   .vcd-dialog {
     :deep(.el-dialog) {
+      overflow: hidden;
       background: #131c2e;
       border: 1px solid rgb(255 255 255 / 7%);
       border-radius: 14px;
-      overflow: hidden;
     }
+
     :deep(.el-dialog__header) {
       padding: 0;
       margin: 0;
     }
+
     :deep(.el-dialog__body) {
       padding: 0;
     }
+
     :deep(.el-dialog__footer) {
       padding: 0;
       border-top: 1px solid rgb(255 255 255 / 7%);
@@ -323,35 +322,61 @@
     border-bottom: 1px solid rgb(255 255 255 / 7%);
   }
 
-  .vcd-header-left { display: flex; gap: 10px; align-items: center; }
+  .vcd-header-left {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
 
   .vcd-app-icon {
-    width: 38px; height: 38px; border-radius: 9px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 9px;
   }
 
   .vcd-title {
-    font-size: 16px; font-weight: 700; color: #e2e8f0;
-    display: block; margin-bottom: 4px;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #e2e8f0;
   }
 
-  .vcd-subtitle-tags { display: flex; gap: 5px; }
+  .vcd-subtitle-tags {
+    display: flex;
+    gap: 5px;
+  }
+
   .vcd-tag {
-    padding: 1px 7px; font-size: 11px;
-    color: #94a3b8; background: rgb(255 255 255 / 6%); border-radius: 3px;
+    padding: 1px 7px;
+    font-size: 11px;
+    color: #94a3b8;
+    background: rgb(255 255 255 / 6%);
+    border-radius: 3px;
   }
 
   .vcd-close-btn {
-    font-size: 18px; color: #64748b; cursor: pointer;
-    &:hover { color: #e2e8f0; }
+    font-size: 18px;
+    color: #64748b;
+    cursor: pointer;
+
+    &:hover {
+      color: #e2e8f0;
+    }
   }
 
   // ── 版本选择 ────────────────────────────────────────────
   .vcd-version-selectors {
     display: flex;
-    align-items: center;
     gap: 12px;
+    align-items: center;
     padding: 14px 20px;
     background: rgb(255 255 255 / 2%);
     border-bottom: 1px solid rgb(255 255 255 / 7%);
@@ -359,82 +384,149 @@
 
   .vcd-ver-selector {
     display: flex;
-    align-items: center;
-    gap: 8px;
     flex: 1;
+    gap: 8px;
+    align-items: center;
   }
 
-  .vcd-ver-label { font-size: 12px; color: #64748b; white-space: nowrap; }
+  .vcd-ver-label {
+    font-size: 12px;
+    color: #64748b;
+    white-space: nowrap;
+  }
 
   .vcd-ver-select {
     flex: 1;
+
     :deep(.el-select__wrapper) {
+      color: #e2e8f0 !important;
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
-      box-shadow: none !important;
-      color: #e2e8f0 !important;
       border-radius: 7px;
-      &:hover { border-color: #2dd4bf !important; }
+      box-shadow: none !important;
+
+      &:hover {
+        border-color: #2dd4bf !important;
+      }
     }
-    :deep(.el-select__placeholder) { color: #94a3b8 !important; }
+
+    :deep(.el-select__placeholder) {
+      color: #94a3b8 !important;
+    }
   }
 
   .vcd-ver-badge {
     padding: 3px 10px;
-    font-size: 12px; font-weight: 700; border-radius: 5px; white-space: nowrap;
-    &--a { color: #60a5fa; background: rgb(96 165 250 / 12%); border: 1px solid rgb(96 165 250 / 25%); }
-    &--b { color: #2dd4bf; background: rgb(45 212 191 / 12%); border: 1px solid rgb(45 212 191 / 25%); }
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    border-radius: 5px;
+
+    &--a {
+      color: #60a5fa;
+      background: rgb(96 165 250 / 12%);
+      border: 1px solid rgb(96 165 250 / 25%);
+    }
+
+    &--b {
+      color: #2dd4bf;
+      background: rgb(45 212 191 / 12%);
+      border: 1px solid rgb(45 212 191 / 25%);
+    }
   }
 
   .vcd-vs-sep {
-    font-size: 11px; font-weight: 700; color: #475569;
-    padding: 0 4px; flex-shrink: 0;
+    flex-shrink: 0;
+    padding: 0 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
   }
 
   // ── 对比表格 ─────────────────────────────────────────────
   .vcd-table-wrap {
     max-height: 380px;
-    overflow-y: auto;
     padding: 0;
+    overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #1e293b transparent;
-    &::-webkit-scrollbar { width: 5px; }
-    &::-webkit-scrollbar-track { background: transparent; }
-    &::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+
+    &::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
   }
 
   .vcd-table {
     width: 100%;
-    border-collapse: collapse;
     font-size: 13px;
+    border-collapse: collapse;
 
-    th, td {
+    th,
+    td {
       padding: 10px 16px;
-      border-bottom: 1px solid rgb(255 255 255 / 5%);
       text-align: left;
+      border-bottom: 1px solid rgb(255 255 255 / 5%);
     }
 
     th {
-      font-size: 11px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.04em;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      font-size: 11px;
+      font-weight: 600;
       color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
       background: #0d1626;
-      position: sticky; top: 0; z-index: 1;
     }
 
-    .col-field { width: 120px; color: #94a3b8; }
-    .col-val   { min-width: 200px; color: #e2e8f0; }
-    .col-a     { border-left: 2px solid rgb(96 165 250 / 20%); }
-    .col-b     { border-left: 2px solid rgb(45 212 191 / 20%); }
-    .col-diff  { width: 90px; text-align: center; }
+    .col-field {
+      width: 120px;
+      color: #94a3b8;
+    }
+
+    .col-val {
+      min-width: 200px;
+      color: #e2e8f0;
+    }
+
+    .col-a {
+      border-left: 2px solid rgb(96 165 250 / 20%);
+    }
+
+    .col-b {
+      border-left: 2px solid rgb(45 212 191 / 20%);
+    }
+
+    .col-diff {
+      width: 90px;
+      text-align: center;
+    }
   }
 
   .vcd-row {
     transition: background 0.12s;
-    &:hover td { background: rgb(255 255 255 / 2%); }
+
+    &:hover td {
+      background: rgb(255 255 255 / 2%);
+    }
+
     &--changed {
       background: rgb(245 158 11 / 4%);
-      .col-field { color: #f59e0b; font-weight: 500; }
+
+      .col-field {
+        font-weight: 500;
+        color: #f59e0b;
+      }
     }
   }
 
@@ -445,30 +537,48 @@
   }
 
   .val--changed-b {
-    color: #2dd4bf !important;
     font-weight: 500;
+    color: #2dd4bf !important;
   }
 
   .diff-tag {
     display: inline-block;
-    padding: 2px 7px; font-size: 10px; border-radius: 3px;
-    &--changed { color: #f59e0b; background: rgb(245 158 11 / 12%); }
-    &--same    { color: #64748b; background: rgb(100 116 139 / 10%); }
+    padding: 2px 7px;
+    font-size: 10px;
+    border-radius: 3px;
+
+    &--changed {
+      color: #f59e0b;
+      background: rgb(245 158 11 / 12%);
+    }
+
+    &--same {
+      color: #64748b;
+      background: rgb(100 116 139 / 10%);
+    }
   }
 
   // 汇总行
   .vcd-summary-row {
-    td { padding: 10px 16px; background: #0d1626; }
+    td {
+      padding: 10px 16px;
+      background: #0d1626;
+    }
   }
 
   .summary-text {
-    font-size: 12px; color: #94a3b8;
-    b { color: #f59e0b; }
+    font-size: 12px;
+    color: #94a3b8;
+
+    b {
+      color: #f59e0b;
+    }
   }
 
   .summary-no-diff {
     margin-left: 12px;
-    font-size: 12px; color: #2dd4bf;
+    font-size: 12px;
+    color: #2dd4bf;
   }
 
   // ── 底部 ─────────────────────────────────────────────────
@@ -479,16 +589,25 @@
     padding: 14px 20px;
   }
 
-  .vcd-footer-right { display: flex; gap: 8px; }
+  .vcd-footer-right {
+    display: flex;
+    gap: 8px;
+  }
 
   .btn-export {
-    display: inline-flex !important; gap: 5px !important; align-items: center !important;
+    display: inline-flex !important;
+    gap: 5px !important;
+    align-items: center !important;
     font-size: 13px !important;
     color: #94a3b8 !important;
     background: rgb(255 255 255 / 4%) !important;
     border: 1px solid rgb(255 255 255 / 10%) !important;
     border-radius: 7px !important;
-    &:hover { color: #2dd4bf !important; border-color: #2dd4bf !important; }
+
+    &:hover {
+      color: #2dd4bf !important;
+      border-color: #2dd4bf !important;
+    }
   }
 
   .btn-close {
@@ -497,16 +616,25 @@
     background: rgb(255 255 255 / 4%) !important;
     border: 1px solid rgb(255 255 255 / 10%) !important;
     border-radius: 7px !important;
-    &:hover { color: #e2e8f0 !important; border-color: rgb(255 255 255 / 20%) !important; }
+
+    &:hover {
+      color: #e2e8f0 !important;
+      border-color: rgb(255 255 255 / 20%) !important;
+    }
   }
 
   .btn-activate {
-    font-size: 13px !important; font-weight: 600 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
     color: #0b1120 !important;
     background: #2dd4bf !important;
     border: none !important;
     border-radius: 7px !important;
-    &:hover { filter: brightness(1.08); }
+
+    &:hover {
+      filter: brightness(1.08);
+    }
+
     &--a {
       color: #0b1120 !important;
       background: #60a5fa !important;
@@ -518,10 +646,20 @@
     background: #1a2540 !important;
     border: 1px solid rgb(255 255 255 / 10%) !important;
   }
+
   :deep(.el-select-dropdown__item) {
-    color: #94a3b8 !important;
     font-size: 13px;
-    &:hover, &.is-hovering { color: #2dd4bf !important; background: rgb(45 212 191 / 8%) !important; }
-    &.is-selected { color: #2dd4bf !important; background: rgb(45 212 191 / 12%) !important; }
+    color: #94a3b8 !important;
+
+    &:hover,
+    &.is-hovering {
+      color: #2dd4bf !important;
+      background: rgb(45 212 191 / 8%) !important;
+    }
+
+    &.is-selected {
+      color: #2dd4bf !important;
+      background: rgb(45 212 191 / 12%) !important;
+    }
   }
 </style>

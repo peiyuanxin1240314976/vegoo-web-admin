@@ -26,13 +26,7 @@
       </div>
     </div>
 
-    <el-form
-      ref="formRef"
-      :model="form"
-      :rules="rules"
-      label-position="top"
-      class="agency-form"
-    >
+    <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="agency-form">
       <!-- 代理商名称 -->
       <el-form-item label="代理商名称" prop="agencyName">
         <el-input
@@ -81,7 +75,12 @@
           <el-input v-model="form.contact" placeholder="联系人姓名" class="form-input" clearable />
         </el-form-item>
         <el-form-item label="联系电话" prop="phone" class="form-col">
-          <el-input v-model="form.phone" placeholder="+86 138-0000-0000" class="form-input" clearable />
+          <el-input
+            v-model="form.phone"
+            placeholder="+86 138-0000-0000"
+            class="form-input"
+            clearable
+          />
         </el-form-item>
       </div>
 
@@ -136,7 +135,12 @@
 
     <template #footer>
       <ElButton round class="dialog-btn dialog-btn--cancel" @click="handleCancel">取消</ElButton>
-      <ElButton round class="dialog-btn dialog-btn--submit" :loading="submitting" @click="handleSubmit">
+      <ElButton
+        round
+        class="dialog-btn dialog-btn--submit"
+        :loading="submitting"
+        @click="handleSubmit"
+      >
         {{ isEdit ? '保存修改' : '确认新增' }}
       </ElButton>
     </template>
@@ -147,7 +151,7 @@
   import { ref, computed, watch } from 'vue'
   import type { FormInstance, FormRules } from 'element-plus'
   import { PLATFORM_CONFIGS } from '../types'
-  import type { AgencyItem, AgencyFormModel } from '../types'
+  import type { AgencyItem, AgencyFormModel, AgencyCoopMode } from '../types'
 
   defineOptions({ name: 'AgencyFormDialog' })
 
@@ -168,7 +172,7 @@
 
   const isEdit = computed(() => !!props.editData?.id)
 
-  const coopModeOptions = [
+  const coopModeOptions: Array<{ value: AgencyCoopMode; label: string; desc: string }> = [
     { value: '授权代理', label: '授权代理', desc: '通过代理商账号体系管理广告账户' },
     { value: '直接开户', label: '直接开户', desc: '通过平台直接开设广告账户' }
   ]
@@ -215,10 +219,10 @@
 
   const rules: FormRules = {
     agencyName: [{ required: true, message: '请输入代理商名称', trigger: 'blur' }],
-    source:     [{ required: true, message: '请选择广告平台', trigger: 'change' }],
-    coopMode:   [{ required: true, message: '请选择合作模式', trigger: 'change' }],
-    contact:    [{ required: true, message: '请输入联系人', trigger: 'blur' }],
-    email:      [
+    source: [{ required: true, message: '请选择广告平台', trigger: 'change' }],
+    coopMode: [{ required: true, message: '请选择合作模式', trigger: 'change' }],
+    contact: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
+    email: [
       { required: true, message: '请输入联系邮箱', trigger: 'blur' },
       { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
     ],
@@ -271,7 +275,9 @@
   .el-dialog:has(.agency-form-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
 
-    &:hover { color: var(--cm-dialog-text-primary) !important; }
+    &:hover {
+      color: var(--cm-dialog-text-primary) !important;
+    }
   }
 
   .el-dialog:has(.agency-form-dialog-bd) .el-dialog__body.agency-form-dialog-bd {
@@ -350,8 +356,13 @@
       box-shadow: none !important;
       transition: border-color 0.18s;
 
-      &:hover { border-color: rgb(255 255 255 / 18%) !important; }
-      &:focus-within { border-color: #3b82f6 !important; }
+      &:hover {
+        border-color: rgb(255 255 255 / 18%) !important;
+      }
+
+      &:focus-within {
+        border-color: #3b82f6 !important;
+      }
     }
 
     :deep(.el-input__inner),
@@ -359,7 +370,9 @@
       font-size: 13px;
       color: #e2e8f0;
 
-      &::placeholder { color: #475569; }
+      &::placeholder {
+        color: #475569;
+      }
     }
   }
 
@@ -373,9 +386,17 @@
       box-shadow: none;
       transition: border-color 0.18s;
 
-      &:hover { border-color: rgb(255 255 255 / 18%); }
-      &:focus { border-color: #3b82f6; }
-      &::placeholder { color: #475569; }
+      &:hover {
+        border-color: rgb(255 255 255 / 18%);
+      }
+
+      &:focus {
+        border-color: #3b82f6;
+      }
+
+      &::placeholder {
+        color: #475569;
+      }
     }
   }
 
@@ -418,8 +439,8 @@
   }
 
   .radio-dot-wrap {
-    padding-top: 2px;
     flex-shrink: 0;
+    padding-top: 2px;
   }
 
   .radio-dot {
@@ -453,8 +474,8 @@
 
   .radio-desc {
     font-size: 11px;
-    color: #64748b;
     line-height: 1.4;
+    color: #64748b;
   }
 
   // ─── 底部按钮 ────────────────────────────────────────
@@ -477,7 +498,9 @@
       background: #3b82f6 !important;
       border: none !important;
 
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
   }
 </style>

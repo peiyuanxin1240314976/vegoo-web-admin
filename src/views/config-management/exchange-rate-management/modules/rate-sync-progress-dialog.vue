@@ -22,7 +22,7 @@
         <ElProgress
           :percentage="Math.round((current / total) * 100)"
           :show-text="false"
-          stroke-width="4"
+          :stroke-width="4"
           color="#2dd4bf"
           class="prog-bar"
         />
@@ -105,7 +105,9 @@
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .prog-info {

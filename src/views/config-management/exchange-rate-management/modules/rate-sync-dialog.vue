@@ -30,20 +30,19 @@
     <div class="sync-section">
       <div class="section-label">同步范围</div>
       <div class="pairs-header">
-        <ElCheckbox v-model="allSelected" :indeterminate="isIndeterminate" @change="handleSelectAll">
+        <ElCheckbox
+          v-model="allSelected"
+          :indeterminate="isIndeterminate"
+          @change="handleSelectAll"
+        >
           全选
         </ElCheckbox>
       </div>
-      <div class="pairs-grid">
-        <ElCheckbox
-          v-for="pair in ALL_CURRENCY_PAIRS"
-          :key="pair"
-          v-model="selectedPairs"
-          :label="pair"
-        >
+      <ElCheckboxGroup v-model="selectedPairs" class="pairs-grid">
+        <ElCheckbox v-for="pair in ALL_CURRENCY_PAIRS" :key="pair" :label="pair">
           {{ pair }}
         </ElCheckbox>
-      </div>
+      </ElCheckboxGroup>
     </div>
 
     <div class="sync-section">
@@ -91,18 +90,14 @@
   const selectedSource = ref('openexchange')
   const selectedPairs = ref<string[]>([...ALL_CURRENCY_PAIRS])
 
-  const allSelected = computed(
-    () => selectedPairs.value.length === ALL_CURRENCY_PAIRS.length
-  )
+  const allSelected = computed(() => selectedPairs.value.length === ALL_CURRENCY_PAIRS.length)
 
   const isIndeterminate = computed(
-    () =>
-      selectedPairs.value.length > 0 &&
-      selectedPairs.value.length < ALL_CURRENCY_PAIRS.length
+    () => selectedPairs.value.length > 0 && selectedPairs.value.length < ALL_CURRENCY_PAIRS.length
   )
 
-  const handleSelectAll = (val: boolean | string | number) => {
-    selectedPairs.value = val ? [...ALL_CURRENCY_PAIRS] : []
+  const handleSelectAll = (val: string | number | boolean) => {
+    selectedPairs.value = val === true ? [...ALL_CURRENCY_PAIRS] : []
   }
 
   const handleStartSync = () => {
@@ -134,11 +129,11 @@
   .source-tab {
     padding: 5px 14px;
     font-size: 13px;
+    color: #94a3b8;
     cursor: pointer;
     background: rgb(255 255 255 / 4%);
     border: 1px solid rgb(255 255 255 / 8%);
     border-radius: 6px;
-    color: #94a3b8;
     transition: all 0.15s;
 
     &--active {
@@ -160,10 +155,10 @@
   }
 
   .status-dot {
+    flex-shrink: 0;
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    flex-shrink: 0;
 
     &--ok {
       background: #22c55e;
