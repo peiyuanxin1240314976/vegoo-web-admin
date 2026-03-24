@@ -66,7 +66,7 @@
             </ElSelect>
           </div>
 
-          <div class="rev-pill">
+          <!-- <div class="rev-pill">
             <span class="rev-pill__k">Version:</span>
             <ElSelect
               v-model="filters.app_version"
@@ -82,7 +82,7 @@
                 :value="opt.value"
               />
             </ElSelect>
-          </div>
+          </div> -->
 
           <div class="rev-pill">
             <span class="rev-pill__k">Date:</span>
