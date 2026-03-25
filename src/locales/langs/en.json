@@ -269,6 +269,7 @@
       "iaaAnalysis": "IAA Analysis",
       "ecpmAnalysis": "eCPM Analysis",
       "adPlatformDetail": "Ad Platform Details",
+      "adPlatformInfo": "Ad Platform Info",
       "adPlatformDetailEmpty": "Aggregate ad platform metrics here, or open the view below for app-level performance.",
       "backToAdPlatformDetail": "Back to Ad Platform Details",
       "appAdPlatformPerformance": "App Ad Platform Performance",

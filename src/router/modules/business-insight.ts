@@ -116,6 +116,16 @@ export const businessInsightRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'ad-platform-info',
+      name: 'AdPlatformInfo',
+      component: '/business-insight/ad-platform-info',
+      meta: {
+        title: 'menus.businessInsight.adPlatformInfo',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
       path: 'ad-platform-detail/app-ad-platform-performance',
       name: 'AppAdPlatformPerformance',
       component: '/business-insight/ad-platform-detail/app-ad-platform-performance',

@@ -269,6 +269,7 @@
       "iaaAnalysis": "IAA 分析",
       "ecpmAnalysis": "ECPM分析",
       "adPlatformDetail": "广告平台详情",
+      "adPlatformInfo": "广告平台信息",
       "adPlatformDetailEmpty": "在此汇总各广告平台维度数据，可进入下级查看应用侧表现。",
       "backToAdPlatformDetail": "返回广告平台详情",
       "appAdPlatformPerformance": "应用广告平台表现",
