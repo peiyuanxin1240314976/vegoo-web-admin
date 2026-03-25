@@ -14,7 +14,7 @@
           <div class="rev-pill">
             <span class="rev-pill__k">App:</span>
             <ElSelect
-              v-model="filters.s_app_id"
+              v-model="filtersDraft.s_app_id"
               class="rev-select"
               popper-class="rev-select__popper"
               :teleported="false"
@@ -32,7 +32,7 @@
           <div class="rev-pill">
             <span class="rev-pill__k">Platform:</span>
             <ElSelect
-              v-model="filters.platform"
+              v-model="filtersDraft.platform"
               class="rev-select"
               popper-class="rev-select__popper"
               :teleported="false"
@@ -50,7 +50,7 @@
           <div class="rev-pill">
             <span class="rev-pill__k">Country:</span>
             <ElSelect
-              v-model="filters.s_country_code"
+              v-model="filtersDraft.s_country_code"
               class="rev-select"
               popper-class="rev-select__popper"
               :teleported="false"
@@ -69,7 +69,7 @@
           <!-- <div class="rev-pill">
             <span class="rev-pill__k">Version:</span>
             <ElSelect
-              v-model="filters.app_version"
+              v-model="filtersDraft.app_version"
               class="rev-select"
               popper-class="rev-select__popper"
               :teleported="false"
@@ -87,7 +87,7 @@
           <div class="rev-pill">
             <span class="rev-pill__k">Date:</span>
             <ElDatePicker
-              v-model="filters.t_date"
+              v-model="filtersDraft.t_date"
               type="date"
               value-format="YYYY-MM-DD"
               format="YYYY-MM-DD"
@@ -96,553 +96,599 @@
               :clearable="false"
             />
           </div>
+
+          <ElButton round class="rev-query-btn" @click="onQuery">查询</ElButton>
         </div>
 
         <!-- <button type="button" class="rev-export" @click="onExport">Export</button> -->
       </header>
 
-      <!-- KPI 卡片 -->
-      <section class="rev-kpi-grid">
-        <article
-          v-for="k in kpis"
-          :key="k.id"
-          class="rev-kpi"
-          :data-accent="k.accent"
-          role="group"
-          :aria-label="`${k.title} ${k.primaryValue}`"
-        >
-          <div class="rev-kpi__head">
-            <div class="rev-kpi__title">{{ k.title }}</div>
-            <div class="rev-kpi__trend" :class="k.trendUp ? 'up' : 'down'">
-              {{ k.trendPercentText }}
-            </div>
-          </div>
-          <div class="rev-kpi__value">{{ k.primaryValue }}</div>
-          <div class="rev-kpi__sub">
-            <span class="rev-kpi__subitem">{{ k.subLeftLabel }} {{ k.subLeftValue }}</span>
-            <span class="rev-kpi__subitem">{{ k.subRightLabel }} {{ k.subRightValue }}</span>
-          </div>
-          <div :ref="(el) => setSparkRef(k.id, el)" class="rev-kpi__spark" />
-        </article>
-      </section>
-
-      <!-- 主体栅格：完全按原型固定列宽/高度 -->
-      <section class="rev-main">
-        <!-- 上排：左 IAA / 中 IAP / 右 7天 IAA vs IAP -->
-        <div class="rev-panel rev-panel--iaa">
-          <div class="rev-panel__header rev-panel__header--iaa">
-            <div class="rev-panel__title">IAA 广告收入构成分析</div>
-            <div class="rev-tabs rev-tabs--iaa">
-              <button
-                v-for="t in iaaTabs"
-                :key="t.key"
-                type="button"
-                class="rev-tab"
-                :class="{ active: iaaTab === t.key }"
-                @click="iaaTab = t.key"
-              >
-                {{ t.label }}
-              </button>
-            </div>
-          </div>
-
-          <div
-            v-loading="
-              (iaaTab === 'ad_type' && iaaAdTypeLoading) ||
-              (iaaTab === 'platform' && iaaPlatformLoading) ||
-              (iaaTab === 'ad_unit' && iaaAdUnitLoading) ||
-              (iaaTab === 'country' && iaaCountryLoading) ||
-              (iaaTab === 'version' && iaaVersionLoading)
-            "
-            class="rev-iaa-main"
-            :class="{ 'rev-iaa-main--stacked': iaaTab === 'ad_type' }"
-          >
-            <div class="rev-iaa-viz">
-              <!-- 广告类型 / 广告平台：堆叠条 + 图例 -->
-              <div v-show="iaaTab === 'ad_type' || iaaTab === 'platform'" class="rev-iaa-bar">
-                <div class="rev-iaa-bar__track">
-                  <div
-                    v-for="seg in iaaSegments"
-                    :key="seg.key"
-                    class="rev-iaa-bar__seg"
-                    :style="{ width: `${seg.percent}%`, background: seg.color }"
+      <ElSkeleton :loading="pageLoading" animated>
+        <template #template>
+          <section class="rev-skeleton">
+            <div class="rev-skeleton__kpis">
+              <div v-for="i in 6" :key="i" class="rev-skeleton__kpi">
+                <ElSkeletonItem variant="text" class="rev-skeleton__line rev-skeleton__line--sm" />
+                <ElSkeletonItem variant="text" class="rev-skeleton__line rev-skeleton__line--lg" />
+                <div class="rev-skeleton__kpi-sub">
+                  <ElSkeletonItem
+                    variant="text"
+                    class="rev-skeleton__line rev-skeleton__line--md"
+                  />
+                  <ElSkeletonItem
+                    variant="text"
+                    class="rev-skeleton__line rev-skeleton__line--md"
                   />
                 </div>
-                <div class="rev-iaa-bar__labels">
-                  <span v-for="seg in iaaSegments" :key="seg.key" class="rev-iaa-bar__label">
-                    <span class="rev-dot" :style="{ background: seg.color }" />
-                    {{ seg.percent.toFixed(1) }}% {{ seg.label }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- 广告位：左图例（竖排）+ 右环形图 -->
-              <div v-show="iaaTab === 'ad_unit'" class="rev-iaa-donut-wrap">
-                <div class="rev-iaa-donut-legend">
-                  <span v-for="seg in iaaSegments" :key="seg.key" class="rev-iaa-bar__label">
-                    <span class="rev-dot" :style="{ background: seg.color }" />
-                    {{ seg.label }}
-                  </span>
-                </div>
-                <div class="rev-iaa-donut-chart">
-                  <div ref="iaaDonutRef" class="rev-iaa-donut" />
-                  <div class="rev-iaa-donut-center">
-                    <div class="rev-iaa-donut-center-val">{{ iaaVizTotalMoney }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 国家：横向排名条 -->
-              <div v-show="iaaTab === 'country'" class="rev-iaa-country">
-                <div
-                  v-for="item in iaaCountryBarItems"
-                  :key="item._rowKey"
-                  class="rev-iaa-country-row"
-                  :class="{ 'is-other': item.isOther }"
-                >
-                  <div class="rev-iaa-country-bar-track">
-                    <div class="rev-iaa-country-bar-fill" :style="{ width: `${item.pctWidth}%` }" />
-                  </div>
-                  <div class="rev-iaa-country-meta">
-                    <span
-                      v-if="item.flagClass"
-                      class="fi"
-                      :class="item.flagClass"
-                      aria-hidden="true"
-                    />
-                    <span class="rev-iaa-country-name">{{ item.label }}</span>
-                    <span class="rev-iaa-country-rev">: ${{ formatMoneyInt(item.revenue) }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 版本：柱状图 -->
-              <div v-show="iaaTab === 'version'" class="rev-iaa-version-wrap">
-                <div ref="iaaVersionBarRef" class="rev-iaa-version-chart" />
               </div>
             </div>
-
-            <div class="rev-table-wrap rev-table-wrap--iaa">
-              <ArtTable
-                class="rev-art-table"
-                :data="iaaRowsWithTotal"
-                :columns="iaaColumns"
-                row-key="_rowKey"
-                :stripe="false"
-                :border="false"
-                size="default"
-                :pagination="undefined"
-                :header-cell-style="iaaHeaderCellStyle"
-                :cell-style="iaaCellStyle"
-                :row-class-name="iaaRowClassName"
-              >
-                <template #s_name="{ row }">
-                  <span
-                    v-if="iaaTab === 'country' && row.s_country_code"
-                    class="rev-iaa-cell-country"
-                  >
-                    <span
-                      v-if="iaaCountryFlagClass(row.s_country_code)"
-                      class="fi"
-                      :class="iaaCountryFlagClass(row.s_country_code)"
-                      aria-hidden="true"
-                    />
-                    {{ row.s_name }}
-                  </span>
-                  <span v-else-if="iaaTab === 'version'" class="rev-iaa-cell-version">
-                    <span :class="{ 'is-current': row.is_current }">{{ row.s_name }}</span>
-                    <span v-if="row.is_current" class="rev-iaa-ver-badge">当前</span>
-                  </span>
-                  <span v-else>{{ row.s_name }}</span>
-                </template>
-                <template #revenue="{ row }">
-                  <span class="rev-iaa-money">{{ iaaFmtRevenue(row) }}</span>
-                </template>
-                <template #d_fill_rate="{ row }">
-                  <span class="rev-iaa-fill">{{ formatFixed(row.d_fill_rate, 1) }}%</span>
-                </template>
-                <template #d_mom_pct="{ row }">
-                  <span v-if="row.s_name === '合计'" class="rev-iaa-mom is-muted">—</span>
-                  <span
-                    v-else
-                    class="rev-iaa-mom"
-                    :class="row.d_mom_pct >= 0 ? 'is-up' : 'is-down'"
-                  >
-                    {{ row.d_mom_pct >= 0 ? '+' : '' }}{{ formatFixed(row.d_mom_pct, 1) }}%
-                    {{ row.d_mom_pct >= 0 ? '↑' : '↓' }}
-                  </span>
-                </template>
-                <template #d_crash_rate="{ row }">
-                  <span
-                    class="rev-iaa-crash"
-                    :class="iaaCrashToneClass(row.d_crash_rate, row.s_name === '合计')"
-                  >
-                    {{ formatFixed(row.d_crash_rate, 2) }}%
-                  </span>
-                </template>
-              </ArtTable>
-              <p v-if="iaaTab === 'version'" class="rev-iaa-version-foot">
-                {{ iaaVersionFootnote }}
-              </p>
+            <div class="rev-skeleton__main">
+              <div v-for="b in 6" :key="b" class="rev-skeleton__block">
+                <ElSkeletonItem variant="text" class="rev-skeleton__line rev-skeleton__line--lg" />
+                <ElSkeletonItem variant="text" class="rev-skeleton__line rev-skeleton__line--md" />
+                <ElSkeletonItem variant="text" class="rev-skeleton__line rev-skeleton__line--md" />
+                <ElSkeletonItem variant="text" class="rev-skeleton__line rev-skeleton__line--sm" />
+              </div>
             </div>
-          </div>
-        </div>
+          </section>
+        </template>
 
-        <div class="rev-panel rev-panel--iap">
-          <div class="rev-panel__header rev-panel__header--iap">
-            <div class="rev-panel__title">IAP 付费收入分析</div>
-            <div class="rev-tabs rev-tabs--iap">
-              <button
-                v-for="t in iapTabs"
-                :key="t.key"
-                type="button"
-                class="rev-tab"
-                :class="{ active: iapTab === t.key }"
-                @click="iapTab = t.key"
-              >
-                {{ t.label }}
-              </button>
-            </div>
-          </div>
-
-          <div class="rev-iap-body">
-            <!-- 商品构成 -->
-            <div
-              v-show="iapTab === 'product'"
-              v-loading="iapTab === 'product' && iapProductLoading"
-              class="rev-iap-tab rev-iap-tab--product"
+        <template #default>
+          <!-- KPI 卡片 -->
+          <section class="rev-kpi-grid">
+            <article
+              v-for="k in kpis"
+              :key="k.id"
+              class="rev-kpi"
+              :data-accent="k.accent"
+              role="group"
+              :aria-label="`${k.title} ${k.primaryValue}`"
             >
-              <div class="rev-iap-top">
-                <div class="rev-iap-kpi">
-                  <div class="rev-iap-kpi__k">订阅收入</div>
-                  <div class="rev-iap-kpi__row">
-                    <span class="rev-iap-kpi__v rev-iap-kpi__v--accent">{{
-                      iapProductHeader.subscriptionValueText
-                    }}</span>
-                    <span class="rev-iap-kpi__tag">{{ iapProductHeader.subscriptionPctText }}</span>
-                  </div>
+              <div class="rev-kpi__head">
+                <div class="rev-kpi__title">{{ k.title }}</div>
+                <div class="rev-kpi__trend" :class="k.trendUp ? 'up' : 'down'">
+                  {{ k.trendPercentText }}
                 </div>
-                <div class="rev-iap-kpi">
-                  <div class="rev-iap-kpi__k">一次性购买</div>
-                  <div class="rev-iap-kpi__row">
-                    <span class="rev-iap-kpi__v rev-iap-kpi__v--accent">{{
-                      iapProductHeader.oneTimeValueText
-                    }}</span>
-                    <span class="rev-iap-kpi__tag">{{ iapProductHeader.oneTimePctText }}</span>
-                  </div>
+              </div>
+              <div class="rev-kpi__value">{{ k.primaryValue }}</div>
+              <div class="rev-kpi__sub">
+                <span class="rev-kpi__subitem">{{ k.subLeftLabel }} {{ k.subLeftValue }}</span>
+                <span class="rev-kpi__subitem">{{ k.subRightLabel }} {{ k.subRightValue }}</span>
+              </div>
+              <div :ref="(el) => setSparkRef(k.id, el)" class="rev-kpi__spark" />
+            </article>
+          </section>
+
+          <!-- 主体栅格：完全按原型固定列宽/高度 -->
+          <section class="rev-main">
+            <!-- 上排：左 IAA / 中 IAP / 右 7天 IAA vs IAP -->
+            <div class="rev-panel rev-panel--iaa">
+              <div class="rev-panel__header rev-panel__header--iaa">
+                <div class="rev-panel__title">IAA 广告收入构成分析</div>
+                <div class="rev-tabs rev-tabs--iaa">
+                  <button
+                    v-for="t in iaaTabs"
+                    :key="t.key"
+                    type="button"
+                    class="rev-tab"
+                    :class="{ active: iaaTab === t.key }"
+                    @click="iaaTab = t.key"
+                  >
+                    {{ t.label }}
+                  </button>
                 </div>
               </div>
 
-              <div class="rev-table-wrap rev-table-wrap--iap">
-                <ArtTable
-                  height="300px"
-                  class="rev-art-table"
-                  :data="iapRowsWithTotal"
-                  :columns="iapColumns"
-                  row-key="s_product"
-                  :stripe="false"
-                  :border="false"
-                  size="default"
-                  :pagination="undefined"
-                  :header-cell-style="iapHeaderCellStyle"
-                  :cell-style="iapCellStyle"
-                >
-                  <template #d_purchase_rate="{ row }">
-                    <span
-                      class="rev-pill-metric"
-                      :class="
-                        row.d_purchase_rate >= 70
-                          ? 'good'
-                          : row.d_purchase_rate >= 30
-                            ? 'mid'
-                            : 'bad'
-                      "
+              <div
+                v-loading="
+                  (iaaTab === 'ad_type' && iaaAdTypeLoading) ||
+                  (iaaTab === 'platform' && iaaPlatformLoading) ||
+                  (iaaTab === 'ad_unit' && iaaAdUnitLoading) ||
+                  (iaaTab === 'country' && iaaCountryLoading) ||
+                  (iaaTab === 'version' && iaaVersionLoading)
+                "
+                class="rev-iaa-main"
+                :class="{ 'rev-iaa-main--stacked': iaaTab === 'ad_type' }"
+              >
+                <div class="rev-iaa-viz">
+                  <!-- 广告类型 / 广告平台：堆叠条 + 图例 -->
+                  <div v-show="iaaTab === 'ad_type' || iaaTab === 'platform'" class="rev-iaa-bar">
+                    <div class="rev-iaa-bar__track">
+                      <div
+                        v-for="seg in iaaSegments"
+                        :key="seg.key"
+                        class="rev-iaa-bar__seg"
+                        :style="{ width: `${seg.percent}%`, background: seg.color }"
+                      />
+                    </div>
+                    <div class="rev-iaa-bar__labels">
+                      <span v-for="seg in iaaSegments" :key="seg.key" class="rev-iaa-bar__label">
+                        <span class="rev-dot" :style="{ background: seg.color }" />
+                        {{ seg.percent.toFixed(1) }}% {{ seg.label }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- 广告位：左图例（竖排）+ 右环形图 -->
+                  <div v-show="iaaTab === 'ad_unit'" class="rev-iaa-donut-wrap">
+                    <div class="rev-iaa-donut-legend">
+                      <span v-for="seg in iaaSegments" :key="seg.key" class="rev-iaa-bar__label">
+                        <span class="rev-dot" :style="{ background: seg.color }" />
+                        {{ seg.label }}
+                      </span>
+                    </div>
+                    <div class="rev-iaa-donut-chart">
+                      <div ref="iaaDonutRef" class="rev-iaa-donut" />
+                      <div class="rev-iaa-donut-center">
+                        <div class="rev-iaa-donut-center-val">{{ iaaVizTotalMoney }}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 国家：横向排名条 -->
+                  <div v-show="iaaTab === 'country'" class="rev-iaa-country">
+                    <div
+                      v-for="item in iaaCountryBarItems"
+                      :key="item._rowKey"
+                      class="rev-iaa-country-row"
+                      :class="{ 'is-other': item.isOther }"
                     >
-                      {{ row.d_purchase_rate.toFixed(1) }}%
-                    </span>
-                  </template>
-                </ArtTable>
-              </div>
+                      <div class="rev-iaa-country-bar-track">
+                        <div
+                          class="rev-iaa-country-bar-fill"
+                          :style="{ width: `${item.pctWidth}%` }"
+                        />
+                      </div>
+                      <div class="rev-iaa-country-meta">
+                        <span
+                          v-if="item.flagClass"
+                          class="fi"
+                          :class="item.flagClass"
+                          aria-hidden="true"
+                        />
+                        <span class="rev-iaa-country-name">{{ item.label }}</span>
+                        <span class="rev-iaa-country-rev"
+                          >: ${{ formatMoneyInt(item.revenue) }}</span
+                        >
+                      </div>
+                    </div>
+                  </div>
 
-              <div class="rev-iap-bottom">
-                <div class="rev-mini-kpi">
-                  <div class="rev-mini-kpi__k">付费转化率</div>
-                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
-                    iapProductFoot.conversionRateText
-                  }}</div>
+                  <!-- 版本：柱状图 -->
+                  <div v-show="iaaTab === 'version'" class="rev-iaa-version-wrap">
+                    <div ref="iaaVersionBarRef" class="rev-iaa-version-chart" />
+                  </div>
                 </div>
-                <div class="rev-mini-kpi">
-                  <div class="rev-mini-kpi__k">ARPPU</div>
-                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
-                    iapProductFoot.arppuText
-                  }}</div>
-                </div>
-                <div class="rev-mini-kpi">
-                  <div class="rev-mini-kpi__k">订阅续费率</div>
-                  <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
-                    iapProductFoot.renewalRateText
-                  }}</div>
+
+                <div class="rev-table-wrap rev-table-wrap--iaa">
+                  <ArtTable
+                    class="rev-art-table"
+                    :data="iaaRowsWithTotal"
+                    :columns="iaaColumns"
+                    row-key="_rowKey"
+                    :stripe="false"
+                    :border="false"
+                    size="default"
+                    :pagination="undefined"
+                    :header-cell-style="iaaHeaderCellStyle"
+                    :cell-style="iaaCellStyle"
+                    :row-class-name="iaaRowClassName"
+                  >
+                    <template #s_name="{ row }">
+                      <span
+                        v-if="iaaTab === 'country' && row.s_country_code"
+                        class="rev-iaa-cell-country"
+                      >
+                        <span
+                          v-if="iaaCountryFlagClass(row.s_country_code)"
+                          class="fi"
+                          :class="iaaCountryFlagClass(row.s_country_code)"
+                          aria-hidden="true"
+                        />
+                        {{ row.s_name }}
+                      </span>
+                      <span v-else-if="iaaTab === 'version'" class="rev-iaa-cell-version">
+                        <span :class="{ 'is-current': row.is_current }">{{ row.s_name }}</span>
+                        <span v-if="row.is_current" class="rev-iaa-ver-badge">当前</span>
+                      </span>
+                      <span v-else>{{ row.s_name }}</span>
+                    </template>
+                    <template #revenue="{ row }">
+                      <span class="rev-iaa-money">{{ iaaFmtRevenue(row) }}</span>
+                    </template>
+                    <template #percent="{ row }">
+                      <span class="rev-iaa-fill">{{ formatFixed(row.percent, 1) }}%</span>
+                    </template>
+                    <template #d_mom_pct="{ row }">
+                      <span v-if="row.s_name === '合计'" class="rev-iaa-mom is-muted">—</span>
+                      <span
+                        v-else
+                        class="rev-iaa-mom"
+                        :class="row.d_mom_pct >= 0 ? 'is-up' : 'is-down'"
+                      >
+                        {{ row.d_mom_pct >= 0 ? '+' : '' }}{{ formatFixed(row.d_mom_pct, 1) }}%
+                        {{ row.d_mom_pct >= 0 ? '↑' : '↓' }}
+                      </span>
+                    </template>
+                  </ArtTable>
+                  <p v-if="iaaTab === 'version'" class="rev-iaa-version-foot">
+                    {{ iaaVersionFootnote }}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <!-- 广告平台分析：上比例条、中表格、下指标 -->
-            <div
-              v-show="iapTab === 'channel'"
-              v-loading="iapTab === 'channel' && iapChannelLoading"
-              class="rev-iap-tab rev-iap-tab--channel"
-            >
-              <div class="rev-iap-channel-viz">
-                <div class="rev-iaa-bar__track">
-                  <div
-                    v-for="seg in iapChannelSegments"
-                    :key="seg.key"
-                    class="rev-iaa-bar__seg"
-                    :style="{ width: `${seg.percent}%`, background: seg.color }"
-                  />
-                </div>
-                <div class="rev-iaa-bar__labels">
-                  <span v-for="seg in iapChannelSegments" :key="seg.key" class="rev-iaa-bar__label">
-                    <span class="rev-dot" :style="{ background: seg.color }" />
-                    {{ seg.percent.toFixed(1) }}% {{ seg.label }}
-                  </span>
+            <div class="rev-panel rev-panel--iap">
+              <div class="rev-panel__header rev-panel__header--iap">
+                <div class="rev-panel__title">IAP 付费收入分析</div>
+                <div class="rev-tabs rev-tabs--iap">
+                  <button
+                    v-for="t in iapTabs"
+                    :key="t.key"
+                    type="button"
+                    class="rev-tab"
+                    :class="{ active: iapTab === t.key }"
+                    @click="iapTab = t.key"
+                  >
+                    {{ t.label }}
+                  </button>
                 </div>
               </div>
-              <div class="rev-table-wrap rev-table-wrap--iap-channel">
-                <ArtTable
-                  height="200px"
-                  class="rev-art-table"
-                  :data="iapChannelRowsWithTotal"
-                  :columns="iapChannelColumns"
-                  row-key="s_channel_name"
-                  :stripe="false"
-                  :border="false"
-                  size="default"
-                  :pagination="undefined"
-                  :header-cell-style="iapHeaderCellStyle"
-                  :cell-style="iapCellStyle"
-                  :row-class-name="iapChannelRowClassName"
+
+              <div class="rev-iap-body">
+                <!-- 商品构成 -->
+                <div
+                  v-show="iapTab === 'product'"
+                  v-loading="iapTab === 'product' && iapProductLoading"
+                  class="rev-iap-tab rev-iap-tab--product"
                 >
-                  <template #revenue="{ row }">
-                    <span class="rev-iap-money">${{ formatFixed(row.revenue, 2) }}</span>
-                  </template>
-                  <template #d_conversion_rate="{ row }">
-                    <span
-                      class="rev-pill-metric"
-                      :class="
-                        row.s_channel_name === '合计'
-                          ? 'mid'
-                          : row.d_conversion_rate >= 2.2
-                            ? 'good'
-                            : row.d_conversion_rate >= 1.8
+                  <div class="rev-iap-top">
+                    <div class="rev-iap-kpi">
+                      <div class="rev-iap-kpi__k">订阅收入</div>
+                      <div class="rev-iap-kpi__row">
+                        <span class="rev-iap-kpi__v rev-iap-kpi__v--accent">{{
+                          iapProductHeader.subscriptionValueText
+                        }}</span>
+                        <span class="rev-iap-kpi__tag">{{
+                          iapProductHeader.subscriptionPctText
+                        }}</span>
+                      </div>
+                    </div>
+                    <div class="rev-iap-kpi">
+                      <div class="rev-iap-kpi__k">一次性购买</div>
+                      <div class="rev-iap-kpi__row">
+                        <span class="rev-iap-kpi__v rev-iap-kpi__v--accent">{{
+                          iapProductHeader.oneTimeValueText
+                        }}</span>
+                        <span class="rev-iap-kpi__tag">{{ iapProductHeader.oneTimePctText }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="rev-table-wrap rev-table-wrap--iap">
+                    <ArtTable
+                      height="260px"
+                      class="rev-art-table"
+                      :data="iapRowsWithTotal"
+                      :columns="iapColumns"
+                      row-key="s_product"
+                      :stripe="false"
+                      :border="false"
+                      size="default"
+                      :pagination="undefined"
+                      :header-cell-style="iapHeaderCellStyle"
+                      :cell-style="iapCellStyle"
+                    >
+                      <template #d_purchase_rate="{ row }">
+                        <span
+                          class="rev-pill-metric"
+                          :class="
+                            Number(row.d_purchase_rate || 0) >= 70
+                              ? 'good'
+                              : Number(row.d_purchase_rate || 0) >= 30
+                                ? 'mid'
+                                : 'bad'
+                          "
+                        >
+                          {{ formatFixed(row.d_purchase_rate, 1) }}%
+                        </span>
+                      </template>
+                    </ArtTable>
+                  </div>
+
+                  <div class="rev-iap-bottom">
+                    <div class="rev-mini-kpi">
+                      <div class="rev-mini-kpi__k">付费转化率</div>
+                      <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
+                        iapProductFoot.conversionRateText
+                      }}</div>
+                    </div>
+                    <div class="rev-mini-kpi">
+                      <div class="rev-mini-kpi__k">ARPPU</div>
+                      <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
+                        iapProductFoot.arppuText
+                      }}</div>
+                    </div>
+                    <div class="rev-mini-kpi">
+                      <div class="rev-mini-kpi__k">订阅续费率</div>
+                      <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
+                        iapProductFoot.renewalRateText
+                      }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 广告平台分析：上比例条、中表格、下指标 -->
+                <div
+                  v-show="iapTab === 'channel'"
+                  v-loading="iapTab === 'channel' && iapChannelLoading"
+                  class="rev-iap-tab rev-iap-tab--channel"
+                >
+                  <div class="rev-iap-channel-viz">
+                    <div class="rev-iaa-bar__track">
+                      <div
+                        v-for="seg in iapChannelSegments"
+                        :key="seg.key"
+                        class="rev-iaa-bar__seg"
+                        :style="{ width: `${seg.percent}%`, background: seg.color }"
+                      />
+                    </div>
+                    <div class="rev-iaa-bar__labels">
+                      <span
+                        v-for="seg in iapChannelSegments"
+                        :key="seg.key"
+                        class="rev-iaa-bar__label"
+                      >
+                        <span class="rev-dot" :style="{ background: seg.color }" />
+                        {{ seg.percent.toFixed(1) }}% {{ seg.label }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="rev-table-wrap rev-table-wrap--iap-channel">
+                    <ArtTable
+                      height="200px"
+                      class="rev-art-table"
+                      :data="iapChannelRowsWithTotal"
+                      :columns="iapChannelColumns"
+                      row-key="s_channel_name"
+                      :stripe="false"
+                      :border="false"
+                      size="default"
+                      :pagination="undefined"
+                      :header-cell-style="iapHeaderCellStyle"
+                      :cell-style="iapCellStyle"
+                      :row-class-name="iapChannelRowClassName"
+                    >
+                      <template #revenue="{ row }">
+                        <span class="rev-iap-money">${{ formatFixed(row.revenue, 2) }}</span>
+                      </template>
+                      <template #d_conversion_rate="{ row }">
+                        <span
+                          class="rev-pill-metric"
+                          :class="
+                            row.s_channel_name === '合计'
                               ? 'mid'
-                              : 'bad'
-                      "
-                    >
-                      {{ formatFixed(row.d_conversion_rate, 1) }}%
-                    </span>
-                  </template>
-                  <template #d_refund_rate="{ row }">
-                    <span
-                      class="rev-pill-metric"
-                      :class="
-                        row.s_channel_name === '合计'
-                          ? 'mid'
-                          : row.d_refund_rate <= 1.5
-                            ? 'good'
-                            : row.d_refund_rate <= 2.5
+                              : row.d_conversion_rate >= 2.2
+                                ? 'good'
+                                : row.d_conversion_rate >= 1.8
+                                  ? 'mid'
+                                  : 'bad'
+                          "
+                        >
+                          {{ formatFixed(row.d_conversion_rate, 1) }}%
+                        </span>
+                      </template>
+                      <template #d_refund_rate="{ row }">
+                        <span
+                          class="rev-pill-metric"
+                          :class="
+                            row.s_channel_name === '合计'
                               ? 'mid'
-                              : 'bad'
-                      "
+                              : row.d_refund_rate <= 1.5
+                                ? 'good'
+                                : row.d_refund_rate <= 2.5
+                                  ? 'mid'
+                                  : 'bad'
+                          "
+                        >
+                          {{ formatFixed(row.d_refund_rate, 1) }}%
+                        </span>
+                      </template>
+                    </ArtTable>
+                  </div>
+                  <div class="rev-iap-channel-metrics">
+                    <div
+                      v-for="(m, idx) in iapChannelLeftMetrics"
+                      :key="idx"
+                      class="rev-iap-channel-metric"
                     >
-                      {{ formatFixed(row.d_refund_rate, 1) }}%
+                      <div class="rev-iap-channel-metric__k">{{ m.title }}</div>
+                      <div class="rev-iap-channel-metric__v" :class="`is-accent-${m.accent}`">
+                        {{ m.valueText }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 趋势：双轴图 + KPI -->
+                <div
+                  v-show="iapTab === 'trend'"
+                  v-loading="iapTab === 'trend' && iapTrendLoading"
+                  class="rev-iap-tab rev-iap-tab--trend"
+                >
+                  <div class="rev-iap-trend-chart-wrap">
+                    <div ref="iapTrendRef" class="rev-chart rev-chart--iap-trend" />
+                  </div>
+                  <div class="rev-iap-trend-kpis">
+                    <div v-for="(card, idx) in iapTrendKpis" :key="idx" class="rev-iap-trend-kpi">
+                      <div class="rev-iap-trend-kpi__head">
+                        <span class="rev-iap-trend-kpi__title">{{ card.title }}</span>
+                        <span
+                          v-if="card.trendText"
+                          class="rev-iap-trend-kpi__trend"
+                          :class="card.trendUp ? 'up' : 'down'"
+                        >
+                          {{ card.trendText }}
+                        </span>
+                      </div>
+                      <div class="rev-iap-trend-kpi__value">{{ card.valueText }}</div>
+                      <div v-if="card.subText" class="rev-iap-trend-kpi__sub">{{
+                        card.subText
+                      }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-loading="trend7dLoading" class="rev-panel rev-panel--trend7d">
+              <div class="rev-panel__header">
+                <div class="rev-panel__title">近7天 IAA vs IAP 收入趋势</div>
+                <div class="rev-legend">
+                  <span class="rev-legend__item"
+                    ><span class="rev-dot" style="background: var(--rev-c-teal)" /> IAA</span
+                  >
+                  <span class="rev-legend__item"
+                    ><span class="rev-dot" style="background: var(--rev-c-purple)" /> IAP</span
+                  >
+                </div>
+              </div>
+              <div ref="trend7dRef" class="rev-chart rev-chart--trend7d" />
+            </div>
+
+            <!-- 下排：左 饼图 / 中 Top5 / 右 ECPM + AI + 质量 -->
+            <div v-loading="platformPieLoading" class="rev-panel rev-panel--pie">
+              <div class="rev-panel__header">
+                <div class="rev-panel__title">广告平台分布</div>
+              </div>
+              <div class="rev-pie">
+                <div class="rev-pie__chart-wrap">
+                  <div ref="pieRef" class="rev-pie__chart" />
+                  <div class="rev-pie__center">
+                    <div class="rev-pie__center-value">{{ platformPieCenterTotal }}</div>
+                    <div class="rev-pie__center-label">广告收入</div>
+                  </div>
+                </div>
+                <div class="rev-pie__list">
+                  <div v-for="s in platformPie" :key="s.name" class="rev-pie__item">
+                    <span class="rev-dot" :style="{ background: s.color }" />
+                    <div class="rev-pie__item-text">
+                      <span class="rev-pie__name">{{ s.name }}</span>
+                      <span class="rev-pie__percent" :style="{ color: s.color }">{{
+                        s.percentText
+                      }}</span>
+                    </div>
+                    <div class="rev-pie__money">{{ s.moneyText }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-loading="topCountriesLoading" class="rev-panel rev-panel--top5">
+              <div class="rev-panel__header">
+                <div class="rev-panel__title">Top 5 国家收入</div>
+                <div class="rev-tabs rev-tabs--compact rev-tabs--segmented rev-tabs--top5">
+                  <span class="rev-tab-pill" :style="top5PillStyle" aria-hidden="true" />
+                  <button
+                    v-for="t in top5TabDefs"
+                    :key="t.key"
+                    type="button"
+                    class="rev-tab"
+                    :class="{ active: top5Tab === t.key }"
+                    @click="top5Tab = t.key"
+                  >
+                    {{ t.label }}
+                  </button>
+                </div>
+              </div>
+
+              <Transition name="rev-top5-panel" mode="out-in">
+                <div :key="top5Tab" class="rev-table-wrap rev-table-wrap--top5">
+                  <ArtTable
+                    class="rev-art-table rev-art-table--top5"
+                    :data="topCountriesWithTotal"
+                    :columns="top5Columns"
+                    row-key="s_country_code"
+                    :stripe="false"
+                    :border="false"
+                    size="default"
+                    :pagination="undefined"
+                    :header-cell-style="top5HeaderCellStyle"
+                    :cell-style="top5CellStyle"
+                    :row-class-name="top5RowClassName"
+                  >
+                    <template #s_country_name="{ row }">
+                      <span class="rev-flag">{{ flagEmojiByCode(row.s_country_code) }}</span>
+                      {{ row.s_country_name }}
+                    </template>
+                  </ArtTable>
+                </div>
+              </Transition>
+            </div>
+
+            <div class="rev-right-stack">
+              <div v-loading="ecpmLoading" class="rev-panel rev-panel--ecpm">
+                <div class="rev-panel__header">
+                  <div class="rev-panel__title">ECPM 趋势（7天）</div>
+                  <div class="rev-legend">
+                    <span class="rev-legend__item">
+                      <span class="rev-dot" style="background: var(--rev-c-amber)" />
+                      预估 eCPM
                     </span>
+                    <span class="rev-legend__item">
+                      <span class="rev-dot" style="background: var(--rev-c-cyan)" />
+                      真实 eCPM
+                    </span>
+                  </div>
+                </div>
+                <div ref="ecpmRef" class="rev-chart rev-chart--sm" />
+              </div>
+
+              <div class="rev-right-bottom">
+                <div v-loading="aiInsightLoading" class="rev-panel rev-panel--ai">
+                  <div class="rev-panel__header">
+                    <div class="rev-panel__title">{{ aiInsight.title || 'AI 洞察' }}</div>
+                  </div>
+                  <template v-if="aiInsight.bullets.length">
+                    <ul class="rev-ai">
+                      <li
+                        v-for="(b, i) in aiInsight.bullets"
+                        :key="i"
+                        class="rev-ai__item"
+                        :data-idx="i"
+                      >
+                        {{ b }}
+                      </li>
+                    </ul>
                   </template>
-                </ArtTable>
-              </div>
-              <div class="rev-iap-channel-metrics">
-                <div
-                  v-for="(m, idx) in iapChannelLeftMetrics"
-                  :key="idx"
-                  class="rev-iap-channel-metric"
-                >
-                  <div class="rev-iap-channel-metric__k">{{ m.title }}</div>
-                  <div class="rev-iap-channel-metric__v" :class="`is-accent-${m.accent}`">
-                    {{ m.valueText }}
-                  </div>
+                  <template v-else>
+                    <div class="rev-ai-empty">
+                      <ElEmpty description="暂无 AI 洞察" :image-size="72" />
+                    </div>
+                  </template>
                 </div>
-              </div>
-            </div>
 
-            <!-- 趋势：双轴图 + KPI -->
-            <div
-              v-show="iapTab === 'trend'"
-              v-loading="iapTab === 'trend' && iapTrendLoading"
-              class="rev-iap-tab rev-iap-tab--trend"
-            >
-              <div class="rev-iap-trend-chart-wrap">
-                <div ref="iapTrendRef" class="rev-chart rev-chart--iap-trend" />
-              </div>
-              <div class="rev-iap-trend-kpis">
-                <div v-for="(card, idx) in iapTrendKpis" :key="idx" class="rev-iap-trend-kpi">
-                  <div class="rev-iap-trend-kpi__head">
-                    <span class="rev-iap-trend-kpi__title">{{ card.title }}</span>
-                    <span
-                      v-if="card.trendText"
-                      class="rev-iap-trend-kpi__trend"
-                      :class="card.trendUp ? 'up' : 'down'"
+                <div class="rev-panel rev-panel--quality">
+                  <div class="rev-panel__header">
+                    <div class="rev-panel__title">收入质量指标</div>
+                  </div>
+                  <div class="rev-quality-grid">
+                    <div
+                      v-for="c in fixedQualityCards"
+                      :key="c.title"
+                      class="rev-quality"
+                      :data-accent="c.accent"
                     >
-                      {{ card.trendText }}
-                    </span>
-                  </div>
-                  <div class="rev-iap-trend-kpi__value">{{ card.valueText }}</div>
-                  <div v-if="card.subText" class="rev-iap-trend-kpi__sub">{{ card.subText }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-loading="trend7dLoading" class="rev-panel rev-panel--trend7d">
-          <div class="rev-panel__header">
-            <div class="rev-panel__title">近7天 IAA vs IAP 收入趋势</div>
-            <div class="rev-legend">
-              <span class="rev-legend__item"
-                ><span class="rev-dot" style="background: var(--rev-c-teal)" /> IAA</span
-              >
-              <span class="rev-legend__item"
-                ><span class="rev-dot" style="background: var(--rev-c-purple)" /> IAP</span
-              >
-            </div>
-          </div>
-          <div ref="trend7dRef" class="rev-chart rev-chart--trend7d" />
-        </div>
-
-        <!-- 下排：左 饼图 / 中 Top5 / 右 ECPM + AI + 质量 -->
-        <div v-loading="platformPieLoading" class="rev-panel rev-panel--pie">
-          <div class="rev-panel__header">
-            <div class="rev-panel__title">广告平台分布</div>
-          </div>
-          <div class="rev-pie">
-            <div class="rev-pie__chart-wrap">
-              <div ref="pieRef" class="rev-pie__chart" />
-              <div class="rev-pie__center">
-                <div class="rev-pie__center-value">{{ platformPieCenterTotal }}</div>
-                <div class="rev-pie__center-label">广告收入</div>
-              </div>
-            </div>
-            <div class="rev-pie__list">
-              <div v-for="s in platformPie" :key="s.name" class="rev-pie__item">
-                <span class="rev-dot" :style="{ background: s.color }" />
-                <div class="rev-pie__item-text">
-                  <span class="rev-pie__name">{{ s.name }}</span>
-                  <span class="rev-pie__percent" :style="{ color: s.color }">{{
-                    s.percentText
-                  }}</span>
-                </div>
-                <div class="rev-pie__money">{{ s.moneyText }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-loading="topCountriesLoading" class="rev-panel rev-panel--top5">
-          <div class="rev-panel__header">
-            <div class="rev-panel__title">Top 5 国家收入</div>
-            <div class="rev-tabs rev-tabs--compact rev-tabs--segmented rev-tabs--top5">
-              <span class="rev-tab-pill" :style="top5PillStyle" aria-hidden="true" />
-              <button
-                v-for="t in top5TabDefs"
-                :key="t.key"
-                type="button"
-                class="rev-tab"
-                :class="{ active: top5Tab === t.key }"
-                @click="top5Tab = t.key"
-              >
-                {{ t.label }}
-              </button>
-            </div>
-          </div>
-
-          <Transition name="rev-top5-panel" mode="out-in">
-            <div :key="top5Tab" class="rev-table-wrap rev-table-wrap--top5">
-              <ArtTable
-                class="rev-art-table rev-art-table--top5"
-                :data="topCountriesWithTotal"
-                :columns="top5Columns"
-                row-key="s_country_code"
-                :stripe="false"
-                :border="false"
-                size="default"
-                :pagination="undefined"
-                :header-cell-style="top5HeaderCellStyle"
-                :cell-style="top5CellStyle"
-                :row-class-name="top5RowClassName"
-              >
-                <template #s_country_name="{ row }">
-                  <span class="rev-flag">{{ flagEmojiByCode(row.s_country_code) }}</span>
-                  {{ row.s_country_name }}
-                </template>
-              </ArtTable>
-            </div>
-          </Transition>
-        </div>
-
-        <div class="rev-right-stack">
-          <div v-loading="ecpmLoading" class="rev-panel rev-panel--ecpm">
-            <div class="rev-panel__header">
-              <div class="rev-panel__title">ECPM 趋势（7天）</div>
-              <div class="rev-legend">
-                <span class="rev-legend__item">
-                  <span class="rev-dot" style="background: var(--rev-c-amber)" />
-                  预估 eCPM
-                </span>
-                <span class="rev-legend__item">
-                  <span class="rev-dot" style="background: var(--rev-c-cyan)" />
-                  真实 eCPM
-                </span>
-              </div>
-            </div>
-            <div ref="ecpmRef" class="rev-chart rev-chart--sm" />
-          </div>
-
-          <div class="rev-right-bottom">
-            <div v-loading="aiInsightLoading" class="rev-panel rev-panel--ai">
-              <div class="rev-panel__header">
-                <div class="rev-panel__title">{{ aiInsight.title }}</div>
-              </div>
-              <ul class="rev-ai">
-                <li v-for="(b, i) in aiInsight.bullets" :key="i" class="rev-ai__item" :data-idx="i">
-                  {{ b }}
-                </li>
-              </ul>
-            </div>
-
-            <div v-loading="qualityMetricsLoading" class="rev-panel rev-panel--quality">
-              <div class="rev-panel__header">
-                <div class="rev-panel__title">收入质量指标</div>
-              </div>
-              <div class="rev-quality-grid">
-                <div
-                  v-for="m in qualityMetrics"
-                  :key="m.title"
-                  class="rev-quality"
-                  :data-accent="m.accent"
-                >
-                  <div class="rev-quality__k">{{ m.title }}</div>
-                  <div class="rev-quality__v">{{ m.valueText }}</div>
-                  <div class="rev-quality__sub">
-                    <span class="rev-quality__hint">{{ m.subText }}</span>
-                    <span class="rev-quality__trend" :class="m.trendUp ? 'up' : 'down'">{{
-                      m.trendText
-                    }}</span>
+                      <div class="rev-quality__k">{{ c.title }}</div>
+                      <div class="rev-quality__v">{{ c.valueText }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
+        </template>
+      </ElSkeleton>
     </div>
   </div>
 </template>
@@ -663,8 +709,6 @@
   import { graphic, type EChartsOption } from '@/plugins/echarts'
   import type { ColumnOption } from '@/types'
   import {
-    fetchRevenueOverviewQualityMetrics,
-    fetchRevenueOverviewAiInsight,
     fetchRevenueOverviewTopCountries,
     fetchRevenueOverviewPlatformPie,
     fetchRevenueOverviewTrend7dEcpm,
@@ -681,7 +725,6 @@
     fetchRevenueOverviewOverviewKpis
   } from '@/api/business-insight'
   import {
-    MOCK_REVENUE_OVERVIEW_AI_INSIGHT,
     MOCK_REVENUE_OVERVIEW_ECPM_7D,
     MOCK_REVENUE_OVERVIEW_FILTERS,
     MOCK_REVENUE_OVERVIEW_IAA_AD_UNIT_ROWS,
@@ -705,7 +748,6 @@
     MOCK_REVENUE_OVERVIEW_7D_TREND,
     MOCK_REVENUE_OVERVIEW_PLATFORM_PIE,
     MOCK_REVENUE_OVERVIEW_TOP_COUNTRIES,
-    MOCK_REVENUE_OVERVIEW_QUALITY_METRICS,
     type RevenueOverviewIapBreakdownRow,
     type RevenueOverviewIapChannelRow,
     type RevenueOverviewIapChannelSegment,
@@ -724,6 +766,7 @@
   // 高度仍保留设计稿基准，宽度改为自适应容器
   const designHeight = 980
   const rootRef = ref<HTMLElement>()
+  const pageLoading = ref(true)
 
   type SelectOption<T extends string = string> = { label: string; value: T }
   type IapProductHeader = {
@@ -743,6 +786,8 @@
     accent: 'purple' | 'green' | 'amber'
   }
 
+  const filtersDraft = reactive<RevenueOverviewFilterState>({ ...MOCK_REVENUE_OVERVIEW_FILTERS })
+  // applied filters：仅在点击「查询」时更新，用于所有接口请求
   const filters = reactive<RevenueOverviewFilterState>({ ...MOCK_REVENUE_OVERVIEW_FILTERS })
 
   const appOptions = ref<SelectOption[]>([
@@ -773,7 +818,16 @@
   async function loadMetaFilterOptions() {
     try {
       const data = await fetchRevenueOverviewMetaFilterOptions()
-      if (data.appOptions.length) appOptions.value = data.appOptions
+      if (data.appOptions.length) {
+        appOptions.value = data.appOptions
+
+        const selected = String(filtersDraft.s_app_id || '')
+        const byValue = appOptions.value.find((o) => o.value === selected)
+        if (!byValue) {
+          const byLabel = appOptions.value.find((o) => o.label === selected)
+          filtersDraft.s_app_id = byLabel?.value || appOptions.value[0]?.value || ''
+        }
+      }
       if (data.platformOptions.length) {
         platformOptions.value = data.platformOptions as SelectOption<
           RevenueOverviewFilterState['platform']
@@ -784,6 +838,100 @@
     } catch {
       // 保留本地默认筛选项，避免首屏不可用
     }
+  }
+
+  function applyDraftFilters() {
+    Object.assign(filters, filtersDraft)
+  }
+
+  function triggerQueryLoads() {
+    void loadOverviewKpis()
+    if (iaaTab.value === 'ad_type') void loadIaaAdTypeRows()
+    if (iaaTab.value === 'platform') void loadIaaPlatformRows()
+    if (iaaTab.value === 'ad_unit') void loadIaaAdUnitRows()
+    if (iaaTab.value === 'country') void loadIaaCountryRows()
+    if (iaaTab.value === 'version') void loadIaaVersionRows()
+    if (iapTab.value === 'product') void loadIapProductRows()
+    if (iapTab.value === 'channel') void loadIapChannelRows()
+    if (iapTab.value === 'trend') void loadIapTrendRows()
+    void loadTrend7dIaaIap()
+    void loadTrend7dEcpm()
+    void loadPlatformPie()
+    void loadTopCountries()
+    void loadAiInsight()
+    void syncIaaCharts()
+    if (iapTrendInited.value && iapTab.value === 'trend') {
+      chartIapTrend.updateChart(buildIapTrendOption())
+    }
+    kpis.value.forEach((k) => {
+      const dom = sparkRefs.value[k.id]
+      const chart = sparkCharts.get(k.id)
+      if (!dom || !chart) return
+      const accent =
+        k.accent === 'blue'
+          ? getVar(dom, '--rev-c-blue', '#60a5fa')
+          : k.accent === 'teal'
+            ? getVar(dom, '--rev-c-teal', '#20d6b5')
+            : k.accent === 'purple'
+              ? getVar(dom, '--rev-c-purple', '#a78bfa')
+              : k.accent === 'amber'
+                ? getVar(dom, '--rev-c-amber', '#f59e0b')
+                : k.accent === 'green'
+                  ? getVar(dom, '--rev-c-green', '#22c55e')
+                  : getVar(dom, '--rev-c-indigo', '#60a5fa')
+      chart.updateChart(buildSparkOption(k.spark, accent))
+    })
+  }
+
+  function onQuery() {
+    applyDraftFilters()
+    triggerQueryLoads()
+  }
+
+  function resetViewDataBeforeLoad() {
+    kpis.value = []
+    iaaAdTypeRows.value = []
+    iaaPlatformRows.value = []
+    iaaAdUnitRows.value = []
+    iaaCountryRows.value = []
+    iaaVersionRows.value = []
+
+    iapChannelSegments.value = []
+    iapChannelRows.value = []
+    iapChannelLeftMetrics.value = []
+
+    iapTrendDateLabels.value = []
+    iapTrendSeries.value = { revenue: [], orders: [] }
+    iapTrendKpis.value = []
+
+    iapProductHeader.value = {
+      subscriptionValueText: '',
+      subscriptionPctText: '',
+      oneTimeValueText: '',
+      oneTimePctText: ''
+    }
+    iapProductFoot.value = { conversionRateText: '', arppuText: '', renewalRateText: '' }
+    iapProductRows.value = []
+    iapProductCache.value = {
+      header: {
+        subscriptionValueText: '',
+        subscriptionPctText: '',
+        oneTimeValueText: '',
+        oneTimePctText: ''
+      },
+      foot: { conversionRateText: '', arppuText: '', renewalRateText: '' },
+      rows: []
+    }
+
+    trend7dDateLabels.value = []
+    trend7dSeries.value = { iaa: [], iap: [] }
+
+    ecpmDateLabels.value = []
+    ecpmSeries.value = { predicted: [], actual: [] }
+
+    platformPie.value = []
+    topCountries.value = []
+    aiInsight.value = { title: 'AI 洞察', bullets: [] }
   }
 
   const kpis = ref<RevenueOverviewKpiCard[]>(MOCK_REVENUE_OVERVIEW_KPIS)
@@ -888,7 +1036,15 @@
     iaaVersionLoading.value = true
     try {
       const data = await fetchRevenueOverviewIaaVersion({ ...filters })
-      if (Array.isArray(data.rows)) iaaVersionRows.value = data.rows
+      if (Array.isArray(data.rows)) {
+        iaaVersionRows.value = data.rows.map((r: any) => ({
+          ...r,
+          // 兼容后端返回 users 字段（用于版本维度“广告用户”展示）
+          n_users: Number(r?.n_users ?? r?.users ?? r?.n_dau ?? 0),
+          // 兼容崩溃率字段可能缺失/改名，保持结构稳定
+          d_crash_rate: Number(r?.d_crash_rate ?? r?.crashRate ?? 0)
+        }))
+      }
     } catch {
       // 失败时保留当前数据，避免主区块闪断
     } finally {
@@ -900,9 +1056,30 @@
     iapProductLoading.value = true
     try {
       const data = await fetchRevenueOverviewIapProduct({ ...filters })
-      iapProductHeader.value = data.header
-      iapProductFoot.value = data.foot
-      iapProductRows.value = Array.isArray(data.rows) ? data.rows : []
+      const mappedRows: RevenueOverviewIapBreakdownRow[] = Array.isArray(data.rows)
+        ? data.rows.map((r: any) => ({
+            s_product: String(r?.s_product ?? r?.product ?? ''),
+            s_type: (r?.s_type ?? r?.type) === '订阅' ? '订阅' : '一次性',
+            revenue: Number(r?.revenue ?? 0),
+            percent: Number(r?.percent ?? 0),
+            n_buy_times: Number(r?.n_buy_times ?? r?.buyTimes ?? 0),
+            n_users: Number(r?.n_users ?? r?.users ?? 0),
+            d_arppu: Number(r?.d_arppu ?? r?.arppu ?? 0),
+            d_purchase_rate: Number(r?.d_purchase_rate ?? r?.purchaseRate ?? 0)
+          }))
+        : []
+
+      // 缓存商品构成数据：用于全局固定卡片等跨 tab 读取
+      iapProductCache.value = {
+        header: data.header,
+        foot: data.foot,
+        rows: mappedRows
+      }
+
+      iapProductHeader.value = iapProductCache.value.header
+      iapProductFoot.value = iapProductCache.value.foot
+      // 兼容后端返回 camelCase 字段（product/buyTimes/purchaseRate...）
+      iapProductRows.value = mappedRows
     } catch {
       // 失败时保留当前数据，避免主区块闪断
     } finally {
@@ -984,6 +1161,9 @@
       const data = await fetchRevenueOverviewPlatformPie({ ...filters })
       platformPie.value = Array.isArray(data.slices) ? data.slices : []
       chartPie.updateChart(buildPieOption())
+      requestAnimationFrame(() => {
+        chartPie.handleResize()
+      })
     } catch {
       // 失败时保留当前数据，避免主区块闪断
     } finally {
@@ -1006,26 +1186,42 @@
   async function loadAiInsight() {
     aiInsightLoading.value = true
     try {
-      const data = await fetchRevenueOverviewAiInsight({ ...filters })
-      aiInsight.value = data
-    } catch {
-      // 失败时保留当前数据，避免主区块闪断
+      // 暂无数据：该模块需要对接新的接口，先保持空态展示
+      aiInsight.value = { title: 'AI 洞察', bullets: [] }
     } finally {
       aiInsightLoading.value = false
     }
   }
 
-  async function loadQualityMetrics() {
-    qualityMetricsLoading.value = true
-    try {
-      const data = await fetchRevenueOverviewQualityMetrics({ ...filters })
-      qualityMetrics.value = Array.isArray(data.metrics) ? data.metrics : []
-    } catch {
-      // 失败时保留当前数据，避免主区块闪断
-    } finally {
-      qualityMetricsLoading.value = false
-    }
+  type FixedQualityCard = { title: string; valueText: string; accent: 'green' | 'amber' | 'purple' }
+
+  type IapProductCache = {
+    header: IapProductHeader
+    foot: IapProductFoot
+    rows: RevenueOverviewIapBreakdownRow[]
   }
+
+  const iapProductCache = ref<IapProductCache>({
+    header: {
+      subscriptionValueText: '',
+      subscriptionPctText: '',
+      oneTimeValueText: '',
+      oneTimePctText: ''
+    },
+    foot: { conversionRateText: '', arppuText: '', renewalRateText: '' },
+    rows: []
+  })
+
+  const fixedQualityCards = computed<FixedQualityCard[]>(() => {
+    const kpiEcpm = kpis.value?.[3]
+    const ecpmDeviationText = String(kpiEcpm?.subRightValue ?? '--')
+    const iapConversionRateText = String(iapProductCache.value.foot?.conversionRateText || '--')
+    return [
+      { title: '广告填充率', valueText: '9.10%', accent: 'green' },
+      { title: 'IAP转化率', valueText: iapConversionRateText, accent: 'purple' },
+      { title: 'ECPM偏差率', valueText: ecpmDeviationText, accent: 'amber' }
+    ]
+  })
 
   const iaaTabs = ref(MOCK_REVENUE_OVERVIEW_IAA_TABS)
   const iapTabs = ref(MOCK_REVENUE_OVERVIEW_IAP_TABS)
@@ -1096,10 +1292,10 @@
   const top5PillStyle = computed<CSSProperties>(() => ({
     transform: `translateX(calc(${Math.max(0, top5TabIndex.value)} * 100%))`
   }))
-  const aiInsight = ref(MOCK_REVENUE_OVERVIEW_AI_INSIGHT)
+  type RevenueOverviewAiInsight = { title: string; bullets: string[] }
+  const aiInsight = ref<RevenueOverviewAiInsight>({ title: 'AI 洞察', bullets: [] })
   const aiInsightLoading = ref(false)
-  const qualityMetrics = ref(MOCK_REVENUE_OVERVIEW_QUALITY_METRICS)
-  const qualityMetricsLoading = ref(false)
+  // 收入质量指标改为固定卡片：不再走 quality-metrics 接口
 
   function formatInt(n: number) {
     return Number(n || 0).toLocaleString()
@@ -1130,18 +1326,6 @@
     const sumI = rows.reduce((a, r) => a + r.n_impression, 0)
     if (sumI <= 0) return 0
     return rows.reduce((a, r) => a + r.d_avg_display * r.n_impression, 0) / sumI
-  }
-
-  function iaaWeightedFillRate(rows: { n_impression: number; d_fill_rate: number }[]) {
-    const sumI = rows.reduce((a, r) => a + r.n_impression, 0)
-    if (sumI <= 0) return 0
-    return rows.reduce((a, r) => a + r.d_fill_rate * r.n_impression, 0) / sumI
-  }
-
-  function iaaWeightedCrash(rows: { n_dau: number; d_crash_rate: number }[]) {
-    const sumD = rows.reduce((a, r) => a + r.n_dau, 0)
-    if (sumD <= 0) return 0
-    return rows.reduce((a, r) => a + r.d_crash_rate * r.n_dau, 0) / sumD
   }
 
   const iaaSegments = computed(() => {
@@ -1269,7 +1453,6 @@
         percent: r.percent,
         n_impression: r.n_impression,
         d_ecpm: r.d_ecpm,
-        d_fill_rate: r.d_fill_rate,
         n_users: r.n_users
       }))
       const sumR = rows.reduce((a, r) => a + r.revenue, 0)
@@ -1282,7 +1465,6 @@
         percent: 100,
         n_impression: sumI,
         d_ecpm: iaaWeightedEcpm(iaaAdUnitRows.value),
-        d_fill_rate: iaaWeightedFillRate(iaaAdUnitRows.value),
         n_users: sumU
       })
       return rows
@@ -1322,13 +1504,13 @@
       percent: r.percent,
       n_impression: r.n_impression,
       d_ecpm: r.d_ecpm,
-      n_users: r.n_dau,
+      n_users: Number((r as any)?.n_users ?? (r as any)?.users ?? r.n_dau ?? 0),
       n_dau: r.n_dau,
-      d_crash_rate: r.d_crash_rate,
       is_current: r.is_current
     }))
     const sumR = rows.reduce((a, r) => a + r.revenue, 0)
     const sumDau = rows.reduce((a, r) => a + r.n_dau, 0)
+    const sumUsers = rows.reduce((a, r) => a + Number(r.n_users || 0), 0)
     const sumI = rows.reduce((a, r) => a + r.n_impression, 0)
     rows.push({
       _rowKey: 'ver-total',
@@ -1337,9 +1519,8 @@
       percent: 100,
       n_impression: sumI,
       d_ecpm: iaaWeightedEcpm(iaaVersionRows.value),
-      n_users: sumDau,
+      n_users: sumUsers,
       n_dau: sumDau,
-      d_crash_rate: iaaWeightedCrash(iaaVersionRows.value),
       is_current: false
     })
     return rows
@@ -1347,13 +1528,6 @@
 
   function iaaFmtRevenue(row: { revenue: number; s_name?: string }) {
     return `$${formatMoneyInt(row.revenue)}`
-  }
-
-  function iaaCrashToneClass(rate: number, isTotal: boolean) {
-    if (isTotal) return 'is-neutral'
-    if (rate <= 0.2) return 'is-good'
-    if (rate <= 0.5) return 'is-warn'
-    return 'is-bad'
   }
 
   function iaaRowClassName({ row }: { row: { s_name?: string; is_current?: boolean } }) {
@@ -1434,40 +1608,51 @@
               ? '国家'
               : '版本'
 
-    const baseDim: ColumnOption = { label: dimLabel, prop: 's_name', minWidth: 100, useSlot: true }
+    const baseDim: ColumnOption = {
+      label: dimLabel,
+      prop: 's_name',
+      minWidth: 100,
+      useSlot: true,
+      showOverflowTooltip: true
+    }
 
     if (tab === 'ad_type') {
       return [
         baseDim,
-        { label: '收入', prop: 'revenue', minWidth: 72, useSlot: true },
+        { label: '收入', prop: 'revenue', minWidth: 72, useSlot: true, showOverflowTooltip: true },
         {
           label: '占比',
           prop: 'percent',
           minWidth: 64,
+          showOverflowTooltip: true,
           formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
         },
         {
           label: '广告用户',
           prop: 'n_users',
           minWidth: 84,
+          showOverflowTooltip: true,
           formatter: (row: any) => formatInt(row.n_users)
         },
         {
           label: '展示次数',
           prop: 'n_impression',
           minWidth: 84,
+          showOverflowTooltip: true,
           formatter: (row: any) => formatInt(row.n_impression)
         },
         {
           label: '平均展示',
           prop: 'd_avg_display',
           minWidth: 80,
+          showOverflowTooltip: true,
           formatter: (row: any) => formatFixed(row.d_avg_display, 1)
         },
         {
           label: '平均收入',
           prop: 'd_avg_revenue',
           minWidth: 88,
+          showOverflowTooltip: true,
           formatter: (row: any) => `$${formatFixed(row.d_avg_revenue, 3)}`
         }
       ]
@@ -1476,29 +1661,33 @@
     if (tab === 'platform') {
       return [
         baseDim,
-        { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true },
+        { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true, showOverflowTooltip: true },
         {
           label: '占比',
           prop: 'percent',
           minWidth: 64,
+          showOverflowTooltip: true,
           formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
         },
         {
           label: '展示数',
           prop: 'n_impression',
           minWidth: 84,
+          showOverflowTooltip: true,
           formatter: (row: any) => formatInt(row.n_impression)
         },
         {
           label: '平均 eCPM',
           prop: 'd_ecpm',
           minWidth: 88,
+          showOverflowTooltip: true,
           formatter: (row: any) => `$${formatFixed(row.d_ecpm, 2)}`
         },
         {
           label: '广告用户',
           prop: 'n_users',
           minWidth: 84,
+          showOverflowTooltip: true,
           formatter: (row: any) => formatInt(row.n_users)
         }
       ]
@@ -1507,24 +1696,33 @@
     if (tab === 'ad_unit') {
       return [
         baseDim,
-        { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true },
+        { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true, showOverflowTooltip: true },
+        {
+          label: '占比',
+          prop: 'percent',
+          minWidth: 64,
+          showOverflowTooltip: true,
+          formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
+        },
         {
           label: '展示数',
           prop: 'n_impression',
           minWidth: 84,
+          showOverflowTooltip: true,
           formatter: (row: any) => formatInt(row.n_impression)
         },
         {
           label: '平均 eCPM',
           prop: 'd_ecpm',
           minWidth: 88,
+          showOverflowTooltip: true,
           formatter: (row: any) => `$${formatFixed(row.d_ecpm, 2)}`
         },
-        { label: '填充率', prop: 'd_fill_rate', minWidth: 72, useSlot: true },
         {
           label: '广告用户',
           prop: 'n_users',
           minWidth: 84,
+          showOverflowTooltip: true,
           formatter: (row: any) => formatInt(row.n_users)
         }
       ]
@@ -1533,63 +1731,77 @@
     if (tab === 'country') {
       return [
         baseDim,
-        { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true },
+        { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true, showOverflowTooltip: true },
         {
           label: '占比',
           prop: 'percent',
           minWidth: 64,
+          showOverflowTooltip: true,
           formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
         },
         {
           label: '展示数',
           prop: 'n_impression',
           minWidth: 84,
+          showOverflowTooltip: true,
           formatter: (row: any) => formatInt(row.n_impression)
         },
         {
           label: '平均 eCPM',
           prop: 'd_ecpm',
           minWidth: 88,
+          showOverflowTooltip: true,
           formatter: (row: any) => `$${formatFixed(row.d_ecpm, 2)}`
         },
         {
           label: '广告用户',
           prop: 'n_users',
           minWidth: 84,
+          showOverflowTooltip: true,
           formatter: (row: any) => formatInt(row.n_users)
         },
-        { label: '环比', prop: 'd_mom_pct', minWidth: 92, useSlot: true }
+        { label: '环比', prop: 'd_mom_pct', minWidth: 92, useSlot: true, showOverflowTooltip: true }
       ]
     }
 
     return [
       baseDim,
-      { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true },
+      { label: '收入', prop: 'revenue', minWidth: 80, useSlot: true, showOverflowTooltip: true },
       {
         label: '占比',
         prop: 'percent',
         minWidth: 64,
+        showOverflowTooltip: true,
         formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
       },
       {
         label: '展示数',
         prop: 'n_impression',
         minWidth: 84,
+        showOverflowTooltip: true,
         formatter: (row: any) => formatInt(row.n_impression)
       },
       {
         label: '平均 eCPM',
         prop: 'd_ecpm',
         minWidth: 88,
+        showOverflowTooltip: true,
         formatter: (row: any) => `$${formatFixed(row.d_ecpm, 2)}`
       },
       {
         label: 'DAU',
         prop: 'n_dau',
         minWidth: 80,
+        showOverflowTooltip: true,
         formatter: (row: any) => formatInt(row.n_dau)
       },
-      { label: '崩溃率', prop: 'd_crash_rate', minWidth: 80, useSlot: true }
+      {
+        label: '广告用户',
+        prop: 'n_users',
+        minWidth: 84,
+        showOverflowTooltip: true,
+        formatter: (row: any) => formatInt(row.n_users)
+      }
     ]
   })
 
@@ -1614,21 +1826,21 @@
     {
       label: '价格',
       prop: 'd_arppu',
-      minWidth: 70,
+      minWidth: 60,
       showOverflowTooltip: true,
       formatter: (row: any) => `$${formatFixed(row.d_arppu, 2)}`
     },
     {
       label: '购买次数',
       prop: 'n_buy_times',
-      minWidth: 80,
+      minWidth: 70,
       showOverflowTooltip: true,
       formatter: (row: any) => formatInt(row.n_buy_times)
     },
     {
       label: '收入',
       prop: 'revenue',
-      minWidth: 80,
+      minWidth: 70,
       showOverflowTooltip: true,
       formatter: (row: any) => `$${formatFixed(row.revenue, 2)}`
     },
@@ -2255,6 +2467,9 @@
       } else {
         chartIaaDonut.updateChart(buildIaaDonutOption())
       }
+      requestAnimationFrame(() => {
+        chartIaaDonut.handleResize()
+      })
     }
     if (iaaTab.value === 'version' && iaaVersionBarRef.value) {
       chartIaaVersion.chartRef!.value = iaaVersionBarRef.value
@@ -2264,6 +2479,9 @@
       } else {
         chartIaaVersion.updateChart(buildIaaVersionBarOption())
       }
+      requestAnimationFrame(() => {
+        chartIaaVersion.handleResize()
+      })
     }
   }
 
@@ -2331,76 +2549,34 @@
   }
 
   onMounted(() => {
-    void loadMetaFilterOptions()
-    void loadOverviewKpis()
-    // 首屏仅加载默认 tab，其他 tab 在切换时再按需请求
-    void loadIaaAdTypeRows()
-    void loadIapProductRows()
-    void loadTrend7dIaaIap()
-    void loadTrend7dEcpm()
-    void loadPlatformPie()
-    void loadTopCountries()
-    void loadAiInsight()
-    void loadQualityMetrics()
-    initCharts()
+    void (async () => {
+      pageLoading.value = true
+      resetViewDataBeforeLoad()
+      await loadMetaFilterOptions()
+      applyDraftFilters()
+      await Promise.all([
+        loadOverviewKpis(),
+        loadIaaAdTypeRows(),
+        loadIapProductRows(),
+        loadTrend7dIaaIap(),
+        loadTrend7dEcpm(),
+        loadPlatformPie(),
+        loadTopCountries(),
+        loadAiInsight()
+      ])
+      pageLoading.value = false
+      await nextTick()
+      initCharts()
+    })()
   })
 
-  watch(
-    () => [
-      filters.s_app_id,
-      filters.platform,
-      filters.s_country_code,
-      filters.app_version,
-      filters.t_date
-    ],
-    () => {
-      void loadOverviewKpis()
-      if (iaaTab.value === 'ad_type') void loadIaaAdTypeRows()
-      if (iaaTab.value === 'platform') void loadIaaPlatformRows()
-      if (iaaTab.value === 'ad_unit') void loadIaaAdUnitRows()
-      if (iaaTab.value === 'country') void loadIaaCountryRows()
-      if (iaaTab.value === 'version') void loadIaaVersionRows()
-      if (iapTab.value === 'product') void loadIapProductRows()
-      if (iapTab.value === 'channel') void loadIapChannelRows()
-      if (iapTab.value === 'trend') void loadIapTrendRows()
-      void loadTrend7dIaaIap()
-      void loadTrend7dEcpm()
-      void loadPlatformPie()
-      void loadTopCountries()
-      void loadAiInsight()
-      void loadQualityMetrics()
-      void syncIaaCharts()
-      if (iapTrendInited.value && iapTab.value === 'trend') {
-        chartIapTrend.updateChart(buildIapTrendOption())
-      }
-      kpis.value.forEach((k) => {
-        const dom = sparkRefs.value[k.id]
-        const chart = sparkCharts.get(k.id)
-        if (!dom || !chart) return
-        const accent =
-          k.accent === 'blue'
-            ? getVar(dom, '--rev-c-blue', '#60a5fa')
-            : k.accent === 'teal'
-              ? getVar(dom, '--rev-c-teal', '#20d6b5')
-              : k.accent === 'purple'
-                ? getVar(dom, '--rev-c-purple', '#a78bfa')
-                : k.accent === 'amber'
-                  ? getVar(dom, '--rev-c-amber', '#f59e0b')
-                  : k.accent === 'green'
-                    ? getVar(dom, '--rev-c-green', '#22c55e')
-                    : getVar(dom, '--rev-c-indigo', '#60a5fa')
-        chart.updateChart(buildSparkOption(k.spark, accent))
-      })
-    }
-  )
-
-  watch(iaaTab, () => {
-    if (iaaTab.value === 'ad_type') void loadIaaAdTypeRows()
-    if (iaaTab.value === 'platform') void loadIaaPlatformRows()
-    if (iaaTab.value === 'ad_unit') void loadIaaAdUnitRows()
-    if (iaaTab.value === 'country') void loadIaaCountryRows()
-    if (iaaTab.value === 'version') void loadIaaVersionRows()
-    void syncIaaCharts()
+  watch(iaaTab, async () => {
+    if (iaaTab.value === 'ad_type') await loadIaaAdTypeRows()
+    if (iaaTab.value === 'platform') await loadIaaPlatformRows()
+    if (iaaTab.value === 'ad_unit') await loadIaaAdUnitRows()
+    if (iaaTab.value === 'country') await loadIaaCountryRows()
+    if (iaaTab.value === 'version') await loadIaaVersionRows()
+    await syncIaaCharts()
   })
 
   watch(iapTab, () => {
@@ -2519,6 +2695,88 @@
 
   .rev-export:hover {
     filter: brightness(1.06);
+  }
+
+  .rev-query-btn {
+    height: 36px;
+    padding: 0 14px;
+    color: var(--rev-text);
+    background: var(--rev-pill);
+    border: 1px solid var(--rev-pill-border);
+    border-radius: 9999px;
+  }
+
+  .rev-query-btn:hover {
+    filter: brightness(1.06);
+  }
+
+  :deep(.rev-query-btn.el-button) {
+    background: var(--rev-pill);
+    border-color: var(--rev-pill-border);
+  }
+
+  .rev-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .rev-skeleton__kpis {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+  }
+
+  .rev-skeleton__kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 120px;
+    padding: 12px;
+    background: var(--rev-pill);
+    border: 1px solid var(--rev-pill-border);
+    border-radius: 14px;
+  }
+
+  .rev-skeleton__main {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    height: 760px;
+    border-radius: 16px;
+  }
+
+  .rev-skeleton__block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    background: var(--rev-panel-bg);
+    border: 1px solid var(--rev-border-soft);
+    border-radius: 16px;
+  }
+
+  .rev-skeleton__kpi-sub {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .rev-skeleton__line {
+    height: 12px;
+  }
+
+  .rev-skeleton__line--sm {
+    width: 40%;
+  }
+
+  .rev-skeleton__line--md {
+    width: 48%;
+  }
+
+  .rev-skeleton__line--lg {
+    width: 72%;
+    height: 18px;
   }
 
   .rev-select,
@@ -3399,7 +3657,7 @@
 
   .rev-right-bottom {
     display: grid;
-    grid-template-columns: 1.05fr 1fr;
+    grid-template-columns: 1fr 1.2fr;
     gap: 12px;
     align-items: stretch;
     height: 228px;
@@ -3968,6 +4226,10 @@
     padding: 2px 14px 14px;
     margin: 0;
     list-style: none;
+  }
+
+  .rev-ai-empty {
+    padding: 6px 14px 14px;
   }
 
   .rev-ai__item {
