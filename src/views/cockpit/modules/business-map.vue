@@ -564,6 +564,7 @@
       series: [
         {
           type: 'map',
+          map: 'world',
           geoIndex: 0,
           name: '业务分布',
           data: mapData,
