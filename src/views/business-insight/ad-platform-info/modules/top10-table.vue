@@ -16,7 +16,6 @@
         :border="false"
         size="small"
         :show-table-header="true"
-        :pagination="false"
       >
         <template #country="{ row }">
           <span class="api-country-cell">
