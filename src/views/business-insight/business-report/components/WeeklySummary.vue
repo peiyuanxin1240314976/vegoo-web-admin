@@ -137,21 +137,23 @@
 </template>
 
 <script setup lang="ts">
-  import { inject } from 'vue'
+  import { computed, inject } from 'vue'
   import KpiCard from './KpiCard.vue'
+  import { businessReportContextKey } from '../composables/business-report-context'
   import { weeklyKpis, weeklyUserMetrics, roiMetrics, retentionMetrics } from '../mockData'
   import type { RevenueRow } from '../types'
 
   defineOptions({ name: 'WeeklySummary' })
 
   const openPushModal = inject<() => void>('openPushModal', () => {})
+  const ctx = inject(businessReportContextKey)
 
-  const kpis = weeklyKpis
-  const userMetrics = weeklyUserMetrics
-  const roiRows = roiMetrics
-  const retention = retentionMetrics
+  const kpis = computed(() => ctx?.summary.value?.kpis ?? weeklyKpis)
+  const userMetrics = computed(() => ctx?.summary.value?.userMetrics ?? weeklyUserMetrics)
+  const roiRows = computed(() => ctx?.summary.value?.roiMetrics ?? roiMetrics)
+  const retention = computed(() => ctx?.summary.value?.retentionMetrics ?? retentionMetrics)
 
-  const revenueMetrics: RevenueRow[] = [
+  const weeklyRevenueMetricsFallback: RevenueRow[] = [
     {
       name: '总收缴',
       current: '$1,064,100',
@@ -195,6 +197,10 @@
       changeType: 'positive'
     }
   ]
+
+  const revenueMetrics = computed(
+    () => ctx?.summary.value?.revenueMetrics ?? weeklyRevenueMetricsFallback
+  )
 
   const roiColor = (val: string) => {
     if (val === '-') return ''

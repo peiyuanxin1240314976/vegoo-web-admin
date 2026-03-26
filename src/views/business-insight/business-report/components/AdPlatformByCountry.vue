@@ -240,6 +240,7 @@
 <script setup lang="ts">
   import { ref, computed, inject } from 'vue'
   import type { ApcOsEntry } from '../types'
+  import { businessReportContextKey } from '../composables/business-report-context'
   import { adPlatformByCountryData } from '../mockData'
 
   const props = defineProps<{
@@ -247,6 +248,7 @@
   }>()
 
   const openPushModal = inject<() => void>('openPushModal', () => {})
+  const ctx = inject(businessReportContextKey)
 
   const periodLabel = computed(() =>
     props.period === 'daily' ? '日报' : props.period === 'weekly' ? '周报' : '月报'
@@ -291,17 +293,25 @@
     return 'roi-orange'
   }
 
-  const tableData = ref<ApcOsEntry[]>(adPlatformByCountryData)
+  const tableData = computed<ApcOsEntry[]>(() => {
+    const api = ctx?.platformCountry.value?.osEntries
+    if (api && api.length) return api
+    return adPlatformByCountryData
+  })
 
-  const totalPlatforms = computed(() =>
-    tableData.value.reduce((acc, os) => acc + os.platforms.length, 0)
-  )
-  const totalCountries = computed(() =>
-    tableData.value.reduce(
+  const totalPlatforms = computed(() => {
+    const r = ctx?.platformCountry.value
+    if (r?.totalPlatforms != null && r.totalPlatforms > 0) return r.totalPlatforms
+    return tableData.value.reduce((acc, os) => acc + os.platforms.length, 0)
+  })
+  const totalCountries = computed(() => {
+    const r = ctx?.platformCountry.value
+    if (r?.totalCountries != null && r.totalCountries > 0) return r.totalCountries
+    return tableData.value.reduce(
       (acc, os) => acc + os.platforms.reduce((pacc, p) => pacc + p.countries.length, 0),
       0
     )
-  )
+  })
 </script>
 
 <style scoped>

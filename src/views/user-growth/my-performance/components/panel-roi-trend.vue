@@ -27,11 +27,78 @@
   const chartRef = ref<HTMLElement | null>(null)
   let chart: ReturnType<typeof echarts.init> | null = null
 
+  function formatXLabel(date: string): string {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return `${date.slice(5, 7)}/${date.slice(8, 10)}`
+    }
+    return date
+  }
+
   function buildOption(): EChartsOption {
-    const x = props.points.map((p) => p.date.slice(5))
+    const x = props.points.map((p) => formatXLabel(p.date))
     const y = props.points.map((p) => p.roi)
+    const hasTarget = props.points.some(
+      (p) => p.targetRoi != null && Number.isFinite(p.targetRoi as number)
+    )
+    const yTarget = hasTarget
+      ? props.points.map((p) => (p.targetRoi != null ? p.targetRoi : 0))
+      : []
+
+    const series: EChartsOption['series'] = [
+      {
+        name: '实际 ROI',
+        type: 'line',
+        data: y,
+        smooth: true,
+        symbolSize: 6,
+        lineStyle: {
+          width: 2,
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: 'rgba(59, 130, 246, 0.95)' },
+            { offset: 0.5, color: 'rgba(34, 211, 238, 0.95)' },
+            { offset: 1, color: 'rgba(16, 185, 129, 0.95)' }
+          ])
+        },
+        itemStyle: {
+          color: 'rgba(34, 211, 238, 0.95)',
+          borderColor: 'rgba(244, 244, 245, 0.35)',
+          borderWidth: 1
+        },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(59, 130, 246, 0.22)' },
+            { offset: 0.55, color: 'rgba(34, 211, 238, 0.10)' },
+            { offset: 1, color: 'rgba(16, 185, 129, 0)' }
+          ])
+        }
+      }
+    ]
+
+    if (hasTarget) {
+      series.push({
+        name: '目标 ROI',
+        type: 'line',
+        data: yTarget,
+        smooth: true,
+        symbolSize: 4,
+        lineStyle: {
+          width: 2,
+          type: 'dashed',
+          color: 'rgba(161, 161, 170, 0.85)'
+        },
+        itemStyle: { color: 'rgba(161, 161, 170, 0.95)' }
+      })
+    }
+
     return {
-      grid: { top: 20, right: 16, bottom: 24, left: 36 },
+      grid: { top: hasTarget ? 36 : 20, right: 16, bottom: 24, left: 36 },
+      legend: hasTarget
+        ? {
+            top: 0,
+            right: 8,
+            textStyle: { color: 'rgba(161,161,170,0.9)', fontSize: 11 }
+          }
+        : undefined,
       tooltip: { trigger: 'axis' },
       xAxis: {
         type: 'category',
@@ -46,34 +113,7 @@
         splitLine: { lineStyle: { color: 'rgba(148,163,184,0.12)' } },
         axisLabel: { color: 'rgba(161,161,170,0.9)', formatter: '{value}%' }
       },
-      series: [
-        {
-          type: 'line',
-          data: y,
-          smooth: true,
-          symbolSize: 6,
-          lineStyle: {
-            width: 2,
-            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-              { offset: 0, color: 'rgba(59, 130, 246, 0.95)' },
-              { offset: 0.5, color: 'rgba(34, 211, 238, 0.95)' },
-              { offset: 1, color: 'rgba(16, 185, 129, 0.95)' }
-            ])
-          },
-          itemStyle: {
-            color: 'rgba(34, 211, 238, 0.95)',
-            borderColor: 'rgba(244, 244, 245, 0.35)',
-            borderWidth: 1
-          },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(59, 130, 246, 0.22)' },
-              { offset: 0.55, color: 'rgba(34, 211, 238, 0.10)' },
-              { offset: 1, color: 'rgba(16, 185, 129, 0)' }
-            ])
-          }
-        }
-      ]
+      series
     }
   }
 

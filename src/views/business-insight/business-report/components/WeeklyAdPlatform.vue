@@ -170,6 +170,8 @@
 
 <script setup lang="ts">
   import { computed, inject } from 'vue'
+  import { businessReportContextKey } from '../composables/business-report-context'
+  import type { AdPlatformCard } from '../types'
   import { adPlatformCards } from '../mockData'
 
   defineOptions({ name: 'WeeklyAdPlatform' })
@@ -179,10 +181,35 @@
     return Number.isFinite(n) ? n : 0
   }
 
-  const openPushModal = inject<() => void>('openPushModal', () => {})
+  function mapCardsToWeeklyTableRows(cards: AdPlatformCard[]) {
+    return cards.map((p) => ({
+      id: p.id,
+      name: p.name,
+      logo: p.logo,
+      color: p.color,
+      spend: p.adSpend,
+      change: p.adSpendChange,
+      acquisitions: p.acquisitions,
+      campaigns: p.campaigns,
+      cpi: p.cpi,
+      cpm: p.cpm,
+      cpc: p.cpc,
+      roi1d: p.roi1d,
+      roi7d: p.roi7d,
+      roi14d: p.roi14d ?? '—',
+      profit: p.profit
+    }))
+  }
 
-  const mainPlatforms = computed(() =>
-    adPlatformCards.slice(0, 5).map((p) => {
+  const openPushModal = inject<() => void>('openPushModal', () => {})
+  const ctx = inject(businessReportContextKey)
+
+  const cardList = computed(() => ctx?.adPlatform.value?.platforms ?? null)
+
+  const mainPlatforms = computed(() => {
+    const api = cardList.value
+    if (api && api.length) return api.slice(0, 5)
+    return adPlatformCards.slice(0, 5).map((p) => {
       const base = parseInt(p.adSpend.replace(/[$,]/g, ''), 10)
       const accent = p.id === 'facebook' ? '#8B5CF6' : p.color
       return {
@@ -195,19 +222,26 @@
         roi14d: p.roi14d ?? '93%'
       }
     })
-  )
+  })
 
-  const otherPlatforms = computed(() =>
-    adPlatformCards.slice(5).map((p) => {
+  const otherPlatforms = computed(() => {
+    const api = cardList.value
+    if (api && api.length) {
+      return api.slice(5).map((p) => ({
+        ...p,
+        weeklySpend: p.adSpend
+      }))
+    }
+    return adPlatformCards.slice(5).map((p) => {
       const base = parseInt(p.adSpend.replace(/[$,]/g, ''), 10)
       return {
         ...p,
         weeklySpend: '$' + (base * 7).toLocaleString('en-US')
       }
     })
-  )
+  })
 
-  const tableData = [
+  const weeklyAdPlatformTableMock = [
     {
       id: 'google',
       name: 'Google',
@@ -311,6 +345,12 @@
       profit: '$30,100'
     }
   ]
+
+  const tableData = computed(() => {
+    const api = cardList.value
+    if (api && api.length) return mapCardsToWeeklyTableRows(api)
+    return weeklyAdPlatformTableMock
+  })
 </script>
 
 <style scoped>

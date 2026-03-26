@@ -127,15 +127,15 @@
   const leftHint = computed(() => props.leftHint)
 
   const activeQuarterLabel = computed(() => {
-    const found = props.periodOptions.quarter.find((o) => o.value === props.periodValue)
-    return (
-      (props.periodType === 'quarter' ? found?.value : props.periodOptions.quarter[0]?.value) ?? ''
-    )
+    const quarterOpts = props.periodOptions?.quarter ?? []
+    const found = quarterOpts.find((o) => o.value === props.periodValue)
+    return (props.periodType === 'quarter' ? found?.value : quarterOpts[0]?.value) ?? ''
   })
 
   const activeMonthLabel = computed(() => {
-    const found = props.periodOptions.month.find((o) => o.value === props.periodValue)
-    return (props.periodType === 'month' ? found?.value : props.periodOptions.month[0]?.value) ?? ''
+    const monthOpts = props.periodOptions?.month ?? []
+    const found = monthOpts.find((o) => o.value === props.periodValue)
+    return (props.periodType === 'month' ? found?.value : monthOpts[0]?.value) ?? ''
   })
 
   const personLabel = computed(() => props.personLabel)

@@ -144,13 +144,17 @@
 
 <script setup lang="ts">
   import { computed, inject } from 'vue'
+  import { businessReportContextKey } from '../composables/business-report-context'
   import { adPlatformCards } from '../mockData'
 
   const openPushModal = inject<() => void>('openPushModal', () => {})
+  const ctx = inject(businessReportContextKey)
 
-  const mainPlatforms = computed(() => adPlatformCards.slice(0, 5))
-  const otherPlatforms = computed(() => adPlatformCards.slice(5))
-  const allPlatforms = computed(() => adPlatformCards)
+  const cardList = computed(() => ctx?.adPlatform.value?.platforms ?? adPlatformCards)
+
+  const mainPlatforms = computed(() => cardList.value.slice(0, 5))
+  const otherPlatforms = computed(() => cardList.value.slice(5))
+  const allPlatforms = cardList
 
   const roiColor = (val: string) => {
     const n = parseInt(val)

@@ -11,10 +11,53 @@ import {
   fetchMyPerformanceSpendProgress
 } from '@/api/user-growth/my-performance'
 import type {
+  MyPerformanceMetaPersonResponse,
+  MyPerformanceMetaPeriodResponse,
   MyPerformancePageData,
   MyPerformancePeriodType,
   MyPerformanceQueryBody
 } from '../types'
+
+/** 兼容远程未返回 selectedPersonId、列表字段异常等情况，保证能拼出 queryBody */
+function normalizeMetaPersonPayload(
+  raw: MyPerformanceMetaPersonResponse | null | undefined
+): Pick<MyPerformancePageData, 'personOptions' | 'selectedPersonId'> {
+  const list = Array.isArray(raw?.personOptions) ? raw.personOptions : []
+  let selected = typeof raw?.selectedPersonId === 'string' ? raw.selectedPersonId.trim() : ''
+  if (!selected || !list.some((p) => p.id === selected)) {
+    selected = list[0]?.id ?? ''
+  }
+  return { personOptions: list, selectedPersonId: selected }
+}
+
+/** 兼容远程返回缺字段、`data` 为空等情况，避免 periodOptions / selectedPeriod 为 undefined */
+function normalizeMetaPeriodPayload(
+  raw: MyPerformanceMetaPeriodResponse | null | undefined
+): Pick<MyPerformancePageData, 'periodOptions' | 'periodType' | 'selectedPeriodValue'> {
+  const po = raw?.periodOptions
+  const periodOptions = {
+    quarter: Array.isArray(po?.quarter) ? po.quarter : [],
+    month: Array.isArray(po?.month) ? po.month : []
+  }
+  const sp = raw?.selectedPeriod
+  if (
+    sp &&
+    (sp.periodType === 'quarter' || sp.periodType === 'month') &&
+    typeof sp.periodValue === 'string' &&
+    sp.periodValue.length > 0
+  ) {
+    return { periodOptions, periodType: sp.periodType, selectedPeriodValue: sp.periodValue }
+  }
+  const m0 = periodOptions.month[0]?.value
+  if (m0) {
+    return { periodOptions, periodType: 'month', selectedPeriodValue: m0 }
+  }
+  const q0 = periodOptions.quarter[0]?.value
+  if (q0) {
+    return { periodOptions, periodType: 'quarter', selectedPeriodValue: q0 }
+  }
+  return { periodOptions, periodType: 'month', selectedPeriodValue: '' }
+}
 
 function emptyPageData(): MyPerformancePageData {
   return {
@@ -88,35 +131,49 @@ export function useMyPerformancePage() {
     }
   }
 
-  async function loadMeta(personIdForPeriod?: string) {
-    const [personRes, periodRes] = await Promise.allSettled([
-      fetchMyPerformanceMetaPersonOptions(),
-      fetchMyPerformanceMetaPeriodOptions(
-        personIdForPeriod ? { personId: personIdForPeriod } : undefined
-      )
-    ])
-
-    if (personRes.status === 'fulfilled') {
-      data.value.personOptions = personRes.value.personOptions
-      data.value.selectedPersonId = personRes.value.selectedPersonId
-    } else {
+  /**
+   * 先拉人员再拉统计口径：多数后端口径随人员变化，并行时不带 personId 会导致口径失败/为空，
+   * 进而 selectedPeriodValue 为空，loadDetail 不会发任何详情请求。
+   */
+  async function loadMeta(personIdOverride?: string) {
+    let personOk = false
+    try {
+      const personRaw = await fetchMyPerformanceMetaPersonOptions()
+      const n = normalizeMetaPersonPayload(personRaw)
+      data.value.personOptions = n.personOptions
+      data.value.selectedPersonId = n.selectedPersonId
+      personOk = true
+    } catch {
       ElMessage.error('加载人员选项失败')
     }
 
-    if (periodRes.status === 'fulfilled') {
-      data.value.periodOptions = periodRes.value.periodOptions
-      data.value.periodType = periodRes.value.selectedPeriod.periodType
-      data.value.selectedPeriodValue = periodRes.value.selectedPeriod.periodValue
-    } else {
+    const personIdForPeriod = personIdOverride ?? data.value.selectedPersonId
+
+    let periodOk = false
+    try {
+      const periodRaw = await fetchMyPerformanceMetaPeriodOptions(
+        personIdForPeriod ? { personId: personIdForPeriod } : undefined
+      )
+      const n = normalizeMetaPeriodPayload(periodRaw)
+      data.value.periodOptions = n.periodOptions
+      data.value.periodType = n.periodType
+      data.value.selectedPeriodValue = n.selectedPeriodValue
+      periodOk = true
+    } catch {
       ElMessage.error('加载统计口径选项失败')
     }
 
-    return personRes.status === 'fulfilled' && periodRes.status === 'fulfilled'
+    return personOk && periodOk
   }
 
   async function loadDetail() {
     const body = queryBody()
-    if (!body) return
+    if (!body) {
+      if (data.value.selectedPersonId && !data.value.selectedPeriodValue) {
+        ElMessage.warning('统计口径下暂无可用月份或季度，无法加载绩效详情')
+      }
+      return
+    }
 
     detailLoading.value = true
     try {
@@ -188,9 +245,12 @@ export function useMyPerformancePage() {
 
   async function bootstrap() {
     loading.value = true
-    const ok = await loadMeta()
-    if (ok) await loadDetail()
-    loading.value = false
+    try {
+      await loadMeta()
+      await loadDetail()
+    } finally {
+      loading.value = false
+    }
   }
 
   onMounted(() => {
@@ -201,9 +261,10 @@ export function useMyPerformancePage() {
     data.value.selectedPersonId = personId
     try {
       const periodRes = await fetchMyPerformanceMetaPeriodOptions({ personId })
-      data.value.periodOptions = periodRes.periodOptions
-      data.value.periodType = periodRes.selectedPeriod.periodType
-      data.value.selectedPeriodValue = periodRes.selectedPeriod.periodValue
+      const n = normalizeMetaPeriodPayload(periodRes)
+      data.value.periodOptions = n.periodOptions
+      data.value.periodType = n.periodType
+      data.value.selectedPeriodValue = n.selectedPeriodValue
     } catch {
       ElMessage.error('加载统计口径选项失败')
     }

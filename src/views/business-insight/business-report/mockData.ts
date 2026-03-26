@@ -1877,7 +1877,7 @@ export const compareMetrics: CompareMetricRow[] = [
 ]
 
 // ── AdPlatformByCountry 结构化数据（ApcOsEntry[]）─────────────
-// 对应 GET /api/v1/report/platform-country → osEntries
+// 对应 GET /api/v1/datacenter/analysis/report/platform-country → osEntries
 export const adPlatformByCountryData: ApcOsEntry[] = [
   {
     id: 'android',

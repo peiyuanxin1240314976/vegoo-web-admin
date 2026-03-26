@@ -3,7 +3,7 @@
 // ============================================================
 // 切换方式：修改 config/data-source.ts 中 BUSINESS_REPORT_USE_MOCK 对应项
 //   true  → 使用本地 Mock（mockData.ts）
-//   false → 调用真实后端接口
+//   false → `@/api/business-report` + `@/utils/http`（带 Token、统一错误提示）
 //
 // 接口契约文档见 mock/backend-api/README.md
 // ============================================================
@@ -15,11 +15,21 @@ import type {
   ByCountryResponse,
   PlatformCountryResponse,
   CampaignsResponse,
-  LarkPushConfig,
-  ApiResponse
+  LarkPushConfig
 } from './types'
 
 import { BusinessReportEndpoint, isBusinessReportMock } from './config/data-source'
+
+import {
+  fetchBusinessReportSummary,
+  fetchBusinessReportAdPlatform,
+  fetchBusinessReportByCountry,
+  fetchBusinessReportPlatformCountry,
+  fetchBusinessReportCampaigns,
+  fetchBusinessReportLarkConfig,
+  saveBusinessReportLarkConfig,
+  pushBusinessReportLarkNow
+} from '@/api/business-report'
 
 import {
   dailyKpis,
@@ -45,50 +55,13 @@ import {
   larkPushConfigMock
 } from './mockData'
 
-// ── 基础 URL（真实接口时使用） ──────────────────────────────
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
-
-// ── 通用请求工具 ─────────────────────────────────────────────
-async function request<T>(path: string, params?: Record<string, string>): Promise<T> {
-  const url = new URL(`${BASE_URL}${path}`, window.location.origin)
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => v && url.searchParams.set(k, v))
-  }
-  const res = await fetch(url.toString())
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-  const body: ApiResponse<T> = await res.json()
-  if (body.code !== 0) throw new Error(body.message || '接口返回错误')
-  return body.data
-}
-
-async function post<T>(path: string, payload: unknown): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-  const body: ApiResponse<T> = await res.json()
-  if (body.code !== 0) throw new Error(body.message || '接口返回错误')
-  return body.data
-}
-
 // ── 模拟延迟（mock 模式下，便于测试加载状态） ────────────────
 function mockDelay<T>(data: T, ms = 300): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(data), ms))
 }
 
-// ── 通用查询参数构造 ─────────────────────────────────────────
-function buildQueryParams(params: ReportQueryParams): Record<string, string> {
-  return {
-    period: params.period,
-    ...(params.appId ? { appId: params.appId } : {}),
-    ...(params.date ? { date: params.date } : {})
-  }
-}
-
 // ============================================================
-// 1. 汇总表  GET /api/v1/report/summary
+// 1. 汇总表  GET /api/v1/datacenter/analysis/report/summary
 // 契约：mock/backend-api/01-summary.json
 // ============================================================
 export async function getSummary(params: ReportQueryParams): Promise<SummaryResponse> {
@@ -114,11 +87,11 @@ export async function getSummary(params: ReportQueryParams): Promise<SummaryResp
       appList: period === 'weekly' ? weeklyAppList : appListData
     })
   }
-  return request<SummaryResponse>('/report/summary', buildQueryParams(params))
+  return fetchBusinessReportSummary(params)
 }
 
 // ============================================================
-// 2. 广告平台  GET /api/v1/report/ad-platform
+// 2. 广告平台  GET /api/v1/datacenter/analysis/report/ad-platform
 // 契约：mock/backend-api/02-ad-platform.json
 // ============================================================
 export async function getAdPlatform(params: ReportQueryParams): Promise<AdPlatformResponse> {
@@ -129,11 +102,11 @@ export async function getAdPlatform(params: ReportQueryParams): Promise<AdPlatfo
       appList: params.period === 'weekly' ? weeklyAppList : appListData
     })
   }
-  return request<AdPlatformResponse>('/report/ad-platform', buildQueryParams(params))
+  return fetchBusinessReportAdPlatform(params)
 }
 
 // ============================================================
-// 3. 分国家汇总  GET /api/v1/report/by-country
+// 3. 分国家汇总  GET /api/v1/datacenter/analysis/report/by-country
 // 契约：mock/backend-api/03-by-country.json
 // ============================================================
 export async function getByCountry(params: ReportQueryParams): Promise<ByCountryResponse> {
@@ -145,11 +118,11 @@ export async function getByCountry(params: ReportQueryParams): Promise<ByCountry
       appList: params.period === 'weekly' ? weeklyAppList : appListData
     })
   }
-  return request<ByCountryResponse>('/report/by-country', buildQueryParams(params))
+  return fetchBusinessReportByCountry(params)
 }
 
 // ============================================================
-// 4. 广告平台分国家  GET /api/v1/report/platform-country
+// 4. 广告平台分国家  GET /api/v1/datacenter/analysis/report/platform-country
 // 契约：mock/backend-api/04-platform-country.json
 // ============================================================
 export async function getPlatformCountry(
@@ -166,11 +139,11 @@ export async function getPlatformCountry(
       )
     })
   }
-  return request<PlatformCountryResponse>('/report/platform-country', buildQueryParams(params))
+  return fetchBusinessReportPlatformCountry(params)
 }
 
 // ============================================================
-// 5. 在投广告系列  GET /api/v1/report/campaigns
+// 5. 在投广告系列  GET /api/v1/datacenter/analysis/report/campaigns
 // 契约：mock/backend-api/05-campaigns.json
 // ============================================================
 export async function getCampaigns(params: ReportQueryParams): Promise<CampaignsResponse> {
@@ -181,7 +154,7 @@ export async function getCampaigns(params: ReportQueryParams): Promise<Campaigns
       appList: params.period === 'weekly' ? weeklyAppList : appListData
     })
   }
-  return request<CampaignsResponse>('/report/campaigns', buildQueryParams(params))
+  return fetchBusinessReportCampaigns(params)
 }
 
 // ============================================================
@@ -192,7 +165,7 @@ export async function getLarkConfig(): Promise<LarkPushConfig> {
   if (isBusinessReportMock(BusinessReportEndpoint.LarkConfigGet)) {
     return mockDelay<LarkPushConfig>(larkPushConfigMock)
   }
-  return request<LarkPushConfig>('/lark/push-config')
+  return fetchBusinessReportLarkConfig()
 }
 
 // ============================================================
@@ -203,7 +176,7 @@ export async function saveLarkConfig(config: LarkPushConfig): Promise<void> {
   if (isBusinessReportMock(BusinessReportEndpoint.LarkConfigSave)) {
     return mockDelay<void>(undefined)
   }
-  await post<null>('/lark/push-config', config)
+  await saveBusinessReportLarkConfig(config)
 }
 
 // ============================================================
@@ -214,5 +187,5 @@ export async function pushReportNow(config: LarkPushConfig): Promise<void> {
   if (isBusinessReportMock(BusinessReportEndpoint.LarkPushNow)) {
     return mockDelay<void>(undefined, 800)
   }
-  await post<null>('/lark/push-now', config)
+  await pushBusinessReportLarkNow(config)
 }

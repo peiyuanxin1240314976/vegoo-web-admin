@@ -106,8 +106,12 @@ export interface MyPerformanceKpiAchievement {
 }
 
 export interface MyPerformanceRoiTrendPoint {
+  /** X 轴：YYYY-MM-DD 或后端已格式化的 MM/DD 等 */
   date: string
+  /** 实际 ROI（%） */
   roi: number
+  /** 目标 ROI（%）；存在时图表画第二条线 */
+  targetRoi?: number
 }
 
 export interface MyPerformanceSpendProgress {

@@ -1,7 +1,7 @@
 {
   "_comment": "经营报告 - 在投广告系列表。对应 types.ts: CampaignsResponse。三周期结构相同，adSpendChange 分别为日/周/月环比变化率；月报可能包含更多历史系列。",
   "api": {
-    "url": "GET /api/v1/report/campaigns",
+    "url": "GET /api/v1/datacenter/analysis/report/campaigns",
     "method": "GET",
     "priority": "P1",
     "queryParams": "period, appId?, date?"

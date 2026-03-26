@@ -3,9 +3,9 @@
  *
  * - `BusinessReportEndpoint`：每个接口一个枚举值，改 `BUSINESS_REPORT_USE_MOCK` 对应项即可。
  * - `true`  = 使用本地 Mock（`mockData.ts`）
- * - `false` = 走真实 HTTP（`reportService.ts` 中的 `request` / `post`）
+ * - `false` = 走真实 HTTP（`src/api/business-report.ts`，根路径见同目录 `api-base.ts`）
  *
- * 默认全部为 `true`（开发阶段 Mock）；后端接口就绪后逐项改为 `false`。
+ * 默认全部为 `false`（对接后端）；本地可逐项改为 `true` 使用 `mockData.ts`。
  */
 
 export enum BusinessReportEndpoint {
@@ -29,14 +29,14 @@ export enum BusinessReportEndpoint {
 
 /** 是否对该接口使用 Mock（逐项修改） */
 export const BUSINESS_REPORT_USE_MOCK: Record<BusinessReportEndpoint, boolean> = {
-  [BusinessReportEndpoint.Summary]: true,
-  [BusinessReportEndpoint.AdPlatform]: true,
-  [BusinessReportEndpoint.ByCountry]: true,
-  [BusinessReportEndpoint.PlatformCountry]: true,
-  [BusinessReportEndpoint.Campaigns]: true,
-  [BusinessReportEndpoint.LarkConfigGet]: true,
-  [BusinessReportEndpoint.LarkConfigSave]: true,
-  [BusinessReportEndpoint.LarkPushNow]: true
+  [BusinessReportEndpoint.Summary]: false,
+  [BusinessReportEndpoint.AdPlatform]: false,
+  [BusinessReportEndpoint.ByCountry]: false,
+  [BusinessReportEndpoint.PlatformCountry]: false,
+  [BusinessReportEndpoint.Campaigns]: false,
+  [BusinessReportEndpoint.LarkConfigGet]: false,
+  [BusinessReportEndpoint.LarkConfigSave]: false,
+  [BusinessReportEndpoint.LarkPushNow]: false
 }
 
 export function isBusinessReportMock(endpoint: BusinessReportEndpoint): boolean {

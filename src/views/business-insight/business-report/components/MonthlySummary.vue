@@ -171,22 +171,35 @@
 </template>
 
 <script setup lang="ts">
-  import { inject } from 'vue'
+  import { computed, inject } from 'vue'
   import KpiCard from './KpiCard.vue'
+  import { businessReportContextKey } from '../composables/business-report-context'
   import {
-    monthlyKpis,
-    monthlyUserMetrics,
-    roiMetrics,
-    retentionMetrics,
-    monthlyRevenueMetrics,
-    feeDeductions
+    monthlyKpis as monthlyKpisMock,
+    monthlyUserMetrics as monthlyUserMetricsMock,
+    roiMetrics as roiMetricsMock,
+    retentionMetrics as retentionMetricsMock,
+    monthlyRevenueMetrics as monthlyRevenueMetricsMock,
+    feeDeductions as feeDeductionsMock
   } from '../mockData'
 
   defineOptions({ name: 'MonthlySummary' })
 
   const openPushModal = inject<() => void>('openPushModal', () => {})
+  const ctx = inject(businessReportContextKey)
 
-  const feeItems = feeDeductions
+  const monthlyKpis = computed(() => ctx?.summary.value?.kpis ?? monthlyKpisMock)
+  const monthlyUserMetrics = computed(
+    () => ctx?.summary.value?.userMetrics ?? monthlyUserMetricsMock
+  )
+  const retentionMetrics = computed(
+    () => ctx?.summary.value?.retentionMetrics ?? retentionMetricsMock
+  )
+  const roiMetrics = computed(() => ctx?.summary.value?.roiMetrics ?? roiMetricsMock)
+  const monthlyRevenueMetrics = computed(
+    () => ctx?.summary.value?.revenueMetrics ?? monthlyRevenueMetricsMock
+  )
+  const feeItems = computed(() => ctx?.summary.value?.feeDeductions ?? feeDeductionsMock)
 
   function changeClass(type?: string) {
     if (type === 'positive') return 'positive'

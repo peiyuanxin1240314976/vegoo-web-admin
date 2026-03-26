@@ -202,7 +202,7 @@
     <div :class="['br-content', { 'no-sidebar': compareMode && period === 'monthly' }]">
       <!-- Monthly compare mode: no sidebar -->
       <template v-if="compareMode && period === 'monthly'">
-        <main class="br-main br-main--compare">
+        <main v-loading="contentLoading" class="br-main br-main--compare">
           <MonthlyCompareMode />
         </main>
       </template>
@@ -223,7 +223,7 @@
             />
           </div>
         </aside>
-        <main class="br-main">
+        <main v-loading="contentLoading" class="br-main">
           <!-- ── daily ─────────────────────────────────────────── -->
           <DailySummary v-if="contentKey === 'daily-summary'" />
           <DailyAdPlatform v-else-if="contentKey === 'daily-adPlatform'" />
@@ -257,8 +257,25 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, provide } from 'vue'
-  import type { ReportPeriod, ReportTab } from './types'
+  import { ref, computed, provide, watch } from 'vue'
+  import type {
+    ReportPeriod,
+    ReportQueryParams,
+    ReportTab,
+    SummaryResponse,
+    AdPlatformResponse,
+    ByCountryResponse,
+    PlatformCountryResponse,
+    CampaignsResponse
+  } from './types'
+  import { businessReportContextKey } from './composables/business-report-context'
+  import {
+    getSummary,
+    getAdPlatform,
+    getByCountry,
+    getPlatformCountry,
+    getCampaigns
+  } from './reportService'
 
   import AppSidebar from './components/AppSidebar.vue'
   import LarkPushModal from './components/LarkPushModal.vue'
@@ -434,8 +451,17 @@
   // Composite key for independent period×tab right-side content
   const contentKey = computed(() => `${period.value}-${activeTab.value}`)
 
-  // Pass period-specific app list to sidebar
+  const loading = ref(false)
+  const summary = ref<SummaryResponse | null>(null)
+  const adPlatform = ref<AdPlatformResponse | null>(null)
+  const byCountry = ref<ByCountryResponse | null>(null)
+  const platformCountry = ref<PlatformCountryResponse | null>(null)
+  const campaigns = ref<CampaignsResponse | null>(null)
+
+  // 侧栏应用列表：优先使用 summary 接口返回的 appList
   const currentAppList = computed(() => {
+    const fromApi = summary.value?.appList
+    if (fromApi && fromApi.length > 0) return fromApi
     if (period.value === 'weekly') return weeklyAppList
     return appList
   })
@@ -450,6 +476,67 @@
   provide('openPushModal', () => {
     showLarkModal.value = true
   })
+
+  provide(businessReportContextKey, {
+    loading,
+    summary,
+    adPlatform,
+    byCountry,
+    platformCountry,
+    campaigns
+  })
+
+  function buildReportParams(): ReportQueryParams {
+    const id = selectedAppId.value
+    return {
+      period: period.value,
+      appId: id === 'overall' ? undefined : id
+    }
+  }
+
+  let reportRequestSeq = 0
+  async function refreshReportData() {
+    const seq = ++reportRequestSeq
+    const params = buildReportParams()
+    const tab = activeTab.value
+    loading.value = true
+    try {
+      const sum = await getSummary(params)
+      if (seq !== reportRequestSeq) return
+      summary.value = sum
+
+      if (tab !== 'adPlatform') adPlatform.value = null
+      if (tab !== 'byCountry') byCountry.value = null
+      if (tab !== 'platformCountry') platformCountry.value = null
+      if (tab !== 'campaigns') campaigns.value = null
+
+      if (tab === 'adPlatform') {
+        const r = await getAdPlatform(params)
+        if (seq !== reportRequestSeq) return
+        adPlatform.value = r
+      } else if (tab === 'byCountry') {
+        const r = await getByCountry(params)
+        if (seq !== reportRequestSeq) return
+        byCountry.value = r
+      } else if (tab === 'platformCountry') {
+        const r = await getPlatformCountry(params)
+        if (seq !== reportRequestSeq) return
+        platformCountry.value = r
+      } else if (tab === 'campaigns') {
+        const r = await getCampaigns(params)
+        if (seq !== reportRequestSeq) return
+        campaigns.value = r
+      }
+    } catch (e) {
+      console.error('[BusinessReport] refreshReportData', e)
+    } finally {
+      if (seq === reportRequestSeq) loading.value = false
+    }
+  }
+
+  watch([period, selectedAppId, activeTab], refreshReportData, { immediate: true })
+
+  const contentLoading = computed(() => loading.value)
 </script>
 
 <style>

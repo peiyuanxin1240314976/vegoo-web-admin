@@ -128,11 +128,12 @@
 <script setup lang="ts">
   import { ref, computed, inject, onMounted, onUnmounted } from 'vue'
   import * as echarts from 'echarts'
+  import { businessReportContextKey } from '../composables/business-report-context'
   import { campaignData } from '../mockData'
 
   defineOptions({ name: 'WeeklyCampaigns' })
 
-  const campaigns = campaignData.map((c) => ({
+  const weeklyCampaignsMock = campaignData.map((c) => ({
     ...c,
     adSpend:
       c.adSpend === '$0'
@@ -141,12 +142,15 @@
   }))
 
   const openPushModal = inject<() => void>('openPushModal', () => {})
+  const ctx = inject(businessReportContextKey)
 
-  const activeCount = computed(() => campaigns.filter((c) => c.status === 'active').length)
-  const pausedCount = computed(() => campaigns.filter((c) => c.status === 'paused').length)
+  const campaigns = computed(() => ctx?.campaigns.value?.rows ?? weeklyCampaignsMock)
+
+  const activeCount = computed(() => campaigns.value.filter((c) => c.status === 'active').length)
+  const pausedCount = computed(() => campaigns.value.filter((c) => c.status === 'paused').length)
 
   const totalSpendDisplay = computed(() => {
-    const sum = campaigns.reduce((acc, c) => {
+    const sum = campaigns.value.reduce((acc, c) => {
       if (c.adSpend === '$0') return acc
       return acc + parseInt(c.adSpend.replace(/[$,]/g, ''), 10)
     }, 0)

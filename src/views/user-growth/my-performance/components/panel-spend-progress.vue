@@ -26,15 +26,20 @@
 
   defineOptions({ name: 'MyPerformancePanelSpendProgress' })
 
-  const props = defineProps<{
-    title: string
-    data: MyPerformanceSpendProgress
-    hintText?: string
-  }>()
+  const props = withDefaults(
+    defineProps<{
+      title: string
+      data?: MyPerformanceSpendProgress
+      hintText?: string
+    }>(),
+    {
+      data: () => ({ spend: 0, target: 0, rate: 0 })
+    }
+  )
 
-  const spend = computed(() => props.data.spend)
-  const target = computed(() => props.data.target)
-  const rate = computed(() => props.data.rate)
+  const spend = computed(() => props.data?.spend ?? 0)
+  const target = computed(() => props.data?.target ?? 0)
+  const rate = computed(() => props.data?.rate ?? 0)
 
   function money(n: number) {
     return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })

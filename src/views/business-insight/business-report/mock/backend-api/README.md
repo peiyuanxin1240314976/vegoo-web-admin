@@ -5,7 +5,7 @@
 ## 父级 API 路径
 
 ```
-/api/v1/report/          （报告数据接口）
+/api/v1/datacenter/analysis/report/   （报告数据接口，前缀同 `config/api-base.ts`）
 /api/v1/lark/            （飞书推送接口）
 ```
 

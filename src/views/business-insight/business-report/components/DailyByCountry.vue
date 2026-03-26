@@ -202,6 +202,7 @@
 <script setup lang="ts">
   import 'flag-icons/css/flag-icons.min.css'
   import { computed, inject } from 'vue'
+  import { businessReportContextKey } from '../composables/business-report-context'
   import { countryData, countryOthersRow } from '../mockData'
 
   const props = withDefaults(
@@ -215,11 +216,12 @@
   defineOptions({ name: 'DailyByCountry' })
 
   const openPushModal = inject<() => void>('openPushModal', () => {})
+  const ctx = inject(businessReportContextKey)
 
   const isWeekly = computed(() => props.variant === 'weekly')
 
-  const countries = countryData
-  const othersRow = countryOthersRow
+  const countries = computed(() => ctx?.byCountry.value?.rows ?? countryData)
+  const othersRow = computed(() => ctx?.byCountry.value?.othersRow ?? countryOthersRow)
 
   /** 国家名称 → flag-icons 的 `fi-xx`（与 mock 国家名一致） */
   const COUNTRY_FI: Record<string, string> = {

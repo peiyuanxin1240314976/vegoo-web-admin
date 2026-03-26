@@ -338,7 +338,7 @@ export interface ReportQueryParams {
 
 // ── 各模块接口响应类型 ────────────────────────────────────────
 
-/** GET /api/v1/report/summary */
+/** GET /api/v1/datacenter/analysis/report/summary */
 export interface SummaryResponse {
   kpis: KpiMetric[]
   userMetrics: UserMetricRow[]
@@ -349,20 +349,20 @@ export interface SummaryResponse {
   appList: AppListItem[]
 }
 
-/** GET /api/v1/report/ad-platform */
+/** GET /api/v1/datacenter/analysis/report/ad-platform */
 export interface AdPlatformResponse {
   platforms: AdPlatformCard[]
   appList: AppListItem[]
 }
 
-/** GET /api/v1/report/by-country */
+/** GET /api/v1/datacenter/analysis/report/by-country */
 export interface ByCountryResponse {
   rows: CountryRow[]
   othersRow: CountryRow // 合并的"其他 N 个国家"行
   appList: AppListItem[]
 }
 
-/** GET /api/v1/report/platform-country */
+/** GET /api/v1/datacenter/analysis/report/platform-country */
 export interface PlatformCountryResponse {
   osEntries: ApcOsEntry[] // AdPlatformByCountry 组件使用（结构化）
   flatRows: PlatformCountryRow[] // DailyPlatformCountry 等组件使用（平铺层级）
@@ -370,7 +370,7 @@ export interface PlatformCountryResponse {
   totalCountries: number
 }
 
-/** GET /api/v1/report/campaigns */
+/** GET /api/v1/datacenter/analysis/report/campaigns */
 export interface CampaignsResponse {
   rows: CampaignRow[]
   appList: AppListItem[]

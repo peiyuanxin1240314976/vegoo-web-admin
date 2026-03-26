@@ -244,9 +244,10 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+  import { ref, computed, watch, onMounted, onUnmounted, nextTick, inject } from 'vue'
   import * as echarts from 'echarts'
   import SparklineChart from './SparklineChart.vue'
+  import { businessReportContextKey } from '../composables/business-report-context'
   import { appList } from '../mockData'
   import type { AppListItem } from '../types'
 
@@ -254,19 +255,34 @@
   const platformFilter = ref('全部')
   const searchQ = ref('')
 
-  // Augment appList with sparkline data
-  const enrichedApps = appList.map((app) => ({
-    ...app,
-    sparklineData: Array.from({ length: 12 }, (_, i) =>
-      Math.floor(app.revenue * (0.6 + i * 0.035 + Math.random() * 0.05))
-    )
-  }))
+  const ctx = inject(businessReportContextKey)
 
-  type EnrichedApp = (typeof enrichedApps)[number]
+  const baseAppList = computed(() => {
+    const api = ctx?.summary.value?.appList
+    if (api && api.length) return api
+    return appList
+  })
+
+  type EnrichedApp = AppListItem & { sparklineData: number[] }
+  const enrichedApps = ref<EnrichedApp[]>([])
   const selectedApps = ref<EnrichedApp[]>([])
 
+  watch(
+    baseAppList,
+    (list) => {
+      enrichedApps.value = list.map((app) => ({
+        ...app,
+        sparklineData: Array.from({ length: 12 }, (_, i) =>
+          Math.floor(app.revenue * (0.6 + i * 0.035 + Math.random() * 0.05))
+        )
+      }))
+      selectedApps.value = enrichedApps.value.slice(0, Math.min(3, enrichedApps.value.length))
+    },
+    { immediate: true }
+  )
+
   const filteredApps = computed(() => {
-    let list = enrichedApps
+    let list = enrichedApps.value
     if (platformFilter.value !== '全部') {
       list = list.filter((a) => a.platforms.includes(platformFilter.value))
     }
@@ -276,9 +292,7 @@
     return list
   })
 
-  // Init with first 3
   onMounted(() => {
-    selectedApps.value = enrichedApps.slice(0, 3)
     nextTick(() => {
       initMauChart()
       initTrendChart()

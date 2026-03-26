@@ -146,10 +146,9 @@
 </template>
 
 <script setup lang="ts">
-  import { inject } from 'vue'
+  import { computed, inject } from 'vue'
   import KpiCard from './KpiCard.vue'
-
-  const openPushModal = inject<() => void>('openPushModal', () => {})
+  import { businessReportContextKey } from '../composables/business-report-context'
   import {
     dailyKpis,
     dailyUserMetrics,
@@ -179,11 +178,14 @@
     }
   )
 
-  const kpis = dailyKpis
-  const userMetrics = dailyUserMetrics
-  const roiRows = roiMetrics
-  const retention = retentionMetrics
-  const revenueMetrics = dailyRevenueMetrics
+  const openPushModal = inject<() => void>('openPushModal', () => {})
+  const ctx = inject(businessReportContextKey)
+
+  const kpis = computed(() => ctx?.summary.value?.kpis ?? dailyKpis)
+  const userMetrics = computed(() => ctx?.summary.value?.userMetrics ?? dailyUserMetrics)
+  const roiRows = computed(() => ctx?.summary.value?.roiMetrics ?? roiMetrics)
+  const retention = computed(() => ctx?.summary.value?.retentionMetrics ?? retentionMetrics)
+  const revenueMetrics = computed(() => ctx?.summary.value?.revenueMetrics ?? dailyRevenueMetrics)
 </script>
 
 <style scoped>

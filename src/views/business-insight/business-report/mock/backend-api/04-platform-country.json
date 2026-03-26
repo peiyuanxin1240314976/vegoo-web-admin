@@ -1,7 +1,7 @@
 {
   "_comment": "经营报告 - 广告平台分国家。对应 types.ts: PlatformCountryResponse。三周期结构相同，change 字段分别反映日/周/月环比。",
   "api": {
-    "url": "GET /api/v1/report/platform-country",
+    "url": "GET /api/v1/datacenter/analysis/report/platform-country",
     "method": "GET",
     "priority": "P1",
     "queryParams": "period, appId?, date?"

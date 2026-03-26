@@ -61,7 +61,53 @@ export class MenuProcessor {
    */
   private async processBackendMenu(): Promise<AppRouteRecord[]> {
     const list = await fetchGetMenuList()
-    return this.filterEmptyMenus(list)
+    // 后端菜单可能滞后于前端已上线的路由：与静态 `asyncRoutes` 按 route.name 合并缺失项（如「报告管理」）
+    const merged = this.mergeBackendMenuWithStaticRoutes(list, asyncRoutes)
+    return this.filterEmptyMenus(merged)
+  }
+
+  /** 按 route.name 将静态路由树合并进后端菜单（补齐后端未配置的子菜单，顺序以静态配置为准） */
+  private mergeBackendMenuWithStaticRoutes(
+    backendList: AppRouteRecord[],
+    staticList: AppRouteRecord[]
+  ): AppRouteRecord[] {
+    const staticByName = new Map(staticList.map((r) => [String(r.name), r]))
+    return backendList.map((item) => {
+      const staticItem = staticByName.get(String(item.name))
+      return staticItem ? this.mergeMenuBranch(item, staticItem) : item
+    })
+  }
+
+  private mergeMenuBranch(backendItem: AppRouteRecord, staticItem: AppRouteRecord): AppRouteRecord {
+    const staticChildren = staticItem.children
+    if (!staticChildren?.length) {
+      return backendItem
+    }
+
+    const backendChildren = backendItem.children ?? []
+    if (backendChildren.length === 0) {
+      return { ...backendItem, children: staticChildren.map((c) => ({ ...c })) }
+    }
+
+    const backendByName = new Map(backendChildren.map((c) => [String(c.name), c]))
+    const merged: AppRouteRecord[] = []
+
+    for (const sc of staticChildren) {
+      const key = String(sc.name)
+      const bc = backendByName.get(key)
+      if (bc) {
+        merged.push(this.mergeMenuBranch(bc, sc))
+        backendByName.delete(key)
+      } else {
+        merged.push({ ...sc })
+      }
+    }
+
+    for (const [, bc] of backendByName) {
+      merged.push(bc)
+    }
+
+    return { ...backendItem, children: merged }
   }
 
   /**

@@ -129,13 +129,20 @@
 
 <script setup lang="ts">
   import { computed, inject } from 'vue'
+  import { businessReportContextKey } from '../composables/business-report-context'
   import { campaignData } from '../mockData'
 
-  const campaigns = campaignData
   const openPushModal = inject<() => void>('openPushModal', () => {})
+  const ctx = inject(businessReportContextKey)
 
-  const activeCampaigns = computed(() => campaigns.filter((c) => c.status === 'active').length)
-  const pausedCampaigns = computed(() => campaigns.filter((c) => c.status === 'paused').length)
+  const campaigns = computed(() => ctx?.campaigns.value?.rows ?? campaignData)
+
+  const activeCampaigns = computed(
+    () => campaigns.value.filter((c) => c.status === 'active').length
+  )
+  const pausedCampaigns = computed(
+    () => campaigns.value.filter((c) => c.status === 'paused').length
+  )
 
   const changeColor = (v: number) => (v >= 0 ? 'chg-pos' : 'chg-neg')
 

@@ -1,7 +1,7 @@
 {
   "_comment": "经营报告 - 分国家汇总表。对应 types.ts: ByCountryResponse。三周期结构相同，数值按 period 聚合。",
   "api": {
-    "url": "GET /api/v1/report/by-country",
+    "url": "GET /api/v1/datacenter/analysis/report/by-country",
     "method": "GET",
     "priority": "P0",
     "queryParams": "period, appId?, date?"
