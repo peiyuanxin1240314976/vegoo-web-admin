@@ -8,15 +8,21 @@
           </div>
           <div class="api-platform__meta">
             <div class="api-platform__name">{{ summary.name }}</div>
-            <ElTag class="api-platform__tag" size="small" type="primary" effect="dark">聚合</ElTag>
+            <ElTag class="api-platform__tag" size="small" type="primary" effect="dark">渠道</ElTag>
           </div>
         </div>
 
         <div class="api-score">
-          <div class="api-score__ring" :style="{ '--p': summary.score }">
-            <div class="api-score__num">{{ summary.score }}</div>
-            <div class="api-score__text">{{ summary.scoreText }}</div>
-            <div class="api-score__label">优秀</div>
+          <div class="api-score__card" :class="`is-${scoreStatus}`">
+            <div class="api-score__ring" :style="{ '--p': scorePercent }">
+              <div class="api-score__ringNum">{{ scoreValue }}</div>
+            </div>
+            <div class="api-score__meta">
+              <div class="api-score__value">
+                {{ scoreValue }}<span class="api-score__total">/100</span>
+              </div>
+              <div class="api-score__label">{{ scoreLabel }}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -32,38 +38,6 @@
             <ArtSvgIcon icon="ri:download-2-line" :size="16" />
             导出报表
           </ElButton>
-        </div>
-
-        <div class="api-controls">
-          <div class="api-filter">
-            <div class="api-filter__label">广告平台</div>
-            <ElSelect v-model="sourceProxy" class="api-select">
-              <ElOption
-                v-for="o in sourceOptions"
-                :key="o.value"
-                :label="o.label"
-                :value="o.value"
-              />
-            </ElSelect>
-          </div>
-
-          <div class="api-filter">
-            <div class="api-filter__label">日期范围</div>
-            <ElRadioGroup v-model="dateRangeProxy" class="api-seg" size="default">
-              <ElRadioButton v-for="o in dateRangeOptions" :key="o.value" :label="o.value">
-                {{ o.label }}
-              </ElRadioButton>
-            </ElRadioGroup>
-          </div>
-
-          <div class="api-filter api-filter--btns">
-            <div class="api-filter__label">数据更新时间</div>
-            <div class="api-updated">{{ updatedAtText }}</div>
-            <div class="api-btns">
-              <ElButton round type="primary" @click="emit('query')">查询</ElButton>
-              <ElButton round @click="emit('refresh')">刷新</ElButton>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -92,28 +66,28 @@
     (e: 'export'): void
   }>()
 
-  const sourceOptions = [
-    { label: 'Google Ads', value: 'google_ads' },
-    { label: 'Facebook Ads', value: 'facebook_ads' },
-    { label: 'AppLovin', value: 'applovin' },
-    { label: 'Unity', value: 'unity' },
-    { label: 'IronSource', value: 'ironsource' }
-  ] as const
-
-  const dateRangeOptions = [
-    { label: '近7天', value: '7d' },
-    { label: '近30天', value: '30d' },
-    { label: '近90天', value: '90d' }
-  ] as const
-
-  const sourceProxy = computed({
-    get: () => props.source,
-    set: (v) => emit('update:source', v)
+  const scoreValue = computed(() => {
+    const v = Number(props.summary.score || 0)
+    if (Number.isNaN(v)) return 0
+    if (v > 100) return 100
+    if (v < 0) return 0
+    return Math.round(v)
   })
 
-  const dateRangeProxy = computed({
-    get: () => props.dateRange,
-    set: (v) => emit('update:dateRange', v)
+  const scorePercent = computed(() => {
+    return scoreValue.value
+  })
+
+  const scoreStatus = computed(() => {
+    if (scoreValue.value >= 90) return 'excellent'
+    if (scoreValue.value >= 60) return 'good'
+    return 'bad'
+  })
+
+  const scoreLabel = computed(() => {
+    if (scoreValue.value >= 90) return '优秀'
+    if (scoreValue.value >= 60) return '良好'
+    return '较差'
   })
 
   const rangeText = computed(() => {
@@ -184,10 +158,30 @@
     }
   }
 
+  .api-score__card {
+    --accent: var(--art-success);
+
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgb(24 24 27 / 72%);
+    border: 1px solid color-mix(in srgb, var(--accent) 75%, transparent);
+    border-radius: 12px;
+  }
+
+  .api-score__card.is-excellent {
+    --accent: var(--art-primary);
+  }
+
+  .api-score__card.is-bad {
+    --accent: var(--art-danger);
+  }
+
   .api-score__ring {
-    --size: 64px;
+    --size: 42px;
     --track: rgb(161 161 170 / 22%);
-    --color: var(--art-primary);
+    --color: var(--accent);
 
     position: relative;
     display: grid;
@@ -203,40 +197,48 @@
 
   .api-score__ring::before {
     position: absolute;
-    inset: 5px;
-    width: calc(var(--size) - 10px);
-    height: calc(var(--size) - 10px);
+    inset: 4px;
+    width: calc(var(--size) - 8px);
+    height: calc(var(--size) - 8px);
     content: '';
     background: var(--default-box-color);
     border-radius: 9999px;
   }
 
-  .api-score__num {
+  .api-score__ringNum {
     position: relative;
     z-index: 1;
-    font-size: 16px;
+    font-size: 27px;
     font-weight: 900;
-    line-height: 1.1;
-    color: var(--art-gray-900);
-    text-align: center;
+    line-height: 1;
+    color: var(--accent);
+    zoom: 0.5;
   }
 
-  .api-score__text {
-    position: relative;
-    z-index: 1;
-    margin-top: 2px;
-    font-size: 11px;
+  .api-score__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .api-score__value {
+    font-size: 37px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -0.01em;
+    zoom: 0.5;
+  }
+
+  .api-score__total {
     font-weight: 700;
-    color: var(--art-gray-600);
+    color: color-mix(in srgb, var(--accent) 80%, white);
   }
 
   .api-score__label {
-    position: relative;
-    z-index: 1;
-    margin-top: 2px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    color: var(--art-success);
+    color: var(--art-gray-900);
   }
 
   .api-score {
@@ -286,52 +288,5 @@
     display: inline-flex;
     gap: 8px;
     align-items: center;
-  }
-
-  .api-controls {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 1.2fr;
-    gap: 12px;
-
-    @media (width <= 1100px) {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .api-filter__label {
-    margin-bottom: 6px;
-    font-size: 12px;
-    color: var(--art-gray-600);
-  }
-
-  .api-select {
-    width: 100%;
-  }
-
-  .api-filter--btns {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .api-updated {
-    font-size: 12px;
-    color: var(--art-gray-600);
-  }
-
-  .api-btns {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-
-    @media (width <= 1100px) {
-      justify-content: flex-start;
-    }
-  }
-
-  .api-seg {
-    :deep(.el-radio-button__inner) {
-      border-color: var(--default-border);
-    }
   }
 </style>
