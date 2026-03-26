@@ -5,7 +5,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- Mock 保留入参形状供联调对照 */
 import type {
   IaaFilterOptions,
-  IaaPlatformTableRow,
   IaaFilterState,
   IaaAdTypeTabData,
   IaaPlatformTabData,
@@ -46,44 +45,6 @@ export function mockFetchIaaMetaFilterOptions() {
       { label: '美国', value: 'US' },
       { label: '韩国', value: 'KR' },
       { label: '日本', value: 'JP' }
-    ]
-  })
-}
-
-/** 广告平台 Tab - 平台详细对比表（Mock：后端就绪后改为 request.post） */
-export function mockFetchIaaTableAdPlatform(_params: IaaFilterState) {
-  return Promise.resolve<{ list: IaaPlatformTableRow[] }>({
-    list: [
-      {
-        sourceName: 'Admob',
-        source: 1,
-        revenue: 1985.86,
-        revenueShare: 71.7,
-        impressions: 520000,
-        impressionShare: 62.4,
-        adUsers: 85000,
-        userShare: 72.4,
-        ecpmEst: 18.54,
-        ecpmReal: 17.2,
-        variance: 7.8,
-        fillRate: 96.2,
-        trend: 'up'
-      },
-      {
-        sourceName: 'Facebook',
-        source: 2,
-        revenue: 257.5,
-        revenueShare: 9.3,
-        impressions: 120000,
-        impressionShare: 14.4,
-        adUsers: 22000,
-        userShare: 18.7,
-        ecpmEst: 2.14,
-        ecpmReal: 2.0,
-        variance: 7.0,
-        fillRate: 92,
-        trend: 'flat'
-      }
     ]
   })
 }

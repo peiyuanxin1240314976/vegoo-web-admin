@@ -1273,17 +1273,6 @@ export function fetchProfitOverviewSankey(fo: ProfitAnalysisQueryParams) {
   })
 }
 
-export async function fetchIaaTableAdPlatform(params: IaaFilterState) {
-  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.TableAdPlatform)) {
-    return insightMock.mockFetchIaaTableAdPlatform(params)
-  }
-  const raw = await request.post<unknown>({
-    url: `${IAA_BASE}/table/ad-platform`,
-    data: normalizeIaaBody(params)
-  })
-  return unwrapIaaPayload<{ list: IaaPlatformTableRow[] }>(raw)
-}
-
 export async function fetchIaaAdTypeTabData(params: IaaFilterState) {
   if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.AdTypeTab)) {
     return insightMock.mockFetchIaaAdTypeTabData(params)

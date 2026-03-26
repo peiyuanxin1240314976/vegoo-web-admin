@@ -11,8 +11,6 @@
 export enum IaaAnalysisEndpoint {
   /** 01-meta-filter-options */
   MetaFilterOptions = 'metaFilterOptions',
-  /** 03-table-ad-platform（平台对比表，与广告平台 Tab 并存） */
-  TableAdPlatform = 'tableAdPlatform',
   /** 11-overview-ad-type-tab */
   AdTypeTab = 'adTypeTab',
   /** 12-overview-platform-tab */
@@ -29,7 +27,6 @@ export enum IaaAnalysisEndpoint {
 
 export const IAA_ANALYSIS_USE_MOCK: Record<IaaAnalysisEndpoint, boolean> = {
   [IaaAnalysisEndpoint.MetaFilterOptions]: false,
-  [IaaAnalysisEndpoint.TableAdPlatform]: false,
   [IaaAnalysisEndpoint.AdTypeTab]: false,
   [IaaAnalysisEndpoint.PlatformTab]: false,
   [IaaAnalysisEndpoint.PlacementTab]: false,

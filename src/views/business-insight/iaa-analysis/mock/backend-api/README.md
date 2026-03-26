@@ -11,7 +11,6 @@
 | 文件 | 说明 | 建议 URL | 方法 | 优先级 |
 | --- | --- | --- | --- | --- |
 | `01-meta-filter-options.json` | 全局筛选下拉（App/Platform/Country） | `/meta-filter-options` | GET | P0 |
-| `03-table-ad-platform.json` | 广告平台 Tab - 平台详细对比表 | `/table/ad-platform` | POST | P0 |
 | `04-table-ad-placement.json` | 广告位 Tab - 广告位详细数据表 | `/table/ad-placement` | POST | P0 |
 | `05-table-ad-unit.json` | 广告单元 Tab - 广告单元 Top15 收入表 | `/table/ad-unit` | POST | P0 |
 | `06-table-country.json` | 国家 Tab - 国家收入 Top10 表 | `/table/country` | POST | P0 |
@@ -46,17 +45,16 @@
 
 ### 本仓库当前已有文件
 
-`01`、`03`、`11`～`16`。新增契约时，示例同样须与 Mock 实现一致。
+`01`、`11`～`16`。新增契约时，示例同样须与 Mock 实现一致。
 
 ### 清单与 `types.ts` 对应关系（整页接口）
 
-| 文件                             | `types.ts` 类型                   |
-| -------------------------------- | --------------------------------- |
-| `11-overview-ad-type-tab.json`   | `IaaAdTypeTabData`                |
-| `12-overview-platform-tab.json`  | `IaaPlatformTabData`              |
-| `13-overview-placement-tab.json` | `IaaPlacementTabData`             |
-| `14-overview-ad-unit-tab.json`   | `IaaAdUnitTabData`                |
-| `15-overview-country-tab.json`   | `IaaCountryTabData`               |
-| `16-overview-version-tab.json`   | `IaaVersionTabData`               |
-| `01-meta-filter-options.json`    | `IaaFilterOptions`                |
-| `03-table-ad-platform.json`      | `IaaPlatformTableRow[]`（`list`） |
+| 文件                             | `types.ts` 类型       |
+| -------------------------------- | --------------------- |
+| `11-overview-ad-type-tab.json`   | `IaaAdTypeTabData`    |
+| `12-overview-platform-tab.json`  | `IaaPlatformTabData`  |
+| `13-overview-placement-tab.json` | `IaaPlacementTabData` |
+| `14-overview-ad-unit-tab.json`   | `IaaAdUnitTabData`    |
+| `15-overview-country-tab.json`   | `IaaCountryTabData`   |
+| `16-overview-version-tab.json`   | `IaaVersionTabData`   |
+| `01-meta-filter-options.json`    | `IaaFilterOptions`    |
