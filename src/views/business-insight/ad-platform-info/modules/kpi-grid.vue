@@ -244,6 +244,90 @@
 
   .api-kpi--top {
     padding: 14px 14px 10px;
+    isolation: isolate;
+  }
+
+  .api-kpi--top::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        130% 100% at 0% 0%,
+        var(--kpi-accent-bg, rgb(59 130 246 / 20%)) 0%,
+        transparent 65%
+      ),
+      linear-gradient(180deg, rgb(255 255 255 / 3%), transparent 45%);
+    opacity: 0.72;
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease;
+  }
+
+  .api-kpi--top::after {
+    position: absolute;
+    inset: -30% auto auto -55%;
+    z-index: 0;
+    width: 55%;
+    height: 180%;
+    pointer-events: none;
+    content: '';
+    background: linear-gradient(
+      110deg,
+      transparent 0%,
+      rgb(255 255 255 / 0%) 35%,
+      rgb(255 255 255 / 10%) 50%,
+      rgb(255 255 255 / 0%) 65%,
+      transparent 100%
+    );
+    transition: transform 360ms ease;
+    transform: translateX(-40%);
+  }
+
+  .api-kpi--top > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .api-kpi--top[data-accent='blue'] {
+    --kpi-accent-bg: rgb(59 130 246 / 20%);
+  }
+
+  .api-kpi--top[data-accent='green'] {
+    --kpi-accent-bg: rgb(16 185 129 / 20%);
+  }
+
+  .api-kpi--top[data-accent='amber'] {
+    --kpi-accent-bg: rgb(249 115 22 / 20%);
+  }
+
+  .api-kpi--top[data-accent='red'] {
+    --kpi-accent-bg: rgb(239 68 68 / 20%);
+  }
+
+  .api-kpi--top[data-accent='purple'] {
+    --kpi-accent-bg: rgb(168 85 247 / 20%);
+  }
+
+  .api-kpi--top[data-accent='teal'] {
+    --kpi-accent-bg: rgb(20 184 166 / 20%);
+  }
+
+  .api-kpi--top:hover {
+    border-color: color-mix(in srgb, var(--kpi-accent-bg, rgb(59 130 246 / 45%)) 80%, white);
+    box-shadow: 0 14px 30px rgb(0 0 0 / 28%);
+    transform: translateY(-4px);
+  }
+
+  .api-kpi--top:hover::before {
+    opacity: 0.92;
+    transform: scale(1.02);
+  }
+
+  .api-kpi--top:hover::after {
+    transform: translateX(320%);
   }
 
   .api-kpi__area {
