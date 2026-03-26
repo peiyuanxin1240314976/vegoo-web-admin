@@ -718,40 +718,54 @@
         backgroundColor: bg,
         tooltip: {
           trigger: 'item',
-          formatter: '{b}: ${c}',
+          formatter: (p: { name: string; value: number; percent: number }) =>
+            `${p.name}: $${p.value.toLocaleString()} (${p.percent.toFixed(1)}%)`,
           backgroundColor: '#1a2d44',
           borderColor: '#1e3a5f',
           textStyle: { color: '#e2e8f0', fontSize: 11 }
         },
         legend: {
-          orient: 'vertical',
-          right: 4,
-          top: 'middle',
+          orient: 'horizontal',
+          left: 'center',
+          bottom: 0,
           itemWidth: 8,
           itemHeight: 8,
           textStyle: { color: '#94a3b8', fontSize: 10 },
-          formatter: (name: string) => {
-            const map: Record<string, string> = {
-              GatherOne: '$198,420 (69.7%)',
-              快鸟: '$52,680 (18.5%)',
-              星图传媒: '$33,420 (11.8%)'
-            }
-            return `${name}  ${map[name] || ''}`
+          data: ['GatherOne', '快鸟', '星图传媒']
+        },
+        graphic: {
+          type: 'text',
+          left: 'center',
+          top: '36%',
+          silent: true,
+          style: {
+            text: '$284,520',
+            fill: '#e2e8f0',
+            fontSize: 18,
+            fontWeight: 700
           }
         },
         series: [
           {
             type: 'pie',
-            radius: ['55%', '80%'],
-            center: ['32%', '50%'],
+            radius: ['28%', '42%'],
+            center: ['50%', '40%'],
+            avoidLabelOverlap: true,
             itemStyle: { borderColor: '#0d1829', borderWidth: 2 },
             label: {
               show: true,
-              position: 'center',
-              formatter: () => '$284,520',
+              position: 'outside',
+              formatter: (p: { name: string; value: number; percent: number }) =>
+                `${p.name}\n$${p.value.toLocaleString()} (${p.percent.toFixed(1)}%)`,
               color: '#e2e8f0',
-              fontSize: 13,
-              fontWeight: 'bold'
+              fontSize: 10,
+              lineHeight: 14
+            },
+            labelLine: {
+              show: true,
+              length: 10,
+              length2: 8,
+              lineStyle: { color: '#94a3b8', width: 1 }
             },
             data: [
               { value: 198420, name: 'GatherOne', itemStyle: { color: '#3b82f6' } },
@@ -1011,11 +1025,6 @@
   <div class="page-wrap">
     <!-- ── Top bar ── -->
     <div class="top-bar">
-      <div class="breadcrumb">
-        <span class="bc-parent">用户增长</span>
-        <span class="bc-sep">›</span>
-        <span class="bc-current">代投分析</span>
-      </div>
       <div class="top-filters">
         <el-date-picker
           model-value="2026-03-07"
@@ -1577,9 +1586,9 @@
       <!-- Right sidebar -->
       <div class="sidebar-right">
         <!-- Donut chart -->
-        <div class="chart-block">
+        <div class="chart-block donut-chart-block">
           <div class="chart-title">代投方消耗占比</div>
-          <div ref="donutRef" class="chart-area" style="height: 160px" />
+          <div ref="donutRef" class="chart-area" style="height: 220px" />
         </div>
 
         <!-- Bar chart -->
@@ -1649,26 +1658,6 @@
     padding: 12px 20px;
     background: $bg-card;
     border-bottom: 1px solid $border;
-  }
-
-  .breadcrumb {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    font-size: 14px;
-  }
-
-  .bc-parent {
-    color: $text-muted;
-  }
-
-  .bc-sep {
-    color: $text-muted;
-  }
-
-  .bc-current {
-    font-weight: 600;
-    color: $text-primary;
   }
 
   .top-filters {
@@ -2427,5 +2416,9 @@
 
   .chart-area {
     width: 100%;
+  }
+
+  .donut-chart-block {
+    overflow: visible;
   }
 </style>
