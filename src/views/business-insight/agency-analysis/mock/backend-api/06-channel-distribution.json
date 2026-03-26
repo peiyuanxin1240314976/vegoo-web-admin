@@ -1,0 +1,31 @@
+{
+  "_comment": "代投分析 - 渠道分布分析柱图。对应 types.ts: channelDistribution。",
+  "fieldDescription": {
+    "request": {
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" }
+    },
+    "response": {
+      "categories": { "type": "string[]", "required": true, "description": "X 轴渠道列表。" },
+      "series": {
+        "type": "ChannelDistributionSeries[]",
+        "required": true,
+        "description": "各代投方序列。"
+      }
+    }
+  },
+  "sampleRequest": { "t_date": "2026-03-07" },
+  "sampleResponse": {
+    "categories": ["Facebook", "Google", "TikTok", "Meta"],
+    "series": [
+      { "name": "GatherOne", "values": [159000, 39000, 0, 0], "color": "#3b82f6" },
+      { "name": "快鸟", "values": [0, 0, 52680, 0], "color": "#00d4b4" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/chart/channel-distribution",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "t_date",
+    "responseBody": "categories, series"
+  }
+}

@@ -1,676 +1,44 @@
 <script setup lang="ts">
   import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+  import { useRouter } from 'vue-router'
   import * as echarts from 'echarts'
   import ScreenshotModal from './ScreenshotModal.vue'
-
-  // ─────────────────── Types ───────────────────
-  type AgencyStatus = 'normal' | 'low' | 'paused'
-
-  interface AgencyRow {
-    id: string
-    name: string
-    nameColor?: string
-    hasWarning?: boolean
-    appCount: number
-    channelCount: number
-    spend: number
-    installs: number
-    cpi: number
-    cpa: number
-    roi: number
-    budgetRate: number
-    status: AgencyStatus
-  }
-
-  interface AccountDetail {
-    app: string
-    platform: string
-    adPlatform: string
-    accountId: string
-    accountName: string
-    spend: string
-    roi: number
-    cpa: string
-    cpi: string
-    installs: number
-  }
-
-  interface CampaignDetail {
-    name: string
-    budget: number
-    spend: string
-    cpa: string
-    cpi: string
-    installs: number
-    roi34: number | null
-    roi33: number | null
-    roi32: number | null
-    isRed?: boolean
-  }
-
-  interface AgencyExpandData {
-    appCount: string
-    channelCount: string
-    totalSpend: number
-    totalInstalls: number
-    roi: number
-    roiTarget: number
-    weeklySpend: number
-    weeklyRoi: number
-    weeklyInstalls: number
-    weeklyApps: number
-    weeklyAccounts: number
-    weeklyCampaigns: number
-    weeklyCountries: number
-    weeklyDays: number
-    accounts: AccountDetail[]
-    campaigns: CampaignDetail[]
-  }
-
-  interface CampaignRow {
-    agency: string
-    agencyColor?: string
-    name: string
-    channel: string
-    app: string
-    spend: number
-    installs: number
-    cpi: number
-    ctr: number
-    cvr: number
-    ipm: number
-    budget: number
-    execRate: number
-    trend: 'up' | 'down' | 'flat'
-  }
-
-  interface DailyRow {
-    date: string
-    agency: string
-    agencyColor?: string
-    spend: number
-    installs: number
-    cpi: number
-    cpa: number
-    spendChange: number | null
-    installsChange: number | null
-  }
+  import { AgencyAnalysisEndpoint, isAgencyAnalysisMock } from '../config/data-source'
+  import { mockFetchAgencyAnalysisData } from '../mock/mock-data'
+  import type {
+    AgencyAnalysisCharts,
+    AgencyExpandData,
+    AgencyRow,
+    CampaignRow,
+    DailyRow,
+    KpiCardItem,
+    AgencyStatus
+  } from '../types'
 
   // ─────────────────── KPI Cards ───────────────────
-  const kpiCards = ref([
-    {
-      label: '代投总消耗',
-      value: '$284,520',
-      changeText: '↑12.3% vs昨日',
-      changeUp: true,
-      highlighted: true,
-      sparkPoints: '0,32 12,28 24,25 36,22 48,20 60,16 72,14 84,10 96,8',
-      sparkColor: '#00d4b4'
-    },
-    {
-      label: '代投安装数',
-      value: '8,642',
-      changeText: '↑8.7%',
-      changeUp: true,
-      highlighted: true,
-      sparkPoints: '0,30 12,27 24,25 36,22 48,18 60,16 72,13 84,10 96,8',
-      sparkColor: '#00d4b4'
-    },
-    {
-      label: '平均CPI',
-      value: '$2.41',
-      changeText: '↓3.2%',
-      changeUp: false,
-      highlighted: true,
-      sparkPoints: '0,10 12,12 24,14 36,18 48,20 60,22 72,25 84,28 96,30',
-      sparkColor: '#ef4444'
-    },
-    { label: '代投应用数', value: '6个', changeText: '', changeUp: null, highlighted: false },
-    { label: '代投渠道数', value: '4个', changeText: '', changeUp: null, highlighted: false },
-    { label: '代投方数量', value: '3个', changeText: '', changeUp: null, highlighted: false }
-  ])
+  const kpiCards = ref<KpiCardItem[]>([])
+  const pageLoading = ref(true)
+  const agencySkeletonRows = 4
+  const campaignSkeletonRows = 5
+  const dailySkeletonRows = 6
 
   // ─────────────────── Agency Table Data ───────────────────
-  const agencies = ref<AgencyRow[]>([
-    {
-      id: 'gatherone',
-      name: 'GatherOne',
-      appCount: 3,
-      channelCount: 2,
-      spend: 198420,
-      installs: 5842,
-      cpi: 2.38,
-      cpa: 33.96,
-      roi: 96,
-      budgetRate: 92,
-      status: 'normal'
-    },
-    {
-      id: 'kuainiao',
-      name: '快鸟',
-      nameColor: '#00d4b4',
-      appCount: 2,
-      channelCount: 1,
-      spend: 52680,
-      installs: 1845,
-      cpi: 2.35,
-      cpa: 28.56,
-      roi: 103,
-      budgetRate: 88,
-      status: 'normal'
-    },
-    {
-      id: 'xingtumedia',
-      name: '星图传媒',
-      nameColor: '#f59e0b',
-      hasWarning: true,
-      appCount: 1,
-      channelCount: 1,
-      spend: 33420,
-      installs: 955,
-      cpi: 2.51,
-      cpa: 35.02,
-      roi: 88,
-      budgetRate: 76,
-      status: 'low'
-    }
-  ])
+  const agencies = ref<AgencyRow[]>([])
 
   // ─────────────────── Expand Detail Data ───────────────────
-  const agencyDetailMap: Record<string, AgencyExpandData> = {
-    gatherone: {
-      appCount: '10/3个',
-      channelCount: '2/2个',
-      totalSpend: 198420,
-      totalInstalls: 5842,
-      roi: 96,
-      roiTarget: 90,
-      weeklySpend: 1241580,
-      weeklyRoi: 97,
-      weeklyInstalls: 36421,
-      weeklyApps: 3,
-      weeklyAccounts: 8,
-      weeklyCampaigns: 42,
-      weeklyCountries: 12,
-      weeklyDays: 7,
-      accounts: [
-        {
-          app: 'PhoneTracker2',
-          platform: '安卓',
-          adPlatform: 'Facebook',
-          accountId: '7519055062153461761',
-          accountName: 'panda-VEGOO-PT-02',
-          spend: '$502',
-          roi: 104,
-          cpa: '--',
-          cpi: '0.19',
-          installs: 2649
-        },
-        {
-          app: 'PhoneTracker2',
-          platform: '安卓',
-          adPlatform: 'Facebook',
-          accountId: '7589528572449308688',
-          accountName: 'BV-ZL-PT-04',
-          spend: '$120',
-          roi: 113,
-          cpa: '--',
-          cpi: '0.13',
-          installs: 918
-        },
-        {
-          app: 'SpyApp',
-          platform: '安卓',
-          adPlatform: 'Google',
-          accountId: '4421055062153461001',
-          accountName: 'SpyApp-Google-US-01',
-          spend: '$280',
-          roi: 98,
-          cpa: '--',
-          cpi: '0.22',
-          installs: 1180
-        },
-        {
-          app: 'SpyApp',
-          platform: '安卓',
-          adPlatform: 'Google',
-          accountId: '4421055062153461002',
-          accountName: 'SpyApp-Google-CA-01',
-          spend: '$150',
-          roi: 95,
-          cpa: '--',
-          cpi: '0.25',
-          installs: 620
-        }
-      ],
-      campaigns: [
-        {
-          name: 'PT_761_VO_WW_IL_0228',
-          budget: 200,
-          spend: '$33.2',
-          cpa: '--',
-          cpi: '0.21',
-          installs: 173,
-          roi34: 116,
-          roi33: 121,
-          roi32: 93
-        },
-        {
-          name: 'PT_761_VO_WW_IL_0228_03',
-          budget: 200,
-          spend: '$74.9',
-          cpa: '--',
-          cpi: '0.21',
-          installs: 354,
-          roi34: 105,
-          roi33: 116,
-          roi32: 96
-        },
-        {
-          name: 'PT_761_VO_WW_IL_0228_01',
-          budget: 200,
-          spend: '$78.1',
-          cpa: '--',
-          cpi: '0.22',
-          installs: 349,
-          roi34: 99,
-          roi33: 90,
-          roi32: 101
-        },
-        {
-          name: 'PT_761_VO_WW_IL_0208_2_03',
-          budget: 300,
-          spend: '$18.9',
-          cpa: '--',
-          cpi: '0.14',
-          installs: 132,
-          roi34: 148,
-          roi33: 106,
-          roi32: 95
-        },
-        {
-          name: 'PT_761_VO_WW_IL_0208_2_02',
-          budget: 200,
-          spend: '$13.5',
-          cpa: '--',
-          cpi: '0.17',
-          installs: 79,
-          roi34: 125,
-          roi33: 129,
-          roi32: 99
-        },
-        {
-          name: 'PT_761_VO_WW_IL_0228_02',
-          budget: 200,
-          spend: '$10.8',
-          cpa: '--',
-          cpi: '0.18',
-          installs: 59,
-          roi34: 100,
-          roi33: 92,
-          roi32: 110
-        },
-        {
-          name: 'PT_761_VO_WW_IL_0228_04',
-          budget: 100,
-          spend: '$15.4',
-          cpa: '--',
-          cpi: '0.22',
-          installs: 69,
-          roi34: 135,
-          roi33: 102,
-          roi32: 90
-        },
-        {
-          name: 'PT_761_VO_WW_IL_0208_2_01',
-          budget: 200,
-          spend: '$32.8',
-          cpa: '--',
-          cpi: '0.16',
-          installs: 202,
-          roi34: 112,
-          roi33: 112,
-          roi32: 103
-        },
-        {
-          name: 'PT_761_VO_WW_IL_0228_06',
-          budget: 100,
-          spend: '$52.5',
-          cpa: '--',
-          cpi: '0.22',
-          installs: 236,
-          roi34: 96,
-          roi33: null,
-          roi32: null
-        },
-        {
-          name: 'PT_761_VO_WW_IL_0212_1_03',
-          budget: 200,
-          spend: '$13.9',
-          cpa: '--',
-          cpi: '0.21',
-          installs: 66,
-          roi34: 115,
-          roi33: 146,
-          roi32: 75,
-          isRed: true
-        }
-      ]
-    },
-    kuainiao: {
-      appCount: '5/2个',
-      channelCount: '1/1个',
-      totalSpend: 52680,
-      totalInstalls: 1845,
-      roi: 103,
-      roiTarget: 90,
-      weeklySpend: 284500,
-      weeklyRoi: 103,
-      weeklyInstalls: 12840,
-      weeklyApps: 2,
-      weeklyAccounts: 3,
-      weeklyCampaigns: 18,
-      weeklyCountries: 5,
-      weeklyDays: 7,
-      accounts: [
-        {
-          app: 'PhoneTracker2',
-          platform: '安卓',
-          adPlatform: 'TikTok',
-          accountId: '7519055062153461100',
-          accountName: 'kuainiao-TK-PT-01',
-          spend: '$320',
-          roi: 105,
-          cpa: '--',
-          cpi: '0.20',
-          installs: 1124
-        }
-      ],
-      campaigns: [
-        {
-          name: 'KN_TK_WW_0228_01',
-          budget: 300,
-          spend: '$32.5',
-          cpa: '--',
-          cpi: '0.20',
-          installs: 164,
-          roi34: 108,
-          roi33: 112,
-          roi32: 98
-        },
-        {
-          name: 'KN_TK_WW_0228_02',
-          budget: 200,
-          spend: '$21.3',
-          cpa: '--',
-          cpi: '0.21',
-          installs: 102,
-          roi34: 103,
-          roi33: 95,
-          roi32: 107
-        }
-      ]
-    },
-    xingtumedia: {
-      appCount: '3/1个',
-      channelCount: '1/1个',
-      totalSpend: 33420,
-      totalInstalls: 955,
-      roi: 88,
-      roiTarget: 90,
-      weeklySpend: 196400,
-      weeklyRoi: 85,
-      weeklyInstalls: 6820,
-      weeklyApps: 1,
-      weeklyAccounts: 2,
-      weeklyCampaigns: 12,
-      weeklyCountries: 3,
-      weeklyDays: 7,
-      accounts: [
-        {
-          app: 'SpyApp',
-          platform: '安卓',
-          adPlatform: 'Meta',
-          accountId: '7519055062153461300',
-          accountName: 'xingtumedia-Meta-01',
-          spend: '$210',
-          roi: 88,
-          cpa: '--',
-          cpi: '0.25',
-          installs: 955
-        }
-      ],
-      campaigns: [
-        {
-          name: 'XTM_Meta_WW_0228_01',
-          budget: 500,
-          spend: '$33.4',
-          cpa: '--',
-          cpi: '0.25',
-          installs: 136,
-          roi34: 88,
-          roi33: 82,
-          roi32: 90
-        }
-      ]
-    }
-  }
+  const agencyDetailMap = ref<Record<string, AgencyExpandData>>({})
 
   // ─────────────────── Campaign Detail Table ───────────────────
-  const campaigns = ref<CampaignRow[]>([
-    {
-      agency: 'GatherOne',
-      name: 'PhoneTracker2_US_Facebook_001',
-      channel: 'Facebook',
-      app: 'PhoneTracker2',
-      spend: 68420,
-      installs: 1842,
-      cpi: 2.36,
-      ctr: 3.8,
-      cvr: 5.2,
-      ipm: 18.4,
-      budget: 75000,
-      execRate: 91,
-      trend: 'up'
-    },
-    {
-      agency: 'GatherOne',
-      name: 'PhoneTracker2_UK_Facebook_002',
-      channel: 'Facebook',
-      app: 'PhoneTracker2',
-      spend: 52180,
-      installs: 1456,
-      cpi: 2.4,
-      ctr: 3.5,
-      cvr: 4.9,
-      ipm: 16.8,
-      budget: 60000,
-      execRate: 87,
-      trend: 'up'
-    },
-    {
-      agency: 'GatherOne',
-      name: 'PhoneTracker2_AU_Facebook_003',
-      channel: 'Facebook',
-      app: 'PhoneTracker2',
-      spend: 38650,
-      installs: 1024,
-      cpi: 2.42,
-      ctr: 3.2,
-      cvr: 4.6,
-      ipm: 15.2,
-      budget: 45000,
-      execRate: 86,
-      trend: 'up'
-    },
-    {
-      agency: 'GatherOne',
-      name: 'SpyApp_US_Google_001',
-      channel: 'Google',
-      app: 'SpyApp',
-      spend: 28420,
-      installs: 820,
-      cpi: 2.34,
-      ctr: 2.8,
-      cvr: 4.2,
-      ipm: 14.8,
-      budget: 32000,
-      execRate: 89,
-      trend: 'up'
-    },
-    {
-      agency: 'GatherOne',
-      name: 'SpyApp_CA_Google_002',
-      channel: 'Google',
-      app: 'SpyApp',
-      spend: 10750,
-      installs: 700,
-      cpi: 2.38,
-      ctr: 2.6,
-      cvr: 3.9,
-      ipm: 13.2,
-      budget: 12000,
-      execRate: 90,
-      trend: 'flat'
-    },
-    {
-      agency: '快鸟',
-      agencyColor: '#00d4b4',
-      name: 'PhoneTracker2_CA_TikTok_001',
-      channel: 'TikTok',
-      app: 'PhoneTracker2',
-      spend: 32480,
-      installs: 1124,
-      cpi: 2.39,
-      ctr: 2.9,
-      cvr: 4.5,
-      ipm: 15.6,
-      budget: 38000,
-      execRate: 85,
-      trend: 'up'
-    },
-    {
-      agency: '快鸟',
-      agencyColor: '#00d4b4',
-      name: 'PhoneTracker2_IN_TikTok_002',
-      channel: 'TikTok',
-      app: 'PhoneTracker2',
-      spend: 20200,
-      installs: 721,
-      cpi: 2.36,
-      ctr: 2.7,
-      cvr: 4.1,
-      ipm: 14.2,
-      budget: 24000,
-      execRate: 84,
-      trend: 'flat'
-    },
-    {
-      agency: '星图传媒',
-      agencyColor: '#f59e0b',
-      name: 'SpyApp_JP_Meta_001',
-      channel: 'Meta',
-      app: 'SpyApp',
-      spend: 33420,
-      installs: 955,
-      cpi: 2.51,
-      ctr: 2.4,
-      cvr: 3.9,
-      ipm: 12.8,
-      budget: 44000,
-      execRate: 76,
-      trend: 'down'
-    }
-  ])
+  const campaigns = ref<CampaignRow[]>([])
 
   // ─────────────────── Daily Comparison ───────────────────
-  const dailyRows = ref<DailyRow[]>([
-    {
-      date: '2026-03-07',
-      agency: 'GatherOne',
-      spend: 198420,
-      installs: 5842,
-      cpi: 2.38,
-      cpa: 33.96,
-      spendChange: 14.3,
-      installsChange: 11.2
-    },
-    {
-      date: '2026-03-07',
-      agency: '快鸟',
-      agencyColor: '#00d4b4',
-      spend: 52680,
-      installs: 1845,
-      cpi: 2.35,
-      cpa: 28.56,
-      spendChange: 24.0,
-      installsChange: 18.6
-    },
-    {
-      date: '2026-03-07',
-      agency: '星图传媒',
-      agencyColor: '#f59e0b',
-      spend: 33420,
-      installs: 955,
-      cpi: 2.51,
-      cpa: 35.02,
-      spendChange: 18.2,
-      installsChange: 12.4
-    },
-    {
-      date: '2026-03-06',
-      agency: 'GatherOne',
-      spend: 173590,
-      installs: 5257,
-      cpi: 2.38,
-      cpa: 33.4,
-      spendChange: 6.8,
-      installsChange: 5.2
-    },
-    {
-      date: '2026-03-06',
-      agency: '快鸟',
-      agencyColor: '#00d4b4',
-      spend: 42480,
-      installs: 1554,
-      cpi: 2.36,
-      cpa: 27.8,
-      spendChange: 3.2,
-      installsChange: 2.8
-    },
-    {
-      date: '2026-03-06',
-      agency: '星图传媒',
-      agencyColor: '#f59e0b',
-      spend: 36420,
-      installs: 1086,
-      cpi: 2.49,
-      cpa: 33.54,
-      spendChange: -2.1,
-      installsChange: -1.8
-    },
-    {
-      date: '2026-03-05',
-      agency: 'GatherOne',
-      spend: 162480,
-      installs: 4996,
-      cpi: 2.37,
-      cpa: 32.5,
-      spendChange: null,
-      installsChange: null
-    },
-    {
-      date: '2026-03-05',
-      agency: '快鸟',
-      agencyColor: '#00d4b4',
-      spend: 41160,
-      installs: 1512,
-      cpi: 2.35,
-      cpa: 27.22,
-      spendChange: null,
-      installsChange: null
-    }
-  ])
+  const dailyRows = ref<DailyRow[]>([])
+  const charts = ref<AgencyAnalysisCharts>({
+    donut: [],
+    channelDistribution: { categories: [], series: [] },
+    countryTop8: [],
+    spendTrend30d: { dates: [], series: [] }
+  })
 
   // ─────────────────── Expand State ───────────────────
   const expandedSet = ref<Set<string>>(new Set())
@@ -689,10 +57,21 @@
   // ─────────────────── Screenshot Modal ───────────────────
   const showScreenshot = ref(false)
   const screenshotAgency = ref('GatherOne')
+  const router = useRouter()
 
   const openScreenshot = (agencyName?: string) => {
     screenshotAgency.value = agencyName || 'GatherOne'
     showScreenshot.value = true
+  }
+
+  const goCampaignDetail = (campaign: CampaignRow) => {
+    router.push({
+      path: '/user-growth/ad-performance/campaign-detail',
+      query: {
+        id: campaign.id,
+        name: campaign.name
+      }
+    })
   }
 
   // ─────────────────── Charts ───────────────────
@@ -710,6 +89,8 @@
   const initCharts = () => {
     disposeCharts()
     const bg = 'transparent'
+    const donutRows = charts.value.donut
+    const donutTotal = donutRows.reduce((sum, item) => sum + item.value, 0)
 
     // Donut chart
     if (donutRef.value) {
@@ -731,7 +112,7 @@
           itemWidth: 8,
           itemHeight: 8,
           textStyle: { color: '#94a3b8', fontSize: 10 },
-          data: ['GatherOne', '快鸟', '星图传媒']
+          data: donutRows.map((item) => item.name)
         },
         graphic: {
           type: 'text',
@@ -739,7 +120,7 @@
           top: '36%',
           silent: true,
           style: {
-            text: '$284,520',
+            text: `$${donutTotal.toLocaleString()}`,
             fill: '#e2e8f0',
             fontSize: 18,
             fontWeight: 700
@@ -767,11 +148,11 @@
               length2: 8,
               lineStyle: { color: '#94a3b8', width: 1 }
             },
-            data: [
-              { value: 198420, name: 'GatherOne', itemStyle: { color: '#3b82f6' } },
-              { value: 52680, name: '快鸟', itemStyle: { color: '#00d4b4' } },
-              { value: 33420, name: '星图传媒', itemStyle: { color: '#f59e0b' } }
-            ]
+            data: donutRows.map((item) => ({
+              value: item.value,
+              name: item.name,
+              itemStyle: { color: item.color }
+            }))
           }
         ]
       })
@@ -794,12 +175,12 @@
           itemWidth: 8,
           itemHeight: 8,
           textStyle: { color: '#94a3b8', fontSize: 9 },
-          data: ['GatherOne', '快鸟', '星图传媒']
+          data: charts.value.channelDistribution.series.map((item) => item.name)
         },
         grid: { top: 30, right: 8, bottom: 24, left: 48 },
         xAxis: {
           type: 'category',
-          data: ['Facebook', 'Google', 'TikTok', 'Meta'],
+          data: charts.value.channelDistribution.categories,
           axisLabel: { color: '#64748b', fontSize: 9 },
           axisLine: { lineStyle: { color: '#1e3a5f' } },
           axisTick: { show: false }
@@ -809,38 +190,22 @@
           axisLabel: { color: '#64748b', fontSize: 9, formatter: (v: number) => `$${v / 1000}k` },
           splitLine: { lineStyle: { color: '#1e3a5f', type: 'dashed' } }
         },
-        series: [
-          {
-            name: 'GatherOne',
-            type: 'bar',
-            data: [159000, 39000, 0, 0],
-            itemStyle: { color: '#3b82f6', borderRadius: [2, 2, 0, 0] },
-            barMaxWidth: 14
-          },
-          {
-            name: '快鸟',
-            type: 'bar',
-            data: [0, 0, 52680, 0],
-            itemStyle: { color: '#00d4b4', borderRadius: [2, 2, 0, 0] },
-            barMaxWidth: 14
-          },
-          {
-            name: '星图传媒',
-            type: 'bar',
-            data: [0, 0, 0, 33420],
-            itemStyle: { color: '#f59e0b', borderRadius: [2, 2, 0, 0] },
-            barMaxWidth: 14
-          }
-        ]
+        series: charts.value.channelDistribution.series.map((item) => ({
+          name: item.name,
+          type: 'bar',
+          data: item.values,
+          itemStyle: { color: item.color, borderRadius: [2, 2, 0, 0] },
+          barMaxWidth: 14
+        }))
       })
       chartInstances.push(c)
     }
 
     // Country horizontal bar
     if (countryRef.value) {
-      const countries = ['FR', 'DE', 'JP', 'IN', 'AU', 'CA', 'UK', 'US']
-      const values = [12580, 18420, 33420, 20200, 38650, 52680, 68180, 98420]
-      const percents = ['4.4%', '6.5%', '11.8%', '7.1%', '13.6%', '18.5%', '24.0%', '34.6%']
+      const countries = charts.value.countryTop8.map((item) => item.s_country_code)
+      const values = charts.value.countryTop8.map((item) => item.spend)
+      const percents = charts.value.countryTop8.map((item) => `${item.sharePct}%`)
       const c = echarts.init(countryRef.value)
       c.setOption({
         backgroundColor: bg,
@@ -880,7 +245,7 @@
 
     // Trend area chart
     if (trendRef.value) {
-      const dates = ['Mar 06', 'Mar 07', 'Mar 08', 'Mar 09', 'Mar 10', 'Mar 11', 'Mar 07']
+      const dates = charts.value.spendTrend30d.dates
       const c = echarts.init(trendRef.value)
       c.setOption({
         backgroundColor: bg,
@@ -910,80 +275,62 @@
           axisLabel: { color: '#64748b', fontSize: 9, formatter: (v: number) => `$${v / 1000}k` },
           splitLine: { lineStyle: { color: '#1e3a5f', type: 'dashed' } }
         },
-        series: [
-          {
-            name: 'GatherOne',
-            type: 'line',
-            smooth: true,
-            symbol: 'none',
-            data: [120000, 140000, 160000, 175000, 185000, 195000, 198420],
-            lineStyle: { color: '#3b82f6', width: 2 },
-            itemStyle: { color: '#3b82f6' },
-            areaStyle: {
-              color: {
-                type: 'linear',
-                x: 0,
-                y: 0,
-                x2: 0,
-                y2: 1,
-                colorStops: [
-                  { offset: 0, color: 'rgba(59,130,246,0.35)' },
-                  { offset: 1, color: 'rgba(59,130,246,0.02)' }
-                ]
-              }
-            }
-          },
-          {
-            name: '快鸟',
-            type: 'line',
-            smooth: true,
-            symbol: 'none',
-            data: [28000, 32000, 38000, 42000, 46000, 50000, 52680],
-            lineStyle: { color: '#00d4b4', width: 2 },
-            itemStyle: { color: '#00d4b4' },
-            areaStyle: {
-              color: {
-                type: 'linear',
-                x: 0,
-                y: 0,
-                x2: 0,
-                y2: 1,
-                colorStops: [
-                  { offset: 0, color: 'rgba(0,212,180,0.25)' },
-                  { offset: 1, color: 'rgba(0,212,180,0.02)' }
-                ]
-              }
-            }
-          },
-          {
-            name: '星图传媒',
-            type: 'line',
-            smooth: true,
-            symbol: 'none',
-            data: [25000, 30000, 32000, 34000, 35000, 36000, 33420],
-            lineStyle: { color: '#f59e0b', width: 2 },
-            itemStyle: { color: '#f59e0b' },
-            areaStyle: {
-              color: {
-                type: 'linear',
-                x: 0,
-                y: 0,
-                x2: 0,
-                y2: 1,
-                colorStops: [
-                  { offset: 0, color: 'rgba(245,158,11,0.2)' },
-                  { offset: 1, color: 'rgba(245,158,11,0.02)' }
-                ]
-              }
+        series: charts.value.spendTrend30d.series.map((item) => ({
+          name: item.name,
+          type: 'line',
+          smooth: true,
+          symbol: 'none',
+          data: item.values,
+          lineStyle: { color: item.color, width: 2 },
+          itemStyle: { color: item.color },
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: `${item.color}55` },
+                { offset: 1, color: `${item.color}08` }
+              ]
             }
           }
-        ]
+        }))
       })
       chartInstances.push(c)
     }
   }
 
-  onMounted(() => nextTick(initCharts))
+  const loadPageData = async () => {
+    pageLoading.value = true
+    try {
+      if (
+        isAgencyAnalysisMock(AgencyAnalysisEndpoint.Overview) &&
+        isAgencyAnalysisMock(AgencyAnalysisEndpoint.AgencySummary) &&
+        isAgencyAnalysisMock(AgencyAnalysisEndpoint.CampaignTable) &&
+        isAgencyAnalysisMock(AgencyAnalysisEndpoint.DailyComparison) &&
+        isAgencyAnalysisMock(AgencyAnalysisEndpoint.DonutSpendShare) &&
+        isAgencyAnalysisMock(AgencyAnalysisEndpoint.ChannelDistribution) &&
+        isAgencyAnalysisMock(AgencyAnalysisEndpoint.CountryTop8) &&
+        isAgencyAnalysisMock(AgencyAnalysisEndpoint.SpendTrend30d)
+      ) {
+        const payload = await mockFetchAgencyAnalysisData()
+        kpiCards.value = payload.kpiCards
+        agencies.value = payload.agencies
+        agencyDetailMap.value = payload.agencyDetailMap
+        campaigns.value = payload.campaigns
+        dailyRows.value = payload.dailyRows
+        charts.value = payload.charts
+      }
+    } finally {
+      pageLoading.value = false
+      await nextTick()
+      initCharts()
+    }
+  }
+
+  onMounted(loadPageData)
   onBeforeUnmount(disposeCharts)
 
   // ─────────────────── Helpers ───────────────────
@@ -1148,6 +495,13 @@
               </tr>
             </thead>
             <tbody>
+              <template v-if="pageLoading">
+                <tr v-for="idx in agencySkeletonRows" :key="`agency-skeleton-${idx}`">
+                  <td colspan="12" class="skeleton-row-cell">
+                    <div class="row-skeleton-line" />
+                  </td>
+                </tr>
+              </template>
               <template v-for="ag in agencies" :key="ag.id">
                 <!-- Main row -->
                 <tr class="agency-row" :class="{ expanded: isExpanded(ag.id) }">
@@ -1232,8 +586,8 @@
                           <span class="exp-meta">数据日期: 2026-03-07</span>
                         </div>
                         <div class="exp-hd-right">
-                          <button class="btn-sm-teal">展开全部</button>
-                          <button class="btn-sm-ghost">自定义列</button>
+                          <!-- <button class="btn-sm-teal">展开全部</button>
+                          <button class="btn-sm-ghost">自定义列</button> -->
                           <button class="btn-sm-ghost">↓ 导出</button>
                           <button class="btn-sm-ghost" @click="toggleExpand(ag.id)">收起 ∧</button>
                         </div>
@@ -1445,7 +799,7 @@
               </template>
 
               <!-- Total row -->
-              <tr class="total-row">
+              <tr v-if="!pageLoading" class="total-row">
                 <td></td>
                 <td>小计</td>
                 <td class="text-right">6</td>
@@ -1503,6 +857,13 @@
               </tr>
             </thead>
             <tbody>
+              <template v-if="pageLoading">
+                <tr v-for="idx in campaignSkeletonRows" :key="`campaign-skeleton-${idx}`">
+                  <td colspan="14" class="skeleton-row-cell">
+                    <div class="row-skeleton-line" />
+                  </td>
+                </tr>
+              </template>
               <tr v-for="(cp, i) in campaigns" :key="i" class="data-row">
                 <td :style="{ color: cp.agencyColor || '#e2e8f0' }">{{ cp.agency }}</td>
                 <td class="name-cell">{{ cp.name }}</td>
@@ -1535,7 +896,9 @@
                     {{ cp.trend === 'up' ? '↑' : cp.trend === 'down' ? '↓' : '→' }}
                   </span>
                 </td>
-                <td><span class="link-action">详情 ›</span></td>
+                <td>
+                  <span class="link-action" @click="goCampaignDetail(cp)">详情 ›</span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -1564,6 +927,13 @@
               </tr>
             </thead>
             <tbody>
+              <template v-if="pageLoading">
+                <tr v-for="idx in dailySkeletonRows" :key="`daily-skeleton-${idx}`">
+                  <td colspan="8" class="skeleton-row-cell">
+                    <div class="row-skeleton-line" />
+                  </td>
+                </tr>
+              </template>
               <tr v-for="(row, i) in dailyRows" :key="i" class="data-row">
                 <td>{{ row.date }}</td>
                 <td :style="{ color: row.agencyColor || '#e2e8f0' }">{{ row.agency }}</td>
@@ -1934,6 +1304,29 @@
 
     .data-row:hover td {
       background: $bg-row-hover;
+    }
+  }
+
+  .skeleton-row-cell {
+    padding: 10px !important;
+    border-bottom: 1px solid #0f1c2e;
+  }
+
+  .row-skeleton-line {
+    height: 16px;
+    background: linear-gradient(90deg, #102135 20%, #17314e 40%, #102135 60%);
+    background-size: 200% 100%;
+    border-radius: 4px;
+    animation: row-loading 1.2s ease-in-out infinite;
+  }
+
+  @keyframes row-loading {
+    0% {
+      background-position: 200% 0;
+    }
+
+    100% {
+      background-position: -200% 0;
     }
   }
 

@@ -1,0 +1,39 @@
+{
+  "_comment": "代投分析 - 代投消耗趋势（近 30 天）。对应 types.ts: spendTrend30d。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期 YYYY-MM-DD。"
+      },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日期 YYYY-MM-DD。" }
+    },
+    "response": {
+      "dates": { "type": "string[]", "required": true, "description": "X 轴日期标签。" },
+      "series": {
+        "type": "SpendTrendSeries[]",
+        "required": true,
+        "description": "各代投方趋势序列。"
+      }
+    }
+  },
+  "sampleRequest": { "t_start_date": "2026-02-12", "t_end_date": "2026-03-12" },
+  "sampleResponse": {
+    "dates": ["Mar 06", "Mar 07", "Mar 08", "Mar 09", "Mar 10", "Mar 11", "Mar 12"],
+    "series": [
+      {
+        "name": "GatherOne",
+        "color": "#3b82f6",
+        "values": [120000, 140000, 160000, 175000, 185000, 195000, 198420]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/chart/spend-trend30d",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "t_start_date, t_end_date",
+    "responseBody": "dates, series"
+  }
+}

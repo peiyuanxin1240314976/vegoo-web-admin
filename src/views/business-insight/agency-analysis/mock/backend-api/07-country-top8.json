@@ -1,0 +1,29 @@
+{
+  "_comment": "代投分析 - 国家消耗分布 Top 8。对应 types.ts: CountryDistributionItem[]。",
+  "fieldDescription": {
+    "request": {
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" }
+    },
+    "response": {
+      "countryTop8": {
+        "type": "CountryDistributionItem[]",
+        "required": true,
+        "description": "国家维度消耗及占比。"
+      }
+    }
+  },
+  "sampleRequest": { "t_date": "2026-03-07" },
+  "sampleResponse": {
+    "countryTop8": [
+      { "s_country_code": "US", "spend": 98420, "sharePct": 34.6 },
+      { "s_country_code": "UK", "spend": 68180, "sharePct": 24.0 }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/chart/country-top8",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "t_date",
+    "responseBody": "countryTop8"
+  }
+}

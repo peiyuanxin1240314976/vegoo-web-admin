@@ -1,0 +1,103 @@
+{
+  "_comment": "代投分析 - 顶部 KPI 概览。对应 types.ts: KpiCardItem[]。",
+  "fieldDescription": {
+    "request": {
+      "t_date": {
+        "type": "string",
+        "required": true,
+        "description": "查询日期，格式 YYYY-MM-DD。"
+      },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "应用 ID；all 代表全部应用。"
+      },
+      "agency_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "代投方 ID；all 代表全部代投方。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "广告平台（source）；all 代表全部广告平台。"
+      }
+    },
+    "response": {
+      "kpiCards": {
+        "type": "KpiCardItem[]",
+        "required": true,
+        "description": "顶部 KPI 卡片列表。"
+      }
+    },
+    "KpiCardItem": {
+      "label": { "type": "string", "required": true, "description": "卡片名称。" },
+      "value": { "type": "string", "required": true, "description": "主指标展示值。" },
+      "changeText": { "type": "string", "required": true, "description": "变化文案。" },
+      "changeUp": { "type": "boolean|null", "required": true, "description": "变化方向。" },
+      "highlighted": { "type": "boolean", "required": true, "description": "是否高亮卡片。" }
+    }
+  },
+  "sampleRequest": {
+    "t_date": "2026-03-07",
+    "s_app_id": "all",
+    "agency_id": "all",
+    "source": "all"
+  },
+  "sampleResponse": {
+    "kpiCards": [
+      {
+        "label": "代投总消耗",
+        "value": "$284,520",
+        "changeText": "↑12.3% vs昨日",
+        "changeUp": true,
+        "highlighted": true
+      },
+      {
+        "label": "代投安装数",
+        "value": "8,642",
+        "changeText": "↑8.7%",
+        "changeUp": true,
+        "highlighted": true
+      },
+      {
+        "label": "平均CPI",
+        "value": "$2.41",
+        "changeText": "↓3.2%",
+        "changeUp": false,
+        "highlighted": true
+      },
+      {
+        "label": "代投应用数",
+        "value": "6个",
+        "changeText": "",
+        "changeUp": null,
+        "highlighted": false
+      },
+      {
+        "label": "代投渠道数",
+        "value": "4个",
+        "changeText": "",
+        "changeUp": null,
+        "highlighted": false
+      },
+      {
+        "label": "代投方数量",
+        "value": "3个",
+        "changeText": "",
+        "changeUp": null,
+        "highlighted": false
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_date, s_app_id?, agency_id?, source?",
+    "responseBody": "kpiCards"
+  }
+}

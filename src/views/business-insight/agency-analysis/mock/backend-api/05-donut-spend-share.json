@@ -1,0 +1,26 @@
+{
+  "_comment": "代投分析 - 代投方消耗占比图。对应 types.ts: DonutChartItem[]。",
+  "fieldDescription": {
+    "request": {
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" }
+    },
+    "response": {
+      "donut": { "type": "DonutChartItem[]", "required": true, "description": "环形图数据。" }
+    }
+  },
+  "sampleRequest": { "t_date": "2026-03-07" },
+  "sampleResponse": {
+    "donut": [
+      { "name": "GatherOne", "value": 198420, "color": "#3b82f6" },
+      { "name": "快鸟", "value": 52680, "color": "#00d4b4" },
+      { "name": "星图传媒", "value": 33420, "color": "#f59e0b" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/chart/donut-spend-share",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "t_date",
+    "responseBody": "donut"
+  }
+}

@@ -3,12 +3,7 @@
     <!-- ─── Header ─────────────────────────────────── -->
     <div class="perf-header">
       <div class="header-left">
-        <div class="breadcrumb">
-          <span class="bc-parent">用户增长</span>
-          <span class="bc-sep">›</span>
-          <span class="bc-current">人员绩效</span>
-        </div>
-        <div class="subtitle">实时数据截止 {{ currentTime }}</div>
+        <h1>&nbsp;</h1>
       </div>
       <div class="header-right">
         <span class="date-label">日期范围：</span>
@@ -436,7 +431,6 @@
   // ─── State ──────────────────────────────────────────────
   const router = useRouter()
 
-  const currentTime = ref('14:40')
   const activeDateRange = ref('7d')
   const activePersonFilter = ref('全部')
   const activeAppFilter = ref('全部')

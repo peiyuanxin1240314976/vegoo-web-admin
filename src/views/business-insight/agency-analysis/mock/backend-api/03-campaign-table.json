@@ -1,0 +1,66 @@
+{
+  "_comment": "代投分析 - 代投广告系列明细表。对应 types.ts: CampaignRow[]。",
+  "fieldDescription": {
+    "request": {
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "应用 ID。"
+      },
+      "agency_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "代投方 ID。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "广告平台（source）。"
+      }
+    },
+    "response": {
+      "campaigns": {
+        "type": "CampaignRow[]",
+        "required": true,
+        "description": "广告系列明细行。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_date": "2026-03-07",
+    "s_app_id": "all",
+    "agency_id": "all",
+    "source": "all"
+  },
+  "sampleResponse": {
+    "campaigns": [
+      {
+        "id": "c1",
+        "agency": "GatherOne",
+        "name": "PhoneTracker2_US_Facebook_001",
+        "channel": "Facebook",
+        "app": "PhoneTracker2",
+        "spend": 68420,
+        "installs": 1842,
+        "cpi": 2.36,
+        "ctr": 3.8,
+        "cvr": 5.2,
+        "ipm": 18.4,
+        "budget": 75000,
+        "execRate": 91,
+        "trend": "up"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/table/campaign",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "t_date, s_app_id?, agency_id?, source?",
+    "responseBody": "campaigns"
+  }
+}

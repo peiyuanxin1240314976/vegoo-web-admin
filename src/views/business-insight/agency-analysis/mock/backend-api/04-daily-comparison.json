@@ -1,0 +1,66 @@
+{
+  "_comment": "代投分析 - 逐日对比（近 7 天）。对应 types.ts: DailyRow[]。",
+  "fieldDescription": {
+    "request": {
+      "t_start_date": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期 YYYY-MM-DD。"
+      },
+      "t_end_date": { "type": "string", "required": true, "description": "结束日期 YYYY-MM-DD。" },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "应用 ID。"
+      },
+      "agency_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "代投方 ID。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "广告平台（source）。"
+      }
+    },
+    "response": {
+      "dailyRows": {
+        "type": "DailyRow[]",
+        "required": true,
+        "description": "逐日对比行。变化字段单位为百分比点。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_start_date": "2026-03-01",
+    "t_end_date": "2026-03-07",
+    "s_app_id": "all",
+    "agency_id": "all",
+    "source": "all"
+  },
+  "sampleResponse": {
+    "dailyRows": [
+      {
+        "date": "2026-03-07",
+        "agency": "GatherOne",
+        "spend": 198420,
+        "installs": 5842,
+        "cpi": 2.38,
+        "cpa": 33.96,
+        "spendChange": 14.3,
+        "installsChange": 11.2
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/table/daily-comparison",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "t_start_date, t_end_date, s_app_id?, agency_id?, source?",
+    "responseBody": "dailyRows"
+  }
+}

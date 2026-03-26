@@ -1,0 +1,84 @@
+{
+  "_comment": "代投分析 - 代投方汇总（主表 + 展开详情）。对应 types.ts: AgencyRow 与 AgencyExpandData。",
+  "fieldDescription": {
+    "request": {
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "应用 ID。"
+      },
+      "agency_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "代投方 ID。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "广告平台（source）。"
+      }
+    },
+    "response": {
+      "agencies": { "type": "AgencyRow[]", "required": true, "description": "代投方主表行数据。" },
+      "agencyDetailMap": {
+        "type": "Record<string, AgencyExpandData>",
+        "required": true,
+        "description": "展开区详情映射。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_date": "2026-03-07",
+    "s_app_id": "all",
+    "agency_id": "all",
+    "source": "all"
+  },
+  "sampleResponse": {
+    "agencies": [
+      {
+        "id": "gatherone",
+        "name": "GatherOne",
+        "appCount": 3,
+        "channelCount": 2,
+        "spend": 198420,
+        "installs": 5842,
+        "cpi": 2.38,
+        "cpa": 33.96,
+        "roi": 96,
+        "budgetRate": 92,
+        "status": "normal"
+      }
+    ],
+    "agencyDetailMap": {
+      "gatherone": {
+        "appCount": "10/3个",
+        "channelCount": "2/2个",
+        "totalSpend": 198420,
+        "totalInstalls": 5842,
+        "roi": 96,
+        "roiTarget": 90,
+        "weeklySpend": 1241580,
+        "weeklyRoi": 97,
+        "weeklyInstalls": 36421,
+        "weeklyApps": 3,
+        "weeklyAccounts": 8,
+        "weeklyCampaigns": 42,
+        "weeklyCountries": 12,
+        "weeklyDays": 7,
+        "accounts": [],
+        "campaigns": []
+      }
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/table/agency-summary",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_date, s_app_id?, agency_id?, source?",
+    "responseBody": "agencies, agencyDetailMap"
+  }
+}
