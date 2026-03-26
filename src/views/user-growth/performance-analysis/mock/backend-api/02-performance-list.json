@@ -1,0 +1,88 @@
+{
+  "_comment": "人员绩效 - 列表页数据。用于主表格和分页。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "personId": {
+        "type": "string",
+        "required": false,
+        "description": "人员 ID，不传或空表示全部。"
+      },
+      "appCategory": {
+        "type": "string",
+        "required": false,
+        "description": "应用分类（weather/health/tools）。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["pass", "fail"],
+        "description": "达标状态筛选。"
+      },
+      "keyword": { "type": "string", "required": false, "description": "姓名搜索关键字。" },
+      "current": { "type": "number", "required": true, "description": "页码，从 1 开始。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" }
+    },
+    "response": {
+      "list": { "type": "PerformanceRow[]", "required": true, "description": "分页数据。" },
+      "total": { "type": "number", "required": true, "description": "总条数。" }
+    },
+    "PerformanceRow": {
+      "id": { "type": "string", "required": true, "description": "人员唯一 ID。" },
+      "name": { "type": "string", "required": true, "description": "姓名。" },
+      "level": { "type": "string", "required": true, "description": "职级。" },
+      "adSpend": { "type": "number", "required": true, "description": "广告支出。" },
+      "budget": { "type": "number", "required": true, "description": "预算。" },
+      "roi1": { "type": "number", "required": true, "description": "首日 ROI，百分比数值。" },
+      "roi3": { "type": "number", "required": true, "description": "3 日 ROI，百分比数值。" },
+      "roi7": { "type": "number", "required": true, "description": "7 日 ROI，百分比数值。" },
+      "estProfit": { "type": "number", "required": true, "description": "预估利润。" },
+      "score": { "type": "number", "required": true, "description": "绩效得分。" },
+      "status": { "type": "string", "required": true, "description": "达标状态文案。" },
+      "statusClass": {
+        "type": "string",
+        "required": true,
+        "description": "状态样式码（over/pass/near/fail）。"
+      },
+      "reportDate": { "type": "string", "required": true, "description": "数据日期，YYYY-MM-DD。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-20",
+    "endDate": "2026-03-26",
+    "personId": "",
+    "appCategory": "",
+    "status": "",
+    "keyword": "",
+    "current": 1,
+    "size": 20
+  },
+  "sampleResponse": {
+    "list": [
+      {
+        "id": "zhang3",
+        "name": "张三",
+        "level": "高级优化师",
+        "adSpend": 49279,
+        "budget": 49840,
+        "roi1": 93,
+        "roi3": 91,
+        "roi7": 92,
+        "estProfit": 12400,
+        "score": 94,
+        "status": "达标",
+        "statusClass": "pass",
+        "reportDate": "2026-03-22"
+      }
+    ],
+    "total": 1
+  },
+  "api": {
+    "url": "POST /api/user-growth/performance-analysis/performance-list",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, personId?, appCategory?, status?, keyword?, current, size",
+    "responseBody": "list, total"
+  }
+}

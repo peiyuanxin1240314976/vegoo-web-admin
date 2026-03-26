@@ -1,0 +1,39 @@
+{
+  "_comment": "人员绩效对比 - 指标排名表。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "staffIds": {
+        "type": "string[]",
+        "required": true,
+        "description": "参与对比的人员 ID 列表。"
+      }
+    },
+    "response": {
+      "rows": {
+        "type": "Array<{ metric: string; r1: string; r2: string; r3: string }>",
+        "required": true,
+        "description": "排名表行数据。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-20",
+    "endDate": "2026-03-26",
+    "staffIds": ["zhang3", "li4", "wang5", "zhao6"]
+  },
+  "sampleResponse": {
+    "rows": [
+      { "metric": "广告支出", "r1": "赵六 $52,100", "r2": "张三 $49,279", "r3": "李四 $37,838" },
+      { "metric": "首日ROI", "r1": "赵六 96%", "r2": "张三 93%", "r3": "李四 88%" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/performance-analysis/comparison-rankings",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, staffIds",
+    "responseBody": "rows"
+  }
+}

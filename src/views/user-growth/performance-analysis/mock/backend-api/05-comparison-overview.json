@@ -1,0 +1,48 @@
+{
+  "_comment": "人员绩效对比 - 顶部 KPI 汇总。对应 PerformanceComparison.vue 顶部四张卡片。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "staffIds": {
+        "type": "string[]",
+        "required": true,
+        "description": "参与对比的人员 ID 列表。"
+      }
+    },
+    "response": {
+      "totalAd": { "type": "number", "required": true, "description": "广告支出合计。" },
+      "avgRoi": {
+        "type": "number",
+        "required": true,
+        "description": "首日 ROI 均值（百分比数值）。"
+      },
+      "totalProfit": { "type": "number", "required": true, "description": "预估利润合计。" },
+      "failCount": { "type": "number", "required": true, "description": "未达标人数。" },
+      "failName": {
+        "type": "string",
+        "required": false,
+        "description": "未达标人员姓名（多个用顿号分隔）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-20",
+    "endDate": "2026-03-26",
+    "staffIds": ["zhang3", "li4", "wang5", "zhao6"]
+  },
+  "sampleResponse": {
+    "totalAd": 167667,
+    "avgRoi": 89,
+    "totalProfit": 33600,
+    "failCount": 1,
+    "failName": "王五"
+  },
+  "api": {
+    "url": "POST /api/user-growth/performance-analysis/comparison-overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, staffIds",
+    "responseBody": "totalAd, avgRoi, totalProfit, failCount, failName"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "_comment": "人员绩效对比 - 异常预警列表。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "staffIds": {
+        "type": "string[]",
+        "required": true,
+        "description": "参与对比的人员 ID 列表。"
+      }
+    },
+    "response": {
+      "list": {
+        "type": "Array<{ id: number; level: 'warn' | 'error'; text: string }>",
+        "required": true,
+        "description": "预警列表。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-20",
+    "endDate": "2026-03-26",
+    "staffIds": ["zhang3", "li4", "wang5", "zhao6"]
+  },
+  "sampleResponse": {
+    "list": [
+      {
+        "id": 1,
+        "level": "warn",
+        "text": "王五 连续7日首日ROI低于80%达标线，建议尽快安排读师会议"
+      },
+      { "id": 2, "level": "error", "text": "王五 预估利润连续为负，建议调整投放策略" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/performance-analysis/comparison-alerts",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "startDate, endDate, staffIds",
+    "responseBody": "list"
+  }
+}

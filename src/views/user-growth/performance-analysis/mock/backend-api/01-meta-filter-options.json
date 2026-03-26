@@ -1,0 +1,64 @@
+{
+  "_comment": "人员绩效 - 筛选项元数据。用于列表页筛选条初始化。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，格式 YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，格式 YYYY-MM-DD。"
+      }
+    },
+    "response": {
+      "personOptions": {
+        "type": "Array<{ label: string; value: string }>",
+        "required": true,
+        "description": "人员筛选选项。"
+      },
+      "appOptions": {
+        "type": "Array<{ label: string; value: string }>",
+        "required": true,
+        "description": "应用筛选选项。"
+      },
+      "statusOptions": {
+        "type": "Array<{ label: string; value: string }>",
+        "required": true,
+        "description": "达标状态筛选选项。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-20",
+    "endDate": "2026-03-26"
+  },
+  "sampleResponse": {
+    "personOptions": [
+      { "label": "全部", "value": "" },
+      { "label": "张三", "value": "zhang3" },
+      { "label": "李四", "value": "li4" },
+      { "label": "王五", "value": "wang5" }
+    ],
+    "appOptions": [
+      { "label": "全部", "value": "" },
+      { "label": "天气类", "value": "weather" },
+      { "label": "健康类", "value": "health" },
+      { "label": "工具类", "value": "tools" }
+    ],
+    "statusOptions": [
+      { "label": "全部", "value": "" },
+      { "label": "达标", "value": "pass" },
+      { "label": "未达标", "value": "fail" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/performance-analysis/meta-filter-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate",
+    "responseBody": "personOptions, appOptions, statusOptions"
+  }
+}

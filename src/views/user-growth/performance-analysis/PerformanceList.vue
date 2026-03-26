@@ -12,11 +12,11 @@
             v-for="d in DATE_RANGES"
             :key="d.value"
             :class="['date-btn', { active: activeDateRange === d.value }]"
-            @click="activeDateRange = d.value"
-            >{{ d.label }}</button
+            @click="handleDateRangeClick(d.value)"
+            >{{ getDateRangeLabel(d) }}</button
           >
         </div>
-        <button class="btn-tool"> <span class="icon">⊞</span> 自定义列 </button>
+        <!-- <button class="btn-tool"> <span class="icon">⊞</span> 自定义列 </button> -->
         <button class="btn-tool"> <span class="icon">↓</span> 导出 </button>
         <button class="btn-admin">🔐 管理员编辑</button>
       </div>
@@ -60,101 +60,112 @@
 
         <!-- Table -->
         <div class="table-wrap">
-          <table class="perf-table">
-            <thead>
-              <tr>
-                <th class="col-check">
-                  <input type="checkbox" :checked="allSelected" @change="toggleAll" />
-                </th>
-                <th class="col-name">优化师</th>
-                <th>职级</th>
-                <th class="sortable" @click="handleSort('adSpend')">
-                  广告支出
-                  <span class="sort-icon">{{
-                    sortField === 'adSpend' ? (sortAsc ? '↑' : '↓') : '↕'
-                  }}</span>
-                </th>
-                <th>计算消耗</th>
-                <th>首日ROI</th>
-                <th>3日ROI</th>
-                <th>7日ROI</th>
-                <th>代投消耗</th>
-                <th>最低消耗</th>
-                <th>预估利润</th>
-                <th>最低利润</th>
-                <th>绩效得分</th>
-                <th>达标状态</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="row in filteredData"
-                :key="row.id"
-                :class="[
-                  'data-row',
-                  `border-${row.statusClass}`,
-                  { 'row-selected': checkedIds.includes(row.id) }
-                ]"
-              >
-                <td>
-                  <input
-                    type="checkbox"
-                    :checked="checkedIds.includes(row.id)"
-                    @change="toggleRow(row.id)"
-                  />
-                </td>
-                <td class="name-cell">
+          <ArtTable
+            :data="pagedData"
+            row-key="id"
+            size="small"
+            height="calc(100% + 46px)"
+            :row-class-name="getRowClassName"
+            :header-cell-style="{ backgroundColor: '#161C2D' }"
+            show-summary
+            :summary-method="getTableSummaries"
+          >
+            <ElTableColumn width="60">
+              <template #header>
+                <input type="checkbox" :checked="allSelected" @change="toggleAll" />
+              </template>
+              <template #default="{ row }">
+                <input
+                  type="checkbox"
+                  :checked="checkedIds.includes(row.id)"
+                  @change="toggleRow(row.id)"
+                />
+              </template>
+            </ElTableColumn>
+
+            <ElTableColumn label="优化师" min-width="110">
+              <template #default="{ row }">
+                <div class="name-cell">
                   <span class="avatar" :style="{ background: row.avatarBg }">{{
                     row.surname
                   }}</span>
                   {{ row.name }}
-                </td>
-                <td>
-                  <span :class="['level-badge', `level-${row.levelClass}`]">{{ row.level }}</span>
-                </td>
-                <td class="num">${{ fmt(row.adSpend) }}</td>
-                <td class="num">${{ fmt(row.calcCost) }}</td>
-                <td :class="['num', roiClass(row.roi1)]">{{ row.roi1 }}%</td>
-                <td :class="['num', roiClass(row.roi3)]">{{ row.roi3 }}%</td>
-                <td :class="['num', roiClass(row.roi7)]">{{ row.roi7 }}%</td>
-                <td class="num">${{ fmt(row.agentCost) }}</td>
-                <td class="num">${{ fmt(row.minCost) }}</td>
-                <td :class="['num', row.estProfit >= 0 ? 'pos' : 'neg']">
+                </div>
+              </template>
+            </ElTableColumn>
+
+            <ElTableColumn label="职级" min-width="110">
+              <template #default="{ row }">
+                <span :class="['level-badge', `level-${row.levelClass}`]">{{ row.level }}</span>
+              </template>
+            </ElTableColumn>
+
+            <ElTableColumn min-width="110" align="left">
+              <template #header>
+                <div class="th-sortable" @click="handleSort('adSpend')">
+                  广告支出
+                  <span class="sort-icon">{{
+                    sortField === 'adSpend' ? (sortAsc ? '↑' : '↓') : '↕'
+                  }}</span>
+                </div>
+              </template>
+              <template #default="{ row }">${{ fmt(row.adSpend) }}</template>
+            </ElTableColumn>
+
+            <ElTableColumn label="计算消耗" min-width="110" align="left">
+              <template #default="{ row }">${{ fmt(row.calcCost) }}</template>
+            </ElTableColumn>
+            <ElTableColumn label="首日ROI" min-width="90" align="left">
+              <template #default="{ row }">
+                <span :class="['num', roiClass(row.roi1)]">{{ row.roi1 }}%</span>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn label="3日ROI" min-width="80" align="left">
+              <template #default="{ row }">
+                <span :class="['num', roiClass(row.roi3)]">{{ row.roi3 }}%</span>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn label="7日ROI" min-width="80" align="left">
+              <template #default="{ row }">
+                <span :class="['num', roiClass(row.roi7)]">{{ row.roi7 }}%</span>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn label="代投消耗" min-width="90" align="left">
+              <template #default="{ row }">${{ fmt(row.agentCost) }}</template>
+            </ElTableColumn>
+            <ElTableColumn label="最低消耗" min-width="90" align="left">
+              <template #default="{ row }">${{ fmt(row.minCost) }}</template>
+            </ElTableColumn>
+            <ElTableColumn label="预估利润" min-width="90" align="left">
+              <template #default="{ row }">
+                <span :class="['num', row.estProfit >= 0 ? 'pos' : 'neg']">
                   {{ row.estProfit >= 0 ? '+' : '' }}${{ fmt(Math.abs(row.estProfit)) }}
-                </td>
-                <td :class="['num', row.minProfit >= 0 ? 'pos' : 'neg']">
+                </span>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn label="最低利润" min-width="90" align="left">
+              <template #default="{ row }">
+                <span :class="['num', row.minProfit >= 0 ? 'pos' : 'neg']">
                   {{ row.minProfit >= 0 ? '+' : '' }}${{ fmt(Math.abs(row.minProfit)) }}
-                </td>
-                <td class="num score">{{ row.score }}分</td>
-                <td>
-                  <span :class="['status-badge', `s-${row.statusClass}`]">{{ row.status }}</span>
-                </td>
-                <td>
-                  <button class="view-btn" @click="viewDetail(row.id)">查看</button>
-                </td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr class="total-row">
-                <td></td>
-                <td class="total-label">团队合计</td>
-                <td>—</td>
-                <td class="num">${{ fmt(TOTALS.adSpend) }}</td>
-                <td class="num">${{ fmt(TOTALS.calcCost) }}</td>
-                <td class="num">{{ TOTALS.roi1 }}%</td>
-                <td class="num">{{ TOTALS.roi3 }}%</td>
-                <td class="num">{{ TOTALS.roi7 }}%</td>
-                <td class="num">${{ fmt(TOTALS.agentCost) }}</td>
-                <td class="num">—</td>
-                <td class="num pos">+${{ fmt(TOTALS.estProfit) }}</td>
-                <td class="num pos">+${{ fmt(TOTALS.minProfit) }}</td>
-                <td class="num">{{ TOTALS.score }}分</td>
-                <td>—</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
+                </span>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn label="得分" min-width="80" align="left">
+              <template #default="{ row }"
+                ><span class="num score">{{ row.score }}分</span></template
+              >
+            </ElTableColumn>
+            <ElTableColumn label="达标状态" min-width="110" align="left">
+              <template #default="{ row }">
+                <span :class="['status-badge', `s-${row.statusClass}`]">{{ row.status }}</span>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn label="操作" min-width="90" fixed="right">
+              <template #default="{ row }">
+                <button class="view-btn" @click="viewDetail(row.id)">查看</button>
+              </template>
+            </ElTableColumn>
+          </ArtTable>
         </div>
 
         <!-- Pagination -->
@@ -169,55 +180,107 @@
             >
           </div>
           <div class="page-right">
-            <button class="page-btn" :disabled="currentPage === 1" @click="currentPage--"
-              >上一页</button
-            >
-            <span class="page-info">第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
-            <button class="page-btn" :disabled="currentPage === totalPages" @click="currentPage++"
-              >下一页</button
-            >
-            <select v-model="pageSize" class="page-size-select">
-              <option :value="20">每页 20 条</option>
-              <option :value="50">每页 50 条</option>
-            </select>
+            <ElPagination
+              v-model:current-page="currentPage"
+              v-model:page-size="pageSize"
+              :page-sizes="[20, 50, 100, 200]"
+              :size="size"
+              :disabled="disabled"
+              :background="background"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="filteredData.length"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+            />
           </div>
         </div>
       </div>
 
       <!-- ─── Right Sidebar ──────────────────────── -->
-      <div class="sidebar">
+      <div :class="['sidebar', { collapsed: isSidebarCollapsed }]">
         <div class="sidebar-header">
-          <span>指标概览</span>
-          <button class="collapse-btn">∧</button>
+          <span v-if="!isSidebarCollapsed">指标概览</span>
+          <button class="collapse-btn" @click="isSidebarCollapsed = !isSidebarCollapsed">
+            <ElIcon>
+              <ArrowRightBold v-if="isSidebarCollapsed" />
+              <ArrowLeftBold v-else />
+            </ElIcon>
+          </button>
         </div>
-        <div class="metric-card">
-          <div class="metric-title">团队广告支出</div>
-          <div class="metric-val">${{ fmt(272068) }}</div>
-          <div class="metric-sub pos-text">周环比 +8%</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">首日ROI均值</div>
-          <div class="metric-val gold-text">89%</div>
-          <div class="metric-badge-inline">达标</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">团队预估利润</div>
-          <div class="metric-val pos-text">+$47,200</div>
-          <div class="metric-sub pos-text">周环比 +12%</div>
-        </div>
-        <div class="metric-card alert-card">
-          <div class="metric-title">未达标人员</div>
-          <div class="metric-val red-text">1 人</div>
-          <div class="metric-sub red-text">王五</div>
+        <div v-show="!isSidebarCollapsed" class="sidebar-content">
+          <div class="metric-card">
+            <div class="metric-title">团队广告支出</div>
+            <div class="metric-main-row">
+              <div class="metric-val">${{ fmt(overviewMetrics.adSpend) }}</div>
+              <div class="metric-side">
+                <span>周环比</span>
+                <span class="pos-text">+8%</span>
+              </div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">首日ROI均值</div>
+            <div class="metric-main-row">
+              <div class="metric-val gold-text">{{ overviewMetrics.avgRoi1.toFixed(2) }}%</div>
+              <div class="metric-badge-inline">{{ overviewMetrics.roiStatusLabel }}</div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">团队预估利润</div>
+            <div class="metric-main-row">
+              <div
+                :class="['metric-val', overviewMetrics.estProfit >= 0 ? 'pos-text' : 'red-text']"
+              >
+                {{ overviewMetrics.estProfit >= 0 ? '+' : '-' }}${{
+                  fmt(Math.abs(overviewMetrics.estProfit))
+                }}
+              </div>
+              <div class="metric-side">
+                <span>周环比</span>
+                <span class="pos-text">+12%</span>
+              </div>
+            </div>
+          </div>
+          <div class="metric-card alert-card">
+            <div class="metric-title">未达标人员</div>
+            <div class="metric-main-row metric-main-col">
+              <div class="metric-val red-text">{{ overviewMetrics.failCount }} 人</div>
+              <div class="metric-sub red-text">{{ overviewMetrics.failNamesText }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
+    <ElDialog
+      v-model="isCustomDateDialogVisible"
+      title="选择自定义日期范围"
+      width="420px"
+      append-to-body
+    >
+      <ElDatePicker
+        v-model="customDateRangeDraft"
+        type="daterange"
+        start-placeholder="开始日期"
+        end-placeholder="结束日期"
+        value-format="YYYY-MM-DD"
+        format="YYYY-MM-DD"
+        style="width: 100%"
+      />
+      <template #footer>
+        <ElButton @click="handleCustomDateCancel">取消</ElButton>
+        <ElButton type="primary" @click="handleCustomDateConfirm">确定</ElButton>
+      </template>
+    </ElDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import { useRouter } from 'vue-router'
+  import { ElMessage } from 'element-plus'
+  import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 
   // ─── Types ──────────────────────────────────────────────
   interface StaffRow {
@@ -239,6 +302,7 @@
     score: number
     status: string
     statusClass: string
+    reportDate: string
   }
 
   // ─── Constants ──────────────────────────────────────────
@@ -272,7 +336,29 @@
       minProfit: 9800,
       score: 96,
       status: '超标',
-      statusClass: 'over'
+      statusClass: 'over',
+      reportDate: '2026-03-26'
+    },
+    {
+      id: 'zhao6',
+      surname: '赵',
+      name: '赵六',
+      avatarBg: '#f97316',
+      level: '高级优化师',
+      levelClass: 'senior',
+      adSpend: 52100,
+      calcCost: 50800,
+      roi1: 96,
+      roi3: 94,
+      roi7: 95,
+      agentCost: 2400,
+      minCost: 48000,
+      estProfit: 15600,
+      minProfit: 9800,
+      score: 96,
+      status: '超标',
+      statusClass: 'over',
+      reportDate: '2026-03-25'
     },
     {
       id: 'zhang3',
@@ -292,7 +378,8 @@
       minProfit: 8200,
       score: 94,
       status: '达标',
-      statusClass: 'pass'
+      statusClass: 'pass',
+      reportDate: '2026-03-22'
     },
     {
       id: 'liu7',
@@ -312,7 +399,8 @@
       minProfit: 5100,
       score: 90,
       status: '达标',
-      statusClass: 'pass'
+      statusClass: 'pass',
+      reportDate: '2026-03-18'
     },
     {
       id: 'li4',
@@ -332,7 +420,8 @@
       minProfit: 3200,
       score: 88,
       status: '达标',
-      statusClass: 'pass'
+      statusClass: 'pass',
+      reportDate: '2026-03-10'
     },
     {
       id: 'chen8',
@@ -352,7 +441,8 @@
       minProfit: 1800,
       score: 83,
       status: '达标',
-      statusClass: 'pass'
+      statusClass: 'pass',
+      reportDate: '2026-02-28'
     },
     {
       id: 'zhou9',
@@ -372,7 +462,8 @@
       minProfit: 800,
       score: 80,
       status: '达标',
-      statusClass: 'pass'
+      statusClass: 'pass',
+      reportDate: '2026-02-19'
     },
     {
       id: 'wu10',
@@ -392,7 +483,8 @@
       minProfit: 200,
       score: 78,
       status: '接近达标',
-      statusClass: 'near'
+      statusClass: 'near',
+      reportDate: '2026-02-10'
     },
     {
       id: 'wang5',
@@ -412,7 +504,8 @@
       minProfit: -3800,
       score: 72,
       status: '未达标',
-      statusClass: 'fail'
+      statusClass: 'fail',
+      reportDate: '2026-01-30'
     }
   ]
 
@@ -432,6 +525,9 @@
   const router = useRouter()
 
   const activeDateRange = ref('7d')
+  const isCustomDateDialogVisible = ref(false)
+  const customDateRangeValue = ref<[string, string] | null>(null)
+  const customDateRangeDraft = ref<[string, string] | null>(null)
   const activePersonFilter = ref('全部')
   const activeAppFilter = ref('全部')
   const activeStatusFilter = ref('全部')
@@ -441,10 +537,14 @@
   const sortAsc = ref(true)
   const currentPage = ref(1)
   const pageSize = ref(20)
+  const isSidebarCollapsed = ref(false)
 
   // ─── Computed ────────────────────────────────────────────
   const filteredData = computed<StaffRow[]>(() => {
     let list = [...MOCK_DATA]
+    const [rangeStart, rangeEnd] = getActiveDateRange()
+
+    list = list.filter((r) => r.reportDate >= rangeStart && r.reportDate <= rangeEnd)
 
     if (activePersonFilter.value !== '全部') {
       list = list.filter((r) => r.name === activePersonFilter.value)
@@ -462,17 +562,119 @@
     }
     return list
   })
+  const overviewMetrics = computed(() => {
+    const list = filteredData.value
+    const total = list.length
+    const adSpend = list.reduce((sum, item) => sum + item.adSpend, 0)
+    const estProfit = list.reduce((sum, item) => sum + item.estProfit, 0)
+    const avgRoi1 = total > 0 ? list.reduce((sum, item) => sum + item.roi1, 0) / total : 0
+    const failRows = list.filter(
+      (item) => item.statusClass === 'fail' || item.statusClass === 'near'
+    )
+    const failNamesText =
+      failRows.length > 0 ? failRows.map((item) => item.name).join('、') : '暂无'
+    const roiStatusLabel = avgRoi1 >= 85 ? '达标' : '未达标'
 
-  const totalPages = computed(() => Math.ceil(filteredData.value.length / pageSize.value) || 1)
+    return {
+      adSpend,
+      estProfit,
+      avgRoi1,
+      failCount: failRows.length,
+      failNamesText,
+      roiStatusLabel
+    }
+  })
+
+  const size = 'small' as const
+  const disabled = false
+  const background = false
+  const pagedData = computed<StaffRow[]>(() => {
+    const start = (currentPage.value - 1) * pageSize.value
+    return filteredData.value.slice(start, start + pageSize.value)
+  })
   const allSelected = computed(
     () =>
-      filteredData.value.length > 0 &&
-      filteredData.value.every((r) => checkedIds.value.includes(r.id))
+      pagedData.value.length > 0 && pagedData.value.every((r) => checkedIds.value.includes(r.id))
   )
 
   // ─── Methods ─────────────────────────────────────────────
   function fmt(n: number) {
     return n.toLocaleString('en-US')
+  }
+
+  function formatYDM(dateText: string): string {
+    const [year, month, day] = dateText.split('-')
+    return `${year}-${day}-${month}`
+  }
+
+  function toYmd(d: Date): string {
+    return formatYYYYMMDD(d)
+  }
+
+  function getActiveDateRange(): [string, string] {
+    const now = getAppNow()
+    const end = toYmd(now)
+
+    if (activeDateRange.value === '7d') {
+      const startDate = cloneAppDate(now)
+      startDate.setDate(startDate.getDate() - 6)
+      return [toYmd(startDate), end]
+    }
+    if (activeDateRange.value === '30d') {
+      const startDate = cloneAppDate(now)
+      startDate.setDate(startDate.getDate() - 29)
+      return [toYmd(startDate), end]
+    }
+    if (activeDateRange.value === 'month') {
+      const startDate = cloneAppDate(now)
+      startDate.setDate(1)
+      return [toYmd(startDate), end]
+    }
+    if (activeDateRange.value === 'custom' && customDateRangeValue.value) {
+      const [startDate, endDate] = customDateRangeValue.value
+      return startDate <= endDate ? [startDate, endDate] : [endDate, startDate]
+    }
+    return ['1900-01-01', '2999-12-31']
+  }
+
+  function buildCustomDateLabel(): string {
+    if (!customDateRangeValue.value) return '自定义'
+    const [startDate, endDate] = customDateRangeValue.value
+    return `${formatYDM(startDate)} ~ ${formatYDM(endDate)}`
+  }
+
+  function getDateRangeLabel(range: { label: string; value: string }): string {
+    if (range.value !== 'custom') return range.label
+    return buildCustomDateLabel()
+  }
+
+  function handleDateRangeClick(rangeValue: string) {
+    if (rangeValue !== 'custom') {
+      activeDateRange.value = rangeValue
+      return
+    }
+
+    if (!customDateRangeValue.value) {
+      const today = getAppNow().toISOString().slice(0, 10)
+      customDateRangeDraft.value = [today, today]
+    } else {
+      customDateRangeDraft.value = [...customDateRangeValue.value] as [string, string]
+    }
+    isCustomDateDialogVisible.value = true
+  }
+
+  function handleCustomDateCancel() {
+    isCustomDateDialogVisible.value = false
+  }
+
+  function handleCustomDateConfirm() {
+    if (!customDateRangeDraft.value || customDateRangeDraft.value.length !== 2) {
+      ElMessage.warning('请选择开始和结束日期')
+      return
+    }
+    customDateRangeValue.value = [...customDateRangeDraft.value] as [string, string]
+    activeDateRange.value = 'custom'
+    isCustomDateDialogVisible.value = false
   }
 
   function roiClass(v: number): string {
@@ -491,9 +693,11 @@
 
   function toggleAll(e: Event) {
     if ((e.target as HTMLInputElement).checked) {
-      checkedIds.value = filteredData.value.map((r) => r.id)
+      const currentPageIds = pagedData.value.map((r) => r.id)
+      checkedIds.value = Array.from(new Set([...checkedIds.value, ...currentPageIds]))
     } else {
-      checkedIds.value = []
+      const currentPageSet = new Set(pagedData.value.map((r) => r.id))
+      checkedIds.value = checkedIds.value.filter((id) => !currentPageSet.has(id))
     }
   }
 
@@ -504,13 +708,80 @@
   }
 
   function viewDetail(id: string) {
-    router.push({ name: 'PerformanceComparison', query: { ids: id } })
+    const [startDate, endDate] = getActiveDateRange()
+    router.push({
+      name: 'PerformanceComparison',
+      query: {
+        ids: id,
+        startDate,
+        endDate,
+        personFilter: activePersonFilter.value,
+        appFilter: activeAppFilter.value,
+        statusFilter: activeStatusFilter.value,
+        keyword: searchKw.value
+      }
+    })
   }
 
   function goCompare() {
     if (checkedIds.value.length < 2) return
-    router.push({ name: 'PerformanceComparison', query: { ids: checkedIds.value.join(',') } })
+    const [startDate, endDate] = getActiveDateRange()
+    router.push({
+      name: 'PerformanceComparison',
+      query: {
+        ids: checkedIds.value.join(','),
+        startDate,
+        endDate,
+        personFilter: activePersonFilter.value,
+        appFilter: activeAppFilter.value,
+        statusFilter: activeStatusFilter.value,
+        keyword: searchKw.value
+      }
+    })
   }
+
+  function handleSizeChange(size: number) {
+    pageSize.value = size
+    currentPage.value = 1
+  }
+
+  function handleCurrentChange(page: number) {
+    currentPage.value = page
+  }
+
+  function getRowClassName({ row }: { row: StaffRow }) {
+    return [
+      'data-row',
+      `border-${row.statusClass}`,
+      checkedIds.value.includes(row.id) ? 'row-selected' : ''
+    ].join(' ')
+  }
+
+  function getTableSummaries({ columns }: { columns: Array<{ label?: string }> }) {
+    const map: Record<string, string> = {
+      优化师: '团队合计',
+      职级: '—',
+      广告支出: `$${fmt(TOTALS.adSpend)}`,
+      计算消耗: `$${fmt(TOTALS.calcCost)}`,
+      首日ROI: `${TOTALS.roi1}%`,
+      '3日ROI': `${TOTALS.roi3}%`,
+      '7日ROI': `${TOTALS.roi7}%`,
+      代投消耗: `$${fmt(TOTALS.agentCost)}`,
+      最低消耗: '—',
+      预估利润: `+$${fmt(TOTALS.estProfit)}`,
+      最低利润: `+$${fmt(TOTALS.minProfit)}`,
+      绩效得分: `${TOTALS.score}分`,
+      达标状态: '—',
+      操作: ''
+    }
+
+    return columns.map((column) => map[column.label || ''] ?? '')
+  }
+
+  watch([filteredData, pageSize], () => {
+    const maxPage = Math.max(1, Math.ceil(filteredData.value.length / pageSize.value))
+    if (currentPage.value > maxPage) currentPage.value = maxPage
+  })
 </script>
 
 <style scoped lang="scss">
@@ -538,7 +809,8 @@
   .perf-page {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100%;
+    min-height: 0;
     overflow: hidden;
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 13px;
@@ -669,6 +941,7 @@
     display: flex;
     flex: 1;
     gap: 0;
+    min-height: 0;
     overflow: hidden;
   }
 
@@ -772,98 +1045,66 @@
     }
   }
 
-  .perf-table {
-    width: 100%;
-    font-size: 12.5px;
-    border-collapse: collapse;
+  .th-sortable {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
 
-    th {
-      position: sticky;
-      top: 0;
-      z-index: 1;
+    &:hover {
+      color: $text-primary;
+    }
+  }
+
+  .sort-icon {
+    font-size: 10px;
+    opacity: 0.6;
+  }
+
+  :deep(.table-wrap .el-table) {
+    --el-table-tr-bg-color: transparent;
+    --el-table-row-hover-bg-color: #{$bg-row-hover};
+    --el-table-border-color: #{$border};
+    --el-fill-color-lighter: #0f1623;
+
+    th.el-table__cell {
       padding: 11px 10px;
       font-size: 12px;
       font-weight: 500;
       color: $text-secondary;
-      text-align: left;
+      border-bottom: 1px solid $border;
+    }
+
+    td.el-table__cell {
+      padding: 10px;
       white-space: nowrap;
-      background: #0f1623;
+      vertical-align: middle;
       border-bottom: 1px solid $border;
+    }
+  }
 
-      &.sortable {
-        cursor: pointer;
-        user-select: none;
+  :deep(.table-wrap .el-table__row.data-row) {
+    transition: background 0.15s;
 
-        &:hover {
-          color: $text-primary;
-        }
-      }
-
-      .sort-icon {
-        margin-left: 4px;
-        font-size: 10px;
-        opacity: 0.6;
-      }
+    &.row-selected > td.el-table__cell {
+      background: $bg-row-selected;
     }
 
-    .col-check {
-      width: 36px;
-      padding-left: 14px;
+    &.border-over > td.el-table__cell:first-child {
+      box-shadow: inset 3px 0 0 0 $gold;
     }
 
-    .col-name {
-      min-width: 100px;
+    &.border-pass > td.el-table__cell:first-child {
+      box-shadow: inset 3px 0 0 0 $green;
     }
 
-    .data-row {
-      border-bottom: 1px solid $border;
-      border-left: 3px solid transparent;
-      transition: background 0.15s;
-
-      &:hover {
-        background: $bg-row-hover;
-      }
-
-      &.row-selected {
-        background: $bg-row-selected;
-      }
-
-      &.border-over {
-        border-left-color: $gold;
-      }
-
-      &.border-pass {
-        border-left-color: $green;
-      }
-
-      &.border-near {
-        border-left-color: $orange;
-      }
-
-      &.border-fail {
-        border-left-color: $red;
-      }
-
-      td {
-        padding: 10px;
-        white-space: nowrap;
-        vertical-align: middle;
-      }
+    &.border-near > td.el-table__cell:first-child {
+      box-shadow: inset 3px 0 0 0 $orange;
     }
 
-    .total-row {
-      background: #0f1623;
-      border-top: 2px solid $border-light;
-
-      td {
-        padding: 10px;
-        font-weight: 600;
-        color: $text-secondary;
-      }
-
-      .total-label {
-        color: $text-primary;
-      }
+    &.border-fail > td.el-table__cell:first-child {
+      box-shadow: inset 3px 0 0 0 $red;
     }
   }
 
@@ -1078,71 +1319,124 @@
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    width: 220px;
-    padding: 0;
+    width: 240px;
+    padding: 0 12px;
     overflow-y: auto;
-    background: $bg-card;
+    background:
+      radial-gradient(130% 110% at 50% 10%, rgb(59 130 246 / 18%) 0%, rgb(24 24 27 / 95%) 60%),
+      $bg-card;
     border-left: 1px solid $border;
+    transition: width 0.2s ease;
+  }
+
+  .sidebar.collapsed {
+    width: 88px;
+    padding: 0;
   }
 
   .sidebar-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 16px 10px;
+    padding: 14px 4px 12px;
     font-size: 13px;
     font-weight: 600;
     color: $text-primary;
-    border-bottom: 1px solid $border;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
 
     .collapse-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
       font-size: 14px;
       color: $text-secondary;
       cursor: pointer;
       background: none;
-      border: none;
+      border: 1px solid rgb(255 255 255 / 10%);
+      border-radius: 9999px;
+      transition: all 0.15s;
 
       &:hover {
         color: $text-primary;
+        background: rgb(255 255 255 / 8%);
+        border-color: rgb(255 255 255 / 24%);
       }
     }
   }
 
+  .sidebar-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 0 16px;
+  }
+
   .metric-card {
-    padding: 16px;
-    border-bottom: 1px solid $border;
+    padding: 14px;
+    background: linear-gradient(145deg, rgb(59 130 246 / 8%) 0%, rgb(22 28 45 / 82%) 100%);
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 20%);
 
     .metric-title {
-      margin-bottom: 6px;
-      font-size: 11px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 600;
       color: $text-secondary;
     }
 
     .metric-val {
-      margin-bottom: 4px;
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 700;
-      line-height: 1.2;
+      line-height: 1.25;
     }
 
     .metric-sub {
-      font-size: 11px;
+      font-size: 14px;
+      font-weight: 600;
     }
 
     .metric-badge-inline {
-      display: inline-block;
-      padding: 2px 8px;
-      margin-top: 4px;
-      font-size: 11px;
-      color: $cyan;
-      background: rgba($cyan, 0.12);
-      border: 1px solid rgba($cyan, 0.3);
-      border-radius: 4px;
+      display: inline-flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: $green;
+      background: rgba($green, 0.18);
+      border: 1px solid rgba($green, 0.35);
+      border-radius: 8px;
     }
   }
 
+  .metric-main-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .metric-main-col {
+    align-items: flex-start;
+  }
+
+  .metric-side {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    align-items: flex-end;
+    font-size: 12px;
+    line-height: 1.35;
+    color: $text-secondary;
+  }
+
   .alert-card {
-    background: rgba($red, 0.05);
+    background: linear-gradient(145deg, rgb(239 68 68 / 10%) 0%, rgb(22 28 45 / 82%) 100%);
   }
 
   .pos-text {
@@ -1155,6 +1449,76 @@
 
   .gold-text {
     color: $gold;
+  }
+
+  @media (width <= 1366px) {
+    .sidebar {
+      width: 220px;
+    }
+
+    .metric-card {
+      .metric-val {
+        font-size: 22px;
+      }
+
+      .metric-sub {
+        font-size: 13px;
+      }
+
+      .metric-badge-inline {
+        height: 24px;
+        padding: 0 8px;
+        font-size: 12px;
+      }
+    }
+
+    .metric-side {
+      font-size: 12px;
+    }
+  }
+
+  @media (width <= 1280px) {
+    .sidebar {
+      width: 196px;
+      padding: 0 10px;
+    }
+
+    .metric-card {
+      padding: 12px;
+
+      .metric-val {
+        font-size: 20px;
+      }
+
+      .metric-sub {
+        font-size: 12px;
+      }
+
+      .metric-title {
+        font-size: 11px;
+      }
+    }
+
+    .metric-side {
+      font-size: 11px;
+    }
+  }
+
+  @media (width <= 1200px) {
+    .sidebar {
+      width: 176px;
+      padding: 0 8px;
+    }
+
+    .metric-card {
+      .metric-val {
+        font-size: 18px;
+      }
+
+      .metric-sub {
+        font-size: 12px;
+      }
+    }
   }
 
   input[type='checkbox'] {

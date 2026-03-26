@@ -1,0 +1,46 @@
+{
+  "_comment": "人员绩效 - 右侧指标概览。列表页右侧卡片使用。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "personId": { "type": "string", "required": false, "description": "人员 ID，空表示全部。" },
+      "appCategory": { "type": "string", "required": false, "description": "应用分类。" },
+      "status": { "type": "string", "required": false, "description": "达标状态筛选。" },
+      "keyword": { "type": "string", "required": false, "description": "搜索关键字。" }
+    },
+    "response": {
+      "adSpend": { "type": "number", "required": true, "description": "团队广告支出。" },
+      "avgRoi1": {
+        "type": "number",
+        "required": true,
+        "description": "首日 ROI 均值，百分比数值。"
+      },
+      "estProfit": { "type": "number", "required": true, "description": "团队预估利润。" },
+      "failCount": { "type": "number", "required": true, "description": "未达标人数。" },
+      "failNames": { "type": "string[]", "required": true, "description": "未达标人员姓名列表。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-20",
+    "endDate": "2026-03-26",
+    "personId": "",
+    "appCategory": "",
+    "status": "",
+    "keyword": ""
+  },
+  "sampleResponse": {
+    "adSpend": 131179,
+    "avgRoi1": 92.0,
+    "estProfit": 28000,
+    "failCount": 0,
+    "failNames": []
+  },
+  "api": {
+    "url": "POST /api/user-growth/performance-analysis/overview-metrics",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, personId?, appCategory?, status?, keyword?",
+    "responseBody": "adSpend, avgRoi1, estProfit, failCount, failNames"
+  }
+}
