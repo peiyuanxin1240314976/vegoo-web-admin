@@ -1,0 +1,55 @@
+{
+  "_comment": "人员绩效对比 - 绩效得分明细表。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "staffIds": {
+        "type": "string[]",
+        "required": true,
+        "description": "参与对比的人员 ID 列表。"
+      }
+    },
+    "response": {
+      "list": { "type": "ScoreDetailItem[]", "required": true, "description": "明细表数据。" }
+    },
+    "ScoreDetailItem": {
+      "id": { "type": "string", "required": true, "description": "人员 ID。" },
+      "name": { "type": "string", "required": true, "description": "姓名。" },
+      "spend": { "type": "number", "required": true, "description": "花费分。" },
+      "roi": { "type": "number", "required": true, "description": "ROI 分。" },
+      "cpi": { "type": "number", "required": true, "description": "CPI 分。" },
+      "profit": { "type": "number", "required": true, "description": "利润分。" },
+      "total": { "type": "number", "required": true, "description": "综合得分。" },
+      "status": { "type": "string", "required": true, "description": "状态文案。" },
+      "statusClass": { "type": "string", "required": true, "description": "状态样式码。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-20",
+    "endDate": "2026-03-26",
+    "staffIds": ["zhang3", "li4", "wang5", "zhao6"]
+  },
+  "sampleResponse": {
+    "list": [
+      {
+        "id": "zhao6",
+        "name": "赵六",
+        "spend": 28,
+        "roi": 30,
+        "cpi": 20,
+        "profit": 18,
+        "total": 96,
+        "status": "超标",
+        "statusClass": "over"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/performance-analysis/comparison-score-detail",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, staffIds",
+    "responseBody": "list"
+  }
+}

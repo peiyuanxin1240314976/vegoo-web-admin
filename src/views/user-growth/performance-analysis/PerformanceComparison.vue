@@ -14,7 +14,16 @@
       </div>
       <div class="header-right">
         <button class="btn-back" @click="goBack">← 返回列表</button>
-        <div class="date-range-btn">日期范围：最近7天</div>
+        <ElDatePicker
+          v-model="selectedDateRange"
+          class="date-range-picker"
+          type="daterange"
+          range-separator="~"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="YYYY-MM-DD"
+          format="YYYY-MM-DD"
+        />
         <button class="btn-export">↑ 导出</button>
       </div>
     </div>
@@ -157,13 +166,45 @@
         </div>
       </div>
     </div>
+
+    <ElDialog v-model="showAddModal" title="添加对比人员" width="560px" append-to-body>
+      <div class="add-compare-body">
+        <div class="add-compare-toolbar">
+          <ElButton size="small" :loading="compareCandidatesLoading" @click="loadCompareCandidates">
+            刷新候选
+          </ElButton>
+          <span class="candidate-tip">按当前筛选条件拉取，已选人员会自动排除</span>
+        </div>
+        <ElCheckboxGroup v-model="pendingAddIds" class="candidate-list">
+          <ElCheckbox v-for="item in compareCandidates" :key="item.id" :value="item.id">
+            {{ item.name }}（{{ item.level }}｜{{ item.score }}分｜{{ item.status }}）
+          </ElCheckbox>
+        </ElCheckboxGroup>
+        <div
+          v-if="!compareCandidatesLoading && compareCandidates.length === 0"
+          class="candidate-empty"
+        >
+          当前筛选下没有可添加人员
+        </div>
+      </div>
+      <template #footer>
+        <ElButton @click="closeAddCompareModal">取消</ElButton>
+        <ElButton type="primary" @click="confirmAddCompare">确定添加</ElButton>
+      </template>
+    </ElDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+  import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
+  import { ElMessage } from 'element-plus'
   import * as echarts from 'echarts'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import {
+    fetchPerformanceCompareCandidates,
+    type PerformanceCompareCandidatesItem
+  } from '@/api/user-growth/performance-analysis'
 
   // ─── Types ────────────────────────────────────────────────
   interface StaffSummary {
@@ -292,7 +333,11 @@
     zhao6: { spend: 28, roi: 30, cpi: 20, profit: 18, total: 96 },
     zhang3: { spend: 25, roi: 30, cpi: 20, profit: 19, total: 94 },
     li4: { spend: 22, roi: 28, cpi: 20, profit: 18, total: 88 },
-    wang5: { spend: 15, roi: 18, cpi: 16, profit: 23, total: 72 }
+    wang5: { spend: 15, roi: 18, cpi: 16, profit: 23, total: 72 },
+    liu7: { spend: 23, roi: 29, cpi: 20, profit: 18, total: 90 },
+    chen8: { spend: 21, roi: 26, cpi: 19, profit: 17, total: 83 },
+    zhou9: { spend: 20, roi: 25, cpi: 18, profit: 17, total: 80 },
+    wu10: { spend: 19, roi: 24, cpi: 18, profit: 17, total: 78 }
   }
 
   // ─── Router ───────────────────────────────────────────────
@@ -301,6 +346,10 @@
 
   // ─── State ────────────────────────────────────────────────
   const showAddModal = ref(false)
+  const selectedDateRange = ref<[string, string]>(buildDefaultDateRange())
+  const compareCandidatesLoading = ref(false)
+  const compareCandidates = ref<PerformanceCompareCandidatesItem[]>([])
+  const pendingAddIds = ref<string[]>([])
 
   // Parse IDs from route query
   const selectedStaff = ref<StaffSummary[]>([])
@@ -311,8 +360,20 @@
       id,
       name: ALL_STAFF[id]?.name ?? id
     }))
+    const startDate = route.query.startDate as string | undefined
+    const endDate = route.query.endDate as string | undefined
+    if (startDate && endDate) {
+      selectedDateRange.value = [startDate, endDate]
+    }
   }
   initFromRoute()
+
+  function buildDefaultDateRange(): [string, string] {
+    const endDate = getAppNow()
+    const startDate = cloneAppDate(endDate)
+    startDate.setDate(startDate.getDate() - 6)
+    return [formatYYYYMMDD(startDate), formatYYYYMMDD(endDate)]
+  }
 
   // ─── Computed KPIs ────────────────────────────────────────
   const kpis = computed(() => {
@@ -363,16 +424,26 @@
     }
   ])
 
+  function buildScoreDetailById(id: string) {
+    const scoreData = SCORE_DETAIL_DATA[id]
+    if (scoreData) return scoreData
+
+    const total = ALL_STAFF[id]?.score ?? 80
+    const spend = Math.round(total * 0.26)
+    const roi = Math.round(total * 0.31)
+    const cpi = Math.round(total * 0.21)
+    const profit = Math.max(0, total - spend - roi - cpi)
+    return { spend, roi, cpi, profit, total }
+  }
+
   const scoreDetail = computed(() =>
-    selectedStaff.value
-      .filter((s) => SCORE_DETAIL_DATA[s.id])
-      .map((s) => ({
-        name: s.name,
-        color: ALL_STAFF[s.id]?.color ?? '#fff',
-        ...SCORE_DETAIL_DATA[s.id],
-        status: ALL_STAFF[s.id]?.status ?? '',
-        statusClass: ALL_STAFF[s.id]?.statusClass ?? ''
-      }))
+    selectedStaff.value.map((s) => ({
+      name: s.name,
+      color: ALL_STAFF[s.id]?.color ?? '#fff',
+      ...buildScoreDetailById(s.id),
+      status: ALL_STAFF[s.id]?.status ?? '',
+      statusClass: ALL_STAFF[s.id]?.statusClass ?? ''
+    }))
   )
 
   const alerts = ref([
@@ -694,11 +765,43 @@
   }
 
   function goBack() {
-    router.push({ name: 'PerformanceList' })
+    router.push('/user-growth/performance-analysis')
   }
 
-  function removeStaff(id: string) {
-    selectedStaff.value = selectedStaff.value.filter((s) => s.id !== id)
+  function resolveCompareRequestFilters() {
+    return {
+      personFilter: (route.query.personFilter as string) || '',
+      appFilter: (route.query.appFilter as string) || '',
+      statusFilter: (route.query.statusFilter as string) || '',
+      keyword: (route.query.keyword as string) || ''
+    }
+  }
+
+  async function loadCompareCandidates() {
+    const [startDate, endDate] = selectedDateRange.value
+    compareCandidatesLoading.value = true
+    try {
+      const filters = resolveCompareRequestFilters()
+      const res = await fetchPerformanceCompareCandidates({
+        startDate,
+        endDate,
+        ...filters,
+        excludeIds: selectedStaff.value.map((item) => item.id),
+        current: 1,
+        size: 50
+      })
+      compareCandidates.value = res.list
+    } finally {
+      compareCandidatesLoading.value = false
+    }
+  }
+
+  function closeAddCompareModal() {
+    showAddModal.value = false
+    pendingAddIds.value = []
+  }
+
+  function refreshAllCharts() {
     nextTick(() => {
       roiChart?.setOption(buildRoiOption(), true)
       radarChart?.setOption(buildRadarOption(), true)
@@ -707,10 +810,35 @@
     })
   }
 
+  function confirmAddCompare() {
+    if (pendingAddIds.value.length === 0) {
+      ElMessage.warning('请先选择要添加的人员')
+      return
+    }
+    const exists = new Set(selectedStaff.value.map((item) => item.id))
+    const appendList = pendingAddIds.value
+      .filter((id) => !exists.has(id))
+      .map((id) => ({ id, name: ALL_STAFF[id]?.name ?? id }))
+    selectedStaff.value = [...selectedStaff.value, ...appendList]
+    closeAddCompareModal()
+    refreshAllCharts()
+  }
+
+  function removeStaff(id: string) {
+    selectedStaff.value = selectedStaff.value.filter((s) => s.id !== id)
+    refreshAllCharts()
+  }
+
   function viewAlertDetail(id: number) {
     void id
     // Navigate to alert detail or open modal
   }
+
+  watch(showAddModal, (visible) => {
+    if (!visible) return
+    pendingAddIds.value = []
+    void loadCompareCandidates()
+  })
 </script>
 
 <style scoped lang="scss">
@@ -804,14 +932,24 @@
     }
   }
 
-  .date-range-btn {
-    padding: 5px 14px;
-    font-size: 12px;
-    font-weight: 600;
-    color: $cyan;
+  .date-range-picker {
+    width: 260px;
+  }
+
+  :deep(.date-range-picker .el-input__wrapper) {
+    padding: 5px 10px;
     background: rgba($cyan, 0.1);
     border: 1px solid $cyan;
     border-radius: 6px;
+    box-shadow: none;
+  }
+
+  :deep(.date-range-picker .el-range-separator),
+  :deep(.date-range-picker .el-range-input) {
+    font-size: 12px;
+    font-weight: 600;
+    color: $cyan;
+    background: transparent;
   }
 
   .btn-export {
@@ -827,6 +965,41 @@
     &:hover {
       color: $text-primary;
     }
+  }
+
+  .add-compare-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .add-compare-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .candidate-tip {
+    font-size: 12px;
+    color: $text-secondary;
+  }
+
+  .candidate-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 260px;
+    padding: 10px;
+    overflow: auto;
+    border: 1px solid $border;
+    border-radius: 8px;
+  }
+
+  .candidate-empty {
+    font-size: 12px;
+    color: $text-secondary;
+    text-align: center;
   }
 
   // ─── Selected Row ────────────────────────────────────────

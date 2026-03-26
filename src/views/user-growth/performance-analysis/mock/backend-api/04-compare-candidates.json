@@ -1,0 +1,86 @@
+{
+  "_comment": "人员绩效 - 对比页添加对比候选列表。按当前筛选条件重新拉取，并排除已选人员。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "personId": {
+        "type": "string",
+        "required": false,
+        "description": "人员筛选 ID，空表示全部。"
+      },
+      "appCategory": { "type": "string", "required": false, "description": "应用分类筛选。" },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["pass", "fail"],
+        "description": "达标状态筛选。"
+      },
+      "keyword": { "type": "string", "required": false, "description": "关键字搜索。" },
+      "excludeIds": {
+        "type": "string[]",
+        "required": true,
+        "description": "已加入对比的人员 ID 列表，接口需排除。"
+      },
+      "current": { "type": "number", "required": true, "description": "页码。" },
+      "size": { "type": "number", "required": true, "description": "每页数量。" }
+    },
+    "response": {
+      "list": { "type": "CompareCandidate[]", "required": true, "description": "候选人员列表。" },
+      "total": { "type": "number", "required": true, "description": "候选总数。" }
+    },
+    "CompareCandidate": {
+      "id": { "type": "string", "required": true, "description": "人员 ID。" },
+      "name": { "type": "string", "required": true, "description": "姓名。" },
+      "level": { "type": "string", "required": true, "description": "职级。" },
+      "status": { "type": "string", "required": true, "description": "达标状态文案。" },
+      "statusClass": { "type": "string", "required": true, "description": "状态样式码。" },
+      "score": { "type": "number", "required": true, "description": "绩效得分。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-20",
+    "endDate": "2026-03-26",
+    "personId": "",
+    "appCategory": "",
+    "status": "",
+    "keyword": "",
+    "excludeIds": ["zhang3", "li4"],
+    "current": 1,
+    "size": 10
+  },
+  "sampleResponse": {
+    "list": [
+      {
+        "id": "zhao6",
+        "name": "赵六",
+        "level": "高级优化师",
+        "status": "超标",
+        "statusClass": "over",
+        "score": 96
+      },
+      {
+        "id": "liu7",
+        "name": "刘七",
+        "level": "优化师",
+        "status": "达标",
+        "statusClass": "pass",
+        "score": 90
+      }
+    ],
+    "total": 2
+  },
+  "api": {
+    "url": "POST /api/user-growth/performance-analysis/compare-candidates",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, personId?, appCategory?, status?, keyword?, excludeIds, current, size",
+    "responseBody": "list, total"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "接口内部先按筛选条件查询，再应用 excludeIds 过滤，最后分页。",
+      "返回顺序建议按 score desc，再按 name 升序保证稳定性。"
+    ]
+  }
+}
