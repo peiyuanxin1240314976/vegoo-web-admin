@@ -30,8 +30,15 @@
       <div class="api-header__right">
         <div class="api-actions">
           <div class="api-pill">
-            <ArtSvgIcon icon="ri:calendar-2-line" :size="16" class="api-pill__icon" />
-            <span class="api-pill__text">{{ rangeText }}</span>
+            <ElDatePicker
+              size="small"
+              v-model="datePickerValue"
+              type="daterange"
+              unlink-panels
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+            />
           </div>
 
           <ElButton round class="api-export" @click="emit('export')">
@@ -46,6 +53,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
+  import { cloneAppDate, getAppNow } from '@/utils/app-now'
   import type { AdPlatformInfoFilterState, AdPlatformInfoPlatformSummary } from '../types'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
 
@@ -90,10 +98,27 @@
     return '较差'
   })
 
-  const rangeText = computed(() => {
-    if (props.dateRange === '7d') return '过去7天，2026年01月25日-2026年01月31日'
-    if (props.dateRange === '90d') return '过去90天，2025年11月03日-2026年01月31日'
-    return '过去30天，2026年01月01日-2026年01月31日'
+  const datePickerValue = computed<[Date, Date]>({
+    get: () => {
+      const end = getAppNow()
+      const start = cloneAppDate(end)
+      const days = props.dateRange === '7d' ? 7 : props.dateRange === '90d' ? 90 : 30
+      start.setDate(end.getDate() - (days - 1))
+      return [start, end] as [Date, Date]
+    },
+    set: (v: [Date, Date]) => {
+      if (!v?.length) return
+      const [start, end] = v
+      const diffMs = end.getTime() - start.getTime()
+      const days = Math.floor(diffMs / 86400000) + 1
+      if (days <= 14) {
+        emit('update:dateRange', '7d')
+      } else if (days <= 60) {
+        emit('update:dateRange', '30d')
+      } else {
+        emit('update:dateRange', '90d')
+      }
+    }
   })
 </script>
 
@@ -266,21 +291,19 @@
 
   .api-pill {
     display: inline-flex;
-    gap: 8px;
     align-items: center;
-    padding: 8px 12px;
-    background: rgb(24 24 27 / 55%);
+    min-width: 280px;
+    padding: 4px;
+    background: rgb(24 24 27 / 65%);
     border: 1px solid var(--default-border);
     border-radius: 9999px;
 
-    &__icon {
-      color: var(--art-gray-600);
-    }
-
-    &__text {
-      font-size: 12px;
-      color: var(--art-gray-900);
-      white-space: nowrap;
+    :deep(.el-range-editor.el-input__wrapper) {
+      width: 100%;
+      padding: 0 10px;
+      background: transparent;
+      border-radius: 9999px;
+      box-shadow: none;
     }
   }
 
