@@ -76,7 +76,7 @@
 
 <script setup lang="ts">
   import { ref, computed, nextTick, watchEffect } from 'vue'
-  import type { ElTable, TableProps } from 'element-plus'
+  import type { ElTable } from 'element-plus'
   import { storeToRefs } from 'pinia'
   import { ColumnOption } from '@/types'
   import { useTableStore } from '@/store/modules/table'
@@ -121,8 +121,27 @@
     pagerCount?: number
   }
 
+  type ElTableSize = 'small' | 'default' | 'large'
+
   /** ArtTable 组件的 Props 接口 */
-  interface ArtTableProps extends TableProps<Record<string, any>> {
+  type ArtTableProps = {
+    /** el-table: 表格数据 */
+    data?: Record<string, any>[]
+    /** el-table: 高度（透传给 el-table） */
+    height?: string | number
+    /** el-table: 是否自动撑满容器宽度 */
+    fit?: boolean
+    /** el-table: 是否显示表头 */
+    showHeader?: boolean
+    /** el-table: 斑马纹 */
+    stripe?: boolean
+    /** el-table: 边框 */
+    border?: boolean
+    /** el-table: 尺寸 */
+    size?: ElTableSize
+    /** el-table: 表头单元格样式 */
+    headerCellStyle?: unknown
+
     /** 加载状态 */
     loading?: boolean
     /** 列渲染配置 */

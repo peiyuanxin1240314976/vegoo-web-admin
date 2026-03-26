@@ -5,8 +5,8 @@ import { fileURLToPath } from 'url'
 
 // 从 ESLint 插件中导入推荐配置
 import pluginJs from '@eslint/js'
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import pluginVue from 'eslint-plugin-vue'
+import eslintConfigPrettier from 'eslint-config-prettier'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
@@ -78,6 +78,6 @@ export default [
       'src/utils/console.ts'
     ]
   },
-  // prettier 配置
-  eslintPluginPrettierRecommended
+  // 关闭与 Prettier 冲突的 ESLint 格式化规则（Prettier 单独运行）
+  eslintConfigPrettier
 ]
