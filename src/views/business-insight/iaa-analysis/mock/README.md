@@ -10,14 +10,14 @@
 
 ## 与 6 个 Tab 的对应关系
 
-| Tab | 主要数据来源（契约） |
-| --- | --- |
-| 广告类型 | overview-kpi、table-ad-type、chart-ad-type-trend、chart-user-breakdown |
-| 广告平台 | overview-kpi、table-ad-platform、chart-platform-ranking、chart-revenue-donut、chart-ecpm-compare、chart-revenue-trend-7d |
-| 广告位 | overview-kpi、table-ad-placement、chart-placement-top10、chart-placement-donut、chart-placement-scatter |
-| 广告单元 | overview-kpi、table-ad-unit、chart-fill-rate-dist、chart-ecpm-fill-scatter、chart-revenue-trend-7d |
-| 国家 | overview-kpi、table-country、chart-country-map、chart-country-ecpm、chart-country-trend、chart-country-penetration |
-| 版本 | overview-kpi、table-version、chart-version-revenue、chart-version-ecpm-trend、chart-version-upgrade、chart-version-penetration-crash、ai-insight-version |
+| Tab      | 主要数据来源（契约）                                  |
+| -------- | ----------------------------------------------------- |
+| 广告类型 | `11-overview-ad-type-tab`（整页，含 KPI）             |
+| 广告平台 | `12-overview-platform-tab`、`03-table-ad-platform` 等 |
+| 广告位   | `13-overview-placement-tab`                           |
+| 广告单元 | `14-overview-ad-unit-tab`                             |
+| 国家     | `15-overview-country-tab`                             |
+| 版本     | `16-overview-version-tab`                             |
 
 上表为**按图表拆分**时的概念对应；**当前仓库以 `backend-api/` 下 `11`～`16` 整页 Tab 契约为准**（单接口返回该 Tab 全模块数据），详见 [`backend-api/README.md`](backend-api/README.md) 清单。
 

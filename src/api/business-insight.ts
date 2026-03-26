@@ -1273,29 +1273,6 @@ export function fetchProfitOverviewSankey(fo: ProfitAnalysisQueryParams) {
   })
 }
 
-export async function fetchIaaOverviewKpi(params: {
-  tab: string
-  s_app_id?: string
-  platform?: string
-  s_country_code?: string
-  t_date: string
-}) {
-  if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.OverviewKpi)) {
-    return insightMock.mockFetchIaaOverviewKpi(params)
-  }
-  const body = {
-    tab: params.tab,
-    ...normalizeIaaBody({
-      s_app_id: params.s_app_id ?? 'all',
-      platform: params.platform ?? 'all',
-      s_country_code: params.s_country_code ?? 'all',
-      t_date: params.t_date
-    })
-  }
-  const raw = await request.post<unknown>({ url: `${IAA_BASE}/overview-kpi`, data: body })
-  return unwrapIaaPayload<{ kpis: IaaKpiCard[] }>(raw)
-}
-
 export async function fetchIaaTableAdPlatform(params: IaaFilterState) {
   if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.TableAdPlatform)) {
     return insightMock.mockFetchIaaTableAdPlatform(params)

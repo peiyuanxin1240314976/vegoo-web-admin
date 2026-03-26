@@ -27,7 +27,7 @@ export interface IaaFilterOptions {
   countryOptions: IaaSelectOption[]
 }
 
-/** 顶部 KPI 卡片（overview-kpi 单项） */
+/** 顶部 KPI 卡片（各 Tab 接口内 `kpis` 单项；广告类型 Tab 为 `kpi` 对象） */
 export interface IaaKpiCard {
   id: string
   title: string

@@ -5,7 +5,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- Mock 保留入参形状供联调对照 */
 import type {
   IaaFilterOptions,
-  IaaKpiCard,
   IaaPlatformTableRow,
   IaaFilterState,
   IaaAdTypeTabData,
@@ -47,49 +46,6 @@ export function mockFetchIaaMetaFilterOptions() {
       { label: '美国', value: 'US' },
       { label: '韩国', value: 'KR' },
       { label: '日本', value: 'JP' }
-    ]
-  })
-}
-
-/** 当前 Tab 顶部 KPI 卡片（Mock：后端就绪后改为 request.post） */
-export function mockFetchIaaOverviewKpi(_params: {
-  tab: string
-  s_app_id?: string
-  platform?: string
-  s_country_code?: string
-  t_date: string
-}) {
-  return Promise.resolve<{ kpis: IaaKpiCard[] }>({
-    kpis: [
-      {
-        id: 'kpi_1',
-        title: '广告总收入',
-        primaryValue: '$2,768.58',
-        subText: '广告平台上报 ↑12.3%',
-        trendUp: true,
-        accent: 'teal'
-      },
-      {
-        id: 'kpi_2',
-        title: '平均ECPM',
-        primaryValue: '3.32 / 3.06',
-        subText: '预估/真实 | 偏差 +8.5%',
-        accent: 'default'
-      },
-      {
-        id: 'kpi_3',
-        title: '广告展示次数',
-        primaryValue: '833,607',
-        subText: '人均展示4.9次',
-        accent: 'default'
-      },
-      {
-        id: 'kpi_4',
-        title: '广告用户',
-        primaryValue: '117,483',
-        subText: '渗透率68.6%',
-        accent: 'default'
-      }
     ]
   })
 }

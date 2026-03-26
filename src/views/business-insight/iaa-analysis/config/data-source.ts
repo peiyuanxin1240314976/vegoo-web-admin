@@ -6,13 +6,11 @@
  *
  * 当前默认全部为 `false`（走线上 HTTP）；本地只 Mock 某接口时把对应项改为 `true`。
  *
- * 说明：契约 03～10 为细粒度文档，当前实现为 Tab 聚合接口（11～16 对应各 `overview/*-tab`），无单独 fetch。
+ * 说明：契约 03～10 为细粒度文档，当前实现为 Tab 聚合接口（11～16 对应各 `overview/*-tab`）；KPI 由各自 Tab 接口内返回，无单独 overview-kpi。
  */
 export enum IaaAnalysisEndpoint {
   /** 01-meta-filter-options */
   MetaFilterOptions = 'metaFilterOptions',
-  /** 02-overview-kpi */
-  OverviewKpi = 'overviewKpi',
   /** 03-table-ad-platform（平台对比表，与广告平台 Tab 并存） */
   TableAdPlatform = 'tableAdPlatform',
   /** 11-overview-ad-type-tab */
@@ -31,7 +29,6 @@ export enum IaaAnalysisEndpoint {
 
 export const IAA_ANALYSIS_USE_MOCK: Record<IaaAnalysisEndpoint, boolean> = {
   [IaaAnalysisEndpoint.MetaFilterOptions]: false,
-  [IaaAnalysisEndpoint.OverviewKpi]: false,
   [IaaAnalysisEndpoint.TableAdPlatform]: false,
   [IaaAnalysisEndpoint.AdTypeTab]: false,
   [IaaAnalysisEndpoint.PlatformTab]: false,
