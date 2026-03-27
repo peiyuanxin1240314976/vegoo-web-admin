@@ -2,11 +2,6 @@
   <div class="credential-page">
     <!-- 页面标题栏 -->
     <div class="page-header">
-      <div class="breadcrumb">
-        <span class="breadcrumb-parent">系统管理</span>
-        <span class="breadcrumb-sep">›</span>
-        <span class="breadcrumb-current">应用商店凭据</span>
-      </div>
       <div class="header-actions">
         <button class="btn btn-primary" @click="showAddDialog = true">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -765,28 +760,8 @@
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
-    justify-content: space-between;
+    justify-content: end;
     margin-bottom: 20px;
-  }
-
-  .breadcrumb {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    font-size: 15px;
-  }
-
-  .breadcrumb-parent {
-    color: var(--text-secondary);
-  }
-
-  .breadcrumb-sep {
-    color: var(--text-muted);
-  }
-
-  .breadcrumb-current {
-    font-weight: 600;
-    color: var(--text-primary);
   }
 
   .header-actions {

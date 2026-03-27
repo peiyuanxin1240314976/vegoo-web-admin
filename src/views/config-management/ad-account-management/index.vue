@@ -184,13 +184,6 @@
 
 <template>
   <div class="ad-account-page">
-    <!-- ── 面包屑 ── -->
-    <div class="breadcrumb">
-      <span class="breadcrumb-parent">配置管理</span>
-      <span class="breadcrumb-sep">›</span>
-      <span class="breadcrumb-current">广告账户管理</span>
-    </div>
-
     <!-- ── 页头 ── -->
     <div class="page-header">
       <div>
@@ -423,32 +416,6 @@
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
     color: #e2e8f0;
     background: #0d1117;
-  }
-
-  /* ── 面包屑 ── */
-  .breadcrumb {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    margin-bottom: 16px;
-    font-size: 13px;
-    color: #6b7280;
-  }
-
-  .breadcrumb-parent {
-    cursor: pointer;
-  }
-
-  .breadcrumb-parent:hover {
-    color: #94a3b8;
-  }
-
-  .breadcrumb-sep {
-    color: #374151;
-  }
-
-  .breadcrumb-current {
-    color: #94a3b8;
   }
 
   /* ── 页头 ── */
