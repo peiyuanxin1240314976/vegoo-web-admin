@@ -1,0 +1,62 @@
+{
+  "_comment": "应用管理 - 更新。path 参数 id；当前远端实现为 PUT（后续可统一 POST JSON）。",
+  "fieldDescription": {
+    "request": {
+      "path.id": { "type": "string", "required": true, "description": "应用业务 ID。" },
+      "body": { "type": "ApplicationFormPayload", "required": true, "description": "编辑字段。" }
+    },
+    "response": {
+      "data": {
+        "type": "ApplicationAppItem",
+        "required": true,
+        "description": "更新后的完整记录。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "path": { "id": "Weather5A" },
+    "body": {
+      "id": "Weather5A",
+      "appName": "Weather5",
+      "platform": "Android",
+      "category": "Weather",
+      "bundleId": "com.accurate.weather.forecast.live",
+      "lastModifier": "李四"
+    }
+  },
+  "sampleResponse": {
+    "id": "Weather5A",
+    "appName": "Weather5",
+    "iconColor": "#2dd4bf",
+    "platform": "Android",
+    "bundleId": "com.accurate.weather.forecast.live",
+    "packageId": "com.accurate.weather.forecast.live",
+    "shortName": "W5",
+    "category": "Weather",
+    "timezone": "PST",
+    "priority": 12,
+    "status": "正常",
+    "creator": "张三",
+    "createTime": "2024-01-15",
+    "lastModifier": "李四",
+    "lastModifyTime": "2026-03-27 11:00:00"
+  },
+  "api": {
+    "url": "PUT /api/config-management/application/:id",
+    "method": "PUT",
+    "priority": "P0",
+    "requestBody": "ApplicationFormPayload",
+    "responseBody": "ApplicationAppItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "表格或详情中编辑并提交",
+        "detail": "updateApplication；成功后 loadStats + loadTable。",
+        "prerequisite": "id 存在"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "同创建。"
+  }
+}

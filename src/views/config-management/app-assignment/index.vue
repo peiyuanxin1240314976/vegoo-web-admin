@@ -104,7 +104,8 @@
     <!-- ── 数据表格 ───────────────────────────────────────── -->
     <div class="table-wrapper">
       <el-table
-        :data="pagedData"
+        v-loading="tableLoading"
+        :data="tableRecords"
         class="assignment-table"
         style="width: 100%"
         :row-class-name="rowClass"
@@ -158,15 +159,15 @@
 
       <!-- 分页 -->
       <div class="pagination-bar">
-        <span class="page-total">共 {{ filteredData.length }} 条</span>
-        <el-select v-model="pageSize" class="page-size-select" @change="currentPage = 1">
+        <span class="page-total">共 {{ tableTotal }} 条</span>
+        <el-select v-model="pageSize" class="page-size-select" @change="handlePageSizeChange">
           <el-option label="每页 20 条" :value="20" />
           <el-option label="每页 50 条" :value="50" />
         </el-select>
         <el-pagination
           v-model:current-page="currentPage"
           :page-size="pageSize"
-          :total="filteredData.length"
+          :total="tableTotal"
           layout="prev, pager, next"
           class="app-pagination"
         />
@@ -185,6 +186,10 @@
     <AssignmentFormDialog
       v-model:visible="formVisible"
       :edit-data="editData"
+      :ad-platform-options="metaFilter.adPlatformOptions"
+      :optimizer-options="metaFilter.optimizerOptions"
+      :assignable-apps="assignableAppOptions"
+      :load-versions="loadPerformanceVersions"
       @success="handleFormSuccess"
     />
 
@@ -194,14 +199,32 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, reactive, ref } from 'vue'
+  import { computed, reactive, ref, watch, onMounted } from 'vue'
   import { Plus, Download, Search } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
+  import {
+    createAppAssignment,
+    exportAppAssignmentList,
+    fetchAppAssignmentDetail,
+    fetchAppAssignmentMetaAssignableApps,
+    fetchAppAssignmentMetaFilterOptions,
+    fetchAppAssignmentMetaPerformanceVersions,
+    fetchAppAssignmentOverview,
+    fetchAppAssignmentTable,
+    updateAppAssignment
+  } from '@/api/config-management'
   import AssignmentDetailDrawer from './modules/assignment-detail-drawer.vue'
   import AssignmentFormDialog from './modules/assignment-form-dialog.vue'
   import ChangeLogDialog from './modules/change-log-dialog.vue'
-  import { assignmentMockList, adPlatformOptions, optimizerOptions } from './mock/data'
-  import type { AppAssignmentItem, AssignmentStatus } from './types'
+  import type {
+    AppAssignmentItem,
+    AppAssignmentMetaFilterResponse,
+    AppAssignmentOverviewResponse,
+    AppAssignableAppMetaItem,
+    AssignmentAssignableSelectOption,
+    AssignmentFormModel,
+    AssignmentStatus
+  } from './types'
 
   defineOptions({ name: 'AppAssignment' })
 
@@ -216,37 +239,119 @@
 
   const currentPage = ref(1)
   const pageSize = ref(20)
+  const tableLoading = ref(false)
+  const tableRecords = ref<AppAssignmentItem[]>([])
+  const tableTotal = ref(0)
+  const overview = ref<AppAssignmentOverviewResponse | null>(null)
 
-  const filteredData = computed(() => {
-    return assignmentMockList.filter((item) => {
-      const kw = filterForm.keyword.toLowerCase()
-      if (
-        kw &&
-        !item.appName.toLowerCase().includes(kw) &&
-        !item.optimizer.toLowerCase().includes(kw)
-      ) {
-        return false
+  const metaFilter = reactive<AppAssignmentMetaFilterResponse>({
+    adPlatformOptions: [],
+    optimizerOptions: []
+  })
+  const assignableAppsRaw = ref<AppAssignableAppMetaItem[]>([])
+
+  const assignableAppOptions = computed<AssignmentAssignableSelectOption[]>(() =>
+    assignableAppsRaw.value.map((a) => ({
+      label: `${a.appName}（${a.platform === 'Android' ? '安卓' : 'iOS'}）`,
+      value: a.appId,
+      appName: a.appName,
+      iconColor: a.iconColor
+    }))
+  )
+
+  const adPlatformOptions = computed(() => metaFilter.adPlatformOptions)
+  const optimizerOptions = computed(() => metaFilter.optimizerOptions)
+
+  // ─── 统计卡片（与 overview 契约一致）──────────────────────
+  const stats = computed(() => {
+    if (overview.value) {
+      return {
+        total: overview.value.total,
+        active: overview.value.active,
+        unassigned: overview.value.unassigned,
+        optimizerCount: overview.value.optimizerCount
       }
-      if (filterForm.platform && item.platform !== filterForm.platform) return false
-      if (filterForm.adPlatform && item.adPlatform !== filterForm.adPlatform) return false
-      if (filterForm.optimizer && item.optimizer !== filterForm.optimizer) return false
-      if (filterForm.status && item.status !== filterForm.status) return false
-      return true
-    })
+    }
+    return {
+      total: tableTotal.value,
+      active: 0,
+      unassigned: 0,
+      optimizerCount: 0
+    }
   })
 
-  const pagedData = computed(() => {
-    const start = (currentPage.value - 1) * pageSize.value
-    return filteredData.value.slice(start, start + pageSize.value)
+  async function loadOverview() {
+    try {
+      overview.value = await fetchAppAssignmentOverview()
+    } catch {
+      overview.value = null
+    }
+  }
+
+  async function loadTable() {
+    tableLoading.value = true
+    try {
+      const res = await fetchAppAssignmentTable({
+        current: currentPage.value,
+        size: pageSize.value,
+        keyword: filterForm.keyword.trim() || undefined,
+        platform: filterForm.platform || undefined,
+        source: filterForm.adPlatform || undefined,
+        optimizer: filterForm.optimizer || undefined,
+        status: filterForm.status || undefined
+      })
+      tableRecords.value = Array.isArray(res.records) ? res.records : []
+      tableTotal.value = Number(res.total ?? 0)
+    } catch {
+      tableRecords.value = []
+      tableTotal.value = 0
+    } finally {
+      tableLoading.value = false
+    }
+  }
+
+  async function loadMeta() {
+    try {
+      const [filterRes, appsRes] = await Promise.all([
+        fetchAppAssignmentMetaFilterOptions(),
+        fetchAppAssignmentMetaAssignableApps()
+      ])
+      metaFilter.adPlatformOptions = filterRes.adPlatformOptions ?? []
+      metaFilter.optimizerOptions = filterRes.optimizerOptions ?? []
+      assignableAppsRaw.value = appsRes.apps ?? []
+    } catch {
+      metaFilter.adPlatformOptions = []
+      metaFilter.optimizerOptions = []
+      assignableAppsRaw.value = []
+    }
+  }
+
+  function loadPerformanceVersions(appId: string) {
+    return fetchAppAssignmentMetaPerformanceVersions({ appId }).then((r) => r.versions ?? [])
+  }
+
+  function handlePageSizeChange() {
+    currentPage.value = 1
+  }
+
+  watch(
+    () => ({ ...filterForm }),
+    () => {
+      const wasPage = currentPage.value
+      currentPage.value = 1
+      if (wasPage === 1) void loadTable()
+    },
+    { deep: true }
+  )
+
+  watch([currentPage, pageSize], () => {
+    void loadTable()
   })
 
-  // ─── 统计卡片 ────────────────────────────────────────────
-  const stats = computed(() => ({
-    total: assignmentMockList.length,
-    active: assignmentMockList.filter((i) => i.status === '活跃').length,
-    unassigned: 6,
-    optimizerCount: new Set(assignmentMockList.map((i) => i.optimizer)).size
-  }))
+  onMounted(async () => {
+    await loadMeta()
+    await Promise.all([loadOverview(), loadTable()])
+  })
 
   // ─── 弹窗 / 抽屉状态 ────────────────────────────────────
   const drawerVisible = ref(false)
@@ -278,9 +383,15 @@
   }
 
   // ─── 事件处理 ────────────────────────────────────────────
-  const handleRowClick = (row: AppAssignmentItem) => {
+  const handleRowClick = async (row: AppAssignmentItem) => {
     currentAssignment.value = row
     drawerVisible.value = true
+    try {
+      const detail = await fetchAppAssignmentDetail({ id: row.id })
+      if (detail) currentAssignment.value = detail
+    } catch {
+      currentAssignment.value = row
+    }
   }
 
   const handleAdd = () => {
@@ -299,12 +410,41 @@
     logVisible.value = true
   }
 
-  const handleFormSuccess = () => {
-    formVisible.value = false
-    ElMessage.success('操作成功')
+  const handleFormSuccess = async (payload: AssignmentFormModel) => {
+    try {
+      if (editData.value) {
+        await updateAppAssignment({ ...payload, id: editData.value.id })
+        ElMessage.success('保存成功')
+      } else {
+        await createAppAssignment(payload)
+        ElMessage.success('分配已创建')
+      }
+      formVisible.value = false
+      editData.value = null
+      await Promise.all([loadOverview(), loadTable()])
+    } catch {
+      /* request 层已提示 */
+    }
   }
 
-  const handleExport = () => ElMessage.success('导出成功')
+  const handleExport = async () => {
+    try {
+      const res = await exportAppAssignmentList({
+        keyword: filterForm.keyword.trim() || undefined,
+        platform: filterForm.platform || undefined,
+        source: filterForm.adPlatform || undefined,
+        optimizer: filterForm.optimizer || undefined,
+        status: filterForm.status || undefined
+      })
+      const token =
+        res && typeof res === 'object' && 'fileToken' in res
+          ? (res as { fileToken: string }).fileToken
+          : ''
+      ElMessage.success(token ? `导出任务已提交：${token}` : '导出任务已提交')
+    } catch {
+      /* request 层已提示 */
+    }
+  }
 </script>
 
 <style lang="scss" scoped>

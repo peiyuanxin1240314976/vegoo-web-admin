@@ -11,12 +11,27 @@
     }
   },
   "sampleRequest": { "enabled": true, "webhook": "", "mentionAll": false },
-  "sampleResponse": { "success": true },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": { "success": true }
+  },
   "api": {
     "url": "POST /api/config-management/open-account/feishu-config/save",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "enabled, webhook?, mentionAll?",
-    "responseBody": "success"
+    "requestBody": "{ enabled, webhook?, mentionAll? }",
+    "responseBody": "{ success } | null"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "飞书推送设置弹窗保存 `saveOpenAccountFeishuConfig`。",
+        "prerequisite": "`AccountApiSource.saveOpenAccountFeishuConfig`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

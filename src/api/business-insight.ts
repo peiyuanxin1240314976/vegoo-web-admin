@@ -72,8 +72,6 @@ export {
   fetchIapOverviewCountryDistribution,
   fetchIapOverviewProductTypeDonut,
   fetchIapOverviewPlatformCompare,
-  fetchIapOverviewTable,
-  fetchIapTableOverview,
   fetchIapDetailKpi,
   fetchIapDetailProduct,
   fetchIapDetailUser,

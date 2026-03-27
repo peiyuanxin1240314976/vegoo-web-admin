@@ -149,6 +149,9 @@ alwaysApply: true
 - **开关粒度**：**每个契约接口 / 每个 `fetch*` 对应一项开关**，便于单独切 Mock 或远程。推荐在 config 中用 **TypeScript `enum`（或 const 枚举式对象）列出端点**，再配 **`Record<Endpoint, boolean>`**（或 `'mock' | 'remote'`）集中维护默认值；`src/api` 内按枚举分支走 `request` 或 mock 实现。
 - **环境变量**：**不要**在仓库根目录 `.env` / `.env.development` 等为**单个业务模块**增加 `VITE_*` 类数据源总开关；默认值以模块 `config` 内导出常量为准。若需开发机临时覆盖，在**该小模块** `config` 内自行扩展（如 localStorage），且仍须保持**每接口显式 key**。
 - **禁止**：将按接口开关散落在全局 `store`、无归属 `utils`，或仅在 `.vue` 内写死 `useMock = true` 而无集中、可枚举的配置表。
+- **配置管理（`src/views/config-management`）Mock 分层（不必全员统一）**：
+  - **已对齐子模块**：**国家管理**、**成本系数**、**汇率管理** 采用「`src/api/config-management/` 下对应子文件内按页面 `config/data-source.ts` 的 `is*EndpointMock` 分支 + `mock/*-api-mock.ts`，页面**只**调 `@/api/config-management`」，不在页面内再写一套「本地数据 / 远程」双轨。
+  - **其余子模块**：如订单导入、绩效配置、账户管理等，**不强制**改为上述形态；**允许**继续以页面侧本地 mock、静态或较重的本地数据为主，接真接口时再按需补契约、`fetch*` 与模块内开关。**非硬性统一要求。**
 - **先查公共组件再写模块**：开发新模块或新页面时，**先检查** `src/components/core/` 下是否有可复用的公共组件（表格 `art-table`、表单 `art-form`、图表、卡片、结果页 `ArtResultPage`、搜索栏、上传等），优先使用或基于其扩展，避免重复实现；若需新能力，再考虑在公共组件上扩展或新增组件。
 
 ## 提交规范（Commitlint + cz-git）

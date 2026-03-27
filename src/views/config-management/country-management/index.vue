@@ -19,7 +19,9 @@
           class="header-search"
           clearable
         >
-          <template #prefix><el-icon><Search /></el-icon></template>
+          <template #prefix
+            ><el-icon><Search /></el-icon
+          ></template>
         </el-input>
         <span class="filter-label">地区</span>
         <el-select v-model="filterForm.region" placeholder="全部" class="header-select" clearable>
@@ -34,7 +36,6 @@
 
     <!-- ── 内容区：左右两列大网格 ──────────────────────── -->
     <div class="content-grid">
-
       <!-- ── 左列：KPI行 + 表格 ──────────────────────────── -->
       <div class="left-col">
         <!-- KPI 四卡 -->
@@ -43,7 +44,9 @@
             <div class="kpi-icon-wrap kpi-icon-wrap--teal">🌐</div>
             <div class="kpi-body">
               <div class="kpi-label">已配置国家</div>
-              <div class="kpi-value kpi-value--teal">{{ kpi.total }}<span class="kpi-unit">个</span></div>
+              <div class="kpi-value kpi-value--teal"
+                >{{ kpi.total }}<span class="kpi-unit">个</span></div
+              >
             </div>
             <div class="kpi-accent kpi-accent--teal" />
           </div>
@@ -51,7 +54,9 @@
             <div class="kpi-icon-wrap kpi-icon-wrap--blue">💱</div>
             <div class="kpi-body">
               <div class="kpi-label">支持货币</div>
-              <div class="kpi-value kpi-value--blue">{{ kpi.currencies }}<span class="kpi-unit">种</span></div>
+              <div class="kpi-value kpi-value--blue"
+                >{{ kpi.currencies }}<span class="kpi-unit">种</span></div
+              >
             </div>
             <div class="kpi-accent kpi-accent--blue" />
           </div>
@@ -59,7 +64,9 @@
             <div class="kpi-icon-wrap kpi-icon-wrap--green">📈</div>
             <div class="kpi-body">
               <div class="kpi-label">主要市场</div>
-              <div class="kpi-value kpi-value--green">{{ kpi.mainMarkets }}<span class="kpi-unit">个</span></div>
+              <div class="kpi-value kpi-value--green"
+                >{{ kpi.mainMarkets }}<span class="kpi-unit">个</span></div
+              >
             </div>
             <div class="kpi-accent kpi-accent--green" />
           </div>
@@ -67,7 +74,9 @@
             <div class="kpi-icon-wrap kpi-icon-wrap--amber">💰</div>
             <div class="kpi-body">
               <div class="kpi-label">未配置货币</div>
-              <div class="kpi-value kpi-value--amber">{{ kpi.noCurrency }}<span class="kpi-unit">个</span></div>
+              <div class="kpi-value kpi-value--amber"
+                >{{ kpi.noCurrency }}<span class="kpi-unit">个</span></div
+              >
             </div>
             <div class="kpi-accent kpi-accent--amber" />
           </div>
@@ -94,10 +103,20 @@
             <el-table-column prop="timezone" label="时区" width="110" show-overflow-tooltip />
             <el-table-column prop="phoneCode" label="电话代码" width="100" show-overflow-tooltip />
             <el-table-column prop="code3" label="三位数代码" width="110" show-overflow-tooltip />
-            <el-table-column prop="criteriaId" label="Criteria ID" width="120" show-overflow-tooltip />
+            <el-table-column
+              prop="criteriaId"
+              label="Criteria ID"
+              width="120"
+              show-overflow-tooltip
+            />
             <el-table-column label="是否主要市场" width="120" align="center">
               <template #default="{ row }">
-                <span :class="['market-badge', row.isMainMarket ? 'market-badge--yes' : 'market-badge--no']">
+                <span
+                  :class="[
+                    'market-badge',
+                    row.isMainMarket ? 'market-badge--yes' : 'market-badge--no'
+                  ]"
+                >
                   {{ row.isMainMarket ? '是 主要' : '否' }}
                 </span>
               </template>
@@ -105,8 +124,12 @@
             <el-table-column label="操作" width="150" fixed="right" align="center">
               <template #default="{ row }">
                 <div class="action-btns">
-                  <button class="action-btn action-btn--view" @click.stop="handleView(row)">查看</button>
-                  <button class="action-btn action-btn--edit" @click.stop="handleEdit(row)">编辑</button>
+                  <button class="action-btn action-btn--view" @click.stop="handleView(row)"
+                    >查看</button
+                  >
+                  <button class="action-btn action-btn--edit" @click.stop="handleEdit(row)"
+                    >编辑</button
+                  >
                 </div>
               </template>
             </el-table-column>
@@ -149,7 +172,6 @@
           <div ref="barEl" class="bar-chart" />
         </div>
       </div>
-
     </div>
 
     <!-- ── 子组件 ──────────────────────────────────────── -->
@@ -176,13 +198,8 @@
   import { ElMessage, ElMessageBox } from 'element-plus'
   import * as echarts from 'echarts/core'
   import { PieChart, BarChart } from 'echarts/charts'
-  import {
-    TooltipComponent,
-    LegendComponent,
-    GridComponent
-  } from 'echarts/components'
+  import { TooltipComponent, LegendComponent, GridComponent } from 'echarts/components'
   import { CanvasRenderer } from 'echarts/renderers'
-  import { getAppNow } from '@/utils/app-now'
   import {
     fetchCountryTable,
     createCountry,
@@ -191,14 +208,20 @@
     exportCountryList,
     importCountryList
   } from '@/api/config-management'
-  import { CountryApiSource } from './config/data-source'
   import CountryDetailDrawer from './modules/country-detail-drawer.vue'
   import CountryFormDialog from './modules/country-form-dialog.vue'
   import CountryImportDialog from './modules/country-import-dialog.vue'
-  import { cloneCountryList, regionOptions, currencyOptions } from './mock/data'
+  import { regionOptions, currencyOptions } from './mock/data'
   import type { CountryItem, CountryFormModel } from './types'
 
-  echarts.use([PieChart, BarChart, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer])
+  echarts.use([
+    PieChart,
+    BarChart,
+    TooltipComponent,
+    LegendComponent,
+    GridComponent,
+    CanvasRenderer
+  ])
 
   defineOptions({ name: 'CountryManagement' })
 
@@ -212,16 +235,10 @@
       .join('')
   }
 
-  function formatNow(): string {
-    return getAppNow().toISOString().slice(0, 19).replace('T', ' ')
-  }
-
   // ─── 数据 ──────────────────────────────────────────────
   const countryList = ref<CountryItem[]>([])
   const total = ref(0)
   const loading = ref(false)
-  const mockCountryStore = ref<CountryItem[]>(cloneCountryList())
-
   const filterForm = reactive({ keyword: '', region: '', currency: '' })
   const currentPage = ref(1)
   const pageSize = ref(10)
@@ -230,45 +247,6 @@
   const importVisible = ref(false)
   const currentCountry = ref<CountryItem | null>(null)
   const editData = ref<CountryItem | null>(null)
-
-  const filterCountryList = (
-    sourceList: CountryItem[],
-    params: {
-      keyword: string
-      region: string
-      currency: string
-    }
-  ) => {
-    return sourceList.filter((item) => {
-      const kw = params.keyword.toLowerCase()
-      if (kw) {
-        const match =
-          item.code.toLowerCase().includes(kw) ||
-          item.nameCn.toLowerCase().includes(kw) ||
-          item.nameEn.toLowerCase().includes(kw) ||
-          item.aliases.some((a) => a.toLowerCase().includes(kw))
-        if (!match) return false
-      }
-      if (params.region && item.region !== params.region) return false
-      if (params.currency && item.currency !== params.currency) return false
-      return true
-    })
-  }
-
-  const applyMockTable = (params: {
-    keyword: string
-    region: string
-    currency: string
-    page: number
-    pageSize: number
-  }) => {
-    const filtered = filterCountryList(mockCountryStore.value, params)
-    const start = (params.page - 1) * params.pageSize
-    return {
-      total: filtered.length,
-      list: filtered.slice(start, start + params.pageSize)
-    }
-  }
 
   const loadCountryTable = async () => {
     const params = {
@@ -280,18 +258,17 @@
     }
     loading.value = true
     try {
-      if (!CountryApiSource.countryTable) {
-        const res = await fetchCountryTable(params)
-        const tableData = (
-          res as { data?: { list?: CountryItem[]; total?: number }; list?: CountryItem[]; total?: number }
-        ).data ?? (res as { list?: CountryItem[]; total?: number })
-        countryList.value = Array.isArray(tableData.list) ? tableData.list : []
-        total.value = Number(tableData.total ?? 0)
-      } else {
-        const mockData = applyMockTable(params)
-        countryList.value = mockData.list
-        total.value = mockData.total
+      const res = await fetchCountryTable(params)
+      const r = res as Api.Common.PaginatedResponse<CountryItem> & {
+        data?: { list?: CountryItem[]; total?: number }
+        list?: CountryItem[]
+        total?: number
       }
+      const records = Array.isArray(r.records)
+        ? r.records
+        : (r.data?.list ?? (Array.isArray(r.list) ? r.list : []))
+      countryList.value = records
+      total.value = Number(r.total ?? r.data?.total ?? 0)
       nextTick(() => {
         donutChart?.setOption(buildDonutOption())
         barChart?.setOption(buildBarOption())
@@ -381,9 +358,7 @@
   }
 
   function buildBarOption() {
-    const mainCountries = countryList.value
-      .filter((c) => c.isMainMarket)
-      .slice(0, 6)
+    const mainCountries = countryList.value.filter((c) => c.isMainMarket).slice(0, 6)
     const labels = mainCountries.map((c) => c.code)
     const pcts = mainCountries.map((_, i) => Math.max(5, 40 - i * 6))
     const colors = ['#2dd4bf', '#60a5fa', '#a78bfa', '#f59e0b', '#f472b6', '#94a3b8']
@@ -417,9 +392,18 @@
       series: [
         {
           type: 'bar',
-          data: pcts.map((v, i) => ({ value: v, itemStyle: { color: colors[i], borderRadius: [0, 4, 4, 0] } })),
+          data: pcts.map((v, i) => ({
+            value: v,
+            itemStyle: { color: colors[i], borderRadius: [0, 4, 4, 0] }
+          })),
           barMaxWidth: 14,
-          label: { show: true, position: 'right', color: '#94a3b8', fontSize: 11, formatter: '{c}%' }
+          label: {
+            show: true,
+            position: 'right',
+            color: '#94a3b8',
+            fontSize: 11,
+            formatter: '{c}%'
+          }
         }
       ]
     }
@@ -493,15 +477,11 @@
       return
     }
 
-    if (!CountryApiSource.deleteCountry) {
-      try {
-        await deleteCountry(row.code)
-      } catch {
-        ElMessage.error('删除失败，请稍后重试')
-        return
-      }
-    } else {
-      mockCountryStore.value = mockCountryStore.value.filter((item) => item.code !== row.code)
+    try {
+      await deleteCountry(row.code)
+    } catch {
+      ElMessage.error('删除失败，请稍后重试')
+      return
     }
     if (currentCountry.value?.code === row.code) {
       currentCountry.value = null
@@ -513,51 +493,20 @@
 
   const handleFormSuccess = async (payload: CountryFormModel, isEdit: boolean) => {
     if (isEdit && editData.value?.code) {
-      if (!CountryApiSource.updateCountry) {
-        try {
-          await updateCountry(editData.value.code, payload)
-        } catch {
-          ElMessage.error('保存失败，请稍后重试')
-          return
-        }
-      } else {
-        mockCountryStore.value = mockCountryStore.value.map((item) => {
-          if (item.code !== editData.value!.code) return item
-          return {
-            ...item,
-            ...payload,
-            updatedBy: 'admin',
-            updatedTime: formatNow()
-          }
-        })
+      try {
+        await updateCountry(editData.value.code, payload)
+      } catch {
+        ElMessage.error('保存失败，请稍后重试')
+        return
       }
       await loadCountryTable()
       ElMessage.success('保存成功')
     } else {
-      if (!CountryApiSource.createCountry) {
-        try {
-          await createCountry(payload)
-        } catch {
-          ElMessage.error('创建失败，请稍后重试')
-          return
-        }
-      } else {
-        const exists = mockCountryStore.value.some((item) => item.code === payload.code)
-        const now = formatNow()
-        const nextItem: CountryItem = {
-          ...payload,
-          createdBy: 'admin',
-          createdTime: now,
-          updatedBy: 'admin',
-          updatedTime: now
-        }
-        if (exists) {
-          mockCountryStore.value = mockCountryStore.value.map((item) =>
-            item.code === payload.code ? nextItem : item
-          )
-        } else {
-          mockCountryStore.value.unshift(nextItem)
-        }
+      try {
+        await createCountry(payload)
+      } catch {
+        ElMessage.error('创建失败，请稍后重试')
+        return
       }
       await loadCountryTable()
       ElMessage.success('创建成功')
@@ -572,27 +521,11 @@
   }
 
   const handleImportSuccess = async (items: CountryFormModel[]) => {
-    if (!CountryApiSource.importCountry) {
-      try {
-        await importCountryList({ items })
-      } catch {
-        ElMessage.error('导入失败，请稍后重试')
-        return
-      }
-    } else {
-      const now = formatNow()
-      const storeMap = new Map(mockCountryStore.value.map((item) => [item.code, item]))
-      for (const item of items) {
-        const prev = storeMap.get(item.code)
-        storeMap.set(item.code, {
-          ...item,
-          createdBy: prev?.createdBy ?? 'admin',
-          createdTime: prev?.createdTime ?? now,
-          updatedBy: 'admin',
-          updatedTime: now
-        })
-      }
-      mockCountryStore.value = Array.from(storeMap.values())
+    try {
+      await importCountryList({ items })
+    } catch {
+      ElMessage.error('导入失败，请稍后重试')
+      return
     }
 
     await loadCountryTable()
@@ -601,45 +534,18 @@
   }
 
   const handleExport = async () => {
-    if (!CountryApiSource.exportCountry) {
-      try {
-        await exportCountryList({
-          keyword: filterForm.keyword,
-          region: filterForm.region,
-          currency: filterForm.currency,
-          page: 1,
-          pageSize: 9999
-        })
-      } catch {
-        ElMessage.error('导出失败，请稍后重试')
-        return
-      }
-      ElMessage.success('导出成功')
+    try {
+      await exportCountryList({
+        keyword: filterForm.keyword,
+        region: filterForm.region,
+        currency: filterForm.currency,
+        page: 1,
+        pageSize: 9999
+      })
+    } catch {
+      ElMessage.error('导出失败，请稍后重试')
       return
     }
-
-    const exportList = filterCountryList(mockCountryStore.value, {
-      keyword: filterForm.keyword.trim(),
-      region: filterForm.region,
-      currency: filterForm.currency
-    })
-    const header = 'code,nameCn,nameEn,timezone,phoneCode,code3,criteriaId,currency,currencySymbol,region,isMainMarket'
-    const lines = [header]
-    for (const r of exportList) {
-      lines.push(
-        [r.code, r.nameCn, r.nameEn, r.timezone, r.phoneCode, r.code3, r.criteriaId, r.currency, r.currencySymbol, r.region, r.isMainMarket]
-          .map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`)
-          .join(',')
-      )
-    }
-    const bom = '\uFEFF'
-    const blob = new Blob([bom + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `countries_${Date.now()}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
     ElMessage.success('导出成功')
   }
 </script>
@@ -683,9 +589,18 @@
     font-size: 14px;
   }
 
-  .bc-parent { color: var(--text-secondary); }
-  .bc-sep    { color: var(--text-muted); }
-  .bc-current { font-weight: 600; color: var(--text-primary); }
+  .bc-parent {
+    color: var(--text-secondary);
+  }
+
+  .bc-sep {
+    color: var(--text-muted);
+  }
+
+  .bc-current {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 
   .header-actions {
     display: flex;
@@ -824,10 +739,18 @@
     font-size: 20px;
     border-radius: 10px;
 
-    &--teal  { background: rgb(45 212 191 / 15%); }
-    &--blue  { background: rgb(96 165 250 / 15%); }
-    &--green { background: rgb(34 197 94 / 15%); }
-    &--amber { background: rgb(245 158 11 / 15%); }
+    &--teal {
+      background: rgb(45 212 191 / 15%);
+    }
+    &--blue {
+      background: rgb(96 165 250 / 15%);
+    }
+    &--green {
+      background: rgb(34 197 94 / 15%);
+    }
+    &--amber {
+      background: rgb(245 158 11 / 15%);
+    }
   }
 
   .kpi-body {
@@ -846,10 +769,18 @@
     font-weight: 700;
     line-height: 1;
 
-    &--teal  { color: #2dd4bf; }
-    &--blue  { color: #60a5fa; }
-    &--green { color: #22c55e; }
-    &--amber { color: #f59e0b; }
+    &--teal {
+      color: #2dd4bf;
+    }
+    &--blue {
+      color: #60a5fa;
+    }
+    &--green {
+      color: #22c55e;
+    }
+    &--amber {
+      color: #f59e0b;
+    }
   }
 
   .kpi-unit {
@@ -868,10 +799,18 @@
     height: 3px;
     border-radius: 0 0 10px 10px;
 
-    &--teal  { background: linear-gradient(90deg, #2dd4bf, transparent); }
-    &--blue  { background: linear-gradient(90deg, #60a5fa, transparent); }
-    &--green { background: linear-gradient(90deg, #22c55e, transparent); }
-    &--amber { background: linear-gradient(90deg, #f59e0b, transparent); }
+    &--teal {
+      background: linear-gradient(90deg, #2dd4bf, transparent);
+    }
+    &--blue {
+      background: linear-gradient(90deg, #60a5fa, transparent);
+    }
+    &--green {
+      background: linear-gradient(90deg, #22c55e, transparent);
+    }
+    &--amber {
+      background: linear-gradient(90deg, #f59e0b, transparent);
+    }
   }
 
   // ─── 图表卡片 ───────────────────────────────────────────

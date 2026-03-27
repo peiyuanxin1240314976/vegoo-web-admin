@@ -16,6 +16,17 @@
     "method": "POST",
     "priority": "P1",
     "requestBody": "version",
-    "responseBody": "{ activeVersion }"
+    "responseBody": "PerfConfigItem | { activeVersion }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "详情抽屉中将某历史版本设为激活 `activatePerfConfig`（index.vue 行内操作）。",
+        "prerequisite": "`PerfConfigApiSource.perfActivate` 为 false 时调用 `activatePerfConfig`。"
+      }
+    ],
+    "defaultSelection": "version 为目标激活版本号。",
+    "dedupe": "无"
   }
 }

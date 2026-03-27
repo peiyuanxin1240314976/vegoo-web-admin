@@ -1,13 +1,41 @@
 {
-  "url": "/api/config-management/open-account/delete",
-  "method": "POST",
-  "description": "删除开户记录",
-  "request": {
+  "_comment": "账户管理 · 开户管理 — 删除开户记录。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "开户记录 ID。" }
+    },
+    "response": {
+      "data": {
+        "type": "null",
+        "required": false,
+        "description": "成功时 data 可为 null，以 HTTP 200 为准。"
+      }
+    }
+  },
+  "sampleRequest": {
     "id": "OA-007"
   },
-  "response": {
-    "code": 0,
+  "sampleResponse": {
+    "code": 200,
     "message": "success",
     "data": null
+  },
+  "api": {
+    "url": "POST /api/config-management/open-account/delete",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ id }",
+    "responseBody": "null"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "删除确认对话框确认后调用，成功后刷新开户列表。",
+        "prerequisite": "二次确认。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

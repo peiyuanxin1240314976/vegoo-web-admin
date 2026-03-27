@@ -23,8 +23,18 @@
   "api": {
     "url": "POST /api/config-management/account/disable",
     "method": "POST",
-    "priority": "P1",
+    "priority": "P0",
     "requestBody": "{ id }",
     "responseBody": "{ id, status }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "停用确认框确认后 `disableAccount`；前端可本地更新行状态。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

@@ -19,11 +19,30 @@
     "status": "",
     "app": ""
   },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "downloadUrl": "https://example.com/exports/account_20260327.csv",
+      "taskId": "export_account_20260327_001",
+      "_note": "若网关直接返回 blob，可无 JSON body；此处为异步导出任务示例。"
+    }
+  },
   "api": {
     "url": "POST /api/config-management/account/export",
     "method": "POST",
-    "priority": "P2",
+    "priority": "P1",
     "requestBody": "Partial<AccountTableQuery>",
-    "responseBody": "blob (CSV)"
+    "responseBody": "blob | { downloadUrl?, taskId? }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "页头导出按钮，`exportAccountList`；`AccountApiSource.exportAccount === true` 时可仅提示不请求。"
+      }
+    ],
+    "defaultSelection": "导出条件与当前列表筛选一致（若实现）。",
+    "dedupe": "无"
   }
 }

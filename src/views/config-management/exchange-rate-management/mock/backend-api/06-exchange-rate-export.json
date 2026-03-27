@@ -17,5 +17,16 @@
     "priority": "P1",
     "requestBody": "pair?, date?",
     "responseBody": "{ fileToken }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "导出按钮 `exportExchangeRates`。",
+        "prerequisite": "`ExchangeRateApiSource.exportRates`。"
+      }
+    ],
+    "defaultSelection": "与当前筛选一致。",
+    "dedupe": "无"
   }
 }

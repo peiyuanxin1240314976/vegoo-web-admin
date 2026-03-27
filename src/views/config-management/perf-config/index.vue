@@ -51,7 +51,9 @@
           clearable
           @input="currentPage = 1"
         >
-          <template #prefix><ElIcon><Search /></ElIcon></template>
+          <template #prefix
+            ><ElIcon><Search /></ElIcon
+          ></template>
         </el-input>
         <el-select v-model="filterPlatform" class="filter-select" @change="currentPage = 1">
           <el-option value="" label="平台：全部" />
@@ -104,13 +106,21 @@
         <el-table-column label="达标要求" min-width="110" align="right">
           <template #default="{ row }">
             <span class="rate-val rate-val--target">
-              {{ row.activeVersion.evalMethod === 'ROI' ? row.activeVersion.targetRate + '%' : '$' + row.activeVersion.targetRate }}
+              {{
+                row.activeVersion.evalMethod === 'ROI'
+                  ? row.activeVersion.targetRate + '%'
+                  : '$' + row.activeVersion.targetRate
+              }}
             </span>
           </template>
         </el-table-column>
         <el-table-column label="最低要求" min-width="110" align="right">
           <template #default="{ row }">
-            {{ row.activeVersion.evalMethod === 'ROI' ? row.activeVersion.minRate + '%' : '$' + row.activeVersion.minRate }}
+            {{
+              row.activeVersion.evalMethod === 'ROI'
+                ? row.activeVersion.minRate + '%'
+                : '$' + row.activeVersion.minRate
+            }}
           </template>
         </el-table-column>
         <el-table-column label="难度系数" min-width="100" align="center">
@@ -119,7 +129,10 @@
         <el-table-column label="运行状态" min-width="100" align="center">
           <template #default="{ row }">
             <span class="run-badge" :style="{ color: RUN_STATUS_CONFIG[row.runStatus].color }">
-              <span class="run-dot" :style="{ background: RUN_STATUS_CONFIG[row.runStatus].color }" />
+              <span
+                class="run-dot"
+                :style="{ background: RUN_STATUS_CONFIG[row.runStatus].color }"
+              />
               {{ RUN_STATUS_CONFIG[row.runStatus].label }}
             </span>
           </template>
@@ -140,7 +153,9 @@
         <el-table-column label="操作" min-width="120" align="center" fixed="right">
           <template #default="{ row }">
             <button class="action-btn" @click.stop="handleEdit(row)">编辑</button>
-            <button class="action-btn action-btn--detail" @click.stop="handleRowClick(row)">详情</button>
+            <button class="action-btn action-btn--detail" @click.stop="handleRowClick(row)"
+              >详情</button
+            >
           </template>
         </el-table-column>
       </el-table>
@@ -180,14 +195,20 @@
             <div class="drawer-app-info">
               <span class="drawer-app-name">{{ drawerItem.appName }}</span>
               <div class="drawer-app-tags">
-                <span class="drawer-tag">{{ drawerItem.appPlatform === 'android' ? '安卓' : 'iOS' }}</span>
+                <span class="drawer-tag">{{
+                  drawerItem.appPlatform === 'android' ? '安卓' : 'iOS'
+                }}</span>
                 <span class="drawer-tag">{{ drawerItem.adPlatform }}</span>
               </div>
             </div>
           </div>
           <div class="drawer-header-icons">
-            <ElIcon class="drawer-icon-btn" title="编辑" @click="handleEdit(drawerItem)"><Edit /></ElIcon>
-            <ElIcon class="drawer-icon-btn" title="关闭" @click="drawerVisible = false"><Close /></ElIcon>
+            <ElIcon class="drawer-icon-btn" title="编辑" @click="handleEdit(drawerItem)"
+              ><Edit
+            /></ElIcon>
+            <ElIcon class="drawer-icon-btn" title="关闭" @click="drawerVisible = false"
+              ><Close
+            /></ElIcon>
           </div>
         </div>
 
@@ -215,7 +236,9 @@
               </div>
               <div class="drawer-item">
                 <span class="di-label">平台</span>
-                <span class="di-value">{{ drawerItem.appPlatform === 'android' ? '安卓' : 'iOS' }}</span>
+                <span class="di-value">{{
+                  drawerItem.appPlatform === 'android' ? '安卓' : 'iOS'
+                }}</span>
               </div>
               <div class="drawer-item">
                 <span class="di-label">广告平台</span>
@@ -223,7 +246,10 @@
               </div>
               <div class="drawer-item">
                 <span class="di-label">运行状态</span>
-                <span class="di-value" :style="{ color: RUN_STATUS_CONFIG[drawerItem.runStatus].color }">
+                <span
+                  class="di-value"
+                  :style="{ color: RUN_STATUS_CONFIG[drawerItem.runStatus].color }"
+                >
                   {{ RUN_STATUS_CONFIG[drawerItem.runStatus].label }}
                 </span>
               </div>
@@ -253,23 +279,31 @@
               <div class="drawer-item">
                 <span class="di-label">达标要求</span>
                 <span class="di-value di-value--accent">
-                  {{ drawerItem.activeVersion.evalMethod === 'ROI'
-                    ? drawerItem.activeVersion.targetRate + '%'
-                    : '$' + drawerItem.activeVersion.targetRate }}
+                  {{
+                    drawerItem.activeVersion.evalMethod === 'ROI'
+                      ? drawerItem.activeVersion.targetRate + '%'
+                      : '$' + drawerItem.activeVersion.targetRate
+                  }}
                 </span>
               </div>
               <div class="drawer-item">
                 <span class="di-label">最低要求</span>
                 <span class="di-value">
-                  {{ drawerItem.activeVersion.evalMethod === 'ROI'
-                    ? drawerItem.activeVersion.minRate + '%'
-                    : '$' + drawerItem.activeVersion.minRate }}
+                  {{
+                    drawerItem.activeVersion.evalMethod === 'ROI'
+                      ? drawerItem.activeVersion.minRate + '%'
+                      : '$' + drawerItem.activeVersion.minRate
+                  }}
                 </span>
               </div>
               <div class="drawer-item">
                 <span class="di-label">最低利润</span>
                 <span class="di-value">
-                  {{ drawerItem.activeVersion.minProfit != null ? '$' + drawerItem.activeVersion.minProfit.toLocaleString() : '-' }}
+                  {{
+                    drawerItem.activeVersion.minProfit != null
+                      ? '$' + drawerItem.activeVersion.minProfit.toLocaleString()
+                      : '-'
+                  }}
                 </span>
               </div>
               <div class="drawer-item">
@@ -288,18 +322,26 @@
                 :key="ver.version"
                 :class="['version-item', ver.isActive && 'version-item--active']"
               >
-                <div class="ver-dot" :style="{ background: ver.isActive ? '#2dd4bf' : '#334155' }" />
+                <div
+                  class="ver-dot"
+                  :style="{ background: ver.isActive ? '#2dd4bf' : '#334155' }"
+                />
                 <div class="ver-body">
                   <div class="ver-head">
                     <span class="ver-name">v{{ ver.version }}</span>
                     <span v-if="ver.isActive" class="ver-active-tag">当前激活</span>
                   </div>
                   <div class="ver-meta">
-                    {{ STATUS_CONFIG[ver.status].label }} | {{ ver.publishedAt }} | {{ ver.publishedBy }}
+                    {{ STATUS_CONFIG[ver.status].label }} | {{ ver.publishedAt }} |
+                    {{ ver.publishedBy }}
                   </div>
                   <div class="ver-stats">
-                    达标{{ ver.evalMethod === 'ROI' ? ver.targetRate + '%' : '$' + ver.targetRate }}
-                    &nbsp;最低{{ ver.evalMethod === 'ROI' ? ver.minRate + '%' : '$' + ver.minRate }}
+                    达标{{
+                      ver.evalMethod === 'ROI' ? ver.targetRate + '%' : '$' + ver.targetRate
+                    }}
+                    &nbsp;最低{{
+                      ver.evalMethod === 'ROI' ? ver.minRate + '%' : '$' + ver.minRate
+                    }}
                     &nbsp;系数{{ ver.difficultyFactor }}
                   </div>
                   <div class="ver-actions">
@@ -308,12 +350,14 @@
                       v-if="drawerItem.versions.length > 1"
                       class="ver-btn"
                       @click="openCompare(drawerItem!, ver)"
-                    >对比</button>
+                      >对比</button
+                    >
                     <button
                       v-if="!ver.isActive && ver.status !== 'archived'"
                       class="ver-btn ver-btn--activate"
                       @click="handleActivate(ver)"
-                    >设为激活</button>
+                      >设为激活</button
+                    >
                   </div>
                 </div>
               </div>
@@ -334,10 +378,7 @@
     </el-drawer>
 
     <!-- ── 弹窗 ─────────────────────────────────────────── -->
-    <PerfCreateDialog
-      v-model:visible="createVisible"
-      @success="handleCreateSuccess"
-    />
+    <PerfCreateDialog v-model:visible="createVisible" @success="handleCreateSuccess" />
 
     <VersionCompareDialog
       v-if="compareVisible"
@@ -378,20 +419,26 @@
 
   // ─── KPI ────────────────────────────────────────────────
   const kpi = computed(() => ({
-    total:     list.value.length,
-    published: list.value.filter(r => r.activeVersion.status === 'published').length,
-    draft:     list.value.filter(r => r.activeVersion.status === 'draft').length,
-    archived:  list.value.filter(r => r.activeVersion.status === 'archived').length
+    total: list.value.length,
+    published: list.value.filter((r) => r.activeVersion.status === 'published').length,
+    draft: list.value.filter((r) => r.activeVersion.status === 'draft').length,
+    archived: list.value.filter((r) => r.activeVersion.status === 'archived').length
   }))
 
   // ─── 筛选 ───────────────────────────────────────────────
-  const filteredList = computed(() => list.value.filter(row => {
-    if (filterKeyword.value && !row.appName.toLowerCase().includes(filterKeyword.value.toLowerCase())) return false
-    if (filterPlatform.value && row.appPlatform !== filterPlatform.value) return false
-    if (filterAdPlatform.value && row.adPlatform !== filterAdPlatform.value) return false
-    if (filterStatus.value && row.activeVersion.status !== filterStatus.value) return false
-    return true
-  }))
+  const filteredList = computed(() =>
+    list.value.filter((row) => {
+      if (
+        filterKeyword.value &&
+        !row.appName.toLowerCase().includes(filterKeyword.value.toLowerCase())
+      )
+        return false
+      if (filterPlatform.value && row.appPlatform !== filterPlatform.value) return false
+      if (filterAdPlatform.value && row.adPlatform !== filterAdPlatform.value) return false
+      if (filterStatus.value && row.activeVersion.status !== filterStatus.value) return false
+      return true
+    })
+  )
 
   const pagedList = computed(() => {
     const s = (currentPage.value - 1) * pageSize.value
@@ -402,7 +449,9 @@
   const drawerItem = ref<PerfConfigItem | null>(null)
   const drawerVisible = ref(false)
 
-  watch(drawerVisible, (v) => { if (!v) drawerItem.value = null })
+  watch(drawerVisible, (v) => {
+    if (!v) drawerItem.value = null
+  })
 
   const getRowClass = ({ row }: { row: PerfConfigItem }) =>
     drawerItem.value?.id === row.id ? 'row-selected' : ''
@@ -458,10 +507,12 @@
 
   const handleActivate = (ver: PerfVersion) => {
     if (!drawerItem.value) return
-    if (!PerfConfigApiSource.perfPublish) {
+    if (!PerfConfigApiSource.perfActivate) {
       activatePerfConfig(drawerItem.value.id, ver.version).catch(() => undefined)
     }
-    drawerItem.value.versions.forEach(v => { v.isActive = false })
+    drawerItem.value.versions.forEach((v) => {
+      v.isActive = false
+    })
     ver.isActive = true
     drawerItem.value.activeVersion = ver
     ElMessage.success(`已将 v${ver.version} 设为激活版本`)
@@ -532,26 +583,45 @@
   // ── 顶栏 ────────────────────────────────────────────────
   .page-topbar {
     display: flex;
+    flex-shrink: 0;
     align-items: flex-end;
     justify-content: space-between;
     padding: 20px 0 16px;
-    flex-shrink: 0;
   }
 
-  .breadcrumb { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; font-size: 13px; }
-  .bc-parent  { color: var(--text-secondary); }
-  .bc-sep     { color: var(--text-muted); }
-  .bc-current { color: var(--text-secondary); }
+  .breadcrumb {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  .bc-parent {
+    color: var(--text-secondary);
+  }
+
+  .bc-sep {
+    color: var(--text-muted);
+  }
+
+  .bc-current {
+    color: var(--text-secondary);
+  }
 
   .page-title {
     margin: 0;
     font-size: 22px;
     font-weight: 700;
-    color: var(--text-primary);
     line-height: 1;
+    color: var(--text-primary);
   }
 
-  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+  .topbar-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
 
   .btn-create {
     display: inline-flex !important;
@@ -564,7 +634,10 @@
     background: var(--accent) !important;
     border: none !important;
     border-radius: 8px !important;
-    &:hover { filter: brightness(1.1); }
+
+    &:hover {
+      filter: brightness(1.1);
+    }
   }
 
   .btn-export {
@@ -575,44 +648,79 @@
     background: var(--bg-card) !important;
     border: 1px solid var(--border) !important;
     border-radius: 8px !important;
-    &:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+
+    &:hover {
+      color: var(--accent) !important;
+      border-color: var(--accent) !important;
+    }
   }
 
   // ── KPI ─────────────────────────────────────────────────
   .kpi-row {
     display: grid;
+    flex-shrink: 0;
     grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-bottom: 16px;
-    flex-shrink: 0;
   }
 
   .kpi-card {
     padding: 16px 20px;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 10px;
     border-left: 4px solid;
-    &--blue  { border-left-color: #3b82f6; }
-    &--teal  { border-left-color: #2dd4bf; }
-    &--amber { border-left-color: #f59e0b; }
-    &--gray  { border-left-color: #64748b; }
+    border-radius: 10px;
+
+    &--blue {
+      border-left-color: #3b82f6;
+    }
+
+    &--teal {
+      border-left-color: #2dd4bf;
+    }
+
+    &--amber {
+      border-left-color: #f59e0b;
+    }
+
+    &--gray {
+      border-left-color: #64748b;
+    }
   }
 
-  .kpi-label { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+  .kpi-label {
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
   .kpi-value {
-    font-size: 32px; font-weight: 700; line-height: 1;
-    &--blue  { color: #60a5fa; }
-    &--teal  { color: #2dd4bf; }
-    &--amber { color: #f59e0b; }
-    &--gray  { color: #64748b; }
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+
+    &--blue {
+      color: #60a5fa;
+    }
+
+    &--teal {
+      color: #2dd4bf;
+    }
+
+    &--amber {
+      color: #f59e0b;
+    }
+
+    &--gray {
+      color: #64748b;
+    }
   }
 
   // ── 表格面板 ────────────────────────────────────────────
   .table-panel {
     display: flex;
-    flex-direction: column;
     flex: 1;
+    flex-direction: column;
     min-height: 0;
     overflow: hidden;
     background: var(--bg-card);
@@ -622,42 +730,60 @@
 
   .filter-bar {
     display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
     padding: 12px 16px;
     border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    flex-wrap: wrap;
   }
 
   .filter-search {
     width: 200px;
+
     :deep(.el-input__wrapper) {
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid var(--border) !important;
       border-radius: 7px;
       box-shadow: none !important;
-      &:focus-within { border-color: var(--accent) !important; }
+
+      &:focus-within {
+        border-color: var(--accent) !important;
+      }
     }
-    :deep(.el-input__inner) { color: var(--text-primary); font-size: 13px; }
-    :deep(.el-input__prefix) { color: var(--text-muted); }
+
+    :deep(.el-input__inner) {
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    :deep(.el-input__prefix) {
+      color: var(--text-muted);
+    }
   }
 
   .filter-select {
     width: 140px;
+
     :deep(.el-select__wrapper) {
       color: var(--text-primary);
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid var(--border) !important;
       border-radius: 7px;
       box-shadow: none !important;
-      &:hover { border-color: var(--accent) !important; }
+
+      &:hover {
+        border-color: var(--accent) !important;
+      }
     }
   }
 
   .pc-table {
     flex: 1;
     overflow: auto;
+    cursor: pointer;
+    background: transparent !important;
+
     --el-table-bg-color: transparent;
     --el-table-header-bg-color: #0d1626;
     --el-table-row-hover-bg-color: #162035;
@@ -665,56 +791,89 @@
     --el-table-text-color: var(--text-primary);
     --el-table-header-text-color: var(--text-secondary);
     --el-table-current-row-bg-color: rgb(45 212 191 / 8%);
-    background: transparent !important;
-    cursor: pointer;
 
     :deep(th.el-table__cell) {
       padding: 11px 14px;
       font-size: 12px;
+      white-space: nowrap;
       background: #0d1626 !important;
       border-bottom: 1px solid var(--border) !important;
-      white-space: nowrap;
     }
+
     :deep(td.el-table__cell) {
       padding: 12px 14px;
       font-size: 13px;
       border-bottom: 1px solid var(--border) !important;
     }
-    :deep(tr) { background: transparent !important; }
-    :deep(.el-table__inner-wrapper::before) { display: none; }
-    :deep(.row-selected td) { background: rgb(45 212 191 / 8%) !important; border-left: 2px solid var(--accent); }
+
+    :deep(tr) {
+      background: transparent !important;
+    }
+
+    :deep(.el-table__inner-wrapper::before) {
+      display: none;
+    }
+
+    :deep(.row-selected td) {
+      background: rgb(45 212 191 / 8%) !important;
+      border-left: 2px solid var(--accent);
+    }
   }
 
-  .app-cell { display: flex; gap: 8px; align-items: center; }
+  .app-cell {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
   .app-icon {
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 30px; height: 30px;
-    font-size: 13px; font-weight: 700;
-    color: #fff; border-radius: 7px;
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 7px;
   }
-  .app-name { font-size: 13px; color: var(--text-primary); white-space: nowrap; }
+
+  .app-name {
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
 
   .platform-tag {
     padding: 3px 8px;
     font-size: 12px;
     color: var(--text-secondary);
+    white-space: nowrap;
     background: rgb(255 255 255 / 5%);
     border-radius: 4px;
-    white-space: nowrap;
   }
 
   .run-badge {
-    display: inline-flex; gap: 5px; align-items: center;
-    font-size: 12px; font-weight: 500; white-space: nowrap;
-  }
-  .run-dot {
-    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
   }
 
-  .rate-val--target { color: var(--accent); font-weight: 600; }
+  .run-dot {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .rate-val--target {
+    font-weight: 600;
+    color: var(--accent);
+  }
 
   .version-badge {
     display: inline-flex;
@@ -722,60 +881,98 @@
     padding: 3px 10px;
     font-size: 12px;
     font-weight: 500;
-    border-radius: 4px;
     white-space: nowrap;
+    border-radius: 4px;
   }
 
   .action-btn {
     padding: 3px 10px;
     font-size: 12px;
     color: #60a5fa;
+    white-space: nowrap;
     cursor: pointer;
     background: transparent;
     border: 1px solid rgb(96 165 250 / 30%);
     border-radius: 4px;
     transition: all 0.15s;
-    white-space: nowrap;
-    & + & { margin-left: 5px; }
-    &:hover { color: #fff; background: #3b82f6; border-color: #3b82f6; }
+
+    & + & {
+      margin-left: 5px;
+    }
+
+    &:hover {
+      color: #fff;
+      background: #3b82f6;
+      border-color: #3b82f6;
+    }
+
     &--detail {
       color: var(--accent);
       border-color: rgb(45 212 191 / 30%);
-      &:hover { color: #fff; background: var(--accent); border-color: var(--accent); }
+
+      &:hover {
+        color: #fff;
+        background: var(--accent);
+        border-color: var(--accent);
+      }
     }
   }
 
   .pagination-bar {
     display: flex;
+    flex-shrink: 0;
     gap: 10px;
     align-items: center;
     justify-content: space-between;
     padding: 10px 16px;
     border-top: 1px solid var(--border);
-    flex-shrink: 0;
   }
 
-  .total-text { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+  .total-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
 
   .pc-pagination {
     :deep(.el-pager li) {
-      min-width: 28px; height: 28px; font-size: 13px; line-height: 28px;
-      color: var(--text-secondary); background: transparent; border-radius: 5px;
-      &:hover { color: var(--accent); }
-      &.is-active { color: #0b1120; background: var(--accent); font-weight: 700; }
+      min-width: 28px;
+      height: 28px;
+      font-size: 13px;
+      line-height: 28px;
+      color: var(--text-secondary);
+      background: transparent;
+      border-radius: 5px;
+
+      &:hover {
+        color: var(--accent);
+      }
+
+      &.is-active {
+        font-weight: 700;
+        color: #0b1120;
+        background: var(--accent);
+      }
     }
-    :deep(.btn-prev), :deep(.btn-next) {
+
+    :deep(.btn-prev),
+    :deep(.btn-next) {
       color: var(--text-secondary) !important;
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid var(--border) !important;
       border-radius: 5px;
-      &:hover { color: var(--accent) !important; border-color: var(--accent) !important; }
+
+      &:hover {
+        color: var(--accent) !important;
+        border-color: var(--accent) !important;
+      }
     }
+
     :deep(.el-select .el-select__wrapper) {
+      color: var(--text-secondary) !important;
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid var(--border) !important;
       box-shadow: none !important;
-      color: var(--text-secondary) !important;
     }
   }
 
@@ -786,11 +983,12 @@
       border-left: 1px solid rgb(255 255 255 / 7%);
       box-shadow: -8px 0 32px rgb(0 0 0 / 40%);
     }
+
     :deep(.el-drawer__body) {
-      padding: 0;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
+      padding: 0;
+      overflow: hidden;
     }
   }
 
@@ -800,56 +998,94 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    color: var(--text-primary);
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color: var(--text-primary);
   }
 
   .drawer-header {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: space-between;
     padding: 16px 18px;
     border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
   }
 
-  .drawer-app { display: flex; gap: 10px; align-items: center; }
-  .drawer-app-icon {
-    width: 42px; height: 42px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 17px; font-weight: 700; color: #fff;
-    border-radius: 11px; flex-shrink: 0;
+  .drawer-app {
+    display: flex;
+    gap: 10px;
+    align-items: center;
   }
-  .drawer-app-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
-  .drawer-app-tags { display: flex; gap: 5px; margin-top: 4px; }
+
+  .drawer-app-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 11px;
+  }
+
+  .drawer-app-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .drawer-app-tags {
+    display: flex;
+    gap: 5px;
+    margin-top: 4px;
+  }
+
   .drawer-tag {
-    padding: 2px 8px; font-size: 11px;
+    padding: 2px 8px;
+    font-size: 11px;
     color: var(--text-secondary);
     background: rgb(255 255 255 / 6%);
     border-radius: 3px;
   }
 
-  .drawer-header-icons { display: flex; gap: 10px; }
+  .drawer-header-icons {
+    display: flex;
+    gap: 10px;
+  }
+
   .drawer-icon-btn {
-    font-size: 17px; color: var(--text-muted); cursor: pointer;
+    font-size: 17px;
+    color: var(--text-muted);
+    cursor: pointer;
     transition: color 0.15s;
-    &:hover { color: var(--text-primary); }
+
+    &:hover {
+      color: var(--text-primary);
+    }
   }
 
   .drawer-active-bar {
     display: flex;
-    align-items: center;
+    flex-shrink: 0;
     gap: 6px;
+    align-items: center;
     padding: 10px 18px;
+    font-size: 12px;
     background: rgb(45 212 191 / 5%);
     border-bottom: 1px solid var(--border);
-    font-size: 12px;
-    flex-shrink: 0;
   }
-  .active-label { color: var(--text-muted); }
+  .active-label {
+    color: var(--text-muted);
+  }
+
   .active-version {
-    display: flex; gap: 5px; align-items: center;
-    font-weight: 600; color: var(--text-primary);
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
   .drawer-body {
@@ -857,23 +1093,36 @@
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #1e293b transparent;
-    &::-webkit-scrollbar { width: 5px; }
-    &::-webkit-scrollbar-track { background: transparent; }
-    &::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+
+    &::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
   }
 
   .drawer-section {
     padding: 14px 18px;
     border-bottom: 1px solid var(--border);
-    &:last-child { border-bottom: none; }
+    &:last-child {
+      border-bottom: none;
+    }
   }
 
   .drawer-section-title {
-    font-size: 11px; font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 11px;
+    font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    margin-bottom: 12px;
   }
 
   .drawer-grid {
@@ -882,72 +1131,156 @@
     gap: 10px 16px;
   }
 
-  .drawer-item { display: flex; flex-direction: column; gap: 3px; }
-  .di-label { font-size: 11px; color: var(--text-muted); }
+  .drawer-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .di-label {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
   .di-value {
-    font-size: 13px; color: var(--text-primary);
-    &--accent { color: var(--accent); font-weight: 600; }
+    font-size: 13px;
+    color: var(--text-primary);
+
+    &--accent {
+      font-weight: 600;
+      color: var(--accent);
+    }
   }
 
   // 版本历史
-  .version-list { display: flex; flex-direction: column; }
+  .version-list {
+    display: flex;
+    flex-direction: column;
+  }
 
   .version-item {
     display: flex;
     gap: 10px;
     padding: 12px 0;
     border-bottom: 1px solid var(--border);
-    &:last-child { border-bottom: none; }
-    &--active .ver-name { color: var(--accent); }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &--active .ver-name {
+      color: var(--accent);
+    }
   }
 
   .ver-dot {
-    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
     margin-top: 4px;
+    border-radius: 50%;
   }
 
-  .ver-head  { display: flex; gap: 6px; align-items: center; margin-bottom: 3px; }
-  .ver-name  { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-  .ver-active-tag {
-    padding: 1px 6px; font-size: 10px;
-    color: var(--accent); background: rgb(45 212 191 / 12%); border-radius: 3px;
+  .ver-head {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 3px;
   }
-  .ver-meta  { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
-  .ver-stats { font-size: 11px; color: var(--text-secondary); margin-bottom: 7px; }
-  .ver-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+
+  .ver-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .ver-active-tag {
+    padding: 1px 6px;
+    font-size: 10px;
+    color: var(--accent);
+    background: rgb(45 212 191 / 12%);
+    border-radius: 3px;
+  }
+
+  .ver-meta {
+    margin-bottom: 2px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .ver-stats {
+    margin-bottom: 7px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .ver-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
   .ver-btn {
-    padding: 3px 9px; font-size: 11px;
-    color: var(--accent); background: transparent;
-    border: 1px solid rgb(45 212 191 / 30%); border-radius: 3px; cursor: pointer;
-    &:hover { background: rgb(45 212 191 / 10%); }
+    padding: 3px 9px;
+    font-size: 11px;
+    color: var(--accent);
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid rgb(45 212 191 / 30%);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgb(45 212 191 / 10%);
+    }
+
     &--activate {
-      color: #f59e0b; border-color: rgb(245 158 11 / 30%);
-      &:hover { background: rgb(245 158 11 / 10%); }
+      color: #f59e0b;
+      border-color: rgb(245 158 11 / 30%);
+
+      &:hover {
+        background: rgb(245 158 11 / 10%);
+      }
     }
   }
 
   .drawer-footer {
-    display: flex; gap: 8px; padding: 14px 18px;
-    border-top: 1px solid var(--border);
+    display: flex;
     flex-shrink: 0;
+    gap: 8px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
   }
 
   .btn-new-ver {
+    display: inline-flex !important;
     flex: 1;
-    display: inline-flex !important; gap: 5px !important; align-items: center !important;
+    gap: 5px !important;
+    align-items: center !important;
     justify-content: center !important;
-    color: #0b1120 !important; font-weight: 600 !important;
-    background: var(--accent) !important; border: none !important;
+    font-weight: 600 !important;
+    color: #0b1120 !important;
+    background: var(--accent) !important;
+    border: none !important;
     border-radius: 7px !important;
-    &:hover { filter: brightness(1.1); }
+
+    &:hover {
+      filter: brightness(1.1);
+    }
   }
 
   .btn-export-drawer {
-    display: inline-flex !important; gap: 5px !important; align-items: center !important;
+    display: inline-flex !important;
+    gap: 5px !important;
+    align-items: center !important;
     color: var(--text-secondary) !important;
     background: var(--bg-card) !important;
-    border: 1px solid var(--border) !important; border-radius: 7px !important;
-    &:hover { color: var(--accent) !important; border-color: var(--accent) !important; }
+    border: 1px solid var(--border) !important;
+    border-radius: 7px !important;
+
+    &:hover {
+      color: var(--accent) !important;
+      border-color: var(--accent) !important;
+    }
   }
 
   // 下拉全局覆盖
@@ -955,9 +1288,19 @@
     background: #1a2540 !important;
     border: 1px solid var(--border) !important;
   }
+
   :deep(.el-select-dropdown__item) {
     color: var(--text-secondary) !important;
-    &:hover, &.is-hovering { color: var(--accent) !important; background: rgb(45 212 191 / 8%) !important; }
-    &.is-selected { color: var(--accent) !important; background: rgb(45 212 191 / 12%) !important; }
+
+    &:hover,
+    &.is-hovering {
+      color: var(--accent) !important;
+      background: rgb(45 212 191 / 8%) !important;
+    }
+
+    &.is-selected {
+      color: var(--accent) !important;
+      background: rgb(45 212 191 / 12%) !important;
+    }
   }
 </style>

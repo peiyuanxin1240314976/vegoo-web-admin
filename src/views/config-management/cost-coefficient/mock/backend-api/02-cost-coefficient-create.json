@@ -4,15 +4,29 @@
     "request": {
       "nSource": { "type": "number", "required": true, "description": "广告平台 n_source。" },
       "tStart": { "type": "string", "required": true, "description": "生效日期 YYYY-MM-DD。" },
-      "dCostRatio": { "type": "number", "required": true, "description": "折算比例 d_cost_ratio。" },
-      "dInstallCost": { "type": "number", "required": true, "description": "安装成本 d_install_cost。" },
+      "dCostRatio": {
+        "type": "number",
+        "required": true,
+        "description": "折算比例 d_cost_ratio。"
+      },
+      "dInstallCost": {
+        "type": "number",
+        "required": true,
+        "description": "安装成本 d_install_cost。"
+      },
       "remark": { "type": "string", "required": false, "description": "备注。" }
     },
     "response": {
       "id": { "type": "string", "required": true, "description": "新增记录 ID。" }
     }
   },
-  "sampleRequest": { "nSource": 1, "tStart": "2026-03-24", "dCostRatio": 1.125, "dInstallCost": 0.34567, "remark": "Q2 调整" },
+  "sampleRequest": {
+    "nSource": 1,
+    "tStart": "2026-03-24",
+    "dCostRatio": 1.125,
+    "dInstallCost": 0.34567,
+    "remark": "Q2 调整"
+  },
   "sampleResponse": { "data": { "id": "CC-009" } },
   "api": {
     "url": "POST /api/config-management/cost-coefficient",
@@ -20,5 +34,16 @@
     "priority": "P0",
     "requestBody": "CostCoefficientFormModel",
     "responseBody": "{ id }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "新建系数弹窗提交 `createCostCoefficient`。",
+        "prerequisite": "`CostCoefficientApiSource.createCoefficient`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

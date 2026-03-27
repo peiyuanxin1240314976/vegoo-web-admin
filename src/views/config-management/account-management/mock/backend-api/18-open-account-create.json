@@ -1,8 +1,46 @@
 {
-  "url": "/api/config-management/open-account",
-  "method": "POST",
-  "description": "新建开户记录",
-  "request": {
+  "_comment": "账户管理 · 开户管理 — 新建开户记录。对应 types.ts: OpenAccountFormModel / OpenAccountItem。",
+  "fieldDescription": {
+    "request": {
+      "source": { "type": "string", "required": true, "description": "广告平台。" },
+      "app": { "type": "string", "required": true, "description": "应用名称。" },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["安卓", "iOS", "网页"],
+        "description": "投放平台。"
+      },
+      "accountType": {
+        "type": "string",
+        "required": true,
+        "enum": ["企业户", "个人户", "小额广告户"],
+        "description": "开户类型。"
+      },
+      "agency": { "type": "string", "required": true, "description": "归属代理商。" },
+      "amount": {
+        "type": "string",
+        "required": true,
+        "description": "开户金额（表单字符串，服务端可转数值）。"
+      },
+      "applicant": { "type": "string", "required": true, "description": "申请人。" },
+      "adAccountId": {
+        "type": "string",
+        "required": false,
+        "description": "广告账户 ID（开户后补全）。"
+      },
+      "adAccountName": { "type": "string", "required": false, "description": "广告账户名称。" },
+      "credential": { "type": "string", "required": false, "description": "关联凭据名。" },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "data": {
+        "type": "OpenAccountItem",
+        "required": true,
+        "description": "新建后的记录，含服务端生成 id、registerTime、feishuRecords。"
+      }
+    }
+  },
+  "sampleRequest": {
     "source": "Meta Ads",
     "app": "Vegoo主App",
     "platform": "安卓",
@@ -15,8 +53,8 @@
     "credential": "",
     "remark": ""
   },
-  "response": {
-    "code": 0,
+  "sampleResponse": {
+    "code": 200,
     "message": "success",
     "data": {
       "id": "OA-010",
@@ -31,8 +69,35 @@
       "status": "待分配",
       "remark": "",
       "feishuRecords": [
-        { "time": "2024-03-23 09:00", "event": "开户登记", "result": "成功", "target": "广告账户群" }
+        {
+          "time": "2024-03-23 09:00",
+          "event": "开户登记",
+          "result": "成功",
+          "target": "广告账户群"
+        }
       ]
     }
+  },
+  "api": {
+    "url": "POST /api/config-management/open-account",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "OpenAccountFormModel",
+    "responseBody": "OpenAccountItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "「开户管理」Tab 中新建弹窗点击提交，`index.vue` / `open-account-tab` 调用 `createOpenAccount`。",
+        "prerequisite": "表单校验通过。"
+      },
+      {
+        "moment": "提交成功后",
+        "detail": "关闭弹窗并刷新开户列表。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "提交按钮可防重复点击。"
   }
 }

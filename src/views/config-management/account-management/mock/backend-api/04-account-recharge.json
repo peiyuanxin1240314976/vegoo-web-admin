@@ -3,12 +3,21 @@
   "fieldDescription": {
     "request": {
       "id": { "type": "string", "required": true, "description": "账户ID，如 ACC-012。" },
-      "amount": { "type": "number", "required": true, "description": "充值金额（整数，单位：账户货币）。" },
+      "amount": {
+        "type": "number",
+        "required": true,
+        "description": "充值金额（整数，单位：账户货币）。"
+      },
       "method": {
         "type": "string",
         "required": true,
         "enum": ["platform", "small-campaign", "other"],
         "description": "充值方式：platform=广告平台充值，small-campaign=小额广告系列，other=其他方式。"
+      },
+      "customAmount": {
+        "type": "string",
+        "required": false,
+        "description": "自定义金额文案，与 amount 二选一展示时用。"
       },
       "remark": { "type": "string", "required": false, "description": "充值备注。" }
     },
@@ -17,13 +26,17 @@
         "orderId": { "type": "string", "description": "充值订单ID。" },
         "accountId": { "type": "string", "description": "账户ID。" },
         "amount": { "type": "number", "description": "充值金额。" },
-        "status": { "type": "string", "description": "订单状态：pending=待处理，success=成功，failed=失败。" }
+        "status": {
+          "type": "string",
+          "description": "订单状态：pending=待处理，success=成功，failed=失败。"
+        }
       }
     }
   },
   "sampleRequest": {
     "id": "ACC-012",
     "amount": 1000,
+    "customAmount": "",
     "method": "platform",
     "remark": "常规月度充值"
   },
@@ -42,7 +55,18 @@
     "url": "POST /api/config-management/account/recharge",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "{ id, amount, method, remark? }",
+    "requestBody": "{ id, ...RechargeFormModel }",
     "responseBody": "RechargeOrder"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "行内或详情打开充值弹窗，确认后 `rechargeAccount`。",
+        "prerequisite": "`AccountApiSource.rechargeAccount` 为 false 时调接口。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

@@ -20,5 +20,20 @@
     "priority": "P0",
     "requestBody": "pair?, date?, page, pageSize",
     "responseBody": "{ total, list }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`/config-management/exchange-rate-management` 进入后加载表格；`ExchangeRateApiSource.rateTable` 控制 mock。",
+        "prerequisite": "登录态。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "筛选货币对、日期、分页变更后重新请求。"
+      }
+    ],
+    "defaultSelection": "page=1，pageSize=10。",
+    "dedupe": "无"
   }
 }

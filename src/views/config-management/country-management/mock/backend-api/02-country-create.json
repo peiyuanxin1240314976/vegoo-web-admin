@@ -2,15 +2,31 @@
   "_comment": "国家管理 - 新增国家。对应 types.ts: CountryFormModel（请求）/ CountryItem（响应）。",
   "fieldDescription": {
     "request": {
-      "code": { "type": "string", "required": true, "description": "国家代码（ISO alpha-2），大写，唯一。" },
-      "code3": { "type": "string", "required": true, "description": "三位数字代码字符串，如 '840'。" },
-      "criteriaId": { "type": "string", "required": true, "description": "Google Ads Criteria ID。" },
+      "code": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码（ISO alpha-2），大写，唯一。"
+      },
+      "code3": {
+        "type": "string",
+        "required": true,
+        "description": "三位数字代码字符串，如 '840'。"
+      },
+      "criteriaId": {
+        "type": "string",
+        "required": true,
+        "description": "Google Ads Criteria ID。"
+      },
       "nameCn": { "type": "string", "required": true, "description": "中文名称。" },
       "nameEn": { "type": "string", "required": true, "description": "英文名称。" },
       "aliases": { "type": "string[]", "required": true, "description": "别名数组，最多 5 项。" },
       "timezone": { "type": "string", "required": true, "description": "时区，格式 GMT±N。" },
       "phoneCode": { "type": "string", "required": true, "description": "电话区号（不含 +）。" },
-      "currency": { "type": "string", "required": true, "description": "货币名称，如 'USD - 美元'。" },
+      "currency": {
+        "type": "string",
+        "required": true,
+        "description": "货币名称，如 'USD - 美元'。"
+      },
       "currencySymbol": { "type": "string", "required": true, "description": "货币符号，如 '$'。" },
       "region": {
         "type": "string",
@@ -65,5 +81,16 @@
     "priority": "P0",
     "requestBody": "CountryFormModel",
     "responseBody": "CountryItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "新建国家弹窗提交 `createCountry`；成功后关闭并刷新表格。",
+        "prerequisite": "`CountryApiSource.createCountry` 为 false 时走 `request`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "提交防重复。"
   }
 }

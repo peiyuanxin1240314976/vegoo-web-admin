@@ -89,7 +89,8 @@
     <!-- 数据表格 -->
     <div class="table-wrapper">
       <el-table
-        :data="pagedTableData"
+        v-loading="tableLoading"
+        :data="tableRecords"
         class="app-table"
         table-layout="fixed"
         row-class-name="app-table-row"
@@ -155,7 +156,7 @@
 
       <!-- 分页 -->
       <div class="pagination-bar">
-        <span class="pagination-total">共 {{ total }} 条</span>
+        <span class="pagination-total">共 {{ serverTotal }} 条</span>
         <el-select v-model="pageSize" class="page-size-select" @change="handlePageSizeChange">
           <el-option label="每页 10 条" :value="10" />
           <el-option label="每页 20 条" :value="20" />
@@ -164,7 +165,7 @@
         <el-pagination
           v-model:current-page="currentPage"
           :page-size="pageSize"
-          :total="total"
+          :total="serverTotal"
           layout="prev, pager, next"
           class="app-pagination"
           @current-change="handlePageChange"
@@ -202,7 +203,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, reactive, ref, watch } from 'vue'
+  import { onMounted, reactive, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { Plus, Download, Search, EditPen, Delete, View } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
@@ -210,23 +211,15 @@
     createApplication,
     deleteApplication,
     exportApplicationList,
+    fetchApplicationTable,
     updateApplication
   } from '@/api/config-management'
   import { useUserStore } from '@/store/modules/user'
-  import { getAppNow } from '@/utils/app-now'
   import AppDetailDrawer from './modules/app-detail-drawer.vue'
   import AppFormDialog from './modules/app-form-dialog.vue'
   import AppDeleteDialog from './modules/app-delete-dialog.vue'
-  import {
-    cloneApplicationMockList,
-    applicationCategoryOptions,
-    applicationCreatorOptions
-  } from './mock/data'
-  import {
-    deriveIconColorFromId,
-    type ApplicationAppItem,
-    type ApplicationFormPayload
-  } from './types'
+  import { applicationCategoryOptions, applicationCreatorOptions } from './mock/data'
+  import { type ApplicationAppItem, type ApplicationFormPayload } from './types'
 
   defineOptions({ name: 'ApplicationManagement' })
 
@@ -242,7 +235,10 @@
     creator: ''
   })
 
-  const appList = ref<ApplicationAppItem[]>(cloneApplicationMockList())
+  const tableRecords = ref<ApplicationAppItem[]>([])
+  const serverTotal = ref(0)
+  const tableLoading = ref(false)
+  const stats = ref({ total: 0, ios: 0, android: 0, pending: 0 })
 
   const currentPage = ref(1)
   const pageSize = ref(20)
@@ -257,55 +253,87 @@
   const categoryOptions = applicationCategoryOptions
   const creatorOptions = applicationCreatorOptions
 
-  const filteredTableData = computed(() => {
-    return appList.value.filter((item) => {
-      const kw = filterForm.keyword.toLowerCase()
-      if (kw && !item.id.toLowerCase().includes(kw) && !item.appName.toLowerCase().includes(kw)) {
-        return false
-      }
-      if (filterForm.category && item.category !== filterForm.category) return false
-      if (filterForm.platform && item.platform !== filterForm.platform) return false
-      if (filterForm.status && item.status !== filterForm.status) return false
-      if (filterForm.creator && item.creator !== filterForm.creator) return false
-      return true
-    })
-  })
-
-  const total = computed(() => filteredTableData.value.length)
-
-  const pagedTableData = computed(() => {
-    const list = filteredTableData.value
-    const start = (currentPage.value - 1) * pageSize.value
-    return list.slice(start, start + pageSize.value)
-  })
-
-  const stats = computed(() => {
-    const list = appList.value
+  function tableQueryBase() {
     return {
-      total: list.length,
-      ios: list.filter((i) => i.platform === 'iOS').length,
-      android: list.filter((i) => i.platform === 'Android').length,
-      pending: list.filter((i) => i.status === '禁用').length
+      ...(filterForm.keyword.trim() ? { keyword: filterForm.keyword.trim() } : {}),
+      ...(filterForm.category ? { category: filterForm.category } : {}),
+      ...(filterForm.platform ? { platform: filterForm.platform } : {}),
+      ...(filterForm.status ? { status: filterForm.status } : {}),
+      ...(filterForm.creator ? { creator: filterForm.creator } : {})
     }
+  }
+
+  function syncCurrentAppFromTable() {
+    if (!currentApp.value) return
+    const row = tableRecords.value.find((a) => a.id === currentApp.value!.id)
+    if (row) currentApp.value = { ...row }
+  }
+
+  async function loadStats() {
+    try {
+      const res = await fetchApplicationTable({
+        current: 1,
+        size: 10000,
+        keyword: '',
+        category: '',
+        platform: '',
+        status: '',
+        creator: ''
+      })
+      const list = res.records
+      stats.value = {
+        total: res.total,
+        ios: list.filter((i) => i.platform === 'iOS').length,
+        android: list.filter((i) => i.platform === 'Android').length,
+        pending: list.filter((i) => i.status === '禁用').length
+      }
+    } catch {
+      /* request / mock 已统一走 fetch* */
+    }
+  }
+
+  async function loadTable() {
+    tableLoading.value = true
+    try {
+      const res = await fetchApplicationTable({
+        current: currentPage.value,
+        size: pageSize.value,
+        ...tableQueryBase()
+      })
+      const maxPage = Math.max(1, Math.ceil(res.total / pageSize.value) || 1)
+      if (currentPage.value > maxPage) {
+        currentPage.value = maxPage
+        tableLoading.value = false
+        return loadTable()
+      }
+      tableRecords.value = res.records
+      serverTotal.value = res.total
+      syncCurrentAppFromTable()
+    } catch {
+      tableRecords.value = []
+      serverTotal.value = 0
+    } finally {
+      tableLoading.value = false
+    }
+  }
+
+  onMounted(() => {
+    loadStats()
+    loadTable()
   })
 
   watch(
     () => ({ ...filterForm }),
     () => {
-      currentPage.value = 1
+      if (currentPage.value !== 1) currentPage.value = 1
+      else loadTable()
     },
     { deep: true }
   )
 
-  watch(pagedTableData, (rows) => {
-    if (rows.length === 0 && currentPage.value > 1) {
-      currentPage.value = Math.max(1, currentPage.value - 1)
-    }
+  watch([currentPage, pageSize], () => {
+    loadTable()
   })
-
-  function formatNow(): string {
-    return getAppNow().toISOString().slice(0, 19).replace('T', ' ')
-  }
 
   const handleAdd = () => {
     editData.value = null
@@ -334,7 +362,19 @@
   }
 
   const handleExport = async () => {
-    const rows = filteredTableData.value
+    let rows: ApplicationAppItem[] = []
+    try {
+      const res = await fetchApplicationTable({
+        current: 1,
+        size: 10000,
+        ...tableQueryBase()
+      })
+      rows = res.records
+    } catch {
+      ElMessage.error('获取导出数据失败')
+      return
+    }
+
     const header = [
       'id',
       'appName',
@@ -371,14 +411,10 @@
       await exportApplicationList({
         current: currentPage.value,
         size: pageSize.value,
-        keyword: filterForm.keyword || undefined,
-        category: filterForm.category || undefined,
-        platform: filterForm.platform || undefined,
-        status: filterForm.status || undefined,
-        creator: filterForm.creator || undefined
+        ...tableQueryBase()
       })
     } catch {
-      // 后端未就绪时仅本地下载 CSV
+      /* 远程导出未就绪时仅本地下载 CSV */
     }
     ElMessage.success('导出成功')
   }
@@ -395,7 +431,7 @@
     const raw = parseInt(jumpPage.value, 10)
     jumpPage.value = ''
     if (Number.isNaN(raw) || raw < 1) return
-    const maxPage = Math.max(1, Math.ceil(total.value / pageSize.value))
+    const maxPage = Math.max(1, Math.ceil(serverTotal.value / pageSize.value))
     currentPage.value = Math.min(raw, maxPage)
   }
 
@@ -404,57 +440,24 @@
     const editing = !!editData.value
     const editingId = editData.value?.id
 
+    const body: ApplicationFormPayload = editing
+      ? { ...payload, lastModifier: userName }
+      : { ...payload, creator: userName }
+
     try {
       if (editing && editingId) {
-        await updateApplication(payload)
+        await updateApplication(body)
       } else {
-        await createApplication(payload)
+        await createApplication(body)
       }
+      await loadStats()
+      await loadTable()
+      ElMessage.success(editing ? '保存成功' : '创建成功')
+      formVisible.value = false
+      editData.value = null
     } catch {
-      // 后端未就绪时仍合并本地列表
+      ElMessage.error(editing ? '保存失败' : '创建失败')
     }
-
-    const now = formatNow()
-    const dateStr = now.slice(0, 10)
-
-    if (editing && editingId) {
-      const idx = appList.value.findIndex((i) => i.id === editingId)
-      if (idx >= 0) {
-        const prev = appList.value[idx]
-        appList.value[idx] = {
-          ...prev,
-          ...payload,
-          iconColor: payload.iconColor ?? prev.iconColor,
-          packageId: payload.packageId ?? payload.bundleId ?? prev.packageId,
-          lastModifier: userName,
-          lastModifyTime: now
-        }
-      }
-      if (currentApp.value?.id === editingId) {
-        const row = appList.value.find((i) => i.id === editingId)
-        if (row) currentApp.value = row
-      }
-      ElMessage.success('保存成功')
-    } else {
-      const item: ApplicationAppItem = {
-        ...payload,
-        iconColor: payload.iconColor ?? deriveIconColorFromId(payload.id),
-        packageId: payload.packageId ?? payload.bundleId,
-        shortName: payload.shortName ?? '',
-        timezone: payload.timezone ?? 'PST',
-        priority: payload.priority ?? 1,
-        status: payload.status ?? '正常',
-        creator: userName,
-        createTime: dateStr,
-        lastModifier: userName,
-        lastModifyTime: now
-      }
-      appList.value.unshift(item)
-      ElMessage.success('创建成功')
-    }
-
-    formVisible.value = false
-    editData.value = null
   }
 
   const handleDeleteConfirm = async () => {
@@ -467,18 +470,18 @@
 
     try {
       await deleteApplication(id)
+      await loadStats()
+      await loadTable()
+      if (currentApp.value?.id === id) {
+        currentApp.value = null
+        drawerVisible.value = false
+      }
+      ElMessage.success('删除成功')
     } catch {
-      // 后端未就绪时仍删除本地
+      ElMessage.error('删除失败')
     }
 
-    const idx = appList.value.findIndex((i) => i.id === id)
-    if (idx >= 0) appList.value.splice(idx, 1)
-    if (currentApp.value?.id === id) {
-      currentApp.value = null
-      drawerVisible.value = false
-    }
     deleteData.value = null
-    ElMessage.success('删除成功')
   }
 </script>
 

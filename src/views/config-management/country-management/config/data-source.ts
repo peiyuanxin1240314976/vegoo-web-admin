@@ -1,19 +1,33 @@
 /**
- * 国家管理 - 数据源开关
- * true: 使用 mock
- * false: 使用 remote
+ * 国家管理（`/config-management/country-management`）数据源开关。
+ *
+ * - **`true`**：`config-management.ts` 国家方法走 `mock/country-api-mock.ts`。
+ * - **`false`**：真实网关；`index.vue` 一律通过 `@/api/config-management` 调用即可。
+ *
+ * 契约目录：`../mock/backend-api/`。
  */
 
 type UseMock = boolean
 
-export const CountryApiSource: Record<
-  'countryTable' | 'createCountry' | 'updateCountry' | 'deleteCountry' | 'exportCountry' | 'importCountry',
-  UseMock
-> = {
-  countryTable: true,
-  createCountry: true,
-  updateCountry: true,
-  deleteCountry: true,
-  exportCountry: true,
-  importCountry: true
+export enum CountryEndpoint {
+  CountryTable = 'countryTable',
+  CreateCountry = 'createCountry',
+  UpdateCountry = 'updateCountry',
+  DeleteCountry = 'deleteCountry',
+  ExportCountry = 'exportCountry',
+  ImportCountry = 'importCountry'
+}
+
+export const CountryApiSource: Record<CountryEndpoint, UseMock> = {
+  [CountryEndpoint.CountryTable]: true,
+  [CountryEndpoint.CreateCountry]: true,
+  [CountryEndpoint.UpdateCountry]: true,
+  [CountryEndpoint.DeleteCountry]: true,
+  [CountryEndpoint.ExportCountry]: true,
+  [CountryEndpoint.ImportCountry]: true
+}
+
+/** 读取方：`src/api/config-management.ts` 国家段 */
+export function isCountryEndpointMock(endpoint: CountryEndpoint): boolean {
+  return CountryApiSource[endpoint]
 }

@@ -2,19 +2,35 @@
   "_comment": "代理商管理 - 分页列表。支持关键词、广告平台、合作模式、合作状态筛选。",
   "fieldDescription": {
     "request": {
-      "current":   { "type": "number",  "required": true,  "description": "当前页码，从 1 开始。" },
-      "size":      { "type": "number",  "required": true,  "description": "每页条数。" },
-      "keyword":   { "type": "string",  "required": false, "description": "关键词，模糊匹配代理商名称或ID。" },
-      "source":    { "type": "string",  "required": false, "description": "广告平台筛选，如 Meta Ads。" },
-      "coopMode":  { "type": "string",  "required": false, "description": "合作模式筛选：授权代理 | 直接开户。" },
-      "status":    { "type": "string",  "required": false, "description": "合作状态筛选：已合作 | 洽谈中 | 已终止。" }
+      "current": { "type": "number", "required": true, "description": "当前页码，从 1 开始。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "关键词，模糊匹配代理商名称或ID。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选，如 Meta Ads。"
+      },
+      "coopMode": {
+        "type": "string",
+        "required": false,
+        "description": "合作模式筛选：授权代理 | 直接开户。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "description": "合作状态筛选：已合作 | 洽谈中 | 已终止。"
+      }
     },
     "response": {
       "data": {
-        "records":  { "type": "AgencyItem[]", "description": "当前页代理商列表。" },
-        "total":    { "type": "number",       "description": "符合条件的总条数。" },
-        "current":  { "type": "number",       "description": "当前页码。" },
-        "size":     { "type": "number",       "description": "每页条数。" }
+        "records": { "type": "AgencyItem[]", "description": "当前页代理商列表。" },
+        "total": { "type": "number", "description": "符合条件的总条数。" },
+        "current": { "type": "number", "description": "当前页码。" },
+        "size": { "type": "number", "description": "每页条数。" }
       }
     }
   },
@@ -47,7 +63,13 @@
           "pausedAccounts": 4,
           "monthRevenue": 8991,
           "bcBmList": [
-            { "name": "Vegoo主务BC", "source": "Meta Ads", "type": "BC", "accountCount": 45, "status": "正常" }
+            {
+              "name": "Vegoo主务BC",
+              "source": "Meta Ads",
+              "type": "BC",
+              "accountCount": 45,
+              "status": "正常"
+            }
           ]
         }
       ],
@@ -59,8 +81,19 @@
   "api": {
     "url": "POST /api/config-management/agency/table",
     "method": "POST",
-    "priority": "P1",
+    "priority": "P0",
     "requestBody": "AgencyTableQuery",
     "responseBody": "PaginatedResponse<AgencyItem>"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "切换「代理商管理」Tab，`agency-tab.vue` onMounted `loadAgencyList`。",
+        "prerequisite": "`AccountApiSource.agencyTable`。"
+      }
+    ],
+    "defaultSelection": "current=1，size=20。",
+    "dedupe": "无"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "_comment": "配置管理 - 导出用户列表（README 已列，src/api 尚未提供 exportUserList，联调前需补充 fetch*）。",
+  "_comment": "配置管理 - 导出用户列表。与 exportUserList、UserEndpoint.Export、user-api-mock.mockExportUserList 对齐。",
   "fieldDescription": {
     "request": {
       "keyword": { "type": "string", "required": false, "description": "与列表筛选一致。" },
@@ -34,7 +34,7 @@
   "apiSuggestion": {
     "notes": [
       "若返回文件流，需在 request 层设置 responseType: blob，与本项目其他 export* 一致。",
-      "待补充：src/api/config-management.ts 中 exportUserList 与页面导出入口。"
+      "页面可无「导出」按钮；需要时调用 exportUserList，与当前列表筛选字段一致。"
     ]
   },
   "interaction": {

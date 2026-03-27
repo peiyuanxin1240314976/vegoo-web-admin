@@ -12,12 +12,27 @@
     }
   },
   "sampleRequest": { "keyword": "", "source": "", "coopMode": "", "status": "" },
-  "sampleResponse": { "taskId": "export_agency_20260324_001" },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": { "taskId": "export_agency_20260324_001" }
+  },
   "api": {
     "url": "POST /api/config-management/agency/export",
     "method": "POST",
     "priority": "P1",
     "requestBody": "筛选参数",
-    "responseBody": "taskId"
+    "responseBody": "{ taskId } | blob"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "「代理商管理」Tab 导出按钮 `exportAgencyList`。",
+        "prerequisite": "`AccountApiSource.exportAgency`。"
+      }
+    ],
+    "defaultSelection": "与当前筛选一致。",
+    "dedupe": "无"
   }
 }

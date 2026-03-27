@@ -17,5 +17,16 @@
     "priority": "P0",
     "requestBody": "{}",
     "responseBody": "{ todayTotal, completed, processing, failed }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "列表页顶部 KPI 与表格并行 `fetchOrderImportSummary`。",
+        "prerequisite": "`OrderImportApiSource.importSummary`。"
+      }
+    ],
+    "defaultSelection": "无请求参数。",
+    "dedupe": "可与 table 并行。"
   }
 }

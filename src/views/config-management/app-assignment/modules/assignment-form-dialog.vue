@@ -39,7 +39,7 @@
                 @change="handleAppChange"
               >
                 <el-option
-                  v-for="opt in appOptions"
+                  v-for="opt in assignableApps"
                   :key="opt.value"
                   :label="opt.label"
                   :value="opt.value"
@@ -281,8 +281,12 @@
   import { ref, reactive, computed, watch, nextTick } from 'vue'
   import { Lock, ArrowDown, Check, Warning } from '@element-plus/icons-vue'
   import type { FormInstance, FormRules } from 'element-plus'
-  import type { AppAssignmentItem, AssignmentFormModel, PerformanceVersion } from '../types'
-  import { adPlatformOptions, optimizerOptions, appOptions, versionsByApp } from '../mock/data'
+  import type {
+    AppAssignmentItem,
+    AssignmentAssignableSelectOption,
+    AssignmentFormModel,
+    PerformanceVersion
+  } from '../types'
 
   // 自定义 click-outside 指令
   const vClickOutsideCustom = {
@@ -302,10 +306,23 @@
 
   defineOptions({ name: 'AssignmentFormDialog' })
 
-  const props = defineProps<{
-    visible: boolean
-    editData?: AppAssignmentItem | null
-  }>()
+  const props = withDefaults(
+    defineProps<{
+      visible: boolean
+      editData?: AppAssignmentItem | null
+      adPlatformOptions: { label: string; value: string }[]
+      optimizerOptions: { label: string; value: string }[]
+      assignableApps: AssignmentAssignableSelectOption[]
+      loadVersions: (appId: string) => Promise<PerformanceVersion[]>
+    }>(),
+    {
+      editData: null,
+      adPlatformOptions: () => [],
+      optimizerOptions: () => [],
+      assignableApps: () => [],
+      loadVersions: () => Promise.resolve([])
+    }
+  )
 
   const emit = defineEmits<{
     'update:visible': [val: boolean]
@@ -382,12 +399,15 @@
     { immediate: true }
   )
 
-  // 新建时，切换 app 时从映射表加载对应版本
-  const handleAppChange = () => {
+  // 新建时，切换 app 时请求绩效版本列表
+  const handleAppChange = async () => {
     form.adPlatform = ''
     form.configVersionId = ''
-    availableVersions.value = versionsByApp[form.appId] ?? []
-    // 默认选中当前激活版本
+    if (!form.appId) {
+      availableVersions.value = []
+      return
+    }
+    availableVersions.value = await props.loadVersions(form.appId)
     const active = availableVersions.value.find((v) => v.isActive)
     if (active) form.configVersionId = active.id
   }

@@ -16,5 +16,16 @@
     "priority": "P1",
     "requestBody": "{ taskId }",
     "responseBody": "{ success }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "任务行「暂停」`pauseOrderImport`。",
+        "prerequisite": "`OrderImportApiSource.pauseImport`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

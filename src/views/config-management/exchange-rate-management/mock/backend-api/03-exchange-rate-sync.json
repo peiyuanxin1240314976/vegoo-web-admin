@@ -19,7 +19,13 @@
   },
   "sampleRequest": { "pairs": ["USD/EUR", "USD/JPY"], "source": "openexchange" },
   "sampleResponse": {
-    "data": { "total": 2, "success": 2, "overrideManual": 0, "failed": 0, "syncTime": "2026-03-24 09:32:00" }
+    "data": {
+      "total": 2,
+      "success": 2,
+      "overrideManual": 0,
+      "failed": 0,
+      "syncTime": "2026-03-24 09:32:00"
+    }
   },
   "api": {
     "url": "POST /api/config-management/exchange-rate/sync",
@@ -27,5 +33,16 @@
     "priority": "P0",
     "requestBody": "pairs, source",
     "responseBody": "SyncResult"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "用户选择货币对并点击同步，`syncExchangeRates`；完成后可弹出结果对话框。",
+        "prerequisite": "`ExchangeRateApiSource.syncRates`。"
+      }
+    ],
+    "defaultSelection": "pairs 来自表格勾选或手动选择。",
+    "dedupe": "同步进行中禁用按钮。"
   }
 }

@@ -30,5 +30,16 @@
     "priority": "P0",
     "requestBody": "ManualRateFormModel",
     "responseBody": "{ id }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "手动新增汇率弹窗提交 `createExchangeRate`；成功后刷新列表。",
+        "prerequisite": "`ExchangeRateApiSource.manualCreate`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

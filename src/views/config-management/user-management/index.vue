@@ -80,8 +80,8 @@
     </div>
 
     <!-- 数据表格 -->
-    <div class="table-wrapper">
-      <el-table :data="pagedTableData" class="user-table" @row-click="handleRowClick">
+    <div class="table-wrapper" v-loading="tableLoading">
+      <el-table :data="tableRecords" class="user-table" @row-click="handleRowClick">
         <el-table-column label="用户" min-width="200">
           <template #default="{ row }">
             <div class="user-cell">
@@ -155,7 +155,7 @@
 
       <!-- 分页 -->
       <div class="pagination-bar">
-        <span class="pagination-total">共 {{ total }} 条</span>
+        <span class="pagination-total">共 {{ serverTotal }} 条</span>
         <el-select v-model="pageSize" class="page-size-select" @change="handlePageSizeChange">
           <el-option label="每页 10 条" :value="10" />
           <el-option label="每页 20 条" :value="20" />
@@ -164,10 +164,9 @@
         <el-pagination
           v-model:current-page="currentPage"
           :page-size="pageSize"
-          :total="total"
+          :total="serverTotal"
           layout="prev, pager, next"
           class="user-pagination"
-          @current-change="handlePageChange"
         />
         <span class="pagination-jumper">
           跳转至
@@ -196,25 +195,31 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, reactive, ref, watch } from 'vue'
+  import { reactive, ref, watch, onMounted } from 'vue'
   import { Plus, Search, User, UserFilled, CircleClose, Clock } from '@element-plus/icons-vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import UserDetailDrawer from './modules/user-detail-drawer.vue'
   import UserFormDialog from './modules/user-form-dialog.vue'
-  import { cloneUserMockList, userRoleOptions } from './mock/data'
+  import { userRoleOptions } from './mock/data'
+  import { type UserItem, type UserFormPayload, type UserRole } from './types'
   import {
-    deriveAvatarColorFromId,
-    type UserItem,
-    type UserFormPayload,
-    type UserRole
-  } from './types'
-  import { getAppNow } from '@/utils/app-now'
+    createUser,
+    deleteUser,
+    fetchUserTable,
+    resendUserActivation,
+    resetUserPassword,
+    updateUser,
+    updateUserStatus
+  } from '@/api/config-management'
 
   defineOptions({ name: 'UserManagement' })
 
   const filterForm = reactive({ keyword: '', role: '', status: '' })
 
-  const userList = ref<UserItem[]>(cloneUserMockList())
+  const tableRecords = ref<UserItem[]>([])
+  const serverTotal = ref(0)
+  const tableLoading = ref(false)
+  const stats = ref({ total: 0, active: 0, disabled: 0, pending: 0 })
   const currentPage = ref(1)
   const pageSize = ref(20)
   const jumpPage = ref('')
@@ -225,46 +230,76 @@
 
   const roleOptions = userRoleOptions
 
-  const filteredTableData = computed(() =>
-    userList.value.filter((item) => {
-      const kw = filterForm.keyword.toLowerCase()
-      if (kw && !item.userName.toLowerCase().includes(kw) && !item.email.toLowerCase().includes(kw))
-        return false
-      if (filterForm.role && item.role !== filterForm.role) return false
-      if (filterForm.status && item.status !== filterForm.status) return false
-      return true
-    })
-  )
+  function syncSelectedUserFromTable() {
+    if (!selectedUser.value) return
+    const row = tableRecords.value.find((u) => u.id === selectedUser.value!.id)
+    if (row) selectedUser.value = { ...row }
+  }
 
-  const total = computed(() => filteredTableData.value.length)
-
-  const pagedTableData = computed(() => {
-    const start = (currentPage.value - 1) * pageSize.value
-    return filteredTableData.value.slice(start, start + pageSize.value)
-  })
-
-  const stats = computed(() => {
-    const list = userList.value
-    return {
-      total: list.length,
-      active: list.filter((u) => u.status === '活跃').length,
-      disabled: list.filter((u) => u.status === '已禁用').length,
-      pending: list.filter((u) => u.status === '待激活').length
+  async function loadStats() {
+    try {
+      const res = await fetchUserTable({
+        current: 1,
+        size: 10000,
+        keyword: '',
+        role: '',
+        status: ''
+      })
+      const list = res.records
+      stats.value = {
+        total: res.total,
+        active: list.filter((u) => u.status === '活跃').length,
+        disabled: list.filter((u) => u.status === '已禁用').length,
+        pending: list.filter((u) => u.status === '待激活').length
+      }
+    } catch {
+      /* request 层已处理错误提示 */
     }
+  }
+
+  async function loadTable() {
+    tableLoading.value = true
+    try {
+      const res = await fetchUserTable({
+        current: currentPage.value,
+        size: pageSize.value,
+        ...(filterForm.keyword.trim() ? { keyword: filterForm.keyword.trim() } : {}),
+        ...(filterForm.role ? { role: filterForm.role } : {}),
+        ...(filterForm.status ? { status: filterForm.status } : {})
+      })
+      const maxPage = Math.max(1, Math.ceil(res.total / pageSize.value) || 1)
+      if (currentPage.value > maxPage) {
+        currentPage.value = maxPage
+        tableLoading.value = false
+        return loadTable()
+      }
+      tableRecords.value = res.records
+      serverTotal.value = res.total
+      syncSelectedUserFromTable()
+    } catch {
+      tableRecords.value = []
+      serverTotal.value = 0
+    } finally {
+      tableLoading.value = false
+    }
+  }
+
+  onMounted(() => {
+    loadStats()
+    loadTable()
   })
 
   watch(
     () => ({ ...filterForm }),
     () => {
-      currentPage.value = 1
+      if (currentPage.value !== 1) currentPage.value = 1
+      else loadTable()
     },
     { deep: true }
   )
 
-  watch(pagedTableData, (rows) => {
-    if (rows.length === 0 && currentPage.value > 1) {
-      currentPage.value = Math.max(1, currentPage.value - 1)
-    }
+  watch([currentPage, pageSize], () => {
+    loadTable()
   })
 
   function getRoleBadgeClass(role: UserRole) {
@@ -308,13 +343,12 @@
       cancelButtonText: '取消',
       type: 'warning'
     })
-      .then(() => {
-        const idx = userList.value.findIndex((u) => u.id === row.id)
-        if (idx >= 0) {
-          userList.value[idx] = { ...userList.value[idx], status: next }
-          if (selectedUser.value?.id === row.id) selectedUser.value = userList.value[idx]
-        }
+      .then(async () => {
+        await updateUserStatus(row.id, next)
         ElMessage.success(`${label}成功`)
+        await loadStats()
+        await loadTable()
+        syncSelectedUserFromTable()
       })
       .catch(() => {})
   }
@@ -325,14 +359,19 @@
       '重置密码',
       { confirmButtonText: '确认重置', cancelButtonText: '取消', type: 'warning' }
     )
-      .then(() => {
+      .then(async () => {
+        await resetUserPassword(row.id)
         ElMessage.success('密码重置邮件已发送')
       })
       .catch(() => {})
   }
 
   function handleResendActivation(row: UserItem) {
-    ElMessage.success(`激活邮件已发送至 ${row.email}`)
+    resendUserActivation(row.id)
+      .then(() => {
+        ElMessage.success(`激活邮件已发送至 ${row.email}`)
+      })
+      .catch(() => {})
   }
 
   function handleDeleteConfirm(row: UserItem) {
@@ -341,30 +380,41 @@
       cancelButtonText: '取消',
       type: 'warning'
     })
-      .then(() => {
-        const idx = userList.value.findIndex((u) => u.id === row.id)
-        if (idx >= 0) userList.value.splice(idx, 1)
+      .then(async () => {
+        await deleteUser(row.id)
         if (selectedUser.value?.id === row.id) {
           selectedUser.value = null
           drawerVisible.value = false
         }
         ElMessage.success('删除成功')
+        await loadStats()
+        await loadTable()
       })
       .catch(() => {})
   }
 
-  function handleDrawerSave(data: Pick<UserItem, 'id' | 'role' | 'accessibleApps' | 'remark'>) {
-    const idx = userList.value.findIndex((u) => u.id === data.id)
-    if (idx >= 0) {
-      userList.value[idx] = { ...userList.value[idx], ...data }
-      if (selectedUser.value?.id === data.id) selectedUser.value = userList.value[idx]
+  async function handleDrawerSave(
+    data: Pick<UserItem, 'id' | 'role' | 'accessibleApps' | 'remark'>
+  ) {
+    if (!selectedUser.value || selectedUser.value.id !== data.id) return
+    try {
+      await updateUser({
+        id: data.id,
+        userName: selectedUser.value.userName,
+        email: selectedUser.value.email,
+        role: data.role,
+        accessibleApps: data.accessibleApps,
+        remark: data.remark
+      })
+      ElMessage.success('保存成功')
+      await loadStats()
+      await loadTable()
+      syncSelectedUserFromTable()
+    } catch {
+      /* request 已提示 */
     }
-    ElMessage.success('保存成功')
   }
 
-  function handlePageChange(page: number) {
-    currentPage.value = page
-  }
   function handlePageSizeChange() {
     currentPage.value = 1
   }
@@ -373,39 +423,26 @@
     const raw = parseInt(jumpPage.value, 10)
     jumpPage.value = ''
     if (Number.isNaN(raw) || raw < 1) return
-    const maxPage = Math.max(1, Math.ceil(total.value / pageSize.value))
+    const maxPage = Math.max(1, Math.ceil(serverTotal.value / pageSize.value))
     currentPage.value = Math.min(raw, maxPage)
   }
 
-  function handleFormSuccess(payload: UserFormPayload) {
-    const isEdit = !!payload.id
-    if (isEdit) {
-      const idx = userList.value.findIndex((u) => u.id === payload.id)
-      if (idx >= 0) {
-        userList.value[idx] = {
-          ...userList.value[idx],
-          userName: payload.userName,
-          role: payload.role,
-          accessibleApps: payload.accessibleApps,
-          remark: payload.remark
-        }
-        if (selectedUser.value?.id === payload.id) selectedUser.value = userList.value[idx]
+  async function handleFormSuccess(payload: UserFormPayload) {
+    try {
+      const isEdit = !!payload.id
+      if (isEdit) {
+        await updateUser(payload)
+        ElMessage.success('保存成功')
+      } else {
+        await createUser(payload)
+        ElMessage.success('用户创建成功，激活邮件已发送')
       }
-      ElMessage.success('保存成功')
-    } else {
-      userList.value.unshift({
-        id: `u${Date.now()}`,
-        userName: payload.userName,
-        email: payload.email,
-        avatarColor: deriveAvatarColorFromId(payload.email),
-        role: payload.role,
-        status: '待激活',
-        lastLogin: '未登录',
-        joinTime: getAppNow().toISOString().slice(0, 10),
-        accessibleApps: payload.accessibleApps,
-        remark: payload.remark
-      })
-      ElMessage.success('用户创建成功，激活邮件已发送')
+      await loadStats()
+      await loadTable()
+      if (isEdit && selectedUser.value?.id === payload.id) syncSelectedUserFromTable()
+    } catch {
+      /* request 已提示 */
+      return
     }
     formVisible.value = false
     editData.value = null

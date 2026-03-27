@@ -107,7 +107,7 @@ export function mockCreateAppAssignment(data: AssignmentCreatePayload): Promise<
   const appMeta = appOptions.find((o) => o.value === data.appId)
   const now = getAppTodayYYYYMMDD()
   const item: AppAssignmentItem = {
-    id: `asgn-mock-new`,
+    id: `asgn-${Date.now()}`,
     appName: appMeta?.appName ?? 'MockApp',
     appId: data.appId,
     iconColor: appMeta?.iconColor ?? '#3b82f6',
@@ -134,6 +134,7 @@ export function mockCreateAppAssignment(data: AssignmentCreatePayload): Promise<
       }
     ]
   }
+  assignmentMockList.unshift(item)
   return Promise.resolve(item)
 }
 
@@ -165,6 +166,8 @@ export function mockUpdateAppAssignment(data: AssignmentUpdatePayload): Promise<
     ],
     availableVersions: versions
   }
+  const idx = assignmentMockList.findIndex((i) => i.id === data.id)
+  if (idx >= 0) assignmentMockList[idx] = next
   return Promise.resolve(next)
 }
 

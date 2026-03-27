@@ -2,13 +2,24 @@
 
 父级 API 路径：`/api/config-management/order-import`
 
-| 文件 | 接口 | 说明 | 优先级 |
-|---|---|---|---|
-| `01-order-import-table.json` | `POST /table` | 导入任务分页列表 | P0 |
-| `02-order-import-summary.json` | `POST /summary` | 今日导入统计 | P0 |
-| `03-order-import-submit.json` | `POST /submit` | 提交导入任务 | P0 |
-| `04-order-import-pause.json` | `POST /pause` | 暂停导入任务 | P1 |
-| `05-order-import-cancel.json` | `POST /cancel` | 取消导入任务 | P1 |
-| `06-order-import-report.json` | `POST /report` | 报告详情 | P0 |
-| `07-order-import-report-export.json` | `POST /report/export` | 导出报告 | P1 |
-| `08-order-import-template.json` | `GET /template` | 下载导入模板 | P1 |
+| 文件                                 | 接口                  | 说明             | 优先级 |
+| ------------------------------------ | --------------------- | ---------------- | ------ |
+| `01-order-import-table.json`         | `POST /table`         | 导入任务分页列表 | P0     |
+| `02-order-import-summary.json`       | `POST /summary`       | 今日导入统计     | P0     |
+| `03-order-import-submit.json`        | `POST /submit`        | 提交导入任务     | P0     |
+| `04-order-import-pause.json`         | `POST /pause`         | 暂停导入任务     | P1     |
+| `05-order-import-cancel.json`        | `POST /cancel`        | 取消导入任务     | P1     |
+| `06-order-import-report.json`        | `POST /report`        | 报告详情         | P0     |
+| `07-order-import-report-export.json` | `POST /report/export` | 导出报告         | P1     |
+
+## 场景 → 接口
+
+| 场景 | 路由 | 契约文件 | `src/api` |
+| --- | --- | --- | --- |
+| 任务列表 + KPI | `/config-management/order-import` | `01` / `02` | `fetchOrderImportTable` / `fetchOrderImportSummary` |
+| 提交文件导入 | 同上 | `03` | `submitOrderImport`（FormData） |
+| 暂停 / 取消任务 | 同上 | `04` / `05` | `pauseOrderImport` / `cancelOrderImport` |
+| 报告详情 | `/order-import/import-report/:taskId` | `06` | `fetchOrderImportReport` |
+| 导出报告 | 报告页 | `07` | `exportOrderImportReport` |
+
+开关：[`../../config/data-source.ts`](../../config/data-source.ts) → `OrderImportApiSource`。

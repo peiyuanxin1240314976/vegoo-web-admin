@@ -62,5 +62,16 @@
     "priority": "P0",
     "requestBody": "{ items: CountryFormModel[] }",
     "responseBody": "{ successCount, updateCount, createCount, failedCount }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "批量导入解析完成后 `importCountryList`。",
+        "prerequisite": "`CountryApiSource.importCountry`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

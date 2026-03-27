@@ -4,12 +4,12 @@ description: >-
   契约示例/sampleResponse 是否完整、接口是否全部 POST、URL 是否按路由+模块+功能命名、
   页面与 fetch 是否对齐时应用。触发用语包括：整理接口契约、梳理模块契约、校验 mock 契约、
   backend-api、模块接口联调清单、契约与 API 对照、返回示例、POST 约定、大模块契约聚合目录、
-  单一 data-source、interaction 交互说明、首屏加载、默认选中。
+  单一 data-source、interaction 交互说明、首屏加载、默认选中、契约与页面入口可达。
 alwaysApply: false
 ---
 
 # 模块接口契约整理（触发）
 
-1. **必须先阅读** 项目技能：[`/.cursor/skills/module-api-contract-audit/SKILL.md`](../skills/module-api-contract-audit/SKILL.md)，按其中步骤执行并输出交付物（含 **场景→接口→触发时机** 表）；验收 **章节 0**（`sampleResponse`、URL、POST）、**章节 9**（大模块单目录 JSON + 单 config、**`data-source` 注释**、**多页面多 `is*Mock`/多 enum**）、**章节 10**（每 JSON 根级 `interaction` + README 场景表）。
+1. **必须先阅读** 项目技能：[`/.cursor/skills/module-api-contract-audit/SKILL.md`](../skills/module-api-contract-audit/SKILL.md)，按其中步骤执行并输出交付物（含 **场景→接口→触发时机** 表）；验收 **章节 0**（`sampleResponse`、URL、POST）、**§2.1**（契约须对应可触达页面/展示；无入口或不可达项 **单列表格待需求确认**，不得擅自删改）、**章节 9**（大模块单目录 JSON + 单 config、**`data-source` 注释**、**多页面多 `is*Mock`/多 enum**）、**章节 10**（每 JSON 根级 `interaction` + README 场景表）。
 2. 与现有规范一并遵守：**`api-contract-and-mock-conventions.mdc`**、**`module-api-mock-config.mdc`**；若与技能 **章节 9.3** 冲突，整理结论中注明并以 **聚合单元单一 config** 为推荐终态。
 3. 若用户指定了模块路径或路由名，从该 `views/` 目录与 `router` 起 scoped 检索，避免泛泛而谈。

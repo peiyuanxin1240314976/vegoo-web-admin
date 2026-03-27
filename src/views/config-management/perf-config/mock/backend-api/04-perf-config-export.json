@@ -19,5 +19,16 @@
     "priority": "P1",
     "requestBody": "筛选参数",
     "responseBody": "{ fileToken }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "页头导出 `exportPerfConfig`；`PerfConfigApiSource.perfExport === true` 时可仅提示。",
+        "prerequisite": "筛选与列表一致。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

@@ -5,13 +5,19 @@
       "id": { "type": "string", "required": true, "description": "记录 ID。" }
     },
     "response": {
-      "list": { "type": "CostCoefficientHistory[]", "required": true, "description": "历史变更记录。" }
+      "list": {
+        "type": "CostCoefficientHistory[]",
+        "required": true,
+        "description": "历史变更记录。"
+      }
     }
   },
   "sampleRequest": { "id": "CC-001" },
   "sampleResponse": {
     "data": {
-      "list": [{ "time": "2026-03-24 09:40", "operator": "admin", "changes": ["dCostRatio: 1.10 -> 1.20"] }]
+      "list": [
+        { "time": "2026-03-24 09:40", "operator": "admin", "changes": ["dCostRatio: 1.10 -> 1.20"] }
+      ]
     }
   },
   "api": {
@@ -20,5 +26,16 @@
     "priority": "P1",
     "requestBody": "id",
     "responseBody": "{ list }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "详情抽屉打开「调整历史」Tab 时 `fetchCostCoefficientHistory`。",
+        "prerequisite": "`CostCoefficientApiSource.coefficientHistory`；为 false 时调用 `fetchCostCoefficientHistory`。"
+      }
+    ],
+    "defaultSelection": "请求体 id 为当前行主键。",
+    "dedupe": "打开抽屉时请求一次。"
   }
 }

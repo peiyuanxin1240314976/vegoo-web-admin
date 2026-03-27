@@ -1,20 +1,65 @@
 {
-  "url": "/api/config-management/open-account/assign",
-  "method": "POST",
-  "description": "分配凭据并激活广告账户",
-  "request": {
+  "_comment": "账户管理 · 开户管理 — 分配凭据并激活。对应 `assignOpenAccountCredential`。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "开户记录 ID，如 OA-008。" },
+      "credential": {
+        "type": "string",
+        "required": true,
+        "description": "选用的凭据名称或 ID（与前端表单一致）。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "OpenAccountItem",
+        "required": true,
+        "description": "更新后的开户记录（至少含 id、status、credential、activateTime 等）。"
+      }
+    }
+  },
+  "sampleRequest": {
     "id": "OA-008",
     "credential": "Meta-主账号Token"
   },
-  "response": {
-    "code": 0,
+  "sampleResponse": {
+    "code": 200,
     "message": "success",
     "data": {
       "id": "OA-008",
+      "source": "Meta Ads",
+      "app": "Vegoo主App",
+      "platform": "安卓",
+      "accountType": "企业户",
+      "agency": "广州媒优科技有限公司",
+      "amount": 5000,
+      "applicant": "张三",
+      "registerTime": "2024-01-15T08:30:00Z",
       "status": "已激活",
+      "remark": "",
+      "adAccountId": "act_123456789",
+      "adAccountName": "Vegoo_Meta_01",
+      "activateTime": "2024-03-23T10:00:00Z",
       "credential": "Meta-主账号Token",
       "credentialStatus": "验证正常",
-      "activateTime": "2024-03-23T10:00:00Z"
+      "feishuRecords": []
     }
+  },
+  "api": {
+    "url": "POST /api/config-management/open-account/assign",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ id, credential }",
+    "responseBody": "OpenAccountItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "开户列表行操作「分配凭据」弹窗确认后调用。",
+        "prerequisite": "记录状态为待分配且凭据有效。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

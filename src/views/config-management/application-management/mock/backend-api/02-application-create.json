@@ -1,0 +1,63 @@
+{
+  "_comment": "应用管理 - 新增。对应 types.ts: ApplicationFormPayload / ApplicationAppItem。",
+  "fieldDescription": {
+    "request": {
+      "body": {
+        "type": "ApplicationFormPayload",
+        "required": true,
+        "description": "表单提交，含 id/appName/platform/bundleId 等。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "ApplicationAppItem",
+        "required": true,
+        "description": "新建后的完整记录（网关若包裹则取 data）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "id": "NewApp01",
+    "appName": "Demo",
+    "platform": "Android",
+    "category": "Weather",
+    "bundleId": "com.demo.app",
+    "packageId": "com.demo.app",
+    "creator": "系统"
+  },
+  "sampleResponse": {
+    "id": "NewApp01",
+    "appName": "Demo",
+    "iconColor": "hsl(200 42% 46%)",
+    "platform": "Android",
+    "bundleId": "com.demo.app",
+    "packageId": "com.demo.app",
+    "shortName": "",
+    "category": "Weather",
+    "timezone": "PST",
+    "priority": 1,
+    "status": "正常",
+    "creator": "系统",
+    "createTime": "2026-03-27",
+    "lastModifier": "系统",
+    "lastModifyTime": "2026-03-27 10:00:00"
+  },
+  "api": {
+    "url": "POST /api/config-management/application",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "ApplicationFormPayload",
+    "responseBody": "ApplicationAppItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户点击「新增应用」提交表单",
+        "detail": "createApplication；成功后 loadStats + loadTable。",
+        "prerequisite": "表单校验通过"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "提交中禁用确认按钮（由弹窗实现）。"
+  }
+}

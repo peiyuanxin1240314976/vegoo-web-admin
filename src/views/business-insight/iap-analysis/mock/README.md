@@ -4,7 +4,7 @@
 
 本目录为「商业洞察 > IAP 分析」模块提供 Mock 数据与后端接口契约，用于：
 
-- 开发阶段按 Dashboard 一级页、Detail 二级页、Overview 表格页独立联调
+- 开发阶段按 Dashboard 一级页、Detail 二级页独立联调
 - 与 `types.ts`、页面组件、API 层保持数据结构一致
 - 接口就绪后平滑切换为真实请求
 
@@ -14,7 +14,6 @@
 | --- | --- |
 | Dashboard（首页） | meta-filter-options、overview/kpi、overview/trend、overview/app-cards、overview/country-distribution、overview/product-type-donut、overview/platform-compare |
 | Detail（应用详情） | detail/kpi、detail/product、detail/user、detail/trend |
-| Overview（表格视图） | table/overview |
 
 ## 数据来源与类型
 

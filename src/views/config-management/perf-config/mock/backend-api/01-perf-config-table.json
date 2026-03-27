@@ -1,26 +1,128 @@
 {
-  "_comment": "绩效配置列表。",
+  "_comment": "绩效配置 — 分页列表。请求与 `fetchPerfTable` 一致：page、pageSize。响应建议与 `Api.Common.PaginatedResponse<PerfConfigItem>` 对齐：records、total、current、size；若网关暂为 { total, list }，联调时在网关层映射或与前端约定后更新本契约。对应 types.ts: PerfConfigItem / PerfVersion。",
   "fieldDescription": {
     "request": {
       "page": { "type": "number", "required": true, "description": "页码。", "default": 1 },
-      "pageSize": { "type": "number", "required": true, "description": "每页条数。", "default": 20 },
+      "pageSize": {
+        "type": "number",
+        "required": true,
+        "description": "每页条数。",
+        "default": 20
+      },
       "keyword": { "type": "string", "required": false, "description": "应用关键词。" },
-      "appPlatform": { "type": "string", "required": false, "description": "平台。" },
-      "adPlatform": { "type": "string", "required": false, "description": "广告平台。" },
-      "status": { "type": "string", "required": false, "description": "状态。" }
+      "appPlatform": {
+        "type": "string",
+        "required": false,
+        "description": "应用平台：android | ios。"
+      },
+      "adPlatform": { "type": "string", "required": false, "description": "广告平台筛选。" },
+      "status": { "type": "string", "required": false, "description": "配置/运行状态筛选。" }
     },
     "response": {
+      "records": { "type": "PerfConfigItem[]", "required": true, "description": "列表行。" },
       "total": { "type": "number", "required": true, "description": "总数。" },
-      "list": { "type": "PerfConfigItem[]", "required": true, "description": "配置列表。" }
+      "current": {
+        "type": "number",
+        "required": true,
+        "description": "当前页码（与请求 page 一致）。"
+      },
+      "size": {
+        "type": "number",
+        "required": true,
+        "description": "每页条数（与请求 pageSize 一致）。"
+      }
     }
   },
-  "sampleRequest": { "page": 1, "pageSize": 20, "keyword": "", "appPlatform": "", "adPlatform": "", "status": "" },
-  "sampleResponse": { "data": { "total": 1, "list": [{ "id": "PF-001", "appName": "BloodSugar" }] } },
+  "sampleRequest": {
+    "page": 1,
+    "pageSize": 20,
+    "keyword": "",
+    "appPlatform": "",
+    "adPlatform": "",
+    "status": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "records": [
+        {
+          "id": "PF-001",
+          "appName": "BloodSugar",
+          "appIcon": "#3B82F6",
+          "appPlatform": "android",
+          "adPlatform": "Google",
+          "runStatus": "running",
+          "allowMulti": true,
+          "activeVersion": {
+            "version": 2,
+            "status": "published",
+            "publishedAt": "2026-03-20 10:00:00",
+            "publishedBy": "admin",
+            "evalMethod": "ROI",
+            "evalDays": 7,
+            "targetRate": 55,
+            "minRate": 45,
+            "difficultyFactor": 1.2,
+            "minProfit": 100,
+            "extraCondition": "工作日考核",
+            "isActive": true
+          },
+          "versions": [
+            {
+              "version": 2,
+              "status": "published",
+              "publishedAt": "2026-03-20 10:00:00",
+              "publishedBy": "admin",
+              "evalMethod": "ROI",
+              "evalDays": 7,
+              "targetRate": 55,
+              "minRate": 45,
+              "difficultyFactor": 1.2,
+              "minProfit": 100,
+              "extraCondition": "工作日考核",
+              "isActive": true
+            },
+            {
+              "version": 1,
+              "status": "archived",
+              "publishedAt": "2026-02-01 09:00:00",
+              "publishedBy": "admin",
+              "evalMethod": "ROI",
+              "evalDays": 7,
+              "targetRate": 52,
+              "minRate": 42,
+              "difficultyFactor": 1.1,
+              "minProfit": 80,
+              "extraCondition": "",
+              "isActive": false
+            }
+          ]
+        }
+      ],
+      "total": 1,
+      "current": 1,
+      "size": 20
+    }
+  },
   "api": {
     "url": "POST /api/config-management/perf-config/table",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "列表筛选参数",
-    "responseBody": "{ total, list }"
+    "requestBody": "page, pageSize, keyword?, appPlatform?, adPlatform?, status?",
+    "responseBody": "PaginatedResponse<PerfConfigItem>（推荐）或 { total, list } 待映射"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`/config-management/perf-config` `loadPerfTable`；`PerfConfigApiSource.perfTable === true` 时跳过远程。",
+        "prerequisite": "登录态。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "顶部筛选变更后可重新拉取（与前端 filteredList 并行时注意是否仍需远程分页）。"
+      }
+    ],
+    "defaultSelection": "page=1，pageSize=20，筛选项默认空。",
+    "dedupe": "无"
   }
 }

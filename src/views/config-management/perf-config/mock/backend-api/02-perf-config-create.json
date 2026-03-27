@@ -4,23 +4,93 @@
     "request": {
       "step1": { "type": "PerfStep1Form", "required": true, "description": "基础信息。" },
       "step2": { "type": "PerfStep2Form", "required": true, "description": "绩效指标。" },
-      "saveMode": { "type": "string", "required": true, "enum": ["draft", "publish"], "description": "保存方式。" }
+      "saveMode": {
+        "type": "string",
+        "required": true,
+        "enum": ["draft", "publish"],
+        "description": "保存方式。"
+      }
     },
     "response": {
       "id": { "type": "string", "required": true, "description": "新增配置 ID。" }
     }
   },
   "sampleRequest": {
-    "step1": { "appName": "BloodSugar", "appPlatform": "android", "adPlatforms": ["Google"], "runStatus": "running", "allowMulti": true },
-    "step2": { "evalMethod": "ROI", "evalDays": 7, "targetRate": 55, "minRate": 45, "difficultyFactor": 1.2, "minProfit": 100, "extraCondition": "" },
+    "step1": {
+      "appName": "BloodSugar",
+      "appPlatform": "android",
+      "adPlatforms": ["Google"],
+      "runStatus": "running",
+      "allowMulti": true
+    },
+    "step2": {
+      "evalMethod": "ROI",
+      "evalDays": 7,
+      "targetRate": 55,
+      "minRate": 45,
+      "difficultyFactor": 1.2,
+      "minProfit": 100,
+      "extraCondition": ""
+    },
     "saveMode": "publish"
   },
-  "sampleResponse": { "data": { "id": "PF-009" } },
+  "sampleResponse": {
+    "data": {
+      "id": "PF-009",
+      "appName": "BloodSugar",
+      "appIcon": "#3B82F6",
+      "appPlatform": "android",
+      "adPlatform": "Google",
+      "runStatus": "running",
+      "allowMulti": true,
+      "activeVersion": {
+        "version": 1,
+        "status": "published",
+        "publishedAt": "2026-03-27 10:00:00",
+        "publishedBy": "admin",
+        "evalMethod": "ROI",
+        "evalDays": 7,
+        "targetRate": 55,
+        "minRate": 45,
+        "difficultyFactor": 1.2,
+        "minProfit": 100,
+        "extraCondition": "",
+        "isActive": true
+      },
+      "versions": [
+        {
+          "version": 1,
+          "status": "published",
+          "publishedAt": "2026-03-27 10:00:00",
+          "publishedBy": "admin",
+          "evalMethod": "ROI",
+          "evalDays": 7,
+          "targetRate": 55,
+          "minRate": 45,
+          "difficultyFactor": 1.2,
+          "minProfit": 100,
+          "extraCondition": "",
+          "isActive": true
+        }
+      ]
+    }
+  },
   "api": {
     "url": "POST /api/config-management/perf-config",
     "method": "POST",
     "priority": "P0",
     "requestBody": "step1, step2, saveMode",
-    "responseBody": "{ id }"
+    "responseBody": "PerfConfigItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "新建向导最后一步提交 `createPerfConfig`；saveMode 为 draft 或 publish。",
+        "prerequisite": "`PerfConfigApiSource.perfCreate`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "提交防重复。"
   }
 }

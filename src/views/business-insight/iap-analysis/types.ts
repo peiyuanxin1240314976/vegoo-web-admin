@@ -100,47 +100,6 @@ export interface IapPlatformCompare {
   android: number[]
 }
 
-/** Overview 表格行（树形，含 children） */
-export interface IapOverviewRow {
-  id: string
-  /** 应用 ID（远程接口优先；无则详情页可用 id / name 回退） */
-  s_app_id?: string
-  name: string
-  platform: string
-  adPlatform: string
-  evalDays?: string
-  targetReq?: string
-  minReq?: string
-  difficulty?: string
-  minProfit?: string
-  adSpend: string
-  calcCost: string
-  roi?: string
-  proxyCost: string
-  estProfit: string
-  cpa?: string
-  score?: number | null
-  status?: string
-  statusNote?: string
-  statusBadge?: string
-  icon: string
-  iconBg: string
-  isChild?: boolean
-  children?: IapOverviewRow[]
-  hasChildren?: boolean
-}
-
-/** Overview 表格合计行 */
-export interface IapOverviewSummary {
-  adSpend: string
-  calcCost: string
-  avgRoi: string
-  proxyCost: string
-  estProfit: string
-  avgCpa: string
-  score: string
-}
-
 /** Detail - 产品 SKU 表行 */
 export interface IapSkuRow {
   name: string

@@ -2,7 +2,11 @@
   "_comment": "国家管理 - 编辑国家。path 参数 code 为主键，body 对应 CountryFormModel。",
   "fieldDescription": {
     "request": {
-      "path.code": { "type": "string", "required": true, "description": "主键国家代码（ISO alpha-2）。" },
+      "path.code": {
+        "type": "string",
+        "required": true,
+        "description": "主键国家代码（ISO alpha-2）。"
+      },
       "body": { "type": "CountryFormModel", "required": true, "description": "编辑表单数据。" }
     },
     "response": {
@@ -53,5 +57,16 @@
     "priority": "P0",
     "requestBody": "CountryFormModel",
     "responseBody": "CountryItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "详情抽屉或编辑弹窗保存 `updateCountry(code, data)`。",
+        "prerequisite": "与 `src/api/config-management.ts` 一致当前为 PUT；长期建议改为 POST body 含 code。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

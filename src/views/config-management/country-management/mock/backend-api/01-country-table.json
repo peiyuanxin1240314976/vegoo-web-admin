@@ -207,5 +207,20 @@
       "分页从第 1 页开始，list 为空数组时 total 返回 0。",
       "isMainMarket 字段建议在列表页高亮展示，便于运营快速识别重点市场。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`/config-management/country-management` `index.vue` onMounted / 筛选变更后 `loadTable`；`CountryApiSource.countryTable` 为 true 时走本地 mock。",
+        "prerequisite": "登录态。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "关键词搜索、地区/货币筛选、分页变化触发重新拉取。"
+      }
+    ],
+    "defaultSelection": "页码 1，pageSize 20；筛选空为全部。",
+    "dedupe": "无"
   }
 }

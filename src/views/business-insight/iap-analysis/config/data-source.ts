@@ -22,10 +22,6 @@ export enum IapAnalysisEndpoint {
   OverviewProductTypeDonut = 'overviewProductTypeDonut',
   /** 07-overview-platform-compare */
   OverviewPlatformCompare = 'overviewPlatformCompare',
-  /** 08-overview-table.json → POST overview/table */
-  OverviewTable = 'overviewTable',
-  /** 08-table-overview.json → POST table/overview */
-  TableOverview = 'tableOverview',
   /** 09-detail-kpi */
   DetailKpi = 'detailKpi',
   /** 10-detail-product */
@@ -45,8 +41,6 @@ export const IAP_ANALYSIS_USE_MOCK: Record<IapAnalysisEndpoint, boolean> = {
   [IapAnalysisEndpoint.OverviewCountryDistribution]: false,
   [IapAnalysisEndpoint.OverviewProductTypeDonut]: false,
   [IapAnalysisEndpoint.OverviewPlatformCompare]: false,
-  [IapAnalysisEndpoint.OverviewTable]: false,
-  [IapAnalysisEndpoint.TableOverview]: false,
   [IapAnalysisEndpoint.DetailKpi]: false,
   [IapAnalysisEndpoint.DetailProduct]: false,
   [IapAnalysisEndpoint.DetailUser]: false,

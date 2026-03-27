@@ -18,5 +18,16 @@
     "priority": "P0",
     "requestBody": "{ taskId }",
     "responseBody": "ImportReportDetail"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "隐藏路由 `/order-import/import-report/:taskId` 进入后 `fetchOrderImportReport(taskId)`。",
+        "prerequisite": "`OrderImportApiSource.importReport`；taskId 来自路由参数。"
+      }
+    ],
+    "defaultSelection": "taskId 必填。",
+    "dedupe": "无"
   }
 }

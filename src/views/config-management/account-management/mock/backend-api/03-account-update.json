@@ -55,5 +55,15 @@
     "priority": "P0",
     "requestBody": "{ id, ...Partial<AccountFormModel> }",
     "responseBody": "AdAccountItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "编辑广告账户弹窗提交，`updateAccount`。"
+      }
+    ],
+    "defaultSelection": "请求体带当前行 id 与变更字段。",
+    "dedupe": "无"
   }
 }

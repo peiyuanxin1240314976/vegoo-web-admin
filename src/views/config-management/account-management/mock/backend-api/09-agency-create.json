@@ -2,18 +2,33 @@
   "_comment": "代理商管理 - 新增代理商。",
   "fieldDescription": {
     "request": {
-      "agencyName": { "type": "string",  "required": true,  "description": "代理商名称。" },
-      "source":     { "type": "string",  "required": true,  "description": "广告平台，如 Meta Ads。" },
-      "coopMode":   { "type": "string",  "required": true,  "description": "合作模式：授权代理 | 直接开户。" },
-      "contact":    { "type": "string",  "required": true,  "description": "联系人姓名。" },
-      "email":      { "type": "string",  "required": true,  "description": "联系邮箱。" },
-      "phone":      { "type": "string",  "required": true,  "description": "联系电话。" },
-      "startDate":  { "type": "string",  "required": false, "description": "合作开始日期，格式 YYYY-MM-DD。" },
-      "expireDate": { "type": "string",  "required": false, "description": "合作到期日期，格式 YYYY-MM-DD。" },
-      "remark":     { "type": "string",  "required": false, "description": "备注信息。" }
+      "agencyName": { "type": "string", "required": true, "description": "代理商名称。" },
+      "source": { "type": "string", "required": true, "description": "广告平台，如 Meta Ads。" },
+      "coopMode": {
+        "type": "string",
+        "required": true,
+        "description": "合作模式：授权代理 | 直接开户。"
+      },
+      "contact": { "type": "string", "required": true, "description": "联系人姓名。" },
+      "email": { "type": "string", "required": true, "description": "联系邮箱。" },
+      "phone": { "type": "string", "required": true, "description": "联系电话。" },
+      "startDate": {
+        "type": "string",
+        "required": false,
+        "description": "合作开始日期，格式 YYYY-MM-DD。"
+      },
+      "expireDate": {
+        "type": "string",
+        "required": false,
+        "description": "合作到期日期，格式 YYYY-MM-DD。"
+      },
+      "remark": { "type": "string", "required": false, "description": "备注信息。" }
     },
     "response": {
-      "data": { "type": "AgencyItem", "description": "新建后的完整代理商对象，包含服务端生成的 id。" }
+      "data": {
+        "type": "AgencyItem",
+        "description": "新建后的完整代理商对象，包含服务端生成的 id。"
+      }
     }
   },
   "sampleRequest": {
@@ -51,8 +66,19 @@
   "api": {
     "url": "POST /api/config-management/agency",
     "method": "POST",
-    "priority": "P1",
+    "priority": "P0",
     "requestBody": "AgencyFormModel",
     "responseBody": "AgencyItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "代理商新建弹窗提交 `createAgency`。",
+        "prerequisite": "`AccountApiSource.createAgency` 为 false 时走网关。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

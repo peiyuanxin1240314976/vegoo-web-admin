@@ -116,6 +116,14 @@ export interface AppAssignmentMetaAssignableAppsResponse {
   apps: AppAssignableAppMetaItem[]
 }
 
+/** 新建弹窗应用下拉的选项（由 meta apps 映射） */
+export interface AssignmentAssignableSelectOption {
+  label: string
+  value: string
+  appName: string
+  iconColor: string
+}
+
 /** 某应用下可选绩效版本（契约 meta-performance-versions） */
 export interface AppAssignmentMetaVersionsResponse {
   versions: PerformanceVersion[]

@@ -18,7 +18,6 @@
 | `05-overview-country-distribution.json` | Dashboard 按国家/地区收入分布表 | `/overview/country-distribution` | POST | P0 |
 | `06-overview-product-type-donut.json` | Dashboard 产品类型分布甜甜圈 | `/overview/product-type-donut` | POST | P0 |
 | `07-overview-platform-compare.json` | Dashboard 平台对比柱状图 | `/overview/platform-compare` | POST | P0 |
-| `08-table-overview.json` | Overview 表格（树形）+ 合计行 | `/table/overview` | POST | P1 |
 | `09-detail-kpi.json` | Detail 页顶部 6 个 KPI | `/detail/kpi` | POST | P0 |
 | `10-detail-product.json` | Detail 产品统计 Tab 数据 | `/detail/product` | POST | P0 |
 | `11-detail-user.json` | Detail 用户分析 Tab 数据 | `/detail/user` | POST | P0 |
@@ -28,7 +27,6 @@
 
 - 各契约对应方法集中在 `src/api/iap-analysis.ts`（按文件名注释可查）
 - Dashboard 01～07：`composables/useIapDashboardModules.ts` 内并行拉取
-- Overview 树表：`fetchIapTableOverview` → `08-table-overview.json`；另备 `fetchIapOverviewTable` → `08-overview-table.json`
 - 详情 09～12：按 Tab 懒加载，见 `detail.vue`（进入页仅 KPI + 当前 Tab，切换 Tab 再请求对应接口）
 
 ## 拆分原则

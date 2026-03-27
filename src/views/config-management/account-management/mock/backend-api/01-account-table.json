@@ -1,8 +1,47 @@
 {
-  "name": "广告账户列表",
-  "method": "POST",
-  "url": "/api/config-management/account/table",
-  "description": "获取广告账户分页列表",
+  "_comment": "账户管理 · 广告账户 — 分页列表。对应 types.ts: AccountTableQuery / AdAccountItem。网关若统一包裹，业务体为 data 内对象；与 Api.Common.PaginatedResponse 对齐时使用 records、current、size、total。",
+  "fieldDescription": {
+    "request": {
+      "current": {
+        "type": "number",
+        "required": true,
+        "description": "当前页码，从 1 开始。",
+        "default": 1
+      },
+      "size": { "type": "number", "required": true, "description": "每页条数。", "default": 20 },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "关键词，匹配账户名或 ID。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台筛选，空为全部。"
+      },
+      "accountType": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "账户类型：直投 / 代投，空为全部。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "状态筛选，空为全部。"
+      },
+      "app": { "type": "string", "required": false, "default": "", "description": "应用名称筛选。" }
+    },
+    "response": {
+      "records": { "type": "AdAccountItem[]", "required": true, "description": "当前页记录。" },
+      "total": { "type": "number", "required": true, "description": "总条数。" },
+      "current": { "type": "number", "required": true, "description": "当前页码。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" }
+    }
+  },
   "sampleRequest": {
     "current": 1,
     "size": 20,
@@ -14,6 +53,7 @@
   },
   "sampleResponse": {
     "code": 200,
+    "message": "success",
     "data": {
       "records": [
         {
@@ -43,5 +83,27 @@
       "current": 1,
       "size": 20
     }
+  },
+  "api": {
+    "url": "POST /api/config-management/account/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "AccountTableQuery",
+    "responseBody": "PaginatedResponse<AdAccountItem>"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`/config-management/account-management` 进入后切换至「广告账户」Tab，`ad-account-tab.vue` onMounted 拉取列表。",
+        "prerequisite": "`AccountApiSource.accountTable === true` 时走本地 mock，不调用网关；为 false 时发起本 POST。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "父级搜索词变更、`reloadList`；行点击打开详情侧边栏不改变列表数据源。"
+      }
+    ],
+    "defaultSelection": "current=1，size=20，筛选默认空串表示不限。",
+    "dedupe": "与 Tab 切换互不取消；按页面实现可能全量拉取后前端分页。"
   }
 }

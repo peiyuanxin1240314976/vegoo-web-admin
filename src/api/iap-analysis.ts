@@ -17,8 +17,6 @@ import type {
   IapCountryRow,
   IapProductTypeDonutItem,
   IapPlatformCompare,
-  IapOverviewRow,
-  IapOverviewSummary,
   IapDetailProduct,
   IapDetailUser,
   IapDetailTrend
@@ -139,28 +137,6 @@ export function fetchIapOverviewPlatformCompare(params: IapOverviewTableQuery) {
   }
   return request.post<IapPlatformCompare>({
     url: `${IAP_BASE}/overview/platform-compare`,
-    data: normalizeIapOverviewBody(params)
-  })
-}
-
-/** 契约 08-overview-table.json — POST overview/table（与 table/overview 并存时选其一联调） */
-export function fetchIapOverviewTable(params: IapOverviewTableQuery) {
-  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.OverviewTable)) {
-    return insightMock.mockFetchIapOverviewTable(params)
-  }
-  return request.post<{ list: IapOverviewRow[]; summary: IapOverviewSummary }>({
-    url: `${IAP_BASE}/overview/table`,
-    data: normalizeIapOverviewBody(params)
-  })
-}
-
-/** 契约 08-table-overview.json — POST table/overview（README 清单中的 Overview 树表） */
-export function fetchIapTableOverview(params: IapOverviewTableQuery) {
-  if (isIapAnalysisEndpointMock(IapAnalysisEndpoint.TableOverview)) {
-    return insightMock.mockFetchIapOverviewTable(params)
-  }
-  return request.post<{ list: IapOverviewRow[]; summary: IapOverviewSummary }>({
-    url: `${IAP_BASE}/table/overview`,
     data: normalizeIapOverviewBody(params)
   })
 }

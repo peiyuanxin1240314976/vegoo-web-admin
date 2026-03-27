@@ -16,5 +16,16 @@
     "priority": "P1",
     "requestBody": "{ taskId }",
     "responseBody": "{ fileToken }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "报告页导出按钮 `exportOrderImportReport`。",
+        "prerequisite": "`OrderImportApiSource.exportReport`。"
+      }
+    ],
+    "defaultSelection": "taskId 为当前报告任务。",
+    "dedupe": "无"
   }
 }

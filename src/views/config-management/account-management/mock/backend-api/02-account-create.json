@@ -2,20 +2,41 @@
   "_comment": "账户管理 - 新建广告账户（提交开户申请）。",
   "fieldDescription": {
     "request": {
-      "source": { "type": "string", "required": true, "description": "广告平台，如 Google Ads / Meta Ads。" },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台，如 Google Ads / Meta Ads。"
+      },
       "accountName": { "type": "string", "required": true, "description": "账户名称。" },
-      "accountType": { "type": "string", "required": true, "enum": ["直投", "代投"], "description": "账户类型。" },
+      "accountType": {
+        "type": "string",
+        "required": true,
+        "enum": ["直投", "代投"],
+        "description": "账户类型。"
+      },
       "openAmount": { "type": "number", "required": false, "description": "开户金额（美元）。" },
       "agency": { "type": "string", "required": false, "description": "归属代理商，代投时必填。" },
       "bcBm": { "type": "string", "required": false, "description": "归属BC/BM。" },
       "apps": { "type": "string[]", "required": false, "description": "投放应用列表。" },
-      "platform": { "type": "string[]", "required": false, "description": "投放平台，如 ['安卓','iOS']。" },
-      "purposes": { "type": "string[]", "required": false, "description": "账户用途，如 ['广告投放','用户获取']。" },
+      "platform": {
+        "type": "string[]",
+        "required": false,
+        "description": "投放平台，如 ['安卓','iOS']。"
+      },
+      "purposes": {
+        "type": "string[]",
+        "required": false,
+        "description": "账户用途，如 ['广告投放','用户获取']。"
+      },
       "credential": { "type": "string", "required": false, "description": "关联凭据名称。" },
       "remark": { "type": "string", "required": false, "description": "备注。" }
     },
     "response": {
-      "data": { "type": "AdAccountItem", "required": true, "description": "创建完成后的完整账户信息。" }
+      "data": {
+        "type": "AdAccountItem",
+        "required": true,
+        "description": "创建完成后的完整账户信息。"
+      }
     }
   },
   "sampleRequest": {
@@ -61,5 +82,16 @@
     "priority": "P0",
     "requestBody": "AccountFormModel",
     "responseBody": "AdAccountItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "「广告账户」Tab 新建/编辑弹窗提交新建分支，`index.vue` 调用 `createAccount`。",
+        "prerequisite": "`AccountApiSource.createAccount === false` 时走网关；否则本地模拟成功。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "提交防重复。"
   }
 }

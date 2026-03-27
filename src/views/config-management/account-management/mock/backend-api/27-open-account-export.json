@@ -13,12 +13,27 @@
     }
   },
   "sampleRequest": { "keyword": "", "source": "", "status": "", "agency": "", "app": "" },
-  "sampleResponse": { "taskId": "export_open_account_20260324_001" },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": { "taskId": "export_open_account_20260324_001" }
+  },
   "api": {
     "url": "POST /api/config-management/open-account/export",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "筛选参数",
-    "responseBody": "taskId"
+    "requestBody": "Partial<OpenAccountTableQuery>",
+    "responseBody": "{ taskId } | blob"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "开户 Tab 导出 `exportOpenAccountList`。",
+        "prerequisite": "`AccountApiSource.exportOpenAccount`。"
+      }
+    ],
+    "defaultSelection": "与列表筛选一致。",
+    "dedupe": "无"
   }
 }

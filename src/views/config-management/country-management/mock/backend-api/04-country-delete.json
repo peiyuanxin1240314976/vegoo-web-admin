@@ -2,7 +2,11 @@
   "_comment": "国家管理 - 删除国家。按国家代码删除。",
   "fieldDescription": {
     "request": {
-      "path.code": { "type": "string", "required": true, "description": "国家代码（ISO alpha-2）。" }
+      "path.code": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码（ISO alpha-2）。"
+      }
     },
     "response": {
       "code": { "type": "number", "required": true, "description": "状态码，200 表示成功。" },
@@ -22,5 +26,16 @@
     "priority": "P0",
     "requestBody": "N/A",
     "responseBody": "{ code, message }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "删除确认后 `deleteCountry(code)`。",
+        "prerequisite": "当前实现为 DELETE；联调以 `src/api` 为准，后续可迁移 POST `/country/delete` + body。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

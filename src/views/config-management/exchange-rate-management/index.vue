@@ -32,7 +32,6 @@
 
     <!-- ── 内容区：左右两列 ─────────────────────────────── -->
     <div class="content-grid">
-
       <!-- 左列：KPI四卡 + 汇率列表表格 -->
       <div class="left-col">
         <!-- KPI 四卡 -->
@@ -41,7 +40,9 @@
             <div class="kpi-icon-wrap kpi-icon-wrap--teal">💱</div>
             <div class="kpi-body">
               <div class="kpi-label">已配置货币对</div>
-              <div class="kpi-value kpi-value--teal">{{ kpi.total }}<span class="kpi-unit">对</span></div>
+              <div class="kpi-value kpi-value--teal"
+                >{{ kpi.total }}<span class="kpi-unit">对</span></div
+              >
             </div>
             <div class="kpi-accent kpi-accent--teal" />
           </div>
@@ -77,7 +78,7 @@
         <!-- 表格 -->
         <div class="table-panel">
           <el-table
-            :data="pagedList"
+            :data="rateList"
             class="rate-table"
             style="width: 100%"
             @row-click="handleRowClick"
@@ -96,7 +97,10 @@
             <el-table-column label="变动幅度" min-width="100" align="center">
               <template #default="{ row }">
                 <span
-                  :class="['change-badge', row.changePercent >= 0 ? 'change-badge--up' : 'change-badge--down']"
+                  :class="[
+                    'change-badge',
+                    row.changePercent >= 0 ? 'change-badge--up' : 'change-badge--down'
+                  ]"
                 >
                   {{ row.changePercent >= 0 ? '▲' : '▼' }}
                   {{ Math.abs(row.changePercent).toFixed(2) }}%
@@ -107,7 +111,10 @@
             <el-table-column label="数据来源" min-width="90" align="center">
               <template #default="{ row }">
                 <span
-                  :class="['source-tag', row.dataSource === 'manual' ? 'source-tag--manual' : 'source-tag--auto']"
+                  :class="[
+                    'source-tag',
+                    row.dataSource === 'manual' ? 'source-tag--manual' : 'source-tag--auto'
+                  ]"
                 >
                   {{ row.dataSource === 'manual' ? '手动' : '自动同步' }}
                 </span>
@@ -126,11 +133,11 @@
           </el-table>
 
           <div class="pagination-bar">
-            <span class="total-text">共 {{ total }} 条</span>
+            <span class="total-text">共 {{ serverTotal }} 条</span>
             <el-pagination
               v-model:current-page="currentPage"
               :page-size="pageSize"
-              :total="total"
+              :total="serverTotal"
               layout="prev, pager, next"
               class="er-pagination"
             />
@@ -205,7 +212,6 @@
           <ElButton round class="btn-save-settings" @click="handleSaveSettings">保存设置</ElButton>
         </div>
       </div>
-
     </div>
 
     <!-- ── 弹窗 ─────────────────────────────────────────── -->
@@ -222,33 +228,19 @@
       @cancel="handleCancelSync"
     />
 
-    <RateSyncDoneDialog
-      v-model:visible="syncDoneVisible"
-      :result="syncResult"
-    />
+    <RateSyncDoneDialog v-model:visible="syncDoneVisible" :result="syncResult" />
   </div>
 </template>
 
 <script setup lang="ts">
-  import {
-    ref,
-    reactive,
-    computed,
-    watch,
-    onMounted,
-    onBeforeUnmount,
-    nextTick
-  } from 'vue'
+  import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import { Refresh, Edit, Download } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import * as echarts from 'echarts/core'
   import { LineChart } from 'echarts/charts'
-  import {
-    TooltipComponent,
-    GridComponent
-  } from 'echarts/components'
+  import { TooltipComponent, GridComponent } from 'echarts/components'
   import { CanvasRenderer } from 'echarts/renderers'
-  import { getAppNow } from '@/utils/app-now'
+  import { getAppNow, cloneAppDate } from '@/utils/app-now'
   import {
     fetchExchangeRateTable,
     createExchangeRate,
@@ -257,17 +249,11 @@
     exportExchangeRates,
     updateExchangeRateOverride
   } from '@/api/config-management'
-  import { ExchangeRateApiSource } from './config/data-source'
   import RateManualDialog from './modules/rate-manual-dialog.vue'
   import RateSyncDialog from './modules/rate-sync-dialog.vue'
   import RateSyncProgressDialog from './modules/rate-sync-progress-dialog.vue'
   import RateSyncDoneDialog from './modules/rate-sync-done-dialog.vue'
-  import {
-    cloneRateList,
-    ALL_CURRENCY_PAIRS,
-    mockTrendData,
-    mockSyncConfig
-  } from './mock/data'
+  import { ALL_CURRENCY_PAIRS, mockTrendData, mockSyncConfig } from './mock/data'
   import type { ExchangeRateItem, ManualRateFormModel, SyncResult, SyncConfig } from './types'
 
   echarts.use([LineChart, TooltipComponent, GridComponent, CanvasRenderer])
@@ -275,45 +261,19 @@
   defineOptions({ name: 'ExchangeRateManagement' })
 
   // ─── 数据 ──────────────────────────────────────────────
-  const rateList = ref<ExchangeRateItem[]>(cloneRateList())
+  const rateList = ref<ExchangeRateItem[]>([])
+  const serverTotal = ref(0)
   const filterDate = ref('')
   const filterPair = ref('')
   const currentPage = ref(1)
   const pageSize = ref(10)
   const activePair = ref('USD/EUR')
 
-  watch(filterPair, () => { currentPage.value = 1 })
-
-  const filteredList = computed(() => {
-    let list = [...rateList.value]
-    // 置顶优先
-    list.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0))
-    if (filterPair.value) {
-      list = list.filter((r) => r.pair === filterPair.value)
-    }
-    return list
+  watch(filterPair, () => {
+    currentPage.value = 1
   })
-
-  const total = computed(() => filteredList.value.length)
-  const pagedList = computed(() => {
-    const start = (currentPage.value - 1) * pageSize.value
-    return filteredList.value.slice(start, start + pageSize.value)
-  })
-
-  // ─── KPI ────────────────────────────────────────────────
-  const lastSyncTime = ref(getAppNow())
-
-  const kpi = computed(() => {
-    const diff = Math.round((getAppNow().getTime() - lastSyncTime.value.getTime()) / 60000)
-    const diffLabel = diff < 1 ? '刚刚' : `${diff}分钟前`
-    const abnormal = rateList.value.filter(
-      (r) => Math.abs(r.changePercent) > syncConfig.alertThreshold
-    ).length
-    return {
-      total: rateList.value.length,
-      lastSyncLabel: diffLabel,
-      abnormal
-    }
+  watch(filterDate, () => {
+    currentPage.value = 1
   })
 
   // ─── 同步设置 ───────────────────────────────────────────
@@ -322,17 +282,87 @@
     alertThreshold: mockSyncConfig.alertThreshold
   })
 
+  // ─── KPI ────────────────────────────────────────────────
+  const lastSyncTime = ref(getAppNow())
+  const kpiData = ref({ total: 0, abnormal: 0 })
+
+  const kpi = computed(() => {
+    const diff = Math.round((getAppNow().getTime() - lastSyncTime.value.getTime()) / 60000)
+    const diffLabel = diff < 1 ? '刚刚' : `${diff}分钟前`
+    return {
+      total: kpiData.value.total,
+      lastSyncLabel: diffLabel,
+      abnormal: kpiData.value.abnormal
+    }
+  })
+
+  function tableQueryBase() {
+    return {
+      pair: filterPair.value || undefined,
+      date: filterDate.value || undefined
+    }
+  }
+
+  async function loadTable() {
+    try {
+      const res = await fetchExchangeRateTable({
+        ...tableQueryBase(),
+        page: currentPage.value,
+        pageSize: pageSize.value
+      })
+      const r = res as Api.Common.PaginatedResponse<ExchangeRateItem>
+      rateList.value = r.records ?? []
+      serverTotal.value = r.total ?? 0
+    } catch {
+      ElMessage.error('加载列表失败')
+    }
+  }
+
+  async function loadKpiFromApi() {
+    try {
+      const res = await fetchExchangeRateTable({
+        ...tableQueryBase(),
+        page: 1,
+        pageSize: 10000
+      })
+      const r = res as Api.Common.PaginatedResponse<ExchangeRateItem>
+      const rows = r.records ?? []
+      kpiData.value = {
+        total: r.total ?? rows.length,
+        abnormal: rows.filter((row) => Math.abs(row.changePercent) > syncConfig.alertThreshold)
+          .length
+      }
+    } catch {
+      // 保持 KPI 上轮值
+    }
+  }
+
+  watch([filterPair, filterDate, currentPage, pageSize], () => {
+    void loadTable()
+  })
+  watch([filterPair, filterDate], () => {
+    void loadKpiFromApi()
+  })
+  watch(
+    () => syncConfig.alertThreshold,
+    () => {
+      void loadKpiFromApi()
+    }
+  )
+
   const FREQ_OPTIONS = [
     { label: '每小时', value: 'hourly' as const },
     { label: '每6小时', value: 'every6h' as const },
     { label: '每天', value: 'daily' as const }
   ]
 
-  const handleSaveSettings = () => {
-    if (!ExchangeRateApiSource.saveSyncConfig) {
-      saveSyncConfig(syncConfig).catch(() => undefined)
+  const handleSaveSettings = async () => {
+    try {
+      await saveSyncConfig(syncConfig)
+      ElMessage.success('同步设置已保存')
+    } catch {
+      ElMessage.error('保存失败')
     }
-    ElMessage.success('同步设置已保存')
   }
 
   // ─── 折线图 ─────────────────────────────────────────────
@@ -341,7 +371,7 @@
 
   function buildLineOption() {
     const dates = Array.from({ length: 30 }, (_, i) => {
-      const d = new Date(getAppNow())
+      const d = cloneAppDate(getAppNow())
       d.setDate(d.getDate() - (29 - i))
       return `${d.getMonth() + 1}/${d.getDate()}`
     })
@@ -400,6 +430,8 @@
       }
     })
     window.addEventListener('resize', resizeChart)
+    void loadTable()
+    void loadKpiFromApi()
   })
 
   onBeforeUnmount(() => {
@@ -412,12 +444,16 @@
     activePair.value = row.pair
   }
 
-  const toggleOverride = (row: ExchangeRateItem) => {
-    row.overrideAuto = !row.overrideAuto
-    if (!ExchangeRateApiSource.syncRates) {
-      updateExchangeRateOverride(row.id, row.overrideAuto).catch(() => undefined)
+  const toggleOverride = async (row: ExchangeRateItem) => {
+    const next = !row.overrideAuto
+    try {
+      await updateExchangeRateOverride(row.id, next)
+      await loadTable()
+      await loadKpiFromApi()
+      ElMessage.success(next ? `${row.pair} 已覆盖自动同步` : `${row.pair} 已取消覆盖`)
+    } catch {
+      ElMessage.error('操作失败')
     }
-    ElMessage.success(row.overrideAuto ? `${row.pair} 已覆盖自动同步` : `${row.pair} 已取消覆盖`)
   }
 
   const formatRate = (val: number) => {
@@ -428,33 +464,13 @@
   // ─── 手动输入 ───────────────────────────────────────────
   const manualVisible = ref(false)
 
-  const handleManualSuccess = (payload: ManualRateFormModel) => {
-    if (!ExchangeRateApiSource.manualCreate) {
-      createExchangeRate(payload).catch(() => undefined)
-    }
-    const pair = `${payload.baseCurrency}/${payload.quoteCurrency}`
-    const existing = rateList.value.find((r) => r.pair === pair)
-    if (existing) {
-      existing.currentRate = payload.rate
-      existing.dataSource = 'manual'
-      existing.overrideAuto = payload.overrideAuto
-      existing.remark = payload.remark
-    } else {
-      rateList.value.unshift({
-        id: String(Date.now()),
-        pair,
-        baseCurrency: payload.baseCurrency,
-        quoteCurrency: payload.quoteCurrency,
-        currentRate: payload.rate,
-        yesterdayRate: payload.rate,
-        changePercent: 0,
-        lastUpdated: getAppNow().toTimeString().slice(0, 5),
-        dataSource: 'manual',
-        isEnabled: true,
-        isPinned: false,
-        overrideAuto: payload.overrideAuto,
-        remark: payload.remark
-      })
+  const handleManualSuccess = async (payload: ManualRateFormModel) => {
+    try {
+      await createExchangeRate(payload)
+      await loadTable()
+      await loadKpiFromApi()
+    } catch {
+      ElMessage.error('保存失败')
     }
   }
 
@@ -484,9 +500,12 @@
     syncDialogVisible.value = true
   }
 
-  const handleStartSync = (pairs: string[], source = 'openexchange') => {
-    if (!ExchangeRateApiSource.syncRates) {
-      syncExchangeRates(pairs, source).catch(() => undefined)
+  const handleStartSync = async (pairs: string[], source = 'openexchange') => {
+    try {
+      await syncExchangeRates(pairs, source)
+    } catch {
+      ElMessage.error('同步请求失败')
+      return
     }
     syncProgress.current = 0
     syncProgress.total = pairs.length
@@ -504,16 +523,36 @@
         syncTimer = null
         syncProgressVisible.value = false
         const now = getAppNow()
-        const manualCount = rateList.value.filter((r) => r.dataSource === 'manual').length
-        syncResult.value = {
-          total: pairs.length,
-          success: pairs.length - manualCount,
-          overrideManual: manualCount,
-          failed: 0,
-          syncTime: now.toISOString().slice(0, 19).replace('T', ' ')
-        }
-        lastSyncTime.value = now
-        syncDoneVisible.value = true
+        void (async () => {
+          try {
+            const full = await fetchExchangeRateTable({
+              ...tableQueryBase(),
+              page: 1,
+              pageSize: 10000
+            })
+            const rows = (full as Api.Common.PaginatedResponse<ExchangeRateItem>).records ?? []
+            const manualCount = rows.filter((r) => r.dataSource === 'manual').length
+            syncResult.value = {
+              total: pairs.length,
+              success: Math.max(0, pairs.length - manualCount),
+              overrideManual: manualCount,
+              failed: 0,
+              syncTime: now.toISOString().slice(0, 19).replace('T', ' ')
+            }
+          } catch {
+            syncResult.value = {
+              total: pairs.length,
+              success: pairs.length,
+              overrideManual: 0,
+              failed: 0,
+              syncTime: now.toISOString().slice(0, 19).replace('T', ' ')
+            }
+          }
+          lastSyncTime.value = now
+          syncDoneVisible.value = true
+          await loadTable()
+          await loadKpiFromApi()
+        })()
       }
     }, 300)
   }
@@ -528,51 +567,19 @@
   }
 
   // ─── 导出 ───────────────────────────────────────────────
-  const handleExport = () => {
-    if (!ExchangeRateApiSource.exportRates) {
-      exportExchangeRates({
+  const handleExport = async () => {
+    try {
+      await exportExchangeRates({
         page: currentPage.value,
         pageSize: pageSize.value,
         pair: filterPair.value || undefined,
         date: filterDate.value || undefined
-      }).catch(() => undefined)
-    }
-    const header = 'pair,currentRate,yesterdayRate,changePercent,lastUpdated,dataSource'
-    const lines = [header]
-    for (const r of filteredList.value) {
-      lines.push(
-        [r.pair, r.currentRate, r.yesterdayRate, r.changePercent, r.lastUpdated, r.dataSource]
-          .map((v) => `"${String(v ?? '')}"`)
-          .join(',')
-      )
-    }
-    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `exchange_rates_${Date.now()}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-    ElMessage.success('导出成功')
-  }
-
-  const loadExchangeRateTable = async () => {
-    if (ExchangeRateApiSource.rateTable) return
-    try {
-      await fetchExchangeRateTable({
-        pair: filterPair.value || undefined,
-        date: filterDate.value || undefined,
-        page: currentPage.value,
-        pageSize: pageSize.value
       })
+      ElMessage.success('导出成功')
     } catch {
-      // keep mock list as fallback
+      ElMessage.error('导出失败')
     }
   }
-
-  onMounted(() => {
-    loadExchangeRateTable()
-  })
 </script>
 
 <style lang="scss" scoped>
@@ -611,9 +618,18 @@
     font-size: 14px;
   }
 
-  .bc-parent { color: var(--text-secondary); }
-  .bc-sep    { color: var(--text-muted); }
-  .bc-current { font-weight: 600; color: var(--text-primary); }
+  .bc-parent {
+    color: var(--text-secondary);
+  }
+
+  .bc-sep {
+    color: var(--text-muted);
+  }
+
+  .bc-current {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 
   .header-actions {
     display: flex;
@@ -661,11 +677,11 @@
     width: 150px;
 
     :deep(.el-input__wrapper) {
+      color: var(--text-primary);
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid var(--border) !important;
       border-radius: 7px;
       box-shadow: none !important;
-      color: var(--text-primary);
 
       &:hover,
       &:focus-within {
@@ -723,9 +739,15 @@
     font-size: 20px;
     border-radius: 10px;
 
-    &--teal  { background: rgb(45 212 191 / 15%); }
-    &--blue  { background: rgb(96 165 250 / 15%); }
-    &--amber { background: rgb(245 158 11 / 15%); }
+    &--teal {
+      background: rgb(45 212 191 / 15%);
+    }
+    &--blue {
+      background: rgb(96 165 250 / 15%);
+    }
+    &--amber {
+      background: rgb(245 158 11 / 15%);
+    }
   }
 
   .kpi-body {
@@ -744,11 +766,27 @@
     font-weight: 700;
     line-height: 1;
 
-    &--teal  { color: #2dd4bf; }
-    &--blue  { color: #60a5fa; }
-    &--amber { color: #f59e0b; }
-    &--source { font-size: 16px; color: #2dd4bf; font-weight: 700; }
-    &--sm    { font-size: 16px; }
+    &--teal {
+      color: #2dd4bf;
+    }
+
+    &--blue {
+      color: #60a5fa;
+    }
+
+    &--amber {
+      color: #f59e0b;
+    }
+
+    &--source {
+      font-size: 16px;
+      font-weight: 700;
+      color: #2dd4bf;
+    }
+
+    &--sm {
+      font-size: 16px;
+    }
   }
 
   .kpi-sub {
@@ -772,9 +810,15 @@
     height: 3px;
     border-radius: 0 0 10px 10px;
 
-    &--teal  { background: linear-gradient(90deg, #2dd4bf, transparent); }
-    &--blue  { background: linear-gradient(90deg, #60a5fa, transparent); }
-    &--amber { background: linear-gradient(90deg, #f59e0b, transparent); }
+    &--teal {
+      background: linear-gradient(90deg, #2dd4bf, transparent);
+    }
+    &--blue {
+      background: linear-gradient(90deg, #60a5fa, transparent);
+    }
+    &--amber {
+      background: linear-gradient(90deg, #f59e0b, transparent);
+    }
   }
 
   // ─── 两列布局 ────────────────────────────────────────────
@@ -834,9 +878,13 @@
       border-bottom: 1px solid var(--border) !important;
     }
 
-    :deep(tr) { background: transparent !important; }
+    :deep(tr) {
+      background: transparent !important;
+    }
 
-    :deep(.el-table__inner-wrapper::before) { display: none; }
+    :deep(.el-table__inner-wrapper::before) {
+      display: none;
+    }
   }
 
   .rate-val {
@@ -890,8 +938,8 @@
   .override-btn {
     padding: 3px 10px;
     font-size: 12px;
-    cursor: pointer;
     color: var(--text-muted);
+    cursor: pointer;
     background: none;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -899,8 +947,8 @@
 
     &--active {
       color: #f59e0b;
-      border-color: #f59e0b;
       background: rgb(245 158 11 / 12%);
+      border-color: #f59e0b;
     }
 
     &:hover:not(.override-btn--active) {
@@ -933,7 +981,9 @@
       background: transparent;
       border-radius: 5px;
 
-      &:hover { color: var(--accent); }
+      &:hover {
+        color: var(--accent);
+      }
 
       &.is-active {
         font-weight: 700;
@@ -1015,8 +1065,8 @@
   .freq-tab {
     padding: 4px 10px;
     font-size: 12px;
-    cursor: pointer;
     color: var(--text-muted);
+    cursor: pointer;
     background: rgb(255 255 255 / 4%);
     border: 1px solid var(--border);
     border-radius: 5px;
@@ -1082,7 +1132,9 @@
     font-size: 12px;
     font-weight: 600;
 
-    &--ok { color: #22c55e; }
+    &--ok {
+      color: #22c55e;
+    }
   }
 
   .btn-save-settings {

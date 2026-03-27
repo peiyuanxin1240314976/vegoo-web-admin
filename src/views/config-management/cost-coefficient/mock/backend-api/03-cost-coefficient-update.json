@@ -13,7 +13,13 @@
       "updated": { "type": "boolean", "required": true, "description": "更新结果。" }
     }
   },
-  "sampleRequest": { "id": "CC-001", "tStart": "2026-04-01", "dCostRatio": 1.2, "dInstallCost": 0.35678, "remark": "季度更新" },
+  "sampleRequest": {
+    "id": "CC-001",
+    "tStart": "2026-04-01",
+    "dCostRatio": 1.2,
+    "dInstallCost": 0.35678,
+    "remark": "季度更新"
+  },
   "sampleResponse": { "data": { "updated": true } },
   "api": {
     "url": "PUT /api/config-management/cost-coefficient/:id",
@@ -21,5 +27,16 @@
     "priority": "P0",
     "requestBody": "Partial<CostCoefficientFormModel>",
     "responseBody": "{ updated }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "编辑弹窗或抽屉保存 `updateCostCoefficient`。",
+        "prerequisite": "与 `src/api` 一致为 PUT；长期可改为 POST `/update` + body 含 id。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

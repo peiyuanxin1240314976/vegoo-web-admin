@@ -1,0 +1,35 @@
+{
+  "_comment": "应用管理 - 删除。当前远端实现为 DELETE。",
+  "fieldDescription": {
+    "request": {
+      "path.id": { "type": "string", "required": true, "description": "应用业务 ID。" }
+    },
+    "response": {
+      "empty": {
+        "type": "void",
+        "required": false,
+        "description": "成功即可，无 body 或统一 code。"
+      }
+    }
+  },
+  "sampleRequest": { "path": { "id": "Weather5A" } },
+  "sampleResponse": {},
+  "api": {
+    "url": "DELETE /api/config-management/application/:id",
+    "method": "DELETE",
+    "priority": "P0",
+    "requestBody": "无",
+    "responseBody": "空或统一包裹"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "确认删除弹窗点击确定",
+        "detail": "deleteApplication(id)；成功后 loadStats + loadTable，若当前详情即该行则关抽屉。",
+        "prerequisite": "id 有效"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "确认后立刻关闭弹窗，避免重复提交。"
+  }
+}

@@ -1,7 +1,7 @@
 ---
 name: module-api-contract-audit
 description: >-
-  Audits and organizes per-module HTTP API contracts, mock/backend-api JSON, README inventories, config data-source switches, fetch* in src/api, and UI coverage across routes. Enforces full sampleResponse, POST-only JSON APIs, and URL shape route+module+feature. Use when the user asks to 整理/梳理/校验/补全 项目或某业务模块的 接口契约、mock 契约、backend-api、或检查某模块是否少接口；或提到「模块接口与页面对齐」「契约与 fetch 对照」 「返回示例」「sampleResponse」「全部 POST」「接口路径命名」、大模块多页面契约目录聚合、 数据源开关统一、data-source 注释、多 enum 多 isMock、交互说明、初始化加载、默认选中。
+  Audits and organizes per-module HTTP API contracts, mock/backend-api JSON, README inventories, config data-source switches, fetch* in src/api, and UI coverage across routes. Enforces full sampleResponse, POST-only JSON APIs, and URL shape route+module+feature. Maps each contract to reachable UI; flags orphaned or unreachable surfaces for human/product confirmation before deleting or changing. Use when the user asks to 整理/梳理/校验/补全 项目或某业务模块的 接口契约、mock 契约、backend-api、或检查某模块是否少接口；或提到「模块接口与页面对齐」「契约与 fetch 对照」 「返回示例」「sampleResponse」「全部 POST」「接口路径命名」、大模块多页面契约目录聚合、 数据源开关统一、data-source 注释、多 enum 多 isMock、交互说明、初始化加载、默认选中、契约与页面可达/入口。
 ---
 
 # 模块接口契约整理（工作流）
@@ -38,6 +38,16 @@ description: >-
 - 在对应 `views/...` 下 `grep`：`fetch`、`request.post`、`from '@/api`。
 - 列出每个 **路由/页面** → **fetch\* 或请求函数**；注意 composable 间接调用。
 
+### 2.1 契约与页面展示、业务入口（须对齐；不可达须交需求方判断）
+
+审核或整理契约时，**每个接口应能对应到真实 UI**：表格/图表/KPI/弹窗/按钮结果等有展示或触发，而不是仅存在于 JSON 或 `fetch*` 定义中。
+
+- **交付对照**：在输出中写明 **契约文件 / URL → 路由 path 或页面组件 → 用户如何进入**（菜单、Tab、按钮、详情跳链等），与 **`interaction.triggers`**、README「场景 → 接口」一致。
+- **以下情况禁止由 Agent 擅自删除契约、改路径或删 `fetch*`**，须在交付物中单列 **「待需求 / 产品确认」**，写清依据（例如：路由未挂载、`index.vue` 未引用该页、菜单无入口、全仓无组件调用该 `fetch*`、仅有历史 Mock 等），**由需求方判断**后再改：
+  - 业务上 **从菜单/路由无法进入** 的页面及其契约；
+  - 契约或接口 **在现有界面中无任何展示或操作入口**（数据无处可渲染、无初始化/无用户操作触发）。
+- 可标注为 **「疑似冗余」** 或 **「待确认是否下线」**，与 **「缺契约 / 缺 fetch」** 区分，避免与验收清单混为一谈。
+
 ## 3. 盘点契约与文档
 
 - 查找 `src/views/<模块>/.../mock/backend-api/**/*.json` 与 **`README.md` 接口清单**。
@@ -68,6 +78,7 @@ description: >-
 3. **已对齐**的读/写接口；**缺契约 / 缺 fetch / 缺开关 / 缺 interaction / 仅有前端占位** 的项（逐条）。
 4. 网关路径与 JSON 示例 URL 不一致时的 **以前端 `src/api` 实际 URL 为准** 说明。
 5. 若仍存在 **子目录分散的 backend-api 或多份 config**：列出 **建议合并后的目标路径**（章节 9）。
+6. **无 UI 入口或业务不可触达**的契约 / `fetch*`（若有）：逐条列文件、URL、判定理由，标注 **须需求确认**；**不**计入「已对齐」清单，**不**在未获确认前建议删除（见 **§2.1**）。
 
 ## 8. 参考示例（本仓库）
 

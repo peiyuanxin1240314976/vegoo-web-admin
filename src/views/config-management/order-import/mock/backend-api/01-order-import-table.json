@@ -3,8 +3,18 @@
   "fieldDescription": {
     "request": {
       "page": { "type": "number", "required": true, "description": "页码。", "default": 1 },
-      "pageSize": { "type": "number", "required": true, "description": "每页条数。", "default": 10 },
-      "dataSource": { "type": "string", "required": false, "enum": ["appstore", "googleplay"], "description": "数据源筛选。" },
+      "pageSize": {
+        "type": "number",
+        "required": true,
+        "description": "每页条数。",
+        "default": 10
+      },
+      "dataSource": {
+        "type": "string",
+        "required": false,
+        "enum": ["appstore", "googleplay"],
+        "description": "数据源筛选。"
+      },
       "status": { "type": "string", "required": false, "description": "状态筛选。" }
     },
     "response": {
@@ -13,12 +23,29 @@
     }
   },
   "sampleRequest": { "page": 1, "pageSize": 10, "dataSource": "", "status": "" },
-  "sampleResponse": { "data": { "total": 1, "records": [{ "taskId": "IMP-027", "status": "completed" }] } },
+  "sampleResponse": {
+    "data": { "total": 1, "records": [{ "taskId": "IMP-027", "status": "completed" }] }
+  },
   "api": {
     "url": "POST /api/config-management/order-import/table",
     "method": "POST",
     "priority": "P0",
     "requestBody": "分页+筛选参数",
     "responseBody": "{ total, records }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`/config-management/order-import` `index.vue` 拉取任务表与 KPI；`OrderImportApiSource.importTable`。",
+        "prerequisite": "登录态。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "筛选数据源/状态、分页变更后重新请求。"
+      }
+    ],
+    "defaultSelection": "page=1，pageSize=10。",
+    "dedupe": "无"
   }
 }

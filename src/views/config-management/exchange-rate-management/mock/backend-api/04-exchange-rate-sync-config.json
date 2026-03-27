@@ -29,5 +29,16 @@
     "priority": "P0",
     "requestBody": "SyncConfig",
     "responseBody": "{ saved }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "同步设置弹窗保存 `saveSyncConfig`。",
+        "prerequisite": "`ExchangeRateApiSource.saveSyncConfig`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

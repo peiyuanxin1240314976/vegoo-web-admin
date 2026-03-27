@@ -9,12 +9,27 @@
     }
   },
   "sampleRequest": {},
-  "sampleResponse": { "enabled": true, "webhook": "", "mentionAll": false },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": { "enabled": true, "webhook": "https://open.feishu.cn/xxx", "mentionAll": false }
+  },
   "api": {
     "url": "POST /api/config-management/open-account/feishu-config",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "空对象",
-    "responseBody": "enabled, webhook, mentionAll"
+    "requestBody": "{}",
+    "responseBody": "{ enabled, webhook?, mentionAll? }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "「开户管理」Tab 打开飞书设置或进入 Tab 时 `fetchOpenAccountFeishuConfig`；`fetchOpenAccountFeishuConfig === false` 在源码语义为跳过远程（见 `open-account-tab`）。",
+        "prerequisite": "与 `AccountApiSource.fetchOpenAccountFeishuConfig` 对齐阅读。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
   }
 }

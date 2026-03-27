@@ -3,7 +3,12 @@
   "fieldDescription": {
     "request": {
       "file": { "type": "file", "required": true, "description": "CSV 文件。" },
-      "dataSource": { "type": "string", "required": true, "enum": ["appstore", "googleplay"], "description": "数据源。" },
+      "dataSource": {
+        "type": "string",
+        "required": true,
+        "enum": ["appstore", "googleplay"],
+        "description": "数据源。"
+      },
       "remark": { "type": "string", "required": false, "description": "备注。" }
     },
     "response": {
@@ -18,5 +23,16 @@
     "priority": "P0",
     "requestBody": "multipart/form-data",
     "responseBody": "{ taskId }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "导入弹窗选择文件并提交 `submitOrderImport(FormData)`；成功后跳转报告或刷新列表。",
+        "prerequisite": "`OrderImportApiSource.submitImport`。"
+      }
+    ],
+    "defaultSelection": "dataSource 与文件必选。",
+    "dedupe": "上传中禁用提交。"
   }
 }
