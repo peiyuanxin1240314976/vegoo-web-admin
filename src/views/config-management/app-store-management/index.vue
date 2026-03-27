@@ -184,23 +184,13 @@
       <div
         v-if="showAddDialog || showEditDialog"
         class="modal-overlay"
-        @click.self="
-          showAddDialog = false
-          showEditDialog = false
-        "
+        @click.self="closeFormDialog"
       >
         <div class="modal-box modal-form">
           <!-- 顶栏 -->
           <div class="modal-header">
             <span>{{ showEditDialog ? '编辑应用商店凭据' : '新增应用商店凭据' }}</span>
-            <button
-              class="modal-close"
-              @click="
-                showAddDialog = false
-                showEditDialog = false
-              "
-              >✕</button
-            >
+            <button class="modal-close" @click="closeFormDialog">✕</button>
           </div>
 
           <div class="modal-body">
@@ -338,14 +328,7 @@
           </div>
 
           <div class="modal-footer">
-            <button
-              class="btn btn-ghost"
-              @click="
-                showAddDialog = false
-                showEditDialog = false
-              "
-              >取消</button
-            >
+            <button class="btn btn-ghost" @click="closeFormDialog">取消</button>
             <button class="btn btn-primary" @click="handleSaveForm">
               {{ showEditDialog ? '保存' : '保存并测试' }}
             </button>
@@ -707,6 +690,11 @@
   }
 
   const handleView = () => {}
+
+  const closeFormDialog = () => {
+    showAddDialog.value = false
+    showEditDialog.value = false
+  }
 
   /** 新增 / 编辑 统一保存 */
   const handleSaveForm = () => {
