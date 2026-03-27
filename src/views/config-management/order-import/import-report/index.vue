@@ -267,7 +267,7 @@
   import { useRouter, useRoute } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import { Download, CircleCheckFilled, WarningFilled } from '@element-plus/icons-vue'
-  import { fetchOrderImportReport, exportOrderImportReport } from '@/api/config-management'
+  import { fetchOrderImportReport, exportOrderImportReport } from '@/api/config-management/order-import'
   import { OrderImportApiSource } from '../config/data-source'
   import { cloneAppDate, getAppNow } from '@/utils/app-now'
   import { cloneTaskList, getReport, getFailedItems, getErrorDistribution } from '../mock/data'

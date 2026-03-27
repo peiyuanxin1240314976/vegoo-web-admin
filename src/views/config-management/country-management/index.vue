@@ -207,7 +207,7 @@
     deleteCountry,
     exportCountryList,
     importCountryList
-  } from '@/api/config-management'
+  } from '@/api/config-management/country-management'
   import CountryDetailDrawer from './modules/country-detail-drawer.vue'
   import CountryFormDialog from './modules/country-form-dialog.vue'
   import CountryImportDialog from './modules/country-import-dialog.vue'

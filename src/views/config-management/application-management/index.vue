@@ -213,7 +213,7 @@
     exportApplicationList,
     fetchApplicationTable,
     updateApplication
-  } from '@/api/config-management'
+  } from '@/api/config-management/application-management'
   import { useUserStore } from '@/store/modules/user'
   import AppDetailDrawer from './modules/app-detail-drawer.vue'
   import AppFormDialog from './modules/app-form-dialog.vue'

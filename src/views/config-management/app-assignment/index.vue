@@ -212,7 +212,7 @@
     fetchAppAssignmentOverview,
     fetchAppAssignmentTable,
     updateAppAssignment
-  } from '@/api/config-management'
+  } from '@/api/config-management/app-assignment'
   import AssignmentDetailDrawer from './modules/assignment-detail-drawer.vue'
   import AssignmentFormDialog from './modules/assignment-form-dialog.vue'
   import ChangeLogDialog from './modules/change-log-dialog.vue'

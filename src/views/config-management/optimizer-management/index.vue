@@ -202,7 +202,7 @@
     fetchOptimizerOverview,
     fetchOptimizerTable,
     updateOptimizer
-  } from '@/api/config-management'
+  } from '@/api/config-management/optimizer-management'
   import { getAppNow } from '@/utils/app-now'
   import OptimizerDetailDrawer from './modules/optimizer-detail-drawer.vue'
   import OptimizerFormDialog from './modules/optimizer-form-dialog.vue'

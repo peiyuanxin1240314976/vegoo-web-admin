@@ -179,7 +179,7 @@
     fetchOrderImportSummary,
     pauseOrderImport,
     cancelOrderImport
-  } from '@/api/config-management'
+  } from '@/api/config-management/order-import'
   import { OrderImportApiSource } from './config/data-source'
   import { cloneTaskList, DATA_SOURCE_LABELS, STATUS_CONFIGS } from './mock/data'
   import ImportDialog from './modules/import-dialog.vue'

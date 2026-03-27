@@ -210,7 +210,7 @@
     resetUserPassword,
     updateUser,
     updateUserStatus
-  } from '@/api/config-management'
+  } from '@/api/config-management/user-management'
 
   defineOptions({ name: 'UserManagement' })
 

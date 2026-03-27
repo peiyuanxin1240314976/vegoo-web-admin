@@ -268,7 +268,7 @@
     updateAgency,
     updateCredential,
     validateCredential
-  } from '@/api/config-management'
+  } from '@/api/config-management/account-management'
   import { AccountApiSource } from './config/data-source'
   import AdAccountTab from './modules/ad-account-tab.vue'
   import AgencyTab from './modules/agency-tab.vue'

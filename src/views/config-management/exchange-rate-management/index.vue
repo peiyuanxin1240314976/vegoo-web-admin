@@ -248,7 +248,7 @@
     saveSyncConfig,
     exportExchangeRates,
     updateExchangeRateOverride
-  } from '@/api/config-management'
+  } from '@/api/config-management/exchange-rate-management'
   import RateManualDialog from './modules/rate-manual-dialog.vue'
   import RateSyncDialog from './modules/rate-sync-dialog.vue'
   import RateSyncProgressDialog from './modules/rate-sync-progress-dialog.vue'

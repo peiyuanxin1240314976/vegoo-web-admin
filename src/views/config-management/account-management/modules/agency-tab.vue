@@ -168,7 +168,7 @@
 <script setup lang="ts">
   import { onMounted, ref, computed, watch } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import { deleteAgency, fetchAgencyTable } from '@/api/config-management'
+  import { deleteAgency, fetchAgencyTable } from '@/api/config-management/account-management'
   import { getAppNowMs } from '@/utils/app-now'
   import { AccountApiSource } from '../config/data-source'
   import { cloneAgencyMockList } from '../mock/data'

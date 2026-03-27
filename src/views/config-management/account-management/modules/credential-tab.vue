@@ -180,7 +180,7 @@
 <script setup lang="ts">
   import { onMounted, ref, computed, watch } from 'vue'
   import { ElMessage } from 'element-plus'
-  import { fetchCredentialTable, validateCredentialBatch } from '@/api/config-management'
+  import { fetchCredentialTable, validateCredentialBatch } from '@/api/config-management/account-management'
   import { AccountApiSource } from '../config/data-source'
   import { cloneCredentialMockList } from '../mock/data'
   import { PLATFORM_CONFIGS } from '../types'

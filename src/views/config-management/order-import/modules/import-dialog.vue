@@ -244,7 +244,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
   import { Check, Upload, InfoFilled } from '@element-plus/icons-vue'
-  import { submitOrderImport } from '@/api/config-management'
+  import { submitOrderImport } from '@/api/config-management/order-import'
   import { OrderImportApiSource } from '../config/data-source'
   import { getAppNow } from '@/utils/app-now'
 

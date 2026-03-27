@@ -399,7 +399,7 @@
     createPerfConfig,
     activatePerfConfig,
     exportPerfConfig
-  } from '@/api/config-management'
+  } from '@/api/config-management/perf-config'
   import { PerfConfigApiSource } from './config/data-source'
   import { clonePerfList, AD_PLATFORMS, STATUS_CONFIG, RUN_STATUS_CONFIG } from './mock/data'
   import PerfCreateDialog from './modules/perf-create-dialog.vue'

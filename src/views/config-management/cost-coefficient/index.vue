@@ -199,7 +199,7 @@
     updateCostCoefficient,
     deleteCostCoefficient,
     fetchCostCoefficientHistory
-  } from '@/api/config-management'
+  } from '@/api/config-management/cost-coefficient'
   import CostFormDialog from './modules/cost-form-dialog.vue'
   import CostDeleteDialog from './modules/cost-delete-dialog.vue'
   import CostDetailDrawer from './modules/cost-detail-drawer.vue'

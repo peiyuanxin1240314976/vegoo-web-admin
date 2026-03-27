@@ -194,7 +194,7 @@
     fetchOpenAccountFeishuConfig,
     fetchOpenAccountTable,
     saveOpenAccountFeishuConfig
-  } from '@/api/config-management'
+  } from '@/api/config-management/account-management'
   import { AccountApiSource } from '../config/data-source'
   import { cloneOpenAccountMockList, agencyOptions, appOptions } from '../mock/data'
   import { PLATFORM_CONFIGS } from '../types'
