@@ -300,10 +300,12 @@
     "configManagement": {
       "title": "Configuration",
       "applicationManagement": "Application Management",
+      "appStoreManagement": "App Store Management",
       "appAssignment": "App Assignment",
       "optimizerManagement": "Optimizer Management",
       "userManagement": "User Management",
       "accountManagement": "Account Management",
+      "adAccountManagement": "Ad Account Management",
       "countryManagement": "Country Management",
       "exchangeRateManagement": "Exchange Rate Management",
       "costCoefficient": "Cost Coefficient",

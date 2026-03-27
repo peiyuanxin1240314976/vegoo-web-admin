@@ -25,6 +25,16 @@ export const configManagementRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'app-store-management',
+      name: 'AppStoreManagement',
+      component: '/config-management/app-store-management',
+      meta: {
+        title: 'menus.configManagement.appStoreManagement',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
       path: 'app-assignment',
       name: 'AppAssignment',
       component: '/config-management/app-assignment',
@@ -60,6 +70,16 @@ export const configManagementRoutes: AppRouteRecord = {
       component: '/config-management/account-management',
       meta: {
         title: 'menus.configManagement.accountManagement',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'ad-account-management',
+      name: 'AdAccountManagement',
+      component: '/config-management/ad-account-management',
+      meta: {
+        title: 'menus.configManagement.adAccountManagement',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
