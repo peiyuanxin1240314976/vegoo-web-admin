@@ -1,0 +1,42 @@
+{
+  "_comment": "配置管理 - 禁用/启用用户。fetch*: updateUserStatus(id, status)。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "路径 :id。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["活跃", "待激活", "已禁用"],
+        "description": "目标状态；启用传活跃，禁用传已禁用。"
+      }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否更新成功。" }
+    }
+  },
+  "sampleRequest": { "status": "已禁用" },
+  "sampleResponse": { "success": true },
+  "api": {
+    "url": "PUT /api/config-management/user/:id/status",
+    "method": "PUT",
+    "priority": "P0",
+    "requestBody": "{ status }",
+    "responseBody": "success 或完整 UserItem，以网关为准"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "当前实现为 PUT；可与账户模块一致改为 POST /api/config-management/user/status，body: { id, status }。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "表格「禁用」/「启用」或详情抽屉内切换状态，确认后调用。",
+        "prerequisite": "权限校验通过。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "_comment": "配置管理 - 新建用户。fetch*: createUser。",
+  "fieldDescription": {
+    "request": {
+      "userName": { "type": "string", "required": true, "description": "用户名。" },
+      "email": { "type": "string", "required": true, "description": "邮箱，用于激活与登录通知。" },
+      "role": { "type": "string", "required": true, "description": "角色，同 UserRole。" },
+      "accessibleApps": { "type": "string[]", "required": true, "description": "可访问应用列表。" },
+      "remark": { "type": "string", "required": true, "description": "备注，可为空串。" }
+    },
+    "response": {
+      "data": {
+        "type": "UserItem",
+        "required": true,
+        "description": "新建成功的用户完整信息；若网关 unwrap 则根即 UserItem，与 sampleResponse 一致。"
+      }
+    },
+    "UserItem": {
+      "id": { "type": "string", "required": true, "description": "服务端生成的用户 ID。" },
+      "userName": { "type": "string", "required": true, "description": "用户名。" },
+      "email": { "type": "string", "required": true, "description": "邮箱。" },
+      "avatarColor": { "type": "string", "required": true, "description": "头像色。" },
+      "role": { "type": "string", "required": true, "description": "角色。" },
+      "status": { "type": "string", "required": true, "description": "新建后一般为待激活。" },
+      "lastLogin": {
+        "type": "string",
+        "required": true,
+        "description": "如未登录可为「未登录」。"
+      },
+      "joinTime": { "type": "string", "required": true, "description": "创建日 YYYY-MM-DD。" },
+      "accessibleApps": { "type": "string[]", "required": true, "description": "可访问应用。" },
+      "remark": { "type": "string", "required": true, "description": "备注。" }
+    }
+  },
+  "sampleRequest": {
+    "userName": "新用户",
+    "email": "newuser@vegoo.com",
+    "role": "投放人员",
+    "accessibleApps": ["Weather1"],
+    "remark": ""
+  },
+  "sampleResponse": {
+    "id": "u-new-001",
+    "userName": "新用户",
+    "email": "newuser@vegoo.com",
+    "avatarColor": "#3B82F6",
+    "role": "投放人员",
+    "status": "待激活",
+    "lastLogin": "未登录",
+    "joinTime": "2026-03-27",
+    "accessibleApps": ["Weather1"],
+    "remark": ""
+  },
+  "api": {
+    "url": "POST /api/config-management/user",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "userName, email, role, accessibleApps, remark",
+    "responseBody": "UserItem"
+  },
+  "apiSuggestion": {
+    "notes": ["成功后服务端应触发激活邮件；重复邮箱返回业务错误码由网关约定。"]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "点击「新建用户」打开 UserFormDialog，提交校验通过后调用。",
+        "prerequisite": "表单必填项通过校验。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "提交中按钮 loading，防重复点击。"
+  }
+}

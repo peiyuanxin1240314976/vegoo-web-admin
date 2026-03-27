@@ -1,0 +1,80 @@
+{
+  "_comment": "配置管理 - 更新用户。fetch*: updateUser（路径含 id，body 为 UserFormPayload）。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "用户 ID，与路径 :id 一致。" },
+      "userName": { "type": "string", "required": true, "description": "用户名。" },
+      "email": { "type": "string", "required": true, "description": "邮箱。" },
+      "role": { "type": "string", "required": true, "description": "角色。" },
+      "accessibleApps": { "type": "string[]", "required": true, "description": "可访问应用。" },
+      "remark": { "type": "string", "required": true, "description": "备注。" },
+      "status": {
+        "type": "string",
+        "required": false,
+        "description": "可选，若表单允许改状态则传递。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "UserItem",
+        "required": true,
+        "description": "更新后的用户信息；unwrap 时同 sampleResponse。"
+      }
+    },
+    "UserItem": {
+      "id": { "type": "string", "required": true, "description": "用户 ID。" },
+      "userName": { "type": "string", "required": true, "description": "用户名。" },
+      "email": { "type": "string", "required": true, "description": "邮箱。" },
+      "avatarColor": { "type": "string", "required": true, "description": "头像色。" },
+      "role": { "type": "string", "required": true, "description": "角色。" },
+      "status": { "type": "string", "required": true, "description": "状态。" },
+      "lastLogin": { "type": "string", "required": true, "description": "最近登录文案。" },
+      "joinTime": { "type": "string", "required": true, "description": "加入时间。" },
+      "accessibleApps": { "type": "string[]", "required": true, "description": "可访问应用。" },
+      "remark": { "type": "string", "required": true, "description": "备注。" }
+    }
+  },
+  "sampleRequest": {
+    "id": "u001",
+    "userName": "张三",
+    "email": "zhangsan@vegoo.com",
+    "role": "管理层/老板",
+    "accessibleApps": ["Weather1", "Weather2"],
+    "remark": "更新备注"
+  },
+  "sampleResponse": {
+    "id": "u001",
+    "userName": "张三",
+    "email": "zhangsan@vegoo.com",
+    "avatarColor": "#F97316",
+    "role": "管理层/老板",
+    "status": "活跃",
+    "lastLogin": "2小时前",
+    "joinTime": "2024-01-15",
+    "accessibleApps": ["Weather1", "Weather2"],
+    "remark": "更新备注"
+  },
+  "api": {
+    "url": "PUT /api/config-management/user/:id",
+    "method": "PUT",
+    "priority": "P0",
+    "requestBody": "UserFormPayload（含 id，与路径一致）",
+    "responseBody": "UserItem"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "当前实现为 PUT；新项目统一 POST JSON 时可改为 POST /api/config-management/user/update，body 含 id，与优化师模块一致。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "表格行「编辑」或抽屉内编辑打开 UserFormDialog，提交后调用。",
+        "prerequisite": "payload.id 存在。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "提交中防重复。"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "_comment": "配置管理 - 删除用户。fetch*: deleteUser；路径参数 id。",
+  "fieldDescription": {
+    "request": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "路径 :id，与 sampleRequest.pathParams 对应（JSON 中单独说明）。"
+      }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否删除成功。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": { "success": true },
+  "api": {
+    "url": "DELETE /api/config-management/user/:id",
+    "method": "DELETE",
+    "priority": "P0",
+    "requestBody": "无，id 在路径",
+    "responseBody": "success 或空对象，以网关为准"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "当前实现为 DELETE；统一 POST 时可改为 POST /api/config-management/user/delete，body: { id }。",
+      "仅待激活等允许删除的场景由后端校验。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "待激活用户行点击「删除」，确认后调用。",
+        "prerequisite": "ElMessageBox 确认。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
+  }
+}

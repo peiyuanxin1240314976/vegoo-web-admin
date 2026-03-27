@@ -93,5 +93,26 @@
     "priority": "P0",
     "requestBody": "Query: current, size, userName?, status?, role?, ...",
     "responseBody": "Api.Common.PaginatedResponse<UserListItem>"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "存量 GET + query；新项目统一 POST JSON 时可新增 POST /api/system/user/table，body 与 sampleRequest 同结构，本契约可平行迁移。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`views/system/user/index.vue` 中 `useTable` 配置 `apiFn: fetchGetUserList`，进入页面拉取分页列表。",
+        "prerequisite": "登录态"
+      },
+      {
+        "moment": "搜索 / 重置 / 分页 / 刷新",
+        "detail": "左侧 `UserLeftPanel` 搜索与 `ArtTable` 分页、`ArtTableHeader` 刷新触发表格重新请求。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "current=1、size 取自表格默认；status/role 等空字符串表示不过滤（与 Api.SystemManage.UserSearchParams 一致）。",
+    "dedupe": "由表格封装处理并发请求策略。"
   }
 }

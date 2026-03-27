@@ -1,0 +1,34 @@
+{
+  "_comment": "配置管理 - 重发激活邮件。fetch*: resendUserActivation(id)。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "路径 :id。" }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否已重新发送。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": { "success": true },
+  "api": {
+    "url": "POST /api/config-management/user/:id/resend-activation",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "无或空对象",
+    "responseBody": "{ success }"
+  },
+  "apiSuggestion": {
+    "notes": ["需后端限流防止滥发。"]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "待激活用户行「发送激活邮件」。",
+        "prerequisite": "用户状态为待激活。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "建议按钮级冷却时间。"
+  }
+}
