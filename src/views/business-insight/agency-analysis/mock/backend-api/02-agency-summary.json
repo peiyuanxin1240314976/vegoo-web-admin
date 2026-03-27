@@ -29,6 +29,24 @@
         "required": true,
         "description": "展开区详情映射。"
       }
+    },
+    "AgencyExpandData": {
+      "campaigns": {
+        "type": "AgencyExpandCampaign[]",
+        "required": true,
+        "description": "代投方下的广告系列列表。"
+      }
+    },
+    "AgencyExpandCampaign": {
+      "id": { "type": "string", "required": true, "description": "广告系列 ID。" },
+      "appId": { "type": "string", "required": true, "description": "应用 ID（s_app_id）。" },
+      "appName": {
+        "type": "string",
+        "required": true,
+        "description": "应用名称（原广告系列名称字段 name 已更名为 appName）。"
+      },
+      "channel": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "spend": { "type": "number", "required": true, "description": "消耗金额。" }
     }
   },
   "sampleRequest": {
@@ -70,7 +88,15 @@
         "weeklyCountries": 12,
         "weeklyDays": 7,
         "accounts": [],
-        "campaigns": []
+        "campaigns": [
+          {
+            "id": "c1",
+            "appId": "com.vegoo.phonetracker2",
+            "appName": "PhoneTracker2_US_Facebook_001",
+            "channel": "Facebook",
+            "spend": 68420
+          }
+        ]
       }
     }
   },

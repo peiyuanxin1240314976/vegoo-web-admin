@@ -65,11 +65,12 @@
   }
 
   const goCampaignDetail = (campaign: CampaignRow) => {
+    const campaignName = campaign.appName || campaign.name || ''
     router.push({
       path: '/user-growth/ad-performance/campaign-detail',
       query: {
         id: campaign.id,
-        name: campaign.name
+        name: campaignName
       }
     })
   }
@@ -752,7 +753,9 @@
                               :key="ci"
                               :class="{ 'row-red-tint': cp.isRed }"
                             >
-                              <td :class="{ 'text-danger': cp.isRed }">{{ cp.name }}</td>
+                              <td :class="{ 'text-danger': cp.isRed }">
+                                {{ cp.appName || cp.name || '--' }}
+                              </td>
                               <td>${{ cp.budget }}</td>
                               <td>{{ cp.spend }}</td>
                               <td>{{ cp.cpa }}</td>
@@ -866,7 +869,7 @@
               </template>
               <tr v-for="(cp, i) in campaigns" :key="i" class="data-row">
                 <td :style="{ color: cp.agencyColor || '#e2e8f0' }">{{ cp.agency }}</td>
-                <td class="name-cell">{{ cp.name }}</td>
+                <td class="name-cell">{{ cp.appName || cp.name || '--' }}</td>
                 <td>{{ cp.channel }}</td>
                 <td>{{ cp.app }}</td>
                 <td class="text-right">${{ cp.spend.toLocaleString() }}</td>

@@ -11,16 +11,6 @@ export const dashboardRoutes: AppRouteRecord = {
   },
   children: [
     {
-      path: 'console',
-      name: 'Console',
-      component: '/dashboard/console',
-      meta: {
-        title: 'menus.dashboard.console',
-        keepAlive: false,
-        fixedTab: true
-      }
-    },
-    {
       path: 'big-screen',
       name: 'BigScreen',
       component: '/dashboard/big-screen',

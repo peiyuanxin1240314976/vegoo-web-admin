@@ -356,11 +356,11 @@
 
 <script setup lang="ts" name="AdPlatformAnalysis">
   import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
+  import { useRouter } from 'vue-router'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
   import type { ColumnOption } from '@/types'
   import { getAppNow } from '@/utils/app-now'
-  import { ElMessage } from 'element-plus'
   import {
     fetchAdPlatformAnalysisCampaignTop10,
     fetchAdPlatformAnalysisFiltersMeta,
@@ -379,6 +379,7 @@
   } from './mock'
 
   defineOptions({ name: 'FinanceScreen' })
+  const router = useRouter()
 
   const KPI_SKELETON_CARD_COUNT = 5
 
@@ -879,7 +880,8 @@
   }
 
   function onViewTopCampaign(row: TopCampaignRow) {
-    ElMessage.info(`查看广告系列：${row.campaign}（${row.channel}）`)
+    void row
+    void router.push('/business-insight/ad-platform-info')
   }
 
   function topCampaignRowKey(row: TopCampaignRow) {

@@ -40,7 +40,9 @@ export interface AccountDetail {
 }
 
 export interface CampaignDetail {
-  name: string
+  appId?: string
+  appName?: string
+  name?: string
   budget: number
   spend: string
   cpa: string
@@ -75,7 +77,9 @@ export interface CampaignRow {
   id: string
   agency: string
   agencyColor?: string
-  name: string
+  appId?: string
+  appName?: string
+  name?: string
   channel: string
   app: string
   spend: number

@@ -28,6 +28,27 @@
         "required": true,
         "description": "广告系列明细行。"
       }
+    },
+    "CampaignRow": {
+      "id": { "type": "string", "required": true, "description": "广告系列记录 ID。" },
+      "agency": { "type": "string", "required": true, "description": "代投方名称。" },
+      "appId": { "type": "string", "required": true, "description": "应用 ID（s_app_id）。" },
+      "appName": {
+        "type": "string",
+        "required": true,
+        "description": "应用名称（原广告系列名称字段 name 已更名为 appName）。"
+      },
+      "channel": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "app": { "type": "string", "required": true, "description": "应用别名/展示简称。" },
+      "spend": { "type": "number", "required": true, "description": "消耗金额。" },
+      "installs": { "type": "number", "required": true, "description": "安装量。" },
+      "cpi": { "type": "number", "required": true, "description": "CPI。" },
+      "ctr": { "type": "number", "required": true, "description": "CTR（%）。" },
+      "cvr": { "type": "number", "required": true, "description": "CVR（%）。" },
+      "ipm": { "type": "number", "required": true, "description": "IPM。" },
+      "budget": { "type": "number", "required": true, "description": "预算金额。" },
+      "execRate": { "type": "number", "required": true, "description": "预算执行率（%）。" },
+      "trend": { "type": "string", "required": true, "description": "趋势方向。" }
     }
   },
   "sampleRequest": {
@@ -41,7 +62,8 @@
       {
         "id": "c1",
         "agency": "GatherOne",
-        "name": "PhoneTracker2_US_Facebook_001",
+        "appId": "com.vegoo.phonetracker2",
+        "appName": "PhoneTracker2_US_Facebook_001",
         "channel": "Facebook",
         "app": "PhoneTracker2",
         "spend": 68420,
