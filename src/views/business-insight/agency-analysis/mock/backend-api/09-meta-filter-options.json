@@ -1,0 +1,109 @@
+{
+  "_comment": "代投分析 - 顶部筛选项元信息（应用/代投方/广告平台）。对应顶部过滤区下拉选项。",
+  "fieldDescription": {
+    "request": {
+      "t_date": {
+        "type": "string",
+        "required": true,
+        "description": "查询日期，格式 YYYY-MM-DD。用于返回该日期可用的筛选项。"
+      }
+    },
+    "response": {
+      "appOptions": {
+        "type": "FilterOption[]",
+        "required": true,
+        "description": "应用下拉选项，首项建议为 all。"
+      },
+      "agencyOptions": {
+        "type": "FilterOption[]",
+        "required": true,
+        "description": "代投方下拉选项，首项建议为 all。"
+      },
+      "sourceOptions": {
+        "type": "FilterOption[]",
+        "required": true,
+        "description": "广告平台（source）下拉选项，首项建议为 all。"
+      }
+    },
+    "FilterOption": {
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "展示名称。"
+      },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "选项值；全量项固定使用 all。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "t_date": "2026-03-07"
+  },
+  "sampleResponse": {
+    "appOptions": [
+      {
+        "label": "全部应用",
+        "value": "all"
+      },
+      {
+        "label": "Solitaire Classic",
+        "value": "app_solitaire_classic"
+      },
+      {
+        "label": "Mahjong Master",
+        "value": "app_mahjong_master"
+      }
+    ],
+    "agencyOptions": [
+      {
+        "label": "全部代投方",
+        "value": "all"
+      },
+      {
+        "label": "GatherOne",
+        "value": "agency_gatherone"
+      },
+      {
+        "label": "BluePeak",
+        "value": "agency_bluepeak"
+      }
+    ],
+    "sourceOptions": [
+      {
+        "label": "全部广告平台",
+        "value": "all"
+      },
+      {
+        "label": "Google",
+        "value": "1"
+      },
+      {
+        "label": "Facebook",
+        "value": "2"
+      },
+      {
+        "label": "Unity",
+        "value": "3"
+      },
+      {
+        "label": "AppLovin",
+        "value": "4"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/meta/filter-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "t_date",
+    "responseBody": "appOptions, agencyOptions, sourceOptions"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "返回顺序即前端展示顺序；all 选项固定放首位。",
+      "sourceOptions 的 value 建议与后端 source 枚举保持一致。"
+    ]
+  }
+}
