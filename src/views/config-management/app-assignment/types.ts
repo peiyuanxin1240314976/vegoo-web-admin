@@ -64,3 +64,64 @@ export interface AssignmentFormModel {
   configVersionId: string
   changeReason: string
 }
+
+/** 列表查询（契约 `app-assignment/table`）；`source` 表示广告平台筛选，与 UI 筛选「广告平台」一致 */
+export interface AssignmentTableQuery {
+  keyword?: string
+  /** 终端平台：`Android` | `iOS`，空串表示全部 */
+  platform?: string
+  /** 广告平台名称或「全部」，与 `AppAssignmentItem.adPlatform` 展示值一致 */
+  source?: string
+  optimizer?: string
+  /** `活跃` | `草稿配置` | `已归档`，空串表示全部 */
+  status?: string
+  current: number
+  size: number
+}
+
+/** 新建分配提交体（契约 create） */
+export type AssignmentCreatePayload = AssignmentFormModel
+
+/** 更新分配提交体（契约 update，id 必填） */
+export type AssignmentUpdatePayload = AssignmentFormModel & { id: string }
+
+/** 页头 KPI（契约 overview） */
+export interface AppAssignmentOverviewResponse {
+  /** 分配总条数（与表格维度一致，不含仅统计类虚拟行） */
+  total: number
+  /** 状态为「活跃」的分配数 */
+  active: number
+  /** 已配置绩效目标但尚未建立任何分配的应用数（或产品定义口径） */
+  unassigned: number
+  /** 当前列表涉及的优化师去重人数（可与 overview 同屏或独立统计） */
+  optimizerCount: number
+}
+
+/** 筛选区下拉（契约 meta-filter-options） */
+export interface AppAssignmentMetaFilterResponse {
+  adPlatformOptions: { label: string; value: string }[]
+  optimizerOptions: { label: string; value: string }[]
+}
+
+/** 新建分配可选应用（契约 meta-assignable-apps） */
+export interface AppAssignableAppMetaItem {
+  appId: string
+  appName: string
+  iconColor: string
+  platform: AssignmentPlatform
+}
+
+/** `meta-assignable-apps` 响应体 */
+export interface AppAssignmentMetaAssignableAppsResponse {
+  apps: AppAssignableAppMetaItem[]
+}
+
+/** 某应用下可选绩效版本（契约 meta-performance-versions） */
+export interface AppAssignmentMetaVersionsResponse {
+  versions: PerformanceVersion[]
+}
+
+/** 导出异步凭证（契约 export；与 perf-config 导出形态对齐，真实联调可为文件流另议） */
+export interface AppAssignmentExportResponse {
+  fileToken: string
+}

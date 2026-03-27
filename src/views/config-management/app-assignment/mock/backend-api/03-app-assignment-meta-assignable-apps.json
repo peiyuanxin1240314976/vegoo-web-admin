@@ -1,0 +1,70 @@
+{
+  "_comment": "应用分配 - 新建弹窗可选应用（已配置绩效目标）。对应 types.ts: AppAssignmentMetaAssignableAppsResponse。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户点击「新建分配」",
+        "detail": "`assignment-form-dialog` 打开且非编辑模式时请求，填充应用下拉。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "无默认选中；用户必选应用后再请求绩效版本列表。",
+    "dedupe": "每次打开新建弹窗可拉取一次；数据稳定时可与首屏 table 并行缓存。"
+  },
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "apps": {
+        "type": "AppAssignableAppMetaItem[]",
+        "required": true,
+        "description": "可选应用列表。"
+      }
+    },
+    "AppAssignableAppMetaItem": {
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用 ID（自有 ID），与表单 `appId` 一致。"
+      },
+      "appName": { "type": "string", "required": true, "description": "应用名称。" },
+      "iconColor": {
+        "type": "string",
+        "required": true,
+        "description": "首字头像背景色（前端展示用，如 HEX）。"
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "终端平台：`Android` | `iOS`。",
+        "enum": ["Android", "iOS"]
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "apps": [
+      {
+        "appId": "Weather8A",
+        "appName": "Weather8",
+        "iconColor": "#a78bfa",
+        "platform": "Android"
+      },
+      {
+        "appId": "HealthBS2A",
+        "appName": "BloodSugar2",
+        "iconColor": "#f97316",
+        "platform": "Android"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/app-assignment/meta-assignable-apps",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{}",
+    "responseBody": "{ apps }"
+  },
+  "apiSuggestion": {
+    "notes": ["若应用极多，可改为 keyword 分页的 POST meta 接口（另立契约）。"]
+  }
+}

@@ -1,5 +1,16 @@
 {
   "_comment": "广告系列编辑页 - 拉取表单回填（结构以前端 ad-edit/types.ts: AdEditFormData 为准）。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "编辑页进入",
+        "detail": "路由携带 `campaignId` 进入 `ad-edit` 时拉取表单；用于回填多步骤表单。",
+        "prerequisite": "有效系列 id。"
+      }
+    ],
+    "defaultSelection": "无草稿 id 时拉取服务端最新；若有草稿逻辑由产品扩展。",
+    "dedupe": "进入页一次；重复进入重新拉取。"
+  },
   "fieldDescription": {
     "request": {
       "campaignId": { "type": "string", "required": true, "description": "广告系列 ID。" },

@@ -2,14 +2,24 @@
  * 广告成效 - 与 `fetchAdPerformance*` 对齐的本地 Mock
  */
 import type {
+  CampaignDetailAdGroupActionBody,
+  CampaignDetailAdGroupActionResponse,
   CampaignDetailAdListResponse,
   CampaignDetailAiInsightsResponse,
+  CampaignDetailCampaignActionBody,
+  CampaignDetailCampaignActionResponse,
   CampaignDetailCreativeTop5Response,
   CampaignDetailOverviewResponse
 } from '../campaign-detail/types'
 import type { AdDetailOverviewResponse } from '../campaign-detail/ad-detail/types'
-import type { AdEditFormResponse } from '../campaign-detail/ad-edit/types'
-import { MOCK_AD_EDIT_FORM } from '../campaign-detail/ad-edit/mock/data'
+import type {
+  AdEditFormResponse,
+  AdEditSaveDraftBody,
+  AdEditSaveDraftResponse,
+  AdEditSubmitLaunchBody,
+  AdEditSubmitLaunchResponse
+} from '../campaign-detail/ad-edit/types'
+import { MOCK_AD_EDIT_FORM } from './ad-edit-data'
 import type {
   AdPerformanceAccountRow,
   AdPerformanceCampaignDetail,
@@ -30,8 +40,8 @@ import type {
   AdPerformanceExportJsonResponse
 } from '../types'
 import { MOCK_AD_PERFORMANCE, getMockCampaignDetail } from './data'
-import { MOCK_CAMPAIGN_DETAIL } from '../campaign-detail/mock/data'
-import { MOCK_AD_DETAIL } from '../campaign-detail/ad-detail/mock/data'
+import { MOCK_CAMPAIGN_DETAIL } from './campaign-detail-data'
+import { MOCK_AD_DETAIL } from './ad-detail-data'
 
 const META_STATIC: AdPerformanceMetaFilterResponse = {
   dateRangeOptions: [
@@ -251,6 +261,31 @@ export function mockFetchCampaignDetailAiInsights(_body: {
   return Promise.resolve({ insights: MOCK_CAMPAIGN_DETAIL.aiInsights })
 }
 
+export function mockFetchCampaignDetailCampaignAction(
+  body: CampaignDetailCampaignActionBody
+): Promise<CampaignDetailCampaignActionResponse> {
+  const msg: Record<CampaignDetailCampaignActionBody['actionType'], string> = {
+    pause: '已暂停该广告系列（Mock）',
+    copy: '已复制广告系列（Mock）',
+    archive: '已归档该广告系列（Mock）'
+  }
+  const res: CampaignDetailCampaignActionResponse = {
+    success: true,
+    message: msg[body.actionType]
+  }
+  if (body.actionType === 'copy') {
+    res.newCampaignId = `${body.campaignId}_copy`
+  }
+  return Promise.resolve(res)
+}
+
+export function mockFetchCampaignDetailAdGroupAction(
+  _body: CampaignDetailAdGroupActionBody
+): Promise<CampaignDetailAdGroupActionResponse> {
+  void _body
+  return Promise.resolve({ success: true, message: '已暂停该广告组（Mock）' })
+}
+
 export function mockFetchAdDetailOverview(_body: {
   adId: string
   campaignId: string
@@ -270,4 +305,25 @@ export function mockFetchAdEditForm(body: {
     data.basic.name = `Series_${body.campaignId}`
   }
   return Promise.resolve(data)
+}
+
+export function mockFetchAdEditSaveDraft(
+  _body: AdEditSaveDraftBody
+): Promise<AdEditSaveDraftResponse> {
+  void _body
+  return Promise.resolve({
+    success: true,
+    message: '草稿已保存（Mock）',
+    draftId: 'draft-mock-1'
+  })
+}
+
+export function mockFetchAdEditSubmitLaunch(
+  _body: AdEditSubmitLaunchBody
+): Promise<AdEditSubmitLaunchResponse> {
+  void _body
+  return Promise.resolve({
+    success: true,
+    message: 'Campaign 已创建并启动（Mock）'
+  })
 }

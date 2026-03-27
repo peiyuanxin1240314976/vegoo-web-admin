@@ -1,12 +1,23 @@
 {
-  "_comment": "优化师管理 - 更新。路径参数 id + body 与 FormPayload 一致（含 id 也可仅在路径）。",
+  "_comment": "优化师管理 - 更新。一律 POST，body 含 id 与表单字段（与账户管理等模块一致）。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "编辑弹窗提交",
+        "detail": "`optimizer-form-dialog` 提交后 `updateOptimizer`；成功刷新 table + overview。",
+        "prerequisite": "`payload.id` 存在。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "提交中禁用按钮。"
+  },
   "fieldDescription": {
     "request": {
-      "id": { "type": "string", "required": true, "description": "路径 :id，优化师主键。" },
+      "id": { "type": "string", "required": true, "description": "优化师主键，必填。" },
       "userId": {
         "type": "string",
         "required": true,
-        "description": "关联用户（通常不可改，可与原值一致）。"
+        "description": "关联用户（产品若锁定不可改，仍传原值）。"
       },
       "version": { "type": "number", "required": true, "description": "版本号。" },
       "sCode": { "type": "string", "required": true, "description": "代号。" },
@@ -25,10 +36,15 @@
       }
     },
     "response": {
-      "data": { "type": "ListItem", "required": true, "description": "更新后的完整行。" }
+      "_updated": {
+        "type": "ListItem",
+        "required": true,
+        "description": "更新后的完整行。"
+      }
     }
   },
   "sampleRequest": {
+    "id": "opt001",
     "userId": "u001",
     "version": 2,
     "sCode": "FB-OPT-001",
@@ -38,29 +54,37 @@
     "status": "在职"
   },
   "sampleResponse": {
-    "data": {
-      "id": "opt001",
-      "no": 1,
-      "userId": "u001",
-      "userName": "张三",
-      "email": "zhang@example.com",
-      "avatarColor": "#2dd4bf",
-      "version": 2,
-      "sCode": "FB-OPT-001",
-      "minConsumption": 900,
-      "checkCode": "CHK-UPDATED",
-      "status": "在职",
-      "apps": [],
-      "recentLogs": [],
-      "createTime": "2024-01-15",
-      "lastModifyTime": "2026-03-21 12:00"
-    }
+    "id": "opt001",
+    "no": 1,
+    "userId": "u001",
+    "userName": "张三",
+    "email": "张三@vegoo.com",
+    "avatarColor": "#2dd4bf",
+    "version": 2,
+    "sCode": "FB-OPT-001",
+    "sCode2": "FB-001",
+    "minConsumption": 900,
+    "checkCode": "CHK-UPDATED",
+    "status": "在职",
+    "apps": ["Vegoo Keyboard", "Vegoo VPN"],
+    "recentLogs": [
+      { "id": "l-new", "timeLabel": "今天 12:00", "content": "更新最低消耗与检验码" },
+      { "id": "l1", "timeLabel": "今天 14:30", "content": "更新 Vegoo Keyboard 预算" }
+    ],
+    "createTime": "2024-01-15",
+    "lastModifyTime": "2026-03-27 12:00"
   },
   "api": {
-    "url": "PUT /api/config-management/optimizer/:id",
-    "method": "PUT",
+    "url": "POST /api/config-management/optimizer/update",
+    "method": "POST",
     "priority": "P0",
-    "requestBody": "FormPayload + id（id 以路径为准）",
+    "requestBody": "id + FormPayload 字段",
     "responseBody": "ListItem"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "历史 PUT `/:id` 已迁移为 POST `/update`；前后端联调以 `src/api/config-management.ts` 为准。",
+      "并发更新可用 version 乐观锁（若后端支持另增字段）。"
+    ]
   }
 }

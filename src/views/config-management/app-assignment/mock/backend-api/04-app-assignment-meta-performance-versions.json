@@ -1,0 +1,104 @@
+{
+  "_comment": "应用分配 - 指定应用下可选绩效配置版本（新建/编辑选版本）。对应 types.ts: AppAssignmentMetaVersionsResponse。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "新建弹窗中选择应用后",
+        "detail": "`assignment-form-dialog` 中 `appId` 变更后请求，刷新版本下拉/自定义选择器。",
+        "prerequisite": "`appId` 非空。"
+      },
+      {
+        "moment": "编辑弹窗打开时（可选）",
+        "detail": "若列表行未带齐 `availableVersions`，编辑前用 `appId` 再拉取。",
+        "prerequisite": "已知 `appId`。"
+      }
+    ],
+    "defaultSelection": "无；由用户选择 `configVersionId`。",
+    "dedupe": "同一 `appId` 可短时缓存，避免重复请求。"
+  },
+  "fieldDescription": {
+    "request": {
+      "appId": { "type": "string", "required": true, "description": "应用 ID，与表单字段一致。" }
+    },
+    "response": {
+      "versions": {
+        "type": "PerformanceVersion[]",
+        "required": true,
+        "description": "该应用下可被本分配引用的绩效配置版本列表。"
+      }
+    },
+    "PerformanceVersion": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "版本业务 id，与 `configVersionId` 对应。"
+      },
+      "version": { "type": "string", "required": true, "description": "版本号展示，如 v3。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "description": "已发布 / 草稿 / 已归档",
+        "enum": ["已发布", "草稿", "已归档"]
+      },
+      "isActive": { "type": "boolean", "required": true, "description": "是否为当前激活版本。" },
+      "date": { "type": "string", "required": true, "description": "版本日期 YYYY-MM-DD。" },
+      "creator": { "type": "string", "required": true, "description": "创建人。" },
+      "evalMethod": { "type": "string", "required": true, "description": "评估方式，如 ROI。" },
+      "evalDays": { "type": "number", "required": true, "description": "评估天数。" },
+      "targetRate": {
+        "type": "string",
+        "required": true,
+        "description": "达标要求（可含百分号）。"
+      },
+      "minRate": { "type": "string", "required": true, "description": "最低要求。" },
+      "difficulty": { "type": "number", "required": true, "description": "难度系数。" },
+      "minProfit": { "type": "string", "required": true, "description": "最低利润文案。" },
+      "extraCondition": { "type": "string", "required": true, "description": "附加条件说明。" }
+    }
+  },
+  "sampleRequest": { "appId": "Weather8A" },
+  "sampleResponse": {
+    "versions": [
+      {
+        "id": "v3",
+        "version": "v3",
+        "status": "已发布",
+        "isActive": true,
+        "date": "2024-03-15",
+        "creator": "张三",
+        "evalMethod": "ROI",
+        "evalDays": 3,
+        "targetRate": "53%",
+        "minRate": "50%",
+        "difficulty": 1.2,
+        "minProfit": "-",
+        "extraCondition": "-"
+      },
+      {
+        "id": "v2",
+        "version": "v2",
+        "status": "已发布",
+        "isActive": false,
+        "date": "2024-03-10",
+        "creator": "李四",
+        "evalMethod": "ROI",
+        "evalDays": 3,
+        "targetRate": "50%",
+        "minRate": "47%",
+        "difficulty": 1.1,
+        "minProfit": "-",
+        "extraCondition": "-"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/app-assignment/meta-performance-versions",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "appId",
+    "responseBody": "{ versions }"
+  },
+  "apiSuggestion": {
+    "notes": ["与绩效配置主数据同源；只读列表即可。"]
+  }
+}

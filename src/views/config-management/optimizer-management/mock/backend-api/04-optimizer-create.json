@@ -1,5 +1,16 @@
 {
-  "_comment": "优化师管理 - 新增。对应 Api.ConfigManagement.Optimizer.FormPayload（无 id）。",
+  "_comment": "优化师管理 - 新增。Api.ConfigManagement.Optimizer.FormPayload（无 id）。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "新建弹窗提交",
+        "detail": "`optimizer-form-dialog` 校验通过后 `createOptimizer`；成功则 `index.vue` `handleFormSuccess` 刷新 table + overview。",
+        "prerequisite": "已选择关联用户并填写代号、检验码等。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "提交中禁用确定按钮。"
+  },
   "fieldDescription": {
     "request": {
       "userId": { "type": "string", "required": true, "description": "关联系统用户 ID。" },
@@ -20,10 +31,10 @@
       }
     },
     "response": {
-      "data": {
+      "_created": {
         "type": "ListItem",
         "required": true,
-        "description": "新建完成后的完整行；与列表项结构一致。"
+        "description": "新建完成后的完整行，与列表项一致；字段见 01 契约 ListItem。"
       }
     }
   },
@@ -37,22 +48,22 @@
     "status": "在职"
   },
   "sampleResponse": {
-    "data": {
-      "id": "opt099",
-      "no": 99,
-      "userId": "u001",
-      "userName": "张三",
-      "email": "zhang@example.com",
-      "avatarColor": "#2dd4bf",
-      "version": 0,
-      "sCode": "FB-OPT-099",
-      "minConsumption": 500,
-      "checkCode": "CHK-XXXX",
-      "status": "在职",
-      "apps": [],
-      "recentLogs": [],
-      "createTime": "2026-03-21"
-    }
+    "id": "opt099",
+    "no": 99,
+    "userId": "u001",
+    "userName": "张三",
+    "email": "张三@vegoo.com",
+    "avatarColor": "#2dd4bf",
+    "version": 0,
+    "sCode": "FB-OPT-099",
+    "sCode2": "",
+    "minConsumption": 500,
+    "checkCode": "CHK-XXXX",
+    "status": "在职",
+    "apps": ["Vegoo Demo"],
+    "recentLogs": [{ "id": "l0", "timeLabel": "刚刚", "content": "新建优化师" }],
+    "createTime": "2026-03-27",
+    "lastModifyTime": "2026-03-27 10:00"
   },
   "api": {
     "url": "POST /api/config-management/optimizer",
@@ -60,5 +71,11 @@
     "priority": "P0",
     "requestBody": "FormPayload（无 id）",
     "responseBody": "ListItem"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "`sampleResponse` 为 unwrap 后单行对象。",
+      "唯一性冲突（userId+业务键）由后端返回业务错误码。"
+    ]
   }
 }

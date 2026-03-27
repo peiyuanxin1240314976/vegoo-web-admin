@@ -1,5 +1,16 @@
 {
   "_comment": "广告成效 - 主表格（Country tab）。由原 03 的 tab=country 拆分而来。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户切换到 Country tab",
+        "detail": "首进该 tab、分页、关键字与筛选变化时请求。",
+        "prerequisite": "dateRange 必填。"
+      }
+    ],
+    "defaultSelection": "current=1, size=10。",
+    "dedupe": "与 Campaign tab 数据独立；切换 tab 不混用缓存除非显式保留。"
+  },
   "fieldDescription": {
     "request": {
       "keyword": {
@@ -80,7 +91,7 @@
     "pagination": { "current": 1, "size": 10, "total": 38 }
   },
   "api": {
-    "url": "POST /api/user-growth/ad-performance/table/country",
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/table/country",
     "method": "POST",
     "priority": "P0",
     "requestBody": "keyword?, current?, size?, dateRange, app?, adPlatform?, account?, country?",

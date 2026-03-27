@@ -121,10 +121,18 @@ export function resendUserActivation(id: string) {
   })
 }
 
-// ─── 优化师管理 ───────────────────────────────────────────
+// ─── 优化师管理（契约 + Mock：`views/.../optimizer-management`）────────────────
+import {
+  OptimizerEndpoint,
+  isOptimizerEndpointMock
+} from '@/views/config-management/optimizer-management/config/data-source'
+import * as optimizerMock from '@/views/config-management/optimizer-management/mock/optimizer-api-mock'
 
 /** 分页列表（筛选与分页由服务端处理） */
 export function fetchOptimizerTable(params: Api.ConfigManagement.Optimizer.TableQuery) {
+  if (isOptimizerEndpointMock(OptimizerEndpoint.Table)) {
+    return optimizerMock.mockFetchOptimizerTable(params)
+  }
   return request.post<Api.Common.PaginatedResponse<Api.ConfigManagement.Optimizer.ListItem>>({
     url: '/api/config-management/optimizer/table',
     data: params,
@@ -134,6 +142,9 @@ export function fetchOptimizerTable(params: Api.ConfigManagement.Optimizer.Table
 
 /** 页头 KPI 卡片 */
 export function fetchOptimizerOverview() {
+  if (isOptimizerEndpointMock(OptimizerEndpoint.Overview)) {
+    return optimizerMock.mockFetchOptimizerOverview()
+  }
   return request.post<Api.ConfigManagement.Optimizer.OverviewResponse>({
     url: '/api/config-management/optimizer/overview',
     data: {},
@@ -143,6 +154,9 @@ export function fetchOptimizerOverview() {
 
 /** 新建弹窗：可选系统用户列表 */
 export function fetchOptimizerMetaSystemUsers() {
+  if (isOptimizerEndpointMock(OptimizerEndpoint.MetaSystemUsers)) {
+    return optimizerMock.mockFetchOptimizerMetaSystemUsers()
+  }
   return request.post<Api.ConfigManagement.Optimizer.MetaSystemUserItem[]>({
     url: '/api/config-management/optimizer/meta-system-users',
     data: {},
@@ -152,6 +166,9 @@ export function fetchOptimizerMetaSystemUsers() {
 
 /** 新增优化师 */
 export function createOptimizer(data: Api.ConfigManagement.Optimizer.FormPayload) {
+  if (isOptimizerEndpointMock(OptimizerEndpoint.Create)) {
+    return optimizerMock.mockCreateOptimizer(data)
+  }
   return request.post<Api.ConfigManagement.Optimizer.ListItem>({
     url: '/api/config-management/optimizer',
     data,
@@ -159,10 +176,13 @@ export function createOptimizer(data: Api.ConfigManagement.Optimizer.FormPayload
   })
 }
 
-/** 更新优化师 */
+/** 更新优化师（POST + body 含 id，与契约一致） */
 export function updateOptimizer(data: Api.ConfigManagement.Optimizer.FormPayload & { id: string }) {
-  return request.put<Api.ConfigManagement.Optimizer.ListItem>({
-    url: `/api/config-management/optimizer/${data.id}`,
+  if (isOptimizerEndpointMock(OptimizerEndpoint.Update)) {
+    return optimizerMock.mockUpdateOptimizer(data)
+  }
+  return request.post<Api.ConfigManagement.Optimizer.ListItem>({
+    url: '/api/config-management/optimizer/update',
     data,
     showErrorMessage: false
   })
@@ -170,7 +190,10 @@ export function updateOptimizer(data: Api.ConfigManagement.Optimizer.FormPayload
 
 /** 导出（联调时若返回文件流需在 http 层单独处理 responseType） */
 export function exportOptimizerList(params: Partial<Api.ConfigManagement.Optimizer.TableQuery>) {
-  return request.post<unknown>({
+  if (isOptimizerEndpointMock(OptimizerEndpoint.Export)) {
+    return optimizerMock.mockExportOptimizerList(params)
+  }
+  return request.post<Api.ConfigManagement.Optimizer.ExportResponse>({
     url: '/api/config-management/optimizer/export',
     data: params,
     showErrorMessage: false
@@ -646,13 +669,15 @@ export function exportCostCoefficient(params: Partial<CostCoefficientQuery>) {
 // ──────────────────────────────────────────────────────────
 // 导入商店订单
 // ──────────────────────────────────────────────────────────
-import type {
-  ImportTask,
-  ImportReportDetail
-} from '@/views/config-management/order-import/types'
+import type { ImportTask, ImportReportDetail } from '@/views/config-management/order-import/types'
 
 /** 上传历史分页列表 */
-export function fetchOrderImportTable(params: { page: number; pageSize: number; dataSource?: string; status?: string }) {
+export function fetchOrderImportTable(params: {
+  page: number
+  pageSize: number
+  dataSource?: string
+  status?: string
+}) {
   return request.post<Api.Common.PaginatedResponse<ImportTask>>({
     url: '/api/config-management/order-import/table',
     data: params,
@@ -662,7 +687,12 @@ export function fetchOrderImportTable(params: { page: number; pageSize: number; 
 
 /** 今日导入统计（顶部 KPI） */
 export function fetchOrderImportSummary() {
-  return request.post<{ todayTotal: number; completed: number; processing: number; failed: number }>({
+  return request.post<{
+    todayTotal: number
+    completed: number
+    processing: number
+    failed: number
+  }>({
     url: '/api/config-management/order-import/summary',
     data: {},
     showErrorMessage: false
@@ -763,11 +793,14 @@ export function createPerfConfig(data: {
 }
 
 /** 编辑绩效配置（新建一个版本） */
-export function updatePerfConfig(id: string, data: {
-  step1?: Partial<PerfStep1Form>
-  step2: PerfStep2Form
-  saveMode: SaveMode
-}) {
+export function updatePerfConfig(
+  id: string,
+  data: {
+    step1?: Partial<PerfStep1Form>
+    step2: PerfStep2Form
+    saveMode: SaveMode
+  }
+) {
   return request.put<PerfConfigItem>({
     url: `/api/config-management/perf-config/${id}`,
     data,
@@ -811,6 +844,134 @@ export function exportPerfConfig(params: {
 }) {
   return request.post<unknown>({
     url: '/api/config-management/perf-config/export',
+    data: params,
+    showErrorMessage: false
+  })
+}
+
+// ──────────────────────────────────────────────────────────
+// 应用分配（契约：`views/.../app-assignment/mock/backend-api`）
+// ──────────────────────────────────────────────────────────
+import type {
+  AppAssignmentExportResponse,
+  AppAssignmentItem,
+  AppAssignmentMetaAssignableAppsResponse,
+  AppAssignmentMetaFilterResponse,
+  AppAssignmentMetaVersionsResponse,
+  AppAssignmentOverviewResponse,
+  AssignmentCreatePayload,
+  AssignmentTableQuery,
+  AssignmentUpdatePayload
+} from '@/views/config-management/app-assignment/types'
+import {
+  AppAssignmentEndpoint,
+  isAppAssignmentEndpointMock
+} from '@/views/config-management/app-assignment/config/data-source'
+import * as appAssignmentMock from '@/views/config-management/app-assignment/mock/app-assignment-api-mock'
+
+/** 页头 KPI */
+export function fetchAppAssignmentOverview() {
+  if (isAppAssignmentEndpointMock(AppAssignmentEndpoint.Overview)) {
+    return appAssignmentMock.mockFetchAppAssignmentOverview()
+  }
+  return request.post<AppAssignmentOverviewResponse>({
+    url: '/api/config-management/app-assignment/overview',
+    data: {},
+    showErrorMessage: false
+  })
+}
+
+/** 筛选栏下拉 */
+export function fetchAppAssignmentMetaFilterOptions() {
+  if (isAppAssignmentEndpointMock(AppAssignmentEndpoint.MetaFilterOptions)) {
+    return appAssignmentMock.mockFetchAppAssignmentMetaFilterOptions()
+  }
+  return request.post<AppAssignmentMetaFilterResponse>({
+    url: '/api/config-management/app-assignment/meta-filter-options',
+    data: {},
+    showErrorMessage: false
+  })
+}
+
+/** 新建可选应用 */
+export function fetchAppAssignmentMetaAssignableApps() {
+  if (isAppAssignmentEndpointMock(AppAssignmentEndpoint.MetaAssignableApps)) {
+    return appAssignmentMock.mockFetchAppAssignmentMetaAssignableApps()
+  }
+  return request.post<AppAssignmentMetaAssignableAppsResponse>({
+    url: '/api/config-management/app-assignment/meta-assignable-apps',
+    data: {},
+    showErrorMessage: false
+  })
+}
+
+/** 按应用拉取绩效版本 */
+export function fetchAppAssignmentMetaPerformanceVersions(body: { appId: string }) {
+  if (isAppAssignmentEndpointMock(AppAssignmentEndpoint.MetaPerformanceVersions)) {
+    return appAssignmentMock.mockFetchAppAssignmentMetaPerformanceVersions(body)
+  }
+  return request.post<AppAssignmentMetaVersionsResponse>({
+    url: '/api/config-management/app-assignment/meta-performance-versions',
+    data: body,
+    showErrorMessage: false
+  })
+}
+
+/** 分页列表 */
+export function fetchAppAssignmentTable(params: AssignmentTableQuery) {
+  if (isAppAssignmentEndpointMock(AppAssignmentEndpoint.Table)) {
+    return appAssignmentMock.mockFetchAppAssignmentTable(params)
+  }
+  return request.post<Api.Common.PaginatedResponse<AppAssignmentItem>>({
+    url: '/api/config-management/app-assignment/table',
+    data: params,
+    showErrorMessage: false
+  })
+}
+
+/** 单条详情 */
+export function fetchAppAssignmentDetail(body: { id: string }) {
+  if (isAppAssignmentEndpointMock(AppAssignmentEndpoint.Detail)) {
+    return appAssignmentMock.mockFetchAppAssignmentDetail(body)
+  }
+  return request.post<AppAssignmentItem | null>({
+    url: '/api/config-management/app-assignment/detail',
+    data: body,
+    showErrorMessage: false
+  })
+}
+
+/** 新建分配 */
+export function createAppAssignment(data: AssignmentCreatePayload) {
+  if (isAppAssignmentEndpointMock(AppAssignmentEndpoint.Create)) {
+    return appAssignmentMock.mockCreateAppAssignment(data)
+  }
+  return request.post<AppAssignmentItem>({
+    url: '/api/config-management/app-assignment',
+    data,
+    showErrorMessage: false
+  })
+}
+
+/** 更新分配 */
+export function updateAppAssignment(data: AssignmentUpdatePayload) {
+  if (isAppAssignmentEndpointMock(AppAssignmentEndpoint.Update)) {
+    return appAssignmentMock.mockUpdateAppAssignment(data)
+  }
+  return request.post<AppAssignmentItem>({
+    url: '/api/config-management/app-assignment/update',
+    data,
+    showErrorMessage: false
+  })
+}
+
+/** 导出 */
+export function exportAppAssignmentList(params: Partial<AssignmentTableQuery>) {
+  if (isAppAssignmentEndpointMock(AppAssignmentEndpoint.Export)) {
+    return appAssignmentMock.mockExportAppAssignmentList(params)
+  }
+  return request.post<AppAssignmentExportResponse>({
+    url: '/api/config-management/app-assignment/export',
     data: params,
     showErrorMessage: false
   })

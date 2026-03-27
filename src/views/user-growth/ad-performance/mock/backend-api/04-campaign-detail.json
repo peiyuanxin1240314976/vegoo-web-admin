@@ -1,5 +1,21 @@
 {
   "_comment": "广告成效 - 广告系列详情（抽屉）：顶部 KPI + ROI 汇总 + 三维度 tabs（广告组/日期/国家）。对应 types.ts: AdPerformanceCampaignDetail。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户打开系列详情抽屉",
+        "detail": "`AdPerformanceDetailDrawer` 打开且传入 `campaignId` 时请求；可带主列表当前 dateRange。",
+        "prerequisite": "有效的 `campaignId`。"
+      },
+      {
+        "moment": "抽屉内切换子 tab（若未拆子接口）",
+        "detail": "若仍由本聚合接口返回多 tab 数据，仅需首屏一次；若后续拆分为子接口则按子契约触发。",
+        "prerequisite": "抽屉仍打开。"
+      }
+    ],
+    "defaultSelection": "dateRange 可与主列表筛选同步或后端默认。",
+    "dedupe": "同一 `campaignId` 快速重复打开可缓存短 TTL（可选）。"
+  },
   "fieldDescription": {
     "request": {
       "campaignId": {
@@ -231,7 +247,7 @@
     }
   },
   "api": {
-    "url": "POST /api/user-growth/ad-performance/campaign-detail",
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail",
     "method": "POST",
     "priority": "P0",
     "requestBody": "campaignId (必填), dateRange?",

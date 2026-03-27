@@ -1,0 +1,85 @@
+{
+  "_comment": "编辑 Campaign - 创建并启动（提交投放）。请求体与 save-draft 相同，语义为正式发布。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户确认提交投放",
+        "detail": "最终校验通过后调用；成功后可跳转系列详情或列表。",
+        "prerequisite": "业务规则要求的必填项均已满足。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "提交中与保存草稿互斥或队列化，避免双写。"
+  },
+  "fieldDescription": {
+    "request": {
+      "campaignId": { "type": "string", "required": true, "description": "广告系列 ID。" },
+      "adId": {
+        "type": "string",
+        "required": false,
+        "description": "广告组 ID；新建提交时可空，由后端创建。"
+      },
+      "form": {
+        "type": "AdEditFormData",
+        "required": true,
+        "description": "完整表单，与 01-form、02-save-draft 一致。"
+      }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否提交成功。" },
+      "message": { "type": "string", "required": false, "description": "提示信息。" },
+      "campaignId": {
+        "type": "string",
+        "required": false,
+        "description": "最终系列 ID（若与请求不同则返回）。"
+      },
+      "adId": { "type": "string", "required": false, "description": "新建广告组 ID。" }
+    }
+  },
+  "sampleRequest": {
+    "campaignId": "0032021863838Z7",
+    "form": {
+      "basic": {
+        "name": "USA_Android_T1_Purchase",
+        "app": "Weather5",
+        "region": "US",
+        "channel": "google"
+      },
+      "budget": {
+        "dailyBudget": 500,
+        "totalBudget": "15,000",
+        "scheduleType": "always",
+        "startDate": "2026-01-15",
+        "endDate": "2026-03-31",
+        "bidStrategy": "target_cpi",
+        "bidValue": "3.50"
+      },
+      "targeting": {
+        "devicePhone": true,
+        "deviceTablet": false,
+        "iosMin": 14,
+        "androidMin": 10,
+        "ageRange": [18, 45],
+        "gender": "all"
+      },
+      "creatives": {
+        "items": [
+          { "id": "c1", "name": "Banner_US_v1", "thumb": "https://picsum.photos/seed/c1/160/100" }
+        ],
+        "selectedIds": ["c1"]
+      },
+      "sidebar": { "refItems": [], "tips": [] }
+    }
+  },
+  "sampleResponse": { "success": true, "message": "Campaign 已创建并启动" },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail/ad-edit/submit-launch",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "campaignId, form, adId?",
+    "responseBody": "success, message?, campaignId?, adId?"
+  },
+  "apiSuggestion": {
+    "notes": ["与渠道侧异步任务时，可返回 taskId 并另立查询契约（本版可不实现）。"]
+  }
+}

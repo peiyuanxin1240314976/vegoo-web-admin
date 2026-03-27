@@ -1,15 +1,19 @@
 {
-  "_comment": "优化师管理 - 页头 KPI。独立聚合，与列表分页无关。对应 Api.ConfigManagement.Optimizer.OverviewResponse。",
+  "_comment": "优化师管理 - 页头 KPI。独立聚合，与列表分页无关。Api.ConfigManagement.Optimizer.OverviewResponse。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏",
+        "detail": "`index.vue` onMounted 与 table 并行调用 `fetchOptimizerOverview`；筛选变更且在远程表模式下调用 `refreshOverview`。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "无请求参数；统计口径由后端按租户/权限计算。",
+    "dedupe": "可与 table 首屏合并为单一聚合接口（另议）；拆分时注意 KPI 不依赖当前页。"
+  },
   "fieldDescription": {
     "request": {},
     "response": {
-      "data": {
-        "type": "OverviewResponse",
-        "required": true,
-        "description": "若网关统一包裹则为 data 内字段；否则响应体即下述对象。"
-      }
-    },
-    "OverviewResponse": {
       "total": { "type": "number", "required": true, "description": "优化师总数。" },
       "active": { "type": "number", "required": true, "description": "在职人数。" },
       "avgMinConsumption": {
@@ -35,7 +39,12 @@
     "url": "POST /api/config-management/optimizer/overview",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "空对象或无需 body",
+    "requestBody": "{}",
     "responseBody": "OverviewResponse"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "`sampleResponse` 为 unwrap 后 `data`；不再嵌套多余 `data` 层以免与 HTTP 封装重复解包。"
+    ]
   }
 }

@@ -35,7 +35,7 @@
           <el-icon><Edit /></el-icon>
           编辑系列
         </ElButton>
-        <ElButton size="large" round class="add-btn-pause">
+        <ElButton size="large" round class="add-btn-pause" @click="onPauseAd">
           <el-icon><VideoPause /></el-icon>
           暂停
         </ElButton>
@@ -64,12 +64,15 @@
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import { ArrowLeft, Edit, VideoPause } from '@element-plus/icons-vue'
-  import { fetchAdDetailOverview } from '@/api/user-growth/ad-performance'
+  import {
+    fetchAdDetailOverview,
+    fetchCampaignDetailAdGroupAction
+  } from '@/api/user-growth/ad-performance'
   import AdDetailKpiCards from './modules/ad-detail-kpi-cards.vue'
   import AdDetailTrendChart from './modules/ad-detail-trend-chart.vue'
   import AdDetailTargeting from './modules/ad-detail-targeting.vue'
   import AdDetailCreative from './modules/ad-detail-creative.vue'
-  import { MOCK_AD_DETAIL } from './mock/data'
+  import { MOCK_AD_DETAIL } from '../../mock/ad-detail-data'
   import type { AdDetailData, AdDetailStatus } from './types'
 
   defineOptions({ name: 'AdDetail' })
@@ -97,6 +100,27 @@
       completed: '已完成'
     }
     return map[s] ?? s
+  }
+
+  async function onPauseAd() {
+    const adId = String(route.query.id ?? '')
+    const cid = campaignId.value
+    if (!adId || !cid) {
+      ElMessage.error('缺少广告或系列 ID')
+      return
+    }
+    try {
+      const res = await fetchCampaignDetailAdGroupAction({
+        campaignId: cid,
+        adId,
+        actionType: 'pause'
+      })
+      if (res.message) ElMessage.success(res.message)
+      else ElMessage.success('操作成功')
+      data.status = 'paused'
+    } catch {
+      ElMessage.error('操作失败')
+    }
   }
 
   onMounted(async () => {

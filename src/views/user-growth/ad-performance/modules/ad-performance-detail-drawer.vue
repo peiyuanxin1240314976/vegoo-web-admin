@@ -22,7 +22,7 @@
         >
           暂停
         </ElButton>
-        <ElButton text round class="ad-performance-detail__close" @click="$emit('close')"
+        <ElButton text round class="ad-performance-detail__close" @click="emit('close')"
           >关闭</ElButton
         >
       </div>
@@ -140,6 +140,8 @@
 <script setup lang="ts">
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
+  import { ElMessage } from 'element-plus'
+  import { fetchCampaignDetailCampaignAction } from '@/api/user-growth/ad-performance'
   import DetailTabAdGroup from './detail-tabs/detail-tab-adgroup.vue'
   import DetailTabDate from './detail-tabs/detail-tab-date.vue'
   import DetailTabCountry from './detail-tabs/detail-tab-country.vue'
@@ -158,8 +160,9 @@
 
   const router = useRouter()
 
-  defineEmits<{
+  const emit = defineEmits<{
     (e: 'close'): void
+    (e: 'data-mutated'): void
   }>()
 
   const activeDimension = ref<AdPerformanceDetailDimension>('adGroup')
@@ -189,8 +192,18 @@
     })
   }
 
-  function onPause() {
-    // 占位：后续接暂停逻辑
+  async function onPause() {
+    try {
+      const res = await fetchCampaignDetailCampaignAction({
+        campaignId: props.campaignRow.id,
+        actionType: 'pause'
+      })
+      if (res.message) ElMessage.success(res.message)
+      else ElMessage.success('操作成功')
+      emit('data-mutated')
+    } catch {
+      ElMessage.error('操作失败')
+    }
   }
 
   function onAdd() {

@@ -149,33 +149,46 @@
     }
   )
 
-  const channelTotal = computed(() => props.channelDistribution.reduce((s, d) => s + d.value, 0))
+  const channelTotal = computed(() =>
+    props.channelDistribution.reduce((s, d) => {
+      const v = Number(d.value)
+      return s + (Number.isFinite(v) ? v : 0)
+    }, 0)
+  )
 
   const channelChart = useChart()
   const channelChartRef = channelChart.chartRef
 
   const activeTab = ref<'app' | 'owner'>('app')
 
-  function formatCurrency(n: number) {
-    return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  function formatCurrency(n: number | undefined | null) {
+    const x = typeof n === 'number' ? n : Number(n)
+    const safe = Number.isFinite(x) ? x : 0
+    return '$' + safe.toLocaleString('en-US', { maximumFractionDigits: 0 })
   }
 
   const appRows = computed(() => {
     const data = props.appDistribution ?? []
-    return data.map((d) => ({
-      name: d.appName,
-      percent: Math.max(0, Math.min(100, Math.round(d.percent))),
-      value: d.spend
-    }))
+    return data.map((d) => {
+      const spend = Number(d.spend)
+      return {
+        name: d.appName,
+        percent: Math.max(0, Math.min(100, Math.round(d.percent))),
+        value: Number.isFinite(spend) ? spend : 0
+      }
+    })
   })
 
   const ownerRows = computed(() => {
     const data = props.ownerShareDistribution ?? []
-    return data.map((d) => ({
-      name: d.ownerName,
-      percent: Math.max(0, Math.min(100, Math.round(d.percent))),
-      value: d.spend
-    }))
+    return data.map((d) => {
+      const spend = Number(d.spend)
+      return {
+        name: d.ownerName,
+        percent: Math.max(0, Math.min(100, Math.round(d.percent))),
+        value: Number.isFinite(spend) ? spend : 0
+      }
+    })
   })
 
   function getAvatarText(name: string) {

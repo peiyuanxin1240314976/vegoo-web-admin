@@ -37,6 +37,7 @@
             @update:active-tab="onTableTabChange"
             @update:table-keyword="setTableKeyword"
             @keyword-search="onTableKeywordSearch"
+            @data-mutated="refreshAll"
           />
         </div>
       </ElCol>

@@ -1,0 +1,53 @@
+{
+  "_comment": "广告系列详情页 - 系列级操作（暂停/复制/归档）。用于详情顶栏、主列表抽屉「暂停」等。对应 campaign-detail/types.ts: CampaignDetailCampaignActionBody。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户点击系列级操作按钮",
+        "detail": "详情顶栏或列表抽屉发起；成功后前端刷新 overview/列表或触发 `data-mutated`。",
+        "prerequisite": "`campaignId` 与受支持的 `actionType`。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "请求进行中禁用对应按钮，避免重复提交。"
+  },
+  "fieldDescription": {
+    "request": {
+      "campaignId": {
+        "type": "string",
+        "required": true,
+        "description": "广告系列唯一标识。"
+      },
+      "actionType": {
+        "type": "string",
+        "required": true,
+        "enum": ["pause", "copy", "archive"],
+        "description": "pause=暂停投放；copy=复制系列；archive=归档。"
+      }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否成功。" },
+      "message": { "type": "string", "required": false, "description": "提示文案（toast）。" },
+      "newCampaignId": {
+        "type": "string",
+        "required": false,
+        "description": "copy 成功时可选返回新系列 ID。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "campaignId": "0032021863838Z7",
+    "actionType": "pause"
+  },
+  "sampleResponse": { "success": true, "message": "已暂停该广告系列" },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail/campaign-action",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "campaignId, actionType",
+    "responseBody": "success, message?, newCampaignId?"
+  },
+  "apiSuggestion": {
+    "notes": ["与 alert-action 类似，建议幂等与权限校验。", "网关统一包裹时业务字段放入 data。"]
+  }
+}

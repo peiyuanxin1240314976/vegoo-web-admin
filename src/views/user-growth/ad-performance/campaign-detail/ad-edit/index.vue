@@ -60,17 +60,21 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
+  import { onMounted, reactive, ref, toRaw } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import { ArrowLeft, VideoPlay } from '@element-plus/icons-vue'
-  import { fetchAdEditForm } from '@/api/user-growth/ad-performance'
+  import {
+    fetchAdEditForm,
+    fetchAdEditSaveDraft,
+    fetchAdEditSubmitLaunch
+  } from '@/api/user-growth/ad-performance'
   import EditBasicInfo from './modules/edit-basic-info.vue'
   import EditBudget from './modules/edit-budget.vue'
   import EditTargeting from './modules/edit-targeting.vue'
   import EditCreatives from './modules/edit-creatives.vue'
   import EditSidebar from './modules/edit-sidebar.vue'
-  import { MOCK_AD_EDIT_FORM } from './mock/data'
+  import { MOCK_AD_EDIT_FORM } from '../../mock/ad-edit-data'
   import type { AdEditCreativeItem, AdEditFormData, AdEditSidebarRefItem } from './types'
 
   defineOptions({ name: 'AdEdit' })
@@ -115,17 +119,57 @@
     }
   })
 
-  function saveDraft() {
-    ElMessage.success('草稿已保存')
+  function getEditAdId(): string | undefined {
+    const qAd = String(route.query.adId ?? '')
+    const qId = String(route.query.id ?? '')
+    return qAd || qId || undefined
+  }
+
+  function formPayload(): AdEditFormData {
+    return toRaw(form) as AdEditFormData
+  }
+
+  async function saveDraft() {
+    const cid = campaignId.value
+    if (!cid) {
+      ElMessage.error('缺少广告系列 ID')
+      return
+    }
+    try {
+      const res = await fetchAdEditSaveDraft({
+        campaignId: cid,
+        adId: getEditAdId(),
+        form: formPayload()
+      })
+      if (res.message) ElMessage.success(res.message)
+      else ElMessage.success('草稿已保存')
+    } catch {
+      ElMessage.error('保存草稿失败')
+    }
   }
 
   function preview() {
     ElMessage.info('预览功能开发中')
   }
 
-  function createAndLaunch() {
-    ElMessage.success('Campaign 已创建并启动')
-    router.back()
+  async function createAndLaunch() {
+    const cid = campaignId.value
+    if (!cid) {
+      ElMessage.error('缺少广告系列 ID')
+      return
+    }
+    try {
+      const res = await fetchAdEditSubmitLaunch({
+        campaignId: cid,
+        adId: getEditAdId(),
+        form: formPayload()
+      })
+      if (res.message) ElMessage.success(res.message)
+      else ElMessage.success('Campaign 已创建并启动')
+      router.back()
+    } catch {
+      ElMessage.error('提交失败')
+    }
   }
 </script>
 

@@ -634,6 +634,11 @@ declare namespace Api {
         email: string
         avatarColor: string
       }
+
+      /** 导出异步凭证（与网关约定；若直接返回文件流见接口说明） */
+      interface ExportResponse {
+        fileToken: string
+      }
     }
   }
 }

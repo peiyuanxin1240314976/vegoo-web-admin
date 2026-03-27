@@ -152,6 +152,7 @@
           :campaign-row="drawerCampaignRow"
           :detail="drawerCampaignDetail"
           @close="drawerVisible = false"
+          @data-mutated="emit('data-mutated')"
         />
       </div>
 
@@ -483,6 +484,7 @@
     (e: 'update:activeTab', tab: AdPerformanceTableTab): void
     (e: 'update:tableKeyword', v: string): void
     (e: 'keyword-search'): void
+    (e: 'data-mutated'): void
   }>()
 
   function onActiveTabUpdate(tab: string | number) {

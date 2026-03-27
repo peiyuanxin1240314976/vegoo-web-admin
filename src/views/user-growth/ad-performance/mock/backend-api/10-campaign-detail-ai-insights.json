@@ -1,5 +1,16 @@
 {
   "_comment": "广告系列详情 - AI 洞察与建议列表。对应 types.ts: AiInsightItem[]。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "系列详情页首屏",
+        "detail": "与其他详情模块并行加载洞察列表。",
+        "prerequisite": "`campaignId` 有效。"
+      }
+    ],
+    "defaultSelection": "无分页说明时默认展示后端返回全量或裁剪后列表。",
+    "dedupe": "同 overview。"
+  },
   "fieldDescription": {
     "request": {
       "campaignId": { "type": "string", "required": true, "description": "广告系列唯一标识。" }
@@ -55,7 +66,7 @@
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/ad-performance/campaign-detail/ai-insights",
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail/ai-insights",
     "method": "POST",
     "priority": "P1",
     "requestBody": "campaignId (必填)",

@@ -74,3 +74,30 @@ export interface AdEditFormData {
 }
 
 export type AdEditFormResponse = AdEditFormData
+
+/** POST ad-edit/save-draft */
+export interface AdEditSaveDraftBody {
+  campaignId: string
+  form: AdEditFormData
+  adId?: string
+}
+
+export interface AdEditSaveDraftResponse {
+  success: boolean
+  message?: string
+  draftId?: string
+}
+
+/** POST ad-edit/submit-launch */
+export interface AdEditSubmitLaunchBody {
+  campaignId: string
+  form: AdEditFormData
+  adId?: string
+}
+
+export interface AdEditSubmitLaunchResponse {
+  success: boolean
+  message?: string
+  campaignId?: string
+  adId?: string
+}

@@ -110,3 +110,30 @@ export interface CampaignDetailCreativeTop5Response {
 export interface CampaignDetailAiInsightsResponse {
   insights: AiInsightItem[]
 }
+
+/** POST campaign-detail/campaign-action */
+export type CampaignDetailCampaignActionType = 'pause' | 'copy' | 'archive'
+
+export interface CampaignDetailCampaignActionBody {
+  campaignId: string
+  actionType: CampaignDetailCampaignActionType
+}
+
+export interface CampaignDetailCampaignActionResponse {
+  success: boolean
+  message?: string
+  /** copy 成功时可选返回新系列 ID */
+  newCampaignId?: string
+}
+
+/** POST campaign-detail/ad-group-action */
+export interface CampaignDetailAdGroupActionBody {
+  campaignId: string
+  adId: string
+  actionType: 'pause'
+}
+
+export interface CampaignDetailAdGroupActionResponse {
+  success: boolean
+  message?: string
+}

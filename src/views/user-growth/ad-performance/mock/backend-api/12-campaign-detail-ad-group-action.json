@@ -1,0 +1,54 @@
+{
+  "_comment": "广告系列详情页 - 广告组级操作（如暂停）。用于系列内广告列表行内按钮、广告详情顶栏暂停。对应 campaign-detail/types.ts: CampaignDetailAdGroupActionBody。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户暂停或恢复单条广告组",
+        "detail": "广告列表行内或广告详情顶栏触发；成功后刷新 ad-list 或详情 overview。",
+        "prerequisite": "`campaignId` + `adGroupId`（或契约约定字段）有效。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "同一广告组操作进行中应互斥。"
+  },
+  "fieldDescription": {
+    "request": {
+      "campaignId": {
+        "type": "string",
+        "required": true,
+        "description": "所属广告系列 ID。"
+      },
+      "adId": {
+        "type": "string",
+        "required": true,
+        "description": "广告组（ad group）ID，与列表行 id、路由 query id 一致。"
+      },
+      "actionType": {
+        "type": "string",
+        "required": true,
+        "enum": ["pause"],
+        "description": "首版仅 pause；后续可扩展 resume 等。"
+      }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否成功。" },
+      "message": { "type": "string", "required": false, "description": "提示文案。" }
+    }
+  },
+  "sampleRequest": {
+    "campaignId": "0032021863838Z7",
+    "adId": "1",
+    "actionType": "pause"
+  },
+  "sampleResponse": { "success": true, "message": "已暂停该广告组" },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail/ad-group-action",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "campaignId, adId, actionType",
+    "responseBody": "success, message?"
+  },
+  "apiSuggestion": {
+    "notes": ["操作成功后前端可刷新 ad-list 或 ad-detail/overview。"]
+  }
+}

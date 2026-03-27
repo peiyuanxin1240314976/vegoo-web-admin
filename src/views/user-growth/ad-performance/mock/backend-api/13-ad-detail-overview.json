@@ -1,0 +1,226 @@
+{
+  "_comment": "广告详情页 - 概览。对应 ad-detail/types.ts: AdDetailData。网关真实路径以前端 AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE + /ad-detail/overview 为准。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "广告详情页首屏",
+        "detail": "`ad-detail/index.vue` 挂载时按路由 `adId` 拉取概览 KPI 与结构数据。",
+        "prerequisite": "有效 `adId`。"
+      },
+      {
+        "moment": "顶栏暂停等操作成功后",
+        "detail": "可再次请求本接口或与返回列表联动刷新。",
+        "prerequisite": "仍在本页。"
+      }
+    ],
+    "defaultSelection": "无列表分页；由单实体 id 决定。",
+    "dedupe": "首屏单次即可，除非用户显式刷新。"
+  },
+  "fieldDescription": {
+    "request": {
+      "adId": { "type": "string", "required": true, "description": "广告组唯一标识。" },
+      "campaignId": { "type": "string", "required": true, "description": "所属广告系列 ID。" }
+    },
+    "response": {
+      "adId": { "type": "string", "required": true, "description": "广告组 ID。" },
+      "adGroupName": { "type": "string", "required": true, "description": "广告组名称。" },
+      "campaignName": { "type": "string", "required": true, "description": "所属广告系列名称。" },
+      "campaignId": { "type": "string", "required": true, "description": "所属广告系列 ID。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["active", "paused", "completed"],
+        "description": "广告组状态。"
+      },
+      "targeting": {
+        "type": "AdTargeting",
+        "required": true,
+        "description": "受众定向摘要（与 UI 卡片一致）。"
+      },
+      "kpiMetrics": {
+        "type": "AdKpiMetrics",
+        "required": true,
+        "description": "核心指标四项：消耗、安装、CPI、ROI（ROI 为百分比数值）."
+      },
+      "kpiTrends": {
+        "type": "AdKpiTrends",
+        "required": true,
+        "description": "各 KPI 环比方向，用于箭头展示；可为空对象表示无对比。"
+      },
+      "trendData": {
+        "type": "AdTrendPoint[]",
+        "required": true,
+        "description": "按日趋势：date、spend、installs、cpi、roi。"
+      },
+      "creatives": {
+        "type": "AdCreativeItem[]",
+        "required": true,
+        "description": "素材表现表行数据。"
+      },
+      "creativeSuggestion": {
+        "type": "string",
+        "required": true,
+        "description": "AI 素材优化建议文案。"
+      }
+    },
+    "AdTargeting": {
+      "geoCode": {
+        "type": "string",
+        "required": true,
+        "description": "国家/地区 ISO 代码，如 US。"
+      },
+      "geoName": { "type": "string", "required": true, "description": "地区展示名，如 美国。" },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "终端平台文案，如 Android 12+。"
+      },
+      "gender": { "type": "string", "required": true, "description": "性别定向文案。" },
+      "ageRange": { "type": "string", "required": true, "description": "年龄段，如 25-35。" }
+    },
+    "AdKpiMetrics": {
+      "spend": { "type": "number", "required": true, "description": "消耗，美元。" },
+      "installs": { "type": "number", "required": true, "description": "安装量。" },
+      "cpi": { "type": "number", "required": true, "description": "CPI，美元，两位小数。" },
+      "roi": {
+        "type": "number",
+        "required": true,
+        "description": "ROI 百分比数值，如 142 表示 142%。"
+      }
+    },
+    "AdKpiTrends": {
+      "spend": {
+        "type": "string",
+        "required": false,
+        "enum": ["up", "down", "flat"],
+        "description": "消耗环比方向。"
+      },
+      "installs": {
+        "type": "string",
+        "required": false,
+        "enum": ["up", "down", "flat"],
+        "description": "安装环比方向。"
+      },
+      "cpi": {
+        "type": "string",
+        "required": false,
+        "enum": ["up", "down", "flat"],
+        "description": "CPI 环比（升多为变差）。"
+      },
+      "roi": {
+        "type": "string",
+        "required": false,
+        "enum": ["up", "down", "flat"],
+        "description": "ROI 环比。"
+      }
+    },
+    "AdTrendPoint": {
+      "date": { "type": "string", "required": true, "description": "日期标签或 MM-DD。" },
+      "spend": { "type": "number", "required": true, "description": "当日消耗。" },
+      "installs": { "type": "number", "required": true, "description": "当日安装。" },
+      "cpi": { "type": "number", "required": true, "description": "当日 CPI。" },
+      "roi": { "type": "number", "required": true, "description": "当日 ROI 百分比数值。" }
+    },
+    "AdCreativeItem": {
+      "id": { "type": "string", "required": true, "description": "素材 ID。" },
+      "type": {
+        "type": "string",
+        "required": true,
+        "enum": ["video", "image"],
+        "description": "素材类型。"
+      },
+      "name": { "type": "string", "required": true, "description": "素材文件名或标题。" },
+      "thumbnail": { "type": "string", "required": false, "description": "缩略图 URL。" },
+      "spend": { "type": "number", "required": true, "description": "该素材维度消耗（美元）。" },
+      "installs": { "type": "number", "required": true, "description": "安装量。" },
+      "ctr": { "type": "number", "required": true, "description": "CTR 百分比数值。" },
+      "cvr": { "type": "number", "required": true, "description": "CVR 百分比数值。" },
+      "cpi": { "type": "number", "required": true, "description": "CPI 美元。" },
+      "roi": { "type": "number", "required": true, "description": "ROI 百分比数值。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["active", "paused"],
+        "description": "素材投放状态。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "adId": "1",
+    "campaignId": "0032021863838Z7"
+  },
+  "sampleResponse": {
+    "adId": "1",
+    "adGroupName": "AdGroup_Android_Male_25-35",
+    "campaignName": "USA_Android_T1_Purchase",
+    "campaignId": "0032021863838Z7",
+    "status": "active",
+    "targeting": {
+      "geoCode": "US",
+      "geoName": "美国",
+      "platform": "Android 12+",
+      "gender": "Male",
+      "ageRange": "25-35"
+    },
+    "kpiMetrics": {
+      "spend": 45000,
+      "installs": 28000,
+      "cpi": 1.61,
+      "roi": 142
+    },
+    "kpiTrends": {
+      "spend": "up",
+      "installs": "up",
+      "cpi": "down",
+      "roi": "up"
+    },
+    "trendData": [
+      { "date": "01-01", "spend": 2800, "installs": 1600, "cpi": 1.75, "roi": 98 },
+      { "date": "01-03", "spend": 3500, "installs": 2100, "cpi": 1.67, "roi": 108 },
+      { "date": "01-05", "spend": 4100, "installs": 2500, "cpi": 1.64, "roi": 115 },
+      { "date": "01-07", "spend": 4600, "installs": 2900, "cpi": 1.59, "roi": 122 }
+    ],
+    "creatives": [
+      {
+        "id": "CR58392",
+        "type": "video",
+        "name": "Video_Male_25-35_v1.mp4",
+        "thumbnail": "",
+        "spend": 25000,
+        "installs": 16000,
+        "ctr": 3.2,
+        "cvr": 45,
+        "cpi": 1.56,
+        "roi": 155,
+        "status": "active"
+      },
+      {
+        "id": "CR10952",
+        "type": "image",
+        "name": "Banner_Male_25-35_b.jpg",
+        "thumbnail": "",
+        "spend": 8000,
+        "installs": 2400,
+        "ctr": 2.1,
+        "cvr": 38,
+        "cpi": 1.92,
+        "roi": 98,
+        "status": "paused"
+      }
+    ],
+    "creativeSuggestion": "视频素材 #CR58392 表现最佳，建议增加变体预算；图片素材 CPI 偏高可暂停观察。"
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail/ad-detail/overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "adId, campaignId",
+    "responseBody": "AdDetailData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "数值字段与 types.ts 严格一致；展示格式化由前端负责。",
+      "若网关统一包裹，业务体置于 data。"
+    ]
+  }
+}

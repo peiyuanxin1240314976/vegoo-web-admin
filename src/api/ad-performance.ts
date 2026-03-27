@@ -31,13 +31,23 @@ import type {
   AdPerformanceTableQuery
 } from '@/views/user-growth/ad-performance/types'
 import type {
+  CampaignDetailAdGroupActionBody,
+  CampaignDetailAdGroupActionResponse,
   CampaignDetailAdListResponse,
   CampaignDetailAiInsightsResponse,
+  CampaignDetailCampaignActionBody,
+  CampaignDetailCampaignActionResponse,
   CampaignDetailCreativeTop5Response,
   CampaignDetailOverviewResponse
 } from '@/views/user-growth/ad-performance/campaign-detail/types'
 import type { AdDetailOverviewResponse } from '@/views/user-growth/ad-performance/campaign-detail/ad-detail/types'
-import type { AdEditFormResponse } from '@/views/user-growth/ad-performance/campaign-detail/ad-edit/types'
+import type {
+  AdEditFormResponse,
+  AdEditSaveDraftBody,
+  AdEditSaveDraftResponse,
+  AdEditSubmitLaunchBody,
+  AdEditSubmitLaunchResponse
+} from '@/views/user-growth/ad-performance/campaign-detail/ad-edit/types'
 
 /** 中间段见 `ANALYSIS_API_MIDDLE_PREFIX` */
 export const AD_PERFORMANCE_BASE = `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PREFIX}/ad-performance`
@@ -205,6 +215,30 @@ export function fetchCampaignDetailAiInsights(body: { campaignId: string }) {
   })
 }
 
+export function fetchCampaignDetailCampaignAction(body: CampaignDetailCampaignActionBody) {
+  if (
+    isAdPerformanceCampaignDetailEndpointMock(AdPerformanceCampaignDetailEndpoint.CampaignAction)
+  ) {
+    return adPerfMock.mockFetchCampaignDetailCampaignAction(body)
+  }
+  return request.post<CampaignDetailCampaignActionResponse>({
+    url: `${AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE}/campaign-action`,
+    data: body
+  })
+}
+
+export function fetchCampaignDetailAdGroupAction(body: CampaignDetailAdGroupActionBody) {
+  if (
+    isAdPerformanceCampaignDetailEndpointMock(AdPerformanceCampaignDetailEndpoint.AdGroupAction)
+  ) {
+    return adPerfMock.mockFetchCampaignDetailAdGroupAction(body)
+  }
+  return request.post<CampaignDetailAdGroupActionResponse>({
+    url: `${AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE}/ad-group-action`,
+    data: body
+  })
+}
+
 /** 单广告详情页概览（路由：campaign-detail/ad-detail） */
 export function fetchAdDetailOverview(body: { adId: string; campaignId: string }) {
   if (isAdPerformanceAdDetailEndpointMock(AdPerformanceAdDetailEndpoint.Overview)) {
@@ -223,6 +257,26 @@ export function fetchAdEditForm(body: { campaignId: string; adId?: string }) {
   }
   return request.post<AdEditFormResponse>({
     url: `${AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE}/ad-edit/form`,
+    data: body
+  })
+}
+
+export function fetchAdEditSaveDraft(body: AdEditSaveDraftBody) {
+  if (isAdPerformanceAdEditEndpointMock(AdPerformanceAdEditEndpoint.SaveDraft)) {
+    return adPerfMock.mockFetchAdEditSaveDraft(body)
+  }
+  return request.post<AdEditSaveDraftResponse>({
+    url: `${AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE}/ad-edit/save-draft`,
+    data: body
+  })
+}
+
+export function fetchAdEditSubmitLaunch(body: AdEditSubmitLaunchBody) {
+  if (isAdPerformanceAdEditEndpointMock(AdPerformanceAdEditEndpoint.SubmitLaunch)) {
+    return adPerfMock.mockFetchAdEditSubmitLaunch(body)
+  }
+  return request.post<AdEditSubmitLaunchResponse>({
+    url: `${AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE}/ad-edit/submit-launch`,
     data: body
   })
 }

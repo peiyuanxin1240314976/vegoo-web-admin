@@ -1,0 +1,181 @@
+{
+  "_comment": "应用分配 - 分页列表。对应 types.ts: AssignmentTableQuery、AppAssignmentItem；分页结构 Api.Common.PaginatedResponse。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "列表页首屏",
+        "detail": "`index.vue` 与 overview / meta 并行或紧接请求，current=1、size 默认 20。",
+        "prerequisite": "无。"
+      },
+      {
+        "moment": "筛选条件变更或分页",
+        "detail": "筛选框 `filterForm` 与 `pageSize` / `currentPage` 变更后重新请求（或前端占位筛选时改用本地过滤，联调以本接口为准）。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "`platform`/`source`/`optimizer`/`status` 空串表示不限；`keyword` 可空。",
+    "dedupe": "keyword 输入可 debounce 300ms。"
+  },
+  "fieldDescription": {
+    "request": {
+      "keyword": { "type": "string", "required": false, "description": "应用名称或优化师模糊搜。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台 Android|iOS，空为全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选值，与行内 `adPlatform` 及 meta 选项 value 一致。"
+      },
+      "optimizer": { "type": "string", "required": false, "description": "优化师，空为全部。" },
+      "status": {
+        "type": "string",
+        "required": false,
+        "description": "活跃|草稿配置|已归档，空为全部。"
+      },
+      "current": { "type": "number", "required": true, "description": "页码，从 1 起。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" }
+    },
+    "response": {
+      "records": { "type": "AppAssignmentItem[]", "required": true, "description": "当前页数据。" },
+      "total": { "type": "number", "required": true, "description": "总条数。" },
+      "current": { "type": "number", "required": true, "description": "当前页码。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" }
+    },
+    "AppAssignmentItem": {
+      "id": { "type": "string", "required": true, "description": "分配记录 id。" },
+      "appName": { "type": "string", "required": true, "description": "应用名。" },
+      "appId": { "type": "string", "required": true, "description": "应用 ID。" },
+      "iconColor": { "type": "string", "required": true, "description": "列表头像底色。" },
+      "platform": { "type": "string", "required": true, "description": "Android|iOS。" },
+      "adPlatform": { "type": "string", "required": true, "description": "广告平台展示名。" },
+      "optimizer": { "type": "string", "required": true, "description": "优化师姓名。" },
+      "configVersionId": {
+        "type": "string",
+        "required": true,
+        "description": "当前引用绩效版本 id。"
+      },
+      "configVersionLabel": { "type": "string", "required": true, "description": "版本展示文案。" },
+      "assignTime": { "type": "string", "required": true, "description": "分配时间。" },
+      "effectiveTime": { "type": "string", "required": true, "description": "生效时间。" },
+      "status": { "type": "string", "required": true, "description": "分配状态。" },
+      "operator": { "type": "string", "required": true, "description": "最近操作人。" },
+      "note": { "type": "string", "required": true, "description": "备注。" },
+      "availableVersions": {
+        "type": "PerformanceVersion[]",
+        "required": true,
+        "description": "可切换版本；列表体积大时可改为仅 detail 返回。"
+      },
+      "changeLogs": {
+        "type": "ChangeLogItem[]",
+        "required": true,
+        "description": "变更记录；同上可仅 detail。"
+      }
+    },
+    "ChangeLogItem": {
+      "id": { "type": "string", "required": true, "description": "日志 id。" },
+      "time": { "type": "string", "required": true, "description": "时间。" },
+      "type": { "type": "string", "required": true, "description": "日志类型。" },
+      "operator": { "type": "string", "required": true, "description": "操作者。" },
+      "content": { "type": "string", "required": true, "description": "摘要内容。" },
+      "note": { "type": "string", "required": true, "description": "附注。" },
+      "status": { "type": "string", "required": true, "description": "有效|已删除。" }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "platform": "",
+    "source": "",
+    "optimizer": "",
+    "status": "",
+    "current": 1,
+    "size": 20
+  },
+  "sampleResponse": {
+    "records": [
+      {
+        "id": "asgn-001",
+        "appName": "Weather8",
+        "appId": "Weather8A",
+        "iconColor": "#a78bfa",
+        "platform": "Android",
+        "adPlatform": "Facebook",
+        "optimizer": "张三",
+        "configVersionId": "v3",
+        "configVersionLabel": "v3 已发布",
+        "assignTime": "2024-03-15",
+        "effectiveTime": "2024-03-15",
+        "status": "活跃",
+        "operator": "管理员A",
+        "note": "负责Weather8-Facebook投放优化",
+        "availableVersions": [
+          {
+            "id": "v3",
+            "version": "v3",
+            "status": "已发布",
+            "isActive": true,
+            "date": "2024-03-15",
+            "creator": "张三",
+            "evalMethod": "ROI",
+            "evalDays": 3,
+            "targetRate": "53%",
+            "minRate": "50%",
+            "difficulty": 1.2,
+            "minProfit": "-",
+            "extraCondition": "-"
+          },
+          {
+            "id": "v2",
+            "version": "v2",
+            "status": "已发布",
+            "isActive": false,
+            "date": "2024-03-10",
+            "creator": "李四",
+            "evalMethod": "ROI",
+            "evalDays": 3,
+            "targetRate": "50%",
+            "minRate": "47%",
+            "difficulty": 1.1,
+            "minProfit": "-",
+            "extraCondition": "-"
+          }
+        ],
+        "changeLogs": [
+          {
+            "id": "log-001-3",
+            "time": "2024-03-15 10:30:22",
+            "type": "配置变更",
+            "operator": "管理员A",
+            "content": "绩效配置版本变更：v2 → v3（已发布）",
+            "note": "-",
+            "status": "有效"
+          },
+          {
+            "id": "log-001-2",
+            "time": "2024-03-10 09:15:44",
+            "type": "优化师变更",
+            "operator": "管理员A",
+            "content": "负责优化师：李四 → 张三",
+            "note": "工作调动",
+            "status": "有效"
+          }
+        ]
+      }
+    ],
+    "total": 10,
+    "current": 1,
+    "size": 20
+  },
+  "api": {
+    "url": "POST /api/config-management/app-assignment/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?, platform?, source?, optimizer?, status?, current, size",
+    "responseBody": "PaginatedResponse<AppAssignmentItem>"
+  },
+  "apiSuggestion": {
+    "notes": ["若 `records` 去掉嵌套大字段，须保证 `assignment-detail` 可补全抽屉与变更记录弹窗。"]
+  }
+}

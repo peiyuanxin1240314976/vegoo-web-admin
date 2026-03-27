@@ -1,0 +1,105 @@
+{
+  "_comment": "应用分配 - 编辑。对应 types.ts: AssignmentUpdatePayload；应用维度锁定，可改编排、版本、备注等。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "编辑弹窗点击「保存变更」",
+        "detail": "`assignment-form-dialog` 有改动时 `changeReason` 必填；`handleSubmit` 通过后调用。",
+        "prerequisite": "已知分配 id。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "提交中禁用按钮。"
+  },
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "分配记录 id。" },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用 ID（与创建一致，编辑时只读校验）。"
+      },
+      "platform": { "type": "string", "required": true, "description": "终端平台（只读校验）。" },
+      "adPlatform": { "type": "string", "required": true, "description": "广告平台。" },
+      "optimizer": { "type": "string", "required": true, "description": "优化师。" },
+      "note": { "type": "string", "required": false, "description": "备注。" },
+      "configVersionId": { "type": "string", "required": true, "description": "绩效版本 id。" },
+      "changeReason": {
+        "type": "string",
+        "required": true,
+        "description": "有变更时必填，写入变更日志。"
+      }
+    },
+    "response": {
+      "_updated": {
+        "type": "AppAssignmentItem",
+        "required": true,
+        "description": "更新后的完整记录。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "id": "asgn-001",
+    "appId": "Weather8A",
+    "platform": "Android",
+    "adPlatform": "Facebook",
+    "optimizer": "张三",
+    "note": "负责Weather8-Facebook投放优化",
+    "configVersionId": "v3",
+    "changeReason": "业务要求切换已发布版本"
+  },
+  "sampleResponse": {
+    "id": "asgn-001",
+    "appName": "Weather8",
+    "appId": "Weather8A",
+    "iconColor": "#a78bfa",
+    "platform": "Android",
+    "adPlatform": "Facebook",
+    "optimizer": "张三",
+    "configVersionId": "v3",
+    "configVersionLabel": "v3 已发布",
+    "assignTime": "2024-03-15",
+    "effectiveTime": "2024-03-15",
+    "status": "活跃",
+    "operator": "管理员A",
+    "note": "负责Weather8-Facebook投放优化",
+    "availableVersions": [
+      {
+        "id": "v3",
+        "version": "v3",
+        "status": "已发布",
+        "isActive": true,
+        "date": "2024-03-15",
+        "creator": "张三",
+        "evalMethod": "ROI",
+        "evalDays": 3,
+        "targetRate": "53%",
+        "minRate": "50%",
+        "difficulty": 1.2,
+        "minProfit": "-",
+        "extraCondition": "-"
+      }
+    ],
+    "changeLogs": [
+      {
+        "id": "log-upd-1",
+        "time": "2026-03-27 11:00:00",
+        "type": "配置变更",
+        "operator": "管理员A",
+        "content": "绩效配置版本变更：v2 → v3（已发布）",
+        "note": "业务要求切换已发布版本",
+        "status": "有效"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/app-assignment/update",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "AssignmentUpdatePayload",
+    "responseBody": "AppAssignmentItem"
+  },
+  "apiSuggestion": {
+    "notes": ["与账户管理等模块一致，`id` 放 body；不使用 PUT PATH。"]
+  }
+}

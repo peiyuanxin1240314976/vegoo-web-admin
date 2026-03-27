@@ -1,0 +1,60 @@
+{
+  "_comment": "应用分配 - 筛选栏下拉：广告平台、优化师。对应 types.ts: AppAssignmentMetaFilterResponse。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "列表页首屏",
+        "detail": "`index.vue` 挂载时拉取，填充「广告平台」「优化师」下拉。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "options 中 value 空字符串表示「全部」，与表格请求字段一致。",
+    "dedupe": "同屏缓存；筛选项变更不重复请求除非产品有联动。"
+  },
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "adPlatformOptions": {
+        "type": "Option[]",
+        "required": true,
+        "description": "广告平台选项；label 展示，value 与 `AppAssignmentItem.adPlatform` / table 请求 `source` 对齐。"
+      },
+      "optimizerOptions": {
+        "type": "Option[]",
+        "required": true,
+        "description": "优化师选项；value 与列表行 `optimizer`、table 请求 `optimizer` 对齐。"
+      }
+    },
+    "Option": {
+      "label": { "type": "string", "required": true, "description": "展示文案。" },
+      "value": { "type": "string", "required": true, "description": "取值；「全部」用空串。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "adPlatformOptions": [
+      { "label": "Facebook", "value": "Facebook" },
+      { "label": "Google", "value": "Google" },
+      { "label": "TikTok", "value": "TikTok" },
+      { "label": "全部", "value": "全部" }
+    ],
+    "optimizerOptions": [
+      { "label": "张三", "value": "张三" },
+      { "label": "李四", "value": "李四" },
+      { "label": "王五", "value": "王五" },
+      { "label": "赵六", "value": "赵六" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/app-assignment/meta-filter-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{}",
+    "responseBody": "{ adPlatformOptions, optimizerOptions }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "业务概念「广告平台」；字段与数据字典 `source` 对应时，后端可返回编码由前端映射 label。"
+    ]
+  }
+}

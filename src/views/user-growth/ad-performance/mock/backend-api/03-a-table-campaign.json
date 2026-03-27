@@ -1,5 +1,21 @@
 {
   "_comment": "广告成效 - 主表格（Campaign tab）。由原 03 的 tab=campaign 拆分而来。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "主列表 tab 为 Campaign",
+        "detail": "首屏、分页、关键字、筛选变化时请求；可与 overview 并行。",
+        "prerequisite": "dateRange 必填；其余筛选项与主筛选一致。"
+      },
+      {
+        "moment": "数据变更后刷新",
+        "detail": "抽屉内暂停系列、alert-action 等成功后，父组件可 `refreshAll` 再次请求本接口。",
+        "prerequisite": "仍停留在 Campaign tab。"
+      }
+    ],
+    "defaultSelection": "current=1, size=10。",
+    "dedupe": "相同 query 连续触发可防抖（可选）。"
+  },
   "fieldDescription": {
     "request": {
       "keyword": {
@@ -102,7 +118,7 @@
     "pagination": { "current": 1, "size": 10, "total": 604 }
   },
   "api": {
-    "url": "POST /api/user-growth/ad-performance/table/campaign",
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/table/campaign",
     "method": "POST",
     "priority": "P0",
     "requestBody": "keyword?, current?, size?, dateRange, app?, adPlatform?, account?, country?",

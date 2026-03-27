@@ -1,5 +1,16 @@
 {
   "_comment": "广告成效 - 主表格数据（按 tab 拆分接口）。03 为说明文件；实际接口契约见：03-a/03-b/03-c/03-d。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "文档阅读 / 联调对齐",
+        "detail": "本 JSON 仅汇总 requestCommon 与各 tab 真实 URL，不对应 `data-source` 单一开关项；实现以 03-a～03-d 为准。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "无 UI 触发；表格切换 tab 时调用对应 03-x 契约。",
+    "dedupe": "不适用。"
+  },
   "fieldDescription": {
     "requestCommon": {
       "keyword": {
@@ -57,25 +68,25 @@
   },
   "apiList": [
     {
-      "url": "POST /api/user-growth/ad-performance/table/campaign",
+      "url": "POST /api/v1/datacenter/analysis/ad-performance/table/campaign",
       "method": "POST",
       "priority": "P0",
       "ref": "03-a"
     },
     {
-      "url": "POST /api/user-growth/ad-performance/table/country",
+      "url": "POST /api/v1/datacenter/analysis/ad-performance/table/country",
       "method": "POST",
       "priority": "P0",
       "ref": "03-b"
     },
     {
-      "url": "POST /api/user-growth/ad-performance/table/owner",
+      "url": "POST /api/v1/datacenter/analysis/ad-performance/table/owner",
       "method": "POST",
       "priority": "P0",
       "ref": "03-c"
     },
     {
-      "url": "POST /api/user-growth/ad-performance/table/account",
+      "url": "POST /api/v1/datacenter/analysis/ad-performance/table/account",
       "method": "POST",
       "priority": "P0",
       "ref": "03-d"

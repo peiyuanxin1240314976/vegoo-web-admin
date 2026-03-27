@@ -1,0 +1,102 @@
+{
+  "_comment": "应用分配 - 新建。对应 types.ts: AssignmentCreatePayload；响应为新建后的 AppAssignmentItem。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "新建弹窗点击「确认分配」",
+        "detail": "`assignment-form-dialog` `handleSubmit` 校验通过后提交；变更原因在新建场景可空。",
+        "prerequisite": "应用、平台、广告平台、优化师、绩效版本已选。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "提交中禁用按钮防重复。"
+  },
+  "fieldDescription": {
+    "request": {
+      "appId": { "type": "string", "required": true, "description": "应用 ID。" },
+      "platform": { "type": "string", "required": true, "description": "Android | iOS。" },
+      "adPlatform": { "type": "string", "required": true, "description": "广告平台展示值。" },
+      "optimizer": { "type": "string", "required": true, "description": "优化师。" },
+      "note": { "type": "string", "required": false, "description": "备注。" },
+      "configVersionId": { "type": "string", "required": true, "description": "绩效配置版本 id。" },
+      "changeReason": {
+        "type": "string",
+        "required": false,
+        "description": "变更原因；新建一般可空。"
+      }
+    },
+    "response": {
+      "_created": {
+        "type": "AppAssignmentItem",
+        "required": true,
+        "description": "新建完成的分配记录，含服务端生成 id、时间、初始变更日志等。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "appId": "Weather8A",
+    "platform": "Android",
+    "adPlatform": "Google",
+    "optimizer": "李四",
+    "note": "",
+    "configVersionId": "v2",
+    "changeReason": ""
+  },
+  "sampleResponse": {
+    "id": "asgn-new-001",
+    "appName": "Weather8",
+    "appId": "Weather8A",
+    "iconColor": "#a78bfa",
+    "platform": "Android",
+    "adPlatform": "Google",
+    "optimizer": "李四",
+    "configVersionId": "v2",
+    "configVersionLabel": "v2 已发布",
+    "assignTime": "2026-03-27",
+    "effectiveTime": "2026-03-27",
+    "status": "活跃",
+    "operator": "管理员A",
+    "note": "",
+    "availableVersions": [
+      {
+        "id": "v2",
+        "version": "v2",
+        "status": "已发布",
+        "isActive": true,
+        "date": "2024-03-10",
+        "creator": "李四",
+        "evalMethod": "ROI",
+        "evalDays": 3,
+        "targetRate": "50%",
+        "minRate": "47%",
+        "difficulty": 1.1,
+        "minProfit": "-",
+        "extraCondition": "-"
+      }
+    ],
+    "changeLogs": [
+      {
+        "id": "log-new-1",
+        "time": "2026-03-27 10:00:00",
+        "type": "初始分配",
+        "operator": "管理员A",
+        "content": "初始分配：应用 Weather8-安卓-Google 分配给 李四，使用 v2 配置",
+        "note": "-",
+        "status": "有效"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/app-assignment",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "AssignmentCreatePayload",
+    "responseBody": "AppAssignmentItem"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "若 (appId, platform, adPlatform) 要求唯一，冲突时返回业务错误码。",
+      "`sampleResponse` 为 unwrap 后 `data`。"
+    ]
+  }
+}

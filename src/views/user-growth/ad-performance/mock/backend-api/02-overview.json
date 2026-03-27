@@ -1,5 +1,21 @@
 {
   "_comment": "广告成效 - 页面概览数据：顶部 KPI、趋势图、右侧分布、异常预警、数据时间。建议首屏与筛选变化时调用。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "首屏加载",
+        "detail": "与 meta-filter-options、当前 tab 表格请求并行；入参与主筛选区一致。",
+        "prerequisite": "dateRange 有默认值或用户已选。"
+      },
+      {
+        "moment": "筛选条件变化",
+        "detail": "应用/广告平台/账户/国家/日期范围任一变化后重新请求，刷新 KPI、趋势、分布与预警列表。",
+        "prerequisite": "筛选表单已提交或受控更新。"
+      }
+    ],
+    "defaultSelection": "与列表 tab 无关；全页共用当前筛选快照。",
+    "dedupe": "短时间重复相同参数可合并为一次请求（可选）。"
+  },
   "fieldDescription": {
     "request": {
       "dateRange": {
@@ -165,7 +181,7 @@
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/ad-performance/overview",
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/overview",
     "method": "POST",
     "priority": "P0",
     "requestBody": "dateRange, app?, adPlatform?, account?, country?",

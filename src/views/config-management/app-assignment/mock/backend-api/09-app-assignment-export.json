@@ -1,0 +1,53 @@
+{
+  "_comment": "应用分配 - 导出列表。对应 types.ts: AppAssignmentExportResponse；与绩效导出类似可先返 fileToken，或直接文件流（见 apiSuggestion）。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页头点击「导出」",
+        "detail": "`index.vue` `handleExport`；参数与 table 筛选对齐。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "导出范围默认与当前筛选一致；未传参表示全量（权限内）由产品定。",
+    "dedupe": "导出任务进行中禁用按钮。"
+  },
+  "fieldDescription": {
+    "request": {
+      "keyword": { "type": "string", "required": false, "description": "同 table。" },
+      "platform": { "type": "string", "required": false, "description": "同 table。" },
+      "source": { "type": "string", "required": false, "description": "同 table。" },
+      "optimizer": { "type": "string", "required": false, "description": "同 table。" },
+      "status": { "type": "string", "required": false, "description": "同 table。" }
+    },
+    "response": {
+      "fileToken": {
+        "type": "string",
+        "required": true,
+        "description": "异步导出任务令牌或下载凭证；前端再调下载接口（若适用）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "platform": "",
+    "source": "",
+    "optimizer": "",
+    "status": ""
+  },
+  "sampleResponse": {
+    "fileToken": "app-assignment-export-20260327"
+  },
+  "api": {
+    "url": "POST /api/config-management/app-assignment/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "与 table 筛选字段一致（可无分页）",
+    "responseBody": "AppAssignmentExportResponse"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "若直接返回 `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` 流，需在 `src/utils/http` 单独配置 responseType，契约改为说明响应头 Content-Disposition。",
+      "`sampleResponse` 为 unwrap 后 `data`。"
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "_comment": "编辑 Campaign - 保存草稿。请求体与 ad-edit/types.ts: AdEditFormData 同结构的 form 字段。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户点击保存草稿",
+        "detail": "提交当前表单快照；成功后可停留在编辑页并提示已保存。",
+        "prerequisite": "表单通过前端基础校验（若有）。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "保存中禁用按钮，防止重复草稿版本冲突。"
+  },
+  "fieldDescription": {
+    "request": {
+      "campaignId": { "type": "string", "required": true, "description": "广告系列 ID。" },
+      "adId": {
+        "type": "string",
+        "required": false,
+        "description": "广告组 ID；新建草稿时可空。"
+      },
+      "form": {
+        "type": "AdEditFormData",
+        "required": true,
+        "description": "完整表单，与 GET form 响应结构一致；见 01-form.json 内嵌类型说明。"
+      }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否保存成功。" },
+      "message": { "type": "string", "required": false, "description": "提示信息。" },
+      "draftId": {
+        "type": "string",
+        "required": false,
+        "description": "草稿 ID；若后端生成可返回供续编。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "campaignId": "0032021863838Z7",
+    "adId": "1",
+    "form": {
+      "basic": {
+        "name": "USA_Android_T1_Purchase",
+        "app": "Weather5",
+        "region": "US",
+        "channel": "google"
+      },
+      "budget": {
+        "dailyBudget": 500,
+        "totalBudget": "15,000",
+        "scheduleType": "always",
+        "startDate": "2026-01-15",
+        "endDate": "2026-03-31",
+        "bidStrategy": "target_cpi",
+        "bidValue": "3.50"
+      },
+      "targeting": {
+        "devicePhone": true,
+        "deviceTablet": false,
+        "iosMin": 14,
+        "androidMin": 10,
+        "ageRange": [18, 45],
+        "gender": "all"
+      },
+      "creatives": {
+        "items": [
+          { "id": "c1", "name": "Banner_US_v1", "thumb": "https://picsum.photos/seed/c1/160/100" }
+        ],
+        "selectedIds": ["c1"]
+      },
+      "sidebar": {
+        "refItems": [],
+        "tips": [],
+        "budgetForecastValues": []
+      }
+    }
+  },
+  "sampleResponse": { "success": true, "message": "草稿已保存" },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail/ad-edit/save-draft",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "campaignId, form, adId?",
+    "responseBody": "success, message?, draftId?"
+  },
+  "apiSuggestion": {
+    "notes": ["可对 form 做服务端校验；大字段可考虑后续拆分为分块保存（另立契约）。"]
+  }
+}

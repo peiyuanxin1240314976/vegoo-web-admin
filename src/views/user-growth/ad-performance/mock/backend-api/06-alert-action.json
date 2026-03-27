@@ -1,5 +1,16 @@
 {
   "_comment": "广告成效 - 异常预警操作：暂停/查看/优化。用于 AdPerformanceAlerts 的 action 事件回调。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户在预警卡片上点击操作",
+        "detail": "根据 `actionType` 调用；暂停/优化可触发后续刷新 overview 或列表。",
+        "prerequisite": "`alertId` 来自 overview.alerts。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "同一 `alertId` 操作进行中应禁用或 loading。"
+  },
   "fieldDescription": {
     "request": {
       "alertId": {
@@ -52,7 +63,7 @@
   },
   "sampleResponse": { "success": true, "message": "已暂停该系列" },
   "api": {
-    "url": "POST /api/user-growth/ad-performance/alert-action",
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/alert-action",
     "method": "POST",
     "priority": "P2",
     "requestBody": "alertId, actionType, target?",

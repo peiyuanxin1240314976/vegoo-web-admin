@@ -1,5 +1,21 @@
 {
   "_comment": "广告系列详情 - 广告列表（广告组明细，支持状态筛选）。对应 types.ts: CampaignAdRow[]。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "系列详情页首屏 / 状态筛选变化",
+        "detail": "进入页面与切换「全部/投放中/已暂停」等条件时请求。",
+        "prerequisite": "`campaignId` 有效。"
+      },
+      {
+        "moment": "广告组级操作成功后",
+        "detail": "ad-group-action 成功后刷新列表行状态。",
+        "prerequisite": "仍在本页。"
+      }
+    ],
+    "defaultSelection": "状态筛选默认「全部」或由前后端约定。",
+    "dedupe": "短时间重复相同参数可略并（可选）。"
+  },
   "fieldDescription": {
     "request": {
       "campaignId": { "type": "string", "required": true, "description": "广告系列唯一标识。" },
@@ -79,7 +95,7 @@
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/ad-performance/campaign-detail/ad-list",
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail/ad-list",
     "method": "POST",
     "priority": "P0",
     "requestBody": "campaignId (必填), status? (枚举筛选)",

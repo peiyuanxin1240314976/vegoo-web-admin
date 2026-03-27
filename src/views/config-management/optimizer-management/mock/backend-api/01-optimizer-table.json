@@ -1,12 +1,28 @@
 {
-  "_comment": "优化师管理 - 分页列表。对应 types.ts: OptimizerTableQuery / OptimizerItem；Api.ConfigManagement.Optimizer.ListItem。",
+  "_comment": "优化师管理 - 分页列表。types: OptimizerTableQuery / OptimizerItem；Api.ConfigManagement.Optimizer.ListItem。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`optimizer-management/index.vue` onMounted 与 overview 并行请求 table（current=1、size 为页大小或「全部」上限如 5000）。",
+        "prerequisite": "登录态。"
+      },
+      {
+        "moment": "筛选或分页变化",
+        "detail": "`filterForm` 变更或 `currentPage`/`pageSize` 变更后，在 `useRemoteTable` 为 true 时调用 `refreshTable`。",
+        "prerequisite": "已与列表接口联调成功。"
+      }
+    ],
+    "defaultSelection": "`keyword`、`status` 可空；`current` 从 1 起；`size` 与通用分页一致。",
+    "dedupe": "keyword 可 debounce；翻页取消上一次请求（可选）。"
+  },
   "fieldDescription": {
     "request": {
       "current": { "type": "number", "required": true, "description": "当前页，从 1 开始。" },
       "size": {
         "type": "number",
         "required": true,
-        "description": "每页条数；前端「全部」时用上限（如 5000）由网关约定。"
+        "description": "每页条数；前端「全部」时用上限（如 5000）由前后端约定。"
       },
       "keyword": { "type": "string", "required": false, "description": "名称或代号模糊搜索。" },
       "status": {
@@ -20,7 +36,7 @@
       "records": { "type": "ListItem[]", "required": true, "description": "当前页数据。" },
       "current": { "type": "number", "required": true, "description": "当前页码。" },
       "size": { "type": "number", "required": true, "description": "每页条数。" },
-      "total": { "type": "number", "required": true, "description": "总条数。" }
+      "total": { "type": "number", "required": true, "description": "符合条件总条数。" }
     },
     "ListItem": {
       "id": { "type": "string", "required": true, "description": "优化师业务主键。" },
@@ -34,7 +50,7 @@
         "description": "头像底色 HEX，前端渲染首字。"
       },
       "version": { "type": "number", "required": true, "description": "版本号，展示 v{n}。" },
-      "sCode": { "type": "string", "required": true, "description": "代号，对应业务 s_code。" },
+      "sCode": { "type": "string", "required": true, "description": "代号。" },
       "sCode2": { "type": "string", "required": false, "description": "副代号。" },
       "minConsumption": {
         "type": "number",
@@ -71,18 +87,46 @@
       "content": { "type": "string", "required": true, "description": "摘要内容。" }
     }
   },
-  "sampleRequest": { "current": 1, "size": 20, "keyword": "", "status": "在职" },
+  "sampleRequest": { "current": 1, "size": 20, "keyword": "", "status": "" },
   "sampleResponse": {
-    "records": [],
+    "records": [
+      {
+        "id": "opt001",
+        "no": 1,
+        "userId": "u001",
+        "userName": "张三",
+        "email": "张三@vegoo.com",
+        "avatarColor": "#2dd4bf",
+        "version": 1,
+        "sCode": "FB-OPT-001",
+        "sCode2": "FB-001",
+        "minConsumption": 800,
+        "checkCode": "CHK-A8F2D3E1B5C7F9X9K2M4P6Q8R3S1T0U7V2W5Y8Z1",
+        "status": "在职",
+        "apps": ["Vegoo Keyboard", "Vegoo VPN", "Vegoo Notes", "Vegoo Weather"],
+        "recentLogs": [
+          { "id": "l1", "timeLabel": "今天 14:30", "content": "更新 Vegoo Keyboard 预算" },
+          { "id": "l2", "timeLabel": "今天 10:15", "content": "创建新推广计划" }
+        ],
+        "createTime": "2024-01-15",
+        "lastModifyTime": "2026-03-15 14:30"
+      }
+    ],
     "current": 1,
     "size": 20,
-    "total": 0
+    "total": 12
   },
   "api": {
     "url": "POST /api/config-management/optimizer/table",
     "method": "POST",
     "priority": "P0",
     "requestBody": "current, size, keyword?, status?",
-    "responseBody": "Api.Common.PaginatedResponse<Api.ConfigManagement.Optimizer.ListItem>"
+    "responseBody": "Api.Common.PaginatedResponse<ListItem>"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "`sampleResponse` 为网关 unwrap 后 `data`（与 `request.post` 泛型一致）。",
+      "列表项须含至少一条完整 `recentLogs`/`apps` 示例以便联调详情抽屉。"
+    ]
   }
 }

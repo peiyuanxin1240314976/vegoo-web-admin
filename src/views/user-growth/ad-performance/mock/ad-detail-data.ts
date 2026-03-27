@@ -1,9 +1,9 @@
 /**
- * 广告详情页 Mock 数据
+ * 广告详情页 Mock 数据（模块根统一存放）
  * 路由：/user-growth/ad-performance/campaign-detail/ad-detail
- * 对应类型：src/views/.../ad-detail/types.ts
+ * 类型：../campaign-detail/ad-detail/types.ts
  */
-import type { AdDetailData } from '../types'
+import type { AdDetailData } from '../campaign-detail/ad-detail/types'
 
 export const MOCK_AD_DETAIL: AdDetailData = {
   adId: '1',

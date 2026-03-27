@@ -1,9 +1,9 @@
 /**
- * 广告系列详情页 Mock 数据
+ * 广告系列详情页 Mock 数据（模块根统一存放，避免子路由重复 mock 目录）
  * 路由：/user-growth/ad-performance/campaign-detail
- * 对应类型：src/views/user-growth/ad-performance/campaign-detail/types.ts
+ * 类型：../campaign-detail/types.ts
  */
-import type { CampaignDetailData } from '../types'
+import type { CampaignDetailData } from '../campaign-detail/types'
 
 export const MOCK_CAMPAIGN_DETAIL: CampaignDetailData = {
   campaignName: 'USA_Android_T1_Purchase',

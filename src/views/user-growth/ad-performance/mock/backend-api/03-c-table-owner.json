@@ -1,5 +1,16 @@
 {
   "_comment": "广告成效 - 主表格（Owner tab）。由原 03 的 tab=owner 拆分而来。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户切换到 Owner tab",
+        "detail": "首进该 tab、分页、关键字与筛选变化时请求。",
+        "prerequisite": "dateRange 必填。"
+      }
+    ],
+    "defaultSelection": "current=1, size=10。",
+    "dedupe": "同 Country tab 策略。"
+  },
   "fieldDescription": {
     "request": {
       "keyword": {
@@ -108,7 +119,7 @@
     "pagination": { "current": 1, "size": 10, "total": 18 }
   },
   "api": {
-    "url": "POST /api/user-growth/ad-performance/table/owner",
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/table/owner",
     "method": "POST",
     "priority": "P0",
     "requestBody": "keyword?, current?, size?, dateRange, app?, adPlatform?, account?, country?",

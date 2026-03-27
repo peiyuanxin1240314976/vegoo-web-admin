@@ -1,5 +1,16 @@
 {
-  "_comment": "优化师管理 - 导出。筛选条件与列表一致；实际返回文件流或异步任务 ID 由网关约定。",
+  "_comment": "优化师管理 - 导出。筛选与列表一致；异步凭证或与文件流二选一（见 apiSuggestion）。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页头点击「导出」",
+        "detail": "`index.vue` `handleExport`：远程模式下 `exportOptimizerList`，否则前端 CSV 兜底。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "请求体字段与 table 筛选一致时可省略分页字段，表示导出全部匹配行（权限内）。",
+    "dedupe": "导出任务进行中禁用按钮。"
+  },
   "fieldDescription": {
     "request": {
       "keyword": { "type": "string", "required": false, "description": "与列表一致。" },
@@ -8,22 +19,28 @@
       "size": { "type": "number", "required": false, "description": "若后端支持按页导出。" }
     },
     "response": {
-      "data": { "type": "blob | string", "required": false, "description": "文件流或任务 ID。" }
+      "fileToken": {
+        "type": "string",
+        "required": true,
+        "description": "异步导出任务令牌或下载凭证；前端可再调下载接口。"
+      }
     }
   },
   "sampleRequest": { "keyword": "", "status": "在职" },
-  "sampleResponse": {},
+  "sampleResponse": {
+    "fileToken": "optimizer-export-20260327120000"
+  },
   "api": {
     "url": "POST /api/config-management/optimizer/export",
     "method": "POST",
     "priority": "P1",
     "requestBody": "keyword?, status?, current?, size?",
-    "responseBody": "文件流或业务自定义"
+    "responseBody": "Api.ConfigManagement.Optimizer.ExportResponse"
   },
   "apiSuggestion": {
     "notes": [
-      "前端需在 http 层设置 responseType: 'blob' 若返回二进制。",
-      "若改为异步导出，可返回 taskId 并另配查询进度接口。"
+      "若直接返回二进制流，需 `responseType: 'blob'` 且本契约 `sampleResponse` 仅作占位说明。",
+      "`sampleResponse` 为 unwrap 后 `data`。"
     ]
   }
 }

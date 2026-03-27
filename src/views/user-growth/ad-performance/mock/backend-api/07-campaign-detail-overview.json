@@ -1,5 +1,21 @@
 {
   "_comment": "广告系列详情 - 概览数据（基本信息/预算排期/目标出价/核心指标趋势）。对应 types.ts: CampaignDetailData 中的 basicInfo / budgetInfo / targetInfo / trendData。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "系列详情页首屏",
+        "detail": "`campaign-detail/index.vue` onMounted 与 ad-list / creative / ai 并行；`campaignId` 来自路由 query。",
+        "prerequisite": "路由带有效 `?id=`。"
+      },
+      {
+        "moment": "系列级操作成功后",
+        "detail": "调用 campaign-action 成功后可选再次拉取本接口以刷新顶部信息与趋势。",
+        "prerequisite": "同系列 id。"
+      }
+    ],
+    "defaultSelection": "无额外筛选项；由路由 id 决定实体。",
+    "dedupe": "四路首屏请求可并行，无强制防抖。"
+  },
   "fieldDescription": {
     "request": {
       "campaignId": { "type": "string", "required": true, "description": "广告系列唯一标识。" }
@@ -168,7 +184,7 @@
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/ad-performance/campaign-detail/overview",
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail/overview",
     "method": "POST",
     "priority": "P0",
     "requestBody": "campaignId (必填)",

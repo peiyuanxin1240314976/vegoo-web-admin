@@ -1,5 +1,16 @@
 {
   "_comment": "广告系列详情 - 素材表现 Top5（按 ROI 降序）。对应 types.ts: CreativeTop5Item[]。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "系列详情页首屏",
+        "detail": "与 overview / ad-list / ai-insights 并行请求 Top5 区块。",
+        "prerequisite": "`campaignId` 来自路由。"
+      }
+    ],
+    "defaultSelection": "无交互筛选；排序规则由后端固定（如 ROI 降序）。",
+    "dedupe": "同 overview。"
+  },
   "fieldDescription": {
     "request": {
       "campaignId": { "type": "string", "required": true, "description": "广告系列唯一标识。" }
@@ -66,7 +77,7 @@
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/ad-performance/campaign-detail/creative-top5",
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/campaign-detail/creative-top5",
     "method": "POST",
     "priority": "P1",
     "requestBody": "campaignId (必填)",

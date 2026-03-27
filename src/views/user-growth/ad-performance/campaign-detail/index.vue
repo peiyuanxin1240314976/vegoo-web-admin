@@ -31,12 +31,12 @@
           <el-icon><Edit /></el-icon>
           编辑系列
         </ElButton>
-        <ElButton size="small" plain round class="cd-btn-pause">
+        <ElButton size="small" plain round class="cd-btn-pause" @click="onCampaignAction('pause')">
           <el-icon><VideoPause /></el-icon>
           暂停
         </ElButton>
-        <ElButton size="small" plain round>复制</ElButton>
-        <ElButton size="small" plain round>归档</ElButton>
+        <ElButton size="small" plain round @click="onCampaignAction('copy')">复制</ElButton>
+        <ElButton size="small" plain round @click="onCampaignAction('archive')">归档</ElButton>
       </div>
     </div>
 
@@ -54,7 +54,11 @@
       <!-- 中列：趋势图 + 广告列表 -->
       <div class="cd-col cd-col--mid">
         <CampaignCoreTrend :data="data.trendData" />
-        <CampaignAdList :rows="data.adRows" :campaign-id="String(route.query.id ?? '')" />
+        <CampaignAdList
+          :rows="data.adRows"
+          :campaign-id="String(route.query.id ?? '')"
+          @refresh-ad-list="reloadAdList"
+        />
       </div>
 
       <!-- 右列：素材Top5 + AI洞察 -->
@@ -74,6 +78,7 @@
   import {
     fetchCampaignDetailAdList,
     fetchCampaignDetailAiInsights,
+    fetchCampaignDetailCampaignAction,
     fetchCampaignDetailCreativeTop5,
     fetchCampaignDetailOverview
   } from '@/api/user-growth/ad-performance'
@@ -82,8 +87,12 @@
   import CampaignAdList from './modules/campaign-ad-list.vue'
   import CampaignCreativeTop5 from './modules/campaign-creative-top5.vue'
   import CampaignAiInsights from './modules/campaign-ai-insights.vue'
-  import { MOCK_CAMPAIGN_DETAIL } from './mock/data'
-  import type { CampaignDetailData, CampaignStatus } from './types'
+  import { MOCK_CAMPAIGN_DETAIL } from '../mock/campaign-detail-data'
+  import type {
+    CampaignDetailCampaignActionType,
+    CampaignDetailData,
+    CampaignStatus
+  } from './types'
 
   defineOptions({ name: 'CampaignDetail' })
 
@@ -97,6 +106,61 @@
       path: '/user-growth/ad-performance/campaign-detail/ad-edit',
       query: { campaignId: String(route.query.id ?? '') }
     })
+  }
+
+  async function loadCampaignDetail() {
+    const campaignId = String(route.query.id ?? '')
+    if (!campaignId) {
+      ElMessage.error('缺少广告系列 ID')
+      return
+    }
+    const [o, ads, cr, ai] = await Promise.all([
+      fetchCampaignDetailOverview({ campaignId }),
+      fetchCampaignDetailAdList({ campaignId, status: 'all' }),
+      fetchCampaignDetailCreativeTop5({ campaignId }),
+      fetchCampaignDetailAiInsights({ campaignId })
+    ])
+    Object.assign(data, {
+      campaignName: o.campaignName,
+      status: o.status,
+      basicInfo: o.basicInfo,
+      budgetInfo: o.budgetInfo,
+      targetInfo: o.targetInfo,
+      trendData: o.trendData,
+      adRows: ads.rows,
+      creativeTop5: cr.items,
+      aiInsights: ai.insights
+    })
+  }
+
+  async function reloadAdList() {
+    const campaignId = String(route.query.id ?? '')
+    if (!campaignId) return
+    try {
+      const ads = await fetchCampaignDetailAdList({ campaignId, status: 'all' })
+      data.adRows = ads.rows
+    } catch {
+      ElMessage.error('刷新广告列表失败')
+    }
+  }
+
+  async function onCampaignAction(actionType: CampaignDetailCampaignActionType) {
+    const campaignId = String(route.query.id ?? '')
+    if (!campaignId) {
+      ElMessage.error('缺少广告系列 ID')
+      return
+    }
+    try {
+      const res = await fetchCampaignDetailCampaignAction({ campaignId, actionType })
+      if (res.message) ElMessage.success(res.message)
+      else ElMessage.success('操作成功')
+      if (actionType === 'copy' && res.newCampaignId) {
+        ElMessage.info(`新系列 ID：${res.newCampaignId}`)
+      }
+      await loadCampaignDetail()
+    } catch {
+      ElMessage.error('操作失败')
+    }
   }
 
   function statusText(s: CampaignStatus): string {
@@ -117,23 +181,7 @@
       return
     }
     try {
-      const [o, ads, cr, ai] = await Promise.all([
-        fetchCampaignDetailOverview({ campaignId }),
-        fetchCampaignDetailAdList({ campaignId, status: 'all' }),
-        fetchCampaignDetailCreativeTop5({ campaignId }),
-        fetchCampaignDetailAiInsights({ campaignId })
-      ])
-      Object.assign(data, {
-        campaignName: o.campaignName,
-        status: o.status,
-        basicInfo: o.basicInfo,
-        budgetInfo: o.budgetInfo,
-        targetInfo: o.targetInfo,
-        trendData: o.trendData,
-        adRows: ads.rows,
-        creativeTop5: cr.items,
-        aiInsights: ai.insights
-      })
+      await loadCampaignDetail()
     } catch {
       ElMessage.error('加载系列详情失败')
     } finally {

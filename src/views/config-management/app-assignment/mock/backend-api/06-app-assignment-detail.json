@@ -1,0 +1,88 @@
+{
+  "_comment": "应用分配 - 单条详情（抽屉/变更记录数据源）。对应 types.ts: AppAssignmentItem。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户点击表格行打开抽屉",
+        "detail": "`index.vue` `handleRowClick`：若 table 行已含完整嵌套可直接展示，否则用 `id` 请求本接口。",
+        "prerequisite": "已知分配 `id`。"
+      },
+      {
+        "moment": "抽屉内点「变更记录」",
+        "detail": "`change-log-dialog` 可走行内 `changeLogs` 或依赖本接口刷新。",
+        "prerequisite": "同 id。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "重复打开同一行可复用缓存。"
+  },
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "分配记录 id。" }
+    },
+    "response": {
+      "_item": {
+        "type": "AppAssignmentItem | null",
+        "required": true,
+        "description": "单条完整对象，字段见 05-app-assignment-table.json 的 AppAssignmentItem；无记录时后端可 404 或返回 null（与网关约定）。"
+      }
+    }
+  },
+  "sampleRequest": { "id": "asgn-001" },
+  "sampleResponse": {
+    "id": "asgn-001",
+    "appName": "Weather8",
+    "appId": "Weather8A",
+    "iconColor": "#a78bfa",
+    "platform": "Android",
+    "adPlatform": "Facebook",
+    "optimizer": "张三",
+    "configVersionId": "v3",
+    "configVersionLabel": "v3 已发布",
+    "assignTime": "2024-03-15",
+    "effectiveTime": "2024-03-15",
+    "status": "活跃",
+    "operator": "管理员A",
+    "note": "负责Weather8-Facebook投放优化",
+    "availableVersions": [
+      {
+        "id": "v3",
+        "version": "v3",
+        "status": "已发布",
+        "isActive": true,
+        "date": "2024-03-15",
+        "creator": "张三",
+        "evalMethod": "ROI",
+        "evalDays": 3,
+        "targetRate": "53%",
+        "minRate": "50%",
+        "difficulty": 1.2,
+        "minProfit": "-",
+        "extraCondition": "-"
+      }
+    ],
+    "changeLogs": [
+      {
+        "id": "log-001-1",
+        "time": "2024-03-01 14:00:33",
+        "type": "初始分配",
+        "operator": "管理员B",
+        "content": "初始分配：应用 Weather8-安卓-Facebook 分配给 李四，使用 v1 配置",
+        "note": "-",
+        "status": "有效"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/app-assignment/detail",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "id",
+    "responseBody": "AppAssignmentItem | null"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "`fieldDescription.response.data` 命名与 unwrap 冲突时，以实际网关 `data` 内单对象为准；前端 `request.post<AppAssignmentItem | null>`。"
+    ]
+  }
+}

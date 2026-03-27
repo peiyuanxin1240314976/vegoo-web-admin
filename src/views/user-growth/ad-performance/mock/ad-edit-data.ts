@@ -1,7 +1,8 @@
 /**
- * 编辑页表单 Mock（与 types.ts、子组件默认值一致）
+ * 编辑 Campaign 表单 Mock（模块根统一存放）
+ * 类型：../campaign-detail/ad-edit/types.ts
  */
-import type { AdEditFormData } from '../types'
+import type { AdEditFormData } from '../campaign-detail/ad-edit/types'
 
 export const MOCK_AD_EDIT_FORM: AdEditFormData = {
   basic: {

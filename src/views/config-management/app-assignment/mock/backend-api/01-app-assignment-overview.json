@@ -1,0 +1,60 @@
+{
+  "_comment": "应用分配 - 页头 KPI。对应 types.ts: AppAssignmentOverviewResponse。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "列表页首屏初始化",
+        "detail": "`app-assignment/index.vue` 进入后与 table / meta 并行或稍后请求，用于统计卡片。",
+        "prerequisite": "登录态；口径与 table 同一数据集。"
+      },
+      {
+        "moment": "新建或编辑分配成功后（可选）",
+        "detail": "前端可再次请求 overview + table 刷新 KPI 与列表。",
+        "prerequisite": "写操作成功返回。"
+      }
+    ],
+    "defaultSelection": "无入参；后端按租户/权限统计。",
+    "dedupe": "可与首次 table 合并为聚合接口（非本契约范围）；拆分时注意避免重复计算。"
+  },
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "total": {
+        "type": "number",
+        "required": true,
+        "description": "分配总条数（与 table 合计一致）。"
+      },
+      "active": { "type": "number", "required": true, "description": "状态为「活跃」的分配数。" },
+      "unassigned": {
+        "type": "number",
+        "required": true,
+        "description": "未分配应用数等产品口径；与列表筛选项无关。"
+      },
+      "optimizerCount": {
+        "type": "number",
+        "required": true,
+        "description": "涉及优化师去重人数；可与当前筛选联动由产品决定。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "total": 10,
+    "active": 8,
+    "unassigned": 6,
+    "optimizerCount": 4
+  },
+  "api": {
+    "url": "POST /api/config-management/app-assignment/overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "空对象 {}",
+    "responseBody": "AppAssignmentOverviewResponse"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "`sampleResponse` 为网关 unwrap 后 `data` 形态。",
+      "`unassigned` 若需独立接口统计，可在 README 拆 P1。"
+    ]
+  }
+}

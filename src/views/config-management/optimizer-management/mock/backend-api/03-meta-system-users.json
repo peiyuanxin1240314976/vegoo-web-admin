@@ -1,12 +1,28 @@
 {
-  "_comment": "优化师管理 - 新建弹窗关联用户下拉。对应 Api.ConfigManagement.Optimizer.MetaSystemUserItem[]。",
+  "_comment": "优化师管理 - 新建弹窗「关联用户」下拉。响应为数组。Api.ConfigManagement.Optimizer.MetaSystemUserItem[]。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面挂载",
+        "detail": "`index.vue` onMounted 调用 `fetchOptimizerMetaSystemUsers` 填充 `systemUserOptions`；失败则保留种子数据。",
+        "prerequisite": "无。"
+      },
+      {
+        "moment": "打开新建/编辑弹窗（可选）",
+        "detail": "若需刷新用户池可在 `optimizer-form-dialog` 打开时再拉取。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "全页缓存一份 options 即可。"
+  },
   "fieldDescription": {
     "request": {},
     "response": {
-      "data": {
+      "_root": {
         "type": "MetaSystemUserItem[]",
         "required": true,
-        "description": "可选用户列表；网关若包裹则在 data 内。"
+        "description": "根级即为数组（unwrap 后的 `data`）。"
       }
     },
     "MetaSystemUserItem": {
@@ -17,16 +33,20 @@
     }
   },
   "sampleRequest": {},
-  "sampleResponse": {
-    "data": [
-      { "id": "u001", "userName": "张三", "email": "zhang@example.com", "avatarColor": "#2dd4bf" }
-    ]
-  },
+  "sampleResponse": [
+    { "id": "u001", "userName": "张三", "email": "张三@vegoo.com", "avatarColor": "#2dd4bf" },
+    { "id": "u002", "userName": "李四", "email": "李四@vegoo.com", "avatarColor": "#60a5fa" }
+  ],
   "api": {
     "url": "POST /api/config-management/optimizer/meta-system-users",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "空对象",
+    "requestBody": "{}",
     "responseBody": "MetaSystemUserItem[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "若网关总包 `{ code, data }`，则 `data` 直接为该数组，与 `request.post<MetaSystemUserItem[]>` 一致。"
+    ]
   }
 }

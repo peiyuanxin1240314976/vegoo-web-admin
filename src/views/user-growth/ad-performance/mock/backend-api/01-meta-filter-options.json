@@ -1,5 +1,21 @@
 {
   "_comment": "广告成效 - 筛选区域下拉选项。用于 Filters：应用/广告平台/账户/国家；dateRange 目前是枚举按钮，可一并由接口下发（可选）。",
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏 / 筛选区挂载",
+        "detail": "`ad-performance/index.vue` 挂载时拉取一次，填充应用、广告平台、账户、国家等下拉；可与 overview 并行。",
+        "prerequisite": "无；权限由网关与用户上下文决定。"
+      },
+      {
+        "moment": "父级筛选变更（可选）",
+        "detail": "若账户、国家等依赖应用或广告平台，父级变更后可再次请求以刷新联动选项。",
+        "prerequisite": "父筛选已选定或已清空。"
+      }
+    ],
+    "defaultSelection": "各下拉首项或「全部」由前后端约定；dateRange 可由前端默认 last7d。",
+    "dedupe": "同屏缓存一份 options；联动刷新可加 300ms debounce（可选）。"
+  },
   "fieldDescription": {
     "request": {},
     "response": {
@@ -70,7 +86,7 @@
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/ad-performance/meta-filter-options",
+    "url": "POST /api/v1/datacenter/analysis/ad-performance/meta-filter-options",
     "method": "POST",
     "priority": "P0",
     "requestBody": "无（或 {}）",
