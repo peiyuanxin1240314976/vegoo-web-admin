@@ -1,25 +1,71 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, useTemplateRef } from 'vue'
+  import { getAppNow } from '@/utils/app-now'
+  import 'flag-icons/css/flag-icons.min.css'
+  import type {
+    AgencyRow,
+    CampaignRow,
+    DailyRow,
+    KpiCardItem,
+    AgencyExpandData,
+    CampaignDetail,
+    DonutChartItem,
+    CountryDistributionItem
+  } from '../types'
+
+  defineOptions({ name: 'ScreenshotModal' })
+
+  type ScreenType = 'current' | 'all' | 'custom'
+  type OutputFmt = 'png' | 'long'
+  type CustomKey = 'agency' | 'campaign' | 'daily' | 'roi' | 'channel'
 
   interface Props {
     modelValue: boolean
+    /** 报告抬头主名称（一般为当前展开代投方） */
+    agencyName: string
+    dataDate: string
+    pageLoading: boolean
+    kpiCards: KpiCardItem[]
+    agencies: AgencyRow[]
+    agencyDetailMap: Record<string, AgencyExpandData>
+    campaigns: CampaignRow[]
+    dailyRows: DailyRow[]
+    donut: DonutChartItem[]
+    channelDistribution: {
+      categories: string[]
+      series: { name: string; values: number[]; color: string }[]
+    }
+    countryTop8: CountryDistributionItem[]
+    focusedAgencyId: string | null
   }
-  defineProps<Props>()
+
+  const props = withDefaults(defineProps<Props>(), {
+    agencyName: '',
+    dataDate: '',
+    pageLoading: true,
+    kpiCards: () => [],
+    agencies: () => [],
+    agencyDetailMap: () => ({}),
+    campaigns: () => [],
+    dailyRows: () => [],
+    donut: () => [],
+    channelDistribution: () => ({ categories: [], series: [] }),
+    countryTop8: () => [],
+    focusedAgencyId: null
+  })
+
   const emit = defineEmits<{
     'update:modelValue': [val: boolean]
     download: []
     copy: []
   }>()
 
-  type ScreenType = 'current' | 'all' | 'custom'
-  type OutputFmt = 'png' | 'long'
+  const ROW_CAP = 12
 
   const selectedType = ref<ScreenType>('current')
   const outputFormat = ref<OutputFmt>('png')
-  const dateStart = ref('2026-03-07')
-  const dateEnd = ref('2026-03-07')
 
-  const customChecks = ref({
+  const customChecks = ref<Record<CustomKey, boolean>>({
     agency: true,
     campaign: true,
     daily: false,
@@ -27,33 +73,33 @@
     channel: false
   })
 
+  const customModuleList: { key: CustomKey; label: string }[] = [
+    { key: 'agency', label: '代投方汇总' },
+    { key: 'campaign', label: '广告系列明细' },
+    { key: 'daily', label: '逐日对比' },
+    { key: 'roi', label: '首日 ROI（3/4·3/3·3/2）' },
+    { key: 'channel', label: '分布概览' }
+  ]
+
   const typeOptions = [
     {
       value: 'current' as ScreenType,
       title: '当前代投方报告',
-      desc: '包含当前展开的 GatherOne 代投方完整数据报告',
-      tags: ['近7天汇总', '账户汇总', '广告系列明细', '首日ROI']
+      desc: '以当前展开的代投方为主：汇总 KPI、账户与系列 ROI 等（需先在列表中展开一行）',
+      tags: ['概览 KPI', '账户明细', '广告系列', '首日 ROI']
     },
     {
       value: 'all' as ScreenType,
       title: '全部代投方汇总',
-      desc: '包含所有代投方的汇总数据对比',
-      tags: ['代投方汇总表', '渠道分布', '国家分布']
+      desc: '全量代投方表、系列与逐日对比，以及广告平台 / 国家 / 代投占比分布',
+      tags: ['代投方汇总表', '广告平台分布', '国家 Top8']
     },
     {
       value: 'custom' as ScreenType,
       title: '自定义范围',
-      desc: '自行选择要包含的数据模块',
+      desc: '自行勾选要出现在报告中的模块',
       tags: []
     }
-  ]
-
-  const customModuleList = [
-    { key: 'agency', label: '代投方汇总' },
-    { key: 'campaign', label: '广告系列明细' },
-    { key: 'daily', label: '逐日对比' },
-    { key: 'roi', label: '首日ROI' },
-    { key: 'channel', label: '渠道分布' }
   ]
 
   const estimatedSize = computed(() => (selectedType.value === 'all' ? '~1.8MB' : '~2.4MB'))
@@ -61,50 +107,164 @@
 
   const close = () => emit('update:modelValue', false)
 
-  const pvStats = [
-    { label: '近7天汇', val: '336,576', chg: '+606.77%' },
-    { label: '账户汇总', val: '378', chg: '+1094.88%' },
-    { label: '广告系列数', val: '2.78', chg: '+3600.00%' },
-    { label: '首日ROI', val: '31.8K', chg: '+300.0%' }
-  ]
-  const pvCampaigns = [
-    {
-      name: 'Campaign Row 01',
-      spend: '13000',
-      cmp: '19.30',
-      roi: '1.0%',
-      rb: '#10b981',
-      dist: '10.0%',
-      db: '#10b981'
-    },
-    {
-      name: 'Campaign Row 02',
-      spend: '13000',
-      cmp: '19.50',
-      roi: '0.99%',
-      rb: '#3b82f6',
-      dist: '40.7%',
-      db: '#3b82f6'
-    },
-    {
-      name: 'Campaign Row 03',
-      spend: '5,000',
-      cmp: '0.70',
-      roi: '0.41%',
-      rb: '#f59e0b',
-      dist: '3.6%',
-      db: '#f59e0b'
-    },
-    {
-      name: 'Campaign Row 04',
-      spend: '1,000',
-      cmp: '-9.50',
-      roi: '0.29%',
-      rb: '#1e3a5f',
-      dist: '0.0%',
-      db: '#1e3a5f'
+  const genTimeStr = computed(() => {
+    const d = getAppNow()
+    const p = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(
+      d.getMinutes()
+    )}:${p(d.getSeconds())}`
+  })
+
+  const focusAgencyRow = computed(
+    () => props.agencies.find((a) => a.id === props.focusedAgencyId) ?? null
+  )
+
+  const agencyDetail = computed(() => {
+    const id = props.focusedAgencyId
+    if (!id) return null
+    return props.agencyDetailMap[id] ?? null
+  })
+
+  const visibility = computed(() => {
+    const t = selectedType.value
+    if (t === 'current') {
+      return {
+        kpi: true,
+        agency: true,
+        accounts: true,
+        campaign: true,
+        daily: false,
+        roi: true,
+        donut: false,
+        channelBars: false,
+        country: false
+      }
     }
-  ]
+    if (t === 'all') {
+      return {
+        kpi: true,
+        agency: true,
+        accounts: false,
+        campaign: true,
+        daily: true,
+        roi: false,
+        donut: true,
+        channelBars: true,
+        country: true
+      }
+    }
+    const c = customChecks.value
+    return {
+      kpi: true,
+      agency: c.agency,
+      accounts: c.agency && !!props.focusedAgencyId,
+      campaign: c.campaign,
+      daily: c.daily,
+      roi: c.roi && !!props.focusedAgencyId,
+      donut: c.channel,
+      channelBars: c.channel,
+      country: c.channel
+    }
+  })
+
+  const reportAgencies = computed((): AgencyRow[] => {
+    if (selectedType.value === 'current' && focusAgencyRow.value) return [focusAgencyRow.value]
+    return props.agencies
+  })
+
+  const reportCampaigns = computed((): CampaignRow[] => {
+    let rows = props.campaigns
+    if (selectedType.value === 'current' && focusAgencyRow.value) {
+      rows = rows.filter((c) => c.agency === focusAgencyRow.value!.name)
+    }
+    return rows.slice(0, ROW_CAP)
+  })
+
+  const reportDaily = computed((): DailyRow[] => {
+    let rows = props.dailyRows
+    if (selectedType.value === 'current' && focusAgencyRow.value) {
+      rows = rows.filter((d) => d.agency === focusAgencyRow.value!.name)
+    }
+    return rows.slice(0, ROW_CAP)
+  })
+
+  const roiRows = computed((): CampaignDetail[] => {
+    const d = agencyDetail.value
+    if (!d?.campaigns?.length) return []
+    return d.campaigns.slice(0, ROW_CAP)
+  })
+
+  const accountRows = computed(() => {
+    const d = agencyDetail.value
+    if (!d?.accounts?.length) return []
+    return d.accounts.slice(0, ROW_CAP)
+  })
+
+  const donutList = computed(() => {
+    const items = props.donut
+    const sum = items.reduce((s, i) => s + i.value, 0)
+    if (sum <= 0) return [] as { name: string; value: number; color: string; pct: number }[]
+    return items.map((i) => ({
+      name: i.name,
+      value: i.value,
+      color: i.color,
+      pct: (i.value / sum) * 100
+    }))
+  })
+
+  const channelBars = computed(() => {
+    const { categories, series } = props.channelDistribution
+    if (!categories?.length) return [] as { name: string; value: number; widthPct: number }[]
+    const totals = categories.map((_, i) => series.reduce((s, ser) => s + (ser.values[i] ?? 0), 0))
+    const max = Math.max(...totals, 1)
+    return categories
+      .map((name, i) => ({
+        name,
+        value: totals[i],
+        widthPct: (totals[i] / max) * 100
+      }))
+      .filter((x) => x.value > 0)
+  })
+
+  const countryRows = computed(() => props.countryTop8.slice(0, 8))
+
+  const fmtMoney = (v: number) => `$${v.toLocaleString('en-US')}`
+
+  const roiBadgeClass = (v: number | null) => {
+    if (v === null) return ''
+    if (v >= 110) return 'roi-green'
+    if (v >= 95) return 'roi-teal'
+    if (v >= 85) return 'roi-yellow'
+    return 'roi-red'
+  }
+
+  const kpiChangeClass = (card: KpiCardItem) => {
+    if (!card.changeText) return 'pv-s-c--muted'
+    if (card.changeUp === null) return 'pv-s-c--muted'
+    return card.changeUp ? 'pv-s-c--up' : 'pv-s-c--down'
+  }
+
+  const changeTxt = (v: number | null) =>
+    v === null ? '--' : `${v >= 0 ? '↑' : '↓'}${Math.abs(v).toFixed(2)}%`
+
+  const isIso2Country = (code: string) => /^[a-z]{2}$/i.test(String(code || '').trim())
+
+  const reportTitleLine = computed(() => {
+    if (selectedType.value === 'current') return props.agencyName || '代投数据报告'
+    if (selectedType.value === 'all') return '全部代投方汇总'
+    return '自定义数据报告'
+  })
+
+  const previewHint = computed(() => {
+    if (selectedType.value !== 'current') return ''
+    if (!props.focusedAgencyId)
+      return '提示：先在「代投方汇总」中展开一行，即可在报告中展示账户与首日 ROI 明细。'
+    return ''
+  })
+
+  const reportRootRef = useTemplateRef<HTMLElement>('reportRoot')
+
+  defineExpose({ reportRootRef })
 </script>
 
 <template>
@@ -112,7 +272,6 @@
     <transition name="modal-fade">
       <div v-if="modelValue" class="modal-overlay" @click.self="close">
         <div class="modal-box">
-          <!-- Header -->
           <div class="modal-header">
             <div class="modal-title-wrap">
               <div class="modal-icon">
@@ -132,12 +291,10 @@
                 <div class="modal-subtitle">将数据报告截图并复制到剪贴板</div>
               </div>
             </div>
-            <button class="modal-close" @click="close">×</button>
+            <button type="button" class="modal-close" @click="close">×</button>
           </div>
 
-          <!-- Body -->
           <div class="modal-body">
-            <!-- Left panel -->
             <div class="modal-left">
               <div class="section-label">选择截图内容</div>
 
@@ -167,16 +324,12 @@
                     <label v-for="m in customModuleList" :key="m.key" class="check-item">
                       <input
                         type="checkbox"
-                        v-model="(customChecks as any)[m.key]"
                         class="check-input"
+                        :checked="customChecks[m.key]"
+                        @change="customChecks[m.key] = ($event.target as HTMLInputElement).checked"
                       />
-                      <span class="check-box" :class="{ checked: (customChecks as any)[m.key] }">
-                        <svg
-                          v-if="(customChecks as any)[m.key]"
-                          width="9"
-                          height="9"
-                          viewBox="0 0 9 9"
-                        >
+                      <span class="check-box" :class="{ checked: customChecks[m.key] }">
+                        <svg v-if="customChecks[m.key]" width="9" height="9" viewBox="0 0 9 9">
                           <path
                             d="M1.5 4.5L3.5 6.5L7.5 2"
                             stroke="#00d4b4"
@@ -193,16 +346,16 @@
               </div>
 
               <div class="form-row">
-                <span class="form-label">数据日期:</span>
-                <input v-model="dateStart" type="text" class="date-input" />
-                <span class="form-sep">至</span>
-                <input v-model="dateEnd" type="text" class="date-input" />
+                <span class="form-label">数据日期</span>
+                <span class="form-readonly">{{ dataDate }}</span>
+                <span class="form-hint">与页面顶部筛选一致</span>
               </div>
 
               <div class="form-row">
-                <span class="form-label">输出格式:</span>
+                <span class="form-label">输出格式</span>
                 <div class="fmt-group">
                   <button
+                    type="button"
                     class="fmt-btn"
                     :class="{ active: outputFormat === 'png' }"
                     @click="outputFormat = 'png'"
@@ -210,6 +363,7 @@
                     图片(PNG)
                   </button>
                   <button
+                    type="button"
                     class="fmt-btn"
                     :class="{ active: outputFormat === 'long' }"
                     @click="outputFormat = 'long'"
@@ -220,122 +374,309 @@
               </div>
             </div>
 
-            <!-- Right: Preview -->
             <div class="modal-right">
-              <div class="preview-label">预览 <span class="preview-sub">将复制到剪贴板</span></div>
+              <div class="preview-label">
+                预览 <span class="preview-sub">独立报告模板 · 将复制到剪贴板</span>
+              </div>
               <div class="preview-wrap">
-                <div class="preview-card">
+                <div
+                  ref="reportRoot"
+                  class="preview-card"
+                  :class="{ 'preview-card--long': outputFormat === 'long' }"
+                >
                   <div class="pv-header">
                     <div class="pv-logo">
-                      <div class="pv-logo-icon"></div>
-                      <span>GatherOne</span>
+                      <div class="pv-logo-icon" />
+                      <span>{{ reportTitleLine }}</span>
                     </div>
                     <div>
-                      <div style="font-size: 9px; font-weight: 700; color: #e2e8f0"
-                        >代投数据报告</div
-                      >
-                      <div style="font-size: 8px; color: #64748b">2026-03-07</div>
+                      <div class="pv-head-title">代投数据报告</div>
+                      <div class="pv-head-date">{{ dataDate }}</div>
                     </div>
                   </div>
 
-                  <div class="pv-sec-title">近7天汇总</div>
-                  <div class="pv-stats">
-                    <div v-for="s in pvStats" :key="s.label" class="pv-stat">
-                      <div class="pv-s-l">{{ s.label }}</div>
-                      <div class="pv-s-v">{{ s.val }}</div>
-                      <div class="pv-s-c">{{ s.chg }}</div>
+                  <div v-if="previewHint" class="pv-banner">{{ previewHint }}</div>
+
+                  <template v-if="pageLoading">
+                    <div class="pv-empty">数据加载中…</div>
+                  </template>
+                  <template v-else>
+                    <template v-if="visibility.kpi && kpiCards.length">
+                      <div class="pv-sec-title">数据概览</div>
+                      <div class="pv-stats">
+                        <div v-for="(card, i) in kpiCards" :key="i" class="pv-stat">
+                          <div class="pv-s-l">{{ card.label }}</div>
+                          <div class="pv-s-v">{{ card.value }}</div>
+                          <div v-if="card.changeText" class="pv-s-c" :class="kpiChangeClass(card)">
+                            {{ card.changeText }}
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template v-if="visibility.agency && reportAgencies.length">
+                      <div class="pv-sec-title mt8">代投方汇总</div>
+                      <table class="pv-table">
+                        <thead>
+                          <tr>
+                            <th>代投方</th>
+                            <th class="text-right">应用</th>
+                            <th class="text-right">广告平台</th>
+                            <th class="text-right">消耗</th>
+                            <th class="text-right">安装</th>
+                            <th class="text-right">CPI</th>
+                            <th class="text-right">CPA</th>
+                            <th class="text-right">首日ROI</th>
+                            <th class="text-right">预算%</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="ag in reportAgencies" :key="ag.id">
+                            <td :style="{ color: ag.nameColor || '#e2e8f0' }">{{ ag.name }}</td>
+                            <td class="text-right">{{ ag.appCount }}</td>
+                            <td class="text-right">{{ ag.channelCount }}</td>
+                            <td class="text-right">{{ fmtMoney(ag.spend) }}</td>
+                            <td class="text-right">{{ ag.installs.toLocaleString('en-US') }}</td>
+                            <td class="text-right">${{ ag.cpi.toFixed(2) }}</td>
+                            <td class="text-right">${{ ag.cpa.toFixed(2) }}</td>
+                            <td class="text-right pv-teal">{{ ag.roi.toFixed(2) }}%</td>
+                            <td class="text-right">{{ ag.budgetRate }}%</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </template>
+
+                    <template v-if="visibility.accounts">
+                      <div class="pv-sec-title mt8">账户汇总</div>
+                      <table v-if="accountRows.length" class="pv-table">
+                        <thead>
+                          <tr>
+                            <th>账户名称</th>
+                            <th>应用</th>
+                            <th>广告平台</th>
+                            <th class="text-right">消耗</th>
+                            <th class="text-right">ROI</th>
+                            <th class="text-right">安装</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(ac, ai) in accountRows" :key="ai">
+                            <td>{{ ac.accountName }}</td>
+                            <td>{{ ac.app }}</td>
+                            <td>{{ ac.adPlatform }}</td>
+                            <td class="text-right">{{ ac.spend }}</td>
+                            <td class="text-right pv-teal">{{ ac.roi }}%</td>
+                            <td class="text-right">{{ ac.installs.toLocaleString('en-US') }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div v-else class="pv-mini-empty">暂无账户明细（请先展开代投方）</div>
+                    </template>
+
+                    <template v-if="visibility.campaign">
+                      <div class="pv-sec-title mt8">广告系列明细</div>
+                      <table v-if="reportCampaigns.length" class="pv-table">
+                        <thead>
+                          <tr>
+                            <th>代投方</th>
+                            <th>系列</th>
+                            <th>广告平台</th>
+                            <th class="text-right">消耗</th>
+                            <th class="text-right">安装</th>
+                            <th class="text-right">CPI</th>
+                            <th class="text-right">执行率</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(cp, ci) in reportCampaigns" :key="ci">
+                            <td :style="{ color: cp.agencyColor || '#e2e8f0' }">{{ cp.agency }}</td>
+                            <td>{{ cp.appName || cp.name || '--' }}</td>
+                            <td>{{ cp.channel }}</td>
+                            <td class="text-right">{{ fmtMoney(cp.spend) }}</td>
+                            <td class="text-right">{{ cp.installs.toLocaleString('en-US') }}</td>
+                            <td class="text-right">${{ cp.cpi.toFixed(2) }}</td>
+                            <td class="text-right">{{ cp.execRate }}%</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div v-else class="pv-mini-empty">暂无广告系列数据</div>
+                    </template>
+
+                    <template v-if="visibility.daily">
+                      <div class="pv-sec-title mt8">逐日对比（近7天）</div>
+                      <table v-if="reportDaily.length" class="pv-table">
+                        <thead>
+                          <tr>
+                            <th>日期</th>
+                            <th>代投方</th>
+                            <th class="text-right">消耗</th>
+                            <th class="text-right">安装</th>
+                            <th class="text-right">CPI</th>
+                            <th class="text-right">CPA</th>
+                            <th class="text-right">消耗环比</th>
+                            <th class="text-right">安装环比</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(row, di) in reportDaily" :key="di">
+                            <td>{{ row.date }}</td>
+                            <td :style="{ color: row.agencyColor || '#e2e8f0' }">{{
+                              row.agency
+                            }}</td>
+                            <td class="text-right">{{ fmtMoney(row.spend) }}</td>
+                            <td class="text-right">{{ row.installs.toLocaleString('en-US') }}</td>
+                            <td class="text-right">${{ row.cpi.toFixed(2) }}</td>
+                            <td class="text-right">${{ row.cpa.toFixed(2) }}</td>
+                            <td class="text-right">{{ changeTxt(row.spendChange) }}</td>
+                            <td class="text-right">{{ changeTxt(row.installsChange) }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div v-else class="pv-mini-empty">暂无逐日数据</div>
+                    </template>
+
+                    <template v-if="visibility.roi">
+                      <div class="pv-sec-title mt8">首日 ROI</div>
+                      <table v-if="roiRows.length" class="pv-table pv-table--roi">
+                        <thead>
+                          <tr>
+                            <th>广告系列</th>
+                            <th class="text-right">预算</th>
+                            <th class="text-right">支出</th>
+                            <th class="text-right">CPA</th>
+                            <th class="text-right">CPI</th>
+                            <th class="text-right">安装</th>
+                            <th class="text-right">3/4</th>
+                            <th class="text-right">3/3</th>
+                            <th class="text-right">3/2</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(cp, ri) in roiRows" :key="ri">
+                            <td>{{ cp.appName || cp.name || '--' }}</td>
+                            <td class="text-right">${{ cp.budget }}</td>
+                            <td class="text-right">{{ cp.spend }}</td>
+                            <td class="text-right">{{ cp.cpa }}</td>
+                            <td class="text-right">{{ cp.cpi }}</td>
+                            <td class="text-right">{{ cp.installs }}</td>
+                            <td class="text-right">
+                              <span
+                                v-if="cp.roi34 !== null"
+                                class="pv-badge"
+                                :class="roiBadgeClass(cp.roi34)"
+                                >{{ cp.roi34 }}%</span
+                              >
+                              <span v-else class="dim">--</span>
+                            </td>
+                            <td class="text-right">
+                              <span
+                                v-if="cp.roi33 !== null"
+                                class="pv-badge"
+                                :class="roiBadgeClass(cp.roi33)"
+                                >{{ cp.roi33 }}%</span
+                              >
+                              <span v-else class="dim">--</span>
+                            </td>
+                            <td class="text-right">
+                              <span
+                                v-if="cp.roi32 !== null"
+                                class="pv-badge"
+                                :class="roiBadgeClass(cp.roi32)"
+                                >{{ cp.roi32 }}%</span
+                              >
+                              <span v-else class="dim">--</span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div v-else class="pv-mini-empty">暂无首日 ROI（请先展开代投方）</div>
+                    </template>
+
+                    <template v-if="visibility.donut && donutList.length">
+                      <div class="pv-sec-title mt8">代投方消耗占比</div>
+                      <div class="pv-bar-list">
+                        <div v-for="(d, di) in donutList" :key="di" class="pv-bar-row">
+                          <span class="pv-bar-dot" :style="{ background: d.color }" />
+                          <span class="pv-bar-name">{{ d.name }}</span>
+                          <div class="pv-bar-track">
+                            <div
+                              class="pv-bar-fill"
+                              :style="{ width: `${d.pct}%`, background: d.color }"
+                            />
+                          </div>
+                          <span class="pv-bar-pct">{{ d.pct.toFixed(1) }}%</span>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template v-if="visibility.channelBars && channelBars.length">
+                      <div class="pv-sec-title mt8">广告平台分布</div>
+                      <div class="pv-bar-list">
+                        <div v-for="(b, bi) in channelBars" :key="bi" class="pv-bar-row">
+                          <span class="pv-bar-name">{{ b.name }}</span>
+                          <div class="pv-bar-track">
+                            <div
+                              class="pv-bar-fill pv-bar-fill--muted"
+                              :style="{ width: `${b.widthPct}%` }"
+                            />
+                          </div>
+                          <span class="pv-bar-val">{{ fmtMoney(b.value) }}</span>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template v-if="visibility.country && countryRows.length">
+                      <div class="pv-sec-title mt8">国家消耗 Top8</div>
+                      <div class="pv-bar-list">
+                        <div v-for="(c, ci) in countryRows" :key="ci" class="pv-bar-row">
+                          <span
+                            v-if="isIso2Country(c.s_country_code)"
+                            class="pv-flag fi"
+                            :class="'fi-' + c.s_country_code.toLowerCase()"
+                          />
+                          <span class="pv-bar-name">{{ c.s_country_code.toUpperCase() }}</span>
+                          <div class="pv-bar-track">
+                            <div
+                              class="pv-bar-fill pv-bar-fill--country"
+                              :style="{ width: `${c.sharePct}%` }"
+                            />
+                          </div>
+                          <span class="pv-bar-pct">{{ c.sharePct.toFixed(2) }}%</span>
+                        </div>
+                      </div>
+                    </template>
+
+                    <div class="pv-footnote">
+                      注: 时区 PST(UTC-8), 货币 USD；ROI
+                      计算含广告收入及付费收入。预览最多展示各表前
+                      {{ ROW_CAP }} 行。
                     </div>
-                  </div>
-
-                  <div class="pv-sec-title mt8">账户汇总</div>
-                  <table class="pv-table">
-                    <thead
-                      ><tr
-                        ><th>账户名称</th><th>近7天汇</th><th>账户汇总</th><th>广告系列数</th
-                        ><th>ROI</th></tr
-                      ></thead
-                    >
-                    <tbody>
-                      <tr
-                        ><td>Campaigner 1</td><td>216.80</td><td>43.72</td><td>622</td
-                        ><td class="pv-teal">17,098</td></tr
-                      >
-                      <tr
-                        ><td>Campaigner 2</td><td>183.50</td><td>12.60</td><td>108</td
-                        ><td class="pv-teal">12,095</td></tr
-                      >
-                      <tr
-                        ><td>Campaigner 3</td><td>33.69</td><td>5.00</td><td>13</td
-                        ><td class="pv-teal">4,079</td></tr
-                      >
-                    </tbody>
-                  </table>
-
-                  <div class="pv-sec-title mt8">近期明细</div>
-                  <table class="pv-table">
-                    <thead
-                      ><tr
-                        ><th>广告明细</th><th>代投帐号</th><th>账目对比</th><th>ROI</th
-                        ><th>覆盖分布</th></tr
-                      ></thead
-                    >
-                    <tbody>
-                      <tr v-for="r in pvCampaigns" :key="r.name">
-                        <td>{{ r.name }}</td
-                        ><td>{{ r.spend }}</td
-                        ><td>{{ r.cmp }}</td>
-                        <td
-                          ><span class="pv-badge" :style="{ background: r.rb, color: '#fff' }">{{
-                            r.roi
-                          }}</span></td
-                        >
-                        <td
-                          ><span class="pv-badge" :style="{ background: r.db, color: '#fff' }">{{
-                            r.dist
-                          }}</span></td
-                        >
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div class="pv-footnote">注: 时区 PST(UTC-8), 货币 USD</div>
+                  </template>
                 </div>
               </div>
               <div class="preview-meta">
                 <span
                   >预计截图大小: <strong>{{ estimatedSize }}</strong></span
                 >
-                <span style="margin-left: 16px"
+                <span class="preview-meta-gap"
                   >分辨率: <strong>{{ resolution }}</strong></span
                 >
               </div>
             </div>
           </div>
 
-          <!-- Footer -->
           <div class="modal-footer">
-            <div class="gen-time">生成时间: 2026-03-07 14:40:23</div>
+            <div class="gen-time">生成时间: {{ genTimeStr }}</div>
             <div class="footer-btns">
-              <button class="btn-cancel" @click="close">取消</button>
-              <button class="btn-download" @click="$emit('download')">
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  style="margin-right: 5px"
-                >
+              <button type="button" class="btn-cancel" @click="close">取消</button>
+              <button type="button" class="btn-download" @click="emit('download')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" class="btn-ic">
                   <path d="M12 16L7 11h4V4h2v7h4l-5 5zM5 20h14v-2H5v2z" />
                 </svg>
                 下载 PNG
               </button>
-              <button class="btn-copy" @click="($emit('copy'), close())">
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  style="margin-right: 5px"
-                >
+              <button type="button" class="btn-copy" @click="(emit('copy'), close())">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" class="btn-ic">
                   <rect
                     x="9"
                     y="9"
@@ -388,7 +729,6 @@
       0 0 0 1px rgb(0 212 180 / 8%);
   }
 
-  /* Header */
   .modal-header {
     display: flex;
     flex-shrink: 0;
@@ -448,7 +788,6 @@
     }
   }
 
-  /* Body */
   .modal-body {
     display: flex;
     flex: 1;
@@ -456,7 +795,6 @@
     overflow: hidden;
   }
 
-  /* Left */
   .modal-left {
     flex-shrink: 0;
     width: 510px;
@@ -603,7 +941,8 @@
 
   .form-row {
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
     align-items: center;
     margin-bottom: 14px;
   }
@@ -615,23 +954,17 @@
     white-space: nowrap;
   }
 
-  .date-input {
-    width: 118px;
+  .form-readonly {
     padding: 6px 10px;
     font-size: 12px;
     color: #e2e8f0;
     background: #0a1422;
     border: 1px solid #2d3f54;
     border-radius: 6px;
-    outline: none;
-
-    &:focus {
-      border-color: #00d4b4;
-    }
   }
 
-  .form-sep {
-    font-size: 12px;
+  .form-hint {
+    font-size: 11px;
     color: #64748b;
   }
 
@@ -664,7 +997,6 @@
     }
   }
 
-  /* Right */
   .modal-right {
     display: flex;
     flex: 1;
@@ -699,6 +1031,10 @@
     padding: 12px;
     background: #0d1829;
     border-radius: 6px;
+
+    &--long {
+      min-height: 480px;
+    }
   }
 
   .pv-header {
@@ -722,6 +1058,41 @@
     height: 14px;
     background: linear-gradient(135deg, #00d4b4, #3b82f6);
     border-radius: 3px;
+  }
+
+  .pv-head-title {
+    font-size: 9px;
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+
+  .pv-head-date {
+    font-size: 8px;
+    color: #64748b;
+  }
+
+  .pv-banner {
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    font-size: 10px;
+    line-height: 1.4;
+    color: #fbbf24;
+    background: rgb(245 158 11 / 12%);
+    border: 1px solid rgb(245 158 11 / 35%);
+    border-radius: 6px;
+  }
+
+  .pv-empty {
+    padding: 24px;
+    font-size: 12px;
+    color: #64748b;
+    text-align: center;
+  }
+
+  .pv-mini-empty {
+    padding: 10px;
+    font-size: 10px;
+    color: #64748b;
   }
 
   .pv-sec-title {
@@ -764,7 +1135,18 @@
 
   .pv-s-c {
     font-size: 8px;
+  }
+
+  .pv-s-c--up {
     color: #10b981;
+  }
+
+  .pv-s-c--down {
+    color: #f97316;
+  }
+
+  .pv-s-c--muted {
+    color: #64748b;
   }
 
   .pv-teal {
@@ -789,6 +1171,18 @@
       color: #cbd5e1;
       border-bottom: 1px solid #0f1c2e;
     }
+
+    .text-right {
+      text-align: right;
+    }
+  }
+
+  .pv-table--roi {
+    font-size: 8px;
+  }
+
+  .dim {
+    color: #475569;
   }
 
   .pv-badge {
@@ -797,6 +1191,89 @@
     font-size: 8px;
     font-weight: 600;
     border-radius: 2px;
+  }
+
+  .roi-green {
+    color: #fff;
+    background: #059669;
+  }
+
+  .roi-teal {
+    color: #fff;
+    background: #00d4b4;
+  }
+
+  .roi-yellow {
+    color: #0f172a;
+    background: #fbbf24;
+  }
+
+  .roi-red {
+    color: #fff;
+    background: #ef4444;
+  }
+
+  .pv-bar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .pv-bar-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 9px;
+  }
+
+  .pv-bar-dot {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .pv-flag {
+    flex-shrink: 0;
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .pv-bar-name {
+    flex-shrink: 0;
+    min-width: 56px;
+    color: #94a3b8;
+  }
+
+  .pv-bar-track {
+    flex: 1;
+    height: 5px;
+    overflow: hidden;
+    background: #0a1422;
+    border-radius: 3px;
+  }
+
+  .pv-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+
+    &--muted {
+      background: #3b82f6;
+    }
+
+    &--country {
+      background: #00d4b4;
+    }
+  }
+
+  .pv-bar-pct,
+  .pv-bar-val {
+    flex-shrink: 0;
+    min-width: 52px;
+    font-size: 8px;
+    color: #94a3b8;
+    text-align: right;
   }
 
   .pv-footnote {
@@ -816,7 +1293,10 @@
     }
   }
 
-  /* Footer */
+  .preview-meta-gap {
+    margin-left: 16px;
+  }
+
   .modal-footer {
     display: flex;
     flex-shrink: 0;
@@ -834,6 +1314,10 @@
   .footer-btns {
     display: flex;
     gap: 10px;
+  }
+
+  .btn-ic {
+    margin-right: 5px;
   }
 
   .btn-cancel {

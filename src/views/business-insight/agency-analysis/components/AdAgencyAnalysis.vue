@@ -91,11 +91,24 @@
 
   // ─────────────────── Screenshot Modal ───────────────────
   const showScreenshot = ref(false)
-  const screenshotAgency = ref('GatherOne')
   const router = useRouter()
 
-  const openScreenshot = (agencyName?: string) => {
-    screenshotAgency.value = agencyName || 'GatherOne'
+  /** 截图报告：优先取当前展开的代投方，否则「当前代投方」模式无账户/ROI 明细 */
+  const focusedAgencyIdForScreenshot = computed(() => {
+    for (const id of expandedSet.value) return id
+    return null
+  })
+
+  const screenshotTitleName = computed(() => {
+    const id = focusedAgencyIdForScreenshot.value
+    if (id) {
+      const row = agencies.value.find((a) => a.id === id)
+      return row?.name ?? '代投方'
+    }
+    return '全部代投方'
+  })
+
+  const openScreenshot = () => {
     showScreenshot.value = true
   }
 
@@ -610,7 +623,7 @@
             type="date"
             format="YYYY-MM-DD"
             value-format="YYYY-MM-DD"
-            size="small"
+            size="default"
             class="filter-date"
             prefix-icon=""
           >
@@ -635,7 +648,12 @@
             </template>
           </el-date-picker>
 
-          <el-select v-model="filterAppId" size="small" class="filter-select" style="width: 140px">
+          <el-select
+            v-model="filterAppId"
+            size="default"
+            class="filter-select"
+            style="width: 140px"
+          >
             <el-option
               v-for="opt in appOptions"
               :key="`app-${opt.value}`"
@@ -646,7 +664,7 @@
 
           <el-select
             v-model="filterAgencyId"
-            size="small"
+            size="default"
             class="filter-select"
             style="width: 140px"
           >
@@ -658,7 +676,12 @@
             />
           </el-select>
 
-          <el-select v-model="filterSource" size="small" class="filter-select" style="width: 160px">
+          <el-select
+            v-model="filterSource"
+            size="default"
+            class="filter-select"
+            style="width: 160px"
+          >
             <el-option
               v-for="opt in sourceOptions"
               :key="`src-${opt.value}`"
@@ -1395,7 +1418,18 @@
     <!-- Screenshot Modal -->
     <ScreenshotModal
       v-model="showScreenshot"
-      :agency-name="screenshotAgency"
+      :agency-name="screenshotTitleName"
+      :data-date="filterDate"
+      :page-loading="pageLoading"
+      :kpi-cards="kpiCards"
+      :agencies="agencies"
+      :agency-detail-map="agencyDetailMap"
+      :campaigns="campaigns"
+      :daily-rows="dailyRows"
+      :donut="charts.donut"
+      :channel-distribution="charts.channelDistribution"
+      :country-top8="charts.countryTop8"
+      :focused-agency-id="focusedAgencyIdForScreenshot"
       @download="() => {}"
       @copy="() => {}"
     />
@@ -1544,7 +1578,7 @@
   }
 
   .filter-select {
-    width: 110px !important;
+    width: 130px !important;
 
     :deep(.el-input__wrapper) {
       height: 30px;

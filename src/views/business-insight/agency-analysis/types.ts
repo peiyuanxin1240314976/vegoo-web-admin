@@ -164,3 +164,19 @@ export interface AgencyAnalysisCharts {
     series: SpendTrendSeries[]
   }
 }
+
+/** 截图弹窗独立报告：由父页传入当前仪表盘数据 */
+export interface AgencyAnalysisScreenshotPayload {
+  dataDate: string
+  pageLoading: boolean
+  kpiCards: KpiCardItem[]
+  agencies: AgencyRow[]
+  agencyDetailMap: Record<string, AgencyExpandData>
+  campaigns: CampaignRow[]
+  dailyRows: DailyRow[]
+  donut: DonutChartItem[]
+  channelDistribution: AgencyAnalysisCharts['channelDistribution']
+  countryTop8: CountryDistributionItem[]
+  /** 当前展开的代投方 id，无则「当前代投方」模式下账户/ROI 等无明细 */
+  focusedAgencyId: string | null
+}
