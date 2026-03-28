@@ -1,7 +1,15 @@
 <template>
   <div class="oa-detail-panel">
     <div v-if="!data" class="empty-state">
-      <svg viewBox="0 0 48 48" fill="none" width="36" height="36"><rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M16 18h16M16 24h10M16 30h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 48 48" fill="none" width="36" height="36">
+        <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="1.5" />
+        <path
+          d="M16 18h16M16 24h10M16 30h8"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+      </svg>
       <p class="empty-text">请选择记录查看详情</p>
     </div>
 
@@ -9,12 +17,19 @@
       <!-- 头部 -->
       <div class="panel-header">
         <div class="header-top">
-          <span class="platform-icon" :style="{ color: getPlatformColor(data.source), background: getPlatformBg(data.source) }">
+          <span
+            class="platform-icon"
+            :style="{
+              color: getPlatformColor(data.source),
+              background: getPlatformBg(data.source)
+            }"
+          >
             {{ getPlatformShort(data.source) }}
           </span>
           <span class="record-id">{{ data.id }}</span>
           <span :class="['status-badge', getStatusClass(data.status)]">
-            <span class="s-dot">{{ getStatusIcon(data.status) }}</span>{{ data.status }}
+            <span class="s-dot">{{ getStatusIcon(data.status) }}</span
+            >{{ data.status }}
           </span>
         </div>
         <div class="header-sub">
@@ -36,7 +51,11 @@
           <div class="info-list">
             <div class="info-item">
               <span class="info-key">广告平台</span>
-              <span class="info-val platform-val" :style="{ color: getPlatformColor(data.source) }">{{ data.source }}</span>
+              <span
+                class="info-val platform-val"
+                :style="{ color: getPlatformColor(data.source) }"
+                >{{ data.source }}</span
+              >
             </div>
             <div class="info-item">
               <span class="info-key">应用</span>
@@ -44,13 +63,24 @@
             </div>
             <div class="info-item">
               <span class="info-key">投放平台</span>
-              <span :class="['platform-badge', data.platform === 'iOS' ? 'platform-badge--ios' : data.platform === '网页' ? 'platform-badge--web' : 'platform-badge--android']">
+              <span
+                :class="[
+                  'platform-badge',
+                  data.platform === 'iOS'
+                    ? 'platform-badge--ios'
+                    : data.platform === '网页'
+                      ? 'platform-badge--web'
+                      : 'platform-badge--android'
+                ]"
+              >
                 {{ data.platform }}
               </span>
             </div>
             <div class="info-item">
               <span class="info-key">开户类型</span>
-              <span :class="['type-badge', `type-badge--${typeClass(data.accountType)}`]">{{ data.accountType }}</span>
+              <span :class="['type-badge', `type-badge--${typeClass(data.accountType)}`]">{{
+                data.accountType
+              }}</span>
             </div>
             <div class="info-item">
               <span class="info-key">归属代理商</span>
@@ -98,7 +128,12 @@
             </div>
             <div v-if="data.credentialStatus" class="info-item">
               <span class="info-key">凭据状态</span>
-              <span :class="['cred-status', data.credentialStatus === '验证正常' ? 'cred-status--ok' : 'cred-status--fail']">
+              <span
+                :class="[
+                  'cred-status',
+                  data.credentialStatus === '验证正常' ? 'cred-status--ok' : 'cred-status--fail'
+                ]"
+              >
                 <span class="cred-status-dot" />{{ data.credentialStatus }}
               </span>
             </div>
@@ -135,7 +170,9 @@
         >
           分配凭据
         </ElButton>
-        <ElButton round class="footer-btn footer-btn--secondary" @click="emit('delete', data)">删除记录</ElButton>
+        <ElButton round class="footer-btn footer-btn--secondary" @click="emit('delete', data)"
+          >删除记录</ElButton
+        >
       </div>
     </template>
   </div>
@@ -154,9 +191,15 @@
     delete: [data: OpenAccountItem]
   }>()
 
-  function getPlatformColor(s: string) { return PLATFORM_CONFIGS.find((p) => p.value === s)?.color ?? '#94a3b8' }
-  function getPlatformBg(s: string) { return PLATFORM_CONFIGS.find((p) => p.value === s)?.bg ?? 'rgb(148 163 184 / 12%)' }
-  function getPlatformShort(s: string) { return PLATFORM_CONFIGS.find((p) => p.value === s)?.shortLabel ?? s[0] }
+  function getPlatformColor(s: string) {
+    return PLATFORM_CONFIGS.find((p) => p.value === s)?.color ?? '#94a3b8'
+  }
+  function getPlatformBg(s: string) {
+    return PLATFORM_CONFIGS.find((p) => p.value === s)?.bg ?? 'rgb(148 163 184 / 12%)'
+  }
+  function getPlatformShort(s: string) {
+    return PLATFORM_CONFIGS.find((p) => p.value === s)?.shortLabel ?? s[0]
+  }
 
   function getStatusClass(status?: string) {
     if (status === '已激活') return 'status--ok'
@@ -209,7 +252,9 @@
     justify-content: center;
     color: var(--text-muted);
   }
-  .empty-text { font-size: 13px; }
+  .empty-text {
+    font-size: 13px;
+  }
 
   // 头部
   .panel-header {
@@ -253,11 +298,19 @@
     font-size: 12px;
     font-weight: 600;
 
-    &.status--ok      { color: #22c55e; }
-    &.status--pending { color: #f59e0b; }
-    &.status--fail    { color: #f87171; }
+    &.status--ok {
+      color: #22c55e;
+    }
+    &.status--pending {
+      color: #f59e0b;
+    }
+    &.status--fail {
+      color: #f87171;
+    }
   }
-  .s-dot { font-size: 10px; }
+  .s-dot {
+    font-size: 10px;
+  }
 
   .header-sub {
     display: flex;
@@ -267,23 +320,39 @@
     color: var(--text-muted);
   }
 
-  .platform-name { color: var(--text-secondary); }
-  .app-name { color: var(--text-secondary); }
-  .platform-tag { color: var(--text-muted); }
-  .sep { color: var(--border); }
+  .platform-name {
+    color: var(--text-secondary);
+  }
+  .app-name {
+    color: var(--text-secondary);
+  }
+  .platform-tag {
+    color: var(--text-muted);
+  }
+  .sep {
+    color: var(--border);
+  }
 
   // 正文
   .panel-body {
     flex: 1;
     overflow-y: auto;
-    &::-webkit-scrollbar { width: 3px; }
-    &::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 8%); border-radius: 2px; }
+    &::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgb(255 255 255 / 8%);
+      border-radius: 2px;
+    }
   }
 
   .detail-section {
     padding: 12px 16px;
     border-bottom: 1px solid var(--border);
-    &--last { border-bottom: none; }
+    &--last {
+      border-bottom: none;
+    }
   }
 
   .section-title-row {
@@ -302,9 +371,15 @@
     color: var(--accent);
     border-left: 3px solid var(--accent);
   }
-  .section-title-row .section-title { margin-bottom: 0; }
+  .section-title-row .section-title {
+    margin-bottom: 0;
+  }
 
-  .info-list { display: flex; flex-direction: column; gap: 7px; }
+  .info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
 
   .info-item {
     display: flex;
@@ -325,23 +400,57 @@
     font-size: 13px;
     line-height: 1.8;
     color: var(--text-primary);
-    &--mono { font-family: 'SF Mono', monospace; font-size: 11px; color: var(--text-secondary); }
-    &--muted { font-size: 12px; color: var(--text-muted); }
-    &--remark { color: var(--text-secondary); }
+
+    &--mono {
+      font-family: 'SF Mono', monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    &--muted {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    &--remark {
+      color: var(--text-secondary);
+    }
   }
 
-  .platform-val { font-weight: 600; }
-  .agency-val { color: #22d3ee; }
-  .amount-val { font-weight: 600; color: #22c55e; }
+  .platform-val {
+    font-weight: 600;
+  }
+  .agency-val {
+    color: #22d3ee;
+  }
+
+  .amount-val {
+    font-weight: 600;
+    color: #22c55e;
+  }
 
   .platform-badge {
     display: inline-block;
     padding: 2px 7px;
     font-size: 11px;
     border-radius: 4px;
-    &--android { color: #94a3b8; background: rgb(148 163 184 / 12%); border: 1px solid rgb(148 163 184 / 20%); }
-    &--ios     { color: #a78bfa; background: rgb(167 139 250 / 12%); border: 1px solid rgb(167 139 250 / 20%); }
-    &--web     { color: #38bdf8; background: rgb(56 189 248 / 12%); border: 1px solid rgb(56 189 248 / 20%); }
+
+    &--android {
+      color: #94a3b8;
+      background: rgb(148 163 184 / 12%);
+      border: 1px solid rgb(148 163 184 / 20%);
+    }
+
+    &--ios {
+      color: #a78bfa;
+      background: rgb(167 139 250 / 12%);
+      border: 1px solid rgb(167 139 250 / 20%);
+    }
+
+    &--web {
+      color: #38bdf8;
+      background: rgb(56 189 248 / 12%);
+      border: 1px solid rgb(56 189 248 / 20%);
+    }
   }
 
   .type-badge {
@@ -349,9 +458,21 @@
     padding: 2px 7px;
     font-size: 11px;
     border-radius: 4px;
-    &--corp     { color: #60a5fa; background: rgb(96 165 250 / 12%); }
-    &--personal { color: #a78bfa; background: rgb(167 139 250 / 12%); }
-    &--small    { color: #34d399; background: rgb(52 211 153 / 12%); }
+
+    &--corp {
+      color: #60a5fa;
+      background: rgb(96 165 250 / 12%);
+    }
+
+    &--personal {
+      color: #a78bfa;
+      background: rgb(167 139 250 / 12%);
+    }
+
+    &--small {
+      color: #34d399;
+      background: rgb(52 211 153 / 12%);
+    }
   }
 
   .cred-badge {
@@ -368,8 +489,18 @@
     gap: 5px;
     align-items: center;
     font-size: 12px;
-    &--ok { color: #22c55e; .cred-status-dot { background: #22c55e; } }
-    &--fail { color: #f87171; .cred-status-dot { background: #f87171; } }
+    &--ok {
+      color: #22c55e;
+      .cred-status-dot {
+        background: #22c55e;
+      }
+    }
+    &--fail {
+      color: #f87171;
+      .cred-status-dot {
+        background: #f87171;
+      }
+    }
   }
 
   .cred-status-dot {
@@ -389,7 +520,11 @@
   }
 
   // 飞书记录
-  .feishu-list { display: flex; flex-direction: column; gap: 6px; }
+  .feishu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
 
   .feishu-item {
     display: flex;
@@ -403,11 +538,23 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    &--ok { background: #22c55e; }
-    &--fail { background: #f87171; }
+    &--ok {
+      background: #22c55e;
+    }
+    &--fail {
+      background: #f87171;
+    }
   }
-  .feishu-msg { flex: 1; color: var(--text-secondary); }
-  .feishu-time { color: var(--text-muted); white-space: nowrap; }
+
+  .feishu-msg {
+    flex: 1;
+    color: var(--text-secondary);
+  }
+
+  .feishu-time {
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
 
   // 底部
   .panel-footer {
@@ -429,14 +576,18 @@
       color: #fff !important;
       background: var(--teal) !important;
       border: none !important;
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
 
     &--secondary {
       color: #f87171 !important;
       background: rgb(248 113 113 / 8%) !important;
       border: 1px solid rgb(248 113 113 / 20%) !important;
-      &:hover { background: rgb(248 113 113 / 15%) !important; }
+      &:hover {
+        background: rgb(248 113 113 / 15%) !important;
+      }
     }
   }
 </style>

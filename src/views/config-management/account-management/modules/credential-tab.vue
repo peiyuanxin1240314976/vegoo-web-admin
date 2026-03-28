@@ -25,7 +25,9 @@
         </div>
         <!-- 上次全量验证 + 立即验证全部 -->
         <div class="validate-all-bar">
-          <span class="last-validate-tip">上次全量验证：<span class="last-validate-time">2026-03-13 08:00</span></span>
+          <span class="last-validate-tip"
+            >上次全量验证：<span class="last-validate-time">2026-03-13 08:00</span></span
+          >
           <button class="btn-validate-all" @click="handleValidateAll">立即验证全部</button>
         </div>
       </div>
@@ -180,7 +182,10 @@
 <script setup lang="ts">
   import { onMounted, ref, computed, watch } from 'vue'
   import { ElMessage } from 'element-plus'
-  import { fetchCredentialTable, validateCredentialBatch } from '@/api/config-management/account-management'
+  import {
+    fetchCredentialTable,
+    validateCredentialBatch
+  } from '@/api/config-management/account-management'
   import { AccountApiSource } from '../config/data-source'
   import { cloneCredentialMockList } from '../mock/data'
   import { PLATFORM_CONFIGS } from '../types'
@@ -200,8 +205,13 @@
   }>()
 
   const platformShortList = PLATFORM_CONFIGS.filter((p) =>
-    ['Google Ads', 'Meta Ads', 'TikTok Ads', 'Mintegral', 'Snapchat Ads', 'Kwai Ads'].includes(p.value)
-  ).map((p) => ({ value: p.value, shortLabel: p.shortLabel === 'G' ? 'Google' : p.shortLabel === 'f' ? 'Meta' : p.shortLabel }))
+    ['Google Ads', 'Meta Ads', 'TikTok Ads', 'Mintegral', 'Snapchat Ads', 'Kwai Ads'].includes(
+      p.value
+    )
+  ).map((p) => ({
+    value: p.value,
+    shortLabel: p.shortLabel === 'G' ? 'Google' : p.shortLabel === 'f' ? 'Meta' : p.shortLabel
+  }))
 
   const credTypeOptions = [
     { label: '全部', value: '' },
@@ -253,7 +263,8 @@
   const filteredList = computed(() => {
     return credentialList.value.filter((item) => {
       const kw = props.searchKeyword.toLowerCase()
-      if (kw && !item.name.toLowerCase().includes(kw) && !item.id.toLowerCase().includes(kw)) return false
+      if (kw && !item.name.toLowerCase().includes(kw) && !item.id.toLowerCase().includes(kw))
+        return false
       if (sourceFilter.value && item.source !== sourceFilter.value) return false
       if (credTypeFilter.value && item.credentialType !== credTypeFilter.value) return false
       if (statusFilter.value && item.status !== statusFilter.value) return false
@@ -284,7 +295,9 @@
 
   watch(
     () => [props.searchKeyword, sourceFilter.value, credTypeFilter.value, statusFilter.value],
-    () => { currentPage.value = 1 }
+    () => {
+      currentPage.value = 1
+    }
   )
 
   function getPlatformColor(source: string) {
@@ -376,7 +389,9 @@
     border-radius: 6px;
     transition: all 0.18s;
 
-    &:hover { color: var(--text-primary, #e2e8f0); }
+    &:hover {
+      color: var(--text-primary, #e2e8f0);
+    }
 
     &--active {
       color: var(--accent, #3b82f6);
@@ -412,7 +427,9 @@
     border-radius: 6px;
     transition: all 0.18s;
 
-    &:hover { background: rgb(59 130 246 / 20%); }
+    &:hover {
+      background: rgb(59 130 246 / 20%);
+    }
   }
 
   // ─── 统计卡片 ────────────────────────────────────────
@@ -428,9 +445,15 @@
     border: 1px solid var(--border, rgb(255 255 255 / 7%));
     border-radius: 10px;
 
-    &--ok   { border-left: 3px solid #22c55e; }
-    &--fail { border-left: 3px solid #f87171; }
-    &--pending { border-left: 3px solid #f59e0b; }
+    &--ok {
+      border-left: 3px solid #22c55e;
+    }
+    &--fail {
+      border-left: 3px solid #f87171;
+    }
+    &--pending {
+      border-left: 3px solid #f59e0b;
+    }
   }
 
   .stat-label {
@@ -450,10 +473,18 @@
     font-weight: 700;
     line-height: 1;
 
-    &--total   { color: #e2e8f0; }
-    &--ok      { color: #22c55e; }
-    &--fail    { color: #f87171; }
-    &--pending { color: #f59e0b; }
+    &--total {
+      color: #e2e8f0;
+    }
+    &--ok {
+      color: #22c55e;
+    }
+    &--fail {
+      color: #f87171;
+    }
+    &--pending {
+      color: #f59e0b;
+    }
   }
 
   .stat-rate {
@@ -497,9 +528,13 @@
       background: transparent;
     }
 
-    :deep(td.el-table__cell) { font-size: 13px; }
+    :deep(td.el-table__cell) {
+      font-size: 13px;
+    }
 
-    :deep(.el-table__inner-wrapper::before) { display: none; }
+    :deep(.el-table__inner-wrapper::before) {
+      display: none;
+    }
 
     :deep(.row--selected td.el-table__cell) {
       background: rgb(59 130 246 / 8%) !important;
@@ -565,13 +600,17 @@
     &--ok {
       color: #22c55e;
       background: rgb(34 197 94 / 10%);
-      .status-dot { background: #22c55e; }
+      .status-dot {
+        background: #22c55e;
+      }
     }
 
     &--fail {
       color: #f87171;
       background: rgb(248 113 113 / 10%);
-      .status-dot { background: #f87171; }
+      .status-dot {
+        background: #f87171;
+      }
     }
 
     &--pending {
@@ -615,21 +654,27 @@
       color: #3b82f6;
       background: rgb(59 130 246 / 10%);
       border-color: rgb(59 130 246 / 20%);
-      &:hover { background: rgb(59 130 246 / 20%); }
+      &:hover {
+        background: rgb(59 130 246 / 20%);
+      }
     }
 
     &--revalidate {
       color: #f59e0b;
       background: rgb(245 158 11 / 10%);
       border-color: rgb(245 158 11 / 20%);
-      &:hover { background: rgb(245 158 11 / 20%); }
+      &:hover {
+        background: rgb(245 158 11 / 20%);
+      }
     }
 
     &--edit {
       color: #34d399;
       background: rgb(52 211 153 / 10%);
       border-color: rgb(52 211 153 / 20%);
-      &:hover { background: rgb(52 211 153 / 20%); }
+      &:hover {
+        background: rgb(52 211 153 / 20%);
+      }
     }
   }
 
@@ -653,16 +698,27 @@
     :deep(.el-pager li) {
       color: #94a3b8;
       background: transparent;
-      &.is-active { color: #3b82f6; background: rgb(59 130 246 / 15%); border-radius: 4px; }
-      &:hover:not(.is-active) { color: #e2e8f0; }
+
+      &.is-active {
+        color: #3b82f6;
+        background: rgb(59 130 246 / 15%);
+        border-radius: 4px;
+      }
+      &:hover:not(.is-active) {
+        color: #e2e8f0;
+      }
     }
 
     :deep(.btn-prev),
     :deep(.btn-next) {
       color: #94a3b8;
       background: transparent;
-      &:hover { color: #e2e8f0; }
-      &:disabled { opacity: 0.4; }
+      &:hover {
+        color: #e2e8f0;
+      }
+      &:disabled {
+        opacity: 0.4;
+      }
     }
 
     :deep(.el-pagination__jump .el-input__wrapper) {

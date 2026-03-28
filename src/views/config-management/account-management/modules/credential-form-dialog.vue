@@ -14,7 +14,6 @@
     </div>
 
     <el-form ref="formRef" :model="form" :rules="rules" label-width="0" class="cred-form">
-
       <!-- 凭证名称 -->
       <div class="form-item">
         <div class="form-label">凭证名称 <span class="required">*</span></div>
@@ -45,7 +44,11 @@
         <div class="form-label">Client ID <span class="required">*</span></div>
         <div class="form-control">
           <el-form-item prop="config.clientId">
-            <el-input v-model="form.config.clientId" placeholder="请输入 Client ID" class="dark-input" />
+            <el-input
+              v-model="form.config.clientId"
+              placeholder="请输入 Client ID"
+              class="dark-input"
+            />
           </el-form-item>
         </div>
       </div>
@@ -62,13 +65,31 @@
               class="dark-input"
             >
               <template #suffix>
-                <button class="eye-btn" @click.prevent="showFields.clientSecret = !showFields.clientSecret">
-                  <svg v-if="showFields.clientSecret" viewBox="0 0 16 16" fill="none" width="14" height="14">
-                    <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z" stroke="currentColor" stroke-width="1.3"/>
-                    <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/>
+                <button
+                  class="eye-btn"
+                  @click.prevent="showFields.clientSecret = !showFields.clientSecret"
+                >
+                  <svg
+                    v-if="showFields.clientSecret"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    width="14"
+                    height="14"
+                  >
+                    <path
+                      d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z"
+                      stroke="currentColor"
+                      stroke-width="1.3"
+                    />
+                    <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3" />
                   </svg>
                   <svg v-else viewBox="0 0 16 16" fill="none" width="14" height="14">
-                    <path d="M2 2l12 12M6.5 6.6A2 2 0 0 0 9.4 9.5M4.2 4.3C2.7 5.3 1.5 7 1.5 8s2.5 5 6.5 5a7 7 0 0 0 3.7-1.1M6 3.2A7 7 0 0 1 8 3c4 0 6.5 5 6.5 5a9.4 9.4 0 0 1-1.7 2.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                    <path
+                      d="M2 2l12 12M6.5 6.6A2 2 0 0 0 9.4 9.5M4.2 4.3C2.7 5.3 1.5 7 1.5 8s2.5 5 6.5 5a7 7 0 0 0 3.7-1.1M6 3.2A7 7 0 0 1 8 3c4 0 6.5 5 6.5 5a9.4 9.4 0 0 1-1.7 2.4"
+                      stroke="currentColor"
+                      stroke-width="1.3"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
               </template>
@@ -88,13 +109,31 @@
             class="dark-input"
           >
             <template #suffix>
-              <button class="eye-btn" @click.prevent="showFields.accessToken = !showFields.accessToken">
-                <svg v-if="showFields.accessToken" viewBox="0 0 16 16" fill="none" width="14" height="14">
-                  <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z" stroke="currentColor" stroke-width="1.3"/>
-                  <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/>
+              <button
+                class="eye-btn"
+                @click.prevent="showFields.accessToken = !showFields.accessToken"
+              >
+                <svg
+                  v-if="showFields.accessToken"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  width="14"
+                  height="14"
+                >
+                  <path
+                    d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z"
+                    stroke="currentColor"
+                    stroke-width="1.3"
+                  />
+                  <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3" />
                 </svg>
                 <svg v-else viewBox="0 0 16 16" fill="none" width="14" height="14">
-                  <path d="M2 2l12 12M6.5 6.6A2 2 0 0 0 9.4 9.5M4.2 4.3C2.7 5.3 1.5 7 1.5 8s2.5 5 6.5 5a7 7 0 0 0 3.7-1.1M6 3.2A7 7 0 0 1 8 3c4 0 6.5 5 6.5 5a9.4 9.4 0 0 1-1.7 2.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  <path
+                    d="M2 2l12 12M6.5 6.6A2 2 0 0 0 9.4 9.5M4.2 4.3C2.7 5.3 1.5 7 1.5 8s2.5 5 6.5 5a7 7 0 0 0 3.7-1.1M6 3.2A7 7 0 0 1 8 3c4 0 6.5 5 6.5 5a9.4 9.4 0 0 1-1.7 2.4"
+                    stroke="currentColor"
+                    stroke-width="1.3"
+                    stroke-linecap="round"
+                  />
                 </svg>
               </button>
             </template>
@@ -113,13 +152,31 @@
             class="dark-input"
           >
             <template #suffix>
-              <button class="eye-btn" @click.prevent="showFields.refreshToken = !showFields.refreshToken">
-                <svg v-if="showFields.refreshToken" viewBox="0 0 16 16" fill="none" width="14" height="14">
-                  <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z" stroke="currentColor" stroke-width="1.3"/>
-                  <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/>
+              <button
+                class="eye-btn"
+                @click.prevent="showFields.refreshToken = !showFields.refreshToken"
+              >
+                <svg
+                  v-if="showFields.refreshToken"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  width="14"
+                  height="14"
+                >
+                  <path
+                    d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z"
+                    stroke="currentColor"
+                    stroke-width="1.3"
+                  />
+                  <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3" />
                 </svg>
                 <svg v-else viewBox="0 0 16 16" fill="none" width="14" height="14">
-                  <path d="M2 2l12 12M6.5 6.6A2 2 0 0 0 9.4 9.5M4.2 4.3C2.7 5.3 1.5 7 1.5 8s2.5 5 6.5 5a7 7 0 0 0 3.7-1.1M6 3.2A7 7 0 0 1 8 3c4 0 6.5 5 6.5 5a9.4 9.4 0 0 1-1.7 2.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  <path
+                    d="M2 2l12 12M6.5 6.6A2 2 0 0 0 9.4 9.5M4.2 4.3C2.7 5.3 1.5 7 1.5 8s2.5 5 6.5 5a7 7 0 0 0 3.7-1.1M6 3.2A7 7 0 0 1 8 3c4 0 6.5 5 6.5 5a9.4 9.4 0 0 1-1.7 2.4"
+                    stroke="currentColor"
+                    stroke-width="1.3"
+                    stroke-linecap="round"
+                  />
                 </svg>
               </button>
             </template>
@@ -176,7 +233,6 @@
           />
         </div>
       </div>
-
     </el-form>
 
     <template #footer>
@@ -230,38 +286,48 @@
     expireTime: '',
     remark: '',
     apps: [],
-    config: { account: '', password: '', clientId: '', clientSecret: '', accessToken: '', refreshToken: '' }
+    config: {
+      account: '',
+      password: '',
+      clientId: '',
+      clientSecret: '',
+      accessToken: '',
+      refreshToken: ''
+    }
   })
 
   const form = ref<CredentialFormModel>(defaultForm())
 
-  watch(() => props.visible, (v) => {
-    if (v) {
-      if (props.editData) {
-        form.value = {
-          name: props.editData.name,
-          source: props.editData.source,
-          group: props.editData.group,
-          credentialType: props.editData.credentialType,
-          expireTime: '',
-          remark: props.editData.remark,
-          apps: [...props.editData.apps],
-          config: {
-            account: props.editData.config.account ?? '',
-            password: '',
-            clientId: props.editData.config.clientId ?? '',
-            clientSecret: '',
-            accessToken: '',
-            refreshToken: ''
+  watch(
+    () => props.visible,
+    (v) => {
+      if (v) {
+        if (props.editData) {
+          form.value = {
+            name: props.editData.name,
+            source: props.editData.source,
+            group: props.editData.group,
+            credentialType: props.editData.credentialType,
+            expireTime: '',
+            remark: props.editData.remark,
+            apps: [...props.editData.apps],
+            config: {
+              account: props.editData.config.account ?? '',
+              password: '',
+              clientId: props.editData.config.clientId ?? '',
+              clientSecret: '',
+              accessToken: '',
+              refreshToken: ''
+            }
           }
+        } else {
+          form.value = defaultForm()
         }
-      } else {
-        form.value = defaultForm()
+        Object.assign(showFields, { clientSecret: false, accessToken: false, refreshToken: false })
+        formRef.value?.clearValidate()
       }
-      Object.assign(showFields, { clientSecret: false, accessToken: false, refreshToken: false })
-      formRef.value?.clearValidate()
     }
-  })
+  )
 
   const availableApps = computed(() => appOptions.filter((a) => !form.value.apps.includes(a)))
 
@@ -278,7 +344,9 @@
     name: [{ required: true, message: '请输入凭证名称', trigger: 'blur' }],
     credentialType: [{ required: true, message: '请选择凭证类型', trigger: 'change' }],
     'config.clientId': [{ required: true, message: '请输入 Client ID', trigger: 'blur' }],
-    'config.clientSecret': [{ required: !isEdit.value, message: '请输入 Client Secret', trigger: 'blur' }]
+    'config.clientSecret': [
+      { required: !isEdit.value, message: '请输入 Client Secret', trigger: 'blur' }
+    ]
   }
 
   const handleCancel = () => emit('update:visible', false)
@@ -288,7 +356,11 @@
     submitting.value = true
     try {
       await new Promise((r) => setTimeout(r, 600))
-      emit('success', { ...form.value, apps: [...form.value.apps], config: { ...form.value.config } })
+      emit('success', {
+        ...form.value,
+        apps: [...form.value.apps],
+        config: { ...form.value.config }
+      })
       emit('update:visible', false)
     } finally {
       submitting.value = false
@@ -319,7 +391,9 @@
 
   .el-dialog:has(.cred-form-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
-    &:hover { color: var(--cm-dialog-text-primary) !important; }
+    &:hover {
+      color: var(--cm-dialog-text-primary) !important;
+    }
   }
 
   .el-dialog:has(.cred-form-dialog-bd) .el-dialog__body.cred-form-dialog-bd {
@@ -328,9 +402,17 @@
     overflow-y: auto;
     background: var(--cm-dialog-bg-inner);
 
-    &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-track { background: transparent; }
-    &::-webkit-scrollbar-thumb { background: var(--cm-dialog-border); border-radius: 2px; }
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--cm-dialog-border);
+      border-radius: 2px;
+    }
   }
 
   .el-dialog:has(.cred-form-dialog-bd) .el-dialog__footer.cred-form-dialog-ft {
@@ -373,7 +455,9 @@
     display: flex;
     align-items: flex-start;
 
-    &--textarea { align-items: flex-start; }
+    &--textarea {
+      align-items: flex-start;
+    }
   }
 
   .form-label {
@@ -387,7 +471,9 @@
     text-align: right;
     white-space: nowrap;
 
-    &--top { padding-top: 9px; }
+    &--top {
+      padding-top: 9px;
+    }
   }
 
   .form-control {
@@ -433,12 +519,16 @@
     border: none;
     transition: color 0.15s;
 
-    &:hover { color: #94a3b8; }
+    &:hover {
+      color: #94a3b8;
+    }
   }
 
   // ─── 日期选择器 ────────────────────────────────────────
   .dark-date-picker {
-    &.full-width { width: 100%; }
+    &.full-width {
+      width: 100%;
+    }
 
     :deep(.el-input__wrapper) {
       background: rgb(255 255 255 / 4%) !important;
@@ -446,14 +536,20 @@
       border-radius: 7px !important;
       box-shadow: none !important;
 
-      &:hover { border-color: rgb(59 130 246 / 40%) !important; }
-      &.is-focus { border-color: #3b82f6 !important; }
+      &:hover {
+        border-color: rgb(59 130 246 / 40%) !important;
+      }
+      &.is-focus {
+        border-color: #3b82f6 !important;
+      }
     }
 
     :deep(.el-input__inner) {
       font-size: 13px;
       color: #e2e8f0 !important;
-      &::placeholder { color: #475569 !important; }
+      &::placeholder {
+        color: #475569 !important;
+      }
     }
 
     :deep(.el-input__suffix .el-icon) {
@@ -494,7 +590,9 @@
     background: none;
     border: none;
     opacity: 0.7;
-    &:hover { opacity: 1; }
+    &:hover {
+      opacity: 1;
+    }
   }
 
   .app-add-select {
@@ -527,7 +625,11 @@
     background: transparent !important;
     border: 1px solid rgb(255 255 255 / 10%) !important;
     border-radius: 8px !important;
-    &:hover { color: #e2e8f0 !important; border-color: rgb(255 255 255 / 20%) !important; }
+
+    &:hover {
+      color: #e2e8f0 !important;
+      border-color: rgb(255 255 255 / 20%) !important;
+    }
   }
 
   .btn-submit {
@@ -537,7 +639,9 @@
     background: #0d9488 !important;
     border: none !important;
     border-radius: 8px !important;
-    &:hover { filter: brightness(1.1); }
+    &:hover {
+      filter: brightness(1.1);
+    }
   }
 
   // ─── 深色输入通用 ──────────────────────────────────────
@@ -548,14 +652,20 @@
       border-radius: 7px !important;
       box-shadow: none !important;
 
-      &:hover { border-color: rgb(59 130 246 / 40%) !important; }
-      &.is-focus { border-color: #3b82f6 !important; }
+      &:hover {
+        border-color: rgb(59 130 246 / 40%) !important;
+      }
+      &.is-focus {
+        border-color: #3b82f6 !important;
+      }
     }
 
     :deep(.el-input__inner) {
       font-size: 13px;
       color: #e2e8f0 !important;
-      &::placeholder { color: #475569 !important; }
+      &::placeholder {
+        color: #475569 !important;
+      }
     }
   }
 
@@ -568,14 +678,22 @@
       border: 1px solid rgb(255 255 255 / 10%) !important;
       border-radius: 7px !important;
       box-shadow: none !important;
-      &::placeholder { color: #475569 !important; }
-      &:hover { border-color: rgb(59 130 246 / 40%) !important; }
-      &:focus { border-color: #3b82f6 !important; }
+      &::placeholder {
+        color: #475569 !important;
+      }
+      &:hover {
+        border-color: rgb(59 130 246 / 40%) !important;
+      }
+      &:focus {
+        border-color: #3b82f6 !important;
+      }
     }
   }
 
   .dark-select {
-    &.full-width { width: 100%; }
+    &.full-width {
+      width: 100%;
+    }
 
     :deep(.el-select__wrapper) {
       color: #e2e8f0;
@@ -583,10 +701,19 @@
       border: 1px solid rgb(255 255 255 / 10%) !important;
       border-radius: 7px !important;
       box-shadow: none !important;
-      &:hover { border-color: rgb(59 130 246 / 40%) !important; }
+      &:hover {
+        border-color: rgb(59 130 246 / 40%) !important;
+      }
     }
 
-    :deep(.el-select__selected-item) { font-size: 13px; color: #e2e8f0 !important; }
-    :deep(.el-select__placeholder) { font-size: 13px; color: #475569 !important; }
+    :deep(.el-select__selected-item) {
+      font-size: 13px;
+      color: #e2e8f0 !important;
+    }
+
+    :deep(.el-select__placeholder) {
+      font-size: 13px;
+      color: #475569 !important;
+    }
   }
 </style>

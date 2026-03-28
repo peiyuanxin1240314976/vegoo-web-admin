@@ -11,14 +11,20 @@
             <button
               :class="['platform-tab', { 'platform-tab--active': sourceFilter === '' }]"
               @click="sourceFilter = ''"
-            >全部</button>
+              >全部</button
+            >
             <button
               v-for="p in PLATFORM_CONFIGS"
               :key="p.value"
               :class="['platform-tab', { 'platform-tab--active': sourceFilter === p.value }]"
-              :style="sourceFilter === p.value ? { color: p.color, borderColor: p.color, background: p.bg } : {}"
+              :style="
+                sourceFilter === p.value
+                  ? { color: p.color, borderColor: p.color, background: p.bg }
+                  : {}
+              "
               @click="sourceFilter = p.value"
-            >{{ p.shortLabel }}</button>
+              >{{ p.shortLabel }}</button
+            >
           </div>
         </div>
         <!-- 开户状态 -->
@@ -28,7 +34,11 @@
             <button
               v-for="s in statusOptions"
               :key="s.value"
-              :class="['status-tab', `status-tab--${s.type}`, { 'status-tab--active': statusFilter === s.value }]"
+              :class="[
+                'status-tab',
+                `status-tab--${s.type}`,
+                { 'status-tab--active': statusFilter === s.value }
+              ]"
               @click="statusFilter = s.value"
             >
               {{ s.label }}
@@ -63,9 +73,13 @@
         <button class="feishu-setting-btn" @click="handleOpenFeishuSetting">
           推送设置
           <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
-            <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M8 2v2M8 12v2M2 8h2M12 8h2M3.5 3.5l1.5 1.5M11 11l1.5 1.5M3.5 12.5L5 11M11 5l1.5-1.5"
-              stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.4" />
+            <path
+              d="M8 2v2M8 12v2M2 8h2M12 8h2M3.5 3.5l1.5 1.5M11 11l1.5 1.5M3.5 12.5L5 11M11 5l1.5-1.5"
+              stroke="currentColor"
+              stroke-width="1.3"
+              stroke-linecap="round"
+            />
           </svg>
         </button>
       </div>
@@ -116,7 +130,13 @@
         <el-table-column label="广告平台" min-width="140">
           <template #default="{ row }">
             <div class="platform-cell">
-              <span class="platform-icon-wrap" :style="{ color: getPlatformColor(row.source), background: getPlatformBg(row.source) }">
+              <span
+                class="platform-icon-wrap"
+                :style="{
+                  color: getPlatformColor(row.source),
+                  background: getPlatformBg(row.source)
+                }"
+              >
                 {{ getPlatformShort(row.source) }}
               </span>
               <span class="platform-name">{{ row.source }}</span>
@@ -126,7 +146,12 @@
         <el-table-column prop="app" label="应用" min-width="120" show-overflow-tooltip />
         <el-table-column label="平台" min-width="70" align="center">
           <template #default="{ row }">
-            <span :class="['platform-badge', row.platform === 'iOS' ? 'platform-badge--ios' : 'platform-badge--android']">
+            <span
+              :class="[
+                'platform-badge',
+                row.platform === 'iOS' ? 'platform-badge--ios' : 'platform-badge--android'
+              ]"
+            >
               {{ row.platform }}
             </span>
           </template>
@@ -134,7 +159,12 @@
         <el-table-column prop="accountType" label="开户类型" min-width="90" align="center" />
         <el-table-column label="归属代理商" min-width="110" show-overflow-tooltip>
           <template #default="{ row }">
-            <span :class="['agency-name', isHighlightAgency(row.agency) ? 'agency-name--highlight' : '']">
+            <span
+              :class="[
+                'agency-name',
+                isHighlightAgency(row.agency) ? 'agency-name--highlight' : ''
+              ]"
+            >
               {{ row.agency }}
             </span>
           </template>
@@ -166,8 +196,11 @@
                 v-if="row.status === '待分配'"
                 class="action-link action-link--assign"
                 @click.stop="emit('assign', row)"
-              >[分配凭据]</button>
-              <button class="action-link action-link--del" @click.stop="emit('delete', row)">[删除]</button>
+                >[分配凭据]</button
+              >
+              <button class="action-link action-link--del" @click.stop="emit('delete', row)"
+                >[删除]</button
+              >
             </div>
           </template>
         </el-table-column>
@@ -279,7 +312,8 @@
   const filteredList = computed(() =>
     list.value.filter((item) => {
       const kw = props.searchKeyword.toLowerCase()
-      if (kw && !item.id.toLowerCase().includes(kw) && !item.app.toLowerCase().includes(kw)) return false
+      if (kw && !item.id.toLowerCase().includes(kw) && !item.app.toLowerCase().includes(kw))
+        return false
       if (sourceFilter.value && item.source !== sourceFilter.value) return false
       if (statusFilter.value && item.status !== statusFilter.value) return false
       if (agencyFilter.value && item.agency !== agencyFilter.value) return false
@@ -297,20 +331,28 @@
   const stats = computed(() => ({
     total: list.value.length,
     pending: list.value.filter((i) => i.status === '待分配').length,
-    active:  list.value.filter((i) => i.status === '已激活').length,
-    failed:  list.value.filter((i) => i.status === '开户失败').length
+    active: list.value.filter((i) => i.status === '已激活').length,
+    failed: list.value.filter((i) => i.status === '开户失败').length
   }))
 
   const statusOptions = computed(() => [
-    { label: '全部',    value: '',      type: 'default' },
-    { label: '待分配',  value: '待分配', type: 'warn',  count: stats.value.pending },
-    { label: '已激活',  value: '已激活', type: 'ok',    count: stats.value.active },
-    { label: '开户失败',value: '开户失败',type: 'fail',  count: stats.value.failed }
+    { label: '全部', value: '', type: 'default' },
+    { label: '待分配', value: '待分配', type: 'warn', count: stats.value.pending },
+    { label: '已激活', value: '已激活', type: 'ok', count: stats.value.active },
+    { label: '开户失败', value: '开户失败', type: 'fail', count: stats.value.failed }
   ])
 
   watch(
-    () => [props.searchKeyword, sourceFilter.value, statusFilter.value, agencyFilter.value, appFilter.value],
-    () => { currentPage.value = 1 }
+    () => [
+      props.searchKeyword,
+      sourceFilter.value,
+      statusFilter.value,
+      agencyFilter.value,
+      appFilter.value
+    ],
+    () => {
+      currentPage.value = 1
+    }
   )
 
   function getPlatformColor(source: string) {
@@ -324,13 +366,13 @@
   }
 
   function getStatusClass(status: string) {
-    if (status === '已激活')  return 'status-badge--ok'
-    if (status === '待分配')  return 'status-badge--pending'
+    if (status === '已激活') return 'status-badge--ok'
+    if (status === '待分配') return 'status-badge--pending'
     return 'status-badge--fail'
   }
 
   function getStatusIcon(status: string) {
-    if (status === '已激活')  return '●'
+    if (status === '已激活') return '●'
     if (status === '开户失败') return '✕'
     return '✓'
   }
@@ -419,7 +461,9 @@
       border: 1px solid rgb(255 255 255 / 8%) !important;
       border-radius: 6px;
       box-shadow: none !important;
-      &:focus-within { border-color: #3b82f6 !important; }
+      &:focus-within {
+        border-color: #3b82f6 !important;
+      }
     }
 
     :deep(.el-input__inner),
@@ -451,8 +495,16 @@
     border-radius: 6px;
     transition: all 0.15s;
 
-    &--active:not([style]) { color: #e2e8f0; background: rgb(255 255 255 / 8%); border-color: rgb(255 255 255 / 18%); }
-    &:not(.platform-tab--active):hover { color: #94a3b8; border-color: rgb(255 255 255 / 12%); }
+    &--active:not([style]) {
+      color: #e2e8f0;
+      background: rgb(255 255 255 / 8%);
+      border-color: rgb(255 255 255 / 18%);
+    }
+
+    &:not(.platform-tab--active):hover {
+      color: #94a3b8;
+      border-color: rgb(255 255 255 / 12%);
+    }
   }
 
   // ─── 状态筛选切换 ────────────────────────────────────
@@ -474,12 +526,34 @@
     border-radius: 6px;
     transition: all 0.18s;
 
-    &--active.status-tab--default { color: #e2e8f0; background: rgb(255 255 255 / 8%); border-color: rgb(255 255 255 / 15%); }
-    &--active.status-tab--warn    { color: #f59e0b; background: rgb(245 158 11 / 12%); border-color: rgb(245 158 11 / 35%); }
-    &--active.status-tab--ok      { color: #22c55e; background: rgb(34 197 94 / 12%); border-color: rgb(34 197 94 / 35%); }
-    &--active.status-tab--fail    { color: #f87171; background: rgb(248 113 113 / 12%); border-color: rgb(248 113 113 / 35%); }
+    &--active.status-tab--default {
+      color: #e2e8f0;
+      background: rgb(255 255 255 / 8%);
+      border-color: rgb(255 255 255 / 15%);
+    }
 
-    &:not(.status-tab--active):hover { color: #e2e8f0; border-color: rgb(255 255 255 / 14%); }
+    &--active.status-tab--warn {
+      color: #f59e0b;
+      background: rgb(245 158 11 / 12%);
+      border-color: rgb(245 158 11 / 35%);
+    }
+
+    &--active.status-tab--ok {
+      color: #22c55e;
+      background: rgb(34 197 94 / 12%);
+      border-color: rgb(34 197 94 / 35%);
+    }
+
+    &--active.status-tab--fail {
+      color: #f87171;
+      background: rgb(248 113 113 / 12%);
+      border-color: rgb(248 113 113 / 35%);
+    }
+
+    &:not(.status-tab--active):hover {
+      color: #e2e8f0;
+      border-color: rgb(255 255 255 / 14%);
+    }
   }
 
   .status-tab-count {
@@ -493,10 +567,25 @@
     font-weight: 700;
     border-radius: 8px;
 
-    .status-tab--active.status-tab--warn  & { color: #f59e0b; background: rgb(245 158 11 / 20%); }
-    .status-tab--active.status-tab--ok    & { color: #22c55e; background: rgb(34 197 94 / 20%); }
-    .status-tab--active.status-tab--fail  & { color: #f87171; background: rgb(248 113 113 / 20%); }
-    .status-tab:not(.status-tab--active) & { color: #94a3b8; background: rgb(255 255 255 / 8%); }
+    .status-tab--active.status-tab--warn & {
+      color: #f59e0b;
+      background: rgb(245 158 11 / 20%);
+    }
+
+    .status-tab--active.status-tab--ok & {
+      color: #22c55e;
+      background: rgb(34 197 94 / 20%);
+    }
+
+    .status-tab--active.status-tab--fail & {
+      color: #f87171;
+      background: rgb(248 113 113 / 20%);
+    }
+
+    .status-tab:not(.status-tab--active) & {
+      color: #94a3b8;
+      background: rgb(255 255 255 / 8%);
+    }
   }
 
   // ─── 飞书推送 ────────────────────────────────────────
@@ -525,7 +614,10 @@
     height: 7px;
     border-radius: 50%;
 
-    &--on { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    &--on {
+      background: #22c55e;
+      box-shadow: 0 0 6px #22c55e;
+    }
   }
 
   .feishu-setting-btn {
@@ -541,7 +633,10 @@
     border-radius: 6px;
     transition: all 0.18s;
 
-    &:hover { color: #94a3b8; border-color: rgb(255 255 255 / 14%); }
+    &:hover {
+      color: #94a3b8;
+      border-color: rgb(255 255 255 / 14%);
+    }
   }
 
   // ─── 统计卡片 ────────────────────────────────────────
@@ -557,12 +652,27 @@
     border: 1px solid var(--border, rgb(255 255 255 / 7%));
     border-radius: 10px;
 
-    &--warn { background: rgb(245 158 11 / 6%); border-color: rgb(245 158 11 / 20%); }
-    &--ok   { background: rgb(34 197 94 / 6%);  border-color: rgb(34 197 94 / 20%); }
-    &--fail { background: rgb(248 113 113 / 6%); border-color: rgb(248 113 113 / 20%); }
+    &--warn {
+      background: rgb(245 158 11 / 6%);
+      border-color: rgb(245 158 11 / 20%);
+    }
+
+    &--ok {
+      background: rgb(34 197 94 / 6%);
+      border-color: rgb(34 197 94 / 20%);
+    }
+
+    &--fail {
+      background: rgb(248 113 113 / 6%);
+      border-color: rgb(248 113 113 / 20%);
+    }
   }
 
-  .stat-label { margin-bottom: 8px; font-size: 12px; color: #94a3b8; }
+  .stat-label {
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+  }
 
   .stat-label-row {
     display: flex;
@@ -584,10 +694,18 @@
     font-weight: 700;
     line-height: 1;
 
-    &--total { color: #e2e8f0; }
-    &--warn  { color: #f59e0b; }
-    &--ok    { color: #22c55e; }
-    &--fail  { color: #f87171; }
+    &--total {
+      color: #e2e8f0;
+    }
+    &--warn {
+      color: #f59e0b;
+    }
+    &--ok {
+      color: #22c55e;
+    }
+    &--fail {
+      color: #f87171;
+    }
   }
 
   // ─── 表格 ────────────────────────────────────────────
@@ -615,9 +733,13 @@
       background: transparent;
     }
 
-    :deep(td.el-table__cell) { font-size: 13px; }
+    :deep(td.el-table__cell) {
+      font-size: 13px;
+    }
 
-    :deep(.el-table__inner-wrapper::before) { display: none; }
+    :deep(.el-table__inner-wrapper::before) {
+      display: none;
+    }
 
     :deep(.row--selected td.el-table__cell) {
       background: rgb(34 211 238 / 5%) !important;
@@ -664,15 +786,26 @@
     font-size: 11px;
     border-radius: 4px;
 
-    &--android { color: #94a3b8; background: rgb(148 163 184 / 12%); border: 1px solid rgb(148 163 184 / 20%); }
-    &--ios     { color: #a78bfa; background: rgb(167 139 250 / 12%); border: 1px solid rgb(167 139 250 / 20%); }
+    &--android {
+      color: #94a3b8;
+      background: rgb(148 163 184 / 12%);
+      border: 1px solid rgb(148 163 184 / 20%);
+    }
+
+    &--ios {
+      color: #a78bfa;
+      background: rgb(167 139 250 / 12%);
+      border: 1px solid rgb(167 139 250 / 20%);
+    }
   }
 
   .agency-name {
     font-size: 13px;
     color: #94a3b8;
 
-    &--highlight { color: #22d3ee; }
+    &--highlight {
+      color: #22d3ee;
+    }
   }
 
   .amount {
@@ -691,12 +824,20 @@
     align-items: center;
     font-size: 12px;
 
-    &--ok      { color: #22c55e; }
-    &--pending { color: #f59e0b; }
-    &--fail    { color: #f87171; }
+    &--ok {
+      color: #22c55e;
+    }
+    &--pending {
+      color: #f59e0b;
+    }
+    &--fail {
+      color: #f87171;
+    }
   }
 
-  .status-icon { font-size: 10px; }
+  .status-icon {
+    font-size: 10px;
+  }
 
   .action-btns {
     display: flex;
@@ -713,9 +854,21 @@
     background: none;
     border: none;
     transition: color 0.15s;
-    &:hover { color: #60a5fa; }
-    &--assign { color: #22d3ee; &:hover { color: #67e8f9; } }
-    &--del    { color: #f87171; &:hover { color: #fca5a5; } }
+    &:hover {
+      color: #60a5fa;
+    }
+    &--assign {
+      color: #22d3ee;
+      &:hover {
+        color: #67e8f9;
+      }
+    }
+    &--del {
+      color: #f87171;
+      &:hover {
+        color: #fca5a5;
+      }
+    }
   }
 
   // ─── 分页 ────────────────────────────────────────────
@@ -729,15 +882,40 @@
     border-top: 1px solid rgb(255 255 255 / 7%);
   }
 
-  .pagination-total { font-size: 13px; color: #94a3b8; }
+  .pagination-total {
+    font-size: 13px;
+    color: #94a3b8;
+  }
 
   .oa-pagination {
     :deep(.el-pager li) {
-      color: #94a3b8; background: transparent;
-      &.is-active { color: #3b82f6; background: rgb(59 130 246 / 15%); border-radius: 4px; }
-      &:hover:not(.is-active) { color: #e2e8f0; }
+      color: #94a3b8;
+      background: transparent;
+
+      &.is-active {
+        color: #3b82f6;
+        background: rgb(59 130 246 / 15%);
+        border-radius: 4px;
+      }
+
+      &:hover:not(.is-active) {
+        color: #e2e8f0;
+      }
     }
-    :deep(.btn-prev), :deep(.btn-next) { color: #94a3b8; background: transparent; &:hover { color: #e2e8f0; } &:disabled { opacity: 0.4; } }
+
+    :deep(.btn-prev),
+    :deep(.btn-next) {
+      color: #94a3b8;
+      background: transparent;
+
+      &:hover {
+        color: #e2e8f0;
+      }
+
+      &:disabled {
+        opacity: 0.4;
+      }
+    }
   }
 
   .pagination-jumper {
@@ -750,7 +928,18 @@
 
   .jumper-input {
     width: 52px;
-    :deep(.el-input__wrapper) { background: rgb(255 255 255 / 4%) !important; border: 1px solid rgb(255 255 255 / 7%) !important; border-radius: 5px; box-shadow: none !important; }
-    :deep(.el-input__inner) { font-size: 12px; color: #e2e8f0; text-align: center; }
+
+    :deep(.el-input__wrapper) {
+      background: rgb(255 255 255 / 4%) !important;
+      border: 1px solid rgb(255 255 255 / 7%) !important;
+      border-radius: 5px;
+      box-shadow: none !important;
+    }
+
+    :deep(.el-input__inner) {
+      font-size: 12px;
+      color: #e2e8f0;
+      text-align: center;
+    }
   }
 </style>

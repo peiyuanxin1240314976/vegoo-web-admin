@@ -21,7 +21,12 @@
           <ElButton round size="small" class="btn-delete" @click="handleDelete">删除</ElButton>
           <button class="close-btn" @click="handleClose">
             <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
-              <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              <path
+                d="M2 2l12 12M14 2L2 14"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
             </svg>
           </button>
         </div>
@@ -36,7 +41,10 @@
             <div class="info-item">
               <span class="info-key">广告平台</span>
               <span class="platform-cell">
-                <span class="platform-icon" :style="{ color: getPlatformColor(credData?.source ?? '') }">
+                <span
+                  class="platform-icon"
+                  :style="{ color: getPlatformColor(credData?.source ?? '') }"
+                >
                   {{ getPlatformShort(credData?.source ?? '') }}
                 </span>
                 <span class="info-val">{{ credData?.source }}</span>
@@ -81,21 +89,49 @@
               <div class="config-row">
                 <span class="config-key">账号</span>
                 <div class="config-val-wrap">
-                  <span class="config-val">{{ showSecret ? credData.config.account : maskStr(credData.config.account) }}</span>
+                  <span class="config-val">{{
+                    showSecret ? credData.config.account : maskStr(credData.config.account)
+                  }}</span>
                   <button class="copy-btn" @click="handleCopy(credData.config.account ?? '')">
                     <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
-                      <rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.4"/>
-                      <path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.4"/>
+                      <rect
+                        x="5"
+                        y="5"
+                        width="9"
+                        height="9"
+                        rx="2"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
+                      <path
+                        d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
                     </svg>
                   </button>
                 </div>
                 <span v-if="credData.config.password" class="config-key ml">密码</span>
                 <div v-if="credData.config.password" class="config-val-wrap">
-                  <span class="config-val">{{ showSecret ? credData.config.password : '••••••••' }}</span>
+                  <span class="config-val">{{
+                    showSecret ? credData.config.password : '••••••••'
+                  }}</span>
                   <button class="copy-btn" @click="handleCopy(credData.config.password ?? '')">
                     <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
-                      <rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.4"/>
-                      <path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.4"/>
+                      <rect
+                        x="5"
+                        y="5"
+                        width="9"
+                        height="9"
+                        rx="2"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
+                      <path
+                        d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -105,11 +141,25 @@
               <div class="config-row">
                 <span class="config-key">客户端 ID</span>
                 <div class="config-val-wrap">
-                  <span class="config-val">{{ showSecret ? credData.config.clientId : maskStr(credData.config.clientId) }}</span>
+                  <span class="config-val">{{
+                    showSecret ? credData.config.clientId : maskStr(credData.config.clientId)
+                  }}</span>
                   <button class="copy-btn" @click="handleCopy(credData.config.clientId ?? '')">
                     <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
-                      <rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.4"/>
-                      <path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.4"/>
+                      <rect
+                        x="5"
+                        y="5"
+                        width="9"
+                        height="9"
+                        rx="2"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
+                      <path
+                        d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -118,8 +168,20 @@
                   <span class="config-val">••••••••</span>
                   <button class="copy-btn" @click="handleCopy(credData.config.clientSecret ?? '')">
                     <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
-                      <rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.4"/>
-                      <path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.4"/>
+                      <rect
+                        x="5"
+                        y="5"
+                        width="9"
+                        height="9"
+                        rx="2"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
+                      <path
+                        d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -129,11 +191,25 @@
               <div class="config-row">
                 <span class="config-key">访问令牌</span>
                 <div class="config-val-wrap">
-                  <span class="config-val">{{ showSecret ? credData.config.accessToken : maskStr(credData.config.accessToken) }}</span>
+                  <span class="config-val">{{
+                    showSecret ? credData.config.accessToken : maskStr(credData.config.accessToken)
+                  }}</span>
                   <button class="copy-btn" @click="handleCopy(credData.config.accessToken ?? '')">
                     <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
-                      <rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.4"/>
-                      <path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.4"/>
+                      <rect
+                        x="5"
+                        y="5"
+                        width="9"
+                        height="9"
+                        rx="2"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
+                      <path
+                        d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -142,8 +218,20 @@
                   <span class="config-val">••••••••</span>
                   <button class="copy-btn" @click="handleCopy(credData.config.refreshToken ?? '')">
                     <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
-                      <rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.4"/>
-                      <path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.4"/>
+                      <rect
+                        x="5"
+                        y="5"
+                        width="9"
+                        height="9"
+                        rx="2"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
+                      <path
+                        d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -154,16 +242,28 @@
 
         <!-- 验证记录 -->
         <section class="detail-section">
-          <div class="section-title">验证记录 <span class="section-subtitle">（最近 5 条）</span></div>
+          <div class="section-title"
+            >验证记录 <span class="section-subtitle">（最近 5 条）</span></div
+          >
           <div v-if="credData?.validateHistory.length" class="validate-history">
             <div
               v-for="(rec, i) in credData.validateHistory.slice(0, 5)"
               :key="i"
               class="history-item"
             >
-              <span :class="['history-dot', rec.status === '验证成功' ? 'history-dot--ok' : 'history-dot--fail']" />
+              <span
+                :class="[
+                  'history-dot',
+                  rec.status === '验证成功' ? 'history-dot--ok' : 'history-dot--fail'
+                ]"
+              />
               <span class="history-time">{{ rec.time }}</span>
-              <span :class="['history-status', rec.status === '验证成功' ? 'history-status--ok' : 'history-status--fail']">
+              <span
+                :class="[
+                  'history-status',
+                  rec.status === '验证成功' ? 'history-status--ok' : 'history-status--fail'
+                ]"
+              >
                 {{ rec.status }}
                 <span v-if="rec.detail" class="history-detail">{{ rec.detail }}</span>
               </span>
@@ -176,7 +276,9 @@
 
       <!-- ── 底部操作 ──────────────────────── -->
       <div class="drawer-footer">
-        <ElButton round class="footer-btn footer-btn--validate" @click="handleValidate">立即验证</ElButton>
+        <ElButton round class="footer-btn footer-btn--validate" @click="handleValidate"
+          >立即验证</ElButton
+        >
         <ElButton round class="footer-btn footer-btn--edit" @click="handleEdit">编辑凭据</ElButton>
       </div>
     </div>
@@ -209,9 +311,15 @@
     showSecret.value = false
     emit('update:visible', false)
   }
-  const handleEdit = () => { if (props.credData) emit('edit', props.credData) }
-  const handleDelete = () => { if (props.credData) emit('delete', props.credData) }
-  const handleValidate = () => { if (props.credData) emit('validate', props.credData) }
+  const handleEdit = () => {
+    if (props.credData) emit('edit', props.credData)
+  }
+  const handleDelete = () => {
+    if (props.credData) emit('delete', props.credData)
+  }
+  const handleValidate = () => {
+    if (props.credData) emit('validate', props.credData)
+  }
 
   function getPlatformColor(source: string) {
     return PLATFORM_CONFIGS.find((p) => p.value === source)?.color ?? '#94a3b8'
@@ -261,10 +369,22 @@
     box-shadow: -8px 0 40px rgb(0 0 0 / 50%);
   }
 
-  .fade-enter-active, .fade-leave-active { transition: opacity 0.22s; }
-  .fade-enter-from, .fade-leave-to { opacity: 0; }
-  .drawer-slide-enter-active, .drawer-slide-leave-active { transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
-  .drawer-slide-enter-from, .drawer-slide-leave-to { transform: translateX(100%); }
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.22s;
+  }
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
+  .drawer-slide-enter-active,
+  .drawer-slide-leave-active {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .drawer-slide-enter-from,
+  .drawer-slide-leave-to {
+    transform: translateX(100%);
+  }
 
   // ─── 头部 ────────────────────────────────────────────
   .drawer-header {
@@ -304,7 +424,9 @@
     background: rgb(59 130 246 / 10%) !important;
     border: 1px solid rgb(59 130 246 / 25%) !important;
     border-radius: 6px !important;
-    &:hover { background: rgb(59 130 246 / 20%) !important; }
+    &:hover {
+      background: rgb(59 130 246 / 20%) !important;
+    }
   }
 
   .btn-delete {
@@ -314,7 +436,9 @@
     background: rgb(248 113 113 / 10%) !important;
     border: 1px solid rgb(248 113 113 / 25%) !important;
     border-radius: 6px !important;
-    &:hover { background: rgb(248 113 113 / 20%) !important; }
+    &:hover {
+      background: rgb(248 113 113 / 20%) !important;
+    }
   }
 
   .close-btn {
@@ -328,7 +452,11 @@
     background: transparent;
     border: none;
     border-radius: 6px;
-    &:hover { color: #e2e8f0; background: rgb(255 255 255 / 6%); }
+
+    &:hover {
+      color: #e2e8f0;
+      background: rgb(255 255 255 / 6%);
+    }
   }
 
   .status-badge {
@@ -339,15 +467,41 @@
     font-size: 11px;
     border-radius: 20px;
 
-    &--ok    { color: #22c55e; background: rgb(34 197 94 / 10%);  .status-dot { background: #22c55e; } }
-    &--fail  { color: #f87171; background: rgb(248 113 113 / 10%); .status-dot { background: #f87171; } }
+    &--ok {
+      color: #22c55e;
+      background: rgb(34 197 94 / 10%);
 
-    &--pending { color: #f59e0b; background: rgb(245 158 11 / 10%);
-      .status-dot { background: transparent; border: 1.5px solid #f59e0b; }
+      .status-dot {
+        background: #22c55e;
+      }
+    }
+
+    &--fail {
+      color: #f87171;
+      background: rgb(248 113 113 / 10%);
+
+      .status-dot {
+        background: #f87171;
+      }
+    }
+
+    &--pending {
+      color: #f59e0b;
+      background: rgb(245 158 11 / 10%);
+
+      .status-dot {
+        background: transparent;
+        border: 1.5px solid #f59e0b;
+      }
     }
   }
 
-  .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
+  .status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
 
   // ─── 正文 ────────────────────────────────────────────
   .drawer-body {
@@ -355,15 +509,25 @@
     padding: 0 20px;
     overflow-y: auto;
 
-    &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-track { background: transparent; }
-    &::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 10%); border-radius: 2px; }
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgb(255 255 255 / 10%);
+      border-radius: 2px;
+    }
   }
 
   .detail-section {
     padding: 16px 0;
     border-bottom: 1px solid rgb(255 255 255 / 5%);
-    &:last-child { border-bottom: none; }
+    &:last-child {
+      border-bottom: none;
+    }
   }
 
   .section-header {
@@ -382,7 +546,9 @@
     letter-spacing: 0.08em;
   }
 
-  .section-header .section-title { margin-bottom: 0; }
+  .section-header .section-title {
+    margin-bottom: 0;
+  }
 
   .section-subtitle {
     font-weight: 400;
@@ -429,7 +595,10 @@
     font-size: 13px;
     color: #e2e8f0;
 
-    &--blue { font-weight: 600; color: #3b82f6; }
+    &--blue {
+      font-weight: 600;
+      color: #3b82f6;
+    }
   }
 
   .platform-cell {
@@ -479,7 +648,9 @@
     font-size: 11px;
     color: #64748b;
 
-    &.ml { margin-left: 4px; }
+    &.ml {
+      margin-left: 4px;
+    }
   }
 
   .config-val-wrap {
@@ -509,7 +680,9 @@
     border: none;
     border-radius: 3px;
     transition: color 0.15s;
-    &:hover { color: #94a3b8; }
+    &:hover {
+      color: #94a3b8;
+    }
   }
 
   // ─── 验证历史 ────────────────────────────────────────
@@ -533,15 +706,26 @@
     height: 8px;
     border-radius: 50%;
 
-    &--ok   { background: #22c55e; }
-    &--fail { background: #f87171; }
+    &--ok {
+      background: #22c55e;
+    }
+    &--fail {
+      background: #f87171;
+    }
   }
 
-  .history-time { font-family: monospace; color: #64748b; }
+  .history-time {
+    font-family: monospace;
+    color: #64748b;
+  }
 
   .history-status {
-    &--ok   { color: #22c55e; }
-    &--fail { color: #f87171; }
+    &--ok {
+      color: #22c55e;
+    }
+    &--fail {
+      color: #f87171;
+    }
   }
 
   .history-detail {
@@ -550,7 +734,10 @@
     color: #94a3b8;
   }
 
-  .history-trigger { color: #475569; text-align: right; }
+  .history-trigger {
+    color: #475569;
+    text-align: right;
+  }
 
   .no-history {
     padding: 16px 0;
@@ -576,14 +763,20 @@
       color: #fff !important;
       background: #3b82f6 !important;
       border: none !important;
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
 
     &--edit {
       color: #94a3b8 !important;
       background: transparent !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
-      &:hover { color: #e2e8f0 !important; border-color: rgb(255 255 255 / 20%) !important; }
+
+      &:hover {
+        color: #e2e8f0 !important;
+        border-color: rgb(255 255 255 / 20%) !important;
+      }
     }
   }
 </style>

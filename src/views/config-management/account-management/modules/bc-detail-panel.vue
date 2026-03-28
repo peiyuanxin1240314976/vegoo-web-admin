@@ -1,7 +1,15 @@
 <template>
   <div class="bc-detail-panel">
     <div v-if="!bcData" class="empty-state">
-      <svg viewBox="0 0 48 48" fill="none" width="36" height="36"><rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M16 18h16M16 24h10M16 30h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 48 48" fill="none" width="36" height="36">
+        <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="1.5" />
+        <path
+          d="M16 18h16M16 24h10M16 30h8"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+      </svg>
       <p class="empty-text">请选择 BC 查看详情</p>
     </div>
 
@@ -13,7 +21,8 @@
           <span class="bc-id-chip">{{ bcData.id }}</span>
         </div>
         <span :class="['status-badge', getStatusClass(bcData.status)]">
-          <span class="s-dot">{{ getStatusIcon(bcData.status) }}</span>{{ bcData.status }}
+          <span class="s-dot">{{ getStatusIcon(bcData.status) }}</span
+          >{{ bcData.status }}
         </span>
       </div>
 
@@ -36,7 +45,9 @@
             </div>
             <div class="info-item">
               <span class="info-key">广告平台</span>
-              <span class="info-val platform-val" :style="getPlatformStyle(bcData.source)">{{ bcData.source }}</span>
+              <span class="info-val platform-val" :style="getPlatformStyle(bcData.source)">{{
+                bcData.source
+              }}</span>
             </div>
             <div class="info-item">
               <span class="info-key">归属组</span>
@@ -45,12 +56,15 @@
             <div class="info-item">
               <span class="info-key">状态</span>
               <span :class="['status-badge status-badge--sm', getStatusClass(bcData.status)]">
-                <span class="s-dot">{{ getStatusIcon(bcData.status) }}</span>{{ bcData.status }}
+                <span class="s-dot">{{ getStatusIcon(bcData.status) }}</span
+                >{{ bcData.status }}
               </span>
             </div>
             <div class="info-item">
               <span class="info-key">开户主体</span>
-              <span :class="['owner-badge', `owner-badge--${ownerClass(bcData.ownerType)}`]">{{ bcData.ownerType }}</span>
+              <span :class="['owner-badge', `owner-badge--${ownerClass(bcData.ownerType)}`]">{{
+                bcData.ownerType
+              }}</span>
             </div>
             <div class="info-item">
               <span class="info-key">管理员</span>
@@ -58,7 +72,13 @@
             </div>
             <div class="info-item">
               <span class="info-key">封户记录</span>
-              <span :class="['ban-badge', bcData.banRecord === '有' ? 'ban-badge--yes' : 'ban-badge--no']">{{ bcData.banRecord }}</span>
+              <span
+                :class="[
+                  'ban-badge',
+                  bcData.banRecord === '有' ? 'ban-badge--yes' : 'ban-badge--no'
+                ]"
+                >{{ bcData.banRecord }}</span
+              >
             </div>
             <div class="info-item">
               <span class="info-key">创建时间</span>
@@ -82,7 +102,10 @@
             已停用 <strong class="sn sn--muted">{{ bcData.inactiveAccounts }} 个</strong>
           </div>
           <div class="stats-row">
-            本月消耗 <strong class="sn sn--amber">${{ (bcData.monthSpend ?? 0).toLocaleString('en-US') }}</strong>
+            本月消耗
+            <strong class="sn sn--amber"
+              >${{ (bcData.monthSpend ?? 0).toLocaleString('en-US') }}</strong
+            >
           </div>
           <div class="stats-row">
             本月开户 <strong class="sn sn--blue">{{ bcData.monthOpenCount }} 个</strong>
@@ -98,12 +121,19 @@
           <svg class="spend-chart" viewBox="0 0 320 80" preserveAspectRatio="none">
             <defs>
               <linearGradient id="bc-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#0d9488" stop-opacity="0.4"/>
-                <stop offset="100%" stop-color="#0d9488" stop-opacity="0"/>
+                <stop offset="0%" stop-color="#0d9488" stop-opacity="0.4" />
+                <stop offset="100%" stop-color="#0d9488" stop-opacity="0" />
               </linearGradient>
             </defs>
-            <path :d="areaPath" fill="url(#bc-grad)"/>
-            <polyline :points="chartPoints" fill="none" stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path :d="areaPath" fill="url(#bc-grad)" />
+            <polyline
+              :points="chartPoints"
+              fill="none"
+              stroke="#0d9488"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </section>
       </div>
@@ -111,7 +141,9 @@
       <!-- 底部 -->
       <div class="panel-footer">
         <ElButton round class="footer-btn footer-btn--primary">查看关联账户</ElButton>
-        <ElButton round class="footer-btn footer-btn--secondary" @click="emit('edit', bcData)">编辑</ElButton>
+        <ElButton round class="footer-btn footer-btn--secondary" @click="emit('edit', bcData)"
+          >编辑</ElButton
+        >
       </div>
     </template>
   </div>
@@ -166,11 +198,13 @@
   const chartPoints = computed(() => {
     const data = chartData.value
     const max = Math.max(...data, 1)
-    return data.map((v, i) => {
-      const x = (i / (data.length - 1)) * 320
-      const y = 72 - (v / max) * 60
-      return `${x},${y}`
-    }).join(' ')
+    return data
+      .map((v, i) => {
+        const x = (i / (data.length - 1)) * 320
+        const y = 72 - (v / max) * 60
+        return `${x},${y}`
+      })
+      .join(' ')
   })
 
   const areaPath = computed(() => {
@@ -213,7 +247,9 @@
     justify-content: center;
     color: var(--text-muted);
   }
-  .empty-text { font-size: 13px; }
+  .empty-text {
+    font-size: 13px;
+  }
 
   // 头部
   .panel-header {
@@ -257,29 +293,52 @@
     font-size: 12px;
     font-weight: 600;
 
-    &.status--healthy   { color: #22c55e; }
-    &.status--available { color: #3b82f6; }
-    &.status--banned    { color: #f59e0b; }
-    &.status--inactive  { color: #64748b; }
-    &.status--other     { color: #94a3b8; }
+    &.status--healthy {
+      color: #22c55e;
+    }
+    &.status--available {
+      color: #3b82f6;
+    }
+    &.status--banned {
+      color: #f59e0b;
+    }
+    &.status--inactive {
+      color: #64748b;
+    }
+    &.status--other {
+      color: #94a3b8;
+    }
 
-    &--sm { font-size: 12px; font-weight: 500; }
+    &--sm {
+      font-size: 12px;
+      font-weight: 500;
+    }
   }
 
-  .s-dot { font-size: 10px; }
+  .s-dot {
+    font-size: 10px;
+  }
 
   // 正文
   .panel-body {
     flex: 1;
     overflow-y: auto;
-    &::-webkit-scrollbar { width: 3px; }
-    &::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 8%); border-radius: 2px; }
+    &::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgb(255 255 255 / 8%);
+      border-radius: 2px;
+    }
   }
 
   .detail-section {
     padding: 14px 16px;
     border-bottom: 1px solid var(--border);
-    &--last { border-bottom: none; }
+    &--last {
+      border-bottom: none;
+    }
   }
 
   .section-title-row {
@@ -299,7 +358,9 @@
     border-left: 3px solid var(--accent);
   }
 
-  .section-title-row .section-title { margin-bottom: 0; }
+  .section-title-row .section-title {
+    margin-bottom: 0;
+  }
 
   .edit-link {
     padding: 2px 8px;
@@ -310,10 +371,16 @@
     background: rgb(59 130 246 / 10%);
     border: none;
     border-radius: 4px;
-    &:hover { background: rgb(59 130 246 / 20%); }
+    &:hover {
+      background: rgb(59 130 246 / 20%);
+    }
   }
 
-  .info-list { display: flex; flex-direction: column; gap: 8px; }
+  .info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 
   .info-item {
     display: flex;
@@ -334,11 +401,21 @@
     font-size: 13px;
     line-height: 1.8;
     color: var(--text-primary);
-    &--mono { font-family: 'SF Mono', monospace; font-size: 11px; color: var(--text-secondary); }
-    &--remark { color: var(--text-secondary); }
+
+    &--mono {
+      font-family: 'SF Mono', monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    &--remark {
+      color: var(--text-secondary);
+    }
   }
 
-  .platform-val { font-size: 13px; font-weight: 600; }
+  .platform-val {
+    font-size: 13px;
+    font-weight: 600;
+  }
 
   .group-badge {
     display: inline-block;
@@ -354,9 +431,21 @@
     padding: 2px 8px;
     font-size: 11px;
     border-radius: 4px;
-    &--corp     { color: #60a5fa; background: rgb(96 165 250 / 12%); }
-    &--personal { color: #a78bfa; background: rgb(167 139 250 / 12%); }
-    &--small    { color: #34d399; background: rgb(52 211 153 / 12%); }
+
+    &--corp {
+      color: #60a5fa;
+      background: rgb(96 165 250 / 12%);
+    }
+
+    &--personal {
+      color: #a78bfa;
+      background: rgb(167 139 250 / 12%);
+    }
+
+    &--small {
+      color: #34d399;
+      background: rgb(52 211 153 / 12%);
+    }
   }
 
   .ban-badge {
@@ -365,8 +454,16 @@
     font-size: 12px;
     font-weight: 600;
     border-radius: 4px;
-    &--no  { color: #64748b; background: rgb(100 116 139 / 15%); }
-    &--yes { color: #f59e0b; background: rgb(245 158 11 / 15%); }
+
+    &--no {
+      color: #64748b;
+      background: rgb(100 116 139 / 15%);
+    }
+
+    &--yes {
+      color: #f59e0b;
+      background: rgb(245 158 11 / 15%);
+    }
   }
 
   // 账户累计
@@ -378,18 +475,30 @@
     margin-bottom: 6px;
     font-size: 12px;
     color: var(--text-secondary);
-    &:last-child { margin-bottom: 0; }
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 
   .sn {
     font-weight: 600;
-    &--blue  { color: var(--accent); }
-    &--green { color: var(--green); }
-    &--amber { color: var(--amber); }
-    &--muted { color: var(--text-muted); }
+    &--blue {
+      color: var(--accent);
+    }
+    &--green {
+      color: var(--green);
+    }
+    &--amber {
+      color: var(--amber);
+    }
+    &--muted {
+      color: var(--text-muted);
+    }
   }
 
-  .s-sep { color: var(--border); }
+  .s-sep {
+    color: var(--border);
+  }
 
   // 走势图
   .chart-header {
@@ -399,8 +508,15 @@
     margin-bottom: 8px;
   }
 
-  .chart-label { font-size: 11px; color: var(--text-muted); }
-  .chart-range { font-size: 11px; color: var(--teal); }
+  .chart-label {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .chart-range {
+    font-size: 11px;
+    color: var(--teal);
+  }
 
   .spend-chart {
     display: block;
@@ -428,14 +544,20 @@
       color: #fff !important;
       background: var(--teal) !important;
       border: none !important;
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
 
     &--secondary {
       color: var(--text-secondary) !important;
       background: transparent !important;
       border: 1px solid var(--border) !important;
-      &:hover { color: var(--text-primary) !important; border-color: rgb(255 255 255 / 15%) !important; }
+
+      &:hover {
+        color: var(--text-primary) !important;
+        border-color: rgb(255 255 255 / 15%) !important;
+      }
     }
   }
 </style>

@@ -70,9 +70,7 @@
 
       <!-- 输入确认 -->
       <div class="confirm-input-wrap">
-        <div class="confirm-input-label">
-          请输入账户名称确认
-        </div>
+        <div class="confirm-input-label"> 请输入账户名称确认 </div>
         <el-input
           v-model="confirmName"
           :placeholder="accountData?.accountName"
@@ -174,7 +172,9 @@
   .el-dialog:has(.acc-disable-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
 
-    &:hover { color: var(--cm-dialog-text-primary) !important; }
+    &:hover {
+      color: var(--cm-dialog-text-primary) !important;
+    }
   }
 
   .el-dialog:has(.acc-disable-dialog-bd) .el-dialog__body.acc-disable-dialog-bd {
@@ -224,9 +224,20 @@
   }
 
   @keyframes pulse-ring {
-    0% { opacity: 0.8; transform: scale(0.92); }
-    50% { opacity: 0.3; transform: scale(1.04); }
-    100% { opacity: 0.8; transform: scale(0.92); }
+    0% {
+      opacity: 0.8;
+      transform: scale(0.92);
+    }
+
+    50% {
+      opacity: 0.3;
+      transform: scale(1.04);
+    }
+
+    100% {
+      opacity: 0.8;
+      transform: scale(0.92);
+    }
   }
 
   .warning-icon-circle {
@@ -373,15 +384,21 @@
       border-radius: 7px !important;
       box-shadow: none !important;
 
-      &:hover { border-color: rgb(245 158 11 / 40%) !important; }
-      &.is-focus { border-color: #f59e0b !important; }
+      &:hover {
+        border-color: rgb(245 158 11 / 40%) !important;
+      }
+      &.is-focus {
+        border-color: #f59e0b !important;
+      }
     }
 
     :deep(.el-input__inner) {
       font-size: 13px;
       color: #e2e8f0 !important;
 
-      &::placeholder { color: #475569 !important; }
+      &::placeholder {
+        color: #475569 !important;
+      }
     }
   }
 </style>

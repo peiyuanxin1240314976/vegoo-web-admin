@@ -16,8 +16,20 @@
     <div class="delete-icon-wrap">
       <div class="delete-icon-ring">
         <svg viewBox="0 0 48 48" fill="none" width="40" height="40">
-          <circle cx="24" cy="24" r="22" fill="rgb(239 68 68 / 12%)" stroke="#ef4444" stroke-width="1.8" />
-          <path d="M17 17l14 14M31 17L17 31" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" />
+          <circle
+            cx="24"
+            cy="24"
+            r="22"
+            fill="rgb(239 68 68 / 12%)"
+            stroke="#ef4444"
+            stroke-width="1.8"
+          />
+          <path
+            d="M17 17l14 14M31 17L17 31"
+            stroke="#ef4444"
+            stroke-width="2.2"
+            stroke-linecap="round"
+          />
         </svg>
       </div>
     </div>
@@ -83,9 +95,12 @@
 
   const deleting = ref(false)
 
-  watch(() => props.visible, (v) => {
-    if (!v) deleting.value = false
-  })
+  watch(
+    () => props.visible,
+    (v) => {
+      if (!v) deleting.value = false
+    }
+  )
 
   const relatedAccountText = computed(() => {
     if (props.accountData) {
@@ -129,8 +144,12 @@
     .el-dialog__headerbtn {
       top: 12px;
       right: 16px;
-      .el-icon { color: var(--cm-dialog-text-muted) !important; }
-      &:hover .el-icon { color: var(--cm-dialog-text-primary) !important; }
+      .el-icon {
+        color: var(--cm-dialog-text-muted) !important;
+      }
+      &:hover .el-icon {
+        color: var(--cm-dialog-text-primary) !important;
+      }
     }
   }
 
@@ -241,14 +260,20 @@
       color: #94a3b8 !important;
       background: transparent !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
-      &:hover { color: #e2e8f0 !important; border-color: rgb(255 255 255 / 20%) !important; }
+
+      &:hover {
+        color: #e2e8f0 !important;
+        border-color: rgb(255 255 255 / 20%) !important;
+      }
     }
 
     &--delete {
       color: #fff !important;
       background: #ef4444 !important;
       border: none !important;
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
   }
 </style>

@@ -4,8 +4,21 @@
     <div v-if="!agencyData" class="empty-state">
       <div class="empty-icon">
         <svg viewBox="0 0 48 48" fill="none" width="40" height="40">
-          <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M16 18h16M16 24h10M16 30h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <rect
+            x="8"
+            y="8"
+            width="32"
+            height="32"
+            rx="4"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path
+            d="M16 18h16M16 24h10M16 30h8"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
         </svg>
       </div>
       <p class="empty-text">请选择代理商查看详情</p>
@@ -55,7 +68,12 @@
             </div>
             <div class="info-item">
               <span class="info-key">合作模式</span>
-              <span :class="['coop-badge', agencyData.coopMode === '授权代理' ? 'coop-badge--auth' : 'coop-badge--direct']">
+              <span
+                :class="[
+                  'coop-badge',
+                  agencyData.coopMode === '授权代理' ? 'coop-badge--auth' : 'coop-badge--direct'
+                ]"
+              >
                 {{ agencyData.coopMode }}
               </span>
             </div>
@@ -77,9 +95,13 @@
             </div>
             <div class="info-item">
               <span class="info-key">合作到期</span>
-              <span :class="['info-val', isExpiringSoon(agencyData.expireDate) ? 'info-val--warn' : '']">
+              <span
+                :class="['info-val', isExpiringSoon(agencyData.expireDate) ? 'info-val--warn' : '']"
+              >
                 {{ agencyData.expireDate || '--' }}
-                <span v-if="isExpiringSoon(agencyData.expireDate)" class="expire-tag">即将到期</span>
+                <span v-if="isExpiringSoon(agencyData.expireDate)" class="expire-tag"
+                  >即将到期</span
+                >
               </span>
             </div>
             <div v-if="agencyData.remark" class="info-item">
@@ -93,20 +115,28 @@
         <section class="detail-section">
           <div class="stats-row">
             <span class="stat-item">
-              管理账户：<strong class="stat-num stat-num--blue">{{ agencyData.managedAccounts }} 个</strong>
+              管理账户：<strong class="stat-num stat-num--blue"
+                >{{ agencyData.managedAccounts }} 个</strong
+              >
             </span>
             <span class="stat-sep">|</span>
             <span class="stat-item">
-              活跃：<strong class="stat-num stat-num--green">{{ agencyData.activeAccounts }} 个</strong>
+              活跃：<strong class="stat-num stat-num--green"
+                >{{ agencyData.activeAccounts }} 个</strong
+              >
             </span>
             <span class="stat-sep">|</span>
             <span class="stat-item">
-              已停用：<strong class="stat-num stat-num--muted">{{ agencyData.pausedAccounts }} 个</strong>
+              已停用：<strong class="stat-num stat-num--muted"
+                >{{ agencyData.pausedAccounts }} 个</strong
+              >
             </span>
           </div>
           <div class="spend-row">
             <span class="stat-item">
-              本月消耗：<strong class="stat-num stat-num--amber">${{ (agencyData.monthSpend ?? 0).toLocaleString('en-US') }}</strong>
+              本月消耗：<strong class="stat-num stat-num--amber"
+                >${{ (agencyData.monthSpend ?? 0).toLocaleString('en-US') }}</strong
+              >
             </span>
             <span class="stat-sep">|</span>
             <span class="stat-item">
@@ -114,7 +144,13 @@
             </span>
           </div>
           <div class="lifetime-row">
-            合作以来消耗：<strong class="stat-num stat-num--amber">${{ ((agencyData.monthSpend ?? 0) * 9.7).toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</strong>
+            合作以来消耗：<strong class="stat-num stat-num--amber"
+              >${{
+                ((agencyData.monthSpend ?? 0) * 9.7).toLocaleString('en-US', {
+                  maximumFractionDigits: 0
+                })
+              }}</strong
+            >
           </div>
         </section>
 
@@ -125,7 +161,13 @@
             <div v-for="(bm, i) in agencyData.bcBmList" :key="i" class="bcbm-item">
               <span class="bcbm-name bcbm-link">{{ bm.name }}</span>
               <svg viewBox="0 0 12 12" fill="none" width="10" height="10" class="bcbm-ext-icon">
-                <path d="M7 2h3v3M10 2L5.5 6.5M4 3H2v7h7V8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                  d="M7 2h3v3M10 2L5.5 6.5M4 3H2v7h7V8"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </div>
           </div>
@@ -134,7 +176,8 @@
         <!-- 关联账户数 -->
         <section class="detail-section">
           <div class="linked-row">
-            关联账户数 <strong class="stat-num stat-num--blue">{{ agencyData.managedAccounts }}</strong>
+            关联账户数
+            <strong class="stat-num stat-num--blue">{{ agencyData.managedAccounts }}</strong>
             <button class="view-all-btn">查看全部</button>
           </div>
         </section>
@@ -144,13 +187,19 @@
           <svg class="spend-chart" viewBox="0 0 320 80" preserveAspectRatio="none">
             <defs>
               <linearGradient id="ag-panel-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#0d9488" stop-opacity="0.4"/>
-                <stop offset="100%" stop-color="#0d9488" stop-opacity="0"/>
+                <stop offset="0%" stop-color="#0d9488" stop-opacity="0.4" />
+                <stop offset="100%" stop-color="#0d9488" stop-opacity="0" />
               </linearGradient>
             </defs>
-            <path :d="areaPath" fill="url(#ag-panel-grad)"/>
-            <polyline :points="chartPoints" fill="none" stroke="#0d9488" stroke-width="1.8"
-              stroke-linecap="round" stroke-linejoin="round"/>
+            <path :d="areaPath" fill="url(#ag-panel-grad)" />
+            <polyline
+              :points="chartPoints"
+              fill="none"
+              stroke="#0d9488"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </section>
       </div>
@@ -216,11 +265,13 @@
   const chartPoints = computed(() => {
     const data = chartData.value
     const max = Math.max(...data, 1)
-    return data.map((v, i) => {
-      const x = (i / (data.length - 1)) * 320
-      const y = 75 - (v / max) * 65
-      return `${x},${y}`
-    }).join(' ')
+    return data
+      .map((v, i) => {
+        const x = (i / (data.length - 1)) * 320
+        const y = 75 - (v / max) * 65
+        return `${x},${y}`
+      })
+      .join(' ')
   })
 
   const areaPath = computed(() => {
@@ -266,7 +317,9 @@
     color: var(--text-muted);
   }
 
-  .empty-text { font-size: 13px; }
+  .empty-text {
+    font-size: 13px;
+  }
 
   // 头部
   .panel-header {
@@ -307,7 +360,9 @@
     background: rgb(59 130 246 / 10%) !important;
     border: 1px solid rgb(59 130 246 / 25%) !important;
     border-radius: 5px !important;
-    &:hover { background: rgb(59 130 246 / 20%) !important; }
+    &:hover {
+      background: rgb(59 130 246 / 20%) !important;
+    }
   }
 
   .btn-terminate {
@@ -318,10 +373,15 @@
     background: transparent !important;
     border: 1px solid var(--red) !important;
     border-radius: 5px !important;
-    &:hover { background: rgb(239 68 68 / 10%) !important; }
+    &:hover {
+      background: rgb(239 68 68 / 10%) !important;
+    }
   }
 
-  .header-status-row { display: flex; align-items: center; }
+  .header-status-row {
+    display: flex;
+    align-items: center;
+  }
 
   .status-badge {
     display: inline-flex;
@@ -330,9 +390,24 @@
     font-size: 12px;
     font-weight: 500;
 
-    &.status--active { color: var(--green); .status-dot { background: var(--green); } }
-    &.status--pending { color: var(--amber); .status-dot { background: var(--amber); } }
-    &.status--terminated { color: var(--text-muted); .status-dot { background: var(--text-muted); } }
+    &.status--active {
+      color: var(--green);
+      .status-dot {
+        background: var(--green);
+      }
+    }
+    &.status--pending {
+      color: var(--amber);
+      .status-dot {
+        background: var(--amber);
+      }
+    }
+    &.status--terminated {
+      color: var(--text-muted);
+      .status-dot {
+        background: var(--text-muted);
+      }
+    }
   }
 
   .status-dot {
@@ -346,15 +421,25 @@
     flex: 1;
     overflow-y: auto;
 
-    &::-webkit-scrollbar { width: 3px; }
-    &::-webkit-scrollbar-track { background: transparent; }
-    &::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 8%); border-radius: 2px; }
+    &::-webkit-scrollbar {
+      width: 3px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgb(255 255 255 / 8%);
+      border-radius: 2px;
+    }
   }
 
   .detail-section {
     padding: 14px 16px;
     border-bottom: 1px solid var(--border);
-    &--last { border-bottom: none; }
+    &--last {
+      border-bottom: none;
+    }
   }
 
   .section-label {
@@ -397,11 +482,19 @@
     line-height: 1.8;
     color: var(--text-primary);
 
-    &--warn { color: var(--amber); }
-    &--remark { font-weight: 400; color: var(--text-secondary); }
+    &--warn {
+      color: var(--amber);
+    }
+
+    &--remark {
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
   }
 
-  .platform-val { font-weight: 600; }
+  .platform-val {
+    font-weight: 600;
+  }
 
   .expire-tag {
     padding: 1px 6px;
@@ -418,12 +511,22 @@
     padding: 2px 8px;
     font-size: 11px;
     border-radius: 4px;
-    &--auth { color: #818cf8; background: rgb(129 140 248 / 12%); }
-    &--direct { color: #34d399; background: rgb(52 211 153 / 12%); }
+
+    &--auth {
+      color: #818cf8;
+      background: rgb(129 140 248 / 12%);
+    }
+
+    &--direct {
+      color: #34d399;
+      background: rgb(52 211 153 / 12%);
+    }
   }
 
   // 账户统计
-  .stats-row, .spend-row, .lifetime-row {
+  .stats-row,
+  .spend-row,
+  .lifetime-row {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -432,7 +535,9 @@
     font-size: 12px;
     color: var(--text-secondary);
 
-    &:last-child { margin-bottom: 0; }
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 
   .stat-sep {
@@ -441,10 +546,18 @@
 
   .stat-num {
     font-weight: 600;
-    &--blue { color: var(--accent); }
-    &--green { color: var(--green); }
-    &--amber { color: var(--amber); }
-    &--muted { color: var(--text-muted); }
+    &--blue {
+      color: var(--accent);
+    }
+    &--green {
+      color: var(--green);
+    }
+    &--amber {
+      color: var(--amber);
+    }
+    &--muted {
+      color: var(--text-muted);
+    }
   }
 
   // BC/BM
@@ -464,10 +577,14 @@
   .bcbm-link {
     color: var(--accent);
     cursor: pointer;
-    &:hover { text-decoration: underline; }
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
-  .bcbm-ext-icon { color: var(--text-muted); }
+  .bcbm-ext-icon {
+    color: var(--text-muted);
+  }
 
   // 关联账户数
   .linked-row {
@@ -487,7 +604,9 @@
     border: none;
     border-radius: 4px;
     transition: background 0.15s;
-    &:hover { background: rgb(59 130 246 / 20%); }
+    &:hover {
+      background: rgb(59 130 246 / 20%);
+    }
   }
 
   // 走势图
@@ -517,14 +636,20 @@
       color: #fff !important;
       background: var(--teal) !important;
       border: none !important;
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
 
     &--secondary {
       color: var(--text-secondary) !important;
       background: transparent !important;
       border: 1px solid var(--border) !important;
-      &:hover { color: var(--text-primary) !important; border-color: rgb(255 255 255 / 15%) !important; }
+
+      &:hover {
+        color: var(--text-primary) !important;
+        border-color: rgb(255 255 255 / 15%) !important;
+      }
     }
   }
 </style>

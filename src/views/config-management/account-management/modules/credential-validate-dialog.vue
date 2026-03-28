@@ -22,16 +22,32 @@
     <div v-if="validating" class="validating-wrap">
       <div class="validating-spin">
         <svg viewBox="0 0 40 40" width="48" height="48">
-          <circle cx="20" cy="20" r="16" fill="none" stroke="rgb(59 130 246 / 20%)" stroke-width="3" />
           <circle
-            cx="20" cy="20" r="16"
+            cx="20"
+            cy="20"
+            r="16"
+            fill="none"
+            stroke="rgb(59 130 246 / 20%)"
+            stroke-width="3"
+          />
+          <circle
+            cx="20"
+            cy="20"
+            r="16"
             fill="none"
             stroke="#3b82f6"
             stroke-width="3"
             stroke-dasharray="60 40"
             stroke-linecap="round"
           >
-            <animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur="0.9s" repeatCount="indefinite" />
+            <animateTransform
+              attributeName="transform"
+              type="rotate"
+              from="0 20 20"
+              to="360 20 20"
+              dur="0.9s"
+              repeatCount="indefinite"
+            />
           </circle>
         </svg>
       </div>
@@ -40,14 +56,44 @@
 
     <template v-else-if="result">
       <!-- 验证结果图标 -->
-      <div :class="['result-icon-wrap', result.success ? 'result-icon-wrap--ok' : 'result-icon-wrap--fail']">
+      <div
+        :class="[
+          'result-icon-wrap',
+          result.success ? 'result-icon-wrap--ok' : 'result-icon-wrap--fail'
+        ]"
+      >
         <svg v-if="result.success" viewBox="0 0 48 48" fill="none" width="48" height="48">
-          <circle cx="24" cy="24" r="22" fill="rgb(34 197 94 / 15%)" stroke="#22c55e" stroke-width="2" />
-          <path d="M14 24l8 8 12-14" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          <circle
+            cx="24"
+            cy="24"
+            r="22"
+            fill="rgb(34 197 94 / 15%)"
+            stroke="#22c55e"
+            stroke-width="2"
+          />
+          <path
+            d="M14 24l8 8 12-14"
+            stroke="#22c55e"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
         <svg v-else viewBox="0 0 48 48" fill="none" width="48" height="48">
-          <circle cx="24" cy="24" r="22" fill="rgb(248 113 113 / 15%)" stroke="#f87171" stroke-width="2" />
-          <path d="M16 16l16 16M32 16L16 32" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" />
+          <circle
+            cx="24"
+            cy="24"
+            r="22"
+            fill="rgb(248 113 113 / 15%)"
+            stroke="#f87171"
+            stroke-width="2"
+          />
+          <path
+            d="M16 16l16 16M32 16L16 32"
+            stroke="#f87171"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
         </svg>
         <p :class="['result-text', result.success ? 'result-text--ok' : 'result-text--fail']">
           {{ result.success ? '验证成功' : '验证失败' }}
@@ -138,7 +184,10 @@
   watch(
     () => props.visible,
     async (v) => {
-      if (!v) { result.value = null; return }
+      if (!v) {
+        result.value = null
+        return
+      }
       validating.value = true
       result.value = null
       // 模拟验证请求
@@ -173,7 +222,10 @@
   }
 
   const handleClose = () => emit('update:visible', false)
-  const handleConfirm = () => { emit('confirm'); emit('update:visible', false) }
+  const handleConfirm = () => {
+    emit('confirm')
+    emit('update:visible', false)
+  }
 </script>
 
 <!-- 非 scoped -->
@@ -200,7 +252,9 @@
 
   .el-dialog:has(.cred-validate-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
-    &:hover { color: var(--cm-dialog-text-primary) !important; }
+    &:hover {
+      color: var(--cm-dialog-text-primary) !important;
+    }
   }
 
   .el-dialog:has(.cred-validate-dialog-bd) .el-dialog__body.cred-validate-dialog-bd {
@@ -241,7 +295,9 @@
     color: #e2e8f0;
   }
 
-  .chip-sep { color: #334155; }
+  .chip-sep {
+    color: #334155;
+  }
 
   .chip-type {
     font-size: 12px;
@@ -257,7 +313,9 @@
     padding: 24px 0;
   }
 
-  .validating-spin { color: #3b82f6; }
+  .validating-spin {
+    color: #3b82f6;
+  }
 
   .validating-text {
     font-size: 14px;
@@ -277,8 +335,12 @@
     font-size: 18px;
     font-weight: 700;
 
-    &--ok   { color: #22c55e; }
-    &--fail { color: #f87171; }
+    &--ok {
+      color: #22c55e;
+    }
+    &--fail {
+      color: #f87171;
+    }
   }
 
   // ─── 验证详情 ────────────────────────────────────────
@@ -306,10 +368,14 @@
     color: #64748b;
   }
 
-  .info-val { color: #e2e8f0; }
+  .info-val {
+    color: #e2e8f0;
+  }
 
   // ─── 权限列表 ────────────────────────────────────────
-  .perm-section { margin-bottom: 16px; }
+  .perm-section {
+    margin-bottom: 16px;
+  }
 
   .perm-title {
     margin-bottom: 10px;
@@ -335,8 +401,12 @@
     font-size: 13px;
     font-weight: 700;
 
-    &--ok  { color: #22c55e; }
-    &--no  { color: #f87171; }
+    &--ok {
+      color: #22c55e;
+    }
+    &--no {
+      color: #f87171;
+    }
   }
 
   // ─── 可访问账户 ──────────────────────────────────────
@@ -348,7 +418,9 @@
     font-size: 12px;
   }
 
-  .account-access-label { color: #64748b; }
+  .account-access-label {
+    color: #64748b;
+  }
 
   .account-access-count {
     font-weight: 600;
@@ -375,14 +447,20 @@
       color: #94a3b8 !important;
       background: transparent !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
-      &:hover { color: #e2e8f0 !important; border-color: rgb(255 255 255 / 20%) !important; }
+
+      &:hover {
+        color: #e2e8f0 !important;
+        border-color: rgb(255 255 255 / 20%) !important;
+      }
     }
 
     &--confirm {
       color: #fff !important;
       background: #3b82f6 !important;
       border: none !important;
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
   }
 </style>

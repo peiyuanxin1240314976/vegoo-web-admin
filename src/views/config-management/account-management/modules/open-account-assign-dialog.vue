@@ -11,11 +11,19 @@
     <!-- 开户记录信息卡 -->
     <div class="record-card">
       <div class="record-card-top">
-        <span class="record-platform-icon" :style="{ color: getPlatformColor(data?.source ?? ''), background: getPlatformBg(data?.source ?? '') }">
+        <span
+          class="record-platform-icon"
+          :style="{
+            color: getPlatformColor(data?.source ?? ''),
+            background: getPlatformBg(data?.source ?? '')
+          }"
+        >
           {{ getPlatformShort(data?.source ?? '') }}
         </span>
         <span class="record-id">{{ data?.id }}</span>
-        <span class="record-meta">{{ data?.app }} {{ data?.platform }} {{ data?.accountType }}</span>
+        <span class="record-meta"
+          >{{ data?.app }} {{ data?.platform }} {{ data?.accountType }}</span
+        >
         <span class="record-agency">{{ data?.agency }}</span>
       </div>
       <div v-if="data?.adAccountId" class="record-account-info">
@@ -38,12 +46,7 @@
       class="cred-select"
       popper-class="cred-select-dropdown"
     >
-      <el-option
-        v-for="c in credentialList"
-        :key="c.name"
-        :label="c.name"
-        :value="c.name"
-      >
+      <el-option v-for="c in credentialList" :key="c.name" :label="c.name" :value="c.name">
         <div class="cred-option">
           <span class="cred-option-icon" :style="{ color: getPlatformColor(c.source) }">
             {{ getPlatformShort(c.source) }}
@@ -69,7 +72,14 @@
       </div>
       <div class="cred-detail-row">
         <span class="cred-detail-key">验证状态</span>
-        <span :class="['cred-validate-status', selectedCredInfo.status === '验证正常' ? 'cred-validate-status--ok' : 'cred-validate-status--fail']">
+        <span
+          :class="[
+            'cred-validate-status',
+            selectedCredInfo.status === '验证正常'
+              ? 'cred-validate-status--ok'
+              : 'cred-validate-status--fail'
+          ]"
+        >
           <span class="cred-validate-dot" />{{ selectedCredInfo.status }}
         </span>
       </div>
@@ -82,15 +92,14 @@
     <!-- 提示信息 -->
     <div v-if="selectedCredInfo" class="assign-hint">
       <svg viewBox="0 0 16 16" fill="none" width="14" height="14" class="hint-icon">
-        <circle cx="8" cy="8" r="7" stroke="#3b82f6" stroke-width="1.4"/>
-        <path d="M8 7v4M8 5v.5" stroke="#3b82f6" stroke-width="1.4" stroke-linecap="round"/>
+        <circle cx="8" cy="8" r="7" stroke="#3b82f6" stroke-width="1.4" />
+        <path d="M8 7v4M8 5v.5" stroke="#3b82f6" stroke-width="1.4" stroke-linecap="round" />
       </svg>
-      分配后该广告账户将可通过 <strong>{{ selectedCred }}</strong> 凭据进行API调用，状态将变更为「已激活」
+      分配后该广告账户将可通过
+      <strong>{{ selectedCred }}</strong> 凭据进行API调用，状态将变更为「已激活」
     </div>
 
-    <div class="feishu-tip">
-      <span class="feishu-tip-dot" />分配完成后自动推送飞书通知
-    </div>
+    <div class="feishu-tip"> <span class="feishu-tip-dot" />分配完成后自动推送飞书通知 </div>
 
     <template #footer>
       <ElButton round class="dialog-btn dialog-btn--cancel" @click="handleCancel">取消</ElButton>
@@ -130,17 +139,26 @@
   const submitting = ref(false)
   const credentialList = cloneCredentialMockList().filter((c) => c.status === '验证正常')
 
-  watch(() => props.visible, (v) => {
-    if (v) selectedCred.value = ''
-  })
-
-  const selectedCredInfo = computed(() =>
-    credentialList.find((c) => c.name === selectedCred.value) ?? null
+  watch(
+    () => props.visible,
+    (v) => {
+      if (v) selectedCred.value = ''
+    }
   )
 
-  function getPlatformColor(s: string) { return PLATFORM_CONFIGS.find((p) => p.value === s)?.color ?? '#94a3b8' }
-  function getPlatformBg(s: string)    { return PLATFORM_CONFIGS.find((p) => p.value === s)?.bg    ?? 'rgb(148 163 184 / 12%)' }
-  function getPlatformShort(s: string) { return PLATFORM_CONFIGS.find((p) => p.value === s)?.shortLabel ?? s[0] }
+  const selectedCredInfo = computed(
+    () => credentialList.find((c) => c.name === selectedCred.value) ?? null
+  )
+
+  function getPlatformColor(s: string) {
+    return PLATFORM_CONFIGS.find((p) => p.value === s)?.color ?? '#94a3b8'
+  }
+  function getPlatformBg(s: string) {
+    return PLATFORM_CONFIGS.find((p) => p.value === s)?.bg ?? 'rgb(148 163 184 / 12%)'
+  }
+  function getPlatformShort(s: string) {
+    return PLATFORM_CONFIGS.find((p) => p.value === s)?.shortLabel ?? s[0]
+  }
 
   const handleCancel = () => emit('update:visible', false)
   const handleConfirm = async () => {
@@ -171,13 +189,16 @@
   }
 
   .el-dialog:has(.oa-assign-dialog-bd) .el-dialog__title {
-    font-size: 15px; font-weight: 600;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--cm-dialog-text-primary) !important;
   }
 
   .el-dialog:has(.oa-assign-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
-    &:hover { color: var(--cm-dialog-text-primary) !important; }
+    &:hover {
+      color: var(--cm-dialog-text-primary) !important;
+    }
   }
 
   .el-dialog:has(.oa-assign-dialog-bd) .el-dialog__body.oa-assign-dialog-bd {
@@ -205,48 +226,72 @@
   }
 
   .record-card-top {
-    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
     margin-bottom: 10px;
   }
 
   .record-platform-icon {
-    display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center;
-    width: 28px; height: 28px;
-    font-size: 11px; font-weight: 700;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+    font-weight: 700;
     border-radius: 6px;
   }
 
   .record-id {
     font-family: 'SF Mono', monospace;
-    font-size: 15px; font-weight: 700; color: #e2e8f0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #e2e8f0;
   }
 
   .record-meta {
-    font-size: 13px; color: #94a3b8;
+    font-size: 13px;
+    color: #94a3b8;
   }
 
-  .record-agency { margin-left: auto;
-    font-size: 13px; color: #22d3ee;
+  .record-agency {
+    margin-left: auto;
+    font-size: 13px;
+    color: #22d3ee;
   }
 
   .record-account-info {
-    display: flex; flex-direction: column; gap: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     padding-top: 10px;
     border-top: 1px solid rgb(255 255 255 / 6%);
   }
 
   .record-account-item {
-    display: flex; gap: 12px; align-items: center;
+    display: flex;
+    gap: 12px;
+    align-items: center;
     font-size: 13px;
   }
 
-  .record-account-key { flex-shrink: 0; width: 80px; color: #64748b; }
-  .record-account-val { color: #e2e8f0; }
+  .record-account-key {
+    flex-shrink: 0;
+    width: 80px;
+    color: #64748b;
+  }
+  .record-account-val {
+    color: #e2e8f0;
+  }
 
   // ─── 凭据选择 ────────────────────────────────────────
   .select-cred-label {
     margin-bottom: 8px;
-    font-size: 13px; color: #94a3b8;
+    font-size: 13px;
+    color: #94a3b8;
   }
 
   .cred-select {
@@ -256,28 +301,40 @@
     :deep(.el-select__wrapper) {
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
-      border-radius: 8px; box-shadow: none !important;
-      &:focus-within { border-color: #0d9488 !important; }
+      border-radius: 8px;
+      box-shadow: none !important;
+      &:focus-within {
+        border-color: #0d9488 !important;
+      }
     }
 
     :deep(.el-select__placeholder) {
-      font-size: 13px; color: #64748b;
+      font-size: 13px;
+      color: #64748b;
     }
   }
 
   .cred-option {
-    display: flex; gap: 8px; align-items: center;
+    display: flex;
+    gap: 8px;
+    align-items: center;
   }
 
   .cred-option-icon {
-    font-size: 11px; font-weight: 700;
+    font-size: 11px;
+    font-weight: 700;
   }
 
-  .cred-option-name { font-size: 13px; color: #e2e8f0; }
+  .cred-option-name {
+    font-size: 13px;
+    color: #e2e8f0;
+  }
 
   // ─── 凭据详情卡 ──────────────────────────────────────
   .cred-detail-card {
-    display: flex; flex-direction: column; gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     padding: 12px 16px;
     margin-bottom: 12px;
     background: rgb(255 255 255 / 3%);
@@ -286,45 +343,85 @@
   }
 
   .cred-detail-row {
-    display: flex; gap: 16px; align-items: center; font-size: 13px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 13px;
   }
 
-  .cred-detail-key { flex-shrink: 0; width: 72px; color: #64748b; }
-  .cred-detail-val { color: #e2e8f0; }
+  .cred-detail-key {
+    flex-shrink: 0;
+    width: 72px;
+    color: #64748b;
+  }
+  .cred-detail-val {
+    color: #e2e8f0;
+  }
 
   .cred-validate-status {
-    display: inline-flex; gap: 5px; align-items: center; font-size: 12px;
-    &--ok { color: #22c55e; .cred-validate-dot { background: #22c55e; } }
-    &--fail { color: #f87171; .cred-validate-dot { background: #f87171; } }
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    font-size: 12px;
+    &--ok {
+      color: #22c55e;
+      .cred-validate-dot {
+        background: #22c55e;
+      }
+    }
+    &--fail {
+      color: #f87171;
+      .cred-validate-dot {
+        background: #f87171;
+      }
+    }
   }
 
   .cred-validate-dot {
-    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
   }
 
   // ─── 提示 ────────────────────────────────────────────
   .assign-hint {
-    display: flex; gap: 8px; align-items: flex-start;
-    padding: 10px 14px; margin-bottom: 10px;
-    font-size: 13px; color: #93c5fd;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #93c5fd;
     background: rgb(59 130 246 / 8%);
     border: 1px solid rgb(59 130 246 / 20%);
     border-radius: 8px;
 
-    strong { color: #60a5fa; }
+    strong {
+      color: #60a5fa;
+    }
   }
 
-  .hint-icon { flex-shrink: 0; margin-top: 1px; }
+  .hint-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
 
   .feishu-tip {
-    display: flex; gap: 6px; align-items: center;
+    display: flex;
+    gap: 6px;
+    align-items: center;
     margin-bottom: 4px;
-    font-size: 12px; color: #22c55e;
+    font-size: 12px;
+    color: #22c55e;
   }
 
-  .feishu-tip-dot { flex-shrink: 0;
-    width: 6px; height: 6px;
-    background: #22c55e; border-radius: 50%;
+  .feishu-tip-dot {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    background: #22c55e;
+    border-radius: 50%;
   }
 
   // ─── 底部按钮 ────────────────────────────────────────
@@ -332,15 +429,26 @@
     border-radius: 8px !important;
 
     &--cancel {
-      color: #94a3b8 !important; background: transparent !important;
+      color: #94a3b8 !important;
+      background: transparent !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
-      &:hover { color: #e2e8f0 !important; }
+      &:hover {
+        color: #e2e8f0 !important;
+      }
     }
 
     &--confirm {
-      color: #fff !important; background: #0d9488 !important; border: none !important;
-      &:not(.is-disabled):hover { filter: brightness(1.1); }
-      &.is-disabled { cursor: not-allowed !important; opacity: 0.4 !important; }
+      color: #fff !important;
+      background: #0d9488 !important;
+      border: none !important;
+      &:not(.is-disabled):hover {
+        filter: brightness(1.1);
+      }
+
+      &.is-disabled {
+        cursor: not-allowed !important;
+        opacity: 0.4 !important;
+      }
     }
   }
 </style>

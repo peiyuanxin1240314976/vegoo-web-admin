@@ -39,23 +39,43 @@
 
       <!-- 代理商名称 -->
       <el-form-item label="代理商名称" prop="agencyName">
-        <el-input v-model="form.agencyName" placeholder="请输入代理商名称" class="form-input" clearable />
+        <el-input
+          v-model="form.agencyName"
+          placeholder="请输入代理商名称"
+          class="form-input"
+          clearable
+        />
       </el-form-item>
 
       <!-- 联系人 + 联系邮箱 -->
       <div class="form-row">
         <el-form-item label="联系人" prop="contact" class="form-col">
-          <el-input v-model="form.contact" placeholder="请输入联系人" class="form-input" clearable />
+          <el-input
+            v-model="form.contact"
+            placeholder="请输入联系人"
+            class="form-input"
+            clearable
+          />
         </el-form-item>
         <el-form-item label="联系邮箱" prop="email" class="form-col">
-          <el-input v-model="form.email" placeholder="请输入联系邮箱" class="form-input" clearable />
+          <el-input
+            v-model="form.email"
+            placeholder="请输入联系邮箱"
+            class="form-input"
+            clearable
+          />
         </el-form-item>
       </div>
 
       <!-- 联系电话 + 广告平台账号 -->
       <div class="form-row">
         <el-form-item label="联系电话" class="form-col">
-          <el-input v-model="form.phone" placeholder="请输入联系电话" class="form-input" clearable />
+          <el-input
+            v-model="form.phone"
+            placeholder="请输入联系电话"
+            class="form-input"
+            clearable
+          />
         </el-form-item>
         <el-form-item label="广告平台账号" class="form-col">
           <el-input
@@ -164,27 +184,30 @@
   const formRef = ref<FormInstance>()
   const submitting = ref(false)
 
-  watch(() => props.visible, (v) => {
-    if (v) {
-      if (props.editData) {
-        form.value = {
-          agencyName: props.editData.agencyName,
-          source: props.editData.source,
-          coopMode: props.editData.coopMode,
-          contact: props.editData.contact,
-          email: props.editData.email,
-          phone: props.editData.phone,
-          agencyAccount: (props.editData as any).agencyAccount ?? '',
-          startDate: props.editData.startDate,
-          expireDate: props.editData.expireDate,
-          remark: props.editData.remark
+  watch(
+    () => props.visible,
+    (v) => {
+      if (v) {
+        if (props.editData) {
+          form.value = {
+            agencyName: props.editData.agencyName,
+            source: props.editData.source,
+            coopMode: props.editData.coopMode,
+            contact: props.editData.contact,
+            email: props.editData.email,
+            phone: props.editData.phone,
+            agencyAccount: (props.editData as any).agencyAccount ?? '',
+            startDate: props.editData.startDate,
+            expireDate: props.editData.expireDate,
+            remark: props.editData.remark
+          }
+        } else {
+          form.value = defaultForm()
         }
-      } else {
-        form.value = defaultForm()
+        formRef.value?.clearValidate()
       }
-      formRef.value?.clearValidate()
     }
-  })
+  )
 
   const rules: FormRules = {
     agencyName: [{ required: true, message: '请输入代理商名称', trigger: 'blur' }],
@@ -246,7 +269,9 @@
 
   .el-dialog:has(.agency-form-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
-    &:hover { color: var(--cm-dialog-text-primary) !important; }
+    &:hover {
+      color: var(--cm-dialog-text-primary) !important;
+    }
   }
 
   .el-dialog:has(.agency-form-dialog-bd) .el-dialog__body.agency-form-dialog-bd {
@@ -300,8 +325,12 @@
       box-shadow: none !important;
       transition: border-color 0.18s;
 
-      &:hover { border-color: rgb(255 255 255 / 18%) !important; }
-      &:focus-within { border-color: #3b82f6 !important; }
+      &:hover {
+        border-color: rgb(255 255 255 / 18%) !important;
+      }
+      &:focus-within {
+        border-color: #3b82f6 !important;
+      }
     }
 
     :deep(.el-input__inner),
@@ -309,12 +338,16 @@
     :deep(.el-select__selected-item) {
       font-size: 13px;
       color: #e2e8f0;
-      &::placeholder { color: #475569; }
+      &::placeholder {
+        color: #475569;
+      }
     }
   }
 
   .form-datepicker {
-    :deep(.el-input__suffix) { color: #64748b; }
+    :deep(.el-input__suffix) {
+      color: #64748b;
+    }
 
     &.datepicker--warn :deep(.el-input__inner) {
       color: #f59e0b !important;
@@ -330,9 +363,15 @@
       border-radius: 7px;
       box-shadow: none;
       transition: border-color 0.18s;
-      &:hover { border-color: rgb(255 255 255 / 18%); }
-      &:focus { border-color: #3b82f6; }
-      &::placeholder { color: #475569; }
+      &:hover {
+        border-color: rgb(255 255 255 / 18%);
+      }
+      &:focus {
+        border-color: #3b82f6;
+      }
+      &::placeholder {
+        color: #475569;
+      }
     }
   }
 
@@ -359,14 +398,20 @@
       color: #94a3b8 !important;
       background: transparent !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
-      &:hover { color: #e2e8f0 !important; border-color: rgb(255 255 255 / 20%) !important; }
+
+      &:hover {
+        color: #e2e8f0 !important;
+        border-color: rgb(255 255 255 / 20%) !important;
+      }
     }
 
     &--submit {
       color: #fff !important;
       background: #0d9488 !important;
       border: none !important;
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
   }
 </style>

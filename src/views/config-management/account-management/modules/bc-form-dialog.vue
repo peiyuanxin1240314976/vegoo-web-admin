@@ -9,15 +9,22 @@
     footer-class="bc-form-dialog-ft"
   >
     <el-form ref="formRef" :model="form" :rules="rules" class="bc-form">
-
       <!-- 广告平台 -->
       <div class="form-item" :class="{ 'is-error': errors.source }">
         <label class="form-label"><span class="req">*</span>广告平台</label>
         <div class="form-control">
-          <el-select v-if="!isEdit" v-model="form.source" placeholder="请选择广告平台" class="form-select" @change="errors.source = ''">
+          <el-select
+            v-if="!isEdit"
+            v-model="form.source"
+            placeholder="请选择广告平台"
+            class="form-select"
+            @change="errors.source = ''"
+          >
             <el-option v-for="p in bcPlatforms" :key="p.value" :label="p.label" :value="p.value" />
           </el-select>
-          <div v-else class="readonly-field" :style="getPlatformStyle(form.source)">{{ form.source }}</div>
+          <div v-else class="readonly-field" :style="getPlatformStyle(form.source)">{{
+            form.source
+          }}</div>
           <div v-if="errors.source" class="err-msg">{{ errors.source }}</div>
         </div>
       </div>
@@ -43,7 +50,13 @@
       <div class="form-item" :class="{ 'is-error': errors.bmName }">
         <label class="form-label"><span class="req">*</span>BM名称</label>
         <div class="form-control">
-          <el-input v-model="form.bmName" placeholder="请输入BM名称" class="form-input" clearable @input="errors.bmName = ''" />
+          <el-input
+            v-model="form.bmName"
+            placeholder="请输入BM名称"
+            class="form-input"
+            clearable
+            @input="errors.bmName = ''"
+          />
           <div v-if="errors.bmName" class="err-msg">{{ errors.bmName }}</div>
         </div>
       </div>
@@ -52,7 +65,12 @@
       <div class="form-item" :class="{ 'is-error': errors.group }">
         <label class="form-label"><span class="req">*</span>归属组</label>
         <div class="form-control">
-          <el-select v-model="form.group" placeholder="请选择归属组" class="form-select" @change="errors.group = ''">
+          <el-select
+            v-model="form.group"
+            placeholder="请选择归属组"
+            class="form-select"
+            @change="errors.group = ''"
+          >
             <el-option v-for="g in groupOptions" :key="g" :label="g" :value="g" />
           </el-select>
           <div v-if="errors.group" class="err-msg">{{ errors.group }}</div>
@@ -75,7 +93,10 @@
         <div class="form-control">
           <div class="radio-row">
             <label v-for="o in ownerOptions" :key="o" class="radio-item">
-              <span :class="['radio-dot', { 'radio-dot--checked': form.ownerType === o }]" @click="form.ownerType = o" />
+              <span
+                :class="['radio-dot', { 'radio-dot--checked': form.ownerType === o }]"
+                @click="form.ownerType = o"
+              />
               <span class="radio-label" @click="form.ownerType = o">{{ o }}</span>
             </label>
           </div>
@@ -86,7 +107,12 @@
       <div class="form-item" :class="{ 'is-error': errors.manager }">
         <label class="form-label"><span class="req">*</span>管理员</label>
         <div class="form-control">
-          <el-select v-model="form.manager" placeholder="请选择管理员" class="form-select" @change="errors.manager = ''">
+          <el-select
+            v-model="form.manager"
+            placeholder="请选择管理员"
+            class="form-select"
+            @change="errors.manager = ''"
+          >
             <el-option v-for="m in managerOptions" :key="m" :label="m" :value="m" />
           </el-select>
           <div v-if="errors.manager" class="err-msg">{{ errors.manager }}</div>
@@ -99,11 +125,17 @@
         <div class="form-control">
           <div class="radio-row">
             <label class="radio-item">
-              <span :class="['radio-dot', { 'radio-dot--checked': form.banRecord === '无' }]" @click="form.banRecord = '无'" />
+              <span
+                :class="['radio-dot', { 'radio-dot--checked': form.banRecord === '无' }]"
+                @click="form.banRecord = '无'"
+              />
               <span class="radio-label" @click="form.banRecord = '无'">无</span>
             </label>
             <label class="radio-item">
-              <span :class="['radio-dot', { 'radio-dot--checked': form.banRecord === '有' }]" @click="form.banRecord = '有'" />
+              <span
+                :class="['radio-dot', { 'radio-dot--checked': form.banRecord === '有' }]"
+                @click="form.banRecord = '有'"
+              />
               <span class="radio-label" @click="form.banRecord = '有'">有</span>
             </label>
           </div>
@@ -114,7 +146,14 @@
       <div v-if="form.banRecord === '有'" class="form-item form-item--nostar">
         <label class="form-label">封户记录说明</label>
         <div class="form-control">
-          <el-input v-model="form.banDesc" type="textarea" placeholder="请输入封户记录说明" :rows="2" class="form-textarea" resize="none" />
+          <el-input
+            v-model="form.banDesc"
+            type="textarea"
+            placeholder="请输入封户记录说明"
+            :rows="2"
+            class="form-textarea"
+            resize="none"
+          />
         </div>
       </div>
 
@@ -122,15 +161,26 @@
       <div class="form-item form-item--nostar">
         <label class="form-label">备注</label>
         <div class="form-control">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入备注信息" :rows="3" class="form-textarea" resize="none" />
+          <el-input
+            v-model="form.remark"
+            type="textarea"
+            placeholder="请输入备注信息"
+            :rows="3"
+            class="form-textarea"
+            resize="none"
+          />
         </div>
       </div>
-
     </el-form>
 
     <template #footer>
       <ElButton round class="dialog-btn dialog-btn--cancel" @click="handleCancel">取消</ElButton>
-      <ElButton round class="dialog-btn dialog-btn--submit" :loading="submitting" @click="handleSubmit">
+      <ElButton
+        round
+        class="dialog-btn dialog-btn--submit"
+        :loading="submitting"
+        @click="handleSubmit"
+      >
         {{ isEdit ? '保存' : '保存' }}
       </ElButton>
     </template>
@@ -187,27 +237,30 @@
   const submitting = ref(false)
   const errors = reactive({ source: '', bmId: '', bmName: '', group: '', manager: '' })
 
-  watch(() => props.visible, (v) => {
-    if (v) {
-      if (props.editData) {
-        form.value = {
-          source: props.editData.source,
-          bmId: props.editData.bmId,
-          bmName: props.editData.bmName,
-          group: props.editData.group,
-          status: props.editData.status,
-          ownerType: props.editData.ownerType,
-          manager: props.editData.manager,
-          banRecord: props.editData.banRecord,
-          banDesc: props.editData.banDesc,
-          remark: props.editData.remark
+  watch(
+    () => props.visible,
+    (v) => {
+      if (v) {
+        if (props.editData) {
+          form.value = {
+            source: props.editData.source,
+            bmId: props.editData.bmId,
+            bmName: props.editData.bmName,
+            group: props.editData.group,
+            status: props.editData.status,
+            ownerType: props.editData.ownerType,
+            manager: props.editData.manager,
+            banRecord: props.editData.banRecord,
+            banDesc: props.editData.banDesc,
+            remark: props.editData.remark
+          }
+        } else {
+          form.value = defaultForm()
         }
-      } else {
-        form.value = defaultForm()
+        Object.assign(errors, { source: '', bmId: '', bmName: '', group: '', manager: '' })
       }
-      Object.assign(errors, { source: '', bmId: '', bmName: '', group: '', manager: '' })
     }
-  })
+  )
 
   const rules = {}
 
@@ -221,11 +274,26 @@
   const handleSubmit = async () => {
     // 简单校验
     let valid = true
-    if (!isEdit.value && !form.value.source) { errors.source = '请选择广告平台'; valid = false }
-    if (!isEdit.value && !form.value.bmId.trim()) { errors.bmId = '请输入BM ID'; valid = false }
-    if (!form.value.bmName.trim()) { errors.bmName = '请输入BM名称'; valid = false }
-    if (!form.value.group) { errors.group = '请选择归属组'; valid = false }
-    if (!form.value.manager) { errors.manager = '请选择管理员'; valid = false }
+    if (!isEdit.value && !form.value.source) {
+      errors.source = '请选择广告平台'
+      valid = false
+    }
+    if (!isEdit.value && !form.value.bmId.trim()) {
+      errors.bmId = '请输入BM ID'
+      valid = false
+    }
+    if (!form.value.bmName.trim()) {
+      errors.bmName = '请输入BM名称'
+      valid = false
+    }
+    if (!form.value.group) {
+      errors.group = '请选择归属组'
+      valid = false
+    }
+    if (!form.value.manager) {
+      errors.manager = '请选择管理员'
+      valid = false
+    }
     if (!valid) return
 
     submitting.value = true
@@ -262,7 +330,9 @@
 
   .el-dialog:has(.bc-form-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
-    &:hover { color: var(--cm-dialog-text-primary) !important; }
+    &:hover {
+      color: var(--cm-dialog-text-primary) !important;
+    }
   }
 
   .el-dialog:has(.bc-form-dialog-bd) .el-dialog__body.bc-form-dialog-bd {
@@ -280,7 +350,11 @@
 </style>
 
 <style lang="scss" scoped>
-  .bc-form { display: flex; flex-direction: column; gap: 0; }
+  .bc-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
 
   .form-item {
     display: flex;
@@ -289,8 +363,12 @@
     padding: 9px 0;
     border-bottom: 1px solid rgb(255 255 255 / 4%);
 
-    &:last-child { border-bottom: none; }
-    &.is-error .form-label { color: #f87171; }
+    &:last-child {
+      border-bottom: none;
+    }
+    &.is-error .form-label {
+      color: #f87171;
+    }
   }
 
   .form-label {
@@ -324,8 +402,12 @@
       border-radius: 6px;
       box-shadow: none !important;
       transition: border-color 0.15s;
-      &:hover { border-color: rgb(255 255 255 / 18%) !important; }
-      &:focus-within { border-color: #3b82f6 !important; }
+      &:hover {
+        border-color: rgb(255 255 255 / 18%) !important;
+      }
+      &:focus-within {
+        border-color: #3b82f6 !important;
+      }
     }
 
     :deep(.el-input__inner),
@@ -333,7 +415,9 @@
     :deep(.el-select__selected-item) {
       font-size: 13px;
       color: #e2e8f0;
-      &::placeholder { color: #475569; }
+      &::placeholder {
+        color: #475569;
+      }
     }
   }
 
@@ -346,9 +430,15 @@
       border-radius: 6px;
       box-shadow: none;
       transition: border-color 0.15s;
-      &:hover { border-color: rgb(255 255 255 / 18%); }
-      &:focus { border-color: #3b82f6; }
-      &::placeholder { color: #475569; }
+      &:hover {
+        border-color: rgb(255 255 255 / 18%);
+      }
+      &:focus {
+        border-color: #3b82f6;
+      }
+      &::placeholder {
+        color: #475569;
+      }
     }
   }
 
@@ -424,14 +514,20 @@
       color: #94a3b8 !important;
       background: transparent !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
-      &:hover { color: #e2e8f0 !important; border-color: rgb(255 255 255 / 20%) !important; }
+
+      &:hover {
+        color: #e2e8f0 !important;
+        border-color: rgb(255 255 255 / 20%) !important;
+      }
     }
 
     &--submit {
       color: #fff !important;
       background: #0d9488 !important;
       border: none !important;
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
   }
 </style>

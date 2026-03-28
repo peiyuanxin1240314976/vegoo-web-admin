@@ -15,7 +15,12 @@
       <div class="form-item" :class="{ 'is-error': errors.source }">
         <label class="form-label"><span class="req">*</span>广告平台</label>
         <div class="form-control">
-          <el-select v-model="form.source" placeholder="请选择广告平台" class="form-select" @change="errors.source = ''">
+          <el-select
+            v-model="form.source"
+            placeholder="请选择广告平台"
+            class="form-select"
+            @change="errors.source = ''"
+          >
             <el-option
               v-for="p in PLATFORM_CONFIGS"
               :key="p.value"
@@ -23,7 +28,9 @@
               :value="p.value"
             >
               <span class="opt-platform">
-                <span :style="{ color: p.color, fontWeight: 700, fontSize: '12px' }">{{ p.shortLabel }}</span>
+                <span :style="{ color: p.color, fontWeight: 700, fontSize: '12px' }">{{
+                  p.shortLabel
+                }}</span>
                 {{ p.label }}
               </span>
             </el-option>
@@ -36,7 +43,12 @@
       <div class="form-item" :class="{ 'is-error': errors.app }">
         <label class="form-label"><span class="req">*</span>应用</label>
         <div class="form-control">
-          <el-select v-model="form.app" placeholder="请选择应用" class="form-select" @change="errors.app = ''">
+          <el-select
+            v-model="form.app"
+            placeholder="请选择应用"
+            class="form-select"
+            @change="errors.app = ''"
+          >
             <el-option v-for="a in appOptions" :key="a" :label="a" :value="a" />
           </el-select>
           <div v-if="errors.app" class="err-msg">{{ errors.app }}</div>
@@ -49,7 +61,10 @@
         <div class="form-control">
           <div class="radio-row">
             <label v-for="p in platformOptions" :key="p" class="radio-item">
-              <span :class="['radio-dot', { 'radio-dot--checked': form.platform === p }]" @click="form.platform = p" />
+              <span
+                :class="['radio-dot', { 'radio-dot--checked': form.platform === p }]"
+                @click="form.platform = p"
+              />
               <span class="radio-label" @click="form.platform = p">{{ p }}</span>
             </label>
           </div>
@@ -62,7 +77,10 @@
         <div class="form-control">
           <div class="radio-row">
             <label v-for="t in accountTypeOptions" :key="t" class="radio-item">
-              <span :class="['radio-dot', { 'radio-dot--checked': form.accountType === t }]" @click="form.accountType = t" />
+              <span
+                :class="['radio-dot', { 'radio-dot--checked': form.accountType === t }]"
+                @click="form.accountType = t"
+              />
               <span class="radio-label" @click="form.accountType = t">{{ t }}</span>
             </label>
           </div>
@@ -73,7 +91,12 @@
       <div class="form-item" :class="{ 'is-error': errors.agency }">
         <label class="form-label"><span class="req">*</span>归属代理商</label>
         <div class="form-control">
-          <el-select v-model="form.agency" placeholder="请选择代理商" class="form-select" @change="errors.agency = ''">
+          <el-select
+            v-model="form.agency"
+            placeholder="请选择代理商"
+            class="form-select"
+            @change="errors.agency = ''"
+          >
             <el-option v-for="a in agencyOptions" :key="a" :label="a" :value="a" />
           </el-select>
           <div v-if="errors.agency" class="err-msg">{{ errors.agency }}</div>
@@ -94,7 +117,13 @@
       <div class="form-item" :class="{ 'is-error': errors.applicant }">
         <label class="form-label"><span class="req">*</span>申请人</label>
         <div class="form-control">
-          <el-input v-model="form.applicant" placeholder="申请人姓名" class="form-input" clearable @input="errors.applicant = ''" />
+          <el-input
+            v-model="form.applicant"
+            placeholder="申请人姓名"
+            class="form-input"
+            clearable
+            @input="errors.applicant = ''"
+          />
           <div v-if="errors.applicant" class="err-msg">{{ errors.applicant }}</div>
         </div>
       </div>
@@ -109,7 +138,12 @@
       <div class="form-item form-item--nostar">
         <label class="form-label">账户ID</label>
         <div class="form-control">
-          <el-input v-model="form.adAccountId" placeholder="平台分配的账户ID" class="form-input" clearable />
+          <el-input
+            v-model="form.adAccountId"
+            placeholder="平台分配的账户ID"
+            class="form-input"
+            clearable
+          />
         </div>
       </div>
 
@@ -117,7 +151,12 @@
       <div class="form-item form-item--nostar">
         <label class="form-label">账户名称</label>
         <div class="form-control">
-          <el-input v-model="form.adAccountName" placeholder="账户名称" class="form-input" clearable />
+          <el-input
+            v-model="form.adAccountName"
+            placeholder="账户名称"
+            class="form-input"
+            clearable
+          />
         </div>
       </div>
 
@@ -135,7 +174,14 @@
       <div class="form-item form-item--nostar">
         <label class="form-label">备注</label>
         <div class="form-control">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入备注信息" :rows="2" class="form-textarea" resize="none" />
+          <el-input
+            v-model="form.remark"
+            type="textarea"
+            placeholder="请输入备注信息"
+            :rows="2"
+            class="form-textarea"
+            resize="none"
+          />
         </div>
       </div>
     </div>
@@ -144,8 +190,16 @@
       <div class="dialog-footer">
         <span class="footer-tip">保存后自动推送飞书通知到广告账户群</span>
         <div class="footer-btns">
-          <ElButton round class="dialog-btn dialog-btn--cancel" @click="handleCancel">取消</ElButton>
-          <ElButton round class="dialog-btn dialog-btn--submit" :loading="submitting" @click="handleSubmit">保存</ElButton>
+          <ElButton round class="dialog-btn dialog-btn--cancel" @click="handleCancel"
+            >取消</ElButton
+          >
+          <ElButton
+            round
+            class="dialog-btn dialog-btn--submit"
+            :loading="submitting"
+            @click="handleSubmit"
+            >保存</ElButton
+          >
         </div>
       </div>
     </template>
@@ -175,30 +229,53 @@
   const accountTypeOptions = ['企业户', '个人户', '小额广告户'] as const
 
   const defaultForm = (): OpenAccountFormModel => ({
-    source: '', app: '', platform: '安卓', accountType: '企业户',
-    agency: '', amount: '', applicant: '',
-    adAccountId: '', adAccountName: '', credential: '', remark: ''
+    source: '',
+    app: '',
+    platform: '安卓',
+    accountType: '企业户',
+    agency: '',
+    amount: '',
+    applicant: '',
+    adAccountId: '',
+    adAccountName: '',
+    credential: '',
+    remark: ''
   })
 
   const form = ref<OpenAccountFormModel>(defaultForm())
   const submitting = ref(false)
   const errors = reactive({ source: '', app: '', agency: '', applicant: '' })
 
-  watch(() => props.visible, (v) => {
-    if (v) {
-      form.value = defaultForm()
-      Object.assign(errors, { source: '', app: '', agency: '', applicant: '' })
+  watch(
+    () => props.visible,
+    (v) => {
+      if (v) {
+        form.value = defaultForm()
+        Object.assign(errors, { source: '', app: '', agency: '', applicant: '' })
+      }
     }
-  })
+  )
 
   const handleCancel = () => emit('update:visible', false)
 
   const handleSubmit = async () => {
     let valid = true
-    if (!form.value.source) { errors.source = '请选择广告平台'; valid = false }
-    if (!form.value.app) { errors.app = '请选择应用'; valid = false }
-    if (!form.value.agency) { errors.agency = '请选择代理商'; valid = false }
-    if (!form.value.applicant.trim()) { errors.applicant = '请输入申请人'; valid = false }
+    if (!form.value.source) {
+      errors.source = '请选择广告平台'
+      valid = false
+    }
+    if (!form.value.app) {
+      errors.app = '请选择应用'
+      valid = false
+    }
+    if (!form.value.agency) {
+      errors.agency = '请选择代理商'
+      valid = false
+    }
+    if (!form.value.applicant.trim()) {
+      errors.applicant = '请输入申请人'
+      valid = false
+    }
     if (!valid) return
 
     submitting.value = true
@@ -228,13 +305,16 @@
   }
 
   .el-dialog:has(.oa-form-dialog-bd) .el-dialog__title {
-    font-size: 15px; font-weight: 600;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--cm-dialog-text-primary) !important;
   }
 
   .el-dialog:has(.oa-form-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
-    &:hover { color: var(--cm-dialog-text-primary) !important; }
+    &:hover {
+      color: var(--cm-dialog-text-primary) !important;
+    }
   }
 
   .el-dialog:has(.oa-form-dialog-bd) .el-dialog__body.oa-form-dialog-bd {
@@ -259,7 +339,11 @@
     color: #64748b;
   }
 
-  .oa-form { display: flex; flex-direction: column; gap: 0; }
+  .oa-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
 
   .form-item {
     display: flex;
@@ -268,8 +352,12 @@
     padding: 9px 0;
     border-bottom: 1px solid rgb(255 255 255 / 4%);
 
-    &:last-child { border-bottom: none; }
-    &.is-error .form-label { color: #f87171; }
+    &:last-child {
+      border-bottom: none;
+    }
+    &.is-error .form-label {
+      color: #f87171;
+    }
   }
 
   .form-label {
@@ -282,9 +370,15 @@
     text-align: right;
   }
 
-  .req { margin-right: 2px; color: #f87171; }
+  .req {
+    margin-right: 2px;
+    color: #f87171;
+  }
 
-  .form-control { flex: 1; min-width: 0; }
+  .form-control {
+    flex: 1;
+    min-width: 0;
+  }
 
   .form-input,
   .form-select {
@@ -297,8 +391,12 @@
       border-radius: 6px;
       box-shadow: none !important;
       transition: border-color 0.15s;
-      &:hover { border-color: rgb(255 255 255 / 18%) !important; }
-      &:focus-within { border-color: #3b82f6 !important; }
+      &:hover {
+        border-color: rgb(255 255 255 / 18%) !important;
+      }
+      &:focus-within {
+        border-color: #3b82f6 !important;
+      }
     }
 
     :deep(.el-input__inner),
@@ -306,7 +404,9 @@
     :deep(.el-select__selected-item) {
       font-size: 13px;
       color: #e2e8f0;
-      &::placeholder { color: #475569; }
+      &::placeholder {
+        color: #475569;
+      }
     }
   }
 
@@ -318,19 +418,44 @@
       border: 1px solid rgb(255 255 255 / 10%);
       border-radius: 6px;
       box-shadow: none;
-      &:hover { border-color: rgb(255 255 255 / 18%); }
-      &:focus { border-color: #3b82f6; }
-      &::placeholder { color: #475569; }
+      &:hover {
+        border-color: rgb(255 255 255 / 18%);
+      }
+      &:focus {
+        border-color: #3b82f6;
+      }
+      &::placeholder {
+        color: #475569;
+      }
     }
   }
 
-  .input-prefix { font-size: 13px; color: #94a3b8; }
+  .input-prefix {
+    font-size: 13px;
+    color: #94a3b8;
+  }
 
-  .opt-platform { display: flex; gap: 8px; align-items: center; }
+  .opt-platform {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
 
   // radio
-  .radio-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding-top: 5px; }
-  .radio-item { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .radio-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    padding-top: 5px;
+  }
+
+  .radio-item {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    cursor: pointer;
+  }
 
   .radio-dot {
     display: inline-block;
@@ -349,9 +474,17 @@
     }
   }
 
-  .radio-label { font-size: 13px; color: #e2e8f0; user-select: none; }
+  .radio-label {
+    font-size: 13px;
+    color: #e2e8f0;
+    user-select: none;
+  }
 
-  .err-msg { margin-top: 4px; font-size: 11px; color: #f87171; }
+  .err-msg {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #f87171;
+  }
 
   // 分割线
   .section-divider {
@@ -374,9 +507,21 @@
   }
 
   // footer
-  .dialog-footer { display: flex; align-items: center; justify-content: space-between; }
-  .footer-tip { font-size: 11px; color: #475569; }
-  .footer-btns { display: flex; gap: 8px; }
+  .dialog-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-tip {
+    font-size: 11px;
+    color: #475569;
+  }
+
+  .footer-btns {
+    display: flex;
+    gap: 8px;
+  }
 
   .dialog-btn {
     border-radius: 8px !important;
@@ -385,14 +530,20 @@
       color: #94a3b8 !important;
       background: transparent !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
-      &:hover { color: #e2e8f0 !important; border-color: rgb(255 255 255 / 20%) !important; }
+
+      &:hover {
+        color: #e2e8f0 !important;
+        border-color: rgb(255 255 255 / 20%) !important;
+      }
     }
 
     &--submit {
       color: #fff !important;
       background: #0d9488 !important;
       border: none !important;
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
   }
 </style>

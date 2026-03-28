@@ -13,8 +13,20 @@
     <div class="delete-icon-wrap">
       <div class="delete-icon-ring">
         <svg viewBox="0 0 48 48" fill="none" width="40" height="40">
-          <circle cx="24" cy="24" r="22" fill="rgb(239 68 68 / 12%)" stroke="#ef4444" stroke-width="1.8"/>
-          <path d="M17 17l14 14M31 17L17 31" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/>
+          <circle
+            cx="24"
+            cy="24"
+            r="22"
+            fill="rgb(239 68 68 / 12%)"
+            stroke="#ef4444"
+            stroke-width="1.8"
+          />
+          <path
+            d="M17 17l14 14M31 17L17 31"
+            stroke="#ef4444"
+            stroke-width="2.2"
+            stroke-linecap="round"
+          />
         </svg>
       </div>
     </div>
@@ -31,7 +43,9 @@
         </div>
         <div class="info-row">
           <span class="info-label">广告平台</span>
-          <span class="info-value" :style="{ color: getPlatformColor(data?.source ?? '') }">{{ data?.source ?? '—' }}</span>
+          <span class="info-value" :style="{ color: getPlatformColor(data?.source ?? '') }">{{
+            data?.source ?? '—'
+          }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">应用</span>
@@ -43,23 +57,39 @@
         </div>
         <div class="info-row">
           <span class="info-label">状态</span>
-          <span :class="['status-val', getStatusClass(data?.status)]">{{ data?.status ?? '—' }}</span>
+          <span :class="['status-val', getStatusClass(data?.status)]">{{
+            data?.status ?? '—'
+          }}</span>
         </div>
       </div>
     </div>
 
     <div class="warn-tip">
-      <svg viewBox="0 0 16 16" fill="none" width="14" height="14" style="flex-shrink:0;margin-top:1px">
-        <path d="M8 2L14 13H2L8 2Z" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round"/>
-        <path d="M8 6v3.5" stroke="#f59e0b" stroke-width="1.4" stroke-linecap="round"/>
-        <circle cx="8" cy="11.5" r="0.6" fill="#f59e0b"/>
+      <svg
+        viewBox="0 0 16 16"
+        fill="none"
+        width="14"
+        height="14"
+        style="flex-shrink: 0; margin-top: 1px"
+      >
+        <path d="M8 2L14 13H2L8 2Z" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round" />
+        <path d="M8 6v3.5" stroke="#f59e0b" stroke-width="1.4" stroke-linecap="round" />
+        <circle cx="8" cy="11.5" r="0.6" fill="#f59e0b" />
       </svg>
       删除后该开户记录将永久删除，无法恢复
     </div>
 
     <template #footer>
-      <ElButton round class="dialog-btn dialog-btn--cancel" @click="emit('update:visible', false)">取消</ElButton>
-      <ElButton round class="dialog-btn dialog-btn--delete" :loading="deleting" @click="handleConfirm">确认删除</ElButton>
+      <ElButton round class="dialog-btn dialog-btn--cancel" @click="emit('update:visible', false)"
+        >取消</ElButton
+      >
+      <ElButton
+        round
+        class="dialog-btn dialog-btn--delete"
+        :loading="deleting"
+        @click="handleConfirm"
+        >确认删除</ElButton
+      >
     </template>
   </el-dialog>
 </template>
@@ -87,9 +117,16 @@
   })
 
   const deleting = ref(false)
-  watch(() => props.visible, (v) => { if (!v) deleting.value = false })
+  watch(
+    () => props.visible,
+    (v) => {
+      if (!v) deleting.value = false
+    }
+  )
 
-  function getPlatformColor(s: string) { return PLATFORM_CONFIGS.find((p) => p.value === s)?.color ?? '#94a3b8' }
+  function getPlatformColor(s: string) {
+    return PLATFORM_CONFIGS.find((p) => p.value === s)?.color ?? '#94a3b8'
+  }
 
   function getStatusClass(status?: string) {
     if (status === '已激活') return 'status-val--ok'
@@ -122,8 +159,14 @@
     padding: 12px 16px 0;
     background: var(--cm-dialog-bg-inner);
     border-bottom: none;
-    .el-dialog__headerbtn { top: 12px; right: 16px; }
-    .el-icon { color: var(--cm-dialog-text-muted) !important; }
+
+    .el-dialog__headerbtn {
+      top: 12px;
+      right: 16px;
+    }
+    .el-icon {
+      color: var(--cm-dialog-text-muted) !important;
+    }
   }
 
   .el-dialog:has(.oa-delete-dialog-bd) .el-dialog__body.oa-delete-dialog-bd {
@@ -189,31 +232,51 @@
     border-bottom: 1px solid rgb(245 158 11 / 20%);
   }
 
-  .info-card__body { padding: 4px 0; background: rgb(245 158 11 / 5%); }
+  .info-card__body {
+    padding: 4px 0;
+    background: rgb(245 158 11 / 5%);
+  }
 
   .info-row {
     display: flex;
     gap: 12px;
     align-items: center;
     padding: 8px 14px;
-    & + & { border-top: 1px solid rgb(245 158 11 / 10%); }
+    & + & {
+      border-top: 1px solid rgb(245 158 11 / 10%);
+    }
   }
 
-  .info-label { flex-shrink: 0; width: 72px; font-size: 12px; color: #94a3b8; }
+  .info-label {
+    flex-shrink: 0;
+    width: 72px;
+    font-size: 12px;
+    color: #94a3b8;
+  }
 
   .info-value {
     flex: 1;
     font-size: 13px;
     color: #e2e8f0;
-    &--mono { font-family: 'SF Mono', monospace; font-size: 11px; }
+
+    &--mono {
+      font-family: 'SF Mono', monospace;
+      font-size: 11px;
+    }
   }
 
   .status-val {
     font-size: 12px;
     font-weight: 600;
-    &--ok      { color: #22c55e; }
-    &--pending { color: #f59e0b; }
-    &--fail    { color: #f87171; }
+    &--ok {
+      color: #22c55e;
+    }
+    &--pending {
+      color: #f59e0b;
+    }
+    &--fail {
+      color: #f87171;
+    }
   }
 
   .warn-tip {
@@ -236,14 +299,20 @@
       color: #94a3b8 !important;
       background: transparent !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
-      &:hover { color: #e2e8f0 !important; border-color: rgb(255 255 255 / 20%) !important; }
+
+      &:hover {
+        color: #e2e8f0 !important;
+        border-color: rgb(255 255 255 / 20%) !important;
+      }
     }
 
     &--delete {
       color: #fff !important;
       background: #ef4444 !important;
       border: none !important;
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
   }
 </style>

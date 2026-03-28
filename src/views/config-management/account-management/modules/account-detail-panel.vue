@@ -4,8 +4,21 @@
     <div v-if="!accountData" class="empty-state">
       <div class="empty-icon">
         <svg viewBox="0 0 48 48" fill="none" width="40" height="40">
-          <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="1.5" />
-          <path d="M16 18h16M16 24h10M16 30h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          <rect
+            x="8"
+            y="8"
+            width="32"
+            height="32"
+            rx="4"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path
+            d="M16 18h16M16 24h10M16 30h8"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
         </svg>
       </div>
       <p class="empty-text">请选择账户查看详情</p>
@@ -111,7 +124,9 @@
               <div class="info-item">
                 <span class="info-key">账户用途</span>
                 <div class="purpose-tags">
-                  <span v-for="p in accountData.purposes" :key="p" class="purpose-tag">{{ p }}</span>
+                  <span v-for="p in accountData.purposes" :key="p" class="purpose-tag">{{
+                    p
+                  }}</span>
                   <span v-if="!accountData.purposes?.length" class="info-val">—</span>
                 </div>
               </div>
@@ -139,7 +154,9 @@
             </div>
             <div class="finance-meta-row">
               <span class="meta-item">
-                本月消耗：<strong>${{ (accountData.monthSpend ?? 0).toLocaleString('en-US') }}</strong>
+                本月消耗：<strong
+                  >${{ (accountData.monthSpend ?? 0).toLocaleString('en-US') }}</strong
+                >
               </span>
               <span class="meta-item">
                 消耗进度：<strong class="pct-val">{{ accountData.spendProgress ?? 0 }}%</strong>
@@ -177,11 +194,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 />
-                <polyline
-                  :points="trendAreaPoints"
-                  fill="url(#trendGradPanel)"
-                  stroke="none"
-                />
+                <polyline :points="trendAreaPoints" fill="url(#trendGradPanel)" stroke="none" />
                 <defs>
                   <linearGradient id="trendGradPanel" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2" />
@@ -202,9 +215,7 @@
           <section class="detail-section">
             <div class="section-title-row">
               <span class="section-title-text">凭据列表</span>
-              <button class="btn-new-cred" @click="handleNewCred">
-                + 新建凭据
-              </button>
+              <button class="btn-new-cred" @click="handleNewCred"> + 新建凭据 </button>
             </div>
             <div class="cred-table">
               <div class="cred-table-header">
@@ -231,7 +242,11 @@
                 <div class="ctd ctd--action cred-actions">
                   <button class="cred-action-btn" @click.stop="selectedCred = cred">查看</button>
                   <button class="cred-action-btn" @click.stop="handleEditCred(cred)">编辑</button>
-                  <button class="cred-action-btn cred-action-btn--danger" @click.stop="handleDeleteCred(cred)">删除</button>
+                  <button
+                    class="cred-action-btn cred-action-btn--danger"
+                    @click.stop="handleDeleteCred(cred)"
+                    >删除</button
+                  >
                 </div>
               </div>
             </div>
@@ -253,13 +268,20 @@
               </div>
               <div class="cred-detail-item">
                 <span class="cred-detail-key">Client ID</span>
-                <span class="cred-detail-val cred-detail-val--mono">{{ selectedCred.clientId }}</span>
+                <span class="cred-detail-val cred-detail-val--mono">{{
+                  selectedCred.clientId
+                }}</span>
               </div>
               <div class="cred-detail-item">
                 <span class="cred-detail-key">Client Secret</span>
                 <span class="cred-detail-val">
-                  <span class="secret-mask">{{ showSecrets.clientSecret ? selectedCred.clientSecret : '●●●●●●●●●●●' }}</span>
-                  <button class="show-btn" @click="showSecrets.clientSecret = !showSecrets.clientSecret">
+                  <span class="secret-mask">{{
+                    showSecrets.clientSecret ? selectedCred.clientSecret : '●●●●●●●●●●●'
+                  }}</span>
+                  <button
+                    class="show-btn"
+                    @click="showSecrets.clientSecret = !showSecrets.clientSecret"
+                  >
                     {{ showSecrets.clientSecret ? '隐藏' : '显示' }}
                   </button>
                 </span>
@@ -267,8 +289,15 @@
               <div class="cred-detail-item">
                 <span class="cred-detail-key">Access Token</span>
                 <span class="cred-detail-val">
-                  <span class="secret-mask">{{ showSecrets.accessToken ? selectedCred.accessToken : selectedCred.accessTokenMasked }}</span>
-                  <button class="show-btn" @click="showSecrets.accessToken = !showSecrets.accessToken">
+                  <span class="secret-mask">{{
+                    showSecrets.accessToken
+                      ? selectedCred.accessToken
+                      : selectedCred.accessTokenMasked
+                  }}</span>
+                  <button
+                    class="show-btn"
+                    @click="showSecrets.accessToken = !showSecrets.accessToken"
+                  >
                     {{ showSecrets.accessToken ? '隐藏' : '显示' }}
                   </button>
                 </span>
@@ -276,8 +305,15 @@
               <div class="cred-detail-item">
                 <span class="cred-detail-key">Refresh Token</span>
                 <span class="cred-detail-val">
-                  <span class="secret-mask">{{ showSecrets.refreshToken ? selectedCred.refreshToken : selectedCred.refreshTokenMasked }}</span>
-                  <button class="show-btn" @click="showSecrets.refreshToken = !showSecrets.refreshToken">
+                  <span class="secret-mask">{{
+                    showSecrets.refreshToken
+                      ? selectedCred.refreshToken
+                      : selectedCred.refreshTokenMasked
+                  }}</span>
+                  <button
+                    class="show-btn"
+                    @click="showSecrets.refreshToken = !showSecrets.refreshToken"
+                  >
                     {{ showSecrets.refreshToken ? '隐藏' : '显示' }}
                   </button>
                 </span>
@@ -289,7 +325,9 @@
               <div class="cred-detail-item">
                 <span class="cred-detail-key">关联应用</span>
                 <div class="cred-app-tags">
-                  <span v-for="app in selectedCred.apps" :key="app" class="cred-app-tag">{{ app }}</span>
+                  <span v-for="app in selectedCred.apps" :key="app" class="cred-app-tag">{{
+                    app
+                  }}</span>
                 </div>
               </div>
               <div class="cred-detail-item">
@@ -305,16 +343,51 @@
             </div>
             <div class="cred-detail-actions">
               <button class="cred-detail-btn cred-detail-btn--revalidate">
-                <svg viewBox="0 0 16 16" fill="none" width="13" height="13" style="margin-right:4px">
-                  <path d="M13.5 2.5A6.5 6.5 0 1 1 2 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M2 4v4.5h4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  width="13"
+                  height="13"
+                  style="margin-right: 4px"
+                >
+                  <path
+                    d="M13.5 2.5A6.5 6.5 0 1 1 2 8.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    d="M2 4v4.5h4.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
                 重新验证
               </button>
               <button class="cred-detail-btn cred-detail-btn--copy">
-                <svg viewBox="0 0 16 16" fill="none" width="13" height="13" style="margin-right:4px">
-                  <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
-                  <path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" stroke-width="1.4"/>
+                <svg
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  width="13"
+                  height="13"
+                  style="margin-right: 4px"
+                >
+                  <rect
+                    x="5"
+                    y="5"
+                    width="9"
+                    height="9"
+                    rx="1.5"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                  />
+                  <path
+                    d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                  />
                 </svg>
                 复制Token
               </button>
@@ -328,12 +401,8 @@
         <ElButton round class="footer-btn footer-btn--recharge" @click="handleRecharge">
           充值
         </ElButton>
-        <ElButton round class="footer-btn footer-btn--report">
-          查看报表
-        </ElButton>
-        <ElButton round class="footer-btn footer-btn--credential">
-          更换凭据
-        </ElButton>
+        <ElButton round class="footer-btn footer-btn--report"> 查看报表 </ElButton>
+        <ElButton round class="footer-btn footer-btn--credential"> 更换凭据 </ElButton>
       </div>
     </template>
   </div>
@@ -397,7 +466,12 @@
       apps: cred.apps,
       accountCount: 1,
       accountIds: [props.accountData?.id ?? ''],
-      status: cred.statusKey === 'ok' ? '验证正常' : cred.statusKey === 'expiring' ? '验证失败' : '待验证',
+      status:
+        cred.statusKey === 'ok'
+          ? '验证正常'
+          : cred.statusKey === 'expiring'
+            ? '验证失败'
+            : '待验证',
       lastValidateTime: cred.lastValidated,
       config: {
         clientId: cred.clientId,
@@ -514,11 +588,14 @@
   const showSecrets = ref({ clientSecret: false, accessToken: false, refreshToken: false })
 
   // 切换账户时重置 tab 及凭据选中
-  watch(() => props.accountData?.id, () => {
-    activeTab.value = 'basic'
-    selectedCred.value = null
-    showSecrets.value = { clientSecret: false, accessToken: false, refreshToken: false }
-  })
+  watch(
+    () => props.accountData?.id,
+    () => {
+      activeTab.value = 'basic'
+      selectedCred.value = null
+      showSecrets.value = { clientSecret: false, accessToken: false, refreshToken: false }
+    }
+  )
 
   // 切换 tab 时重置凭据选中
   watch(activeTab, () => {
@@ -684,9 +761,15 @@
     font-size: 12px;
     font-weight: 500;
 
-    &.status--normal { color: var(--green); }
-    &.status--warning { color: var(--amber); }
-    &.status--disabled { color: var(--text-muted); }
+    &.status--normal {
+      color: var(--green);
+    }
+    &.status--warning {
+      color: var(--amber);
+    }
+    &.status--disabled {
+      color: var(--text-muted);
+    }
   }
 
   .status-dot {
@@ -694,9 +777,15 @@
     height: 7px;
     border-radius: 50%;
 
-    .status--normal & { background: var(--green); }
-    .status--warning & { background: var(--amber); }
-    .status--disabled & { background: var(--text-muted); }
+    .status--normal & {
+      background: var(--green);
+    }
+    .status--warning & {
+      background: var(--amber);
+    }
+    .status--disabled & {
+      background: var(--text-muted);
+    }
   }
 
   .header-right {
@@ -716,7 +805,9 @@
     border: 1px solid rgb(59 130 246 / 30%) !important;
     border-radius: 6px !important;
 
-    &:hover { background: rgb(59 130 246 / 20%) !important; }
+    &:hover {
+      background: rgb(59 130 246 / 20%) !important;
+    }
   }
 
   .btn-disable {
@@ -728,7 +819,9 @@
     border: 1px solid var(--red) !important;
     border-radius: 6px !important;
 
-    &:hover { background: var(--red-bg) !important; }
+    &:hover {
+      background: var(--red-bg) !important;
+    }
   }
 
   // ─── Tab 切换 ──────────────────────────────────────────
@@ -751,7 +844,9 @@
     border-bottom: 2px solid transparent;
     transition: all 0.15s;
 
-    &:hover { color: var(--text-primary); }
+    &:hover {
+      color: var(--text-primary);
+    }
 
     &--active {
       font-weight: 500;
@@ -765,8 +860,12 @@
     flex: 1;
     overflow-y: auto;
 
-    &::-webkit-scrollbar { width: 3px; }
-    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar {
+      width: 3px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
 
     &::-webkit-scrollbar-thumb {
       background: rgb(255 255 255 / 8%);
@@ -778,7 +877,9 @@
     padding: 14px 16px;
     border-bottom: 1px solid var(--border);
 
-    &--last { border-bottom: none; }
+    &--last {
+      border-bottom: none;
+    }
   }
 
   .section-title {
@@ -827,8 +928,13 @@
     line-height: 1.8;
     color: var(--text-primary);
 
-    &--link { color: var(--accent); cursor: pointer; }
-    &--remark { color: var(--text-secondary); }
+    &--link {
+      color: var(--accent);
+      cursor: pointer;
+    }
+    &--remark {
+      color: var(--text-secondary);
+    }
   }
 
   .platform-val {
@@ -843,8 +949,15 @@
     font-size: 12px;
     border-radius: 4px;
 
-    &--direct { color: var(--accent); background: var(--accent-dim); }
-    &--proxy { color: #a78bfa; background: rgb(167 139 250 / 12%); }
+    &--direct {
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    &--proxy {
+      color: #a78bfa;
+      background: rgb(167 139 250 / 12%);
+    }
   }
 
   .app-tags,
@@ -936,7 +1049,9 @@
     color: var(--text-primary);
   }
 
-  .ml { margin-left: 8px; }
+  .ml {
+    margin-left: 8px;
+  }
 
   .recharge-amount {
     margin-left: 6px;
@@ -1003,7 +1118,9 @@
     height: 7px;
     border-radius: 50%;
 
-    &--ok { background: var(--green); }
+    &--ok {
+      background: var(--green);
+    }
   }
 
   .link-btn {
@@ -1014,7 +1131,9 @@
     border: none;
     transition: opacity 0.15s;
 
-    &:hover { opacity: 0.7; }
+    &:hover {
+      opacity: 0.7;
+    }
   }
 
   .credential-hint {
@@ -1071,7 +1190,9 @@
     border-radius: 6px;
     transition: filter 0.15s;
 
-    &:hover { filter: brightness(1.1); }
+    &:hover {
+      filter: brightness(1.1);
+    }
   }
 
   // 凭据列表表格
@@ -1097,22 +1218,44 @@
     border-bottom: 1px solid var(--border);
     transition: background 0.15s;
 
-    &:last-child { border-bottom: none; }
+    &:last-child {
+      border-bottom: none;
+    }
 
-    &:hover { background: rgb(255 255 255 / 3%); }
+    &:hover {
+      background: rgb(255 255 255 / 3%);
+    }
 
-    &--active { background: var(--accent-dim) !important; }
+    &--active {
+      background: var(--accent-dim) !important;
+    }
   }
 
-  .cth, .ctd {
+  .cth,
+  .ctd {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 
-    &--name { flex: 2.5; min-width: 0; }
-    &--type { flex: 2; min-width: 0; }
-    &--status { flex: 1.8; min-width: 0; }
-    &--time { flex: 2; min-width: 0; }
+    &--name {
+      flex: 2.5;
+      min-width: 0;
+    }
+
+    &--type {
+      flex: 2;
+      min-width: 0;
+    }
+
+    &--status {
+      flex: 1.8;
+      min-width: 0;
+    }
+
+    &--time {
+      flex: 2;
+      min-width: 0;
+    }
 
     &--action {
       flex-shrink: 0;
@@ -1132,9 +1275,15 @@
     font-size: 12px;
     font-weight: 500;
 
-    &--ok { color: var(--green); }
-    &--expiring { color: var(--amber); }
-    &--error { color: var(--red); }
+    &--ok {
+      color: var(--green);
+    }
+    &--expiring {
+      color: var(--amber);
+    }
+    &--error {
+      color: var(--red);
+    }
   }
 
   .cred-status-dot {
@@ -1143,9 +1292,15 @@
     height: 6px;
     border-radius: 50%;
 
-    .cred-status--ok & { background: var(--green); }
-    .cred-status--expiring & { background: var(--amber); }
-    .cred-status--error & { background: var(--red); }
+    .cred-status--ok & {
+      background: var(--green);
+    }
+    .cred-status--expiring & {
+      background: var(--amber);
+    }
+    .cred-status--error & {
+      background: var(--red);
+    }
   }
 
   .cred-actions {
@@ -1164,10 +1319,16 @@
     border-radius: 3px;
     transition: all 0.15s;
 
-    &:hover { color: var(--accent); background: var(--accent-dim); }
+    &:hover {
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
 
     &--danger {
-      &:hover { color: var(--red) !important; background: var(--red-bg) !important; }
+      &:hover {
+        color: var(--red) !important;
+        background: var(--red-bg) !important;
+      }
     }
   }
 
@@ -1235,7 +1396,9 @@
     border-radius: 4px;
     transition: all 0.15s;
 
-    &:hover { background: rgb(59 130 246 / 20%); }
+    &:hover {
+      background: rgb(59 130 246 / 20%);
+    }
   }
 
   .cred-app-tags {
@@ -1272,7 +1435,9 @@
       background: var(--green-bg);
       border: 1px solid rgb(34 197 94 / 25%);
 
-      &:hover { background: rgb(34 197 94 / 20%); }
+      &:hover {
+        background: rgb(34 197 94 / 20%);
+      }
     }
 
     &--copy {
@@ -1310,7 +1475,9 @@
       background: var(--accent) !important;
       border: none !important;
 
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
 
     &--report {
