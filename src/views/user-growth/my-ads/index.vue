@@ -159,5 +159,5 @@
 </script>
 
 <template>
-  <MyAds />
+  <MyAds style="background-color: #0f1012" />
 </template>

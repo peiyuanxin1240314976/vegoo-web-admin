@@ -552,6 +552,17 @@
     border: 1px solid var(--border);
     border-top: 2px solid;
     border-radius: 8px;
+    transition:
+      transform 0.22s ease,
+      box-shadow 0.22s ease,
+      border-color 0.22s ease;
+  }
+
+  .stat-card:not(.stat-card--skeleton):hover {
+    box-shadow:
+      0 6px 20px rgb(0 0 0 / 28%),
+      0 0 0 1px rgb(0 212 170 / 10%);
+    transform: translateY(-2px);
   }
 
   .stat-card--skeleton {
@@ -605,6 +616,16 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      transform 0.22s ease;
+  }
+
+  .chart-card:not(.summary-skeleton-chart, .summary-skeleton-table):hover {
+    border-color: #2a4060;
+    box-shadow: 0 6px 22px rgb(0 0 0 / 25%);
+    transform: translateY(-1px);
   }
 
   .summary-skeleton-chart {
@@ -644,6 +665,18 @@
     background: var(--bg-card2);
     border: 1px solid var(--border);
     border-radius: 4px;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .btn-sm:hover {
+    color: var(--text-primary);
+    background: rgb(0 212 170 / 10%);
+    border-color: rgb(0 212 170 / 35%);
+    transform: translateY(-1px);
   }
 
   .chart-body {
@@ -714,6 +747,11 @@
     padding: 7px 6px;
     vertical-align: middle;
     border-bottom: 1px solid rgb(30 47 69 / 50%);
+    transition: background 0.18s ease;
+  }
+
+  .progress-table tbody tr:hover td {
+    background: rgb(0 212 170 / 6%);
   }
 
   .camp-name {
@@ -792,5 +830,20 @@
 
   .status-dot.inactive .dot {
     background: #4b5563;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stat-card,
+    .chart-card,
+    .btn-sm,
+    .progress-table td {
+      transition: none;
+    }
+
+    .stat-card:not(.stat-card--skeleton):hover,
+    .chart-card:not(.summary-skeleton-chart, .summary-skeleton-table):hover,
+    .btn-sm:hover {
+      transform: none;
+    }
   }
 </style>

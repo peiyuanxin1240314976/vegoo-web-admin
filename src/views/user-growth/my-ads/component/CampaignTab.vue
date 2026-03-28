@@ -718,11 +718,19 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     outline: none;
-    transition: border-color 0.2s;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .search-input:hover:not(:focus) {
+    border-color: #2a4060;
+    box-shadow: 0 0 0 1px rgb(0 212 170 / 8%);
   }
 
   .search-input:focus {
     border-color: var(--teal);
+    box-shadow: 0 0 0 2px rgb(0 212 170 / 15%);
   }
 
   .search-input::placeholder {
@@ -737,11 +745,16 @@
     background: transparent;
     border: 1px solid var(--border);
     border-radius: 6px;
-    transition: all 0.2s;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
   }
 
   .reset-btn:hover {
     background: var(--teal-dim);
+    border-color: rgb(0 212 170 / 45%);
+    transform: translateY(-1px);
   }
 
   /* ── 表格 ── */
@@ -751,6 +764,14 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease;
+  }
+
+  .table-wrap:hover {
+    border-color: #2a4060;
+    box-shadow: 0 6px 22px rgb(0 0 0 / 22%);
   }
 
   .table-skeleton {
@@ -788,6 +809,7 @@
     padding: 10px;
     vertical-align: middle;
     border-bottom: 1px solid rgb(30 47 69 / 40%);
+    transition: background 0.2s ease;
   }
 
   .data-row:last-child td {
@@ -795,7 +817,7 @@
   }
 
   .data-row:hover td {
-    background: rgb(15 25 41 / 60%);
+    background: rgb(0 212 170 / 7%);
   }
 
   .row-warn {
@@ -804,6 +826,10 @@
 
   .row-warn td {
     background: rgb(146 64 14 / 5%);
+  }
+
+  .data-row.row-warn:hover td {
+    background: rgb(245 158 11 / 10%);
   }
 
   .row-inactive {
@@ -929,12 +955,18 @@
     background: transparent;
     border: 1px solid var(--border);
     border-radius: 4px;
-    transition: all 0.2s;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
   }
 
   .detail-btn:hover {
     background: var(--teal-dim);
     border-color: var(--teal);
+    box-shadow: 0 2px 10px rgb(0 212 170 / 18%);
+    transform: translateY(-1px);
   }
 
   /* ── 分页（对齐原自定义 .page-info / .page-btn / .page-size-select 视觉） ── */
@@ -1100,6 +1132,21 @@
   .bar-val {
     font-size: 18px;
     font-weight: 700;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .search-input,
+    .reset-btn,
+    .table-wrap,
+    .data-row td,
+    .detail-btn {
+      transition: none;
+    }
+
+    .reset-btn:hover,
+    .detail-btn:hover {
+      transform: none;
+    }
   }
 </style>
 

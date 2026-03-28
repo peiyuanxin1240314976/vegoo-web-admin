@@ -368,11 +368,26 @@
     cursor: pointer;
     background: var(--teal);
     border-radius: 20px;
+    transition:
+      filter 0.2s ease,
+      box-shadow 0.22s ease,
+      transform 0.22s ease;
+  }
+
+  .user-pill:not(.user-pill--select):hover {
+    filter: brightness(1.06);
+    box-shadow: 0 3px 12px rgb(0 212 170 / 30%);
+    transform: translateY(-1px);
   }
 
   .user-pill--select {
     padding: 0;
     cursor: default;
+  }
+
+  .user-pill--select:hover {
+    filter: brightness(1.04);
+    box-shadow: 0 2px 12px rgb(0 212 170 / 25%);
   }
 
   .filter-staff-select {
@@ -438,6 +453,16 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 6px;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      transform 0.22s ease;
+  }
+
+  .date-pill--range:hover {
+    border-color: rgb(0 212 170 / 45%);
+    box-shadow: 0 0 0 1px rgb(0 212 170 / 12%);
+    transform: translateY(-1px);
   }
 
   .date-pill--range {
@@ -505,11 +530,21 @@
     background: var(--teal);
     border: none;
     border-radius: 6px;
-    transition: opacity 0.2s;
+    transition:
+      opacity 0.2s ease,
+      transform 0.22s ease,
+      box-shadow 0.22s ease;
   }
 
   .export-btn:hover {
-    opacity: 0.85;
+    box-shadow: 0 4px 14px rgb(0 212 170 / 35%);
+    opacity: 0.95;
+    transform: translateY(-1px);
+  }
+
+  .export-btn:active {
+    box-shadow: none;
+    transform: translateY(0);
   }
 
   /* ── 用户卡 ── */
@@ -528,6 +563,19 @@
     background: var(--bg-card);
     border: 1px solid var(--teal);
     border-radius: 10px;
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  .user-card:hover {
+    border-color: #00e8bb;
+    box-shadow:
+      0 8px 28px rgb(0 0 0 / 35%),
+      0 0 0 1px rgb(0 212 170 / 18%),
+      0 0 24px rgb(0 212 170 / 12%);
+    transform: translateY(-2px);
   }
 
   .user-card-skeleton {
@@ -605,6 +653,11 @@
     color: #000;
     background: var(--teal);
     border-radius: 50%;
+    transition: transform 0.25s ease;
+  }
+
+  .user-card:hover .user-avatar {
+    transform: scale(1.05);
   }
 
   .user-name {
@@ -638,6 +691,16 @@
     flex-direction: column;
     gap: 2px;
     align-items: center;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .metric-item:hover {
+    background: rgb(0 212 170 / 8%);
+    transform: translateY(-1px);
   }
 
   .metric-label {
@@ -670,22 +733,61 @@
     color: var(--text-secondary);
     cursor: pointer;
     border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
   }
 
   .tab-item:hover {
     color: var(--text-primary);
+    transform: translateY(-1px);
   }
 
   .tab-item.active {
     font-weight: 500;
     color: var(--teal);
     border-bottom-color: var(--teal);
+    transform: none;
+  }
+
+  .tab-item.active:hover {
+    transform: none;
   }
 
   /* ── Tab 内容区域 ── */
   .tab-content {
     padding-top: 16px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .user-pill,
+    .date-pill,
+    .export-btn,
+    .user-card,
+    .user-avatar,
+    .metric-item,
+    .tab-item {
+      transition: none;
+    }
+
+    .user-pill:not(.user-pill--select):hover,
+    .date-pill--range:hover,
+    .export-btn:hover,
+    .user-card:hover,
+    .metric-item:hover,
+    .tab-item:hover {
+      transform: none;
+    }
+
+    .user-card:hover .user-avatar {
+      transform: none;
+    }
+
+    .user-pill--select:hover {
+      filter: none;
+      box-shadow: none;
+    }
   }
 </style>
 

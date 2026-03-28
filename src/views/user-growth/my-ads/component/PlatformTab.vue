@@ -304,13 +304,27 @@
     font-size: 12px;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+      color 0.2s ease,
+      background 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .toggle-btn:not(.active):hover {
+    color: var(--text-primary);
+    background: rgb(0 212 170 / 8%);
+    transform: translateY(-1px);
   }
 
   .toggle-btn.active {
     font-weight: 600;
     color: #000;
     background: var(--teal);
+  }
+
+  .toggle-btn.active:hover {
+    filter: brightness(1.05);
+    transform: none;
   }
 
   /* ── 应用分组 ── */
@@ -358,11 +372,18 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
-    transition: border-color 0.2s;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      transform 0.22s ease;
   }
 
   .camp-card:hover {
-    border-color: #2a4060;
+    border-color: rgb(0 212 170 / 40%);
+    box-shadow:
+      0 8px 24px rgb(0 0 0 / 30%),
+      0 0 0 1px rgb(0 212 170 / 12%);
+    transform: translateY(-3px);
   }
 
   .card-warn {
@@ -392,6 +413,11 @@
     font-size: 11px;
     font-weight: 700;
     border-radius: 4px;
+    transition: transform 0.22s ease;
+  }
+
+  .camp-card:hover .plat-icon {
+    transform: scale(1.08);
   }
 
   .plat-name {
@@ -490,6 +516,14 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease;
+  }
+
+  .bottom-summary:hover {
+    border-color: #2a4060;
+    box-shadow: 0 4px 18px rgb(0 0 0 / 22%);
   }
 
   .summary-left,
@@ -526,5 +560,23 @@
 
   .sep {
     color: var(--text-dim);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .toggle-btn,
+    .camp-card,
+    .plat-icon,
+    .bottom-summary {
+      transition: none;
+    }
+
+    .toggle-btn:not(.active):hover,
+    .camp-card:hover {
+      transform: none;
+    }
+
+    .camp-card:hover .plat-icon {
+      transform: none;
+    }
   }
 </style>
