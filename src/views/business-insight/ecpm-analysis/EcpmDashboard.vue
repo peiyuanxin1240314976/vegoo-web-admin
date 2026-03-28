@@ -2,16 +2,16 @@
   <div class="ecpm-dash">
     <!-- ══════════════════ HEADER ══════════════════ -->
     <header class="dash-header">
-      <div class="breadcrumb">
+      <!-- <div class="breadcrumb">
         <span class="bc-parent">商业洞察</span>
         <span class="bc-sep">›</span>
         <span class="bc-cur">ECPM分析</span>
-      </div>
+      </div> -->
       <div class="header-filters">
         <el-date-picker
           v-model="dateRange"
           type="daterange"
-          size="small"
+          size="default"
           range-separator="~"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
@@ -22,7 +22,7 @@
           <template #template>
             <el-skeleton-item variant="text" class="filter-sel-skeleton" />
           </template>
-          <el-select v-model="filterPlatform" size="small" class="filter-sel">
+          <el-select v-model="filterPlatform" size="default" class="filter-sel">
             <el-option
               v-for="item in sourceOptions"
               :key="item.value"
@@ -35,7 +35,7 @@
           <template #template>
             <el-skeleton-item variant="text" class="filter-sel-skeleton" />
           </template>
-          <el-select v-model="filterApp" size="small" class="filter-sel">
+          <el-select v-model="filterApp" size="default" class="filter-sel">
             <el-option
               v-for="item in appOptions"
               :key="item.value"
@@ -48,7 +48,7 @@
           <template #template>
             <el-skeleton-item variant="text" class="filter-sel-skeleton" />
           </template>
-          <el-select v-model="filterCountry" size="small" class="filter-sel">
+          <el-select v-model="filterCountry" size="default" class="filter-sel">
             <el-option
               v-for="item in countryOptions"
               :key="item.value"
@@ -1270,15 +1270,15 @@
     border-bottom: 1px solid var(--border);
   }
 
-  .breadcrumb {
+  /* .breadcrumb {
     display: flex;
     gap: 6px;
     align-items: center;
     font-size: 16px;
     font-weight: 600;
-  }
+  } */
 
-  .bc-parent {
+  /* .bc-parent {
     font-size: 14px;
     font-weight: 400;
     color: var(--text-dim);
@@ -1292,7 +1292,7 @@
     font-size: 18px;
     font-weight: 700;
     color: var(--text);
-  }
+  } */
 
   .header-filters {
     display: flex;

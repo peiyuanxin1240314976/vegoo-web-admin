@@ -199,9 +199,9 @@
     <!-- ===== Header ===== -->
     <div class="top-header">
       <div class="breadcrumb">
-        <span class="bc-parent">用户增长</span>
+        <!-- <span class="bc-parent">用户增长</span>
         <span class="bc-sep">›</span>
-        <span class="bc-current">实时数据</span>
+        <span class="bc-current">实时数据</span> -->
         <div class="bc-subtitle">按需要调整匹配产品的最新广告投战数据</div>
       </div>
       <div class="header-actions">
@@ -413,7 +413,7 @@
     align-items: baseline;
   }
 
-  .bc-parent {
+  /* .bc-parent {
     font-size: 17px;
     font-weight: 500;
     color: #6b7a99;
@@ -428,7 +428,7 @@
     font-size: 17px;
     font-weight: 700;
     color: #e2ebf8;
-  }
+  } */
 
   .bc-subtitle {
     width: 100%;
