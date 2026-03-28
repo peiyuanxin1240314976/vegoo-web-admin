@@ -614,7 +614,7 @@
       </div>
 
       <div class="bi-card bi-map-panel">
-        <div class="card-title">国家利润分布</div>
+        <div class="card-title">国家或地区利润分布</div>
         <div class="bi-chart-host bi-chart-host--map">
           <!-- 地图容器始终占位，避免 v-show:none 时 ECharts 在 0×0 初始化导致不绘制 -->
           <div ref="mapRef" class="world-map" aria-label="国家利润分布地图"></div>
