@@ -66,28 +66,22 @@
       :class="`menu-left-${getMenuTheme.theme} menu-left-${!menuOpen ? 'close' : 'open'}`"
       :style="{ background: getMenuTheme.background }"
     >
-      <ElScrollbar :style="scrollbarStyle">
-        <!-- Logo、系统名称 -->
-        <div
-          class="header"
-          @click="navigateToHome"
+      <!-- 仅菜单区单一滚动容器，避免 ElScrollbar 与 .el-menu 双重 overflow 导致滚轮不生效 -->
+      <div class="header" @click="navigateToHome" :style="{ background: getMenuTheme.background }">
+        <ArtLogo v-if="!isDualMenu" class="logo" />
+
+        <p
+          :class="{ 'is-dual-menu-name': isDualMenu }"
           :style="{
-            background: getMenuTheme.background
+            color: getMenuTheme.systemNameColor,
+            opacity: !menuOpen ? 0 : 1
           }"
         >
-          <ArtLogo v-if="!isDualMenu" class="logo" />
+          {{ AppConfig.systemInfo.name }}
+        </p>
+      </div>
 
-          <p
-            :class="{ 'is-dual-menu-name': isDualMenu }"
-            :style="{
-              color: getMenuTheme.systemNameColor,
-              opacity: !menuOpen ? 0 : 1
-            }"
-          >
-            {{ AppConfig.systemInfo.name }}
-          </p>
-        </div>
-
+      <div class="menu-left-scroll" :style="scrollbarStyle">
         <ElMenu
           :class="'el-menu-' + getMenuTheme.theme"
           :collapse="!menuOpen"
@@ -107,7 +101,7 @@
             @close="handleMenuClose"
           />
         </ElMenu>
-      </ElScrollbar>
+      </div>
 
       <!-- 双列菜单右侧折叠按钮 -->
       <div class="dual-menu-collapse-btn" v-if="isDualMenu" @click="toggleMenuVisibility">
