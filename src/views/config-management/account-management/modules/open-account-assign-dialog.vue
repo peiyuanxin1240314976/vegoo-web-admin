@@ -162,30 +162,35 @@
     border-radius: 12px !important;
     box-shadow: var(--cm-dialog-shadow) !important;
   }
+
   .el-dialog:has(.oa-assign-dialog-bd) .el-dialog__header.oa-assign-dialog-hd {
     padding: 18px 20px 14px;
     background: var(--cm-dialog-bg-inner);
     border-bottom: 1px solid var(--cm-dialog-border);
     border-radius: 12px 12px 0 0;
   }
+
   .el-dialog:has(.oa-assign-dialog-bd) .el-dialog__title {
     font-size: 15px; font-weight: 600;
     color: var(--cm-dialog-text-primary) !important;
   }
+
   .el-dialog:has(.oa-assign-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
     &:hover { color: var(--cm-dialog-text-primary) !important; }
   }
+
   .el-dialog:has(.oa-assign-dialog-bd) .el-dialog__body.oa-assign-dialog-bd {
     padding: 18px 20px 8px;
     background: var(--cm-dialog-bg-inner);
   }
+
   .el-dialog:has(.oa-assign-dialog-bd) .el-dialog__footer.oa-assign-dialog-ft {
     padding: 14px 20px;
+    text-align: right;
     background: var(--cm-dialog-bg-inner);
     border-top: 1px solid var(--cm-dialog-border);
     border-radius: 0 0 12px 12px;
-    text-align: right;
   }
 </style>
 
@@ -200,28 +205,28 @@
   }
 
   .record-card-top {
-    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
     margin-bottom: 10px;
   }
 
   .record-platform-icon {
-    display: inline-flex; align-items: center; justify-content: center;
+    display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center;
     width: 28px; height: 28px;
     font-size: 11px; font-weight: 700;
-    border-radius: 6px; flex-shrink: 0;
+    border-radius: 6px;
   }
 
   .record-id {
-    font-size: 15px; font-weight: 700;
-    font-family: 'SF Mono', monospace; color: #e2e8f0;
+    font-family: 'SF Mono', monospace;
+    font-size: 15px; font-weight: 700; color: #e2e8f0;
   }
 
   .record-meta {
     font-size: 13px; color: #94a3b8;
   }
 
-  .record-agency {
-    font-size: 13px; color: #22d3ee; margin-left: auto;
+  .record-agency { margin-left: auto;
+    font-size: 13px; color: #22d3ee;
   }
 
   .record-account-info {
@@ -235,7 +240,7 @@
     font-size: 13px;
   }
 
-  .record-account-key { width: 80px; color: #64748b; flex-shrink: 0; }
+  .record-account-key { flex-shrink: 0; width: 80px; color: #64748b; }
   .record-account-val { color: #e2e8f0; }
 
   // ─── 凭据选择 ────────────────────────────────────────
@@ -272,19 +277,19 @@
 
   // ─── 凭据详情卡 ──────────────────────────────────────
   .cred-detail-card {
+    display: flex; flex-direction: column; gap: 8px;
     padding: 12px 16px;
     margin-bottom: 12px;
     background: rgb(255 255 255 / 3%);
     border: 1px solid rgb(255 255 255 / 8%);
     border-radius: 8px;
-    display: flex; flex-direction: column; gap: 8px;
   }
 
   .cred-detail-row {
     display: flex; gap: 16px; align-items: center; font-size: 13px;
   }
 
-  .cred-detail-key { width: 72px; color: #64748b; flex-shrink: 0; }
+  .cred-detail-key { flex-shrink: 0; width: 72px; color: #64748b; }
   .cred-detail-val { color: #e2e8f0; }
 
   .cred-validate-status {
@@ -313,27 +318,29 @@
 
   .feishu-tip {
     display: flex; gap: 6px; align-items: center;
-    font-size: 12px; color: #22c55e;
     margin-bottom: 4px;
+    font-size: 12px; color: #22c55e;
   }
 
-  .feishu-tip-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: #22c55e; flex-shrink: 0;
+  .feishu-tip-dot { flex-shrink: 0;
+    width: 6px; height: 6px;
+    background: #22c55e; border-radius: 50%;
   }
 
   // ─── 底部按钮 ────────────────────────────────────────
   .dialog-btn {
     border-radius: 8px !important;
+
     &--cancel {
       color: #94a3b8 !important; background: transparent !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
       &:hover { color: #e2e8f0 !important; }
     }
+
     &--confirm {
       color: #fff !important; background: #0d9488 !important; border: none !important;
       &:not(.is-disabled):hover { filter: brightness(1.1); }
-      &.is-disabled { opacity: 0.4 !important; cursor: not-allowed !important; }
+      &.is-disabled { cursor: not-allowed !important; opacity: 0.4 !important; }
     }
   }
 </style>

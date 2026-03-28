@@ -492,8 +492,8 @@
     :deep(th.el-table__cell) {
       font-size: 12px;
       font-weight: 500;
-      letter-spacing: 0.02em;
       text-transform: uppercase;
+      letter-spacing: 0.02em;
       background: transparent;
     }
 
@@ -577,6 +577,7 @@
     &--pending {
       color: #f59e0b;
       background: rgb(245 158 11 / 10%);
+
       .status-dot {
         background: transparent;
         border: 1.5px solid #f59e0b;

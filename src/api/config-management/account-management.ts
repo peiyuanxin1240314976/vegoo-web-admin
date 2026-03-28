@@ -1,5 +1,5 @@
 /**
- * 配置管理 · 账户管理 API（广告账户 / 代理商 / 凭据 / 开户，与 `views/config-management/account-management` 对齐）
+ * 配置管理 · 账户管理 API（广告账户 / 代理商 / 凭据 / 开户 / BC，与 `views/config-management/account-management` 对齐）
  */
 import request from '@/utils/http'
 import type {
@@ -16,7 +16,10 @@ import type {
   CredentialValidateResult,
   OpenAccountItem,
   OpenAccountFormModel,
-  OpenAccountTableQuery
+  OpenAccountTableQuery,
+  BcItem,
+  BcFormModel,
+  BcTableQuery
 } from '@/views/config-management/account-management/types'
 
 /** 广告账户分页列表 */
@@ -262,6 +265,51 @@ export function saveOpenAccountFeishuConfig(data: {
   return request.post<unknown>({
     url: '/api/config-management/open-account/feishu-config/save',
     data,
+    showErrorMessage: false
+  })
+}
+
+/** BC/BM 分页列表 */
+export function fetchBcTable(params: BcTableQuery) {
+  return request.post<Api.Common.PaginatedResponse<BcItem>>({
+    url: '/api/config-management/bc/table',
+    data: params,
+    showErrorMessage: false
+  })
+}
+
+/** 新建 BC */
+export function createBc(data: BcFormModel) {
+  return request.post<BcItem>({
+    url: '/api/config-management/bc',
+    data,
+    showErrorMessage: false
+  })
+}
+
+/** 编辑 BC */
+export function updateBc(id: string, data: Partial<BcFormModel>) {
+  return request.post<BcItem>({
+    url: '/api/config-management/bc/update',
+    data: { id, ...data },
+    showErrorMessage: false
+  })
+}
+
+/** 删除 BC */
+export function deleteBc(id: string) {
+  return request.post<unknown>({
+    url: '/api/config-management/bc/delete',
+    data: { id },
+    showErrorMessage: false
+  })
+}
+
+/** 导出 BC 列表 */
+export function exportBcList(params: Partial<BcTableQuery>) {
+  return request.post<unknown>({
+    url: '/api/config-management/bc/export',
+    data: params,
     showErrorMessage: false
   })
 }

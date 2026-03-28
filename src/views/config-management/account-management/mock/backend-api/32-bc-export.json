@@ -1,0 +1,59 @@
+{
+  "_comment": "BC/BM 管理 — 导出列表。筛选字段与列表查询一致，可为空表示按当前列表条件导出（与后端约定）。通常返回文件流或异步任务 id，此处示例为通用成功包裹。",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "关键词，与列表一致。"
+      },
+      "source": { "type": "string", "required": false, "description": "广告平台。" },
+      "status": { "type": "string", "required": false, "description": "状态。" },
+      "ownerType": { "type": "string", "required": false, "description": "开户主体。" },
+      "banRecord": { "type": "string", "required": false, "description": "封户记录：有 | 无。" }
+    },
+    "response": {
+      "data": {
+        "type": "object",
+        "required": false,
+        "description": "若同步导出文件：可能无 JSON body 或返回下载 URL / 任务 id；与网关统一约定。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "source": "",
+    "status": "",
+    "ownerType": "",
+    "banRecord": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "downloadUrl": "https://example.com/exports/bc-20260328.xlsx",
+      "expireAt": "2026-03-28T23:59:59.000Z"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/bc/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "Partial<BcTableQuery>（无分页字段或与列表共用）",
+    "responseBody": "按网关：文件流 | 下载信息 | null"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "页头「导出」；`bc-management/index.vue` `handleExport` 在非 mock 时调用 `exportBcList`。",
+        "prerequisite": "`AccountApiSource.exportBc` 为 false 时走网关。"
+      }
+    ],
+    "defaultSelection": "可传当前搜索关键词与 Tab 筛选条件；实现前与后端确认是否支持服务端筛选或仅导出全量。",
+    "dedupe": "导出按钮可加 loading 防重复点击。"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "若项目其它 export 接口为二进制流，本契约 sampleResponse 仅作占位；实际联调以前端 `request` 与 `http` 层处理为准。"
+    ]
+  }
+}

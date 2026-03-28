@@ -4,7 +4,7 @@
  * ## 语义（必读）
  *
  * - **`true`**：该接口优先走 **Tab 内本地 mock**（不发起 `fetch*` / `request`），用于无网关时的 UI 联调。
- * - **`false`**：应调用 `src/api/config-management.ts` 对应方法走真实网关；请求失败时部分 Tab 仍会 fallback 到本地数据。
+ * - **`false`**：应调用 `src/api/config-management/account-management.ts` 中对应 `fetch*` / `create*` 等方法走真实网关；请求失败时部分 Tab 仍会 fallback 到本地数据。
  *
  * 本开关 **仅** 在 `views/.../account-management` 各 Tab / `index.vue` 中读取；**不在** `src/api` 内分支。
  *
@@ -40,7 +40,12 @@ export const AccountApiSource: Record<
   | 'deleteOpenAccount'
   | 'exportOpenAccount'
   | 'fetchOpenAccountFeishuConfig'
-  | 'saveOpenAccountFeishuConfig',
+  | 'saveOpenAccountFeishuConfig'
+  | 'bcTable'
+  | 'createBc'
+  | 'updateBc'
+  | 'deleteBc'
+  | 'exportBc',
   UseMock
 > = {
   // ── 广告账户 Tab ─────────────────────────────────────
@@ -73,5 +78,11 @@ export const AccountApiSource: Record<
   deleteOpenAccount: true,
   exportOpenAccount: true,
   fetchOpenAccountFeishuConfig: true,
-  saveOpenAccountFeishuConfig: true
+  saveOpenAccountFeishuConfig: true,
+  // ── BC/BM（路由 `/account-management/bc-management`）────────────────
+  bcTable: true,
+  createBc: true,
+  updateBc: true,
+  deleteBc: true,
+  exportBc: true
 }

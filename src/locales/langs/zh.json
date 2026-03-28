@@ -297,6 +297,13 @@
       "notFound": "404",
       "serverError": "500"
     },
+    "accountManagement": {
+      "title": "账户管理",
+      "adAccount": "广告账户",
+      "agency": "代理商管理",
+      "bcManagement": "BC管理",
+      "openAccount": "开户管理"
+    },
     "configManagement": {
       "title": "配置管理",
       "applicationManagement": "应用管理",

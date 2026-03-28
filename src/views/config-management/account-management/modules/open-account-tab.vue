@@ -7,10 +7,19 @@
         <!-- 广告平台 -->
         <div class="filter-group">
           <span class="filter-label">广告平台：</span>
-          <el-select v-model="sourceFilter" placeholder="全部" class="filter-select" clearable>
-            <el-option label="全部" value="" />
-            <el-option v-for="p in PLATFORM_CONFIGS" :key="p.value" :label="p.label" :value="p.value" />
-          </el-select>
+          <div class="platform-tabs">
+            <button
+              :class="['platform-tab', { 'platform-tab--active': sourceFilter === '' }]"
+              @click="sourceFilter = ''"
+            >全部</button>
+            <button
+              v-for="p in PLATFORM_CONFIGS"
+              :key="p.value"
+              :class="['platform-tab', { 'platform-tab--active': sourceFilter === p.value }]"
+              :style="sourceFilter === p.value ? { color: p.color, borderColor: p.color, background: p.bg } : {}"
+              @click="sourceFilter = p.value"
+            >{{ p.shortLabel }}</button>
+          </div>
         </div>
         <!-- 开户状态 -->
         <div class="filter-group">
@@ -96,7 +105,10 @@
       >
         <el-table-column prop="id" label="申请ID" min-width="90">
           <template #default="{ row }">
-            <span class="apply-id" :style="{ color: row.id === selectedId ? '#22d3ee' : '#3b82f6' }">
+            <span
+              class="apply-id"
+              :style="{ color: row.id === (selectedId ?? innerSelectedId) ? '#22d3ee' : '#3b82f6' }"
+            >
               {{ row.id }}
             </span>
           </template>
@@ -149,19 +161,13 @@
         <el-table-column label="操作" min-width="160" fixed="right" align="center">
           <template #default="{ row }">
             <div class="action-btns">
-              <button class="action-btn action-btn--view" @click.stop="emit('detail', row)">
-                查看
-              </button>
+              <button class="action-link" @click.stop="handleRowClick(row)">[查看]</button>
               <button
                 v-if="row.status === '待分配'"
-                class="action-btn action-btn--assign"
+                class="action-link action-link--assign"
                 @click.stop="emit('assign', row)"
-              >
-                分配凭据
-              </button>
-              <button class="action-btn action-btn--del" @click.stop="emit('delete', row)">
-                删除
-              </button>
+              >[分配凭据]</button>
+              <button class="action-link action-link--del" @click.stop="emit('delete', row)">[删除]</button>
             </div>
           </template>
         </el-table-column>
@@ -202,10 +208,10 @@
 
   defineOptions({ name: 'OpenAccountTab' })
 
-  const props = defineProps<{ searchKeyword: string }>()
+  const props = defineProps<{ searchKeyword: string; selectedId?: string }>()
 
   const emit = defineEmits<{
-    detail: [row: OpenAccountItem]
+    select: [row: OpenAccountItem]
     assign: [row: OpenAccountItem]
     delete: [row: OpenAccountItem]
   }>()
@@ -217,7 +223,7 @@
   const currentPage = ref(1)
   const pageSize = ref(20)
   const jumpPage = ref('')
-  const selectedId = ref('')
+  const innerSelectedId = ref('')
 
   const list = ref<OpenAccountItem[]>([])
   const feishuEnabled = ref(true)
@@ -229,6 +235,7 @@
         const rows = (response as any)?.records ?? (response as any)?.list ?? []
         if (Array.isArray(rows)) {
           list.value = rows
+          autoSelectFirst()
           return
         }
       } catch {
@@ -236,6 +243,15 @@
       }
     }
     list.value = cloneOpenAccountMockList()
+    autoSelectFirst()
+  }
+
+  const autoSelectFirst = () => {
+    if (!props.selectedId && list.value.length > 0) {
+      const first = list.value[0]
+      innerSelectedId.value = first.id
+      emit('select', first)
+    }
   }
 
   const loadFeishuConfig = async () => {
@@ -253,9 +269,12 @@
     loadFeishuConfig()
   })
 
-  defineExpose({
-    reloadList: loadOpenAccountList
-  })
+  const removeFromList = (id: string) => {
+    list.value = list.value.filter((i) => i.id !== id)
+    if (innerSelectedId.value === id) innerSelectedId.value = ''
+  }
+
+  defineExpose({ reloadList: loadOpenAccountList, removeFromList })
 
   const filteredList = computed(() =>
     list.value.filter((item) => {
@@ -321,12 +340,13 @@
   }
 
   function getRowClass({ row }: { row: OpenAccountItem }) {
-    return row.id === selectedId.value ? 'row--selected' : ''
+    const activeId = props.selectedId ?? innerSelectedId.value
+    return row.id === activeId ? 'row--selected' : ''
   }
 
   const handleRowClick = (row: OpenAccountItem) => {
-    selectedId.value = row.id
-    emit('detail', row)
+    innerSelectedId.value = row.id
+    emit('select', row)
   }
 
   const handleJump = () => {
@@ -409,6 +429,32 @@
     }
   }
 
+  // ─── 平台 pill 筛选 ──────────────────────────────────
+  .platform-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .platform-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: 6px;
+    transition: all 0.15s;
+
+    &--active:not([style]) { color: #e2e8f0; background: rgb(255 255 255 / 8%); border-color: rgb(255 255 255 / 18%); }
+    &:not(.platform-tab--active):hover { color: #94a3b8; border-color: rgb(255 255 255 / 12%); }
+  }
+
   // ─── 状态筛选切换 ────────────────────────────────────
   .status-tabs {
     display: flex;
@@ -456,9 +502,9 @@
   // ─── 飞书推送 ────────────────────────────────────────
   .feishu-bar {
     display: flex;
+    flex-shrink: 0;
     gap: 8px;
     align-items: center;
-    flex-shrink: 0;
   }
 
   .feishu-label {
@@ -516,7 +562,7 @@
     &--fail { background: rgb(248 113 113 / 6%); border-color: rgb(248 113 113 / 20%); }
   }
 
-  .stat-label { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
+  .stat-label { margin-bottom: 8px; font-size: 12px; color: #94a3b8; }
 
   .stat-label-row {
     display: flex;
@@ -597,6 +643,7 @@
 
   .platform-icon-wrap {
     display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
     width: 26px;
@@ -604,7 +651,6 @@
     font-size: 11px;
     font-weight: 700;
     border-radius: 6px;
-    flex-shrink: 0;
   }
 
   .platform-name {
@@ -654,21 +700,22 @@
 
   .action-btns {
     display: flex;
-    gap: 6px;
+    flex-wrap: wrap;
+    gap: 4px;
     justify-content: center;
   }
 
-  .action-btn {
-    padding: 3px 8px;
+  .action-link {
+    padding: 2px 4px;
     font-size: 12px;
+    color: #3b82f6;
     cursor: pointer;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    transition: all 0.18s;
-
-    &--view   { color: #3b82f6; background: rgb(59 130 246 / 10%); border-color: rgb(59 130 246 / 20%); &:hover { background: rgb(59 130 246 / 20%); } }
-    &--assign { color: #22d3ee; background: rgb(34 211 238 / 10%); border-color: rgb(34 211 238 / 20%); &:hover { background: rgb(34 211 238 / 20%); } }
-    &--del    { color: #f87171; background: rgb(248 113 113 / 10%); border-color: rgb(248 113 113 / 20%); &:hover { background: rgb(248 113 113 / 20%); } }
+    background: none;
+    border: none;
+    transition: color 0.15s;
+    &:hover { color: #60a5fa; }
+    &--assign { color: #22d3ee; &:hover { color: #67e8f9; } }
+    &--del    { color: #f87171; &:hover { color: #fca5a5; } }
   }
 
   // ─── 分页 ────────────────────────────────────────────

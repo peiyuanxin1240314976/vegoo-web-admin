@@ -4,9 +4,9 @@
     width="400px"
     :close-on-click-modal="false"
     :show-close="true"
-    header-class="oa-delete-dialog-hd"
-    body-class="oa-delete-dialog-bd"
-    footer-class="oa-delete-dialog-ft"
+    header-class="bc-delete-dialog-hd"
+    body-class="bc-delete-dialog-bd"
+    footer-class="bc-delete-dialog-ft"
   >
     <template #header><span /></template>
 
@@ -23,27 +23,23 @@
     <p class="delete-subtitle">删除后数据无法恢复，请谨慎操作</p>
 
     <div class="info-card">
-      <div class="info-card__header">将要删除的开户记录</div>
+      <div class="info-card__header">将要删除的BC</div>
       <div class="info-card__body">
         <div class="info-row">
-          <span class="info-label">申请ID</span>
-          <span class="info-value info-value--mono">{{ data?.id ?? '—' }}</span>
+          <span class="info-label">BM名称</span>
+          <span class="info-value">{{ bcData?.bmName ?? '—' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">BM ID</span>
+          <span class="info-value info-value--mono">{{ bcData?.bmId ?? '—' }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">广告平台</span>
-          <span class="info-value" :style="{ color: getPlatformColor(data?.source ?? '') }">{{ data?.source ?? '—' }}</span>
+          <span class="info-value">{{ bcData?.source ?? '—' }}</span>
         </div>
         <div class="info-row">
-          <span class="info-label">应用</span>
-          <span class="info-value">{{ data?.app ?? '—' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">归属代理商</span>
-          <span class="info-value">{{ data?.agency ?? '—' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">状态</span>
-          <span :class="['status-val', getStatusClass(data?.status)]">{{ data?.status ?? '—' }}</span>
+          <span class="info-label">关联账户数</span>
+          <span class="info-value">{{ bcData?.linkedAccounts ?? 0 }} 个</span>
         </div>
       </div>
     </div>
@@ -54,7 +50,7 @@
         <path d="M8 6v3.5" stroke="#f59e0b" stroke-width="1.4" stroke-linecap="round"/>
         <circle cx="8" cy="11.5" r="0.6" fill="#f59e0b"/>
       </svg>
-      删除后该开户记录将永久删除，无法恢复
+      删除后关联账户将转为未分配状态
     </div>
 
     <template #footer>
@@ -66,14 +62,13 @@
 
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue'
-  import { PLATFORM_CONFIGS } from '../types'
-  import type { OpenAccountItem } from '../types'
+  import type { BcItem } from '../types'
 
-  defineOptions({ name: 'OpenAccountDeleteDialog' })
+  defineOptions({ name: 'BcDeleteDialog' })
 
   const props = defineProps<{
     visible: boolean
-    data: OpenAccountItem | null
+    bcData: BcItem | null
   }>()
 
   const emit = defineEmits<{
@@ -89,14 +84,6 @@
   const deleting = ref(false)
   watch(() => props.visible, (v) => { if (!v) deleting.value = false })
 
-  function getPlatformColor(s: string) { return PLATFORM_CONFIGS.find((p) => p.value === s)?.color ?? '#94a3b8' }
-
-  function getStatusClass(status?: string) {
-    if (status === '已激活') return 'status-val--ok'
-    if (status === '待分配') return 'status-val--pending'
-    return 'status-val--fail'
-  }
-
   const handleConfirm = async () => {
     deleting.value = true
     try {
@@ -110,7 +97,7 @@
 </script>
 
 <style lang="scss">
-  .el-dialog:has(.oa-delete-dialog-bd) {
+  .el-dialog:has(.bc-delete-dialog-bd) {
     overflow: hidden;
     background: var(--cm-dialog-bg-inner) !important;
     border: 1px solid var(--cm-dialog-border);
@@ -118,7 +105,7 @@
     box-shadow: var(--cm-dialog-shadow-lg) !important;
   }
 
-  .el-dialog:has(.oa-delete-dialog-bd) .el-dialog__header.oa-delete-dialog-hd {
+  .el-dialog:has(.bc-delete-dialog-bd) .el-dialog__header.bc-delete-dialog-hd {
     padding: 12px 16px 0;
     background: var(--cm-dialog-bg-inner);
     border-bottom: none;
@@ -126,12 +113,12 @@
     .el-icon { color: var(--cm-dialog-text-muted) !important; }
   }
 
-  .el-dialog:has(.oa-delete-dialog-bd) .el-dialog__body.oa-delete-dialog-bd {
+  .el-dialog:has(.bc-delete-dialog-bd) .el-dialog__body.bc-delete-dialog-bd {
     padding: 8px 28px 16px;
     background: var(--cm-dialog-bg-inner);
   }
 
-  .el-dialog:has(.oa-delete-dialog-bd) .el-dialog__footer.oa-delete-dialog-ft {
+  .el-dialog:has(.bc-delete-dialog-bd) .el-dialog__footer.bc-delete-dialog-ft {
     display: flex;
     gap: 10px;
     justify-content: flex-end;
@@ -206,14 +193,6 @@
     font-size: 13px;
     color: #e2e8f0;
     &--mono { font-family: 'SF Mono', monospace; font-size: 11px; }
-  }
-
-  .status-val {
-    font-size: 12px;
-    font-weight: 600;
-    &--ok      { color: #22c55e; }
-    &--pending { color: #f59e0b; }
-    &--fail    { color: #f87171; }
   }
 
   .warn-tip {

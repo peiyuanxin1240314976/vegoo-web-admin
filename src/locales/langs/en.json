@@ -297,6 +297,13 @@
       "notFound": "404",
       "serverError": "500"
     },
+    "accountManagement": {
+      "title": "Account Management",
+      "adAccount": "Ad Accounts",
+      "agency": "Agency Management",
+      "bcManagement": "BC Management",
+      "openAccount": "Account Opening"
+    },
     "configManagement": {
       "title": "Configuration",
       "applicationManagement": "Application Management",

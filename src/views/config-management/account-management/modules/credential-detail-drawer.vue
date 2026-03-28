@@ -278,9 +278,9 @@
 
   .header-left {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     align-items: center;
-    flex-wrap: wrap;
     min-width: 0;
   }
 
@@ -292,9 +292,9 @@
 
   .header-right {
     display: flex;
+    flex-shrink: 0;
     gap: 8px;
     align-items: center;
-    flex-shrink: 0;
   }
 
   .btn-edit {
@@ -341,6 +341,7 @@
 
     &--ok    { color: #22c55e; background: rgb(34 197 94 / 10%);  .status-dot { background: #22c55e; } }
     &--fail  { color: #f87171; background: rgb(248 113 113 / 10%); .status-dot { background: #f87171; } }
+
     &--pending { color: #f59e0b; background: rgb(245 158 11 / 10%);
       .status-dot { background: transparent; border: 1.5px solid #f59e0b; }
     }
@@ -351,8 +352,8 @@
   // ─── 正文 ────────────────────────────────────────────
   .drawer-body {
     flex: 1;
-    overflow-y: auto;
     padding: 0 20px;
+    overflow-y: auto;
 
     &::-webkit-scrollbar { width: 4px; }
     &::-webkit-scrollbar-track { background: transparent; }
@@ -373,12 +374,12 @@
   }
 
   .section-title {
+    margin-bottom: 14px;
     font-size: 11px;
     font-weight: 600;
     color: #475569;
-    letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-bottom: 14px;
+    letter-spacing: 0.08em;
   }
 
   .section-header .section-title { margin-bottom: 0; }
@@ -428,7 +429,7 @@
     font-size: 13px;
     color: #e2e8f0;
 
-    &--blue { color: #3b82f6; font-weight: 600; }
+    &--blue { font-weight: 600; color: #3b82f6; }
   }
 
   .platform-cell {
@@ -466,7 +467,7 @@
   .config-row {
     display: grid;
     grid-template-columns: 80px 1fr 80px 1fr;
-    gap: 8px 8px;
+    gap: 8px;
     align-items: center;
     padding: 8px 12px;
     background: rgb(255 255 255 / 3%);
@@ -490,22 +491,22 @@
 
   .config-val {
     overflow: hidden;
-    font-size: 12px;
     font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
     color: #cbd5e1;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .copy-btn {
-    flex-shrink: 0;
     display: flex;
+    flex-shrink: 0;
     align-items: center;
+    padding: 2px;
     color: #475569;
     cursor: pointer;
     background: transparent;
     border: none;
-    padding: 2px;
     border-radius: 3px;
     transition: color 0.15s;
     &:hover { color: #94a3b8; }
@@ -527,16 +528,16 @@
   }
 
   .history-dot {
+    flex-shrink: 0;
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    flex-shrink: 0;
 
     &--ok   { background: #22c55e; }
     &--fail { background: #f87171; }
   }
 
-  .history-time { color: #64748b; font-family: monospace; }
+  .history-time { font-family: monospace; color: #64748b; }
 
   .history-status {
     &--ok   { color: #22c55e; }
@@ -545,17 +546,17 @@
 
   .history-detail {
     margin-left: 4px;
-    color: #94a3b8;
     font-size: 11px;
+    color: #94a3b8;
   }
 
   .history-trigger { color: #475569; text-align: right; }
 
   .no-history {
+    padding: 16px 0;
     font-size: 13px;
     color: #475569;
     text-align: center;
-    padding: 16px 0;
   }
 
   // ─── 底部 ────────────────────────────────────────────

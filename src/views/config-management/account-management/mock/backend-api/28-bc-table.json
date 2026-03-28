@@ -1,0 +1,126 @@
+{
+  "_comment": "BC/BM 管理 — 分页列表。对应 types.ts: BcTableQuery / BcItem。路由 `/account-management/bc-management`，`bc-tab.vue` 首屏加载。",
+  "fieldDescription": {
+    "request": {
+      "current": { "type": "number", "required": true, "description": "当前页码，从 1 开始。", "default": 1 },
+      "size": { "type": "number", "required": true, "description": "每页条数。", "default": 20 },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "关键词，匹配列表行 id、bmId、bmName。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台筛选，空为全部，如 Meta Ads、TikTok Ads。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "状态：健康 | 可用 | 不再使用 | 封禁 | 其他，空为全部。"
+      },
+      "ownerType": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "开户主体：企业户 | 个人户 | 小额广告户，空为全部。"
+      },
+      "banRecord": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "封户记录：有 | 无，空为全部。"
+      }
+    },
+    "response": {
+      "data": {
+        "records": { "type": "BcItem[]", "required": true, "description": "当前页记录。" },
+        "total": { "type": "number", "required": true, "description": "总条数。" },
+        "current": { "type": "number", "required": true, "description": "当前页码。" },
+        "size": { "type": "number", "required": true, "description": "每页条数。" }
+      }
+    },
+    "BcItem": {
+      "id": { "type": "string", "required": true, "description": "业务主键/列表行 ID，如 BM-001。" },
+      "bmId": { "type": "string", "required": true, "description": "BM 平台数字 ID。" },
+      "bmName": { "type": "string", "required": true, "description": "BM 名称。" },
+      "source": { "type": "string", "required": true, "description": "广告平台文案，与前端 AdPlatform 一致。" },
+      "group": { "type": "string", "required": true, "description": "归属组。" },
+      "status": { "type": "string", "required": true, "description": "BC 状态。" },
+      "ownerType": { "type": "string", "required": true, "description": "开户主体。" },
+      "manager": { "type": "string", "required": true, "description": "管理员。" },
+      "banRecord": { "type": "string", "required": true, "description": "有 | 无。" },
+      "banDesc": { "type": "string", "required": false, "description": "封户说明。" },
+      "createTime": { "type": "string", "required": true, "description": "创建时间 YYYY-MM-DD。" },
+      "remark": { "type": "string", "required": false, "description": "备注。" },
+      "linkedAccounts": { "type": "number", "required": true, "description": "关联账户数。" },
+      "activeAccounts": { "type": "number", "required": true, "description": "活跃账户数。" },
+      "inactiveAccounts": { "type": "number", "required": true, "description": "已停用账户数。" },
+      "monthSpend": { "type": "number", "required": true, "description": "本月消耗（展示货币与前端一致，默认同列表 mock 为美元量级）。" },
+      "monthOpenCount": { "type": "number", "required": true, "description": "本月开户数。" }
+    }
+  },
+  "sampleRequest": {
+    "current": 1,
+    "size": 20,
+    "keyword": "",
+    "source": "",
+    "status": "",
+    "ownerType": "",
+    "banRecord": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "records": [
+        {
+          "id": "BM-001",
+          "bmId": "123456789012345",
+          "bmName": "Vegoo主务BC",
+          "source": "Meta Ads",
+          "group": "Google组",
+          "status": "健康",
+          "ownerType": "企业户",
+          "manager": "张三",
+          "banRecord": "无",
+          "banDesc": "",
+          "createTime": "2022-06-15",
+          "remark": "Vegoo公司主要Meta平台BC",
+          "linkedAccounts": 45,
+          "activeAccounts": 40,
+          "inactiveAccounts": 5,
+          "monthSpend": 128450.35,
+          "monthOpenCount": 8
+        }
+      ],
+      "total": 8,
+      "current": 1,
+      "size": 20
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/bc/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "BcTableQuery",
+    "responseBody": "PaginatedResponse<BcItem>"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "路由 `/account-management/bc-management`，`bc-tab.vue` onMounted 调用 `loadList` / `reloadList`。",
+        "prerequisite": "`AccountApiSource.bcTable` 为 false 时走 `fetchBcTable`；为 true 时用 Tab 内本地 mock。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "新建/编辑/删除成功后父组件 `reloadList` 再次请求列表。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "current=1，size 由前端决定（可与代理商 Tab 一致拉取较大 size 做本地筛选）。keyword 与 Tab 内筛选可合并进请求或仅前端过滤，联调时与后端约定。",
+    "dedupe": "无"
+  }
+}

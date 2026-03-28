@@ -96,6 +96,7 @@
         :data="pagedList"
         class="account-table"
         table-layout="fixed"
+        :row-class-name="({ row }: { row: AdAccountItem }) => row.id === props.selectedId ? 'row-selected' : ''"
         @row-click="handleRowClick"
       >
         <el-table-column prop="id" label="账户ID" min-width="100" show-overflow-tooltip>
@@ -200,6 +201,7 @@
 
   const props = defineProps<{
     searchKeyword: string
+    selectedId?: string
   }>()
 
   const emit = defineEmits<{
@@ -208,6 +210,7 @@
     recharge: [row: AdAccountItem]
     disable: [row: AdAccountItem]
     detail: [row: AdAccountItem]
+    select: [row: AdAccountItem]
   }>()
 
   const accountTypeOptions = [
@@ -240,6 +243,7 @@
         const rows = (response as any)?.records ?? (response as any)?.list ?? []
         if (Array.isArray(rows)) {
           accountList.value = rows
+          autoSelectFirst()
           return
         }
       } catch {
@@ -247,6 +251,14 @@
       }
     }
     accountList.value = cloneAccountMockList()
+    autoSelectFirst()
+  }
+
+  const autoSelectFirst = () => {
+    const first = accountList.value[0]
+    if (first && !props.selectedId) {
+      emit('select', first)
+    }
   }
 
   onMounted(() => {
@@ -308,6 +320,7 @@
   }
 
   const handleRowClick = (row: AdAccountItem) => {
+    emit('select', row)
     emit('detail', row)
   }
 
@@ -522,6 +535,11 @@
     :deep(tr) { background: transparent !important; }
 
     :deep(.el-table__inner-wrapper::before) { display: none; }
+
+    :deep(tr.row-selected td.el-table__cell) {
+      background: var(--accent-dim) !important;
+      border-bottom-color: rgb(59 130 246 / 20%) !important;
+    }
   }
 
   .acc-id {

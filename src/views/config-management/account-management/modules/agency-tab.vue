@@ -5,15 +5,21 @@
       <!-- 广告平台 -->
       <div class="filter-group">
         <span class="filter-label">广告平台：</span>
-        <el-select v-model="sourceFilter" placeholder="全部" class="filter-select" clearable>
-          <el-option label="全部" value="" />
-          <el-option
+        <div class="toggle-tabs">
+          <button
+            :class="['toggle-tab', { 'toggle-tab--active': sourceFilter === '' }]"
+            @click="sourceFilter = ''"
+          >全部</button>
+          <button
             v-for="p in PLATFORM_CONFIGS"
             :key="p.value"
-            :label="p.label"
-            :value="p.value"
-          />
-        </el-select>
+            :class="['toggle-tab', 'toggle-tab--platform', { 'toggle-tab--active': sourceFilter === p.value }]"
+            :style="sourceFilter === p.value ? { color: p.color, borderColor: p.color, background: p.bg } : {}"
+            @click="sourceFilter = p.value"
+          >
+            {{ p.shortLabel }}
+          </button>
+        </div>
       </div>
       <!-- 合作模式 -->
       <div class="filter-group">
@@ -24,23 +30,19 @@
             :key="m.value"
             :class="['toggle-tab', { 'toggle-tab--active': coopModeFilter === m.value }]"
             @click="coopModeFilter = m.value"
-          >
-            {{ m.label }}
-          </button>
+          >{{ m.label }}</button>
         </div>
       </div>
-      <!-- 合作状态 -->
+      <!-- 状态 -->
       <div class="filter-group">
-        <span class="filter-label">合作状态：</span>
+        <span class="filter-label">状态：</span>
         <div class="toggle-tabs">
           <button
             v-for="s in statusOptions"
             :key="s.value"
             :class="['toggle-tab', { 'toggle-tab--active': statusFilter === s.value }]"
             @click="statusFilter = s.value"
-          >
-            {{ s.label }}
-          </button>
+          >{{ s.label }}</button>
         </div>
       </div>
     </div>
@@ -131,13 +133,13 @@
         <el-table-column label="操作" min-width="180" fixed="right" align="center">
           <template #default="{ row }">
             <div class="action-btns">
-              <button class="action-btn action-btn--view" @click.stop="emit('detail', row)">
+              <button class="action-btn action-btn--view" @click.stop="emit('select', row)">
                 查看
               </button>
               <button class="action-btn action-btn--edit" @click.stop="emit('edit', row)">
                 编辑
               </button>
-              <button class="action-btn action-btn--del" @click.stop="handleDelete(row)">
+              <button class="action-btn action-btn--del" @click.stop="emit('delete', row)">
                 删除
               </button>
             </div>
@@ -167,8 +169,7 @@
 
 <script setup lang="ts">
   import { onMounted, ref, computed, watch } from 'vue'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import { deleteAgency, fetchAgencyTable } from '@/api/config-management/account-management'
+  import { fetchAgencyTable } from '@/api/config-management/account-management'
   import { getAppNowMs } from '@/utils/app-now'
   import { AccountApiSource } from '../config/data-source'
   import { cloneAgencyMockList } from '../mock/data'
@@ -179,11 +180,13 @@
 
   const props = defineProps<{
     searchKeyword: string
+    selectedId?: string
   }>()
 
   const emit = defineEmits<{
-    detail: [row: AgencyItem]
+    select: [row: AgencyItem]
     edit: [row: AgencyItem]
+    delete: [row: AgencyItem]
   }>()
 
   const coopModeOptions = [
@@ -195,7 +198,8 @@
   const statusOptions = [
     { label: '全部', value: '' },
     { label: '已合作', value: '已合作' },
-    { label: '洽谈中', value: '洽谈中' },
+    { label: '待开通', value: '洽谈中' },
+    { label: '已到期', value: '已到期' },
     { label: '已终止', value: '已终止' }
   ]
 
@@ -205,7 +209,7 @@
   const currentPage = ref(1)
   const pageSize = ref(20)
   const jumpPage = ref('')
-  const selectedId = ref('')
+  const innerSelectedId = ref('')
 
   const agencyList = ref<AgencyItem[]>([])
 
@@ -216,6 +220,7 @@
         const rows = (response as any)?.records ?? (response as any)?.list ?? []
         if (Array.isArray(rows)) {
           agencyList.value = rows
+          autoSelectFirst()
           return
         }
       } catch {
@@ -223,14 +228,19 @@
       }
     }
     agencyList.value = cloneAgencyMockList()
+    autoSelectFirst()
+  }
+
+  const autoSelectFirst = () => {
+    if (!props.selectedId && agencyList.value.length > 0) {
+      const first = agencyList.value[0]
+      innerSelectedId.value = first.id
+      emit('select', first)
+    }
   }
 
   onMounted(() => {
     loadAgencyList()
-  })
-
-  defineExpose({
-    reloadList: loadAgencyList
   })
 
   const filteredList = computed(() => {
@@ -289,12 +299,12 @@
   }
 
   function getRowClass({ row }: { row: AgencyItem }) {
-    return row.id === selectedId.value ? 'row--selected' : ''
+    return row.id === (props.selectedId ?? innerSelectedId.value) ? 'row--selected' : ''
   }
 
   const handleRowClick = (row: AgencyItem) => {
-    selectedId.value = row.id
-    emit('detail', row)
+    innerSelectedId.value = row.id
+    emit('select', row)
   }
 
   const handleJump = () => {
@@ -305,27 +315,16 @@
     currentPage.value = Math.min(raw, maxPage)
   }
 
-  const handleDelete = async (row: AgencyItem) => {
-    try {
-      await ElMessageBox.confirm(
-        `确认删除代理商「${row.agencyName}」？此操作不可恢复。`,
-        '删除代理商',
-        { confirmButtonText: '确认删除', cancelButtonText: '取消', type: 'warning' }
-      )
-      if (!AccountApiSource.deleteAgency) {
-        try {
-          await deleteAgency(row.id)
-        } catch {
-          // keep local fallback behavior
-        }
-      }
-      agencyList.value = agencyList.value.filter((i) => i.id !== row.id)
-      if (selectedId.value === row.id) selectedId.value = ''
-      ElMessage.success('删除成功')
-    } catch {
-      // 取消
-    }
+  // 从列表中移除已删除的代理商（供父组件调用）
+  const removeFromList = (id: string) => {
+    agencyList.value = agencyList.value.filter((i) => i.id !== id)
+    if (innerSelectedId.value === id) innerSelectedId.value = ''
   }
+
+  defineExpose({
+    reloadList: loadAgencyList,
+    removeFromList
+  })
 </script>
 
 <style lang="scss" scoped>
@@ -404,6 +403,14 @@
       background: rgb(59 130 246 / 12%);
       border-color: rgb(59 130 246 / 30%);
     }
+
+    &--platform {
+      min-width: 36px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+    }
   }
 
   // ─── 统计卡片 ────────────────────────────────────────
@@ -459,8 +466,8 @@
     :deep(th.el-table__cell) {
       font-size: 12px;
       font-weight: 500;
-      letter-spacing: 0.02em;
       text-transform: uppercase;
+      letter-spacing: 0.02em;
       background: transparent;
     }
 

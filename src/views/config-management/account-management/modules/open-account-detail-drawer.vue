@@ -216,20 +216,20 @@
 
   // ─── 头部 ────────────────────────────────────────────
   .drawer-header {
-    padding: 16px 18px;
-    border-bottom: 1px solid rgb(255 255 255 / 7%);
     display: flex;
     flex-direction: column;
     gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid rgb(255 255 255 / 7%);
   }
 
   .header-id-row {
-    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
   }
 
   .oa-id {
-    font-size: 17px; font-weight: 700;
     font-family: 'SF Mono', monospace;
+    font-size: 17px; font-weight: 700;
     color: #e2e8f0;
   }
 
@@ -254,7 +254,7 @@
   }
 
   .header-actions {
-    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
   }
 
   .btn-assign {
@@ -285,9 +285,9 @@
   }
 
   .close-btn {
-    margin-left: auto;
     display: flex; align-items: center; justify-content: center;
     width: 28px; height: 28px;
+    margin-left: auto;
     color: #64748b; cursor: pointer;
     background: transparent; border: none; border-radius: 6px;
     &:hover { color: #e2e8f0; background: rgb(255 255 255 / 6%); }
@@ -295,7 +295,7 @@
 
   // ─── 正文 ────────────────────────────────────────────
   .drawer-body {
-    flex: 1; overflow-y: auto; padding: 0 18px;
+    flex: 1; padding: 0 18px; overflow-y: auto;
     &::-webkit-scrollbar { width: 4px; }
     &::-webkit-scrollbar-track { background: transparent; }
     &::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 10%); border-radius: 2px; }
@@ -313,10 +313,10 @@
   }
 
   .section-title {
-    font-size: 11px; font-weight: 600;
-    color: #475569; letter-spacing: 0.08em;
-    text-transform: uppercase;
     margin-bottom: 14px;
+    font-size: 11px; font-weight: 600;
+    color: #475569;
+    text-transform: uppercase; letter-spacing: 0.08em;
   }
 
   .section-header .section-title { margin-bottom: 0; }
@@ -350,10 +350,10 @@
   .platform-cell { display: flex; gap: 6px; align-items: center; }
 
   .platform-icon-wrap {
-    display: inline-flex; align-items: center; justify-content: center;
+    display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center;
     width: 24px; height: 24px;
     font-size: 10px; font-weight: 700;
-    border-radius: 5px; flex-shrink: 0;
+    border-radius: 5px;
   }
 
   .app-chip {
@@ -387,8 +387,8 @@
   .cred-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
 
   .cred-hint {
-    margin-top: 6px; font-size: 12px; color: #64748b;
     padding: 6px 10px;
+    margin-top: 6px; font-size: 12px; color: #64748b;
     background: rgb(34 197 94 / 6%);
     border: 1px solid rgb(34 197 94 / 15%);
     border-radius: 6px;
@@ -401,8 +401,8 @@
   }
 
   .feishu-dot-sm {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: #22c55e;
+    width: 6px; height: 6px;
+    background: #22c55e; border-radius: 50%;
     box-shadow: 0 0 5px #22c55e;
   }
 
@@ -413,8 +413,8 @@
   }
 
   .feishu-item-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    flex-shrink: 0; margin-top: 3px;
+    flex-shrink: 0;
+    width: 8px; height: 8px; margin-top: 3px; border-radius: 50%;
     &--ok   { background: #22c55e; }
     &--fail { background: #f87171; }
   }
@@ -422,11 +422,12 @@
   .feishu-item-body { display: flex; flex-direction: column; gap: 3px; }
 
   .feishu-item-top {
-    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
   }
 
-  .feishu-time { font-size: 12px; color: #64748b; font-family: monospace; }
+  .feishu-time { font-family: monospace; font-size: 12px; color: #64748b; }
   .feishu-event { font-size: 12px; color: #e2e8f0; }
+
   .feishu-result {
     font-size: 11px;
     &--ok   { color: #22c55e; }
@@ -435,10 +436,10 @@
 
   .feishu-target { font-size: 11px; color: #475569; }
 
-  .no-records { font-size: 13px; color: #475569; padding: 8px 0; }
+  .no-records { padding: 8px 0; font-size: 13px; color: #475569; }
 
-  .feishu-footer-tip {
-    margin-top: 12px; padding: 8px 12px;
+  .feishu-footer-tip { padding: 8px 12px;
+    margin-top: 12px;
     font-size: 11px; color: #475569;
     background: rgb(255 255 255 / 2%);
     border-radius: 6px;

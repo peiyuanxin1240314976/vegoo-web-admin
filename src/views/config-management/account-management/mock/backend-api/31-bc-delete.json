@@ -1,0 +1,35 @@
+{
+  "_comment": "BC/BM 管理 — 删除。id 放入请求体，POST。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "BC 业务 ID，如 BM-001。" }
+    },
+    "response": {
+      "data": { "type": "null", "description": "成功时 data 可为 null，依赖 HTTP 200 与业务码。" }
+    }
+  },
+  "sampleRequest": {
+    "id": "BM-008"
+  },
+  "sampleResponse": {
+    "data": null
+  },
+  "api": {
+    "url": "POST /api/config-management/bc/delete",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ id }",
+    "responseBody": "null"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "删除确认后 `deleteBc`；`bc-management/index.vue` 中本地列表同步移除并刷新。",
+        "prerequisite": "`AccountApiSource.deleteBc` 为 false 时走网关。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
+  }
+}

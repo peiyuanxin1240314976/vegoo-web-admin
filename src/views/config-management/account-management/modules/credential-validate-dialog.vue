@@ -210,10 +210,10 @@
 
   .el-dialog:has(.cred-validate-dialog-bd) .el-dialog__footer.cred-validate-dialog-ft {
     padding: 14px 20px;
+    text-align: right;
     background: var(--cm-dialog-bg-inner);
     border-top: 1px solid var(--cm-dialog-border);
     border-radius: 0 0 12px 12px;
-    text-align: right;
   }
 </style>
 
@@ -301,9 +301,9 @@
   }
 
   .info-key {
+    flex-shrink: 0;
     width: 70px;
     color: #64748b;
-    flex-shrink: 0;
   }
 
   .info-val { color: #e2e8f0; }
@@ -351,8 +351,8 @@
   .account-access-label { color: #64748b; }
 
   .account-access-count {
-    color: #3b82f6;
     font-weight: 600;
+    color: #3b82f6;
   }
 
   .acc-chip {

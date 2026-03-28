@@ -1,0 +1,75 @@
+{
+  "_comment": "BC/BM 管理 — 新建。请求体对应 types.ts: BcFormModel（新建时 bmId 必填）。响应为完整 BcItem。",
+  "fieldDescription": {
+    "request": {
+      "source": { "type": "string", "required": true, "description": "广告平台。" },
+      "bmId": { "type": "string", "required": true, "description": "BM 平台 ID。" },
+      "bmName": { "type": "string", "required": true, "description": "BM 名称。" },
+      "group": { "type": "string", "required": true, "description": "归属组。" },
+      "status": { "type": "string", "required": true, "description": "状态。" },
+      "ownerType": { "type": "string", "required": true, "description": "开户主体。" },
+      "manager": { "type": "string", "required": true, "description": "管理员。" },
+      "banRecord": { "type": "string", "required": true, "description": "有 | 无。" },
+      "banDesc": { "type": "string", "required": false, "description": "封户说明，banRecord 为「有」时建议填写。" },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "data": {
+        "type": "BcItem",
+        "required": true,
+        "description": "新建后的完整对象，含服务端生成的 id 及统计类字段默认值或初值。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "source": "TikTok Ads",
+    "bmId": "998877665544332",
+    "bmName": "测试新建BC",
+    "group": "TikTok组",
+    "status": "健康",
+    "ownerType": "企业户",
+    "manager": "张三",
+    "banRecord": "无",
+    "banDesc": "",
+    "remark": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "id": "BM-009",
+      "bmId": "998877665544332",
+      "bmName": "测试新建BC",
+      "source": "TikTok Ads",
+      "group": "TikTok组",
+      "status": "健康",
+      "ownerType": "企业户",
+      "manager": "张三",
+      "banRecord": "无",
+      "banDesc": "",
+      "createTime": "2026-03-28",
+      "remark": "",
+      "linkedAccounts": 0,
+      "activeAccounts": 0,
+      "inactiveAccounts": 0,
+      "monthSpend": 0,
+      "monthOpenCount": 0
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/bc",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "BcFormModel",
+    "responseBody": "BcItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "「新建 BC」表单提交。`bc-management/index.vue` 中 `handleFormSuccess` 在非 mock 时调用 `createBc`。",
+        "prerequisite": "`AccountApiSource.createBc` 为 false 时走网关。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "提交中按钮 loading，避免重复提交。"
+  }
+}

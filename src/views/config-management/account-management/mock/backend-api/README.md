@@ -2,13 +2,14 @@
 
 父级 API：`/api/config-management`
 
-本目录按“一接口一文件”维护 `account-management` 契约 JSON，当前覆盖四个子域：
+本目录按“一接口一文件”维护 `account-management` 契约 JSON，当前覆盖五个子域：
 
 - 广告账户：`01~07`
 - 代理商管理：`08~11`
 - 凭据管理：`12~16`
 - 开户管理：`17~20`
 - 扩展接口：`21~27`
+- **BC/BM 管理**：`28~32`（路由 `/account-management/bc-management`）
 
 ## 接口清单（含紧急程度）
 
@@ -39,6 +40,11 @@
 - `25-open-account-feishu-config-fetch.json`：开户飞书推送设置读取（P1）
 - `26-open-account-feishu-config-save.json`：开户飞书推送设置保存（P1）
 - `27-open-account-export.json`：开户记录导出（P1）
+- `28-bc-table.json`：BC/BM 分页列表（P0）
+- `29-bc-create.json`：新建 BC（P0）
+- `30-bc-update.json`：编辑 BC（P0）
+- `31-bc-delete.json`：删除 BC（P0）
+- `32-bc-export.json`：BC 列表导出（P1）
 
 ## 场景 → 接口（路由：`/config-management/account-management`）
 
@@ -56,7 +62,16 @@
 | 飞书推送设置 | 开户 Tab 设置入口 | `25` / `26` | `fetchOpenAccountFeishuConfig` / `saveOpenAccountFeishuConfig` |
 | 开户记录导出 | 开户 Tab 导出 | `27` | `exportOpenAccountList` |
 
-各 JSON 根级 `interaction` 与上表一致；联调以 **`src/api/config-management.ts` 实际 URL、方法** 为准。
+## 场景 → 接口（路由：`/account-management/bc-management`）
+
+| 场景 | 触发时机 | 契约 JSON | `src/api` 方法 |
+| --- | --- | --- | --- |
+| BC 列表首屏 | `bc-tab` 挂载 / 刷新 | `28-bc-table.json` | `fetchBcTable` |
+| 新建/编辑 BC | 表单提交（父页 `handleFormSuccess`） | `29` / `30` | `createBc` / `updateBc` |
+| 删除 BC | 删除确认 | `31` | `deleteBc` |
+| 导出 | 页头导出 | `32` | `exportBcList` |
+
+各 JSON 根级 `interaction` 与上表一致；联调以 **`src/api/config-management/account-management.ts` 实际 URL、方法** 为准。
 
 ## 开关与 Mock 语义
 

@@ -65,16 +65,6 @@ export const configManagementRoutes: AppRouteRecord = {
       }
     },
     {
-      path: 'account-management',
-      name: 'AccountManagement',
-      component: '/config-management/account-management',
-      meta: {
-        title: 'menus.configManagement.accountManagement',
-        keepAlive: true,
-        roles: ['R_SUPER', 'R_ADMIN']
-      }
-    },
-    {
       path: 'ad-account-management',
       name: 'AdAccountManagement',
       component: '/config-management/ad-account-management',

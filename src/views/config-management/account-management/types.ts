@@ -58,16 +58,17 @@ export interface AdAccountItem {
 
 /** 新增 / 编辑表单模型 */
 export interface AccountFormModel {
+  /** 新建时由用户填写，编辑时只读 */
+  id: string
   source: AdPlatform | ''
   accountName: string
   accountType: AccountType
-  openAmount: number
-  agency: string
   bcBm: string
-  apps: string[]
+  agency: string
   platform: string[]
-  purposes: string[]
-  credential: string
+  apps: string[]
+  spendLimit: string
+  currency: string
   remark: string
 }
 
@@ -164,6 +165,7 @@ export interface AgencyFormModel {
   contact: string
   email: string
   phone: string
+  agencyAccount: string
   startDate: string
   expireDate: string
   remark: string
@@ -231,6 +233,7 @@ export interface CredentialFormModel {
   source: AdPlatform | ''
   group: string
   credentialType: CredentialType
+  expireTime: string
   remark: string
   apps: string[]
   config: {
@@ -333,6 +336,71 @@ export interface OpenAccountTableQuery {
   status?: string
   agency?: string
   app?: string
+}
+
+// ─── BC / BM 管理 ──────────────────────────────────────────
+
+export type BcStatus = '健康' | '可用' | '不再使用' | '封禁' | '其他'
+export type BcOwnerType = '企业户' | '个人户' | '小额广告户'
+export type BcBanRecord = '无' | '有'
+
+export interface BcItem {
+  id: string
+  /** BM平台ID */
+  bmId: string
+  /** BM名称 */
+  bmName: string
+  /** 广告平台 */
+  source: AdPlatform
+  /** 归属组 */
+  group: string
+  /** 状态 */
+  status: BcStatus
+  /** 开户主体 */
+  ownerType: BcOwnerType
+  /** 管理员 */
+  manager: string
+  /** 封户记录 */
+  banRecord: BcBanRecord
+  /** 封户记录说明 */
+  banDesc: string
+  /** 创建时间 */
+  createTime: string
+  /** 备注 */
+  remark: string
+  /** 关联账户数 */
+  linkedAccounts: number
+  /** 活跃账户数 */
+  activeAccounts: number
+  /** 已停用账户数 */
+  inactiveAccounts: number
+  /** 本月消耗 */
+  monthSpend: number
+  /** 本月开户数 */
+  monthOpenCount: number
+}
+
+export interface BcFormModel {
+  source: AdPlatform | ''
+  bmId: string
+  bmName: string
+  group: string
+  status: BcStatus
+  ownerType: BcOwnerType
+  manager: string
+  banRecord: BcBanRecord
+  banDesc: string
+  remark: string
+}
+
+export interface BcTableQuery {
+  current: number
+  size: number
+  keyword?: string
+  source?: string
+  status?: string
+  ownerType?: string
+  banRecord?: string
 }
 
 // ─── 广告平台配置 ───────────────────────────────────────────

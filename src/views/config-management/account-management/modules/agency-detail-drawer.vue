@@ -272,11 +272,13 @@
   // ─── 过渡动画 ────────────────────────────────────────
   .fade-enter-active,
   .fade-leave-active { transition: opacity 0.22s ease; }
+
   .fade-enter-from,
   .fade-leave-to { opacity: 0; }
 
   .drawer-slide-enter-active,
   .drawer-slide-leave-active { transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+
   .drawer-slide-enter-from,
   .drawer-slide-leave-to { transform: translateX(100%); }
 
@@ -299,9 +301,9 @@
 
   .header-name-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
-    flex-wrap: wrap;
   }
 
   .agency-name {
@@ -327,9 +329,9 @@
 
   .header-right {
     display: flex;
+    flex-shrink: 0;
     gap: 8px;
     align-items: center;
-    flex-shrink: 0;
   }
 
   .btn-edit {
@@ -410,14 +412,15 @@
   // ─── 正文 ────────────────────────────────────────────
   .drawer-body {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 0;
-    flex: 1;
-    overflow-y: auto;
     padding: 0 20px;
+    overflow-y: auto;
 
     &::-webkit-scrollbar { width: 4px; }
     &::-webkit-scrollbar-track { background: transparent; }
+
     &::-webkit-scrollbar-thumb {
       background: rgb(255 255 255 / 10%);
       border-radius: 2px;
@@ -436,8 +439,8 @@
     font-size: 11px;
     font-weight: 600;
     color: #475569;
-    letter-spacing: 0.08em;
     text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 
   .info-list {
@@ -465,8 +468,8 @@
     word-break: break-all;
 
     &--remark {
-      color: #94a3b8;
       line-height: 1.5;
+      color: #94a3b8;
     }
   }
 

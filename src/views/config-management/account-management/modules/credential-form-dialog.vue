@@ -1,174 +1,207 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    :title="isEdit ? `编辑凭据 ${editData?.name}` : '新建凭据'"
-    width="520px"
+    :title="isEdit ? '编辑凭证' : '新建凭证'"
+    width="560px"
     :close-on-click-modal="false"
     header-class="cred-form-dialog-hd"
     body-class="cred-form-dialog-bd"
     footer-class="cred-form-dialog-ft"
   >
-    <!-- 编辑警告栏 -->
-    <div v-if="isEdit" class="warn-bar">
-      <svg viewBox="0 0 16 16" fill="none" width="14" height="14" class="warn-icon">
-        <path d="M8 2L14 13H2L8 2Z" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round"/>
-        <path d="M8 6v4M8 11.5v.5" stroke="#f59e0b" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
-      修改凭据内容将影响 <strong>{{ editData?.accountCount }}</strong> 个关联账户的API调用，请谨慎操作
+    <!-- 副标题：关联账户 -->
+    <div v-if="accountData" class="dialog-subtitle">
+      关联账户：{{ accountData.accountName }}（{{ accountData.id }}）
     </div>
 
-    <el-form
-      ref="formRef"
-      :model="form"
-      :rules="rules"
-      label-position="top"
-      class="cred-form"
-    >
-      <!-- 凭据名称 -->
-      <el-form-item label="凭据名称" prop="name">
-        <el-input v-model="form.name" placeholder="请输入凭据名称" class="form-input" clearable />
-      </el-form-item>
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="0" class="cred-form">
 
-      <!-- 广告平台 + 分组（同行） -->
-      <div class="form-row">
-        <el-form-item label="广告平台" prop="source" class="form-col">
-          <el-select
-            v-if="!isEdit"
-            v-model="form.source"
-            placeholder="请选择"
-            class="form-select"
-            clearable
-          >
-            <el-option v-for="p in PLATFORM_CONFIGS" :key="p.value" :label="p.label" :value="p.value" />
-          </el-select>
-          <!-- 编辑时不可改平台 -->
-          <div v-else class="readonly-val">{{ editData?.source }}</div>
-        </el-form-item>
-        <el-form-item label="分组" prop="group" class="form-col">
-          <el-select v-model="form.group" placeholder="请选择" class="form-select">
-            <el-option v-for="g in groupOptions" :key="g" :label="g" :value="g" />
-          </el-select>
-        </el-form-item>
+      <!-- 凭证名称 -->
+      <div class="form-item">
+        <div class="form-label">凭证名称 <span class="required">*</span></div>
+        <div class="form-control">
+          <el-form-item prop="name">
+            <el-input v-model="form.name" placeholder="请输入凭证名称" class="dark-input" />
+          </el-form-item>
+        </div>
       </div>
 
-      <!-- 凭据类型（新建时显示；编辑时不可改） -->
-      <el-form-item v-if="!isEdit" label="凭据类型" prop="credentialType">
-        <div class="radio-inline">
-          <label
-            v-for="t in credTypeOptions"
-            :key="t"
-            :class="['radio-item', { 'radio-item--active': form.credentialType === t }]"
-            @click="form.credentialType = t"
-          >
-            <span :class="['radio-dot', { 'radio-dot--checked': form.credentialType === t }]" />
-            {{ t }}
-          </label>
+      <!-- 凭证类型 -->
+      <div class="form-item">
+        <div class="form-label">凭证类型 <span class="required">*</span></div>
+        <div class="form-control">
+          <div v-if="isEdit" class="readonly-field">
+            <span class="readonly-text">{{ form.credentialType }}</span>
+          </div>
+          <el-form-item v-else prop="credentialType">
+            <el-select v-model="form.credentialType" class="dark-select full-width">
+              <el-option v-for="t in credTypeOptions" :key="t" :label="t" :value="t" />
+            </el-select>
+          </el-form-item>
         </div>
-      </el-form-item>
+      </div>
 
-      <!-- 备注 -->
-      <el-form-item label="备注" prop="remark">
-        <el-input v-model="form.remark" placeholder="可填写凭据用途说明" class="form-input" clearable />
-      </el-form-item>
+      <!-- Client ID -->
+      <div class="form-item">
+        <div class="form-label">Client ID <span class="required">*</span></div>
+        <div class="form-control">
+          <el-form-item prop="config.clientId">
+            <el-input v-model="form.config.clientId" placeholder="请输入 Client ID" class="dark-input" />
+          </el-form-item>
+        </div>
+      </div>
+
+      <!-- Client Secret -->
+      <div class="form-item">
+        <div class="form-label">Client Secret <span class="required">*</span></div>
+        <div class="form-control">
+          <el-form-item prop="config.clientSecret">
+            <el-input
+              v-model="form.config.clientSecret"
+              :type="showFields.clientSecret ? 'text' : 'password'"
+              placeholder="••••••••••••••"
+              class="dark-input"
+            >
+              <template #suffix>
+                <button class="eye-btn" @click.prevent="showFields.clientSecret = !showFields.clientSecret">
+                  <svg v-if="showFields.clientSecret" viewBox="0 0 16 16" fill="none" width="14" height="14">
+                    <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z" stroke="currentColor" stroke-width="1.3"/>
+                    <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/>
+                  </svg>
+                  <svg v-else viewBox="0 0 16 16" fill="none" width="14" height="14">
+                    <path d="M2 2l12 12M6.5 6.6A2 2 0 0 0 9.4 9.5M4.2 4.3C2.7 5.3 1.5 7 1.5 8s2.5 5 6.5 5a7 7 0 0 0 3.7-1.1M6 3.2A7 7 0 0 1 8 3c4 0 6.5 5 6.5 5a9.4 9.4 0 0 1-1.7 2.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </template>
+            </el-input>
+          </el-form-item>
+        </div>
+      </div>
+
+      <!-- Access Token -->
+      <div class="form-item">
+        <div class="form-label">Access Token</div>
+        <div class="form-control">
+          <el-input
+            v-model="form.config.accessToken"
+            :type="showFields.accessToken ? 'text' : 'password'"
+            placeholder=""
+            class="dark-input"
+          >
+            <template #suffix>
+              <button class="eye-btn" @click.prevent="showFields.accessToken = !showFields.accessToken">
+                <svg v-if="showFields.accessToken" viewBox="0 0 16 16" fill="none" width="14" height="14">
+                  <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z" stroke="currentColor" stroke-width="1.3"/>
+                  <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/>
+                </svg>
+                <svg v-else viewBox="0 0 16 16" fill="none" width="14" height="14">
+                  <path d="M2 2l12 12M6.5 6.6A2 2 0 0 0 9.4 9.5M4.2 4.3C2.7 5.3 1.5 7 1.5 8s2.5 5 6.5 5a7 7 0 0 0 3.7-1.1M6 3.2A7 7 0 0 1 8 3c4 0 6.5 5 6.5 5a9.4 9.4 0 0 1-1.7 2.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </template>
+          </el-input>
+        </div>
+      </div>
+
+      <!-- Refresh Token -->
+      <div class="form-item">
+        <div class="form-label">Refresh Token</div>
+        <div class="form-control">
+          <el-input
+            v-model="form.config.refreshToken"
+            :type="showFields.refreshToken ? 'text' : 'password'"
+            placeholder=""
+            class="dark-input"
+          >
+            <template #suffix>
+              <button class="eye-btn" @click.prevent="showFields.refreshToken = !showFields.refreshToken">
+                <svg v-if="showFields.refreshToken" viewBox="0 0 16 16" fill="none" width="14" height="14">
+                  <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z" stroke="currentColor" stroke-width="1.3"/>
+                  <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/>
+                </svg>
+                <svg v-else viewBox="0 0 16 16" fill="none" width="14" height="14">
+                  <path d="M2 2l12 12M6.5 6.6A2 2 0 0 0 9.4 9.5M4.2 4.3C2.7 5.3 1.5 7 1.5 8s2.5 5 6.5 5a7 7 0 0 0 3.7-1.1M6 3.2A7 7 0 0 1 8 3c4 0 6.5 5 6.5 5a9.4 9.4 0 0 1-1.7 2.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </template>
+          </el-input>
+        </div>
+      </div>
+
+      <!-- 过期时间 -->
+      <div class="form-item">
+        <div class="form-label">过期时间</div>
+        <div class="form-control">
+          <el-date-picker
+            v-model="form.expireTime"
+            type="datetime"
+            placeholder="2024-06-26 10:30"
+            format="YYYY-MM-DD HH:mm"
+            value-format="YYYY-MM-DD HH:mm"
+            class="dark-date-picker full-width"
+          />
+        </div>
+      </div>
 
       <!-- 关联应用 -->
-      <el-form-item label="关联应用" prop="apps">
-        <div class="apps-editor">
-          <div class="apps-tags">
+      <div class="form-item">
+        <div class="form-label">关联应用</div>
+        <div class="form-control">
+          <div class="app-tags-input">
             <span v-for="app in form.apps" :key="app" class="app-tag">
               {{ app }}
-              <button class="app-tag-del" @click="removeApp(app)">×</button>
+              <button class="app-tag-remove" @click.prevent="removeApp(app)">×</button>
             </span>
             <el-select
               v-model="addingApp"
-              placeholder="+ 添加"
-              class="app-add-select"
-              size="small"
-              clearable
+              placeholder="选择应用"
+              class="dark-select app-add-select"
               @change="handleAddApp"
             >
-              <el-option
-                v-for="opt in availableApps"
-                :key="opt"
-                :label="opt"
-                :value="opt"
-              />
+              <el-option v-for="a in availableApps" :key="a" :label="a" :value="a" />
             </el-select>
           </div>
         </div>
-      </el-form-item>
+      </div>
 
-      <!-- 凭据配置 -->
-      <div class="config-section-title">{{ isEdit ? '更新凭据配置' : '凭据配置' }}</div>
-
-      <el-form-item label="账号" prop="config.account">
-        <el-input v-model="form.config.account" placeholder="账号 / 邮箱" class="form-input" clearable />
-      </el-form-item>
-
-      <template v-if="showClientId">
-        <el-form-item label="客户端 ID" prop="config.clientId">
-          <el-input v-model="form.config.clientId" placeholder="Client ID" class="form-input" clearable />
-        </el-form-item>
-        <el-form-item label="客户端密码" prop="config.clientSecret">
+      <!-- 备注 -->
+      <div class="form-item form-item--textarea">
+        <div class="form-label form-label--top">备注</div>
+        <div class="form-control">
           <el-input
-            v-model="form.config.clientSecret"
-            type="password"
-            placeholder="Client Secret"
-            class="form-input"
-            show-password
+            v-model="form.remark"
+            type="textarea"
+            :rows="3"
+            placeholder=""
+            class="dark-input dark-textarea"
           />
-        </el-form-item>
-      </template>
+        </div>
+      </div>
 
-      <el-form-item label="访问令牌" prop="config.accessToken">
-        <el-input
-          v-model="form.config.accessToken"
-          type="password"
-          placeholder="Access Token"
-          class="form-input"
-          show-password
-        />
-      </el-form-item>
-
-      <template v-if="isEdit || form.credentialType === '客户端Token'">
-        <el-form-item label="刷新令牌" prop="config.refreshToken">
-          <el-input
-            v-model="form.config.refreshToken"
-            type="password"
-            placeholder="Refresh Token（可选）"
-            class="form-input"
-            show-password
-          />
-        </el-form-item>
-      </template>
     </el-form>
 
     <template #footer>
       <div class="dialog-footer">
-        <span v-if="!isEdit" class="footer-tip">保存后自动进行接口验证</span>
-        <div class="footer-btns">
-          <ElButton round class="dialog-btn dialog-btn--cancel" @click="handleCancel">取消</ElButton>
-          <ElButton round class="dialog-btn dialog-btn--submit" :loading="submitting" @click="handleSubmit">
-            {{ isEdit ? '保存并重新验证' : '保存并验证' }}
-          </ElButton>
-        </div>
+        <ElButton round class="btn-cancel" @click="handleCancel">取消</ElButton>
+        <ElButton round class="btn-submit" :loading="submitting" @click="handleSubmit">
+          {{ isEdit ? '保存修改' : '保存并验证' }}
+        </ElButton>
       </div>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
+  import { ref, computed, watch, reactive } from 'vue'
   import type { FormInstance, FormRules } from 'element-plus'
-  import { PLATFORM_CONFIGS } from '../types'
-  import { appOptions, credentialGroupOptions } from '../mock/data'
-  import type { CredentialItem, CredentialFormModel } from '../types'
+  import { appOptions } from '../mock/data'
+  import type { AdAccountItem, CredentialItem, CredentialFormModel } from '../types'
 
   defineOptions({ name: 'CredentialFormDialog' })
 
   const props = defineProps<{
     visible: boolean
     editData: CredentialItem | null
+    accountData?: AdAccountItem | null
   }>()
 
   const emit = defineEmits<{
@@ -182,76 +215,70 @@
   })
 
   const isEdit = computed(() => !!props.editData?.id)
+  const credTypeOptions = ['客户端 Token', '服务账号证书', 'OAuth2'] as const
+  const submitting = ref(false)
+  const addingApp = ref('')
+  const formRef = ref<FormInstance>()
 
-  const credTypeOptions: CredentialItem['credentialType'][] = ['客户端Token', '服务号', '证书文件']
-  const groupOptions = credentialGroupOptions
-
-  const showClientId = computed(() =>
-    form.value.credentialType === '客户端Token' || form.value.credentialType === '服务号'
-  )
+  const showFields = reactive({ clientSecret: false, accessToken: false, refreshToken: false })
 
   const defaultForm = (): CredentialFormModel => ({
     name: '',
     source: '',
-    group: 'Google',
+    group: '',
     credentialType: '客户端Token',
+    expireTime: '',
     remark: '',
     apps: [],
     config: { account: '', password: '', clientId: '', clientSecret: '', accessToken: '', refreshToken: '' }
   })
 
   const form = ref<CredentialFormModel>(defaultForm())
-  const formRef = ref<FormInstance>()
-  const submitting = ref(false)
-  const addingApp = ref('')
 
-  watch(
-    () => props.visible,
-    (v) => {
-      if (v) {
-        if (props.editData) {
-          form.value = {
-            name: props.editData.name,
-            source: props.editData.source,
-            group: props.editData.group,
-            credentialType: props.editData.credentialType,
-            remark: props.editData.remark,
-            apps: [...props.editData.apps],
-            config: {
-              account: props.editData.config.account ?? '',
-              password: '',
-              clientId: props.editData.config.clientId ?? '',
-              clientSecret: '',
-              accessToken: '',
-              refreshToken: ''
-            }
+  watch(() => props.visible, (v) => {
+    if (v) {
+      if (props.editData) {
+        form.value = {
+          name: props.editData.name,
+          source: props.editData.source,
+          group: props.editData.group,
+          credentialType: props.editData.credentialType,
+          expireTime: '',
+          remark: props.editData.remark,
+          apps: [...props.editData.apps],
+          config: {
+            account: props.editData.config.account ?? '',
+            password: '',
+            clientId: props.editData.config.clientId ?? '',
+            clientSecret: '',
+            accessToken: '',
+            refreshToken: ''
           }
-        } else {
-          form.value = defaultForm()
         }
-        formRef.value?.clearValidate()
+      } else {
+        form.value = defaultForm()
       }
+      Object.assign(showFields, { clientSecret: false, accessToken: false, refreshToken: false })
+      formRef.value?.clearValidate()
     }
-  )
+  })
 
-  const availableApps = computed(() =>
-    appOptions.filter((a) => !form.value.apps.includes(a))
-  )
+  const availableApps = computed(() => appOptions.filter((a) => !form.value.apps.includes(a)))
 
   const removeApp = (app: string) => {
     form.value.apps = form.value.apps.filter((a) => a !== app)
   }
 
   const handleAddApp = (val: string) => {
-    if (val && !form.value.apps.includes(val)) {
-      form.value.apps.push(val)
-    }
+    if (val && !form.value.apps.includes(val)) form.value.apps.push(val)
     addingApp.value = ''
   }
 
   const rules: FormRules = {
-    name:   [{ required: true, message: '请输入凭据名称', trigger: 'blur' }],
-    source: [{ required: true, message: '请选择广告平台', trigger: 'change' }]
+    name: [{ required: true, message: '请输入凭证名称', trigger: 'blur' }],
+    credentialType: [{ required: true, message: '请选择凭证类型', trigger: 'change' }],
+    'config.clientId': [{ required: true, message: '请输入 Client ID', trigger: 'blur' }],
+    'config.clientSecret': [{ required: !isEdit.value, message: '请输入 Client Secret', trigger: 'blur' }]
   }
 
   const handleCancel = () => emit('update:visible', false)
@@ -260,15 +287,15 @@
     await formRef.value?.validate()
     submitting.value = true
     try {
-      await new Promise((r) => setTimeout(r, 800))
+      await new Promise((r) => setTimeout(r, 600))
       emit('success', { ...form.value, apps: [...form.value.apps], config: { ...form.value.config } })
+      emit('update:visible', false)
     } finally {
       submitting.value = false
     }
   }
 </script>
 
-<!-- 非 scoped：利用 :has() 定向覆盖 ElDialog -->
 <style lang="scss">
   .el-dialog:has(.cred-form-dialog-bd) {
     background: var(--cm-dialog-bg-inner) !important;
@@ -278,15 +305,15 @@
   }
 
   .el-dialog:has(.cred-form-dialog-bd) .el-dialog__header.cred-form-dialog-hd {
-    padding: 18px 20px 16px;
+    padding: 18px 24px 0;
+    margin: 0;
     background: var(--cm-dialog-bg-inner);
-    border-bottom: 1px solid var(--cm-dialog-border);
     border-radius: 12px 12px 0 0;
   }
 
   .el-dialog:has(.cred-form-dialog-bd) .el-dialog__title {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 16px !important;
+    font-weight: 600 !important;
     color: var(--cm-dialog-text-primary) !important;
   }
 
@@ -296,161 +323,176 @@
   }
 
   .el-dialog:has(.cred-form-dialog-bd) .el-dialog__body.cred-form-dialog-bd {
-    padding: 18px 20px 4px;
+    max-height: 74vh;
+    padding: 0 !important;
+    overflow-y: auto;
     background: var(--cm-dialog-bg-inner);
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb { background: var(--cm-dialog-border); border-radius: 2px; }
   }
 
   .el-dialog:has(.cred-form-dialog-bd) .el-dialog__footer.cred-form-dialog-ft {
-    padding: 14px 20px;
+    padding: 0 !important;
     background: var(--cm-dialog-bg-inner);
     border-top: 1px solid var(--cm-dialog-border);
     border-radius: 0 0 12px 12px;
   }
+
+  .el-dialog:has(.cred-form-dialog-bd) .el-form-item {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .el-dialog:has(.cred-form-dialog-bd) .el-form-item__error {
+    padding-top: 3px;
+    font-size: 11px;
+    color: #ef4444;
+  }
 </style>
 
 <style lang="scss" scoped>
-  // ─── 警告栏 ──────────────────────────────────────────
-  .warn-bar {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    padding: 10px 14px;
-    margin-bottom: 16px;
-    font-size: 13px;
-    color: #fcd34d;
-    background: rgb(245 158 11 / 8%);
-    border: 1px solid rgb(245 158 11 / 20%);
-    border-radius: 8px;
-
-    strong { color: #f59e0b; }
+  // ─── 副标题 ────────────────────────────────────────────
+  .dialog-subtitle {
+    padding: 6px 24px 14px;
+    font-size: 12px;
+    color: #64748b;
+    border-bottom: 1px solid var(--cm-dialog-border, rgb(255 255 255 / 8%));
   }
 
-  .warn-icon { flex-shrink: 0; }
-
-  // ─── 表单 ────────────────────────────────────────────
+  // ─── 表单 ──────────────────────────────────────────────
   .cred-form {
-    :deep(.el-form-item__label) {
-      font-size: 12px;
-      font-weight: 500;
-      color: #94a3b8;
-    }
-
-    :deep(.el-form-item) { margin-bottom: 16px; }
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 24px;
   }
 
-  .form-input,
-  .form-select {
-    width: 100%;
+  .form-item {
+    display: flex;
+    align-items: flex-start;
 
-    :deep(.el-input__wrapper),
-    :deep(.el-select__wrapper) {
-      background: rgb(255 255 255 / 4%) !important;
-      border: 1px solid rgb(255 255 255 / 10%) !important;
-      border-radius: 7px;
-      box-shadow: none !important;
-      transition: border-color 0.18s;
-
-      &:hover { border-color: rgb(255 255 255 / 18%) !important; }
-      &:focus-within { border-color: #3b82f6 !important; }
-    }
-
-    :deep(.el-input__inner),
-    :deep(.el-select__placeholder) {
-      font-size: 13px;
-      color: #e2e8f0;
-      &::placeholder { color: #475569; }
-    }
+    &--textarea { align-items: flex-start; }
   }
 
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 14px;
-  }
-
-  .form-col { min-width: 0; }
-
-  .readonly-val {
-    padding: 9px 12px;
+  .form-label {
+    box-sizing: border-box;
+    flex-shrink: 0;
+    width: 100px;
+    padding-top: 9px;
+    padding-right: 14px;
     font-size: 13px;
     color: #94a3b8;
+    text-align: right;
+    white-space: nowrap;
+
+    &--top { padding-top: 9px; }
+  }
+
+  .form-control {
+    flex: 1;
+    min-width: 0;
+
+    :deep(.el-form-item) {
+      width: 100%;
+      margin-bottom: 0;
+    }
+  }
+
+  .required {
+    margin-left: 2px;
+    color: #ef4444;
+  }
+
+  // ─── 只读字段 ──────────────────────────────────────────
+  .readonly-field {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 12px;
     background: rgb(255 255 255 / 2%);
-    border: 1px solid rgb(255 255 255 / 7%);
+    border: 1px solid rgb(255 255 255 / 6%);
     border-radius: 7px;
   }
 
-  // ─── 凭据类型 radio ──────────────────────────────────
-  .radio-inline {
-    display: flex;
-    gap: 12px;
+  .readonly-text {
+    font-size: 13px;
+    color: #64748b;
   }
 
-  .radio-item {
+  // ─── 密码眼睛按钮 ──────────────────────────────────────
+  .eye-btn {
     display: flex;
-    gap: 6px;
     align-items: center;
-    font-size: 13px;
-    color: #94a3b8;
+    justify-content: center;
+    padding: 2px;
+    color: #64748b;
     cursor: pointer;
+    background: none;
+    border: none;
     transition: color 0.15s;
 
-    &--active { color: #e2e8f0; }
+    &:hover { color: #94a3b8; }
   }
 
-  .radio-dot {
-    display: block;
-    width: 14px;
-    height: 14px;
-    background: rgb(255 255 255 / 10%);
-    border: 2px solid rgb(255 255 255 / 20%);
-    border-radius: 50%;
-    transition: all 0.18s;
+  // ─── 日期选择器 ────────────────────────────────────────
+  .dark-date-picker {
+    &.full-width { width: 100%; }
 
-    &--checked {
-      background: #3b82f6;
-      border-color: #3b82f6;
+    :deep(.el-input__wrapper) {
+      background: rgb(255 255 255 / 4%) !important;
+      border: 1px solid rgb(255 255 255 / 10%) !important;
+      border-radius: 7px !important;
+      box-shadow: none !important;
+
+      &:hover { border-color: rgb(59 130 246 / 40%) !important; }
+      &.is-focus { border-color: #3b82f6 !important; }
+    }
+
+    :deep(.el-input__inner) {
+      font-size: 13px;
+      color: #e2e8f0 !important;
+      &::placeholder { color: #475569 !important; }
+    }
+
+    :deep(.el-input__suffix .el-icon) {
+      color: #64748b !important;
     }
   }
 
-  // ─── 关联应用 ────────────────────────────────────────
-  .apps-editor {
-    width: 100%;
-  }
-
-  .apps-tags {
+  // ─── 关联应用 ──────────────────────────────────────────
+  .app-tags-input {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     align-items: center;
-    min-height: 36px;
+    min-height: 38px;
     padding: 6px 10px;
     background: rgb(255 255 255 / 4%);
     border: 1px solid rgb(255 255 255 / 10%);
     border-radius: 7px;
-    transition: border-color 0.18s;
-
-    &:focus-within { border-color: #3b82f6; }
   }
 
   .app-tag {
     display: inline-flex;
     gap: 4px;
     align-items: center;
-    padding: 2px 8px;
+    padding: 3px 8px;
     font-size: 12px;
     color: #3b82f6;
     background: rgb(59 130 246 / 10%);
     border-radius: 4px;
   }
 
-  .app-tag-del {
+  .app-tag-remove {
+    padding: 0;
     font-size: 14px;
     line-height: 1;
     color: #3b82f6;
     cursor: pointer;
-    background: transparent;
+    background: none;
     border: none;
-    padding: 0;
     opacity: 0.7;
     &:hover { opacity: 1; }
   }
@@ -459,62 +501,92 @@
     width: 100px;
 
     :deep(.el-select__wrapper) {
-      background: transparent !important;
-      border: 1px dashed rgb(59 130 246 / 30%) !important;
-      border-radius: 4px !important;
+      height: 26px !important;
       min-height: 26px !important;
-      box-shadow: none !important;
       padding: 0 8px !important;
-    }
-
-    :deep(.el-select__placeholder) {
-      font-size: 12px !important;
-      color: #3b82f6 !important;
+      font-size: 12px;
+      color: #3b82f6;
+      background: transparent !important;
+      border: 1px dashed rgb(59 130 246 / 40%) !important;
+      border-radius: 4px;
+      box-shadow: none !important;
     }
   }
 
-  // ─── 凭据配置小标题 ──────────────────────────────────
-  .config-section-title {
-    margin-bottom: 12px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #475569;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  // ─── 底部 ────────────────────────────────────────────
+  // ─── 底部按钮 ──────────────────────────────────────────
   .dialog-footer {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 14px 24px;
   }
 
-  .footer-tip {
-    font-size: 11px;
-    color: #475569;
-  }
-
-  .footer-btns {
-    display: flex;
-    gap: 8px;
-  }
-
-  .dialog-btn {
+  .btn-cancel {
+    padding: 8px 20px !important;
+    color: #94a3b8 !important;
+    background: transparent !important;
+    border: 1px solid rgb(255 255 255 / 10%) !important;
     border-radius: 8px !important;
+    &:hover { color: #e2e8f0 !important; border-color: rgb(255 255 255 / 20%) !important; }
+  }
 
-    &--cancel {
-      color: #94a3b8 !important;
-      background: transparent !important;
+  .btn-submit {
+    padding: 8px 24px !important;
+    font-weight: 600 !important;
+    color: #fff !important;
+    background: #0d9488 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    &:hover { filter: brightness(1.1); }
+  }
+
+  // ─── 深色输入通用 ──────────────────────────────────────
+  .dark-input {
+    :deep(.el-input__wrapper) {
+      background: rgb(255 255 255 / 4%) !important;
       border: 1px solid rgb(255 255 255 / 10%) !important;
-      &:hover { color: #e2e8f0 !important; border-color: rgb(255 255 255 / 20%) !important; }
+      border-radius: 7px !important;
+      box-shadow: none !important;
+
+      &:hover { border-color: rgb(59 130 246 / 40%) !important; }
+      &.is-focus { border-color: #3b82f6 !important; }
     }
 
-    &--submit {
-      color: #fff !important;
-      background: #3b82f6 !important;
-      border: none !important;
-      &:hover { filter: brightness(1.1); }
+    :deep(.el-input__inner) {
+      font-size: 13px;
+      color: #e2e8f0 !important;
+      &::placeholder { color: #475569 !important; }
     }
+  }
+
+  .dark-textarea {
+    :deep(.el-textarea__inner) {
+      font-size: 13px;
+      color: #e2e8f0 !important;
+      resize: vertical;
+      background: rgb(255 255 255 / 4%) !important;
+      border: 1px solid rgb(255 255 255 / 10%) !important;
+      border-radius: 7px !important;
+      box-shadow: none !important;
+      &::placeholder { color: #475569 !important; }
+      &:hover { border-color: rgb(59 130 246 / 40%) !important; }
+      &:focus { border-color: #3b82f6 !important; }
+    }
+  }
+
+  .dark-select {
+    &.full-width { width: 100%; }
+
+    :deep(.el-select__wrapper) {
+      color: #e2e8f0;
+      background: rgb(255 255 255 / 4%) !important;
+      border: 1px solid rgb(255 255 255 / 10%) !important;
+      border-radius: 7px !important;
+      box-shadow: none !important;
+      &:hover { border-color: rgb(59 130 246 / 40%) !important; }
+    }
+
+    :deep(.el-select__selected-item) { font-size: 13px; color: #e2e8f0 !important; }
+    :deep(.el-select__placeholder) { font-size: 13px; color: #475569 !important; }
   }
 </style>

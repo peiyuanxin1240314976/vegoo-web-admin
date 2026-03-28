@@ -360,8 +360,8 @@
     }
 
     &:disabled {
-      opacity: 0.4 !important;
       cursor: not-allowed !important;
+      opacity: 0.4 !important;
     }
   }
 

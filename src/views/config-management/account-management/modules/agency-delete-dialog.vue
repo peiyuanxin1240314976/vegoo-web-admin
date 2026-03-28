@@ -4,17 +4,18 @@
     width="400px"
     :close-on-click-modal="false"
     :show-close="true"
-    header-class="oa-delete-dialog-hd"
-    body-class="oa-delete-dialog-bd"
-    footer-class="oa-delete-dialog-ft"
+    header-class="agency-delete-dialog-hd"
+    body-class="agency-delete-dialog-bd"
+    footer-class="agency-delete-dialog-ft"
   >
     <template #header><span /></template>
 
+    <!-- 红色 X 图标 -->
     <div class="delete-icon-wrap">
       <div class="delete-icon-ring">
         <svg viewBox="0 0 48 48" fill="none" width="40" height="40">
-          <circle cx="24" cy="24" r="22" fill="rgb(239 68 68 / 12%)" stroke="#ef4444" stroke-width="1.8"/>
-          <path d="M17 17l14 14M31 17L17 31" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="24" cy="24" r="22" fill="rgb(239 68 68 / 12%)" stroke="#ef4444" stroke-width="1.8" />
+          <path d="M17 17l14 14M31 17L17 31" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" />
         </svg>
       </div>
     </div>
@@ -22,58 +23,58 @@
     <p class="delete-title">确认删除</p>
     <p class="delete-subtitle">删除后数据无法恢复，请谨慎操作</p>
 
+    <!-- 代理商信息卡片 -->
     <div class="info-card">
-      <div class="info-card__header">将要删除的开户记录</div>
+      <div class="info-card__header">将要删除的代理商</div>
       <div class="info-card__body">
         <div class="info-row">
-          <span class="info-label">申请ID</span>
-          <span class="info-value info-value--mono">{{ data?.id ?? '—' }}</span>
+          <span class="info-label">代理商名称</span>
+          <span class="info-value">{{ agencyData?.agencyName ?? '—' }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">广告平台</span>
-          <span class="info-value" :style="{ color: getPlatformColor(data?.source ?? '') }">{{ data?.source ?? '—' }}</span>
+          <span class="info-value">{{ agencyData?.source ?? '—' }}</span>
         </div>
         <div class="info-row">
-          <span class="info-label">应用</span>
-          <span class="info-value">{{ data?.app ?? '—' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">归属代理商</span>
-          <span class="info-value">{{ data?.agency ?? '—' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">状态</span>
-          <span :class="['status-val', getStatusClass(data?.status)]">{{ data?.status ?? '—' }}</span>
+          <span class="info-label">关联账户数</span>
+          <span class="info-value">{{ agencyData?.managedAccounts ?? 0 }} 个</span>
         </div>
       </div>
     </div>
 
+    <!-- 提示 -->
     <div class="warn-tip">
       <svg viewBox="0 0 16 16" fill="none" width="14" height="14" style="flex-shrink:0;margin-top:1px">
         <path d="M8 2L14 13H2L8 2Z" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round"/>
         <path d="M8 6v3.5" stroke="#f59e0b" stroke-width="1.4" stroke-linecap="round"/>
         <circle cx="8" cy="11.5" r="0.6" fill="#f59e0b"/>
       </svg>
-      删除后该开户记录将永久删除，无法恢复
+      删除后关联账户将转为未分配状态
     </div>
 
     <template #footer>
-      <ElButton round class="dialog-btn dialog-btn--cancel" @click="emit('update:visible', false)">取消</ElButton>
-      <ElButton round class="dialog-btn dialog-btn--delete" :loading="deleting" @click="handleConfirm">确认删除</ElButton>
+      <ElButton round class="dialog-btn dialog-btn--cancel" @click="handleCancel">取消</ElButton>
+      <ElButton
+        round
+        class="dialog-btn dialog-btn--delete"
+        :loading="deleting"
+        @click="handleConfirm"
+      >
+        确认删除
+      </ElButton>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue'
-  import { PLATFORM_CONFIGS } from '../types'
-  import type { OpenAccountItem } from '../types'
+  import type { AgencyItem } from '../types'
 
-  defineOptions({ name: 'OpenAccountDeleteDialog' })
+  defineOptions({ name: 'AgencyDeleteDialog' })
 
   const props = defineProps<{
     visible: boolean
-    data: OpenAccountItem | null
+    agencyData: AgencyItem | null
   }>()
 
   const emit = defineEmits<{
@@ -87,15 +88,12 @@
   })
 
   const deleting = ref(false)
-  watch(() => props.visible, (v) => { if (!v) deleting.value = false })
 
-  function getPlatformColor(s: string) { return PLATFORM_CONFIGS.find((p) => p.value === s)?.color ?? '#94a3b8' }
+  watch(() => props.visible, (v) => {
+    if (!v) deleting.value = false
+  })
 
-  function getStatusClass(status?: string) {
-    if (status === '已激活') return 'status-val--ok'
-    if (status === '待分配') return 'status-val--pending'
-    return 'status-val--fail'
-  }
+  const handleCancel = () => emit('update:visible', false)
 
   const handleConfirm = async () => {
     deleting.value = true
@@ -110,7 +108,7 @@
 </script>
 
 <style lang="scss">
-  .el-dialog:has(.oa-delete-dialog-bd) {
+  .el-dialog:has(.agency-delete-dialog-bd) {
     overflow: hidden;
     background: var(--cm-dialog-bg-inner) !important;
     border: 1px solid var(--cm-dialog-border);
@@ -118,20 +116,25 @@
     box-shadow: var(--cm-dialog-shadow-lg) !important;
   }
 
-  .el-dialog:has(.oa-delete-dialog-bd) .el-dialog__header.oa-delete-dialog-hd {
+  .el-dialog:has(.agency-delete-dialog-bd) .el-dialog__header.agency-delete-dialog-hd {
     padding: 12px 16px 0;
     background: var(--cm-dialog-bg-inner);
     border-bottom: none;
-    .el-dialog__headerbtn { top: 12px; right: 16px; }
-    .el-icon { color: var(--cm-dialog-text-muted) !important; }
+
+    .el-dialog__headerbtn {
+      top: 12px;
+      right: 16px;
+      .el-icon { color: var(--cm-dialog-text-muted) !important; }
+      &:hover .el-icon { color: var(--cm-dialog-text-primary) !important; }
+    }
   }
 
-  .el-dialog:has(.oa-delete-dialog-bd) .el-dialog__body.oa-delete-dialog-bd {
+  .el-dialog:has(.agency-delete-dialog-bd) .el-dialog__body.agency-delete-dialog-bd {
     padding: 8px 28px 16px;
     background: var(--cm-dialog-bg-inner);
   }
 
-  .el-dialog:has(.oa-delete-dialog-bd) .el-dialog__footer.oa-delete-dialog-ft {
+  .el-dialog:has(.agency-delete-dialog-bd) .el-dialog__footer.agency-delete-dialog-ft {
     display: flex;
     gap: 10px;
     justify-content: flex-end;
@@ -189,31 +192,31 @@
     border-bottom: 1px solid rgb(245 158 11 / 20%);
   }
 
-  .info-card__body { padding: 4px 0; background: rgb(245 158 11 / 5%); }
+  .info-card__body {
+    padding: 4px 0;
+    background: rgb(245 158 11 / 5%);
+  }
 
   .info-row {
     display: flex;
     gap: 12px;
     align-items: center;
     padding: 8px 14px;
+
     & + & { border-top: 1px solid rgb(245 158 11 / 10%); }
   }
 
-  .info-label { flex-shrink: 0; width: 72px; font-size: 12px; color: #94a3b8; }
+  .info-label {
+    flex-shrink: 0;
+    width: 72px;
+    font-size: 12px;
+    color: #94a3b8;
+  }
 
   .info-value {
     flex: 1;
     font-size: 13px;
     color: #e2e8f0;
-    &--mono { font-family: 'SF Mono', monospace; font-size: 11px; }
-  }
-
-  .status-val {
-    font-size: 12px;
-    font-weight: 600;
-    &--ok      { color: #22c55e; }
-    &--pending { color: #f59e0b; }
-    &--fail    { color: #f87171; }
   }
 
   .warn-tip {

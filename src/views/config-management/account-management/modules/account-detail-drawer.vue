@@ -492,6 +492,7 @@
 
     &::-webkit-scrollbar { width: 4px; }
     &::-webkit-scrollbar-track { background: transparent; }
+
     &::-webkit-scrollbar-thumb {
       background: rgb(255 255 255 / 8%);
       border-radius: 2px;
@@ -548,8 +549,8 @@
     flex: 1;
     font-size: 13px;
     font-weight: 500;
-    color: var(--text-primary);
     line-height: 1.8;
+    color: var(--text-primary);
 
     &--link {
       color: var(--accent);
