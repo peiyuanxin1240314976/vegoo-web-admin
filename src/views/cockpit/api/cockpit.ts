@@ -1042,7 +1042,7 @@ export async function fetchCockpitTop3(params?: { date?: string }): Promise<Cock
  * 将广告平台 ROI&安装量接口数据转为表格/折线用结构
  * - 广告平台名称：使用 channel 字段
  * - 消耗、安装量、CPI：使用 list 数组中索引为 0 的对象（list[0]）的 cost、install、cpl（接口可能返回 null，已做兼容）
- * - 近七日折线图：使用 list 中每日的 install（安装量）按顺序组成 trend 数组
+ * - 近七日折线图：使用 list 中每日的 cost（消耗）按顺序组成 trend 数组
  */
 export function mapChannelRoiInstallToItems(
   data: CockpitChannelRoiInstallResponse | null
@@ -1052,7 +1052,7 @@ export function mapChannelRoiInstallToItems(
   return data.map((row) => {
     const list = row.list ?? []
     const first = list[0] ?? { cost: null, cpl: null, install: null }
-    const trend = list.map((d) => num(d.install))
+    const trend = list.map((d) => num(d.cost))
     return {
       channel: row.channel ?? '—',
       spend: num(first.cost),

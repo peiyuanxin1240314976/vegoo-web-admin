@@ -31,10 +31,11 @@
           <template #cpi="{ row }">
             <span class="col-cpi" :class="getCpiClass(row.cpi)">{{ row.cpi.toFixed(2) }}</span>
           </template>
-          <template #trend="{ $index }">
-            <div
-              :ref="(el) => $index >= 0 && setTrendChartRef(el as HTMLElement, $index)"
-              class="trend-chart-cell"
+          <template #trend="{ row, $index }">
+            <CockpitRoiTrendSpark
+              v-if="row.trend?.length"
+              :trend="row.trend"
+              :line-color="getTrendLineColorByIndex($index)"
             />
           </template>
         </ArtTable>
@@ -45,12 +46,38 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
-  import { echarts, type EChartsOption } from '@/plugins/echarts'
+  import { computed } from 'vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import CockpitRoiTrendSpark from './cockpit-roi-trend-spark.vue'
   import type { ColumnOption } from '@/types'
   import type { CockpitChannelRoiInstallItem } from '../types'
   import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
+
+  const num = (v: unknown) => (v != null && Number.isFinite(Number(v)) ? Number(v) : 0)
+
+  /**
+   * 统一表格行：兼容已 map 的项，以及接口 { channel, list[] }（list 为近 7 日，含 install/cost/cpl/cpi）
+   * 迷你图：无 trend 时由 list 近 7 日生成，默认用每日 cost（与「消耗」列一致）
+   */
+  function normalizeChannelRoiRows(raw: unknown[]): CockpitChannelRoiInstallItem[] {
+    if (!raw.length) return []
+    return raw.map((item) => {
+      const r = item as Record<string, unknown>
+      const list = (r.list as { install?: unknown; cost?: unknown; cpl?: unknown }[]) ?? []
+      let trend = Array.isArray(r.trend) ? (r.trend as unknown[]).map((x) => num(x)) : []
+      if (!trend.length && list.length) {
+        trend = list.map((d) => num(d.cost))
+      }
+      const first = list[0] ?? {}
+      return {
+        channel: String(r.channel ?? '—'),
+        spend: num(r.spend ?? r.cost ?? first.cost),
+        installs: num(r.installs ?? r.install ?? first.install),
+        cpi: num(r.cpi ?? r.cpl ?? first.cpl),
+        trend
+      }
+    })
+  }
 
   defineOptions({ name: 'CockpitChannelRoiInstall' })
   /** ArtTable 列配置 */
@@ -66,9 +93,12 @@
     list: null
   })
 
-  const list = computed(() =>
-    Array.isArray(props.list) ? props.list : (MOCK_COCKPIT_OVERVIEW.channelRoiInstall ?? [])
-  )
+  const list = computed((): CockpitChannelRoiInstallItem[] => {
+    const raw = Array.isArray(props.list)
+      ? props.list
+      : (MOCK_COCKPIT_OVERVIEW.channelRoiInstall ?? [])
+    return normalizeChannelRoiRows(raw as unknown[])
+  })
 
   const totals = computed(() => {
     const rows = list.value
@@ -101,85 +131,24 @@
     return ['合计', formatMoney(t.spend), formatNumber(t.installs), '$' + t.cpi.toFixed(2), '']
   }
 
-  const trendChartRefs = ref<(HTMLElement | null)[]>([])
-  const chartInstances = new Map<number, ReturnType<typeof echarts.init>>()
+  /** 近 7 日折线：自上而下按行序循环取色（与 CPI 列绿/黄/红无关） */
+  const TREND_LINE_PALETTE = [
+    '#3B82F6',
+    '#10B981',
+    '#F97316',
+    '#EF4444',
+    '#8B5CF6',
+    '#06B6D4',
+    '#EC4899',
+    '#EAB308',
+    '#14B8A6',
+    '#A855F7'
+  ] as const
 
-  function setTrendChartRef(el: HTMLElement | null, index: number) {
-    if (el) {
-      trendChartRefs.value[index] = el
-    }
+  function getTrendLineColorByIndex(index: number): string {
+    const i = Number.isFinite(index) && index >= 0 ? index : 0
+    return TREND_LINE_PALETTE[i % TREND_LINE_PALETTE.length]
   }
-
-  /** 近7日折线图颜色与 CPI 列一致：按 CPI 取绿/黄/红 */
-  const CPI_COLORS = { green: '#67c23a', yellow: '#e6a23c', red: '#f56c6c' } as const
-  function getChartColorByCpi(cpi: number): string {
-    if (cpi < CPI_GREEN_MAX) return CPI_COLORS.green
-    if (cpi < CPI_YELLOW_MAX) return CPI_COLORS.yellow
-    return CPI_COLORS.red
-  }
-
-  function buildMiniOption(trend: number[], lineColor: string): EChartsOption {
-    return {
-      grid: { top: 2, right: 2, bottom: 2, left: 2, containLabel: false },
-      xAxis: { type: 'category', show: false, data: trend.map((_, i) => i) },
-      yAxis: { type: 'value', show: false, scale: true },
-      series: [
-        {
-          type: 'line',
-          data: trend,
-          smooth: true,
-          showSymbol: false,
-          lineStyle: { color: lineColor, width: 1 },
-          areaStyle: { color: lineColor + '40' }
-        }
-      ]
-    }
-  }
-
-  function initAllTrendCharts() {
-    nextTick(() => {
-      const rows = list.value
-      const maxIndex = rows.length - 1
-      chartInstances.forEach((chart, i) => {
-        if (i > maxIndex) {
-          chart.dispose()
-          chartInstances.delete(i)
-        }
-      })
-      rows.forEach((row: CockpitChannelRoiInstallItem, i: number) => {
-        const el = trendChartRefs.value[i]
-        if (!el || !row.trend?.length) return
-        const lineColor = getChartColorByCpi(row.cpi)
-        let chart = chartInstances.get(i)
-        if (!chart) {
-          chart = echarts.init(el)
-          chartInstances.set(i, chart)
-        }
-        chart.setOption(buildMiniOption(row.trend, lineColor), { replaceMerge: ['series'] })
-      })
-    })
-  }
-
-  function resizeTrendCharts() {
-    chartInstances.forEach((chart) => chart.resize())
-  }
-
-  function disposeTrendCharts() {
-    chartInstances.forEach((chart) => chart.dispose())
-    chartInstances.clear()
-  }
-
-  onMounted(() => {
-    initAllTrendCharts()
-    window.addEventListener('resize', resizeTrendCharts)
-  })
-
-  watch(list, () => initAllTrendCharts(), { deep: true })
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('resize', resizeTrendCharts)
-    disposeTrendCharts()
-  })
 </script>
 
 <style scoped lang="scss">
@@ -292,11 +261,6 @@
       &.cpi-red {
         color: #f56c6c;
       }
-    }
-
-    .trend-chart-cell {
-      width: 100%;
-      height: 24px;
     }
   }
 </style>
