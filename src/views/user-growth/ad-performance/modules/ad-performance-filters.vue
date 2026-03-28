@@ -82,6 +82,7 @@
       </ElButton>
       <ElButton
         round
+        aria-label="刷新数据"
         class="ad-performance-filter-action-btn ad-performance-filter-action-btn--refresh"
         :icon="RefreshRight"
         @click="$emit('refresh')"
@@ -243,6 +244,7 @@
 <style scoped lang="scss">
   .ad-performance-filters {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     align-items: center;
     justify-content: space-between;
@@ -391,6 +393,10 @@
     transition:
       left 160ms ease,
       width 160ms ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 
   .ad-performance-date-slider__item {
@@ -401,6 +407,7 @@
     font-size: 12px;
     color: var(--el-text-color-secondary);
     white-space: nowrap;
+    touch-action: manipulation;
     cursor: pointer;
     background: transparent;
     border: none;
@@ -418,5 +425,24 @@
 
   .ad-performance-date-slider__item:focus-visible {
     box-shadow: 0 0 0 2px rgb(16 185 129 / 35%);
+  }
+
+  @media (width <= 768px) {
+    .ad-performance-filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .ad-performance-filters__left {
+      justify-content: flex-start;
+    }
+
+    .ad-performance-date-slider {
+      width: 100%;
+    }
+
+    .ad-performance-date-slider__item {
+      padding: 0 8px;
+    }
   }
 </style>

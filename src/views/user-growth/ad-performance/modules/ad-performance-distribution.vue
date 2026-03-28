@@ -23,30 +23,28 @@
         class="ad-performance-distribution__card ad-performance-distribution__card--app"
         shadow="never"
       >
-        <template #header>
-          <div class="ad-performance-distribution__tabs" role="tablist">
-            <button
-              type="button"
-              class="ad-performance-distribution__tab"
-              :class="{ 'is-active': activeTab === 'app' }"
-              role="tab"
-              :aria-selected="activeTab === 'app'"
-              @click="activeTab = 'app'"
-            >
-              {{ tr('adPerformance.appDistribution', '应用分布') }}
-            </button>
-            <button
-              type="button"
-              class="ad-performance-distribution__tab"
-              :class="{ 'is-active': activeTab === 'owner' }"
-              role="tab"
-              :aria-selected="activeTab === 'owner'"
-              @click="activeTab = 'owner'"
-            >
-              {{ tr('adPerformance.ownerShare', '优化师占比') }}
-            </button>
-          </div>
-        </template>
+        <div class="ad-performance-distribution__tabs" role="tablist">
+          <button
+            type="button"
+            class="ad-performance-distribution__tab"
+            :class="{ 'is-active': activeTab === 'app' }"
+            role="tab"
+            :aria-selected="activeTab === 'app'"
+            @click="activeTab = 'app'"
+          >
+            {{ tr('adPerformance.appDistribution', '应用分布') }}
+          </button>
+          <button
+            type="button"
+            class="ad-performance-distribution__tab"
+            :class="{ 'is-active': activeTab === 'owner' }"
+            role="tab"
+            :aria-selected="activeTab === 'owner'"
+            @click="activeTab = 'owner'"
+          >
+            {{ tr('adPerformance.ownerShare', '优化师占比') }}
+          </button>
+        </div>
 
         <div class="ad-performance-distribution__list" role="tabpanel">
           <template v-if="activeTab === 'owner'">
@@ -89,14 +87,25 @@
               :key="row.name"
               class="ad-performance-distribution__list-row"
             >
-              <span class="ad-performance-distribution__app-icon" aria-hidden="true"></span>
+              <span
+                class="ad-performance-distribution__app-icon"
+                aria-hidden="true"
+                :style="{
+                  background: `${row.color}22`,
+                  boxShadow: `0 0 0 1px ${row.color}44 inset`
+                }"
+              ></span>
               <div class="ad-performance-distribution__app-content">
                 <div class="ad-performance-distribution__app-top">
                   <div class="ad-performance-distribution__app-name" :title="row.name">
                     <span class="ad-performance-distribution__app-name-text">{{ row.name }}</span>
                   </div>
                   <div class="ad-performance-distribution__app-metrics">
-                    <span class="ad-performance-distribution__app-percent">{{ row.percent }}%</span>
+                    <span
+                      class="ad-performance-distribution__app-percent"
+                      :style="{ color: row.color }"
+                      >{{ row.percent }}%</span
+                    >
                     <span class="ad-performance-distribution__app-value">
                       {{ formatCurrency(row.value) }}
                     </span>
@@ -106,7 +115,7 @@
                 <div class="ad-performance-distribution__list-bar-bg">
                   <div
                     class="ad-performance-distribution__list-bar-fill"
-                    :style="{ width: `${row.percent}%` }"
+                    :style="{ width: `${row.percent}%`, background: row.color }"
                   ></div>
                 </div>
               </div>
@@ -167,14 +176,17 @@
     return '$' + safe.toLocaleString('en-US', { maximumFractionDigits: 0 })
   }
 
+  const APP_BAR_COLORS = ['#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#EC4899', '#14B8A6']
+
   const appRows = computed(() => {
     const data = props.appDistribution ?? []
-    return data.map((d) => {
+    return data.map((d, idx) => {
       const spend = Number(d.spend)
       return {
         name: d.appName,
         percent: Math.max(0, Math.min(100, Math.round(d.percent))),
-        value: Number.isFinite(spend) ? spend : 0
+        value: Number.isFinite(spend) ? spend : 0,
+        color: APP_BAR_COLORS[idx % APP_BAR_COLORS.length]
       }
     })
   })
@@ -197,9 +209,11 @@
   }
 
   function getRowColor(index: number) {
-    const colors = ['#22C55E', '#34D399', '#10B981', '#84CC16', '#A1A1AA']
-    return colors[index] ?? '#22C55E'
+    const colors = ['#10B981', '#3B82F6', '#F97316', '#8B5CF6', '#EC4899', '#14B8A6']
+    return colors[index] ?? colors[index % colors.length]
   }
+
+  const DONUT_COLORS = ['#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#EC4899', '#14B8A6', '#F59E0B']
 
   function renderChannelChart() {
     const data = props.channelDistribution.map((d) => ({
@@ -207,32 +221,45 @@
       value: d.percent
     }))
     const isDark = channelChart.isDark.value
-    const pieBorderColor = isDark ? '#1d1e1f' : '#fff'
+    const pieBorderColor = isDark ? '#111827' : '#fff'
     channelChart.initChart(
       {
+        animation: true,
+        animationDuration: 800,
+        animationEasing: 'cubicOut',
         tooltip: {
           trigger: 'item',
-          formatter: '{b}: {c}%',
-          backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)',
-          borderColor: isDark ? '#333' : '#ddd',
-          textStyle: { color: isDark ? '#e5e7eb' : '#333' }
+          formatter: (p: any) => `${p.marker}${p.name}  <b>${p.value}%</b>`,
+          backgroundColor: isDark ? 'rgba(15,25,41,0.92)' : 'rgba(255,255,255,0.96)',
+          borderColor: isDark ? '#2a3f5f' : '#e5e7eb',
+          textStyle: { color: isDark ? '#e2e8f0' : '#374151', fontSize: 12 }
         },
         legend: {
           orient: 'horizontal',
           left: 'center',
-          bottom: 0,
-          textStyle: { color: isDark ? '#9ca3af' : '#666', fontSize: 12 }
+          bottom: 2,
+          itemWidth: 10,
+          itemHeight: 10,
+          textStyle: { color: isDark ? '#9ca3af' : '#6b7280', fontSize: 11 }
         },
         series: [
           {
             type: 'pie',
-            radius: ['42%', '64%'],
-            center: ['50%', '45%'],
-            avoidLabelOverlap: false,
-            itemStyle: { borderColor: pieBorderColor, borderWidth: 2 },
+            radius: ['44%', '66%'],
+            center: ['50%', '44%'],
+            avoidLabelOverlap: true,
+            itemStyle: {
+              borderColor: pieBorderColor,
+              borderWidth: 2,
+              borderRadius: 4
+            },
             label: { show: false },
+            emphasis: {
+              itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.25)' },
+              scaleSize: 5
+            },
             data,
-            color: ['#3B82F6', '#8B5CF6', '#14B8A6', '#F97316', '#EC4899']
+            color: DONUT_COLORS
           }
         ]
       },
@@ -277,14 +304,11 @@
   }
 
   .ad-performance-distribution__card--app {
-    :deep(.el-card__header) {
-      padding: 0;
-      border-bottom: none;
-    }
-
     :deep(.el-card__body) {
-      padding-top: 12px;
-      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 12px;
     }
   }
 
@@ -336,11 +360,12 @@
 
   .ad-performance-distribution__tabs {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     width: 100%;
     min-width: 0;
     padding: 4px;
-    margin: 12px 12px 0;
+    margin-bottom: 10px;
     background: color-mix(in srgb, var(--default-box-color) 75%, transparent);
     border: 1px solid color-mix(in srgb, var(--art-success) 35%, var(--default-border));
     border-radius: 10px;
@@ -353,10 +378,12 @@
     font-weight: 600;
     color: var(--el-text-color-secondary);
     text-align: center;
+    touch-action: manipulation;
     cursor: pointer;
     background: transparent;
     border: none;
     border-radius: 8px;
+    outline: none;
     transition:
       background-color 0.15s ease,
       color 0.15s ease,
@@ -367,14 +394,19 @@
       background: color-mix(in srgb, var(--art-success) 18%, transparent);
       box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-success) 45%, transparent) inset;
     }
+
+    &:focus-visible {
+      box-shadow: 0 0 0 2px rgb(16 185 129 / 40%);
+    }
   }
 
   .ad-performance-distribution__list {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 6px 12px 2px;
-    overflow: hidden;
+    max-height: 300px;
+    padding-bottom: 4px;
+    overflow: hidden auto;
   }
 
   .ad-performance-distribution__list-row {
@@ -441,14 +473,17 @@
 
   .ad-performance-distribution__list-bar-fill {
     height: 100%;
-    background: var(--art-success);
     border-radius: 9999px;
+    transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 
   .ad-performance-distribution__app-percent {
     font-size: 13px;
     font-weight: 600;
-    color: var(--art-success);
   }
 
   .ad-performance-distribution__app-value {
@@ -514,6 +549,11 @@
   .ad-performance-distribution__owner-bar-fill {
     height: 100%;
     border-radius: 9999px;
+    transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 
   .ad-performance-distribution__owner-percent {
@@ -544,6 +584,25 @@
 
     .ad-performance-distribution__owner-bar-bg {
       max-width: 120px;
+    }
+  }
+
+  @media (width <= 480px) {
+    .ad-performance-distribution__owner-row {
+      grid-template-columns: minmax(0, 1fr) 42px 58px;
+      gap: 8px;
+    }
+
+    .ad-performance-distribution__owner-bar {
+      display: none;
+    }
+
+    .ad-performance-distribution__tabs {
+      border-radius: 8px;
+    }
+
+    .ad-performance-distribution__donut-wrap {
+      height: 190px;
     }
   }
 </style>

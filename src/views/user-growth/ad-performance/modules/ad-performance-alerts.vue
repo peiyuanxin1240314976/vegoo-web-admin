@@ -91,8 +91,10 @@
   }
 
   .ad-performance-alerts__list {
+    max-height: 320px;
     padding: 0;
     margin: 0;
+    overflow-y: auto;
     list-style: none;
   }
 

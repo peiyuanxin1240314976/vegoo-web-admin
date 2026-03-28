@@ -67,6 +67,8 @@ export type CampaignRowStatus = 'active' | 'over_budget' | 'low_efficiency' | 'p
 /** 广告系列明细树行（支持 children 为广告组） */
 export interface AdPerformanceCampaignRow {
   id: string
+  /** 应用 ID */
+  appId?: string
   /** 应用名 */
   appName: string
   /** 广告系列名称或广告组名称 */

@@ -166,10 +166,10 @@
     if (currentPage.value > maxPage) currentPage.value = maxPage
   })
 
-  function goToCampaignDetail(id: string, name: string) {
+  function goToCampaignDetail(id: string, name: string, appId: string, appName: string) {
     router.push({
       path: '/user-growth/ad-performance/campaign-detail',
-      query: { id, name }
+      query: { id, name, appId, appName }
     })
   }
 
@@ -550,7 +550,12 @@
 
             <!-- 操作 -->
             <td>
-              <button class="detail-btn" @click="goToCampaignDetail(c.id, c.name)"> 详情 </button>
+              <button
+                class="detail-btn"
+                @click="goToCampaignDetail(c.id, c.name, c.appId ?? '', c.appName)"
+              >
+                详情
+              </button>
             </td>
           </tr>
         </tbody>

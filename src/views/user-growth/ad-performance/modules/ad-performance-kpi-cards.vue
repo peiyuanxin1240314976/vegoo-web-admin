@@ -12,7 +12,7 @@
         <!-- 异常系列：保持原样（图标在数字右侧） -->
         <div v-if="item.alert" class="ad-performance-kpi-cards__value-row">
           <div class="ad-performance-kpi-cards__value">{{ item.value }}</div>
-          <ElIcon class="ad-performance-kpi-cards__alert-icon">
+          <ElIcon class="ad-performance-kpi-cards__alert-icon" aria-hidden="true">
             <WarningFilled />
           </ElIcon>
         </div>

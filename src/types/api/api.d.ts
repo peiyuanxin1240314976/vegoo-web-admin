@@ -531,6 +531,7 @@ declare namespace Api {
     interface MyAdsCampaignRowDto {
       id: string
       name: string
+      appId?: string
       appName: string
       appIcon: string | null
       platform: string

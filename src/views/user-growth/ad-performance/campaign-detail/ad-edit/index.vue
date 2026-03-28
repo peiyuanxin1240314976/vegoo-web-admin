@@ -12,7 +12,7 @@
           <el-breadcrumb-item
             :to="{
               path: '/user-growth/ad-performance/campaign-detail',
-              query: { id: campaignId }
+              query: { id: campaignId, appId: route.query.appId, appName: route.query.appName }
             }"
           >
             广告系列详情

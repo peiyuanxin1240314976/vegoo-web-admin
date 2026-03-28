@@ -7,6 +7,7 @@ function buildCampaignRows(): AdPerformanceMock['campaignTableRows'] {
   return [
     {
       id: 'c1',
+      appId: 'app_weather5',
       appName: 'Weather5',
       name: 'Weather5_US_Google_CRE001',
       channel: 'google',
@@ -77,6 +78,7 @@ function buildCampaignRows(): AdPerformanceMock['campaignTableRows'] {
     },
     {
       id: 'c2',
+      appId: 'app_bloodsugar2',
       appName: 'BloodSugar2',
       name: 'BloodSugar2_UK_Facebook_CRE002',
       channel: 'facebook',
@@ -95,6 +97,7 @@ function buildCampaignRows(): AdPerformanceMock['campaignTableRows'] {
     },
     {
       id: 'c3',
+      appId: 'app_phonetracker',
       appName: 'PhoneTracker',
       name: 'PhoneTracker_CA_TikTok_CRE003',
       channel: 'tiktok',
@@ -113,6 +116,7 @@ function buildCampaignRows(): AdPerformanceMock['campaignTableRows'] {
     },
     {
       id: 'c4',
+      appId: 'app_weather5',
       appName: 'Weather5',
       name: 'Weather5_JP_Google_CRE004',
       channel: 'google',
@@ -131,6 +135,7 @@ function buildCampaignRows(): AdPerformanceMock['campaignTableRows'] {
     },
     {
       id: 'c5',
+      appId: 'app_faceme',
       appName: 'FaceMe',
       name: 'FaceMe_US_Meta_CRE005',
       channel: 'meta',
@@ -149,6 +154,7 @@ function buildCampaignRows(): AdPerformanceMock['campaignTableRows'] {
     },
     {
       id: 'c6',
+      appId: 'app_healthtracker',
       appName: 'HealthTracker',
       name: 'HealthTracker_BR_Kwai_CRE006',
       channel: 'kwai',

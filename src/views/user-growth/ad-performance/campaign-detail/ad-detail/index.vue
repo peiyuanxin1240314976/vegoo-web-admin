@@ -12,7 +12,7 @@
           <el-breadcrumb-item
             :to="{
               path: '/user-growth/ad-performance/campaign-detail',
-              query: { id: campaignId }
+              query: { id: campaignId, appId: route.query.appId, appName: route.query.appName }
             }"
           >
             {{ data.campaignName || '广告系列详情' }}
@@ -88,7 +88,9 @@
       path: '/user-growth/ad-performance/campaign-detail/ad-edit',
       query: {
         campaignId: campaignId.value,
-        adId: String(route.query.id ?? '')
+        adId: String(route.query.id ?? ''),
+        appId: route.query.appId,
+        appName: route.query.appName
       }
     })
   }

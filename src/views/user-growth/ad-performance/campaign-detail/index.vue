@@ -104,7 +104,11 @@
   function goToEdit() {
     router.push({
       path: '/user-growth/ad-performance/campaign-detail/ad-edit',
-      query: { campaignId: String(route.query.id ?? '') }
+      query: {
+        campaignId: String(route.query.id ?? ''),
+        appId: String(route.query.appId ?? ''),
+        appName: String(route.query.appName ?? '')
+      }
     })
   }
 

@@ -1,12 +1,12 @@
 <template>
   <ElRow :gutter="16" class="ad-performance-trend-charts">
-    <ElCol :xs="24" :lg="12">
+    <ElCol :xs="24" :md="12">
       <ElCard class="ad-performance-trend-charts__card" shadow="never">
         <template #header>{{ tr('adPerformance.spendTrend', '花费趋势') }}</template>
         <div ref="spendChartRef" class="ad-performance-trend-charts__chart"></div>
       </ElCard>
     </ElCol>
-    <ElCol :xs="24" :lg="12">
+    <ElCol :xs="24" :md="12">
       <ElCard class="ad-performance-trend-charts__card" shadow="never">
         <template #header>{{ tr('adPerformance.roi7dTrend', '7日ROI趋势') }}</template>
         <div ref="roiChartRef" class="ad-performance-trend-charts__chart"></div>
@@ -46,40 +46,64 @@
   function renderSpendChart() {
     const data = props.spendTrend
     const isDark = spendChart.isDark.value
-    const topColor = isDark ? 'rgba(249,115,22,0.22)' : 'rgba(249,115,22,0.16)'
+    const topColor = isDark ? 'rgba(249,115,22,0.38)' : 'rgba(249,115,22,0.28)'
+    const midColor = isDark ? 'rgba(249,115,22,0.12)' : 'rgba(249,115,22,0.08)'
     const bottomColor = 'rgba(249,115,22,0)'
     spendChart.initChart(
       {
-        tooltip: { trigger: 'axis' },
-        grid: { left: 38, right: 14, top: 8, bottom: 18 },
+        animation: true,
+        animationDuration: 900,
+        animationEasing: 'cubicOut',
+        animationDurationUpdate: 500,
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: isDark ? 'rgba(15,25,41,0.92)' : 'rgba(255,255,255,0.96)',
+          borderColor: isDark ? '#2a3f5f' : '#e5e7eb',
+          textStyle: { color: isDark ? '#e2e8f0' : '#374151', fontSize: 12 }
+        },
+        grid: { left: 40, right: 14, top: 12, bottom: 20 },
         xAxis: {
           type: 'category',
           data: data.map((t) => t.date),
-          boundaryGap: true,
-          axisLabel: { color: isDark ? '#999' : '#666', fontSize: 11 },
-          axisLine: { lineStyle: { color: isDark ? '#444' : '#eee' } }
+          boundaryGap: false,
+          axisLabel: { color: isDark ? '#6b7280' : '#9ca3af', fontSize: 11 },
+          axisLine: { lineStyle: { color: isDark ? '#374151' : '#f3f4f6' } },
+          axisTick: { show: false }
         },
         yAxis: {
           type: 'value',
           axisLabel: {
-            color: isDark ? '#999' : '#666',
+            color: isDark ? '#6b7280' : '#9ca3af',
             fontSize: 11,
-            formatter: (v: number) => (v >= 1000 ? `${v / 1000}K` : String(v))
+            formatter: (v: number) =>
+              v >= 1000 ? `${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}K` : String(v)
           },
-          splitLine: { lineStyle: { color: isDark ? '#333' : '#eee', type: 'dashed' } }
+          splitLine: { lineStyle: { color: isDark ? '#1f2937' : '#f9fafb', type: 'dashed' } }
         },
         series: [
           {
             type: 'line',
             data: data.map((t) => t.value),
-            smooth: true,
+            smooth: 0.4,
             symbol: 'circle',
-            symbolSize: 6,
-            lineStyle: { width: 2 },
-            itemStyle: { color: '#F97316' },
+            symbolSize: 7,
+            showSymbol: false,
+            emphasis: { scale: true, focus: 'series' },
+            lineStyle: {
+              width: 2.5,
+              color: '#F97316',
+              shadowColor: 'rgba(249,115,22,0.3)',
+              shadowBlur: 6
+            },
+            itemStyle: {
+              color: '#F97316',
+              borderWidth: 2,
+              borderColor: isDark ? '#1a2535' : '#fff'
+            },
             areaStyle: {
               color: new graphic.LinearGradient(0, 0, 0, 1, [
                 { offset: 0, color: topColor },
+                { offset: 0.5, color: midColor },
                 { offset: 1, color: bottomColor }
               ])
             }
@@ -93,53 +117,87 @@
   function renderRoiChart() {
     const data = props.roi7dTrend
     const isDark = roiChart.isDark.value
-    const topColor = isDark ? 'rgba(16,185,129,0.22)' : 'rgba(16,185,129,0.16)'
+    const topColor = isDark ? 'rgba(16,185,129,0.38)' : 'rgba(16,185,129,0.28)'
+    const midColor = isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)'
     const bottomColor = 'rgba(16,185,129,0)'
     roiChart.initChart(
       {
-        tooltip: { trigger: 'axis' },
-        grid: { left: 38, right: 14, top: 8, bottom: 18 },
+        animation: true,
+        animationDuration: 900,
+        animationEasing: 'cubicOut',
+        animationDurationUpdate: 500,
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: isDark ? 'rgba(15,25,41,0.92)' : 'rgba(255,255,255,0.96)',
+          borderColor: isDark ? '#2a3f5f' : '#e5e7eb',
+          textStyle: { color: isDark ? '#e2e8f0' : '#374151', fontSize: 12 },
+          formatter: (params: any[]) => {
+            const p = params[0]
+            return `${p.axisValue}<br/><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10B981;margin-right:5px"></span>${p.value}%`
+          }
+        },
+        grid: { left: 40, right: 14, top: 12, bottom: 20 },
         xAxis: {
           type: 'category',
           data: data.map((t) => t.date),
-          boundaryGap: true,
-          axisLabel: { color: isDark ? '#999' : '#666', fontSize: 11 },
-          axisLine: { lineStyle: { color: isDark ? '#444' : '#eee' } }
+          boundaryGap: false,
+          axisLabel: { color: isDark ? '#6b7280' : '#9ca3af', fontSize: 11 },
+          axisLine: { lineStyle: { color: isDark ? '#374151' : '#f3f4f6' } },
+          axisTick: { show: false }
         },
         yAxis: {
           type: 'value',
-          min: (v: { min: number }) => Math.max(0, v.min - 15),
+          min: (v: { min: number }) => Math.max(0, Math.floor(v.min / 10) * 10 - 10),
           axisLabel: {
-            color: isDark ? '#999' : '#666',
+            color: isDark ? '#6b7280' : '#9ca3af',
             fontSize: 11,
             formatter: '{value}%'
           },
-          splitLine: { lineStyle: { color: isDark ? '#333' : '#eee', type: 'dashed' } }
+          splitLine: { lineStyle: { color: isDark ? '#1f2937' : '#f9fafb', type: 'dashed' } }
         },
         series: [
           {
             type: 'line',
             data: data.map((t) => t.roi),
-            smooth: true,
+            smooth: 0.4,
             symbol: 'circle',
-            symbolSize: 6,
-            lineStyle: { width: 2 },
-            itemStyle: { color: '#10B981' },
+            symbolSize: 7,
+            showSymbol: false,
+            emphasis: { scale: true, focus: 'series' },
+            lineStyle: {
+              width: 2.5,
+              color: '#10B981',
+              shadowColor: 'rgba(16,185,129,0.3)',
+              shadowBlur: 6
+            },
+            itemStyle: {
+              color: '#10B981',
+              borderWidth: 2,
+              borderColor: isDark ? '#1a2535' : '#fff'
+            },
             areaStyle: {
               color: new graphic.LinearGradient(0, 0, 0, 1, [
                 { offset: 0, color: topColor },
+                { offset: 0.5, color: midColor },
                 { offset: 1, color: bottomColor }
               ])
+            },
+            markLine: {
+              silent: true,
+              symbol: 'none',
+              animation: false,
+              label: {
+                show: true,
+                position: 'insideEndTop',
+                formatter: `目标 ${ROI_TARGET}%`,
+                color: isDark ? '#6b7280' : '#9ca3af',
+                fontSize: 11
+              },
+              lineStyle: { type: 'dashed', color: isDark ? '#4b5563' : '#d1d5db', width: 1 },
+              data: [{ yAxis: ROI_TARGET }]
             }
           }
-        ],
-        markLine: {
-          silent: true,
-          symbol: 'none',
-          label: { show: true, formatter: `目标 ${ROI_TARGET}%` },
-          lineStyle: { type: 'dashed', color: isDark ? '#666' : '#999' },
-          data: [{ yAxis: ROI_TARGET }]
-        }
+        ]
       },
       data.length === 0
     )
@@ -188,5 +246,15 @@
   .ad-performance-trend-charts__chart {
     height: 135px;
     min-height: 120px;
+  }
+
+  @media (width <= 768px) {
+    .ad-performance-trend-charts__chart {
+      height: 180px;
+    }
+
+    .ad-performance-trend-charts {
+      margin-bottom: 12px;
+    }
   }
 </style>

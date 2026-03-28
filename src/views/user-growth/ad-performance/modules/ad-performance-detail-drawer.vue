@@ -188,7 +188,12 @@
   function onEdit() {
     router.push({
       path: '/user-growth/ad-performance/campaign-detail',
-      query: { id: props.campaignRow.id, name: props.campaignRow.name }
+      query: {
+        id: props.campaignRow.id,
+        name: props.campaignRow.name,
+        appId: props.campaignRow.appId ?? '',
+        appName: props.campaignRow.appName
+      }
     })
   }
 

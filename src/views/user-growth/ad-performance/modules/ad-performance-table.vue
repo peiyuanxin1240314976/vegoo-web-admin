@@ -30,13 +30,16 @@
                 <template #prefix>
                   <ElIcon><Search /></ElIcon>
                 </template>
-                <template #suffix>
-                  <ElIcon><Search /></ElIcon>
-                </template>
               </ElInput>
 
-              <ElButton class="ad-performance-table__filter-btn" round text @click="onFilter">
-                <ElIcon><Filter /></ElIcon>
+              <ElButton
+                class="ad-performance-table__filter-btn"
+                round
+                text
+                aria-label="高级筛选"
+                @click="onFilter"
+              >
+                <ElIcon aria-hidden="true"><Filter /></ElIcon>
               </ElButton>
 
               <ElButton class="ad-performance-table__custom-btn" round @click="onCustomColumns">
@@ -46,7 +49,7 @@
           </div>
         </div>
       </div>
-      <div class="ad-performance-table__body">
+      <div v-loading="props.loading" class="ad-performance-table__body">
         <CampaignTab
           v-if="activeTab === 'campaign'"
           :data="props.campaignRows"
@@ -637,6 +640,8 @@
     background: var(--default-box-color);
 
     :deep(.el-card__body) {
+      display: flex;
+      flex-direction: column;
       padding: 16px;
     }
   }
@@ -788,6 +793,7 @@
     height: 34px;
     padding: 0;
     color: var(--art-success);
+    touch-action: manipulation;
     background: transparent;
     border: 1px solid color-mix(in srgb, var(--art-success) 55%, transparent);
 
@@ -799,6 +805,7 @@
 
   .ad-performance-table__custom-btn {
     color: var(--art-success);
+    touch-action: manipulation;
     background: transparent;
     border: 1px solid color-mix(in srgb, var(--art-success) 55%, transparent);
 
@@ -825,7 +832,10 @@
   }
 
   .ad-performance-table__body {
-    overflow-x: auto;
+    flex: 1;
+    min-height: 180px;
+    max-height: min(calc(var(--art-full-height, 100vh) - 600px), 60vh);
+    overflow: auto;
   }
 
   .ad-performance-table__el-table {
@@ -1121,5 +1131,47 @@
     color: var(--el-text-color-primary);
     text-align: right;
     word-break: break-word;
+  }
+
+  @media (width <= 768px) {
+    .ad-performance-table__header-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .ad-performance-table__search {
+      width: 100%;
+    }
+
+    .ad-performance-table__searchbar {
+      flex-wrap: wrap;
+      padding: 4px 0;
+    }
+
+    .ad-performance-table__body {
+      max-height: 50vh;
+    }
+
+    :deep(.el-tabs__item) {
+      min-width: 72px !important;
+      padding: 0 12px !important;
+      font-size: 13px;
+    }
+
+    :deep(.el-tabs__nav > .el-tabs__item:nth-child(2)),
+    :deep(.el-tabs__item:last-child) {
+      padding-right: 12px !important;
+      padding-left: 12px !important;
+    }
+
+    :deep(.el-drawer) {
+      width: 100% !important;
+    }
+  }
+
+  @media (width <= 480px) {
+    :deep(.el-tabs__nav-wrap) {
+      overflow-x: auto;
+    }
   }
 </style>

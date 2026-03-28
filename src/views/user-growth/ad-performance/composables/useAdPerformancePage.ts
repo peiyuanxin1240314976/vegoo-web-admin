@@ -62,9 +62,15 @@ function emptyPage(): AdPerformanceMock {
 export function useAdPerformancePage() {
   const meta = ref<AdPerformanceMetaFilterResponse | null>(null)
   const page = ref<AdPerformanceMock>(emptyPage())
+  /** 全页面加载（首次 bootstrap / 刷新 / 筛选条件变更） */
   const loading = ref(false)
+  /** 仅表格区域加载（Tab 切换 / 翻页 / 关键词搜索） */
+  const tableLoading = ref(false)
   const activeTableTab = ref<AdPerformanceTableTab>('campaign')
   const tableKeyword = ref('')
+
+  /** 防竞态：每次 loadTable 调用前自增，异步回来后比较是否仍是最新请求 */
+  let tableLoadSeq = 0
 
   const appCountFromMeta = computed(() => {
     const opts = meta.value?.appOptions ?? []
@@ -106,28 +112,34 @@ export function useAdPerformancePage() {
   }
 
   async function loadTable() {
+    const seq = ++tableLoadSeq
     const q = tableQuery()
     try {
       if (activeTableTab.value === 'campaign') {
         const r = await fetchAdPerformanceTableCampaign(q)
+        if (seq !== tableLoadSeq) return
         page.value.campaignTableRows = r.rows
         page.value.pagination = r.pagination
       } else if (activeTableTab.value === 'country') {
         const r = await fetchAdPerformanceTableCountry(q)
+        if (seq !== tableLoadSeq) return
         page.value.countryTableRows = r.rows
         page.value.pagination = r.pagination
       } else if (activeTableTab.value === 'owner') {
         const r = await fetchAdPerformanceTableOwner(q)
+        if (seq !== tableLoadSeq) return
         page.value.ownerTableRows = r.rows
         page.value.ownerTeamSummary = r.summary
         page.value.pagination = r.pagination
       } else {
         const r = await fetchAdPerformanceTableAccount(q)
+        if (seq !== tableLoadSeq) return
         page.value.accountTableRows = r.rows
         page.value.accountSummary = r.summary
         page.value.pagination = r.pagination
       }
     } catch {
+      if (seq !== tableLoadSeq) return
       ElMessage.error('加载表格数据失败')
     }
   }
@@ -135,8 +147,7 @@ export function useAdPerformancePage() {
   async function bootstrap() {
     loading.value = true
     await loadMeta()
-    await loadOverview()
-    await loadTable()
+    await Promise.all([loadOverview(), loadTable()])
     loading.value = false
   }
 
@@ -148,46 +159,44 @@ export function useAdPerformancePage() {
     page.value.filter = { ...filter }
     page.value.pagination = { ...page.value.pagination, current: 1 }
     loading.value = true
-    await loadOverview()
-    await loadTable()
+    await Promise.all([loadOverview(), loadTable()])
     loading.value = false
   }
 
   async function refreshAll() {
     loading.value = true
     await loadMeta()
-    await loadOverview()
-    await loadTable()
+    await Promise.all([loadOverview(), loadTable()])
     loading.value = false
   }
 
   async function onTableTabChange(tab: AdPerformanceTableTab) {
     activeTableTab.value = tab
     page.value.pagination = { ...page.value.pagination, current: 1 }
-    loading.value = true
+    tableLoading.value = true
     await loadTable()
-    loading.value = false
+    tableLoading.value = false
   }
 
   async function onTableKeywordSearch() {
     page.value.pagination = { ...page.value.pagination, current: 1 }
-    loading.value = true
+    tableLoading.value = true
     await loadTable()
-    loading.value = false
+    tableLoading.value = false
   }
 
   async function onPageChange(p: number) {
     page.value.pagination = { ...page.value.pagination, current: p }
-    loading.value = true
+    tableLoading.value = true
     await loadTable()
-    loading.value = false
+    tableLoading.value = false
   }
 
   async function onPageSizeChange(size: number) {
     page.value.pagination = { ...page.value.pagination, size, current: 1 }
-    loading.value = true
+    tableLoading.value = true
     await loadTable()
-    loading.value = false
+    tableLoading.value = false
   }
 
   async function onExport() {
@@ -229,6 +238,7 @@ export function useAdPerformancePage() {
     meta,
     page,
     loading,
+    tableLoading,
     activeTableTab,
     tableKeyword,
     setTableKeyword,

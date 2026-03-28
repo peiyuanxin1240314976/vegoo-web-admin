@@ -29,7 +29,7 @@
             :owner-team-summary="page.ownerTeamSummary"
             :account-rows="page.accountTableRows"
             :account-summary="page.accountSummary"
-            :loading="loading"
+            :loading="tableLoading"
             :pagination="page.pagination"
             :filter-date-range="page.filter.dateRange"
             @pagination:current-change="onPageChange"
@@ -71,6 +71,7 @@
     meta,
     page,
     loading,
+    tableLoading,
     activeTableTab,
     tableKeyword,
     setTableKeyword,
@@ -136,5 +137,15 @@
   .ad-performance-page__section--alerts {
     margin-top: 16px;
     margin-bottom: 0;
+  }
+
+  @media (width <= 768px) {
+    .ad-performance-page {
+      padding-bottom: 16px;
+    }
+
+    .ad-performance-page__right {
+      margin-top: 4px;
+    }
   }
 </style>
