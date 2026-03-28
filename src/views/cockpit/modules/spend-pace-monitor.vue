@@ -2,7 +2,7 @@
   <div class="cockpit-pace-panel">
     <div class="pace-header">
       <span class="pace-title">消耗节奏监控</span>
-      <a class="pace-more" href="javascript:;">查看更多</a>
+      <!-- <a class="pace-more" href="javascript:;">查看更多</a> -->
     </div>
     <div class="pace-body">
       <template v-if="mainList.length || managedList.length">

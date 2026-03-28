@@ -2,7 +2,7 @@
   <ElCard class="cockpit-panel" shadow="never">
     <template #header>
       <span>智能预警</span>
-      <ElButton type="primary" link size="small">查看更多</ElButton>
+      <!-- <ElButton type="primary" link size="small">查看更多</ElButton> -->
     </template>
     <div class="alert-list">
       <template v-if="displayAlerts.length">

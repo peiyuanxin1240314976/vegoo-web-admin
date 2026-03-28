@@ -132,8 +132,10 @@
 
         <!-- 操作 -->
         <ElTableColumn label="操作" width="80" align="center" fixed="right" show-overflow-tooltip>
-          <template #default>
-            <ElButton link type="primary" size="small">详情</ElButton>
+          <template #default="{ row }">
+            <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
+              系列
+            </ElButton>
           </template>
         </ElTableColumn>
       </ElTable>
@@ -160,10 +162,13 @@
 
 <script setup lang="ts">
   import { ref, watch } from 'vue'
+  import { useRouter } from 'vue-router'
   import request from '@/utils/http'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
 
   defineOptions({ name: 'PlatformPerformancePlaceholder' })
+
+  const router = useRouter()
 
   const props = defineProps<{
     dateRange: [string, string]
@@ -200,6 +205,17 @@
     roi7: number
     status: 'normal' | 'warning' | 'roi_low'
   }
+
+  function goCampaignDetail(row: PlatformRow) {
+    router.push({
+      name: 'CampaignDetail',
+      query: {
+        appId: String(row.id),
+        appName: row.name
+      }
+    })
+  }
+
   // 接口未返回时不要展示 mock 数据，否则骨架屏会“盖在 mock 上面”
   const platformData = ref<PlatformRow[]>([])
   const platformTotal = ref(0)

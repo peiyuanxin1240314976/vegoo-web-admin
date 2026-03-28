@@ -117,15 +117,34 @@
         <ElTableColumn label="操作" width="100" align="center" fixed="right" show-overflow-tooltip>
           <template #default="{ row }">
             <template v-if="row.type === 'account'">
-              <ElButton link type="primary" size="small">系列</ElButton>
-              <ElButton link type="primary" size="small">详情</ElButton>
+              <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
+                系列
+              </ElButton>
+              <!-- <ElButton link type="primary" size="small">详情</ElButton> -->
             </template>
             <template v-else-if="row.type === 'platform'">
-              <ElButton link type="primary" size="small">系列</ElButton>
-              <ElButton link type="primary" size="small">详情</ElButton>
+              <ElButton
+                v-if="rowHasChildren(row)"
+                round
+                link
+                type="primary"
+                size="small"
+                @click="onToggleExpand(row)"
+              >
+                {{ isRowExpanded(row) ? '收起' : '展开' }}
+              </ElButton>
             </template>
             <template v-else>
-              <ElButton link type="primary" size="small">详情</ElButton>
+              <ElButton
+                v-if="rowHasChildren(row)"
+                round
+                link
+                type="primary"
+                size="small"
+                @click="onToggleExpand(row)"
+              >
+                {{ isRowExpanded(row) ? '收起' : '展开' }}
+              </ElButton>
             </template>
           </template>
         </ElTableColumn>
@@ -139,10 +158,13 @@
 <script setup lang="ts">
   import type { AccountDetailRow } from '../types'
   import { Monitor, Iphone } from '@element-plus/icons-vue'
+  import { useRouter } from 'vue-router'
 
   defineOptions({ name: 'AccountDetailTable' })
 
-  defineProps<{
+  const router = useRouter()
+
+  const props = defineProps<{
     tableData: AccountDetailRow[]
     expandedRowKeys: string[]
     summaryText: string
@@ -156,6 +178,35 @@
     getRoiClass: (roi: number) => string
     getUsageRateColor: (rate: number) => string
   }>()
+
+  const emit = defineEmits<{
+    toggleExpand: [row: AccountDetailRow]
+  }>()
+
+  function rowHasChildren(row: AccountDetailRow) {
+    return Boolean(row.children?.length)
+  }
+
+  function isRowExpanded(row: AccountDetailRow) {
+    return props.expandedRowKeys.includes(String(row.id))
+  }
+
+  function onToggleExpand(row: AccountDetailRow) {
+    if (!rowHasChildren(row)) return
+    emit('toggleExpand', row)
+  }
+
+  /** 系列详情：与广告成效系列页 query 约定一致（appId / appName） */
+  function goCampaignDetail(row: AccountDetailRow) {
+    router.push({
+      name: 'CampaignDetail',
+      query: {
+        id: String(row.id),
+        appId: String(row.id),
+        appName: row.name
+      }
+    })
+  }
 
   const EMPTY_TEXT = '无数据'
 

@@ -2,7 +2,7 @@
   <div class="cockpit-panel channel-roi-panel">
     <div class="panel-header">
       <span class="panel-title">广告平台ROI&安装量</span>
-      <a class="panel-more" href="javascript:;">查看更多</a>
+      <!-- <a class="panel-more" href="javascript:;">查看更多</a> -->
     </div>
     <div class="panel-body">
       <template v-if="list.length">

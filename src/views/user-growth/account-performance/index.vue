@@ -147,6 +147,7 @@
                     :format-number="formatNumber"
                     :get-roi-class="getRoiClass"
                     :get-usage-rate-color="getUsageRateColor"
+                    @toggle-expand="toggleRowExpand"
                   />
                   <div v-else class="ap-table-loading-block">
                     <ElSkeleton animated :rows="11" />
@@ -796,6 +797,19 @@
   function toggleExpandAll() {
     expandAll.value = !expandAll.value
     expandedRowKeys.value = expandAll.value ? collectExpandableRowKeys(tableData.value) : []
+  }
+
+  /** 操作列：展开 / 收起当前行的下一级（树节点） */
+  function toggleRowExpand(row: AccountDetailRow) {
+    if (!row.children?.length) return
+    const id = String(row.id)
+    const open = expandedRowKeys.value.includes(id)
+    if (open) {
+      expandAll.value = false
+      expandedRowKeys.value = expandedRowKeys.value.filter((k) => k !== id)
+    } else {
+      expandedRowKeys.value = [...expandedRowKeys.value, id]
+    }
   }
 
   function toFiniteNumber(v: unknown): number | null {

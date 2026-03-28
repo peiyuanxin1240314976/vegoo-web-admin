@@ -134,9 +134,11 @@
 
         <!-- 操作 -->
         <ElTableColumn label="操作" width="110" align="center" fixed="right" show-overflow-tooltip>
-          <template #default>
-            <ElButton link type="primary" size="small">系列</ElButton>
-            <ElButton link type="primary" size="small">详情</ElButton>
+          <template #default="{ row }">
+            <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
+              系列
+            </ElButton>
+            <!-- <ElButton link type="primary" size="small">详情</ElButton> -->
           </template>
         </ElTableColumn>
       </ElTable>
@@ -161,10 +163,13 @@
 
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue'
+  import { useRouter } from 'vue-router'
   import request from '@/utils/http'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
 
   defineOptions({ name: 'AppPerformancePlaceholder' })
+
+  const router = useRouter()
 
   const props = defineProps<{
     dateRange: [string, string]
@@ -212,6 +217,17 @@
     roi3: number
     roi7: number
     status: 'normal' | 'warning' | 'roi_low'
+  }
+
+  function goCampaignDetail(row: AccountRow) {
+    router.push({
+      name: 'CampaignDetail',
+      query: {
+        id: String(row.id),
+        appId: String(row.id),
+        appName: row.name
+      }
+    })
   }
 
   const MOCK_ACCOUNTS_FALLBACK: AccountRow[] = [

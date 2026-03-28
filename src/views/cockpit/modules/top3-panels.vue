@@ -7,7 +7,7 @@
           <i class="iconfont icon-jinjiangbei" />
         </span>
         <span class="top3-module__title">Top3收入应用</span>
-        <a class="top3-module__more" href="javascript:;">查看更多</a>
+        <!-- <a class="top3-module__more" href="javascript:;">查看更多</a> -->
       </div>
       <div class="top3-module__list">
         <template v-if="displayTopRevenue.length">
@@ -32,7 +32,7 @@
           <DislikeIcon />
         </span>
         <span class="top3-module__title">Top3差评产品</span>
-        <a class="top3-module__more" href="javascript:;">查看更多</a>
+        <!-- <a class="top3-module__more" href="javascript:;">查看更多</a> -->
       </div>
       <div class="top3-module__list">
         <template v-if="displayTopBadReview.length">
@@ -61,7 +61,7 @@
           <TrendIcon />
         </span>
         <span class="top3-module__title">Top3用户增长</span>
-        <a class="top3-module__more" href="javascript:;">查看更多</a>
+        <!-- <a class="top3-module__more" href="javascript:;">查看更多</a> -->
       </div>
       <div class="top3-module__list">
         <template v-if="displayTopUser.length">

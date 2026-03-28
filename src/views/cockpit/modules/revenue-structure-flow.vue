@@ -2,7 +2,7 @@
   <div class="revenue-flow-panel">
     <div class="panel-header">
       <span class="panel-title">近7日收入结构流向</span>
-      <ElButton type="primary" link size="small">查看更多</ElButton>
+      <!-- <ElButton type="primary" link size="small">查看更多</ElButton> -->
     </div>
     <template v-if="hasFlowData">
       <div ref="chartRef" class="sankey-chart" />
