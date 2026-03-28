@@ -10,10 +10,15 @@ import type {
   ComprehensiveAnalysisFilterState,
   KpiCard,
   PlatformCpiBarData,
+  PlatformCpiBarItem,
   AppCpiRankItem,
   AlertItem,
   PlatformCpiTrend,
-  EcpmAnalysis
+  TrendSeries,
+  EcpmAnalysis,
+  SelectOption,
+  CountryCpiMapItem,
+  CountryCpiTopItem
 } from '@/views/user-growth/comprehensive-analysis/types'
 import { buildComprehensiveAnalysisApiParams } from '@/views/user-growth/comprehensive-analysis/utils/buildApiParams'
 import {
@@ -72,9 +77,9 @@ export function fetchComprehensiveAnalysisFilterOptions() {
     })
     .then((res) => unwrapDataDeep<ComprehensiveAnalysisFilterOptions>(res))
     .then((opts) => ({
-      appOptions: asArray(opts?.appOptions),
-      sourceOptions: asArray(opts?.sourceOptions),
-      countryOptions: asArray(opts?.countryOptions)
+      appOptions: asArray<SelectOption>(opts?.appOptions),
+      sourceOptions: asArray<SelectOption>(opts?.sourceOptions),
+      countryOptions: asArray<SelectOption>(opts?.countryOptions)
     }))
 }
 
@@ -104,7 +109,7 @@ export function fetchComprehensiveAnalysisPlatformCpiBar(params: ComprehensiveAn
     .then((res) => unwrapDataDeep<PlatformCpiBarData>(res))
     .then((d) => ({
       target: typeof d?.target === 'number' ? d.target : 0,
-      items: asArray(d?.items)
+      items: asArray<PlatformCpiBarItem>(d?.items)
     }))
 }
 
@@ -137,8 +142,8 @@ export function fetchComprehensiveAnalysisCountryDistribution(
     .then((d) => {
       const obj = asRecord(d)
       return {
-        mapItems: asArray<ComprehensiveAnalysisData['countryCpiMap'][number]>(obj.mapItems),
-        top8: asArray<ComprehensiveAnalysisData['countryTop8'][number]>(obj.top8)
+        mapItems: asArray<CountryCpiMapItem>(obj.mapItems),
+        top8: asArray<CountryCpiTopItem>(obj.top8)
       }
     })
 }
@@ -170,7 +175,7 @@ export function fetchComprehensiveAnalysisPlatformCpiTrend(params: Comprehensive
     .then((d) => ({
       dates: asArray<string>(d?.dates),
       target: typeof d?.target === 'number' ? d.target : 0,
-      series: asArray(d?.series)
+      series: asArray<TrendSeries>(d?.series)
     }))
 }
 
@@ -231,14 +236,17 @@ export async function fetchComprehensiveAnalysisData(
     fetchComprehensiveAnalysisEcpmAnalysis(params)
   ])
 
+  const emptyBar: PlatformCpiBarData = { target: 0, items: [] }
+  const emptyTrend: PlatformCpiTrend = { dates: [], target: 0, series: [] }
+
   return {
-    kpis: asArray(kpis),
-    platformCpiBar: platformCpiBar ?? { target: 0, items: [] },
-    appCpiRank: asArray(appCpiRank),
-    countryCpiMap: asArray(countryDistribution?.mapItems),
-    countryTop8: asArray(countryDistribution?.top8),
-    alerts: asArray(alerts),
-    platformCpiTrend: platformCpiTrend ?? { dates: [], target: 0, series: [] },
+    kpis: asArray<KpiCard>(kpis),
+    platformCpiBar: platformCpiBar ?? emptyBar,
+    appCpiRank: asArray<AppCpiRankItem>(appCpiRank),
+    countryCpiMap: asArray<CountryCpiMapItem>(countryDistribution?.mapItems),
+    countryTop8: asArray<CountryCpiTopItem>(countryDistribution?.top8),
+    alerts: asArray<AlertItem>(alerts),
+    platformCpiTrend: platformCpiTrend ?? emptyTrend,
     ecpmAnalysis: ecpmAnalysis ?? EMPTY_ECPM
   } satisfies ComprehensiveAnalysisData
 }

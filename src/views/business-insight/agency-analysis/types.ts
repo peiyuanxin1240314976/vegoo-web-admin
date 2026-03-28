@@ -1,5 +1,17 @@
 export type AgencyStatus = 'normal' | 'low' | 'paused'
 
+/** 顶部筛选下拉项（契约 09-meta-filter-options） */
+export interface AgencyAnalysisFilterOption {
+  label: string
+  value: string
+}
+
+export interface AgencyAnalysisFilterOptionsPayload {
+  appOptions: AgencyAnalysisFilterOption[]
+  agencyOptions: AgencyAnalysisFilterOption[]
+  sourceOptions: AgencyAnalysisFilterOption[]
+}
+
 export interface KpiCardItem {
   label: string
   value: string
@@ -40,6 +52,8 @@ export interface AccountDetail {
 }
 
 export interface CampaignDetail {
+  /** 广告系列 ID（契约 AgencyExpandCampaign.id，跳转详情 query.id） */
+  id?: string
   appId?: string
   appName?: string
   name?: string

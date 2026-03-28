@@ -1,6 +1,7 @@
 import type {
   AgencyAnalysisMockPayload,
   AgencyAnalysisCharts,
+  AgencyAnalysisFilterOptionsPayload,
   AgencyExpandData,
   AgencyRow,
   CampaignRow,
@@ -118,6 +119,9 @@ const AGENCY_DETAIL_MAP: Record<string, AgencyExpandData> = {
     ],
     campaigns: [
       {
+        id: 'c1',
+        appId: 'com.vegoo.phonetracker2',
+        appName: 'PhoneTracker2_US_Facebook_001',
         name: 'PT_761_VO_WW_IL_0228',
         budget: 200,
         spend: '$33.2',
@@ -129,6 +133,9 @@ const AGENCY_DETAIL_MAP: Record<string, AgencyExpandData> = {
         roi32: 93
       },
       {
+        id: 'c-g1-2',
+        appId: 'com.vegoo.phonetracker2',
+        appName: 'PhoneTracker2_US_Facebook_002',
         name: 'PT_761_VO_WW_IL_0208_2_03',
         budget: 300,
         spend: '$18.9',
@@ -172,6 +179,9 @@ const AGENCY_DETAIL_MAP: Record<string, AgencyExpandData> = {
     ],
     campaigns: [
       {
+        id: 'c2',
+        appId: 'com.vegoo.phonetracker2',
+        appName: 'PhoneTracker2_CA_TikTok_001',
         name: 'KN_TK_WW_0228_01',
         budget: 300,
         spend: '$32.5',
@@ -215,6 +225,9 @@ const AGENCY_DETAIL_MAP: Record<string, AgencyExpandData> = {
     ],
     campaigns: [
       {
+        id: 'c3',
+        appId: 'com.vegoo.spyapp',
+        appName: 'SpyApp_JP_Meta_001',
         name: 'XTM_Meta_WW_0228_01',
         budget: 500,
         spend: '$33.4',
@@ -233,6 +246,8 @@ const CAMPAIGNS: CampaignRow[] = [
   {
     id: 'c1',
     agency: 'GatherOne',
+    appId: 'com.vegoo.phonetracker2',
+    appName: 'PhoneTracker2_US_Facebook_001',
     name: 'PhoneTracker2_US_Facebook_001',
     channel: 'Facebook',
     app: 'PhoneTracker2',
@@ -250,6 +265,8 @@ const CAMPAIGNS: CampaignRow[] = [
     id: 'c2',
     agency: '快鸟',
     agencyColor: '#00d4b4',
+    appId: 'com.vegoo.phonetracker2',
+    appName: 'PhoneTracker2_CA_TikTok_001',
     name: 'PhoneTracker2_CA_TikTok_001',
     channel: 'TikTok',
     app: 'PhoneTracker2',
@@ -267,6 +284,8 @@ const CAMPAIGNS: CampaignRow[] = [
     id: 'c3',
     agency: '星图传媒',
     agencyColor: '#f59e0b',
+    appId: 'com.vegoo.spyapp',
+    appName: 'SpyApp_JP_Meta_001',
     name: 'SpyApp_JP_Meta_001',
     channel: 'Meta',
     app: 'SpyApp',
@@ -372,5 +391,79 @@ export async function mockFetchAgencyAnalysisData(): Promise<AgencyAnalysisMockP
     campaigns: CAMPAIGNS,
     dailyRows: DAILY_ROWS,
     charts: CHARTS
+  }
+}
+
+const FILTER_OPTIONS: AgencyAnalysisFilterOptionsPayload = {
+  appOptions: [
+    { label: '全部应用', value: 'all' },
+    { label: 'Solitaire Classic', value: 'app_solitaire_classic' },
+    { label: 'Mahjong Master', value: 'app_mahjong_master' }
+  ],
+  agencyOptions: [
+    { label: '全部代投方', value: 'all' },
+    { label: 'GatherOne', value: 'agency_gatherone' },
+    { label: 'BluePeak', value: 'agency_bluepeak' }
+  ],
+  sourceOptions: [
+    { label: '全部广告平台', value: 'all' },
+    { label: 'Google', value: '1' },
+    { label: 'Facebook', value: '2' },
+    { label: 'Unity', value: '3' },
+    { label: 'AppLovin', value: '4' }
+  ]
+}
+
+export async function mockFetchAgencyAnalysisFilterOptions(): Promise<AgencyAnalysisFilterOptionsPayload> {
+  return { ...FILTER_OPTIONS }
+}
+
+export async function mockFetchAgencyOverview(): Promise<{ kpiCards: KpiCardItem[] }> {
+  return { kpiCards: [...KPI_CARDS] }
+}
+
+export async function mockFetchAgencyAgencySummary(): Promise<{
+  agencies: AgencyRow[]
+  agencyDetailMap: Record<string, AgencyExpandData>
+}> {
+  return { agencies: [...AGENCIES], agencyDetailMap: { ...AGENCY_DETAIL_MAP } }
+}
+
+export async function mockFetchAgencyCampaignTable(): Promise<{ campaigns: CampaignRow[] }> {
+  return { campaigns: [...CAMPAIGNS] }
+}
+
+export async function mockFetchAgencyDailyComparison(): Promise<{ dailyRows: DailyRow[] }> {
+  return { dailyRows: [...DAILY_ROWS] }
+}
+
+export async function mockFetchAgencyDonutSpendShare(): Promise<{
+  donut: AgencyAnalysisCharts['donut']
+}> {
+  return { donut: [...CHARTS.donut] }
+}
+
+export async function mockFetchAgencyChannelDistribution(): Promise<{
+  categories: string[]
+  series: AgencyAnalysisCharts['channelDistribution']['series']
+}> {
+  return {
+    categories: [...CHARTS.channelDistribution.categories],
+    series: CHARTS.channelDistribution.series.map((s) => ({ ...s, values: [...s.values] }))
+  }
+}
+
+export async function mockFetchAgencyCountryTop8(): Promise<{
+  countryTop8: AgencyAnalysisCharts['countryTop8']
+}> {
+  return { countryTop8: [...CHARTS.countryTop8] }
+}
+
+export async function mockFetchAgencySpendTrend30d(): Promise<
+  AgencyAnalysisCharts['spendTrend30d']
+> {
+  return {
+    dates: [...CHARTS.spendTrend30d.dates],
+    series: CHARTS.spendTrend30d.series.map((s) => ({ ...s, values: [...s.values] }))
   }
 }

@@ -7,7 +7,8 @@ import type {
   OverallRecoveryFilterOptions,
   OverallRecoveryFilterState,
   OverallTabData,
-  OrganicTabData
+  OrganicTabData,
+  SelectOption
 } from '@/views/user-growth/overall-recovery/types'
 import { buildOverallRecoveryApiParams } from '@/views/user-growth/overall-recovery/utils/buildApiParams'
 import {
@@ -49,9 +50,9 @@ export function fetchOverallRecoveryFilterOptions() {
     })
     .then((res) => unwrapDataDeep<OverallRecoveryFilterOptions>(res))
     .then((opts) => ({
-      appOptions: asArray(opts?.appOptions),
-      sourceOptions: asArray(opts?.sourceOptions),
-      countryOptions: asArray(opts?.countryOptions)
+      appOptions: asArray<SelectOption>(opts?.appOptions),
+      sourceOptions: asArray<SelectOption>(opts?.sourceOptions),
+      countryOptions: asArray<SelectOption>(opts?.countryOptions)
     }))
 }
 
