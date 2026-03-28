@@ -63,45 +63,89 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../../styles/ap-card-fx';
+
   .adtg {
-    background: var(--default-box-color);
+    @include ap-neon-bg;
+    @include ap-panel-hover;
+
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 5%;
+      z-index: 0;
+      width: 90%;
+      height: 1.5px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(16 185 129 / 72%),
+        rgb(34 211 238 / 78%),
+        rgb(59 130 246 / 65%),
+        transparent
+      );
+      filter: blur(0.4px);
+    }
 
     :deep(.el-card__header) {
-      padding: 10px 16px 8px;
-      border-bottom: 1px solid var(--default-border);
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 12px;
+      background: transparent;
+      border-bottom: 1px solid rgb(16 185 129 / 16%);
     }
 
     :deep(.el-card__body) {
-      padding: 14px 16px;
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 16px;
+      background: transparent;
     }
   }
 
   .adtg__title {
+    @include ap-title-gradient;
+
     font-size: 13px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
   }
 
   .adtg__grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 12px;
   }
 
   .adtg__cell {
     display: flex;
     gap: 18px;
     align-items: center;
-    padding: 22px 20px;
-    background: var(--default-bg-color);
-    border: 1px solid var(--default-border);
-    border-radius: 8px;
+    padding: 20px 18px;
+    background: rgb(16 185 129 / 6%);
+    border: 1px solid rgb(16 185 129 / 20%);
+    border-radius: 10px;
+    transition:
+      background 0.22s ease,
+      border-color 0.22s ease,
+      box-shadow 0.22s ease;
+
+    &:hover {
+      background: rgb(16 185 129 / 10%);
+      border-color: rgb(52 211 153 / 40%);
+      box-shadow: 0 0 16px rgb(16 185 129 / 14%);
+    }
   }
 
   .adtg__icon {
     flex-shrink: 0;
-    font-size: 48px;
-    color: var(--el-text-color-secondary);
+    font-size: 40px;
+    color: #22d3ee;
+    filter: drop-shadow(0 0 8px rgb(34 211 238 / 45%));
   }
 
   .adtg__info {
@@ -112,23 +156,24 @@
   }
 
   .adtg__label {
-    font-size: 14px;
-    color: var(--el-text-color-secondary);
+    font-size: 13px;
+    color: #64748b;
   }
 
   .adtg__value {
     display: inline-flex;
     gap: 6px;
     align-items: center;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
+    font-size: 17px;
+    font-weight: 700;
+    color: #e2e8f0;
+    text-shadow: 0 0 8px rgb(34 211 238 / 20%);
   }
 
   .adtg__flag {
     flex-shrink: 0;
-    width: 16px;
-    height: 12px;
+    width: 18px;
+    height: 13px;
     border-radius: 2px;
   }
 </style>

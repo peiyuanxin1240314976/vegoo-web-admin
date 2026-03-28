@@ -189,6 +189,94 @@ alwaysApply: true
 - 写样式时**优先使用上表中的 CSS 变量**，避免硬编码 HEX；若需在 JS/图表配置中引用，可使用 `getComputedStyle(document.documentElement).getPropertyValue('--art-primary')` 等。
 - 浅色模式由 `:root` 与现有 gray/primary 变量控制，与深色角色语义一致，具体色值见 `tailwind.css`。
 
+### 语义文字颜色 Token
+
+文字颜色优先使用语义变量而非直接引用灰阶（如用 `var(--text-secondary)` 而非 `var(--art-gray-600)`），亮/暗模式自动适配：
+
+| 变量 | 指向 | 用途 | Tailwind 类名 |
+|------|------|------|--------------|
+| `--text-primary` | `--art-gray-900` | 标题、正文主文字 | `text-text-primary` |
+| `--text-secondary` | `--art-gray-600` | 辅助说明、标签、图例 | `text-text-secondary` |
+| `--text-tertiary` | `--art-gray-500` | 更弱的辅助信息 | `text-text-tertiary` |
+| `--text-disabled` | `--art-gray-400` | 禁用态文字 | `text-text-disabled` |
+| `--text-link` | `--art-primary` | 链接文字 | `text-text-link` |
+| `--text-success` | `--art-success` | 积极/成功状态文字 | `text-text-success` |
+| `--text-warning` | `--art-warning` | 警告状态文字 | `text-text-warning` |
+| `--text-danger` | `--art-danger` | 危险/错误状态文字 | `text-text-danger` |
+
+### 间距体系 Token
+
+统一使用 `--space-*` 变量，避免散落魔法数字；Tailwind 中已映射为 `--spacing-*`：
+
+| 变量 | 值 | 典型场景 |
+|------|-----|----------|
+| `--space-1` | 4px | 图标与文字间距 |
+| `--space-2` | 8px | 紧凑元素间距、表单项内 |
+| `--space-3` | 12px | 面板内部 padding |
+| `--space-4` | 16px | 区块间距、栅格 gutter |
+| `--space-5` | 20px | 中等区域间距 |
+| `--space-6` | 24px | 大区块间距 |
+| `--space-8` | 32px | 页面分区 |
+| `--space-10` | 40px | 大间隔 |
+| `--space-12` | 48px | 特大间隔 |
+| `--space-16` | 64px | 页面级间距 |
+
+### 阴影体系 Token
+
+统一使用 `--shadow-*` 变量，亮/暗自动适配（暗色模式阴影更深）。Tailwind 中可直接用 `shadow-xs`~`shadow-xl`：
+
+| 变量 | 用途 |
+|------|------|
+| `--shadow-xs` | 微弱阴影，输入框、小卡片 |
+| `--shadow-sm` | 卡片默认阴影 |
+| `--shadow-md` | 悬浮面板、下拉菜单 |
+| `--shadow-lg` | 弹窗、抽屉 |
+| `--shadow-xl` | 全屏浮层、大弹窗 |
+
+### 动效 Token
+
+过渡动画统一使用以下变量（**禁止** `transition: all`，须显式列出属性）：
+
+| 变量 | 值 | 用途 |
+|------|-----|------|
+| `--duration-fast` | 150ms | hover 反馈、开关切换 |
+| `--duration-normal` | 250ms | 面板展开、路由过渡 |
+| `--duration-slow` | 350ms | 复杂动画、大面积过渡 |
+| `--ease-default` | `cubic-bezier(0.4, 0, 0.2, 1)` | 通用缓动 |
+| `--ease-in` | `cubic-bezier(0.4, 0, 1, 1)` | 元素退出 |
+| `--ease-out` | `cubic-bezier(0, 0, 0.2, 1)` | 元素进入 |
+| `--ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | 弹性效果 |
+
+### Z-index 层级
+
+z-index 统一使用变量，避免随意数值冲突：
+
+| 变量 | 值 | 层级 |
+|------|-----|------|
+| `--z-dropdown` | 1000 | 下拉菜单 |
+| `--z-sticky` | 1020 | 吸顶元素 |
+| `--z-fixed` | 1030 | 固定定位 |
+| `--z-modal-backdrop` | 1040 | 弹窗遮罩 |
+| `--z-modal` | 1050 | 弹窗/抽屉 |
+| `--z-popover` | 1060 | 气泡框 |
+| `--z-tooltip` | 1070 | 工具提示 |
+| `--z-toast` | 1080 | 消息提示 |
+| `--z-fullscreen` | 2300 | 全屏容器 |
+| `--z-progress-bar` | 2400 | 顶部进度条 |
+
+### Focus 可见性
+
+交互元素需要可见的 focus 状态。项目提供以下变量供业务组件使用 Tailwind `focus-visible:ring-*` 类：
+
+- `--focus-ring-color`: `var(--art-primary)` — 焦点环颜色
+- `--focus-ring-width`: `2px` — 焦点环宽度
+- `--focus-ring-offset`: `2px` — 焦点环偏移
+
+### 可访问性工具类
+
+- `.tabular-nums`：对数字列/KPI 卡片等需要数字对齐的场景使用 `font-variant-numeric: tabular-nums`。
+- **`prefers-reduced-motion`**：项目已全局响应用户的「减少动画」偏好，自动将动画/过渡缩短至近零。
+
 ## 其他
 
 - **模块接口契约整理**：当需要 **按路由/页面梳理 `mock/backend-api`、与 `fetch*` / `config/data-source` 对齐、输出契约清单** 时，Agent 应遵循项目技能 **`.cursor/skills/module-api-contract-audit/SKILL.md`**，并配合规则 **`module-api-contract-audit.mdc`**、**`api-contract-and-mock-conventions.mdc`**、**`module-api-mock-config.mdc`**。契约须满足该 Skill「章节 0」：**`sampleResponse` 完整可联调**；URL 按 **路由+模块+功能**（kebab-case）组织；**接口一律 POST + JSON 请求体**（与 `request.post` 一致）。**大模块多页面** 时另有 Skill「章节 9～10」：**契约 JSON 与开关聚合到模块根目录**（子页不单独建契约目录/config）、**`data-source` 须注释且多页面用多 enum / 多 `is*Mock` 方法**、**每 JSON 根级 `interaction`**、**README 场景→接口表**。

@@ -1,5 +1,5 @@
 <template>
-  <div v-loading="loading" class="cd-page art-full-height">
+  <div v-loading="loading" class="cd-page">
     <!-- ── 顶部导航栏 ─────────────────────────────────────── -->
     <div class="cd-topbar">
       <div class="cd-topbar__left">
@@ -196,12 +196,81 @@
 
 <style scoped lang="scss">
   .cd-page {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 16px 20px 20px;
-    overflow: auto;
-    background: var(--default-bg-color);
+    gap: 16px;
+    padding: 24px 28px 32px;
+    overflow-x: clip;
+    background: rgb(6 6 10);
+
+    /* 极光层 ── 高饱和度 */
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(
+          ellipse 65% 52% at 4% 4%,
+          rgb(59 130 246 / 38%) 0%,
+          rgb(6 182 212 / 18%) 38%,
+          transparent 56%
+        ),
+        radial-gradient(
+          ellipse 55% 45% at 96% 92%,
+          rgb(16 185 129 / 35%) 0%,
+          rgb(52 211 153 / 15%) 38%,
+          transparent 56%
+        ),
+        radial-gradient(ellipse 38% 32% at 68% 50%, rgb(168 85 247 / 18%) 0%, transparent 52%),
+        radial-gradient(ellipse 42% 35% at 12% 88%, rgb(249 115 22 / 16%) 0%, transparent 50%);
+      animation: cd-aurora 16s ease-in-out infinite alternate;
+    }
+
+    /* 网格层 ── 更亮 */
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px),
+        radial-gradient(circle, rgb(6 182 212 / 7%) 1px, transparent 1px);
+      background-size:
+        40px 40px,
+        40px 40px,
+        80px 80px;
+      mask-image: radial-gradient(ellipse 88% 75% at 50% 25%, black 12%, transparent 68%);
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  @keyframes cd-aurora {
+    0% {
+      filter: hue-rotate(0deg);
+      opacity: 0.75;
+      transform: scale(1) translate(0, 0);
+    }
+
+    50% {
+      filter: hue-rotate(15deg);
+      opacity: 1;
+      transform: scale(1.04) translate(0.8%, -0.8%);
+    }
+
+    100% {
+      filter: hue-rotate(-10deg);
+      opacity: 0.82;
+      transform: scale(1) translate(-0.8%, 0.8%);
+    }
   }
 
   // ── 顶部导航栏 ──────────────────────────────────────────────
@@ -209,6 +278,7 @@
     display: flex;
     flex-shrink: 0;
     align-items: center;
+    animation: cd-slide-down 0.45s var(--ease-out) both;
   }
 
   .cd-topbar__left {
@@ -226,14 +296,20 @@
     font-weight: 500;
     color: var(--el-text-color-secondary);
     cursor: pointer;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
+    background: linear-gradient(135deg, rgb(59 130 246 / 8%) 0%, rgb(24 24 27 / 80%) 100%);
+    border: 1px solid rgb(82 82 91 / 50%);
     border-radius: 20px;
-    transition: all 0.15s ease;
+    transition:
+      color 0.2s var(--ease-out),
+      border-color 0.2s var(--ease-out),
+      box-shadow 0.2s var(--ease-out),
+      background 0.2s var(--ease-out);
 
     &:hover {
       color: var(--el-text-color-primary);
-      border-color: var(--art-primary);
+      background: linear-gradient(135deg, rgb(59 130 246 / 16%) 0%, rgb(24 24 27 / 90%) 100%);
+      border-color: rgb(96 165 250 / 55%);
+      box-shadow: 0 0 12px rgb(59 130 246 / 20%);
     }
   }
 
@@ -247,6 +323,30 @@
     }
   }
 
+  @keyframes cd-slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes cd-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   // ── 系列标题行 ───────────────────────────────────────────────
   .cd-title-row {
     display: flex;
@@ -255,6 +355,17 @@
     gap: 12px;
     align-items: center;
     justify-content: space-between;
+    padding: 12px 18px;
+    background:
+      radial-gradient(ellipse 80% 100% at 0% 50%, rgb(59 130 246 / 16%) 0%, transparent 55%),
+      linear-gradient(135deg, rgb(20 25 40 / 88%) 0%, rgb(10 10 16 / 82%) 100%);
+    border: 1px solid rgb(96 165 250 / 32%);
+    border-radius: 14px;
+    box-shadow:
+      0 6px 32px rgb(0 0 0 / 42%),
+      0 0 0 1px rgb(59 130 246 / 10%),
+      inset 0 1px 0 rgb(186 230 253 / 12%);
+    animation: cd-slide-up 0.5s var(--ease-out) 0.1s both;
   }
 
   .cd-title-row__left {
@@ -268,9 +379,14 @@
     overflow: hidden;
     font-size: 22px;
     font-weight: 800;
-    color: var(--el-text-color-primary);
     text-overflow: ellipsis;
     white-space: nowrap;
+    background-color: transparent;
+    background-image: linear-gradient(92deg, #f0f9ff 0%, #7dd3fc 35%, #22d3ee 65%, #34d399 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-size: 100%;
+    -webkit-text-fill-color: transparent;
   }
 
   .cd-status-badge {
@@ -330,15 +446,16 @@
     display: grid;
     flex: 1;
     grid-template-columns: 220px 1fr 280px;
-    gap: 14px;
+    gap: 16px;
     align-items: start;
     min-height: 0;
+    animation: cd-slide-up 0.55s var(--ease-out) 0.2s both;
   }
 
   .cd-col {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
     min-width: 0;
   }
 
@@ -356,6 +473,22 @@
     .cd-col--left {
       flex-direction: row;
       grid-column: 1 / -1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cd-page::before {
+      animation: none;
+    }
+
+    .cd-topbar,
+    .cd-title-row,
+    .cd-body {
+      animation: none;
+    }
+
+    .cd-back-btn {
+      transition: none;
     }
   }
 </style>

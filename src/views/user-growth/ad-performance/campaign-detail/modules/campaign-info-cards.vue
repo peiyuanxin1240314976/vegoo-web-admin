@@ -2,7 +2,7 @@
   <div class="cic">
     <!-- 基本信息 -->
     <ElCard class="cic__card" shadow="never">
-      <template #header>基本信息</template>
+      <template #header><span class="cic__card-title">基本信息</span></template>
       <div class="cic__rows">
         <div class="cic__row">
           <span class="cic__label">系列ID</span>
@@ -34,7 +34,7 @@
 
     <!-- 预算与排期 -->
     <ElCard class="cic__card" shadow="never">
-      <template #header>预算与排期</template>
+      <template #header><span class="cic__card-title">预算与排期</span></template>
       <div class="cic__rows">
         <div class="cic__row">
           <span class="cic__label">预算类型</span>
@@ -77,7 +77,7 @@
 
     <!-- 目标与出价 -->
     <ElCard class="cic__card" shadow="never">
-      <template #header>目标与出价</template>
+      <template #header><span class="cic__card-title">目标与出价</span></template>
       <div class="cic__rows">
         <div class="cic__row">
           <span class="cic__label">目标区域</span>
@@ -146,6 +146,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../styles/ap-card-fx';
+
   .cic {
     display: flex;
     flex-direction: column;
@@ -153,25 +155,66 @@
   }
 
   .cic__card {
-    background: var(--default-box-color);
+    @include ap-neon-bg;
+    @include ap-panel-hover;
+
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+
+    /* 顶部蓝色高光线 */
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 8%;
+      z-index: 0;
+      width: 84%;
+      height: 1.5px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(59 130 246 / 70%),
+        rgb(6 182 212 / 80%),
+        transparent
+      );
+      filter: blur(0.4px);
+    }
 
     :deep(.el-card__header) {
-      padding: 10px 14px 8px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--el-text-color-primary);
-      border-bottom: 1px solid var(--default-border);
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 12px;
+      background: transparent;
+      border-bottom: 1px solid rgb(59 130 246 / 18%);
     }
 
     :deep(.el-card__body) {
-      padding: 10px 14px 12px;
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 16px;
+      background: transparent;
     }
+  }
+
+  .cic__card-title {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    background-color: transparent;
+    background-image: linear-gradient(92deg, #f0f9ff 0%, #7dd3fc 45%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-size: 100%;
+    -webkit-text-fill-color: transparent;
   }
 
   .cic__rows {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 11px;
   }
 
   .cic__row {

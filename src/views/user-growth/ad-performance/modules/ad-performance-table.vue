@@ -632,17 +632,29 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/ap-card-fx';
+
   .ad-performance-table {
     margin-bottom: 16px;
   }
 
   .ad-performance-table__card {
-    background: var(--default-box-color);
+    @include ap-neon-bg;
+    @include ap-panel-hover;
+
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+
+    --el-card-bg-color: transparent;
 
     :deep(.el-card__body) {
+      position: relative;
+      z-index: 1;
       display: flex;
       flex-direction: column;
       padding: 16px;
+      background: transparent;
     }
   }
 
@@ -730,10 +742,17 @@
   }
 
   .ad-performance-table__title {
+    display: inline-block;
     flex: 0 0 auto;
     font-size: 15px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    background-color: transparent;
+    background-image: linear-gradient(92deg, #f0f9ff 0%, #7dd3fc 30%, #22d3ee 62%, #34d399 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-size: 100%;
+    -webkit-text-fill-color: transparent;
   }
 
   .ad-performance-table__actions {

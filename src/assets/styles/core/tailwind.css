@@ -18,6 +18,61 @@
   --font-weight-regular: 400;
 }
 
+/* ==================== 设计规范：间距体系 ==================== */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+}
+
+/* ==================== 设计规范：阴影体系 ==================== */
+:root {
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 8px 10px rgba(0, 0, 0, 0.04);
+}
+
+/* ==================== 设计规范：动效 Token ==================== */
+:root {
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ==================== 设计规范：Z-index 层级 ==================== */
+:root {
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+  --z-fullscreen: 2300;
+  --z-progress-bar: 2400;
+}
+
+/* ==================== 设计规范：Focus 可见性 ==================== */
+:root {
+  --focus-ring-color: var(--art-primary);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}
+
 /* ==================== Light Mode Variables ==================== */
 :root {
   /* Base Colors */
@@ -62,6 +117,16 @@
 
   /* Element Component Active Color */
   --art-el-active-color: #f2f4f5;
+
+  /* Semantic Text Colors */
+  --text-primary: var(--art-gray-900);
+  --text-secondary: var(--art-gray-600);
+  --text-tertiary: var(--art-gray-500);
+  --text-disabled: var(--art-gray-400);
+  --text-link: var(--art-primary);
+  --text-success: var(--art-success);
+  --text-warning: var(--art-warning);
+  --text-danger: var(--art-danger);
 }
 
 /* ==================== Dark Mode Variables（设计规范 2.1）==================== */
@@ -104,6 +169,23 @@
 
   /* Element Plus 主色与设计规范主品牌色一致 */
   --el-color-primary: #3b82f6;
+
+  /* Semantic Text Colors - Dark */
+  --text-primary: var(--art-gray-900);
+  --text-secondary: var(--art-gray-600);
+  --text-tertiary: var(--art-gray-500);
+  --text-disabled: var(--art-gray-400);
+  --text-link: var(--art-primary);
+  --text-success: var(--art-success);
+  --text-warning: var(--art-warning);
+  --text-danger: var(--art-danger);
+
+  /* Shadow - Dark (deeper for contrast on dark backgrounds) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5), 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5), 0 8px 10px rgba(0, 0, 0, 0.3);
 }
 
 /* ==================== Tailwind Theme Configuration ==================== */
@@ -140,6 +222,16 @@
   --color-warning: var(--art-warning);
   --color-danger: var(--art-danger);
 
+  /* Semantic Text Colors */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-disabled: var(--text-disabled);
+  --color-text-link: var(--text-link);
+  --color-text-success: var(--text-success);
+  --color-text-warning: var(--text-warning);
+  --color-text-danger: var(--text-danger);
+
   /* Gray Scale Colors (Auto-adapts to dark mode) */
   --color-g-100: var(--art-gray-100);
   --color-g-200: var(--art-gray-200);
@@ -150,6 +242,25 @@
   --color-g-700: var(--art-gray-700);
   --color-g-800: var(--art-gray-800);
   --color-g-900: var(--art-gray-900);
+
+  /* Spacing Scale */
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-5: var(--space-5);
+  --spacing-6: var(--space-6);
+  --spacing-8: var(--space-8);
+  --spacing-10: var(--space-10);
+  --spacing-12: var(--space-12);
+  --spacing-16: var(--space-16);
+
+  /* Shadow Scale */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
 }
 
 /* ==================== Custom Border Radius Utilities ==================== */
@@ -180,13 +291,23 @@
     @apply flex items-center justify-between;
   }
 
-  /* Transition Utilities */
+  /* Transition Utilities (explicit properties, avoid transition-all) */
   .tad-200 {
-    @apply transition-all duration-200;
+    transition:
+      opacity 200ms,
+      transform 200ms,
+      background-color 200ms,
+      color 200ms,
+      border-color 200ms;
   }
 
   .tad-300 {
-    @apply transition-all duration-300;
+    transition:
+      opacity 300ms,
+      transform 300ms,
+      background-color 300ms,
+      color 300ms,
+      border-color 300ms;
   }
 
   /* Border Utilities */
@@ -213,6 +334,23 @@
   /* Cursor Utilities */
   .c-p {
     @apply cursor-pointer;
+  }
+
+  /* Numeric Utilities */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ==================== Accessibility: Reduced Motion ==================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

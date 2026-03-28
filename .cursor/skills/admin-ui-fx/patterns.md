@@ -1,0 +1,596 @@
+# Admin UI 视效增强——代码模板手册
+
+> 复制后按需改前缀（如 `mp-` → 模块缩写）。
+
+---
+
+## §A 页面级极光背景
+
+```scss
+/* index.vue <style scoped> */
+.{module}-page {
+  position: relative;
+  overflow: hidden;
+
+  /* 极光辐射渐变层 */
+  &::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(ellipse 75% 55% at 8% 8%,   rgb(16 185 129 / 14%) 0%, transparent 52%),
+      radial-gradient(ellipse 65% 50% at 92% 88%,  rgb(59 130 246 / 12%) 0%, transparent 52%),
+      radial-gradient(ellipse 45% 40% at 48% 48%,  rgb(168 85 247 / 8%)  0%, transparent 50%),
+      radial-gradient(ellipse 55% 45% at 75% 15%,  rgb(34 211 238 / 6%)  0%, transparent 45%);
+    animation: aurora-drift 14s ease-in-out infinite alternate,
+               bg-flow     22s ease-in-out infinite alternate;
+  }
+
+  /* 网格纹理 */
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(rgb(244 244 245 / 3%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(244 244 245 / 3%) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 85% 75% at 50% 35%, black 18%, transparent 72%);
+  }
+
+  > *:not(.page-fx) { position: relative; z-index: 1; }
+}
+
+/* 旋转锥形光（放在 HTML 里作独立元素：<div class="page-fx" aria-hidden="true" />） */
+.page-fx {
+  position: absolute;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    rgb(59 130 246 / 4%) 72deg,
+    transparent 144deg,
+    rgb(16 185 129 / 4%) 216deg,
+    transparent 288deg,
+    rgb(168 85 247 / 3%) 340deg,
+    transparent 360deg
+  );
+  opacity: 0.65;
+  filter: blur(1px);
+  animation: page-fx-spin 48s linear infinite;
+}
+
+@keyframes aurora-drift {
+  0%   { opacity: .72; filter: hue-rotate(0deg);   transform: scale(1) translate(0,0); }
+  50%  { opacity: 1;   filter: hue-rotate(18deg);  transform: scale(1.06) translate(1.2%,-1.2%); }
+  100% { opacity: .82; filter: hue-rotate(-12deg); transform: scale(1) translate(-1.2%,1.2%); }
+}
+
+@keyframes page-fx-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .{module}-page::before,
+  .page-fx { animation: none; }
+}
+```
+
+---
+
+## §B 入场动画（slide-up）
+
+```scss
+/* 各区块按延迟错开 */
+.top-row {
+  animation: slide-up 0.6s var(--ease-out) both;
+  animation-delay: 0.1s;
+}
+.data-row {
+  animation: slide-up 0.6s var(--ease-out) both;
+  animation-delay: 0.25s;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-row,
+  .data-row {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+```
+
+---
+
+## §C 卡片底层 mixin（`*-card-fx.scss`）
+
+```scss
+/* 在模块 styles/ 目录下新建，各面板 @import 后 @include */
+
+@mixin neon-stack {
+  background-color: rgb(24 24 27 / 94%);
+  background-image:
+    radial-gradient(ellipse 95% 60% at 100% -8%, rgb(59 130 246 / 18%) 0%, transparent 44%),
+    radial-gradient(ellipse 70% 50% at -8% 108%, rgb(16 185 129 / 15%) 0%, transparent 42%),
+    radial-gradient(ellipse 50% 38% at 78% 102%, rgb(168 85 247 / 11%) 0%, transparent 48%),
+    linear-gradient(
+      168deg,
+      rgb(39 39 42 / 82%) 0%,
+      rgb(24 24 27 / 97%) 50%,
+      rgb(15 23 42 / 58%) 100%
+    );
+  border-color: rgb(82 82 91 / 48%);
+  box-shadow:
+    0 14px 48px rgb(0 0 0 / 32%),
+    0 0 0 1px rgb(244 244 245 / 5%),
+    inset 0 1px 0 rgb(244 244 245 / 11%),
+    inset 0 -12px 32px rgb(0 0 0 / 20%),
+    0 0 60px rgb(59 130 246 / 4%);
+}
+
+@mixin card-mesh {
+  &::after {
+    position: absolute;
+    inset: 1px;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    border-radius: inherit;
+    opacity: 0.24;
+    background-image:
+      linear-gradient(rgb(244 244 245 / 3.5%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(244 244 245 / 3.5%) 1px, transparent 1px),
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgb(255 255 255 / 5%) 0%, transparent 55%);
+    background-size:
+      20px 20px,
+      20px 20px,
+      100% 100%;
+    mask-image: linear-gradient(180deg, black 0%, rgb(0 0 0 / 50%) 70%, transparent 100%);
+  }
+}
+```
+
+---
+
+## §D 卡片悬浮抬起 mixin
+
+```scss
+@mixin panel-hover-lift {
+  /* 禁止 transition: all，必须显式列属性 */
+  transition:
+    transform 0.4s var(--ease-out),
+    box-shadow 0.45s var(--ease-out),
+    border-color 0.35s var(--ease-default);
+
+  &:hover {
+    transform: translateY(-6px);
+    border-color: rgb(96 165 250 / 48%);
+    box-shadow:
+      0 24px 64px rgb(0 0 0 / 40%),
+      0 0 0 1px rgb(96 165 250 / 16%),
+      inset 0 1px 0 rgb(244 244 245 / 14%),
+      0 0 64px rgb(59 130 246 / 12%),
+      0 0 100px rgb(16 185 129 / 5%);
+  }
+
+  &:active {
+    transform: translateY(-3px);
+    transition-duration: 0.12s;
+  }
+}
+
+/* prefers-reduced-motion 必须配套 */
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    transition: none;
+    &:hover {
+      transform: none;
+    }
+    &:active {
+      transform: none;
+    }
+  }
+}
+```
+
+---
+
+## §E 标题渐变 + 跟手动效 mixin
+
+```scss
+@mixin title-gradient {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(
+    95deg,
+    rgb(244 244 245 / 96%) 0%,
+    rgb(186 230 253 / 88%) 45%,
+    rgb(52 211 153 / 82%) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 与 panel-hover-lift 配合：标题跟手滑动 + 发光 */
+@mixin panel-header-title-hover {
+  .panel__header .title {
+    transition:
+      transform 0.35s var(--ease-out),
+      filter 0.35s var(--ease-out);
+  }
+
+  &:hover .panel__header .title {
+    transform: translateX(5px) scale(1.03);
+    filter: drop-shadow(0 0 16px rgb(34 211 238 / 35%));
+  }
+}
+```
+
+---
+
+## §F 旋转渐变边框
+
+> 需要 `@property --border-angle`（Chromium 85+，现代浏览器均支持）。
+
+```scss
+/* 在使用它的组件 <style scoped> 顶部声明 */
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.card {
+  position: relative;
+
+  &::before {
+    position: absolute;
+    inset: -1px;
+    z-index: 1;
+    pointer-events: none;
+    content: '';
+    background: conic-gradient(
+      from var(--border-angle, 0deg) at 50% 50%,
+      transparent 0deg,
+      rgb(16 185 129 / 25%) 60deg,
+      transparent 120deg,
+      rgb(59 130 246 / 20%) 200deg,
+      transparent 280deg,
+      rgb(168 85 247 / 15%) 340deg,
+      transparent 360deg
+    );
+    border-radius: inherit;
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    padding: 1px;
+    animation: border-spin 6s linear infinite;
+  }
+}
+
+@keyframes border-spin {
+  to {
+    --border-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card::before {
+    animation: none;
+  }
+}
+```
+
+---
+
+## §G 骨架屏（ElSkeleton 用法）
+
+```vue
+<!-- 子卡片组件 -->
+<template>
+  <div class="panel">
+    <ElSkeleton :loading="loading" animated>
+      <template #template>
+        <!-- 模拟标题 -->
+        <div class="panel__header">
+          <ElSkeletonItem variant="text" style="width:38%;height:16px" />
+        </div>
+        <!-- 模拟内容区（按实际布局仿形） -->
+        <div class="panel__body" style="display:flex;flex-direction:column;gap:12px;padding:16px">
+          <ElSkeletonItem variant="circle" style="width:140px;height:140px;align-self:center" />
+          <ElSkeletonItem variant="text" style="width:100%;height:14px" />
+          <ElSkeletonItem variant="text" style="width:80%;height:14px" />
+        </div>
+      </template>
+
+      <template #default>
+        <!-- 真实内容 -->
+        <div class="panel__header"
+          ><span class="title">{{ title }}</span></div
+        >
+        <div class="panel__body">...</div>
+      </template>
+    </ElSkeleton>
+  </div>
+</template>
+
+<script setup lang="ts">
+  withDefaults(defineProps<{ loading?: boolean; ... }>(), { loading: false })
+</script>
+```
+
+```vue
+<!-- 父页面 index.vue：统一 cardLoading，去掉整页 v-loading -->
+<script setup lang="ts">
+  const cardLoading = computed(() => loading.value || detailLoading.value)
+</script>
+
+<!-- 传给每个子卡片 -->
+<MyCard :loading="cardLoading" ... />
+```
+
+---
+
+## §H 圆环/进度初始入场动画
+
+```vue
+<script setup lang="ts">
+  import { ref, watch, nextTick, computed } from 'vue'
+  import { useTransition, TransitionPresets, usePreferredReducedMotion } from '@vueuse/core'
+
+  const props = defineProps<{ loading: boolean; score: number }>()
+
+  const reduceMotion = usePreferredReducedMotion()
+  const ringTarget = ref(0)
+  const ringValue = useTransition(ringTarget, {
+    duration: computed(() => (reduceMotion.value ? 1 : 1150)),
+    transition: TransitionPresets.easeOutCubic
+  })
+
+  const ringRounded = computed(() => Math.round(ringValue.value))
+  const ringForEl = computed(() => Math.min(100, Math.max(0, Number(ringValue.value.toFixed(2)))))
+
+  watch(
+    () => [props.loading, props.score] as const,
+    async ([ld, score]) => {
+      if (ld) {
+        ringTarget.value = 0
+        return
+      }
+      const next = Math.min(100, Math.max(0, score))
+      await nextTick()
+      if (reduceMotion.value) {
+        ringTarget.value = next
+        return
+      }
+      ringTarget.value = 0
+      requestAnimationFrame(() => {
+        ringTarget.value = next
+      })
+    },
+    { immediate: true }
+  )
+</script>
+
+<template>
+  <ElProgress type="circle" :percentage="ringForEl" :stroke-width="10" :width="140">
+    <template #default>
+      <div class="ring-score">{{ ringRounded }}%</div>
+    </template>
+  </ElProgress>
+</template>
+
+<style scoped>
+  /* 去掉 EP 自带 stroke-dasharray 过渡，避免与 useTransition 插值冲突 */
+  :deep(.el-progress--circle svg path:nth-of-type(2)) {
+    transition:
+      stroke-dasharray 0s linear,
+      stroke 0.25s ease,
+      opacity 0.25s ease !important;
+  }
+</style>
+```
+
+---
+
+## §I 数据行悬浮高光
+
+```scss
+.table-wrapper {
+  background: linear-gradient(165deg, rgb(24 24 27 / 55%), rgb(24 24 27 / 28%));
+  border: 1px solid rgb(63 63 70 / 28%);
+  border-radius: 12px;
+  box-shadow:
+    inset 0 1px 0 rgb(244 244 245 / 5%),
+    0 4px 20px rgb(0 0 0 / 12%);
+  padding: 6px 4px 10px;
+}
+
+.row {
+  position: relative;
+  padding: 9px 10px 9px 12px;
+  margin: 0 2px;
+  isolation: isolate;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.92;
+  transition:
+    background-color var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal) var(--ease-out),
+    opacity var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out),
+    transform var(--duration-normal) var(--ease-out);
+
+  /* 左侧高光条 */
+  &::before {
+    position: absolute;
+    top: 50%;
+    left: 3px;
+    z-index: 0;
+    width: 3px;
+    height: 0;
+    content: '';
+    background: linear-gradient(
+      180deg,
+      rgb(34 211 238 / 90%) 0%,
+      rgb(16 185 129 / 85%) 50%,
+      rgb(59 130 246 / 75%) 100%
+    );
+    border-radius: 3px;
+    opacity: 0;
+    transition:
+      height var(--duration-normal) var(--ease-out),
+      opacity var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
+    transform: translateY(-50%) scaleY(0.35);
+  }
+
+  .cell {
+    position: relative;
+    z-index: 1;
+  }
+
+  &:hover {
+    z-index: 2;
+    background: linear-gradient(
+      100deg,
+      rgb(16 185 129 / 10%) 0%,
+      rgb(39 39 42 / 72%) 32%,
+      rgb(39 39 42 / 58%) 100%
+    );
+    border-color: rgb(34 211 238 / 32%);
+    opacity: 1;
+    box-shadow:
+      0 10px 28px rgb(0 0 0 / 32%),
+      inset 0 0 0 1px rgb(59 130 246 / 14%),
+      0 0 32px rgb(16 185 129 / 14%);
+    transform: translateX(5px) translateY(-3px);
+
+    &::before {
+      height: 62%;
+      opacity: 1;
+      transform: translateY(-50%) scaleY(1);
+    }
+  }
+
+  &:active {
+    transform: translateX(3px) translateY(-1px);
+    transition-duration: var(--duration-fast);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row {
+    transition:
+      background-color 0.2s,
+      opacity 0.2s,
+      box-shadow 0.2s,
+      border-color 0.2s;
+    &::before {
+      display: none;
+    }
+    &:hover,
+    &:active {
+      transform: none;
+    }
+  }
+}
+```
+
+---
+
+## §J ECharts 折线/面积图增强
+
+```ts
+// buildOption() 片段
+const series = [
+  {
+    type: 'line',
+    smooth: true,
+    symbolSize: 8,
+    lineStyle: {
+      width: 3,
+      shadowBlur: 12,
+      shadowColor: 'rgba(34,211,238,0.35)',
+      shadowOffsetY: 2,
+      color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+        { offset: 0, color: 'rgba(59,130,246,0.98)' },
+        { offset: 0.5, color: 'rgba(34,211,238,0.98)' },
+        { offset: 1, color: 'rgba(16,185,129,0.98)' }
+      ])
+    },
+    areaStyle: {
+      color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+        { offset: 0, color: 'rgba(59,130,246,0.32)' },
+        { offset: 1, color: 'rgba(16,185,129,0)' }
+      ])
+    }
+  }
+]
+```
+
+```scss
+/* 图表容器：hover 微缩放 + 增强阴影 */
+.chart {
+  width: 100%;
+  height: 216px;
+  transition:
+    transform 0.5s var(--ease-out),
+    filter 0.5s var(--ease-out);
+}
+
+.panel:hover .chart {
+  transform: scale(1.03) translateY(-2px);
+  filter: drop-shadow(0 10px 36px rgb(34 211 238 / 18%)) brightness(1.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart {
+    transition: none;
+  }
+  .panel:hover .chart {
+    transform: none;
+    filter: none;
+  }
+}
+```
+
+```ts
+// loading 时 dispose，数据就绪时重建（避免 v-if 导致首屏丢失）
+watch(
+  () => props.loading,
+  async (ld) => {
+    if (ld) {
+      chart?.dispose()
+      chart = null
+      return
+    }
+    await nextTick()
+    if (!chart && chartRef.value) chart = echarts.init(chartRef.value)
+    chart?.setOption(buildOption())
+    chart?.resize()
+  },
+  { immediate: true }
+)
+```

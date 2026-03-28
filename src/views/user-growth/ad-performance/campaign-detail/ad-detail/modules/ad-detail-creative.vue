@@ -141,23 +141,74 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../../styles/ap-card-fx';
+
   .adcr {
+    @include ap-neon-bg;
+    @include ap-panel-hover;
+
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: var(--default-box-color);
+    overflow: hidden;
+    border-radius: 14px;
+
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 5%;
+      z-index: 0;
+      width: 90%;
+      height: 1.5px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(168 85 247 / 72%),
+        rgb(59 130 246 / 80%),
+        rgb(6 182 212 / 68%),
+        transparent
+      );
+      filter: blur(0.4px);
+    }
 
     :deep(.el-card__header) {
-      padding: 10px 16px 8px;
-      border-bottom: 1px solid var(--default-border);
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 12px;
+      background: transparent;
+      border-bottom: 1px solid rgb(59 130 246 / 18%);
     }
 
     :deep(.el-card__body) {
+      position: relative;
+      z-index: 1;
       display: flex;
       flex: 1;
       flex-direction: column;
       padding: 0;
       overflow: hidden;
+      background: transparent;
+    }
+
+    :deep(.el-table) {
+      background: transparent;
+
+      --el-table-bg-color: transparent;
+      --el-table-tr-bg-color: transparent;
+      --el-table-header-bg-color: rgb(59 130 246 / 6%);
+      --el-table-row-hover-bg-color: rgb(59 130 246 / 10%);
+      --el-table-border-color: rgb(96 165 250 / 14%);
+    }
+
+    :deep(.el-table th.el-table__cell) {
+      font-size: 12px;
+      font-weight: 700;
+      color: #7dd3fc;
+      text-shadow: 0 0 8px rgb(125 211 252 / 38%);
+      letter-spacing: 0.03em;
     }
   }
 
@@ -170,16 +221,17 @@
   }
 
   .adcr__title {
+    @include ap-title-gradient;
+
     font-size: 13px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
   }
 
   .adcr__tabs {
     display: flex;
     gap: 2px;
     padding: 3px;
-    background: color-mix(in srgb, var(--default-border) 40%, transparent);
+    background: rgb(59 130 246 / 8%);
+    border: 1px solid rgb(59 130 246 / 20%);
     border-radius: 8px;
   }
 
@@ -192,12 +244,23 @@
     background: transparent;
     border: none;
     border-radius: 6px;
-    transition: all 0.15s;
+    transition:
+      color 0.15s ease,
+      background 0.15s ease,
+      box-shadow 0.15s ease;
 
     &.is-active {
+      color: #22d3ee;
+      text-shadow: 0 0 8px rgb(34 211 238 / 45%);
+      background: rgb(6 182 212 / 16%);
+      box-shadow:
+        0 1px 6px rgb(0 0 0 / 28%),
+        0 0 10px rgb(6 182 212 / 20%);
+    }
+
+    &:not(.is-active):hover {
       color: var(--el-text-color-primary);
-      background: var(--default-box-color);
-      box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+      background: rgb(255 255 255 / 5%);
     }
   }
 

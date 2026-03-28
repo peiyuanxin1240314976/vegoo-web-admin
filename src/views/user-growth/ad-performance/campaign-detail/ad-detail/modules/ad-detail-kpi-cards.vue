@@ -84,39 +84,82 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../../styles/ap-card-fx';
+
   .adk {
-    background: var(--default-box-color);
+    @include ap-neon-bg;
+    @include ap-panel-hover;
+
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 6%;
+      z-index: 0;
+      width: 88%;
+      height: 1.5px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(249 115 22 / 72%),
+        rgb(251 191 36 / 80%),
+        rgb(16 185 129 / 65%),
+        transparent
+      );
+      filter: blur(0.4px);
+    }
 
     :deep(.el-card__header) {
-      padding: 10px 16px 8px;
-      border-bottom: 1px solid var(--default-border);
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 12px;
+      background: transparent;
+      border-bottom: 1px solid rgb(249 115 22 / 15%);
     }
 
     :deep(.el-card__body) {
-      padding: 14px 16px;
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 16px;
+      background: transparent;
     }
   }
 
   .adk__title {
+    @include ap-title-gradient;
+
     font-size: 13px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
   }
 
   .adk__grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 12px;
   }
 
   .adk__card {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 12px 14px;
-    background: var(--default-bg-color);
-    border: 1px solid var(--default-border);
-    border-radius: 8px;
+    gap: 8px;
+    padding: 14px 16px;
+    background: rgb(8 8 12 / 95%);
+    border: 1px solid rgb(59 130 246 / 28%);
+    border-radius: 10px;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      transform 0.22s ease;
+
+    &:hover {
+      border-color: rgb(96 165 250 / 55%);
+      box-shadow: 0 0 20px rgb(59 130 246 / 18%);
+      transform: translateY(-2px);
+    }
   }
 
   .adk__card-top {
@@ -127,7 +170,7 @@
 
   .adk__label {
     font-size: 12px;
-    color: var(--el-text-color-secondary);
+    color: #94a3b8;
   }
 
   .adk__trend {
@@ -136,11 +179,13 @@
     font-size: 14px;
 
     &--success {
-      color: var(--art-success);
+      color: #10b981;
+      filter: drop-shadow(0 0 4px rgb(16 185 129 / 50%));
     }
 
     &--danger {
-      color: var(--art-danger);
+      color: #ef4444;
+      filter: drop-shadow(0 0 4px rgb(239 68 68 / 50%));
     }
 
     &--flat {
@@ -149,9 +194,16 @@
   }
 
   .adk__value {
+    display: inline-block;
     font-size: 26px;
-    font-weight: 700;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
     line-height: 1.1;
-    color: var(--el-text-color-primary);
+    background-color: transparent;
+    background-image: linear-gradient(92deg, #f0f9ff 0%, #7dd3fc 45%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-size: 100%;
+    -webkit-text-fill-color: transparent;
   }
 </style>

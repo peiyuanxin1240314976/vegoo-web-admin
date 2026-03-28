@@ -1,27 +1,53 @@
 <template>
   <div class="panel">
     <div class="panel__header">
-      <span class="title">{{ title }}</span>
+      <ElSkeleton :loading="loading" animated>
+        <template #template>
+          <ElSkeletonItem variant="text" class="roi-sk-title" />
+        </template>
+        <template #default>
+          <span class="title">{{ title }}</span>
+        </template>
+      </ElSkeleton>
     </div>
     <div class="panel__body">
-      <div ref="chartRef" class="chart"></div>
+      <div v-if="loading" class="chart chart--sk" aria-hidden="true">
+        <ElSkeleton :loading="true" animated>
+          <template #template>
+            <div class="chart__sk-bars">
+              <div
+                v-for="(h, i) in chartSkHeights"
+                :key="i"
+                class="chart__sk-col"
+                :style="{ height: h + 'px' }"
+              >
+                <ElSkeletonItem variant="text" class="chart__sk-bar" />
+              </div>
+            </div>
+          </template>
+        </ElSkeleton>
+      </div>
+      <div v-else ref="chartRef" class="chart"></div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+  import { ref, watch, onMounted, onBeforeUnmount, onActivated, nextTick } from 'vue'
   import { echarts, type EChartsOption } from '@/plugins/echarts'
   import type { MyPerformanceRoiTrendPoint } from '../types'
 
   defineOptions({ name: 'MyPerformancePanelRoiTrend' })
 
+  const chartSkHeights = [48, 72, 56, 88, 64, 92, 52]
+
   const props = withDefaults(
     defineProps<{
+      loading?: boolean
       title: string
       points: MyPerformanceRoiTrendPoint[]
     }>(),
-    { points: () => [] }
+    { loading: false, points: () => [] }
   )
 
   const chartRef = ref<HTMLElement | null>(null)
@@ -50,27 +76,41 @@
         type: 'line',
         data: y,
         smooth: true,
-        symbolSize: 6,
+        symbolSize: 8,
+        emphasis: {
+          focus: 'series',
+          itemStyle: {
+            shadowBlur: 16,
+            shadowColor: 'rgba(34, 211, 238, 0.55)'
+          }
+        },
         lineStyle: {
-          width: 2,
+          width: 3,
+          shadowBlur: 12,
+          shadowColor: 'rgba(34, 211, 238, 0.35)',
+          shadowOffsetY: 2,
           color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: 'rgba(59, 130, 246, 0.95)' },
-            { offset: 0.5, color: 'rgba(34, 211, 238, 0.95)' },
-            { offset: 1, color: 'rgba(16, 185, 129, 0.95)' }
+            { offset: 0, color: 'rgba(59, 130, 246, 0.98)' },
+            { offset: 0.5, color: 'rgba(34, 211, 238, 0.98)' },
+            { offset: 1, color: 'rgba(16, 185, 129, 0.98)' }
           ])
         },
         itemStyle: {
-          color: 'rgba(34, 211, 238, 0.95)',
-          borderColor: 'rgba(244, 244, 245, 0.35)',
-          borderWidth: 1
+          color: 'rgba(34, 211, 238, 0.98)',
+          borderColor: 'rgba(244, 244, 245, 0.45)',
+          borderWidth: 2,
+          shadowBlur: 8,
+          shadowColor: 'rgba(34, 211, 238, 0.4)'
         },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(59, 130, 246, 0.22)' },
-            { offset: 0.55, color: 'rgba(34, 211, 238, 0.10)' },
+            { offset: 0, color: 'rgba(59, 130, 246, 0.32)' },
+            { offset: 0.45, color: 'rgba(34, 211, 238, 0.14)' },
             { offset: 1, color: 'rgba(16, 185, 129, 0)' }
           ])
-        }
+        },
+        animationDuration: 1200,
+        animationEasing: 'cubicOut'
       }
     ]
 
@@ -91,7 +131,7 @@
     }
 
     return {
-      grid: { top: hasTarget ? 36 : 20, right: 16, bottom: 24, left: 36 },
+      grid: { top: hasTarget ? 38 : 22, right: 16, bottom: 26, left: 38 },
       legend: hasTarget
         ? {
             top: 0,
@@ -117,27 +157,54 @@
     }
   }
 
-  function init() {
-    if (!chartRef.value) return
-    chart = echarts.init(chartRef.value)
+  function syncChart() {
+    if (props.loading || !chartRef.value) return
+    if (!chart) chart = echarts.init(chartRef.value)
     chart.setOption(buildOption())
+    chart.resize()
   }
 
   function resize() {
     chart?.resize()
   }
 
+  function resizeAfterActivate() {
+    nextTick(() => {
+      requestAnimationFrame(() => {
+        chart?.resize()
+      })
+      window.setTimeout(() => chart?.resize(), 80)
+      window.setTimeout(() => chart?.resize(), 220)
+    })
+  }
+
   onMounted(() => {
-    init()
     window.addEventListener('resize', resize)
   })
+
+  onActivated(() => {
+    if (props.loading) return
+    resizeAfterActivate()
+  })
+
+  watch(
+    () => props.loading,
+    async (ld) => {
+      if (ld) {
+        chart?.dispose()
+        chart = null
+        return
+      }
+      await nextTick()
+      syncChart()
+    },
+    { immediate: true }
+  )
 
   watch(
     () => props.points,
     () => {
-      if (!chart) init()
-      chart?.setOption(buildOption())
-      chart?.resize()
+      syncChart()
     },
     { deep: true }
   )
@@ -150,29 +217,148 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/mp-card-fx';
+
   .panel {
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(16px) saturate(1.12);
+    border: 1px solid rgb(63 63 70 / 40%);
+    border-radius: 16px;
+
+    @include mp-neon-stack;
+    @include mp-card-mesh;
+    @include mp-panel-hover-lift;
+    @include mp-panel-header-title-hover;
+
+    &::before {
+      position: absolute;
+      bottom: -40%;
+      left: -20%;
+      z-index: 0;
+      width: 70%;
+      height: 80%;
+      pointer-events: none;
+      content: '';
+      background: radial-gradient(ellipse at center, rgb(59 130 246 / 16%) 0%, transparent 70%);
+      animation: roi-glow-drift 8s ease-in-out infinite alternate;
+    }
+  }
+
+  @keyframes roi-glow-drift {
+    0% {
+      opacity: 0.5;
+      transform: translate(0, 0);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translate(8%, -5%);
+    }
   }
 
   .panel__header {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--default-border);
+    position: relative;
+    z-index: 1;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgb(63 63 70 / 30%);
   }
 
   .title {
     font-size: 14px;
-    font-weight: 650;
-    color: var(--art-gray-900);
+
+    @include mp-title-gradient;
+  }
+
+  .roi-sk-title {
+    width: 38% !important;
+    height: 16px !important;
+  }
+
+  .chart--sk {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 8px 0 0;
+  }
+
+  .chart--sk :deep(.el-skeleton) {
+    width: 100%;
+  }
+
+  .chart__sk-bars {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 180px;
+    padding: 0 8px 12px;
+  }
+
+  .chart__sk-col {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .chart__sk-bar {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    border-radius: 6px 6px 2px 2px;
   }
 
   .panel__body {
-    padding: 10px 14px 14px;
+    position: relative;
+    z-index: 1;
+    padding: 10px 14px 16px;
   }
 
   .chart {
     width: 100%;
-    height: 180px;
+    height: 216px;
+    filter: drop-shadow(0 4px 20px rgb(34 211 238 / 8%));
+    transition:
+      transform 0.5s var(--ease-out),
+      filter 0.5s var(--ease-out);
+    transform-origin: center center;
+  }
+
+  .panel:hover .chart {
+    filter: drop-shadow(0 10px 36px rgb(34 211 238 / 18%)) brightness(1.06);
+    transform: scale(1.03) translateY(-2px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel {
+      transition: none;
+    }
+
+    .panel:hover {
+      transform: none;
+    }
+
+    .panel:hover .panel__header .title {
+      filter: none;
+      transform: none;
+    }
+
+    .panel:hover .chart {
+      filter: drop-shadow(0 4px 20px rgb(34 211 238 / 8%));
+      transform: none;
+    }
+
+    .chart {
+      transition: none;
+    }
+
+    .panel::before {
+      animation: none;
+    }
+
+    .panel::after {
+      opacity: 0.12;
+    }
   }
 </style>

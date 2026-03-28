@@ -14,7 +14,7 @@
       </div>
     </div>
 
-    <RouterView v-if="isRefresh" v-slot="{ Component, route }" :style="contentStyle">
+    <RouterView v-if="isRefresh" v-slot="{ Component, route }">
       <!-- 缓存路由动画 -->
       <Transition :name="showTransitionMask ? '' : actualTransition" mode="out-in" appear>
         <KeepAlive :max="10" :exclude="keepAliveExclude">
@@ -50,14 +50,12 @@
 <script setup lang="ts">
   import type { CSSProperties } from 'vue'
   import { useRoute } from 'vue-router'
-  import { useAutoLayoutHeight } from '@/hooks/core/useLayoutHeight'
   import { useSettingStore } from '@/store/modules/setting'
   import { useWorktabStore } from '@/store/modules/worktab'
 
   defineOptions({ name: 'ArtPageContent' })
 
   const route = useRoute()
-  const { containerMinHeight } = useAutoLayoutHeight()
   const { pageTransition, containerWidth, refresh } = storeToRefs(useSettingStore())
   const { keepAliveExclude } = storeToRefs(useWorktabStore())
 
@@ -109,12 +107,6 @@
         : {
             maxWidth: containerWidth.value
           }
-  )
-
-  const contentStyle = computed(
-    (): CSSProperties => ({
-      minHeight: containerMinHeight.value
-    })
   )
 
   const reload = () => {
