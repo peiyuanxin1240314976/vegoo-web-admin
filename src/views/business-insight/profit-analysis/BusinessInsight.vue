@@ -3,6 +3,7 @@
   import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import * as echarts from 'echarts'
   import type { ProfitCountryRow, ProfitMapDataItem } from './types'
+  import { buildProfitMapScatterChartData } from './country-profit-map-centroids'
   import { resolveProfitCountryIso } from './country-flag-iso'
   import { useProfitAnalysisDashboard } from './composables/useProfitAnalysisDashboard'
 
@@ -41,6 +42,22 @@
   let trendChart: echarts.ECharts | null = null
   let sankeyChart: echarts.ECharts | null = null
   let mapGeoReady = false
+  let mapResizeObserver: ResizeObserver | null = null
+
+  function teardownMapResizeObserver() {
+    mapResizeObserver?.disconnect()
+    mapResizeObserver = null
+  }
+
+  function setupMapResizeObserver() {
+    teardownMapResizeObserver()
+    const el = mapRef.value
+    if (!el || typeof ResizeObserver === 'undefined') return
+    mapResizeObserver = new ResizeObserver(() => {
+      mapChart?.resize()
+    })
+    mapResizeObserver.observe(el)
+  }
 
   function fiCountryClass(code: string | undefined) {
     if (!code?.trim()) return ''
@@ -71,11 +88,16 @@
       mapChart = echarts.init(mapRef.value, 'dark', { renderer: 'canvas' })
     }
     const maxVal = Math.max(1, ...mapData.value.map((d: ProfitMapDataItem) => d.value))
+    const scatterSeriesData = buildProfitMapScatterChartData(mapScatter.value, mapData.value)
     mapChart.setOption({
       backgroundColor: 'transparent',
       geo: {
         map: 'world',
-        roam: false,
+        roam: true,
+        scaleLimit: { min: 0.85, max: 8 },
+        /** 让地图绘制区域占满画布，避免「外层 div 变高但地图仍缩在中间」的留白感 */
+        layoutCenter: ['50%', '50%'],
+        layoutSize: '118%',
         silent: false,
         itemStyle: {
           areaColor: '#1a2744',
@@ -92,23 +114,53 @@
           type: 'map',
           map: 'world',
           geoIndex: 0,
+          zlevel: 0,
+          z: 1,
           data: mapData.value,
           silent: false
         },
         {
           type: 'effectScatter',
           coordinateSystem: 'geo',
-          rippleEffect: { brushType: 'stroke', scale: 3, period: 3 },
-          symbolSize: 8,
-          itemStyle: { color: '#4ade80' },
-          data: mapScatter.value.filter((p) => Array.isArray(p.value) && p.value.length >= 3),
+          geoIndex: 0,
+          /** 关闭裁剪：涟漪向外扩散时不会被 geo 区域切掉，否则动画看起来像「没出来」 */
+          clip: false,
+          zlevel: 2,
+          z: 10,
+          showEffectOn: 'render',
+          /** 定位点尽量小；涟漪单独用半透明暖色 fill，比 stroke 在深色底上更明显 */
+          symbol: 'circle',
+          symbolSize: 7,
+          rippleEffect: {
+            brushType: 'fill',
+            color: 'rgba(251, 146, 60, 0.45)',
+            scale: 4,
+            period: 2.2,
+            number: 3
+          },
+          itemStyle: {
+            color: '#fb923c',
+            borderColor: '#fde68a',
+            borderWidth: 1,
+            shadowBlur: 6,
+            shadowColor: 'rgb(251 146 60 / 50%)'
+          },
+          emphasis: {
+            itemStyle: {
+              color: '#fbbf24',
+              borderColor: '#fff7ed',
+              shadowBlur: 10,
+              shadowColor: 'rgb(251 191 36 / 55%)'
+            }
+          },
+          data: scatterSeriesData,
           label: {
-            show: true,
+            show: scatterSeriesData.length > 0,
             formatter: (p: { name?: string }) => p.name ?? '',
             position: 'right',
-            color: '#e2e8f0',
+            color: '#fde68a',
             fontSize: 11,
-            distance: 8
+            distance: 6
           }
         }
       ],
@@ -116,10 +168,16 @@
         min: 0,
         max: maxVal,
         show: false,
+        seriesIndex: 0,
         inRange: {
           color: ['#1a2744', '#1e4080', '#1d6fa4', '#22c55e']
         }
       }
+    })
+    await nextTick()
+    mapChart.resize()
+    requestAnimationFrame(() => {
+      mapChart?.resize()
     })
   }
 
@@ -289,6 +347,14 @@
   }
 
   watch(
+    () => mapRef.value,
+    () => {
+      setupMapResizeObserver()
+    },
+    { flush: 'post', immediate: true }
+  )
+
+  watch(
     () => [pendingCountry.value, mapData.value, mapScatter.value],
     async () => {
       if (pendingCountry.value) return
@@ -326,6 +392,7 @@
 
   onUnmounted(() => {
     window.removeEventListener('resize', handleResize)
+    teardownMapResizeObserver()
     mapChart?.dispose()
     trendChart?.dispose()
     sankeyChart?.dispose()
@@ -338,11 +405,11 @@
 <template>
   <div class="bi-root">
     <header class="bi-header">
-      <div class="bi-breadcrumb">
+      <!-- <div class="bi-breadcrumb">
         <span class="bi-brand">{{ $t('menus.businessInsight.title') }}</span>
         <span class="bi-sep">›</span>
         <span class="bi-page">{{ $t('menus.businessInsight.profitAnalysis') }}</span>
-      </div>
+      </div> -->
       <div class="bi-filters">
         <div class="bi-filter-field">
           <span class="bi-filter-label">{{
@@ -429,6 +496,11 @@
     <section class="bi-kpi-row">
       <template v-if="pendingKpi">
         <div v-for="i in 5" :key="i" class="kpi-card kpi-card--skeleton">
+          <div class="kpi-card-decor" aria-hidden="true">
+            <span class="kpi-card-decor__bar kpi-card-decor__bar--a" />
+            <span class="kpi-card-decor__bar kpi-card-decor__bar--b" />
+            <span class="kpi-card-decor__bar kpi-card-decor__bar--c" />
+          </div>
           <ElSkeleton animated>
             <template #template>
               <ElSkeletonItem variant="text" style="width: 40%; margin-bottom: 12px" />
@@ -445,6 +517,11 @@
           class="kpi-card"
           :style="{ background: card.bg, '--card-border': card.border }"
         >
+          <div class="kpi-card-decor" aria-hidden="true">
+            <span class="kpi-card-decor__bar kpi-card-decor__bar--a" />
+            <span class="kpi-card-decor__bar kpi-card-decor__bar--b" />
+            <span class="kpi-card-decor__bar kpi-card-decor__bar--c" />
+          </div>
           <div class="kpi-top">
             <span class="kpi-label">{{ card.label }}</span>
             <span
@@ -486,7 +563,7 @@
                 <th>广告支出</th>
                 <th>预估利润</th>
                 <th>利润率</th>
-                <th>趋势</th>
+                <th class="th-trend">趋势</th>
               </tr>
             </thead>
             <tbody>
@@ -499,21 +576,24 @@
                 <td :style="{ color: row.profitColor, fontWeight: 600 }">{{ row.profit }}</td>
                 <td :style="{ color: row.rateColor, fontWeight: 600 }">{{ row.rate }}</td>
                 <td class="td-trend">
-                  <svg
-                    v-if="normalizeAppTrend(row.trend) !== 'none'"
-                    width="60"
-                    height="20"
-                    viewBox="0 0 60 20"
-                  >
-                    <path
-                      :d="getTrendPath(row.trend)"
-                      fill="none"
-                      :stroke="getTrendColor(row.trend)"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                  <span v-else style="color: #475569">—</span>
+                  <div class="td-trend__inner">
+                    <svg
+                      v-if="normalizeAppTrend(row.trend) !== 'none'"
+                      width="60"
+                      height="20"
+                      viewBox="0 0 60 20"
+                      class="td-trend__svg"
+                    >
+                      <path
+                        :d="getTrendPath(row.trend)"
+                        fill="none"
+                        :stroke="getTrendColor(row.trend)"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                    <span v-else class="td-trend__dash">—</span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -526,7 +606,7 @@
                 <td>{{ appTotal.adSpend }}</td>
                 <td style="font-weight: 700; color: #4ade80">{{ appTotal.profit }}</td>
                 <td style="font-weight: 700; color: #4ade80">{{ appTotal.rate }}</td>
-                <td></td>
+                <td class="td-trend"></td>
               </tr>
             </tfoot>
           </table>
@@ -536,14 +616,17 @@
       <div class="bi-card bi-map-panel">
         <div class="card-title">国家利润分布</div>
         <div class="bi-chart-host bi-chart-host--map">
-          <div v-show="pendingCountry" class="bi-skeleton-block bi-skeleton-block--map">
-            <ElSkeleton animated :rows="0">
-              <template #template>
-                <ElSkeletonItem variant="rect" style="width: 100%; height: 200px" />
-              </template>
-            </ElSkeleton>
+          <!-- 地图容器始终占位，避免 v-show:none 时 ECharts 在 0×0 初始化导致不绘制 -->
+          <div ref="mapRef" class="world-map" aria-label="国家利润分布地图"></div>
+          <div v-show="pendingCountry" class="bi-map-loading-mask">
+            <div class="bi-skeleton-block bi-skeleton-block--map">
+              <ElSkeleton animated :rows="0">
+                <template #template>
+                  <ElSkeletonItem variant="rect" style="width: 100%; height: 100%" />
+                </template>
+              </ElSkeleton>
+            </div>
           </div>
-          <div v-show="!pendingCountry" ref="mapRef" class="world-map"></div>
         </div>
         <div class="card-title" style="margin-top: 12px">国家利润详情 Top10</div>
         <div class="bi-table-host bi-table-host--country">
@@ -631,7 +714,7 @@
 
 <style scoped lang="scss">
   .bi-root {
-    --bg-deep: #070f1e;
+    --bg-deep: #0f1012;
     --bg-card: #0d1b2e;
     --bg-card2: #0f2040;
     --border: #1a3052;
@@ -658,9 +741,9 @@
   .bi-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: start;
     padding: 14px 24px;
-    background: linear-gradient(180deg, #0b1729 0%, var(--bg-deep) 100%);
+    background: linear-gradient(180deg, #131518 0%, var(--bg-deep) 100%);
     border-bottom: 1px solid var(--border);
   }
 
@@ -781,6 +864,50 @@
     }
   }
 
+  /** 右下角微型柱状装饰（不参与信息层级） */
+  .kpi-card-decor {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    z-index: 0;
+    display: flex;
+    gap: 4px;
+    align-items: flex-end;
+    height: 26px;
+    pointer-events: none;
+    opacity: 0.88;
+  }
+
+  .kpi-card--skeleton .kpi-card-decor {
+    opacity: 0.72;
+  }
+
+  .kpi-card--skeleton :deep(.el-skeleton) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .kpi-card-decor__bar {
+    width: 4px;
+    border-radius: 9999px;
+    box-shadow: 0 0 10px rgb(0 0 0 / 15%);
+  }
+
+  .kpi-card-decor__bar--a {
+    height: 10px;
+    background: linear-gradient(180deg, rgb(45 212 191 / 85%) 0%, rgb(45 212 191 / 45%) 100%);
+  }
+
+  .kpi-card-decor__bar--b {
+    height: 22px;
+    background: linear-gradient(180deg, rgb(74 222 128 / 88%) 0%, rgb(74 222 128 / 48%) 100%);
+  }
+
+  .kpi-card-decor__bar--c {
+    height: 14px;
+    background: linear-gradient(180deg, rgb(251 146 60 / 88%) 0%, rgb(251 146 60 / 48%) 100%);
+  }
+
   .kpi-card:not(.kpi-card--skeleton) {
     cursor: default;
     transition:
@@ -820,6 +947,8 @@
   }
 
   .kpi-top {
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -841,6 +970,8 @@
   }
 
   .kpi-value {
+    position: relative;
+    z-index: 1;
     margin-bottom: 6px;
     font-size: 26px;
     font-weight: 700;
@@ -849,6 +980,8 @@
   }
 
   .kpi-sub {
+    position: relative;
+    z-index: 1;
     font-size: 11px;
     color: var(--text-sec);
   }
@@ -907,7 +1040,8 @@
 
   .bi-skeleton-block--map {
     position: relative;
-    height: 200px;
+    height: 100%;
+    min-height: 220px;
   }
 
   .bi-skeleton-block--chart {
@@ -921,7 +1055,15 @@
   }
 
   .bi-chart-host--map {
-    min-height: 200px;
+    min-height: 0;
+  }
+
+  .bi-map-loading-mask {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: rgb(13 27 46 / 94%);
+    border-radius: 6px;
   }
 
   .data-table {
@@ -963,8 +1105,30 @@
     color: var(--text-pri) !important;
   }
 
+  .th-trend {
+    text-align: center !important;
+  }
+
   .td-trend {
     text-align: center !important;
+    vertical-align: middle;
+  }
+
+  .td-trend__inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 22px;
+  }
+
+  .td-trend__svg {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .td-trend__dash {
+    line-height: 1;
+    color: #475569;
   }
 
   .td-country {
@@ -994,8 +1158,10 @@
   }
 
   .world-map {
+    display: block;
     width: 100%;
-    height: 200px;
+    height: 240px;
+    min-height: 220px;
     overflow: hidden;
     border-radius: 6px;
   }
