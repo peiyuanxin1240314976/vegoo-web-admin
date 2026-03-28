@@ -160,6 +160,11 @@
 <style scoped lang="scss">
   .cockpit-kpi-row {
     margin-bottom: 16px;
+
+    /* 同一行内多列等高，避免单卡增高后其余卡底部留白不协调 */
+    :deep(.el-col) {
+      display: flex;
+    }
   }
 
   .cockpit-kpi-empty {
@@ -180,8 +185,9 @@
     position: relative;
     box-sizing: border-box;
     display: flex;
+    flex: 1;
     flex-direction: column;
-    height: 188px;
+    width: 100%;
     min-height: 188px;
     padding: 16px;
     overflow: hidden;
@@ -323,18 +329,21 @@
 
     .kpi-detail--badges {
       display: flex;
-      gap: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
       align-items: center;
       opacity: 1;
     }
 
     .kpi-detail-badge {
       display: inline-flex;
+      flex-shrink: 0;
       align-items: center;
       padding: 6px 10px;
       font-size: 12px;
       line-height: 1;
       color: rgb(255 255 255 / 88%);
+      white-space: nowrap;
       background: rgb(15 23 42 / 55%);
       -webkit-backdrop-filter: blur(10px);
       backdrop-filter: blur(10px);
@@ -354,8 +363,11 @@
     }
 
     .kpi-compare {
+      flex-shrink: 0;
       margin-top: auto;
       font-size: 12px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
 
       &.up {
         color: inherit;
