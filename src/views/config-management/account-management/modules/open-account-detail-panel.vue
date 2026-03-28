@@ -148,8 +148,13 @@
           <div class="section-title">飞书推送记录</div>
           <div class="feishu-list">
             <div v-for="(rec, i) in data.feishuRecords" :key="i" class="feishu-item">
-              <span :class="['feishu-dot', rec.success ? 'feishu-dot--ok' : 'feishu-dot--fail']" />
-              <span class="feishu-msg">{{ rec.message }}</span>
+              <span
+                :class="[
+                  'feishu-dot',
+                  rec.result === '成功' ? 'feishu-dot--ok' : 'feishu-dot--fail'
+                ]"
+              />
+              <span class="feishu-msg">{{ rec.event }} · {{ rec.target }}</span>
               <span class="feishu-time">{{ rec.time?.slice(5, 16) }}</span>
             </div>
           </div>
@@ -252,6 +257,7 @@
     justify-content: center;
     color: var(--text-muted);
   }
+
   .empty-text {
     font-size: 13px;
   }
@@ -301,13 +307,16 @@
     &.status--ok {
       color: #22c55e;
     }
+
     &.status--pending {
       color: #f59e0b;
     }
+
     &.status--fail {
       color: #f87171;
     }
   }
+
   .s-dot {
     font-size: 10px;
   }
@@ -323,12 +332,15 @@
   .platform-name {
     color: var(--text-secondary);
   }
+
   .app-name {
     color: var(--text-secondary);
   }
+
   .platform-tag {
     color: var(--text-muted);
   }
+
   .sep {
     color: var(--border);
   }
@@ -337,6 +349,7 @@
   .panel-body {
     flex: 1;
     overflow-y: auto;
+
     &::-webkit-scrollbar {
       width: 3px;
     }
@@ -350,6 +363,7 @@
   .detail-section {
     padding: 12px 16px;
     border-bottom: 1px solid var(--border);
+
     &--last {
       border-bottom: none;
     }
@@ -371,6 +385,7 @@
     color: var(--accent);
     border-left: 3px solid var(--accent);
   }
+
   .section-title-row .section-title {
     margin-bottom: 0;
   }
@@ -411,6 +426,7 @@
       font-size: 12px;
       color: var(--text-muted);
     }
+
     &--remark {
       color: var(--text-secondary);
     }
@@ -419,6 +435,7 @@
   .platform-val {
     font-weight: 600;
   }
+
   .agency-val {
     color: #22d3ee;
   }
@@ -489,14 +506,18 @@
     gap: 5px;
     align-items: center;
     font-size: 12px;
+
     &--ok {
       color: #22c55e;
+
       .cred-status-dot {
         background: #22c55e;
       }
     }
+
     &--fail {
       color: #f87171;
+
       .cred-status-dot {
         background: #f87171;
       }
@@ -538,9 +559,11 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
+
     &--ok {
       background: #22c55e;
     }
+
     &--fail {
       background: #f87171;
     }
@@ -576,6 +599,7 @@
       color: #fff !important;
       background: var(--teal) !important;
       border: none !important;
+
       &:hover {
         filter: brightness(1.1);
       }
@@ -585,6 +609,7 @@
       color: #f87171 !important;
       background: rgb(248 113 113 / 8%) !important;
       border: 1px solid rgb(248 113 113 / 20%) !important;
+
       &:hover {
         background: rgb(248 113 113 / 15%) !important;
       }

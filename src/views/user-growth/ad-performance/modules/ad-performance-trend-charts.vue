@@ -131,9 +131,12 @@
           backgroundColor: isDark ? 'rgba(15,25,41,0.92)' : 'rgba(255,255,255,0.96)',
           borderColor: isDark ? '#2a3f5f' : '#e5e7eb',
           textStyle: { color: isDark ? '#e2e8f0' : '#374151', fontSize: 12 },
-          formatter: (params: any[]) => {
-            const p = params[0]
-            return `${p.axisValue}<br/><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10B981;margin-right:5px"></span>${p.value}%`
+          formatter: (params) => {
+            const p = Array.isArray(params) ? params[0] : params
+            if (!p || typeof p !== 'object') return ''
+            const axisValue = 'axisValue' in p ? String(p.axisValue) : ''
+            const value = 'value' in p ? p.value : ''
+            return `${axisValue}<br/><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10B981;margin-right:5px"></span>${value}%`
           }
         },
         grid: { left: 40, right: 14, top: 12, bottom: 20 },

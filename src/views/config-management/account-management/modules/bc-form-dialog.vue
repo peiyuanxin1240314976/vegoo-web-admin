@@ -191,7 +191,7 @@
   import { ref, computed, watch, reactive } from 'vue'
   import type { FormInstance } from 'element-plus'
   import { PLATFORM_CONFIGS } from '../types'
-  import type { BcItem, BcFormModel } from '../types'
+  import type { BcItem, BcFormModel, BcOwnerType } from '../types'
 
   defineOptions({ name: 'BcFormDialog' })
 
@@ -215,7 +215,7 @@
   const bcPlatforms = PLATFORM_CONFIGS.filter((p) => ['Meta Ads', 'TikTok Ads'].includes(p.value))
 
   const statusOptions = ['健康', '可用', '不再使用', '封禁', '其他']
-  const ownerOptions = ['企业户', '个人户', '小额广告户']
+  const ownerOptions: BcOwnerType[] = ['企业户', '个人户', '小额广告户']
   const managerOptions = ['张三', '李四', '王五', '赵六']
   const groupOptions = ['Google组', 'TikTok组', 'Agency-A组', 'Agency-B组']
 
@@ -330,6 +330,7 @@
 
   .el-dialog:has(.bc-form-dialog-bd) .el-dialog__headerbtn .el-icon {
     color: var(--cm-dialog-text-muted) !important;
+
     &:hover {
       color: var(--cm-dialog-text-primary) !important;
     }
@@ -366,6 +367,7 @@
     &:last-child {
       border-bottom: none;
     }
+
     &.is-error .form-label {
       color: #f87171;
     }
@@ -402,9 +404,11 @@
       border-radius: 6px;
       box-shadow: none !important;
       transition: border-color 0.15s;
+
       &:hover {
         border-color: rgb(255 255 255 / 18%) !important;
       }
+
       &:focus-within {
         border-color: #3b82f6 !important;
       }
@@ -415,6 +419,7 @@
     :deep(.el-select__selected-item) {
       font-size: 13px;
       color: #e2e8f0;
+
       &::placeholder {
         color: #475569;
       }
@@ -430,12 +435,15 @@
       border-radius: 6px;
       box-shadow: none;
       transition: border-color 0.15s;
+
       &:hover {
         border-color: rgb(255 255 255 / 18%);
       }
+
       &:focus {
         border-color: #3b82f6;
       }
+
       &::placeholder {
         color: #475569;
       }
@@ -525,6 +533,7 @@
       color: #fff !important;
       background: #0d9488 !important;
       border: none !important;
+
       &:hover {
         filter: brightness(1.1);
       }

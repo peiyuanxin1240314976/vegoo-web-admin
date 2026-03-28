@@ -54,12 +54,7 @@
       <div class="filter-group">
         <span class="filter-label">应用：</span>
         <el-select v-model="appFilter" placeholder="全部" class="app-select" clearable>
-          <el-option
-            v-for="app in appOptions"
-            :key="app"
-            :label="app"
-            :value="app"
-          />
+          <el-option v-for="app in appOptions" :key="app" :label="app" :value="app" />
         </el-select>
       </div>
     </div>
@@ -96,19 +91,22 @@
         :data="pagedList"
         class="account-table"
         table-layout="fixed"
-        :row-class-name="({ row }: { row: AdAccountItem }) => row.id === props.selectedId ? 'row-selected' : ''"
+        :row-class-name="getRowClassName"
         @row-click="handleRowClick"
       >
         <el-table-column prop="id" label="账户ID" min-width="100" show-overflow-tooltip>
           <template #default="{ row }">
-            <span
-              :class="['acc-id', { 'acc-id--warning': row.status === '余额不足' }]"
-            >
+            <span :class="['acc-id', { 'acc-id--warning': row.status === '余额不足' }]">
               {{ row.id }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="accountName" label="账户名称" min-width="140" show-overflow-tooltip />
+        <el-table-column
+          prop="accountName"
+          label="账户名称"
+          min-width="140"
+          show-overflow-tooltip
+        />
         <el-table-column label="广告平台" min-width="120">
           <template #default="{ row }">
             <span class="platform-chip" :style="getPlatformStyle(row.source)">
@@ -119,7 +117,12 @@
         <el-table-column prop="agency" label="代理商" min-width="100" show-overflow-tooltip />
         <el-table-column label="账户类型" min-width="90" align="center">
           <template #default="{ row }">
-            <span :class="['type-badge', row.accountType === '直投' ? 'type-badge--direct' : 'type-badge--proxy']">
+            <span
+              :class="[
+                'type-badge',
+                row.accountType === '直投' ? 'type-badge--direct' : 'type-badge--proxy'
+              ]"
+            >
               {{ row.accountType }}
             </span>
           </template>
@@ -303,8 +306,16 @@
   }))
 
   watch(
-    () => [props.searchKeyword, sourceFilter.value, accountTypeFilter.value, statusFilter.value, appFilter.value],
-    () => { currentPage.value = 1 }
+    () => [
+      props.searchKeyword,
+      sourceFilter.value,
+      accountTypeFilter.value,
+      statusFilter.value,
+      appFilter.value
+    ],
+    () => {
+      currentPage.value = 1
+    }
   )
 
   function getPlatformStyle(source: string) {
@@ -317,6 +328,10 @@
     if (status === '正常') return 'status-badge--normal'
     if (status === '余额不足') return 'status-badge--warning'
     return 'status-badge--disabled'
+  }
+
+  function getRowClassName({ row }: { row: AdAccountItem }) {
+    return row.id === props.selectedId ? 'row-selected' : ''
   }
 
   const handleRowClick = (row: AdAccountItem) => {
@@ -456,10 +471,18 @@
       content: '';
     }
 
-    &--total::before { background: var(--accent); }
-    &--active::before { background: var(--green); }
-    &--proxy::before { background: #a78bfa; }
-    &--new::before { background: var(--amber); }
+    &--total::before {
+      background: var(--accent);
+    }
+    &--active::before {
+      background: var(--green);
+    }
+    &--proxy::before {
+      background: #a78bfa;
+    }
+    &--new::before {
+      background: var(--amber);
+    }
   }
 
   .stat-label {
@@ -475,16 +498,26 @@
     font-size: 28px;
     font-weight: 700;
 
-    &--total { color: var(--accent); }
-    &--active { color: var(--green); }
-    &--proxy { color: #a78bfa; }
-    &--new { color: var(--amber); }
+    &--total {
+      color: var(--accent);
+    }
+    &--active {
+      color: var(--green);
+    }
+    &--proxy {
+      color: #a78bfa;
+    }
+    &--new {
+      color: var(--amber);
+    }
   }
 
   .stat-arrow {
     font-size: 16px;
 
-    &--up { color: var(--green); }
+    &--up {
+      color: var(--green);
+    }
   }
 
   .stat-delta {
@@ -532,9 +565,13 @@
       border-bottom: 1px solid var(--border) !important;
     }
 
-    :deep(tr) { background: transparent !important; }
+    :deep(tr) {
+      background: transparent !important;
+    }
 
-    :deep(.el-table__inner-wrapper::before) { display: none; }
+    :deep(.el-table__inner-wrapper::before) {
+      display: none;
+    }
 
     :deep(tr.row-selected td.el-table__cell) {
       background: var(--accent-dim) !important;
@@ -582,7 +619,9 @@
     font-weight: 500;
     color: var(--text-primary);
 
-    &--low { color: var(--amber); }
+    &--low {
+      color: var(--amber);
+    }
   }
 
   .spend {
@@ -618,9 +657,15 @@
     height: 6px;
     border-radius: 50%;
 
-    .status-badge--normal & { background: var(--green); }
-    .status-badge--warning & { background: var(--amber); }
-    .status-badge--disabled & { background: var(--text-muted); }
+    .status-badge--normal & {
+      background: var(--green);
+    }
+    .status-badge--warning & {
+      background: var(--amber);
+    }
+    .status-badge--disabled & {
+      background: var(--text-muted);
+    }
   }
 
   .action-btns {
@@ -698,7 +743,9 @@
       background: transparent;
       border-radius: 5px;
 
-      &:hover { color: var(--accent); }
+      &:hover {
+        color: var(--accent);
+      }
 
       &.is-active {
         font-weight: 700;
