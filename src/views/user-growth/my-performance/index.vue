@@ -1,27 +1,31 @@
 <template>
-  <div v-loading="loading || detailLoading" class="my-performance-page art-full-height">
-    <MyPerformanceHeader
-      :person-options="data.personOptions"
-      :person-id="data.selectedPersonId"
-      :period-type="data.periodType"
-      :period-value="data.selectedPeriodValue"
-      :period-options="data.periodOptions"
-      left-primary="当前日期：2026-03-04"
-      left-secondary="计算日期：2026-03-01 至 2026-03-04"
-      left-tertiary="时区：PST (UTC-8)"
-      left-quaternary="货币：USD"
-      left-hint="注意：一周内及回收周期内的数据会回更，此页面数据仅供参考，并非最终绩效结果；每个月度前3天仍然展示上个月度的数据。"
-      :person-label="$t('myPerformance.header.person')"
-      :export-label="$t('myPerformance.header.export')"
-      :quarter-label="$t('myPerformance.header.quarter')"
-      :month-label="$t('myPerformance.header.month')"
-      @update:person-id="onPersonChange"
-      @update:period-type="onPeriodTypeChange"
-      @update:period-value="onPeriodValueChange"
-    />
+  <div class="my-performance-page art-full-height">
+    <div class="mp-page-fx" aria-hidden="true"></div>
+    <div class="mp-entry-header">
+      <MyPerformanceHeader
+        :person-options="data.personOptions"
+        :person-id="data.selectedPersonId"
+        :period-type="data.periodType"
+        :period-value="data.selectedPeriodValue"
+        :period-options="data.periodOptions"
+        left-primary="当前日期：2026-03-04"
+        left-secondary="计算日期：2026-03-01 至 2026-03-04"
+        left-tertiary="时区：PST (UTC-8)"
+        left-quaternary="货币：USD"
+        left-hint="注意：一周内及回收周期内的数据会回更，此页面数据仅供参考，并非最终绩效结果；每个月度前3天仍然展示上个月度的数据。"
+        :person-label="$t('myPerformance.header.person')"
+        :export-label="$t('myPerformance.header.export')"
+        :quarter-label="$t('myPerformance.header.quarter')"
+        :month-label="$t('myPerformance.header.month')"
+        @update:person-id="onPersonChange"
+        @update:period-type="onPeriodTypeChange"
+        @update:period-value="onPeriodValueChange"
+      />
+    </div>
 
     <div class="top-row">
       <MyPerformanceTopCard
+        :loading="cardLoading"
         :person="selectedPerson"
         :kpis="data.topKpis"
         :responsible-label="$t('myPerformance.personCard.responsible')"
@@ -32,6 +36,7 @@
       <ElCol :xs="24" :lg="7" class="left-col">
         <div class="left-stack">
           <MyPerformancePanelKpiAchievement
+            :loading="cardLoading"
             :title="$t('myPerformance.panels.kpiAchievement')"
             :achievement="data.kpiAchievement"
             :col-label="$t('myPerformance.kpiTable.col.label')"
@@ -40,14 +45,20 @@
             :col-rate="$t('myPerformance.kpiTable.col.rate')"
             :col-score="$t('myPerformance.kpiTable.col.score')"
           />
-          <MyPerformancePanelRoiTrend :title="data.roiTrend.title" :points="data.roiTrend.points" />
+          <MyPerformancePanelRoiTrend
+            :loading="cardLoading"
+            :title="data.roiTrend.title"
+            :points="data.roiTrend.points"
+          />
           <MyPerformancePanelSpendProgress
             v-if="data.periodType === 'month'"
+            :loading="cardLoading"
             :title="data.spendProgress.title"
             :data="data.spendProgress.data"
             :hint-text="spendAchievementHint"
           />
           <MyPerformancePanelPerformanceHistory
+            :loading="cardLoading"
             :title="data.performanceHistory.title"
             :list="data.performanceHistory.list"
           />
@@ -56,6 +67,7 @@
       <ElCol :xs="24" :lg="17" class="right-col">
         <div class="right-wrap">
           <MyPerformancePanelAppDimensionTable
+            :loading="cardLoading"
             :title="data.appTable.title"
             :list="data.appTable.list"
             :summary="data.appTable.summary"
@@ -119,6 +131,8 @@
     onPeriodValueChange
   } = useMyPerformancePage()
 
+  const cardLoading = computed(() => loading.value || detailLoading.value)
+
   const spendAchievementHint = computed(() => {
     const d = data.value.spendProgress?.data
     if (!d) return ''
@@ -131,15 +145,157 @@
 
 <style scoped lang="scss">
   .my-performance-page {
-    padding: 16px 20px 24px;
+    position: relative;
+    min-width: 0;
+    padding: var(--space-4) var(--space-5) var(--space-6);
+    overflow-x: clip;
+
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(ellipse 75% 55% at 8% 8%, rgb(16 185 129 / 16%) 0%, transparent 52%),
+        radial-gradient(ellipse 65% 50% at 92% 88%, rgb(59 130 246 / 14%) 0%, transparent 52%),
+        radial-gradient(ellipse 45% 40% at 48% 48%, rgb(168 85 247 / 9%) 0%, transparent 50%),
+        radial-gradient(ellipse 55% 45% at 75% 15%, rgb(34 211 238 / 8%) 0%, transparent 45%);
+      background-position:
+        0% 0%,
+        100% 100%,
+        50% 50%,
+        80% 20%;
+      background-size:
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        120% 120%;
+      mask-image: linear-gradient(to bottom, black 0%, black 32%, transparent 58%);
+      animation:
+        aurora-drift 14s ease-in-out infinite alternate,
+        mp-bg-flow 22s ease-in-out infinite alternate;
+    }
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(rgb(186 230 253 / 4%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(186 230 253 / 4%) 1px, transparent 1px),
+        radial-gradient(circle, rgb(6 182 212 / 6%) 1px, transparent 1px);
+      background-size:
+        40px 40px,
+        40px 40px,
+        80px 80px;
+      mask-image: linear-gradient(to bottom, black 0%, black 20%, transparent 46%);
+    }
+
+    > *:not(.mp-page-fx) {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .mp-page-fx {
+    position: absolute;
+    inset: -12% -12% 40%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      rgb(59 130 246 / 8%) 55deg,
+      rgb(6 182 212 / 6%) 80deg,
+      transparent 130deg,
+      rgb(16 185 129 / 7%) 200deg,
+      rgb(52 211 153 / 5%) 225deg,
+      transparent 285deg,
+      rgb(168 85 247 / 6%) 330deg,
+      rgb(249 115 22 / 4%) 350deg,
+      transparent 360deg
+    );
+    filter: blur(2px);
+    opacity: 0.78;
+    mask-image: linear-gradient(to bottom, black 0%, black 48%, transparent 82%);
+    animation: mp-page-fx-spin 52s linear infinite;
+  }
+
+  @keyframes mp-page-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes mp-bg-flow {
+    0% {
+      background-position:
+        0% 0%,
+        100% 100%,
+        50% 50%,
+        80% 20%;
+    }
+
+    100% {
+      background-position:
+        6% 4%,
+        94% 96%,
+        52% 48%,
+        65% 35%;
+    }
+  }
+
+  @keyframes aurora-drift {
+    0% {
+      filter: hue-rotate(0deg);
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    50% {
+      filter: hue-rotate(18deg);
+      opacity: 1;
+      transform: scale(1.06) translate(1.2%, -1.2%);
+    }
+
+    100% {
+      filter: hue-rotate(-12deg);
+      opacity: 0.82;
+      transform: scale(1) translate(-1.2%, 1.2%);
+    }
+  }
+
+  .mp-entry-header {
+    margin-bottom: var(--space-4);
+    animation: slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.04s;
   }
 
   .top-row {
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
+    animation: slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.12s;
   }
 
   .data-row {
-    padding-bottom: 24px;
+    padding-bottom: var(--space-6);
+    animation: slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.22s;
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .left-col,
@@ -157,44 +313,193 @@
   }
 
   .table-hint {
-    padding: 10px 14px;
-    margin-top: 12px;
-    color: rgb(161 161 170 / 92%);
-    background: rgb(39 39 42 / 18%);
-    border: 1px solid rgb(39 39 42 / 40%);
-    border-radius: 12px;
+    position: relative;
+    padding: 14px 18px 14px 20px;
+    margin-top: var(--space-3);
+    overflow: hidden;
+    color: var(--text-secondary);
+    background-color: rgb(24 24 27 / 78%);
+    background-image:
+      radial-gradient(ellipse 85% 55% at 100% 0%, rgb(59 130 246 / 12%) 0%, transparent 48%),
+      radial-gradient(ellipse 55% 45% at 0% 100%, rgb(16 185 129 / 9%) 0%, transparent 42%),
+      linear-gradient(168deg, rgb(39 39 42 / 52%) 0%, rgb(24 24 27 / 82%) 100%);
+    backdrop-filter: blur(14px) saturate(1.08);
+    border: 1px solid rgb(72 72 80 / 40%);
+    border-radius: 14px;
+    box-shadow:
+      0 10px 32px rgb(0 0 0 / 26%),
+      inset 0 1px 0 rgb(244 244 245 / 7%),
+      0 0 40px rgb(59 130 246 / 4%);
+    transition:
+      transform 0.4s var(--ease-out),
+      box-shadow 0.45s var(--ease-out),
+      border-color 0.35s var(--ease-default);
+
+    &:hover {
+      border-color: rgb(96 165 250 / 45%);
+      box-shadow:
+        0 18px 48px rgb(0 0 0 / 32%),
+        inset 0 1px 0 rgb(244 244 245 / 10%),
+        0 0 48px rgb(59 130 246 / 10%);
+      transform: translateY(-4px) scale(1.002);
+    }
+
+    &:hover .table-hint__title {
+      filter: drop-shadow(0 0 12px rgb(34 211 238 / 30%));
+      transform: translateX(4px);
+    }
+
+    &:hover .table-hint__list li {
+      color: rgb(244 244 245 / 88%);
+    }
+
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      width: 3px;
+      height: 100%;
+      content: '';
+      background: linear-gradient(
+        180deg,
+        rgb(34 211 238 / 80%),
+        rgb(16 185 129 / 60%),
+        rgb(59 130 246 / 50%)
+      );
+      border-radius: 3px 0 0 3px;
+      animation: hint-line-glow 3s ease-in-out infinite alternate;
+    }
+
+    &::after {
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      z-index: 0;
+      width: 200%;
+      height: 200%;
+      pointer-events: none;
+      content: '';
+      background: conic-gradient(
+        from 0deg at 50% 50%,
+        transparent 0deg,
+        rgb(16 185 129 / 5%) 60deg,
+        transparent 120deg,
+        rgb(59 130 246 / 5%) 200deg,
+        transparent 300deg
+      );
+      opacity: 0.45;
+      animation: hint-sweep 8s linear infinite;
+    }
+  }
+
+  @keyframes hint-line-glow {
+    0% {
+      box-shadow: 0 0 8px rgb(16 185 129 / 30%);
+    }
+
+    100% {
+      box-shadow: 0 0 16px rgb(34 211 238 / 45%);
+    }
+  }
+
+  @keyframes hint-sweep {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .table-hint__title {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
     margin-bottom: 6px;
-    font-size: 12px;
-    font-weight: 650;
-    color: rgb(244 244 245 / 70%);
+    font-size: var(--font-size-aux);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    background-color: transparent;
+    background-image: linear-gradient(
+      95deg,
+      rgb(244 244 245 / 92%) 0%,
+      rgb(186 230 253 / 78%) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-size: 100%;
+    transition:
+      transform 0.35s var(--ease-out),
+      filter 0.35s var(--ease-out);
+    -webkit-text-fill-color: transparent;
   }
 
   .table-hint__list {
-    padding-left: 16px;
+    position: relative;
+    z-index: 1;
+    padding-left: var(--space-4);
     margin: 0;
-    font-size: 12px;
-    line-height: 1.6;
+    font-size: var(--font-size-aux);
+    line-height: 1.7;
+
+    li {
+      transition: color 0.3s var(--ease-out);
+    }
 
     li + li {
-      margin-top: 2px;
+      margin-top: 3px;
     }
   }
 
   .left-stack {
     display: grid;
-    gap: 16px;
+    gap: var(--space-4);
     min-width: 0;
 
     > * {
       min-width: 0;
     }
 
-    :deep(.panel) {
+    :deep(.panel),
+    :deep(.spend-panel) {
       width: 100%;
       min-width: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .my-performance-page::before {
+      animation: none;
+    }
+
+    .mp-page-fx {
+      animation: none;
+    }
+
+    .table-hint {
+      transition: none;
+    }
+
+    .table-hint:hover {
+      transform: none;
+    }
+
+    .table-hint::before {
+      animation: none;
+    }
+
+    .table-hint::after {
+      animation: none;
+    }
+
+    .table-hint__title {
+      transition: none;
+    }
+
+    .mp-entry-header,
+    .top-row,
+    .data-row {
+      opacity: 1;
+      transform: none;
+      animation: none;
     }
   }
 </style>

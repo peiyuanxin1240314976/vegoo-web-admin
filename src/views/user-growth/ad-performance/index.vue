@@ -1,6 +1,7 @@
 <template>
-  <div v-loading="loading" class="ad-performance-page art-full-height flex flex-col">
-    <div class="ad-performance-page__section ad-performance-page__section--filters">
+  <div class="ad-performance-page flex flex-col">
+    <div class="ap-page-fx" aria-hidden="true"></div>
+    <div class="ad-performance-page__section ad-performance-page__section--filters ap-entry-1">
       <AdPerformanceFilters
         :filter="page.filter"
         :meta-options="meta"
@@ -11,13 +12,17 @@
       />
     </div>
 
-    <ElRow :gutter="16" class="ad-performance-page__body">
+    <ElRow :gutter="16" class="ad-performance-page__body ap-entry-2">
       <ElCol :xs="24" :md="17" :xl="19" class="ad-performance-page__left">
         <div class="ad-performance-page__section ad-performance-page__section--kpi">
-          <AdPerformanceKpiCards :kpi="page.kpi" />
+          <AdPerformanceKpiCards :kpi="page.kpi" :loading="cardLoading" />
         </div>
         <div class="ad-performance-page__section ad-performance-page__section--trend">
-          <AdPerformanceTrendCharts :spend-trend="page.spendTrend" :roi7d-trend="page.roi7dTrend" />
+          <AdPerformanceTrendCharts
+            :spend-trend="page.spendTrend"
+            :roi7d-trend="page.roi7dTrend"
+            :loading="cardLoading"
+          />
         </div>
         <div class="ad-performance-page__section ad-performance-page__section--table">
           <AdPerformanceTable
@@ -46,10 +51,15 @@
           :channel-distribution="page.channelDistribution"
           :app-distribution="page.appDistribution"
           :owner-share-distribution="page.ownerShareDistribution"
+          :loading="cardLoading"
           layout="vertical"
         />
         <div class="ad-performance-page__section ad-performance-page__section--alerts">
-          <AdPerformanceAlerts :alerts="page.alerts" @action="onAlertAction" />
+          <AdPerformanceAlerts
+            :alerts="page.alerts"
+            :loading="cardLoading"
+            @action="onAlertAction"
+          />
         </div>
       </ElCol>
     </ElRow>
@@ -57,6 +67,7 @@
 </template>
 
 <script setup lang="ts">
+  import { computed } from 'vue'
   import AdPerformanceFilters from './modules/ad-performance-filters.vue'
   import AdPerformanceKpiCards from './modules/ad-performance-kpi-cards.vue'
   import AdPerformanceTrendCharts from './modules/ad-performance-trend-charts.vue'
@@ -86,6 +97,8 @@
     onAlertAction
   } = useAdPerformancePage()
 
+  const cardLoading = computed(() => loading.value)
+
   function onRefresh() {
     refreshAll()
   }
@@ -93,8 +106,150 @@
 
 <style scoped lang="scss">
   .ad-performance-page {
+    position: relative;
     min-width: 0;
-    padding-bottom: 24px;
+    padding: 20px 24px 28px;
+    overflow-x: clip;
+
+    /* 极光辐射层 ── 仅顶部可见，向下淡出 */
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(
+          ellipse 70% 50% at 6% 6%,
+          rgb(16 185 129 / 42%) 0%,
+          rgb(6 182 212 / 20%) 38%,
+          transparent 58%
+        ),
+        radial-gradient(
+          ellipse 55% 42% at 94% 8%,
+          rgb(59 130 246 / 38%) 0%,
+          rgb(139 92 246 / 18%) 38%,
+          transparent 58%
+        ),
+        radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 18%) 0%, transparent 55%),
+        radial-gradient(
+          ellipse 55% 42% at 76% 4%,
+          rgb(34 211 238 / 22%) 0%,
+          rgb(59 130 246 / 10%) 40%,
+          transparent 58%
+        );
+      mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
+      animation:
+        ap-aurora-drift 14s ease-in-out infinite alternate,
+        ap-bg-flow 22s ease-in-out infinite alternate;
+    }
+
+    /* 网格纹理层 ── 仅顶部点阵 */
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px),
+        radial-gradient(circle, rgb(6 182 212 / 8%) 1px, transparent 1px);
+      background-size:
+        40px 40px,
+        40px 40px,
+        80px 80px;
+      mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+    }
+
+    > *:not(.ap-page-fx) {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .ap-page-fx {
+    position: absolute;
+    inset: -12% -12% 40%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      rgb(59 130 246 / 14%) 55deg,
+      rgb(6 182 212 / 10%) 80deg,
+      transparent 130deg,
+      rgb(16 185 129 / 12%) 200deg,
+      rgb(52 211 153 / 8%) 225deg,
+      transparent 285deg,
+      rgb(168 85 247 / 10%) 330deg,
+      rgb(249 115 22 / 6%) 350deg,
+      transparent 360deg
+    );
+    filter: blur(2px);
+    opacity: 0.85;
+    mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
+    animation: ap-fx-spin 52s linear infinite;
+  }
+
+  @keyframes ap-aurora-drift {
+    0% {
+      filter: hue-rotate(0deg);
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    50% {
+      filter: hue-rotate(18deg);
+      opacity: 1;
+      transform: scale(1.06) translate(1.2%, -1.2%);
+    }
+
+    100% {
+      filter: hue-rotate(-12deg);
+      opacity: 0.82;
+      transform: scale(1) translate(-1.2%, 1.2%);
+    }
+  }
+
+  @keyframes ap-bg-flow {
+    0% {
+      opacity: 0.7;
+      transform: scaleY(1) skewX(0deg);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scaleY(1.08) skewX(1deg);
+    }
+  }
+
+  @keyframes ap-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .ap-entry-1 {
+    animation: ap-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.05s;
+  }
+
+  .ap-entry-2 {
+    animation: ap-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.18s;
+  }
+
+  @keyframes ap-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .ad-performance-page__body {
@@ -119,7 +274,7 @@
   }
 
   .ad-performance-page__section--filters {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
 
   .ad-performance-page__section--kpi {
@@ -146,6 +301,20 @@
 
     .ad-performance-page__right {
       margin-top: 4px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ad-performance-page::before,
+    .ap-page-fx {
+      animation: none;
+    }
+
+    .ap-entry-1,
+    .ap-entry-2 {
+      opacity: 1;
+      transform: none;
+      animation: none;
     }
   }
 </style>

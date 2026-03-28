@@ -9,8 +9,21 @@
         class="ad-performance-distribution__card ad-performance-distribution__card--channel"
         shadow="never"
       >
-        <template #header>{{ tr('adPerformance.channelDistribution', '广告平台分布') }}</template>
-        <div class="ad-performance-distribution__donut-wrap">
+        <template #header>
+          <span class="ad-performance-distribution__card-title">
+            {{ tr('adPerformance.channelDistribution', '广告平台分布') }}
+          </span>
+        </template>
+        <!-- 骨架：环形图占位 -->
+        <div v-if="loading" class="ad-performance-distribution__donut-wrap">
+          <div class="donut-sk">
+            <div class="donut-sk__ring"></div>
+            <div class="donut-sk__center">
+              <ElSkeletonItem variant="text" style="width: 60px; height: 14px" />
+            </div>
+          </div>
+        </div>
+        <div v-show="!loading" class="ad-performance-distribution__donut-wrap">
           <div ref="channelChartRef" class="ad-performance-distribution__donut-chart"></div>
           <div class="ad-performance-distribution__donut-center">
             {{ formatCurrency(channelTotal) }}
@@ -46,7 +59,19 @@
           </button>
         </div>
 
-        <div class="ad-performance-distribution__list" role="tabpanel">
+        <!-- 骨架：列表占位 -->
+        <div v-if="loading" class="ad-performance-distribution__list">
+          <div v-for="i in 4" :key="i" class="dist-sk-row">
+            <ElSkeletonItem variant="circle" class="dist-sk-row__avatar" />
+            <div class="dist-sk-row__info">
+              <ElSkeletonItem variant="text" class="dist-sk-row__name" />
+              <ElSkeletonItem variant="text" class="dist-sk-row__bar" />
+            </div>
+            <ElSkeletonItem variant="text" class="dist-sk-row__val" />
+          </div>
+        </div>
+
+        <div v-else class="ad-performance-distribution__list" role="tabpanel">
           <template v-if="activeTab === 'owner'">
             <div
               v-for="(row, idx) in ownerRows"
@@ -128,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-  import { watch, onMounted, computed, ref } from 'vue'
+  import { watch, onMounted, computed, ref, nextTick } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useChart } from '@/hooks/core/useChart'
   import type {
@@ -147,6 +172,7 @@
       channelDistribution?: ChannelDistributionItem[]
       appDistribution?: AppDistributionItem[]
       ownerShareDistribution?: OwnerShareDistributionItem[]
+      loading?: boolean
       /** vertical：右侧栏纵向排列；horizontal：左右并排 */
       layout?: 'vertical' | 'horizontal'
     }>(),
@@ -154,6 +180,7 @@
       channelDistribution: () => [],
       appDistribution: () => [],
       ownerShareDistribution: () => [],
+      loading: false,
       layout: 'horizontal'
     }
   )
@@ -272,8 +299,20 @@
   }
 
   onMounted(() => {
-    renderAll()
+    if (!props.loading) renderAll()
   })
+
+  watch(
+    () => props.loading,
+    async (ld) => {
+      if (ld) {
+        channelChart.getChartInstance()?.dispose()
+        return
+      }
+      await nextTick()
+      renderAll()
+    }
+  )
 
   watch(
     () => [
@@ -283,23 +322,118 @@
       props.ownerShareDistribution
     ],
     () => {
-      renderAll()
+      if (!props.loading) renderAll()
     },
     { deep: true }
   )
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/ap-card-fx';
+
   .ad-performance-distribution {
     margin-bottom: 16px;
   }
 
+  .ad-performance-distribution__card-title {
+    @include ap-title-gradient;
+
+    font-size: 15px;
+  }
+
+  /* 环形图骨架 */
+  .donut-sk {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+
+    &__ring {
+      width: 120px;
+      height: 120px;
+      border: 14px solid rgb(63 63 70 / 60%);
+      border-top-color: rgb(59 130 246 / 40%);
+      border-radius: 50%;
+      animation: donut-sk-spin 1.4s linear infinite;
+    }
+
+    &__center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  @keyframes donut-sk-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* 列表骨架 */
+  .dist-sk-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 6px;
+  }
+
+  .dist-sk-row__avatar {
+    flex-shrink: 0;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+  }
+
+  .dist-sk-row__info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .dist-sk-row__name {
+    width: 60% !important;
+    height: 12px !important;
+    border-radius: 6px !important;
+  }
+
+  .dist-sk-row__bar {
+    width: 90% !important;
+    height: 8px !important;
+    border-radius: 9999px !important;
+  }
+
+  .dist-sk-row__val {
+    flex-shrink: 0;
+    width: 48px !important;
+    height: 12px !important;
+    border-radius: 6px !important;
+  }
+
   .ad-performance-distribution__card {
+    @include ap-neon-bg;
+    @include ap-panel-hover;
+
+    position: relative;
     margin-bottom: 0;
-    background: var(--default-box-color);
+    overflow: hidden;
+    border-radius: 12px;
 
     :deep(.el-card__header) {
+      font-size: 15px;
+      font-weight: 700;
       color: var(--el-text-color-primary);
+      letter-spacing: 0.03em;
+      background: transparent;
+      border-bottom: 1px solid rgb(63 63 70 / 35%);
+    }
+
+    :deep(.el-card__body) {
+      background: transparent;
     }
   }
 
@@ -366,17 +500,18 @@
     min-width: 0;
     padding: 4px;
     margin-bottom: 10px;
-    background: color-mix(in srgb, var(--default-box-color) 75%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-success) 35%, var(--default-border));
+    background: linear-gradient(135deg, rgb(16 185 129 / 8%) 0%, rgb(24 24 27 / 55%) 100%);
+    border: 1px solid rgb(16 185 129 / 28%);
     border-radius: 10px;
+    box-shadow: inset 0 1px 0 rgb(244 244 245 / 6%);
   }
 
   .ad-performance-distribution__tab {
     flex: 1;
     padding: 8px 10px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
-    color: var(--el-text-color-secondary);
+    color: var(--text-secondary);
     text-align: center;
     touch-action: manipulation;
     cursor: pointer;
@@ -385,14 +520,21 @@
     border-radius: 8px;
     outline: none;
     transition:
-      background-color 0.15s ease,
-      color 0.15s ease,
-      box-shadow 0.15s ease;
+      background-color 0.2s var(--ease-out),
+      color 0.2s var(--ease-out),
+      box-shadow 0.2s var(--ease-out);
 
     &.is-active {
       color: var(--el-text-color-primary);
-      background: color-mix(in srgb, var(--art-success) 18%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-success) 45%, transparent) inset;
+      background: linear-gradient(135deg, rgb(16 185 129 / 22%) 0%, rgb(16 185 129 / 12%) 100%);
+      box-shadow:
+        0 0 0 1px rgb(16 185 129 / 40%) inset,
+        0 0 12px rgb(16 185 129 / 12%);
+    }
+
+    &:not(.is-active):hover {
+      color: var(--text-primary);
+      background: rgb(244 244 245 / 5%);
     }
 
     &:focus-visible {
@@ -415,6 +557,17 @@
     column-gap: 10px;
     align-items: stretch;
     min-width: 0;
+    padding: 8px 6px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    transition:
+      background-color 0.22s var(--ease-out),
+      border-color 0.22s var(--ease-default);
+
+    &:hover {
+      background: rgb(59 130 246 / 6%);
+      border-color: rgb(59 130 246 / 18%);
+    }
   }
 
   .ad-performance-distribution__app-top {
@@ -498,6 +651,21 @@
     gap: 12px;
     align-items: center;
     min-width: 0;
+    padding: 8px 6px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    transition:
+      background-color 0.22s var(--ease-out),
+      border-color 0.22s var(--ease-default),
+      box-shadow 0.26s var(--ease-out);
+
+    &:hover {
+      background: linear-gradient(135deg, rgb(16 185 129 / 8%) 0%, rgb(59 130 246 / 5%) 100%);
+      border-color: rgb(16 185 129 / 22%);
+      box-shadow:
+        0 4px 16px rgb(0 0 0 / 18%),
+        0 0 0 1px rgb(16 185 129 / 10%);
+    }
   }
 
   .ad-performance-distribution__owner-left {
@@ -584,6 +752,22 @@
 
     .ad-performance-distribution__owner-bar-bg {
       max-width: 120px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ad-performance-distribution__card {
+      transition: none;
+
+      &:hover {
+        transform: none;
+      }
+    }
+
+    .ad-performance-distribution__owner-row,
+    .ad-performance-distribution__list-row,
+    .ad-performance-distribution__tab {
+      transition: none;
     }
   }
 

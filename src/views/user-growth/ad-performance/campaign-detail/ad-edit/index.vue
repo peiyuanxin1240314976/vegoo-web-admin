@@ -1,5 +1,5 @@
 <template>
-  <div v-loading="loading" class="ade-page art-full-height">
+  <div v-loading="loading" class="ade-page">
     <!-- ── 顶部面包屑 ───────────────────────────────────────────── -->
     <div class="ade-topbar">
       <div class="ade-topbar__left">
@@ -177,9 +177,9 @@
   .ade-page {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 14px 16px 0;
-    overflow: hidden;
+    gap: 16px;
+    padding: 20px 24px 28px;
+    overflow-x: clip;
     background: var(--default-bg-color);
   }
 

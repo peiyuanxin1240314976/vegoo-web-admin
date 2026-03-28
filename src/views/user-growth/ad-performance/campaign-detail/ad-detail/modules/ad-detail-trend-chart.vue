@@ -129,24 +129,57 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../../styles/ap-card-fx';
+
   .adt {
+    @include ap-neon-bg;
+    @include ap-panel-hover;
+
+    position: relative;
     display: flex;
     flex: 1;
     flex-direction: column;
     min-height: 0;
-    background: var(--default-box-color);
+    overflow: hidden;
+    border-radius: 14px;
+
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 5%;
+      z-index: 0;
+      width: 90%;
+      height: 1.5px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(59 130 246 / 75%),
+        rgb(6 182 212 / 82%),
+        rgb(16 185 129 / 68%),
+        transparent
+      );
+      filter: blur(0.4px);
+    }
 
     :deep(.el-card__header) {
-      padding: 10px 16px 8px;
-      border-bottom: 1px solid var(--default-border);
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 12px;
+      background: transparent;
+      border-bottom: 1px solid rgb(6 182 212 / 16%);
     }
 
     :deep(.el-card__body) {
+      position: relative;
+      z-index: 1;
       display: flex;
       flex: 1;
       flex-direction: column;
       min-height: 0;
-      padding: 12px 14px 14px;
+      padding: 14px 12px 16px;
+      background: transparent;
     }
   }
 
@@ -159,9 +192,9 @@
   }
 
   .adt__title {
+    @include ap-title-gradient;
+
     font-size: 13px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
   }
 
   .adt__legend {
@@ -175,13 +208,14 @@
     gap: 5px;
     align-items: center;
     font-size: 12px;
-    color: var(--el-text-color-secondary);
+    color: #94a3b8;
   }
 
   .adt__legend-dot {
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
+    box-shadow: 0 0 6px currentcolor;
   }
 
   .adt__body {

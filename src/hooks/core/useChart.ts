@@ -601,6 +601,24 @@ export function useChart(options: UseChartOptions = {}) {
     window.addEventListener('resize', debouncedResize)
   })
 
+  // KeepAlive + 工作区 Tab 切走时 DOM 会隐藏，ECharts 常保持 0 宽高；切回需重新 layout
+  onActivated(() => {
+    if (isDestroyed) return
+    nextTick(() => {
+      multiDelayResize(RESIZE_DELAYS)
+      if (chartRef.value && isContainerVisible(chartRef.value) && pendingOptions && !chart) {
+        cleanupIntersectionObserver()
+        const opts = pendingOptions
+        pendingOptions = null
+        if (initDelay > 0) {
+          setTimeout(() => performChartInit(opts), initDelay)
+        } else {
+          performChartInit(opts)
+        }
+      }
+    })
+  })
+
   onBeforeUnmount(() => {
     window.removeEventListener('resize', debouncedResize)
   })

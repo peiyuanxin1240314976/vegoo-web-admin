@@ -190,16 +190,50 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../styles/ap-card-fx';
+
   .cct {
-    background: var(--default-box-color);
+    @include ap-neon-bg;
+    @include ap-panel-hover;
+
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+
+    /* 顶部橙绿高光线 */
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 5%;
+      z-index: 0;
+      width: 90%;
+      height: 1.5px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(249 115 22 / 72%),
+        rgb(16 185 129 / 80%),
+        rgb(34 211 238 / 65%),
+        transparent
+      );
+      filter: blur(0.4px);
+    }
 
     :deep(.el-card__header) {
-      padding: 10px 14px 8px;
-      border-bottom: 1px solid var(--default-border);
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 12px;
+      background: transparent;
+      border-bottom: 1px solid rgb(249 115 22 / 15%);
     }
 
     :deep(.el-card__body) {
-      padding: 8px 6px 10px;
+      position: relative;
+      z-index: 1;
+      padding: 12px 10px 14px;
+      background: transparent;
     }
   }
 
@@ -212,9 +246,9 @@
   }
 
   .cct__title {
+    @include ap-title-gradient;
+
     font-size: 13px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
   }
 
   .cct__legend {

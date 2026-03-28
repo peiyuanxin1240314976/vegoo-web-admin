@@ -1,197 +1,223 @@
 <template>
   <div class="panel">
-    <div class="panel__header">
-      <div class="header-left">
-        <span class="title">{{ title }}</span>
-        <span v-if="headerHint" class="header-hint">{{ headerHint }}</span>
-      </div>
-    </div>
-
-    <div class="panel__body">
-      <div class="table-scroll">
-        <ElTable
-          :data="tableData"
-          row-key="id"
-          :tree-props="{ children: 'children' }"
-          :default-expand-all="false"
-          :expand-row-keys="expandedRowKeys"
-          :row-style="getRowStyle"
-          :cell-style="getCellStyle"
-          stripe
-          size="default"
-          class="mp-detail-table"
-          table-layout="fixed"
-          :header-cell-style="{ fontWeight: 600 }"
-        >
-          <ElTableColumn :label="colApp" min-width="220" show-overflow-tooltip>
-            <template #default="{ row }">
-              <span class="name-cell">
-                <span
-                  v-if="row.type === 'app' && row.__appId"
-                  class="app-dot"
-                  :class="'app-dot--' + appDotFromAppId(row.__appId)"
-                ></span>
-                <span class="name" :class="'is-' + row.type" :style="getNameStyle(row)">{{
-                  row.name
-                }}</span>
-              </span>
-            </template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colPlatform" width="90" show-overflow-tooltip>
-            <template #default="{ row }">
-              <span v-if="row.platform" class="dim dim--platform">{{ row.platform }}</span>
-              <span v-else>--</span>
-            </template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colSource" width="110" show-overflow-tooltip>
-            <template #default="{ row }">
-              <span
-                v-if="row.type === 'source'"
-                class="dim dim--source"
-                :style="getSourceTextStyle(row)"
-              >
-                {{ row.name }}
-              </span>
-              <span
-                v-else-if="row.type === 'app'"
-                class="dim dim--source"
-                :style="getSourceTextStyle(row)"
-                >全部</span
-              >
-              <span v-else>--</span>
-            </template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colWindow" width="70" show-overflow-tooltip>
-            <template #default="{ row }">
-              {{ row.windowLabel ?? (row.type === 'app' ? '--' : '--') }}
-            </template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colReachRate" width="80" align="right">
-            <template #default="{ row }">{{ fmtNum(row.reachRate, '%') }}</template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colMinRate" width="80" align="right">
-            <template #default="{ row }">{{ fmtNum(row.minRate, '%') }}</template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colDeviationCoef" width="90" align="right">
-            <template #default="{ row }">{{ fmtNum(row.deviationCoef) }}</template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colMinProfit" width="110" align="right">
-            <template #default="{ row }">{{ fmtMoney(row.minProfit) }}</template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colAdSpend" width="110" align="right">
-            <template #default="{ row }">
-              <span class="ad-spend">{{ fmtMoney(row.adSpend) }}</span>
-            </template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colCalculatedSpend" width="110" align="right">
-            <template #default="{ row }">{{ fmtMoney(row.calculatedSpend) }}</template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colRoi" width="80" align="right">
-            <template #default="{ row }">
-              <span
-                v-if="row.roi != null"
-                class="roi-pill"
-                :class="roiClass(row.roi)"
-                :style="getRoiPillStyle(row)"
-              >
-                {{ row.roi }}%
-              </span>
-              <span v-else>--</span>
-            </template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colCommissionSpend" width="110" align="right">
-            <template #default="{ row }">{{ fmtMoney(row.commissionSpend) }}</template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colEstimatedProfit" width="120" align="right">
-            <template #default="{ row }">
-              <span v-if="row.estimatedProfit != null" :class="profitClass(row.estimatedProfit)">
-                {{ fmtSignedMoney(row.estimatedProfit) }}
-              </span>
-              <span v-else>--</span>
-            </template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colCpa" width="90" align="right">
-            <template #default="{ row }">{{
-              row.cpa != null ? '$' + row.cpa.toFixed(2) : '--'
-            }}</template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colScore" width="80" align="right">
-            <template #default="{ row }">
-              <span v-if="row.score != null" class="score">{{ row.score }}分</span>
-              <span v-else>--</span>
-            </template>
-          </ElTableColumn>
-
-          <ElTableColumn :label="colStatus" width="90" show-overflow-tooltip>
-            <template #default="{ row }">
-              <span
-                v-if="row.type === 'source' && row.status"
-                class="status-pill"
-                :class="'is-' + row.status"
-                :style="getStatusPillStyle(row)"
-              >
-                {{ row.statusText }}
-              </span>
-              <span v-else>--</span>
-            </template>
-          </ElTableColumn>
-        </ElTable>
-
-        <div class="summary-footer">
-          <div class="summary-footer__label">合计/均值：</div>
-          <div class="summary-footer__items">
-            <div class="sf-item">
-              <span class="sf-k">基础系数</span>
-              <span class="sf-v">--</span>
+    <ElSkeleton :loading="loading" animated>
+      <template #template>
+        <div class="panel__header">
+          <ElSkeletonItem variant="text" class="app-table-sk-title" />
+        </div>
+        <div class="panel__body">
+          <div class="table-scroll app-table-sk">
+            <div class="app-table-sk-toolbar">
+              <ElSkeletonItem v-for="c in 10" :key="c" variant="text" class="app-table-sk-th" />
             </div>
-            <div class="sf-item">
-              <span class="sf-k">广告支出</span>
-              <span class="sf-v is-primary">{{ money(summary.adSpend) }}</span>
+            <div v-for="r in 6" :key="r" class="app-table-sk-row">
+              <ElSkeletonItem variant="text" class="app-table-sk-cell app-table-sk-cell--app" />
+              <ElSkeletonItem v-for="c in 9" :key="c" variant="text" class="app-table-sk-cell" />
             </div>
-            <div class="sf-item">
-              <span class="sf-k">预算</span>
-              <span class="sf-v is-info">{{ money(summary.calculatedSpend) }}</span>
-            </div>
-            <div class="sf-item">
-              <span class="sf-k">平均ROI</span>
-              <span class="sf-v is-warning">{{ summary.roi }}%</span>
-            </div>
-            <div class="sf-item">
-              <span class="sf-k">代投消耗</span>
-              <span class="sf-v is-info">{{ money(summary.commissionSpend) }}</span>
-            </div>
-            <div class="sf-item">
-              <span class="sf-k">预估利润</span>
-              <span class="sf-v" :class="profitClass(summary.estimatedProfit)">{{
-                signedMoney(summary.estimatedProfit)
-              }}</span>
-            </div>
-            <div class="sf-item">
-              <span class="sf-k">平均CPA</span>
-              <span class="sf-v">{{ '$' + summary.cpa.toFixed(2) }}</span>
-            </div>
-            <div class="sf-item">
-              <span class="sf-k">绩效分数</span>
-              <span class="sf-v is-strong">{{ summary.score }}分</span>
+            <div class="app-table-sk-summary">
+              <ElSkeletonItem variant="text" class="app-table-sk-sum-line" />
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </template>
+      <template #default>
+        <div class="panel__header">
+          <div class="header-left">
+            <span class="title">{{ title }}</span>
+            <span v-if="headerHint" class="header-hint">{{ headerHint }}</span>
+          </div>
+        </div>
+
+        <div class="panel__body">
+          <div class="table-scroll">
+            <ElTable
+              :data="tableData"
+              row-key="id"
+              :tree-props="{ children: 'children' }"
+              :default-expand-all="false"
+              :expand-row-keys="expandedRowKeys"
+              :row-style="getRowStyle"
+              :cell-style="getCellStyle"
+              stripe
+              size="default"
+              class="mp-detail-table"
+              table-layout="fixed"
+              :header-cell-style="{ fontWeight: 600 }"
+            >
+              <ElTableColumn :label="colApp" min-width="220" show-overflow-tooltip>
+                <template #default="{ row }">
+                  <span class="name-cell">
+                    <span
+                      v-if="row.type === 'app' && row.__appId"
+                      class="app-dot"
+                      :class="'app-dot--' + appDotFromAppId(row.__appId)"
+                    ></span>
+                    <span class="name" :class="'is-' + row.type" :style="getNameStyle(row)">{{
+                      row.name
+                    }}</span>
+                  </span>
+                </template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colPlatform" width="90" show-overflow-tooltip>
+                <template #default="{ row }">
+                  <span v-if="row.platform" class="dim dim--platform">{{ row.platform }}</span>
+                  <span v-else>--</span>
+                </template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colSource" width="110" show-overflow-tooltip>
+                <template #default="{ row }">
+                  <span
+                    v-if="row.type === 'source'"
+                    class="dim dim--source"
+                    :style="getSourceTextStyle(row)"
+                  >
+                    {{ row.name }}
+                  </span>
+                  <span
+                    v-else-if="row.type === 'app'"
+                    class="dim dim--source"
+                    :style="getSourceTextStyle(row)"
+                    >全部</span
+                  >
+                  <span v-else>--</span>
+                </template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colWindow" width="70" show-overflow-tooltip>
+                <template #default="{ row }">
+                  {{ row.windowLabel ?? (row.type === 'app' ? '--' : '--') }}
+                </template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colReachRate" width="80" align="right">
+                <template #default="{ row }">{{ fmtNum(row.reachRate, '%') }}</template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colMinRate" width="80" align="right">
+                <template #default="{ row }">{{ fmtNum(row.minRate, '%') }}</template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colDeviationCoef" width="90" align="right">
+                <template #default="{ row }">{{ fmtNum(row.deviationCoef) }}</template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colMinProfit" width="110" align="right">
+                <template #default="{ row }">{{ fmtMoney(row.minProfit) }}</template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colAdSpend" width="110" align="right">
+                <template #default="{ row }">
+                  <span class="ad-spend">{{ fmtMoney(row.adSpend) }}</span>
+                </template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colCalculatedSpend" width="110" align="right">
+                <template #default="{ row }">{{ fmtMoney(row.calculatedSpend) }}</template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colRoi" width="80" align="right">
+                <template #default="{ row }">
+                  <span
+                    v-if="row.roi != null"
+                    class="roi-pill"
+                    :class="roiClass(row.roi)"
+                    :style="getRoiPillStyle(row)"
+                  >
+                    {{ row.roi }}%
+                  </span>
+                  <span v-else>--</span>
+                </template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colCommissionSpend" width="110" align="right">
+                <template #default="{ row }">{{ fmtMoney(row.commissionSpend) }}</template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colEstimatedProfit" width="120" align="right">
+                <template #default="{ row }">
+                  <span
+                    v-if="row.estimatedProfit != null"
+                    :class="profitClass(row.estimatedProfit)"
+                  >
+                    {{ fmtSignedMoney(row.estimatedProfit) }}
+                  </span>
+                  <span v-else>--</span>
+                </template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colCpa" width="90" align="right">
+                <template #default="{ row }">{{
+                  row.cpa != null ? '$' + row.cpa.toFixed(2) : '--'
+                }}</template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colScore" width="80" align="right">
+                <template #default="{ row }">
+                  <span v-if="row.score != null" class="score">{{ row.score }}分</span>
+                  <span v-else>--</span>
+                </template>
+              </ElTableColumn>
+
+              <ElTableColumn :label="colStatus" width="90" show-overflow-tooltip>
+                <template #default="{ row }">
+                  <span
+                    v-if="row.type === 'source' && row.status"
+                    class="status-pill"
+                    :class="'is-' + row.status"
+                    :style="getStatusPillStyle(row)"
+                  >
+                    {{ row.statusText }}
+                  </span>
+                  <span v-else>--</span>
+                </template>
+              </ElTableColumn>
+            </ElTable>
+
+            <div class="summary-footer">
+              <div class="summary-footer__label">合计/均值：</div>
+              <div class="summary-footer__items">
+                <div class="sf-item">
+                  <span class="sf-k">基础系数</span>
+                  <span class="sf-v">--</span>
+                </div>
+                <div class="sf-item">
+                  <span class="sf-k">广告支出</span>
+                  <span class="sf-v is-primary">{{ money(summary.adSpend) }}</span>
+                </div>
+                <div class="sf-item">
+                  <span class="sf-k">预算</span>
+                  <span class="sf-v is-info">{{ money(summary.calculatedSpend) }}</span>
+                </div>
+                <div class="sf-item">
+                  <span class="sf-k">平均ROI</span>
+                  <span class="sf-v is-warning">{{ summary.roi }}%</span>
+                </div>
+                <div class="sf-item">
+                  <span class="sf-k">代投消耗</span>
+                  <span class="sf-v is-info">{{ money(summary.commissionSpend) }}</span>
+                </div>
+                <div class="sf-item">
+                  <span class="sf-k">预估利润</span>
+                  <span class="sf-v" :class="profitClass(summary.estimatedProfit)">{{
+                    signedMoney(summary.estimatedProfit)
+                  }}</span>
+                </div>
+                <div class="sf-item">
+                  <span class="sf-k">平均CPA</span>
+                  <span class="sf-v">{{ '$' + summary.cpa.toFixed(2) }}</span>
+                </div>
+                <div class="sf-item">
+                  <span class="sf-k">绩效分数</span>
+                  <span class="sf-v is-strong">{{ summary.score }}分</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </ElSkeleton>
   </div>
 </template>
 
@@ -208,6 +234,7 @@
 
   const props = withDefaults(
     defineProps<{
+      loading?: boolean
       title: string
       list: MyPerformanceAppTreeRow[]
       summary: MyPerformanceAppTableSummary
@@ -230,6 +257,7 @@
       colStatus?: string
     }>(),
     {
+      loading: false,
       colApp: '应用',
       colPlatform: '平台',
       colSource: '广告平台',
@@ -536,19 +564,112 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/mp-card-fx';
+
   .panel {
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(16px) saturate(1.08);
+    border: 1px solid rgb(63 63 70 / 42%);
+    border-radius: 16px;
+
+    @include mp-neon-stack;
+    @include mp-card-mesh;
+    @include mp-panel-hover-lift;
+    @include mp-panel-header-title-hover;
+
+    &::before {
+      position: absolute;
+      top: -40%;
+      left: 50%;
+      z-index: 0;
+      width: 80%;
+      height: 85%;
+      pointer-events: none;
+      content: '';
+      background: radial-gradient(ellipse at center, rgb(99 102 241 / 9%) 0%, transparent 68%);
+      transform: translateX(-50%);
+      animation: app-table-aurora 12s ease-in-out infinite alternate;
+    }
+  }
+
+  .app-table-sk-title {
+    width: 32% !important;
+    height: 16px !important;
+  }
+
+  .app-table-sk {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 280px;
+    padding: 4px 2px 8px;
+  }
+
+  .app-table-sk-toolbar {
+    display: grid;
+    grid-template-columns: 2.2fr repeat(9, 1fr);
+    gap: 8px;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgb(63 63 70 / 25%);
+  }
+
+  .app-table-sk-th {
+    width: 100% !important;
+    height: 12px !important;
+  }
+
+  .app-table-sk-row {
+    display: grid;
+    grid-template-columns: 2.2fr repeat(9, 1fr);
+    gap: 8px;
+    align-items: center;
+    padding: 8px 4px;
+    border-radius: 8px;
+  }
+
+  .app-table-sk-cell {
+    width: 100% !important;
+    height: 14px !important;
+  }
+
+  .app-table-sk-cell--app {
+    width: 88% !important;
+  }
+
+  .app-table-sk-summary {
+    padding-top: 10px;
+    margin-top: 6px;
+    border-top: 1px solid rgb(63 63 70 / 25%);
+  }
+
+  .app-table-sk-sum-line {
+    width: 72% !important;
+    height: 16px !important;
+  }
+
+  @keyframes app-table-aurora {
+    0% {
+      opacity: 0.35;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    100% {
+      opacity: 0.85;
+      transform: translateX(-48%) translateY(4%);
+    }
   }
 
   .panel__header {
+    position: relative;
+    z-index: 1;
     display: flex;
     gap: 10px;
     align-items: center;
     justify-content: flex-start;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--default-border);
+    padding: 12px 16px;
+    border-bottom: 1px solid rgb(63 63 70 / 30%);
   }
 
   .header-left {
@@ -561,21 +682,23 @@
 
   .title {
     font-size: 14px;
-    font-weight: 650;
-    color: var(--art-gray-900);
+
+    @include mp-title-gradient;
   }
 
   .header-hint {
     min-width: 0;
     overflow: hidden;
     font-size: 12px;
-    color: rgb(161 161 170 / 88%);
+    color: var(--text-secondary);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .panel__body {
-    padding: 12px 14px 14px;
+    position: relative;
+    z-index: 1;
+    padding: 12px 14px 16px;
   }
 
   .table-scroll {
@@ -597,25 +720,82 @@
     gap: 10px;
     align-items: center;
     min-width: 980px;
-    padding: 10px 12px;
-    margin-top: 8px;
-    background: linear-gradient(90deg, rgb(39 39 42 / 75%), rgb(24 24 27 / 85%));
-    backdrop-filter: blur(6px);
-    border: 1px solid rgb(39 39 42 / 55%);
+    padding: 12px 14px;
+    margin-top: 10px;
+    overflow: hidden;
+    background: linear-gradient(
+      90deg,
+      rgb(24 24 27 / 92%) 0%,
+      rgb(39 39 42 / 88%) 25%,
+      rgb(30 58 138 / 18%) 50%,
+      rgb(39 39 42 / 88%) 75%,
+      rgb(24 24 27 / 92%) 100%
+    );
+    background-size: 200% 100%;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(63 63 70 / 45%);
     border-radius: 12px;
+    box-shadow:
+      0 -4px 20px rgb(0 0 0 / 25%),
+      0 0 40px rgb(59 130 246 / 6%),
+      inset 0 1px 0 rgb(244 244 245 / 5%);
+    animation: summary-sheen 6s ease-in-out infinite;
+
+    &::before {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        105deg,
+        transparent 40%,
+        rgb(34 211 238 / 6%) 50%,
+        transparent 60%
+      );
+      animation: summary-glint 4s ease-in-out infinite;
+    }
+  }
+
+  @keyframes summary-sheen {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  @keyframes summary-glint {
+    0%,
+    100% {
+      opacity: 0;
+      transform: translateX(-30%);
+    }
+
+    50% {
+      opacity: 1;
+      transform: translateX(30%);
+    }
   }
 
   .summary-footer__label {
+    position: relative;
+    z-index: 1;
     flex: none;
     font-size: 12px;
-    font-weight: 650;
-    color: rgb(244 244 245 / 80%);
+    font-weight: 700;
+    color: var(--text-primary);
+    text-shadow: 0 0 10px rgb(244 244 245 / 18%);
   }
 
   .summary-footer__items {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 18px;
     align-items: center;
     min-width: 0;
   }
@@ -624,38 +804,47 @@
     display: inline-flex;
     gap: 8px;
     align-items: baseline;
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
 
   .sf-k {
     font-size: 12px;
-    color: rgb(161 161 170 / 85%);
+    color: var(--text-secondary);
   }
 
   .sf-v {
     font-size: 13px;
     font-weight: 700;
-    color: rgb(244 244 245 / 88%);
+    color: rgb(244 244 245 / 92%);
   }
 
   .sf-v.is-primary {
-    color: rgb(96 165 250 / 95%);
+    color: rgb(96 165 250 / 98%);
+    text-shadow: 0 0 10px rgb(59 130 246 / 25%);
   }
 
   .sf-v.is-info {
-    color: rgb(34 211 238 / 92%);
+    color: rgb(34 211 238 / 95%);
+    text-shadow: 0 0 10px rgb(34 211 238 / 25%);
   }
 
   .sf-v.is-warning {
-    color: rgb(249 115 22 / 95%);
+    color: rgb(249 115 22 / 98%);
+    text-shadow: 0 0 10px rgb(249 115 22 / 25%);
   }
 
   .sf-v.is-strong {
-    color: rgb(244 244 245 / 98%);
+    color: rgb(244 244 245);
+    text-shadow: 0 0 10px rgb(244 244 245 / 20%);
   }
 
   .mp-detail-table {
     font-size: 14px;
+    transition:
+      filter 0.45s var(--ease-out),
+      transform 0.45s var(--ease-out);
+    transform-origin: top center;
 
     --el-table-border-color: var(--el-border-color-lighter);
     --el-table-header-bg-color: var(--el-fill-color-light);
@@ -665,16 +854,42 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
+    :deep(.el-table__row) {
+      transition:
+        background-color 0.25s var(--ease-out),
+        box-shadow 0.25s var(--ease-out);
+    }
+
+    :deep(.el-table__row:hover > td) {
+      background-color: rgb(39 39 42 / 45%) !important;
+      box-shadow: inset 0 0 0 1px rgb(59 130 246 / 12%);
+    }
+
+    :deep(.el-table__row:hover > td:first-child) {
+      box-shadow:
+        inset 0 0 0 1px rgb(59 130 246 / 12%),
+        inset 3px 0 12px rgb(59 130 246 / 6%);
+    }
+  }
+
+  .panel:hover .mp-detail-table {
+    filter: brightness(1.04) drop-shadow(0 6px 24px rgb(59 130 246 / 6%));
+    transform: translateY(-2px);
   }
 
   html.dark .mp-detail-table {
-    --el-table-border-color: var(--el-border-color);
-    --el-table-header-bg-color: var(--el-fill-color-dark);
+    --el-table-border-color: rgb(63 63 70 / 40%);
+    --el-table-header-bg-color: rgb(24 24 27 / 70%);
     --el-table-header-text-color: #fff;
 
     :deep(.el-table__header-wrapper th),
     :deep(.el-table__header-wrapper th .cell) {
       color: #fff;
+    }
+
+    :deep(.el-table__header-wrapper) {
+      backdrop-filter: blur(4px);
     }
   }
 
@@ -685,22 +900,28 @@
     margin-right: 8px;
     vertical-align: middle;
     border-radius: 4px;
-    opacity: 0.9;
+    transition:
+      box-shadow var(--duration-fast) var(--ease-default),
+      transform var(--duration-fast) var(--ease-default);
 
     &.app-dot--weather {
       background: linear-gradient(135deg, #93c5fd, #60a5fa);
+      box-shadow: 0 0 8px rgb(96 165 250 / 35%);
     }
 
     &.app-dot--phone {
       background: linear-gradient(135deg, #86efac, #22c55e);
+      box-shadow: 0 0 8px rgb(34 197 94 / 35%);
     }
 
     &.app-dot--blood {
       background: linear-gradient(135deg, #f87171, #ef4444);
+      box-shadow: 0 0 8px rgb(239 68 68 / 35%);
     }
 
     &.app-dot--default {
       background: rgb(161 161 170 / 45%);
+      box-shadow: 0 0 6px rgb(161 161 170 / 15%);
     }
   }
 
@@ -713,22 +934,100 @@
     padding: 0 8px;
     font-size: 12px;
     font-weight: 750;
+    font-variant-numeric: tabular-nums;
     line-height: 22px;
     border: 1px solid transparent;
     border-radius: 9999px;
+    transition:
+      box-shadow 0.25s var(--ease-out),
+      transform 0.2s var(--ease-out);
+
+    &:hover {
+      transform: scale(1.06);
+    }
+
+    &.is-good {
+      box-shadow:
+        0 0 10px rgb(16 185 129 / 28%),
+        0 0 20px rgb(16 185 129 / 12%);
+      animation: pill-neon-green 2.6s ease-in-out infinite;
+    }
+
+    &.is-mid {
+      box-shadow:
+        0 0 10px rgb(245 158 11 / 22%),
+        0 0 20px rgb(245 158 11 / 8%);
+      animation: pill-neon-amber 2.8s ease-in-out infinite;
+    }
+
+    &.is-bad {
+      box-shadow:
+        0 0 10px rgb(244 63 94 / 22%),
+        0 0 20px rgb(244 63 94 / 8%);
+      animation: pill-neon-rose 3s ease-in-out infinite;
+    }
+  }
+
+  @keyframes pill-neon-green {
+    0%,
+    100% {
+      box-shadow:
+        0 0 8px rgb(16 185 129 / 22%),
+        0 0 18px rgb(16 185 129 / 8%);
+    }
+
+    50% {
+      box-shadow:
+        0 0 14px rgb(16 185 129 / 38%),
+        0 0 28px rgb(16 185 129 / 14%);
+    }
+  }
+
+  @keyframes pill-neon-amber {
+    0%,
+    100% {
+      box-shadow:
+        0 0 8px rgb(245 158 11 / 18%),
+        0 0 16px rgb(245 158 11 / 6%);
+    }
+
+    50% {
+      box-shadow:
+        0 0 14px rgb(245 158 11 / 32%),
+        0 0 26px rgb(245 158 11 / 10%);
+    }
+  }
+
+  @keyframes pill-neon-rose {
+    0%,
+    100% {
+      box-shadow:
+        0 0 8px rgb(244 63 94 / 18%),
+        0 0 16px rgb(244 63 94 / 6%);
+    }
+
+    50% {
+      box-shadow:
+        0 0 14px rgb(244 63 94 / 32%),
+        0 0 26px rgb(244 63 94 / 10%);
+    }
   }
 
   .ad-spend {
     font-weight: 850;
+    font-variant-numeric: tabular-nums;
     color: rgb(56 189 248 / 98%);
+    text-shadow: 0 0 8px rgb(56 189 248 / 20%);
   }
 
   .is-profit {
     color: var(--art-success);
+    text-shadow: 0 0 6px rgb(16 185 129 / 20%);
   }
 
   .is-loss {
     color: var(--art-danger);
+    text-shadow: 0 0 6px rgb(239 68 68 / 20%);
   }
 
   .status-pill {
@@ -743,6 +1042,13 @@
     white-space: nowrap;
     border: 1px solid transparent;
     border-radius: 9999px;
+    transition:
+      box-shadow var(--duration-fast) var(--ease-default),
+      transform var(--duration-fast) var(--ease-default);
+
+    &:hover {
+      transform: scale(1.05);
+    }
   }
 
   .name-cell {
@@ -766,6 +1072,51 @@
 
   .score {
     font-weight: 700;
-    color: rgb(148 163 184 / 92%);
+    font-variant-numeric: tabular-nums;
+    color: rgb(148 163 184 / 95%);
+    text-shadow: 0 0 6px rgb(148 163 184 / 15%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel {
+      transition: none;
+    }
+
+    .panel:hover {
+      transform: none;
+    }
+
+    .panel:hover .panel__header .title {
+      filter: none;
+      transform: none;
+    }
+
+    .panel:hover .mp-detail-table {
+      filter: none;
+      transform: none;
+    }
+
+    .mp-detail-table {
+      transition: none;
+    }
+
+    .panel::before {
+      animation: none;
+    }
+
+    .panel::after {
+      opacity: 0.12;
+    }
+
+    .summary-footer,
+    .summary-footer::before {
+      animation: none;
+    }
+
+    .roi-pill.is-good,
+    .roi-pill.is-mid,
+    .roi-pill.is-bad {
+      animation: none;
+    }
   }
 </style>

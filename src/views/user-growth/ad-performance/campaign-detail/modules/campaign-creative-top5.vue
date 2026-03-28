@@ -45,16 +45,49 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../styles/ap-card-fx';
+
   .cct5 {
-    background: var(--default-box-color);
+    @include ap-neon-bg;
+    @include ap-panel-hover;
+
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+
+    /* 顶部紫粉高光线 */
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 8%;
+      z-index: 0;
+      width: 84%;
+      height: 1.5px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(168 85 247 / 72%),
+        rgb(236 72 153 / 68%),
+        transparent
+      );
+      filter: blur(0.4px);
+    }
 
     :deep(.el-card__header) {
-      padding: 10px 14px 8px;
-      border-bottom: 1px solid var(--default-border);
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 12px;
+      background: transparent;
+      border-bottom: 1px solid rgb(168 85 247 / 18%);
     }
 
     :deep(.el-card__body) {
-      padding: 10px;
+      position: relative;
+      z-index: 1;
+      padding: 14px;
+      background: transparent;
     }
   }
 
@@ -65,20 +98,29 @@
   }
 
   .cct5__title {
+    display: inline-block;
     font-size: 13px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    background-color: transparent;
+    background-image: linear-gradient(92deg, #f0f9ff 0%, #c4b5fd 45%, #f0abfc 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-size: 100%;
+    -webkit-text-fill-color: transparent;
   }
 
   .cct5__more {
     font-size: 12px;
-    color: var(--art-primary);
+    color: #a78bfa;
     cursor: pointer;
     background: transparent;
     border: none;
+    transition: color 0.18s ease;
 
     &:hover {
-      text-decoration: underline;
+      color: #c4b5fd;
+      text-shadow: 0 0 8px rgb(167 139 250 / 50%);
     }
   }
 

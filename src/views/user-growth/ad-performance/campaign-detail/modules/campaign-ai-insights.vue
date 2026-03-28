@@ -47,16 +47,79 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../styles/ap-card-fx';
+
   .cai {
-    background: var(--default-box-color);
+    position: relative;
+    overflow: hidden;
+    background-color: rgb(8 6 18 / 98%);
+    background-image:
+      radial-gradient(
+        ellipse 95% 60% at 100% -8%,
+        rgb(139 92 246 / 38%) 0%,
+        rgb(168 85 247 / 16%) 35%,
+        transparent 55%
+      ),
+      radial-gradient(ellipse 65% 50% at -5% 108%, rgb(59 130 246 / 28%) 0%, transparent 52%),
+      radial-gradient(ellipse 45% 38% at 80% 100%, rgb(236 72 153 / 18%) 0%, transparent 50%),
+      linear-gradient(158deg, rgb(22 12 46 / 92%) 0%, rgb(8 6 18 / 96%) 50%, rgb(6 6 24 / 88%) 100%);
+    border-color: rgb(139 92 246 / 35%);
+    border-radius: 14px;
+    box-shadow:
+      0 12px 48px rgb(0 0 0 / 52%),
+      0 0 0 1px rgb(139 92 246 / 12%),
+      inset 0 1px 0 rgb(196 181 253 / 14%),
+      0 0 32px rgb(139 92 246 / 14%);
+    transition:
+      transform 0.38s var(--ease-out),
+      box-shadow 0.42s var(--ease-out),
+      border-color 0.32s var(--ease-default);
+
+    &:hover {
+      border-color: rgb(167 139 250 / 65%);
+      box-shadow:
+        0 24px 72px rgb(0 0 0 / 52%),
+        0 0 0 1px rgb(167 139 250 / 25%),
+        inset 0 1px 0 rgb(196 181 253 / 18%),
+        0 0 72px rgb(139 92 246 / 28%),
+        0 0 120px rgb(168 85 247 / 14%);
+      transform: translateY(-6px);
+    }
+
+    /* 顶部紫色 AI 光线 */
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 5%;
+      z-index: 0;
+      width: 90%;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(139 92 246 / 80%),
+        rgb(236 72 153 / 75%),
+        rgb(96 165 250 / 65%),
+        transparent
+      );
+      filter: blur(0.5px);
+    }
 
     :deep(.el-card__header) {
-      padding: 10px 14px 8px;
-      border-bottom: 1px solid var(--default-border);
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 12px;
+      background: transparent;
+      border-bottom: 1px solid rgb(139 92 246 / 22%);
     }
 
     :deep(.el-card__body) {
-      padding: 10px 14px 12px;
+      position: relative;
+      z-index: 1;
+      padding: 14px 18px 16px;
+      background: transparent;
     }
   }
 
@@ -67,15 +130,22 @@
   }
 
   .cai__title {
+    display: inline-block;
     font-size: 13px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    background-color: transparent;
+    background-image: linear-gradient(92deg, #f0f9ff 0%, #c4b5fd 40%, #f0abfc 80%, #818cf8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-size: 100%;
+    -webkit-text-fill-color: transparent;
   }
 
   .cai__brain-icon {
     font-size: 18px;
-    color: var(--art-primary);
-    opacity: 0.7;
+    color: #a78bfa;
+    filter: drop-shadow(0 0 8px rgb(139 92 246 / 60%));
   }
 
   .cai__list {
@@ -89,8 +159,17 @@
     gap: 10px;
     align-items: flex-start;
     padding: 10px;
-    background: color-mix(in srgb, var(--default-border) 30%, transparent);
+    background: rgb(139 92 246 / 8%);
+    border: 1px solid rgb(139 92 246 / 18%);
     border-radius: 8px;
+    transition:
+      background 0.22s ease,
+      border-color 0.22s ease;
+
+    &:hover {
+      background: rgb(139 92 246 / 14%);
+      border-color: rgb(167 139 250 / 35%);
+    }
   }
 
   .cai__item-icon {

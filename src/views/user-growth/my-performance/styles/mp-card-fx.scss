@@ -1,0 +1,117 @@
+// 「我的绩效」卡片霓虹背景与网格质感（各面板 @import 后 @include）
+
+@mixin mp-neon-stack {
+  background-color: rgb(24 24 27 / 94%);
+  background-image:
+    radial-gradient(ellipse 95% 60% at 100% -8%, rgb(59 130 246 / 22%) 0%, transparent 44%),
+    radial-gradient(ellipse 70% 50% at -8% 108%, rgb(16 185 129 / 18%) 0%, transparent 42%),
+    radial-gradient(ellipse 50% 38% at 78% 102%, rgb(168 85 247 / 12%) 0%, transparent 48%),
+    linear-gradient(
+      168deg,
+      rgb(39 39 42 / 82%) 0%,
+      rgb(24 24 27 / 97%) 50%,
+      rgb(15 23 42 / 58%) 100%
+    );
+  border-color: rgb(96 165 250 / 22%);
+  box-shadow:
+    0 14px 48px rgb(0 0 0 / 34%),
+    0 0 0 1px rgb(96 165 250 / 8%),
+    inset 0 1px 0 rgb(244 244 245 / 12%),
+    inset 0 -12px 32px rgb(0 0 0 / 22%),
+    0 0 56px rgb(59 130 246 / 6%);
+}
+
+@mixin mp-card-mesh {
+  &::after {
+    position: absolute;
+    inset: 1px;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(rgb(186 230 253 / 4%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(186 230 253 / 4%) 1px, transparent 1px),
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgb(255 255 255 / 5%) 0%, transparent 55%);
+    background-size:
+      20px 20px,
+      20px 20px,
+      100% 100%;
+    border-radius: inherit;
+    opacity: 0.24;
+    mask-image: linear-gradient(
+      180deg,
+      rgb(0 0 0 / 100%) 0%,
+      rgb(0 0 0 / 50%) 70%,
+      transparent 100%
+    );
+  }
+}
+
+@mixin mp-title-gradient {
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background-color: transparent;
+  background-image: linear-gradient(
+    95deg,
+    rgb(244 244 245 / 96%) 0%,
+    rgb(186 230 253 / 88%) 45%,
+    rgb(52 211 153 / 82%) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-size: 100%;
+  -webkit-text-fill-color: transparent;
+}
+
+// 整块卡片悬浮：上浮 + 霓虹描边/外光（显式列出 transition 属性，避免 all）
+@mixin mp-panel-hover-lift {
+  transition:
+    transform 0.4s var(--ease-out),
+    box-shadow 0.45s var(--ease-out),
+    border-color 0.35s var(--ease-default);
+
+  &:hover {
+    border-color: rgb(96 165 250 / 52%);
+    box-shadow:
+      0 24px 64px rgb(0 0 0 / 42%),
+      0 0 0 1px rgb(96 165 250 / 18%),
+      inset 0 1px 0 rgb(244 244 245 / 15%),
+      0 0 64px rgb(59 130 246 / 14%),
+      0 0 100px rgb(16 185 129 / 7%);
+    transform: translateY(-6px);
+  }
+
+  &:active {
+    transition-duration: 0.12s;
+    transform: translateY(-3px);
+  }
+}
+
+// 与 mp-panel-hover-lift 同用：标题跟手加光
+@mixin mp-panel-header-title-hover {
+  .panel__header .title {
+    transition:
+      transform 0.35s var(--ease-out),
+      filter 0.35s var(--ease-out);
+  }
+
+  &:hover .panel__header .title {
+    filter: drop-shadow(0 0 16px rgb(34 211 238 / 35%));
+    transform: translateX(5px) scale(1.03);
+  }
+}
+
+// 消耗面板标题选择器不同
+@mixin mp-spend-header-title-hover {
+  .spend-panel__title {
+    transition:
+      transform 0.35s var(--ease-out),
+      filter 0.35s var(--ease-out);
+  }
+
+  &:hover .spend-panel__title {
+    filter: drop-shadow(0 0 16px rgb(96 165 250 / 38%));
+    transform: translateX(5px) scale(1.03);
+  }
+}
