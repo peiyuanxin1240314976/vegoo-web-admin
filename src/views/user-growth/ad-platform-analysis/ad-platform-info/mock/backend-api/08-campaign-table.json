@@ -1,0 +1,78 @@
+{
+  "_comment": "广告平台信息 - 广告系列明细表。对应 types: AdPlatformInfoCampaignRow[]。",
+  "fieldDescription": {
+    "request": {
+      "s_campaign_id": {
+        "type": "string",
+        "required": true,
+        "description": "主广告系列 ID（详情主体）；若表内为子系列，仍按该筛选维度返回。"
+      },
+      "date_range": {
+        "type": "string",
+        "required": false,
+        "enum": ["7d", "30d", "90d"],
+        "default": "30d"
+      },
+      "t_start_date": { "type": "string", "required": false },
+      "t_end_date": { "type": "string", "required": false }
+    },
+    "response": {
+      "campaigns": {
+        "type": "AdPlatformInfoCampaignRow[]",
+        "required": true,
+        "description": "明细行。"
+      }
+    },
+    "AdPlatformInfoCampaignRow": {
+      "id": { "type": "string", "required": true, "description": "行 id / 子系列 id。" },
+      "campaign": { "type": "string", "required": true, "description": "广告系列名称。" },
+      "spend": { "type": "number", "required": true, "description": "花费 USD。" },
+      "revenue": { "type": "number", "required": true },
+      "profit": { "type": "number", "required": true },
+      "roi": { "type": "number", "required": true },
+      "cpi": { "type": "number", "required": true },
+      "installs": { "type": "number", "required": true },
+      "status": { "type": "string", "required": true, "enum": ["active", "paused"] }
+    }
+  },
+  "sampleRequest": {
+    "s_campaign_id": "s_cmp_mock_001",
+    "date_range": "30d"
+  },
+  "sampleResponse": {
+    "campaigns": [
+      {
+        "id": "cmp_1",
+        "campaign": "P7262_a_3_17geo_09",
+        "spend": 5720.0,
+        "revenue": 8008.0,
+        "profit": 2288.0,
+        "roi": 140.0,
+        "cpi": 0.78,
+        "installs": 7320,
+        "status": "active"
+      },
+      {
+        "id": "cmp_2",
+        "campaign": "P7263_a_4_17geo_10",
+        "spend": 6440.0,
+        "revenue": 9016.0,
+        "profit": 2576.0,
+        "roi": 140.0,
+        "cpi": 0.84,
+        "installs": 7840,
+        "status": "paused"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-platform-analysis/ad-platform-info/campaign-table",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
+    "responseBody": "{ campaigns }"
+  },
+  "apiSuggestion": {
+    "notes": ["后续若需分页，增加 pageNum/pageSize 与 total，本契约为全量示例。"]
+  }
+}

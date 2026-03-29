@@ -264,7 +264,6 @@
         "platform": "终端平台",
         "selectPlaceholder": "请选择"
       },
-      "agencyAnalysis": "代投分析",
       "iapAnalysis": "IAP 分析",
       "iaaAnalysis": "IAA 分析",
       "ecpmAnalysis": "ECPM分析",
@@ -275,8 +274,6 @@
       "appAdPlatformPerformance": "应用广告平台表现",
       "appAdPlatformPerformanceEmpty": "页面内容建设中",
       "revenueDeviation": "预估收入偏差",
-      "businessReport": "报告管理",
-      "businessReportPlaceholder": "页面内容建设中",
       "iaaTabs": {
         "adType": "广告类型",
         "adPlatform": "广告平台",
@@ -285,6 +282,10 @@
         "country": "国家",
         "version": "版本"
       }
+    },
+    "productInsight": {
+      "title": "产品洞察",
+      "businessReport": "报告管理"
     },
     "result": {
       "title": "结果页面",
@@ -326,9 +327,9 @@
       "accountPerformance": "账户成效",
       "adPlatformAnalysis": "广告平台分析",
       "myAds": "我的广告",
-      "adPlatformDetail": "广告平台详情",
       "adPerformance": "广告成效",
       "conversionManagement": "转化管理",
+      "agencyAnalysis": "代投分析",
       "paidAnalysis": "付费分析",
       "performanceAnalysis": "人员成效",
       "performanceComparison": "对比分析",

@@ -1,3 +1,7 @@
+/**
+ * 本地聚合 Mock，字段与 `mock/backend-api/01-08-*.json` 各模块 `sampleResponse` 合并后的 `AdPlatformInfoPageData` 一致；
+ * 接入 HTTP 后按 `../config/data-source.ts` 分模块 `fetch*` 并行组装，或保留此处为 fallback。
+ */
 import type {
   AdPlatformInfoCampaignRow,
   AdPlatformInfoFunnelStage,
@@ -333,6 +337,18 @@ export const MOCK_AD_PLATFORM_INFO_PAGE_DATA: AdPlatformInfoPageData = {
   trend: MOCK_AD_PLATFORM_INFO_TREND,
   campaigns: MOCK_AD_PLATFORM_INFO_CAMPAIGNS,
   updatedAtText: '截止：2026-03-25 23:59'
+}
+
+/** 按广告系列 ID 生成与契约 `sampleResponse` 结构一致的 Mock（接入真实接口后删除） */
+export function buildMockAdPlatformInfoPageData(sCampaignId: string): AdPlatformInfoPageData {
+  const id = sCampaignId.trim() || '—'
+  return {
+    ...MOCK_AD_PLATFORM_INFO_PAGE_DATA,
+    summary: {
+      ...MOCK_AD_PLATFORM_INFO_PAGE_DATA.summary,
+      subtitle: `聚合深度分析 · ${id}`
+    }
+  }
 }
 
 export function getAccentColor(accent: AdPlatformInfoKpiCard['accent']) {

@@ -13,9 +13,9 @@ export type AdPlatformInfoMetricKey =
   | 'ctr'
   | 'cvr'
 
+/** 详情页筛选项：仅时间维度（与路由 param `id` 配合请求详情） */
 export type AdPlatformInfoFilterState = {
   dateRange: '7d' | '30d' | '90d'
-  source: 'google_ads' | 'facebook_ads' | 'applovin' | 'unity' | 'ironsource'
 }
 
 export type AdPlatformInfoPlatformSummary = {

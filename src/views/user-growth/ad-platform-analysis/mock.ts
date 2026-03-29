@@ -206,6 +206,7 @@ export interface TopCampaignRow {
 
 export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
   {
+    campaignId: 's_cmp_mock_001',
     campaign: 'IOS_Traffic_New',
     channel: 'Google',
     sourceKey: 'google',
@@ -214,6 +215,7 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.4
   },
   {
+    campaignId: 's_cmp_mock_002',
     campaign: 'IOS_Traffic_New',
     channel: 'Facebook',
     sourceKey: 'facebook',
@@ -222,6 +224,7 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.2
   },
   {
+    campaignId: 's_cmp_mock_003',
     campaign: 'IOS_Traffic_New',
     channel: 'TikTok',
     sourceKey: 'tiktok',
@@ -230,6 +233,7 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.35
   },
   {
+    campaignId: 's_cmp_mock_004',
     campaign: 'IOS_Traffic_New',
     channel: 'Unity',
     sourceKey: 'unity',
@@ -238,6 +242,7 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 0.82
   },
   {
+    campaignId: 's_cmp_mock_005',
     campaign: 'IOS_Retarget_Core',
     channel: 'Google',
     sourceKey: 'google',
@@ -246,6 +251,7 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.52
   },
   {
+    campaignId: 's_cmp_mock_006',
     campaign: 'Android_UAC_Brand',
     channel: 'Facebook',
     sourceKey: 'facebook',
@@ -254,6 +260,7 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.18
   },
   {
+    campaignId: 's_cmp_mock_007',
     campaign: 'SEA_Launch_Phase1',
     channel: 'TikTok',
     sourceKey: 'tiktok',
@@ -262,6 +269,7 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.05
   },
   {
+    campaignId: 's_cmp_mock_008',
     campaign: 'LATAM_Test_A',
     channel: 'Kwai',
     sourceKey: 'kwai',
@@ -270,6 +278,7 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 0.88
   },
   {
+    campaignId: 's_cmp_mock_009',
     campaign: 'EU_Search_SKAG',
     channel: 'Unity',
     sourceKey: 'unity',
@@ -278,6 +287,7 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.12
   },
   {
+    campaignId: 's_cmp_mock_010',
     campaign: 'Global_Pangle_Run',
     channel: 'Bigo',
     sourceKey: 'bigo',

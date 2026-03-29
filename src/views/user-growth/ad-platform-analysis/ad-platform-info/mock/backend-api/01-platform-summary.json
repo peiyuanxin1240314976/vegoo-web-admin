@@ -1,0 +1,70 @@
+{
+  "_comment": "广告平台信息 - 顶部平台摘要 + 数据截止时间。对应 types: AdPlatformInfoPlatformSummary + updatedAtText。",
+  "fieldDescription": {
+    "request": {
+      "s_campaign_id": {
+        "type": "string",
+        "required": true,
+        "description": "广告系列 ID（路由 query `id`，数据字典 s_campaign_id）。"
+      },
+      "date_range": {
+        "type": "string",
+        "required": false,
+        "enum": ["7d", "30d", "90d"],
+        "default": "30d",
+        "description": "统计周期。"
+      },
+      "t_start_date": {
+        "type": "string",
+        "required": false,
+        "description": "区间开始 YYYY-MM-DD。"
+      },
+      "t_end_date": { "type": "string", "required": false, "description": "区间结束 YYYY-MM-DD。" }
+    },
+    "response": {
+      "summary": {
+        "type": "AdPlatformInfoPlatformSummary",
+        "required": true,
+        "description": "平台名、副标题、评分。"
+      },
+      "updatedAtText": {
+        "type": "string",
+        "required": true,
+        "description": "数据截止时间展示文案（预格式化）。"
+      }
+    },
+    "AdPlatformInfoPlatformSummary": {
+      "name": { "type": "string", "required": true, "description": "平台展示名。" },
+      "subtitle": { "type": "string", "required": true, "description": "副标题。" },
+      "score": { "type": "number", "required": true, "description": "综合评分 0–100。" },
+      "scoreText": { "type": "string", "required": true, "description": "评分文案，如 92/100。" }
+    }
+  },
+  "sampleRequest": {
+    "s_campaign_id": "s_cmp_mock_001",
+    "date_range": "30d",
+    "t_start_date": "2026-03-01",
+    "t_end_date": "2026-03-29"
+  },
+  "sampleResponse": {
+    "summary": {
+      "name": "Google Ads",
+      "subtitle": "聚合深度分析 · s_cmp_mock_001",
+      "score": 92,
+      "scoreText": "92/100"
+    },
+    "updatedAtText": "截止：2026-03-29 23:59"
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-platform-analysis/ad-platform-info/platform-summary",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
+    "responseBody": "{ summary, updatedAtText }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "首屏可与 KPI 并行请求；updatedAtText 也可由网关统一在响应头返回，此处为页面展示用字段。"
+    ]
+  }
+}

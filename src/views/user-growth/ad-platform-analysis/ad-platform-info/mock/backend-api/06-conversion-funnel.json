@@ -1,0 +1,49 @@
+{
+  "_comment": "广告平台信息 - 转化漏斗。对应 types: AdPlatformInfoFunnelStage[]。",
+  "fieldDescription": {
+    "request": {
+      "s_campaign_id": { "type": "string", "required": true, "description": "广告系列 ID。" },
+      "date_range": {
+        "type": "string",
+        "required": false,
+        "enum": ["7d", "30d", "90d"],
+        "default": "30d"
+      },
+      "t_start_date": { "type": "string", "required": false },
+      "t_end_date": { "type": "string", "required": false }
+    },
+    "response": {
+      "funnel": {
+        "type": "AdPlatformInfoFunnelStage[]",
+        "required": true,
+        "description": "漏斗各阶段。"
+      }
+    },
+    "AdPlatformInfoFunnelStage": {
+      "name": { "type": "string", "required": true, "description": "阶段名称。" },
+      "value": { "type": "number", "required": true, "description": "人数或计数。" }
+    }
+  },
+  "sampleRequest": {
+    "s_campaign_id": "s_cmp_mock_001",
+    "date_range": "30d"
+  },
+  "sampleResponse": {
+    "funnel": [
+      { "name": "引流", "value": 789 },
+      { "name": "安装", "value": 253 },
+      { "name": "留存", "value": 113 },
+      { "name": "支付", "value": 59 }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-platform-analysis/ad-platform-info/conversion-funnel",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
+    "responseBody": "{ funnel }"
+  },
+  "apiSuggestion": {
+    "notes": []
+  }
+}

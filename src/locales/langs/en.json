@@ -264,7 +264,6 @@
         "platform": "Platform",
         "selectPlaceholder": "Select"
       },
-      "agencyAnalysis": "Agency Analysis",
       "iapAnalysis": "IAP Analysis",
       "iaaAnalysis": "IAA Analysis",
       "ecpmAnalysis": "eCPM Analysis",
@@ -275,8 +274,6 @@
       "appAdPlatformPerformance": "App Ad Platform Performance",
       "appAdPlatformPerformanceEmpty": "Page under construction",
       "revenueDeviation": "Estimated Revenue Deviation",
-      "businessReport": "Report Management",
-      "businessReportPlaceholder": "Page under construction",
       "iaaTabs": {
         "adType": "Ad Type",
         "adPlatform": "Ad Platform",
@@ -285,6 +282,10 @@
         "country": "Country",
         "version": "Version"
       }
+    },
+    "productInsight": {
+      "title": "Product Insight",
+      "businessReport": "Report Management"
     },
     "result": {
       "title": "Result Page",
@@ -326,9 +327,9 @@
       "accountPerformance": "Account Performance",
       "adPlatformAnalysis": "Ad Platform Analysis",
       "myAds": "My Ads",
-      "adPlatformDetail": "Ad Platform Detail",
       "adPerformance": "Ad Performance",
       "conversionManagement": "Conversion Management",
+      "agencyAnalysis": "Agency Analysis",
       "paidAnalysis": "Paid Analysis",
       "performanceAnalysis": "Performance Analysis",
       "performanceComparison": "Comparison Analysis",

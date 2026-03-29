@@ -1,0 +1,48 @@
+{
+  "_comment": "广告平台信息 - ROI 地图/区域散点。对应 types: AdPlatformInfoMapPoint[]。",
+  "fieldDescription": {
+    "request": {
+      "s_campaign_id": { "type": "string", "required": true, "description": "广告系列 ID。" },
+      "date_range": {
+        "type": "string",
+        "required": false,
+        "enum": ["7d", "30d", "90d"],
+        "default": "30d"
+      },
+      "t_start_date": { "type": "string", "required": false },
+      "t_end_date": { "type": "string", "required": false }
+    },
+    "response": {
+      "mapPoints": {
+        "type": "AdPlatformInfoMapPoint[]",
+        "required": true,
+        "description": "国家/区域点位。"
+      }
+    },
+    "AdPlatformInfoMapPoint": {
+      "name": { "type": "string", "required": true, "description": "英文地名。" },
+      "cnName": { "type": "string", "required": false, "description": "中文名。" },
+      "value": { "type": "number", "required": true, "description": "指标值（与图表语义一致）。" }
+    }
+  },
+  "sampleRequest": {
+    "s_campaign_id": "s_cmp_mock_001",
+    "date_range": "30d"
+  },
+  "sampleResponse": {
+    "mapPoints": [
+      { "name": "United States", "cnName": "美国", "value": 86.2 },
+      { "name": "Germany", "cnName": "德国", "value": 78.3 }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-platform-analysis/ad-platform-info/roi-map-points",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
+    "responseBody": "{ mapPoints }"
+  },
+  "apiSuggestion": {
+    "notes": ["点位数量大时可按 zoom/视口分页，本契约为全量示例。"]
+  }
+}

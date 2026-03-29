@@ -1,11 +1,11 @@
 /**
- * 经营报告（报告管理）— 与 `views/business-insight/business-report/mock/backend-api` 契约一致
+ * 经营报告（报告管理）— 与 `views/product-insight/business-report/mock/backend-api` 契约一致
  *
  * 报告数据：`BUSINESS_REPORT_DATA_BASE`（见模块 `config/api-base.ts`，含 `datacenter/analysis` 段）
  * 飞书：`/api/v1/lark`
  */
 import request from '@/utils/http'
-import { BUSINESS_REPORT_DATA_BASE } from '@/views/business-insight/business-report/config/api-base'
+import { BUSINESS_REPORT_DATA_BASE } from '@/views/product-insight/business-report/config/api-base'
 import type {
   ReportQueryParams,
   SummaryResponse,
@@ -14,7 +14,7 @@ import type {
   PlatformCountryResponse,
   CampaignsResponse,
   LarkPushConfig
-} from '@/views/business-insight/business-report/types'
+} from '@/views/product-insight/business-report/types'
 
 const LARK_BASE = '/api/v1/lark'
 

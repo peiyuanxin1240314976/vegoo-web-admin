@@ -4,6 +4,7 @@ import { dashboardRoutes } from './dashboard'
 import { monetizationRoutes } from './monetization'
 import { productOperationsRoutes } from './product-operations'
 import { businessInsightRoutes } from './business-insight'
+import { productInsightRoutes } from './product-insight'
 import { userGrowthRoutes } from './user-growth'
 import { configManagementRoutes } from './config-management'
 import { accountManagementRoutes } from './account-management'
@@ -19,9 +20,11 @@ export const routeModules: AppRouteRecord[] = [
   cockpitRoutes,
   cockpitMapDetailRoute,
   userGrowthRoutes,
+  businessInsightRoutes,
+  productInsightRoutes,
   configManagementRoutes,
   accountManagementRoutes,
-  businessInsightRoutes,
+
   dashboardRoutes,
   monetizationRoutes,
   productOperationsRoutes,

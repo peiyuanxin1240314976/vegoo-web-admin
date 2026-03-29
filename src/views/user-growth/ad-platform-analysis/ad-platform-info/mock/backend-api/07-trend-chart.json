@@ -1,0 +1,69 @@
+{
+  "_comment": "广告平台信息 - 趋势图（多序列）。对应 types: AdPlatformInfoTrendData。",
+  "fieldDescription": {
+    "request": {
+      "s_campaign_id": { "type": "string", "required": true, "description": "广告系列 ID。" },
+      "date_range": {
+        "type": "string",
+        "required": false,
+        "enum": ["7d", "30d", "90d"],
+        "default": "30d"
+      },
+      "t_start_date": { "type": "string", "required": false },
+      "t_end_date": { "type": "string", "required": false }
+    },
+    "response": {
+      "trend": {
+        "type": "AdPlatformInfoTrendData",
+        "required": true,
+        "description": "日期轴 + 序列。"
+      }
+    },
+    "AdPlatformInfoTrendSeries": {
+      "name": { "type": "string", "required": true },
+      "type": { "type": "string", "required": true, "enum": ["line", "bar"] },
+      "yAxisIndex": { "type": "number", "required": false },
+      "data": { "type": "number[]", "required": true },
+      "color": { "type": "string", "required": true }
+    },
+    "AdPlatformInfoTrendData": {
+      "dates": { "type": "string[]", "required": true },
+      "series": { "type": "AdPlatformInfoTrendSeries[]", "required": true }
+    }
+  },
+  "sampleRequest": {
+    "s_campaign_id": "s_cmp_mock_001",
+    "date_range": "30d"
+  },
+  "sampleResponse": {
+    "trend": {
+      "dates": ["10/01", "10/02", "10/03", "10/04"],
+      "series": [
+        {
+          "name": "ROI",
+          "type": "line",
+          "yAxisIndex": 0,
+          "data": [160.0, 162.5, 165.2, 168.0],
+          "color": "#3B82F6"
+        },
+        {
+          "name": "收入",
+          "type": "line",
+          "yAxisIndex": 0,
+          "data": [7200, 7350, 7480, 7620],
+          "color": "#10B981"
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-platform-analysis/ad-platform-info/trend-chart",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
+    "responseBody": "{ trend }"
+  },
+  "apiSuggestion": {
+    "notes": ["序列过多时可拆主轴/副轴或分页日期粒度。"]
+  }
+}

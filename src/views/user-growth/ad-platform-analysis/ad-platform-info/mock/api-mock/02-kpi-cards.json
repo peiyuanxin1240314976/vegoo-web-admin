@@ -1,0 +1,25 @@
+{
+  "_comment": "与 backend-api/02-kpi-cards.json 的 sampleResponse 一致。",
+  "kpis": [
+    {
+      "id": "spend",
+      "title": "总支出",
+      "metricKey": "spend",
+      "valueText": "$120,500.00",
+      "deltaPct": 12.3,
+      "accent": "blue",
+      "variant": "top",
+      "spark": [82, 88, 84, 90, 96, 94, 102, 98, 112, 108, 116, 120.5]
+    },
+    {
+      "id": "roi",
+      "title": "平均 ROI",
+      "metricKey": "roi",
+      "valueText": "200.00%",
+      "deltaPct": 12.3,
+      "accent": "amber",
+      "variant": "top",
+      "spark": [150, 158, 162, 170, 178, 185, 192, 188, 195, 198, 202, 200]
+    }
+  ]
+}

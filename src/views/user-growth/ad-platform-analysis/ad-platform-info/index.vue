@@ -36,7 +36,6 @@
           <div class="api-page">
             <ApiPageHeader
               v-model:date-range="filtersDraft.dateRange"
-              v-model:source="filtersDraft.source"
               :updated-at-text="pageData.updatedAtText"
               :summary="pageData.summary"
               @query="onQuery"
@@ -63,7 +62,7 @@
         </template>
 
         <template v-else>
-          <ElEmpty description="暂无数据" />
+          <ElEmpty :description="emptyDescription" />
         </template>
       </template>
     </ElSkeleton>
@@ -71,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted } from 'vue'
+  import { computed } from 'vue'
   import { ElMessage } from 'element-plus'
   import { useAdPlatformInfo } from './composables/useAdPlatformInfo'
   import ApiPageHeader from './modules/page-header.vue'
@@ -86,8 +85,9 @@
 
   defineOptions({ name: 'AdPlatformInfo' })
 
-  const { filtersDraft, applyDraftFilters, isLoading, data, load } = useAdPlatformInfo()
+  const { filtersDraft, applyDraftFilters, isLoading, data, errorMsg, load } = useAdPlatformInfo()
   const pageData = computed(() => data.value)
+  const emptyDescription = computed(() => errorMsg.value || '暂无数据')
 
   function onQuery() {
     applyDraftFilters()
@@ -97,10 +97,6 @@
   function onExport() {
     ElMessage.info('导出功能待接入（已完成 UI 与交互）')
   }
-
-  onMounted(() => {
-    void load()
-  })
 </script>
 
 <style scoped lang="scss">

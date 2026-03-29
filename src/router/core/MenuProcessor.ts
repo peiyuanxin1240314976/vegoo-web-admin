@@ -162,6 +162,15 @@ export class MenuProcessor {
           return true
         }
 
+        // 纯 redirect 子路由（无 component）：须保留以便注册与旧链接跳转
+        if (
+          item.redirect !== undefined &&
+          item.redirect !== null &&
+          !(typeof item.redirect === 'string' && item.redirect === '')
+        ) {
+          return true
+        }
+
         // 其他情况过滤掉
         return false
       })

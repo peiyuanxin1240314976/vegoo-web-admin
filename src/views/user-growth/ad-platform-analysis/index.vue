@@ -362,6 +362,7 @@
 <script setup lang="ts" name="AdPlatformAnalysis">
   import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
   import { useRouter } from 'vue-router'
+  import { ElMessage } from 'element-plus'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
   import type { ColumnOption } from '@/types'
@@ -885,8 +886,12 @@
   }
 
   function onViewTopCampaign(row: TopCampaignRow) {
-    void row
-    void router.push('/business-insight/ad-platform-info')
+    const id = row.campaignId?.trim()
+    if (!id) {
+      ElMessage.warning('缺少广告系列 ID，无法打开详情')
+      return
+    }
+    void router.push({ name: 'AdPlatformInfo', query: { id } })
   }
 
   function topCampaignRowKey(row: TopCampaignRow) {

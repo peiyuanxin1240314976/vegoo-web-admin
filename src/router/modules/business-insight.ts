@@ -1,7 +1,10 @@
 import { AppRouteRecord } from '@/types/router'
 
 /**
- * 商业洞察 - 一级菜单，含 收入概览、利润分析、IAP/IAA、代投、ECPM、报告管理等
+ * 商业洞察 - 一级菜单，含 收入概览、利润分析、IAP/IAA、ECPM 等
+ * （报告管理已迁至产品洞察；本模块保留 business-report 路径重定向）
+ * （代投分析已迁至用户增长；本模块保留 agency-analysis 路径重定向）
+ * （广告平台信息已迁至用户增长·广告平台分析下；本模块保留 ad-platform-info 路径重定向）
  */
 export const businessInsightRoutes: AppRouteRecord = {
   name: 'BusinessInsight',
@@ -67,11 +70,10 @@ export const businessInsightRoutes: AppRouteRecord = {
     },
     {
       path: 'agency-analysis',
-      name: 'AgencyAnalysis',
-      component: '/business-insight/agency-analysis',
+      redirect: '/user-growth/agency-analysis',
       meta: {
-        title: 'menus.businessInsight.agencyAnalysis',
-        keepAlive: true,
+        title: 'menus.userGrowth.agencyAnalysis',
+        isHide: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
     },
@@ -97,11 +99,10 @@ export const businessInsightRoutes: AppRouteRecord = {
     },
     {
       path: 'business-report',
-      name: 'BusinessReport',
-      component: '/business-insight/business-report',
+      redirect: '/product-insight/business-report',
       meta: {
-        title: 'menus.businessInsight.businessReport',
-        keepAlive: true,
+        title: 'menus.productInsight.businessReport',
+        isHide: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
     },
@@ -117,11 +118,10 @@ export const businessInsightRoutes: AppRouteRecord = {
     },
     {
       path: 'ad-platform-info',
-      name: 'AdPlatformInfo',
-      component: '/business-insight/ad-platform-info',
+      redirect: '/user-growth/ad-platform-analysis',
       meta: {
         title: 'menus.businessInsight.adPlatformInfo',
-        keepAlive: true,
+        isHide: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
     },

@@ -8,7 +8,9 @@
           </div>
           <div class="api-platform__meta">
             <div class="api-platform__name">{{ summary.name }}</div>
-            <ElTag class="api-platform__tag" size="small" type="primary" effect="dark">渠道</ElTag>
+            <ElTag class="api-platform__tag" size="small" type="primary" effect="dark"
+              >广告平台</ElTag
+            >
           </div>
         </div>
 
@@ -61,14 +63,12 @@
 
   const props = defineProps<{
     dateRange: AdPlatformInfoFilterState['dateRange']
-    source: AdPlatformInfoFilterState['source']
     updatedAtText: string
     summary: AdPlatformInfoPlatformSummary
   }>()
 
   const emit = defineEmits<{
     (e: 'update:dateRange', v: AdPlatformInfoFilterState['dateRange']): void
-    (e: 'update:source', v: AdPlatformInfoFilterState['source']): void
     (e: 'query'): void
     (e: 'refresh'): void
     (e: 'export'): void
@@ -118,6 +118,7 @@
       } else {
         emit('update:dateRange', '90d')
       }
+      emit('query')
     }
   })
 </script>

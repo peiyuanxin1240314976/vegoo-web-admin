@@ -1,0 +1,62 @@
+{
+  "_comment": "广告平台信息 - 留存热力图。对应 types: AdPlatformInfoHeatmapData。",
+  "fieldDescription": {
+    "request": {
+      "s_campaign_id": { "type": "string", "required": true, "description": "广告系列 ID。" },
+      "date_range": {
+        "type": "string",
+        "required": false,
+        "enum": ["7d", "30d", "90d"],
+        "default": "30d"
+      },
+      "t_start_date": { "type": "string", "required": false },
+      "t_end_date": { "type": "string", "required": false }
+    },
+    "response": {
+      "heatmap": {
+        "type": "AdPlatformInfoHeatmapData",
+        "required": true,
+        "description": "热力图矩阵。"
+      }
+    },
+    "AdPlatformInfoHeatmapData": {
+      "xLabels": { "type": "string[]", "required": true },
+      "yLabels": { "type": "string[]", "required": true },
+      "points": {
+        "type": "Array<[number, number, number]>",
+        "required": true,
+        "description": "[xIndex, yIndex, value]。"
+      },
+      "legendMin": { "type": "number", "required": true },
+      "legendMax": { "type": "number", "required": true }
+    }
+  },
+  "sampleRequest": {
+    "s_campaign_id": "s_cmp_mock_001",
+    "date_range": "30d"
+  },
+  "sampleResponse": {
+    "heatmap": {
+      "xLabels": ["D1", "D3", "D7", "D14", "D30"],
+      "yLabels": ["01/01", "01/02", "01/03"],
+      "points": [
+        [0, 0, 42.1],
+        [1, 0, 38.5],
+        [0, 1, 40.2],
+        [1, 1, 36.8]
+      ],
+      "legendMin": 36.8,
+      "legendMax": 42.1
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-platform-analysis/ad-platform-info/retention-heatmap",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
+    "responseBody": "{ heatmap }"
+  },
+  "apiSuggestion": {
+    "notes": ["矩阵很大时可改为稀疏点 + 维度元数据分接口，当前契约为前端现有结构。"]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "_comment": "与 backend-api/06-conversion-funnel.json 的 sampleResponse 一致。",
+  "funnel": [
+    { "name": "引流", "value": 789 },
+    { "name": "安装", "value": 253 },
+    { "name": "留存", "value": 113 },
+    { "name": "支付", "value": 59 }
+  ]
+}

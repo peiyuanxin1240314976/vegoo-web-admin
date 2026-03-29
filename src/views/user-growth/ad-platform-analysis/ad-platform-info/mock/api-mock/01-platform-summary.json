@@ -1,0 +1,10 @@
+{
+  "_comment": "与 backend-api/01-platform-summary.json 的 sampleResponse 一致。",
+  "summary": {
+    "name": "Google Ads",
+    "subtitle": "聚合深度分析 · s_cmp_mock_001",
+    "score": 92,
+    "scoreText": "92/100"
+  },
+  "updatedAtText": "截止：2026-03-29 23:59"
+}

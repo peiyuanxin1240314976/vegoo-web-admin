@@ -1,0 +1,69 @@
+{
+  "_comment": "广告平台信息 - 国家维度 Top10。对应 types: AdPlatformInfoTopRow[]。",
+  "fieldDescription": {
+    "request": {
+      "s_campaign_id": { "type": "string", "required": true, "description": "广告系列 ID。" },
+      "date_range": {
+        "type": "string",
+        "required": false,
+        "enum": ["7d", "30d", "90d"],
+        "default": "30d"
+      },
+      "t_start_date": { "type": "string", "required": false },
+      "t_end_date": { "type": "string", "required": false }
+    },
+    "response": {
+      "top10": {
+        "type": "AdPlatformInfoTopRow[]",
+        "required": true,
+        "description": "国家 Top10 行。"
+      }
+    },
+    "AdPlatformInfoTopRow": {
+      "rank": { "type": "number", "required": true, "description": "排名。" },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "ISO 3166-1 alpha-2，大写。"
+      },
+      "countryName": { "type": "string", "required": true },
+      "revenue": { "type": "number", "required": true, "description": "收入 USD。" },
+      "roi": { "type": "number", "required": true },
+      "profit": { "type": "number", "required": true, "description": "利润 USD。" }
+    }
+  },
+  "sampleRequest": {
+    "s_campaign_id": "s_cmp_mock_001",
+    "date_range": "30d"
+  },
+  "sampleResponse": {
+    "top10": [
+      {
+        "rank": 1,
+        "s_country_code": "US",
+        "countryName": "美国",
+        "revenue": 118000,
+        "roi": 220,
+        "profit": 28500
+      },
+      {
+        "rank": 2,
+        "s_country_code": "GB",
+        "countryName": "英国",
+        "revenue": 112800,
+        "roi": 212,
+        "profit": 26200
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/user-growth/ad-platform-analysis/ad-platform-info/country-top10",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
+    "responseBody": "{ top10 }"
+  },
+  "apiSuggestion": {
+    "notes": ["国旗展示仅用 s_country_code + flag-icons，接口勿返回 emoji。"]
+  }
+}

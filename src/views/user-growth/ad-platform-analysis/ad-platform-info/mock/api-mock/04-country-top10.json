@@ -1,0 +1,21 @@
+{
+  "_comment": "与 backend-api/04-country-top10.json 的 sampleResponse 一致。",
+  "top10": [
+    {
+      "rank": 1,
+      "s_country_code": "US",
+      "countryName": "美国",
+      "revenue": 118000,
+      "roi": 220,
+      "profit": 28500
+    },
+    {
+      "rank": 2,
+      "s_country_code": "GB",
+      "countryName": "英国",
+      "revenue": 112800,
+      "roi": 212,
+      "profit": 26200
+    }
+  ]
+}

@@ -118,6 +118,19 @@ export class RouteValidator {
         return
       }
 
+      // 子路由仅配置 redirect（旧路径兼容等）：无需 component
+      const hasRedirect =
+        route.redirect !== undefined &&
+        route.redirect !== null &&
+        !(typeof route.redirect === 'string' && route.redirect === '')
+      if (parentPath !== '' && hasRedirect) {
+        if (route.children?.length) {
+          const fullPath = this.resolvePath(parentPath, route.path || '')
+          this.checkComponents(route.children, errors, warnings, fullPath)
+        }
+        return
+      }
+
       // 一级菜单：必须指定 Layout，除非是外链或 iframe
       if (parentPath === '' && !hasExternalLink && !isIframe) {
         errors.push(`一级菜单(${routePath}) 缺少 component，必须指向 ${RoutesAlias.Layout}`)

@@ -34,6 +34,18 @@ export const userGrowthRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'ad-platform-analysis/ad-platform-info',
+      name: 'AdPlatformInfo',
+      component: '/user-growth/ad-platform-analysis/ad-platform-info',
+      meta: {
+        title: 'menus.businessInsight.adPlatformInfo',
+        keepAlive: true,
+        isHide: true,
+        activePath: '/user-growth/ad-platform-analysis',
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
       path: 'my-ads',
       name: 'MyAds',
       component: '/user-growth/my-ads',
@@ -49,16 +61,6 @@ export const userGrowthRoutes: AppRouteRecord = {
       component: '/user-growth/my-performance',
       meta: {
         title: 'menus.userGrowth.myPerformance',
-        keepAlive: true,
-        roles: ['R_SUPER', 'R_ADMIN']
-      }
-    },
-    {
-      path: 'ad-platform-detail',
-      name: 'UserGrowthAdPlatformDetail',
-      component: '/business-insight/ad-platform-detail',
-      meta: {
-        title: 'menus.userGrowth.adPlatformDetail',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
@@ -89,6 +91,16 @@ export const userGrowthRoutes: AppRouteRecord = {
       component: '/user-growth/conversion-management',
       meta: {
         title: 'menus.userGrowth.conversionManagement',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'agency-analysis',
+      name: 'AgencyAnalysis',
+      component: '/business-insight/agency-analysis',
+      meta: {
+        title: 'menus.userGrowth.agencyAnalysis',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
