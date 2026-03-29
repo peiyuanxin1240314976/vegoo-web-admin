@@ -404,13 +404,14 @@
 
 <template>
   <div class="bi-root">
-    <header class="bi-header">
+    <div class="bi-page-fx" aria-hidden="true"></div>
+    <header class="bi-header bi-entry-1">
       <!-- <div class="bi-breadcrumb">
         <span class="bi-brand">{{ $t('menus.businessInsight.title') }}</span>
         <span class="bi-sep">›</span>
         <span class="bi-page">{{ $t('menus.businessInsight.profitAnalysis') }}</span>
       </div> -->
-      <div class="bi-filters">
+      <div class="bi-filters bi-filter-panel">
         <div class="bi-filter-field">
           <span class="bi-filter-label">{{
             $t('menus.businessInsight.profitAnalysisFilters.dateRange')
@@ -428,6 +429,7 @@
             :clearable="false"
             :disabled="pendingMeta"
             class="bi-filter-date"
+            popper-class="bi-select__popper"
             @change="reloadDashboard"
           />
         </div>
@@ -438,6 +440,7 @@
           <ElSelect
             v-model="query.sAppId"
             class="bi-filter-select"
+            popper-class="bi-select__popper"
             :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
             :disabled="pendingMeta"
             filterable
@@ -458,6 +461,7 @@
           <ElSelect
             v-model="query.sCountryCode"
             class="bi-filter-select"
+            popper-class="bi-select__popper"
             :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
             :disabled="pendingMeta"
             filterable
@@ -478,6 +482,7 @@
           <ElSelect
             v-model="query.platform"
             class="bi-filter-select bi-filter-select--platform"
+            popper-class="bi-select__popper"
             :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
             :disabled="pendingMeta"
             @change="reloadDashboard"
@@ -493,9 +498,9 @@
       </div>
     </header>
 
-    <section class="bi-kpi-row">
+    <section class="bi-kpi-row bi-entry-2">
       <template v-if="pendingKpi">
-        <div v-for="i in 5" :key="i" class="kpi-card kpi-card--skeleton">
+        <div v-for="i in 5" :key="i" class="kpi-card kpi-card--skeleton kpi-card--skel-fx">
           <div class="kpi-card-decor" aria-hidden="true">
             <span class="kpi-card-decor__bar kpi-card-decor__bar--a" />
             <span class="kpi-card-decor__bar kpi-card-decor__bar--b" />
@@ -537,11 +542,11 @@
       </template>
     </section>
 
-    <section class="bi-mid-row">
+    <section class="bi-mid-row bi-entry-3">
       <div class="bi-card bi-app-table">
         <div class="card-title">应用利润详情</div>
         <div class="bi-table-host">
-          <div v-show="pendingApp" class="bi-skeleton-block">
+          <div v-show="pendingApp" class="bi-skeleton-block bi-skeleton--fx">
             <ElSkeleton animated :rows="6">
               <template #template>
                 <ElSkeletonItem
@@ -619,7 +624,7 @@
           <!-- 地图容器始终占位，避免 v-show:none 时 ECharts 在 0×0 初始化导致不绘制 -->
           <div ref="mapRef" class="world-map" aria-label="国家利润分布地图"></div>
           <div v-show="pendingCountry" class="bi-map-loading-mask">
-            <div class="bi-skeleton-block bi-skeleton-block--map">
+            <div class="bi-skeleton-block bi-skeleton-block--map bi-skeleton--fx">
               <ElSkeleton animated :rows="0">
                 <template #template>
                   <ElSkeletonItem variant="rect" style="width: 100%; height: 100%" />
@@ -630,7 +635,7 @@
         </div>
         <div class="card-title" style="margin-top: 12px">国家利润详情 Top10</div>
         <div class="bi-table-host bi-table-host--country">
-          <div v-show="pendingCountry" class="bi-skeleton-block">
+          <div v-show="pendingCountry" class="bi-skeleton-block bi-skeleton--fx">
             <ElSkeleton animated :rows="5">
               <template #template>
                 <ElSkeletonItem
@@ -676,11 +681,14 @@
       </div>
     </section>
 
-    <section class="bi-bot-row">
+    <section class="bi-bot-row bi-entry-4">
       <div class="bi-card bi-trend">
         <div class="card-title">利润趋势（近30天）</div>
         <div class="bi-chart-host">
-          <div v-show="pendingTrend" class="bi-skeleton-block bi-skeleton-block--chart">
+          <div
+            v-show="pendingTrend"
+            class="bi-skeleton-block bi-skeleton-block--chart bi-skeleton--fx"
+          >
             <ElSkeleton animated :rows="0">
               <template #template>
                 <ElSkeletonItem variant="rect" style="width: 100%; height: 240px" />
@@ -694,7 +702,10 @@
       <div class="bi-card bi-sankey">
         <div class="card-title">利润构成分析</div>
         <div class="bi-chart-host">
-          <div v-show="pendingSankey" class="bi-skeleton-block bi-skeleton-block--chart">
+          <div
+            v-show="pendingSankey"
+            class="bi-skeleton-block bi-skeleton-block--chart bi-skeleton--fx"
+          >
             <ElSkeleton animated :rows="0">
               <template #template>
                 <ElSkeletonItem variant="rect" style="width: 100%; height: 240px" />
@@ -713,6 +724,8 @@
 </template>
 
 <style scoped lang="scss">
+  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+
   .bi-root {
     --bg-deep: #0f1012;
     --bg-card: #0d1b2e;
@@ -729,13 +742,136 @@
     --yellow: #facc15;
     --red: #f87171;
 
+    position: relative;
     min-height: 100vh;
     padding: 0 0 16px;
+    overflow-x: clip;
     font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
     font-size: 13px;
     color: var(--text-pri);
     user-select: none;
     background: var(--bg-deep);
+    isolation: isolate;
+
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(ellipse 70% 50% at 6% 6%, rgb(16 185 129 / 34%) 0%, transparent 58%),
+        radial-gradient(ellipse 55% 42% at 94% 8%, rgb(59 130 246 / 34%) 0%, transparent 58%),
+        radial-gradient(ellipse 40% 35% at 48% 16%, rgb(168 85 247 / 14%) 0%, transparent 55%);
+      mask-image: linear-gradient(to bottom, black 0%, black 32%, transparent 62%);
+      animation: bi-ap-aurora-drift 14s ease-in-out infinite alternate;
+    }
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: linear-gradient(to bottom, black 0%, black 22%, transparent 48%);
+    }
+
+    > *:not(.bi-page-fx) {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .bi-page-fx {
+    position: absolute;
+    inset: -12% -12% 52%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      rgb(59 130 246 / 11%) 55deg,
+      rgb(6 182 212 / 7%) 80deg,
+      transparent 130deg,
+      rgb(16 185 129 / 9%) 200deg,
+      transparent 285deg,
+      rgb(168 85 247 / 7%) 330deg,
+      transparent 360deg
+    );
+    filter: blur(2px);
+    opacity: 0.8;
+    mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 82%);
+    animation: bi-ap-fx-spin 52s linear infinite;
+  }
+
+  @keyframes bi-ap-aurora-drift {
+    0% {
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1.04) translate(1%, -0.8%);
+    }
+  }
+
+  @keyframes bi-ap-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes bi-ap-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes bi-skeleton-orbit {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 1px rgb(96 165 250 / 16%),
+        0 0 22px rgb(59 130 246 / 8%);
+    }
+
+    50% {
+      box-shadow:
+        0 0 0 1px rgb(96 165 250 / 34%),
+        0 0 38px rgb(59 130 246 / 18%),
+        0 0 64px rgb(6 182 212 / 8%);
+    }
+  }
+
+  .bi-entry-1 {
+    animation: bi-ap-slide-up 0.52s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
+    animation-delay: 0.04s;
+  }
+
+  .bi-entry-2 {
+    animation: bi-ap-slide-up 0.56s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
+    animation-delay: 0.1s;
+  }
+
+  .bi-entry-3 {
+    animation: bi-ap-slide-up 0.58s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
+    animation-delay: 0.16s;
+  }
+
+  .bi-entry-4 {
+    animation: bi-ap-slide-up 0.6s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
+    animation-delay: 0.22s;
   }
 
   .bi-header {
@@ -743,8 +879,8 @@
     align-items: center;
     justify-content: start;
     padding: 14px 24px;
-    background: linear-gradient(180deg, #131518 0%, var(--bg-deep) 100%);
-    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgb(19 21 24 / 88%) 0%, rgb(15 16 18 / 72%) 100%);
+    border-bottom: 1px solid rgb(96 165 250 / 18%);
   }
 
   .bi-breadcrumb {
@@ -775,6 +911,50 @@
     align-items: center;
   }
 
+  .bi-filter-panel {
+    padding: 10px 14px;
+    overflow: hidden;
+    border-radius: 16px;
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+
+    transition:
+      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+    &:hover {
+      border-color: rgb(96 165 250 / 48%);
+      box-shadow:
+        0 12px 40px rgb(0 0 0 / 44%),
+        0 0 0 1px rgb(96 165 250 / 22%),
+        inset 0 1px 0 rgb(186 230 253 / 16%),
+        0 0 48px rgb(59 130 246 / 14%);
+    }
+
+    .bi-filter-field {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper),
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor .el-range-editor.el-input__wrapper) {
+    min-height: 34px;
+    background: rgb(0 0 0 / 28%);
+    border: 1px solid rgb(96 165 250 / 26%);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+  }
+
+  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper:hover),
+  .bi-filter-panel :deep(.bi-filter-date .el-range-editor.el-input__wrapper:hover) {
+    border-color: rgb(147 197 253 / 42%);
+    box-shadow:
+      0 0 0 1px rgb(56 189 248 / 12%) inset,
+      0 0 20px rgb(59 130 246 / 12%);
+  }
+
   .bi-filter-field {
     display: flex;
     gap: 8px;
@@ -803,8 +983,10 @@
 
   :deep(.bi-filter-select .el-select__wrapper),
   :deep(.bi-filter-date.el-date-editor) {
-    background: var(--bg-card2);
-    box-shadow: 0 0 0 1px var(--border-hl) inset;
+    background: rgb(0 0 0 / 28%);
+    border: 1px solid rgb(96 165 250 / 26%);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
   }
 
   :deep(.bi-filter-select .el-select__wrapper:hover),
@@ -861,6 +1043,14 @@
       &::before {
         display: none;
       }
+    }
+
+    &--skel-fx {
+      animation: bi-skeleton-orbit 2.45s ease-in-out infinite;
+    }
+
+    &--skel-fx:nth-child(even) {
+      animation-delay: 0.12s;
     }
   }
 
@@ -987,11 +1177,20 @@
   }
 
   .bi-card {
+    position: relative;
     padding: 14px 16px;
     overflow: hidden;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 2px solid transparent;
     border-radius: 10px;
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+    @include ap.ap-panel-hover;
+  }
+
+  .bi-card > * {
+    position: relative;
+    z-index: 1;
   }
 
   .card-title {
@@ -999,8 +1198,9 @@
     margin-bottom: 10px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--text-pri);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgb(96 165 250 / 22%);
+
+    @include ap.ap-title-gradient;
   }
 
   .bi-mid-row {
@@ -1023,9 +1223,9 @@
   .bi-app-table .data-table thead th {
     position: sticky;
     top: 0;
-    z-index: 1;
-    background: var(--bg-card);
-    box-shadow: 0 1px 0 var(--border);
+    z-index: 2;
+    background: rgb(10 10 14 / 96%);
+    box-shadow: 0 1px 0 rgb(96 165 250 / 18%);
   }
 
   .bi-table-host--country {
@@ -1036,6 +1236,14 @@
     position: absolute;
     inset: 0;
     padding: 4px 0;
+  }
+
+  .bi-skeleton--fx {
+    animation: bi-skeleton-orbit 2.65s ease-in-out infinite;
+  }
+
+  .bi-skeleton--fx:nth-child(odd) {
+    animation-delay: 0.08s;
   }
 
   .bi-skeleton-block--map {
@@ -1201,6 +1409,51 @@
   .footer-warn {
     font-size: 12px;
     color: #f5a623;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bi-root::before {
+      animation: none;
+    }
+
+    .bi-page-fx {
+      animation: none;
+    }
+
+    .bi-entry-1,
+    .bi-entry-2,
+    .bi-entry-3,
+    .bi-entry-4 {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+
+    .kpi-card--skel-fx,
+    .bi-skeleton--fx {
+      animation: none;
+    }
+
+    .bi-card:hover,
+    .bi-card:active {
+      transform: none;
+    }
+  }
+
+  :global(html.dark .bi-select__popper.el-popper) {
+    overflow: hidden;
+    background: rgb(24 24 27 / 98%) !important;
+    border: 1px solid rgb(96 165 250 / 30%) !important;
+    border-radius: 12px !important;
+    box-shadow:
+      0 18px 52px rgb(0 0 0 / 58%),
+      0 0 0 1px rgb(96 165 250 / 14%),
+      inset 0 1px 0 rgb(186 230 253 / 10%) !important;
+  }
+
+  :global(html:not(.dark) .bi-select__popper.el-popper) {
+    border-radius: 12px !important;
+    box-shadow: 0 14px 40px rgb(15 23 42 / 12%) !important;
   }
 
   @media (width <= 1280px) {
