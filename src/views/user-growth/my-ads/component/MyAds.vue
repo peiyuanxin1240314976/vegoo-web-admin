@@ -763,7 +763,9 @@
     max-width: 423px;
   }
 
+  /* 与「我的绩效」顶部用户卡 avatar 对齐：渐变圆、外发光、脉冲环 */
   .user-avatar {
+    position: relative;
     display: flex;
     flex-shrink: 0;
     align-items: center;
@@ -772,14 +774,49 @@
     height: 52px;
     font-size: 22px;
     font-weight: 700;
-    color: #000;
-    background: var(--teal);
-    border-radius: 50%;
-    transition: transform 0.25s ease;
+    color: rgb(244 244 245 / 98%);
+    background: linear-gradient(135deg, rgb(16 185 129 / 95%), rgb(34 211 238 / 80%));
+    border-radius: 9999px;
+    box-shadow:
+      0 0 20px rgb(16 185 129 / 32%),
+      0 0 40px rgb(16 185 129 / 14%),
+      0 0 64px rgb(34 211 238 / 8%);
+    transition:
+      transform 0.45s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      box-shadow 0.45s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+
+    &::after {
+      position: absolute;
+      inset: -5px;
+      pointer-events: none;
+      content: '';
+      border: 2px solid rgb(16 185 129 / 30%);
+      border-radius: 9999px;
+      animation: ma-avatar-ring-pulse 3s ease-in-out infinite;
+    }
+  }
+
+  @keyframes ma-avatar-ring-pulse {
+    0%,
+    100% {
+      border-color: rgb(16 185 129 / 30%);
+      opacity: 0.4;
+      transform: scale(1);
+    }
+
+    50% {
+      border-color: rgb(34 211 238 / 45%);
+      opacity: 0.8;
+      transform: scale(1.08);
+    }
   }
 
   .user-card:hover .user-avatar {
-    transform: scale(1.05);
+    box-shadow:
+      0 0 28px rgb(16 185 129 / 42%),
+      0 0 48px rgb(16 185 129 / 20%),
+      0 0 80px rgb(34 211 238 / 12%);
+    transform: scale(1.07);
   }
 
   .user-name {
@@ -924,6 +961,10 @@
 
     .user-card:hover .user-avatar {
       transform: none;
+    }
+
+    .user-avatar::after {
+      animation: none;
     }
 
     // .user-pill--select:hover {
