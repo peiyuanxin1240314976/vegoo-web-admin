@@ -113,110 +113,115 @@
 </script>
 
 <template>
-  <Transition name="modal">
-    <div v-if="modelValue" class="overlay" @click.self="close">
-      <div class="panel">
-        <!-- Header -->
-        <div class="panel-header">
-          <div class="header-left">
-            <span class="app-icon" :style="{ background: appData?.iconBg }">
-              {{ appData?.iconText }}
-            </span>
-            <span class="header-title">{{ appData?.name }} · 详细数据</span>
+  <!-- 挂到 body，避免任意祖先 transform/filter（布局缩放、入场动画等）导致 position:fixed 错位 -->
+  <Teleport to="body">
+    <Transition name="modal">
+      <div v-if="modelValue" class="overlay" @click.self="close">
+        <div class="panel">
+          <!-- Header -->
+          <div class="panel-header">
+            <div class="header-left">
+              <span class="app-icon" :style="{ background: appData?.iconBg }">
+                {{ appData?.iconText }}
+              </span>
+              <span class="header-title">{{ appData?.name }} · 详细数据</span>
+            </div>
+            <button class="close-btn" @click="close">✕</button>
           </div>
-          <button class="close-btn" @click="close">✕</button>
-        </div>
 
-        <!-- Section 1: KPI -->
-        <div class="section">
-          <div class="sec-label">1. KPI</div>
-          <div class="kpi-row">
-            <div class="kpi-cell accent-cell">
-              <div class="kc-label">今日花费</div>
-              <div class="kc-value accent-val">{{ fmtMoney(appData?.spend ?? 0) }}</div>
-            </div>
-            <div class="kpi-cell">
-              <div class="kc-label">今日安装</div>
-              <div class="kc-value">{{ (appData?.installs ?? 0).toLocaleString() }}</div>
-            </div>
-            <div class="kpi-cell">
-              <div class="kc-label">实时CPI</div>
-              <div class="kc-value">{{ fmtMoney(appData?.cpi ?? 0) }}</div>
-            </div>
-            <div class="kpi-cell">
-              <div class="kc-label">首日ROI</div>
-              <div class="kc-value green-val">{{ appData?.roi1d }}%</div>
-            </div>
-            <div class="kpi-cell">
-              <div class="kc-label">3日ROI</div>
-              <div class="kc-value green-val">{{ appData?.roi3d }}%</div>
-            </div>
-            <div class="kpi-cell">
-              <div class="kc-label">预估利润</div>
-              <div class="kc-value profit-val">+{{ fmtMoney(appData?.estimatedProfit ?? 0) }}</div>
-            </div>
-          </div>
-          <div class="kpi-row kpi-row2">
-            <div class="kpi-cell2">
-              <div class="kc-label">活跃系列</div>
-              <div class="kc-value2">{{ appData?.activeSeries }}个</div>
-            </div>
-            <div class="kpi-cell2">
-              <div class="kc-label">账户余额</div>
-              <div class="kc-value2">{{ fmtMoney(appData?.balance ?? 0) }}</div>
-            </div>
-            <div class="kpi-cell2">
-              <div class="kc-label">点击率</div>
-              <div class="kc-value2">{{ appData?.ctr }}%</div>
-            </div>
-            <div class="kpi-cell2">
-              <div class="kc-label">转化率</div>
-              <div class="kc-value2">{{ appData?.cvr }}%</div>
-            </div>
-            <div class="kpi-cell2 budget-cell">
-              <div class="kc-label">预算进度</div>
-              <div class="kc-value2 budget-val">{{ appData?.budgetProgress }}%</div>
-            </div>
-            <div class="kpi-cell2">
-              <div class="kc-label">预算跑完</div>
-              <div class="kc-value2">{{ appData?.budgetDaysLeft }}</div>
-            </div>
-          </div>
-        </div>
-        <!-- Section 2: Hourly Chart -->
-        <div class="section">
-          <div class="sec-label-row">
-            <span class="sec-label">3. 今日小时消耗趋势</span>
-            <span class="chart-legend"> <span class="legend-dash"></span>ROI </span>
-          </div>
-          <div ref="chartRef" class="detail-chart"></div>
-        </div>
-        <!-- Section 3: Channels -->
-        <div class="section">
-          <div class="sec-label">2. 各渠道数据</div>
-          <div class="channels">
-            <div v-for="ch in appData?.channels" :key="ch.name" class="channel-card">
-              <div class="ch-header">
-                <span class="ch-dot" :style="{ background: ch.iconColor }"></span>
-                <span class="ch-name">{{ ch.name }}</span>
+          <!-- Section 1: KPI -->
+          <div class="section">
+            <div class="sec-label">1. KPI</div>
+            <div class="kpi-row">
+              <div class="kpi-cell accent-cell">
+                <div class="kc-label">今日花费</div>
+                <div class="kc-value accent-val">{{ fmtMoney(appData?.spend ?? 0) }}</div>
               </div>
-              <div class="ch-stats">
-                <span class="ch-stat"
-                  >花费<b>{{ fmtMoney(ch.spend) }}</b></span
+              <div class="kpi-cell">
+                <div class="kc-label">今日安装</div>
+                <div class="kc-value">{{ (appData?.installs ?? 0).toLocaleString() }}</div>
+              </div>
+              <div class="kpi-cell">
+                <div class="kc-label">实时CPI</div>
+                <div class="kc-value">{{ fmtMoney(appData?.cpi ?? 0) }}</div>
+              </div>
+              <div class="kpi-cell">
+                <div class="kc-label">首日ROI</div>
+                <div class="kc-value green-val">{{ appData?.roi1d }}%</div>
+              </div>
+              <div class="kpi-cell">
+                <div class="kc-label">3日ROI</div>
+                <div class="kc-value green-val">{{ appData?.roi3d }}%</div>
+              </div>
+              <div class="kpi-cell">
+                <div class="kc-label">预估利润</div>
+                <div class="kc-value profit-val"
+                  >+{{ fmtMoney(appData?.estimatedProfit ?? 0) }}</div
                 >
-                <span class="ch-stat"
-                  >CPI<b>{{ fmtMoney(ch.cpi) }}</b></span
-                >
-                <span class="ch-stat"
-                  >ROI <b class="roi-green">{{ ch.roi }}%绿</b></span
-                >
+              </div>
+            </div>
+            <div class="kpi-row kpi-row2">
+              <div class="kpi-cell2">
+                <div class="kc-label">活跃系列</div>
+                <div class="kc-value2">{{ appData?.activeSeries }}个</div>
+              </div>
+              <div class="kpi-cell2">
+                <div class="kc-label">账户余额</div>
+                <div class="kc-value2">{{ fmtMoney(appData?.balance ?? 0) }}</div>
+              </div>
+              <div class="kpi-cell2">
+                <div class="kc-label">点击率</div>
+                <div class="kc-value2">{{ appData?.ctr }}%</div>
+              </div>
+              <div class="kpi-cell2">
+                <div class="kc-label">转化率</div>
+                <div class="kc-value2">{{ appData?.cvr }}%</div>
+              </div>
+              <div class="kpi-cell2 budget-cell">
+                <div class="kc-label">预算进度</div>
+                <div class="kc-value2 budget-val">{{ appData?.budgetProgress }}%</div>
+              </div>
+              <div class="kpi-cell2">
+                <div class="kc-label">预算跑完</div>
+                <div class="kc-value2">{{ appData?.budgetDaysLeft }}</div>
+              </div>
+            </div>
+          </div>
+          <!-- Section 2: Hourly Chart -->
+          <div class="section">
+            <div class="sec-label-row">
+              <span class="sec-label">3. 今日小时消耗趋势</span>
+              <span class="chart-legend"> <span class="legend-dash"></span>ROI </span>
+            </div>
+            <div ref="chartRef" class="detail-chart"></div>
+          </div>
+          <!-- Section 3: Channels -->
+          <div class="section">
+            <div class="sec-label">2. 各渠道数据</div>
+            <div class="channels">
+              <div v-for="ch in appData?.channels" :key="ch.name" class="channel-card">
+                <div class="ch-header">
+                  <span class="ch-dot" :style="{ background: ch.iconColor }"></span>
+                  <span class="ch-name">{{ ch.name }}</span>
+                </div>
+                <div class="ch-stats">
+                  <span class="ch-stat"
+                    >花费<b>{{ fmtMoney(ch.spend) }}</b></span
+                  >
+                  <span class="ch-stat"
+                    >CPI<b>{{ fmtMoney(ch.cpi) }}</b></span
+                  >
+                  <span class="ch-stat"
+                    >ROI <b class="roi-green">{{ ch.roi }}%绿</b></span
+                  >
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </Transition>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -224,7 +229,7 @@
   .overlay {
     position: fixed;
     inset: 0;
-    z-index: 1000;
+    z-index: var(--z-modal, 1050);
     display: flex;
     align-items: center;
     justify-content: center;

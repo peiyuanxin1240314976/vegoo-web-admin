@@ -169,13 +169,20 @@
     bottomChart?.resize()
   }
 
+  /** 首屏骨架（测试体验用）；结束后与原先一致初始化图表 */
+  const showContentSkeleton = ref(true)
+
   // ===== Lifecycle =====
-  onMounted(async () => {
-    await nextTick()
-    initSparklines()
-    initBottomChart()
+  onMounted(() => {
     startCountdown()
     window.addEventListener('resize', onResize)
+    window.setTimeout(() => {
+      showContentSkeleton.value = false
+      nextTick(() => {
+        initSparklines()
+        initBottomChart()
+      })
+    }, 520)
   })
 
   onBeforeUnmount(() => {
@@ -195,14 +202,15 @@
 </script>
 
 <template>
-  <div class="dashboard">
+  <div class="dashboard dashboard--ap-fx art-full-height">
+    <div class="rtd-page-fx" aria-hidden="true"></div>
     <!-- ===== Header ===== -->
-    <div class="top-header">
+    <div class="top-header rtd-entry-1">
       <div class="breadcrumb">
         <!-- <span class="bc-parent">用户增长</span>
         <span class="bc-sep">›</span>
         <span class="bc-current">实时数据</span> -->
-        <div class="bc-subtitle">按需要调整匹配产品的最新广告投战数据</div>
+        <!-- <div class="bc-subtitle">按需要调整匹配产品的最新广告投战数据</div> -->
       </div>
       <div class="header-actions">
         <span class="last-update">⏱ 最后更新：14:40:20</span>
@@ -212,7 +220,7 @@
     </div>
 
     <!-- ===== Alert Banner ===== -->
-    <div class="alert-banner">
+    <div class="alert-banner rtd-entry-2">
       <div class="banner-left">
         <span class="banner-icon">⚠</span>
         <span class="banner-text"> 实时数据每 30 分钟自动更新一次，如需额外需新数据请点击 </span>
@@ -225,168 +233,357 @@
     </div>
 
     <!-- ===== Filters ===== -->
-    <div class="filter-bar">
-      <div class="filter-group">
-        <span class="filter-label">应用筛选：</span>
-        <button class="filter-btn">全部应用 ▾</button>
+    <div class="filter-bar rtd-entry-3">
+      <div class="rtd-filter-panel">
+        <div class="filter-group">
+          <span class="filter-label">应用筛选：</span>
+          <button type="button" class="filter-btn">全部应用 ▾</button>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">渠道筛选：</span>
+          <button type="button" class="filter-btn">全部渠道 ▾</button>
+        </div>
       </div>
-      <div class="filter-group">
-        <span class="filter-label">渠道筛选：</span>
-        <button class="filter-btn">全部渠道 ▾</button>
-      </div>
-      <!-- <div class="view-toggle">
-        <span class="filter-label">显示方式：</span>
-        <button class="toggle-btn active">⊞</button>
-        <button class="toggle-btn">☰</button>
-      </div> -->
     </div>
 
-    <!-- ===== Summary KPI Cards ===== -->
-    <div class="kpi-summary">
-      <div class="summary-card">
-        <div class="sum-label">在线应用数</div>
-        <div class="sum-value">{{ kpiData.onlineApps }} <span class="sum-unit">个</span></div>
-        <div class="sum-sub">共 {{ kpiData.totalApps }} 个应用</div>
-      </div>
-      <div class="summary-card">
-        <div class="sum-label">全应用今日花费</div>
-        <div class="sum-value">{{ fmtBigMoney(kpiData.todaySpend) }}</div>
-        <div class="sum-sub">
-          周环比
-          <span class="sum-up">{{ kpiData.spendChange }} ↑</span>
+    <template v-if="showContentSkeleton">
+      <!-- ===== Skeleton：KPI / 卡片栅格 / 底部图 ===== -->
+      <div class="kpi-summary rtd-skel-kpi">
+        <div v-for="s in 4" :key="`sk-${s}`" class="summary-card rtd-skel-block">
+          <ElSkeleton animated>
+            <template #template>
+              <ElSkeletonItem variant="text" style="width: 42%; margin-bottom: 14px" />
+              <ElSkeletonItem
+                variant="text"
+                style="width: 68%; height: 28px; margin-bottom: 10px"
+              />
+              <ElSkeletonItem variant="text" style="width: 52%" />
+            </template>
+          </ElSkeleton>
         </div>
       </div>
-      <div class="summary-card">
-        <div class="sum-label">全应用实时ROI均值</div>
-        <div class="sum-value green-text">{{ kpiData.roiAvg }}%</div>
-        <div class="sum-sub">
-          达标线 {{ kpiData.roiTarget }}%
-          <span class="badge-reach">达标</span>
+      <div class="app-grid rtd-skel-grid">
+        <div v-for="s in 7" :key="`sg-${s}`" class="app-card rtd-skel-block">
+          <ElSkeleton animated>
+            <template #template>
+              <ElSkeletonItem variant="text" style="width: 55%; margin-bottom: 12px" />
+              <ElSkeletonItem variant="text" style="width: 100%; margin-bottom: 8px" />
+              <ElSkeletonItem variant="text" style="width: 88%; margin-bottom: 8px" />
+              <ElSkeletonItem variant="text" style="width: 72%; margin-bottom: 10px" />
+              <ElSkeletonItem
+                variant="rect"
+                style="width: 100%; height: 48px; margin-bottom: 8px"
+              />
+              <ElSkeletonItem variant="text" style="width: 40%" />
+            </template>
+          </ElSkeleton>
         </div>
       </div>
-      <div class="summary-card warning-card">
-        <div class="sum-label">预警应用</div>
-        <div class="sum-value orange-text"
-          >{{ kpiData.warningApps }} <span class="sum-unit">个</span></div
+      <div class="bottom-section rtd-skel-bottom rtd-entry-6">
+        <div class="bottom-header">
+          <span class="bottom-title">实时小时消耗趋势对比</span>
+        </div>
+        <ElSkeleton animated>
+          <template #template>
+            <ElSkeletonItem variant="rect" style="width: 100%; height: 200px" />
+          </template>
+        </ElSkeleton>
+      </div>
+    </template>
+    <template v-else>
+      <!-- ===== Summary KPI Cards ===== -->
+      <div class="kpi-summary rtd-entry-4">
+        <div class="summary-card">
+          <div class="sum-label">在线应用数</div>
+          <div class="sum-value">{{ kpiData.onlineApps }} <span class="sum-unit">个</span></div>
+          <div class="sum-sub">共 {{ kpiData.totalApps }} 个应用</div>
+        </div>
+        <div class="summary-card">
+          <div class="sum-label">全应用今日花费</div>
+          <div class="sum-value">{{ fmtBigMoney(kpiData.todaySpend) }}</div>
+          <div class="sum-sub">
+            周环比
+            <span class="sum-up">{{ kpiData.spendChange }} ↑</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="sum-label">全应用实时ROI均值</div>
+          <div class="sum-value green-text">{{ kpiData.roiAvg }}%</div>
+          <div class="sum-sub">
+            达标线 {{ kpiData.roiTarget }}%
+            <span class="badge-reach">达标</span>
+          </div>
+        </div>
+        <div class="summary-card warning-card">
+          <div class="sum-label">预警应用</div>
+          <div class="sum-value orange-text"
+            >{{ kpiData.warningApps }} <span class="sum-unit">个</span></div
+          >
+          <div class="sum-sub">
+            <span class="warn-tag">超预算</span>
+            <span class="mx4">/</span>
+            <span class="warn-tag">低活跃</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== App Cards Grid ===== -->
+      <div class="app-grid rtd-entry-5">
+        <div
+          v-for="(app, idx) in apps"
+          :key="app.id"
+          class="app-card"
+          :class="{ 'card-warning': app.hasWarning && app.roi < 80 }"
+          @click="openDetail(app)"
         >
-        <div class="sum-sub">
-          <span class="warn-tag">超预算</span>
-          <span class="mx4">/</span>
-          <span class="warn-tag">低活跃</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== App Cards Grid ===== -->
-    <div class="app-grid">
-      <div
-        v-for="(app, idx) in apps"
-        :key="app.id"
-        class="app-card"
-        :class="{ 'card-warning': app.hasWarning && app.roi < 80 }"
-        @click="openDetail(app)"
-      >
-        <!-- Card Header -->
-        <div class="card-header">
-          <div class="card-title">
-            <span class="app-icon-small" :style="{ background: app.iconBg }">
-              {{ app.iconText }}
-            </span>
-            <span class="app-name">{{ app.name }}</span>
-          </div>
-          <div class="card-badges">
-            <span v-if="app.hasWarning && app.warningBadge" class="badge-warn">{{
-              app.warningBadge
-            }}</span>
-            <span class="badge-status" :class="app.isLive ? 'badge-live' : 'badge-launch'">
-              <span v-if="app.isLive" class="live-dot"></span>
-              {{ app.launchLabel }} ›
-            </span>
-          </div>
-        </div>
-
-        <!-- Spend & Installs -->
-        <div class="card-row2">
-          <div class="cr-block">
-            <div class="cr-label">今日花费</div>
-            <div class="cr-value">
-              {{ fmtSpend(app.spend) }}
-              <span
-                v-if="app.spendChange"
-                class="change"
-                :class="app.spendUp ? 'chg-up' : 'chg-dn'"
-              >
-                {{ app.spendUp ? '↑' : '↓' }}{{ app.spendChange }}
+          <!-- Card Header -->
+          <div class="card-header">
+            <div class="card-title">
+              <span class="app-icon-small" :style="{ background: app.iconBg }">
+                {{ app.iconText }}
+              </span>
+              <span class="app-name">{{ app.name }}</span>
+            </div>
+            <div class="card-badges">
+              <span v-if="app.hasWarning && app.warningBadge" class="badge-warn">{{
+                app.warningBadge
+              }}</span>
+              <span class="badge-status" :class="app.isLive ? 'badge-live' : 'badge-launch'">
+                <span v-if="app.isLive" class="live-dot"></span>
+                {{ app.launchLabel }} ›
               </span>
             </div>
           </div>
-          <div class="cr-block cr-right">
-            <div class="cr-label">今日安装</div>
-            <div class="cr-value">{{ app.installs.toLocaleString() }}</div>
-          </div>
-        </div>
 
-        <!-- CPI & Active -->
-        <div class="card-row3">
-          <div class="cr-block">
-            <div class="cr-label">实时CPI</div>
-            <div class="cr-value cpi-val">
-              ${{ app.cpi.toFixed(2) }}
-              <span v-if="app.cpiChange" class="change" :class="app.cpiUp ? 'chg-up' : 'chg-dn'"
-                >{{ app.cpiUp ? '↑' : '↓' }}{{ app.cpiChange }}</span
-              >
+          <!-- Spend & Installs -->
+          <div class="card-row2">
+            <div class="cr-block">
+              <div class="cr-label">今日花费</div>
+              <div class="cr-value">
+                {{ fmtSpend(app.spend) }}
+                <span
+                  v-if="app.spendChange"
+                  class="change"
+                  :class="app.spendUp ? 'chg-up' : 'chg-dn'"
+                >
+                  {{ app.spendUp ? '↑' : '↓' }}{{ app.spendChange }}
+                </span>
+              </div>
+            </div>
+            <div class="cr-block cr-right">
+              <div class="cr-label">今日安装</div>
+              <div class="cr-value">{{ app.installs.toLocaleString() }}</div>
             </div>
           </div>
-          <div class="cr-block cr-right">
-            <div class="cr-label">活跃系列</div>
-            <div class="cr-value">{{ app.activeSeries }} 个</div>
-          </div>
-        </div>
 
-        <!-- Sparkline -->
-        <div :ref="(el) => setSparkRef(el, idx)" class="sparkline"></div>
-
-        <!-- ROI Footer -->
-        <div class="card-footer">
-          <div class="roi-block">
-            <div class="roi-label">当前量目ROI</div>
-            <div class="roi-val" :style="{ color: app.roiColor }">{{ app.roi }}%</div>
+          <!-- CPI & Active -->
+          <div class="card-row3">
+            <div class="cr-block">
+              <div class="cr-label">实时CPI</div>
+              <div class="cr-value cpi-val">
+                ${{ app.cpi.toFixed(2) }}
+                <span v-if="app.cpiChange" class="change" :class="app.cpiUp ? 'chg-up' : 'chg-dn'"
+                  >{{ app.cpiUp ? '↑' : '↓' }}{{ app.cpiChange }}</span
+                >
+              </div>
+            </div>
+            <div class="cr-block cr-right">
+              <div class="cr-label">活跃系列</div>
+              <div class="cr-value">{{ app.activeSeries }} 个</div>
+            </div>
           </div>
-          <div class="action-tag" :class="`tag-${app.actionTagType}`">
-            {{ app.actionTag }}
+
+          <!-- Sparkline -->
+          <div :ref="(el) => setSparkRef(el, idx)" class="sparkline"></div>
+
+          <!-- ROI Footer -->
+          <div class="card-footer">
+            <div class="roi-block">
+              <div class="roi-label">当前量目ROI</div>
+              <div class="roi-val" :style="{ color: app.roiColor }">{{ app.roi }}%</div>
+            </div>
+            <div class="action-tag" :class="`tag-${app.actionTagType}`">
+              {{ app.actionTag }}
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ===== Bottom Chart ===== -->
-    <div class="bottom-section">
-      <div class="bottom-header">
-        <span class="bottom-title">实时小时消耗趋势对比</span>
-        <div class="legend-list">
-          <span class="legend-item">
-            <span class="legend-dot" style="background: #00cfc0"></span>Weather5
-          </span>
-          <span class="legend-item">
-            <span class="legend-dot" style="background: #ffa040"></span>PhoneTracker
-          </span>
-          <span class="legend-item">
-            <span class="legend-dot" style="background: #4d9eff"></span>BloodSugar2
-          </span>
-          <span class="legend-item">
-            <span class="legend-dot" style="background: #a855f7"></span>PhoneTracker2
-          </span>
+      <!-- ===== Bottom Chart ===== -->
+      <div class="bottom-section rtd-entry-6">
+        <div class="bottom-header">
+          <span class="bottom-title">实时小时消耗趋势对比</span>
+          <div class="legend-list">
+            <span class="legend-item">
+              <span class="legend-dot" style="background: #00cfc0"></span>Weather5
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot" style="background: #ffa040"></span>PhoneTracker
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot" style="background: #4d9eff"></span>BloodSugar2
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot" style="background: #a855f7"></span>PhoneTracker2
+            </span>
+          </div>
         </div>
+        <div ref="bottomChartEl" class="bottom-chart"></div>
       </div>
-      <div ref="bottomChartEl" class="bottom-chart"></div>
-    </div>
+    </template>
 
     <!-- ===== Detail Modal ===== -->
     <AppDetailModal v-model="showModal" :app-data="selectedApp" />
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+  @use '../../ad-performance/styles/ap-card-fx.scss' as ap;
+
+  /* ===== Root（极光 + 网格，对齐广告成效底氛围） ===== */
+  .dashboard--ap-fx {
+    position: relative;
+    overflow-x: clip;
+    background: #07090f;
+    isolation: isolate;
+
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(ellipse 68% 48% at 8% 8%, rgb(16 185 129 / 28%) 0%, transparent 58%),
+        radial-gradient(ellipse 52% 40% at 92% 10%, rgb(59 130 246 / 30%) 0%, transparent 55%),
+        radial-gradient(ellipse 38% 32% at 50% 18%, rgb(168 85 247 / 12%) 0%, transparent 52%);
+      mask-image: linear-gradient(to bottom, black 0%, black 36%, transparent 68%);
+      animation: rtd-aurora-drift 14s ease-in-out infinite alternate;
+    }
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(rgb(186 230 253 / 4%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(186 230 253 / 4%) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: linear-gradient(to bottom, black 0%, black 24%, transparent 52%);
+    }
+
+    > *:not(.rtd-page-fx) {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .rtd-page-fx {
+    position: absolute;
+    inset: -10% -10% 48%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      rgb(59 130 246 / 10%) 55deg,
+      rgb(16 185 129 / 8%) 120deg,
+      transparent 200deg,
+      rgb(6 182 212 / 7%) 280deg,
+      transparent 360deg
+    );
+    filter: blur(2px);
+    opacity: 0.78;
+    mask-image: linear-gradient(to bottom, black 0%, black 44%, transparent 80%);
+    animation: rtd-fx-spin 48s linear infinite;
+  }
+
+  @keyframes rtd-aurora-drift {
+    0% {
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1.03) translate(0.8%, -0.6%);
+    }
+  }
+
+  @keyframes rtd-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes rtd-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes rtd-skeleton-orbit {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 1px rgb(96 165 250 / 14%),
+        0 0 20px rgb(16 185 129 / 8%);
+    }
+
+    50% {
+      box-shadow:
+        0 0 0 1px rgb(96 165 250 / 32%),
+        0 0 36px rgb(59 130 246 / 14%),
+        0 0 56px rgb(16 185 129 / 10%);
+    }
+  }
+
+  .rtd-entry-1 {
+    animation: rtd-slide-up 0.52s cubic-bezier(0, 0, 0.2, 1) both;
+    animation-delay: 0.03s;
+  }
+
+  .rtd-entry-2 {
+    animation: rtd-slide-up 0.54s cubic-bezier(0, 0, 0.2, 1) both;
+    animation-delay: 0.08s;
+  }
+
+  .rtd-entry-3 {
+    animation: rtd-slide-up 0.56s cubic-bezier(0, 0, 0.2, 1) both;
+    animation-delay: 0.12s;
+  }
+
+  .rtd-entry-4 {
+    animation: rtd-slide-up 0.56s cubic-bezier(0, 0, 0.2, 1) both;
+    animation-delay: 0.06s;
+  }
+
+  .rtd-entry-5 {
+    animation: rtd-slide-up 0.58s cubic-bezier(0, 0, 0.2, 1) both;
+    animation-delay: 0.1s;
+  }
+
+  .rtd-entry-6 {
+    animation: rtd-slide-up 0.6s cubic-bezier(0, 0, 0.2, 1) both;
+    animation-delay: 0.12s;
+  }
+
+  .rtd-skel-block {
+    animation: rtd-skeleton-orbit 2.5s ease-in-out infinite;
+  }
+
+  .rtd-skel-block:nth-child(odd) {
+    animation-delay: 0.1s;
+  }
+
   /* ===== Root ===== */
   .dashboard {
     box-sizing: border-box;
@@ -403,7 +600,7 @@
     align-items: flex-start;
     justify-content: space-between;
     padding: 18px 24px 10px;
-    border-bottom: 1px solid #121c2e;
+    border-bottom: 1px solid rgb(96 165 250 / 16%);
   }
 
   .breadcrumb {
@@ -452,35 +649,49 @@
   }
 
   .btn-refresh {
-    padding: 5px 12px;
+    padding: 6px 14px;
     font-size: 12px;
-    color: #00cfc0;
+    font-weight: 500;
+    color: #10b981;
     white-space: nowrap;
     cursor: pointer;
-    background: #0e1a2e;
-    border: 1px solid #1e3050;
-    border-radius: 6px;
-    transition: background 0.15s;
+    background: rgb(16 185 129 / 8%);
+    border: 1px solid rgb(16 185 129 / 38%);
+    border-radius: 9999px;
+    box-shadow: 0 0 12px rgb(16 185 129 / 10%);
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.18s ease;
   }
 
   .btn-refresh:hover {
-    background: #122040;
+    background: rgb(16 185 129 / 16%);
+    border-color: #10b981;
+    box-shadow: 0 0 20px rgb(16 185 129 / 22%);
+    transform: translateY(-1px);
   }
 
   .btn-auto {
-    padding: 5px 12px;
+    padding: 6px 14px;
     font-size: 12px;
-    color: #6b7a99;
+    color: #94a3b8;
     white-space: nowrap;
     cursor: pointer;
-    background: none;
-    border: 1px solid #1e2d42;
-    border-radius: 6px;
-    transition: background 0.15s;
+    background: rgb(255 255 255 / 4%);
+    border: 1px solid rgb(96 165 250 / 22%);
+    border-radius: 9999px;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.18s ease;
   }
 
   .btn-auto:hover {
-    background: #0e1525;
+    background: rgb(255 255 255 / 7%);
+    border-color: rgb(96 165 250 / 38%);
+    transform: translateY(-1px);
   }
 
   /* ===== Alert Banner ===== */
@@ -539,39 +750,80 @@
     color: #e2ebf8;
   }
 
-  /* ===== Filters ===== */
+  /* ===== Filters（霓虹条 + 广告成效绿色胶囊按钮） ===== */
   .filter-bar {
+    padding: 10px 24px 14px;
+    border-bottom: 1px solid rgb(96 165 250 / 12%);
+  }
+
+  .rtd-filter-panel {
     display: flex;
-    gap: 20px;
+    flex-wrap: wrap;
+    gap: 12px 20px;
     align-items: center;
-    padding: 10px 24px;
-    border-bottom: 1px solid #0e1525;
+    padding: 10px 16px;
+    overflow: hidden;
+    border-radius: 16px;
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+
+    transition:
+      box-shadow 0.35s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      border-color: rgb(96 165 250 / 48%);
+      box-shadow:
+        0 12px 40px rgb(0 0 0 / 44%),
+        0 0 0 1px rgb(96 165 250 / 22%),
+        inset 0 1px 0 rgb(186 230 253 / 14%),
+        0 0 40px rgb(59 130 246 / 12%);
+    }
+
+    .filter-group {
+      position: relative;
+      z-index: 1;
+    }
   }
 
   .filter-group {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
   }
 
   .filter-label {
     font-size: 12px;
-    color: #4a5a72;
+    color: #94a3b8;
   }
 
   .filter-btn {
-    padding: 4px 12px;
+    min-height: 36px;
+    padding: 6px 16px;
     font-size: 12px;
-    color: #c8d6e8;
+    font-weight: 500;
+    color: #e2e8f0;
     cursor: pointer;
-    background: #0e1525;
-    border: 1px solid #1a2840;
-    border-radius: 5px;
-    transition: border-color 0.15s;
+    background: rgb(16 185 129 / 6%);
+    border: 1px solid rgb(16 185 129 / 28%);
+    border-radius: 9999px;
+    box-shadow: none;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease,
+      transform 0.18s ease;
   }
 
   .filter-btn:hover {
-    border-color: #00cfc044;
+    border-color: rgb(16 185 129 / 58%);
+    box-shadow: 0 0 14px rgb(16 185 129 / 16%);
+    transform: translateY(-1px);
+  }
+
+  .filter-btn:active {
+    transform: translateY(0);
   }
 
   .view-toggle {
@@ -608,15 +860,29 @@
   }
 
   .summary-card {
+    position: relative;
     padding: 14px 18px;
-    background: #0b1020;
-    border: 1px solid #141e32;
-    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    border-radius: 12px;
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+    @include ap.ap-panel-hover;
+  }
+
+  .summary-card > * {
+    position: relative;
+    z-index: 1;
   }
 
   .warning-card {
-    background: #130e00;
-    border-color: #2a1e00;
+    background: linear-gradient(155deg, rgb(40 22 8 / 95%), rgb(18 12 4 / 98%));
+    border-color: rgb(245 158 11 / 35%);
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 45%),
+      0 0 0 1px rgb(251 191 36 / 12%),
+      inset 0 1px 0 rgb(254 243 199 / 8%);
   }
 
   .sum-label {
@@ -701,27 +967,27 @@
   }
 
   .app-card {
+    position: relative;
     min-width: 0;
     padding: 12px 10px 10px;
+    overflow: hidden;
     cursor: pointer;
-    background: #0b1020;
-    border: 1px solid #141e32;
-    border-radius: 8px;
-    transition:
-      border-color 0.18s,
-      transform 0.12s,
-      box-shadow 0.18s;
+    border: 2px solid transparent;
+    border-radius: 12px;
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+    @include ap.ap-panel-hover;
   }
 
-  .app-card:hover {
-    border-color: #00cfc044;
-    box-shadow: 0 6px 24px rgb(0 207 192 / 8%);
-    transform: translateY(-1px);
+  .app-card > * {
+    position: relative;
+    z-index: 1;
   }
 
   .card-warning {
-    background: #120a0c;
-    border-color: #ff4d6a33;
+    background: linear-gradient(160deg, rgb(45 12 18 / 92%), rgb(12 8 10 / 96%));
+    border-color: rgb(244 63 94 / 35%);
   }
 
   /* Card Header */
@@ -936,11 +1202,21 @@
 
   /* ===== Bottom Chart ===== */
   .bottom-section {
+    position: relative;
     padding: 16px;
     margin: 16px 24px 0;
-    background: #0b1020;
-    border: 1px solid #141e32;
-    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    border-radius: 12px;
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+    @include ap.ap-panel-hover;
+  }
+
+  .bottom-section > * {
+    position: relative;
+    z-index: 1;
   }
 
   .bottom-header {
@@ -952,8 +1228,9 @@
 
   .bottom-title {
     font-size: 13px;
-    font-weight: 600;
-    color: #c8d6e8;
+    font-weight: 700;
+
+    @include ap.ap-title-gradient;
   }
 
   .legend-list {
@@ -979,5 +1256,49 @@
   .bottom-chart {
     width: 100%;
     height: 200px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard--ap-fx::before {
+      animation: none;
+    }
+
+    .rtd-page-fx {
+      animation: none;
+    }
+
+    .rtd-entry-1,
+    .rtd-entry-2,
+    .rtd-entry-3,
+    .rtd-entry-4,
+    .rtd-entry-5,
+    .rtd-entry-6 {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+
+    .rtd-skel-block {
+      animation: none;
+    }
+
+    .summary-card:hover,
+    .summary-card:active,
+    .app-card:hover,
+    .app-card:active,
+    .bottom-section:hover,
+    .bottom-section:active {
+      transform: none;
+    }
+
+    .btn-refresh:hover,
+    .btn-auto:hover,
+    .filter-btn:hover {
+      transform: none;
+    }
+
+    .live-dot {
+      animation: none;
+    }
   }
 </style>
