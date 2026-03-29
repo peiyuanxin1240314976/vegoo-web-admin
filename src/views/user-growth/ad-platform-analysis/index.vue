@@ -11,73 +11,76 @@
       <div class="aps-page-fx" aria-hidden="true"></div>
       <!-- 顶栏：日期 + 筛选 + 导出（常驻，不随数据骨架整页隐藏） -->
       <header class="finance-header aps-entry-1">
-        <div class="header-left">
-          <ElDatePicker
-            v-model="dateRange"
-            type="daterange"
-            range-separator="~"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            format="YYYY-MM-DD"
-            class="aps-date-picker"
-            :teleported="false"
-            popper-class="aps-filter-popper"
-          />
-        </div>
-        <div class="header-right">
-          <div class="header-filters">
-            <el-select
-              v-model="filters.app"
-              class="aps-filter-select"
-              popper-class="aps-filter-popper"
-              :teleported="false"
-              :fit-input-width="true"
-              :placeholder="filtersPlaceholders.app"
-            >
-              <el-option
-                v-for="opt in appOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
+        <div class="aps-filter-toolbar">
+          <div class="aps-filter-toolbar__row">
+            <div class="header-left">
+              <ElDatePicker
+                v-model="dateRange"
+                type="daterange"
+                range-separator="~"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                value-format="YYYY-MM-DD"
+                format="YYYY-MM-DD"
+                class="aps-date-picker"
+                :teleported="true"
+                popper-class="aps-filter-popper"
               />
-            </el-select>
+            </div>
+            <div class="header-filters">
+              <el-select
+                v-model="filters.app"
+                class="aps-filter-select"
+                popper-class="aps-filter-popper"
+                :teleported="true"
+                :fit-input-width="true"
+                :placeholder="filtersPlaceholders.app"
+              >
+                <el-option
+                  v-for="opt in appOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
+              </el-select>
 
-            <el-select
-              v-model="filters.platform"
-              class="aps-filter-select"
-              popper-class="aps-filter-popper"
-              :teleported="false"
-              :fit-input-width="true"
-              :placeholder="filtersPlaceholders.platform"
-            >
-              <el-option
-                v-for="opt in platformOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </el-select>
+              <el-select
+                v-model="filters.platform"
+                class="aps-filter-select"
+                popper-class="aps-filter-popper"
+                :teleported="true"
+                :fit-input-width="true"
+                :placeholder="filtersPlaceholders.platform"
+              >
+                <el-option
+                  v-for="opt in platformOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
+              </el-select>
 
-            <el-select
-              v-model="filters.channelKey"
-              class="aps-filter-select"
-              popper-class="aps-filter-popper"
-              :teleported="false"
-              :fit-input-width="true"
-              :placeholder="filtersPlaceholders.channel"
-              filterable
-              clearable
-            >
-              <el-option
-                v-for="opt in channelOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </el-select>
+              <el-select
+                v-model="filters.channelKey"
+                class="aps-filter-select"
+                popper-class="aps-filter-popper"
+                :teleported="true"
+                :fit-input-width="true"
+                :placeholder="filtersPlaceholders.channel"
+                filterable
+                clearable
+              >
+                <el-option
+                  v-for="opt in channelOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
+              </el-select>
+            </div>
+            <button type="button" class="btn-export" @click="runDashboardQuery">查询</button>
+            <button type="button" class="btn-export">导出报表</button>
           </div>
-          <button type="button" class="btn-export">导出报表</button>
         </div>
       </header>
 
@@ -357,7 +360,7 @@
 </template>
 
 <script setup lang="ts" name="AdPlatformAnalysis">
-  import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
+  import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
   import { useRouter } from 'vue-router'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
@@ -1543,6 +1546,16 @@
     }
   }
 
+  /** 拉取 KPI / 图表 / 表格等业务数据（首次进入与点击「查询」时调用；改筛选/日期不会自动请求） */
+  function runDashboardQuery() {
+    currentPage.value = 1
+    void loadKpiCards()
+    void loadRoiTrend()
+    void loadQualityHeatmap()
+    void loadTopCampaigns()
+    void loadMetricsTable()
+  }
+
   onMounted(() => {
     updateScale()
     if (rootRef.value) {
@@ -1553,25 +1566,9 @@
 
     void (async () => {
       await loadFiltersMeta()
-      void loadKpiCards()
-      void loadRoiTrend()
-      void loadQualityHeatmap()
-      void loadTopCampaigns()
-      void loadMetricsTable()
+      runDashboardQuery()
     })()
   })
-
-  watch(
-    () => [filters.value.app, filters.value.platform, filters.value.channelKey, dateRange.value],
-    () => {
-      currentPage.value = 1
-      void loadKpiCards()
-      void loadRoiTrend()
-      void loadQualityHeatmap()
-      void loadTopCampaigns()
-      void loadMetricsTable()
-    }
-  )
 
   onUnmounted(() => {
     if (resizeObserver && rootRef.value) {
@@ -1586,6 +1583,8 @@
 </script>
 
 <style lang="scss" scoped>
+  @use '../ad-performance/styles/ap-card-fx.scss' as ap;
+
   /* ========== 设计变量（与原型/设计图一致，便于统一修改） ========== */
 
   /**
@@ -1798,8 +1797,10 @@
     top: 0;
     left: 0;
     padding: 0;
+    padding: 0 10px;
     overflow: hidden;
     background: $color-bg;
+    border-radius: 10px;
 
     &::before {
       position: absolute;
@@ -1891,17 +1892,66 @@
     }
   }
 
-  /* ========== 顶栏 ========== */
+  /* ========== 顶栏（对齐广告成效：霓虹工具条 + 控件描边） ========== */
   .finance-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    /* 原型顶栏没有包裹面板：仅做“定位区” */
-    padding: 15px 13px 0;
+    padding: 15px 0 0;
     margin-bottom: 13px;
     background: transparent;
     border: 0;
+  }
+
+  .aps-filter-toolbar {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 16px;
+    overflow: hidden;
+    border-radius: 16px;
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+
+    transition:
+      box-shadow 0.35s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      border-color: rgb(96 165 250 / 48%);
+      box-shadow:
+        0 12px 40px rgb(0 0 0 / 44%),
+        0 0 0 1px rgb(96 165 250 / 22%),
+        inset 0 1px 0 rgb(186 230 253 / 16%),
+        0 0 48px rgb(59 130 246 / 14%);
+    }
+  }
+
+  /* 与广告成效一致：日期 + 下拉 + 导出从左起单行排列 */
+  .aps-filter-toolbar__row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .aps-filter-toolbar .header-left {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+  }
+
+  :global(html:not(.dark) .finance-screen-root .aps-filter-toolbar) {
+    background: linear-gradient(148deg, rgb(255 255 255 / 98%), rgb(248 250 252 / 99%));
+    border: 1px solid rgb(15 23 42 / 10%);
+    box-shadow: 0 10px 32px rgb(15 23 42 / 7%);
+
+    &:hover {
+      border-color: rgb(59 130 246 / 22%);
+      box-shadow: 0 12px 36px rgb(15 23 42 / 10%);
+    }
   }
 
   .header-left {
@@ -1917,46 +1967,88 @@
       sans-serif;
     font-size: 14px;
     color: $color-text-axure;
+  }
 
-    :deep(.aps-date-picker) {
-      width: 240px;
+  /* 广告成效：绿色胶囊日期范围（与 filter-select 同系） */
+  .aps-filter-toolbar .header-left :deep(.aps-date-picker) {
+    --el-input-focus-border-color: #10b981;
+    --el-border-color-hover: rgb(16 185 129 / 75%);
+    --el-color-primary: #10b981;
 
-      .el-range-editor {
-        min-height: 36px;
-        padding: 0 10px;
-        color: $color-text-axure;
-        background: $color-slate-700;
-        border: 1px solid $color-slate-700;
-        border-radius: 12px;
-        box-shadow: none;
-      }
+    width: 268px;
 
-      .el-range-input {
-        color: $color-text-axure;
-      }
+    .el-range-editor,
+    .el-range-editor.el-input__wrapper {
+      min-height: 40px;
+      padding: 0 14px;
+      color: $color-text-axure;
+      background: rgb(16 185 129 / 6%);
+      border: 1px solid rgb(16 185 129 / 28%);
+      border-radius: 9999px;
+      box-shadow: none;
+      transition:
+        border-color 0.22s ease,
+        box-shadow 0.22s ease,
+        background 0.22s ease;
+    }
 
-      .el-range-separator {
-        color: $color-text-axure;
-      }
+    .el-range-editor:hover,
+    .el-range-editor.el-input__wrapper:hover {
+      border-color: rgb(16 185 129 / 60%);
+      box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+    }
 
-      .el-range__icon,
-      .el-range__close-icon {
-        color: $color-text-axure;
-      }
+    .el-range-editor.is-active,
+    .el-range-editor.el-input__wrapper.is-focus {
+      background: rgb(16 185 129 / 10%);
+      border-color: #10b981;
+      box-shadow: 0 0 0 2px rgb(16 185 129 / 20%);
+    }
+
+    .el-range-input,
+    .el-range-separator {
+      color: $color-text-axure;
+    }
+
+    .el-range__icon,
+    .el-range__close-icon {
+      color: #10b981;
     }
   }
 
-  .header-right {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 10px;
-    align-items: center;
-    justify-content: flex-end;
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-left
+    :deep(.aps-date-picker) {
+    .el-range-editor,
+    .el-range-editor.el-input__wrapper {
+      color: var(--aps-text-primary);
+      background: rgb(16 185 129 / 8%);
+      border: 1px solid rgb(16 185 129 / 30%);
+    }
+
+    .el-range-editor:hover,
+    .el-range-editor.el-input__wrapper:hover {
+      border-color: rgb(5 150 105 / 45%);
+      box-shadow: 0 0 12px rgb(16 185 129 / 14%);
+    }
+
+    .el-range-editor.is-active,
+    .el-range-editor.el-input__wrapper.is-focus {
+      background: rgb(16 185 129 / 12%);
+      border-color: #10b981;
+      box-shadow: 0 0 0 2px rgb(16 185 129 / 18%);
+    }
+
+    .el-range-input,
+    .el-range-separator {
+      color: var(--aps-text-primary);
+    }
   }
 
   .header-filters {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 10px;
     align-items: center;
     font-size: 14px;
@@ -1970,17 +2062,6 @@
       width: 150px;
     }
 
-    /* Element Plus v2：用 wrapper 模拟原型的“pill 下拉” */
-    :deep(.aps-filter-select .el-select__wrapper) {
-      min-height: 36px;
-      padding: 0 10px;
-      color: $color-text-axure;
-      background: $color-slate-700;
-      border: 1px solid $color-slate-700;
-      border-radius: 12px; /* 原型下拉为 12px */
-      box-shadow: none;
-    }
-
     :deep(.aps-filter-select .el-select__selected-item) {
       color: $color-text-axure;
     }
@@ -1989,18 +2070,89 @@
       color: $color-text-axure;
       opacity: 0.85;
     }
-
-    :deep(.aps-filter-select .el-select__caret) {
-      color: $color-text-axure;
-    }
-
-    :deep(.aps-filter-select .el-select__wrapper.is-focused) {
-      border-color: rgb(74 190 255 / 55%);
-    }
   }
 
-  .header-right .btn-export {
-    height: 36px;
+  .aps-filter-toolbar .header-filters {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+  }
+
+  /* 广告成效：绿色胶囊下拉 */
+  .aps-filter-toolbar .header-filters :deep(.aps-filter-select) {
+    --el-input-focus-border-color: #10b981;
+    --el-border-color-hover: rgb(16 185 129 / 75%);
+    --el-color-primary: #10b981;
+    --el-border-color-focus: #10b981;
+    --el-component-size: 40px;
+  }
+
+  .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__wrapper) {
+    min-height: 40px;
+    padding: 0 12px;
+    color: $color-text-axure;
+    background: rgb(16 185 129 / 6%);
+    border: 1px solid rgb(16 185 129 / 28%);
+    border-radius: 9999px;
+    box-shadow: none;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
+  }
+
+  .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__wrapper:hover) {
+    border-color: rgb(16 185 129 / 60%);
+    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+  }
+
+  .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__wrapper.is-focused) {
+    background: rgb(16 185 129 / 10%);
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%);
+  }
+
+  .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__caret) {
+    color: #10b981;
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.aps-filter-select .el-select__wrapper) {
+    color: var(--aps-text-primary);
+    background: rgb(16 185 129 / 8%);
+    border: 1px solid rgb(16 185 129 / 30%);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.aps-filter-select .el-select__wrapper:hover) {
+    border-color: rgb(5 150 105 / 45%);
+    box-shadow: 0 0 12px rgb(16 185 129 / 14%);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.aps-filter-select .el-select__wrapper.is-focused) {
+    background: rgb(16 185 129 / 12%);
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 18%);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.aps-filter-select .el-select__caret) {
+    color: #059669;
+  }
+
+  /* 广告成效：导出为绿色描边主按钮 */
+  .aps-filter-toolbar .btn-export {
+    flex: 0 0 auto;
+    height: 40px;
     padding: 0 16px;
     font-family:
       'PingFang SC',
@@ -2013,14 +2165,42 @@
       'Microsoft YaHei',
       sans-serif;
     font-size: 14px;
-    color: $color-text-axure;
+    font-weight: 500;
+    color: #10b981;
     cursor: pointer;
-    background: $color-slate-700; /* 原型：rgba(51,65,85,1) */
-    border: 1px solid $color-slate-700;
-    border-radius: 8px; /* 原型导出按钮为 8px */
+    background: rgb(16 185 129 / 8%);
+    border: 1px solid rgb(16 185 129 / 40%);
+    border-radius: 9999px;
+    box-shadow: 0 0 14px rgb(16 185 129 / 12%);
+    transition:
+      box-shadow 0.22s ease,
+      transform 0.18s ease,
+      background 0.22s ease,
+      border-color 0.22s ease,
+      color 0.22s ease;
 
     &:hover {
-      filter: brightness(1.06);
+      color: #34d399;
+      background: rgb(16 185 129 / 16%);
+      border-color: #10b981;
+      box-shadow: 0 0 22px rgb(16 185 129 / 28%);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  :global(html:not(.dark) .finance-screen-root) .aps-filter-toolbar .btn-export {
+    color: #059669;
+    background: rgb(16 185 129 / 10%);
+    border-color: rgb(16 185 129 / 38%);
+
+    &:hover {
+      color: #047857;
+      background: rgb(16 185 129 / 16%);
+      border-color: #10b981;
     }
   }
 
@@ -2837,6 +3017,24 @@
     }
   }
 
+  /* 筛选/日期下拉（teleported=false 时仍在画布内，与霓虹条一致） */
+  :global(html.dark .aps-filter-popper.el-popper) {
+    overflow: hidden;
+    background: rgb(24 24 27 / 98%) !important;
+    border: 1px solid rgb(16 185 129 / 32%) !important;
+    border-radius: 12px !important;
+    box-shadow:
+      0 18px 52px rgb(0 0 0 / 58%),
+      0 0 0 1px rgb(16 185 129 / 12%),
+      inset 0 1px 0 rgb(167 243 208 / 8%) !important;
+  }
+
+  :global(html:not(.dark) .aps-filter-popper.el-popper) {
+    border: 1px solid rgb(16 185 129 / 22%) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 14px 40px rgb(15 23 42 / 12%) !important;
+  }
+
   /* ========== 无障碍：减少动画 ========== */
   @media (prefers-reduced-motion: reduce) {
     .aps-entry-1,
@@ -2857,6 +3055,11 @@
     .panel,
     .kpi-card {
       transition: none;
+    }
+
+    .aps-filter-toolbar .btn-export:hover,
+    .aps-filter-toolbar .btn-export:active {
+      transform: none;
     }
   }
 </style>
