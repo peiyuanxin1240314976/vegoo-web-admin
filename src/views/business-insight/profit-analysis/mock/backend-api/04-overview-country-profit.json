@@ -13,7 +13,7 @@
       "mapData": {
         "type": "ProfitMapDataItem[]",
         "required": true,
-        "description": "地图 choropleth 用，name 英文国家名，value 利润数值。"
+        "description": "地图 choropleth 用，name 可为中文或英文国家/地区名（前端映射为 geo name），value 利润数值。"
       },
       "mapScatter": {
         "type": "ProfitMapScatterItem[]",
@@ -30,7 +30,7 @@
       "name": {
         "type": "string",
         "required": true,
-        "description": "英文国家名，与 geo 地图 name 一致，如 United States。"
+        "description": "国家/地区名：可与 geo 一致（如 United States），或中文（如 美国），由前端映射；无独立多边形的地区（如 中国台湾）仅参与散点不落 choropleth。"
       },
       "value": { "type": "number", "required": true, "description": "利润数值，用于地图着色。" }
     },

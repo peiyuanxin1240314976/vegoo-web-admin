@@ -104,7 +104,7 @@ export interface ProfitCountryRow {
   s_country_code?: string
 }
 
-/** 世界地图-地图层数据项（name 为英文国家名，value 为利润数值） */
+/** 世界地图-地图层数据项（name 可为中文或英文国家/地区名，value 为利润数值；前端映射为 ECharts world 区域名） */
 export interface ProfitMapDataItem {
   name: string
   value: number

@@ -3,7 +3,10 @@
   import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import * as echarts from 'echarts'
   import type { ProfitCountryRow, ProfitMapDataItem } from './types'
-  import { buildProfitMapScatterChartData } from './country-profit-map-centroids'
+  import {
+    buildProfitMapScatterChartData,
+    normalizeProfitMapDataForEchartsMapSeries
+  } from './country-profit-map-centroids'
   import { resolveProfitCountryIso } from './country-flag-iso'
   import { useProfitAnalysisDashboard } from './composables/useProfitAnalysisDashboard'
 
@@ -87,6 +90,7 @@
     if (!mapChart) {
       mapChart = echarts.init(mapRef.value, 'dark', { renderer: 'canvas' })
     }
+    const mapSeriesData = normalizeProfitMapDataForEchartsMapSeries(mapData.value)
     const maxVal = Math.max(1, ...mapData.value.map((d: ProfitMapDataItem) => d.value))
     const scatterSeriesData = buildProfitMapScatterChartData(mapScatter.value, mapData.value)
     mapChart.setOption({
@@ -116,7 +120,7 @@
           geoIndex: 0,
           zlevel: 0,
           z: 1,
-          data: mapData.value,
+          data: mapSeriesData,
           silent: false
         },
         {

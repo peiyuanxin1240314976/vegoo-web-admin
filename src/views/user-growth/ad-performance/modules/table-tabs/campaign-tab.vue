@@ -14,13 +14,14 @@
       class="ad-performance-table__el-table"
     >
       <ElTableColumn
+        show-overflow-tooltip
         v-for="col in visibleColumnDefs"
         :key="col.key"
         :label="col.label"
         :prop="col.prop || undefined"
         :width="col.width"
         :min-width="col.minWidth"
-        :align="col.align"
+        align="left"
       >
         <template #default="{ row }">
           <template v-if="col.key === 'appName'">
@@ -175,14 +176,14 @@
 
   const ALL_COLUMNS: ColumnDef[] = [
     { key: 'appName', label: '应用', prop: 'appName', minWidth: 100, required: true },
-    { key: 'name', label: '广告系列名称', prop: 'name', minWidth: 200, required: true },
+    { key: 'name', label: '广告系列名称', prop: 'name', minWidth: 150, required: true },
     { key: 'channel', label: '广告平台', prop: 'channel', width: 100 },
     { key: 'country', label: '国家', prop: 'country', width: 80 },
     { key: 'status', label: '状态', prop: 'status', width: 100, align: 'center' },
     { key: 'spendBudget', label: '花费/预算', minWidth: 130, align: 'right' },
     { key: 'cpi', label: 'CPI', prop: 'cpi', width: 80, align: 'right' },
-    { key: 'ctr', label: '点击率', prop: 'ctr', width: 90, align: 'right' },
-    { key: 'cvr', label: '转化率', prop: 'cvr', width: 90, align: 'right' },
+    { key: 'ctr', label: '点击率', prop: 'ctr', width: 100, align: 'right' },
+    { key: 'cvr', label: '转化率', prop: 'cvr', width: 100, align: 'right' },
     { key: 'roi1', label: '首日ROI', prop: 'roi1', width: 90, align: 'right' },
     { key: 'roi7', label: '7日ROI', prop: 'roi7', width: 90, align: 'right' },
     {

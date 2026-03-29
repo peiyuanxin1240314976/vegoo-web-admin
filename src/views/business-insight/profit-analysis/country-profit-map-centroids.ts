@@ -1,6 +1,51 @@
 import type { ProfitMapDataItem, ProfitMapScatterItem } from './types'
 
 /**
+ * 接口可能下发中文国家名，需映射为 `/geo/world.json` 中 `properties.name`（与 map 系列 data.name 一致）。
+ * 「中国台湾」等在标准 world 底图中无独立面，不参与 choropleth，仅走散点 + 中文标签。
+ */
+const CN_NAME_TO_ECHARTS_REGION: Record<string, string> = {
+  美国: 'United States',
+  德国: 'Germany',
+  韩国: 'Korea',
+  法国: 'France',
+  西班牙: 'Spain',
+  波兰: 'Poland',
+  意大利: 'Italy',
+  巴西: 'Brazil',
+  英国: 'United Kingdom',
+  日本: 'Japan',
+  中国: 'China',
+  加拿大: 'Canada',
+  澳大利亚: 'Australia',
+  印度: 'India',
+  俄罗斯: 'Russia',
+  墨西哥: 'Mexico',
+  荷兰: 'Netherlands',
+  土耳其: 'Turkey',
+  沙特: 'Saudi Arabia',
+  沙特阿拉伯: 'Saudi Arabia',
+  南非: 'South Africa',
+  阿根廷: 'Argentina',
+  印尼: 'Indonesia',
+  印度尼西亚: 'Indonesia',
+  泰国: 'Thailand',
+  越南: 'Vietnam',
+  埃及: 'Egypt',
+  尼日利亚: 'Nigeria'
+}
+
+/** 与 world.json 不一致的常见英文别名（历史 mock / 接口） */
+const ENGLISH_ALIAS_TO_ECHARTS_REGION: Record<string, string> = {
+  'South Korea': 'Korea'
+}
+
+/**
+ * 无独立多边形的地区：不参与 map 填色，仍可对应用 centroid 做散点。
+ */
+const MAP_REGION_SKIP_CHOROPLETH = new Set(['中国台湾', '台灣'])
+
+/**
  * 与 ECharts world.json 常见英文国家名对齐，用于 mapScatter 缺失时从 mapData 回退定位点。
  * 坐标为大致中心 [经度, 纬度]。
  */
@@ -49,11 +94,55 @@ const ENGLISH_COUNTRY_NAME_TO_LNGLAT: Record<string, [number, number]> = {
   'United Arab Emirates': [53.8, 23.4],
   'United Kingdom': [-2.4, 54.5],
   'United States': [-98.5, 39.8],
-  Vietnam: [108.3, 14.1]
+  Vietnam: [108.3, 14.1],
+  /** 与 world.json 中 Korea 一致；与 South Korea 同坐标 */
+  Korea: [127.8, 35.9]
 }
 
 function normName(s: string) {
   return s.trim().replace(/\s+/g, ' ')
+}
+
+/**
+ * 将接口下发的国家名（中文或英文）解析为 world.json 的 region `name`，无对应面则返回 null（仅散点）。
+ */
+export function resolveEchartsWorldMapRegionName(rawName: string): string | null {
+  const key = normName(rawName)
+  if (!key) return null
+  if (MAP_REGION_SKIP_CHOROPLETH.has(key)) return null
+  if (CN_NAME_TO_ECHARTS_REGION[key]) return CN_NAME_TO_ECHARTS_REGION[key]
+  if (ENGLISH_ALIAS_TO_ECHARTS_REGION[key]) return ENGLISH_ALIAS_TO_ECHARTS_REGION[key]
+  return key
+}
+
+/**
+ * 中文/别名 → 与 ENGLISH_COUNTRY_NAME_TO_LNGLAT 键一致，用于回退散点坐标。
+ */
+function resolveCentroidLookupEnglishName(rawName: string): string {
+  const key = normName(rawName)
+  if (!key) return key
+  if (key === '中国台湾' || key === '台灣') return 'Taiwan'
+  const region = CN_NAME_TO_ECHARTS_REGION[key]
+  if (region === 'Korea') return 'South Korea'
+  if (region) return region
+  if (ENGLISH_ALIAS_TO_ECHARTS_REGION[key]) {
+    const r = ENGLISH_ALIAS_TO_ECHARTS_REGION[key]
+    return r === 'Korea' ? 'South Korea' : r
+  }
+  return key
+}
+
+/** map 系列用：中文名 → ECharts 英文名；无法着色的条目已过滤 */
+export function normalizeProfitMapDataForEchartsMapSeries(
+  items: ProfitMapDataItem[]
+): ProfitMapDataItem[] {
+  const out: ProfitMapDataItem[] = []
+  for (const row of items) {
+    const region = resolveEchartsWorldMapRegionName(row.name ?? '')
+    if (region === null) continue
+    out.push({ name: region, value: row.value })
+  }
+  return out
 }
 
 /** 英文国家名 → [lng, lat]，未收录时返回 null */
@@ -95,12 +184,14 @@ export function buildProfitMapScatterChartData(
 
   const out: { name: string; value: [number, number, number] }[] = []
   for (const row of mapData) {
-    const name = (row.name ?? '').trim()
-    if (!name) continue
-    const ll = getCountryProfitMapCentroidLngLat(name)
+    const displayName = (row.name ?? '').trim()
+    if (!displayName) continue
+    const centroidKey = resolveCentroidLookupEnglishName(displayName)
+    const ll = getCountryProfitMapCentroidLngLat(centroidKey)
     if (!ll) continue
     const n = Number(row.value)
-    out.push({ name, value: [ll[0], ll[1], Number.isFinite(n) ? n : 0] })
+    /** 保留接口原名（多为中文），供涟漪旁标签展示 */
+    out.push({ name: displayName, value: [ll[0], ll[1], Number.isFinite(n) ? n : 0] })
   }
   return out
 }
