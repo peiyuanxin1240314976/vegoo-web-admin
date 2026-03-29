@@ -55,10 +55,13 @@
   import { useTableColumns } from '@/hooks/core/useTableColumns'
   import type { AppRouteRecord } from '@/types/router'
   import MenuDialog from './modules/menu-dialog.vue'
-  import { fetchGetMenuList } from '@/api/system-manage'
+  import { useMenuStore } from '@/store/modules/menu'
   import { ElTag, ElMessageBox } from 'element-plus'
 
   defineOptions({ name: 'Menus' })
+
+  /** 与侧边栏同源：路由初始化后写入的菜单树，不请求 `/api/v3/system/menus/simple` */
+  const menuStore = useMenuStore()
 
   // 状态管理
   const loading = ref(false)
@@ -95,25 +98,56 @@
     }
   ])
 
-  onMounted(() => {
-    getMenuList()
-  })
+  // 数据相关（须早于 Store 同步与列 formatters 闭包）
+  const tableData = ref<AppRouteRecord[]>([])
 
   /**
-   * 获取菜单列表数据
+   * 深度克隆对象
    */
-  const getMenuList = async (): Promise<void> => {
-    loading.value = true
+  const deepClone = <T,>(obj: T): T => {
+    if (obj === null || typeof obj !== 'object') return obj
+    if (obj instanceof Date) return new Date(obj) as T
+    if (Array.isArray(obj)) return obj.map((item) => deepClone(item)) as T
 
+    const cloned = {} as T
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        cloned[key] = deepClone(obj[key])
+      }
+    }
+    return cloned
+  }
+
+  /**
+   * 从菜单 Store 同步表格数据（与侧边导航同一棵树）
+   */
+  const syncTableFromMenuStore = (): void => {
+    tableData.value = deepClone(menuStore.menuList)
+  }
+
+  /**
+   * 刷新列表（重新从 Store 拉取，便于与侧边栏一致）
+   */
+  const getMenuList = (): void => {
+    loading.value = true
     try {
-      const list = await fetchGetMenuList()
-      tableData.value = list
-    } catch (error) {
-      throw error instanceof Error ? error : new Error('获取菜单失败')
+      syncTableFromMenuStore()
     } finally {
       loading.value = false
     }
   }
+
+  onMounted(() => {
+    syncTableFromMenuStore()
+  })
+
+  watch(
+    () => menuStore.menuList,
+    () => {
+      syncTableFromMenuStore()
+    },
+    { deep: true }
+  )
 
   /**
    * 获取菜单类型标签颜色
@@ -229,9 +263,6 @@
     }
   ])
 
-  // 数据相关
-  const tableData = ref<AppRouteRecord[]>([])
-
   /**
    * 重置搜索条件
    */
@@ -254,25 +285,6 @@
    */
   const handleRefresh = (): void => {
     getMenuList()
-  }
-
-  /**
-   * 深度克隆对象
-   * @param obj 要克隆的对象
-   * @returns 克隆后的对象
-   */
-  const deepClone = <T,>(obj: T): T => {
-    if (obj === null || typeof obj !== 'object') return obj
-    if (obj instanceof Date) return new Date(obj) as T
-    if (Array.isArray(obj)) return obj.map((item) => deepClone(item)) as T
-
-    const cloned = {} as T
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        cloned[key] = deepClone(obj[key])
-      }
-    }
-    return cloned
   }
 
   /**
