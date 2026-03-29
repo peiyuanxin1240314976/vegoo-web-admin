@@ -44,7 +44,7 @@
             />
           </div>
 
-          <ElButton round type="button" class="api-export" @click="emit('export')">
+          <ElButton round class="api-export" @click="emit('export')">
             <ArtSvgIcon icon="ri:download-2-line" :size="16" />
             导出报表
           </ElButton>
