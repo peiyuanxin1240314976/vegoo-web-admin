@@ -8,16 +8,17 @@
         transformOrigin: '0 0'
       }"
     >
+      <div class="rev-page-fx" aria-hidden="true"></div>
       <!-- 顶部栏：筛选 + 导出（对齐原型右上角） -->
-      <header class="rev-header">
-        <div class="rev-header__filters">
+      <header class="rev-header rev-entry-1">
+        <div class="rev-header__filters rev-filter-panel">
           <div class="rev-pill">
             <span class="rev-pill__k">App:</span>
             <ElSelect
               v-model="filtersDraft.s_app_id"
               class="rev-select"
               popper-class="rev-select__popper"
-              :teleported="false"
+              :teleported="true"
               :fit-input-width="true"
             >
               <ElOption
@@ -35,7 +36,7 @@
               v-model="filtersDraft.platform"
               class="rev-select"
               popper-class="rev-select__popper"
-              :teleported="false"
+              :teleported="true"
               :fit-input-width="true"
             >
               <ElOption
@@ -53,7 +54,7 @@
               v-model="filtersDraft.s_country_code"
               class="rev-select"
               popper-class="rev-select__popper"
-              :teleported="false"
+              :teleported="true"
               :fit-input-width="true"
               filterable
             >
@@ -92,7 +93,7 @@
               value-format="YYYY-MM-DD"
               format="YYYY-MM-DD"
               class="rev-date"
-              :teleported="false"
+              :teleported="true"
               :clearable="false"
             />
           </div>
@@ -105,7 +106,7 @@
 
       <ElSkeleton :loading="pageLoading" animated>
         <template #template>
-          <section class="rev-skeleton">
+          <section class="rev-skeleton rev-skeleton--fx">
             <div class="rev-skeleton__kpis">
               <div v-for="i in 6" :key="i" class="rev-skeleton__kpi">
                 <ElSkeletonItem variant="text" class="rev-skeleton__line rev-skeleton__line--sm" />
@@ -135,7 +136,7 @@
 
         <template #default>
           <!-- KPI 卡片 -->
-          <section class="rev-kpi-grid">
+          <section class="rev-kpi-grid rev-entry-2">
             <article
               v-for="k in kpis"
               :key="k.id"
@@ -160,7 +161,7 @@
           </section>
 
           <!-- 主体栅格：完全按原型固定列宽/高度 -->
-          <section class="rev-main">
+          <section class="rev-main rev-entry-3">
             <!-- 上排：左 IAA / 中 IAP / 右 7天 IAA vs IAP -->
             <div class="rev-panel rev-panel--iaa">
               <div class="rev-panel__header rev-panel__header--iaa">
@@ -2598,6 +2599,8 @@
 </script>
 
 <style scoped lang="scss">
+  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+
   /* 背景与主题变量在外层 root，保证铺满可视区；内层 scale 后视觉缩小，不再依赖透明底露边 */
   .revenue-overview-root.revenue-overview-page {
     /* 默认深色（对齐原型），在 light 模式覆盖 */
@@ -2625,15 +2628,137 @@
     height: var(--art-full-height, calc(100vh - 120px));
     min-height: var(--art-full-height, calc(100vh - 120px));
     padding: 14px 14px 0;
-    overflow: auto;
+    overflow: clip auto;
     color: var(--rev-text);
     background: var(--rev-bg);
     border-radius: 12px;
+
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(ellipse 70% 50% at 6% 6%, rgb(16 185 129 / 38%) 0%, transparent 58%),
+        radial-gradient(ellipse 55% 42% at 94% 8%, rgb(59 130 246 / 36%) 0%, transparent 58%),
+        radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 16%) 0%, transparent 55%);
+      mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
+      animation: rev-ap-aurora-drift 14s ease-in-out infinite alternate;
+    }
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+    }
+
+    > .revenue-overview-wrap {
+      position: relative;
+      z-index: 1;
+    }
   }
 
   .revenue-overview-wrap {
+    position: relative;
     box-sizing: border-box;
     width: 100%;
+    isolation: isolate;
+  }
+
+  .rev-page-fx {
+    position: absolute;
+    inset: -10% -10% 45%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      rgb(59 130 246 / 12%) 55deg,
+      rgb(6 182 212 / 8%) 80deg,
+      transparent 130deg,
+      rgb(16 185 129 / 10%) 200deg,
+      transparent 285deg,
+      rgb(168 85 247 / 8%) 330deg,
+      transparent 360deg
+    );
+    filter: blur(2px);
+    opacity: 0.82;
+    mask-image: linear-gradient(to bottom, black 0%, black 48%, transparent 82%);
+    animation: rev-ap-fx-spin 50s linear infinite;
+  }
+
+  .revenue-overview-wrap > *:not(.rev-page-fx) {
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes rev-ap-aurora-drift {
+    0% {
+      opacity: 0.75;
+      transform: scale(1) translate(0, 0);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1.04) translate(1%, -0.8%);
+    }
+  }
+
+  @keyframes rev-ap-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .rev-entry-1 {
+    animation: rev-ap-slide-up 0.55s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
+    animation-delay: 0.04s;
+  }
+
+  .rev-entry-2 {
+    animation: rev-ap-slide-up 0.58s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
+    animation-delay: 0.12s;
+  }
+
+  .rev-entry-3 {
+    animation: rev-ap-slide-up 0.62s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
+    animation-delay: 0.2s;
+  }
+
+  @keyframes rev-ap-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes rev-skeleton-orbit {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 1px rgb(96 165 250 / 18%),
+        0 0 26px rgb(59 130 246 / 10%);
+    }
+
+    50% {
+      box-shadow:
+        0 0 0 1px rgb(96 165 250 / 38%),
+        0 0 42px rgb(59 130 246 / 20%),
+        0 0 72px rgb(6 182 212 / 10%);
+    }
   }
 
   :global(html:not(.dark) .revenue-overview-page) {
@@ -2650,10 +2775,10 @@
   }
 
   .rev-header {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: space-between;
+    // display: flex;
+    // gap: 12px;
+    // align-items: center;
+    // justify-content: space-between;
     padding: 0 0 10px;
     margin-bottom: 12px;
   }
@@ -2665,6 +2790,109 @@
     align-items: center;
   }
 
+  .rev-filter-panel {
+    position: relative;
+    padding: 10px 14px;
+    overflow: hidden;
+    border-radius: 16px;
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+
+    transition:
+      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+    &:hover {
+      border-color: rgb(96 165 250 / 48%);
+      box-shadow:
+        0 12px 40px rgb(0 0 0 / 44%),
+        0 0 0 1px rgb(96 165 250 / 22%),
+        inset 0 1px 0 rgb(186 230 253 / 16%),
+        0 0 48px rgb(59 130 246 / 14%);
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  :global(html:not(.dark) .rev-filter-panel) {
+    background: linear-gradient(148deg, rgb(255 255 255 / 98%), rgb(248 250 252 / 99%));
+    border: 1px solid var(--rev-border-soft);
+    box-shadow: 0 10px 32px rgb(15 23 42 / 7%);
+
+    &:hover {
+      border-color: rgb(59 130 246 / 22%);
+      box-shadow: 0 12px 36px rgb(15 23 42 / 10%);
+    }
+  }
+
+  :global(html.dark .rev-filter-panel .rev-pill) {
+    background: rgb(15 23 42 / 0%);
+    border-color: rgb(96 165 250 / 26%);
+    box-shadow: 0 0 0 0 rgb(59 130 246 / 8%) inset;
+  }
+
+  .rev-filter-panel :deep(.rev-select .el-select__wrapper) {
+    min-height: 32px;
+    padding: 0 10px;
+    background: rgb(0 0 0 / 28%);
+    border: 1px solid rgb(96 165 250 / 24%);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+  }
+
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper) {
+    min-height: 32px;
+    padding: 0 10px;
+    background: rgb(0 0 0 / 28%);
+    border: 1px solid rgb(96 165 250 / 24%);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+  }
+
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-select .el-select__wrapper),
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-input__wrapper) {
+    background: rgb(255 255 255 / 90%);
+    border: 1px solid var(--rev-pill-border);
+    box-shadow: none;
+  }
+
+  .rev-filter-panel :deep(.rev-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 600;
+    color: #f8fafc;
+    background: linear-gradient(135deg, rgb(37 99 235 / 96%), rgb(6 182 212 / 88%));
+    border: 1px solid rgb(96 165 250 / 55%);
+    box-shadow:
+      0 0 0 1px rgb(186 230 253 / 14%) inset,
+      0 8px 26px rgb(37 99 235 / 38%),
+      0 0 32px rgb(6 182 212 / 12%);
+  }
+
+  .rev-filter-panel :deep(.rev-query-btn.el-button:hover) {
+    filter: brightness(1.08);
+    border-color: rgb(147 197 253 / 62%);
+    box-shadow:
+      0 0 0 1px rgb(186 230 253 / 20%) inset,
+      0 10px 34px rgb(37 99 235 / 45%),
+      0 0 44px rgb(6 182 212 / 20%);
+  }
+
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-query-btn.el-button) {
+    color: var(--rev-text);
+    background: var(--rev-pill);
+    border: 1px solid var(--rev-pill-border);
+    box-shadow: none;
+  }
+
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-query-btn.el-button:hover) {
+    filter: brightness(1.06);
+  }
+
   .rev-pill {
     display: inline-flex;
     gap: 8px;
@@ -2673,7 +2901,7 @@
     padding: 0 10px;
     color: var(--rev-text);
     background: var(--rev-pill);
-    border: 1px solid var(--rev-pill-border);
+    border: 0 solid var(--rev-pill-border);
     border-radius: 14px;
   }
 
@@ -2777,6 +3005,22 @@
   .rev-skeleton__line--lg {
     width: 72%;
     height: 18px;
+  }
+
+  .rev-skeleton--fx .rev-skeleton__kpi {
+    animation: rev-skeleton-orbit 2.5s ease-in-out infinite;
+  }
+
+  .rev-skeleton--fx .rev-skeleton__kpi:nth-child(odd) {
+    animation-delay: 0.12s;
+  }
+
+  .rev-skeleton--fx .rev-skeleton__block {
+    animation: rev-skeleton-orbit 2.8s ease-in-out infinite;
+  }
+
+  .rev-skeleton--fx .rev-skeleton__block:nth-child(3n) {
+    animation-delay: 0.2s;
   }
 
   .rev-select,
@@ -3029,9 +3273,23 @@
   }
 
   .rev-panel {
-    background: linear-gradient(135deg, rgb(31 45 61 / 85%), rgb(0 0 0 / 55%));
-    border: 2px solid var(--rev-border);
+    position: relative;
+    overflow: hidden;
+    border-style: solid;
+    border-width: 2px;
     border-radius: 12px;
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+  }
+
+  .rev-panel > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .rev-panel:not(.rev-panel--ai, .rev-panel--quality) {
+    @include ap.ap-panel-hover;
   }
 
   .rev-panel--iaa,
@@ -3679,6 +3937,10 @@
     font-size: 14px;
     font-weight: 700;
     color: var(--rev-text);
+  }
+
+  :global(html.dark .rev-panel:not(.rev-panel--ai) .rev-panel__title) {
+    @include ap.ap-title-gradient;
   }
 
   .rev-tabs {
@@ -4442,6 +4704,64 @@
     .rev-quality:hover {
       transform: none;
     }
+
+    .revenue-overview-root.revenue-overview-page::before {
+      animation: none;
+    }
+
+    .rev-page-fx {
+      animation: none;
+    }
+
+    .rev-entry-1,
+    .rev-entry-2,
+    .rev-entry-3 {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+
+    .rev-skeleton--fx .rev-skeleton__kpi,
+    .rev-skeleton--fx .rev-skeleton__block {
+      animation: none;
+    }
+
+    .rev-panel:not(.rev-panel--ai, .rev-panel--quality):hover {
+      transform: none;
+    }
+  }
+
+  :global(html:not(.dark)) .revenue-overview-root.revenue-overview-page {
+    &::before {
+      opacity: 0.38;
+      animation: none;
+    }
+
+    &::after {
+      opacity: 0.45;
+    }
+  }
+
+  :global(html:not(.dark) .rev-page-fx) {
+    opacity: 0.32;
+    animation: none;
+  }
+
+  /* 下拉与日期面板（teleported=false 时仍在页内，同步霓虹底） */
+  :global(html.dark .rev-select__popper.el-popper) {
+    overflow: hidden;
+    background: rgb(24 24 27 / 98%) !important;
+    border: 1px solid rgb(96 165 250 / 30%) !important;
+    border-radius: 12px !important;
+    box-shadow:
+      0 18px 52px rgb(0 0 0 / 58%),
+      0 0 0 1px rgb(96 165 250 / 14%),
+      inset 0 1px 0 rgb(186 230 253 / 10%) !important;
+  }
+
+  :global(html:not(.dark) .rev-select__popper.el-popper) {
+    border-radius: 12px !important;
+    box-shadow: 0 14px 40px rgb(15 23 42 / 12%) !important;
   }
 
   /* 固定画布布局：不做响应式重排，保持原型一致 */
