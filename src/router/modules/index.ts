@@ -17,18 +17,17 @@ import { systemRoutes } from './system'
  * cockpitMapDetailRoute 为隐藏路由，不显示在侧栏
  */
 export const routeModules: AppRouteRecord[] = [
-  cockpitRoutes,
-  cockpitMapDetailRoute,
-  userGrowthRoutes,
-  businessInsightRoutes,
-  productInsightRoutes,
-  configManagementRoutes,
-  accountManagementRoutes,
-
-  dashboardRoutes,
-  monetizationRoutes,
-  productOperationsRoutes,
-  systemRoutes
-  // resultRoutes,
-  // exceptionRoutes
+  cockpitRoutes, //经营驾驶舱
+  cockpitMapDetailRoute, //经营驾驶舱地图详情
+  userGrowthRoutes, //用户增长
+  businessInsightRoutes, //商业洞察
+  productInsightRoutes, //产品洞察
+  productOperationsRoutes, //商品运营
+  accountManagementRoutes, //账户管理
+  configManagementRoutes, // 平台管理（路径仍为 /config-management）
+  dashboardRoutes, // 仪表盘
+  monetizationRoutes, // 变现管理
+  systemRoutes // 系统管理
+  // resultRoutes,//结果
+  // exceptionRoutes//异常
 ]

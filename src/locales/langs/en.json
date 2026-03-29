@@ -306,12 +306,13 @@
       "openAccount": "Account Opening"
     },
     "configManagement": {
-      "title": "Configuration",
+      "title": "Platform Management",
       "applicationManagement": "Application Management",
       "appStoreManagement": "App Store Management",
       "appAssignment": "App Assignment",
       "optimizerManagement": "Optimizer Management",
       "userManagement": "User Management",
+      "roleManagement": "Role & Permission Management",
       "accountManagement": "Account Management",
       "adAccountManagement": "Ad Account Management",
       "countryManagement": "Country Management",
@@ -341,8 +342,6 @@
     },
     "system": {
       "title": "System Settings",
-      "user": "User Manage",
-      "role": "Role Manage",
       "userCenter": "User Center",
       "menu": "Menu Manage"
     }

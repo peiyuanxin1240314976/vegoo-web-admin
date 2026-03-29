@@ -184,11 +184,11 @@
         {
           label: createLabelTooltip(
             '组件路径',
-            '一级父级菜单：填写 /index/index\n具体页面：填写组件路径（如 /system/user）\n目录菜单：留空'
+            '一级父级菜单：填写 /index/index\n具体页面：填写组件路径（如 /config-management/user-management）\n目录菜单：留空'
           ),
           key: 'component',
           type: 'input',
-          props: { placeholder: '如：/system/user 或留空' }
+          props: { placeholder: '如：/config-management/user-management 或留空' }
         },
         { label: '图标', key: 'icon', type: 'input', props: { placeholder: '如：ri:user-line' } },
         {
@@ -225,7 +225,7 @@
           ),
           key: 'activePath',
           type: 'input',
-          props: { placeholder: '如：/system/user' }
+          props: { placeholder: '如：/config-management/user-management' }
         },
         { label: '是否启用', key: 'isEnable', type: 'switch', span: switchSpan },
         { label: '页面缓存', key: 'keepAlive', type: 'switch', span: switchSpan },

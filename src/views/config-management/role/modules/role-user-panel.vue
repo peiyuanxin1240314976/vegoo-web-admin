@@ -1,6 +1,6 @@
 <!-- 权限管理 - 右侧：用户列表、权限摘要、角色说明 -->
 <template>
-  <div class="role-user-panel art-full-height flex flex-col">
+  <div class="role-user-panel flex h-full min-h-0 min-w-0 flex-col">
     <template v-if="selectedRole">
       <div class="panel-header">
         <h2 class="panel-title">用户列表-{{ selectedRole.roleName }}({{ roleUsers.length }}人)</h2>
@@ -167,11 +167,13 @@
 
 <style scoped lang="scss">
   .role-user-panel {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     width: 380px;
     min-width: 320px;
+    min-height: 0;
     padding: 16px;
     background: var(--el-bg-color);
   }

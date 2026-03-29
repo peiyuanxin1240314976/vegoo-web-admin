@@ -306,12 +306,13 @@
       "openAccount": "开户管理"
     },
     "configManagement": {
-      "title": "配置管理",
+      "title": "平台管理",
       "applicationManagement": "应用管理",
       "appStoreManagement": "应用商店管理",
       "appAssignment": "应用分配",
       "optimizerManagement": "优化师管理",
       "userManagement": "用户管理",
+      "roleManagement": "角色与权限管理",
       "accountManagement": "账户管理",
       "adAccountManagement": "广告账户管理",
       "countryManagement": "国家管理",
@@ -341,8 +342,6 @@
     },
     "system": {
       "title": "系统管理",
-      "user": "用户管理",
-      "role": "角色管理",
       "userCenter": "个人中心",
       "menu": "菜单管理"
     }

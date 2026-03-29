@@ -1,9 +1,9 @@
 <!-- 权限管理 - 左侧：角色列表 -->
 <template>
-  <div class="role-list-panel art-full-height flex flex-col">
+  <div class="role-list-panel flex min-h-0 h-full min-w-0 flex-col">
     <div class="panel-header">
       <div class="header-title-wrap">
-        <h1 class="page-title">权限管理</h1>
+        <h1 class="page-title">{{ t('menus.configManagement.roleManagement') }}</h1>
         <p class="page-desc">管理用户账号、角色与数据访问权限</p>
       </div>
       <ElButton type="primary" @click="$emit('add-role')" v-ripple>+ 新建角色</ElButton>
@@ -39,8 +39,11 @@
 
 <script setup lang="ts">
   import { User } from '@element-plus/icons-vue'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'RoleListPanel' })
+
+  const { t } = useI18n()
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -68,9 +71,11 @@
 
 <style scoped lang="scss">
   .role-list-panel {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    min-height: 0;
     padding: 16px;
     background: var(--el-bg-color);
     border-right: 1px solid var(--el-border-color-lighter);

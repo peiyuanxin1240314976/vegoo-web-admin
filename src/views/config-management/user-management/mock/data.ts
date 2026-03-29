@@ -1,125 +1,56 @@
-import type { UserItem, UserRole } from '../types'
+import { getAppNow } from '@/utils/app-now'
 
-export const USER_ROLE_OPTIONS: { label: UserRole; value: UserRole }[] = [
-  { label: '管理层/老板', value: '管理层/老板' },
-  { label: '投放人员', value: '投放人员' },
-  { label: '变现人员', value: '变现人员' },
-  { label: '素材设计师', value: '素材设计师' },
-  { label: '运营维护', value: '运营维护' }
-]
+/** 与 `mock/backend-api/01-user-list.json` sample 结构一致，供列表 Mock 克隆 */
+export function buildSystemUserMockSeed(): Api.SystemManage.UserListItem[] {
+  const y = getAppNow().getFullYear()
+  const base = (i: number): Api.SystemManage.UserListItem => ({
+    id: i,
+    avatar: '',
+    status: (['1', '2', '3', '4'] as const)[i % 4],
+    userName: `user_${i}`,
+    nickName: i % 2 === 0 ? `昵称${i}` : '',
+    userGender: i % 2 === 0 ? '男' : '女',
+    userPhone: `1380013${String(8000 + i).slice(-4)}`,
+    userEmail: `user${i}@example.com`,
+    userRoles: i % 5 === 0 ? ['admin'] : ['ops'],
+    accessibleApps: i % 4 === 0 ? ['com.demo.app'] : [],
+    remark: i % 6 === 0 ? 'Mock 备注' : '',
+    createBy: 'admin',
+    createTime: `${y}-01-${String((i % 28) + 1).padStart(2, '0')} 10:00:00`,
+    updateBy: 'admin',
+    updateTime: `${y}-02-${String((i % 28) + 1).padStart(2, '0')} 15:30:00`
+  })
 
-export const userRoleOptions = USER_ROLE_OPTIONS
-
-export const USER_APP_OPTIONS = [
-  { label: 'Weather1', value: 'Weather1' },
-  { label: 'Weather2', value: 'Weather2' },
-  { label: 'Finance Pro', value: 'Finance Pro' },
-  { label: 'Fitness App', value: 'Fitness App' },
-  { label: 'Travel Guide', value: 'Travel Guide' }
-]
-
-export const userAppOptions = USER_APP_OPTIONS
-
-const USER_MOCK_SEED: UserItem[] = [
-  {
-    id: 'u001',
-    userName: '张三',
-    email: 'zhangsan@vegoo.com',
-    avatarColor: '#F97316',
-    role: '管理层/老板',
-    status: '活跃',
-    lastLogin: '2小时前',
-    joinTime: '2024-01-15',
-    accessibleApps: ['Weather1', 'Weather2', 'Finance Pro'],
-    remark: ''
-  },
-  {
-    id: 'u002',
-    userName: '李四',
-    email: 'lisi@vegoo.com',
-    avatarColor: '#10B981',
-    role: '投放人员',
-    status: '活跃',
-    lastLogin: '30分钟前',
-    joinTime: '2024-01-20',
-    accessibleApps: ['Weather1', 'Weather2'],
-    remark:
-      '这是一个备注/这是一个备注/这是一个备注/这是一个备注/这是一个备注/这是一个备注/这是一个备注/这是一个备注/这是一个备注/这是一个备注/'
-  },
-  {
-    id: 'u003',
-    userName: '王五',
-    email: 'wangwu@vegoo.com',
-    avatarColor: '#3B82F6',
-    role: '投放人员',
-    status: '活跃',
-    lastLogin: '1天前',
-    joinTime: '2024-02-01',
-    accessibleApps: ['Weather1'],
-    remark: ''
-  },
-  {
-    id: 'u004',
-    userName: '赵六',
-    email: 'zhaoliu@vegoo.com',
-    avatarColor: '#10B981',
-    role: '变现人员',
-    status: '活跃',
-    lastLogin: '3小时前',
-    joinTime: '2024-01-25',
-    accessibleApps: ['Finance Pro'],
-    remark: ''
-  },
-  {
-    id: 'u005',
-    userName: '孙七',
-    email: 'sunqi@vegoo.com',
-    avatarColor: '#8B5CF6',
-    role: '素材设计师',
-    status: '活跃',
-    lastLogin: '2天前',
-    joinTime: '2024-02-05',
-    accessibleApps: ['Weather1', 'Weather2'],
-    remark: ''
-  },
-  {
-    id: 'u006',
-    userName: '周八',
-    email: 'zhouba@vegoo.com',
-    avatarColor: '#64748B',
-    role: '运营维护',
-    status: '待激活',
-    lastLogin: '未登录',
-    joinTime: '2024-02-20',
-    accessibleApps: [],
-    remark: ''
-  },
-  {
-    id: 'u007',
-    userName: '吴九',
-    email: 'wujiu@vegoo.com',
-    avatarColor: '#EF4444',
-    role: '投放人员',
-    status: '已禁用',
-    lastLogin: '1月前',
-    joinTime: '2024-01-10',
-    accessibleApps: ['Weather1'],
-    remark: ''
-  },
-  {
-    id: 'u008',
-    userName: '郑十',
-    email: 'zhengshi@vegoo.com',
-    avatarColor: '#F97316',
-    role: '管理层/老板',
-    status: '活跃',
-    lastLogin: '5小时前',
-    joinTime: '2024-01-12',
-    accessibleApps: ['Weather1', 'Weather2', 'Finance Pro', 'Fitness App'],
-    remark: ''
+  const list: Api.SystemManage.UserListItem[] = []
+  for (let i = 1; i <= 24; i++) {
+    list.push(base(i))
   }
-]
+  // 保证首条与契约示例接近，便于对照
+  list[0] = {
+    id: 1,
+    avatar: '',
+    status: '1',
+    userName: 'demo',
+    nickName: '演示',
+    userGender: '男',
+    userPhone: '13800138000',
+    userEmail: 'demo@example.com',
+    userRoles: ['ops'],
+    accessibleApps: [],
+    remark: '',
+    createBy: 'admin',
+    createTime: `${y}-01-01 10:00:00`,
+    updateBy: 'admin',
+    updateTime: `${y}-01-02 10:00:00`
+  }
+  return list
+}
 
-export function cloneUserMockList(): UserItem[] {
-  return JSON.parse(JSON.stringify(USER_MOCK_SEED))
+let cachedSeed: Api.SystemManage.UserListItem[] | null = null
+
+export function getSystemUserMockList(): Api.SystemManage.UserListItem[] {
+  if (!cachedSeed) {
+    cachedSeed = buildSystemUserMockSeed()
+  }
+  return cachedSeed.map((r) => ({ ...r }))
 }

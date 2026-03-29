@@ -1,7 +1,7 @@
 import { AppRouteRecord } from '@/types/router'
 
 /**
- * 配置管理 - 一级菜单（与用户增长同级）
+ * 平台管理 - 一级菜单（与用户增长同级；路由模块名仍为 config-management）
  */
 export const configManagementRoutes: AppRouteRecord = {
   path: '/config-management',
@@ -62,6 +62,16 @@ export const configManagementRoutes: AppRouteRecord = {
         title: 'menus.configManagement.userManagement',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      path: 'role',
+      name: 'Role',
+      component: '/config-management/role',
+      meta: {
+        title: 'menus.configManagement.roleManagement',
+        keepAlive: true,
+        roles: ['R_SUPER']
       }
     },
     {

@@ -1,6 +1,6 @@
 <!-- 权限管理 - 中间：权限配置 -->
 <template>
-  <div class="role-permission-panel art-full-height flex flex-col">
+  <div class="role-permission-panel flex h-full min-h-0 min-w-0 flex-col">
     <template v-if="selectedRole">
       <div class="panel-header">
         <div class="header-title-wrap">
@@ -30,8 +30,10 @@
 
       <!-- 功能权限与数据权限共用的底部操作 -->
       <div class="panel-footer">
-        <ElButton class="btn-save" type="primary" @click="emit('save')"> 保存权限配置 </ElButton>
-        <ElButton class="btn-reset" @click="handleReset">重置</ElButton>
+        <ElButton class="btn-save" type="primary" round @click="emit('save')"
+          >保存权限配置</ElButton
+        >
+        <ElButton round @click="handleReset">重置</ElButton>
       </div>
     </template>
 
@@ -74,9 +76,11 @@
 
 <style scoped lang="scss">
   .role-permission-panel {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     min-width: 0;
+    min-height: 0;
     padding: 16px;
     background: var(--el-bg-color);
     border-right: 1px solid var(--el-border-color-lighter);
@@ -150,16 +154,6 @@
 
   .btn-save {
     min-width: 120px;
-    background: linear-gradient(90deg, #409eff 0%, #66b1ff 100%);
-    border: none;
-
-    &:hover {
-      background: linear-gradient(90deg, #66b1ff 0%, #409eff 100%);
-    }
-  }
-
-  .btn-reset {
-    border-color: var(--el-border-color);
   }
 
   .panel-empty {

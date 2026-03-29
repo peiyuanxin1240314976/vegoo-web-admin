@@ -1,37 +1,21 @@
 /**
- * 用户管理（`/config-management/user-management`）按接口 Mock / 远程开关。
+ * 平台管理 · 用户管理（`/config-management/user-management`）按接口 Mock / 远程开关。
  *
- * - **`true`**：对应 `fetch*` 走 `mock/user-api-mock.ts`
- * - **`false`**：走 `src/api/config-management.ts` 中的真实 URL
+ * - **`true`**：`fetchGetUserList` 走 `mock/system-user-api-mock.ts`
+ * - **`false`**：走 `GET /api/user/list`（`src/api/system-manage.ts`）
  *
- * 读取方：仅 `config-management.ts` 用户段；页面通过 `@/api/config-management` 调用即可。
- * 含：`table` / `create` / `update` / `delete` / `status` / `resetPassword` / `resendActivation` / **`export`**。
+ * 与 `mock/backend-api/01-user-list.json` 一一对应。
  */
 
-export enum UserEndpoint {
-  Table = 'table',
-  Create = 'create',
-  Update = 'update',
-  Delete = 'delete',
-  Status = 'status',
-  ResetPassword = 'resetPassword',
-  ResendActivation = 'resendActivation',
-  Export = 'export'
+export enum SystemUserEndpoint {
+  /** 01-user-list：分页列表 */
+  UserList = 'userList'
 }
 
-type UseMock = boolean
-
-const UserApiMockDefaults: Record<UserEndpoint, UseMock> = {
-  [UserEndpoint.Table]: true,
-  [UserEndpoint.Create]: true,
-  [UserEndpoint.Update]: true,
-  [UserEndpoint.Delete]: true,
-  [UserEndpoint.Status]: true,
-  [UserEndpoint.ResetPassword]: true,
-  [UserEndpoint.ResendActivation]: true,
-  [UserEndpoint.Export]: true
+const SystemUserApiMockDefaults: Record<SystemUserEndpoint, boolean> = {
+  [SystemUserEndpoint.UserList]: true
 }
 
-export function isUserEndpointMock(endpoint: UserEndpoint): boolean {
-  return UserApiMockDefaults[endpoint]
+export function isSystemUserEndpointMock(endpoint: SystemUserEndpoint): boolean {
+  return SystemUserApiMockDefaults[endpoint] === true
 }

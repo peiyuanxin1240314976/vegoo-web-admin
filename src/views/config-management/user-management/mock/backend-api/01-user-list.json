@@ -62,7 +62,7 @@
       "updateTime": { "type": "string", "required": true, "description": "最后更新时间。" }
     }
   },
-  "sampleRequest": { "current": 1, "size": 20, "userName": "", "status": "", "role": "" },
+  "sampleRequest": { "current": 1, "size": 10, "userName": "", "status": "", "role": "" },
   "sampleResponse": {
     "records": [
       {
@@ -84,7 +84,7 @@
       }
     ],
     "current": 1,
-    "size": 20,
+    "size": 10,
     "total": 1
   },
   "api": {
@@ -103,7 +103,7 @@
     "triggers": [
       {
         "moment": "页面首屏初始化",
-        "detail": "`views/system/user/index.vue` 中 `useTable` 配置 `apiFn: fetchGetUserList`，进入页面拉取分页列表。",
+        "detail": "`views/config-management/user-management/index.vue` 中 `useTable` 配置 `apiFn: fetchGetUserList`，进入页面拉取分页列表。",
         "prerequisite": "登录态"
       },
       {
