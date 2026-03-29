@@ -23,13 +23,13 @@ export enum AdPerformanceEndpoint {
 export const AD_PERFORMANCE_USE_MOCK: Record<AdPerformanceEndpoint, boolean> = {
   [AdPerformanceEndpoint.MetaFilterOptions]: false,
   [AdPerformanceEndpoint.Overview]: false,
-  /** 主表 Tab「按广告系列」+ 行内展开的系列抽屉详情（`fetchAdPerformanceCampaignDetailDrawer`） */
-  [AdPerformanceEndpoint.TableCampaign]: true,
+  /** 主表 Tab「按广告系列」 */
+  [AdPerformanceEndpoint.TableCampaign]: false,
   [AdPerformanceEndpoint.TableCountry]: false,
   [AdPerformanceEndpoint.TableOwner]: false,
   [AdPerformanceEndpoint.TableAccount]: false,
-  /** 与 TableCampaign 共用场景：列表页点行打开抽屉拉详情 */
-  [AdPerformanceEndpoint.CampaignDetailDrawer]: true,
+  /** 列表页点行打开抽屉拉系列详情 */
+  [AdPerformanceEndpoint.CampaignDetailDrawer]: false,
   [AdPerformanceEndpoint.Export]: false,
   [AdPerformanceEndpoint.AlertAction]: false
 }
@@ -53,12 +53,12 @@ export const AD_PERFORMANCE_CAMPAIGN_DETAIL_USE_MOCK: Record<
   AdPerformanceCampaignDetailEndpoint,
   boolean
 > = {
-  [AdPerformanceCampaignDetailEndpoint.Overview]: true,
-  [AdPerformanceCampaignDetailEndpoint.AdList]: true,
-  [AdPerformanceCampaignDetailEndpoint.CreativeTop5]: true,
-  [AdPerformanceCampaignDetailEndpoint.AiInsights]: true,
-  [AdPerformanceCampaignDetailEndpoint.CampaignAction]: true,
-  [AdPerformanceCampaignDetailEndpoint.AdGroupAction]: true
+  [AdPerformanceCampaignDetailEndpoint.Overview]: false,
+  [AdPerformanceCampaignDetailEndpoint.AdList]: false,
+  [AdPerformanceCampaignDetailEndpoint.CreativeTop5]: false,
+  [AdPerformanceCampaignDetailEndpoint.AiInsights]: false,
+  [AdPerformanceCampaignDetailEndpoint.CampaignAction]: false,
+  [AdPerformanceCampaignDetailEndpoint.AdGroupAction]: false
 }
 
 export function isAdPerformanceCampaignDetailEndpointMock(
@@ -73,7 +73,7 @@ export enum AdPerformanceAdDetailEndpoint {
 }
 
 export const AD_PERFORMANCE_AD_DETAIL_USE_MOCK: Record<AdPerformanceAdDetailEndpoint, boolean> = {
-  [AdPerformanceAdDetailEndpoint.Overview]: true
+  [AdPerformanceAdDetailEndpoint.Overview]: false
 }
 
 export function isAdPerformanceAdDetailEndpointMock(
@@ -90,9 +90,9 @@ export enum AdPerformanceAdEditEndpoint {
 }
 
 export const AD_PERFORMANCE_AD_EDIT_USE_MOCK: Record<AdPerformanceAdEditEndpoint, boolean> = {
-  [AdPerformanceAdEditEndpoint.Form]: true,
-  [AdPerformanceAdEditEndpoint.SaveDraft]: true,
-  [AdPerformanceAdEditEndpoint.SubmitLaunch]: true
+  [AdPerformanceAdEditEndpoint.Form]: false,
+  [AdPerformanceAdEditEndpoint.SaveDraft]: false,
+  [AdPerformanceAdEditEndpoint.SubmitLaunch]: false
 }
 
 export function isAdPerformanceAdEditEndpointMock(endpoint: AdPerformanceAdEditEndpoint): boolean {
