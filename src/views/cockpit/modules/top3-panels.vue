@@ -163,9 +163,8 @@
   .top3-module {
     position: relative;
     overflow: hidden;
-    background: var(--el-fill-color-dark);
     border: 1px solid var(--el-border-color-lighter);
-    border-radius: 8px;
+    border-radius: 12px;
 
     &::before {
       position: absolute;
@@ -281,19 +280,6 @@
     .top3-row__value {
       color: #606266;
     }
-  }
-
-  /* 深色模式：渐变落到底色 #000 */
-  html.dark .top3-module--revenue {
-    background: linear-gradient(180deg, #6a4e00, #000, #000, #000, #000, transparent);
-  }
-
-  html.dark .top3-module--badreview {
-    background: linear-gradient(180deg, #700, #000, #000, #000, #000, transparent);
-  }
-
-  html.dark .top3-module--growth {
-    background: linear-gradient(180deg, #003a24, #000, #000, #000, #000, transparent);
   }
 
   .top3-row {

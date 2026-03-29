@@ -98,14 +98,12 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    background: var(--el-bg-color);
     border: 1px solid var(--el-border-color-lighter);
-    border-radius: 10px;
+    border-radius: 12px;
   }
 
-  /* 深色模式：渐变色背景 */
   html.dark .cockpit-pace-panel {
-    background: linear-gradient(320deg, #000e29, #000);
+    border-color: transparent;
   }
 
   .pace-header {

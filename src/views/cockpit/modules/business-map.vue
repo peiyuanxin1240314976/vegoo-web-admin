@@ -26,14 +26,6 @@
     <div v-loading="mapLoading" class="map-wrap">
       <template v-if="countryData.length">
         <div ref="mapChartRef" class="map-chart"></div>
-        <!-- 悬浮 tooltip：按收入/消耗/用户按钮显示简版内容，点击时会被隐藏 -->
-        <div
-          v-show="hoverTooltipVisible"
-          class="cockpit-map-hover-tt"
-          :class="{ 'cockpit-map-hover-tt--dark': isDark }"
-          :style="{ left: hoverTooltipX + 'px', top: hoverTooltipY + 'px' }"
-          v-html="hoverTooltipHtml"
-        />
       </template>
       <div v-else class="map-empty">暂无数据</div>
     </div>
@@ -44,6 +36,16 @@
       </div>
     </div> -->
   </ElCard>
+  <!-- 悬浮 tooltip：Teleport 到 body，避免父卡片 transform/overflow:hidden 导致定位失效或被裁切 -->
+  <Teleport to="body">
+    <div
+      v-show="hoverTooltipVisible"
+      class="cockpit-map-hover-tt"
+      :class="{ 'cockpit-map-hover-tt--dark': isDark }"
+      :style="{ left: hoverTooltipX + 'px', top: hoverTooltipY + 'px' }"
+      v-html="hoverTooltipHtml"
+    />
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -805,12 +807,6 @@
   }
 
   .cockpit-map-panel--dark {
-    // .map-metric-box {
-    //   background: rgb(51 65 85 / 80%);
-    //   border-color: rgb(71 85 105 / 60%);
-    // }
-    background: linear-gradient(320deg, #000e29, #000);
-
     .map-metric-slider {
       background: rgb(59 130 246 / 90%);
     }
@@ -929,5 +925,20 @@
     font-size: 12px;
     color: var(--el-color-primary);
     cursor: pointer;
+  }
+
+  /*
+   * 点击地图区域时，阻止父卡片 :active 伪类触发 ap-panel-hover 的抖动动画。
+   * 使用 :has() 检测点击目标是否在 .map-chart 内，若是则将 transform 锁定在悬浮位置，
+   * 仅点击地图外区域（如 Header 按钮）才允许触发 :active 效果。
+   */
+  html.dark .cockpit-map-panel:has(.map-chart:active) {
+    transition: none;
+    transform: translateY(-6px);
+  }
+
+  html:not(.dark) .cockpit-map-panel:has(.map-chart:active) {
+    transition: none;
+    transform: translateY(-4px);
   }
 </style>

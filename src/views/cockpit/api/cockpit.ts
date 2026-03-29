@@ -802,7 +802,7 @@ export function mapChannelLaunchToChannelRows(
       installs: install,
       cpi: cpl,
       roi,
-      roas: roas >= 0 ? (roas >= 1 ? `${roas.toFixed(1)}x` : String(roas)) : '—',
+      roas: roas >= 0 ? `${roas.toFixed(2)}x` : '—',
       trend,
       trendClass
     }

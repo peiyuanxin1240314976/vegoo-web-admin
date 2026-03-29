@@ -1,66 +1,76 @@
 <template>
-  <div class="map-detail-page">
-    <MapDetailHeader :country-code="countryCode" :country-name="countryName">
-      <template #right>
-        <div class="detail-filters">
-          <ElDatePicker
-            v-model="filterDateRange"
-            type="daterange"
-            range-separator="~"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            class="detail-date-picker"
-          />
-          <div class="detail-range-box">
-            <div
-              class="detail-range-slider"
-              :style="{ transform: `translateX(${rangeIndex * 100}%)` }"
+  <div class="map-detail-page flex flex-col">
+    <div class="map-detail-page-fx" aria-hidden="true"></div>
+    <div class="map-detail-page__section map-detail-entry-1">
+      <div class="map-detail-top-shell">
+        <MapDetailHeader :country-code="countryCode" :country-name="countryName">
+          <template #right>
+            <div class="detail-filters">
+              <ElDatePicker
+                v-model="filterDateRange"
+                type="daterange"
+                range-separator="~"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD"
+                class="detail-date-picker"
+              />
+              <div class="detail-range-box">
+                <div
+                  class="detail-range-slider"
+                  :style="{ transform: `translateX(${rangeIndex * 100}%)` }"
+                />
+                <button
+                  v-for="opt in rangeOptions"
+                  :key="opt.value"
+                  type="button"
+                  class="detail-range-btn"
+                  :class="{ active: rangeType === opt.value }"
+                  @click="selectRange(opt.value)"
+                >
+                  {{ opt.label }}
+                </button>
+              </div>
+            </div>
+          </template>
+        </MapDetailHeader>
+      </div>
+    </div>
+
+    <div class="map-detail-entry-2">
+      <!-- <div class="detail-date-display">区间, {{ currentDateLabel }}</div> -->
+
+      <MapDetailStatsCards :cards="statCards" />
+    </div>
+
+    <div class="map-detail-entry-3 main-row-wrap">
+      <div class="main-row">
+        <div class="main-content">
+          <div class="section-row two-cols">
+            <MapDetailSpendPanel
+              :channel-data="channelTableData"
+              :campaign-data="campaignTableData"
+              :channel-loading="channelLoading"
+              :campaign-loading="campaignLoading"
             />
-            <button
-              v-for="opt in rangeOptions"
-              :key="opt.value"
-              type="button"
-              class="detail-range-btn"
-              :class="{ active: rangeType === opt.value }"
-              @click="selectRange(opt.value)"
-            >
-              {{ opt.label }}
-            </button>
+            <MapDetailRevenuePanel
+              :metrics="revenueMetrics"
+              :composition-data="revenueCompositionData"
+              :app-table-data="appPerformanceData"
+              :region-label="countryName"
+              :app-loading="appPerformanceLoading"
+            />
           </div>
-        </div>
-      </template>
-    </MapDetailHeader>
-    <div class="detail-date-display">区间, {{ currentDateLabel }}</div>
 
-    <MapDetailStatsCards :cards="statCards" />
-
-    <div class="main-row">
-      <div class="main-content">
-        <div class="section-row two-cols">
-          <MapDetailSpendPanel
-            :channel-data="channelTableData"
-            :campaign-data="campaignTableData"
-            :channel-loading="channelLoading"
-            :campaign-loading="campaignLoading"
-          />
-          <MapDetailRevenuePanel
-            :metrics="revenueMetrics"
-            :composition-data="revenueCompositionData"
-            :app-table-data="appPerformanceData"
-            :region-label="countryName"
-            :app-loading="appPerformanceLoading"
-          />
-        </div>
-
-        <div v-if="showThirdRow" class="section-row">
-          <MapDetailRetentionChart
-            :local-data="retentionLocalData"
-            :global-data="retentionGlobalData"
-          />
-          <MapDetailLtvChart :data="ltvData" :note="ltvNote" />
-          <MapDetailSegmentChart :data="segmentData" :note="segmentNote" />
+          <div v-if="showThirdRow" class="section-row">
+            <MapDetailRetentionChart
+              :local-data="retentionLocalData"
+              :global-data="retentionGlobalData"
+            />
+            <MapDetailLtvChart :data="ltvData" :note="ltvNote" />
+            <MapDetailSegmentChart :data="segmentData" :note="segmentNote" />
+          </div>
         </div>
       </div>
     </div>
@@ -106,10 +116,6 @@
 
   type RangeType = 'yesterday' | 'past7' | 'month'
 
-  function todayStr(): string {
-    return formatYYYYMMDD(getAppNow())
-  }
-
   type DateRange = [string, string]
 
   function getDateRangeByQuick(type: RangeType): DateRange {
@@ -143,18 +149,6 @@
     rangeType.value = value
     filterDateRange.value = getDateRangeByQuick(value)
   }
-
-  function toCnDateLabel(s: string): string {
-    const [y, m, d] = String(s || '').split('-')
-    if (!y || !m || !d) return '—'
-    return `${y}年${m}月${d}日`
-  }
-
-  /** 下方展示的当前日期：区间, YYYY年MM月DD日 ~ YYYY年MM月DD日 */
-  const currentDateLabel = computed(() => {
-    const [start, end] = filterDateRange.value || [todayStr(), todayStr()]
-    return `${toCnDateLabel(start)} ~ ${toCnDateLabel(end)}`
-  })
 
   const countryCode = computed(() => String(route.params.country || '').toUpperCase() || '—')
   const countryName = computed(() => {
@@ -275,10 +269,11 @@
           ecpmTrend:
             eCpmChangeVal != null
               ? eCpmChangeVal >= 0
-                ? `↑+${eCpmChangeVal}`
-                : `↓${eCpmChangeVal}`
+                ? `↑+${(eCpmChangeVal * 100).toFixed(2)}%`
+                : `↓${(Math.abs(eCpmChangeVal) * 100).toFixed(2)}%`
               : '—',
-          fillRate: now.adExpansionRate != null ? `${Number(now.adExpansionRate)}%` : '—',
+          fillRate:
+            now.adExpansionRate != null ? `${Number(now.adExpansionRate).toFixed(2)}%` : '—',
           arpu: now.arpu != null ? `$${Number(now.arpu).toFixed(2)}` : '—'
         }
       }
@@ -427,8 +422,187 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../user-growth/ad-performance/styles/ap-card-fx';
+
   .map-detail-page {
-    padding-bottom: 24px;
+    position: relative;
+    min-width: 0;
+    padding: 20px 24px 28px;
+    overflow-x: clip;
+
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(
+          ellipse 70% 50% at 6% 6%,
+          rgb(16 185 129 / 42%) 0%,
+          rgb(6 182 212 / 20%) 38%,
+          transparent 58%
+        ),
+        radial-gradient(
+          ellipse 55% 42% at 94% 8%,
+          rgb(59 130 246 / 38%) 0%,
+          rgb(139 92 246 / 18%) 38%,
+          transparent 58%
+        ),
+        radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 18%) 0%, transparent 55%),
+        radial-gradient(
+          ellipse 55% 42% at 76% 4%,
+          rgb(34 211 238 / 22%) 0%,
+          rgb(59 130 246 / 10%) 40%,
+          transparent 58%
+        );
+      mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
+      animation:
+        map-detail-aurora 14s ease-in-out infinite alternate,
+        map-detail-bg-flow 22s ease-in-out infinite alternate;
+    }
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px),
+        radial-gradient(circle, rgb(6 182 212 / 8%) 1px, transparent 1px);
+      background-size:
+        40px 40px,
+        40px 40px,
+        80px 80px;
+      mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+    }
+
+    > *:not(.map-detail-page-fx) {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .map-detail-page-fx {
+    position: absolute;
+    inset: -12% -12% 40%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      rgb(59 130 246 / 14%) 55deg,
+      rgb(6 182 212 / 10%) 80deg,
+      transparent 130deg,
+      rgb(16 185 129 / 12%) 200deg,
+      rgb(52 211 153 / 8%) 225deg,
+      transparent 285deg,
+      rgb(168 85 247 / 10%) 330deg,
+      rgb(249 115 22 / 6%) 350deg,
+      transparent 360deg
+    );
+    filter: blur(2px);
+    opacity: 0.85;
+    mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
+    animation: map-detail-fx-spin 52s linear infinite;
+  }
+
+  @keyframes map-detail-aurora {
+    0% {
+      filter: hue-rotate(0deg);
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    50% {
+      filter: hue-rotate(18deg);
+      opacity: 1;
+      transform: scale(1.06) translate(1.2%, -1.2%);
+    }
+
+    100% {
+      filter: hue-rotate(-12deg);
+      opacity: 0.82;
+      transform: scale(1) translate(-1.2%, 1.2%);
+    }
+  }
+
+  @keyframes map-detail-bg-flow {
+    0% {
+      opacity: 0.7;
+      transform: scaleY(1) skewX(0deg);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scaleY(1.08) skewX(1deg);
+    }
+  }
+
+  @keyframes map-detail-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .map-detail-entry-1 {
+    animation: map-detail-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.05s;
+  }
+
+  .map-detail-entry-2 {
+    animation: map-detail-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.12s;
+  }
+
+  .map-detail-entry-3 {
+    animation: map-detail-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.18s;
+  }
+
+  @keyframes map-detail-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .map-detail-page__section {
+    margin-bottom: 20px;
+  }
+
+  .map-detail-top-shell {
+    position: relative;
+    padding: 14px 16px;
+    overflow: hidden;
+    border-radius: 12px;
+
+    @include ap-neon-bg;
+    @include ap-card-mesh;
+    @include ap-panel-hover;
+
+    :deep(.map-detail-header) {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 0;
+    }
+
+    :deep(.detail-filters) {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .main-row-wrap {
+    flex: 1;
+    min-width: 0;
   }
 
   .main-row {
@@ -463,9 +637,9 @@
     position: relative;
     display: inline-flex;
     padding: 3px;
-    background: var(--el-fill-color-light);
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 8px;
+    background: rgb(8 12 24 / 55%);
+    border: 1px solid rgb(96 165 250 / 22%);
+    border-radius: 10px;
   }
 
   .detail-range-slider {
@@ -475,7 +649,7 @@
     width: calc((100% - 6px) / 2);
     height: calc(100% - 6px);
     pointer-events: none;
-    background: var(--el-color-primary);
+    background: linear-gradient(92deg, rgb(59 130 246 / 95%), rgb(6 182 212 / 88%));
     border-radius: 6px;
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -495,7 +669,7 @@
     transition: color 0.2s ease;
 
     &:hover {
-      color: var(--el-text-color-primary);
+      color: rgb(125 211 252);
     }
 
     &.active {
@@ -528,5 +702,65 @@
     .section-row:not(.two-cols) {
       grid-template-columns: 1fr;
     }
+  }
+
+  @media (width <= 768px) {
+    .map-detail-page {
+      padding-bottom: 16px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .map-detail-page::before,
+    .map-detail-page-fx {
+      animation: none;
+    }
+
+    .map-detail-entry-1,
+    .map-detail-entry-2,
+    .map-detail-entry-3 {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+  }
+</style>
+
+<style lang="scss">
+  @import '../../user-growth/ad-performance/styles/ap-card-fx';
+
+  html.dark .el-card.map-detail-spend-panel,
+  html.dark .el-card.map-detail-revenue-panel,
+  html.dark .el-card.map-detail-retention-chart,
+  html.dark .el-card.map-detail-ltv-chart,
+  html.dark .el-card.map-detail-segment-chart {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+
+    @include ap-neon-bg;
+    @include ap-card-mesh;
+    @include ap-panel-hover;
+  }
+
+  html.dark .el-card.map-detail-spend-panel .el-card__header,
+  html.dark .el-card.map-detail-revenue-panel .el-card__header,
+  html.dark .el-card.map-detail-retention-chart .el-card__header,
+  html.dark .el-card.map-detail-ltv-chart .el-card__header,
+  html.dark .el-card.map-detail-segment-chart .el-card__header {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+    border-bottom: 1px solid rgb(96 165 250 / 14%);
+  }
+
+  html.dark .el-card.map-detail-spend-panel .el-card__body,
+  html.dark .el-card.map-detail-revenue-panel .el-card__body,
+  html.dark .el-card.map-detail-retention-chart .el-card__body,
+  html.dark .el-card.map-detail-ltv-chart .el-card__body,
+  html.dark .el-card.map-detail-segment-chart .el-card__body {
+    position: relative;
+    z-index: 1;
+    background: transparent;
   }
 </style>

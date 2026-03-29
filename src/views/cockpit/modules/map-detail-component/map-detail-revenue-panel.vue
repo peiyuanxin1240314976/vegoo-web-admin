@@ -4,14 +4,13 @@
       <span>变现分析</span>
     </template>
 
-    <!-- A: 收入构成 - 固定宽高横向色块，上 label 下数值(占比)，无 echarts -->
+    <!-- A: 收入构成 -->
     <div class="revenue-composition">
       <div class="composition-bar-wrap">
         <div class="panel-header section-header">
           <span class="section-badge">A</span>
           <span class="section-title">收入构成</span>
         </div>
-        <!-- 统计条上方两排：名称 + 金额(占比) -->
         <div class="composition-labels">
           <template v-for="(s, i) in compositionData" :key="'label-' + i">
             <ElTooltip
@@ -92,24 +91,44 @@
           </template>
         </div>
       </div>
+
+      <!-- 三指标卡片 -->
       <div class="revenue-metrics">
-        <span
-          >eCPM: {{ metrics.ecpm }}
-          <span :class="ecpmTrendClass">{{ metrics.ecpmTrend }}</span></span
-        >
-        <span>广告充展率: {{ metrics.fillRate }}</span>
-        <span>ARPU: {{ metrics.arpu }}</span>
+        <div class="rm-card rm-card--ecpm">
+          <span class="rm-icon">📡</span>
+          <div class="rm-body">
+            <span class="rm-label">eCPM</span>
+            <div class="rm-value-row">
+              <span class="rm-value tabular-nums">{{ metrics.ecpm }}</span>
+              <span :class="ecpmTrendClass" class="rm-trend">{{ metrics.ecpmTrend }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="rm-card rm-card--fill">
+          <span class="rm-icon">📶</span>
+          <div class="rm-body">
+            <span class="rm-label">广告充展率</span>
+            <span class="rm-value tabular-nums">{{ metrics.fillRate }}</span>
+          </div>
+        </div>
+        <div class="rm-card rm-card--arpu">
+          <span class="rm-icon">💰</span>
+          <div class="rm-body">
+            <span class="rm-label">ARPU</span>
+            <span class="rm-value tabular-nums">{{ metrics.arpu }}</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- B: 各 App 表现 - art-table -->
+    <!-- B: 各 App 表现 -->
     <div class="app-performance-block">
       <div class="panel-header section-header">
         <span class="section-badge">B</span>
         <span class="section-title">各 App 在{{ regionLabel }}表现</span>
       </div>
       <ElSkeleton v-if="appLoading" :rows="6" animated class="table-skeleton" />
-      <ArtTable v-else :data="appTableData" :columns="appColumns" size="small" height="220" />
+      <ArtTable v-else :data="appTableData" :columns="appColumns" size="small" height="260" />
     </div>
   </ElCard>
 </template>
@@ -157,7 +176,6 @@
     }
   )
 
-  /** 根据 ecpmTrend 文案判断上升/下降/持平，用于颜色 */
   const ecpmTrendClass = computed(() => {
     const t = props.metrics?.ecpmTrend ?? ''
     if (!t || t === '—') return 'revenue-metric-trend--flat'
@@ -167,37 +185,39 @@
   })
 
   function fmtMoneyK(n: number) {
-    return `$${(n / 1000).toFixed(0)}K`
+    if (n >= 1000) return `$${(n / 1000).toFixed(1)}K`
+    if (n >= 100) return `$${n.toFixed(0)}`
+    return `$${n.toFixed(2)}`
   }
 
   const appColumns: ColumnOption<AppPerformanceRow>[] = [
-    { prop: 'app', label: 'App名称', minWidth: 120 },
+    { prop: 'app', label: 'App 名称', minWidth: 120 },
     {
       prop: 'arpu',
       label: 'ARPU',
-      minWidth: 90,
-      align: 'right',
+      minWidth: 80,
+      align: 'left',
       formatter: (row: AppPerformanceRow) => `$${Number(row.arpu ?? 0).toFixed(2)}`
     },
     {
       prop: 'dAdRevenue',
       label: '广告收入',
-      minWidth: 90,
-      align: 'right',
+      minWidth: 86,
+      align: 'left',
       formatter: (row: AppPerformanceRow) => fmtMoneyK(row.dAdRevenue)
     },
     {
       prop: 'dIapRevenue',
       label: '内购收入',
-      minWidth: 90,
-      align: 'right',
+      minWidth: 86,
+      align: 'left',
       formatter: (row: AppPerformanceRow) => fmtMoneyK(row.dIapRevenue)
     },
     {
       prop: 'remainDay7',
       label: '7日留存',
-      width: 90,
-      align: 'right',
+      width: 82,
+      align: 'left',
       formatter: (row: AppPerformanceRow) => {
         const v = Number(row.remainDay7 ?? 0)
         const pct = v <= 1 && v >= 0 ? v * 100 : v
@@ -212,16 +232,47 @@
     :deep(.el-card__header) {
       font-weight: 500;
     }
+
+    /* ── 深色主题表格覆盖 ── */
+    :deep(.el-table) {
+      --el-table-bg-color: transparent;
+      --el-table-tr-bg-color: transparent;
+      --el-table-row-hover-bg-color: rgb(255 255 255 / 5%);
+      --el-table-header-bg-color: rgb(255 255 255 / 4%);
+
+      background: transparent;
+
+      &::before {
+        display: none;
+      }
+
+      th.el-table__cell {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        background-color: rgb(255 255 255 / 4%);
+        border-bottom: 1px solid var(--default-border, rgb(255 255 255 / 10%));
+      }
+
+      td.el-table__cell {
+        font-size: 13px;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--default-border, rgb(255 255 255 / 6%));
+      }
+
+      .el-table__body tr:last-child td.el-table__cell {
+        border-bottom: none;
+      }
+    }
   }
 
   .revenue-composition {
-    min-height: 190px;
     margin-bottom: 16px;
   }
 
   .composition-bar-wrap {
     width: 100%;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
 
   .composition-labels,
@@ -271,11 +322,10 @@
     animation: segment-slide-in 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 
     &:not(:first-child) {
-      border-left: 1px solid rgba(255 255 255 / 20%);
+      border-left: 1px solid rgb(255 255 255 / 20%);
     }
 
     &:hover {
-      /* 仅上下描边，不增加左右视觉宽度 */
       box-shadow:
         0 -2px 0 0 var(--segment-color),
         0 2px 0 0 var(--segment-color);
@@ -319,32 +369,98 @@
     }
   }
 
+  /* ── 三指标卡片 ── */
   .revenue-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .rm-card {
     display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    justify-content: space-between;
-    font-size: 13px;
-    color: var(--el-text-color-regular);
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgb(255 255 255 / 3%);
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-left: 3px solid transparent;
+    border-radius: 8px;
+    transition: background 0.2s ease;
 
-    span {
-      width: 30%;
-      padding: 5px 0;
-      text-align: center;
-      background-color: var(--el-fill-color-light);
-      border-radius: 6px;
+    &:hover {
+      background: rgb(255 255 255 / 6%);
     }
 
-    .revenue-metric-trend--up {
-      color: var(--el-color-success);
+    &--ecpm {
+      background: linear-gradient(135deg, rgb(59 130 246 / 8%), rgb(59 130 246 / 2%));
+      border-left-color: #3b82f6;
     }
 
-    .revenue-metric-trend--down {
-      color: var(--el-color-danger);
+    &--fill {
+      background: linear-gradient(135deg, rgb(16 185 129 / 8%), rgb(16 185 129 / 2%));
+      border-left-color: #10b981;
     }
 
-    .revenue-metric-trend--flat {
-      color: var(--el-text-color-secondary);
+    &--arpu {
+      background: linear-gradient(135deg, rgb(245 158 11 / 8%), rgb(245 158 11 / 2%));
+      border-left-color: #f59e0b;
+    }
+  }
+
+  .rm-icon {
+    flex-shrink: 0;
+    font-size: 18px;
+    line-height: 1;
+    filter: saturate(0.9);
+  }
+
+  .rm-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .rm-label {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .rm-value-row {
+    display: flex;
+    gap: 5px;
+    align-items: baseline;
+  }
+
+  .rm-value {
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+
+  .rm-trend {
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+
+    &.revenue-metric-trend--up {
+      color: var(--art-success, #10b981);
+    }
+
+    &.revenue-metric-trend--down {
+      color: var(--art-danger, #ef4444);
+    }
+
+    &.revenue-metric-trend--flat {
+      color: var(--text-secondary);
     }
   }
 
@@ -352,7 +468,7 @@
     display: flex;
     gap: 10px;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .section-badge {
@@ -360,9 +476,9 @@
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
     font-weight: 600;
     line-height: 1;
     color: #fff;
@@ -372,18 +488,14 @@
   }
 
   .section-title {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--el-text-color-primary);
   }
 
   .app-performance-block {
-    .panel-header {
-      margin-bottom: 8px;
-    }
-
     .table-skeleton {
-      height: 220px;
+      height: 260px;
       padding: 8px 0;
     }
   }

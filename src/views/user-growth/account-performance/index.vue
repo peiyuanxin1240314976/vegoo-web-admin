@@ -1,48 +1,53 @@
 <template>
-  <div class="account-performance-page">
+  <div class="account-performance-page flex flex-col">
+    <div class="ac-perf-page-fx" aria-hidden="true"></div>
     <!-- 顶部：筛选 + 日期 + 导出 -->
-    <div class="ap-header">
-      <div class="ap-filters">
-        <ElSelect v-model="source" placeholder="广告平台" class="ap-filter-select">
-          <ElOption
-            v-for="opt in metaAdPlatformOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
+    <div
+      class="account-performance-page__section account-performance-page__section--header ac-perf-entry-1"
+    >
+      <div class="ac-perf-filter-panel">
+        <div class="ap-filters">
+          <ElSelect v-model="source" placeholder="广告平台" class="ap-filter-select">
+            <ElOption
+              v-for="opt in metaAdPlatformOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
+          <ElSelect v-model="platform" placeholder="应用" class="ap-filter-select">
+            <ElOption
+              v-for="opt in metaAppOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
+          <ElSelect v-model="filterOwner" placeholder="广告账户" class="ap-filter-select">
+            <ElOption
+              v-for="opt in metaAccountOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
+          <ElDatePicker
+            v-model="dateRange"
+            type="daterange"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            class="ap-date-picker"
+            style="width: 100px"
           />
-        </ElSelect>
-        <ElSelect v-model="platform" placeholder="应用" class="ap-filter-select">
-          <ElOption
-            v-for="opt in metaAppOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </ElSelect>
-        <ElSelect v-model="filterOwner" placeholder="广告账户" class="ap-filter-select">
-          <ElOption
-            v-for="opt in metaAccountOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </ElSelect>
-        <ElDatePicker
-          v-model="dateRange"
-          type="daterange"
-          range-separator="~"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          value-format="YYYY-MM-DD"
-          class="ap-date-picker"
-          style="width: 100px"
-        />
-        <ElButton color="#13deb9" @click="onExport">导出</ElButton>
+          <ElButton round type="primary" @click="onExport">导出</ElButton>
+        </div>
       </div>
     </div>
 
     <!-- 6 个 KPI 卡片 -->
-    <ElRow :gutter="16" class="ap-kpi-row">
+    <ElRow :gutter="16" class="ap-kpi-row ac-perf-entry-2">
       <template v-if="kpiLoading">
         <ElCol v-for="i in KPI_CARD_COUNT" :key="i" :xs="24" :sm="12" :md="4" :lg="4" :xl="4">
           <div class="ap-kpi-card ap-kpi-card--skeleton">
@@ -83,7 +88,7 @@
     </ElRow>
 
     <!-- 主体：左侧表格 + 右侧图表 -->
-    <ElRow :gutter="16" class="ap-body">
+    <ElRow :gutter="16" class="ap-body ac-perf-entry-3">
       <!-- 左侧：应用×平台×账户明细表（min-width:0 让列可收缩，表格内部横向滚动） -->
       <ElCol :xs="24" :md="16" :lg="17" :xl="17" class="ap-table-col">
         <ElCard class="ap-table-card" shadow="never">
@@ -114,8 +119,9 @@
             <div class="ap-table-actions">
               <ElButton
                 v-if="modelValue === '应用'"
+                round
                 size="default"
-                color="#13deb9"
+                type="primary"
                 plain
                 :dark="isDark"
                 @click="toggleExpandAll"
@@ -1156,11 +1162,68 @@
 </script>
 
 <style scoped lang="scss">
-  .account-performance-page {
-    min-width: 0;
+  @import '../ad-performance/styles/ap-card-fx';
 
-    /* 参与 flex 收缩，避免小屏溢出 */
-    padding-bottom: 24px;
+  .account-performance-page {
+    position: relative;
+    min-width: 0;
+    padding: 20px 24px 28px;
+    overflow-x: clip;
+
+    /* 极光辐射层 ── 与广告成效页一致 */
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(
+          ellipse 70% 50% at 6% 6%,
+          rgb(16 185 129 / 42%) 0%,
+          rgb(6 182 212 / 20%) 38%,
+          transparent 58%
+        ),
+        radial-gradient(
+          ellipse 55% 42% at 94% 8%,
+          rgb(59 130 246 / 38%) 0%,
+          rgb(139 92 246 / 18%) 38%,
+          transparent 58%
+        ),
+        radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 18%) 0%, transparent 55%),
+        radial-gradient(
+          ellipse 55% 42% at 76% 4%,
+          rgb(34 211 238 / 22%) 0%,
+          rgb(59 130 246 / 10%) 40%,
+          transparent 58%
+        );
+      mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
+      animation:
+        ac-perf-aurora-drift 14s ease-in-out infinite alternate,
+        ac-perf-bg-flow 22s ease-in-out infinite alternate;
+    }
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px),
+        radial-gradient(circle, rgb(6 182 212 / 8%) 1px, transparent 1px);
+      background-size:
+        40px 40px,
+        40px 40px,
+        80px 80px;
+      mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+    }
+
+    > *:not(.ac-perf-page-fx) {
+      position: relative;
+      z-index: 1;
+    }
 
     .date-range-box {
       position: relative;
@@ -1169,9 +1232,9 @@
       max-width: 100%;
       padding: 0;
       margin-left: 8px;
-      background: var(--el-fill-color-light);
-      border: 1px solid var(--el-border-color-lighter);
-      border-radius: 8px;
+      background: rgb(8 12 24 / 55%);
+      border: 1px solid rgb(96 165 250 / 22%);
+      border-radius: 10px;
 
       @media (width <=768px) {
         width: 100%;
@@ -1184,7 +1247,7 @@
       left: 3px;
       height: calc(100% - 6px);
       pointer-events: none;
-      background: #13deb9;
+      background: linear-gradient(92deg, rgb(59 130 246 / 95%), rgb(6 182 212 / 88%));
       border-radius: 6px;
       transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -1210,7 +1273,7 @@
       transition: color 0.2s ease;
 
       &:hover {
-        color: #13deb9;
+        color: rgb(125 211 252);
       }
 
       &.active {
@@ -1219,8 +1282,125 @@
     }
   }
 
-  .ap-header {
+  .ac-perf-page-fx {
+    position: absolute;
+    inset: -12% -12% 40%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      rgb(59 130 246 / 14%) 55deg,
+      rgb(6 182 212 / 10%) 80deg,
+      transparent 130deg,
+      rgb(16 185 129 / 12%) 200deg,
+      rgb(52 211 153 / 8%) 225deg,
+      transparent 285deg,
+      rgb(168 85 247 / 10%) 330deg,
+      rgb(249 115 22 / 6%) 350deg,
+      transparent 360deg
+    );
+    filter: blur(2px);
+    opacity: 0.85;
+    mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
+    animation: ac-perf-fx-spin 52s linear infinite;
+  }
+
+  @keyframes ac-perf-aurora-drift {
+    0% {
+      filter: hue-rotate(0deg);
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    50% {
+      filter: hue-rotate(18deg);
+      opacity: 1;
+      transform: scale(1.06) translate(1.2%, -1.2%);
+    }
+
+    100% {
+      filter: hue-rotate(-12deg);
+      opacity: 0.82;
+      transform: scale(1) translate(-1.2%, 1.2%);
+    }
+  }
+
+  @keyframes ac-perf-bg-flow {
+    0% {
+      opacity: 0.7;
+      transform: scaleY(1) skewX(0deg);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scaleY(1.08) skewX(1deg);
+    }
+  }
+
+  @keyframes ac-perf-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .ac-perf-entry-1 {
+    animation: ac-perf-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.05s;
+  }
+
+  .ac-perf-entry-2 {
+    animation: ac-perf-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.14s;
+  }
+
+  .ac-perf-entry-3 {
+    animation: ac-perf-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.22s;
+  }
+
+  @keyframes ac-perf-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .account-performance-page__section {
     margin-bottom: 16px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .account-performance-page__section--header {
+    margin-bottom: 20px;
+  }
+
+  .ac-perf-filter-panel {
+    position: relative;
+    padding: 14px 16px;
+    overflow: hidden;
+    border-radius: 12px;
+
+    @include ap-neon-bg;
+    @include ap-card-mesh;
+    @include ap-panel-hover;
+
+    .ap-filters {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .ap-header {
+    margin-bottom: 0;
   }
 
   .ap-filters {
@@ -1267,60 +1447,29 @@
     min-height: 123px;
     padding: 16px;
     overflow: hidden;
-    background: linear-gradient(180deg, rgb(255 255 255 / 4%), rgb(255 255 255 / 1.5%));
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 10px;
-    box-shadow: 0 0 0 rgb(0 0 0 / 0%);
-    transition:
-      transform 0.25s ease,
-      box-shadow 0.25s ease,
-      border-color 0.25s ease;
+    border-radius: 12px;
+
+    @include ap-neon-bg;
+    @include ap-panel-hover;
 
     --kpi-accent-rgb: 16, 185, 129;
-
-    &::after {
-      position: absolute;
-      inset: -1px;
-      z-index: 0;
-      pointer-events: none;
-      content: '';
-      background:
-        radial-gradient(60% 60% at 20% 10%, rgba(var(--kpi-accent-rgb), 0.22), transparent 60%),
-        linear-gradient(
-          135deg,
-          rgba(var(--kpi-accent-rgb), 0.18),
-          rgba(var(--kpi-accent-rgb), 0.05)
-        );
-      opacity: 0;
-      transition: opacity 0.25s ease;
-    }
 
     & > * {
       position: relative;
       z-index: 1;
     }
 
-    &:hover {
-      border-color: rgba(var(--kpi-accent-rgb), 0.62);
-      box-shadow: 0 18px 50px rgba(var(--kpi-accent-rgb), 0.12);
-      transform: translateY(-6px);
-    }
-
-    &:hover::after {
-      opacity: 1;
-    }
-
     &--skeleton {
       cursor: default;
 
       &:hover {
-        border-color: var(--el-border-color-lighter);
-        box-shadow: 0 0 0 rgb(0 0 0 / 0%);
+        border-color: rgb(96 165 250 / 28%);
+        box-shadow:
+          0 12px 48px rgb(0 0 0 / 48%),
+          0 0 0 1px rgb(96 165 250 / 10%),
+          inset 0 1px 0 rgb(186 230 253 / 14%),
+          inset 0 -12px 32px rgb(0 0 0 / 30%);
         transform: none;
-      }
-
-      &::after {
-        opacity: 0;
       }
 
       :deep(.el-skeleton) {
@@ -1363,8 +1512,15 @@
     &--alert {
       --kpi-accent-rgb: 230, 162, 60;
 
-      background: rgb(230 162 60 / 8%);
-      border-color: rgb(230 162 60 / 35%);
+      background-color: rgb(12 10 8 / 96%);
+      background-image:
+        radial-gradient(ellipse 80% 70% at 100% 0%, rgb(249 115 22 / 22%) 0%, transparent 55%),
+        linear-gradient(158deg, rgb(40 32 20 / 92%) 0%, rgb(18 14 10 / 96%) 100%);
+      border-color: rgb(251 191 36 / 38%);
+      box-shadow:
+        0 12px 48px rgb(0 0 0 / 48%),
+        0 0 0 1px rgb(251 191 36 / 12%),
+        inset 0 1px 0 rgb(253 230 138 / 12%);
     }
 
     &--accounts {
@@ -1386,8 +1542,17 @@
     &--roi1 {
       --kpi-accent-rgb: 16, 185, 129;
 
-      background: linear-gradient(180deg, rgb(16 185 129 / 14%), rgb(16 185 129 / 3%));
-      border-color: rgb(16 185 129 / 55%);
+      background-color: rgb(8 14 12 / 96%);
+      background-image:
+        radial-gradient(ellipse 90% 65% at 50% -25%, rgb(16 185 129 / 35%) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 50% at 0% 100%, rgb(52 211 153 / 18%) 0%, transparent 50%),
+        linear-gradient(158deg, rgb(12 28 22 / 94%) 0%, rgb(6 12 10 / 98%) 100%);
+      border-color: rgb(52 211 153 / 45%);
+      box-shadow:
+        0 12px 48px rgb(0 0 0 / 48%),
+        0 0 0 1px rgb(16 185 129 / 15%),
+        inset 0 1px 0 rgb(167 243 208 / 18%),
+        inset 0 -12px 32px rgb(0 0 0 / 28%);
 
       .ap-kpi-label {
         color: rgb(16 185 129 / 95%);
@@ -1462,26 +1627,39 @@
   }
 
   .ap-table-card {
+    position: relative;
     margin-bottom: 16px;
-    background: var(--el-bg-color);
+    overflow: hidden;
+    border-radius: 12px;
+
+    @include ap-neon-bg;
+    @include ap-card-mesh;
+    @include ap-panel-hover;
 
     :deep(.el-card__header) {
+      position: relative;
+      z-index: 1;
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       align-items: center;
       justify-content: space-between;
+      background: transparent;
+      border-bottom: 1px solid rgb(96 165 250 / 14%);
     }
 
     :deep(.el-card__body) {
+      position: relative;
+      z-index: 1;
       padding: 12px 16px;
+      background: transparent;
     }
   }
 
   .ap-table-title {
+    @include ap-title-gradient;
+
     font-size: 20px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
     word-break: break-word;
   }
 
@@ -1622,29 +1800,46 @@
   .ap-chart-card {
     position: relative;
     margin-bottom: 0;
-    background: var(--el-bg-color);
+    overflow: hidden;
+    border-radius: 12px;
+
+    @include ap-neon-bg;
+    @include ap-card-mesh;
+    @include ap-panel-hover;
 
     :deep(.el-card__header) {
+      position: relative;
+      z-index: 1;
       padding: 8px 12px;
       font-size: 13px;
       color: var(--el-text-color-primary);
+      background: transparent;
+      border-bottom: 1px solid rgb(96 165 250 / 12%);
     }
 
     :deep(.el-card__body) {
       position: relative;
+      z-index: 1;
       padding: 8px 12px;
-      background: var(--el-bg-color);
+      background: transparent;
     }
   }
 
   /* 与顶部 KPI「预警账户」(.ap-kpi-card--alert) 同系透明黄底与边框 */
   .ap-chart-card.ap-alert-card {
-    background: rgb(230 162 60 / 8%);
-    border-color: rgb(230 162 60 / 35%);
+    background-color: rgb(12 10 8 / 96%);
+    background-image:
+      radial-gradient(ellipse 80% 70% at 100% 0%, rgb(249 115 22 / 18%) 0%, transparent 55%),
+      linear-gradient(158deg, rgb(36 28 16 / 92%) 0%, rgb(14 12 8 / 96%) 100%);
+    border-color: rgb(251 191 36 / 32%);
+    box-shadow:
+      0 12px 48px rgb(0 0 0 / 48%),
+      0 0 0 1px rgb(251 191 36 / 10%),
+      inset 0 1px 0 rgb(253 230 138 / 10%);
 
     :deep(.el-card__header) {
       background: transparent;
-      border-bottom: 1px solid rgb(230 162 60 / 22%);
+      border-bottom: 1px solid rgb(251 191 36 / 22%);
     }
 
     :deep(.el-card__body) {
@@ -1801,25 +1996,6 @@
 
   /* 深色模式：用 :global(html.dark) 避免 scoped 误伤；限定在本页根节点下以免污染同名类 */
   :global(html.dark) .account-performance-page {
-    .ap-kpi-card {
-      background: linear-gradient(180deg, rgb(255 255 255 / 4%), rgb(255 255 255 / 1.5%));
-      border-color: var(--el-border-color);
-    }
-
-    .ap-kpi-card--roi1 {
-      background: linear-gradient(180deg, rgb(16 185 129 / 18%), rgb(16 185 129 / 4%));
-      border-color: rgb(16 185 129 / 65%);
-    }
-
-    .ap-kpi-card--alert {
-      background: rgb(230 162 60 / 12%);
-      border-color: rgb(230 162 60 / 40%);
-    }
-
-    .ap-table-card {
-      border-color: var(--el-border-color);
-    }
-
     .ap-detail-table {
       --el-table-border-color: var(--el-border-color);
       --el-table-header-bg-color: var(--el-fill-color-dark);
@@ -1829,19 +2005,6 @@
       :deep(.el-table__header-wrapper th .cell),
       :deep(.el-table__header-wrapper th .sort-caret) {
         color: #fff;
-      }
-    }
-
-    .ap-chart-card {
-      border-color: var(--el-border-color);
-    }
-
-    .ap-chart-card.ap-alert-card {
-      background: rgb(230 162 60 / 12%);
-      border-color: rgb(230 162 60 / 40%);
-
-      :deep(.el-card__header) {
-        border-bottom: 1px solid rgb(230 162 60 / 28%);
       }
     }
 
@@ -1855,6 +2018,27 @@
 
     .ap-alert-item {
       border-bottom-color: var(--el-border-color);
+    }
+  }
+
+  @media (width <= 768px) {
+    .account-performance-page {
+      padding-bottom: 16px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .account-performance-page::before,
+    .ac-perf-page-fx {
+      animation: none;
+    }
+
+    .ac-perf-entry-1,
+    .ac-perf-entry-2,
+    .ac-perf-entry-3 {
+      opacity: 1;
+      transform: none;
+      animation: none;
     }
   }
 </style>

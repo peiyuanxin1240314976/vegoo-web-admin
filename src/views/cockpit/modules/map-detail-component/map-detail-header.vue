@@ -12,7 +12,9 @@
           :class="`fi-${flagCode}`"
           :title="countryCode"
         ></span>
-        {{ countryName }}<template v-if="countryCode"> ({{ countryCode }})</template> - 地区详情
+        <span class="detail-title-text">
+          {{ countryName }}<template v-if="countryCode"> ({{ countryCode }})</template> - 地区详情
+        </span>
       </h1>
     </div>
     <div v-if="$slots.right" class="header-right">
@@ -48,6 +50,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../../user-growth/ad-performance/styles/ap-card-fx';
+
   .map-detail-header {
     display: flex;
     flex-wrap: wrap;
@@ -57,9 +61,8 @@
     margin-bottom: 16px;
 
     .header-left {
-      .back-btn {
-        margin-bottom: 8px;
-      }
+      display: flex;
+      gap: 15px;
 
       .detail-title {
         display: flex;
@@ -69,6 +72,10 @@
         font-size: 18px;
         font-weight: 600;
         color: var(--el-text-color-primary);
+      }
+
+      .detail-title-text {
+        min-width: 0;
       }
 
       .detail-title-flag {
@@ -88,5 +95,9 @@
       gap: 12px;
       align-items: center;
     }
+  }
+
+  html.dark .map-detail-header .detail-title-text {
+    @include ap-title-gradient;
   }
 </style>

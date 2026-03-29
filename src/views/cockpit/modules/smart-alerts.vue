@@ -41,7 +41,6 @@
 <style scoped lang="scss">
   .cockpit-panel {
     height: 100%;
-    background: var(--el-bg-color);
 
     :deep(.el-card__header) {
       display: flex;
@@ -52,11 +51,6 @@
     :deep(.el-card__body) {
       padding: 12px;
     }
-  }
-
-  /* 深色模式：渐变色背景 */
-  html.dark .cockpit-panel {
-    background: linear-gradient(320deg, #000e29, #000);
   }
 
   .alert-list {
