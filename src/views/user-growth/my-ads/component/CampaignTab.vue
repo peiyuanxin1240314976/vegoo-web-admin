@@ -414,7 +414,7 @@
     <!-- ── 数据表格 ── -->
     <div class="table-wrap">
       <template v-if="loading">
-        <div class="table-skeleton">
+        <div class="table-skeleton ma-skeleton-orbit">
           <ElSkeleton :rows="6" animated />
         </div>
       </template>
@@ -631,7 +631,13 @@
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+  @use '../styles/my-ads-neon.scss' as ma;
+
+  .ma-skeleton-orbit {
+    @include ma.ma-skeleton-orbit;
+  }
+
   .campaign-tab {
     display: flex;
     flex-direction: column;
@@ -738,13 +744,13 @@
   }
 
   .reset-btn {
-    padding: 5px 12px;
+    padding: 5px 14px;
     font-size: 12px;
     color: var(--teal);
     cursor: pointer;
     background: transparent;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 9999px;
     transition:
       background 0.2s ease,
       border-color 0.2s ease,
@@ -759,23 +765,19 @@
 
   /* ── 表格 ── */
   .table-wrap {
+    @include ma.ma-neon-surface;
+    @include ma.ma-neon-surface-children;
+
     padding: 16px;
     overflow: auto;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease;
-  }
-
-  .table-wrap:hover {
-    border-color: #2a4060;
-    box-shadow: 0 6px 22px rgb(0 0 0 / 22%);
   }
 
   .table-skeleton {
     min-height: 200px;
+  }
+
+  .table-skeleton :deep(.el-skeleton) {
+    padding: 0;
   }
 
   .data-table {
@@ -788,12 +790,14 @@
   .data-table th {
     position: sticky;
     top: 0;
+    z-index: 1;
     padding: 10px;
     font-weight: 500;
     color: var(--text-dim);
     text-align: left;
     white-space: nowrap;
-    background: var(--bg-card);
+    background: rgb(10 10 14 / 94%);
+    backdrop-filter: blur(6px);
     border-bottom: 1px solid var(--border);
   }
 
@@ -1135,6 +1139,10 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .ma-skeleton-orbit {
+      animation: none;
+    }
+
     .search-input,
     .reset-btn,
     .table-wrap,
@@ -1144,7 +1152,8 @@
     }
 
     .reset-btn:hover,
-    .detail-btn:hover {
+    .detail-btn:hover,
+    .table-wrap:hover {
       transform: none;
     }
   }

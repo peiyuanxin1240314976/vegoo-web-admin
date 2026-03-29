@@ -59,10 +59,10 @@
 
     <template v-if="showSkeleton">
       <!-- 骨架屏 -->
-      <div class="platform-skeleton">
+      <div class="platform-skeleton ma-skeleton-orbit">
         <ElSkeleton animated :rows="6" />
       </div>
-      <div class="bottom-summary platform-skeleton-footer">
+      <div class="bottom-summary platform-skeleton-footer ma-skeleton-orbit">
         <ElSkeleton animated :rows="2" />
       </div>
     </template>
@@ -211,7 +211,13 @@
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+  @use '../styles/my-ads-neon.scss' as ma;
+
+  .ma-skeleton-orbit {
+    @include ma.ma-skeleton-orbit;
+  }
+
   .platform-tab {
     display: flex;
     flex-direction: column;
@@ -219,11 +225,11 @@
   }
 
   .platform-skeleton {
+    @include ma.ma-neon-surface;
+    @include ma.ma-neon-surface-children;
+
     min-height: 240px;
     padding: 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
   }
 
   .platform-skeleton :deep(.el-skeleton) {
@@ -239,14 +245,14 @@
   }
 
   .app-groups-empty {
+    @include ma.ma-neon-surface;
+    @include ma.ma-neon-surface-children;
+
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 180px;
     padding: 40px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
   }
 
   .app-groups-empty :deep(.el-empty__description) {
@@ -294,9 +300,10 @@
   .toggle-group {
     display: flex;
     overflow: hidden;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    background: rgb(10 10 14 / 85%);
+    border: 1px solid rgb(96 165 250 / 22%);
+    border-radius: 9999px;
+    box-shadow: inset 0 1px 0 rgb(186 230 253 / 8%);
   }
 
   .toggle-btn {
@@ -365,25 +372,13 @@
   }
 
   .camp-card {
+    @include ma.ma-neon-surface;
+    @include ma.ma-neon-surface-children;
+
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding: 14px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      transform 0.22s ease;
-  }
-
-  .camp-card:hover {
-    border-color: rgb(0 212 170 / 40%);
-    box-shadow:
-      0 8px 24px rgb(0 0 0 / 30%),
-      0 0 0 1px rgb(0 212 170 / 12%);
-    transform: translateY(-3px);
   }
 
   .card-warn {
@@ -507,23 +502,15 @@
 
   /* ── 底部汇总 ── */
   .bottom-summary {
+    @include ma.ma-neon-surface;
+    @include ma.ma-neon-surface-children;
+
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
     justify-content: space-between;
     padding: 12px 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease;
-  }
-
-  .bottom-summary:hover {
-    border-color: #2a4060;
-    box-shadow: 0 4px 18px rgb(0 0 0 / 22%);
   }
 
   .summary-left,
@@ -563,6 +550,10 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .ma-skeleton-orbit {
+      animation: none;
+    }
+
     .toggle-btn,
     .camp-card,
     .plat-icon,

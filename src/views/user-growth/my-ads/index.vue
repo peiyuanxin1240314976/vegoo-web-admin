@@ -159,5 +159,13 @@
 </script>
 
 <template>
-  <MyAds style="background-color: #0f1012" />
+  <MyAds class="my-ads-route-root" />
 </template>
+
+<style scoped>
+  .my-ads-route-root {
+    display: block;
+    min-width: 0;
+    min-height: var(--art-full-height, calc(100vh - 120px));
+  }
+</style>

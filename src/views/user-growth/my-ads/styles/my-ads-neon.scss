@@ -1,0 +1,44 @@
+// 我的广告：与广告成效对齐的霓虹面板 mixin（子组件 scoped 中 @use）
+@use '../../ad-performance/styles/ap-card-fx.scss' as ap;
+
+@mixin ma-neon-surface {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+
+  @include ap.ap-neon-bg;
+  @include ap.ap-card-mesh;
+  @include ap.ap-panel-hover;
+}
+
+@mixin ma-neon-surface-children {
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@mixin ma-title-gradient {
+  @include ap.ap-title-gradient;
+}
+
+// 骨架外层微光呼吸（容器）
+@keyframes ma-skeleton-orbit {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgb(96 165 250 / 18%),
+      0 0 28px rgb(59 130 246 / 10%);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 1px rgb(96 165 250 / 42%),
+      0 0 44px rgb(59 130 246 / 22%),
+      0 0 80px rgb(6 182 212 / 10%);
+  }
+}
+
+@mixin ma-skeleton-orbit {
+  animation: ma-skeleton-orbit 2.4s ease-in-out infinite;
+}

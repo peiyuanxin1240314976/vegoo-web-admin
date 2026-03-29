@@ -65,8 +65,16 @@
 
   function updateLineChart() {
     if (!lineChartEl.value || !props.data?.trend) return
+    const dom = lineChartEl.value
+    if (lineChart) {
+      const prevDom = lineChart.getDom?.()
+      if (prevDom && prevDom !== dom) {
+        lineChart.dispose()
+        lineChart = null
+      }
+    }
     if (!lineChart) {
-      lineChart = echarts.init(lineChartEl.value, 'dark')
+      lineChart = echarts.init(dom, 'dark')
     }
     const t = props.data.trend
     lineChart.setOption({
@@ -174,8 +182,16 @@
 
   function updatePieChart() {
     if (!pieChartEl.value || !props.data) return
+    const dom = pieChartEl.value
+    if (pieChart) {
+      const prevDom = pieChart.getDom?.()
+      if (prevDom && prevDom !== dom) {
+        pieChart.dispose()
+        pieChart = null
+      }
+    }
     if (!pieChart) {
-      pieChart = echarts.init(pieChartEl.value, 'dark')
+      pieChart = echarts.init(dom, 'dark')
     }
     const cd = channelData.value
     const centerAmount = pieCenterValue.value.replace(/[{}]/g, '')
@@ -268,17 +284,30 @@
   watch(
     () => [props.data, showSkeleton.value, trendIsEmpty.value, sourcePieIsEmpty.value],
     async () => {
+      // 骨架屏阶段图表节点被 v-if 卸载，必须 dispose，否则实例仍挂在已移除的 DOM 上，恢复后无法重绘
+      if (showSkeleton.value) {
+        if (lineChart) {
+          lineChart.dispose()
+          lineChart = null
+        }
+        if (pieChart) {
+          pieChart.dispose()
+          pieChart = null
+        }
+        return
+      }
+
       if (trendIsEmpty.value && lineChart) {
         lineChart.dispose()
         lineChart = null
-      } else if (props.data && !showSkeleton.value && !trendIsEmpty.value) {
+      } else if (props.data && !trendIsEmpty.value) {
         await nextTick()
         updateLineChart()
       }
       if (sourcePieIsEmpty.value && pieChart) {
         pieChart.dispose()
         pieChart = null
-      } else if (props.data && !showSkeleton.value && !sourcePieIsEmpty.value) {
+      } else if (props.data && !sourcePieIsEmpty.value) {
         await nextTick()
         updatePieChart()
       }
@@ -520,7 +549,9 @@
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+  @use '../styles/my-ads-neon.scss' as ma;
+
   .summary-tab {
     display: flex;
     flex-direction: column;
@@ -544,29 +575,22 @@
   }
 
   .stat-card {
+    @include ma.ma-neon-surface;
+    @include ma.ma-neon-surface-children;
+
     display: flex;
     flex-direction: column;
     gap: 4px;
     padding: 14px 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-top: 2px solid;
-    border-radius: 8px;
-    transition:
-      transform 0.22s ease,
-      box-shadow 0.22s ease,
-      border-color 0.22s ease;
-  }
-
-  .stat-card:not(.stat-card--skeleton):hover {
-    box-shadow:
-      0 6px 20px rgb(0 0 0 / 28%),
-      0 0 0 1px rgb(0 212 170 / 10%);
-    transform: translateY(-2px);
+    border-style: solid;
+    border-width: 1px;
+    border-top-width: 2px;
   }
 
   .stat-card--skeleton {
     min-height: 100px;
+
+    @include ma.ma-skeleton-orbit;
   }
 
   .stat-card--skeleton :deep(.el-skeleton) {
@@ -575,7 +599,9 @@
 
   .stat-title {
     font-size: 12px;
-    color: var(--text-secondary);
+    font-weight: 600;
+
+    @include ma.ma-title-gradient;
   }
 
   .stat-main {
@@ -612,24 +638,16 @@
   }
 
   .chart-card {
-    padding: 14px 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      transform 0.22s ease;
-  }
+    @include ma.ma-neon-surface;
+    @include ma.ma-neon-surface-children;
 
-  .chart-card:not(.summary-skeleton-chart, .summary-skeleton-table):hover {
-    border-color: #2a4060;
-    box-shadow: 0 6px 22px rgb(0 0 0 / 25%);
-    transform: translateY(-1px);
+    padding: 14px 16px;
   }
 
   .summary-skeleton-chart {
     min-height: 220px;
+
+    @include ma.ma-skeleton-orbit;
   }
 
   .summary-skeleton-chart :deep(.el-skeleton) {
@@ -638,6 +656,8 @@
 
   .summary-skeleton-table {
     min-height: 280px;
+
+    @include ma.ma-skeleton-orbit;
   }
 
   .summary-skeleton-table :deep(.el-skeleton) {
@@ -653,8 +673,9 @@
 
   .chart-title {
     font-size: 13px;
-    font-weight: 500;
-    color: var(--text-primary);
+    font-weight: 600;
+
+    @include ma.ma-title-gradient;
   }
 
   .btn-sm {
@@ -725,7 +746,8 @@
     position: sticky;
     top: 0;
     z-index: 1;
-    background: var(--bg-card);
+    background: rgb(10 10 14 / 94%);
+    backdrop-filter: blur(6px);
   }
 
   .progress-table {
@@ -840,8 +862,14 @@
       transition: none;
     }
 
-    .stat-card:not(.stat-card--skeleton):hover,
-    .chart-card:not(.summary-skeleton-chart, .summary-skeleton-table):hover,
+    .stat-card--skeleton,
+    .summary-skeleton-chart,
+    .summary-skeleton-table {
+      animation: none;
+    }
+
+    .stat-card:hover,
+    .chart-card:hover,
     .btn-sm:hover {
       transform: none;
     }
