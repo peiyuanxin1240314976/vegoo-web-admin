@@ -1,7 +1,16 @@
 <template>
-  <div class="or-tab-content or-tab-overall">
+  <div
+    class="or-tab-content or-tab-overall"
+    v-loading="loading && !!tabData"
+    element-loading-background="color-mix(in srgb, var(--default-box-color) 88%, transparent)"
+  >
     <!-- KPI 卡片行 -->
-    <section class="or-kpi-grid">
+    <section v-if="loading && !tabData" class="or-kpi-grid or-kpi-grid--skeleton" aria-busy="true">
+      <div v-for="n in 6" :key="n" class="or-kpi-skel">
+        <ElSkeleton animated :rows="2" />
+      </div>
+    </section>
+    <section v-else class="or-kpi-grid">
       <article v-for="card in tabData?.kpis ?? []" :key="card.id" class="or-kpi">
         <div class="or-kpi__title">{{ card.title }}</div>
         <div class="or-kpi__value">{{ card.primaryValue }}</div>
@@ -25,12 +34,12 @@
     </section>
 
     <!-- 中部：曲线图 + 右侧面板 -->
-    <section class="or-mid-grid">
+    <section v-if="tabData" class="or-mid-grid">
       <!-- 左：整体回收曲线 -->
       <ElCard class="or-panel or-panel--curve" shadow="never">
         <template #header>
           <div class="panel-header-row">
-            <span>整体回收曲线（按渠道）</span>
+            <span>整体回收曲线（按广告平台）</span>
             <span class="panel-hint"
               >该数据为整合用户，含自然量用户。自然量数据来源：BigQuery 归因计算。
               回收天数截至今日。</span
@@ -96,7 +105,7 @@
     </section>
 
     <!-- 底部：明细数据表 -->
-    <ElCard class="or-panel or-panel--detail" shadow="never">
+    <ElCard v-if="tabData" class="or-panel or-panel--detail" shadow="never">
       <template #header>
         <div class="panel-header-row">
           <span>整体回收明细数据</span>
@@ -202,7 +211,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, watch } from 'vue'
+  import { ref, onMounted, watch, nextTick } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { OverallRecoveryFilterState, OverallTabData } from '../types'
@@ -214,6 +223,8 @@
   const props = defineProps<{ filter: OverallRecoveryFilterState }>()
 
   const tabData = ref<OverallTabData | null>(null)
+  const loading = ref(false)
+  let loadSeq = 0
   const detailApp = ref('all')
   const detailChannel = ref('all')
 
@@ -328,14 +339,24 @@
   }
 
   async function loadData() {
-    tabData.value = await fetchOverallTabData({
-      dateRange: props.filter.dateRange,
-      s_app_id: props.filter.s_app_id,
-      source: props.filter.source,
-      s_country_code: props.filter.s_country_code
-    })
-    curveChart.initChart(buildCurveOption())
-    volumeChart.initChart(buildVolumeOption())
+    const seq = ++loadSeq
+    loading.value = true
+    try {
+      const res = await fetchOverallTabData({
+        dateRange: props.filter.dateRange,
+        s_app_id: props.filter.s_app_id,
+        source: props.filter.source,
+        s_country_code: props.filter.s_country_code
+      })
+      if (seq !== loadSeq) return
+      tabData.value = res
+      await nextTick()
+      if (seq !== loadSeq) return
+      curveChart.initChart(buildCurveOption())
+      volumeChart.initChart(buildVolumeOption())
+    } finally {
+      if (seq === loadSeq) loading.value = false
+    }
   }
 
   onMounted(loadData)
@@ -343,12 +364,15 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../ad-performance/styles/ap-card-fx';
+
   .or-tab-overall {
+    position: relative;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    min-height: 100%;
+    min-height: 280px;
     padding-bottom: 16px;
   }
 
@@ -359,11 +383,25 @@
     gap: 12px;
   }
 
-  .or-kpi {
+  .or-kpi-grid--skeleton {
+    margin-bottom: 0;
+  }
+
+  .or-kpi-skel {
     padding: 14px 16px;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 8px;
+
+    @include ap-neon-bg;
+
+    border-radius: 14px;
+  }
+
+  .or-kpi {
+    position: relative;
+    padding: 14px 16px;
+
+    @include ap-neon-bg;
+
+    border-radius: 14px;
 
     &__title {
       margin-bottom: 6px;
@@ -452,18 +490,34 @@
 
   /* 面板 */
   .or-panel {
+    position: relative;
+    overflow: hidden;
+    border: none;
+
+    @include ap-neon-bg;
+
+    border-radius: 14px;
+
     :deep(.el-card__header) {
       padding: 10px 14px;
       font-size: 13px;
       font-weight: 500;
       color: var(--art-gray-800);
-      background: var(--default-box-color);
-      border-bottom: 1px solid var(--default-border);
+      background: transparent !important;
+      border-bottom: 1px solid color-mix(in srgb, var(--art-success) 22%, var(--default-border));
+    }
+
+    :deep(.el-card__header:not(:has(.panel-header-row))) {
+      @include ap-title-gradient;
+    }
+
+    :deep(.panel-header-row > span:first-child) {
+      @include ap-title-gradient;
     }
 
     :deep(.el-card__body) {
       padding: 12px 14px;
-      background: var(--default-box-color);
+      background: transparent;
     }
   }
 
@@ -477,7 +531,9 @@
   .panel-hint {
     font-size: 11px;
     font-weight: 400;
-    color: var(--art-gray-500);
+    color: var(--text-secondary);
+    background: none;
+    -webkit-text-fill-color: var(--text-secondary);
   }
 
   /* 图例 */

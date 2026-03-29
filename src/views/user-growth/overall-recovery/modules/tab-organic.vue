@@ -1,5 +1,9 @@
 <template>
-  <div class="or-tab-content or-tab-organic">
+  <div
+    class="or-tab-content or-tab-organic"
+    v-loading="loading && !!tabData"
+    element-loading-background="color-mix(in srgb, var(--default-box-color) 88%, transparent)"
+  >
     <!-- 数据源提示 -->
     <div class="or-datasource-bar">
       <el-icon><InfoFilled /></el-icon>
@@ -9,7 +13,12 @@
     </div>
 
     <!-- KPI 卡片行 -->
-    <section class="or-kpi-grid">
+    <section v-if="loading && !tabData" class="or-kpi-grid or-kpi-grid--skeleton" aria-busy="true">
+      <div v-for="n in 6" :key="n" class="or-kpi-skel">
+        <ElSkeleton animated :rows="2" />
+      </div>
+    </section>
+    <section v-else class="or-kpi-grid">
       <article
         v-for="card in tabData?.kpis ?? []"
         :key="card.id"
@@ -35,7 +44,7 @@
     </section>
 
     <!-- 中部：4列图表 -->
-    <section class="or-chart-grid">
+    <section v-if="tabData" class="or-chart-grid">
       <!-- 自然量 vs 付费量趋势 -->
       <ElCard class="or-panel or-panel--trend" shadow="never">
         <template #header>自然量 vs 付费量趋势（近30天）</template>
@@ -85,7 +94,7 @@
     </section>
 
     <!-- 底部：K-factor渠道分析 + 国家分布 -->
-    <section class="or-bottom-grid">
+    <section v-if="tabData" class="or-bottom-grid">
       <!-- K-factor 渠道分析 -->
       <ElCard class="or-panel" shadow="never">
         <template #header>
@@ -173,7 +182,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, watch, defineComponent, h } from 'vue'
+  import { ref, onMounted, watch, nextTick, defineComponent, h } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { OverallRecoveryFilterState, OrganicTabData } from '../types'
@@ -185,6 +194,8 @@
   const props = defineProps<{ filter: OverallRecoveryFilterState }>()
 
   const tabData = ref<OrganicTabData | null>(null)
+  const loading = ref(false)
+  let loadSeq = 0
 
   // Mini sparkline component (inline SVG)
   const MiniSparkline = defineComponent({
@@ -435,16 +446,26 @@
   }
 
   async function loadData() {
-    tabData.value = await fetchOrganicTabData({
-      dateRange: props.filter.dateRange,
-      s_app_id: props.filter.s_app_id,
-      source: props.filter.source,
-      s_country_code: props.filter.s_country_code
-    })
-    trendChart.initChart(buildTrendOption())
-    sourceChart.initChart(buildSourceOption())
-    radarChart.initChart(buildRadarOption())
-    kfactorChart.initChart(buildKfactorOption())
+    const seq = ++loadSeq
+    loading.value = true
+    try {
+      const res = await fetchOrganicTabData({
+        dateRange: props.filter.dateRange,
+        s_app_id: props.filter.s_app_id,
+        source: props.filter.source,
+        s_country_code: props.filter.s_country_code
+      })
+      if (seq !== loadSeq) return
+      tabData.value = res
+      await nextTick()
+      if (seq !== loadSeq) return
+      trendChart.initChart(buildTrendOption())
+      sourceChart.initChart(buildSourceOption())
+      radarChart.initChart(buildRadarOption())
+      kfactorChart.initChart(buildKfactorOption())
+    } finally {
+      if (seq === loadSeq) loading.value = false
+    }
   }
 
   onMounted(loadData)
@@ -452,26 +473,31 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../ad-performance/styles/ap-card-fx';
+
   .or-tab-organic {
+    position: relative;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    min-height: 100%;
+    min-height: 280px;
     padding-bottom: 16px;
   }
 
   .or-datasource-bar {
     display: flex;
-    gap: 6px;
-    align-items: center;
-    padding: 8px 14px;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 12px 16px;
     font-size: 12px;
-    color: var(--art-gray-500);
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-left: 3px solid #14b8a6;
-    border-radius: 6px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    border-left: 3px solid #10b981;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgb(16 185 129 / 12%);
+
+    @include ap-neon-bg;
   }
 
   /* KPI */
@@ -481,14 +507,31 @@
     gap: 12px;
   }
 
-  .or-kpi {
+  .or-kpi-grid--skeleton {
+    margin-bottom: 0;
+  }
+
+  .or-kpi-skel {
     padding: 14px 16px;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 8px;
+
+    @include ap-neon-bg;
+
+    border-radius: 14px;
+  }
+
+  .or-kpi {
+    position: relative;
+    padding: 14px 16px;
+
+    @include ap-neon-bg;
+
+    border-radius: 14px;
 
     &--accent {
-      border-left: 3px solid #14b8a6;
+      border-left: 3px solid #10b981;
+      box-shadow:
+        0 0 0 1px rgb(16 185 129 / 25%) inset,
+        0 8px 28px rgb(16 185 129 / 12%);
     }
 
     &__title {
@@ -534,18 +577,34 @@
 
   /* 面板通用 */
   .or-panel {
+    position: relative;
+    overflow: hidden;
+    border: none;
+
+    @include ap-neon-bg;
+
+    border-radius: 14px;
+
     :deep(.el-card__header) {
       padding: 10px 14px;
       font-size: 13px;
       font-weight: 500;
       color: var(--art-gray-800);
-      background: var(--default-box-color);
-      border-bottom: 1px solid var(--default-border);
+      background: transparent !important;
+      border-bottom: 1px solid color-mix(in srgb, var(--art-success) 22%, var(--default-border));
+    }
+
+    :deep(.el-card__header:not(:has(.panel-header-row))) {
+      @include ap-title-gradient;
+    }
+
+    :deep(.panel-header-row > span:first-child) {
+      @include ap-title-gradient;
     }
 
     :deep(.el-card__body) {
       padding: 12px 14px;
-      background: var(--default-box-color);
+      background: transparent;
     }
   }
 
@@ -559,7 +618,9 @@
   .panel-sort {
     font-size: 11px;
     font-weight: 400;
-    color: var(--art-gray-500);
+    color: var(--text-secondary);
+    background: none;
+    -webkit-text-fill-color: var(--text-secondary);
   }
 
   /* 图表 */
@@ -706,9 +767,9 @@
     justify-content: space-between;
     min-height: 0;
     padding: 10px 12px;
-    background: var(--default-bg-color);
-    border: 1px solid var(--default-border);
-    border-radius: 6px;
+    background: color-mix(in srgb, var(--default-bg-color) 85%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-success) 18%, var(--default-border));
+    border-radius: 10px;
 
     &__header {
       display: flex;
