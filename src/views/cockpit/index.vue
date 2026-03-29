@@ -5,7 +5,10 @@
     <div class="cockpit-page__section cockpit-page__section--header cockpit-entry-1">
       <div class="cockpit-header">
         <CockpitDateRangeTabs :model-value="dateRange" @update:model-value="onDateRangeChange" />
-        <CockpitTopBarActions v-model="date" />
+        <CockpitTopBarActions
+          v-model="date"
+          @open-scenario-simulation="showScenarioSimulation = true"
+        />
       </div>
     </div>
 
@@ -152,6 +155,8 @@
         </ElCol>
       </ElRow>
     </div>
+
+    <ScenarioSimulationDialog v-model="showScenarioSimulation" />
   </div>
 </template>
 
@@ -169,9 +174,11 @@
   import CockpitTop3Panels from './modules/top3-panels.vue'
   import CockpitSmartAlerts from './modules/smart-alerts.vue'
   import CockpitRevenueStructureFlow from './modules/revenue-structure-flow.vue'
+  import ScenarioSimulationDialog from './modules/scenario-simulation-dialog.vue'
   // dev测试提交
   defineOptions({ name: 'Cockpit' })
 
+  const showScenarioSimulation = ref(false)
   const { overview, moduleLoading, dateRange, date, load } = useCockpitData()
   const suppressNextDateWatch = ref(false)
 
@@ -202,7 +209,6 @@
     position: relative;
     min-width: 0;
     padding: 20px 24px 28px;
-    overflow-x: clip;
 
     &::before {
       position: absolute;
@@ -261,7 +267,7 @@
 
   .cockpit-page-fx {
     position: absolute;
-    inset: -12% -12% 40%;
+    inset: 0 0 40%;
     z-index: 0;
     pointer-events: none;
     background: conic-gradient(
@@ -346,7 +352,7 @@
 
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: none;
     }
   }
 

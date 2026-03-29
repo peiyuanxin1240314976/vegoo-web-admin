@@ -11,11 +11,10 @@
       :prefix-icon="Calendar"
     />
     <div class="actions">
-      <ElButton size="default" type="primary" @click="showSimulationDialog = true">
+      <ElButton size="default" type="primary" @click="emit('openScenarioSimulation')">
         <ElIcon class="btn-icon"><DataAnalysis /></ElIcon>
         模拟分析
       </ElButton>
-      <ScenarioSimulationDialog v-model="showSimulationDialog" />
       <ElButton size="default" @click="toggleFullScreen">
         <ElIcon class="btn-icon"><FullScreen /></ElIcon>
         {{ isFullScreen ? '退出全屏' : '全屏' }}
@@ -29,11 +28,8 @@
   import { Calendar, DataAnalysis, FullScreen } from '@element-plus/icons-vue'
   import { useTableStore } from '@/store/modules/table'
   import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
-  import ScenarioSimulationDialog from './scenario-simulation-dialog.vue'
 
   defineOptions({ name: 'CockpitTopBarActions' })
-
-  const showSimulationDialog = ref(false)
 
   const props = withDefaults(
     defineProps<{
@@ -45,7 +41,10 @@
       fullClass: 'cockpit-page'
     }
   )
-  const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+  const emit = defineEmits<{
+    (e: 'update:modelValue', value: string): void
+    (e: 'openScenarioSimulation'): void
+  }>()
 
   const tableStore = useTableStore()
   const isFullScreen = ref(false)
@@ -73,14 +72,17 @@
     if (!el) return
 
     isFullScreen.value = !isFullScreen.value
+    const appMain = document.getElementById('app-main')
 
     if (isFullScreen.value) {
       originalOverflow.value = document.body.style.overflow
       document.body.style.overflow = 'hidden'
+      if (appMain) appMain.style.overflow = 'hidden'
       el.classList.add('el-full-screen')
       tableStore.setIsFullScreen(true)
     } else {
       document.body.style.overflow = originalOverflow.value
+      if (appMain) appMain.style.overflow = ''
       el.classList.remove('el-full-screen')
       tableStore.setIsFullScreen(false)
     }
@@ -100,6 +102,8 @@
     document.removeEventListener('keydown', handleEscapeKey)
     if (isFullScreen.value) {
       document.body.style.overflow = originalOverflow.value
+      const appMain = document.getElementById('app-main')
+      if (appMain) appMain.style.overflow = ''
       const el = document.querySelector(`.${props.fullClass}`)
       if (el) el.classList.remove('el-full-screen')
       tableStore.setIsFullScreen(false)

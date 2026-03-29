@@ -5,7 +5,9 @@
     width="1000px"
     class="scenario-simulation-dialog"
     :close-on-click-modal="false"
+    append-to-body
     destroy-on-close
+    :z-index="SIMULATION_DIALOG_Z_INDEX"
     @update:model-value="emit('update:modelValue', $event)"
   >
     <div class="simulation-content">
@@ -138,6 +140,9 @@
   } from '../types'
 
   defineOptions({ name: 'ScenarioSimulationDialog' })
+
+  /** 高于 `.el-full-screen`（2300），否则驾驶舱全屏时弹窗在页面下层不可见 */
+  const SIMULATION_DIALOG_Z_INDEX = 2410
 
   const props = defineProps<{ modelValue: boolean }>()
   const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()

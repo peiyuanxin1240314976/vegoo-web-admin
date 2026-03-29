@@ -48,6 +48,9 @@ import {
 // 导入渲染器
 import { CanvasRenderer } from 'echarts/renderers'
 
+// ECharts 6：`grid.containLabel` 需注册 legacy 实现，否则控制台告警并失效
+import { LegacyGridContainLabel } from 'echarts/features'
+
 // 注册必要的组件
 echarts.use([
   // 图表类型
@@ -81,7 +84,9 @@ echarts.use([
   VisualMapComponent,
 
   // 渲染器
-  CanvasRenderer
+  CanvasRenderer,
+
+  LegacyGridContainLabel
 ])
 
 // 导出 echarts 实例和类型

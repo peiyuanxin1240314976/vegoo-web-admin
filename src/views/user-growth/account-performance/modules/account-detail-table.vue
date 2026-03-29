@@ -13,7 +13,7 @@
         size="default"
         class="ap-detail-table"
       >
-        <ElTableColumn label="应用 / 平台 / 账户" width="180" show-overflow-tooltip>
+        <ElTableColumn label="应用 / 平台 / 账户" width="auto" show-overflow-tooltip>
           <template #default="{ row }">
             <span class="ap-cell-name">
               <ElIcon v-if="row.type === 'app'" class="ap-row-icon ap-row-icon--app">
@@ -33,7 +33,7 @@
           </template>
         </ElTableColumn>
 
-        <ElTableColumn label="广告支出" width="100" align="left" show-overflow-tooltip>
+        <ElTableColumn label="广告支出" width="80" align="left" show-overflow-tooltip>
           <template #default="{ row }">{{ formatMoney(row.spend) }}</template>
         </ElTableColumn>
 
@@ -114,7 +114,7 @@
           </template>
         </ElTableColumn>
 
-        <ElTableColumn label="操作" width="80" align="center" fixed="right" show-overflow-tooltip>
+        <ElTableColumn label="操作" width="auto" align="center" show-overflow-tooltip>
           <template #default="{ row }">
             <template v-if="row.type === 'account'">
               <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
