@@ -113,14 +113,20 @@
 </script>
 
 <style scoped lang="scss">
+  /* 纵向只让外层 .layout-content 滚动，避免与 #app-content 内滚动区叠成双层滚动条 */
   .ad-platform-info-page {
     position: relative;
     flex: 1;
     min-width: 0;
     min-height: 0;
     padding: 16px 20px 24px;
-    overflow: clip auto;
+    overflow: clip visible;
     background: var(--default-bg-color);
+  }
+
+  .ad-platform-info-page.art-full-height {
+    height: auto;
+    min-height: var(--art-full-height, calc(100vh - 120px));
   }
 
   .ad-platform-info-page--ap-fx {
@@ -252,7 +258,7 @@
   }
 
   .api-skeleton-root {
-    min-height: 100%;
+    min-height: var(--art-full-height, calc(100vh - 120px));
   }
 
   .api-page {
