@@ -92,7 +92,7 @@ export interface AdPerformanceCampaignRow {
   children?: AdPerformanceCampaignRow[]
 }
 
-/** 按国家地区：单行（平铺） */
+/** 按国家地区：父行为国家汇总；子行为广告系列（结构与广告系列 Tab 行一致） */
 export interface AdPerformanceCountryRow {
   id: string
   /** 国家代码，如 US */
@@ -110,95 +110,93 @@ export interface AdPerformanceCountryRow {
   /** 累计 ROI */
   roiTotal: number
   estimatedProfit: number
+  children?: AdPerformanceCampaignRow[]
 }
 
 /** 优化师职级（截图里显示“初级/中级/高级优化师”等） */
 export type OwnerLevel = 'junior' | 'mid' | 'senior'
 
-/** 按投放优化师：子行（广告系列） */
-export interface AdPerformanceOwnerCampaignRow {
+/**
+ * 按优化师：接口父子行字段名一致，未使用处为 null；子行带 campaignId。
+ * Mock 可额外包含 level、appCount 等扩展字段。
+ */
+export interface AdPerformanceOwnerTableRow {
   id: string
-  /** 广告系列名称 */
-  campaignName: string
-  channel: string
-  country: string
-  status: CampaignRowStatus
+  campaignId?: string | null
+  ownerName?: string | null
+  accountName?: string | null
+  platform?: string | null
+  campaignName?: string | null
+  channel?: string | null
+  country?: string | null
+  status?: CampaignRowStatus | null
   spend: number
-  cpi: number
-  ctr: number
-  cvr: number
-  roi1: number
-  roi7: number
-  estimatedProfit: number
+  activeCampaignCount?: number | null
+  avgCpi?: number | null
+  avgCtr?: number | null
+  avgCvr?: number | null
+  cpi?: number | null
+  ctr?: number | null
+  cvr?: number | null
+  roi1?: number | null
+  roi7?: number | null
+  estimatedProfit?: number | null
+  level?: OwnerLevel | null
+  appCount?: number | null
+  children?: AdPerformanceOwnerTableRow[]
 }
 
-/** 按投放优化师：父行（优化师汇总，可展开） */
-export interface AdPerformanceOwnerRow {
-  id: string
-  ownerName: string
-  level: OwnerLevel
-  /** 负责应用数 */
-  appCount: number
-  /** 广告支出 */
-  spend: number
-  /** 活跃系列数 */
-  activeCampaignCount: number
-  avgCpi: number
-  avgCtr: number
-  avgCvr: number
-  roi1: number
-  roi7: number
-  estimatedProfit: number
-  children?: AdPerformanceOwnerCampaignRow[]
-}
+/** @deprecated 与 {@link AdPerformanceOwnerTableRow} 相同，保留别名便于阅读 */
+export type AdPerformanceOwnerCampaignRow = AdPerformanceOwnerTableRow
+export type AdPerformanceOwnerRow = AdPerformanceOwnerTableRow
 
-/** 按投放优化师：团队汇总条 */
+/** 按投放优化师：团队汇总条（部分网关可能缺少 avgRoi1/avgCvr 或混入账户类计数字段） */
 export interface OwnerTeamSummary {
   totalSpend: number
   avgCpi: number
-  avgRoi1: number
-  avgCvr: number
   estimatedProfit: number
+  avgRoi1?: number
+  avgCvr?: number
+  lowBalanceAccountCount?: number
+  overBudgetAccountCount?: number
 }
 
 /** 广告账户状态（截图里有“充足/低余额/余额不足/超预算”等） */
 export type AdAccountStatus = 'sufficient' | 'low_balance' | 'insufficient' | 'over_budget'
 
-/** 按广告账户：子行（广告系列） */
-export interface AdPerformanceAccountCampaignRow {
+/**
+ * 按广告账户：接口父子行字段名一致，未使用处为 null；子行带 campaignId。
+ * 余额、预算进度、账户状态等仅部分响应返回，需做空值展示。
+ */
+export interface AdPerformanceAccountTableRow {
   id: string
-  campaignName: string
-  channel: string
-  country: string
-  status: CampaignRowStatus
+  campaignId?: string | null
+  ownerName?: string | null
+  accountName?: string | null
+  platform?: string | null
+  campaignName?: string | null
+  channel?: string | null
+  country?: string | null
+  status?: CampaignRowStatus | AdAccountStatus | null
   spend: number
-  cpi: number
-  ctr: number
-  cvr: number
-  roi1: number
-  roi7: number
-  estimatedProfit: number
+  activeCampaignCount?: number | null
+  avgCpi?: number | null
+  avgCtr?: number | null
+  avgCvr?: number | null
+  cpi?: number | null
+  ctr?: number | null
+  cvr?: number | null
+  roi1?: number | null
+  roi7?: number | null
+  estimatedProfit?: number | null
+  balance?: number | null
+  budgetProgressPercent?: number | null
+  children?: AdPerformanceAccountTableRow[]
 }
 
-/** 按广告账户：父行（账户汇总，可展开） */
-export interface AdPerformanceAccountRow {
-  id: string
-  accountName: string
-  platform: string
-  balance: number
-  status: AdAccountStatus
-  spend: number
-  /** 预算进度（0-100） */
-  budgetProgressPercent: number
-  activeCampaignCount: number
-  avgCpi: number
-  avgCtr: number
-  avgCvr: number
-  roi1: number
-  roi7: number
-  estimatedProfit: number
-  children?: AdPerformanceAccountCampaignRow[]
-}
+/** @deprecated 与 {@link AdPerformanceAccountTableRow} 相同 */
+export type AdPerformanceAccountCampaignRow = AdPerformanceAccountTableRow
+export type AdPerformanceAccountRow = AdPerformanceAccountTableRow
 
 /** 按广告账户：账户汇总条 */
 export interface AccountSummary {

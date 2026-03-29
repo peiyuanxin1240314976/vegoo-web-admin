@@ -26,9 +26,9 @@
             <template v-if="isOwnerRow(row)">
               <div class="ad-performance-owner__cell">
                 <div class="ad-performance-owner__avatar">
-                  {{ avatarText(row.ownerName) }}
+                  {{ avatarText(row.ownerName ?? '') }}
                 </div>
-                <span class="ad-performance-owner__name" :title="row.ownerName">{{
+                <span class="ad-performance-owner__name" :title="row.ownerName ?? ''">{{
                   row.ownerName
                 }}</span>
               </div>
@@ -56,55 +56,67 @@
           </template>
 
           <template v-else-if="col.key === 'level'">
-            <template v-if="isOwnerRow(row)">
+            <template v-if="isOwnerRow(row) && row.level">
               <ElTag :type="levelTagType(row.level)" size="small" effect="plain">
                 {{ levelLabel(row.level) }}
               </ElTag>
             </template>
+            <span v-else-if="isOwnerRow(row)" class="ad-performance-table__muted">-</span>
             <span v-else class="ad-performance-table__muted">-</span>
           </template>
 
           <template v-else-if="col.key === 'appCount'">
-            <template v-if="isOwnerRow(row)">{{ row.appCount }} 个应用</template>
+            <template v-if="isOwnerRow(row) && row.appCount != null"
+              >{{ row.appCount }} 个应用</template
+            >
+            <span v-else-if="isOwnerRow(row)" class="ad-performance-table__muted">-</span>
             <span v-else class="ad-performance-table__muted">-</span>
           </template>
 
           <template v-else-if="col.key === 'spend'">{{ formatMoney(row.spend, 0) }}</template>
 
           <template v-else-if="col.key === 'activeCampaignCount'">
-            <template v-if="isOwnerRow(row)">{{ row.activeCampaignCount }} 个系列</template>
+            <template v-if="isOwnerRow(row) && row.activeCampaignCount != null"
+              >{{ row.activeCampaignCount }} 个系列</template
+            >
+            <span v-else-if="isOwnerRow(row)" class="ad-performance-table__muted">-</span>
             <span v-else class="ad-performance-table__muted">-</span>
           </template>
 
           <template v-else-if="col.key === 'avgCpi'">
-            <template v-if="isOwnerRow(row)">{{ formatMoney(row.avgCpi, 2) }}</template>
-            <span v-else>{{ formatMoney(row.cpi, 2) }}</span>
+            <template v-if="isOwnerRow(row)">{{
+              row.avgCpi != null ? formatMoney(row.avgCpi, 2) : '—'
+            }}</template>
+            <span v-else>{{ row.cpi != null ? formatMoney(row.cpi, 2) : '—' }}</span>
           </template>
 
           <template v-else-if="col.key === 'avgCtr'">
-            <template v-if="isOwnerRow(row)">{{ row.avgCtr }}%</template>
-            <span v-else>{{ row.ctr }}%</span>
+            <template v-if="isOwnerRow(row)">{{
+              row.avgCtr != null ? `${row.avgCtr}%` : '—'
+            }}</template>
+            <span v-else>{{ row.ctr != null ? `${row.ctr}%` : '—' }}</span>
           </template>
 
           <template v-else-if="col.key === 'avgCvr'">
-            <template v-if="isOwnerRow(row)">{{ row.avgCvr }}%</template>
-            <span v-else>{{ row.cvr }}%</span>
+            <template v-if="isOwnerRow(row)">{{
+              row.avgCvr != null ? `${row.avgCvr}%` : '—'
+            }}</template>
+            <span v-else>{{ row.cvr != null ? `${row.cvr}%` : '—' }}</span>
           </template>
 
           <template v-else-if="col.key === 'roi1'">
-            <span :class="roiClass(isOwnerRow(row) ? row.roi1 : row.roi1)">
-              {{ isOwnerRow(row) ? row.roi1 : row.roi1 }}%
-            </span>
+            <span v-if="row.roi1 == null" class="ad-performance-table__muted">—</span>
+            <span v-else :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
           </template>
 
           <template v-else-if="col.key === 'roi7'">
-            <span :class="roiClass(isOwnerRow(row) ? row.roi7 : row.roi7)">
-              {{ isOwnerRow(row) ? row.roi7 : row.roi7 }}%
-            </span>
+            <span v-if="row.roi7 == null" class="ad-performance-table__muted">—</span>
+            <span v-else :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
           </template>
 
           <template v-else-if="col.key === 'estimatedProfit'">
-            <span :class="profitClass(row.estimatedProfit)">
+            <span v-if="row.estimatedProfit == null" class="ad-performance-table__muted">—</span>
+            <span v-else :class="profitClass(row.estimatedProfit)">
               {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
             </span>
           </template>
@@ -294,7 +306,7 @@
   const treeProps = { children: 'children', hasChildren: 'hasChildren' } as const
 
   function isOwnerRow(row: OwnerMixedRow): row is AdPerformanceOwnerRow {
-    return (row as AdPerformanceOwnerRow).ownerName !== undefined
+    return row.ownerName != null && String(row.ownerName).trim() !== ''
   }
 
   const filteredData = computed<AdPerformanceOwnerRow[]>(() => {
@@ -303,10 +315,10 @@
     if (!kw) return list
     return list
       .map((owner) => {
-        const ownerMatch = owner.ownerName.toLowerCase().includes(kw)
+        const ownerMatch = (owner.ownerName ?? '').toLowerCase().includes(kw)
         if (ownerMatch) return owner
         const children =
-          owner.children?.filter((c) => c.campaignName.toLowerCase().includes(kw)) ?? []
+          owner.children?.filter((c) => (c.campaignName ?? '').toLowerCase().includes(kw)) ?? []
         if (children.length) return { ...owner, children }
         return null
       })

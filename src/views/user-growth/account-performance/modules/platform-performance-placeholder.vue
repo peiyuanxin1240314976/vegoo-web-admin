@@ -134,7 +134,7 @@
         <ElTableColumn label="操作" width="80" align="center" fixed="right" show-overflow-tooltip>
           <template #default="{ row }">
             <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
-              系列
+              详情
             </ElButton>
           </template>
         </ElTableColumn>
@@ -208,11 +208,8 @@
 
   function goCampaignDetail(row: PlatformRow) {
     router.push({
-      name: 'CampaignDetail',
-      query: {
-        appId: String(row.id),
-        appName: row.name
-      }
+      name: 'AdPlatformInfo',
+      query: { id: String(row.id) }
     })
   }
 

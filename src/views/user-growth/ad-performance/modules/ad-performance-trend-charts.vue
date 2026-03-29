@@ -187,8 +187,9 @@
           borderColor: isDark ? 'rgba(16,185,129,0.3)' : '#e5e7eb',
           borderWidth: 1,
           textStyle: { color: isDark ? '#e2e8f0' : '#374151', fontSize: 12 },
-          formatter: (params: any[]) => {
-            const p = params[0]
+          formatter: (params: unknown) => {
+            const list = Array.isArray(params) ? params : [params]
+            const p = list[0] as { axisValue?: string; value?: unknown }
             return (
               `${p.axisValue}<br/>` +
               `<span style="display:inline-block;width:8px;height:8px;` +

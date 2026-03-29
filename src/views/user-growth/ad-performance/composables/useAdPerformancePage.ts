@@ -42,8 +42,6 @@ function emptyPage(): AdPerformanceMock {
     ownerTeamSummary: {
       totalSpend: 0,
       avgCpi: 0,
-      avgRoi1: 0,
-      avgCvr: 0,
       estimatedProfit: 0
     },
     accountTableRows: [],

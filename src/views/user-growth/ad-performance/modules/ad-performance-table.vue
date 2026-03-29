@@ -90,11 +90,17 @@
             平均CPI
             <b>{{ formatMoney(props.ownerTeamSummary.avgCpi) }}</b>
           </span>
-          <span class="ad-performance-table__summary-item">
+          <span
+            v-if="props.ownerTeamSummary.avgRoi1 != null"
+            class="ad-performance-table__summary-item"
+          >
             平均首日ROI
             <b>{{ props.ownerTeamSummary.avgRoi1 }}%</b>
           </span>
-          <span class="ad-performance-table__summary-item">
+          <span
+            v-if="props.ownerTeamSummary.avgCvr != null"
+            class="ad-performance-table__summary-item"
+          >
             平均转化率
             <b>{{ props.ownerTeamSummary.avgCvr }}%</b>
           </span>
@@ -291,10 +297,13 @@
                 <span class="ad-performance-detail__k">平台</span>
                 <span class="ad-performance-detail__v">{{ drawerRowAny?.platform }}</span>
               </div>
-              <div v-if="drawerRowAny?.accountName" class="ad-performance-detail__item">
+              <div
+                v-if="drawerRowAny?.accountName && drawerRowAny?.balance != null"
+                class="ad-performance-detail__item"
+              >
                 <span class="ad-performance-detail__k">余额</span>
                 <span class="ad-performance-detail__v">{{
-                  formatMoney(drawerRowAny?.balance ?? 0)
+                  formatMoney(drawerRowAny.balance)
                 }}</span>
               </div>
               <div class="ad-performance-detail__item">
@@ -303,16 +312,22 @@
                   formatMoney(drawerRowAny?.spend ?? 0)
                 }}</span>
               </div>
-              <div v-if="drawerRowAny?.accountName" class="ad-performance-detail__item">
+              <div
+                v-if="drawerRowAny?.accountName && drawerRowAny?.budgetProgressPercent != null"
+                class="ad-performance-detail__item"
+              >
                 <span class="ad-performance-detail__k">预算进度</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRowAny?.budgetProgressPercent }}%</span
+                  >{{ drawerRowAny.budgetProgressPercent }}%</span
                 >
               </div>
-              <div v-if="drawerRowAny?.accountName" class="ad-performance-detail__item">
+              <div
+                v-if="drawerRowAny?.accountName && drawerRowAny?.activeCampaignCount != null"
+                class="ad-performance-detail__item"
+              >
                 <span class="ad-performance-detail__k">活跃系列数</span>
                 <span class="ad-performance-detail__v"
-                  >{{ drawerRowAny?.activeCampaignCount }} 个</span
+                  >{{ drawerRowAny.activeCampaignCount }} 个</span
                 >
               </div>
               <div class="ad-performance-detail__item">
@@ -433,7 +448,8 @@
     AdPerformanceAccountCampaignRow,
     AdPerformanceCampaignDetail,
     AdPerformanceDateRange,
-    AdPerformanceTableTab
+    AdPerformanceTableTab,
+    CampaignRowStatus
   } from '../types'
 
   defineOptions({ name: 'AdPerformanceTable' })
@@ -465,8 +481,6 @@
         ({
           totalSpend: 0,
           avgCpi: 0,
-          avgRoi1: 0,
-          avgCvr: 0,
           estimatedProfit: 0
         }) as OwnerTeamSummary,
       accountSummary: () =>
@@ -586,15 +600,60 @@
     return `共 ${props.pagination.total} 条`
   })
 
-  async function onDetailCampaign(row: AdPerformanceCampaignRow) {
+  function isCampaignTableRow(row: unknown): row is AdPerformanceCampaignRow {
+    return (
+      typeof row === 'object' &&
+      row !== null &&
+      'name' in row &&
+      (row as AdPerformanceCampaignRow).name !== undefined
+    )
+  }
+
+  function treeChildToCampaignRow(
+    row: AdPerformanceOwnerRow | AdPerformanceAccountRow
+  ): AdPerformanceCampaignRow {
+    const id =
+      row.campaignId != null && String(row.campaignId).trim() !== ''
+        ? String(row.campaignId)
+        : row.id
+    return {
+      id,
+      appName: '',
+      name: row.campaignName ?? '',
+      channel: row.channel ?? '',
+      country: row.country ?? '',
+      status: (row.status as CampaignRowStatus) ?? 'active',
+      spend: row.spend ?? 0,
+      budget: 0,
+      spendBudgetPercent: 0,
+      cpi: row.cpi ?? 0,
+      ctr: row.ctr ?? 0,
+      cvr: row.cvr ?? 0,
+      roi1: row.roi1 ?? 0,
+      roi7: row.roi7 ?? 0,
+      estimatedProfit: row.estimatedProfit ?? 0
+    }
+  }
+
+  async function onDetailCampaign(
+    row: AdPerformanceCampaignRow | AdPerformanceOwnerRow | AdPerformanceAccountRow
+  ) {
+    const campaignRow: AdPerformanceCampaignRow = isCampaignTableRow(row)
+      ? row
+      : treeChildToCampaignRow(row)
+    const campaignId =
+      !isCampaignTableRow(row) && row.campaignId != null && String(row.campaignId).trim() !== ''
+        ? String(row.campaignId)
+        : campaignRow.id
+
     drawerTab.value = 'campaign'
-    drawerRow.value = row
+    drawerRow.value = campaignRow
     drawerVisible.value = true
     drawerCampaignDetail.value = null
     drawerDetailLoading.value = true
     try {
       drawerCampaignDetail.value = await fetchAdPerformanceCampaignDetailDrawer({
-        campaignId: row.id,
+        campaignId,
         dateRange: props.filterDateRange
       })
     } catch {
@@ -604,19 +663,43 @@
     }
   }
 
-  function onDetailCountry(row: AdPerformanceCountryRow) {
+  /**
+   * 按国家地区：一级为国家汇总（无系列 name）；二级子行结构与「按广告系列」一致，应打开系列详情抽屉。
+   * 不能仅用 spendSharePercent 判断汇总行：接口可能在子行也带该字段，需与 isCampaignTableRow 组合判断。
+   */
+  function onDetailCountry(row: AdPerformanceCountryRow | AdPerformanceCampaignRow) {
+    if (isCampaignTableRow(row)) {
+      void onDetailCampaign(row)
+      return
+    }
     drawerTab.value = 'country'
     drawerRow.value = row
     drawerVisible.value = true
   }
 
+  function isOwnerAggregateRow(row: AdPerformanceOwnerRow) {
+    return row.ownerName != null && String(row.ownerName).trim() !== ''
+  }
+
+  function isAccountAggregateRow(row: AdPerformanceAccountRow) {
+    return row.accountName != null && String(row.accountName).trim() !== ''
+  }
+
   function onDetailOwner(row: AdPerformanceOwnerRow | AdPerformanceOwnerCampaignRow) {
+    if (!isOwnerAggregateRow(row)) {
+      void onDetailCampaign(row)
+      return
+    }
     drawerTab.value = 'owner'
     drawerRow.value = row
     drawerVisible.value = true
   }
 
   function onDetailAccount(row: AdPerformanceAccountRow | AdPerformanceAccountCampaignRow) {
+    if (!isAccountAggregateRow(row)) {
+      void onDetailCampaign(row)
+      return
+    }
     drawerTab.value = 'account'
     drawerRow.value = row
     drawerVisible.value = true

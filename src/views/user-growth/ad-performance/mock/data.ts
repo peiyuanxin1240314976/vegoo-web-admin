@@ -279,7 +279,47 @@ export const MOCK_AD_PERFORMANCE: AdPerformanceMock = {
       roi3: 89,
       roi7: 90,
       roiTotal: 90,
-      estimatedProfit: -577
+      estimatedProfit: -577,
+      children: [
+        {
+          id: 'c1',
+          appId: 'app_weather5',
+          appName: 'Weather5',
+          name: 'Weather5_US_Google_CRE001',
+          channel: 'google',
+          country: 'US',
+          status: 'active',
+          spend: 12450,
+          budget: 13000,
+          spendBudgetPercent: 83,
+          cpi: 2.37,
+          ctr: 3.1,
+          cvr: 31.2,
+          roi1: 85,
+          roi7: 94,
+          estimatedProfit: 1240,
+          children: []
+        },
+        {
+          id: 'c5',
+          appId: 'app_faceme',
+          appName: 'FaceMe',
+          name: 'FaceMe_US_Meta_CRE005',
+          channel: 'meta',
+          country: 'US',
+          status: 'low_efficiency',
+          spend: 1926,
+          budget: 3000,
+          spendBudgetPercent: 54,
+          cpi: 2.65,
+          ctr: 1.8,
+          cvr: 18.9,
+          roi1: 72,
+          roi7: 84,
+          estimatedProfit: -180,
+          children: []
+        }
+      ]
     },
     {
       id: 'ct2',
@@ -293,7 +333,28 @@ export const MOCK_AD_PERFORMANCE: AdPerformanceMock = {
       roi3: 101,
       roi7: 103,
       roiTotal: 103,
-      estimatedProfit: 64
+      estimatedProfit: 64,
+      children: [
+        {
+          id: 'c3',
+          appId: 'app_phonetracker',
+          appName: 'PhoneTracker',
+          name: 'PhoneTracker_MX_TikTok_CRE003',
+          channel: 'tiktok',
+          country: 'MX',
+          status: 'over_budget',
+          spend: 2866,
+          budget: 3000,
+          spendBudgetPercent: 96,
+          cpi: 2.38,
+          ctr: 4.2,
+          cvr: 35.6,
+          roi1: 88,
+          roi7: 99,
+          estimatedProfit: 340,
+          children: []
+        }
+      ]
     },
     {
       id: 'ct3',

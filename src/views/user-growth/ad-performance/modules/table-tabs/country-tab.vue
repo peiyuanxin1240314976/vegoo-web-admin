@@ -1,6 +1,18 @@
 <template>
   <div class="ad-performance-table-tab">
-    <ElTable :data="data" row-key="id" stripe size="default" class="ad-performance-table__el-table">
+    <ElTable
+      :data="tableData"
+      row-key="id"
+      :tree-props="treeProps"
+      :default-expand-all="false"
+      :expand-row-keys="expandedRowKeys"
+      :row-class-name="getRowClassName"
+      :row-style="getRowStyle"
+      stripe
+      size="default"
+      class="ad-performance-table__el-table"
+      @expand-change="onExpandChange"
+    >
       <ElTableColumn
         v-for="col in visibleColumnDefs"
         :key="col.key"
@@ -12,41 +24,80 @@
       >
         <template #default="{ row }">
           <template v-if="col.key === 'country'">
-            <span class="ad-performance-table__country" :title="row.country">
-              {{ countryFlag(row.country) }}
-              <span class="ml-2 text-sm text-g-900">{{ countryLabel(row.country) }}</span>
-            </span>
-          </template>
-          <template v-else-if="col.key === 'spend'">{{ formatMoney(row.spend, 0) }}</template>
-          <template v-else-if="col.key === 'spendSharePercent'">
-            <div class="ad-performance-table__progress-cell">
-              <div class="ad-performance-table__progress-bg">
-                <div
-                  class="ad-performance-table__progress-fill ad-performance-table__progress-fill--teal"
-                  :style="{ width: `${row.spendSharePercent}%` }"
-                ></div>
+            <template v-if="isCountryAggregateRow(row)">
+              <span class="ad-performance-table__country" :title="row.country">
+                {{ countryFlag(row.country) }}
+                <span class="ml-2 text-sm text-g-900">{{ countryLabel(row.country) }}</span>
+              </span>
+            </template>
+            <template v-else>
+              <div class="ad-performance-country__campaign">
+                <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
+                <span class="ad-performance-country__campaign-app" :title="row.appName">{{
+                  row.appName
+                }}</span>
+                <span class="ad-performance-country__campaign-name" :title="row.name">{{
+                  row.name
+                }}</span>
+                <span class="ad-performance-table__channel">
+                  <span
+                    class="ad-performance-table__channel-icon"
+                    :class="`ad-performance-table__channel-icon--${row.channel}`"
+                    aria-hidden="true"
+                  >
+                    {{ channelShort(row.channel) }}
+                  </span>
+                </span>
+                <span class="ad-performance-table__country" :title="row.country">
+                  {{ countryFlag(row.country) }}
+                </span>
               </div>
-              <span class="ad-performance-table__progress-text">{{ row.spendSharePercent }}%</span>
-            </div>
+            </template>
           </template>
-          <template v-else-if="col.key === 'cpi'">{{ formatMoney(row.cpi, 2) }}</template>
-          <template v-else-if="col.key === 'ctr'">{{ row.ctr }}%</template>
-          <template v-else-if="col.key === 'cvr'">{{ row.cvr }}%</template>
+          <template v-else-if="col.key === 'spend'">
+            {{ formatMoney(rowSpend(row), 0) }}
+          </template>
+          <template v-else-if="col.key === 'spendSharePercent'">
+            <template v-if="isCountryAggregateRow(row)">
+              <div class="ad-performance-table__progress-cell">
+                <div class="ad-performance-table__progress-bg">
+                  <div
+                    class="ad-performance-table__progress-fill ad-performance-table__progress-fill--teal"
+                    :style="{ width: `${row.spendSharePercent}%` }"
+                  ></div>
+                </div>
+                <span class="ad-performance-table__progress-text"
+                  >{{ row.spendSharePercent }}%</span
+                >
+              </div>
+            </template>
+            <span v-else class="ad-performance-table__muted">-</span>
+          </template>
+          <template v-else-if="col.key === 'cpi'">{{ formatMoney(rowCpi(row), 2) }}</template>
+          <template v-else-if="col.key === 'ctr'">{{ rowCtr(row) }}%</template>
+          <template v-else-if="col.key === 'cvr'">{{ rowCvr(row) }}%</template>
           <template v-else-if="col.key === 'roi1'">
             <span :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
           </template>
           <template v-else-if="col.key === 'roi3'">
-            <span :class="roiClass(row.roi3)">{{ row.roi3 }}%</span>
+            <span v-if="isCountryAggregateRow(row)" :class="roiClass(row.roi3)"
+              >{{ row.roi3 }}%</span
+            >
+            <span v-else class="ad-performance-table__muted">-</span>
           </template>
           <template v-else-if="col.key === 'roi7'">
             <span :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
           </template>
           <template v-else-if="col.key === 'roiTotal'">
-            <span :class="roiClass(row.roiTotal)">{{ row.roiTotal }}%</span>
+            <span v-if="isCountryAggregateRow(row)" :class="roiClass(row.roiTotal)"
+              >{{ row.roiTotal }}%</span
+            >
+            <span v-else class="ad-performance-table__muted">-</span>
           </template>
           <template v-else-if="col.key === 'estimatedProfit'">
-            <span :class="profitClass(row.estimatedProfit)">
-              {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
+            <span :class="profitClass(rowEstimatedProfit(row))">
+              {{ rowEstimatedProfit(row) >= 0 ? '+' : ''
+              }}{{ formatMoney(rowEstimatedProfit(row), 0) }}
             </span>
           </template>
         </template>
@@ -54,7 +105,7 @@
 
       <ElTableColumn label="操作" width="90" align="center" fixed="right">
         <template #default="{ row }">
-          <ElButton link type="primary" size="small" @click="$emit('detail', row)">详情</ElButton>
+          <ElButton link type="primary" size="small" @click="emit('detail', row)">详情</ElButton>
         </template>
       </ElTableColumn>
     </ElTable>
@@ -91,9 +142,11 @@
 
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
-  import type { AdPerformanceCountryRow } from '../../types'
+  import type { AdPerformanceCampaignRow, AdPerformanceCountryRow } from '../../types'
 
   defineOptions({ name: 'AdPerformanceCountryTab' })
+
+  type CountryMixedRow = AdPerformanceCountryRow | AdPerformanceCampaignRow
 
   type ColumnKey =
     | 'country'
@@ -126,14 +179,23 @@
     { rows: () => [], keyword: '' }
   )
 
-  defineEmits<{
-    (e: 'detail', row: AdPerformanceCountryRow): void
+  const emit = defineEmits<{
+    (e: 'detail', row: CountryMixedRow): void
   }>()
+
+  const expandedRowKeys = ref<string[]>([])
+
+  watch(
+    () => props.keyword,
+    () => {
+      expandedRowKeys.value = []
+    }
+  )
 
   const STORAGE_KEY_COLUMNS = 'ad-performance:table:country:visible-columns'
 
   const ALL_COLUMNS: ColumnDef[] = [
-    { key: 'country', label: '国家', prop: 'country', minWidth: 160, required: true },
+    { key: 'country', label: '国家', prop: 'country', minWidth: 200, required: true },
     { key: 'spend', label: '广告支出', prop: 'spend', width: 110, align: 'right', required: true },
     { key: 'spendSharePercent', label: '支出占比', prop: 'spendSharePercent', minWidth: 150 },
     { key: 'cpi', label: 'CPI', prop: 'cpi', width: 90, align: 'right' },
@@ -223,18 +285,103 @@
 
   defineExpose({ openCustomColumns })
 
-  const filteredData = computed(() => {
-    const list = props.rows ?? []
-    const kw = props.keyword?.trim().toLowerCase()
-    if (!kw) return list
-    return list.filter((r) =>
-      String(r.country ?? '')
-        .toLowerCase()
-        .includes(kw)
-    )
-  })
+  const treeProps = { children: 'children', hasChildren: 'hasChildren' } as const
 
-  const data = computed(() => filteredData.value)
+  function isCountryAggregateRow(row: CountryMixedRow): row is AdPerformanceCountryRow {
+    return Object.prototype.hasOwnProperty.call(row, 'spendSharePercent')
+  }
+
+  function filterCampaignRowsTree(
+    rows: AdPerformanceCampaignRow[],
+    kw: string
+  ): AdPerformanceCampaignRow[] {
+    if (!kw) return rows
+    return rows
+      .map((row) => {
+        const match =
+          row.appName.toLowerCase().includes(kw) ||
+          row.name.toLowerCase().includes(kw) ||
+          row.channel.toLowerCase().includes(kw) ||
+          row.country.toLowerCase().includes(kw)
+        if (match) return row
+        if (row.children?.length) {
+          const filtered = filterCampaignRowsTree(row.children, kw)
+          if (filtered.length) return { ...row, children: filtered }
+        }
+        return null
+      })
+      .filter(Boolean) as AdPerformanceCampaignRow[]
+  }
+
+  function filterCountryRows(
+    rows: AdPerformanceCountryRow[],
+    kw: string
+  ): AdPerformanceCountryRow[] {
+    if (!kw) return rows
+    return rows
+      .map((row) => {
+        if (row.country.toLowerCase().includes(kw)) return row
+        if (row.children?.length) {
+          const filtered = filterCampaignRowsTree(row.children, kw)
+          if (filtered.length) return { ...row, children: filtered }
+        }
+        return null
+      })
+      .filter(Boolean) as AdPerformanceCountryRow[]
+  }
+
+  const tableData = computed(() => filterCountryRows(props.rows ?? [], props.keyword?.trim() ?? ''))
+
+  function rowSpend(row: CountryMixedRow) {
+    return row.spend
+  }
+
+  function rowCpi(row: CountryMixedRow) {
+    return row.cpi
+  }
+
+  function rowCtr(row: CountryMixedRow) {
+    return row.ctr
+  }
+
+  function rowCvr(row: CountryMixedRow) {
+    return row.cvr
+  }
+
+  function rowEstimatedProfit(row: CountryMixedRow) {
+    return row.estimatedProfit
+  }
+
+  function onExpandChange(row: CountryMixedRow) {
+    if (!isCountryAggregateRow(row)) return
+    const id = row.id
+    const idx = expandedRowKeys.value.indexOf(id)
+    if (idx >= 0) expandedRowKeys.value.splice(idx, 1)
+    else expandedRowKeys.value.push(id)
+  }
+
+  const LEVEL_ACCENT_COLORS: Record<string, string> = {
+    google: '#3B82F6',
+    facebook: '#2563EB',
+    tiktok: '#10B981',
+    meta: '#8B5CF6',
+    kwai: '#F97316',
+    mintegral: '#EC4899'
+  }
+
+  function getRowAccentColor(row: CountryMixedRow) {
+    const ch = String((row as AdPerformanceCampaignRow).channel ?? '')
+    return LEVEL_ACCENT_COLORS[ch] ?? 'var(--art-success)'
+  }
+
+  function getRowClassName({ row }: { row: CountryMixedRow }) {
+    return isCountryAggregateRow(row) ? 'is-level-country' : 'is-level-country-campaign'
+  }
+
+  function getRowStyle({ row }: { row: CountryMixedRow }) {
+    const color = getRowAccentColor(row)
+    return { '--row-accent': color } as Record<string, string>
+  }
 
   function formatMoney(n: number, digits: 0 | 2) {
     return (
@@ -249,6 +396,23 @@
 
   function profitClass(profit: number): string {
     return profit >= 0 ? 'ad-performance-table__profit--up' : 'ad-performance-table__profit--down'
+  }
+
+  function channelShort(channel: string) {
+    const map: Record<string, string> = {
+      google: 'G',
+      facebook: 'F',
+      tiktok: 'T',
+      meta: 'M',
+      kwai: 'K',
+      mintegral: 'Mi'
+    }
+    return (
+      map[channel] ??
+      String(channel ?? '')
+        .slice(0, 1)
+        .toUpperCase()
+    )
   }
 
   function countryFlag(country: string) {
@@ -303,5 +467,34 @@
     max-height: 360px;
     padding-right: 4px;
     overflow: auto;
+  }
+
+  .ad-performance-country__campaign {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .ad-performance-country__campaign-app {
+    min-width: 0;
+    max-width: 120px;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--el-text-color-secondary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ad-performance-country__campaign-name {
+    min-width: 0;
+    max-width: 280px;
+    overflow: hidden;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 </style>

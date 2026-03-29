@@ -100,13 +100,14 @@ function filterCampaignRows(rows: AdPerformanceCampaignRow[], kw: string) {
 
 function countryRowMatches(row: AdPerformanceCountryRow, kw: string) {
   if (!kw) return true
-  return row.country.toLowerCase().includes(kw)
+  if (row.country.toLowerCase().includes(kw)) return true
+  return row.children?.some((c) => campaignRowMatches(c, kw)) ?? false
 }
 
 function ownerRowMatches(row: AdPerformanceOwnerRow, kw: string) {
   if (!kw) return true
   const blob = [
-    row.ownerName,
+    row.ownerName ?? '',
     ...(row.children?.map((c) => [c.campaignName, c.channel, c.country].join(' ')) ?? [])
   ]
     .join(' ')
@@ -117,8 +118,8 @@ function ownerRowMatches(row: AdPerformanceOwnerRow, kw: string) {
 function accountRowMatches(row: AdPerformanceAccountRow, kw: string) {
   if (!kw) return true
   const blob = [
-    row.accountName,
-    row.platform,
+    row.accountName ?? '',
+    row.platform ?? '',
     ...(row.children?.map((c) => [c.campaignName, c.channel, c.country].join(' ')) ?? [])
   ]
     .join(' ')

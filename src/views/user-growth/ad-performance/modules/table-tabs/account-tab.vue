@@ -25,10 +25,15 @@
           <template v-if="col.key === 'accountName'">
             <template v-if="isAccountRow(row)">
               <div class="ad-performance-account__cell">
-                <span class="ad-performance-account__name" :title="row.accountName">
+                <span class="ad-performance-account__name" :title="row.accountName ?? ''">
                   {{ row.accountName }}
                 </span>
-                <ElTag :type="accountStatusTagType(row.status)" size="small" effect="plain">
+                <ElTag
+                  v-if="row.status"
+                  :type="accountStatusTagType(row.status)"
+                  size="small"
+                  effect="plain"
+                >
                   {{ accountStatusLabel(row.status) }}
                 </ElTag>
               </div>
@@ -57,13 +62,13 @@
 
           <template v-else-if="col.key === 'platform'">
             <template v-if="isAccountRow(row)">
-              <span class="ad-performance-account__platform" :title="row.platform">
+              <span class="ad-performance-account__platform" :title="row.platform ?? ''">
                 <span
                   class="ad-performance-account__platform-icon"
-                  :class="`ad-performance-account__platform-icon--${row.platform}`"
+                  :class="`ad-performance-account__platform-icon--${row.platform ?? ''}`"
                   aria-hidden="true"
                 >
-                  {{ channelShort(row.platform) }}
+                  {{ channelShort(row.platform ?? '') }}
                 </span>
               </span>
             </template>
@@ -71,14 +76,17 @@
           </template>
 
           <template v-else-if="col.key === 'balance'">
-            <template v-if="isAccountRow(row)">{{ formatMoney(row.balance, 0) }}</template>
+            <template v-if="isAccountRow(row) && row.balance != null">{{
+              formatMoney(row.balance, 0)
+            }}</template>
+            <span v-else-if="isAccountRow(row)" class="ad-performance-table__muted">-</span>
             <span v-else class="ad-performance-table__muted">-</span>
           </template>
 
           <template v-else-if="col.key === 'spend'">{{ formatMoney(row.spend, 0) }}</template>
 
           <template v-else-if="col.key === 'budgetProgressPercent'">
-            <template v-if="isAccountRow(row)">
+            <template v-if="isAccountRow(row) && row.budgetProgressPercent != null">
               <div class="ad-performance-table__progress-cell">
                 <div class="ad-performance-table__progress-bg">
                   <div
@@ -92,39 +100,52 @@
                 >
               </div>
             </template>
+            <span v-else-if="isAccountRow(row)" class="ad-performance-table__muted">-</span>
             <span v-else class="ad-performance-table__muted">-</span>
           </template>
 
           <template v-else-if="col.key === 'activeCampaignCount'">
-            <template v-if="isAccountRow(row)">{{ row.activeCampaignCount }} 个系列</template>
+            <template v-if="isAccountRow(row) && row.activeCampaignCount != null"
+              >{{ row.activeCampaignCount }} 个系列</template
+            >
+            <span v-else-if="isAccountRow(row)" class="ad-performance-table__muted">-</span>
             <span v-else class="ad-performance-table__muted">-</span>
           </template>
 
           <template v-else-if="col.key === 'avgCpi'">
-            <template v-if="isAccountRow(row)">{{ formatMoney(row.avgCpi, 2) }}</template>
-            <span v-else>{{ formatMoney(row.cpi, 2) }}</span>
+            <template v-if="isAccountRow(row)">{{
+              row.avgCpi != null ? formatMoney(row.avgCpi, 2) : '—'
+            }}</template>
+            <span v-else>{{ row.cpi != null ? formatMoney(row.cpi, 2) : '—' }}</span>
           </template>
 
           <template v-else-if="col.key === 'avgCtr'">
-            <template v-if="isAccountRow(row)">{{ row.avgCtr }}%</template>
-            <span v-else>{{ row.ctr }}%</span>
+            <template v-if="isAccountRow(row)">{{
+              row.avgCtr != null ? `${row.avgCtr}%` : '—'
+            }}</template>
+            <span v-else>{{ row.ctr != null ? `${row.ctr}%` : '—' }}</span>
           </template>
 
           <template v-else-if="col.key === 'avgCvr'">
-            <template v-if="isAccountRow(row)">{{ row.avgCvr }}%</template>
-            <span v-else>{{ row.cvr }}%</span>
+            <template v-if="isAccountRow(row)">{{
+              row.avgCvr != null ? `${row.avgCvr}%` : '—'
+            }}</template>
+            <span v-else>{{ row.cvr != null ? `${row.cvr}%` : '—' }}</span>
           </template>
 
           <template v-else-if="col.key === 'roi1'">
-            <span :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
+            <span v-if="row.roi1 == null" class="ad-performance-table__muted">—</span>
+            <span v-else :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
           </template>
 
           <template v-else-if="col.key === 'roi7'">
-            <span :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
+            <span v-if="row.roi7 == null" class="ad-performance-table__muted">—</span>
+            <span v-else :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
           </template>
 
           <template v-else-if="col.key === 'estimatedProfit'">
-            <span :class="profitClass(row.estimatedProfit)">
+            <span v-if="row.estimatedProfit == null" class="ad-performance-table__muted">—</span>
+            <span v-else :class="profitClass(row.estimatedProfit)">
               {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
             </span>
           </template>
@@ -173,7 +194,8 @@
   import type {
     AdAccountStatus,
     AdPerformanceAccountCampaignRow,
-    AdPerformanceAccountRow
+    AdPerformanceAccountRow,
+    CampaignRowStatus
   } from '../../types'
 
   defineOptions({ name: 'AdPerformanceAccountTab' })
@@ -316,7 +338,7 @@
   const treeProps = { children: 'children', hasChildren: 'hasChildren' } as const
 
   function isAccountRow(row: AccountMixedRow): row is AdPerformanceAccountRow {
-    return (row as AdPerformanceAccountRow).accountName !== undefined
+    return row.accountName != null && String(row.accountName).trim() !== ''
   }
 
   const filteredData = computed<AdPerformanceAccountRow[]>(() => {
@@ -325,10 +347,10 @@
     if (!kw) return list
     return list
       .map((acc) => {
-        const accMatch = acc.accountName.toLowerCase().includes(kw)
+        const accMatch = (acc.accountName ?? '').toLowerCase().includes(kw)
         if (accMatch) return acc
         const children =
-          acc.children?.filter((c) => c.campaignName.toLowerCase().includes(kw)) ?? []
+          acc.children?.filter((c) => (c.campaignName ?? '').toLowerCase().includes(kw)) ?? []
         if (children.length) return { ...acc, children }
         return null
       })
@@ -397,22 +419,32 @@
     return map[c] ?? c
   }
 
-  function accountStatusLabel(s: AdAccountStatus) {
-    const map: Record<AdAccountStatus, string> = {
+  function accountStatusLabel(s: AdAccountStatus | CampaignRowStatus | string | null | undefined) {
+    if (s == null || s === '') return ''
+    const map: Record<string, string> = {
       sufficient: '充足',
       low_balance: '低余额',
       insufficient: '余额不足',
-      over_budget: '超预算'
+      over_budget: '超预算',
+      active: '激活',
+      paused: '已暂停',
+      low_efficiency: '低效'
     }
-    return map[s] ?? s
+    return map[s] ?? String(s)
   }
 
-  function accountStatusTagType(s: AdAccountStatus): 'success' | 'warning' | 'danger' | 'info' {
-    const map: Record<AdAccountStatus, 'success' | 'warning' | 'danger' | 'info'> = {
+  function accountStatusTagType(
+    s: AdAccountStatus | CampaignRowStatus | string | null | undefined
+  ): 'success' | 'warning' | 'danger' | 'info' {
+    if (s == null || s === '') return 'info'
+    const map: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
       sufficient: 'success',
       low_balance: 'warning',
       insufficient: 'danger',
-      over_budget: 'warning'
+      over_budget: 'warning',
+      active: 'success',
+      paused: 'info',
+      low_efficiency: 'warning'
     }
     return map[s] ?? 'info'
   }
