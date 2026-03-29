@@ -159,6 +159,8 @@
 </script>
 
 <style scoped lang="scss">
+  @use '../../../ad-performance/styles/ap-card-fx.scss' as *;
+
   .api-kpi-wrap {
     display: flex;
     flex-direction: column;
@@ -351,6 +353,28 @@
 
   .api-kpi--stat {
     padding: 14px;
+    isolation: isolate;
+    border-radius: 12px;
+    transition:
+      border-color 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.42s cubic-bezier(0, 0, 0.2, 1);
+
+    @include ap-neon-bg;
+    @include ap-card-mesh;
+
+    &:hover {
+      border-color: rgb(96 165 250 / 52%);
+      box-shadow:
+        0 16px 48px rgb(0 0 0 / 48%),
+        0 0 0 1px rgb(96 165 250 / 18%),
+        inset 0 1px 0 rgb(186 230 253 / 14%),
+        0 0 40px rgb(59 130 246 / 12%);
+    }
+  }
+
+  .api-kpi--stat > * {
+    position: relative;
+    z-index: 1;
   }
 
   .api-kpi__statHead {

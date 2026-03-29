@@ -38,6 +38,13 @@
         margin: auto;
         overflow-y: auto; /* 主题区域内容超出时在此滚动 */
 
+        /* 隔离各路由页面的布局溢出，阻止动效（scale/rotate 绝对定位层）的 transform 包围盒
+           泄漏到本滚动容器的 scrollHeight 计算，根治滚动条忽隐忽现的问题。
+           contain: layout 创建独立 BFC，不裁切视觉绘制区，极光等视效不受影响。 */
+        .art-page-view {
+          contain: layout;
+        }
+
         // 子页面默认 style
         .page-content {
           position: relative;

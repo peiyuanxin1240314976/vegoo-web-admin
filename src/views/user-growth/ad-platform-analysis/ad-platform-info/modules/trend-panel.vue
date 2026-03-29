@@ -200,19 +200,10 @@
 </script>
 
 <style scoped lang="scss">
+  @use '../styles/api-info-fx.scss' as fx;
+
   .api-panel {
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 12px;
-
-    :deep(.el-card__header) {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--default-border);
-    }
-
-    :deep(.el-card__body) {
-      padding: 14px;
-    }
+    @include fx.api-panel-card;
   }
 
   .api-panel__header {
@@ -235,7 +226,18 @@
 
   .api-seg {
     :deep(.el-radio-button__inner) {
-      border-color: var(--default-border);
+      padding: 8px 12px;
+      font-weight: 600;
+      color: var(--art-gray-600);
+      background: rgb(16 185 129 / 8%);
+      border-color: rgb(16 185 129 / 32%);
+    }
+
+    :deep(.el-radio-button.is-active .el-radio-button__inner) {
+      color: #fff !important;
+      background: linear-gradient(135deg, #059669 0%, #10b981 55%, #34d399 100%) !important;
+      border-color: #10b981 !important;
+      box-shadow: 0 0 14px rgb(16 185 129 / 35%);
     }
   }
 </style>

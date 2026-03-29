@@ -1,0 +1,34 @@
+// 广告平台详情页：与「广告成效」共享霓虹卡片 mixin
+@use '../../../ad-performance/styles/ap-card-fx.scss' as *;
+
+@mixin api-panel-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 12px !important;
+  transition:
+    border-color 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.42s cubic-bezier(0, 0, 0.2, 1);
+
+  @include ap-neon-bg;
+  @include ap-card-mesh;
+
+  &:hover {
+    border-color: rgb(96 165 250 / 52%);
+    box-shadow:
+      0 16px 56px rgb(0 0 0 / 50%),
+      0 0 0 1px rgb(96 165 250 / 22%),
+      inset 0 1px 0 rgb(186 230 253 / 16%),
+      0 0 56px rgb(59 130 246 / 14%);
+  }
+
+  :deep(.el-card__header) {
+    padding: 12px 14px;
+    background: rgb(0 0 0 / 14%);
+    border-bottom: 1px solid rgb(96 165 250 / 18%);
+  }
+
+  :deep(.el-card__body) {
+    padding: 14px;
+  }
+}

@@ -102,19 +102,10 @@
 </script>
 
 <style scoped lang="scss">
+  @use '../styles/api-info-fx.scss' as fx;
+
   .api-panel {
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 12px;
-
-    :deep(.el-card__header) {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--default-border);
-    }
-
-    :deep(.el-card__body) {
-      padding: 14px;
-    }
+    @include fx.api-panel-card;
   }
 
   .api-panel__header {
