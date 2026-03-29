@@ -1408,7 +1408,7 @@
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
-    max-width: 50%;
+    max-width: 55%;
 
     @media (width <=768px) {
       gap: 8px;
