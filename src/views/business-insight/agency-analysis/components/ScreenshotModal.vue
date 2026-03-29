@@ -268,7 +268,8 @@
 </script>
 
 <template>
-  <teleport to="body">
+  <!-- 必须挂 body，避免页面内 transform/缩放导致 position:fixed 错位（与实时数据弹窗问题同源） -->
+  <Teleport to="body">
     <transition name="modal-fade">
       <div v-if="modelValue" class="modal-overlay" @click.self="close">
         <div class="modal-box">
@@ -700,13 +701,15 @@
         </div>
       </div>
     </transition>
-  </teleport>
+  </Teleport>
 </template>
 
 <style scoped lang="scss">
   .modal-overlay {
     position: fixed;
     inset: 0;
+
+    /* 高于侧栏/顶栏 sticky，且保持 body 挂载避免 fixed 参考系错误 */
     z-index: 9000;
     display: flex;
     align-items: center;

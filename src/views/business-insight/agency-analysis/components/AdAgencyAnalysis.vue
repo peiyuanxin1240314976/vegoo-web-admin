@@ -595,127 +595,140 @@
 </script>
 
 <template>
-  <div class="page-wrap">
+  <div class="page-wrap page-wrap--ap-fx art-full-height">
+    <div class="aa-page-fx" aria-hidden="true"></div>
     <!-- ── Top bar ── -->
-    <div class="top-bar">
+    <div class="top-bar aa-entry-1">
       <div class="top-filters">
-        <template v-if="metaLoading">
-          <div class="filter-skel filter-skel--date" />
-          <div class="filter-skel filter-skel--select" />
-          <div class="filter-skel filter-skel--select" />
-          <div class="filter-skel filter-skel--select-wide" />
-        </template>
-        <template v-else-if="metaLoadError">
-          <ElEmpty description="筛选项加载失败" :image-size="52" class="top-meta-empty" />
-          <ElButton
-            round
-            size="small"
-            type="primary"
-            class="btn-retry-meta"
-            @click="retryMetaOptions"
-          >
-            重试
-          </ElButton>
-        </template>
-        <template v-else>
-          <el-date-picker
-            v-model="filterDate"
-            type="date"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            size="default"
-            class="filter-date"
-            prefix-icon=""
-          >
-            <template #prefix>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-right: 2px">
-                <rect
-                  x="1"
-                  y="2"
-                  width="12"
-                  height="11"
-                  rx="2"
-                  stroke="#64748b"
-                  stroke-width="1.2"
-                />
-                <path
-                  d="M1 5h12M4 1v2M10 1v2"
-                  stroke="#64748b"
-                  stroke-width="1.2"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </template>
-          </el-date-picker>
+        <div class="aa-filter-panel">
+          <template v-if="metaLoading">
+            <div class="filter-skel filter-skel--date" />
+            <div class="filter-skel filter-skel--select" />
+            <div class="filter-skel filter-skel--select" />
+            <div class="filter-skel filter-skel--select-wide" />
+          </template>
+          <template v-else-if="metaLoadError">
+            <ElEmpty description="筛选项加载失败" :image-size="52" class="top-meta-empty" />
+            <ElButton
+              round
+              size="small"
+              type="primary"
+              class="btn-retry-meta"
+              @click="retryMetaOptions"
+            >
+              重试
+            </ElButton>
+          </template>
+          <template v-else>
+            <el-date-picker
+              v-model="filterDate"
+              type="date"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              size="default"
+              class="filter-date"
+              popper-class="aa-agency-filter-popper"
+              prefix-icon=""
+            >
+              <template #prefix>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  style="margin-right: 2px"
+                >
+                  <rect
+                    x="1"
+                    y="2"
+                    width="12"
+                    height="11"
+                    rx="2"
+                    stroke="#64748b"
+                    stroke-width="1.2"
+                  />
+                  <path
+                    d="M1 5h12M4 1v2M10 1v2"
+                    stroke="#64748b"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </template>
+            </el-date-picker>
 
-          <el-select
-            v-model="filterAppId"
-            size="default"
-            class="filter-select"
-            style="width: 140px"
-          >
-            <el-option
-              v-for="opt in appOptions"
-              :key="`app-${opt.value}`"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
+            <el-select
+              v-model="filterAppId"
+              size="default"
+              class="filter-select"
+              popper-class="aa-agency-filter-popper"
+              style="width: 140px"
+            >
+              <el-option
+                v-for="opt in appOptions"
+                :key="`app-${opt.value}`"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </el-select>
 
-          <el-select
-            v-model="filterAgencyId"
-            size="default"
-            class="filter-select"
-            style="width: 140px"
-          >
-            <el-option
-              v-for="opt in agencyOptions"
-              :key="`agency-${opt.value}`"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
+            <el-select
+              v-model="filterAgencyId"
+              size="default"
+              class="filter-select"
+              popper-class="aa-agency-filter-popper"
+              style="width: 140px"
+            >
+              <el-option
+                v-for="opt in agencyOptions"
+                :key="`agency-${opt.value}`"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </el-select>
 
-          <el-select
-            v-model="filterSource"
-            size="default"
-            class="filter-select"
-            style="width: 160px"
-          >
-            <el-option
-              v-for="opt in sourceOptions"
-              :key="`src-${opt.value}`"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
-        </template>
+            <el-select
+              v-model="filterSource"
+              size="default"
+              class="filter-select"
+              popper-class="aa-agency-filter-popper"
+              style="width: 160px"
+            >
+              <el-option
+                v-for="opt in sourceOptions"
+                :key="`src-${opt.value}`"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </el-select>
+          </template>
 
-        <button class="btn-screenshot" @click="openScreenshot()">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-right: 6px">
-            <rect
-              x="1"
-              y="2"
-              width="12"
-              height="10"
-              rx="2"
-              stroke="currentColor"
-              stroke-width="1.2"
-            />
-            <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.2" />
-          </svg>
-          一键截图复制
-        </button>
+          <button type="button" class="btn-screenshot" @click="openScreenshot()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-right: 6px">
+              <rect
+                x="1"
+                y="2"
+                width="12"
+                height="10"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+              <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.2" />
+            </svg>
+            一键截图复制
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- ── KPI Cards ── -->
-    <div class="kpi-row">
+    <div class="kpi-row aa-entry-2">
       <template v-if="pageLoading">
         <div
           v-for="i in kpiSkeletonCount"
           :key="`kpi-sk-${i}`"
-          class="kpi-card kpi-card--skeleton"
+          class="kpi-card kpi-card--skeleton kpi-card--skeleton-fx"
           :style="{ '--kpi-sk-stagger': `${(i - 1) * 55}ms` }"
         >
           <div class="kpi-sk-line kpi-sk-line--label" />
@@ -762,7 +775,7 @@
     </div>
 
     <!-- ── Main layout ── -->
-    <div class="main-layout">
+    <div class="main-layout aa-entry-3">
       <!-- Left content -->
       <div class="main-left">
         <!-- ① Agency Summary Table -->
@@ -1437,6 +1450,8 @@
 </template>
 
 <style scoped lang="scss">
+  @use '../../../user-growth/ad-performance/styles/ap-card-fx.scss' as *;
+
   // ─── Variables ───
   $bg-page: #08111e;
   $bg-card: #0d1829;
@@ -1454,12 +1469,167 @@
 
   // ─── Page ───
   .page-wrap {
+    position: relative;
+    min-width: 0;
     min-height: 100vh;
     padding: 0;
+    overflow-x: clip;
     font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
     font-size: 13px;
     color: $text-primary;
     background: $bg-page;
+  }
+
+  .page-wrap--ap-fx {
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(
+          ellipse 70% 50% at 6% 6%,
+          rgb(16 185 129 / 42%) 0%,
+          rgb(6 182 212 / 20%) 38%,
+          transparent 58%
+        ),
+        radial-gradient(
+          ellipse 55% 42% at 94% 8%,
+          rgb(59 130 246 / 38%) 0%,
+          rgb(139 92 246 / 18%) 38%,
+          transparent 58%
+        ),
+        radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 18%) 0%, transparent 55%),
+        radial-gradient(
+          ellipse 55% 42% at 76% 4%,
+          rgb(34 211 238 / 22%) 0%,
+          rgb(59 130 246 / 10%) 40%,
+          transparent 58%
+        );
+      mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
+      animation:
+        aa-aurora-drift 14s ease-in-out infinite alternate,
+        aa-bg-flow 22s ease-in-out infinite alternate;
+    }
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px),
+        radial-gradient(circle, rgb(6 182 212 / 8%) 1px, transparent 1px);
+      background-size:
+        40px 40px,
+        40px 40px,
+        80px 80px;
+      mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+    }
+
+    /* 勿对 .top-bar 设 position:relative，否则会覆盖 sticky */
+    > *:not(.aa-page-fx, .top-bar) {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .aa-page-fx {
+    position: absolute;
+    inset: -12% -12% 40%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      rgb(59 130 246 / 14%) 55deg,
+      rgb(6 182 212 / 10%) 80deg,
+      transparent 130deg,
+      rgb(16 185 129 / 12%) 200deg,
+      rgb(52 211 153 / 8%) 225deg,
+      transparent 285deg,
+      rgb(168 85 247 / 10%) 330deg,
+      rgb(249 115 22 / 6%) 350deg,
+      transparent 360deg
+    );
+    filter: blur(2px);
+    opacity: 0.85;
+    mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
+    animation: aa-fx-spin 52s linear infinite;
+  }
+
+  @keyframes aa-aurora-drift {
+    0% {
+      filter: hue-rotate(0deg);
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    50% {
+      filter: hue-rotate(18deg);
+      opacity: 1;
+      transform: scale(1.06) translate(1.2%, -1.2%);
+    }
+
+    100% {
+      filter: hue-rotate(-12deg);
+      opacity: 0.82;
+      transform: scale(1) translate(-1.2%, 1.2%);
+    }
+  }
+
+  @keyframes aa-bg-flow {
+    0% {
+      opacity: 0.7;
+      transform: scaleY(1) skewX(0deg);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scaleY(1.08) skewX(1deg);
+    }
+  }
+
+  @keyframes aa-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes aa-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes aa-skel-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .aa-entry-1 {
+    animation: aa-slide-up 0.55s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
+    animation-delay: 0.05s;
+  }
+
+  .aa-entry-2 {
+    animation: aa-slide-up 0.55s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
+    animation-delay: 0.16s;
+  }
+
+  .aa-entry-3 {
+    animation: aa-slide-up 0.55s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) both;
+    animation-delay: 0.26s;
   }
 
   // ─── Topbar ───
@@ -1470,22 +1640,48 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 20px;
-    background: $bg-card;
-    border-bottom: 1px solid $border;
+    padding: 14px 20px 16px;
+    background: rgb(8 17 30 / 55%);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgb(96 165 250 / 14%);
   }
 
   .top-filters {
     display: flex;
+    flex: 1;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px 12px;
     align-items: center;
+    min-width: 0;
+  }
+
+  .aa-filter-panel {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    align-items: center;
+    min-width: 0;
+    padding: 14px 18px;
+    background: rgb(10 10 14 / 82%);
+    border: 1px solid rgb(96 165 250 / 22%);
+    border-radius: 16px;
+    box-shadow:
+      0 8px 32px rgb(0 0 0 / 40%),
+      inset 0 1px 0 rgb(186 230 253 / 10%),
+      0 0 40px rgb(59 130 246 / 8%);
   }
 
   .filter-skel {
-    background: linear-gradient(90deg, #102135 22%, #1a3555 45%, #102135 68%);
+    background: linear-gradient(
+      90deg,
+      rgb(16 185 129 / 12%) 0%,
+      rgb(59 130 246 / 22%) 45%,
+      rgb(16 185 129 / 12%) 100%
+    );
     background-size: 220% 100%;
-    border-radius: 6px;
+    border: 1px solid rgb(96 165 250 / 18%);
+    border-radius: 9999px;
     animation: row-loading 1.25s ease-in-out infinite;
   }
 
@@ -1565,15 +1761,36 @@
     width: 130px !important;
 
     :deep(.el-input__wrapper) {
-      height: 30px;
-      background: #111f35 !important;
-      border-color: $border !important;
+      height: 36px;
+      padding: 0 12px;
+      background: rgb(16 185 129 / 8%) !important;
+      border: 1px solid rgb(16 185 129 / 32%) !important;
+      border-radius: 9999px !important;
       box-shadow: none !important;
+      transition:
+        border-color 0.22s ease,
+        box-shadow 0.22s ease,
+        background 0.22s ease;
+    }
+
+    :deep(.el-input__wrapper:hover) {
+      border-color: rgb(16 185 129 / 55%) !important;
+      box-shadow: 0 0 12px rgb(16 185 129 / 18%) !important;
+    }
+
+    :deep(.el-input__wrapper.is-focus) {
+      background: rgb(16 185 129 / 12%) !important;
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 2px rgb(16 185 129 / 22%) !important;
     }
 
     :deep(.el-input__inner) {
       font-size: 12px;
       color: $text-primary !important;
+    }
+
+    :deep(.el-input__prefix-inner) {
+      color: #10b981;
     }
   }
 
@@ -1581,10 +1798,27 @@
     width: 130px !important;
 
     :deep(.el-input__wrapper) {
-      height: 30px;
-      background: #111f35 !important;
-      border-color: $border !important;
+      height: 36px;
+      padding: 0 12px;
+      background: rgb(16 185 129 / 8%) !important;
+      border: 1px solid rgb(16 185 129 / 32%) !important;
+      border-radius: 9999px !important;
       box-shadow: none !important;
+      transition:
+        border-color 0.22s ease,
+        box-shadow 0.22s ease,
+        background 0.22s ease;
+    }
+
+    :deep(.el-input__wrapper:hover) {
+      border-color: rgb(16 185 129 / 55%) !important;
+      box-shadow: 0 0 12px rgb(16 185 129 / 18%) !important;
+    }
+
+    :deep(.el-input__wrapper.is-focus) {
+      background: rgb(16 185 129 / 12%) !important;
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 2px rgb(16 185 129 / 22%) !important;
     }
 
     :deep(.el-input__inner) {
@@ -1592,27 +1826,43 @@
       color: $text-primary !important;
     }
 
-    :deep(.el-select__suffix) {
-      color: $text-muted !important;
+    :deep(.el-select__suffix),
+    :deep(.el-select__caret) {
+      color: #10b981 !important;
     }
   }
 
   .btn-screenshot {
     display: flex;
     align-items: center;
-    padding: 6px 14px;
+    padding: 8px 16px;
+    margin-left: auto;
     font-size: 12px;
     font-weight: 600;
-    color: #0a1628;
+    color: #ecfdf5;
     white-space: nowrap;
     cursor: pointer;
-    background: $teal;
-    border: none;
-    border-radius: 6px;
-    transition: background 0.2s;
+    background: linear-gradient(135deg, #059669 0%, #10b981 48%, #34d399 100%);
+    border: 1px solid rgb(16 185 129 / 45%);
+    border-radius: 9999px;
+    box-shadow:
+      0 0 18px rgb(16 185 129 / 35%),
+      inset 0 1px 0 rgb(255 255 255 / 12%);
+    transition:
+      box-shadow 0.22s ease,
+      transform 0.18s ease,
+      filter 0.22s ease;
 
     &:hover {
-      background: #00bfa3;
+      filter: brightness(1.06);
+      box-shadow:
+        0 0 28px rgb(16 185 129 / 45%),
+        inset 0 1px 0 rgb(255 255 255 / 16%);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
     }
   }
 
@@ -1630,18 +1880,24 @@
     min-width: 0;
     padding: 14px 16px;
     overflow: hidden;
-    background: $bg-card;
-    border: 1px solid $border;
-    border-radius: 8px;
-    transition: border-color 0.2s;
+    border-radius: 12px;
 
-    &:hover {
-      border-color: #2d5070;
+    &:not(.kpi-card--skeleton) {
+      @include ap-neon-bg;
+      @include ap-card-mesh;
+      @include ap-panel-hover;
+
+      isolation: isolate;
+      border-radius: 12px;
     }
 
-    &.highlighted {
-      background: linear-gradient(135deg, rgb(0 212 180 / 6%) 0%, $bg-card 60%);
-      border-color: $teal;
+    &:not(.kpi-card--skeleton).highlighted {
+      border-color: rgb(16 185 129 / 55%);
+      box-shadow:
+        0 12px 48px rgb(0 0 0 / 48%),
+        0 0 0 1px rgb(16 185 129 / 25%),
+        inset 0 1px 0 rgb(167 243 208 / 18%),
+        0 0 48px rgb(16 185 129 / 18%);
     }
   }
 
@@ -1722,10 +1978,25 @@
 
   // ─── Section blocks ───
   .section-block {
+    position: relative;
     overflow: hidden;
-    background: $bg-card;
-    border: 1px solid $border;
-    border-radius: 8px;
+    isolation: isolate;
+    border-radius: 12px;
+    transition:
+      border-color 0.32s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow 0.42s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+
+    @include ap-neon-bg;
+    @include ap-card-mesh;
+
+    &:hover {
+      border-color: rgb(96 165 250 / 52%);
+      box-shadow:
+        0 16px 56px rgb(0 0 0 / 50%),
+        0 0 0 1px rgb(96 165 250 / 22%),
+        inset 0 1px 0 rgb(186 230 253 / 16%),
+        0 0 56px rgb(59 130 246 / 14%);
+    }
   }
 
   .section-header {
@@ -1968,15 +2239,60 @@
     }
   }
 
+  .kpi-card--skeleton-fx {
+    overflow: visible;
+    background: rgb(10 10 14 / 90%);
+    border: 1px solid rgb(96 165 250 / 22%);
+    border-radius: 12px;
+    box-shadow:
+      0 0 24px rgb(59 130 246 / 12%),
+      inset 0 0 0 1px rgb(186 230 253 / 8%);
+
+    &::before {
+      position: absolute;
+      inset: -2px;
+      z-index: 0;
+      padding: 2px;
+      pointer-events: none;
+      content: '';
+      background: conic-gradient(
+        from 0deg,
+        rgb(59 130 246 / 55%),
+        rgb(6 182 212 / 45%),
+        rgb(16 185 129 / 50%),
+        rgb(59 130 246 / 55%)
+      );
+      border-radius: 14px;
+      opacity: 0.35;
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: aa-skel-orbit 2.8s linear infinite;
+    }
+
+    .kpi-sk-line {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
   // ─── 图表区骨架 ───
   .chart-skeleton {
     box-sizing: border-box;
     width: 100%;
-    background-color: #0a1422;
+    background-color: rgb(10 10 14 / 88%);
     background-image: $sk-base;
     background-size: $sk-bg-size;
-    border: 1px solid rgb(30 58 95 / 35%);
-    border-radius: 6px;
+    border: 1px solid rgb(96 165 250 / 22%);
+    border-radius: 12px;
+    box-shadow:
+      0 0 20px rgb(59 130 246 / 10%),
+      inset 0 1px 0 rgb(186 230 253 / 8%);
     animation: row-loading 1.25s ease-in-out infinite;
   }
 
@@ -2519,11 +2835,26 @@
 
   // ─── Sidebar charts ───
   .chart-block {
+    position: relative;
     padding: 10px 12px 8px;
     overflow: hidden;
-    background: $bg-card;
-    border: 1px solid $border;
-    border-radius: 8px;
+    isolation: isolate;
+    border-radius: 12px;
+    transition:
+      border-color 0.32s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow 0.42s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+
+    @include ap-neon-bg;
+    @include ap-card-mesh;
+
+    &:hover {
+      border-color: rgb(96 165 250 / 48%);
+      box-shadow:
+        0 14px 48px rgb(0 0 0 / 48%),
+        0 0 0 1px rgb(96 165 250 / 18%),
+        inset 0 1px 0 rgb(186 230 253 / 14%),
+        0 0 40px rgb(59 130 246 / 12%);
+    }
   }
 
   .chart-title {
@@ -2539,5 +2870,68 @@
 
   .donut-chart-block {
     overflow: visible;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-wrap--ap-fx::before,
+    .page-wrap--ap-fx::after,
+    .aa-page-fx {
+      animation: none;
+    }
+
+    .aa-entry-1,
+    .aa-entry-2,
+    .aa-entry-3 {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+
+    .kpi-card--skeleton-fx::before {
+      animation: none;
+    }
+  }
+</style>
+
+<style lang="scss">
+  /* 挂载在 body，须非 scoped；与广告成效筛选下拉视觉对齐 */
+  .aa-agency-filter-popper.el-popper {
+    background: rgb(10 10 14 / 96%) !important;
+    border: 1px solid rgb(96 165 250 / 28%) !important;
+    border-radius: 12px !important;
+    box-shadow:
+      0 16px 48px rgb(0 0 0 / 55%),
+      0 0 0 1px rgb(16 185 129 / 12%),
+      0 0 32px rgb(59 130 246 / 15%) !important;
+  }
+
+  .aa-agency-filter-popper .el-popper__arrow::before {
+    background: rgb(10 10 14 / 96%) !important;
+    border: 1px solid rgb(96 165 250 / 25%) !important;
+  }
+
+  .aa-agency-filter-popper .el-select-dropdown__item {
+    font-size: 13px;
+  }
+
+  .aa-agency-filter-popper .el-select-dropdown__item.is-selected {
+    font-weight: 600;
+    color: #34d399 !important;
+    background: rgb(16 185 129 / 12%) !important;
+  }
+
+  .aa-agency-filter-popper .el-select-dropdown__item.is-hovering {
+    background: rgb(59 130 246 / 12%) !important;
+  }
+
+  .aa-agency-filter-popper.el-picker__popper.el-popper,
+  .aa-agency-filter-popper .el-picker-panel {
+    background: rgb(10 10 14 / 96%) !important;
+    border: 1px solid rgb(96 165 250 / 28%) !important;
+
+    --el-datepicker-border-color: rgb(96 165 250 / 35%);
+    --el-datepicker-text-color: #e2e8f0;
+    --el-datepicker-off-text-color: #64748b;
+    --el-datepicker-header-text-color: #f1f5f9;
   }
 </style>
