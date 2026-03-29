@@ -8,8 +8,9 @@
         transformOrigin: '0 0'
       }"
     >
+      <div class="aps-page-fx" aria-hidden="true"></div>
       <!-- 顶栏：日期 + 筛选 + 导出（常驻，不随数据骨架整页隐藏） -->
-      <header class="finance-header">
+      <header class="finance-header aps-entry-1">
         <div class="header-left">
           <ElDatePicker
             v-model="dateRange"
@@ -81,7 +82,7 @@
       </header>
 
       <!-- 第一排：广告平台 KPI 卡片（筛选 App/终端平台时局部骨架，隐藏真实卡片） -->
-      <section v-if="showKpiRowSkeleton" class="row row-1">
+      <section v-if="showKpiRowSkeleton" class="row row-1 aps-entry-2">
         <div
           v-for="n in KPI_SKELETON_CARD_COUNT"
           :key="`s-${n}`"
@@ -90,7 +91,7 @@
           <ElSkeleton animated :rows="5" />
         </div>
       </section>
-      <section v-else class="row row-1">
+      <section v-else class="row row-1 aps-entry-2">
         <div v-for="card in filteredChannelKpiCards" :key="card.id" class="kpi-card">
           <div class="kpi-card-head">
             <div class="kpi-card-head-main">
@@ -131,7 +132,7 @@
       </section>
 
       <!-- 第二排：各面板独立骨架，与接口一一对应 -->
-      <section class="row row-2">
+      <section class="row row-2 aps-entry-3">
         <div class="panel panel-trend">
           <div class="panel-title">广告平台ROI趋势分析 (最近30天)</div>
           <div class="panel-chart-host">
@@ -173,6 +174,7 @@
               :row-key="topCampaignRowKey"
               :stripe="false"
               size="small"
+              :max-height="240"
               :header-cell-style="{
                 color: 'var(--aps-table-header-text)',
                 fontSize: '12px',
@@ -232,7 +234,7 @@
       </section>
 
       <!-- 第三排：广告平台指标比较详情表格 -->
-      <section class="row row-3">
+      <section class="row row-3 aps-entry-4">
         <div class="panel panel-table">
           <div class="panel-title">广告平台指标比较详情</div>
           <div class="table-wrap aps-metrics-table-host">
@@ -1795,10 +1797,41 @@
     position: absolute;
     top: 0;
     left: 0;
-
-    /* 原型为固定画布，内部用绝对定位的“边距感” */
     padding: 0;
+    overflow: hidden;
     background: $color-bg;
+
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(ellipse 72% 38% at 6% 6%, rgb(59 130 246 / 22%) 0%, transparent 55%),
+        radial-gradient(ellipse 54% 34% at 94% 8%, rgb(139 92 246 / 18%) 0%, transparent 50%),
+        radial-gradient(ellipse 46% 28% at 50% 0%, rgb(16 185 129 / 12%) 0%, transparent 50%);
+      mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+      animation: aps-aurora-drift 14s ease-in-out infinite alternate;
+    }
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(rgb(255 255 255 / 3%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(255 255 255 / 3%) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: linear-gradient(to bottom, black 0%, black 14%, transparent 35%);
+    }
+
+    > *:not(.aps-page-fx) {
+      position: relative;
+      z-index: 1;
+    }
   }
 
   /* 第二排各面板内骨架（与 ROI / 热力图 / Top10 请求一一对应） */
@@ -2009,9 +2042,40 @@
 
     position: relative;
     min-height: 200px;
-
-    /* KPI 卡片原型为渐变底 + 2px #334155 描边 */
+    overflow: hidden;
+    border: 1px solid rgb(96 165 250 / 28%);
     border-radius: 12px;
+    box-shadow:
+      0 12px 48px rgb(0 0 0 / 48%),
+      inset 0 1px 0 rgb(186 230 253 / 12%);
+    transition:
+      transform 0.38s cubic-bezier(0, 0, 0.2, 1),
+      box-shadow 0.42s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.32s cubic-bezier(0, 0, 0.2, 1);
+
+    &:hover {
+      box-shadow:
+        0 24px 72px rgb(0 0 0 / 52%),
+        0 0 72px rgb(59 130 246 / 22%);
+      transform: translateY(-6px);
+    }
+
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(rgb(255 255 255 / 4%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(255 255 255 / 4%) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
 
     .kpi-card-head {
       margin-bottom: 8px;
@@ -2038,7 +2102,6 @@
         background: rgb(255 255 255 / 12%);
       }
 
-      /* 占位默认色；--google 等品牌选择器优先级更高 */
       &.is-placeholder {
         color: $color-text-primary;
         background: rgb(255 255 255 / 10%);
@@ -2133,29 +2196,50 @@
       right: 14px;
       bottom: 14px;
       left: 14px;
+      z-index: 1;
       height: 42px;
     }
   }
 
-  /* KPI 渐变色（来自原型 SVG stop-color） */
+  /* KPI card neon gradient backgrounds */
   .row-1 .kpi-card:nth-child(1) {
-    background: var(--aps-kpi-g1);
+    background:
+      radial-gradient(ellipse 80% 60% at 0% 0%, rgb(35 86 162 / 55%) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgb(59 130 246 / 18%) 0%, transparent 50%),
+      rgb(8 8 18 / 98%);
+    border-color: rgb(35 86 162 / 55%);
   }
 
   .row-1 .kpi-card:nth-child(2) {
-    background: var(--aps-kpi-g2);
+    background:
+      radial-gradient(ellipse 80% 60% at 0% 0%, rgb(37 133 157 / 55%) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgb(20 222 186 / 16%) 0%, transparent 50%),
+      rgb(8 8 18 / 98%);
+    border-color: rgb(37 133 157 / 55%);
   }
 
   .row-1 .kpi-card:nth-child(3) {
-    background: var(--aps-kpi-g3);
+    background:
+      radial-gradient(ellipse 80% 60% at 0% 0%, rgb(143 56 96 / 55%) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgb(244 63 94 / 16%) 0%, transparent 50%),
+      rgb(8 8 18 / 98%);
+    border-color: rgb(143 56 96 / 55%);
   }
 
   .row-1 .kpi-card:nth-child(4) {
-    background: var(--aps-kpi-g4);
+    background:
+      radial-gradient(ellipse 80% 60% at 0% 0%, rgb(137 98 40 / 55%) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgb(245 158 11 / 16%) 0%, transparent 50%),
+      rgb(8 8 18 / 98%);
+    border-color: rgb(137 98 40 / 55%);
   }
 
   .row-1 .kpi-card:nth-child(5) {
-    background: var(--aps-kpi-g5);
+    background:
+      radial-gradient(ellipse 80% 60% at 0% 0%, rgb(137 53 40 / 55%) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgb(239 68 68 / 16%) 0%, transparent 50%),
+      rgb(8 8 18 / 98%);
+    border-color: rgb(137 53 40 / 55%);
   }
 
   .row-2 {
@@ -2168,14 +2252,38 @@
     @include data-card-base;
 
     overflow: hidden;
+    background-color: rgb(10 10 14 / 98%);
+    background-image:
+      radial-gradient(ellipse 78% 42% at 0% 0%, rgb(59 130 246 / 14%) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 40% at 100% 100%, rgb(139 92 246 / 10%) 0%, transparent 55%);
+    border-color: rgb(96 165 250 / 28%);
+    border-radius: 12px;
+    box-shadow:
+      0 12px 48px rgb(0 0 0 / 48%),
+      0 0 0 1px rgb(96 165 250 / 10%),
+      inset 0 1px 0 rgb(186 230 253 / 12%);
+    transition:
+      transform 0.38s cubic-bezier(0, 0, 0.2, 1),
+      box-shadow 0.42s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.32s cubic-bezier(0, 0, 0.2, 1);
 
-    /* 面板原型为深色渐变底（如 u2477/u2530） */
-    background: var(--aps-panel-gradient);
+    &:hover {
+      border-color: rgb(96 165 250 / 55%);
+      box-shadow:
+        0 24px 72px rgb(0 0 0 / 52%),
+        0 0 72px rgb(59 130 246 / 18%),
+        0 0 0 1px rgb(96 165 250 / 30%);
+      transform: translateY(-4px);
+    }
 
     .panel-title {
       @include section-title;
 
       margin-bottom: 10px;
+      background: linear-gradient(90deg, #93c5fd 0%, #c4b5fd 55%, #6ee7b7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .chart-dom {
@@ -2197,11 +2305,25 @@
   .panel-top10 {
     .top10-table-wrap {
       max-height: 260px;
-      overflow: auto;
+      overflow: hidden;
     }
 
     :deep(.el-table) {
       margin-top: 6px;
+      background: transparent !important;
+    }
+
+    :deep(.el-table__inner-wrapper),
+    :deep(.el-table__header-wrapper),
+    :deep(.el-table__body-wrapper) {
+      background: transparent !important;
+    }
+
+    :deep(.el-scrollbar__view) {
+      background: transparent;
+    }
+
+    :deep(.el-table__body tr.el-table__row) {
       background: transparent;
     }
 
@@ -2498,12 +2620,54 @@
   }
 
   .panel-table {
+    overflow: hidden;
+    background-color: rgb(10 10 14 / 98%);
+    background-image:
+      radial-gradient(ellipse 78% 42% at 0% 0%, rgb(59 130 246 / 14%) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 40% at 100% 100%, rgb(139 92 246 / 10%) 0%, transparent 55%);
+    border-color: rgb(96 165 250 / 28%);
+    border-radius: 12px;
+    box-shadow:
+      0 12px 48px rgb(0 0 0 / 48%),
+      0 0 0 1px rgb(96 165 250 / 10%),
+      inset 0 1px 0 rgb(186 230 253 / 12%);
+    transition:
+      border-color 0.32s cubic-bezier(0, 0, 0.2, 1),
+      box-shadow 0.42s cubic-bezier(0, 0, 0.2, 1);
+
+    &:hover {
+      border-color: rgb(96 165 250 / 45%);
+      box-shadow:
+        0 24px 72px rgb(0 0 0 / 52%),
+        0 0 72px rgb(59 130 246 / 14%),
+        0 0 0 1px rgb(96 165 250 / 25%);
+    }
+
+    .panel-title {
+      background: linear-gradient(90deg, #93c5fd 0%, #c4b5fd 55%, #6ee7b7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
     :deep(.art-table) {
       height: 100%;
+      background: transparent;
     }
 
     :deep(.el-table) {
       margin-top: 6px;
+      background: transparent !important;
+    }
+
+    :deep(.el-table__inner-wrapper),
+    :deep(.el-table__header-wrapper),
+    :deep(.el-table__body-wrapper),
+    :deep(.el-scrollbar__view) {
+      background: transparent !important;
+    }
+
+    :deep(.el-table__body tr.el-table__row) {
       background: transparent;
     }
 
@@ -2599,6 +2763,100 @@
         border: 1px solid $border-subtle-10;
         border-radius: $radius-page;
       }
+    }
+  }
+
+  /* ========== aps-page-fx 旋转极光 ========== */
+  .aps-page-fx {
+    position: absolute;
+    inset: -12% -12% 40%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      rgb(59 130 246 / 10%) 0deg,
+      rgb(139 92 246 / 8%) 72deg,
+      rgb(16 185 129 / 6%) 144deg,
+      transparent 200deg,
+      rgb(59 130 246 / 8%) 288deg,
+      rgb(59 130 246 / 10%) 360deg
+    );
+    filter: blur(48px);
+    border-radius: 50%;
+    animation: aps-fx-spin 22s linear infinite;
+  }
+
+  /* ========== 入场动画 ========== */
+  .aps-entry-1 {
+    animation: aps-slide-up 0.55s cubic-bezier(0, 0, 0.2, 1) both;
+  }
+
+  .aps-entry-2 {
+    animation: aps-slide-up 0.65s 0.1s cubic-bezier(0, 0, 0.2, 1) both;
+  }
+
+  .aps-entry-3 {
+    animation: aps-slide-up 0.7s 0.2s cubic-bezier(0, 0, 0.2, 1) both;
+  }
+
+  .aps-entry-4 {
+    animation: aps-slide-up 0.75s 0.32s cubic-bezier(0, 0, 0.2, 1) both;
+  }
+
+  @keyframes aps-aurora-drift {
+    0% {
+      opacity: 0.7;
+      transform: scale(1) translateX(0%);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1.04) translateX(2%);
+    }
+  }
+
+  @keyframes aps-fx-spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes aps-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ========== 无障碍：减少动画 ========== */
+  @media (prefers-reduced-motion: reduce) {
+    .aps-entry-1,
+    .aps-entry-2,
+    .aps-entry-3,
+    .aps-entry-4 {
+      animation: none;
+    }
+
+    .aps-page-fx {
+      animation: none;
+    }
+
+    .finance-screen-wrap::before {
+      animation: none;
+    }
+
+    .panel,
+    .kpi-card {
+      transition: none;
     }
   }
 </style>
