@@ -2,55 +2,66 @@
   <div class="conversion-management-page art-full-height flex flex-col">
     <ConversionTabs v-model="activeTab" />
     <template v-if="activeTab === 'name'">
-      <div class="conversion-management-page__section conversion-management-page__section--filters">
-        <ConversionFilters
-          :filter="filterForForm"
-          @search="handleSearch"
-          @add-mapping="openDialog('add')"
-        />
+      <div class="conversion-data-page flex flex-1 flex-col min-h-0 min-w-0">
+        <div class="cm-data-page-fx" aria-hidden="true"></div>
+        <div
+          class="conversion-management-page__section conversion-data-page__section--filters cm-entry-1"
+        >
+          <ConversionFilters
+            :filter="filterForForm"
+            @search="handleSearch"
+            @add-mapping="openDialog('add')"
+          />
+        </div>
+        <ElRow :gutter="16" class="conversion-management-page__body cm-entry-2 flex-1 min-h-0">
+          <ElCol :xs="24" :md="17" :xl="19" class="conversion-management-page__main">
+            <ConversionTable
+              :data="data"
+              :loading="loading"
+              :pagination="pagination"
+              @edit="openDialog('edit', $event)"
+              @delete="handleDelete"
+              @pagination:size-change="handleSizeChange"
+              @pagination:current-change="handleCurrentChange"
+            />
+          </ElCol>
+          <ElCol :xs="24" :md="7" :xl="5" class="conversion-management-page__side">
+            <ConversionSidePanel
+              :type-distribution="sideStats.typeDistribution"
+              :mapping-stats="sideStats.mappingStats"
+              :platform-stats="sideStats.platformStats"
+              @batch-enable="handleBatchEnable"
+              @batch-disable="handleBatchDisable"
+              @export="handleExport"
+            />
+          </ElCol>
+        </ElRow>
       </div>
-      <ElRow :gutter="16" class="conversion-management-page__body">
-        <ElCol :xs="24" :md="17" :xl="19" class="conversion-management-page__main">
-          <ConversionTable
-            :data="data"
-            :loading="loading"
-            :pagination="pagination"
-            @edit="openDialog('edit', $event)"
-            @delete="handleDelete"
-            @pagination:size-change="handleSizeChange"
-            @pagination:current-change="handleCurrentChange"
-          />
-        </ElCol>
-        <ElCol :xs="24" :md="7" :xl="5" class="conversion-management-page__side">
-          <ConversionSidePanel
-            :type-distribution="sideStats.typeDistribution"
-            :mapping-stats="sideStats.mappingStats"
-            :platform-stats="sideStats.platformStats"
-            @batch-enable="handleBatchEnable"
-            @batch-disable="handleBatchDisable"
-            @export="handleExport"
-          />
-        </ElCol>
-      </ElRow>
     </template>
     <template v-else>
-      <div class="conversion-management-page__section conversion-management-page__section--filters">
-        <ConversionDataFilters :filter="dataFilterForForm" @search="handleDataSearch" />
+      <div class="conversion-data-page flex flex-1 flex-col min-h-0 min-w-0">
+        <div class="cm-data-page-fx" aria-hidden="true"></div>
+        <div
+          class="conversion-management-page__section conversion-data-page__section--filters cm-entry-1"
+        >
+          <ConversionDataFilters :filter="dataFilterForForm" @search="handleDataSearch" />
+        </div>
+        <ElRow :gutter="16" class="conversion-management-page__body cm-entry-2 flex-1 min-h-0">
+          <ElCol :xs="24" :md="15" :xl="15" class="conversion-management-page__left">
+            <ConversionDataKpiCards :kpi="dataKpi" :loading="dataLoading" />
+            <ConversionDataTable :data="dataTableRows" :loading="dataLoading" />
+          </ElCol>
+          <ElCol :xs="24" :md="9" :xl="9" class="conversion-management-page__right">
+            <ConversionDataSidePanel
+              :type-distribution="dataSidePanels.typeDistribution"
+              :top10="dataSidePanels.top10"
+              :value-trend30d="dataSidePanels.valueTrend30d"
+              :account-share="dataSidePanels.accountShare"
+              :loading="dataLoading"
+            />
+          </ElCol>
+        </ElRow>
       </div>
-      <ElRow :gutter="16" class="conversion-management-page__body">
-        <ElCol :xs="24" :md="15" :xl="15" class="conversion-management-page__left">
-          <ConversionDataKpiCards :kpi="dataKpi" />
-          <ConversionDataTable :data="dataTableRows" :loading="dataLoading" />
-        </ElCol>
-        <ElCol :xs="24" :md="9" :xl="9" class="conversion-management-page__right">
-          <ConversionDataSidePanel
-            :type-distribution="dataSidePanels.typeDistribution"
-            :top10="dataSidePanels.top10"
-            :value-trend30d="dataSidePanels.valueTrend30d"
-            :account-share="dataSidePanels.accountShare"
-          />
-        </ElCol>
-      </ElRow>
     </template>
     <ConversionMappingDialog
       v-model:visible="dialogVisible"
@@ -228,21 +239,26 @@
     accountShare: []
   })
 
+  let dataLoadSeq = 0
+
   async function loadDataTab() {
+    const seq = ++dataLoadSeq
     dataLoading.value = true
     try {
       const res = await fetchConversionDataMock({ ...dataFilter })
+      if (seq !== dataLoadSeq || activeTab.value !== 'data') return
       dataKpi.value = res.kpi
       dataTableRows.value = res.tableRows
       dataSidePanels.value = res.sidePanels
     } finally {
-      dataLoading.value = false
+      if (seq === dataLoadSeq) dataLoading.value = false
     }
   }
 
   const interval = useIntervalFn(
     () => {
       if (activeTab.value !== 'data') return
+      if (dataLoading.value) return
       void loadDataTab()
     },
     refreshIntervalMs,
@@ -285,12 +301,10 @@
 </script>
 
 <style scoped lang="scss">
+  @import './styles/cm-data-page';
+
   .conversion-management-page {
     padding: 0;
-  }
-
-  .conversion-management-page__section--filters {
-    margin-bottom: 16px;
   }
 
   .conversion-management-page__body {

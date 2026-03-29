@@ -41,6 +41,7 @@
       <div class="conversion-data-table__body">
         <div class="conversion-data-table__table-wrap">
           <ArtTable
+            class="conversion-data-table__art"
             :data="pagedData"
             :columns="columns"
             :loading="loading"
@@ -417,37 +418,39 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../ad-performance/styles/ap-card-fx';
+
   .conversion-data-table {
     margin-bottom: 16px;
-
-    :deep(.el-table) {
-      .el-table__header th,
-      .el-table__body td {
-        font-size: 12px;
-      }
-    }
   }
 
   .conversion-data-table__card {
+    @include ap-neon-bg;
+    @include ap-card-mesh;
+
+    position: relative;
     overflow: hidden;
-    background: color-mix(in srgb, var(--default-box-color) 92%, transparent);
-    border: 1px solid var(--default-border);
-    border-radius: 10px;
+    border-radius: 14px;
   }
 
   .conversion-data-table__header {
+    position: relative;
+    z-index: 1;
     display: flex;
     gap: 12px;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--default-border);
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--art-success) 22%, var(--default-border));
+    box-shadow: inset 0 -1px 0 rgb(59 130 246 / 6%);
   }
 
   .conversion-data-table__title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
+    @include ap-title-gradient;
+
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
   }
 
   .conversion-data-table__actions {
@@ -459,11 +462,22 @@
   }
 
   .conversion-data-table__action-btn {
+    color: var(--art-success);
+    touch-action: manipulation;
+    background: color-mix(in srgb, var(--art-success) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-success) 48%, transparent);
     border-radius: 9999px;
+    box-shadow: 0 0 12px rgb(16 185 129 / 12%);
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
 
     &:hover,
     &:focus {
-      background-color: transparent;
+      background: color-mix(in srgb, var(--art-success) 16%, transparent);
+      border-color: color-mix(in srgb, var(--art-success) 72%, transparent);
+      box-shadow: 0 0 18px rgb(16 185 129 / 22%);
     }
   }
 
@@ -480,6 +494,8 @@
   }
 
   .conversion-data-table__body {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -489,12 +505,13 @@
   .conversion-data-table__table-wrap {
     flex: 1;
     min-height: 0;
+    padding: 0 10px;
   }
 
   .conversion-data-table__footer {
-    padding: 8px 12px;
-    background: color-mix(in srgb, var(--default-box-color) 92%, transparent);
-    border-top: 1px solid var(--default-border);
+    padding: 10px 14px;
+    background: color-mix(in srgb, rgb(8 10 16) 94%, rgb(16 185 129 / 4%));
+    border-top: 1px solid color-mix(in srgb, var(--art-success) 18%, var(--default-border));
   }
 
   .conversion-data-table__footer-grid {
@@ -544,7 +561,7 @@
     gap: 12px;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 12px;
+    padding: 8px 14px 12px;
     background: transparent;
   }
 
@@ -575,18 +592,46 @@
   }
 
   :deep(.conversion-data-table__pagination .el-pagination .el-pager li.is-active) {
-    color: var(--el-color-success);
-    background: color-mix(in srgb, var(--el-color-success) 18%, transparent);
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, rgb(16 185 129 / 88%), rgb(5 150 105 / 82%));
+    box-shadow: 0 0 14px rgb(16 185 129 / 35%);
   }
 
   :deep(
     .conversion-data-table__pagination .el-pagination .el-select .el-input__wrapper.is-focused
   ) {
-    box-shadow: 0 0 0 1px var(--el-color-success) inset !important;
+    box-shadow: 0 0 0 1px var(--art-success) inset !important;
   }
 
-  :deep(.el-table) {
-    --el-table-border-color: var(--default-border);
+  .conversion-data-table__art {
+    :deep(.el-table) {
+      --el-table-border-color: color-mix(in srgb, var(--default-border) 90%, rgb(16 185 129 / 12%));
+      --el-table-row-hover-bg-color: color-mix(
+        in srgb,
+        var(--default-box-color) 88%,
+        rgb(34 211 238 / 5%)
+      );
+
+      background: transparent;
+    }
+
+    :deep(.el-table__inner-wrapper::before) {
+      display: none;
+    }
+
+    :deep(.el-table__body tr:hover > td) {
+      background-color: color-mix(
+        in srgb,
+        var(--default-box-color) 82%,
+        rgb(34 211 238 / 6%)
+      ) !important;
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--art-success) 10%, transparent);
+    }
+
+    :deep(.el-table td) {
+      border-color: color-mix(in srgb, var(--default-border) 92%, transparent);
+    }
   }
 
   /* 树表父级左侧彩色标识条 + 左圆角 */

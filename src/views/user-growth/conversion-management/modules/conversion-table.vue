@@ -1,19 +1,29 @@
 <template>
   <div class="conversion-table">
-    <div class="conversion-table__summary">
-      {{ $t('conversionManagement.totalRecords', { n: pagination?.total ?? 0 }) }}
+    <div class="conversion-table__card">
+      <div class="conversion-table__head">
+        <div class="conversion-table__title">{{
+          $t('conversionManagement.mappingTableTitle')
+        }}</div>
+        <div class="conversion-table__summary">
+          {{ $t('conversionManagement.totalRecords', { n: pagination?.total ?? 0 }) }}
+        </div>
+      </div>
+      <div class="conversion-table__body">
+        <ArtTable
+          :data="data"
+          :columns="columns"
+          :loading="loading"
+          :pagination="pagination"
+          :pagination-options="paginationOptions"
+          size="small"
+          stripe
+          class="conversion-table__art"
+          @pagination:size-change="$emit('pagination:size-change', $event)"
+          @pagination:current-change="$emit('pagination:current-change', $event)"
+        />
+      </div>
     </div>
-    <ArtTable
-      :data="data"
-      :columns="columns"
-      :loading="loading"
-      :pagination="pagination"
-      :pagination-options="paginationOptions"
-      size="small"
-      stripe
-      @pagination:size-change="$emit('pagination:size-change', $event)"
-      @pagination:current-change="$emit('pagination:current-change', $event)"
-    />
   </div>
 </template>
 
@@ -190,29 +200,148 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../../ad-performance/styles/ap-card-fx';
+
   .conversion-table {
     margin-bottom: 16px;
+  }
 
-    :deep(.el-table) {
-      .el-table__header th,
-      .el-table__body td {
-        font-size: 12px;
-      }
-    }
+  .conversion-table__card {
+    @include ap-neon-bg;
+    @include ap-card-mesh;
+
+    position: relative;
+    padding: 14px 14px 10px;
+    overflow: hidden;
+    border: 1px solid rgb(96 165 250 / 28%);
+    border-radius: 14px;
+  }
+
+  .conversion-table__head,
+  .conversion-table__body {
+    position: relative;
+    z-index: 1;
+  }
+
+  .conversion-table__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--art-success) 22%, var(--default-border));
+  }
+
+  .conversion-table__title {
+    @include ap-title-gradient;
+
+    font-size: 15px;
+    line-height: 1.3;
   }
 
   .conversion-table__summary {
-    margin-bottom: 8px;
-    font-size: 13px;
-    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .conversion-table__body {
+    min-height: 120px;
+  }
+
+  .conversion-table__art {
+    :deep(.el-table) {
+      --el-table-border-color: color-mix(in srgb, var(--default-border) 90%, rgb(16 185 129 / 15%));
+      --el-table-header-bg-color: color-mix(in srgb, rgb(8 12 18) 92%, rgb(16 185 129 / 10%));
+      --el-table-row-hover-bg-color: color-mix(
+        in srgb,
+        var(--default-box-color) 88%,
+        rgb(59 130 246 / 8%)
+      );
+      --el-table-fixed-left-column: color-mix(in srgb, var(--default-box-color) 96%, transparent);
+      --el-table-fixed-right-column: color-mix(in srgb, var(--default-box-color) 96%, transparent);
+
+      font-size: 12px;
+      background: transparent;
+    }
+
+    :deep(.el-table__inner-wrapper::before) {
+      display: none;
+    }
+
+    :deep(.el-table__header-wrapper th) {
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, rgb(16 185 129 / 12%) 100%, transparent) 0%,
+        color-mix(in srgb, rgb(8 10 16) 100%, transparent) 100%
+      ) !important;
+      border-bottom: 1px solid color-mix(in srgb, var(--art-success) 28%, transparent) !important;
+      box-shadow: inset 0 1px 0 rgb(186 230 253 / 8%);
+    }
+
+    :deep(.el-table__body tr:hover > td) {
+      background-color: color-mix(
+        in srgb,
+        var(--default-box-color) 82%,
+        rgb(34 211 238 / 6%)
+      ) !important;
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--art-success) 12%, transparent);
+    }
+
+    :deep(.el-table td),
+    :deep(.el-table th) {
+      border-color: color-mix(in srgb, var(--default-border) 92%, transparent);
+    }
+
+    :deep(.pagination) {
+      padding-top: 4px;
+      margin-top: 12px;
+    }
+
+    :deep(.el-pagination) {
+      --el-pagination-hover-color: var(--art-success);
+      --el-pagination-button-color: var(--el-text-color-regular);
+      --el-pagination-bg-color: transparent;
+      --el-pagination-border-radius: 9999px;
+    }
+
+    :deep(.el-pagination .btn-prev),
+    :deep(.el-pagination .btn-next) {
+      color: var(--art-success);
+      background: color-mix(in srgb, var(--art-success) 6%, transparent);
+      border: 1px solid color-mix(in srgb, var(--art-success) 45%, transparent);
+      border-radius: 9999px;
+    }
+
+    :deep(.el-pagination .el-pager li) {
+      border-radius: 9999px;
+    }
+
+    :deep(.el-pagination .el-pager li.is-active) {
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, rgb(16 185 129 / 88%), rgb(5 150 105 / 82%));
+      box-shadow: 0 0 14px rgb(16 185 129 / 35%);
+    }
+
+    :deep(.el-pagination .el-select .el-input__wrapper.is-focus) {
+      box-shadow: 0 0 0 1px var(--art-success) inset !important;
+    }
   }
 
   :deep(.conversion-table__platform) {
     display: inline-block !important;
     padding: 2px 10px !important;
-    font-weight: 500 !important;
-    background-color: var(--art-gray-400) !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    background: color-mix(in srgb, var(--art-success) 16%, var(--default-box-color)) !important;
+    border: 1px solid color-mix(in srgb, var(--art-success) 35%, transparent) !important;
     border-radius: 9999px !important;
+    box-shadow: 0 0 10px rgb(16 185 129 / 12%);
   }
 
   :deep(.conversion-table__app-package) {

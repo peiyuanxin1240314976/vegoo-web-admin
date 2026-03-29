@@ -1,0 +1,164 @@
+// 转化管理 -「转化数据」页背景与入场动效（对齐广告成效 ap-page）
+
+.conversion-data-page {
+  position: relative;
+  min-width: 0;
+  padding: 20px 24px 28px;
+  overflow-x: clip;
+
+  &::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        ellipse 70% 50% at 6% 6%,
+        rgb(16 185 129 / 42%) 0%,
+        rgb(6 182 212 / 20%) 38%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 55% 42% at 94% 8%,
+        rgb(59 130 246 / 38%) 0%,
+        rgb(139 92 246 / 18%) 38%,
+        transparent 58%
+      ),
+      radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 18%) 0%, transparent 55%),
+      radial-gradient(
+        ellipse 55% 42% at 76% 4%,
+        rgb(34 211 238 / 22%) 0%,
+        rgb(59 130 246 / 10%) 40%,
+        transparent 58%
+      );
+    mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
+    animation:
+      cm-aurora-drift 14s ease-in-out infinite alternate,
+      cm-bg-flow 22s ease-in-out infinite alternate;
+  }
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px),
+      radial-gradient(circle, rgb(6 182 212 / 8%) 1px, transparent 1px);
+    background-size:
+      40px 40px,
+      40px 40px,
+      80px 80px;
+    mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+  }
+
+  > *:not(.cm-data-page-fx) {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.cm-data-page-fx {
+  position: absolute;
+  inset: -12% -12% 40%;
+  z-index: 0;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    rgb(59 130 246 / 14%) 55deg,
+    rgb(6 182 212 / 10%) 80deg,
+    transparent 130deg,
+    rgb(16 185 129 / 12%) 200deg,
+    rgb(52 211 153 / 8%) 225deg,
+    transparent 285deg,
+    rgb(168 85 247 / 10%) 330deg,
+    rgb(249 115 22 / 6%) 350deg,
+    transparent 360deg
+  );
+  filter: blur(2px);
+  opacity: 0.85;
+  mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
+  animation: cm-fx-spin 52s linear infinite;
+}
+
+@keyframes cm-aurora-drift {
+  0% {
+    filter: hue-rotate(0deg);
+    opacity: 0.72;
+    transform: scale(1) translate(0, 0);
+  }
+
+  50% {
+    filter: hue-rotate(18deg);
+    opacity: 1;
+    transform: scale(1.06) translate(1.2%, -1.2%);
+  }
+
+  100% {
+    filter: hue-rotate(-12deg);
+    opacity: 0.82;
+    transform: scale(1) translate(-1.2%, 1.2%);
+  }
+}
+
+@keyframes cm-bg-flow {
+  0% {
+    opacity: 0.7;
+    transform: scaleY(1) skewX(0deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scaleY(1.08) skewX(1deg);
+  }
+}
+
+@keyframes cm-fx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cm-entry-1 {
+  animation: cm-slide-up 0.55s var(--ease-out) both;
+  animation-delay: 0.05s;
+}
+
+.cm-entry-2 {
+  animation: cm-slide-up 0.55s var(--ease-out) both;
+  animation-delay: 0.18s;
+}
+
+@keyframes cm-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.conversion-data-page__section--filters {
+  margin-bottom: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conversion-data-page::before,
+  .cm-data-page-fx {
+    animation: none;
+  }
+
+  .cm-entry-1,
+  .cm-entry-2 {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}

@@ -35,7 +35,9 @@
 
 <style scoped lang="scss">
   .conversion-tabs {
-    margin-bottom: 16px;
+    flex-shrink: 0;
+    padding: 0 24px;
+    margin-bottom: 0;
 
     :deep(.el-tabs__header) {
       margin-bottom: 0;
@@ -43,14 +45,21 @@
 
     :deep(.el-tabs__item) {
       font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s ease;
 
       &.is-active {
-        color: var(--el-color-success);
+        font-weight: 700;
+        color: #10b981;
+        text-shadow: 0 0 14px rgb(16 185 129 / 35%);
       }
     }
 
     :deep(.el-tabs__active-bar) {
-      background-color: var(--el-color-success);
+      height: 3px;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      border-radius: 9999px;
+      box-shadow: 0 0 12px rgb(16 185 129 / 45%);
     }
 
     :deep(.el-tabs__nav-wrap::after) {
