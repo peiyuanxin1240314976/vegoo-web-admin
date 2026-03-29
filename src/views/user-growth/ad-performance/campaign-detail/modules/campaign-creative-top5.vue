@@ -3,7 +3,7 @@
     <template #header>
       <div class="cct5__header">
         <span class="cct5__title">素材表现Top5</span>
-        <button type="button" class="cct5__more">查看更多</button>
+        <!-- <button type="button" class="cct5__more">查看更多</button> -->
       </div>
     </template>
 

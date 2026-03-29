@@ -1,5 +1,5 @@
 <template>
-  <div v-loading="loading" class="cd-page">
+  <div class="cd-page">
     <!-- ── 顶部导航栏 ─────────────────────────────────────── -->
     <div class="cd-topbar">
       <div class="cd-topbar__left">
@@ -8,65 +8,139 @@
           返回
         </button>
         <el-breadcrumb separator="›" class="cd-breadcrumb">
-          <el-breadcrumb-item>用户增长</el-breadcrumb-item>
-          <el-breadcrumb-item :to="{ path: '/user-growth/ad-performance' }"
-            >广告成效</el-breadcrumb-item
-          >
           <el-breadcrumb-item>广告系列详情</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
     </div>
 
-    <!-- ── 系列标题行 ──────────────────────────────────────── -->
-    <div class="cd-title-row">
-      <div class="cd-title-row__left">
-        <h1 class="cd-campaign-name">{{ data.campaignName }}</h1>
-        <span class="cd-status-badge" :class="`cd-status-badge--${data.status}`">
-          <el-icon><SuccessFilled /></el-icon>
-          {{ statusText(data.status) }}
-        </span>
+    <!-- ── 首屏骨架（远程加载中不展示本地 Mock）── -->
+    <template v-if="loading">
+      <div class="cd-title-row cd-title-row--skeleton">
+        <div class="cd-title-row__left cd-sk-title-left">
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <div class="cd-sk-title-line">
+                <ElSkeletonItem variant="h1" style="width: min(320px, 55vw); height: 28px" />
+                <ElSkeletonItem variant="button" style="width: 72px; height: 26px" />
+              </div>
+            </template>
+          </ElSkeleton>
+        </div>
+        <div class="cd-title-row__actions cd-sk-actions">
+          <ElSkeletonItem variant="button" style="width: 92px; height: 28px" />
+          <ElSkeletonItem variant="button" style="width: 72px; height: 28px" />
+          <ElSkeletonItem variant="button" style="width: 56px; height: 28px" />
+          <ElSkeletonItem variant="button" style="width: 56px; height: 28px" />
+        </div>
       </div>
-      <div class="cd-title-row__actions">
-        <ElButton type="primary" size="small" plain round @click="goToEdit">
-          <el-icon><Edit /></el-icon>
-          编辑系列
-        </ElButton>
-        <ElButton size="small" plain round class="cd-btn-pause" @click="onCampaignAction('pause')">
-          <el-icon><VideoPause /></el-icon>
-          暂停
-        </ElButton>
-        <ElButton size="small" plain round @click="onCampaignAction('copy')">复制</ElButton>
-        <ElButton size="small" plain round @click="onCampaignAction('archive')">归档</ElButton>
+      <div class="cd-body cd-body--skeleton">
+        <div class="cd-col cd-col--left">
+          <ElCard v-for="i in 3" :key="i" class="cd-sk-card" shadow="never">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <ElSkeletonItem variant="text" style="width: 40%; margin-bottom: 16px" />
+                <ElSkeletonItem v-for="j in 4" :key="j" variant="text" style="margin-top: 10px" />
+              </template>
+            </ElSkeleton>
+          </ElCard>
+        </div>
+        <div class="cd-col cd-col--mid">
+          <ElCard class="cd-sk-card cd-sk-card--chart" shadow="never">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <ElSkeletonItem variant="text" style="width: 120px; margin-bottom: 12px" />
+                <ElSkeletonItem variant="image" style="width: 100%; height: 280px" />
+              </template>
+            </ElSkeleton>
+          </ElCard>
+          <ElCard class="cd-sk-card cd-sk-card--table" shadow="never">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <ElSkeletonItem variant="text" style="width: 100px; margin-bottom: 12px" />
+                <ElSkeletonItem v-for="k in 5" :key="k" variant="text" style="margin-top: 12px" />
+              </template>
+            </ElSkeleton>
+          </ElCard>
+        </div>
+        <div class="cd-col cd-col--right">
+          <ElCard class="cd-sk-card" shadow="never">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <ElSkeletonItem variant="text" style="width: 50%; margin-bottom: 12px" />
+                <ElSkeletonItem
+                  v-for="n in 3"
+                  :key="n"
+                  variant="image"
+                  style="height: 72px; margin-top: 10px"
+                />
+              </template>
+            </ElSkeleton>
+          </ElCard>
+          <ElCard class="cd-sk-card" shadow="never">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <ElSkeletonItem variant="text" style="width: 40%; margin-bottom: 12px" />
+                <ElSkeletonItem v-for="m in 3" :key="m" variant="p" style="margin-top: 10px" />
+              </template>
+            </ElSkeleton>
+          </ElCard>
+        </div>
       </div>
-    </div>
+    </template>
 
-    <!-- ── 主体三列 ────────────────────────────────────────── -->
-    <div class="cd-body">
-      <!-- 左列：信息卡片 -->
-      <div class="cd-col cd-col--left">
-        <CampaignInfoCards
-          :basic-info="data.basicInfo"
-          :budget-info="data.budgetInfo"
-          :target-info="data.targetInfo"
-        />
+    <template v-else>
+      <!-- ── 系列标题行 ──────────────────────────────────────── -->
+      <div class="cd-title-row">
+        <div class="cd-title-row__left">
+          <h1 class="cd-campaign-name">{{ data.campaignName }}</h1>
+          <span class="cd-status-badge" :class="`cd-status-badge--${data.status}`">
+            <el-icon><SuccessFilled /></el-icon>
+            {{ statusText(data.status) }}
+          </span>
+        </div>
+        <div class="cd-title-row__actions">
+          <ElButton type="primary" size="small" plain round @click="goToEdit">
+            <el-icon><Edit /></el-icon>
+            编辑系列
+          </ElButton>
+          <ElButton
+            size="small"
+            plain
+            round
+            class="cd-btn-pause"
+            @click="onCampaignAction('pause')"
+          >
+            <el-icon><VideoPause /></el-icon>
+            暂停
+          </ElButton>
+          <ElButton size="small" plain round @click="onCampaignAction('copy')">复制</ElButton>
+          <ElButton size="small" plain round @click="onCampaignAction('archive')">归档</ElButton>
+        </div>
       </div>
 
-      <!-- 中列：趋势图 + 广告列表 -->
-      <div class="cd-col cd-col--mid">
-        <CampaignCoreTrend :data="data.trendData" />
-        <CampaignAdList
-          :rows="data.adRows"
-          :campaign-id="String(route.query.id ?? '')"
-          @refresh-ad-list="reloadAdList"
-        />
+      <!-- ── 主体三列 ────────────────────────────────────────── -->
+      <div class="cd-body">
+        <div class="cd-col cd-col--left">
+          <CampaignInfoCards
+            :basic-info="data.basicInfo"
+            :budget-info="data.budgetInfo"
+            :target-info="data.targetInfo"
+          />
+        </div>
+        <div class="cd-col cd-col--mid">
+          <CampaignCoreTrend :data="data.trendData" />
+          <CampaignAdList
+            :rows="data.adRows"
+            :campaign-id="String(route.query.id ?? '')"
+            @refresh-ad-list="reloadAdList"
+          />
+        </div>
+        <div class="cd-col cd-col--right">
+          <CampaignCreativeTop5 :items="data.creativeTop5" />
+          <CampaignAiInsights :insights="data.aiInsights" />
+        </div>
       </div>
-
-      <!-- 右列：素材Top5 + AI洞察 -->
-      <div class="cd-col cd-col--right">
-        <CampaignCreativeTop5 :items="data.creativeTop5" />
-        <CampaignAiInsights :insights="data.aiInsights" />
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -87,11 +161,12 @@
   import CampaignAdList from './modules/campaign-ad-list.vue'
   import CampaignCreativeTop5 from './modules/campaign-creative-top5.vue'
   import CampaignAiInsights from './modules/campaign-ai-insights.vue'
-  import { MOCK_CAMPAIGN_DETAIL } from '../mock/campaign-detail-data'
-  import type {
-    CampaignDetailCampaignActionType,
-    CampaignDetailData,
-    CampaignStatus
+  import {
+    createEmptyCampaignDetail,
+    normalizeCampaignDetailFromApi,
+    type CampaignDetailCampaignActionType,
+    type CampaignDetailData,
+    type CampaignStatus
   } from './types'
 
   defineOptions({ name: 'CampaignDetail' })
@@ -99,7 +174,7 @@
   const router = useRouter()
   const route = useRoute()
   const loading = ref(true)
-  const data = reactive<CampaignDetailData>({ ...MOCK_CAMPAIGN_DETAIL })
+  const data = reactive<CampaignDetailData>(createEmptyCampaignDetail())
 
   function goToEdit() {
     router.push({
@@ -124,17 +199,7 @@
       fetchCampaignDetailCreativeTop5({ campaignId }),
       fetchCampaignDetailAiInsights({ campaignId })
     ])
-    Object.assign(data, {
-      campaignName: o.campaignName,
-      status: o.status,
-      basicInfo: o.basicInfo,
-      budgetInfo: o.budgetInfo,
-      targetInfo: o.targetInfo,
-      trendData: o.trendData,
-      adRows: ads.rows,
-      creativeTop5: cr.items,
-      aiInsights: ai.insights
-    })
+    Object.assign(data, normalizeCampaignDetailFromApi(o, ads, cr, ai))
   }
 
   async function reloadAdList() {
@@ -142,7 +207,7 @@
     if (!campaignId) return
     try {
       const ads = await fetchCampaignDetailAdList({ campaignId, status: 'all' })
-      data.adRows = ads.rows
+      data.adRows = Array.isArray(ads?.rows) ? ads.rows : []
     } catch {
       ElMessage.error('刷新广告列表失败')
     }
@@ -430,6 +495,34 @@
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
+  }
+
+  .cd-title-row--skeleton {
+    .cd-sk-title-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .cd-sk-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+  }
+
+  .cd-body--skeleton {
+    .cd-sk-card {
+      --el-card-bg-color: rgb(24 24 27 / 72%);
+
+      border: 1px solid rgb(96 165 250 / 22%);
+    }
+
+    .cd-sk-card--chart :deep(.el-skeleton__item) {
+      border-radius: 10px;
+    }
   }
 
   .cd-btn-pause {

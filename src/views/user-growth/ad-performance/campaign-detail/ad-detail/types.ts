@@ -93,3 +93,49 @@ export interface AdDetailData {
 
 /** POST ad-detail/overview 响应 */
 export type AdDetailOverviewResponse = AdDetailData
+
+/** 远程模式初始态；接口缺字段时不与本地 Mock 混显 */
+export function createEmptyAdDetail(): AdDetailData {
+  return {
+    adId: '',
+    adGroupName: '',
+    campaignName: '',
+    campaignId: '',
+    status: 'paused',
+    targeting: {
+      geoCode: '',
+      geoName: '',
+      platform: '',
+      gender: '',
+      ageRange: ''
+    },
+    kpiMetrics: { spend: 0, installs: 0, cpi: 0, roi: 0 },
+    kpiTrends: {},
+    trendData: [],
+    creatives: [],
+    creativeSuggestion: ''
+  }
+}
+
+export function normalizeAdDetailFromApi(
+  res: Partial<AdDetailOverviewResponse> | null | undefined
+): AdDetailData {
+  const e = createEmptyAdDetail()
+  if (!res) return e
+  const status = res.status
+  return {
+    adId: res.adId ?? e.adId,
+    adGroupName: res.adGroupName ?? e.adGroupName,
+    campaignName: res.campaignName ?? e.campaignName,
+    campaignId: res.campaignId ?? e.campaignId,
+    status: (status === 'active' || status === 'paused' || status === 'completed'
+      ? status
+      : e.status) as AdDetailStatus,
+    targeting: { ...e.targeting, ...(res.targeting ?? {}) },
+    kpiMetrics: { ...e.kpiMetrics, ...(res.kpiMetrics ?? {}) },
+    kpiTrends: { ...e.kpiTrends, ...(res.kpiTrends ?? {}) },
+    trendData: Array.isArray(res.trendData) ? res.trendData : [],
+    creatives: Array.isArray(res.creatives) ? res.creatives : [],
+    creativeSuggestion: res.creativeSuggestion ?? e.creativeSuggestion
+  }
+}

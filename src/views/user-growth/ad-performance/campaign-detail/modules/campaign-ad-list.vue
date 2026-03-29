@@ -48,7 +48,7 @@
         <template #default="{ row }"> ${{ row.cpi.toFixed(2) }} </template>
       </ElTableColumn>
 
-      <ElTableColumn label="ROI" width="62" align="right">
+      <ElTableColumn label="ROI" width="80" align="right">
         <template #default="{ row }">
           <span :class="row.roi >= 100 ? 'cal__roi--good' : 'cal__roi--warn'">
             {{ row.roi }}%

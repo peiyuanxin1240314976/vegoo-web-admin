@@ -111,6 +111,68 @@ export interface CampaignDetailAiInsightsResponse {
   insights: AiInsightItem[]
 }
 
+/** 远程模式下初始态 / 失败回退：不使用页面 Mock，避免与真实接口混显 */
+export function createEmptyCampaignDetail(): CampaignDetailData {
+  return {
+    campaignName: '',
+    status: 'paused',
+    basicInfo: {
+      campaignId: '',
+      channel: 'google',
+      channelName: '',
+      appName: '',
+      createdAt: ''
+    },
+    budgetInfo: {
+      budgetType: '',
+      budgetAmount: 0,
+      todaySpend: 0,
+      todaySpendPercent: 0,
+      totalSpend: 0,
+      scheduleStart: '',
+      scheduleEnd: ''
+    },
+    targetInfo: {
+      region: '',
+      regionCode: '',
+      platform: 'all',
+      bidStrategy: '',
+      targetCpi: 0
+    },
+    trendData: [],
+    adRows: [],
+    creativeTop5: [],
+    aiInsights: []
+  }
+}
+
+/** 将多分片接口结果合并为完整模型；缺字段时用空结构覆盖，避免残留本地 Mock */
+export function normalizeCampaignDetailFromApi(
+  o: Partial<CampaignDetailOverviewResponse> | null | undefined,
+  ads: Partial<CampaignDetailAdListResponse> | null | undefined,
+  cr: Partial<CampaignDetailCreativeTop5Response> | null | undefined,
+  ai: Partial<CampaignDetailAiInsightsResponse> | null | undefined
+): CampaignDetailData {
+  const e = createEmptyCampaignDetail()
+  const status = o?.status
+  return {
+    campaignName: o?.campaignName ?? e.campaignName,
+    status: (status === 'active' ||
+    status === 'paused' ||
+    status === 'completed' ||
+    status === 'archived'
+      ? status
+      : e.status) as CampaignStatus,
+    basicInfo: { ...e.basicInfo, ...(o?.basicInfo ?? {}) },
+    budgetInfo: { ...e.budgetInfo, ...(o?.budgetInfo ?? {}) },
+    targetInfo: { ...e.targetInfo, ...(o?.targetInfo ?? {}) },
+    trendData: Array.isArray(o?.trendData) ? o.trendData : [],
+    adRows: Array.isArray(ads?.rows) ? ads.rows : [],
+    creativeTop5: Array.isArray(cr?.items) ? cr.items : [],
+    aiInsights: Array.isArray(ai?.insights) ? ai.insights : []
+  }
+}
+
 /** POST campaign-detail/campaign-action */
 export type CampaignDetailCampaignActionType = 'pause' | 'copy' | 'archive'
 

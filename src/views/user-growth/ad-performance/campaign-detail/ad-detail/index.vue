@@ -1,5 +1,5 @@
 <template>
-  <div v-loading="loading" class="add-page">
+  <div class="add-page">
     <!-- ── 顶部面包屑 ───────────────────────────────────────── -->
     <div class="add-topbar">
       <div class="add-topbar__left">
@@ -15,47 +15,112 @@
               query: { id: campaignId, appId: route.query.appId, appName: route.query.appName }
             }"
           >
-            {{ data.campaignName || '广告系列详情' }}
+            {{ loading ? '广告系列详情' : data.campaignName || '广告系列详情' }}
           </el-breadcrumb-item>
-          <el-breadcrumb-item>{{ data.adGroupName }}</el-breadcrumb-item>
+          <el-breadcrumb-item>{{
+            loading ? '加载中…' : data.adGroupName || '—'
+          }}</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
     </div>
 
-    <!-- ── 标题行 ──────────────────────────────────────────── -->
-    <div class="add-title-row">
-      <div class="add-title-row__left">
-        <h1 class="add-ad-name">{{ data.adGroupName }}</h1>
-        <span class="add-status-badge" :class="`add-status-badge--${data.status}`">
-          {{ statusText(data.status) }}
-        </span>
+    <template v-if="loading">
+      <div class="add-title-row add-title-row--skeleton">
+        <div class="add-title-row__left add-sk-title">
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <div class="add-sk-title-line">
+                <ElSkeletonItem variant="h1" style="width: min(280px, 50vw); height: 26px" />
+                <ElSkeletonItem variant="button" style="width: 64px; height: 24px" />
+              </div>
+            </template>
+          </ElSkeleton>
+        </div>
+        <div class="add-title-row__actions add-sk-actions">
+          <ElSkeletonItem variant="button" style="width: 120px; height: 36px" />
+          <ElSkeletonItem variant="button" style="width: 88px; height: 36px" />
+        </div>
       </div>
-      <div class="add-title-row__actions">
-        <ElButton type="primary" size="large" round @click="goToEdit">
-          <el-icon><Edit /></el-icon>
-          编辑系列
-        </ElButton>
-        <ElButton size="large" round class="add-btn-pause" @click="onPauseAd">
-          <el-icon><VideoPause /></el-icon>
-          暂停
-        </ElButton>
+      <div class="add-body add-body--skeleton">
+        <div class="add-col add-col--left">
+          <ElCard class="add-sk-card" shadow="never">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <ElSkeletonItem variant="text" style="width: 45%; margin-bottom: 16px" />
+                <div class="add-sk-kpi-grid">
+                  <ElSkeletonItem v-for="i in 4" :key="i" variant="text" style="height: 56px" />
+                </div>
+              </template>
+            </ElSkeleton>
+          </ElCard>
+          <ElCard class="add-sk-card add-sk-card--chart" shadow="never">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <ElSkeletonItem variant="text" style="width: 100px; margin-bottom: 12px" />
+                <ElSkeletonItem variant="image" style="width: 100%; height: 260px" />
+              </template>
+            </ElSkeleton>
+          </ElCard>
+          <ElCard class="add-sk-card" shadow="never">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <ElSkeletonItem variant="text" style="width: 35%; margin-bottom: 12px" />
+                <ElSkeletonItem v-for="j in 5" :key="j" variant="text" style="margin-top: 10px" />
+              </template>
+            </ElSkeleton>
+          </ElCard>
+        </div>
+        <div class="add-col add-col--right">
+          <ElCard class="add-sk-card add-sk-card--tall" shadow="never">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <ElSkeletonItem variant="text" style="width: 50%; margin-bottom: 12px" />
+                <ElSkeletonItem
+                  v-for="k in 4"
+                  :key="k"
+                  variant="image"
+                  style="height: 100px; margin-top: 12px"
+                />
+              </template>
+            </ElSkeleton>
+          </ElCard>
+        </div>
       </div>
-    </div>
+    </template>
 
-    <!-- ── 主体双列 ─────────────────────────────────────────── -->
-    <div class="add-body">
-      <!-- 左列：核心指标 + 趋势图 + 受众定位 -->
-      <div class="add-col add-col--left">
-        <AdDetailKpiCards :metrics="data.kpiMetrics" :trends="data.kpiTrends" />
-        <AdDetailTrendChart :data="data.trendData" />
-        <AdDetailTargeting :targeting="data.targeting" />
+    <template v-else>
+      <!-- ── 标题行 ──────────────────────────────────────────── -->
+      <div class="add-title-row">
+        <div class="add-title-row__left">
+          <h1 class="add-ad-name">{{ data.adGroupName }}</h1>
+          <span class="add-status-badge" :class="`add-status-badge--${data.status}`">
+            {{ statusText(data.status) }}
+          </span>
+        </div>
+        <div class="add-title-row__actions">
+          <ElButton type="primary" size="large" round @click="goToEdit">
+            <el-icon><Edit /></el-icon>
+            编辑系列
+          </ElButton>
+          <ElButton size="large" round class="add-btn-pause" @click="onPauseAd">
+            <el-icon><VideoPause /></el-icon>
+            暂停
+          </ElButton>
+        </div>
       </div>
 
-      <!-- 右列：广告素材表现（占满整列高度） -->
-      <div class="add-col add-col--right">
-        <AdDetailCreative :creatives="data.creatives" :suggestion="data.creativeSuggestion" />
+      <!-- ── 主体双列 ─────────────────────────────────────────── -->
+      <div class="add-body">
+        <div class="add-col add-col--left">
+          <AdDetailKpiCards :metrics="data.kpiMetrics" :trends="data.kpiTrends" />
+          <AdDetailTrendChart :data="data.trendData" />
+          <AdDetailTargeting :targeting="data.targeting" />
+        </div>
+        <div class="add-col add-col--right">
+          <AdDetailCreative :creatives="data.creatives" :suggestion="data.creativeSuggestion" />
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -72,8 +137,12 @@
   import AdDetailTrendChart from './modules/ad-detail-trend-chart.vue'
   import AdDetailTargeting from './modules/ad-detail-targeting.vue'
   import AdDetailCreative from './modules/ad-detail-creative.vue'
-  import { MOCK_AD_DETAIL } from '../../mock/ad-detail-data'
-  import type { AdDetailData, AdDetailStatus } from './types'
+  import {
+    createEmptyAdDetail,
+    normalizeAdDetailFromApi,
+    type AdDetailData,
+    type AdDetailStatus
+  } from './types'
 
   defineOptions({ name: 'AdDetail' })
 
@@ -81,7 +150,7 @@
   const route = useRoute()
   const loading = ref(true)
   const campaignId = ref('')
-  const data = reactive<AdDetailData>({ ...MOCK_AD_DETAIL })
+  const data = reactive<AdDetailData>(createEmptyAdDetail())
 
   function goToEdit() {
     router.push({
@@ -137,7 +206,7 @@
 
     try {
       const res = await fetchAdDetailOverview({ adId, campaignId: campaignId.value })
-      Object.assign(data, res)
+      Object.assign(data, normalizeAdDetailFromApi(res))
     } catch {
       ElMessage.error('加载广告详情失败')
     } finally {
@@ -372,6 +441,40 @@
     flex-shrink: 0;
     gap: 8px;
     align-items: center;
+  }
+
+  .add-title-row--skeleton {
+    .add-sk-title-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .add-sk-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+  }
+
+  .add-body--skeleton {
+    .add-sk-card {
+      --el-card-bg-color: rgb(24 24 27 / 72%);
+
+      border: 1px solid rgb(96 165 250 / 22%);
+    }
+
+    .add-sk-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .add-sk-card--chart :deep(.el-skeleton__item) {
+      border-radius: 10px;
+    }
   }
 
   .add-btn-pause {
