@@ -1,246 +1,425 @@
 <template>
-  <div class="iap-page">
-    <!-- Header -->
-    <header class="iap-header">
-      <div class="breadcrumb">
-        <span class="bc-parent">商业洞察</span>
-        <span class="bc-sep"> &rsaquo; </span>
-        <span class="bc-current">付费分析</span>
-      </div>
-      <div class="header-filters">
-        <div class="filter-item">
-          <span class="filter-label">App:</span>
-          <el-select v-model="filters.app" size="small" class="filter-sel">
-            <el-option label="全部" value="all" />
-            <el-option label="Weather5" value="weather5" />
-            <el-option label="PhoneTracker" value="phonetracker" />
-            <el-option label="YearCam" value="yearcam" />
-            <el-option label="AgeCam" value="agecam" />
-          </el-select>
-        </div>
-        <div class="filter-item">
-          <span class="filter-label">Platform:</span>
-          <el-select v-model="filters.platform" size="small" class="filter-sel">
-            <el-option label="Android&iOS" value="all" />
-            <el-option label="iOS" value="ios" />
-            <el-option label="Android" value="android" />
-          </el-select>
-        </div>
-        <div class="filter-item">
-          <span class="filter-label">Country:</span>
-          <el-select v-model="filters.country" size="small" class="filter-sel">
-            <el-option label="全部" value="all" />
-            <el-option label="US" value="us" />
-            <el-option label="KR" value="kr" />
-            <el-option label="DE" value="de" />
-            <el-option label="JP" value="jp" />
-          </el-select>
-        </div>
-        <div class="filter-item">
-          <span class="filter-label">Date:</span>
-          <el-date-picker
+  <div class="iap-analysis-page art-full-height flex flex-col min-h-0">
+    <div class="iap-page-fx" aria-hidden="true"></div>
+    <header class="iap-analysis-page__section--filters iap-entry-1">
+      <div class="iap-filters-inner">
+        <div class="iap-filters-row">
+          <div class="iap-filter-chip iap-filter-chip--static">
+            <ElIcon class="iap-filter-chip__icon"><Calendar /></ElIcon>
+            <span class="iap-filter-chip__label">日期</span>
+            <span class="iap-filter-chip__value">{{ dateChipText }}</span>
+          </div>
+          <ElDatePicker
             v-model="filters.date"
             type="date"
-            size="small"
-            class="filter-date"
-            placeholder="选择日期"
-            format="YYYY-MM-DD"
             value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
+            placeholder="选择日期"
+            class="iap-filter-date"
           />
+          <ElSelect
+            v-model="filters.app"
+            placeholder="应用"
+            class="iap-filter-select"
+            :prefix-icon="Grid"
+          >
+            <ElOption label="全部" value="all" />
+            <ElOption label="Weather5" value="weather5" />
+            <ElOption label="PhoneTracker" value="phonetracker" />
+            <ElOption label="YearCam" value="yearcam" />
+            <ElOption label="AgeCam" value="agecam" />
+          </ElSelect>
+          <ElSelect
+            v-model="filters.platform"
+            placeholder="终端平台"
+            class="iap-filter-select"
+            :prefix-icon="Monitor"
+          >
+            <ElOption label="Android&iOS" value="all" />
+            <ElOption label="iOS" value="ios" />
+            <ElOption label="Android" value="android" />
+          </ElSelect>
+          <ElSelect
+            v-model="filters.country"
+            placeholder="国家"
+            class="iap-filter-select"
+            :prefix-icon="Flag"
+          >
+            <ElOption label="全部" value="all" />
+            <ElOption label="US" value="us" />
+            <ElOption label="KR" value="kr" />
+            <ElOption label="DE" value="de" />
+            <ElOption label="JP" value="jp" />
+          </ElSelect>
+          <ElButton round class="iap-export-btn" @click="onExportClick">导出</ElButton>
         </div>
-        <el-button class="export-btn" size="small">导出</el-button>
       </div>
     </header>
 
-    <!-- Tab Navigation -->
-    <nav class="tab-nav">
-      <div
+    <nav class="iap-tab-nav iap-entry-1" role="tablist" aria-label="付费分析">
+      <button
         v-for="tab in tabs"
         :key="tab.key"
-        class="tab-btn"
-        :class="{ 'tab-active': activeTab === tab.key }"
+        type="button"
+        role="tab"
+        class="iap-tab-btn"
+        :class="{ 'is-active': activeTab === tab.key }"
+        :aria-selected="activeTab === tab.key"
         @click="activeTab = tab.key"
       >
         {{ tab.label }}
-      </div>
+      </button>
     </nav>
 
-    <!-- Tab Content -->
-    <main class="tab-body">
-      <IAPChannelTab v-if="activeTab === 'channel'" />
-      <IAPProductTab v-if="activeTab === 'product'" />
-      <IAPOrderTab v-if="activeTab === 'order'" />
+    <main class="iap-tab-body iap-entry-2 flex flex-1 flex-col min-h-0 min-w-0">
+      <div v-if="bootLoading" class="iap-boot-skeleton" aria-busy="true" aria-label="加载中">
+        <div class="iap-sk-kpis">
+          <div v-for="i in 5" :key="i" class="iap-sk-kpi">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <ElSkeletonItem variant="text" style="width: 56%; margin-bottom: 12px" />
+                <ElSkeletonItem variant="h3" style="width: 72%; margin-bottom: 8px" />
+                <ElSkeletonItem variant="text" style="width: 40%" />
+              </template>
+            </ElSkeleton>
+          </div>
+        </div>
+        <ElSkeleton animated :throttle="0">
+          <template #template>
+            <ElSkeletonItem variant="h3" style="width: 32%; margin-bottom: 16px" />
+            <ElSkeletonItem
+              variant="rect"
+              style="width: 100%; height: 220px; margin-bottom: 12px"
+            />
+            <ElSkeletonItem variant="rect" style="width: 100%; height: 160px" />
+          </template>
+        </ElSkeleton>
+      </div>
+      <template v-else>
+        <IAPChannelTab v-if="activeTab === 'channel'" class="iap-tab-panel" />
+        <IAPProductTab v-if="activeTab === 'product'" class="iap-tab-panel" />
+        <IAPOrderTab v-if="activeTab === 'order'" class="iap-tab-panel" />
+      </template>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { Calendar, Flag, Grid, Monitor } from '@element-plus/icons-vue'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import IAPChannelTab from './IAPChannelTab.vue'
   import IAPProductTab from './IAPProductTab.vue'
   import IAPOrderTab from './IAPOrderTab.vue'
 
-  const activeTab = ref<string>('channel')
+  defineOptions({ name: 'IAPAnalysis' })
+
+  const activeTab = ref<'channel' | 'product' | 'order'>('channel')
 
   const tabs = [
-    { key: 'channel', label: '渠道IAP转化' },
-    { key: 'product', label: '商品分析' },
-    { key: 'order', label: '订单明细' }
+    { key: 'channel' as const, label: '广告平台 IAP 转化' },
+    { key: 'product' as const, label: '商品分析' },
+    { key: 'order' as const, label: '订单明细' }
   ]
 
-  const filters = ref({
+  const filters = reactive({
     app: 'all',
     platform: 'all',
     country: 'all',
-    date: '2026-03-05'
+    date: getAppTodayYYYYMMDD()
   })
+
+  const dateChipText = computed(() => filters.date || '—')
+
+  const bootLoading = ref(true)
+  let bootTimer: ReturnType<typeof setTimeout> | null = null
+
+  onMounted(() => {
+    bootTimer = setTimeout(() => {
+      bootLoading.value = false
+      bootTimer = null
+    }, 420)
+  })
+
+  onBeforeUnmount(() => {
+    if (bootTimer != null) clearTimeout(bootTimer)
+  })
+
+  function onExportClick() {
+    /* 演示占位，与改版前一致不接真实导出 */
+  }
 </script>
 
-<style scoped>
-  .iap-page {
-    min-height: 100vh;
-    font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
-    font-size: 14px;
-    color: #e2e8f5;
-    background: #0b0e1a;
-  }
+<style scoped lang="scss">
+  @import './styles/iap-analysis-page';
 
-  /* ── Header ──────────────────────────────────── */
-  .iap-header {
+  .iap-filters-inner {
     display: flex;
+    flex-wrap: wrap;
+    gap: 14px 16px;
     align-items: center;
     justify-content: space-between;
-    height: 52px;
-    padding: 0 24px;
-    background: #0d1120;
-    border-bottom: 1px solid #1a2240;
+    min-width: 0;
+    padding: 18px 20px;
+    background: rgb(10 10 14 / 82%);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(96 165 250 / 20%);
+    border-radius: 16px;
+    box-shadow:
+      0 8px 32px rgb(0 0 0 / 40%),
+      inset 0 1px 0 rgb(186 230 253 / 10%),
+      0 0 40px rgb(59 130 246 / 8%);
   }
 
-  .breadcrumb {
+  .iap-filters-row {
     display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 10px 12px;
     align-items: center;
-    font-size: 15px;
+    min-width: 0;
   }
 
-  .bc-parent {
-    color: #5a6a8a;
-  }
-
-  .bc-sep {
-    margin: 0 6px;
-    font-size: 16px;
-    color: #3a4a66;
-  }
-
-  .bc-current {
-    font-weight: 600;
-    color: #e2e8f5;
-  }
-
-  .header-filters {
-    display: flex;
-    gap: 8px;
+  .iap-filter-chip {
+    display: inline-flex;
+    gap: 7px;
     align-items: center;
-  }
-
-  .filter-item {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    height: 30px;
-    padding: 0 8px 0 10px;
-    background: #151c30;
-    border: 1px solid #1e2a44;
-    border-radius: 6px;
-  }
-
-  .filter-label {
-    font-size: 12px;
-    color: #8892a8;
+    min-height: 40px;
+    padding: 0 14px;
     white-space: nowrap;
+    background: rgb(16 185 129 / 8%);
+    border: 1px solid rgb(16 185 129 / 30%);
+    border-radius: 9999px;
+    box-shadow: 0 0 16px rgb(16 185 129 / 10%);
   }
 
-  .export-btn {
-    height: 30px;
-    padding: 0 16px;
-    font-weight: 700;
-    color: #0b0e1a !important;
-    background: #22d3ee !important;
-    border-color: #22d3ee !important;
-    border-radius: 6px;
+  .iap-filter-chip__icon {
+    font-size: 16px;
+    color: #10b981;
+    filter: drop-shadow(0 0 6px rgb(16 185 129 / 55%));
   }
 
-  /* ── Tab Nav ──────────────────────────────────── */
-  .tab-nav {
-    display: flex;
-    padding: 0 24px;
-    background: #0d1120;
-    border-bottom: 1px solid #1a2240;
+  .iap-filter-chip__label {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
   }
 
-  .tab-btn {
-    padding: 14px 20px 12px;
+  .iap-filter-chip__value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #10b981;
+    text-shadow: 0 0 10px rgb(16 185 129 / 50%);
+  }
+
+  .iap-filter-date {
+    flex: 0 1 160px;
+    width: 160px;
+    min-width: 140px;
+  }
+
+  :deep(.iap-filter-date .el-input__wrapper) {
+    min-height: 40px;
+    padding: 0 12px;
+    background: rgb(16 185 129 / 6%);
+    border: 1px solid rgb(16 185 129 / 28%);
+    border-radius: 9999px;
+    box-shadow: none;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
+  }
+
+  :deep(.iap-filter-date .el-input__wrapper.is-focus) {
+    background: rgb(16 185 129 / 10%) !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+  }
+
+  :deep(.iap-filter-date .el-input__inner) {
+    font-size: 13px;
+    color: var(--el-text-color-primary);
+  }
+
+  .iap-filter-select {
+    width: 150px;
+    min-width: 120px;
+    max-width: 100%;
+  }
+
+  :deep(.iap-filter-select) {
+    --el-input-focus-border-color: #10b981;
+    --el-border-color-hover: rgb(16 185 129 / 75%);
+    --el-color-primary: #10b981;
+    --el-border-color-focus: #10b981;
+    --el-component-size: 40px;
+  }
+
+  :deep(.iap-filter-select .el-input__wrapper) {
+    padding: 0 12px;
+    background: rgb(16 185 129 / 6%);
+    border: 1px solid rgb(16 185 129 / 28%);
+    border-radius: 9999px;
+    box-shadow: none;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
+  }
+
+  :deep(.iap-filter-select .el-input__inner) {
     font-size: 14px;
-    color: #5a6a8a;
+    color: var(--el-text-color-primary);
+  }
+
+  :deep(.iap-filter-select .el-input__prefix-inner svg) {
+    width: 16px;
+    height: 16px;
+    color: #10b981;
+    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+  }
+
+  :deep(.iap-filter-select .el-select__caret) {
+    color: #10b981;
+  }
+
+  :deep(.iap-filter-select .el-input__wrapper.is-focus) {
+    background: rgb(16 185 129 / 10%) !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+  }
+
+  :deep(.iap-filter-select .el-input__wrapper:hover) {
+    border-color: rgb(16 185 129 / 60%);
+    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+  }
+
+  .iap-export-btn {
+    --el-button-size: 40px;
+
+    height: 40px;
+    padding: 0 20px;
+    margin-left: auto;
+    font-size: 14px;
+    background: linear-gradient(135deg, rgb(16 185 129 / 92%), rgb(5 150 105 / 88%));
+    border: 1px solid rgb(16 185 129 / 55%);
+    box-shadow:
+      0 0 18px rgb(16 185 129 / 28%),
+      inset 0 1px 0 rgb(255 255 255 / 12%);
+    transition:
+      box-shadow 0.22s ease,
+      transform 0.18s ease;
+
+    &:hover {
+      box-shadow:
+        0 0 26px rgb(16 185 129 / 42%),
+        inset 0 1px 0 rgb(255 255 255 / 18%);
+      transform: translateY(-1px);
+    }
+  }
+
+  .iap-tab-nav {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 4px;
+    margin-bottom: 16px;
+    background: color-mix(in srgb, var(--default-box-color) 75%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-success) 35%, var(--default-border));
+    border-radius: 9999px;
+  }
+
+  .iap-tab-btn {
+    min-width: 108px;
+    height: 36px;
+    padding: 0 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--el-text-color-secondary);
+    touch-action: manipulation;
     cursor: pointer;
-    user-select: none;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s ease;
+    background: transparent;
+    border: none;
+    border-radius: 9999px;
+    outline: none;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    &:hover {
+      color: var(--art-success);
+      background: color-mix(in srgb, var(--art-success) 12%, transparent);
+    }
+
+    &.is-active {
+      font-weight: 700;
+      color: var(--art-success);
+      background: color-mix(in srgb, var(--art-success) 18%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-success) 45%, transparent) inset;
+    }
+
+    &:focus-visible {
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--art-success) 45%, transparent);
+    }
   }
 
-  .tab-btn:hover {
-    color: #a0aec0;
-  }
-
-  .tab-active {
-    color: #22d3ee !important;
-    border-bottom-color: #22d3ee !important;
-  }
-
-  /* ── Tab Body ──────────────────────────────────── */
-  .tab-body {
-    padding: 16px 24px 24px;
+  .iap-tab-body {
     overflow-x: auto;
   }
 
-  /* ── Element Plus overrides ──────────────────── */
-  :deep(.filter-sel .el-input__wrapper),
-  :deep(.filter-date .el-input__wrapper) {
-    padding: 0;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
+  .iap-tab-panel {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
   }
 
-  :deep(.filter-sel .el-input__inner),
-  :deep(.filter-date .el-input__inner) {
-    font-size: 12px;
-    color: #e2e8f5 !important;
+  .iap-boot-skeleton {
+    padding: 4px 0 8px;
   }
 
-  :deep(.filter-sel .el-select__caret),
-  :deep(.filter-date .el-input__prefix) {
-    color: #5a6a8a !important;
+  .iap-sk-kpis {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
   }
 
-  :deep(.filter-date) {
-    width: 110px;
+  .iap-sk-kpi {
+    padding: 14px 16px;
+    background: rgb(10 10 14 / 55%);
+    border: 1px solid rgb(96 165 250 / 18%);
+    border-radius: 14px;
   }
 
-  :deep(.el-select-dropdown) {
-    background: #151c30 !important;
-    border: 1px solid #1e2a44 !important;
+  @media (width <= 1200px) {
+    .iap-sk-kpis {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
-  :deep(.el-select-dropdown__item) {
-    color: #a0b0cc !important;
-  }
+  @media (width <= 768px) {
+    .iap-filters-inner {
+      padding: 14px 16px;
+    }
 
-  :deep(.el-select-dropdown__item.is-selected) {
-    color: #22d3ee !important;
-  }
+    .iap-filter-select {
+      flex: 1 1 calc(50% - 6px);
+    }
 
-  :deep(.el-select-dropdown__item:hover) {
-    background: #1e2a44 !important;
+    .iap-export-btn {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .iap-tab-nav {
+      flex-direction: column;
+      align-items: stretch;
+      border-radius: 12px;
+    }
+
+    .iap-tab-btn {
+      width: 100%;
+    }
   }
 </style>

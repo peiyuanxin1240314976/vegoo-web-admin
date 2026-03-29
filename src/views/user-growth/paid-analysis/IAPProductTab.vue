@@ -708,7 +708,9 @@
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @import '../ad-performance/styles/ap-card-fx';
+
   .product-tab {
     display: flex;
     flex-direction: column;
@@ -723,15 +725,27 @@
   }
 
   .kpi-card {
+    @include ap-neon-bg;
+
+    position: relative;
     display: flex;
     gap: 10px;
     align-items: center;
     justify-content: space-between;
     padding: 14px 16px;
-    background: #131624;
-    border: 1px solid #1a2240;
+    overflow: hidden;
     border-left: 3px solid var(--accent);
-    border-radius: 8px;
+    border-radius: 14px;
+    transition:
+      transform 0.32s var(--ease-out),
+      box-shadow 0.36s var(--ease-out);
+
+    &:hover {
+      box-shadow:
+        0 16px 48px rgb(0 0 0 / 45%),
+        0 0 40px color-mix(in srgb, var(--accent) 15%, transparent);
+      transform: translateY(-4px);
+    }
   }
 
   .kpi-info {
@@ -801,17 +815,30 @@
 
   /* Card */
   .card {
+    @include ap-neon-bg;
+
+    position: relative;
     padding: 14px 16px;
-    background: #131624;
-    border: 1px solid #1a2240;
-    border-radius: 8px;
+    overflow: hidden;
+    border-radius: 14px;
+    transition:
+      border-color 0.28s ease,
+      box-shadow 0.36s var(--ease-out);
+
+    &:hover {
+      border-color: rgb(96 165 250 / 55%);
+      box-shadow:
+        0 18px 56px rgb(0 0 0 / 48%),
+        0 0 48px rgb(59 130 246 / 12%);
+    }
   }
 
   .card-hd {
+    @include ap-title-gradient;
+
     margin-bottom: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #c4d0e8;
+    font-size: 14px;
+    font-weight: 700;
   }
 
   .card-sub-hd {

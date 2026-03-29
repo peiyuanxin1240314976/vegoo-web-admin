@@ -30,7 +30,7 @@
       <el-select v-model="fApp" size="small" placeholder="App: 全部" class="fi-sel">
         <el-option label="全部" value="all" /><el-option label="Weather5" value="w5" />
       </el-select>
-      <el-select v-model="fChannel" size="small" placeholder="渠道: 全部" class="fi-sel">
+      <el-select v-model="fChannel" size="small" placeholder="广告平台: 全部" class="fi-sel">
         <el-option label="全部" value="all" /><el-option label="Google" value="google" />
       </el-select>
       <el-select v-model="fCountry" size="small" placeholder="国家: 全部" class="fi-sel">
@@ -169,7 +169,7 @@
               <thead>
                 <tr>
                   <th>订单号</th><th>用户ID</th><th>应用</th> <th>商品</th><th>金额</th
-                  ><th>渠道</th> <th>国家</th><th>下单时间</th><th>支付方式</th> <th>状态</th
+                  ><th>广告平台</th> <th>国家</th><th>下单时间</th><th>支付方式</th> <th>状态</th
                   ><th>操作</th>
                 </tr>
               </thead>
@@ -275,10 +275,10 @@
             </div>
 
             <div class="detail-section">
-              <div class="ds-title">渠道与地区</div>
+              <div class="ds-title">广告平台与地区</div>
               <div class="ds-grid">
                 <div class="ds-row"
-                  ><span class="ds-k">渠道</span><span class="ds-v">Google</span></div
+                  ><span class="ds-k">广告平台</span><span class="ds-v">Google</span></div
                 >
                 <div class="ds-row"
                   ><span class="ds-k">国家/地区</span><span class="ds-v">🇺🇸 美国 (US)</span></div
@@ -340,7 +340,7 @@
               <div class="ds-title">收入归因</div>
               <div class="ds-grid">
                 <div class="ds-row"
-                  ><span class="ds-k">归因渠道</span><span class="ds-v">Google UAC</span></div
+                  ><span class="ds-k">归因广告平台</span><span class="ds-v">Google UAC</span></div
                 >
                 <div class="ds-row"
                   ><span class="ds-k">Campaign</span
@@ -837,7 +837,9 @@
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @import '../ad-performance/styles/ap-card-fx';
+
   .order-tab {
     display: flex;
     flex-direction: column;
@@ -852,13 +854,25 @@
   }
 
   .kpi-card {
+    @include ap-neon-bg;
+
+    position: relative;
     display: flex;
     align-items: center;
     padding: 16px 18px;
-    background: #131624;
-    border: 1px solid #1a2240;
+    overflow: hidden;
     border-left: 3px solid var(--accent);
-    border-radius: 8px;
+    border-radius: 14px;
+    transition:
+      transform 0.32s var(--ease-out),
+      box-shadow 0.36s var(--ease-out);
+
+    &:hover {
+      box-shadow:
+        0 16px 48px rgb(0 0 0 / 45%),
+        0 0 40px color-mix(in srgb, var(--accent) 15%, transparent);
+      transform: translateY(-4px);
+    }
   }
 
   .kpi-info {
@@ -903,12 +917,17 @@
   .filter-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px 12px;
     align-items: center;
-    padding: 10px 14px;
-    background: #131624;
-    border: 1px solid #1a2240;
-    border-radius: 8px;
+    padding: 16px 18px;
+    background: rgb(10 10 14 / 82%);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(96 165 250 / 20%);
+    border-radius: 16px;
+    box-shadow:
+      0 8px 32px rgb(0 0 0 / 38%),
+      inset 0 1px 0 rgb(186 230 253 / 10%),
+      0 0 32px rgb(59 130 246 / 8%);
   }
 
   .filter-item {
@@ -964,18 +983,31 @@
 
   /* Card */
   .card {
+    @include ap-neon-bg;
+
+    position: relative;
     padding: 14px 16px;
-    background: #131624;
-    border: 1px solid #1a2240;
-    border-radius: 8px;
+    overflow: hidden;
+    border-radius: 14px;
+    transition:
+      border-color 0.28s ease,
+      box-shadow 0.36s var(--ease-out);
+
+    &:hover {
+      border-color: rgb(96 165 250 / 55%);
+      box-shadow:
+        0 18px 56px rgb(0 0 0 / 48%),
+        0 0 48px rgb(59 130 246 / 12%);
+    }
   }
 
   .card-hd {
+    @include ap-title-gradient;
+
     display: block;
     margin-bottom: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #c4d0e8;
+    font-size: 14px;
+    font-weight: 700;
   }
 
   .card-note {
@@ -1218,6 +1250,8 @@
 
   /* ── Order Detail Panel ───────────────────────── */
   .detail-panel {
+    @include ap-neon-bg;
+
     position: sticky;
     top: 0;
     display: flex;
@@ -1228,9 +1262,7 @@
     max-height: calc(100vh - 120px);
     overflow: hidden;
     overflow-y: auto;
-    background: #131624;
-    border: 1px solid #1a2240;
-    border-radius: 8px;
+    border-radius: 14px;
   }
 
   .detail-header {

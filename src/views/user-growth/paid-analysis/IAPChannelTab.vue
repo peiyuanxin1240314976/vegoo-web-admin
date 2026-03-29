@@ -26,11 +26,11 @@
     <div class="mid-grid">
       <!-- Channel IAP Table -->
       <div class="card span-table">
-        <div class="card-hd">渠道 IAP 转化质量对比表</div>
+        <div class="card-hd">广告平台 IAP 转化质量对比表</div>
         <table class="dt">
           <thead>
             <tr>
-              <th>渠道</th><th>IAP收入</th><th>占比</th> <th>付费用户</th><th>ARPPU</th>
+              <th>广告平台</th><th>IAP收入</th><th>占比</th> <th>付费用户</th><th>ARPPU</th>
               <th>首次付费周期</th><th>续费率</th><th>质量评分</th>
             </tr>
           </thead>
@@ -77,7 +77,7 @@
 
       <!-- ARPPU Horizontal Bar -->
       <div class="card span-arppu">
-        <div class="card-hd">渠道 ARPPU 对比</div>
+        <div class="card-hd">广告平台 ARPPU 对比</div>
         <div ref="arppuRef" style="height: 230px"></div>
       </div>
 
@@ -124,10 +124,10 @@
 
       <!-- Retention Heatmap -->
       <div class="card reten-card">
-        <div class="card-hd">订阅续费率队列（按渠道）</div>
+        <div class="card-hd">订阅续费率队列（按广告平台）</div>
         <table class="dt hm-dt">
           <thead>
-            <tr> <th>渠道</th><th>Month1</th><th>Month2</th><th>Month5</th> </tr>
+            <tr> <th>广告平台</th><th>Month1</th><th>Month2</th><th>Month5</th> </tr>
           </thead>
           <tbody>
             <tr v-for="r in retenRows" :key="r.ch">
@@ -432,7 +432,7 @@
     {
       id: 1,
       color: '#10b981',
-      text: 'Organic用户续费率最高(78.6%)，远高于付费渠道，建议加大自然量运营'
+      text: 'Organic用户续费率最高(78.6%)，远高于付费广告平台，建议加大自然量运营'
     },
     { id: 2, color: '#f59e0b', text: 'Mintegral用户首次付费周期最长(3.2天)，建议优化新手引导流程' },
     { id: 3, color: '#22d3ee', text: 'ROI在45日达到回本点(100%)，建议广告预算以45天为优化周期' }
@@ -692,7 +692,9 @@
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @import '../ad-performance/styles/ap-card-fx';
+
   /* ── Layout ───────────────────────────────────── */
   .channel-tab {
     display: flex;
@@ -708,15 +710,27 @@
   }
 
   .kpi-card {
+    @include ap-neon-bg;
+
+    position: relative;
     display: flex;
     gap: 10px;
     align-items: center;
     justify-content: space-between;
     padding: 14px 16px;
-    background: #131624;
-    border: 1px solid #1a2240;
+    overflow: hidden;
     border-left: 3px solid var(--accent);
-    border-radius: 8px;
+    border-radius: 14px;
+    transition:
+      transform 0.32s var(--ease-out),
+      box-shadow 0.36s var(--ease-out);
+
+    &:hover {
+      box-shadow:
+        0 16px 48px rgb(0 0 0 / 45%),
+        0 0 40px color-mix(in srgb, var(--accent) 15%, transparent);
+      transform: translateY(-4px);
+    }
   }
 
   .kpi-info {
@@ -786,17 +800,30 @@
 
   /* ── Card base ────────────────────────────────── */
   .card {
+    @include ap-neon-bg;
+
+    position: relative;
     padding: 14px 16px;
-    background: #131624;
-    border: 1px solid #1a2240;
-    border-radius: 8px;
+    overflow: hidden;
+    border-radius: 14px;
+    transition:
+      border-color 0.28s ease,
+      box-shadow 0.36s var(--ease-out);
+
+    &:hover {
+      border-color: rgb(96 165 250 / 55%);
+      box-shadow:
+        0 18px 56px rgb(0 0 0 / 48%),
+        0 0 48px rgb(59 130 246 / 12%);
+    }
   }
 
   .card-hd {
+    @include ap-title-gradient;
+
     margin-bottom: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #c4d0e8;
+    font-size: 14px;
+    font-weight: 700;
   }
 
   .card-sub-hd {
