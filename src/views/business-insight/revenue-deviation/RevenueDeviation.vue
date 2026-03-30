@@ -236,7 +236,8 @@
             v-for="d in rowDims"
             :key="d.value"
             class="rd-dim-chip"
-            :class="{ 'rd-dim-chip--active': d.active }"
+            :class="{ 'rd-dim-chip--active': activeRowDim === d.value }"
+            @click="activeRowDim = d.value"
             >{{ d.label }}</span
           >
           <span class="rd-dim-label" style="margin-left: 16px">列维度：</span>
@@ -244,7 +245,8 @@
             v-for="d in colDims"
             :key="d.value"
             class="rd-dim-chip"
-            :class="{ 'rd-dim-chip--active': d.active }"
+            :class="{ 'rd-dim-chip--active': activeColDim === d.value }"
+            @click="activeColDim = d.value"
             >{{ d.label }}</span
           >
         </div>
@@ -328,6 +330,8 @@
     RevenueDeviationOverviewKpis,
     RevenueDeviationOverviewTrend,
     RevenueDeviationPlatformTable,
+    RevenueDeviationMatrixColDim,
+    RevenueDeviationMatrixRowDim,
     RevenueDeviationQuery
   } from '@/views/business-insight/revenue-deviation/types'
 
@@ -379,15 +383,18 @@
     { label: '偏差率', value: 'rate' }
   ]
 
-  const rowDims = [
-    { label: '应用', value: 'app', active: true },
-    { label: '平台', value: 'platform', active: false },
-    { label: '日期', value: 'date', active: false }
+  const rowDims: { label: string; value: RevenueDeviationMatrixRowDim }[] = [
+    { label: '应用', value: 'app' },
+    { label: '平台', value: 'platform' },
+    { label: '日期', value: 'date' }
   ]
-  const colDims = [
-    { label: '平台', value: 'platform', active: true },
-    { label: '日期', value: 'date', active: false }
+  const colDims: { label: string; value: RevenueDeviationMatrixColDim }[] = [
+    { label: '平台', value: 'platform' },
+    { label: '日期', value: 'date' }
   ]
+
+  const activeRowDim = ref<RevenueDeviationMatrixRowDim>('app')
+  const activeColDim = ref<RevenueDeviationMatrixColDim>('platform')
 
   function mapAppFilterToAppId(v: string): string {
     const m: Record<string, string> = {
@@ -423,6 +430,12 @@
 
   async function loadRevenueDeviationData() {
     const q = buildQuery()
+    const matrixQ = {
+      ...q,
+      matrix_source: matrixPlatform.value,
+      row_dim: activeRowDim.value,
+      col_dim: activeColDim.value
+    }
     const [kpi, trend, plat, reason, advice, country, hist, matrix] = await Promise.all([
       fetchRevenueDeviationOverviewKpis(q),
       fetchRevenueDeviationOverviewTrend(q),
@@ -431,7 +444,7 @@
       fetchRevenueDeviationOverviewAdvice(q),
       fetchRevenueDeviationOverviewCountryTop10(q),
       fetchRevenueDeviationTableHistory(q),
-      fetchRevenueDeviationTableMatrix(q)
+      fetchRevenueDeviationTableMatrix(matrixQ)
     ])
     kpiOverview.value = kpi
     trendData.value = trend
@@ -691,7 +704,7 @@
   })
 
   watch(
-    [dateRange, platform, appFilter],
+    [dateRange, platform, appFilter, matrixPlatform, activeRowDim, activeColDim],
     async () => {
       await loadRevenueDeviationData()
       await nextTick()

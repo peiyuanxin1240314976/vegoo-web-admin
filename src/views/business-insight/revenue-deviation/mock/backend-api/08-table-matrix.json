@@ -5,7 +5,26 @@
       "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
       "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
       "source": { "type": "string", "required": false, "description": "广告平台，空为全部。" },
-      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" }
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" },
+      "matrix_source": {
+        "type": "string",
+        "required": false,
+        "description": "矩阵右上角「平台」筛选（广告平台编码），空为全部；与页面 matrixPlatform 一致，如 admob/facebook。"
+      },
+      "row_dim": {
+        "type": "string",
+        "required": false,
+        "enum": ["app", "platform", "date"],
+        "default": "app",
+        "description": "矩阵行维度（默认 app）。"
+      },
+      "col_dim": {
+        "type": "string",
+        "required": false,
+        "enum": ["platform", "date"],
+        "default": "platform",
+        "description": "矩阵列维度（默认 platform）。"
+      }
     },
     "response": {
       "cols": {
@@ -76,7 +95,10 @@
     "t_start_date": "2024-05-01",
     "t_end_date": "2024-05-31",
     "source": "",
-    "s_app_id": ""
+    "s_app_id": "",
+    "matrix_source": "",
+    "row_dim": "app",
+    "col_dim": "platform"
   },
   "sampleResponse": {
     "cols": [
@@ -122,18 +144,18 @@
       },
       {
         "moment": "筛选变化触发刷新",
-        "detail": "日期范围/广告平台/应用变化后重新请求并刷新矩阵。",
+        "detail": "日期范围/广告平台/应用变化后重新请求并刷新矩阵；矩阵右上角「平台」筛选与行/列维度切换同样会触发本接口刷新。",
         "prerequisite": "无。"
       }
     ],
-    "defaultSelection": "矩阵右上角「平台」下拉为纯 UI（当前不参与请求参数）；矩阵 cols/rows 结构由后端一次性返回。",
+    "defaultSelection": "默认 row_dim=app、col_dim=platform；matrix_source 为空表示全平台。",
     "dedupe": "无。"
   },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/table/matrix",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "t_start_date, t_end_date, source?, s_app_id?",
+    "requestBody": "t_start_date, t_end_date, source?, s_app_id?, matrix_source?, row_dim?, col_dim?",
     "responseBody": "RevenueDeviationMatrixTable"
   },
   "apiSuggestion": {

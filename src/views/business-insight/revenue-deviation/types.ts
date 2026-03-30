@@ -12,6 +12,22 @@ export type RevenueDeviationQuery = {
   s_app_id?: string
 }
 
+/** 08-table-matrix 请求额外参数 */
+export type RevenueDeviationMatrixRowDim = 'app' | 'platform' | 'date'
+export type RevenueDeviationMatrixColDim = 'platform' | 'date'
+
+export type RevenueDeviationMatrixQuery = RevenueDeviationQuery & {
+  /**
+   * 矩阵右上角「平台」筛选（广告平台编码，空为全部）
+   * 与页面 matrixPlatform 一致，如 admob/facebook/applovin/vungle
+   */
+  matrix_source?: string
+  /** 行维度（默认 app） */
+  row_dim?: RevenueDeviationMatrixRowDim
+  /** 列维度（默认 platform） */
+  col_dim?: RevenueDeviationMatrixColDim
+}
+
 /** 01-overview-kpis */
 export type RevenueDeviationOverviewKpis = {
   d_revenue_estimated: number

@@ -6,6 +6,7 @@ import type {
   RevenueDeviationAdvice,
   RevenueDeviationCountryTop10,
   RevenueDeviationHistoryRow,
+  RevenueDeviationMatrixQuery,
   RevenueDeviationMatrixTable,
   RevenueDeviationOverviewKpis,
   RevenueDeviationOverviewTrend,
@@ -238,5 +239,7 @@ export function mockFetchRevenueDeviationTableHistory(q: RevenueDeviationQuery) 
 }
 
 export function mockFetchRevenueDeviationTableMatrix(q: RevenueDeviationQuery) {
-  return Promise.resolve(noopFilter(q, structuredClone(MOCK_TABLE_MATRIX)))
+  return Promise.resolve(
+    noopFilter(q as RevenueDeviationMatrixQuery, structuredClone(MOCK_TABLE_MATRIX))
+  )
 }

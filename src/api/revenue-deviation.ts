@@ -21,6 +21,7 @@ import type {
   RevenueDeviationAdvice,
   RevenueDeviationCountryTop10,
   RevenueDeviationHistoryRow,
+  RevenueDeviationMatrixQuery,
   RevenueDeviationMatrixTable,
   RevenueDeviationOverviewKpis,
   RevenueDeviationOverviewTrend,
@@ -37,6 +38,15 @@ function normalizeQuery(q: RevenueDeviationQuery) {
     t_end_date: q.t_end_date,
     source: q.source ?? '',
     s_app_id: q.s_app_id ?? ''
+  }
+}
+
+function normalizeMatrixQuery(q: RevenueDeviationMatrixQuery) {
+  return {
+    ...normalizeQuery(q),
+    matrix_source: q.matrix_source ?? '',
+    row_dim: q.row_dim ?? 'app',
+    col_dim: q.col_dim ?? 'platform'
   }
 }
 
@@ -125,8 +135,8 @@ export function fetchRevenueDeviationTableHistory(params: RevenueDeviationQuery)
 }
 
 /** 08-table-matrix.json */
-export function fetchRevenueDeviationTableMatrix(params: RevenueDeviationQuery) {
-  const body = normalizeQuery(params)
+export function fetchRevenueDeviationTableMatrix(params: RevenueDeviationMatrixQuery) {
+  const body = normalizeMatrixQuery(params)
   if (isRevenueDeviationEndpointMock(RevenueDeviationEndpoint.TableMatrix)) {
     return mockFetchRevenueDeviationTableMatrix(body)
   }
