@@ -10,23 +10,11 @@
           <ArtTable
             :data="rows"
             :columns="columns"
+            class="aps-metrics-table"
             row-key="channel"
             :stripe="false"
             :border="false"
             size="default"
-            :header-cell-style="{
-              color: 'var(--aps-table-header-text)',
-              fontSize: '12px',
-              padding: '6px 0',
-              borderBottom: '1px solid var(--aps-table-divider-strong)'
-            }"
-            :cell-style="{
-              background: 'transparent',
-              color: 'var(--aps-text-secondary)',
-              fontSize: '12px',
-              padding: '6px 0',
-              borderBottom: '1px solid var(--aps-table-divider-weak)'
-            }"
             :pagination="pagination"
             :paginationOptions="{ align: 'center', pageSizes: [10, 20, 30], background: false }"
             @pagination:current-change="onCurrentChange"
@@ -145,3 +133,60 @@
 <script lang="ts">
   export default { name: 'ApaMetricsTablePanel' }
 </script>
+
+<style scoped lang="scss">
+  .aps-metrics-table {
+    :deep(.el-table) {
+      margin-top: 6px;
+      background: transparent !important;
+    }
+
+    :deep(.el-table__inner-wrapper),
+    :deep(.el-table__header-wrapper),
+    :deep(.el-table__body-wrapper),
+    :deep(.el-scrollbar__view) {
+      background: transparent !important;
+    }
+
+    :deep(.el-table__body tr.el-table__row) {
+      background: transparent;
+    }
+
+    :deep(.el-table__inner-wrapper::before) {
+      height: 0;
+    }
+
+    :deep(.el-table__header thead tr) {
+      background: var(--aps-table-header-gradient);
+    }
+
+    :deep(.el-table th.el-table__cell) {
+      padding: 6px 0;
+      font-size: 12px;
+      color: var(--aps-table-header-text);
+      background: transparent !important;
+      border-bottom: 1px solid var(--aps-table-divider-strong);
+    }
+
+    :deep(.el-table td.el-table__cell) {
+      padding: 6px 0;
+      font-size: 12px;
+      color: var(--aps-text-secondary);
+      background: transparent;
+      border-bottom: 1px solid var(--aps-table-divider-weak);
+    }
+
+    :deep(.el-table__cell .cell) {
+      padding: 0 8px;
+    }
+
+    :deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {
+      background: var(--aps-bg-row-hover);
+    }
+
+    :deep(.el-button.is-link) {
+      padding: 0;
+      font-size: 12px;
+    }
+  }
+</style>
