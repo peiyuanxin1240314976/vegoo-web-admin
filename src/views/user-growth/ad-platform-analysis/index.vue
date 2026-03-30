@@ -759,14 +759,18 @@
     })
   }
 
-  /** 指标比较表行为广告平台维度，使用平台展示名作为详情页 query.id（与接口 source 一致） */
+  /** 指标比较表跳转详情：用行内 sourceKey（平台编码）作为 query.source */
   function onViewMetricsPlatformDetail(row: ChannelMetricRow) {
     const id = String(row.channel ?? '').trim()
     if (!id || id === '—') {
       ElMessage.warning('缺少广告平台标识，无法打开详情')
       return
     }
-    void router.push({ name: 'AdPlatformInfo', query: { id } })
+    const source = String(row.sourceKey ?? '').trim() || normalizeChannelKey(id)
+    void router.push({
+      name: 'AdPlatformInfo',
+      query: { id, source }
+    })
   }
 
   function topCampaignRowKey(row: TopCampaignRow) {
@@ -899,8 +903,11 @@
     const st = String(d?.status ?? '').toLowerCase()
     const status: ChannelStatus =
       st === 'excellent' || st === 'average' || st === 'poor' ? st : 'average'
+    const channel = String(d?.source ?? '').trim() || '—'
+    const key = String(d?.sourceKey ?? '').trim()
     return {
-      channel: String(d?.source ?? '').trim() || '—',
+      channel,
+      sourceKey: key || (channel !== '—' ? normalizeChannelKey(channel) : undefined),
       cost: String(d?.cost ?? ''),
       revenue: String(d?.revenue ?? ''),
       roi: parseMetricNum(d?.roi),

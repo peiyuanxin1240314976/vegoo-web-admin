@@ -28,6 +28,21 @@ export function useAdPlatformInfo() {
     return String(s ?? '').trim()
   })
 
+  /** 查询参数 `?source=`，广告平台编码；缺省时可由 `id` 推导（兼容旧入口） */
+  const sourceKey = computed(() => {
+    const raw = route.query.source
+    const s = Array.isArray(raw) ? raw[0] : raw
+    const v = String(s ?? '').trim()
+    if (v) return v
+    const fallback = String(detailId.value ?? '').trim()
+    return fallback
+      ? fallback
+          .toLowerCase()
+          .replace(/\s+/g, '')
+          .replace(/[^\w]+/g, '')
+      : ''
+  })
+
   const filtersDraft = reactive<AdPlatformInfoFilterState>({
     dateRange: '30d'
   })
@@ -46,6 +61,7 @@ export function useAdPlatformInfo() {
   function buildRequestBody(): Api.UserGrowth.AdPlatformInfoRequestBody {
     return {
       s_campaign_id: detailId.value,
+      source: sourceKey.value || undefined,
       date_range: filters.dateRange
     }
   }

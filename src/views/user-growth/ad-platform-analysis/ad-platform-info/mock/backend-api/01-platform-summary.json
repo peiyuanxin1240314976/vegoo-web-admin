@@ -7,6 +7,11 @@
         "required": true,
         "description": "广告系列 ID（路由 query `id`，数据字典 s_campaign_id）。"
       },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台编码（与大屏筛选 `source` 口径一致，如 google/facebook）。"
+      },
       "date_range": {
         "type": "string",
         "required": false,
@@ -42,6 +47,7 @@
   },
   "sampleRequest": {
     "s_campaign_id": "s_cmp_mock_001",
+    "source": "google",
     "date_range": "30d",
     "t_start_date": "2026-03-01",
     "t_end_date": "2026-03-29"
@@ -59,7 +65,7 @@
     "url": "POST /api/v1/datacenter/analysis/ad-platform/ad-platform-info/platform-summary",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
+    "requestBody": "s_campaign_id (必填), source (必填), date_range?, t_start_date?, t_end_date?",
     "responseBody": "{ summary, updatedAtText }（位于网关 BaseResponse.data）"
   },
   "interaction": {

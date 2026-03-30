@@ -22,6 +22,11 @@
     },
     "AdPlatformMetricsTableRowDto": {
       "source": { "type": "string", "required": true, "description": "广告平台展示名。" },
+      "sourceKey": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台编码（与筛选 `source` 一致），用于跳转详情页 query.source。"
+      },
       "status": { "type": "string", "required": true, "description": "excellent|average|poor。" },
       "statusText": { "type": "string", "required": false, "description": "可选：状态文案。" },
       "cost": { "type": "string", "required": true, "description": "花费展示文本（如 $850K）。" },
@@ -66,6 +71,7 @@
     "rows": [
       {
         "source": "Google Ads",
+        "sourceKey": "google",
         "status": "excellent",
         "cost": "$850K",
         "revenue": "$1.29M",

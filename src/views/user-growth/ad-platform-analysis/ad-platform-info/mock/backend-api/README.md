@@ -6,14 +6,17 @@
 
 完整 URL：`POST {基路径}/{endpoint}`，见各 JSON `api.url`。
 
-对应前端路由：`/user-growth/ad-platform-analysis/ad-platform-info?id=<s_campaign_id>`（`id` 即请求体 `s_campaign_id`）。
+对应前端路由：`/user-growth/ad-platform-analysis/ad-platform-info?id=<s_campaign_id>&source=<source>`。
+
+- `id` → 请求体 `s_campaign_id`
+- `source` → 请求体 `source`（广告平台编码，与大屏筛选口径一致）
 
 **响应包裹**：成功时业务体在网关 **`BaseResponse.data`**，各契约 `sampleResponse` 为 **unwrap 后的 `data` 内结构**（与 `request.post` 泛型一致）。
 
 ## 拆分原则
 
 - **一接口一 UI 模块**：首屏可按模块并行请求，避免单接口 payload 过大。
-- 各接口 **POST + JSON**，请求体均含 **`s_campaign_id`** 与 **`date_range`**（及可选 `t_start_date`/`t_end_date`）。
+- 各接口 **POST + JSON**，请求体均含 **`s_campaign_id`**、**`source`** 与 **`date_range`**（及可选 `t_start_date`/`t_end_date`）。
 
 ## 接口清单
 
@@ -36,7 +39,7 @@
 | 顶栏「查询」（应用时间筛选草稿） | 上表 **全部 8 个** | `applyDraftFilters` → `load()`，携带最新 `date_range` |
 | 顶栏「刷新」 | 同上 | 调用 `load()`，请求体与当前 `filters` 一致 |
 
-**默认选中**：`date_range` 初始 `30d`；`s_campaign_id` = 路由 `query.id`。
+**默认选中**：`date_range` 初始 `30d`；`s_campaign_id` = 路由 `query.id`；`source` = 路由 `query.source`（缺省时前端会尝试从 `id` 规范化推导）。
 
 ## `fetch*` 与数据源开关
 

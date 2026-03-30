@@ -3,6 +3,11 @@
   "fieldDescription": {
     "request": {
       "s_campaign_id": { "type": "string", "required": true, "description": "广告系列 ID。" },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台编码（与大屏筛选 `source` 口径一致，如 google/facebook）。"
+      },
       "date_range": {
         "type": "string",
         "required": false,
@@ -34,6 +39,7 @@
   },
   "sampleRequest": {
     "s_campaign_id": "s_cmp_mock_001",
+    "source": "google",
     "date_range": "30d"
   },
   "sampleResponse": {
@@ -60,7 +66,7 @@
     "url": "POST /api/v1/datacenter/analysis/ad-platform/ad-platform-info/country-top10",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
+    "requestBody": "s_campaign_id (必填), source (必填), date_range?, t_start_date?, t_end_date?",
     "responseBody": "{ top10 }（位于网关 BaseResponse.data）"
   },
   "interaction": {
