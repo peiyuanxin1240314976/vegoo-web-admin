@@ -10,23 +10,22 @@ export type RevenueDeviationQuery = {
   source?: string
   /** 应用，空为全部 */
   s_app_id?: string
+  /**
+   * 右上角「平台」筛选（广告平台编码，空为全部）
+   * 当前产品要求：作为全局筛选参数，下方所有卡片接口均透传
+   */
+  matrix_source?: string
+  /** 右上角维度切换：行维度（默认 app） */
+  row_dim?: RevenueDeviationMatrixRowDim
+  /** 右上角维度切换：列维度（默认 platform） */
+  col_dim?: RevenueDeviationMatrixColDim
 }
 
 /** 08-table-matrix 请求额外参数 */
 export type RevenueDeviationMatrixRowDim = 'app' | 'platform' | 'date'
 export type RevenueDeviationMatrixColDim = 'platform' | 'date'
 
-export type RevenueDeviationMatrixQuery = RevenueDeviationQuery & {
-  /**
-   * 矩阵右上角「平台」筛选（广告平台编码，空为全部）
-   * 与页面 matrixPlatform 一致，如 admob/facebook/applovin/vungle
-   */
-  matrix_source?: string
-  /** 行维度（默认 app） */
-  row_dim?: RevenueDeviationMatrixRowDim
-  /** 列维度（默认 platform） */
-  col_dim?: RevenueDeviationMatrixColDim
-}
+export type RevenueDeviationMatrixQuery = RevenueDeviationQuery
 
 /** 01-overview-kpis */
 export type RevenueDeviationOverviewKpis = {

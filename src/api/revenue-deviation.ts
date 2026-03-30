@@ -37,17 +37,15 @@ function normalizeQuery(q: RevenueDeviationQuery) {
     t_start_date: q.t_start_date,
     t_end_date: q.t_end_date,
     source: q.source ?? '',
-    s_app_id: q.s_app_id ?? ''
-  }
-}
-
-function normalizeMatrixQuery(q: RevenueDeviationMatrixQuery) {
-  return {
-    ...normalizeQuery(q),
+    s_app_id: q.s_app_id ?? '',
     matrix_source: q.matrix_source ?? '',
     row_dim: q.row_dim ?? 'app',
     col_dim: q.col_dim ?? 'platform'
   }
+}
+
+function normalizeMatrixQuery(q: RevenueDeviationMatrixQuery) {
+  return normalizeQuery(q)
 }
 
 /** 01-overview-kpis.json */

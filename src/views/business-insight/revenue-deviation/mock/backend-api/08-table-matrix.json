@@ -9,21 +9,21 @@
       "matrix_source": {
         "type": "string",
         "required": false,
-        "description": "矩阵右上角「平台」筛选（广告平台编码），空为全部；与页面 matrixPlatform 一致，如 admob/facebook。"
+        "description": "右上角「平台」筛选（广告平台编码），空为全部；当前作为全局筛选参数透传。"
       },
       "row_dim": {
         "type": "string",
         "required": false,
         "enum": ["app", "platform", "date"],
         "default": "app",
-        "description": "矩阵行维度（默认 app）。"
+        "description": "右上角维度切换：行维度（默认 app）；当前作为全局筛选参数透传。"
       },
       "col_dim": {
         "type": "string",
         "required": false,
         "enum": ["platform", "date"],
         "default": "platform",
-        "description": "矩阵列维度（默认 platform）。"
+        "description": "右上角维度切换：列维度（默认 platform）；当前作为全局筛选参数透传。"
       }
     },
     "response": {

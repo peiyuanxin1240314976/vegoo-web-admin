@@ -5,7 +5,26 @@
       "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
       "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
       "source": { "type": "string", "required": false, "description": "广告平台，空为全部。" },
-      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" }
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" },
+      "matrix_source": {
+        "type": "string",
+        "required": false,
+        "description": "右上角「平台」筛选（广告平台编码），空为全部；当前作为全局筛选参数透传。"
+      },
+      "row_dim": {
+        "type": "string",
+        "required": false,
+        "enum": ["app", "platform", "date"],
+        "default": "app",
+        "description": "右上角维度切换：行维度（默认 app）；当前作为全局筛选参数透传。"
+      },
+      "col_dim": {
+        "type": "string",
+        "required": false,
+        "enum": ["platform", "date"],
+        "default": "platform",
+        "description": "右上角维度切换：列维度（默认 platform）；当前作为全局筛选参数透传。"
+      }
     },
     "response": {
       "tab_amount": {
@@ -37,7 +56,10 @@
     "t_start_date": "2024-05-01",
     "t_end_date": "2024-05-31",
     "source": "",
-    "s_app_id": ""
+    "s_app_id": "",
+    "matrix_source": "",
+    "row_dim": "app",
+    "col_dim": "platform"
   },
   "sampleResponse": {
     "tab_amount": [
@@ -85,7 +107,7 @@
     "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/country-top10",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "t_start_date, t_end_date, source?, s_app_id?",
+    "requestBody": "t_start_date, t_end_date, source?, s_app_id?, matrix_source?, row_dim?, col_dim?",
     "responseBody": "RevenueDeviationCountryTop10"
   },
   "apiSuggestion": {
