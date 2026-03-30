@@ -1,5 +1,6 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 import {
   fetchAdPlatformInfoCampaignTable,
   fetchAdPlatformInfoConversionFunnel,
@@ -21,26 +22,16 @@ type LoadState = 'idle' | 'loading' | 'ready' | 'error'
 export function useAdPlatformInfo() {
   const route = useRoute()
 
-  /** 查询参数 `?id=`，对应广告系列 `s_campaign_id` */
+  /** 查询参数 `?id=`：来自列表行 `sourceCode`（广告平台编码 n_source） */
   const detailId = computed(() => {
     const raw = route.query.id
     const s = Array.isArray(raw) ? raw[0] : raw
     return String(s ?? '').trim()
   })
 
-  /** 查询参数 `?source=`，广告平台编码；缺省时可由 `id` 推导（兼容旧入口） */
-  const sourceKey = computed(() => {
-    const raw = route.query.source
-    const s = Array.isArray(raw) ? raw[0] : raw
-    const v = String(s ?? '').trim()
-    if (v) return v
-    const fallback = String(detailId.value ?? '').trim()
-    return fallback
-      ? fallback
-          .toLowerCase()
-          .replace(/\s+/g, '')
-          .replace(/[^\w]+/g, '')
-      : ''
+  const nSource = computed(() => {
+    const n = Number.parseInt(detailId.value, 10)
+    return Number.isFinite(n) ? n : 0
   })
 
   const filtersDraft = reactive<AdPlatformInfoFilterState>({
@@ -59,19 +50,22 @@ export function useAdPlatformInfo() {
   }
 
   function buildRequestBody(): Api.UserGrowth.AdPlatformInfoRequestBody {
+    const end = getAppNow()
+    const start = cloneAppDate(end)
+    const days = filters.dateRange === '7d' ? 7 : filters.dateRange === '90d' ? 90 : 30
+    start.setDate(end.getDate() - (days - 1))
     return {
-      s_campaign_id: detailId.value,
-      source: sourceKey.value || undefined,
-      date_range: filters.dateRange
+      n_source: nSource.value,
+      t_start_date: formatYYYYMMDD(start),
+      t_end_date: formatYYYYMMDD(end)
     }
   }
 
   async function load() {
-    const id = detailId.value
-    if (!id) {
+    if (!detailId.value) {
       state.value = 'error'
       data.value = null
-      errorMsg.value = '缺少广告系列 ID'
+      errorMsg.value = '缺少广告平台编码'
       return
     }
 

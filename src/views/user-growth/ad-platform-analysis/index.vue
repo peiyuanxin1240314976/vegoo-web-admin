@@ -759,14 +759,14 @@
     })
   }
 
-  /** 指标比较表跳转详情：用行内 sourceKey（平台编码）作为 query.source */
+  /** 指标比较表跳转详情：优先使用行内 sourceCode + source */
   function onViewMetricsPlatformDetail(row: ChannelMetricRow) {
-    const id = String(row.channel ?? '').trim()
+    const id = String(row.sourceCode ?? '').trim()
     if (!id || id === '—') {
       ElMessage.warning('缺少广告平台标识，无法打开详情')
       return
     }
-    const source = String(row.sourceKey ?? '').trim() || normalizeChannelKey(id)
+    const source = String(row.source ?? row.channel ?? '').trim() || normalizeChannelKey(id)
     void router.push({
       name: 'AdPlatformInfo',
       query: { id, source }
@@ -903,11 +903,15 @@
     const st = String(d?.status ?? '').toLowerCase()
     const status: ChannelStatus =
       st === 'excellent' || st === 'average' || st === 'poor' ? st : 'average'
-    const channel = String(d?.source ?? '').trim() || '—'
-    const key = String(d?.sourceKey ?? '').trim()
+    const sourceName = String(d?.source ?? '').trim()
+    const channel = sourceName || '—'
+    const sourceCode = String((d as { sourceCode?: string | number })?.sourceCode ?? '').trim()
+    const sourceKey = String(d?.sourceKey ?? '').trim()
+    const id = sourceCode || sourceKey || (channel !== '—' ? normalizeChannelKey(channel) : '')
     return {
       channel,
-      sourceKey: key || (channel !== '—' ? normalizeChannelKey(channel) : undefined),
+      source: sourceName || undefined,
+      sourceCode: id || undefined,
       cost: String(d?.cost ?? ''),
       revenue: String(d?.revenue ?? ''),
       roi: parseMetricNum(d?.roi),

@@ -325,6 +325,8 @@ declare namespace Api {
     /** 指标比较详情表单行（响应 data.rows[]，POST .../metrics/table） */
     interface AdPlatformMetricsTableRowDto {
       source: string
+      /** 广告平台编码（数字码），例如 1=Google、2=Facebook */
+      sourceCode?: string | number
       /** 广告平台编码（与筛选 `source` 一致）；用于跳转详情页等场景 */
       sourceKey?: string
       status: string | AdPlatformMetricStatus
@@ -359,12 +361,10 @@ declare namespace Api {
      * 业务体见各 `AdPlatformInfo*Response`；成功时位于响应 `BaseResponse.data`。
      */
     interface AdPlatformInfoRequestBody {
-      s_campaign_id: string
-      /** 广告平台标识/编码（与大屏筛选 `source` 口径一致），用于详情页数据归属 */
-      source?: string
-      date_range?: '7d' | '30d' | '90d'
-      t_start_date?: string
-      t_end_date?: string
+      /** 广告平台编码（n_source），来源于列表行 sourceCode */
+      n_source: number
+      t_start_date: string
+      t_end_date: string
     }
 
     interface AdPlatformInfoPlatformSummaryDto {

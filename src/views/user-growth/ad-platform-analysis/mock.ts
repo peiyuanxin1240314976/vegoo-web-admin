@@ -180,7 +180,8 @@ export type ChannelStatus = 'excellent' | 'average' | 'poor'
 export interface ChannelMetricRow {
   channel: string
   /** 广告平台编码（与筛选 `source` 一致）；用于跳转详情页 */
-  sourceKey?: string
+  sourceCode?: string
+  source?: string
   cost: string
   revenue: string
   roi: number

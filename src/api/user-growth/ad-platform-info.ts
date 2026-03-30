@@ -18,7 +18,8 @@ import {
   mockAdPlatformInfoTrendChart
 } from '@/views/user-growth/ad-platform-analysis/ad-platform-info/mock/ad-platform-info-api-mock'
 
-const AD_PLATFORM_INFO_BASE = '/api/v1/datacenter/analysis/ad-platform/ad-platform-info'
+const AD_PLATFORM_INFO_BASE =
+  '/api/v1/datacenter/analysis/user-growth/ad-platform-analysis/ad-platform-info'
 
 /** POST .../platform-summary */
 export function fetchAdPlatformInfoPlatformSummary(body: Api.UserGrowth.AdPlatformInfoRequestBody) {

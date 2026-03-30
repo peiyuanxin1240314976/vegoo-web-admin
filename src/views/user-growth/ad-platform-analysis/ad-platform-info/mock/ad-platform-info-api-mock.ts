@@ -18,7 +18,7 @@ import { buildMockAdPlatformInfoPageData } from './index'
 export type AdPlatformInfoRequestBody = Api.UserGrowth.AdPlatformInfoRequestBody
 
 function page(body: AdPlatformInfoRequestBody) {
-  return buildMockAdPlatformInfoPageData(String(body?.s_campaign_id ?? '').trim() || '—')
+  return buildMockAdPlatformInfoPageData(String(body?.n_source ?? '').trim() || '—')
 }
 
 export function mockAdPlatformInfoPlatformSummary(

@@ -31,14 +31,14 @@ export enum AdPlatformInfoEndpoint {
 }
 
 export const AD_PLATFORM_INFO_USE_MOCK: Record<AdPlatformInfoEndpoint, boolean> = {
-  [AdPlatformInfoEndpoint.PlatformSummary]: true,
-  [AdPlatformInfoEndpoint.KpiCards]: true,
-  [AdPlatformInfoEndpoint.RoiMapPoints]: true,
-  [AdPlatformInfoEndpoint.CountryTop10]: true,
-  [AdPlatformInfoEndpoint.RetentionHeatmap]: true,
-  [AdPlatformInfoEndpoint.ConversionFunnel]: true,
-  [AdPlatformInfoEndpoint.TrendChart]: true,
-  [AdPlatformInfoEndpoint.CampaignTable]: true
+  [AdPlatformInfoEndpoint.PlatformSummary]: false,
+  [AdPlatformInfoEndpoint.KpiCards]: false,
+  [AdPlatformInfoEndpoint.RoiMapPoints]: false,
+  [AdPlatformInfoEndpoint.CountryTop10]: false,
+  [AdPlatformInfoEndpoint.RetentionHeatmap]: false,
+  [AdPlatformInfoEndpoint.ConversionFunnel]: false,
+  [AdPlatformInfoEndpoint.TrendChart]: false,
+  [AdPlatformInfoEndpoint.CampaignTable]: false
 }
 
 export function isAdPlatformInfoMock(endpoint: AdPlatformInfoEndpoint): boolean {
