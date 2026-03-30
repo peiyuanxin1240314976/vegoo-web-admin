@@ -1,0 +1,86 @@
+{
+  "_comment": "广告平台分析大屏 - Top10 广告系列。对应 Api.UserGrowth.AdPlatformCampaignTop10RowDto[]。",
+  "fieldDescription": {
+    "request": {
+      "appId": { "type": "string", "required": false },
+      "platform": { "type": "string", "required": false },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "可选：筛选某平台的 Top10。"
+      },
+      "dateStart": { "type": "string", "required": true },
+      "dateEnd": { "type": "string", "required": true },
+      "currentPage": { "type": "number", "required": true },
+      "pageSize": { "type": "number", "required": true },
+      "groupBy": { "type": "string", "required": false },
+      "userId": { "type": "string", "required": false }
+    },
+    "response": {
+      "data": {
+        "type": "AdPlatformCampaignTop10RowDto[]",
+        "required": true,
+        "description": "网关 unwrap 后即为数组。"
+      }
+    },
+    "AdPlatformCampaignTop10RowDto": {
+      "campaignId": {
+        "type": "string",
+        "required": true,
+        "description": "广告系列主键，用于跳转系列详情。"
+      },
+      "campaignName": { "type": "string", "required": true },
+      "cost": { "type": "number", "required": true, "description": "花费（USD）。" },
+      "cpi": { "type": "number", "required": true, "description": "CPI（USD）。" },
+      "roi": { "type": "number", "required": true, "description": "ROI 数值。" },
+      "source": { "type": "string", "required": true, "description": "广告平台展示名。" },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "可选：应用 ID（用于跳转系列详情 query）。"
+      },
+      "appName": { "type": "string", "required": false, "description": "可选：应用名称。" }
+    }
+  },
+  "sampleRequest": {
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "dateStart": "2026-03-01",
+    "dateEnd": "2026-03-30",
+    "currentPage": 0,
+    "pageSize": 0,
+    "groupBy": "",
+    "userId": ""
+  },
+  "sampleResponse": [
+    {
+      "campaignId": "s_cmp_mock_001",
+      "campaignName": "IOS_Traffic_New",
+      "cost": 7500,
+      "cpi": 1.2,
+      "roi": 1.4,
+      "source": "Google Ads",
+      "appId": "s_app_demo",
+      "appName": "示例应用 A"
+    }
+  ],
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-platform/campaign/top10",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "AdPlatformAnalysisRequestParams",
+    "responseBody": "AdPlatformCampaignTop10RowDto[]（位于网关 BaseResponse.data）"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化 / 点击「查询」",
+        "detail": "用于第二排右侧 Top10 表格；行内「查看」用于跳转广告系列详情页。",
+        "prerequisite": "需返回 campaignId。"
+      }
+    ],
+    "defaultSelection": "默认日期为最近 30 天；默认 source 为空代表全平台混合 Top10。",
+    "dedupe": "与趋势图/热力图/指标表等并行。"
+  }
+}

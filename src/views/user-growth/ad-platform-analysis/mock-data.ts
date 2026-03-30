@@ -1,32 +1,14 @@
 /**
- * 广告平台 ROI / 用户质量分析大屏 - 兼容导出（历史入口）
- *
- * - 类型已迁移到 `./types.ts`
- * - MOCK 数据已迁移到 `./mock-data.ts`
- *
- * 该文件保留仅为减少一次性改动面，后续可逐步替换引用后删除。
- */
-export * from './types'
-export * from './mock-data'
-
-/**
- * 广告平台 ROI / 用户质量分析大屏 - Mock 数据
+ * 广告平台分析大屏 - 本地 Mock 数据（UI 开发/对照；按接口 Mock 分支会引用）
  */
 
-/** 广告平台 KPI 卡片 */
-export interface ChannelKpiCard {
-  id: string
-  name: string
-  /** 广告平台 / App 图标 URL；为空则前端显示圆角占位块 */
-  logo?: string
-  roi: number
-  roiChange: number
-  roiChangeUp: boolean
-  cost: string
-  revenue: string
-  cpi: string
-  trendData: number[]
-}
+import type {
+  ChannelKpiCard,
+  ChannelMetricRow,
+  ChannelRoiTrend,
+  TopCampaignRow,
+  UserQualityHeatmapRow
+} from './types'
 
 export const MOCK_CHANNEL_KPI_CARDS: ChannelKpiCard[] = [
   {
@@ -86,12 +68,6 @@ export const MOCK_CHANNEL_KPI_CARDS: ChannelKpiCard[] = [
   }
 ]
 
-/** 广告平台 ROI 趋势（最近 30 天） */
-export interface ChannelRoiTrend {
-  dates: string[]
-  series: { name: string; data: number[] }[]
-}
-
 export const MOCK_CHANNEL_ROI_TREND: ChannelRoiTrend = {
   dates: ['1月1日', '1月6日', '1月11日', '1月16日', '1月20日', '1月25日', '2月1日', '2月4日'],
   series: [
@@ -101,16 +77,6 @@ export const MOCK_CHANNEL_ROI_TREND: ChannelRoiTrend = {
     { name: 'Unity', data: [1.0, 1.05, 1.1, 1.12, 1.15, 1.14, 1.13, 1.15] },
     { name: 'Kwai', data: [1.05, 1.08, 1.1, 1.11, 1.12, 1.1, 1.11, 1.12] }
   ]
-}
-
-/** 用户质量热力图：行=广告平台，列=D1/D7/D30留存、付费率、ARPU */
-export interface UserQualityHeatmapRow {
-  channel: string
-  d1Retention: number
-  d7Retention: number
-  d30Retention: number
-  payRate: number
-  arpu: number
 }
 
 export const MOCK_USER_QUALITY_HEATMAP: UserQualityHeatmapRow[] = [
@@ -150,7 +116,6 @@ export const MOCK_USER_QUALITY_HEATMAP: UserQualityHeatmapRow[] = [
   { channel: 'Bigo', d1Retention: 38, d7Retention: 28, d30Retention: 12, payRate: 2.8, arpu: 2.12 }
 ]
 
-/** 广告平台质量雷达图维度 */
 export const MOCK_RADAR_INDICATORS = [
   { name: '成本效益', max: 100 },
   { name: '用户留存', max: 100 },
@@ -159,7 +124,6 @@ export const MOCK_RADAR_INDICATORS = [
   { name: '稳定性', max: 100 }
 ]
 
-/** 广告平台质量雷达图系列 */
 export interface ChannelRadarSeries {
   name: string
   value: number[]
@@ -174,56 +138,10 @@ export const MOCK_CHANNEL_RADAR: ChannelRadarSeries[] = [
   { name: '其他', value: [60, 58, 55, 65, 62] }
 ]
 
-/** 广告平台指标比较详情表 */
-export type ChannelStatus = 'excellent' | 'average' | 'poor'
-
-export interface ChannelMetricRow {
-  channel: string
-  cost: string
-  revenue: string
-  roi: number
-  roiTrendUp: boolean
-  roas: number
-  cpi: number
-  cpiTrendUp: boolean
-  /** 迷你柱图高度（0–1），5 个点；缺省由前端按 channel 生成 */
-  roiSparkline?: number[]
-  cpiSparkline?: number[]
-  installs: string
-  userQualityD7: number
-  userQualityD7TrendUp: boolean
-  userQualityPay: number
-  userQualityPayTrendUp: boolean
-  ltv7: number
-  ltv30: number
-  status: ChannelStatus
-}
-
-/** Top10 广告系列（大屏第二排右侧） */
-export interface TopCampaignRow {
-  /** 广告系列 ID（接口 campaignId，可选） */
-  campaignId?: string
-  /** 广告系列名称（展示，对应业务概念 campaign） */
-  campaign: string
-  /** 广告平台展示名（用于筛选联动，与热力图等平台名一致） */
-  channel: string
-  /** 广告平台标识（用于角标样式）：google / facebook / tiktok / unity / kwai / bigo 等 */
-  sourceKey: string
-  /** 应用 ID（接口 appId，跳转系列详情 query） */
-  appId?: string
-  /** 应用名称（接口 appName） */
-  appName?: string
-  /** 花费（美元） */
-  cost: number
-  cpi: number
-  roi: number
-}
-
-const MOCK_TOP10_ROW_APP = { appId: 's_app_demo', appName: '示例应用 A' } as const
-
 export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
   {
-    ...MOCK_TOP10_ROW_APP,
+    appId: 's_app_demo',
+    appName: '示例应用 A',
     campaignId: 's_cmp_mock_001',
     campaign: 'IOS_Traffic_New',
     channel: 'Google',
@@ -233,7 +151,8 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.4
   },
   {
-    ...MOCK_TOP10_ROW_APP,
+    appId: 's_app_demo',
+    appName: '示例应用 A',
     campaignId: 's_cmp_mock_002',
     campaign: 'IOS_Traffic_New',
     channel: 'Facebook',
@@ -243,7 +162,8 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.2
   },
   {
-    ...MOCK_TOP10_ROW_APP,
+    appId: 's_app_demo',
+    appName: '示例应用 A',
     campaignId: 's_cmp_mock_003',
     campaign: 'IOS_Traffic_New',
     channel: 'TikTok',
@@ -253,7 +173,8 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.35
   },
   {
-    ...MOCK_TOP10_ROW_APP,
+    appId: 's_app_demo',
+    appName: '示例应用 A',
     campaignId: 's_cmp_mock_004',
     campaign: 'IOS_Traffic_New',
     channel: 'Unity',
@@ -263,7 +184,8 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 0.82
   },
   {
-    ...MOCK_TOP10_ROW_APP,
+    appId: 's_app_demo',
+    appName: '示例应用 A',
     campaignId: 's_cmp_mock_005',
     campaign: 'IOS_Retarget_Core',
     channel: 'Google',
@@ -273,7 +195,8 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.52
   },
   {
-    ...MOCK_TOP10_ROW_APP,
+    appId: 's_app_demo',
+    appName: '示例应用 A',
     campaignId: 's_cmp_mock_006',
     campaign: 'Android_UAC_Brand',
     channel: 'Facebook',
@@ -283,7 +206,8 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.18
   },
   {
-    ...MOCK_TOP10_ROW_APP,
+    appId: 's_app_demo',
+    appName: '示例应用 A',
     campaignId: 's_cmp_mock_007',
     campaign: 'SEA_Launch_Phase1',
     channel: 'TikTok',
@@ -293,7 +217,8 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.05
   },
   {
-    ...MOCK_TOP10_ROW_APP,
+    appId: 's_app_demo',
+    appName: '示例应用 A',
     campaignId: 's_cmp_mock_008',
     campaign: 'LATAM_Test_A',
     channel: 'Kwai',
@@ -303,7 +228,8 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 0.88
   },
   {
-    ...MOCK_TOP10_ROW_APP,
+    appId: 's_app_demo',
+    appName: '示例应用 A',
     campaignId: 's_cmp_mock_009',
     campaign: 'EU_Search_SKAG',
     channel: 'Unity',
@@ -313,7 +239,8 @@ export const MOCK_TOP_CAMPAIGNS: TopCampaignRow[] = [
     roi: 1.12
   },
   {
-    ...MOCK_TOP10_ROW_APP,
+    appId: 's_app_demo',
+    appName: '示例应用 A',
     campaignId: 's_cmp_mock_010',
     campaign: 'Global_Pangle_Run',
     channel: 'Bigo',

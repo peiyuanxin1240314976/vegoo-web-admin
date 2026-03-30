@@ -1,0 +1,64 @@
+{
+  "_comment": "广告平台分析大屏 - ROI 趋势（最近 30 天折线）。对应 Api.UserGrowth.AdPlatformRoiTrendDto。",
+  "fieldDescription": {
+    "request": {
+      "appId": { "type": "string", "required": false },
+      "platform": { "type": "string", "required": false },
+      "source": { "type": "string", "required": false },
+      "dateStart": { "type": "string", "required": true, "description": "YYYY-MM-DD" },
+      "dateEnd": { "type": "string", "required": true, "description": "YYYY-MM-DD" },
+      "currentPage": { "type": "number", "required": true },
+      "pageSize": { "type": "number", "required": true },
+      "groupBy": { "type": "string", "required": false },
+      "userId": { "type": "string", "required": false }
+    },
+    "response": {
+      "dates": { "type": "string[]", "required": true, "description": "横轴日期数组。" },
+      "series": {
+        "type": "AdPlatformRoiTrendSeriesDto[]",
+        "required": true,
+        "description": "多平台序列。"
+      }
+    },
+    "AdPlatformRoiTrendSeriesDto": {
+      "name": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "data": { "type": "number[]", "required": true, "description": "与 dates 对齐的 ROI 数值。" }
+    }
+  },
+  "sampleRequest": {
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "dateStart": "2026-03-01",
+    "dateEnd": "2026-03-30",
+    "currentPage": 0,
+    "pageSize": 0,
+    "groupBy": "",
+    "userId": ""
+  },
+  "sampleResponse": {
+    "dates": ["2026-03-28", "2026-03-29", "2026-03-30"],
+    "series": [
+      { "name": "Google Ads", "data": [1.45, 1.5, 1.52] },
+      { "name": "Facebook", "data": [1.28, 1.32, 1.38] }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-platform/roi/trend",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "AdPlatformAnalysisRequestParams",
+    "responseBody": "AdPlatformRoiTrendDto（位于网关 BaseResponse.data）"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化 / 点击「查询」",
+        "detail": "用于第二排 ROI 趋势图；当筛选 `source` 指定单平台时，后端可仅返回该平台 series。",
+        "prerequisite": "日期范围有效。"
+      }
+    ],
+    "defaultSelection": "默认日期为最近 30 天（由前端生成 dateStart/dateEnd）。",
+    "dedupe": "与热力图、Top10、表格等并行。"
+  }
+}

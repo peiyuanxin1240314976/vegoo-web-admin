@@ -37,13 +37,29 @@
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/ad-platform-analysis/ad-platform-info/conversion-funnel",
+    "url": "POST /api/v1/datacenter/analysis/ad-platform/ad-platform-info/conversion-funnel",
     "method": "POST",
     "priority": "P1",
     "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
-    "responseBody": "{ funnel }"
+    "responseBody": "{ funnel }（位于网关 BaseResponse.data）"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`useAdPlatformInfo` 首屏 `Promise.all` 之一；渲染 `modules/conversion-funnel.vue`。",
+        "prerequisite": "需有效 `s_campaign_id`。"
+      },
+      {
+        "moment": "用户点击顶栏「查询」",
+        "detail": "`load()` 全量重拉漏斗。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "`date_range` 默认 `30d`；`s_campaign_id` 取自路由 `?id=`。",
+    "dedupe": "与同页其他 7 个 POST 同次触发。"
   },
   "apiSuggestion": {
-    "notes": []
+    "notes": ["联调 URL 以 `src/api/user-growth/ad-platform-info.ts` 为准。"]
   }
 }

@@ -50,13 +50,32 @@
     }
   },
   "api": {
-    "url": "POST /api/user-growth/ad-platform-analysis/ad-platform-info/retention-heatmap",
+    "url": "POST /api/v1/datacenter/analysis/ad-platform/ad-platform-info/retention-heatmap",
     "method": "POST",
     "priority": "P0",
     "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
-    "responseBody": "{ heatmap }"
+    "responseBody": "{ heatmap }（位于网关 BaseResponse.data）"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`useAdPlatformInfo` 首屏 `Promise.all` 之一；渲染 `modules/retention-heatmap.vue`。",
+        "prerequisite": "需有效 `s_campaign_id`。"
+      },
+      {
+        "moment": "用户点击顶栏「查询」",
+        "detail": "`load()` 全量重拉热力图。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "`date_range` 默认 `30d`；`s_campaign_id` 取自路由 `?id=`。",
+    "dedupe": "与同页其他 7 个 POST 同次触发。"
   },
   "apiSuggestion": {
-    "notes": ["矩阵很大时可改为稀疏点 + 维度元数据分接口，当前契约为前端现有结构。"]
+    "notes": [
+      "矩阵很大时可改为稀疏点 + 维度元数据分接口，当前契约为前端现有结构。",
+      "联调 URL 以 `src/api/user-growth/ad-platform-info.ts` 为准。"
+    ]
   }
 }

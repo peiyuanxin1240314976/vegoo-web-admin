@@ -1,0 +1,110 @@
+{
+  "_comment": "广告平台分析大屏 - 第一排 KPI 卡片。对应 Api.UserGrowth.AdPlatformKpiCardDto[]。",
+  "fieldDescription": {
+    "request": {
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用 ID；空字符串表示全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台（ios/android）；空字符串表示全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选；空字符串表示全部。"
+      },
+      "dateStart": { "type": "string", "required": true, "description": "开始日期 YYYY-MM-DD。" },
+      "dateEnd": { "type": "string", "required": true, "description": "结束日期 YYYY-MM-DD。" },
+      "currentPage": {
+        "type": "number",
+        "required": true,
+        "description": "分页用占位；本接口固定 0。"
+      },
+      "pageSize": {
+        "type": "number",
+        "required": true,
+        "description": "分页用占位；本接口固定 0。"
+      },
+      "groupBy": {
+        "type": "string",
+        "required": false,
+        "description": "聚合维度占位；本页按广告平台展示可为空。"
+      },
+      "userId": { "type": "string", "required": false, "description": "用户占位；可为空。" }
+    },
+    "response": {
+      "data": {
+        "type": "AdPlatformKpiCardDto[]",
+        "required": true,
+        "description": "KPI 卡片数组（网关 unwrap 后即为数组）。"
+      }
+    },
+    "AdPlatformKpiCardDto": {
+      "id": { "type": "string", "required": true, "description": "卡片唯一 id。" },
+      "name": { "type": "string", "required": true, "description": "广告平台展示名。" },
+      "logo": { "type": "string", "required": false, "description": "平台 logo URL，可为空。" },
+      "cost": {
+        "type": "string",
+        "required": true,
+        "description": "花费展示文本（若后端改为数值需同步契约）。"
+      },
+      "revenue": { "type": "string", "required": true, "description": "收入展示文本。" },
+      "cpi": { "type": "string", "required": true, "description": "CPI 展示文本。" },
+      "roi": { "type": "number", "required": true, "description": "ROI 数值。" },
+      "roiChange": {
+        "type": "number",
+        "required": true,
+        "description": "ROI 环比变化（百分比数值）。"
+      },
+      "roiChangeUp": { "type": "boolean", "required": true, "description": "ROI 是否上升。" },
+      "trendData": { "type": "number[]", "required": true, "description": "迷你趋势序列。" }
+    }
+  },
+  "sampleRequest": {
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "dateStart": "2026-03-01",
+    "dateEnd": "2026-03-30",
+    "currentPage": 0,
+    "pageSize": 0,
+    "groupBy": "",
+    "userId": ""
+  },
+  "sampleResponse": [
+    {
+      "id": "google",
+      "name": "Google Ads",
+      "logo": "",
+      "cost": "$850K",
+      "revenue": "$1.29M",
+      "cpi": "$2.15",
+      "roi": 1.52,
+      "roiChange": 8.5,
+      "roiChangeUp": true,
+      "trendData": [1.2, 1.35, 1.28, 1.42, 1.48, 1.52]
+    }
+  ],
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-platform/kpi/cards",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "AdPlatformAnalysisRequestParams",
+    "responseBody": "AdPlatformKpiCardDto[]（位于网关 BaseResponse.data）"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "首屏与点击「查询」时请求；用于第一排 KPI 卡片渲染与迷你趋势图。",
+        "prerequisite": "筛选项（app/platform/source）可为空代表全部。"
+      }
+    ],
+    "defaultSelection": "默认日期范围由前端计算（最近 30 天）；默认 app/platform/source 为全部。",
+    "dedupe": "与 ROI/热力图/Top10/表格等并行请求。"
+  }
+}

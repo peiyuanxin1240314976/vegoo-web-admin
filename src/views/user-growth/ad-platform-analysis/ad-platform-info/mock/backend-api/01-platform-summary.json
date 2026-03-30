@@ -56,15 +56,32 @@
     "updatedAtText": "截止：2026-03-29 23:59"
   },
   "api": {
-    "url": "POST /api/user-growth/ad-platform-analysis/ad-platform-info/platform-summary",
+    "url": "POST /api/v1/datacenter/analysis/ad-platform/ad-platform-info/platform-summary",
     "method": "POST",
     "priority": "P0",
     "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
-    "responseBody": "{ summary, updatedAtText }"
+    "responseBody": "{ summary, updatedAtText }（位于网关 BaseResponse.data）"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`useAdPlatformInfo` 在路由 `query.id` 有效时，与本页其他 7 个分块接口 `Promise.all` 并行请求；本接口对应 `ApiPageHeader` 摘要区与 `updatedAtText`。",
+        "prerequisite": "需有效 `s_campaign_id`（与 query `id` 一致）。"
+      },
+      {
+        "moment": "用户点击顶栏「查询」",
+        "detail": "`page-header.vue` → `applyDraftFilters` → `load()`，以当前 `date_range` 重拉包含本接口在内的全部分块。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "`date_range` 默认 `30d`；`s_campaign_id` 取自路由 `?id=`。",
+    "dedupe": "与 `02-kpi-cards` 等同批并行；`id` 变更时整套重载。"
   },
   "apiSuggestion": {
     "notes": [
-      "首屏可与 KPI 并行请求；updatedAtText 也可由网关统一在响应头返回，此处为页面展示用字段。"
+      "首屏可与 KPI 并行请求；updatedAtText 也可由网关统一在响应头返回，此处为页面展示用字段。",
+      "联调以 `src/api/user-growth/ad-platform-info.ts` 中 `AD_PLATFORM_INFO_BASE` + 本文件末段 path 为准。"
     ]
   }
 }

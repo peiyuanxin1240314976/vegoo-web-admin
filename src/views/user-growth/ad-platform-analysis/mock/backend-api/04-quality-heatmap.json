@@ -1,0 +1,70 @@
+{
+  "_comment": "广告平台分析大屏 - 用户质量热力图（行=广告平台）。对应 Api.UserGrowth.AdPlatformQualityHeatmapRowDto[]。",
+  "fieldDescription": {
+    "request": {
+      "appId": { "type": "string", "required": false },
+      "platform": { "type": "string", "required": false },
+      "source": { "type": "string", "required": false },
+      "dateStart": { "type": "string", "required": true },
+      "dateEnd": { "type": "string", "required": true },
+      "currentPage": { "type": "number", "required": true },
+      "pageSize": { "type": "number", "required": true },
+      "groupBy": { "type": "string", "required": false },
+      "userId": { "type": "string", "required": false }
+    },
+    "response": {
+      "data": {
+        "type": "AdPlatformQualityHeatmapRowDto[]",
+        "required": true,
+        "description": "网关 unwrap 后即为数组。"
+      }
+    },
+    "AdPlatformQualityHeatmapRowDto": {
+      "source": { "type": "string", "required": true, "description": "广告平台名称。" },
+      "d1Retention": { "type": "number", "required": true, "description": "D1 留存（0-100）。" },
+      "d7Retention": { "type": "number", "required": true, "description": "D7 留存（0-100）。" },
+      "d30Retention": { "type": "number", "required": true, "description": "D30 留存（0-100）。" },
+      "payRate": { "type": "number", "required": true, "description": "付费率（0-100）。" },
+      "arpu": { "type": "number", "required": true, "description": "ARPU（USD）。" }
+    }
+  },
+  "sampleRequest": {
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "dateStart": "2026-03-01",
+    "dateEnd": "2026-03-30",
+    "currentPage": 0,
+    "pageSize": 0,
+    "groupBy": "",
+    "userId": ""
+  },
+  "sampleResponse": [
+    {
+      "source": "Google Ads",
+      "d1Retention": 58,
+      "d7Retention": 42,
+      "d30Retention": 22,
+      "payRate": 5.2,
+      "arpu": 3.28
+    }
+  ],
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-platform/quality/heatmap",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "AdPlatformAnalysisRequestParams",
+    "responseBody": "AdPlatformQualityHeatmapRowDto[]（位于网关 BaseResponse.data）"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化 / 点击「查询」",
+        "detail": "用于第二排用户质量热力图；若筛选 `source` 指定单平台，后端可仅返回单行。",
+        "prerequisite": "日期范围有效。"
+      }
+    ],
+    "defaultSelection": "默认日期为最近 30 天；默认展示全部广告平台。",
+    "dedupe": "与趋势图/Top10/表格等并行。"
+  }
+}

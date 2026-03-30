@@ -1,0 +1,66 @@
+{
+  "_comment": "广告平台分析大屏 - 顶栏筛选下拉元数据。对应 Api.UserGrowth.AdPlatformFiltersMetaDto。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "apps": {
+        "type": "AdPlatformFiltersMetaOptionDto[]",
+        "required": true,
+        "description": "App 下拉选项。"
+      },
+      "platforms": {
+        "type": "AdPlatformFiltersMetaOptionDto[]",
+        "required": true,
+        "description": "终端平台下拉选项。"
+      },
+      "sources": {
+        "type": "AdPlatformFiltersMetaOptionDto[]",
+        "required": true,
+        "description": "广告平台下拉选项。"
+      }
+    },
+    "AdPlatformFiltersMetaOptionDto": {
+      "label": { "type": "string", "required": true, "description": "展示文案。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "选项值（请求体字段 `appId/platform/source` 对应此 value）。"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "apps": [
+      { "label": "全部Apps", "value": "all" },
+      { "label": "App A", "value": "app_a" }
+    ],
+    "platforms": [
+      { "label": "IOS & Android", "value": "all" },
+      { "label": "iOS", "value": "ios" },
+      { "label": "Android", "value": "android" }
+    ],
+    "sources": [
+      { "label": "全部广告平台", "value": "all" },
+      { "label": "Google Ads", "value": "google" },
+      { "label": "Facebook", "value": "facebook" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-platform/filters/meta",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{}",
+    "responseBody": "{ apps, platforms, sources }（位于网关 BaseResponse.data）"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`index.vue` 首屏调用，用于渲染顶栏筛选下拉；通常可缓存（除非后端按权限/应用动态下发）。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "页面默认选中项由前端本地常量提供（如 all），并在 meta 返回后校验当前选中值是否存在。",
+    "dedupe": "可选：若已缓存且未过期，允许跳过重复请求。"
+  }
+}

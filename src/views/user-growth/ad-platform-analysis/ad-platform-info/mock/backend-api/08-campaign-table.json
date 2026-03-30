@@ -66,13 +66,32 @@
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/ad-platform-analysis/ad-platform-info/campaign-table",
+    "url": "POST /api/v1/datacenter/analysis/ad-platform/ad-platform-info/campaign-table",
     "method": "POST",
     "priority": "P1",
     "requestBody": "s_campaign_id (必填), date_range?, t_start_date?, t_end_date?",
-    "responseBody": "{ campaigns }"
+    "responseBody": "{ campaigns }（位于网关 BaseResponse.data）"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`useAdPlatformInfo` 首屏 `Promise.all` 之一；渲染 `modules/campaign-table.vue`。",
+        "prerequisite": "需有效 `s_campaign_id`。"
+      },
+      {
+        "moment": "用户点击顶栏「查询」",
+        "detail": "`load()` 全量重拉系列明细表。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "`date_range` 默认 `30d`；`s_campaign_id` 取自路由 `?id=`。",
+    "dedupe": "与同页其他 7 个 POST 同次触发。"
   },
   "apiSuggestion": {
-    "notes": ["后续若需分页，增加 pageNum/pageSize 与 total，本契约为全量示例。"]
+    "notes": [
+      "后续若需分页，增加 pageNum/pageSize 与 total，本契约为全量示例。",
+      "联调 URL 以 `src/api/user-growth/ad-platform-info.ts` 为准。"
+    ]
   }
 }

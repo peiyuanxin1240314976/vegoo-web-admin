@@ -314,6 +314,10 @@ declare namespace Api {
       roi: number
       /** 广告平台名称 */
       source: string
+      /** 应用 ID（自有 ID），跳转系列详情等场景与当前行归属一致时返回 */
+      appId?: string
+      /** 应用名称展示 */
+      appName?: string
     }
 
     type AdPlatformMetricStatus = 'excellent' | 'average' | 'poor'
@@ -345,6 +349,124 @@ declare namespace Api {
     interface AdPlatformMetricsTableDto {
       total: number
       rows: AdPlatformMetricsTableRowDto[]
+    }
+
+    /**
+     * 广告平台信息详情（路由 `/user-growth/ad-platform-analysis/ad-platform-info`）
+     * 网关前缀与同模块大屏一致：`POST /api/v1/datacenter/analysis/ad-platform/ad-platform-info/<endpoint>`
+     * 业务体见各 `AdPlatformInfo*Response`；成功时位于响应 `BaseResponse.data`。
+     */
+    interface AdPlatformInfoRequestBody {
+      s_campaign_id: string
+      date_range?: '7d' | '30d' | '90d'
+      t_start_date?: string
+      t_end_date?: string
+    }
+
+    interface AdPlatformInfoPlatformSummaryDto {
+      name: string
+      subtitle: string
+      score: number
+      scoreText: string
+    }
+
+    interface AdPlatformInfoPlatformSummaryResponse {
+      summary: AdPlatformInfoPlatformSummaryDto
+      updatedAtText: string
+    }
+
+    interface AdPlatformInfoKpiCardDto {
+      id: string
+      title: string
+      metricKey: string
+      valueText: string
+      deltaPct: number
+      accent: string
+      spark: number[]
+      variant?: string
+      noteText?: string
+      icon?: string
+    }
+
+    interface AdPlatformInfoKpiCardsResponse {
+      kpis: AdPlatformInfoKpiCardDto[]
+    }
+
+    interface AdPlatformInfoMapPointDto {
+      name: string
+      cnName?: string
+      value: number
+    }
+
+    interface AdPlatformInfoRoiMapPointsResponse {
+      mapPoints: AdPlatformInfoMapPointDto[]
+    }
+
+    interface AdPlatformInfoTopRowDto {
+      rank: number
+      s_country_code: string
+      countryName: string
+      revenue: number
+      roi: number
+      profit: number
+    }
+
+    interface AdPlatformInfoCountryTop10Response {
+      top10: AdPlatformInfoTopRowDto[]
+    }
+
+    interface AdPlatformInfoHeatmapDataDto {
+      xLabels: string[]
+      yLabels: string[]
+      points: Array<[number, number, number]>
+      legendMin: number
+      legendMax: number
+    }
+
+    interface AdPlatformInfoRetentionHeatmapResponse {
+      heatmap: AdPlatformInfoHeatmapDataDto
+    }
+
+    interface AdPlatformInfoFunnelStageDto {
+      name: string
+      value: number
+    }
+
+    interface AdPlatformInfoConversionFunnelResponse {
+      funnel: AdPlatformInfoFunnelStageDto[]
+    }
+
+    interface AdPlatformInfoTrendSeriesDto {
+      name: string
+      type: 'line' | 'bar'
+      yAxisIndex?: number
+      data: number[]
+      color: string
+    }
+
+    interface AdPlatformInfoTrendDataDto {
+      dates: string[]
+      series: AdPlatformInfoTrendSeriesDto[]
+    }
+
+    interface AdPlatformInfoTrendChartResponse {
+      trend: AdPlatformInfoTrendDataDto
+    }
+
+    interface AdPlatformInfoCampaignRowDto {
+      id: string
+      campaign: string
+      spend: number
+      revenue: number
+      profit: number
+      roi: number
+      cpi: number
+      installs: number
+      status: string
+    }
+
+    interface AdPlatformInfoCampaignTableResponse {
+      campaigns: AdPlatformInfoCampaignRowDto[]
     }
 
     /**

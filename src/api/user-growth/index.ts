@@ -4,6 +4,7 @@
  */
 export * from './ad-performance'
 export * from './ad-platform-analysis'
+export * from './ad-platform-info'
 export * from './alert-management'
 export * from './comprehensive-analysis'
 export * from './conversion-management'

@@ -1,7 +1,20 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import type { AdPlatformInfoFilterState, AdPlatformInfoPageData } from '../types'
-import { buildMockAdPlatformInfoPageData } from '../mock'
+import {
+  fetchAdPlatformInfoCampaignTable,
+  fetchAdPlatformInfoConversionFunnel,
+  fetchAdPlatformInfoCountryTop10,
+  fetchAdPlatformInfoKpiCards,
+  fetchAdPlatformInfoPlatformSummary,
+  fetchAdPlatformInfoRetentionHeatmap,
+  fetchAdPlatformInfoRoiMapPoints,
+  fetchAdPlatformInfoTrendChart
+} from '@/api/user-growth/ad-platform-info'
+import type {
+  AdPlatformInfoFilterState,
+  AdPlatformInfoKpiCard,
+  AdPlatformInfoPageData
+} from '../types'
 
 type LoadState = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -30,6 +43,13 @@ export function useAdPlatformInfo() {
     Object.assign(filters, filtersDraft)
   }
 
+  function buildRequestBody(): Api.UserGrowth.AdPlatformInfoRequestBody {
+    return {
+      s_campaign_id: detailId.value,
+      date_range: filters.dateRange
+    }
+  }
+
   async function load() {
     const id = detailId.value
     if (!id) {
@@ -42,9 +62,38 @@ export function useAdPlatformInfo() {
     state.value = 'loading'
     errorMsg.value = ''
     try {
-      // 预留：POST 详情接口，body 含 s_campaign_id + 时间范围（与 filters 一致）
-      await new Promise((r) => setTimeout(r, 450))
-      data.value = buildMockAdPlatformInfoPageData(id)
+      const body = buildRequestBody()
+      const [
+        platformSummary,
+        kpiCards,
+        roiMap,
+        countryTop10,
+        retentionHeatmap,
+        conversionFunnel,
+        trendChart,
+        campaignTable
+      ] = await Promise.all([
+        fetchAdPlatformInfoPlatformSummary(body),
+        fetchAdPlatformInfoKpiCards(body),
+        fetchAdPlatformInfoRoiMapPoints(body),
+        fetchAdPlatformInfoCountryTop10(body),
+        fetchAdPlatformInfoRetentionHeatmap(body),
+        fetchAdPlatformInfoConversionFunnel(body),
+        fetchAdPlatformInfoTrendChart(body),
+        fetchAdPlatformInfoCampaignTable(body)
+      ])
+
+      data.value = {
+        summary: platformSummary.summary,
+        updatedAtText: platformSummary.updatedAtText,
+        kpis: kpiCards.kpis as AdPlatformInfoKpiCard[],
+        mapPoints: roiMap.mapPoints,
+        top10: countryTop10.top10,
+        heatmap: retentionHeatmap.heatmap,
+        funnel: conversionFunnel.funnel,
+        trend: trendChart.trend,
+        campaigns: campaignTable.campaigns as AdPlatformInfoPageData['campaigns']
+      }
       state.value = 'ready'
     } catch (e: unknown) {
       const err = e as { message?: string }

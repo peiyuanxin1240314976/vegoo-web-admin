@@ -1,6 +1,6 @@
 /**
- * 本地聚合 Mock，字段与 `mock/backend-api/01-08-*.json` 各模块 `sampleResponse` 合并后的 `AdPlatformInfoPageData` 一致；
- * 接入 HTTP 后按 `../config/data-source.ts` 分模块 `fetch*` 并行组装，或保留此处为 fallback。
+ * 本地聚合 Mock，字段与 `mock/backend-api/01-08-*.json` 各模块 `sampleResponse` 合并后的 `AdPlatformInfoPageData` 一致。
+ * 分接口 Mock 见 `ad-platform-info-api-mock.ts`；远程联调见 `src/api/user-growth/ad-platform-info.ts` + `../config/data-source.ts`。
  */
 import type {
   AdPlatformInfoCampaignRow,

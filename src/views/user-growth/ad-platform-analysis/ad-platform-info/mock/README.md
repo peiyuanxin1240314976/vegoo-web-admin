@@ -12,12 +12,12 @@
 | 路径 | 说明 |
 | --- | --- |
 | `README.md` | 本文件 |
-| `backend-api/README.md` | 父级 API、接口清单表 |
-| `backend-api/01-platform-summary.json` … `08-campaign-table.json` | 按页面模块拆分的契约（各含 `fieldDescription`、`sampleRequest`、`sampleResponse`） |
-| `api-mock/01-*.json` … `08-*.json` | 与各契约 `sampleResponse` 对齐的静态示例 |
-| `index.ts` | 页面当前使用的 TS 聚合 Mock（`MOCK_*` + `buildMockAdPlatformInfoPageData`）；接入多接口后可在 composable 中并行 `fetch*` 再组装为 `AdPlatformInfoPageData` |
+| `backend-api/README.md` | 父级 API、接口清单、场景 → 接口表 |
+| `backend-api/01-platform-summary.json` … `08-campaign-table.json` | 契约源文件（含 `interaction`、`sampleResponse` 等）；**不要求**另建重复 JSON |
+| `ad-platform-info-api-mock.ts` | 分接口 Mock，命名对齐 `ad-performance-api-mock.ts`，供 `src/api/user-growth/ad-platform-info.ts` 在开关为 Mock 时调用 |
+| `index.ts` | 聚合静态数据（`MOCK_*` + `buildMockAdPlatformInfoPageData`）；`ad-platform-info-api-mock` 按块从中切片 |
 
 ## 与代码的对应关系
 
 - 类型：`../types.ts`（`AdPlatformInfoPageData` 为聚合根）
-- 加载：`../composables/useAdPlatformInfo.ts`
+- 加载：`../composables/useAdPlatformInfo.ts`（并行调用 `fetchAdPlatformInfo*`）

@@ -162,199 +162,36 @@
           </div>
         </div>
 
-        <div class="panel panel-top10">
-          <div class="panel-title">Top10 广告系列</div>
-          <div class="top10-table-wrap">
-            <div
-              v-if="topCampaignsFetchPending"
-              class="aps-module-skeleton aps-module-skeleton--top10"
-            >
-              <ElSkeleton animated :rows="10" />
-            </div>
-            <ElTable
-              v-show="!topCampaignsFetchPending"
-              :data="filteredTopCampaigns"
-              :row-key="topCampaignRowKey"
-              :stripe="false"
-              size="small"
-              :max-height="240"
-              :header-cell-style="{
-                color: 'var(--aps-table-header-text)',
-                fontSize: '12px',
-                padding: '6px 0',
-                borderBottom: '1px solid var(--aps-table-divider-strong)'
-              }"
-              :cell-style="{
-                background: 'transparent',
-                color: 'var(--aps-text-secondary)',
-                fontSize: '12px',
-                padding: '6px 0',
-                borderBottom: '1px solid var(--aps-table-divider-weak)'
-              }"
-            >
-              <ElTableColumn
-                prop="campaign"
-                label="Campaign"
-                min-width="80"
-                show-overflow-tooltip
-              />
-              <ElTableColumn label="广告平台" width="80" align="center">
-                <template #default="{ row }">
-                  <span
-                    class="top10-source-badge"
-                    :class="`top10-source-badge--${row.sourceKey}`"
-                    :title="row.channel"
-                  >
-                    {{ sourceBadgeShort(row.sourceKey) }}
-                  </span>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn label="花费" width="80" align="left">
-                <template #default="{ row }">{{ formatTopCurrency(row.cost) }}</template>
-              </ElTableColumn>
-              <ElTableColumn label="CPI" width="80" align="left">
-                <template #default="{ row }">
-                  <span class="top10-cpi">{{ formatNum2(row.cpi) }}</span>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn label="ROI" width="80" align="left">
-                <template #default="{ row }">
-                  <span class="top10-roi" :class="topCampaignRoiTone(row.roi)">{{
-                    formatNum2(row.roi)
-                  }}</span>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn label="操作" width="48" align="center">
-                <template #default="{ row }">
-                  <ElButton type="primary" link round @click="onViewTopCampaign(row)"
-                    >查看</ElButton
-                  >
-                </template>
-              </ElTableColumn>
-            </ElTable>
-          </div>
-        </div>
+        <ApaTop10Panel
+          :pending="topCampaignsFetchPending"
+          :rows="filteredTopCampaigns"
+          :row-key="topCampaignRowKey"
+          :format-top-currency="formatTopCurrency"
+          :format-num2="formatNum2"
+          :source-badge-short="sourceBadgeShort"
+          :roi-tone="topCampaignRoiTone"
+          :on-view="onViewTopCampaign"
+        />
       </section>
 
       <!-- 第三排：广告平台指标比较详情表格 -->
-      <section class="row row-3 aps-entry-4">
-        <div class="panel panel-table">
-          <div class="panel-title">广告平台指标比较详情</div>
-          <div class="table-wrap aps-metrics-table-host">
-            <div
-              v-if="metricsTableFetchPending"
-              class="aps-module-skeleton aps-module-skeleton--metrics-table"
-            >
-              <ElSkeleton animated :rows="metricsTableSkeletonRows" />
-            </div>
-            <div v-show="!metricsTableFetchPending" class="aps-metrics-table-real">
-              <ArtTable
-                :data="paginatedMetrics"
-                :columns="detailColumns"
-                row-key="channel"
-                :stripe="false"
-                :border="false"
-                size="default"
-                :header-cell-style="{
-                  color: 'var(--aps-table-header-text)',
-                  fontSize: '12px',
-                  padding: '6px 0',
-                  borderBottom: '1px solid var(--aps-table-divider-strong)'
-                }"
-                :cell-style="{
-                  background: 'transparent',
-                  color: 'var(--aps-text-secondary)',
-                  fontSize: '12px',
-                  padding: '6px 0',
-                  borderBottom: '1px solid var(--aps-table-divider-weak)'
-                }"
-                :pagination="{
-                  current: currentPage,
-                  size: pageSize,
-                  total: metricsTotal
-                }"
-                :paginationOptions="{ align: 'center', pageSizes: [10, 20, 30], background: false }"
-                @pagination:current-change="onMetricsCurrentChange"
-                @pagination:size-change="onPageSizeChange"
-                @sort-change="onSortChange"
-              >
-                <template #roi="{ row }">
-                  <span class="detail-cell detail-cell--metric">
-                    <span class="detail-metric-value">{{ formatNum2(row.roi) }}</span>
-                    <div
-                      class="detail-sparkline"
-                      :class="row.roiTrendUp ? 'is-good' : 'is-bad'"
-                      role="img"
-                      :aria-label="`ROI 趋势 ${formatNum2(row.roi)}`"
-                    >
-                      <span
-                        v-for="(h, i) in metricSparklineBars(row, 'roi')"
-                        :key="i"
-                        class="detail-sparkline__bar"
-                        :style="{ height: `${Math.round(h * 20)}px` }"
-                      />
-                    </div>
-                  </span>
-                </template>
-                <template #cpi="{ row }">
-                  <span class="detail-cell detail-cell--metric">
-                    <span class="detail-metric-value">{{ formatUsd2(row.cpi) }}</span>
-                    <div
-                      class="detail-sparkline"
-                      :class="!row.cpiTrendUp ? 'is-good' : 'is-bad'"
-                      role="img"
-                      :aria-label="`CPI 趋势 ${formatUsd2(row.cpi)}`"
-                    >
-                      <span
-                        v-for="(h, i) in metricSparklineBars(row, 'cpi')"
-                        :key="i"
-                        class="detail-sparkline__bar"
-                        :style="{ height: `${Math.round(h * 20)}px` }"
-                      />
-                    </div>
-                  </span>
-                </template>
-                <template #userQualityD7="{ row }">
-                  <div class="detail-uq-cell">
-                    <span class="detail-uq-value">{{ formatNum2(row.userQualityD7) }}%</span>
-                    <span class="arrow" :class="row.userQualityD7TrendUp ? 'up' : 'down'">{{
-                      row.userQualityD7TrendUp ? '↑' : '↓'
-                    }}</span>
-                    <ElProgress
-                      :percentage="userQualityProgressPercent(row.userQualityD7)"
-                      :stroke-width="4"
-                      :show-text="false"
-                      :color="userQualityProgressColor(row.userQualityD7TrendUp)"
-                      class="detail-uq-progress"
-                    />
-                  </div>
-                </template>
-                <template #userQualityPay="{ row }">
-                  <div class="detail-uq-cell">
-                    <span class="detail-uq-value">{{ formatNum2(row.userQualityPay) }}%</span>
-                    <span class="arrow" :class="row.userQualityPayTrendUp ? 'up' : 'down'">{{
-                      row.userQualityPayTrendUp ? '↑' : '↓'
-                    }}</span>
-                    <ElProgress
-                      :percentage="userQualityProgressPercent(row.userQualityPay)"
-                      :stroke-width="4"
-                      :show-text="false"
-                      :color="userQualityProgressColor(row.userQualityPayTrendUp)"
-                      class="detail-uq-progress"
-                    />
-                  </div>
-                </template>
-                <template #status="{ row }">
-                  <span class="detail-cell">
-                    <span class="status-dot" :class="row.status"></span>
-                    {{ statusText(row.status) }}
-                  </span>
-                </template>
-              </ArtTable>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ApaMetricsTablePanel
+        :pending="metricsTableFetchPending"
+        :skeleton-rows="metricsTableSkeletonRows"
+        :rows="paginatedMetrics"
+        :columns="detailColumns"
+        :pagination="{ current: currentPage, size: pageSize, total: metricsTotal }"
+        :on-current-change="onMetricsCurrentChange"
+        :on-size-change="onPageSizeChange"
+        :on-sort-change="onSortChange"
+        :format-num2="formatNum2"
+        :format-usd2="formatUsd2"
+        :status-text="statusText"
+        :metric-sparkline-bars="metricSparklineBars"
+        :user-quality-progress-percent="userQualityProgressPercent"
+        :user-quality-progress-color="userQualityProgressColor"
+        :on-view-detail="onViewMetricsPlatformDetail"
+      />
     </div>
   </div>
 </template>
@@ -366,6 +203,8 @@
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
   import type { ColumnOption } from '@/types'
+  import ApaTop10Panel from './modules/top10-panel.vue'
+  import ApaMetricsTablePanel from './modules/metrics-table-panel.vue'
   import { getAppNow } from '@/utils/app-now'
   import {
     fetchAdPlatformAnalysisCampaignTop10,
@@ -672,11 +511,15 @@
   function mapCampaignTop10Dto(d: Api.UserGrowth.AdPlatformCampaignTop10RowDto): TopCampaignRow {
     const source = String(d?.source ?? '').trim()
     const cid = String(d?.campaignId ?? '').trim()
+    const appId = String(d?.appId ?? '').trim()
+    const appName = String(d?.appName ?? '').trim()
     return {
       campaignId: cid || undefined,
       campaign: String(d?.campaignName ?? '').trim() || '—',
       channel: source || '—',
       sourceKey: normalizeChannelKey(source || 'x'),
+      ...(appId ? { appId } : {}),
+      ...(appName ? { appName } : {}),
       cost:
         typeof d?.cost === 'number' && Number.isFinite(d.cost)
           ? d.cost
@@ -885,10 +728,42 @@
     return 'is-bad'
   }
 
+  /** 系列详情 query：优先接口行内 appId/appName，否则用大屏 App 筛选 + 元数据补全名称 */
+  function topCampaignDetailAppQuery(row: TopCampaignRow): { appId: string; appName: string } {
+    let appId = String(row.appId ?? '').trim()
+    let appName = String(row.appName ?? '').trim()
+    if (!appId && filters.value.app !== 'all' && filters.value.app) {
+      appId = String(filters.value.app).trim()
+    }
+    if (!appName && appId) {
+      appName = String(metaAppOptions.value.find((o) => o.value === appId)?.label ?? '').trim()
+    }
+    return { appId, appName }
+  }
+
   function onViewTopCampaign(row: TopCampaignRow) {
     const id = row.campaignId?.trim()
     if (!id) {
       ElMessage.warning('缺少广告系列 ID，无法打开详情')
+      return
+    }
+    const { appId, appName } = topCampaignDetailAppQuery(row)
+    void router.push({
+      name: 'CampaignDetail',
+      query: {
+        id,
+        name: String(row.campaign ?? ''),
+        appId,
+        appName
+      }
+    })
+  }
+
+  /** 指标比较表行为广告平台维度，使用平台展示名作为详情页 query.id（与接口 source 一致） */
+  function onViewMetricsPlatformDetail(row: ChannelMetricRow) {
+    const id = String(row.channel ?? '').trim()
+    if (!id || id === '—') {
+      ElMessage.warning('缺少广告平台标识，无法打开详情')
       return
     }
     void router.push({ name: 'AdPlatformInfo', query: { id } })
@@ -1113,6 +988,14 @@
         minWidth: 110,
         useSlot: true,
         sortable: 'custom'
+      },
+      {
+        label: '操作',
+        prop: 'metricsDetailAction',
+        width: 72,
+        align: 'center',
+        fixed: 'right',
+        useSlot: true
       }
     ]
   })
@@ -2888,6 +2771,11 @@
 
     :deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {
       background: var(--aps-bg-row-hover);
+    }
+
+    :deep(.el-button.is-link) {
+      padding: 0;
+      font-size: 12px;
     }
   }
 

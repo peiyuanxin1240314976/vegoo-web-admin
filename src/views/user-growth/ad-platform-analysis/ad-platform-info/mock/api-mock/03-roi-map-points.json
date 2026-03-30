@@ -1,7 +1,0 @@
-{
-  "_comment": "与 backend-api/03-roi-map-points.json 的 sampleResponse 一致。",
-  "mapPoints": [
-    { "name": "United States", "cnName": "美国", "value": 86.2 },
-    { "name": "Germany", "cnName": "德国", "value": 78.3 }
-  ]
-}

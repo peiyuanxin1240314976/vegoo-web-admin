@@ -1,0 +1,112 @@
+{
+  "_comment": "广告平台分析大屏 - 广告平台指标比较详情表（分页）。对应 Api.UserGrowth.AdPlatformMetricsTableDto。",
+  "fieldDescription": {
+    "request": {
+      "appId": { "type": "string", "required": false },
+      "platform": { "type": "string", "required": false },
+      "source": { "type": "string", "required": false },
+      "dateStart": { "type": "string", "required": true },
+      "dateEnd": { "type": "string", "required": true },
+      "currentPage": { "type": "number", "required": true, "description": "0 起算页码。" },
+      "pageSize": { "type": "number", "required": true, "description": "每页条数。" },
+      "groupBy": { "type": "string", "required": false },
+      "userId": { "type": "string", "required": false }
+    },
+    "response": {
+      "total": { "type": "number", "required": true, "description": "总条数。" },
+      "rows": {
+        "type": "AdPlatformMetricsTableRowDto[]",
+        "required": true,
+        "description": "当前页行数据。"
+      }
+    },
+    "AdPlatformMetricsTableRowDto": {
+      "source": { "type": "string", "required": true, "description": "广告平台展示名。" },
+      "status": { "type": "string", "required": true, "description": "excellent|average|poor。" },
+      "statusText": { "type": "string", "required": false, "description": "可选：状态文案。" },
+      "cost": { "type": "string", "required": true, "description": "花费展示文本（如 $850K）。" },
+      "revenue": { "type": "string", "required": true, "description": "收入展示文本。" },
+      "installs": { "type": "string", "required": true, "description": "安装量展示文本。" },
+      "cpi": { "type": "number", "required": true, "description": "CPI 数值（USD）。" },
+      "cpiTrendUp": { "type": "boolean", "required": true },
+      "roi": { "type": "number", "required": true },
+      "roiTrendUp": { "type": "boolean", "required": true },
+      "roas": { "type": "number", "required": true },
+      "ltv7": { "type": "number", "required": true, "description": "LTV_7（USD）。" },
+      "ltv30": { "type": "number", "required": true, "description": "LTV_30（USD）。" },
+      "userQualityD7": { "type": "number", "required": true, "description": "D7 质量（0-100）。" },
+      "userQualityD7TrendUp": { "type": "boolean", "required": true },
+      "userQualityPay": { "type": "number", "required": true, "description": "付费率（0-100）。" },
+      "userQualityPayTrendUp": { "type": "boolean", "required": true },
+      "roiSparkline": {
+        "type": "number[]",
+        "required": false,
+        "description": "可选：ROI 小条序列（5 项）。"
+      },
+      "cpiSparkline": {
+        "type": "number[]",
+        "required": false,
+        "description": "可选：CPI 小条序列（5 项）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "dateStart": "2026-03-01",
+    "dateEnd": "2026-03-30",
+    "currentPage": 0,
+    "pageSize": 10,
+    "groupBy": "",
+    "userId": ""
+  },
+  "sampleResponse": {
+    "total": 23,
+    "rows": [
+      {
+        "source": "Google Ads",
+        "status": "excellent",
+        "cost": "$850K",
+        "revenue": "$1.29M",
+        "installs": "395K",
+        "cpi": 2.15,
+        "cpiTrendUp": false,
+        "roi": 1.52,
+        "roiTrendUp": true,
+        "roas": 1.52,
+        "ltv7": 2.38,
+        "ltv30": 4.12,
+        "userQualityD7": 42,
+        "userQualityD7TrendUp": true,
+        "userQualityPay": 5.2,
+        "userQualityPayTrendUp": true,
+        "roiSparkline": [0.22, 0.52, 0.28, 0.92, 0.48],
+        "cpiSparkline": [0.32, 0.45, 0.38, 0.51, 0.42]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/ad-platform/metrics/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "AdPlatformAnalysisRequestParams（含 currentPage/pageSize）",
+    "responseBody": "AdPlatformMetricsTableDto（位于网关 BaseResponse.data）"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化 / 点击「查询」",
+        "detail": "用于第三排指标比较表；后端负责分页与总数，前端支持排序事件（如需服务端排序可扩展请求体）。",
+        "prerequisite": "需返回 total 与 rows。"
+      },
+      {
+        "moment": "用户切换分页 / 页大小",
+        "detail": "仅重拉本接口（`currentPage/pageSize` 变化）。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "默认 currentPage=0；pageSize 与前端分页组件默认一致。",
+    "dedupe": "同一页码重复点击可忽略；切筛选会重置页码为 0。"
+  }
+}
