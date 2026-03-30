@@ -20,23 +20,23 @@
 
 ## 接口清单
 
-| 文件                        | 页面模块            | endpoint（相对基路径） | 方法 | 优先级 |
-| --------------------------- | ------------------- | ---------------------- | ---- | ------ |
-| `01-platform-summary.json`  | 顶部摘要 + 更新时间 | `/platform-summary`    | POST | P0     |
-| `02-kpi-cards.json`         | KPI 卡片            | `/kpi-cards`           | POST | P0     |
-| `03-roi-map-points.json`    | ROI 地图散点        | `/roi-map-points`      | POST | P0     |
-| `04-country-top10.json`     | 国家 Top10          | `/country-top10`       | POST | P0     |
-| `05-retention-heatmap.json` | 留存热力图          | `/retention-heatmap`   | POST | P0     |
-| `06-conversion-funnel.json` | 转化漏斗            | `/conversion-funnel`   | POST | P1     |
-| `07-trend-chart.json`       | 趋势图              | `/trend-chart`         | POST | P0     |
-| `08-campaign-table.json`    | 广告系列明细表      | `/campaign-table`      | POST | P1     |
+| 文件                       | 页面模块            | endpoint（相对基路径） | 方法 | 优先级 |
+| -------------------------- | ------------------- | ---------------------- | ---- | ------ |
+| `01-platform-summary.json` | 顶部摘要 + 更新时间 | `/platform-summary`    | POST | P0     |
+| `02-kpi-cards.json`        | KPI 卡片            | `/kpi-cards`           | POST | P0     |
+| `03-roi-map-points.json`   | ROI 地图散点        | `/roi-map-points`      | POST | P0     |
+| `04-country-top10.json`    | 国家 Top10          | `/country-top10`       | POST | P0     |
+
+<!-- `05-retention-heatmap.json` 留存热力图模块临时隐藏：对应接口 `/retention-heatmap` 暂停调用 -->
+
+| `06-conversion-funnel.json` | 转化漏斗 | `/conversion-funnel` | POST | P1 | | `07-trend-chart.json` | 趋势图 | `/trend-chart` | POST | P0 | | `08-campaign-table.json` | 广告系列明细表 | `/campaign-table` | POST | P1 |
 
 ## 场景 → 接口（与各 JSON 根级 `interaction` 一致）
 
 | 用户场景 / 触发时机 | 调用的 POST（ endpoint ） | 说明 |
 | --- | --- | --- |
-| 进入详情页且 `?id=` 有效 | 上表 **全部 8 个** | `useAdPlatformInfo` 内 `Promise.all` 并行 |
-| 顶栏「查询」（应用时间筛选草稿） | 上表 **全部 8 个** | `applyDraftFilters` → `load()`，携带最新 `date_range` |
+| 进入详情页且 `?id=` 有效 | 上表 **除 retention-heatmap 外 7 个** | `useAdPlatformInfo` 内 `Promise.all` 并行 |
+| 顶栏「查询」（应用时间筛选草稿） | 上表 **除 retention-heatmap 外 7 个** | `applyDraftFilters` → `load()`，携带最新 `date_range` |
 | 顶栏「刷新」 | 同上 | 调用 `load()`，请求体与当前 `filters` 一致 |
 
 **默认选中**：`date_range` 初始 `30d`；`s_campaign_id` = 路由 `query.id`；`source` = 路由 `query.source`（缺省时前端会尝试从 `id` 规范化推导）。

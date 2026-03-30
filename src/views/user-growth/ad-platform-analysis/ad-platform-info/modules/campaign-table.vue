@@ -49,12 +49,25 @@
 
   defineProps<{ rows: AdPlatformInfoCampaignRow[] }>()
 
-  function fmtUsd2(n: number) {
-    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  function toFiniteNumber(v: unknown): number {
+    const n = typeof v === 'number' ? v : Number(v)
+    return Number.isFinite(n) ? n : 0
   }
 
-  function fmtPct2(n: number) {
-    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%'
+  function fmtUsd2(n: unknown) {
+    return toFiniteNumber(n).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  }
+
+  function fmtPct2(n: unknown) {
+    return (
+      toFiniteNumber(n).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + '%'
+    )
   }
 
   const columns: ColumnOption[] = [
@@ -105,7 +118,8 @@
       label: '安装量',
       width: 'auto',
       align: 'right',
-      formatter: (r: AdPlatformInfoCampaignRow) => r.installs.toLocaleString('en-US')
+      formatter: (r: AdPlatformInfoCampaignRow) =>
+        toFiniteNumber(r.installs).toLocaleString('en-US')
     },
     { prop: 'status', label: '状态', width: 'auto', align: 'center', useSlot: true },
     { prop: 'action', label: '操作', width: 'auto', align: 'center', fixed: 'right', useSlot: true }

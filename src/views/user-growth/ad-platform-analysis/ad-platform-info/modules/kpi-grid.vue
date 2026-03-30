@@ -39,7 +39,10 @@
       </article>
     </div>
 
-    <div class="api-kpi-grid api-kpi-grid--bottom">
+    <div
+      class="api-kpi-grid api-kpi-grid--bottom"
+      :style="{ '--api-bottom-columns': String(bottomGridColumns) }"
+    >
       <article
         v-for="k in bottomKpis"
         :key="k.id"
@@ -125,6 +128,13 @@
       (k) => k.variant !== 'top' && !['spend', 'revenue', 'profit', 'roi'].includes(k.metricKey)
     )
   )
+
+  const bottomGridColumns = computed(() => {
+    const count = bottomKpis.value.length
+    if (count <= 0) return 1
+    if (count <= 5) return count
+    return 3
+  })
 
   function accentColor(accent: AdPlatformInfoKpiCard['accent']) {
     return getAccentColor(accent)
@@ -344,10 +354,14 @@
   }
 
   .api-kpi-grid--bottom {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--api-bottom-columns, 3), minmax(0, 1fr));
 
     @media (width <= 1100px) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (width <= 768px) {
+      grid-template-columns: 1fr;
     }
   }
 

@@ -7,17 +7,24 @@ import {
   fetchAdPlatformInfoCountryTop10,
   fetchAdPlatformInfoKpiCards,
   fetchAdPlatformInfoPlatformSummary,
-  fetchAdPlatformInfoRetentionHeatmap,
   fetchAdPlatformInfoRoiMapPoints,
   fetchAdPlatformInfoTrendChart
 } from '@/api/user-growth/ad-platform-info'
 import type {
   AdPlatformInfoFilterState,
+  AdPlatformInfoHeatmapData,
   AdPlatformInfoKpiCard,
   AdPlatformInfoPageData
 } from '../types'
 
 type LoadState = 'idle' | 'loading' | 'ready' | 'error'
+const EMPTY_HEATMAP: AdPlatformInfoHeatmapData = {
+  xLabels: [],
+  yLabels: [],
+  points: [],
+  legendMin: 0,
+  legendMax: 0
+}
 
 export function useAdPlatformInfo() {
   const route = useRoute()
@@ -78,7 +85,6 @@ export function useAdPlatformInfo() {
         kpiCards,
         roiMap,
         countryTop10,
-        retentionHeatmap,
         conversionFunnel,
         trendChart,
         campaignTable
@@ -87,7 +93,6 @@ export function useAdPlatformInfo() {
         fetchAdPlatformInfoKpiCards(body),
         fetchAdPlatformInfoRoiMapPoints(body),
         fetchAdPlatformInfoCountryTop10(body),
-        fetchAdPlatformInfoRetentionHeatmap(body),
         fetchAdPlatformInfoConversionFunnel(body),
         fetchAdPlatformInfoTrendChart(body),
         fetchAdPlatformInfoCampaignTable(body)
@@ -95,11 +100,11 @@ export function useAdPlatformInfo() {
 
       data.value = {
         summary: platformSummary.summary,
-        updatedAtText: platformSummary.updatedAtText,
+        updatedAtText: String(platformSummary.updatedAtText ?? ''),
         kpis: kpiCards.kpis as AdPlatformInfoKpiCard[],
         mapPoints: roiMap.mapPoints,
         top10: countryTop10.top10,
-        heatmap: retentionHeatmap.heatmap,
+        heatmap: EMPTY_HEATMAP,
         funnel: conversionFunnel.funnel,
         trend: trendChart.trend,
         campaigns: campaignTable.campaigns as AdPlatformInfoPageData['campaigns']

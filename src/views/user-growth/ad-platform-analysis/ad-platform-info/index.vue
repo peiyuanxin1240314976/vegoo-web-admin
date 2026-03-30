@@ -64,7 +64,7 @@
             </div>
 
             <div class="api-row api-row--mid api-section">
-              <ApiRetentionHeatmap :data="pageData.heatmap" />
+              <!-- 留存热力图模块临时隐藏（对应 /retention-heatmap 接口暂停） -->
               <ApiConversionFunnel :stages="pageData.funnel" />
             </div>
 
@@ -90,7 +90,6 @@
   import ApiKpiGrid from './modules/kpi-grid.vue'
   import ApiRoiMapPanel from './modules/roi-map-panel.vue'
   import ApiTop10Table from './modules/top10-table.vue'
-  import ApiRetentionHeatmap from './modules/retention-heatmap.vue'
   import ApiConversionFunnel from './modules/conversion-funnel.vue'
   import ApiTrendPanel from './modules/trend-panel.vue'
   import ApiCampaignTable from './modules/campaign-table.vue'
