@@ -1,13 +1,10 @@
 <template>
   <div class="revenue-deviation">
+    <div class="rd-page-fx" aria-hidden="true"></div>
     <!-- ========== Header ========== -->
-    <div class="rd-header">
-      <div class="rd-breadcrumb">
-        <span class="rd-breadcrumb__parent">商业洞察</span>
-        <el-icon class="rd-breadcrumb__sep"><ArrowRight /></el-icon>
-        <span class="rd-breadcrumb__current">预估收入偏差</span>
-      </div>
-      <div class="rd-header__actions">
+    <div class="rd-header rd-entry-1">
+      <div class="rd-page-title">预估收入偏差</div>
+      <div class="rd-filters">
         <el-date-picker
           v-model="dateRange"
           type="daterange"
@@ -16,18 +13,11 @@
           end-placeholder="结束日期"
           format="YYYY/MM/DD"
           value-format="YYYY-MM-DD"
-          class="rd-date-picker"
-          :teleported="false"
+          class="rd-filter-date"
+          :teleported="true"
+          popper-class="rd-filter-popper"
         />
-        <el-select v-model="platform" class="rd-select" placeholder="全部平台">
-          <el-option label="全部平台" value="" />
-          <el-option label="Admob" value="admob" />
-          <el-option label="Facebook" value="facebook" />
-          <el-option label="Applovin" value="applovin" />
-          <el-option label="Vungle" value="vungle" />
-          <el-option label="Pangle" value="pangle" />
-        </el-select>
-        <el-select v-model="appFilter" class="rd-select" placeholder="全部应用">
+        <el-select v-model="appFilter" class="rd-filter-select" placeholder="应用">
           <el-option label="全部应用" value="" />
           <el-option label="WeatherRadar" value="weather" />
           <el-option label="PhoneTracker" value="phone" />
@@ -35,12 +25,56 @@
           <el-option label="HealthTracker" value="health" />
           <el-option label="FaceMe" value="face" />
         </el-select>
-        <el-button class="rd-filter-btn" :icon="Filter" circle />
+        <el-select
+          v-model="platform"
+          class="rd-filter-select"
+          placeholder="广告平台"
+          popper-class="rd-filter-popper"
+          :teleported="true"
+        >
+          <el-option label="全部平台" value="" />
+          <el-option label="Admob" value="admob" />
+          <el-option label="Facebook" value="facebook" />
+          <el-option label="Applovin" value="applovin" />
+          <el-option label="Vungle" value="vungle" />
+          <el-option label="Pangle" value="pangle" />
+        </el-select>
+        <el-select
+          v-model="appFilter"
+          class="rd-filter-select"
+          placeholder="应用"
+          popper-class="rd-filter-popper"
+          :teleported="true"
+        >
+          <el-option label="全部应用" value="" />
+          <el-option label="WeatherRadar" value="weather" />
+          <el-option label="PhoneTracker" value="phone" />
+          <el-option label="BloodSugar2" value="blood" />
+          <el-option label="HealthTracker" value="health" />
+          <el-option label="FaceMe" value="face" />
+        </el-select>
+
+        <el-button round class="rd-filter-action rd-filter-action--apply" :icon="Filter">
+          筛选
+        </el-button>
       </div>
     </div>
 
     <!-- ========== KPI Cards ========== -->
-    <div v-if="kpiOverview" class="rd-kpi-grid">
+    <div v-if="loadingAll" class="rd-kpi-grid rd-entry-2">
+      <div v-for="i in 5" :key="i" class="rd-kpi-card rd-kpi-card--sk">
+        <ElSkeleton animated :throttle="0">
+          <template #template>
+            <div class="rd-kpi-sk">
+              <ElSkeletonItem variant="text" class="rd-kpi-sk__label" />
+              <ElSkeletonItem variant="text" class="rd-kpi-sk__value" />
+              <ElSkeletonItem variant="text" class="rd-kpi-sk__sub" />
+            </div>
+          </template>
+        </ElSkeleton>
+      </div>
+    </div>
+    <div v-else-if="kpiOverview" class="rd-kpi-grid rd-entry-2">
       <div class="rd-kpi-card rd-kpi-card--green">
         <div class="rd-kpi-card__label">广告收入（预估）</div>
         <div class="rd-kpi-card__value rd-kpi-card__value--green">
@@ -90,11 +124,12 @@
     </div>
 
     <!-- ========== Middle Row ========== -->
-    <div class="rd-middle-grid">
+    <div class="rd-middle-grid rd-entry-3">
       <!-- 趋势图 -->
       <div class="rd-card rd-trend-card">
         <div class="rd-card__title">收入偏差趋势（30天）</div>
-        <div ref="trendChartRef" class="rd-trend-chart"></div>
+        <div v-if="loadingAll" class="rd-chart-sk"></div>
+        <div v-else ref="trendChartRef" class="rd-trend-chart"></div>
         <div class="rd-trend-legend">
           <span class="rd-legend-item rd-legend-item--dashed rd-legend-item--green">预估收入</span>
           <span class="rd-legend-item rd-legend-item--solid rd-legend-item--teal">真实收入</span>
@@ -144,7 +179,8 @@
         <div class="rd-card rd-reason-card">
           <div class="rd-card__title">偏差原因分析</div>
           <div class="rd-reason-body">
-            <div ref="reasonChartRef" class="rd-reason-chart"></div>
+            <div v-if="loadingAll" class="rd-pie-sk"></div>
+            <div v-else ref="reasonChartRef" class="rd-reason-chart"></div>
             <div class="rd-reason-legend">
               <div v-for="item in reasonData" :key="item.name" class="rd-reason-legend__item">
                 <span class="rd-reason-legend__dot" :style="{ background: item.color }"></span>
@@ -168,7 +204,7 @@
     </div>
 
     <!-- ========== Bottom Row ========== -->
-    <div class="rd-bottom-grid">
+    <div class="rd-bottom-grid rd-entry-4">
       <!-- 国家偏差分布 Top 10 -->
       <div class="rd-card rd-country-card">
         <div class="rd-card__header-row">
@@ -186,7 +222,8 @@
             {{ tab.label }}
           </button>
         </div>
-        <div ref="countryChartRef" class="rd-country-chart"></div>
+        <div v-if="loadingAll" class="rd-chart-sk rd-chart-sk--tall"></div>
+        <div v-else ref="countryChartRef" class="rd-country-chart"></div>
       </div>
 
       <!-- 偏差历史记录 -->
@@ -311,7 +348,7 @@
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
-  import { ArrowRight, Filter, TopRight } from '@element-plus/icons-vue'
+  import { Filter, TopRight } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
   import {
     fetchRevenueDeviationOverviewAdvice,
@@ -368,6 +405,9 @@
   const activeCountryTab = ref('amount')
   const matrixPlatform = ref('')
 
+  const loadingAll = ref(false)
+  const matrixLoading = ref(false)
+
   const kpiOverview = ref<RevenueDeviationOverviewKpis | null>(null)
   const trendData = ref<RevenueDeviationOverviewTrend | null>(null)
   const platformTable = ref<RevenueDeviationPlatformTable | null>(null)
@@ -412,7 +452,10 @@
       t_start_date: dateRange.value[0]!,
       t_end_date: dateRange.value[1]!,
       source: platform.value,
-      s_app_id: mapAppFilterToAppId(appFilter.value)
+      s_app_id: mapAppFilterToAppId(appFilter.value),
+      matrix_source: matrixPlatform.value,
+      row_dim: activeRowDim.value,
+      col_dim: activeColDim.value
     }
   }
 
@@ -428,41 +471,61 @@
     }))
   }
 
-  async function loadRevenueDeviationData() {
-    const q = buildQuery()
-    const matrixQ = {
-      ...q,
-      matrix_source: matrixPlatform.value,
-      row_dim: activeRowDim.value,
-      col_dim: activeColDim.value
+  function cssVar(name: string) {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+    return v || name
+  }
+
+  async function loadMatrixOnly() {
+    matrixLoading.value = true
+    try {
+      const q = buildQuery()
+      const matrix = await fetchRevenueDeviationTableMatrix(q)
+      matrixCols.value = matrix.cols.map((c) => ({
+        name: c.name,
+        key: c.key,
+        total: c.total
+      }))
+      matrixData.value = toMatrixVmRows(matrix.rows)
+    } finally {
+      matrixLoading.value = false
     }
-    const [kpi, trend, plat, reason, advice, country, hist, matrix] = await Promise.all([
-      fetchRevenueDeviationOverviewKpis(q),
-      fetchRevenueDeviationOverviewTrend(q),
-      fetchRevenueDeviationTablePlatform(q),
-      fetchRevenueDeviationOverviewReason(q),
-      fetchRevenueDeviationOverviewAdvice(q),
-      fetchRevenueDeviationOverviewCountryTop10(q),
-      fetchRevenueDeviationTableHistory(q),
-      fetchRevenueDeviationTableMatrix(matrixQ)
-    ])
-    kpiOverview.value = kpi
-    trendData.value = trend
-    platformTable.value = plat
-    reasonData.value = reason.map((s) => ({
-      name: s.s_label,
-      value: s.n_pct,
-      color: s.s_color
-    }))
-    adviceLines.value = advice.lines
-    countryTop10.value = country
-    historyRows.value = hist
-    matrixCols.value = matrix.cols.map((c) => ({
-      name: c.name,
-      key: c.key,
-      total: c.total
-    }))
-    matrixData.value = toMatrixVmRows(matrix.rows)
+  }
+
+  async function loadAllCards() {
+    loadingAll.value = true
+    try {
+      const q = buildQuery()
+      const [kpi, trend, plat, reason, advice, country, hist, matrix] = await Promise.all([
+        fetchRevenueDeviationOverviewKpis(q),
+        fetchRevenueDeviationOverviewTrend(q),
+        fetchRevenueDeviationTablePlatform(q),
+        fetchRevenueDeviationOverviewReason(q),
+        fetchRevenueDeviationOverviewAdvice(q),
+        fetchRevenueDeviationOverviewCountryTop10(q),
+        fetchRevenueDeviationTableHistory(q),
+        fetchRevenueDeviationTableMatrix(q)
+      ])
+      kpiOverview.value = kpi
+      trendData.value = trend
+      platformTable.value = plat
+      reasonData.value = reason.map((s) => ({
+        name: s.s_label,
+        value: s.n_pct,
+        color: s.s_color
+      }))
+      adviceLines.value = advice.lines
+      countryTop10.value = country
+      historyRows.value = hist
+      matrixCols.value = matrix.cols.map((c) => ({
+        name: c.name,
+        key: c.key,
+        total: c.total
+      }))
+      matrixData.value = toMatrixVmRows(matrix.rows)
+    } finally {
+      loadingAll.value = false
+    }
   }
 
   function formatUsd2(n: number) {
@@ -527,6 +590,13 @@
     trendChart?.dispose()
     trendChart = echarts.init(trendChartRef.value, 'dark')
 
+    const ttBg = cssVar('--default-box-color')
+    const ttBorder = cssVar('--default-border')
+    const ttText = cssVar('--text-primary')
+    const axisText = cssVar('--text-tertiary')
+    const axisLine = cssVar('--default-border')
+    const seriesEstimated = cssVar('--art-success')
+    const seriesReal = cssVar('--art-primary')
     const days = trendData.value.t_day_labels
     const estimated = trendData.value.n_estimated_series
     const real = trendData.value.n_real_series
@@ -536,22 +606,24 @@
       grid: { top: 30, right: 10, bottom: 50, left: 50 },
       tooltip: {
         trigger: 'axis',
-        backgroundColor: '#1e2533',
-        borderColor: '#334155',
-        textStyle: { color: '#e2e8f0', fontSize: 12 }
+        backgroundColor: ttBg,
+        borderColor: ttBorder,
+        textStyle: { color: ttText, fontSize: 12 }
       },
       xAxis: {
         type: 'category',
         data: days,
-        axisLine: { lineStyle: { color: '#334155' } },
-        axisLabel: { color: '#64748b', fontSize: 11 },
+        axisLine: { lineStyle: { color: axisLine } },
+        axisLabel: { color: axisText, fontSize: 11 },
         splitLine: { show: false }
       },
       yAxis: {
         type: 'value',
         axisLine: { show: false },
-        axisLabel: { color: '#64748b', fontSize: 11 },
-        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+        axisLabel: { color: axisText, fontSize: 11 },
+        splitLine: {
+          lineStyle: { color: cssVar('--default-border'), type: 'dashed' }
+        }
       },
       series: [
         {
@@ -560,8 +632,8 @@
           data: estimated,
           smooth: true,
           symbol: 'none',
-          lineStyle: { color: '#4ade80', width: 2, type: 'dashed' },
-          itemStyle: { color: '#4ade80' }
+          lineStyle: { color: seriesEstimated, width: 2, type: 'dashed' },
+          itemStyle: { color: seriesEstimated }
         },
         {
           name: '真实收入',
@@ -569,12 +641,12 @@
           data: real,
           smooth: true,
           symbol: 'none',
-          lineStyle: { color: '#2dd4bf', width: 2 },
-          itemStyle: { color: '#2dd4bf' },
+          lineStyle: { color: seriesReal, width: 2 },
+          itemStyle: { color: seriesReal },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(45,212,191,0.15)' },
-              { offset: 1, color: 'rgba(45,212,191,0.02)' }
+              { offset: 0, color: 'rgba(59,130,246,0.18)' },
+              { offset: 1, color: 'rgba(59,130,246,0.02)' }
             ])
           }
         },
@@ -587,8 +659,8 @@
           lineStyle: { opacity: 0 },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(251,146,60,0.35)' },
-              { offset: 1, color: 'rgba(251,146,60,0.05)' }
+              { offset: 0, color: 'rgba(249,115,22,0.30)' },
+              { offset: 1, color: 'rgba(249,115,22,0.05)' }
             ])
           }
         }
@@ -600,13 +672,16 @@
     if (!reasonChartRef.value || reasonData.value.length === 0) return
     reasonChart?.dispose()
     reasonChart = echarts.init(reasonChartRef.value, 'dark')
+    const ttBg = cssVar('--default-box-color')
+    const ttBorder = cssVar('--default-border')
+    const ttText = cssVar('--text-primary')
     reasonChart.setOption({
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'item',
-        backgroundColor: '#1e2533',
-        borderColor: '#334155',
-        textStyle: { color: '#e2e8f0', fontSize: 12 }
+        backgroundColor: ttBg,
+        borderColor: ttBorder,
+        textStyle: { color: ttText, fontSize: 12 }
       },
       series: [
         {
@@ -629,6 +704,11 @@
     if (!countryChartRef.value || !countryTop10.value) return
     countryChart?.dispose()
     countryChart = echarts.init(countryChartRef.value, 'dark')
+    const ttBg = cssVar('--default-box-color')
+    const ttBorder = cssVar('--default-border')
+    const ttText = cssVar('--text-primary')
+    const axisText = cssVar('--text-secondary')
+    const barColor = cssVar('--art-warning')
     const list =
       activeCountryTab.value === 'amount'
         ? countryTop10.value.tab_amount
@@ -641,9 +721,9 @@
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'none' },
-        backgroundColor: '#1e2533',
-        borderColor: '#334155',
-        textStyle: { color: '#e2e8f0', fontSize: 12 }
+        backgroundColor: ttBg,
+        borderColor: ttBorder,
+        textStyle: { color: ttText, fontSize: 12 }
       },
       xAxis: {
         type: 'value',
@@ -656,7 +736,7 @@
         data: countries,
         axisLine: { show: false },
         axisTick: { show: false },
-        axisLabel: { color: '#94a3b8', fontSize: 12 }
+        axisLabel: { color: axisText, fontSize: 12 }
       },
       series: [
         {
@@ -665,8 +745,8 @@
           barMaxWidth: 14,
           itemStyle: {
             color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
-              { offset: 0, color: '#f97316' },
-              { offset: 1, color: '#fb923c44' }
+              { offset: 0, color: barColor },
+              { offset: 1, color: 'rgba(249,115,22,0.16)' }
             ]),
             borderRadius: [0, 4, 4, 0]
           }
@@ -682,7 +762,7 @@
   }
 
   onMounted(async () => {
-    await loadRevenueDeviationData()
+    await loadAllCards()
     await nextTick()
     initTrendChart()
     initReasonChart()
@@ -704,9 +784,9 @@
   })
 
   watch(
-    [dateRange, platform, appFilter, matrixPlatform, activeRowDim, activeColDim],
+    [dateRange, platform, appFilter],
     async () => {
-      await loadRevenueDeviationData()
+      await loadAllCards()
       await nextTick()
       trendChart?.dispose()
       trendChart = null
@@ -720,30 +800,174 @@
     },
     { deep: true }
   )
+
+  watch([matrixPlatform, activeRowDim, activeColDim], async () => {
+    await loadMatrixOnly()
+  })
 </script>
 
-<style scoped>
-  /* ── CSS Variables ─────────────────────────────────────────────────── */
-  .revenue-deviation {
-    --rd-bg: #0f1117;
-    --rd-card-bg: #151b27;
-    --rd-card-border: #1e293b;
-    --rd-text-primary: #e2e8f0;
-    --rd-text-secondary: #94a3b8;
-    --rd-text-muted: #475569;
-    --rd-green: #4ade80;
-    --rd-gold: #f59e0b;
-    --rd-red: #f87171;
-    --rd-blue: #60a5fa;
-    --rd-orange: #fb923c;
-    --rd-teal: #2dd4bf;
+<style scoped lang="scss">
+  @import './styles/rd-card-fx';
 
+  /* ── 页面背景分层（对齐 ad-performance 高对比风格；使用项目 token） ───────── */
+  .revenue-deviation {
+    position: relative;
+    min-width: 0;
     min-height: 100vh;
     padding: 20px 24px;
-    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    overflow-x: clip;
     font-size: 13px;
-    color: var(--rd-text-primary);
-    background: var(--rd-bg);
+    color: var(--text-primary);
+    background: var(--default-bg-color);
+  }
+
+  .revenue-deviation::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        ellipse 70% 50% at 8% 6%,
+        color-mix(in srgb, var(--art-success) 42%, transparent) 0%,
+        color-mix(in srgb, var(--art-primary) 18%, transparent) 38%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 55% 42% at 94% 8%,
+        color-mix(in srgb, var(--art-primary) 38%, transparent) 0%,
+        color-mix(in srgb, var(--art-warning) 14%, transparent) 38%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 40% 35% at 48% 18%,
+        color-mix(in srgb, var(--art-primary) 14%, transparent) 0%,
+        transparent 55%
+      );
+    mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
+    animation:
+      rd-aurora-drift 14s var(--ease-out) infinite alternate,
+      rd-bg-flow 22s var(--ease-out) infinite alternate;
+  }
+
+  .revenue-deviation::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--art-primary) 8%, transparent) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--art-primary) 8%, transparent) 1px,
+        transparent 1px
+      ),
+      radial-gradient(
+        circle,
+        color-mix(in srgb, var(--art-success) 10%, transparent) 1px,
+        transparent 1px
+      );
+    background-size:
+      40px 40px,
+      40px 40px,
+      80px 80px;
+    mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+  }
+
+  .revenue-deviation > *:not(.rd-page-fx) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .rd-page-fx {
+    position: absolute;
+    inset: -12% -12% 40%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      color-mix(in srgb, var(--art-primary) 14%, transparent) 55deg,
+      color-mix(in srgb, var(--art-success) 10%, transparent) 80deg,
+      transparent 130deg,
+      color-mix(in srgb, var(--art-warning) 12%, transparent) 200deg,
+      transparent 285deg,
+      color-mix(in srgb, var(--art-danger) 10%, transparent) 330deg,
+      transparent 360deg
+    );
+    filter: blur(2px);
+    opacity: 0.85;
+    mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
+    animation: rd-fx-spin 52s linear infinite;
+  }
+
+  @keyframes rd-aurora-drift {
+    0% {
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    50% {
+      opacity: 1;
+      transform: scale(1.06) translate(1.2%, -1.2%);
+    }
+
+    100% {
+      opacity: 0.82;
+      transform: scale(1) translate(-1.2%, 1.2%);
+    }
+  }
+
+  @keyframes rd-bg-flow {
+    0% {
+      opacity: 0.7;
+      transform: scaleY(1) skewX(0deg);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scaleY(1.08) skewX(1deg);
+    }
+  }
+
+  @keyframes rd-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .rd-entry-1 {
+    animation: rd-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.05s;
+  }
+
+  .rd-entry-2 {
+    animation: rd-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.14s;
+  }
+
+  .rd-entry-3 {
+    animation: rd-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.22s;
+  }
+
+  .rd-entry-4 {
+    animation: rd-slide-up 0.55s var(--ease-out) both;
+    animation-delay: 0.3s;
+  }
+
+  @keyframes rd-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   /* ── Header ────────────────────────────────────────────────────────── */
@@ -754,58 +978,102 @@
     margin-bottom: 20px;
   }
 
-  .rd-breadcrumb {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }
+  .rd-page-title {
+    @include rd-title-gradient;
 
-  .rd-breadcrumb__parent {
-    font-size: 16px;
-    color: var(--rd-text-secondary);
-  }
-
-  .rd-breadcrumb__sep {
-    font-size: 14px;
-    color: var(--rd-text-muted);
-  }
-
-  .rd-breadcrumb__current {
     font-size: 18px;
-    font-weight: 700;
-    color: var(--rd-text-primary);
   }
 
-  .rd-header__actions {
+  .rd-filters {
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 10px 12px;
     align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
+    padding: 14px 16px;
+    background: color-mix(in srgb, var(--default-bg-color) 82%, transparent);
+    backdrop-filter: blur(12px);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, transparent);
+    border-radius: 16px;
+    box-shadow:
+      0 8px 32px color-mix(in srgb, black 40%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent),
+      0 0 40px color-mix(in srgb, var(--art-primary) 8%, transparent);
   }
 
-  .rd-date-picker {
-    --el-fill-color-blank: #1e293b;
-    --el-border-color: #334155;
-    --el-text-color-regular: #e2e8f0;
-
+  .rd-filter-date {
     width: 240px;
+    min-width: 200px;
   }
 
-  .rd-select {
-    --el-fill-color-blank: #1e293b;
-    --el-border-color: #334155;
-    --el-text-color-regular: #e2e8f0;
-
-    width: 130px;
+  .rd-filter-select {
+    width: 134px;
+    min-width: 120px;
+    max-width: 100%;
   }
 
   .rd-select--sm {
     width: 110px;
   }
 
-  .rd-filter-btn {
-    color: var(--rd-text-secondary) !important;
-    background: #1e293b !important;
-    border-color: #334155 !important;
+  :deep(.rd-filter-date .el-input__wrapper),
+  :deep(.rd-filter-select .el-input__wrapper) {
+    background: color-mix(in srgb, var(--art-primary) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
+    border-radius: 9999px;
+    box-shadow: none;
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      background-color var(--duration-normal) var(--ease-out);
+  }
+
+  :deep(.rd-filter-date .el-input__wrapper:hover),
+  :deep(.rd-filter-select .el-input__wrapper:hover) {
+    border-color: color-mix(in srgb, var(--art-primary) 42%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--art-primary) 16%, transparent);
+  }
+
+  :deep(.rd-filter-date .el-input__wrapper.is-focus),
+  :deep(.rd-filter-select .el-input__wrapper.is-focus) {
+    background: color-mix(in srgb, var(--art-primary) 10%, transparent) !important;
+    border-color: color-mix(in srgb, var(--art-primary) 55%, transparent) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--art-primary) 18%, transparent) !important;
+  }
+
+  :deep(.rd-filter-date .el-input__inner),
+  :deep(.rd-filter-select .el-input__inner) {
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+
+  .rd-filter-action {
+    height: 40px !important;
+    padding: 0 14px !important;
+    font-weight: 600;
+    border-radius: 9999px !important;
+    transition:
+      transform var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      border-color var(--duration-normal) var(--ease-out);
+  }
+
+  .rd-filter-action--apply {
+    color: var(--el-color-white) !important;
+    background: color-mix(
+      in srgb,
+      var(--el-color-primary) 78%,
+      var(--default-box-color)
+    ) !important;
+    border-color: color-mix(in srgb, var(--el-color-primary) 70%, transparent) !important;
+    box-shadow:
+      0 0 18px color-mix(in srgb, var(--el-color-primary) 18%, transparent),
+      0 0 42px color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+  }
+
+  .rd-filter-action--apply:hover {
+    transform: translateY(-2px);
   }
 
   /* ── KPI Grid ──────────────────────────────────────────────────────── */
@@ -817,12 +1085,20 @@
   }
 
   .rd-kpi-card {
+    --rd-accent: var(--art-primary);
+
     position: relative;
     padding: 18px 20px;
     overflow: hidden;
-    background: var(--rd-card-bg);
-    border: 1px solid var(--rd-card-border);
     border-radius: 10px;
+
+    @include rd-neon-bg(var(--rd-accent));
+    @include rd-card-mesh;
+    @include rd-panel-hover(var(--rd-accent));
+  }
+
+  .rd-kpi-card--sk {
+    min-height: 108px;
   }
 
   .rd-kpi-card::before {
@@ -832,23 +1108,30 @@
     left: 0;
     height: 3px;
     content: '';
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--rd-accent) 85%, transparent) 30%,
+      color-mix(in srgb, var(--rd-accent) 55%, transparent) 70%,
+      transparent 100%
+    );
     border-radius: 10px 10px 0 0;
   }
 
   .rd-kpi-card--green::before {
-    background: var(--rd-green);
+    --rd-accent: var(--art-success);
   }
 
   .rd-kpi-card--gold::before {
-    background: var(--rd-gold);
+    --rd-accent: var(--art-warning);
   }
 
   .rd-kpi-card--red::before {
-    background: var(--rd-red);
+    --rd-accent: var(--art-danger);
   }
 
   .rd-kpi-card--blue::before {
-    background: var(--rd-blue);
+    --rd-accent: var(--art-primary);
   }
 
   .rd-kpi-card__header-row {
@@ -861,36 +1144,37 @@
   .rd-kpi-card__label {
     margin-bottom: 8px;
     font-size: 12px;
-    color: var(--rd-text-secondary);
+    color: var(--text-secondary);
   }
 
   .rd-kpi-card__value {
     margin-bottom: 6px;
     font-size: 28px;
     font-weight: 700;
+    text-shadow: 0 0 18px color-mix(in srgb, var(--rd-accent) 18%, transparent);
     letter-spacing: -0.5px;
   }
 
   .rd-kpi-card__value--green {
-    color: var(--rd-green);
+    color: var(--art-success);
   }
 
   .rd-kpi-card__value--gold {
-    color: var(--rd-gold);
+    color: var(--art-warning);
   }
 
   .rd-kpi-card__value--red {
-    color: var(--rd-red);
+    color: var(--art-danger);
   }
 
   .rd-kpi-card__value--blue {
-    color: var(--rd-blue);
+    color: var(--art-primary);
   }
 
   .rd-kpi-card__sub {
     font-size: 11px;
     line-height: 1.4;
-    color: var(--rd-text-muted);
+    color: var(--text-tertiary);
   }
 
   /* ── Badge ─────────────────────────────────────────────────────────── */
@@ -902,9 +1186,9 @@
   }
 
   .rd-badge--red {
-    color: var(--rd-red);
-    background: rgb(248 113 113 / 15%);
-    border: 1px solid rgb(248 113 113 / 30%);
+    color: var(--art-danger);
+    background: color-mix(in srgb, var(--art-danger) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-danger) 22%, transparent);
   }
 
   /* ── Middle Grid ───────────────────────────────────────────────────── */
@@ -912,7 +1196,7 @@
     display: grid;
     grid-template-columns: 1fr 320px 280px;
     gap: 14px;
-    align-items: start;
+    align-items: stretch;
     margin-bottom: 16px;
   }
 
@@ -920,31 +1204,76 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+    min-height: 0;
+  }
+
+  /* 第二行三列统一高度，右侧两卡等分 */
+  .rd-trend-card,
+  .rd-platform-card,
+  .rd-right-col {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .rd-reason-card,
+  .rd-advice-card {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .rd-trend-card,
+  .rd-reason-card,
+  .rd-country-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
 
   /* ── Card Base ─────────────────────────────────────────────────────── */
   .rd-card {
+    --rd-panel-accent: var(--art-primary);
+
+    position: relative;
     padding: 16px 18px;
-    background: var(--rd-card-bg);
-    border: 1px solid var(--rd-card-border);
+    overflow: hidden;
+    border: 1px solid transparent;
     border-radius: 10px;
+
+    @include rd-neon-bg(var(--rd-panel-accent));
+    @include rd-card-mesh;
+    @include rd-panel-hover(var(--rd-panel-accent));
   }
 
   .rd-card__title {
+    @include rd-card-title-hover(&, var(--art-primary));
+
     margin-bottom: 12px;
     font-size: 14px;
     font-weight: 600;
-    color: var(--rd-text-primary);
+    color: var(--text-primary);
+  }
+
+  /* 关键标题做渐变强调（对齐 ad-performance） */
+  .rd-trend-card .rd-card__title,
+  .rd-platform-card .rd-card__title,
+  .rd-reason-card .rd-card__title,
+  .rd-advice-card .rd-card__title,
+  .rd-country-card .rd-card__title,
+  .rd-history-card .rd-card__title,
+  .rd-matrix-card .rd-card__title {
+    @include rd-title-gradient;
+
+    font-size: 15px;
   }
 
   .rd-card__title--gold {
-    color: var(--rd-gold);
+    color: var(--art-warning);
   }
 
   .rd-card__subtitle {
     margin-top: 2px;
     font-size: 11px;
-    color: var(--rd-text-muted);
+    color: var(--text-tertiary);
   }
 
   .rd-card__header-row {
@@ -956,13 +1285,16 @@
 
   .rd-icon-link {
     font-size: 14px;
-    color: var(--rd-text-muted);
+    color: var(--text-tertiary);
     cursor: pointer;
   }
 
   /* ── Trend Chart ───────────────────────────────────────────────────── */
   .rd-trend-chart {
-    height: 200px;
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    min-height: 160px;
   }
 
   .rd-trend-legend {
@@ -977,7 +1309,7 @@
     gap: 6px;
     align-items: center;
     font-size: 11px;
-    color: var(--rd-text-secondary);
+    color: var(--text-secondary);
   }
 
   .rd-legend-item::before {
@@ -990,17 +1322,17 @@
 
   .rd-legend-item--green::before {
     height: 0;
-    background: var(--rd-green);
-    border-top: 2px dashed var(--rd-green);
+    background: var(--art-success);
+    border-top: 2px dashed var(--art-success);
   }
 
   .rd-legend-item--teal::before {
-    background: var(--rd-teal);
+    background: var(--art-primary);
   }
 
   .rd-legend-item--orange::before {
     height: 8px;
-    background: var(--rd-orange);
+    background: var(--art-warning);
     border-radius: 2px;
     opacity: 0.6;
   }
@@ -1015,15 +1347,15 @@
   .rd-table th {
     padding: 6px 8px;
     font-weight: 500;
-    color: var(--rd-text-muted);
+    color: var(--text-tertiary);
     text-align: left;
-    border-bottom: 1px solid var(--rd-card-border);
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
   }
 
   .rd-table td {
     padding: 8px;
-    color: var(--rd-text-secondary);
-    border-bottom: 1px solid rgb(30 41 59 / 50%);
+    color: var(--text-secondary);
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
   }
 
   .rd-table tr:last-child td {
@@ -1031,31 +1363,31 @@
   }
 
   .rd-table tr:hover td {
-    background: rgb(255 255 255 / 2%);
+    background: color-mix(in srgb, var(--art-primary) 6%, transparent);
   }
 
   .rd-table__total td {
     font-weight: 600;
-    color: var(--rd-text-primary) !important;
-    border-top: 1px solid var(--rd-card-border);
+    color: var(--text-primary) !important;
+    border-top: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
     border-bottom: none;
   }
 
   /* ── Text Colors ───────────────────────────────────────────────────── */
   .rd-text--red {
-    color: var(--rd-red) !important;
+    color: var(--art-danger) !important;
   }
 
   .rd-text--green {
-    color: var(--rd-green) !important;
+    color: var(--art-success) !important;
   }
 
   .rd-text--orange {
-    color: var(--rd-orange) !important;
+    color: var(--art-warning) !important;
   }
 
   .rd-text--muted {
-    color: var(--rd-text-muted) !important;
+    color: var(--text-tertiary) !important;
   }
 
   /* ── Reason Chart ──────────────────────────────────────────────────── */
@@ -1071,6 +1403,82 @@
     height: 110px;
   }
 
+  .rd-chart-sk {
+    position: relative;
+    z-index: 1;
+    height: 200px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--default-box-color) 72%, transparent),
+      color-mix(in srgb, var(--default-box-color) 92%, transparent),
+      color-mix(in srgb, var(--default-box-color) 72%, transparent)
+    );
+    background-size: 220% 100%;
+    border-radius: 12px;
+    animation: rd-sk-shimmer 1.4s var(--ease-out) infinite;
+  }
+
+  .rd-chart-sk--tall {
+    height: 240px;
+  }
+
+  .rd-pie-sk {
+    flex-shrink: 0;
+    width: 110px;
+    height: 110px;
+    background: radial-gradient(
+      circle at 30% 30%,
+      color-mix(in srgb, var(--default-box-color) 90%, transparent),
+      color-mix(in srgb, var(--default-box-color) 70%, transparent)
+    );
+    border-radius: 50%;
+    animation: rd-sk-pulse 1.2s var(--ease-out) infinite alternate;
+  }
+
+  .rd-kpi-sk {
+    display: grid;
+    gap: 10px;
+  }
+
+  .rd-kpi-sk__label {
+    width: 72%;
+    height: 12px;
+  }
+
+  .rd-kpi-sk__value {
+    width: 58%;
+    height: 26px;
+  }
+
+  .rd-kpi-sk__sub {
+    width: 88%;
+    height: 10px;
+  }
+
+  @keyframes rd-sk-shimmer {
+    from {
+      background-position: 0% 0%;
+      opacity: 0.9;
+    }
+
+    to {
+      background-position: 100% 0%;
+      opacity: 1;
+    }
+  }
+
+  @keyframes rd-sk-pulse {
+    from {
+      opacity: 0.6;
+      transform: scale(0.98);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
   .rd-reason-legend {
     flex: 1;
   }
@@ -1081,7 +1489,7 @@
     align-items: center;
     margin-bottom: 7px;
     font-size: 11px;
-    color: var(--rd-text-secondary);
+    color: var(--text-secondary);
   }
 
   .rd-reason-legend__dot {
@@ -1097,7 +1505,7 @@
 
   .rd-reason-legend__val {
     font-weight: 600;
-    color: var(--rd-text-primary);
+    color: var(--text-primary);
   }
 
   /* ── Advice Card ───────────────────────────────────────────────────── */
@@ -1112,13 +1520,13 @@
     padding: 4px 0 4px 14px;
     font-size: 12px;
     line-height: 1.5;
-    color: var(--rd-text-secondary);
+    color: var(--text-secondary);
   }
 
   .rd-advice-list li::before {
     position: absolute;
     left: 0;
-    color: var(--rd-gold);
+    color: var(--art-warning);
     content: '•';
   }
 
@@ -1131,9 +1539,13 @@
     flex: 1;
     height: 32px !important;
     font-size: 12px !important;
-    color: var(--rd-text-secondary) !important;
+    color: var(--text-secondary) !important;
     background: transparent !important;
-    border: 1px solid #334155 !important;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent) !important;
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
   }
 
   .rd-btn-primary {
@@ -1141,9 +1553,22 @@
     height: 32px !important;
     font-size: 12px !important;
     font-weight: 600 !important;
-    color: #0f1117 !important;
-    background: var(--rd-gold) !important;
-    border-color: var(--rd-gold) !important;
+    color: var(--el-color-white) !important;
+    background: color-mix(
+      in srgb,
+      var(--el-color-primary) 78%,
+      var(--default-box-color)
+    ) !important;
+    border-color: color-mix(in srgb, var(--el-color-primary) 70%, transparent) !important;
+    transition:
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
+  }
+
+  .rd-btn-outline:hover,
+  .rd-btn-primary:hover {
+    box-shadow: 0 0 18px color-mix(in srgb, var(--el-color-primary) 22%, transparent);
+    transform: translateY(-2px);
   }
 
   /* ── Bottom Grid ───────────────────────────────────────────────────── */
@@ -1151,7 +1576,22 @@
     display: grid;
     grid-template-columns: 240px 260px 1fr;
     gap: 14px;
-    align-items: start;
+    align-items: stretch;
+  }
+
+  /* 第三行三列同高 */
+  .rd-country-card,
+  .rd-history-card,
+  .rd-matrix-card {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .rd-history-card,
+  .rd-matrix-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
 
   /* ── Country Chart ─────────────────────────────────────────────────── */
@@ -1164,22 +1604,35 @@
   .rd-tab-btn {
     padding: 3px 10px;
     font-size: 11px;
-    color: var(--rd-text-muted);
+    color: var(--text-tertiary);
     cursor: pointer;
     background: transparent;
-    border: 1px solid #334155;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent);
     border-radius: 4px;
-    transition: all 0.2s;
+    transition:
+      color var(--duration-normal) var(--ease-out),
+      background-color var(--duration-normal) var(--ease-out),
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
   }
 
   .rd-tab-btn--active {
-    color: var(--rd-green);
-    background: rgb(74 222 128 / 15%);
-    border-color: var(--rd-green);
+    color: var(--art-success);
+    background: color-mix(in srgb, var(--art-success) 14%, transparent);
+    border-color: color-mix(in srgb, var(--art-success) 28%, transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--art-success) 16%, transparent);
+  }
+
+  .rd-tab-btn:hover {
+    border-color: color-mix(in srgb, var(--art-primary) 28%, transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--art-primary) 14%, transparent);
+    transform: translateY(-2px);
   }
 
   .rd-country-chart {
-    height: 240px;
+    flex: 1;
+    min-height: 200px;
   }
 
   /* ── Matrix Table ──────────────────────────────────────────────────── */
@@ -1212,6 +1665,8 @@
   }
 
   .rd-matrix-scroll {
+    flex: 1;
+    min-height: 0;
     overflow-x: auto;
   }
 
@@ -1279,7 +1734,38 @@
     margin-top: 10px;
     font-size: 11px;
     line-height: 1.6;
-    color: var(--rd-text-muted);
-    border-top: 1px solid var(--rd-card-border);
+    color: var(--text-tertiary);
+    border-top: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .revenue-deviation::before,
+    .rd-page-fx {
+      animation: none;
+    }
+
+    .rd-entry-1,
+    .rd-entry-2,
+    .rd-entry-3,
+    .rd-entry-4 {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+
+    .rd-card,
+    .rd-kpi-card,
+    .rd-tab-btn,
+    .rd-btn-outline,
+    .rd-btn-primary {
+      transition: none !important;
+      transform: none !important;
+    }
+  }
+</style>
+
+<style lang="scss">
+  .rd-filter-popper {
+    z-index: var(--z-dropdown);
   }
 </style>
