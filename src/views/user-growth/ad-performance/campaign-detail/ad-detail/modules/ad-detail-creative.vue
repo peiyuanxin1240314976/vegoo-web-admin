@@ -60,17 +60,17 @@
 
         <!-- CTR -->
         <ElTableColumn label="CTR" min-width="80" align="right">
-          <template #default="{ row }">{{ row.ctr.toFixed(1) }}%</template>
+          <template #default="{ row }">{{ fmtFixed(row.ctr, 1) }}%</template>
         </ElTableColumn>
 
         <!-- CVR -->
         <ElTableColumn label="CVR" min-width="80" align="right">
-          <template #default="{ row }">{{ row.cvr.toFixed(0) }}%</template>
+          <template #default="{ row }">{{ fmtFixed(row.cvr, 0) }}%</template>
         </ElTableColumn>
 
         <!-- CPI -->
         <ElTableColumn label="CPI" min-width="80" align="right">
-          <template #default="{ row }">${{ row.cpi.toFixed(2) }}</template>
+          <template #default="{ row }">${{ fmtFixed(row.cpi, 2) }}</template>
         </ElTableColumn>
 
         <!-- ROI -->
@@ -132,6 +132,17 @@
     if (activeStatus.value === 'all') return props.creatives
     return props.creatives.filter((r) => r.status === activeStatus.value)
   })
+
+  function toFiniteNumber(v: unknown): number | null {
+    const n = typeof v === 'number' ? v : Number(v)
+    return Number.isFinite(n) ? n : null
+  }
+
+  function fmtFixed(v: unknown, digits: number): string {
+    const n = toFiniteNumber(v)
+    if (n === null) return '--'
+    return n.toFixed(digits)
+  }
 
   function fmtK(v: number): string {
     if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`

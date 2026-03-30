@@ -28,6 +28,8 @@ const EMPTY_HEATMAP: AdPlatformInfoHeatmapData = {
 
 export function useAdPlatformInfo() {
   const route = useRoute()
+  const AD_PLATFORM_INFO_PATH = '/user-growth/ad-platform-analysis/ad-platform-info'
+  const isAdPlatformInfoRoute = computed(() => route.path === AD_PLATFORM_INFO_PATH)
 
   /** 查询参数 `?id=`：来自列表行 `sourceCode`（广告平台编码 n_source） */
   const detailId = computed(() => {
@@ -69,6 +71,8 @@ export function useAdPlatformInfo() {
   }
 
   async function load() {
+    if (!isAdPlatformInfoRoute.value) return
+
     if (!detailId.value) {
       state.value = 'error'
       data.value = null
@@ -119,8 +123,9 @@ export function useAdPlatformInfo() {
   }
 
   watch(
-    detailId,
+    [detailId, isAdPlatformInfoRoute],
     () => {
+      if (!isAdPlatformInfoRoute.value) return
       void load()
     },
     { immediate: true }

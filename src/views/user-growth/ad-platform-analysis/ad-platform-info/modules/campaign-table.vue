@@ -43,6 +43,7 @@
 
 <script setup lang="ts">
   import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+  import { useRouter } from 'vue-router'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import type { ColumnOption } from '@/types'
   import type { AdPlatformInfoCampaignRow } from '../types'
@@ -51,6 +52,7 @@
   defineOptions({ name: 'ApiCampaignTable' })
 
   const props = defineProps<{ rows: AdPlatformInfoCampaignRow[] }>()
+  const router = useRouter()
 
   const TABLE_MAX_HEIGHT = 520
   const INITIAL_LOAD_COUNT = 30
@@ -197,7 +199,14 @@
   ]
 
   function openDetail(row: AdPlatformInfoCampaignRow) {
-    ElMessage.info(`详情面板待接入：${row.campaign}`)
+    router.push({
+      path: '/user-growth/ad-performance/campaign-detail',
+      query: {
+        id: row.id,
+        appId: row.id,
+        appName: row.campaign
+      }
+    })
   }
 
   function toggleStatus(row: AdPlatformInfoCampaignRow) {
