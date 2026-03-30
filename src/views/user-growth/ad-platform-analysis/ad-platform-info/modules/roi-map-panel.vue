@@ -110,11 +110,14 @@
       visualMap: {
         type: 'continuous',
         show: false,
+        seriesIndex: [0],
         min: dataMin,
         max: dataMax,
         realtime: false,
         calculable: false,
-        inRange: { color: ['#111827', '#1e3a8a', '#3B82F6', '#10B981'] },
+        inRange: {
+          color: ['#1E1B4B', '#2563EB', '#06B6D4', '#22C55E', '#F59E0B', '#EF4444']
+        },
         left: 12,
         bottom: 12,
         itemWidth: 12,
@@ -164,12 +167,15 @@
           },
           symbolSize: (val: [number, number, number]) => {
             const v = Number(val?.[2] ?? 0)
-            return Math.max(3, Math.min(10, ((v - dataMin) / (dataMax - dataMin || 1)) * 7 + 3))
+            return Math.max(
+              2.4,
+              Math.min(7.2, ((v - dataMin) / (dataMax - dataMin || 1)) * 4.8 + 2.4)
+            )
           },
           itemStyle: {
-            color: '#3B82F6',
-            shadowBlur: 18,
-            shadowColor: 'rgba(59,130,246,0.55)'
+            color: 'rgba(59,130,246,0.35)',
+            shadowBlur: 12,
+            shadowColor: 'rgba(59,130,246,0.25)'
           },
           emphasis: {
             scale: true
@@ -178,6 +184,35 @@
             formatter: (p: any) => {
               const v = Number(p.value?.[2] ?? 0)
               return `<div style="font-weight:700;margin-bottom:4px">${p.name}</div><div>ROI：<b style="color:#3B82F6">${v.toFixed(
+                2
+              )}%</b></div>`
+            }
+          }
+        },
+        {
+          name: '金色定位',
+          type: 'effectScatter',
+          coordinateSystem: 'geo',
+          data: geoScatter,
+          zlevel: 3,
+          rippleEffect: {
+            period: 2.8,
+            scale: 1.8,
+            brushType: 'stroke'
+          },
+          symbolSize: 3.2,
+          itemStyle: {
+            color: '#FACC15',
+            shadowBlur: 14,
+            shadowColor: 'rgba(250, 204, 21, 0.7)'
+          },
+          emphasis: {
+            scale: true
+          },
+          tooltip: {
+            formatter: (p: any) => {
+              const v = Number(p.value?.[2] ?? 0)
+              return `<div style="font-weight:700;margin-bottom:4px">${p.name}</div><div>ROI：<b style="color:#FACC15">${v.toFixed(
                 2
               )}%</b></div>`
             }

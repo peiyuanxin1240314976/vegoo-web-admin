@@ -7,12 +7,14 @@
         </div>
       </template>
 
-      <div class="api-panel__body">
+      <div class="api-panel__body api-panel__body--table" :style="tableBodyStyle">
         <ArtTable
-          :data="rows"
+          ref="artTableRef"
+          :data="displayedRows"
           :columns="columns"
           row-key="id"
-          height="360"
+          height="100%"
+          :show-table-header="false"
           size="small"
           :stripe="false"
           :border="false"
@@ -40,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+  import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import type { ColumnOption } from '@/types'
   import type { AdPlatformInfoCampaignRow } from '../types'
@@ -47,7 +50,74 @@
 
   defineOptions({ name: 'ApiCampaignTable' })
 
-  defineProps<{ rows: AdPlatformInfoCampaignRow[] }>()
+  const props = defineProps<{ rows: AdPlatformInfoCampaignRow[] }>()
+
+  const TABLE_MAX_HEIGHT = 520
+  const INITIAL_LOAD_COUNT = 30
+  const LOAD_MORE_COUNT = 20
+  const LOAD_MORE_THRESHOLD_PX = 48
+
+  const artTableRef = ref<InstanceType<typeof ArtTable> | null>(null)
+  const visibleCount = ref(INITIAL_LOAD_COUNT)
+  const isLoadingMore = ref(false)
+  const bodyScrollEl = ref<HTMLElement | null>(null)
+
+  const displayedRows = computed(() => props.rows.slice(0, visibleCount.value))
+  const tableBodyHeight = computed(() => TABLE_MAX_HEIGHT)
+  const tableBodyStyle = computed(() => ({ height: `${tableBodyHeight.value}px` }))
+
+  function appendMoreRows() {
+    if (isLoadingMore.value) return
+    if (visibleCount.value >= props.rows.length) return
+    isLoadingMore.value = true
+    visibleCount.value = Math.min(visibleCount.value + LOAD_MORE_COUNT, props.rows.length)
+    isLoadingMore.value = false
+  }
+
+  function handleBodyScroll() {
+    if (!bodyScrollEl.value) return
+    const { scrollTop, clientHeight, scrollHeight } = bodyScrollEl.value
+    const isNearBottom = scrollTop + clientHeight >= scrollHeight - LOAD_MORE_THRESHOLD_PX
+    if (isNearBottom) {
+      appendMoreRows()
+    }
+  }
+
+  function bindTableBodyScroll() {
+    const tableRoot = (artTableRef.value as unknown as { $el?: HTMLElement })?.$el
+    const nextBody = tableRoot?.querySelector('.el-scrollbar__wrap') as HTMLElement | null
+    if (!nextBody) return
+    if (bodyScrollEl.value === nextBody) return
+    if (bodyScrollEl.value) {
+      bodyScrollEl.value.removeEventListener('scroll', handleBodyScroll)
+    }
+    bodyScrollEl.value = nextBody
+    bodyScrollEl.value.addEventListener('scroll', handleBodyScroll, { passive: true })
+  }
+
+  watch(
+    () => props.rows,
+    () => {
+      visibleCount.value = INITIAL_LOAD_COUNT
+      nextTick(() => {
+        bindTableBodyScroll()
+      })
+    },
+    { deep: true }
+  )
+
+  onMounted(() => {
+    nextTick(() => {
+      bindTableBodyScroll()
+    })
+  })
+
+  onBeforeUnmount(() => {
+    if (bodyScrollEl.value) {
+      bodyScrollEl.value.removeEventListener('scroll', handleBodyScroll)
+      bodyScrollEl.value = null
+    }
+  })
 
   function toFiniteNumber(v: unknown): number {
     const n = typeof v === 'number' ? v : Number(v)
@@ -167,6 +237,14 @@
   .api-panel__hint {
     font-size: 12px;
     color: var(--art-gray-600);
+  }
+
+  .api-panel__body--table {
+    min-height: 0;
+  }
+
+  :deep(.art-table .el-table) {
+    margin-top: 0 !important;
   }
 
   .api-table {
