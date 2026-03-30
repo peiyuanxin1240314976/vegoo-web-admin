@@ -1,6 +1,19 @@
 # Admin UI 视效增强——代码模板手册
 
 > 复制后按需改前缀（如 `mp-` → 模块缩写）。
+>
+> **颜色规范**：所有颜色必须通过 `color-mix(in srgb, var(--token) X%, transparent)` 引用主题变量，禁止在业务 SCSS/TS 中写任何硬编码 HEX/RGB/RGBA 颜色值。
+>
+> | 用途              | 变量                                  |
+> | ----------------- | ------------------------------------- |
+> | 主高光（蓝）      | `--art-primary`                       |
+> | 积极/增长（绿）   | `--art-success`                       |
+> | 警示（橙）        | `--art-warning`                       |
+> | 危险（红）        | `--art-danger`                        |
+> | 卡片背景          | `--default-box-color`                 |
+> | 页面背景          | `--default-bg-color`                  |
+> | 灰阶（最亮→最暗） | `--art-gray-900` … `--art-gray-100`   |
+> | 正文 / 辅助文字   | `--text-primary` / `--text-secondary` |
 
 ---
 
@@ -20,10 +33,14 @@
     pointer-events: none;
     content: '';
     background:
-      radial-gradient(ellipse 75% 55% at 8% 8%,   rgb(16 185 129 / 14%) 0%, transparent 52%),
-      radial-gradient(ellipse 65% 50% at 92% 88%,  rgb(59 130 246 / 12%) 0%, transparent 52%),
-      radial-gradient(ellipse 45% 40% at 48% 48%,  rgb(168 85 247 / 8%)  0%, transparent 50%),
-      radial-gradient(ellipse 55% 45% at 75% 15%,  rgb(34 211 238 / 6%)  0%, transparent 45%);
+      radial-gradient(ellipse 75% 55% at 8% 8%,
+        color-mix(in srgb, var(--art-success) 14%, transparent) 0%, transparent 52%),
+      radial-gradient(ellipse 65% 50% at 92% 88%,
+        color-mix(in srgb, var(--art-primary) 12%, transparent) 0%, transparent 52%),
+      radial-gradient(ellipse 45% 40% at 48% 48%,
+        color-mix(in srgb, var(--art-warning) 8%,  transparent) 0%, transparent 50%),
+      radial-gradient(ellipse 55% 45% at 75% 15%,
+        color-mix(in srgb, var(--art-danger)  6%,  transparent) 0%, transparent 45%);
     animation: aurora-drift 14s ease-in-out infinite alternate,
                bg-flow     22s ease-in-out infinite alternate;
   }
@@ -36,8 +53,8 @@
     pointer-events: none;
     content: '';
     background-image:
-      linear-gradient(rgb(244 244 245 / 3%) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(244 244 245 / 3%) 1px, transparent 1px);
+      linear-gradient(color-mix(in srgb, var(--art-gray-900) 3%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--art-gray-900) 3%, transparent) 1px, transparent 1px);
     background-size: 48px 48px;
     mask-image: radial-gradient(ellipse 85% 75% at 50% 35%, black 18%, transparent 72%);
   }
@@ -54,11 +71,11 @@
   background: conic-gradient(
     from 0deg at 50% 50%,
     transparent 0deg,
-    rgb(59 130 246 / 4%) 72deg,
+    color-mix(in srgb, var(--art-primary) 4%, transparent) 72deg,
     transparent 144deg,
-    rgb(16 185 129 / 4%) 216deg,
+    color-mix(in srgb, var(--art-success) 4%, transparent) 216deg,
     transparent 288deg,
-    rgb(168 85 247 / 3%) 340deg,
+    color-mix(in srgb, var(--art-warning) 3%, transparent) 340deg,
     transparent 360deg
   );
   opacity: 0.65;
@@ -126,24 +143,36 @@
 /* 在模块 styles/ 目录下新建，各面板 @import 后 @include */
 
 @mixin neon-stack {
-  background-color: rgb(24 24 27 / 94%);
+  background-color: color-mix(in srgb, var(--default-box-color) 94%, transparent);
   background-image:
-    radial-gradient(ellipse 95% 60% at 100% -8%, rgb(59 130 246 / 18%) 0%, transparent 44%),
-    radial-gradient(ellipse 70% 50% at -8% 108%, rgb(16 185 129 / 15%) 0%, transparent 42%),
-    radial-gradient(ellipse 50% 38% at 78% 102%, rgb(168 85 247 / 11%) 0%, transparent 48%),
+    radial-gradient(
+      ellipse 95% 60% at 100% -8%,
+      color-mix(in srgb, var(--art-primary) 18%, transparent) 0%,
+      transparent 44%
+    ),
+    radial-gradient(
+      ellipse 70% 50% at -8% 108%,
+      color-mix(in srgb, var(--art-success) 15%, transparent) 0%,
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse 50% 38% at 78% 102%,
+      color-mix(in srgb, var(--art-warning) 11%, transparent) 0%,
+      transparent 48%
+    ),
     linear-gradient(
       168deg,
-      rgb(39 39 42 / 82%) 0%,
-      rgb(24 24 27 / 97%) 50%,
-      rgb(15 23 42 / 58%) 100%
+      color-mix(in srgb, var(--art-gray-300) 82%, transparent) 0%,
+      color-mix(in srgb, var(--default-box-color) 97%, transparent) 50%,
+      color-mix(in srgb, var(--default-bg-color) 58%, transparent) 100%
     );
-  border-color: rgb(82 82 91 / 48%);
+  border-color: color-mix(in srgb, var(--art-gray-500) 48%, transparent);
   box-shadow:
     0 14px 48px rgb(0 0 0 / 32%),
-    0 0 0 1px rgb(244 244 245 / 5%),
-    inset 0 1px 0 rgb(244 244 245 / 11%),
+    0 0 0 1px color-mix(in srgb, var(--art-gray-900) 5%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--art-gray-900) 11%, transparent),
     inset 0 -12px 32px rgb(0 0 0 / 20%),
-    0 0 60px rgb(59 130 246 / 4%);
+    0 0 60px color-mix(in srgb, var(--art-primary) 4%, transparent);
 }
 
 @mixin card-mesh {
@@ -156,9 +185,20 @@
     border-radius: inherit;
     opacity: 0.24;
     background-image:
-      linear-gradient(rgb(244 244 245 / 3.5%) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(244 244 245 / 3.5%) 1px, transparent 1px),
-      radial-gradient(ellipse 80% 50% at 50% -10%, rgb(255 255 255 / 5%) 0%, transparent 55%);
+      linear-gradient(
+        color-mix(in srgb, var(--art-gray-900) 3.5%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--art-gray-900) 3.5%, transparent) 1px,
+        transparent 1px
+      ),
+      radial-gradient(
+        ellipse 80% 50% at 50% -10%,
+        color-mix(in srgb, var(--art-gray-900) 5%, transparent) 0%,
+        transparent 55%
+      );
     background-size:
       20px 20px,
       20px 20px,
@@ -182,13 +222,13 @@
 
   &:hover {
     transform: translateY(-6px);
-    border-color: rgb(96 165 250 / 48%);
+    border-color: color-mix(in srgb, var(--art-primary) 48%, transparent);
     box-shadow:
       0 24px 64px rgb(0 0 0 / 40%),
-      0 0 0 1px rgb(96 165 250 / 16%),
-      inset 0 1px 0 rgb(244 244 245 / 14%),
-      0 0 64px rgb(59 130 246 / 12%),
-      0 0 100px rgb(16 185 129 / 5%);
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-gray-900) 14%, transparent),
+      0 0 64px color-mix(in srgb, var(--art-primary) 12%, transparent),
+      0 0 100px color-mix(in srgb, var(--art-success) 5%, transparent);
   }
 
   &:active {
@@ -219,12 +259,14 @@
 @mixin title-gradient {
   font-weight: 700;
   letter-spacing: 0.02em;
-  background: linear-gradient(
+  background-color: transparent;
+  background-image: linear-gradient(
     95deg,
-    rgb(244 244 245 / 96%) 0%,
-    rgb(186 230 253 / 88%) 45%,
-    rgb(52 211 153 / 82%) 100%
+    var(--text-primary) 0%,
+    var(--art-primary) 45%,
+    var(--art-success) 100%
   );
+  background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -240,7 +282,7 @@
 
   &:hover .panel__header .title {
     transform: translateX(5px) scale(1.03);
-    filter: drop-shadow(0 0 16px rgb(34 211 238 / 35%));
+    filter: drop-shadow(0 0 16px color-mix(in srgb, var(--art-success) 35%, transparent));
   }
 }
 ```
@@ -271,17 +313,17 @@
     background: conic-gradient(
       from var(--border-angle, 0deg) at 50% 50%,
       transparent 0deg,
-      rgb(16 185 129 / 25%) 60deg,
+      color-mix(in srgb, var(--art-success) 25%, transparent) 60deg,
       transparent 120deg,
-      rgb(59 130 246 / 20%) 200deg,
+      color-mix(in srgb, var(--art-primary) 20%, transparent) 200deg,
       transparent 280deg,
-      rgb(168 85 247 / 15%) 340deg,
+      color-mix(in srgb, var(--art-warning) 15%, transparent) 340deg,
       transparent 360deg
     );
     border-radius: inherit;
     mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
+      linear-gradient(white 0 0) content-box,
+      linear-gradient(white 0 0);
     mask-composite: exclude;
     padding: 1px;
     animation: border-spin 6s linear infinite;
@@ -417,11 +459,15 @@
 
 ```scss
 .table-wrapper {
-  background: linear-gradient(165deg, rgb(24 24 27 / 55%), rgb(24 24 27 / 28%));
-  border: 1px solid rgb(63 63 70 / 28%);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--default-box-color) 55%, transparent),
+    color-mix(in srgb, var(--default-box-color) 28%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--art-gray-400) 28%, transparent);
   border-radius: 12px;
   box-shadow:
-    inset 0 1px 0 rgb(244 244 245 / 5%),
+    inset 0 1px 0 color-mix(in srgb, var(--art-gray-900) 5%, transparent),
     0 4px 20px rgb(0 0 0 / 12%);
   padding: 6px 4px 10px;
 }
@@ -453,9 +499,9 @@
     content: '';
     background: linear-gradient(
       180deg,
-      rgb(34 211 238 / 90%) 0%,
-      rgb(16 185 129 / 85%) 50%,
-      rgb(59 130 246 / 75%) 100%
+      color-mix(in srgb, var(--art-success) 90%, transparent) 0%,
+      color-mix(in srgb, var(--art-success) 85%, transparent) 50%,
+      color-mix(in srgb, var(--art-primary) 75%, transparent) 100%
     );
     border-radius: 3px;
     opacity: 0;
@@ -475,16 +521,16 @@
     z-index: 2;
     background: linear-gradient(
       100deg,
-      rgb(16 185 129 / 10%) 0%,
-      rgb(39 39 42 / 72%) 32%,
-      rgb(39 39 42 / 58%) 100%
+      color-mix(in srgb, var(--art-success) 10%, transparent) 0%,
+      color-mix(in srgb, var(--art-gray-300) 72%, transparent) 32%,
+      color-mix(in srgb, var(--art-gray-300) 58%, transparent) 100%
     );
-    border-color: rgb(34 211 238 / 32%);
+    border-color: color-mix(in srgb, var(--art-success) 32%, transparent);
     opacity: 1;
     box-shadow:
       0 10px 28px rgb(0 0 0 / 32%),
-      inset 0 0 0 1px rgb(59 130 246 / 14%),
-      0 0 32px rgb(16 185 129 / 14%);
+      inset 0 0 0 1px color-mix(in srgb, var(--art-primary) 14%, transparent),
+      0 0 32px color-mix(in srgb, var(--art-success) 14%, transparent);
     transform: translateX(5px) translateY(-3px);
 
     &::before {
@@ -522,32 +568,59 @@
 
 ## §J ECharts 折线/面积图增强
 
+> ECharts option 在 JavaScript 运行时构建，无法直接使用 CSS 变量语法。使用下方 `getCssColor` 工具函数在 `buildOption()` 内读取当前主题值，确保深/浅色模式均正确。
+
+```ts
+/**
+ * 读取 CSS 变量的当前计算色值，并组装带透明度的 rgba 字符串。
+ * 在 buildOption() 内调用，每次图表重建时都能读到最新主题值。
+ */
+function getCssColor(varName: string, alpha = 1): string {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
+  if (alpha >= 1) return raw
+  // 通过临时元素将任意格式（hex / oklch）解析为浏览器标准 rgb()
+  const el = document.createElement('span')
+  el.style.color = raw
+  document.documentElement.appendChild(el)
+  const rgb = getComputedStyle(el).color // "rgb(59, 130, 246)"
+  document.documentElement.removeChild(el)
+  return rgb.replace('rgb(', 'rgba(').replace(')', `, ${alpha})`)
+}
+```
+
 ```ts
 // buildOption() 片段
-const series = [
-  {
-    type: 'line',
-    smooth: true,
-    symbolSize: 8,
-    lineStyle: {
-      width: 3,
-      shadowBlur: 12,
-      shadowColor: 'rgba(34,211,238,0.35)',
-      shadowOffsetY: 2,
-      color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-        { offset: 0, color: 'rgba(59,130,246,0.98)' },
-        { offset: 0.5, color: 'rgba(34,211,238,0.98)' },
-        { offset: 1, color: 'rgba(16,185,129,0.98)' }
-      ])
-    },
-    areaStyle: {
-      color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-        { offset: 0, color: 'rgba(59,130,246,0.32)' },
-        { offset: 1, color: 'rgba(16,185,129,0)' }
-      ])
+function buildOption() {
+  const primary = getCssColor('--art-primary')
+  const success = getCssColor('--art-success')
+
+  const series = [
+    {
+      type: 'line',
+      smooth: true,
+      symbolSize: 8,
+      lineStyle: {
+        width: 3,
+        shadowBlur: 12,
+        shadowColor: getCssColor('--art-success', 0.35),
+        shadowOffsetY: 2,
+        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+          { offset: 0, color: getCssColor('--art-primary', 0.98) },
+          { offset: 0.5, color: getCssColor('--art-success', 0.98) },
+          { offset: 1, color: getCssColor('--art-success', 0.98) }
+        ])
+      },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: getCssColor('--art-primary', 0.32) },
+          { offset: 1, color: getCssColor('--art-primary', 0) }
+        ])
+      }
     }
-  }
-]
+  ]
+
+  return { series }
+}
 ```
 
 ```scss
@@ -562,7 +635,8 @@ const series = [
 
 .panel:hover .chart {
   transform: scale(1.03) translateY(-2px);
-  filter: drop-shadow(0 10px 36px rgb(34 211 238 / 18%)) brightness(1.06);
+  filter: drop-shadow(0 10px 36px color-mix(in srgb, var(--art-success) 18%, transparent))
+    brightness(1.06);
 }
 
 @media (prefers-reduced-motion: reduce) {

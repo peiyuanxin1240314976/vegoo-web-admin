@@ -1,7 +1,7 @@
 ---
 name: admin-ui-fx
 description: >-
-  为 vegoo-web-admin 项目页面/卡片添加炫酷 UI 效果的标准流程，涵盖：模块色板与鲜明度对比、 页面整体背景分层、卡片个性化（含 ElCard 覆盖）、极光背景、网格纹理、卡片悬浮/霓虹发光、 旋转渐变边框、骨架屏加载、环形进度入场动画、数据行悬浮高光、ECharts 样式增强、 入场动画、prefers-reduced-motion 无障碍适配。 Use when the user asks to 优化/美化/炫酷 某个页面或模块的 UI 效果， 或提到「加骨架屏」「悬浮效果」「动效」「入场动画」「发光」「渐变」「初始动画」 「色板」「对比度」「页面背景」「卡片样式」「霓虹」。
+  为 vegoo-web-admin 项目页面/卡片添加炫酷 UI 效果的标准流程，涵盖：模块色板与鲜明度对比、 页面整体背景分层、卡片个性化（含 ElCard 覆盖）、极光背景、网格纹理、卡片悬浮/霓虹发光、 旋转渐变边框、骨架屏加载、环形进度入场动画、数据行悬浮高光、数据表列左对齐、ECharts 样式增强、 入场动画、prefers-reduced-motion 无障碍适配。 Use when the user asks to 优化/美化/炫酷 某个页面或模块的 UI 效果， 或提到「加骨架屏」「悬浮效果」「动效」「入场动画」「发光」「渐变」「初始动画」 「色板」「对比度」「页面背景」「卡片样式」「霓虹」「表格对齐」「表头对齐」。
 ---
 
 # Admin UI 视效增强（admin-ui-fx）
@@ -29,11 +29,11 @@ description: >-
 ### 2-1 与项目 Token 的关系（必须先读）
 
 - **页面最底、卡片容器背景**：优先使用已有变量，如 `--default-bg-color`、`--default-box-color`，与深色/浅色主题一致。
-- **霓虹中的「品牌色语义」**：蓝青绿紫橙的发光应映射到已有角色，而非随意新色——例如主高光对应 `--art-primary`（`#3B82F6`）、积极/增长对应 `--art-success`（`#10B981`）、警示对应 `--art-warning`（`#F97316`）、危险对应 `--art-danger`。
+- **霓虹中的「品牌色语义」**：发光色必须映射到已有角色，而非新建临时色值——主高光对应 `--art-primary`，积极/增长对应 `--art-success`，警示对应 `--art-warning`，危险对应 `--art-danger`。
 - **正文与标签**：卡片内标题以外的文案仍用语义文字 token：`--text-primary` / `--text-secondary` 等（Tailwind 如 `text-text-primary`），**不要用渐变字 mixin 糊满大段正文**，保证可读性。
 - **动效 token**：过渡使用 `--duration-*`、`--ease-*`（禁止 `transition: all`）。
 
-实现时 **RGB + alpha** 写法（如 `rgb(59 130 246 / 38%)`）便于在同一角色上调节「鲜明度」；**不要**在业务 SCSS 里大量写与 token 无关的纯 HEX 装饰色。
+实现时使用 **主题变量 + 透明度混合**（如 `color-mix(in srgb, var(--art-primary) 38%, transparent)`）调节同一角色的鲜明度；**禁止**在业务 SCSS/TS 中写任何硬编码 HEX/RGB/RGBA 颜色。
 
 ### 2-2 鲜明度与对比度（页面 vs 卡片）
 
@@ -41,7 +41,7 @@ description: >-
 
 1. **页面背景**：保持偏暗、略透（极光/网格仅作氛围），用 **`mask-image` 自上而下淡出**，避免与卡片抢对比。
 2. **卡片霓虹底**：深色底 + 多层 `radial-gradient` + 底层 `linear-gradient`；**边缘识别**靠：
-   - `border-color` 半透明主色（如蓝 `rgb(96 165 250 / 28%)` 量级）；
+   - `border-color` 使用半透明主题主色（如 `color-mix(in srgb, var(--art-primary) 28%, transparent)`）；
    - **多层 `box-shadow`**：外投影 + `0 0 0 1px` 细描边 + **inset 顶部高光** + **inset 底部暗角**，hover 时再加强光晕（见各模块 `*-panel-hover` mixin）。
 3. **卡片与页面分离**：卡片默认态就要有可见轮廓；hover 时 `translateY` + 更强 `box-shadow`，避免「飘在背景上分不清边界」。
 4. **图表**（ECharts）：坐标、分割线用低对比灰；**系列色**保持饱和，与 `二-1` 角色一致，tooltip 背景略实、保证文字对比。
@@ -76,7 +76,7 @@ description: >-
 3. 根上设 **`--el-card-bg-color: transparent`**，让自定义 `background-color` / `background-image` 生效。
 4. 根上 **`position: relative`、`overflow: hidden`、`border-radius`**（如 `14px`）与 mixin 阴影一致。
 5. **`:deep(.el-card__header)` / `:deep(.el-card__body)`**：`background: transparent`；需要时分区 `border-bottom` 用半透明主色细线；内容加 **`z-index: 1`**，避免被卡片内 `::after` 网格层压住。
-6. **可选装饰**：卡片顶边 `::before` 做细条 `linear-gradient(90deg, transparent, 橙, 绿, 青, transparent)` + 轻微 `blur`，强化「数据面板」感；**仅**关键卡使用，避免每卡一条。
+6. **可选装饰**：卡片顶边 `::before` 做细条渐变时，仅使用主题变量组合（如 `var(--art-warning)` / `var(--art-success)` / `var(--art-primary)`）并两端 `transparent`，再加轻微 `blur` 强化「数据面板」感；**仅**关键卡使用，避免每卡一条。
 
 **网格叠层**：需要时 `@include ap-card-mesh`（或本模块等价 mixin），注意伪元素 `z-index: 0` 与内容层级。
 
@@ -95,6 +95,19 @@ description: >-
 2. `index.vue` 页面根背景（`::before` / `::after` / 可选 `page-fx`）+ 入场 + reduced-motion。
 3. 各 `ElCard` 根 class + `--el-card-bg-color: transparent` + `:deep` 透底。
 4. 检查清单见 **「五」**。
+
+### 2-6 数据表格（`ElTable`）列对齐：内容左对齐 ★默认
+
+与大屏/霓虹卡片一起做数据表时，**数据列（含金额、比率、ROI、计数等数值列）统一左对齐**，与标题区「左起扫读」一致；**不要用**「数字列默认右对齐」的习惯堆在本项目的主数据表里。
+
+**实现要点**
+
+1. **`ElTableColumn`**：数据列设 `align="left"`（Element Plus 表头与单元格会跟随；如需单独控制可用 `header-align`）。
+2. **列配置数组**：若用 `v-for` + `ColumnDef`（如 `align?: 'left' | 'center' | 'right'`），默认值应为 `'left'`，仅对少数列例外。
+3. **自定义列「操作」**：`label="操作"` 等固定列可保留 `align="center"`，便于链接/按钮视觉居中。
+4. **进度条 + 百分比**：若单元格内为「横条 + 右侧百分比」布局，容器不要用 `justify-content: flex-end` 贴右；改为 **`justify-content: flex-start`**，百分比文本 **`text-align: left`**，否则在左对齐列里会出现内容仍靠右的视觉撕裂。参考：`src/views/user-growth/ad-performance/modules/ad-performance-table.vue` 中的 `.ad-performance-table__progress-cell`、`.ad-performance-table__progress-text`，以及各 `table-tabs/*.vue` 中列 `align` 与 `ALL_COLUMNS` 约定。
+
+沿用 **`ad-performance`** 表格子 Tab 的写法即可作为本 Skill 覆盖页面的**对齐基准**。
 
 ---
 
@@ -119,13 +132,13 @@ description: >-
 
 ### 3-4 卡片整体悬浮抬起（Hover Lift） ★基础
 
-- `@mixin panel-hover-lift`：`translateY(-6px)` + 多层 `box-shadow` 蓝/绿光。
+- `@mixin panel-hover-lift`：`translateY(-6px)` + 多层 `box-shadow` 主题色光晕（来自 `--art-primary` / `--art-success` 等语义色）。
 - **禁止**用 `transition: all`，必须显式列出属性。
 - 见 patterns.md §D。
 
 ### 3-5 标题渐变文字 + 跟手动效 ★基础
 
-- `@mixin title-gradient`：`background-clip: text`，白→天蓝→翠绿渐变。
+- `@mixin title-gradient`：`background-clip: text`，仅用主题变量做渐变（如 `var(--text-primary) -> var(--art-primary) -> var(--art-success)`）。
 - `@mixin panel-header-title-hover`：hover 时 `translateX(5px) scale(1.03)` + `drop-shadow`。
 - 见 patterns.md §E；**属性拆写**见「二-4」。
 
@@ -158,12 +171,13 @@ description: >-
 
 - 行加 `position: relative; isolation: isolate; border: 1px solid transparent`。
 - `::before` 做左侧竖向高光条（默认 `opacity: 0`，hover 时 `opacity: 1` + `height: 62%`）。
-- hover：`translateX(5px) translateY(-3px)` + 多层 `box-shadow` + `border-color` 改为半透明蓝/青。
+- hover：`translateX(5px) translateY(-3px)` + 多层 `box-shadow` + `border-color` 改为半透明主题色（`color-mix` + `var(--art-*)`）。
 - 见 patterns.md §I。
+- **列对齐**：数据列左对齐、进度类单元格与表头一致，详见 **「二-6」**。
 
 ### 3-10 ECharts 增强 ★进阶
 
-- 折线/面积渐变：`echarts.graphic.LinearGradient`，蓝→青→绿。
+- 折线/面积渐变：`echarts.graphic.LinearGradient`，颜色仅来自主题变量（例如 `--art-primary`、`--art-success`、`--art-warning` 按业务语义选用）。
 - 线条加 `lineStyle.shadowBlur` + `shadowColor`。
 - `areaStyle` 半透明渐变。
 - `panel:hover .chart`：`scale(1.03) + drop-shadow`。
@@ -201,7 +215,7 @@ description: >-
 
 - [ ] 页面根节点有极光背景 `::before` + 网格 `::after`（可选 `page-fx`）
 - [ ] 装饰层与内容层级正确（子块 `z-index: 1`，无遮挡点击）
-- [ ] 霓虹色与 **项目 Token 角色**一致，非随意 HEX 堆叠
+- [ ] 霓虹色与 **项目 Token 角色**一致，未出现任何硬编码 HEX/RGB/RGBA
 - [ ] 卡片相对页面有清晰 **border + 多层 box-shadow**（默认 + hover）
 - [ ] 使用 `ElCard` 霓虹底时已设 `--el-card-bg-color: transparent`，header/body 透底
 - [ ] 各卡片 `@include` 本模块 neon-bg / panel-hover（及可选 card-mesh）
@@ -211,6 +225,7 @@ description: >-
 - [ ] 骨架屏：`cardLoading` 从 composable 往下传，无整页 `v-loading`
 - [ ] 圆环进度有 0→目标 入场动画
 - [ ] 数据行有左侧高光条 + 抬起 hover
+- [ ] `ElTable` 数据列（含数值）左对齐；操作列可居中；进度+百分比单元格不贴右
 - [ ] 所有 `animation` 在 `prefers-reduced-motion: reduce` 下 `none`
 - [ ] 所有 hover `transform` 在 `prefers-reduced-motion: reduce` 下 `none`
 - [ ] JS 动画使用 `usePreferredReducedMotion`

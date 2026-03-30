@@ -179,19 +179,19 @@
     { key: 'name', label: '广告系列名称', prop: 'name', minWidth: 150, required: true },
     { key: 'channel', label: '广告平台', prop: 'channel', width: 100 },
     { key: 'country', label: '国家', prop: 'country', width: 80 },
-    { key: 'status', label: '状态', prop: 'status', width: 100, align: 'center' },
-    { key: 'spendBudget', label: '花费/预算', minWidth: 130, align: 'right' },
-    { key: 'cpi', label: 'CPI', prop: 'cpi', width: 80, align: 'right' },
-    { key: 'ctr', label: '点击率', prop: 'ctr', width: 100, align: 'right' },
-    { key: 'cvr', label: '转化率', prop: 'cvr', width: 100, align: 'right' },
-    { key: 'roi1', label: '首日ROI', prop: 'roi1', width: 90, align: 'right' },
-    { key: 'roi7', label: '7日ROI', prop: 'roi7', width: 90, align: 'right' },
+    { key: 'status', label: '状态', prop: 'status', width: 100, align: 'left' },
+    { key: 'spendBudget', label: '花费/预算', minWidth: 130, align: 'left' },
+    { key: 'cpi', label: 'CPI', prop: 'cpi', width: 80, align: 'left' },
+    { key: 'ctr', label: '点击率', prop: 'ctr', width: 100, align: 'left' },
+    { key: 'cvr', label: '转化率', prop: 'cvr', width: 100, align: 'left' },
+    { key: 'roi1', label: '首日ROI', prop: 'roi1', width: 90, align: 'left' },
+    { key: 'roi7', label: '7日ROI', prop: 'roi7', width: 90, align: 'left' },
     {
       key: 'estimatedProfit',
       label: '预估利润',
       prop: 'estimatedProfit',
       minWidth: 100,
-      align: 'right'
+      align: 'left'
     }
   ]
 

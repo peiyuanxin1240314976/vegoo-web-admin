@@ -1142,7 +1142,7 @@
     display: flex;
     gap: 10px;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
   }
 
   .ad-performance-table__progress-bg {
@@ -1179,7 +1179,7 @@
     width: 44px;
     font-weight: 700;
     color: var(--el-text-color-primary);
-    text-align: right;
+    text-align: left;
   }
 
   .ad-performance-detail__header {

@@ -196,21 +196,21 @@
 
   const ALL_COLUMNS: ColumnDef[] = [
     { key: 'country', label: '国家', prop: 'country', minWidth: 200, required: true },
-    { key: 'spend', label: '广告支出', prop: 'spend', width: 110, align: 'right', required: true },
+    { key: 'spend', label: '广告支出', prop: 'spend', width: 110, align: 'left', required: true },
     { key: 'spendSharePercent', label: '支出占比', prop: 'spendSharePercent', minWidth: 150 },
-    { key: 'cpi', label: 'CPI', prop: 'cpi', width: 90, align: 'right' },
-    { key: 'ctr', label: '点击率', prop: 'ctr', width: 100, align: 'right' },
-    { key: 'cvr', label: '转化率', prop: 'cvr', width: 100, align: 'right' },
-    { key: 'roi1', label: '首日ROI', prop: 'roi1', width: 90, align: 'right' },
-    { key: 'roi3', label: '3日ROI', prop: 'roi3', width: 90, align: 'right' },
-    { key: 'roi7', label: '7日ROI', prop: 'roi7', width: 90, align: 'right' },
-    { key: 'roiTotal', label: '累ROI', prop: 'roiTotal', width: 90, align: 'right' },
+    { key: 'cpi', label: 'CPI', prop: 'cpi', width: 90, align: 'left' },
+    { key: 'ctr', label: '点击率', prop: 'ctr', width: 100, align: 'left' },
+    { key: 'cvr', label: '转化率', prop: 'cvr', width: 100, align: 'left' },
+    { key: 'roi1', label: '首日ROI', prop: 'roi1', width: 90, align: 'left' },
+    { key: 'roi3', label: '3日ROI', prop: 'roi3', width: 90, align: 'left' },
+    { key: 'roi7', label: '7日ROI', prop: 'roi7', width: 90, align: 'left' },
+    { key: 'roiTotal', label: '累ROI', prop: 'roiTotal', width: 90, align: 'left' },
     {
       key: 'estimatedProfit',
       label: '预估利润',
       prop: 'estimatedProfit',
       minWidth: 100,
-      align: 'right'
+      align: 'left'
     }
   ]
 

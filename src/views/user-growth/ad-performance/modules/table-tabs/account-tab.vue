@@ -251,17 +251,17 @@
 
   const ALL_COLUMNS: ColumnDef[] = [
     { key: 'accountName', label: '广告账户', minWidth: 220, required: true },
-    { key: 'platform', label: '平台', width: 90, align: 'center' },
-    { key: 'balance', label: '账户余额', width: 110, align: 'right' },
-    { key: 'spend', label: '广告支出', width: 110, align: 'right', required: true },
+    { key: 'platform', label: '平台', width: 90, align: 'left' },
+    { key: 'balance', label: '账户余额', width: 110, align: 'left' },
+    { key: 'spend', label: '广告支出', width: 110, align: 'left', required: true },
     { key: 'budgetProgressPercent', label: '预算进度', minWidth: 160 },
-    { key: 'activeCampaignCount', label: '活跃系列数', width: 120, align: 'center' },
-    { key: 'avgCpi', label: '平均CPI', width: 100, align: 'right' },
-    { key: 'avgCtr', label: '平均点击率', width: 110, align: 'right' },
-    { key: 'avgCvr', label: '平均转化率', width: 110, align: 'right' },
-    { key: 'roi1', label: '首日ROI', width: 90, align: 'right' },
-    { key: 'roi7', label: '7日ROI', width: 90, align: 'right' },
-    { key: 'estimatedProfit', label: '预估利润', minWidth: 110, align: 'right' }
+    { key: 'activeCampaignCount', label: '活跃系列数', width: 120, align: 'left' },
+    { key: 'avgCpi', label: '平均CPI', width: 100, align: 'left' },
+    { key: 'avgCtr', label: '平均点击率', width: 110, align: 'left' },
+    { key: 'avgCvr', label: '平均转化率', width: 110, align: 'left' },
+    { key: 'roi1', label: '首日ROI', width: 90, align: 'left' },
+    { key: 'roi7', label: '7日ROI', width: 90, align: 'left' },
+    { key: 'estimatedProfit', label: '预估利润', minWidth: 110, align: 'left' }
   ]
 
   const requiredKeys = computed<ColumnKey[]>(() =>
