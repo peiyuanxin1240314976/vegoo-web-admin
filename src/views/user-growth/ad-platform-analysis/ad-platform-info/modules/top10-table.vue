@@ -58,7 +58,7 @@
       prop: 'revenue',
       label: '收入',
       minWidth: 86,
-      align: 'right',
+      align: 'left',
       formatter: (r: AdPlatformInfoTopRow) =>
         '$' +
         r.revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -67,7 +67,7 @@
       prop: 'roi',
       label: 'ROI',
       minWidth: 74,
-      align: 'right',
+      align: 'left',
       useSlot: true,
       slotName: 'roi'
     },
@@ -75,7 +75,7 @@
       prop: 'profit',
       label: '利润',
       minWidth: 86,
-      align: 'right',
+      align: 'left',
       formatter: (r: AdPlatformInfoTopRow) =>
         '$' +
         r.profit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })

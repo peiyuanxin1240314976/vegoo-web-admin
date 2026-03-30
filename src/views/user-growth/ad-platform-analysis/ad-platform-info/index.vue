@@ -19,15 +19,10 @@
               class="api-skeleton__block api-skeleton__block--card api-skeleton__block--fx"
             ></div>
           </div>
-          <div class="api-skeleton__row api-skeleton__row--mid api-skel-entry-3">
+          <div class="api-skeleton__row api-skeleton__row--triple api-skel-entry-3">
             <div
               class="api-skeleton__block api-skeleton__block--panel api-skeleton__block--fx"
             ></div>
-            <div
-              class="api-skeleton__block api-skeleton__block--panel api-skeleton__block--fx"
-            ></div>
-          </div>
-          <div class="api-skeleton__row api-skeleton__row--mid api-skel-entry-3">
             <div
               class="api-skeleton__block api-skeleton__block--panel api-skeleton__block--fx"
             ></div>
@@ -58,12 +53,9 @@
 
             <ApiKpiGrid :kpis="pageData.kpis" class="api-section" />
 
-            <div class="api-row api-row--mid api-section">
+            <div class="api-row api-row--triple api-section">
               <ApiRoiMapPanel :points="pageData.mapPoints" />
               <ApiTop10Table :rows="pageData.top10" />
-            </div>
-
-            <div class="api-row api-row--mid api-section">
               <!-- 留存热力图模块临时隐藏（对应 /retention-heatmap 接口暂停） -->
               <ApiConversionFunnel :stages="pageData.funnel" />
             </div>
@@ -277,10 +269,26 @@
     gap: 16px;
     align-items: stretch;
 
+    > * {
+      min-width: 0;
+    }
+
     &--mid {
       grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
 
       @media (width <= 1100px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    &--triple {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+
+      @media (width <= 1400px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      @media (width <= 980px) {
         grid-template-columns: 1fr;
       }
     }
@@ -316,6 +324,18 @@
       grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
 
       @media (width <= 1100px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    &--triple {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+
+      @media (width <= 1400px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      @media (width <= 980px) {
         grid-template-columns: 1fr;
       }
     }

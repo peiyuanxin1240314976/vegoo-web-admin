@@ -3,6 +3,7 @@
     <ElCard class="api-panel" shadow="never">
       <template #header>
         <div class="api-panel__header">
+          <div class="api-panel__title">趋势分析</div>
           <div class="api-panel__actions">
             <ElRadioGroup v-model="modeProxy" class="api-seg" size="default">
               <ElRadioButton v-for="o in modeOptions" :key="o.value" :label="o.value">
@@ -10,7 +11,6 @@
               </ElRadioButton>
             </ElRadioGroup>
           </div>
-          <div class="api-panel__title">趋势分析</div>
         </div>
       </template>
 
