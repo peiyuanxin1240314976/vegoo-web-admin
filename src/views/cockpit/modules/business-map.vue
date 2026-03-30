@@ -49,8 +49,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { ref, onMounted, onUnmounted, nextTick, watch, computed, onDeactivated } from 'vue'
+  import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useSettingStore } from '@/store/modules/setting'
   import { useChart } from '@/hooks/core/useChart'
@@ -700,6 +700,11 @@
     hoverTooltipVisible.value = false
     hoveredCountryNameEn.value = null
   }
+  function resetHoverTooltip() {
+    hoverTooltipVisible.value = false
+    hoveredCountryNameEn.value = null
+    hoverTooltipHtml.value = ''
+  }
   /** 地图容器 mousemove：更新鼠标位置，悬浮 tooltip 显示时跟随 */
   function handleMapContainerMouseMove(e: MouseEvent) {
     const offset = 12
@@ -712,7 +717,7 @@
   }
   /** 点击地图区域时，若该国家不在数据中则隐藏 tooltip，使点击显示 tooltip 不生效；并隐藏悬浮 tooltip */
   function handleMapItemClick(params: any) {
-    hoverTooltipVisible.value = false
+    resetHoverTooltip()
     const namesWithData = new Set(countryData.value.map((c) => c.nameEn))
     if (!params?.name || !namesWithData.has(params.name)) {
       getChartInstance()?.dispatchAction({ type: 'hideTip' })
@@ -723,17 +728,30 @@
     const link = (e.target as HTMLElement).closest('.cockpit-map-tt-link')
     if (!link) return
     e.preventDefault()
+    resetHoverTooltip()
+    getChartInstance()?.dispatchAction({ type: 'hideTip' })
     const countryCode = link.getAttribute('data-country-code') ?? ''
     if (countryCode) {
       router.push({ name: 'CockpitMapDetail', params: { country: countryCode } })
     }
   }
 
+  onBeforeRouteLeave(() => {
+    resetHoverTooltip()
+    getChartInstance()?.dispatchAction({ type: 'hideTip' })
+  })
+
+  onDeactivated(() => {
+    resetHoverTooltip()
+    getChartInstance()?.dispatchAction({ type: 'hideTip' })
+  })
+
   onMounted(() => {
     initWorldMap()
   })
 
   onUnmounted(() => {
+    resetHoverTooltip()
     if (mapChartRef.value) {
       mapChartRef.value.removeEventListener('click', handleTooltipLinkClick)
       mapChartRef.value.removeEventListener('mousemove', handleMapContainerMouseMove)

@@ -3,7 +3,7 @@
 <!-- 扩展功能：分页组件、渲染自定义列、loading、表格全局边框、斑马纹、表格尺寸、表头背景配置 -->
 <!-- 获取 ref：默认暴露了 elTableRef 外部通过 ref.value.elTableRef 可以调用 el-table 方法 -->
 <template>
-  <div class="art-table" :class="{ 'is-empty': isEmpty }" :style="containerHeight">
+  <div class="art-table" :class="{ 'is-empty': isEmpty }" :style="tableContainerStyle">
     <ElTable
       ref="elTableRef"
       v-loading="!!loading"
@@ -248,14 +248,31 @@
     paginationSpacing: PAGINATION_SPACING
   })
 
+  const normalizedHeight = computed(() => {
+    if (props.height === undefined || props.height === null || props.height === '') return undefined
+    if (typeof props.height === 'string') {
+      const raw = props.height.trim()
+      if (/^\d+(\.\d+)?$/.test(raw)) {
+        return Number(raw)
+      }
+      return raw
+    }
+    return props.height
+  })
+
+  const tableContainerStyle = computed(() => {
+    if (normalizedHeight.value !== undefined) return {}
+    return containerHeight.value
+  })
+
   // 表格高度逻辑
   const height = computed(() => {
     // 全屏模式下占满全屏
     if (isFullScreen.value) return '100%'
+    // 显式传入高度时优先使用，避免被空数据分支覆盖
+    if (normalizedHeight.value !== undefined) return normalizedHeight.value
     // 空数据且非加载状态时固定高度
     if (isEmpty.value && !props.loading) return props.emptyHeight
-    // 使用传入的高度
-    if (props.height) return props.height
     // 默认占满容器高度
     return '100%'
   })
