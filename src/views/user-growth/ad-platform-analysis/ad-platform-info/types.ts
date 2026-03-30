@@ -85,6 +85,8 @@ export type AdPlatformInfoTrendData = {
 }
 
 export type AdPlatformInfoCampaignRow = {
+  clicks: number
+  conversionRate: number
   id: string
   campaign: string
   spend: number

@@ -3,7 +3,7 @@
     <ElCard class="api-panel api-panel--table" shadow="never">
       <template #header>
         <div class="api-panel__header">
-          <div class="api-panel__title">活动明细</div>
+          <div class="api-panel__title">该渠道下广告表现</div>
         </div>
       </template>
 
@@ -143,7 +143,7 @@
   const columns: ColumnOption[] = [
     {
       prop: 'campaign',
-      label: '活动名称',
+      label: '系列名称',
       width: 'auto',
       showOverflowTooltip: true
     },
@@ -155,18 +155,19 @@
       formatter: (r: AdPlatformInfoCampaignRow) => `$${fmtUsd2(r.spend)}`
     },
     {
-      prop: 'revenue',
-      label: '收入',
+      prop: 'clicks',
+      label: '点击量',
       width: 'auto',
       align: 'left',
-      formatter: (r: AdPlatformInfoCampaignRow) => `$${fmtUsd2(r.revenue)}`
+      formatter: (r: AdPlatformInfoCampaignRow) => `${fmtUsd2(r.clicks)}`
     },
     {
-      prop: 'profit',
-      label: '利润',
+      prop: 'conversionRate',
+      label: '投放转化率',
       width: 'auto',
       align: 'left',
-      useSlot: true,
+      formatter: (r: AdPlatformInfoCampaignRow & { conversionRate?: number }) =>
+        fmtPct2(r.conversionRate),
       showOverflowTooltip: true
     },
     {
