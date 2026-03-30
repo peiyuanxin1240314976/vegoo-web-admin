@@ -19,7 +19,7 @@
       <!-- 左：应用 CPI 排行表格 + 趋势图 -->
       <div class="ca-app-left">
         <!-- 应用 CPI 排行 -->
-        <ElCard class="ca-panel" shadow="never">
+        <ElCard class="ca-panel ca-neon-panel" shadow="never">
           <template #header>应用 CPI 排行</template>
           <ElTable
             :data="data?.appCpiRank ?? []"
@@ -51,14 +51,14 @@
         </ElCard>
 
         <!-- 应用 CPI 趋势图 -->
-        <ElCard class="ca-panel" shadow="never">
+        <ElCard class="ca-panel ca-neon-panel" shadow="never">
           <template #header>应用 CPI 趋势分析</template>
           <div ref="appTrendRef" class="ca-chart ca-chart--app-trend"></div>
         </ElCard>
       </div>
 
       <!-- 右：广告平台 × 国家矩阵表 -->
-      <ElCard class="ca-panel ca-panel--matrix" shadow="never">
+      <ElCard class="ca-panel ca-neon-panel ca-panel--matrix" shadow="never">
         <template #header>
           <div class="panel-header-row">
             <span>广告平台 × 国家矩阵表</span>
@@ -212,6 +212,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/ca-card-fx';
+
   .ca-section-app {
     display: flex;
     flex-direction: column;

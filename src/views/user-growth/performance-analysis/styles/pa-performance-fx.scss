@@ -1,0 +1,232 @@
+// 人员绩效分析：与 ad-performance 同档高对比霓虹，复用 ap-card-fx mixin
+@import '../ad-performance/styles/ap-card-fx';
+
+// ── 页面级背景（与 ad-performance/index.vue 一致） ─────────────
+.performance-analysis-page {
+  position: relative;
+  min-width: 0;
+  overflow-x: clip;
+  background: var(--default-bg-color);
+
+  &::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        ellipse 70% 50% at 6% 6%,
+        rgb(16 185 129 / 42%) 0%,
+        rgb(6 182 212 / 20%) 38%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 55% 42% at 94% 8%,
+        rgb(59 130 246 / 38%) 0%,
+        rgb(139 92 246 / 18%) 38%,
+        transparent 58%
+      ),
+      radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 18%) 0%, transparent 55%),
+      radial-gradient(
+        ellipse 55% 42% at 76% 4%,
+        rgb(34 211 238 / 22%) 0%,
+        rgb(59 130 246 / 10%) 40%,
+        transparent 58%
+      );
+    mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
+    animation:
+      pa-aurora-drift 14s ease-in-out infinite alternate,
+      pa-bg-flow 22s ease-in-out infinite alternate;
+  }
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px),
+      radial-gradient(circle, rgb(6 182 212 / 8%) 1px, transparent 1px);
+    background-size:
+      40px 40px,
+      40px 40px,
+      80px 80px;
+    mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+  }
+
+  > *:not(.pa-page-fx) {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.pa-page-fx {
+  position: absolute;
+  inset: -12% -12% 40%;
+  z-index: 0;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    rgb(59 130 246 / 14%) 55deg,
+    rgb(6 182 212 / 10%) 80deg,
+    transparent 130deg,
+    rgb(16 185 129 / 12%) 200deg,
+    rgb(52 211 153 / 8%) 225deg,
+    transparent 285deg,
+    rgb(168 85 247 / 10%) 330deg,
+    rgb(249 115 22 / 6%) 350deg,
+    transparent 360deg
+  );
+  filter: blur(2px);
+  opacity: 0.85;
+  mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
+  animation: pa-fx-spin 52s linear infinite;
+}
+
+@keyframes pa-aurora-drift {
+  0% {
+    filter: hue-rotate(0deg);
+    opacity: 0.72;
+    transform: scale(1) translate(0, 0);
+  }
+
+  50% {
+    filter: hue-rotate(18deg);
+    opacity: 1;
+    transform: scale(1.06) translate(1.2%, -1.2%);
+  }
+
+  100% {
+    filter: hue-rotate(-12deg);
+    opacity: 0.82;
+    transform: scale(1) translate(-1.2%, 1.2%);
+  }
+}
+
+@keyframes pa-bg-flow {
+  0% {
+    opacity: 0.7;
+    transform: scaleY(1) skewX(0deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scaleY(1.08) skewX(1deg);
+  }
+}
+
+@keyframes pa-fx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pa-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pa-entry-1 {
+  animation: pa-slide-up 0.55s var(--ease-out) both;
+  animation-delay: 0.05s;
+}
+
+.pa-entry-2 {
+  animation: pa-slide-up 0.55s var(--ease-out) both;
+  animation-delay: 0.18s;
+}
+
+.pa-entry-3 {
+  animation: pa-slide-up 0.55s var(--ease-out) both;
+  animation-delay: 0.28s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .performance-analysis-page::before,
+  .performance-analysis-page::after,
+  .pa-page-fx {
+    animation: none;
+  }
+
+  .pa-entry-1,
+  .pa-entry-2,
+  .pa-entry-3 {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+// ── 霓虹面板：静态大容器（无抬升，避免整块跳动） ───────────────
+@mixin pa-neon-surface-static {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+
+  @include ap-neon-bg;
+  @include ap-card-mesh;
+
+  transition:
+    border-color 0.36s var(--ease-default),
+    box-shadow 0.42s var(--ease-out);
+
+  &:hover {
+    border-color: rgb(96 165 250 / 48%);
+    box-shadow:
+      0 16px 56px rgb(0 0 0 / 44%),
+      0 0 0 1px rgb(96 165 250 / 18%),
+      inset 0 1px 0 rgb(186 230 253 / 16%),
+      inset 0 -12px 32px rgb(0 0 0 / 28%),
+      0 0 48px rgb(59 130 246 / 14%);
+  }
+}
+
+.pa-neon-filter {
+  @include pa-neon-surface-static;
+}
+
+.pa-neon-table-wrap {
+  @include pa-neon-surface-static;
+}
+
+// 图表块 / 右侧面板（与表格容器同档静态霓虹）
+.pa-neon-panel {
+  @include pa-neon-surface-static;
+}
+
+// ── 霓虹卡片：可抬升（侧栏 KPI 等） ───────────────────────────
+.pa-neon-lift-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+
+  @include ap-neon-bg;
+  @include ap-card-mesh;
+  @include ap-panel-hover;
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.pa-sidebar-shell {
+  position: relative;
+  background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent);
+}
+
+.pa-title-gradient {
+  @include ap-title-gradient;
+}

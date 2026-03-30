@@ -1,7 +1,8 @@
 <template>
-  <div class="comp-page">
+  <div class="performance-analysis-page comp-page">
+    <div class="pa-page-fx" aria-hidden="true"></div>
     <!-- ─── Header ────────────────────────────────── -->
-    <div class="comp-header">
+    <div class="comp-header pa-entry-1">
       <div class="header-left">
         <div class="breadcrumb">
           <span class="bc-parent">用户增长</span>
@@ -29,7 +30,7 @@
     </div>
 
     <!-- ─── Selected Tags ────────────────────────── -->
-    <div class="selected-row">
+    <div class="selected-row pa-entry-2">
       <span class="selected-label">已选择：</span>
       <span
         v-for="(p, i) in selectedStaff"
@@ -44,13 +45,13 @@
     </div>
 
     <!-- ─── KPI Row ───────────────────────────────── -->
-    <div class="kpi-row">
-      <div class="kpi-card">
+    <div class="kpi-row pa-entry-2">
+      <div class="kpi-card pa-neon-lift-card">
         <div class="kpi-title">广告支出合计</div>
         <div class="kpi-value">${{ fmt(kpis.totalAd) }}</div>
         <div class="kpi-sub pos-text">周环比 +8%</div>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card pa-neon-lift-card">
         <div class="kpi-title">首日ROI均值</div>
         <div class="kpi-value gold-text">{{ kpis.avgRoi }}%</div>
         <div class="kpi-row-inline">
@@ -58,12 +59,12 @@
           <span class="badge-pass">达标</span>
         </div>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card pa-neon-lift-card">
         <div class="kpi-title">预估利润合计</div>
         <div class="kpi-value pos-text">+${{ fmt(kpis.totalProfit) }}</div>
         <div class="kpi-sub pos-text">周环比 +12%</div>
       </div>
-      <div class="kpi-card kpi-alert">
+      <div class="kpi-card pa-neon-lift-card kpi-alert">
         <div class="kpi-title">未达标人员</div>
         <div class="kpi-value red-text">{{ kpis.failCount }} 人</div>
         <div class="kpi-fail-name red-text">{{ kpis.failName }}</div>
@@ -71,29 +72,29 @@
     </div>
 
     <!-- ─── Main Charts + Right Panel ───────────── -->
-    <div class="content-area">
+    <div class="content-area pa-entry-3">
       <!-- Left: charts 2×2 -->
       <div class="charts-grid">
         <!-- ROI 趋势 -->
-        <div class="chart-card">
+        <div class="chart-card pa-neon-panel">
           <div class="chart-title">首日ROI 趋势对比</div>
           <div ref="roiChartRef" class="chart-body"></div>
         </div>
 
         <!-- Radar -->
-        <div class="chart-card">
+        <div class="chart-card pa-neon-panel">
           <div class="chart-title">综合效能雷达图</div>
           <div ref="radarChartRef" class="chart-body"></div>
         </div>
 
         <!-- 广告支出趋势 -->
-        <div class="chart-card">
+        <div class="chart-card pa-neon-panel">
           <div class="chart-title">广告支出 趋势对比</div>
           <div ref="adChartRef" class="chart-body"></div>
         </div>
 
         <!-- 利润对比 -->
-        <div class="chart-card">
+        <div class="chart-card pa-neon-panel">
           <div class="chart-title">预估利润对比</div>
           <div ref="profitChartRef" class="chart-body"></div>
         </div>
@@ -102,7 +103,7 @@
       <!-- Right Panel -->
       <div class="right-panel">
         <!-- 指标排名 -->
-        <div class="panel-card">
+        <div class="panel-card pa-neon-panel">
           <div class="panel-title">指标排名</div>
           <table class="rank-table">
             <thead>
@@ -125,7 +126,7 @@
         </div>
 
         <!-- 绩效得分明细 -->
-        <div class="panel-card">
+        <div class="panel-card pa-neon-panel">
           <div class="panel-title">绩效得分明细</div>
           <table class="score-table">
             <thead>
@@ -156,7 +157,7 @@
         </div>
 
         <!-- 异常预警 -->
-        <div class="panel-card alert-panel">
+        <div class="panel-card pa-neon-panel alert-panel">
           <div class="panel-title warning-title">⚠ 异常预警</div>
           <div class="alert-item" v-for="a in alerts" :key="a.id">
             <span :class="['alert-icon', a.level]">{{ a.level === 'warn' ? '△' : '▲' }}</span>
@@ -188,8 +189,8 @@
         </div>
       </div>
       <template #footer>
-        <ElButton @click="closeAddCompareModal">取消</ElButton>
-        <ElButton type="primary" @click="confirmAddCompare">确定添加</ElButton>
+        <ElButton round @click="closeAddCompareModal">取消</ElButton>
+        <ElButton round type="primary" @click="confirmAddCompare">确定添加</ElButton>
       </template>
     </ElDialog>
   </div>
@@ -205,6 +206,8 @@
     fetchPerformanceCompareCandidates,
     type PerformanceCompareCandidatesItem
   } from '@/api/user-growth/performance-analysis'
+
+  defineOptions({ name: 'PerformanceComparison' })
 
   // ─── Types ────────────────────────────────────────────────
   interface StaffSummary {
@@ -842,6 +845,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import './styles/pa-performance-fx';
+
   $bg: #0d1117;
   $bg-card: #161c2d;
   $bg-header: #111827;
@@ -859,15 +864,15 @@
   $text-muted: #475569;
 
   // ─── Layout ──────────────────────────────────────────────
-  .comp-page {
+  .performance-analysis-page.comp-page {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    padding: 20px 24px 28px;
     overflow: hidden;
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 13px;
-    color: $text-primary;
-    background: $bg;
+    color: var(--text-primary);
   }
 
   // ─── Header ──────────────────────────────────────────────
@@ -877,8 +882,12 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 24px;
-    background: $bg-header;
-    border-bottom: 1px solid $border;
+    background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
+    border-radius: 14px;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 8%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-gray-900) 8%, transparent);
   }
 
   .breadcrumb {
@@ -923,8 +932,10 @@
     cursor: pointer;
     background: $bg-card;
     border: 1px solid $border-light;
-    border-radius: 6px;
-    transition: all 0.15s;
+    border-radius: 9999px;
+    transition:
+      color 0.15s var(--ease-default),
+      border-color 0.15s var(--ease-default);
 
     &:hover {
       color: $text-primary;
@@ -959,8 +970,10 @@
     cursor: pointer;
     background: $bg-card;
     border: 1px solid $border-light;
-    border-radius: 6px;
-    transition: all 0.15s;
+    border-radius: 9999px;
+    transition:
+      color 0.15s var(--ease-default),
+      border-color 0.15s var(--ease-default);
 
     &:hover {
       color: $text-primary;
@@ -1009,9 +1022,11 @@
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
-    padding: 10px 24px;
-    background: $bg-header;
-    border-bottom: 1px solid $border;
+    padding: 10px 16px;
+    margin-top: 12px;
+    background: color-mix(in srgb, var(--default-box-color) 65%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, transparent);
+    border-radius: 14px;
   }
 
   .selected-label {
@@ -1049,7 +1064,9 @@
     background: transparent;
     border: 1px dashed $border-light;
     border-radius: 20px;
-    transition: all 0.15s;
+    transition:
+      color 0.15s var(--ease-default),
+      border-color 0.15s var(--ease-default);
 
     &:hover {
       color: $cyan;
@@ -1062,15 +1079,12 @@
     display: flex;
     flex-shrink: 0;
     gap: 12px;
-    padding: 12px 24px;
+    padding: 12px 0 0;
   }
 
   .kpi-card {
     flex: 1;
     padding: 14px 18px;
-    background: $bg-card;
-    border: 1px solid $border;
-    border-radius: 10px;
 
     .kpi-title {
       margin-bottom: 6px;
@@ -1108,9 +1122,13 @@
     }
   }
 
-  .kpi-alert {
-    background: rgba($red, 0.05);
-    border-color: rgba($red, 0.3);
+  .kpi-card.kpi-alert {
+    border-color: color-mix(in srgb, var(--art-danger) 38%, transparent) !important;
+    box-shadow:
+      0 12px 48px rgb(0 0 0 / 48%),
+      0 0 0 1px color-mix(in srgb, var(--art-danger) 22%, transparent),
+      inset 0 1px 0 rgb(186 230 253 / 10%),
+      inset 0 -12px 32px rgb(0 0 0 / 30%);
   }
 
   .badge-pass {
@@ -1129,7 +1147,7 @@
     flex: 1;
     gap: 12px;
     min-height: 0;
-    padding: 0 24px 16px;
+    padding: 12px 0 0;
     overflow: hidden;
   }
 
@@ -1149,11 +1167,10 @@
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
-    background: $bg-card;
-    border: 1px solid $border;
-    border-radius: 10px;
 
     .chart-title {
+      position: relative;
+      z-index: 1;
       flex-shrink: 0;
       padding: 12px 16px 0;
       font-size: 12px;
@@ -1162,6 +1179,8 @@
     }
 
     .chart-body {
+      position: relative;
+      z-index: 1;
       flex: 1;
       min-height: 0;
       padding: 4px;
@@ -1193,16 +1212,20 @@
 
   .panel-card {
     padding: 14px;
-    background: $bg-card;
-    border: 1px solid $border;
-    border-radius: 10px;
-  }
 
-  .panel-title {
-    margin-bottom: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: $text-primary;
+    .panel-title {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: $text-primary;
+    }
+
+    table {
+      position: relative;
+      z-index: 1;
+    }
   }
 
   .warning-title {
@@ -1316,9 +1339,13 @@
   }
 
   // ─── Alert Panel ─────────────────────────────────────────
-  .alert-panel {
-    background: rgba($gold, 0.04);
-    border-color: rgba($gold, 0.2);
+  .panel-card.alert-panel {
+    border-color: color-mix(in srgb, var(--art-warning) 35%, transparent) !important;
+    box-shadow:
+      0 16px 56px rgb(0 0 0 / 44%),
+      0 0 0 1px color-mix(in srgb, var(--art-warning) 24%, transparent),
+      inset 0 1px 0 rgb(186 230 253 / 12%),
+      inset 0 -12px 32px rgb(0 0 0 / 28%);
   }
 
   .alert-item {

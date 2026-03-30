@@ -11,13 +11,18 @@
           </article>
         </div>
 
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>广告单元 Top15 收入表</span>
             <div class="iaa-unit-filters">
               <div class="iaa-filter-item">
                 <span class="iaa-filter-label">广告平台</span>
-                <ElSelect v-model="localFilter.source" size="small" class="iaa-filter-select">
+                <ElSelect
+                  v-model="localFilter.source"
+                  size="small"
+                  class="iaa-filter-select"
+                  popper-class="iaa-select__popper"
+                >
                   <ElOption
                     v-for="opt in sourceOptions"
                     :key="opt.value"
@@ -28,7 +33,12 @@
               </div>
               <div class="iaa-filter-item">
                 <span class="iaa-filter-label">广告位</span>
-                <ElSelect v-model="localFilter.placement" size="small" class="iaa-filter-select">
+                <ElSelect
+                  v-model="localFilter.placement"
+                  size="small"
+                  class="iaa-filter-select"
+                  popper-class="iaa-select__popper"
+                >
                   <ElOption
                     v-for="opt in placementOptions"
                     :key="opt.value"
@@ -39,7 +49,12 @@
               </div>
               <div class="iaa-filter-item">
                 <span class="iaa-filter-label">广告类型</span>
-                <ElSelect v-model="localFilter.adType" size="small" class="iaa-filter-select">
+                <ElSelect
+                  v-model="localFilter.adType"
+                  size="small"
+                  class="iaa-filter-select"
+                  popper-class="iaa-select__popper"
+                >
                   <ElOption
                     v-for="opt in adTypeOptions"
                     :key="opt.value"
@@ -85,7 +100,7 @@
         </ElCard> </div
       ><!-- iaa-main-left -->
       <div class="iaa-main-right">
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>广告单元充填率分布</span>
           </template>
@@ -95,13 +110,13 @@
             {{ fillRateInsight }}
           </div>
         </ElCard>
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>广告单元ECPM vs 充填率关联分析</span>
           </template>
           <div ref="scatterChartRef" class="iaa-chart iaa-chart--scatter"></div>
         </ElCard>
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>广告单元收入趋势(近7天)</span>
           </template>
@@ -394,6 +409,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/iaa-card-fx';
+
   .iaa-tab-ad-unit {
     display: flex;
     flex-direction: column;

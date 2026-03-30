@@ -1,7 +1,8 @@
 <template>
-  <div class="iaa-analysis-page art-full-height">
+  <div class="iaa-analysis-page iaa-fx-page art-full-height">
+    <div class="iaa-page-fx" aria-hidden="true"></div>
     <!-- 顶栏：面包屑 + 全局筛选 -->
-    <header class="iaa-header">
+    <header class="iaa-header iaa-entry-1">
       <div class="iaa-header__left">
         <span class="iaa-breadcrumb">
           {{ $t('menus.businessInsight.title') }} &gt; {{ $t('menus.businessInsight.iaaAnalysis') }}
@@ -14,7 +15,6 @@
             v-model="filters.s_app_id"
             class="iaa-select"
             popper-class="iaa-select__popper"
-            :teleported="false"
             :fit-input-width="true"
           >
             <ElOption
@@ -31,7 +31,6 @@
             v-model="filters.platform"
             class="iaa-select"
             popper-class="iaa-select__popper"
-            :teleported="false"
             :fit-input-width="true"
           >
             <ElOption
@@ -48,7 +47,6 @@
             v-model="filters.s_country_code"
             class="iaa-select"
             popper-class="iaa-select__popper"
-            :teleported="false"
             :fit-input-width="true"
             filterable
           >
@@ -68,7 +66,7 @@
             value-format="YYYY-MM-DD"
             format="YYYY-MM-DD"
             class="iaa-date"
-            :teleported="false"
+            popper-class="iaa-date-popper"
             :clearable="false"
           />
         </div>
@@ -76,7 +74,7 @@
     </header>
 
     <!-- Tab 栏 -->
-    <nav class="iaa-tabs">
+    <nav class="iaa-tabs iaa-entry-2">
       <button
         v-for="t in tabList"
         :key="t.key"
@@ -142,6 +140,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import './styles/iaa-card-fx';
+
   .iaa-analysis-page {
     display: flex;
     flex-direction: column;
@@ -158,7 +158,11 @@
     gap: 12px;
     align-items: center;
     justify-content: space-between;
+    padding: 10px 14px;
     margin-bottom: 16px;
+    background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
+    border-radius: 14px;
   }
 
   .iaa-header__left {
@@ -214,8 +218,11 @@
   .iaa-tabs {
     display: flex;
     gap: 4px;
+    padding: 4px;
     margin-bottom: 16px;
-    border-bottom: 1px solid var(--default-border);
+    background: color-mix(in srgb, var(--default-box-color) 74%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 20%, transparent);
+    border-radius: 10px;
   }
 
   .iaa-tab {
@@ -236,6 +243,7 @@
 
     &.is-active {
       color: var(--art-primary);
+      background: color-mix(in srgb, var(--art-primary) 12%, transparent);
       border-bottom-color: var(--art-primary);
     }
   }
@@ -244,5 +252,21 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
+  }
+</style>
+
+<style lang="scss">
+  .iaa-select__popper,
+  .iaa-date-popper {
+    z-index: 3200 !important;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 28%, transparent);
+    box-shadow:
+      0 12px 36px rgb(0 0 0 / 48%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
+  }
+
+  .iaa-select__popper .el-select-dropdown__item.is-selected {
+    color: var(--art-primary);
+    background: color-mix(in srgb, var(--art-primary) 12%, var(--default-box-color));
   }
 </style>

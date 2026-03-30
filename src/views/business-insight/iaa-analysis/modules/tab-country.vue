@@ -10,14 +10,14 @@
           </article>
         </div>
 
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>国家收入地图</span>
           </template>
           <div ref="mapChartRef" class="iaa-chart iaa-chart--map"></div>
         </ElCard>
 
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>国家收入 Top10 表格</span>
           </template>
@@ -55,19 +55,19 @@
       </div>
 
       <div class="iaa-main-right">
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>国家ECPM对比</span>
           </template>
           <div ref="ecpmChartRef" class="iaa-chart iaa-chart--hbar"></div>
         </ElCard>
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>国家收入趋势(近7天)</span>
           </template>
           <div ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
         </ElCard>
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>国家广告用户渗透率</span>
           </template>
@@ -405,6 +405,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/iaa-card-fx';
+
   .iaa-tab-country {
     display: flex;
     flex-direction: column;

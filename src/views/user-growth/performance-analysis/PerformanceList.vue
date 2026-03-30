@@ -1,7 +1,8 @@
 <template>
-  <div class="perf-page">
+  <div class="performance-analysis-page perf-page">
+    <div class="pa-page-fx" aria-hidden="true"></div>
     <!-- ─── Header ─────────────────────────────────── -->
-    <div class="perf-header">
+    <div class="perf-header pa-entry-1">
       <div class="header-left">
         <h1>&nbsp;</h1>
       </div>
@@ -22,11 +23,11 @@
       </div>
     </div>
 
-    <div class="perf-body">
+    <div class="perf-body pa-entry-2">
       <!-- ─── Main Area ───────────────────────────── -->
       <div class="main-area">
         <!-- Filters -->
-        <div class="filter-block">
+        <div class="filter-block pa-neon-filter">
           <div class="filter-row">
             <span class="filter-label">人员：</span>
             <button
@@ -59,14 +60,14 @@
         </div>
 
         <!-- Table -->
-        <div class="table-wrap">
+        <div class="table-wrap pa-neon-table-wrap pa-entry-3">
           <ArtTable
             :data="pagedData"
             row-key="id"
             size="small"
             height="calc(100% + 46px)"
             :row-class-name="getRowClassName"
-            :header-cell-style="{ backgroundColor: '#161C2D' }"
+            :header-cell-style="tableHeaderCellStyle"
             show-summary
             :summary-method="getTableSummaries"
           >
@@ -112,7 +113,7 @@
               <template #default="{ row }">${{ fmt(row.adSpend) }}</template>
             </ElTableColumn>
 
-            <ElTableColumn label="计算消耗" min-width="110" align="left">
+            <ElTableColumn label="预算" min-width="110" align="left">
               <template #default="{ row }">${{ fmt(row.calcCost) }}</template>
             </ElTableColumn>
             <ElTableColumn label="首日ROI" min-width="90" align="left">
@@ -197,7 +198,7 @@
       </div>
 
       <!-- ─── Right Sidebar ──────────────────────── -->
-      <div :class="['sidebar', { collapsed: isSidebarCollapsed }]">
+      <div :class="['sidebar', 'pa-sidebar-shell', { collapsed: isSidebarCollapsed }]">
         <div class="sidebar-header">
           <span v-if="!isSidebarCollapsed">指标概览</span>
           <button class="collapse-btn" @click="isSidebarCollapsed = !isSidebarCollapsed">
@@ -208,7 +209,7 @@
           </button>
         </div>
         <div v-show="!isSidebarCollapsed" class="sidebar-content">
-          <div class="metric-card">
+          <div class="metric-card pa-neon-lift-card">
             <div class="metric-title">团队广告支出</div>
             <div class="metric-main-row">
               <div class="metric-val">${{ fmt(overviewMetrics.adSpend) }}</div>
@@ -218,14 +219,14 @@
               </div>
             </div>
           </div>
-          <div class="metric-card">
+          <div class="metric-card pa-neon-lift-card">
             <div class="metric-title">首日ROI均值</div>
             <div class="metric-main-row">
               <div class="metric-val gold-text">{{ overviewMetrics.avgRoi1.toFixed(2) }}%</div>
               <div class="metric-badge-inline">{{ overviewMetrics.roiStatusLabel }}</div>
             </div>
           </div>
-          <div class="metric-card">
+          <div class="metric-card pa-neon-lift-card">
             <div class="metric-title">团队预估利润</div>
             <div class="metric-main-row">
               <div
@@ -241,7 +242,7 @@
               </div>
             </div>
           </div>
-          <div class="metric-card alert-card">
+          <div class="metric-card pa-neon-lift-card alert-card">
             <div class="metric-title">未达标人员</div>
             <div class="metric-main-row metric-main-col">
               <div class="metric-val red-text">{{ overviewMetrics.failCount }} 人</div>
@@ -268,8 +269,8 @@
         style="width: 100%"
       />
       <template #footer>
-        <ElButton @click="handleCustomDateCancel">取消</ElButton>
-        <ElButton type="primary" @click="handleCustomDateConfirm">确定</ElButton>
+        <ElButton round @click="handleCustomDateCancel">取消</ElButton>
+        <ElButton round type="primary" @click="handleCustomDateConfirm">确定</ElButton>
       </template>
     </ElDialog>
   </div>
@@ -281,6 +282,12 @@
   import { ElMessage } from 'element-plus'
   import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+
+  defineOptions({ name: 'PerformanceList' })
+
+  const tableHeaderCellStyle = {
+    backgroundColor: 'color-mix(in srgb, var(--default-box-color) 88%, transparent)'
+  }
 
   // ─── Types ──────────────────────────────────────────────
   interface StaffRow {
@@ -762,7 +769,7 @@
       优化师: '团队合计',
       职级: '—',
       广告支出: `$${fmt(TOTALS.adSpend)}`,
-      计算消耗: `$${fmt(TOTALS.calcCost)}`,
+      预算: `$${fmt(TOTALS.calcCost)}`,
       首日ROI: `${TOTALS.roi1}%`,
       '3日ROI': `${TOTALS.roi3}%`,
       '7日ROI': `${TOTALS.roi7}%`,
@@ -770,7 +777,7 @@
       最低消耗: '—',
       预估利润: `+$${fmt(TOTALS.estProfit)}`,
       最低利润: `+$${fmt(TOTALS.minProfit)}`,
-      绩效得分: `${TOTALS.score}分`,
+      得分: `${TOTALS.score}分`,
       达标状态: '—',
       操作: ''
     }
@@ -785,6 +792,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import './styles/pa-performance-fx';
+
   // ─── Tokens ──────────────────────────────────────────────
   $bg: #0d1117;
   $bg-card: #161c2d;
@@ -806,16 +815,16 @@
   $text-muted: #475569;
 
   // ─── Layout ──────────────────────────────────────────────
-  .perf-page {
+  .performance-analysis-page.perf-page {
     display: flex;
     flex-direction: column;
     height: 100%;
     min-height: 0;
+    padding: 20px 24px 28px;
     overflow: hidden;
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 13px;
-    color: $text-primary;
-    background: $bg;
+    color: var(--text-primary);
   }
 
   // ─── Header ──────────────────────────────────────────────
@@ -825,8 +834,12 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 24px;
-    background: $bg-header;
-    border-bottom: 1px solid $border;
+    background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
+    border-radius: 14px;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 8%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-gray-900) 8%, transparent);
   }
 
   .breadcrumb {
@@ -882,8 +895,11 @@
     cursor: pointer;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 6px;
-    transition: all 0.15s;
+    border-radius: 9999px;
+    transition:
+      color 0.15s var(--ease-default),
+      background-color 0.15s var(--ease-default),
+      border-color 0.15s var(--ease-default);
 
     &:hover {
       color: $text-primary;
@@ -907,8 +923,11 @@
     cursor: pointer;
     background: $bg-card;
     border: 1px solid $border-light;
-    border-radius: 6px;
-    transition: all 0.15s;
+    border-radius: 9999px;
+    transition:
+      color 0.15s var(--ease-default),
+      border-color 0.15s var(--ease-default),
+      background-color 0.15s var(--ease-default);
 
     &:hover {
       color: $text-primary;
@@ -928,8 +947,10 @@
     cursor: pointer;
     background: rgba($gold, 0.1);
     border: 1px solid rgba($gold, 0.5);
-    border-radius: 6px;
-    transition: all 0.15s;
+    border-radius: 9999px;
+    transition:
+      background-color 0.15s var(--ease-default),
+      border-color 0.15s var(--ease-default);
 
     &:hover {
       background: rgba($gold, 0.2);
@@ -950,7 +971,7 @@
     flex: 1;
     flex-direction: column;
     gap: 12px;
-    padding: 16px 20px;
+    padding: 12px 0 0;
     overflow: hidden;
   }
 
@@ -961,9 +982,6 @@
     flex-shrink: 0;
     gap: 8px;
     padding: 12px 16px;
-    background: $bg-card;
-    border: 1px solid $border;
-    border-radius: 10px;
   }
 
   .filter-row {
@@ -988,7 +1006,10 @@
     background: transparent;
     border: 1px solid $border-light;
     border-radius: 20px;
-    transition: all 0.15s;
+    transition:
+      color 0.15s var(--ease-default),
+      background-color 0.15s var(--ease-default),
+      border-color 0.15s var(--ease-default);
 
     &:hover {
       color: $text-primary;
@@ -1026,9 +1047,6 @@
   .table-wrap {
     flex: 1;
     overflow: auto;
-    background: $bg-card;
-    border: 1px solid $border;
-    border-radius: 10px;
 
     &::-webkit-scrollbar {
       width: 6px;
@@ -1085,7 +1103,11 @@
   }
 
   :deep(.table-wrap .el-table__row.data-row) {
-    transition: background 0.15s;
+    position: relative;
+    isolation: isolate;
+    transition:
+      background-color 0.22s var(--ease-out),
+      box-shadow 0.22s var(--ease-out);
 
     &.row-selected > td.el-table__cell {
       background: $bg-row-selected;
@@ -1105,6 +1127,13 @@
 
     &.border-fail > td.el-table__cell:first-child {
       box-shadow: inset 3px 0 0 0 $red;
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--art-primary) 9%, transparent) !important;
+      box-shadow:
+        0 8px 24px rgb(0 0 0 / 22%),
+        inset 0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent);
     }
   }
 
@@ -1156,7 +1185,7 @@
 
   .num {
     font-variant-numeric: tabular-nums;
-    text-align: right;
+    text-align: left;
   }
 
   .score {
@@ -1223,8 +1252,10 @@
     cursor: pointer;
     background: transparent;
     border: 1px solid $border-light;
-    border-radius: 5px;
-    transition: all 0.15s;
+    border-radius: 9999px;
+    transition:
+      background-color 0.15s var(--ease-default),
+      border-color 0.15s var(--ease-default);
 
     &:hover {
       background: rgba($cyan, 0.1);
@@ -1256,8 +1287,11 @@
     cursor: not-allowed;
     background: transparent;
     border: 1px solid $border-light;
-    border-radius: 6px;
-    transition: all 0.15s;
+    border-radius: 9999px;
+    transition:
+      color 0.15s var(--ease-default),
+      background-color 0.15s var(--ease-default),
+      border-color 0.15s var(--ease-default);
 
     &.compare-active {
       color: $cyan;
@@ -1322,11 +1356,7 @@
     width: 240px;
     padding: 0 12px;
     overflow-y: auto;
-    background:
-      radial-gradient(130% 110% at 50% 10%, rgb(59 130 246 / 18%) 0%, rgb(24 24 27 / 95%) 60%),
-      $bg-card;
-    border-left: 1px solid $border;
-    transition: width 0.2s ease;
+    transition: width 0.2s var(--ease-default);
   }
 
   .sidebar.collapsed {
@@ -1356,7 +1386,10 @@
       background: none;
       border: 1px solid rgb(255 255 255 / 10%);
       border-radius: 9999px;
-      transition: all 0.15s;
+      transition:
+        color 0.15s var(--ease-default),
+        background-color 0.15s var(--ease-default),
+        border-color 0.15s var(--ease-default);
 
       &:hover {
         color: $text-primary;
@@ -1375,10 +1408,6 @@
 
   .metric-card {
     padding: 14px;
-    background: linear-gradient(145deg, rgb(59 130 246 / 8%) 0%, rgb(22 28 45 / 82%) 100%);
-    border: 1px solid rgb(255 255 255 / 8%);
-    border-radius: 14px;
-    box-shadow: 0 8px 20px rgb(0 0 0 / 20%);
 
     .metric-title {
       margin-bottom: 8px;
@@ -1435,8 +1464,13 @@
     color: $text-secondary;
   }
 
-  .alert-card {
-    background: linear-gradient(145deg, rgb(239 68 68 / 10%) 0%, rgb(22 28 45 / 82%) 100%);
+  .metric-card.alert-card {
+    border-color: color-mix(in srgb, var(--art-danger) 38%, transparent) !important;
+    box-shadow:
+      0 12px 48px rgb(0 0 0 / 48%),
+      0 0 0 1px color-mix(in srgb, var(--art-danger) 22%, transparent),
+      inset 0 1px 0 rgb(186 230 253 / 10%),
+      inset 0 -12px 32px rgb(0 0 0 / 30%);
   }
 
   .pos-text {
@@ -1526,5 +1560,12 @@
     height: 14px;
     accent-color: $cyan;
     cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :deep(.table-wrap .el-table__row.data-row:hover) {
+      background: transparent !important;
+      box-shadow: none;
+    }
   }
 </style>

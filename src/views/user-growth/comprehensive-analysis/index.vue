@@ -1,12 +1,13 @@
 <template>
   <div
-    class="ca-page art-full-height"
+    class="comprehensive-analysis-page ca-page art-full-height"
     :class="{ 'is-platform-analysis-detail': isPlatformAnalysisDetail }"
   >
+    <div class="ca-page-fx" aria-hidden="true"></div>
     <router-view v-if="isPlatformAnalysisDetail" />
     <template v-else>
       <!-- 顶栏 -->
-      <header class="ca-header">
+      <header class="ca-header ca-entry-1">
         <div class="ca-header__left">
           <span class="ca-breadcrumb">
             {{ $t('menus.userGrowth.title') }} &gt;
@@ -21,7 +22,11 @@
             </div>
             <div class="ca-pill">
               <span class="ca-pill__k">应用:</span>
-              <ElSelect v-model="filters.s_app_id" class="ca-select" :teleported="false">
+              <ElSelect
+                v-model="filters.s_app_id"
+                class="ca-select"
+                popper-class="ca-select-popper"
+              >
                 <ElOption
                   v-for="opt in appOptions"
                   :key="opt.value"
@@ -32,7 +37,11 @@
             </div>
             <div class="ca-pill">
               <span class="ca-pill__k">广告平台:</span>
-              <ElSelect v-model="filters.adPlatform" class="ca-select" :teleported="false">
+              <ElSelect
+                v-model="filters.adPlatform"
+                class="ca-select"
+                popper-class="ca-select-popper"
+              >
                 <ElOption
                   v-for="opt in sourceOptions"
                   :key="opt.value"
@@ -46,7 +55,7 @@
               <ElSelect
                 v-model="filters.s_country_code"
                 class="ca-select"
-                :teleported="false"
+                popper-class="ca-select-popper"
                 filterable
               >
                 <ElOption
@@ -73,10 +82,14 @@
         </div>
       </header>
 
-      <main v-loading="loading" class="ca-main">
+      <main v-loading="loading" class="ca-main ca-entry-2">
         <!-- KPI 行 -->
         <section class="ca-kpi-grid">
-          <article v-for="card in pageData?.kpis ?? []" :key="card.id" class="ca-kpi">
+          <article
+            v-for="card in pageData?.kpis ?? []"
+            :key="card.id"
+            class="ca-kpi ca-neon-lift-card ca-entry-3"
+          >
             <div class="ca-kpi__title">{{ card.title }}</div>
             <div class="ca-kpi__value">{{ card.primaryValue }}</div>
             <div class="ca-kpi__sub">{{ card.subTitle }}</div>
@@ -98,7 +111,7 @@
           :data="sectionAppData"
           @drill-down="handleDrillDown"
         />
-        <ElCard v-else shadow="never" class="ca-view-placeholder">
+        <ElCard v-else shadow="never" class="ca-view-placeholder ca-neon-panel">
           <ElEmpty :description="viewModePlaceholderText" />
         </ElCard>
       </main>
@@ -199,6 +212,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import './styles/ca-card-fx';
+
   .ca-page {
     display: flex;
     flex-direction: column;
@@ -211,6 +226,10 @@
 
   .is-platform-analysis-detail {
     padding: 0;
+
+    .ca-page-fx {
+      display: none;
+    }
   }
 
   .ca-header {
@@ -219,7 +238,11 @@
     gap: 12px;
     align-items: center;
     justify-content: space-between;
+    padding: 10px 14px;
     margin-bottom: 14px;
+    background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
+    border-radius: 14px;
   }
 
   .ca-breadcrumb {
@@ -342,9 +365,6 @@
 
   .ca-kpi {
     padding: 14px 16px;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 10px;
 
     &__title {
       margin-bottom: 2px;
@@ -384,15 +404,27 @@
   .ca-view-placeholder {
     flex: 1;
     min-height: 240px;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 10px;
 
     :deep(.el-card__body) {
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 220px;
+    }
+  }
+</style>
+
+<style lang="scss">
+  .ca-select-popper {
+    z-index: 3200 !important;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 28%, transparent);
+    box-shadow:
+      0 12px 36px rgb(0 0 0 / 48%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
+
+    .el-select-dropdown__item.is-selected {
+      color: var(--art-primary);
+      background: color-mix(in srgb, var(--art-primary) 12%, var(--default-box-color));
     }
   }
 </style>

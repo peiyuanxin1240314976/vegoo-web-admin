@@ -1,0 +1,26 @@
+// IAP 分析：Select 下拉与弹层（teleport 到 body，需全局样式）
+// z-index 高于页面装饰层，低于项目 --z-modal（弹窗仍应盖住下拉）
+
+.iap-select-popper {
+  z-index: calc(var(--z-modal) - 1) !important;
+  background: var(--default-box-color);
+  border: 1px solid color-mix(in srgb, var(--art-primary) 28%, transparent);
+  box-shadow:
+    0 12px 36px rgb(0 0 0 / 48%),
+    0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
+}
+
+.iap-select-popper .el-select-dropdown__item.is-selected {
+  color: var(--art-primary);
+  background: color-mix(in srgb, var(--art-primary) 12%, var(--default-box-color));
+}
+
+// 日期选择面板（ElDatePicker 的 popper-class）
+.iap-date-popper {
+  z-index: calc(var(--z-modal) - 1) !important;
+  background: var(--default-box-color);
+  border: 1px solid color-mix(in srgb, var(--art-primary) 28%, transparent);
+  box-shadow:
+    0 12px 36px rgb(0 0 0 / 48%),
+    0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
+}

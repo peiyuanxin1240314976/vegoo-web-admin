@@ -18,7 +18,7 @@
         </section>
 
         <!-- Top10 排行 -->
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>广告位 Top10 收入排行</span>
             <div class="iaa-metric-tabs">
@@ -38,7 +38,7 @@
         </ElCard>
 
         <!-- 详细数据表 -->
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>广告位详细数据表</span>
           </template>
@@ -65,7 +65,7 @@
       <!-- ——— 右列 ——— -->
       <div class="iaa-main-right">
         <!-- 广告位收入分布 donut -->
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>广告位收入分布</span></template>
           <div class="iaa-donut-body">
             <div class="iaa-donut-wrap">
@@ -83,7 +83,7 @@
         </ElCard>
 
         <!-- ECPM 排行 -->
-        <ElCard class="iaa-panel iaa-panel--with-footer" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel iaa-panel--with-footer" shadow="never">
           <template #header><span>广告位 ECPM 排行</span></template>
           <div ref="ecpmChartRef" class="iaa-chart iaa-chart--hbar"></div>
           <div v-if="placementInsight" class="iaa-insight-banner">
@@ -93,7 +93,7 @@
         </ElCard>
 
         <!-- 展示次数 vs 收入散点图 -->
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>广告位展示次数 vs 收入散点图</span></template>
           <div ref="scatterChartRef" class="iaa-chart iaa-chart--scatter"></div>
         </ElCard>
@@ -415,6 +415,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/iaa-card-fx';
+
   .iaa-tab-ad-placement {
     display: flex;
     flex-direction: column;

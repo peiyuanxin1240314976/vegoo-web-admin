@@ -1,14 +1,8 @@
 <template>
-  <div class="iap-dashboard-page art-full-height">
-    <header class="iap-dashboard-header">
+  <div class="iap-dashboard-page iap-fx-page art-full-height">
+    <div class="iap-page-fx" aria-hidden="true"></div>
+    <header class="iap-dashboard-header iap-entry-1">
       <div class="iap-dashboard-header__left">
-        <div class="iap-dashboard-breadcrumb">
-          <span class="iap-dashboard-bc-parent">{{ $t('menus.businessInsight.title') }}</span>
-          <span class="iap-dashboard-bc-sep">›</span>
-          <span class="iap-dashboard-bc-current">{{
-            $t('menus.businessInsight.iapAnalysis')
-          }}</span>
-        </div>
         <div class="iap-dashboard-subtitle">应用内购订单与收入分析</div>
       </div>
       <div class="iap-dashboard-header__actions">
@@ -28,13 +22,14 @@
       </div>
     </header>
 
-    <div class="iap-dashboard-filter">
+    <div class="iap-dashboard-filter iap-entry-2">
       <div class="iap-dashboard-filter__item">
         <span class="iap-dashboard-f-label">时间范围</span>
         <ElSelect
           v-model="filters.timeRange"
           size="small"
           class="iap-dashboard-sel iap-dashboard-sel--w110"
+          popper-class="iap-select-popper"
         >
           <ElOption
             v-for="opt in filterOptions?.timeRangeOptions"
@@ -50,6 +45,7 @@
           v-model="filters.s_app_id"
           size="small"
           class="iap-dashboard-sel iap-dashboard-sel--w110"
+          popper-class="iap-select-popper"
         >
           <ElOption
             v-for="opt in filterOptions?.appOptions"
@@ -65,6 +61,7 @@
           v-model="filters.productType"
           size="small"
           class="iap-dashboard-sel iap-dashboard-sel--w90"
+          popper-class="iap-select-popper"
         >
           <ElOption
             v-for="opt in filterOptions?.productTypeOptions"
@@ -80,6 +77,7 @@
           v-model="filters.s_country_code"
           size="small"
           class="iap-dashboard-sel iap-dashboard-sel--w90"
+          popper-class="iap-select-popper"
         >
           <ElOption
             v-for="opt in filterOptions?.countryOptions"
@@ -95,6 +93,7 @@
           v-model="filters.platform"
           size="small"
           class="iap-dashboard-sel iap-dashboard-sel--w90"
+          popper-class="iap-select-popper"
         >
           <ElOption
             v-for="opt in filterOptions?.platformOptions"
@@ -129,7 +128,7 @@
     </div>
 
     <div class="iap-dashboard-trend-row">
-      <div class="iap-dashboard-trend-card iap-dashboard-trend-card--wide">
+      <div class="iap-dashboard-trend-card iap-dashboard-trend-card--wide iap-neon-surface">
         <div class="iap-dashboard-card-title">
           订单数 vs 收入趋势
           <div class="iap-dashboard-chart-legend">
@@ -143,17 +142,17 @@
         </div>
         <div ref="chart1Ref" class="iap-dashboard-chart-area"></div>
       </div>
-      <div class="iap-dashboard-trend-card">
+      <div class="iap-dashboard-trend-card iap-neon-surface">
         <div class="iap-dashboard-card-title">转化率趋势</div>
         <div ref="chart2Ref" class="iap-dashboard-chart-area"></div>
       </div>
-      <div class="iap-dashboard-trend-card">
+      <div class="iap-dashboard-trend-card iap-neon-surface">
         <div class="iap-dashboard-card-title">ARPU趋势</div>
         <div ref="chart3Ref" class="iap-dashboard-chart-area"></div>
       </div>
     </div>
 
-    <div class="iap-dashboard-section">
+    <div class="iap-dashboard-section iap-neon-surface">
       <div class="iap-dashboard-section-header">
         <span class="iap-dashboard-section-title">应用分析</span>
         <span class="iap-dashboard-sort-hint">按收入排序 ▾</span>
@@ -162,7 +161,7 @@
         <div
           v-for="app in appList"
           :key="app.name"
-          class="iap-dashboard-app-card"
+          class="iap-dashboard-app-card iap-neon-surface"
           @click="handleAppClick(app)"
         >
           <div class="iap-dashboard-app-card-top">
@@ -193,7 +192,7 @@
     </div>
 
     <div class="iap-dashboard-bottom-row">
-      <div class="iap-dashboard-bottom-card iap-dashboard-bottom-card--wide">
+      <div class="iap-dashboard-bottom-card iap-dashboard-bottom-card--wide iap-neon-surface">
         <div class="iap-dashboard-card-title">按国家/地区收入分布</div>
         <table class="iap-dashboard-country-table">
           <thead>
@@ -233,7 +232,7 @@
           </tbody>
         </table>
       </div>
-      <div class="iap-dashboard-bottom-card">
+      <div class="iap-dashboard-bottom-card iap-neon-surface">
         <div class="iap-dashboard-card-title">产品类型分布</div>
         <div ref="donutRef" class="iap-dashboard-donut-area"></div>
         <div class="iap-dashboard-donut-legend">
@@ -251,7 +250,7 @@
           </div>
         </div>
       </div>
-      <div class="iap-dashboard-bottom-card">
+      <div class="iap-dashboard-bottom-card iap-neon-surface">
         <div class="iap-dashboard-card-title">
           平台对比
           <div class="iap-dashboard-chart-legend">
@@ -770,6 +769,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import './styles/iap-card-fx';
+
   .iap-dashboard-page {
     display: flex;
     flex-direction: column;
@@ -779,7 +780,7 @@
     overflow: auto;
     font-size: 13px;
     color: var(--art-gray-900);
-    background: var(--default-bg-color);
+    background: transparent;
   }
 
   .iap-dashboard-header {
@@ -787,19 +788,13 @@
     align-items: flex-start;
     justify-content: space-between;
     padding: 14px 20px 10px;
-    border-bottom: 1px solid var(--default-border);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
+    border-radius: 14px;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 8%, transparent);
   }
 
   .iap-dashboard-header__left {
     flex-shrink: 0;
-  }
-
-  .iap-dashboard-breadcrumb {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    font-size: 15px;
-    font-weight: 600;
   }
 
   .iap-dashboard-bc-parent {
@@ -860,8 +855,9 @@
     gap: 16px;
     align-items: center;
     padding: 8px 20px;
-    background: var(--default-box-color);
-    border-bottom: 1px solid var(--default-border);
+    background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 20%, transparent);
+    border-radius: 10px;
   }
 
   .iap-dashboard-filter__item {
@@ -909,19 +905,11 @@
   }
 
   .iap-dashboard-kpi-card {
+    @extend %iap-neon-surface;
+
     padding: 12px 14px 10px;
     cursor: pointer;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
     border-top-width: 2px;
-    border-radius: 8px;
-    transition:
-      border-color 0.2s,
-      transform 0.15s;
-
-    &:hover {
-      transform: translateY(-1px);
-    }
   }
 
   .iap-dashboard-kpi-header {
@@ -981,9 +969,6 @@
     display: flex;
     flex-direction: column;
     padding: 12px 14px;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 8px;
 
     &--wide {
       grid-column: span 1;
@@ -1031,17 +1016,6 @@
   .iap-dashboard-app-card {
     padding: 12px;
     cursor: pointer;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 8px;
-    transition:
-      border-color 0.2s,
-      transform 0.15s;
-
-    &:hover {
-      border-color: var(--art-gray-400);
-      transform: translateY(-1px);
-    }
   }
 
   .iap-dashboard-app-card-top {
@@ -1131,9 +1105,6 @@
     display: flex;
     flex-direction: column;
     padding: 12px 14px;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 8px;
 
     &--wide {
       grid-column: span 1;
@@ -1289,4 +1260,8 @@
     flex: 1;
     min-height: 140px;
   }
+</style>
+
+<style lang="scss">
+  @import './styles/iap-popper';
 </style>

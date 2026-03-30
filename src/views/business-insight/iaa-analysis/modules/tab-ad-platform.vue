@@ -18,7 +18,7 @@
         </section>
 
         <!-- 广告平台效果排行 -->
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>广告平台效果排行</span></template>
           <div ref="rankingChartRef" class="iaa-chart iaa-chart--bar"></div>
           <div v-if="platformInsight" class="iaa-insight-banner">
@@ -28,7 +28,7 @@
         </ElCard>
 
         <!-- 平台详细对比表 -->
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>平台详细对比表</span></template>
           <ArtTable
             :data="tableData"
@@ -58,7 +58,7 @@
       <!-- ——— 右列 ——— -->
       <div class="iaa-main-right">
         <!-- 广告平台收入占比 -->
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>广告平台收入占比</span></template>
           <div class="iaa-donut-body">
             <div class="iaa-donut-wrap">
@@ -76,13 +76,13 @@
         </ElCard>
 
         <!-- 平台ECPM对比 -->
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>平台ECPM对比</span></template>
           <div ref="ecpmChartRef" class="iaa-chart iaa-chart--hbar"></div>
         </ElCard>
 
         <!-- 平台收入趋势 -->
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>平台收入趋势(近7天)</span></template>
           <div ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
         </ElCard>
@@ -429,6 +429,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/iaa-card-fx';
+
   .iaa-tab-ad-platform {
     display: flex;
     flex-direction: column;

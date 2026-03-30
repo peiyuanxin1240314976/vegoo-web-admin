@@ -9,7 +9,7 @@
             <div class="iaa-kpi__sub">{{ k.subText }}</div>
           </article>
         </div>
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>版本收入对比</span>
           </template>
@@ -18,7 +18,7 @@
             {{ versionInsight }}
           </div>
         </ElCard>
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>版本详细数据表</span>
           </template>
@@ -47,19 +47,19 @@
         </ElCard>
       </div>
       <div class="iaa-main-right">
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>版本 ECPM 趋势对比</span>
           </template>
           <div ref="ecpmTrendRef" class="iaa-chart iaa-chart--line"></div>
         </ElCard>
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>版本升级进度</span>
           </template>
           <div ref="upgradeChartRef" class="iaa-chart iaa-chart--stack"></div>
         </ElCard>
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>版本广告渗透率 vs 崩溃率</span>
           </template>
@@ -412,6 +412,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/iaa-card-fx';
+
   .iaa-tab-version {
     display: flex;
     flex-direction: column;

@@ -1,7 +1,8 @@
 <template>
-  <div class="iap-analysis-page art-full-height">
+  <div class="iap-analysis-page iap-fx-page art-full-height">
+    <div class="iap-page-fx" aria-hidden="true"></div>
     <!-- 顶部面包屑 + 操作栏 -->
-    <header class="iap-header">
+    <header class="iap-header iap-entry-1">
       <div class="iap-breadcrumb">
         <span class="iap-breadcrumb__item">{{ $t('menus.businessInsight.title') }}</span>
         <span class="iap-breadcrumb__sep">&gt;</span>
@@ -14,7 +15,12 @@
       <div class="iap-actions">
         <div class="iap-pill">
           <span class="iap-pill__label">时间范围</span>
-          <ElSelect v-model="timeRange" size="small" class="iap-select">
+          <ElSelect
+            v-model="timeRange"
+            size="small"
+            class="iap-select"
+            popper-class="iap-select-popper"
+          >
             <ElOption label="最近30天" value="30" />
             <ElOption label="最近7天" value="7" />
             <ElOption label="最近90天" value="90" />
@@ -22,13 +28,23 @@
         </div>
         <div class="iap-pill">
           <span class="iap-pill__label">国家</span>
-          <ElSelect v-model="country" size="small" class="iap-select">
+          <ElSelect
+            v-model="country"
+            size="small"
+            class="iap-select"
+            popper-class="iap-select-popper"
+          >
             <ElOption label="全部" value="all" />
           </ElSelect>
         </div>
         <div class="iap-pill">
           <span class="iap-pill__label">平台</span>
-          <ElSelect v-model="platform" size="small" class="iap-select">
+          <ElSelect
+            v-model="platform"
+            size="small"
+            class="iap-select"
+            popper-class="iap-select-popper"
+          >
             <ElOption label="全部" value="all" />
           </ElSelect>
         </div>
@@ -52,7 +68,7 @@
 
     <!-- KPI 指标卡片行 -->
     <div class="iap-kpi-row">
-      <div v-for="(kpi, i) in kpiList" :key="kpi.label" class="iap-kpi-card">
+      <div v-for="(kpi, i) in kpiList" :key="kpi.label" class="iap-kpi-card iap-neon-surface">
         <div class="iap-kpi-top">
           <span class="iap-kpi-label">{{ kpi.label }}</span>
           <div :ref="(el) => setKpiSparklineRef(i, el)" class="iap-kpi-sparkline" />
@@ -82,7 +98,7 @@
 
     <!-- 产品统计 Tab -->
     <main v-if="activeTab === 'product'" class="iap-tab-content">
-      <div class="iap-section-card">
+      <div class="iap-section-card iap-neon-surface">
         <div class="iap-section-title">产品SKU订单分析</div>
         <ElTable :data="skuData" class="iap-dark-table" size="small" row-key="name">
           <ElTableColumn prop="name" label="产品名称" min-width="145" show-overflow-tooltip />
@@ -125,7 +141,7 @@
       </div>
 
       <div class="iap-bottom-three-col">
-        <div class="iap-section-card iap-flex-1">
+        <div class="iap-section-card iap-neon-surface iap-flex-1">
           <div class="iap-section-title">用户分层分布</div>
           <div class="iap-segment-list">
             <div v-for="seg in userSegments" :key="seg.label" class="iap-segment-row">
@@ -140,7 +156,7 @@
             </div>
           </div>
         </div>
-        <div class="iap-section-card iap-flex-1">
+        <div class="iap-section-card iap-neon-surface iap-flex-1">
           <div class="iap-section-title">订阅周期分布</div>
           <div class="iap-donut-wrap">
             <div class="iap-donut-center">
@@ -155,7 +171,7 @@
             </span>
           </div>
         </div>
-        <div class="iap-section-card iap-flex-1">
+        <div class="iap-section-card iap-neon-surface iap-flex-1">
           <div class="iap-section-title">续费周期分析</div>
           <div ref="renewRef" class="iap-renew-chart"></div>
         </div>
@@ -165,7 +181,7 @@
     <!-- 用户分析 Tab -->
     <main v-if="activeTab === 'user'" class="iap-tab-content">
       <div class="iap-two-col-grid">
-        <div class="iap-section-card">
+        <div class="iap-section-card iap-neon-surface">
           <div class="iap-section-title">用户分层价值分析</div>
           <ElTable :data="userValueData" class="iap-dark-table" size="small">
             <ElTableColumn prop="segment" label="用户分层" width="120" />
@@ -185,17 +201,17 @@
             <ElTableColumn prop="churn" label="退款率" width="75" />
           </ElTable>
         </div>
-        <div class="iap-section-card">
+        <div class="iap-section-card iap-neon-surface">
           <div class="iap-section-title">Top 10 国家用户分布</div>
           <div ref="countryRef" class="iap-country-chart"></div>
         </div>
       </div>
       <div class="iap-two-col-grid iap-mt-16">
-        <div class="iap-section-card">
+        <div class="iap-section-card iap-neon-surface">
           <div class="iap-section-title">新老用户付费行为对比</div>
           <div ref="userCompareRef" class="iap-user-compare-chart"></div>
         </div>
-        <div class="iap-section-card">
+        <div class="iap-section-card iap-neon-surface">
           <div class="iap-section-title">用户首次付费时间分布</div>
           <div ref="firstPayRef" class="iap-first-pay-chart"></div>
         </div>
@@ -204,7 +220,7 @@
 
     <!-- 趋势分析 Tab -->
     <main v-if="activeTab === 'trend'" class="iap-tab-content">
-      <div class="iap-section-card">
+      <div class="iap-section-card iap-neon-surface">
         <div class="iap-section-title iap-section-title--legend">
           订单数 vs 收入 日趋势
           <div class="iap-legend-right">
@@ -215,15 +231,15 @@
         <div ref="trendRef" class="iap-trend-chart-lg"></div>
       </div>
       <div class="iap-three-col-grid iap-mt-16">
-        <div class="iap-section-card">
+        <div class="iap-section-card iap-neon-surface">
           <div class="iap-section-title">ARPU 日趋势</div>
           <div ref="arpuTrendRef" class="iap-trend-chart-sm"></div>
         </div>
-        <div class="iap-section-card">
+        <div class="iap-section-card iap-neon-surface">
           <div class="iap-section-title">转化率 & 续费率 趋势</div>
           <div ref="convTrendRef" class="iap-trend-chart-sm"></div>
         </div>
-        <div class="iap-section-card">
+        <div class="iap-section-card iap-neon-surface">
           <div class="iap-section-title">退款率 趋势</div>
           <div ref="churnTrendRef" class="iap-trend-chart-sm"></div>
         </div>
@@ -1015,6 +1031,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import './styles/iap-card-fx';
+
   .iap-analysis-page {
     display: flex;
     flex-direction: column;
@@ -1024,7 +1042,7 @@
     overflow: auto;
     font-size: 13px;
     color: var(--art-gray-900);
-    background: var(--default-bg-color);
+    background: transparent;
   }
 
   .iap-header {
@@ -1033,7 +1051,11 @@
     gap: 12px;
     align-items: center;
     justify-content: space-between;
+    padding: 10px 14px;
     margin-bottom: 12px;
+    background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
+    border-radius: 14px;
   }
 
   .iap-breadcrumb {
@@ -1199,8 +1221,11 @@
   .iap-tab-bar {
     display: flex;
     gap: 0;
+    padding: 4px;
     margin-bottom: 16px;
-    border-bottom: 1px solid var(--default-border);
+    background: color-mix(in srgb, var(--default-box-color) 74%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 20%, transparent);
+    border-radius: 10px;
   }
 
   .iap-tab-item {
@@ -1215,7 +1240,10 @@
     background: transparent;
     border: none;
     border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    transition:
+      color 0.2s var(--ease-default),
+      border-color 0.2s var(--ease-default),
+      background-color 0.2s var(--ease-default);
 
     &:hover {
       color: var(--art-gray-700);
@@ -1223,6 +1251,7 @@
 
     &.is-active {
       color: var(--art-primary);
+      background: color-mix(in srgb, var(--art-primary) 12%, transparent);
       border-bottom-color: var(--art-primary);
     }
   }
@@ -1242,9 +1271,6 @@
 
   .iap-section-card {
     padding: 14px 16px;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 10px;
   }
 
   .iap-section-title {
@@ -1565,4 +1591,8 @@
       background: #a78bfa;
     }
   }
+</style>
+
+<style lang="scss">
+  @import './styles/iap-popper';
 </style>

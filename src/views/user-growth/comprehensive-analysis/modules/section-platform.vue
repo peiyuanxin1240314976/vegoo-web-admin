@@ -3,7 +3,7 @@
     <!-- ── 中部四列 ─────────────────────────────────────────── -->
     <div class="ca-mid-grid">
       <!-- Col 1: 广告平台 CPI 对比 -->
-      <ElCard class="ca-panel" shadow="never">
+      <ElCard class="ca-panel ca-neon-panel" shadow="never">
         <template #header>
           <span>广告平台 CPI 对比</span>
         </template>
@@ -18,7 +18,7 @@
       </ElCard>
 
       <!-- Col 2: 应用 CPI 排行 -->
-      <ElCard class="ca-panel" shadow="never">
+      <ElCard class="ca-panel ca-neon-panel" shadow="never">
         <template #header>
           <div class="panel-header-row">
             <span>应用 CPI 排行</span>
@@ -26,7 +26,7 @@
               v-model="appRankPlatform"
               size="small"
               style="width: 102px"
-              :teleported="false"
+              popper-class="ca-select-popper"
             >
               <ElOption label="按广告平台" value="all" />
               <ElOption label="Google Ads" value="google" />
@@ -71,7 +71,7 @@
       </ElCard>
 
       <!-- Col 3: 国家 CPI 分布（地图） -->
-      <ElCard class="ca-panel" shadow="never">
+      <ElCard class="ca-panel ca-neon-panel" shadow="never">
         <template #header>
           <div class="panel-header-row">
             <span>国家 CPI 分布</span>
@@ -93,7 +93,7 @@
 
       <!-- Col 4: CPI Top 8 国家 + 投放预警 -->
       <div class="ca-col4">
-        <ElCard class="ca-panel ca-panel--top8" shadow="never">
+        <ElCard class="ca-panel ca-neon-panel ca-panel--top8" shadow="never">
           <template #header>CPI Top 8 国家</template>
           <div class="top8-list">
             <div v-for="item in data?.countryTop8 ?? []" :key="item.code" class="top8-item">
@@ -117,7 +117,7 @@
           </div>
         </ElCard>
 
-        <ElCard class="ca-panel ca-panel--alerts" shadow="never">
+        <ElCard class="ca-panel ca-neon-panel ca-panel--alerts" shadow="never">
           <template #header>投放预警</template>
           <div class="alert-list">
             <div v-for="alert in data?.alerts ?? []" :key="alert.id" class="alert-item">
@@ -132,13 +132,13 @@
     <!-- ── 底部两列 ─────────────────────────────────────────── -->
     <div class="ca-bottom-grid">
       <!-- Left: 广告平台 CPI 趋势 -->
-      <ElCard class="ca-panel" shadow="never">
+      <ElCard class="ca-panel ca-neon-panel" shadow="never">
         <template #header>广告平台 CPI 趋势（近7天）</template>
         <div ref="cpiTrendRef" class="ca-chart ca-chart--trend"></div>
       </ElCard>
 
       <!-- Right: ECPM 分析 -->
-      <ElCard class="ca-panel" shadow="never">
+      <ElCard class="ca-panel ca-neon-panel" shadow="never">
         <template #header>ECPM 分析（近7天）</template>
         <div ref="ecpmRef" class="ca-chart ca-chart--ecpm"></div>
         <div v-if="data?.ecpmAnalysis" class="ecpm-metrics">
@@ -590,6 +590,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/ca-card-fx';
+
   .ca-dashboard {
     display: flex;
     flex-direction: column;
@@ -773,7 +775,10 @@
     background: transparent;
     border: 1px solid var(--default-border);
     border-radius: 4px;
-    transition: all 0.15s;
+    transition:
+      color 0.15s var(--ease-default),
+      border-color 0.15s var(--ease-default),
+      background-color 0.15s var(--ease-default);
 
     &.is-active {
       color: var(--art-primary);

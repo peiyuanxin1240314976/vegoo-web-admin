@@ -1,0 +1,170 @@
+@import '../../../user-growth/ad-performance/styles/ap-card-fx';
+
+.iap-fx-page {
+  position: relative;
+  min-width: 0;
+  overflow-x: clip;
+  background: var(--default-bg-color);
+
+  &::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        ellipse 70% 50% at 6% 6%,
+        rgb(16 185 129 / 42%) 0%,
+        rgb(6 182 212 / 20%) 38%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 55% 42% at 94% 8%,
+        rgb(59 130 246 / 38%) 0%,
+        rgb(139 92 246 / 18%) 38%,
+        transparent 58%
+      ),
+      radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 16%) 0%, transparent 55%);
+    mask-image: linear-gradient(to bottom, black 0%, black 30%, transparent 58%);
+    animation:
+      iap-aurora-drift 14s ease-in-out infinite alternate,
+      iap-bg-flow 22s ease-in-out infinite alternate;
+  }
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px);
+    background-size:
+      40px 40px,
+      40px 40px;
+    mask-image: linear-gradient(to bottom, black 0%, black 16%, transparent 45%);
+  }
+
+  > *:not(.iap-page-fx) {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.iap-page-fx {
+  position: absolute;
+  inset: -12% -12% 44%;
+  z-index: 0;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    rgb(59 130 246 / 12%) 65deg,
+    rgb(6 182 212 / 10%) 88deg,
+    transparent 140deg,
+    rgb(16 185 129 / 11%) 205deg,
+    transparent 280deg,
+    rgb(168 85 247 / 8%) 330deg,
+    transparent 360deg
+  );
+  filter: blur(2px);
+  opacity: 0.85;
+  mask-image: linear-gradient(to bottom, black 0%, black 48%, transparent 82%);
+  animation: iap-fx-spin 52s linear infinite;
+}
+
+@keyframes iap-aurora-drift {
+  0% {
+    opacity: 0.74;
+    transform: scale(1) translate(0, 0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.06) translate(1.2%, -1.2%);
+  }
+
+  100% {
+    opacity: 0.84;
+    transform: scale(1) translate(-1.2%, 1.2%);
+  }
+}
+
+@keyframes iap-bg-flow {
+  0% {
+    opacity: 0.7;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes iap-fx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes iap-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.iap-entry-1 {
+  animation: iap-slide-up 0.55s var(--ease-out) both;
+  animation-delay: 0.05s;
+}
+
+.iap-entry-2 {
+  animation: iap-slide-up 0.55s var(--ease-out) both;
+  animation-delay: 0.18s;
+}
+
+%iap-neon-surface {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+
+  @include ap-neon-bg;
+  @include ap-card-mesh;
+  @include ap-panel-hover;
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.iap-neon-surface {
+  @extend %iap-neon-surface;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iap-fx-page::before,
+  .iap-fx-page::after,
+  .iap-page-fx {
+    animation: none;
+  }
+
+  .iap-entry-1,
+  .iap-entry-2 {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .iap-neon-surface:hover,
+  .iap-neon-surface:active {
+    transform: none;
+  }
+}

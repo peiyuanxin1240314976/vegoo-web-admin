@@ -45,7 +45,7 @@
     <section class="iaa-main-grid">
       <!-- 左列：广告类型详细对比 -->
       <div class="iaa-col iaa-col--left">
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <div class="panel-header-row">
               <span>广告类型详细对比</span>
@@ -89,7 +89,7 @@
 
       <!-- 中列：广告平台效果排行 -->
       <div class="iaa-col iaa-col--mid">
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>广告平台效果排行</span></template>
           <div ref="platformBarRef" class="iaa-chart iaa-chart--bar"></div>
           <div v-if="platformInsight" class="iaa-insight-banner">
@@ -101,7 +101,7 @@
 
       <!-- 右列：广告位 Top10 收入 -->
       <div class="iaa-col iaa-col--right">
-        <ElCard class="iaa-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>广告位 Top10收入</span></template>
           <div class="iaa-top10-list">
             <div
@@ -129,7 +129,7 @@
     <!-- 下方两列 -->
     <section class="iaa-bottom-grid">
       <!-- 广告类型趋势 -->
-      <ElCard class="iaa-panel" shadow="never">
+      <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
         <template #header>
           <div class="panel-header-row">
             <span>广告类型趋势(近7天)</span>
@@ -144,7 +144,7 @@
       </ElCard>
 
       <!-- 用户拆分分析 -->
-      <ElCard class="iaa-panel" shadow="never">
+      <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
         <template #header>
           <div class="panel-header-row">
             <span>用户拆分分析(安装天数)</span>
@@ -535,6 +535,8 @@
 </script>
 
 <style scoped lang="scss">
+  @import '../styles/iaa-card-fx';
+
   .iaa-tab-ad-type {
     display: flex;
     flex-direction: column;
