@@ -23,6 +23,18 @@
 | `07-table-history.json` | 偏差历史记录（按月） | `/table/history` | POST | P1 |
 | `08-table-matrix.json` | 四维度偏差明细矩阵（应用 × 平台） | `/table/matrix` | POST | P0 |
 
+## 场景 → 接口（触发时机）
+
+> 详细触发说明见各契约文件根级 `interaction` 字段。
+
+| 场景/用户操作 | 调用接口（契约文件） | 触发时机 |
+| --- | --- | --- |
+| 页面首屏进入「预估收入偏差」 | `01-overview-kpis.json`~`08-table-matrix.json` | `RevenueDeviation.vue` 的 `onMounted` 并行请求 8 个接口 |
+| 修改日期范围 | `01`~`08` | 监听筛选变化后整体刷新，并重绘图表 |
+| 修改广告平台筛选 | `01`~`08` | 同上 |
+| 修改应用筛选 | `01`~`08` | 同上 |
+| 切换「国家偏差分布」Tab（金额/偏差率） | `06-overview-country-top10.json` | 仅前端切换展示，不再请求 |
+
 ## 前端对照
 
 - Mock 实现：`src/views/business-insight/revenue-deviation/mock/data.ts`（与各契约 `sampleResponse` 对应）。

@@ -64,6 +64,22 @@
     "d_deviation_rate_history_avg_pct": 6.2,
     "s_deviation_badge": "预估偏高"
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`RevenueDeviation.vue` 的 onMounted 并行请求 KPI/趋势/表格/原因/建议/国家Top10/历史/矩阵。",
+        "prerequisite": "无需前置接口；入参由日期范围 + 筛选项拼装。"
+      },
+      {
+        "moment": "筛选变化触发刷新",
+        "detail": "监听日期范围、广告平台、应用筛选变更后重新请求并重绘图表。",
+        "prerequisite": "同上。"
+      }
+    ],
+    "defaultSelection": "默认日期范围与默认筛选项由页面 state 决定（当前为 dateRange 初始值 + source/s_app_id 为空）。",
+    "dedupe": "页面对筛选变更未做防抖；如后端成本较高可建议前端增加 debounce 或取消上一次请求。"
+  },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/kpis",
     "method": "POST",

@@ -80,6 +80,22 @@
       "d_deviation_rate_pct": 8.5
     }
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "用于「平台偏差对比」表格（含合计行）；与其他区块并行加载。",
+        "prerequisite": "无。"
+      },
+      {
+        "moment": "筛选变化触发刷新",
+        "detail": "日期范围/广告平台/应用变化后重新请求并刷新表格。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "source 为空表示全部广告平台；表格行按后端默认排序或按 d_deviation_rate_pct 排序（若需要前端排序需约定）。",
+    "dedupe": "同入参可缓存；前端短时间内连续变更筛选可考虑防抖。"
+  },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/table/platform",
     "method": "POST",

@@ -65,6 +65,22 @@
       { "s_country_code": "us", "label_display": "美国", "n_value": 12.4 }
     ]
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "用于「国家偏差分布 Top10」横条图；页面内 Tab（金额/偏差率）仅在前端切换，不会二次请求。",
+        "prerequisite": "无。"
+      },
+      {
+        "moment": "筛选变化触发刷新",
+        "detail": "日期范围/广告平台/应用变化后重新请求并重绘图表。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "默认选中 Tab=amount（偏差金额），由页面 activeCountryTab 初始值控制。",
+    "dedupe": "无。"
+  },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/country-top10",
     "method": "POST",

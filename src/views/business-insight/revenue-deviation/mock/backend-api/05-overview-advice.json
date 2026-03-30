@@ -24,6 +24,22 @@
   "sampleResponse": {
     "lines": ["当前偏差率 8.5%，高于历史平均", "美国偏差页贡献最大 44.2%", "建议重点梳理 Admob"]
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "用于「对账建议」区块的文案列表；与其他区块并行加载。",
+        "prerequisite": "无。"
+      },
+      {
+        "moment": "筛选变化触发刷新",
+        "detail": "日期范围/广告平台/应用变化后重新请求并刷新建议列表。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "建议内容随筛选范围变化；当前页面按钮「查看对账记录」「设置预警阈值」仅为 UI 占位，未绑定接口。",
+    "dedupe": "无。"
+  },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/advice",
     "method": "POST",

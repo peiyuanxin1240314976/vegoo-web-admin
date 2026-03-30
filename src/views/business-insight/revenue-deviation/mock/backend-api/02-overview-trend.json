@@ -73,6 +73,22 @@
       2.3, 2.1, 2.4, 2.6, 2.7, 2.5, 2.2, 2.0, 2.3, 2.5, 2.7
     ]
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "用于「收入偏差趋势（30天）」折线图；与其他区块并行加载。",
+        "prerequisite": "无。"
+      },
+      {
+        "moment": "筛选变化触发刷新",
+        "detail": "日期范围/广告平台/应用变化后重新请求并重绘图表。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "趋势区块展示范围由 t_start_date/t_end_date 控制；当前页面默认 2024-05-01~2024-05-31。",
+    "dedupe": "建议后端支持相同入参命中缓存；前端若频繁变更可加防抖。"
+  },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/trend",
     "method": "POST",

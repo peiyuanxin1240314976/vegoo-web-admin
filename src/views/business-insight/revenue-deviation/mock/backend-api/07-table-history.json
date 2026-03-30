@@ -8,10 +8,10 @@
       "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" }
     },
     "response": {
-      "rows": {
+      "data": {
         "type": "RevenueDeviationHistoryRow[]",
         "required": true,
-        "description": "历史月份列表，按时间倒序或正序由产品约定。"
+        "description": "历史月份列表；本接口在前端为「直接返回数组」形态（与 fetchRevenueDeviationTableHistory 的返回类型一致）。"
       }
     },
     "RevenueDeviationHistoryRow": {
@@ -74,6 +74,22 @@
     },
     { "t_month": "2023–12", "d_estimated_usd": 6.16, "d_real_usd": 3.54, "d_deviation_rate_pct": 0 }
   ],
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "用于「偏差历史记录」表格（按月）。",
+        "prerequisite": "无。"
+      },
+      {
+        "moment": "筛选变化触发刷新",
+        "detail": "日期范围/广告平台/应用变化后重新请求并刷新表格。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "t_month 展示格式与后端约定一致（当前示例为 2024–05 使用短横线）。",
+    "dedupe": "无。"
+  },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/table/history",
     "method": "POST",

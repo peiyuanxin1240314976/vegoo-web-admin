@@ -8,10 +8,10 @@
       "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" }
     },
     "response": {
-      "items": {
+      "data": {
         "type": "RevenueDeviationReasonSegment[]",
         "required": true,
-        "description": "饼图扇区；n_pct 合计建议为 100。"
+        "description": "饼图扇区列表；本接口在前端为「直接返回数组」形态（与 fetchRevenueDeviationOverviewReason 的返回类型一致），n_pct 合计建议为 100。"
       }
     },
     "RevenueDeviationReasonSegment": {
@@ -36,6 +36,22 @@
     { "s_label": "中沪偏点贡献", "n_pct": 18, "s_color": "#60a5fa" },
     { "s_label": "真实原因", "n_pct": 9, "s_color": "#f87171" }
   ],
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "用于「偏差原因分析」饼图；页面拿到数组后映射为 {name,value,color} 渲染。",
+        "prerequisite": "无。"
+      },
+      {
+        "moment": "筛选变化触发刷新",
+        "detail": "日期范围/广告平台/应用变化后重新请求并重绘饼图。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "默认筛选项同页面 state；source/s_app_id 为空表示全量汇总。",
+    "dedupe": "无强依赖去重；建议后端对同入参做缓存。"
+  },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/reason",
     "method": "POST",

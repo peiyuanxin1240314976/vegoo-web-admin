@@ -113,6 +113,22 @@
       }
     ]
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "用于「四维度偏差明细分析表」矩阵区块；与其他区块并行加载。",
+        "prerequisite": "无。"
+      },
+      {
+        "moment": "筛选变化触发刷新",
+        "detail": "日期范围/广告平台/应用变化后重新请求并刷新矩阵。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "矩阵右上角「平台」下拉为纯 UI（当前不参与请求参数）；矩阵 cols/rows 结构由后端一次性返回。",
+    "dedupe": "无。"
+  },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/table/matrix",
     "method": "POST",
