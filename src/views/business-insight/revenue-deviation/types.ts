@@ -21,6 +21,16 @@ export type RevenueDeviationQuery = {
   col_dim?: RevenueDeviationMatrixColDim
 }
 
+export type RevenueDeviationFilterOption = {
+  value: string
+  label: string
+}
+
+export type RevenueDeviationMetaFilterOptions = {
+  apps: RevenueDeviationFilterOption[]
+  sources: RevenueDeviationFilterOption[]
+}
+
 /** 08-table-matrix 请求额外参数 */
 export type RevenueDeviationMatrixRowDim = 'app' | 'platform' | 'date'
 export type RevenueDeviationMatrixColDim = 'platform' | 'date'

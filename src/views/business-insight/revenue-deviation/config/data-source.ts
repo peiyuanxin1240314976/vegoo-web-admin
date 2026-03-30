@@ -16,14 +16,14 @@ export enum RevenueDeviationEndpoint {
 }
 
 export const REVENUE_DEVIATION_USE_MOCK: Record<RevenueDeviationEndpoint, boolean> = {
-  [RevenueDeviationEndpoint.OverviewKpis]: true,
-  [RevenueDeviationEndpoint.OverviewTrend]: true,
-  [RevenueDeviationEndpoint.TablePlatform]: true,
-  [RevenueDeviationEndpoint.OverviewReason]: true,
-  [RevenueDeviationEndpoint.OverviewAdvice]: true,
-  [RevenueDeviationEndpoint.OverviewCountryTop10]: true,
-  [RevenueDeviationEndpoint.TableHistory]: true,
-  [RevenueDeviationEndpoint.TableMatrix]: true
+  [RevenueDeviationEndpoint.OverviewKpis]: false,
+  [RevenueDeviationEndpoint.OverviewTrend]: false,
+  [RevenueDeviationEndpoint.TablePlatform]: false,
+  [RevenueDeviationEndpoint.OverviewReason]: false,
+  [RevenueDeviationEndpoint.OverviewAdvice]: false,
+  [RevenueDeviationEndpoint.OverviewCountryTop10]: false,
+  [RevenueDeviationEndpoint.TableHistory]: false,
+  [RevenueDeviationEndpoint.TableMatrix]: false
 }
 
 export function isRevenueDeviationEndpointMock(endpoint: RevenueDeviationEndpoint): boolean {

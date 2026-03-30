@@ -3,7 +3,7 @@
     <div class="rd-page-fx" aria-hidden="true"></div>
     <!-- ========== Header ========== -->
     <div class="rd-header rd-entry-1">
-      <div class="rd-page-title">预估收入偏差</div>
+      <!-- <div class="rd-page-title">预估收入偏差</div> -->
       <div class="rd-filters">
         <el-date-picker
           v-model="dateRange"
@@ -17,14 +17,6 @@
           :teleported="true"
           popper-class="rd-filter-popper"
         />
-        <el-select v-model="appFilter" class="rd-filter-select" placeholder="应用">
-          <el-option label="全部应用" value="" />
-          <el-option label="WeatherRadar" value="weather" />
-          <el-option label="PhoneTracker" value="phone" />
-          <el-option label="BloodSugar2" value="blood" />
-          <el-option label="HealthTracker" value="health" />
-          <el-option label="FaceMe" value="face" />
-        </el-select>
         <el-select
           v-model="platform"
           class="rd-filter-select"
@@ -32,12 +24,12 @@
           popper-class="rd-filter-popper"
           :teleported="true"
         >
-          <el-option label="全部平台" value="" />
-          <el-option label="Admob" value="admob" />
-          <el-option label="Facebook" value="facebook" />
-          <el-option label="Applovin" value="applovin" />
-          <el-option label="Vungle" value="vungle" />
-          <el-option label="Pangle" value="pangle" />
+          <el-option
+            v-for="item in sourceOptions"
+            :key="`source-${item.value}-${item.label}`"
+            :label="item.label"
+            :value="item.value"
+          />
         </el-select>
         <el-select
           v-model="appFilter"
@@ -46,12 +38,12 @@
           popper-class="rd-filter-popper"
           :teleported="true"
         >
-          <el-option label="全部应用" value="" />
-          <el-option label="WeatherRadar" value="weather" />
-          <el-option label="PhoneTracker" value="phone" />
-          <el-option label="BloodSugar2" value="blood" />
-          <el-option label="HealthTracker" value="health" />
-          <el-option label="FaceMe" value="face" />
+          <el-option
+            v-for="item in appOptions"
+            :key="`app-${item.value}-${item.label}`"
+            :label="item.label"
+            :value="item.value"
+          />
         </el-select>
 
         <el-button round class="rd-filter-action rd-filter-action--apply" :icon="Filter">
@@ -350,7 +342,9 @@
   import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
   import { Filter, TopRight } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import {
+    fetchRevenueDeviationMetaFilterOptions,
     fetchRevenueDeviationOverviewAdvice,
     fetchRevenueDeviationOverviewCountryTop10,
     fetchRevenueDeviationOverviewKpis,
@@ -362,6 +356,7 @@
   } from '@/api/revenue-deviation'
   import type {
     RevenueDeviationCountryTop10,
+    RevenueDeviationFilterOption,
     RevenueDeviationHistoryRow,
     RevenueDeviationMatrixRow as RdmRow,
     RevenueDeviationOverviewKpis,
@@ -398,10 +393,41 @@
     return row[key]
   }
 
+  const ALL_SOURCE_VALUE = '__ALL_SOURCE__'
+  const ALL_APP_VALUE = '__ALL_APP__'
+
+  function toSelectOptions(
+    options: RevenueDeviationFilterOption[],
+    allLabel: string,
+    allValue: string
+  ): RevenueDeviationFilterOption[] {
+    const normalized = options.map((item) => ({
+      label: item.label,
+      value: item.value === '' ? allValue : item.value
+    }))
+    if (!normalized.some((item) => item.value === allValue)) {
+      return [{ label: allLabel, value: allValue }, ...normalized]
+    }
+    return normalized
+  }
+
+  function getDefaultDateRange(): [string, string] {
+    const end = getAppNow()
+    const start = cloneAppDate(end)
+    start.setMonth(start.getMonth() - 1)
+    return [formatYYYYMMDD(start), formatYYYYMMDD(end)]
+  }
+
   // ── State ────────────────────────────────────────────────────────────────────
-  const dateRange = ref(['2024-05-01', '2024-05-31'])
-  const platform = ref('')
-  const appFilter = ref('')
+  const dateRange = ref<[string, string]>(getDefaultDateRange())
+  const platform = ref(ALL_SOURCE_VALUE)
+  const appFilter = ref(ALL_APP_VALUE)
+  const sourceOptions = ref<RevenueDeviationFilterOption[]>([
+    { value: ALL_SOURCE_VALUE, label: '全部广告平台' }
+  ])
+  const appOptions = ref<RevenueDeviationFilterOption[]>([
+    { value: ALL_APP_VALUE, label: '全部应用' }
+  ])
   const activeCountryTab = ref('amount')
   const matrixPlatform = ref('')
 
@@ -436,23 +462,23 @@
   const activeRowDim = ref<RevenueDeviationMatrixRowDim>('app')
   const activeColDim = ref<RevenueDeviationMatrixColDim>('platform')
 
-  function mapAppFilterToAppId(v: string): string {
-    const m: Record<string, string> = {
-      weather: 'weather_radar',
-      phone: 'phone_tracker',
-      blood: 'blood_sugar_2',
-      health: 'health_tracker',
-      face: 'face_me'
+  async function loadMetaFilterOptions() {
+    try {
+      const options = await fetchRevenueDeviationMetaFilterOptions()
+      sourceOptions.value = toSelectOptions(options.sources, '全部广告平台', ALL_SOURCE_VALUE)
+      appOptions.value = toSelectOptions(options.apps, '全部应用', ALL_APP_VALUE)
+    } catch {
+      sourceOptions.value = [{ value: ALL_SOURCE_VALUE, label: '全部广告平台' }]
+      appOptions.value = [{ value: ALL_APP_VALUE, label: '全部应用' }]
     }
-    return v ? (m[v] ?? v) : ''
   }
 
   function buildQuery(): RevenueDeviationQuery {
     return {
       t_start_date: dateRange.value[0]!,
       t_end_date: dateRange.value[1]!,
-      source: platform.value,
-      s_app_id: mapAppFilterToAppId(appFilter.value),
+      source: platform.value === ALL_SOURCE_VALUE ? '' : platform.value,
+      s_app_id: appFilter.value === ALL_APP_VALUE ? '' : appFilter.value,
       matrix_source: matrixPlatform.value,
       row_dim: activeRowDim.value,
       col_dim: activeColDim.value
@@ -496,7 +522,7 @@
     loadingAll.value = true
     try {
       const q = buildQuery()
-      const [kpi, trend, plat, reason, advice, country, hist, matrix] = await Promise.all([
+      const [kpi, trend, plat, reason, advice, country, hist, matrix] = await Promise.allSettled([
         fetchRevenueDeviationOverviewKpis(q),
         fetchRevenueDeviationOverviewTrend(q),
         fetchRevenueDeviationTablePlatform(q),
@@ -506,23 +532,27 @@
         fetchRevenueDeviationTableHistory(q),
         fetchRevenueDeviationTableMatrix(q)
       ])
-      kpiOverview.value = kpi
-      trendData.value = trend
-      platformTable.value = plat
-      reasonData.value = reason.map((s) => ({
-        name: s.s_label,
-        value: s.n_pct,
-        color: s.s_color
-      }))
-      adviceLines.value = advice.lines
-      countryTop10.value = country
-      historyRows.value = hist
-      matrixCols.value = matrix.cols.map((c) => ({
-        name: c.name,
-        key: c.key,
-        total: c.total
-      }))
-      matrixData.value = toMatrixVmRows(matrix.rows)
+      if (kpi.status === 'fulfilled') kpiOverview.value = kpi.value
+      if (trend.status === 'fulfilled') trendData.value = trend.value
+      if (plat.status === 'fulfilled') platformTable.value = plat.value
+      if (reason.status === 'fulfilled') {
+        reasonData.value = reason.value.map((s) => ({
+          name: s.s_label,
+          value: s.n_pct,
+          color: s.s_color
+        }))
+      }
+      if (advice.status === 'fulfilled') adviceLines.value = advice.value.lines
+      if (country.status === 'fulfilled') countryTop10.value = country.value
+      if (hist.status === 'fulfilled') historyRows.value = hist.value
+      if (matrix.status === 'fulfilled') {
+        matrixCols.value = matrix.value.cols.map((c) => ({
+          name: c.name,
+          key: c.key,
+          total: c.total
+        }))
+        matrixData.value = toMatrixVmRows(matrix.value.rows)
+      }
     } finally {
       loadingAll.value = false
     }
@@ -762,6 +792,7 @@
   }
 
   onMounted(async () => {
+    await loadMetaFilterOptions()
     await loadAllCards()
     await nextTick()
     initTrendChart()
@@ -972,9 +1003,9 @@
 
   /* ── Header ────────────────────────────────────────────────────────── */
   .rd-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    //display: flex;
+    // align-items: center;
+    // justify-content: space-between;
     margin-bottom: 20px;
   }
 
@@ -989,7 +1020,7 @@
     flex-wrap: wrap;
     gap: 10px 12px;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: start;
     min-width: 0;
     padding: 14px 16px;
     background: color-mix(in srgb, var(--default-bg-color) 82%, transparent);
@@ -1003,8 +1034,11 @@
   }
 
   .rd-filter-date {
-    width: 240px;
-    min-width: 200px;
+    max-width: 260px;
+  }
+
+  :deep(.rd-filter-date.el-date-editor.el-range-editor) {
+    max-width: 260px !important;
   }
 
   .rd-filter-select {

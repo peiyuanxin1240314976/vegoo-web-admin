@@ -20,6 +20,7 @@ import {
 import type {
   RevenueDeviationAdvice,
   RevenueDeviationCountryTop10,
+  RevenueDeviationMetaFilterOptions,
   RevenueDeviationHistoryRow,
   RevenueDeviationMatrixQuery,
   RevenueDeviationMatrixTable,
@@ -31,6 +32,7 @@ import type {
 } from '@/views/business-insight/revenue-deviation/types'
 
 const RD_BASE = `${ANALYSIS_API_BASE}/business-insight/revenue-deviation`
+const ECPM_ANALYSIS_BASE = `${ANALYSIS_API_BASE}/business-insight/ecpm-analysis`
 
 function normalizeQuery(q: RevenueDeviationQuery) {
   return {
@@ -46,6 +48,12 @@ function normalizeQuery(q: RevenueDeviationQuery) {
 
 function normalizeMatrixQuery(q: RevenueDeviationMatrixQuery) {
   return normalizeQuery(q)
+}
+
+export function fetchRevenueDeviationMetaFilterOptions() {
+  return request.get<RevenueDeviationMetaFilterOptions>({
+    url: `${ECPM_ANALYSIS_BASE}/meta-filter-options`
+  })
 }
 
 /** 01-overview-kpis.json */
