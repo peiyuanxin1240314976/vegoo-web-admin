@@ -1,199 +1,202 @@
 <template>
   <div class="ad-performance-table-tab">
     <ElTable
-      :data="data"
+      :data="tableData"
       row-key="id"
       :tree-props="treeProps"
       :default-expand-all="false"
       :expand-row-keys="expandedRowKeys"
       :row-class-name="getRowClassName"
-      @expand-change="onExpandChange"
-      stripe
+      @expand-change="handleExpand"
       size="default"
       class="ad-performance-table__el-table"
     >
-      <ElTableColumn
-        v-for="col in visibleColumnDefs"
-        :key="col.key"
-        :label="col.label"
-        :prop="col.prop || undefined"
-        :width="col.width"
-        :min-width="col.minWidth"
-        :align="col.align"
-      >
+      <!-- 优化师 (required) -->
+      <ElTableColumn label="优化师" min-width="220">
         <template #default="{ row }">
-          <template v-if="col.key === 'ownerName'">
-            <template v-if="isOwnerRow(row)">
-              <div class="ad-performance-owner__cell">
-                <div class="ad-performance-owner__avatar">
-                  {{ avatarText(row.ownerName ?? '') }}
-                </div>
-                <span class="ad-performance-owner__name" :title="row.ownerName ?? ''">{{
-                  row.ownerName
-                }}</span>
-              </div>
-            </template>
-            <template v-else>
-              <div class="ad-performance-owner__campaign">
-                <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
-                <span class="ad-performance-owner__campaign-name" :title="row.campaignName">
-                  {{ row.campaignName }}
-                </span>
-                <span class="ad-performance-table__channel">
-                  <span
-                    class="ad-performance-table__channel-icon"
-                    :class="`ad-performance-table__channel-icon--${row.channel}`"
-                    aria-hidden="true"
-                  >
-                    {{ channelShort(row.channel) }}
-                  </span>
-                </span>
-                <span class="ad-performance-table__country" :title="row.country">
-                  {{ countryFlag(row.country) }}
-                </span>
-              </div>
-            </template>
+          <template v-if="isOwnerRow(row)">
+            <div class="ad-performance-owner__cell">
+              <div class="ad-performance-owner__avatar">{{ avatarText(row.ownerName ?? '') }}</div>
+              <span class="ad-performance-owner__name" :title="row.ownerName ?? ''">
+                {{ row.ownerName }}
+              </span>
+            </div>
           </template>
-
-          <template v-else-if="col.key === 'level'">
-            <template v-if="isOwnerRow(row) && row.level">
-              <ElTag :type="levelTagType(row.level)" size="small" effect="plain">
-                {{ levelLabel(row.level) }}
-              </ElTag>
-            </template>
-            <span v-else-if="isOwnerRow(row)" class="ad-performance-table__muted">-</span>
-            <span v-else class="ad-performance-table__muted">-</span>
-          </template>
-
-          <template v-else-if="col.key === 'appCount'">
-            <template v-if="isOwnerRow(row) && row.appCount != null"
-              >{{ row.appCount }} 个应用</template
-            >
-            <span v-else-if="isOwnerRow(row)" class="ad-performance-table__muted">-</span>
-            <span v-else class="ad-performance-table__muted">-</span>
-          </template>
-
-          <template v-else-if="col.key === 'spend'">{{ formatMoney(row.spend, 0) }}</template>
-
-          <template v-else-if="col.key === 'activeCampaignCount'">
-            <template v-if="isOwnerRow(row) && row.activeCampaignCount != null"
-              >{{ row.activeCampaignCount }} 个系列</template
-            >
-            <span v-else-if="isOwnerRow(row)" class="ad-performance-table__muted">-</span>
-            <span v-else class="ad-performance-table__muted">-</span>
-          </template>
-
-          <template v-else-if="col.key === 'avgCpi'">
-            <template v-if="isOwnerRow(row)">{{
-              row.avgCpi != null ? formatMoney(row.avgCpi, 2) : '—'
-            }}</template>
-            <span v-else>{{ row.cpi != null ? formatMoney(row.cpi, 2) : '—' }}</span>
-          </template>
-
-          <template v-else-if="col.key === 'avgCtr'">
-            <template v-if="isOwnerRow(row)">{{
-              row.avgCtr != null ? `${row.avgCtr}%` : '—'
-            }}</template>
-            <span v-else>{{ row.ctr != null ? `${row.ctr}%` : '—' }}</span>
-          </template>
-
-          <template v-else-if="col.key === 'avgCvr'">
-            <template v-if="isOwnerRow(row)">{{
-              row.avgCvr != null ? `${row.avgCvr}%` : '—'
-            }}</template>
-            <span v-else>{{ row.cvr != null ? `${row.cvr}%` : '—' }}</span>
-          </template>
-
-          <template v-else-if="col.key === 'roi1'">
-            <span v-if="row.roi1 == null" class="ad-performance-table__muted">—</span>
-            <span v-else :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
-          </template>
-
-          <template v-else-if="col.key === 'roi7'">
-            <span v-if="row.roi7 == null" class="ad-performance-table__muted">—</span>
-            <span v-else :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
-          </template>
-
-          <template v-else-if="col.key === 'estimatedProfit'">
-            <span v-if="row.estimatedProfit == null" class="ad-performance-table__muted">—</span>
-            <span v-else :class="profitClass(row.estimatedProfit)">
-              {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
-            </span>
+          <template v-else>
+            <div class="ad-performance-owner__campaign">
+              <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
+              <span class="ad-performance-owner__campaign-name" :title="row.campaignName ?? ''">
+                {{ row.campaignName }}
+              </span>
+              <span class="ad-performance-table__channel">
+                <span
+                  class="ad-performance-table__channel-icon"
+                  :class="`ad-performance-table__channel-icon--${row.channel ?? ''}`"
+                  aria-hidden="true"
+                  >{{ channelShort(row.channel) }}</span
+                >
+              </span>
+              <span class="ad-performance-table__country" :title="row.country ?? ''">
+                {{ countryFlag(row.country) }}
+              </span>
+            </div>
           </template>
         </template>
       </ElTableColumn>
 
+      <!-- 职级 -->
+      <ElTableColumn v-if="isVisible('level')" label="职级" width="120" align="left">
+        <template #default="{ row }">
+          <template v-if="isOwnerRow(row) && row.level">
+            <ElTag :type="LEVEL_TAG_TYPE[row.level] ?? 'info'" size="small" effect="plain">
+              {{ LEVEL_LABEL[row.level] ?? row.level }}
+            </ElTag>
+          </template>
+          <span v-else class="ad-performance-table__muted">-</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 负责应用数 -->
+      <ElTableColumn v-if="isVisible('appCount')" label="负责应用数" width="120" align="left">
+        <template #default="{ row }">
+          <span v-if="isOwnerRow(row) && row.appCount != null">{{ row.appCount }} 个应用</span>
+          <span v-else class="ad-performance-table__muted">-</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 广告支出 (required) -->
+      <ElTableColumn label="广告支出" width="110" align="left">
+        <template #default="{ row }">{{ formatMoney(row.spend, 0) }}</template>
+      </ElTableColumn>
+
+      <!-- 活跃系列数 -->
+      <ElTableColumn
+        v-if="isVisible('activeCampaignCount')"
+        label="活跃系列数"
+        width="120"
+        align="left"
+      >
+        <template #default="{ row }">
+          <span v-if="isOwnerRow(row) && row.activeCampaignCount != null">
+            {{ row.activeCampaignCount }} 个系列
+          </span>
+          <span v-else class="ad-performance-table__muted">-</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 平均CPI -->
+      <ElTableColumn v-if="isVisible('avgCpi')" label="平均CPI" width="100" align="left">
+        <template #default="{ row }">
+          <span v-if="isOwnerRow(row)">
+            {{ row.avgCpi != null ? formatMoney(row.avgCpi, 2) : '—' }}
+          </span>
+          <span v-else>{{ row.cpi != null ? formatMoney(row.cpi, 2) : '—' }}</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 平均点击率 -->
+      <ElTableColumn v-if="isVisible('avgCtr')" label="平均点击率" width="110" align="left">
+        <template #default="{ row }">
+          <span v-if="isOwnerRow(row)">{{ row.avgCtr != null ? `${row.avgCtr}%` : '—' }}</span>
+          <span v-else>{{ row.ctr != null ? `${row.ctr}%` : '—' }}</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 平均转化率 -->
+      <ElTableColumn v-if="isVisible('avgCvr')" label="平均转化率" width="110" align="left">
+        <template #default="{ row }">
+          <span v-if="isOwnerRow(row)">{{ row.avgCvr != null ? `${row.avgCvr}%` : '—' }}</span>
+          <span v-else>{{ row.cvr != null ? `${row.cvr}%` : '—' }}</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 首日ROI -->
+      <ElTableColumn v-if="isVisible('roi1')" label="首日ROI" width="90" align="left">
+        <template #default="{ row }">
+          <span v-if="row.roi1 == null" class="ad-performance-table__muted">—</span>
+          <span v-else :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 7日ROI -->
+      <ElTableColumn v-if="isVisible('roi7')" label="7日ROI" width="90" align="left">
+        <template #default="{ row }">
+          <span v-if="row.roi7 == null" class="ad-performance-table__muted">—</span>
+          <span v-else :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 预估利润 -->
+      <ElTableColumn
+        v-if="isVisible('estimatedProfit')"
+        label="预估利润"
+        min-width="110"
+        align="left"
+      >
+        <template #default="{ row }">
+          <span v-if="row.estimatedProfit == null" class="ad-performance-table__muted">—</span>
+          <span v-else :class="profitClass(row.estimatedProfit)">
+            {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
+          </span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 操作 -->
       <ElTableColumn label="操作" width="90" align="center" fixed="right">
         <template #default="{ row }">
-          <ElButton link type="primary" size="small" @click="onDetail(row)">详情</ElButton>
+          <ElButton link type="primary" size="small" @click="$emit('detail', row)">详情</ElButton>
         </template>
       </ElTableColumn>
     </ElTable>
 
     <ElDialog
-      v-model="customColumnsVisible"
+      v-model="dialogVisible"
       width="520px"
       :close-on-click-modal="false"
+      :append-to-body="true"
       title="自定义列"
     >
       <div class="ad-performance-table__custom-header">
-        <ElCheckbox v-model="customAllChecked" :indeterminate="customIndeterminate"
-          >全选</ElCheckbox
-        >
-        <ElButton link type="primary" @click="onCustomReset">重置</ElButton>
+        <ElCheckbox v-model="allChecked" :indeterminate="indeterminate">全选</ElCheckbox>
+        <ElButton link type="primary" @click="resetDialog">重置</ElButton>
       </div>
-      <ElCheckboxGroup v-model="customCheckedKeys" class="ad-performance-table__custom-grid">
+      <ElCheckboxGroup v-model="checkedKeys" class="ad-performance-table__custom-grid">
         <ElCheckbox
-          v-for="opt in ALL_COLUMNS"
-          :key="opt.key"
-          :label="opt.key"
-          :disabled="opt.required"
+          v-for="col in allColumns"
+          :key="col.key"
+          :label="col.key"
+          :disabled="col.required"
+          >{{ col.label }}</ElCheckbox
         >
-          {{ opt.label }}
-        </ElCheckbox>
       </ElCheckboxGroup>
       <template #footer>
-        <ElButton round @click="customColumnsVisible = false">取消</ElButton>
-        <ElButton round type="primary" @click="onCustomConfirm">确定</ElButton>
+        <ElButton round @click="dialogVisible = false">取消</ElButton>
+        <ElButton round type="primary" @click="confirmDialog">确定</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue'
+  import { computed } from 'vue'
   import type {
-    AdPerformanceOwnerCampaignRow,
     AdPerformanceOwnerRow,
+    AdPerformanceOwnerCampaignRow,
     OwnerLevel
   } from '../../types'
+  import { useTabColumnVisibility } from '../../composables/useTabColumnVisibility'
+  import { useTabExpand } from '../../composables/useTabExpand'
+  import {
+    channelShort,
+    countryFlag,
+    formatMoney,
+    roiClass,
+    profitClass
+  } from '../../utils/tab-utils'
 
   defineOptions({ name: 'AdPerformanceOwnerTab' })
 
   type OwnerMixedRow = AdPerformanceOwnerRow | AdPerformanceOwnerCampaignRow
-
-  type ColumnKey =
-    | 'ownerName'
-    | 'level'
-    | 'appCount'
-    | 'spend'
-    | 'activeCampaignCount'
-    | 'avgCpi'
-    | 'avgCtr'
-    | 'avgCvr'
-    | 'roi1'
-    | 'roi7'
-    | 'estimatedProfit'
-
-  type ColumnDef = {
-    key: ColumnKey
-    label: string
-    prop?: string
-    width?: number
-    minWidth?: number
-    align?: 'left' | 'center' | 'right'
-    required?: boolean
-  }
 
   const props = withDefaults(
     defineProps<{
@@ -203,120 +206,71 @@
     { rows: () => [], keyword: '' }
   )
 
-  const emit = defineEmits<{
-    (e: 'detail', row: OwnerMixedRow): void
-  }>()
+  defineEmits<{ (e: 'detail', row: OwnerMixedRow): void }>()
 
-  const expandedRowKeys = ref<string[]>([])
+  // --- 列可见性 ---
+  const ALL_COLUMNS = [
+    { key: 'ownerName', label: '优化师', required: true },
+    { key: 'level', label: '职级' },
+    { key: 'appCount', label: '负责应用数' },
+    { key: 'spend', label: '广告支出', required: true },
+    { key: 'activeCampaignCount', label: '活跃系列数' },
+    { key: 'avgCpi', label: '平均CPI' },
+    { key: 'avgCtr', label: '平均点击率' },
+    { key: 'avgCvr', label: '平均转化率' },
+    { key: 'roi1', label: '首日ROI' },
+    { key: 'roi7', label: '7日ROI' },
+    { key: 'estimatedProfit', label: '预估利润' }
+  ] as const
 
-  watch(
-    () => props.keyword,
-    () => {
-      expandedRowKeys.value = []
-    }
-  )
+  const {
+    allColumns,
+    isVisible,
+    dialogVisible,
+    checkedKeys,
+    allChecked,
+    indeterminate,
+    openDialog,
+    resetDialog,
+    confirmDialog
+  } = useTabColumnVisibility('ad-performance:table:owner:visible-columns', ALL_COLUMNS)
 
-  const STORAGE_KEY_COLUMNS = 'ad-performance:table:owner:visible-columns'
+  defineExpose({ openCustomColumns: openDialog })
 
-  const ALL_COLUMNS: ColumnDef[] = [
-    { key: 'ownerName', label: '优化师', minWidth: 220, required: true },
-    { key: 'level', label: '职级', width: 120, align: 'left' },
-    { key: 'appCount', label: '负责应用数', width: 120, align: 'left' },
-    { key: 'spend', label: '广告支出', width: 110, align: 'left', required: true },
-    { key: 'activeCampaignCount', label: '活跃系列数', width: 120, align: 'left' },
-    { key: 'avgCpi', label: '平均CPI', width: 100, align: 'left' },
-    { key: 'avgCtr', label: '平均点击率', width: 110, align: 'left' },
-    { key: 'avgCvr', label: '平均转化率', width: 110, align: 'left' },
-    { key: 'roi1', label: '首日ROI', width: 90, align: 'left' },
-    { key: 'roi7', label: '7日ROI', width: 90, align: 'left' },
-    { key: 'estimatedProfit', label: '预估利润', minWidth: 110, align: 'left' }
-  ]
-
-  const requiredKeys = computed<ColumnKey[]>(() =>
-    ALL_COLUMNS.filter((c) => c.required).map((c) => c.key)
-  )
-
-  function loadVisibleKeys(): ColumnKey[] {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_COLUMNS)
-      if (!raw) return ALL_COLUMNS.map((c) => c.key)
-      const parsed = JSON.parse(raw) as unknown
-      if (!Array.isArray(parsed)) return ALL_COLUMNS.map((c) => c.key)
-      const set = new Set(parsed.filter((k) => typeof k === 'string') as string[])
-      const keys = ALL_COLUMNS.map((c) => c.key).filter((k) => set.has(k))
-      for (const k of requiredKeys.value) {
-        if (!keys.includes(k)) keys.unshift(k)
-      }
-      return keys
-    } catch {
-      return ALL_COLUMNS.map((c) => c.key)
-    }
-  }
-
-  const visibleColumnKeys = ref<ColumnKey[]>(loadVisibleKeys())
-
-  watch(
-    visibleColumnKeys,
-    (val) => {
-      localStorage.setItem(STORAGE_KEY_COLUMNS, JSON.stringify(val))
-    },
-    { deep: true }
-  )
-
-  const visibleColumnDefs = computed<ColumnDef[]>(() => {
-    const set = new Set(visibleColumnKeys.value)
-    return ALL_COLUMNS.filter((c) => set.has(c.key))
-  })
-
-  const customColumnsVisible = ref(false)
-  const customCheckedKeys = ref<ColumnKey[]>([])
-
-  const customAllChecked = computed({
-    get() {
-      return customCheckedKeys.value.length === ALL_COLUMNS.length
-    },
-    set(val: boolean) {
-      customCheckedKeys.value = val ? ALL_COLUMNS.map((c) => c.key) : [...requiredKeys.value]
-    }
-  })
-
-  const customIndeterminate = computed(() => {
-    const len = customCheckedKeys.value.length
-    return len > 0 && len < ALL_COLUMNS.length
-  })
-
-  function openCustomColumns() {
-    customCheckedKeys.value = [...visibleColumnKeys.value]
-    customColumnsVisible.value = true
-  }
-
-  function onCustomReset() {
-    customCheckedKeys.value = ALL_COLUMNS.map((c) => c.key)
-  }
-
-  function onCustomConfirm() {
-    const set = new Set(customCheckedKeys.value)
-    for (const k of requiredKeys.value) set.add(k)
-    visibleColumnKeys.value = ALL_COLUMNS.map((c) => c.key).filter((k) => set.has(k))
-    customColumnsVisible.value = false
-  }
-
-  defineExpose({ openCustomColumns })
-
+  // --- 展开状态 ---
+  const { expandedRowKeys, onExpandChange } = useTabExpand(() => props.keyword)
   const treeProps = { children: 'children', hasChildren: 'hasChildren' } as const
 
+  // --- 枚举映射 ---
+  const LEVEL_LABEL: Record<OwnerLevel, string> = {
+    junior: '初级优化师',
+    mid: '中级优化师',
+    senior: '高级优化师'
+  }
+  const LEVEL_TAG_TYPE: Record<OwnerLevel, 'success' | 'warning' | 'info'> = {
+    junior: 'info',
+    mid: 'success',
+    senior: 'warning'
+  }
+
+  // --- 行类型判断 ---
   function isOwnerRow(row: OwnerMixedRow): row is AdPerformanceOwnerRow {
     return row.ownerName != null && String(row.ownerName).trim() !== ''
   }
 
-  const filteredData = computed<AdPerformanceOwnerRow[]>(() => {
+  function avatarText(name: string): string {
+    const t = String(name ?? '').trim()
+    return t ? t.slice(0, 1) : '?'
+  }
+
+  // --- 过滤数据 ---
+  const tableData = computed(() => {
     const list = props.rows ?? []
     const kw = props.keyword?.trim().toLowerCase()
     if (!kw) return list
     return list
       .map((owner) => {
-        const ownerMatch = (owner.ownerName ?? '').toLowerCase().includes(kw)
-        if (ownerMatch) return owner
+        if ((owner.ownerName ?? '').toLowerCase().includes(kw)) return owner
         const children =
           owner.children?.filter((c) => (c.campaignName ?? '').toLowerCase().includes(kw)) ?? []
         if (children.length) return { ...owner, children }
@@ -325,89 +279,13 @@
       .filter(Boolean) as AdPerformanceOwnerRow[]
   })
 
-  const data = computed(() => filteredData.value)
-
-  function onExpandChange(row: OwnerMixedRow) {
-    if (!isOwnerRow(row)) return
-    const id = row.id
-    const idx = expandedRowKeys.value.indexOf(id)
-    if (idx >= 0) expandedRowKeys.value.splice(idx, 1)
-    else expandedRowKeys.value.push(id)
-  }
-
   function getRowClassName({ row }: { row: OwnerMixedRow }) {
     return isOwnerRow(row) ? 'is-level-owner' : 'is-level-owner-campaign'
   }
 
-  function onDetail(row: OwnerMixedRow) {
-    emit('detail', row)
-  }
-
-  function formatMoney(n: number, digits: 0 | 2) {
-    return (
-      '$' +
-      n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })
-    )
-  }
-
-  function roiClass(roi: number): string {
-    return roi >= 80 ? 'ad-performance-table__roi--up' : 'ad-performance-table__roi--down'
-  }
-
-  function profitClass(profit: number): string {
-    return profit >= 0 ? 'ad-performance-table__profit--up' : 'ad-performance-table__profit--down'
-  }
-
-  function avatarText(name: string) {
-    const t = String(name ?? '').trim()
-    return t ? t.slice(0, 1) : '?'
-  }
-
-  function levelLabel(level: OwnerLevel) {
-    const map: Record<OwnerLevel, string> = {
-      junior: '初级优化师',
-      mid: '中级优化师',
-      senior: '高级优化师'
-    }
-    return map[level] ?? level
-  }
-
-  function levelTagType(level: OwnerLevel): 'success' | 'warning' | 'info' {
-    const map: Record<OwnerLevel, 'success' | 'warning' | 'info'> = {
-      junior: 'info',
-      mid: 'success',
-      senior: 'warning'
-    }
-    return map[level] ?? 'info'
-  }
-
-  function channelShort(channel: string) {
-    const map: Record<string, string> = {
-      google: 'G',
-      facebook: 'F',
-      tiktok: 'T',
-      meta: 'M',
-      kwai: 'K',
-      mintegral: 'Mi'
-    }
-    return (
-      map[channel] ??
-      String(channel ?? '')
-        .slice(0, 1)
-        .toUpperCase()
-    )
-  }
-
-  function countryFlag(country: string) {
-    const c = String(country ?? '').toUpperCase()
-    const map: Record<string, string> = {
-      US: '🇺🇸',
-      UK: '🇬🇧',
-      CA: '🇨🇦',
-      JP: '🇯🇵',
-      BR: '🇧🇷'
-    }
-    return map[c] ?? c
+  function handleExpand(row: OwnerMixedRow) {
+    if (!isOwnerRow(row)) return
+    onExpandChange(row.id)
   }
 </script>
 

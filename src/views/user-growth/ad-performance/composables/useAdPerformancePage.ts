@@ -1,4 +1,4 @@
-import { computed, onMounted, ref } from 'vue'
+import { computed, markRaw, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   fetchAdPerformanceAlertAction,
@@ -97,13 +97,13 @@ export function useAdPerformancePage() {
     try {
       const o = await fetchAdPerformanceOverview(page.value.filter)
       page.value.dataTime = o.dataTime
-      page.value.kpi = o.kpi
-      page.value.spendTrend = o.spendTrend
-      page.value.roi7dTrend = o.roi7dTrend
-      page.value.channelDistribution = o.channelDistribution
-      page.value.appDistribution = o.appDistribution
-      page.value.ownerShareDistribution = o.ownerShareDistribution
-      page.value.alerts = o.alerts
+      page.value.kpi = markRaw(o.kpi)
+      page.value.spendTrend = markRaw(o.spendTrend)
+      page.value.roi7dTrend = markRaw(o.roi7dTrend)
+      page.value.channelDistribution = markRaw(o.channelDistribution)
+      page.value.appDistribution = markRaw(o.appDistribution)
+      page.value.ownerShareDistribution = markRaw(o.ownerShareDistribution)
+      page.value.alerts = markRaw(o.alerts)
     } catch {
       ElMessage.error('加载概览数据失败')
     }
@@ -113,29 +113,21 @@ export function useAdPerformancePage() {
     const seq = ++tableLoadSeq
     const q = tableQuery()
     try {
-      if (activeTableTab.value === 'campaign') {
-        const r = await fetchAdPerformanceTableCampaign(q)
-        if (seq !== tableLoadSeq) return
-        page.value.campaignTableRows = r.rows
-        page.value.pagination = r.pagination
-      } else if (activeTableTab.value === 'country') {
-        const r = await fetchAdPerformanceTableCountry(q)
-        if (seq !== tableLoadSeq) return
-        page.value.countryTableRows = r.rows
-        page.value.pagination = r.pagination
-      } else if (activeTableTab.value === 'owner') {
-        const r = await fetchAdPerformanceTableOwner(q)
-        if (seq !== tableLoadSeq) return
-        page.value.ownerTableRows = r.rows
-        page.value.ownerTeamSummary = r.summary
-        page.value.pagination = r.pagination
-      } else {
-        const r = await fetchAdPerformanceTableAccount(q)
-        if (seq !== tableLoadSeq) return
-        page.value.accountTableRows = r.rows
-        page.value.accountSummary = r.summary
-        page.value.pagination = r.pagination
-      }
+      const [campaign, country, owner, account] = await Promise.all([
+        fetchAdPerformanceTableCampaign(q),
+        fetchAdPerformanceTableCountry(q),
+        fetchAdPerformanceTableOwner(q),
+        fetchAdPerformanceTableAccount(q)
+      ])
+      if (seq !== tableLoadSeq) return
+      // markRaw 阻止 Vue 对行数据做深度响应式追踪，避免大数据量下递归创建 Proxy 导致卡顿/内存暴涨
+      page.value.campaignTableRows = markRaw(campaign.rows)
+      page.value.pagination = campaign.pagination
+      page.value.countryTableRows = markRaw(country.rows)
+      page.value.ownerTableRows = markRaw(owner.rows)
+      page.value.ownerTeamSummary = owner.summary
+      page.value.accountTableRows = markRaw(account.rows)
+      page.value.accountSummary = account.summary
     } catch {
       if (seq !== tableLoadSeq) return
       ElMessage.error('加载表格数据失败')
@@ -168,12 +160,8 @@ export function useAdPerformancePage() {
     loading.value = false
   }
 
-  async function onTableTabChange(tab: AdPerformanceTableTab) {
+  function onTableTabChange(tab: AdPerformanceTableTab) {
     activeTableTab.value = tab
-    page.value.pagination = { ...page.value.pagination, current: 1 }
-    tableLoading.value = true
-    await loadTable()
-    tableLoading.value = false
   }
 
   async function onTableKeywordSearch() {

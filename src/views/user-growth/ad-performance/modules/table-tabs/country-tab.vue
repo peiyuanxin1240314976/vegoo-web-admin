@@ -8,168 +8,182 @@
       :expand-row-keys="expandedRowKeys"
       :row-class-name="getRowClassName"
       :row-style="getRowStyle"
-      stripe
+      @expand-change="handleExpand"
       size="default"
       class="ad-performance-table__el-table"
-      @expand-change="onExpandChange"
     >
-      <ElTableColumn
-        v-for="col in visibleColumnDefs"
-        :key="col.key"
-        :label="col.label"
-        :prop="col.prop || undefined"
-        :width="col.width"
-        :min-width="col.minWidth"
-        :align="col.align"
-      >
+      <!-- 国家 (required) -->
+      <ElTableColumn label="国家" min-width="200">
         <template #default="{ row }">
-          <template v-if="col.key === 'country'">
-            <template v-if="isCountryAggregateRow(row)">
+          <template v-if="isAggregateId(row.id)">
+            <span class="ad-performance-table__country" :title="row.country">
+              {{ countryFlag(row.country) }}
+              <span class="ml-2 text-sm text-g-900">{{ countryLabel(row.country) }}</span>
+            </span>
+          </template>
+          <template v-else>
+            <div class="ad-performance-country__campaign">
+              <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
+              <span class="ad-performance-country__campaign-app" :title="row.appName">{{
+                row.appName
+              }}</span>
+              <span class="ad-performance-country__campaign-name" :title="row.name">{{
+                row.name
+              }}</span>
+              <span class="ad-performance-table__channel">
+                <span
+                  class="ad-performance-table__channel-icon"
+                  :class="`ad-performance-table__channel-icon--${row.channel}`"
+                  aria-hidden="true"
+                  >{{ channelShort(row.channel) }}</span
+                >
+              </span>
               <span class="ad-performance-table__country" :title="row.country">
                 {{ countryFlag(row.country) }}
-                <span class="ml-2 text-sm text-g-900">{{ countryLabel(row.country) }}</span>
               </span>
-            </template>
-            <template v-else>
-              <div class="ad-performance-country__campaign">
-                <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
-                <span class="ad-performance-country__campaign-app" :title="row.appName">{{
-                  row.appName
-                }}</span>
-                <span class="ad-performance-country__campaign-name" :title="row.name">{{
-                  row.name
-                }}</span>
-                <span class="ad-performance-table__channel">
-                  <span
-                    class="ad-performance-table__channel-icon"
-                    :class="`ad-performance-table__channel-icon--${row.channel}`"
-                    aria-hidden="true"
-                  >
-                    {{ channelShort(row.channel) }}
-                  </span>
-                </span>
-                <span class="ad-performance-table__country" :title="row.country">
-                  {{ countryFlag(row.country) }}
-                </span>
-              </div>
-            </template>
-          </template>
-          <template v-else-if="col.key === 'spend'">
-            {{ formatMoney(rowSpend(row), 0) }}
-          </template>
-          <template v-else-if="col.key === 'spendSharePercent'">
-            <template v-if="isCountryAggregateRow(row)">
-              <div class="ad-performance-table__progress-cell">
-                <div class="ad-performance-table__progress-bg">
-                  <div
-                    class="ad-performance-table__progress-fill ad-performance-table__progress-fill--teal"
-                    :style="{ width: `${row.spendSharePercent}%` }"
-                  ></div>
-                </div>
-                <span class="ad-performance-table__progress-text"
-                  >{{ row.spendSharePercent }}%</span
-                >
-              </div>
-            </template>
-            <span v-else class="ad-performance-table__muted">-</span>
-          </template>
-          <template v-else-if="col.key === 'cpi'">{{ formatMoney(rowCpi(row), 2) }}</template>
-          <template v-else-if="col.key === 'ctr'">{{ rowCtr(row) }}%</template>
-          <template v-else-if="col.key === 'cvr'">{{ rowCvr(row) }}%</template>
-          <template v-else-if="col.key === 'roi1'">
-            <span :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
-          </template>
-          <template v-else-if="col.key === 'roi3'">
-            <span v-if="isCountryAggregateRow(row)" :class="roiClass(row.roi3)"
-              >{{ row.roi3 }}%</span
-            >
-            <span v-else class="ad-performance-table__muted">-</span>
-          </template>
-          <template v-else-if="col.key === 'roi7'">
-            <span :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
-          </template>
-          <template v-else-if="col.key === 'roiTotal'">
-            <span v-if="isCountryAggregateRow(row)" :class="roiClass(row.roiTotal)"
-              >{{ row.roiTotal }}%</span
-            >
-            <span v-else class="ad-performance-table__muted">-</span>
-          </template>
-          <template v-else-if="col.key === 'estimatedProfit'">
-            <span :class="profitClass(rowEstimatedProfit(row))">
-              {{ rowEstimatedProfit(row) >= 0 ? '+' : ''
-              }}{{ formatMoney(rowEstimatedProfit(row), 0) }}
-            </span>
+            </div>
           </template>
         </template>
       </ElTableColumn>
 
+      <!-- 广告支出 (required) -->
+      <ElTableColumn label="广告支出" width="110" align="left">
+        <template #default="{ row }">{{ formatMoney(row.spend, 0) }}</template>
+      </ElTableColumn>
+
+      <!-- 支出占比 -->
+      <ElTableColumn v-if="isVisible('spendSharePercent')" label="支出占比" min-width="150">
+        <template #default="{ row }">
+          <template v-if="isAggregateId(row.id)">
+            <div class="ad-performance-table__progress-cell">
+              <div class="ad-performance-table__progress-bg">
+                <div
+                  class="ad-performance-table__progress-fill ad-performance-table__progress-fill--teal"
+                  :style="progressStyleMap.get(row.id)"
+                ></div>
+              </div>
+              <span class="ad-performance-table__progress-text">{{ row.spendSharePercent }}%</span>
+            </div>
+          </template>
+          <span v-else class="ad-performance-table__muted">-</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- CPI -->
+      <ElTableColumn v-if="isVisible('cpi')" label="CPI" width="90" align="left">
+        <template #default="{ row }">{{ formatMoney(row.cpi, 2) }}</template>
+      </ElTableColumn>
+
+      <!-- 点击率 -->
+      <ElTableColumn v-if="isVisible('ctr')" label="点击率" width="100" align="left">
+        <template #default="{ row }">{{ row.ctr }}%</template>
+      </ElTableColumn>
+
+      <!-- 转化率 -->
+      <ElTableColumn v-if="isVisible('cvr')" label="转化率" width="100" align="left">
+        <template #default="{ row }">{{ row.cvr }}%</template>
+      </ElTableColumn>
+
+      <!-- 首日ROI -->
+      <ElTableColumn v-if="isVisible('roi1')" label="首日ROI" width="90" align="left">
+        <template #default="{ row }">
+          <span :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 3日ROI（仅国家汇总行有值） -->
+      <ElTableColumn v-if="isVisible('roi3')" label="3日ROI" width="90" align="left">
+        <template #default="{ row }">
+          <span v-if="isAggregateId(row.id)" :class="roiClass(row.roi3)">{{ row.roi3 }}%</span>
+          <span v-else class="ad-performance-table__muted">-</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 7日ROI -->
+      <ElTableColumn v-if="isVisible('roi7')" label="7日ROI" width="90" align="left">
+        <template #default="{ row }">
+          <span :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 累ROI（仅国家汇总行有值） -->
+      <ElTableColumn v-if="isVisible('roiTotal')" label="累ROI" width="90" align="left">
+        <template #default="{ row }">
+          <span v-if="isAggregateId(row.id)" :class="roiClass(row.roiTotal)"
+            >{{ row.roiTotal }}%</span
+          >
+          <span v-else class="ad-performance-table__muted">-</span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 预估利润 -->
+      <ElTableColumn
+        v-if="isVisible('estimatedProfit')"
+        label="预估利润"
+        min-width="100"
+        align="left"
+      >
+        <template #default="{ row }">
+          <span :class="profitClass(row.estimatedProfit)">
+            {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
+          </span>
+        </template>
+      </ElTableColumn>
+
+      <!-- 操作 -->
       <ElTableColumn label="操作" width="90" align="center" fixed="right">
         <template #default="{ row }">
-          <ElButton link type="primary" size="small" @click="emit('detail', row)">详情</ElButton>
+          <ElButton link type="primary" size="small" @click="$emit('detail', row)">详情</ElButton>
         </template>
       </ElTableColumn>
     </ElTable>
 
     <ElDialog
-      v-model="customColumnsVisible"
+      v-model="dialogVisible"
       width="520px"
       :close-on-click-modal="false"
+      :append-to-body="true"
       title="自定义列"
     >
       <div class="ad-performance-table__custom-header">
-        <ElCheckbox v-model="customAllChecked" :indeterminate="customIndeterminate"
-          >全选</ElCheckbox
-        >
-        <ElButton link type="primary" @click="onCustomReset">重置</ElButton>
+        <ElCheckbox v-model="allChecked" :indeterminate="indeterminate">全选</ElCheckbox>
+        <ElButton link type="primary" @click="resetDialog">重置</ElButton>
       </div>
-      <ElCheckboxGroup v-model="customCheckedKeys" class="ad-performance-table__custom-grid">
+      <ElCheckboxGroup v-model="checkedKeys" class="ad-performance-table__custom-grid">
         <ElCheckbox
-          v-for="opt in ALL_COLUMNS"
-          :key="opt.key"
-          :label="opt.key"
-          :disabled="opt.required"
+          v-for="col in allColumns"
+          :key="col.key"
+          :label="col.key"
+          :disabled="col.required"
+          >{{ col.label }}</ElCheckbox
         >
-          {{ opt.label }}
-        </ElCheckbox>
       </ElCheckboxGroup>
       <template #footer>
-        <ElButton round @click="customColumnsVisible = false">取消</ElButton>
-        <ElButton round type="primary" @click="onCustomConfirm">确定</ElButton>
+        <ElButton round @click="dialogVisible = false">取消</ElButton>
+        <ElButton round type="primary" @click="confirmDialog">确定</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue'
+  import { computed } from 'vue'
   import type { AdPerformanceCampaignRow, AdPerformanceCountryRow } from '../../types'
+  import { useTabColumnVisibility } from '../../composables/useTabColumnVisibility'
+  import { useTabExpand } from '../../composables/useTabExpand'
+  import {
+    channelShort,
+    countryFlag,
+    countryLabel,
+    formatMoney,
+    roiClass,
+    profitClass,
+    accentColor
+  } from '../../utils/tab-utils'
 
   defineOptions({ name: 'AdPerformanceCountryTab' })
 
   type CountryMixedRow = AdPerformanceCountryRow | AdPerformanceCampaignRow
-
-  type ColumnKey =
-    | 'country'
-    | 'spend'
-    | 'spendSharePercent'
-    | 'cpi'
-    | 'ctr'
-    | 'cvr'
-    | 'roi1'
-    | 'roi3'
-    | 'roi7'
-    | 'roiTotal'
-    | 'estimatedProfit'
-
-  type ColumnDef = {
-    key: ColumnKey
-    label: string
-    prop?: keyof AdPerformanceCountryRow
-    width?: number
-    minWidth?: number
-    align?: 'left' | 'center' | 'right'
-    required?: boolean
-  }
 
   const props = withDefaults(
     defineProps<{
@@ -179,123 +193,46 @@
     { rows: () => [], keyword: '' }
   )
 
-  const emit = defineEmits<{
-    (e: 'detail', row: CountryMixedRow): void
-  }>()
+  defineEmits<{ (e: 'detail', row: CountryMixedRow): void }>()
 
-  const expandedRowKeys = ref<string[]>([])
+  // --- 列可见性 ---
+  const ALL_COLUMNS = [
+    { key: 'country', label: '国家', required: true },
+    { key: 'spend', label: '广告支出', required: true },
+    { key: 'spendSharePercent', label: '支出占比' },
+    { key: 'cpi', label: 'CPI' },
+    { key: 'ctr', label: '点击率' },
+    { key: 'cvr', label: '转化率' },
+    { key: 'roi1', label: '首日ROI' },
+    { key: 'roi3', label: '3日ROI' },
+    { key: 'roi7', label: '7日ROI' },
+    { key: 'roiTotal', label: '累ROI' },
+    { key: 'estimatedProfit', label: '预估利润' }
+  ] as const
 
-  watch(
-    () => props.keyword,
-    () => {
-      expandedRowKeys.value = []
-    }
-  )
+  const {
+    allColumns,
+    isVisible,
+    dialogVisible,
+    checkedKeys,
+    allChecked,
+    indeterminate,
+    openDialog,
+    resetDialog,
+    confirmDialog
+  } = useTabColumnVisibility('ad-performance:table:country:visible-columns', ALL_COLUMNS)
 
-  const STORAGE_KEY_COLUMNS = 'ad-performance:table:country:visible-columns'
+  defineExpose({ openCustomColumns: openDialog })
 
-  const ALL_COLUMNS: ColumnDef[] = [
-    { key: 'country', label: '国家', prop: 'country', minWidth: 200, required: true },
-    { key: 'spend', label: '广告支出', prop: 'spend', width: 110, align: 'left', required: true },
-    { key: 'spendSharePercent', label: '支出占比', prop: 'spendSharePercent', minWidth: 150 },
-    { key: 'cpi', label: 'CPI', prop: 'cpi', width: 90, align: 'left' },
-    { key: 'ctr', label: '点击率', prop: 'ctr', width: 100, align: 'left' },
-    { key: 'cvr', label: '转化率', prop: 'cvr', width: 100, align: 'left' },
-    { key: 'roi1', label: '首日ROI', prop: 'roi1', width: 90, align: 'left' },
-    { key: 'roi3', label: '3日ROI', prop: 'roi3', width: 90, align: 'left' },
-    { key: 'roi7', label: '7日ROI', prop: 'roi7', width: 90, align: 'left' },
-    { key: 'roiTotal', label: '累ROI', prop: 'roiTotal', width: 90, align: 'left' },
-    {
-      key: 'estimatedProfit',
-      label: '预估利润',
-      prop: 'estimatedProfit',
-      minWidth: 100,
-      align: 'left'
-    }
-  ]
-
-  const requiredKeys = computed<ColumnKey[]>(() =>
-    ALL_COLUMNS.filter((c) => c.required).map((c) => c.key)
-  )
-
-  function loadVisibleKeys(): ColumnKey[] {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_COLUMNS)
-      if (!raw) return ALL_COLUMNS.map((c) => c.key)
-      const parsed = JSON.parse(raw) as unknown
-      if (!Array.isArray(parsed)) return ALL_COLUMNS.map((c) => c.key)
-      const set = new Set(parsed.filter((k) => typeof k === 'string') as string[])
-      const keys = ALL_COLUMNS.map((c) => c.key).filter((k) => set.has(k))
-      for (const k of requiredKeys.value) {
-        if (!keys.includes(k)) keys.unshift(k)
-      }
-      return keys
-    } catch {
-      return ALL_COLUMNS.map((c) => c.key)
-    }
-  }
-
-  const visibleColumnKeys = ref<ColumnKey[]>(loadVisibleKeys())
-
-  watch(
-    visibleColumnKeys,
-    (val) => {
-      localStorage.setItem(STORAGE_KEY_COLUMNS, JSON.stringify(val))
-    },
-    { deep: true }
-  )
-
-  const visibleColumnDefs = computed<ColumnDef[]>(() => {
-    const set = new Set(visibleColumnKeys.value)
-    return ALL_COLUMNS.filter((c) => set.has(c.key))
-  })
-
-  const customColumnsVisible = ref(false)
-  const customCheckedKeys = ref<ColumnKey[]>([])
-
-  const customAllChecked = computed({
-    get() {
-      return customCheckedKeys.value.length === ALL_COLUMNS.length
-    },
-    set(val: boolean) {
-      customCheckedKeys.value = val ? ALL_COLUMNS.map((c) => c.key) : [...requiredKeys.value]
-    }
-  })
-
-  const customIndeterminate = computed(() => {
-    const len = customCheckedKeys.value.length
-    return len > 0 && len < ALL_COLUMNS.length
-  })
-
-  function openCustomColumns() {
-    customCheckedKeys.value = [...visibleColumnKeys.value]
-    customColumnsVisible.value = true
-  }
-
-  function onCustomReset() {
-    customCheckedKeys.value = ALL_COLUMNS.map((c) => c.key)
-  }
-
-  function onCustomConfirm() {
-    const set = new Set(customCheckedKeys.value)
-    for (const k of requiredKeys.value) set.add(k)
-    visibleColumnKeys.value = ALL_COLUMNS.map((c) => c.key).filter((k) => set.has(k))
-    customColumnsVisible.value = false
-  }
-
-  defineExpose({ openCustomColumns })
-
+  // --- 展开状态 ---
+  const { expandedRowKeys, onExpandChange } = useTabExpand(() => props.keyword)
   const treeProps = { children: 'children', hasChildren: 'hasChildren' } as const
 
-  function isCountryAggregateRow(row: CountryMixedRow): row is AdPerformanceCountryRow {
-    return Object.prototype.hasOwnProperty.call(row, 'spendSharePercent')
-  }
-
-  function filterCampaignRowsTree(
+  // --- 过滤数据 ---
+  function filterCampaignTree(
     rows: AdPerformanceCampaignRow[],
     kw: string
   ): AdPerformanceCampaignRow[] {
-    if (!kw) return rows
     return rows
       .map((row) => {
         const match =
@@ -305,7 +242,7 @@
           row.country.toLowerCase().includes(kw)
         if (match) return row
         if (row.children?.length) {
-          const filtered = filterCampaignRowsTree(row.children, kw)
+          const filtered = filterCampaignTree(row.children, kw)
           if (filtered.length) return { ...row, children: filtered }
         }
         return null
@@ -313,142 +250,69 @@
       .filter(Boolean) as AdPerformanceCampaignRow[]
   }
 
-  function filterCountryRows(
-    rows: AdPerformanceCountryRow[],
-    kw: string
-  ): AdPerformanceCountryRow[] {
-    if (!kw) return rows
-    return rows
+  const tableData = computed(() => {
+    const list = props.rows ?? []
+    const kw = props.keyword?.trim().toLowerCase()
+    if (!kw) return list
+    return list
       .map((row) => {
         if (row.country.toLowerCase().includes(kw)) return row
         if (row.children?.length) {
-          const filtered = filterCampaignRowsTree(row.children, kw)
+          const filtered = filterCampaignTree(row.children, kw)
           if (filtered.length) return { ...row, children: filtered }
         }
         return null
       })
       .filter(Boolean) as AdPerformanceCountryRow[]
+  })
+
+  // --- 国家汇总行 ID 集合（O(1) 查找，替代 hasOwnProperty 逐格判断）---
+  const aggregateIdSet = computed(() => {
+    const s = new Set<string>()
+    for (const row of tableData.value) s.add(row.id)
+    return s
+  })
+
+  function isAggregateId(id: string): boolean {
+    return aggregateIdSet.value.has(id)
   }
 
-  const tableData = computed(() => filterCountryRows(props.rows ?? [], props.keyword?.trim() ?? ''))
+  // --- 行样式 ---
+  const rowStyleMap = computed(() => {
+    const map = new Map<string, Record<string, string>>()
+    for (const row of tableData.value) {
+      // 国家汇总行无 channel，使用默认色
+      map.set(row.id, { '--row-accent': 'var(--art-success)' })
+      if (row.children?.length) {
+        for (const child of row.children) {
+          map.set(child.id, { '--row-accent': accentColor(child.channel) })
+        }
+      }
+    }
+    return map
+  })
 
-  function rowSpend(row: CountryMixedRow) {
-    return row.spend
-  }
+  // 进度条宽度缓存
+  const progressStyleMap = computed(() => {
+    const map = new Map<string, { width: string }>()
+    for (const row of tableData.value) {
+      map.set(row.id, { width: `${row.spendSharePercent}%` })
+    }
+    return map
+  })
 
-  function rowCpi(row: CountryMixedRow) {
-    return row.cpi
-  }
-
-  function rowCtr(row: CountryMixedRow) {
-    return row.ctr
-  }
-
-  function rowCvr(row: CountryMixedRow) {
-    return row.cvr
-  }
-
-  function rowEstimatedProfit(row: CountryMixedRow) {
-    return row.estimatedProfit
-  }
-
-  function onExpandChange(row: CountryMixedRow) {
-    if (!isCountryAggregateRow(row)) return
-    const id = row.id
-    const idx = expandedRowKeys.value.indexOf(id)
-    if (idx >= 0) expandedRowKeys.value.splice(idx, 1)
-    else expandedRowKeys.value.push(id)
-  }
-
-  const LEVEL_ACCENT_COLORS: Record<string, string> = {
-    google: '#3B82F6',
-    facebook: '#2563EB',
-    tiktok: '#10B981',
-    meta: '#8B5CF6',
-    kwai: '#F97316',
-    mintegral: '#EC4899'
-  }
-
-  function getRowAccentColor(row: CountryMixedRow) {
-    const ch = String((row as AdPerformanceCampaignRow).channel ?? '')
-    return LEVEL_ACCENT_COLORS[ch] ?? 'var(--art-success)'
+  function getRowStyle({ row }: { row: CountryMixedRow }) {
+    return rowStyleMap.value.get(row.id) ?? {}
   }
 
   function getRowClassName({ row }: { row: CountryMixedRow }) {
-    return isCountryAggregateRow(row) ? 'is-level-country' : 'is-level-country-campaign'
+    return isAggregateId(row.id) ? 'is-level-country' : 'is-level-country-campaign'
   }
 
-  function getRowStyle({ row }: { row: CountryMixedRow }) {
-    const color = getRowAccentColor(row)
-    return { '--row-accent': color } as Record<string, string>
-  }
-
-  function formatMoney(n: number, digits: 0 | 2) {
-    return (
-      '$' +
-      n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })
-    )
-  }
-
-  function roiClass(roi: number): string {
-    return roi >= 80 ? 'ad-performance-table__roi--up' : 'ad-performance-table__roi--down'
-  }
-
-  function profitClass(profit: number): string {
-    return profit >= 0 ? 'ad-performance-table__profit--up' : 'ad-performance-table__profit--down'
-  }
-
-  function channelShort(channel: string) {
-    const map: Record<string, string> = {
-      google: 'G',
-      facebook: 'F',
-      tiktok: 'T',
-      meta: 'M',
-      kwai: 'K',
-      mintegral: 'Mi'
-    }
-    return (
-      map[channel] ??
-      String(channel ?? '')
-        .slice(0, 1)
-        .toUpperCase()
-    )
-  }
-
-  function countryFlag(country: string) {
-    const c = String(country ?? '').toUpperCase()
-    const map: Record<string, string> = {
-      US: '🇺🇸',
-      UK: '🇬🇧',
-      CA: '🇨🇦',
-      JP: '🇯🇵',
-      BR: '🇧🇷',
-      MX: '🇲🇽',
-      CO: '🇨🇴',
-      AR: '🇦🇷',
-      TH: '🇹🇭',
-      VN: '🇻🇳',
-      ES: '🇪🇸'
-    }
-    return map[c] ?? c
-  }
-
-  function countryLabel(country: string) {
-    const c = String(country ?? '').toUpperCase()
-    const map: Record<string, string> = {
-      US: '美国(US)',
-      UK: '英国(UK)',
-      CA: '加拿大(CA)',
-      JP: '日本(JP)',
-      BR: '巴西(BR)',
-      MX: '墨西哥(MX)',
-      CO: '哥伦比亚(CO)',
-      AR: '阿根廷(AR)',
-      TH: '泰国(TH)',
-      VN: '越南(VN)',
-      ES: '西班牙(ES)'
-    }
-    return map[c] ?? c
+  function handleExpand(row: CountryMixedRow) {
+    // 子行不处理展开
+    if (!isAggregateId(row.id)) return
+    onExpandChange(row.id)
   }
 </script>
 

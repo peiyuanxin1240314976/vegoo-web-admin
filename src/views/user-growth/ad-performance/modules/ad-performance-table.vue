@@ -50,34 +50,17 @@
         </div>
       </div>
       <div v-loading="props.loading" class="ad-performance-table__body">
-        <CampaignTab
-          v-if="activeTab === 'campaign'"
-          :data="props.campaignRows"
-          :keyword="tableKeyword"
-          @detail="onDetailCampaign"
-          ref="campaignTabRef"
-        />
-        <CountryTab
-          v-else-if="activeTab === 'country'"
-          :rows="props.countryRows"
-          :keyword="tableKeyword"
-          @detail="onDetailCountry"
-          ref="countryTabRef"
-        />
-        <OwnerTab
-          v-else-if="activeTab === 'owner'"
-          :rows="props.ownerRows"
-          :keyword="tableKeyword"
-          @detail="onDetailOwner"
-          ref="ownerTabRef"
-        />
-        <AccountTab
-          v-else
-          :rows="props.accountRows"
-          :keyword="tableKeyword"
-          @detail="onDetailAccount"
-          ref="accountTabRef"
-        />
+        <!-- component :is + KeepAlive 是 Vue 3 官方支持的缓存模式；v-if/else-if 在 slot 变空时 KeepAlive 无法正确缓存 -->
+        <KeepAlive>
+          <component
+            :is="activeTabComp"
+            :rows="activeTabRows"
+            v-bind="activeTabExtraProps"
+            :keyword="tableKeyword"
+            ref="activeTabRef"
+            @detail="onDetail"
+          />
+        </KeepAlive>
       </div>
       <div class="ad-performance-table__footer">
         <div v-if="activeTab === 'owner'" class="ad-performance-table__summary">
@@ -508,10 +491,7 @@
     emit('update:activeTab', tab as AdPerformanceTableTab)
   }
 
-  const campaignTabRef = ref<{ openCustomColumns: () => void } | null>(null)
-  const countryTabRef = ref<{ openCustomColumns: () => void } | null>(null)
-  const ownerTabRef = ref<{ openCustomColumns: () => void } | null>(null)
-  const accountTabRef = ref<{ openCustomColumns: () => void } | null>(null)
+  const activeTabRef = ref<{ openCustomColumns: () => void } | null>(null)
 
   const drawerCampaignDetail = ref<AdPerformanceCampaignDetail | null>(null)
   const drawerDetailLoading = ref(false)
@@ -583,10 +563,56 @@
   }
 
   function onCustomColumns() {
-    if (props.activeTab === 'campaign') campaignTabRef.value?.openCustomColumns()
-    else if (props.activeTab === 'country') countryTabRef.value?.openCustomColumns()
-    else if (props.activeTab === 'owner') ownerTabRef.value?.openCustomColumns()
-    else accountTabRef.value?.openCustomColumns()
+    activeTabRef.value?.openCustomColumns()
+  }
+
+  const activeTabComp = computed(() => {
+    if (props.activeTab === 'campaign') return CampaignTab
+    if (props.activeTab === 'country') return CountryTab
+    if (props.activeTab === 'owner') return OwnerTab
+    return AccountTab
+  })
+
+  const activeTabRows = computed(() => {
+    if (props.activeTab === 'campaign') return campaignParentRows.value
+    if (props.activeTab === 'country') return props.countryRows
+    if (props.activeTab === 'owner') return props.ownerRows
+    return props.accountRows
+  })
+
+  // --- 广告系列 Tab：子行懒加载（父行剥离 children，子行存 Map） ---
+  const campaignChildrenMap = computed(() => {
+    const map = new Map<string, AdPerformanceCampaignRow[]>()
+    for (const row of props.campaignRows ?? []) {
+      if (row.children?.length) map.set(row.id, row.children)
+    }
+    return map
+  })
+
+  const campaignParentRows = computed((): AdPerformanceCampaignRow[] => {
+    return (props.campaignRows ?? []).map((row) => {
+      // 父行 children 不预先传入，减少初始渲染/patch 负担；展开时由 ElTable lazy/load 注入
+      const rest = { ...(row as any) } as Record<string, any>
+      delete rest.children
+      const hasChildren =
+        (row as any).hasChildren === true ||
+        (campaignChildrenMap.value.get(row.id)?.length ?? 0) > 0
+      return (hasChildren ? { ...rest, hasChildren: true } : rest) as AdPerformanceCampaignRow
+    })
+  })
+
+  const activeTabExtraProps = computed(() => {
+    if (props.activeTab !== 'campaign') return {}
+    return { childrenMap: campaignChildrenMap.value }
+  })
+
+  function onDetail(row: unknown) {
+    if (props.activeTab === 'campaign') onDetailCampaign(row as AdPerformanceCampaignRow)
+    else if (props.activeTab === 'country')
+      onDetailCountry(row as AdPerformanceCountryRow | AdPerformanceCampaignRow)
+    else if (props.activeTab === 'owner')
+      onDetailOwner(row as AdPerformanceOwnerRow | AdPerformanceOwnerCampaignRow)
+    else onDetailAccount(row as AdPerformanceAccountRow | AdPerformanceAccountCampaignRow)
   }
 
   function onFilter() {
