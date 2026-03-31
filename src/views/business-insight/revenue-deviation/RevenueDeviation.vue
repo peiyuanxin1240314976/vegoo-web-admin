@@ -46,9 +46,7 @@
           />
         </el-select>
 
-        <el-button type="primary" class="rd-filter-action rd-filter-action--apply">
-          查询
-        </el-button>
+        <el-button type="primary" plain round> 查询 </el-button>
       </div>
     </div>
 
@@ -321,7 +319,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+  import { ref, onMounted, onUnmounted, watch, nextTick, onActivated, onDeactivated } from 'vue'
   import { TopRight } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
@@ -602,6 +600,61 @@
 
   let trendChart: echarts.ECharts | null = null
   let countryChart: echarts.ECharts | null = null
+  let chartResizeObserver: ResizeObserver | null = null
+  let windowResizeBound = false
+
+  function bindWindowResize() {
+    if (windowResizeBound) return
+    window.addEventListener('resize', resizeHandler)
+    windowResizeBound = true
+  }
+
+  function unbindWindowResize() {
+    if (!windowResizeBound) return
+    window.removeEventListener('resize', resizeHandler)
+    windowResizeBound = false
+  }
+
+  function setupChartResizeObserver() {
+    chartResizeObserver?.disconnect()
+    chartResizeObserver = null
+
+    if (typeof ResizeObserver === 'undefined') return
+    chartResizeObserver = new ResizeObserver(() => {
+      resizeHandler()
+    })
+
+    if (trendChartRef.value) chartResizeObserver.observe(trendChartRef.value)
+    if (countryChartRef.value) chartResizeObserver.observe(countryChartRef.value)
+  }
+
+  async function ensureChartsVisibleAndRendered() {
+    await nextTick()
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve())
+    })
+
+    const trendDom = trendChartRef.value
+    const countryDom = countryChartRef.value
+
+    if (trendDom) {
+      const instanceInDom = echarts.getInstanceByDom(trendDom)
+      if (!trendChart || (instanceInDom && instanceInDom !== trendChart)) {
+        trendChart = instanceInDom ?? null
+      }
+      if (!trendChart) initTrendChart()
+    }
+
+    if (countryDom) {
+      const instanceInDom = echarts.getInstanceByDom(countryDom)
+      if (!countryChart || (instanceInDom && instanceInDom !== countryChart)) {
+        countryChart = instanceInDom ?? null
+      }
+      if (!countryChart) initCountryChart()
+    }
+
+    resizeHandler()
+  }
 
   function initTrendChart() {
     if (!trendChartRef.value || !trendData.value) return
@@ -684,6 +737,7 @@
         }
       ]
     })
+    trendChart.resize()
   }
 
   function initCountryChart() {
@@ -739,6 +793,7 @@
         }
       ]
     })
+    countryChart.resize()
   }
 
   const resizeHandler = () => {
@@ -751,16 +806,29 @@
     matrixPlatform.value = platform.value
     await loadAllCards()
     await loadMatrixOnly()
-    await nextTick()
-    initTrendChart()
-    initCountryChart()
-    window.addEventListener('resize', resizeHandler)
+    await ensureChartsVisibleAndRendered()
+    setupChartResizeObserver()
+    bindWindowResize()
   })
 
   onUnmounted(() => {
-    window.removeEventListener('resize', resizeHandler)
+    unbindWindowResize()
+    chartResizeObserver?.disconnect()
+    chartResizeObserver = null
     trendChart?.dispose()
     countryChart?.dispose()
+  })
+
+  onActivated(async () => {
+    setupChartResizeObserver()
+    bindWindowResize()
+    await ensureChartsVisibleAndRendered()
+  })
+
+  onDeactivated(() => {
+    unbindWindowResize()
+    chartResizeObserver?.disconnect()
+    chartResizeObserver = null
   })
 
   watch(activeCountryTab, () => {

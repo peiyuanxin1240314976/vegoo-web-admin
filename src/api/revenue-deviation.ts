@@ -134,10 +134,13 @@ export function fetchRevenueDeviationTableHistory(params: RevenueDeviationQuery)
   if (isRevenueDeviationEndpointMock(RevenueDeviationEndpoint.TableHistory)) {
     return mockFetchRevenueDeviationTableHistory(body)
   }
-  return request.post<RevenueDeviationHistoryRow[]>({
-    url: `${RD_BASE}/table/history`,
-    data: body
-  })
+  // 兼容后端返回 data: { data: [...] } 的包裹形态（项目 request 会先返回 res.data.data）
+  return request
+    .post<{ data: RevenueDeviationHistoryRow[] }>({
+      url: `${RD_BASE}/table/history`,
+      data: body
+    })
+    .then((res) => res.data ?? [])
 }
 
 /** 08-table-matrix.json */

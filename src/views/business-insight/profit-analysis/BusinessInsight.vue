@@ -496,7 +496,7 @@
           </ElSelect>
         </div>
 
-        <ElButton type="primary" round :disabled="pendingMeta" @click="reloadDashboard"
+        <ElButton type="primary" plain round :disabled="pendingMeta" @click="reloadDashboard"
           >查询</ElButton
         >
       </div>
