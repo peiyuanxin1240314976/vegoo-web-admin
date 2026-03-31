@@ -51,7 +51,10 @@
             <ElOption label="DE" value="de" />
             <ElOption label="JP" value="jp" />
           </ElSelect>
-          <ElButton round class="iap-export-btn" @click="onExportClick">导出</ElButton>
+          <div class="iap-filter-actions">
+            <ElButton round class="iap-search-btn" @click="handleSearch">检索</ElButton>
+            <ElButton round class="iap-search-btn" @click="onExportClick">导出</ElButton>
+          </div>
         </div>
       </div>
     </header>
@@ -96,9 +99,27 @@
         </ElSkeleton>
       </div>
       <template v-else>
-        <IAPChannelTab v-if="activeTab === 'channel'" class="iap-tab-panel" />
-        <IAPProductTab v-if="activeTab === 'product'" class="iap-tab-panel" />
-        <IAPOrderTab v-if="activeTab === 'order'" class="iap-tab-panel" />
+        <IAPChannelTab
+          v-if="activeTab === 'channel'"
+          :key="`channel-${searchToken}`"
+          class="iap-tab-panel"
+          :filters="appliedFilters"
+          :search-token="searchToken"
+        />
+        <IAPProductTab
+          v-if="activeTab === 'product'"
+          :key="`product-${searchToken}`"
+          class="iap-tab-panel"
+          :filters="appliedFilters"
+          :search-token="searchToken"
+        />
+        <IAPOrderTab
+          v-if="activeTab === 'order'"
+          :key="`order-${searchToken}`"
+          class="iap-tab-panel"
+          :filters="appliedFilters"
+          :search-token="searchToken"
+        />
       </template>
     </main>
   </div>
@@ -128,6 +149,9 @@
     date: getAppTodayYYYYMMDD()
   })
 
+  const appliedFilters = ref({ ...filters })
+  const searchToken = ref(0)
+
   const dateChipText = computed(() => filters.date || '—')
 
   const bootLoading = ref(true)
@@ -143,6 +167,17 @@
   onBeforeUnmount(() => {
     if (bootTimer != null) clearTimeout(bootTimer)
   })
+
+  function handleSearch() {
+    appliedFilters.value = { ...filters }
+    searchToken.value += 1
+    bootLoading.value = true
+    if (bootTimer != null) clearTimeout(bootTimer)
+    bootTimer = setTimeout(() => {
+      bootLoading.value = false
+      bootTimer = null
+    }, 260)
+  }
 
   function onExportClick() {
     /* 演示占位，与改版前一致不接真实导出 */
@@ -293,27 +328,37 @@
     box-shadow: 0 0 12px rgb(16 185 129 / 18%);
   }
 
-  .iap-export-btn {
+  .iap-filter-actions {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .iap-search-btn {
     --el-button-size: 40px;
 
     height: 40px;
     padding: 0 20px;
-    margin-left: auto;
     font-size: 14px;
-    background: linear-gradient(135deg, rgb(16 185 129 / 92%), rgb(5 150 105 / 88%));
-    border: 1px solid rgb(16 185 129 / 55%);
+    color: var(--art-success);
+    background: color-mix(in srgb, var(--art-success) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-success) 45%, transparent);
     box-shadow:
-      0 0 18px rgb(16 185 129 / 28%),
-      inset 0 1px 0 rgb(255 255 255 / 12%);
+      0 0 18px color-mix(in srgb, var(--art-success) 20%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 10%);
     transition:
       box-shadow 0.22s ease,
       transform 0.18s ease;
 
     &:hover {
       box-shadow:
-        0 0 26px rgb(16 185 129 / 42%),
-        inset 0 1px 0 rgb(255 255 255 / 18%);
+        0 0 26px color-mix(in srgb, var(--art-success) 34%, transparent),
+        inset 0 1px 0 rgb(255 255 255 / 16%);
       transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
     }
   }
 
@@ -407,9 +452,13 @@
       flex: 1 1 calc(50% - 6px);
     }
 
-    .iap-export-btn {
+    .iap-filter-actions {
       width: 100%;
       margin-left: 0;
+    }
+
+    .iap-search-btn {
+      width: 100%;
     }
 
     .iap-tab-nav {
@@ -420,6 +469,21 @@
 
     .iap-tab-btn {
       width: 100%;
+    }
+  }
+
+  @media (width <= 1200px) {
+    .iap-filters-inner {
+      padding: 16px 18px;
+    }
+
+    .iap-filter-select {
+      width: 150px;
+    }
+
+    .iap-filter-actions {
+      flex: 1 1 100%;
+      justify-content: flex-start;
     }
   }
 </style>

@@ -611,10 +611,13 @@
     display: grid;
     grid-template-columns: 58fr 42fr;
     gap: 14px;
+    align-items: stretch;
   }
 
   // ── 通用面板 ──────────────────────────────────────────────────
   .ca-panel {
+    height: 100%;
+
     :deep(.el-card__header) {
       padding: 10px 14px;
       font-size: 13px;
@@ -624,6 +627,20 @@
 
     :deep(.el-card__body) {
       padding: 10px 14px;
+    }
+  }
+
+  // 底部两列：卡片等高（body 纵向布局，图表撑满）
+  .ca-bottom-grid .ca-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 340px;
+
+    :deep(.el-card__body) {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
     }
   }
 
@@ -640,11 +657,15 @@
     }
 
     &--trend {
-      height: 220px;
+      flex: 1;
+      height: auto;
+      min-height: 220px;
     }
 
     &--ecpm {
-      height: 160px;
+      flex: 1;
+      height: auto;
+      min-height: 160px;
     }
   }
 
@@ -898,6 +919,33 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     margin-top: 10px;
+  }
+
+  /* 响应式：中部/底部网格与指标适配 */
+  @media (width <= 1536px) {
+    .ca-mid-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (width <= 980px) {
+    .ca-mid-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .ca-bottom-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .ecpm-metrics {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (width <= 560px) {
+    .ecpm-metrics {
+      grid-template-columns: 1fr;
+    }
   }
 
   .ecpm-metric {

@@ -2,9 +2,17 @@
   "_comment": "IAP Dashboard - 三块趋势图数据。对应 types.ts: IapOverviewTrend。",
   "fieldDescription": {
     "request": {
-      "timeRange": { "type": "string", "required": true, "description": "时间范围。" },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，格式 YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，格式 YYYY-MM-DD。"
+      },
       "s_app_id": { "type": "string", "required": false, "description": "应用 ID。" },
-      "productType": { "type": "string", "required": false, "description": "产品类型。" },
       "s_country_code": { "type": "string", "required": false, "description": "国家代码。" },
       "platform": { "type": "string", "required": false, "description": "终端平台。" }
     },
@@ -28,9 +36,9 @@
     }
   },
   "sampleRequest": {
-    "timeRange": "30",
+    "startDate": "2024-01-01",
+    "endDate": "2024-01-31",
     "s_app_id": "all",
-    "productType": "all",
     "s_country_code": "all",
     "platform": "all"
   },
@@ -53,7 +61,7 @@
     "url": "POST /api/business-insight/iap-analysis/overview/trend",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "timeRange, s_app_id?, productType?, s_country_code?, platform",
+    "requestBody": "startDate, endDate, s_app_id?, s_country_code?, platform",
     "responseBody": "ordersRevenue, conversion, arpu"
   }
 }

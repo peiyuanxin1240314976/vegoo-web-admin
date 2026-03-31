@@ -177,7 +177,8 @@ function buildCampaignRows(): AdPerformanceMock['campaignTableRows'] {
 export const MOCK_AD_PERFORMANCE: AdPerformanceMock = {
   dataTime: '14:40:23',
   filter: {
-    dateRange: 'today',
+    startDate: '2026-03-05',
+    endDate: '2026-03-05',
     app: '',
     adPlatform: '',
     account: '',

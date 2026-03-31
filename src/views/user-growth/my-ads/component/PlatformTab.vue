@@ -44,15 +44,19 @@
 
 <template>
   <div class="platform-tab">
-    <!-- ── 副标题 + 切换 ── -->
+    <!-- ── 副标题 + 切换（两行，少占横向宽度） ── -->
     <div class="tab-sub-header">
-      <span class="sub-desc">应用视角 | 展示各应用在各广告平台的广告数据</span>
-      <div class="toggle-group">
-        <div :class="['toggle-btn', groupByApp ? 'active' : '']" @click="groupByApp = true">
-          按应用分组
-        </div>
-        <div :class="['toggle-btn', !groupByApp ? 'active' : '']" @click="groupByApp = false">
-          按平台分组
+      <div class="tab-sub-header__row tab-sub-header__row--desc">
+        <span class="sub-desc">应用视角 | 展示各应用在各广告平台的广告数据</span>
+      </div>
+      <div class="tab-sub-header__row tab-sub-header__row--toggle">
+        <div class="toggle-group">
+          <div :class="['toggle-btn', groupByApp ? 'active' : '']" @click="groupByApp = true">
+            按应用分组
+          </div>
+          <div :class="['toggle-btn', !groupByApp ? 'active' : '']" @click="groupByApp = false">
+            按平台分组
+          </div>
         </div>
       </div>
     </div>
@@ -75,19 +79,23 @@
         </div>
         <template v-else>
           <div v-for="app in appGroups" :key="app.nameEn || app.name" class="app-group">
-            <!-- 应用标题行 -->
+            <!-- 应用标题：两行（名称 | 指标） -->
             <div class="app-group-header">
-              <span class="app-icon">{{ app.icon || '📱' }}</span>
-              <span class="app-name">{{ app.name }}（{{ app.nameEn }}）</span>
-              <span class="app-meta">
-                总广告支出: <b style="color: #e2e8f0">{{ app.totalSpend || '—' }}</b>
-              </span>
-              <span class="app-meta">
-                平均首日ROI: <b style="color: #f59e0b">{{ app.avgRoi || '—' }}</b>
-              </span>
-              <span class="app-meta">
-                平台数: <b style="color: #e2e8f0">{{ app.platformCount }}个</b>
-              </span>
+              <div class="app-group-header__row app-group-header__row--title">
+                <span class="app-icon">{{ app.icon || '📱' }}</span>
+                <span class="app-name">{{ app.name }}（{{ app.nameEn }}）</span>
+              </div>
+              <div class="app-group-header__row app-group-header__row--meta">
+                <span class="app-meta">
+                  总广告支出: <b style="color: #e2e8f0">{{ app.totalSpend || '—' }}</b>
+                </span>
+                <span class="app-meta">
+                  平均首日ROI: <b style="color: #f59e0b">{{ app.avgRoi || '—' }}</b>
+                </span>
+                <span class="app-meta">
+                  平台数: <b style="color: #e2e8f0">{{ app.platformCount }}个</b>
+                </span>
+              </div>
             </div>
 
             <!-- 平台卡片网格 -->
@@ -249,6 +257,7 @@
     @include ma.ma-neon-surface-children;
 
     display: flex;
+    grid-column: 1 / -1;
     align-items: center;
     justify-content: center;
     min-height: 180px;
@@ -285,15 +294,44 @@
     color: var(--text-secondary);
   }
 
-  /* ── 副标题 ── */
+  /* ── 副标题（默认同一行：左文案右切换；小屏自动两行） ── */
   .tab-sub-header {
     display: flex;
+    gap: 12px;
     align-items: center;
     justify-content: space-between;
   }
 
+  .tab-sub-header__row {
+    min-width: 0;
+  }
+
+  .tab-sub-header__row--desc {
+    flex: 1 1 auto;
+  }
+
+  .tab-sub-header__row--toggle {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+  }
+
+  @media (width <= 768px) {
+    .tab-sub-header {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .tab-sub-header__row--toggle {
+      justify-content: flex-start;
+      width: 100%;
+    }
+  }
+
   .sub-desc {
     font-size: 12px;
+    line-height: 1.45;
     color: var(--text-dim);
   }
 
@@ -334,41 +372,85 @@
     transform: none;
   }
 
-  /* ── 应用分组 ── */
+  /* ── 应用分组（大三栏） ── */
   .app-groups {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
+    align-items: start;
+  }
+
+  .app-group {
+    width: 100%;
+    min-width: 0;
+  }
+
+  @media (width <= 1366px) {
+    .app-groups {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (width <= 900px) {
+    .app-groups {
+      grid-template-columns: 1fr;
+    }
   }
 
   .app-group-header {
     display: flex;
-    gap: 12px;
-    align-items: center;
+    flex-direction: column;
+    gap: 8px;
     margin-bottom: 10px;
     font-size: 13px;
   }
 
+  .app-group-header__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .app-group-header__row--title {
+    row-gap: 6px;
+  }
+
+  .app-group-header__row--meta {
+    padding-top: 8px;
+    padding-left: 0;
+    margin: 0;
+    border-top: 1px solid rgb(63 63 70 / 25%);
+  }
+
   .app-icon {
+    flex-shrink: 0;
     font-size: 18px;
+    line-height: 1;
   }
 
   .app-name {
+    min-width: 0;
     font-weight: 600;
+    line-height: 1.35;
     color: var(--text-primary);
+    word-break: break-word;
   }
 
   .app-meta {
-    margin-left: 4px;
     font-size: 12px;
+    line-height: 1.4;
     color: var(--text-secondary);
   }
 
-  /* ── 卡片网格 ── */
+  /* ── 卡片网格：始终单列（每个平台卡片独占一行） ── */
   .campaign-cards {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
     gap: 12px;
+    align-items: stretch;
+    width: 100%;
   }
 
   .camp-card {
@@ -378,6 +460,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-width: 0;
     padding: 14px;
   }
 

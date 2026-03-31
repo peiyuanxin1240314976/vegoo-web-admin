@@ -6,78 +6,73 @@
     <div class="ca-page-fx" aria-hidden="true"></div>
     <router-view v-if="isPlatformAnalysisDetail" />
     <template v-else>
-      <!-- 顶栏 -->
+      <!-- 顶栏：筛选 + 检索 + 视图切换（筛选项外不再套一层卡片容器） -->
       <header class="ca-header ca-entry-1">
-        <div class="ca-header__left">
-          <span class="ca-breadcrumb">
-            {{ $t('menus.userGrowth.title') }} &gt;
-            {{ $t('menus.userGrowth.comprehensiveAnalysis') }}
-          </span>
-        </div>
-        <div class="ca-header__right">
-          <div class="ca-filters">
-            <div class="ca-pill">
-              <el-icon style="font-size: 12px; color: var(--art-gray-500)"><Calendar /></el-icon>
-              <span class="ca-pill__k">{{ dateRangeLabel }}</span>
+        <div class="ca-filters-bar">
+          <div class="ca-filters-left">
+            <div class="ca-filter-chip ca-filter-chip--static">
+              <ElIcon class="ca-filter-chip__icon"><Calendar /></ElIcon>
+              <span class="ca-filter-chip__value">{{ dateRangeLabel }}</span>
             </div>
-            <div class="ca-pill">
-              <span class="ca-pill__k">应用:</span>
-              <ElSelect
-                v-model="filters.s_app_id"
-                class="ca-select"
-                popper-class="ca-select-popper"
-              >
-                <ElOption
-                  v-for="opt in appOptions"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </ElSelect>
-            </div>
-            <div class="ca-pill">
-              <span class="ca-pill__k">广告平台:</span>
-              <ElSelect
-                v-model="filters.adPlatform"
-                class="ca-select"
-                popper-class="ca-select-popper"
-              >
-                <ElOption
-                  v-for="opt in sourceOptions"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </ElSelect>
-            </div>
-            <div class="ca-pill">
-              <span class="ca-pill__k">国家:</span>
-              <ElSelect
-                v-model="filters.s_country_code"
-                class="ca-select"
-                popper-class="ca-select-popper"
-                filterable
-              >
-                <ElOption
-                  v-for="opt in countryOptions"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </ElSelect>
-            </div>
-          </div>
-          <div class="ca-view-tabs">
-            <button
-              v-for="v in viewModes"
-              :key="v.key"
-              type="button"
-              class="ca-view-tab"
-              :class="{ 'is-active': filters.viewMode === v.key }"
-              @click="filters.viewMode = v.key"
+
+            <ElSelect
+              v-model="filters.s_app_id"
+              class="ca-filter-select ca-filter-select--app"
+              popper-class="ca-select-popper"
             >
-              {{ v.label }}
-            </button>
+              <ElOption
+                v-for="opt in appOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </ElSelect>
+
+            <ElSelect
+              v-model="filters.adPlatform"
+              class="ca-filter-select ca-filter-select--source"
+              popper-class="ca-select-popper"
+            >
+              <ElOption
+                v-for="opt in sourceOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </ElSelect>
+
+            <ElSelect
+              v-model="filters.s_country_code"
+              class="ca-filter-select ca-filter-select--country"
+              popper-class="ca-select-popper"
+              filterable
+            >
+              <ElOption
+                v-for="opt in countryOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </ElSelect>
+
+            <ElButton round class="ca-filter-search" :icon="Search" @click="loadData"
+              >检索</ElButton
+            >
+          </div>
+
+          <div class="ca-filters-right">
+            <div class="ca-view-tabs">
+              <button
+                v-for="v in viewModes"
+                :key="v.key"
+                type="button"
+                class="ca-view-tab"
+                :class="{ 'is-active': filters.viewMode === v.key }"
+                @click="filters.viewMode = v.key"
+              >
+                {{ v.label }}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -120,9 +115,9 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted, watch, computed, defineAsyncComponent } from 'vue'
+  import { ref, reactive, onMounted, computed, defineAsyncComponent } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
-  import { Top, Bottom, Calendar } from '@element-plus/icons-vue'
+  import { Top, Bottom, Calendar, Search } from '@element-plus/icons-vue'
   import type { ComprehensiveAnalysisFilterState, ComprehensiveAnalysisData } from './types'
   import { useComprehensiveAnalysisFilters } from './composables/useComprehensiveAnalysisFilters'
   import { fetchComprehensiveAnalysisData } from '@/api/user-growth'
@@ -197,17 +192,6 @@
     }
   }
 
-  watch(
-    () => ({
-      dateRange: filters.dateRange,
-      s_app_id: filters.s_app_id,
-      adPlatform: filters.adPlatform,
-      s_country_code: filters.s_country_code
-    }),
-    loadData,
-    { deep: true }
-  )
-
   onMounted(loadData)
 </script>
 
@@ -238,110 +222,191 @@
     gap: 12px;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
     margin-bottom: 14px;
-    background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
-    border-radius: 14px;
   }
 
-  .ca-breadcrumb {
-    font-size: 14px;
-    color: var(--art-gray-600);
-  }
-
-  .ca-header__right {
+  /* 筛选项平铺：无外层卡片边框/阴影，仅横向排列 */
+  .ca-filters-bar {
     display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    min-width: 0;
+    padding: 18px 20px;
+    background: color-mix(in srgb, var(--default-bg-color) 82%, transparent);
+    backdrop-filter: blur(12px);
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 20%, transparent);
+    border-radius: 16px;
+    box-shadow:
+      0 8px 32px rgb(0 0 0 / 40%),
+      inset 0 1px 0 color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+  }
+
+  .ca-filters-left {
+    display: flex;
+    flex: 1;
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
+    min-width: 0;
   }
 
-  .ca-filters {
+  .ca-filters-right {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-shrink: 0;
     align-items: center;
+    margin-left: auto;
   }
 
-  .ca-pill {
+  .ca-filter-search {
+    --el-button-bg-color: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
+    --el-button-text-color: var(--el-color-primary);
+    --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 40%, transparent);
+    --el-button-hover-text-color: color-mix(
+      in srgb,
+      var(--el-color-primary) 80%,
+      var(--text-primary)
+    );
+    --el-button-hover-border-color: var(--el-color-primary);
+    --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
+    --el-button-active-text-color: color-mix(
+      in srgb,
+      var(--el-color-primary) 80%,
+      var(--text-primary)
+    );
+    --el-button-active-border-color: var(--el-color-primary);
+    --el-button-active-bg-color: color-mix(in srgb, var(--el-color-primary) 22%, transparent);
+
+    box-shadow: 0 0 14px color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    transition:
+      box-shadow 0.22s var(--ease-default),
+      transform 0.18s var(--ease-default);
+
+    &:hover {
+      box-shadow: 0 0 22px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
+      transform: translateY(-1px);
+    }
+  }
+
+  .ca-filter-chip {
+    --ca-filter-accent: var(--el-color-primary);
+
+    box-sizing: border-box;
     display: inline-flex;
-    gap: 4px;
+    gap: 10px;
     align-items: center;
-    padding: 3px 10px;
-    overflow: visible;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
+    min-height: 40px;
+    padding: 8px 18px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    background: color-mix(in srgb, var(--ca-filter-accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ca-filter-accent) 30%, transparent);
     border-radius: 9999px;
-
-    .ca-pill__k {
-      flex-shrink: 0;
-      font-size: 12px;
-      color: var(--art-gray-700);
-      white-space: nowrap;
-    }
+    box-shadow: 0 0 16px color-mix(in srgb, var(--ca-filter-accent) 10%, transparent);
   }
 
-  .ca-select {
-    :deep(.el-select__wrapper) {
-      padding-inline: 0;
-      background: transparent;
-      box-shadow: none !important;
-    }
+  .ca-filter-chip__icon {
+    font-size: 16px;
+    color: var(--ca-filter-accent);
+  }
 
-    :deep(.el-select__selection) {
-      flex-wrap: nowrap;
-      min-width: 0;
-    }
+  .ca-filter-chip__value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 
-    :deep(.el-select__selected-item) {
-      overflow: visible;
-      white-space: nowrap;
-    }
+  .ca-filter-select {
+    width: 134px;
+    min-width: 110px;
+  }
 
-    :deep(.el-select__placeholder) {
-      white-space: nowrap;
-    }
+  :deep(.ca-filter-select) {
+    --el-input-focus-border-color: var(--el-color-primary);
+    --el-border-color-hover: color-mix(in srgb, var(--el-color-primary) 75%, transparent);
+    --el-border-color-focus: var(--el-color-primary);
+    --el-component-size: 40px;
+  }
 
-    :deep(.el-input__wrapper) {
-      background: transparent;
-      box-shadow: none !important;
-    }
+  :deep(.ca-filter-select .el-input__wrapper) {
+    padding: 0 14px;
+    background: color-mix(in srgb, var(--el-color-primary) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent);
+    border-radius: 9999px;
+    box-shadow: none;
+    transition:
+      border-color 0.22s var(--ease-default),
+      box-shadow 0.22s var(--ease-default),
+      background-color 0.22s var(--ease-default);
+  }
 
-    :deep(.el-input__inner) {
-      width: 64px;
-      min-width: 64px;
-    }
+  :deep(.ca-filter-select .el-input__inner) {
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+
+  :deep(.ca-filter-select .el-select__caret) {
+    color: var(--el-color-primary);
+  }
+
+  :deep(.ca-filter-select .el-input__wrapper.is-focus) {
+    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent) !important;
+    border-color: var(--el-color-primary) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 20%, transparent) !important;
+  }
+
+  :deep(.ca-filter-select .el-input__wrapper:hover) {
+    border-color: color-mix(in srgb, var(--el-color-primary) 60%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
   }
 
   .ca-view-tabs {
     display: flex;
     gap: 2px;
-    padding: 3px;
+    padding: 4px;
     background: var(--default-box-color);
     border: 1px solid var(--default-border);
-    border-radius: 8px;
+    border-radius: 10px;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent);
   }
 
   .ca-view-tab {
-    padding: 4px 12px;
-    font-size: 12px;
-    color: var(--art-gray-600);
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
     cursor: pointer;
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: 9999px;
     transition:
-      color 0.2s,
-      background 0.2s;
+      color 0.2s var(--ease-default),
+      background-color 0.2s var(--ease-default),
+      box-shadow 0.2s var(--ease-default),
+      transform 0.2s var(--ease-default);
 
     &:hover {
-      color: var(--art-gray-900);
+      color: var(--text-primary);
     }
 
     &.is-active {
-      color: var(--art-primary);
-      background: color-mix(in srgb, var(--art-primary) 12%, var(--default-box-color));
+      color: var(--text-primary);
+      background: color-mix(in srgb, var(--el-color-primary) 22%, transparent);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--el-color-primary) 35%, transparent),
+        0 0 18px color-mix(in srgb, var(--el-color-primary) 20%, transparent);
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ca-filter-search:hover {
+      transform: none;
+    }
+
+    .ca-view-tab.is-active {
+      transform: none;
     }
   }
 
@@ -361,6 +426,31 @@
     flex-shrink: 0;
     grid-template-columns: repeat(5, 1fr);
     gap: 12px;
+  }
+
+  /* KPI 网格：适配大/中/小屏 */
+  @media (width <= 1536px) {
+    .ca-kpi-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media (width <= 1280px) {
+    .ca-kpi-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (width <= 980px) {
+    .ca-kpi-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (width <= 560px) {
+    .ca-kpi-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .ca-kpi {
@@ -417,14 +507,14 @@
 <style lang="scss">
   .ca-select-popper {
     z-index: 3200 !important;
-    border: 1px solid color-mix(in srgb, var(--art-primary) 28%, transparent);
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent);
     box-shadow:
       0 12px 36px rgb(0 0 0 / 48%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
+      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 12%, transparent);
 
     .el-select-dropdown__item.is-selected {
-      color: var(--art-primary);
-      background: color-mix(in srgb, var(--art-primary) 12%, var(--default-box-color));
+      color: var(--el-color-primary);
+      background: color-mix(in srgb, var(--el-color-primary) 12%, var(--default-box-color));
     }
   }
 </style>

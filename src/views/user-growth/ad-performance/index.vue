@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="ad-performance-page flex flex-col">
     <div class="ap-page-fx" aria-hidden="true"></div>
     <div class="ad-performance-page__section ad-performance-page__section--filters ap-entry-1">
@@ -36,7 +36,8 @@
             :account-summary="page.accountSummary"
             :loading="tableLoading"
             :pagination="page.pagination"
-            :filter-date-range="page.filter.dateRange"
+            :filter-start-date="page.filter.startDate"
+            :filter-end-date="page.filter.endDate"
             @pagination:current-change="onPageChange"
             @pagination:size-change="onPageSizeChange"
             @update:active-tab="onTableTabChange"

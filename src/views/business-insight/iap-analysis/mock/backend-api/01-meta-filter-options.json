@@ -22,11 +22,6 @@
         "type": "IapSelectOption[]",
         "required": true,
         "description": "产品类型下拉选项。"
-      },
-      "timeRangeOptions": {
-        "type": "IapSelectOption[]",
-        "required": true,
-        "description": "时间范围下拉选项。"
       }
     },
     "IapSelectOption": {
@@ -55,11 +50,6 @@
       { "label": "全部", "value": "all" },
       { "label": "内购", "value": "iap" },
       { "label": "订阅", "value": "sub" }
-    ],
-    "timeRangeOptions": [
-      { "label": "最近7天", "value": "7" },
-      { "label": "最近30天", "value": "30" },
-      { "label": "最近90天", "value": "90" }
     ]
   },
   "api": {

@@ -1153,7 +1153,8 @@ export function mockFetchIaaVersionTabData(_params: IaaFilterState) {
 // ---------- IAP 分析 ----------
 
 type IapOverviewDashParams = {
-  timeRange?: string
+  startDate?: string
+  endDate?: string
   s_app_id?: string
   productType?: string
   s_country_code?: string
@@ -1168,9 +1169,9 @@ function iapDashMockNorm(v?: string) {
 /** Mock：五维筛选 → 数值系数，趋势/分布等随筛选变化（演示联调，非真实聚合） */
 function iapDashMockNumericScale(p: IapOverviewDashParams): number {
   const key = [
-    p.timeRange ?? '',
+    p.startDate ?? '',
+    p.endDate ?? '',
     iapDashMockNorm(p.s_app_id),
-    iapDashMockNorm(p.productType),
     iapDashMockNorm(p.s_country_code),
     iapDashMockNorm(p.platform)
   ].join('\t')
@@ -1220,9 +1221,9 @@ export function mockFetchIapMetaFilterOptions() {
 
 /** IAP Dashboard - 顶部 KPI（Mock：后端就绪后改为 request.post） */
 export function mockFetchIapOverviewKpi(_params: {
-  timeRange: string
+  startDate: string
+  endDate: string
   s_app_id?: string
-  productType?: string
   s_country_code?: string
   platform?: string
 }) {
@@ -1282,7 +1283,7 @@ export function mockFetchIapOverviewKpi(_params: {
 }
 
 /** IAP Dashboard - 趋势图（Mock：后端就绪后改为 request.post） */
-export function mockFetchIapOverviewTrend(params: IapOverviewDashParams & { timeRange: string }) {
+export function mockFetchIapOverviewTrend(params: IapOverviewDashParams) {
   const s = iapDashMockNumericScale(params)
   return Promise.resolve<IapOverviewTrend>({
     ordersRevenue: {
@@ -1302,9 +1303,7 @@ export function mockFetchIapOverviewTrend(params: IapOverviewDashParams & { time
 }
 
 /** IAP Dashboard - 应用卡片列表（Mock：后端就绪后改为 request.post） */
-export function mockFetchIapOverviewAppCards(
-  params: IapOverviewDashParams & { timeRange: string }
-) {
+export function mockFetchIapOverviewAppCards(params: IapOverviewDashParams) {
   const plat = iapDashMockNorm(params.platform)
   const app = iapDashMockNorm(params.s_app_id)
   const all: IapAppCard[] = [
@@ -1374,9 +1373,7 @@ export function mockFetchIapOverviewAppCards(
 }
 
 /** IAP Dashboard - 国家收入分布（Mock：后端就绪后改为 request.post） */
-export function mockFetchIapOverviewCountryDistribution(
-  params: IapOverviewDashParams & { timeRange: string }
-) {
+export function mockFetchIapOverviewCountryDistribution(params: IapOverviewDashParams) {
   const cc = (params.s_country_code || '').trim().toUpperCase()
   const scale = iapDashMockNumericScale(params)
   const base: IapCountryRow[] = [
@@ -1466,9 +1463,7 @@ export function mockFetchIapOverviewCountryDistribution(
 }
 
 /** IAP Dashboard - 产品类型甜甜圈（Mock：后端就绪后改为 request.post） */
-export function mockFetchIapOverviewProductTypeDonut(
-  params: IapOverviewDashParams & { timeRange: string }
-) {
+export function mockFetchIapOverviewProductTypeDonut(params: IapOverviewDashParams) {
   const pt = iapDashMockNorm(params.productType)
   if (pt === 'sub') {
     return Promise.resolve<{ list: IapProductTypeDonutItem[] }>({
@@ -1506,9 +1501,7 @@ export function mockFetchIapOverviewProductTypeDonut(
 }
 
 /** IAP Dashboard - 平台对比（Mock：后端就绪后改为 request.post） */
-export function mockFetchIapOverviewPlatformCompare(
-  params: IapOverviewDashParams & { timeRange: string }
-) {
+export function mockFetchIapOverviewPlatformCompare(params: IapOverviewDashParams) {
   const plat = iapDashMockNorm(params.platform)
   const s = iapDashMockNumericScale(params)
   const iosBase = [28, 32, 38]
@@ -1537,7 +1530,8 @@ export function mockFetchIapOverviewPlatformCompare(
 /** IAP Detail - 详情页 KPI（Mock：后端就绪后改为 request.post） */
 export function mockFetchIapDetailKpi(_params: {
   s_app_id: string
-  timeRange: string
+  startDate: string
+  endDate: string
   s_country_code?: string
   platform?: string
 }) {
@@ -1604,7 +1598,8 @@ export function mockFetchIapDetailKpi(_params: {
 /** IAP Detail - 产品 Tab（Mock：后端就绪后改为 request.post） */
 export function mockFetchIapDetailProduct(_params: {
   s_app_id: string
-  timeRange: string
+  startDate: string
+  endDate: string
   s_country_code?: string
   platform?: string
 }) {
@@ -1701,7 +1696,8 @@ export function mockFetchIapDetailProduct(_params: {
 /** IAP Detail - 用户 Tab（Mock：后端就绪后改为 request.post） */
 export function mockFetchIapDetailUser(_params: {
   s_app_id: string
-  timeRange: string
+  startDate: string
+  endDate: string
   s_country_code?: string
   platform?: string
 }) {
@@ -1764,7 +1760,8 @@ export function mockFetchIapDetailUser(_params: {
 /** IAP Detail - 趋势 Tab（Mock：后端就绪后改为 request.post） */
 export function mockFetchIapDetailTrend(_params: {
   s_app_id: string
-  timeRange: string
+  startDate: string
+  endDate: string
   s_country_code?: string
   platform?: string
 }) {

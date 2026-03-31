@@ -24,7 +24,6 @@
           clearable
           class="conversion-name-filter-select"
           :prefix-icon="Monitor"
-          @change="doSearch"
         >
           <ElOption
             v-for="opt in platformOptions"
@@ -39,7 +38,6 @@
           clearable
           class="conversion-name-filter-select"
           :prefix-icon="Grid"
-          @change="doSearch"
         >
           <ElOption
             v-for="opt in appOptions"
@@ -54,7 +52,6 @@
           clearable
           class="conversion-name-filter-select"
           :prefix-icon="CollectionTag"
-          @change="doSearch"
         >
           <ElOption
             v-for="opt in conversionTypeOptions"
@@ -69,7 +66,6 @@
           clearable
           class="conversion-name-filter-select"
           :prefix-icon="CircleCheck"
-          @change="doSearch"
         >
           <ElOption
             v-for="opt in statusOptions"
@@ -83,13 +79,20 @@
           :placeholder="$t('conversionManagement.searchPlaceholder')"
           clearable
           class="conversion-filters__search conversion-name-filter-input"
-          @keyup.enter="doSearch"
-          @clear="doSearch"
         >
           <template #prefix>
             <ElIcon><Search /></ElIcon>
           </template>
         </ElInput>
+        <ElButton
+          type="primary"
+          round
+          class="conversion-name-filter-action-btn"
+          @click="doSearch"
+          v-ripple
+        >
+          {{ $t('conversionManagement.dataFilterSearch') }}
+        </ElButton>
       </div>
     </div>
   </div>
@@ -272,9 +275,9 @@
   }
 
   .conversion-filters__search {
-    flex: 1 1 220px;
-    width: 260px;
-    min-width: 180px;
+    flex: 0 1 180px;
+    width: 180px;
+    min-width: 140px;
     max-width: 100%;
   }
 
@@ -316,6 +319,33 @@
     --el-button-size: 40px;
 
     flex-shrink: 0;
+    height: 40px;
+    padding: 0 20px;
+    font-size: 14px;
+    background: linear-gradient(135deg, rgb(16 185 129 / 92%), rgb(5 150 105 / 88%));
+    border: 1px solid rgb(16 185 129 / 55%);
+    box-shadow:
+      0 0 18px rgb(16 185 129 / 28%),
+      inset 0 1px 0 rgb(255 255 255 / 12%);
+    transition:
+      box-shadow 0.22s ease,
+      transform 0.18s ease;
+
+    &:hover {
+      box-shadow:
+        0 0 26px rgb(16 185 129 / 42%),
+        inset 0 1px 0 rgb(255 255 255 / 18%);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  .conversion-name-filter-action-btn {
+    --el-button-size: 40px;
+
     height: 40px;
     padding: 0 20px;
     font-size: 14px;

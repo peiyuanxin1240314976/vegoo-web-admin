@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
   import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
@@ -88,6 +88,11 @@
   }
 
   const isExpanded = (id: string) => expandedSet.value.has(id)
+
+  function expandFirstAgency() {
+    const firstId = String(agencies.value?.[0]?.id ?? '').trim()
+    expandedSet.value = firstId ? new Set([firstId]) : new Set()
+  }
 
   // ─────────────────── Screenshot Modal ───────────────────
   const showScreenshot = ref(false)
@@ -389,6 +394,11 @@
   const filterAgencyId = ref('all')
   const filterSource = ref('all')
 
+  function handleSearch() {
+    if (!metaReady.value) return
+    void loadPageData()
+  }
+
   const appOptions = ref<AgencyAnalysisFilterOption[]>([])
   const agencyOptions = ref<AgencyAnalysisFilterOption[]>([])
   const sourceOptions = ref<AgencyAnalysisFilterOption[]>([])
@@ -529,6 +539,9 @@
         countryTop8: countryRes.countryTop8 ?? [],
         spendTrend30d: trendRes ?? { dates: [], series: [] }
       }
+
+      // 代投方汇总：默认展开第一条
+      expandFirstAgency()
     } catch {
       clearDashboardData()
     } finally {
@@ -542,7 +555,6 @@
     [filterDate, filterAppId, filterAgencyId, filterSource],
     () => {
       if (!metaReady.value) return
-      void loadPageData()
     },
     { flush: 'post' }
   )
@@ -595,130 +607,126 @@
 </script>
 
 <template>
-  <div class="page-wrap page-wrap--ap-fx art-full-height">
+  <div class="agency-analysis-page page-wrap page-wrap--ap-fx flex flex-col min-h-0">
     <div class="aa-page-fx" aria-hidden="true"></div>
-    <!-- ── Top bar ── -->
-    <div class="top-bar aa-entry-1">
-      <div class="top-filters">
-        <div class="aa-filter-panel">
-          <template v-if="metaLoading">
-            <div class="filter-skel filter-skel--date" />
-            <div class="filter-skel filter-skel--select" />
-            <div class="filter-skel filter-skel--select" />
-            <div class="filter-skel filter-skel--select-wide" />
-          </template>
-          <template v-else-if="metaLoadError">
-            <ElEmpty description="筛选项加载失败" :image-size="52" class="top-meta-empty" />
-            <ElButton
-              round
-              size="small"
-              type="primary"
-              class="btn-retry-meta"
-              @click="retryMetaOptions"
-            >
-              重试
-            </ElButton>
-          </template>
-          <template v-else>
-            <el-date-picker
-              v-model="filterDate"
-              type="date"
-              format="YYYY-MM-DD"
-              value-format="YYYY-MM-DD"
-              size="default"
-              class="filter-date"
-              popper-class="aa-agency-filter-popper"
-              prefix-icon=""
-            >
-              <template #prefix>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  style="margin-right: 2px"
-                >
-                  <rect
-                    x="1"
-                    y="2"
-                    width="12"
-                    height="11"
-                    rx="2"
-                    stroke="#64748b"
-                    stroke-width="1.2"
-                  />
-                  <path
-                    d="M1 5h12M4 1v2M10 1v2"
-                    stroke="#64748b"
-                    stroke-width="1.2"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </template>
-            </el-date-picker>
+    <!-- 与广告成效一致：筛选区随页面滚动，非 sticky 顶栏 -->
+    <div class="agency-analysis-page__section agency-analysis-page__section--filters aa-entry-1">
+      <div class="aa-filter-panel">
+        <template v-if="metaLoading">
+          <div class="filter-skel filter-skel--date" />
+          <div class="filter-skel filter-skel--select" />
+          <div class="filter-skel filter-skel--select" />
+          <div class="filter-skel filter-skel--select-wide" />
+        </template>
+        <template v-else-if="metaLoadError">
+          <ElEmpty description="筛选项加载失败" :image-size="52" class="top-meta-empty" />
+          <ElButton
+            round
+            size="small"
+            type="primary"
+            class="btn-retry-meta"
+            @click="retryMetaOptions"
+          >
+            重试
+          </ElButton>
+        </template>
+        <template v-else>
+          <el-date-picker
+            v-model="filterDate"
+            type="date"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            size="default"
+            class="filter-date"
+            popper-class="aa-agency-filter-popper"
+            prefix-icon=""
+          >
+            <template #prefix>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-right: 2px">
+                <rect
+                  x="1"
+                  y="2"
+                  width="12"
+                  height="11"
+                  rx="2"
+                  stroke="#64748b"
+                  stroke-width="1.2"
+                />
+                <path
+                  d="M1 5h12M4 1v2M10 1v2"
+                  stroke="#64748b"
+                  stroke-width="1.2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </template>
+          </el-date-picker>
 
-            <el-select
-              v-model="filterAppId"
-              size="default"
-              class="filter-select"
-              popper-class="aa-agency-filter-popper"
-              style="width: 140px"
-            >
-              <el-option
-                v-for="opt in appOptions"
-                :key="`app-${opt.value}`"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </el-select>
+          <el-select
+            v-model="filterAppId"
+            size="default"
+            class="filter-select"
+            popper-class="aa-agency-filter-popper"
+            style="width: 140px"
+          >
+            <el-option
+              v-for="opt in appOptions"
+              :key="`app-${opt.value}`"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
 
-            <el-select
-              v-model="filterAgencyId"
-              size="default"
-              class="filter-select"
-              popper-class="aa-agency-filter-popper"
-              style="width: 140px"
-            >
-              <el-option
-                v-for="opt in agencyOptions"
-                :key="`agency-${opt.value}`"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </el-select>
+          <el-select
+            v-model="filterAgencyId"
+            size="default"
+            class="filter-select"
+            popper-class="aa-agency-filter-popper"
+            style="width: 140px"
+          >
+            <el-option
+              v-for="opt in agencyOptions"
+              :key="`agency-${opt.value}`"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
 
-            <el-select
-              v-model="filterSource"
-              size="default"
-              class="filter-select"
-              popper-class="aa-agency-filter-popper"
-              style="width: 160px"
-            >
-              <el-option
-                v-for="opt in sourceOptions"
-                :key="`src-${opt.value}`"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </el-select>
-          </template>
+          <el-select
+            v-model="filterSource"
+            size="default"
+            class="filter-select"
+            popper-class="aa-agency-filter-popper"
+            style="width: 160px"
+          >
+            <el-option
+              v-for="opt in sourceOptions"
+              :key="`src-${opt.value}`"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
 
-          <button type="button" class="btn-screenshot" @click="openScreenshot()">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-right: 6px">
-              <rect
-                x="1"
-                y="2"
-                width="12"
-                height="10"
-                rx="2"
-                stroke="currentColor"
-                stroke-width="1.2"
-              />
-              <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.2" />
-            </svg>
-            一键截图复制
-          </button>
-        </div>
+          <ElButton type="primary" round class="btn-search" @click="handleSearch" v-ripple>
+            检索
+          </ElButton>
+        </template>
+
+        <button type="button" class="btn-screenshot" @click="openScreenshot()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-right: 6px">
+            <rect
+              x="1"
+              y="2"
+              width="12"
+              height="10"
+              rx="2"
+              stroke="currentColor"
+              stroke-width="1.2"
+            />
+            <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.2" />
+          </svg>
+          一键截图复制
+        </button>
       </div>
     </div>
 
@@ -748,11 +756,13 @@
           class="kpi-card"
           :class="{ highlighted: card.highlighted }"
         >
-          <div class="kpi-label">{{ card.label }}</div>
-          <div class="kpi-value">{{ card.value }}</div>
-          <div v-if="card.changeText" class="kpi-change" :class="card.changeUp ? 'up' : 'down'">
-            {{ card.changeText }}
+          <div class="kpi-head">
+            <div class="kpi-label">{{ card.label }}</div>
+            <div v-if="card.changeText" class="kpi-change" :class="card.changeUp ? 'up' : 'down'">
+              {{ card.changeText }}
+            </div>
           </div>
+          <div class="kpi-value">{{ card.value }}</div>
           <svg
             v-if="card.sparkPoints"
             class="kpi-spark"
@@ -784,7 +794,6 @@
             <div class="section-title">
               <span class="section-num">1</span>
               代投方汇总
-              <span class="section-subtitle">14px</span>
             </div>
             <div class="section-actions">
               <span class="data-date">数据日期: {{ filterDate }}</span>
@@ -792,399 +801,408 @@
             </div>
           </div>
 
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th class="th-expand"></th>
-                <th>代投方</th>
-                <th class="text-right">应用数</th>
-                <th class="text-right">广告平台数</th>
-                <th class="text-right">消耗($)</th>
-                <th class="text-right">安装数</th>
-                <th class="text-right">CPI($)</th>
-                <th class="text-right">CPA($)</th>
-                <th class="text-right">首日ROI</th>
-                <th>预算执行率</th>
-                <th>状态</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-if="pageLoading">
-                <tr
-                  v-for="idx in agencySkeletonRows"
-                  :key="`agency-skeleton-${idx}`"
-                  class="skeleton-data-tr"
-                  :style="{ '--sk-stagger': `${(idx - 1) * 48}ms` }"
-                >
-                  <td class="td-expand skeleton-td">
-                    <span class="sk-brick sk-brick--sq" />
-                  </td>
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--name" /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td text-right"
-                    ><span class="sk-brick sk-brick--num-wide"
-                  /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--bar" /></td>
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--sm" /></td>
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--action" /></td>
-                </tr>
-              </template>
-              <template v-else-if="!agencies.length">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <td colspan="12" class="table-empty-cell">
-                    <ElEmpty description="暂无数据" :image-size="64" class="block-empty" />
-                  </td>
+                  <th class="th-expand"></th>
+                  <th>代投方</th>
+                  <th class="text-right">应用数</th>
+                  <th class="text-right">广告平台数</th>
+                  <th class="text-right">消耗($)</th>
+                  <th class="text-right">安装数</th>
+                  <th class="text-right">CPI($)</th>
+                  <th class="text-right">CPA($)</th>
+                  <th class="text-right">首日ROI</th>
+                  <th>预算执行率</th>
+                  <th>状态</th>
+                  <th>操作</th>
                 </tr>
-              </template>
-              <template v-else>
-                <template v-for="ag in agencies" :key="ag.id">
-                  <!-- Main row -->
-                  <tr class="agency-row" :class="{ expanded: isExpanded(ag.id) }">
-                    <td class="td-expand">
-                      <button
-                        class="expand-arrow"
-                        :class="{ open: isExpanded(ag.id) }"
-                        @click="toggleExpand(ag.id)"
-                      >
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                          <path
-                            d="M2 3.5L5 6.5L8 3.5"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                          />
-                        </svg>
-                      </button>
+              </thead>
+              <tbody>
+                <template v-if="pageLoading">
+                  <tr
+                    v-for="idx in agencySkeletonRows"
+                    :key="`agency-skeleton-${idx}`"
+                    class="skeleton-data-tr"
+                    :style="{ '--sk-stagger': `${(idx - 1) * 48}ms` }"
+                  >
+                    <td class="td-expand skeleton-td">
+                      <span class="sk-brick sk-brick--sq" />
                     </td>
-                    <td>
-                      <div class="agency-name-cell">
-                        <span :style="{ color: ag.nameColor || '#e2e8f0' }">{{ ag.name }}</span>
-                        <span v-if="ag.hasWarning" class="warn-icon">⚠</span>
-                      </div>
-                    </td>
-                    <td class="text-right">{{ ag.appCount }}</td>
-                    <td class="text-right">{{ ag.channelCount }}</td>
-                    <td class="text-right fw-600">{{ fmtM(ag.spend) }}</td>
-                    <td class="text-right">{{ ag.installs.toLocaleString() }}</td>
-                    <td class="text-right">${{ ag.cpi.toFixed(2) }}</td>
-                    <td class="text-right">${{ ag.cpa.toFixed(2) }}</td>
-                    <td class="text-right" :class="roiClass(ag.roi)">
-                      <span :class="[`roi-text-${roiClass(ag.roi)}`]">{{ ag.roi }}%</span>
-                    </td>
-                    <td>
-                      <div class="budget-bar-wrap">
-                        <div class="budget-bar-track">
-                          <div
-                            class="budget-bar-fill"
-                            :style="{
-                              width: `${ag.budgetRate}%`,
-                              background:
-                                ag.budgetRate >= 90
-                                  ? '#00d4b4'
-                                  : ag.budgetRate >= 80
-                                    ? '#3b82f6'
-                                    : '#f59e0b'
-                            }"
-                          />
-                        </div>
-                        <span class="budget-pct">{{ ag.budgetRate }}%</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="status-cell">
-                        <span
-                          class="status-dot"
-                          :style="{ background: statusInfo(ag.status).dot }"
-                        />
-                        <span :style="{ color: statusInfo(ag.status).text }">{{
-                          statusInfo(ag.status).label
-                        }}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <button class="btn-expand-text" @click="toggleExpand(ag.id)">
-                        {{ isExpanded(ag.id) ? '收起 ∧' : '展开 ∨' }}
-                      </button>
-                    </td>
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--name" /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td text-right"
+                      ><span class="sk-brick sk-brick--num-wide"
+                    /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--bar" /></td>
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--sm" /></td>
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--action" /></td>
                   </tr>
-
-                  <!-- Expanded row -->
-                  <tr v-if="isExpanded(ag.id)" class="expand-row">
-                    <td colspan="12" class="expand-td">
-                      <div class="expand-panel">
-                        <!-- Expand header -->
-                        <div class="exp-hd">
-                          <div class="exp-hd-left">
-                            <span class="exp-device-icon">📱</span>
-                            <span class="exp-name" :style="{ color: ag.nameColor || '#e2e8f0' }">{{
-                              ag.name
-                            }}</span>
-                            <span class="exp-badge active">ACTIVE</span>
-                            <span class="exp-meta">广告投放代理商</span>
-                            <span class="exp-meta">数据日期: {{ filterDate }}</span>
-                          </div>
-                          <div class="exp-hd-right">
-                            <!-- <button class="btn-sm-teal">展开全部</button>
-                          <button class="btn-sm-ghost">自定义列</button> -->
-                            <button class="btn-sm-ghost">↓ 导出</button>
-                            <button class="btn-sm-ghost" @click="toggleExpand(ag.id)"
-                              >收起 ∧</button
-                            >
-                          </div>
-                        </div>
-
-                        <!-- Summary metrics -->
-                        <div class="exp-metrics">
-                          <div class="exp-metric">
-                            <div class="exp-metric-label">应用数</div>
-                            <div class="exp-metric-value">{{
-                              agencyDetailMap[ag.id].appCount
-                            }}</div>
-                          </div>
-                          <div class="exp-metric">
-                            <div class="exp-metric-label">广告平台</div>
-                            <div class="exp-metric-value">{{
-                              agencyDetailMap[ag.id].channelCount
-                            }}</div>
-                          </div>
-                          <div class="exp-metric">
-                            <div class="exp-metric-label">总消耗</div>
-                            <div class="exp-metric-value teal">{{
-                              fmtM(agencyDetailMap[ag.id].totalSpend)
-                            }}</div>
-                          </div>
-                          <div class="exp-metric">
-                            <div class="exp-metric-label">总安装</div>
-                            <div class="exp-metric-value">{{
-                              agencyDetailMap[ag.id].totalInstalls.toLocaleString()
-                            }}</div>
-                          </div>
-                          <div class="exp-metric">
-                            <div class="exp-metric-label">平均首日ROI</div>
-                            <div class="exp-metric-value-roi">
-                              <span :class="`roi-text-${roiClass(agencyDetailMap[ag.id].roi)}`">
-                                {{ agencyDetailMap[ag.id].roi }}%
-                              </span>
-                              <span
-                                class="roi-tag"
-                                :class="
-                                  agencyDetailMap[ag.id].roi >= agencyDetailMap[ag.id].roiTarget
-                                    ? 'roi-tag-meet'
-                                    : 'roi-tag-miss'
-                                "
-                              >
-                                {{
-                                  agencyDetailMap[ag.id].roi >= agencyDetailMap[ag.id].roiTarget
-                                    ? '达标'
-                                    : '未达'
-                                }}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <!-- Weekly summary -->
-                        <div class="exp-weekly">
-                          <span class="weekly-lbl">近7天汇总</span>
-                          <span class="weekly-item"
-                            >广告支出:
-                            <strong
-                              >${{ agencyDetailMap[ag.id].weeklySpend.toLocaleString() }}</strong
-                            ></span
-                          >
-                          <span class="weekly-sep">|</span>
-                          <span class="weekly-item"
-                            >首日ROI:
-                            <strong class="teal"
-                              >{{ agencyDetailMap[ag.id].weeklyRoi }}%</strong
-                            ></span
-                          >
-                          <span class="weekly-sep">|</span>
-                          <span class="weekly-item">CPA: <strong>--</strong></span>
-                          <span class="weekly-sep">|</span>
-                          <span class="weekly-item"
-                            >安装数:
-                            <strong>{{
-                              agencyDetailMap[ag.id].weeklyInstalls.toLocaleString()
-                            }}</strong></span
-                          >
-                          <span class="weekly-sep">|</span>
-                          <span class="weekly-item"
-                            >在投应用:
-                            <strong>{{ agencyDetailMap[ag.id].weeklyApps }}</strong></span
-                          >
-                          <span class="weekly-sep">|</span>
-                          <span class="weekly-item"
-                            >广告账户:
-                            <strong>{{ agencyDetailMap[ag.id].weeklyAccounts }}</strong></span
-                          >
-                          <span class="weekly-sep">|</span>
-                          <span class="weekly-item"
-                            >广告系列:
-                            <strong>{{ agencyDetailMap[ag.id].weeklyCampaigns }}</strong></span
-                          >
-                          <span class="weekly-sep">|</span>
-                          <span class="weekly-item"
-                            >投放国家:
-                            <strong>{{ agencyDetailMap[ag.id].weeklyCountries }}</strong></span
-                          >
-                          <span class="weekly-sep">|</span>
-                          <span class="weekly-item"
-                            >投放天数:
-                            <strong>{{ agencyDetailMap[ag.id].weeklyDays }}</strong></span
-                          >
-                        </div>
-
-                        <!-- Account summary sub-table -->
-                        <div class="exp-sub-section">
-                          <div class="exp-sub-title">账户汇总</div>
-                          <table class="sub-table">
-                            <thead>
-                              <tr>
-                                <th>应用</th>
-                                <th>平台</th>
-                                <th>广告平台</th>
-                                <th>账户ID</th>
-                                <th>账户名称</th>
-                                <th>广告支出</th>
-                                <th>首日ROI</th>
-                                <th>CPA</th>
-                                <th>CPI</th>
-                                <th>安装数</th>
-                                <th>操作</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr v-for="(acc, ai) in agencyDetailMap[ag.id].accounts" :key="ai">
-                                <td>{{ acc.app }}</td>
-                                <td>{{ acc.platform }}</td>
-                                <td>{{ acc.adPlatform }}</td>
-                                <td class="account-id">{{ acc.accountId }}</td>
-                                <td>{{ acc.accountName }}</td>
-                                <td>{{ acc.spend }}</td>
-                                <td :class="`roi-text-${roiClass(acc.roi)}`">{{ acc.roi }}%</td>
-                                <td>{{ acc.cpa }}</td>
-                                <td>{{ acc.cpi }}</td>
-                                <td>{{ acc.installs.toLocaleString() }}</td>
-                                <td><span class="link-action">详情</span></td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-
-                        <!-- Campaign detail sub-table -->
-                        <div class="exp-sub-section">
-                          <div class="exp-sub-title">近期明细</div>
-                          <table class="sub-table">
-                            <thead>
-                              <tr>
-                                <th>广告系列名称</th>
-                                <th>预算</th>
-                                <th>广告支出</th>
-                                <th>CPA</th>
-                                <th>CPI</th>
-                                <th>安装数</th>
-                                <th class="roi-date-head">3/4</th>
-                                <th class="roi-date-head">3/3</th>
-                                <th class="roi-date-head">3/2</th>
-                                <th>明细</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr
-                                v-for="(cp, ci) in agencyDetailMap[ag.id].campaigns"
-                                :key="ci"
-                                :class="{ 'row-red-tint': cp.isRed }"
-                              >
-                                <td :class="{ 'text-danger': cp.isRed }">
-                                  {{ cp.appName || cp.name || '--' }}
-                                </td>
-                                <td>${{ cp.budget }}</td>
-                                <td>{{ cp.spend }}</td>
-                                <td>{{ cp.cpa }}</td>
-                                <td>{{ cp.cpi }}</td>
-                                <td>{{ cp.installs }}</td>
-                                <td>
-                                  <span
-                                    v-if="cp.roi34 !== null"
-                                    class="roi-badge"
-                                    :class="roiBadgeClass(cp.roi34)"
-                                    >{{ cp.roi34 }}%</span
-                                  >
-                                  <span v-else class="dim">--</span>
-                                </td>
-                                <td>
-                                  <span
-                                    v-if="cp.roi33 !== null"
-                                    class="roi-badge"
-                                    :class="roiBadgeClass(cp.roi33)"
-                                    >{{ cp.roi33 }}%</span
-                                  >
-                                  <span v-else class="dim">--</span>
-                                </td>
-                                <td>
-                                  <span
-                                    v-if="cp.roi32 !== null"
-                                    class="roi-badge"
-                                    :class="roiBadgeClass(cp.roi32)"
-                                    >{{ cp.roi32 }}%</span
-                                  >
-                                  <span v-else class="dim">--</span>
-                                </td>
-                                <td>
-                                  <span class="link-action" @click="goCampaignDetailFromExpand(cp)">
-                                    查看
-                                  </span>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                          <div class="sub-footnote"
-                            >注: 时区 PST(UTC-8), 货币 USD; ROI计算包含广告收入及付费收入。</div
-                          >
-                        </div>
-                      </div>
+                </template>
+                <template v-else-if="!agencies.length">
+                  <tr>
+                    <td colspan="12" class="table-empty-cell">
+                      <ElEmpty description="暂无数据" :image-size="64" class="block-empty" />
                     </td>
                   </tr>
                 </template>
-              </template>
+                <template v-else>
+                  <template v-for="ag in agencies" :key="ag.id">
+                    <!-- Main row -->
+                    <tr class="agency-row" :class="{ expanded: isExpanded(ag.id) }">
+                      <td class="td-expand">
+                        <button
+                          class="expand-arrow"
+                          :class="{ open: isExpanded(ag.id) }"
+                          @click="toggleExpand(ag.id)"
+                        >
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                            <path
+                              d="M2 3.5L5 6.5L8 3.5"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                              stroke-linecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </td>
+                      <td>
+                        <div class="agency-name-cell">
+                          <span :style="{ color: ag.nameColor || '#e2e8f0' }">{{ ag.name }}</span>
+                          <span v-if="ag.hasWarning" class="warn-icon">⚠</span>
+                        </div>
+                      </td>
+                      <td class="text-right">{{ ag.appCount }}</td>
+                      <td class="text-right">{{ ag.channelCount }}</td>
+                      <td class="text-right fw-600">{{ fmtM(ag.spend) }}</td>
+                      <td class="text-right">{{ ag.installs.toLocaleString() }}</td>
+                      <td class="text-right">${{ ag.cpi.toFixed(2) }}</td>
+                      <td class="text-right">${{ ag.cpa.toFixed(2) }}</td>
+                      <td class="text-right" :class="roiClass(ag.roi)">
+                        <span :class="[`roi-text-${roiClass(ag.roi)}`]">{{ ag.roi }}%</span>
+                      </td>
+                      <td>
+                        <div class="budget-bar-wrap">
+                          <div class="budget-bar-track">
+                            <div
+                              class="budget-bar-fill"
+                              :style="{
+                                width: `${ag.budgetRate}%`,
+                                background:
+                                  ag.budgetRate >= 90
+                                    ? '#00d4b4'
+                                    : ag.budgetRate >= 80
+                                      ? '#3b82f6'
+                                      : '#f59e0b'
+                              }"
+                            />
+                          </div>
+                          <span class="budget-pct">{{ ag.budgetRate }}%</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="status-cell">
+                          <span
+                            class="status-dot"
+                            :style="{ background: statusInfo(ag.status).dot }"
+                          />
+                          <span :style="{ color: statusInfo(ag.status).text }">{{
+                            statusInfo(ag.status).label
+                          }}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <button class="btn-expand-text" @click="toggleExpand(ag.id)">
+                          {{ isExpanded(ag.id) ? '收起 ∧' : '展开 ∨' }}
+                        </button>
+                      </td>
+                    </tr>
 
-              <!-- Total row -->
-              <tr v-if="!pageLoading && agencies.length" class="total-row">
-                <td></td>
-                <td>小计</td>
-                <td class="text-right">{{ agencyTotals.appCount }}</td>
-                <td class="text-right">{{ agencyTotals.channelCount }}</td>
-                <td class="text-right fw-600">${{ agencyTotals.spend.toLocaleString('en-US') }}</td>
-                <td class="text-right">{{ agencyTotals.installs.toLocaleString('en-US') }}</td>
-                <td class="text-right">${{ agencyTotals.cpi.toFixed(2) }}</td>
-                <td class="text-right">${{ agencyTotals.cpa.toFixed(2) }}</td>
-                <td class="text-right">{{ Math.round(agencyTotals.roi) }}%</td>
-                <td>
-                  <div class="budget-bar-wrap">
-                    <div class="budget-bar-track">
-                      <div
-                        class="budget-bar-fill"
-                        :style="{
-                          width: `${Math.min(100, Math.round(agencyTotals.budgetRate))}%`,
-                          background: '#94a3b8'
-                        }"
-                      />
+                    <!-- Expanded row -->
+                    <tr v-if="isExpanded(ag.id)" class="expand-row">
+                      <td colspan="12" class="expand-td">
+                        <div class="expand-panel">
+                          <!-- Expand header -->
+                          <div class="exp-hd">
+                            <div class="exp-hd-left">
+                              <span class="exp-device-icon">📱</span>
+                              <span
+                                class="exp-name"
+                                :style="{ color: ag.nameColor || '#e2e8f0' }"
+                                >{{ ag.name }}</span
+                              >
+                              <span class="exp-badge active">ACTIVE</span>
+                              <span class="exp-meta">广告投放代理商</span>
+                              <span class="exp-meta">数据日期: {{ filterDate }}</span>
+                            </div>
+                            <div class="exp-hd-right">
+                              <!-- <button class="btn-sm-teal">展开全部</button>
+                          <button class="btn-sm-ghost">自定义列</button> -->
+                              <button class="btn-sm-ghost">↓ 导出</button>
+                              <button class="btn-sm-ghost" @click="toggleExpand(ag.id)"
+                                >收起 ∧</button
+                              >
+                            </div>
+                          </div>
+
+                          <!-- Summary metrics -->
+                          <div class="exp-metrics">
+                            <div class="exp-metric">
+                              <div class="exp-metric-label">应用数</div>
+                              <div class="exp-metric-value">{{
+                                agencyDetailMap[ag.id].appCount
+                              }}</div>
+                            </div>
+                            <div class="exp-metric">
+                              <div class="exp-metric-label">广告平台</div>
+                              <div class="exp-metric-value">{{
+                                agencyDetailMap[ag.id].channelCount
+                              }}</div>
+                            </div>
+                            <div class="exp-metric">
+                              <div class="exp-metric-label">总消耗</div>
+                              <div class="exp-metric-value teal">{{
+                                fmtM(agencyDetailMap[ag.id].totalSpend)
+                              }}</div>
+                            </div>
+                            <div class="exp-metric">
+                              <div class="exp-metric-label">总安装</div>
+                              <div class="exp-metric-value">{{
+                                agencyDetailMap[ag.id].totalInstalls.toLocaleString()
+                              }}</div>
+                            </div>
+                            <div class="exp-metric">
+                              <div class="exp-metric-label">平均首日ROI</div>
+                              <div class="exp-metric-value-roi">
+                                <span :class="`roi-text-${roiClass(agencyDetailMap[ag.id].roi)}`">
+                                  {{ agencyDetailMap[ag.id].roi }}%
+                                </span>
+                                <span
+                                  class="roi-tag"
+                                  :class="
+                                    agencyDetailMap[ag.id].roi >= agencyDetailMap[ag.id].roiTarget
+                                      ? 'roi-tag-meet'
+                                      : 'roi-tag-miss'
+                                  "
+                                >
+                                  {{
+                                    agencyDetailMap[ag.id].roi >= agencyDetailMap[ag.id].roiTarget
+                                      ? '达标'
+                                      : '未达'
+                                  }}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Weekly summary -->
+                          <div class="exp-weekly">
+                            <span class="weekly-lbl">近7天汇总</span>
+                            <span class="weekly-item"
+                              >广告支出:
+                              <strong
+                                >${{ agencyDetailMap[ag.id].weeklySpend.toLocaleString() }}</strong
+                              ></span
+                            >
+                            <span class="weekly-sep">|</span>
+                            <span class="weekly-item"
+                              >首日ROI:
+                              <strong class="teal"
+                                >{{ agencyDetailMap[ag.id].weeklyRoi }}%</strong
+                              ></span
+                            >
+                            <span class="weekly-sep">|</span>
+                            <span class="weekly-item">CPA: <strong>--</strong></span>
+                            <span class="weekly-sep">|</span>
+                            <span class="weekly-item"
+                              >安装数:
+                              <strong>{{
+                                agencyDetailMap[ag.id].weeklyInstalls.toLocaleString()
+                              }}</strong></span
+                            >
+                            <span class="weekly-sep">|</span>
+                            <span class="weekly-item"
+                              >在投应用:
+                              <strong>{{ agencyDetailMap[ag.id].weeklyApps }}</strong></span
+                            >
+                            <span class="weekly-sep">|</span>
+                            <span class="weekly-item"
+                              >广告账户:
+                              <strong>{{ agencyDetailMap[ag.id].weeklyAccounts }}</strong></span
+                            >
+                            <span class="weekly-sep">|</span>
+                            <span class="weekly-item"
+                              >广告系列:
+                              <strong>{{ agencyDetailMap[ag.id].weeklyCampaigns }}</strong></span
+                            >
+                            <span class="weekly-sep">|</span>
+                            <span class="weekly-item"
+                              >投放国家:
+                              <strong>{{ agencyDetailMap[ag.id].weeklyCountries }}</strong></span
+                            >
+                            <span class="weekly-sep">|</span>
+                            <span class="weekly-item"
+                              >投放天数:
+                              <strong>{{ agencyDetailMap[ag.id].weeklyDays }}</strong></span
+                            >
+                          </div>
+
+                          <!-- Account summary sub-table -->
+                          <div class="exp-sub-section">
+                            <div class="exp-sub-title">账户汇总</div>
+                            <table class="sub-table">
+                              <thead>
+                                <tr>
+                                  <th>应用</th>
+                                  <th>平台</th>
+                                  <th>广告平台</th>
+                                  <th>账户ID</th>
+                                  <th>账户名称</th>
+                                  <th>广告支出</th>
+                                  <th>首日ROI</th>
+                                  <th>CPA</th>
+                                  <th>CPI</th>
+                                  <th>安装数</th>
+                                  <th>操作</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr v-for="(acc, ai) in agencyDetailMap[ag.id].accounts" :key="ai">
+                                  <td>{{ acc.app }}</td>
+                                  <td>{{ acc.platform }}</td>
+                                  <td>{{ acc.adPlatform }}</td>
+                                  <td class="account-id">{{ acc.accountId }}</td>
+                                  <td>{{ acc.accountName }}</td>
+                                  <td>{{ acc.spend }}</td>
+                                  <td :class="`roi-text-${roiClass(acc.roi)}`">{{ acc.roi }}%</td>
+                                  <td>{{ acc.cpa }}</td>
+                                  <td>{{ acc.cpi }}</td>
+                                  <td>{{ acc.installs.toLocaleString() }}</td>
+                                  <td><span class="link-action">详情</span></td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+
+                          <!-- Campaign detail sub-table -->
+                          <div class="exp-sub-section">
+                            <div class="exp-sub-title">近期明细</div>
+                            <table class="sub-table">
+                              <thead>
+                                <tr>
+                                  <th>广告系列名称</th>
+                                  <th>预算</th>
+                                  <th>广告支出</th>
+                                  <th>CPA</th>
+                                  <th>CPI</th>
+                                  <th>安装数</th>
+                                  <th class="roi-date-head">3/4</th>
+                                  <th class="roi-date-head">3/3</th>
+                                  <th class="roi-date-head">3/2</th>
+                                  <th>明细</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr
+                                  v-for="(cp, ci) in agencyDetailMap[ag.id].campaigns"
+                                  :key="ci"
+                                  :class="{ 'row-red-tint': cp.isRed }"
+                                >
+                                  <td :class="{ 'text-danger': cp.isRed }">
+                                    {{ cp.appName || cp.name || '--' }}
+                                  </td>
+                                  <td>${{ cp.budget }}</td>
+                                  <td>{{ cp.spend }}</td>
+                                  <td>{{ cp.cpa }}</td>
+                                  <td>{{ cp.cpi }}</td>
+                                  <td>{{ cp.installs }}</td>
+                                  <td>
+                                    <span
+                                      v-if="cp.roi34 !== null"
+                                      class="roi-badge"
+                                      :class="roiBadgeClass(cp.roi34)"
+                                      >{{ cp.roi34 }}%</span
+                                    >
+                                    <span v-else class="dim">--</span>
+                                  </td>
+                                  <td>
+                                    <span
+                                      v-if="cp.roi33 !== null"
+                                      class="roi-badge"
+                                      :class="roiBadgeClass(cp.roi33)"
+                                      >{{ cp.roi33 }}%</span
+                                    >
+                                    <span v-else class="dim">--</span>
+                                  </td>
+                                  <td>
+                                    <span
+                                      v-if="cp.roi32 !== null"
+                                      class="roi-badge"
+                                      :class="roiBadgeClass(cp.roi32)"
+                                      >{{ cp.roi32 }}%</span
+                                    >
+                                    <span v-else class="dim">--</span>
+                                  </td>
+                                  <td>
+                                    <span
+                                      class="link-action"
+                                      @click="goCampaignDetailFromExpand(cp)"
+                                    >
+                                      查看
+                                    </span>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                            <div class="sub-footnote"
+                              >注: 时区 PST(UTC-8), 货币 USD; ROI计算包含广告收入及付费收入。</div
+                            >
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </template>
+
+                <!-- Total row -->
+                <tr v-if="!pageLoading && agencies.length" class="total-row">
+                  <td></td>
+                  <td>小计</td>
+                  <td class="text-right">{{ agencyTotals.appCount }}</td>
+                  <td class="text-right">{{ agencyTotals.channelCount }}</td>
+                  <td class="text-right fw-600"
+                    >${{ agencyTotals.spend.toLocaleString('en-US') }}</td
+                  >
+                  <td class="text-right">{{ agencyTotals.installs.toLocaleString('en-US') }}</td>
+                  <td class="text-right">${{ agencyTotals.cpi.toFixed(2) }}</td>
+                  <td class="text-right">${{ agencyTotals.cpa.toFixed(2) }}</td>
+                  <td class="text-right">{{ Math.round(agencyTotals.roi) }}%</td>
+                  <td>
+                    <div class="budget-bar-wrap">
+                      <div class="budget-bar-track">
+                        <div
+                          class="budget-bar-fill"
+                          :style="{
+                            width: `${Math.min(100, Math.round(agencyTotals.budgetRate))}%`,
+                            background: '#94a3b8'
+                          }"
+                        />
+                      </div>
+                      <span class="budget-pct">{{ Math.round(agencyTotals.budgetRate) }}%</span>
                     </div>
-                    <span class="budget-pct">{{ Math.round(agencyTotals.budgetRate) }}%</span>
-                  </div>
-                </td>
-                <td>--</td>
-                <td>--</td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                  <td>--</td>
+                  <td>--</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- ② Campaign Detail Table -->
@@ -1200,114 +1218,116 @@
             </div>
           </div>
 
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>代投方</th>
-                <th>广告系列名称</th>
-                <th>广告平台</th>
-                <th>应用</th>
-                <th class="text-right">消耗($)</th>
-                <th class="text-right">安装数</th>
-                <th class="text-right">CPI($)</th>
-                <th class="text-right">CTR(%)</th>
-                <th class="text-right">CVR(%)</th>
-                <th class="text-right">IPM</th>
-                <th class="text-right">预算($)</th>
-                <th class="text-right">执行率</th>
-                <th>7日趋势</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-if="pageLoading">
-                <tr
-                  v-for="idx in campaignSkeletonRows"
-                  :key="`campaign-skeleton-${idx}`"
-                  class="skeleton-data-tr"
-                  :style="{ '--sk-stagger': `${(idx - 1) * 48}ms` }"
-                >
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--sm-name" /></td>
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--name-lg" /></td>
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--sm" /></td>
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--sm" /></td>
-                  <td class="skeleton-td text-right"
-                    ><span class="sk-brick sk-brick--num-wide"
-                  /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td text-right"
-                    ><span class="sk-brick sk-brick--num-tiny"
-                  /></td>
-                  <td class="skeleton-td text-right"
-                    ><span class="sk-brick sk-brick--num-tiny"
-                  /></td>
-                  <td class="skeleton-td text-right"
-                    ><span class="sk-brick sk-brick--num-tiny"
-                  /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td text-right"
-                    ><span class="sk-brick sk-brick--num-tiny"
-                  /></td>
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--trend" /></td>
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--action" /></td>
-                </tr>
-              </template>
-              <template v-else-if="!campaigns.length">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <td colspan="14" class="table-empty-cell">
-                    <ElEmpty description="暂无数据" :image-size="64" class="block-empty" />
-                  </td>
+                  <th>代投方</th>
+                  <th>广告系列名称</th>
+                  <th>广告平台</th>
+                  <th>应用</th>
+                  <th class="text-right">消耗($)</th>
+                  <th class="text-right">安装数</th>
+                  <th class="text-right">CPI($)</th>
+                  <th class="text-right">CTR(%)</th>
+                  <th class="text-right">CVR(%)</th>
+                  <th class="text-right">IPM</th>
+                  <th class="text-right">预算($)</th>
+                  <th class="text-right">执行率</th>
+                  <th>7日趋势</th>
+                  <th>操作</th>
                 </tr>
-              </template>
-              <template v-else>
-                <tr v-for="(cp, i) in campaigns" :key="i" class="data-row">
-                  <td :style="{ color: cp.agencyColor || '#e2e8f0' }">{{ cp.agency }}</td>
-                  <td class="name-cell">{{ cp.appName || cp.name || '--' }}</td>
-                  <td>{{ cp.channel }}</td>
-                  <td>{{ cp.app }}</td>
-                  <td class="text-right">${{ cp.spend.toLocaleString() }}</td>
-                  <td class="text-right">{{ cp.installs.toLocaleString() }}</td>
-                  <td class="text-right">${{ cp.cpi.toFixed(2) }}</td>
-                  <td class="text-right">{{ cp.ctr }}%</td>
-                  <td class="text-right">{{ cp.cvr }}%</td>
-                  <td class="text-right">{{ cp.ipm }}</td>
-                  <td class="text-right">${{ cp.budget.toLocaleString() }}</td>
-                  <td class="text-right">{{ cp.execRate }}%</td>
-                  <td>
-                    <div class="trend-cell-inner">
-                      <svg
-                        class="trend-spark-svg"
-                        width="40"
-                        height="18"
-                        viewBox="0 0 16 14"
-                        fill="none"
-                      >
-                        <path
-                          :d="trendPath(cp.trend)"
-                          :stroke="trendColor(cp.trend)"
-                          stroke-width="1.5"
-                          stroke-linecap="round"
+              </thead>
+              <tbody>
+                <template v-if="pageLoading">
+                  <tr
+                    v-for="idx in campaignSkeletonRows"
+                    :key="`campaign-skeleton-${idx}`"
+                    class="skeleton-data-tr"
+                    :style="{ '--sk-stagger': `${(idx - 1) * 48}ms` }"
+                  >
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--sm-name" /></td>
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--name-lg" /></td>
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--sm" /></td>
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--sm" /></td>
+                    <td class="skeleton-td text-right"
+                      ><span class="sk-brick sk-brick--num-wide"
+                    /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td text-right"
+                      ><span class="sk-brick sk-brick--num-tiny"
+                    /></td>
+                    <td class="skeleton-td text-right"
+                      ><span class="sk-brick sk-brick--num-tiny"
+                    /></td>
+                    <td class="skeleton-td text-right"
+                      ><span class="sk-brick sk-brick--num-tiny"
+                    /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td text-right"
+                      ><span class="sk-brick sk-brick--num-tiny"
+                    /></td>
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--trend" /></td>
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--action" /></td>
+                  </tr>
+                </template>
+                <template v-else-if="!campaigns.length">
+                  <tr>
+                    <td colspan="14" class="table-empty-cell">
+                      <ElEmpty description="暂无数据" :image-size="64" class="block-empty" />
+                    </td>
+                  </tr>
+                </template>
+                <template v-else>
+                  <tr v-for="(cp, i) in campaigns" :key="i" class="data-row">
+                    <td :style="{ color: cp.agencyColor || '#e2e8f0' }">{{ cp.agency }}</td>
+                    <td class="name-cell">{{ cp.appName || cp.name || '--' }}</td>
+                    <td>{{ cp.channel }}</td>
+                    <td>{{ cp.app }}</td>
+                    <td class="text-right">${{ cp.spend.toLocaleString() }}</td>
+                    <td class="text-right">{{ cp.installs.toLocaleString() }}</td>
+                    <td class="text-right">${{ cp.cpi.toFixed(2) }}</td>
+                    <td class="text-right">{{ cp.ctr }}%</td>
+                    <td class="text-right">{{ cp.cvr }}%</td>
+                    <td class="text-right">{{ cp.ipm }}</td>
+                    <td class="text-right">${{ cp.budget.toLocaleString() }}</td>
+                    <td class="text-right">{{ cp.execRate }}%</td>
+                    <td>
+                      <div class="trend-cell-inner">
+                        <svg
+                          class="trend-spark-svg"
+                          width="40"
+                          height="18"
+                          viewBox="0 0 16 14"
                           fill="none"
-                        />
-                        <path
-                          :d="trendPath(cp.trend) + ' V14 H2 Z'"
-                          :fill="trendColor(cp.trend)"
-                          fill-opacity="0.15"
-                        />
-                      </svg>
-                      <span class="trend-arrow" :style="{ color: trendColor(cp.trend) }">
-                        {{ cp.trend === 'up' ? '↑' : cp.trend === 'down' ? '↓' : '→' }}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="link-action" @click="goCampaignDetailFromRow(cp)">详情 ›</span>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
+                        >
+                          <path
+                            :d="trendPath(cp.trend)"
+                            :stroke="trendColor(cp.trend)"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            fill="none"
+                          />
+                          <path
+                            :d="trendPath(cp.trend) + ' V14 H2 Z'"
+                            :fill="trendColor(cp.trend)"
+                            fill-opacity="0.15"
+                          />
+                        </svg>
+                        <span class="trend-arrow" :style="{ color: trendColor(cp.trend) }">
+                          {{ cp.trend === 'up' ? '↑' : cp.trend === 'down' ? '↓' : '→' }}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="link-action" @click="goCampaignDetailFromRow(cp)">详情 ›</span>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- ③ Daily Comparison -->
@@ -1319,64 +1339,66 @@
             </div>
           </div>
 
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>日期</th>
-                <th>代投方</th>
-                <th class="text-right">消耗($)</th>
-                <th class="text-right">安装数</th>
-                <th class="text-right">CPI($)</th>
-                <th class="text-right">CPA($)</th>
-                <th class="text-right">消耗环比</th>
-                <th class="text-right">安装环比</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-if="pageLoading">
-                <tr
-                  v-for="idx in dailySkeletonRows"
-                  :key="`daily-skeleton-${idx}`"
-                  class="skeleton-data-tr"
-                  :style="{ '--sk-stagger': `${(idx - 1) * 48}ms` }"
-                >
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--date" /></td>
-                  <td class="skeleton-td"><span class="sk-brick sk-brick--sm-name" /></td>
-                  <td class="skeleton-td text-right"
-                    ><span class="sk-brick sk-brick--num-wide"
-                  /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--pct" /></td>
-                  <td class="skeleton-td text-right"><span class="sk-brick sk-brick--pct" /></td>
-                </tr>
-              </template>
-              <template v-else-if="!dailyRows.length">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <td colspan="8" class="table-empty-cell">
-                    <ElEmpty description="暂无数据" :image-size="64" class="block-empty" />
-                  </td>
+                  <th>日期</th>
+                  <th>代投方</th>
+                  <th class="text-right">消耗($)</th>
+                  <th class="text-right">安装数</th>
+                  <th class="text-right">CPI($)</th>
+                  <th class="text-right">CPA($)</th>
+                  <th class="text-right">消耗环比</th>
+                  <th class="text-right">安装环比</th>
                 </tr>
-              </template>
-              <template v-else>
-                <tr v-for="(row, i) in dailyRows" :key="i" class="data-row">
-                  <td>{{ row.date }}</td>
-                  <td :style="{ color: row.agencyColor || '#e2e8f0' }">{{ row.agency }}</td>
-                  <td class="text-right">${{ row.spend.toLocaleString() }}</td>
-                  <td class="text-right">{{ row.installs.toLocaleString() }}</td>
-                  <td class="text-right">${{ row.cpi.toFixed(2) }}</td>
-                  <td class="text-right">${{ row.cpa.toFixed(2) }}</td>
-                  <td class="text-right" :class="changeClass(row.spendChange)">
-                    {{ changeTxt(row.spendChange) }}
-                  </td>
-                  <td class="text-right" :class="changeClass(row.installsChange)">
-                    {{ changeTxt(row.installsChange) }}
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                <template v-if="pageLoading">
+                  <tr
+                    v-for="idx in dailySkeletonRows"
+                    :key="`daily-skeleton-${idx}`"
+                    class="skeleton-data-tr"
+                    :style="{ '--sk-stagger': `${(idx - 1) * 48}ms` }"
+                  >
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--date" /></td>
+                    <td class="skeleton-td"><span class="sk-brick sk-brick--sm-name" /></td>
+                    <td class="skeleton-td text-right"
+                      ><span class="sk-brick sk-brick--num-wide"
+                    /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--num" /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--pct" /></td>
+                    <td class="skeleton-td text-right"><span class="sk-brick sk-brick--pct" /></td>
+                  </tr>
+                </template>
+                <template v-else-if="!dailyRows.length">
+                  <tr>
+                    <td colspan="8" class="table-empty-cell">
+                      <ElEmpty description="暂无数据" :image-size="64" class="block-empty" />
+                    </td>
+                  </tr>
+                </template>
+                <template v-else>
+                  <tr v-for="(row, i) in dailyRows" :key="i" class="data-row">
+                    <td>{{ row.date }}</td>
+                    <td :style="{ color: row.agencyColor || '#e2e8f0' }">{{ row.agency }}</td>
+                    <td class="text-right">${{ row.spend.toLocaleString() }}</td>
+                    <td class="text-right">{{ row.installs.toLocaleString() }}</td>
+                    <td class="text-right">${{ row.cpi.toFixed(2) }}</td>
+                    <td class="text-right">${{ row.cpa.toFixed(2) }}</td>
+                    <td class="text-right" :class="changeClass(row.spendChange)">
+                      {{ changeTxt(row.spendChange) }}
+                    </td>
+                    <td class="text-right" :class="changeClass(row.installsChange)">
+                      {{ changeTxt(row.installsChange) }}
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1467,17 +1489,39 @@
   $red: #ef4444;
   $green: #10b981;
 
-  // ─── Page ───
+  // ─── Page（对齐广告成效：整页 padding + 筛选区非固定） ───
+  .agency-analysis-page.page-wrap {
+    box-sizing: border-box;
+    padding: 20px 24px 28px;
+  }
+
   .page-wrap {
     position: relative;
     min-width: 0;
-    min-height: 100vh;
-    padding: 0;
+    min-height: 0;
     overflow-x: clip;
     font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
     font-size: 13px;
     color: $text-primary;
     background: $bg-page;
+  }
+
+  .agency-analysis-page__section {
+    margin-bottom: 16px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .agency-analysis-page__section--filters {
+    margin-bottom: 20px;
+  }
+
+  @media (width <= 768px) {
+    .agency-analysis-page.page-wrap {
+      padding: 16px;
+    }
   }
 
   .page-wrap--ap-fx {
@@ -1530,8 +1574,7 @@
       mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
     }
 
-    /* 勿对 .top-bar 设 position:relative，否则会覆盖 sticky */
-    > *:not(.aa-page-fx, .top-bar) {
+    > *:not(.aa-page-fx) {
       position: relative;
       z-index: 1;
     }
@@ -1632,29 +1675,6 @@
     animation-delay: 0.26s;
   }
 
-  // ─── Topbar ───
-  .top-bar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 20px 16px;
-    background: rgb(8 17 30 / 55%);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgb(96 165 250 / 14%);
-  }
-
-  .top-filters {
-    display: flex;
-    flex: 1;
-    flex-wrap: wrap;
-    gap: 10px 12px;
-    align-items: center;
-    min-width: 0;
-  }
-
   .aa-filter-panel {
     display: flex;
     flex: 1;
@@ -1662,14 +1682,27 @@
     gap: 10px 12px;
     align-items: center;
     min-width: 0;
-    padding: 14px 18px;
+    padding: 18px 20px;
     background: rgb(10 10 14 / 82%);
-    border: 1px solid rgb(96 165 250 / 22%);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(96 165 250 / 20%);
     border-radius: 16px;
     box-shadow:
       0 8px 32px rgb(0 0 0 / 40%),
       inset 0 1px 0 rgb(186 230 253 / 10%),
       0 0 40px rgb(59 130 246 / 8%);
+    transition:
+      box-shadow 0.35s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+    &:hover {
+      border-color: rgb(96 165 250 / 48%);
+      box-shadow:
+        0 12px 40px rgb(0 0 0 / 44%),
+        0 0 0 1px rgb(96 165 250 / 22%),
+        inset 0 1px 0 rgb(186 230 253 / 16%),
+        0 0 48px rgb(59 130 246 / 14%);
+    }
   }
 
   .filter-skel {
@@ -1710,6 +1743,37 @@
     flex-shrink: 0;
   }
 
+  .btn-search {
+    --el-button-size: 40px;
+
+    flex-shrink: 0;
+    height: 40px;
+    padding: 0 16px;
+    font-size: 13px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 48%, #34d399 100%);
+    border: 1px solid rgb(16 185 129 / 45%);
+    border-radius: 9999px;
+    box-shadow:
+      0 0 18px rgb(16 185 129 / 30%),
+      inset 0 1px 0 rgb(255 255 255 / 12%);
+    transition:
+      box-shadow 0.22s ease,
+      transform 0.18s ease,
+      filter 0.22s ease;
+
+    &:hover {
+      filter: brightness(1.06);
+      box-shadow:
+        0 0 28px rgb(16 185 129 / 42%),
+        inset 0 1px 0 rgb(255 255 255 / 16%);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
   .kpi-full-empty {
     display: flex;
     flex: 1 1 100%;
@@ -1723,6 +1787,10 @@
     text-align: center;
     vertical-align: middle;
     border-bottom: 1px solid #0f1c2e;
+
+    :deep(.el-empty__description) {
+      font-size: 13px;
+    }
   }
 
   .chart-empty-wrap {
@@ -1761,10 +1829,10 @@
     width: 130px !important;
 
     :deep(.el-input__wrapper) {
-      height: 36px;
+      min-height: 40px;
       padding: 0 12px;
-      background: rgb(16 185 129 / 8%) !important;
-      border: 1px solid rgb(16 185 129 / 32%) !important;
+      background: rgb(16 185 129 / 6%) !important;
+      border: 1px solid rgb(16 185 129 / 28%) !important;
       border-radius: 9999px !important;
       box-shadow: none !important;
       transition:
@@ -1779,9 +1847,9 @@
     }
 
     :deep(.el-input__wrapper.is-focus) {
-      background: rgb(16 185 129 / 12%) !important;
+      background: rgb(16 185 129 / 10%) !important;
       border-color: #10b981 !important;
-      box-shadow: 0 0 0 2px rgb(16 185 129 / 22%) !important;
+      box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
     }
 
     :deep(.el-input__inner) {
@@ -1798,10 +1866,10 @@
     width: 130px !important;
 
     :deep(.el-input__wrapper) {
-      height: 36px;
+      min-height: 40px;
       padding: 0 12px;
-      background: rgb(16 185 129 / 8%) !important;
-      border: 1px solid rgb(16 185 129 / 32%) !important;
+      background: rgb(16 185 129 / 6%) !important;
+      border: 1px solid rgb(16 185 129 / 28%) !important;
       border-radius: 9999px !important;
       box-shadow: none !important;
       transition:
@@ -1816,9 +1884,9 @@
     }
 
     :deep(.el-input__wrapper.is-focus) {
-      background: rgb(16 185 129 / 12%) !important;
+      background: rgb(16 185 129 / 10%) !important;
       border-color: #10b981 !important;
-      box-shadow: 0 0 0 2px rgb(16 185 129 / 22%) !important;
+      box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
     }
 
     :deep(.el-input__inner) {
@@ -1869,95 +1937,196 @@
   // ─── KPI Cards ───
   .kpi-row {
     display: flex;
-    gap: 0;
-    gap: 12px;
-    padding: 16px 20px;
+    gap: 16px;
+    padding: 0;
+    margin-bottom: 12px;
+  }
+
+  .kpi-row > .kpi-card:not(.kpi-card--skeleton):nth-child(1) {
+    --kpi-accent: var(--art-primary);
+  }
+
+  .kpi-row > .kpi-card:not(.kpi-card--skeleton):nth-child(2) {
+    --kpi-accent: var(--art-success);
+  }
+
+  .kpi-row > .kpi-card:not(.kpi-card--skeleton):nth-child(3) {
+    --kpi-accent: var(--art-warning);
+  }
+
+  .kpi-row > .kpi-card:not(.kpi-card--skeleton):nth-child(4) {
+    --kpi-accent: var(--art-danger);
+  }
+
+  .kpi-row > .kpi-card:not(.kpi-card--skeleton):nth-child(5) {
+    --kpi-accent: color-mix(in srgb, var(--art-primary) 48%, var(--art-success));
+  }
+
+  .kpi-row > .kpi-card:not(.kpi-card--skeleton):nth-child(6) {
+    --kpi-accent: color-mix(in srgb, var(--art-success) 42%, var(--art-warning));
   }
 
   .kpi-card {
     position: relative;
     flex: 1;
     min-width: 0;
-    padding: 14px 16px;
+    padding: 22px;
     overflow: hidden;
     border-radius: 12px;
 
     &:not(.kpi-card--skeleton) {
+      --kpi-accent: var(--art-primary);
+
       @include ap-neon-bg;
       @include ap-card-mesh;
       @include ap-panel-hover;
 
       isolation: isolate;
+      border-color: color-mix(in srgb, var(--kpi-accent) 46%, transparent);
       border-radius: 12px;
-    }
-
-    &:not(.kpi-card--skeleton).highlighted {
-      border-color: rgb(16 185 129 / 55%);
       box-shadow:
         0 12px 48px rgb(0 0 0 / 48%),
-        0 0 0 1px rgb(16 185 129 / 25%),
-        inset 0 1px 0 rgb(167 243 208 / 18%),
-        0 0 48px rgb(16 185 129 / 18%);
+        0 0 0 1px color-mix(in srgb, var(--kpi-accent) 22%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 16%, transparent),
+        inset 0 -12px 32px rgb(0 0 0 / 30%),
+        0 0 52px color-mix(in srgb, var(--kpi-accent) 22%, transparent);
+
+      &::before {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        content: '';
+        background:
+          radial-gradient(
+            ellipse 118% 78% at 104% -18%,
+            color-mix(in srgb, var(--kpi-accent) 44%, transparent) 0%,
+            transparent 58%
+          ),
+          radial-gradient(
+            ellipse 82% 62% at -12% 108%,
+            color-mix(in srgb, var(--kpi-accent) 30%, transparent) 0%,
+            transparent 58%
+          );
+        border-radius: inherit;
+      }
+
+      &:hover {
+        border-color: color-mix(in srgb, var(--kpi-accent) 58%, transparent);
+        box-shadow:
+          0 24px 72px rgb(0 0 0 / 52%),
+          0 0 0 1px color-mix(in srgb, var(--kpi-accent) 32%, transparent),
+          inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 22%, transparent),
+          inset 0 -12px 32px rgb(0 0 0 / 32%),
+          0 0 72px color-mix(in srgb, var(--kpi-accent) 32%, transparent),
+          0 0 120px color-mix(in srgb, var(--kpi-accent) 14%, transparent);
+      }
+    }
+  }
+
+  .kpi-row > .kpi-card:not(.kpi-card--skeleton).highlighted {
+    --kpi-accent: var(--art-success);
+
+    border-color: color-mix(in srgb, var(--art-success) 58%, transparent);
+    box-shadow:
+      0 12px 48px rgb(0 0 0 / 48%),
+      0 0 0 1px color-mix(in srgb, var(--art-success) 32%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-success) 22%, transparent),
+      inset 0 -12px 32px rgb(0 0 0 / 30%),
+      0 0 56px color-mix(in srgb, var(--art-success) 28%, transparent);
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--art-success) 68%, transparent);
+      box-shadow:
+        0 24px 72px rgb(0 0 0 / 52%),
+        0 0 0 1px color-mix(in srgb, var(--art-success) 40%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--art-success) 26%, transparent),
+        inset 0 -12px 32px rgb(0 0 0 / 32%),
+        0 0 80px color-mix(in srgb, var(--art-success) 38%, transparent),
+        0 0 120px color-mix(in srgb, var(--art-success) 16%, transparent);
     }
   }
 
   .kpi-idx {
     position: absolute;
     top: 8px;
-    left: 8px;
+    right: 10px;
+    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
-    font-size: 10px;
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
     font-weight: 700;
     color: #0a1628;
     background: $teal;
     border-radius: 50%;
   }
 
+  .kpi-head {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
   .kpi-label {
-    margin-bottom: 6px;
-    margin-left: 22px;
-    font-size: 11px;
+    font-size: 13px;
+    font-weight: 600;
     color: $text-muted;
   }
 
   .kpi-value {
-    margin-bottom: 4px;
-    font-size: 22px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 6px;
+    font-size: 26px;
     font-weight: 700;
     line-height: 1;
     color: $text-primary;
   }
 
   .kpi-change {
-    font-size: 11px;
+    flex-shrink: 0;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    background: rgb(148 163 184 / 10%);
+    border-radius: 9999px;
 
     &.up {
       color: $teal;
+      background: rgb(0 212 180 / 10%);
+      border: 1px solid rgb(0 212 180 / 22%);
     }
 
     &.down {
       color: $red;
+      background: rgb(239 68 68 / 10%);
+      border: 1px solid rgb(239 68 68 / 22%);
     }
   }
 
   .kpi-spark {
     position: absolute;
-    right: 10px;
-    bottom: 8px;
-    width: 80px;
-    height: 28px;
-    opacity: 0.8;
+    right: 14px;
+    bottom: 12px;
+    z-index: 1;
+    width: 96px;
+    height: 34px;
+    opacity: 0.85;
   }
 
   // ─── Main layout ───
   .main-layout {
     display: flex;
     gap: 12px;
-    padding: 0 20px 20px;
+    padding: 0 0 20px;
   }
 
   .main-left {
@@ -1973,7 +2142,63 @@
     flex-direction: column;
     flex-shrink: 0;
     gap: 10px;
-    width: 260px;
+    width: 360px;
+  }
+
+  @media (width <= 1366px) {
+    .sidebar-right {
+      width: 300px;
+    }
+  }
+
+  // ─── Responsive（中/小尺寸兼容） ───
+  @media (width <= 1200px) {
+    .main-layout {
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .sidebar-right {
+      flex-flow: row wrap;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .sidebar-right .chart-block {
+      flex: 1 1 calc(50% - 6px);
+      min-width: 320px;
+    }
+
+    .kpi-row {
+      flex-wrap: wrap;
+    }
+
+    .kpi-row > .kpi-card {
+      flex: 1 1 calc(33.333% - 11px);
+      min-width: 260px;
+    }
+  }
+
+  @media (width <= 900px) {
+    .sidebar-right {
+      flex-direction: column;
+    }
+
+    .sidebar-right .chart-block {
+      flex: 1 1 100%;
+      min-width: 0;
+    }
+
+    .kpi-row > .kpi-card {
+      flex: 1 1 calc(50% - 8px);
+      min-width: 0;
+    }
+  }
+
+  @media (width <= 560px) {
+    .kpi-row > .kpi-card {
+      flex: 1 1 100%;
+    }
   }
 
   // ─── Section blocks ───
@@ -2003,7 +2228,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
+    padding: 14px 16px;
     background: $bg-header;
     border-bottom: 1px solid $border;
   }
@@ -2012,7 +2237,7 @@
     display: flex;
     gap: 8px;
     align-items: center;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: $text-primary;
   }
@@ -2042,14 +2267,24 @@
     align-items: center;
   }
 
+  .table-scroll {
+    width: 100%;
+    overflow: auto hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-scroll .data-table {
+    min-width: 980px;
+  }
+
   .data-date {
-    font-size: 11px;
+    font-size: 12px;
     color: $text-muted;
   }
 
   .btn-small-outline {
     padding: 3px 10px;
-    font-size: 11px;
+    font-size: 12px;
     color: $text-secondary;
     cursor: pointer;
     background: transparent;
@@ -2066,7 +2301,7 @@
   // ─── Data Table ───
   .data-table {
     width: 100%;
-    font-size: 12px;
+    font-size: 13px;
     border-collapse: collapse;
 
     thead tr {
@@ -2074,7 +2309,7 @@
     }
 
     th {
-      padding: 8px 10px;
+      padding: 9px 11px;
       font-weight: 500;
       color: $text-muted;
       text-align: left;
@@ -2083,7 +2318,7 @@
     }
 
     td {
-      padding: 9px 10px;
+      padding: 10px 11px;
       color: $text-secondary;
       white-space: nowrap;
       border-bottom: 1px solid #0f1c2e;
@@ -2417,7 +2652,7 @@
   }
 
   .warn-icon {
-    font-size: 12px;
+    font-size: 13px;
     color: $amber;
   }
 
@@ -2456,7 +2691,7 @@
 
   .budget-pct {
     min-width: 32px;
-    font-size: 11px;
+    font-size: 12px;
     color: $text-secondary;
   }
 
@@ -2464,7 +2699,7 @@
     display: flex;
     gap: 5px;
     align-items: center;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .status-dot {
@@ -2476,7 +2711,7 @@
 
   .btn-expand-text {
     padding: 3px 8px;
-    font-size: 11px;
+    font-size: 12px;
     color: $teal;
     white-space: nowrap;
     cursor: pointer;
@@ -2532,13 +2767,13 @@
   }
 
   .exp-name {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
   }
 
   .exp-badge {
     padding: 2px 7px;
-    font-size: 10px;
+    font-size: 11px;
     border-radius: 4px;
 
     &.active {
@@ -2549,13 +2784,13 @@
   }
 
   .exp-meta {
-    font-size: 11px;
+    font-size: 12px;
     color: $text-muted;
   }
 
   .btn-sm-teal {
     padding: 4px 10px;
-    font-size: 11px;
+    font-size: 12px;
     color: $teal;
     cursor: pointer;
     background: transparent;
@@ -2569,7 +2804,7 @@
 
   .btn-sm-ghost {
     padding: 4px 10px;
-    font-size: 11px;
+    font-size: 12px;
     color: $text-secondary;
     cursor: pointer;
     background: transparent;
@@ -2596,7 +2831,7 @@
 
     &-label {
       margin-bottom: 4px;
-      font-size: 11px;
+      font-size: 12px;
       color: $text-muted;
     }
 
@@ -2621,7 +2856,7 @@
 
   .roi-tag {
     padding: 2px 8px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     border-radius: 4px;
 
@@ -2643,7 +2878,7 @@
     gap: 6px;
     align-items: center;
     padding: 8px 14px;
-    font-size: 11px;
+    font-size: 12px;
     background: #060e1a;
     border-bottom: 1px solid $border;
 
@@ -2681,7 +2916,7 @@
 
   .exp-sub-title {
     margin-bottom: 8px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: $text-muted;
     text-transform: uppercase;
@@ -2690,7 +2925,7 @@
 
   .sub-table {
     width: 100%;
-    font-size: 11px;
+    font-size: 12px;
     border-collapse: collapse;
 
     th {
@@ -2726,7 +2961,7 @@
   }
 
   .account-id {
-    font-size: 10px;
+    font-size: 11px;
     color: $text-muted;
   }
 
@@ -2734,7 +2969,7 @@
     display: inline-block;
     min-width: 40px;
     padding: 1px 6px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     text-align: center;
     border-radius: 4px;
@@ -2773,7 +3008,7 @@
   }
 
   .link-action {
-    font-size: 11px;
+    font-size: 13px;
     color: $teal;
     cursor: pointer;
 
@@ -2785,7 +3020,7 @@
   .sub-footnote {
     padding-top: 6px;
     margin-top: 8px;
-    font-size: 10px;
+    font-size: 11px;
     color: #475569;
     border-top: 1px solid $border;
   }
@@ -2810,7 +3045,7 @@
   }
 
   .trend-arrow {
-    font-size: 16px;
+    font-size: 17px;
     line-height: 1;
   }
 
@@ -2836,7 +3071,7 @@
   // ─── Sidebar charts ───
   .chart-block {
     position: relative;
-    padding: 10px 12px 8px;
+    padding: 14px 14px 12px;
     overflow: hidden;
     isolation: isolate;
     border-radius: 12px;
@@ -2859,7 +3094,7 @@
 
   .chart-title {
     margin-bottom: 4px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     color: $text-secondary;
   }

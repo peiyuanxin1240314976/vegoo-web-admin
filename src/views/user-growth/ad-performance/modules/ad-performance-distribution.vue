@@ -23,7 +23,7 @@
             </div>
           </div>
         </div>
-        <div v-show="!loading" class="ad-performance-distribution__donut-wrap">
+        <div v-else class="ad-performance-distribution__donut-wrap">
           <div ref="channelChartRef" class="ad-performance-distribution__donut-chart"></div>
           <div class="ad-performance-distribution__donut-center">
             {{ formatCurrency(channelTotal) }}
@@ -298,8 +298,19 @@
     renderChannelChart()
   }
 
+  let renderRafId: number | null = null
+  function scheduleRenderAll() {
+    if (props.loading) return
+    if (renderRafId != null) return
+    renderRafId = window.requestAnimationFrame(async () => {
+      renderRafId = null
+      await nextTick()
+      renderAll()
+    })
+  }
+
   onMounted(() => {
-    if (!props.loading) renderAll()
+    if (!props.loading) scheduleRenderAll()
   })
 
   watch(
@@ -309,8 +320,7 @@
         channelChart.destroyChart()
         return
       }
-      await nextTick()
-      renderAll()
+      scheduleRenderAll()
     }
   )
 
@@ -322,9 +332,9 @@
       props.ownerShareDistribution
     ],
     () => {
-      if (!props.loading) renderAll()
+      scheduleRenderAll()
     },
-    { deep: true }
+    { deep: false }
   )
 </script>
 

@@ -434,7 +434,10 @@ export function useChart(options: UseChartOptions = {}) {
   // 检查容器是否可见
   const isContainerVisible = (element: HTMLElement): boolean => {
     const rect = element.getBoundingClientRect()
-    return rect.width > 0 && rect.height > 0 && rect.top < window.innerHeight && rect.bottom > 0
+    // 仅以尺寸判断是否可初始化：
+    // - 项目内多数图表位于内部滚动容器，rect.top/bottom 与 window 视口不一致，容易误判为“不可见”
+    // - 只要有非 0 宽高即可 init；真正不可见（display:none）时宽高会为 0
+    return rect.width > 0 && rect.height > 0
   }
 
   // 图表初始化核心逻辑
@@ -506,7 +509,10 @@ export function useChart(options: UseChartOptions = {}) {
 
   // 初始化图表
   const initChart = (options: EChartsOption = {}, isEmpty: boolean = false) => {
-    if (!chartRef.value || isDestroyed) return
+    if (!chartRef.value) return
+    // destroyChart() 会将 isDestroyed 置为 true（用于保护异步回调）；
+    // initChart 被主动调用意味着需要重新初始化，此时 chartRef 非空说明组件仍挂载，重置标志位。
+    isDestroyed = false
 
     const mergedOptions = { ...initOptions, ...options }
 

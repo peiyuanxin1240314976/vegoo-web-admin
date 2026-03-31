@@ -370,8 +370,20 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted } from 'vue'
+  import { ref, onMounted, onUnmounted, watch } from 'vue'
   import * as echarts from 'echarts'
+
+  defineOptions({ name: 'IAPOrderTab' })
+
+  const props = defineProps<{
+    filters: {
+      app: string
+      platform: string
+      country: string
+      date: string
+    }
+    searchToken: number
+  }>()
 
   /* ── Filter State ─────────────────────────────── */
   const fApp = ref('all'),
@@ -743,6 +755,20 @@
   onUnmounted(() => {
     chartInstances.forEach((c) => c.dispose())
   })
+
+  function rebuildCharts() {
+    chartInstances.forEach((c) => c.dispose())
+    chartInstances.length = 0
+    initHourChart()
+    initTypeChart()
+  }
+
+  watch(
+    () => props.searchToken,
+    () => {
+      rebuildCharts()
+    }
+  )
 
   function initHourChart() {
     if (!hourRef.value) return
@@ -1448,5 +1474,66 @@
   .detail-panel::-webkit-scrollbar-thumb {
     background: #1e2a44;
     border-radius: 2px;
+  }
+
+  /* ── Responsive ───────────────────────────────── */
+  @media (width <= 1200px) {
+    .kpi-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dual-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .order-charts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .charts-col {
+      flex-flow: row wrap;
+    }
+
+    .charts-col .card {
+      flex: 1 1 calc(50% - 6px);
+      min-width: 320px;
+    }
+
+    .detail-panel {
+      position: relative;
+      top: auto;
+      width: 100%;
+      max-height: none;
+    }
+
+    .detail-open .left-content {
+      flex: 1;
+    }
+  }
+
+  @media (width <= 768px) {
+    .kpi-row {
+      grid-template-columns: 1fr;
+    }
+
+    .charts-col {
+      flex-direction: column;
+    }
+
+    .charts-col .card {
+      flex: 1 1 100%;
+      min-width: 0;
+    }
+
+    .fi-sel,
+    .fi-search {
+      flex: 1 1 calc(50% - 6px);
+      width: auto;
+    }
+
+    .export-btn-sm {
+      width: 100%;
+      margin-left: 0;
+    }
   }
 </style>

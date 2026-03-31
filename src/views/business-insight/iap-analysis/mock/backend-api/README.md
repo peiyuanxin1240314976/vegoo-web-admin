@@ -33,8 +33,7 @@
 
 - 一个接口只服务一个明确 UI 模块（一块 KPI、一张图、一张表或一个 Tab 聚合）
 - **Dashboard 带筛选的 POST（02～07）**：请求体与 `02-overview-kpi.json` 的 `request` **一致**，均接收五维筛选  
-  `timeRange`（必填）、`s_app_id`、`productType`、`s_country_code`、`platform`（可选，未选或「全部」时传 `all` 或空由网关约定；前端见 `normalizeIapOverviewBody`）。  
-  各图/KPI/卡片/分布/甜甜圈/平台对比的后端实现须 **按同一语义过滤**，避免「只有表格跟着筛、图不跟筛」。
+  `startDate`、`endDate`（必填）、`s_app_id`、`s_country_code`、`platform`（可选，未选或「全部」时传 `all` 或空由网关约定；前端见 `normalizeIapOverviewBody`）。各图/KPI/卡片/分布/甜甜圈/平台对比的后端实现须 **按同一语义过滤**，避免「只有表格跟着筛、图不跟筛」。
 - **Mock 模式**：`business-insight-api-mock.ts` 内 Dashboard Mock 已按上述入参做 **演示级** 变化（非真实聚合）；接真接口后以服务端为准。
 - Detail 接口需带 s_app_id（或应用标识）以按应用拉取详情
 

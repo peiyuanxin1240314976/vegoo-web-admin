@@ -2,12 +2,6 @@
   <div class="or-analysis-page art-full-height flex flex-col min-h-0">
     <div class="or-page-fx" aria-hidden="true"></div>
 
-    <div class="or-page__breadcrumb or-entry-1">
-      <span class="or-breadcrumb">
-        {{ $t('menus.userGrowth.title') }} &gt; {{ $t('menus.userGrowth.overallRecovery') }}
-      </span>
-    </div>
-
     <div class="or-filters-wrap or-entry-1">
       <div class="or-filters-inner">
         <div class="or-filters-row">
@@ -21,7 +15,7 @@
             class="or-filter-select"
             :prefix-icon="Grid"
             placeholder="应用"
-            :teleported="false"
+            popper-class="or-filter-popper"
           >
             <ElOption
               v-for="opt in appOptions"
@@ -35,7 +29,7 @@
             class="or-filter-select"
             :prefix-icon="Promotion"
             placeholder="广告平台"
-            :teleported="false"
+            popper-class="or-filter-popper"
           >
             <ElOption
               v-for="opt in sourceOptions"
@@ -50,7 +44,7 @@
             :prefix-icon="Flag"
             placeholder="国家"
             filterable
-            :teleported="false"
+            popper-class="or-filter-popper"
           >
             <ElOption
               v-for="opt in countryOptions"
@@ -59,6 +53,9 @@
               :value="opt.value"
             />
           </ElSelect>
+          <div class="or-filter-actions">
+            <ElButton round class="or-search-btn" @click="handleSearch">检索</ElButton>
+          </div>
         </div>
       </div>
     </div>
@@ -83,7 +80,12 @@
     </nav>
 
     <main class="or-main or-entry-2 flex flex-1 flex-col min-h-0">
-      <component :is="currentTabComponent" :filter="filters" class="or-tab-root" />
+      <component
+        :is="currentTabComponent"
+        :key="`${activeTab}-${searchToken}`"
+        :filter="appliedFilters"
+        class="or-tab-root"
+      />
     </main>
   </div>
 </template>
@@ -112,6 +114,9 @@
     s_country_code: 'all'
   })
 
+  const appliedFilters = ref<OverallRecoveryFilterState>({ ...filters })
+  const searchToken = ref(0)
+
   const { appOptions, sourceOptions, countryOptions } = useOverallRecoveryFilters()
 
   const dateRangeLabel = computed(() => {
@@ -125,20 +130,15 @@
   }
 
   const currentTabComponent = computed(() => tabComponents[activeTab.value])
+
+  function handleSearch() {
+    appliedFilters.value = { ...filters }
+    searchToken.value += 1
+  }
 </script>
 
 <style scoped lang="scss">
   @import './styles/or-analysis-page';
-
-  .or-page__breadcrumb {
-    flex-shrink: 0;
-    margin-bottom: 12px;
-  }
-
-  .or-breadcrumb {
-    font-size: 14px;
-    color: var(--text-secondary);
-  }
 
   .or-filters-wrap {
     flex-shrink: 0;
@@ -170,6 +170,40 @@
     gap: 10px 12px;
     align-items: center;
     min-width: 0;
+  }
+
+  .or-filter-actions {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .or-search-btn {
+    --el-button-size: 40px;
+
+    height: 40px;
+    padding: 0 20px;
+    font-size: 14px;
+    color: var(--art-success);
+    background: color-mix(in srgb, var(--art-success) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-success) 45%, transparent);
+    box-shadow:
+      0 0 18px color-mix(in srgb, var(--art-success) 20%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 10%);
+    transition:
+      box-shadow 0.22s ease,
+      transform 0.18s ease;
+
+    &:hover {
+      box-shadow:
+        0 0 26px color-mix(in srgb, var(--art-success) 34%, transparent),
+        inset 0 1px 0 rgb(255 255 255 / 16%);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
   }
 
   .or-filter-chip {
@@ -336,6 +370,15 @@
       flex: 1 1 calc(50% - 6px);
     }
 
+    .or-filter-actions {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .or-search-btn {
+      width: 100%;
+    }
+
     .or-tab-nav {
       flex-direction: column;
       align-items: stretch;
@@ -345,5 +388,24 @@
     .or-tab-btn {
       width: 100%;
     }
+  }
+</style>
+
+<style lang="scss">
+  /* 挂载在 body（popper），须非 scoped；避免下拉被内容遮挡 */
+  .or-filter-popper.el-popper {
+    z-index: var(--z-dropdown) !important;
+    background: rgb(10 10 14 / 96%) !important;
+    border: 1px solid rgb(96 165 250 / 28%) !important;
+    border-radius: 12px !important;
+    box-shadow:
+      0 16px 48px rgb(0 0 0 / 55%),
+      0 0 0 1px rgb(16 185 129 / 12%),
+      0 0 32px rgb(59 130 246 / 15%) !important;
+  }
+
+  .or-filter-popper .el-popper__arrow::before {
+    background: rgb(10 10 14 / 96%) !important;
+    border: 1px solid rgb(96 165 250 / 25%) !important;
   }
 </style>

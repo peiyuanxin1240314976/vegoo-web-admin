@@ -450,7 +450,6 @@
     AdPerformanceOwnerCampaignRow,
     AdPerformanceAccountCampaignRow,
     AdPerformanceCampaignDetail,
-    AdPerformanceDateRange,
     AdPerformanceTableTab,
     CampaignRowStatus
   } from '../types'
@@ -465,7 +464,8 @@
       activeTab: AdPerformanceTableTab
       tableKeyword: string
       /** 与主筛选日期同步，用于抽屉详情请求 */
-      filterDateRange: AdPerformanceDateRange
+      filterStartDate: string
+      filterEndDate: string
       campaignRows: AdPerformanceCampaignRow[]
       countryRows: AdPerformanceCountryRow[]
       ownerRows: AdPerformanceOwnerRow[]
@@ -709,7 +709,8 @@
     try {
       drawerCampaignDetail.value = await fetchAdPerformanceCampaignDetailDrawer({
         campaignId,
-        dateRange: props.filterDateRange
+        startDate: props.filterStartDate,
+        endDate: props.filterEndDate
       })
     } catch {
       ElMessage.error('加载系列详情失败')

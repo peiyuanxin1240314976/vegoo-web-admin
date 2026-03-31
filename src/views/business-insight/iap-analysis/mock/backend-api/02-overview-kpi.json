@@ -2,13 +2,17 @@
   "_comment": "IAP Dashboard - 顶部 6 个 KPI 卡片。对应 types.ts: IapKpiCard[]。",
   "fieldDescription": {
     "request": {
-      "timeRange": { "type": "string", "required": true, "description": "时间范围，如 7/30/90。" },
-      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
-      "productType": {
+      "startDate": {
         "type": "string",
-        "required": false,
-        "description": "产品类型，全部传 all。"
+        "required": true,
+        "description": "开始日期，格式 YYYY-MM-DD。"
       },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，格式 YYYY-MM-DD。"
+      },
+      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，全部传 all。" },
       "s_country_code": {
         "type": "string",
         "required": false,
@@ -34,9 +38,9 @@
     }
   },
   "sampleRequest": {
-    "timeRange": "30",
+    "startDate": "2024-01-01",
+    "endDate": "2024-01-31",
     "s_app_id": "all",
-    "productType": "all",
     "s_country_code": "all",
     "platform": "all"
   },
@@ -97,7 +101,7 @@
     "url": "POST /api/business-insight/iap-analysis/overview/kpi",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "timeRange, s_app_id?, productType?, s_country_code?, platform",
+    "requestBody": "startDate, endDate, s_app_id?, s_country_code?, platform",
     "responseBody": "kpis (IapKpiCard[])"
   }
 }

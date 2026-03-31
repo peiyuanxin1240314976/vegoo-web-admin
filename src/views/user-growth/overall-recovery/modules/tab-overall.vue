@@ -67,13 +67,13 @@
       <div class="or-panel-right">
         <!-- 日均量构成 -->
         <ElCard class="or-panel or-panel--volume" shadow="never">
-          <template #header>日均量构成（近30天）</template>
+          <template #header><span class="or-panel-title">日均量构成（近30天）</span></template>
           <div ref="volumeChartRef" class="or-chart or-chart--volume"></div>
         </ElCard>
 
         <!-- ROI 对比 -->
         <ElCard class="or-panel or-panel--roi" shadow="never">
-          <template #header>ROI 对比（付费 vs 整体）</template>
+          <template #header><span class="or-panel-title">ROI 对比（付费 vs 整体）</span></template>
           <table class="roi-table">
             <thead>
               <tr>
@@ -488,7 +488,7 @@
     }
   }
 
-  /* 面板 */
+  /* 面板（卡片标题与广告成效 trend 卡一致：主色字 + 渐变标题 + 底部分割线） */
   .or-panel {
     position: relative;
     overflow: hidden;
@@ -499,26 +499,51 @@
     border-radius: 14px;
 
     :deep(.el-card__header) {
-      padding: 10px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--art-gray-800);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 12px 14px 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.03em;
       background: transparent !important;
-      border-bottom: 1px solid color-mix(in srgb, var(--art-success) 22%, var(--default-border));
+      border-bottom: 1px solid rgb(63 63 70 / 35%);
+      transition: filter 0.32s var(--ease-out);
+    }
+
+    :deep(.panel-header-row) {
+      color: var(--text-primary);
+    }
+
+    &:hover :deep(.el-card__header) {
+      filter: drop-shadow(0 0 12px rgb(34 211 238 / 28%));
     }
 
     :deep(.el-card__header:not(:has(.panel-header-row))) {
       @include ap-title-gradient;
+
+      font-size: 15px;
     }
 
     :deep(.panel-header-row > span:first-child) {
       @include ap-title-gradient;
+
+      font-size: 15px;
+      font-weight: 700;
     }
 
     :deep(.el-card__body) {
       padding: 12px 14px;
+      padding-top: 8px;
       background: transparent;
     }
+  }
+
+  .or-panel-title {
+    @include ap-title-gradient;
+
+    font-size: 15px;
   }
 
   .panel-header-row {

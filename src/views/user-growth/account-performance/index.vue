@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="account-performance-page flex flex-col">
     <div class="ac-perf-page-fx" aria-hidden="true"></div>
     <!-- 顶部：筛选 + 日期 + 导出 -->
@@ -7,7 +7,7 @@
     >
       <div class="ac-perf-filter-panel">
         <div class="ap-filters">
-          <ElSelect v-model="source" placeholder="广告平台" class="ap-filter-select">
+          <ElSelect v-model="draftSource" placeholder="广告平台" class="ap-filter-select">
             <ElOption
               v-for="opt in metaAdPlatformOptions"
               :key="opt.value"
@@ -15,7 +15,7 @@
               :value="opt.value"
             />
           </ElSelect>
-          <ElSelect v-model="platform" placeholder="应用" class="ap-filter-select">
+          <ElSelect v-model="draftPlatform" placeholder="应用" class="ap-filter-select">
             <ElOption
               v-for="opt in metaAppOptions"
               :key="opt.value"
@@ -23,7 +23,7 @@
               :value="opt.value"
             />
           </ElSelect>
-          <ElSelect v-model="filterOwner" placeholder="广告账户" class="ap-filter-select">
+          <ElSelect v-model="draftFilterOwner" placeholder="广告账户" class="ap-filter-select">
             <ElOption
               v-for="opt in metaAccountOptions"
               :key="opt.value"
@@ -32,15 +32,15 @@
             />
           </ElSelect>
           <ElDatePicker
-            v-model="dateRange"
+            v-model="draftDateRange"
             type="daterange"
             range-separator="~"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             value-format="YYYY-MM-DD"
             class="ap-date-picker"
-            style="width: 100px"
           />
+          <ElButton round type="primary" :disabled="!isFilterDirty" @click="onQuery">查询</ElButton>
           <ElButton round type="primary" @click="onExport">导出</ElButton>
         </div>
       </div>
@@ -175,17 +175,17 @@
 
             <AppPerformancePlaceholder
               v-else-if="modelValue === '账户'"
-              :date-range="dateRange"
-              :source="source"
-              :platform="platform"
-              :filter-owner="filterOwner"
+              :date-range="appliedDateRange"
+              :source="appliedSource"
+              :platform="appliedPlatform"
+              :filter-owner="appliedFilterOwner"
             />
             <PlatformPerformancePlaceholder
               v-else
-              :date-range="dateRange"
-              :source="source"
-              :platform="platform"
-              :filter-owner="filterOwner"
+              :date-range="appliedDateRange"
+              :source="appliedSource"
+              :platform="appliedPlatform"
+              :filter-owner="appliedFilterOwner"
             />
           </div>
         </ElCard>
@@ -289,14 +289,21 @@
   const { isDark } = storeToRefs(settingStore)
 
   const mock = ref(MOCK_ACCOUNT_PERFORMANCE)
-  const source = ref('')
-  const platform = ref('')
+  const draftSource = ref('')
+  const draftPlatform = ref('')
   /** 顶部第三项：对接 meta accountOptions，请求体仍走 ownerId 字段名 */
-  const filterOwner = ref('')
+  const draftFilterOwner = ref('')
+  const draftDateRange = ref<[string, string]>([...MOCK_ACCOUNT_PERFORMANCE.dateRange])
+
+  /** 点击“查询”后才会更新 applied，并触发请求 */
+  const appliedSource = ref('')
+  const appliedPlatform = ref('')
+  const appliedFilterOwner = ref('')
+  const appliedDateRange = ref<[string, string]>([...MOCK_ACCOUNT_PERFORMANCE.dateRange])
+
   const metaAdPlatformOptions = ref<AdPerformanceMetaFilterResponse['adPlatformOptions']>([])
   const metaAppOptions = ref<AdPerformanceMetaFilterResponse['appOptions']>([])
   const metaAccountOptions = ref<NonNullable<AdPerformanceMetaFilterResponse['accountOptions']>>([])
-  const dateRange = ref<[string, string]>([...MOCK_ACCOUNT_PERFORMANCE.dateRange])
   const tableSearch = ref('')
   const expandAll = ref(false)
   const expandedRowKeys = ref<string[]>([])
@@ -318,6 +325,39 @@
 
   function selectRange(value: string) {
     modelValue.value = value
+  }
+
+  const isFilterDirty = computed(() => {
+    const [ds, de] = draftDateRange.value || ['', '']
+    const [as, ae] = appliedDateRange.value || ['', '']
+    return (
+      String(draftSource.value ?? '') !== String(appliedSource.value ?? '') ||
+      String(draftPlatform.value ?? '') !== String(appliedPlatform.value ?? '') ||
+      String(draftFilterOwner.value ?? '') !== String(appliedFilterOwner.value ?? '') ||
+      String(ds ?? '') !== String(as ?? '') ||
+      String(de ?? '') !== String(ae ?? '')
+    )
+  })
+
+  function applyFilters() {
+    appliedSource.value = draftSource.value ?? ''
+    appliedPlatform.value = draftPlatform.value ?? ''
+    appliedFilterOwner.value = draftFilterOwner.value ?? ''
+    appliedDateRange.value = [...draftDateRange.value]
+
+    // 筛选提交后统一回到第一页，避免新条件下页码越界
+    appCurrentPage.value = 1
+  }
+
+  function onQuery() {
+    applyFilters()
+    void loadKpiCards()
+    void loadChannelSpend()
+    void loadUsageBuckets()
+    void loadDay1RoiTrend()
+    void loadTodaySpendPace()
+    void loadAlerts()
+    if (modelValue.value === '应用') void loadAppTableTree()
   }
 
   // 应用×平台×账户明细树形表：独立请求 + 局部骨架屏
@@ -388,7 +428,7 @@
   })
 
   async function loadAppTableTree() {
-    const [dateStart, dateEnd] = dateRange.value
+    const [dateStart, dateEnd] = appliedDateRange.value
     if (!dateStart || !dateEnd) return
 
     const requestSeq = ++appTableRequestSeq
@@ -402,10 +442,10 @@
           dateEnd,
           dateStart,
           kw: '',
-          ownerId: filterOwner.value,
+          ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: platform.value,
-          source: source.value
+          platform: appliedPlatform.value,
+          source: appliedSource.value
         }
       })
 
@@ -421,7 +461,7 @@
 
   let appTableDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [modelValue, dateRange, source, platform, filterOwner],
+    [modelValue, appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
     () => {
       if (modelValue.value !== '应用') return
 
@@ -467,7 +507,7 @@
   let kpiRequestSeq = 0
 
   async function loadKpiCards() {
-    const [dateStart, dateEnd] = dateRange.value
+    const [dateStart, dateEnd] = appliedDateRange.value
     if (!dateStart || !dateEnd) return
 
     const requestSeq = ++kpiRequestSeq
@@ -481,10 +521,10 @@
           dateEnd,
           dateStart,
           kw: '',
-          ownerId: filterOwner.value,
+          ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: platform.value,
-          source: source.value
+          platform: appliedPlatform.value,
+          source: appliedSource.value
         }
       })
 
@@ -503,7 +543,7 @@
   // 仅 KPI 联动筛选条件，避免其它模块（表格/图表）未联动造成认知不一致
   let kpiDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [dateRange, source, platform, filterOwner],
+    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
     () => {
       if (kpiDebounceTimer) clearTimeout(kpiDebounceTimer)
       kpiDebounceTimer = setTimeout(() => {
@@ -520,7 +560,7 @@
   let channelRequestSeq = 0
 
   async function loadChannelSpend() {
-    const [dateStart, dateEnd] = dateRange.value
+    const [dateStart, dateEnd] = appliedDateRange.value
     if (!dateStart || !dateEnd) return
 
     const requestSeq = ++channelRequestSeq
@@ -535,10 +575,10 @@
           dateEnd,
           dateStart,
           kw: '',
-          ownerId: filterOwner.value,
+          ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: platform.value,
-          source: source.value
+          platform: appliedPlatform.value,
+          source: appliedSource.value
         }
       })
 
@@ -558,7 +598,7 @@
   // 只联动右侧该张图，避免其它区域（表格/图表）在 KPI 未就绪时来回闪烁
   let channelDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [dateRange, source, platform, filterOwner],
+    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
     () => {
       if (channelDebounceTimer) clearTimeout(channelDebounceTimer)
       channelDebounceTimer = setTimeout(() => {
@@ -575,7 +615,7 @@
   let usageRequestSeq = 0
 
   async function loadUsageBuckets() {
-    const [dateStart, dateEnd] = dateRange.value
+    const [dateStart, dateEnd] = appliedDateRange.value
     if (!dateStart || !dateEnd) return
 
     const requestSeq = ++usageRequestSeq
@@ -590,10 +630,10 @@
           dateEnd,
           dateStart,
           kw: '',
-          ownerId: filterOwner.value,
+          ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: platform.value,
-          source: source.value
+          platform: appliedPlatform.value,
+          source: appliedSource.value
         }
       })
 
@@ -612,7 +652,7 @@
 
   let usageDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [dateRange, source, platform, filterOwner],
+    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
     () => {
       if (usageDebounceTimer) clearTimeout(usageDebounceTimer)
       usageDebounceTimer = setTimeout(() => {
@@ -629,7 +669,7 @@
   let roiTrendRequestSeq = 0
 
   async function loadDay1RoiTrend() {
-    const [dateStart, dateEnd] = dateRange.value
+    const [dateStart, dateEnd] = appliedDateRange.value
     if (!dateStart || !dateEnd) return
 
     const requestSeq = ++roiTrendRequestSeq
@@ -644,10 +684,10 @@
           dateEnd,
           dateStart,
           kw: '',
-          ownerId: filterOwner.value,
+          ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: platform.value,
-          source: source.value
+          platform: appliedPlatform.value,
+          source: appliedSource.value
         }
       })
 
@@ -666,7 +706,7 @@
 
   let roiTrendDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [dateRange, source, platform, filterOwner],
+    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
     () => {
       if (roiTrendDebounceTimer) clearTimeout(roiTrendDebounceTimer)
       roiTrendDebounceTimer = setTimeout(() => {
@@ -868,7 +908,7 @@
   })
 
   function onExport() {
-    console.log('导出', dateRange.value)
+    console.log('导出', appliedDateRange.value)
   }
 
   // --- 广告平台消耗环形图 ---
@@ -1019,7 +1059,7 @@
   let paceRequestSeq = 0
 
   async function loadTodaySpendPace() {
-    const [dateStart, dateEnd] = dateRange.value
+    const [dateStart, dateEnd] = appliedDateRange.value
     if (!dateStart || !dateEnd) return
 
     const requestSeq = ++paceRequestSeq
@@ -1034,10 +1074,10 @@
           dateEnd,
           dateStart,
           kw: '',
-          ownerId: filterOwner.value,
+          ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: platform.value,
-          source: source.value
+          platform: appliedPlatform.value,
+          source: appliedSource.value
         }
       })
 
@@ -1056,7 +1096,7 @@
 
   let paceDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [dateRange, source, platform, filterOwner],
+    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
     () => {
       if (paceDebounceTimer) clearTimeout(paceDebounceTimer)
       paceDebounceTimer = setTimeout(() => {
@@ -1071,14 +1111,14 @@
   const alertsLoading = ref(false)
 
   async function loadAlerts() {
-    const [dateStart, dateEnd] = dateRange.value
+    const [dateStart, dateEnd] = appliedDateRange.value
     if (!dateStart || !dateEnd) return
     alerts.value = []
   }
 
   let alertsDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [dateRange, source, platform, filterOwner],
+    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
     () => {
       if (alertsDebounceTimer) clearTimeout(alertsDebounceTimer)
       alertsDebounceTimer = setTimeout(() => {
@@ -1152,12 +1192,8 @@
   onMounted(() => {
     void loadMetaFilterOptions()
     renderAllCharts()
-    void loadKpiCards()
-    void loadChannelSpend()
-    void loadUsageBuckets()
-    void loadDay1RoiTrend()
-    void loadTodaySpendPace()
-    void loadAlerts()
+    // 首次进入：自动提交一次默认筛选（等价于用户点一次“查询”）
+    onQuery()
 
     // 默认初始化：如果初始就是「应用」，首次进入页面也需要拉取 table-tree
     if (modelValue.value === '应用') void loadAppTableTree()
@@ -1191,21 +1227,25 @@
       background:
         radial-gradient(
           ellipse 70% 50% at 6% 6%,
-          rgb(16 185 129 / 42%) 0%,
-          rgb(6 182 212 / 20%) 38%,
+          color-mix(in srgb, var(--art-success) 42%, transparent) 0%,
+          color-mix(in srgb, var(--art-primary) 20%, transparent) 38%,
           transparent 58%
         ),
         radial-gradient(
           ellipse 55% 42% at 94% 8%,
-          rgb(59 130 246 / 38%) 0%,
-          rgb(139 92 246 / 18%) 38%,
+          color-mix(in srgb, var(--art-primary) 38%, transparent) 0%,
+          color-mix(in srgb, var(--art-warning) 18%, transparent) 38%,
           transparent 58%
         ),
-        radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 18%) 0%, transparent 55%),
+        radial-gradient(
+          ellipse 40% 35% at 48% 18%,
+          color-mix(in srgb, var(--art-warning) 18%, transparent) 0%,
+          transparent 55%
+        ),
         radial-gradient(
           ellipse 55% 42% at 76% 4%,
-          rgb(34 211 238 / 22%) 0%,
-          rgb(59 130 246 / 10%) 40%,
+          color-mix(in srgb, var(--art-primary) 22%, transparent) 0%,
+          color-mix(in srgb, var(--art-primary) 10%, transparent) 40%,
           transparent 58%
         );
       mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
@@ -1221,9 +1261,20 @@
       pointer-events: none;
       content: '';
       background-image:
-        linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px),
-        radial-gradient(circle, rgb(6 182 212 / 8%) 1px, transparent 1px);
+        linear-gradient(
+          color-mix(in srgb, var(--art-primary) 5%, transparent) 1px,
+          transparent 1px
+        ),
+        linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--art-primary) 5%, transparent) 1px,
+          transparent 1px
+        ),
+        radial-gradient(
+          circle,
+          color-mix(in srgb, var(--art-primary) 8%, transparent) 1px,
+          transparent 1px
+        );
       background-size:
         40px 40px,
         40px 40px,
@@ -1243,8 +1294,8 @@
       max-width: 100%;
       padding: 0;
       margin-left: 8px;
-      background: rgb(8 12 24 / 55%);
-      border: 1px solid rgb(96 165 250 / 22%);
+      background: color-mix(in srgb, var(--default-box-color) 55%, transparent);
+      border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent);
       border-radius: 10px;
 
       @media (width <=768px) {
@@ -1258,9 +1309,13 @@
       left: 3px;
       height: calc(100% - 6px);
       pointer-events: none;
-      background: linear-gradient(92deg, rgb(59 130 246 / 95%), rgb(6 182 212 / 88%));
+      background: linear-gradient(
+        92deg,
+        color-mix(in srgb, var(--art-primary) 95%, transparent),
+        color-mix(in srgb, var(--art-primary) 88%, transparent)
+      );
       border-radius: 6px;
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform var(--duration-normal, 0.25s) var(--ease-out);
     }
 
     .date-range-btn {
@@ -1281,10 +1336,10 @@
       background: transparent !important;
       border: none !important;
       border-radius: 6px !important;
-      transition: color 0.2s ease;
+      transition: color var(--duration-fast, 0.2s) var(--ease-out);
 
       &:hover {
-        color: rgb(125 211 252);
+        color: var(--art-primary);
       }
 
       &.active {
@@ -1301,14 +1356,14 @@
     background: conic-gradient(
       from 0deg at 50% 50%,
       transparent 0deg,
-      rgb(59 130 246 / 14%) 55deg,
-      rgb(6 182 212 / 10%) 80deg,
+      color-mix(in srgb, var(--art-primary) 14%, transparent) 55deg,
+      color-mix(in srgb, var(--art-primary) 10%, transparent) 80deg,
       transparent 130deg,
-      rgb(16 185 129 / 12%) 200deg,
-      rgb(52 211 153 / 8%) 225deg,
+      color-mix(in srgb, var(--art-success) 12%, transparent) 200deg,
+      color-mix(in srgb, var(--art-success) 8%, transparent) 225deg,
       transparent 285deg,
-      rgb(168 85 247 / 10%) 330deg,
-      rgb(249 115 22 / 6%) 350deg,
+      color-mix(in srgb, var(--art-warning) 10%, transparent) 330deg,
+      color-mix(in srgb, var(--art-warning) 6%, transparent) 350deg,
       transparent 360deg
     );
     opacity: 0.85;
@@ -1474,11 +1529,11 @@
       cursor: default;
 
       &:hover {
-        border-color: rgb(96 165 250 / 28%);
+        border-color: color-mix(in srgb, var(--art-primary) 28%, transparent);
         box-shadow:
           0 12px 48px rgb(0 0 0 / 48%),
-          0 0 0 1px rgb(96 165 250 / 10%),
-          inset 0 1px 0 rgb(186 230 253 / 14%),
+          0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent),
+          inset 0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent),
           inset 0 -12px 32px rgb(0 0 0 / 30%);
         transform: none;
       }
@@ -1523,15 +1578,23 @@
     &--alert {
       --kpi-accent-rgb: 230, 162, 60;
 
-      background-color: rgb(12 10 8 / 96%);
+      background-color: color-mix(in srgb, var(--default-box-color) 96%, transparent);
       background-image:
-        radial-gradient(ellipse 80% 70% at 100% 0%, rgb(249 115 22 / 22%) 0%, transparent 55%),
-        linear-gradient(158deg, rgb(40 32 20 / 92%) 0%, rgb(18 14 10 / 96%) 100%);
-      border-color: rgb(251 191 36 / 38%);
+        radial-gradient(
+          ellipse 80% 70% at 100% 0%,
+          color-mix(in srgb, var(--art-warning) 22%, transparent) 0%,
+          transparent 55%
+        ),
+        linear-gradient(
+          158deg,
+          color-mix(in srgb, var(--default-box-color) 92%, transparent) 0%,
+          color-mix(in srgb, var(--default-bg-color) 96%, transparent) 100%
+        );
+      border-color: color-mix(in srgb, var(--art-warning) 38%, transparent);
       box-shadow:
         0 12px 48px rgb(0 0 0 / 48%),
-        0 0 0 1px rgb(251 191 36 / 12%),
-        inset 0 1px 0 rgb(253 230 138 / 12%);
+        0 0 0 1px color-mix(in srgb, var(--art-warning) 12%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--art-warning) 12%, transparent);
     }
 
     &--accounts {
@@ -1553,20 +1616,32 @@
     &--roi1 {
       --kpi-accent-rgb: 16, 185, 129;
 
-      background-color: rgb(8 14 12 / 96%);
+      background-color: color-mix(in srgb, var(--default-box-color) 96%, transparent);
       background-image:
-        radial-gradient(ellipse 90% 65% at 50% -25%, rgb(16 185 129 / 35%) 0%, transparent 58%),
-        radial-gradient(ellipse 70% 50% at 0% 100%, rgb(52 211 153 / 18%) 0%, transparent 50%),
-        linear-gradient(158deg, rgb(12 28 22 / 94%) 0%, rgb(6 12 10 / 98%) 100%);
-      border-color: rgb(52 211 153 / 45%);
+        radial-gradient(
+          ellipse 90% 65% at 50% -25%,
+          color-mix(in srgb, var(--art-success) 35%, transparent) 0%,
+          transparent 58%
+        ),
+        radial-gradient(
+          ellipse 70% 50% at 0% 100%,
+          color-mix(in srgb, var(--art-success) 18%, transparent) 0%,
+          transparent 50%
+        ),
+        linear-gradient(
+          158deg,
+          color-mix(in srgb, var(--default-box-color) 94%, transparent) 0%,
+          color-mix(in srgb, var(--default-bg-color) 98%, transparent) 100%
+        );
+      border-color: color-mix(in srgb, var(--art-success) 45%, transparent);
       box-shadow:
         0 12px 48px rgb(0 0 0 / 48%),
-        0 0 0 1px rgb(16 185 129 / 15%),
-        inset 0 1px 0 rgb(167 243 208 / 18%),
+        0 0 0 1px color-mix(in srgb, var(--art-success) 15%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--art-success) 18%, transparent),
         inset 0 -12px 32px rgb(0 0 0 / 28%);
 
       .ap-kpi-label {
-        color: rgb(16 185 129 / 95%);
+        color: color-mix(in srgb, var(--art-success) 95%, transparent);
       }
 
       .ap-kpi-value {
@@ -1575,8 +1650,8 @@
 
       .ap-kpi-roi-status {
         color: var(--art-success);
-        background: rgb(16 185 129 / 14%);
-        border-color: rgb(16 185 129 / 45%);
+        background: color-mix(in srgb, var(--art-success) 14%, transparent);
+        border-color: color-mix(in srgb, var(--art-success) 45%, transparent);
       }
 
       /* 首日 ROI 均值样式已很好看：不让占位元素影响其垂直排版 */
@@ -1599,15 +1674,15 @@
       padding: 2px 10px;
       font-size: 11px;
       color: var(--art-success);
-      background: rgb(16 185 129 / 14%);
-      border: 1px solid rgb(16 185 129 / 45%);
+      background: color-mix(in srgb, var(--art-success) 14%, transparent);
+      border: 1px solid color-mix(in srgb, var(--art-success) 45%, transparent);
       border-radius: 9999px;
     }
 
     .ap-kpi-roi-status.is-bad {
       color: var(--el-color-danger);
-      background: rgb(239 68 68 / 14%);
-      border-color: rgb(239 68 68 / 45%);
+      background: color-mix(in srgb, var(--art-danger) 14%, transparent);
+      border-color: color-mix(in srgb, var(--art-danger) 45%, transparent);
     }
 
     .ap-kpi-compare--placeholder {
@@ -1656,7 +1731,7 @@
       align-items: center;
       justify-content: space-between;
       background: transparent;
-      border-bottom: 1px solid rgb(96 165 250 / 14%);
+      border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
     }
 
     :deep(.el-card__body) {
@@ -1825,7 +1900,7 @@
       font-size: 13px;
       color: var(--el-text-color-primary);
       background: transparent;
-      border-bottom: 1px solid rgb(96 165 250 / 12%);
+      border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
     }
 
     :deep(.el-card__body) {
@@ -1838,19 +1913,27 @@
 
   /* 与顶部 KPI「预警账户」(.ap-kpi-card--alert) 同系透明黄底与边框 */
   .ap-chart-card.ap-alert-card {
-    background-color: rgb(12 10 8 / 96%);
+    background-color: color-mix(in srgb, var(--default-box-color) 96%, transparent);
     background-image:
-      radial-gradient(ellipse 80% 70% at 100% 0%, rgb(249 115 22 / 18%) 0%, transparent 55%),
-      linear-gradient(158deg, rgb(36 28 16 / 92%) 0%, rgb(14 12 8 / 96%) 100%);
-    border-color: rgb(251 191 36 / 32%);
+      radial-gradient(
+        ellipse 80% 70% at 100% 0%,
+        color-mix(in srgb, var(--art-warning) 18%, transparent) 0%,
+        transparent 55%
+      ),
+      linear-gradient(
+        158deg,
+        color-mix(in srgb, var(--default-box-color) 92%, transparent) 0%,
+        color-mix(in srgb, var(--default-bg-color) 96%, transparent) 100%
+      );
+    border-color: color-mix(in srgb, var(--art-warning) 38%, transparent);
     box-shadow:
       0 12px 48px rgb(0 0 0 / 48%),
-      0 0 0 1px rgb(251 191 36 / 10%),
-      inset 0 1px 0 rgb(253 230 138 / 10%);
+      0 0 0 1px color-mix(in srgb, var(--art-warning) 10%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-warning) 10%, transparent);
 
     :deep(.el-card__header) {
       background: transparent;
-      border-bottom: 1px solid rgb(251 191 36 / 22%);
+      border-bottom: 1px solid color-mix(in srgb, var(--art-warning) 22%, transparent);
     }
 
     :deep(.el-card__body) {
@@ -1922,8 +2005,7 @@
   }
 
   .ap-app-table-scroll-area {
-    max-height: 560px;
-    overflow: auto;
+    overflow: visible;
   }
 
   .ap-app-pagination {

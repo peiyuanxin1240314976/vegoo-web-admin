@@ -1,6 +1,13 @@
 @import '../../../user-growth/ad-performance/styles/ap-card-fx';
 
 .iap-fx-page {
+  --iap-fx-grid-line: color-mix(in srgb, var(--art-primary) 8%, transparent);
+  --iap-fx-aurora-1: color-mix(in srgb, var(--art-success) 42%, transparent);
+  --iap-fx-aurora-2: color-mix(in srgb, var(--art-success) 18%, transparent);
+  --iap-fx-aurora-3: color-mix(in srgb, var(--art-primary) 38%, transparent);
+  --iap-fx-aurora-4: color-mix(in srgb, var(--art-primary) 18%, transparent);
+  --iap-fx-aurora-5: color-mix(in srgb, var(--art-warning) 16%, transparent);
+
   position: relative;
   min-width: 0;
   overflow-x: clip;
@@ -15,17 +22,17 @@
     background:
       radial-gradient(
         ellipse 70% 50% at 6% 6%,
-        rgb(16 185 129 / 42%) 0%,
-        rgb(6 182 212 / 20%) 38%,
+        var(--iap-fx-aurora-1) 0%,
+        var(--iap-fx-aurora-2) 38%,
         transparent 58%
       ),
       radial-gradient(
         ellipse 55% 42% at 94% 8%,
-        rgb(59 130 246 / 38%) 0%,
-        rgb(139 92 246 / 18%) 38%,
+        var(--iap-fx-aurora-3) 0%,
+        var(--iap-fx-aurora-4) 38%,
         transparent 58%
       ),
-      radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 16%) 0%, transparent 55%);
+      radial-gradient(ellipse 40% 35% at 48% 18%, var(--iap-fx-aurora-5) 0%, transparent 55%);
     mask-image: linear-gradient(to bottom, black 0%, black 30%, transparent 58%);
     animation:
       iap-aurora-drift 14s ease-in-out infinite alternate,
@@ -40,8 +47,8 @@
     pointer-events: none;
     content: '';
     background-image:
-      linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px);
+      linear-gradient(var(--iap-fx-grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--iap-fx-grid-line) 1px, transparent 1px);
     background-size:
       40px 40px,
       40px 40px;
@@ -62,12 +69,12 @@
   background: conic-gradient(
     from 0deg at 50% 50%,
     transparent 0deg,
-    rgb(59 130 246 / 12%) 65deg,
-    rgb(6 182 212 / 10%) 88deg,
+    color-mix(in srgb, var(--art-primary) 12%, transparent) 65deg,
+    color-mix(in srgb, var(--art-success) 10%, transparent) 88deg,
     transparent 140deg,
-    rgb(16 185 129 / 11%) 205deg,
+    color-mix(in srgb, var(--art-success) 11%, transparent) 205deg,
     transparent 280deg,
-    rgb(168 85 247 / 8%) 330deg,
+    color-mix(in srgb, var(--art-warning) 8%, transparent) 330deg,
     transparent 360deg
   );
 
@@ -133,6 +140,16 @@
   animation-delay: 0.18s;
 }
 
+.iap-entry-3 {
+  animation: iap-slide-up 0.55s var(--ease-out) both;
+  animation-delay: 0.3s;
+}
+
+.iap-entry-4 {
+  animation: iap-slide-up 0.55s var(--ease-out) both;
+  animation-delay: 0.42s;
+}
+
 %iap-neon-surface {
   position: relative;
   overflow: hidden;
@@ -160,7 +177,9 @@
   }
 
   .iap-entry-1,
-  .iap-entry-2 {
+  .iap-entry-2,
+  .iap-entry-3,
+  .iap-entry-4 {
     opacity: 1;
     transform: none;
     animation: none;

@@ -195,8 +195,20 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted } from 'vue'
+  import { ref, onMounted, onUnmounted, watch } from 'vue'
   import * as echarts from 'echarts'
+
+  defineOptions({ name: 'IAPProductTab' })
+
+  const props = defineProps<{
+    filters: {
+      app: string
+      platform: string
+      country: string
+      date: string
+    }
+    searchToken: number
+  }>()
 
   /* ── Refs ─────────────────────────────────────── */
   const donutRef = ref<HTMLElement | null>(null)
@@ -495,6 +507,23 @@
   onUnmounted(() => {
     chartInstances.forEach((c) => c.dispose())
   })
+
+  function rebuildCharts() {
+    chartInstances.forEach((c) => c.dispose())
+    chartInstances.length = 0
+    initSparklines()
+    initMiniTrends()
+    initDonut()
+    initTrend()
+    initCountry()
+  }
+
+  watch(
+    () => props.searchToken,
+    () => {
+      rebuildCharts()
+    }
+  )
 
   function initSparklines() {
     kpiCards.forEach((kpi, i) => {
@@ -1059,5 +1088,36 @@
   .hm-low {
     color: #f87171;
     background: #3b1c1c;
+  }
+
+  /* ── Responsive ───────────────────────────────── */
+  @media (width <= 1200px) {
+    .kpi-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .top-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .btm-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (width <= 768px) {
+    .kpi-row {
+      grid-template-columns: 1fr;
+    }
+
+    .table-header-row {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .sub-tabs {
+      flex-wrap: wrap;
+    }
   }
 </style>

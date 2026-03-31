@@ -3,7 +3,16 @@
   "fieldDescription": {
     "request": {
       "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
-      "timeRange": { "type": "string", "required": true, "description": "时间范围。" },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，格式 YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，格式 YYYY-MM-DD。"
+      },
       "s_country_code": { "type": "string", "required": false, "description": "国家代码。" },
       "platform": { "type": "string", "required": false, "description": "终端平台。" }
     },
@@ -75,7 +84,8 @@
   },
   "sampleRequest": {
     "s_app_id": "phonetracker",
-    "timeRange": "30",
+    "startDate": "2024-01-01",
+    "endDate": "2024-01-31",
     "s_country_code": "all",
     "platform": "all"
   },
@@ -137,7 +147,7 @@
     "url": "POST /api/business-insight/iap-analysis/detail/user",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_app_id, timeRange, s_country_code?, platform?",
+    "requestBody": "s_app_id, startDate, endDate, s_country_code?, platform?",
     "responseBody": "IapDetailUser"
   }
 }

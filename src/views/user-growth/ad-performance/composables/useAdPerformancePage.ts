@@ -17,9 +17,11 @@ import type {
   AdPerformanceMock,
   AdPerformanceTableTab
 } from '../types'
+import { getAppTodayYYYYMMDD } from '@/utils/app-now'
 
 const defaultFilter: AdPerformanceFilter = {
-  dateRange: 'today',
+  startDate: getAppTodayYYYYMMDD(),
+  endDate: getAppTodayYYYYMMDD(),
   app: '',
   adPlatform: '',
   account: '',
@@ -96,13 +98,38 @@ export function useAdPerformancePage() {
   async function loadOverview() {
     try {
       const o = await fetchAdPerformanceOverview(page.value.filter)
+
+      const normalizedAppDistribution = (o.appDistribution ?? []).map((item: any) => {
+        // 兼容后端字段：name/value/percent
+        if (item && typeof item === 'object' && 'name' in item && 'value' in item) {
+          return {
+            appName: String(item.name ?? ''),
+            spend: Number(item.value ?? 0),
+            percent: Number(item.percent ?? 0)
+          }
+        }
+        return item
+      })
+
+      const normalizedOwnerShareDistribution = (o.ownerShareDistribution ?? []).map((item: any) => {
+        // 兼容后端字段：name/value/percent
+        if (item && typeof item === 'object' && 'name' in item && 'value' in item) {
+          return {
+            ownerName: String(item.name ?? ''),
+            percent: Number(item.percent ?? 0),
+            spend: Number(item.value ?? 0)
+          }
+        }
+        return item
+      })
+
       page.value.dataTime = o.dataTime
       page.value.kpi = markRaw(o.kpi)
       page.value.spendTrend = markRaw(o.spendTrend)
       page.value.roi7dTrend = markRaw(o.roi7dTrend)
       page.value.channelDistribution = markRaw(o.channelDistribution)
-      page.value.appDistribution = markRaw(o.appDistribution)
-      page.value.ownerShareDistribution = markRaw(o.ownerShareDistribution)
+      page.value.appDistribution = markRaw(normalizedAppDistribution as any)
+      page.value.ownerShareDistribution = markRaw(normalizedOwnerShareDistribution as any)
       page.value.alerts = markRaw(o.alerts)
     } catch {
       ElMessage.error('加载概览数据失败')

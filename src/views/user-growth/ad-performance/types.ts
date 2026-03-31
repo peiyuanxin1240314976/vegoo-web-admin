@@ -3,11 +3,12 @@
  */
 
 /** 日期筛选选项 */
-export type AdPerformanceDateRange = 'today' | 'yesterday' | 'last7d' | 'month'
-
 /** 筛选参数 */
 export interface AdPerformanceFilter {
-  dateRange: AdPerformanceDateRange
+  /** YYYY-MM-DD（闭区间） */
+  startDate: string
+  /** YYYY-MM-DD（闭区间） */
+  endDate: string
   app?: string
   adPlatform?: string
   account?: string
@@ -252,15 +253,8 @@ export interface AdPerformanceSelectOption {
   value: string
 }
 
-/** 日期范围筛选项（meta 可选下发） */
-export interface AdPerformanceDateRangeOption {
-  label: string
-  value: AdPerformanceDateRange
-}
-
 /** POST meta-filter-options 响应 */
 export interface AdPerformanceMetaFilterResponse {
-  dateRangeOptions?: AdPerformanceDateRangeOption[]
   appOptions: AdPerformanceSelectOption[]
   adPlatformOptions: AdPerformanceSelectOption[]
   accountOptions?: AdPerformanceSelectOption[]
@@ -313,7 +307,10 @@ export interface AdPerformanceTableAccountResponse {
 
 export interface AdPerformanceCampaignDetailDrawerBody {
   campaignId: string
-  dateRange?: AdPerformanceDateRange
+  /** YYYY-MM-DD（闭区间）；为空则由后端使用默认值 */
+  startDate?: string
+  /** YYYY-MM-DD（闭区间）；为空则由后端使用默认值 */
+  endDate?: string
 }
 
 export interface AdPerformanceExportBody extends AdPerformanceFilter {

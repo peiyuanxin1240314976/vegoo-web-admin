@@ -5,7 +5,7 @@
       {
         "moment": "主列表 tab 为 Campaign",
         "detail": "首屏、分页、关键字、筛选变化时请求；可与 overview 并行。",
-        "prerequisite": "dateRange 必填；其余筛选项与主筛选一致。"
+        "prerequisite": "startDate/endDate 必填；其余筛选项与主筛选一致。"
       },
       {
         "moment": "数据变更后刷新",
@@ -30,11 +30,15 @@
         "description": "页码，从 1 开始。"
       },
       "size": { "type": "number", "required": false, "default": 10, "description": "每页条数。" },
-      "dateRange": {
+      "startDate": {
         "type": "string",
         "required": true,
-        "enum": ["today", "yesterday", "last7d", "month"],
-        "description": "日期范围（与 overview 一致）。"
+        "description": "开始日期（YYYY-MM-DD，闭区间）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期（YYYY-MM-DD，闭区间）。"
       },
       "app": { "type": "string", "required": false, "description": "应用筛选。空字符串表示全部。" },
       "adPlatform": {
@@ -70,7 +74,8 @@
     "keyword": "",
     "current": 1,
     "size": 10,
-    "dateRange": "today",
+    "startDate": "2026-03-05",
+    "endDate": "2026-03-05",
     "app": "",
     "adPlatform": "",
     "account": "",
@@ -121,7 +126,7 @@
     "url": "POST /api/v1/datacenter/analysis/ad-performance/table/campaign",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "keyword?, current?, size?, dateRange, app?, adPlatform?, account?, country?",
+    "requestBody": "keyword?, current?, size?, startDate, endDate, app?, adPlatform?, account?, country?",
     "responseBody": "rows, pagination"
   }
 }
