@@ -46,7 +46,9 @@
           />
         </el-select>
 
-        <el-button round class="rd-filter-action rd-filter-action--apply"> 查询 </el-button>
+        <el-button type="primary" class="rd-filter-action rd-filter-action--apply">
+          查询
+        </el-button>
       </div>
     </div>
 
@@ -1057,20 +1059,51 @@
   }
 
   .rd-filter-action--apply {
-    color: var(--el-color-white) !important;
-    background: color-mix(
+    --rd-btn-bg: color-mix(in srgb, var(--el-color-primary) 78%, var(--default-box-color));
+    --rd-btn-bg-hover: color-mix(in srgb, var(--el-color-primary) 88%, var(--default-box-color));
+    --rd-btn-border: color-mix(in srgb, var(--el-color-primary) 70%, transparent);
+    --rd-btn-border-hover: color-mix(in srgb, var(--el-color-primary) 86%, transparent);
+    --el-button-bg-color: var(--rd-btn-bg);
+    --el-button-border-color: var(--rd-btn-border);
+    --el-button-hover-bg-color: var(--rd-btn-bg-hover);
+    --el-button-hover-border-color: var(--rd-btn-border-hover);
+    --el-button-active-bg-color: color-mix(
       in srgb,
-      var(--el-color-primary) 78%,
+      var(--el-color-primary) 94%,
       var(--default-box-color)
-    ) !important;
-    border-color: color-mix(in srgb, var(--el-color-primary) 70%, transparent) !important;
+    );
+    --el-button-active-border-color: color-mix(in srgb, var(--el-color-primary) 92%, transparent);
+
+    color: var(--el-color-white) !important;
     box-shadow:
       0 0 18px color-mix(in srgb, var(--el-color-primary) 18%, transparent),
       0 0 42px color-mix(in srgb, var(--el-color-primary) 10%, transparent);
   }
 
   .rd-filter-action--apply:hover {
+    box-shadow:
+      0 0 22px color-mix(in srgb, var(--el-color-primary) 22%, transparent),
+      0 0 50px color-mix(in srgb, var(--el-color-primary) 12%, transparent);
     transform: translateY(-2px);
+  }
+
+  .rd-filter-action--apply:active {
+    transform: translateY(0);
+  }
+
+  .rd-filter-action--apply:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 var(--focus-ring-width) color-mix(in srgb, var(--focus-ring-color) 38%, transparent),
+      0 0 18px color-mix(in srgb, var(--el-color-primary) 18%, transparent),
+      0 0 42px color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+  }
+
+  .rd-filter-action--apply.is-disabled,
+  .rd-filter-action--apply.is-disabled:hover,
+  .rd-filter-action--apply.is-disabled:active {
+    box-shadow: none;
+    transform: none;
   }
 
   /* ── KPI Grid ──────────────────────────────────────────────────────── */

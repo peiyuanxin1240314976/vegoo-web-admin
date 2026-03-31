@@ -98,7 +98,7 @@
             />
           </div>
 
-          <ElButton round class="rev-query-btn" @click="onQuery">查询</ElButton>
+          <ElButton type="primary" round @click="onQuery">查询</ElButton>
         </div>
 
         <!-- <button type="button" class="rev-export" @click="onExport">Export</button> -->
@@ -1823,7 +1823,8 @@
   } as const
 
   const iapColumns = computed<ColumnOption[]>(() => [
-    { label: '商品', prop: 's_product', minWidth: 80, fixed: 'left', showOverflowTooltip: true },
+    { label: '商品', prop: 's_product', minWidth: 60, fixed: 'left', showOverflowTooltip: true },
+    { label: '类型', prop: 's_type', minWidth: 60, fixed: 'left', showOverflowTooltip: true },
     {
       label: '价格',
       prop: 'd_arppu',
@@ -1834,7 +1835,7 @@
     {
       label: '购买次数',
       prop: 'n_buy_times',
-      minWidth: 70,
+      minWidth: 80,
       showOverflowTooltip: true,
       formatter: (row: any) => formatInt(row.n_buy_times)
     },
@@ -1853,7 +1854,7 @@
       formatter: (row: any) => `${Number(row.percent).toFixed(1)}%`
     },
     {
-      label: '续费率',
+      label: '购买率',
       prop: 'd_purchase_rate',
       minWidth: 60,
       useSlot: true,
