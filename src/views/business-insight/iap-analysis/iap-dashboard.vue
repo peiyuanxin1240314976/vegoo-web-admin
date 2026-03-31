@@ -82,13 +82,8 @@
           </ElSelect>
         </div>
 
-        <ElButton
-          round
-          class="iap-dashboard-btn iap-dashboard-btn--query"
-          :icon="Search"
-          @click="loadDashboard"
-        >
-          检索
+        <ElButton round class="iap-dashboard-btn iap-dashboard-btn--query" @click="loadDashboard">
+          查询
         </ElButton>
       </div>
     </header>
@@ -269,7 +264,6 @@
   import {
     Download,
     Refresh,
-    Search,
     Top,
     Bottom,
     Warning,

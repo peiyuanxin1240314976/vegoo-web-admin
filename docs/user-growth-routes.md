@@ -60,9 +60,9 @@
 | 页面 | 完整路由路径 | Name | keepAlive | 类型 | activePath（侧边高亮） | 跳出目标 | 触发动作 | 传参 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 综合分析 | `/user-growth/comprehensive-analysis` | ComprehensiveAnalysis | ✅ | 👁️ | — | → PlatformAnalysisDetail | 图表/表格下钻 | `?name=&from=comprehensive-analysis` |
-| 平台分析详情 | `/user-growth/comprehensive-analysis/platform-analysis-detail` | PlatformAnalysisDetail | 🔒 | 🔗 | `/user-growth/comprehensive-analysis` | ← ComprehensiveAnalysis | 面包屑「← 返回综合分析」 | — |
-| 平台分析详情 | `/user-growth/comprehensive-analysis/platform-analysis-detail` | PlatformAnalysisDetail | 🔒 | 🔗 | `/user-growth/comprehensive-analysis` | ← AccountPerformance | 面包屑「应用层面」 | — |
-| 平台分析详情 | `/user-growth/comprehensive-analysis/platform-analysis-detail` | PlatformAnalysisDetail | 🔒 | 🔗 | `/user-growth/comprehensive-analysis` | ← AdPlatformAnalysis | 面包屑「广告平台层面」 | — |
+| 应用详情 | `/user-growth/comprehensive-analysis/platform-analysis-detail` | PlatformAnalysisDetail | 🔒 | 🔗 | `/user-growth/comprehensive-analysis` | ← ComprehensiveAnalysis | 面包屑「← 返回综合分析」 | — |
+| 应用详情 | `/user-growth/comprehensive-analysis/platform-analysis-detail` | PlatformAnalysisDetail | 🔒 | 🔗 | `/user-growth/comprehensive-analysis` | ← AccountPerformance | 面包屑「应用层面」 | — |
+| 应用详情 | `/user-growth/comprehensive-analysis/platform-analysis-detail` | PlatformAnalysisDetail | 🔒 | 🔗 | `/user-growth/comprehensive-analysis` | ← AdPlatformAnalysis | 面包屑「广告平台层面」 | — |
 
 > `PlatformAnalysisDetail` 面包屑可横跳至 3 个不同模块，是全模块唯一多向出口子页。
 
@@ -88,7 +88,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | 广告平台详情 | `/user-growth/ad-platform-analysis/ad-platform-info` | AdPlatformInfo | ✅ | `/user-growth/ad-platform-analysis` | `?id=` | AdPlatformAnalysis、AccountPerformance |
 | 成效对比 | `/user-growth/performance-analysis/comparison` | PerformanceComparison | 🔒 | `/user-growth/performance-analysis` | `?ids=&startDate=&endDate=` | PerformanceAnalysis（单行查看 / 多选对比） |
-| 平台分析详情 | `/user-growth/comprehensive-analysis/platform-analysis-detail` | PlatformAnalysisDetail | 🔒 | `/user-growth/comprehensive-analysis` | `?name=&from=` | ComprehensiveAnalysis |
+| 应用详情 | `/user-growth/comprehensive-analysis/platform-analysis-detail` | PlatformAnalysisDetail | 🔒 | `/user-growth/comprehensive-analysis` | `?name=&from=` | ComprehensiveAnalysis |
 | 系列详情 | `/user-growth/ad-performance/campaign-detail` | CampaignDetail | 🔒 | `/user-growth/ad-performance` | `?id=&appId=&name=...` | AccountPerformance、MyAds、AdPerformance |
 | 广告详情 | `/user-growth/ad-performance/campaign-detail/ad-detail` | AdDetail | 🔒 | `/user-growth/ad-performance` | `?id=&campaignId=` | CampaignDetail |
 | 广告编辑 | `/user-growth/ad-performance/campaign-detail/ad-edit` | AdEdit | 🔒 | `/user-growth/ad-performance` | `?campaignId=&adId=` | CampaignDetail、AdDetail |

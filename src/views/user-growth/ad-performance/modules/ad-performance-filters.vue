@@ -76,7 +76,6 @@
       <ElButton
         round
         class="ad-performance-filter-action-btn ad-performance-filter-action-btn--query"
-        :icon="Search"
         :disabled="!isDirty"
         @click="onQuery"
       >
@@ -122,15 +121,7 @@
 </template>
 
 <script setup lang="ts">
-  import {
-    Calendar,
-    Flag,
-    Grid,
-    Promotion,
-    RefreshRight,
-    Search,
-    User
-  } from '@element-plus/icons-vue'
+  import { Calendar, Flag, Grid, Promotion, RefreshRight, User } from '@element-plus/icons-vue'
   import { computed, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import type { AdPerformanceFilter, AdPerformanceMetaFilterResponse } from '../types'

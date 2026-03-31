@@ -1471,10 +1471,25 @@
 
   .ap-filters {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 12px;
     align-items: center;
-    max-width: 55%;
+    max-width: 100%;
+    overflow: auto hidden;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: color-mix(in srgb, var(--default-border) 60%, transparent);
+      border-radius: 9999px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
 
     @media (width <=768px) {
       gap: 8px;
@@ -1482,17 +1497,19 @@
   }
 
   .ap-filter-select {
+    flex: 0 0 auto;
     width: 150px;
     min-width: 100px;
     max-width: 100%;
 
     @media (width <=768px) {
-      flex: 1 1 120px;
+      flex: 0 0 auto;
       min-width: 0;
     }
   }
 
   .ap-date-picker {
+    flex: 0 0 auto;
     width: 200px;
     max-width: 100%;
 
