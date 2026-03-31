@@ -575,7 +575,14 @@
   ])
 
   const platformTableColumns = computed<ColumnOption[]>(() => [
-    { prop: 'name', label: '广告平台', minWidth: 110, useSlot: true, slotName: 'name' },
+    {
+      prop: 'name',
+      label: '广告平台',
+      minWidth: 100,
+      useSlot: true,
+      slotName: 'name',
+      showOverflowTooltip: true
+    },
     {
       prop: 'estimated',
       label: '预估ECPM',
@@ -595,12 +602,19 @@
     {
       prop: 'revenue',
       label: '广告收入',
-      minWidth: 90,
+      minWidth: 110,
       align: 'left',
       useSlot: true,
       slotName: 'revenue'
     },
-    { prop: 'share', label: '占比', minWidth: 80, align: 'left', useSlot: true, slotName: 'share' },
+    {
+      prop: 'share',
+      label: '占比',
+      minWidth: 100,
+      align: 'left',
+      useSlot: true,
+      slotName: 'share'
+    },
     { prop: 'trend', label: '趋势', minWidth: 90, align: 'left', useSlot: true, slotName: 'trend' }
   ])
 
