@@ -167,8 +167,20 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted } from 'vue'
+  import { ref, onMounted, onUnmounted, watch } from 'vue'
   import * as echarts from 'echarts'
+
+  defineOptions({ name: 'IAPChannelTab' })
+
+  const props = defineProps<{
+    filters: {
+      app: string
+      platform: string
+      country: string
+      date: string
+    }
+    searchToken: number
+  }>()
 
   /* ── Refs ─────────────────────────────────────── */
   const arppuRef = ref<HTMLElement | null>(null)
@@ -470,6 +482,22 @@
   onUnmounted(() => {
     chartInstances.forEach((c) => c.dispose())
   })
+
+  function rebuildCharts() {
+    chartInstances.forEach((c) => c.dispose())
+    chartInstances.length = 0
+    initSparklines()
+    initArppu()
+    initTrend()
+    initDonut()
+  }
+
+  watch(
+    () => props.searchToken,
+    () => {
+      rebuildCharts()
+    }
+  )
 
   function initSparklines() {
     kpiCards.forEach((kpi, i) => {
@@ -984,5 +1012,44 @@
     height: 8px;
     margin-top: 4px;
     border-radius: 50%;
+  }
+
+  /* ── Responsive ───────────────────────────────── */
+  @media (width <= 1200px) {
+    .kpi-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .mid-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .btm-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .right-col {
+      flex-flow: row wrap;
+    }
+
+    .right-col .card {
+      flex: 1 1 calc(50% - 6px);
+      min-width: 320px;
+    }
+  }
+
+  @media (width <= 768px) {
+    .kpi-row {
+      grid-template-columns: 1fr;
+    }
+
+    .right-col {
+      flex-direction: column;
+    }
+
+    .right-col .card {
+      flex: 1 1 100%;
+      min-width: 0;
+    }
   }
 </style>

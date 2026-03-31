@@ -44,12 +44,6 @@ import { MOCK_CAMPAIGN_DETAIL } from './campaign-detail-data'
 import { MOCK_AD_DETAIL } from './ad-detail-data'
 
 const META_STATIC: AdPerformanceMetaFilterResponse = {
-  dateRangeOptions: [
-    { label: '今日', value: 'today' },
-    { label: '昨日', value: 'yesterday' },
-    { label: '近7天', value: 'last7d' },
-    { label: '本月', value: 'month' }
-  ],
   appOptions: [
     { label: '全部(53)', value: '' },
     { label: 'Weather5', value: 'Weather5' },

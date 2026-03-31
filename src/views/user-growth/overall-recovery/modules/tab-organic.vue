@@ -47,13 +47,15 @@
     <section v-if="tabData" class="or-chart-grid">
       <!-- 自然量 vs 付费量趋势 -->
       <ElCard class="or-panel or-panel--trend" shadow="never">
-        <template #header>自然量 vs 付费量趋势（近30天）</template>
+        <template #header>
+          <span class="or-panel-title">自然量 vs 付费量趋势（近30天）</span>
+        </template>
         <div ref="trendChartRef" class="or-chart or-chart--trend"></div>
       </ElCard>
 
       <!-- 流量来源分析 -->
       <ElCard class="or-panel" shadow="never">
-        <template #header>自然量/流量来源分析</template>
+        <template #header><span class="or-panel-title">自然量/流量来源分析</span></template>
         <div ref="sourceChartRef" class="or-chart or-chart--donut"></div>
         <div class="source-legend">
           <div
@@ -88,7 +90,7 @@
 
       <!-- K-factor 趋势 -->
       <ElCard class="or-panel" shadow="never">
-        <template #header>K-factor 趋势（30天）</template>
+        <template #header><span class="or-panel-title">K-factor 趋势（30天）</span></template>
         <div ref="kfactorChartRef" class="or-chart or-chart--kfactor"></div>
       </ElCard>
     </section>
@@ -575,7 +577,7 @@
     gap: 12px;
   }
 
-  /* 面板通用 */
+  /* 面板通用（卡片标题与广告成效 trend 卡对齐） */
   .or-panel {
     position: relative;
     overflow: hidden;
@@ -586,26 +588,51 @@
     border-radius: 14px;
 
     :deep(.el-card__header) {
-      padding: 10px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--art-gray-800);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 12px 14px 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.03em;
       background: transparent !important;
-      border-bottom: 1px solid color-mix(in srgb, var(--art-success) 22%, var(--default-border));
+      border-bottom: 1px solid rgb(63 63 70 / 35%);
+      transition: filter 0.32s var(--ease-out);
+    }
+
+    :deep(.panel-header-row) {
+      color: var(--text-primary);
+    }
+
+    &:hover :deep(.el-card__header) {
+      filter: drop-shadow(0 0 12px rgb(34 211 238 / 28%));
     }
 
     :deep(.el-card__header:not(:has(.panel-header-row))) {
       @include ap-title-gradient;
+
+      font-size: 15px;
     }
 
     :deep(.panel-header-row > span:first-child) {
       @include ap-title-gradient;
+
+      font-size: 15px;
+      font-weight: 700;
     }
 
     :deep(.el-card__body) {
       padding: 12px 14px;
+      padding-top: 8px;
       background: transparent;
     }
+  }
+
+  .or-panel-title {
+    @include ap-title-gradient;
+
+    font-size: 15px;
   }
 
   .panel-header-row {

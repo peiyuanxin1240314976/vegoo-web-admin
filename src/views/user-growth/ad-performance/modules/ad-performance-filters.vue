@@ -10,7 +10,7 @@
       </div>
 
       <ElSelect
-        :model-value="filter.app"
+        :model-value="draft.app"
         :placeholder="tr('adPerformance.filterApp', '应用')"
         class="ad-performance-filter-select"
         :prefix-icon="Grid"
@@ -26,7 +26,7 @@
       </ElSelect>
 
       <ElSelect
-        :model-value="filter.adPlatform"
+        :model-value="draft.adPlatform"
         :placeholder="tr('adPerformance.filterAdPlatform', '广告平台')"
         class="ad-performance-filter-select"
         :prefix-icon="Promotion"
@@ -42,7 +42,7 @@
       </ElSelect>
 
       <ElSelect
-        :model-value="filter.account"
+        :model-value="draft.account"
         :placeholder="tr('adPerformance.filterAccount', '账户')"
         class="ad-performance-filter-select"
         :prefix-icon="User"
@@ -58,7 +58,7 @@
       </ElSelect>
 
       <ElSelect
-        :model-value="filter.country"
+        :model-value="draft.country"
         :placeholder="tr('adPerformance.filterCountry', '国家')"
         class="ad-performance-filter-select"
         :prefix-icon="Flag"
@@ -73,6 +73,15 @@
         />
       </ElSelect>
 
+      <ElButton
+        round
+        class="ad-performance-filter-action-btn ad-performance-filter-action-btn--query"
+        :icon="Search"
+        :disabled="!isDirty"
+        @click="onQuery"
+      >
+        {{ tr('adPerformance.query', '查询') }}
+      </ElButton>
       <ElButton
         round
         class="ad-performance-filter-action-btn ad-performance-filter-action-btn--export"
@@ -98,13 +107,13 @@
       <div class="ad-performance-date-slider__thumb" aria-hidden="true" />
       <button
         v-for="opt in dateRangeOptions"
-        :key="opt.value"
+        :key="opt.key"
         type="button"
         class="ad-performance-date-slider__item"
-        :class="{ 'is-active': opt.value === filter.dateRange }"
+        :class="{ 'is-active': opt.key === activeDateKey }"
         role="tab"
-        :aria-selected="opt.value === filter.dateRange"
-        @click="onDateChange(opt.value)"
+        :aria-selected="opt.key === activeDateKey"
+        @click="onDateChange(opt.key)"
       >
         {{ opt.label }}
       </button>
@@ -113,10 +122,19 @@
 </template>
 
 <script setup lang="ts">
-  import { Calendar, Flag, Grid, Promotion, RefreshRight, User } from '@element-plus/icons-vue'
-  import { computed } from 'vue'
+  import {
+    Calendar,
+    Flag,
+    Grid,
+    Promotion,
+    RefreshRight,
+    Search,
+    User
+  } from '@element-plus/icons-vue'
+  import { computed, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import type { AdPerformanceFilter, AdPerformanceMetaFilterResponse } from '../types'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
 
   defineOptions({ name: 'AdPerformanceFilters' })
 
@@ -139,49 +157,100 @@
     (e: 'refresh'): void
   }>()
 
-  function emitSearch(partial: Partial<AdPerformanceFilter>) {
-    emit('search', { ...props.filter, ...partial })
+  const draft = ref<AdPerformanceFilter>({ ...props.filter })
+
+  const isDirty = computed(() => {
+    const a = props.filter
+    const b = draft.value
+    return (
+      String(a.startDate ?? '') !== String(b.startDate ?? '') ||
+      String(a.endDate ?? '') !== String(b.endDate ?? '') ||
+      String(a.app ?? '') !== String(b.app ?? '') ||
+      String(a.adPlatform ?? '') !== String(b.adPlatform ?? '') ||
+      String(a.account ?? '') !== String(b.account ?? '') ||
+      String(a.country ?? '') !== String(b.country ?? '')
+    )
+  })
+
+  function onQuery() {
+    emit('search', { ...draft.value })
   }
 
-  function onDateChange(v: AdPerformanceFilter['dateRange']) {
-    emitSearch({ dateRange: v })
+  function patchDraft(partial: Partial<AdPerformanceFilter>) {
+    draft.value = { ...draft.value, ...partial }
+  }
+
+  type DatePresetKey = 'today' | 'yesterday' | 'last7d' | 'month'
+
+  function resolvePresetRange(key: DatePresetKey): { startDate: string; endDate: string } {
+    const today = getAppNow()
+    if (key === 'today') {
+      const ymd = getAppTodayYYYYMMDD()
+      return { startDate: ymd, endDate: ymd }
+    }
+    if (key === 'yesterday') {
+      const d = cloneAppDate(today)
+      d.setDate(d.getDate() - 1)
+      const ymd = formatYYYYMMDD(d)
+      return { startDate: ymd, endDate: ymd }
+    }
+    if (key === 'last7d') {
+      const end = formatYYYYMMDD(today)
+      const startD = cloneAppDate(today)
+      startD.setDate(startD.getDate() - 6)
+      const start = formatYYYYMMDD(startD)
+      return { startDate: start, endDate: end }
+    }
+    // month：本月 1 号 ~ 今天
+    const end = formatYYYYMMDD(today)
+    const startD = cloneAppDate(today)
+    startD.setDate(1)
+    const start = formatYYYYMMDD(startD)
+    return { startDate: start, endDate: end }
+  }
+
+  const activeDateKey = ref<DatePresetKey>('today')
+
+  function onDateChange(key: DatePresetKey) {
+    activeDateKey.value = key
+    patchDraft(resolvePresetRange(key))
   }
 
   function onAppChange(v: string) {
-    emitSearch({ app: v ?? '' })
+    patchDraft({ app: v ?? '' })
   }
 
   function onAdPlatformChange(v: string) {
-    emitSearch({ adPlatform: v ?? '' })
+    patchDraft({ adPlatform: v ?? '' })
   }
 
   function onAccountChange(v: string) {
-    emitSearch({ account: v ?? '' })
+    patchDraft({ account: v ?? '' })
   }
 
   function onCountryChange(v: string) {
-    emitSearch({ country: v ?? '' })
+    patchDraft({ country: v ?? '' })
   }
 
-  const defaultDateRangeOptions = [
-    { value: 'today' as const, label: '今日' },
-    { value: 'yesterday' as const, label: '昨日' },
-    { value: 'last7d' as const, label: '近7天' },
-    { value: 'month' as const, label: '本月' }
-  ]
-
   const dateRangeOptions = computed(() => {
-    const m = props.metaOptions?.dateRangeOptions
-    return m?.length ? m : defaultDateRangeOptions
+    return [
+      { key: 'today' as const, label: '今日' },
+      { key: 'yesterday' as const, label: '昨日' },
+      { key: 'last7d' as const, label: '近7天' },
+      { key: 'month' as const, label: '本月' }
+    ]
   })
 
   const dateRangeLabel = computed(() => {
-    const hit = dateRangeOptions.value.find((item) => item.value === props.filter.dateRange)
-    return hit?.label ?? '-'
+    const hit = dateRangeOptions.value.find((item) => item.key === activeDateKey.value)
+    const label = hit?.label ?? '自定义'
+    const start = draft.value.startDate?.trim() || '-'
+    const end = draft.value.endDate?.trim() || '-'
+    return `${label} ${start} ~ ${end}`
   })
 
   const activeDateIndex = computed(() => {
-    const idx = dateRangeOptions.value.findIndex((item) => item.value === props.filter.dateRange)
+    const idx = dateRangeOptions.value.findIndex((item) => item.key === activeDateKey.value)
     return idx >= 0 ? idx : 0
   })
 
@@ -239,6 +308,31 @@
       { label: 'BR', value: 'BR' }
     ]
   })
+
+  watch(
+    () => [draft.value.startDate, draft.value.endDate] as const,
+    () => {
+      const current = {
+        startDate: String(draft.value.startDate ?? '').trim(),
+        endDate: String(draft.value.endDate ?? '').trim()
+      }
+      const presets: DatePresetKey[] = ['today', 'yesterday', 'last7d', 'month']
+      const hit = presets.find((k) => {
+        const r = resolvePresetRange(k)
+        return r.startDate === current.startDate && r.endDate === current.endDate
+      })
+      activeDateKey.value = hit ?? 'today'
+    },
+    { immediate: true }
+  )
+
+  watch(
+    () => props.filter,
+    (v) => {
+      draft.value = { ...v }
+    },
+    { deep: true, immediate: true }
+  )
 </script>
 
 <style scoped lang="scss">

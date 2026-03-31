@@ -11,9 +11,9 @@ export interface IapSelectOption {
 
 /** 全局筛选状态（与 backend-fields：platform、s_country_code、s_app_id 等一致） */
 export interface IapFilterState {
-  timeRange: string
+  startDate: string
+  endDate: string
   s_app_id: string
-  productType: string
   s_country_code: string
   platform: string
 }
@@ -24,7 +24,6 @@ export interface IapFilterOptions {
   platformOptions: IapSelectOption[]
   countryOptions: IapSelectOption[]
   productTypeOptions: IapSelectOption[]
-  timeRangeOptions: IapSelectOption[]
 }
 
 /** Dashboard/Detail 用 KPI 卡片项 */

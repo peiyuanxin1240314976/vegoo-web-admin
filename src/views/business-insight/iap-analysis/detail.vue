@@ -15,16 +15,17 @@
       <div class="iap-actions">
         <div class="iap-pill">
           <span class="iap-pill__label">时间范围</span>
-          <ElSelect
-            v-model="timeRange"
+          <ElDatePicker
+            v-model="dateRange"
+            type="daterange"
             size="small"
-            class="iap-select"
-            popper-class="iap-select-popper"
-          >
-            <ElOption label="最近30天" value="30" />
-            <ElOption label="最近7天" value="7" />
-            <ElOption label="最近90天" value="90" />
-          </ElSelect>
+            range-separator="-"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            class="iap-select iap-select--daterange"
+            popper-class="iap-date-popper"
+          />
         </div>
         <div class="iap-pill">
           <span class="iap-pill__label">国家</span>
@@ -56,7 +57,7 @@
     </header>
 
     <!-- 应用标题行 -->
-    <div class="iap-app-header">
+    <div class="iap-app-header iap-entry-2">
       <div class="iap-app-info">
         <div class="iap-app-icon">
           <ElIcon :size="20"><Monitor /></ElIcon>
@@ -67,7 +68,7 @@
     </div>
 
     <!-- KPI 指标卡片行 -->
-    <div class="iap-kpi-row">
+    <div class="iap-kpi-row iap-entry-3">
       <div v-for="(kpi, i) in kpiList" :key="kpi.label" class="iap-kpi-card iap-neon-surface">
         <div class="iap-kpi-top">
           <span class="iap-kpi-label">{{ kpi.label }}</span>
@@ -82,7 +83,7 @@
     </div>
 
     <!-- Tab 切换 -->
-    <nav class="iap-tab-bar">
+    <nav class="iap-tab-bar iap-entry-4">
       <button
         v-for="tab in tabs"
         :key="tab.key"
@@ -99,7 +100,7 @@
     <!-- 产品统计 Tab -->
     <main v-if="activeTab === 'product'" class="iap-tab-content">
       <div class="iap-section-card iap-neon-surface">
-        <div class="iap-section-title">产品SKU订单分析</div>
+        <div class="iap-section-title iap-card-title-text">产品SKU订单分析</div>
         <ElTable :data="skuData" class="iap-dark-table" size="small" row-key="name">
           <ElTableColumn prop="name" label="产品名称" min-width="145" show-overflow-tooltip />
           <ElTableColumn prop="type" label="类型" width="75">
@@ -109,9 +110,9 @@
               </ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn prop="orders" label="订单数" width="100" />
-          <ElTableColumn prop="revenue" label="收入(USD)" width="110" />
-          <ElTableColumn prop="ratio" label="占比" width="180">
+          <ElTableColumn prop="orders" label="订单数" width="100" align="left" />
+          <ElTableColumn prop="revenue" label="收入(USD)" width="110" align="left" />
+          <ElTableColumn prop="ratio" label="占比" width="180" align="left">
             <template #default="{ row }">
               <div class="iap-ratio-wrap">
                 <div class="iap-ratio-bar" :style="{ width: row.ratio }"></div>
@@ -119,17 +120,17 @@
               </div>
             </template>
           </ElTableColumn>
-          <ElTableColumn prop="arpu" label="ARPU" width="110" />
-          <ElTableColumn prop="conversion" label="转化率" width="110" />
-          <ElTableColumn prop="retention" label="续费率" width="110">
+          <ElTableColumn prop="arpu" label="ARPU" width="110" align="left" />
+          <ElTableColumn prop="conversion" label="转化率" width="110" align="left" />
+          <ElTableColumn prop="retention" label="续费率" width="110" align="left">
             <template #default="{ row }">
               <span :class="parseFloat(row.retention) > 60 ? 'iap-text-green' : 'iap-text-orange'">
                 {{ row.retention }}
               </span>
             </template>
           </ElTableColumn>
-          <ElTableColumn prop="churn" label="退款率" width="110" />
-          <ElTableColumn prop="trend" label="趋势" width="130">
+          <ElTableColumn prop="churn" label="退款率" width="110" align="left" />
+          <ElTableColumn prop="trend" label="趋势" width="130" align="left">
             <template #default="{ row }">
               <div
                 class="iap-sku-trend-spark"
@@ -142,7 +143,7 @@
 
       <div class="iap-bottom-three-col">
         <div class="iap-section-card iap-neon-surface iap-flex-1">
-          <div class="iap-section-title">用户分层分布</div>
+          <div class="iap-section-title iap-card-title-text">用户分层分布</div>
           <div class="iap-segment-list">
             <div v-for="seg in userSegments" :key="seg.label" class="iap-segment-row">
               <div class="iap-seg-left">
@@ -157,7 +158,7 @@
           </div>
         </div>
         <div class="iap-section-card iap-neon-surface iap-flex-1">
-          <div class="iap-section-title">订阅周期分布</div>
+          <div class="iap-section-title iap-card-title-text">订阅周期分布</div>
           <div class="iap-donut-wrap">
             <div class="iap-donut-center">
               <div class="iap-donut-num">{{ subscriptionTotal }}</div>
@@ -172,7 +173,7 @@
           </div>
         </div>
         <div class="iap-section-card iap-neon-surface iap-flex-1">
-          <div class="iap-section-title">续费周期分析</div>
+          <div class="iap-section-title iap-card-title-text">续费周期分析</div>
           <div ref="renewRef" class="iap-renew-chart"></div>
         </div>
       </div>
@@ -182,14 +183,14 @@
     <main v-if="activeTab === 'user'" class="iap-tab-content">
       <div class="iap-two-col-grid">
         <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title">用户分层价值分析</div>
+          <div class="iap-section-title iap-card-title-text">用户分层价值分析</div>
           <ElTable :data="userValueData" class="iap-dark-table" size="small">
-            <ElTableColumn prop="segment" label="用户分层" width="120" />
-            <ElTableColumn prop="count" label="用户数" width="80" />
-            <ElTableColumn prop="ratio" label="占比" width="65" />
-            <ElTableColumn prop="arpu" label="ARPU" width="75" />
-            <ElTableColumn prop="conversion" label="转化率" width="75" />
-            <ElTableColumn prop="retention" label="续费率" width="75">
+            <ElTableColumn prop="segment" label="用户分层" width="120" align="left" />
+            <ElTableColumn prop="count" label="用户数" width="80" align="left" />
+            <ElTableColumn prop="ratio" label="占比" width="65" align="left" />
+            <ElTableColumn prop="arpu" label="ARPU" width="75" align="left" />
+            <ElTableColumn prop="conversion" label="转化率" width="75" align="left" />
+            <ElTableColumn prop="retention" label="续费率" width="75" align="left">
               <template #default="{ row }">
                 <span
                   :class="parseFloat(row.retention) > 60 ? 'iap-text-green' : 'iap-text-orange'"
@@ -198,21 +199,21 @@
                 </span>
               </template>
             </ElTableColumn>
-            <ElTableColumn prop="churn" label="退款率" width="75" />
+            <ElTableColumn prop="churn" label="退款率" width="75" align="left" />
           </ElTable>
         </div>
         <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title">Top 10 国家用户分布</div>
+          <div class="iap-section-title iap-card-title-text">Top 10 国家用户分布</div>
           <div ref="countryRef" class="iap-country-chart"></div>
         </div>
       </div>
       <div class="iap-two-col-grid iap-mt-16">
         <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title">新老用户付费行为对比</div>
+          <div class="iap-section-title iap-card-title-text">新老用户付费行为对比</div>
           <div ref="userCompareRef" class="iap-user-compare-chart"></div>
         </div>
         <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title">用户首次付费时间分布</div>
+          <div class="iap-section-title iap-card-title-text">用户首次付费时间分布</div>
           <div ref="firstPayRef" class="iap-first-pay-chart"></div>
         </div>
       </div>
@@ -222,7 +223,7 @@
     <main v-if="activeTab === 'trend'" class="iap-tab-content">
       <div class="iap-section-card iap-neon-surface">
         <div class="iap-section-title iap-section-title--legend">
-          订单数 vs 收入 日趋势
+          <span class="iap-card-title-text">订单数 vs 收入 日趋势</span>
           <div class="iap-legend-right">
             <span class="iap-legend-dot iap-legend-dot--teal"></span>订单数
             <span class="iap-legend-dot iap-legend-dot--purple"></span>收入
@@ -232,15 +233,15 @@
       </div>
       <div class="iap-three-col-grid iap-mt-16">
         <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title">ARPU 日趋势</div>
+          <div class="iap-section-title iap-card-title-text">ARPU 日趋势</div>
           <div ref="arpuTrendRef" class="iap-trend-chart-sm"></div>
         </div>
         <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title">转化率 & 续费率 趋势</div>
+          <div class="iap-section-title iap-card-title-text">转化率 & 续费率 趋势</div>
           <div ref="convTrendRef" class="iap-trend-chart-sm"></div>
         </div>
         <div class="iap-section-card iap-neon-surface">
-          <div class="iap-section-title">退款率 趋势</div>
+          <div class="iap-section-title iap-card-title-text">退款率 趋势</div>
           <div ref="churnTrendRef" class="iap-trend-chart-sm"></div>
         </div>
       </div>
@@ -251,6 +252,7 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { ArrowUp, ArrowDown, Download, Monitor } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
   import {
@@ -284,7 +286,16 @@
     router.push({ name: 'IapAnalysis' })
   }
 
-  const timeRange = ref('30')
+  const startDate = ref(getAppTodayYYYYMMDD())
+  const endDate = ref(getAppTodayYYYYMMDD())
+  const dateRange = computed({
+    get: (): [string, string] | null =>
+      startDate.value && endDate.value ? [startDate.value, endDate.value] : null,
+    set: (val: [string, string] | null) => {
+      startDate.value = val?.[0] ?? ''
+      endDate.value = val?.[1] ?? ''
+    }
+  })
   const country = ref('all')
   const platform = ref('all')
   const activeTab = ref<'product' | 'user' | 'trend'>('product')
@@ -960,7 +971,8 @@
 
   const params = () => ({
     s_app_id: s_app_id.value,
-    timeRange: timeRange.value,
+    startDate: startDate.value,
+    endDate: endDate.value,
     s_country_code: country.value,
     platform: platform.value
   })
@@ -1007,7 +1019,7 @@
     initAllCharts()
   })
 
-  watch([timeRange, country, platform], refreshDetailScope)
+  watch([startDate, endDate, country, platform], refreshDetailScope)
 
   watch(
     () => route.query,
@@ -1284,6 +1296,14 @@
       align-items: center;
       justify-content: space-between;
     }
+  }
+
+  .iap-card-title-text {
+    @include ap-title-gradient;
+  }
+
+  .iap-neon-surface {
+    @include ap-card-title-hover('.iap-card-title-text');
   }
 
   :deep(.iap-dark-table) {

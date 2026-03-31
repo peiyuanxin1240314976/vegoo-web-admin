@@ -30,16 +30,16 @@ function emptyIfAll(v: string | undefined, all = 'all') {
 }
 
 function normalizeIapOverviewBody(params: {
-  timeRange: string
+  startDate: string
+  endDate: string
   s_app_id?: string
-  productType?: string
   s_country_code?: string
   platform?: string
 }) {
   return {
-    timeRange: params.timeRange,
+    startDate: params.startDate,
+    endDate: params.endDate,
     s_app_id: emptyIfAll(params.s_app_id),
-    productType: emptyIfAll(params.productType),
     s_country_code: emptyIfAll(params.s_country_code),
     platform: emptyIfAll(params.platform)
   }
@@ -47,22 +47,24 @@ function normalizeIapOverviewBody(params: {
 
 function normalizeIapDetailBody(params: {
   s_app_id: string
-  timeRange: string
+  startDate: string
+  endDate: string
   s_country_code?: string
   platform?: string
 }) {
   return {
+    startDate: params.startDate,
+    endDate: params.endDate,
     s_app_id: params.s_app_id,
-    timeRange: params.timeRange,
     s_country_code: emptyIfAll(params.s_country_code),
     platform: emptyIfAll(params.platform)
   }
 }
 
 export type IapOverviewTableQuery = {
-  timeRange: string
+  startDate: string
+  endDate: string
   s_app_id?: string
-  productType?: string
   s_country_code?: string
   platform?: string
 }
@@ -144,7 +146,8 @@ export function fetchIapOverviewPlatformCompare(params: IapOverviewTableQuery) {
 /** 契约 09-detail-kpi.json — POST detail/kpi */
 export function fetchIapDetailKpi(params: {
   s_app_id: string
-  timeRange: string
+  startDate: string
+  endDate: string
   s_country_code?: string
   platform?: string
 }) {
@@ -160,7 +163,8 @@ export function fetchIapDetailKpi(params: {
 /** 契约 10-detail-product.json — POST detail/product */
 export function fetchIapDetailProduct(params: {
   s_app_id: string
-  timeRange: string
+  startDate: string
+  endDate: string
   s_country_code?: string
   platform?: string
 }) {
@@ -176,7 +180,8 @@ export function fetchIapDetailProduct(params: {
 /** 契约 11-detail-user.json — POST detail/user */
 export function fetchIapDetailUser(params: {
   s_app_id: string
-  timeRange: string
+  startDate: string
+  endDate: string
   s_country_code?: string
   platform?: string
 }) {
@@ -192,7 +197,8 @@ export function fetchIapDetailUser(params: {
 /** 契约 12-detail-trend.json — POST detail/trend */
 export function fetchIapDetailTrend(params: {
   s_app_id: string
-  timeRange: string
+  startDate: string
+  endDate: string
   s_country_code?: string
   platform?: string
 }) {

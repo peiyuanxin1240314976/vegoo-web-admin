@@ -259,6 +259,12 @@
     align-items: start;
   }
 
+  @media (width <= 980px) {
+    .ca-app-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .ca-app-left {
     display: flex;
     flex-direction: column;

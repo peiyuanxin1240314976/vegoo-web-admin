@@ -14,6 +14,7 @@ import {
   isAdPerformanceEndpointMock
 } from '@/views/user-growth/ad-performance/config/data-source'
 import * as adPerfMock from '@/views/user-growth/ad-performance/mock/ad-performance-api-mock'
+import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 import type {
   AdPerformanceAlertActionBody,
   AdPerformanceAlertActionResponse,
@@ -54,9 +55,55 @@ export const AD_PERFORMANCE_BASE = `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PR
 
 export const AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE = `${AD_PERFORMANCE_BASE}/campaign-detail`
 
+type CompatibleDateRange = 'today' | 'yesterday' | 'last7d' | 'month'
+
+function resolvePresetRange(key: CompatibleDateRange): { startDate: string; endDate: string } {
+  const today = getAppNow()
+  if (key === 'today') {
+    const ymd = formatYYYYMMDD(today)
+    return { startDate: ymd, endDate: ymd }
+  }
+  if (key === 'yesterday') {
+    const d = cloneAppDate(today)
+    d.setDate(d.getDate() - 1)
+    const ymd = formatYYYYMMDD(d)
+    return { startDate: ymd, endDate: ymd }
+  }
+  if (key === 'last7d') {
+    const end = formatYYYYMMDD(today)
+    const startD = cloneAppDate(today)
+    startD.setDate(startD.getDate() - 6)
+    const start = formatYYYYMMDD(startD)
+    return { startDate: start, endDate: end }
+  }
+  const end = formatYYYYMMDD(today)
+  const startD = cloneAppDate(today)
+  startD.setDate(1)
+  const start = formatYYYYMMDD(startD)
+  return { startDate: start, endDate: end }
+}
+
+function inferCompatibleDateRange(
+  startDate: string,
+  endDate: string
+): CompatibleDateRange | undefined {
+  const s = String(startDate ?? '').trim()
+  const e = String(endDate ?? '').trim()
+  if (!s || !e) return
+  const presets: CompatibleDateRange[] = ['today', 'yesterday', 'last7d', 'month']
+  const hit = presets.find((k) => {
+    const r = resolvePresetRange(k)
+    return r.startDate === s && r.endDate === e
+  })
+  return hit
+}
+
 function filterBody(f: AdPerformanceFilter) {
+  const compat = inferCompatibleDateRange(f.startDate, f.endDate)
   return {
-    dateRange: f.dateRange,
+    startDate: f.startDate,
+    endDate: f.endDate,
+    ...(compat ? { dateRange: compat } : {}),
     app: f.app ?? '',
     adPlatform: f.adPlatform ?? '',
     account: f.account ?? '',
@@ -139,11 +186,17 @@ export function fetchAdPerformanceCampaignDetailDrawer(
   if (isAdPerformanceEndpointMock(AdPerformanceEndpoint.CampaignDetailDrawer)) {
     return adPerfMock.mockFetchAdPerformanceCampaignDetailDrawer(body)
   }
+  const compat =
+    body.startDate && body.endDate
+      ? inferCompatibleDateRange(body.startDate, body.endDate)
+      : undefined
   return request.post<AdPerformanceCampaignDetail>({
     url: `${AD_PERFORMANCE_BASE}/campaign-detail`,
     data: {
       campaignId: body.campaignId,
-      ...(body.dateRange ? { dateRange: body.dateRange } : {})
+      ...(body.startDate ? { startDate: body.startDate } : {}),
+      ...(body.endDate ? { endDate: body.endDate } : {}),
+      ...(compat ? { dateRange: compat } : {})
     }
   })
 }

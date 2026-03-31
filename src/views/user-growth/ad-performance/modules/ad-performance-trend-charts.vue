@@ -14,7 +14,10 @@
             <div v-for="i in 10" :key="i" class="chart-sk__bar" :style="barStyle(i, 10)"></div>
           </div>
         </div>
-        <div v-show="!loading" ref="spendChartRef" class="ad-performance-trend-charts__chart"></div>
+        <div v-else-if="(spendTrend?.length ?? 0) === 0" class="ad-performance-trend-charts__empty">
+          暂无趋势数据
+        </div>
+        <div v-else ref="spendChartRef" class="ad-performance-trend-charts__chart"></div>
       </ElCard>
     </ElCol>
 
@@ -48,7 +51,10 @@
             </svg>
           </div>
         </div>
-        <div v-show="!loading" ref="roiChartRef" class="ad-performance-trend-charts__chart"></div>
+        <div v-else-if="(roi7dTrend?.length ?? 0) === 0" class="ad-performance-trend-charts__empty">
+          暂无趋势数据
+        </div>
+        <div v-else ref="roiChartRef" class="ad-performance-trend-charts__chart"></div>
       </ElCard>
     </ElCol>
   </ElRow>
@@ -82,6 +88,16 @@
 
   const roiChart = useChart()
   const roiChartRef = roiChart.chartRef
+
+  let syncRafId: number | null = null
+  function scheduleSyncCharts() {
+    if (props.loading) return
+    if (syncRafId != null) return
+    syncRafId = window.requestAnimationFrame(async () => {
+      syncRafId = null
+      await syncCharts()
+    })
+  }
 
   /** 骨架 bar 随机高度（模拟柱状图） */
   function barStyle(i: number, total: number) {
@@ -288,7 +304,7 @@
         roiChart.destroyChart()
         return
       }
-      await syncCharts()
+      scheduleSyncCharts()
     },
     { immediate: true }
   )
@@ -296,9 +312,9 @@
   watch(
     () => [spendChart.isDark.value, props.spendTrend, props.roi7dTrend] as const,
     () => {
-      if (!props.loading) syncCharts()
+      scheduleSyncCharts()
     },
-    { deep: true }
+    { deep: false }
   )
 </script>
 
@@ -425,6 +441,17 @@
       filter: drop-shadow(0 8px 24px rgb(59 130 246 / 28%)) brightness(1.08);
       transform: scale(1.025) translateY(-3px);
     }
+  }
+
+  .ad-performance-trend-charts__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 140px;
+    min-height: 120px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+    letter-spacing: 0.02em;
   }
 
   /* 骨架：模拟柱状图占位 */

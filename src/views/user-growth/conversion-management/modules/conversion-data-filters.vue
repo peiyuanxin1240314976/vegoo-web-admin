@@ -213,10 +213,18 @@
   }
 
   .conversion-data-filters__date {
-    flex: 0 1 240px;
-    width: 240px;
-    min-width: 200px;
+    flex: 0 1 200px;
+    width: 200px;
+    min-width: 170px;
     max-width: 100%;
+  }
+
+  /* Element Plus daterange root node also carries el-input__wrapper; force width to avoid being stretched */
+  :deep(.conversion-data-filters__date.el-date-editor--daterange) {
+    flex: 0 0 200px;
+    width: 200px !important;
+    min-width: 170px !important;
+    max-width: 200px !important;
   }
 
   :deep(.conversion-data-filters__date .el-input__wrapper) {
