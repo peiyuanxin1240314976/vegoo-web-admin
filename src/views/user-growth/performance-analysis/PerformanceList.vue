@@ -3,23 +3,35 @@
     <div class="pa-page-fx" aria-hidden="true"></div>
     <!-- ─── Header ─────────────────────────────────── -->
     <div class="perf-header pa-entry-1">
-      <div class="header-left">
-        <h1>&nbsp;</h1>
-      </div>
-      <div class="header-right">
-        <span class="date-label">日期范围：</span>
-        <div class="date-btns">
-          <button
-            v-for="d in DATE_RANGES"
-            :key="d.value"
-            :class="['date-btn', { active: activeDateRange === d.value }]"
-            @click="handleDateRangeClick(d.value)"
-            >{{ getDateRangeLabel(d) }}</button
-          >
+      <div class="perf-header__panel">
+        <div class="perf-header__group">
+          <span class="date-label">日期范围</span>
+          <div class="date-btns" role="tablist" aria-label="日期范围">
+            <button
+              v-for="d in DATE_RANGES"
+              :key="d.value"
+              type="button"
+              class="date-btn"
+              :class="{ active: activeDateRange === d.value }"
+              role="tab"
+              :aria-selected="activeDateRange === d.value"
+              @click="handleDateRangeClick(d.value)"
+            >
+              {{ getDateRangeLabel(d) }}
+            </button>
+          </div>
         </div>
-        <!-- <button class="btn-tool"> <span class="icon">⊞</span> 自定义列 </button> -->
-        <button class="btn-tool"> <span class="icon">↓</span> 导出 </button>
-        <button class="btn-admin">🔐 管理员编辑</button>
+
+        <div class="perf-header__actions">
+          <ElButton round plain type="primary" class="perf-header__btn">
+            <span class="perf-header__btn-icon" aria-hidden="true">↓</span>
+            导出
+          </ElButton>
+          <ElButton round plain type="warning" class="perf-header__btn perf-header__btn--admin">
+            <span class="perf-header__btn-icon" aria-hidden="true">🔐</span>
+            管理员编辑
+          </ElButton>
+        </div>
       </div>
     </div>
 
@@ -33,25 +45,36 @@
             <button
               v-for="p in PERSON_FILTERS"
               :key="p"
+              type="button"
               :class="['filter-chip', { active: activePersonFilter === p }]"
               @click="activePersonFilter = p"
               >{{ p }}</button
             >
-            <input v-model="searchKw" class="search-input" placeholder="搜索人员..." />
+            <input
+              v-model="searchKw"
+              type="search"
+              class="search-input"
+              placeholder="搜索人员…"
+              aria-label="搜索人员"
+              spellcheck="false"
+            />
           </div>
           <div class="filter-row">
             <span class="filter-label">应用：</span>
             <button
               v-for="a in APP_FILTERS"
               :key="a"
+              type="button"
               :class="['filter-chip', { active: activeAppFilter === a }]"
               @click="activeAppFilter = a"
               >{{ a }}</button
             >
-            <span class="filter-label" style="margin-left: 24px">达标状态：</span>
+            <span class="filter-spacer" aria-hidden="true"></span>
+            <span class="filter-label">达标状态：</span>
             <button
               v-for="s in STATUS_FILTERS"
               :key="s"
+              type="button"
               :class="['filter-chip', { active: activeStatusFilter === s }]"
               @click="activeStatusFilter = s"
               >{{ s }}</button
@@ -65,13 +88,13 @@
             :data="pagedData"
             row-key="id"
             size="small"
-            height="calc(100% + 46px)"
+            height="100%"
             :row-class-name="getRowClassName"
             :header-cell-style="tableHeaderCellStyle"
             show-summary
             :summary-method="getTableSummaries"
           >
-            <ElTableColumn width="60">
+            <ElTableColumn width="50">
               <template #header>
                 <input type="checkbox" :checked="allSelected" @change="toggleAll" />
               </template>
@@ -84,7 +107,7 @@
               </template>
             </ElTableColumn>
 
-            <ElTableColumn label="优化师" min-width="110">
+            <ElTableColumn label="优化师" min-width="100">
               <template #default="{ row }">
                 <div class="name-cell">
                   <span class="avatar" :style="{ background: row.avatarBg }">{{
@@ -95,13 +118,13 @@
               </template>
             </ElTableColumn>
 
-            <ElTableColumn label="职级" min-width="110">
+            <ElTableColumn label="职级" min-width="70">
               <template #default="{ row }">
                 <span :class="['level-badge', `level-${row.levelClass}`]">{{ row.level }}</span>
               </template>
             </ElTableColumn>
 
-            <ElTableColumn min-width="110" align="left">
+            <ElTableColumn min-width="100" align="left">
               <template #header>
                 <div class="th-sortable" @click="handleSort('adSpend')">
                   广告支出
@@ -113,7 +136,7 @@
               <template #default="{ row }">${{ fmt(row.adSpend) }}</template>
             </ElTableColumn>
 
-            <ElTableColumn label="预算" min-width="110" align="left">
+            <ElTableColumn label="预算" min-width="90" align="left">
               <template #default="{ row }">${{ fmt(row.calcCost) }}</template>
             </ElTableColumn>
             <ElTableColumn label="首日ROI" min-width="90" align="left">
@@ -156,7 +179,7 @@
                 ><span class="num score">{{ row.score }}分</span></template
               >
             </ElTableColumn>
-            <ElTableColumn label="达标状态" min-width="110" align="left">
+            <ElTableColumn label="达标状态" min-width="90" align="left">
               <template #default="{ row }">
                 <span :class="['status-badge', `s-${row.statusClass}`]">{{ row.status }}</span>
               </template>
@@ -201,7 +224,12 @@
       <div :class="['sidebar', 'pa-sidebar-shell', { collapsed: isSidebarCollapsed }]">
         <div class="sidebar-header">
           <span v-if="!isSidebarCollapsed">指标概览</span>
-          <button class="collapse-btn" @click="isSidebarCollapsed = !isSidebarCollapsed">
+          <button
+            type="button"
+            class="collapse-btn"
+            :aria-label="isSidebarCollapsed ? '展开指标概览' : '收起指标概览'"
+            @click="isSidebarCollapsed = !isSidebarCollapsed"
+          >
             <ElIcon>
               <ArrowRightBold v-if="isSidebarCollapsed" />
               <ArrowLeftBold v-else />
@@ -829,17 +857,37 @@
 
   // ─── Header ──────────────────────────────────────────────
   .perf-header {
-    display: flex;
     flex-shrink: 0;
+    padding: 0;
+  }
+
+  .perf-header__panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 24px;
-    background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
-    border-radius: 14px;
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 8%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-gray-900) 8%, transparent);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    border-radius: 16px;
+
+    @include pa-neon-surface-static;
+  }
+
+  .perf-header__group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .perf-header__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
   }
 
   .breadcrumb {
@@ -871,12 +919,6 @@
     color: $text-muted;
   }
 
-  .header-right {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
   .date-label {
     font-size: 12px;
     color: $text-secondary;
@@ -885,7 +927,8 @@
 
   .date-btns {
     display: flex;
-    gap: 2px;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
   .date-btn {
@@ -893,8 +936,8 @@
     font-size: 12px;
     color: $text-secondary;
     cursor: pointer;
-    background: transparent;
-    border: 1px solid transparent;
+    background: color-mix(in srgb, var(--default-box-color) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
     border-radius: 9999px;
     transition:
       color 0.15s var(--ease-default),
@@ -903,13 +946,42 @@
 
     &:hover {
       color: $text-primary;
-      background: $bg-card;
+      border-color: color-mix(in srgb, var(--art-primary) 40%, transparent);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 55%, transparent);
     }
 
     &.active {
       font-weight: 600;
-      color: #000;
-      background: $cyan;
+      color: var(--art-gray-900);
+      background: color-mix(in srgb, var(--art-primary) 82%, white 18%);
+      border-color: color-mix(in srgb, var(--art-primary) 55%, transparent);
+    }
+  }
+
+  .perf-header__btn {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding: 6px 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .perf-header__btn-icon {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .perf-header__btn--admin {
+    :deep(.el-button__text) {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
     }
   }
 
@@ -961,7 +1033,7 @@
   .perf-body {
     display: flex;
     flex: 1;
-    gap: 0;
+    gap: 16px;
     min-height: 0;
     overflow: hidden;
   }
@@ -971,7 +1043,7 @@
     flex: 1;
     flex-direction: column;
     gap: 12px;
-    padding: 12px 0 0;
+    padding: 0;
     overflow: hidden;
   }
 
@@ -981,14 +1053,18 @@
     flex-direction: column;
     flex-shrink: 0;
     gap: 8px;
-    padding: 12px 16px;
+    padding: 12px 14px;
   }
 
   .filter-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
+    padding: 8px 10px;
+    background: color-mix(in srgb, var(--default-bg-color) 35%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border-radius: 12px;
   }
 
   .filter-label {
@@ -998,55 +1074,86 @@
     white-space: nowrap;
   }
 
+  .filter-spacer {
+    width: 10px;
+    height: 14px;
+    margin: 0 2px 0 6px;
+    border-left: 1px dashed color-mix(in srgb, var(--art-primary) 18%, transparent);
+  }
+
   .filter-chip {
     padding: 4px 12px;
     font-size: 12px;
     color: $text-secondary;
     cursor: pointer;
-    background: transparent;
-    border: 1px solid $border-light;
+    background: color-mix(in srgb, var(--default-box-color) 35%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
     border-radius: 20px;
     transition:
       color 0.15s var(--ease-default),
       background-color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default);
+      border-color 0.15s var(--ease-default),
+      box-shadow 0.22s var(--ease-out);
 
     &:hover {
       color: $text-primary;
-      border-color: $cyan;
+      border-color: color-mix(in srgb, var(--art-primary) 45%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 20%, transparent);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 55%, transparent),
+        0 0 0 6px rgb(0 0 0 / 18%);
     }
 
     &.active {
       font-weight: 600;
-      color: #000;
-      background: $cyan;
-      border-color: $cyan;
+      color: var(--art-gray-900);
+      background: color-mix(in srgb, var(--art-primary) 82%, white 18%);
+      border-color: color-mix(in srgb, var(--art-primary) 55%, transparent);
+      box-shadow:
+        0 10px 30px rgb(0 0 0 / 22%),
+        0 0 0 1px color-mix(in srgb, var(--art-primary) 24%, transparent),
+        0 0 24px color-mix(in srgb, var(--art-primary) 16%, transparent);
     }
   }
 
   .search-input {
-    width: 140px;
-    padding: 4px 12px;
+    flex: 1;
+    width: 220px;
+    min-width: 180px;
+    max-width: 360px;
+    padding: 6px 12px;
     font-size: 12px;
     color: $text-primary;
     background: rgb(255 255 255 / 4%);
-    border: 1px solid $border-light;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
     border-radius: 20px;
     outline: none;
+    transition:
+      border-color 0.15s var(--ease-default),
+      box-shadow 0.22s var(--ease-out);
 
     &::placeholder {
       color: $text-muted;
     }
 
-    &:focus {
-      border-color: $cyan;
+    &:focus-visible {
+      border-color: color-mix(in srgb, var(--art-primary) 55%, transparent);
+      box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 45%, transparent),
+        0 0 0 6px rgb(0 0 0 / 16%);
     }
   }
 
   // ─── Table ───────────────────────────────────────────────
   .table-wrap {
     flex: 1;
-    overflow: auto;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
 
     &::-webkit-scrollbar {
       width: 6px;
@@ -1054,12 +1161,12 @@
     }
 
     &::-webkit-scrollbar-track {
-      background: $bg-card;
+      background: transparent;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: $border-light;
-      border-radius: 3px;
+      background: color-mix(in srgb, var(--art-primary) 14%, transparent);
+      border-radius: 9999px;
     }
   }
 
@@ -1086,11 +1193,44 @@
     --el-table-border-color: #{$border};
     --el-fill-color-lighter: #0f1623;
 
+    .el-table__inner-wrapper::before {
+      background-color: transparent;
+    }
+
+    .el-table__header-wrapper {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: transparent;
+    }
+
+    .el-table__footer-wrapper {
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+      background: linear-gradient(
+        to top,
+        color-mix(in srgb, var(--default-box-color) 92%, transparent),
+        color-mix(in srgb, var(--default-bg-color) 8%, transparent)
+      );
+      backdrop-filter: blur(10px);
+      border-top: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+    }
+
+    .el-table__body-wrapper {
+      padding-bottom: 44px;
+    }
+
     th.el-table__cell {
       padding: 11px 10px;
       font-size: 12px;
       font-weight: 500;
       color: $text-secondary;
+      background: linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--default-box-color) 88%, transparent),
+        color-mix(in srgb, var(--default-bg-color) 18%, transparent)
+      );
       border-bottom: 1px solid $border;
     }
 
@@ -1158,8 +1298,8 @@
 
   .level-badge {
     display: inline-block;
-    padding: 2px 8px;
-    font-size: 11px;
+    padding: 2px 5px;
+    font-size: 10px;
     font-weight: 600;
     white-space: nowrap;
     border-radius: 4px;
@@ -1215,10 +1355,10 @@
 
   .status-badge {
     display: inline-block;
-    padding: 3px 10px;
-    font-size: 11px;
+    padding: 1px 5px;
+    font-size: 10px;
     font-weight: 600;
-    border-radius: 20px;
+    border-radius: 5px;
 
     &.s-over {
       color: $green;
@@ -1246,20 +1386,28 @@
   }
 
   .view-btn {
-    padding: 4px 12px;
+    padding: 2px 5px;
     font-size: 12px;
     color: $cyan;
     cursor: pointer;
     background: transparent;
     border: 1px solid $border-light;
-    border-radius: 9999px;
+    border-radius: 5px;
     transition:
       background-color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default);
+      border-color 0.15s var(--ease-default),
+      box-shadow 0.22s var(--ease-out);
 
     &:hover {
       background: rgba($cyan, 0.1);
       border-color: $cyan;
+      box-shadow: 0 0 0 1px rgba($cyan, 0.25);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 55%, transparent);
     }
   }
 
@@ -1267,11 +1415,83 @@
   .pagination {
     display: flex;
     flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 10px;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 4px;
+    padding: 10px 14px;
     font-size: 12px;
     color: $text-secondary;
+    background: color-mix(in srgb, var(--default-box-color) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+    border-radius: 14px;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 8%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-gray-900) 8%, transparent);
+  }
+
+  .pagination :deep(.el-pagination) {
+    --el-pagination-button-bg-color: transparent;
+    --el-pagination-bg-color: transparent;
+    --el-pagination-text-color: #{$text-secondary};
+    --el-pagination-hover-color: color-mix(in srgb, var(--art-primary) 92%, white 8%);
+    --el-pagination-border-radius: 9999px;
+  }
+
+  .pagination :deep(.el-pagination .btn-prev),
+  .pagination :deep(.el-pagination .btn-next) {
+    width: 30px;
+    height: 30px;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+    border-radius: 9999px;
+    transition:
+      border-color 0.15s var(--ease-default),
+      background-color 0.15s var(--ease-default),
+      box-shadow 0.22s var(--ease-out);
+  }
+
+  .pagination :deep(.el-pagination .btn-prev:hover),
+  .pagination :deep(.el-pagination .btn-next:hover) {
+    background: color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border-color: color-mix(in srgb, var(--art-primary) 38%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 18%, transparent);
+  }
+
+  .pagination :deep(.el-pagination .el-pager li) {
+    min-width: 30px;
+    height: 30px;
+    line-height: 30px;
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
+    border-radius: 9999px;
+    transition:
+      border-color 0.15s var(--ease-default),
+      background-color 0.15s var(--ease-default),
+      box-shadow 0.22s var(--ease-out),
+      color 0.15s var(--ease-default);
+  }
+
+  .pagination :deep(.el-pagination .el-pager li:hover) {
+    color: color-mix(in srgb, var(--art-primary) 92%, white 8%);
+    background: color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border-color: color-mix(in srgb, var(--art-primary) 38%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 18%, transparent);
+  }
+
+  .pagination :deep(.el-pagination .el-pager li.is-active) {
+    color: color-mix(in srgb, var(--art-primary) 92%, white 8%);
+    background: color-mix(in srgb, var(--art-primary) 18%, transparent);
+    border-color: color-mix(in srgb, var(--art-primary) 45%, transparent);
+    box-shadow:
+      0 10px 30px rgb(0 0 0 / 18%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent);
+  }
+
+  .pagination :deep(.el-pagination .el-select .el-input__wrapper),
+  .pagination :deep(.el-pagination .el-input__wrapper) {
+    background: color-mix(in srgb, var(--default-bg-color) 35%, transparent);
+    border-radius: 9999px;
+    box-shadow: none;
   }
 
   .page-left {
@@ -1286,21 +1506,34 @@
     color: $text-muted;
     cursor: not-allowed;
     background: transparent;
-    border: 1px solid $border-light;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
     border-radius: 9999px;
+    opacity: 0.75;
     transition:
       color 0.15s var(--ease-default),
       background-color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default);
+      border-color 0.15s var(--ease-default),
+      box-shadow 0.22s var(--ease-out),
+      opacity 0.15s var(--ease-default);
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 55%, transparent);
+    }
 
     &.compare-active {
-      color: $cyan;
+      color: color-mix(in srgb, var(--art-primary) 92%, white 8%);
       cursor: pointer;
-      background: rgba($cyan, 0.08);
-      border-color: $cyan;
+      background: color-mix(in srgb, var(--art-primary) 12%, transparent);
+      border-color: color-mix(in srgb, var(--art-primary) 45%, transparent);
+      box-shadow:
+        0 10px 30px rgb(0 0 0 / 22%),
+        0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent);
+      opacity: 1;
 
       &:hover {
-        background: rgba($cyan, 0.15);
+        background: color-mix(in srgb, var(--art-primary) 18%, transparent);
       }
     }
   }
@@ -1353,48 +1586,86 @@
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    width: 240px;
-    padding: 0 12px;
+    width: 320px;
+    padding: 12px;
     overflow-y: auto;
-    transition: width 0.2s var(--ease-default);
+    border-radius: 16px;
+    transition:
+      width 0.22s var(--ease-default),
+      padding 0.22s var(--ease-default);
+
+    &.pa-sidebar-shell {
+      @include pa-neon-surface-static;
+    }
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: color-mix(in srgb, var(--art-primary) 14%, transparent);
+      border-radius: 9999px;
+    }
   }
 
   .sidebar.collapsed {
-    width: 88px;
-    padding: 0;
+    width: 96px;
+    padding: 10px 8px;
   }
 
   .sidebar-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 4px 12px;
+    padding: 10px 6px 12px;
     font-size: 13px;
     font-weight: 600;
     color: $text-primary;
-    border-bottom: 1px solid rgb(255 255 255 / 8%);
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--default-box-color) 88%, transparent),
+      transparent
+    );
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
 
     .collapse-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       font-size: 14px;
       color: $text-secondary;
       cursor: pointer;
       background: none;
-      border: 1px solid rgb(255 255 255 / 10%);
+      border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
       border-radius: 9999px;
       transition:
         color 0.15s var(--ease-default),
         background-color 0.15s var(--ease-default),
-        border-color 0.15s var(--ease-default);
+        border-color 0.15s var(--ease-default),
+        box-shadow 0.22s var(--ease-out);
 
       &:hover {
         color: $text-primary;
-        background: rgb(255 255 255 / 8%);
-        border-color: rgb(255 255 255 / 24%);
+        background: color-mix(in srgb, var(--art-primary) 10%, transparent);
+        border-color: color-mix(in srgb, var(--art-primary) 38%, transparent);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 18%, transparent);
+      }
+
+      &:focus-visible {
+        outline: none;
+        box-shadow:
+          0 0 0 2px color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 55%, transparent),
+          0 0 0 6px rgb(0 0 0 / 18%);
       }
     }
   }
@@ -1403,7 +1674,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 12px 0 16px;
+    padding: 12px 0 4px;
   }
 
   .metric-card {
@@ -1419,7 +1690,9 @@
     .metric-val {
       font-size: 24px;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
       line-height: 1.25;
+      text-shadow: 0 10px 34px rgb(0 0 0 / 28%);
     }
 
     .metric-sub {
@@ -1487,7 +1760,7 @@
 
   @media (width <= 1366px) {
     .sidebar {
-      width: 220px;
+      width: 280px;
     }
 
     .metric-card {
@@ -1513,8 +1786,8 @@
 
   @media (width <= 1280px) {
     .sidebar {
-      width: 196px;
-      padding: 0 10px;
+      width: 260px;
+      padding: 10px;
     }
 
     .metric-card {
@@ -1540,8 +1813,8 @@
 
   @media (width <= 1200px) {
     .sidebar {
-      width: 176px;
-      padding: 0 8px;
+      width: 240px;
+      padding: 10px;
     }
 
     .metric-card {
