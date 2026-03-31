@@ -11,10 +11,13 @@ import { h } from 'vue'
 
 export class ComponentLoader {
   private modules: Record<string, () => Promise<any>>
+  private moduleIndex: Map<string, () => Promise<any>>
 
   constructor() {
     // 动态导入 views 目录下所有 .vue 组件
     this.modules = import.meta.glob('../../views/**/*.vue')
+    this.moduleIndex = new Map()
+    this.buildModuleIndex()
   }
 
   /**
@@ -43,30 +46,38 @@ export class ComponentLoader {
     return module
   }
 
+  private buildModuleIndex(): void {
+    Object.entries(this.modules).forEach(([rawKey, moduleLoader]) => {
+      const key = rawKey.replace(/\\/g, '/')
+      if (!key.startsWith('../../views/')) {
+        return
+      }
+
+      const rel = key.slice('../../views'.length)
+      if (!rel.endsWith('.vue')) {
+        return
+      }
+
+      const withoutExt = rel.slice(0, -4)
+      this.moduleIndex.set(withoutExt, moduleLoader)
+
+      if (withoutExt.endsWith('/index')) {
+        const dirPath = withoutExt.slice(0, -'/index'.length) || '/'
+        this.moduleIndex.set(dirPath, moduleLoader)
+      }
+    })
+  }
+
   /**
    * 按约定路径解析 glob 中的视图模块；先精确键名，再按 `views/...` 后缀匹配（兼容 Vite 在不同系统下生成的键差异）
    */
   private resolveViewModule(normalized: string): (() => Promise<any>) | undefined {
-    const fullPath = `../../views${normalized}.vue`
-    const fullPathWithIndex = `../../views${normalized}/index.vue`
-    const direct =
-      this.modules[fullPath] ||
-      this.modules[fullPathWithIndex] ||
-      this.modules[fullPath.replace(/\//g, '\\')] ||
-      this.modules[fullPathWithIndex.replace(/\//g, '\\')]
-    if (direct) return direct
-
-    const rel = normalized.replace(/^\//, '')
-    if (!rel) return undefined
-    const indexSuffix = `${rel}/index.vue`
-    const vueSuffix = `${rel}.vue`
-    for (const key of Object.keys(this.modules)) {
-      const k = key.replace(/\\/g, '/')
-      if (k.endsWith(indexSuffix) || k.endsWith(vueSuffix)) {
-        return this.modules[key]
-      }
-    }
-    return undefined
+    const normalizedPath = normalized === '' ? '/' : normalized
+    return (
+      this.moduleIndex.get(normalizedPath) ||
+      this.moduleIndex.get(`${normalizedPath}/index`) ||
+      undefined
+    )
   }
 
   /**

@@ -69,6 +69,56 @@ let routeInitFailed = false
 // 路由初始化进行中标记，防止并发请求
 let routeInitInProgress = false
 
+const isDev = import.meta.env.DEV
+
+interface GuardProfiler {
+  start: (step: string) => void
+  end: (step: string) => void
+  flush: () => void
+}
+
+function createGuardProfiler(scope: string): GuardProfiler {
+  if (!isDev || typeof performance === 'undefined') {
+    return {
+      start: () => {},
+      end: () => {},
+      flush: () => {}
+    }
+  }
+
+  const timeline: Array<{ step: string; durationMs: number }> = []
+  const marks = new Map<string, number>()
+  const totalStart = performance.now()
+  const safeScope = scope.replace(/\s+/g, '-')
+
+  return {
+    start(step: string) {
+      marks.set(step, performance.now())
+      performance.mark(`${safeScope}-${step}-start`)
+    },
+    end(step: string) {
+      const start = marks.get(step)
+      if (start == null) {
+        return
+      }
+      const end = performance.now()
+      const durationMs = Number((end - start).toFixed(2))
+      timeline.push({ step, durationMs })
+      performance.mark(`${safeScope}-${step}-end`)
+      performance.measure(
+        `${safeScope}-${step}`,
+        `${safeScope}-${step}-start`,
+        `${safeScope}-${step}-end`
+      )
+      marks.delete(step)
+    },
+    flush() {
+      const total = Number((performance.now() - totalStart).toFixed(2))
+      console.info(`[RouteGuardProfiler] ${scope} total: ${total}ms`, timeline)
+    }
+  }
+}
+
 /**
  * 获取 pendingLoading 状态
  */
@@ -132,6 +182,17 @@ function closeLoading(): void {
       pendingLoading = false
     })
   }
+}
+
+function scheduleWorktabValidation(router: Router): void {
+  const run = () => {
+    useWorktabStore().validateWorktabs(router)
+  }
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    window.requestIdleCallback(() => run(), { timeout: 300 })
+    return
+  }
+  setTimeout(run, 0)
 }
 
 /**
@@ -263,6 +324,8 @@ async function handleDynamicRoutes(
   next: NavigationGuardNext,
   router: Router
 ): Promise<void> {
+  const profiler = createGuardProfiler(`dynamic-route-init:${to.path}`)
+
   // 标记初始化进行中
   routeInitInProgress = true
 
@@ -272,10 +335,14 @@ async function handleDynamicRoutes(
 
   try {
     // 1. 获取用户信息
+    profiler.start('fetchUserInfo')
     await fetchUserInfo()
+    profiler.end('fetchUserInfo')
 
     // 2. 获取菜单数据
+    profiler.start('getMenuList')
     const menuList = await menuProcessor.getMenuList()
+    profiler.end('getMenuList')
 
     // 3. 验证菜单数据
     if (!menuProcessor.validateMenuList(menuList)) {
@@ -283,7 +350,9 @@ async function handleDynamicRoutes(
     }
 
     // 4. 注册动态路由
+    profiler.start('registerRoutes')
     routeRegistry?.register(menuList)
+    profiler.end('registerRoutes')
 
     // 5. 保存菜单数据到 store
     const menuStore = useMenuStore()
@@ -293,16 +362,20 @@ async function handleDynamicRoutes(
     // 6. 保存 iframe 路由
     IframeRouteManager.getInstance().save()
 
-    // 7. 验证工作标签页
-    useWorktabStore().validateWorktabs(router)
+    // 7. 验证工作标签页（导航后异步执行，避免首跳主线程阻塞）
+    profiler.start('validateWorktabs')
+    scheduleWorktabValidation(router)
+    profiler.end('validateWorktabs')
 
     // 8. 验证目标路径权限
     const { homePath } = useCommon()
+    profiler.start('validatePathPermission')
     const { path: validatedPath, hasPermission } = RoutePermissionValidator.validatePath(
       to.path,
       menuList,
       homePath.value || '/'
     )
+    profiler.end('validatePathPermission')
 
     // 初始化成功，重置进行中标记
     routeInitInProgress = false
@@ -354,6 +427,8 @@ async function handleDynamicRoutes(
 
     // 跳转到 500 页面，使用 replace 避免产生历史记录
     next({ name: 'Exception500', replace: true })
+  } finally {
+    profiler.flush()
   }
 }
 
