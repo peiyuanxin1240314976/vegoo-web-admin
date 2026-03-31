@@ -11,7 +11,7 @@
           :columns="virtualColumns"
           :data="pagedData"
           row-key="id"
-          height-offset="520"
+          :height-offset="520"
           :min-height="480"
           class="ap-account-table"
         >
@@ -144,7 +144,6 @@
   import { useRouter } from 'vue-router'
   import request from '@/utils/http'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
-  // @ts-expect-error Vetur 对 <script setup> 的误报：.vue 无 default export
   import ArtVirtualTable from '@/components/core/art-virtual-table/index.vue'
   import type { ArtVirtualTableColumn } from '@/components/core/art-virtual-table/index.vue'
 

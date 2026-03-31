@@ -115,7 +115,7 @@ export function mockFetchAdPlatformAnalysisCampaignTop10(
 function mapMetricsRow(x: ChannelMetricRow): Api.UserGrowth.AdPlatformMetricsTableRowDto {
   return {
     source: x.channel,
-    sourceKey: x.sourceKey,
+    sourceKey: x.source,
     status: x.status,
     cost: x.cost,
     revenue: x.revenue,

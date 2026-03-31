@@ -975,7 +975,11 @@ function mapTop3AppToRevenue(items: CockpitTop3Response['app']): CockpitTopReven
 /** 将 Top3 接口 badApp 转为 TopBadReviewItem */
 function mapTop3BadAppToBadReview(items: CockpitTop3Response['badApp']): CockpitTopBadReviewItem[] {
   return (items || []).map((row) => {
-    const note = row.note?.trim() || row.last?.note?.trim() || ''
+    const lastNote =
+      row.last && typeof row.last === 'object' && 'note' in row.last
+        ? String((row.last as { note?: unknown }).note ?? '')
+        : ''
+    const note = (row.note?.trim() || lastNote.trim()) ?? ''
     return {
       sAppName: row.sAppName || '—',
       name: row.sAppName || '—',

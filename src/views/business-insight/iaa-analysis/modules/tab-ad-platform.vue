@@ -261,7 +261,7 @@
           data: revenues.map((v, i) => ({
             value: v,
             itemStyle: {
-              color: PLATFORM_COLORS[i % PLATFORM_COLORS.value.length],
+              color: PLATFORM_COLORS.value[i % PLATFORM_COLORS.value.length],
               borderRadius: [3, 3, 0, 0]
             }
           })),
@@ -281,7 +281,7 @@
     const data = donutData.value.map((d, i) => ({
       name: d.name,
       value: d.value,
-      itemStyle: { color: DONUT_COLORS[i] }
+      itemStyle: { color: DONUT_COLORS.value[i % DONUT_COLORS.value.length] }
     }))
     return {
       backgroundColor: 'transparent',

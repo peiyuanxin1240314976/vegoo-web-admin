@@ -312,7 +312,11 @@ export const MOCK_AD_PLATFORM_INFO_CAMPAIGNS: AdPlatformInfoCampaignRow[] = Arra
   const roi = 140 + (idx % 5) * 18 - (idx % 3) * 6
   const revenue = spend * (roi / 100)
   const profit = revenue - spend
+  const clicks = Math.round(22000 + idx * 1800 + (idx % 3) * 650)
+  const conversionRate = Number((1.6 + (idx % 4) * 0.35 + Math.sin(idx / 2) * 0.18).toFixed(2))
   return {
+    clicks,
+    conversionRate,
     id: `cmp_${idx + 1}`,
     campaign: `P${(7262 + idx).toString()}_a_${(3 + (idx % 3)).toString()}_17geo_${(9 + idx)
       .toString()

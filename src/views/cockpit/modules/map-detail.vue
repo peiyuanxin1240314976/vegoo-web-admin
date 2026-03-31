@@ -309,7 +309,7 @@
           arpu: item.arpu ?? 0,
           dAdRevenue: item.dAdRevenue ?? 0,
           dIapRevenue: item.dIapRevenue ?? 0,
-          remainDay1: item.remainDay1 ?? 0
+          remainDay1: item.remainDay7 ?? 0
         }))
       }
     } catch {
