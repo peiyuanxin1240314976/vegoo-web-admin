@@ -1,4 +1,105 @@
-@import '../../../user-growth/ad-performance/styles/ap-card-fx';
+/* IAA 霓虹面板与页面分层：按项目 token + admin-ui-fx 规范实现
+ * - 禁止硬编码色值：一律使用 var(--art-*) / var(--default-*) + color-mix
+ */
+
+@mixin iaa-neon-bg {
+  background-color: color-mix(in srgb, var(--default-box-color) 82%, transparent);
+  background-image:
+    radial-gradient(
+      ellipse 95% 60% at 100% -8%,
+      color-mix(in srgb, var(--art-primary) 38%, transparent) 0%,
+      color-mix(in srgb, var(--art-success) 18%, transparent) 35%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 70% 55% at -5% 108%,
+      color-mix(in srgb, var(--art-success) 32%, transparent) 0%,
+      color-mix(in srgb, var(--art-primary) 14%, transparent) 38%,
+      transparent 55%
+    ),
+    /* 少量紫/洋红氛围：用 primary+dang er 混合，不引入新色 */
+      radial-gradient(
+        ellipse 56% 44% at 86% 108%,
+        color-mix(in srgb, var(--art-danger) 16%, transparent) 0%,
+        color-mix(in srgb, var(--art-primary) 10%, transparent) 38%,
+        transparent 58%
+      ),
+    radial-gradient(
+      ellipse 50% 40% at 80% 102%,
+      color-mix(in srgb, var(--art-warning) 16%, transparent) 0%,
+      transparent 50%
+    ),
+    /* 橙色点缀（更靠上，模仿 ad-performance 的顶部暖光） */
+      radial-gradient(
+        ellipse 42% 34% at 22% -6%,
+        color-mix(in srgb, var(--art-warning) 18%, transparent) 0%,
+        transparent 55%
+      ),
+    linear-gradient(
+      158deg,
+      color-mix(in srgb, var(--default-box-color) 92%, transparent) 0%,
+      color-mix(in srgb, var(--default-bg-color) 86%, transparent) 50%,
+      color-mix(in srgb, var(--default-box-color) 90%, transparent) 100%
+    );
+  border-color: color-mix(in srgb, var(--art-primary) 28%, transparent);
+  box-shadow:
+    0 12px 48px rgb(0 0 0 / 48%),
+    0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent),
+    inset 0 -12px 32px rgb(0 0 0 / 28%);
+}
+
+@mixin iaa-card-mesh {
+  &::after {
+    position: absolute;
+    inset: 1px;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--text-primary) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--text-primary) 6%, transparent) 1px,
+        transparent 1px
+      ),
+      radial-gradient(
+        ellipse 80% 40% at 50% -5%,
+        color-mix(in srgb, var(--text-primary) 6%, transparent) 0%,
+        transparent 55%
+      );
+    background-size:
+      20px 20px,
+      20px 20px,
+      100% 100%;
+    border-radius: inherit;
+    opacity: 0.32;
+    mask-image: linear-gradient(180deg, black 0%, rgb(0 0 0 / 55%) 70%, transparent 100%);
+  }
+}
+
+@mixin iaa-panel-hover {
+  transition:
+    transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-default);
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--art-primary) 55%, transparent);
+    box-shadow:
+      0 24px 72px rgb(0 0 0 / 52%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--text-primary) 10%, transparent),
+      0 0 72px color-mix(in srgb, var(--art-primary) 22%, transparent),
+      0 0 120px color-mix(in srgb, var(--art-success) 12%, transparent);
+    transform: translateY(-6px);
+  }
+
+  &:active {
+    transition-duration: var(--duration-fast);
+    transform: translateY(-2px);
+  }
+}
 
 .iaa-fx-page {
   position: relative;
@@ -15,17 +116,26 @@
     background:
       radial-gradient(
         ellipse 70% 50% at 6% 6%,
-        rgb(16 185 129 / 42%) 0%,
-        rgb(6 182 212 / 20%) 38%,
+        color-mix(in srgb, var(--art-success) 42%, transparent) 0%,
+        color-mix(in srgb, var(--art-primary) 20%, transparent) 38%,
         transparent 58%
       ),
       radial-gradient(
         ellipse 55% 42% at 94% 8%,
-        rgb(59 130 246 / 38%) 0%,
-        rgb(139 92 246 / 18%) 38%,
+        color-mix(in srgb, var(--art-primary) 38%, transparent) 0%,
+        color-mix(in srgb, var(--art-primary) 18%, transparent) 38%,
         transparent 58%
       ),
-      radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 18%) 0%, transparent 55%);
+      radial-gradient(
+        ellipse 40% 35% at 48% 18%,
+        color-mix(in srgb, var(--art-warning) 14%, transparent) 0%,
+        transparent 55%
+      ),
+      radial-gradient(
+        ellipse 44% 38% at 82% 52%,
+        color-mix(in srgb, var(--art-danger) 14%, transparent) 0%,
+        transparent 58%
+      );
     mask-image: linear-gradient(to bottom, black 0%, black 30%, transparent 58%);
     animation:
       iaa-aurora-drift 14s ease-in-out infinite alternate,
@@ -40,8 +150,12 @@
     pointer-events: none;
     content: '';
     background-image:
-      linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px);
+      linear-gradient(color-mix(in srgb, var(--text-primary) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--text-primary) 6%, transparent) 1px,
+        transparent 1px
+      );
     background-size:
       40px 40px,
       40px 40px;
@@ -62,12 +176,13 @@
   background: conic-gradient(
     from 0deg at 50% 50%,
     transparent 0deg,
-    rgb(59 130 246 / 12%) 65deg,
-    rgb(6 182 212 / 10%) 88deg,
+    color-mix(in srgb, var(--art-primary) 12%, transparent) 65deg,
+    color-mix(in srgb, var(--art-primary) 10%, transparent) 88deg,
     transparent 140deg,
-    rgb(16 185 129 / 11%) 205deg,
+    color-mix(in srgb, var(--art-success) 11%, transparent) 205deg,
     transparent 280deg,
-    rgb(168 85 247 / 8%) 330deg,
+    color-mix(in srgb, var(--art-warning) 8%, transparent) 330deg,
+    color-mix(in srgb, var(--art-danger) 7%, transparent) 350deg,
     transparent 360deg
   );
   opacity: 0.6;
@@ -136,9 +251,11 @@
   overflow: hidden;
   border-radius: 14px;
 
-  @include ap-neon-bg;
-  @include ap-card-mesh;
-  @include ap-panel-hover;
+  --el-card-bg-color: transparent;
+
+  @include iaa-neon-bg;
+  @include iaa-card-mesh;
+  @include iaa-panel-hover;
 
   > * {
     position: relative;
@@ -153,10 +270,90 @@
   }
 }
 
+/* ── Skeleton utilities（各 Tab 复用） ─────────────────────────── */
+.iaa-kpi--sk {
+  background: color-mix(in srgb, var(--default-box-color) 75%, transparent);
+  border-color: color-mix(in srgb, var(--default-border) 70%, transparent);
+}
+
+.iaa-kpi-sk {
+  display: grid;
+  gap: 10px;
+  padding: 2px 0;
+}
+
+.iaa-kpi-sk__t {
+  width: 45%;
+  height: 14px;
+}
+
+.iaa-kpi-sk__v {
+  width: 70%;
+  height: 28px;
+}
+
+.iaa-kpi-sk__s {
+  width: 60%;
+  height: 14px;
+}
+
+.iaa-chart-sk {
+  height: 240px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--default-box-color) 70%, transparent),
+    color-mix(in srgb, var(--art-primary) 12%, transparent),
+    color-mix(in srgb, var(--default-box-color) 70%, transparent)
+  );
+  background-size: 220% 100%;
+  border: 1px solid color-mix(in srgb, var(--art-primary) 18%, transparent);
+  border-radius: 12px;
+  animation: iaa-skeleton-shimmer 1.2s var(--ease-out) infinite;
+}
+
+.iaa-chart-sk--radar {
+  height: 260px;
+}
+
+.iaa-chart-sk--line {
+  height: 260px;
+}
+
+.iaa-list-sk {
+  display: grid;
+  gap: 10px;
+}
+
+.iaa-list-sk__row {
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--default-box-color) 76%, transparent);
+  border: 1px solid color-mix(in srgb, var(--default-border) 65%, transparent);
+  border-radius: 12px;
+}
+
+.iaa-list-sk__t {
+  width: 100%;
+  height: 14px;
+}
+
+@keyframes iaa-skeleton-shimmer {
+  0% {
+    background-position: 0% 0%;
+  }
+
+  100% {
+    background-position: 100% 0%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .iaa-fx-page::before,
   .iaa-fx-page::after,
   .iaa-page-fx {
+    animation: none;
+  }
+
+  .iaa-chart-sk {
     animation: none;
   }
 

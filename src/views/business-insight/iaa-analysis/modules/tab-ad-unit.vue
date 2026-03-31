@@ -3,7 +3,21 @@
     <section class="iaa-main-grid">
       <div class="iaa-main-left">
         <!-- KPI 卡片行：属于左栏 -->
-        <div class="iaa-kpi-grid">
+        <div v-if="loading" class="iaa-kpi-grid">
+          <article v-for="i in 4" :key="i" class="iaa-kpi iaa-kpi--sk">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <div class="iaa-kpi-sk">
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__t" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__v" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__s" />
+                </div>
+              </template>
+            </ElSkeleton>
+          </article>
+        </div>
+
+        <div v-else class="iaa-kpi-grid">
           <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
             <div class="iaa-kpi__title">{{ k.title }}</div>
             <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
@@ -76,7 +90,9 @@
               </ElInput>
             </div>
           </template>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
           <ArtTable
+            v-else
             :data="tableData"
             :columns="tableColumns"
             row-key="s_ad_unit_id"
@@ -104,7 +120,8 @@
           <template #header>
             <span>广告单元充填率分布</span>
           </template>
-          <div ref="fillRateChartRef" class="iaa-chart iaa-chart--bar"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--bar"></div>
+          <div v-else ref="fillRateChartRef" class="iaa-chart iaa-chart--bar"></div>
           <div v-if="fillRateInsight" class="iaa-insight-banner">
             <ElIcon><WarningFilled /></ElIcon>
             {{ fillRateInsight }}
@@ -114,13 +131,15 @@
           <template #header>
             <span>广告单元ECPM vs 充填率关联分析</span>
           </template>
-          <div ref="scatterChartRef" class="iaa-chart iaa-chart--scatter"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
+          <div v-else ref="scatterChartRef" class="iaa-chart iaa-chart--scatter"></div>
         </ElCard>
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>广告单元收入趋势(近7天)</span>
           </template>
-          <div ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
+          <div v-else ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
         </ElCard>
       </div>
     </section>
@@ -139,6 +158,8 @@
   defineOptions({ name: 'IaaTabAdUnit' })
 
   const props = defineProps<{ filter: IaaFilterState }>()
+
+  const loading = ref(false)
 
   const localFilter = reactive({ source: 'all', placement: 'all', adType: 'all', keyword: '' })
 
@@ -388,9 +409,19 @@
   }
 
   async function loadTabData() {
-    tabData.value = await fetchIaaAdUnitTabData(props.filter)
-    pagination.total = tabData.value?.tableRows.length ?? 0
-    pagination.current = 1
+    if (!props.filter?.s_app_id) {
+      loading.value = false
+      tabData.value = null
+      return
+    }
+    loading.value = true
+    try {
+      tabData.value = await fetchIaaAdUnitTabData(props.filter)
+      pagination.total = tabData.value?.tableRows.length ?? 0
+      pagination.current = 1
+    } finally {
+      loading.value = false
+    }
     await nextTick()
     refreshCharts()
   }

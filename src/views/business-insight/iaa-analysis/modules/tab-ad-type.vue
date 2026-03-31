@@ -1,7 +1,21 @@
 <template>
   <div class="iaa-tab-content iaa-tab-ad-type">
     <!-- KPI 卡片行（通栏） -->
-    <section v-if="kpi" class="iaa-kpi-grid">
+    <section v-if="loading" class="iaa-kpi-grid">
+      <article v-for="i in 4" :key="i" class="iaa-kpi iaa-kpi--sk">
+        <ElSkeleton animated :throttle="0">
+          <template #template>
+            <div class="iaa-kpi-sk">
+              <ElSkeletonItem variant="text" class="iaa-kpi-sk__t" />
+              <ElSkeletonItem variant="text" class="iaa-kpi-sk__v" />
+              <ElSkeletonItem variant="text" class="iaa-kpi-sk__s" />
+            </div>
+          </template>
+        </ElSkeleton>
+      </article>
+    </section>
+
+    <section v-else-if="kpi" class="iaa-kpi-grid">
       <article class="iaa-kpi" data-accent="teal">
         <div class="iaa-kpi__title">广告总收入</div>
         <div class="iaa-kpi__value">{{ formatUsd(kpi.revenueTotal) }}</div>
@@ -61,7 +75,8 @@
               </div>
             </div>
           </template>
-          <div ref="radarChartRef" class="iaa-chart iaa-chart--radar"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--radar"></div>
+          <div v-else ref="radarChartRef" class="iaa-chart iaa-chart--radar"></div>
           <table class="ad-type-table">
             <thead>
               <tr>
@@ -91,7 +106,8 @@
       <div class="iaa-col iaa-col--mid">
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>广告平台效果排行</span></template>
-          <div ref="platformBarRef" class="iaa-chart iaa-chart--bar"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--bar"></div>
+          <div v-else ref="platformBarRef" class="iaa-chart iaa-chart--bar"></div>
           <div v-if="platformInsight" class="iaa-insight-banner">
             <el-icon><Sunny /></el-icon>
             {{ platformInsight }}
@@ -103,7 +119,16 @@
       <div class="iaa-col iaa-col--right">
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>广告位 Top10收入</span></template>
-          <div class="iaa-top10-list">
+          <div v-if="loading" class="iaa-list-sk">
+            <div v-for="i in 6" :key="i" class="iaa-list-sk__row">
+              <ElSkeleton animated :throttle="0">
+                <template #template>
+                  <ElSkeletonItem variant="text" class="iaa-list-sk__t" />
+                </template>
+              </ElSkeleton>
+            </div>
+          </div>
+          <div v-else class="iaa-top10-list">
             <div
               v-for="(item, i) in placementTop10View"
               :key="item.placementName"
@@ -140,7 +165,8 @@
             </div>
           </div>
         </template>
-        <div ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
+        <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
+        <div v-else ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
       </ElCard>
 
       <!-- 用户拆分分析 -->
@@ -156,7 +182,8 @@
             </div>
           </div>
         </template>
-        <div ref="userBreakdownRef" class="iaa-chart iaa-chart--bar"></div>
+        <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--bar"></div>
+        <div v-else ref="userBreakdownRef" class="iaa-chart iaa-chart--bar"></div>
         <div v-if="userBreakdownInsight" class="iaa-insight-banner">
           <el-icon><Sunny /></el-icon>
           {{ userBreakdownInsight }}
@@ -179,6 +206,7 @@
   const props = defineProps<{ filter: IaaFilterState }>()
 
   const tabData = ref<IaaAdTypeTabData | null>(null)
+  const loading = ref(false)
 
   const kpi = computed(() => tabData.value?.kpi ?? null)
   const platformInsight = computed(() => tabData.value?.platformInsight ?? '')
@@ -510,6 +538,12 @@
   }
 
   async function loadTabData() {
+    if (!props.filter?.s_app_id) {
+      loading.value = false
+      tabData.value = null
+      return
+    }
+    loading.value = true
     try {
       const data = await fetchIaaAdTypeTabData(props.filter)
       tabData.value = data ?? null
@@ -517,7 +551,7 @@
       // 用户拆分分析改走新接口（其余模块仍沿用原整页接口）
       const userBreakdown = await fetchIaaOverviewUserBreakdown({
         platform: emptyIfAll(props.filter.platform),
-        s_app_id: emptyIfAll(props.filter.s_app_id),
+        s_app_id: props.filter.s_app_id,
         s_app_version: '',
         s_country_code: emptyIfAll(props.filter.s_country_code),
         t_date: props.filter.t_date ?? ''
@@ -530,6 +564,8 @@
       }
     } catch {
       tabData.value = null
+    } finally {
+      loading.value = false
     }
     await nextTick()
     refreshCharts()
@@ -604,15 +640,15 @@
       color: var(--art-gray-600);
 
       &.warn {
-        color: #f59e0b;
+        color: var(--art-warning);
       }
 
       &.up {
-        color: #10b981;
+        color: var(--art-success);
       }
 
       &.down {
-        color: #ef4444;
+        color: var(--art-danger);
       }
     }
   }
@@ -629,7 +665,7 @@
   .ecpm-est {
     font-size: 26px;
     font-weight: 700;
-    color: #f59e0b;
+    color: var(--art-warning);
   }
 
   .ecpm-real {

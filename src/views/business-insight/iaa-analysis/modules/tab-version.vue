@@ -2,7 +2,21 @@
   <div class="iaa-tab-content iaa-tab-version">
     <section class="iaa-main-grid">
       <div class="iaa-main-left">
-        <div class="iaa-kpi-grid">
+        <div v-if="loading" class="iaa-kpi-grid">
+          <article v-for="i in 4" :key="i" class="iaa-kpi iaa-kpi--sk">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <div class="iaa-kpi-sk">
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__t" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__v" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__s" />
+                </div>
+              </template>
+            </ElSkeleton>
+          </article>
+        </div>
+
+        <div v-else class="iaa-kpi-grid">
           <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
             <div class="iaa-kpi__title">{{ k.title }}</div>
             <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
@@ -13,7 +27,8 @@
           <template #header>
             <span>版本收入对比</span>
           </template>
-          <div ref="revenueChartRef" class="iaa-chart iaa-chart--hbar"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--bar"></div>
+          <div v-else ref="revenueChartRef" class="iaa-chart iaa-chart--hbar"></div>
           <div v-if="versionInsight" class="iaa-insight-banner">
             {{ versionInsight }}
           </div>
@@ -22,7 +37,9 @@
           <template #header>
             <span>版本详细数据表</span>
           </template>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
           <ArtTable
+            v-else
             :data="tableData"
             :columns="tableColumns"
             row-key="app_version"
@@ -40,9 +57,6 @@
                 row.app_version
               }}</span>
             </template>
-            <template #rating="{ row }">
-              <span class="iaa-rating">{{ row.versionRating.toFixed(1) }}★</span>
-            </template>
           </ArtTable>
         </ElCard>
       </div>
@@ -51,19 +65,22 @@
           <template #header>
             <span>版本 ECPM 趋势对比</span>
           </template>
-          <div ref="ecpmTrendRef" class="iaa-chart iaa-chart--line"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
+          <div v-else ref="ecpmTrendRef" class="iaa-chart iaa-chart--line"></div>
         </ElCard>
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>版本升级进度</span>
           </template>
-          <div ref="upgradeChartRef" class="iaa-chart iaa-chart--stack"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--bar"></div>
+          <div v-else ref="upgradeChartRef" class="iaa-chart iaa-chart--stack"></div>
         </ElCard>
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>版本广告渗透率 vs 崩溃率</span>
           </template>
-          <div ref="penetrationCrashRef" class="iaa-chart iaa-chart--dual"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
+          <div v-else ref="penetrationCrashRef" class="iaa-chart iaa-chart--dual"></div>
         </ElCard>
         <div class="iaa-ai-card">
           <div class="iaa-ai-card__header">
@@ -103,6 +120,7 @@
   const props = defineProps<{ filter: IaaFilterState }>()
 
   const tabData = ref<IaaVersionTabData | null>(null)
+  const loading = ref(false)
 
   const kpis = computed(() => tabData.value?.kpis ?? [])
   const allRows = computed(() => tabData.value?.tableRows ?? [])
@@ -167,14 +185,7 @@
       label: '渗透率',
       minWidth: 64,
       formatter: (r: IaaVersionTableRow) => `${r.adPenetration}%`
-    },
-    {
-      prop: 'crashRate',
-      label: '崩溃率',
-      minWidth: 60,
-      formatter: (r: IaaVersionTableRow) => `${r.crashRate}%`
-    },
-    { prop: 'versionRating', label: '评分', minWidth: 60, useSlot: true, slotName: 'rating' }
+    }
   ])
 
   const useRevenueChart = useChart()
@@ -391,9 +402,19 @@
   }
 
   async function loadTabData() {
-    tabData.value = await fetchIaaVersionTabData(props.filter)
-    pagination.total = tabData.value?.tableRows.length ?? 0
-    pagination.current = 1
+    if (!props.filter?.s_app_id) {
+      loading.value = false
+      tabData.value = null
+      return
+    }
+    loading.value = true
+    try {
+      tabData.value = await fetchIaaVersionTabData(props.filter)
+      pagination.total = tabData.value?.tableRows.length ?? 0
+      pagination.current = 1
+    } finally {
+      loading.value = false
+    }
     await nextTick()
     refreshCharts()
   }

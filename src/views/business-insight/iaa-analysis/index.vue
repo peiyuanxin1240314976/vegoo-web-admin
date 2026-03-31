@@ -3,11 +3,6 @@
     <div class="iaa-page-fx" aria-hidden="true"></div>
     <!-- 顶栏：面包屑 + 全局筛选 -->
     <header class="iaa-header iaa-entry-1">
-      <div class="iaa-header__left">
-        <span class="iaa-breadcrumb">
-          {{ $t('menus.businessInsight.title') }} &gt; {{ $t('menus.businessInsight.iaaAnalysis') }}
-        </span>
-      </div>
       <div class="iaa-header__filters">
         <div class="iaa-pill">
           <span class="iaa-pill__k">App:</span>
@@ -89,13 +84,14 @@
 
     <!-- 主内容区：按 Tab 渲染对应模块 -->
     <main class="iaa-main">
-      <component :is="currentTabComponent" :filter="filters" />
+      <component :is="currentTabComponent" :filter="effectiveFilter" />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref, computed, reactive, watch } from 'vue'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import type { IaaTabKey, IaaFilterState } from './types'
   import { useIaaFilters } from './composables/useIaaFilters'
   import TabAdType from './modules/tab-ad-type.vue'
@@ -122,7 +118,7 @@
     s_app_id: '',
     platform: 'all',
     s_country_code: 'all',
-    t_date: '2026-03-05'
+    t_date: getAppTodayYYYYMMDD()
   })
 
   const { appOptions, platformOptions, countryOptions } = useIaaFilters()
@@ -150,6 +146,20 @@
     version: TabVersion
   }
 
+  // 与 AdPerformance 类似：筛选变化统一汇总后再下发（轻量 debounce，避免下拉快速切换时每次都全量请求）
+  const effectiveFilter = ref<IaaFilterState>({ ...filters })
+  let filterTimer: number | null = null
+  watch(
+    filters,
+    (val) => {
+      if (filterTimer) window.clearTimeout(filterTimer)
+      filterTimer = window.setTimeout(() => {
+        effectiveFilter.value = { ...val }
+      }, 180)
+    },
+    { deep: true, immediate: true }
+  )
+
   const currentTabComponent = computed(() => tabComponents[activeTab.value])
 </script>
 
@@ -169,14 +179,20 @@
   .iaa-header {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 14px 16px;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
+    min-width: 0;
+    padding: 16px 18px;
     margin-bottom: 16px;
-    background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
-    border-radius: 14px;
+    background: color-mix(in srgb, var(--default-bg-color) 82%, transparent);
+    backdrop-filter: blur(12px);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent);
+    border-radius: 16px;
+    box-shadow:
+      0 8px 32px rgb(0 0 0 / 40%),
+      inset 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent),
+      0 0 40px color-mix(in srgb, var(--art-primary) 10%, transparent);
   }
 
   .iaa-header__left {
@@ -191,28 +207,35 @@
   .iaa-header__filters {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px 12px;
     align-items: center;
+    min-width: 0;
   }
 
   .iaa-pill {
+    --iaa-filter-accent: var(--art-success);
+
     display: inline-flex;
     gap: 6px;
     align-items: center;
-    padding: 4px 10px;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
+    min-height: 40px;
+    padding: 0 14px;
+    background: color-mix(in srgb, var(--iaa-filter-accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--iaa-filter-accent) 26%, transparent);
     border-radius: 9999px;
+    box-shadow: 0 0 16px color-mix(in srgb, var(--iaa-filter-accent) 14%, transparent);
 
     .iaa-pill__k {
       font-size: 12px;
-      color: var(--art-gray-600);
+      color: var(--text-secondary);
       white-space: nowrap;
     }
   }
 
   .iaa-select {
-    width: 100px;
+    width: 132px;
+    min-width: 110px;
+    max-width: 100%;
 
     :deep(.el-input__wrapper) {
       background: transparent;
@@ -229,36 +252,100 @@
     }
   }
 
+  /* Select / Date 统一成 ad-performance 的圆角透底风格 */
+  :deep(.iaa-select .el-input__wrapper),
+  :deep(.iaa-date .el-input__wrapper) {
+    padding: 0 12px;
+    background: color-mix(in srgb, var(--iaa-filter-accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--iaa-filter-accent) 28%, transparent);
+    border-radius: 9999px;
+    transition:
+      border-color var(--duration-fast) var(--ease-default),
+      box-shadow var(--duration-fast) var(--ease-default),
+      background var(--duration-fast) var(--ease-default);
+  }
+
+  :deep(.iaa-select .el-input__inner),
+  :deep(.iaa-date .el-input__inner) {
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+
+  :deep(.iaa-select .el-select__caret) {
+    color: var(--iaa-filter-accent);
+  }
+
+  :deep(.iaa-select .el-input__prefix-inner svg) {
+    color: var(--iaa-filter-accent);
+  }
+
+  :deep(.iaa-select .el-input__wrapper:hover),
+  :deep(.iaa-date .el-input__wrapper:hover) {
+    border-color: color-mix(in srgb, var(--iaa-filter-accent) 55%, transparent);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--iaa-filter-accent) 18%, transparent);
+  }
+
+  :deep(.iaa-select .el-input__wrapper.is-focus),
+  :deep(.iaa-date .el-input__wrapper.is-focus) {
+    background: color-mix(in srgb, var(--iaa-filter-accent) 12%, transparent) !important;
+    border-color: var(--iaa-filter-accent) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--iaa-filter-accent) 22%, transparent) !important;
+  }
+
+  /* 小屏：筛选条改为纵向堆叠 */
+  @media (width <= 768px) {
+    .iaa-header {
+      align-items: stretch;
+      padding: 14px 16px;
+    }
+
+    .iaa-header__filters {
+      justify-content: flex-start;
+    }
+  }
+
   .iaa-tabs {
+    position: relative;
     display: flex;
-    gap: 4px;
+    gap: 6px;
     padding: 4px;
     margin-bottom: 16px;
-    background: color-mix(in srgb, var(--default-box-color) 74%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 20%, transparent);
-    border-radius: 10px;
+    background: color-mix(in srgb, var(--default-bg-color) 86%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent);
+    border-radius: 9999px;
+    box-shadow:
+      0 10px 30px rgb(0 0 0 / 45%),
+      inset 0 1px 0 color-mix(in srgb, var(--text-primary) 10%, transparent);
   }
 
   .iaa-tab {
-    padding: 10px 16px;
+    position: relative;
+    padding: 8px 18px;
     font-size: 14px;
-    color: var(--art-gray-600);
+    font-weight: 500;
+    color: var(--text-secondary);
     cursor: pointer;
     background: transparent;
     border: none;
-    border-bottom: 2px solid transparent;
+    border-radius: 9999px;
     transition:
-      color 0.2s,
-      border-color 0.2s;
+      color var(--duration-fast) var(--ease-default),
+      background-color var(--duration-fast) var(--ease-default),
+      transform var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
 
     &:hover {
-      color: var(--art-gray-900);
+      color: var(--text-primary);
+      box-shadow: 0 6px 14px color-mix(in srgb, var(--art-primary) 18%, transparent);
+      transform: translateY(-1px);
     }
 
     &.is-active {
       color: var(--art-primary);
-      background: color-mix(in srgb, var(--art-primary) 12%, transparent);
-      border-bottom-color: var(--art-primary);
+      background: color-mix(in srgb, var(--art-primary) 16%, transparent);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--art-primary) 32%, transparent),
+        0 0 20px color-mix(in srgb, var(--art-primary) 24%, transparent);
     }
   }
 
@@ -273,6 +360,8 @@
   .iaa-select__popper,
   .iaa-date-popper {
     z-index: 3200 !important;
+    background: color-mix(in srgb, var(--default-bg-color) 92%, transparent);
+    backdrop-filter: blur(12px);
     border: 1px solid color-mix(in srgb, var(--art-primary) 28%, transparent);
     box-shadow:
       0 12px 36px rgb(0 0 0 / 48%),
@@ -282,5 +371,9 @@
   .iaa-select__popper .el-select-dropdown__item.is-selected {
     color: var(--art-primary);
     background: color-mix(in srgb, var(--art-primary) 12%, var(--default-box-color));
+  }
+
+  .iaa-select__popper .el-select-dropdown__item:hover {
+    background: color-mix(in srgb, var(--art-primary) 10%, var(--default-box-color));
   }
 </style>

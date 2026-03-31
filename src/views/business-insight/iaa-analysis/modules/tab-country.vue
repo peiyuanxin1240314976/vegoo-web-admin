@@ -2,7 +2,21 @@
   <div class="iaa-tab-content iaa-tab-country">
     <section class="iaa-main-grid">
       <div class="iaa-main-left">
-        <div class="iaa-kpi-grid">
+        <div v-if="loading" class="iaa-kpi-grid">
+          <article v-for="i in 4" :key="i" class="iaa-kpi iaa-kpi--sk">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <div class="iaa-kpi-sk">
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__t" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__v" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__s" />
+                </div>
+              </template>
+            </ElSkeleton>
+          </article>
+        </div>
+
+        <div v-else class="iaa-kpi-grid">
           <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
             <div class="iaa-kpi__title">{{ k.title }}</div>
             <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
@@ -14,14 +28,17 @@
           <template #header>
             <span>国家收入地图</span>
           </template>
-          <div ref="mapChartRef" class="iaa-chart iaa-chart--map"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--radar"></div>
+          <div v-else ref="mapChartRef" class="iaa-chart iaa-chart--map"></div>
         </ElCard>
 
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>国家收入 Top10 表格</span>
           </template>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
           <ArtTable
+            v-else
             :data="tableData"
             :columns="tableColumns"
             row-key="s_country_code"
@@ -59,19 +76,22 @@
           <template #header>
             <span>国家ECPM对比</span>
           </template>
-          <div ref="ecpmChartRef" class="iaa-chart iaa-chart--hbar"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--bar"></div>
+          <div v-else ref="ecpmChartRef" class="iaa-chart iaa-chart--hbar"></div>
         </ElCard>
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>国家收入趋势(近7天)</span>
           </template>
-          <div ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
+          <div v-else ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
         </ElCard>
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>国家广告用户渗透率</span>
           </template>
-          <div ref="penetrationChartRef" class="iaa-chart iaa-chart--hbar"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--bar"></div>
+          <div v-else ref="penetrationChartRef" class="iaa-chart iaa-chart--hbar"></div>
         </ElCard>
       </div>
     </section>
@@ -102,6 +122,7 @@
   const props = defineProps<{ filter: IaaFilterState }>()
 
   const tabData = ref<IaaCountryTabData | null>(null)
+  const loading = ref(false)
 
   const kpis = computed(() => tabData.value?.kpis ?? [])
   const allRows = computed(() => tabData.value?.tableRows ?? [])
@@ -383,10 +404,20 @@
   }
 
   async function loadTabData() {
-    await ensureMapRegistered()
-    tabData.value = await fetchIaaCountryTabData(props.filter)
-    pagination.total = tabData.value?.tableRows.length ?? 0
-    pagination.current = 1
+    if (!props.filter?.s_app_id) {
+      loading.value = false
+      tabData.value = null
+      return
+    }
+    loading.value = true
+    try {
+      await ensureMapRegistered()
+      tabData.value = await fetchIaaCountryTabData(props.filter)
+      pagination.total = tabData.value?.tableRows.length ?? 0
+      pagination.current = 1
+    } finally {
+      loading.value = false
+    }
     await nextTick()
     refreshCharts()
   }

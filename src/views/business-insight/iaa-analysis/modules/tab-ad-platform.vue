@@ -4,7 +4,21 @@
       <!-- ——— 左列 ——— -->
       <div class="iaa-main-left">
         <!-- KPI 4列横排 -->
-        <section class="iaa-kpi-grid">
+        <section v-if="loading" class="iaa-kpi-grid">
+          <article v-for="i in 4" :key="i" class="iaa-kpi iaa-kpi--sk">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <div class="iaa-kpi-sk">
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__t" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__v" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__s" />
+                </div>
+              </template>
+            </ElSkeleton>
+          </article>
+        </section>
+
+        <section v-else class="iaa-kpi-grid">
           <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
             <div class="iaa-kpi__title">{{ k.title }}</div>
             <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
@@ -20,7 +34,8 @@
         <!-- 广告平台效果排行 -->
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>广告平台效果排行</span></template>
-          <div ref="rankingChartRef" class="iaa-chart iaa-chart--bar"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--bar"></div>
+          <div v-else ref="rankingChartRef" class="iaa-chart iaa-chart--bar"></div>
           <div v-if="platformInsight" class="iaa-insight-banner">
             <el-icon><SuccessFilled /></el-icon>
             <span v-html="platformInsight"></span>
@@ -30,7 +45,9 @@
         <!-- 平台详细对比表 -->
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>平台详细对比表</span></template>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
           <ArtTable
+            v-else
             :data="tableData"
             :columns="tableColumns"
             row-key="sourceName"
@@ -62,7 +79,8 @@
           <template #header><span>广告平台收入占比</span></template>
           <div class="iaa-donut-body">
             <div class="iaa-donut-wrap">
-              <div ref="donutChartRef" class="iaa-chart iaa-chart--donut"></div>
+              <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--radar"></div>
+              <div v-else ref="donutChartRef" class="iaa-chart iaa-chart--donut"></div>
               <div class="iaa-donut-center">{{ donutTotal }}</div>
             </div>
             <div class="iaa-donut-legend">
@@ -78,13 +96,15 @@
         <!-- 平台ECPM对比 -->
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>平台ECPM对比</span></template>
-          <div ref="ecpmChartRef" class="iaa-chart iaa-chart--hbar"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--bar"></div>
+          <div v-else ref="ecpmChartRef" class="iaa-chart iaa-chart--hbar"></div>
         </ElCard>
 
         <!-- 平台收入趋势 -->
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>平台收入趋势(近7天)</span></template>
-          <div ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
+          <div v-else ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
         </ElCard>
       </div>
     </section>
@@ -99,19 +119,29 @@
   import type { ColumnOption } from '@/types'
   import type { IaaFilterState, IaaPlatformTabData, IaaPlatformTableRow } from '../types'
   import { fetchIaaPlatformTabData } from '@/api/business-insight'
+  import { useIaaTheme } from '../composables/useIaaTheme'
 
   defineOptions({ name: 'IaaTabAdPlatform' })
 
   const props = defineProps<{ filter: IaaFilterState }>()
 
   const tabData = ref<IaaPlatformTabData | null>(null)
+  const loading = ref(false)
+  const { colors } = useIaaTheme()
 
   const kpis = computed(() => tabData.value?.kpis ?? [])
   const tableData = computed(() => tabData.value?.tableRows ?? [])
   const platformInsight = computed(() => tabData.value?.platformInsight ?? '')
   const donutData = computed(() => tabData.value?.donut ?? [])
 
-  const PLATFORM_COLORS = ['#26C2AD', '#3B82F6', '#8B5CF6', '#F59E0B', '#10B981', '#64748B']
+  // 加一点紫/橙氛围：warning + danger 参与配色（仍来自 token）
+  const PLATFORM_COLORS = computed(() => [
+    colors.value.success,
+    colors.value.primary,
+    colors.value.danger,
+    colors.value.warning,
+    colors.value.textSecondary
+  ])
   const DONUT_COLORS = PLATFORM_COLORS
 
   const donutTotal = computed(() => {
@@ -231,7 +261,7 @@
           data: revenues.map((v, i) => ({
             value: v,
             itemStyle: {
-              color: PLATFORM_COLORS[i % PLATFORM_COLORS.length],
+              color: PLATFORM_COLORS[i % PLATFORM_COLORS.value.length],
               borderRadius: [3, 3, 0, 0]
             }
           })),
@@ -410,7 +440,17 @@
   }
 
   async function loadTabData() {
-    tabData.value = await fetchIaaPlatformTabData(props.filter)
+    if (!props.filter?.s_app_id) {
+      loading.value = false
+      tabData.value = null
+      return
+    }
+    loading.value = true
+    try {
+      tabData.value = await fetchIaaPlatformTabData(props.filter)
+    } finally {
+      loading.value = false
+    }
     await nextTick()
     refreshCharts()
   }

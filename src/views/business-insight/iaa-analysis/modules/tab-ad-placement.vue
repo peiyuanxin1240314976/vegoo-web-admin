@@ -4,7 +4,21 @@
       <!-- ——— 左列 ——— -->
       <div class="iaa-main-left">
         <!-- KPI 4列横排（在左列内） -->
-        <section class="iaa-kpi-grid">
+        <section v-if="loading" class="iaa-kpi-grid">
+          <article v-for="i in 4" :key="i" class="iaa-kpi iaa-kpi--sk">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <div class="iaa-kpi-sk">
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__t" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__v" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__s" />
+                </div>
+              </template>
+            </ElSkeleton>
+          </article>
+        </section>
+
+        <section v-else class="iaa-kpi-grid">
           <article v-for="k in kpis" :key="k.id" class="iaa-kpi" :data-accent="k.accent">
             <div class="iaa-kpi__title">{{ k.title }}</div>
             <div class="iaa-kpi__value">{{ k.primaryValue }}</div>
@@ -34,7 +48,8 @@
               </button>
             </div>
           </template>
-          <div ref="top10ChartRef" class="iaa-chart iaa-chart--top10"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--bar"></div>
+          <div v-else ref="top10ChartRef" class="iaa-chart iaa-chart--top10"></div>
         </ElCard>
 
         <!-- 详细数据表 -->
@@ -42,7 +57,9 @@
           <template #header>
             <span>广告位详细数据表</span>
           </template>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
           <ArtTable
+            v-else
             :data="tableData"
             :columns="tableColumns"
             row-key="placementName"
@@ -69,7 +86,8 @@
           <template #header><span>广告位收入分布</span></template>
           <div class="iaa-donut-body">
             <div class="iaa-donut-wrap">
-              <div ref="donutChartRef" class="iaa-chart iaa-chart--donut"></div>
+              <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--radar"></div>
+              <div v-else ref="donutChartRef" class="iaa-chart iaa-chart--donut"></div>
               <div class="iaa-donut-center">{{ donutTotal }}</div>
             </div>
             <div class="iaa-donut-legend">
@@ -85,7 +103,8 @@
         <!-- ECPM 排行 -->
         <ElCard class="iaa-panel iaa-neon-panel iaa-panel--with-footer" shadow="never">
           <template #header><span>广告位 ECPM 排行</span></template>
-          <div ref="ecpmChartRef" class="iaa-chart iaa-chart--hbar"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--bar"></div>
+          <div v-else ref="ecpmChartRef" class="iaa-chart iaa-chart--hbar"></div>
           <div v-if="placementInsight" class="iaa-insight-banner">
             <span>💡</span>
             <span>{{ placementInsight }}</span>
@@ -95,7 +114,8 @@
         <!-- 展示次数 vs 收入散点图 -->
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header><span>广告位展示次数 vs 收入散点图</span></template>
-          <div ref="scatterChartRef" class="iaa-chart iaa-chart--scatter"></div>
+          <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
+          <div v-else ref="scatterChartRef" class="iaa-chart iaa-chart--scatter"></div>
         </ElCard>
       </div>
     </section>
@@ -113,6 +133,8 @@
   defineOptions({ name: 'IaaTabAdPlacement' })
 
   const props = defineProps<{ filter: IaaFilterState }>()
+
+  const loading = ref(false)
 
   const metricTabs = [
     { key: 'revenue', label: '收入' },
@@ -392,7 +414,17 @@
   }
 
   async function loadTabData() {
-    tabData.value = await fetchIaaPlacementTabData(props.filter)
+    if (!props.filter?.s_app_id) {
+      loading.value = false
+      tabData.value = null
+      return
+    }
+    loading.value = true
+    try {
+      tabData.value = await fetchIaaPlacementTabData(props.filter)
+    } finally {
+      loading.value = false
+    }
     await nextTick()
     refreshCharts()
   }
