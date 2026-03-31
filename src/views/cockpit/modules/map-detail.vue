@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="map-detail-page flex flex-col">
     <div class="map-detail-page-fx" aria-hidden="true"></div>
     <div class="map-detail-page__section map-detail-entry-1">
@@ -63,13 +63,11 @@
             />
           </div>
 
-          <div v-if="showThirdRow" class="section-row">
+          <div v-if="showThirdRow" class="section-row third-row--single">
             <MapDetailRetentionChart
               :local-data="retentionLocalData"
               :global-data="retentionGlobalData"
             />
-            <MapDetailLtvChart :data="ltvData" :note="ltvNote" />
-            <MapDetailSegmentChart :data="segmentData" :note="segmentNote" />
           </div>
         </div>
       </div>
@@ -86,27 +84,20 @@
     MapDetailStatsCards,
     MapDetailSpendPanel,
     MapDetailRevenuePanel,
-    MapDetailRetentionChart,
-    MapDetailLtvChart,
-    MapDetailSegmentChart
+    MapDetailRetentionChart
   } from './map-detail-component'
   import type { StatCardItem } from './map-detail-component'
   import type { ChannelRow, CampaignRow } from './map-detail-component'
   import type { RevenueCompositionItem, AppPerformanceRow } from './map-detail-component'
-  import type { SegmentItem } from './map-detail-component'
   import {
     fetchCountryInfoOverall,
     fetchCountryInfoTop5Campaign,
     fetchCountryInfoAppLaunch,
     fetchCountryInfoChannelLaunch,
-    fetchCountryInfoLtv,
     fetchCountryInfoRemain,
-    fetchCountryInfoUserPayLaunch,
     mapCountryInfoOverallToStatCards,
     mapChannelLaunchToChannelRows,
-    mapLtvToChart,
-    mapRemainDataToSeries,
-    mapUserPayLaunchToSegment
+    mapRemainDataToSeries
   } from '../api/cockpit'
   import type { CountryInfoOverallData } from '../types'
 
@@ -216,7 +207,7 @@
     }
   })
 
-  /** 第三排（用户留存、LTV、用户分层）延后渲染，先让首屏卡片+投放/变现展示，提升首屏效率 */
+  /** 第三排（用户留存曲线）延后渲染；LTV / 用户分层接口暂不可用已下线 */
   const showThirdRow = ref(false)
 
   async function reloadAll() {
@@ -318,7 +309,7 @@
           arpu: item.arpu ?? 0,
           dAdRevenue: item.dAdRevenue ?? 0,
           dIapRevenue: item.dIapRevenue ?? 0,
-          remainDay7: item.remainDay7 ?? 0
+          remainDay1: item.remainDay1 ?? 0
         }))
       }
     } catch {
@@ -336,28 +327,6 @@
       }
     } catch {
       // 接口失败时保持空数组
-    }
-    // LTV 预测：/api/v1/datacenter/analysis/countryInfo/ltv
-    try {
-      const ltvRes = await fetchCountryInfoLtv(params)
-      if (ltvRes && typeof ltvRes === 'object') {
-        const { data: ltvArr, note: ltvNoteStr } = mapLtvToChart(ltvRes)
-        ltvData.value = ltvArr
-        ltvNote.value = ltvNoteStr
-      }
-    } catch {
-      // 接口失败时保持默认
-    }
-    // 用户分层：/api/v1/datacenter/analysis/countryInfo/userPayLaunch
-    try {
-      const userPay = await fetchCountryInfoUserPayLaunch(params)
-      if (userPay && typeof userPay === 'object') {
-        const { segmentData: seg, note } = mapUserPayLaunchToSegment(userPay)
-        segmentData.value = seg
-        segmentNote.value = note
-      }
-    } catch {
-      // 接口失败时保持默认
     }
     // 下一帧再展示第三排，避免首屏同时渲染图表，提升首屏渲染与用户体感
     await nextTick()
@@ -411,14 +380,6 @@
   /** 用户留存曲线：本地区 + 全局平均均来自 /api/v1/datacenter/analysis/countryInfo/remain */
   const retentionLocalData = ref<number[]>([])
   const retentionGlobalData = ref<number[]>([])
-
-  /** LTV 预测图表与头部文案来自 /api/v1/datacenter/analysis/countryInfo/ltv */
-  const ltvData = ref<number[]>([])
-  const ltvNote = ref('')
-
-  /** 用户分层饼图数据与底部文案来自 /api/v1/datacenter/analysis/countryInfo/userPayLaunch */
-  const segmentData = ref<SegmentItem[]>([])
-  const segmentNote = ref('')
 </script>
 
 <style scoped lang="scss">
@@ -615,7 +576,7 @@
     flex: 1;
     min-width: 0;
 
-    /* 投放分析、变现分析、用户留存曲线、LTV 预测、用户分层 等模块标题：字体变大并加粗 */
+    /* 投放分析、变现分析、用户留存曲线 等模块标题：字体变大并加粗 */
     :deep(.el-card__header) {
       font-size: 16px;
       font-weight: bold;
@@ -695,6 +656,11 @@
     &:not(.two-cols) {
       grid-template-columns: repeat(3, 1fr);
     }
+
+    /* 仅用户留存时铺满整行（原 LTV / 用户分层已下线） */
+    &.third-row--single {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (width <= 1200px) {
@@ -731,9 +697,7 @@
 
   html.dark .el-card.map-detail-spend-panel,
   html.dark .el-card.map-detail-revenue-panel,
-  html.dark .el-card.map-detail-retention-chart,
-  html.dark .el-card.map-detail-ltv-chart,
-  html.dark .el-card.map-detail-segment-chart {
+  html.dark .el-card.map-detail-retention-chart {
     position: relative;
     overflow: hidden;
     border-radius: 12px;
@@ -745,9 +709,7 @@
 
   html.dark .el-card.map-detail-spend-panel .el-card__header,
   html.dark .el-card.map-detail-revenue-panel .el-card__header,
-  html.dark .el-card.map-detail-retention-chart .el-card__header,
-  html.dark .el-card.map-detail-ltv-chart .el-card__header,
-  html.dark .el-card.map-detail-segment-chart .el-card__header {
+  html.dark .el-card.map-detail-retention-chart .el-card__header {
     position: relative;
     z-index: 1;
     background: transparent;
@@ -756,9 +718,7 @@
 
   html.dark .el-card.map-detail-spend-panel .el-card__body,
   html.dark .el-card.map-detail-revenue-panel .el-card__body,
-  html.dark .el-card.map-detail-retention-chart .el-card__body,
-  html.dark .el-card.map-detail-ltv-chart .el-card__body,
-  html.dark .el-card.map-detail-segment-chart .el-card__body {
+  html.dark .el-card.map-detail-retention-chart .el-card__body {
     position: relative;
     z-index: 1;
     background: transparent;

@@ -153,7 +153,7 @@
     arpu: number
     dAdRevenue: number
     dIapRevenue: number
-    remainDay7: number
+    remainDay1: number
   }
 
   const props = withDefaults(
@@ -214,12 +214,12 @@
       formatter: (row: AppPerformanceRow) => fmtMoneyK(row.dIapRevenue)
     },
     {
-      prop: 'remainDay7',
-      label: '7日留存',
+      prop: 'remainDay1',
+      label: '次留数据',
       width: 82,
       align: 'left',
       formatter: (row: AppPerformanceRow) => {
-        const v = Number(row.remainDay7 ?? 0)
+        const v = Number(row.remainDay1 ?? 0)
         const pct = v <= 1 && v >= 0 ? v * 100 : v
         return `${pct.toFixed(1)}%`
       }

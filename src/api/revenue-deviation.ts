@@ -40,13 +40,13 @@ function normalizeQuery(q: RevenueDeviationQuery) {
     t_end_date: q.t_end_date,
     source: q.source ?? '',
     s_app_id: q.s_app_id ?? '',
-    matrix_source: q.matrix_source ?? '',
     row_dim: q.row_dim ?? 'app',
     col_dim: q.col_dim ?? 'platform'
   }
 }
 
 function normalizeMatrixQuery(q: RevenueDeviationMatrixQuery) {
+  // 矩阵接口也使用同名 source 参数（仅影响 table/matrix）
   return normalizeQuery(q)
 }
 

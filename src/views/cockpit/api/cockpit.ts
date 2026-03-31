@@ -792,12 +792,12 @@ export function mapChannelLaunchToChannelRows(
     const now = item.now || {}
     const cost = Number(now.cost) || 0
     const install = Number(now.install) || 0
-    const cpl = Number(now.cpl) || 0
+    const cpl = Number(now.cpl ?? now.cpi) || 0
     const roi = Number(now.roi) || 0
     const roas = now.roas != null ? Number(now.roas) : 0
     const { trend, trendClass } = getCplChangeTrend(item.cplChange)
     return {
-      channel: item.channel ?? `广告平台${index + 1}`,
+      channel: item.sourceName ?? item.channel ?? `广告平台${index + 1}`,
       spend: cost,
       installs: install,
       cpi: cpl,
@@ -975,21 +975,13 @@ function mapTop3AppToRevenue(items: CockpitTop3Response['app']): CockpitTopReven
 /** 将 Top3 接口 badApp 转为 TopBadReviewItem */
 function mapTop3BadAppToBadReview(items: CockpitTop3Response['badApp']): CockpitTopBadReviewItem[] {
   return (items || []).map((row) => {
-    const roiChange = row.roiChange ?? 0
-    const dauChange = row.dauChange ?? 0
-    const trend: 'up' | 'down' = roiChange >= 0 ? 'up' : 'down'
-    const metricParts: string[] = []
-    if (dauChange !== 0)
-      metricParts.push(`DAU ${dauChange >= 0 ? '↑' : '↓'}${Math.abs(dauChange)}%`)
-    if (row.now?.cpl != null && row.last?.cpl != null && row.last.cpl !== 0) {
-      const cplPct = percentChange(row.now.cpl, row.last.cpl)
-      if (cplPct != null) metricParts.push(`CPI ${cplPct >= 0 ? '↑' : '↓'}${Math.abs(cplPct)}%`)
-    }
+    const note = row.note?.trim() || row.last?.note?.trim() || ''
     return {
+      sAppName: row.sAppName || '—',
       name: row.sAppName || '—',
-      reasonTag: row.last?.note?.trim() || (roiChange < 0 ? 'ROI 下降' : 'ROI 变化'),
-      metric: metricParts.length ? metricParts.join(' ') : row.last?.note || '—',
-      trend
+      note: note || undefined,
+      reasonTag: note || undefined,
+      metric: note || '—'
     }
   })
 }

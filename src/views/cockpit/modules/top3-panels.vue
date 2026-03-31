@@ -31,7 +31,7 @@
         <span class="top3-module__icon top3-module__icon--dislike">
           <DislikeIcon />
         </span>
-        <span class="top3-module__title">Top3差评产品</span>
+        <span class="top3-module__title">Top3差评数</span>
         <!-- <a class="top3-module__more" href="javascript:;">查看更多</a> -->
       </div>
       <div class="top3-module__list">
@@ -39,14 +39,8 @@
           <div v-for="(item, i) in displayTopBadReview" :key="'bad-' + i" class="top3-row">
             <div class="top3-row__app-icon" title="应用" />
             <span class="top3-row__name">{{ item.name }}</span>
-            <span class="top3-row__tag" :class="item.trend === 'up' ? 'tag-orange' : 'tag-red'">
-              {{ item.reasonTag }}
-            </span>
-            <span
-              class="top3-row__metric"
-              :class="item.trend === 'up' ? 'metric-up' : 'metric-down'"
-            >
-              {{ item.metric }}
+            <span class="top3-row__tag tag-red">
+              {{ item.note }}
             </span>
           </div>
         </template>
@@ -140,14 +134,24 @@
     { topRevenue: () => [], topBadReview: () => [], topUser: () => [] }
   )
 
+  type DisplayTopBadReviewItem = {
+    name: string
+    note: string
+  }
+
   const displayTopRevenue = computed(() =>
     Array.isArray(props.topRevenue) ? props.topRevenue : MOCK_COCKPIT_OVERVIEW.topRevenue
   )
-  const displayTopBadReview = computed(() =>
-    Array.isArray(props.topBadReview)
+  const displayTopBadReview = computed<DisplayTopBadReviewItem[]>(() => {
+    const raw = Array.isArray(props.topBadReview)
       ? props.topBadReview
       : ((MOCK_COCKPIT_OVERVIEW as { topBadReview?: CockpitTopBadReviewItem[] }).topBadReview ?? [])
-  )
+
+    return raw.map((i) => ({
+      name: i.sAppName ?? i.name ?? '—',
+      note: i.note ?? i.reasonTag ?? i.metric ?? '—'
+    }))
+  })
   const displayTopUser = computed(() =>
     Array.isArray(props.topUser) ? props.topUser : MOCK_COCKPIT_OVERVIEW.topUser
   )

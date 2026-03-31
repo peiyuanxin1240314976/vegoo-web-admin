@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="revenue-deviation">
     <div class="rd-page-fx" aria-hidden="true"></div>
     <!-- ========== Header ========== -->
@@ -53,7 +53,7 @@
     </div>
 
     <!-- ========== KPI Cards ========== -->
-    <div v-if="loadingAll" class="rd-kpi-grid rd-entry-2">
+    <div v-if="loadingKpi" class="rd-kpi-grid rd-entry-2">
       <div v-for="i in 5" :key="i" class="rd-kpi-card rd-kpi-card--sk">
         <ElSkeleton animated :throttle="0">
           <template #template>
@@ -120,7 +120,7 @@
       <!-- 趋势图 -->
       <div class="rd-card rd-trend-card">
         <div class="rd-card__title">收入偏差趋势（30天）</div>
-        <div v-if="loadingAll" class="rd-chart-sk"></div>
+        <div v-if="loadingTrend" class="rd-chart-sk"></div>
         <div v-else ref="trendChartRef" class="rd-trend-chart"></div>
         <div class="rd-trend-legend">
           <span class="rd-legend-item rd-legend-item--dashed rd-legend-item--green">预估收入</span>
@@ -166,33 +166,10 @@
         </table>
       </div>
 
-      <!-- 右侧：原因分析 + 对账建议 -->
-      <div class="rd-right-col">
-        <div class="rd-card rd-reason-card">
-          <div class="rd-card__title">偏差原因分析</div>
-          <div class="rd-reason-body">
-            <div v-if="loadingAll" class="rd-pie-sk"></div>
-            <div v-else ref="reasonChartRef" class="rd-reason-chart"></div>
-            <div class="rd-reason-legend">
-              <div v-for="item in reasonData" :key="item.name" class="rd-reason-legend__item">
-                <span class="rd-reason-legend__dot" :style="{ background: item.color }"></span>
-                <span class="rd-reason-legend__name">{{ item.name }}</span>
-                <span class="rd-reason-legend__val">{{ item.value }}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="rd-card rd-advice-card">
-          <div class="rd-card__title rd-card__title--gold">对账建议</div>
-          <ul class="rd-advice-list">
-            <li v-for="(line, idx) in adviceLines" :key="idx">{{ line }}</li>
-          </ul>
-          <div class="rd-advice-actions">
-            <el-button class="rd-btn-outline">查看对账记录</el-button>
-            <el-button class="rd-btn-primary">设置预警阈值</el-button>
-          </div>
-        </div>
-      </div>
+      <!-- 右侧模块（偏差原因分析 / 对账建议）已下线：
+           - /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/reason
+           - /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/advice
+      -->
     </div>
 
     <!-- ========== Bottom Row ========== -->
@@ -214,7 +191,7 @@
             {{ tab.label }}
           </button>
         </div>
-        <div v-if="loadingAll" class="rd-chart-sk rd-chart-sk--tall"></div>
+        <div v-if="loadingCountry" class="rd-chart-sk rd-chart-sk--tall"></div>
         <div v-else ref="countryChartRef" class="rd-country-chart"></div>
       </div>
 
@@ -255,8 +232,12 @@
             class="rd-select rd-select--sm"
             placeholder="平台: 全部"
           >
-            <el-option label="全部" value="" />
-            <el-option label="Admob" value="admob" />
+            <el-option
+              v-for="item in sourceOptions"
+              :key="`matrix-source-${item.value}-${item.label}`"
+              :label="item.label"
+              :value="item.value"
+            />
           </el-select>
         </div>
         <div class="rd-dim-row">
@@ -280,7 +261,8 @@
           >
         </div>
         <div class="rd-matrix-scroll">
-          <table class="rd-table rd-matrix-table">
+          <div v-if="matrixLoading" class="rd-chart-sk rd-chart-sk--tall"></div>
+          <table v-else class="rd-table rd-matrix-table">
             <thead>
               <tr>
                 <th>应用</th>
@@ -345,10 +327,8 @@
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import {
     fetchRevenueDeviationMetaFilterOptions,
-    fetchRevenueDeviationOverviewAdvice,
     fetchRevenueDeviationOverviewCountryTop10,
     fetchRevenueDeviationOverviewKpis,
-    fetchRevenueDeviationOverviewReason,
     fetchRevenueDeviationOverviewTrend,
     fetchRevenueDeviationTableHistory,
     fetchRevenueDeviationTableMatrix,
@@ -429,16 +409,13 @@
     { value: ALL_APP_VALUE, label: '全部应用' }
   ])
   const activeCountryTab = ref('amount')
-  const matrixPlatform = ref('')
+  const matrixPlatform = ref(ALL_SOURCE_VALUE)
 
-  const loadingAll = ref(false)
   const matrixLoading = ref(false)
 
   const kpiOverview = ref<RevenueDeviationOverviewKpis | null>(null)
   const trendData = ref<RevenueDeviationOverviewTrend | null>(null)
   const platformTable = ref<RevenueDeviationPlatformTable | null>(null)
-  const reasonData = ref<{ name: string; value: number; color: string }[]>([])
-  const adviceLines = ref<string[]>([])
   const countryTop10 = ref<RevenueDeviationCountryTop10 | null>(null)
   const historyRows = ref<RevenueDeviationHistoryRow[]>([])
   const matrixCols = ref<MatrixColDef[]>([])
@@ -462,6 +439,11 @@
   const activeRowDim = ref<RevenueDeviationMatrixRowDim>('app')
   const activeColDim = ref<RevenueDeviationMatrixColDim>('platform')
 
+  const loadingKpi = ref(false)
+  const loadingTrend = ref(false)
+  const loadingPlatformTable = ref(false)
+  const loadingCountry = ref(false)
+  const loadingHistory = ref(false)
   async function loadMetaFilterOptions() {
     try {
       const options = await fetchRevenueDeviationMetaFilterOptions()
@@ -473,15 +455,22 @@
     }
   }
 
-  function buildQuery(): RevenueDeviationQuery {
+  function buildGlobalQuery(): RevenueDeviationQuery {
     return {
       t_start_date: dateRange.value[0]!,
       t_end_date: dateRange.value[1]!,
       source: platform.value === ALL_SOURCE_VALUE ? '' : platform.value,
       s_app_id: appFilter.value === ALL_APP_VALUE ? '' : appFilter.value,
-      matrix_source: matrixPlatform.value,
       row_dim: activeRowDim.value,
       col_dim: activeColDim.value
+    }
+  }
+
+  function buildMatrixQuery(): RevenueDeviationQuery {
+    const global = buildGlobalQuery()
+    return {
+      ...global,
+      source: matrixPlatform.value === ALL_SOURCE_VALUE ? '' : matrixPlatform.value
     }
   }
 
@@ -505,7 +494,7 @@
   async function loadMatrixOnly() {
     matrixLoading.value = true
     try {
-      const q = buildQuery()
+      const q = buildMatrixQuery()
       const matrix = await fetchRevenueDeviationTableMatrix(q)
       matrixCols.value = matrix.cols.map((c) => ({
         name: c.name,
@@ -513,52 +502,50 @@
         total: c.total
       }))
       matrixData.value = toMatrixVmRows(matrix.rows)
+    } catch {
+      matrixCols.value = []
+      matrixData.value = []
     } finally {
       matrixLoading.value = false
     }
   }
 
+  function safeTask<T>(fn: () => Promise<T>) {
+    return Promise.resolve().then(fn)
+  }
+
   async function loadAllCards() {
-    loadingAll.value = true
+    const q = buildGlobalQuery()
+    loadingKpi.value = true
+    loadingTrend.value = true
+    loadingPlatformTable.value = true
+    loadingCountry.value = true
+    loadingHistory.value = true
     try {
-      const q = buildQuery()
-      const [kpi, trend, plat, reason, advice, country, hist, matrix] = await Promise.allSettled([
-        fetchRevenueDeviationOverviewKpis(q),
-        fetchRevenueDeviationOverviewTrend(q),
-        fetchRevenueDeviationTablePlatform(q),
-        fetchRevenueDeviationOverviewReason(q),
-        fetchRevenueDeviationOverviewAdvice(q),
-        fetchRevenueDeviationOverviewCountryTop10(q),
-        fetchRevenueDeviationTableHistory(q),
-        fetchRevenueDeviationTableMatrix(q)
+      const [kpi, trend, plat, country, hist] = await Promise.allSettled([
+        safeTask(() => fetchRevenueDeviationOverviewKpis(q)),
+        safeTask(() => fetchRevenueDeviationOverviewTrend(q)),
+        safeTask(() => fetchRevenueDeviationTablePlatform(q)),
+        safeTask(() => fetchRevenueDeviationOverviewCountryTop10(q)),
+        safeTask(() => fetchRevenueDeviationTableHistory(q))
       ])
+
       if (kpi.status === 'fulfilled') kpiOverview.value = kpi.value
       if (trend.status === 'fulfilled') trendData.value = trend.value
       if (plat.status === 'fulfilled') platformTable.value = plat.value
-      if (reason.status === 'fulfilled') {
-        reasonData.value = reason.value.map((s) => ({
-          name: s.s_label,
-          value: s.n_pct,
-          color: s.s_color
-        }))
-      }
-      if (advice.status === 'fulfilled') adviceLines.value = advice.value.lines
       if (country.status === 'fulfilled') countryTop10.value = country.value
       if (hist.status === 'fulfilled') historyRows.value = hist.value
-      if (matrix.status === 'fulfilled') {
-        matrixCols.value = matrix.value.cols.map((c) => ({
-          name: c.name,
-          key: c.key,
-          total: c.total
-        }))
-        matrixData.value = toMatrixVmRows(matrix.value.rows)
-      }
     } finally {
-      loadingAll.value = false
+      loadingKpi.value = false
+      loadingTrend.value = false
+      loadingPlatformTable.value = false
+      loadingCountry.value = false
+      loadingHistory.value = false
     }
   }
 
-  function formatUsd2(n: number) {
+  function formatUsd2(n?: number | null) {
+    if (n === null || n === undefined || Number.isNaN(n)) return '--'
     return n.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -567,7 +554,8 @@
     })
   }
 
-  function fmtUsdWithSign(n: number) {
+  function fmtUsdWithSign(n?: number | null) {
+    if (n === null || n === undefined || Number.isNaN(n)) return '--'
     const base = Math.abs(n).toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -579,13 +567,15 @@
     return base
   }
 
-  function fmtPctSigned(n: number) {
+  function fmtPctSigned(n?: number | null) {
+    if (n === null || n === undefined || Number.isNaN(n)) return '--'
     if (n === 0) return '0.0%'
     if (n > 0) return `+${n.toFixed(1)}%`
     return `${n.toFixed(1)}%`
   }
 
-  function fmtRoiPp(n: number) {
+  function fmtRoiPp(n?: number | null) {
+    if (n === null || n === undefined || Number.isNaN(n)) return '--'
     return `${n.toFixed(1)}pp`
   }
 
@@ -608,11 +598,9 @@
 
   // ── Charts ────────────────────────────────────────────────────────────────────
   const trendChartRef = ref<HTMLElement | null>(null)
-  const reasonChartRef = ref<HTMLElement | null>(null)
   const countryChartRef = ref<HTMLElement | null>(null)
 
   let trendChart: echarts.ECharts | null = null
-  let reasonChart: echarts.ECharts | null = null
   let countryChart: echarts.ECharts | null = null
 
   function initTrendChart() {
@@ -698,38 +686,6 @@
     })
   }
 
-  function initReasonChart() {
-    if (!reasonChartRef.value || reasonData.value.length === 0) return
-    reasonChart?.dispose()
-    reasonChart = echarts.init(reasonChartRef.value, 'dark')
-    const ttBg = cssVar('--default-box-color')
-    const ttBorder = cssVar('--default-border')
-    const ttText = cssVar('--text-primary')
-    reasonChart.setOption({
-      backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: ttBg,
-        borderColor: ttBorder,
-        textStyle: { color: ttText, fontSize: 12 }
-      },
-      series: [
-        {
-          type: 'pie',
-          radius: ['55%', '80%'],
-          center: ['50%', '50%'],
-          data: reasonData.value.map((d) => ({
-            name: d.name,
-            value: d.value,
-            itemStyle: { color: d.color }
-          })),
-          label: { show: false },
-          emphasis: { scale: true, scaleSize: 5 }
-        }
-      ]
-    })
-  }
-
   function initCountryChart() {
     if (!countryChartRef.value || !countryTop10.value) return
     countryChart?.dispose()
@@ -787,16 +743,16 @@
 
   const resizeHandler = () => {
     trendChart?.resize()
-    reasonChart?.resize()
     countryChart?.resize()
   }
 
   onMounted(async () => {
     await loadMetaFilterOptions()
+    matrixPlatform.value = platform.value
     await loadAllCards()
+    await loadMatrixOnly()
     await nextTick()
     initTrendChart()
-    initReasonChart()
     initCountryChart()
     window.addEventListener('resize', resizeHandler)
   })
@@ -804,7 +760,6 @@
   onUnmounted(() => {
     window.removeEventListener('resize', resizeHandler)
     trendChart?.dispose()
-    reasonChart?.dispose()
     countryChart?.dispose()
   })
 
@@ -814,19 +769,30 @@
     initCountryChart()
   })
 
+  watch(trendData, async (val) => {
+    if (!val) return
+    await nextTick()
+    initTrendChart()
+  })
+
+  watch(countryTop10, async (val) => {
+    if (!val) return
+    await nextTick()
+    initCountryChart()
+  })
+
   watch(
     [dateRange, platform, appFilter],
     async () => {
+      matrixPlatform.value = platform.value
       await loadAllCards()
+      await loadMatrixOnly()
       await nextTick()
       trendChart?.dispose()
       trendChart = null
-      reasonChart?.dispose()
-      reasonChart = null
       countryChart?.dispose()
       countryChart = null
       initTrendChart()
-      initReasonChart()
       initCountryChart()
     },
     { deep: true }

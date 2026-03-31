@@ -254,6 +254,8 @@ export interface CountryInfoChannelLaunchPeriod {
   install?: number
   roi?: number
   cpl?: number
+  /** 部分数据源可能使用 cpi 字段，含义与 cpl 一致，这里兼容 */
+  cpi?: number
   roas?: number
   arpu?: number
   dAdRevenue?: number
@@ -269,6 +271,10 @@ export interface CountryInfoChannelLaunchItem {
   last: CountryInfoChannelLaunchPeriod
   /** CPL 变化趋势，用于展示箭头：>0 上箭头绿，=0 右箭头灰，<0 下箭头红，null 显示 '-' 灰 */
   cplChange: number | null
+  /** 广告平台编码（source 枚举值） */
+  source?: number
+  /** 广告平台名称（后端推荐字段） */
+  sourceName?: string
   /** 广告平台名称（若后端返回） */
   channel?: string
 }
@@ -495,11 +501,13 @@ export interface CockpitTop3AppItem {
 /** Top3 接口：差评产品单项（badApp 数组元素） */
 export interface CockpitTop3BadAppItem {
   sAppName: string
-  cplChange: number
-  dauChange: number
-  roiChange: number
-  last: { cpl: number; dau: number; roi: number; note: string }
-  now: { cpl: number; dau: number; roi: number }
+  /** 新结构：直接给描述文案 */
+  note?: string
+  now?: unknown | null
+  last?: unknown | null
+  roiChange?: number | null
+  cplChange?: number | null
+  dauChange?: number | null
 }
 
 /** Top3 接口：用户增长单项（user 数组元素） */
@@ -536,13 +544,24 @@ export interface CockpitTopSpendItem {
 
 /** Top3 差评产品 */
 export interface CockpitTopBadReviewItem {
-  name: string
-  /** 差评原因标签，如 '变现下降18%'、'安装成本过高'、'用户流失' */
-  reasonTag: string
-  /** 指标文案，如 'DAU ↓ 12%'、'CPI ↑ 23%'、'留存 ↓ 15%' */
-  metric: string
-  /** 指标趋势：上升/下降，用于箭头颜色 */
-  trend: 'up' | 'down'
+  /** 新结构：应用名（后端字段） */
+  sAppName?: string
+  /** 兼容旧结构：应用名（展示字段） */
+  name?: string
+  /** 新结构：后端直接给的描述，如 '差评数：6' */
+  note?: string
+  /** 兼容旧结构：差评原因标签 */
+  reasonTag?: string
+  /** 兼容旧结构：指标文案 */
+  metric?: string
+  /** 兼容旧结构：趋势 */
+  trend?: 'up' | 'down'
+  /** 新结构可能带 now/last（允许为 null） */
+  now?: unknown | null
+  last?: unknown | null
+  roiChange?: number | null
+  cplChange?: number | null
+  dauChange?: number | null
 }
 
 /** Top3 用户增长 */
