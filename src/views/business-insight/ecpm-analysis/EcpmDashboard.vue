@@ -1,5 +1,6 @@
 <template>
   <div class="ecpm-dash">
+    <div class="ecpm-page-fx" aria-hidden="true"></div>
     <!-- ══════════════════ HEADER ══════════════════ -->
     <header class="dash-header">
       <!-- <div class="breadcrumb">
@@ -7,57 +8,73 @@
         <span class="bc-sep">›</span>
         <span class="bc-cur">ECPM分析</span>
       </div> -->
-      <div class="header-filters">
-        <el-date-picker
-          v-model="dateRange"
-          type="daterange"
-          size="default"
-          range-separator="~"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          value-format="YYYY/MM/DD"
-          class="date-picker"
-        />
-        <el-skeleton :loading="loadingMetaFilterOptions" animated>
-          <template #template>
-            <el-skeleton-item variant="text" class="filter-sel-skeleton" />
-          </template>
-          <el-select v-model="filterPlatform" size="default" class="filter-sel">
-            <el-option
-              v-for="item in sourceOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="toSelectValue(item.value)"
-            />
-          </el-select>
-        </el-skeleton>
-        <el-skeleton :loading="loadingMetaFilterOptions" animated>
-          <template #template>
-            <el-skeleton-item variant="text" class="filter-sel-skeleton" />
-          </template>
-          <el-select v-model="filterApp" size="default" class="filter-sel">
-            <el-option
-              v-for="item in appOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="toSelectValue(item.value)"
-            />
-          </el-select>
-        </el-skeleton>
-        <el-skeleton :loading="loadingMetaFilterOptions" animated>
-          <template #template>
-            <el-skeleton-item variant="text" class="filter-sel-skeleton" />
-          </template>
-          <el-select v-model="filterCountry" size="default" class="filter-sel">
-            <el-option
-              v-for="item in countryOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="toSelectValue(item.value)"
-            />
-          </el-select>
-        </el-skeleton>
-        <el-button size="small" class="filter-icon-btn" :icon="Filter" />
+      <div class="header-filters ecpm-filter-panel">
+        <div class="ecpm-pill ecpm-pill--date">
+          <span class="ecpm-pill__k">日期</span>
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            size="default"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY/MM/DD"
+            class="ecpm-date"
+          />
+        </div>
+
+        <div class="ecpm-pill">
+          <span class="ecpm-pill__k">广告平台</span>
+          <el-skeleton :loading="loadingMetaFilterOptions" animated>
+            <template #template>
+              <el-skeleton-item variant="text" class="filter-sel-skeleton" />
+            </template>
+            <el-select v-model="filterPlatform" size="default" class="ecpm-select">
+              <el-option
+                v-for="item in sourceOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="toSelectValue(item.value)"
+              />
+            </el-select>
+          </el-skeleton>
+        </div>
+
+        <div class="ecpm-pill">
+          <span class="ecpm-pill__k">App</span>
+          <el-skeleton :loading="loadingMetaFilterOptions" animated>
+            <template #template>
+              <el-skeleton-item variant="text" class="filter-sel-skeleton" />
+            </template>
+            <el-select v-model="filterApp" size="default" class="ecpm-select">
+              <el-option
+                v-for="item in appOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="toSelectValue(item.value)"
+              />
+            </el-select>
+          </el-skeleton>
+        </div>
+
+        <div class="ecpm-pill">
+          <span class="ecpm-pill__k">国家</span>
+          <el-skeleton :loading="loadingMetaFilterOptions" animated>
+            <template #template>
+              <el-skeleton-item variant="text" class="filter-sel-skeleton" />
+            </template>
+            <el-select v-model="filterCountry" size="default" class="ecpm-select">
+              <el-option
+                v-for="item in countryOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="toSelectValue(item.value)"
+              />
+            </el-select>
+          </el-skeleton>
+        </div>
+
+        <el-button size="default" type="primary" plain round>查询</el-button>
       </div>
     </header>
 
@@ -404,7 +421,7 @@
   import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
   import * as echarts from 'echarts'
   import type { ECharts } from 'echarts'
-  import { Filter, TrendCharts, Money, Location, Grid, Warning } from '@element-plus/icons-vue'
+  import { TrendCharts, Money, Location, Grid, Warning } from '@element-plus/icons-vue'
   import { getAppNow, cloneAppDate } from '@/utils/app-now'
   import {
     fetchEcpmMetaFilterOptions,
@@ -1312,9 +1329,11 @@
     --blue-dim: rgb(77 182 232 / 12%);
     --orange-dim: rgb(245 166 35 / 12%);
 
+    position: relative;
     box-sizing: border-box;
     min-height: 100vh;
     padding: 0;
+    overflow-x: clip;
     font-family:
       'PingFang SC',
       'Microsoft YaHei',
@@ -1325,11 +1344,87 @@
     background: var(--bg);
   }
 
+  .ecpm-dash::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        1100px 520px at 12% -10%,
+        color-mix(in srgb, var(--art-primary, #3b82f6) 26%, transparent),
+        transparent 62%
+      ),
+      radial-gradient(
+        900px 440px at 78% 4%,
+        color-mix(in srgb, var(--art-success, #10b981) 16%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        840px 520px at 52% 0%,
+        color-mix(in srgb, var(--art-warning, #f97316) 14%, transparent),
+        transparent 66%
+      );
+    opacity: 0.95;
+    mask-image: linear-gradient(to bottom, #000 0%, #000 36%, transparent 78%);
+  }
+
+  .ecpm-dash::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      linear-gradient(to right, rgb(255 255 255 / 5%) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 5%) 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: 0.42;
+    mask-image: radial-gradient(ellipse 92% 52% at 40% 0%, #000 0%, transparent 70%);
+  }
+
+  .ecpm-page-fx {
+    position: absolute;
+    top: -220px;
+    right: -280px;
+    z-index: 0;
+    width: 640px;
+    height: 640px;
+    pointer-events: none;
+    background: conic-gradient(
+      from 180deg,
+      transparent,
+      color-mix(in srgb, var(--art-primary, #3b82f6) 52%, transparent),
+      transparent,
+      color-mix(in srgb, var(--art-success, #10b981) 45%, transparent),
+      transparent,
+      color-mix(in srgb, var(--art-warning, #f97316) 44%, transparent),
+      transparent
+    );
+    filter: blur(40px);
+    border-radius: 9999px;
+    opacity: 0.48;
+    animation: ecpm-fx-spin 18s linear infinite;
+  }
+
+  .ecpm-dash > :not(.ecpm-page-fx) {
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes ecpm-fx-spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   /* ── Header ──────────────────────────────────────────────────── */
   .dash-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     padding: 14px 20px;
     border-bottom: 1px solid var(--border);
   }
@@ -1360,32 +1455,100 @@
 
   .header-filters {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
   }
 
-  /* Override Element Plus to fit dark theme */
-  :deep(.date-picker.el-date-editor) {
-    --el-input-bg-color: var(--bg-card-2);
-    --el-input-border-color: var(--border-2);
-    --el-input-text-color: var(--text);
-    --el-input-hover-border-color: var(--teal);
+  .ecpm-filter-panel {
+    position: relative;
+    padding: 10px 14px;
+    overflow: hidden;
+    background:
+      radial-gradient(880px 240px at 12% 0%, rgb(77 182 232 / 12%), transparent 60%),
+      radial-gradient(780px 260px at 92% 10%, rgb(0 212 170 / 10%), transparent 55%),
+      linear-gradient(148deg, rgb(19 29 47 / 92%), rgb(22 32 56 / 92%));
+    border: 1px solid rgb(77 182 232 / 18%);
+    border-radius: 16px;
+    box-shadow:
+      0 10px 34px rgb(0 0 0 / 44%),
+      0 0 0 1px rgb(96 165 250 / 10%),
+      inset 0 1px 0 rgb(186 230 253 / 10%);
+    transition:
+      box-shadow 0.35s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-    width: 220px !important;
+  .ecpm-filter-panel:hover {
+    border-color: rgb(96 165 250 / 38%);
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 52%),
+      0 0 0 1px rgb(96 165 250 / 18%),
+      inset 0 1px 0 rgb(186 230 253 / 14%),
+      0 0 44px rgb(59 130 246 / 12%);
+  }
+
+  .ecpm-filter-panel::after {
+    position: absolute;
+    inset: -40% -20%;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      linear-gradient(to right, rgb(255 255 255 / 6%) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 6%) 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: 0.55;
+    mask-image: radial-gradient(circle at 30% 0%, #000 0%, transparent 62%);
+  }
+
+  .ecpm-filter-panel > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .ecpm-pill {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 9999px;
+  }
+
+  .ecpm-pill--date {
+    padding-right: 6px;
+  }
+
+  .ecpm-pill__k {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(226 232 240 / 78%);
+    white-space: nowrap;
+  }
+
+  /* Override Element Plus to fit dark theme (sync with revenue-overview) */
+  :deep(.ecpm-select .el-select__wrapper),
+  :deep(.ecpm-date .el-input__wrapper) {
+    min-height: 32px;
+    padding: 0 10px;
+    background: rgb(0 0 0 / 28%);
+    border: 1px solid rgb(96 165 250 / 24%);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+  }
+
+  :deep(.ecpm-date.el-date-editor) {
+    width: 240px;
     font-size: 12px;
   }
 
-  :deep(.filter-sel.el-select) {
-    --el-input-bg-color: var(--bg-card-2);
-    --el-input-border-color: var(--border-2);
-    --el-input-text-color: var(--text);
-    --el-input-hover-border-color: var(--teal);
-
-    width: 100px;
+  :deep(.ecpm-select.el-select) {
+    width: 140px;
   }
 
   :deep(.filter-sel-skeleton.el-skeleton__item) {
-    width: 100px;
+    width: 140px;
     height: 32px;
     border-radius: 6px;
   }
@@ -1412,6 +1575,7 @@
 
   .chart-loading-wrap {
     position: relative;
+    border-radius: 14px;
   }
 
   .chart-loading-overlay {
@@ -1420,8 +1584,9 @@
     z-index: 2;
     padding: 8px;
     pointer-events: none;
-    background: rgb(19 29 47 / 88%);
-    border-radius: 6px;
+    background: rgb(10 14 22 / 64%);
+    backdrop-filter: blur(6px);
+    border-radius: 14px;
   }
 
   :deep(.s-line.el-skeleton__item) {
@@ -1531,6 +1696,20 @@
     border-color: var(--border-2);
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .ecpm-page-fx {
+      animation: none;
+    }
+
+    .ecpm-filter-panel {
+      transition: none;
+    }
+
+    .ecpm-filter-panel::after {
+      opacity: 0.35;
+    }
+  }
+
   :deep(.mini-sel.el-select) {
     --el-input-bg-color: var(--bg-card-2);
     --el-input-border-color: var(--border-2);
@@ -1551,40 +1730,97 @@
     position: relative;
     padding: 16px 18px;
     overflow: hidden;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-left-width: 3px;
-    border-radius: 6px;
+    background:
+      radial-gradient(780px 260px at 10% 0%, rgb(255 255 255 / 8%), transparent 58%),
+      radial-gradient(620px 240px at 92% 12%, rgb(255 255 255 / 6%), transparent 60%),
+      linear-gradient(145deg, rgb(19 29 47 / 96%), rgb(22 32 56 / 94%));
+    border: 1px solid rgb(96 165 250 / 14%);
+    border-radius: 16px;
+    box-shadow:
+      0 12px 38px rgb(0 0 0 / 46%),
+      0 0 0 1px rgb(96 165 250 / 10%),
+      inset 0 1px 0 rgb(186 230 253 / 10%),
+      inset 0 -10px 22px rgb(0 0 0 / 26%);
+    transition:
+      transform var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      box-shadow var(--duration-slow, 350ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+    transform: translateY(0);
   }
 
   .kpi-card::before {
     position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    height: 1px;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
     content: '';
-    opacity: 0.4;
+    background:
+      linear-gradient(to right, rgb(255 255 255 / 5%) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 5%) 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: 0.7;
+    mask-image: radial-gradient(circle at 16% 0%, #000 0%, transparent 62%);
+  }
+
+  .kpi-card::after {
+    position: absolute;
+    top: 0;
+    right: -10%;
+    left: -10%;
+    z-index: 0;
+    height: 2px;
+    pointer-events: none;
+    content: '';
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 40%), transparent);
+    filter: blur(0.2px);
+    opacity: 0.55;
+  }
+
+  .kpi-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .kpi-card:hover {
+    border-color: rgb(96 165 250 / 34%);
+    box-shadow:
+      0 16px 46px rgb(0 0 0 / 56%),
+      0 0 0 1px rgb(96 165 250 / 16%),
+      inset 0 1px 0 rgb(186 230 253 / 14%),
+      0 0 52px rgb(59 130 246 / 12%),
+      0 0 40px rgb(34 211 238 / 8%);
+    transform: translateY(-4px);
   }
 
   .kpi-card.kpi-teal {
-    background: linear-gradient(135deg, #0d1d2e, var(--bg-card));
-    border-left-color: var(--teal);
+    border-color: rgb(0 212 170 / 20%);
+    box-shadow:
+      0 12px 38px rgb(0 0 0 / 46%),
+      0 0 0 1px rgb(0 212 170 / 12%),
+      inset 0 1px 0 rgb(153 246 228 / 10%),
+      0 0 40px rgb(0 212 170 / 10%);
   }
 
   .kpi-card.kpi-blue {
-    background: linear-gradient(135deg, #0d1e2e, var(--bg-card));
-    border-left-color: var(--blue);
+    border-color: rgb(77 182 232 / 20%);
+    box-shadow:
+      0 12px 38px rgb(0 0 0 / 46%),
+      0 0 0 1px rgb(77 182 232 / 12%),
+      inset 0 1px 0 rgb(186 230 253 / 10%),
+      0 0 44px rgb(77 182 232 / 10%);
   }
 
   .kpi-card.kpi-dark {
-    background: linear-gradient(135deg, #111e2f, var(--bg-card));
-    border-left-color: #1e3a55;
+    border-color: rgb(96 165 250 / 12%);
   }
 
   .kpi-card.kpi-orange {
-    background: linear-gradient(135deg, #1c1a0e, var(--bg-card));
-    border-left-color: var(--orange);
+    border-color: rgb(245 166 35 / 22%);
+    box-shadow:
+      0 12px 38px rgb(0 0 0 / 46%),
+      0 0 0 1px rgb(245 166 35 / 12%),
+      inset 0 1px 0 rgb(254 215 170 / 10%),
+      0 0 44px rgb(245 166 35 / 10%);
   }
 
   .kpi-label {
@@ -1594,17 +1830,23 @@
     margin-bottom: 10px;
     font-size: 12px;
     color: var(--text-mid);
+    letter-spacing: 0.2px;
   }
 
   .kpi-icon {
     font-size: 13px;
+    filter: drop-shadow(0 8px 18px rgb(0 0 0 / 55%));
   }
 
   .kpi-value {
     margin-bottom: 6px;
     font-size: 36px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
     line-height: 1;
+    text-shadow:
+      0 10px 28px rgb(0 0 0 / 55%),
+      0 0 22px rgb(59 130 246 / 10%);
     letter-spacing: -0.5px;
   }
 
@@ -1643,6 +1885,21 @@
 
   .kpi-change.dn {
     color: var(--red);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kpi-card {
+      transition: none;
+    }
+
+    .kpi-card:hover {
+      box-shadow:
+        0 12px 38px rgb(0 0 0 / 46%),
+        0 0 0 1px rgb(96 165 250 / 10%),
+        inset 0 1px 0 rgb(186 230 253 / 10%),
+        inset 0 -10px 22px rgb(0 0 0 / 26%);
+      transform: none;
+    }
   }
 
   /* Colors */
@@ -1692,9 +1949,67 @@
   .card {
     flex-shrink: 0;
     padding: 14px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    overflow: hidden;
+    background:
+      radial-gradient(820px 240px at 12% 0%, rgb(255 255 255 / 8%), transparent 58%),
+      radial-gradient(720px 260px at 86% 0%, rgb(255 255 255 / 6%), transparent 62%),
+      linear-gradient(148deg, rgb(19 29 47 / 96%), rgb(22 32 56 / 94%));
+    border: 1px solid rgb(96 165 250 / 14%);
+    border-radius: 16px;
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      0 0 0 1px rgb(96 165 250 / 10%),
+      inset 0 1px 0 rgb(186 230 253 / 10%),
+      inset 0 -10px 26px rgb(0 0 0 / 26%);
+    transition:
+      transform var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      box-shadow var(--duration-slow, 350ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+    transform: translateY(0);
+  }
+
+  .card::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      linear-gradient(to right, rgb(255 255 255 / 5%) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 5%) 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: 0.66;
+    mask-image: radial-gradient(circle at 16% 0%, #000 0%, transparent 62%);
+  }
+
+  .card::after {
+    position: absolute;
+    top: 0;
+    right: -10%;
+    left: -10%;
+    z-index: 0;
+    height: 2px;
+    pointer-events: none;
+    content: '';
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 40%), transparent);
+    filter: blur(0.2px);
+    opacity: 0.55;
+  }
+
+  .card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .card:hover {
+    border-color: rgb(96 165 250 / 34%);
+    box-shadow:
+      0 16px 52px rgb(0 0 0 / 56%),
+      0 0 0 1px rgb(96 165 250 / 16%),
+      inset 0 1px 0 rgb(186 230 253 / 14%),
+      0 0 56px rgb(59 130 246 / 12%),
+      0 0 44px rgb(34 211 238 / 8%);
+    transform: translateY(-4px);
   }
 
   .card-title {
@@ -1702,6 +2017,8 @@
     font-size: 13px;
     font-weight: 600;
     color: var(--text);
+    text-shadow: 0 12px 28px rgb(0 0 0 / 55%);
+    letter-spacing: 0.2px;
   }
 
   .card-header-row {
@@ -1726,6 +2043,13 @@
 
   .echart-map {
     height: 240px;
+    background:
+      radial-gradient(760px 280px at 12% 0%, rgb(59 130 246 / 12%), transparent 58%),
+      radial-gradient(640px 260px at 86% 0%, rgb(0 212 170 / 10%), transparent 62%),
+      linear-gradient(180deg, rgb(0 0 0 / 14%), rgb(0 0 0 / 0%));
+    box-shadow:
+      0 0 0 1px rgb(96 165 250 / 10%) inset,
+      inset 0 18px 40px rgb(0 0 0 / 20%);
   }
 
   .echart-top10 {
@@ -1744,49 +2068,84 @@
     font-size: 11px;
     color: var(--text-dim);
     cursor: pointer;
-    background: var(--bg-card-2);
-    border: 1px solid var(--border-2);
-    border-radius: 3px;
-    transition: all 0.15s;
+    background: rgb(0 0 0 / 22%);
+    border: 1px solid rgb(96 165 250 / 16%);
+    border-radius: 9999px;
+    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+    transition:
+      transform var(--duration-fast, 150ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      background-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
   }
 
   .tab-btn:hover {
     color: var(--text-mid);
-    border-color: var(--teal);
+    border-color: rgb(0 212 170 / 40%);
+    box-shadow:
+      0 10px 26px rgb(0 0 0 / 44%),
+      0 0 0 1px rgb(0 212 170 / 14%);
+    transform: translateY(-1px);
   }
 
   .tab-btn.active {
     color: var(--teal);
-    background: var(--teal-dim);
-    border-color: rgb(0 212 170 / 40%);
+    background: rgb(0 212 170 / 12%);
+    border-color: rgb(0 212 170 / 44%);
+    box-shadow:
+      0 0 0 1px rgb(0 212 170 / 14%) inset,
+      0 10px 30px rgb(0 212 170 / 10%);
   }
 
   /* ── Toggle Group ────────────────────────────────────────────── */
   .toggle-group {
     display: flex;
+    padding: 2px;
     overflow: hidden;
-    border: 1px solid var(--border-2);
-    border-radius: 4px;
+    background: rgb(0 0 0 / 20%);
+    border: 1px solid rgb(96 165 250 / 18%);
+    border-radius: 9999px;
+    box-shadow:
+      0 0 0 1px rgb(59 130 246 / 6%) inset,
+      0 10px 28px rgb(0 0 0 / 38%);
   }
 
   .tgl {
-    padding: 3px 10px;
+    padding: 5px 12px;
     font-size: 11px;
     color: var(--text-dim);
     cursor: pointer;
     background: transparent;
-    border: none;
-    border-right: 1px solid var(--border-2);
-    transition: all 0.15s;
+    border: 0;
+    border-radius: 9999px;
+    transition:
+      transform var(--duration-fast, 150ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      background-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
   }
 
   .tgl:last-child {
     border-right: none;
   }
 
+  .tgl:hover {
+    color: var(--text-mid);
+    transform: translateY(-1px);
+  }
+
   .tgl.active {
     color: var(--teal);
-    background: var(--bg-card-2);
+    background: rgb(0 212 170 / 12%);
+    box-shadow:
+      0 0 0 1px rgb(0 212 170 / 14%) inset,
+      0 10px 28px rgb(0 212 170 / 10%);
+  }
+
+  .echart-map,
+  .echart-top10,
+  .echart-trend {
+    border-radius: 14px;
   }
 
   /* ── Data Table ──────────────────────────────────────────────── */
@@ -1834,11 +2193,42 @@
   .ecpm-platform-art-table :deep(.el-table) {
     --el-table-bg-color: transparent;
     --el-table-tr-bg-color: transparent;
-    --el-table-row-hover-bg-color: rgb(255 255 255 / 3%);
+    --el-table-row-hover-bg-color: rgb(96 165 250 / 8%);
     --el-table-header-bg-color: #131d2f;
     --el-table-border-color: var(--border);
     --el-table-text-color: var(--text);
     --el-table-header-text-color: var(--text-dim);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card {
+      transition: none;
+    }
+
+    .card:hover {
+      box-shadow:
+        0 12px 40px rgb(0 0 0 / 44%),
+        0 0 0 1px rgb(96 165 250 / 10%),
+        inset 0 1px 0 rgb(186 230 253 / 10%),
+        inset 0 -10px 26px rgb(0 0 0 / 26%);
+      transform: none;
+    }
+
+    .tab-btn {
+      transition: none;
+    }
+
+    .tab-btn:hover {
+      transform: none;
+    }
+
+    .tgl {
+      transition: none;
+    }
+
+    .tgl:hover {
+      transform: none;
+    }
   }
 
   .ecpm-platform-art-table :deep(.el-table th.el-table__cell) {
