@@ -145,7 +145,6 @@
                     v-if="!appTableLoading"
                     :table-data="tableData"
                     :expanded-row-keys="expandedRowKeys"
-                    :source="source"
                     :summary-text="tableSummaryText"
                     :get-row-style="getRowStyleAny"
                     :get-cell-style="getCellStyleAny"

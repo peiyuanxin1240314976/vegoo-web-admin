@@ -53,6 +53,7 @@ export const MOCK_ACCOUNT_PERFORMANCE: AccountPerformanceMock = {
   tableTree: [
     {
       id: 'app-1',
+      campaignId: 'camp-app-1',
       type: 'app',
       name: 'PhoneTracker',
       spend: 1607,
@@ -155,6 +156,7 @@ export const MOCK_ACCOUNT_PERFORMANCE: AccountPerformanceMock = {
     },
     {
       id: 'app-2',
+      campaignId: 'camp-app-2',
       type: 'app',
       name: 'VideoDownloader',
       spend: 1607,
@@ -170,6 +172,7 @@ export const MOCK_ACCOUNT_PERFORMANCE: AccountPerformanceMock = {
     },
     {
       id: 'app-3',
+      campaignId: 'camp-app-3',
       type: 'app',
       name: 'VideoDownloader3',
       spend: 1603,
@@ -185,6 +188,7 @@ export const MOCK_ACCOUNT_PERFORMANCE: AccountPerformanceMock = {
     },
     {
       id: 'app-4',
+      campaignId: 'camp-app-4',
       type: 'app',
       name: 'DramaVue',
       spend: 502,
@@ -200,6 +204,7 @@ export const MOCK_ACCOUNT_PERFORMANCE: AccountPerformanceMock = {
     },
     {
       id: 'app-5',
+      campaignId: 'camp-app-5',
       type: 'app',
       name: 'PhoneTracker3',
       spend: 1607,

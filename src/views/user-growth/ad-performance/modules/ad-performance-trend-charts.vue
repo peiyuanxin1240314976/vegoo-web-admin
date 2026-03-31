@@ -284,8 +284,8 @@
     () => props.loading,
     async (ld) => {
       if (ld) {
-        spendChart.getChartInstance()?.dispose()
-        roiChart.getChartInstance()?.dispose()
+        spendChart.destroyChart()
+        roiChart.destroyChart()
         return
       }
       await syncCharts()

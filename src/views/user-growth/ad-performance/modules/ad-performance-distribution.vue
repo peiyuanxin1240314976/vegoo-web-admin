@@ -306,7 +306,7 @@
     () => props.loading,
     async (ld) => {
       if (ld) {
-        channelChart.getChartInstance()?.dispose()
+        channelChart.destroyChart()
         return
       }
       await nextTick()

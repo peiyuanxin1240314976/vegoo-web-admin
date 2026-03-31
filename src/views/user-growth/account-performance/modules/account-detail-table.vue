@@ -142,7 +142,6 @@
   const props = defineProps<{
     tableData: AccountDetailRow[]
     expandedRowKeys: string[]
-    source: string
     summaryText: string
     // Element Plus style 回调签名在不同版本里参数类型略有差异
     // 这里用 `any` 放宽，以避免父组件严格类型无法赋值。
@@ -230,7 +229,7 @@
       name: 'CampaignDetail',
       query: {
         // CampaignDetail 页面读取 route.query.id 作为 campaignId
-        id: String(props.source || ''),
+        id: String(row.id ?? ''),
         appId: String(row.id ?? ''),
         appName: String(row.name ?? '')
       }

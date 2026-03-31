@@ -146,7 +146,11 @@
       class="ad-performance__global-drawer"
     >
       <div class="ad-performance-drawer__shell">
-        <div v-if="drawerTab === 'campaign' && drawerCampaignRow" v-loading="drawerDetailLoading">
+        <div
+          v-if="drawerTab === 'campaign' && drawerCampaignRow"
+          class="ad-performance-drawer__content"
+          v-loading="drawerDetailLoading"
+        >
           <AdPerformanceDetailDrawer
             :campaign-row="drawerCampaignRow"
             :detail="drawerCampaignDetail"
@@ -155,7 +159,7 @@
           />
         </div>
 
-        <template v-else>
+        <div v-else class="ad-performance-drawer__content">
           <div class="ad-performance-detail__header">
             <div class="ad-performance-detail__title">{{ drawerTitle }}</div>
             <ElButton
@@ -417,7 +421,7 @@
               </div>
             </template>
           </div>
-        </template>
+        </div>
       </div>
     </ElDrawer>
   </div>
@@ -426,9 +430,10 @@
 <script setup lang="ts">
   import { Filter, Search } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
-  import { computed, ref, watch } from 'vue'
+  import { computed, onUnmounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { fetchAdPerformanceCampaignDetailDrawer } from '@/api/user-growth/ad-performance'
+  import mittBus from '@/utils/sys/mittBus'
   import CampaignTab from './table-tabs/campaign-tab.vue'
   import CountryTab from './table-tabs/country-tab.vue'
   import OwnerTab from './table-tabs/owner-tab.vue'
@@ -525,6 +530,15 @@
 
   /** 抽屉内多 Tab 行结构不同，避免联合类型在模板中报缺失字段 */
   const drawerRowAny = computed(() => drawerRow.value as Record<string, any> | null)
+
+  const onCloseOverlays = () => {
+    drawerVisible.value = false
+  }
+
+  mittBus.on('closeOverlays', onCloseOverlays)
+  onUnmounted(() => {
+    mittBus.off('closeOverlays', onCloseOverlays)
+  })
 
   const drawerCampaignRow = computed(() => {
     if (drawerTab.value !== 'campaign') return null
@@ -1247,16 +1261,27 @@
     overflow: auto;
   }
 
-  /* 抽屉内容较多时：内部滚动，不撑出窗口，也不触发页面整体滚动条 */
-  :deep(.ad-performance__global-drawer .el-drawer__body) {
+  /* 抽屉内容较多时：禁止 Drawer 自身滚动，滚动仅发生在内部内容盒子 */
+  :global(.ad-performance__global-drawer .el-drawer),
+  :global(.ad-performance__global-drawer .el-drawer__body) {
+    overflow: hidden;
+  }
+
+  :global(.ad-performance__global-drawer .el-drawer__body) {
     display: flex;
     flex-direction: column;
     height: 100%;
     padding: 0;
-    overflow: hidden;
   }
 
   .ad-performance-drawer__shell {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .ad-performance-drawer__content {
     display: flex;
     flex: 1;
     flex-direction: column;

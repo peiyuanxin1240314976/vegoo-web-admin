@@ -8,6 +8,8 @@ export type AccountDetailRowType = 'app' | 'platform' | 'account'
 /** 应用×平台×账户明细行（树形） */
 export interface AccountDetailRow {
   id: string
+  /** 广告系列 ID（用于跳转广告系列详情：CampaignDetail query.id） */
+  campaignId?: string
   type: AccountDetailRowType
   name: string
   spend: number

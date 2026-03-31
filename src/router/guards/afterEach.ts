@@ -4,6 +4,7 @@ import { Router } from 'vue-router'
 import NProgress from 'nprogress'
 import { useCommon } from '@/hooks/core/useCommon'
 import { loadingService } from '@/utils/ui'
+import mittBus from '@/utils/sys/mittBus'
 import { getPendingLoading, resetPendingLoading } from './beforeEach'
 
 /** 路由全局后置守卫 */
@@ -12,6 +13,9 @@ export function setupAfterEachGuard(router: Router) {
 
   router.afterEach(() => {
     scrollToTop()
+
+    // 路由切换后自动收起所有浮层（弹窗/抽屉等），避免残留遮罩或滚动锁定
+    mittBus.emit('closeOverlays')
 
     // 关闭进度条
     const settingStore = useSettingStore()

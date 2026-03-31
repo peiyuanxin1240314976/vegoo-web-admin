@@ -49,6 +49,8 @@ type Events = {
   openChat: void
   // 打开锁屏事件 - 无参数
   openLockScreen: void
+  // 关闭所有浮层（弹窗/抽屉/气泡等）- 通常用于路由切换时自动收起
+  closeOverlays: void
 }
 
 // 创建类型安全的事件总线实例

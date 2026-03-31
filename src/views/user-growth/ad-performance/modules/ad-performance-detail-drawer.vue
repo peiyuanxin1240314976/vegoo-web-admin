@@ -186,6 +186,7 @@
   }
 
   function onEdit() {
+    emit('close')
     router.push({
       path: '/user-growth/ad-performance/campaign-detail',
       query: {
