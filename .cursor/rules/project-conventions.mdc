@@ -170,6 +170,28 @@ alwaysApply: true
 - **颜色**: 必须遵循下方 **颜色规范**；实现时优先使用 `src/assets/styles/core/tailwind.css` 中已定义的 CSS 变量（如 `var(--default-bg-color)`、`var(--art-primary)` 等），深色模式在 `.dark` 下生效。
 - **SCSS**: `<style scoped lang="scss">`，覆盖子组件用 `:deep()`；挂到 body 的节点可单独无 scoped 块，类名带模块前缀。
 
+### 构建稳定性约束（避免下次打包报错）
+
+以下约束来自历史构建故障复盘，目标是让 `pnpm build` 在不同开发机上更稳定、可复现。
+
+- **Sass 模块系统（强制）**：
+  - 新增/修改 SCSS 时，**禁止**再新增 `@import`（Dart Sass 已弃用，未来版本会移除）。
+  - 统一使用 `@use '...scss' as *;`（或命名空间形式 `as xxx`）。
+  - 如需复用变量/mixin/函数，请在使用方显式 `@use` 引入；**不要**依赖 “某个中间文件被 @import 后全局可见” 的隐式行为。
+  - 说明：本仓库的 stylelint 规则会对 `@forward` 报错（`at-rule-no-unknown`），因此**不要**在业务 SCSS 中使用 `@forward`。
+
+- **`:deep()` 作用域（强制）**：
+  - `:deep()` **只能**用于 `.vue` 的 `<style scoped>` 内（由 Vue 编译器处理）。
+  - **禁止**在独立的 `.css/.scss` 文件里写 `:deep()`，否则会在生产构建的 CSS 优化阶段产生 warning / 甚至影响产物。
+  - 独立样式文件需要穿透子组件时，改用正常的后代选择器（例如 `.wrap .el-input__inner`）。
+
+- **Windows 重装依赖（推荐）**：
+  - Windows 下执行 `pnpm install --force` 前，优先停止 `pnpm dev` / watcher，避免 `.node` 文件被占用导致 `ERR_PNPM_EPERM unlink ...*.node`。
+
+- **Element Plus 类型异常排查（推荐）**：
+  - 若 `vue-tsc` 成片报 `element-plus/es/index.d.ts is not a module (TS2306)`，优先排查依赖是否损坏（例如该 `index.d.ts` 变成 0 字节空文件），再考虑代码层面的 import 修复。
+  - 更完整的排障步骤见 `docs/build-troubleshooting.md`。
+
 ### 颜色规范（设计调色板）
 
 界面颜色须按以下角色使用，确保一致性与可维护性。色值以深色模式为准；对应 CSS 变量见 `tailwind.css` 中 `.dark` 块。
