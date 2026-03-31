@@ -245,7 +245,7 @@ export interface CountryInfoAppLaunchItem {
   /** 内购收入 */
   dIapRevenue: number
   /** 七日留存 */
-  remainDay7: number
+  remainDay1: number
 }
 
 /** 国家详情广告平台投放效果对比 - 单条 data 的 now/last 结构 */

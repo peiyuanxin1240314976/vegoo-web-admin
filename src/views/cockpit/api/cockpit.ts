@@ -735,7 +735,7 @@ export async function fetchCountryInfoTop5Campaign(
 /**
  * 获取国家详情各 APP 表现
  * POST /api/v1/datacenter/analysis/countryInfo/appLaunch，请求体：{}
- * 返回 data 数组，项为 { app, arpu, dAdRevenue, dIapRevenue, remainDay7 }
+ * 返回 data 数组，项为 { app, arpu, dAdRevenue, dIapRevenue, remainDay1 }
  */
 export async function fetchCountryInfoAppLaunch(
   params?: Partial<CountryInfoQueryParams>
