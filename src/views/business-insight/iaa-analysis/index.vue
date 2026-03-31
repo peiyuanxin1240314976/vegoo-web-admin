@@ -3,13 +3,14 @@
     <div class="iaa-page-fx" aria-hidden="true"></div>
     <!-- 顶栏：面包屑 + 全局筛选 -->
     <header class="iaa-header iaa-entry-1">
-      <div class="iaa-header__filters">
+      <div class="iaa-header__filters iaa-filter-panel">
         <div class="iaa-pill">
           <span class="iaa-pill__k">App:</span>
           <ElSelect
-            v-model="filters.s_app_id"
+            v-model="filtersDraft.s_app_id"
             class="iaa-select"
             popper-class="iaa-select__popper"
+            :teleported="true"
             :fit-input-width="true"
           >
             <ElOption
@@ -23,9 +24,10 @@
         <div class="iaa-pill">
           <span class="iaa-pill__k">Platform:</span>
           <ElSelect
-            v-model="filters.platform"
+            v-model="filtersDraft.platform"
             class="iaa-select"
             popper-class="iaa-select__popper"
+            :teleported="true"
             :fit-input-width="true"
           >
             <ElOption
@@ -39,9 +41,10 @@
         <div class="iaa-pill">
           <span class="iaa-pill__k">Country:</span>
           <ElSelect
-            v-model="filters.s_country_code"
+            v-model="filtersDraft.s_country_code"
             class="iaa-select"
             popper-class="iaa-select__popper"
+            :teleported="true"
             :fit-input-width="true"
             filterable
           >
@@ -56,15 +59,18 @@
         <div class="iaa-pill">
           <span class="iaa-pill__k">Date:</span>
           <ElDatePicker
-            v-model="filters.t_date"
+            v-model="filtersDraft.t_date"
             type="date"
             value-format="YYYY-MM-DD"
             format="YYYY-MM-DD"
             class="iaa-date"
+            :teleported="true"
             popper-class="iaa-date-popper"
             :clearable="false"
           />
         </div>
+
+        <ElButton type="primary" round @click="onQuery">查询</ElButton>
       </div>
     </header>
 
@@ -84,7 +90,7 @@
 
     <!-- 主内容区：按 Tab 渲染对应模块 -->
     <main class="iaa-main">
-      <component :is="currentTabComponent" :filter="effectiveFilter" />
+      <component v-if="effectiveFilter" :is="currentTabComponent" :filter="effectiveFilter" />
     </main>
   </div>
 </template>
@@ -114,7 +120,7 @@
 
   const activeTab = ref<IaaTabKey>('adType')
 
-  const filters = reactive<IaaFilterState>({
+  const filtersDraft = reactive<IaaFilterState>({
     s_app_id: '',
     platform: 'all',
     s_country_code: 'all',
@@ -131,8 +137,9 @@
       if (!opts?.length) return
       if (!opts[0]?.value) return
 
-      filters.s_app_id = opts[0].value
+      filtersDraft.s_app_id = opts[0].value
       hasInitDefaultAppId.value = true
+      onQuery()
     },
     { immediate: true }
   )
@@ -146,24 +153,18 @@
     version: TabVersion
   }
 
-  // 与 AdPerformance 类似：筛选变化统一汇总后再下发（轻量 debounce，避免下拉快速切换时每次都全量请求）
-  const effectiveFilter = ref<IaaFilterState>({ ...filters })
-  let filterTimer: number | null = null
-  watch(
-    filters,
-    (val) => {
-      if (filterTimer) window.clearTimeout(filterTimer)
-      filterTimer = window.setTimeout(() => {
-        effectiveFilter.value = { ...val }
-      }, 180)
-    },
-    { deep: true, immediate: true }
-  )
+  // 仅初始化与点击“查询”时才下发筛选，避免下拉切换触发各 tab 的全量请求
+  const effectiveFilter = ref<IaaFilterState | null>(null)
+  function onQuery() {
+    effectiveFilter.value = { ...filtersDraft }
+  }
 
   const currentTabComponent = computed(() => tabComponents[activeTab.value])
 </script>
 
 <style scoped lang="scss">
+  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+
   @import './styles/iaa-card-fx';
 
   .iaa-analysis-page {
@@ -177,22 +178,8 @@
   }
 
   .iaa-header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px 16px;
-    align-items: center;
-    justify-content: space-between;
-    min-width: 0;
-    padding: 16px 18px;
-    margin-bottom: 16px;
-    background: color-mix(in srgb, var(--default-bg-color) 82%, transparent);
-    backdrop-filter: blur(12px);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent);
-    border-radius: 16px;
-    box-shadow:
-      0 8px 32px rgb(0 0 0 / 40%),
-      inset 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent),
-      0 0 40px color-mix(in srgb, var(--art-primary) 10%, transparent);
+    padding: 0 0 10px;
+    margin-bottom: 12px;
   }
 
   .iaa-header__left {
@@ -207,89 +194,184 @@
   .iaa-header__filters {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px 12px;
+    gap: 10px;
     align-items: center;
-    min-width: 0;
+  }
+
+  .iaa-filter-panel {
+    position: relative;
+    padding: 10px 14px;
+    overflow: hidden;
+    border-radius: 16px;
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+
+    transition:
+      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+    &:hover {
+      border-color: rgb(96 165 250 / 48%);
+      box-shadow:
+        0 12px 40px rgb(0 0 0 / 44%),
+        0 0 0 1px rgb(96 165 250 / 22%),
+        inset 0 1px 0 rgb(186 230 253 / 16%),
+        0 0 48px rgb(59 130 246 / 14%);
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  :global(html:not(.dark) .iaa-filter-panel) {
+    background: linear-gradient(148deg, rgb(255 255 255 / 98%), rgb(248 250 252 / 99%));
+    border: 1px solid rgb(15 23 42 / 8%);
+    box-shadow: 0 10px 32px rgb(15 23 42 / 7%);
+
+    &:hover {
+      border-color: rgb(59 130 246 / 22%);
+      box-shadow: 0 12px 36px rgb(15 23 42 / 10%);
+    }
+  }
+
+  :global(html.dark .iaa-filter-panel .iaa-pill) {
+    background: rgb(15 23 42 / 0%);
+    border-color: rgb(96 165 250 / 26%);
+    box-shadow: 0 0 0 0 rgb(59 130 246 / 8%) inset;
+  }
+
+  .iaa-filter-panel :deep(.iaa-select .el-select__wrapper) {
+    min-height: 32px;
+    padding: 0 10px;
+    background: rgb(0 0 0 / 28%);
+    border: 1px solid rgb(96 165 250 / 24%);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+  }
+
+  .iaa-filter-panel :deep(.iaa-date .el-input__wrapper) {
+    min-height: 32px;
+    padding: 0 10px;
+    background: rgb(0 0 0 / 28%);
+    border: 1px solid rgb(96 165 250 / 24%);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+  }
+
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__wrapper),
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-date .el-input__wrapper) {
+    background: rgb(255 255 255 / 90%);
+    border: 1px solid rgb(15 23 42 / 8%);
+    box-shadow: none;
+  }
+
+  .iaa-filter-panel :deep(.iaa-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 600;
+    color: #f8fafc;
+    background: linear-gradient(135deg, rgb(37 99 235 / 96%), rgb(6 182 212 / 88%));
+    border: 1px solid rgb(96 165 250 / 55%);
+    box-shadow:
+      0 0 0 1px rgb(186 230 253 / 14%) inset,
+      0 8px 26px rgb(37 99 235 / 38%),
+      0 0 32px rgb(6 182 212 / 12%);
+  }
+
+  .iaa-filter-panel :deep(.iaa-query-btn.el-button:hover) {
+    filter: brightness(1.08);
+    border-color: rgb(147 197 253 / 62%);
+    box-shadow:
+      0 0 0 1px rgb(186 230 253 / 20%) inset,
+      0 10px 34px rgb(37 99 235 / 45%),
+      0 0 44px rgb(6 182 212 / 20%);
+  }
+
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-query-btn.el-button) {
+    color: #0f172a;
+    background: rgb(15 23 42 / 6%);
+    border: 1px solid rgb(15 23 42 / 8%);
+    box-shadow: none;
+  }
+
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-query-btn.el-button:hover) {
+    filter: brightness(1.06);
   }
 
   .iaa-pill {
-    --iaa-filter-accent: var(--art-success);
-
     display: inline-flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
-    min-height: 40px;
-    padding: 0 14px;
-    background: color-mix(in srgb, var(--iaa-filter-accent) 10%, transparent);
-    border: 1px solid color-mix(in srgb, var(--iaa-filter-accent) 26%, transparent);
-    border-radius: 9999px;
-    box-shadow: 0 0 16px color-mix(in srgb, var(--iaa-filter-accent) 14%, transparent);
-
-    .iaa-pill__k {
-      font-size: 12px;
-      color: var(--text-secondary);
-      white-space: nowrap;
-    }
+    height: 36px;
+    padding: 0 10px;
+    color: var(--text-primary);
+    background: rgb(15 23 42 / 6%);
+    border: 0 solid rgb(15 23 42 / 8%);
+    border-radius: 14px;
   }
 
-  .iaa-select {
-    width: 132px;
-    min-width: 110px;
-    max-width: 100%;
-
-    :deep(.el-input__wrapper) {
-      background: transparent;
-      box-shadow: none;
-    }
+  :global(html.dark .iaa-pill) {
+    color: #f4f4f5;
+    background: rgb(24 24 27 / 45%);
   }
 
+  .iaa-pill__k {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .iaa-select,
   .iaa-date {
     width: 140px;
-
-    :deep(.el-input__wrapper) {
-      background: transparent;
-      box-shadow: none;
-    }
   }
 
-  /* Select / Date 统一成 ad-performance 的圆角透底风格 */
-  :deep(.iaa-select .el-input__wrapper),
+  :deep(.iaa-select .el-select__wrapper) {
+    min-height: 30px;
+    padding: 0 8px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
   :deep(.iaa-date .el-input__wrapper) {
-    padding: 0 12px;
-    background: color-mix(in srgb, var(--iaa-filter-accent) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--iaa-filter-accent) 28%, transparent);
-    border-radius: 9999px;
-    transition:
-      border-color var(--duration-fast) var(--ease-default),
-      box-shadow var(--duration-fast) var(--ease-default),
-      background var(--duration-fast) var(--ease-default);
+    min-height: 30px;
+    padding: 0 8px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
   }
 
-  :deep(.iaa-select .el-input__inner),
   :deep(.iaa-date .el-input__inner) {
-    font-size: 14px;
     color: var(--text-primary);
   }
 
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-date .el-input__inner) {
+    color: #0f172a;
+  }
+
+  :deep(.iaa-select .el-select__selected-item),
+  :deep(.iaa-select .el-select__placeholder),
   :deep(.iaa-select .el-select__caret) {
-    color: var(--iaa-filter-accent);
+    color: var(--text-primary);
   }
 
-  :deep(.iaa-select .el-input__prefix-inner svg) {
-    color: var(--iaa-filter-accent);
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__selected-item),
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__placeholder),
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__caret) {
+    color: #0f172a;
   }
 
-  :deep(.iaa-select .el-input__wrapper:hover),
-  :deep(.iaa-date .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--iaa-filter-accent) 55%, transparent);
-    box-shadow: 0 0 18px color-mix(in srgb, var(--iaa-filter-accent) 18%, transparent);
+  :deep(.iaa-date .el-input__prefix),
+  :deep(.iaa-date .el-input__suffix) {
+    color: var(--text-primary);
   }
 
-  :deep(.iaa-select .el-input__wrapper.is-focus),
-  :deep(.iaa-date .el-input__wrapper.is-focus) {
-    background: color-mix(in srgb, var(--iaa-filter-accent) 12%, transparent) !important;
-    border-color: var(--iaa-filter-accent) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--iaa-filter-accent) 22%, transparent) !important;
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-date .el-input__prefix),
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-date .el-input__suffix) {
+    color: #0f172a;
   }
 
   /* 小屏：筛选条改为纵向堆叠 */
