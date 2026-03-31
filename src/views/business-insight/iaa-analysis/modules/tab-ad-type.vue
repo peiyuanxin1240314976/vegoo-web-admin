@@ -171,7 +171,7 @@
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { IaaFilterState, IaaAdTypeTabData } from '../types'
-  import { fetchIaaAdTypeTabData } from '@/api/business-insight'
+  import { fetchIaaAdTypeTabData, fetchIaaOverviewUserBreakdown } from '@/api/business-insight'
   import { Warning, Top, Bottom, Sunny } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'IaaTabAdType' })
@@ -197,6 +197,11 @@
       barColor: TOP10_BAR
     }))
   })
+
+  function emptyIfAll(v: string | undefined, all = 'all') {
+    if (v === undefined || v === '' || v === all) return ''
+    return v
+  }
 
   function formatUsd(n: number) {
     return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -508,6 +513,21 @@
     try {
       const data = await fetchIaaAdTypeTabData(props.filter)
       tabData.value = data ?? null
+
+      // 用户拆分分析改走新接口（其余模块仍沿用原整页接口）
+      const userBreakdown = await fetchIaaOverviewUserBreakdown({
+        platform: emptyIfAll(props.filter.platform),
+        s_app_id: emptyIfAll(props.filter.s_app_id),
+        s_app_version: '',
+        s_country_code: emptyIfAll(props.filter.s_country_code),
+        t_date: props.filter.t_date ?? ''
+      })
+      if (tabData.value) {
+        tabData.value = {
+          ...tabData.value,
+          userBreakdown
+        }
+      }
     } catch {
       tabData.value = null
     }

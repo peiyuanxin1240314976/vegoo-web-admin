@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, reactive } from 'vue'
+  import { ref, computed, reactive, watch } from 'vue'
   import type { IaaTabKey, IaaFilterState } from './types'
   import { useIaaFilters } from './composables/useIaaFilters'
   import TabAdType from './modules/tab-ad-type.vue'
@@ -119,13 +119,27 @@
   const activeTab = ref<IaaTabKey>('adType')
 
   const filters = reactive<IaaFilterState>({
-    s_app_id: 'all',
+    s_app_id: '',
     platform: 'all',
     s_country_code: 'all',
     t_date: '2026-03-05'
   })
 
   const { appOptions, platformOptions, countryOptions } = useIaaFilters()
+
+  const hasInitDefaultAppId = ref(false)
+  watch(
+    appOptions,
+    (opts) => {
+      if (hasInitDefaultAppId.value) return
+      if (!opts?.length) return
+      if (!opts[0]?.value) return
+
+      filters.s_app_id = opts[0].value
+      hasInitDefaultAppId.value = true
+    },
+    { immediate: true }
+  )
 
   const tabComponents: Record<IaaTabKey, typeof TabAdType> = {
     adType: TabAdType,
@@ -148,7 +162,7 @@
     width: 100%;
     height: 100%;
     padding: 16px 24px;
-    overflow: hidden;
+    overflow: auto;
     background: var(--default-bg-color);
   }
 
@@ -251,7 +265,7 @@
   .iaa-main {
     flex: 1;
     min-height: 0;
-    overflow: auto;
+    overflow: visible;
   }
 </style>
 

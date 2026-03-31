@@ -810,9 +810,8 @@
   .revenue-deviation {
     position: relative;
     min-width: 0;
-    min-height: 100vh;
     padding: 20px 24px;
-    overflow-x: auto;
+    overflow: hidden;
     font-size: 13px;
     color: var(--text-primary);
     background: var(--default-bg-color);
@@ -1671,7 +1670,7 @@
   .rd-matrix-scroll {
     flex: 1;
     min-height: 0;
-    max-height: 420px;
+    max-height: 340px;
     overflow: auto;
   }
 

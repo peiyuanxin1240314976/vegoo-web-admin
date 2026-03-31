@@ -405,6 +405,7 @@
   import * as echarts from 'echarts'
   import type { ECharts } from 'echarts'
   import { Filter, TrendCharts, Money, Location, Grid, Warning } from '@element-plus/icons-vue'
+  import { getAppNow, cloneAppDate } from '@/utils/app-now'
   import {
     fetchEcpmMetaFilterOptions,
     fetchEcpmOverviewAdSlotRanking,
@@ -428,6 +429,13 @@
 
   function fmt2(n: number) {
     return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+
+  function formatYmdSlash(d: Date): string {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}/${m}/${day}`
   }
 
   const kpis = ref<EcpmOverviewKpis>({
@@ -491,7 +499,13 @@
   // ─── State ───────────────────────────────────────────────────────────────
   const ALL_OPTION_VALUE = '__ALL__'
 
-  const dateRange = ref<[string, string]>(['2024/05/01', '2024/05/31'])
+  const defaultEnd = getAppNow()
+  const defaultStart = cloneAppDate(defaultEnd)
+  defaultStart.setDate(defaultStart.getDate() - 6)
+  const dateRange = ref<[string, string]>([
+    formatYmdSlash(defaultStart),
+    formatYmdSlash(defaultEnd)
+  ])
   const filterPlatform = ref(ALL_OPTION_VALUE)
   const filterApp = ref(ALL_OPTION_VALUE)
   const filterCountry = ref(ALL_OPTION_VALUE)
@@ -795,9 +809,43 @@
     updateTrendChart()
   }
 
+  function normalizeMapCountryName(rawName: string) {
+    const name = String(rawName ?? '').trim()
+    if (!name) return ''
+
+    const isAllCaps =
+      name.length >= 3 && name === name.toUpperCase() && /[A-Z]/.test(name) && !/\d/.test(name)
+
+    const normalized = isAllCaps
+      ? name
+          .replace(/[_-]+/g, ' ')
+          .toLowerCase()
+          .split(' ')
+          .filter(Boolean)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ')
+      : name
+
+    // GeoJSON country name quirks / aliases
+    const aliasMap: Record<string, string> = {
+      'United States Of America': 'United States',
+      'Russian Federation': 'Russia',
+      'Korea, South': 'South Korea',
+      'Korea (Republic Of)': 'South Korea',
+      'United Kingdom Of Great Britain And Northern Ireland': 'United Kingdom',
+      'Brunei Darussalam': 'Brunei'
+    }
+
+    return aliasMap[normalized] ?? normalized
+  }
+
+  function getMapCountryName(item: { geo_name?: string; s_country_code?: string }) {
+    return normalizeMapCountryName(item.geo_name || item.s_country_code || '')
+  }
+
   function mapSeriesData() {
     return mapCountries.value.map((c) => ({
-      name: c.geo_name,
+      name: getMapCountryName(c),
       value: mapMode.value === 'estimated' ? c.d_ecpm_estimated : c.d_ecpm_real
     }))
   }
@@ -806,10 +854,11 @@
     return mapCountries.value
       .map((c) => {
         const value = mapMode.value === 'estimated' ? c.d_ecpm_estimated : c.d_ecpm_real
-        const coord = WORLD_GEO_COORD_MAP[c.geo_name]
+        const name = getMapCountryName(c)
+        const coord = WORLD_GEO_COORD_MAP[name]
         if (!coord) return null
         return {
-          name: c.geo_name,
+          name,
           value: [...coord, value]
         }
       })
@@ -869,6 +918,7 @@
           }
         },
         visualMap: {
+          show: false,
           min: 0,
           max: 10,
           left: 'left',
@@ -1089,9 +1139,23 @@
       if (requestSeq !== mapRequestSeq) return
       mapCountries.value = response.items
       if (worldMapChart) {
-        worldMapChart.setOption({
-          series: [{ data: mapSeriesData() }, { data: mapPulseData() }]
-        })
+        const pulse = mapPulseData()
+        worldMapChart.setOption(
+          {
+            series: [
+              { type: 'map', geoIndex: 0, label: { show: false }, data: mapSeriesData() },
+              { type: 'effectScatter', coordinateSystem: 'geo', zlevel: 3, data: pulse },
+              {
+                type: 'scatter',
+                coordinateSystem: 'geo',
+                zlevel: 2,
+                silent: true,
+                data: pulse.map((d) => ({ name: d.name, value: d.value }))
+              }
+            ]
+          },
+          { replaceMerge: ['series'] as any }
+        )
       }
     } finally {
       if (requestSeq === mapRequestSeq) {

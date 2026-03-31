@@ -1282,6 +1282,53 @@ export async function fetchIaaAdTypeTabData(params: IaaFilterState) {
   return unwrapIaaPayload<IaaAdTypeTabData>(raw)
 }
 
+type IaaOverviewUserBreakdownParams = {
+  platform: string
+  s_app_id: string
+  s_app_version: string
+  s_country_code: string
+  t_date: string
+}
+
+type IaaOverviewUserBreakdownResponse = {
+  buckets: {
+    activeUsers: number
+    installDays: string
+    revenue: number
+  }[]
+  highlightRevenueSharePct: number
+  insight: string
+}
+
+function normalizeIaaOverviewUserBreakdown(
+  raw: IaaOverviewUserBreakdownResponse | null | undefined
+): IaaAdTypeTabData['userBreakdown'] {
+  const buckets = Array.isArray(raw?.buckets)
+    ? raw!.buckets.map((b) => ({
+        activeUsers: Number(b?.activeUsers ?? 0),
+        installDays: String(b?.installDays ?? ''),
+        revenue: Number(b?.revenue ?? 0)
+      }))
+    : []
+  return {
+    buckets,
+    insight: String(raw?.insight ?? ''),
+    highlightRevenueSharePct: Number(raw?.highlightRevenueSharePct ?? 0)
+  }
+}
+
+/**
+ * IAA 分析 - 用户拆分分析（安装天数）
+ * 新网关：POST /api/v1/datacenter/analysis/business-insight/iaa-analysis/overview/user-breakdown
+ */
+export async function fetchIaaOverviewUserBreakdown(params: IaaOverviewUserBreakdownParams) {
+  const raw = await request.post<unknown>({
+    url: '/api/v1/datacenter/analysis/business-insight/iaa-analysis/overview/user-breakdown',
+    data: params
+  })
+  return normalizeIaaOverviewUserBreakdown(unwrapIaaPayload<IaaOverviewUserBreakdownResponse>(raw))
+}
+
 export async function fetchIaaPlatformTabData(params: IaaFilterState) {
   if (isIaaAnalysisEndpointMock(IaaAnalysisEndpoint.PlatformTab)) {
     return insightMock.mockFetchIaaPlatformTabData(params)

@@ -7,8 +7,7 @@ import { fetchIaaMetaFilterOptions } from '@/api/business-insight'
 import type { IaaSelectOption } from '../types'
 
 const DEFAULT_APP_OPTIONS: IaaSelectOption[] = [
-  { label: '全部', value: 'all' },
-  { label: 'Weather5', value: 'weather5' }
+  // s_app_id 不在前端拼接“全部”，以接口返回为准
 ]
 const DEFAULT_PLATFORM_OPTIONS: IaaSelectOption[] = [
   { label: 'Android&iOS', value: 'all' },
