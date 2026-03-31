@@ -29,21 +29,12 @@ const fastEnterConfig: FastEnterConfig = {
       routeName: 'Analysis'
     },
     {
-      name: '礼花效果',
-      description: '动画特效展示',
-      icon: 'ri:loader-line',
-      iconColor: '#7A7FFF',
-      enabled: true,
-      order: 3,
-      routeName: 'Fireworks'
-    },
-    {
       name: '聊天',
       description: '即时通讯功能',
       icon: 'ri:user-line',
       iconColor: '#13DEB9',
       enabled: true,
-      order: 4,
+      order: 3,
       routeName: 'Chat'
     },
     {
@@ -52,7 +43,7 @@ const fastEnterConfig: FastEnterConfig = {
       icon: 'ri:bill-line',
       iconColor: '#ffb100',
       enabled: true,
-      order: 5,
+      order: 4,
       link: WEB_LINKS.DOCS
     },
     {
@@ -61,7 +52,7 @@ const fastEnterConfig: FastEnterConfig = {
       icon: 'ri:user-location-line',
       iconColor: '#ff6b6b',
       enabled: true,
-      order: 6,
+      order: 5,
       link: WEB_LINKS.COMMUNITY
     },
     {
@@ -70,7 +61,7 @@ const fastEnterConfig: FastEnterConfig = {
       icon: 'ri:gamepad-line',
       iconColor: '#38C0FC',
       enabled: true,
-      order: 7,
+      order: 6,
       routeName: 'ChangeLog'
     },
     {
@@ -79,7 +70,7 @@ const fastEnterConfig: FastEnterConfig = {
       icon: 'ri:bilibili-line',
       iconColor: '#FB7299',
       enabled: true,
-      order: 8,
+      order: 7,
       link: WEB_LINKS.BILIBILI
     }
   ],

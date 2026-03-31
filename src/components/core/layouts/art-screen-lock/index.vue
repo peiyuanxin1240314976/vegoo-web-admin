@@ -160,6 +160,36 @@
     )
   }
 
+  /** 通过窗口尺寸差检测开发者工具（仅锁屏且桌面端轮询） */
+  const DEVTOOLS_SIZE_THRESHOLD = 160
+  let devToolsPollTimer: ReturnType<typeof setInterval> | null = null
+  let devtoolsSizeOpen = false
+
+  const stopDevToolsWindowPoll = () => {
+    if (devToolsPollTimer) {
+      clearInterval(devToolsPollTimer)
+      devToolsPollTimer = null
+    }
+    devtoolsSizeOpen = false
+    showDevToolsWarning.value = false
+  }
+
+  const pollDevToolsByWindowSize = () => {
+    if (!isLock.value || isMobile()) return
+
+    const isDevToolsOpen =
+      window.outerHeight - window.innerHeight > DEVTOOLS_SIZE_THRESHOLD ||
+      window.outerWidth - window.innerWidth > DEVTOOLS_SIZE_THRESHOLD
+
+    if (isDevToolsOpen && !devtoolsSizeOpen) {
+      devtoolsSizeOpen = true
+      showDevToolsWarning.value = true
+    } else if (!isDevToolsOpen && devtoolsSizeOpen) {
+      devtoolsSizeOpen = false
+      showDevToolsWarning.value = false
+    }
+  }
+
   // 添加禁用控制台的函数
   const disableDevTools = () => {
     // 禁用右键菜单
@@ -283,41 +313,12 @@
     }
     document.addEventListener('dragstart', handleDragStart, true)
 
-    // 监听开发者工具打开状态（仅在桌面端启用）
-    let devtools = { open: false }
-    const threshold = 160
-    let devToolsInterval: ReturnType<typeof setInterval> | null = null
-
-    const checkDevTools = () => {
-      if (!isLock.value || isMobile()) return
-
-      const isDevToolsOpen =
-        window.outerHeight - window.innerHeight > threshold ||
-        window.outerWidth - window.innerWidth > threshold
-
-      if (isDevToolsOpen && !devtools.open) {
-        devtools.open = true
-        showDevToolsWarning.value = true
-      } else if (!isDevToolsOpen && devtools.open) {
-        devtools.open = false
-        showDevToolsWarning.value = false
-      }
-    }
-
-    // 仅在桌面端启用开发者工具检测
-    if (!isMobile()) {
-      devToolsInterval = setInterval(checkDevTools, 500)
-    }
-
-    // 返回清理函数
+    // 返回清理函数（开发者工具窗口尺寸轮询由 isLock 的 watch 单独管理）
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu, true)
       document.removeEventListener('keydown', handleKeyDown, true)
       document.removeEventListener('selectstart', handleSelectStart, true)
       document.removeEventListener('dragstart', handleDragStart, true)
-      if (devToolsInterval) {
-        clearInterval(devToolsInterval)
-      }
     }
   }
 
@@ -407,18 +408,31 @@
     visible.value = true
   }
 
-  // 监听锁屏状态变化
-  watch(isLock, (newValue) => {
-    if (newValue) {
-      document.body.style.overflow = 'hidden'
-      setTimeout(() => {
-        unlockInputRef.value?.input?.focus()
-      }, 100)
-    } else {
-      document.body.style.overflow = 'auto'
-      showDevToolsWarning.value = false
-    }
-  })
+  // 监听锁屏状态：布局、焦点；锁屏期间才轮询检测开发者工具窗口尺寸
+  watch(
+    isLock,
+    (locked) => {
+      if (locked) {
+        document.body.style.overflow = 'hidden'
+        setTimeout(() => {
+          unlockInputRef.value?.input?.focus()
+        }, 100)
+        if (!isMobile()) {
+          devtoolsSizeOpen = false
+          showDevToolsWarning.value = false
+          pollDevToolsByWindowSize()
+          stopDevToolsWindowPoll()
+          devToolsPollTimer = setInterval(pollDevToolsByWindowSize, 500)
+        } else {
+          stopDevToolsWindowPoll()
+        }
+      } else {
+        document.body.style.overflow = 'auto'
+        stopDevToolsWindowPoll()
+      }
+    },
+    { immediate: true }
+  )
 
   // 存储清理函数
   let cleanupDevTools: (() => void) | null = null
@@ -442,6 +456,7 @@
   onUnmounted(() => {
     document.removeEventListener('keydown', handleKeydown)
     document.body.style.overflow = 'auto'
+    stopDevToolsWindowPoll()
     // 清理禁用开发者工具的事件监听器
     if (cleanupDevTools) {
       cleanupDevTools()

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="ad-platform-info-page ad-platform-info-page--ap-fx art-full-height">
     <div class="api-page-fx" aria-hidden="true"></div>
     <ElSkeleton :loading="isLoading" animated class="api-skeleton-root">
@@ -194,10 +194,10 @@
       rgb(249 115 22 / 5%) 350deg,
       transparent 360deg
     );
-    filter: blur(2px);
     opacity: 0.82;
     mask-image: linear-gradient(to bottom, black 0%, black 52%, transparent 88%);
     animation: api-fx-spin 52s linear infinite;
+    will-change: transform;
   }
 
   @keyframes api-aurora-drift {

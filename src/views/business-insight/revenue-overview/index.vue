@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div ref="rootRef" class="revenue-overview-root art-full-height revenue-overview-page">
     <div
       class="revenue-overview-wrap"
@@ -2689,10 +2689,10 @@
       rgb(168 85 247 / 8%) 330deg,
       transparent 360deg
     );
-    filter: blur(2px);
     opacity: 0.82;
     mask-image: linear-gradient(to bottom, black 0%, black 48%, transparent 82%);
     animation: rev-ap-fx-spin 50s linear infinite;
+    will-change: transform;
   }
 
   .revenue-overview-wrap > *:not(.rev-page-fx) {

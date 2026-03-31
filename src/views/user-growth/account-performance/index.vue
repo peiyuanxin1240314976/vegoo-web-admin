@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="account-performance-page flex flex-col">
     <div class="ac-perf-page-fx" aria-hidden="true"></div>
     <!-- 顶部：筛选 + 日期 + 导出 -->
@@ -1300,10 +1300,10 @@
       rgb(249 115 22 / 6%) 350deg,
       transparent 360deg
     );
-    filter: blur(2px);
     opacity: 0.85;
     mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
     animation: ac-perf-fx-spin 52s linear infinite;
+    will-change: transform;
   }
 
   @keyframes ac-perf-aurora-drift {

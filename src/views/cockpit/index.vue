@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="cockpit-page flex flex-col">
     <div class="cockpit-page-fx" aria-hidden="true"></div>
     <!-- 1. 日期范围 + 2. 顶部操作栏 -->
@@ -283,10 +283,10 @@
       rgb(249 115 22 / 6%) 350deg,
       transparent 360deg
     );
-    filter: blur(2px);
     opacity: 0.85;
     mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
     animation: cockpit-fx-spin 52s linear infinite;
+    will-change: transform;
   }
 
   @keyframes cockpit-aurora-drift {

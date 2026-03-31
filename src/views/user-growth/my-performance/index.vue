@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="my-performance-page art-full-height">
     <div class="mp-page-fx" aria-hidden="true"></div>
     <div class="mp-entry-header">
@@ -218,10 +218,10 @@
       rgb(249 115 22 / 4%) 350deg,
       transparent 360deg
     );
-    filter: blur(2px);
     opacity: 0.78;
     mask-image: linear-gradient(to bottom, black 0%, black 48%, transparent 82%);
     animation: mp-page-fx-spin 52s linear infinite;
+    will-change: transform;
   }
 
   @keyframes mp-page-fx-spin {

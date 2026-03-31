@@ -30,6 +30,7 @@
     animation:
       iaa-aurora-drift 14s ease-in-out infinite alternate,
       iaa-bg-flow 22s ease-in-out infinite alternate;
+    will-change: transform, opacity;
   }
 
   &::after {
@@ -69,10 +70,10 @@
     rgb(168 85 247 / 8%) 330deg,
     transparent 360deg
   );
-  filter: blur(2px);
-  opacity: 0.85;
+  opacity: 0.6;
   mask-image: linear-gradient(to bottom, black 0%, black 48%, transparent 82%);
   animation: iaa-fx-spin 52s linear infinite;
+  will-change: transform;
 }
 
 @keyframes iaa-aurora-drift {

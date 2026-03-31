@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="map-detail-page flex flex-col">
     <div class="map-detail-page-fx" aria-hidden="true"></div>
     <div class="map-detail-page__section map-detail-entry-1">
@@ -503,10 +503,10 @@
       rgb(249 115 22 / 6%) 350deg,
       transparent 360deg
     );
-    filter: blur(2px);
     opacity: 0.85;
     mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
     animation: map-detail-fx-spin 52s linear infinite;
+    will-change: transform;
   }
 
   @keyframes map-detail-aurora {

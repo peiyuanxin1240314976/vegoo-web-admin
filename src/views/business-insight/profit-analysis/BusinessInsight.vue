@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
   import 'flag-icons/css/flag-icons.min.css'
   import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import * as echarts from 'echarts'
@@ -806,10 +806,10 @@
       rgb(168 85 247 / 7%) 330deg,
       transparent 360deg
     );
-    filter: blur(2px);
     opacity: 0.8;
     mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 82%);
     animation: bi-ap-fx-spin 52s linear infinite;
+    will-change: transform;
   }
 
   @keyframes bi-ap-aurora-drift {

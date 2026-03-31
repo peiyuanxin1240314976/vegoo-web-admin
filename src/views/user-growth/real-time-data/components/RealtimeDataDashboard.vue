@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
   import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import * as echarts from 'echarts'
   import AppDetailModal from './AppDetailModal.vue'
@@ -494,10 +494,10 @@
       rgb(6 182 212 / 7%) 280deg,
       transparent 360deg
     );
-    filter: blur(2px);
     opacity: 0.78;
     mask-image: linear-gradient(to bottom, black 0%, black 44%, transparent 80%);
     animation: rtd-fx-spin 48s linear infinite;
+    will-change: transform;
   }
 
   @keyframes rtd-aurora-drift {

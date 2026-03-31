@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="revenue-deviation">
     <div class="rd-page-fx" aria-hidden="true"></div>
     <!-- ========== Header ========== -->
@@ -928,10 +928,10 @@
       color-mix(in srgb, var(--art-danger) 10%, transparent) 330deg,
       transparent 360deg
     );
-    filter: blur(2px);
     opacity: 0.85;
     mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
     animation: rd-fx-spin 52s linear infinite;
+    will-change: transform;
   }
 
   @keyframes rd-aurora-drift {

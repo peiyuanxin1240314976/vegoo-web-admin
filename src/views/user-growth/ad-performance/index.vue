@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="ad-performance-page flex flex-col">
     <div class="ap-page-fx" aria-hidden="true"></div>
     <div class="ad-performance-page__section ad-performance-page__section--filters ap-entry-1">
@@ -186,10 +186,10 @@
       rgb(249 115 22 / 6%) 350deg,
       transparent 360deg
     );
-    filter: blur(2px);
     opacity: 0.85;
     mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
     animation: ap-fx-spin 52s linear infinite;
+    will-change: transform;
   }
 
   @keyframes ap-aurora-drift {

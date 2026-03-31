@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
   import { ref, computed, onMounted, watch } from 'vue'
   import SummaryTab from './SummaryTab.vue'
   import PlatformTab from './PlatformTab.vue'
@@ -409,10 +409,10 @@
       rgb(168 85 247 / 8%) 330deg,
       transparent 360deg
     );
-    filter: blur(2px);
     opacity: 0.82;
     mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
     animation: ma-fx-spin 48s linear infinite;
+    will-change: transform;
   }
 
   @keyframes ma-aurora-drift {
