@@ -109,11 +109,67 @@
 
   const WORLD_JSON_URL = `${import.meta.env.BASE_URL}geo/world.json`
   let mapRegistered = false
+  let worldRegionNameIndex: Map<string, string> | null = null
+
+  function normalizeWorldRegionKey(s: string) {
+    return s
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[\s'’".,()-]+/g, '')
+      .trim()
+  }
+
+  const ISO2_TO_WORLD_NAME_ALIASES: Record<string, string> = {
+    // `public/geo/world.json` uses some abbreviations / simplified names.
+    CD: 'Dem. Rep. Congo',
+    KP: 'Dem. Rep. Korea',
+    KR: 'Korea',
+    CI: "Côte d'Ivoire"
+  }
+
+  function resolveWorldRegionName(input: string | undefined) {
+    const raw = (input ?? '').trim()
+    if (!raw) return ''
+
+    if (!worldRegionNameIndex) return raw
+
+    const upper = raw.toUpperCase()
+    const aliasName = ISO2_TO_WORLD_NAME_ALIASES[upper]
+    if (aliasName) return aliasName
+
+    // If API already returns world.json `properties.name` (English), keep it.
+    if (worldRegionNameIndex.has(raw)) return raw
+
+    // Prefer ISO2 -> English name via Intl, then normalize to match world.json.
+    if (/^[A-Z]{2}$/.test(upper)) {
+      try {
+        const dn = new Intl.DisplayNames(['en'], { type: 'region' })
+        const enName = dn.of(upper) ?? ''
+        const hit = worldRegionNameIndex.get(normalizeWorldRegionKey(enName))
+        if (hit) return hit
+      } catch {
+        // ignore: Intl.DisplayNames may be unavailable in some runtimes
+      }
+    }
+
+    const hit = worldRegionNameIndex.get(normalizeWorldRegionKey(raw))
+    return hit ?? raw
+  }
+
   async function ensureMapRegistered() {
     if (mapRegistered) return
     const res = await fetch(WORLD_JSON_URL)
     const geoJson = await res.json()
     echarts.registerMap('world', geoJson)
+    // Build a fast lookup so series.data[].name can be ISO2 / varied formats.
+    worldRegionNameIndex = new Map<string, string>()
+    for (const f of geoJson?.features ?? []) {
+      const n = f?.properties?.name
+      if (typeof n !== 'string' || !n) continue
+      worldRegionNameIndex.set(n, n)
+      worldRegionNameIndex.set(normalizeWorldRegionKey(n), n)
+    }
     mapRegistered = true
   }
 
@@ -220,7 +276,9 @@
         padding: [10, 14],
         textStyle: { color: '#f1f5f9', fontSize: 12 },
         formatter: (params: any) => {
-          const item = mapData.find((d) => d.name === params.name)
+          const item = mapData.find(
+            (d) => resolveWorldRegionName((d as any).s_country_code ?? d.name) === params.name
+          )
           if (!item) return `<div style="color:#94a3b8">${params.name}</div>`
           return [
             `<div style="font-weight:600;margin-bottom:4px">${item.cnName ?? params.name}</div>`,
@@ -253,7 +311,7 @@
           zoom: 1.2,
           scaleLimit: { min: 0.8, max: 5 },
           data: mapData.map((d) => ({
-            name: d.name,
+            name: resolveWorldRegionName((d as any).s_country_code ?? d.name),
             value: d.value,
             cnName: d.cnName
           })),
@@ -279,7 +337,9 @@
             fontSize: 10,
             fontWeight: 500,
             formatter: (params: any) => {
-              const item = mapData.find((d) => d.name === params.name)
+              const item = mapData.find(
+                (d) => resolveWorldRegionName((d as any).s_country_code ?? d.name) === params.name
+              )
               if (!item) return ''
               return `{name|${item.cnName ?? params.name}}\n{ecpm|${item.value.toFixed(2)}}`
             },
