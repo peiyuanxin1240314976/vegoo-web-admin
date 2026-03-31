@@ -812,7 +812,7 @@
     min-width: 0;
     min-height: 100vh;
     padding: 20px 24px;
-    overflow-x: clip;
+    overflow-x: auto;
     font-size: 13px;
     color: var(--text-primary);
     background: var(--default-bg-color);
@@ -1198,6 +1198,10 @@
     gap: 14px;
     align-items: stretch;
     margin-bottom: 16px;
+  }
+
+  .rd-platform-card {
+    grid-column: 2 / -1;
   }
 
   .rd-right-col {
@@ -1667,11 +1671,20 @@
   .rd-matrix-scroll {
     flex: 1;
     min-height: 0;
-    overflow-x: auto;
+    max-height: 420px;
+    overflow: auto;
   }
 
   .rd-matrix-table {
     min-width: 600px;
+  }
+
+  .rd-matrix-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--default-box-color);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent);
   }
 
   .rd-matrix-col-head {
