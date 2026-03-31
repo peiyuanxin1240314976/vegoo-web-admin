@@ -97,6 +97,7 @@
     <!-- 自定义列弹窗 -->
     <ElDialog
       v-model="dialogVisible"
+      class="ad-performance__global-dialog"
       width="520px"
       :close-on-click-modal="false"
       :append-to-body="true"
@@ -288,6 +289,12 @@
 </script>
 
 <style scoped lang="scss">
+  /* 弹窗内容较多时：内部滚动，不撑出窗口 */
+  :deep(.ad-performance__global-dialog .el-dialog__body) {
+    max-height: min(60vh, calc(100vh - 240px));
+    overflow: auto;
+  }
+
   .ad-performance-table__custom-header {
     display: flex;
     align-items: center;

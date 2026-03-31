@@ -145,10 +145,11 @@
                     v-if="!appTableLoading"
                     :table-data="tableData"
                     :expanded-row-keys="expandedRowKeys"
+                    :source="source"
                     :summary-text="tableSummaryText"
-                    :get-row-style="getRowStyle as any"
-                    :get-cell-style="getCellStyle as any"
-                    :get-name-style="getNameStyle as any"
+                    :get-row-style="getRowStyleAny"
+                    :get-cell-style="getCellStyleAny"
+                    :get-name-style="getNameStyleAny"
                     :format-money="formatMoney"
                     :format-number="formatNumber"
                     :get-roi-class="getRoiClass"
@@ -263,8 +264,14 @@
   import { AD_PERFORMANCE_BASE } from '@/views/user-growth/ad-performance/config/api-base'
   import type { AdPerformanceMetaFilterResponse } from '@/views/user-growth/ad-performance/types'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
   import AccountDetailTable from './modules/account-detail-table.vue'
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
   import AppPerformancePlaceholder from './modules/app-performance-placeholder.vue'
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
   import PlatformPerformancePlaceholder from './modules/platform-performance-placeholder.vue'
   import type {
     AccountDetailRow,
@@ -294,6 +301,11 @@
   const tableSearch = ref('')
   const expandAll = ref(false)
   const expandedRowKeys = ref<string[]>([])
+
+  // 模板内禁止写 `as any`，这里预先放宽签名给子组件透传
+  const getRowStyleAny = getRowStyle as any
+  const getCellStyleAny = getCellStyle as any
+  const getNameStyleAny = getNameStyle as any
   const rangeOptions: { value: string; label: string }[] = [
     { value: '应用', label: '应用' },
     { value: '平台', label: '平台' },

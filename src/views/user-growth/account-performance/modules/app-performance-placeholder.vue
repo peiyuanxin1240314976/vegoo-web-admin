@@ -1,25 +1,28 @@
 <!-- 我是账户页面 -->
 <template>
   <div>
-    <div v-if="accountsLoading" class="ap-table-skeleton-scroll">
-      <ElSkeleton animated :rows="11" />
-    </div>
+    <div class="ap-table-scroll">
+      <div v-if="accountsLoading" class="ap-table-skeleton-scroll">
+        <ElSkeleton animated :rows="11" />
+      </div>
 
-    <div v-else class="ap-table-scroll">
-      <ElTable :data="pagedData" size="default" class="ap-account-table">
-        <!-- 账户名称（含 ID 后缀） -->
-        <ElTableColumn label="账户名称" min-width="220" show-overflow-tooltip>
-          <template #default="{ row }">
+      <template v-else>
+        <ArtVirtualTable
+          :columns="virtualColumns"
+          :data="pagedData"
+          row-key="id"
+          height-offset="520"
+          :min-height="480"
+          class="ap-account-table"
+        >
+          <template #cell:name="{ row }">
             <div class="ap-account-name-cell">
               <span class="ap-account-name">{{ row.name }}</span>
               <span v-if="row.accountId" class="ap-account-id">({{ row.accountId }})</span>
             </div>
           </template>
-        </ElTableColumn>
 
-        <!-- 广告平台（图标 + 平台名） -->
-        <ElTableColumn label="广告平台" width="130" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:platform="{ row }">
             <div class="ap-platform-cell">
               <span
                 class="ap-platform-icon-sm"
@@ -27,26 +30,17 @@
                   background: getPlatformIcon(row.platform).bg,
                   color: getPlatformIcon(row.platform).color
                 }"
-                >{{ getPlatformIcon(row.platform).char }}</span
               >
+                {{ getPlatformIcon(row.platform).char }}
+              </span>
               <span class="ap-platform-name-sm">{{ row.platform }}</span>
             </div>
           </template>
-        </ElTableColumn>
 
-        <!-- 广告支出 -->
-        <ElTableColumn label="广告支出" width="100" align="center" sortable show-overflow-tooltip>
-          <template #default="{ row }">{{ formatMoney(row.spend) }}</template>
-        </ElTableColumn>
+          <template #cell:spend="{ row }">{{ formatMoney(row.spend) }}</template>
+          <template #cell:budget="{ row }">{{ formatMoney(row.budget) }}</template>
 
-        <!-- 预算 -->
-        <ElTableColumn label="预算" width="90" align="center" show-overflow-tooltip>
-          <template #default="{ row }">{{ formatMoney(row.budget) }}</template>
-        </ElTableColumn>
-
-        <!-- 使用率 -->
-        <ElTableColumn label="使用率" width="130" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:usageRate="{ row }">
             <div class="ap-usage-cell">
               <ElProgress
                 v-if="hasFiniteNumber(row.usageRate)"
@@ -63,25 +57,16 @@
                     ? getUsageRateColor(round2Number(row.usageRate) ?? 0)
                     : ''
                 }"
-                >{{ formatPercentFixed2OrEmpty(row.usageRate) }}</span
               >
+                {{ formatPercentFixed2OrEmpty(row.usageRate) }}
+              </span>
             </div>
           </template>
-        </ElTableColumn>
 
-        <!-- CPI -->
-        <ElTableColumn label="CPI" width="70" align="center" show-overflow-tooltip>
-          <template #default="{ row }">{{ formatFixed2OrEmpty(row.cpi) }}</template>
-        </ElTableColumn>
+          <template #cell:cpi="{ row }">{{ formatFixed2OrEmpty(row.cpi) }}</template>
+          <template #cell:installs="{ row }">{{ formatNumber(row.installs) }}</template>
 
-        <!-- 安装数 -->
-        <ElTableColumn label="安装数" width="90" align="center" show-overflow-tooltip>
-          <template #default="{ row }">{{ formatNumber(row.installs) }}</template>
-        </ElTableColumn>
-
-        <!-- 首日ROI -->
-        <ElTableColumn label="首日ROI" width="90" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:roi1="{ row }">
             <span
               v-if="hasFiniteNumber(row.roi1)"
               :class="getRoiClass(round2Number(row.roi1) ?? 0)"
@@ -90,11 +75,8 @@
             </span>
             <span v-else>无数据</span>
           </template>
-        </ElTableColumn>
 
-        <!-- 3日ROI -->
-        <ElTableColumn label="3日ROI" width="80" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:roi3="{ row }">
             <span
               v-if="hasFiniteNumber(row.roi3)"
               :class="getRoiClass(round2Number(row.roi3) ?? 0)"
@@ -103,11 +85,8 @@
             </span>
             <span v-else>无数据</span>
           </template>
-        </ElTableColumn>
 
-        <!-- 7日ROI -->
-        <ElTableColumn label="7日ROI" width="80" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:roi7="{ row }">
             <span
               v-if="hasFiniteNumber(row.roi7)"
               :class="getRoiClass(round2Number(row.roi7) ?? 0)"
@@ -116,11 +95,8 @@
             </span>
             <span v-else>无数据</span>
           </template>
-        </ElTableColumn>
 
-        <!-- 状态 -->
-        <ElTableColumn label="状态" width="110" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:status="{ row }">
             <span v-if="row.status === 'normal'" class="ap-status ap-status--normal">正常</span>
             <span v-else-if="row.status === 'warning'" class="ap-status ap-status--warning"
               >注意</span
@@ -130,21 +106,20 @@
             </span>
             <span v-else>无数据</span>
           </template>
-        </ElTableColumn>
 
-        <!-- 操作 -->
-        <ElTableColumn label="操作" width="110" align="center" fixed="right" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:operation="{ row }">
             <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
               系列
             </ElButton>
-            <!-- <ElButton link type="primary" size="small">详情</ElButton> -->
           </template>
-        </ElTableColumn>
-      </ElTable>
+        </ArtVirtualTable>
+
+        <div v-if="!pagedData.length" class="ap-table-empty">
+          <ElEmpty description="暂无数据" :image-size="120" />
+        </div>
+      </template>
     </div>
 
-    <!-- 底部：汇总文字 + 分页 -->
     <div class="ap-table-footer-row">
       <span class="ap-table-footer">共 {{ total }} 个广告账户</span>
       <ElPagination
@@ -156,6 +131,9 @@
         small
         background
         class="ap-pagination"
+        :disabled="accountsLoading"
+        @size-change="onSizeChange"
+        @current-change="onCurrentChange"
       />
     </div>
   </div>
@@ -166,6 +144,9 @@
   import { useRouter } from 'vue-router'
   import request from '@/utils/http'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
+  // @ts-expect-error Vetur 对 <script setup> 的误报：.vue 无 default export
+  import ArtVirtualTable from '@/components/core/art-virtual-table/index.vue'
+  import type { ArtVirtualTableColumn } from '@/components/core/art-virtual-table/index.vue'
 
   defineOptions({ name: 'AppPerformancePlaceholder' })
 
@@ -707,6 +688,21 @@
 
   const pagedData = computed<AccountRow[]>(() => accounts.value)
 
+  const virtualColumns = computed<ArtVirtualTableColumn[]>(() => [
+    { key: 'name', title: '账户名称', width: 260, flexGrow: 1 },
+    { key: 'platform', title: '广告平台', width: 150, align: 'center' },
+    { key: 'spend', title: '广告支出', width: 120, align: 'center' },
+    { key: 'budget', title: '预算', width: 110, align: 'center' },
+    { key: 'usageRate', title: '使用率', width: 150, align: 'center' },
+    { key: 'cpi', title: 'CPI', width: 90, align: 'center' },
+    { key: 'installs', title: '安装数', width: 110, align: 'center' },
+    { key: 'roi1', title: '首日ROI', width: 110, align: 'center' },
+    { key: 'roi3', title: '3日ROI', width: 100, align: 'center' },
+    { key: 'roi7', title: '7日ROI', width: 100, align: 'center' },
+    { key: 'status', title: '状态', width: 120, align: 'center' },
+    { key: 'operation', title: '操作', width: 110, align: 'center' }
+  ])
+
   let requestSeq = 0
 
   async function loadAccountPerformance() {
@@ -766,6 +762,15 @@
   })
 
   void loadAccountPerformance()
+
+  function onCurrentChange(v: number) {
+    currentPage.value = v
+  }
+
+  function onSizeChange(v: number) {
+    pageSize.value = v
+    currentPage.value = 1
+  }
 
   /* ── 工具函数 ── */
   function formatMoney(n: number | null | undefined): string {
@@ -828,12 +833,17 @@
     width: 100%;
     min-height: 480px;
     max-height: 560px;
-    overflow: auto;
+    overflow: hidden;
     -webkit-overflow-scrolling: touch;
 
-    :deep(.el-table) {
-      min-width: 1080px;
+    :deep(.el-table-v2) {
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: 10px;
     }
+  }
+
+  .ap-table-empty {
+    padding: 24px 0;
   }
 
   .ap-table-skeleton-scroll {

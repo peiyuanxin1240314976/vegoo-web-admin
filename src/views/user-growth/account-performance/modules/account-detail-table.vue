@@ -2,153 +2,123 @@
 <template>
   <div>
     <div class="ap-table-scroll">
-      <ElTable
+      <ArtVirtualTable
+        :columns="virtualColumns"
         :data="tableData"
         row-key="id"
-        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-        :expand-row-keys="expandedRowKeys"
-        :row-style="getRowStyle"
-        :cell-style="getCellStyle"
-        stripe
-        size="default"
+        expand-column-key="name"
+        :expanded-row-keys="expandedRowKeys"
+        @update:expanded-row-keys="onExpandedKeysUpdate"
+        :row-style="rowStyleAdapter"
         class="ap-detail-table"
+        :height-offset="520"
+        :min-height="480"
       >
-        <ElTableColumn label="应用 / 平台 / 账户" width="auto" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span class="ap-cell-name">
-              <ElIcon v-if="row.type === 'app'" class="ap-row-icon ap-row-icon--app">
-                <Monitor />
-              </ElIcon>
-              <ElIcon v-else-if="row.type === 'platform'" class="ap-row-icon ap-row-icon--platform">
-                <Iphone />
-              </ElIcon>
-              <span
-                class="ap-name-text"
-                :class="row.type === 'account' ? 'ap-cell-account' : ''"
-                :style="getNameStyle(row)"
-              >
-                {{ row.name }}
-              </span>
-            </span>
-          </template>
-        </ElTableColumn>
-
-        <ElTableColumn label="广告支出" width="80" align="left" show-overflow-tooltip>
-          <template #default="{ row }">{{ formatMoney(row.spend) }}</template>
-        </ElTableColumn>
-
-        <ElTableColumn label="预算" width="90" align="center" show-overflow-tooltip>
-          <template #default="{ row }">{{ formatMoney(row.budget) }}</template>
-        </ElTableColumn>
-
-        <ElTableColumn label="使用率" width="115" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
-            <div class="ap-usage-cell">
-              <ElProgress
-                v-if="hasFiniteNumber(row.usageRate)"
-                :percentage="Math.min(100, round2Number(row.usageRate) ?? 0)"
-                :color="getUsageRateColor(round2Number(row.usageRate) ?? 0)"
-                :show-text="false"
-                :stroke-width="6"
-                class="ap-usage-bar"
-              />
-              <span class="ap-usage-value">{{ formatPercentFixed2OrEmpty(row.usageRate) }}</span>
-            </div>
-          </template>
-        </ElTableColumn>
-
-        <ElTableColumn label="CPI" width="70" align="center" show-overflow-tooltip>
-          <template #default="{ row }">{{ formatFixed2OrEmpty(row.cpi) }}</template>
-        </ElTableColumn>
-
-        <ElTableColumn label="安装数" width="95" align="center" show-overflow-tooltip>
-          <template #default="{ row }">{{ formatNumber(row.installs) }}</template>
-        </ElTableColumn>
-
-        <ElTableColumn label="首日ROI" width="90" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+        <template #cell:name="{ row }">
+          <span class="ap-cell-name">
+            <ElIcon v-if="row.type === 'app'" class="ap-row-icon ap-row-icon--app">
+              <Monitor />
+            </ElIcon>
+            <ElIcon v-else-if="row.type === 'platform'" class="ap-row-icon ap-row-icon--platform">
+              <Iphone />
+            </ElIcon>
             <span
-              v-if="hasFiniteNumber(row.roi1)"
-              :class="getRoiClass(round2Number(row.roi1) ?? 0)"
+              class="ap-name-text"
+              :class="row.type === 'account' ? 'ap-cell-account' : ''"
+              :style="getNameStyle(row)"
             >
-              {{ formatPercentFixed2OrEmpty(row.roi1) }}
+              {{ row.name }}
             </span>
-            <span v-else>无数据</span>
-          </template>
-        </ElTableColumn>
+          </span>
+        </template>
 
-        <ElTableColumn label="3日ROI" width="80" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span
-              v-if="hasFiniteNumber(row.roi3)"
-              :class="getRoiClass(round2Number(row.roi3) ?? 0)"
+        <template #cell:spend="{ row }">{{ formatMoney(row.spend) }}</template>
+        <template #cell:budget="{ row }">{{ formatMoney(row.budget) }}</template>
+
+        <template #cell:usageRate="{ row }">
+          <div class="ap-usage-cell">
+            <ElProgress
+              v-if="hasFiniteNumber(row.usageRate)"
+              :percentage="Math.min(100, round2Number(row.usageRate) ?? 0)"
+              :color="getUsageRateColor(round2Number(row.usageRate) ?? 0)"
+              :show-text="false"
+              :stroke-width="6"
+              class="ap-usage-bar"
+            />
+            <span class="ap-usage-value">{{ formatPercentFixed2OrEmpty(row.usageRate) }}</span>
+          </div>
+        </template>
+
+        <template #cell:cpi="{ row }">{{ formatFixed2OrEmpty(row.cpi) }}</template>
+        <template #cell:installs="{ row }">{{ formatNumber(row.installs) }}</template>
+
+        <template #cell:roi1="{ row }">
+          <span v-if="hasFiniteNumber(row.roi1)" :class="getRoiClass(round2Number(row.roi1) ?? 0)">
+            {{ formatPercentFixed2OrEmpty(row.roi1) }}
+          </span>
+          <span v-else>无数据</span>
+        </template>
+
+        <template #cell:roi3="{ row }">
+          <span v-if="hasFiniteNumber(row.roi3)" :class="getRoiClass(round2Number(row.roi3) ?? 0)">
+            {{ formatPercentFixed2OrEmpty(row.roi3) }}
+          </span>
+          <span v-else>无数据</span>
+        </template>
+
+        <template #cell:roi7="{ row }">
+          <span v-if="hasFiniteNumber(row.roi7)" :class="getRoiClass(round2Number(row.roi7) ?? 0)">
+            {{ formatPercentFixed2OrEmpty(row.roi7) }}
+          </span>
+          <span v-else>无数据</span>
+        </template>
+
+        <template #cell:status="{ row }">
+          <span v-if="row.status === 'normal'" class="ap-status ap-status--normal">正常</span>
+          <span v-else-if="row.status === 'warning'" class="ap-status ap-status--warning"
+            >注意</span
+          >
+          <span v-else-if="row.status === 'roi_low'" class="ap-status ap-status--warning">
+            {{ row.statusText || 'ROI偏低' }}
+          </span>
+          <span v-else>无数据</span>
+        </template>
+
+        <template #cell:operation="{ row }">
+          <template v-if="row.type === 'account'">
+            <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
+              系列
+            </ElButton>
+          </template>
+          <template v-else-if="row.type === 'app'">
+            <ElButton round link type="primary" size="small" @click="goCampaignDetailFromApp(row)">
+              详情
+            </ElButton>
+            <ElButton
+              v-if="rowHasChildren(row)"
+              round
+              link
+              type="primary"
+              size="small"
+              @click="onToggleExpand(row)"
             >
-              {{ formatPercentFixed2OrEmpty(row.roi3) }}
-            </span>
-            <span v-else>无数据</span>
+              {{ isRowExpanded(row) ? '收起' : '展开' }}
+            </ElButton>
           </template>
-        </ElTableColumn>
-
-        <ElTableColumn label="7日ROI" width="80" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span
-              v-if="hasFiniteNumber(row.roi7)"
-              :class="getRoiClass(round2Number(row.roi7) ?? 0)"
+          <template v-else>
+            <ElButton
+              v-if="rowHasChildren(row)"
+              round
+              link
+              type="primary"
+              size="small"
+              @click="onToggleExpand(row)"
             >
-              {{ formatPercentFixed2OrEmpty(row.roi7) }}
-            </span>
-            <span v-else>无数据</span>
+              {{ isRowExpanded(row) ? '收起' : '展开' }}
+            </ElButton>
           </template>
-        </ElTableColumn>
-
-        <ElTableColumn label="状态" width="100" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span v-if="row.status === 'normal'" class="ap-status ap-status--normal">正常</span>
-            <span v-else-if="row.status === 'warning'" class="ap-status ap-status--warning"
-              >注意</span
-            >
-            <span v-else-if="row.status === 'roi_low'" class="ap-status ap-status--warning">{{
-              row.statusText || 'ROI偏低'
-            }}</span>
-            <span v-else>无数据</span>
-          </template>
-        </ElTableColumn>
-
-        <ElTableColumn label="操作" width="auto" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
-            <template v-if="row.type === 'account'">
-              <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
-                系列
-              </ElButton>
-              <!-- <ElButton link type="primary" size="small">详情</ElButton> -->
-            </template>
-            <template v-else-if="row.type === 'platform'">
-              <ElButton
-                v-if="rowHasChildren(row)"
-                round
-                link
-                type="primary"
-                size="small"
-                @click="onToggleExpand(row)"
-              >
-                {{ isRowExpanded(row) ? '收起' : '展开' }}
-              </ElButton>
-            </template>
-            <template v-else>
-              <ElButton
-                v-if="rowHasChildren(row)"
-                round
-                link
-                type="primary"
-                size="small"
-                @click="onToggleExpand(row)"
-              >
-                {{ isRowExpanded(row) ? '收起' : '展开' }}
-              </ElButton>
-            </template>
-          </template>
-        </ElTableColumn>
-      </ElTable>
+        </template>
+      </ArtVirtualTable>
     </div>
 
     <div class="ap-table-footer">{{ summaryText }}</div>
@@ -156,9 +126,14 @@
 </template>
 
 <script setup lang="ts">
+  import { computed } from 'vue'
   import type { AccountDetailRow } from '../types'
   import { Monitor, Iphone } from '@element-plus/icons-vue'
   import { useRouter } from 'vue-router'
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
+  import ArtVirtualTable from '@/components/core/art-virtual-table/index.vue'
+  import type { ArtVirtualTableColumn } from '@/components/core/art-virtual-table/index.vue'
 
   defineOptions({ name: 'AccountDetailTable' })
 
@@ -167,6 +142,7 @@
   const props = defineProps<{
     tableData: AccountDetailRow[]
     expandedRowKeys: string[]
+    source: string
     summaryText: string
     // Element Plus style 回调签名在不同版本里参数类型略有差异
     // 这里用 `any` 放宽，以避免父组件严格类型无法赋值。
@@ -182,6 +158,47 @@
   const emit = defineEmits<{
     toggleExpand: [row: AccountDetailRow]
   }>()
+
+  const virtualColumns = computed<ArtVirtualTableColumn[]>(() => [
+    { key: 'name', title: '应用 / 平台 / 账户', width: 320, flexGrow: 1 },
+    { key: 'spend', title: '广告支出', width: 120, align: 'left' },
+    { key: 'budget', title: '预算', width: 120, align: 'center' },
+    { key: 'usageRate', title: '使用率', width: 160, align: 'center' },
+    { key: 'cpi', title: 'CPI', width: 90, align: 'center' },
+    { key: 'installs', title: '安装数', width: 120, align: 'center' },
+    { key: 'roi1', title: '首日ROI', width: 110, align: 'center' },
+    { key: 'roi3', title: '3日ROI', width: 100, align: 'center' },
+    { key: 'roi7', title: '7日ROI', width: 100, align: 'center' },
+    { key: 'status', title: '状态', width: 120, align: 'center' },
+    { key: 'operation', title: '操作', width: 140, align: 'center' }
+  ])
+
+  function onExpandedKeysUpdate(keys: Array<string | number>) {
+    const prev = new Set((props.expandedRowKeys ?? []).map((k) => String(k)))
+    const next = new Set(keys.map((k) => String(k)))
+
+    const changed: string[] = []
+    for (const k of next) if (!prev.has(k)) changed.push(k)
+    for (const k of prev) if (!next.has(k)) changed.push(k)
+
+    for (const id of changed) {
+      const row = findRowById(props.tableData ?? [], id)
+      if (row) emit('toggleExpand', row)
+    }
+  }
+
+  function rowStyleAdapter(params: { rowData: AccountDetailRow; rowIndex: number }) {
+    return props.getRowStyle({ row: params.rowData, rowIndex: params.rowIndex })
+  }
+
+  function findRowById(rows: AccountDetailRow[], id: string): AccountDetailRow | null {
+    for (const r of rows) {
+      if (String(r.id) === id) return r
+      const child = r.children?.length ? findRowById(r.children as AccountDetailRow[], id) : null
+      if (child) return child
+    }
+    return null
+  }
 
   function rowHasChildren(row: AccountDetailRow) {
     return Boolean(row.children?.length)
@@ -204,6 +221,18 @@
         id: String(row.id),
         appId: String(row.id),
         appName: row.name
+      }
+    })
+  }
+
+  function goCampaignDetailFromApp(row: AccountDetailRow) {
+    router.push({
+      name: 'CampaignDetail',
+      query: {
+        // CampaignDetail 页面读取 route.query.id 作为 campaignId
+        id: String(props.source || ''),
+        appId: String(row.id ?? ''),
+        appName: String(row.name ?? '')
       }
     })
   }

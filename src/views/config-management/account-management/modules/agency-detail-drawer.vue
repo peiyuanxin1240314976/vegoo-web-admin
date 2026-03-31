@@ -60,7 +60,10 @@
             <div class="info-item">
               <span class="info-key">合作模式</span>
               <span
-                :class="['coop-badge', agencyData?.coopMode === '授权代理' ? 'coop-badge--auth' : 'coop-badge--direct']"
+                :class="[
+                  'coop-badge',
+                  agencyData?.coopMode === '授权代理' ? 'coop-badge--auth' : 'coop-badge--direct'
+                ]"
               >
                 {{ agencyData?.coopMode }}
               </span>
@@ -71,7 +74,9 @@
             </div>
             <div class="info-item">
               <span class="info-key">到期日期</span>
-              <span :class="['info-val', isExpiringSoon(agencyData?.expireDate) ? 'text-warn' : '']">
+              <span
+                :class="['info-val', isExpiringSoon(agencyData?.expireDate) ? 'text-warn' : '']"
+              >
                 {{ agencyData?.expireDate || '--' }}
               </span>
             </div>
@@ -107,19 +112,27 @@
           <div class="overview-grid">
             <div class="overview-card">
               <div class="overview-label">管理账户</div>
-              <div class="overview-value overview-value--blue">{{ agencyData?.managedAccounts }}</div>
+              <div class="overview-value overview-value--blue">{{
+                agencyData?.managedAccounts
+              }}</div>
             </div>
             <div class="overview-card">
               <div class="overview-label">活跃账户</div>
-              <div class="overview-value overview-value--green">{{ agencyData?.activeAccounts }}</div>
+              <div class="overview-value overview-value--green">{{
+                agencyData?.activeAccounts
+              }}</div>
             </div>
             <div class="overview-card">
               <div class="overview-label">暂停账户</div>
-              <div class="overview-value overview-value--amber">{{ agencyData?.pausedAccounts }}</div>
+              <div class="overview-value overview-value--amber">{{
+                agencyData?.pausedAccounts
+              }}</div>
             </div>
             <div class="overview-card">
               <div class="overview-label">本月消耗</div>
-              <div class="overview-value overview-value--amber">${{ (agencyData?.monthSpend ?? 0).toLocaleString('en-US') }}</div>
+              <div class="overview-value overview-value--amber"
+                >${{ (agencyData?.monthSpend ?? 0).toLocaleString('en-US') }}</div
+              >
             </div>
           </div>
         </section>
@@ -135,7 +148,12 @@
               </div>
               <div class="bcbm-meta">
                 <span class="bcbm-count">{{ bm.accountCount }} 个账户</span>
-                <span :class="['bcbm-status', bm.status === '正常' ? 'bcbm-status--ok' : 'bcbm-status--warn']">
+                <span
+                  :class="[
+                    'bcbm-status',
+                    bm.status === '正常' ? 'bcbm-status--ok' : 'bcbm-status--warn'
+                  ]"
+                >
                   {{ bm.status }}
                 </span>
               </div>
@@ -155,13 +173,27 @@
                 </linearGradient>
               </defs>
               <!-- 网格线 -->
-              <line v-for="y in [20, 45, 70]" :key="y" x1="0" :y1="y" x2="340" :y2="y"
-                stroke="rgb(255 255 255 / 5%)" stroke-width="1" />
+              <line
+                v-for="y in [20, 45, 70]"
+                :key="y"
+                x1="0"
+                :y1="y"
+                x2="340"
+                :y2="y"
+                stroke="rgb(255 255 255 / 5%)"
+                stroke-width="1"
+              />
               <!-- 面积填充 -->
               <path :d="areaPath" fill="url(#ag-grad)" />
               <!-- 折线 -->
-              <polyline :points="chartPoints" fill="none" stroke="#3b82f6" stroke-width="1.8"
-                stroke-linecap="round" stroke-linejoin="round" />
+              <polyline
+                :points="chartPoints"
+                fill="none"
+                stroke="#3b82f6"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </div>
         </section>
@@ -169,8 +201,12 @@
 
       <!-- ── 底部操作 ──────────────────────── -->
       <div class="drawer-footer">
-        <ElButton round class="footer-btn footer-btn--edit" @click="handleEdit">编辑代理商</ElButton>
-        <ElButton round class="footer-btn footer-btn--secondary" @click="handleClose">关闭</ElButton>
+        <ElButton round class="footer-btn footer-btn--edit" @click="handleEdit"
+          >编辑代理商</ElButton
+        >
+        <ElButton round class="footer-btn footer-btn--secondary" @click="handleClose"
+          >关闭</ElButton
+        >
       </div>
     </div>
   </transition>
@@ -222,9 +258,7 @@
   // 模拟近 30 天消耗数据并生成 SVG 路径
   const chartData = computed(() => {
     const base = (props.agencyData?.monthSpend ?? 0) / 30
-    return Array.from({ length: 30 }, (_, i) =>
-      Math.max(0, base * (0.6 + Math.random() * 0.8))
-    )
+    return Array.from({ length: 30 }, () => Math.max(0, base * (0.6 + Math.random() * 0.8)))
   })
 
   const chartPoints = computed(() => {
@@ -271,16 +305,24 @@
 
   // ─── 过渡动画 ────────────────────────────────────────
   .fade-enter-active,
-  .fade-leave-active { transition: opacity 0.22s ease; }
+  .fade-leave-active {
+    transition: opacity 0.22s ease;
+  }
 
   .fade-enter-from,
-  .fade-leave-to { opacity: 0; }
+  .fade-leave-to {
+    opacity: 0;
+  }
 
   .drawer-slide-enter-active,
-  .drawer-slide-leave-active { transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+  .drawer-slide-leave-active {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
   .drawer-slide-enter-from,
-  .drawer-slide-leave-to { transform: translateX(100%); }
+  .drawer-slide-leave-to {
+    transform: translateX(100%);
+  }
 
   // ─── 头部 ────────────────────────────────────────────
   .drawer-header {
@@ -378,19 +420,25 @@
     &--active {
       color: #22c55e;
       background: rgb(34 197 94 / 10%);
-      .status-dot { background: #22c55e; }
+      .status-dot {
+        background: #22c55e;
+      }
     }
 
     &--pending {
       color: #f59e0b;
       background: rgb(245 158 11 / 10%);
-      .status-dot { background: #f59e0b; }
+      .status-dot {
+        background: #f59e0b;
+      }
     }
 
     &--terminated {
       color: #64748b;
       background: rgb(100 116 139 / 10%);
-      .status-dot { background: #64748b; }
+      .status-dot {
+        background: #64748b;
+      }
     }
   }
 
@@ -418,8 +466,12 @@
     padding: 0 20px;
     overflow-y: auto;
 
-    &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
 
     &::-webkit-scrollbar-thumb {
       background: rgb(255 255 255 / 10%);
@@ -431,7 +483,9 @@
     padding: 18px 0;
     border-bottom: 1px solid rgb(255 255 255 / 5%);
 
-    &:last-child { border-bottom: none; }
+    &:last-child {
+      border-bottom: none;
+    }
   }
 
   .section-title {
@@ -473,7 +527,9 @@
     }
   }
 
-  .text-warn { color: #f59e0b !important; }
+  .text-warn {
+    color: #f59e0b !important;
+  }
 
   .coop-badge {
     display: inline-block;
@@ -519,9 +575,15 @@
     font-weight: 700;
     line-height: 1;
 
-    &--blue  { color: #3b82f6; }
-    &--green { color: #22c55e; }
-    &--amber { color: #f59e0b; }
+    &--blue {
+      color: #3b82f6;
+    }
+    &--green {
+      color: #22c55e;
+    }
+    &--amber {
+      color: #f59e0b;
+    }
   }
 
   // ─── BC/BM 列表 ──────────────────────────────────────
@@ -574,8 +636,12 @@
   .bcbm-status {
     font-size: 11px;
 
-    &--ok   { color: #22c55e; }
-    &--warn { color: #f59e0b; }
+    &--ok {
+      color: #22c55e;
+    }
+    &--warn {
+      color: #f59e0b;
+    }
   }
 
   // ─── 消耗走势 ────────────────────────────────────────
@@ -607,7 +673,9 @@
       background: #3b82f6 !important;
       border: none !important;
 
-      &:hover { filter: brightness(1.1); }
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
 
     &--secondary {

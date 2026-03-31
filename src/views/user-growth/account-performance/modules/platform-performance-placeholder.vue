@@ -1,15 +1,21 @@
 <!-- 我是平台页面 -->
 <template>
   <div>
-    <div v-if="platformLoading" class="ap-table-skeleton-scroll">
-      <ElSkeleton animated :rows="8" />
-    </div>
+    <div class="ap-table-scroll">
+      <div v-if="platformLoading" class="ap-table-skeleton-scroll">
+        <ElSkeleton animated :rows="8" />
+      </div>
 
-    <div v-else class="ap-table-scroll">
-      <ElTable :data="platformData" size="default" class="ap-platform-table">
-        <!-- 广告平台（图标 + 名称） -->
-        <ElTableColumn label="广告平台" min-width="180" show-overflow-tooltip>
-          <template #default="{ row }">
+      <template v-else>
+        <ArtVirtualTable
+          :columns="virtualColumns"
+          :data="platformData"
+          row-key="id"
+          :height-offset="520"
+          :min-height="430"
+          class="ap-platform-table"
+        >
+          <template #cell:name="{ row }">
             <div class="ap-platform-name">
               <span
                 class="ap-platform-icon"
@@ -18,33 +24,21 @@
                   color: row.iconColor,
                   boxShadow: `0 0 0 1px ${row.iconBg}44`
                 }"
-                >{{ row.iconChar }}</span
               >
+                {{ row.iconChar }}
+              </span>
               <span class="ap-platform-label">{{ row.name }}</span>
             </div>
           </template>
-        </ElTableColumn>
 
-        <!-- 账户数 -->
-        <ElTableColumn label="账户数" width="100" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:accountCount="{ row }">
             <span class="ap-account-count">{{ row.accountCount }}个账户</span>
           </template>
-        </ElTableColumn>
 
-        <!-- 广告支出 -->
-        <ElTableColumn label="广告支出" width="110" align="center" sortable show-overflow-tooltip>
-          <template #default="{ row }">{{ formatMoney(row.spend) }}</template>
-        </ElTableColumn>
+          <template #cell:spend="{ row }">{{ formatMoney(row.spend) }}</template>
+          <template #cell:budget="{ row }">{{ formatMoney(row.budget) }}</template>
 
-        <!-- 预算 -->
-        <ElTableColumn label="预算" width="100" align="center" show-overflow-tooltip>
-          <template #default="{ row }">{{ formatMoney(row.budget) }}</template>
-        </ElTableColumn>
-
-        <!-- 使用率 -->
-        <ElTableColumn label="使用率" width="140" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:usageRate="{ row }">
             <div class="ap-usage-cell">
               <ElProgress
                 v-if="hasFiniteNumber(row.usageRate)"
@@ -61,25 +55,16 @@
                     ? getUsageRateColor(round2Number(row.usageRate) ?? 0)
                     : ''
                 }"
-                >{{ formatPercentFixed2OrEmpty(row.usageRate) }}</span
               >
+                {{ formatPercentFixed2OrEmpty(row.usageRate) }}
+              </span>
             </div>
           </template>
-        </ElTableColumn>
 
-        <!-- CPI -->
-        <ElTableColumn label="CPI" width="70" align="center" show-overflow-tooltip>
-          <template #default="{ row }">{{ formatFixed2OrEmpty(row.cpi) }}</template>
-        </ElTableColumn>
+          <template #cell:cpi="{ row }">{{ formatFixed2OrEmpty(row.cpi) }}</template>
+          <template #cell:installs="{ row }">{{ formatNumber(row.installs) }}</template>
 
-        <!-- 安装数 -->
-        <ElTableColumn label="安装数" width="100" align="center" show-overflow-tooltip>
-          <template #default="{ row }">{{ formatNumber(row.installs) }}</template>
-        </ElTableColumn>
-
-        <!-- 首日ROI -->
-        <ElTableColumn label="首日ROI" width="90" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:roi1="{ row }">
             <span
               v-if="hasFiniteNumber(row.roi1)"
               :class="getRoiClass(round2Number(row.roi1) ?? 0)"
@@ -88,11 +73,8 @@
             </span>
             <span v-else>无数据</span>
           </template>
-        </ElTableColumn>
 
-        <!-- 3日ROI -->
-        <ElTableColumn label="3日ROI" width="80" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:roi3="{ row }">
             <span
               v-if="hasFiniteNumber(row.roi3)"
               :class="getRoiClass(round2Number(row.roi3) ?? 0)"
@@ -101,11 +83,8 @@
             </span>
             <span v-else>无数据</span>
           </template>
-        </ElTableColumn>
 
-        <!-- 7日ROI -->
-        <ElTableColumn label="7日ROI" width="80" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:roi7="{ row }">
             <span
               v-if="hasFiniteNumber(row.roi7)"
               :class="getRoiClass(round2Number(row.roi7) ?? 0)"
@@ -114,11 +93,8 @@
             </span>
             <span v-else>无数据</span>
           </template>
-        </ElTableColumn>
 
-        <!-- 状态 -->
-        <ElTableColumn label="状态" width="110" align="center" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:status="{ row }">
             <span v-if="row.status === 'normal'" class="ap-status ap-status--normal">正常</span>
             <span v-else-if="row.status === 'warning'" class="ap-status ap-status--warning"
               >注意</span
@@ -128,43 +104,51 @@
             </span>
             <span v-else>无数据</span>
           </template>
-        </ElTableColumn>
 
-        <!-- 操作 -->
-        <ElTableColumn label="操作" width="80" align="center" fixed="right" show-overflow-tooltip>
-          <template #default="{ row }">
+          <template #cell:operation="{ row }">
             <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
               详情
             </ElButton>
           </template>
-        </ElTableColumn>
-      </ElTable>
+        </ArtVirtualTable>
 
-      <ElPagination
-        v-if="platformTotal > 0"
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :total="platformTotal"
-        :page-sizes="pageSizes"
-        layout="prev, pager, next, sizes"
-        small
-        background
-        class="ap-platform-pagination"
-      />
+        <div v-if="!platformData.length" class="ap-table-empty">
+          <ElEmpty description="暂无数据" :image-size="120" />
+        </div>
+      </template>
     </div>
 
     <!-- 底部汇总 -->
     <div class="ap-table-footer">
       共 {{ platformTotal }} 个广告平台 / {{ accountTotal }} 个广告账户
     </div>
+
+    <ElPagination
+      v-if="platformTotal > 0"
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      :total="platformTotal"
+      :page-sizes="pageSizes"
+      layout="prev, pager, next, sizes"
+      small
+      background
+      class="ap-platform-pagination"
+      :disabled="platformLoading"
+      @size-change="onSizeChange"
+      @current-change="onCurrentChange"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
+  import { computed, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import request from '@/utils/http'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
+  import ArtVirtualTable from '@/components/core/art-virtual-table/index.vue'
+  import type { ArtVirtualTableColumn } from '@/components/core/art-virtual-table/index.vue'
 
   defineOptions({ name: 'PlatformPerformancePlaceholder' })
 
@@ -244,6 +228,21 @@
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
   let suppressPageWatch = false
 
+  const virtualColumns = computed<ArtVirtualTableColumn[]>(() => [
+    { key: 'name', title: '广告平台', width: 260, flexGrow: 1 },
+    { key: 'accountCount', title: '账户数', width: 120, align: 'center' },
+    { key: 'spend', title: '广告支出', width: 120, align: 'center' },
+    { key: 'budget', title: '预算', width: 120, align: 'center' },
+    { key: 'usageRate', title: '使用率', width: 160, align: 'center' },
+    { key: 'cpi', title: 'CPI', width: 90, align: 'center' },
+    { key: 'installs', title: '安装数', width: 120, align: 'center' },
+    { key: 'roi1', title: '首日ROI', width: 110, align: 'center' },
+    { key: 'roi3', title: '3日ROI', width: 100, align: 'center' },
+    { key: 'roi7', title: '7日ROI', width: 100, align: 'center' },
+    { key: 'status', title: '状态', width: 120, align: 'center' },
+    { key: 'operation', title: '操作', width: 90, align: 'center' }
+  ])
+
   async function loadPlatformPerformance() {
     const [dateStart, dateEnd] = props.dateRange
     if (!dateStart || !dateEnd) return
@@ -313,6 +312,15 @@
 
   void loadPlatformPerformance()
 
+  function onCurrentChange(v: number) {
+    currentPage.value = v
+  }
+
+  function onSizeChange(v: number) {
+    pageSize.value = v
+    currentPage.value = 1
+  }
+
   function formatMoney(n: number | null | undefined): string {
     const value = toFiniteNumber(n)
     return value === null
@@ -378,7 +386,7 @@
     width: 100%;
     min-height: 430px;
     max-height: 560px;
-    overflow: auto;
+    overflow: hidden;
     -webkit-overflow-scrolling: touch;
 
     :deep(.el-table) {

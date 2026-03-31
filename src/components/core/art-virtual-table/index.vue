@@ -33,8 +33,11 @@
   import { computed, Fragment, h, onMounted, onUnmounted, ref, useSlots } from 'vue'
   import { useWindowSize } from '@vueuse/core'
   import type { CSSProperties } from 'vue'
+  import { TableV2FixedDir } from 'element-plus'
 
   defineOptions({ name: 'ArtVirtualTable' })
+
+  type ExpandedKey = string | number
 
   const props = withDefaults(
     defineProps<{
@@ -42,6 +45,8 @@
       data: any[]
       rowKey?: string
       expandColumnKey?: string
+      /** 受控展开行 keys（用于树表/分组展开） */
+      expandedRowKeys?: ExpandedKey[]
       rowHeight?: number
       headerHeight?: number
       /** 从 window.innerHeight 减去多少来算表格高度，对应 calc(100vh - N) */
@@ -58,6 +63,10 @@
       minHeight: 300
     }
   )
+
+  const emit = defineEmits<{
+    (e: 'update:expandedRowKeys', v: ExpandedKey[]): void
+  }>()
 
   const slots = useSlots()
 
@@ -85,8 +94,15 @@
     return Math.max(props.minHeight, Math.min(offset, vh60))
   })
 
-  // 展开/收起状态（内部管理）
-  const expandedKeys = ref<(string | number)[]>([])
+  // 展开/收起状态（内部管理 + 支持外部 v-model 控制）
+  const innerExpandedKeys = ref<ExpandedKey[]>([])
+  const expandedKeys = computed<ExpandedKey[]>({
+    get: () => props.expandedRowKeys ?? innerExpandedKeys.value,
+    set: (v) => {
+      innerExpandedKeys.value = v
+      emit('update:expandedRowKeys', v)
+    }
+  })
 
   // 将 columns 映射为 ElTableV2 所需格式，cellRenderer 调用具名 slot
   const computedColumns = computed(() =>
@@ -96,7 +112,11 @@
       title: col.title,
       width: col.width,
       flexGrow: col.flexGrow,
-      fixed: col.fixed,
+      fixed: col.fixed
+        ? col.fixed === 'left'
+          ? TableV2FixedDir.LEFT
+          : TableV2FixedDir.RIGHT
+        : undefined,
       align: col.align ?? 'left',
       cellRenderer: ({ rowData, rowIndex, cellData, columnIndex }: any) => {
         const slotFn = slots[`cell:${col.key}`]
@@ -120,7 +140,7 @@
 
   /** 展开所有有子行的父行 */
   function expandAll() {
-    const keys: (string | number)[] = []
+    const keys: ExpandedKey[] = []
     const collect = (rows: any[]) => {
       for (const row of rows) {
         if (row.children?.length) {

@@ -455,7 +455,7 @@
 </style>
 
 <style lang="scss">
-  @import '../user-growth/ad-performance/styles/ap-card-fx';
+  @use '../user-growth/ad-performance/styles/ap-card-fx' as *;
 
   /* 深色：与广告成效同系霓虹面板 */
   html.dark .cockpit-panel {
