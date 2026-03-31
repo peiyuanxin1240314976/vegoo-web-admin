@@ -1,43 +1,53 @@
 <template>
   <div class="admob-dashboard">
-    <!-- 顶部导航栏 -->
-    <div class="top-nav">
-      <button class="back-btn" @click="goBack">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <circle cx="8" cy="8" r="7.5" stroke="currentColor" stroke-opacity="0.4" />
-          <path
-            d="M9.5 5L6.5 8L9.5 11"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-        返回
-      </button>
-    </div>
-
     <!-- 页面标题 + 筛选器 -->
     <div class="page-header">
-      <h1 class="page-title">AdMob在Weather 8 中的表现详情</h1>
-      <div class="filters">
-        <div class="filter-item">
+      <div class="page-title-wrap">
+        <button class="back-btn" @click="goBack">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="7.5" stroke="currentColor" stroke-opacity="0.4" />
+            <path
+              d="M9.5 5L6.5 8L9.5 11"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          返回
+        </button>
+        <span class="page-title">AdMob在Weather 8 中的表现详情</span>
+      </div>
+
+      <div class="filters filters-panel">
+        <div class="filter-item filter-field">
           <span class="filter-label">日期范围</span>
-          <el-select v-model="dateRange" class="custom-select" style="width: 220px">
+          <el-select v-model="dateRange" class="custom-select filter-select filter-select--date">
             <el-option label="2025年12月01日 - 2025年12月31日" value="2025-12" />
             <el-option label="2025年11月01日 - 2025年11月30日" value="2025-11" />
             <el-option label="2025年10月01日 - 2025年10月31日" value="2025-10" />
           </el-select>
         </div>
-        <div class="filter-item">
+        <div class="filter-item filter-field">
           <span class="filter-label">国家</span>
-          <el-select v-model="country" class="custom-select" style="width: 130px">
+          <el-select v-model="country" class="custom-select filter-select filter-select--country">
             <el-option label="全部国家" value="all" />
             <el-option label="中国" value="cn" />
             <el-option label="美国" value="us" />
             <el-option label="日本" value="jp" />
           </el-select>
         </div>
+
+        <el-button
+          class="filter-query-btn"
+          type="primary"
+          round
+          :loading="pendingQuery"
+          :disabled="pendingQuery || !isQueryDirty"
+          @click="runQuery"
+        >
+          查询
+        </el-button>
       </div>
     </div>
 
@@ -62,7 +72,7 @@
               <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
                 <polyline
                   points="0,20 10,14 20,18 30,8 40,12 50,6 60,10 70,4 80,8"
-                  stroke="#f59e0b"
+                  stroke="currentColor"
                   stroke-width="1.5"
                   fill="none"
                   opacity="0.8"
@@ -92,7 +102,7 @@
               <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
                 <polyline
                   points="0,16 10,12 20,14 30,8 40,10 50,4 60,6 70,2 80,4"
-                  stroke="#3b82f6"
+                  stroke="currentColor"
                   stroke-width="1.5"
                   fill="none"
                   opacity="0.8"
@@ -122,7 +132,7 @@
               <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
                 <polyline
                   points="0,8 10,10 20,6 30,12 40,8 50,14 60,10 70,16 80,12"
-                  stroke="#10b981"
+                  stroke="currentColor"
                   stroke-width="1.5"
                   fill="none"
                   opacity="0.8"
@@ -146,7 +156,7 @@
               <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
                 <polyline
                   points="0,12 10,8 20,14 30,6 40,10 50,4 60,8 70,2 80,6"
-                  stroke="#a855f7"
+                  stroke="currentColor"
                   stroke-width="1.5"
                   fill="none"
                   opacity="0.8"
@@ -275,7 +285,7 @@
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"
-                  fill="#3b82f6"
+                  fill="currentColor"
                   opacity="0.3"
                 />
                 <path d="M9 9h2v6H9zm4 0h2v6h-2z" fill="none" />
@@ -283,7 +293,7 @@
                   cx="12"
                   cy="12"
                   r="9"
-                  stroke="#3b82f6"
+                  stroke="currentColor"
                   stroke-width="1"
                   stroke-dasharray="4 2"
                 />
@@ -300,9 +310,18 @@
             >
               <div class="insight-icon-wrap">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M9 2a7 7 0 100 14A7 7 0 009 2z" stroke="#3b82f6" stroke-width="1.2" />
-                  <circle cx="9" cy="6" r="1" fill="#3b82f6" />
-                  <path d="M9 8.5V13" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" />
+                  <path
+                    d="M9 2a7 7 0 100 14A7 7 0 009 2z"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                  />
+                  <circle cx="9" cy="6" r="1" fill="currentColor" />
+                  <path
+                    d="M9 8.5V13"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
                 </svg>
               </div>
               <div class="insight-content">
@@ -333,7 +352,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+  import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
   import * as echarts from 'echarts'
 
@@ -659,10 +678,39 @@
     chartInstance?.resize()
   }
 
+  const pendingQuery = ref(false)
+
+  const appliedFilters = ref({
+    dateRange: dateRange.value,
+    country: country.value
+  })
+
+  const isQueryDirty = computed(() => {
+    return (
+      appliedFilters.value.dateRange !== dateRange.value ||
+      appliedFilters.value.country !== country.value
+    )
+  })
+
+  async function runQuery() {
+    if (pendingQuery.value) return
+    pendingQuery.value = true
+    try {
+      // TODO: 接真实接口时，把请求放到这里，然后刷新图表/列表等数据
+      appliedFilters.value = {
+        dateRange: dateRange.value,
+        country: country.value
+      }
+    } finally {
+      pendingQuery.value = false
+    }
+  }
+
   onMounted(async () => {
     await nextTick()
     initChart()
     window.addEventListener('resize', handleResize)
+    await runQuery()
   })
 
   onBeforeUnmount(() => {
@@ -670,9 +718,7 @@
     window.removeEventListener('resize', handleResize)
   })
 
-  watch([dateRange, country], () => {
-    // 实际项目中在此处重新请求数据后调用 chartInstance?.setOption(...)
-  })
+  // 初始化会自动查询；之后仅点击「查询」按钮才触发 runQuery()
 </script>
 
 <style scoped>
@@ -680,20 +726,20 @@
    CSS 变量 & 基础
 ═══════════════════════════════════════════════ */
   .admob-dashboard {
-    --bg-base: #090e1a;
-    --bg-panel: #0d1526;
-    --bg-card: #111d35;
-    --bg-hover: #162040;
-    --border: rgb(255 255 255 / 7%);
-    --border-light: rgb(255 255 255 / 12%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #475569;
-    --accent-yellow: #f59e0b;
-    --accent-blue: #3b82f6;
-    --accent-green: #10b981;
-    --accent-purple: #a855f7;
-    --accent-red: #ef4444;
+    --bg-base: var(--default-bg-color);
+    --bg-panel: color-mix(in srgb, var(--default-box-color) 92%, transparent);
+    --bg-card: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    --bg-hover: color-mix(in srgb, var(--default-box-color) 78%, transparent);
+    --border: color-mix(in srgb, var(--art-primary) 14%, var(--default-border));
+    --border-light: color-mix(in srgb, var(--art-primary) 22%, var(--default-border));
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
+    --accent-yellow: var(--art-warning);
+    --accent-blue: var(--art-primary);
+    --accent-green: var(--art-success);
+    --accent-purple: color-mix(in srgb, var(--art-primary) 52%, var(--art-success));
+    --accent-red: var(--art-danger);
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 14px;
@@ -734,12 +780,19 @@
     background: rgb(255 255 255 / 6%);
     border: 1px solid var(--border);
     border-radius: 20px;
-    transition: all 0.2s;
+    transition:
+      color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
+      transform 0.25s cubic-bezier(0, 0, 0.2, 1);
   }
 
   .back-btn:hover {
     color: var(--text-primary);
-    background: rgb(255 255 255 / 10%);
+    background: var(--bg-hover);
+    border-color: var(--border-light);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--art-primary) 14%, transparent);
     transform: translateX(-2px);
   }
 
@@ -771,12 +824,22 @@
     padding: 20px 24px 16px;
   }
 
+  .page-title-wrap {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+  }
+
   .page-title {
     margin: 0;
+    overflow: hidden;
     font-size: 18px;
     font-weight: 600;
     color: var(--text-primary);
+    text-overflow: ellipsis;
     letter-spacing: -0.3px;
+    white-space: nowrap;
   }
 
   .filters {
@@ -785,10 +848,37 @@
     align-items: center;
   }
 
+  .filters-panel {
+    padding: 10px 14px;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 20% 10%,
+        color-mix(in srgb, var(--art-primary) 16%, transparent) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        circle at 82% 16%,
+        color-mix(in srgb, var(--art-success) 10%, transparent) 0%,
+        transparent 52%
+      ),
+      linear-gradient(180deg, rgb(0 0 0 / 22%) 0%, rgb(0 0 0 / 10%) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
+    border-radius: 16px;
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+  }
+
   .filter-item {
     display: flex;
     gap: 8px;
     align-items: center;
+  }
+
+  .filter-field {
+    min-height: 32px;
   }
 
   .filter-label {
@@ -797,11 +887,29 @@
     white-space: nowrap;
   }
 
+  .filter-select--date {
+    width: 220px;
+  }
+
+  .filter-select--country {
+    width: 130px;
+  }
+
   /* Element Plus select 深色适配 */
   :deep(.custom-select .el-input__wrapper) {
-    background: var(--bg-card) !important;
-    border-radius: var(--radius-sm) !important;
-    box-shadow: 0 0 0 1px var(--border) !important;
+    min-height: 34px;
+    background: rgb(0 0 0 / 22%) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent) !important;
+    transition:
+      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  :deep(.custom-select .el-input__wrapper:hover) {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 44%, transparent) inset,
+      0 0 20px color-mix(in srgb, var(--art-primary) 12%, transparent) !important;
   }
 
   :deep(.custom-select .el-input__inner) {
@@ -823,6 +931,36 @@
   :deep(.el-select-dropdown__item:hover) {
     color: var(--text-primary) !important;
     background: var(--bg-hover) !important;
+  }
+
+  .filter-query-btn {
+    min-height: 34px;
+    padding: 0 16px;
+    margin-left: 4px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 38%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent) inset,
+      0 10px 28px color-mix(in srgb, var(--art-primary) 10%, transparent);
+    transition:
+      transform 0.25s cubic-bezier(0, 0, 0.2, 1),
+      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .filter-query-btn:hover:not(.is-disabled) {
+    border-color: color-mix(in srgb, var(--art-primary) 56%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent) inset,
+      0 0 22px color-mix(in srgb, var(--art-primary) 18%, transparent),
+      0 12px 38px color-mix(in srgb, var(--art-primary) 12%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .filter-query-btn:active:not(.is-disabled) {
+    transition-duration: 0.14s;
+    transform: translateY(0);
   }
 
   /* ═══════════════════════════════════════════════
@@ -854,31 +992,59 @@
 ═══════════════════════════════════════════════ */
   .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: clamp(10px, 1.6vw, 12px);
   }
 
   .kpi-card {
+    --kpi-accent: var(--art-primary);
+
     position: relative;
     padding: 18px 16px 12px;
     overflow: hidden;
     cursor: pointer;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background:
+      radial-gradient(
+        circle at 18% 12%,
+        color-mix(in srgb, var(--kpi-accent) 18%, transparent) 0%,
+        transparent 62%
+      ),
+      radial-gradient(
+        circle at 86% 16%,
+        color-mix(in srgb, var(--art-primary) 12%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+    border: 1px solid color-mix(in srgb, var(--kpi-accent) 22%, var(--default-border));
     border-radius: var(--radius-lg);
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      0 0 0 1px color-mix(in srgb, var(--kpi-accent) 10%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 10%, transparent);
     transition:
-      border-color 0.25s,
-      transform 0.2s,
-      box-shadow 0.25s;
+      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
+      box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      filter 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .kpi-card:hover {
-    box-shadow: 0 8px 32px rgb(0 0 0 / 35%);
-    transform: translateY(-2px);
+    filter: brightness(1.05);
+    border-color: color-mix(in srgb, var(--kpi-accent) 44%, var(--default-border));
+    box-shadow:
+      0 20px 52px -14px rgb(0 0 0 / 62%),
+      0 0 0 1px color-mix(in srgb, var(--kpi-accent) 18%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 14%, transparent),
+      0 0 40px color-mix(in srgb, var(--kpi-accent) 18%, transparent);
+    transform: translateY(-5px);
   }
 
   .kpi-card.is-active {
-    border-color: rgb(255 255 255 / 20%);
+    border-color: color-mix(in srgb, var(--kpi-accent) 52%, var(--default-border));
+    box-shadow:
+      0 18px 48px -16px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--kpi-accent) 24%, transparent),
+      0 0 44px -10px color-mix(in srgb, var(--kpi-accent) 22%, transparent);
   }
 
   .kpi-bg-glow {
@@ -886,23 +1052,63 @@
     inset: 0;
     pointer-events: none;
     border-radius: inherit;
-    opacity: 0.08;
+    opacity: 0.1;
   }
 
   .revenue-glow {
-    background: radial-gradient(ellipse at 30% 0%, #f59e0b 0%, transparent 65%);
+    background: radial-gradient(
+      ellipse at 30% 0%,
+      color-mix(in srgb, var(--art-warning) 34%, transparent) 0%,
+      transparent 65%
+    );
   }
 
   .ecpm-glow {
-    background: radial-gradient(ellipse at 30% 0%, #3b82f6 0%, transparent 65%);
+    background: radial-gradient(
+      ellipse at 30% 0%,
+      color-mix(in srgb, var(--art-primary) 34%, transparent) 0%,
+      transparent 65%
+    );
   }
 
   .fill-glow {
-    background: radial-gradient(ellipse at 30% 0%, #10b981 0%, transparent 65%);
+    background: radial-gradient(
+      ellipse at 30% 0%,
+      color-mix(in srgb, var(--art-success) 34%, transparent) 0%,
+      transparent 65%
+    );
   }
 
   .impression-glow {
-    background: radial-gradient(ellipse at 30% 0%, #a855f7 0%, transparent 65%);
+    background: radial-gradient(
+      ellipse at 30% 0%,
+      color-mix(in srgb, var(--art-primary) 22%, transparent) 0%,
+      transparent 65%
+    );
+  }
+
+  .kpi-revenue {
+    --kpi-accent: var(--art-warning);
+
+    color: var(--art-warning);
+  }
+
+  .kpi-ecpm {
+    --kpi-accent: var(--art-primary);
+
+    color: var(--art-primary);
+  }
+
+  .kpi-fill {
+    --kpi-accent: var(--art-success);
+
+    color: var(--art-success);
+  }
+
+  .kpi-impression {
+    --kpi-accent: color-mix(in srgb, var(--art-primary) 52%, var(--art-success));
+
+    color: color-mix(in srgb, var(--art-primary) 52%, var(--art-success));
   }
 
   .kpi-label {
@@ -954,13 +1160,13 @@
   }
 
   .badge-up {
-    color: #10b981;
-    background: rgb(16 185 129 / 15%);
+    color: var(--art-success);
+    background: color-mix(in srgb, var(--art-success) 14%, transparent);
   }
 
   .badge-down {
-    color: #ef4444;
-    background: rgb(239 68 68 / 15%);
+    color: var(--art-danger);
+    background: color-mix(in srgb, var(--art-danger) 14%, transparent);
   }
 
   .kpi-sparkline {
@@ -990,9 +1196,32 @@
 ═══════════════════════════════════════════════ */
   .chart-panel {
     padding: 18px 16px 14px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background:
+      radial-gradient(
+        circle at 14% 10%,
+        color-mix(in srgb, var(--art-primary) 14%, transparent) 0%,
+        transparent 60%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
     border-radius: var(--radius-lg);
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+    transition:
+      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
+      box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .chart-panel:hover {
+    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+    box-shadow:
+      0 20px 52px -14px rgb(0 0 0 / 62%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
+      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
+    transform: translateY(-4px);
   }
 
   .panel-header {
@@ -1016,7 +1245,9 @@
     color: var(--text-secondary);
     cursor: pointer;
     user-select: none;
-    transition: opacity 0.2s;
+    transition:
+      opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .legend-item:hover {
@@ -1036,7 +1267,7 @@
 
   .echarts-container {
     width: 100%;
-    height: 220px;
+    height: clamp(200px, 22vw, 260px);
   }
 
   /* ═══════════════════════════════════════════════
@@ -1044,9 +1275,32 @@
 ═══════════════════════════════════════════════ */
   .waterfall-panel {
     padding: 18px 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background:
+      radial-gradient(
+        circle at 14% 10%,
+        color-mix(in srgb, var(--art-primary) 12%, transparent) 0%,
+        transparent 60%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
     border-radius: var(--radius-lg);
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+    transition:
+      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
+      box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .waterfall-panel:hover {
+    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+    box-shadow:
+      0 20px 52px -14px rgb(0 0 0 / 62%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
+      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
+    transform: translateY(-4px);
   }
 
   /* Tabs 深色适配 */
@@ -1079,7 +1333,7 @@
 
   .waterfall-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 8px;
   }
 
@@ -1091,17 +1345,23 @@
     cursor: grab;
     user-select: none;
     background: rgb(255 255 255 / 3%);
-    border: 1px solid var(--border);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, var(--default-border));
     border-radius: var(--radius-md);
     transition:
-      background 0.2s,
-      border-color 0.2s,
-      transform 0.15s;
+      background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
+      transform 0.2s cubic-bezier(0, 0, 0.2, 1);
   }
 
   .waterfall-item:hover {
     background: var(--bg-hover);
-    border-color: var(--border-light);
+    border-color: color-mix(in srgb, var(--art-primary) 26%, var(--default-border));
+    box-shadow:
+      0 12px 34px -16px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 14%, transparent),
+      0 0 26px -10px color-mix(in srgb, var(--art-primary) 14%, transparent);
+    transform: translateY(-2px);
   }
 
   .waterfall-item:active {
@@ -1109,8 +1369,8 @@
   }
 
   .waterfall-item.drag-over {
-    background: rgb(59 130 246 / 10%);
-    border-color: var(--accent-blue);
+    background: color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border-color: color-mix(in srgb, var(--art-primary) 40%, var(--default-border));
     transform: scale(1.01);
   }
 
@@ -1169,36 +1429,70 @@
 ═══════════════════════════════════════════════ */
   .table-panel {
     padding: 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 14% 10%,
+        color-mix(in srgb, var(--art-primary) 14%, transparent) 0%,
+        transparent 60%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
     border-radius: var(--radius-lg);
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+    transition:
+      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
+      box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .table-panel:hover {
+    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+    box-shadow:
+      0 20px 52px -14px rgb(0 0 0 / 62%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
+      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
+    transform: translateY(-4px);
   }
 
   .custom-table {
     margin-top: 12px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .table-header {
     display: grid;
-    grid-template-columns: 80px 60px 70px 50px 80px 60px;
+    grid-template-columns:
+      minmax(92px, 1.2fr) minmax(66px, 0.9fr) minmax(74px, 1fr) minmax(58px, 0.8fr)
+      minmax(100px, 1.1fr) minmax(76px, 1fr);
     gap: 4px;
     padding: 0 8px 8px;
     font-size: 11px;
     color: var(--text-muted);
     letter-spacing: 0.3px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 18%, transparent);
   }
 
   .table-row {
     display: grid;
-    grid-template-columns: 80px 60px 70px 50px 80px 60px;
+    grid-template-columns:
+      minmax(92px, 1.2fr) minmax(66px, 0.9fr) minmax(74px, 1fr) minmax(58px, 0.8fr)
+      minmax(100px, 1.1fr) minmax(76px, 1fr);
     gap: 4px;
     align-items: center;
     padding: 7px 8px;
     font-size: 12px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 16%, transparent);
     border-radius: var(--radius-sm);
-    transition: background 0.15s;
+    transition:
+      background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.2s cubic-bezier(0, 0, 0.2, 1),
+      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .table-row:last-child {
@@ -1207,6 +1501,11 @@
 
   .table-row.row-hover {
     background: var(--bg-hover);
+    border-color: color-mix(in srgb, var(--art-primary) 22%, transparent);
+    box-shadow:
+      0 12px 34px -18px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
+    transform: translateY(-1px);
   }
 
   .col-network {
@@ -1223,18 +1522,18 @@
   }
 
   .format-banner {
-    color: #3b82f6;
-    background: rgb(59 130 246 / 15%);
+    color: var(--art-primary);
+    background: color-mix(in srgb, var(--art-primary) 14%, transparent);
   }
 
   .format-interstitial {
-    color: #f59e0b;
-    background: rgb(245 158 11 / 15%);
+    color: var(--art-warning);
+    background: color-mix(in srgb, var(--art-warning) 14%, transparent);
   }
 
   .format-rewarded {
-    color: #a855f7;
-    background: rgb(168 85 247 / 15%);
+    color: color-mix(in srgb, var(--art-primary) 52%, var(--art-success));
+    background: color-mix(in srgb, var(--art-primary) 12%, transparent);
   }
 
   .col-revenue {
@@ -1244,7 +1543,7 @@
   }
 
   .col-revenue.revenue-high {
-    color: #f59e0b;
+    color: var(--art-warning);
   }
 
   .col-ecpm {
@@ -1285,9 +1584,32 @@
   .ai-insight-panel {
     flex: 1;
     padding: 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background:
+      radial-gradient(
+        circle at 14% 10%,
+        color-mix(in srgb, var(--art-primary) 14%, transparent) 0%,
+        transparent 60%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
     border-radius: var(--radius-lg);
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+    transition:
+      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
+      box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .ai-insight-panel:hover {
+    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+    box-shadow:
+      0 20px 52px -14px rgb(0 0 0 / 62%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
+      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
+    transform: translateY(-4px);
   }
 
   .ai-panel-header {
@@ -1303,8 +1625,9 @@
     justify-content: center;
     width: 32px;
     height: 32px;
-    background: rgb(59 130 246 / 10%);
-    border: 1px solid rgb(59 130 246 / 20%);
+    color: var(--art-primary);
+    background: color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent);
     border-radius: 8px;
     animation: pulseGlow 3s ease-in-out infinite;
   }
@@ -1312,11 +1635,11 @@
   @keyframes pulseGlow {
     0%,
     100% {
-      box-shadow: 0 0 0 0 rgb(59 130 246 / 0%);
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--art-primary) 0%, transparent);
     }
 
     50% {
-      box-shadow: 0 0 0 6px rgb(59 130 246 / 8%);
+      box-shadow: 0 0 0 6px color-mix(in srgb, var(--art-primary) 10%, transparent);
     }
   }
 
@@ -1334,21 +1657,27 @@
     padding: 10px 12px;
     cursor: pointer;
     background: rgb(255 255 255 / 2.5%);
-    border: 1px solid var(--border);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, var(--default-border));
     border-radius: var(--radius-md);
     transition:
-      background 0.2s,
-      border-color 0.2s;
+      background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.2s cubic-bezier(0, 0, 0.2, 1),
+      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1);
   }
 
   .insight-card:hover {
     background: var(--bg-hover);
-    border-color: rgb(59 130 246 / 25%);
+    border-color: color-mix(in srgb, var(--art-primary) 28%, var(--default-border));
+    box-shadow:
+      0 12px 34px -18px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
+    transform: translateY(-2px);
   }
 
   .insight-card.insight-expanded {
-    background: rgb(59 130 246 / 6%);
-    border-color: rgb(59 130 246 / 30%);
+    background: color-mix(in srgb, var(--art-primary) 8%, transparent);
+    border-color: color-mix(in srgb, var(--art-primary) 34%, var(--default-border));
   }
 
   .insight-icon-wrap {
@@ -1359,7 +1688,8 @@
     width: 28px;
     height: 28px;
     margin-top: 2px;
-    background: rgb(59 130 246 / 10%);
+    color: var(--art-primary);
+    background: color-mix(in srgb, var(--art-primary) 10%, transparent);
     border-radius: 7px;
   }
 
@@ -1374,9 +1704,9 @@
     margin-bottom: 5px;
     font-size: 10px;
     font-weight: 600;
-    color: #3b82f6;
+    color: var(--art-primary);
     letter-spacing: 0.3px;
-    background: rgb(59 130 246 / 12%);
+    background: color-mix(in srgb, var(--art-primary) 12%, transparent);
     border-radius: 10px;
   }
 
@@ -1389,12 +1719,14 @@
     color: var(--text-secondary);
     transition: all 0.3s;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
   }
 
   .insight-expanded .insight-text {
-    -webkit-line-clamp: unset;
     overflow: visible;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
   }
 
   .insight-arrow {
@@ -1443,12 +1775,51 @@
       align-items: flex-start;
     }
 
+    .filters {
+      width: 100%;
+    }
+
+    .filters-panel {
+      width: 100%;
+    }
+
+    .filter-select--date,
+    .filter-select--country {
+      width: 100%;
+    }
+
     .kpi-grid {
       grid-template-columns: 1fr 1fr;
     }
 
     .main-layout {
       padding: 0 12px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kpi-card,
+    .chart-panel,
+    .waterfall-panel,
+    .table-panel,
+    .ai-insight-panel,
+    .waterfall-item,
+    .filter-query-btn,
+    .back-btn,
+    :deep(.custom-select .el-input__wrapper) {
+      transition: none !important;
+    }
+
+    .kpi-card:hover,
+    .kpi-card:active,
+    .chart-panel:hover,
+    .waterfall-panel:hover,
+    .table-panel:hover,
+    .ai-insight-panel:hover,
+    .waterfall-item:hover {
+      filter: none !important;
+      box-shadow: none !important;
+      transform: none !important;
     }
   }
 </style>
