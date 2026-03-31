@@ -138,7 +138,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import './styles/or-analysis-page';
+  @use './styles/or-analysis-page.scss' as *;
 
   .or-filters-wrap {
     flex-shrink: 0;

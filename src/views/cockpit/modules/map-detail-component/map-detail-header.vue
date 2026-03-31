@@ -50,7 +50,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import '../../../user-growth/ad-performance/styles/ap-card-fx';
+  @use '../../../user-growth/ad-performance/styles/ap-card-fx.scss' as *;
 
   .map-detail-header {
     display: flex;

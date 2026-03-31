@@ -319,7 +319,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import '../styles/ap-card-fx';
+  @use '../styles/ap-card-fx.scss' as *;
 
   .ad-performance-trend-charts {
     margin-bottom: 16px;

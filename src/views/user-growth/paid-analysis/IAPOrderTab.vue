@@ -864,7 +864,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import '../ad-performance/styles/ap-card-fx';
+  @use '../ad-performance/styles/ap-card-fx.scss' as *;
 
   .order-tab {
     display: flex;

@@ -17,11 +17,11 @@
     transition: width 0.25s;
 
     // 双列菜单左侧 ElScrollbar：细、半透明、无箭头感（组件自绘滑块）
-    :deep(.el-scrollbar__bar.is-vertical) {
+    .el-scrollbar__bar.is-vertical {
       width: 3px;
     }
 
-    :deep(.el-scrollbar__thumb) {
+    .el-scrollbar__thumb {
       right: -1px;
       background-color: rgb(0 0 0 / 14%);
       border-radius: 9999px;
@@ -31,7 +31,7 @@
         opacity 0.2s ease;
     }
 
-    :deep(.el-scrollbar__bar.is-vertical:hover .el-scrollbar__thumb) {
+    .el-scrollbar__bar.is-vertical:hover .el-scrollbar__thumb {
       background-color: rgb(0 0 0 / 26%);
       opacity: 1;
     }
@@ -292,12 +292,12 @@
     .dual-menu-left {
       border-right: 1px solid rgb(255 255 255 / 9%) !important;
 
-      :deep(.el-scrollbar__thumb) {
+      .el-scrollbar__thumb {
         background-color: rgb(255 255 255 / 12%);
         opacity: 0.85;
       }
 
-      :deep(.el-scrollbar__bar.is-vertical:hover .el-scrollbar__thumb) {
+      .el-scrollbar__bar.is-vertical:hover .el-scrollbar__thumb {
         background-color: rgb(255 255 255 / 22%);
         opacity: 1;
       }

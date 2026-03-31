@@ -185,7 +185,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import './styles/iap-analysis-page';
+  @use './styles/iap-analysis-page.scss' as *;
 
   .iap-filters-inner {
     display: flex;

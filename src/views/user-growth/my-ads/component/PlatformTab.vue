@@ -414,7 +414,9 @@
   }
 
   .app-group-header__row--title {
+    flex-wrap: nowrap;
     row-gap: 6px;
+    overflow: hidden;
   }
 
   .app-group-header__row--meta {
@@ -436,6 +438,13 @@
     line-height: 1.35;
     color: var(--text-primary);
     word-break: break-word;
+  }
+
+  .app-group-header__row--title .app-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
+    white-space: nowrap;
   }
 
   .app-meta {

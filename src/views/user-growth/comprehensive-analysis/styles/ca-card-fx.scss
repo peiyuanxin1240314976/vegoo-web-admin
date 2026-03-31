@@ -1,4 +1,4 @@
-@import '../../ad-performance/styles/ap-card-fx';
+@use '../../ad-performance/styles/ap-card-fx.scss' as *;
 
 .comprehensive-analysis-page {
   position: relative;
@@ -163,8 +163,8 @@
     z-index: 1;
   }
 
-  :deep(.el-card__header),
-  :deep(.el-card__body) {
+  .el-card__header,
+  .el-card__body {
     position: relative;
     z-index: 1;
     background: transparent;

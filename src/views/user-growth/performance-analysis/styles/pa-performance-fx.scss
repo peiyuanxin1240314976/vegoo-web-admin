@@ -1,5 +1,5 @@
 // 人员绩效分析：与 ad-performance 同档高对比霓虹，复用 ap-card-fx mixin
-@import '../../ad-performance/styles/ap-card-fx';
+@use '../../ad-performance/styles/ap-card-fx.scss' as *;
 
 // ── 页面级背景（与 ad-performance/index.vue 一致） ─────────────
 .performance-analysis-page {

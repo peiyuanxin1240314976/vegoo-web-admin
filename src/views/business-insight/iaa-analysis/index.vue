@@ -164,8 +164,7 @@
 
 <style scoped lang="scss">
   @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
-
-  @import './styles/iaa-card-fx';
+  @use './styles/iaa-card-fx.scss' as *;
 
   .iaa-analysis-page {
     display: flex;

@@ -142,7 +142,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import '../styles/mp-card-fx';
+  @use '../styles/mp-card-fx.scss' as *;
 
   .panel {
     position: relative;

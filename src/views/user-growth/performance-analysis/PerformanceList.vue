@@ -820,7 +820,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import './styles/pa-performance-fx';
+  @use './styles/pa-performance-fx.scss' as *;
 
   // ─── Tokens ──────────────────────────────────────────────
   $bg: #0d1117;

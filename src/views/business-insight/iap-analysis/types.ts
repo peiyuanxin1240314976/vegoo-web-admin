@@ -24,6 +24,7 @@ export interface IapFilterOptions {
   platformOptions: IapSelectOption[]
   countryOptions: IapSelectOption[]
   productTypeOptions: IapSelectOption[]
+  timeRangeOptions?: IapSelectOption[]
 }
 
 /** Dashboard/Detail 用 KPI 卡片项 */

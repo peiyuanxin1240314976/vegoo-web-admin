@@ -872,7 +872,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import './styles/rd-card-fx';
+  @use './styles/rd-card-fx.scss' as *;
 
   /* ── 页面背景分层（对齐 ad-performance 高对比风格；使用项目 token） ───────── */
   .revenue-deviation {

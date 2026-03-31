@@ -25,6 +25,12 @@ pnpm build
 
 执行 `vue-tsc --noEmit` 进行类型检查，通过后使用 Vite 构建生产版本，产物输出到 `dist` 目录。
 
+## 构建排障（常见错误/警告）
+
+若遇到 `pnpm build` 报错（例如 Element Plus 类型异常、Windows EPERM 解锁、Sass `@import` 弃用、`:deep` CSS warning 等），请先查看：
+
+- `docs/build-troubleshooting.md`
+
 ## 预览打包结果
 
 ```bash

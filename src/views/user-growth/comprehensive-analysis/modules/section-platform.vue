@@ -590,7 +590,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import '../styles/ca-card-fx';
+  @use '../styles/ca-card-fx.scss' as *;
 
   .ca-dashboard {
     display: flex;

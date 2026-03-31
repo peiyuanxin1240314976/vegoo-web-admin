@@ -770,7 +770,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import './styles/iap-card-fx';
+  @use './styles/iap-card-fx.scss' as *;
 
   .iap-dashboard-page {
     display: flex;
@@ -1342,5 +1342,5 @@
 </style>
 
 <style lang="scss">
-  @import './styles/iap-popper';
+  @use './styles/iap-popper.scss' as *;
 </style>

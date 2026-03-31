@@ -22,13 +22,13 @@
       0 0 56px rgb(59 130 246 / 14%);
   }
 
-  :deep(.el-card__header) {
+  .el-card__header {
     padding: 12px 14px;
     background: rgb(0 0 0 / 14%);
     border-bottom: 1px solid rgb(96 165 250 / 18%);
   }
 
-  :deep(.el-card__body) {
+  .el-card__body {
     padding: 14px;
   }
 }

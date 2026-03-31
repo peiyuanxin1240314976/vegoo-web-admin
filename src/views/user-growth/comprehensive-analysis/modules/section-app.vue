@@ -212,7 +212,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import '../styles/ca-card-fx';
+  @use '../styles/ca-card-fx.scss' as *;
 
   .ca-section-app {
     display: flex;

@@ -496,7 +496,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import '../styles/iaa-card-fx';
+  @use '../styles/iaa-card-fx.scss' as *;
 
   .iaa-tab-country {
     display: flex;

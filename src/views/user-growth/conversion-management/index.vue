@@ -301,7 +301,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import './styles/cm-data-page';
+  @use './styles/cm-data-page.scss' as *;
 
   .conversion-management-page {
     padding: 0;

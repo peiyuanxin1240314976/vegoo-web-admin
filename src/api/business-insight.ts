@@ -17,7 +17,6 @@ import {
   isEcpmAnalysisEndpointMock
 } from '@/views/business-insight/ecpm-analysis/config/data-source'
 import * as insightMock from '@/views/business-insight/mocks/business-insight-api-mock'
-import { MOCK_REVENUE_OVERVIEW_KPIS } from '@/views/business-insight/revenue-overview/mock'
 import type {
   RevenueOverviewIaaCountryRow,
   RevenueOverviewFilterState,
@@ -825,6 +824,9 @@ function normalizeRevenueOverviewKpisResponse(
 /** 收入总览 - 顶部 KPI 卡片 POST .../overview/kpis */
 export async function fetchRevenueOverviewOverviewKpis(params: RevenueOverviewFilterState) {
   if (isRevenueOverviewEndpointMock(RevenueOverviewEndpoint.OverviewKpis)) {
+    const { MOCK_REVENUE_OVERVIEW_KPIS } = await import(
+      '@/views/business-insight/revenue-overview/mock'
+    )
     return { kpis: MOCK_REVENUE_OVERVIEW_KPIS }
   }
   const raw = await request.post<unknown>({

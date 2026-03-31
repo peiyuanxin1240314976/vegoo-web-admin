@@ -153,7 +153,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import '../../styles/ap-card-fx';
+  @use '../../styles/ap-card-fx.scss' as *;
 
   .cal {
     @include ap-neon-bg;

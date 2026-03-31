@@ -309,7 +309,7 @@
           arpu: item.arpu ?? 0,
           dAdRevenue: item.dAdRevenue ?? 0,
           dIapRevenue: item.dIapRevenue ?? 0,
-          remainDay1: item.remainDay1 ?? 0
+          remainDay1: item.remainDay7 ?? 0
         }))
       }
     } catch {
@@ -383,7 +383,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import '../../user-growth/ad-performance/styles/ap-card-fx';
+  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as *;
 
   .map-detail-page {
     position: relative;
@@ -693,7 +693,7 @@
 </style>
 
 <style lang="scss">
-  @import '../../user-growth/ad-performance/styles/ap-card-fx';
+  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as *;
 
   html.dark .el-card.map-detail-spend-panel,
   html.dark .el-card.map-detail-revenue-panel,

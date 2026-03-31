@@ -30,7 +30,7 @@
       flex-direction: column;
       min-height: 0; /* 允许在 flex 中收缩，避免内容把整页撑高导致无法形成滚动 */
 
-      :deep(.layout-content) {
+      .layout-content {
         box-sizing: border-box;
         flex: 1;
         width: calc(100% - 40px);
@@ -85,7 +85,7 @@
       overflow: visible;
 
       #app-content {
-        :deep(.layout-content) {
+        .layout-content {
           width: calc(100% - 40px);
         }
       }
@@ -97,7 +97,7 @@
   .app-layout {
     #app-main {
       #app-content {
-        :deep(.layout-content) {
+        .layout-content {
           width: calc(100% - 30px);
         }
       }

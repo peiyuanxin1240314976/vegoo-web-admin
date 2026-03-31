@@ -262,8 +262,8 @@
     z-index: 1;
   }
 
-  :deep(.el-card__header),
-  :deep(.el-card__body) {
+  .el-card__header,
+  .el-card__body {
     position: relative;
     z-index: 1;
     background: transparent;

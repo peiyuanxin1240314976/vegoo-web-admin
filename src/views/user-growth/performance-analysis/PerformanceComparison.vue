@@ -845,7 +845,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import './styles/pa-performance-fx';
+  @use './styles/pa-performance-fx.scss' as *;
 
   $bg: #0d1117;
   $bg-card: #161c2d;

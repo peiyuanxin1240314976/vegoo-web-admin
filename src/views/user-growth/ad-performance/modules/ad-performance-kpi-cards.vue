@@ -77,7 +77,7 @@
 </script>
 
 <style scoped lang="scss">
-  @import '../styles/ap-card-fx';
+  @use '../styles/ap-card-fx.scss' as *;
 
   /* 旋转渐变边框：CSS Houdini @property */
   @property --kpi-border-angle {
