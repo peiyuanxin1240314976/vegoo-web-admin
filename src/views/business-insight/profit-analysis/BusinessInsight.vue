@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
   import 'flag-icons/css/flag-icons.min.css'
   import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import * as echarts from 'echarts'
@@ -434,7 +434,6 @@
             :disabled="pendingMeta"
             class="bi-filter-date"
             popper-class="bi-select__popper"
-            @change="reloadDashboard"
           />
         </div>
         <div class="bi-filter-field">
@@ -448,7 +447,6 @@
             :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
             :disabled="pendingMeta"
             filterable
-            @change="reloadDashboard"
           >
             <ElOption
               v-for="opt in filterOptions.appOptions"
@@ -469,7 +467,6 @@
             :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
             :disabled="pendingMeta"
             filterable
-            @change="reloadDashboard"
           >
             <ElOption
               v-for="opt in filterOptions.countryOptions"
@@ -489,7 +486,6 @@
             popper-class="bi-select__popper"
             :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
             :disabled="pendingMeta"
-            @change="reloadDashboard"
           >
             <ElOption
               v-for="opt in filterOptions.platformOptions"
@@ -499,6 +495,10 @@
             />
           </ElSelect>
         </div>
+
+        <ElButton type="primary" round :disabled="pendingMeta" @click="reloadDashboard"
+          >查询</ElButton
+        >
       </div>
     </header>
 
@@ -879,9 +879,6 @@
   }
 
   .bi-header {
-    display: flex;
-    align-items: center;
-    justify-content: start;
     padding: 14px 24px;
     background: linear-gradient(180deg, rgb(19 21 24 / 88%) 0%, rgb(15 16 18 / 72%) 100%);
     border-bottom: 1px solid rgb(96 165 250 / 18%);
