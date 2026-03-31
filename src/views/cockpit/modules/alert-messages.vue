@@ -100,6 +100,7 @@
   }
 
   .alert-block--metrics {
+    flex: 0 0 59%;
     color: var(--el-text-color-primary);
 
     .metrics-inner {
@@ -144,6 +145,7 @@
   }
 
   .alert-block--list {
+    flex: 0 0 40%;
     flex-flow: row wrap;
     gap: 8px 16px;
     background: rgb(140 100 60 / 25%);
@@ -181,6 +183,13 @@
       &.risk .alert-icon {
         color: var(--el-color-danger);
       }
+    }
+  }
+
+  @media (width <= 992px) {
+    .alert-block--metrics,
+    .alert-block--list {
+      flex: 0 0 100%;
     }
   }
 </style>
