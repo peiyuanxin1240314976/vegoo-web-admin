@@ -1,5 +1,6 @@
 <template>
   <div class="br-root">
+    <div class="br-page-fx" aria-hidden="true"></div>
     <!-- ─────────────────────────────── TOP HEADER ────────────── -->
     <header class="br-header">
       <div class="header-left">
@@ -563,11 +564,100 @@
 
 <style scoped>
   .br-root {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow-x: clip;
     color: var(--rp-text);
     background: var(--rp-bg);
+    isolation: isolate;
+  }
+
+  .br-root::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        ellipse 70% 50% at 6% 6%,
+        color-mix(in srgb, var(--art-success) 32%, transparent) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 55% 42% at 94% 8%,
+        color-mix(in srgb, var(--art-primary) 34%, transparent) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 40% 35% at 48% 16%,
+        color-mix(in srgb, var(--art-warning) 12%, transparent) 0%,
+        transparent 55%
+      );
+    mask-image: linear-gradient(to bottom, black 0%, black 32%, transparent 62%);
+    animation: br-aurora-drift 14s ease-in-out infinite alternate;
+  }
+
+  .br-root::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--art-primary) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--art-primary) 6%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 40px 40px;
+    mask-image: linear-gradient(to bottom, black 0%, black 22%, transparent 48%);
+  }
+
+  .br-page-fx {
+    position: absolute;
+    inset: -12% -12% 52%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      color-mix(in srgb, var(--art-primary) 11%, transparent) 55deg,
+      color-mix(in srgb, var(--art-success) 7%, transparent) 200deg,
+      transparent 285deg,
+      color-mix(in srgb, var(--art-warning) 7%, transparent) 330deg,
+      transparent 360deg
+    );
+    opacity: 0.8;
+    mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 82%);
+    animation: br-fx-spin 52s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes br-aurora-drift {
+    0% {
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1.04) translate(1%, -0.8%);
+    }
+  }
+
+  @keyframes br-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .br-root > *:not(.br-page-fx) {
+    position: relative;
+    z-index: 1;
   }
 
   .br-header {
@@ -1042,5 +1132,15 @@
   .fade-enter-to,
   .fade-leave-from {
     opacity: 0.8;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .br-root::before {
+      animation: none;
+    }
+
+    .br-page-fx {
+      animation: none;
+    }
   }
 </style>
