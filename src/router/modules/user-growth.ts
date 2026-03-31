@@ -176,6 +176,7 @@ export const userGrowthRoutes: AppRouteRecord = {
       meta: {
         title: 'menus.userGrowth.alertManagement',
         keepAlive: true,
+        isHide: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
     },

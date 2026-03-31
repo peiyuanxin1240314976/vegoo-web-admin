@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+  import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
   import * as echarts from 'echarts'
 
@@ -42,6 +42,21 @@
   const appFilter = ref('全部')
   const countryFilter = ref('全部国家')
   const activeMetric = ref<'revenue' | 'ecpm' | 'fillRate'>('revenue')
+  const pendingQuery = ref(false)
+
+  const appliedFilters = ref({
+    dateRange: dateRange.value,
+    appFilter: appFilter.value,
+    countryFilter: countryFilter.value
+  })
+
+  const isQueryDirty = computed(() => {
+    return (
+      appliedFilters.value.dateRange !== dateRange.value ||
+      appliedFilters.value.appFilter !== appFilter.value ||
+      appliedFilters.value.countryFilter !== countryFilter.value
+    )
+  })
 
   const dateOptions = ['最近7天', '最近30天', '最近90天', '自定义']
   const appOptions = ['全部', 'Weather8', 'PhoneTracker2', 'BatteryMax']
@@ -184,6 +199,22 @@
   const revenueData = [17000, 19500, 22000, 28000, 35000, 42500, 38000, 36000, 37500, 39000]
   const ecpmData = [3.1, 3.2, 3.0, 3.35, 3.45, 3.5, 3.3, 3.25, 3.35, 3.4]
   const fillData = [96.5, 95, 95.5, 96, 97, 93, 94, 93.5, 95, 97.5]
+
+  async function runQuery() {
+    if (pendingQuery.value) return
+    pendingQuery.value = true
+    try {
+      // TODO: 接真实接口时，把请求放到这里。
+      // 当前页面为静态 mock 展示，先只记录「已应用筛选」用于控制查询触发时机。
+      appliedFilters.value = {
+        dateRange: dateRange.value,
+        appFilter: appFilter.value,
+        countryFilter: countryFilter.value
+      }
+    } finally {
+      pendingQuery.value = false
+    }
+  }
 
   function buildChartOption() {
     return {
@@ -335,6 +366,7 @@
     await nextTick()
     initChart()
     window.addEventListener('resize', handleResize)
+    await runQuery()
   })
 
   onUnmounted(() => {
@@ -361,24 +393,41 @@
 
 <template>
   <div class="admob-dashboard">
+    <div class="admob-page-fx" aria-hidden="true"></div>
     <!-- ── Page body ──────────────────────────────────────────────── -->
     <div class="page-body">
       <!-- Page header -->
       <div class="page-header">
-        <h1 class="page-title">AdMob表现详情</h1>
-        <div class="filters">
-          <span class="filter-label">日期范围：</span>
-          <el-select v-model="dateRange" size="default" class="filter-select">
-            <el-option v-for="o in dateOptions" :key="o" :label="o" :value="o" />
-          </el-select>
-          <span class="filter-label">App选择：</span>
-          <el-select v-model="appFilter" size="default" class="filter-select">
-            <el-option v-for="o in appOptions" :key="o" :label="o" :value="o" />
-          </el-select>
-          <span class="filter-label">国家：</span>
-          <el-select v-model="countryFilter" size="default" class="filter-select">
-            <el-option v-for="o in countryOptions" :key="o" :label="o" :value="o" />
-          </el-select>
+        <div class="filters filters-panel">
+          <div class="filter-field">
+            <span class="filter-label">日期范围</span>
+            <el-select v-model="dateRange" size="default" class="filter-select">
+              <el-option v-for="o in dateOptions" :key="o" :label="o" :value="o" />
+            </el-select>
+          </div>
+          <div class="filter-field">
+            <span class="filter-label">App选择</span>
+            <el-select v-model="appFilter" size="default" class="filter-select">
+              <el-option v-for="o in appOptions" :key="o" :label="o" :value="o" />
+            </el-select>
+          </div>
+          <div class="filter-field">
+            <span class="filter-label">国家</span>
+            <el-select v-model="countryFilter" size="default" class="filter-select">
+              <el-option v-for="o in countryOptions" :key="o" :label="o" :value="o" />
+            </el-select>
+          </div>
+
+          <el-button
+            type="primary"
+            round
+            plain
+            :loading="pendingQuery"
+            :disabled="pendingQuery || !isQueryDirty"
+            @click="runQuery"
+          >
+            查询
+          </el-button>
         </div>
       </div>
 
@@ -467,16 +516,16 @@
           <div class="ai-header">
             <span class="section-title">AI洞察与建议</span>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="ai-icon">
-              <circle cx="12" cy="12" r="10" stroke="#38bdf8" stroke-width="1.5" />
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
               <path
                 d="M8 12s1-3 4-3 4 3 4 3-1 3-4 3-4-3-4-3z"
-                stroke="#38bdf8"
+                stroke="currentColor"
                 stroke-width="1.5"
               />
-              <circle cx="12" cy="12" r="2" fill="#38bdf8" />
+              <circle cx="12" cy="12" r="2" fill="currentColor" />
               <path
                 d="M12 2v2M12 20v2M2 12h2M20 12h2"
-                stroke="#38bdf8"
+                stroke="currentColor"
                 stroke-width="1.5"
                 stroke-linecap="round"
               />
@@ -494,39 +543,43 @@
 
       <!-- ── Table ───────────────────────────────────────────────── -->
       <div class="table-card">
-        <div class="section-title" style="margin-bottom: 16px">按应用表现细分</div>
-        <el-table :data="tableData" style="width: 100%" :row-class-name="() => 'admob-row'">
-          <el-table-column prop="app" label="应用" sortable min-width="160" />
-          <el-table-column prop="revenue" label="总收入" sortable min-width="110" align="right" />
-          <el-table-column
-            prop="revenueShare"
-            label="收入占比"
-            sortable
-            min-width="110"
-            align="right"
-          />
-          <el-table-column prop="ecpm" label="eCPM" sortable min-width="110" align="right" />
-          <el-table-column prop="fillRate" label="填充率" sortable min-width="110" align="right" />
-          <el-table-column
-            prop="impressions"
-            label="展示次数"
-            sortable
-            min-width="120"
-            align="right"
-          />
-          <el-table-column label="操作" min-width="120" align="center">
-            <template #default="{ row }">
-              <el-button
-                size="small"
-                class="detail-btn"
-                round
-                @click="goToAppAdPlatformPerformance(row)"
-              >
-                查看详情
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <div class="table-head">
+          <div class="section-title section-title--glow">按应用表现细分</div>
+        </div>
+        <div class="table-scroll">
+          <el-table :data="tableData" style="width: 100%" :row-class-name="() => 'admob-row'">
+            <el-table-column prop="app" label="应用" sortable min-width="160" align="left" />
+            <el-table-column prop="revenue" label="总收入" sortable min-width="110" align="left" />
+            <el-table-column
+              prop="revenueShare"
+              label="收入占比"
+              sortable
+              min-width="110"
+              align="left"
+            />
+            <el-table-column prop="ecpm" label="eCPM" sortable min-width="110" align="left" />
+            <el-table-column prop="fillRate" label="填充率" sortable min-width="110" align="left" />
+            <el-table-column
+              prop="impressions"
+              label="展示次数"
+              sortable
+              min-width="120"
+              align="left"
+            />
+            <el-table-column label="操作" min-width="120" align="center">
+              <template #default="{ row }">
+                <el-button
+                  size="small"
+                  class="detail-btn"
+                  round
+                  @click="goToAppAdPlatformPerformance(row)"
+                >
+                  查看详情
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
       </div>
     </div>
   </div>
@@ -535,26 +588,118 @@
 <style scoped lang="scss">
   // ─── CSS Variables ────────────────────────────────────────────────────────────
   .admob-dashboard {
-    --bg-base: #0b0f1a;
-    --bg-card: #111827;
-    --bg-card2: #0f1623;
-    --bg-hover: #1a2235;
-    --border: #1e2d40;
-    --text-1: #e2e8f0;
-    --text-2: #94a3b8;
-    --text-3: #475569;
-    --blue: #38bdf8;
-    --purple: #a78bfa;
-    --green: #34d399;
-    --orange: #fb923c;
-    --red: #f87171;
-    --pos: #34d399;
-    --neg: #f87171;
+    --bg-base: var(--default-bg-color);
+    --bg-card: color-mix(in srgb, var(--default-box-color) 92%, transparent);
+    --bg-card2: color-mix(in srgb, var(--default-box-color) 86%, transparent);
+    --bg-hover: color-mix(in srgb, var(--default-box-color) 78%, transparent);
+    --border: color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
+    --text-1: var(--text-primary);
+    --text-2: var(--text-secondary);
+    --text-3: var(--text-tertiary);
+    --blue: var(--art-primary);
+    --purple: color-mix(in srgb, var(--art-primary) 45%, var(--art-success));
+    --green: var(--art-success);
+    --orange: var(--art-warning);
+    --red: var(--art-danger);
+    --pos: var(--art-success);
+    --neg: var(--art-danger);
 
+    position: relative;
     min-height: 100vh;
+    overflow-x: clip;
     font-family: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
     color: var(--text-1);
     background: var(--bg-base);
+    isolation: isolate;
+
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(
+          ellipse 70% 50% at 6% 6%,
+          color-mix(in srgb, var(--art-success) 34%, transparent) 0%,
+          transparent 58%
+        ),
+        radial-gradient(
+          ellipse 55% 42% at 94% 8%,
+          color-mix(in srgb, var(--art-primary) 34%, transparent) 0%,
+          transparent 58%
+        ),
+        radial-gradient(
+          ellipse 40% 35% at 48% 16%,
+          color-mix(in srgb, var(--art-warning) 14%, transparent) 0%,
+          transparent 55%
+        );
+      mask-image: linear-gradient(to bottom, black 0%, black 32%, transparent 62%);
+      animation: admob-aurora-drift 14s ease-in-out infinite alternate;
+    }
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(
+          color-mix(in srgb, var(--art-primary) 6%, transparent) 1px,
+          transparent 1px
+        ),
+        linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--art-primary) 6%, transparent) 1px,
+          transparent 1px
+        );
+      background-size: 40px 40px;
+      mask-image: linear-gradient(to bottom, black 0%, black 22%, transparent 48%);
+    }
+
+    > *:not(.admob-page-fx) {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .admob-page-fx {
+    position: absolute;
+    inset: -12% -12% 52%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      color-mix(in srgb, var(--art-primary) 12%, transparent) 55deg,
+      color-mix(in srgb, var(--art-success) 9%, transparent) 200deg,
+      transparent 285deg,
+      color-mix(in srgb, var(--art-warning) 7%, transparent) 330deg,
+      transparent 360deg
+    );
+    opacity: 0.8;
+    mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 82%);
+    animation: admob-fx-spin 52s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes admob-aurora-drift {
+    0% {
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1.04) translate(1%, -0.8%);
+    }
+  }
+
+  @keyframes admob-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   // ─── Top bar ─────────────────────────────────────────────────────────────────
@@ -578,11 +723,20 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 6px;
-    transition: all 0.2s;
+    transition:
+      color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      background-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      transform 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
 
     &:hover {
       color: var(--text-1);
       background: var(--bg-hover);
+      border-color: color-mix(in srgb, var(--art-primary) 28%, var(--default-border));
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--art-primary) 18%, transparent),
+        0 0 18px color-mix(in srgb, var(--art-primary) 14%, transparent);
     }
   }
 
@@ -603,11 +757,6 @@
   }
 
   .page-header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    justify-content: space-between;
     margin-bottom: 22px;
   }
 
@@ -625,6 +774,74 @@
     align-items: center;
   }
 
+  .filters-panel {
+    padding: 10px 14px;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 20% 10%,
+        color-mix(in srgb, var(--art-primary) 16%, transparent) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        circle at 82% 16%,
+        color-mix(in srgb, var(--art-success) 10%, transparent) 0%,
+        transparent 52%
+      ),
+      linear-gradient(180deg, rgb(0 0 0 / 22%) 0%, rgb(0 0 0 / 10%) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
+    border-radius: 16px;
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+    transition:
+      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+      box-shadow:
+        0 12px 40px rgb(0 0 0 / 44%),
+        0 0 0 1px color-mix(in srgb, var(--art-primary) 18%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
+        0 0 48px color-mix(in srgb, var(--art-primary) 14%, transparent);
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(
+          color-mix(in srgb, var(--art-primary) 5%, transparent) 1px,
+          transparent 1px
+        ),
+        linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--art-primary) 5%, transparent) 1px,
+          transparent 1px
+        );
+      background-size: 20px 20px;
+      opacity: 0.55;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 36%, black 0%, transparent 72%);
+    }
+  }
+
+  .filter-field {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    min-height: 32px;
+  }
+
   .filter-label {
     font-size: 13px;
     color: var(--text-2);
@@ -636,12 +853,19 @@
 
     :deep(.el-select__wrapper) {
       color: var(--text-1);
-      background: var(--bg-card) !important;
-      border-color: var(--border) !important;
+      background: rgb(0 0 0 / 22%) !important;
+      border-color: color-mix(in srgb, var(--art-primary) 22%, transparent) !important;
+      border-radius: 10px;
       box-shadow: none !important;
+      transition:
+        border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
 
       &:hover {
-        border-color: var(--blue) !important;
+        border-color: color-mix(in srgb, var(--art-primary) 44%, transparent) !important;
+        box-shadow:
+          0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent) inset,
+          0 0 20px color-mix(in srgb, var(--art-primary) 12%, transparent);
       }
     }
 
@@ -654,14 +878,50 @@
     }
   }
 
+  .filter-query-btn {
+    min-height: 34px;
+    padding: 0 16px;
+    margin-left: 4px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 38%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent) inset,
+      0 10px 28px color-mix(in srgb, var(--art-primary) 10%, transparent);
+    transition:
+      transform 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+    &:hover:not(.is-disabled) {
+      border-color: color-mix(in srgb, var(--art-primary) 56%, transparent);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent) inset,
+        0 0 22px color-mix(in srgb, var(--art-primary) 18%, transparent),
+        0 12px 38px color-mix(in srgb, var(--art-primary) 12%, transparent);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(.is-disabled) {
+      transition-duration: 0.14s;
+      transform: translateY(0);
+    }
+
+    &:focus-visible {
+      box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--art-primary) 38%, transparent),
+        0 0 0 4px color-mix(in srgb, var(--art-primary) 16%, transparent);
+    }
+  }
+
   // ─── Main grid ───────────────────────────────────────────────────────────────
   .main-grid {
     display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 18px;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    gap: clamp(14px, 2vw, 18px);
     margin-bottom: 18px;
 
-    @media (width <= 1100px) {
+    @media (width <= 1180px) {
       grid-template-columns: 1fr;
     }
   }
@@ -675,40 +935,69 @@
   // ─── KPI Cards ───────────────────────────────────────────────────────────────
   .kpi-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-
-    @media (width <= 900px) {
-      grid-template-columns: repeat(2, 1fr);
-    }
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: clamp(12px, 1.8vw, 14px);
   }
 
   .kpi-card {
     position: relative;
     padding: 18px 20px 16px;
     overflow: hidden;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background:
+      radial-gradient(
+        circle at 18% 12%,
+        color-mix(in srgb, var(--accent) 18%, transparent) 0%,
+        transparent 62%
+      ),
+      radial-gradient(
+        circle at 86% 16%,
+        color-mix(in srgb, var(--art-primary) 12%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card2) 100%);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--default-border));
     border-radius: 12px;
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--accent) 10%, transparent);
     transition:
-      border-color 0.2s,
-      transform 0.2s;
+      transform 0.32s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      box-shadow 0.32s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      filter 0.25s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
 
     &::before {
       position: absolute;
       inset: 0;
       pointer-events: none;
       content: '';
-      background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--accent) 8%, transparent),
-        transparent 60%
-      );
+      background-image:
+        linear-gradient(color-mix(in srgb, var(--accent) 6%, transparent) 1px, transparent 1px),
+        linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--accent) 6%, transparent) 1px,
+          transparent 1px
+        );
+      background-size: 22px 22px;
+      opacity: 0.4;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 0%, transparent 74%);
     }
 
     &:hover {
-      border-color: var(--accent);
-      transform: translateY(-1px);
+      filter: brightness(1.05);
+      border-color: color-mix(in srgb, var(--accent) 44%, var(--default-border));
+      box-shadow:
+        0 20px 52px -14px rgb(0 0 0 / 62%),
+        0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--accent) 14%, transparent),
+        0 0 40px color-mix(in srgb, var(--accent) 18%, transparent);
+      transform: translateY(-5px);
+    }
+
+    &:active {
+      transition-duration: 0.14s;
+      transform: translateY(-2px);
     }
   }
 
@@ -762,9 +1051,32 @@
   // ─── Chart ───────────────────────────────────────────────────────────────────
   .chart-card {
     padding: 20px 20px 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background:
+      radial-gradient(
+        circle at 14% 10%,
+        color-mix(in srgb, var(--art-primary) 14%, transparent) 0%,
+        transparent 60%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card2) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
     border-radius: 12px;
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+    transition:
+      transform 0.32s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      box-shadow 0.32s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+      box-shadow:
+        0 20px 52px -14px rgb(0 0 0 / 62%),
+        0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
+        0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
+      transform: translateY(-4px);
+    }
   }
 
   .chart-header {
@@ -776,7 +1088,7 @@
 
   .chart-canvas {
     width: 100%;
-    height: 280px;
+    height: clamp(220px, 28vw, 300px);
   }
 
   .section-title {
@@ -798,29 +1110,69 @@
     background: transparent;
     border: 1px solid var(--border);
     border-radius: 6px;
-    transition: all 0.2s;
+    transition:
+      color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      background-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      transform 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
 
     &:hover {
       background: var(--bg-hover);
     }
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .admob-dashboard::before {
+      animation: none;
+    }
+
+    .admob-page-fx {
+      animation: none;
+    }
+
+    .back-btn,
+    .metric-btn,
+    .filters-panel,
+    .kpi-card,
+    .chart-card,
+    .ai-panel,
+    .table-card,
+    .detail-btn {
+      transition: none !important;
+    }
+
+    .kpi-card:hover,
+    .kpi-card:active,
+    .chart-card:hover,
+    .ai-panel:hover {
+      filter: none;
+      transform: none;
+    }
+
+    .table-card:hover,
+    .detail-btn:hover {
+      box-shadow: none !important;
+      transform: none !important;
+    }
+  }
+
   .active-revenue {
-    color: #38bdf8 !important;
-    background: rgb(56 189 248 / 15%) !important;
-    border-color: #38bdf8 !important;
+    color: var(--art-primary) !important;
+    background: color-mix(in srgb, var(--art-primary) 16%, transparent) !important;
+    border-color: color-mix(in srgb, var(--art-primary) 44%, transparent) !important;
   }
 
   .active-ecpm {
-    color: #a78bfa !important;
-    background: rgb(167 139 250 / 15%) !important;
-    border-color: #a78bfa !important;
+    color: color-mix(in srgb, var(--art-primary) 54%, var(--art-success)) !important;
+    background: color-mix(in srgb, var(--art-primary) 12%, transparent) !important;
+    border-color: color-mix(in srgb, var(--art-primary) 34%, transparent) !important;
   }
 
   .active-fill {
-    color: #34d399 !important;
-    background: rgb(52 211 153 / 15%) !important;
-    border-color: #34d399 !important;
+    color: var(--art-success) !important;
+    background: color-mix(in srgb, var(--art-success) 14%, transparent) !important;
+    border-color: color-mix(in srgb, var(--art-success) 40%, transparent) !important;
   }
 
   // ─── AI Panel ────────────────────────────────────────────────────────────────
@@ -829,9 +1181,32 @@
     flex-direction: column;
     gap: 0;
     padding: 20px 18px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background:
+      radial-gradient(
+        circle at 16% 10%,
+        color-mix(in srgb, var(--art-primary) 16%, transparent) 0%,
+        transparent 60%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card2) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
     border-radius: 12px;
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+    transition:
+      transform 0.32s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      box-shadow 0.32s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+      box-shadow:
+        0 20px 52px -14px rgb(0 0 0 / 62%),
+        0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
+        0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
+      transform: translateY(-4px);
+    }
   }
 
   .ai-header {
@@ -842,6 +1217,7 @@
   }
 
   .ai-icon {
+    color: var(--blue);
     opacity: 0.85;
   }
 
@@ -876,9 +1252,71 @@
   // ─── Table ───────────────────────────────────────────────────────────────────
   .table-card {
     padding: 20px 20px 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 14% 10%,
+        color-mix(in srgb, var(--art-primary) 14%, transparent) 0%,
+        transparent 60%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card2) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
     border-radius: 12px;
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+    transition:
+      transform 0.32s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      box-shadow 0.32s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
+      box-shadow:
+        0 20px 52px -14px rgb(0 0 0 / 62%),
+        0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
+        0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
+      transform: translateY(-4px);
+    }
+  }
+
+  .table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 18%, transparent);
+  }
+
+  .section-title--glow {
+    background-image: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--text-primary) 92%, transparent) 0%,
+      color-mix(in srgb, var(--art-primary) 70%, transparent) 55%,
+      color-mix(in srgb, var(--art-success) 50%, transparent) 100%
+    );
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .table-scroll {
+    overflow: auto hidden;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      height: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: color-mix(in srgb, var(--art-primary) 18%, transparent);
+      border-radius: 9999px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
 
     :deep(.el-table) {
       color: var(--text-1);
@@ -899,12 +1337,16 @@
         padding: 10px 0;
         font-size: 13px;
         font-weight: 600;
-        background: #0d1622 !important;
+        background: rgb(0 0 0 / 18%) !important;
       }
       // Gradient header left-to-right on first column
       th:first-child {
-        color: #fff !important;
-        background: linear-gradient(90deg, #1e3a8a 0%, #312e81 100%) !important;
+        color: var(--text-1) !important;
+        background: linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--art-primary) 24%, transparent) 0%,
+          color-mix(in srgb, var(--art-success) 14%, transparent) 100%
+        ) !important;
       }
     }
 
@@ -919,6 +1361,29 @@
       background: var(--bg-hover) !important;
     }
 
+    :deep(.el-table__row) td {
+      position: relative;
+      transition:
+        background-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+    }
+
+    :deep(.el-table__row:hover) td:first-child::before {
+      position: absolute;
+      top: 20%;
+      bottom: 20%;
+      left: 0;
+      width: 3px;
+      content: '';
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--art-primary) 70%, transparent),
+        color-mix(in srgb, var(--art-success) 55%, transparent)
+      );
+      border-radius: 9999px;
+      opacity: 0.9;
+    }
+
     :deep(.cell) {
       padding: 0 16px;
     }
@@ -927,13 +1392,19 @@
   .detail-btn {
     font-size: 12px !important;
     color: var(--blue) !important;
-    background: rgb(56 189 248 / 12%) !important;
-    border: 1px solid rgb(56 189 248 / 35%) !important;
+    background: color-mix(in srgb, var(--art-primary) 12%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 32%, transparent) !important;
     border-radius: 6px !important;
+    transition:
+      transform 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
 
     &:hover {
-      background: rgb(56 189 248 / 25%) !important;
+      background: color-mix(in srgb, var(--art-primary) 18%, transparent) !important;
       border-color: var(--blue) !important;
+      box-shadow: 0 0 18px color-mix(in srgb, var(--art-primary) 18%, transparent);
+      transform: translateY(-1px);
     }
   }
 </style>
