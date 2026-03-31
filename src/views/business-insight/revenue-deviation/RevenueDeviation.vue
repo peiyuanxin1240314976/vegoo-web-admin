@@ -46,9 +46,7 @@
           />
         </el-select>
 
-        <el-button round class="rd-filter-action rd-filter-action--apply" :icon="Filter">
-          筛选
-        </el-button>
+        <el-button round class="rd-filter-action rd-filter-action--apply"> 查询 </el-button>
       </div>
     </div>
 
@@ -322,7 +320,7 @@
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
-  import { Filter, TopRight } from '@element-plus/icons-vue'
+  import { TopRight } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import {
