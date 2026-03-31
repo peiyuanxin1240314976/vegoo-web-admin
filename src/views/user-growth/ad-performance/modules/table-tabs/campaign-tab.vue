@@ -1,147 +1,100 @@
 <template>
   <div class="ad-performance-table-tab">
-    <ElTable
-      :key="lazyMode ? 'lazy' : 'normal'"
+    <ArtVirtualTable
+      ref="tableRef"
+      :columns="visibleColumns"
       :data="tableData"
-      row-key="id"
-      :tree-props="treeProps"
-      :default-expand-all="!lazyMode"
-      :lazy="lazyMode"
-      :load="lazyMode ? loadChildren : undefined"
-      :row-class-name="getRowClassName"
+      expand-column-key="appName"
+      :row-class="getRowClass"
       :row-style="getRowStyle"
-      size="default"
-      class="ad-performance-table__el-table"
     >
-      <!-- 应用 (required) -->
-      <ElTableColumn show-overflow-tooltip label="应用" min-width="100">
-        <template #default="{ row }">
-          <div class="ad-performance-table__dim">
-            <span v-if="isNestedRow(row)" class="ad-performance-table__badge" aria-hidden="true"
-              >AD</span
-            >
-            <span v-else class="ad-performance-table__app-icon" aria-hidden="true"></span>
-            <span class="ad-performance-table__dim-main" :title="row.appName">
-              {{ isNestedRow(row) ? '' : row.appName }}
-            </span>
-          </div>
-        </template>
-      </ElTableColumn>
+      <!-- 应用 -->
+      <template #cell:appName="{ row }">
+        <div class="ad-performance-table__dim">
+          <span v-if="isNestedRow(row)" class="ad-performance-table__badge" aria-hidden="true">
+            AD
+          </span>
+          <span v-else class="ad-performance-table__app-icon" aria-hidden="true"></span>
+          <span class="ad-performance-table__dim-main" :title="row.appName">
+            {{ isNestedRow(row) ? '' : row.appName }}
+          </span>
+        </div>
+      </template>
 
-      <!-- 广告系列名称 (required) -->
-      <ElTableColumn show-overflow-tooltip label="广告系列名称" min-width="150">
-        <template #default="{ row }">
-          <div class="ad-performance-table__dim">
-            <span class="ad-performance-table__dim-main" :title="row.name">{{ row.name }}</span>
-          </div>
-        </template>
-      </ElTableColumn>
+      <!-- 广告系列名称 -->
+      <template #cell:name="{ row }">
+        <div class="ad-performance-table__dim">
+          <span class="ad-performance-table__dim-main" :title="row.name">{{ row.name }}</span>
+        </div>
+      </template>
 
       <!-- 广告平台 -->
-      <ElTableColumn
-        v-if="isVisible('channel')"
-        show-overflow-tooltip
-        label="广告平台"
-        width="100"
-        align="left"
-      >
-        <template #default="{ row }">
-          <span v-if="isNestedRow(row)" class="ad-performance-table__muted">-</span>
-          <span v-else class="ad-performance-table__channel">
-            <span
-              class="ad-performance-table__channel-icon"
-              :class="`ad-performance-table__channel-icon--${row.channel}`"
-              aria-hidden="true"
-              >{{ channelShort(row.channel) }}</span
-            >
-          </span>
-        </template>
-      </ElTableColumn>
+      <template #cell:channel="{ row }">
+        <span v-if="isNestedRow(row)" class="ad-performance-table__muted">-</span>
+        <span
+          v-else
+          class="ad-performance-table__channel-icon"
+          :class="`ad-performance-table__channel-icon--${row.channel}`"
+          aria-hidden="true"
+        >
+          {{ channelShort(row.channel) }}
+        </span>
+      </template>
 
       <!-- 国家 -->
-      <ElTableColumn
-        v-if="isVisible('country')"
-        show-overflow-tooltip
-        label="国家"
-        width="80"
-        align="left"
-      >
-        <template #default="{ row }">
-          <span v-if="isNestedRow(row)" class="ad-performance-table__muted">-</span>
-          <span v-else class="ad-performance-table__country" :title="row.country">
-            {{ countryFlag(row.country) }}
-          </span>
-        </template>
-      </ElTableColumn>
+      <template #cell:country="{ row }">
+        <span v-if="isNestedRow(row)" class="ad-performance-table__muted">-</span>
+        <span v-else class="ad-performance-table__country" :title="row.country">
+          {{ countryFlag(row.country) }}
+        </span>
+      </template>
 
       <!-- 状态 -->
-      <ElTableColumn v-if="isVisible('status')" label="状态" width="100" align="left">
-        <template #default="{ row }">
-          <ElTag :type="statusTagType(row.status)" size="small" effect="plain">
-            {{ statusLabel(row.status) }}
-          </ElTag>
-        </template>
-      </ElTableColumn>
+      <template #cell:status="{ row }">
+        <ElTag :type="statusTagType(row.status)" size="small" effect="plain">
+          {{ statusLabel(row.status) }}
+        </ElTag>
+      </template>
 
       <!-- 花费/预算 -->
-      <ElTableColumn v-if="isVisible('spendBudget')" label="花费/预算" min-width="130" align="left">
-        <template #default="{ row }">
-          {{ formatMoney(row.spend, 0) }}/{{ formatMoney(row.budget, 0) }}
-          <span class="ad-performance-table__percent">({{ row.spendBudgetPercent }}%)</span>
-        </template>
-      </ElTableColumn>
+      <template #cell:spendBudget="{ row }">
+        {{ formatMoney(row.spend, 0) }}/{{ formatMoney(row.budget, 0) }}
+        <span class="ad-performance-table__percent">({{ row.spendBudgetPercent }}%)</span>
+      </template>
 
       <!-- CPI -->
-      <ElTableColumn v-if="isVisible('cpi')" label="CPI" width="80" align="left">
-        <template #default="{ row }">{{ formatMoney(row.cpi, 2) }}</template>
-      </ElTableColumn>
+      <template #cell:cpi="{ row }">{{ formatMoney(row.cpi, 2) }}</template>
 
       <!-- 点击率 -->
-      <ElTableColumn v-if="isVisible('ctr')" label="点击率" width="100" align="left">
-        <template #default="{ row }">{{ row.ctr }}%</template>
-      </ElTableColumn>
+      <template #cell:ctr="{ row }">{{ row.ctr }}%</template>
 
       <!-- 转化率 -->
-      <ElTableColumn v-if="isVisible('cvr')" label="转化率" width="100" align="left">
-        <template #default="{ row }">{{ row.cvr }}%</template>
-      </ElTableColumn>
+      <template #cell:cvr="{ row }">{{ row.cvr }}%</template>
 
       <!-- 首日ROI -->
-      <ElTableColumn v-if="isVisible('roi1')" label="首日ROI" width="90" align="left">
-        <template #default="{ row }">
-          <span :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
-        </template>
-      </ElTableColumn>
+      <template #cell:roi1="{ row }">
+        <span :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
+      </template>
 
       <!-- 7日ROI -->
-      <ElTableColumn v-if="isVisible('roi7')" label="7日ROI" width="90" align="left">
-        <template #default="{ row }">
-          <span :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
-        </template>
-      </ElTableColumn>
+      <template #cell:roi7="{ row }">
+        <span :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
+      </template>
 
       <!-- 预估利润 -->
-      <ElTableColumn
-        v-if="isVisible('estimatedProfit')"
-        label="预估利润"
-        min-width="100"
-        align="left"
-      >
-        <template #default="{ row }">
-          <span :class="profitClass(row.estimatedProfit)">
-            {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
-          </span>
-        </template>
-      </ElTableColumn>
+      <template #cell:estimatedProfit="{ row }">
+        <span :class="profitClass(row.estimatedProfit)">
+          {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
+        </span>
+      </template>
 
       <!-- 操作 -->
-      <ElTableColumn label="操作" width="90" align="center" fixed="right">
-        <template #default="{ row }">
-          <ElButton link type="primary" size="small" @click="$emit('detail', row)">详情</ElButton>
-        </template>
-      </ElTableColumn>
-    </ElTable>
+      <template #cell:actions="{ row }">
+        <ElButton link type="primary" size="small" @click="$emit('detail', row)">详情</ElButton>
+      </template>
+    </ArtVirtualTable>
 
+    <!-- 自定义列弹窗 -->
     <ElDialog
       v-model="dialogVisible"
       width="520px"
@@ -159,8 +112,9 @@
           :key="col.key"
           :label="col.key"
           :disabled="col.required"
-          >{{ col.label }}</ElCheckbox
         >
+          {{ col.label }}
+        </ElCheckbox>
       </ElCheckboxGroup>
       <template #footer>
         <ElButton round @click="dialogVisible = false">取消</ElButton>
@@ -171,7 +125,9 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
+  import { computed, ref, watch } from 'vue'
+  import ArtVirtualTable from '@/components/core/art-virtual-table/index.vue'
+  import type { ArtVirtualTableColumn } from '@/components/core/art-virtual-table/index.vue'
   import type { AdPerformanceCampaignRow, CampaignRowStatus } from '../../types'
   import { useTabColumnVisibility } from '../../composables/useTabColumnVisibility'
   import {
@@ -188,7 +144,6 @@
   const props = withDefaults(
     defineProps<{
       rows: AdPerformanceCampaignRow[]
-      /** 父行 id -> 子行数组（展开时 ElTable lazy/load 读取） */
       childrenMap?: Map<string, AdPerformanceCampaignRow[]>
       keyword?: string
     }>(),
@@ -225,21 +180,29 @@
     confirmDialog
   } = useTabColumnVisibility('ad-performance:table:campaign:visible-columns', ALL_COLUMNS)
 
+  // 可见列配置 → ArtVirtualTable columns
+  const visibleColumns = computed<ArtVirtualTableColumn[]>(() => {
+    const cols: ArtVirtualTableColumn[] = []
+    cols.push({ key: 'appName', title: '应用', width: 120 })
+    cols.push({ key: 'name', title: '广告系列名称', width: 200, flexGrow: 1 })
+    if (isVisible('channel')) cols.push({ key: 'channel', title: '广告平台', width: 100 })
+    if (isVisible('country')) cols.push({ key: 'country', title: '国家', width: 80 })
+    if (isVisible('status')) cols.push({ key: 'status', title: '状态', width: 100 })
+    if (isVisible('spendBudget')) cols.push({ key: 'spendBudget', title: '花费/预算', width: 160 })
+    if (isVisible('cpi')) cols.push({ key: 'cpi', title: 'CPI', width: 80 })
+    if (isVisible('ctr')) cols.push({ key: 'ctr', title: '点击率', width: 90 })
+    if (isVisible('cvr')) cols.push({ key: 'cvr', title: '转化率', width: 90 })
+    if (isVisible('roi1')) cols.push({ key: 'roi1', title: '首日ROI', width: 90 })
+    if (isVisible('roi7')) cols.push({ key: 'roi7', title: '7日ROI', width: 90 })
+    if (isVisible('estimatedProfit'))
+      cols.push({ key: 'estimatedProfit', title: '预估利润', width: 120 })
+    cols.push({ key: 'actions', title: '操作', width: 90, fixed: 'right', align: 'center' })
+    return cols
+  })
+
+  const tableRef = ref<InstanceType<typeof ArtVirtualTable> | null>(null)
+
   defineExpose({ openCustomColumns: openDialog })
-
-  // 无关键字时用懒加载（初始只渲染父行），有关键字时全树渲染以显示匹配子行
-  const lazyMode = computed(() => !props.keyword?.trim())
-
-  const treeProps = { children: 'children', hasChildren: 'hasChildren' } as const
-
-  // 懒加载回调：从内存 Map 即时返回，无网络请求
-  function loadChildren(
-    row: AdPerformanceCampaignRow,
-    _treeNode: unknown,
-    resolve: (data: AdPerformanceCampaignRow[]) => void
-  ) {
-    resolve(props.childrenMap?.get(row.id) ?? [])
-  }
 
   // --- 状态枚举映射 ---
   const STATUS_LABEL: Record<CampaignRowStatus, string> = {
@@ -262,24 +225,18 @@
     return STATUS_TAG_TYPE[s] ?? 'info'
   }
 
-  // --- 行类型判断 ---
   function isNestedRow(row: AdPerformanceCampaignRow): boolean {
     return String(row.id ?? '').includes('-') || String(row.name ?? '').startsWith('AdGroup_')
   }
 
-  // --- 过滤 + 懒加载数据准备 ---
+  // 数据：合并 childrenMap 到 rows，关键字过滤
   const tableData = computed(() => {
-    const list = props.rows ?? []
-    const kw = props.keyword?.trim().toLowerCase()
-    if (!kw) {
-      // 懒加载模式：父组件已剥离 children；这里只需保证 hasChildren 存在即可
-      return list
-    }
-    // 关键字模式：全树过滤，结果由 :default-expand-all="true" 自动展开
-    const fullTree = list.map((row) => ({
+    const list = (props.rows ?? []).map((row) => ({
       ...row,
-      children: props.childrenMap?.get(row.id) ?? []
+      children: props.childrenMap?.get(row.id) ?? row.children ?? []
     }))
+    const kw = props.keyword?.trim().toLowerCase()
+    if (!kw) return list
     const filter = (rows: AdPerformanceCampaignRow[]): AdPerformanceCampaignRow[] =>
       rows
         .map((row) => {
@@ -289,34 +246,44 @@
             row.channel.toLowerCase().includes(kw) ||
             row.country.toLowerCase().includes(kw)
           if (match) return row
-          if (row.children?.length) {
-            const filtered = filter(row.children)
+          if ((row as any).children?.length) {
+            const filtered = filter((row as any).children)
             if (filtered.length) return { ...row, children: filtered }
           }
           return null
         })
         .filter(Boolean) as AdPerformanceCampaignRow[]
-    return filter(fullTree)
+    return filter(list)
   })
 
-  // rowStyleMap 从 props.rows + childrenMap 遍历（懒加载时 props.rows 无 children）
+  // 关键字变化时展开/收起
+  watch(
+    () => props.keyword,
+    (kw) => {
+      if (kw?.trim()) tableRef.value?.expandAll()
+      else tableRef.value?.collapseAll()
+    }
+  )
+
+  // 行颜色
   const rowStyleMap = computed(() => {
     const map = new Map<string, Record<string, string>>()
     for (const row of props.rows ?? []) {
       map.set(row.id, { '--row-accent': accentColor(row.channel) })
       const children = props.childrenMap?.get(row.id) ?? []
-      for (const child of children)
+      for (const child of children) {
         map.set(child.id, { '--row-accent': accentColor(child.channel) })
+      }
     }
     return map
   })
 
-  function getRowStyle({ row }: { row: AdPerformanceCampaignRow }) {
-    return rowStyleMap.value.get(row.id) ?? {}
+  function getRowStyle({ rowData }: { rowData: AdPerformanceCampaignRow }) {
+    return rowStyleMap.value.get(rowData.id) ?? {}
   }
 
-  function getRowClassName({ row }: { row: AdPerformanceCampaignRow }) {
-    return isNestedRow(row) ? 'is-level-adgroup' : 'is-level-campaign'
+  function getRowClass({ rowData }: { rowData: AdPerformanceCampaignRow }): string {
+    return isNestedRow(rowData) ? 'is-level-adgroup' : 'is-level-campaign'
   }
 </script>
 

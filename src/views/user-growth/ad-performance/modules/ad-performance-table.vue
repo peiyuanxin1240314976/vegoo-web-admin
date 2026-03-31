@@ -962,8 +962,7 @@
   .ad-performance-table__body {
     flex: 1;
     min-height: 180px;
-    max-height: min(calc(var(--art-full-height, 100vh) - 600px), 60vh);
-    overflow: auto;
+    overflow: hidden;
   }
 
   .ad-performance-table__el-table {

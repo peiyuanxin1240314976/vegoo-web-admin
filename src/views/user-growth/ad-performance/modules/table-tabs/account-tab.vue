@@ -1,189 +1,148 @@
 <template>
   <div class="ad-performance-table-tab">
-    <ElTable
+    <ArtVirtualTable
+      ref="tableRef"
+      :columns="visibleColumns"
       :data="tableData"
-      row-key="id"
-      :tree-props="treeProps"
-      :default-expand-all="false"
-      :expand-row-keys="expandedRowKeys"
-      :row-class-name="getRowClassName"
-      @expand-change="handleExpand"
-      size="default"
-      class="ad-performance-table__el-table"
+      expand-column-key="accountName"
+      :row-class="getRowClass"
     >
-      <!-- 广告账户 (required) -->
-      <ElTableColumn label="广告账户" min-width="220">
-        <template #default="{ row }">
-          <template v-if="isAccountRow(row)">
-            <div class="ad-performance-account__cell">
-              <span class="ad-performance-account__name" :title="row.accountName ?? ''">
-                {{ row.accountName }}
-              </span>
-              <ElTag
-                v-if="row.status"
-                :type="ACCOUNT_STATUS_TAG_TYPE[row.status ?? ''] ?? 'info'"
-                size="small"
-                effect="plain"
-                >{{ ACCOUNT_STATUS_LABEL[row.status ?? ''] ?? String(row.status) }}</ElTag
-              >
-            </div>
-          </template>
-          <template v-else>
-            <div class="ad-performance-account__campaign">
-              <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
-              <span class="ad-performance-account__campaign-name" :title="row.campaignName ?? ''">
-                {{ row.campaignName }}
-              </span>
-              <span class="ad-performance-table__channel">
-                <span
-                  class="ad-performance-table__channel-icon"
-                  :class="`ad-performance-table__channel-icon--${row.channel ?? ''}`"
-                  aria-hidden="true"
-                  >{{ channelShort(row.channel) }}</span
-                >
-              </span>
-              <span class="ad-performance-table__country" :title="row.country ?? ''">
-                {{ countryFlag(row.country) }}
-              </span>
-            </div>
-          </template>
+      <!-- 广告账户 -->
+      <template #cell:accountName="{ row }">
+        <template v-if="isAccountRow(row)">
+          <div class="ad-performance-account__cell">
+            <span class="ad-performance-account__name" :title="row.accountName ?? ''">
+              {{ row.accountName }}
+            </span>
+            <ElTag
+              v-if="row.status"
+              :type="ACCOUNT_STATUS_TAG_TYPE[row.status ?? ''] ?? 'info'"
+              size="small"
+              effect="plain"
+            >
+              {{ ACCOUNT_STATUS_LABEL[row.status ?? ''] ?? String(row.status) }}
+            </ElTag>
+          </div>
         </template>
-      </ElTableColumn>
+        <template v-else>
+          <div class="ad-performance-account__campaign">
+            <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
+            <span class="ad-performance-account__campaign-name" :title="row.campaignName ?? ''">
+              {{ row.campaignName }}
+            </span>
+            <span
+              class="ad-performance-table__channel-icon"
+              :class="`ad-performance-table__channel-icon--${row.channel ?? ''}`"
+              aria-hidden="true"
+            >
+              {{ channelShort(row.channel) }}
+            </span>
+            <span class="ad-performance-table__country" :title="row.country ?? ''">
+              {{ countryFlag(row.country) }}
+            </span>
+          </div>
+        </template>
+      </template>
 
       <!-- 平台 -->
-      <ElTableColumn v-if="isVisible('platform')" label="平台" width="90" align="left">
-        <template #default="{ row }">
-          <template v-if="isAccountRow(row)">
-            <span class="ad-performance-account__platform" :title="row.platform ?? ''">
-              <span
-                class="ad-performance-account__platform-icon"
-                :class="`ad-performance-account__platform-icon--${row.platform ?? ''}`"
-                aria-hidden="true"
-                >{{ channelShort(row.platform) }}</span
-              >
-            </span>
-          </template>
-          <span v-else class="ad-performance-table__muted">-</span>
+      <template #cell:platform="{ row }">
+        <template v-if="isAccountRow(row)">
+          <span
+            class="ad-performance-account__platform-icon"
+            :class="`ad-performance-account__platform-icon--${row.platform ?? ''}`"
+            :title="row.platform ?? ''"
+          >
+            {{ channelShort(row.platform) }}
+          </span>
         </template>
-      </ElTableColumn>
+        <span v-else class="ad-performance-table__muted">-</span>
+      </template>
 
       <!-- 账户余额 -->
-      <ElTableColumn v-if="isVisible('balance')" label="账户余额" width="110" align="left">
-        <template #default="{ row }">
-          <span v-if="isAccountRow(row) && row.balance != null">{{
-            formatMoney(row.balance, 0)
-          }}</span>
-          <span v-else class="ad-performance-table__muted">-</span>
-        </template>
-      </ElTableColumn>
+      <template #cell:balance="{ row }">
+        <span v-if="isAccountRow(row) && row.balance != null">
+          {{ formatMoney(row.balance, 0) }}
+        </span>
+        <span v-else class="ad-performance-table__muted">-</span>
+      </template>
 
-      <!-- 广告支出 (required) -->
-      <ElTableColumn label="广告支出" width="110" align="left">
-        <template #default="{ row }">{{ formatMoney(row.spend, 0) }}</template>
-      </ElTableColumn>
+      <!-- 广告支出 -->
+      <template #cell:spend="{ row }">{{ formatMoney(row.spend, 0) }}</template>
 
       <!-- 预算进度 -->
-      <ElTableColumn v-if="isVisible('budgetProgressPercent')" label="预算进度" min-width="160">
-        <template #default="{ row }">
-          <template v-if="isAccountRow(row) && row.budgetProgressPercent != null">
-            <div class="ad-performance-table__progress-cell">
-              <div class="ad-performance-table__progress-bg">
-                <div
-                  class="ad-performance-table__progress-fill"
-                  :class="budgetProgressClass(row.budgetProgressPercent)"
-                  :style="progressStyleMap.get(row.id)"
-                ></div>
-              </div>
-              <span class="ad-performance-table__progress-text"
-                >{{ row.budgetProgressPercent }}%</span
-              >
+      <template #cell:budgetProgressPercent="{ row }">
+        <template v-if="isAccountRow(row) && row.budgetProgressPercent != null">
+          <div class="ad-performance-table__progress-cell">
+            <div class="ad-performance-table__progress-bg">
+              <div
+                class="ad-performance-table__progress-fill"
+                :class="budgetProgressClass(row.budgetProgressPercent)"
+                :style="{ width: `${row.budgetProgressPercent}%` }"
+              ></div>
             </div>
-          </template>
-          <span v-else-if="isAccountRow(row)" class="ad-performance-table__muted">-</span>
-          <span v-else class="ad-performance-table__muted">-</span>
+            <span class="ad-performance-table__progress-text">
+              {{ row.budgetProgressPercent }}%
+            </span>
+          </div>
         </template>
-      </ElTableColumn>
+        <span v-else class="ad-performance-table__muted">-</span>
+      </template>
 
       <!-- 活跃系列数 -->
-      <ElTableColumn
-        v-if="isVisible('activeCampaignCount')"
-        label="活跃系列数"
-        width="120"
-        align="left"
-      >
-        <template #default="{ row }">
-          <span v-if="isAccountRow(row) && row.activeCampaignCount != null">
-            {{ row.activeCampaignCount }} 个系列
-          </span>
-          <span v-else class="ad-performance-table__muted">-</span>
-        </template>
-      </ElTableColumn>
+      <template #cell:activeCampaignCount="{ row }">
+        <span v-if="isAccountRow(row) && row.activeCampaignCount != null">
+          {{ row.activeCampaignCount }} 个系列
+        </span>
+        <span v-else class="ad-performance-table__muted">-</span>
+      </template>
 
       <!-- 平均CPI -->
-      <ElTableColumn v-if="isVisible('avgCpi')" label="平均CPI" width="100" align="left">
-        <template #default="{ row }">
-          <span v-if="isAccountRow(row)">
-            {{ row.avgCpi != null ? formatMoney(row.avgCpi, 2) : '—' }}
-          </span>
-          <span v-else>{{ row.cpi != null ? formatMoney(row.cpi, 2) : '—' }}</span>
-        </template>
-      </ElTableColumn>
+      <template #cell:avgCpi="{ row }">
+        <span v-if="isAccountRow(row)">
+          {{ row.avgCpi != null ? formatMoney(row.avgCpi, 2) : '—' }}
+        </span>
+        <span v-else>{{ row.cpi != null ? formatMoney(row.cpi, 2) : '—' }}</span>
+      </template>
 
       <!-- 平均点击率 -->
-      <ElTableColumn v-if="isVisible('avgCtr')" label="平均点击率" width="110" align="left">
-        <template #default="{ row }">
-          <span v-if="isAccountRow(row)">{{ row.avgCtr != null ? `${row.avgCtr}%` : '—' }}</span>
-          <span v-else>{{ row.ctr != null ? `${row.ctr}%` : '—' }}</span>
-        </template>
-      </ElTableColumn>
+      <template #cell:avgCtr="{ row }">
+        <span v-if="isAccountRow(row)">{{ row.avgCtr != null ? `${row.avgCtr}%` : '—' }}</span>
+        <span v-else>{{ row.ctr != null ? `${row.ctr}%` : '—' }}</span>
+      </template>
 
       <!-- 平均转化率 -->
-      <ElTableColumn v-if="isVisible('avgCvr')" label="平均转化率" width="110" align="left">
-        <template #default="{ row }">
-          <span v-if="isAccountRow(row)">{{ row.avgCvr != null ? `${row.avgCvr}%` : '—' }}</span>
-          <span v-else>{{ row.cvr != null ? `${row.cvr}%` : '—' }}</span>
-        </template>
-      </ElTableColumn>
+      <template #cell:avgCvr="{ row }">
+        <span v-if="isAccountRow(row)">{{ row.avgCvr != null ? `${row.avgCvr}%` : '—' }}</span>
+        <span v-else>{{ row.cvr != null ? `${row.cvr}%` : '—' }}</span>
+      </template>
 
       <!-- 首日ROI -->
-      <ElTableColumn v-if="isVisible('roi1')" label="首日ROI" width="90" align="left">
-        <template #default="{ row }">
-          <span v-if="row.roi1 == null" class="ad-performance-table__muted">—</span>
-          <span v-else :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
-        </template>
-      </ElTableColumn>
+      <template #cell:roi1="{ row }">
+        <span v-if="row.roi1 == null" class="ad-performance-table__muted">—</span>
+        <span v-else :class="roiClass(row.roi1)">{{ row.roi1 }}%</span>
+      </template>
 
       <!-- 7日ROI -->
-      <ElTableColumn v-if="isVisible('roi7')" label="7日ROI" width="90" align="left">
-        <template #default="{ row }">
-          <span v-if="row.roi7 == null" class="ad-performance-table__muted">—</span>
-          <span v-else :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
-        </template>
-      </ElTableColumn>
+      <template #cell:roi7="{ row }">
+        <span v-if="row.roi7 == null" class="ad-performance-table__muted">—</span>
+        <span v-else :class="roiClass(row.roi7)">{{ row.roi7 }}%</span>
+      </template>
 
       <!-- 预估利润 -->
-      <ElTableColumn
-        v-if="isVisible('estimatedProfit')"
-        label="预估利润"
-        min-width="110"
-        align="left"
-      >
-        <template #default="{ row }">
-          <span v-if="row.estimatedProfit == null" class="ad-performance-table__muted">—</span>
-          <span v-else :class="profitClass(row.estimatedProfit)">
-            {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
-          </span>
-        </template>
-      </ElTableColumn>
+      <template #cell:estimatedProfit="{ row }">
+        <span v-if="row.estimatedProfit == null" class="ad-performance-table__muted">—</span>
+        <span v-else :class="profitClass(row.estimatedProfit)">
+          {{ row.estimatedProfit >= 0 ? '+' : '' }}{{ formatMoney(row.estimatedProfit, 0) }}
+        </span>
+      </template>
 
       <!-- 操作 -->
-      <ElTableColumn label="操作" width="90" align="center" fixed="right">
-        <template #default="{ row }">
-          <ElButton link type="primary" size="small" @click="$emit('detail', row)">详情</ElButton>
-        </template>
-      </ElTableColumn>
-    </ElTable>
+      <template #cell:actions="{ row }">
+        <ElButton link type="primary" size="small" @click="$emit('detail', row)">详情</ElButton>
+      </template>
+    </ArtVirtualTable>
 
+    <!-- 自定义列弹窗 -->
     <ElDialog
       v-model="dialogVisible"
       width="520px"
@@ -201,8 +160,9 @@
           :key="col.key"
           :label="col.key"
           :disabled="col.required"
-          >{{ col.label }}</ElCheckbox
         >
+          {{ col.label }}
+        </ElCheckbox>
       </ElCheckboxGroup>
       <template #footer>
         <ElButton round @click="dialogVisible = false">取消</ElButton>
@@ -213,10 +173,11 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
+  import { computed, ref, watch } from 'vue'
+  import ArtVirtualTable from '@/components/core/art-virtual-table/index.vue'
+  import type { ArtVirtualTableColumn } from '@/components/core/art-virtual-table/index.vue'
   import type { AdPerformanceAccountRow, AdPerformanceAccountCampaignRow } from '../../types'
   import { useTabColumnVisibility } from '../../composables/useTabColumnVisibility'
-  import { useTabExpand } from '../../composables/useTabExpand'
   import {
     channelShort,
     countryFlag,
@@ -267,11 +228,30 @@
     confirmDialog
   } = useTabColumnVisibility('ad-performance:table:account:visible-columns', ALL_COLUMNS)
 
-  defineExpose({ openCustomColumns: openDialog })
+  const visibleColumns = computed<ArtVirtualTableColumn[]>(() => {
+    const cols: ArtVirtualTableColumn[] = []
+    cols.push({ key: 'accountName', title: '广告账户', width: 240, flexGrow: 1 })
+    if (isVisible('platform')) cols.push({ key: 'platform', title: '平台', width: 90 })
+    if (isVisible('balance')) cols.push({ key: 'balance', title: '账户余额', width: 110 })
+    cols.push({ key: 'spend', title: '广告支出', width: 110 })
+    if (isVisible('budgetProgressPercent'))
+      cols.push({ key: 'budgetProgressPercent', title: '预算进度', width: 170 })
+    if (isVisible('activeCampaignCount'))
+      cols.push({ key: 'activeCampaignCount', title: '活跃系列数', width: 130 })
+    if (isVisible('avgCpi')) cols.push({ key: 'avgCpi', title: '平均CPI', width: 110 })
+    if (isVisible('avgCtr')) cols.push({ key: 'avgCtr', title: '平均点击率', width: 120 })
+    if (isVisible('avgCvr')) cols.push({ key: 'avgCvr', title: '平均转化率', width: 120 })
+    if (isVisible('roi1')) cols.push({ key: 'roi1', title: '首日ROI', width: 90 })
+    if (isVisible('roi7')) cols.push({ key: 'roi7', title: '7日ROI', width: 90 })
+    if (isVisible('estimatedProfit'))
+      cols.push({ key: 'estimatedProfit', title: '预估利润', width: 120 })
+    cols.push({ key: 'actions', title: '操作', width: 90, fixed: 'right', align: 'center' })
+    return cols
+  })
 
-  // --- 展开状态 ---
-  const { expandedRowKeys, onExpandChange } = useTabExpand(() => props.keyword)
-  const treeProps = { children: 'children', hasChildren: 'hasChildren' } as const
+  const tableRef = ref<InstanceType<typeof ArtVirtualTable> | null>(null)
+
+  defineExpose({ openCustomColumns: openDialog })
 
   // --- 状态枚举映射 ---
   const ACCOUNT_STATUS_LABEL: Record<string, string> = {
@@ -293,9 +273,14 @@
     low_efficiency: 'warning'
   }
 
-  // --- 行类型判断 ---
   function isAccountRow(row: AccountMixedRow): row is AdPerformanceAccountRow {
     return row.accountName != null && String(row.accountName).trim() !== ''
+  }
+
+  function budgetProgressClass(percent: number): string {
+    if (percent >= 90) return 'ad-performance-table__progress-fill--danger'
+    if (percent >= 75) return 'ad-performance-table__progress-fill--warning'
+    return 'ad-performance-table__progress-fill--success'
   }
 
   // --- 过滤数据 ---
@@ -314,30 +299,16 @@
       .filter(Boolean) as AdPerformanceAccountRow[]
   })
 
-  // --- 预算进度条宽度缓存 ---
-  const progressStyleMap = computed(() => {
-    const map = new Map<string, { width: string }>()
-    for (const row of tableData.value) {
-      if (row.budgetProgressPercent != null) {
-        map.set(row.id, { width: `${row.budgetProgressPercent}%` })
-      }
+  watch(
+    () => props.keyword,
+    (kw) => {
+      if (kw?.trim()) tableRef.value?.expandAll()
+      else tableRef.value?.collapseAll()
     }
-    return map
-  })
+  )
 
-  function budgetProgressClass(percent: number): string {
-    if (percent >= 90) return 'ad-performance-table__progress-fill--danger'
-    if (percent >= 75) return 'ad-performance-table__progress-fill--warning'
-    return 'ad-performance-table__progress-fill--success'
-  }
-
-  function getRowClassName({ row }: { row: AccountMixedRow }) {
-    return isAccountRow(row) ? 'is-level-account' : 'is-level-account-campaign'
-  }
-
-  function handleExpand(row: AccountMixedRow) {
-    if (!isAccountRow(row)) return
-    onExpandChange(row.id)
+  function getRowClass({ rowData }: { rowData: AccountMixedRow }): string {
+    return isAccountRow(rowData) ? 'is-level-account' : 'is-level-account-campaign'
   }
 </script>
 
