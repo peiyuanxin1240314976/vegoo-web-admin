@@ -10,7 +10,7 @@
           :data="list"
           :columns="roiColumns"
           size="small"
-          height="calc(100% + 45px)"
+          height="100%"
           show-summary
           :summary-method="getSummaries"
           :header-cell-style="{ background: '#131D2F' }"
@@ -47,6 +47,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
+  import { useMediaQuery } from '@vueuse/core'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import CockpitRoiTrendSpark from './cockpit-roi-trend-spark.vue'
   import type { ColumnOption } from '@/types'
@@ -80,14 +81,26 @@
   }
 
   defineOptions({ name: 'CockpitChannelRoiInstall' })
-  /** ArtTable 列配置 */
-  const roiColumns: ColumnOption<CockpitChannelRoiInstallItem>[] = [
-    { prop: 'channel', label: '广告平台', minWidth: 100, useSlot: true },
-    { prop: 'spend', label: '消耗', minWidth: 60, align: 'right', useSlot: true },
-    { prop: 'installs', label: '安装量', minWidth: 60, align: 'right', useSlot: true },
-    { prop: 'cpi', label: 'CPI', width: 50, align: 'right', useSlot: true },
-    { prop: 'trend', label: '近7日', width: 80, align: 'center', useSlot: true }
-  ]
+  /** 与驾驶舱 md 栅格断点一致：窄屏列宽收紧（见下方 @media 样式取消固定高度） */
+  const isNarrowViewport = useMediaQuery('(max-width: 992px)')
+
+  /** ArtTable 列配置（窄屏略收紧 minWidth，减轻横向挤压） */
+  const roiColumns = computed((): ColumnOption<CockpitChannelRoiInstallItem>[] => {
+    const narrow = isNarrowViewport.value
+    return [
+      { prop: 'channel', label: '广告平台', minWidth: narrow ? 68 : 100, useSlot: true },
+      { prop: 'spend', label: '消耗', minWidth: narrow ? 66 : 70, align: 'left', useSlot: true },
+      {
+        prop: 'installs',
+        label: '安装量',
+        minWidth: narrow ? 66 : 70,
+        align: 'left',
+        useSlot: true
+      },
+      { prop: 'cpi', label: 'CPI', width: narrow ? 48 : 50, align: 'left', useSlot: true },
+      { prop: 'trend', label: '近7日', width: narrow ? 72 : 80, align: 'center', useSlot: true }
+    ]
+  })
 
   const props = withDefaults(defineProps<{ list?: CockpitChannelRoiInstallItem[] | null }>(), {
     list: null
@@ -156,6 +169,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 0;
     overflow: hidden;
   }
 
@@ -184,7 +198,10 @@
   }
 
   .panel-body {
+    display: flex;
     flex: 1;
+    flex-direction: column;
+    min-height: 0;
     padding: 12px 16px;
     overflow: auto;
   }
@@ -197,6 +214,9 @@
   }
 
   .roi-table {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
     font-size: 13px;
 
     :deep(.el-table) {
@@ -260,6 +280,43 @@
 
       &.cpi-red {
         color: #f56c6c;
+      }
+    }
+  }
+
+  /* 窄屏：取消固定表格高度，按内容展开，合计行随页面/面板滚动可见（ArtTable 默认会传 height:100%） */
+  @media (width <= 992px) {
+    .channel-roi-panel {
+      height: auto;
+      min-height: 240px;
+      overflow: visible;
+    }
+
+    .panel-body {
+      flex: 0 1 auto;
+      overflow: auto visible;
+    }
+
+    .roi-table.art-table {
+      flex: 0 0 auto;
+      height: auto !important;
+
+      :deep(.el-table) {
+        height: auto !important;
+      }
+
+      :deep(.el-table__inner-wrapper) {
+        height: auto !important;
+      }
+
+      :deep(.el-table__body-wrapper) {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+      }
+
+      :deep(.el-scrollbar__wrap) {
+        overflow: visible !important;
       }
     }
   }

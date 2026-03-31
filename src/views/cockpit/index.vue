@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="cockpit-page flex flex-col">
     <div class="cockpit-page-fx" aria-hidden="true"></div>
     <!-- 1. 日期范围 + 2. 顶部操作栏 -->
@@ -291,19 +291,16 @@
 
   @keyframes cockpit-aurora-drift {
     0% {
-      filter: hue-rotate(0deg);
       opacity: 0.72;
       transform: scale(1) translate(0, 0);
     }
 
     50% {
-      filter: hue-rotate(18deg);
       opacity: 1;
       transform: scale(1.06) translate(1.2%, -1.2%);
     }
 
     100% {
-      filter: hue-rotate(-12deg);
       opacity: 0.82;
       transform: scale(1) translate(-1.2%, 1.2%);
     }
@@ -312,12 +309,12 @@
   @keyframes cockpit-bg-flow {
     0% {
       opacity: 0.7;
-      transform: scaleY(1) skewX(0deg);
+      transform: scaleY(1);
     }
 
     100% {
       opacity: 1;
-      transform: scaleY(1.08) skewX(1deg);
+      transform: scaleY(1.04);
     }
   }
 
@@ -431,8 +428,18 @@
     }
   }
 
+  /* 小屏关闭全页背景动效与 hue-rotate，减轻 GPU/合成压力（与 md 栅格断点一致） */
+  @media (width <= 992px) {
+    .cockpit-page::before,
+    .cockpit-page::after,
+    .cockpit-page-fx {
+      animation: none;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .cockpit-page::before,
+    .cockpit-page::after,
     .cockpit-page-fx {
       animation: none;
     }

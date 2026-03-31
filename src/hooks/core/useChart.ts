@@ -83,7 +83,7 @@ const MENU_RESIZE_DELAYS = [50, 100, 200] as const
 const RESIZE_DEBOUNCE_DELAY = 100
 
 export function useChart(options: UseChartOptions = {}) {
-  const { initOptions, initDelay = 0, threshold = 0.1, autoTheme = true } = options
+  const { initOptions, initDelay = 0, threshold = 0.1, autoTheme = true, echartsInitOpts } = options
 
   const settingStore = useSettingStore()
   const { isDark, menuOpen, menuType } = storeToRefs(settingStore)
@@ -396,7 +396,7 @@ export function useChart(options: UseChartOptions = {}) {
               if (isDestroyed || !optionsToSet) return
               try {
                 if (!chart && chartRef.value) {
-                  chart = echarts.init(entry.target as HTMLElement)
+                  chart = echarts.init(entry.target as HTMLElement, undefined, echartsInitOpts)
                   setupMenuWatchers()
                   setupThemeWatcher()
                 }
@@ -440,7 +440,7 @@ export function useChart(options: UseChartOptions = {}) {
   // 图表初始化核心逻辑
   const performChartInit = (options: EChartsOption) => {
     if (!chart && chartRef.value && !isDestroyed) {
-      chart = echarts.init(chartRef.value)
+      chart = echarts.init(chartRef.value, undefined, echartsInitOpts)
       // 图表创建后立即设置监听器
       setupMenuWatchers()
       setupThemeWatcher()

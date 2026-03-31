@@ -56,10 +56,21 @@ export interface ChartThemeConfig {
   colors: string[]
 }
 
+/** 传给 `echarts.init(dom, theme, opts)` 的第三参（非 setOption） */
+export interface EChartsInitOpts {
+  devicePixelRatio?: number
+  renderer?: 'canvas' | 'svg'
+  width?: number | string
+  height?: number | string
+  locale?: string
+}
+
 // 图表初始化选项
 export interface UseChartOptions {
   /** 初始化选项 */
   initOptions?: EChartsOption
+  /** 传给 echarts.init 第三参：如限制 devicePixelRatio 减轻高分屏开销 */
+  echartsInitOpts?: EChartsInitOpts
   /** 延迟初始化时间(ms) */
   initDelay?: number
   /** IntersectionObserver阈值 */

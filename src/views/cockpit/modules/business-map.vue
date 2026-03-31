@@ -50,6 +50,7 @@
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted, nextTick, watch, computed, onDeactivated } from 'vue'
+  import { useMediaQuery } from '@vueuse/core'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useSettingStore } from '@/store/modules/setting'
@@ -306,7 +307,18 @@
   const mapChartRef = ref<HTMLElement | null>(null)
   const mapLoading = ref(true)
   const mapMetric = ref<'revenue' | 'spend' | 'user'>('revenue')
-  const { chartRef, initChart, updateChart, destroyChart, getChartInstance } = useChart()
+  /** 与布局 md 断点一致：窄屏降低地图绘制与交互成本 */
+  const isNarrowViewport = useMediaQuery('(max-width: 992px)')
+  const narrowAtSetup =
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 992px)').matches
+  const { chartRef, initChart, updateChart, destroyChart, getChartInstance } = useChart({
+    echartsInitOpts: {
+      devicePixelRatio: Math.min(
+        typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1,
+        narrowAtSetup ? 1.5 : 2
+      )
+    }
+  })
   const geoCoordMap = ref<Record<string, [number, number]>>({})
 
   /** 悬浮 tooltip：仅在有数据国家显示，按收入/消耗/用户切换内容 */
@@ -444,6 +456,7 @@
 
   function buildOption(): EChartsOption {
     const dark = isDark.value
+    const lite = isNarrowViewport.value
     const mapData = countryData.value.map((item) => ({
       name: item.nameEn,
       value: getValueByMetric(item),
@@ -477,30 +490,32 @@
     const visualMin = hasPositive && dataMin >= 0 ? 0.5 : dataMin
     const visualMax = dataMax
     const regionNamesWithData = new Set(mapData.map((d) => d.name))
-    const pulseData = mapData
-      .map((d) => {
-        const coord = geoCoordMap.value[d.name]
-        if (!coord) return null
-        const metricValue = Number(d.value ?? 0)
-        if (!Number.isFinite(metricValue) || metricValue <= 0) return null
-        return {
-          name: d.name,
-          value: [...coord, metricValue]
-        }
-      })
-      .filter(Boolean)
-      .sort((a, b) => Number((b as any).value[2]) - Number((a as any).value[2]))
-      .slice(0, 6) as Array<{ name: string; value: [number, number, number] }>
+    const pulseData = lite
+      ? ([] as Array<{ name: string; value: [number, number, number] }>)
+      : (mapData
+          .map((d) => {
+            const coord = geoCoordMap.value[d.name]
+            if (!coord) return null
+            const metricValue = Number(d.value ?? 0)
+            if (!Number.isFinite(metricValue) || metricValue <= 0) return null
+            return {
+              name: d.name,
+              value: [...coord, metricValue]
+            }
+          })
+          .filter(Boolean)
+          .sort((a, b) => Number((b as any).value[2]) - Number((a as any).value[2]))
+          .slice(0, 6) as Array<{ name: string; value: [number, number, number] }>)
 
     return {
-      animation: true,
-      animationDuration: 900,
+      animation: !lite,
+      animationDuration: lite ? 0 : 900,
       animationEasing: 'quarticOut',
-      animationDurationUpdate: 650,
+      animationDurationUpdate: lite ? 0 : 650,
       animationEasingUpdate: 'quarticInOut',
       geo: {
         map: 'world',
-        roam: true,
+        roam: !lite,
         zoom: 1.15,
         scaleLimit: { min: 0.6, max: 4 },
         itemStyle: {
@@ -513,7 +528,7 @@
             areaColor: emphasisArea,
             borderColor: emphasisBorder,
             borderWidth: 1.4,
-            shadowBlur: dark ? 18 : 12,
+            shadowBlur: lite ? 6 : dark ? 18 : 12,
             shadowColor: emphasisShadow
           },
           label: {
@@ -622,6 +637,12 @@
   })
   watch(isDark, () => updateChart(buildOption()))
 
+  watch(isNarrowViewport, () => {
+    if (!getChartInstance()) return
+    updateChart(buildOption())
+    nextTick(() => getChartInstance()?.resize())
+  })
+
   /** 父组件 overview 异步加载，首次 onMounted 时 mapChartRef 可能尚未渲染（countryData 为空）；数据到达后再初始化 */
   watch(
     () => countryData.value.length,
@@ -705,15 +726,25 @@
     hoveredCountryNameEn.value = null
     hoverTooltipHtml.value = ''
   }
-  /** 地图容器 mousemove：更新鼠标位置，悬浮 tooltip 显示时跟随 */
+  let pendingMapMove: MouseEvent | null = null
+  let mapMoveRaf = 0
+  /** 地图容器 mousemove：rAF 合并，减轻小屏/触控下高频事件压力 */
   function handleMapContainerMouseMove(e: MouseEvent) {
-    const offset = 12
-    lastMouseX.value = e.clientX + offset
-    lastMouseY.value = e.clientY + offset
-    if (hoverTooltipVisible.value) {
-      hoverTooltipX.value = e.clientX + offset
-      hoverTooltipY.value = e.clientY + offset
-    }
+    pendingMapMove = e
+    if (mapMoveRaf) return
+    mapMoveRaf = requestAnimationFrame(() => {
+      mapMoveRaf = 0
+      const ev = pendingMapMove
+      pendingMapMove = null
+      if (!ev) return
+      const offset = 12
+      lastMouseX.value = ev.clientX + offset
+      lastMouseY.value = ev.clientY + offset
+      if (hoverTooltipVisible.value) {
+        hoverTooltipX.value = ev.clientX + offset
+        hoverTooltipY.value = ev.clientY + offset
+      }
+    })
   }
   /** 点击地图区域时，若该国家不在数据中则隐藏 tooltip，使点击显示 tooltip 不生效；并隐藏悬浮 tooltip */
   function handleMapItemClick(params: any) {
@@ -752,6 +783,11 @@
 
   onUnmounted(() => {
     resetHoverTooltip()
+    if (mapMoveRaf) {
+      cancelAnimationFrame(mapMoveRaf)
+      mapMoveRaf = 0
+      pendingMapMove = null
+    }
     if (mapChartRef.value) {
       mapChartRef.value.removeEventListener('click', handleTooltipLinkClick)
       mapChartRef.value.removeEventListener('mousemove', handleMapContainerMouseMove)
@@ -849,6 +885,10 @@
   .map-wrap {
     position: relative;
     min-height: 470px;
+
+    /* 创建独立的绘制容器，切断父级 filter/backdrop-filter 合成层对 Canvas 的纹理采样"污染" */
+    isolation: isolate;
+    contain: paint;
   }
 
   .map-empty {
@@ -864,6 +904,9 @@
   .map-chart {
     width: 100%;
     height: 470px;
+
+    /* 将 Canvas 提升为独立 GPU 合成层，在 DPR=1 外接屏下避免与父级 filter 层做纹理采样插值模糊 */
+    will-change: transform;
   }
 
   .cockpit-map-hover-tt {
