@@ -227,7 +227,7 @@
           </div>
           <el-select
             v-model="matrixPlatform"
-            class="rd-select rd-select--sm"
+            class="rd-select rd-select--sm rd-select--matrix-platform"
             placeholder="平台: 全部"
           >
             <el-option
@@ -1081,7 +1081,12 @@
   }
 
   .rd-select--sm {
-    width: 110px;
+    width: 140px;
+  }
+
+  .rd-select--matrix-platform {
+    width: 168px;
+    max-width: 100%;
   }
 
   :deep(.rd-filter-date .el-input__wrapper),
@@ -1676,7 +1681,7 @@
   /* ── Bottom Grid ───────────────────────────────────────────────────── */
   .rd-bottom-grid {
     display: grid;
-    grid-template-columns: 240px 260px 1fr;
+    grid-template-columns: 240px minmax(220px, 0.6fr) minmax(520px, 1.4fr);
     gap: 14px;
     align-items: stretch;
   }

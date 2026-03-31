@@ -707,9 +707,7 @@
             />
           </el-select>
 
-          <ElButton type="primary" round class="btn-search" @click="handleSearch" v-ripple>
-            检索
-          </ElButton>
+          <ElButton type="primary" plain round @click="handleSearch" v-ripple> 查询 </ElButton>
         </template>
 
         <button type="button" class="btn-screenshot" @click="openScreenshot()">
