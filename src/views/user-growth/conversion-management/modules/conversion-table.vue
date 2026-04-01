@@ -97,7 +97,7 @@
     {
       prop: 'appPackage',
       label: t('conversionManagement.appPackage'),
-      minWidth: 130,
+      minWidth: 100,
       showOverflowTooltip: true,
       formatter: (row) =>
         h('span', { class: 'conversion-table__app-package' }, row.appPackage ?? '')
@@ -105,7 +105,7 @@
     {
       prop: 'conversionName',
       label: t('conversionManagement.conversionName'),
-      minWidth: 160,
+      minWidth: 100,
       showOverflowTooltip: true
     },
     {

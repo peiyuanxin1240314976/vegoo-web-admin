@@ -7,6 +7,7 @@
         : $t('conversionManagement.dialogEditTitle')
     "
     width="560px"
+    top="8vh"
     destroy-on-close
     custom-class="conversion-dialog"
     @update:model-value="handleClose"

@@ -4,7 +4,7 @@
     :title="$t('conversionManagement.deleteDialogTitle')"
     width="520px"
     destroy-on-close
-    align-center
+    top="10vh"
     :close-on-click-modal="false"
     @update:model-value="handleClose"
   >
