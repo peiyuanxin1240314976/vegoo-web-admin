@@ -315,20 +315,26 @@
         <div class="rd-dim-row">
           <span class="rd-dim-label">行维度：</span>
           <span
-            v-for="d in rowDims"
+            v-for="d in rowDimsUi"
             :key="d.value"
             class="rd-dim-chip"
-            :class="{ 'rd-dim-chip--active': activeRowDim === d.value }"
-            @click="activeRowDim = d.value"
+            :class="{
+              'rd-dim-chip--active': activeRowDim === d.value,
+              'rd-dim-chip--disabled': d.disabled
+            }"
+            @click="onRowDimClick(d.value)"
             >{{ d.label }}</span
           >
           <span class="rd-dim-label" style="margin-left: 16px">列维度：</span>
           <span
-            v-for="d in colDims"
+            v-for="d in colDimsUi"
             :key="d.value"
             class="rd-dim-chip"
-            :class="{ 'rd-dim-chip--active': activeColDim === d.value }"
-            @click="activeColDim = d.value"
+            :class="{
+              'rd-dim-chip--active': activeColDim === d.value,
+              'rd-dim-chip--disabled': d.disabled
+            }"
+            @click="onColDimClick(d.value)"
             >{{ d.label }}</span
           >
         </div>
@@ -552,6 +558,46 @@
 
   const activeRowDim = ref<RevenueDeviationMatrixRowDim>('app')
   const activeColDim = ref<RevenueDeviationMatrixColDim>('platform')
+
+  const MATRIX_DATE_DIM = 'date' as const
+
+  const rowDimsUi = computed(() =>
+    rowDims.map((d) => ({
+      ...d,
+      disabled: d.value === MATRIX_DATE_DIM && activeColDim.value === MATRIX_DATE_DIM
+    }))
+  )
+
+  const colDimsUi = computed(() =>
+    colDims.map((d) => ({
+      ...d,
+      disabled: d.value === MATRIX_DATE_DIM && activeRowDim.value === MATRIX_DATE_DIM
+    }))
+  )
+
+  function fallbackColDim(): RevenueDeviationMatrixColDim {
+    return colDims.find((d) => d.value !== MATRIX_DATE_DIM)?.value ?? 'platform'
+  }
+
+  function onRowDimClick(v: RevenueDeviationMatrixRowDim) {
+    if (v === MATRIX_DATE_DIM && activeColDim.value === MATRIX_DATE_DIM) return
+    activeRowDim.value = v
+  }
+
+  function onColDimClick(v: RevenueDeviationMatrixColDim) {
+    if (v === MATRIX_DATE_DIM && activeRowDim.value === MATRIX_DATE_DIM) return
+    activeColDim.value = v
+  }
+
+  watch(
+    [activeRowDim, activeColDim],
+    ([r, c]) => {
+      if (r === MATRIX_DATE_DIM && c === MATRIX_DATE_DIM) {
+        activeColDim.value = fallbackColDim()
+      }
+    },
+    { flush: 'sync' }
+  )
 
   const loadingKpi = ref(false)
   const loadingTrend = ref(false)
@@ -2048,6 +2094,13 @@
     color: var(--rd-blue);
     background: rgb(96 165 250 / 15%);
     border-color: var(--rd-blue);
+  }
+
+  .rd-dim-chip--disabled {
+    cursor: not-allowed;
+    background: color-mix(in srgb, var(--default-box-color) 70%, transparent);
+    border-color: color-mix(in srgb, var(--default-border) 80%, transparent);
+    opacity: 0.45;
   }
 
   .rd-matrix-scroll {

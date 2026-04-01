@@ -145,7 +145,7 @@
             <div v-show="!roiTrendFetchPending" ref="roiTrendRef" class="chart-dom"></div>
           </div>
         </div>
-        <div class="panel panel-heatmap">
+        <!-- <div class="panel panel-heatmap">
           <div class="panel-title">用户质量热力图</div>
           <div class="heatmap-wrap panel-chart-host">
             <div
@@ -160,7 +160,7 @@
               class="chart-dom quality-heatmap-dom"
             ></div>
           </div>
-        </div>
+        </div> -->
 
         <ApaTop10Panel
           :pending="topCampaignsFetchPending"
@@ -211,7 +211,6 @@
     fetchAdPlatformAnalysisFiltersMeta,
     fetchAdPlatformAnalysisKpiCards,
     fetchAdPlatformAnalysisMetricsTable,
-    fetchAdPlatformAnalysisQualityHeatmap,
     fetchAdPlatformAnalysisRoiTrend
   } from '@/api/user-growth'
   import {
@@ -219,8 +218,7 @@
     type ChannelMetricRow,
     type ChannelRoiTrend,
     type ChannelStatus,
-    type TopCampaignRow,
-    type UserQualityHeatmapRow
+    type TopCampaignRow
   } from './mock'
 
   defineOptions({ name: 'FinanceScreen' })
@@ -262,7 +260,6 @@
   const showKpiRowSkeleton = computed(() => kpiFetchPending.value)
 
   const roiTrendFetchPending = ref(false)
-  const qualityHeatmapFetchPending = ref(false)
   const topCampaignsFetchPending = ref(false)
   /** 首屏 true，避免在首次请求发出前闪空表 */
   const metricsTableFetchPending = ref(true)
@@ -305,7 +302,6 @@
   }
   const roiTrendData = ref<ChannelRoiTrend>({ dates: [], series: [] })
 
-  const userQualityHeatmap = ref<UserQualityHeatmapRow[]>([])
   const channelMetrics = ref<ChannelMetricRow[]>([])
   const metricsTotal = ref(0)
   const topCampaigns = ref<TopCampaignRow[]>([])
@@ -458,53 +454,6 @@
     } finally {
       roiTrendFetchPending.value = false
       await tryMountRoiTrendChart()
-    }
-  }
-
-  function normalizeQualityHeatmapRow(
-    d: Api.UserGrowth.AdPlatformQualityHeatmapRowDto
-  ): UserQualityHeatmapRow {
-    const channel = String(d?.source ?? '').trim()
-    return {
-      channel: channel || '—',
-      d1Retention: Number(d?.d1Retention ?? 0),
-      d7Retention: Number(d?.d7Retention ?? 0),
-      d30Retention: Number(d?.d30Retention ?? 0),
-      payRate:
-        typeof d?.payRate === 'number' && Number.isFinite(d.payRate)
-          ? d.payRate
-          : Number.parseFloat(String(d?.payRate ?? '')) || 0,
-      arpu:
-        typeof d?.arpu === 'number' && Number.isFinite(d.arpu)
-          ? d.arpu
-          : Number.parseFloat(String(d?.arpu ?? '')) || 0
-    }
-  }
-
-  function normalizeQualityHeatmapList(
-    raw: Api.UserGrowth.AdPlatformQualityHeatmapRowDto[] | null | undefined
-  ): UserQualityHeatmapRow[] {
-    if (!Array.isArray(raw)) return []
-    return raw.map(normalizeQualityHeatmapRow).filter((r) => r.channel !== '—')
-  }
-
-  function cloneQualityHeatmapRows(src: UserQualityHeatmapRow[]): UserQualityHeatmapRow[] {
-    return src.map((r) => ({ ...r }))
-  }
-
-  async function loadQualityHeatmap() {
-    qualityHeatmapFetchPending.value = true
-    const prev = cloneQualityHeatmapRows(userQualityHeatmap.value)
-    try {
-      const list = await fetchAdPlatformAnalysisQualityHeatmap(
-        buildAdPlatformAnalysisRequestParams()
-      )
-      userQualityHeatmap.value = normalizeQualityHeatmapList(list)
-    } catch {
-      userQualityHeatmap.value = prev
-    } finally {
-      qualityHeatmapFetchPending.value = false
-      await tryMountQualityHeatmapChart()
     }
   }
 
@@ -688,12 +637,6 @@
     const sel = selectedChannelKey.value
     if (sel === 'all') return channelKpiCards.value
     return channelKpiCards.value.filter((c) => matchesAdPlatformSourceFilter(sel, c.name, c.id))
-  })
-
-  const filteredUserQualityHeatmap = computed(() => {
-    const sel = selectedChannelKey.value
-    if (sel === 'all') return userQualityHeatmap.value
-    return userQualityHeatmap.value.filter((r) => matchesAdPlatformSourceFilter(sel, r.channel))
   })
 
   const filteredTopCampaigns = computed(() => {
@@ -965,13 +908,13 @@
       },
       { label: 'CPI', prop: 'cpi', minWidth: 90, useSlot: true, sortable: 'custom' },
       { label: '安装量', prop: 'installs', minWidth: 80, sortable: 'custom' },
-      {
-        label: 'User Quality (D7)',
-        prop: 'userQualityD7',
-        minWidth: 140,
-        useSlot: true,
-        sortable: 'custom'
-      },
+      // {
+      //   label: 'User Quality (D7)',
+      //   prop: 'userQualityD7',
+      //   minWidth: 140,
+      //   useSlot: true,
+      //   sortable: 'custom'
+      // },
       {
         label: 'User Quality(Pay%)',
         prop: 'userQualityPay',
@@ -979,27 +922,27 @@
         useSlot: true,
         sortable: 'custom'
       },
-      {
-        label: 'LTV_7',
-        prop: 'ltv7',
-        minWidth: 90,
-        sortable: 'custom',
-        formatter: (row: ChannelMetricRow) => formatUsd2(row.ltv7)
-      },
-      {
-        label: 'LTV_30',
-        prop: 'ltv30',
-        minWidth: 90,
-        sortable: 'custom',
-        formatter: (row: ChannelMetricRow) => formatUsd2(row.ltv30)
-      },
-      {
-        label: '状态/Status',
-        prop: 'status',
-        minWidth: 110,
-        useSlot: true,
-        sortable: 'custom'
-      },
+      // {
+      //   label: 'LTV_7',
+      //   prop: 'ltv7',
+      //   minWidth: 90,
+      //   sortable: 'custom',
+      //   formatter: (row: ChannelMetricRow) => formatUsd2(row.ltv7)
+      // },
+      // {
+      //   label: 'LTV_30',
+      //   prop: 'ltv30',
+      //   minWidth: 90,
+      //   sortable: 'custom',
+      //   formatter: (row: ChannelMetricRow) => formatUsd2(row.ltv30)
+      // },
+      // {
+      //   label: '状态/Status',
+      //   prop: 'status',
+      //   minWidth: 110,
+      //   useSlot: true,
+      //   sortable: 'custom'
+      // },
       {
         label: '操作',
         prop: 'metricsDetailAction',
@@ -1034,47 +977,9 @@
     return map[s] ?? s
   }
 
-  /**
-   * 热力图分档配色（对齐原型 styles.css）
-   * - 绿: rgba(16,185,129,1)
-   * - 橄榄绿: rgba(105,159,18,1)
-   * - 橙: rgba(245,158,11,1)
-   * - 红: rgba(239,68,68,1)
-   */
-  type HeatmapMetric = 'd1' | 'd7' | 'd30' | 'pay' | 'arpu'
-  function heatmapCellClass(value: number, metric: HeatmapMetric) {
-    const rules: Record<HeatmapMetric, [number, number, number]> = {
-      // [绿阈值, 橄榄绿阈值, 橙阈值]，其余为红
-      d1: [60, 50, 40],
-      d7: [50, 35, 25],
-      d30: [25, 16, 10],
-      pay: [6, 4, 3],
-      arpu: [3.2, 2.6, 2.1]
-    }
-    const [tGreen, tOlive, tOrange] = rules[metric]
-    if (value >= tGreen) return 'lv-green'
-    if (value >= tOlive) return 'lv-olive'
-    if (value >= tOrange) return 'lv-orange'
-    return 'lv-red'
-  }
+  // 用户质量热力图模块已按需求注释掉（含接口、状态与图表渲染）
 
-  const qualityHeatmapRef = ref<HTMLElement>()
-  const chartQualityHeatmap = useChart()
-
-  function heatmapColorByLevel(level: string) {
-    switch (level) {
-      case 'lv-green':
-        return 'rgba(16, 185, 129, 1)'
-      case 'lv-olive':
-        return 'rgba(105, 159, 18, 1)'
-      case 'lv-orange':
-        return 'rgba(245, 158, 11, 1)'
-      default:
-        return 'rgba(239, 68, 68, 1)'
-    }
-  }
-
-  function buildQualityHeatmapOption(): EChartsOption {
+  /* function buildQualityHeatmapOption(): EChartsOption {
     const metrics: { key: HeatmapMetric; label: string; format: (v: number) => string }[] = [
       { key: 'd1', label: 'D1留存', format: (v) => `${formatNum2(v)}%` },
       { key: 'd7', label: 'D7留存', format: (v) => `${formatNum2(v)}%` },
@@ -1205,7 +1110,7 @@
         }
       ]
     }
-  }
+  } */
 
   const cardChartRefs = ref<Record<string, HTMLElement>>({})
   function setCardChartRef(id: string, el: unknown) {
@@ -1434,23 +1339,11 @@
     }
   }
 
-  async function tryMountQualityHeatmapChart() {
-    await nextTick()
-    if (!qualityHeatmapRef.value) return
-    chartQualityHeatmap.chartRef!.value = qualityHeatmapRef.value
-    if (chartQualityHeatmap.isChartInitialized()) {
-      chartQualityHeatmap.updateChart(buildQualityHeatmapOption())
-    } else {
-      chartQualityHeatmap.initChart(buildQualityHeatmapOption())
-    }
-  }
-
   /** 拉取 KPI / 图表 / 表格等业务数据（首次进入与点击「查询」时调用；改筛选/日期不会自动请求） */
   function runDashboardQuery() {
     currentPage.value = 1
     void loadKpiCards()
     void loadRoiTrend()
-    void loadQualityHeatmap()
     void loadTopCampaigns()
     void loadMetricsTable()
   }
@@ -1477,7 +1370,6 @@
     window.removeEventListener('resize', updateScale)
     kpiMiniCharts.forEach((c) => c.destroyChart?.())
     chartRoiTrend.destroyChart?.()
-    chartQualityHeatmap.destroyChart?.()
   })
 </script>
 
@@ -2315,7 +2207,7 @@
 
   .row-2 {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     min-height: 320px;
   }
 
