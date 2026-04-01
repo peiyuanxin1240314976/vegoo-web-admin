@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div ref="rootRef" class="revenue-overview-root art-full-height revenue-overview-page">
     <div
       class="revenue-overview-wrap"
@@ -3081,7 +3081,6 @@
     border-radius: 12px;
     box-shadow: 0 1px 0 rgb(255 255 255 / 4%) inset;
     transition:
-      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.22s ease,
       border-color 0.22s ease,
       filter 0.22s ease,
@@ -3149,8 +3148,8 @@
     box-shadow:
       0 14px 36px rgb(0 0 0 / 42%),
       0 0 0 1px rgb(255 255 255 / 6%) inset,
-      0 0 32px var(--rev-kpi-glow);
-    transform: translateY(-3px) scale(1.02);
+      0 0 32px var(--rev-kpi-glow),
+      0 0 72px color-mix(in srgb, var(--rev-kpi-glow) 55%, transparent);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -4463,7 +4462,6 @@
     border: 1px solid rgb(139 109 49 / 88%);
     box-shadow: 0 0 0 1px rgb(230 162 60 / 8%) inset;
     transition:
-      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.22s ease,
       filter 0.22s ease,
       border-color 0.22s ease;
@@ -4476,8 +4474,8 @@
     box-shadow:
       0 10px 28px rgb(0 0 0 / 45%),
       0 0 32px rgb(230 162 60 / 14%),
-      0 0 0 1px rgb(255 255 255 / 5%) inset;
-    transform: translateY(-2px);
+      0 0 0 1px rgb(255 255 255 / 5%) inset,
+      0 0 80px rgb(230 162 60 / 10%);
   }
 
   .rev-panel--ai .rev-panel__title {
@@ -4550,7 +4548,6 @@
     background: linear-gradient(150deg, rgb(22 22 24 / 96%), rgb(12 12 14 / 99%));
     border: 1px solid rgb(51 65 85 / 38%);
     transition:
-      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.22s ease,
       filter 0.22s ease,
       border-color 0.22s ease;
@@ -4560,8 +4557,9 @@
     z-index: 1;
     filter: brightness(1.05);
     border-color: rgb(100 116 139 / 45%);
-    box-shadow: 0 10px 28px rgb(0 0 0 / 38%);
-    transform: translateY(-2px);
+    box-shadow:
+      0 10px 28px rgb(0 0 0 / 38%),
+      0 0 68px rgb(59 130 246 / 10%);
   }
 
   :global(html:not(.dark) .rev-panel.rev-panel--quality) {
@@ -4581,7 +4579,6 @@
     cursor: pointer;
     border-radius: 12px;
     transition:
-      transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.2s ease,
       filter 0.2s ease,
       border-color 0.2s ease;
@@ -4619,8 +4616,9 @@
   .rev-quality:hover {
     z-index: 1;
     filter: brightness(1.09);
-    box-shadow: 0 8px 22px rgb(0 0 0 / 35%);
-    transform: scale(1.02);
+    box-shadow:
+      0 8px 22px rgb(0 0 0 / 35%),
+      0 0 64px rgb(34 211 238 / 10%);
   }
 
   :global(html:not(.dark) .rev-quality:nth-child(1)),

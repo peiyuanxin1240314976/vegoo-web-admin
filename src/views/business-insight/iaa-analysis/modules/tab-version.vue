@@ -455,6 +455,10 @@
     border: 1px solid var(--default-border);
     border-radius: 8px;
 
+    &:not(.iaa-kpi--sk) {
+      @include iaa-panel-hover;
+    }
+
     &[data-accent='teal'] .iaa-kpi__value {
       color: #26c2ad;
     }

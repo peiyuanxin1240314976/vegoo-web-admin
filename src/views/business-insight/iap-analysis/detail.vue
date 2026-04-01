@@ -71,7 +71,7 @@
     <div class="iap-kpi-row iap-entry-3">
       <div v-for="(kpi, i) in kpiList" :key="kpi.label" class="iap-kpi-card iap-neon-surface">
         <div class="iap-kpi-top">
-          <span class="iap-kpi-label">{{ kpi.label }}</span>
+          <span class="iap-kpi-label">{{ kpi.label }}11</span>
           <div :ref="(el) => setKpiSparklineRef(i, el)" class="iap-kpi-sparkline" />
         </div>
         <div class="iap-kpi-value">{{ kpi.value }}</div>
@@ -1179,13 +1179,14 @@
 
   .iap-kpi-card {
     padding: 12px 14px;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 10px;
-    transition: border-color 0.2s;
+    border-radius: 14px;
+    transition:
+      box-shadow var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      filter var(--duration-fast, 150ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
 
     &:hover {
-      border-color: var(--art-gray-400);
+      filter: brightness(1.05) saturate(1.06);
     }
   }
 
@@ -1304,6 +1305,8 @@
   }
 
   .iap-neon-surface {
+    @extend %iap-neon-surface;
+
     @include ap.ap-card-title-hover('.iap-card-title-text');
   }
 

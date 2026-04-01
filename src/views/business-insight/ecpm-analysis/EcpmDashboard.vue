@@ -1744,6 +1744,7 @@
     position: relative;
     padding: 16px 18px;
     overflow: hidden;
+    cursor: pointer;
     background:
       radial-gradient(780px 260px at 10% 0%, rgb(255 255 255 / 8%), transparent 58%),
       radial-gradient(620px 240px at 92% 12%, rgb(255 255 255 / 6%), transparent 60%),
@@ -1756,10 +1757,9 @@
       inset 0 1px 0 rgb(186 230 253 / 10%),
       inset 0 -10px 22px rgb(0 0 0 / 26%);
     transition:
-      transform var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
       box-shadow var(--duration-slow, 350ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      border-color var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
-    transform: translateY(0);
+      border-color var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      filter var(--duration-fast, 150ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
   }
 
   .kpi-card::before {
@@ -1796,14 +1796,15 @@
   }
 
   .kpi-card:hover {
+    filter: brightness(1.05) saturate(1.06);
     border-color: rgb(96 165 250 / 34%);
     box-shadow:
       0 16px 46px rgb(0 0 0 / 56%),
       0 0 0 1px rgb(96 165 250 / 16%),
       inset 0 1px 0 rgb(186 230 253 / 14%),
       0 0 52px rgb(59 130 246 / 12%),
-      0 0 40px rgb(34 211 238 / 8%);
-    transform: translateY(-4px);
+      0 0 40px rgb(34 211 238 / 8%),
+      0 0 96px rgb(34 211 238 / 10%);
   }
 
   .kpi-card.kpi-teal {
@@ -1815,6 +1816,16 @@
       0 0 40px rgb(0 212 170 / 10%);
   }
 
+  .kpi-card.kpi-teal:hover {
+    border-color: rgb(0 212 170 / 44%);
+    box-shadow:
+      0 16px 46px rgb(0 0 0 / 56%),
+      0 0 0 1px rgb(0 212 170 / 18%),
+      inset 0 1px 0 rgb(153 246 228 / 12%),
+      0 0 52px rgb(0 212 170 / 14%),
+      0 0 110px rgb(0 212 170 / 14%);
+  }
+
   .kpi-card.kpi-blue {
     border-color: rgb(77 182 232 / 20%);
     box-shadow:
@@ -1824,8 +1835,28 @@
       0 0 44px rgb(77 182 232 / 10%);
   }
 
+  .kpi-card.kpi-blue:hover {
+    border-color: rgb(77 182 232 / 42%);
+    box-shadow:
+      0 16px 46px rgb(0 0 0 / 56%),
+      0 0 0 1px rgb(77 182 232 / 18%),
+      inset 0 1px 0 rgb(186 230 253 / 12%),
+      0 0 54px rgb(77 182 232 / 14%),
+      0 0 120px rgb(77 182 232 / 14%);
+  }
+
   .kpi-card.kpi-dark {
     border-color: rgb(96 165 250 / 12%);
+  }
+
+  .kpi-card.kpi-dark:hover {
+    border-color: rgb(96 165 250 / 32%);
+    box-shadow:
+      0 16px 46px rgb(0 0 0 / 56%),
+      0 0 0 1px rgb(96 165 250 / 14%),
+      inset 0 1px 0 rgb(186 230 253 / 12%),
+      0 0 52px rgb(59 130 246 / 12%),
+      0 0 110px rgb(59 130 246 / 10%);
   }
 
   .kpi-card.kpi-orange {
@@ -1835,6 +1866,16 @@
       0 0 0 1px rgb(245 166 35 / 12%),
       inset 0 1px 0 rgb(254 215 170 / 10%),
       0 0 44px rgb(245 166 35 / 10%);
+  }
+
+  .kpi-card.kpi-orange:hover {
+    border-color: rgb(245 166 35 / 46%);
+    box-shadow:
+      0 16px 46px rgb(0 0 0 / 56%),
+      0 0 0 1px rgb(245 166 35 / 18%),
+      inset 0 1px 0 rgb(254 215 170 / 12%),
+      0 0 56px rgb(245 166 35 / 14%),
+      0 0 120px rgb(245 166 35 / 14%);
   }
 
   .kpi-label {
@@ -1907,12 +1948,54 @@
     }
 
     .kpi-card:hover {
+      filter: brightness(1.05) saturate(1.06);
       box-shadow:
-        0 12px 38px rgb(0 0 0 / 46%),
-        0 0 0 1px rgb(96 165 250 / 10%),
-        inset 0 1px 0 rgb(186 230 253 / 10%),
-        inset 0 -10px 22px rgb(0 0 0 / 26%);
-      transform: none;
+        0 16px 46px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(96 165 250 / 16%),
+        inset 0 1px 0 rgb(186 230 253 / 14%),
+        0 0 52px rgb(59 130 246 / 12%),
+        0 0 40px rgb(34 211 238 / 8%),
+        0 0 96px rgb(34 211 238 / 10%);
+    }
+
+    .kpi-card.kpi-teal:hover {
+      border-color: rgb(0 212 170 / 44%);
+      box-shadow:
+        0 16px 46px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(0 212 170 / 18%),
+        inset 0 1px 0 rgb(153 246 228 / 12%),
+        0 0 52px rgb(0 212 170 / 14%),
+        0 0 110px rgb(0 212 170 / 14%);
+    }
+
+    .kpi-card.kpi-blue:hover {
+      border-color: rgb(77 182 232 / 42%);
+      box-shadow:
+        0 16px 46px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(77 182 232 / 18%),
+        inset 0 1px 0 rgb(186 230 253 / 12%),
+        0 0 54px rgb(77 182 232 / 14%),
+        0 0 120px rgb(77 182 232 / 14%);
+    }
+
+    .kpi-card.kpi-dark:hover {
+      border-color: rgb(96 165 250 / 32%);
+      box-shadow:
+        0 16px 46px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(96 165 250 / 14%),
+        inset 0 1px 0 rgb(186 230 253 / 12%),
+        0 0 52px rgb(59 130 246 / 12%),
+        0 0 110px rgb(59 130 246 / 10%);
+    }
+
+    .kpi-card.kpi-orange:hover {
+      border-color: rgb(245 166 35 / 46%);
+      box-shadow:
+        0 16px 46px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(245 166 35 / 18%),
+        inset 0 1px 0 rgb(254 215 170 / 12%),
+        0 0 56px rgb(245 166 35 / 14%),
+        0 0 120px rgb(245 166 35 / 14%);
     }
   }
 
@@ -1976,10 +2059,8 @@
       inset 0 1px 0 rgb(186 230 253 / 10%),
       inset 0 -10px 26px rgb(0 0 0 / 26%);
     transition:
-      transform var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
       box-shadow var(--duration-slow, 350ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
       border-color var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
-    transform: translateY(0);
   }
 
   .card::before {
@@ -2022,8 +2103,8 @@
       0 0 0 1px rgb(96 165 250 / 16%),
       inset 0 1px 0 rgb(186 230 253 / 14%),
       0 0 56px rgb(59 130 246 / 12%),
-      0 0 44px rgb(34 211 238 / 8%);
-    transform: translateY(-4px);
+      0 0 44px rgb(34 211 238 / 8%),
+      0 0 110px rgb(34 211 238 / 10%);
   }
 
   .card-title {
@@ -2087,7 +2168,6 @@
     border-radius: 9999px;
     box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
     transition:
-      transform var(--duration-fast, 150ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
       border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
       background-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
       box-shadow var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
@@ -2098,8 +2178,8 @@
     border-color: rgb(0 212 170 / 40%);
     box-shadow:
       0 10px 26px rgb(0 0 0 / 44%),
-      0 0 0 1px rgb(0 212 170 / 14%);
-    transform: translateY(-1px);
+      0 0 0 1px rgb(0 212 170 / 14%),
+      0 0 60px rgb(0 212 170 / 8%);
   }
 
   .tab-btn.active {
@@ -2133,7 +2213,6 @@
     border: 0;
     border-radius: 9999px;
     transition:
-      transform var(--duration-fast, 150ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
       background-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
       color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
       box-shadow var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
@@ -2145,7 +2224,7 @@
 
   .tgl:hover {
     color: var(--text-mid);
-    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgb(0 212 170 / 14%) inset;
   }
 
   .tgl.active {
@@ -2221,11 +2300,12 @@
 
     .card:hover {
       box-shadow:
-        0 12px 40px rgb(0 0 0 / 44%),
-        0 0 0 1px rgb(96 165 250 / 10%),
-        inset 0 1px 0 rgb(186 230 253 / 10%),
-        inset 0 -10px 26px rgb(0 0 0 / 26%);
-      transform: none;
+        0 16px 52px rgb(0 0 0 / 56%),
+        0 0 0 1px rgb(96 165 250 / 16%),
+        inset 0 1px 0 rgb(186 230 253 / 14%),
+        0 0 56px rgb(59 130 246 / 12%),
+        0 0 44px rgb(34 211 238 / 8%),
+        0 0 110px rgb(34 211 238 / 10%);
     }
 
     .tab-btn {
@@ -2233,7 +2313,10 @@
     }
 
     .tab-btn:hover {
-      transform: none;
+      box-shadow:
+        0 10px 26px rgb(0 0 0 / 44%),
+        0 0 0 1px rgb(0 212 170 / 14%),
+        0 0 60px rgb(0 212 170 / 8%);
     }
 
     .tgl {
@@ -2241,7 +2324,7 @@
     }
 
     .tgl:hover {
-      transform: none;
+      box-shadow: 0 0 0 1px rgb(0 212 170 / 14%) inset;
     }
   }
 

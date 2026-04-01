@@ -1102,7 +1102,6 @@
   .kpi-card:not(.kpi-card--skeleton) {
     cursor: default;
     transition:
-      transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
       box-shadow 0.32s ease,
       filter 0.32s ease;
 
@@ -1112,13 +1111,12 @@
       box-shadow:
         0 20px 40px -14px rgb(0 0 0 / 72%),
         0 0 0 1px rgb(56 189 248 / 28%),
-        0 0 32px -8px rgb(56 189 248 / 22%);
-      transform: translateY(-5px);
+        0 0 32px -8px rgb(56 189 248 / 22%),
+        0 0 78px rgb(56 189 248 / 12%);
     }
 
     &:active {
       transition-duration: 0.14s;
-      transform: translateY(-2px);
     }
   }
 
