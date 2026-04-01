@@ -1,0 +1,81 @@
+{
+  "_comment": "广告平台分析详情 - ECPM 双折线 + 卡片区四指标。对应 types: PlatformAnalysisDetailEcpmBlock（ecpmTrend + ecpmMetrics）。",
+  "fieldDescription": {
+    "request": {
+      "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
+      "from": { "type": "string", "required": false, "description": "来源页标识。" }
+    },
+    "response": {
+      "data": {
+        "type": "PlatformAnalysisDetailEcpmBlock",
+        "required": true,
+        "description": "趋势与摘要指标一并返回。"
+      }
+    },
+    "PlatformAnalysisDetailEcpmBlock": {
+      "ecpmTrend": {
+        "type": "ChartTrend",
+        "required": true,
+        "description": "预估 vs 真实 ECPM 两条线；结构同 02-cpi-trend 中 ChartTrend。"
+      },
+      "ecpmMetrics": {
+        "type": "EcpmTrendMetrics",
+        "required": true,
+        "description": "预估ECPM、真实ECPM、偏差率、偏差金额；预格式化字符串。"
+      }
+    },
+    "EcpmTrendMetrics": {
+      "estimatedEcpm": { "type": "string", "required": true, "description": "预估 ECPM。" },
+      "actualEcpm": { "type": "string", "required": true, "description": "真实 ECPM。" },
+      "biasRate": { "type": "string", "required": true, "description": "偏差率。" },
+      "biasAmount": { "type": "string", "required": true, "description": "偏差金额。" }
+    }
+  },
+  "sampleRequest": {
+    "name": "PhoneTracker",
+    "from": "comprehensive-analysis"
+  },
+  "sampleResponse": {
+    "data": {
+      "ecpmTrend": {
+        "dates": ["03-14", "03-15", "03-16", "03-17", "03-18", "03-19", "03-20"],
+        "series": [
+          {
+            "name": "预估ECPM",
+            "color": "#f59e0b",
+            "data": [17.2, 17.5, 17.8, 18.1, 18.4, 18.7, 19.0]
+          },
+          {
+            "name": "真实ECPM",
+            "color": "#14b8a6",
+            "data": [16.8, 17.0, 17.2, 17.5, 17.8, 18.0, 18.2]
+          }
+        ]
+      },
+      "ecpmMetrics": {
+        "estimatedEcpm": "$19.2",
+        "actualEcpm": "$18.1",
+        "biasRate": "-5.7%",
+        "biasAmount": "-$0.9"
+      }
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/ecpm-trend",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "name (必填), from?",
+    "responseBody": "PlatformAnalysisDetailEcpmBlock"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "首屏并行加载",
+        "detail": "与 CPI 图同屏展示，一次请求返回趋势+四卡指标。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "与 summary 共用 name/from。",
+    "dedupe": "整页重拉时与其它分片并行。"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "_comment": "广告平台分析详情 - 底部智能预警条。响应 data 可为 AlertBarItem[]，或 { alertBar: AlertBarItem[] }（前端 asAlertBarPayload 兼容）。",
+  "fieldDescription": {
+    "request": {
+      "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
+      "from": { "type": "string", "required": false, "description": "来源页标识。" }
+    },
+    "response": {
+      "data": {
+        "type": "AlertBarItem[] | { alertBar: AlertBarItem[] }",
+        "required": true,
+        "description": "预警列表；推荐直接返回数组。"
+      }
+    },
+    "AlertBarItem": {
+      "id": { "type": "string", "required": true, "description": "项 id。" },
+      "level": {
+        "type": "string",
+        "required": true,
+        "enum": ["danger", "warning", "info", "good"],
+        "description": "样式级别。"
+      },
+      "text": { "type": "string", "required": true, "description": "展示文案。" }
+    }
+  },
+  "sampleRequest": {
+    "name": "PhoneTracker",
+    "from": "comprehensive-analysis"
+  },
+  "sampleResponse": {
+    "data": [
+      {
+        "id": "1",
+        "level": "danger",
+        "text": "PhoneTracker × Google Ads × US：CPI 高于目标 22%，建议收紧定向"
+      },
+      {
+        "id": "2",
+        "level": "warning",
+        "text": "TikTok × DE：预算已用 89%，关注次日回收"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/alert-bar",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "name (必填), from?",
+    "responseBody": "AlertBarItem[]"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "首屏并行加载",
+        "detail": "与矩阵表等同时请求；仅展示无二次交互。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "与 summary 共用 name/from。",
+    "dedupe": "无"
+  }
+}

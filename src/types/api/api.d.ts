@@ -227,12 +227,12 @@ declare namespace Api {
       s_country_code: string
     }
 
-    /** 广告平台分析详情 - overview 请求 */
-    interface PlatformAnalysisDetailOverviewRequest {
+    /** 广告平台分析详情 - 各分片接口公共请求体（与 `mock/backend-api/01-*.json` 一致） */
+    interface PlatformAnalysisDetailRequest {
       /** 钻取实体名称（与路由 query `name` 一致，如应用名） */
       name: string
-      /** 来源页面标识，如 comprehensive-analysis */
-      from: string
+      /** 来源页面标识，如 comprehensive-analysis；可空字符串 */
+      from?: string
     }
 
     /** 广告平台分析 - 筛选项元数据单项（响应 data.apps | platforms | sources[]） */

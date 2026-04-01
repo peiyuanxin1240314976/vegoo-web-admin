@@ -142,7 +142,12 @@
                   <span class="country-count">共{{ row.countryCount }}个国家</span>
                 </div>
                 <div v-else class="country-cell">
-                  <span class="country-flag">{{ row.flag }}</span>
+                  <span
+                    v-if="countryFlagFiClass(row.s_country_code)"
+                    class="country-flag fi"
+                    :class="'fi-' + countryFlagFiClass(row.s_country_code)"
+                    aria-hidden="true"
+                  />
                   <span class="country-name">{{ row.country }}</span>
                 </div>
               </template>
@@ -187,13 +192,14 @@
           <div v-if="pageData?.matrixTable.total" class="matrix-total-row">
             <span class="total-label">合计</span>
             <span>{{ pageData.matrixTable.total.adSpend }}</span>
-            <span>{{ pageData.matrixTable.total.installs }}</span>
             <span>{{ pageData.matrixTable.total.cpi }}</span>
             <span>{{ pageData.matrixTable.total.cpm }}</span>
+            <span>{{ pageData.matrixTable.total.cpc }}</span>
             <span>{{ pageData.matrixTable.total.roiD1 }}</span>
             <span>{{ pageData.matrixTable.total.roiD3 }}</span>
             <span>{{ pageData.matrixTable.total.roiD7 }}</span>
             <span>{{ pageData.matrixTable.total.profit }}</span>
+            <span class="matrix-total-spark" aria-hidden="true">—</span>
           </div>
         </ElCard>
       </div>
@@ -213,22 +219,39 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, watch } from 'vue'
+  import 'flag-icons/css/flag-icons.min.css'
+  import { ref, computed, onMounted, watch } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { Top, Bottom } from '@element-plus/icons-vue'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { PlatformAnalysisDetailData } from './types'
-  import { fetchPlatformAnalysisDetailData } from '@/api/user-growth'
+  import { loadPlatformAnalysisDetailPage } from '@/api/user-growth'
 
   defineOptions({ name: 'PlatformAnalysisDetail' })
 
   const router = useRouter()
   const route = useRoute()
 
-  const sourceName = ref((route.query.name as string) || '应用')
   const pageData = ref<PlatformAnalysisDetailData | null>(null)
   const matrixTableRef = ref()
+
+  /** 优先展示接口回传的 sourceName，避免与钻取名不一致 */
+  const sourceName = computed(() => {
+    const q = (route.query.name as string)?.trim()
+    return pageData.value?.sourceName?.trim() || q || '应用'
+  })
+
+  const COUNTRY_CODE_ALIASES: Record<string, string> = { UK: 'gb' }
+
+  /** flag-icons 类名后缀（小写 ISO alpha-2）；非法则返回空字符串不渲染国旗 */
+  function countryFlagFiClass(code: string | undefined): string {
+    if (!code || typeof code !== 'string') return ''
+    const t = code.trim()
+    if (!/^[A-Za-z]{2}$/.test(t)) return ''
+    const u = t.toUpperCase()
+    return (COUNTRY_CODE_ALIASES[u] ?? t).toLowerCase()
+  }
 
   // 图表
   const cpiTrendChart = useChart()
@@ -392,8 +415,8 @@
 
   onMounted(async () => {
     try {
-      pageData.value = await fetchPlatformAnalysisDetailData({
-        name: sourceName.value,
+      pageData.value = await loadPlatformAnalysisDetailPage({
+        name: ((route.query.name as string) || '应用').trim(),
         from: (route.query.from as string) ?? ''
       })
     } catch {
@@ -778,7 +801,10 @@
   }
 
   .country-flag {
-    font-size: 14px;
+    flex-shrink: 0;
+    width: 1.15em;
+    line-height: 1;
+    background-size: cover;
   }
 
   .country-name {
@@ -882,7 +908,7 @@
   .matrix-total-row {
     display: grid;
     flex-shrink: 0;
-    grid-template-columns: 130px 80px 68px 68px 64px 72px 68px 68px 80px;
+    grid-template-columns: 130px 80px 68px 68px 64px 72px 68px 68px 80px 68px;
     gap: 0;
     padding: 8px 12px;
     font-size: 12px;
@@ -899,6 +925,10 @@
         color: var(--art-gray-800);
         text-align: left;
       }
+    }
+
+    .matrix-total-spark {
+      text-align: center;
     }
   }
 
