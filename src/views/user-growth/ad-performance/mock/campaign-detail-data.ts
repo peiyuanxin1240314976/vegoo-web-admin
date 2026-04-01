@@ -1,6 +1,6 @@
 /**
  * 广告系列详情页 Mock 数据（模块根统一存放，避免子路由重复 mock 目录）
- * 路由：/user-growth/ad-performance/campaign-detail
+ * 路由：/campaign-detail
  * 类型：../campaign-detail/types.ts
  */
 import type { CampaignDetailData } from '../campaign-detail/types'

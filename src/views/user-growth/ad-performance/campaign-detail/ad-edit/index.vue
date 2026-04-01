@@ -11,7 +11,7 @@
           <el-breadcrumb-item>投放管理</el-breadcrumb-item>
           <el-breadcrumb-item
             :to="{
-              path: '/user-growth/ad-performance/campaign-detail',
+              path: '/campaign-detail',
               query: { id: campaignId, appId: route.query.appId, appName: route.query.appName }
             }"
           >

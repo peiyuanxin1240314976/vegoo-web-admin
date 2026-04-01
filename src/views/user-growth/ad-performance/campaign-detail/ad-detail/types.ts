@@ -1,6 +1,6 @@
 /**
  * 广告详情页数据类型
- * 路由：/user-growth/ad-performance/campaign-detail/ad-detail
+ * 路由：/campaign-detail/ad-detail
  */
 
 /** 广告状态 */

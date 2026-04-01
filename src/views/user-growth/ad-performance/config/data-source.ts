@@ -38,7 +38,7 @@ export function isAdPerformanceEndpointMock(endpoint: AdPerformanceEndpoint): bo
   return AD_PERFORMANCE_USE_MOCK[endpoint]
 }
 
-// ── 路由：/user-growth/ad-performance/campaign-detail（系列详情页）──
+// ── 路由：/campaign-detail（系列详情页）──
 /** 系列详情页分片读接口 + 系列级/广告组级写操作 */
 export enum AdPerformanceCampaignDetailEndpoint {
   Overview = 'overview',
@@ -67,7 +67,7 @@ export function isAdPerformanceCampaignDetailEndpointMock(
   return AD_PERFORMANCE_CAMPAIGN_DETAIL_USE_MOCK[endpoint]
 }
 
-// ── 路由：/user-growth/ad-performance/campaign-detail/ad-detail（单广告组详情）──
+// ── 路由：/campaign-detail/ad-detail（单广告组详情）──
 export enum AdPerformanceAdDetailEndpoint {
   Overview = 'overview'
 }
@@ -82,7 +82,7 @@ export function isAdPerformanceAdDetailEndpointMock(
   return AD_PERFORMANCE_AD_DETAIL_USE_MOCK[endpoint]
 }
 
-// ── 路由：/user-growth/ad-performance/campaign-detail/ad-edit（编辑 Campaign）──
+// ── 路由：/campaign-detail/ad-edit（编辑 Campaign）──
 export enum AdPerformanceAdEditEndpoint {
   Form = 'form',
   SaveDraft = 'saveDraft',

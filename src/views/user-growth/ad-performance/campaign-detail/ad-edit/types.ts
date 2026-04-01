@@ -1,6 +1,6 @@
 /**
  * 广告系列 / 广告编辑页表单数据（与页面子模块字段一一对应，联调以前端类型为准）
- * 路由：/user-growth/ad-performance/campaign-detail/ad-edit
+ * 路由：/campaign-detail/ad-edit
  */
 
 export interface AdEditBasicInfo {
