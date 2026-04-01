@@ -228,13 +228,6 @@
     "cockpit": {
       "title": "经营驾驶舱"
     },
-    "dashboard": {
-      "title": "投放管理",
-      "console": "工作台",
-      "bigScreen": "投放分析",
-      "financeScreen": "广告平台分析",
-      "deepAnalysis": "深度分析"
-    },
     "monetization": {
       "title": "变现管理",
       "monetizationAnalysis": "变现分析",

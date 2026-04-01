@@ -1,6 +1,5 @@
 import { AppRouteRecord } from '@/types/router'
 import { cockpitRoutes, cockpitMapDetailRoute } from './cockpit'
-import { dashboardRoutes } from './dashboard'
 import { monetizationRoutes } from './monetization'
 import { productOperationsRoutes } from './product-operations'
 import { businessInsightRoutes } from './business-insight'
@@ -27,7 +26,6 @@ export const routeModules: AppRouteRecord[] = [
   productOperationsRoutes, //商品运营
   accountManagementRoutes, //账户管理
   configManagementRoutes, // 平台管理（路径仍为 /config-management）
-  dashboardRoutes, // 仪表盘
   monetizationRoutes, // 变现管理
   systemRoutes // 系统管理
   // resultRoutes,//结果

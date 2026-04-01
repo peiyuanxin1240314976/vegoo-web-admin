@@ -17,6 +17,23 @@ import { formatMenuTitle } from '@/utils'
 
 export class MenuProcessor {
   /**
+   * 已弃用的菜单/路由前缀（历史工作台 / dashboard / console）
+   * 这些路由可能仍会被后端菜单下发；前端侧需兜底过滤，避免注册后出现在 worktab 中。
+   */
+  private static readonly DEPRECATED_ROUTE_PREFIXES = ['/dashboard']
+
+  /**
+   * 已弃用的路由 name（历史工作台 / dashboard）
+   */
+  private static readonly DEPRECATED_ROUTE_NAMES = new Set([
+    'Dashboard',
+    'Console',
+    'BigScreen',
+    'FinanceScreen',
+    'DeepAnalysis'
+  ])
+
+  /**
    * 获取菜单数据
    */
   async getMenuList(): Promise<AppRouteRecord[]> {
@@ -28,6 +45,9 @@ export class MenuProcessor {
     } else {
       menuList = await this.processBackendMenu()
     }
+
+    // 过滤已弃用的 dashboard/console 路由（后端菜单可能仍在下发）
+    menuList = this.filterDeprecatedRoutes(menuList)
 
     // 在规范化路径之前，验证原始路径配置
     this.validateMenuPaths(menuList)
@@ -173,6 +193,38 @@ export class MenuProcessor {
 
         // 其他情况过滤掉
         return false
+      })
+  }
+
+  /**
+   * 过滤已弃用的菜单项（dashboard / console）
+   * - 支持 top-level: /dashboard
+   * - 支持 children 相对路径：console（父级为 /dashboard）
+   * - 支持通过 route.name 过滤
+   */
+  private filterDeprecatedRoutes(menuList: AppRouteRecord[], parentPath = ''): AppRouteRecord[] {
+    const shouldDrop = (route: AppRouteRecord): boolean => {
+      const name = route.name ? String(route.name) : ''
+      if (name && MenuProcessor.DEPRECATED_ROUTE_NAMES.has(name)) return true
+
+      const rawPath = String(route.path || '')
+      const fullPath = this.buildFullPath(rawPath, parentPath)
+
+      return MenuProcessor.DEPRECATED_ROUTE_PREFIXES.some(
+        (prefix) => fullPath === prefix || fullPath.startsWith(`${prefix}/`)
+      )
+    }
+
+    return menuList
+      .filter((route) => !shouldDrop(route))
+      .map((route) => {
+        if (!route.children?.length) return route
+
+        const nextParentPath = this.buildFullPath(String(route.path || ''), parentPath)
+        return {
+          ...route,
+          children: this.filterDeprecatedRoutes(route.children, nextParentPath)
+        }
       })
   }
 

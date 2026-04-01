@@ -60,7 +60,10 @@ export const setWorktab = (to: RouteLocationNormalized): void => {
         keepAlive: meta.keepAlive as boolean,
         params,
         query,
-        fixedTab: meta.fixedTab as boolean
+        // 注意：worktab store 会持久化到 localStorage。
+        // 这里必须写成显式 boolean，否则当 meta.fixedTab 为 undefined 时，
+        // 会导致旧的 fixedTab=true 无法被覆盖，从而“关闭其他”仍保留该标签。
+        fixedTab: Boolean(meta.fixedTab)
       })
     }
   }

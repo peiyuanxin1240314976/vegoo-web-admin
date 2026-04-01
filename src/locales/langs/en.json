@@ -228,13 +228,6 @@
     "cockpit": {
       "title": "Cockpit"
     },
-    "dashboard": {
-      "title": "Delivery Management",
-      "console": "Console",
-      "bigScreen": "Delivery Analysis",
-      "financeScreen": "Channel Analysis",
-      "deepAnalysis": "Deep Analysis"
-    },
     "monetization": {
       "title": "Monetization",
       "monetizationAnalysis": "Monetization Analysis",
