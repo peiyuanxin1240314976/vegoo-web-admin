@@ -1,5 +1,5 @@
 {
-  "_comment": "广告平台分析详情 - 底部智能预警条。响应 data 可为 AlertBarItem[]，或 { alertBar: AlertBarItem[] }（前端 asAlertBarPayload 兼容）。",
+  "_comment": "综合分析详情 - 底部智能预警条。响应 data 可为 AlertBarItem[]，或 { alertBar: AlertBarItem[] }（前端 asAlertBarPayload 兼容）。",
   "fieldDescription": {
     "request": {
       "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
@@ -38,11 +38,16 @@
         "id": "2",
         "level": "warning",
         "text": "TikTok × DE：预算已用 89%，关注次日回收"
+      },
+      {
+        "id": "3",
+        "level": "info",
+        "text": "来自综合分析钻取（Mock）"
       }
     ]
   },
   "api": {
-    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/alert-bar",
+    "url": "POST /api/user-growth/comprehensive-analysis/platform-analysis-detail/alert-bar",
     "method": "POST",
     "priority": "P1",
     "requestBody": "name (必填), from?",

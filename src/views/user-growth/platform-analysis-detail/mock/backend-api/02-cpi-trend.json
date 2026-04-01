@@ -1,5 +1,5 @@
 {
-  "_comment": "广告平台分析详情 - CPI 趋势折线图数据。响应 data 为 ChartTrend（dates + target? + series[]）。对应 types.ts ChartTrend、TrendSeries。",
+  "_comment": "综合分析详情 - CPI 趋势折线图数据。响应 data 为 ChartTrend（dates + target? + series[]）。对应 types.ts ChartTrend、TrendSeries。",
   "fieldDescription": {
     "request": {
       "name": {
@@ -55,6 +55,11 @@
           "data": [2.2, 2.25, 2.3, 2.45, 2.55, 2.7, 2.85]
         },
         {
+          "name": "TikTok",
+          "color": "#10B981",
+          "data": [1.95, 2.0, 2.05, 2.08, 2.1, 2.12, 2.15]
+        },
+        {
           "name": "目标线",
           "color": "#94a3b8",
           "dashed": true,
@@ -64,7 +69,7 @@
     }
   },
   "api": {
-    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/cpi-trend",
+    "url": "POST /api/user-growth/comprehensive-analysis/platform-analysis-detail/cpi-trend",
     "method": "POST",
     "priority": "P0",
     "requestBody": "name (必填), from?",

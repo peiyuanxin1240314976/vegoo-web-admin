@@ -4,9 +4,9 @@
 
 与路由 `/user-growth/comprehensive-analysis/platform-analysis-detail` 对齐。逻辑资源路径：
 
-**`/api/v1/datacenter/analysis/user-growth/platform-analysis-detail`**
+**`/api/user-growth/comprehensive-analysis/platform-analysis-detail`**
 
-（与 `src/api/user-growth/platform-analysis-detail.ts` 中 `PLATFORM_ANALYSIS_DETAIL_BASE` 一致。）
+（本契约以该父级路径为准；前端 `src/api/user-growth/platform-analysis-detail.ts` 的请求 base 以实际网关配置为准。）
 
 约定：**POST**，各接口请求体均为 **`{ name, from? }`**（与钻取 query 一致）。
 
