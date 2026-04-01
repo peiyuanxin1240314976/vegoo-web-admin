@@ -1,22 +1,6 @@
 <template>
   <div class="conversion-filters">
     <div class="conversion-filters__inner">
-      <div class="conversion-filters__header">
-        <div class="conversion-filters__title-wrap">
-          <h1 class="conversion-filters__title">{{ $t('conversionManagement.title') }}</h1>
-          <p class="conversion-filters__desc">{{ $t('conversionManagement.description') }}</p>
-        </div>
-        <ElButton
-          type="primary"
-          round
-          class="conversion-filters__add-btn"
-          @click="$emit('add-mapping')"
-          v-ripple
-        >
-          <ElIcon class="mr-1"><Plus /></ElIcon>
-          {{ $t('conversionManagement.addMapping') }}
-        </ElButton>
-      </div>
       <div class="conversion-filters__row">
         <ElSelect
           v-model="form.platform"
@@ -92,6 +76,16 @@
           v-ripple
         >
           {{ $t('conversionManagement.dataFilterSearch') }}
+        </ElButton>
+        <ElButton
+          type="primary"
+          round
+          class="conversion-filters__add-btn"
+          @click="$emit('add-mapping')"
+          v-ripple
+        >
+          <ElIcon class="mr-1"><Plus /></ElIcon>
+          {{ $t('conversionManagement.addMapping') }}
         </ElButton>
       </div>
     </div>

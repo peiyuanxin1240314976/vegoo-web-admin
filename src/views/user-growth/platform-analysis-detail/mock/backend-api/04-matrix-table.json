@@ -1,5 +1,5 @@
 {
-  "_comment": "广告平台分析详情 - 广告平台×国家树形表及表脚合计。对应 types: MatrixTableData（rows: PlatformRow[]，total）。国家子行须含 s_country_code。",
+  "_comment": "综合分析详情 - 广告平台×国家树形表及表脚合计。对应 types: MatrixTableData（rows: PlatformRow[]，total）。国家子行须含 s_country_code。",
   "fieldDescription": {
     "request": {
       "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
@@ -33,10 +33,10 @@
     "data": {
       "rows": [
         {
-          "id": "demo-google",
+          "id": "phonetracker-google",
           "isCountry": false,
           "platform": "Google Ads",
-          "countryCount": "1",
+          "countryCount": "3",
           "adSpend": "$24.5k",
           "cpi": "$2.92",
           "cpiLevel": "near",
@@ -50,7 +50,7 @@
           "sparkline": [2.4, 2.42, 2.45, 2.5, 2.52, 2.55, 2.58],
           "children": [
             {
-              "id": "demo-google-us",
+              "id": "phonetracker-google-us",
               "isCountry": true,
               "platform": "Google Ads",
               "country": "美国",
@@ -66,24 +66,117 @@
               "roiD7": "119%",
               "profit": "$4.1k",
               "sparkline": [2.3, 2.35, 2.4, 2.44, 2.48, 2.5, 2.52]
+            },
+            {
+              "id": "phonetracker-google-de",
+              "isCountry": true,
+              "platform": "Google Ads",
+              "country": "德国",
+              "s_country_code": "DE",
+              "adSpend": "$11.7k",
+              "cpi": "$2.88",
+              "cpiLevel": "near",
+              "cpm": "$12.6",
+              "cpc": "$0.43",
+              "roiD1": "107%",
+              "roiD1Level": "good",
+              "roiD3": "113%",
+              "roiD7": "120%",
+              "profit": "$3.9k",
+              "sparkline": [2.34, 2.37, 2.41, 2.46, 2.49, 2.52, 2.55]
+            },
+            {
+              "id": "phonetracker-google-jp",
+              "isCountry": true,
+              "platform": "Google Ads",
+              "country": "日本",
+              "s_country_code": "JP",
+              "adSpend": "$10.5k",
+              "cpi": "$2.87",
+              "cpiLevel": "near",
+              "cpm": "$12.9",
+              "cpc": "$0.45",
+              "roiD1": "109%",
+              "roiD1Level": "good",
+              "roiD3": "114%",
+              "roiD7": "121%",
+              "profit": "$3.6k",
+              "sparkline": [2.36, 2.39, 2.43, 2.48, 2.51, 2.54, 2.57]
+            }
+          ]
+        },
+        {
+          "id": "phonetracker-tiktok",
+          "isCountry": false,
+          "platform": "TikTok",
+          "countryCount": "2",
+          "adSpend": "$14.2k",
+          "cpi": "$2.18",
+          "cpiLevel": "good",
+          "cpm": "$9.6",
+          "cpc": "$0.31",
+          "roiD1": "112%",
+          "roiD1Level": "good",
+          "roiD3": "119%",
+          "roiD7": "124%",
+          "profit": "$5.4k",
+          "sparkline": [2.02, 2.06, 2.08, 2.1, 2.12, 2.13, 2.15],
+          "children": [
+            {
+              "id": "phonetracker-tiktok-us",
+              "isCountry": true,
+              "platform": "TikTok",
+              "country": "美国",
+              "s_country_code": "US",
+              "adSpend": "$8.8k",
+              "cpi": "$2.90",
+              "cpiLevel": "near",
+              "cpm": "$10.3",
+              "cpc": "$0.33",
+              "roiD1": "101%",
+              "roiD1Level": "warn",
+              "roiD3": "108%",
+              "roiD7": "116%",
+              "profit": "$3.1k",
+              "profitNeg": false,
+              "sparkline": [2.25, 2.3, 2.34, 2.36, 2.38, 2.4, 2.41]
+            },
+            {
+              "id": "phonetracker-tiktok-gb",
+              "isCountry": true,
+              "platform": "TikTok",
+              "country": "英国",
+              "s_country_code": "GB",
+              "adSpend": "$7.9k",
+              "cpi": "$2.88",
+              "cpiLevel": "near",
+              "cpm": "$9.9",
+              "cpc": "$0.32",
+              "roiD1": "99%",
+              "roiD1Level": "danger",
+              "roiD3": "105%",
+              "roiD7": "112%",
+              "profit": "$3.5k",
+              "profitNeg": true,
+              "sparkline": [2.2, 2.26, 2.32, 2.35, 2.37, 2.38, 2.4]
             }
           ]
         }
       ],
       "total": {
-        "adSpend": "$24.5k",
-        "cpi": "$2.92",
-        "cpm": "$12.8",
-        "cpc": "$0.44",
-        "roiD1": "104%",
-        "roiD3": "111%",
-        "roiD7": "118%",
-        "profit": "$8.2k"
+        "adSpend": "$38.7k",
+        "cpi": "$2.55",
+        "cpm": "$11.2",
+        "cpc": "$0.39",
+        "roiD1": "106%",
+        "roiD3": "112%",
+        "roiD7": "120%",
+        "profit": "$13.6k"
       }
     }
   },
   "api": {
-    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/matrix-table",
+    "url": "POST /api/user-growth/comprehensive-analysis/platform-analysis-detail/matrix-table",
     "method": "POST",
     "priority": "P0",
     "requestBody": "name (必填), from?",

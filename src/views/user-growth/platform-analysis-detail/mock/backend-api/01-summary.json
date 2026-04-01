@@ -1,5 +1,5 @@
 {
-  "_comment": "广告平台分析详情 - 顶栏 KPI + 左列安卓/iOS/合计三卡 + sourceName。对应 types: PlatformAnalysisDetailSummary。",
+  "_comment": "综合分析详情 - 顶栏 KPI + 左列安卓/iOS/合计三卡 + sourceName。对应 types: PlatformAnalysisDetailSummary。",
   "fieldDescription": {
     "request": {
       "name": {
@@ -61,6 +61,30 @@
           "primaryValue": "14,200",
           "trendText": "+5.1%",
           "trendUp": true
+        },
+        {
+          "id": "cpi",
+          "title": "平均 CPI",
+          "subTitle": "近7天",
+          "primaryValue": "$2.58",
+          "trendText": "-1.8%",
+          "trendUp": true
+        },
+        {
+          "id": "roi7",
+          "title": "7 日 ROI",
+          "subTitle": "近7天",
+          "primaryValue": "118%",
+          "trendText": "+2.0%",
+          "trendUp": true
+        },
+        {
+          "id": "profit",
+          "title": "预估利润",
+          "subTitle": "近7天",
+          "primaryValue": "$13.6k",
+          "trendText": "+4.5%",
+          "trendUp": true
         }
       ],
       "statCards": [
@@ -71,6 +95,15 @@
           "roi": "108%",
           "installs": "8,200",
           "profit": "$7.8k",
+          "activePlatforms": "4"
+        },
+        {
+          "label": "PhoneTracker iOS",
+          "platform": "ios",
+          "adSpend": "$16.3k",
+          "roi": "115%",
+          "installs": "6,000",
+          "profit": "$5.8k",
           "activePlatforms": "4"
         },
         {
@@ -86,7 +119,7 @@
     }
   },
   "api": {
-    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/summary",
+    "url": "POST /api/user-growth/comprehensive-analysis/platform-analysis-detail/summary",
     "method": "POST",
     "priority": "P0",
     "requestBody": "name (必填), from?",
