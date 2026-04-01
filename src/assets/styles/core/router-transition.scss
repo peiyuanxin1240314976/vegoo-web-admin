@@ -3,7 +3,7 @@
 // === 变量区域 ===
 $transition: (
   // 动画持续时间（0.15s：leave 105ms + enter 150ms，out-in 共 255ms，感知近即时）
-  duration: 0.15s,
+  duration: 0.01s,
   // 滑动动画的移动距离
   distance: 12px,
   // 默认缓动函数
