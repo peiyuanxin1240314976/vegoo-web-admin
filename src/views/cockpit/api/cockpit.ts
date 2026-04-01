@@ -735,7 +735,7 @@ export async function fetchCountryInfoTop5Campaign(
 /**
  * 获取国家详情各 APP 表现
  * POST /api/v1/datacenter/analysis/countryInfo/appLaunch，请求体：{}
- * 返回 data 数组，项为 { app, arpu, dAdRevenue, dIapRevenue, remainDay7 }
+ * 返回 data 数组，项为 { app, arpu, dAdRevenue, dIapRevenue, remainDay1 }
  */
 export async function fetchCountryInfoAppLaunch(
   params?: Partial<CountryInfoQueryParams>
@@ -975,7 +975,11 @@ function mapTop3AppToRevenue(items: CockpitTop3Response['app']): CockpitTopReven
 /** 将 Top3 接口 badApp 转为 TopBadReviewItem */
 function mapTop3BadAppToBadReview(items: CockpitTop3Response['badApp']): CockpitTopBadReviewItem[] {
   return (items || []).map((row) => {
-    const note = typeof row.note === 'string' ? row.note.trim() : ''
+    const lastNote =
+      row.last && typeof row.last === 'object' && 'note' in row.last
+        ? String((row.last as { note?: unknown }).note ?? '')
+        : ''
+    const note = (row.note?.trim() || lastNote.trim()) ?? ''
     return {
       sAppName: row.sAppName || '—',
       name: row.sAppName || '—',
