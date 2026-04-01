@@ -274,12 +274,10 @@
   const router = useRouter()
 
   const appName = computed(() => (route.query.app as string) || 'PhoneTracker')
-  /** 详情接口入参：优先 query.s_app_id（Overview 跳转），否则回退 app（历史链接） */
+  /** 详情接口入参：来自路由 query.appId */
   const s_app_id = computed(() => {
-    const sid = (route.query.s_app_id as string)?.trim()
-    if (sid) return sid
-    const legacy = (route.query.app as string)?.trim()
-    return legacy || 'phonetracker'
+    const appId = (route.query.appId as string)?.trim()
+    return appId || 'phonetracker'
   })
 
   function goBack() {
@@ -1052,7 +1050,7 @@
     width: 100%;
     min-height: 100%;
     padding: 16px 20px;
-    overflow: auto;
+    overflow: hidden;
     font-size: 13px;
     color: var(--art-gray-900);
     background: transparent;

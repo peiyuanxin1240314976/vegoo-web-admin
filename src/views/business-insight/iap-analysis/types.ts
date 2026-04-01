@@ -63,6 +63,7 @@ export interface IapOverviewTrend {
 /** 应用卡片（Dashboard 应用分析区块） */
 export interface IapAppCard {
   name: string
+  appId: string
   platform: string
   orders: string
   revenue: string

@@ -183,41 +183,43 @@
         <div class="iap-dashboard-card-title">
           <span class="iap-card-title-text">按国家/地区收入分布</span>
         </div>
-        <table class="iap-dashboard-country-table">
-          <thead>
-            <tr>
-              <th>国家</th>
-              <th>订单数</th>
-              <th>收入(USD)</th>
-              <th>占比</th>
-              <th></th>
-              <th>ARPU</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in countryData" :key="row.s_country_code">
-              <td>
-                <span class="iap-dashboard-flag">{{ row.flag }}</span>
-                <span class="iap-dashboard-country-name">{{ row.country }}</span>
-              </td>
-              <td class="iap-dashboard-num">{{ row.orders.toLocaleString() }}</td>
-              <td class="iap-dashboard-num iap-dashboard-num--green">{{ row.revenue }}</td>
-              <td class="iap-dashboard-num">{{ row.ratio }}</td>
-              <td>
-                <div class="iap-dashboard-ratio-wrap">
-                  <div
-                    class="iap-dashboard-ratio-bar"
-                    :style="{
-                      width: row.barWidth ?? row.ratio,
-                      background: row.barColor ?? '#3b82f6'
-                    }"
-                  ></div>
-                </div>
-              </td>
-              <td class="iap-dashboard-num">{{ row.arpu }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="iap-dashboard-table-scroll">
+          <table class="iap-dashboard-country-table">
+            <thead>
+              <tr>
+                <th>国家</th>
+                <th>订单数</th>
+                <th>收入(USD)</th>
+                <th>占比</th>
+                <th></th>
+                <th>ARPU</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in countryData" :key="row.s_country_code">
+                <td>
+                  <span class="iap-dashboard-flag">{{ row.flag }}</span>
+                  <span class="iap-dashboard-country-name">{{ row.country }}</span>
+                </td>
+                <td class="iap-dashboard-num">{{ row.orders.toLocaleString() }}</td>
+                <td class="iap-dashboard-num iap-dashboard-num--green">{{ row.revenue }}</td>
+                <td class="iap-dashboard-num">{{ row.ratio }}</td>
+                <td>
+                  <div class="iap-dashboard-ratio-wrap">
+                    <div
+                      class="iap-dashboard-ratio-bar"
+                      :style="{
+                        width: row.barWidth ?? row.ratio,
+                        background: row.barColor ?? '#3b82f6'
+                      }"
+                    ></div>
+                  </div>
+                </td>
+                <td class="iap-dashboard-num">{{ row.arpu }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="iap-dashboard-bottom-card iap-neon-surface">
         <div class="iap-dashboard-card-title">
@@ -705,7 +707,7 @@
   }
 
   function handleAppClick(app: IapAppCard) {
-    router.push({ name: 'IapAnalysisDetail', query: { app: app.name } })
+    router.push({ name: 'IapAnalysisDetail', query: { app: app.name, appId: app.appId } })
   }
 
   function resizeCharts() {
@@ -779,7 +781,7 @@
     width: 100%;
     min-height: 100%;
     padding: 20px 24px 28px;
-    overflow: auto;
+    overflow: hidden;
     font-size: 13px;
     color: var(--art-gray-900);
     background: transparent;
@@ -1246,16 +1248,30 @@
     }
   }
 
+  .iap-dashboard-table-scroll {
+    flex: 1;
+    min-height: 0;
+    max-height: 200px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border-radius: 10px;
+  }
+
   .iap-dashboard-country-table {
     width: 100%;
     font-size: 12px;
     border-collapse: collapse;
 
     th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
       padding: 4px 6px 8px;
       font-weight: 500;
       color: var(--art-gray-600);
       text-align: left;
+      background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+      backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--default-border);
     }
 
