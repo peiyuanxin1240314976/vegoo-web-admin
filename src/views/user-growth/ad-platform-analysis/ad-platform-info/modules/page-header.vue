@@ -26,6 +26,8 @@
               range-separator="至"
               start-placeholder="开始日期"
               end-placeholder="结束日期"
+              format="YYYY/MM/DD"
+              value-format="YYYY-MM-DD"
               popper-class="api-info-filter-popper"
             />
           </div>
@@ -42,8 +44,12 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
-  import { cloneAppDate, getAppNow } from '@/utils/app-now'
-  import type { AdPlatformInfoFilterState, AdPlatformInfoPlatformSummary } from '../types'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import type {
+    AdPlatformInfoDateRangePreset,
+    AdPlatformInfoFilterState,
+    AdPlatformInfoPlatformSummary
+  } from '../types'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
 
   defineOptions({ name: 'ApiPageHeader' })
@@ -61,26 +67,22 @@
     (e: 'export'): void
   }>()
 
-  const datePickerValue = computed<[Date, Date]>({
+  const datePickerValue = computed<[string, string]>({
     get: () => {
+      if (Array.isArray(props.dateRange)) return props.dateRange as [string, string]
+
+      const preset: AdPlatformInfoDateRangePreset = props.dateRange
       const end = getAppNow()
       const start = cloneAppDate(end)
-      const days = props.dateRange === '7d' ? 7 : props.dateRange === '90d' ? 90 : 30
+      const days = preset === '7d' ? 7 : preset === '90d' ? 90 : 30
       start.setDate(end.getDate() - (days - 1))
-      return [start, end] as [Date, Date]
+      return [formatYYYYMMDD(start), formatYYYYMMDD(end)] as [string, string]
     },
-    set: (v: [Date, Date]) => {
+    set: (v: [string, string]) => {
       if (!v?.length) return
       const [start, end] = v
-      const diffMs = end.getTime() - start.getTime()
-      const days = Math.floor(diffMs / 86400000) + 1
-      if (days <= 14) {
-        emit('update:dateRange', '7d')
-      } else if (days <= 60) {
-        emit('update:dateRange', '30d')
-      } else {
-        emit('update:dateRange', '90d')
-      }
+      if (!start || !end) return
+      emit('update:dateRange', [start, end])
       emit('query')
     }
   })
