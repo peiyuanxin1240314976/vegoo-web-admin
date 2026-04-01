@@ -46,7 +46,16 @@
           />
         </el-select>
 
-        <el-button type="primary" plain round> 查询 </el-button>
+        <el-button
+          type="primary"
+          plain
+          round
+          :loading="querying"
+          :disabled="querying"
+          @click="handleQuery"
+        >
+          查询
+        </el-button>
       </div>
     </div>
 
@@ -549,6 +558,7 @@
   const loadingPlatformTable = ref(false)
   const loadingCountry = ref(false)
   const loadingHistory = ref(false)
+  const querying = ref(false)
 
   const isTrendEmpty = computed(() => {
     const t = trendData.value
@@ -676,6 +686,17 @@
       loadingPlatformTable.value = false
       loadingCountry.value = false
       loadingHistory.value = false
+    }
+  }
+
+  async function handleQuery() {
+    if (querying.value) return
+    querying.value = true
+    try {
+      await loadAllCards()
+      await loadMatrixOnly()
+    } finally {
+      querying.value = false
     }
   }
 
