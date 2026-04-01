@@ -1,0 +1,103 @@
+{
+  "_comment": "广告平台分析详情 - 广告平台×国家树形表及表脚合计。对应 types: MatrixTableData（rows: PlatformRow[]，total）。国家子行须含 s_country_code。",
+  "fieldDescription": {
+    "request": {
+      "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
+      "from": { "type": "string", "required": false, "description": "来源页标识。" }
+    },
+    "response": {
+      "data": {
+        "type": "MatrixTableData",
+        "required": true,
+        "description": "树形表数据 + 合计行。"
+      }
+    },
+    "MatrixTableData": {
+      "rows": {
+        "type": "PlatformRow[]",
+        "required": true,
+        "description": "一级平台行 isCountry:false，children 为国家行 isCountry:true。"
+      },
+      "total": {
+        "type": "object",
+        "required": true,
+        "description": "与表列对齐：adSpend, cpi, cpm, cpc, roiD1, roiD3, roiD7, profit（走势列前端占位）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "name": "PhoneTracker",
+    "from": "comprehensive-analysis"
+  },
+  "sampleResponse": {
+    "data": {
+      "rows": [
+        {
+          "id": "demo-google",
+          "isCountry": false,
+          "platform": "Google Ads",
+          "countryCount": "1",
+          "adSpend": "$24.5k",
+          "cpi": "$2.92",
+          "cpiLevel": "near",
+          "cpm": "$12.8",
+          "cpc": "$0.44",
+          "roiD1": "104%",
+          "roiD1Level": "good",
+          "roiD3": "111%",
+          "roiD7": "118%",
+          "profit": "$8.2k",
+          "sparkline": [2.4, 2.42, 2.45, 2.5, 2.52, 2.55, 2.58],
+          "children": [
+            {
+              "id": "demo-google-us",
+              "isCountry": true,
+              "platform": "Google Ads",
+              "country": "美国",
+              "s_country_code": "US",
+              "adSpend": "$12.1k",
+              "cpi": "$2.88",
+              "cpiLevel": "good",
+              "cpm": "$12.2",
+              "cpc": "$0.42",
+              "roiD1": "106%",
+              "roiD1Level": "good",
+              "roiD3": "112%",
+              "roiD7": "119%",
+              "profit": "$4.1k",
+              "sparkline": [2.3, 2.35, 2.4, 2.44, 2.48, 2.5, 2.52]
+            }
+          ]
+        }
+      ],
+      "total": {
+        "adSpend": "$24.5k",
+        "cpi": "$2.92",
+        "cpm": "$12.8",
+        "cpc": "$0.44",
+        "roiD1": "104%",
+        "roiD3": "111%",
+        "roiD7": "118%",
+        "profit": "$8.2k"
+      }
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/matrix-table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "name (必填), from?",
+    "responseBody": "MatrixTableData"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "首屏并行加载",
+        "detail": "右侧 ElTable 树形数据；展开/收起不调接口。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "与 summary 共用 name/from。",
+    "dedupe": "数据量大时可后续拆懒加载子节点（另契约）；当前为整表返回。"
+  }
+}

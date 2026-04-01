@@ -1,0 +1,106 @@
+{
+  "_comment": "广告平台分析详情 - 顶栏 KPI + 左列安卓/iOS/合计三卡 + sourceName。对应 types: PlatformAnalysisDetailSummary。",
+  "fieldDescription": {
+    "request": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "钻取实体名称，与路由 query `name` 一致。"
+      },
+      "from": {
+        "type": "string",
+        "required": false,
+        "description": "来源页标识，如 comprehensive-analysis。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "PlatformAnalysisDetailSummary",
+        "required": true,
+        "description": "sourceName + kpis + statCards。"
+      }
+    },
+    "PlatformAnalysisDetailSummary": {
+      "sourceName": {
+        "type": "string",
+        "required": true,
+        "description": "展示名，与请求 name 对齐；面包屑旁「当前查看」优先用此字段。"
+      },
+      "kpis": {
+        "type": "KpiCard[]",
+        "required": true,
+        "description": "顶栏 KPI，通常 5 张；结构见 types.ts KpiCard。"
+      },
+      "statCards": {
+        "type": "PlatformStatCard[]",
+        "required": true,
+        "description": "安卓 / iOS / 合计三卡；结构见 types.ts PlatformStatCard。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "name": "PhoneTracker",
+    "from": "comprehensive-analysis"
+  },
+  "sampleResponse": {
+    "data": {
+      "sourceName": "PhoneTracker",
+      "kpis": [
+        {
+          "id": "spend",
+          "title": "广告支出",
+          "subTitle": "近7天",
+          "primaryValue": "$38.7k",
+          "trendText": "+3.2%",
+          "trendUp": true
+        },
+        {
+          "id": "installs",
+          "title": "安装量",
+          "subTitle": "近7天",
+          "primaryValue": "14,200",
+          "trendText": "+5.1%",
+          "trendUp": true
+        }
+      ],
+      "statCards": [
+        {
+          "label": "PhoneTracker 安卓",
+          "platform": "android",
+          "adSpend": "$22.4k",
+          "roi": "108%",
+          "installs": "8,200",
+          "profit": "$7.8k",
+          "activePlatforms": "4"
+        },
+        {
+          "label": "合计",
+          "platform": "total",
+          "adSpend": "$38.7k",
+          "roi": "112%",
+          "installs": "14,200",
+          "profit": "$13.6k",
+          "activePlatforms": "6"
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/summary",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "name (必填), from?",
+    "responseBody": "PlatformAnalysisDetailSummary"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "与 cpi-trend、ecpm-trend、matrix-table、alert-bar 一并由 loadPlatformAnalysisDetailPage 并行请求。",
+        "prerequisite": "登录态；config/data-source.ts 开关。"
+      }
+    ],
+    "defaultSelection": "name 来自 route.query.name，缺省为「应用」；from 默认空字符串。",
+    "dedupe": "可与其它分片共用同一组 query；换钻取对象时应整页重拉。"
+  }
+}

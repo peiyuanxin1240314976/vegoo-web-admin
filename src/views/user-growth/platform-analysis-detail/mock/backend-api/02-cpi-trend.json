@@ -1,0 +1,84 @@
+{
+  "_comment": "广告平台分析详情 - CPI 趋势折线图数据。响应 data 为 ChartTrend（dates + target? + series[]）。对应 types.ts ChartTrend、TrendSeries。",
+  "fieldDescription": {
+    "request": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "钻取实体名称。"
+      },
+      "from": { "type": "string", "required": false, "description": "来源页标识。" }
+    },
+    "response": {
+      "data": {
+        "type": "ChartTrend",
+        "required": true,
+        "description": "横轴 dates 与各广告平台 CPI 曲线；可含 dashed 目标线。"
+      }
+    },
+    "ChartTrend": {
+      "dates": {
+        "type": "string[]",
+        "required": true,
+        "description": "横轴标签，如 MM-DD。"
+      },
+      "target": {
+        "type": "number",
+        "required": false,
+        "description": "可选目标 CPI，用于图例/辅助线语义。"
+      },
+      "series": {
+        "type": "TrendSeries[]",
+        "required": true,
+        "description": "折线系列；dashed: true 时不画面积、虚线。"
+      }
+    },
+    "TrendSeries": {
+      "name": { "type": "string", "required": true, "description": "图例名。" },
+      "color": { "type": "string", "required": true, "description": "HEX。" },
+      "data": { "type": "number[]", "required": true, "description": "与 dates 等长。" },
+      "dashed": { "type": "boolean", "required": false, "description": "虚线目标线。" }
+    }
+  },
+  "sampleRequest": {
+    "name": "PhoneTracker",
+    "from": "comprehensive-analysis"
+  },
+  "sampleResponse": {
+    "data": {
+      "dates": ["03-14", "03-15", "03-16", "03-17", "03-18", "03-19", "03-20"],
+      "target": 2.5,
+      "series": [
+        {
+          "name": "Google Ads",
+          "color": "#3B82F6",
+          "data": [2.2, 2.25, 2.3, 2.45, 2.55, 2.7, 2.85]
+        },
+        {
+          "name": "目标线",
+          "color": "#94a3b8",
+          "dashed": true,
+          "data": [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/cpi-trend",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "name (必填), from?",
+    "responseBody": "ChartTrend"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "首屏并行加载",
+        "detail": "loadPlatformAnalysisDetailPage 内与其它分片同时请求；返回后 watch pageData 重绘 ECharts。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "与 summary 等共用同一 name/from 口径。",
+    "dedupe": "切换钻取对象时整页重拉。"
+  }
+}

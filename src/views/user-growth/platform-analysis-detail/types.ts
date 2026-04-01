@@ -28,7 +28,8 @@ export interface CountryRow {
   isCountry: true
   platform: string // parent platform
   country: string
-  flag: string
+  /** ISO 3166-1 alpha-2，用于 flag-icons；非法或空时前端不渲染国旗 */
+  s_country_code: string
   adSpend: string
   cpi: string
   cpiLevel: 'good' | 'near' | 'over'
@@ -67,9 +68,9 @@ export interface MatrixTableData {
   rows: PlatformRow[]
   total: {
     adSpend: string
-    installs: string
     cpi: string
     cpm: string
+    cpc: string
     roiD1: string
     roiD3: string
     roiD7: string
@@ -109,7 +110,22 @@ export interface AlertBarItem {
   text: string
 }
 
-// ─── 整合 ──────────────────────────────────────────────────────
+// ─── 分片响应（与 backend-api 各 JSON 对齐）──────────────────────
+
+/** 01-summary：顶栏 KPI + 左列三卡 + sourceName */
+export interface PlatformAnalysisDetailSummary {
+  sourceName: string
+  kpis: KpiCard[]
+  statCards: PlatformStatCard[]
+}
+
+/** 03-ecpm-trend：ECPM 折线 + 底部四指标 */
+export interface PlatformAnalysisDetailEcpmBlock {
+  ecpmTrend: ChartTrend
+  ecpmMetrics: EcpmTrendMetrics
+}
+
+// ─── 整合（页面 state）─────────────────────────────────────────
 
 export interface PlatformAnalysisDetailData {
   sourceName: string

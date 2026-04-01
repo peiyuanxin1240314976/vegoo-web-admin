@@ -1,8 +1,17 @@
 /**
  * 广告平台分析详情页本地 Mock（与 `types.ts`、`mock/backend-api` 契约一致）
- * 由 `src/api/user-growth/platform-analysis-detail.ts` 中 `fetchPlatformAnalysisDetailData` 引用（接入真实接口前）
+ * 分片接口各调一次 `buildMockPlatformAnalysisDetailData` 后取子集（仅 Mock 路径，体量可接受）。
  */
-import type { CountryRow, PlatformAnalysisDetailData, PlatformRow } from '../types'
+import type {
+  AlertBarItem,
+  ChartTrend,
+  CountryRow,
+  MatrixTableData,
+  PlatformAnalysisDetailData,
+  PlatformAnalysisDetailEcpmBlock,
+  PlatformAnalysisDetailSummary,
+  PlatformRow
+} from '../types'
 
 function hashStr(s: string): number {
   let h = 0
@@ -24,14 +33,14 @@ function buildMatrixRows(displayName: string, jitter: number): PlatformRow[] {
     id: string,
     platform: string,
     country: string,
-    flag: string,
+    s_country_code: string,
     base: number
   ): CountryRow => ({
     id,
     isCountry: true,
     platform,
     country,
-    flag,
+    s_country_code,
     adSpend: `$${(8.2 * jitter + base * 0.3).toFixed(1)}k`,
     cpi: `$${(2.8 + base * 0.05).toFixed(2)}`,
     cpiLevel: base > 2 ? 'over' : base > 1 ? 'near' : 'good',
@@ -47,14 +56,14 @@ function buildMatrixRows(displayName: string, jitter: number): PlatformRow[] {
   })
 
   const gChildren: CountryRow[] = [
-    mkCountry(`${displayName}-g-us`, 'Google Ads', '美国', '🇺🇸', 2.2),
-    mkCountry(`${displayName}-g-de`, 'Google Ads', '德国', '🇩🇪', 1.6),
-    mkCountry(`${displayName}-g-jp`, 'Google Ads', '日本', '🇯🇵', 1.4)
+    mkCountry(`${displayName}-g-us`, 'Google Ads', '美国', 'US', 2.2),
+    mkCountry(`${displayName}-g-de`, 'Google Ads', '德国', 'DE', 1.6),
+    mkCountry(`${displayName}-g-jp`, 'Google Ads', '日本', 'JP', 1.4)
   ]
 
   const tChildren: CountryRow[] = [
-    mkCountry(`${displayName}-t-us`, 'TikTok', '美国', '🇺🇸', 1.9),
-    mkCountry(`${displayName}-t-gb`, 'TikTok', '英国', '🇬🇧', 1.5)
+    mkCountry(`${displayName}-t-us`, 'TikTok', '美国', 'US', 1.9),
+    mkCountry(`${displayName}-t-gb`, 'TikTok', '英国', 'GB', 1.5)
   ]
 
   const google: PlatformRow = {
@@ -103,7 +112,7 @@ function buildMatrixRows(displayName: string, jitter: number): PlatformRow[] {
  */
 export function buildMockPlatformAnalysisDetailData(params: {
   name: string
-  from: string
+  from?: string
 }): PlatformAnalysisDetailData {
   const displayName = params.name?.trim() || '应用'
   const h = hashStr(`${displayName}|${params.from ?? ''}`)
@@ -198,9 +207,9 @@ export function buildMockPlatformAnalysisDetailData(params: {
       rows: matrixRows,
       total: {
         adSpend: `$${totalAdK.toFixed(1)}k`,
-        installs: `${Math.round(24.5 * jitter)}k`,
         cpi: `$${(2.55 * jitter).toFixed(2)}`,
         cpm: `$${(11.2 * jitter).toFixed(1)}`,
+        cpc: `$${(0.39 * jitter).toFixed(2)}`,
         roiD1: `${Math.round(106 * jitter)}%`,
         roiD3: `${Math.round(112 * jitter)}%`,
         roiD7: `${Math.round(120 * jitter)}%`,
@@ -269,4 +278,41 @@ export function buildMockPlatformAnalysisDetailData(params: {
       }
     ]
   }
+}
+
+export function mockFetchPlatformAnalysisDetailSummary(params: {
+  name: string
+  from?: string
+}): PlatformAnalysisDetailSummary {
+  const d = buildMockPlatformAnalysisDetailData(params)
+  return { sourceName: d.sourceName, kpis: d.kpis, statCards: d.statCards }
+}
+
+export function mockFetchPlatformAnalysisDetailCpiTrend(params: {
+  name: string
+  from?: string
+}): ChartTrend {
+  return buildMockPlatformAnalysisDetailData(params).cpiTrend
+}
+
+export function mockFetchPlatformAnalysisDetailEcpm(params: {
+  name: string
+  from?: string
+}): PlatformAnalysisDetailEcpmBlock {
+  const d = buildMockPlatformAnalysisDetailData(params)
+  return { ecpmTrend: d.ecpmTrend, ecpmMetrics: d.ecpmMetrics }
+}
+
+export function mockFetchPlatformAnalysisDetailMatrixTable(params: {
+  name: string
+  from?: string
+}): MatrixTableData {
+  return buildMockPlatformAnalysisDetailData(params).matrixTable
+}
+
+export function mockFetchPlatformAnalysisDetailAlertBar(params: {
+  name: string
+  from?: string
+}): AlertBarItem[] {
+  return buildMockPlatformAnalysisDetailData(params).alertBar
 }
