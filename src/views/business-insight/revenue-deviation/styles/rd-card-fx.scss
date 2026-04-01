@@ -66,7 +66,6 @@
 
 @mixin rd-panel-hover($accent: var(--art-primary)) {
   transition:
-    transform var(--duration-normal) var(--ease-out),
     box-shadow var(--duration-normal) var(--ease-out),
     border-color var(--duration-fast) var(--ease-default),
     filter var(--duration-normal) var(--ease-out);
@@ -80,7 +79,6 @@
       0 0 72px color-mix(in srgb, var(--art-primary) 18%, transparent),
       0 0 120px color-mix(in srgb, var(--art-success) 10%, transparent),
       0 0 160px color-mix(in srgb, var(--art-warning) 8%, transparent);
-    transform: translateY(-6px);
   }
 }
 

@@ -101,7 +101,7 @@
 
   function goToAdDetail(row: CampaignAdRow) {
     router.push({
-      path: '/user-growth/ad-performance/campaign-detail/ad-detail',
+      path: '/campaign-detail/ad-detail',
       query: { id: row.id, campaignId: props.campaignId }
     })
   }

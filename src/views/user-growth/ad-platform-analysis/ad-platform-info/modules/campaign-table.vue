@@ -200,7 +200,7 @@
 
   function openDetail(row: AdPlatformInfoCampaignRow) {
     router.push({
-      path: '/user-growth/ad-performance/campaign-detail',
+      path: '/campaign-detail',
       query: {
         id: row.id,
         appId: row.id,

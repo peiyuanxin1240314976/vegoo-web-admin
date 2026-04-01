@@ -136,7 +136,7 @@
       return
     }
     router.push({
-      path: '/user-growth/ad-performance/campaign-detail',
+      path: '/campaign-detail',
       query: {
         id: seriesId,
         appId,

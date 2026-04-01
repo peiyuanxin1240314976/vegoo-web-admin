@@ -112,6 +112,11 @@
         <div class="rd-kpi-card__sub">实际ROI将低于预估 / 需校正ROI计算</div>
       </div>
     </div>
+    <div v-else class="rd-kpi-empty-wrap rd-entry-2">
+      <div class="rd-card rd-kpi-empty-card">
+        <ElEmpty description="暂无概览数据，请调整筛选条件或稍后重试" :image-size="88" />
+      </div>
+    </div>
 
     <!-- ========== Middle Row ========== -->
     <div class="rd-middle-grid rd-entry-3">
@@ -119,18 +124,50 @@
       <div class="rd-card rd-trend-card">
         <div class="rd-card__title">收入偏差趋势（30天）</div>
         <div v-if="loadingTrend" class="rd-chart-sk"></div>
-        <div v-else ref="trendChartRef" class="rd-trend-chart"></div>
-        <div class="rd-trend-legend">
-          <span class="rd-legend-item rd-legend-item--dashed rd-legend-item--green">预估收入</span>
-          <span class="rd-legend-item rd-legend-item--solid rd-legend-item--teal">真实收入</span>
-          <span class="rd-legend-item rd-legend-item--area rd-legend-item--orange">偏差区域</span>
+        <div v-else-if="isTrendEmpty" class="rd-card-empty rd-card-empty--trend">
+          <ElEmpty description="暂无趋势数据" :image-size="90" />
         </div>
+        <template v-else>
+          <div ref="trendChartRef" class="rd-trend-chart"></div>
+          <div class="rd-trend-legend">
+            <span class="rd-legend-item rd-legend-item--dashed rd-legend-item--green"
+              >预估收入</span
+            >
+            <span class="rd-legend-item rd-legend-item--solid rd-legend-item--teal">真实收入</span>
+            <span class="rd-legend-item rd-legend-item--area rd-legend-item--orange">偏差区域</span>
+          </div>
+        </template>
       </div>
 
       <!-- 平台偏差对比 -->
       <div class="rd-card rd-platform-card">
         <div class="rd-card__title">平台偏差对比</div>
-        <table class="rd-table">
+        <div v-if="loadingPlatformTable" class="rd-table-skeleton">
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <div class="rd-table-skeleton__head">
+                <ElSkeletonItem
+                  v-for="h in 4"
+                  :key="`ph-${h}`"
+                  variant="text"
+                  class="rd-table-skeleton__cell"
+                />
+              </div>
+              <div v-for="r in 5" :key="`pr-${r}`" class="rd-table-skeleton__row">
+                <ElSkeletonItem
+                  v-for="c in 4"
+                  :key="`pr-${r}-${c}`"
+                  variant="text"
+                  class="rd-table-skeleton__cell"
+                />
+              </div>
+            </template>
+          </ElSkeleton>
+        </div>
+        <div v-else-if="isPlatformTableEmpty" class="rd-card-empty rd-card-empty--table">
+          <ElEmpty description="暂无平台对比数据" :image-size="80" />
+        </div>
+        <table v-else class="rd-table">
           <thead>
             <tr>
               <th>广告平台</th>
@@ -190,13 +227,41 @@
           </button>
         </div>
         <div v-if="loadingCountry" class="rd-chart-sk rd-chart-sk--tall"></div>
+        <div v-else-if="isCountryChartEmpty" class="rd-card-empty rd-card-empty--country">
+          <ElEmpty description="暂无国家分布数据" :image-size="90" />
+        </div>
         <div v-else ref="countryChartRef" class="rd-country-chart"></div>
       </div>
 
       <!-- 偏差历史记录 -->
       <div class="rd-card rd-history-card">
         <div class="rd-card__title">偏差历史记录</div>
-        <table class="rd-table">
+        <div v-if="loadingHistory" class="rd-table-skeleton rd-table-skeleton--dense">
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <div class="rd-table-skeleton__head">
+                <ElSkeletonItem
+                  v-for="h in 4"
+                  :key="`hh-${h}`"
+                  variant="text"
+                  class="rd-table-skeleton__cell"
+                />
+              </div>
+              <div v-for="r in 8" :key="`hr-${r}`" class="rd-table-skeleton__row">
+                <ElSkeletonItem
+                  v-for="c in 4"
+                  :key="`hr-${r}-${c}`"
+                  variant="text"
+                  class="rd-table-skeleton__cell"
+                />
+              </div>
+            </template>
+          </ElSkeleton>
+        </div>
+        <div v-else-if="isHistoryEmpty" class="rd-card-empty rd-card-empty--table">
+          <ElEmpty description="暂无历史记录" :image-size="80" />
+        </div>
+        <table v-else class="rd-table">
           <thead>
             <tr>
               <th>月份</th>
@@ -258,8 +323,40 @@
             >{{ d.label }}</span
           >
         </div>
-        <div class="rd-matrix-scroll">
-          <div v-if="matrixLoading" class="rd-chart-sk rd-chart-sk--tall"></div>
+        <div class="rd-matrix-scroll" :class="{ 'rd-matrix-scroll--busy': matrixLoading }">
+          <div v-if="matrixLoading" class="rd-matrix-skeleton">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <div class="rd-matrix-skeleton__head">
+                  <ElSkeletonItem
+                    variant="text"
+                    class="rd-matrix-skeleton__cell rd-matrix-skeleton__cell--app"
+                  />
+                  <ElSkeletonItem
+                    v-for="c in 4"
+                    :key="`msh-${c}`"
+                    variant="text"
+                    class="rd-matrix-skeleton__cell"
+                  />
+                </div>
+                <div v-for="r in 6" :key="`msr-${r}`" class="rd-matrix-skeleton__row">
+                  <ElSkeletonItem
+                    variant="text"
+                    class="rd-matrix-skeleton__cell rd-matrix-skeleton__cell--app"
+                  />
+                  <ElSkeletonItem
+                    v-for="c in 4"
+                    :key="`msr-${r}-${c}`"
+                    variant="text"
+                    class="rd-matrix-skeleton__cell"
+                  />
+                </div>
+              </template>
+            </ElSkeleton>
+          </div>
+          <div v-else-if="isMatrixEmpty" class="rd-card-empty rd-card-empty--matrix">
+            <ElEmpty description="暂无明细数据" :image-size="80" />
+          </div>
           <table v-else class="rd-table rd-matrix-table">
             <thead>
               <tr>
@@ -319,7 +416,16 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, watch, nextTick, onActivated, onDeactivated } from 'vue'
+  import {
+    ref,
+    computed,
+    onMounted,
+    onUnmounted,
+    watch,
+    nextTick,
+    onActivated,
+    onDeactivated
+  } from 'vue'
   import { TopRight } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
@@ -409,7 +515,8 @@
   const activeCountryTab = ref('amount')
   const matrixPlatform = ref(ALL_SOURCE_VALUE)
 
-  const matrixLoading = ref(false)
+  const matrixLoading = ref(true)
+  const matrixRequestId = ref(0)
 
   const kpiOverview = ref<RevenueDeviationOverviewKpis | null>(null)
   const trendData = ref<RevenueDeviationOverviewTrend | null>(null)
@@ -442,6 +549,31 @@
   const loadingPlatformTable = ref(false)
   const loadingCountry = ref(false)
   const loadingHistory = ref(false)
+
+  const isTrendEmpty = computed(() => {
+    const t = trendData.value
+    if (!t) return true
+    return !(t.t_day_labels && t.t_day_labels.length > 0)
+  })
+
+  const isPlatformTableEmpty = computed(() => {
+    const rows = platformTable.value?.rows
+    return !(rows && rows.length > 0)
+  })
+
+  const isCountryChartEmpty = computed(() => {
+    const top = countryTop10.value
+    if (!top) return true
+    const list = activeCountryTab.value === 'amount' ? top.tab_amount : top.tab_rate
+    return !(list && list.length > 0)
+  })
+
+  const isHistoryEmpty = computed(() => historyRows.value.length === 0)
+
+  const isMatrixEmpty = computed(
+    () => matrixCols.value.length === 0 || matrixData.value.length === 0
+  )
+
   async function loadMetaFilterOptions() {
     try {
       const options = await fetchRevenueDeviationMetaFilterOptions()
@@ -490,10 +622,12 @@
   }
 
   async function loadMatrixOnly() {
+    const id = ++matrixRequestId.value
     matrixLoading.value = true
     try {
       const q = buildMatrixQuery()
       const matrix = await fetchRevenueDeviationTableMatrix(q)
+      if (id !== matrixRequestId.value) return
       matrixCols.value = matrix.cols.map((c) => ({
         name: c.name,
         key: c.key,
@@ -501,10 +635,13 @@
       }))
       matrixData.value = toMatrixVmRows(matrix.rows)
     } catch {
+      if (id !== matrixRequestId.value) return
       matrixCols.value = []
       matrixData.value = []
     } finally {
-      matrixLoading.value = false
+      if (id === matrixRequestId.value) {
+        matrixLoading.value = false
+      }
     }
   }
 
@@ -853,6 +990,7 @@
     [dateRange, platform, appFilter],
     async () => {
       matrixPlatform.value = platform.value
+      matrixLoading.value = true
       await loadAllCards()
       await loadMatrixOnly()
       await nextTick()
@@ -1182,15 +1320,22 @@
   /* ── KPI Grid ──────────────────────────────────────────────────────── */
   .rd-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(min(168px, 100%), 1fr));
     gap: 14px;
     margin-bottom: 16px;
+  }
+
+  @media (width >= 1600px) {
+    .rd-kpi-grid {
+      grid-template-columns: repeat(5, 1fr);
+    }
   }
 
   .rd-kpi-card {
     --rd-accent: var(--art-primary);
 
     position: relative;
+    min-width: 0;
     padding: 18px 20px;
     overflow: hidden;
     border-radius: 10px;
@@ -1252,10 +1397,11 @@
 
   .rd-kpi-card__value {
     margin-bottom: 6px;
-    font-size: 28px;
+    font-size: clamp(1.125rem, 2.6vw + 0.6rem, 1.75rem);
     font-weight: 700;
     text-shadow: 0 0 18px color-mix(in srgb, var(--rd-accent) 18%, transparent);
     letter-spacing: -0.5px;
+    word-break: break-word;
   }
 
   .rd-kpi-card__value--green {
@@ -1278,6 +1424,7 @@
     font-size: 11px;
     line-height: 1.4;
     color: var(--text-tertiary);
+    word-break: break-word;
   }
 
   /* ── Badge ─────────────────────────────────────────────────────────── */
@@ -1297,7 +1444,7 @@
   /* ── Middle Grid ───────────────────────────────────────────────────── */
   .rd-middle-grid {
     display: grid;
-    grid-template-columns: 1fr 320px 280px;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px) minmax(240px, 280px);
     gap: 14px;
     align-items: stretch;
     margin-bottom: 16px;
@@ -1305,6 +1452,17 @@
 
   .rd-platform-card {
     grid-column: 2 / -1;
+    min-width: 0;
+  }
+
+  @media (width <= 1199px) {
+    .rd-middle-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .rd-platform-card {
+      grid-column: auto;
+    }
   }
 
   .rd-right-col {
@@ -1333,6 +1491,7 @@
   .rd-country-card {
     display: flex;
     flex-direction: column;
+    min-width: 0;
     min-height: 0;
   }
 
@@ -1406,7 +1565,8 @@
 
   .rd-trend-legend {
     display: flex;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 8px 16px;
     justify-content: center;
     margin-top: 8px;
   }
@@ -1478,6 +1638,84 @@
     color: var(--text-primary) !important;
     border-top: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
     border-bottom: none;
+  }
+
+  /* ── 表格骨架（平台对比 / 历史记录）────────────────────────────────── */
+  .rd-table-skeleton {
+    padding: 4px 0 2px;
+  }
+
+  .rd-table-skeleton__head,
+  .rd-table-skeleton__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.9fr);
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .rd-table-skeleton__head {
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
+  }
+
+  .rd-table-skeleton--dense .rd-table-skeleton__row {
+    margin-bottom: 10px;
+  }
+
+  .rd-table-skeleton__cell {
+    height: 14px;
+  }
+
+  .rd-table-skeleton__head .rd-table-skeleton__cell {
+    height: 12px;
+  }
+
+  .rd-kpi-empty-wrap {
+    margin-bottom: 16px;
+  }
+
+  .rd-kpi-empty-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 132px;
+    padding: 20px 16px;
+  }
+
+  .rd-card-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px 8px;
+
+    :deep(.el-empty__description) {
+      margin-top: 12px;
+      color: var(--text-tertiary);
+    }
+
+    :deep(.el-empty__image) {
+      opacity: 0.85;
+    }
+  }
+
+  .rd-card-empty--trend {
+    flex: 1;
+    min-height: 168px;
+  }
+
+  .rd-card-empty--table {
+    min-height: 176px;
+  }
+
+  .rd-card-empty--country {
+    flex: 1;
+    min-height: 200px;
+  }
+
+  .rd-card-empty--matrix {
+    min-height: 240px;
   }
 
   /* ── Text Colors ───────────────────────────────────────────────────── */
@@ -1681,9 +1919,29 @@
   /* ── Bottom Grid ───────────────────────────────────────────────────── */
   .rd-bottom-grid {
     display: grid;
-    grid-template-columns: 240px minmax(220px, 0.6fr) minmax(520px, 1.4fr);
+    grid-template-columns: minmax(200px, 240px) minmax(180px, 0.6fr) minmax(min(100%, 420px), 1.4fr);
     gap: 14px;
     align-items: stretch;
+  }
+
+  @media (width <= 1399px) {
+    .rd-bottom-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rd-matrix-card {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (width <= 767px) {
+    .rd-bottom-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .rd-matrix-card {
+      grid-column: auto;
+    }
   }
 
   /* 第三行三列同高 */
@@ -1778,6 +2036,44 @@
     overflow: auto;
   }
 
+  .rd-matrix-scroll--busy {
+    min-height: 288px;
+  }
+
+  .rd-matrix-skeleton {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 272px;
+    padding: 6px 4px 12px;
+  }
+
+  .rd-matrix-skeleton__head,
+  .rd-matrix-skeleton__row {
+    display: grid;
+    grid-template-columns: minmax(72px, 108px) repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .rd-matrix-skeleton__head {
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
+  }
+
+  .rd-matrix-skeleton__cell {
+    height: 14px;
+  }
+
+  .rd-matrix-skeleton__head .rd-matrix-skeleton__cell {
+    height: 12px;
+  }
+
+  .rd-matrix-skeleton__cell--app {
+    max-width: 100%;
+  }
+
   .rd-matrix-table {
     min-width: 600px;
   }
@@ -1852,6 +2148,49 @@
     line-height: 1.6;
     color: var(--text-tertiary);
     border-top: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  /* ── 视口：大/中/窄屏通用收紧与表头换行 ───────────────────────────── */
+  @media (width <= 1199px) {
+    .revenue-deviation {
+      padding: 16px 18px;
+    }
+  }
+
+  @media (width <= 767px) {
+    .revenue-deviation {
+      padding: 12px 14px;
+    }
+
+    .rd-kpi-grid {
+      gap: 10px;
+    }
+
+    .rd-kpi-card {
+      padding: 14px 16px;
+    }
+
+    .rd-filter-date,
+    :deep(.rd-filter-date.el-date-editor.el-range-editor) {
+      flex: 1 1 100%;
+      max-width: 100% !important;
+    }
+
+    .rd-filter-select {
+      flex: 1 1 calc(50% - 6px);
+      width: auto;
+      min-width: 0;
+    }
+
+    .rd-matrix-card .rd-card__header-row {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .rd-matrix-card .rd-select--matrix-platform {
+      width: 100%;
+      max-width: 100%;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

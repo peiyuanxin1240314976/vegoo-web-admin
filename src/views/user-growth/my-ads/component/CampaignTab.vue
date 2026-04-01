@@ -168,7 +168,7 @@
 
   function goToCampaignDetail(id: string, name: string, appId: string, appName: string) {
     router.push({
-      path: '/user-growth/ad-performance/campaign-detail',
+      path: '/campaign-detail',
       query: { id, name, appId, appName }
     })
   }
