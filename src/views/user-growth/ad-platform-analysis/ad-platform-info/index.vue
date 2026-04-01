@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="ad-platform-info-page ad-platform-info-page--ap-fx art-full-height">
     <div class="api-page-fx" aria-hidden="true"></div>
     <ElSkeleton :loading="isLoading" animated class="api-skeleton-root">

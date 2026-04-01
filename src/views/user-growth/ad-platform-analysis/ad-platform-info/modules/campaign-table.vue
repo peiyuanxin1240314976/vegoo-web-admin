@@ -31,9 +31,9 @@
             <ElButton round size="small" type="primary" link @click="openDetail(row)">
               详情
             </ElButton>
-            <ElButton round size="small" type="primary" link @click="toggleStatus(row)">
+            <!-- <ElButton round size="small" type="primary" link @click="toggleStatus(row)">
               {{ row.status === 'active' ? '暂停' : '启用' }}
-            </ElButton>
+            </ElButton> -->
           </template>
         </ArtTable>
       </div>
@@ -47,7 +47,6 @@
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import type { ColumnOption } from '@/types'
   import type { AdPlatformInfoCampaignRow } from '../types'
-  import { ElMessage } from 'element-plus'
 
   defineOptions({ name: 'ApiCampaignTable' })
 
@@ -209,10 +208,10 @@
     })
   }
 
-  function toggleStatus(row: AdPlatformInfoCampaignRow) {
-    const next = row.status === 'active' ? 'paused' : 'active'
-    ElMessage.success(`已切换状态：${row.campaign} → ${next === 'active' ? '投放中' : '已暂停'}`)
-  }
+  // function toggleStatus(row: AdPlatformInfoCampaignRow) {
+  //   const next = row.status === 'active' ? 'paused' : 'active'
+  //   ElMessage.success(`已切换状态：${row.campaign} → ${next === 'active' ? '投放中' : '已暂停'}`)
+  // }
 </script>
 
 <style scoped lang="scss">

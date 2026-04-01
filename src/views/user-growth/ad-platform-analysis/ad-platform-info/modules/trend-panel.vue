@@ -31,7 +31,7 @@
 
   const props = defineProps<{ data: AdPlatformInfoTrendData }>()
 
-  const mode = ref<'revenue' | 'spend' | 'roi' | 'cpi'>('roi')
+  const mode = ref<'revenue' | 'spend' | 'roi' | 'cpi'>('revenue')
   const modeOptions = [
     { label: '收入趋势', value: 'revenue' },
     { label: '支出趋势', value: 'spend' },
@@ -56,14 +56,19 @@
   } = useChart()
 
   const activeLineSeries = computed(() => {
-    const keyMap: Record<typeof mode.value, string> = {
-      revenue: '收入',
-      spend: '支出',
-      roi: 'ROI',
-      cpi: 'CPI'
+    const nameCandidates: Record<typeof mode.value, string[]> = {
+      revenue: ['广告收入', '收入', 'Revenue'],
+      spend: ['广告支出', '支出', 'Spend'],
+      roi: ['ROI', 'Roi'],
+      cpi: ['CPI', 'Cpi']
     }
-    const name = keyMap[mode.value]
-    return props.data.series.find((s) => s.name === name) || props.data.series[0]
+    const candidates = nameCandidates[mode.value]
+    const exact = props.data.series.find((s) => candidates.includes(s.name))
+    if (exact) return exact
+
+    // 兜底：有的接口会带前缀/后缀（如“广告收入(USD)”），用包含匹配
+    const fuzzy = props.data.series.find((s) => candidates.some((c) => s.name.includes(c)))
+    return fuzzy || props.data.series[0]
   })
 
   const barDiffSeries = computed(() => {
