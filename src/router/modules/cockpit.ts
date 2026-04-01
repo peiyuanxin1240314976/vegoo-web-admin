@@ -25,7 +25,7 @@ export const cockpitMapDetailRoute: AppRouteRecord = {
   meta: {
     title: '地区详情',
     isHide: true,
-    keepAlive: true,
+    keepAlive: false,
     roles: ['R_SUPER', 'R_ADMIN']
   }
 }

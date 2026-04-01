@@ -141,17 +141,18 @@
     filterDateRange.value = getDateRangeByQuick(value)
   }
 
-  const countryCode = computed(() => String(route.params.country || '').toUpperCase() || '—')
+  const countryCodeParam = computed(() => String(route.params.country || '').toUpperCase())
+  const countryCode = computed(() => countryCodeParam.value || '—')
   const countryName = computed(() => {
     const c = String(route.params.country || '')
     return countryNameMap[c] || c || '—'
   })
 
   function buildCountryDateParams(): { countryCode: string; startDate: string; endDate: string } {
-    const code = countryCode.value
+    const code = countryCodeParam.value
     const [startDate, endDate] = filterDateRange.value || ['', '']
     return {
-      countryCode: code && code !== '—' ? code : '',
+      countryCode: code || '',
       startDate: startDate || '',
       endDate: endDate || ''
     }
@@ -211,9 +212,10 @@
   const showThirdRow = ref(false)
 
   async function reloadAll() {
+    if (route.name !== 'CockpitMapDetail') return
     const params = buildCountryDateParams()
     const hasDateRange = Boolean(params.startDate && params.endDate)
-    if (!hasDateRange) return
+    if (!params.countryCode || !hasDateRange) return
 
     // 刷新时重置 loading
     channelLoading.value = true
@@ -344,7 +346,7 @@
     }, 300)
   }
 
-  watch([filterDateRange, countryCode], scheduleReload, { deep: true })
+  watch([filterDateRange, countryCodeParam], scheduleReload, { deep: true })
 
   onMounted(() => {
     void reloadAll()
