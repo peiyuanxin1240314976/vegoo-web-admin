@@ -90,7 +90,46 @@
 
     <!-- 主内容区：按 Tab 渲染对应模块 -->
     <main class="iaa-main">
-      <component v-if="effectiveFilter" :is="currentTabComponent" :filter="effectiveFilter" />
+      <div v-if="isMainSkeletonVisible" class="iaa-page-skeleton">
+        <section class="iaa-kpi-grid">
+          <article v-for="i in 4" :key="i" class="iaa-kpi iaa-kpi--sk">
+            <ElSkeleton animated :throttle="0">
+              <template #template>
+                <div class="iaa-kpi-sk">
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__t" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__v" />
+                  <ElSkeletonItem variant="text" class="iaa-kpi-sk__s" />
+                </div>
+              </template>
+            </ElSkeleton>
+          </article>
+        </section>
+
+        <section class="iaa-main-grid">
+          <ElCard class="iaa-panel" shadow="never">
+            <template #header><span>&nbsp;</span></template>
+            <div class="iaa-chart-sk iaa-chart-sk--radar"></div>
+          </ElCard>
+          <ElCard class="iaa-panel" shadow="never">
+            <template #header><span>&nbsp;</span></template>
+            <div class="iaa-chart-sk iaa-chart-sk--bar"></div>
+          </ElCard>
+          <ElCard class="iaa-panel" shadow="never">
+            <template #header><span>&nbsp;</span></template>
+            <div class="iaa-list-sk">
+              <div v-for="i in 6" :key="i" class="iaa-list-sk__row">
+                <ElSkeleton animated :throttle="0">
+                  <template #template>
+                    <ElSkeletonItem variant="text" class="iaa-list-sk__t" />
+                  </template>
+                </ElSkeleton>
+              </div>
+            </div>
+          </ElCard>
+        </section>
+      </div>
+
+      <component v-else-if="effectiveFilter" :is="currentTabComponent" :filter="effectiveFilter" />
     </main>
   </div>
 </template>
@@ -100,6 +139,7 @@
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import type { IaaTabKey, IaaFilterState } from './types'
   import { useIaaFilters } from './composables/useIaaFilters'
+  import { provideIaaPageLoading } from './composables/useIaaPageLoading'
   import TabAdType from './modules/tab-ad-type.vue'
   import TabAdPlatform from './modules/tab-ad-platform.vue'
   import TabAdPlacement from './modules/tab-ad-placement.vue'
@@ -127,7 +167,13 @@
     t_date: getAppTodayYYYYMMDD()
   })
 
-  const { appOptions, platformOptions, countryOptions } = useIaaFilters()
+  const {
+    appOptions,
+    platformOptions,
+    countryOptions,
+    loading: filterOptionsLoading
+  } = useIaaFilters()
+  provideIaaPageLoading()
 
   const hasInitDefaultAppId = ref(false)
   watch(
@@ -160,6 +206,11 @@
   }
 
   const currentTabComponent = computed(() => tabComponents[activeTab.value])
+  const isMainSkeletonVisible = computed(() => {
+    if (filterOptionsLoading.value) return true
+    if (!effectiveFilter.value) return true
+    return false
+  })
 </script>
 
 <style scoped lang="scss">
@@ -434,6 +485,92 @@
     flex: 1;
     min-height: 0;
     overflow: visible;
+  }
+
+  .iaa-page-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 100%;
+  }
+
+  .iaa-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .iaa-kpi--sk {
+    padding: 16px;
+    background: var(--default-box-color);
+    border: 1px solid var(--default-border);
+    border-radius: 8px;
+  }
+
+  .iaa-kpi-sk__t {
+    width: 52%;
+    height: 12px;
+    margin-bottom: 10px;
+  }
+
+  .iaa-kpi-sk__v {
+    width: 78%;
+    height: 24px;
+    margin-bottom: 8px;
+  }
+
+  .iaa-kpi-sk__s {
+    width: 60%;
+    height: 12px;
+  }
+
+  .iaa-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .iaa-panel {
+    background: var(--default-box-color);
+    border: 1px solid var(--default-border);
+  }
+
+  .iaa-chart-sk {
+    height: 240px;
+    background: linear-gradient(
+      90deg,
+      rgb(148 163 184 / 8%) 25%,
+      rgb(148 163 184 / 14%) 37%,
+      rgb(148 163 184 / 8%) 63%
+    );
+    background-size: 400% 100%;
+    border-radius: 8px;
+    animation: iaa-skeleton-shimmer 1.2s ease-in-out infinite;
+  }
+
+  @keyframes iaa-skeleton-shimmer {
+    0% {
+      background-position: 100% 0;
+    }
+
+    100% {
+      background-position: 0 0;
+    }
+  }
+
+  .iaa-list-sk__row {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--default-border);
+  }
+
+  .iaa-list-sk__row:last-child {
+    border-bottom: 0;
+  }
+
+  .iaa-list-sk__t {
+    width: 100%;
+    height: 12px;
   }
 </style>
 

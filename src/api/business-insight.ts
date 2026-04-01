@@ -1328,7 +1328,16 @@ export async function fetchIaaOverviewUserBreakdown(params: IaaOverviewUserBreak
     url: '/api/v1/datacenter/analysis/business-insight/iaa-analysis/overview/user-breakdown',
     data: params
   })
-  return normalizeIaaOverviewUserBreakdown(unwrapIaaPayload<IaaOverviewUserBreakdownResponse>(raw))
+  const unwrapped = unwrapIaaPayload<unknown>(raw)
+  const payload =
+    unwrapped &&
+    typeof unwrapped === 'object' &&
+    !Array.isArray(unwrapped) &&
+    'code' in (unwrapped as Record<string, unknown>) &&
+    'data' in (unwrapped as Record<string, unknown>)
+      ? ((unwrapped as Record<string, unknown>).data as IaaOverviewUserBreakdownResponse)
+      : (unwrapped as IaaOverviewUserBreakdownResponse)
+  return normalizeIaaOverviewUserBreakdown(payload)
 }
 
 export async function fetchIaaPlatformTabData(params: IaaFilterState) {

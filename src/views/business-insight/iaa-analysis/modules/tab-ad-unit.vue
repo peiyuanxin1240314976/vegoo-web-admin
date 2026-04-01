@@ -154,12 +154,22 @@
   import type { ColumnOption } from '@/types'
   import type { IaaFilterState, IaaAdUnitTabData, IaaAdUnitTableRow } from '../types'
   import { fetchIaaAdUnitTabData } from '@/api/business-insight'
+  import { useIaaPageLoading } from '../composables/useIaaPageLoading'
 
   defineOptions({ name: 'IaaTabAdUnit' })
 
   const props = defineProps<{ filter: IaaFilterState }>()
 
   const loading = ref(false)
+  const pageLoading = useIaaPageLoading()
+
+  watch(loading, (v) => {
+    pageLoading?.setTabLoading('adUnit', v)
+  })
+
+  onMounted(() => {
+    pageLoading?.setTabLoading('adUnit', loading.value)
+  })
 
   const localFilter = reactive({ source: 'all', placement: 'all', adType: 'all', keyword: '' })
 
@@ -249,12 +259,6 @@
       label: '展示次数',
       minWidth: 90,
       formatter: (r: IaaAdUnitTableRow) => r.impressions.toLocaleString()
-    },
-    {
-      prop: 'fillRate',
-      label: '充填率',
-      minWidth: 72,
-      formatter: (r: IaaAdUnitTableRow) => `${r.fillRate}%`
     },
     { prop: 'status', label: '状态', minWidth: 72, useSlot: true, slotName: 'status' }
   ])

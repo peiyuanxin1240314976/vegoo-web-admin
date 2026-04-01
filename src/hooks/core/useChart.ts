@@ -551,6 +551,14 @@ export function useChart(options: UseChartOptions = {}) {
     if (isDestroyed) return
 
     try {
+      // DOM 被 v-if 切换后 ref 会指向新节点，但 chart 仍绑定旧节点，需要重建实例
+      if (chart && chartRef.value) {
+        const dom = chart.getDom?.()
+        if (dom && dom !== chartRef.value) {
+          destroyChart()
+          isDestroyed = false
+        }
+      }
       if (!chart) {
         // 如果图表不存在，先初始化
         initChart(options)

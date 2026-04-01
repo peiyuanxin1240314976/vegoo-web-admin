@@ -114,6 +114,7 @@
   import type { ColumnOption } from '@/types'
   import type { IaaFilterState, IaaVersionTabData, IaaVersionTableRow } from '../types'
   import { fetchIaaVersionTabData } from '@/api/business-insight'
+  import { useIaaPageLoading } from '../composables/useIaaPageLoading'
 
   defineOptions({ name: 'IaaTabVersion' })
 
@@ -121,6 +122,15 @@
 
   const tabData = ref<IaaVersionTabData | null>(null)
   const loading = ref(false)
+  const pageLoading = useIaaPageLoading()
+
+  watch(loading, (v) => {
+    pageLoading?.setTabLoading('version', v)
+  })
+
+  onMounted(() => {
+    pageLoading?.setTabLoading('version', loading.value)
+  })
 
   const kpis = computed(() => tabData.value?.kpis ?? [])
   const allRows = computed(() => tabData.value?.tableRows ?? [])

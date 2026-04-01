@@ -105,6 +105,7 @@
   import type { ColumnOption } from '@/types'
   import type { IaaFilterState, IaaCountryTabData, IaaCountryTableRow } from '../types'
   import { fetchIaaCountryTabData } from '@/api/business-insight'
+  import { useIaaPageLoading } from '../composables/useIaaPageLoading'
   import 'flag-icons/css/flag-icons.min.css'
 
   const WORLD_JSON_URL = `${import.meta.env.BASE_URL}geo/world.json`
@@ -179,6 +180,15 @@
 
   const tabData = ref<IaaCountryTabData | null>(null)
   const loading = ref(false)
+  const pageLoading = useIaaPageLoading()
+
+  watch(loading, (v) => {
+    pageLoading?.setTabLoading('country', v)
+  })
+
+  onMounted(() => {
+    pageLoading?.setTabLoading('country', loading.value)
+  })
 
   const kpis = computed(() => tabData.value?.kpis ?? [])
   const allRows = computed(() => tabData.value?.tableRows ?? [])

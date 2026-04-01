@@ -129,12 +129,22 @@
   import type { ColumnOption } from '@/types'
   import type { IaaFilterState, IaaPlacementTabData, IaaPlacementTableRow } from '../types'
   import { fetchIaaPlacementTabData } from '@/api/business-insight'
+  import { useIaaPageLoading } from '../composables/useIaaPageLoading'
 
   defineOptions({ name: 'IaaTabAdPlacement' })
 
   const props = defineProps<{ filter: IaaFilterState }>()
 
   const loading = ref(false)
+  const pageLoading = useIaaPageLoading()
+
+  watch(loading, (v) => {
+    pageLoading?.setTabLoading('adPlacement', v)
+  })
+
+  onMounted(() => {
+    pageLoading?.setTabLoading('adPlacement', loading.value)
+  })
 
   const metricTabs = [
     { key: 'revenue', label: '收入' },
@@ -191,12 +201,6 @@
       label: '展示用户',
       minWidth: 80,
       formatter: (r: IaaPlacementTableRow) => r.impressionUsers.toLocaleString()
-    },
-    {
-      prop: 'fillRate',
-      label: '充填率',
-      minWidth: 72,
-      formatter: (r: IaaPlacementTableRow) => `${r.fillRate}%`
     },
     { prop: 'status', label: '状态', minWidth: 72, useSlot: true, slotName: 'status' }
   ])

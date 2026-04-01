@@ -120,6 +120,7 @@
   import type { IaaFilterState, IaaPlatformTabData, IaaPlatformTableRow } from '../types'
   import { fetchIaaPlatformTabData } from '@/api/business-insight'
   import { useIaaTheme } from '../composables/useIaaTheme'
+  import { useIaaPageLoading } from '../composables/useIaaPageLoading'
 
   defineOptions({ name: 'IaaTabAdPlatform' })
 
@@ -127,6 +128,15 @@
 
   const tabData = ref<IaaPlatformTabData | null>(null)
   const loading = ref(false)
+  const pageLoading = useIaaPageLoading()
+
+  watch(loading, (v) => {
+    pageLoading?.setTabLoading('adPlatform', v)
+  })
+
+  onMounted(() => {
+    pageLoading?.setTabLoading('adPlatform', loading.value)
+  })
   const { colors } = useIaaTheme()
 
   const kpis = computed(() => tabData.value?.kpis ?? [])
