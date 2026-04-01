@@ -74,7 +74,17 @@
           </el-skeleton>
         </div>
 
-        <el-button size="default" type="primary" plain round>查询</el-button>
+        <el-button
+          size="default"
+          type="primary"
+          plain
+          round
+          :loading="querying"
+          :disabled="querying"
+          @click="handleQuery"
+        >
+          查询
+        </el-button>
       </div>
     </header>
 
@@ -537,6 +547,7 @@
   const loadingOverviewAdSlotRanking = ref(false)
   const loadingOverviewAppRanking = ref(false)
   const loadingOverviewInsightTip = ref(false)
+  const querying = ref(false)
   const sourceOptions = ref<EcpmFilterOption[]>([])
   const appOptions = ref<EcpmFilterOption[]>([])
   const countryOptions = ref<EcpmCountryFilterOption[]>([])
@@ -1295,6 +1306,16 @@
       loadOverviewAppRanking(),
       loadOverviewInsightTip()
     ])
+  }
+
+  async function handleQuery() {
+    if (querying.value) return
+    querying.value = true
+    try {
+      await loadOverviewModulesInParallel()
+    } finally {
+      querying.value = false
+    }
   }
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
