@@ -1117,7 +1117,7 @@
     border-top: 7px solid var(--el-text-color-secondary) !important;
     border-right: 6px solid transparent !important;
     border-left: 6px solid transparent !important;
-    transform: translateY(-6px) rotate(-90deg) !important;
+    transform: rotate(-90deg) !important;
   }
 
   .ad-performance-table__percent {

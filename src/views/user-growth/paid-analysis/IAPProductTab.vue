@@ -765,15 +765,13 @@
     overflow: hidden;
     border-left: 3px solid var(--accent);
     border-radius: 14px;
-    transition:
-      transform 0.32s var(--ease-out),
-      box-shadow 0.36s var(--ease-out);
+    transition: box-shadow 0.36s var(--ease-out);
 
     &:hover {
       box-shadow:
         0 16px 48px rgb(0 0 0 / 45%),
-        0 0 40px color-mix(in srgb, var(--accent) 15%, transparent);
-      transform: translateY(-4px);
+        0 0 40px color-mix(in srgb, var(--accent) 15%, transparent),
+        0 0 72px color-mix(in srgb, var(--accent) 22%, transparent);
     }
   }
 
@@ -858,7 +856,8 @@
       border-color: rgb(96 165 250 / 55%);
       box-shadow:
         0 18px 56px rgb(0 0 0 / 48%),
-        0 0 48px rgb(59 130 246 / 12%);
+        0 0 48px rgb(59 130 246 / 12%),
+        0 0 90px rgb(34 211 238 / 10%);
     }
   }
 

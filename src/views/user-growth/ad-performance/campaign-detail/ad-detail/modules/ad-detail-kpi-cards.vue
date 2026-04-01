@@ -152,13 +152,11 @@
     border-radius: 10px;
     transition:
       border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      transform 0.22s ease;
+      box-shadow 0.22s ease;
 
     &:hover {
       border-color: rgb(96 165 250 / 55%);
       box-shadow: 0 0 20px rgb(59 130 246 / 18%);
-      transform: translateY(-2px);
     }
   }
 

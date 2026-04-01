@@ -346,19 +346,12 @@
     box-shadow:
       0 0 18px color-mix(in srgb, var(--art-success) 20%, transparent),
       inset 0 1px 0 rgb(255 255 255 / 10%);
-    transition:
-      box-shadow 0.22s ease,
-      transform 0.18s ease;
+    transition: box-shadow 0.22s ease;
 
     &:hover {
       box-shadow:
         0 0 26px color-mix(in srgb, var(--art-success) 34%, transparent),
         inset 0 1px 0 rgb(255 255 255 / 16%);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0);
     }
   }
 

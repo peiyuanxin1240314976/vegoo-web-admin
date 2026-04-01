@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
   import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import * as echarts from 'echarts'
   import AppDetailModal from './AppDetailModal.vue'
@@ -662,15 +662,13 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease,
-      box-shadow 0.2s ease,
-      transform 0.18s ease;
+      box-shadow 0.2s ease;
   }
 
   .btn-refresh:hover {
     background: rgb(16 185 129 / 16%);
     border-color: #10b981;
     box-shadow: 0 0 20px rgb(16 185 129 / 22%);
-    transform: translateY(-1px);
   }
 
   .btn-auto {
@@ -684,14 +682,12 @@
     border-radius: 9999px;
     transition:
       background 0.2s ease,
-      border-color 0.2s ease,
-      transform 0.18s ease;
+      border-color 0.2s ease;
   }
 
   .btn-auto:hover {
     background: rgb(255 255 255 / 7%);
     border-color: rgb(96 165 250 / 38%);
-    transform: translateY(-1px);
   }
 
   /* ===== Alert Banner ===== */
@@ -812,18 +808,12 @@
     transition:
       border-color 0.22s ease,
       box-shadow 0.22s ease,
-      background 0.22s ease,
-      transform 0.18s ease;
+      background 0.22s ease;
   }
 
   .filter-btn:hover {
     border-color: rgb(16 185 129 / 58%);
     box-shadow: 0 0 14px rgb(16 185 129 / 16%);
-    transform: translateY(-1px);
-  }
-
-  .filter-btn:active {
-    transform: translateY(0);
   }
 
   .view-toggle {
@@ -841,7 +831,11 @@
     background: none;
     border: 1px solid #1a2840;
     border-radius: 4px;
-    transition: all 0.15s;
+    transition:
+      color 0.15s ease,
+      background 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
   }
 
   .toggle-btn.active {
@@ -869,6 +863,16 @@
     @include ap.ap-neon-bg;
     @include ap.ap-card-mesh;
     @include ap.ap-panel-hover;
+
+    transition:
+      box-shadow 0.42s var(--ease-out),
+      border-color 0.32s var(--ease-default),
+      filter 0.32s var(--ease-default);
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
   }
 
   .summary-card > * {
@@ -978,6 +982,16 @@
     @include ap.ap-neon-bg;
     @include ap.ap-card-mesh;
     @include ap.ap-panel-hover;
+
+    transition:
+      box-shadow 0.42s var(--ease-out),
+      border-color 0.32s var(--ease-default),
+      filter 0.32s var(--ease-default);
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
   }
 
   .app-card > * {
@@ -1212,6 +1226,16 @@
     @include ap.ap-neon-bg;
     @include ap.ap-card-mesh;
     @include ap.ap-panel-hover;
+
+    transition:
+      box-shadow 0.42s var(--ease-out),
+      border-color 0.32s var(--ease-default),
+      filter 0.32s var(--ease-default);
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
   }
 
   .bottom-section > * {

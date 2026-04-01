@@ -433,13 +433,10 @@
     z-index: 1;
     height: 140px;
     min-height: 120px;
-    transition:
-      transform 0.42s var(--ease-out),
-      filter 0.42s var(--ease-out);
+    transition: filter 0.42s var(--ease-out);
 
     .ad-performance-trend-charts__card:hover & {
       filter: drop-shadow(0 8px 24px rgb(59 130 246 / 28%)) brightness(1.08);
-      transform: scale(1.025) translateY(-3px);
     }
   }
 

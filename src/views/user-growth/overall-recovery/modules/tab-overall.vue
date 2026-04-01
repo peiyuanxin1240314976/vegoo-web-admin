@@ -402,6 +402,19 @@
     @include ap-neon-bg;
 
     border-radius: 14px;
+    transition:
+      border-color 0.28s var(--ease-default),
+      box-shadow 0.36s var(--ease-out),
+      filter 0.28s var(--ease-out);
+
+    &:hover {
+      filter: brightness(1.02);
+      border-color: rgb(96 165 250 / 50%);
+      box-shadow:
+        0 18px 56px rgb(0 0 0 / 48%),
+        0 0 48px rgb(59 130 246 / 12%),
+        0 0 90px rgb(34 211 238 / 10%);
+    }
 
     &__title {
       margin-bottom: 6px;
@@ -497,6 +510,19 @@
     @include ap-neon-bg;
 
     border-radius: 14px;
+    transition:
+      border-color 0.28s var(--ease-default),
+      box-shadow 0.36s var(--ease-out),
+      filter 0.28s var(--ease-out);
+
+    &:hover {
+      filter: brightness(1.01);
+      border-color: rgb(96 165 250 / 55%);
+      box-shadow:
+        0 18px 56px rgb(0 0 0 / 48%),
+        0 0 48px rgb(59 130 246 / 12%),
+        0 0 90px rgb(34 211 238 / 10%);
+    }
 
     :deep(.el-card__header) {
       display: flex;

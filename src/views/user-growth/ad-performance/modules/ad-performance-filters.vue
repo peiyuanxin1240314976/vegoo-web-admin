@@ -466,17 +466,10 @@
 
     font-size: 14px;
     box-shadow: 0 0 14px rgb(16 185 129 / 12%);
-    transition:
-      box-shadow 0.22s ease,
-      transform 0.18s ease;
+    transition: box-shadow 0.22s ease;
 
     &:hover {
       box-shadow: 0 0 22px rgb(16 185 129 / 28%);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0);
     }
   }
 

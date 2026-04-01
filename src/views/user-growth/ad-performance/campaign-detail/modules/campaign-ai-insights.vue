@@ -71,7 +71,6 @@
       inset 0 1px 0 rgb(196 181 253 / 14%),
       0 0 32px rgb(139 92 246 / 14%);
     transition:
-      transform 0.38s var(--ease-out),
       box-shadow 0.42s var(--ease-out),
       border-color 0.32s var(--ease-default);
 
@@ -83,7 +82,6 @@
         inset 0 1px 0 rgb(196 181 253 / 18%),
         0 0 72px rgb(139 92 246 / 28%),
         0 0 120px rgb(168 85 247 / 14%);
-      transform: translateY(-6px);
     }
 
     /* 顶部紫色 AI 光线 */
