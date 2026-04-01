@@ -2,7 +2,25 @@
   "_comment": "代投分析 - 渠道分布分析柱图。对应 types.ts: channelDistribution。",
   "fieldDescription": {
     "request": {
-      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" }
+      "t_date": { "type": "string", "required": true, "description": "查询日期 YYYY-MM-DD。" },
+      "s_app_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "应用筛选（all=全部）。"
+      },
+      "agency_id": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "代投方筛选（all=全部）。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "广告平台筛选（all=全部；值来自 meta/filter-options）。"
+      }
     },
     "response": {
       "categories": { "type": "string[]", "required": true, "description": "X 轴渠道列表。" },
@@ -13,7 +31,12 @@
       }
     }
   },
-  "sampleRequest": { "t_date": "2026-03-07" },
+  "sampleRequest": {
+    "t_date": "2026-03-07",
+    "s_app_id": "all",
+    "agency_id": "all",
+    "source": "all"
+  },
   "sampleResponse": {
     "categories": ["Facebook", "Google", "TikTok", "Meta"],
     "series": [
@@ -25,7 +48,7 @@
     "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/chart/channel-distribution",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "t_date",
+    "requestBody": "t_date, s_app_id?, agency_id?, source?",
     "responseBody": "categories, series"
   }
 }

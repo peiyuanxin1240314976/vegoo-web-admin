@@ -49,6 +49,22 @@ function overviewBody(q: AgencyAnalysisFilterQuery) {
   }
 }
 
+function chartBody(q: AgencyAnalysisFilterQuery) {
+  return overviewBody(q)
+}
+
+function spendTrend30dBody(
+  q: AgencyAnalysisFilterQuery & { t_start_date: string; t_end_date: string }
+) {
+  return {
+    t_start_date: q.t_start_date,
+    t_end_date: q.t_end_date,
+    s_app_id: q.s_app_id ?? 'all',
+    agency_id: q.agency_id ?? 'all',
+    source: q.source ?? 'all'
+  }
+}
+
 /** 契约 09：真实对接无请求体 */
 export function fetchAgencyAnalysisMetaFilterOptions() {
   if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.MetaFilterOptions)) {
@@ -157,21 +173,17 @@ export function fetchAgencyAnalysisDailyComparison(
   })
 }
 
-export function fetchAgencyAnalysisDonutSpendShare(
-  params: Pick<AgencyAnalysisFilterQuery, 't_date'>
-) {
+export function fetchAgencyAnalysisDonutSpendShare(params: AgencyAnalysisFilterQuery) {
   if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.DonutSpendShare)) {
     return mockFetchAgencyDonutSpendShare()
   }
   return request.post<{ donut: DonutChartItem[] }>({
     url: `${AGENCY_ANALYSIS_BASE}/chart/donut-spend-share`,
-    data: { t_date: params.t_date }
+    data: chartBody(params)
   })
 }
 
-export function fetchAgencyAnalysisChannelDistribution(
-  params: Pick<AgencyAnalysisFilterQuery, 't_date'>
-) {
+export function fetchAgencyAnalysisChannelDistribution(params: AgencyAnalysisFilterQuery) {
   if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.ChannelDistribution)) {
     return mockFetchAgencyChannelDistribution()
   }
@@ -180,24 +192,23 @@ export function fetchAgencyAnalysisChannelDistribution(
     series: ChannelDistributionSeries[]
   }>({
     url: `${AGENCY_ANALYSIS_BASE}/chart/channel-distribution`,
-    data: { t_date: params.t_date }
+    data: chartBody(params)
   })
 }
 
-export function fetchAgencyAnalysisCountryTop8(params: Pick<AgencyAnalysisFilterQuery, 't_date'>) {
+export function fetchAgencyAnalysisCountryTop8(params: AgencyAnalysisFilterQuery) {
   if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.CountryTop8)) {
     return mockFetchAgencyCountryTop8()
   }
   return request.post<{ countryTop8: CountryDistributionItem[] }>({
     url: `${AGENCY_ANALYSIS_BASE}/chart/country-top8`,
-    data: { t_date: params.t_date }
+    data: chartBody(params)
   })
 }
 
-export function fetchAgencyAnalysisSpendTrend30d(params: {
-  t_start_date: string
-  t_end_date: string
-}) {
+export function fetchAgencyAnalysisSpendTrend30d(
+  params: AgencyAnalysisFilterQuery & { t_start_date: string; t_end_date: string }
+) {
   if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.SpendTrend30d)) {
     return mockFetchAgencySpendTrend30d()
   }
@@ -206,9 +217,6 @@ export function fetchAgencyAnalysisSpendTrend30d(params: {
     series: { name: string; color: string; values: number[] }[]
   }>({
     url: `${AGENCY_ANALYSIS_BASE}/chart/spend-trend30d`,
-    data: {
-      t_start_date: params.t_start_date,
-      t_end_date: params.t_end_date
-    }
+    data: spendTrend30dBody(params)
   })
 }

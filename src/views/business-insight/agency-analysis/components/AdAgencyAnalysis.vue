@@ -519,10 +519,10 @@
         fetchAgencyAnalysisAgencySummary(q),
         fetchAgencyAnalysisCampaignTable(q),
         fetchAgencyAnalysisDailyComparison({ ...q, ...d7 }),
-        fetchAgencyAnalysisDonutSpendShare({ t_date: q.t_date }),
-        fetchAgencyAnalysisChannelDistribution({ t_date: q.t_date }),
-        fetchAgencyAnalysisCountryTop8({ t_date: q.t_date }),
-        fetchAgencyAnalysisSpendTrend30d(d30)
+        fetchAgencyAnalysisDonutSpendShare(q),
+        fetchAgencyAnalysisChannelDistribution(q),
+        fetchAgencyAnalysisCountryTop8(q),
+        fetchAgencyAnalysisSpendTrend30d({ ...q, ...d30 })
       ])
 
       kpiCards.value = overview.kpiCards ?? []
