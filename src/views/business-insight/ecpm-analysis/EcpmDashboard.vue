@@ -78,111 +78,113 @@
       </div>
     </header>
 
-    <!-- ══════════════════ KPI ROW ══════════════════ -->
-    <div class="kpi-row">
-      <!-- 预估 ECPM -->
-      <el-skeleton :loading="loadingOverviewKpis" animated>
-        <template #template>
-          <div class="kpi-card-skeleton-lines">
-            <el-skeleton-item variant="p" class="s-line w40" />
-            <el-skeleton-item variant="p" class="s-line w70" />
-            <el-skeleton-item variant="p" class="s-line w45" />
-            <el-skeleton-item variant="p" class="s-line w55" />
-          </div>
-        </template>
-        <div class="kpi-card kpi-teal">
-          <div class="kpi-label">
-            <el-icon class="kpi-icon teal"><TrendCharts /></el-icon>
-            ECPM（预估）
-          </div>
-          <div class="kpi-value teal">{{ fmt2(kpis.d_ecpm_estimated) }}</div>
-          <div class="kpi-meta">广告平台上报</div>
-          <div
-            class="kpi-change"
-            :class="kpis.estimated_change_pct_vs_prev_month >= 0 ? 'up' : 'dn'"
-          >
-            {{ kpis.estimated_change_pct_vs_prev_month >= 0 ? '↑' : '↓'
-            }}{{ Math.abs(kpis.estimated_change_pct_vs_prev_month) }}% vs 上月
-          </div>
-        </div>
-      </el-skeleton>
-
-      <!-- 真实 ECPM -->
-      <el-skeleton :loading="loadingOverviewKpis" animated>
-        <template #template>
-          <div class="kpi-card-skeleton-lines">
-            <el-skeleton-item variant="p" class="s-line w40" />
-            <el-skeleton-item variant="p" class="s-line w70" />
-            <el-skeleton-item variant="p" class="s-line w45" />
-            <el-skeleton-item variant="p" class="s-line w55" />
-          </div>
-        </template>
-        <div class="kpi-card kpi-blue">
-          <div class="kpi-label">
-            <el-icon class="kpi-icon blue"><Money /></el-icon>
-            ECPM（真实）
-          </div>
-          <div class="kpi-value blue">{{ fmt2(kpis.d_ecpm_real) }}</div>
-          <div class="kpi-meta">实际入账</div>
-          <div class="kpi-change" :class="kpis.real_change_pct_vs_prev_month >= 0 ? 'up' : 'dn'">
-            {{ kpis.real_change_pct_vs_prev_month >= 0 ? '↑' : '↓'
-            }}{{ Math.abs(kpis.real_change_pct_vs_prev_month) }}% vs 上月
-          </div>
-        </div>
-      </el-skeleton>
-
-      <!-- 最高 ECPM 国家 -->
-      <el-skeleton :loading="loadingOverviewKpis" animated>
-        <template #template>
-          <div class="kpi-card-skeleton-lines">
-            <el-skeleton-item variant="p" class="s-line w40" />
-            <el-skeleton-item variant="p" class="s-line w70" />
-            <el-skeleton-item variant="p" class="s-line w45" />
-            <el-skeleton-item variant="p" class="s-line w55" />
-          </div>
-        </template>
-        <div class="kpi-card kpi-dark">
-          <div class="kpi-label">
-            <el-icon class="kpi-icon white"><Location /></el-icon>
-            最高ECPM国家
-          </div>
-          <div class="kpi-value white large">
-            {{ kpis.top_country.label_display }} ${{ fmt2(kpis.top_country.d_ecpm) }}
-          </div>
-          <div class="kpi-meta">全球最高</div>
-          <div class="kpi-meta dim">
-            {{ kpis.top_country.second.label_display }} ${{ fmt2(kpis.top_country.second.d_ecpm) }}
-            第二
-          </div>
-        </div>
-      </el-skeleton>
-
-      <!-- 最高 ECPM 广告位 -->
-      <el-skeleton :loading="loadingOverviewKpis" animated>
-        <template #template>
-          <div class="kpi-card-skeleton-lines">
-            <el-skeleton-item variant="p" class="s-line w40" />
-            <el-skeleton-item variant="p" class="s-line w70" />
-            <el-skeleton-item variant="p" class="s-line w45" />
-            <el-skeleton-item variant="p" class="s-line w55" />
-          </div>
-        </template>
-        <div class="kpi-card kpi-orange">
-          <div class="kpi-label">
-            <el-icon class="kpi-icon orange"><Grid /></el-icon>
-            最高ECPM广告位
-          </div>
-          <div class="kpi-value orange xlarge">{{ kpis.top_ad_slot.s_app_name }}</div>
-          <div class="kpi-meta orange-dim">
-            ${{ fmt2(kpis.top_ad_slot.d_ecpm) }} {{ kpis.top_ad_slot.n_ad_type_label }}
-          </div>
-          <div class="kpi-meta dim">远高于平均水平</div>
-        </div>
-      </el-skeleton>
-    </div>
-
     <!-- ══════════════════ MAIN GRID ══════════════════ -->
     <div class="main-grid">
+      <!-- ══════════════════ KPI ROW ══════════════════ -->
+      <div class="kpi-row">
+        <!-- 预估 ECPM -->
+        <el-skeleton :loading="loadingOverviewKpis" animated>
+          <template #template>
+            <div class="kpi-card-skeleton-lines">
+              <el-skeleton-item variant="p" class="s-line w40" />
+              <el-skeleton-item variant="p" class="s-line w70" />
+              <el-skeleton-item variant="p" class="s-line w45" />
+              <el-skeleton-item variant="p" class="s-line w55" />
+            </div>
+          </template>
+          <div class="kpi-card kpi-teal">
+            <div class="kpi-label">
+              <el-icon class="kpi-icon teal"><TrendCharts /></el-icon>
+              ECPM（预估）
+            </div>
+            <div class="kpi-value teal">{{ fmt2(kpis.d_ecpm_estimated) }}</div>
+            <div class="kpi-meta">广告平台上报</div>
+            <div
+              class="kpi-change"
+              :class="kpis.estimated_change_pct_vs_prev_month >= 0 ? 'up' : 'dn'"
+            >
+              {{ kpis.estimated_change_pct_vs_prev_month >= 0 ? '↑' : '↓'
+              }}{{ Math.abs(kpis.estimated_change_pct_vs_prev_month) }}% vs 上月
+            </div>
+          </div>
+        </el-skeleton>
+
+        <!-- 真实 ECPM -->
+        <el-skeleton :loading="loadingOverviewKpis" animated>
+          <template #template>
+            <div class="kpi-card-skeleton-lines">
+              <el-skeleton-item variant="p" class="s-line w40" />
+              <el-skeleton-item variant="p" class="s-line w70" />
+              <el-skeleton-item variant="p" class="s-line w45" />
+              <el-skeleton-item variant="p" class="s-line w55" />
+            </div>
+          </template>
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-label">
+              <el-icon class="kpi-icon blue"><Money /></el-icon>
+              ECPM（真实）
+            </div>
+            <div class="kpi-value blue">{{ fmt2(kpis.d_ecpm_real) }}</div>
+            <div class="kpi-meta">实际入账</div>
+            <div class="kpi-change" :class="kpis.real_change_pct_vs_prev_month >= 0 ? 'up' : 'dn'">
+              {{ kpis.real_change_pct_vs_prev_month >= 0 ? '↑' : '↓'
+              }}{{ Math.abs(kpis.real_change_pct_vs_prev_month) }}% vs 上月
+            </div>
+          </div>
+        </el-skeleton>
+
+        <!-- 最高 ECPM 国家 -->
+        <el-skeleton :loading="loadingOverviewKpis" animated>
+          <template #template>
+            <div class="kpi-card-skeleton-lines">
+              <el-skeleton-item variant="p" class="s-line w40" />
+              <el-skeleton-item variant="p" class="s-line w70" />
+              <el-skeleton-item variant="p" class="s-line w45" />
+              <el-skeleton-item variant="p" class="s-line w55" />
+            </div>
+          </template>
+          <div class="kpi-card kpi-dark">
+            <div class="kpi-label">
+              <el-icon class="kpi-icon white"><Location /></el-icon>
+              最高ECPM国家
+            </div>
+            <div class="kpi-value white large">
+              {{ kpis.top_country.label_display }} ${{ fmt2(kpis.top_country.d_ecpm) }}
+            </div>
+            <div class="kpi-meta">全球最高</div>
+            <div class="kpi-meta dim">
+              {{ kpis.top_country.second.label_display }} ${{
+                fmt2(kpis.top_country.second.d_ecpm)
+              }}
+              第二
+            </div>
+          </div>
+        </el-skeleton>
+
+        <!-- 最高 ECPM 广告位 -->
+        <el-skeleton :loading="loadingOverviewKpis" animated>
+          <template #template>
+            <div class="kpi-card-skeleton-lines">
+              <el-skeleton-item variant="p" class="s-line w40" />
+              <el-skeleton-item variant="p" class="s-line w70" />
+              <el-skeleton-item variant="p" class="s-line w45" />
+              <el-skeleton-item variant="p" class="s-line w55" />
+            </div>
+          </template>
+          <div class="kpi-card kpi-orange">
+            <div class="kpi-label">
+              <el-icon class="kpi-icon orange"><Grid /></el-icon>
+              最高ECPM广告位
+            </div>
+            <div class="kpi-value orange xlarge">{{ kpis.top_ad_slot.s_app_name }}</div>
+            <div class="kpi-meta orange-dim">
+              ${{ fmt2(kpis.top_ad_slot.d_ecpm) }} {{ kpis.top_ad_slot.n_ad_type_label }}
+            </div>
+            <div class="kpi-meta dim">远高于平均水平</div>
+          </div>
+        </el-skeleton>
+      </div>
+
       <!-- ── LEFT COLUMN ── -->
       <div class="col col-left">
         <!-- 趋势图 -->
@@ -1391,10 +1393,10 @@
     pointer-events: none;
     content: '';
     background:
-      linear-gradient(to right, rgb(255 255 255 / 5%) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 5%) 1px, transparent 1px);
+      linear-gradient(to right, rgb(255 255 255 / 1%) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 1%) 1px, transparent 1px);
     background-size: 22px 22px;
-    opacity: 0.42;
+    opacity: 0.18;
     mask-image: radial-gradient(ellipse 92% 52% at 40% 0%, #000 0%, transparent 70%);
   }
 
@@ -1440,7 +1442,7 @@
   /* ── Header ──────────────────────────────────────────────────── */
   .dash-header {
     padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 0;
   }
 
   /* .breadcrumb {
@@ -1736,8 +1738,9 @@
   .kpi-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
+    grid-column: 1 / -1;
     gap: 10px;
-    padding: 14px 20px;
+    padding: 0 0 14px;
   }
 
   .kpi-card {
@@ -2030,10 +2033,24 @@
 
   /* ── Main Grid ───────────────────────────────────────────────── */
   .main-grid {
+    position: relative;
     display: grid;
     grid-template-columns: 38% 38% 24%;
     gap: 10px;
-    padding: 0 20px 20px;
+    padding: 14px 20px 20px;
+  }
+
+  .main-grid::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 0;
+    height: 22px;
+    pointer-events: none;
+    content: '';
+
+    /* background: var(--bg); */
   }
 
   .col {
@@ -2070,8 +2087,8 @@
     pointer-events: none;
     content: '';
     background:
-      linear-gradient(to right, rgb(255 255 255 / 5%) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 5%) 1px, transparent 1px);
+      linear-gradient(to right, rgb(255 255 255 / 1%) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 1%) 1px, transparent 1px);
     background-size: 22px 22px;
     opacity: 0.66;
     mask-image: radial-gradient(circle at 16% 0%, #000 0%, transparent 62%);
@@ -2086,7 +2103,7 @@
     height: 2px;
     pointer-events: none;
     content: '';
-    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 40%), transparent);
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0%), transparent);
     filter: blur(0.2px);
     opacity: 0.55;
   }
