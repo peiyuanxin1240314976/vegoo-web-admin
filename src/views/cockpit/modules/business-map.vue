@@ -817,8 +817,8 @@
     position: relative;
     display: inline-flex;
     padding: 3px;
-    // background: var(--el-fill-color-light);
-    // border: 1px solid var(--el-border-color-lighter);
+    background: var(--el-fill-color-light);
+    border: 1px solid var(--el-border-color-lighter);
     border-radius: 8px;
   }
 
@@ -838,45 +838,26 @@
     position: relative;
     z-index: 1;
     flex: 1;
-    min-width: 52px;
+    min-width: 60px;
     padding: 6px 12px;
     font-size: 13px;
     color: var(--el-text-color-regular);
     cursor: pointer;
     background: transparent;
     border: none;
-    border: 1px solid var(--el-border-color-lighter);
     border-radius: 6px;
     transition: color 0.2s ease;
+  }
 
-    &:hover {
-      color: var(--el-text-color-primary);
-    }
-    // margin-right: 2px;
+  .map-metric-btn:hover {
+    color: var(--el-text-color-primary);
+  }
 
-    &.active {
-      color: #fff;
-      border-width: 0;
-    }
+  .map-metric-btn.active {
+    color: #fff;
   }
 
   .cockpit-map-panel--dark {
-    .map-metric-slider {
-      background: rgb(59 130 246 / 90%);
-    }
-
-    .map-metric-btn {
-      color: #cbd5e1;
-
-      &:hover {
-        color: #f1f5f9;
-      }
-
-      &.active {
-        color: #fff;
-      }
-    }
-
     .map-legend {
       color: #94a3b8;
     }
