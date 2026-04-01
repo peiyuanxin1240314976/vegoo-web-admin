@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
   import { ref, computed, onMounted, watch } from 'vue'
   import SummaryTab from './SummaryTab.vue'
   import PlatformTab from './PlatformTab.vue'
@@ -582,13 +582,13 @@
     transition:
       border-color 0.22s ease,
       box-shadow 0.22s ease,
-      transform 0.22s ease;
+      background 0.22s ease;
   }
 
   .date-pill--range:hover {
+    background: rgb(0 212 170 / 6%);
     border-color: rgb(0 212 170 / 45%);
     box-shadow: 0 0 0 1px rgb(0 212 170 / 12%);
-    transform: translateY(-1px);
   }
 
   .date-pill--range {
@@ -666,19 +666,16 @@
     border-radius: 9999px;
     transition:
       opacity 0.2s ease,
-      transform 0.22s ease,
       box-shadow 0.22s ease;
   }
 
   .export-btn:hover {
     box-shadow: 0 4px 14px rgb(0 212 170 / 35%);
     opacity: 0.95;
-    transform: translateY(-1px);
   }
 
   .export-btn:active {
     box-shadow: none;
-    transform: translateY(0);
   }
 
   /* ── 用户卡 ── */
@@ -781,9 +778,7 @@
       0 0 20px rgb(16 185 129 / 32%),
       0 0 40px rgb(16 185 129 / 14%),
       0 0 64px rgb(34 211 238 / 8%);
-    transition:
-      transform 0.45s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
-      box-shadow 0.45s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+    transition: box-shadow 0.45s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
 
     &::after {
       position: absolute;
@@ -816,7 +811,6 @@
       0 0 28px rgb(16 185 129 / 42%),
       0 0 48px rgb(16 185 129 / 20%),
       0 0 80px rgb(34 211 238 / 12%);
-    transform: scale(1.07);
   }
 
   .user-name {
@@ -854,12 +848,12 @@
     border-radius: 8px;
     transition:
       background 0.2s ease,
-      transform 0.2s ease;
+      box-shadow 0.2s ease;
   }
 
   .metric-item:hover {
     background: rgb(0 212 170 / 8%);
-    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgb(0 0 0 / 18%);
   }
 
   .metric-label {
@@ -900,12 +894,12 @@
     transition:
       color 0.2s ease,
       border-color 0.2s ease,
-      transform 0.2s ease;
+      text-shadow 0.2s ease;
   }
 
   .tab-item:hover {
     color: var(--text-primary);
-    transform: translateY(-1px);
+    text-shadow: 0 0 14px rgb(0 212 170 / 18%);
   }
 
   .tab-item.active {

@@ -358,7 +358,6 @@
       inset 0 1px 0 rgb(255 255 255 / 12%);
     transition:
       box-shadow 0.22s ease,
-      transform 0.18s ease,
       filter 0.22s ease;
 
     &:hover {
@@ -366,11 +365,6 @@
       box-shadow:
         0 0 28px rgb(16 185 129 / 42%),
         inset 0 1px 0 rgb(255 255 255 / 16%);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0);
     }
   }
 </style>

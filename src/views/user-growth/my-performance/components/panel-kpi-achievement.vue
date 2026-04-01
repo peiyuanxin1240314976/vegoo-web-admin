@@ -424,7 +424,6 @@
         0 0 32px rgb(16 185 129 / 14%),
         0 0 48px rgb(34 211 238 / 8%);
       opacity: 1;
-      transform: translateX(5px) translateY(-3px);
 
       &::before {
         height: 62%;
@@ -435,7 +434,6 @@
 
     &:active {
       transition-duration: var(--duration-fast);
-      transform: translateX(3px) translateY(-1px);
     }
   }
 

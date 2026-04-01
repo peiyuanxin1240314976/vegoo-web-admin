@@ -690,14 +690,14 @@
       color 0.2s ease,
       border-color 0.2s ease,
       background 0.2s ease,
-      transform 0.2s ease;
+      box-shadow 0.2s ease;
   }
 
   .btn-sm:hover {
     color: var(--text-primary);
     background: rgb(0 212 170 / 10%);
     border-color: rgb(0 212 170 / 35%);
-    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgb(0 0 0 / 20%);
   }
 
   .chart-body {

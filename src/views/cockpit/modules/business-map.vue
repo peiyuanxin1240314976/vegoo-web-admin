@@ -1000,11 +1000,11 @@
    */
   html.dark .cockpit-map-panel:has(.map-chart:active) {
     transition: none;
-    transform: translateY(-6px);
+    transform: none;
   }
 
   html:not(.dark) .cockpit-map-panel:has(.map-chart:active) {
     transition: none;
-    transform: translateY(-4px);
+    transform: none;
   }
 </style>

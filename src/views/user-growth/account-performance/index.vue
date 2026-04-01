@@ -1459,6 +1459,15 @@
     @include ap-card-mesh;
     @include ap-panel-hover;
 
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
+
     .ap-filters {
       position: relative;
       z-index: 1;
@@ -1534,6 +1543,15 @@
 
     @include ap-neon-bg;
     @include ap-panel-hover;
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
 
     --kpi-accent-rgb: 16, 185, 129;
 
@@ -1739,6 +1757,15 @@
     @include ap-card-mesh;
     @include ap-panel-hover;
 
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
+
     :deep(.el-card__header) {
       position: relative;
       z-index: 1;
@@ -1909,6 +1936,15 @@
     @include ap-neon-bg;
     @include ap-card-mesh;
     @include ap-panel-hover;
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
 
     :deep(.el-card__header) {
       position: relative;

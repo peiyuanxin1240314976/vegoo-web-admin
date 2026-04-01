@@ -181,9 +181,7 @@
     text-shadow:
       0 0 22px rgb(59 130 246 / 28%),
       0 0 44px rgb(34 211 238 / 12%);
-    transition:
-      transform 0.35s var(--ease-out),
-      text-shadow 0.35s var(--ease-out);
+    transition: text-shadow 0.35s var(--ease-out);
     animation: spend-num-pulse 3.5s ease-in-out infinite;
   }
 
@@ -191,7 +189,6 @@
     text-shadow:
       0 0 28px rgb(59 130 246 / 42%),
       0 0 52px rgb(34 211 238 / 18%);
-    transform: scale(1.04);
   }
 
   @keyframes spend-num-pulse {

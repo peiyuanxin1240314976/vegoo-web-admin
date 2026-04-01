@@ -841,10 +841,7 @@
 
   .mp-detail-table {
     font-size: 14px;
-    transition:
-      filter 0.45s var(--ease-out),
-      transform 0.45s var(--ease-out);
-    transform-origin: top center;
+    transition: filter 0.45s var(--ease-out);
 
     --el-table-border-color: var(--el-border-color-lighter);
     --el-table-header-bg-color: var(--el-fill-color-light);
@@ -875,7 +872,6 @@
 
   .panel:hover .mp-detail-table {
     filter: brightness(1.04) drop-shadow(0 6px 24px rgb(59 130 246 / 6%));
-    transform: translateY(-2px);
   }
 
   html.dark .mp-detail-table {
@@ -900,9 +896,7 @@
     margin-right: 8px;
     vertical-align: middle;
     border-radius: 4px;
-    transition:
-      box-shadow var(--duration-fast) var(--ease-default),
-      transform var(--duration-fast) var(--ease-default);
+    transition: box-shadow var(--duration-fast) var(--ease-default);
 
     &.app-dot--weather {
       background: linear-gradient(135deg, #93c5fd, #60a5fa);
@@ -938,12 +932,10 @@
     line-height: 22px;
     border: 1px solid transparent;
     border-radius: 9999px;
-    transition:
-      box-shadow 0.25s var(--ease-out),
-      transform 0.2s var(--ease-out);
+    transition: box-shadow 0.25s var(--ease-out);
 
     &:hover {
-      transform: scale(1.06);
+      box-shadow: 0 0 16px rgb(34 211 238 / 18%);
     }
 
     &.is-good {
@@ -1042,12 +1034,10 @@
     white-space: nowrap;
     border: 1px solid transparent;
     border-radius: 9999px;
-    transition:
-      box-shadow var(--duration-fast) var(--ease-default),
-      transform var(--duration-fast) var(--ease-default);
+    transition: box-shadow var(--duration-fast) var(--ease-default);
 
     &:hover {
-      transform: scale(1.05);
+      box-shadow: 0 0 18px rgb(59 130 246 / 14%);
     }
   }
 

@@ -250,10 +250,10 @@
     place-items: center center;
     min-width: 88px;
     padding: 0 10px;
-    transition: transform var(--duration-fast) var(--ease-default);
+    transition: filter var(--duration-fast) var(--ease-default);
 
     &:hover {
-      transform: translateY(-3px);
+      filter: drop-shadow(0 10px 24px rgb(0 0 0 / 20%));
     }
   }
 

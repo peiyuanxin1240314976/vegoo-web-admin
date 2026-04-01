@@ -551,6 +551,15 @@
     @include ap-card-mesh;
     @include ap-panel-hover;
 
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
+
     :deep(.map-detail-header) {
       position: relative;
       z-index: 1;
@@ -707,6 +716,15 @@
     @include ap-neon-bg;
     @include ap-card-mesh;
     @include ap-panel-hover;
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
   }
 
   html.dark .el-card.map-detail-spend-panel .el-card__header,

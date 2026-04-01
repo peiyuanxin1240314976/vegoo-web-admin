@@ -474,6 +474,15 @@
     @include ap-neon-bg;
     @include ap-card-mesh;
     @include ap-panel-hover;
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
   }
 
   html.dark .el-card.cockpit-panel .el-card__header,
@@ -506,7 +515,6 @@
       0 10px 30px rgb(15 23 42 / 40%),
       inset 0 0 0 1px rgb(15 23 42 / 85%);
     transition:
-      transform 0.38s var(--ease-out),
       box-shadow 0.42s var(--ease-out),
       border-color 0.32s var(--ease-default);
 
@@ -518,7 +526,6 @@
         0 18px 40px rgb(15 23 42 / 45%),
         0 0 0 1px rgb(96 165 250 / 15%),
         inset 0 1px 0 rgb(186 230 253 / 10%);
-      transform: translateY(-4px);
     }
   }
 
@@ -532,6 +539,15 @@
     @include ap-neon-bg;
     @include ap-card-mesh;
     @include ap-panel-hover;
+
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+
+    &:active {
+      transition-duration: var(--duration-fast);
+    }
 
     .pace-header {
       position: relative;

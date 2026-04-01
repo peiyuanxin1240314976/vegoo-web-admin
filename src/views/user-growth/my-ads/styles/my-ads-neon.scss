@@ -9,6 +9,15 @@
   @include ap.ap-neon-bg;
   @include ap.ap-card-mesh;
   @include ap.ap-panel-hover;
+
+  &:hover,
+  &:active {
+    transform: none !important;
+  }
+
+  &:active {
+    transition-duration: var(--duration-fast);
+  }
 }
 
 @mixin ma-neon-surface-children {

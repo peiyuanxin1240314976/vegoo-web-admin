@@ -325,7 +325,6 @@
       0 4px 20px rgb(16 185 129 / 10%),
       inset 0 1px 0 rgb(244 244 245 / 4%);
     transition:
-      transform 0.35s var(--ease-out),
       box-shadow 0.35s var(--ease-out),
       border-color 0.35s;
 
@@ -335,7 +334,6 @@
         0 8px 28px rgb(16 185 129 / 16%),
         0 0 36px rgb(16 185 129 / 8%),
         inset 0 1px 0 rgb(244 244 245 / 6%);
-      transform: translateY(-2px);
     }
 
     &::before {
@@ -383,12 +381,7 @@
       background-color 0.3s var(--ease-out),
       color 0.3s var(--ease-out),
       border-color 0.3s var(--ease-out),
-      box-shadow 0.3s var(--ease-out),
-      transform 0.2s var(--ease-out);
-
-    &:active {
-      transform: scale(0.97);
-    }
+      box-shadow 0.3s var(--ease-out);
   }
 
   .period-tab__value {
@@ -418,7 +411,6 @@
     background: rgb(16 185 129 / 12%);
     border-color: rgb(16 185 129 / 22%);
     box-shadow: 0 4px 14px rgb(16 185 129 / 10%);
-    transform: translateY(-2px);
   }
 
   :deep(.export-btn.el-button--success) {
@@ -436,18 +428,12 @@
       0 0 24px rgb(16 185 129 / 6%);
     transition:
       background-color 0.3s var(--ease-out),
-      box-shadow 0.3s var(--ease-out),
-      transform 0.2s var(--ease-out);
+      box-shadow 0.3s var(--ease-out);
 
     &:hover {
       box-shadow:
         0 8px 28px rgb(16 185 129 / 20%),
         0 0 36px rgb(16 185 129 / 10%);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0) scale(0.98);
     }
   }
 

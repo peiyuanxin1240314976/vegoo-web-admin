@@ -92,7 +92,9 @@
     }
 
     &:hover {
-      animation: stat-card-bounce 0.4s ease-out forwards;
+      box-shadow:
+        0 14px 34px rgb(0 0 0 / 18%),
+        0 0 0 1px rgb(255 255 255 / 10%);
     }
 
     .stat-label {
@@ -200,20 +202,6 @@
         )
         72% 0 / 28% 100%;
     background-repeat: no-repeat;
-  }
-
-  @keyframes stat-card-bounce {
-    0% {
-      transform: translateY(0);
-    }
-
-    60% {
-      transform: translateY(-10px);
-    }
-
-    100% {
-      transform: translateY(-6px);
-    }
   }
 
   @media (width <= 1200px) {

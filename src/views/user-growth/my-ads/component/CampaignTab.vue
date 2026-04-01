@@ -754,13 +754,13 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease,
-      transform 0.2s ease;
+      box-shadow 0.2s ease;
   }
 
   .reset-btn:hover {
     background: var(--teal-dim);
     border-color: rgb(0 212 170 / 45%);
-    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgb(0 212 170 / 18%);
   }
 
   /* ── 表格 ── */
@@ -962,15 +962,13 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease,
-      box-shadow 0.2s ease,
-      transform 0.2s ease;
+      box-shadow 0.2s ease;
   }
 
   .detail-btn:hover {
     background: var(--teal-dim);
     border-color: var(--teal);
     box-shadow: 0 2px 10px rgb(0 212 170 / 18%);
-    transform: translateY(-1px);
   }
 
   /* ── 分页（对齐原自定义 .page-info / .page-btn / .page-size-select 视觉） ── */

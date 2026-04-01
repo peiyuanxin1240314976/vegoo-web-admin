@@ -2073,7 +2073,6 @@
     box-shadow: 0 0 14px rgb(16 185 129 / 12%);
     transition:
       box-shadow 0.22s ease,
-      transform 0.18s ease,
       background 0.22s ease,
       border-color 0.22s ease,
       color 0.22s ease;
@@ -2083,11 +2082,6 @@
       background: rgb(16 185 129 / 16%);
       border-color: #10b981;
       box-shadow: 0 0 22px rgb(16 185 129 / 28%);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0);
     }
   }
 
@@ -2128,7 +2122,6 @@
       0 12px 48px rgb(0 0 0 / 48%),
       inset 0 1px 0 rgb(186 230 253 / 12%);
     transition:
-      transform 0.38s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.42s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.32s cubic-bezier(0, 0, 0.2, 1);
 
@@ -2136,7 +2129,6 @@
       box-shadow:
         0 24px 72px rgb(0 0 0 / 52%),
         0 0 72px rgb(59 130 246 / 22%);
-      transform: translateY(-6px);
     }
 
     &::before {
@@ -2342,7 +2334,6 @@
       0 0 0 1px rgb(96 165 250 / 10%),
       inset 0 1px 0 rgb(186 230 253 / 12%);
     transition:
-      transform 0.38s cubic-bezier(0, 0, 0.2, 1),
       box-shadow 0.42s cubic-bezier(0, 0, 0.2, 1),
       border-color 0.32s cubic-bezier(0, 0, 0.2, 1);
 
@@ -2352,7 +2343,6 @@
         0 24px 72px rgb(0 0 0 / 52%),
         0 0 72px rgb(59 130 246 / 18%),
         0 0 0 1px rgb(96 165 250 / 30%);
-      transform: translateY(-4px);
     }
 
     .panel-title {

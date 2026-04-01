@@ -5,6 +5,49 @@
   background: #f3f8fb;
 }
 
+.login-page--dark .login-right {
+  position: relative;
+  overflow: clip;
+}
+
+.login-page--dark .login-right::before {
+  position: absolute;
+  top: -120px;
+  left: -160px;
+  width: 520px;
+  height: 520px;
+  pointer-events: none;
+  content: '';
+  background-image:
+    radial-gradient(
+      circle at 30% 30%,
+      color-mix(in srgb, var(--art-primary) 22%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 60% 60%,
+      color-mix(in srgb, var(--art-success) 18%, transparent),
+      transparent 62%
+    );
+  filter: blur(2px);
+}
+
+.login-page--dark .login-right::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background-image: radial-gradient(circle at 1px 1px, rgb(0 0 0 / 10%) 1px, transparent 1px);
+  background-size: 18px 18px;
+  opacity: 0.22;
+  mask-image: radial-gradient(circle at 30% 20%, #000 0%, transparent 62%);
+}
+
+.login-page--dark .login-right > * {
+  position: relative;
+  z-index: 1;
+}
+
 .login-page--dark .login-brand-text .sub-title {
   color: #64748b;
 }
@@ -45,6 +88,16 @@
 .login-page--dark .auth-right-wrap .el-input__wrapper {
   background-color: #f1f5f9;
   box-shadow: 0 0 0 1px #e2e8f0 inset;
+  transition:
+    box-shadow var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.login-page--dark .auth-right-wrap .el-input__wrapper:focus-within {
+  background-color: #fff;
+  box-shadow:
+    0 0 0 2px var(--el-color-primary) inset,
+    0 10px 24px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
 }
 
 .login-page--dark .auth-right-wrap .el-input__wrapper .el-input__inner,
@@ -60,6 +113,36 @@
 
 .login-page--dark .auth-right-wrap .el-input__prefix {
   color: #475569;
+}
+
+/* 登录按钮：渐变 + hover + loading */
+.login-page--dark .auth-right-wrap .el-button--primary {
+  background-image: linear-gradient(
+    135deg,
+    var(--art-primary) 0%,
+    color-mix(in srgb, var(--art-primary) 70%, #000) 100%
+  );
+  border: none;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--art-primary) 18%, transparent);
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    filter var(--duration-fast) var(--ease-out);
+}
+
+.login-page--dark .auth-right-wrap .el-button--primary:hover {
+  filter: saturate(1.05);
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--art-primary) 24%, transparent);
+  transform: translateY(-1px);
+}
+
+.login-page--dark .auth-right-wrap .el-button--primary:active {
+  transform: translateY(0);
+}
+
+.login-page--dark .auth-right-wrap .el-button--primary.is-loading {
+  filter: saturate(0.95);
+  transform: none;
 }
 
 /* 授权页右侧区域 */

@@ -4,7 +4,6 @@
       <div
         class="cockpit-kpi-card cockpit-kpi-card--theme"
         :class="[`cockpit-kpi-card--${item.type}`, { 'is-hovered': hoveredIndex === index }]"
-        :style="getCardTransitionStyle(index)"
         @mouseenter="hoveredIndex = index"
         @mouseleave="hoveredIndex = null"
       >
@@ -85,7 +84,6 @@
 
 <script setup lang="ts">
   import { computed, ref } from 'vue'
-  import { useTransition, TransitionPresets } from '@vueuse/core'
   import type { CockpitKpiCard } from '../types'
   import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
@@ -98,23 +96,6 @@
   )
 
   const hoveredIndex = ref<number | null>(null)
-  const MAX_KPI_CARDS = 12
-  const transitionOptions = {
-    duration: 220,
-    transition: TransitionPresets.easeOutCubic
-  }
-  const hoverProgress = Array.from({ length: MAX_KPI_CARDS }, (_, i) =>
-    useTransition(
-      computed(() => (hoveredIndex.value === i ? 1 : 0)),
-      transitionOptions
-    )
-  )
-
-  function getCardTransitionStyle(index: number) {
-    const t = hoverProgress[index]?.value ?? 0
-    const y = -8 * t
-    return { transform: `translateY(${y}px)` }
-  }
 
   /** 有 chartData 时归一化到 0~1 作为趋势点；否则用 compareUp 生成模拟点 */
   function getTrendPoints(item: CockpitKpiCard, index: number): number[] {

@@ -17,169 +17,201 @@
       </header>
 
       <!-- KPI 卡片：今日已花费 / 今日预估ROI / 今日预估利润 / 异常广告系列 -->
-      <section class="big-screen-kpi">
-        <template v-for="(card, index) in kpiCards" :key="index">
-          <!-- 1. 今日已花费 -->
-          <div v-if="card.type === 'spend'" class="kpi-card kpi-card--spend">
-            <div class="kpi-card-head">
-              <span class="kpi-card-title">{{ card.title }}</span>
-              <span class="kpi-card-status kpi-card-status--normal">
-                <span class="kpi-card-status-dot"></span>
-                {{ card.statusText }}
-              </span>
+      <ElSkeleton :loading="isLoading" animated>
+        <template #template>
+          <section class="big-screen-kpi">
+            <div v-for="i in 4" :key="i" class="kpi-card kpi-skeleton-card">
+              <ElSkeletonItem variant="text" style="width: 40%; height: 14px" />
+              <ElSkeletonItem variant="text" style="width: 70%; height: 34px; margin-top: 10px" />
+              <ElSkeletonItem variant="text" style="width: 100%; height: 10px; margin-top: 14px" />
+              <ElSkeletonItem variant="text" style="width: 55%; height: 12px; margin-top: 10px" />
             </div>
-            <div class="kpi-card-value kpi-card-value--green">{{ formatCurrency(card.value) }}</div>
-            <div class="kpi-card-progress">
-              <div
-                class="kpi-card-progress-bar"
-                :style="{ width: card.budgetPercent * 100 + '%' }"
-              ></div>
-            </div>
-            <div class="kpi-card-budget">
-              <span class="kpi-card-budget-percent"
-                >{{ Math.round(card.budgetPercent * 100) }}%</span
-              >
-              {{ card.budgetText }}
-            </div>
-            <div class="kpi-card-foot">
-              <span class="kpi-card-trend kpi-card-trend--up"
-                >↑ {{ card.trendPercent > 0 ? '+' : '' }}{{ card.trendPercent }}% VS
-                {{ card.trendVs }}</span
-              >
-            </div>
-          </div>
-          <!-- 2. 今日预估ROI -->
-          <div v-else-if="card.type === 'roi'" class="kpi-card kpi-card--roi">
-            <div class="kpi-card-head">
-              <span class="kpi-card-title">{{ card.title }}</span>
-              <span class="kpi-card-status kpi-card-status--met">
-                <span class="kpi-card-status-dot"></span>
-                {{ card.statusText }}
-              </span>
-            </div>
-            <div class="kpi-card-value kpi-card-value--orange">{{ card.value }}%</div>
-            <div class="kpi-card-target">
-              <div class="kpi-card-target-line">
-                <span
-                  class="kpi-card-target-dot"
-                  :style="{
-                    left: Math.min((card.value / 100 / (card.target || 1)) * 100, 100) + '%'
-                  }"
-                ></span>
-              </div>
-              <span class="kpi-card-target-text">{{ card.targetText }}</span>
-            </div>
-            <div class="kpi-card-asof">截止到 {{ overview.dataTime || '--' }}</div>
-            <div class="kpi-card-foot">
-              <span class="kpi-card-trend kpi-card-trend--up"
-                >↑ {{ card.trendPercent > 0 ? '+' : '' }}{{ card.trendPercent }}% VS
-                {{ card.trendVs }}</span
-              >
-            </div>
-          </div>
-          <!-- 3. 今日预估利润 -->
-          <div v-else-if="card.type === 'profit'" class="kpi-card kpi-card--profit">
-            <div class="kpi-card-head">
-              <span class="kpi-card-title">{{ card.title }}</span>
-              <span class="kpi-card-trend-label kpi-card-trend-label--up"
-                >↑ {{ card.trendLabel }}</span
-              >
-            </div>
-            <div
-              class="kpi-card-value"
-              :class="card.value >= 0 ? 'kpi-card-value--green' : 'kpi-card-value--red'"
-              >{{ formatCurrency(card.value) }}</div
-            >
-            <div class="kpi-card-asof">截止到 {{ overview.dataTime || '--' }}</div>
-            <div class="kpi-card-foot">
-              <span
-                class="kpi-card-trend"
-                :class="card.trendPercent >= 0 ? 'kpi-card-trend--up' : 'kpi-card-trend--down'"
-              >
-                {{ card.trendPercent >= 0 ? '↑' : '↓' }} {{ card.trendPercent >= 0 ? '+' : ''
-                }}{{ card.trendPercent }}% VS {{ card.trendVs }}
-              </span>
-            </div>
-          </div>
-          <!-- 4. 异常广告系列 -->
-          <div v-else-if="card.type === 'abnormal'" class="kpi-card kpi-card--abnormal">
-            <div class="kpi-card-head">
-              <span class="kpi-card-title">{{ card.title }}</span>
-              <button type="button" class="kpi-card-view-btn">
-                <span class="kpi-card-view-icon">🔍</span>
-                {{ card.viewButtonText }}
-              </button>
-            </div>
-            <div class="kpi-card-value kpi-card-value--red">{{ card.value }}</div>
-            <div class="kpi-card-asof">截止到 {{ overview.dataTime || '--' }}</div>
-            <div class="kpi-card-foot">
-              <span class="kpi-card-trend kpi-card-trend--up"
-                >↑ +{{ card.trendPercent }}% VS {{ card.trendVs }}</span
-              >
-            </div>
-          </div>
+          </section>
         </template>
-      </section>
-
-      <!-- 上期总结、近7天ROI趋势、我负责的广告表现(上期) -->
-      <section class="big-screen-three-panels">
-        <!-- 左：上期总结 -->
-        <div class="three-panel three-panel--summary">
-          <div class="three-panel-head">
-            <span class="three-panel-title">上期总结</span>
-            <button type="button" class="three-panel-more">查看更多</button>
-          </div>
-          <div class="summary-list">
-            <div class="summary-row">
-              <span class="summary-label">上期花费</span>
-              <span class="summary-value">{{ formatCurrency(lastPeriodSummary.spend) }}</span>
-            </div>
-            <div class="summary-row">
-              <span class="summary-label">上期ROI</span>
-              <span class="summary-value">{{ lastPeriodSummary.roi }}%</span>
-            </div>
-            <div class="summary-row">
-              <span class="summary-label">上期预估利润</span>
-              <span class="summary-value">{{ formatCurrency(lastPeriodSummary.profit) }}</span>
-            </div>
-            <div class="summary-row">
-              <span class="summary-label">正常广告系列</span>
-              <span class="summary-value">{{ lastPeriodSummary.normalCampaigns }}</span>
-            </div>
-          </div>
-        </div>
-        <!-- 中：近7天ROI趋势 -->
-        <div class="three-panel three-panel--roi-trend">
-          <div class="three-panel-title">近7天ROI趋势</div>
-          <div ref="roiTrendRef" class="three-panel-chart"></div>
-        </div>
-        <!-- 右：我负责的广告表现(上期) -->
-        <div class="three-panel three-panel--ad-performance">
-          <div class="three-panel-head">
-            <span class="three-panel-title">我负责的广告表现(上期)</span>
-            <span class="three-panel-target-label">目标/Target</span>
-          </div>
-          <div class="ad-performance-list">
-            <div v-for="(row, idx) in myAdPerformance" :key="idx" class="ad-performance-row">
-              <span class="ad-performance-label">{{ row.label }}</span>
-              <div class="ad-performance-bar-wrap">
-                <div
-                  class="ad-performance-bar"
-                  :style="{ width: Math.min(row.percent, 120) + '%' }"
-                >
-                  <span class="ad-performance-value">{{ formatCurrency(row.value) }}</span>
+        <template #default>
+          <section class="big-screen-kpi">
+            <template v-for="(card, index) in kpiCards" :key="index">
+              <!-- 1. 今日已花费 -->
+              <div v-if="card.type === 'spend'" class="kpi-card kpi-card--spend">
+                <div class="kpi-card-head">
+                  <span class="kpi-card-title">{{ card.title }}</span>
+                  <span class="kpi-card-status kpi-card-status--normal">
+                    <span class="kpi-card-status-dot"></span>
+                    {{ card.statusText }}
+                  </span>
+                </div>
+                <div class="kpi-card-value kpi-card-value--green">
+                  {{ formatCurrency(card.value) }}
+                </div>
+                <div class="kpi-card-progress">
+                  <div
+                    class="kpi-card-progress-bar"
+                    :style="{ width: card.budgetPercent * 100 + '%' }"
+                  ></div>
+                </div>
+                <div class="kpi-card-budget">
+                  <span class="kpi-card-budget-percent"
+                    >{{ Math.round(card.budgetPercent * 100) }}%</span
+                  >
+                  {{ card.budgetText }}
+                </div>
+                <div class="kpi-card-foot">
+                  <span class="kpi-card-trend kpi-card-trend--up"
+                    >↑ {{ card.trendPercent > 0 ? '+' : '' }}{{ card.trendPercent }}% VS
+                    {{ card.trendVs }}</span
+                  >
+                </div>
+              </div>
+              <!-- 2. 今日预估ROI -->
+              <div v-else-if="card.type === 'roi'" class="kpi-card kpi-card--roi">
+                <div class="kpi-card-head">
+                  <span class="kpi-card-title">{{ card.title }}</span>
+                  <span class="kpi-card-status kpi-card-status--met">
+                    <span class="kpi-card-status-dot"></span>
+                    {{ card.statusText }}
+                  </span>
+                </div>
+                <div class="kpi-card-value kpi-card-value--orange">{{ card.value }}%</div>
+                <div class="kpi-card-target">
+                  <div class="kpi-card-target-line">
+                    <span
+                      class="kpi-card-target-dot"
+                      :style="{
+                        left: Math.min((card.value / 100 / (card.target || 1)) * 100, 100) + '%'
+                      }"
+                    ></span>
+                  </div>
+                  <span class="kpi-card-target-text">{{ card.targetText }}</span>
+                </div>
+                <div class="kpi-card-asof">截止到 {{ overview.dataTime || '--' }}</div>
+                <div class="kpi-card-foot">
+                  <span class="kpi-card-trend kpi-card-trend--up"
+                    >↑ {{ card.trendPercent > 0 ? '+' : '' }}{{ card.trendPercent }}% VS
+                    {{ card.trendVs }}</span
+                  >
+                </div>
+              </div>
+              <!-- 3. 今日预估利润 -->
+              <div v-else-if="card.type === 'profit'" class="kpi-card kpi-card--profit">
+                <div class="kpi-card-head">
+                  <span class="kpi-card-title">{{ card.title }}</span>
+                  <span class="kpi-card-trend-label kpi-card-trend-label--up"
+                    >↑ {{ card.trendLabel }}</span
+                  >
                 </div>
                 <div
-                  class="ad-performance-target-line"
-                  :style="{ left: (100 / 120) * 100 + '%' }"
-                  title="100%"
-                ></div>
+                  class="kpi-card-value"
+                  :class="card.value >= 0 ? 'kpi-card-value--green' : 'kpi-card-value--red'"
+                  >{{ formatCurrency(card.value) }}</div
+                >
+                <div class="kpi-card-asof">截止到 {{ overview.dataTime || '--' }}</div>
+                <div class="kpi-card-foot">
+                  <span
+                    class="kpi-card-trend"
+                    :class="card.trendPercent >= 0 ? 'kpi-card-trend--up' : 'kpi-card-trend--down'"
+                  >
+                    {{ card.trendPercent >= 0 ? '↑' : '↓' }}
+                    {{ card.trendPercent >= 0 ? '+' : '' }}{{ card.trendPercent }}% VS
+                    {{ card.trendVs }}
+                  </span>
+                </div>
               </div>
-              <span class="ad-performance-percent">{{ row.percent }}%</span>
+              <!-- 4. 异常广告系列 -->
+              <div v-else-if="card.type === 'abnormal'" class="kpi-card kpi-card--abnormal">
+                <div class="kpi-card-head">
+                  <span class="kpi-card-title">{{ card.title }}</span>
+                  <button type="button" class="kpi-card-view-btn">
+                    <span class="kpi-card-view-icon">🔍</span>
+                    {{ card.viewButtonText }}
+                  </button>
+                </div>
+                <div class="kpi-card-value kpi-card-value--red">{{ card.value }}</div>
+                <div class="kpi-card-asof">截止到 {{ overview.dataTime || '--' }}</div>
+                <div class="kpi-card-foot">
+                  <span class="kpi-card-trend kpi-card-trend--up"
+                    >↑ +{{ card.trendPercent }}% VS {{ card.trendVs }}</span
+                  >
+                </div>
+              </div>
+            </template>
+          </section>
+        </template>
+      </ElSkeleton>
+
+      <!-- 上期总结、近7天ROI趋势、我负责的广告表现(上期) -->
+      <ElSkeleton :loading="isLoading" animated>
+        <template #template>
+          <section class="big-screen-three-panels">
+            <div v-for="i in 3" :key="i" class="three-panel three-panel--skeleton">
+              <ElSkeletonItem variant="text" style="width: 45%; height: 16px" />
+              <ElSkeletonItem variant="text" style="width: 100%; height: 12px; margin-top: 16px" />
+              <ElSkeletonItem variant="text" style="width: 92%; height: 12px; margin-top: 10px" />
+              <ElSkeletonItem variant="text" style="width: 76%; height: 12px; margin-top: 10px" />
+              <ElSkeletonItem variant="text" style="width: 88%; height: 12px; margin-top: 10px" />
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
+        </template>
+        <template #default>
+          <section class="big-screen-three-panels">
+            <!-- 左：上期总结 -->
+            <div class="three-panel three-panel--summary">
+              <div class="three-panel-head">
+                <span class="three-panel-title">上期总结</span>
+                <button type="button" class="three-panel-more">查看更多</button>
+              </div>
+              <div class="summary-list">
+                <div class="summary-row">
+                  <span class="summary-label">上期花费</span>
+                  <span class="summary-value">{{ formatCurrency(lastPeriodSummary.spend) }}</span>
+                </div>
+                <div class="summary-row">
+                  <span class="summary-label">上期ROI</span>
+                  <span class="summary-value">{{ lastPeriodSummary.roi }}%</span>
+                </div>
+                <div class="summary-row">
+                  <span class="summary-label">上期预估利润</span>
+                  <span class="summary-value">{{ formatCurrency(lastPeriodSummary.profit) }}</span>
+                </div>
+                <div class="summary-row">
+                  <span class="summary-label">正常广告系列</span>
+                  <span class="summary-value">{{ lastPeriodSummary.normalCampaigns }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- 中：近7天ROI趋势 -->
+            <div class="three-panel three-panel--roi-trend">
+              <div class="three-panel-title">近7天ROI趋势</div>
+              <div ref="roiTrendRef" class="three-panel-chart"></div>
+            </div>
+            <!-- 右：我负责的广告表现(上期) -->
+            <div class="three-panel three-panel--ad-performance">
+              <div class="three-panel-head">
+                <span class="three-panel-title">我负责的广告表现(上期)</span>
+                <span class="three-panel-target-label">目标/Target</span>
+              </div>
+              <div class="ad-performance-list">
+                <div v-for="(row, idx) in myAdPerformance" :key="idx" class="ad-performance-row">
+                  <span class="ad-performance-label">{{ row.label }}</span>
+                  <div class="ad-performance-bar-wrap">
+                    <div
+                      class="ad-performance-bar"
+                      :style="{ width: Math.min(row.percent, 120) + '%' }"
+                    >
+                      <span class="ad-performance-value">{{ formatCurrency(row.value) }}</span>
+                    </div>
+                    <div
+                      class="ad-performance-target-line"
+                      :style="{ left: (100 / 120) * 100 + '%' }"
+                      title="100%"
+                    ></div>
+                  </div>
+                  <span class="ad-performance-percent">{{ row.percent }}%</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </template>
+      </ElSkeleton>
 
       <!-- 我负责的广告系列列表 -->
       <section class="big-screen-campaigns">
@@ -311,7 +343,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
-  import { type EChartsOption } from '@/plugins/echarts'
+  import { graphic, type EChartsOption } from '@/plugins/echarts'
   import {
     MOCK_OVERVIEW,
     MOCK_LAST_PERIOD_SUMMARY,
@@ -343,6 +375,7 @@
   }
 
   const overview = ref(MOCK_OVERVIEW)
+  const isLoading = ref(true)
 
   const kpiCards = computed<KpiCardItem[]>(() => overview.value.kpiCards ?? [])
 
@@ -427,8 +460,33 @@
   function buildRoiTrendOption(): EChartsOption {
     const data = roiTrend7Days.value
     const dark = isDark.value
-    const axisColor = dark ? '#8b9dc3' : '#606266'
-    const lineColor = '#409eff'
+    const rootStyle = getComputedStyle(document.documentElement)
+    const primary = rootStyle.getPropertyValue('--art-primary').trim() || '#409eff'
+    const success = rootStyle.getPropertyValue('--art-success').trim() || '#67c23a'
+    const axisColor =
+      rootStyle.getPropertyValue('--text-secondary').trim() || (dark ? '#8b9dc3' : '#606266')
+
+    const toRgba = (color: string, alpha: number) => {
+      const c = color.trim()
+      if (/^#([0-9a-f]{6})$/i.test(c)) {
+        const hex = c.slice(1)
+        const r = Number.parseInt(hex.slice(0, 2), 16)
+        const g = Number.parseInt(hex.slice(2, 4), 16)
+        const b = Number.parseInt(hex.slice(4, 6), 16)
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`
+      }
+      return `rgba(64, 158, 255, ${alpha})`
+    }
+
+    const lineColor = new graphic.LinearGradient(0, 0, 1, 0, [
+      { offset: 0, color: primary },
+      { offset: 1, color: success }
+    ])
+
+    const areaColor = new graphic.LinearGradient(0, 0, 0, 1, [
+      { offset: 0, color: toRgba(primary, 0.22) },
+      { offset: 1, color: toRgba(success, 0.05) }
+    ])
     return {
       grid: { left: 48, right: 24, top: 24, bottom: 28 },
       xAxis: {
@@ -455,7 +513,7 @@
           symbolSize: 8,
           lineStyle: { color: lineColor, width: 2 },
           itemStyle: { color: lineColor },
-          areaStyle: { color: 'rgba(64, 158, 255, 0.15)' },
+          areaStyle: { color: areaColor },
           label: { show: true, position: 'top', color: axisColor, formatter: '{c}%' }
         }
       ]
@@ -483,6 +541,9 @@
         chartRoiTrend.chartRef!.value = roiTrendRef.value
         chartRoiTrend.initChart(buildRoiTrendOption())
       }
+      requestAnimationFrame(() => {
+        isLoading.value = false
+      })
     })
   })
 
@@ -562,16 +623,37 @@
   .big-screen-kpi {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    gap: 24px;
     margin-bottom: 28px;
   }
 
   .kpi-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-height: 160px;
     padding: 20px 24px;
+    overflow: hidden;
     border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    transition:
+      transform var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out);
+
+    &::before {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 3px;
+      content: '';
+      background: var(--kpi-accent, var(--art-primary));
+    }
+
+    &:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-5px);
+    }
   }
 
   .kpi-card-head {
@@ -611,9 +693,10 @@
 
   .kpi-card-value {
     margin-bottom: 8px;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
     line-height: 1.2;
+    text-shadow: 0 8px 24px rgb(0 0 0 / 18%);
 
     &.kpi-card-value--green {
       color: #67c23a;
@@ -736,35 +819,49 @@
 
   /* 卡片主题：绿 / 橙 / 蓝 / 红 */
   .kpi-card--spend {
+    --kpi-accent: var(--art-success);
+
     background: linear-gradient(135deg, rgb(30 80 60 / 60%) 0%, rgb(20 50 40 / 80%) 100%);
     border: 1px solid rgb(103 194 58 / 30%);
   }
 
   .kpi-card--roi {
+    --kpi-accent: var(--art-warning);
+
     background: linear-gradient(135deg, rgb(80 55 30 / 60%) 0%, rgb(50 35 20 / 80%) 100%);
     border: 1px solid rgb(230 162 60 / 35%);
   }
 
   .kpi-card--profit {
+    --kpi-accent: var(--art-primary);
+
     background: linear-gradient(135deg, rgb(30 50 80 / 60%) 0%, rgb(20 35 55 / 80%) 100%);
     border: 1px solid rgb(64 158 255 / 30%);
   }
 
   .kpi-card--abnormal {
+    --kpi-accent: var(--art-danger);
+
     background: linear-gradient(135deg, rgb(80 35 35 / 60%) 0%, rgb(50 25 25 / 80%) 100%);
     border: 1px solid rgb(245 108 108 / 40%);
+  }
+
+  .kpi-skeleton-card {
+    background: var(--big-screen-panel-bg);
+    border: 1px solid var(--big-screen-border);
   }
 
   /* 三块：上期总结、近7天ROI趋势、我负责的广告表现 */
   .big-screen-three-panels {
     display: grid;
     grid-template-columns: 1fr 1.2fr 1.2fr;
-    gap: 20px;
+    gap: 24px;
     min-height: 280px;
     margin-bottom: 28px;
   }
 
   .three-panel {
+    position: relative;
     display: flex;
     flex-direction: column;
     padding: 20px 24px;
@@ -772,6 +869,16 @@
     background: var(--big-screen-panel-bg);
     border: 1px solid var(--big-screen-border);
     border-radius: 12px;
+    box-shadow: var(--shadow-xs);
+    transition:
+      transform var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      border-color var(--duration-normal) var(--ease-out);
+
+    &:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-4px);
+    }
   }
 
   .three-panel-head {

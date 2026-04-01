@@ -3,7 +3,7 @@
   <div class="login-page login-page--dark flex w-full h-screen">
     <LoginLeftView />
 
-    <div class="relative flex-1">
+    <div class="relative flex-1 login-right">
       <!-- <AuthTopBar /> -->
 
       <div class="auth-right-wrap">
@@ -98,6 +98,7 @@
               <ElButton
                 class="w-full custom-height"
                 type="primary"
+                round
                 @click="handleSubmit"
                 :loading="loading"
                 v-ripple

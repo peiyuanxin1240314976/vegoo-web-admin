@@ -327,9 +327,7 @@
       0 0 24px rgb(16 185 129 / 35%),
       0 0 48px rgb(16 185 129 / 15%),
       0 0 80px rgb(34 211 238 / 8%);
-    transition:
-      transform 0.45s var(--ease-out),
-      box-shadow 0.45s var(--ease-out);
+    transition: box-shadow 0.45s var(--ease-out);
 
     &::after {
       position: absolute;
@@ -365,7 +363,6 @@
       0 0 32px rgb(16 185 129 / 45%),
       0 0 56px rgb(16 185 129 / 22%),
       0 0 96px rgb(34 211 238 / 12%);
-    transform: scale(1.07);
   }
 
   .name {
@@ -374,7 +371,6 @@
     color: var(--text-primary);
     text-shadow: 0 0 20px rgb(244 244 245 / 8%);
     transition:
-      transform 0.35s var(--ease-out),
       text-shadow 0.35s var(--ease-out),
       color 0.35s;
   }
@@ -383,21 +379,17 @@
     text-shadow:
       0 0 28px rgb(244 244 245 / 14%),
       0 0 48px rgb(34 211 238 / 8%);
-    transform: translateX(4px);
   }
 
   .role {
     margin-top: 3px;
     font-size: 13px;
     color: var(--text-secondary);
-    transition:
-      transform 0.35s var(--ease-out),
-      color 0.35s var(--ease-out);
+    transition: color 0.35s var(--ease-out);
   }
 
   .top-card:hover .role {
     color: rgb(228 228 231 / 92%);
-    transform: translateX(3px);
   }
 
   .apps {
@@ -578,7 +570,6 @@
       inset 0 1px 0 rgb(244 244 245 / 6%),
       0 4px 16px rgb(0 0 0 / 18%);
     transition:
-      transform 0.3s var(--ease-out),
       border-color 0.3s var(--ease-default),
       box-shadow 0.3s var(--ease-default);
 
@@ -587,7 +578,6 @@
       box-shadow:
         0 8px 24px rgb(0 0 0 / 25%),
         inset 0 1px 0 rgb(244 244 245 / 5%);
-      transform: translateY(-2px) rotateX(1deg);
     }
   }
 

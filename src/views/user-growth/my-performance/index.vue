@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="my-performance-page art-full-height">
     <div class="mp-page-fx" aria-hidden="true"></div>
     <div class="mp-entry-header">
@@ -331,7 +331,6 @@
       inset 0 1px 0 rgb(244 244 245 / 7%),
       0 0 40px rgb(59 130 246 / 4%);
     transition:
-      transform 0.4s var(--ease-out),
       box-shadow 0.45s var(--ease-out),
       border-color 0.35s var(--ease-default);
 
@@ -341,12 +340,10 @@
         0 18px 48px rgb(0 0 0 / 32%),
         inset 0 1px 0 rgb(244 244 245 / 10%),
         0 0 48px rgb(59 130 246 / 10%);
-      transform: translateY(-4px) scale(1.002);
     }
 
     &:hover .table-hint__title {
       filter: drop-shadow(0 0 12px rgb(34 211 238 / 30%));
-      transform: translateX(4px);
     }
 
     &:hover .table-hint__list li {

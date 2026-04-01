@@ -319,15 +319,12 @@
     width: 100%;
     height: 216px;
     filter: drop-shadow(0 4px 20px rgb(34 211 238 / 8%));
-    transition:
-      transform 0.5s var(--ease-out),
-      filter 0.5s var(--ease-out);
+    transition: filter 0.5s var(--ease-out);
     transform-origin: center center;
   }
 
   .panel:hover .chart {
     filter: drop-shadow(0 10px 36px rgb(34 211 238 / 18%)) brightness(1.06);
-    transform: scale(1.03) translateY(-2px);
   }
 
   @media (prefers-reduced-motion: reduce) {
