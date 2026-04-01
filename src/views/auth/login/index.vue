@@ -242,7 +242,7 @@
   }
 </script>
 
-<style scoped src="./style.css"></style>
+<style src="./style.css"></style>
 
 <style lang="scss" scoped>
   :deep(.el-select__wrapper) {

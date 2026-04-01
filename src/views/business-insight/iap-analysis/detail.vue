@@ -1044,6 +1044,7 @@
 
 <style scoped lang="scss">
   @use './styles/iap-card-fx.scss' as *;
+  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
 
   .iap-analysis-page {
     display: flex;
@@ -1299,11 +1300,11 @@
   }
 
   .iap-card-title-text {
-    @include ap-title-gradient;
+    @include ap.ap-title-gradient;
   }
 
   .iap-neon-surface {
-    @include ap-card-title-hover('.iap-card-title-text');
+    @include ap.ap-card-title-hover('.iap-card-title-text');
   }
 
   :deep(.iap-dark-table) {
