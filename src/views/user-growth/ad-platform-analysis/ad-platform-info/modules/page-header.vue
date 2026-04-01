@@ -13,20 +13,6 @@
             >
           </div>
         </div>
-
-        <div class="api-score">
-          <div class="api-score__card" :class="`is-${scoreStatus}`">
-            <div class="api-score__ring" :style="{ '--p': scorePercent }">
-              <div class="api-score__ringNum">{{ scoreValue }}</div>
-            </div>
-            <div class="api-score__meta">
-              <div class="api-score__value">
-                {{ scoreValue }}<span class="api-score__total">/100</span>
-              </div>
-              <div class="api-score__label">{{ scoreLabel }}</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div class="api-header__right">
@@ -74,30 +60,6 @@
     (e: 'refresh'): void
     (e: 'export'): void
   }>()
-
-  const scoreValue = computed(() => {
-    const v = Number(props.summary.score || 0)
-    if (Number.isNaN(v)) return 0
-    if (v > 100) return 100
-    if (v < 0) return 0
-    return Math.round(v)
-  })
-
-  const scorePercent = computed(() => {
-    return scoreValue.value
-  })
-
-  const scoreStatus = computed(() => {
-    if (scoreValue.value >= 90) return 'excellent'
-    if (scoreValue.value >= 60) return 'good'
-    return 'bad'
-  })
-
-  const scoreLabel = computed(() => {
-    if (scoreValue.value >= 90) return '优秀'
-    if (scoreValue.value >= 60) return '良好'
-    return '较差'
-  })
 
   const datePickerValue = computed<[Date, Date]>({
     get: () => {
@@ -194,93 +156,6 @@
     &__tag {
       border-radius: 9999px;
     }
-  }
-
-  .api-score__card {
-    --accent: var(--art-success);
-
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    padding: 8px 12px;
-    background: rgb(24 24 27 / 72%);
-    border: 1px solid color-mix(in srgb, var(--accent) 75%, transparent);
-    border-radius: 12px;
-  }
-
-  .api-score__card.is-excellent {
-    --accent: var(--art-primary);
-  }
-
-  .api-score__card.is-bad {
-    --accent: var(--art-danger);
-  }
-
-  .api-score__ring {
-    --size: 42px;
-    --track: rgb(161 161 170 / 22%);
-    --color: var(--accent);
-
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: var(--size);
-    height: var(--size);
-    background: conic-gradient(var(--color) calc(var(--p) * 1%), var(--track) 0);
-    border-radius: 9999px;
-    box-shadow:
-      0 0 0 1px var(--default-border),
-      0 10px 28px rgb(0 0 0 / 25%);
-  }
-
-  .api-score__ring::before {
-    position: absolute;
-    inset: 4px;
-    width: calc(var(--size) - 8px);
-    height: calc(var(--size) - 8px);
-    content: '';
-    background: var(--default-box-color);
-    border-radius: 9999px;
-  }
-
-  .api-score__ringNum {
-    position: relative;
-    z-index: 1;
-    font-size: 27px;
-    font-weight: 900;
-    line-height: 1;
-    color: var(--accent);
-    zoom: 0.5;
-  }
-
-  .api-score__meta {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-
-  .api-score__value {
-    font-size: 37px;
-    font-weight: 900;
-    line-height: 1;
-    color: var(--accent);
-    letter-spacing: -0.01em;
-    zoom: 0.5;
-  }
-
-  .api-score__total {
-    font-weight: 700;
-    color: color-mix(in srgb, var(--accent) 80%, white);
-  }
-
-  .api-score__label {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--art-gray-900);
-  }
-
-  .api-score {
-    flex-shrink: 0;
   }
 
   .api-header__right {
