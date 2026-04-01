@@ -242,9 +242,7 @@
   }
 </script>
 
-<style scoped>
-  @import './style.css';
-</style>
+<style scoped src="./style.css"></style>
 
 <style lang="scss" scoped>
   :deep(.el-select__wrapper) {

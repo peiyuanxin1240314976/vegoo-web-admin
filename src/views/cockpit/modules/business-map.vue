@@ -907,6 +907,11 @@
 
     /* 将 Canvas 提升为独立 GPU 合成层，在 DPR=1 外接屏下避免与父级 filter 层做纹理采样插值模糊 */
     will-change: transform;
+
+    @media (width <= 992px) {
+      /* 小屏 GPU 内存有限，撤销合成层提升，由浏览器自行决定 */
+      will-change: auto;
+    }
   }
 
   .cockpit-map-hover-tt {

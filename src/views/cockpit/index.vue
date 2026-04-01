@@ -428,12 +428,18 @@
     }
   }
 
-  /* 小屏关闭全页背景动效与 hue-rotate，减轻 GPU/合成压力（与 md 栅格断点一致） */
+  /* 小屏：彻底移除装饰层，释放 GPU 合成层与绘制开销（与 md 栅格断点一致） */
   @media (width <= 992px) {
     .cockpit-page::before,
-    .cockpit-page::after,
+    .cockpit-page::after {
+      /* content: none 完全移除伪元素，不再占用任何合成层或绘制资源 */
+      content: none;
+    }
+
     .cockpit-page-fx {
-      animation: none;
+      /* display: none 移除元素 + 撤销 will-change，彻底释放 GPU 纹理分配 */
+      display: none;
+      will-change: auto;
     }
   }
 

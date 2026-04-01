@@ -11,7 +11,7 @@ export const cockpitRoutes: AppRouteRecord = {
     title: 'menus.cockpit.title',
     icon: 'ri:dashboard-line',
     roles: ['R_SUPER', 'R_ADMIN'],
-    keepAlive: true
+    keepAlive: false
   }
 }
 

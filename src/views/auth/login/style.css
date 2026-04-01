@@ -26,39 +26,39 @@
   color: var(--el-color-primary);
 }
 
-.login-page--dark .auth-right-wrap .el-checkbox__label {
+.login-page--dark .auth-right-wrap :deep(.el-checkbox__label) {
   color: #475569;
 }
 
 /* 表单项 label：颜色 + 加粗 */
-.login-page--dark .auth-right-wrap .el-form-item__label {
+.login-page--dark .auth-right-wrap :deep(.el-form-item__label) {
   font-weight: bold;
   color: #94a3b8;
 }
 
 /* 隐藏必填红点 */
-.login-page--dark .auth-right-wrap .el-form-item.is-required .el-form-item__label::before {
+.login-page--dark .auth-right-wrap :deep(.el-form-item.is-required .el-form-item__label::before) {
   display: none;
 }
 
 /* 输入框：浅色背景 + 深色字体（仅登录页） */
-.login-page--dark .auth-right-wrap .el-input__wrapper {
+.login-page--dark .auth-right-wrap :deep(.el-input__wrapper) {
   background-color: #f1f5f9;
   box-shadow: 0 0 0 1px #e2e8f0 inset;
 }
 
-.login-page--dark .auth-right-wrap .el-input__wrapper .el-input__inner,
-.login-page--dark .auth-right-wrap .el-input__wrapper input {
+.login-page--dark .auth-right-wrap :deep(.el-input__wrapper .el-input__inner),
+.login-page--dark .auth-right-wrap :deep(.el-input__wrapper input) {
   color: #1e293b;
   background: transparent;
 }
 
-.login-page--dark .auth-right-wrap .el-input__wrapper .el-input__inner::placeholder,
-.login-page--dark .auth-right-wrap .el-input__wrapper input::placeholder {
+.login-page--dark .auth-right-wrap :deep(.el-input__wrapper .el-input__inner::placeholder),
+.login-page--dark .auth-right-wrap :deep(.el-input__wrapper input::placeholder) {
   color: #64748b;
 }
 
-.login-page--dark .auth-right-wrap .el-input__prefix {
+.login-page--dark .auth-right-wrap :deep(.el-input__prefix) {
   color: #475569;
 }
 
