@@ -407,13 +407,34 @@
     return `${title}<div class="cockpit-map-tt-row"><span>新增用户:</span> <span style="${isTrendUp(newUserTrend) ? upClass : downClass}">${(c.newUser ?? 0).toLocaleString()} ${newUserTrend}</span></div><div class="cockpit-map-tt-row"><span>活跃用户:</span> <span style="${isTrendUp(userTrendVal) ? upClass : downClass}">${(c.user ?? 0).toLocaleString()} ${userTrendVal}</span></div>`
   }
 
-  /** 仅当区域名称在有数据的国家集合中时才显示 tooltip */
-  function buildTooltipFormatter(isDarkTheme: boolean, regionNamesWithData: Set<string>) {
+  /** map 系列一行（与 buildOption 中 mapData 项一致）；effectScatter 的 params.data 只有坐标+指标，须按 name 回查 */
+  type MapTooltipRow = {
+    name: string
+    value: number
+    revenue: number
+    spend: number
+    user: number
+    nameCn: string
+    trend: string
+    code: string
+    newUser?: number
+    newUserTrend?: string
+    ecpm?: number
+    ecpmTrend?: string
+  }
+
+  /** 仅当区域名称在有数据的国家集合中时才显示 tooltip；定位点与地图区域共用同一套文案 */
+  function buildTooltipFormatter(
+    isDarkTheme: boolean,
+    regionNamesWithData: Set<string>,
+    dataByNameEn: Record<string, MapTooltipRow>
+  ) {
     return (params: any) => {
-      if (!regionNamesWithData.has(params.name)) {
+      const nameEn = (params?.name ?? params?.data?.name) as string | undefined
+      if (!nameEn || !regionNamesWithData.has(nameEn)) {
         return '' // 数据中无此国家时不显示 tooltip
       }
-      const d = params.data
+      const d = dataByNameEn[nameEn]
       if (!d) return ''
       const upClass = isDarkTheme ? 'color:#34d399' : 'color:var(--el-color-success)'
       const downClass = isDarkTheme ? 'color:#f87171' : 'color:var(--el-color-danger)'
@@ -489,6 +510,10 @@
     const visualMin = hasPositive && dataMin >= 0 ? 0.5 : dataMin
     const visualMax = dataMax
     const regionNamesWithData = new Set(mapData.map((d) => d.name))
+    const dataByNameEn = Object.fromEntries(mapData.map((row) => [row.name, row])) as Record<
+      string,
+      MapTooltipRow
+    >
     const pulseData = lite
       ? ([] as Array<{ name: string; value: [number, number, number] }>)
       : (mapData
@@ -557,7 +582,7 @@
           fontSize: 12,
           color: dark ? '#e2e8f0' : 'var(--el-text-color-primary)'
         },
-        formatter: buildTooltipFormatter(dark, regionNamesWithData)
+        formatter: buildTooltipFormatter(dark, regionNamesWithData, dataByNameEn)
       },
       visualMap: {
         show: false,
