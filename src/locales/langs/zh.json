@@ -229,7 +229,7 @@
       "title": "经营驾驶舱"
     },
     "monetization": {
-      "title": "变现管理",
+      "title": "变现管理(M)",
       "monetizationAnalysis": "变现分析",
       "appHealth": "App健康管理",
       "deepAnalysis": "深度分析",
@@ -237,7 +237,7 @@
       "ltvPrediction": "LTV预测与用户分层"
     },
     "productOperations": {
-      "title": "商品运营",
+      "title": "商品运营(M)",
       "reviewsRatingsMonitor": "评论与评分监控",
       "orderRefundAnalysis": "订单退款分析",
       "thirdPartyStores": "三方商店",
@@ -260,7 +260,7 @@
       "iapAnalysis": "IAP 分析",
       "iaaAnalysis": "IAA 分析",
       "ecpmAnalysis": "ECPM分析",
-      "adPlatformDetail": "广告平台详情",
+      "adPlatformDetail": "广告平台详情(M)",
       "adPlatformInfo": "广告平台信息",
       "adPlatformDetailEmpty": "在此汇总各广告平台维度数据，可进入下级查看应用侧表现。",
       "backToAdPlatformDetail": "返回广告平台详情",
@@ -277,7 +277,7 @@
       }
     },
     "productInsight": {
-      "title": "产品洞察",
+      "title": "产品洞察(M)",
       "businessReport": "报告管理"
     },
     "result": {
@@ -292,14 +292,14 @@
       "serverError": "500"
     },
     "accountManagement": {
-      "title": "账户管理",
+      "title": "账户管理(M)",
       "adAccount": "广告账户",
       "agency": "代理商管理",
       "bcManagement": "BC管理",
       "openAccount": "开户管理"
     },
     "configManagement": {
-      "title": "平台管理",
+      "title": "平台管理(M)",
       "applicationManagement": "应用管理",
       "appStoreManagement": "应用商店管理",
       "appAssignment": "应用分配",
@@ -325,19 +325,19 @@
       "campaignDetail": "广告系列详情",
       "adDetail": "广告详情",
       "adEdit": "广告编辑",
-      "conversionManagement": "转化管理",
+      "conversionManagement": "转化管理(M)",
       "agencyAnalysis": "代投分析",
-      "paidAnalysis": "付费分析",
-      "performanceAnalysis": "人员成效",
+      "paidAnalysis": "付费分析(M)",
+      "performanceAnalysis": "人员成效(M)",
       "performanceComparison": "对比分析",
-      "realTimeData": "实时数据",
+      "realTimeData": "实时数据(M)",
       "overallRecovery": "整体回收",
       "comprehensiveAnalysis": "综合分析",
       "alertManagement": "预警管理",
       "platformAnalysisDetail": "应用详情"
     },
     "system": {
-      "title": "系统管理",
+      "title": "系统管理(M)",
       "userCenter": "个人中心",
       "menu": "菜单管理"
     }

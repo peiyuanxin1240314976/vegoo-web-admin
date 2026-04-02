@@ -1309,6 +1309,7 @@ export function mockFetchIapOverviewAppCards(params: IapOverviewDashParams) {
   const all: IapAppCard[] = [
     {
       name: 'PhoneTracker',
+      appId: 'phonetracker',
       platform: 'Android',
       orders: '8,950',
       revenue: '$560K',
@@ -1320,6 +1321,7 @@ export function mockFetchIapOverviewAppCards(params: IapOverviewDashParams) {
     },
     {
       name: 'YearCam',
+      appId: 'yearcam',
       platform: 'iOS',
       orders: '7,200',
       revenue: '$480K',
@@ -1331,6 +1333,7 @@ export function mockFetchIapOverviewAppCards(params: IapOverviewDashParams) {
     },
     {
       name: 'FaceMe',
+      appId: 'faceme',
       platform: 'iOS',
       orders: '6,500',
       revenue: '$390K',
@@ -1342,6 +1345,7 @@ export function mockFetchIapOverviewAppCards(params: IapOverviewDashParams) {
     },
     {
       name: 'Weather5',
+      appId: 'weather5',
       platform: 'Android',
       orders: '5,800',
       revenue: '$310K',
@@ -1353,6 +1357,7 @@ export function mockFetchIapOverviewAppCards(params: IapOverviewDashParams) {
     },
     {
       name: 'VideoDownloader',
+      appId: 'videodownloader',
       platform: 'Android',
       orders: '4,100',
       revenue: '$220K',
