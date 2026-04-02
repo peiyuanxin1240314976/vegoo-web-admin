@@ -1,5 +1,6 @@
 <template>
-  <div class="cockpit-panel channel-roi-panel">
+  <div class="channel-roi-panel">
+    <div class="channel-roi-border-spin" aria-hidden="true" />
     <div class="panel-header">
       <span class="panel-title">广告平台ROI&安装量</span>
       <!-- <a class="panel-more" href="javascript:;">查看更多</a> -->
@@ -13,7 +14,6 @@
           height="100%"
           show-summary
           :summary-method="getSummaries"
-          :header-cell-style="{ background: '#131D2F' }"
           class="roi-table"
         >
           <template #channel="{ row }">
@@ -23,13 +23,15 @@
             </div>
           </template>
           <template #spend="{ row }">
-            <span class="col-number">{{ formatMoney(row.spend) }}</span>
+            <span class="col-number tabular-nums">{{ formatMoney(row.spend) }}</span>
           </template>
           <template #installs="{ row }">
-            <span class="col-number">{{ formatNumber(row.installs) }}</span>
+            <span class="col-number tabular-nums">{{ formatNumber(row.installs) }}</span>
           </template>
           <template #cpi="{ row }">
-            <span class="col-cpi" :class="getCpiClass(row.cpi)">{{ row.cpi.toFixed(2) }}</span>
+            <span class="col-cpi tabular-nums" :class="getCpiClass(row.cpi)">{{
+              row.cpi.toFixed(2)
+            }}</span>
           </template>
           <template #trend="{ row, $index }">
             <CockpitRoiTrendSpark
@@ -131,7 +133,7 @@
   }
 
   function formatMoney(n: number): string {
-    return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
   function formatNumber(n: number): string {
@@ -165,25 +167,160 @@
 </script>
 
 <style scoped lang="scss">
+  /* 与广告成效 KPI 卡片同系：旋转渐变边框 */
+  @property --channel-roi-border-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
   .channel-roi-panel {
+    --ch-accent: #10b981;
+    --ch-accent-2: #22d3ee;
+    --ch-glow: rgb(16 185 129 / 45%);
+    --ch-glow-2: rgb(34 211 238 / 22%);
+    --ch-spin-a: rgb(16 185 129 / 62%);
+    --ch-spin-b: rgb(34 211 238 / 48%);
+    --ch-spin-c: rgb(59 130 246 / 38%);
+    --ch-table-bg: color-mix(in srgb, var(--ch-accent) 6%, rgb(8 8 12));
+    --ch-table-header-text: #94a3b8;
+    --ch-table-text: #e2e8f0;
+
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
     min-height: 0;
     overflow: hidden;
+    background-color: rgb(8 8 12 / 98%);
+    background-image:
+      radial-gradient(
+        ellipse 120% 80% at 50% -18%,
+        var(--ch-glow) 0%,
+        var(--ch-glow-2) 30%,
+        transparent 58%
+      ),
+      linear-gradient(
+        172deg,
+        color-mix(in srgb, var(--ch-accent) 22%, rgb(8 8 12)) 0%,
+        color-mix(in srgb, var(--ch-accent) 38%, rgb(8 8 12)) 60%,
+        color-mix(in srgb, var(--ch-accent-2) 15%, rgb(8 8 12)) 100%
+      );
+    border: 1px solid color-mix(in srgb, var(--ch-accent) 55%, transparent);
+    border-radius: 14px;
+    box-shadow:
+      0 8px 40px rgb(0 0 0 / 52%),
+      0 0 0 1px color-mix(in srgb, var(--ch-accent) 18%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 16%),
+      inset 0 -10px 28px rgb(0 0 0 / 38%),
+      0 0 28px color-mix(in srgb, var(--ch-accent) 12%, transparent);
+    transition:
+      box-shadow 0.4s var(--ease-out),
+      border-color 0.28s var(--ease-default);
+
+    > *:not(.channel-roi-border-spin) {
+      position: relative;
+      z-index: 1;
+    }
+
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      z-index: 0;
+      width: 80%;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        var(--ch-accent),
+        var(--ch-accent-2),
+        transparent
+      );
+      opacity: 0.8;
+      transform: translateX(-50%);
+    }
+
+    &::after {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      z-index: 0;
+      width: 60%;
+      height: 1px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(90deg, transparent, var(--ch-accent), transparent);
+      opacity: 0.45;
+      transform: translateX(-50%);
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--ch-accent) 85%, transparent);
+      box-shadow:
+        0 28px 72px rgb(0 0 0 / 55%),
+        0 0 0 1px color-mix(in srgb, var(--ch-accent) 40%, transparent),
+        inset 0 1px 0 rgb(255 255 255 / 20%),
+        0 0 60px color-mix(in srgb, var(--ch-accent) 35%, transparent),
+        0 0 100px color-mix(in srgb, var(--ch-accent) 18%, transparent),
+        0 0 140px color-mix(in srgb, var(--ch-accent-2) 12%, transparent);
+    }
+
+    &:active {
+      transition-duration: 0.12s;
+    }
+  }
+
+  .channel-roi-border-spin {
+    position: absolute;
+    inset: -1px;
+    z-index: 2;
+    padding: 1.5px;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--channel-roi-border-angle, 0deg) at 50% 50%,
+      transparent 0deg,
+      var(--ch-spin-a) 45deg,
+      transparent 95deg,
+      transparent 145deg,
+      var(--ch-spin-b) 195deg,
+      transparent 250deg,
+      transparent 300deg,
+      var(--ch-spin-c) 340deg,
+      transparent 360deg
+    );
+    filter: blur(0.3px);
+    border-radius: inherit;
+    opacity: 0.92;
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    animation: channel-roi-border-spin 4s linear infinite;
+
+    --channel-roi-border-angle: 0deg;
+  }
+
+  @keyframes channel-roi-border-spin {
+    to {
+      --channel-roi-border-angle: 360deg;
+    }
   }
 
   .panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 16px;
+    padding: 12px 16px;
     font-size: 14px;
-    border-bottom: 1px solid var(--el-border-color-lighter);
+    border-bottom: 1px solid color-mix(in srgb, var(--ch-accent) 28%, transparent);
 
     .panel-title {
-      font-weight: 500;
-      color: var(--el-text-color-primary);
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
     }
 
     .panel-more {
@@ -202,14 +339,14 @@
     flex: 1;
     flex-direction: column;
     min-height: 0;
-    padding: 12px 16px;
+    padding: 10px 12px 14px;
     overflow: auto;
   }
 
   .roi-empty {
     padding: 32px 16px;
     font-size: 13px;
-    color: var(--el-text-color-secondary);
+    color: var(--text-secondary);
     text-align: center;
   }
 
@@ -220,31 +357,30 @@
     font-size: 13px;
 
     :deep(.el-table) {
-      --el-table-bg-color: #131d2f;
-      --el-table-tr-bg-color: #131d2f;
-      --el-table-header-bg-color: #131d2f;
+      --el-table-bg-color: var(--ch-table-bg);
+      --el-table-tr-bg-color: var(--ch-table-bg);
+      --el-table-header-bg-color: var(--ch-table-bg);
       --el-table-border-color: rgb(255 255 255 / 10%);
-      --el-table-text-color: #d4e6f5;
-      --el-table-header-text-color: #8aaac8;
+      --el-table-text-color: var(--ch-table-text);
+      --el-table-header-text-color: var(--ch-table-header-text);
     }
 
     :deep(.el-table__header th) {
-      font-weight: 500;
-      color: #8aaac8;
+      font-weight: 600;
     }
 
     :deep(.el-table__body td),
     :deep(.el-table__footer td) {
-      color: #d4e6f5;
+      color: var(--ch-table-text);
     }
 
     :deep(.el-table__footer .cell) {
-      font-weight: 500;
+      font-weight: 600;
     }
 
     :deep(.el-table__footer-wrapper td.el-table__cell) {
-      background: #131d2f !important;
-      border-top: 1px solid rgb(255 255 255 / 10%);
+      background: var(--ch-table-bg) !important;
+      border-top: 1px solid rgb(255 255 255 / 12%);
     }
 
     .col-channel {
@@ -256,8 +392,8 @@
         flex-shrink: 0;
         width: 24px;
         height: 24px;
-        background: var(--el-border-color);
-        border-radius: 4px;
+        background: color-mix(in srgb, var(--ch-accent) 22%, rgb(30 41 59));
+        border-radius: 6px;
       }
 
       .channel-name {
@@ -271,15 +407,81 @@
 
     .col-cpi {
       &.cpi-green {
-        color: #67c23a;
+        color: var(--text-success);
       }
 
       &.cpi-yellow {
-        color: #e6a23c;
+        color: var(--text-warning);
       }
 
       &.cpi-red {
-        color: #f56c6c;
+        color: var(--text-danger);
+      }
+    }
+  }
+
+  html:not(.dark) .channel-roi-panel {
+    --ch-table-bg: #fff;
+    --ch-table-header-text: #64748b;
+    --ch-table-text: #334155;
+
+    background-color: #fff;
+    background-image: none;
+    border: 1px solid var(--el-border-color-lighter);
+    box-shadow:
+      0 8px 24px rgb(15 23 42 / 8%),
+      inset 0 1px 0 rgb(255 255 255 / 90%);
+
+    &::before {
+      opacity: 0.7;
+    }
+
+    &::after {
+      opacity: 0.35;
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--ch-accent) 45%, var(--el-border-color-lighter));
+      box-shadow:
+        0 14px 36px rgb(15 23 42 / 12%),
+        0 0 0 1px color-mix(in srgb, var(--ch-accent) 22%, transparent);
+    }
+
+    .channel-roi-border-spin {
+      opacity: 0.45;
+    }
+
+    .panel-header {
+      border-bottom-color: var(--el-border-color-lighter);
+
+      .panel-title {
+        color: #303133;
+      }
+    }
+
+    .roi-table {
+      :deep(.el-table) {
+        --el-table-border-color: var(--el-border-color-lighter);
+      }
+
+      :deep(.el-table__footer-wrapper td.el-table__cell) {
+        border-top-color: var(--el-border-color-lighter);
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .channel-roi-border-spin {
+      opacity: 0;
+      animation: none;
+    }
+
+    .channel-roi-panel {
+      transition: none;
+
+      &:hover,
+      &:active {
+        transform: none;
       }
     }
   }

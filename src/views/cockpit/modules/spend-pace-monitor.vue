@@ -1,5 +1,6 @@
 <template>
-  <div class="cockpit-pace-panel">
+  <div class="cockpit-pace-kpi">
+    <div class="pace-border-spin" aria-hidden="true" />
     <div class="pace-header">
       <span class="pace-title">消耗节奏监控</span>
     </div>
@@ -111,17 +112,170 @@
 <style scoped lang="scss">
   @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as *;
 
-  .cockpit-pace-panel {
+  /* 与广告成效 KPI 卡片同系：旋转渐变边框 */
+  @property --pace-border-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  .cockpit-pace-kpi {
+    --pace-accent: #3b82f6;
+    --pace-accent-2: #22d3ee;
+    --pace-glow: rgb(59 130 246 / 45%);
+    --pace-glow-2: rgb(34 211 238 / 22%);
+    --pace-spin-a: rgb(16 185 129 / 55%);
+    --pace-spin-b: rgb(59 130 246 / 48%);
+    --pace-spin-c: rgb(168 85 247 / 38%);
+
     position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    border-radius: 12px;
+    background-color: rgb(8 8 12 / 98%);
+    background-image:
+      radial-gradient(
+        ellipse 120% 80% at 50% -18%,
+        var(--pace-glow) 0%,
+        var(--pace-glow-2) 30%,
+        transparent 58%
+      ),
+      linear-gradient(
+        172deg,
+        color-mix(in srgb, var(--pace-accent) 22%, rgb(8 8 12)) 0%,
+        color-mix(in srgb, var(--pace-accent) 38%, rgb(8 8 12)) 60%,
+        color-mix(in srgb, var(--pace-accent-2) 15%, rgb(8 8 12)) 100%
+      );
+    border: 1px solid color-mix(in srgb, var(--pace-accent) 55%, transparent);
+    border-radius: 14px;
+    box-shadow:
+      0 8px 40px rgb(0 0 0 / 52%),
+      0 0 0 1px color-mix(in srgb, var(--pace-accent) 18%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 16%),
+      inset 0 -10px 28px rgb(0 0 0 / 38%),
+      0 0 28px color-mix(in srgb, var(--pace-accent) 12%, transparent);
+    transition:
+      box-shadow 0.4s var(--ease-out),
+      border-color 0.28s var(--ease-default);
+
+    > *:not(.pace-border-spin) {
+      position: relative;
+      z-index: 1;
+    }
+
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      z-index: 0;
+      width: 80%;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        var(--pace-accent),
+        var(--pace-accent-2),
+        transparent
+      );
+      opacity: 0.8;
+      transform: translateX(-50%);
+    }
+
+    &::after {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      z-index: 0;
+      width: 60%;
+      height: 1px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(90deg, transparent, var(--pace-accent), transparent);
+      opacity: 0.45;
+      transform: translateX(-50%);
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--pace-accent) 85%, transparent);
+      box-shadow:
+        0 28px 72px rgb(0 0 0 / 55%),
+        0 0 0 1px color-mix(in srgb, var(--pace-accent) 40%, transparent),
+        inset 0 1px 0 rgb(255 255 255 / 20%),
+        0 0 60px color-mix(in srgb, var(--pace-accent) 35%, transparent),
+        0 0 100px color-mix(in srgb, var(--pace-accent) 18%, transparent),
+        0 0 140px color-mix(in srgb, var(--pace-accent-2) 12%, transparent);
+    }
+
+    &:active {
+      transition-duration: 0.12s;
+    }
   }
 
-  html:not(.dark) .cockpit-pace-panel {
+  .pace-border-spin {
+    position: absolute;
+    inset: -1px;
+    z-index: 2;
+    padding: 1.5px;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--pace-border-angle, 0deg) at 50% 50%,
+      transparent 0deg,
+      var(--pace-spin-a) 45deg,
+      transparent 95deg,
+      transparent 145deg,
+      var(--pace-spin-b) 195deg,
+      transparent 250deg,
+      transparent 300deg,
+      var(--pace-spin-c) 340deg,
+      transparent 360deg
+    );
+    filter: blur(0.3px);
+    border-radius: inherit;
+    opacity: 0.92;
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    animation: pace-border-spin 4s linear infinite;
+
+    --pace-border-angle: 0deg;
+  }
+
+  @keyframes pace-border-spin {
+    to {
+      --pace-border-angle: 360deg;
+    }
+  }
+
+  html:not(.dark) .cockpit-pace-kpi {
+    background-color: #fff;
+    background-image: none;
     border: 1px solid var(--el-border-color-lighter);
+    box-shadow:
+      0 8px 24px rgb(15 23 42 / 8%),
+      inset 0 1px 0 rgb(255 255 255 / 90%);
+
+    &::before {
+      opacity: 0.7;
+    }
+
+    &::after {
+      opacity: 0.35;
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--pace-accent) 45%, var(--el-border-color-lighter));
+      box-shadow:
+        0 14px 36px rgb(15 23 42 / 12%),
+        0 0 0 1px color-mix(in srgb, var(--pace-accent) 22%, transparent);
+    }
+
+    .pace-border-spin {
+      opacity: 0.45;
+    }
   }
 
   .pace-header {
@@ -130,11 +284,7 @@
     justify-content: space-between;
     padding: 14px 16px;
     font-size: 14px;
-    border-bottom: 1px solid var(--el-border-color-lighter);
-
-    html.dark & {
-      border-bottom-color: rgb(96 165 250 / 14%);
-    }
+    border-bottom: 1px solid color-mix(in srgb, var(--pace-accent) 28%, transparent);
   }
 
   html.dark .pace-title {
@@ -143,7 +293,7 @@
 
   html:not(.dark) .pace-title {
     font-weight: 600;
-    color: var(--el-text-color-primary);
+    color: #303133;
     letter-spacing: 0.02em;
   }
 
@@ -211,7 +361,7 @@
 
     html.dark & {
       background: rgb(255 255 255 / 4%);
-      border: 1px solid rgb(96 165 250 / 14%);
+      border: 1px solid color-mix(in srgb, var(--pace-accent) 22%, transparent);
     }
 
     html:not(.dark) & {
@@ -224,8 +374,8 @@
     }
 
     &:hover {
-      border-color: rgb(96 165 250 / 32%);
-      box-shadow: 0 0 0 1px rgb(59 130 246 / 12%);
+      border-color: color-mix(in srgb, var(--pace-accent) 38%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--pace-accent) 18%, transparent);
     }
   }
 
@@ -270,7 +420,7 @@
 
     html.dark & {
       background: linear-gradient(145deg, rgb(39 39 42 / 85%), rgb(24 24 27 / 55%));
-      border-color: rgb(96 165 250 / 22%);
+      border-color: color-mix(in srgb, var(--pace-accent) 28%, transparent);
       box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
     }
   }
@@ -285,7 +435,7 @@
 
     html.dark & {
       background: rgb(0 0 0 / 38%);
-      border: 1px solid rgb(96 165 250 / 12%);
+      border: 1px solid color-mix(in srgb, var(--pace-accent) 18%, transparent);
       box-shadow: inset 0 1px 2px rgb(0 0 0 / 40%);
     }
   }
@@ -338,6 +488,20 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .pace-border-spin {
+      opacity: 0;
+      animation: none;
+    }
+
+    .cockpit-pace-kpi {
+      transition: none;
+
+      &:hover,
+      &:active {
+        transform: none;
+      }
+    }
+
     .pace-bar-track {
       transition: none;
     }

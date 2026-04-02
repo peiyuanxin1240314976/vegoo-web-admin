@@ -491,54 +491,7 @@
     }
   }
 
-  html.dark .cockpit-pace-panel {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border-radius: 12px;
-
-    @include ap-neon-bg;
-    @include ap-card-mesh;
-    @include ap-panel-hover;
-
-    &:hover,
-    &:active {
-      transform: none !important;
-    }
-
-    &:active {
-      transition-duration: var(--duration-fast);
-    }
-
-    .pace-header {
-      position: relative;
-      z-index: 1;
-      background: transparent;
-      border-bottom: 1px solid rgb(96 165 250 / 14%);
-    }
-
-    .pace-body {
-      position: relative;
-      z-index: 1;
-      background: transparent;
-    }
-  }
-
-  html:not(.dark) .cockpit-pace-panel {
-    position: relative;
-    overflow: hidden;
-    background: var(--el-bg-color);
-    border-radius: 12px;
-
-    @include ap-card-mesh;
-
-    .pace-header,
-    .pace-body {
-      position: relative;
-      z-index: 1;
-    }
-  }
+  /* 消耗节奏监控已在模块内部改为 KPI 卡片外壳（旋转边框/深浅色），此处不再做全局覆盖 */
 
   /* 面板头部：左标题 + 右侧操作区 */
   .cockpit-panel__header {
