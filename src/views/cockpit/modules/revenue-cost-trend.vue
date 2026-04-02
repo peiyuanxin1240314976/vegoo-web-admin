@@ -18,7 +18,21 @@
         >
           <template #channel="{ row }">
             <div class="col-channel">
-              <span class="channel-icon" />
+              <div
+                v-for="ico in [channelIconDisplay(row)]"
+                :key="(ico.iconClass ?? '') + ico.letter"
+                class="channel-icon"
+                :class="{ 'channel-icon--iconfont': ico.iconClass }"
+                :title="row.channel"
+              >
+                <i
+                  v-if="ico.iconClass"
+                  class="iconfont"
+                  :class="ico.iconClass"
+                  aria-hidden="true"
+                />
+                <span v-else class="channel-icon-fallback">{{ ico.letter }}</span>
+              </div>
               <span class="channel-name">{{ row.channel }}</span>
             </div>
           </template>
@@ -50,6 +64,7 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import { useMediaQuery } from '@vueuse/core'
+  import { getAdPlatformIconDisplay } from '@/utils/ui/ad-platform-iconfont'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import CockpitRoiTrendSpark from './cockpit-roi-trend-spark.vue'
   import type { ColumnOption } from '@/types'
@@ -72,8 +87,14 @@
         trend = list.map((d) => num(d.cost))
       }
       const first = list[0] ?? {}
+      const platformRaw = r.platform
+      const platform =
+        platformRaw != null && String(platformRaw).trim() !== ''
+          ? String(platformRaw).trim()
+          : undefined
       return {
         channel: String(r.channel ?? '—'),
+        platform,
         spend: num(r.spend ?? r.cost ?? first.cost),
         installs: num(r.installs ?? r.install ?? first.install),
         cpi: num(r.cpi ?? r.cpl ?? first.cpl),
@@ -114,6 +135,10 @@
       : (MOCK_COCKPIT_OVERVIEW.channelRoiInstall ?? [])
     return normalizeChannelRoiRows(raw as unknown[])
   })
+
+  function channelIconDisplay(row: CockpitChannelRoiInstallItem) {
+    return getAdPlatformIconDisplay({ platform: row.platform, name: row.channel })
+  }
 
   const totals = computed(() => {
     const rows = list.value
@@ -389,11 +414,31 @@
       align-items: center;
 
       .channel-icon {
+        display: flex;
         flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
         width: 24px;
         height: 24px;
+        overflow: hidden;
         background: color-mix(in srgb, var(--ch-accent) 22%, rgb(30 41 59));
         border-radius: 6px;
+
+        &--iconfont {
+          color: var(--text-secondary);
+        }
+
+        & .iconfont {
+          font-size: 16px;
+          line-height: 1;
+        }
+
+        .channel-icon-fallback {
+          font-size: 11px;
+          font-weight: 700;
+          line-height: 1;
+          color: var(--text-secondary);
+        }
       }
 
       .channel-name {

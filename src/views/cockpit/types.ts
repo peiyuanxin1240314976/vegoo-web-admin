@@ -375,6 +375,8 @@ export interface CockpitRevenueCostTrend {
 /** 广告平台 ROI&安装量表格行：近7日为折线图数据 */
 export interface CockpitChannelRoiInstallItem {
   channel: string
+  /** 广告平台 slug，与 iconfont 映射一致；可选，缺省时用 channel 文案解析 */
+  platform?: string
   spend: number
   installs: number
   cpi: number
