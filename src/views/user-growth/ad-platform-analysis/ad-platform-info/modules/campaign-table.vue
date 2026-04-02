@@ -3,7 +3,7 @@
     <ElCard class="api-panel api-panel--table" shadow="never">
       <template #header>
         <div class="api-panel__header">
-          <div class="api-panel__title">该渠道下广告表现</div>
+          <div class="api-panel__title">该广告平台下广告表现</div>
         </div>
       </template>
 
