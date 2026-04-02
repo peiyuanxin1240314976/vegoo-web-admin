@@ -103,7 +103,7 @@
             <el-icon><Edit /></el-icon>
             编辑系列
           </ElButton>
-          <ElButton
+          <!-- <ElButton
             size="small"
             plain
             round
@@ -114,7 +114,7 @@
             暂停
           </ElButton>
           <ElButton size="small" plain round @click="onCampaignAction('copy')">复制</ElButton>
-          <ElButton size="small" plain round @click="onCampaignAction('archive')">归档</ElButton>
+          <ElButton size="small" plain round @click="onCampaignAction('archive')">归档</ElButton> -->
         </div>
       </div>
 
@@ -148,11 +148,16 @@
   import { onMounted, reactive, ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import { ArrowLeft, SuccessFilled, Edit, VideoPause } from '@element-plus/icons-vue'
+  import {
+    ArrowLeft,
+    SuccessFilled,
+    Edit
+    // VideoPause
+  } from '@element-plus/icons-vue'
   import {
     fetchCampaignDetailAdList,
     fetchCampaignDetailAiInsights,
-    fetchCampaignDetailCampaignAction,
+    // fetchCampaignDetailCampaignAction,
     fetchCampaignDetailCreativeTop5,
     fetchCampaignDetailOverview
   } from '@/api/user-growth/ad-performance'
@@ -164,7 +169,7 @@
   import {
     createEmptyCampaignDetail,
     normalizeCampaignDetailFromApi,
-    type CampaignDetailCampaignActionType,
+    // type CampaignDetailCampaignActionType,
     type CampaignDetailData,
     type CampaignStatus
   } from './types'
@@ -213,24 +218,24 @@
     }
   }
 
-  async function onCampaignAction(actionType: CampaignDetailCampaignActionType) {
-    const campaignId = String(route.query.id ?? '')
-    if (!campaignId) {
-      ElMessage.error('缺少广告系列 ID')
-      return
-    }
-    try {
-      const res = await fetchCampaignDetailCampaignAction({ campaignId, actionType })
-      if (res.message) ElMessage.success(res.message)
-      else ElMessage.success('操作成功')
-      if (actionType === 'copy' && res.newCampaignId) {
-        ElMessage.info(`新系列 ID：${res.newCampaignId}`)
-      }
-      await loadCampaignDetail()
-    } catch {
-      ElMessage.error('操作失败')
-    }
-  }
+  // async function onCampaignAction(actionType: CampaignDetailCampaignActionType) {
+  //   const campaignId = String(route.query.id ?? '')
+  //   if (!campaignId) {
+  //     ElMessage.error('缺少广告系列 ID')
+  //     return
+  //   }
+  //   try {
+  //     const res = await fetchCampaignDetailCampaignAction({ campaignId, actionType })
+  //     if (res.message) ElMessage.success(res.message)
+  //     else ElMessage.success('操作成功')
+  //     if (actionType === 'copy' && res.newCampaignId) {
+  //       ElMessage.info(`新系列 ID：${res.newCampaignId}`)
+  //     }
+  //     await loadCampaignDetail()
+  //   } catch {
+  //     ElMessage.error('操作失败')
+  //   }
+  // }
 
   function statusText(s: CampaignStatus): string {
     const map: Record<CampaignStatus, string> = {
