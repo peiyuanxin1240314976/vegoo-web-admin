@@ -10,13 +10,25 @@ import {
   fetchMyPerformanceRoiTrend,
   fetchMyPerformanceSpendProgress
 } from '@/api/user-growth/my-performance'
+import { getAppNow } from '@/utils/app-now'
 import type {
   MyPerformanceMetaPersonResponse,
   MyPerformanceMetaPeriodResponse,
   MyPerformancePageData,
+  MyPerformancePeriodOption,
   MyPerformancePeriodType,
   MyPerformanceQueryBody
 } from '../types'
+
+/** 月度口径：固定使用当年 3 月（`YYYY-03`） */
+function pickFixedMarchPeriodValue(monthOptions: MyPerformancePeriodOption[]): string {
+  const y = getAppNow().getFullYear()
+  const target = `${y}-03`
+  if (monthOptions.some((o) => o.value === target)) return target
+  const anyMarch = monthOptions.find((o) => /-03$/.test(o.value))
+  if (anyMarch) return anyMarch.value
+  return target
+}
 
 /** 兼容远程未返回 selectedPersonId、列表字段异常等情况，保证能拼出 queryBody */
 function normalizeMetaPersonPayload(
@@ -46,17 +58,32 @@ function normalizeMetaPeriodPayload(
     typeof sp.periodValue === 'string' &&
     sp.periodValue.length > 0
   ) {
+    if (sp.periodType === 'month') {
+      return {
+        periodOptions,
+        periodType: 'month',
+        selectedPeriodValue: pickFixedMarchPeriodValue(periodOptions.month)
+      }
+    }
     return { periodOptions, periodType: sp.periodType, selectedPeriodValue: sp.periodValue }
   }
   const m0 = periodOptions.month[0]?.value
   if (m0) {
-    return { periodOptions, periodType: 'month', selectedPeriodValue: m0 }
+    return {
+      periodOptions,
+      periodType: 'month',
+      selectedPeriodValue: pickFixedMarchPeriodValue(periodOptions.month)
+    }
   }
   const q0 = periodOptions.quarter[0]?.value
   if (q0) {
     return { periodOptions, periodType: 'quarter', selectedPeriodValue: q0 }
   }
-  return { periodOptions, periodType: 'month', selectedPeriodValue: '' }
+  return {
+    periodOptions,
+    periodType: 'month',
+    selectedPeriodValue: pickFixedMarchPeriodValue(periodOptions.month)
+  }
 }
 
 function emptyPageData(): MyPerformancePageData {
@@ -273,9 +300,10 @@ export function useMyPerformancePage() {
 
   async function onPeriodTypeChange(periodType: MyPerformancePeriodType) {
     data.value.periodType = periodType
-    const options =
-      periodType === 'quarter' ? data.value.periodOptions.quarter : data.value.periodOptions.month
-    const nextValue = options[0]?.value ?? data.value.selectedPeriodValue
+    const nextValue =
+      periodType === 'quarter'
+        ? (data.value.periodOptions.quarter[0]?.value ?? data.value.selectedPeriodValue)
+        : pickFixedMarchPeriodValue(data.value.periodOptions.month)
     data.value.selectedPeriodValue = nextValue
     await loadDetail()
   }

@@ -170,17 +170,19 @@
     display: flex;
     gap: var(--space-4);
     align-items: flex-start;
+    width: 100%;
+    min-width: 0;
     padding: 8px 4px 4px;
     overflow: hidden;
   }
 
   .hist-sk-node {
     display: flex;
-    flex: 0 0 auto;
+    flex: 1 1 0;
     flex-direction: column;
     gap: 10px;
     align-items: center;
-    min-width: 72px;
+    min-width: 0;
   }
 
   .hist-sk-dot {
@@ -214,9 +216,12 @@
     display: flex;
     gap: 0;
     align-items: center;
-    min-width: max-content;
-    padding: 14px 10px;
-    overflow: hidden;
+    width: 100%;
+    min-width: 0;
+
+    /* active-star 为 top: -22px，原 padding-top 过小 + overflow:hidden 会裁切星星下半部分 */
+    padding: 30px 10px 14px;
+    overflow: hidden visible;
     background:
       radial-gradient(ellipse 70% 80% at 50% 0%, rgb(59 130 246 / 8%) 0%, transparent 55%),
       linear-gradient(145deg, rgb(39 39 42 / 42%), rgb(24 24 27 / 55%));
@@ -241,6 +246,7 @@
   .node {
     position: relative;
     display: grid;
+    flex: 1 1 0;
 
     --dot-row-height: 18px;
     --line-height: 3px;
@@ -248,7 +254,7 @@
     grid-template-rows: var(--dot-row-height) 14px;
     gap: 8px;
     place-items: center center;
-    min-width: 88px;
+    min-width: 0;
     padding: 0 10px;
     transition: filter var(--duration-fast) var(--ease-default);
 
@@ -261,6 +267,7 @@
     position: absolute;
     top: calc(var(--dot-row-height) / 2);
     left: -50%;
+    z-index: 0;
     width: 100%;
     height: var(--line-height);
     content: '';
@@ -299,6 +306,7 @@
     width: 10px;
     height: 10px;
     background: var(--node-color, rgb(161 161 170 / 65%));
+    isolation: isolate;
     border-radius: 9999px;
     box-shadow:
       0 0 0 3px rgb(24 24 27 / 60%),
@@ -346,9 +354,16 @@
   }
 
   .label {
+    position: relative;
+    z-index: 2;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
     font-size: 12px;
     font-variant-numeric: tabular-nums;
     color: var(--node-color, rgb(161 161 170 / 88%));
+    text-align: center;
+    text-overflow: ellipsis;
     white-space: nowrap;
     opacity: 0.9;
   }
@@ -357,7 +372,7 @@
     position: absolute;
     top: -22px;
     left: 50%;
-    z-index: 2;
+    z-index: 3;
     color: var(--node-color, var(--art-success));
     filter: drop-shadow(0 0 8px var(--node-color, rgb(16 185 129 / 40%)));
     transform: translateX(-50%);
