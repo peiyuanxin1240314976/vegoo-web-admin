@@ -22,7 +22,9 @@ import type {
   MyPerformanceQueryBody,
   MyPerformanceRoiTrendPoint,
   MyPerformanceRoiTrendResponse,
-  MyPerformanceSpendProgressResponse
+  MyPerformanceSpendProgressItem,
+  MyPerformanceSpendProgressResponse,
+  MyPerformanceSpendProgressTone
 } from '@/views/user-growth/my-performance/types'
 
 /** 与 `IAP_BASE` 同级结构：`.../analysis/user-growth/my-performance` */
@@ -30,7 +32,7 @@ export const MY_PERFORMANCE_BASE = `${ANALYSIS_API_BASE}/user-growth/my-performa
 
 /**
  * 网关在 BaseResponse.data 内再包一层且业务体为 `{ data: T }` 单键对象时，http 取到的是该外壳，此处再剥一层。
- * 若业务体本身含 `data` 字段（如 spend-progress 的 `title` + `data`），顶层键多于 1 个，不会误剥。
+ * 若业务体本身含 `data` 键且为唯一子键才会再剥（spend-progress 新版为 `title` + `list`，不会被误剥）。
  */
 function unwrapMyPerformancePayload<T>(raw: unknown): T {
   if (raw === null || raw === undefined) return raw as T
@@ -184,12 +186,60 @@ function mapRemoteRoiTrendToContract(raw: unknown): MyPerformanceRoiTrendRespons
 
 const EMPTY_SPEND_PROGRESS: MyPerformanceSpendProgressResponse = {
   title: '',
-  data: { spend: 0, target: 0, rate: 0 }
+  list: []
+}
+
+const SPEND_PROGRESS_TONES: MyPerformanceSpendProgressTone[] = [
+  'success',
+  'warning',
+  'danger',
+  'primary',
+  'default'
+]
+
+function clampSpendProgressRate(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.min(100, Math.max(0, n))
+}
+
+function formatSpendProgressUsd2(n: number): string {
+  return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function normalizeSpendProgressList(items: unknown): MyPerformanceSpendProgressItem[] {
+  if (!Array.isArray(items)) return []
+  return items
+    .filter((x) => x !== null && x !== undefined && typeof x === 'object')
+    .map((x) => {
+      const r = x as Record<string, unknown>
+      const label = r.label != null ? String(r.label) : ''
+      const value = r.value != null ? String(r.value) : ''
+      const rawRate = r.rate
+      const rateNum =
+        typeof rawRate === 'number' && Number.isFinite(rawRate)
+          ? rawRate
+          : Number(
+              String(rawRate ?? '')
+                .replace(/%/g, '')
+                .trim()
+            )
+      const typeRaw = r.type != null ? String(r.type) : ''
+      const type = SPEND_PROGRESS_TONES.includes(typeRaw as MyPerformanceSpendProgressTone)
+        ? (typeRaw as MyPerformanceSpendProgressTone)
+        : undefined
+      const row: MyPerformanceSpendProgressItem = {
+        label,
+        value,
+        rate: clampSpendProgressRate(Number.isFinite(rateNum) ? rateNum : 0)
+      }
+      if (type) row.type = type
+      return row
+    })
 }
 
 /**
- * 契约：`{ title, data: { spend, target, rate } }`。
- * 远程常见：多套一层 `spendProgress`，或把 spend/target/rate 摊在 `spendProgress` 顶层而无 `data`。
+ * 契约：`{ title, list }`（网关 `data.spendProgress`）。
+ * 兼容旧版 `{ title, data: { spend, target, rate } }` 或顶层 spend/target/rate。
  */
 function mapRemoteSpendProgressToContract(raw: unknown): MyPerformanceSpendProgressResponse {
   if (raw === null || raw === undefined || typeof raw !== 'object' || Array.isArray(raw)) {
@@ -206,31 +256,47 @@ function mapRemoteSpendProgressToContract(raw: unknown): MyPerformanceSpendProgr
 
   const title = String(payload.title ?? '')
 
+  if (Array.isArray(payload.list)) {
+    return { title, list: normalizeSpendProgressList(payload.list) }
+  }
+
   const inner = payload.data
   if (inner !== null && inner !== undefined && typeof inner === 'object' && !Array.isArray(inner)) {
     const d = inner as Record<string, unknown>
+    const spend = Number(d.spend ?? 0)
+    const target = Number(d.target ?? 0)
+    const rate = clampSpendProgressRate(Number(d.rate ?? 0))
     return {
       title,
-      data: {
-        spend: Number(d.spend ?? 0),
-        target: Number(d.target ?? 0),
-        rate: Number(d.rate ?? 0)
-      }
+      list: [
+        {
+          label: '总消耗',
+          value: `${formatSpendProgressUsd2(spend)} / ${formatSpendProgressUsd2(target)}`,
+          rate,
+          type: 'success'
+        }
+      ]
     }
   }
 
   if ('spend' in payload || 'target' in payload || 'rate' in payload) {
+    const spend = Number(payload.spend ?? 0)
+    const target = Number(payload.target ?? 0)
+    const rate = clampSpendProgressRate(Number(payload.rate ?? 0))
     return {
       title,
-      data: {
-        spend: Number(payload.spend ?? 0),
-        target: Number(payload.target ?? 0),
-        rate: Number(payload.rate ?? 0)
-      }
+      list: [
+        {
+          label: '总消耗',
+          value: `${formatSpendProgressUsd2(spend)} / ${formatSpendProgressUsd2(target)}`,
+          rate,
+          type: 'success'
+        }
+      ]
     }
   }
 
-  return { title, data: { spend: 0, target: 0, rate: 0 } }
+  return { title, list: [] }
 }
 
 /** 契约 01-meta-person-options — GET */

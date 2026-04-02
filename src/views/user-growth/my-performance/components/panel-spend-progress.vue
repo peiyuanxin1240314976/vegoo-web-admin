@@ -6,12 +6,13 @@
           <ElSkeletonItem variant="text" class="spend-sk-title" />
         </div>
         <div class="spend-panel__body spend-panel__body--sk">
-          <div class="spend-sk-row">
-            <ElSkeletonItem variant="text" class="spend-sk-line spend-sk-line--lg" />
-            <ElSkeletonItem variant="text" class="spend-sk-line spend-sk-line--md" />
+          <div v-for="n in 3" :key="n" class="spend-sk-block">
+            <div class="spend-sk-row">
+              <ElSkeletonItem variant="text" class="spend-sk-line spend-sk-line--sm" />
+              <ElSkeletonItem variant="text" class="spend-sk-line spend-sk-line--md" />
+            </div>
+            <ElSkeletonItem variant="text" class="spend-sk-bar" />
           </div>
-          <ElSkeletonItem variant="text" class="spend-sk-bar" />
-          <ElSkeletonItem variant="text" class="spend-sk-hint" />
         </div>
       </template>
       <template #default>
@@ -19,20 +20,30 @@
           <span class="spend-panel__title">{{ title }}</span>
         </div>
         <div class="spend-panel__body">
-          <div class="spend-row">
-            <span class="spend-current">{{ money(spend) }}</span>
-            <span class="spend-target">— {{ money(target) }}</span>
-          </div>
-          <div class="spend-divider"></div>
-          <div class="spend-bar-wrap">
-            <div class="spend-track">
-              <div class="spend-fill" :style="{ width: Math.min(100, rate) + '%' }" />
-              <span class="spend-rate" :style="{ left: Math.min(100, rate) + '%' }"
-                >{{ rate }}%</span
-              >
+          <div
+            v-for="(row, idx) in list"
+            :key="idx + '_' + row.label"
+            class="spend-block"
+            :class="{ 'spend-block--total': row.label.includes('总消耗') }"
+          >
+            <div class="spend-row-head">
+              <span class="spend-label">{{ row.label }}</span>
+              <span class="spend-value">{{ row.value }}</span>
+            </div>
+            <div class="spend-bar-wrap">
+              <div class="spend-track">
+                <div
+                  class="spend-fill"
+                  :class="'spend-fill--' + fillTone(row)"
+                  :style="{ width: Math.min(100, row.rate) + '%' }"
+                />
+                <span class="spend-rate" :style="{ left: Math.min(100, row.rate) + '%' }"
+                  >{{ row.rate }}%</span
+                >
+              </div>
             </div>
           </div>
-          <div class="spend-hint">{{ hintText }}</div>
+          <div v-if="hintText" class="spend-hint">{{ hintText }}</div>
         </div>
       </template>
     </ElSkeleton>
@@ -40,30 +51,35 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
-  import type { MyPerformanceSpendProgress } from '../types'
+  import type { MyPerformanceSpendProgressItem, MyPerformanceSpendProgressTone } from '../types'
 
   defineOptions({ name: 'MyPerformancePanelSpendProgress' })
 
-  const props = withDefaults(
+  withDefaults(
     defineProps<{
       loading?: boolean
       title: string
-      data?: MyPerformanceSpendProgress
+      list?: MyPerformanceSpendProgressItem[]
       hintText?: string
     }>(),
     {
       loading: false,
-      data: () => ({ spend: 0, target: 0, rate: 0 })
+      list: () => []
     }
   )
 
-  const spend = computed(() => props.data?.spend ?? 0)
-  const target = computed(() => props.data?.target ?? 0)
-  const rate = computed(() => props.data?.rate ?? 0)
+  const TONES: MyPerformanceSpendProgressTone[] = [
+    'success',
+    'warning',
+    'danger',
+    'primary',
+    'default'
+  ]
 
-  function money(n: number) {
-    return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  function fillTone(row: MyPerformanceSpendProgressItem): MyPerformanceSpendProgressTone {
+    const t = row.type
+    if (t && TONES.includes(t)) return t
+    return 'success'
   }
 </script>
 
@@ -128,35 +144,37 @@
   .spend-panel__body--sk {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
+  }
+
+  .spend-sk-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .spend-sk-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
+    justify-content: space-between;
   }
 
-  .spend-sk-line--lg {
-    width: 38% !important;
-    height: 28px !important;
+  .spend-sk-line--sm {
+    width: 32% !important;
+    height: 14px !important;
   }
 
   .spend-sk-line--md {
-    width: 32% !important;
-    height: 18px !important;
+    width: 44% !important;
+    height: 14px !important;
   }
 
   .spend-sk-bar {
     width: 100% !important;
-    height: 22px !important;
+    height: 20px !important;
     border-radius: 9999px;
-  }
-
-  .spend-sk-hint {
-    width: 92% !important;
-    height: 14px !important;
   }
 
   .spend-panel__body {
@@ -165,53 +183,45 @@
     padding: 12px 16px 16px;
   }
 
-  .spend-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: baseline;
+  .spend-block {
+    padding-bottom: 14px;
+
+    &:not(:last-of-type) {
+      margin-bottom: 4px;
+      border-bottom: 1px dashed rgb(63 63 70 / 45%);
+    }
   }
 
-  .spend-current {
-    display: inline-block;
-    font-size: 26px;
+  .spend-block--total .spend-value {
+    font-size: 18px;
     font-weight: 800;
-    font-variant-numeric: tabular-nums;
     color: rgb(96 165 250 / 98%);
     text-shadow:
-      0 0 22px rgb(59 130 246 / 28%),
-      0 0 44px rgb(34 211 238 / 12%);
-    transition: text-shadow 0.35s var(--ease-out);
-    animation: spend-num-pulse 3.5s ease-in-out infinite;
+      0 0 18px rgb(59 130 246 / 24%),
+      0 0 36px rgb(34 211 238 / 10%);
   }
 
-  .spend-panel:hover .spend-current {
-    text-shadow:
-      0 0 28px rgb(59 130 246 / 42%),
-      0 0 52px rgb(34 211 238 / 18%);
+  .spend-row-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 10px;
   }
 
-  @keyframes spend-num-pulse {
-    0%,
-    100% {
-      filter: brightness(1);
-    }
-
-    50% {
-      filter: brightness(1.08);
-    }
-  }
-
-  .spend-target {
-    font-size: 14px;
+  .spend-label {
+    font-size: 13px;
     color: var(--text-secondary);
   }
 
-  .spend-divider {
-    height: 0;
-    margin: 12px 0 14px;
-    border: none;
-    border-top: 1px dashed rgb(63 63 70 / 50%);
+  .spend-value {
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    text-align: right;
+    word-break: break-word;
   }
 
   .spend-bar-wrap {
@@ -248,18 +258,52 @@
     left: 0;
     min-width: 0;
     overflow: hidden;
-    background: linear-gradient(
-      90deg,
-      rgb(20 184 166 / 95%) 0%,
-      rgb(34 211 238 / 92%) 45%,
-      rgb(59 130 246 / 95%) 100%
-    );
     border-radius: 9999px;
     box-shadow:
       0 0 18px rgb(34 211 238 / 35%),
       0 0 32px rgb(59 130 246 / 15%);
     transition: width var(--duration-normal) var(--ease-out);
     animation: fill-glow 2.8s ease-in-out infinite alternate;
+  }
+
+  .spend-fill--success {
+    background: linear-gradient(
+      90deg,
+      rgb(20 184 166 / 95%) 0%,
+      rgb(34 211 238 / 92%) 45%,
+      rgb(59 130 246 / 95%) 100%
+    );
+  }
+
+  .spend-fill--primary {
+    background: linear-gradient(
+      90deg,
+      rgb(37 99 235 / 95%) 0%,
+      rgb(59 130 246 / 92%) 50%,
+      rgb(96 165 250 / 95%) 100%
+    );
+  }
+
+  .spend-fill--warning {
+    background: linear-gradient(
+      90deg,
+      rgb(234 88 12 / 95%) 0%,
+      rgb(249 115 22 / 90%) 55%,
+      rgb(251 191 36 / 88%) 100%
+    );
+  }
+
+  .spend-fill--danger {
+    background: linear-gradient(
+      90deg,
+      rgb(220 38 38 / 95%) 0%,
+      rgb(239 68 68 / 92%) 50%,
+      rgb(244 63 94 / 90%) 100%
+    );
+  }
+
+  .spend-fill--default {
+    background: linear-gradient(90deg, rgb(82 82 91 / 95%) 0%, rgb(113 113 122 / 90%) 100%);
   }
 
   @keyframes fill-glow {
@@ -351,10 +395,6 @@
       transform: none;
     }
 
-    .spend-panel:hover .spend-current {
-      transform: none;
-    }
-
     .spend-track {
       transition: none;
     }
@@ -368,8 +408,7 @@
     .spend-panel::before,
     .spend-fill,
     .spend-fill::before,
-    .spend-fill::after,
-    .spend-current {
+    .spend-fill::after {
       animation: none;
     }
 

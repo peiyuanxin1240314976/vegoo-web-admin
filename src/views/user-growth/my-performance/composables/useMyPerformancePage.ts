@@ -102,7 +102,7 @@ function emptyPageData(): MyPerformancePageData {
     roiTrend: { title: '', points: [] },
     spendProgress: {
       title: '',
-      data: { spend: 0, target: 0, rate: 0 }
+      list: []
     },
     performanceHistory: { title: '', list: [] },
     appTable: {
@@ -247,13 +247,13 @@ export function useMyPerformancePage() {
           key: 'spendProgress',
           run: async () => {
             const r = await fetchMyPerformanceSpendProgress(body)
-            data.value.spendProgress = { title: r.title, data: r.data }
+            data.value.spendProgress = { title: r.title, list: r.list }
           }
         })
       } else {
         data.value.spendProgress = {
           title: '',
-          data: { spend: 0, target: 0, rate: 0 }
+          list: []
         }
       }
 
