@@ -68,16 +68,25 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
+  import { computed, defineAsyncComponent } from 'vue'
   import AdPerformanceFilters from './modules/ad-performance-filters.vue'
   import AdPerformanceKpiCards from './modules/ad-performance-kpi-cards.vue'
-  import AdPerformanceTrendCharts from './modules/ad-performance-trend-charts.vue'
-  import AdPerformanceDistribution from './modules/ad-performance-distribution.vue'
-  import AdPerformanceTable from './modules/ad-performance-table.vue'
-  import AdPerformanceAlerts from './modules/ad-performance-alerts.vue'
   import { useAdPerformancePage } from './composables/useAdPerformancePage'
 
   defineOptions({ name: 'AdPerformance' })
+
+  const AdPerformanceTrendCharts = defineAsyncComponent(
+    () => import('./modules/ad-performance-trend-charts.vue')
+  )
+  const AdPerformanceDistribution = defineAsyncComponent(
+    () => import('./modules/ad-performance-distribution.vue')
+  )
+  const AdPerformanceTable = defineAsyncComponent(
+    () => import('./modules/ad-performance-table.vue')
+  )
+  const AdPerformanceAlerts = defineAsyncComponent(
+    () => import('./modules/ad-performance-alerts.vue')
+  )
 
   const {
     meta,
