@@ -1,41 +1,40 @@
 <template>
-  <ElCard
-    class="cockpit-panel cockpit-map-panel"
-    :class="{ 'cockpit-map-panel--dark': isDark }"
-    shadow="never"
-  >
-    <template #header>
-      <span>业务分布地图</span>
-      <div class="map-metric-box">
-        <div
-          class="map-metric-slider"
-          :style="{ transform: `translateX(${metricIndex * 100}%)` }"
-        />
-        <button
-          v-for="opt in metricOptions"
-          :key="opt.value"
-          type="button"
-          class="map-metric-btn"
-          :class="{ active: mapMetric === opt.value }"
-          @click="selectMetric(opt.value)"
-        >
-          {{ opt.label }}
-        </button>
-      </div>
-    </template>
-    <div v-loading="mapLoading" class="map-wrap">
-      <template v-if="countryData.length">
-        <div ref="mapChartRef" class="map-chart"></div>
+  <div class="cockpit-map-kpi">
+    <div class="map-kpi-border-spin" aria-hidden="true" />
+    <ElCard class="cockpit-map-panel" :class="{ 'cockpit-map-panel--dark': isDark }" shadow="never">
+      <template #header>
+        <span class="map-panel-title">业务分布地图</span>
+        <div class="map-metric-box">
+          <div
+            class="map-metric-slider"
+            :style="{ transform: `translateX(${metricIndex * 100}%)` }"
+          />
+          <button
+            v-for="opt in metricOptions"
+            :key="opt.value"
+            type="button"
+            class="map-metric-btn"
+            :class="{ active: mapMetric === opt.value }"
+            @click="selectMetric(opt.value)"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
       </template>
-      <div v-else class="map-empty">暂无数据</div>
-    </div>
-    <!-- <div class="map-legend">
+      <div v-loading="mapLoading" class="map-wrap">
+        <template v-if="countryData.length">
+          <div ref="mapChartRef" class="map-chart"></div>
+        </template>
+        <div v-else class="map-empty">暂无数据</div>
+      </div>
+      <!-- <div class="map-legend">
       <div v-for="r in regionList" :key="r.name" class="legend-item">
         <span class="dot" :style="{ background: r.color }"></span>
         <span>{{ r.name }}（{{ r.value }} {{ r.trend }}）</span>
       </div>
     </div> -->
-  </ElCard>
+    </ElCard>
+  </div>
   <!-- 悬浮 tooltip：Teleport 到 body，避免父卡片 transform/overflow:hidden 导致定位失效或被裁切 -->
   <Teleport to="body">
     <div
@@ -797,20 +796,211 @@
 </script>
 
 <style scoped lang="scss">
-  .cockpit-map-panel {
+  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as *;
+
+  @property --map-kpi-border-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  .cockpit-map-kpi {
+    --map-accent: #3b82f6;
+    --map-accent-2: #22d3ee;
+    --map-glow: rgb(59 130 246 / 45%);
+    --map-glow-2: rgb(34 211 238 / 22%);
+    --map-spin-a: rgb(59 130 246 / 62%);
+    --map-spin-b: rgb(34 211 238 / 48%);
+    --map-spin-c: rgb(16 185 129 / 38%);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
     height: 100%;
-    border-radius: 10px;
+    min-height: 0;
+    overflow: hidden;
+    background-color: rgb(8 8 12 / 98%);
+    background-image:
+      radial-gradient(
+        ellipse 120% 80% at 50% -18%,
+        var(--map-glow) 0%,
+        var(--map-glow-2) 30%,
+        transparent 58%
+      ),
+      linear-gradient(
+        172deg,
+        color-mix(in srgb, var(--map-accent) 22%, rgb(8 8 12)) 0%,
+        color-mix(in srgb, var(--map-accent) 38%, rgb(8 8 12)) 60%,
+        color-mix(in srgb, var(--map-accent-2) 15%, rgb(8 8 12)) 100%
+      );
+    border: 1px solid color-mix(in srgb, var(--map-accent) 55%, transparent);
+    border-radius: 14px;
+    box-shadow:
+      0 8px 40px rgb(0 0 0 / 52%),
+      0 0 0 1px color-mix(in srgb, var(--map-accent) 18%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 16%),
+      inset 0 -10px 28px rgb(0 0 0 / 38%),
+      0 0 28px color-mix(in srgb, var(--map-accent) 12%, transparent);
+    transition:
+      box-shadow 0.4s var(--ease-out),
+      border-color 0.28s var(--ease-default);
 
-    :deep(.el-card__header) {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 5px 15px;
+    > *:not(.map-kpi-border-spin) {
+      position: relative;
+      z-index: 1;
     }
 
-    :deep(.el-card__body) {
-      padding: 5px;
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      z-index: 0;
+      width: 80%;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        var(--map-accent),
+        var(--map-accent-2),
+        transparent
+      );
+      opacity: 0.8;
+      transform: translateX(-50%);
     }
+
+    &::after {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      z-index: 0;
+      width: 60%;
+      height: 1px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(90deg, transparent, var(--map-accent), transparent);
+      opacity: 0.45;
+      transform: translateX(-50%);
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--map-accent) 85%, transparent);
+      box-shadow:
+        0 28px 72px rgb(0 0 0 / 55%),
+        0 0 0 1px color-mix(in srgb, var(--map-accent) 40%, transparent),
+        inset 0 1px 0 rgb(255 255 255 / 20%),
+        0 0 60px color-mix(in srgb, var(--map-accent) 35%, transparent),
+        0 0 100px color-mix(in srgb, var(--map-accent) 18%, transparent),
+        0 0 140px color-mix(in srgb, var(--map-accent-2) 12%, transparent);
+    }
+
+    &:active {
+      transition-duration: 0.12s;
+    }
+  }
+
+  .map-kpi-border-spin {
+    position: absolute;
+    inset: -1px;
+    z-index: 2;
+    padding: 1.5px;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--map-kpi-border-angle, 0deg) at 50% 50%,
+      transparent 0deg,
+      var(--map-spin-a) 45deg,
+      transparent 95deg,
+      transparent 145deg,
+      var(--map-spin-b) 195deg,
+      transparent 250deg,
+      transparent 300deg,
+      var(--map-spin-c) 340deg,
+      transparent 360deg
+    );
+    filter: blur(0.3px);
+    border-radius: inherit;
+    opacity: 0.92;
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    animation: map-kpi-border-spin 4s linear infinite;
+
+    --map-kpi-border-angle: 0deg;
+  }
+
+  @keyframes map-kpi-border-spin {
+    to {
+      --map-kpi-border-angle: 360deg;
+    }
+  }
+
+  html:not(.dark) .cockpit-map-kpi {
+    background-color: #fff;
+    background-image: none;
+    border: 1px solid var(--el-border-color-lighter);
+    box-shadow:
+      0 8px 24px rgb(15 23 42 / 8%),
+      inset 0 1px 0 rgb(255 255 255 / 90%);
+
+    &::before {
+      opacity: 0.7;
+    }
+
+    &::after {
+      opacity: 0.35;
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--map-accent) 45%, var(--el-border-color-lighter));
+      box-shadow:
+        0 14px 36px rgb(15 23 42 / 12%),
+        0 0 0 1px color-mix(in srgb, var(--map-accent) 22%, transparent);
+    }
+
+    .map-kpi-border-spin {
+      opacity: 0.45;
+    }
+  }
+
+  html.dark .map-panel-title {
+    @include ap-title-gradient;
+  }
+
+  html:not(.dark) .map-panel-title {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .cockpit-map-kpi :deep(.el-card.cockpit-map-panel) {
+    height: 100%;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .cockpit-map-kpi :deep(.el-card__header) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 15px;
+    background: transparent !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--map-accent) 28%, transparent);
+  }
+
+  .cockpit-map-kpi :deep(.el-card__body) {
+    padding: 5px;
+    background: transparent !important;
+  }
+
+  html:not(.dark) .cockpit-map-kpi :deep(.el-card__header) {
+    border-bottom-color: var(--el-border-color-lighter);
+  }
+
+  html.dark .map-metric-box {
+    background: rgb(0 0 0 / 28%);
+    border-color: color-mix(in srgb, var(--map-accent) 28%, transparent);
   }
 
   .map-metric-box {
@@ -936,6 +1126,22 @@
       border-radius: 50%;
     }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .map-kpi-border-spin {
+      opacity: 0;
+      animation: none;
+    }
+
+    .cockpit-map-kpi {
+      transition: none;
+
+      &:hover,
+      &:active {
+        transform: none;
+      }
+    }
+  }
 </style>
 
 <style lang="scss">
@@ -979,12 +1185,12 @@
    * 使用 :has() 检测点击目标是否在 .map-chart 内，若是则将 transform 锁定在悬浮位置，
    * 仅点击地图外区域（如 Header 按钮）才允许触发 :active 效果。
    */
-  html.dark .cockpit-map-panel:has(.map-chart:active) {
+  html.dark .cockpit-map-kpi:has(.map-chart:active) {
     transition: none;
     transform: none;
   }
 
-  html:not(.dark) .cockpit-map-panel:has(.map-chart:active) {
+  html:not(.dark) .cockpit-map-kpi:has(.map-chart:active) {
     transition: none;
     transform: none;
   }

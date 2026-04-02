@@ -110,9 +110,7 @@
 </script>
 
 <style scoped lang="scss">
-  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as *;
-
-  /* 与广告成效 KPI 卡片同系：旋转渐变边框 */
+  /* 与驾驶舱第一排「预估利润」KPI 同系：accent 为 primary+danger / primary+success 混色，紫为低透明度叠层 */
   @property --pace-border-angle {
     syntax: '<angle>';
     initial-value: 0deg;
@@ -120,40 +118,40 @@
   }
 
   .cockpit-pace-kpi {
-    --pace-accent: #3b82f6;
-    --pace-accent-2: #22d3ee;
-    --pace-glow: rgb(59 130 246 / 45%);
-    --pace-glow-2: rgb(34 211 238 / 22%);
-    --pace-spin-a: rgb(16 185 129 / 55%);
-    --pace-spin-b: rgb(59 130 246 / 48%);
-    --pace-spin-c: rgb(168 85 247 / 38%);
+    /* 与 global-kpi-cards「预估利润」.cockpit-kpi-card--profit 一致 */
+    --pace-accent: color-mix(in srgb, var(--art-primary) 65%, var(--art-danger));
+    --pace-accent-2: color-mix(in srgb, var(--art-primary) 55%, var(--art-success));
+    --pace-base: color-mix(in srgb, var(--default-bg-color) 92%, black);
+    --pace-spin-a: color-mix(in srgb, var(--pace-accent) 42%, transparent);
+    --pace-spin-b: color-mix(in srgb, var(--pace-accent-2) 34%, transparent);
+    --pace-spin-c: color-mix(in srgb, var(--pace-accent) 26%, transparent);
 
     position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    background-color: rgb(8 8 12 / 98%);
+    background-color: color-mix(in srgb, var(--default-bg-color) 86%, black);
     background-image:
       radial-gradient(
         ellipse 120% 80% at 50% -18%,
-        var(--pace-glow) 0%,
-        var(--pace-glow-2) 30%,
+        color-mix(in srgb, var(--pace-accent) 45%, transparent) 0%,
+        color-mix(in srgb, var(--pace-accent-2) 22%, transparent) 30%,
         transparent 58%
       ),
       linear-gradient(
         172deg,
-        color-mix(in srgb, var(--pace-accent) 22%, rgb(8 8 12)) 0%,
-        color-mix(in srgb, var(--pace-accent) 38%, rgb(8 8 12)) 60%,
-        color-mix(in srgb, var(--pace-accent-2) 15%, rgb(8 8 12)) 100%
+        color-mix(in srgb, var(--pace-accent) 18%, var(--pace-base)) 0%,
+        color-mix(in srgb, var(--pace-accent) 28%, var(--pace-base)) 60%,
+        color-mix(in srgb, var(--pace-accent-2) 14%, var(--pace-base)) 100%
       );
     border: 1px solid color-mix(in srgb, var(--pace-accent) 55%, transparent);
     border-radius: 14px;
     box-shadow:
-      0 8px 40px rgb(0 0 0 / 52%),
+      0 8px 40px color-mix(in srgb, black 52%, transparent),
       0 0 0 1px color-mix(in srgb, var(--pace-accent) 18%, transparent),
-      inset 0 1px 0 rgb(255 255 255 / 16%),
-      inset 0 -10px 28px rgb(0 0 0 / 38%),
+      inset 0 1px 0 color-mix(in srgb, white 16%, transparent),
+      inset 0 -10px 28px color-mix(in srgb, black 38%, transparent),
       0 0 28px color-mix(in srgb, var(--pace-accent) 12%, transparent);
     transition:
       box-shadow 0.4s var(--ease-out),
@@ -180,7 +178,7 @@
         var(--pace-accent-2),
         transparent
       );
-      opacity: 0.8;
+      opacity: 0.55;
       transform: translateX(-50%);
     }
 
@@ -194,16 +192,16 @@
       pointer-events: none;
       content: '';
       background: linear-gradient(90deg, transparent, var(--pace-accent), transparent);
-      opacity: 0.45;
+      opacity: 0.28;
       transform: translateX(-50%);
     }
 
     &:hover {
       border-color: color-mix(in srgb, var(--pace-accent) 85%, transparent);
       box-shadow:
-        0 28px 72px rgb(0 0 0 / 55%),
+        0 28px 72px color-mix(in srgb, black 55%, transparent),
         0 0 0 1px color-mix(in srgb, var(--pace-accent) 40%, transparent),
-        inset 0 1px 0 rgb(255 255 255 / 20%),
+        inset 0 1px 0 color-mix(in srgb, white 20%, transparent),
         0 0 60px color-mix(in srgb, var(--pace-accent) 35%, transparent),
         0 0 100px color-mix(in srgb, var(--pace-accent) 18%, transparent),
         0 0 140px color-mix(in srgb, var(--pace-accent-2) 12%, transparent);
@@ -234,7 +232,7 @@
     );
     filter: blur(0.3px);
     border-radius: inherit;
-    opacity: 0.92;
+    opacity: 0.52;
     mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
@@ -251,30 +249,34 @@
   }
 
   html:not(.dark) .cockpit-pace-kpi {
-    background-color: #fff;
-    background-image: none;
-    border: 1px solid var(--el-border-color-lighter);
+    --pace-accent: color-mix(in srgb, var(--art-primary) 65%, var(--art-danger));
+    --pace-accent-2: color-mix(in srgb, var(--art-primary) 55%, var(--art-success));
+
+    background:
+      linear-gradient(135deg, rgb(255 255 255 / 68%) 0%, rgb(255 255 255 / 45%) 100%),
+      linear-gradient(135deg, rgb(114 46 209 / 18%) 0%, rgb(114 46 209 / 8%) 100%);
+    border: 1px solid rgb(0 0 0 / 10%);
     box-shadow:
       0 8px 24px rgb(15 23 42 / 8%),
       inset 0 1px 0 rgb(255 255 255 / 90%);
 
     &::before {
-      opacity: 0.7;
+      opacity: 0.42;
     }
 
     &::after {
-      opacity: 0.35;
+      opacity: 0.2;
     }
 
     &:hover {
-      border-color: color-mix(in srgb, var(--pace-accent) 45%, var(--el-border-color-lighter));
+      border-color: color-mix(in srgb, var(--pace-accent) 38%, rgb(0 0 0 / 10%));
       box-shadow:
         0 14px 36px rgb(15 23 42 / 12%),
-        0 0 0 1px color-mix(in srgb, var(--pace-accent) 22%, transparent);
+        0 0 0 1px color-mix(in srgb, var(--pace-accent) 16%, transparent);
     }
 
     .pace-border-spin {
-      opacity: 0.45;
+      opacity: 0.24;
     }
   }
 
@@ -288,12 +290,14 @@
   }
 
   html.dark .pace-title {
-    @include ap-title-gradient;
+    font-weight: 700;
+    color: rgb(255 255 255 / 90%);
+    letter-spacing: 0.02em;
   }
 
   html:not(.dark) .pace-title {
     font-weight: 600;
-    color: #303133;
+    color: #722ed1;
     letter-spacing: 0.02em;
   }
 
@@ -330,21 +334,21 @@
     &--self {
       background: linear-gradient(
         90deg,
-        rgb(59 130 246 / 24%) 0%,
-        rgb(6 182 212 / 8%) 45%,
+        rgb(114 46 209 / 16%) 0%,
+        rgb(114 46 209 / 5%) 48%,
         transparent 100%
       );
-      border: 1px solid rgb(96 165 250 / 18%);
+      border: 1px solid rgb(114 46 209 / 22%);
     }
 
     &--managed {
       background: linear-gradient(
         90deg,
-        rgb(16 185 129 / 20%) 0%,
-        rgb(168 85 247 / 12%) 55%,
+        rgb(114 46 209 / 12%) 0%,
+        rgb(59 130 246 / 6%) 52%,
         transparent 100%
       );
-      border: 1px solid rgb(52 211 153 / 16%);
+      border: 1px solid rgb(114 46 209 / 18%);
     }
   }
 
@@ -360,7 +364,7 @@
       box-shadow var(--duration-fast) var(--ease-default);
 
     html.dark & {
-      background: rgb(255 255 255 / 4%);
+      background: rgb(4 4 4 / 35%);
       border: 1px solid color-mix(in srgb, var(--pace-accent) 22%, transparent);
     }
 

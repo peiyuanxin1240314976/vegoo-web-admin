@@ -382,7 +382,7 @@
     margin-bottom: 16px;
 
     .cockpit-panel,
-    .cockpit-map-panel {
+    .cockpit-map-kpi {
       margin-bottom: 16px;
     }
   }
