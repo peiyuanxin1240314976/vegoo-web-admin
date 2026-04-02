@@ -165,7 +165,17 @@ export const useUserStore = defineStore(
       accessToken.value = ''
       // 清空刷新令牌
       refreshToken.value = ''
-      // 注意：不清空工作台标签页，等下次登录时根据用户判断
+
+      // 清空工作台标签页（含 localStorage 持久化数据）
+      const worktabStore = useWorktabStore()
+      worktabStore.clearAll()
+      const worktabKeyPattern = StorageConfig.createKeyPattern('worktab')
+      Object.keys(localStorage).forEach((key) => {
+        if (worktabKeyPattern.test(key)) {
+          localStorage.removeItem(key)
+        }
+      })
+
       // 移除iframe路由缓存
       sessionStorage.removeItem('iframeRoutes')
       // 清空主页路径
