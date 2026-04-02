@@ -147,13 +147,134 @@
 
 /* 授权页右侧区域 */
 .auth-right-wrap {
-  @apply absolute inset-0 w-[540px] h-[650px] py-[5px] m-auto overflow-hidden
+  --auth-right-offset-y: 0px;
+
+  @apply absolute w-[550px] h-[650px] py-[5px] overflow-hidden
     max-sm:px-7 max-sm:w-full
     animate-[slideInRight_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]
     max-md:animate-none;
 
+  top: 50%;
+  left: 50%;
+  padding: 0 5px;
+  isolation: isolate;
+  translate: -50% calc(-50% + var(--auth-right-offset-y));
+
+  /* 卡片后面的低透明抽象几何背景（透过玻璃卡片隐约可见） */
+  &::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        520px 420px at 20% 18%,
+        color-mix(in srgb, var(--art-primary) 12%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        520px 420px at 85% 70%,
+        color-mix(in srgb, var(--art-success) 9%, transparent),
+        transparent 62%
+      ),
+      conic-gradient(
+        from 210deg at 65% 35%,
+        transparent 0deg,
+        color-mix(in srgb, var(--art-primary) 7%, transparent) 38deg,
+        transparent 82deg,
+        color-mix(in srgb, var(--art-primary) 5%, transparent) 128deg,
+        transparent 180deg,
+        color-mix(in srgb, var(--art-success) 5%, transparent) 238deg,
+        transparent 360deg
+      );
+    filter: blur(14px);
+    opacity: 0.62;
+    transform: scale(1.02);
+    animation: loginCardBgFloat 10s var(--ease-out) infinite alternate;
+  }
+
   .form {
     @apply h-full py-[40px];
+
+    position: relative;
+    z-index: 1;
+    padding-inline: 48px;
+    background:
+      radial-gradient(
+        circle at 20% 10%,
+        color-mix(in srgb, var(--art-primary) 6%, transparent),
+        transparent 55%
+      ),
+      radial-gradient(
+        circle at 80% 70%,
+        color-mix(in srgb, var(--art-success) 5%, transparent),
+        transparent 60%
+      ),
+      color-mix(in srgb, var(--el-color-white) 62%, transparent);
+    backdrop-filter: blur(12px) saturate(1.05);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border-radius: 24px;
+    box-shadow:
+      0 30px 120px color-mix(in srgb, var(--art-primary) 0%, transparent),
+      0 18px 60px color-mix(in srgb, var(--art-primary) 0%, transparent),
+      0 10px 30px rgb(15 23 42 / 0%),
+      0 0 0 1px rgb(255 255 255 / 0%) inset;
+    transition:
+      transform var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      border-color var(--duration-normal) var(--ease-out);
+  }
+
+  .form::before {
+    position: absolute;
+    inset: -2px;
+    z-index: 0;
+    padding: 2px;
+    pointer-events: none;
+    content: '';
+    background: conic-gradient(
+      from var(--login-border-angle),
+      transparent 0%,
+      color-mix(in srgb, var(--art-primary) 85%, transparent) 12%,
+      color-mix(in srgb, var(--art-success) 75%, transparent) 28%,
+      color-mix(in srgb, var(--art-primary) 85%, transparent) 44%,
+      transparent 58%,
+      color-mix(in srgb, var(--art-primary) 75%, transparent) 72%,
+      transparent 100%
+    );
+    filter: blur(10px);
+    border-radius: inherit;
+    opacity: 0.32;
+
+    /* hollow border ring */
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: loginBorderSpin 10s linear infinite;
+  }
+
+  .form::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image: radial-gradient(circle at 1px 1px, rgb(0 0 0 / 9%) 1px, transparent 1px);
+    background-size: 18px 18px;
+    border-radius: inherit;
+    opacity: 0.14;
+    mask-image: radial-gradient(circle at 30% 18%, #000 0%, transparent 62%);
+  }
+
+  .form > * {
+    position: relative;
+    z-index: 1;
   }
 
   .login-brand {
@@ -190,5 +311,41 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@property --login-border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes loginBorderSpin {
+  to {
+    --login-border-angle: 360deg;
+  }
+}
+
+@keyframes loginCardBgFloat {
+  from {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: scale(1.06) translate3d(0, 10px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-right-wrap .form {
+    transition: none;
+  }
+
+  .auth-right-wrap .form::before {
+    animation: none;
+  }
+
+  .auth-right-wrap::before {
+    animation: none;
   }
 }
