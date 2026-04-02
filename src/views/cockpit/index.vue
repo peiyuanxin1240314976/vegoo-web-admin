@@ -1,6 +1,5 @@
 <template>
   <div class="cockpit-page flex flex-col">
-    <div class="cockpit-page-fx" aria-hidden="true"></div>
     <!-- 1. 日期范围 + 2. 顶部操作栏 -->
     <div class="cockpit-page__section cockpit-page__section--header cockpit-entry-1">
       <div class="cockpit-header">
@@ -259,34 +258,10 @@
       mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
     }
 
-    > *:not(.cockpit-page-fx) {
+    > * {
       position: relative;
       z-index: 1;
     }
-  }
-
-  .cockpit-page-fx {
-    position: absolute;
-    inset: 0 0 40%;
-    z-index: 0;
-    pointer-events: none;
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      transparent 0deg,
-      rgb(59 130 246 / 14%) 55deg,
-      rgb(6 182 212 / 10%) 80deg,
-      transparent 130deg,
-      rgb(16 185 129 / 12%) 200deg,
-      rgb(52 211 153 / 8%) 225deg,
-      transparent 285deg,
-      rgb(168 85 247 / 10%) 330deg,
-      rgb(249 115 22 / 6%) 350deg,
-      transparent 360deg
-    );
-    opacity: 0.85;
-    mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
-    animation: cockpit-fx-spin 52s linear infinite;
-    will-change: transform;
   }
 
   @keyframes cockpit-aurora-drift {
@@ -315,12 +290,6 @@
     100% {
       opacity: 1;
       transform: scaleY(1.04);
-    }
-  }
-
-  @keyframes cockpit-fx-spin {
-    to {
-      transform: rotate(360deg);
     }
   }
 
@@ -435,18 +404,11 @@
       /* content: none 完全移除伪元素，不再占用任何合成层或绘制资源 */
       content: none;
     }
-
-    .cockpit-page-fx {
-      /* display: none 移除元素 + 撤销 will-change，彻底释放 GPU 纹理分配 */
-      display: none;
-      will-change: auto;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .cockpit-page::before,
-    .cockpit-page::after,
-    .cockpit-page-fx {
+    .cockpit-page::after {
       animation: none;
     }
 
