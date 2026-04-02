@@ -48,15 +48,15 @@
     return row.roi ?? '--'
   }
 
-  function progressDisplayStatus(row: Api.UserGrowth.MyAdsSummaryProgressItemDto): string {
-    if (row.status) return row.status
-    const map: Record<string, string> = {
-      ok: '正常',
-      warn: '超预算',
-      inactive: '未启动'
-    }
-    return map[row.statusType] ?? row.statusType
-  }
+  // function progressDisplayStatus(row: Api.UserGrowth.MyAdsSummaryProgressItemDto): string {
+  //   if (row.status) return row.status
+  //   const map: Record<string, string> = {
+  //     ok: '正常',
+  //     warn: '超预算',
+  //     inactive: '未启动'
+  //   }
+  //   return map[row.statusType] ?? row.statusType
+  // }
 
   const lineChartEl = ref<HTMLElement | null>(null)
   const pieChartEl = ref<HTMLElement | null>(null)
@@ -104,11 +104,16 @@
       yAxis: [
         {
           type: 'value',
-          min: 0,
+          min: (v: { min: number }) => Math.min(0, v.min),
           axisLabel: {
             color: '#64748b',
             fontSize: 11,
-            formatter: (v: number) => (v === 0 ? '$0' : `$${v / 1000}k`)
+            formatter: (v: number) => {
+              if (v === 0) return '$0'
+              const sign = v < 0 ? '-' : ''
+              const abs = Math.abs(v)
+              return abs >= 1000 ? `${sign}$${abs / 1000}k` : `${sign}$${abs}`
+            }
           },
           splitLine: { lineStyle: { color: '#1a2a3a', type: 'dashed' } },
           axisLine: { show: false },
@@ -116,7 +121,7 @@
         },
         {
           type: 'value',
-          min: 0,
+          min: (v: { min: number }) => Math.min(0, v.min),
           axisLabel: { color: '#64748b', fontSize: 11, formatter: '{value}%' },
           splitLine: { show: false },
           axisLine: { show: false },
@@ -498,7 +503,7 @@
                 <th>广告支出/预算</th>
                 <th>进度</th>
                 <th>首日ROI</th>
-                <th>状态</th>
+                <!-- <th>状态</th> -->
               </tr>
             </thead>
             <tbody>
@@ -535,11 +540,11 @@
                 >
                   {{ progressDisplayRoi(row) }}
                 </td>
-                <td>
+                <!-- <td>
                   <span :class="['status-dot', row.statusType]">
                     <i class="dot"></i>{{ progressDisplayStatus(row) }}
                   </span>
-                </td>
+                </td> -->
               </tr>
             </tbody>
           </table>

@@ -4,16 +4,17 @@
   import PlatformTab from './PlatformTab.vue'
   import CampaignTab from './CampaignTab.vue'
   import { fetchMyAdsPageHeader, fetchMyAdsSummary, fetchMyAdsPlatform } from '@/api/user-growth'
-  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
   import type { MyAdsStaffOption, MyAdsUserCardMock, MyAdsMetricStripItem } from '../types'
 
   defineOptions({ name: 'MyAdsPageContent' })
 
   function getDefaultDateRange(): [string, string] {
     const today = getAppTodayYYYYMMDD()
-    const d = new Date(today)
+    const d = cloneAppDate(getAppNow())
+    d.setHours(0, 0, 0, 0)
     d.setDate(d.getDate() - 7)
-    const start = d.toISOString().slice(0, 10)
+    const start = formatYYYYMMDD(d)
     return [start, today]
   }
 
