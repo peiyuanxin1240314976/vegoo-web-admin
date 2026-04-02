@@ -1,13 +1,6 @@
 <template>
-  <div ref="rootRef" class="finance-screen-root art-full-height">
-    <div
-      class="finance-screen-wrap"
-      :style="{
-        width: `${designWidth}px`,
-        transform: `scale(${scale})`,
-        transformOrigin: '0 0'
-      }"
-    >
+  <div ref="rootRef" class="finance-screen-root">
+    <div class="finance-screen-wrap">
       <div class="aps-page-fx" aria-hidden="true"></div>
       <!-- 顶栏：日期 + 筛选 + 导出（常驻，不随数据骨架整页隐藏） -->
       <header class="finance-header aps-entry-1">
@@ -226,20 +219,9 @@
 
   const KPI_SKELETON_CARD_COUNT = 5
 
-  // 对齐 Axure 原型画布尺寸（styles.css: body width 1700, base height 1237）
-  const designWidth = 1700
-  // const designHeight = 1237
   const pageSize = ref(10)
 
   const rootRef = ref<HTMLElement>()
-  const scale = ref(1)
-  const updateScale = () => {
-    const el = rootRef.value
-    if (!el) return
-    const w = el.clientWidth
-    if (w <= 0) return
-    scale.value = w / designWidth
-  }
 
   function getDefaultDateRange(): [string, string] {
     const now = getAppNow()
@@ -1320,8 +1302,6 @@
     }
   }
 
-  let resizeObserver: ResizeObserver | null = null
-
   async function tryMountRoiTrendChart() {
     await nextTick()
     if (!roiTrendRef.value) return
@@ -1349,13 +1329,6 @@
   }
 
   onMounted(() => {
-    updateScale()
-    if (rootRef.value) {
-      resizeObserver = new ResizeObserver(() => updateScale())
-      resizeObserver.observe(rootRef.value)
-    }
-    window.addEventListener('resize', updateScale)
-
     void (async () => {
       await loadFiltersMeta()
       runDashboardQuery()
@@ -1363,11 +1336,6 @@
   })
 
   onUnmounted(() => {
-    if (resizeObserver && rootRef.value) {
-      resizeObserver.unobserve(rootRef.value)
-      resizeObserver = null
-    }
-    window.removeEventListener('resize', updateScale)
     kpiMiniCharts.forEach((c) => c.destroyChart?.())
     chartRoiTrend.destroyChart?.()
   })
@@ -1444,6 +1412,7 @@
     /* ========== 根布局（合并，避免重复 selector） ========== */
     position: relative;
     box-sizing: border-box;
+    display: block;
     width: 100%;
     height: var(--art-full-height, calc(100vh - 120px));
     overflow: auto;
@@ -1584,11 +1553,11 @@
 
   /* ========== 根布局 ========== */
   .finance-screen-wrap {
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 0;
+    position: relative;
+    width: 100%;
+    max-width: 1700px;
     padding: 0 10px;
+    margin: 0 auto;
     overflow: hidden;
     background: $color-bg;
     border-radius: 10px;
@@ -2209,6 +2178,48 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     min-height: 320px;
+  }
+
+  /* ========== 响应式断点：不再整体缩放，改用栅格自适应 ========== */
+  @media (width <= 1680px) {
+    .row-1 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (width <= 1180px) {
+    .row-1 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .row-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (width <= 820px) {
+    .row-1 {
+      grid-template-columns: 1fr;
+    }
+
+    .aps-filter-toolbar {
+      padding: 10px 12px;
+      border-radius: 14px;
+    }
+
+    .aps-filter-toolbar__row {
+      gap: 10px;
+    }
+
+    .aps-filter-toolbar .header-left :deep(.aps-date-picker) {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .header-filters :deep(.aps-filter-select) {
+      width: 100%;
+      max-width: 220px;
+    }
   }
 
   .panel {
