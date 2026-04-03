@@ -76,8 +76,8 @@ export function useCommon() {
    * @param smooth 是否使用平滑滚动
    */
   const scrollTo = (top: number, smooth: boolean = false) => {
-    const behavior = smooth ? 'smooth' : 'auto'
-    const opts = { top, behavior }
+    const behavior: ScrollBehavior = smooth ? 'smooth' : 'auto'
+    const opts: ScrollToOptions = { top, behavior }
     forEachAppLayoutScrollEl((el) => {
       el.scrollTo(opts)
     })
