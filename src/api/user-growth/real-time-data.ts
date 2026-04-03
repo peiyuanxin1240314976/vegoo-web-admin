@@ -1,5 +1,7 @@
 /**
  * 用户增长 - 实时数据 API（Mock / 远程由 `views/user-growth/real-time-data/config/data-source` 切换）
+ *
+ * 筛选项下拉请使用公用 `fetchComprehensiveAnalysisFilterOptions`（`./comprehensive-analysis`），本文件不包含 meta-filter-options。
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
@@ -9,8 +11,7 @@ import type {
   RealtimeAppDetailRequestBody,
   RealtimeDataQueryParams,
   RealtimeHourlySpendComparison,
-  RealtimeKpiSummary,
-  RealtimeMetaFilterOptionsBody
+  RealtimeKpiSummary
 } from '@/views/user-growth/real-time-data/types'
 import {
   RealtimeDataEndpoint,
@@ -36,20 +37,7 @@ function unwrapDataDeep<T = unknown>(value: unknown, maxDepth = 3): T {
   return cur as T
 }
 
-/** 契约 01-meta-filter-options — POST */
-export function fetchRealtimeMetaFilterOptions(params?: RealtimeDataQueryParams) {
-  if (isRealtimeDataEndpointMock(RealtimeDataEndpoint.MetaFilterOptions)) {
-    return realtimeDataMock.mockFetchRealtimeMetaFilterOptions(params)
-  }
-  return request
-    .post<RealtimeMetaFilterOptionsBody>({
-      url: `${REALTIME_DATA_BASE}/meta-filter-options`,
-      data: params ?? {}
-    })
-    .then((res) => unwrapDataDeep<RealtimeMetaFilterOptionsBody>(res))
-}
-
-/** 契约 02-overview-kpi-summary — POST */
+/** 契约 01-overview-kpi-summary — POST */
 export function fetchRealtimeOverviewKpiSummary(params?: RealtimeDataQueryParams) {
   if (isRealtimeDataEndpointMock(RealtimeDataEndpoint.OverviewKpiSummary)) {
     return realtimeDataMock.mockFetchRealtimeOverviewKpiSummary(params)
@@ -62,7 +50,7 @@ export function fetchRealtimeOverviewKpiSummary(params?: RealtimeDataQueryParams
     .then((res) => unwrapDataDeep<RealtimeKpiSummary>(res))
 }
 
-/** 契约 03-table-app-cards — POST */
+/** 契约 02-table-app-cards — POST */
 export function fetchRealtimeTableAppCards(params?: RealtimeDataQueryParams) {
   if (isRealtimeDataEndpointMock(RealtimeDataEndpoint.TableAppCards)) {
     return realtimeDataMock.mockFetchRealtimeTableAppCards(params)
@@ -75,7 +63,7 @@ export function fetchRealtimeTableAppCards(params?: RealtimeDataQueryParams) {
     .then((res) => unwrapDataDeep<RealtimeAppCardsTableBody>(res))
 }
 
-/** 契约 04-app-detail — POST */
+/** 契约 03-app-detail — POST */
 export function fetchRealtimeAppDetail(params: RealtimeAppDetailRequestBody) {
   if (isRealtimeDataEndpointMock(RealtimeDataEndpoint.AppDetail)) {
     return realtimeDataMock.mockFetchRealtimeAppDetail(params)
@@ -88,7 +76,7 @@ export function fetchRealtimeAppDetail(params: RealtimeAppDetailRequestBody) {
     .then((res) => unwrapDataDeep<RealtimeAppDetailBody>(res))
 }
 
-/** 契约 05-overview-hourly-spend-comparison — POST */
+/** 契约 04-overview-hourly-spend-comparison — POST */
 export function fetchRealtimeOverviewHourlySpendComparison(params?: RealtimeDataQueryParams) {
   if (isRealtimeDataEndpointMock(RealtimeDataEndpoint.OverviewHourlySpendComparison)) {
     return realtimeDataMock.mockFetchRealtimeOverviewHourlySpendComparison(params)

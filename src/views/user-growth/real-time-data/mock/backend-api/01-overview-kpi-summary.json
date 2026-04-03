@@ -5,22 +5,12 @@
       "s_app_id": {
         "type": "string",
         "required": false,
-        "description": "应用 ID；不传或 all 表示全应用汇总。"
+        "description": "应用 ID；空字符串表示「全部应用」；勿传字面量 all。不传可省略。"
       },
       "n_source": {
-        "type": "number",
-        "required": false,
-        "description": "广告平台枚举；不传表示不限平台。"
-      },
-      "startDate": {
         "type": "string",
         "required": false,
-        "description": "查询起始日（含），YYYY-MM-DD；单日快照可与 endDate 相同；不传默认今日。"
-      },
-      "endDate": {
-        "type": "string",
-        "required": false,
-        "description": "查询结束日（含），YYYY-MM-DD。"
+        "description": "广告平台枚举字符串（如 1、7）；空字符串表示不限；勿用 JSON number。"
       }
     },
     "response": {
@@ -62,9 +52,7 @@
     }
   },
   "sampleRequest": {
-    "s_app_id": "all",
-    "startDate": "2026-03-21",
-    "endDate": "2026-03-21"
+    "s_app_id": ""
   },
   "sampleResponse": {
     "onlineApps": 8,
@@ -79,7 +67,7 @@
     "triggers": [
       {
         "moment": "页面首屏初始化",
-        "detail": "`RealtimeDataDashboard` 挂载后与 01/03/05 并行请求；入参来自当前筛选（应用、广告平台、业务日）。",
+        "detail": "`RealtimeDataDashboard` 挂载后与 02/04 并行请求；入参来自当前筛选（应用、广告平台）。筛选项来自公用 `.../comprehensive-analysis/meta-filter-options`。",
         "prerequisite": "无"
       },
       {
@@ -88,14 +76,14 @@
         "prerequisite": "无"
       }
     ],
-    "defaultSelection": "应用为「全部」时 s_app_id 传 `all` 或省略；广告平台不限则省略 n_source。",
-    "dedupe": "可与 03 共参数快照，避免参数漂移。"
+    "defaultSelection": "应用为「全部」时 s_app_id 传空字符串 \"\"（勿传 all 字面量）或省略；广告平台不限则省略 n_source。",
+    "dedupe": "可与 02 共参数快照，避免参数漂移。"
   },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/overview-kpi-summary",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_app_id?, n_source?, startDate?, endDate?",
+    "requestBody": "s_app_id?, n_source?",
     "responseBody": "RealtimeKpiSummary"
   },
   "apiSuggestion": {

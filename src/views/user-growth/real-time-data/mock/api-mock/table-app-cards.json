@@ -1,5 +1,5 @@
 {
-  "_comment": "POST table/app-cards — 与 backend-api/03-table-app-cards.json 的 sampleResponse 对齐",
+  "_comment": "POST table/app-cards — 与 backend-api/02-table-app-cards.json 的 sampleResponse 对齐",
   "sampleResponse": {
     "items": [
       {

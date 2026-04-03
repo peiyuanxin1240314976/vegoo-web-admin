@@ -5,22 +5,12 @@
       "s_app_id": {
         "type": "string",
         "required": false,
-        "description": "应用 ID；all 或不传表示全部。"
+        "description": "应用 ID；空字符串表示「全部应用」；勿传字面量 all。不传可省略。"
       },
       "n_source": {
-        "type": "number",
-        "required": false,
-        "description": "广告平台枚举；筛选卡片所基于的投放维度。"
-      },
-      "startDate": {
         "type": "string",
         "required": false,
-        "description": "查询起始日（含），YYYY-MM-DD。"
-      },
-      "endDate": {
-        "type": "string",
-        "required": false,
-        "description": "查询结束日（含），YYYY-MM-DD；单日快照与 startDate 同值。"
+        "description": "广告平台枚举字符串；空字符串表示不限；勿用 JSON number。"
       }
     },
     "response": {
@@ -146,9 +136,7 @@
     }
   },
   "sampleRequest": {
-    "s_app_id": "all",
-    "startDate": "2026-03-21",
-    "endDate": "2026-03-21"
+    "s_app_id": ""
   },
   "sampleResponse": {
     "items": [
@@ -331,28 +319,28 @@
     "triggers": [
       {
         "moment": "页面首屏初始化",
-        "detail": "加载应用卡片栅格（火花图数据在 items[].chartData）；与 02 同筛选项。",
+        "detail": "加载应用卡片栅格（火花图数据在 items[].chartData）；与 01 同筛选项。",
         "prerequisite": "无"
       },
       {
         "moment": "筛选或刷新",
-        "detail": "用户变更应用/广告平台/日期或触发整页刷新时重拉；切换卡片内展示维度若仅前端本地切换则不触发（本页火花图为接口字段，非多 Tab 另请求）。",
+        "detail": "用户变更应用/广告平台或触发整页刷新时重拉；切换卡片内展示维度若仅前端本地切换则不触发（本页火花图为接口字段，非多 Tab 另请求）。",
         "prerequisite": "无"
       }
     ],
-    "defaultSelection": "与 02-overview-kpi-summary 使用相同默认筛选。",
-    "dedupe": "打开详情 04 不重复拉取列表；列表不含弹窗大字段。"
+    "defaultSelection": "与 01-overview-kpi-summary 使用相同默认筛选。",
+    "dedupe": "打开详情 03 不重复拉取列表；列表不含弹窗大字段。"
   },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/table/app-cards",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_app_id?, n_source?, startDate?, endDate?",
+    "requestBody": "s_app_id?, n_source?",
     "responseBody": "items: RealtimeAppCardRow[]"
   },
   "apiSuggestion": {
     "notes": [
-      "禁止在本接口返回弹窗级大字段（小时序列、分广告平台明细）；请走 04-app-detail。",
+      "禁止在本接口返回弹窗级大字段（小时序列、分广告平台明细）；请走 03-app-detail。",
       "若后端统一使用 cost 命名字段，可在映射层写入 spend 以兼容当前 UI。",
       "`sampleResponse.items` 前 7 条与 `mock/data.ts` 导出的卡片行一致；最后一条 `riskdemo` 仅用于联调覆盖 `actionTagType: \"red\"`，生产可不返回。"
     ]

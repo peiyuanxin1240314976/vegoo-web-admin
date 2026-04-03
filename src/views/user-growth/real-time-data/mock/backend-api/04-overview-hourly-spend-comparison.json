@@ -5,22 +5,12 @@
       "s_app_id": {
         "type": "string",
         "required": false,
-        "description": "不传或 all 时返回默认对比集（如头部四应用）；若传单个 ID 可只返回该应用 + ROI。"
+        "description": "空字符串或不传时返回默认对比集（如头部四应用）；若传单个 ID 可只返回该应用 + ROI。勿传字面量 all。"
       },
       "n_source": {
-        "type": "number",
-        "required": false,
-        "description": "按广告平台过滤对比数据时使用。"
-      },
-      "startDate": {
         "type": "string",
         "required": false,
-        "description": "查询起始日（含），YYYY-MM-DD。"
-      },
-      "endDate": {
-        "type": "string",
-        "required": false,
-        "description": "查询结束日（含），YYYY-MM-DD。"
+        "description": "按广告平台过滤；枚举字符串；空字符串表示不限。"
       }
     },
     "response": {
@@ -60,9 +50,7 @@
     }
   },
   "sampleRequest": {
-    "s_app_id": "all",
-    "startDate": "2026-03-21",
-    "endDate": "2026-03-21"
+    "s_app_id": ""
   },
   "sampleResponse": {
     "hourLabels": ["0:00", "2:00", "4:00", "6:00", "8:00", "10:00", "12:00", "14:00"],
@@ -103,18 +91,18 @@
       },
       {
         "moment": "筛选或刷新",
-        "detail": "与 02/03 同步刷新；图表横轴标签切换若仅格式化可前端本地处理，不重拉接口。",
+        "detail": "与 01/02 同步刷新；图表横轴标签切换若仅格式化可前端本地处理，不重拉接口。",
         "prerequisite": "无"
       }
     ],
-    "defaultSelection": "s_app_id 为 all 或未传时返回约定对比应用集合（如头部多应用）；与当前 UI 固定四应用柱序列对齐时可由前端映射 series。",
-    "dedupe": "可并行 02/03；大数据量时保持独立接口避免拖慢首屏。"
+    "defaultSelection": "s_app_id 为空字符串或未传时返回约定对比应用集合（如头部多应用）；与当前 UI 固定四应用柱序列对齐时可由前端映射 series。",
+    "dedupe": "可并行 01/02；大数据量时保持独立接口避免拖慢首屏。"
   },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/overview-hourly-spend-comparison",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_app_id?, n_source?, startDate?, endDate?",
+    "requestBody": "s_app_id?, n_source?",
     "responseBody": "RealtimeHourlySpendComparison"
   },
   "apiSuggestion": {

@@ -1,32 +1,15 @@
-/** 实时数据接口通用筛选（契约 01～05）。单日看板快照时 `startDate` 与 `endDate` 同值；均可选，由服务端默认今日。 */
+/**
+ * 实时数据接口通用筛选（契约 01～04）。
+ * 筛选项下拉请复用公用接口：`fetchComprehensiveAnalysisFilterOptions`（`src/api/user-growth/comprehensive-analysis.ts`），
+ * 响应形态见 `ComprehensiveAnalysisFilterOptions`（`views/user-growth/comprehensive-analysis/types.ts`）。
+ *
+ * 「全部应用」等：请求入参用空字符串 `''`，勿传字面量 `all`（见 `.cursor/rules/backend-fields.mdc`「接口请求 · 筛选「全部」」）。
+ */
 export interface RealtimeDataQueryParams {
+  /** 应用 ID；`''` 表示全部 */
   s_app_id?: string
-  n_source?: number
-  startDate?: string
-  endDate?: string
-}
-
-/** 契约 01-meta-filter-options 响应：应用筛选项 */
-export interface RealtimeFilterAppOption {
-  value: string
-  label: string
-  s_app_id?: string
-}
-
-/** 契约 01-meta-filter-options 响应：广告平台筛选项（UI 文案「广告平台」） */
-export interface RealtimeFilterSourceOption {
-  value: string
-  label: string
-  n_source?: number
-}
-
-export interface RealtimeMetaFilterOptionsBody {
-  appOptions: RealtimeFilterAppOption[]
-  sourceOptions: RealtimeFilterSourceOption[]
-}
-
-export interface RealtimeAppDetailRequestBody extends RealtimeDataQueryParams {
-  s_app_id: string
+  /** 广告平台（与数据字典枚举一致，如 `1` Google）；`''` 表示不限；筛选入参一律 string */
+  n_source?: string
 }
 
 export interface ChannelData {
@@ -35,6 +18,8 @@ export interface ChannelData {
   spend: number
   cpi: number
   roi: number
+  /** 广告平台枚举，string（如 `1`），与请求入参 `n_source` 一致 */
+  n_source?: string
 }
 
 export interface AppDetailData {
@@ -59,10 +44,10 @@ export interface AppDetailData {
   hourlyRoi: number[]
 }
 
-/** 看板应用卡片列表项（不含详情；详情见 app-detail 接口）。对应 mock/backend-api/03-table-app-cards.json */
+/** 看板应用卡片列表项（不含详情；详情见 app-detail 接口）。对应 mock/backend-api/02-table-app-cards.json */
 export type RealtimeAppCardRow = Omit<AppCard, 'detail'>
 
-/** 底部小时消耗对比（推荐接口形态）。对应 mock/backend-api/05-overview-hourly-spend-comparison.json */
+/** 底部小时消耗对比（推荐接口形态）。对应 mock/backend-api/04-overview-hourly-spend-comparison.json */
 export interface RealtimeHourlyBarSeriesItem {
   s_app_id: string
   name: string
@@ -117,17 +102,21 @@ export interface RealtimeKpiSummary {
   warningApps: number
 }
 
-/** 契约 03-table-app-cards 响应体 */
+/** 契约 02-table-app-cards 响应体 */
 export interface RealtimeAppCardsTableBody {
   items: RealtimeAppCardRow[]
 }
 
-/** 契约 04-app-detail 响应体 */
+export interface RealtimeAppDetailRequestBody extends RealtimeDataQueryParams {
+  s_app_id: string
+}
+
+/** 契约 03-app-detail 响应体 */
 export interface RealtimeAppDetailBody {
   detail: AppDetailData
 }
 
-/** 底部「实时小时消耗对比」柱状序列（含 ROI 折线；旧版图表数据结构，接入 05 后推荐映射自 RealtimeHourlySpendComparison） */
+/** 底部「实时小时消耗对比」柱状序列（含 ROI 折线；旧版图表数据结构，接入 04 后推荐映射自 RealtimeHourlySpendComparison） */
 export interface RealtimeBottomSeries {
   weather5: number[]
   phonetracker: number[]

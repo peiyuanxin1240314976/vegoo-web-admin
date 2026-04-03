@@ -64,6 +64,40 @@ alwaysApply: true
 
 
 
+### 接口请求 · 筛选「全部」
+
+
+
+凡需表示「**全部应用」「全部广告平台」「全部国家**」等**不限定该维度**的 **API 请求体 / 筛选入参**（`mock/backend-api` 的 `sampleRequest`、`fieldDescription.request`、页面 `types` 入参），**统一使用空字符串 `""`**，**不要**传字面量 `"all"`。
+
+
+
+- **字符串类字段**（如 `s_app_id`、`source`、`s_country_code` 等）：选「全部」时传 **`""`**；`sampleRequest` 中应写 `"s_app_id": ""` 等形式，而非 `"all"`。
+
+- **下拉选项 `value`**：UI 层仍可用 `value: "all"` 表示「全部」选中态（与 `meta-filter-options` 的 `options` 一致）；**在调用 `request.post` 前**须映射为 `""` 再提交（与 `comprehensive-analysis` 的 `buildApiParams` 一致）。
+
+
+
+### 接口请求 · 筛选字段类型（枚举 string）
+
+
+
+与后端约定：**凡出现在 HTTP 请求体（通常为 POST JSON）中的「筛选 / 维度映射」字段**——即与顶栏筛选、`meta-filter-options` 联动、由用户选择某一枚举项后提交给后端的入参——**类型一律为 `string`**，**不要**使用 JSON number。
+
+
+
+- **适用范围（典型）**：`n_source`（广告平台枚举）、作为筛选入参的 `source`、`platform`、`s_country_code` 等；以及后续新增的同类「选枚举值」筛选字段，除非模块契约单独约定。
+
+- **契约与示例**：`mock/backend-api` 中 `fieldDescription.request` 的 `type` 须为 **`string`**；`sampleRequest` 须写 `\"n_source\": \"1\"` 这类形式，**禁止**写 `\"n_source\": 1`。
+
+- **TypeScript**：页面 `types.ts`、`src/types/api/api.d.ts`、API `fetch*` 的入参类型中，上述字段声明为 **`string`**（可选字段仍 `?: string`）。
+
+- **「不限」与空串**：与上一节「筛选「全部」」一致，不限定时传 **`\"\"`** 或按模块约定省略；**勿**用数字 `0` 代替「全部」除非该模块契约明确约定。
+
+- **与数仓/明细字段区分**：数仓表、报表 **行数据** 上可能仍存在数值型 `n_source` 等（历史口径）；**仅「接口筛选入参 + 前端请求类型」**按本条 string 约定。若响应体中某字段与筛选维度同源且后端统一为 string，契约与 `sampleResponse` 须与后端一致并在 `fieldDescription` 中写明。
+
+
+
 ### 应用与平台
 
 
@@ -84,7 +118,7 @@ alwaysApply: true
 
 | `app_version` / `version` | 版本 |
 
-| `source` / `n_source` | 广告平台：1-Google, 2-Facebook, 3-Unity, 4-AppLovin, 5-IronSource, 6-AdColony, 7-Pangle |
+| `source` / `n_source` | 广告平台：1-Google, 2-Facebook, 3-Unity, 4-AppLovin, 5-IronSource, 6-AdColony, 7-Pangle；**接口筛选入参**中枚举值以 **string** 传递（见「接口请求 · 筛选字段类型（枚举 string）」） |
 
 | `media_source` | 媒体来源 |
 
@@ -290,7 +324,7 @@ alwaysApply: true
 | `options` | 通用配置项数组（元素多为 `{ label, value }`；如转化展示分类等 meta 接口）。 |
 | `sourceOptions` | 广告平台筛选下拉选项数组。 |
 | `label` | 选项展示文案。 |
-| `value` | 选项值（可为 `all` 或业务 ID/枚举值字符串）。 |
+| `value` | 选项值（UI 中「全部」常用 `all`；**提交接口入参时**须按上文「接口请求 · 筛选「全部」」映射为 `""`）。 |
 
 #### UI 展示字段（实时数据模块常用）
 
@@ -476,6 +510,8 @@ alwaysApply: true
   该规则的目标是杜绝「接口/契约/类型已经在用，但字段表缺失」导致的联调歧义与后续重构成本。
 
   **验收口径**：做模块契约整理或新增接口时，必须能在本文件中“逐字段查到对应条目”；查不到的字段即为未完工项。
+
+- **筛选入参类型**：凡属「筛选 / 维度映射」入参，须符合上文 **「接口请求 · 筛选「全部」」** 与 **「接口请求 · 筛选字段类型（枚举 string）」**；契约 `sampleRequest`、页面类型与之一致。
 
 - **复用优先**：与表中已有业务概念相同则 **必须使用** 表内字段名；确属新维度再在表中新增一行。
 

@@ -367,7 +367,7 @@ export const mockRealtimeBottomSeries: RealtimeBottomSeries = {
   roi: [20, 28, 42, 60, 78, 94, 96, 100]
 }
 
-/** 与 `05-overview-hourly-spend-comparison` 契约一致；由底部固定键结构派生，供联调/映射参考 */
+/** 与 `04-overview-hourly-spend-comparison` 契约一致；由底部固定键结构派生，供联调/映射参考 */
 export const mockRealtimeHourlySpendComparison: RealtimeHourlySpendComparison = {
   hourLabels: ['0:00', '2:00', '4:00', '6:00', '8:00', '10:00', '12:00', '14:00'],
   series: [

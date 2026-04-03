@@ -67,6 +67,7 @@ alwaysApply: true
 
 - **终端平台**：使用 `platform` 字段名
 - **广告平台**：使用 `source` 字段名
+- **筛选入参中的枚举/维度**（如 `n_source` 及与 `meta-filter-options` 联动的同类字段）：请求体中类型为 **`string`**（如 `\"1\"`），「不限」用 **`\"\"`** 或与模块约定一致；勿传 JSON number。细则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
 
 ### 常见 Lint 与格式注意点（避免重复报错）
 

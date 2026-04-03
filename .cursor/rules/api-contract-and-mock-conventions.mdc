@@ -14,6 +14,7 @@ alwaysApply: true
 - **变更流程**：增删改字段或业务含义时，须**前后端协商一致**后，**优先更新契约 JSON**（及 README），再同步改前端类型与请求封装、Mock、后端实现；禁止长期存在「文档一套、接口一套、前端一套」。
 - **字段与数据字典**：新建或修订契约 JSON 时，**逐字段**对照 `.cursor/rules/backend-fields.mdc`：`fieldDescription` 与 `sampleRequest` / `sampleResponse` 中的字段名、业务含义须可映射到字典；无法映射时须在 `_comment` 或 `mock/backend-api/README.md` 说明，并推动补全字典条目。
 - **请求体日期范围**：凡表示查询/筛选时间范围的入参，键名须为 **`startDate`**、**`endDate`**（推荐值 `YYYY-MM-DD` 字符串，与模块约定一致）；详见 `backend-fields.mdc`「接口请求 · 日期范围」。
+- **筛选入参枚举类型**：`n_source` 等与筛选/维度映射相关的请求体字段，在契约与实现中须为 **string**（如 `\"1\"`），**勿**在 `sampleRequest` 中写 JSON number；「全部」维度用 `\"\"` 等规则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
 - 网关真实路径与示例 URL 不一致时，在对应 `mock/backend-api/README.md` 或 JSON `_comment` 中注明；以前端 `src/api` 实际请求为准联调。
 
 ## 一、接口地址抽象：路由 → 模块 → 功能
@@ -107,6 +108,7 @@ src/views/<模块>/<页面>/
 
 - **禁止**只写“见后端返回”或只给一个大对象示例不解释字段。
 - 每个字段的 `description` 要能直接用于联调沟通：含义、单位、范围（例如百分比是 0-100 还是 0-1）、空值策略、格式（日期格式等）。
+- **筛选类 `request` 字段**：若字段为枚举型筛选（如 `n_source`），`fieldDescription.request` 的 `type` 须与后端一致（一般为 **`string`**），且 `sampleRequest` 中的示例值类型须与 `type` 一致，详见 `backend-fields.mdc`「接口请求 · 筛选字段类型（枚举 string）」。
 
 ### 同模块 `sampleResponse` 形态复用
 

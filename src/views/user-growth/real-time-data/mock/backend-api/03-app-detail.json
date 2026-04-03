@@ -7,20 +7,10 @@
         "required": true,
         "description": "应用 ID。"
       },
-      "startDate": {
-        "type": "string",
-        "required": false,
-        "description": "查询起始日（含），YYYY-MM-DD。"
-      },
-      "endDate": {
-        "type": "string",
-        "required": false,
-        "description": "查询结束日（含），YYYY-MM-DD。"
-      },
       "n_source": {
-        "type": "number",
+        "type": "string",
         "required": false,
-        "description": "若弹窗内需按单一广告平台过滤，可选；默认全平台汇总。"
+        "description": "若弹窗内需按单一广告平台过滤，可选；空字符串或不传为全平台汇总。"
       }
     },
     "response": {
@@ -118,16 +108,14 @@
         "description": "该平台 ROI 百分比数值。"
       },
       "n_source": {
-        "type": "number",
+        "type": "string",
         "required": false,
-        "description": "可选，对应数据字典广告平台枚举，便于下钻。"
+        "description": "可选，广告平台枚举字符串，便于下钻。"
       }
     }
   },
   "sampleRequest": {
-    "s_app_id": "weather5",
-    "startDate": "2026-03-21",
-    "endDate": "2026-03-21"
+    "s_app_id": "weather5"
   },
   "sampleResponse": {
     "detail": {
@@ -154,7 +142,7 @@
           "spend": 4800,
           "cpi": 2.25,
           "roi": 96,
-          "n_source": 1
+          "n_source": "1"
         },
         {
           "name": "Meta Ads",
@@ -162,7 +150,7 @@
           "spend": 2500,
           "cpi": 2.48,
           "roi": 91,
-          "n_source": 2
+          "n_source": "2"
         },
         {
           "name": "Pangle",
@@ -170,7 +158,7 @@
           "spend": 1072,
           "cpi": 2.61,
           "roi": 89,
-          "n_source": 7
+          "n_source": "7"
         }
       ],
       "hourlyData": [30, 60, 100, 220, 380, 620, 520, 650],
@@ -185,14 +173,14 @@
         "prerequisite": "s_app_id 有效"
       }
     ],
-    "defaultSelection": "继承列表当前筛选的 n_source（可选）与业务日 startDate/endDate；弹窗内若仅展示不触发新维度则不再请求。",
+    "defaultSelection": "继承列表当前筛选的 n_source（可选）；弹窗内若仅展示不触发新维度则不再请求。",
     "dedupe": "同一 s_app_id 短缓存可选；关闭弹窗可丢弃。"
   },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/app-detail",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_app_id, startDate?, endDate?, n_source?",
+    "requestBody": "s_app_id, n_source?",
     "responseBody": "detail: AppDetailData"
   },
   "apiSuggestion": {
