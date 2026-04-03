@@ -8,15 +8,10 @@
         "enum": ["", "android", "ios"],
         "description": "终端平台筛选。空字符串表示全部。"
       },
-      "appPackage": {
+      "appId": {
         "type": "string",
         "required": false,
-        "description": "应用包名筛选（推荐字段）。"
-      },
-      "app": {
-        "type": "string",
-        "required": false,
-        "description": "历史兼容字段，语义同 appPackage。"
+        "description": "应用筛选（自有应用 ID）。空字符串表示全部。与 mappings-list 一致。"
       },
       "conversionType": {
         "type": "string",
@@ -64,13 +59,12 @@
       }
     },
     "exportColumnsSuggestion": {
-      "description": "建议导出列（与表格/弹窗一致）：platform、source、mccAccount、appPackage、conversionName、conversionId、platformConversionType、systemDisplayName、conversionDisplayType、billingType、status、remarks、createdAt、updatedAt。"
+      "description": "建议导出列（与表格/弹窗一致）：platform、source、mccAccount、appId、conversionName、conversionId、platformConversionType、systemDisplayName、conversionDisplayType、billingType、status、remarks、createdAt、updatedAt。"
     }
   },
   "sampleRequest": {
     "platform": "",
-    "appPackage": "",
-    "app": "",
+    "appId": "",
     "conversionType": "",
     "status": "",
     "keyword": "",
@@ -84,7 +78,7 @@
     "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/mappings-export",
     "method": "POST",
     "priority": "P2",
-    "requestBody": "platform, appPackage|app, conversionType, status, keyword, format? (xlsx|csv)",
+    "requestBody": "platform, appId, conversionType, status, keyword, format? (xlsx|csv)",
     "responseBody": "方案A: 文件流 | 方案B: downloadUrl, expireAt?"
   },
   "apiSuggestion": {

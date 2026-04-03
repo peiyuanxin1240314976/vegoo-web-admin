@@ -8,15 +8,10 @@
         "enum": ["", "android", "ios"],
         "description": "终端平台筛选。空字符串表示全部。"
       },
-      "appPackage": {
+      "appId": {
         "type": "string",
         "required": false,
-        "description": "应用包名筛选（推荐字段）。空字符串表示全部。"
-      },
-      "app": {
-        "type": "string",
-        "required": false,
-        "description": "历史兼容字段，语义同 appPackage。"
+        "description": "应用筛选（自有应用 ID）。空字符串表示全部。与 mappings-list 一致。"
       },
       "conversionType": {
         "type": "string",
@@ -101,8 +96,7 @@
   },
   "sampleRequest": {
     "platform": "",
-    "appPackage": "",
-    "app": "",
+    "appId": "",
     "conversionType": "",
     "status": "",
     "keyword": ""
@@ -123,7 +117,7 @@
     "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/mappings-stats",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "platform, appPackage|app, conversionType, status, keyword",
+    "requestBody": "platform, appId, conversionType, status, keyword",
     "responseBody": "typeDistribution, mappingStats { mapped, duplicate, unmapped }, platformStats { android, ios }"
   },
   "apiSuggestion": {

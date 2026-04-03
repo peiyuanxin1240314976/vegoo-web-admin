@@ -33,7 +33,7 @@ alwaysApply: true
 
 - **`src/api` 引用 `@/views/<模块>/config/...`** 在本仓库可接受（与现有 `iap-analysis.ts` 一致）；若团队希望 api 层不依赖 views，可将「是否 mock」判断上移到 **`composables`**，由 composable 调 `fetch` 或 `mockFetch`，config 仍放在 **模块目录下**。
 - 新增接口时：**先改契约 JSON → 再改 types / api / 模块 config 开关表 → 再改 mock 实现**。
-- 契约中筛选类请求字段（如 `n_source`）须与 `backend-fields.mdc` 一致：**枚举维度用 string**、`sampleRequest` 勿写 number；「全部」用空字符串等规则见该文件「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
+- 契约中筛选类请求字段须与 `backend-fields.mdc` 一致：**应用筛选用 `appId`**；**枚举维度用 string**、`sampleRequest` 勿写 number；「全部」用空字符串等规则见该文件「接口请求 · 应用筛选（appId）」「接口请求 · 筛选「全部」」「接口请求 · 筛选字段类型（枚举 string）」。
 
 ## 5. 目录与文档
 

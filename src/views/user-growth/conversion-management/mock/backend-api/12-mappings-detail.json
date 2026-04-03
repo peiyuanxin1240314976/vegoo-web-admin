@@ -36,10 +36,10 @@
         "required": true,
         "description": "MCC 账号。"
       },
-      "appPackage": {
+      "appId": {
         "type": "string",
         "required": true,
-        "description": "应用包名。"
+        "description": "自有应用 ID（与列表、创建契约一致）。"
       },
       "conversionName": {
         "type": "string",
@@ -107,7 +107,7 @@
     "platform": "android",
     "source": "google",
     "mccAccount": "560-369-9741",
-    "appPackage": "com.locate.phone.track",
+    "appId": "10001",
     "conversionName": "Phone Tracker install",
     "conversionId": "7217482985",
     "platformConversionType": "DOWNLOAD",
@@ -124,7 +124,7 @@
     "method": "POST",
     "priority": "P0",
     "requestBody": "id (必填)",
-    "responseBody": "单条映射完整对象：id, platform, source, mccAccount, appPackage, conversionName, conversionId, platformConversionType, systemDisplayName, conversionDisplayType?, billingType, status, remarks?, createdAt?, updatedAt?"
+    "responseBody": "单条映射完整对象：id, platform, source, mccAccount, appId, conversionName, conversionId, platformConversionType, systemDisplayName, conversionDisplayType?, billingType, status, remarks?, createdAt?, updatedAt?"
   },
   "apiSuggestion": {
     "notes": [

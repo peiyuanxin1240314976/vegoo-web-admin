@@ -37,7 +37,7 @@
           />
         </ElSelect>
         <ElSelect
-          v-model="form.app"
+          v-model="form.appId"
           :placeholder="$t('conversionManagement.filterApp')"
           clearable
           class="conversion-data-filter-select"
@@ -84,7 +84,7 @@
   import { Calendar, Grid, Monitor, TrendCharts } from '@element-plus/icons-vue'
   import type { ConversionDataFilterParams } from '../types'
   import {
-    MOCK_APP_OPTIONS,
+    MOCK_DATA_TAB_APP_OPTIONS,
     MOCK_CONVERSION_TYPE_OPTIONS,
     MOCK_PLATFORM_OPTIONS
   } from '../mock/data'
@@ -103,7 +103,7 @@
   }>()
 
   const platformOptions = computed(() => props.platformOptions ?? MOCK_PLATFORM_OPTIONS)
-  const appOptions = computed(() => props.appOptions ?? MOCK_APP_OPTIONS)
+  const appOptions = computed(() => props.appOptions ?? MOCK_DATA_TAB_APP_OPTIONS)
   const conversionTypeOptions = computed(
     () => props.conversionTypeOptions ?? MOCK_CONVERSION_TYPE_OPTIONS
   )
@@ -111,7 +111,7 @@
   const form = reactive({
     dateRange: [props.filter?.startDate ?? '', props.filter?.endDate ?? ''] as [string, string],
     platform: String(props.filter?.platform ?? ''),
-    app: String(props.filter?.app ?? ''),
+    appId: String(props.filter?.appId ?? ''),
     conversionType: String(props.filter?.conversionType ?? '')
   })
 
@@ -127,7 +127,7 @@
       if (!v) return
       form.dateRange = [v.startDate ?? '', v.endDate ?? ''] as [string, string]
       form.platform = v.platform ?? ''
-      form.app = v.app ?? ''
+      form.appId = v.appId ?? ''
       form.conversionType = v.conversionType ?? ''
     },
     { deep: true }
@@ -138,8 +138,7 @@
     emit('search', {
       ...(hasRange ? { startDate: form.dateRange![0], endDate: form.dateRange![1] } : {}),
       platform: form.platform,
-      appPackage: form.app,
-      app: form.app,
+      appId: form.appId,
       conversionType: form.conversionType
     })
   }

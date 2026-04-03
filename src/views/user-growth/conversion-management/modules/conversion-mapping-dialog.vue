@@ -52,9 +52,9 @@
           {{ $t('conversionManagement.hintAfterSelectPlatform') }}
         </div>
       </ElFormItem>
-      <ElFormItem :label="$t('conversionManagement.appPackage')" prop="appPackage" required>
+      <ElFormItem :label="$t('conversionManagement.appId')" prop="appId" required>
         <ElSelect
-          v-model="form.appPackage"
+          v-model="form.appId"
           :placeholder="$t('conversionManagement.selectApp')"
           :disabled="type === 'edit'"
           popper-class="conversion-dialog-select-dropdown"
@@ -232,7 +232,7 @@
     source: undefined,
     adPlatform: undefined,
     mccAccount: '',
-    appPackage: '',
+    appId: '',
     conversionName: '',
     conversionId: '',
     systemDisplayName: 'IAP购买',
@@ -247,7 +247,7 @@
   const rules: FormRules = {
     source: [{ required: true, message: '请选择广告平台', trigger: 'change' }],
     mccAccount: [{ required: true, message: '请先选择广告平台以加载 MCC 账户', trigger: 'change' }],
-    appPackage: [{ required: true, message: '请选择应用', trigger: 'change' }],
+    appId: [{ required: true, message: '请选择应用', trigger: 'change' }],
     conversionName: [{ required: true, message: '请选择或输入转化名称', trigger: 'change' }],
     systemDisplayName: [{ required: true, message: '请输入系统显示名称', trigger: 'blur' }]
   }
@@ -292,7 +292,7 @@
             source: row.source ?? row.adPlatform ?? getAdPlatformByMcc(mcc),
             adPlatform: row.source ?? row.adPlatform ?? getAdPlatformByMcc(mcc),
             mccAccount: props.rowData.mccAccount ?? '',
-            appPackage: props.rowData.appPackage ?? '',
+            appId: props.rowData.appId ?? '',
             conversionName: props.rowData.conversionName ?? '',
             conversionId: props.rowData.conversionId ?? '',
             systemDisplayName: props.rowData.systemDisplayName ?? '',

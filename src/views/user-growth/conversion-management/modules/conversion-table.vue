@@ -95,12 +95,11 @@
       showOverflowTooltip: true
     },
     {
-      prop: 'appPackage',
-      label: t('conversionManagement.appPackage'),
+      prop: 'appId',
+      label: t('conversionManagement.appId'),
       minWidth: 100,
       showOverflowTooltip: true,
-      formatter: (row) =>
-        h('span', { class: 'conversion-table__app-package' }, row.appPackage ?? '')
+      formatter: (row) => h('span', { class: 'conversion-table__app-package' }, row.appId ?? '')
     },
     {
       prop: 'conversionName',

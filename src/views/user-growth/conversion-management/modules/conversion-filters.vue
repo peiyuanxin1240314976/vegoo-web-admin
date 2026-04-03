@@ -17,7 +17,7 @@
           />
         </ElSelect>
         <ElSelect
-          v-model="form.app"
+          v-model="form.appId"
           :placeholder="$t('conversionManagement.filterApp')"
           clearable
           class="conversion-name-filter-select"
@@ -97,7 +97,7 @@
   import type { ConversionFilterParams } from '../types'
   import {
     MOCK_PLATFORM_OPTIONS,
-    MOCK_APP_OPTIONS,
+    MOCK_DATA_TAB_APP_OPTIONS,
     MOCK_CONVERSION_TYPE_OPTIONS,
     MOCK_STATUS_OPTIONS
   } from '../mock/data'
@@ -118,7 +118,7 @@
   }>()
 
   const platformOptions = computed(() => props.platformOptions ?? MOCK_PLATFORM_OPTIONS)
-  const appOptions = computed(() => props.appOptions ?? MOCK_APP_OPTIONS)
+  const appOptions = computed(() => props.appOptions ?? MOCK_DATA_TAB_APP_OPTIONS)
   const conversionTypeOptions = computed(
     () => props.conversionTypeOptions ?? MOCK_CONVERSION_TYPE_OPTIONS
   )
@@ -126,7 +126,7 @@
 
   const form = reactive<Record<string, string>>({
     platform: String(props.filter?.platform ?? ''),
-    app: String(props.filter?.app ?? ''),
+    appId: String(props.filter?.appId ?? ''),
     conversionType: String(props.filter?.conversionType ?? ''),
     status: String(props.filter?.status ?? ''),
     keyword: String(props.filter?.keyword ?? '')
@@ -137,7 +137,7 @@
     (v) => {
       if (v) {
         form.platform = v.platform ?? ''
-        form.app = v.app ?? ''
+        form.appId = v.appId ?? ''
         form.conversionType = v.conversionType ?? ''
         form.status = v.status ?? ''
         form.keyword = v.keyword ?? ''
@@ -149,8 +149,7 @@
   function doSearch() {
     emit('search', {
       platform: form.platform,
-      appPackage: form.app,
-      app: form.app,
+      appId: form.appId,
       conversionType: form.conversionType,
       status: form.status,
       keyword: form.keyword

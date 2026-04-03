@@ -253,7 +253,7 @@
 
     const secondary =
       row.level === 'conversion'
-        ? [row.accountName, row.appPackage].filter(Boolean).join(' · ')
+        ? [row.accountName, row.appId].filter(Boolean).join(' · ')
         : row.level === 'account'
           ? row.accountGroupName
           : ''
@@ -370,13 +370,13 @@
       formatter: (row) => renderDimension(row)
     },
     {
-      prop: 'appPackage',
-      label: t('conversionManagement.appPackage'),
+      prop: 'appId',
+      label: t('conversionManagement.appId'),
       minWidth: 130,
       showOverflowTooltip: true,
       formatter: (row) =>
         row.level === 'conversion'
-          ? h('span', { class: 'conversion-data-table__app' }, row.appPackage ?? '-')
+          ? h('span', { class: 'conversion-data-table__app' }, row.appId ?? '-')
           : h('span', { class: 'conversion-data-table__muted' }, '-')
     },
     {

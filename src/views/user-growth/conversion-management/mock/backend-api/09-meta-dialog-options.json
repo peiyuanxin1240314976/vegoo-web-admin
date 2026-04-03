@@ -18,10 +18,10 @@
         "required": false,
         "description": "MCC 账号。传了可进一步过滤 apps/conversions。"
       },
-      "appPackage": {
+      "appId": {
         "type": "string",
         "required": false,
-        "description": "应用包名。传了可进一步过滤 conversions。"
+        "description": "自有应用 ID（与 `apps` 选项 value、列表/表单 `appId` 一致）。传了可进一步过滤 conversions。"
       }
     },
     "response": {
@@ -38,12 +38,12 @@
       "apps": {
         "type": "Option[]",
         "required": false,
-        "description": "应用选项（受 source+mccAccount 影响）。"
+        "description": "应用选项（受 source+mccAccount 影响）；`value` 为自有应用 ID。"
       },
       "conversions": {
         "type": "ConversionOption[]",
         "required": false,
-        "description": "转化选项（受 source+mccAccount+appPackage 影响）。"
+        "description": "转化选项（受 source+mccAccount+appId 影响）。"
       }
     },
     "Option": {
@@ -55,7 +55,7 @@
       "value": {
         "type": "string",
         "required": true,
-        "description": "实际值。"
+        "description": "实际值（如 `adPlatforms` 为平台枚举，`apps` 为自有应用 ID / `appId`）。"
       }
     },
     "ConversionOption": {
@@ -93,7 +93,7 @@
   "sampleRequest": {
     "source": "google",
     "mccAccount": "560-369-9741",
-    "appPackage": "com.locate.phone.track"
+    "appId": "10001"
   },
   "sampleResponse": {
     "adPlatforms": [
@@ -104,8 +104,8 @@
     ],
     "mccAccounts": [{ "label": "560-369-9741", "value": "560-369-9741" }],
     "apps": [
-      { "label": "com.locate.phone.track", "value": "com.locate.phone.track" },
-      { "label": "com.example.shop", "value": "com.example.shop" }
+      { "label": "com.locate.phone.track", "value": "10001" },
+      { "label": "com.example.shop", "value": "10002" }
     ],
     "conversions": [
       {
@@ -128,7 +128,7 @@
     "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/meta-dialog-options",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "source|adPlatform?, mccAccount?, appPackage?",
+    "requestBody": "source|adPlatform?, mccAccount?, appId?",
     "responseBody": "adPlatforms, mccAccounts?, apps?, conversions? (ConversionOption[]，含 conversionId string)"
   },
   "apiSuggestion": {
@@ -142,7 +142,7 @@
     "triggers": [
       {
         "moment": "弹窗内级联（待接）",
-        "detail": "`conversion-mapping-dialog.vue` 打开后随 source/mccAccount/appPackage 变更请求或本地缓存；当前 Mock 未走此接口。",
+        "detail": "`conversion-mapping-dialog.vue` 打开后随 source/mccAccount/appId 变更请求或本地缓存；当前 Mock 未走此接口。",
         "prerequisite": "新增/编辑均可能依赖。"
       }
     ],

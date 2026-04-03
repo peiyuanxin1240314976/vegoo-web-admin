@@ -1,0 +1,260 @@
+{
+  "_comment": "转化管理 data Tab — 三层树表主数据。与 `01-overview-kpi`、`03-side-panels` 共用 request。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": false, "description": "起始日 YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": false, "description": "结束日 YYYY-MM-DD。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "android", "ios"],
+        "description": "终端平台；空串全部。"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用筛选（自有应用 ID）。空字符串表示全部。见 backend-fields「接口请求 · 应用筛选（appId）」。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "google", "meta", "tiktok", "mintegral"],
+        "description": "广告平台。"
+      },
+      "adPlatform": { "type": "string", "required": false, "description": "兼容 source。" },
+      "conversionType": {
+        "type": "string",
+        "required": false,
+        "description": "转化类型筛选；空串全部。"
+      }
+    },
+    "response": {
+      "tableRows": {
+        "type": "ConversionDataRow[]",
+        "required": true,
+        "description": "树根数组：group → account → conversion。"
+      }
+    },
+    "ConversionDataRow": {
+      "id": { "type": "string", "required": true, "description": "行 ID。" },
+      "level": {
+        "type": "string",
+        "required": true,
+        "enum": ["group", "account", "conversion"],
+        "description": "层级。"
+      },
+      "accountGroupName": { "type": "string", "required": false, "description": "账户组。" },
+      "accountName": { "type": "string", "required": false, "description": "账户。" },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "自有应用 ID（conversion 行；与 `01-mappings-list` 的 `appId` 语义一致）。"
+      },
+      "conversionName": { "type": "string", "required": false, "description": "转化名。" },
+      "platformConversionType": {
+        "type": "string",
+        "required": false,
+        "enum": [
+          "PHONE_CALL_LEAD",
+          "DOWNLOAD",
+          "PURCHASE",
+          "ADD_TO_CART",
+          "PAGE_VIEW",
+          "BEGIN_CHECKOUT"
+        ],
+        "description": "广告平台转化类型（conversion 行色条）。"
+      },
+      "conversionCount": { "type": "number", "required": true, "description": "转化次数。" },
+      "conversionValue": { "type": "number", "required": true, "description": "转化价值。" },
+      "share": { "type": "number", "required": true, "description": "占比 0-100。" },
+      "trendPoints": {
+        "type": "number[]",
+        "required": true,
+        "description": "火花线点数（现网 14）。"
+      },
+      "children": { "type": "ConversionDataRow[]", "required": false, "description": "子节点。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-11",
+    "endDate": "2026-03-17",
+    "platform": "",
+    "appId": "",
+    "source": "",
+    "adPlatform": "",
+    "conversionType": ""
+  },
+  "sampleResponse": {
+    "tableRows": [
+      {
+        "id": "g-1",
+        "level": "group",
+        "accountGroupName": "ACCOUNT GROUP 1",
+        "conversionCount": 100000,
+        "conversionValue": 620000,
+        "share": 41.7,
+        "trendPoints": [48, 52, 49, 60, 55, 51, 58, 62, 57, 59, 63, 61, 64, 66],
+        "children": [
+          {
+            "id": "g-1-a-1",
+            "level": "account",
+            "accountGroupName": "ACCOUNT GROUP 1",
+            "accountName": "PT_262__bgeoo_0903_b",
+            "conversionCount": 100000,
+            "conversionValue": 620000,
+            "share": 41.7,
+            "trendPoints": [20, 22, 21, 25, 24, 23, 26, 27, 26, 28, 29, 30, 31, 32],
+            "children": [
+              {
+                "id": "g-1-a-1-c-1",
+                "level": "conversion",
+                "accountGroupName": "ACCOUNT GROUP 1",
+                "accountName": "PT_262__bgeoo_0903_b",
+                "appId": "10001",
+                "conversionName": "PT_262__bgeoo_0903_b | PHONE_CALL_LEAD | main",
+                "platformConversionType": "PHONE_CALL_LEAD",
+                "conversionCount": 50000,
+                "conversionValue": 310000,
+                "share": 20.8,
+                "trendPoints": [10, 12, 11, 13, 14, 13, 15, 16, 15, 17, 18, 18, 19, 20]
+              },
+              {
+                "id": "g-1-a-1-c-2",
+                "level": "conversion",
+                "accountGroupName": "ACCOUNT GROUP 1",
+                "accountName": "PT_262__bgeoo_0903_b",
+                "appId": "10001",
+                "conversionName": "PT_262__bgeoo_0903_b | DOWNLOAD | main",
+                "platformConversionType": "DOWNLOAD",
+                "conversionCount": 50000,
+                "conversionValue": 310000,
+                "share": 20.8,
+                "trendPoints": [11, 13, 12, 14, 15, 14, 16, 17, 16, 18, 19, 19, 20, 21]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "g-2",
+        "level": "group",
+        "accountGroupName": "ACCOUNT GROUP 2",
+        "conversionCount": 80000,
+        "conversionValue": 410000,
+        "share": 33.3,
+        "trendPoints": [40, 42, 41, 44, 43, 42, 45, 46, 45, 47, 48, 47, 49, 50],
+        "children": [
+          {
+            "id": "g-2-a-1",
+            "level": "account",
+            "accountGroupName": "ACCOUNT GROUP 2",
+            "accountName": "PT_262__ww_0917_t",
+            "conversionCount": 80000,
+            "conversionValue": 410000,
+            "share": 33.3,
+            "trendPoints": [18, 19, 18, 20, 21, 20, 22, 23, 22, 24, 25, 24, 26, 27],
+            "children": [
+              {
+                "id": "g-2-a-1-c-1",
+                "level": "conversion",
+                "accountGroupName": "ACCOUNT GROUP 2",
+                "accountName": "PT_262__ww_0917_t",
+                "appId": "10002",
+                "conversionName": "PT_262__ww_0917_t | PURCHASE | main",
+                "platformConversionType": "PURCHASE",
+                "conversionCount": 40000,
+                "conversionValue": 205000,
+                "share": 16.7,
+                "trendPoints": [9, 10, 9, 11, 12, 11, 13, 14, 13, 15, 16, 15, 17, 18]
+              },
+              {
+                "id": "g-2-a-1-c-2",
+                "level": "conversion",
+                "accountGroupName": "ACCOUNT GROUP 2",
+                "accountName": "PT_262__ww_0917_t",
+                "appId": "10002",
+                "conversionName": "PT_262__ww_0917_t | ADD_TO_CART | main",
+                "platformConversionType": "ADD_TO_CART",
+                "conversionCount": 40000,
+                "conversionValue": 205000,
+                "share": 16.7,
+                "trendPoints": [8, 9, 8, 10, 11, 10, 12, 13, 12, 14, 15, 14, 16, 17]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "g-3",
+        "level": "group",
+        "accountGroupName": "ACCOUNT GROUP 2",
+        "conversionCount": 60000,
+        "conversionValue": 300000,
+        "share": 25.0,
+        "trendPoints": [35, 36, 35, 37, 38, 37, 39, 40, 39, 41, 42, 41, 43, 44],
+        "children": [
+          {
+            "id": "g-3-a-1",
+            "level": "account",
+            "accountGroupName": "ACCOUNT GROUP 2",
+            "accountName": "PT_262__3",
+            "conversionCount": 60000,
+            "conversionValue": 300000,
+            "share": 25.0,
+            "trendPoints": [15, 16, 15, 17, 18, 17, 19, 20, 19, 21, 22, 21, 23, 24],
+            "children": [
+              {
+                "id": "g-3-a-1-c-1",
+                "level": "conversion",
+                "accountGroupName": "ACCOUNT GROUP 2",
+                "accountName": "PT_262__3",
+                "appId": "10003",
+                "conversionName": "PT_262__3 | PAGE_VIEW | main",
+                "platformConversionType": "PAGE_VIEW",
+                "conversionCount": 30000,
+                "conversionValue": 150000,
+                "share": 12.5,
+                "trendPoints": [7, 8, 7, 9, 10, 9, 11, 12, 11, 13, 14, 13, 15, 16]
+              },
+              {
+                "id": "g-3-a-1-c-2",
+                "level": "conversion",
+                "accountGroupName": "ACCOUNT GROUP 2",
+                "accountName": "PT_262__3",
+                "appId": "10003",
+                "conversionName": "PT_262__3 | BEGIN_CHECKOUT | main",
+                "platformConversionType": "BEGIN_CHECKOUT",
+                "conversionCount": 30000,
+                "conversionValue": 150000,
+                "share": 12.5,
+                "trendPoints": [6, 7, 6, 8, 9, 8, 10, 11, 10, 12, 13, 12, 14, 15]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/data-tab/table-rows",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "同 01-overview-kpi",
+    "responseBody": "tableRows: ConversionDataRow[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "根级 tableRows ≥3 条 group；conversion 行 platformConversionType 六类须在示例中写全（跨行覆盖即可）。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "data Tab 加载",
+        "detail": "与 01、03 并行。",
+        "prerequisite": "无"
+      }
+    ],
+    "dedupe": "树较大时可单独缓存 TTL。"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "_comment": "转化管理（name Tab）- 编辑转化映射。对应弹窗提交（type=edit）。UI 禁用 source/appPackage/conversionName 等不可变字段。",
+  "_comment": "转化管理（name Tab）- 编辑转化映射。对应弹窗提交（type=edit）。UI 禁用 source/appId/conversionName 等不可变字段。",
   "fieldDescription": {
     "request": {
       "id": {
@@ -43,7 +43,7 @@
       }
     },
     "immutableFieldsNote": {
-      "description": "建议后端保护不可变字段（即使前端误传也忽略）：source/mccAccount/appPackage/conversionName/conversionId/platformConversionType/billingType 等。"
+      "description": "建议后端保护不可变字段（即使前端误传也忽略）：source/mccAccount/appId/conversionName/conversionId/platformConversionType/billingType 等。"
     }
   },
   "sampleRequest": {

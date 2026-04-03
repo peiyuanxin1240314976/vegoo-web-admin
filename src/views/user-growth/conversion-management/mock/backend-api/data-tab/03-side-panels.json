@@ -1,0 +1,151 @@
+{
+  "_comment": "转化管理 data Tab — 右侧四块：类型分布、Top10、30 日趋势、账户分段占比。与 `01`、`02` 共用 request。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": false, "description": "起始日 YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": false, "description": "结束日 YYYY-MM-DD。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "android", "ios"],
+        "description": "终端平台。"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用筛选（自有应用 ID）。空字符串表示全部。见 backend-fields「接口请求 · 应用筛选（appId）」。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "google", "meta", "tiktok", "mintegral"],
+        "description": "广告平台。"
+      },
+      "adPlatform": { "type": "string", "required": false, "description": "兼容 source。" },
+      "conversionType": { "type": "string", "required": false, "description": "转化类型。" }
+    },
+    "response": {
+      "sidePanels": {
+        "type": "ConversionDataSidePanels",
+        "required": true,
+        "description": "右侧面板聚合。"
+      }
+    },
+    "ConversionDataSidePanels": {
+      "typeDistribution": {
+        "type": "ConversionTypeDistributionItem[]",
+        "required": true,
+        "description": "环形图：六类转化类型占比。"
+      },
+      "top10": { "type": "ConversionTop10Item[]", "required": true, "description": "Top10。" },
+      "valueTrend30d": {
+        "type": "ConversionValueTrendPoint[]",
+        "required": true,
+        "description": "近 30 日趋势（示例可截断，联调宜满 30 点）。"
+      },
+      "accountShare": {
+        "type": "ConversionAccountShareItem[]",
+        "required": true,
+        "description": "账户分段占比。"
+      }
+    },
+    "ConversionTypeDistributionItem": {
+      "name": { "type": "string", "required": true, "description": "类型名（与六类枚举一致）。" },
+      "value": { "type": "number", "required": true, "description": "占比 0-100。" },
+      "count": { "type": "number", "required": false, "description": "可选条数。" }
+    },
+    "ConversionTop10Item": {
+      "name": { "type": "string", "required": true, "description": "名称。" },
+      "value": { "type": "number", "required": true, "description": "指标值。" }
+    },
+    "ConversionValueTrendPoint": {
+      "date": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "value": { "type": "number", "required": true, "description": "当日值。" }
+    },
+    "ConversionAccountShareItem": {
+      "accountName": { "type": "string", "required": true, "description": "账户名。" },
+      "segments": {
+        "type": "{type:string,percent:number}[]",
+        "required": true,
+        "description": "各转化类型占比，合计约 100。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-03-11",
+    "endDate": "2026-03-17",
+    "platform": "",
+    "appId": "",
+    "source": "",
+    "adPlatform": "",
+    "conversionType": ""
+  },
+  "sampleResponse": {
+    "sidePanels": {
+      "typeDistribution": [
+        { "name": "PHONE_CALL_LEAD", "value": 20.8, "count": 50000 },
+        { "name": "DOWNLOAD", "value": 20.8, "count": 50000 },
+        { "name": "PURCHASE", "value": 16.7, "count": 40000 },
+        { "name": "ADD_TO_CART", "value": 16.7, "count": 40000 },
+        { "name": "PAGE_VIEW", "value": 12.5, "count": 30000 },
+        { "name": "BEGIN_CHECKOUT", "value": 12.5, "count": 30000 }
+      ],
+      "top10": [
+        { "name": "PHONE_CALL_LEAD", "value": 20500 },
+        { "name": "DOWNLOAD", "value": 19800 },
+        { "name": "PURCHASE", "value": 18600 },
+        { "name": "ADD_TO_CART", "value": 17200 },
+        { "name": "PAGE_VIEW", "value": 16500 },
+        { "name": "BEGIN_CHECKOUT", "value": 15400 }
+      ],
+      "valueTrend30d": [
+        { "date": "2026-02-13", "value": 840 },
+        { "date": "2026-02-14", "value": 852 },
+        { "date": "2026-02-15", "value": 848 },
+        { "date": "2026-02-16", "value": 860 },
+        { "date": "2026-02-17", "value": 872 }
+      ],
+      "accountShare": [
+        {
+          "accountName": "PT_262__bgeoo_0903_b",
+          "segments": [
+            { "type": "PHONE_CALL_LEAD", "percent": 18.0 },
+            { "type": "DOWNLOAD", "percent": 17.0 },
+            { "type": "PURCHASE", "percent": 16.0 },
+            { "type": "ADD_TO_CART", "percent": 15.0 },
+            { "type": "PAGE_VIEW", "percent": 14.0 },
+            { "type": "BEGIN_CHECKOUT", "percent": 20.0 }
+          ]
+        },
+        {
+          "accountName": "PT_262__ww_0917_t",
+          "segments": [
+            { "type": "PHONE_CALL_LEAD", "percent": 10.0 },
+            { "type": "DOWNLOAD", "percent": 10.0 },
+            { "type": "PURCHASE", "percent": 20.0 },
+            { "type": "ADD_TO_CART", "percent": 20.0 },
+            { "type": "PAGE_VIEW", "percent": 20.0 },
+            { "type": "BEGIN_CHECKOUT", "percent": 20.0 }
+          ]
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/data-tab/side-panels",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "同 01-overview-kpi",
+    "responseBody": "sidePanels: ConversionDataSidePanels"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "data Tab 加载",
+        "detail": "与 01、02 并行。",
+        "prerequisite": "无"
+      }
+    ],
+    "dedupe": "重计算图表可与表格不同缓存策略。"
+  }
+}

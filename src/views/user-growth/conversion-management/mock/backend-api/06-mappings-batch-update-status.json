@@ -19,15 +19,10 @@
             "enum": ["", "android", "ios"],
             "description": "终端平台筛选。"
           },
-          "appPackage": {
+          "appId": {
             "type": "string",
             "required": false,
-            "description": "应用包名筛选（推荐字段）。"
-          },
-          "app": {
-            "type": "string",
-            "required": false,
-            "description": "历史兼容字段，语义同 appPackage。"
+            "description": "应用筛选（自有应用 ID）。空字符串表示全部。与 mappings-list 一致。"
           },
           "conversionType": {
             "type": "string",
@@ -99,8 +94,7 @@
     "mode": "byFilter",
     "filters": {
       "platform": "android",
-      "appPackage": "",
-      "app": "",
+      "appId": "",
       "conversionType": "",
       "status": "",
       "keyword": ""

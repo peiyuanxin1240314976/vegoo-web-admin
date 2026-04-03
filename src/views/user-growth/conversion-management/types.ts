@@ -33,7 +33,8 @@ export interface ConversionMappingItem {
   id: string
   platform: PlatformType
   mccAccount: string
-  appPackage: string
+  /** 自有应用 ID（与筛选、下拉 `appOptions.value` 一致） */
+  appId: string
   conversionName: string
   conversionId: string
   platformConversionType: PlatformConversionType
@@ -42,16 +43,15 @@ export interface ConversionMappingItem {
   status: MappingStatus
 }
 
-/** 筛选参数 */
+/**
+ * name Tab 列表/统计筛选（与 `01`/`02` 契约一致）。
+ * 应用筛选用 **`appId`**；公用筛选项：`fetchComprehensiveAnalysisFilterOptions`（`appOptions.value` 与 `appId` 一致）；提交前将 UI `all` 映射为 `''`。
+ * 转化类型、映射状态等本模块特有下拉可由 `mock/data.ts` 或静态配置；字段均为 **string**。
+ */
 export interface ConversionFilterParams {
   platform?: string
-  /**
-   * 应用筛选字段（兼容）
-   * - appPackage: 推荐使用（语义更准确，对应列表字段 appPackage）
-   * - app: 历史字段，保留兼容
-   */
-  appPackage?: string
-  app?: string
+  /** 应用筛选（自有应用 ID）；「全部」为 `''`。 */
+  appId?: string
   conversionType?: string
   status?: string
   keyword?: string
@@ -97,8 +97,7 @@ export interface ConversionMappingForm {
   source?: AdPlatformType
   adPlatform?: AdPlatformType
   mccAccount?: string
-  app?: string
-  appPackage?: string
+  appId?: string
   conversionName?: string
   conversionId?: string
   platformConversionType?: PlatformConversionType
@@ -113,15 +112,23 @@ export interface ConversionMappingForm {
  * 转化数据（Data Tab）- 类型定义
  */
 
+/**
+ * data Tab 筛选（与 data-tab 三 JSON、`11-data-export` 一致）。日期 `startDate`/`endDate`；应用筛选用 **`appId`**；其余枚举/维度均为 **string**，「全部」为 `''`。
+ * 广告平台维度与公用 `meta-filter-options` 的 `sourceOptions` 对齐时可传 `source`/`adPlatform`。
+ */
+/** 契约 `08-meta-conversion-type-options` 响应：平台转化类型筛选项（与 conversionType 请求字段一致） */
+export interface ConversionMetaConversionTypeOptionsBody {
+  conversionTypeOptions: { label: string; value: string }[]
+}
+
 export interface ConversionDataFilterParams {
   /** 查询起始日期（含），YYYY-MM-DD；与契约 data-tab / data-export 一致 */
   startDate?: string
   /** 查询结束日期（含），YYYY-MM-DD */
   endDate?: string
   platform?: string
-  /** 同上，兼容 app/appPackage 两种入参 */
-  appPackage?: string
-  app?: string
+  /** 应用筛选（自有应用 ID）；「全部」为 `''` */
+  appId?: string
   /**
    * 广告平台字段（与接口约定一致）
    * - source: 推荐使用
@@ -153,7 +160,8 @@ export interface ConversionDataRow {
   /** 维度信息 */
   accountGroupName?: string
   accountName?: string
-  appPackage?: string
+  /** conversion 行：应用 ID（与 data-tab 契约一致） */
+  appId?: string
   conversionName?: string
   platformConversionType?: PlatformConversionType
 

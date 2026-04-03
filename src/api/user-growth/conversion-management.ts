@@ -1,5 +1,8 @@
 /**
  * 用户增长 - 转化管理 API
+ *
+ * 筛选项（应用/广告平台等公用维度）：请使用 `fetchComprehensiveAnalysisFilterOptions`（`./comprehensive-analysis`），勿单独请求已废弃的 `conversion-management/meta-filter-options`。
+ * 联调路径与 POST 契约以 `views/user-growth/conversion-management/mock/backend-api/README.md` 为准；下方部分方法仍为历史占位。
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'

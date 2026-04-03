@@ -165,7 +165,7 @@ declare namespace Api {
       id: string
       platform: 'android' | 'ios'
       mccAccount: string
-      appPackage: string
+      appId: string
       conversionName: string
       conversionId: string
       platformConversionType: string
@@ -180,7 +180,8 @@ declare namespace Api {
     /** 转化映射列表请求参数 */
     interface ConversionMappingListParams extends Api.Common.CommonSearchParams {
       platform?: string
-      app?: string
+      /** 应用筛选（自有应用 ID）；「全部」为空字符串 */
+      appId?: string
       conversionType?: string
       status?: string
       keyword?: string
