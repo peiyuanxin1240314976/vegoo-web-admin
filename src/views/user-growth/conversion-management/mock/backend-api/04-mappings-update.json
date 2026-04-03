@@ -1,14 +1,12 @@
 {
   "_comment": "转化管理（name Tab）- 编辑转化映射。对应弹窗提交（type=edit）。UI 禁用 source/appPackage/conversionName 等不可变字段。",
   "fieldDescription": {
-    "pathParam": {
+    "request": {
       "id": {
         "type": "string",
         "required": true,
-        "description": "映射记录 ID。"
-      }
-    },
-    "request": {
+        "description": "映射记录 ID（POST JSON body）。"
+      },
       "systemDisplayName": {
         "type": "string",
         "required": true,
@@ -49,6 +47,7 @@
     }
   },
   "sampleRequest": {
+    "id": "2",
     "systemDisplayName": "IAP购买",
     "conversionDisplayType": "paid",
     "status": "enabled",
@@ -59,7 +58,7 @@
     "message": "保存成功"
   },
   "api": {
-    "url": "POST /api/user-growth/conversion-management/mappings-update",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/mappings-update",
     "method": "POST",
     "priority": "P2",
     "requestBody": "id (必填), systemDisplayName, conversionDisplayType?, status?, remarks?",
@@ -70,5 +69,16 @@
       "后端建议只允许更新白名单字段（systemDisplayName/conversionDisplayType/status/remarks）。",
       "如存在审计要求，可返回 updatedAt/updatedBy 等字段，但不影响前端展示。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户提交",
+        "detail": "表格行「编辑」→ `openDialog('edit')` → 弹窗提交；可先调 mappings-detail 回显再接 update。当前 `handleDialogSubmit` 为 mock。",
+        "prerequisite": "id 必填。"
+      }
+    ],
+    "defaultSelection": "回显字段来自详情或行数据；仅可变字段入 body。",
+    "dedupe": "提交 loading。"
   }
 }

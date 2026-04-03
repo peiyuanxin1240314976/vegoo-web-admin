@@ -12,10 +12,15 @@
         "required": false,
         "description": "广告平台枚举；不传表示不限平台。"
       },
-      "t_date": {
+      "startDate": {
         "type": "string",
         "required": false,
-        "description": "业务日 YYYY-MM-DD；不传为当日。"
+        "description": "查询起始日（含），YYYY-MM-DD；单日快照可与 endDate 相同；不传默认今日。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": false,
+        "description": "查询结束日（含），YYYY-MM-DD。"
       }
     },
     "response": {
@@ -58,7 +63,8 @@
   },
   "sampleRequest": {
     "s_app_id": "all",
-    "t_date": "2026-03-21"
+    "startDate": "2026-03-21",
+    "endDate": "2026-03-21"
   },
   "sampleResponse": {
     "onlineApps": 8,
@@ -69,11 +75,27 @@
     "roiTarget": 85,
     "warningApps": 2
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`RealtimeDataDashboard` 挂载后与 01/03/05 并行请求；入参来自当前筛选（应用、广告平台、业务日）。",
+        "prerequisite": "无"
+      },
+      {
+        "moment": "用户调整筛选或刷新",
+        "detail": "筛选变更、手动刷新或倒计时自动刷新时携带相同维度重新请求。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "应用为「全部」时 s_app_id 传 `all` 或省略；广告平台不限则省略 n_source。",
+    "dedupe": "可与 03 共参数快照，避免参数漂移。"
+  },
   "api": {
-    "url": "POST /api/user-growth/real-time-data/overview-kpi-summary",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/overview-kpi-summary",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_app_id?, n_source?, t_date?",
+    "requestBody": "s_app_id?, n_source?, startDate?, endDate?",
     "responseBody": "RealtimeKpiSummary"
   },
   "apiSuggestion": {

@@ -109,7 +109,7 @@
   )
 
   const form = reactive({
-    dateRange: props.filter?.dateRange ?? ['', ''],
+    dateRange: [props.filter?.startDate ?? '', props.filter?.endDate ?? ''] as [string, string],
     platform: String(props.filter?.platform ?? ''),
     app: String(props.filter?.app ?? ''),
     conversionType: String(props.filter?.conversionType ?? '')
@@ -125,7 +125,7 @@
     () => props.filter,
     (v) => {
       if (!v) return
-      form.dateRange = v.dateRange ?? ['', '']
+      form.dateRange = [v.startDate ?? '', v.endDate ?? ''] as [string, string]
       form.platform = v.platform ?? ''
       form.app = v.app ?? ''
       form.conversionType = v.conversionType ?? ''
@@ -134,10 +134,9 @@
   )
 
   function doSearch() {
-    const dateRange =
-      form.dateRange?.[0] && form.dateRange?.[1] ? (form.dateRange as [string, string]) : undefined
+    const hasRange = Boolean(form.dateRange?.[0] && form.dateRange?.[1])
     emit('search', {
-      dateRange,
+      ...(hasRange ? { startDate: form.dateRange![0], endDate: form.dateRange![1] } : {}),
       platform: form.platform,
       appPackage: form.app,
       app: form.app,

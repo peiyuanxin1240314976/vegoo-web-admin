@@ -1,11 +1,16 @@
 {
-  "_comment": "实时数据 - 筛选栏元数据（应用、广告平台）。页面 filter-bar。无单独 types 文件时可引用本契约字段在 api 层定义。",
+  "_comment": "实时数据 - 筛选栏元数据（应用、广告平台）。对应 types.ts: RealtimeMetaFilterOptionsBody。",
   "fieldDescription": {
     "request": {
-      "t_date": {
+      "startDate": {
         "type": "string",
         "required": false,
-        "description": "业务日（可选），格式建议 YYYY-MM-DD；不传则默认服务端「今日」。"
+        "description": "查询起始日（含），YYYY-MM-DD；实时看板单日快照时可与 endDate 同为业务日。不传由服务端默认今日。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": false,
+        "description": "查询结束日（含），YYYY-MM-DD；与 startDate 同值表示单日。"
       }
     },
     "response": {
@@ -56,33 +61,59 @@
     }
   },
   "sampleRequest": {
-    "t_date": "2026-03-21"
+    "startDate": "2026-03-21",
+    "endDate": "2026-03-21"
   },
   "sampleResponse": {
     "appOptions": [
       { "value": "all", "label": "全部应用" },
       { "value": "weather5", "label": "Weather5", "s_app_id": "weather5" },
       { "value": "phonetracker", "label": "PhoneTracker", "s_app_id": "phonetracker" },
-      { "value": "bloodsugar2", "label": "BloodSugar2", "s_app_id": "bloodsugar2" }
+      { "value": "bloodsugar2", "label": "BloodSugar2", "s_app_id": "bloodsugar2" },
+      { "value": "phonetracker2", "label": "PhoneTracker2", "s_app_id": "phonetracker2" },
+      { "value": "faceme", "label": "FaceMe", "s_app_id": "faceme" },
+      { "value": "dramavue", "label": "DramaVue", "s_app_id": "dramavue" },
+      { "value": "healthtracker", "label": "HealthTracker", "s_app_id": "healthtracker" }
     ],
     "sourceOptions": [
       { "value": "all", "label": "全部广告平台" },
       { "value": "1", "label": "Google", "n_source": 1 },
       { "value": "2", "label": "Meta", "n_source": 2 },
+      { "value": "3", "label": "Unity", "n_source": 3 },
+      { "value": "4", "label": "AppLovin", "n_source": 4 },
+      { "value": "5", "label": "IronSource", "n_source": 5 },
+      { "value": "6", "label": "AdColony", "n_source": 6 },
       { "value": "7", "label": "Pangle", "n_source": 7 }
     ]
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "路由 `/user-growth/real-time-data` → `index.vue` → `RealtimeDataDashboard.vue`；可与 KPI、卡片表、底部图并行请求。",
+        "prerequisite": "登录态"
+      },
+      {
+        "moment": "用户变更业务日或筛选后刷新",
+        "detail": "筛选栏确认/日期变更后重新拉取元数据（若产品约定元数据随日切变化）；当前实现可单刷或随主列表一并刷新。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "不传 startDate/endDate 时后端按服务端「今日」返回选项；应用 value 为 `all` 或 `s_app_id`，广告平台为 `all` 或 n_source 字符串。",
+    "dedupe": "可与 02/03/05 共用同一筛选快照；建议对短时间内重复 init 做取消或合并。"
+  },
   "api": {
-    "url": "POST /api/user-growth/real-time-data/meta-filter-options",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/meta-filter-options",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "t_date?",
+    "requestBody": "startDate?, endDate?",
     "responseBody": "appOptions, sourceOptions"
   },
   "apiSuggestion": {
     "notes": [
       "与列表接口共用同一套 s_app_id / n_source 语义，避免「全部」与具体 ID 混用不同枚举。",
-      "若网关统一包裹业务体，请在 README 中注明外层字段名（如 data）。"
+      "前端 axios 封装已返回内层 `data`；本契约 `sampleResponse` 为 unwrap 后的业务体，与 `src/api/user-growth/real-time-data.ts` 一致。",
+      "`appOptions` 示例与 `mock/data.ts` 中七款应用一致；`03` 中 `riskdemo` 仅用于联调 `actionTagType=red`，不必出现在筛选项。"
     ]
   }
 }

@@ -1,156 +1,487 @@
----
+﻿---
+
 description: 后端数据字段表与业务概念，定义类型、API、表格列、筛选器时须与此一致
+
 alwaysApply: true
+
 ---
+
+
 
 # 后端字段规范（数据字典）
 
+
+
 与后端接口、报表、用户增长等模块相关的字段命名与业务含义须遵循下表。定义 TypeScript 类型、API 入参/出参、表格列、筛选器选项时，**遇到以下概念必须使用表中给出的字段名与语义**。
+
+
 
 ## 字段前缀约定
 
+
+
 | 前缀 | 含义 | 示例 |
+
 |------|------|------|
+
 | `t_` | 时间/日期 | `t_date` |
+
 | `s_` | 字符串/ID | `s_app_id`, `s_ad_account_id`, `s_campaign_id`, `s_country_code` |
+
 | `n_` | 数值/枚举 | `n_platform`, `n_source`, `n_ad_type` |
+
 | `d_` | 时间类型或 bit 类型 | 按后端具体表定义 |
+
+
 
 ## 表字段与业务概念
 
-### 时间与维度
+
+
+### 接口请求 · 日期范围（入参）
+
+
+
+凡需传递**一段时间范围**的 **API 请求体 / 筛选入参**（`mock/backend-api` 的 `sampleRequest`、`fieldDescription.request`、页面 `types` 入参），**统一使用**下列键名：
+
+
 
 | 字段 | 业务概念 |
+
 |------|----------|
-| `date` | 日期 |
-| `year` | 年 |
-| `month` | 月 |
-| `hour` | 小时 |
-| `initial_date` | 初始日期（买量日期） |
+
+| `startDate` | 查询/筛选起始日期（含） |
+
+| `endDate` | 查询/筛选结束日期（含） |
+
+
+
+- 值格式：推荐 **`YYYY-MM-DD` 字符串**；若模块 `README` 或后端另有说明（如时区），键名仍为 `startDate` / `endDate`。
+
+- **勿**用 `date`、`year`、`month`、`hour`、`initial_date` 等作为「日期范围」入参的替代键名；存量契约若仍用别名，整理时在 Skill 交付物中单列 **「迁移为 startDate/endDate」**。
+
+- **与数仓/响应字段区分**：下文「数据维度与字段关系」中的 **`t_date`** 等表示**明细或报表行上的时间维度、或接口响应体中的日期字段**，**不是**筛选日期范围的入参键名。
+
+
 
 ### 应用与平台
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
+
 | `platform` | 终端平台：安卓 / iOS |
+
+| `appPackage` | 应用包名（Android 等；转化管理等模块列表/筛选/树表常用，与 `app` 兼容并存时优先 `appPackage`） |
+
+| `app` | 应用筛选/入参**兼容字段**，语义同 `appPackage`（历史字段名）。 |
+
 | `appId` / `s_app_id` | 应用 ID（自有 ID），含不同部署版本与联动平台 |
+
 | `app_store` | 应用商店 |
+
 | `app_version` / `version` | 版本 |
+
 | `source` / `n_source` | 广告平台：1-Google, 2-Facebook, 3-Unity, 4-AppLovin, 5-IronSource, 6-AdColony, 7-Pangle |
+
 | `media_source` | 媒体来源 |
+
 | `channel` | 广告平台 |
+
+
 
 ### 广告层级
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
+
 | `ad_account` / `s_ad_account_id` | 广告账号 |
+
 | `campaign` / `s_campaign_id` | 广告系列 |
+
 | `group` / `s_group_id` | 广告组 |
+
 | `ad_network` / `s_ad_network_type` | 广告网络 |
+
 | `ad_type` / `n_ad_type` | 广告类型（仅收入表 `t_ad_revenue_detail`） |
+
 | `ad_unit` / `s_ad_unit_id` | 广告单元（仅收入表 `t_ad_revenue_detail`） |
+
+
 
 ### 地域
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
+
 | `country_code` / `s_country_code` | 国家代码 |
+
+
 
 ### 消耗与展示
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
+
 | `cost` | 花费 |
+
 | `impressions` | 展示次数 |
+
 | `clicks` | 点击量 |
+
 | `installs` | 安装量 |
+
 | `from` | 数据来源 |
+
 | `budget` | 预算 |
+
+
 
 ### 收入与价值
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
+
 | `revenue` | 收入 |
+
 | `request_quantity` | 请求数量 |
+
 | `filled_request` | 填充数量 |
+
 | `firebase_ad_revenue` | Firebase 记录的 Ad_Impression 累计广告价值 |
+
 | `ad_revenue` | 广告价值 |
+
 | `lap_revenue` | 内购价值（含订阅） |
+
 | `subscription_revenue` | 订阅收入 |
+
 | `current_ar` | 当前广告价值 |
+
 | `current_arp` | 当前广告+内购价值 |
+
 | `current_far` | 当前 Firebase 广告价值 |
+
 | `ar1` | 1 日广告价值 |
+
 | `arp1` | 1 日广告+内购价值 |
+
 | `far1` | 1 日 Firebase 广告价值 |
 
+
+ 
 ### 用户与行为
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
+
 | `active_user_count` | 活跃用户数 |
+
 | `new_user_count` | 新增用户数 |
+
 | `sessions` | 总会话次数 |
+
 | `event_count` | 事件数 |
+
 | `avg_play_time` | 人均使用时长（秒） |
+
 | `user_count_day1` | day1 留存用户数 |
+
 | `register_user_count` | 注册用户数 |
+
 | `day0` | 当日活跃用户 |
+
 | `day1` | 次留（第二天留存） |
+
 | `day7` | 7 日留存 |
+
 | `mau` | 月活跃用户 |
+
 | `play_time` | 用户每天游戏时长（分钟） |
+
+
 
 ### 订单与支付
 
+
+
 | 字段 | 业务概念 |
+
 |------|----------|
+
 | `amount` | 实收金额（已去除平台抽成） |
+
 | `money` | 金额（未去除平台抽成） |
+
 | `quantity` | 数量 |
+
 | `sku` | 商品 |
+
 | `order` | 订单 |
+
 | `times` | 订阅次数 |
+
 | `payment_platform` | 支付平台 |
+
 | `product` | 商品 |
+
+
 
 ### 其他
 
+
+
+| 字段 | 业务概念 |
+
+|------|----------|
+
+| `notification` | 通知 |
+
+| `advertising` | 用户广告 |
+
+
+
+### 前端展示与契约结构字段（必须入表）
+
+以下字段多为「页面展示/组件结构」或「契约响应体结构」字段名。根据本项目规则：**只要字段在契约 / types / API 中出现，且不在本表已有条目中，就必须在此补齐**，避免出现“接口已在用但字段表缺失”的灰区。
+
+#### 通用结构/容器字段
+
 | 字段 | 业务概念 |
 |------|----------|
-| `notification` | 通知 |
-| `advertising` | 用户广告 |
+| `items` | 列表数据项数组（非分页时也可用）。 |
+| `records` | 列表/表格主数据数组（分页接口常见键名，与 `items` 并存时以模块契约为准）。 |
+| `current` | 当前页码（分页，一般从 1 起）。 |
+| `size` | 每页条数（分页）。 |
+| `total` | 符合条件的总条数（分页）。 |
+| `keyword` | 关键字搜索入参（多列模糊匹配时统一使用该字段名）。 |
+| `detail` | 详情主体对象（弹窗/抽屉/详情页的主数据）。 |
+| `series` | 图表序列数组（每项一条曲线/柱状序列）。 |
+| `channels` | 按广告平台拆分的行数组（实时数据详情中的平台分布）。 |
+| `hourLabels` | 小时/时段横轴标签数组（与各序列等长）。 |
+| `costSeries` | 与 `hourLabels` 对齐的花费序列（USD）。 |
+| `roiPercentSeries` | 与 `hourLabels` 对齐的 ROI 序列（百分比数值）。 |
+
+#### 下拉/筛选选项字段
+
+| 字段 | 业务概念 |
+|------|----------|
+| `appOptions` | 应用筛选下拉选项数组。 |
+| `platformOptions` | 终端平台筛选项数组（`label`/`value`，值与 `platform` 入参一致）。 |
+| `conversionTypeOptions` | **广告平台转化类型**筛选项数组（`value` 与 `platformConversionType` / `conversionType` 筛选一致）。 |
+| `statusOptions` | 映射等业务**状态**筛选项数组（如启用/重复/未映射）。 |
+| `options` | 通用配置项数组（元素多为 `{ label, value }`；如转化展示分类等 meta 接口）。 |
+| `sourceOptions` | 广告平台筛选下拉选项数组。 |
+| `label` | 选项展示文案。 |
+| `value` | 选项值（可为 `all` 或业务 ID/枚举值字符串）。 |
+
+#### UI 展示字段（实时数据模块常用）
+
+| 字段 | 业务概念 |
+|------|----------|
+| `id` | 前端展示用主键（在实时数据中要求与 `s_app_id` 对齐）。 |
+| `name` | 展示名称（应用名/平台名/图例名等）。 |
+| `iconText` | 图标区展示字符（emoji/字母等），纯展示字段。 |
+| `iconBg` | 图标背景色（CSS 颜色字符串），纯展示字段。 |
+| `iconColor` | 小圆点/标记颜色（CSS 颜色字符串），纯展示字段。 |
+| `color` | 图表颜色（CSS 颜色字符串），纯展示字段。 |
+| `isLive` | 是否“实时刷新/在线”状态（影响 UI 标识）。 |
+| `hasWarning` | 是否存在预警状态（影响 UI 标识）。 |
+| `warningBadge` | 预警角标文案（如超额、低活跃）。 |
+| `launchLabel` | 卡片状态文案（如实时/展开明细）。 |
+| `chartData` | 火花图/迷你趋势序列数组（长度由产品约定）。 |
+| `chartColor` | 火花图主色（CSS 颜色字符串）。 |
+| `actionTag` | 操作标签文案（如“选择”）。 |
+| `actionTagType` | 操作标签类型（如 `cyan/orange/gray/red`）。 |
+
+#### KPI/业务指标（实时数据模块）
+
+| 字段 | 业务概念 |
+|------|----------|
+| `onlineApps` | 在线应用数（整数）。 |
+| `totalApps` | 应用总数（整数）。 |
+| `todaySpend` | 今日花费（USD；与 `cost` 同语义但为 KPI 命名）。 |
+| `spend` | 花费（USD；与 `cost` 同语义，实时数据 UI 历史字段名）。 |
+| `spendChange` | 花费环比/同比展示文案（已含符号或百分号）。 |
+| `spendUp` | 花费变化方向（上升/下降）。 |
+| `cpi` | CPI（Cost Per Install，USD/安装；与 `cost`、`installs` 共同派生的指标）。 |
+| `cpiChange` | CPI 变化展示文案。 |
+| `cpiUp` | CPI 变化方向（上升/下降）。 |
+| `activeSeries` | 活跃广告系列数量（整数）。 |
+| `budgetProgress` | 预算进度（0-100）。 |
+| `budgetDaysLeft` | 预算耗尽预估文案（如“~5天后”）。 |
+| `estimatedProfit` | 预估利润（USD，可为负；展示口径由产品定义）。 |
+| `balance` | 账户/余额（USD；展示口径由产品定义）。 |
+| `ctr` | 点击率（百分比数值，如 3.2 表示 3.2%）。 |
+| `cvr` | 转化率（百分比数值）。 |
+| `roi` | ROI（百分比数值；口径需在模块契约说明）。 |
+| `roiAvg` | ROI 均值（百分比数值）。 |
+| `roiTarget` | ROI 目标/阈值（百分比数值）。 |
+| `roiGood` | ROI 是否达标（用于样式）。 |
+| `roiColor` | ROI 展示色（CSS 颜色字符串）。 |
+| `roi1d` | 1 日 ROI（百分比数值）。 |
+| `roi3d` | 3 日 ROI（百分比数值）。 |
+| `warningApps` | 预警应用数（整数）。 |
+
+#### 小时序列字段（实时数据详情）
+
+| 字段 | 业务概念 |
+|------|----------|
+| `hourlyData` | 小时/时段花费序列（USD）。 |
+| `hourlyRoi` | 小时/时段 ROI 序列（百分比数值）。 |
+
+#### 转化管理（映射列表 + 转化数据 Tab）
+
+| 字段 | 业务概念 |
+|------|----------|
+| `conversionId` | 广告平台侧**转化 ID**（接口与 Mock 一律 **string**，避免长整型精度问题）。 |
+| `conversionName` | 广告平台侧**转化名称**（原始事件名，可能较长）。 |
+| `conversionType` | **筛选入参**：平台转化类型（空串表示全部；取值口径与 `platformConversionType` 一致）。 |
+| `adPlatform` | **广告平台**入参/表单历史字段，语义同 `source`；新契约优先使用 `source`。 |
+| `platformConversionType` | **广告平台转化类型**（展示/色条用；收敛枚举：`PHONE_CALL_LEAD`、`DOWNLOAD`、`PURCHASE`、`ADD_TO_CART`、`PAGE_VIEW`、`BEGIN_CHECKOUT`；亦可返回其它字符串，前端默认样式兜底）。 |
+| `systemDisplayName` | **系统内展示名称**（业务映射后的简称；与 `conversionName` 成对出现）。 |
+| `mccAccount` | **MCC / 经理账户**标识（列表、弹窗、树表维度）。 |
+| `billingType` | **计费类型**（如 `CPA`、`CPI`、`CPE`；**空字符串** 表示未知/不适用）。 |
+| `conversionDisplayType` | **转化展示分类**（与 `platformConversionType` 不同维度）：`paid` / `activation` / `behavior` / `revenue`。 |
+| `remarks` | 映射**备注**（编辑保存）。 |
+| `status` | **映射状态**：`enabled` 启用、`duplicate` 重复、`unmapped` 未映射。 |
+| `mappingStats` | **映射状态统计**对象（内含 `mapped`、`duplicate`、`unmapped` 等**条数计数**；勿与单行 `status` 混为一谈）。 |
+| `platformStats` | **终端分布统计**对象（如 `android`、`ios` 条数或占比，以契约为准）。 |
+| `typeDistribution` | **转化类型分布**数组（环形图等；项含 `name`、`value` 占比、`count` 可选）。 |
+| `tableRows` | **转化数据明细**树表根数组（`group`→`account`→`conversion`）。 |
+| `level` | 树表**层级**：`group` 账户组、`account` 账户、`conversion` 转化行。 |
+| `accountGroupName` | **账户组名称**（树表维度）。 |
+| `accountName` | **广告账户名称**（树表维度）。 |
+| `children` | **子节点**数组（树表嵌套；父行收起/展开用）。 |
+| `conversionCount` | **转化次数**（树表行指标或 KPI 子项；合计/单行依上下文）。 |
+| `conversionValue` | **转化价值**（金额等价值口径见模块契约，常 USD）。 |
+| `share` | **占比**（0–100；对应次数或价值占比以契约为准）。 |
+| `trendPoints` | **迷你趋势**序列（无时间轴点列，如长度 14，用于表格内 sparkline）。 |
+| `kpi` | **KPI 汇总区**对象（如 `conversionCount`/`conversionValue`/`averageValue`/`activeTypeCount` 等子指标，子结构多为 `{ value, deltaPercent }`）。 |
+| `averageValue` | **平均价值**类 KPI 子指标（如总价值/总次数）。 |
+| `activeTypeCount` | **活跃转化类型数**（KPI 子项，整数）。 |
+| `deltaPercent` | 指标相对对比期的**变化百分比**（可正可负；常见于 KPI 子项）。 |
+| `sidePanels` | 转化数据 Tab **右侧面板**容器（类型分布、Top10、趋势、账户占比等）。 |
+| `valueTrend30d` | **多日价值/指标趋势**数组（产品可约定 30 日；项含日期字符串与 `value`；日期键名 **`date`**，非筛选用的 `startDate`/`endDate`）。 |
+| `top10` | **Top10 排行**数组（项多为名称 + 数值，口径见契约）。 |
+| `accountShare` | **账户维度占比**数组（列表项含账户名与 `segments`）。 |
+| `segments` | **分段占比**数组（如 `{ type, percent }`；`type` 常为转化类型名；同一账户内 `percent` 合计约 100）。 |
+| `createdAt` | **创建时间**（ISO 8601 字符串；详情/审计扩展）。 |
+| `updatedAt` | **更新时间**（ISO 8601 字符串）。 |
+
+#### 旧版 Mock 图表结构字段（仍在 types 中出现）
+
+> 说明：`RealtimeBottomSeries` 旧结构使用固定应用 key（如 `weather5`），属于历史展示结构字段名。只要仍在 `types.ts` 中出现，就必须在字段表中登记。
+
+| 字段 | 业务概念 |
+|------|----------|
+| `weather5` | 旧版底部图：Weather5 应用的花费序列 key。 |
+| `phonetracker` | 旧版底部图：PhoneTracker 应用的花费序列 key。 |
+| `bloodsugar2` | 旧版底部图：BloodSugar2 应用的花费序列 key。 |
+| `phonetracker2` | 旧版底部图：PhoneTracker2 应用的花费序列 key。 |
+
 
 ## 数据维度与字段关系
 
-- **时间**: `t_date`
+
+
+- **时间**: `t_date`（行级/报表维度字段；**筛选入参**的日期范围见上文 **「接口请求 · 日期范围」** 之 `startDate` / `endDate`）
+
 - **应用**: `s_app_id`
+
 - **终端平台**: `n_platform`
+
 - **广告平台（渠道）**: `n_source`
+
 - **广告账号**: `s_ad_account_id`
+
 - **广告系列**: `s_campaign_id`
+
 - **广告组**: `s_group_id`
+
 - **广告网络**: `s_ad_network_type`
+
 - **应用版本**: `app_version`
+
 - **国家代码**: `s_country_code`
+
 - **广告类型**: `n_ad_type`（仅存在于收入表 `t_ad_revenue_detail`）
+
 - **广告单元**: `s_ad_unit_id`（仅存在于收入表 `t_ad_revenue_detail`）
+
+
 
 **层级关系（一对多）：**
 
+
+
 - `n_ad_type` ↔ `s_ad_unit_id` 一对多
+
 - `(s_app_id, n_platform)` 作为准唯一键 ↔ `s_country_code` 一对多
+
 - `(s_app_id, n_platform)` 作为准唯一键 ↔ `n_source` 一对多
+
 - `n_source` ↔ `s_ad_account_id` 一对多
+
 - `n_source` ↔ `s_ad_network_type` 一对多
+
 - `s_ad_account_id` ↔ `s_campaign_id` 一对多
+
 - `s_campaign_id` ↔ `s_group_id` 一对多
+
+
 
 ## 使用说明
 
+
+
 - 在 `src/types/api/api.d.ts` 或页面 `types.ts` 中定义接口类型时，字段名与上表一致。
+
 - 表格列 `prop`、筛选表单项 `v-model` 绑定的字段、请求参数名，优先使用上表中的字段名（如 `s_source` 对应后端 `n_source` 时以实际接口为准，但业务概念对应「广告平台」）。
+
 - 文案与 i18n：展示给用户的标签、筛选项文案使用表中的「业务概念」列（如「广告系列」「国家代码」），保持与后端字段表一致。
+
 - 国家代码需展示国旗时：仅用 `s_country_code`（ISO 3166-1 alpha-2），前端用依赖 `flag-icons` 映射为 `fi fi-xx` 样式类；**不要**在接口/Mock 中返回国旗 emoji 或图片 URL（详见 `project-conventions.mdc`「国旗与 flag-icons」）。
+
+
+
+## 维护与对齐约定
+
+
+
+- **单一事实来源**：新增或调整业务字段含义时，**须先**在本文件增改并对齐，**再**同步 `mock/backend-api` 契约、`types.ts`、`src/api`；禁止长期「契约一套、字典无条目」。
+
+- **强制收口（新增字段必须进字段表）**：从现在开始，**无论什么字段**，只要出现在以下任一处且在本文件表格中找不到同名条目，均视为“新增字段”，必须**先**在本文件补充条目（字段名 + 业务概念/语义）后，才允许落到代码与契约中：
+  - `mock/backend-api/*.json` 的 `fieldDescription.request` / `fieldDescription.response` / 其引用的嵌套类型字段；以及 `sampleRequest` / `sampleResponse` 中出现的字段名
+  - 页面 `types.ts` / `src/types/api/api.d.ts` 中的接口入参/出参字段名
+  - `src/api/**` 的请求参数（POST body）与响应体字段名（含解包后的业务体）
+
+  该规则的目标是杜绝「接口/契约/类型已经在用，但字段表缺失」导致的联调歧义与后续重构成本。
+
+  **验收口径**：做模块契约整理或新增接口时，必须能在本文件中“逐字段查到对应条目”；查不到的字段即为未完工项。
+
+- **复用优先**：与表中已有业务概念相同则 **必须使用** 表内字段名；确属新维度再在表中新增一行。
+
+- **别名与历史名**：可在契约 `fieldDescription.description` 中注明「同某标准字段」；整理契约时由 `module-api-contract-audit` Skill 交付物单列合并建议。
+
+- **与契约分工**：本文件不写 Tab/按钮级功能点；**具体 UI 落点**写在各契约的 `interaction` 与 `fieldDescription` 中。
+
+
+

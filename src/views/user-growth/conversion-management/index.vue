@@ -204,7 +204,7 @@
    */
   const refreshIntervalMs = 30_000
 
-  function getDefaultDateRange(): [string, string] {
+  function getDefaultDateBounds(): { startDate: string; endDate: string } {
     const end = getAppNow()
     const start = cloneAppDate(end)
     start.setDate(end.getDate() - 6)
@@ -214,11 +214,11 @@
       const day = String(d.getDate()).padStart(2, '0')
       return `${y}-${m}-${day}`
     }
-    return [toYmd(start), toYmd(end)]
+    return { startDate: toYmd(start), endDate: toYmd(end) }
   }
 
   const dataFilter = reactive<ConversionDataFilterParams>({
-    dateRange: getDefaultDateRange(),
+    ...getDefaultDateBounds(),
     platform: '',
     app: '',
     appPackage: '',
@@ -271,8 +271,12 @@
   }
 
   function handleDataSearch(payload: ConversionDataFilterParams) {
+    const bounds =
+      payload.startDate && payload.endDate
+        ? { startDate: payload.startDate, endDate: payload.endDate }
+        : getDefaultDateBounds()
     Object.assign(dataFilter, {
-      dateRange: payload.dateRange ?? getDefaultDateRange(),
+      ...bounds,
       platform: payload.platform ?? '',
       appPackage: payload.appPackage ?? payload.app ?? '',
       app: payload.appPackage ?? payload.app ?? '',

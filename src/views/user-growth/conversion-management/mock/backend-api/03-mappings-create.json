@@ -108,7 +108,7 @@
     "message": "新增成功"
   },
   "api": {
-    "url": "POST /api/user-growth/conversion-management/mappings-create",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/mappings-create",
     "method": "POST",
     "priority": "P2",
     "requestBody": "source, adPlatform, mccAccount, appPackage, conversionName, conversionId?, platformConversionType?, conversionDisplayType?, systemDisplayName, billingType?, status?, remarks?",
@@ -120,5 +120,16 @@
       "如需防重：建议后端以 (source,mccAccount,appPackage,conversionId|conversionName) 做唯一性校验，并在冲突时返回明确 message。",
       "conversionId 必须返回 string。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户提交",
+        "detail": "`conversion-mapping-dialog.vue` 新增模式提交 → `index.vue` `handleDialogSubmit`；当前为 console mock，接接口后 POST 本契约并在成功后 `getData()`。",
+        "prerequisite": "通常先拉取 meta-dialog-options 填充分级选项。"
+      }
+    ],
+    "defaultSelection": "表单默认值见弹窗组件；source 与 adPlatform 对齐为同一语义。",
+    "dedupe": "提交按钮 loading，防止重复创建。"
   }
 }

@@ -1,0 +1,87 @@
+---
+description: 【P0 · 必读 · 最高优先级】用户增长与商业洞察侧栏无 (M) 标识子模块为冻结红线：禁止擅自改动其目录及关联 API/路由/i18n；须先征得用户明确同意。
+alwaysApply: true
+---
+
+# 冻结红线：无 (M) 子模块（用户增长 & 商业洞察）
+
+本规则优先级高于仓库内其他 Cursor 规则中与之冲突的「可改范围」说明。**任何 Agent/编辑会话须首先遵守本规则。**
+
+## 适用范围（侧栏文案约定）
+
+- **用户增长**：侧栏菜单标题**不带**后缀 `(M)` 的子项（与子项对应代码目录一致）。
+- **商业洞察**：侧栏菜单标题**不带**后缀 `(M)` 的子项（与子项对应代码目录一致）。
+
+## 禁止行为（红线）
+
+对下表所列 **模块显示名称** 对应的 **目录 / 文件**，在**未获得当前用户在对话中明确同意（确认可以改）**之前，禁止：
+
+- 修改、新增、删除、重命名文件或目录
+- 调整依赖、路由、`types`、mock、契约 JSON、样式、配置开关等任何内容
+- 以「小修复」「顺手优化」「仅格式化」等理由绕过
+
+若任务涉及下列任意路径或下文「关联项」，**必须先向用户说明将改什么、为何改，并等待用户明确授权**；**禁止擅自修改**。
+
+## 一、用户增长 — 无 (M) 子模块与目录（写死）
+
+| 侧栏名称     | 冻结目录（仓库根相对路径，递归包含其下全部文件） |
+|--------------|--------------------------------------------------|
+| 账户成效     | `src/views/user-growth/account-performance/`    |
+| 广告平台分析 | `src/views/user-growth/ad-platform-analysis/`（含其下所有子目录，如 `ad-platform-info/`） |
+| 我的广告     | `src/views/user-growth/my-ads/`                   |
+| 我的绩效     | `src/views/user-growth/my-performance/`           |
+| 广告成效     | `src/views/user-growth/ad-performance/`（含其下所有子目录，如 `campaign-detail/`） |
+| 代投分析     | `src/views/business-insight/agency-analysis/`（路由入口挂在用户增长下，代码目录在商业洞察） |
+
+### 用户增长 — 专用 API 文件（与上表模块对应，一并冻结）
+
+`src/api/user-growth/my-ads.ts`  
+`src/api/user-growth/my-performance.ts`  
+`src/api/user-growth/ad-performance.ts`  
+`src/api/user-growth/ad-platform-analysis.ts`  
+`src/api/user-growth/ad-platform-info.ts`  
+`src/api/agency-analysis.ts`（代投分析）
+
+> **说明**：`账户成效` 页面若无独立 `src/api/user-growth/*.ts`，其请求封装可能分散在页面目录内；凡落在 `src/views/user-growth/account-performance/` 内的实现均适用本红线。
+
+## 二、商业洞察 — 无 (M) 子模块与目录（写死）
+
+| 侧栏名称     | 冻结目录（仓库根相对路径，递归包含其下全部文件） |
+|--------------|--------------------------------------------------|
+| 收入概览     | `src/views/business-insight/revenue-overview/`   |
+| 利润分析     | `src/views/business-insight/profit-analysis/`     |
+| IAP 分析     | `src/views/business-insight/iap-analysis/`        |
+| IAA 分析     | `src/views/business-insight/iaa-analysis/`        |
+| ECPM分析     | `src/views/business-insight/ecpm-analysis/`       |
+| 预估收入偏差 | `src/views/business-insight/revenue-deviation/`   |
+
+### 商业洞察 — 专用 API 文件（与上表模块对应，一并冻结）
+
+`src/api/iap-analysis.ts`  
+`src/api/revenue-deviation.ts`
+
+### 商业洞察 — 共享 API / Mock（影响无 (M) 多项模块，一并冻结相关改动）
+
+下列文件被多个无 `(M)` 子模块复用，**禁止在未获用户明确同意时**修改其中与**收入概览、利润分析、IAA 分析、ECPM分析**相关的逻辑（含 URL 前缀常量、`fetch*` 实现、mock 分支、类型导入等）：
+
+- `src/api/business-insight.ts`（涉及 `revenue-overview`、`profit-analysis`、`iaa-analysis`、`ecpm-analysis` 等实现）
+- `src/views/business-insight/mocks/`（其下文件如被上述模块或 `business-insight.ts` / `iap-analysis.ts` 引用，改动可能影响无 `(M)` 模块行为）
+
+## 三、路由与菜单文案（与侧栏一致的条目）
+
+禁止擅自修改下列文件中与**上表侧栏名称**对应路由/`meta.title` 的配置（除非用户明确授权）：
+
+- `src/router/modules/user-growth.ts`（含：`account-performance`、`ad-platform-analysis`、`my-ads`、`my-performance`、`ad-performance`、`agency-analysis` 等无 `(M)` 子项）
+- `src/router/modules/business-insight.ts`（含：`revenue-overview`、`profit-analysis`、`iap-analysis`、`iaa-analysis`、`ecpm-analysis`、`revenue-deviation` 等无 `(M)` 子项）
+- `src/locales/langs/zh.json`（及同源英文等语言包）中 `menus.userGrowth.*`、`menus.businessInsight.*` 里与上述**无 `(M)`** 菜单文案对应的键值
+
+**例外**：仅当用户明确要求修改文案或路由，并在对话中明确确认时，可在授权范围内修改。
+
+## 四、与「带 (M) 模块」共处的原则
+
+- 若任务仅针对**带 `(M)`** 子模块，**仍不得**通过改动本规则表格中的路径/关联项来「绕路」实现（例如为修 (M) 页而改共享 `business-insight.ts` 中无 (M) 模块使用的函数）。
+- 确有耦合时：**先提问、获批准**再动。
+
+## 五、生效说明
+
+- 本文件名为 `00-…`，在 `.cursor/rules` 内排序靠前；`description` 标明 **P0 / 必读 / 最高优先级**，与其他 `alwaysApply` 规则同时存在时，**仍以本红线为准**约束是否允许改动上表范围。

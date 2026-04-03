@@ -7,10 +7,10 @@ import {
 } from '../mock/data'
 
 /**
- * 实时数据看板数据源（当前为 Mock；接口就绪后可在此按 `mock/backend-api` 契约拆分为多请求并映射）。
+ * 实时数据看板数据源（当前为本地 `mock/data` 聚合）。
  *
- * 契约对照：01-meta-filter-options · 02-overview-kpi-summary · 03-table-app-cards ·
- * 04-app-detail · 05-overview-hourly-spend-comparison
+ * 联调：使用 `@/api/user-growth/real-time-data` 下 `fetchRealtimeMetaFilterOptions` 等五类 `fetch*`，
+ * 开关见 `views/user-growth/real-time-data/config/data-source.ts`；契约见 `mock/backend-api/*.json`。
  */
 export function useRealtimeDashboardMock() {
   const apps = ref<AppCard[]>(cloneAppCards(mockRealtimeAppCards))

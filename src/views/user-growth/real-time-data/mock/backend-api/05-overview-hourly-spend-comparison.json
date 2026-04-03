@@ -12,10 +12,15 @@
         "required": false,
         "description": "按广告平台过滤对比数据时使用。"
       },
-      "t_date": {
+      "startDate": {
         "type": "string",
         "required": false,
-        "description": "业务日 YYYY-MM-DD。"
+        "description": "查询起始日（含），YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": false,
+        "description": "查询结束日（含），YYYY-MM-DD。"
       }
     },
     "response": {
@@ -56,7 +61,8 @@
   },
   "sampleRequest": {
     "s_app_id": "all",
-    "t_date": "2026-03-21"
+    "startDate": "2026-03-21",
+    "endDate": "2026-03-21"
   },
   "sampleResponse": {
     "hourLabels": ["0:00", "2:00", "4:00", "6:00", "8:00", "10:00", "12:00", "14:00"],
@@ -88,11 +94,27 @@
     ],
     "roiPercentSeries": [20, 28, 42, 60, 78, 94, 96, 100]
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "底部「实时小时消耗对比」柱状 + ROI 折线图请求 hourLabels、series、roiPercentSeries。",
+        "prerequisite": "无"
+      },
+      {
+        "moment": "筛选或刷新",
+        "detail": "与 02/03 同步刷新；图表横轴标签切换若仅格式化可前端本地处理，不重拉接口。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "s_app_id 为 all 或未传时返回约定对比应用集合（如头部多应用）；与当前 UI 固定四应用柱序列对齐时可由前端映射 series。",
+    "dedupe": "可并行 02/03；大数据量时保持独立接口避免拖慢首屏。"
+  },
   "api": {
-    "url": "POST /api/user-growth/real-time-data/overview-hourly-spend-comparison",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/overview-hourly-spend-comparison",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_app_id?, n_source?, t_date?",
+    "requestBody": "s_app_id?, n_source?, startDate?, endDate?",
     "responseBody": "RealtimeHourlySpendComparison"
   },
   "apiSuggestion": {

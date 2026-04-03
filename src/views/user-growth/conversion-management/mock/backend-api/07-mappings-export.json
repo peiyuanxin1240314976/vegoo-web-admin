@@ -81,7 +81,7 @@
     "expireAt": "2026-03-17T12:00:00Z"
   },
   "api": {
-    "url": "POST /api/user-growth/conversion-management/mappings-export",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/mappings-export",
     "method": "POST",
     "priority": "P2",
     "requestBody": "platform, appPackage|app, conversionType, status, keyword, format? (xlsx|csv)",
@@ -92,5 +92,16 @@
       "数据量大时建议异步导出：先返回 taskId，再轮询 task 状态拿 downloadUrl。",
       "conversionId 仍需按 string 导出，避免 Excel 科学计数法/精度丢失。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作（待接）",
+        "detail": "侧栏「导出」→ `handleExport` 占位；接接口 POST，请求体与列表筛选一致。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "format 默认 xlsx；筛选与当前列表一致。",
+    "dedupe": "避免重复触发下载。"
   }
 }

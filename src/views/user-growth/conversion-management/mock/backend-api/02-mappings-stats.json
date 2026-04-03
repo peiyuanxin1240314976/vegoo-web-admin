@@ -120,7 +120,7 @@
     "platformStats": { "android": 18, "ios": 0 }
   },
   "api": {
-    "url": "POST /api/user-growth/conversion-management/mappings-stats",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/mappings-stats",
     "method": "POST",
     "priority": "P0",
     "requestBody": "platform, appPackage|app, conversionType, status, keyword",
@@ -131,5 +131,16 @@
       "建议统计口径与列表筛选完全一致，前端按同一套筛选值调用两个接口。",
       "typeDistribution.value 建议后端保证总和约等于 100（允许四舍五入误差）。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面展示（当前实现）",
+        "detail": "右侧面板类型分布/映射统计/平台占比当前取自 `mock/data.ts` 静态常量（`MOCK_*`），未请求本接口；接真接口后应在筛选变更后与列表同参请求并替换侧栏数据源。",
+        "prerequisite": "与 mappings-list 筛选字段一致。"
+      }
+    ],
+    "defaultSelection": "与 01-mappings-list 筛选一致：无分页字段。",
+    "dedupe": "可与列表并行；筛选变更时一并刷新。"
   }
 }

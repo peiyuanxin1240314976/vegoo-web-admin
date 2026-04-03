@@ -7,10 +7,15 @@
         "required": true,
         "description": "应用 ID。"
       },
-      "t_date": {
+      "startDate": {
         "type": "string",
         "required": false,
-        "description": "业务日 YYYY-MM-DD。"
+        "description": "查询起始日（含），YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": false,
+        "description": "查询结束日（含），YYYY-MM-DD。"
       },
       "n_source": {
         "type": "number",
@@ -121,7 +126,8 @@
   },
   "sampleRequest": {
     "s_app_id": "weather5",
-    "t_date": "2026-03-21"
+    "startDate": "2026-03-21",
+    "endDate": "2026-03-21"
   },
   "sampleResponse": {
     "detail": {
@@ -171,11 +177,22 @@
       "hourlyRoi": [18, 22, 38, 55, 72, 90, 92, 96]
     }
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户打开详情",
+        "detail": "点击卡片「展开明细」等，`AppDetailModal` 打开时按当前卡片的 s_app_id 请求；不依赖 03 列表内嵌详情。",
+        "prerequisite": "s_app_id 有效"
+      }
+    ],
+    "defaultSelection": "继承列表当前筛选的 n_source（可选）与业务日 startDate/endDate；弹窗内若仅展示不触发新维度则不再请求。",
+    "dedupe": "同一 s_app_id 短缓存可选；关闭弹窗可丢弃。"
+  },
   "api": {
-    "url": "POST /api/user-growth/real-time-data/app-detail",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/app-detail",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_app_id, t_date?, n_source?",
+    "requestBody": "s_app_id, startDate?, endDate?, n_source?",
     "responseBody": "detail: AppDetailData"
   },
   "apiSuggestion": {

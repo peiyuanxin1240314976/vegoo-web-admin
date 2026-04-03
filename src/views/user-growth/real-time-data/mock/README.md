@@ -17,14 +17,15 @@
 | --- | --- |
 | `README.md` | 本说明 |
 | `backend-api/README.md` | 父级 API、接口清单、优先级 |
-| `backend-api/01-*.json` … | 各接口字段解释 + `sampleRequest` / `sampleResponse` |
+| `backend-api/01-*.json` … | 各接口字段解释 + `sampleRequest` / `sampleResponse` + 根级 `interaction` |
 | `api-mock/*.json` | 与对应 `backend-api/*.json` 的 `sampleResponse` 对齐的示例响应（便于静态对照或接入 MSW） |
-| `data.ts` | 页面当前使用的聚合 Mock：`AppCard[]`（列表 + 内嵌详情）、KPI、底部图数据；并从同一源衍生 `mockRealtimeAppCardRows` / `mockRealtimeAppDetailsById` 以与 **03 / 04** 契约对齐 |
+| `real-time-data-api-mock.ts` | 与 `fetch*` 对齐的本地 Mock；开关见 **`../config/data-source.ts`** |
+| `data.ts` | 聚合源数据：`AppCard[]`（列表 + 内嵌详情）、KPI、底部图；衍生 `mockRealtimeAppCardRows` / `mockRealtimeAppDetailsById` / `mockRealtimeHourlySpendComparison` 以与 **03 / 04 / 05** 契约对齐 |
 
 ## 与代码的对应关系
 
 - 页面类型：`../types.ts`（`AppCard`、`AppDetailData`、`RealtimeKpiSummary`、`RealtimeHourlySpendComparison` 等）
-- 数据入口：`../composables/useRealtimeDashboardMock.ts`（接口就绪后在此替换为 `request` + 字段映射）
+- 数据入口：`../composables/useRealtimeDashboardMock.ts`（当前本地聚合；接入后端时使用 `@/api/user-growth/real-time-data` 的 `fetchRealtime*` + `../config/data-source.ts` 切换）
 
 ## 文案与筛选
 

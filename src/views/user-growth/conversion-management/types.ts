@@ -114,7 +114,10 @@ export interface ConversionMappingForm {
  */
 
 export interface ConversionDataFilterParams {
-  dateRange?: [string, string]
+  /** 查询起始日期（含），YYYY-MM-DD；与契约 data-tab / data-export 一致 */
+  startDate?: string
+  /** 查询结束日期（含），YYYY-MM-DD */
+  endDate?: string
   platform?: string
   /** 同上，兼容 app/appPackage 两种入参 */
   appPackage?: string

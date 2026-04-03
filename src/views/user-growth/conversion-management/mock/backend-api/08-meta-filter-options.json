@@ -36,6 +36,7 @@
       }
     }
   },
+  "sampleRequest": {},
   "sampleResponse": {
     "platformOptions": [
       { "label": "全部终端平台", "value": "" },
@@ -65,7 +66,7 @@
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/conversion-management/meta-filter-options",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/conversion-management/meta-filter-options",
     "method": "POST",
     "priority": "P0",
     "requestBody": "无（或 {}）",
@@ -76,5 +77,16 @@
       "若 label 需要 i18n，建议返回 i18nKey（例如 conversionManagement.filterPlatformAll），前端再翻译；否则直接返回中文 label 即可。",
       "appOptions 建议根据用户权限/组织过滤，只下发可见应用。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面初始化（待接）",
+        "detail": "name Tab / data Tab 筛选器需在首屏或进入 Tab 时拉取；当前选项来自 `mock/data.ts` 常量，未请求本接口。",
+        "prerequisite": "登录态。"
+      }
+    ],
+    "defaultSelection": "空 body `{}`；返回含「全部」空 value 的选项。",
+    "dedupe": "前端可缓存至会话，减少重复请求。"
   }
 }

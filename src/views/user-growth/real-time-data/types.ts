@@ -1,3 +1,34 @@
+/** 实时数据接口通用筛选（契约 01～05）。单日看板快照时 `startDate` 与 `endDate` 同值；均可选，由服务端默认今日。 */
+export interface RealtimeDataQueryParams {
+  s_app_id?: string
+  n_source?: number
+  startDate?: string
+  endDate?: string
+}
+
+/** 契约 01-meta-filter-options 响应：应用筛选项 */
+export interface RealtimeFilterAppOption {
+  value: string
+  label: string
+  s_app_id?: string
+}
+
+/** 契约 01-meta-filter-options 响应：广告平台筛选项（UI 文案「广告平台」） */
+export interface RealtimeFilterSourceOption {
+  value: string
+  label: string
+  n_source?: number
+}
+
+export interface RealtimeMetaFilterOptionsBody {
+  appOptions: RealtimeFilterAppOption[]
+  sourceOptions: RealtimeFilterSourceOption[]
+}
+
+export interface RealtimeAppDetailRequestBody extends RealtimeDataQueryParams {
+  s_app_id: string
+}
+
 export interface ChannelData {
   name: string
   iconColor: string
@@ -86,7 +117,17 @@ export interface RealtimeKpiSummary {
   warningApps: number
 }
 
-/** 底部「实时小时消耗对比」柱状序列（含 ROI 折线） */
+/** 契约 03-table-app-cards 响应体 */
+export interface RealtimeAppCardsTableBody {
+  items: RealtimeAppCardRow[]
+}
+
+/** 契约 04-app-detail 响应体 */
+export interface RealtimeAppDetailBody {
+  detail: AppDetailData
+}
+
+/** 底部「实时小时消耗对比」柱状序列（含 ROI 折线；旧版图表数据结构，接入 05 后推荐映射自 RealtimeHourlySpendComparison） */
 export interface RealtimeBottomSeries {
   weather5: number[]
   phonetracker: number[]

@@ -301,7 +301,7 @@ z-index 统一使用变量，避免随意数值冲突：
 
 ## 其他
 
-- **模块接口契约整理**：当需要 **按路由/页面梳理 `mock/backend-api`、与 `fetch*` / `config/data-source` 对齐、输出契约清单** 时，Agent 应遵循项目技能 **`.cursor/skills/module-api-contract-audit/SKILL.md`**，并配合规则 **`module-api-contract-audit.mdc`**、**`api-contract-and-mock-conventions.mdc`**、**`module-api-mock-config.mdc`**。契约须满足该 Skill「章节 0」：**`sampleResponse` 完整可联调**；URL 按 **路由+模块+功能**（kebab-case）组织；**接口一律 POST + JSON 请求体**（与 `request.post` 一致）。**大模块多页面** 时另有 Skill「章节 9～10」：**契约 JSON 与开关聚合到模块根目录**（子页不单独建契约目录/config）、**`data-source` 须注释且多页面用多 enum / 多 `is*Mock` 方法**、**每 JSON 根级 `interaction`**、**README 场景→接口表**。
+- **模块接口契约整理**：当需要 **按路由/页面梳理 `mock/backend-api`、与 `fetch*` / `config/data-source` 对齐、输出契约清单** 时，Agent 应遵循项目技能 **`.cursor/skills/module-api-contract-audit/SKILL.md`**，并配合规则 **`backend-fields.mdc`**、**`module-api-contract-audit.mdc`**、**`api-contract-and-mock-conventions.mdc`**、**`module-api-mock-config.mdc`**。契约须满足该 Skill「章节 0」：**`sampleResponse` 完整可联调**（含 **`api-contract-and-mock-conventions.mdc`**：**表格类主数组 ≥3 条**、**表列/树节点上闭合 `enum` 在示例中写全**）；**§0.4 / §0.5**：字段与 **`backend-fields`** 对齐、入参日期 **`startDate`/`endDate`**、同模块 **`sampleResponse` 形态尽量统一**；URL 按 **路由+模块+功能**（kebab-case）组织；**接口一律 POST + JSON 请求体**（与 `request.post` 一致）。**大模块多页面** 时另有 Skill「章节 9～10」：**契约 JSON 与开关聚合到模块根目录**（子页不单独建契约目录/config）、**`data-source` 须注释且多页面用多 enum / 多 `is*Mock` 方法**、**每 JSON 根级 `interaction`**、**README 场景→接口表**。
 - **应用当前时间**：业务里表示「今天/此刻」或基于今天算日期时，**禁止**裸 `new Date()`，统一使用 `@/utils/app-now` 的 `getAppNow` / `cloneAppDate` / `offsetAppNowMs` 等；细则与例外见 **`app-now-date.mdc`**。
 - **环境变量**: 以 `VITE_` 开头，在 `src/env.d.ts` 或代码中通过 `import.meta.env` 使用；勿提交敏感信息。
 - **生产构建**: `pnpm build` 会先执行 `vue-tsc --noEmit`，再 Vite 构建；生产会 drop console/debugger。
