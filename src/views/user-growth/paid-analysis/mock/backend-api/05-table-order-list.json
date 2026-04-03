@@ -1,0 +1,199 @@
+{
+  "_comment": "付费分析 - 订单分页列表。对应 types.ts: PaidAnalysisOrderListParams + PaidAnalysisOrderListData。",
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "筛选起。" },
+      "endDate": { "type": "string", "required": true, "description": "筛选止。" },
+      "app": { "type": "string", "required": false, "default": "", "description": "应用。" },
+      "platform": { "type": "string", "required": false, "default": "", "description": "终端。" },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "国家。"
+      },
+      "n_source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台。"
+      },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "订单号/用户 ID 模糊。"
+      },
+      "productSku": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "商品筛选。"
+      },
+      "orderStatus": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "success", "refund", "fail"],
+        "description": "订单状态；空为全部。"
+      },
+      "current": { "type": "number", "required": false, "default": 1, "description": "页码。" },
+      "size": { "type": "number", "required": false, "default": 20, "description": "每页条数。" }
+    },
+    "response": {
+      "records": { "type": "array", "required": true, "description": "订单行。" },
+      "total": { "type": "number", "required": true, "description": "总条数。" },
+      "current": { "type": "number", "required": true, "description": "当前页。" },
+      "size": { "type": "number", "required": true, "description": "页大小。" }
+    },
+    "OrderListItem": {
+      "s_order_id": { "type": "string", "required": true, "description": "订单号。" },
+      "user_display_id": { "type": "string", "required": true, "description": "用户展示 ID。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["success", "refund", "fail"],
+        "description": "订单状态。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "国家码小写；展示国旗由前端 flag-icons。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-02-05",
+    "endDate": "2026-03-05",
+    "app": "",
+    "platform": "",
+    "s_country_code": "",
+    "n_source": "",
+    "keyword": "",
+    "productSku": "",
+    "orderStatus": "",
+    "current": 2,
+    "size": 8
+  },
+  "sampleResponse": {
+    "records": [
+      {
+        "s_order_id": "ORD-20260305-8842",
+        "user_display_id": "USR-284920",
+        "appName": "Weather5",
+        "productBrief": "Annual $89.99",
+        "amountLabel": "$89.99",
+        "sourceLabel": "Google",
+        "s_country_code": "us",
+        "orderTimeLabel": "03-05 14:32",
+        "paymentMethod": "App Store",
+        "status": "success"
+      },
+      {
+        "s_order_id": "ORD-20260305-8843",
+        "user_display_id": "USR-284921",
+        "appName": "Weather5",
+        "productBrief": "Annual $89.99",
+        "amountLabel": "$89.99",
+        "sourceLabel": "Google",
+        "s_country_code": "us",
+        "orderTimeLabel": "03-05 14:32",
+        "paymentMethod": "App Store",
+        "status": "success"
+      },
+      {
+        "s_order_id": "ORD-20260305-8848",
+        "user_display_id": "USR-284928",
+        "appName": "Weather5",
+        "productBrief": "Annual $89.99",
+        "amountLabel": "$89.99",
+        "sourceLabel": "Google",
+        "s_country_code": "de",
+        "orderTimeLabel": "03-05 14:32",
+        "paymentMethod": "App Store",
+        "status": "refund"
+      },
+      {
+        "s_order_id": "ORD-20260305-8850",
+        "user_display_id": "USR-284921",
+        "appName": "Weather5",
+        "productBrief": "Annual $89.99",
+        "amountLabel": "$89.99",
+        "sourceLabel": "Facebook",
+        "s_country_code": "jp",
+        "orderTimeLabel": "03-05 14:30",
+        "paymentMethod": "App Store",
+        "status": "success"
+      },
+      {
+        "s_order_id": "ORD-20260305-8851",
+        "user_display_id": "USR-284920",
+        "appName": "Weather5",
+        "productBrief": "Monthly $9.99",
+        "amountLabel": "$9.99",
+        "sourceLabel": "Google",
+        "s_country_code": "kr",
+        "orderTimeLabel": "03-05 14:30",
+        "paymentMethod": "App Store",
+        "status": "refund"
+      },
+      {
+        "s_order_id": "ORD-20260305-8852",
+        "user_display_id": "USR-284929",
+        "appName": "Weather5",
+        "productBrief": "Annual $89.99",
+        "amountLabel": "$89.99",
+        "sourceLabel": "Google",
+        "s_country_code": "ca",
+        "orderTimeLabel": "03-05 14:30",
+        "paymentMethod": "Play Store",
+        "status": "fail"
+      },
+      {
+        "s_order_id": "ORD-20260305-8853",
+        "user_display_id": "USR-284930",
+        "appName": "YearCam",
+        "productBrief": "Pro $6.99",
+        "amountLabel": "$6.99",
+        "sourceLabel": "TikTok",
+        "s_country_code": "gb",
+        "orderTimeLabel": "03-05 14:28",
+        "paymentMethod": "App Store",
+        "status": "fail"
+      },
+      {
+        "s_order_id": "ORD-20260305-8854",
+        "user_display_id": "USR-284920",
+        "appName": "Weather5",
+        "productBrief": "Annual $89.99",
+        "amountLabel": "$89.99",
+        "sourceLabel": "Organic",
+        "s_country_code": "ca",
+        "orderTimeLabel": "03-05 14:25",
+        "paymentMethod": "App Store",
+        "status": "success"
+      }
+    ],
+    "total": 9749,
+    "current": 2,
+    "size": 8
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/table/order-list",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, 筛选字段, keyword?, productSku?, orderStatus?, current?, size?",
+    "responseBody": "PaidAnalysisOrderListData"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "订单 Tab 加载 / 翻页 / 本地筛选提交",
+        "detail": "IAPOrderTab 初始化请求第一页；分页控件变更 current；行内筛选项与 keyword 变更后重新请求。",
+        "prerequisite": "与 tab-order-summary 使用相同日期与顶栏筛选基线。"
+      }
+    ],
+    "defaultSelection": "orderStatus 默认 \"\"；size 默认 20（示例 8 为演示）。",
+    "dedupe": "关键词输入建议防抖 300ms。"
+  }
+}

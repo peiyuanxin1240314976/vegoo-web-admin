@@ -17,6 +17,7 @@ alwaysApply: true
 - **筛选入参枚举类型**：`n_source` 等与筛选/维度映射相关的请求体字段，在契约与实现中须为 **string**（如 `\"1\"`），**勿**在 `sampleRequest` 中写 JSON number；「全部」维度用 `\"\"` 等规则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
 - **应用筛选键名**：需要按应用筛选时，请求体须使用 **`appId`**（`string`），见 `backend-fields.mdc`「接口请求 · 应用筛选（appId）」。
 - 网关真实路径与示例 URL 不一致时，在对应 `mock/backend-api/README.md` 或 JSON `_comment` 中注明；以前端 `src/api` 实际请求为准联调。
+- **公用顶栏筛选项**：`POST .../cockpit/meta-filter-options` 为 **meta 下拉**（应用 / 终端平台 / 广告平台 / 国家等）。若某业务页结构与之相同，须复用 **`fetchCockpitMetaFilterOptions`**（`@/api/cockpit-meta-filter`）及类型 **`@/types/cockpit-meta-filter`**；字段与约定以 **`src/views/user-growth/paid-analysis/mock/backend-api/README.md` 附录 A**（Markdown）及 **`backend-fields.mdc`** 为准，**不**再为该接口单独维护 `mock/backend-api/*.json`。**禁止**在各业务 `mock/backend-api` 复制同结构 `meta-filter-options` JSON；勿为「驾驶舱视图」在 `src/views/cockpit` 下额外增改 mock 目录。
 
 ## 一、接口地址抽象：路由 → 模块 → 功能
 

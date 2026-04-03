@@ -1,0 +1,208 @@
+{
+  "_comment": "付费分析 - 商品分析 Tab · 图例与图表。契约文件：03-tab-product-charts.json。types: PaidAnalysisProductTabChartsData。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "起始日 YYYY-MM-DD（含）。"
+      },
+      "endDate": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD（含）。" },
+      "app": { "type": "string", "required": false, "default": "", "description": "应用筛选。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "终端平台。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "国家。"
+      },
+      "n_source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台。"
+      },
+      "productRankingMode": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "revenue", "orders", "retention", "country"],
+        "description": "与 overview、ranking 一致；图表一般忽略，可为空。"
+      }
+    },
+    "response": {
+      "mixLegend": { "type": "array", "required": true, "description": "收入构成图例。" },
+      "paidDateSummaryRows": {
+        "type": "array",
+        "required": true,
+        "description": "按付费日订单汇总。"
+      },
+      "revenueTrend30d": {
+        "type": "array",
+        "required": true,
+        "description": "近 30 日收入趋势点（t_date + revenue）。"
+      },
+      "subscriptionRetentionMatrix": {
+        "type": "array",
+        "required": true,
+        "description": "订阅续费矩阵（m1–m5）。"
+      },
+      "countryBarTop": {
+        "type": "array",
+        "required": true,
+        "description": "国家 Top 分段柱（s_country_code + segments）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-03",
+    "app": "",
+    "platform": "",
+    "s_country_code": "",
+    "n_source": "",
+    "productRankingMode": ""
+  },
+  "sampleResponse": {
+    "mixLegend": [
+      { "name": "年度订阅", "pct": 42, "revenueUsd": 119480, "color": "#22d3ee" },
+      { "name": "月度订阅", "pct": 28, "revenueUsd": 79680, "color": "#3b82f6" },
+      { "name": "终身购买", "pct": 18, "revenueUsd": 51190, "color": "#8b5cf6" },
+      { "name": "虚拟币", "pct": 8, "revenueUsd": 22756, "color": "#f59e0b" },
+      { "name": "其他", "pct": 4, "revenueUsd": 11414, "color": "#475569" }
+    ],
+    "paidDateSummaryRows": [
+      {
+        "t_date": "2026-03-05",
+        "totalSubscriptions": 1024,
+        "orderPaid": 105,
+        "orderSub": 98,
+        "orderIap": 17,
+        "orderRenew": 6,
+        "orderRefund": 1,
+        "orderCancel": 2,
+        "revPaidUsd": 4103,
+        "revSubUsd": 3212,
+        "revIapUsd": 691,
+        "revRenewUsd": 2230
+      },
+      {
+        "t_date": "2026-03-04",
+        "totalSubscriptions": 987,
+        "orderPaid": 97,
+        "orderSub": 91,
+        "orderIap": 15,
+        "orderRenew": 4,
+        "orderRefund": 1,
+        "orderCancel": 1,
+        "revPaidUsd": 3715,
+        "revSubUsd": 2974,
+        "revIapUsd": 595,
+        "revRenewUsd": 2015
+      },
+      {
+        "t_date": "2026-03-03",
+        "totalSubscriptions": 1102,
+        "orderPaid": 112,
+        "orderSub": 104,
+        "orderIap": 17,
+        "orderRenew": 6,
+        "orderRefund": 1,
+        "orderCancel": 1,
+        "revPaidUsd": 4389,
+        "revSubUsd": 3455,
+        "revIapUsd": 664,
+        "revRenewUsd": 2264
+      },
+      {
+        "t_date": "2026-03-02",
+        "totalSubscriptions": 1089,
+        "orderPaid": 108,
+        "orderSub": 99,
+        "orderIap": 15,
+        "orderRenew": 5,
+        "orderRefund": 0,
+        "orderCancel": 2,
+        "revPaidUsd": 4102,
+        "revSubUsd": 3301,
+        "revIapUsd": 620,
+        "revRenewUsd": 2108
+      }
+    ],
+    "revenueTrend30d": [
+      { "t_date": "2026-03-01", "revenue": 9000 },
+      { "t_date": "2026-03-02", "revenue": 9100 },
+      { "t_date": "2026-03-03", "revenue": 9300 }
+    ],
+    "subscriptionRetentionMatrix": [
+      {
+        "skuName": "Weather Premium Annual",
+        "m1": 78.4,
+        "m2": 72.1,
+        "m3": 66.8,
+        "m4": 61.4,
+        "m5": 56.2
+      },
+      {
+        "skuName": "Weather Premium Monthly",
+        "m1": 58.2,
+        "m2": 50.4,
+        "m3": 44.8,
+        "m4": 39.2,
+        "m5": 34.6
+      },
+      {
+        "skuName": "Weather Pro Monthly",
+        "m1": 52.4,
+        "m2": 44.8,
+        "m3": 38.2,
+        "m4": 32.6,
+        "m5": 27.4
+      }
+    ],
+    "countryBarTop": [
+      {
+        "s_country_code": "us",
+        "segments": [
+          { "kind": "year_sub", "revenue": 42000 },
+          { "kind": "month_sub", "revenue": 18000 }
+        ]
+      },
+      {
+        "s_country_code": "kr",
+        "segments": [
+          { "kind": "year_sub", "revenue": 28000 },
+          { "kind": "month_sub", "revenue": 12000 }
+        ]
+      },
+      {
+        "s_country_code": "de",
+        "segments": [
+          { "kind": "year_sub", "revenue": 18000 },
+          { "kind": "lifetime", "revenue": 12000 }
+        ]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/tab-product/charts",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, app?, platform?, s_country_code?, n_source?, productRankingMode?",
+    "responseBody": "PaidAnalysisProductTabChartsData"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "商品分析 Tab 首屏 / 顶栏检索",
+        "detail": "与 overview、ranking 并行；图表区可延迟挂载。",
+        "prerequisite": "登录态"
+      }
+    ]
+  }
+}

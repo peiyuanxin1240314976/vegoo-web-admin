@@ -40,30 +40,42 @@
             </span>
           </div>
         </div>
-        <table class="dt">
+        <table class="dt product-rank-table">
           <thead>
             <tr>
-              <th>商品名称</th><th>价格</th><th>类型</th> <th>收入</th><th>占比</th><th>订单量</th>
-              <th>ARPPU</th><th>续费率</th><th>国家Top3</th><th>30天趋势</th>
+              <th>商品名称</th><th>价格</th><th>类型</th>
+              <th :class="{ 'col-emphasis': activeSubTab === 'revenue' }">收入</th>
+              <th>占比</th>
+              <th :class="{ 'col-emphasis': activeSubTab === 'orders' }">订单量</th>
+              <th>ARPPU</th>
+              <th :class="{ 'col-emphasis': activeSubTab === 'retention' }">续费率</th>
+              <th :class="{ 'col-emphasis': activeSubTab === 'country' }">国家Top3</th>
+              <th>30天趋势</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="r in productRows" :key="r.name">
+            <tr v-for="r in sortedProductRows" :key="r.name">
               <td class="pname">{{ r.name }}</td>
               <td>{{ r.price }}</td>
               <td
                 ><span class="type-tag" :class="r.typeClass">{{ r.type }}</span></td
               >
-              <td class="text-white font-semibold">{{ r.revenue }}</td>
+              <td
+                class="text-white font-semibold"
+                :class="{ 'col-emphasis': activeSubTab === 'revenue' }"
+                >{{ r.revenue }}</td
+              >
               <td>{{ r.pct }}%</td>
-              <td>{{ r.orders }}</td>
+              <td :class="{ 'col-emphasis': activeSubTab === 'orders' }">{{ r.orders }}</td>
               <td>{{ r.arppu }}</td>
-              <td>
+              <td :class="{ 'col-emphasis': activeSubTab === 'retention' }">
                 <span :class="parseFloat(r.retention) >= 60 ? 'val-green' : 'val-red'">
                   {{ r.retention }}%
                 </span>
               </td>
-              <td class="val-muted">{{ r.countries }}</td>
+              <td class="val-muted" :class="{ 'col-emphasis': activeSubTab === 'country' }">{{
+                r.countries
+              }}</td>
               <td>
                 <div
                   class="mini-trend"
@@ -195,7 +207,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, watch } from 'vue'
+  import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
   import * as echarts from 'echarts'
 
   defineOptions({ name: 'IAPProductTab' })
@@ -233,6 +245,52 @@
     { key: 'retention', label: '续费率' },
     { key: 'country', label: '国家分布' }
   ]
+
+  function parseRankRevenueUsd(s: string): number {
+    const n = Number(String(s).replace(/[$,]/g, ''))
+    return Number.isFinite(n) ? n : 0
+  }
+
+  function parseRankOrders(s: string): number {
+    const n = Number(String(s).replace(/,/g, ''))
+    return Number.isFinite(n) ? n : 0
+  }
+
+  function parseRankRetention(s: string): number {
+    if (!s || s === 'N/A') return -1
+    const n = Number(s)
+    return Number.isFinite(n) ? n : -1
+  }
+
+  function parseRankCountrySpread(s: string): number {
+    if (!s) return 0
+    return s.split('/').filter(Boolean).length
+  }
+
+  /** 商品收入排行表：子 Tab 仅前端按维度降序排序，不重拉接口（与契约 03-tab-product interaction 一致） */
+  const sortedProductRows = computed(() => {
+    const key = activeSubTab.value
+    const rows = [...productRows]
+    rows.sort((a, b) => {
+      let va = 0
+      let vb = 0
+      if (key === 'revenue') {
+        va = parseRankRevenueUsd(a.revenue)
+        vb = parseRankRevenueUsd(b.revenue)
+      } else if (key === 'orders') {
+        va = parseRankOrders(a.orders)
+        vb = parseRankOrders(b.orders)
+      } else if (key === 'retention') {
+        va = parseRankRetention(a.retention)
+        vb = parseRankRetention(b.retention)
+      } else {
+        va = parseRankCountrySpread(a.countries)
+        vb = parseRankCountrySpread(b.countries)
+      }
+      return vb - va
+    })
+    return rows
+  })
 
   /* ── KPI ─────────────────────────────────────── */
   const kpiCards = [
@@ -525,6 +583,10 @@
     }
   )
 
+  watch(activeSubTab, () => {
+    nextTick(() => rebuildCharts())
+  })
+
   function initSparklines() {
     kpiCards.forEach((kpi, i) => {
       const el = sparkRefs.value[i]
@@ -580,7 +642,7 @@
   }
 
   function initMiniTrends() {
-    productRows.forEach((row) => {
+    sortedProductRows.value.forEach((row) => {
       const el = miniRefs.get(row.name)
       if (!el) return
       const c = echarts.init(el)
@@ -1021,6 +1083,16 @@
     color: #22d3ee;
     background: #22d3ee20;
     border-color: #22d3ee44;
+  }
+
+  .product-rank-table th.col-emphasis,
+  .product-rank-table td.col-emphasis {
+    box-shadow: inset 0 0 0 1px rgb(34 211 238 / 35%);
+  }
+
+  .product-rank-table th.col-emphasis {
+    font-weight: 700;
+    color: #22d3ee;
   }
 
   /* Donut legend */

@@ -1,0 +1,126 @@
+{
+  "_comment": "付费分析 - 商品分析 Tab · KPI。契约文件：03-tab-product-overview.json。types: PaidAnalysisProductTabOverviewData。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "起始日 YYYY-MM-DD（含）。"
+      },
+      "endDate": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD（含）。" },
+      "app": { "type": "string", "required": false, "default": "", "description": "应用筛选。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "终端平台。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "国家。"
+      },
+      "n_source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台。"
+      },
+      "productRankingMode": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "revenue", "orders", "retention", "country"],
+        "description": "可选：服务端排序时传入；空表示前端本地排序（当前 UI）。"
+      }
+    },
+    "response": {
+      "kpis": {
+        "type": "array",
+        "required": true,
+        "description": "KPI 卡片（结构同 channel 概览 kpis）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-03",
+    "app": "",
+    "platform": "",
+    "s_country_code": "",
+    "n_source": "",
+    "productRankingMode": ""
+  },
+  "sampleResponse": {
+    "kpis": [
+      {
+        "label": "商品总收入",
+        "value": "$284,520",
+        "trendUp": true,
+        "trendVal": "8.4% vs.上月",
+        "sub": "",
+        "color": "#22d3ee",
+        "sparkData": [6200, 7100, 6800, 7500, 8000, 8300, 8700],
+        "sparkType": "line"
+      },
+      {
+        "label": "订阅收入占比",
+        "value": "70.0%",
+        "trendUp": false,
+        "trendVal": "",
+        "sub": "年订+月订",
+        "color": "#8b5cf6",
+        "sparkData": [68, 69, 70, 69, 71, 70, 70],
+        "sparkType": "line"
+      },
+      {
+        "label": "活跃商品数",
+        "value": "7个",
+        "trendUp": false,
+        "trendVal": "",
+        "sub": "共5类型",
+        "color": "#3b82f6",
+        "sparkData": [5, 6, 6, 7, 7, 7, 7],
+        "sparkType": "bar"
+      },
+      {
+        "label": "平均ARPPU",
+        "value": "$30.82",
+        "trendUp": true,
+        "trendVal": "2.3% vs.上月",
+        "sub": "",
+        "color": "#f59e0b",
+        "sparkData": [29, 30, 29, 31, 30, 31, 31],
+        "sparkType": "line"
+      },
+      {
+        "label": "订阅续费率",
+        "value": "68.4%",
+        "trendUp": true,
+        "trendVal": "3.2pp vs.上月",
+        "sub": "",
+        "color": "#10b981",
+        "sparkData": [63, 65, 64, 66, 67, 68, 68],
+        "sparkType": "line"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/tab-product/overview",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, app?, platform?, s_country_code?, n_source?, productRankingMode?",
+    "responseBody": "PaidAnalysisProductTabOverviewData"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "商品分析 Tab 首屏 / 顶栏检索",
+        "detail": "与 ranking、charts 可并行请求。",
+        "prerequisite": "登录态"
+      }
+    ],
+    "defaultSelection": "productRankingMode 默认 \"\" 由前端本地排序。"
+  }
+}

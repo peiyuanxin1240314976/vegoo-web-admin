@@ -288,6 +288,10 @@ alwaysApply: true
 
 | `order` | 订单 |
 
+| `s_order_id` | 订单号（业务侧唯一标识，string）。 |
+
+| `user_display_id` | 用户展示 ID（列表/详情中与账号相关的可读标识）。 |
+
 | `times` | 订阅次数 |
 
 | `payment_platform` | 支付平台 |
@@ -323,6 +327,8 @@ alwaysApply: true
 | `current` | 当前页码（分页，一般从 1 起）。 |
 | `size` | 每页条数（分页）。 |
 | `total` | 符合条件的总条数（分页）。 |
+| `downloadUrl` | 导出/下载类接口返回的短时有效文件 URL。 |
+| `fileId` | 异步导出任务或生成文件的 ID（与 `downloadUrl` 二选一或并存依模块约定）。 |
 | `keyword` | 关键字搜索入参（多列模糊匹配时统一使用该字段名）。 |
 | `detail` | 详情主体对象（弹窗/抽屉/详情页的主数据）。 |
 | `series` | 图表序列数组（每项一条曲线/柱状序列）。 |
@@ -330,6 +336,18 @@ alwaysApply: true
 | `hourLabels` | 小时/时段横轴标签数组（与各序列等长）。 |
 | `costSeries` | 与 `hourLabels` 对齐的花费序列（USD）。 |
 | `roiPercentSeries` | 与 `hourLabels` 对齐的 ROI 序列（百分比数值）。 |
+| `CockpitMetaFilterOptionsData` | （TS 响应体类型）公用 `.../cockpit/meta-filter-options` 业务体；定义见 `src/types/cockpit-meta-filter.ts`。 |
+| `CockpitMetaOptionItem` | （TS 类型）上述 meta 中单项 `{ label, value }`；定义见 `src/types/cockpit-meta-filter.ts`。 |
+| `PaidAnalysisChannelTabOverviewData` | （TS）付费分析 channel Tab 概览接口体；契约 `02-tab-channel-overview.json`（`views/user-growth/paid-analysis/mock/backend-api/` 根目录扁平）。 |
+| `PaidAnalysisChannelTabTablesData` | （TS）channel Tab 表格接口体；契约 `02-tab-channel-tables.json`（同目录根扁平）。 |
+| `PaidAnalysisChannelTabChartsData` | （TS）channel Tab 图表接口体；契约 `02-tab-channel-charts.json`。 |
+| `PaidAnalysisChannelTabData` | （TS）上述三段响应在客户端合并后的交叉类型。 |
+| `PaidAnalysisProductRankingRow` | （TS）付费分析商品排行表行；契约 `03-tab-product-ranking.json`。 |
+| `PaidAnalysisProductPaidDateSummaryRow` | （TS）按付费日汇总局单行；契约 `03-tab-product-charts.json`。 |
+| `PaidAnalysisProductTabOverviewData` | （TS）product Tab KPI 接口体；`03-tab-product-overview.json`。 |
+| `PaidAnalysisProductTabRankingData` | （TS）product Tab `productRows` 接口体；`03-tab-product-ranking.json`。 |
+| `PaidAnalysisProductTabChartsData` | （TS）product Tab 图例与图表接口体；`03-tab-product-charts.json`。 |
+| `PaidAnalysisProductTabData` | （TS）product Tab 三段响应合并后的交叉类型。 |
 
 #### 下拉/筛选选项字段
 
@@ -341,6 +359,7 @@ alwaysApply: true
 | `statusOptions` | 映射等业务**状态**筛选项数组（如启用/重复/未映射）。 |
 | `options` | 通用配置项数组（元素多为 `{ label, value }`；如转化展示分类等 meta 接口）。 |
 | `sourceOptions` | 广告平台筛选下拉选项数组。 |
+| `countryOptions` | 国家筛选下拉选项数组（`value` 为小写 ISO 3166-1 alpha-2）。 |
 | `label` | 选项展示文案。 |
 | `value` | 选项值（UI 中「全部」常用 `all`；**提交接口入参时**须按上文「接口请求 · 筛选「全部」」映射为 `""`）。 |
 

@@ -1,0 +1,62 @@
+{
+  "_comment": "付费分析 - 订单详情抽屉。对应 types.ts: detail 主体 PaidAnalysisOrderDetailData。",
+  "fieldDescription": {
+    "request": {
+      "s_order_id": { "type": "string", "required": true, "description": "订单号。" }
+    },
+    "response": {
+      "detail": { "type": "object", "required": true, "description": "详情主体。" }
+    }
+  },
+  "sampleRequest": {
+    "s_order_id": "ORD-20260305-8842"
+  },
+  "sampleResponse": {
+    "detail": {
+      "s_order_id": "ORD-20260305-8842",
+      "user_display_id": "USR-284920",
+      "appName": "Weather5",
+      "platform": "ios",
+      "skuName": "Weather Premium Annual",
+      "skuId": "weather_premium_annual",
+      "priceLabel": "$89.99 USD",
+      "paymentPlatform": "App Store",
+      "source": "Google UAC",
+      "s_country_code": "us",
+      "timezoneLabel": "PST (UTC-8)",
+      "currency": "USD",
+      "orderTime": "2026-03-05 14:32:18",
+      "payTime": "2026-03-05 14:32:45",
+      "subStartDate": "2026-03-05",
+      "subEndDate": "2027-03-05",
+      "isFirstPay": true,
+      "firstPayCycleDays": 2.1,
+      "subTypeLabel": "年度订阅",
+      "autoRenewOn": true,
+      "renewCountLabel": "0次（首次）",
+      "nextRenewDate": "2027-03-05",
+      "attrSource": "Google UAC",
+      "campaignName": "Weather5_US_Annual_0305",
+      "adGroupName": "AG_US_iOS_Annual",
+      "attrModel": "Last Click"
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/order-detail",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "s_order_id",
+    "responseBody": "{ detail: PaidAnalysisOrderDetailData }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户点击订单行或「查看」",
+        "detail": "IAPOrderTab selectOrder 后请求；关闭抽屉可丢弃缓存或保留最后一次。",
+        "prerequisite": "列表已返回有效 s_order_id。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "重复点击同一订单可命中短缓存避免闪烁。"
+  }
+}
