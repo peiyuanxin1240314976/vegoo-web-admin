@@ -1096,24 +1096,7 @@
     initCountryChart()
   })
 
-  watch(
-    [dateRange, platform, appFilter],
-    async () => {
-      matrixPlatform.value = platform.value
-      matrixLoading.value = true
-      await loadAllCards()
-      await loadMatrixOnly()
-      await nextTick()
-      trendChart?.dispose()
-      trendChart = null
-      countryChart?.dispose()
-      countryChart = null
-      initTrendChart()
-      initCountryChart()
-    },
-    { deep: true }
-  )
-
+  /** 四维度偏差明细表：平台 / 行维 / 列维 切换单独拉矩阵接口，不依赖顶部「查询」 */
   watch([matrixPlatform, activeRowDim, activeColDim], async () => {
     await loadMatrixOnly()
   })
