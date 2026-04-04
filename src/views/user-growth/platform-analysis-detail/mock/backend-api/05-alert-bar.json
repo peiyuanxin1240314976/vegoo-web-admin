@@ -1,5 +1,5 @@
 {
-  "_comment": "综合分析详情 - 底部智能预警条。响应 data 可为 AlertBarItem[]，或 { alertBar: AlertBarItem[] }（前端 asAlertBarPayload 兼容）。",
+  "_comment": "广告平台分析详情 - 底部智能预警条。响应 data 可为 AlertBarItem[]，或 { alertBar: AlertBarItem[] }（前端 asAlertBarPayload 兼容）。",
   "fieldDescription": {
     "request": {
       "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
@@ -18,7 +18,7 @@
         "type": "string",
         "required": true,
         "enum": ["danger", "warning", "info", "good"],
-        "description": "样式级别。"
+        "description": "样式级别；示例须覆盖各枚举至少一次。"
       },
       "text": { "type": "string", "required": true, "description": "展示文案。" }
     }
@@ -30,28 +30,38 @@
   "sampleResponse": {
     "data": [
       {
-        "id": "1",
+        "id": "alert-1",
         "level": "danger",
         "text": "PhoneTracker × Google Ads × US：CPI 高于目标 22%，建议收紧定向"
       },
       {
-        "id": "2",
+        "id": "alert-2",
         "level": "warning",
         "text": "TikTok × DE：预算已用 89%，关注次日回收"
       },
       {
-        "id": "3",
+        "id": "alert-3",
         "level": "info",
         "text": "来自综合分析钻取（Mock）"
+      },
+      {
+        "id": "alert-4",
+        "level": "good",
+        "text": "Facebook × IN：ROI 达标，可适度扩量"
       }
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/comprehensive-analysis/platform-analysis-detail/alert-bar",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/alert-bar",
     "method": "POST",
     "priority": "P1",
     "requestBody": "name (必填), from?",
     "responseBody": "AlertBarItem[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "若网关统一包裹为 { data: { alertBar: [...] } }，前端 unwrap 后仍须得到数组或含 alertBar 的对象。"
+    ]
   },
   "interaction": {
     "triggers": [

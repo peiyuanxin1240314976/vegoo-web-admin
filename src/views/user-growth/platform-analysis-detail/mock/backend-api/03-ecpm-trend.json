@@ -1,5 +1,5 @@
 {
-  "_comment": "综合分析详情 - ECPM 双折线 + 卡片区四指标。对应 types: PlatformAnalysisDetailEcpmBlock（ecpmTrend + ecpmMetrics）。",
+  "_comment": "广告平台分析详情 - ECPM 双折线 + 卡片区四指标。对应 types: PlatformAnalysisDetailEcpmBlock（ecpmTrend + ecpmMetrics）。",
   "fieldDescription": {
     "request": {
       "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
@@ -21,14 +21,30 @@
       "ecpmMetrics": {
         "type": "EcpmTrendMetrics",
         "required": true,
-        "description": "预估ECPM、真实ECPM、偏差率、偏差金额；预格式化字符串。"
+        "description": "预估ECPM、真实ECPM、偏差率、偏差金额；预格式化字符串，度量两位小数见 sampleResponse。"
       }
     },
     "EcpmTrendMetrics": {
-      "estimatedEcpm": { "type": "string", "required": true, "description": "预估 ECPM。" },
-      "actualEcpm": { "type": "string", "required": true, "description": "真实 ECPM。" },
-      "biasRate": { "type": "string", "required": true, "description": "偏差率。" },
-      "biasAmount": { "type": "string", "required": true, "description": "偏差金额。" }
+      "estimatedEcpm": {
+        "type": "string",
+        "required": true,
+        "description": "预估 ECPM 展示文案（两位小数）。"
+      },
+      "actualEcpm": {
+        "type": "string",
+        "required": true,
+        "description": "真实 ECPM 展示文案（两位小数）。"
+      },
+      "biasRate": {
+        "type": "string",
+        "required": true,
+        "description": "偏差率，预格式化（如 +7.90%）。"
+      },
+      "biasAmount": {
+        "type": "string",
+        "required": true,
+        "description": "偏差金额，预格式化（如 +$284.00）。"
+      }
     }
   },
   "sampleRequest": {
@@ -38,34 +54,40 @@
   "sampleResponse": {
     "data": {
       "ecpmTrend": {
-        "dates": ["03-14", "03-15", "03-16", "03-17", "03-18", "03-19", "03-20"],
+        "dates": ["02-27", "02-28", "03-01", "03-02", "03-03", "03-04", "03-05"],
         "series": [
           {
             "name": "预估ECPM",
-            "color": "#f59e0b",
-            "data": [17.2, 17.5, 17.8, 18.1, 18.4, 18.7, 19.0]
+            "color": "#F59E0B",
+            "data": [17.2, 17.45, 17.7, 17.95, 18.2, 18.45, 18.7]
           },
           {
             "name": "真实ECPM",
-            "color": "#14b8a6",
-            "data": [16.8, 17.0, 17.2, 17.5, 17.8, 18.0, 18.2]
+            "color": "#14B8A6",
+            "data": [16.85, 17.0, 17.15, 17.3, 17.45, 17.6, 17.75]
           }
         ]
       },
       "ecpmMetrics": {
-        "estimatedEcpm": "$19.2",
-        "actualEcpm": "$18.1",
-        "biasRate": "-5.7%",
-        "biasAmount": "-$0.9"
+        "estimatedEcpm": "19.20",
+        "actualEcpm": "17.80",
+        "biasRate": "+7.90%",
+        "biasAmount": "+$284.00"
       }
     }
   },
   "api": {
-    "url": "POST /api/user-growth/comprehensive-analysis/platform-analysis-detail/ecpm-trend",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/ecpm-trend",
     "method": "POST",
     "priority": "P0",
     "requestBody": "name (必填), from?",
     "responseBody": "PlatformAnalysisDetailEcpmBlock"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "ecpmTrend.dates 与两条 series.data 须等长。",
+      "四指标为展示用预格式化字符串，与图表 tooltip 口径一致即可。"
+    ]
   },
   "interaction": {
     "triggers": [

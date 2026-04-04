@@ -2,13 +2,13 @@
 
 ## 父级路径
 
-与路由 `/user-growth/comprehensive-analysis/platform-analysis-detail` 对齐。逻辑资源路径：
+与路由 `/user-growth/comprehensive-analysis/platform-analysis-detail` 对齐。前端实际请求前缀为：
 
-**`/api/user-growth/comprehensive-analysis/platform-analysis-detail`**
+**`/api/v1/datacenter/analysis/user-growth/platform-analysis-detail`**
 
-（本契约以该父级路径为准；前端 `src/api/user-growth/platform-analysis-detail.ts` 的请求 base 以实际网关配置为准。）
+（见 `src/api/user-growth/platform-analysis-detail.ts` 中 `PLATFORM_ANALYSIS_DETAIL_BASE`；若网关另有映射，以 `src/api` 为准并在本目录契约 `_comment` 中备注。）
 
-约定：**POST**，各接口请求体均为 **`{ name, from? }`**（与钻取 query 一致）。
+约定：**POST**，各接口请求体均为 **`{ name, from? }`**（与钻取 query 一致）。**不含**独立 `meta-filter-options` 契约；顶栏若与驾驶舱同构筛选项，见项目规则与付费分析附录 A。
 
 ## 数据源开关
 
@@ -40,3 +40,4 @@
 
 - 钻取时 `query.name`、`query.from` 传入各接口请求体。
 - 国家行仅用 **`s_country_code`**（ISO alpha-2）+ 前端 `flag-icons`，勿返回国旗 emoji。
+- 顶栏 **`KpiCard`** 与综合分析页类型同构（`src/views/user-growth/comprehensive-analysis/types.ts`）。

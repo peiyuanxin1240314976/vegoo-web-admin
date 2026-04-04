@@ -1,5 +1,5 @@
 {
-  "_comment": "综合分析详情 - 顶栏 KPI + 左列安卓/iOS/合计三卡 + sourceName。对应 types: PlatformAnalysisDetailSummary。",
+  "_comment": "广告平台分析详情 - 顶栏 KPI + 左列安卓/iOS/合计三卡 + sourceName。对应 types: PlatformAnalysisDetailSummary。网关路径以前端 PLATFORM_ANALYSIS_DETAIL_BASE + /summary 为准。",
   "fieldDescription": {
     "request": {
       "name": {
@@ -29,12 +29,63 @@
       "kpis": {
         "type": "KpiCard[]",
         "required": true,
-        "description": "顶栏 KPI，通常 5 张；结构见 types.ts KpiCard。"
+        "description": "顶栏 KPI，通常 5 张；与综合分析页 KpiCard 同构（`src/views/user-growth/comprehensive-analysis/types.ts`）。"
       },
       "statCards": {
         "type": "PlatformStatCard[]",
         "required": true,
-        "description": "安卓 / iOS / 合计三卡；结构见 types.ts PlatformStatCard。"
+        "description": "安卓 / iOS / 合计三卡。"
+      }
+    },
+    "KpiCard": {
+      "id": { "type": "string", "required": true, "description": "卡片唯一标识。" },
+      "title": { "type": "string", "required": true, "description": "KPI 标题。" },
+      "subTitle": {
+        "type": "string",
+        "required": true,
+        "description": "副标题/口径说明（如安装成本、买量用户）。"
+      },
+      "primaryValue": {
+        "type": "string",
+        "required": true,
+        "description": "主指标预格式化展示文案。"
+      },
+      "trendText": {
+        "type": "string",
+        "required": true,
+        "description": "趋势幅度，不含箭头；百分比类建议两位小数。"
+      },
+      "trendUp": { "type": "boolean", "required": true, "description": "true 上升，false 下降。" },
+      "trendCompareLabel": {
+        "type": "string",
+        "required": false,
+        "description": "对比期文案（如 vs昨日）；可选。"
+      }
+    },
+    "PlatformStatCard": {
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "卡片标题，如「PhoneTracker 安卓」「合计」。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["android", "ios", "total"],
+        "description": "终端维度；合计卡可用 total。"
+      },
+      "adSpend": { "type": "string", "required": true, "description": "广告支出，预格式化。" },
+      "roi": {
+        "type": "string",
+        "required": true,
+        "description": "首日 ROI，预格式化（如 108%）。"
+      },
+      "installs": { "type": "string", "required": true, "description": "安装数，预格式化。" },
+      "profit": { "type": "string", "required": true, "description": "预估利润，预格式化。" },
+      "activePlatforms": {
+        "type": "string",
+        "required": true,
+        "description": "活跃广告平台数量（纯数字字符串；页面展示时拼接「个」）。"
       }
     }
   },
@@ -47,43 +98,44 @@
       "sourceName": "PhoneTracker",
       "kpis": [
         {
-          "id": "spend",
-          "title": "广告支出",
-          "subTitle": "近7天",
-          "primaryValue": "$38.7k",
-          "trendText": "+3.2%",
+          "id": "cpiToday",
+          "title": "今日CPI（综合）",
+          "subTitle": "安装成本",
+          "primaryValue": "$2.38",
+          "trendText": "5.20%",
+          "trendUp": true,
+          "trendCompareLabel": "vs昨日"
+        },
+        {
+          "id": "installsToday",
+          "title": "今日安装数",
+          "subTitle": "买量用户",
+          "primaryValue": "42,156",
+          "trendText": "1.35%",
+          "trendUp": false
+        },
+        {
+          "id": "ecpmKpi",
+          "title": "ECPM",
+          "subTitle": "广告变现效率",
+          "primaryValue": "19.20",
+          "trendText": "5.20%",
           "trendUp": true
         },
         {
-          "id": "installs",
-          "title": "安装量",
-          "subTitle": "近7天",
-          "primaryValue": "14,200",
-          "trendText": "+5.1%",
+          "id": "roiD1Comprehensive",
+          "title": "首日ROI（综合）",
+          "subTitle": "回收率",
+          "primaryValue": "87%",
+          "trendText": "2.10%",
           "trendUp": true
         },
         {
-          "id": "cpi",
-          "title": "平均 CPI",
-          "subTitle": "近7天",
-          "primaryValue": "$2.58",
-          "trendText": "-1.8%",
-          "trendUp": true
-        },
-        {
-          "id": "roi7",
-          "title": "7 日 ROI",
-          "subTitle": "近7天",
-          "primaryValue": "118%",
-          "trendText": "+2.0%",
-          "trendUp": true
-        },
-        {
-          "id": "profit",
+          "id": "estProfit",
           "title": "预估利润",
-          "subTitle": "近7天",
-          "primaryValue": "$13.6k",
-          "trendText": "+4.5%",
+          "subTitle": "今日",
+          "primaryValue": "$3,358.00",
+          "trendText": "8.40%",
           "trendUp": true
         }
       ],
@@ -91,39 +143,45 @@
         {
           "label": "PhoneTracker 安卓",
           "platform": "android",
-          "adSpend": "$22.4k",
-          "roi": "108%",
+          "adSpend": "$22.40k",
+          "roi": "108.00%",
           "installs": "8,200",
-          "profit": "$7.8k",
+          "profit": "$7.80k",
           "activePlatforms": "4"
         },
         {
           "label": "PhoneTracker iOS",
           "platform": "ios",
-          "adSpend": "$16.3k",
-          "roi": "115%",
+          "adSpend": "$16.30k",
+          "roi": "115.00%",
           "installs": "6,000",
-          "profit": "$5.8k",
+          "profit": "$5.80k",
           "activePlatforms": "4"
         },
         {
           "label": "合计",
           "platform": "total",
-          "adSpend": "$38.7k",
-          "roi": "112%",
+          "adSpend": "$38.70k",
+          "roi": "112.00%",
           "installs": "14,200",
-          "profit": "$13.6k",
+          "profit": "$13.60k",
           "activePlatforms": "6"
         }
       ]
     }
   },
   "api": {
-    "url": "POST /api/user-growth/comprehensive-analysis/platform-analysis-detail/summary",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/summary",
     "method": "POST",
     "priority": "P0",
     "requestBody": "name (必填), from?",
     "responseBody": "PlatformAnalysisDetailSummary"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "与 `loadPlatformAnalysisDetailPage` 内其它分片共用同一请求体。",
+      "KPI 与综合分析页字段一致，便于后端复用 DTO。"
+    ]
   },
   "interaction": {
     "triggers": [
