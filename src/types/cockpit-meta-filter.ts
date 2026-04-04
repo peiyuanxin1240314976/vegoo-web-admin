@@ -1,5 +1,5 @@
 /**
- * 公用顶栏筛选项：`POST ${ANALYSIS_API_BASE}/cockpit/meta-filter-options`
+ * 公用顶栏筛选项：`GET ${ANALYSIS_API_BASE}/cockpit/meta-filter-options`（无参）
  * 行为说明：`src/views/user-growth/paid-analysis/mock/backend-api/README.md` 附录 A（无单独 JSON 契约）。
  */
 

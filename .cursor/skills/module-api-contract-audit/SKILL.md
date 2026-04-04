@@ -1,7 +1,7 @@
 ---
 name: module-api-contract-audit
 description: >-
-  Audits and organizes per-module HTTP API contracts, mock/backend-api JSON, README inventories, config data-source switches, fetch* in src/api, and UI coverage across routes. Enforces full sampleResponse, POST-only JSON APIs, and URL shape route+module+feature. Maps each contract to reachable UI; flags orphaned or unreachable surfaces for human/product confirmation before deleting or changing. Use when the user asks to 整理/梳理/校验/补全 项目或某业务模块的 接口契约、mock 契约、backend-api、或检查某模块是否少接口；或提到「模块接口与页面对齐」「契约与 fetch 对照」 「返回示例」「sampleResponse」「表列枚举写全」「全部 POST」「接口路径命名」、大模块多页面契约目录聚合、 数据源开关统一、data-source 注释、多 enum 多 isMock、交互说明、初始化加载、默认选中、契约与页面可达/入口、字段字典、backend-fields、startDate、endDate、返回体统一、sampleResponse 形态。
+  Audits and organizes per-module HTTP API contracts, mock/backend-api JSON, README inventories, config data-source switches, fetch* in src/api, and UI coverage across routes. Enforces full sampleResponse, POST-only JSON APIs (except documented GET exceptions e.g. cockpit meta), and URL shape route+module+feature. Enforces reuse of GET /api/v1/datacenter/analysis/cockpit/meta-filter-options (no params): no duplicate meta-filter-options JSON; pages read useCockpitMetaFilterStore().data; document in README only per §0.6. Maps each contract to reachable UI; flags orphaned or unreachable surfaces for human/product confirmation before deleting or changing. Use when the user asks to 整理/梳理/校验/补全 项目或某业务模块的 接口契约、mock 契约、backend-api、或检查某模块是否少接口；或提到「模块接口与页面对齐」「契约与 fetch 对照」 「返回示例」「sampleResponse」「表列枚举写全」「全部 POST」「接口路径命名」、大模块多页面契约目录聚合、 数据源开关统一、data-source 注释、多 enum 多 isMock、交互说明、初始化加载、默认选中、契约与页面可达/入口、字段字典、backend-fields、startDate、endDate、返回体统一、sampleResponse 形态、cockpit meta-filter-options、公用下拉。
 ---
 
 # 模块接口契约整理（工作流）
@@ -29,6 +29,7 @@ description: >-
 
 - **所有** 契约接口 **`api.method` 为 `POST`**，请求体为 **JSON**（`sampleRequest` 给出的结构）；前端对应使用 `request.post`（或项目统一封装中等价写法）。
 - 新模块、新契约 **不得** 再用 GET + query 作为主约定；历史 GET 若存在，整理时可在交付物中单列「待迁移为 POST」项，不扩大 GET 面。
+- **明确例外（不写进模块 JSON 契约）**：公用 **`GET .../analysis/cockpit/meta-filter-options`**（**无 query/body**，`fetchCockpitMetaFilterOptions`）为全项目顶栏 meta，**不**适用本条 POST 约定；详见 **§0.6** 与 **`api-contract-and-mock-conventions.mdc`** 篇首。
 
 ### 0.4 字段与数据字典对齐
 
@@ -48,6 +49,14 @@ description: >-
 - **网关包裹**：`sampleResponse` 表示 `data` 内还是整包与模块 README **单一约定**（见 **§0.1**）。
 - **新增接口**：优先对齐本模块已有 JSON；**存量不一致**时交付物单列 **「sampleResponse 结构收敛建议」**；**冻结目录**内不擅自改（见 00 规则）。
 
+### 0.6 公用 cockpit `meta-filter-options`（硬性：无独立 JSON）
+
+- **接口**：**`GET`** `/api/v1/datacenter/analysis/cockpit/meta-filter-options`（**无参**；底层 **`fetchCockpitMetaFilterOptions`** → `request.get`，`@/api/cockpit-meta-filter`；类型 **`CockpitMetaFilterOptionsData`**，`@/types/cockpit-meta-filter`）。与响应 **同构** 的顶栏下拉（应用 / 终端平台 / 广告平台 / 国家等）**不得**在本模块 `mock/backend-api` 新增 `*meta-filter-options*.json` 或复制等价契约。
+- **页面 / 新 Mock 场景写法（直接取数）**：业务页与联调说明中，顶栏选项 **以读 Pinia 为准**：**`useCockpitMetaFilterStore().data`** 或 **`useCockpitMetaFilterOptions().cockpitMeta`**（`src/composables/use-cockpit-meta-filter.ts`），使用其中的 **`appOptions` / `platformOptions` / `sourceOptions` / `countryOptions`**。**不要**把「页面里再请求一次该 URL」或「每个模块单独 mock 一份 meta JSON」当作默认方案；预取与缓存见 **`api-contract-and-mock-conventions.mdc`**。**`ensureLoaded()`** 仅兜底，**不是**页面常规要调用的入口。
+- **文档义务**：在该模块 **`mock/backend-api/README.md` 接口清单** 中单列一行（优先级、说明、完整逻辑 URL、**数据读取：`useCockpitMetaFilterStore().data`**），**契约文件列写「无 JSON」**，并引用 **`src/views/user-growth/paid-analysis/mock/backend-api/README.md` 附录 A**（全项目规范锚点）或在本 README 用简短附录复述要点；**「场景 → 接口」表**写清：顶栏选项来自 **全局 Store 中的公用 meta**（守卫预载 + session），**不要求**为该能力建 JSON 根级 `interaction`。
+- **独有维度例外**：仅当顶栏还有 **本页独有** 筛选项时，**单独**为独有能力维护契约 JSON；**禁止**把与 cockpit 同构的四类选项再次写进契约。
+- **整理交付物**：对照表与清单中须 **显式标注** 该能力为 **公用 Store 数据、无 JSON**；若发现与同构顶栏重复的 `*meta-filter-options*.json`，交付物中单列 **「应删除或收敛为文档引用」**（冻结目录按 00 规则仅建议、不擅自删）。
+
 ## 1. 划定模块边界
 
 - 从 **Vue Router**（如 `src/router/modules/*.ts`）列出该模块下所有 **path/component**，含子路由（详情页、编辑页、抽屉跳转页等）。
@@ -56,7 +65,7 @@ description: >-
 ## 2. 盘点页面实际调用的 API
 
 - 在对应 `views/...` 下 `grep`：`fetch`、`request.post`、`from '@/api`。
-- 列出每个 **路由/页面** → **fetch\* 或请求函数**；注意 composable 间接调用。
+- 列出每个 **路由/页面** → **fetch\* 或请求函数**；注意 composable 间接调用。**公用 cockpit 顶栏 meta**：页面若只读 **`useCockpitMetaFilterStore().data`**，整理时标注 **「数据来自全局 Store，非本页独立 fetch」**，勿误判为缺接口。
 
 ### 2.1 契约与页面展示、业务入口（须对齐；不可达须交需求方判断）
 
@@ -73,7 +82,7 @@ description: >-
 - 查找 `src/views/<模块>/.../mock/backend-api/**/*.json` 与 **`README.md` 接口清单**。
 - **大模块多页面** 时目录须符合 **章节 9**（契约与开关聚合在模块根）；存量若在子目录分散，整理交付物中须标 **待迁移路径**。
 - **每个** 承担「接口契约集合」的 `backend-api` 目录须有 **`README.md`**；纯索引说明可合并进根目录 README。
-- 核对：**一接口一独立 JSON**（含 `fieldDescription`、`sampleRequest`、**完整** `sampleResponse`、`api`、**章节 10 `interaction`**）；复杂表格/详情应按 UI 拆分；并符合 **章节 0**。
+- 核对：**一接口一独立 JSON**（含 `fieldDescription`、`sampleRequest`、**完整** `sampleResponse`、`api`、**章节 10 `interaction`**）；复杂表格/详情应按 UI 拆分；并符合 **章节 0**。**例外**：与 **§0.6** 公用 cockpit `meta-filter-options` 同构的顶栏下拉 **不** 使用 JSON，仅在 README 标注（见 **§0.6**）。
 
 ## 4. 与实现对齐
 
@@ -94,12 +103,12 @@ description: >-
 用 Markdown 输出：
 
 1. **「页面/路由 ↔ 契约文件」** 对照表（多级子路由分行）。
-2. **「用户操作 / 场景 → 接口 → 触发时机」** 表（与各 JSON 内 `interaction` 一致，可对 README 摘要）。
+2. **「用户操作 / 场景 → 接口 → 触发时机」** 表（与各 JSON 内 `interaction` 一致，可对 README 摘要；**§0.6** 公用顶栏 meta 无 JSON 时以 README 描述为准）。
 3. **已对齐**的读/写接口；**缺契约 / 缺 fetch / 缺开关 / 缺 interaction / 仅有前端占位** 的项（逐条）。
 4. 网关路径与 JSON 示例 URL 不一致时的 **以前端 `src/api` 实际 URL 为准** 说明。
 5. 若仍存在 **子目录分散的 backend-api 或多份 config**：列出 **建议合并后的目标路径**（章节 9）。
-6. **无 UI 入口或业务不可触达**的契约 / `fetch*`（若有）：逐条列文件、URL、判定理由，标注 **须需求确认**；**不**计入「已对齐」清单，**不**在未获确认前建议删除（见 **§2.1**）。
-7. **「字段 ↔ 数据字典对齐」**表：列 `契约字段名` | `backend-fields 条目或待定` | `同义/历史名` | `所在契约 JSON` | `备注（是否建议补字典）`；并勾选 **入参日期是否均为 startDate/endDate**（否则在表中注明例外与迁移建议）。
+6. **无 UI 入口或业务不可触达**的契约 / `fetch*`（若有）：逐条列文件、URL、判定理由，标注 **须需求确认**；**不**计入「已对齐」清单，**不**在未获确认前建议删除（见 **§2.1**）。**同条须覆盖**：**公用 cockpit meta** 是否已在 README 按 **§0.6** 标注 **无 JSON**、并写明 **页面读 `useCockpitMetaFilterStore().data`**；若存在与同构顶栏重复的 `*meta-filter-options*.json`，单列收敛建议（冻结目录仅建议）。
+7. **「字段 ↔ 数据字典对齐」**表：列 `契约字段名` | `backend-fields 条目或待定` | `同义/历史名` | `所在契约 JSON` | `备注（是否建议补字典）`；并勾选 **入参日期是否均为 startDate/endDate**（否则在表中注明例外与迁移建议）。**公用 cockpit meta** 字段对齐以 **`cockpit-meta-filter` 类型** + **`backend-fields.mdc`** 为准，**不**要求契约 JSON 行。
 8. **（可选）「sampleResponse 结构收敛建议」**：同模块内同类 UI 响应形态冲突、建议标准形态、是否涉及冻结目录（仅建议不擅自改）。
 9. **（验收勾选）表列 / 树节点枚举覆盖**：主表、树表及 meta `options` 中带闭合 **`enum`** 的字段，是否在 **`sampleResponse` 示例中写全各取值**（见 **`api-contract-and-mock-conventions.mdc`**「表格/列表示例中的枚举须写全」）；未覆盖的逐契约列明。
 
@@ -126,6 +135,7 @@ description: >-
 - **不要** 为每个子页面再建一套 `子页面/mock/backend-api/`（小页面、纯路由页 **无单独契约目录**）；子功能用 **文件名** 区分即可，例如：
   - `03-a-table-campaign.json`、`campaign-detail-01-overview.json`、`ad-edit-01-form.json`（命名风格在模块内统一，建议在模块 README 中约定前缀表）。
 - **例外**：仅存说明、索引、不含单接口 `sampleRequest`/`sampleResponse` 的文件，须在模块 README 标明为 **索引**，避免与 data-source 1:1 混淆。
+- **例外（硬性）**：**§0.6** 公用 cockpit `meta-filter-options` **永不**在本模块 `backend-api` 落独立 JSON；**仅 README 文档标注**（见 **`api-contract-and-mock-conventions.mdc`**）。
 
 ### 9.2 数据源开关（须注释；多页面用多组 enum + 多个判断方法）
 
@@ -192,7 +202,7 @@ description: >-
 
 模块根目录下 README **必须**包含：
 
-1. **接口清单表**：优先级 / 说明 / 逻辑 URL / **契约文件名**。
+1. **接口清单表**：优先级 / 说明 / 逻辑 URL / **契约文件名**（或与 **§0.6** 一致时 **明确写「无 JSON」** 并引用付费分析 **附录 A**）。
 2. **按页面或路由分组的「场景 → 接口」表**：例如「列表页首屏」「详情页进入」「编辑页保存草稿」对应哪些 **POST**、哪些 JSON、`interaction` 摘要（可引用「详见某 JSON 的 `interaction`」）。
 3. **目录约定**：本模块 JSON 命名前缀、是否仍存在待迁入根的子目录文件列表。
 

@@ -445,6 +445,11 @@
 
   defineOptions({ name: 'IAPOrderTab' })
 
+  /** 与公用 meta 一致：不限为 ''；兼容历史 'all' */
+  function isAllFilter(v: string) {
+    return v === '' || v === 'all'
+  }
+
   const props = defineProps<{
     filters: {
       appId: string
@@ -872,7 +877,7 @@
   ]
 
   function matchProductScope(product: string, f: string) {
-    if (f === 'all') return true
+    if (isAllFilter(f)) return true
     if (f === 'annual') return /annual|年|89\.99/i.test(product)
     if (f === 'monthly') return /month|月|9\.99|6\.99/i.test(product)
     return true
@@ -881,7 +886,7 @@
   const filteredAppPlatRows = computed(() => {
     const f = applied.value.app
     const details = APP_PLAT_SOURCE.filter((r) => r.app !== '汇总')
-    if (f === 'all') return APP_PLAT_SOURCE
+    if (isAllFilter(f)) return APP_PLAT_SOURCE
     const want = APP_KEY_MAP[f]
     if (!want) return details.filter(() => false)
     return details.filter((r) => r.app === want)
@@ -899,17 +904,17 @@
     const a = applied.value
     return ORDER_SOURCE.filter((r) => {
       if (r.sortDate < a.dateStart || r.sortDate > a.dateEnd) return false
-      if (a.app !== 'all') {
+      if (!isAllFilter(a.app)) {
         const want = APP_KEY_MAP[a.app]
         if (!want || r.app !== want) return false
       }
-      if (a.channel !== 'all') {
+      if (!isAllFilter(a.channel)) {
         const want = CHANNEL_KEY_MAP[a.channel]
         if (!want || r.channel !== want) return false
       }
-      if (a.country !== 'all' && r.countryCode !== a.country) return false
+      if (!isAllFilter(a.country) && r.countryCode !== a.country) return false
       if (!matchProductScope(r.product, a.product)) return false
-      if (a.status !== 'all') {
+      if (!isAllFilter(a.status)) {
         const want = STATUS_KEY_MAP[a.status]
         if (!want || r.status !== want) return false
       }
@@ -988,6 +993,8 @@
   /* ── ECharts ──────────────────────────────────── */
   onMounted(() => {
     syncDateRangeFromParentDate(props.filters.date || getAppTodayYYYYMMDD())
+    fApp.value = props.filters.appId
+    fCountry.value = props.filters.country
     pushAppliedFromForm()
     initHourChart()
     initTypeChart()
@@ -1007,6 +1014,8 @@
     () => props.searchToken,
     () => {
       syncDateRangeFromParentDate(props.filters.date || getAppTodayYYYYMMDD())
+      fApp.value = props.filters.appId
+      fCountry.value = props.filters.country
       pushAppliedFromForm()
       selectedOrder.value = null
       nextTick(() => rebuildCharts())

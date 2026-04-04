@@ -42,6 +42,7 @@ import { setPageTitle } from '@/utils/router'
 import { resetRouterState } from '@/router/guards/beforeEach'
 import { useMenuStore } from './menu'
 import { StorageConfig } from '@/utils/storage/storage-config'
+import { clearCockpitMetaFilterSession } from '@/utils/cockpit-meta-filter-session'
 
 /**
  * 用户状态管理
@@ -178,6 +179,8 @@ export const useUserStore = defineStore(
 
       // 移除iframe路由缓存
       sessionStorage.removeItem('iframeRoutes')
+      // 公用顶栏 meta 的 session 缓存（Pinia 内存在 resetRouterState 中清空）
+      clearCockpitMetaFilterSession()
       // 清空主页路径
       useMenuStore().setHomePath('')
       // 重置路由状态
