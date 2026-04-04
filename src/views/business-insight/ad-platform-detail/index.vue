@@ -1,14 +1,76 @@
 <script setup lang="ts">
   import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { storeToRefs } from 'pinia'
+  import { useRoute, useRouter } from 'vue-router'
   import * as echarts from 'echarts'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
 
   const router = useRouter()
+  const route = useRoute()
+
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
+
+  function normalizeMetaOptions(list: CockpitMetaOptionItem[]): CockpitMetaOptionItem[] {
+    return list.map((o) => ({
+      ...o,
+      value: o.value === 'all' ? '' : o.value
+    }))
+  }
+
+  function fallbackMetaOptions(label: string): CockpitMetaOptionItem[] {
+    return [{ label, value: '' }]
+  }
+
+  const appBarOptions = computed(() => {
+    const list = cockpitMeta.value?.appOptions
+    return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部应用')
+  })
+
+  const countryBarOptions = computed(() => {
+    const list = cockpitMeta.value?.countryOptions
+    return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部国家')
+  })
+
+  /**
+   * 路由 query：优先 `source`（广告平台，如收入概览平台表跳转 `?source=Google`），
+   * 兼容历史 `sourceLabel`。
+   */
+  function queryStringParam(v: unknown): string {
+    if (v === undefined || v === null) return ''
+    if (Array.isArray(v)) return typeof v[0] === 'string' ? v[0] : ''
+    return typeof v === 'string' ? v : ''
+  }
+
+  function safeDecodeURIComponent(s: string): string {
+    try {
+      return decodeURIComponent(s)
+    } catch {
+      return s
+    }
+  }
+
+  function platformDisplayNameFromRoute(): string {
+    const src = safeDecodeURIComponent(queryStringParam(route.query.source).trim())
+    if (src) return src
+    return safeDecodeURIComponent(queryStringParam(route.query.sourceLabel).trim())
+  }
+
+  const adPlatformPerformanceHeading = computed(() => {
+    const raw = platformDisplayNameFromRoute()
+    return raw ? `${raw}表现详情` : '广告平台表现详情'
+  })
 
   function goToAppAdPlatformPerformance(row: AppRow) {
+    const source = queryStringParam(route.query.source).trim()
+    const sourceLabel = queryStringParam(route.query.sourceLabel).trim()
     router.push({
       name: 'AppAdPlatformPerformance',
-      query: { app: row.app }
+      query: {
+        app: row.app,
+        ...(source ? { source } : sourceLabel ? { sourceLabel } : {})
+      }
     })
   }
 
@@ -39,8 +101,10 @@
 
   // ─── State ───────────────────────────────────────────────────────────────────
   const dateRange = ref('最近30天')
-  const appFilter = ref('全部')
-  const countryFilter = ref('全部国家')
+  /** 与 meta `appOptions` 的 value 对齐，「全部应用」为 `""` */
+  const appFilter = ref('')
+  /** 与 meta `countryOptions` 的 value 对齐（多为小写 ISO2），「全部」为 `""` */
+  const countryFilter = ref('')
   const activeMetric = ref<'revenue' | 'ecpm' | 'fillRate'>('revenue')
   const pendingQuery = ref(false)
 
@@ -50,17 +114,7 @@
     countryFilter: countryFilter.value
   })
 
-  const isQueryDirty = computed(() => {
-    return (
-      appliedFilters.value.dateRange !== dateRange.value ||
-      appliedFilters.value.appFilter !== appFilter.value ||
-      appliedFilters.value.countryFilter !== countryFilter.value
-    )
-  })
-
   const dateOptions = ['最近7天', '最近30天', '最近90天', '自定义']
-  const appOptions = ['全部', 'Weather8', 'PhoneTracker2', 'BatteryMax']
-  const countryOptions = ['全部国家', '中国', '美国', '德国', '日本', '东南亚']
 
   // ─── KPI Cards ───────────────────────────────────────────────────────────────
   const kpiCards: KpiCard[] = [
@@ -363,6 +417,7 @@
   }
 
   onMounted(async () => {
+    await cockpitMetaStore.ensureLoaded()
     await nextTick()
     initChart()
     window.addEventListener('resize', handleResize)
@@ -393,12 +448,12 @@
 
 <template>
   <div class="admob-dashboard">
-    <div class="admob-page-fx" aria-hidden="true"></div>
     <!-- ── Page body ──────────────────────────────────────────────── -->
     <div class="page-body">
       <!-- Page header -->
       <div class="page-header">
         <div class="filters filters-panel">
+          <h2 class="filter-detail-heading">{{ adPlatformPerformanceHeading }}</h2>
           <div class="filter-field">
             <span class="filter-label">日期范围</span>
             <el-select v-model="dateRange" size="default" class="filter-select">
@@ -406,15 +461,25 @@
             </el-select>
           </div>
           <div class="filter-field">
-            <span class="filter-label">App选择</span>
+            <span class="filter-label">应用</span>
             <el-select v-model="appFilter" size="default" class="filter-select">
-              <el-option v-for="o in appOptions" :key="o" :label="o" :value="o" />
+              <el-option
+                v-for="(o, idx) in appBarOptions"
+                :key="`app-${idx}-${o.value || 'all'}`"
+                :label="o.label"
+                :value="o.value"
+              />
             </el-select>
           </div>
           <div class="filter-field">
             <span class="filter-label">国家</span>
             <el-select v-model="countryFilter" size="default" class="filter-select">
-              <el-option v-for="o in countryOptions" :key="o" :label="o" :value="o" />
+              <el-option
+                v-for="(o, idx) in countryBarOptions"
+                :key="`ct-${idx}-${o.value || 'all'}`"
+                :label="o.label"
+                :value="o.value"
+              />
             </el-select>
           </div>
 
@@ -423,7 +488,7 @@
             round
             plain
             :loading="pendingQuery"
-            :disabled="pendingQuery || !isQueryDirty"
+            :disabled="pendingQuery"
             @click="runQuery"
           >
             查询
@@ -658,30 +723,10 @@
       mask-image: linear-gradient(to bottom, black 0%, black 22%, transparent 48%);
     }
 
-    > *:not(.admob-page-fx) {
+    > * {
       position: relative;
       z-index: 1;
     }
-  }
-
-  .admob-page-fx {
-    position: absolute;
-    inset: -12% -12% 52%;
-    z-index: 0;
-    pointer-events: none;
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      transparent 0deg,
-      color-mix(in srgb, var(--art-primary) 12%, transparent) 55deg,
-      color-mix(in srgb, var(--art-success) 9%, transparent) 200deg,
-      transparent 285deg,
-      color-mix(in srgb, var(--art-warning) 7%, transparent) 330deg,
-      transparent 360deg
-    );
-    opacity: 0.8;
-    mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 82%);
-    animation: admob-fx-spin 52s linear infinite;
-    will-change: transform;
   }
 
   @keyframes admob-aurora-drift {
@@ -693,12 +738,6 @@
     100% {
       opacity: 1;
       transform: scale(1.04) translate(1%, -0.8%);
-    }
-  }
-
-  @keyframes admob-fx-spin {
-    to {
-      transform: rotate(360deg);
     }
   }
 
@@ -772,6 +811,17 @@
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
+  }
+
+  .filter-detail-heading {
+    padding-right: var(--space-4, 16px);
+    margin: 0;
+    margin-right: auto;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text-primary, var(--text-1));
+    white-space: nowrap;
   }
 
   .filters-panel {
@@ -1124,10 +1174,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     .admob-dashboard::before {
-      animation: none;
-    }
-
-    .admob-page-fx {
       animation: none;
     }
 

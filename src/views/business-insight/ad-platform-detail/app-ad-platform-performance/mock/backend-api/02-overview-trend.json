@@ -1,0 +1,67 @@
+{
+  "_comment": "应用内广告平台表现 — 核心指标趋势图。对应 index.vue 折线图。",
+  "interaction": {
+    "route": "/business-insight/ad-platform-detail/app-ad-platform-performance",
+    "surface": "核心指标趋势",
+    "triggers": ["查询刷新", "图例切换由前端本地控制时可只依赖本接口序列"]
+  },
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "appId": { "type": "string", "required": true, "description": "应用，来自路由 query.app。" },
+      "source": { "type": "string", "required": false, "description": "广告平台上下文。" }
+    },
+    "response": {
+      "categories": { "type": "string[]", "required": true, "description": "横轴标签。" },
+      "revenue": {
+        "type": "number[]",
+        "required": true,
+        "description": "收入序列（口径与 KPI 一致）。"
+      },
+      "d_ecpm": { "type": "number[]", "required": true, "description": "eCPM 序列。" },
+      "d_fill_rate": { "type": "number[]", "required": true, "description": "填充率 0–100。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2025-10-01",
+    "endDate": "2025-10-31",
+    "s_country_code": "",
+    "appId": "Weather8",
+    "source": "Google"
+  },
+  "sampleResponse": {
+    "categories": [
+      "10/1",
+      "10/3",
+      "10/5",
+      "10/7",
+      "10/9",
+      "10/11",
+      "10/13",
+      "10/15",
+      "10/17",
+      "10/19",
+      "10/21",
+      "10/23",
+      "10/25",
+      "10/27",
+      "10/29",
+      "10/31"
+    ],
+    "revenue": [780, 650, 820, 590, 750, 680, 900, 620, 800, 720, 870, 640, 760, 810, 690, 937],
+    "d_ecpm": [2.8, 2.6, 3.0, 2.5, 2.9, 2.7, 3.1, 2.6, 3.0, 2.8, 3.1, 2.6, 2.9, 3.0, 2.8, 3.1],
+    "d_fill_rate": [97, 96, 98, 95, 98, 97, 99, 96, 98, 97, 99, 96, 98, 98, 97, 98]
+  },
+  "api": {
+    "url": "POST /api/business-insight/ad-platform-detail/app-ad-platform-performance/overview/trend",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, s_country_code, appId, source?",
+    "responseBody": "{ categories, revenue, d_ecpm, d_fill_rate }"
+  },
+  "apiSuggestion": {
+    "notes": ["Revenue 轴与 Fill Rate 双 Y 轴由前端配置。"]
+  }
+}

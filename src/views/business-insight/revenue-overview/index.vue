@@ -264,6 +264,7 @@
                 <div class="rev-table-wrap rev-table-wrap--iaa">
                   <ArtTable
                     class="rev-art-table"
+                    :class="{ 'rev-art-table--iaa-platform-clickable': iaaTab === 'platform' }"
                     :data="iaaRowsWithTotal"
                     :columns="iaaColumns"
                     row-key="_rowKey"
@@ -274,6 +275,7 @@
                     :header-cell-style="iaaHeaderCellStyle"
                     :cell-style="iaaCellStyle"
                     :row-class-name="iaaRowClassName"
+                    @row-click="onIaaTableRowClick"
                   >
                     <template #s_name="{ row }">
                       <span
@@ -705,6 +707,7 @@
     watch,
     type CSSProperties
   } from 'vue'
+  import { useRouter } from 'vue-router'
   import 'flag-icons/css/flag-icons.min.css'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
@@ -763,6 +766,19 @@
   } from './mock'
 
   defineOptions({ name: 'RevenueOverview' })
+
+  const router = useRouter()
+
+  /** IAA 广告平台 Tab 行点击进入商业洞察 · 广告平台详情，携带 `source`（与行上 s_platform_name / s_name 一致） */
+  function onIaaTableRowClick(row: Record<string, unknown>) {
+    if (iaaTab.value !== 'platform') return
+    const name = typeof row.s_name === 'string' ? row.s_name.trim() : ''
+    if (!name || name === '合计') return
+    void router.push({
+      name: 'AdPlatformDetail',
+      query: { source: name }
+    })
+  }
 
   // 高度仍保留设计稿基准，宽度改为自适应容器
   const designHeight = 980
@@ -3601,6 +3617,10 @@
 
   .rev-table-wrap--iaa .rev-art-table {
     height: 100%;
+  }
+
+  .rev-art-table--iaa-platform-clickable :deep(.el-table__body tr:not(.is-iaa-total)) {
+    cursor: pointer;
   }
 
   .rev-panel--iaa :deep(.el-table) {

@@ -16,7 +16,7 @@
           </svg>
           返回
         </button>
-        <span class="page-title">AdMob在Weather 8 中的表现详情</span>
+        <span class="page-title" :title="pageDetailTitle">{{ pageDetailTitle }}</span>
       </div>
 
       <div class="filters filters-panel">
@@ -30,20 +30,26 @@
         </div>
         <div class="filter-item filter-field">
           <span class="filter-label">国家</span>
-          <el-select v-model="country" class="custom-select filter-select filter-select--country">
-            <el-option label="全部国家" value="all" />
-            <el-option label="中国" value="cn" />
-            <el-option label="美国" value="us" />
-            <el-option label="日本" value="jp" />
+          <el-select
+            v-model="countryFilter"
+            class="custom-select filter-select filter-select--country"
+          >
+            <el-option
+              v-for="(o, idx) in countryBarOptions"
+              :key="`ct-${idx}-${o.value || 'all'}`"
+              :label="o.label"
+              :value="o.value"
+            />
           </el-select>
         </div>
 
         <el-button
           class="filter-query-btn"
           type="primary"
+          plain
           round
           :loading="pendingQuery"
-          :disabled="pendingQuery || !isQueryDirty"
+          :disabled="pendingQuery"
           @click="runQuery"
         >
           查询
@@ -353,18 +359,91 @@
 
 <script setup lang="ts">
   import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { storeToRefs } from 'pinia'
+  import { useRoute, useRouter } from 'vue-router'
+  import type { LocationQueryValue } from 'vue-router'
   import * as echarts from 'echarts'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
+
+  defineOptions({ name: 'AppAdPlatformPerformance' })
 
   const router = useRouter()
+  const route = useRoute()
 
-  function goBack() {
-    router.push({ name: 'AdPlatformDetail' })
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
+
+  function normalizeMetaOptions(list: CockpitMetaOptionItem[]): CockpitMetaOptionItem[] {
+    return list.map((o) => ({
+      ...o,
+      value: o.value === 'all' ? '' : o.value
+    }))
   }
 
-  // ─── 筛选器状态 ───────────────────────────────────────────────
+  function fallbackMetaOptions(label: string): CockpitMetaOptionItem[] {
+    return [{ label, value: '' }]
+  }
+
+  const countryBarOptions = computed(() => {
+    const list = cockpitMeta.value?.countryOptions
+    return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部国家')
+  })
+
+  function querySourceLabelString(
+    v: LocationQueryValue | LocationQueryValue[] | undefined
+  ): string {
+    if (v === undefined || v === null) return ''
+    if (Array.isArray(v)) {
+      const first = v[0]
+      return first == null || first === '' ? '' : first
+    }
+    return v === '' ? '' : v
+  }
+
+  function safeDecodeURIComponent(s: string): string {
+    try {
+      return decodeURIComponent(s)
+    } catch {
+      return s
+    }
+  }
+
+  const platformTitlePart = computed(() => {
+    const src = safeDecodeURIComponent(querySourceLabelString(route.query.source).trim())
+    if (src) return src
+    const s = safeDecodeURIComponent(querySourceLabelString(route.query.sourceLabel).trim())
+    return s || '广告平台'
+  })
+
+  const routeAppQueryDecoded = computed(() =>
+    safeDecodeURIComponent(querySourceLabelString(route.query.app).trim())
+  )
+
+  /** 应用由路由 `query.app` 固定，不提供筛选；展示名即入参原文或后续接口回填 */
+  const selectedAppDisplayName = computed(() => routeAppQueryDecoded.value || '应用')
+
+  const pageDetailTitle = computed(
+    () => `${platformTitlePart.value}在${selectedAppDisplayName.value}中的表现详情`
+  )
+
+  function goBack() {
+    const sourceStr = querySourceLabelString(route.query.source)
+    const sourceLabelStr = querySourceLabelString(route.query.sourceLabel)
+    router.push({
+      name: 'AdPlatformDetail',
+      query: sourceStr
+        ? { source: sourceStr }
+        : sourceLabelStr
+          ? { sourceLabel: sourceLabelStr }
+          : {}
+    })
+  }
+
+  // ─── 筛选器状态（仅日期 + 国家；应用固定为路由 query.app）────────────────
   const dateRange = ref('2025-12')
-  const country = ref('all')
+  /** 与 meta `countryOptions` 的 value 对齐，「全部」为 `""` */
+  const countryFilter = ref('')
 
   // ─── KPI ──────────────────────────────────────────────────────
   const activeKpi = ref('revenue')
@@ -682,24 +761,17 @@
 
   const appliedFilters = ref({
     dateRange: dateRange.value,
-    country: country.value
-  })
-
-  const isQueryDirty = computed(() => {
-    return (
-      appliedFilters.value.dateRange !== dateRange.value ||
-      appliedFilters.value.country !== country.value
-    )
+    countryFilter: countryFilter.value
   })
 
   async function runQuery() {
     if (pendingQuery.value) return
     pendingQuery.value = true
     try {
-      // TODO: 接真实接口时，把请求放到这里，然后刷新图表/列表等数据
+      // TODO: 接真实接口时，把请求放到这里（appId 来自 route.query.app，非筛选项）
       appliedFilters.value = {
         dateRange: dateRange.value,
-        country: country.value
+        countryFilter: countryFilter.value
       }
     } finally {
       pendingQuery.value = false
@@ -707,6 +779,7 @@
   }
 
   onMounted(async () => {
+    await cockpitMetaStore.ensureLoaded()
     await nextTick()
     initChart()
     window.addEventListener('resize', handleResize)
@@ -888,11 +961,13 @@
   }
 
   .filter-select--date {
-    width: 220px;
+    width: min(100%, 320px);
+    min-width: 280px;
   }
 
   .filter-select--country {
-    width: 130px;
+    width: 150px;
+    min-width: 130px;
   }
 
   /* Element Plus select 深色适配 */
@@ -992,14 +1067,15 @@
 ═══════════════════════════════════════════════ */
   .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: clamp(10px, 1.6vw, 12px);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(8px, 1.2vw, 12px);
   }
 
   .kpi-card {
     --kpi-accent: var(--art-primary);
 
     position: relative;
+    min-width: 0;
     padding: 18px 16px 12px;
     overflow: hidden;
     cursor: pointer;
@@ -1756,10 +1832,6 @@
   }
 
   @media (width <= 900px) {
-    .kpi-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
     .right-panel {
       grid-template-columns: 1fr;
     }
@@ -1786,10 +1858,7 @@
     .filter-select--date,
     .filter-select--country {
       width: 100%;
-    }
-
-    .kpi-grid {
-      grid-template-columns: 1fr 1fr;
+      min-width: 0;
     }
 
     .main-layout {

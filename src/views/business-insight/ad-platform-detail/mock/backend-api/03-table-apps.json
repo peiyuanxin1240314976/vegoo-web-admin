@@ -1,0 +1,118 @@
+{
+  "_comment": "商业洞察 · 广告平台详情 — 按应用拆分的收入与效果表。对应页面 index.vue: tableData / 查看详情。",
+  "interaction": {
+    "route": "/business-insight/ad-platform-detail",
+    "surface": "应用维度表格",
+    "triggers": ["查询刷新", "行内「查看详情」跳转 AppAdPlatformPerformance（带 app、source）"]
+  },
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用筛选；空为全部；非空时表格可仅返回该应用一行。"
+      },
+      "s_country_code": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台（与路由 query `source` 一致）。"
+      }
+    },
+    "response": {
+      "records": {
+        "type": "AdPlatformDetailAppRow[]",
+        "required": true,
+        "description": "应用维度行；无分页时仍使用 records 键名与兄弟模块对齐。"
+      }
+    },
+    "AdPlatformDetailAppRow": {
+      "appId": { "type": "string", "required": true, "description": "应用 ID（自有 ID）。" },
+      "app": {
+        "type": "string",
+        "required": true,
+        "description": "应用展示名（与 `appPackage` 二选一或并存时以契约为准）。"
+      },
+      "revenue": { "type": "number", "required": true, "description": "收入（USD）。" },
+      "percent": {
+        "type": "number",
+        "required": true,
+        "description": "收入占比 0–100（同一广告平台 source 维度下合计可为 100）。"
+      },
+      "d_ecpm": { "type": "number", "required": true, "description": "平均 eCPM（USD）。" },
+      "d_fill_rate": { "type": "number", "required": true, "description": "平均填充率 0–100。" },
+      "n_impression": { "type": "number", "required": true, "description": "展示次数（整数）。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2025-10-01",
+    "endDate": "2025-10-31",
+    "appId": "",
+    "s_country_code": "",
+    "source": "Google"
+  },
+  "sampleResponse": {
+    "records": [
+      {
+        "appId": "app-weather8",
+        "app": "Weather8",
+        "revenue": 850000,
+        "percent": 24.5,
+        "d_ecpm": 3.1,
+        "d_fill_rate": 98,
+        "n_impression": 302000000
+      },
+      {
+        "appId": "app-phonetracker2",
+        "app": "PhoneTracker2",
+        "revenue": 620000,
+        "percent": 18.2,
+        "d_ecpm": 3.85,
+        "d_fill_rate": 96,
+        "n_impression": 81000000
+      },
+      {
+        "appId": "app-batterymax",
+        "app": "BatteryMax",
+        "revenue": 380000,
+        "percent": 12.8,
+        "d_ecpm": 2.9,
+        "d_fill_rate": 94,
+        "n_impression": 302000000
+      },
+      {
+        "appId": "app-cleanmaster",
+        "app": "CleanMaster",
+        "revenue": 180000,
+        "percent": 6.1,
+        "d_ecpm": 2.6,
+        "d_fill_rate": 91,
+        "n_impression": 81000000
+      },
+      {
+        "appId": "app-speedbooster",
+        "app": "SpeedBooster",
+        "revenue": 125000,
+        "percent": 4.2,
+        "d_ecpm": 2.4,
+        "d_fill_rate": 89,
+        "n_impression": 302000000
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/ad-platform-detail/table/apps",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, appId, s_country_code, source?",
+    "responseBody": "{ records: AdPlatformDetailAppRow[] }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "前端列表金额/占比/eCPM/填充率展示两位小数；展示次数为整数。",
+      "跳转子页时 query.app 可传 app 展示名或 appId；query.source 传广告平台，与子页路由一致。"
+    ]
+  }
+}

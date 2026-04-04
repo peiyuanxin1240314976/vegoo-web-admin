@@ -1,0 +1,106 @@
+{
+  "_comment": "应用内广告平台表现 — 左侧 KPI 四卡。对应 app-ad-platform-performance/index.vue KPI 区。",
+  "interaction": {
+    "route": "/business-insight/ad-platform-detail/app-ad-platform-performance",
+    "surface": "KPI 四卡",
+    "triggers": ["进入页/查询", "无应用筛选项，appId 来自路由"]
+  },
+  "fieldDescription": {
+    "request": {
+      "startDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
+      "s_country_code": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "当前查看的应用（由路由 query.app 解析，非筛选器）。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台上下文，与路由 query.source 一致。"
+      }
+    },
+    "response": {
+      "kpis": {
+        "type": "AppAdPlatformPerfKpiItem[]",
+        "required": true,
+        "description": "四卡：收入、eCPM、填充率、展示次数。"
+      }
+    },
+    "AppAdPlatformPerfKpiItem": {
+      "id": { "type": "string", "required": true, "description": "卡片键。" },
+      "label": { "type": "string", "required": true, "description": "标题。" },
+      "valueText": { "type": "string", "required": true, "description": "主值展示文案。" },
+      "changeText": {
+        "type": "string",
+        "required": true,
+        "description": "角标环比等；无则空字符串。"
+      },
+      "positive": {
+        "type": "boolean",
+        "required": true,
+        "description": "角标涨跌色；无角标时可固定 true。"
+      },
+      "color": { "type": "string", "required": true, "description": "主题色 HEX。" },
+      "chartData": { "type": "number[]", "required": true, "description": "迷你趋势。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2025-12-01",
+    "endDate": "2025-12-31",
+    "s_country_code": "",
+    "appId": "Weather8",
+    "source": "Google"
+  },
+  "sampleResponse": {
+    "kpis": [
+      {
+        "id": "revenue",
+        "label": "收入",
+        "valueText": "$937.5K",
+        "changeText": "",
+        "positive": true,
+        "color": "#f59e0b",
+        "chartData": [650, 720, 680, 800, 750, 820, 900, 780, 810, 850, 880, 937]
+      },
+      {
+        "id": "ecpm",
+        "label": "eCPM",
+        "valueText": "¥3.10",
+        "changeText": "+12.3%",
+        "positive": true,
+        "color": "#3b82f6",
+        "chartData": [2.6, 2.7, 2.8, 2.9, 2.85, 2.95, 3.0, 2.98, 3.05, 3.08, 3.09, 3.1]
+      },
+      {
+        "id": "fill",
+        "label": "填充率",
+        "valueText": "98%",
+        "changeText": "-3.2%",
+        "positive": false,
+        "color": "#10b981",
+        "chartData": [99, 98, 99, 97, 98, 98, 99, 97, 98, 98, 97, 98]
+      },
+      {
+        "id": "impressions",
+        "label": "展示次数",
+        "valueText": "302M",
+        "changeText": "",
+        "positive": true,
+        "color": "#a855f7",
+        "chartData": [260, 275, 268, 290, 285, 295, 300, 292, 298, 305, 310, 302]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/business-insight/ad-platform-detail/app-ad-platform-performance/overview/kpis",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "startDate, endDate, s_country_code, appId, source?",
+    "responseBody": "{ kpis }"
+  },
+  "apiSuggestion": {
+    "notes": ["日期可与页面「月份」选择器映射为当月 start/end。"]
+  }
+}
