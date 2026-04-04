@@ -26,6 +26,7 @@ import {
   isComprehensiveAnalysisEndpointMock
 } from '@/views/user-growth/comprehensive-analysis/config/data-source'
 import * as comprehensiveAnalysisMock from '@/views/user-growth/comprehensive-analysis/mock/comprehensive-analysis-api-mock'
+import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
 
 /** 与 `MY_PERFORMANCE_BASE` 同级结构：`.../analysis/user-growth/comprehensive-analysis` */
 export const COMPREHENSIVE_ANALYSIS_BASE = `${ANALYSIS_API_BASE}/user-growth/comprehensive-analysis`
@@ -73,28 +74,22 @@ function normalizeMetaSelectOptions(options: unknown): SelectOption[] {
   }))
 }
 
-/** 契约 01-meta-filter-options — POST */
-export function fetchComprehensiveAnalysisFilterOptions() {
-  if (isComprehensiveAnalysisEndpointMock(ComprehensiveAnalysisEndpoint.MetaFilterOptions)) {
-    return comprehensiveAnalysisMock
-      .mockFetchComprehensiveAnalysisMetaFilterOptions()
-      .then((opts) => ({
-        appOptions: normalizeMetaSelectOptions(opts.appOptions),
-        sourceOptions: normalizeMetaSelectOptions(opts.sourceOptions),
-        countryOptions: normalizeMetaSelectOptions(opts.countryOptions)
-      }))
+/**
+ * 筛选项与公用 **`GET .../cockpit/meta-filter-options`** 同构：读 Pinia **`useCockpitMetaFilterStore`**，
+ * 不调用本模块 `.../comprehensive-analysis/meta-filter-options`。
+ * 供仍使用 `fetch*` 命名的历史调用方（如其它页的 `onMounted`）兼容；新页面优先用 `useCockpitMetaFilterOptions`。
+ */
+export async function fetchComprehensiveAnalysisFilterOptions(): Promise<ComprehensiveAnalysisFilterOptions> {
+  const store = useCockpitMetaFilterStore()
+  const raw = await store.ensureLoaded()
+  if (!raw) {
+    return { appOptions: [], sourceOptions: [], countryOptions: [] }
   }
-  return request
-    .post<any>({
-      url: `${COMPREHENSIVE_ANALYSIS_BASE}/meta-filter-options`,
-      data: {}
-    })
-    .then((res) => unwrapDataDeep<ComprehensiveAnalysisFilterOptions>(res))
-    .then((opts) => ({
-      appOptions: normalizeMetaSelectOptions(opts?.appOptions),
-      sourceOptions: normalizeMetaSelectOptions(opts?.sourceOptions),
-      countryOptions: normalizeMetaSelectOptions(opts?.countryOptions)
-    }))
+  return {
+    appOptions: normalizeMetaSelectOptions(raw.appOptions),
+    sourceOptions: normalizeMetaSelectOptions(raw.sourceOptions),
+    countryOptions: normalizeMetaSelectOptions(raw.countryOptions)
+  }
 }
 
 /** 契约 02-kpi — POST */

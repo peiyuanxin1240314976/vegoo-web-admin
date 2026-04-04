@@ -2,32 +2,7 @@
  * 综合分析页本地 Mock（与 `mock/backend-api` 契约、`types.ts` 一致）
  * 由 `src/api/user-growth/comprehensive-analysis.ts` 中综合分析相关方法引用（接入真实接口前）
  */
-import type {
-  ComprehensiveAnalysisApiParams,
-  ComprehensiveAnalysisData,
-  ComprehensiveAnalysisFilterOptions,
-  CpiStatus
-} from '../types'
-
-export const MOCK_COMPREHENSIVE_ANALYSIS_FILTER_OPTIONS: ComprehensiveAnalysisFilterOptions = {
-  appOptions: [
-    { label: '全部', value: '' },
-    { label: 'Weather5', value: 'weather5' },
-    { label: 'PhoneTracker', value: 'phonetracker' }
-  ],
-  sourceOptions: [
-    { label: '全部', value: '' },
-    { label: 'Google Ads', value: 'google' },
-    { label: 'Facebook', value: 'facebook' },
-    { label: 'TikTok', value: 'tiktok' }
-  ],
-  countryOptions: [
-    { label: '全部', value: '' },
-    { label: '美国', value: 'US' },
-    { label: '英国', value: 'GB' },
-    { label: '日本', value: 'JP' }
-  ]
-}
+import type { ComprehensiveAnalysisApiParams, ComprehensiveAnalysisData, CpiStatus } from '../types'
 
 export const MOCK_COMPREHENSIVE_ANALYSIS_DATA: ComprehensiveAnalysisData = {
   kpis: [

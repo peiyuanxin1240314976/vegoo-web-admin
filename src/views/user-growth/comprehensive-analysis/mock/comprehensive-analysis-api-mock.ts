@@ -1,9 +1,8 @@
 /**
- * 综合分析 — 契约级 HTTP Mock（与 `config/data-source.ts`、`mock/backend-api/*.json` 一一对应）
+ * 综合分析 — 契约级 HTTP Mock（与 `config/data-source.ts`、`mock/backend-api/02~08` 对应）
  *
  * | mockFetch* | 契约文件 |
  * | --- | --- |
- * | mockFetchComprehensiveAnalysisMetaFilterOptions | 01-meta-filter-options.json |
  * | mockFetchComprehensiveAnalysisKpi | 02-kpi.json |
  * | mockFetchComprehensiveAnalysisPlatformCpiBar | 03-platform-cpi-bar.json |
  * | mockFetchComprehensiveAnalysisAppCpiRank | 04-app-cpi-rank.json |
@@ -12,12 +11,12 @@
  * | mockFetchComprehensiveAnalysisPlatformCpiTrend | 07-platform-cpi-trend.json |
  * | mockFetchComprehensiveAnalysisEcpmAnalysis | 08-ecpm-analysis.json |
  *
+ * 筛选项 **不在此文件**：公用 `GET .../cockpit/meta-filter-options` → `useCockpitMetaFilterStore`。
  * 数据由 `buildMockComprehensiveAnalysisData` 按筛选参数生成；基线见 `mock/data.ts`。
  */
 import type {
   AppCpiRankItem,
   ComprehensiveAnalysisApiParams,
-  ComprehensiveAnalysisFilterOptions,
   EcpmAnalysis,
   KpiCard,
   PlatformCpiBarData,
@@ -26,16 +25,7 @@ import type {
   CountryCpiMapItem,
   CountryCpiTopItem
 } from '../types'
-import {
-  buildMockComprehensiveAnalysisData,
-  MOCK_COMPREHENSIVE_ANALYSIS_FILTER_OPTIONS
-} from './data'
-
-export function mockFetchComprehensiveAnalysisMetaFilterOptions() {
-  return Promise.resolve<ComprehensiveAnalysisFilterOptions>(
-    MOCK_COMPREHENSIVE_ANALYSIS_FILTER_OPTIONS
-  )
-}
+import { buildMockComprehensiveAnalysisData } from './data'
 
 export function mockFetchComprehensiveAnalysisKpi(params: ComprehensiveAnalysisApiParams) {
   return Promise.resolve<KpiCard[]>(buildMockComprehensiveAnalysisData(params).kpis)
