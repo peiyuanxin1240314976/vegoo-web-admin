@@ -356,9 +356,46 @@
       </template>
 
       <div class="date-nav">
-        <button class="nav-arrow" @click="prevDate">‹</button>
-        <span class="date-display">{{ currentDateLabel }}</span>
-        <button class="nav-arrow" @click="nextDate">›</button>
+        <ElDatePicker
+          v-if="period === 'daily'"
+          v-model="reportDayYmd"
+          type="date"
+          value-format="YYYY-MM-DD"
+          format="YYYY-MM-DD"
+          placeholder="选择日期"
+          size="small"
+          :clearable="false"
+          class="br-date-picker br-date-picker--daily"
+          :popper-class="brDatePickerPopperClass"
+        />
+        <template v-else-if="period === 'weekly'">
+          <div class="br-week-picker-shell">
+            <span class="br-week-picker-shell__label">{{ weekRangeDash }}</span>
+            <ElDatePicker
+              v-model="reportWeekStartYmd"
+              type="week"
+              value-format="YYYY-MM-DD"
+              format="YYYY-MM-DD"
+              placeholder="选择周"
+              size="small"
+              :clearable="false"
+              class="br-date-picker br-date-picker--week-shell"
+              :popper-class="brDatePickerPopperClass"
+            />
+          </div>
+        </template>
+        <ElDatePicker
+          v-else
+          v-model="reportMonthYm"
+          type="month"
+          value-format="YYYY-MM"
+          format="YYYY-MM"
+          placeholder="选择月份"
+          size="small"
+          :clearable="false"
+          class="br-date-picker br-date-picker--month"
+          :popper-class="brDatePickerPopperClass"
+        />
       </div>
 
       <div class="compare-toggle">
@@ -369,7 +406,7 @@
         >
           <span class="toggle-knob" />
         </button>
-        <span v-if="compareEnabled" class="compare-date">对比：{{ compareDate }}</span>
+        <span v-if="compareEnabled" class="compare-date">对比：{{ comparePeriodText }}</span>
       </div>
     </div>
 
@@ -448,6 +485,7 @@
   import { storeToRefs } from 'pinia'
   import { ref, computed, provide, watch, onMounted } from 'vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import type {
     ReportPeriod,
@@ -590,8 +628,81 @@
   })
 
   const brFilterSelectPopperClass = 'br-filter-el-select__popper'
+  const brDatePickerPopperClass = 'br-date-picker__popper'
 
+  function parseYmdLocal(ymd: string): Date {
+    const [y, m, d] = ymd.split('-').map((x) => Number(x))
+    return new Date(y, m - 1, d, 12, 0, 0, 0)
+  }
+
+  function addDays(d: Date, n: number): Date {
+    const x = cloneAppDate(d)
+    x.setDate(x.getDate() + n)
+    return x
+  }
+
+  /** 自然周：周一至周日（与「当周周一～周日」口径一致） */
+  function mondayOfWeekContaining(d: Date): Date {
+    const c = cloneAppDate(d)
+    c.setHours(12, 0, 0, 0)
+    const wd = c.getDay()
+    const diff = wd === 0 ? -6 : 1 - wd
+    c.setDate(c.getDate() + diff)
+    c.setHours(0, 0, 0, 0)
+    return c
+  }
+
+  function normalizeWeekStartYmd(ymd: string): string {
+    return formatYYYYMMDD(mondayOfWeekContaining(parseYmdLocal(ymd)))
+  }
+
+  function prevMonthYm(ym: string): string {
+    const [y, m] = ym.split('-').map(Number)
+    const d = new Date(y, m - 2, 1)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  }
+
+  const appAnchorDate = getAppNow()
   const period = ref<ReportPeriod>('daily')
+  const reportDayYmd = ref(formatYYYYMMDD(appAnchorDate))
+  const reportWeekStartYmd = ref(formatYYYYMMDD(mondayOfWeekContaining(appAnchorDate)))
+  const reportMonthYm = ref(formatYYYYMMDD(appAnchorDate).slice(0, 7))
+
+  const weekRangeDash = computed(() => {
+    const ws = parseYmdLocal(reportWeekStartYmd.value)
+    const we = addDays(ws, 6)
+    return `${formatYYYYMMDD(ws)} - ${formatYYYYMMDD(we)}`
+  })
+
+  watch(reportWeekStartYmd, (v) => {
+    if (!v) return
+    const n = normalizeWeekStartYmd(v)
+    if (n !== v) reportWeekStartYmd.value = n
+  })
+
+  function syncReportDatesWhenPeriodChanges(next: ReportPeriod) {
+    const cur = period.value
+    if (next === 'daily') {
+      if (cur === 'weekly') {
+        reportDayYmd.value = formatYYYYMMDD(parseYmdLocal(reportWeekStartYmd.value))
+      } else if (cur === 'monthly') {
+        reportDayYmd.value = `${reportMonthYm.value}-01`
+      }
+    } else if (next === 'weekly') {
+      if (cur === 'daily') {
+        reportWeekStartYmd.value = normalizeWeekStartYmd(reportDayYmd.value)
+      } else if (cur === 'monthly') {
+        reportWeekStartYmd.value = normalizeWeekStartYmd(`${reportMonthYm.value}-01`)
+      }
+    } else if (next === 'monthly') {
+      if (cur === 'daily') {
+        reportMonthYm.value = reportDayYmd.value.slice(0, 7)
+      } else if (cur === 'weekly') {
+        reportMonthYm.value = reportWeekStartYmd.value.slice(0, 7)
+      }
+    }
+  }
+
   const activeTab = ref<ReportTab>('summary')
   const compareMode = ref(false)
   const switching = ref(false)
@@ -614,6 +725,7 @@
     if (p === period.value) return
     switching.value = true
     await new Promise((r) => setTimeout(r, 150))
+    syncReportDatesWhenPeriodChanges(p)
     period.value = p
     compareMode.value = false
     activeTab.value = 'summary'
@@ -632,25 +744,25 @@
   const campaignStatuses = ['在投中', '已暂停', '全部']
   const activeStatus = ref('在投中')
 
-  const currentDateLabel = computed(() => {
-    if (period.value === 'monthly') return '2025年12月'
-    if (period.value === 'weekly') return '2026年第10周 （3/9-3/15）'
-    return '2026年3月13日'
-  })
   const compareEnabled = ref(true)
   const compareLabelLeft = computed(() =>
     period.value === 'monthly' ? '对比上月' : period.value === 'weekly' ? '对比上周' : '对比昨日'
   )
-  const compareDate = computed(() =>
-    period.value === 'monthly'
-      ? '2025年11月'
-      : period.value === 'weekly'
-        ? '第9周 （3/2-3/8）'
-        : '2026年3月12日'
-  )
 
-  function prevDate() {}
-  function nextDate() {}
+  /** 对比期文案：随当前所选日/周/月实时变化（格式 YYYY-MM-DD / 周区间 / YYYY-MM） */
+  const comparePeriodText = computed(() => {
+    if (!compareEnabled.value) return ''
+    if (period.value === 'daily') {
+      return formatYYYYMMDD(addDays(parseYmdLocal(reportDayYmd.value), -1))
+    }
+    if (period.value === 'weekly') {
+      const ws = parseYmdLocal(reportWeekStartYmd.value)
+      const pStart = addDays(ws, -7)
+      const pEnd = addDays(pStart, 6)
+      return `${formatYYYYMMDD(pStart)} - ${formatYYYYMMDD(pEnd)}`
+    }
+    return prevMonthYm(reportMonthYm.value)
+  })
 
   // Per-tab independent app selection state: key = `${period}-${tab}`
   const selectedAppIds = ref<Record<string, string>>({})
@@ -701,11 +813,18 @@
     campaigns
   })
 
+  function reportDateQueryValue(): string {
+    if (period.value === 'daily') return reportDayYmd.value
+    if (period.value === 'weekly') return reportWeekStartYmd.value
+    return `${reportMonthYm.value}-01`
+  }
+
   function buildReportParams(): ReportQueryParams {
     const id = selectedAppId.value
     return {
       period: period.value,
-      appId: id === 'overall' ? undefined : id
+      appId: id === 'overall' ? undefined : id,
+      date: reportDateQueryValue()
     }
   }
 
@@ -749,7 +868,11 @@
     }
   }
 
-  watch([period, selectedAppId, activeTab], refreshReportData, { immediate: true })
+  watch(
+    [period, selectedAppId, activeTab, reportDayYmd, reportWeekStartYmd, reportMonthYm],
+    refreshReportData,
+    { immediate: true }
+  )
 
   const contentLoading = computed(() => loading.value)
 </script>
@@ -1452,6 +1575,95 @@
     line-height: 1;
     background-size: cover;
   }
+
+  .br-date-picker {
+    min-width: 120px;
+  }
+
+  .br-date-picker--daily {
+    width: 148px;
+  }
+
+  .br-date-picker--month {
+    width: 118px;
+  }
+
+  /** 周报：输入框内展示「周一～周日」整段区间，避免 week 类型只显示周一 */
+  .br-week-picker-shell {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: min(100%, 268px);
+    min-width: 220px;
+    max-width: 268px;
+  }
+
+  .br-week-picker-shell__label {
+    position: absolute;
+    top: 50%;
+    right: 28px;
+    left: 10px;
+    z-index: 2;
+    overflow: hidden;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    color: var(--rp-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+
+  .br-week-picker-shell :deep(.br-date-picker--week-shell) {
+    width: 100%;
+  }
+
+  .br-week-picker-shell :deep(.br-date-picker--week-shell .el-input__wrapper) {
+    width: 100%;
+    padding-right: 28px;
+    padding-left: 10px;
+  }
+
+  .br-week-picker-shell :deep(.br-date-picker--week-shell .el-input__inner) {
+    color: transparent !important;
+    text-shadow: none;
+    caret-color: transparent;
+  }
+
+  .br-week-picker-shell :deep(.br-date-picker--week-shell .el-input__inner::placeholder) {
+    color: transparent;
+  }
+
+  :deep(.br-date-picker .el-input__wrapper) {
+    padding: 2px 10px;
+    font-size: 12px;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid var(--rp-border);
+    border-radius: 6px;
+    box-shadow: none;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  :deep(.br-date-picker .el-input__inner) {
+    font-size: 12px;
+    color: var(--rp-text);
+  }
+
+  :deep(.br-date-picker .el-input__prefix-inner) {
+    color: rgb(255 255 255 / 45%);
+  }
+
+  :deep(.br-date-picker .el-input__wrapper.is-focus) {
+    border-color: var(--rp-accent);
+    box-shadow: 0 0 0 1px rgb(0 212 161 / 22%);
+  }
+
+  :deep(.br-date-picker .el-input__wrapper:hover) {
+    border-color: rgb(255 255 255 / 14%);
+  }
 </style>
 
 <style lang="scss">
@@ -1477,5 +1689,21 @@
   .br-filter-el-select__popper .el-select-dropdown__item.is-selected {
     font-weight: 600;
     color: #00d4a1;
+  }
+
+  .br-date-picker__popper.el-picker__popper {
+    --el-datepicker-text-color: rgb(255 255 255 / 88%);
+    --el-datepicker-off-text-color: rgb(255 255 255 / 32%);
+    --el-datepicker-header-text-color: rgb(255 255 255 / 75%);
+    --el-datepicker-bg-color: #0d1529;
+    --el-datepicker-inner-border-color: rgb(255 255 255 / 10%);
+    --el-datepicker-inrange-bg-color: rgb(0 212 161 / 12%);
+    --el-datepicker-inrange-hover-bg-color: rgb(0 212 161 / 18%);
+    --el-datepicker-active-color: #00d4a1;
+    --el-datepicker-hover-text-color: #00d4a1;
+    --el-datepicker-icon-color: rgb(255 255 255 / 45%);
+
+    background: #0d1529 !important;
+    border: 1px solid rgb(255 255 255 / 10%) !important;
   }
 </style>
