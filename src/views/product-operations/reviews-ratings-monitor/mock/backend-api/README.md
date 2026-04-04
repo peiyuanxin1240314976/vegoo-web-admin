@@ -23,7 +23,11 @@
 
 ### 字段与数据字典
 
-- 应用 ID：`s_app_id` / `appId`（空或 all 表示全部）
-- 终端平台：`platform`（google_play / app_store）
-- 国家代码：`s_country_code` / `countryCode`（ISO 3166-1 alpha-2）
-- 日期：`startDate` / `endDate`，格式 `YYYY-MM-DD`
+- 应用 ID：`appId`（`string`；「全部应用」传 `""`，勿传字面量 `all`）
+- 终端平台：`platform`（`google_play` / `app_store`；不限传 `""`）
+- 国家代码：`countryCode`（ISO 3166-1 alpha-2 **小写**，如 `cn`、`us`）
+- 日期范围：`startDate` / `endDate`，格式 `YYYY-MM-DD`
+
+### 方法例外
+
+- `05-templates.json` 为 **GET 无参**，与模块内其余 **POST + JSON** 不同；须在实现中单独封装（见 `api/reviewMonitor.ts`）。

@@ -1,43 +1,36 @@
 /**
- * 整体回收 - 全局筛选与下拉选项
+ * 整体回收 - 顶栏筛选项：复用公用 **`GET .../cockpit/meta-filter-options`**（Pinia Store），
+ * 不请求 `/overall-recovery/meta-filter-options`。
  */
-import { ref, onMounted } from 'vue'
-import { fetchOverallRecoveryFilterOptions } from '@/api/user-growth'
-import type { SelectOption } from '../types'
+import { computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
 
-const DEFAULT_APP_OPTIONS: SelectOption[] = [
-  { label: '全部', value: 'all' },
-  { label: 'Weather5', value: 'weather5' }
-]
-const DEFAULT_SOURCE_OPTIONS: SelectOption[] = [
-  { label: '全部', value: 'all' },
-  { label: 'Google', value: 'google' },
-  { label: 'Facebook', value: 'facebook' },
-  { label: 'TikTok', value: 'tiktok' }
-]
-const DEFAULT_COUNTRY_OPTIONS: SelectOption[] = [
-  { label: '全部', value: 'all' },
-  { label: '美国', value: 'US' },
-  { label: '德国', value: 'DE' },
-  { label: '日本', value: 'JP' },
-  { label: '韩国', value: 'KR' }
-]
+function fallbackOptions(): CockpitMetaOptionItem[] {
+  return [{ label: '全部', value: '' }]
+}
 
 export function useOverallRecoveryFilters() {
-  const appOptions = ref<SelectOption[]>(DEFAULT_APP_OPTIONS)
-  const sourceOptions = ref<SelectOption[]>(DEFAULT_SOURCE_OPTIONS)
-  const countryOptions = ref<SelectOption[]>(DEFAULT_COUNTRY_OPTIONS)
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
 
-  async function loadFilterOptions() {
-    const res = await fetchOverallRecoveryFilterOptions()
-    appOptions.value = res.appOptions
-    sourceOptions.value = res.sourceOptions
-    countryOptions.value = res.countryOptions
-  }
-
-  onMounted(() => {
-    loadFilterOptions()
+  const appOptions = computed(() => {
+    const list = cockpitMeta.value?.appOptions
+    return list?.length ? list : fallbackOptions()
+  })
+  const sourceOptions = computed(() => {
+    const list = cockpitMeta.value?.sourceOptions
+    return list?.length ? list : fallbackOptions()
+  })
+  const countryOptions = computed(() => {
+    const list = cockpitMeta.value?.countryOptions
+    return list?.length ? list : fallbackOptions()
   })
 
-  return { appOptions, sourceOptions, countryOptions, loadFilterOptions }
+  onMounted(() => {
+    metaStore.ensureLoaded()
+  })
+
+  return { appOptions, sourceOptions, countryOptions }
 }

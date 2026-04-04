@@ -24,6 +24,7 @@
           end-placeholder="结束日期"
           value-format="YYYY-MM-DD"
           format="YYYY-MM-DD"
+          popper-class="pa-or-filter-popper"
         />
         <button class="btn-export">↑ 导出</button>
       </div>
@@ -846,6 +847,7 @@
 
 <style scoped lang="scss">
   @use './styles/pa-performance-fx.scss' as *;
+  @use './styles/pa-filters-or-align.scss' as *;
 
   $bg: #0d1117;
   $bg-card: #161c2d;
@@ -873,21 +875,6 @@
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 13px;
     color: var(--text-primary);
-  }
-
-  // ─── Header ──────────────────────────────────────────────
-  .comp-header {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 24px;
-    background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
-    border-radius: 14px;
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 8%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-gray-900) 8%, transparent);
   }
 
   .breadcrumb {
@@ -925,61 +912,6 @@
     align-items: center;
   }
 
-  .btn-back {
-    padding: 5px 14px;
-    font-size: 12px;
-    color: $text-secondary;
-    cursor: pointer;
-    background: $bg-card;
-    border: 1px solid $border-light;
-    border-radius: 9999px;
-    transition:
-      color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default);
-
-    &:hover {
-      color: $text-primary;
-      border-color: $cyan;
-    }
-  }
-
-  .date-range-picker {
-    width: 260px;
-  }
-
-  :deep(.date-range-picker .el-input__wrapper) {
-    padding: 5px 10px;
-    background: rgba($cyan, 0.1);
-    border: 1px solid $cyan;
-    border-radius: 6px;
-    box-shadow: none;
-  }
-
-  :deep(.date-range-picker .el-range-separator),
-  :deep(.date-range-picker .el-range-input) {
-    font-size: 12px;
-    font-weight: 600;
-    color: $cyan;
-    background: transparent;
-  }
-
-  .btn-export {
-    padding: 5px 14px;
-    font-size: 12px;
-    color: $text-secondary;
-    cursor: pointer;
-    background: $bg-card;
-    border: 1px solid $border-light;
-    border-radius: 9999px;
-    transition:
-      color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default);
-
-    &:hover {
-      color: $text-primary;
-    }
-  }
-
   .add-compare-body {
     display: flex;
     flex-direction: column;
@@ -1005,33 +937,12 @@
     max-height: 260px;
     padding: 10px;
     overflow: auto;
-    border: 1px solid $border;
-    border-radius: 8px;
   }
 
   .candidate-empty {
     font-size: 12px;
     color: $text-secondary;
     text-align: center;
-  }
-
-  // ─── Selected Row ────────────────────────────────────────
-  .selected-row {
-    display: flex;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-    padding: 10px 16px;
-    margin-top: 12px;
-    background: color-mix(in srgb, var(--default-box-color) 65%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, transparent);
-    border-radius: 14px;
-  }
-
-  .selected-label {
-    font-size: 12px;
-    color: $text-secondary;
   }
 
   .person-tag {
@@ -1059,27 +970,14 @@
   .add-btn {
     padding: 3px 12px;
     font-size: 12px;
-    color: $text-secondary;
     cursor: pointer;
     background: transparent;
-    border: 1px dashed $border-light;
-    border-radius: 20px;
-    transition:
-      color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default);
-
-    &:hover {
-      color: $cyan;
-      border-color: $cyan;
-    }
   }
 
   // ─── KPI Row ─────────────────────────────────────────────
   .kpi-row {
     display: flex;
     flex-shrink: 0;
-    gap: 12px;
-    padding: 12px 0 0;
   }
 
   .kpi-card {
@@ -1122,32 +1020,11 @@
     }
   }
 
-  .kpi-card.kpi-alert {
-    border-color: color-mix(in srgb, var(--art-danger) 38%, transparent) !important;
-    box-shadow:
-      0 12px 48px rgb(0 0 0 / 48%),
-      0 0 0 1px color-mix(in srgb, var(--art-danger) 22%, transparent),
-      inset 0 1px 0 rgb(186 230 253 / 10%),
-      inset 0 -12px 32px rgb(0 0 0 / 30%);
-  }
-
-  .badge-pass {
-    display: inline-block;
-    padding: 2px 8px;
-    font-size: 11px;
-    color: $cyan;
-    background: rgba($cyan, 0.12);
-    border: 1px solid rgba($cyan, 0.3);
-    border-radius: 4px;
-  }
-
   // ─── Content Area ────────────────────────────────────────
   .content-area {
     display: flex;
     flex: 1;
-    gap: 12px;
     min-height: 0;
-    padding: 12px 0 0;
     overflow: hidden;
   }
 
@@ -1157,7 +1034,6 @@
     flex: 1;
     grid-template-rows: 1fr 1fr;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
     min-height: 0;
     overflow: hidden;
   }
@@ -1182,32 +1058,17 @@
       position: relative;
       z-index: 1;
       flex: 1;
-      min-height: 0;
+      width: 100%;
+      min-width: 0;
+      min-height: 140px;
       padding: 4px;
     }
   }
 
   // ─── Right Panel ─────────────────────────────────────────
   .right-panel {
-    display: flex;
-    flex-direction: column;
     flex-shrink: 0;
-    gap: 12px;
     width: 360px;
-    overflow-y: auto;
-
-    &::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: $bg;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: $border-light;
-      border-radius: 2px;
-    }
   }
 
   .panel-card {
@@ -1322,11 +1183,6 @@
       background: rgba($green, 0.15);
     }
 
-    &.sb-pass {
-      color: $cyan;
-      background: rgba($cyan, 0.12);
-    }
-
     &.sb-near {
       color: $orange;
       background: rgba($orange, 0.12);
@@ -1338,22 +1194,11 @@
     }
   }
 
-  // ─── Alert Panel ─────────────────────────────────────────
-  .panel-card.alert-panel {
-    border-color: color-mix(in srgb, var(--art-warning) 35%, transparent) !important;
-    box-shadow:
-      0 16px 56px rgb(0 0 0 / 44%),
-      0 0 0 1px color-mix(in srgb, var(--art-warning) 24%, transparent),
-      inset 0 1px 0 rgb(186 230 253 / 12%),
-      inset 0 -12px 32px rgb(0 0 0 / 28%);
-  }
-
   .alert-item {
     display: flex;
     gap: 8px;
     align-items: flex-start;
     padding: 8px 0;
-    border-bottom: 1px solid rgba($border, 0.5);
 
     &:last-child {
       padding-bottom: 0;
@@ -1385,7 +1230,6 @@
       flex-shrink: 0;
       padding: 0;
       font-size: 11px;
-      color: $cyan;
       white-space: nowrap;
       cursor: pointer;
       background: none;
@@ -1408,5 +1252,24 @@
 
   .gold-text {
     color: $gold;
+  }
+</style>
+
+<style lang="scss">
+  /* 日期范围挂载在 body；颜色随主题变量 */
+  .pa-or-filter-popper.el-popper {
+    z-index: var(--z-dropdown) !important;
+    background: color-mix(in srgb, var(--default-box-color) 96%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 28%, transparent) !important;
+    border-radius: 12px !important;
+    box-shadow:
+      var(--shadow-xl),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 14%, transparent),
+      0 0 32px color-mix(in srgb, var(--art-primary) 15%, transparent) !important;
+  }
+
+  .pa-or-filter-popper .el-popper__arrow::before {
+    background: color-mix(in srgb, var(--default-box-color) 96%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 25%, transparent) !important;
   }
 </style>

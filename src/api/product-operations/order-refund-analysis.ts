@@ -1,11 +1,17 @@
 /**
- * 订单退款分析 - API 服务层
- * 与 mock/backend-api 契约 1:1，数据源开关见 config/data-source.ts
+ * 商品运营 - 订单退款分析
+ * 与 views/.../mock/backend-api 契约 1:1；数据源开关见页面 config/data-source.ts
  */
 import request from '@/utils/http'
-import { OrderRefundEndpoint, isOrderRefundEndpointMock } from '../config/data-source'
-import * as orderRefundMock from '../mocks/order-refund-analysis-mock'
-import type { DashboardPayload, OrderRefundDashboardParams } from '../types'
+import {
+  OrderRefundEndpoint,
+  isOrderRefundEndpointMock
+} from '@/views/product-operations/order-refund-analysis/config/data-source'
+import * as orderRefundMock from '@/views/product-operations/order-refund-analysis/mock/order-refund-analysis-api-mock'
+import type {
+  DashboardPayload,
+  OrderRefundDashboardParams
+} from '@/views/product-operations/order-refund-analysis/types'
 
 const BASE_URL = '/api/product-operations/order-refund-analysis'
 
@@ -16,7 +22,7 @@ export type {
   TrendPoint,
   CountryRate,
   OrderRefundKpiBlock
-} from '../types'
+} from '@/views/product-operations/order-refund-analysis/types'
 
 export const orderRefundAnalysisApi = {
   async getDashboard(params: OrderRefundDashboardParams): Promise<DashboardPayload> {

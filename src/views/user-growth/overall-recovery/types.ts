@@ -13,17 +13,19 @@ export interface OverallRecoveryFilterState {
   s_country_code: string
 }
 
-/** 下拉选项 */
-export interface SelectOption {
-  label: string
-  value: string
+/** POST 公共筛选体：仅本页顶栏实际维度（见 `mock/backend-api/README.md`） */
+export interface OverallRecoveryCommonRequestBody {
+  startDate: string
+  endDate: string
+  appId: string
+  source: string
+  countryCode: string
 }
 
-/** 筛选下拉选项 */
-export interface OverallRecoveryFilterOptions {
-  appOptions: SelectOption[]
-  sourceOptions: SelectOption[]
-  countryOptions: SelectOption[]
+/** 明细表接口请求体（公共体 + 卡片内子筛） */
+export type OverallRecoveryDetailRecordsBody = OverallRecoveryCommonRequestBody & {
+  detailApp: string
+  detailChannel: string
 }
 
 // ─── Tab1: 整体回收 ───────────────────────────────────────────
@@ -73,6 +75,10 @@ export interface RoiCompareRow {
 
 /** 明细数据表行 */
 export interface RecoveryDetailRow {
+  /** 与卡片内应用子筛选项 value 对齐（如 weather5）；接口未拆维度时可省略，省略则不受应用子筛选影响 */
+  detailApp?: string
+  /** 与卡片内广告平台子筛选项 value 对齐（如 google、facebook）；接口未拆维度时可省略 */
+  detailChannel?: string
   date: string
   adSpend: number
   cpi: number

@@ -19,7 +19,7 @@
           >
             <ElOption
               v-for="opt in appOptions"
-              :key="opt.value"
+              :key="opt.value === '' ? '__or_all_app__' : opt.value"
               :label="opt.label"
               :value="opt.value"
             />
@@ -33,7 +33,7 @@
           >
             <ElOption
               v-for="opt in sourceOptions"
-              :key="opt.value"
+              :key="opt.value === '' ? '__or_all_src__' : opt.value"
               :label="opt.label"
               :value="opt.value"
             />
@@ -48,7 +48,7 @@
           >
             <ElOption
               v-for="opt in countryOptions"
-              :key="opt.value"
+              :key="opt.value === '' ? '__or_all_country__' : opt.value"
               :label="opt.label"
               :value="opt.value"
             />
@@ -109,9 +109,9 @@
 
   const filters = reactive<OverallRecoveryFilterState>({
     dateRange: '30d',
-    s_app_id: 'all',
-    source: 'all',
-    s_country_code: 'all'
+    s_app_id: '',
+    source: '',
+    s_country_code: ''
   })
 
   const appliedFilters = ref<OverallRecoveryFilterState>({ ...filters })

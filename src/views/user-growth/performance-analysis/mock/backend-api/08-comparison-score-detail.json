@@ -1,40 +1,63 @@
 {
-  "_comment": "人员绩效对比 - 绩效得分明细表。",
+  "_comment": "人员绩效对比页 - 右侧「绩效得分明细」表。每人一行，含分项分与状态；color 为行强调色（CSS），与列表/对比条配色一致。",
   "fieldDescription": {
     "request": {
-      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
-      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，YYYY-MM-DD（含）。"
+      },
       "staffIds": {
         "type": "string[]",
         "required": true,
-        "description": "参与对比的人员 ID 列表。"
+        "description": "参与对比的人员 ID；返回顺序建议与 staffIds 一致。"
       }
     },
     "response": {
-      "list": { "type": "ScoreDetailItem[]", "required": true, "description": "明细表数据。" }
+      "list": {
+        "type": "ComparisonScoreDetailItem[]",
+        "required": true,
+        "description": "得分明细行。"
+      }
     },
-    "ScoreDetailItem": {
+    "ComparisonScoreDetailItem": {
       "id": { "type": "string", "required": true, "description": "人员 ID。" },
       "name": { "type": "string", "required": true, "description": "姓名。" },
+      "color": {
+        "type": "string",
+        "required": true,
+        "description": "行/姓名高亮色（如 #f59e0b），与图表图例一致。"
+      },
       "spend": { "type": "number", "required": true, "description": "花费分。" },
       "roi": { "type": "number", "required": true, "description": "ROI 分。" },
       "cpi": { "type": "number", "required": true, "description": "CPI 分。" },
       "profit": { "type": "number", "required": true, "description": "利润分。" },
       "total": { "type": "number", "required": true, "description": "综合得分。" },
       "status": { "type": "string", "required": true, "description": "状态文案。" },
-      "statusClass": { "type": "string", "required": true, "description": "状态样式码。" }
+      "statusClass": {
+        "type": "string",
+        "required": true,
+        "enum": ["over", "pass", "near", "fail"],
+        "description": "状态样式类后缀（sb-over 等）。"
+      }
     }
   },
   "sampleRequest": {
-    "startDate": "2026-03-20",
-    "endDate": "2026-03-26",
-    "staffIds": ["zhang3", "li4", "wang5", "zhao6"]
+    "startDate": "2026-03-28",
+    "endDate": "2026-04-04",
+    "staffIds": ["zhao6", "zhang3", "li4", "wang5", "wu10"]
   },
   "sampleResponse": {
     "list": [
       {
         "id": "zhao6",
         "name": "赵六",
+        "color": "#f59e0b",
         "spend": 28,
         "roi": 30,
         "cpi": 20,
@@ -42,14 +65,79 @@
         "total": 96,
         "status": "超标",
         "statusClass": "over"
+      },
+      {
+        "id": "zhang3",
+        "name": "张三",
+        "color": "#22d3ee",
+        "spend": 25,
+        "roi": 30,
+        "cpi": 20,
+        "profit": 19,
+        "total": 94,
+        "status": "达标",
+        "statusClass": "pass"
+      },
+      {
+        "id": "li4",
+        "name": "李四",
+        "color": "#60a5fa",
+        "spend": 22,
+        "roi": 28,
+        "cpi": 20,
+        "profit": 18,
+        "total": 88,
+        "status": "达标",
+        "statusClass": "pass"
+      },
+      {
+        "id": "wang5",
+        "name": "王五",
+        "color": "#a78bfa",
+        "spend": 15,
+        "roi": 18,
+        "cpi": 16,
+        "profit": 23,
+        "total": 72,
+        "status": "未达标",
+        "statusClass": "fail"
+      },
+      {
+        "id": "wu10",
+        "name": "吴十",
+        "color": "#94a3b8",
+        "spend": 19,
+        "roi": 24,
+        "cpi": 18,
+        "profit": 17,
+        "total": 78,
+        "status": "接近达标",
+        "statusClass": "near"
       }
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/performance-analysis/comparison-score-detail",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/performance-analysis/comparison-score-detail",
     "method": "POST",
     "priority": "P0",
     "requestBody": "startDate, endDate, staffIds",
     "responseBody": "list"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "分项权重与总分关系由后端统一；前端仅展示。",
+      "示例须覆盖 statusClass 主要分支；near 可在联调数据中补行。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "对比页得分表随已选人员刷新",
+        "detail": "staffIds 变化或日期变化后重拉；行数与 staffIds 一致。",
+        "prerequisite": "staffIds 非空。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "可与 rankings、alerts 并行。"
   }
 }

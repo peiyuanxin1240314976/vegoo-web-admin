@@ -17,7 +17,7 @@
     type GlobalFilter,
     type SummaryData,
     type TopicWord
-  } from '../api/reviewMonitor'
+  } from '@/api/product-operations/reviews-ratings-monitor'
 
   // ─────────────────────────────────────────────
   // Props
@@ -543,6 +543,8 @@
       drawDevice(d)
       drawRatingDonut(d)
       drawComplaint(d)
+      await nextTick()
+      handleResize()
     } finally {
       loading.value = false
     }
@@ -593,8 +595,8 @@
       <div class="kpi-row">
         <!-- 平均评分 -->
         <div class="kpi-card kpi-rating">
-          <div class="kpi-label"
-            >平均评分
+          <div class="kpi-label">
+            <span class="kpi-card-title-text">平均评分</span>
             <span
               v-for="i in 5"
               :key="i"
@@ -611,7 +613,7 @@
 
         <!-- 新增评论 -->
         <div class="kpi-card kpi-new">
-          <div class="kpi-label">新增评论</div>
+          <div class="kpi-label"><span class="kpi-card-title-text">新增评论</span></div>
           <div class="kpi-value"
             >{{ data.kpi.newReviews.toLocaleString() }} <span class="kpi-unit">条</span></div
           >
@@ -633,7 +635,7 @@
 
         <!-- 差评率 -->
         <div class="kpi-card kpi-negative">
-          <div class="kpi-label">差评率</div>
+          <div class="kpi-label"><span class="kpi-card-title-text">差评率</span></div>
           <div class="kpi-value">{{ data.kpi.negativeRate }}<span class="kpi-unit">%</span></div>
           <div :class="['kpi-delta', deltaClass(data.kpi.negativeRateDelta, true)]">
             {{ deltaLabel(data.kpi.negativeRateDelta, false, true) }}
@@ -643,9 +645,10 @@
 
         <!-- 待回复 -->
         <div class="kpi-card kpi-pending">
-          <div class="kpi-label"
-            >待回复 <el-icon class="warn-icon"><WarningFilled /></el-icon
-          ></div>
+          <div class="kpi-label">
+            <span class="kpi-card-title-text">待回复</span>
+            <el-icon class="warn-icon"><WarningFilled /></el-icon>
+          </div>
           <div class="kpi-value kpi-pending-val"
             >{{ data.kpi.pendingReply }} <span class="kpi-unit">条</span></div
           >
@@ -663,10 +666,10 @@
             <div ref="ratingDistRef" class="chart-box" style="height: 140px" />
           </div>
 
-          <!-- 30天趋势 -->
-          <div class="chart-card">
+          <!-- 30 天趋势：左列中间行 1fr，图表区随高度撑开 -->
+          <div class="chart-card chart-card--fill chart-card--left-trend">
             <div class="chart-title">透 30 天评分趋势</div>
-            <div ref="trendRef" class="chart-box" style="height: 160px" />
+            <div ref="trendRef" class="chart-box chart-box--flex-grow chart-box--left-trend" />
           </div>
 
           <!-- 评分分布甜甜圈 -->
@@ -678,10 +681,10 @@
 
         <!-- 中列 -->
         <div class="col-mid">
-          <!-- 按日期评论分布 -->
-          <div class="chart-card">
+          <!-- 按日期评论分布（中列剩余高度由该卡吃掉，图表区随 flex 撑开） -->
+          <div class="chart-card chart-card--fill">
             <div class="chart-title">按日期评论分布</div>
-            <div ref="dailyRef" class="chart-box" style="height: 240px" />
+            <div ref="dailyRef" class="chart-box chart-box--flex-grow chart-box--mid-daily" />
           </div>
 
           <!-- 按评论类型分布 -->
@@ -701,10 +704,10 @@
 
           <!-- 语言 + 设备 -->
           <div class="chart-row-2">
-            <div class="chart-card flex-1">
+            <div class="chart-card flex-1 chart-card--fill">
               <div class="chart-title">按语言分布</div>
               <div class="lang-chart-wrap">
-                <div ref="langRef" class="chart-box" style="height: 140px" />
+                <div ref="langRef" class="chart-box chart-box--flex-grow" />
                 <div class="lang-legend">
                   <div
                     v-for="(l, i) in data.languageDistribution"
@@ -732,9 +735,9 @@
               </div>
             </div>
 
-            <div class="chart-card flex-1">
+            <div class="chart-card flex-1 chart-card--fill">
               <div class="chart-title">按设备分布 Top 10</div>
-              <div ref="deviceRef" class="chart-box" style="height: 140px" />
+              <div ref="deviceRef" class="chart-box chart-box--flex-grow" />
             </div>
           </div>
 
@@ -774,12 +777,14 @@
 </template>
 
 <style scoped lang="scss">
+  @use '../styles/rrm-shared.scss' as *;
+
   .summary-root {
     flex: 1;
     min-height: 0;
-    padding: 16px;
+    padding: 0 0 8px;
     overflow: hidden auto;
-    color: #e8eaed;
+    color: var(--el-text-color-primary);
 
     &::-webkit-scrollbar {
       width: 6px;
@@ -790,7 +795,7 @@
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #2a2d3a;
+      background: var(--el-border-color);
       border-radius: 3px;
     }
   }
@@ -798,23 +803,36 @@
   /* ── KPI Row ────────────────────────────────── */
   .kpi-row {
     display: flex;
+    flex-wrap: nowrap;
     gap: 12px;
+    align-items: stretch;
     margin-bottom: 16px;
   }
 
   .kpi-card {
-    flex: 1;
+    position: relative;
+    z-index: 0;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-width: 0;
     padding: 16px 20px;
-    background: #161b2e;
-    border: 1px solid #1e2a40;
-    border-radius: 10px;
     transition:
-      transform 0.2s,
-      box-shadow 0.2s;
+      transform 0.2s ease,
+      box-shadow 0.42s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.32s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
     animation: fadeSlideUp 0.5s ease both;
 
+    @include rrm-neon-panel;
+    @include rrm-card-mesh;
+    @include rrm-panel-hover;
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+
     &:hover {
-      box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
       transform: translateY(-2px);
     }
   }
@@ -827,11 +845,15 @@
 
   .kpi-label {
     display: flex;
-    gap: 4px;
+    flex-wrap: wrap;
+    gap: 4px 6px;
     align-items: center;
     margin-bottom: 8px;
     font-size: 13px;
-    color: #9ca3af;
+  }
+
+  .kpi-card-title-text {
+    @include rrm-card-title-gradient;
   }
 
   .star {
@@ -848,7 +870,7 @@
 
   .kpi-value {
     margin-bottom: 6px;
-    font-size: 28px;
+    font-size: clamp(1.375rem, 2.8vw + 0.5rem, 1.75rem);
     font-weight: 700;
     line-height: 1;
   }
@@ -857,7 +879,7 @@
     margin-left: 2px;
     font-size: 14px;
     font-weight: 400;
-    color: #9ca3af;
+    color: var(--el-text-color-secondary);
   }
 
   .kpi-delta {
@@ -866,7 +888,7 @@
     font-weight: 500;
 
     &.trend-up {
-      color: #10b981;
+      color: var(--el-color-success);
     }
 
     &.trend-down {
@@ -875,8 +897,9 @@
   }
 
   .kpi-sub {
+    margin-top: auto;
     font-size: 11px;
-    color: #6b7280;
+    color: var(--el-text-color-secondary);
   }
 
   .kpi-rating .kpi-value {
@@ -884,11 +907,11 @@
   }
 
   .kpi-new .kpi-value {
-    color: #e8eaed;
+    color: var(--el-text-color-primary);
   }
 
   .kpi-positive .kpi-value {
-    color: #10b981;
+    color: var(--el-color-success);
   }
 
   .kpi-negative .kpi-value {
@@ -908,36 +931,74 @@
   .chart-grid {
     display: grid;
     grid-template-columns: 1fr 1.1fr 1.3fr;
-    gap: 12px;
-    align-items: start;
+    gap: 16px;
+    align-items: stretch;
+    min-width: 0;
   }
 
-  .col-left,
+  .col-left {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 16px;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .col-left > .chart-card--left-trend {
+    min-height: 0;
+  }
+
   .col-mid,
   .col-right {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* 右列：末卡底边与整行对齐。左列用 grid 中间 1fr 撑趋势图，不再对末卡 auto */
+  .col-right > .chart-card:last-child {
+    margin-top: auto;
+  }
+
+  .col-mid > .chart-card:first-child {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  .col-mid > .chart-card:last-child {
+    flex-shrink: 0;
   }
 
   .chart-card {
+    position: relative;
+    z-index: 0;
     padding: 14px 16px;
-    background: #161b2e;
-    border: 1px solid #1e2a40;
-    border-radius: 10px;
-    transition: box-shadow 0.2s;
+    transition:
+      box-shadow 0.42s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.32s ease;
     animation: fadeIn 0.6s ease both;
 
-    &:hover {
-      box-shadow: 0 4px 16px rgb(0 0 0 / 30%);
+    @include rrm-neon-panel;
+    @include rrm-card-mesh;
+    @include rrm-panel-hover;
+
+    .chart-title,
+    .chart-title-row,
+    .chart-box,
+    .lang-chart-wrap,
+    .topic-wrap {
+      position: relative;
+      z-index: 1;
     }
   }
 
   .chart-title {
     margin-bottom: 10px;
     font-size: 13px;
-    font-weight: 600;
-    color: #c9d1d9;
+
+    @include rrm-card-title-gradient;
   }
 
   .chart-title-row {
@@ -949,18 +1010,49 @@
 
   .chart-subtitle {
     font-size: 11px;
-    color: #6b7280;
+
+    @include rrm-card-subtitle-gradient;
   }
 
   .chart-box {
     width: 100%;
   }
 
+  /* 并排小卡：等高由 flex stretch + 内部列布局撑满，图表区用 min-height + 伸展，避免写死整卡高度 */
+  .chart-card--fill {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .chart-box--flex-grow {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 8.75rem;
+  }
+
+  /* 按日期评论分布：堆叠柱 + 图例，需要更高默认下限，其余随中列 flex 继续长高 */
+  .chart-box--mid-daily {
+    min-height: 15rem;
+  }
+
+  /* 透 30 天评分趋势：折线区默认不低于原 160px，其余随左列中间行 1fr 长高 */
+  .chart-box--left-trend {
+    min-height: 10rem;
+  }
+
   /* ── Language legend ─────────────────────────── */
   .lang-chart-wrap {
     display: flex;
+    flex: 1 1 auto;
     gap: 8px;
     align-items: flex-start;
+    min-height: 0;
+  }
+
+  .chart-card--fill .lang-chart-wrap {
+    flex: 1 1 auto;
+    min-height: 8.75rem;
   }
 
   .lang-legend {
@@ -976,7 +1068,7 @@
     gap: 5px;
     align-items: center;
     font-size: 11px;
-    color: #9ca3af;
+    color: var(--el-text-color-secondary);
   }
 
   .lang-dot {
@@ -992,16 +1084,129 @@
 
   .lang-pct {
     font-size: 11px;
-    color: #e8eaed;
+    color: var(--el-text-color-primary);
   }
 
   .chart-row-2 {
     display: flex;
-    gap: 12px;
+    flex-direction: row;
+    gap: 16px;
+    align-items: stretch;
+    min-width: 0;
   }
 
   .flex-1 {
     flex: 1;
+    min-width: 0;
+  }
+
+  /* ── 响应式：大屏默认三列 KPI 单行；中屏双列图表 + KPI 换行；小屏单列 ── */
+  @media (width <= 1199px) {
+    .kpi-row {
+      flex-wrap: wrap;
+    }
+
+    .kpi-card {
+      flex: 1 1 calc(33.333% - 8px);
+      min-width: 168px;
+    }
+
+    .chart-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .col-left {
+      grid-column: 1;
+    }
+
+    .col-mid {
+      grid-column: 2;
+    }
+
+    .col-right {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (width <= 991px) {
+    .kpi-card {
+      flex: 1 1 calc(50% - 6px);
+      min-width: 148px;
+      padding: 14px 16px;
+    }
+  }
+
+  @media (width <= 767px) {
+    .summary-root {
+      padding: 0 4px 8px;
+    }
+
+    .kpi-row {
+      gap: 10px;
+    }
+
+    .kpi-card {
+      flex: 1 1 calc(50% - 5px);
+      min-width: 0;
+      padding: 12px 14px;
+    }
+
+    .chart-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .col-left,
+    .col-mid,
+    .col-right {
+      grid-column: auto;
+      gap: 12px;
+    }
+
+    .chart-card {
+      padding: 12px 14px;
+    }
+
+    .chart-title-row {
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      align-items: flex-start;
+    }
+
+    .chart-row-2 {
+      flex-direction: column;
+    }
+
+    .lang-chart-wrap {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .lang-legend {
+      padding-top: 0;
+    }
+
+    .topic-wrap {
+      flex-direction: column;
+    }
+
+    .word-cloud {
+      min-height: 80px;
+    }
+  }
+
+  @media (width <= 479px) {
+    .kpi-card {
+      flex: 1 1 100%;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+    }
+
+    .kpi-sub {
+      font-size: 10px;
+    }
   }
 
   /* ── Word Cloud ─────────────────────────────── */

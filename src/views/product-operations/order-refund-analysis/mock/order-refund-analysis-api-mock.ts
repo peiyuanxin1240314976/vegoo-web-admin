@@ -1,6 +1,6 @@
 /**
- * 订单退款分析 - Mock 实现
- * 与 mock/backend-api 契约及 api-mock 示例对齐
+ * 订单退款分析 - Mock 实现（与 `review-monitor-api-mock.ts` 命名一致）
+ * 与 mock/backend-api、api-mock 示例对齐
  */
 import type { DashboardPayload, OrderRefundDashboardParams } from '../types'
 
@@ -55,14 +55,14 @@ export function buildMockDashboardPayload(params: OrderRefundDashboardParams): D
       { name: '其他', value: 7 }
     ],
     countryData: [
-      { country: 'US', rate: 2.8, level: 'good', badge: 'Acceptable' },
-      { country: 'UK', rate: 3.1, level: 'warning' },
-      { country: 'DE', rate: 4.2, level: 'warning' },
-      { country: 'FR', rate: 5.8, level: 'danger', badge: 'High' },
-      { country: 'JP', rate: 2.1, level: 'good' },
-      { country: 'CN', rate: 6.2, level: 'critical', badge: 'Highest' },
-      { country: 'AU', rate: 3.5, level: 'warning' },
-      { country: 'CA', rate: 2.9, level: 'good' }
+      { countryCode: 'us', rate: 2.8, level: 'good', badge: 'Acceptable' },
+      { countryCode: 'gb', rate: 3.1, level: 'warning' },
+      { countryCode: 'de', rate: 4.2, level: 'warning' },
+      { countryCode: 'fr', rate: 5.8, level: 'danger', badge: 'High' },
+      { countryCode: 'jp', rate: 2.1, level: 'good' },
+      { countryCode: 'cn', rate: 6.2, level: 'critical', badge: 'Highest' },
+      { countryCode: 'au', rate: 3.5, level: 'warning' },
+      { countryCode: 'ca', rate: 2.9, level: 'good' }
     ],
     orderData: [
       {

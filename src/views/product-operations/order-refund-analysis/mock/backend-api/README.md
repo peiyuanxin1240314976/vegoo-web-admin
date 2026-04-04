@@ -16,8 +16,15 @@
 
 - 当前页面为单屏看板，先使用 **一个聚合接口**；若后续 payload 过大，再按 KPI / 趋势 / 表格等拆分。
 
-### 字段与数据字典
+### 请求体与数据字典（摘要）
 
-- 支付平台请求字段：`payment_platform`（与页面「支付平台」筛选项对应）
-- 国家：`country`（`all` 或 ISO 3166-1 alpha-2）
+- 应用：`appId`（`string`）；「全部」为 `""`
+- 国家：`countryCode`（ISO 3166-1 alpha-2 **小写**）；「全部」为 `""`
+- 支付平台：`paymentPlatform`（`string`）；「全部」为 `""`
 - 日期：`startDate` / `endDate`，格式 `YYYY-MM-DD`
+- 对比期：`compareType`，枚举见契约 `fieldDescription`
+
+### 契约 JSON 要求
+
+- 业务字段键名 **camelCase**，禁止下划线（见 `backend-fields.mdc`）
+- 根级含 `interaction`，说明页面触发时机与默认选中（见 `api-contract-and-mock-conventions.mdc`）

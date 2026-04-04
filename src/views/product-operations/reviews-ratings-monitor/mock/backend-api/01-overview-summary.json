@@ -5,7 +5,7 @@
       "appId": {
         "type": "string",
         "required": false,
-        "description": "应用 ID；空或 all 表示全应用汇总。"
+        "description": "应用 ID；空字符串表示全应用汇总（与顶栏「全部」映射一致）。"
       },
       "platform": {
         "type": "string",
@@ -195,7 +195,8 @@
     "deviceDistribution": [{ "device": "未知", "percent": 23.7 }],
     "topicWords": [
       { "word": "smooth", "weight": 8, "sentiment": "positive" },
-      { "word": "crash", "weight": 10, "sentiment": "negative" }
+      { "word": "crash", "weight": 10, "sentiment": "negative" },
+      { "word": "update", "weight": 5, "sentiment": "neutral" }
     ],
     "complaintTopics": [
       { "topic": "崩溃", "count": 625 },

@@ -1,4 +1,5 @@
 {
+  "_comment": "与 backend-api/01-dashboard.json 的 sampleResponse.data 同构，便于 Postman / MSW 对照。",
   "data": {
     "kpi": {
       "totalAmount": 12450,
@@ -10,7 +11,11 @@
       "avgAmount": 6.74,
       "revenueRatio": 4.8
     },
-    "trend": [{ "date": "1/1", "refundAmount": 28000, "ma7": 30000 }],
+    "trend": [
+      { "date": "1/1", "refundAmount": 28000, "ma7": 30000 },
+      { "date": "1/2", "refundAmount": 31000, "ma7": 30500 },
+      { "date": "1/3", "refundAmount": 35000, "ma7": 31200 }
+    ],
     "reasonData": [
       { "name": "用户主动取消", "value": 45 },
       { "name": "功能不符预期", "value": 28 },
@@ -19,14 +24,14 @@
       { "name": "其他", "value": 7 }
     ],
     "countryData": [
-      { "country": "US", "rate": 2.8, "level": "good", "badge": "Acceptable" },
-      { "country": "UK", "rate": 3.1, "level": "warning" },
-      { "country": "DE", "rate": 4.2, "level": "warning" },
-      { "country": "FR", "rate": 5.8, "level": "danger", "badge": "High" },
-      { "country": "JP", "rate": 2.1, "level": "good" },
-      { "country": "CN", "rate": 6.2, "level": "critical", "badge": "Highest" },
-      { "country": "AU", "rate": 3.5, "level": "warning" },
-      { "country": "CA", "rate": 2.9, "level": "good" }
+      { "countryCode": "us", "rate": 2.8, "level": "good", "badge": "Acceptable" },
+      { "countryCode": "gb", "rate": 3.1, "level": "warning" },
+      { "countryCode": "de", "rate": 4.2, "level": "warning" },
+      { "countryCode": "fr", "rate": 5.8, "level": "danger", "badge": "High" },
+      { "countryCode": "jp", "rate": 2.1, "level": "good" },
+      { "countryCode": "cn", "rate": 6.2, "level": "critical", "badge": "Highest" },
+      { "countryCode": "au", "rate": 3.5, "level": "warning" },
+      { "countryCode": "ca", "rate": 2.9, "level": "good" }
     ],
     "orderData": [
       {
@@ -35,8 +40,26 @@
         "amount": 15.0,
         "reason": "用户主动取消",
         "platform": "Google Play",
-        "date": "2024-01-23",
+        "date": "2026-01-23",
         "status": "refunded"
+      },
+      {
+        "orderId": "ORD-789012",
+        "user": "jane.smith@...",
+        "amount": 5.5,
+        "reason": "订阅重复扣费",
+        "platform": "App Store",
+        "date": "2026-01-22",
+        "status": "processing"
+      },
+      {
+        "orderId": "ORD-345678",
+        "user": "mike.brown@...",
+        "amount": 9.99,
+        "reason": "功能不符预期",
+        "platform": "Stripe",
+        "date": "2026-01-22",
+        "status": "pending"
       }
     ],
     "alertMessage": "高退款率预警：法国地区退款率达5.8%，超过预警阈值5%，建议检查当地付费渠道和定价策略"

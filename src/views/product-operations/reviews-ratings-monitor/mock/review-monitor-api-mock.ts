@@ -8,9 +8,13 @@ import type {
   SummaryData,
   ReviewListData,
   ReplyTemplate
-} from '../api/reviewMonitor'
+} from '@/api/product-operations/reviews-ratings-monitor'
 
-import { mockSummaryData, mockReviewList, mockTemplates } from '../api/reviewMonitor'
+import {
+  mockSummaryData,
+  mockReviewList,
+  mockTemplates
+} from '@/api/product-operations/reviews-ratings-monitor'
 
 function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms))
@@ -31,8 +35,21 @@ export async function mockFetchTableList(filter: DetailFilter): Promise<ReviewLi
     if (filter.keyword && !r.content.includes(filter.keyword)) return false
     if (filter.replied === 'yes' && !r.replied) return false
     if (filter.replied === 'no' && r.replied) return false
-    if (filter.reviewType && filter.reviewType !== '' && r.sentiment !== filter.reviewType)
-      return false
+    if (filter.reviewType && filter.reviewType !== '') {
+      const rt = filter.reviewType
+      if (rt === 'positive' || rt === 'negative' || rt === 'neutral') {
+        if (r.sentiment !== rt) return false
+      } else if (rt === 'ads') {
+        if (!r.content.includes('广告')) return false
+      } else if (rt === 'feature') {
+        if (!r.content.includes('功能') && !r.content.includes('建议')) return false
+      } else if (rt === 'bug') {
+        const c = r.content.toLowerCase()
+        if (!c.includes('崩溃') && !c.includes('bug')) return false
+      } else if (r.sentiment !== rt) {
+        return false
+      }
+    }
     if (filter.autoReplied === 'yes' && !r.autoReplied) return false
     if (filter.autoReplied === 'no' && r.autoReplied) return false
     return true

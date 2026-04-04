@@ -2,11 +2,23 @@
   "_comment": "整体回收 - Tab2 自然量分析数据。对应 types.ts: OrganicTabData。",
   "fieldDescription": {
     "request": {
-      "date_start": { "type": "string", "required": true },
-      "date_end": { "type": "string", "required": true },
-      "s_app_id": { "type": "string", "required": true },
-      "source": { "type": "string", "required": true },
-      "s_country_code": { "type": "string", "required": true }
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计起始日 YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计结束日 YYYY-MM-DD（含）。"
+      },
+      "appId": { "type": "string", "required": true, "description": "应用；全部 `''`。" },
+      "source": { "type": "string", "required": true, "description": "广告平台；全部 `''`。" },
+      "countryCode": {
+        "type": "string",
+        "required": true,
+        "description": "国家小写码；全部 `''`。"
+      }
     },
     "response": {
       "data": {
@@ -44,11 +56,11 @@
     }
   },
   "sampleRequest": {
-    "date_start": "2026-02-20",
-    "date_end": "2026-03-21",
-    "s_app_id": "",
+    "startDate": "2026-02-20",
+    "endDate": "2026-03-21",
+    "appId": "",
     "source": "",
-    "s_country_code": ""
+    "countryCode": ""
   },
   "sampleResponse": {
     "data": {
@@ -219,10 +231,21 @@
     "url": "POST /api/user-growth/overall-recovery/organic-tab",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
+    "requestBody": "startDate, endDate, appId, source, countryCode",
     "responseBody": "OrganicTabData"
   },
   "apiSuggestion": {
     "notes": ["kfactorChannels 中字段名为 source（广告平台），与 KfactorChannelRow 类型一致。"]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "Tab2 首屏 / 顶栏检索",
+        "detail": "父页切换至自然量分析 Tab 或顶栏检索后，`tab-organic.vue` 请求本接口；入参同 Tab1 公共体。",
+        "prerequisite": "已登录；cockpit meta 已预载。"
+      }
+    ],
+    "defaultSelection": "应用/广告平台/国家「全部」→ 对应字段 `''`。",
+    "dedupe": "与 Tab1 并行请求无关；切换 Tab 时重新拉取。"
   }
 }

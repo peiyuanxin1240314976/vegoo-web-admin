@@ -1,10 +1,13 @@
 /**
- * 评论与评分监控 - API 服务层
- * 与 mock/backend-api 契约 1:1，数据源开关见 config/data-source.ts
+ * 商品运营 - 评论与评分监控
+ * 与 views/.../mock/backend-api 契约 1:1；数据源开关见页面 config/data-source.ts
  */
 import request from '@/utils/http'
-import { ReviewMonitorEndpoint, isReviewMonitorEndpointMock } from '../config/data-source'
-import * as reviewMonitorMock from '../mocks/review-monitor-api-mock'
+import {
+  ReviewMonitorEndpoint,
+  isReviewMonitorEndpointMock
+} from '@/views/product-operations/reviews-ratings-monitor/config/data-source'
+import * as reviewMonitorMock from '@/views/product-operations/reviews-ratings-monitor/mock/review-monitor-api-mock'
 
 const BASE_URL = '/api/product-operations/reviews-ratings-monitor'
 
@@ -52,7 +55,8 @@ export interface AppRankItem {
   count: number
 }
 
-export interface TrendPoint {
+/** 近 N 日评分走势点（与订单退款分析 types 中 TrendPoint 区分命名，避免 barrel 重导出冲突） */
+export interface RatingTrendPoint {
   date: string
   rating: number
 }
@@ -90,7 +94,7 @@ export interface SummaryData {
   ratingDistribution: RatingDistributionItem[]
   dailyReviews: DailyReviewItem[]
   appTopList: AppRankItem[]
-  trend30Days: TrendPoint[]
+  trend30Days: RatingTrendPoint[]
   reviewTypes: ReviewTypeItem[]
   languageDistribution: LanguageItem[]
   deviceDistribution: DeviceItem[]
@@ -243,7 +247,7 @@ export const mockSummaryData: SummaryData = {
 }
 
 export const mockReviewList: ReviewListData = {
-  total: 988,
+  total: 990,
   page: 1,
   pageSize: 10,
   list: [
@@ -257,7 +261,7 @@ export const mockReviewList: ReviewListData = {
       platform: 'google_play',
       appName: 'ClapFinder',
       appVersion: '2.0.8',
-      countryCode: 'CN',
+      countryCode: 'cn',
       language: 'zh',
       sentiment: 'negative',
       replied: true,
@@ -274,7 +278,7 @@ export const mockReviewList: ReviewListData = {
       platform: 'google_play',
       appName: 'ClapFinder',
       appVersion: '2.0.8',
-      countryCode: 'CN',
+      countryCode: 'cn',
       language: 'zh',
       sentiment: 'negative',
       replied: false,
@@ -290,7 +294,7 @@ export const mockReviewList: ReviewListData = {
       platform: 'google_play',
       appName: 'ClapFinder',
       appVersion: '2.0.8',
-      countryCode: 'CN',
+      countryCode: 'cn',
       language: 'zh',
       sentiment: 'negative',
       replied: false,
@@ -306,7 +310,7 @@ export const mockReviewList: ReviewListData = {
       platform: 'app_store',
       appName: 'ClapFinder',
       appVersion: '2.0.8',
-      countryCode: 'CN',
+      countryCode: 'cn',
       language: 'zh',
       sentiment: 'negative',
       replied: false,
@@ -322,7 +326,7 @@ export const mockReviewList: ReviewListData = {
       platform: 'google_play',
       appName: 'ClapFinder',
       appVersion: '2.0.8',
-      countryCode: 'CN',
+      countryCode: 'cn',
       language: 'zh',
       sentiment: 'negative',
       replied: false,
@@ -338,7 +342,7 @@ export const mockReviewList: ReviewListData = {
       platform: 'app_store',
       appName: 'ClapFinder',
       appVersion: '2.0.8',
-      countryCode: 'US',
+      countryCode: 'us',
       language: 'en',
       sentiment: 'positive',
       replied: true,
@@ -354,7 +358,7 @@ export const mockReviewList: ReviewListData = {
       platform: 'google_play',
       appName: 'Weather5',
       appVersion: '1.3.2',
-      countryCode: 'ES',
+      countryCode: 'es',
       language: 'es',
       sentiment: 'positive',
       replied: false,
@@ -370,9 +374,41 @@ export const mockReviewList: ReviewListData = {
       platform: 'google_play',
       appName: 'VideoDominos',
       appVersion: '3.1.0',
-      countryCode: 'CN',
+      countryCode: 'cn',
       language: 'zh',
       sentiment: 'negative',
+      replied: false,
+      autoReplied: false
+    },
+    {
+      id: '9',
+      userId: 'u9',
+      userName: 'Lee',
+      starRating: 3,
+      content: '还可以，无功无过，期待后续优化',
+      date: '2026-03-03',
+      platform: 'google_play',
+      appName: 'Weather5',
+      appVersion: '1.2.0',
+      countryCode: 'es',
+      language: 'zh',
+      sentiment: 'neutral',
+      replied: false,
+      autoReplied: false
+    },
+    {
+      id: '10',
+      userId: 'u10',
+      userName: 'Chen',
+      starRating: 4,
+      content: '希望尽快增加暗黑模式功能，现在晚上用太刺眼',
+      date: '2026-03-02',
+      platform: 'google_play',
+      appName: 'ClapFinder',
+      appVersion: '2.0.7',
+      countryCode: 'cn',
+      language: 'zh',
+      sentiment: 'positive',
       replied: false,
       autoReplied: false
     }

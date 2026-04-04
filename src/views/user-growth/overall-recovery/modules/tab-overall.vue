@@ -119,7 +119,8 @@
               <ElOption label="Google" value="google" />
               <ElOption label="Facebook" value="facebook" />
             </ElSelect>
-            <ElButton size="small" type="primary" plain>导出</ElButton>
+            <ElButton round size="small" type="primary" @click="onDetailSearch">检索</ElButton>
+            <ElButton size="small" type="primary" plain round>导出</ElButton>
           </div>
         </div>
       </template>
@@ -215,7 +216,7 @@
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { OverallRecoveryFilterState, OverallTabData } from '../types'
-  import { fetchOverallTabData } from '@/api/user-growth'
+  import { fetchOverallTabData, fetchOverallTabDetailRecords } from '@/api/user-growth'
   import { Top, Bottom } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'OrTabOverall' })
@@ -227,6 +228,20 @@
   let loadSeq = 0
   const detailApp = ref('all')
   const detailChannel = ref('all')
+
+  async function onDetailSearch() {
+    if (!tabData.value) return
+    loading.value = true
+    try {
+      const res = await fetchOverallTabDetailRecords(props.filter, {
+        detailApp: detailApp.value,
+        detailChannel: detailChannel.value
+      })
+      tabData.value.detailRows = res.detailRows
+    } finally {
+      loading.value = false
+    }
+  }
 
   const curveChart = useChart()
   const volumeChart = useChart()
@@ -350,6 +365,8 @@
       })
       if (seq !== loadSeq) return
       tabData.value = res
+      detailApp.value = 'all'
+      detailChannel.value = 'all'
       await nextTick()
       if (seq !== loadSeq) return
       curveChart.initChart(buildCurveOption())

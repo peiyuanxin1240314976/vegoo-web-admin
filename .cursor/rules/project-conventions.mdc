@@ -57,7 +57,7 @@ alwaysApply: true
 
 ## 国旗与 flag-icons
 
-- 国家 **ISO 3166-1 alpha-2** 代码（数据字典字段如 `s_country_code`）由接口返回即可；**不要**在接口或 Mock 中返回国旗 emoji、国旗图片 URL 等纯展示字段。
+- 国家 **ISO 3166-1 alpha-2** 代码：**契约与联调 JSON** 统一 **`countryCode`**（无下划线）。由接口返回即可；**不要**在接口或 Mock 中返回国旗 emoji、国旗图片 URL 等纯展示字段。
 - 前端使用项目依赖 **flag-icons**：在需要展示国旗的页面/组件或**页面入口** `index.vue` 中 `import 'flag-icons/css/flag-icons.min.css'`（入口引入可保证样式与 `url(../flags/...)` 经构建正确解析），用 `<span :class="'fi fi-' + 小写码"></span>` 或与 `class="fi fi-xx"` 等价写法。若代码非法或为空，则不渲染国旗。
 - 历史别名（如 `UK`）可在前端映射为 `gb` 等标准码后再套 `fi-*` 类名。
 
@@ -65,10 +65,10 @@ alwaysApply: true
 
 后续开发中（新开发或重构）涉及 **接口入参/出参类型**、**请求参数**、**表格列 prop**、**筛选表单 v-model**、**Mock 契约（mock/backend-api）** 时，字段名必须统一：
 
-- **终端平台**：使用 `platform` 字段名
-- **广告平台**：使用 `source` 字段名
-- **应用筛选**：HTTP 请求体统一使用 **`appId`**（`string`），「全部」为 **`\"\"`**；勿单独用 `app`、`appPackage` 作为应用筛选主字段。细则见 `backend-fields.mdc`「接口请求 · 应用筛选（appId）」。
-- **筛选入参中的枚举/维度**（如 `n_source` 及与 `meta-filter-options` 联动的同类字段）：请求体中类型为 **`string`**（如 `\"1\"`），「不限」用 **`\"\"`** 或与模块约定一致；勿传 JSON number。细则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
+- **`mock/backend-api` 与 HTTP 业务 JSON**：**全部键名 camelCase，禁止下划线**（见 `backend-fields.mdc`「接口契约与 HTTP JSON 命名」）。
+- **HTTP POST 请求体（筛选/维度）**：凡页面或接口**实际提供**的筛选，键名须与 **「接口请求 · 统一筛选维度键名」**一致（如 **`appId`**、**`platform`**、**`source`**、**`countryCode`**、**`account`**）；「全部」为 **`\"\"`**。**未**在 UI 出现的维度不要写进契约或 POST body（见 `backend-fields.mdc` 该节「与页面一致」）。
+- **应用筛选**：勿单独用 `app`、`appPackage` 作为应用筛选主字段。细则见 `backend-fields.mdc`「接口请求 · 应用筛选（appId）」。
+- **筛选入参中的枚举/维度**：请求体中类型为 **`string`**（如 `\"1\"`），「不限」用 **`\"\"`**；勿传 JSON number。细则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
 
 ### 常见 Lint 与格式注意点（避免重复报错）
 

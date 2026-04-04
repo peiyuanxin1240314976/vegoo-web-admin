@@ -1,58 +1,161 @@
 {
-  "_comment": "人员绩效对比 - 图表数据。包含 ROI 趋势、广告支出趋势、雷达图、利润对比。",
+  "_comment": "人员绩效对比页 - 四块图表：首日 ROI 折线、广告支出趋势、雷达、预估利润条形。dates 与各序列 values 等长；雷达 values 与 radarIndicators 等长且顺序一致。",
   "fieldDescription": {
     "request": {
-      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
-      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，YYYY-MM-DD（含）。"
+      },
       "staffIds": {
         "type": "string[]",
         "required": true,
-        "description": "参与对比的人员 ID 列表。"
+        "description": "参与对比的人员 ID；每条序列对应其中一人。"
       }
     },
     "response": {
-      "dates": { "type": "string[]", "required": true, "description": "横轴日期列表。" },
-      "roiTrend": {
-        "type": "ChartSeries[]",
+      "dates": {
+        "type": "string[]",
         "required": true,
-        "description": "首日 ROI 趋势序列。"
+        "description": "横轴日期标签，YYYY-MM-DD；与 roiTrend/adSpendTrend 各点一一对应。"
+      },
+      "roiTrend": {
+        "type": "ChartLineSeries[]",
+        "required": true,
+        "description": "首日 ROI 趋势；值为百分比数值（如 96 表示 96%）。"
       },
       "adSpendTrend": {
-        "type": "ChartSeries[]",
+        "type": "ChartLineSeries[]",
         "required": true,
-        "description": "广告支出趋势序列。"
+        "description": "广告支出趋势（USD）；与 dates 等长。"
       },
-      "radarSeries": { "type": "RadarSeries[]", "required": true, "description": "雷达图序列。" },
-      "profitBars": { "type": "ProfitBar[]", "required": true, "description": "利润条形图数据。" }
+      "radarIndicators": {
+        "type": "RadarIndicator[]",
+        "required": true,
+        "description": "雷达轴定义；顺序与 radarSeries[].values 下标对齐。"
+      },
+      "radarSeries": {
+        "type": "RadarStaffSeries[]",
+        "required": true,
+        "description": "每人一条雷达轮廓。"
+      },
+      "profitBars": {
+        "type": "ProfitBar[]",
+        "required": true,
+        "description": "预估利润横向条形图；每人一条，value 为 USD（可负）。"
+      },
+      "roiRefLines": {
+        "type": "RoiRefLine[]",
+        "required": false,
+        "description": "ROI 图上参考线（如达标线 85、最低要求 80）；无则由前端写死。"
+      }
+    },
+    "ChartLineSeries": {
+      "id": { "type": "string", "required": true, "description": "人员 ID。" },
+      "name": { "type": "string", "required": true, "description": "图例名（姓名）。" },
+      "values": { "type": "number[]", "required": true, "description": "与 dates 等长的序列值。" }
+    },
+    "RadarIndicator": {
+      "name": { "type": "string", "required": true, "description": "轴名称（如 花费达成）。" },
+      "max": { "type": "number", "required": true, "description": "该维满分/上限，供雷达缩放。" }
+    },
+    "RadarStaffSeries": {
+      "id": { "type": "string", "required": true, "description": "人员 ID。" },
+      "name": { "type": "string", "required": true, "description": "图例名。" },
+      "values": {
+        "type": "number[]",
+        "required": true,
+        "description": "与 radarIndicators 等长的各维得分。"
+      }
+    },
+    "ProfitBar": {
+      "id": { "type": "string", "required": true, "description": "人员 ID。" },
+      "name": { "type": "string", "required": true, "description": "Y 轴类目名。" },
+      "value": { "type": "number", "required": true, "description": "预估利润 USD。" }
+    },
+    "RoiRefLine": {
+      "name": { "type": "string", "required": true, "description": "参考线名称（如 达标线）。" },
+      "value": {
+        "type": "number",
+        "required": true,
+        "description": "ROI 百分比数值，全周期常数序列由前端拉平。"
+      }
     }
   },
   "sampleRequest": {
-    "startDate": "2026-03-20",
-    "endDate": "2026-03-26",
-    "staffIds": ["zhang3", "li4", "wang5", "zhao6"]
+    "startDate": "2026-03-28",
+    "endDate": "2026-04-04",
+    "staffIds": ["zhao6", "zhang3", "li4"]
   },
   "sampleResponse": {
     "dates": [
-      "2026-03-20",
-      "2026-03-21",
-      "2026-03-22",
-      "2026-03-23",
-      "2026-03-24",
-      "2026-03-25",
-      "2026-03-26"
+      "2026-03-28",
+      "2026-03-29",
+      "2026-03-30",
+      "2026-03-31",
+      "2026-04-01",
+      "2026-04-02",
+      "2026-04-03"
     ],
-    "roiTrend": [{ "id": "zhao6", "name": "赵六", "values": [98, 99, 97, 95, 94, 98, 98] }],
+    "roiTrend": [
+      { "id": "zhao6", "name": "赵六", "values": [97, 96, 95, 96, 95, 96, 96] },
+      { "id": "zhang3", "name": "张三", "values": [92, 93, 94, 93, 91, 93, 94] },
+      { "id": "li4", "name": "李四", "values": [87, 88, 86, 87, 85, 88, 88] }
+    ],
     "adSpendTrend": [
-      { "id": "zhao6", "name": "赵六", "values": [6800, 7200, 7600, 7100, 7400, 7800, 8100] }
+      { "id": "zhao6", "name": "赵六", "values": [6800, 7200, 7600, 7100, 7400, 7800, 8100] },
+      { "id": "zhang3", "name": "张三", "values": [6400, 6900, 7100, 6800, 7000, 7200, 7500] },
+      { "id": "li4", "name": "李四", "values": [3800, 4100, 3900, 4200, 4000, 4400, 4500] }
     ],
-    "radarSeries": [{ "id": "zhao6", "name": "赵六", "values": [28, 30, 20, 18, 96] }],
-    "profitBars": [{ "id": "zhao6", "name": "赵六", "value": 15600 }]
+    "radarIndicators": [
+      { "name": "花费达成", "max": 30 },
+      { "name": "首日ROI", "max": 30 },
+      { "name": "CPI控制", "max": 20 },
+      { "name": "利润达成", "max": 25 },
+      { "name": "绩效得分", "max": 100 }
+    ],
+    "radarSeries": [
+      { "id": "zhao6", "name": "赵六", "values": [28, 30, 20, 18, 96] },
+      { "id": "zhang3", "name": "张三", "values": [25, 30, 20, 19, 94] },
+      { "id": "li4", "name": "李四", "values": [22, 28, 20, 18, 88] }
+    ],
+    "profitBars": [
+      { "id": "zhao6", "name": "赵六", "value": 15600 },
+      { "id": "zhang3", "name": "张三", "value": 12400 },
+      { "id": "li4", "name": "李四", "value": 6800 }
+    ],
+    "roiRefLines": [
+      { "name": "达标线", "value": 85 },
+      { "name": "最低要求", "value": 80 }
+    ]
   },
   "api": {
-    "url": "POST /api/user-growth/performance-analysis/comparison-charts",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/performance-analysis/comparison-charts",
     "method": "POST",
     "priority": "P0",
     "requestBody": "startDate, endDate, staffIds",
-    "responseBody": "dates, roiTrend, adSpendTrend, radarSeries, profitBars"
+    "responseBody": "dates, roiTrend, adSpendTrend, radarIndicators, radarSeries, profitBars, roiRefLines?"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "staffIds 顺序建议与页面标签色序一致，便于图例与 COLORS 映射。",
+      "ROI 图如需额外「全勤」参考线，用 roiRefLines 扩展即可。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "对比页图表初始化 / 已选人员或日期变更",
+        "detail": "与 comparison-overview 同参刷新；四图共用本响应。",
+        "prerequisite": "staffIds 非空。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "大数据时可单独缓存本接口；注意与 overview 参数一致。"
   }
 }

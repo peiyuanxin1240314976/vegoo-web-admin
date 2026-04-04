@@ -2,7 +2,7 @@
  * 评论与评分监控 - 数据源开关（小模块内 config，与 mock/backend-api 契约 1:1）
  *
  * - `ReviewMonitorEndpoint`：每个接口一个枚举值，改 `REVIEW_MONITOR_USE_MOCK` 对应项即可。
- * - `true` = 使用本地 Mock（`views/product-operations/reviews-ratings-monitor/mocks/review-monitor-api-mock.ts`）
+ * - `true` = 使用本地 Mock（`views/product-operations/reviews-ratings-monitor/mock/review-monitor-api-mock.ts`）
  * - `false` = 走真实 HTTP
  *
  * 默认全部为 `true`（联调前）；单接口改 `false` 可只接真接口。

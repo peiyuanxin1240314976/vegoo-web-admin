@@ -1,88 +1,266 @@
 {
-  "_comment": "人员绩效 - 列表页数据。用于主表格和分页。",
+  "_comment": "人员绩效列表页 - 主表格分页数据 + 合计行。对应 PerformanceList 表格与表尾合计（服务端汇总当前筛选全量，非仅当前页）。",
   "fieldDescription": {
     "request": {
-      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
-      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
-      "personId": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，YYYY-MM-DD（含）。"
+      },
+      "personFilter": {
         "type": "string",
         "required": false,
-        "description": "人员 ID，不传或空表示全部。"
+        "description": "人员筛选；\"\" 表示全部；非空与 list-filter-options 及行 id/姓名口径一致。"
       },
-      "appCategory": {
+      "appFilter": {
         "type": "string",
         "required": false,
-        "description": "应用分类（weather/health/tools）。"
+        "description": "应用分类；\"\" 表示全部；与 appCategoryOptions 的 value 对齐。"
       },
-      "status": {
+      "statusFilter": {
         "type": "string",
         "required": false,
-        "enum": ["pass", "fail"],
-        "description": "达标状态筛选。"
+        "enum": ["", "达标", "未达标"],
+        "description": "达标状态；\"\" 全部；「达标」含超标+达标；「未达标」含接近达标+未达标（与当前列表筛选逻辑一致）。"
       },
-      "keyword": { "type": "string", "required": false, "description": "姓名搜索关键字。" },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "姓名模糊搜索，空表示不限。"
+      },
+      "sortField": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "adSpend"],
+        "description": "排序字段；空表示默认顺序（如后端定序）；adSpend 为广告支出。"
+      },
+      "sortAsc": {
+        "type": "boolean",
+        "required": false,
+        "description": "与 sortField 同时有效；true 升序 false 降序。"
+      },
       "current": { "type": "number", "required": true, "description": "页码，从 1 开始。" },
       "size": { "type": "number", "required": true, "description": "每页条数。" }
     },
     "response": {
-      "list": { "type": "PerformanceRow[]", "required": true, "description": "分页数据。" },
-      "total": { "type": "number", "required": true, "description": "总条数。" }
+      "list": { "type": "PerformanceRow[]", "required": true, "description": "当前页行数据。" },
+      "total": { "type": "number", "required": true, "description": "符合筛选的总行数。" },
+      "totals": {
+        "type": "PerformanceListTotals",
+        "required": true,
+        "description": "当前筛选条件下全量汇总（表尾合计行），非仅当前页。"
+      }
     },
     "PerformanceRow": {
       "id": { "type": "string", "required": true, "description": "人员唯一 ID。" },
+      "surname": { "type": "string", "required": true, "description": "姓氏（头像旁单字）。" },
       "name": { "type": "string", "required": true, "description": "姓名。" },
-      "level": { "type": "string", "required": true, "description": "职级。" },
-      "adSpend": { "type": "number", "required": true, "description": "广告支出。" },
-      "budget": { "type": "number", "required": true, "description": "预算。" },
-      "roi1": { "type": "number", "required": true, "description": "首日 ROI，百分比数值。" },
+      "avatarBg": { "type": "string", "required": true, "description": "头像背景 CSS 颜色。" },
+      "level": {
+        "type": "string",
+        "required": true,
+        "description": "职级展示文案（如 高级优化师）。"
+      },
+      "levelClass": {
+        "type": "string",
+        "required": true,
+        "enum": ["senior", "mid", "junior"],
+        "description": "职级样式：senior 高级、mid 中级、junior 初级。"
+      },
+      "adSpend": { "type": "number", "required": true, "description": "广告支出（USD）。" },
+      "budget": {
+        "type": "number",
+        "required": true,
+        "description": "预算（USD；列表列「预算」）。"
+      },
+      "roi1": {
+        "type": "number",
+        "required": true,
+        "description": "首日 ROI，百分比数值（如 93 表示 93%）。"
+      },
       "roi3": { "type": "number", "required": true, "description": "3 日 ROI，百分比数值。" },
       "roi7": { "type": "number", "required": true, "description": "7 日 ROI，百分比数值。" },
-      "estProfit": { "type": "number", "required": true, "description": "预估利润。" },
+      "agentCost": { "type": "number", "required": true, "description": "代投消耗（USD）。" },
+      "minCost": { "type": "number", "required": true, "description": "最低消耗（USD）。" },
+      "estProfit": { "type": "number", "required": true, "description": "预估利润（USD，可负）。" },
+      "minProfit": { "type": "number", "required": true, "description": "最低利润（USD，可负）。" },
       "score": { "type": "number", "required": true, "description": "绩效得分。" },
-      "status": { "type": "string", "required": true, "description": "达标状态文案。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "description": "达标状态文案（超标/达标/接近达标/未达标）。"
+      },
       "statusClass": {
         "type": "string",
         "required": true,
-        "description": "状态样式码（over/pass/near/fail）。"
+        "enum": ["over", "pass", "near", "fail"],
+        "description": "状态样式：over 超标、pass 达标、near 接近达标、fail 未达标。"
       },
-      "reportDate": { "type": "string", "required": true, "description": "数据日期，YYYY-MM-DD。" }
+      "reportDate": {
+        "type": "string",
+        "required": true,
+        "description": "数据归属日期 YYYY-MM-DD。"
+      }
+    },
+    "PerformanceListTotals": {
+      "adSpend": { "type": "number", "required": true, "description": "广告支出合计（USD）。" },
+      "budget": { "type": "number", "required": true, "description": "预算合计（USD）。" },
+      "roi1": {
+        "type": "number",
+        "required": true,
+        "description": "首日 ROI 展示用汇总值（百分比数值，口径由后端约定，可为加权或行均）。"
+      },
+      "roi3": { "type": "number", "required": true, "description": "3 日 ROI 汇总展示值。" },
+      "roi7": { "type": "number", "required": true, "description": "7 日 ROI 汇总展示值。" },
+      "agentCost": { "type": "number", "required": true, "description": "代投消耗合计（USD）。" },
+      "estProfit": { "type": "number", "required": true, "description": "预估利润合计（USD）。" },
+      "minProfit": { "type": "number", "required": true, "description": "最低利润合计（USD）。" },
+      "score": {
+        "type": "number",
+        "required": true,
+        "description": "得分汇总或均值（百分比数值或分，口径由后端约定）。"
+      }
     }
   },
   "sampleRequest": {
-    "startDate": "2026-03-20",
-    "endDate": "2026-03-26",
-    "personId": "",
-    "appCategory": "",
-    "status": "",
+    "startDate": "2026-03-28",
+    "endDate": "2026-04-04",
+    "personFilter": "",
+    "appFilter": "",
+    "statusFilter": "",
     "keyword": "",
+    "sortField": "adSpend",
+    "sortAsc": false,
     "current": 1,
     "size": 20
   },
   "sampleResponse": {
     "list": [
       {
-        "id": "zhang3",
-        "name": "张三",
+        "id": "zhao6",
+        "surname": "赵",
+        "name": "赵六",
+        "avatarBg": "#f97316",
         "level": "高级优化师",
+        "levelClass": "senior",
+        "adSpend": 52100,
+        "budget": 50800,
+        "roi1": 96,
+        "roi3": 94,
+        "roi7": 95,
+        "agentCost": 2400,
+        "minCost": 48000,
+        "estProfit": 15600,
+        "minProfit": 9800,
+        "score": 96,
+        "status": "超标",
+        "statusClass": "over",
+        "reportDate": "2026-04-02"
+      },
+      {
+        "id": "zhang3",
+        "surname": "张",
+        "name": "张三",
+        "avatarBg": "#06b6d4",
+        "level": "高级优化师",
+        "levelClass": "senior",
         "adSpend": 49279,
         "budget": 49840,
         "roi1": 93,
         "roi3": 91,
         "roi7": 92,
+        "agentCost": 1866,
+        "minCost": 45000,
         "estProfit": 12400,
+        "minProfit": 8200,
         "score": 94,
         "status": "达标",
         "statusClass": "pass",
-        "reportDate": "2026-03-22"
+        "reportDate": "2026-04-01"
+      },
+      {
+        "id": "wu10",
+        "surname": "吴",
+        "name": "吴十",
+        "avatarBg": "#64748b",
+        "level": "初级优化师",
+        "levelClass": "junior",
+        "adSpend": 18200,
+        "budget": 16900,
+        "roi1": 84,
+        "roi3": 82,
+        "roi7": 83,
+        "agentCost": 0,
+        "minCost": 15000,
+        "estProfit": 900,
+        "minProfit": 200,
+        "score": 78,
+        "status": "接近达标",
+        "statusClass": "near",
+        "reportDate": "2026-03-30"
+      },
+      {
+        "id": "wang5",
+        "surname": "王",
+        "name": "王五",
+        "avatarBg": "#a855f7",
+        "level": "优化师",
+        "levelClass": "mid",
+        "adSpend": 28450,
+        "budget": 26100,
+        "roi1": 79,
+        "roi3": 77,
+        "roi7": 78,
+        "agentCost": 420,
+        "minCost": 24000,
+        "estProfit": -1200,
+        "minProfit": -3800,
+        "score": 72,
+        "status": "未达标",
+        "statusClass": "fail",
+        "reportDate": "2026-03-29"
       }
     ],
-    "total": 1
+    "total": 4,
+    "totals": {
+      "adSpend": 148029,
+      "budget": 143640,
+      "roi1": 88,
+      "roi3": 86,
+      "roi7": 87,
+      "agentCost": 4686,
+      "estProfit": 27700,
+      "minProfit": 14400,
+      "score": 85
+    }
   },
   "api": {
-    "url": "POST /api/user-growth/performance-analysis/performance-list",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/performance-analysis/performance-list",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "startDate, endDate, personId?, appCategory?, status?, keyword?, current, size",
-    "responseBody": "list, total"
+    "requestBody": "startDate, endDate, personFilter?, appFilter?, statusFilter?, keyword?, sortField?, sortAsc?, current, size",
+    "responseBody": "list, total, totals"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "列表行 statusClass 四类须在联调样例中均可出现；levelClass 三类建议覆盖。",
+      "表尾 totals 与 list 的聚合口径须在实现文档中写清（如 ROI 是否为加权）。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "列表页首屏 / 筛选变更",
+        "detail": "日期范围、人员、应用分类、达标状态、关键字、排序或分页变化后重新请求；切换页码只改 current。",
+        "prerequisite": "startDate/endDate 已确定（含自定义区间确认后）。"
+      }
+    ],
+    "defaultSelection": "personFilter、appFilter、statusFilter 默认 \"\"；sortField 默认 \"\" 或后端约定；current=1、size=20。",
+    "dedupe": "建议对相同参数请求防抖或取消上一次 in-flight，避免快速切换筛选时乱序回填。"
   }
 }
