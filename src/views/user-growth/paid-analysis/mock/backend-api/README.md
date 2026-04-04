@@ -62,5 +62,6 @@
 - **路径**：`POST ${ANALYSIS_API_BASE}/cockpit/meta-filter-options`（与 paid-analysis 父路径无关）。
 - **请求体**：可为空 `{}`。筛选「全部」等见 `backend-fields.mdc`、`api-contract-and-mock-conventions.mdc`。
 - **响应**：`CockpitMetaFilterOptionsData`（`src/types/cockpit-meta-filter.ts`）— `appOptions`、`platformOptions`、`sourceOptions`、`countryOptions`；各项 `{ label, value }`，**「全部」** 对应 `""`；国家 value 为小写 ISO 3166-1 alpha-2；`sourceOptions` 与 `n_source` **string** 对齐。
+- **与付费分析等业务请求对齐**：本模块等业务接口筛选体中的 **`appId`** 与 **`appOptions[].value`** 同源（UI 选「全部」提交前映射为 `""`，与 `backend-fields.mdc` 一致）。
 - **封装**：`fetchCockpitMetaFilterOptions`（`src/api/cockpit-meta-filter.ts`）。
 - **约定**：同构业务勿再增加 `meta-filter-options` 契约 JSON。

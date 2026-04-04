@@ -18,7 +18,7 @@
             class="iap-filter-date"
           />
           <ElSelect
-            v-model="filters.app"
+            v-model="filters.appId"
             placeholder="应用"
             class="iap-filter-select"
             :prefix-icon="Grid"
@@ -143,7 +143,7 @@
   ]
 
   const filters = reactive({
-    app: 'all',
+    appId: 'all',
     platform: 'all',
     country: 'all',
     date: getAppTodayYYYYMMDD()

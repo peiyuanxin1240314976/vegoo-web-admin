@@ -4,7 +4,12 @@
     "request": {
       "startDate": { "type": "string", "required": true, "description": "导出范围起。" },
       "endDate": { "type": "string", "required": true, "description": "导出范围止。" },
-      "app": { "type": "string", "required": false, "default": "", "description": "应用。" },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "应用 ID；与 meta appOptions.value 一致；空为全部。"
+      },
       "platform": { "type": "string", "required": false, "default": "", "description": "终端。" },
       "s_country_code": {
         "type": "string",
@@ -48,7 +53,7 @@
   "sampleRequest": {
     "startDate": "2026-02-05",
     "endDate": "2026-03-05",
-    "app": "",
+    "appId": "",
     "platform": "",
     "s_country_code": "",
     "n_source": "",
@@ -63,7 +68,7 @@
     "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/export/orders",
     "method": "POST",
     "priority": "P2",
-    "requestBody": "startDate, endDate, 筛选, keyword?, format?",
+    "requestBody": "startDate, endDate, appId?, platform?, s_country_code?, n_source?, keyword?, format?",
     "responseBody": "export result"
   },
   "interaction": {

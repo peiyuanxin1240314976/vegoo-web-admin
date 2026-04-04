@@ -8,7 +8,12 @@
         "description": "起始日 YYYY-MM-DD（含）。"
       },
       "endDate": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD（含）。" },
-      "app": { "type": "string", "required": false, "default": "", "description": "应用筛选。" },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "应用 ID；与 meta appOptions.value 一致；空为全部。"
+      },
       "platform": {
         "type": "string",
         "required": false,
@@ -64,7 +69,7 @@
   "sampleRequest": {
     "startDate": "2026-04-01",
     "endDate": "2026-04-03",
-    "app": "",
+    "appId": "",
     "platform": "",
     "s_country_code": "",
     "n_source": "",
@@ -169,7 +174,7 @@
     "url": "POST /api/v1/datacenter/analysis/user-growth/paid-analysis/tab-product/ranking",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "startDate, endDate, app?, platform?, s_country_code?, n_source?, productRankingMode?",
+    "requestBody": "startDate, endDate, appId?, platform?, s_country_code?, n_source?, productRankingMode?",
     "responseBody": "PaidAnalysisProductTabRankingData"
   },
   "interaction": {
