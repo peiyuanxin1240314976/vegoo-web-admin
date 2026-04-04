@@ -16,7 +16,7 @@ alwaysApply: true
 - **契约键名（驼峰 · 禁止下划线）**：`sampleRequest` / `sampleResponse` / `fieldDescription` 所涉**业务字段键名**须 **camelCase**，**不得**含 `_`（禁止 `s_*`、`n_*`、`date_start`、`request_quantity` 等）；细则见 **`backend-fields.mdc`**「接口契约与 HTTP JSON 命名」。
 - **请求体日期范围**：凡表示查询/筛选时间范围的入参，键名须为 **`startDate`**、**`endDate`**（推荐值 `YYYY-MM-DD` 字符串，与模块约定一致）；详见 `backend-fields.mdc`「接口请求 · 日期范围」。
 - **筛选入参枚举类型**：请求体键名须符合 `backend-fields.mdc` **「接口请求 · 统一筛选维度键名」**；广告平台用 **`source`**（**string**，如 `\"1\"`），**勿**在 `sampleRequest` 请求体中使用 `n_source` 作键名；**勿**写 JSON number。「全部」用 `\"\"` 等规则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
-- **应用 / 平台 / 国家 / 账户筛选键名**：请求体分别使用 **`appId`**、**`platform`**、**`countryCode`**、**`account`**（均为 `string`），见 `backend-fields.mdc`「接口请求 · 统一筛选维度键名」与「接口请求 · 应用筛选（appId）」。
+- **应用 / 平台 / 国家 / 账户筛选键名**：凡页面或接口**实际提供**对应筛选时，请求体使用 **`appId`**、**`platform`**、**`countryCode`**、**`account`**（均为 `string`）及 **`source`**，键名与 `backend-fields.mdc`「接口请求 · 统一筛选维度键名」一致；**未**在 UI 出现的维度不得仅为对齐字典而写入契约或 POST body（见该节「与页面一致」）。
 - 网关真实路径与示例 URL 不一致时，在对应 `mock/backend-api/README.md` 或 JSON `_comment` 中注明；以前端 `src/api` 实际请求为准联调。
 - **公用 cockpit 顶栏 `meta-filter-options`（硬性要求）**：
   - **统一接口**：**`GET`** `/api/v1/datacenter/analysis/cockpit/meta-filter-options`（即 **`${ANALYSIS_API_BASE}/cockpit/meta-filter-options`**）。**无 query、无 body**，仅依赖全局 **`Authorization`**（与其它 GET meta 类接口一致）。这是全项目 **通用的顶栏筛选项下拉**（应用 / 终端平台 / 广告平台 / 国家等与 **`CockpitMetaFilterOptionsData`** 同构的选项）。与本文件下文「新契约优先 POST」为 **明确例外**。

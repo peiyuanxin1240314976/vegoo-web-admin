@@ -114,6 +114,8 @@ alwaysApply: true
 
 
 
+- **与页面一致（勿凑全量键）**：上表定义的是「**一旦出现该维度，键名与类型必须这样写**」，**不是**要求每个模块的请求体都包含全部五键。`mock/backend-api` 的 `fieldDescription.request`、`sampleRequest` 以及实际 `request.post` 的 body **只应包含本页顶栏/筛选区或该接口业务上真实存在的维度**（及日期、分页等）。某页若无终端平台或广告账户筛选，则契约与入参中 **不要** 写 `platform`、`account` 等仅占位用的字段；若后端单独约定某接口必传固定值，须在契约 `apiSuggestion` 中说明，仍避免与「页面无此筛选项」相矛盾。
+
 - **存量契约**：若仍使用 `s_app_id`、`s_country_code` 等旧键名，整理时须在 Skill 交付物中单列 **「迁移为 appId / countryCode / …」**，新接口一律按上表。
 
 - **与 `meta-filter-options` 联动**：下拉 `value` 与上表入参一致；`platformOptions` 的 `value` 与请求体 **`platform`** 一致。
@@ -376,9 +378,9 @@ alwaysApply: true
 
 | `advertising` | 用户广告 |
 
-| `detailApp` | 整体回收明细表行可选字段：与页内「应用」子筛选项 `value` 对齐（如 `weather5`）；接口未按应用拆行时可省略，省略则该行不受应用子筛选过滤。 |
+| `detailApp` | 整体回收明细：响应行可选字段，与页内「应用」子筛 `value` 对齐（如 `weather5`）；未拆行时可省略。**请求**（如 `overall-tab/detail-records`）中作子筛时 `''` 表示全部，非空与行字段及下拉 value 一致。 |
 
-| `detailChannel` | 整体回收明细表行可选字段：与页内「广告平台」子筛选项 `value` 对齐（如 `google`、`facebook`）；未拆维度时可省略。 |
+| `detailChannel` | 整体回收明细：响应行可选字段，与页内「广告平台」子筛 `value` 对齐（如 `google`、`facebook`）；未拆维度时可省略。**请求**（`detail-records`）中作子筛时 `''` 表示全部。 |
 
 
 
@@ -486,6 +488,58 @@ alwaysApply: true
 |------|----------|
 | `hourlyData` | 小时/时段花费序列（USD）。 |
 | `hourlyRoi` | 小时/时段 ROI 序列（百分比数值）。 |
+
+#### 人员绩效（列表页 / 概览）
+
+| 字段 | 业务概念 |
+|------|----------|
+| `personOptions` | 人员绩效列表：人员筛选项（`label`/`value`；「全部」`value` 为 `""`）。 |
+| `appCategoryOptions` | 人员绩效列表：应用分类筛选项（与请求 `appFilter` 取值对齐）。 |
+| `personFilter` | **请求**：人员筛选（`""` 表示全部；非空与 `personOptions.value` 或人员 id 对齐）。 |
+| `appFilter` | **请求**：应用分类筛选（`""` 表示全部）。 |
+| `statusFilter` | **请求**：达标状态筛选（`""` / `达标` / `未达标`；与列表 Chip 文案一致）。 |
+| `sortField` | **请求**：列表排序字段（如 `adSpend`；空为默认序）。 |
+| `sortAsc` | **请求**：是否升序（与 `sortField` 联用）。 |
+| `surname` | 人员绩效列表行：姓氏（头像旁单字）。 |
+| `avatarBg` | 人员绩效列表行：头像背景色（CSS 颜色字符串）。 |
+| `levelClass` | 人员绩效列表行：职级样式（`senior` / `mid` / `junior`）。 |
+| `adSpend` | 人员绩效列表行：广告支出（USD）。 |
+| `agentCost` | 人员绩效列表行：代投消耗（USD）。 |
+| `minCost` | 人员绩效列表行：最低消耗（USD）。 |
+| `minProfit` | 人员绩效列表行：最低利润（USD，可负）。 |
+| `estProfit` | 人员绩效列表行：预估利润（USD，可负；与 `estimatedProfit` 同语义）。 |
+| `roi1` | 人员绩效：1 日 ROI（百分比数值，如 93 表示 93%）。 |
+| `roi3` | 人员绩效：3 日 ROI（百分比数值）。 |
+| `roi7` | 人员绩效：7 日 ROI（百分比数值）。 |
+| `reportDate` | 人员绩效列表行：数据归属日期（`YYYY-MM-DD`）。 |
+| `totals` | 人员绩效列表响应：当前筛选下全量合计（表尾行；结构见模块契约 `PerformanceListTotals`）。 |
+| `avgRoi1` | 人员绩效概览：首日 ROI 均值（百分比数值）。 |
+| `failCount` | 人员绩效概览：未达标关注人数（口径以模块契约为准）。 |
+| `failNames` | 人员绩效概览：未达标关注人员姓名列表。 |
+| `roiStatusLabel` | 人员绩效概览：ROI 达标结论文案（如 达标 / 未达标）。 |
+| `adSpendWeekOverWeekText` | 人员绩效概览：广告支出环比展示文案（已含符号，可选）。 |
+| `estProfitWeekOverWeekText` | 人员绩效概览：预估利润环比展示文案（可选）。 |
+
+#### 人员绩效对比页
+
+| 字段 | 业务概念 |
+|------|----------|
+| `staffIds` | **请求**：对比页当前已选人员 ID 列表（顺序与 UI 标签一致）。 |
+| `excludeIds` | **请求**：对比候选接口中需排除的人员 ID（已在对比条中）。 |
+| `totalAd` | 对比页 KPI：广告支出合计（USD）。 |
+| `totalProfit` | 对比页 KPI：预估利润合计（USD，可负）。 |
+| `avgRoi` | 对比页 KPI：首日 ROI 均值（百分比数值）。 |
+| `roiPassLabel` | 对比页 KPI：ROI 达标结论短文案（可选）。 |
+| `failName` | 对比页 KPI：未达标人员姓名字符串（多人顿号连接，与 `failCount` 口径一致）。 |
+| `radarIndicators` | 对比雷达：轴定义数组（`name` + `max`），与 `radarSeries.values` 下标对齐。 |
+| `radarSeries` | 对比雷达：每人一条轮廓（`id`、`name`、`values`）。 |
+| `roiTrend` | 对比图：首日 ROI 折线序列数组（每人 `id`/`name`/`values`，与 `dates` 等长）。 |
+| `adSpendTrend` | 对比图：广告支出趋势序列（结构同折线序列）。 |
+| `profitBars` | 对比图：预估利润条形（`id`、`name`、`value` USD）。 |
+| `roiRefLines` | 对比 ROI 图：参考线定义（如达标线/最低要求，`name` + `value` 百分比数值）。 |
+| `r1` | 对比排名表：第一名展示文案（预格式化字符串）。 |
+| `r2` | 对比排名表：第二名展示文案。 |
+| `r3` | 对比排名表：第三名展示文案。 |
 
 #### 转化管理（映射列表 + 转化数据 Tab）
 

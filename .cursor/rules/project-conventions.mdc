@@ -66,7 +66,7 @@ alwaysApply: true
 后续开发中（新开发或重构）涉及 **接口入参/出参类型**、**请求参数**、**表格列 prop**、**筛选表单 v-model**、**Mock 契约（mock/backend-api）** 时，字段名必须统一：
 
 - **`mock/backend-api` 与 HTTP 业务 JSON**：**全部键名 camelCase，禁止下划线**（见 `backend-fields.mdc`「接口契约与 HTTP JSON 命名」）。
-- **HTTP POST 请求体（筛选/维度）**：须与 **「接口请求 · 统一筛选维度键名」**一致：**`appId`**、**`platform`**、**`source`**、**`countryCode`**、**`account`**；「全部」为 **`\"\"`**。
+- **HTTP POST 请求体（筛选/维度）**：凡页面或接口**实际提供**的筛选，键名须与 **「接口请求 · 统一筛选维度键名」**一致（如 **`appId`**、**`platform`**、**`source`**、**`countryCode`**、**`account`**）；「全部」为 **`\"\"`**。**未**在 UI 出现的维度不要写进契约或 POST body（见 `backend-fields.mdc` 该节「与页面一致」）。
 - **应用筛选**：勿单独用 `app`、`appPackage` 作为应用筛选主字段。细则见 `backend-fields.mdc`「接口请求 · 应用筛选（appId）」。
 - **筛选入参中的枚举/维度**：请求体中类型为 **`string`**（如 `\"1\"`），「不限」用 **`\"\"`**；勿传 JSON number。细则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
 
