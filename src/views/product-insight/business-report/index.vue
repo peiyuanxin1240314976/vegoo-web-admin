@@ -3,19 +3,6 @@
     <div class="br-page-fx" aria-hidden="true"></div>
     <!-- ─────────────────────────────── TOP HEADER ────────────── -->
     <header class="br-header">
-      <div class="header-left">
-        <button v-if="showBackBtn" class="back-btn" @click="handleBack">‹</button>
-        <span class="header-logo">
-          <svg v-if="period === 'daily'" width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <rect x="1" y="8" width="3" height="9" rx="1" fill="#00D4A1" />
-            <rect x="6" y="5" width="3" height="12" rx="1" fill="#4A9EF5" />
-            <rect x="11" y="2" width="3" height="15" rx="1" fill="#8B5CF6" />
-            <rect x="16" y="0" width="2" height="17" rx="1" fill="#FB923C" opacity="0.5" />
-          </svg>
-        </span>
-        <h1 class="header-title">经营报告</h1>
-      </div>
-
       <div class="period-toggle">
         <button
           v-for="p in periods"
@@ -51,48 +38,108 @@
       <template v-if="!compareMode">
         <div class="filter-group">
           <span class="filter-label">应用：</span>
-          <select class="filter-select">
-            <option>全部</option>
-            <option>健康</option>
-            <option>天气</option>
-            <option>AI应用</option>
-          </select>
+          <ElSelect
+            size="small"
+            :popper-class="brFilterSelectPopperClass"
+            class="br-filter-el-select br-filter-el-select--app"
+            :model-value="barAppValues"
+            multiple
+            collapse-tags
+            :max-collapse-tags="1"
+            placeholder="全部应用"
+            @update:model-value="onBarAppUpdate"
+          >
+            <ElOption
+              v-for="opt in appBarOptions"
+              :key="opt.value === '' ? '__all_app__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
         </div>
 
         <div class="filter-group">
           <span class="filter-label">平台：</span>
-          <div class="pill-group">
-            <button
-              v-for="p in platforms"
-              :key="p"
-              :class="['pill', { active: activePlatforms.includes(p) }]"
-              @click="togglePlatform(p)"
-            >
-              {{ p }}
-            </button>
-          </div>
+          <ElSelect
+            size="small"
+            :popper-class="brFilterSelectPopperClass"
+            class="br-filter-el-select br-filter-el-select--platform"
+            :model-value="barPlatformValues"
+            multiple
+            collapse-tags
+            :max-collapse-tags="1"
+            placeholder="全部平台"
+            @update:model-value="onBarPlatformUpdate"
+          >
+            <ElOption
+              v-for="opt in platformBarOptions"
+              :key="opt.value === '' ? '__all_plat__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
         </div>
 
-        <div class="filter-group">
+        <div class="filter-group filter-group--tab">
           <template v-if="activeTab === 'adPlatform'">
             <span class="filter-label">广告平台：</span>
-            <div class="pill-group scrollable">
-              <button
-                v-for="ap in adPlatforms"
-                :key="ap"
-                :class="['pill', { active: activeAdPlatforms.includes(ap) }]"
-                @click="toggleAdPlatform(ap)"
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--source"
+              :model-value="barSourceValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部广告平台"
+              @update:model-value="onBarSourceUpdate"
+            >
+              <ElOption
+                v-for="opt in sourceBarOptions"
+                :key="opt.value === '' ? '__all_src__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
               >
-                <span v-if="ap !== '全部'" class="ap-dot" :style="{ background: apColors[ap] }" />
-                {{ ap }}
-              </button>
-            </div>
+                <span class="br-source-opt">
+                  <span
+                    v-if="opt.value !== ''"
+                    class="ap-dot"
+                    :style="{ background: sourceAccentColor(opt) }"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
           </template>
           <template v-else-if="activeTab === 'campaigns'">
             <span class="filter-label">广告平台：</span>
-            <select class="filter-select">
-              <option>全部</option>
-            </select>
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--source"
+              :model-value="barSourceValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部广告平台"
+              @update:model-value="onBarSourceUpdate"
+            >
+              <ElOption
+                v-for="opt in sourceBarOptions"
+                :key="opt.value === '' ? '__all_src__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              >
+                <span class="br-source-opt">
+                  <span
+                    v-if="opt.value !== ''"
+                    class="ap-dot"
+                    :style="{ background: sourceAccentColor(opt) }"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
             <span class="filter-label ml-8">状态：</span>
             <div class="pill-group">
               <button
@@ -105,44 +152,151 @@
               </button>
             </div>
             <span class="filter-label ml-8">国家：</span>
-            <select class="filter-select">
-              <option>全部</option>
-            </select>
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--country"
+              :model-value="barCountryValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部国家"
+              @update:model-value="onBarCountryUpdate"
+            >
+              <ElOption
+                v-for="opt in countryBarOptions"
+                :key="opt.value === '' ? '__all_cty__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              >
+                <span class="br-country-opt">
+                  <span
+                    v-if="countryFlagClass(opt.value)"
+                    :class="countryFlagClass(opt.value)"
+                    class="br-fi"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
           </template>
           <template v-else-if="activeTab === 'byCountry'">
             <span class="filter-label">国家：</span>
-            <div class="pill-group scrollable">
-              <button
-                v-for="c in selectedCountries"
-                :key="c.code"
-                :class="['pill', 'country-pill', { active: true }]"
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--country"
+              :model-value="barCountryValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部国家"
+              @update:model-value="onBarCountryUpdate"
+            >
+              <ElOption
+                v-for="opt in countryBarOptions"
+                :key="opt.value === '' ? '__all_cty__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
               >
-                {{ c.flag }} {{ c.name }}
-              </button>
-              <button class="pill">+{{ 22 - selectedCountries.length }} 个</button>
-            </div>
+                <span class="br-country-opt">
+                  <span
+                    v-if="countryFlagClass(opt.value)"
+                    :class="countryFlagClass(opt.value)"
+                    class="br-fi"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
           </template>
           <template v-else-if="activeTab === 'platformCountry'">
             <span class="filter-label">广告平台：</span>
-            <div class="pill-group scrollable">
-              <button
-                v-for="ap in platformCountryPills"
-                :key="ap"
-                :class="['pill', 'bracket-pill', { active: true }]"
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--source"
+              :model-value="barSourceValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部广告平台"
+              @update:model-value="onBarSourceUpdate"
+            >
+              <ElOption
+                v-for="opt in sourceBarOptions"
+                :key="opt.value === '' ? '__all_src__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
               >
-                {{ ap }}
-              </button>
-            </div>
+                <span class="br-source-opt">
+                  <span
+                    v-if="opt.value !== ''"
+                    class="ap-dot"
+                    :style="{ background: sourceAccentColor(opt) }"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
             <span class="filter-label ml-8">国家：</span>
-            <select class="filter-select">
-              <option>全部</option>
-            </select>
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--country"
+              :model-value="barCountryValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部国家"
+              @update:model-value="onBarCountryUpdate"
+            >
+              <ElOption
+                v-for="opt in countryBarOptions"
+                :key="opt.value === '' ? '__all_cty__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              >
+                <span class="br-country-opt">
+                  <span
+                    v-if="countryFlagClass(opt.value)"
+                    :class="countryFlagClass(opt.value)"
+                    class="br-fi"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
           </template>
           <template v-else>
             <span class="filter-label">广告平台：</span>
-            <select class="filter-select">
-              <option>全部</option>
-            </select>
+            <ElSelect
+              size="small"
+              :popper-class="brFilterSelectPopperClass"
+              class="br-filter-el-select br-filter-el-select--source"
+              :model-value="barSourceValues"
+              multiple
+              collapse-tags
+              :max-collapse-tags="1"
+              placeholder="全部广告平台"
+              @update:model-value="onBarSourceUpdate"
+            >
+              <ElOption
+                v-for="opt in sourceBarOptions"
+                :key="opt.value === '' ? '__all_src__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              >
+                <span class="br-source-opt">
+                  <span
+                    v-if="opt.value !== ''"
+                    class="ap-dot"
+                    :style="{ background: sourceAccentColor(opt) }"
+                  />
+                  {{ opt.label }}
+                </span>
+              </ElOption>
+            </ElSelect>
           </template>
         </div>
       </template>
@@ -150,22 +304,54 @@
       <template v-else>
         <div class="filter-group">
           <span class="filter-label">平台：</span>
-          <div class="pill-group">
-            <button
-              v-for="p in platforms"
-              :key="p"
-              :class="['pill', { active: activePlatforms.includes(p) }]"
-              @click="togglePlatform(p)"
-            >
-              {{ p }}
-            </button>
-          </div>
+          <ElSelect
+            size="small"
+            :popper-class="brFilterSelectPopperClass"
+            class="br-filter-el-select br-filter-el-select--platform"
+            :model-value="barPlatformValues"
+            multiple
+            collapse-tags
+            :max-collapse-tags="1"
+            placeholder="全部平台"
+            @update:model-value="onBarPlatformUpdate"
+          >
+            <ElOption
+              v-for="opt in platformBarOptions"
+              :key="opt.value === '' ? '__all_plat__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
         </div>
         <div class="filter-group">
           <span class="filter-label">广告平台：</span>
-          <select class="filter-select">
-            <option>全部</option>
-          </select>
+          <ElSelect
+            size="small"
+            :popper-class="brFilterSelectPopperClass"
+            class="br-filter-el-select br-filter-el-select--source"
+            :model-value="barSourceValues"
+            multiple
+            collapse-tags
+            :max-collapse-tags="1"
+            placeholder="全部广告平台"
+            @update:model-value="onBarSourceUpdate"
+          >
+            <ElOption
+              v-for="opt in sourceBarOptions"
+              :key="opt.value === '' ? '__all_src__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            >
+              <span class="br-source-opt">
+                <span
+                  v-if="opt.value !== ''"
+                  class="ap-dot"
+                  :style="{ background: sourceAccentColor(opt) }"
+                />
+                {{ opt.label }}
+              </span>
+            </ElOption>
+          </ElSelect>
         </div>
       </template>
 
@@ -258,7 +444,11 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, provide, watch } from 'vue'
+  import 'flag-icons/css/flag-icons.min.css'
+  import { storeToRefs } from 'pinia'
+  import { ref, computed, provide, watch, onMounted } from 'vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import type {
     ReportPeriod,
     ReportQueryParams,
@@ -304,14 +494,102 @@
 
   defineOptions({ name: 'BusinessReport' })
 
-  const platformCountryPills = [
-    '全部',
-    'Google',
-    'Facebook',
-    'Unity',
-    'Mintegral',
-    'TikTok'
-  ] as const
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
+
+  function fallbackMetaOptions(label: string): CockpitMetaOptionItem[] {
+    return [{ label, value: '' }]
+  }
+
+  const appBarOptions = computed(() => {
+    const list = cockpitMeta.value?.appOptions
+    return list?.length ? list : fallbackMetaOptions('全部应用')
+  })
+  const platformBarOptions = computed(() => {
+    const list = cockpitMeta.value?.platformOptions
+    return list?.length ? list : fallbackMetaOptions('全部平台')
+  })
+  const sourceBarOptions = computed(() => {
+    const list = cockpitMeta.value?.sourceOptions
+    return list?.length ? list : fallbackMetaOptions('全部广告平台')
+  })
+  const countryBarOptions = computed(() => {
+    const list = cockpitMeta.value?.countryOptions
+    return list?.length ? list : fallbackMetaOptions('全部国家')
+  })
+
+  /**
+   * 空数组 [] 表示不限，对应后端全局数据。
+   * meta「全部」项 value 为 ''；仅选全部、清空、或在已选具体项时再选全部 → 均归一为 []。
+   */
+  function normalizeMetaMulti(prev: string[], next: string[]): string[] {
+    if (next.length === 0) return []
+    const nonAll = next.filter((v) => v !== '')
+    const hasAllToken = next.includes('')
+    const prevWasGlobal = prev.length === 0
+    if (nonAll.length === 0) return []
+    if (hasAllToken && nonAll.length > 0) {
+      if (prevWasGlobal) return nonAll
+      return []
+    }
+    return nonAll
+  }
+
+  const barAppValues = ref<string[]>([])
+  const barPlatformValues = ref<string[]>([])
+  const barSourceValues = ref<string[]>([])
+  const barCountryValues = ref<string[]>([])
+
+  function onBarAppUpdate(v: string[]) {
+    barAppValues.value = normalizeMetaMulti([...barAppValues.value], v)
+  }
+  function onBarPlatformUpdate(v: string[]) {
+    barPlatformValues.value = normalizeMetaMulti([...barPlatformValues.value], v)
+  }
+  function onBarSourceUpdate(v: string[]) {
+    barSourceValues.value = normalizeMetaMulti([...barSourceValues.value], v)
+  }
+  function onBarCountryUpdate(v: string[]) {
+    barCountryValues.value = normalizeMetaMulti([...barCountryValues.value], v)
+  }
+
+  const SOURCE_DOT_BY_VALUE: Record<string, string> = {
+    '1': '#4285F4',
+    '2': '#1877F2',
+    '3': '#222C37',
+    '4': '#6C3AD6',
+    '5': '#00A3E0',
+    '6': '#FF6B6B',
+    '7': '#000000'
+  }
+
+  function sourceAccentColor(opt: CockpitMetaOptionItem): string {
+    if (opt.value && SOURCE_DOT_BY_VALUE[opt.value]) return SOURCE_DOT_BY_VALUE[opt.value]
+    const lb = opt.label.toLowerCase()
+    if (lb.includes('google')) return '#4285F4'
+    if (lb.includes('facebook') || lb.includes('meta')) return '#1877F2'
+    if (lb.includes('unity')) return '#222C37'
+    if (lb.includes('applovin')) return '#6C3AD6'
+    if (lb.includes('ironsource')) return '#00A3E0'
+    if (lb.includes('tiktok') || lb.includes('pangle')) return '#010101'
+    if (lb.includes('snap')) return '#FFFC00'
+    if (lb.includes('mintegral')) return '#E8770E'
+    return 'rgb(255 255 255 / 35%)'
+  }
+
+  function countryFlagClass(value: string): string | null {
+    if (!value || value.length !== 2) return null
+    let c = value.toLowerCase()
+    if (c === 'uk') c = 'gb'
+    if (!/^[a-z]{2}$/.test(c)) return null
+    return `fi fi-${c}`
+  }
+
+  onMounted(() => {
+    void metaStore.ensureLoaded()
+  })
+
+  const brFilterSelectPopperClass = 'br-filter-el-select__popper'
 
   const period = ref<ReportPeriod>('daily')
   const activeTab = ref<ReportTab>('summary')
@@ -346,77 +624,13 @@
     activeTab.value = tab
   }
 
-  const showBackBtn = computed(() => activeTab.value !== 'summary')
-  function handleBack() {
-    activeTab.value = 'summary'
-  }
-
-  const platforms = ['全部', '安卓', 'iOS', '网站']
-  const activePlatforms = ref(['全部'])
-
-  function togglePlatform(p: string) {
-    if (p === '全部') {
-      activePlatforms.value = ['全部']
-    } else {
-      const idx = activePlatforms.value.indexOf(p)
-      activePlatforms.value = activePlatforms.value.filter((x) => x !== '全部')
-      if (idx >= 0) {
-        activePlatforms.value.splice(activePlatforms.value.indexOf(p), 1)
-        if (activePlatforms.value.length === 0) activePlatforms.value = ['全部']
-      } else {
-        activePlatforms.value.push(p)
-      }
-    }
-  }
-
-  const adPlatforms = [
-    '全部',
-    'Google',
-    'Facebook',
-    'Unity',
-    'Mintegral',
-    'TikTok',
-    'Snapchat',
-    'Kwai',
-    'Bigo'
-  ]
-  const activeAdPlatforms = ref(['全部'])
-  const apColors: Record<string, string> = {
-    Google: '#4285F4',
-    Facebook: '#1877F2',
-    Unity: '#222C37',
-    Mintegral: '#E8770E',
-    TikTok: '#010101',
-    Snapchat: '#FFFC00',
-    Kwai: '#FF6B00',
-    Bigo: '#00A651'
-  }
-
-  function toggleAdPlatform(ap: string) {
-    if (ap === '全部') {
-      activeAdPlatforms.value = ['全部']
-      return
-    }
-    activeAdPlatforms.value = activeAdPlatforms.value.filter((x) => x !== '全部')
-    const idx = activeAdPlatforms.value.indexOf(ap)
-    if (idx >= 0) {
-      activeAdPlatforms.value.splice(idx, 1)
-      if (activeAdPlatforms.value.length === 0) activeAdPlatforms.value = ['全部']
-    } else {
-      activeAdPlatforms.value.push(ap)
-    }
-  }
+  // const showBackBtn = computed(() => activeTab.value !== 'summary')
+  // function handleBack() {
+  //   activeTab.value = 'summary'
+  // }
 
   const campaignStatuses = ['在投中', '已暂停', '全部']
   const activeStatus = ref('在投中')
-
-  const selectedCountries = [
-    { code: 'US', name: '美国', flag: '🇺🇸' },
-    { code: 'DE', name: '德国', flag: '🇩🇪' },
-    { code: 'JP', name: '日本', flag: '🇯🇵' },
-    { code: 'KR', name: '韩国', flag: '🇰🇷' },
-    { code: 'BR', name: '巴西', flag: '🇧🇷' }
-  ]
 
   const currentDateLabel = computed(() => {
     if (period.value === 'monthly') return '2025年12月'
@@ -1142,5 +1356,126 @@
     .br-page-fx {
       animation: none;
     }
+  }
+</style>
+
+<style scoped lang="scss">
+  .filter-group--tab {
+    flex: 1;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .br-filter-el-select {
+    min-width: 118px;
+  }
+
+  .br-filter-el-select--app {
+    min-width: 100px;
+    max-width: 120px;
+  }
+
+  .br-filter-el-select--source {
+    min-width: 110px;
+    max-width: 130px;
+  }
+
+  .br-filter-el-select--country {
+    min-width: 110px;
+    max-width: 130px;
+  }
+
+  :deep(.br-filter-el-select) {
+    --el-input-focus-border-color: #00d4a1;
+    --el-border-color-hover: rgb(0 212 161 / 45%);
+    --el-color-primary: #00d4a1;
+    --el-border-color-focus: #00d4a1;
+
+    vertical-align: middle;
+  }
+
+  :deep(.br-filter-el-select .el-input__wrapper) {
+    min-height: 28px;
+    padding: 2px 8px;
+    font-size: 12px;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid var(--rp-border);
+    border-radius: 6px;
+    box-shadow: none;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  :deep(.br-filter-el-select .el-input__inner) {
+    font-size: 12px;
+    color: var(--rp-text);
+  }
+
+  :deep(.br-filter-el-select .el-select__caret) {
+    color: rgb(255 255 255 / 35%);
+  }
+
+  :deep(.br-filter-el-select .el-input__wrapper.is-focus) {
+    border-color: var(--rp-accent);
+    box-shadow: 0 0 0 1px rgb(0 212 161 / 22%);
+  }
+
+  :deep(.br-filter-el-select .el-input__wrapper:hover) {
+    border-color: rgb(255 255 255 / 14%);
+  }
+
+  :deep(.br-filter-el-select .el-tag) {
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11px;
+    line-height: 18px;
+    color: var(--rp-accent);
+    background: rgb(0 212 161 / 12%);
+    border-color: var(--rp-accent);
+  }
+
+  :deep(.br-filter-el-select .el-tag .el-tag__close) {
+    color: var(--rp-accent);
+  }
+
+  .br-source-opt,
+  .br-country-opt {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .br-fi {
+    flex-shrink: 0;
+    width: 1.15em;
+    line-height: 1;
+    background-size: cover;
+  }
+</style>
+
+<style lang="scss">
+  .br-filter-el-select__popper.el-select__popper {
+    background: #0d1529 !important;
+    border: 1px solid rgb(255 255 255 / 10%) !important;
+  }
+
+  .br-filter-el-select__popper .el-select-dropdown__item {
+    height: auto;
+    min-height: 30px;
+    padding: 6px 12px;
+    font-size: 12px;
+    line-height: 1.3;
+    color: rgb(255 255 255 / 88%);
+  }
+
+  .br-filter-el-select__popper .el-select-dropdown__item.is-hovering,
+  .br-filter-el-select__popper .el-select-dropdown__item:hover {
+    background: rgb(0 212 161 / 12%);
+  }
+
+  .br-filter-el-select__popper .el-select-dropdown__item.is-selected {
+    font-weight: 600;
+    color: #00d4a1;
   }
 </style>
