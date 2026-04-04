@@ -26,13 +26,13 @@ export enum ComprehensiveAnalysisEndpoint {
 }
 
 export const COMPREHENSIVE_ANALYSIS_USE_MOCK: Record<ComprehensiveAnalysisEndpoint, boolean> = {
-  [ComprehensiveAnalysisEndpoint.Kpi]: true,
-  [ComprehensiveAnalysisEndpoint.PlatformCpiBar]: true,
-  [ComprehensiveAnalysisEndpoint.AppCpiRank]: true,
-  [ComprehensiveAnalysisEndpoint.CountryDistribution]: true,
-  [ComprehensiveAnalysisEndpoint.Alerts]: true,
-  [ComprehensiveAnalysisEndpoint.PlatformCpiTrend]: true,
-  [ComprehensiveAnalysisEndpoint.EcpmAnalysis]: true
+  [ComprehensiveAnalysisEndpoint.Kpi]: false,
+  [ComprehensiveAnalysisEndpoint.PlatformCpiBar]: false,
+  [ComprehensiveAnalysisEndpoint.AppCpiRank]: false,
+  [ComprehensiveAnalysisEndpoint.CountryDistribution]: false,
+  [ComprehensiveAnalysisEndpoint.Alerts]: false,
+  [ComprehensiveAnalysisEndpoint.PlatformCpiTrend]: false,
+  [ComprehensiveAnalysisEndpoint.EcpmAnalysis]: false
 }
 
 export function isComprehensiveAnalysisEndpointMock(
