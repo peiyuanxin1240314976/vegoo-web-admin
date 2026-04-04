@@ -13,6 +13,21 @@ export interface OverallRecoveryFilterState {
   s_country_code: string
 }
 
+/** POST 公共筛选体：仅本页顶栏实际维度（见 `mock/backend-api/README.md`） */
+export interface OverallRecoveryCommonRequestBody {
+  startDate: string
+  endDate: string
+  appId: string
+  source: string
+  countryCode: string
+}
+
+/** 明细表接口请求体（公共体 + 卡片内子筛） */
+export type OverallRecoveryDetailRecordsBody = OverallRecoveryCommonRequestBody & {
+  detailApp: string
+  detailChannel: string
+}
+
 // ─── Tab1: 整体回收 ───────────────────────────────────────────
 
 /** 顶部 KPI 卡片 */

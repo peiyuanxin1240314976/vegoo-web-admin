@@ -125,7 +125,7 @@
         </div>
       </template>
       <ElTable
-        :data="displayedDetailRows"
+        :data="tabData?.detailRows ?? []"
         size="small"
         class="detail-table"
         stripe
@@ -212,11 +212,11 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch, nextTick } from 'vue'
+  import { ref, onMounted, watch, nextTick } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { OverallRecoveryFilterState, OverallTabData } from '../types'
-  import { fetchOverallTabData } from '@/api/user-growth'
+  import { fetchOverallTabData, fetchOverallTabDetailRecords } from '@/api/user-growth'
   import { Top, Bottom } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'OrTabOverall' })
@@ -228,31 +228,19 @@
   let loadSeq = 0
   const detailApp = ref('all')
   const detailChannel = ref('all')
-  const appliedDetailApp = ref('all')
-  const appliedDetailChannel = ref('all')
 
-  function filterDetailRows(rows: OverallTabData['detailRows']): OverallTabData['detailRows'] {
-    return rows.filter((row) => {
-      if (appliedDetailApp.value !== 'all') {
-        if (row.detailApp !== undefined && row.detailApp !== appliedDetailApp.value) return false
-      }
-      if (appliedDetailChannel.value !== 'all') {
-        if (row.detailChannel !== undefined && row.detailChannel !== appliedDetailChannel.value) {
-          return false
-        }
-      }
-      return true
-    })
-  }
-
-  const displayedDetailRows = computed(() => {
-    const rows = tabData.value?.detailRows ?? []
-    return filterDetailRows(rows)
-  })
-
-  function onDetailSearch() {
-    appliedDetailApp.value = detailApp.value
-    appliedDetailChannel.value = detailChannel.value
+  async function onDetailSearch() {
+    if (!tabData.value) return
+    loading.value = true
+    try {
+      const res = await fetchOverallTabDetailRecords(props.filter, {
+        detailApp: detailApp.value,
+        detailChannel: detailChannel.value
+      })
+      tabData.value.detailRows = res.detailRows
+    } finally {
+      loading.value = false
+    }
   }
 
   const curveChart = useChart()
@@ -379,8 +367,6 @@
       tabData.value = res
       detailApp.value = 'all'
       detailChannel.value = 'all'
-      appliedDetailApp.value = 'all'
-      appliedDetailChannel.value = 'all'
       await nextTick()
       if (seq !== loadSeq) return
       curveChart.initChart(buildCurveOption())

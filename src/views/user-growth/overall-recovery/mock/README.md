@@ -8,7 +8,7 @@ mock/
   README.md             本文件
   backend-api/
     README.md           接口清单与拆分说明
-    02-overall-tab.json           Tab1 整体回收数据
+    02-overall-tab-*.json         Tab1 五段接口契约（kpis / recovery-curve / … / detail-records）
     03-organic-tab.json           Tab2 自然量分析数据
 ```
 
@@ -16,10 +16,10 @@ mock/
 
 ## 数据结构映射
 
-| 导出名                  | 对应类型         | 对应接口              |
-| ----------------------- | ---------------- | --------------------- |
-| `MOCK_OVERALL_TAB_DATA` | `OverallTabData` | `02-overall-tab.json` |
-| `MOCK_ORGANIC_TAB_DATA` | `OrganicTabData` | `03-organic-tab.json` |
+| 导出名                  | 对应类型         | 对应接口                                |
+| ----------------------- | ---------------- | --------------------------------------- |
+| `MOCK_OVERALL_TAB_DATA` | `OverallTabData` | `02-overall-tab-*.json`（五段合并展示） |
+| `MOCK_ORGANIC_TAB_DATA` | `OrganicTabData` | `03-organic-tab.json`                   |
 
 ## 接入真实接口
 

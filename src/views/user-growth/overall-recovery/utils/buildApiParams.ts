@@ -1,4 +1,8 @@
-import type { OverallRecoveryFilterState } from '../types'
+import type {
+  OverallRecoveryCommonRequestBody,
+  OverallRecoveryDetailRecordsBody,
+  OverallRecoveryFilterState
+} from '../types'
 import { cloneAppDate, getAppNow } from '@/utils/app-now'
 
 function pad2(n: number) {
@@ -15,8 +19,8 @@ function allToEmpty(v: string) {
 }
 
 export function resolveDateRangeFromPreset(dateRange: string): {
-  date_start: string
-  date_end: string
+  startDate: string
+  endDate: string
 } {
   const end = cloneAppDate(getAppNow())
   end.setHours(0, 0, 0, 0)
@@ -24,18 +28,29 @@ export function resolveDateRangeFromPreset(dateRange: string): {
   if (dateRange === '30d') {
     start.setDate(start.getDate() - 29)
   }
-  return { date_start: formatYmd(start), date_end: formatYmd(end) }
+  return { startDate: formatYmd(start), endDate: formatYmd(end) }
 }
 
-export function buildOverallRecoveryApiParams(
+export function buildOverallRecoveryCommonBody(
   filters: Pick<OverallRecoveryFilterState, 'dateRange' | 's_app_id' | 'source' | 's_country_code'>
-) {
-  const { date_start, date_end } = resolveDateRangeFromPreset(filters.dateRange)
+): OverallRecoveryCommonRequestBody {
+  const { startDate, endDate } = resolveDateRangeFromPreset(filters.dateRange)
   return {
-    date_start,
-    date_end,
-    s_app_id: allToEmpty(filters.s_app_id),
+    startDate,
+    endDate,
+    appId: allToEmpty(filters.s_app_id),
     source: allToEmpty(filters.source),
-    s_country_code: allToEmpty(filters.s_country_code)
+    countryCode: allToEmpty(filters.s_country_code)
+  }
+}
+
+export function buildOverallRecoveryDetailRecordsBody(
+  filters: Pick<OverallRecoveryFilterState, 'dateRange' | 's_app_id' | 'source' | 's_country_code'>,
+  detail: { detailApp: string; detailChannel: string }
+): OverallRecoveryDetailRecordsBody {
+  return {
+    ...buildOverallRecoveryCommonBody(filters),
+    detailApp: allToEmpty(detail.detailApp),
+    detailChannel: allToEmpty(detail.detailChannel)
   }
 }

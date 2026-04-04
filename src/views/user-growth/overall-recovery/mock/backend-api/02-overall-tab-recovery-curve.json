@@ -1,0 +1,91 @@
+{
+  "_comment": "整体回收 Tab1 - 整体回收曲线（按广告平台）。对应 types.ts: Pick<OverallTabData,'recoveryCurve'>。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计起始日 YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计结束日 YYYY-MM-DD（含）。"
+      },
+      "appId": { "type": "string", "required": true, "description": "应用；全部 `''`。" },
+      "source": { "type": "string", "required": true, "description": "广告平台；全部 `''`。" },
+      "countryCode": {
+        "type": "string",
+        "required": true,
+        "description": "国家小写码；全部 `''`。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "RecoveryCurveData",
+        "required": true,
+        "description": "days 横轴标签 + series 折线数组。"
+      },
+      "RecoveryCurveSeries": {
+        "name": { "type": "string", "required": true },
+        "color": { "type": "string", "required": true },
+        "data": { "type": "number[]", "required": true },
+        "dashed": {
+          "type": "boolean",
+          "required": false,
+          "description": "虚线（如付费用户序列）。"
+        }
+      }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-02-20",
+    "endDate": "2026-03-21",
+    "appId": "",
+    "source": "",
+    "countryCode": ""
+  },
+  "sampleResponse": {
+    "data": {
+      "recoveryCurve": {
+        "days": ["Day1", "Day7", "Day30", "Day45", "Day60", "Day90", "Day120", "Day150", "Day180"],
+        "series": [
+          {
+            "name": "Google+自然",
+            "color": "#4B8EF1",
+            "data": [18, 65, 135, 165, 190, 230, 265, 285, 300]
+          },
+          {
+            "name": "Facebook+自然",
+            "color": "#F4923A",
+            "data": [15, 55, 115, 145, 168, 200, 228, 248, 260]
+          },
+          {
+            "name": "付费用户",
+            "color": "#EF4444",
+            "data": [10, 40, 85, 108, 128, 155, 178, 192, 200],
+            "dashed": true
+          }
+        ]
+      }
+    }
+  },
+  "api": {
+    "url": "POST /api/user-growth/overall-recovery/overall-tab/recovery-curve",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "同 kpis 公共体",
+    "responseBody": "{ recoveryCurve: RecoveryCurveData }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "Tab1 首屏 / 顶栏检索",
+        "detail": "与 KPI、日均量等并行拉取；筛选变更后整块中部图表重绘。",
+        "prerequisite": "同 kpis。"
+      }
+    ],
+    "defaultSelection": "同公共筛选。",
+    "dedupe": "同 kpis。"
+  }
+}
