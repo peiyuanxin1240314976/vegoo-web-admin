@@ -1,43 +1,95 @@
 {
-  "_comment": "人员绩效对比 - 异常预警列表。",
+  "_comment": "人员绩效对比页 - 右侧「异常预警」列表。每条可跳转详情（前端路由或抽屉，由产品定）。",
   "fieldDescription": {
     "request": {
-      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
-      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "开始日期，YYYY-MM-DD（含）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "结束日期，YYYY-MM-DD（含）。"
+      },
       "staffIds": {
         "type": "string[]",
         "required": true,
-        "description": "参与对比的人员 ID 列表。"
+        "description": "参与对比的人员 ID；预警仅针对该范围内人员。"
       }
     },
     "response": {
       "list": {
-        "type": "Array<{ id: number; level: 'warn' | 'error'; text: string }>",
+        "type": "ComparisonAlertItem[]",
         "required": true,
-        "description": "预警列表。"
+        "description": "预警条目，按展示顺序排列。"
+      }
+    },
+    "ComparisonAlertItem": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "预警唯一 ID（string，避免大整数精度问题）。"
+      },
+      "level": {
+        "type": "string",
+        "required": true,
+        "enum": ["warn", "error"],
+        "description": "warn 一般预警；error 严重。"
+      },
+      "text": {
+        "type": "string",
+        "required": true,
+        "description": "预警正文（已拼好人员名与说明）。"
       }
     }
   },
   "sampleRequest": {
-    "startDate": "2026-03-20",
-    "endDate": "2026-03-26",
+    "startDate": "2026-03-28",
+    "endDate": "2026-04-04",
     "staffIds": ["zhang3", "li4", "wang5", "zhao6"]
   },
   "sampleResponse": {
     "list": [
       {
-        "id": 1,
+        "id": "pa-alert-001",
         "level": "warn",
-        "text": "王五 连续7日首日ROI低于80%达标线，建议尽快安排读师会议"
+        "text": "王五 连续7日首日ROI低于80%达标线，建议尽快安排复盘会议"
       },
-      { "id": 2, "level": "error", "text": "王五 预估利润连续为负，建议调整投放策略" }
+      {
+        "id": "pa-alert-002",
+        "level": "error",
+        "text": "王五 预估利润连续为负，建议调整投放策略"
+      },
+      {
+        "id": "pa-alert-003",
+        "level": "warn",
+        "text": "吴十 花费达成率低于团队均值 12%，请关注账户结构"
+      }
     ]
   },
   "api": {
-    "url": "POST /api/user-growth/performance-analysis/comparison-alerts",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/performance-analysis/comparison-alerts",
     "method": "POST",
     "priority": "P1",
     "requestBody": "startDate, endDate, staffIds",
     "responseBody": "list"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "「查看详情」若需独立详情接口，另建契约；本接口仅列表。",
+      "文案中「优化师」等术语与项目 UI 一致。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "对比页预警区初始化 / 日期或已选人员变更",
+        "detail": "与 overview 同参刷新；点击「查看详情」可走前端路由暂不强制新接口。",
+        "prerequisite": "staffIds 非空。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "可与 score-detail、rankings 并行。"
   }
 }

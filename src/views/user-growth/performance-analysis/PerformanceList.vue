@@ -39,7 +39,7 @@
       <!-- ─── Main Area ───────────────────────────── -->
       <div class="main-area">
         <!-- Filters -->
-        <div class="filter-block pa-neon-filter">
+        <div class="filter-block">
           <div class="filter-row">
             <span class="filter-label">人员：</span>
             <button
@@ -821,6 +821,7 @@
 
 <style scoped lang="scss">
   @use './styles/pa-performance-fx.scss' as *;
+  @use './styles/pa-filters-or-align.scss' as *;
 
   // ─── Tokens ──────────────────────────────────────────────
   $bg: #0d1117;
@@ -855,7 +856,6 @@
     color: var(--text-primary);
   }
 
-  // ─── Header ──────────────────────────────────────────────
   .perf-header {
     flex-shrink: 0;
     padding: 0;
@@ -867,11 +867,6 @@
     gap: 10px;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
-    margin-bottom: 12px;
-    border-radius: 16px;
-
-    @include pa-neon-surface-static;
   }
 
   .perf-header__group {
@@ -890,84 +885,16 @@
     justify-content: flex-end;
   }
 
-  .breadcrumb {
-    font-size: 16px;
-    font-weight: 600;
-
-    .bc-parent {
-      color: $text-secondary;
-      cursor: pointer;
-
-      &:hover {
-        color: $text-primary;
-      }
-    }
-
-    .bc-sep {
-      margin: 0 6px;
-      color: $text-muted;
-    }
-
-    .bc-current {
-      color: $text-primary;
-    }
-  }
-
-  .subtitle {
-    margin-top: 2px;
-    font-size: 11px;
-    color: $text-muted;
-  }
-
-  .date-label {
-    font-size: 12px;
-    color: $text-secondary;
-    white-space: nowrap;
-  }
-
   .date-btns {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
   }
 
-  .date-btn {
-    padding: 5px 12px;
-    font-size: 12px;
-    color: $text-secondary;
-    cursor: pointer;
-    background: color-mix(in srgb, var(--default-box-color) 72%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
-    border-radius: 9999px;
-    transition:
-      color 0.15s var(--ease-default),
-      background-color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default);
-
-    &:hover {
-      color: $text-primary;
-      border-color: color-mix(in srgb, var(--art-primary) 40%, transparent);
-    }
-
-    &:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px
-        color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 55%, transparent);
-    }
-
-    &.active {
-      font-weight: 600;
-      color: var(--art-gray-900);
-      background: color-mix(in srgb, var(--art-primary) 82%, white 18%);
-      border-color: color-mix(in srgb, var(--art-primary) 55%, transparent);
-    }
-  }
-
   .perf-header__btn {
     display: inline-flex;
     gap: 6px;
     align-items: center;
-    padding: 6px 14px;
     font-weight: 600;
     letter-spacing: 0.2px;
   }
@@ -1043,109 +970,9 @@
     flex: 1;
     flex-direction: column;
     gap: 12px;
+    min-width: 0;
     padding: 0;
     overflow: hidden;
-  }
-
-  // ─── Filters ─────────────────────────────────────────────
-  .filter-block {
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    gap: 8px;
-    padding: 12px 14px;
-  }
-
-  .filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-    padding: 8px 10px;
-    background: color-mix(in srgb, var(--default-bg-color) 35%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
-    border-radius: 12px;
-  }
-
-  .filter-label {
-    flex-shrink: 0;
-    font-size: 12px;
-    color: $text-secondary;
-    white-space: nowrap;
-  }
-
-  .filter-spacer {
-    width: 10px;
-    height: 14px;
-    margin: 0 2px 0 6px;
-    border-left: 1px dashed color-mix(in srgb, var(--art-primary) 18%, transparent);
-  }
-
-  .filter-chip {
-    padding: 4px 12px;
-    font-size: 12px;
-    color: $text-secondary;
-    cursor: pointer;
-    background: color-mix(in srgb, var(--default-box-color) 35%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
-    border-radius: 20px;
-    transition:
-      color 0.15s var(--ease-default),
-      background-color 0.15s var(--ease-default),
-      border-color 0.15s var(--ease-default),
-      box-shadow 0.22s var(--ease-out);
-
-    &:hover {
-      color: $text-primary;
-      border-color: color-mix(in srgb, var(--art-primary) 45%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 20%, transparent);
-    }
-
-    &:focus-visible {
-      outline: none;
-      box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 55%, transparent),
-        0 0 0 6px rgb(0 0 0 / 18%);
-    }
-
-    &.active {
-      font-weight: 600;
-      color: var(--art-gray-900);
-      background: color-mix(in srgb, var(--art-primary) 82%, white 18%);
-      border-color: color-mix(in srgb, var(--art-primary) 55%, transparent);
-      box-shadow:
-        0 10px 30px rgb(0 0 0 / 22%),
-        0 0 0 1px color-mix(in srgb, var(--art-primary) 24%, transparent),
-        0 0 24px color-mix(in srgb, var(--art-primary) 16%, transparent);
-    }
-  }
-
-  .search-input {
-    flex: 1;
-    width: 220px;
-    min-width: 180px;
-    max-width: 360px;
-    padding: 6px 12px;
-    font-size: 12px;
-    color: $text-primary;
-    background: rgb(255 255 255 / 4%);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
-    border-radius: 20px;
-    outline: none;
-    transition:
-      border-color 0.15s var(--ease-default),
-      box-shadow 0.22s var(--ease-out);
-
-    &::placeholder {
-      color: $text-muted;
-    }
-
-    &:focus-visible {
-      border-color: color-mix(in srgb, var(--art-primary) 55%, transparent);
-      box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--focus-ring-color, var(--art-primary)) 45%, transparent),
-        0 0 0 6px rgb(0 0 0 / 16%);
-    }
   }
 
   // ─── Table ───────────────────────────────────────────────
@@ -1587,8 +1414,9 @@
     flex-direction: column;
     flex-shrink: 0;
     width: 320px;
+    min-height: 0;
     padding: 12px;
-    overflow-y: auto;
+    overflow: hidden;
     border-radius: 16px;
     transition:
       width 0.22s var(--ease-default),
@@ -1672,13 +1500,21 @@
 
   .sidebar-content {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 12px;
+    min-height: 0;
     padding: 12px 0 4px;
+    overflow: hidden;
   }
 
   .metric-card {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-height: 64px;
     padding: 14px;
+    overflow: hidden auto;
 
     .metric-title {
       margin-bottom: 8px;
