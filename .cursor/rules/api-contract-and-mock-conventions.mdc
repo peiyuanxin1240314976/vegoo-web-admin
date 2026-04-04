@@ -13,13 +13,14 @@ alwaysApply: true
 - **联调顺序建议**：先有契约 JSON（及同目录 `README.md` 接口清单）→ 前端 `types.ts` / `src/api/*.ts` 与契约对齐 → 后端按 JSON 开发与自测 → 前后端联调。
 - **变更流程**：增删改字段或业务含义时，须**前后端协商一致**后，**优先更新契约 JSON**（及 README），再同步改前端类型与请求封装、Mock、后端实现；禁止长期存在「文档一套、接口一套、前端一套」。
 - **字段与数据字典**：新建或修订契约 JSON 时，**逐字段**对照 `.cursor/rules/backend-fields.mdc`：`fieldDescription` 与 `sampleRequest` / `sampleResponse` 中的字段名、业务含义须可映射到字典；无法映射时须在 `_comment` 或 `mock/backend-api/README.md` 说明，并推动补全字典条目。
+- **契约键名（驼峰 · 禁止下划线）**：`sampleRequest` / `sampleResponse` / `fieldDescription` 所涉**业务字段键名**须 **camelCase**，**不得**含 `_`（禁止 `s_*`、`n_*`、`date_start`、`request_quantity` 等）；细则见 **`backend-fields.mdc`**「接口契约与 HTTP JSON 命名」。
 - **请求体日期范围**：凡表示查询/筛选时间范围的入参，键名须为 **`startDate`**、**`endDate`**（推荐值 `YYYY-MM-DD` 字符串，与模块约定一致）；详见 `backend-fields.mdc`「接口请求 · 日期范围」。
-- **筛选入参枚举类型**：`n_source` 等与筛选/维度映射相关的请求体字段，在契约与实现中须为 **string**（如 `\"1\"`），**勿**在 `sampleRequest` 中写 JSON number；「全部」维度用 `\"\"` 等规则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
-- **应用筛选键名**：需要按应用筛选时，请求体须使用 **`appId`**（`string`），见 `backend-fields.mdc`「接口请求 · 应用筛选（appId）」。
+- **筛选入参枚举类型**：请求体键名须符合 `backend-fields.mdc` **「接口请求 · 统一筛选维度键名」**；广告平台用 **`source`**（**string**，如 `\"1\"`），**勿**在 `sampleRequest` 请求体中使用 `n_source` 作键名；**勿**写 JSON number。「全部」用 `\"\"` 等规则见 `backend-fields.mdc`「接口请求 · 筛选「全部」」与「接口请求 · 筛选字段类型（枚举 string）」。
+- **应用 / 平台 / 国家 / 账户筛选键名**：请求体分别使用 **`appId`**、**`platform`**、**`countryCode`**、**`account`**（均为 `string`），见 `backend-fields.mdc`「接口请求 · 统一筛选维度键名」与「接口请求 · 应用筛选（appId）」。
 - 网关真实路径与示例 URL 不一致时，在对应 `mock/backend-api/README.md` 或 JSON `_comment` 中注明；以前端 `src/api` 实际请求为准联调。
 - **公用 cockpit 顶栏 `meta-filter-options`（硬性要求）**：
   - **统一接口**：**`GET`** `/api/v1/datacenter/analysis/cockpit/meta-filter-options`（即 **`${ANALYSIS_API_BASE}/cockpit/meta-filter-options`**）。**无 query、无 body**，仅依赖全局 **`Authorization`**（与其它 GET meta 类接口一致）。这是全项目 **通用的顶栏筛选项下拉**（应用 / 终端平台 / 广告平台 / 国家等与 **`CockpitMetaFilterOptionsData`** 同构的选项）。与本文件下文「新契约优先 POST」为 **明确例外**。
-  - **实现与类型**：HTTP 封装为 **`fetchCockpitMetaFilterOptions`**（`request.get`，`@/api/cockpit-meta-filter`），类型为 **`@/types/cockpit-meta-filter`** 之 **`CockpitMetaFilterOptionsData`**。业务请求里与下拉联动的入参（如 **`appId`** / **`n_source`**）仍以 **`backend-fields.mdc`** 及 **`paid-analysis/mock/backend-api/README.md` 附录 A** 为准（指 **业务 POST 接口** 的请求体，非本 GET）。
+  - **实现与类型**：HTTP 封装为 **`fetchCockpitMetaFilterOptions`**（`request.get`，`@/api/cockpit-meta-filter`），类型为 **`@/types/cockpit-meta-filter`** 之 **`CockpitMetaFilterOptionsData`**。业务 **POST** 与下拉联动的入参键名为 **`appId`** / **`platform`** / **`source`** / **`countryCode`** / **`account`**（见 **`backend-fields.mdc`**「接口请求 · 统一筛选维度键名」）及 **`paid-analysis/mock/backend-api/README.md` 附录 A**（指业务 POST 请求体，非本 GET）。
   - **页面与 Mock 开发（直接读数据，不要当业务接口再拉一遍）**：同构顶栏下拉的选项 **直接从 Pinia 读** **`useCockpitMetaFilterStore().data`**（或组合式 **`useCockpitMetaFilterOptions()`** 返回的 **`cockpitMeta`**），绑定 `appOptions` / `platformOptions` / `sourceOptions` / `countryOptions` 即可。**不要**在页面里把「再调一次 `fetchCockpitMetaFilterOptions`」当作常规写法。数据由 **路由守卫预加载** + **同标签 `sessionStorage`** 填充；**`ensureLoaded()`** 仅作兜底（例如极早挂载且 `data` 仍为空时），非日常入口。
   - **Mock / 契约（禁止重复 JSON）**：凡顶栏筛选与上述接口 **同构**（仅依赖 `appOptions`、`platformOptions`、`sourceOptions`、`countryOptions` 等公用形态），**不得**在该模块 `mock/backend-api` 再新增 `*meta-filter-options*.json` 或等价重复契约。**仅在** 模块 `mock/backend-api/README.md`（及需要时在 `mock/README.md`）中 **用表格一行 + 附录/引用** 标注：接口 URL、`fetch*` 名、**无独立 JSON**、说明详见 **付费分析 `backend-api/README.md` 附录 A**。整理契约时 **不** 为该机造「占位 JSON」凑数。
   - **例外**：若某页顶栏在公用四类之外还有 **本页独有** 筛选项（如转化类型、商品类型），**仅** 为 **独有维度** 维护独立契约 JSON（独立 endpoint）；**仍不得** 把与 cockpit 同构的四类选项再复制进该 JSON 或另建「整页 meta」重复契约。
@@ -118,7 +119,7 @@ src/views/<模块>/<页面>/
 
 - **禁止**只写“见后端返回”或只给一个大对象示例不解释字段。
 - 每个字段的 `description` 要能直接用于联调沟通：含义、单位、范围（例如百分比是 0-100 还是 0-1）、空值策略、格式（日期格式等）。
-- **筛选类 `request` 字段**：若字段为枚举型筛选（如 `n_source`），`fieldDescription.request` 的 `type` 须与后端一致（一般为 **`string`**），且 `sampleRequest` 中的示例值类型须与 `type` 一致，详见 `backend-fields.mdc`「接口请求 · 筛选字段类型（枚举 string）」。
+- **筛选类 `request` 字段**：若字段为枚举型筛选（如广告平台 **`source`**），`fieldDescription.request` 的 `type` 须为 **`string`**（键名驼峰，勿 `n_source`），且 `sampleRequest` 中的示例值类型须与 `type` 一致，详见 `backend-fields.mdc`「接口请求 · 筛选字段类型（枚举 string）」。
 
 ### 同模块 `sampleResponse` 形态复用
 
