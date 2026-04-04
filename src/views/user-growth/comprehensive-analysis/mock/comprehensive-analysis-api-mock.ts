@@ -1,3 +1,19 @@
+/**
+ * 综合分析 — 契约级 HTTP Mock（与 `config/data-source.ts`、`mock/backend-api/*.json` 一一对应）
+ *
+ * | mockFetch* | 契约文件 |
+ * | --- | --- |
+ * | mockFetchComprehensiveAnalysisMetaFilterOptions | 01-meta-filter-options.json |
+ * | mockFetchComprehensiveAnalysisKpi | 02-kpi.json |
+ * | mockFetchComprehensiveAnalysisPlatformCpiBar | 03-platform-cpi-bar.json |
+ * | mockFetchComprehensiveAnalysisAppCpiRank | 04-app-cpi-rank.json |
+ * | mockFetchComprehensiveAnalysisCountryDistribution | 05-country-distribution.json |
+ * | mockFetchComprehensiveAnalysisAlerts | 06-alerts.json |
+ * | mockFetchComprehensiveAnalysisPlatformCpiTrend | 07-platform-cpi-trend.json |
+ * | mockFetchComprehensiveAnalysisEcpmAnalysis | 08-ecpm-analysis.json |
+ *
+ * 数据由 `buildMockComprehensiveAnalysisData` 按筛选参数生成；基线见 `mock/data.ts`。
+ */
 import type {
   AppCpiRankItem,
   ComprehensiveAnalysisApiParams,

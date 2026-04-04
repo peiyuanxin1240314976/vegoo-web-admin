@@ -1,12 +1,14 @@
 <template>
   <div
-    class="comprehensive-analysis-page ca-page art-full-height"
-    :class="{ 'is-platform-analysis-detail': isPlatformAnalysisDetail }"
+    class="comprehensive-analysis-page ca-page"
+    :class="{
+      'art-full-height': isPlatformAnalysisDetail,
+      'is-platform-analysis-detail': isPlatformAnalysisDetail
+    }"
   >
-    <div class="ca-page-fx" aria-hidden="true"></div>
     <router-view v-if="isPlatformAnalysisDetail" />
     <template v-else>
-      <!-- 顶栏：筛选 + 检索 + 视图切换（筛选项外不再套一层卡片容器） -->
+      <!-- 顶栏：筛选 + 检索（筛选项外不再套一层卡片容器） -->
       <header class="ca-header ca-entry-1">
         <div class="ca-filters-bar">
           <div class="ca-filters-left">
@@ -56,23 +58,8 @@
             </ElSelect>
 
             <ElButton round class="ca-filter-search" :icon="Search" @click="loadData"
-              >检索</ElButton
+              >查询</ElButton
             >
-          </div>
-
-          <div class="ca-filters-right">
-            <div class="ca-view-tabs">
-              <button
-                v-for="v in viewModes"
-                :key="v.key"
-                type="button"
-                class="ca-view-tab"
-                :class="{ 'is-active': filters.viewMode === v.key }"
-                @click="filters.viewMode = v.key"
-              >
-                {{ v.label }}
-              </button>
-            </div>
           </div>
         </div>
       </header>
@@ -85,30 +72,31 @@
             :key="card.id"
             class="ca-kpi ca-neon-lift-card ca-entry-3"
           >
-            <div class="ca-kpi__title">{{ card.title }}</div>
-            <div class="ca-kpi__value">{{ card.primaryValue }}</div>
-            <div class="ca-kpi__sub">{{ card.subTitle }}</div>
-            <div class="ca-kpi__trend" :class="card.trendUp ? 'trend-up' : 'trend-down'">
-              <el-icon><Top v-if="card.trendUp" /><Bottom v-else /></el-icon>
-              {{ card.trendText }}
+            <div class="ca-kpi__body">
+              <div class="ca-kpi__left">
+                <div class="ca-kpi__title">{{ card.title }}</div>
+                <div class="ca-kpi__value tabular-nums">{{ card.primaryValue }}</div>
+                <div class="ca-kpi__sub">{{ card.subTitle }}</div>
+              </div>
+              <div
+                class="ca-kpi__trend-pill"
+                :class="card.trendUp ? 'ca-kpi__trend-pill--up' : 'ca-kpi__trend-pill--down'"
+              >
+                <el-icon class="ca-kpi__trend-icon">
+                  <Top v-if="card.trendUp" />
+                  <Bottom v-else />
+                </el-icon>
+                <span class="ca-kpi__trend-pct tabular-nums">{{ card.trendText }}</span>
+                <span v-if="card.trendCompareLabel" class="ca-kpi__trend-compare">{{
+                  card.trendCompareLabel
+                }}</span>
+              </div>
             </div>
           </article>
         </section>
 
-        <!-- 主内容区：数据 / 看板 / 图表 / 报表 -->
-        <SectionPlatform
-          v-if="filters.viewMode === 'data' || filters.viewMode === 'chart'"
-          :data="pageData"
-          @drill-down="handleDrillDown"
-        />
-        <SectionApp
-          v-else-if="filters.viewMode === 'board'"
-          :data="sectionAppData"
-          @drill-down="handleDrillDown"
-        />
-        <ElCard v-else shadow="never" class="ca-view-placeholder ca-neon-panel">
-          <ElEmpty :description="viewModePlaceholderText" />
-        </ElCard>
+        <!-- 主内容区（原「数据」视图：平台 CPI / 排行 / 地图 / 趋势等） -->
+        <SectionPlatform :data="pageData" @drill-down="handleDrillDown" />
       </main>
     </template>
   </div>
@@ -121,13 +109,8 @@
   import type { ComprehensiveAnalysisFilterState, ComprehensiveAnalysisData } from './types'
   import { useComprehensiveAnalysisFilters } from './composables/useComprehensiveAnalysisFilters'
   import { fetchComprehensiveAnalysisData } from '@/api/user-growth'
-  import {
-    buildComprehensiveAnalysisApiParams,
-    resolveDateRangeFromPreset
-  } from './utils/buildApiParams'
-  import { buildMockSectionAppData } from './mock/data'
+  import { resolveDateRangeFromPreset } from './utils/buildApiParams'
   const SectionPlatform = defineAsyncComponent(() => import('./modules/section-platform.vue'))
-  const SectionApp = defineAsyncComponent(() => import('./modules/section-app.vue'))
 
   defineOptions({ name: 'ComprehensiveAnalysis' })
 
@@ -136,18 +119,10 @@
 
   const filters = reactive<ComprehensiveAnalysisFilterState>({
     dateRange: '7d',
-    s_app_id: 'all',
-    adPlatform: 'all',
-    s_country_code: 'all',
-    viewMode: 'data'
+    s_app_id: '',
+    adPlatform: '',
+    s_country_code: ''
   })
-
-  const viewModes: { key: ComprehensiveAnalysisFilterState['viewMode']; label: string }[] = [
-    { key: 'data', label: '数据' },
-    { key: 'board', label: '看板' },
-    { key: 'chart', label: '图表' },
-    { key: 'report', label: '报表' }
-  ]
 
   const { appOptions, sourceOptions, countryOptions } = useComprehensiveAnalysisFilters()
   const pageData = ref<ComprehensiveAnalysisData | null>(null)
@@ -160,12 +135,6 @@
     }
     return `${date_start} ~ ${date_end}`
   })
-
-  const sectionAppData = computed(() =>
-    buildMockSectionAppData(buildComprehensiveAnalysisApiParams(filters))
-  )
-
-  const viewModePlaceholderText = '报表视图：导出与订阅能力联调后开放'
 
   const isPlatformAnalysisDetail = computed(() => route.name === 'PlatformAnalysisDetail')
 
@@ -202,18 +171,17 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100%;
+    min-height: var(--art-full-height);
     padding: 16px 24px;
-    overflow: hidden;
     background: var(--default-bg-color);
   }
 
-  .is-platform-analysis-detail {
+  /* 详情子路由仍占满内容区，由子页自行布局 */
+  .ca-page.is-platform-analysis-detail {
+    height: var(--art-full-height);
+    min-height: 0;
     padding: 0;
-
-    .ca-page-fx {
-      display: none;
-    }
+    overflow: hidden;
   }
 
   .ca-header {
@@ -250,13 +218,6 @@
     gap: 10px;
     align-items: center;
     min-width: 0;
-  }
-
-  .ca-filters-right {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    margin-left: auto;
   }
 
   .ca-filter-search {
@@ -361,63 +322,17 @@
     box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
   }
 
-  .ca-view-tabs {
-    display: flex;
-    gap: 2px;
-    padding: 4px;
-    background: var(--default-box-color);
-    border: 1px solid var(--default-border);
-    border-radius: 10px;
-    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent);
-  }
-
-  .ca-view-tab {
-    padding: 7px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    cursor: pointer;
-    background: transparent;
-    border: none;
-    border-radius: 9999px;
-    transition:
-      color 0.2s var(--ease-default),
-      background-color 0.2s var(--ease-default),
-      box-shadow 0.2s var(--ease-default),
-      transform 0.2s var(--ease-default);
-
-    &:hover {
-      color: var(--text-primary);
-    }
-
-    &.is-active {
-      color: var(--text-primary);
-      background: color-mix(in srgb, var(--el-color-primary) 22%, transparent);
-      box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--el-color-primary) 35%, transparent),
-        0 0 18px color-mix(in srgb, var(--el-color-primary) 20%, transparent);
-      transform: translateY(-1px);
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .ca-filter-search:hover {
-      transform: none;
-    }
-
-    .ca-view-tab.is-active {
       transform: none;
     }
   }
 
   .ca-main {
     display: flex;
-    flex: 1;
     flex-direction: column;
     gap: 14px;
-    min-height: 0;
     padding-bottom: 20px;
-    overflow: auto;
   }
 
   // ── KPI 行 ────────────────────────────────────────────────────
@@ -456,50 +371,83 @@
   .ca-kpi {
     padding: 14px 16px;
 
+    &__body {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+
+    &__left {
+      flex: 1;
+      min-width: 0;
+    }
+
     &__title {
-      margin-bottom: 2px;
+      margin-bottom: 4px;
       font-size: 12px;
-      color: var(--art-gray-500);
+      line-height: 1.3;
+      color: var(--text-secondary);
     }
 
     &__value {
+      margin-bottom: 4px;
       font-size: 26px;
       font-weight: 700;
       line-height: 1.2;
-      color: var(--art-gray-900);
+      color: var(--text-primary);
     }
 
     &__sub {
-      margin-bottom: 4px;
       font-size: 11px;
-      color: var(--art-gray-500);
+      line-height: 1.3;
+      color: var(--text-secondary);
     }
 
-    &__trend {
+    &__trend-pill {
       display: inline-flex;
-      gap: 2px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+      gap: 4px;
       align-items: center;
+      justify-content: flex-end;
+      max-width: 50%;
+      padding: 6px 10px;
       font-size: 12px;
-
-      &.trend-up {
-        color: #22c55e;
-      }
-
-      &.trend-down {
-        color: #ef4444;
-      }
+      font-weight: 600;
+      border-radius: 9999px;
+      transition:
+        background-color 0.2s var(--ease-default),
+        color 0.2s var(--ease-default);
     }
-  }
 
-  .ca-view-placeholder {
-    flex: 1;
-    min-height: 240px;
+    &__trend-pill--up {
+      color: var(--art-success);
+      background: color-mix(in srgb, var(--art-success) 18%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-success) 28%, transparent);
+    }
 
-    :deep(.el-card__body) {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 220px;
+    &__trend-pill--down {
+      color: var(--art-danger);
+      background: color-mix(in srgb, var(--art-danger) 18%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-danger) 28%, transparent);
+    }
+
+    &__trend-icon {
+      font-size: 14px;
+    }
+
+    &__trend-pct {
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    &__trend-compare {
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.2;
+      white-space: nowrap;
+      opacity: 0.95;
     }
   }
 </style>

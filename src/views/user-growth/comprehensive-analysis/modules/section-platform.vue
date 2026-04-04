@@ -28,7 +28,7 @@
               style="width: 102px"
               popper-class="ca-select-popper"
             >
-              <ElOption label="按广告平台" value="all" />
+              <ElOption label="按广告平台" value="" />
               <ElOption label="Google Ads" value="google" />
               <ElOption label="Facebook" value="facebook" />
               <ElOption label="TikTok" value="tiktok" />
@@ -212,10 +212,10 @@
     MY: 'Malaysia'
   }
 
-  const appRankPlatform = ref('all')
+  const appRankPlatform = ref('')
   /** 应用 CPI 排行：按所选广告平台切换展示（本地口径模拟） */
   const PLATFORM_RANK_FACTOR: Record<string, number> = {
-    all: 1,
+    '': 1,
     google: 1.08,
     facebook: 1.02,
     tiktok: 0.93
@@ -227,7 +227,7 @@
       ...item,
       cpi: +(item.cpi * factor * (1 + (i % 5) * 0.006)).toFixed(2)
     }))
-    if (appRankPlatform.value === 'all') return mapped
+    if (appRankPlatform.value === '') return mapped
     return [...mapped].sort((a, b) => b.cpi - a.cpi)
   })
   const activeMapMetric = ref('CPI')
@@ -689,6 +689,8 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    max-height: 280px;
+    overflow: hidden auto;
   }
 
   .app-rank-item {

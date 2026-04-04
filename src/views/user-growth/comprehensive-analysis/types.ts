@@ -11,16 +11,15 @@ export interface ComprehensiveAnalysisFilterOptions {
   countryOptions: SelectOption[]
 }
 
-/** UI 状态（含仅用于前端的 viewMode） */
+/** 页面筛选 UI 状态（与请求体无关的字段勿放入 ComprehensiveAnalysisApiParams） */
 export interface ComprehensiveAnalysisFilterState {
   dateRange: string
   s_app_id: string
   adPlatform: string
   s_country_code: string
-  viewMode: 'data' | 'board' | 'chart' | 'report' // 仅前端，不传后端
 }
 
-/** 发送给后端的查询参数（不含 viewMode；与 mock/backend-api 契约一致） */
+/** 发送给后端的查询参数（与 mock/backend-api 契约一致） */
 export interface ComprehensiveAnalysisApiParams {
   /** 日期区间开始 YYYY-MM-DD */
   date_start: string
@@ -46,11 +45,19 @@ export interface ComprehensiveAnalysisApiParams {
 
 export interface KpiCard {
   id: string
+  /** KPI 标题 */
   title: string
+  /** 副标题/口径说明（如安装成本、买量用户） */
   subTitle: string
+  /** 主指标展示（预格式化字符串，如 $2.38、42,156） */
   primaryValue: string
+  /**
+   * 趋势幅度展示（不含箭头；百分比类建议保留两位小数，如 5.20%）
+   */
   trendText: string
   trendUp: boolean
+  /** 趋势对比说明（如 vs昨日）；可选 */
+  trendCompareLabel?: string
 }
 
 // ─── 广告平台 CPI 对比（横向柱状图）──────────────────────────────
@@ -147,37 +154,4 @@ export interface ComprehensiveAnalysisData {
   alerts: AlertItem[]
   platformCpiTrend: PlatformCpiTrend
   ecpmAnalysis: EcpmAnalysis
-}
-
-// ─── 应用维度区块（section-app，可选；与主 overview 数据结构不同）────────
-
-export interface MatrixCell {
-  value?: string
-  changeRate?: string
-  highlight?: 'warn' | 'good' | ''
-}
-
-export interface AppCpiRankRow {
-  rank: number
-  appName: string
-  cpi: number
-  change: number
-  isHighlight?: boolean
-}
-
-export interface PlatformCountryMatrixRow {
-  platform: string
-  cells: Record<string, MatrixCell>
-}
-
-export interface PlatformCountryMatrix {
-  countries: string[]
-  rows: PlatformCountryMatrixRow[]
-}
-
-/** 应用维度布局专用数据（与主 ComprehensiveAnalysisData 独立） */
-export interface SectionAppData {
-  appCpiRank: AppCpiRankRow[]
-  platformCountryMatrix: PlatformCountryMatrix
-  appCpiTrend: PlatformCpiTrend
 }

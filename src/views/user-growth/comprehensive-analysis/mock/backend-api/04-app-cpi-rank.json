@@ -1,18 +1,55 @@
 {
-  "_comment": "综合分析 - 应用 CPI 排行榜。对应 types.ts: AppCpiRankItem[]。",
+  "_comment": "综合分析 - 应用 CPI 排行榜。对应 types.ts: AppCpiRankItem[]。与 `mock/data.ts` 基线一致；icon 可选，示例省略。",
+  "interaction": {
+    "route": "/user-growth/comprehensive-analysis",
+    "surface": "中部第二列「应用 CPI 排行」列表（可下钻）",
+    "trigger": "fetchComprehensiveAnalysisData 内并发 POST；点击行跳转平台分析详情。"
+  },
   "fieldDescription": {
     "request": {
-      "date_start": { "type": "string", "required": true },
-      "date_end": { "type": "string", "required": true },
-      "s_app_id": { "type": "string", "required": true },
-      "source": { "type": "string", "required": true },
-      "s_country_code": { "type": "string", "required": true }
+      "date_start": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间开始 YYYY-MM-DD（含）。"
+      },
+      "date_end": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间结束 YYYY-MM-DD（含）。"
+      },
+      "s_app_id": { "type": "string", "required": true, "description": "应用 ID；'' 全部。" },
+      "source": { "type": "string", "required": true, "description": "广告平台；'' 全部。" },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码；'' 全部。"
+      }
     },
     "response": {
       "data": {
         "type": "AppCpiRankItem[]",
         "required": true,
-        "description": "id/name/cpi/trend（up|down|flat）；按 cpi 降序排列。"
+        "description": "应用 CPI 排行；建议按 cpi 降序；trend 用于迷你趋势箭头样式。"
+      }
+    },
+    "AppCpiRankItem": {
+      "id": { "type": "string", "required": true, "description": "行唯一标识。" },
+      "name": { "type": "string", "required": true, "description": "应用展示名。" },
+      "icon": {
+        "type": "string",
+        "required": false,
+        "description": "应用图标 URL；可选，缺省由前端首字母占位。"
+      },
+      "cpi": {
+        "type": "number",
+        "required": true,
+        "description": "CPI（USD），展示保留两位小数。"
+      },
+      "trend": {
+        "type": "string",
+        "required": true,
+        "enum": ["up", "down", "flat"],
+        "description": "相对对比期的变化方向。"
       }
     }
   },
@@ -25,20 +62,8 @@
   },
   "sampleResponse": {
     "data": [
-      {
-        "id": "app1",
-        "name": "PhoneTracker",
-        "icon": "https://cdn.example.com/apps/phone-tracker.png",
-        "cpi": 3.21,
-        "trend": "down"
-      },
-      {
-        "id": "app2",
-        "name": "Weather5",
-        "icon": "https://cdn.example.com/apps/weather5.png",
-        "cpi": 2.88,
-        "trend": "up"
-      },
+      { "id": "app1", "name": "PhoneTracker", "cpi": 3.21, "trend": "down" },
+      { "id": "app2", "name": "Weather5", "cpi": 2.88, "trend": "up" },
       { "id": "app3", "name": "BloodSugar2", "cpi": 2.54, "trend": "flat" },
       { "id": "app4", "name": "StepCounter", "cpi": 2.31, "trend": "up" },
       { "id": "app5", "name": "SleepTrack", "cpi": 2.09, "trend": "down" }
@@ -50,5 +75,11 @@
     "priority": "P1",
     "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
     "responseBody": "AppCpiRankItem[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "示例 5 行覆盖 trend 枚举 up/down/flat。",
+      "勿在契约示例中强依赖外链 icon；若返回 URL 须为可访问 HTTPS。"
+    ]
   }
 }

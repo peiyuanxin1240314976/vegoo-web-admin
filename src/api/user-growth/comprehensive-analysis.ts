@@ -65,10 +65,24 @@ const EMPTY_ECPM: EcpmAnalysis = {
   }
 }
 
+/** meta 下拉「全部」须与请求体一致为 `''`；兼容后端仍返回字面量 `all` */
+function normalizeMetaSelectOptions(options: unknown): SelectOption[] {
+  return asArray<SelectOption>(options).map((o) => ({
+    ...o,
+    value: o.value === 'all' ? '' : o.value
+  }))
+}
+
 /** 契约 01-meta-filter-options — POST */
 export function fetchComprehensiveAnalysisFilterOptions() {
   if (isComprehensiveAnalysisEndpointMock(ComprehensiveAnalysisEndpoint.MetaFilterOptions)) {
-    return comprehensiveAnalysisMock.mockFetchComprehensiveAnalysisMetaFilterOptions()
+    return comprehensiveAnalysisMock
+      .mockFetchComprehensiveAnalysisMetaFilterOptions()
+      .then((opts) => ({
+        appOptions: normalizeMetaSelectOptions(opts.appOptions),
+        sourceOptions: normalizeMetaSelectOptions(opts.sourceOptions),
+        countryOptions: normalizeMetaSelectOptions(opts.countryOptions)
+      }))
   }
   return request
     .post<any>({
@@ -77,9 +91,9 @@ export function fetchComprehensiveAnalysisFilterOptions() {
     })
     .then((res) => unwrapDataDeep<ComprehensiveAnalysisFilterOptions>(res))
     .then((opts) => ({
-      appOptions: asArray<SelectOption>(opts?.appOptions),
-      sourceOptions: asArray<SelectOption>(opts?.sourceOptions),
-      countryOptions: asArray<SelectOption>(opts?.countryOptions)
+      appOptions: normalizeMetaSelectOptions(opts?.appOptions),
+      sourceOptions: normalizeMetaSelectOptions(opts?.sourceOptions),
+      countryOptions: normalizeMetaSelectOptions(opts?.countryOptions)
     }))
 }
 
@@ -208,15 +222,9 @@ export function fetchComprehensiveAnalysisEcpmAnalysis(params: ComprehensiveAnal
 }
 
 /**
- * 页面聚合（不含仅前端的 viewMode）。
- * 兼容现有页面逻辑：内部按契约拆分请求后合并为 `ComprehensiveAnalysisData`。
+ * 页面聚合：内部按契约拆分请求后合并为 `ComprehensiveAnalysisData`。
  */
-export async function fetchComprehensiveAnalysisData(
-  filters: Pick<
-    ComprehensiveAnalysisFilterState,
-    'dateRange' | 's_app_id' | 'adPlatform' | 's_country_code'
-  >
-) {
+export async function fetchComprehensiveAnalysisData(filters: ComprehensiveAnalysisFilterState) {
   const params = buildComprehensiveAnalysisApiParams(filters)
   const [
     kpis,

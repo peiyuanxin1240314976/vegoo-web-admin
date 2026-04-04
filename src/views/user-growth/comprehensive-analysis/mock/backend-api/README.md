@@ -8,6 +8,8 @@
 
 ## 接口表
 
+每份契约 JSON 根级含 **`interaction`**（路由 / 页面落点 / 触发时机），便于与 UI 对齐联调。
+
 | 优先级 | 说明 | URL（POST） | 契约文件 |
 | --- | --- | --- | --- |
 | P0 | 筛选下拉（应用 / 广告平台 / 国家） | `/api/user-growth/comprehensive-analysis/meta-filter-options` | `01-meta-filter-options.json` |
@@ -18,6 +20,8 @@
 | P1 | 投放预警列表 | `/api/user-growth/comprehensive-analysis/alerts` | `06-alerts.json` |
 | P1 | 广告平台 CPI 趋势折线图 | `/api/user-growth/comprehensive-analysis/platform-cpi-trend` | `07-platform-cpi-trend.json` |
 | P1 | ECPM 分析（预估 vs 真实） | `/api/user-growth/comprehensive-analysis/ecpm-analysis` | `08-ecpm-analysis.json` |
+
+**示例响应副本**（根级 `data`，供工具导入）：`../api-mock/01-*.json` … `08-*.json`。
 
 ## 公共请求参数（P0/P1 均适用）
 

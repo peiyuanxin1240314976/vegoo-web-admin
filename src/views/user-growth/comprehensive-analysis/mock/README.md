@@ -1,15 +1,22 @@
 # 综合分析 — Mock 说明
 
-## 运行时本地 Mock
+## 数据源开关
 
-- `src/api/user-growth.ts` 中 `fetchComprehensiveAnalysisFilterOptions`、`fetchComprehensiveAnalysisData` 当前使用 **`data.ts`**，不请求后端；接入真实接口时在 API 层改为 `request.post`。
-- `buildMockComprehensiveAnalysisData(apiParams)`：随筛选（应用 / 广告平台 / 国家 / 日期）变化 KPI、柱图、地图、趋势等。
-- `buildMockSectionAppData(apiParams)`：看板视图 `SectionApp` 用，随筛选变化。
+- **配置**：`../config/data-source.ts` 中 `COMPREHENSIVE_ANALYSIS_USE_MOCK`（按接口粒度）。
+- **实现**：`comprehensive-analysis-api-mock.ts` 内 `mockFetch*`；聚合页通过 `src/api/user-growth/comprehensive-analysis.ts` 中 `isComprehensiveAnalysisEndpointMock` 分支调用。
+- **默认**：仓库内开关当前为 **全 Mock**（便于离线开发）；联调真实网关时将对应 endpoint 改为 `false`。
+
+## 运行时 Mock 数据
+
+- **`data.ts`**：`MOCK_COMPREHENSIVE_ANALYSIS_FILTER_OPTIONS`、`MOCK_COMPREHENSIVE_ANALYSIS_DATA` 基线数据。
+- **`buildMockComprehensiveAnalysisData(apiParams)`**：按 `date_start` / `date_end` / `s_app_id` / `source` / `s_country_code` 做哈希抖动，模拟筛选联动（与契约筛选语义一致）。
 
 ## 接口契约（backend-api）
 
-`mock/backend-api/` 用于 **接口契约与联调说明**，页面类型定义见 `../types.ts`。
+- 目录：`mock/backend-api/`，**一接口一 JSON**，含 `fieldDescription`、`sampleRequest`、`sampleResponse`、`interaction`、`api`。
+- 父级路径：`POST /api/user-growth/comprehensive-analysis/*`（与路由 `/user-growth/comprehensive-analysis` 对齐）。
+- **筛选「全部」**：请求体 `s_app_id` / `source` / `s_country_code` 均为 **`""`**；meta 下拉「全部」项 `value` 同为 `""`（见 `utils/buildApiParams.ts`）。
 
-- **筛选「全部」**：请求体中对应字段为空字符串 `''`（由 `utils/buildApiParams.ts` 从 UI 的 `all` 转换）。
-- **viewMode**（数据 / 看板 / 图表 / 报表）仅前端状态，**不参与请求**。
-- 网关统一包裹时，业务数据置于响应 `data` 内（与项目 `request` 解包一致）。
+## 工具用示例 JSON（api-mock）
+
+- 目录：`mock/api-mock/`，根级 `data` 与网关包裹形态一致，便于 Postman / MSW；须与 `backend-api` 示例及 `data.ts` 基线同步维护。

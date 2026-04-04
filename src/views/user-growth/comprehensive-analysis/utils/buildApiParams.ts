@@ -26,23 +26,20 @@ export function resolveDateRangeFromPreset(dateRange: string): {
   return { date_start: formatYmd(start), date_end: formatYmd(end) }
 }
 
-/** UI 筛选「全部」→ 请求体空字符串（与 ad-performance mock 约定一致） */
-function allToEmpty(v: string) {
-  return v === 'all' ? '' : v
+/** 筛选维度「全部」：请求体须为 `''`；兼容历史 UI/meta 仍使用字面量 `all` */
+function dimensionToApiValue(v: string) {
+  return v === 'all' || v === '' ? '' : v
 }
 
 export function buildComprehensiveAnalysisApiParams(
-  filters: Pick<
-    ComprehensiveAnalysisFilterState,
-    'dateRange' | 's_app_id' | 'adPlatform' | 's_country_code'
-  >
+  filters: ComprehensiveAnalysisFilterState
 ): ComprehensiveAnalysisApiParams {
   const { date_start, date_end } = resolveDateRangeFromPreset(filters.dateRange)
   return {
     date_start,
     date_end,
-    s_app_id: allToEmpty(filters.s_app_id),
-    source: allToEmpty(filters.adPlatform),
-    s_country_code: allToEmpty(filters.s_country_code)
+    s_app_id: dimensionToApiValue(filters.s_app_id),
+    source: dimensionToApiValue(filters.adPlatform),
+    s_country_code: dimensionToApiValue(filters.s_country_code)
   }
 }

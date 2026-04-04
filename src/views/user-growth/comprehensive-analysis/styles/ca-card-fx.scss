@@ -55,34 +55,10 @@
     mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
   }
 
-  > *:not(.ca-page-fx) {
+  > * {
     position: relative;
     z-index: 1;
   }
-}
-
-.ca-page-fx {
-  position: absolute;
-  inset: -12% -12% 40%;
-  z-index: 0;
-  pointer-events: none;
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    transparent 0deg,
-    rgb(59 130 246 / 14%) 55deg,
-    rgb(6 182 212 / 10%) 80deg,
-    transparent 130deg,
-    rgb(16 185 129 / 12%) 200deg,
-    rgb(52 211 153 / 8%) 225deg,
-    transparent 285deg,
-    rgb(168 85 247 / 10%) 330deg,
-    rgb(249 115 22 / 6%) 350deg,
-    transparent 360deg
-  );
-  opacity: 0.6;
-  mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
-  animation: ca-fx-spin 52s linear infinite;
-  will-change: transform;
 }
 
 @keyframes ca-aurora-drift {
@@ -114,12 +90,6 @@
   100% {
     opacity: 1;
     transform: scaleY(1.08) skewX(1deg);
-  }
-}
-
-@keyframes ca-fx-spin {
-  to {
-    transform: rotate(360deg);
   }
 }
 
@@ -183,8 +153,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .comprehensive-analysis-page::before,
-  .comprehensive-analysis-page::after,
-  .ca-page-fx {
+  .comprehensive-analysis-page::after {
     animation: none;
   }
 

@@ -1,10 +1,10 @@
 /**
  * 综合分析 - 数据源开关（小模块内 config，与 `mock/backend-api` 契约 1:1）
  *
- * - `true` = 使用本地 Mock（`views/user-growth/comprehensive-analysis/mock/comprehensive-analysis-api-mock.ts`）
- * - `false` = 走真实 HTTP（`src/api/user-growth/comprehensive-analysis.ts`）
+ * - `true` = 使用本地 Mock（`mock/comprehensive-analysis-api-mock.ts`）
+ * - `false` = 走真实 HTTP（`src/api/user-growth/comprehensive-analysis.ts` 内 `request.post`）
  *
- * 默认全部为 `false`，统一走线上 HTTP；本地调试可将对应项改为 `true`。
+ * 当前默认全部为 `true`（离线开发）；联调网关时将对应 endpoint 改为 `false`。
  */
 export enum ComprehensiveAnalysisEndpoint {
   /** 01-meta-filter-options */
@@ -26,14 +26,14 @@ export enum ComprehensiveAnalysisEndpoint {
 }
 
 export const COMPREHENSIVE_ANALYSIS_USE_MOCK: Record<ComprehensiveAnalysisEndpoint, boolean> = {
-  [ComprehensiveAnalysisEndpoint.MetaFilterOptions]: false,
-  [ComprehensiveAnalysisEndpoint.Kpi]: false,
-  [ComprehensiveAnalysisEndpoint.PlatformCpiBar]: false,
-  [ComprehensiveAnalysisEndpoint.AppCpiRank]: false,
-  [ComprehensiveAnalysisEndpoint.CountryDistribution]: false,
-  [ComprehensiveAnalysisEndpoint.Alerts]: false,
-  [ComprehensiveAnalysisEndpoint.PlatformCpiTrend]: false,
-  [ComprehensiveAnalysisEndpoint.EcpmAnalysis]: false
+  [ComprehensiveAnalysisEndpoint.MetaFilterOptions]: true,
+  [ComprehensiveAnalysisEndpoint.Kpi]: true,
+  [ComprehensiveAnalysisEndpoint.PlatformCpiBar]: true,
+  [ComprehensiveAnalysisEndpoint.AppCpiRank]: true,
+  [ComprehensiveAnalysisEndpoint.CountryDistribution]: true,
+  [ComprehensiveAnalysisEndpoint.Alerts]: true,
+  [ComprehensiveAnalysisEndpoint.PlatformCpiTrend]: true,
+  [ComprehensiveAnalysisEndpoint.EcpmAnalysis]: true
 }
 
 export function isComprehensiveAnalysisEndpointMock(

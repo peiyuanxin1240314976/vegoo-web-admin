@@ -381,6 +381,7 @@ alwaysApply: true
 | `chartColor` | 火花图主色（CSS 颜色字符串）。 |
 | `actionTag` | 操作标签文案（如“选择”）。 |
 | `actionTagType` | 操作标签类型（如 `cyan/orange/gray/red`）。 |
+| `trendCompareLabel` | KPI 卡片趋势角标**对比期文案**（如 vs昨日）；可选，与 `trendText`（变化幅度展示）配合使用。 |
 
 #### KPI/业务指标（实时数据模块）
 

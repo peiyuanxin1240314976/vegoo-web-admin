@@ -1,25 +1,70 @@
 {
   "_comment": "综合分析 - 广告平台 CPI 横向柱图。对应 types.ts: PlatformCpiBarData。",
+  "interaction": {
+    "route": "/user-growth/comprehensive-analysis",
+    "surface": "中部第一列「广告平台 CPI 对比」ECharts 柱图",
+    "trigger": "与 fetchComprehensiveAnalysisData 内其他块并发 POST；source 非空时仅返回匹配平台项。"
+  },
   "fieldDescription": {
     "request": {
-      "date_start": { "type": "string", "required": true },
-      "date_end": { "type": "string", "required": true },
-      "s_app_id": { "type": "string", "required": true },
-      "source": { "type": "string", "required": true },
-      "s_country_code": { "type": "string", "required": true }
+      "date_start": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间开始 YYYY-MM-DD（含）。"
+      },
+      "date_end": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间结束 YYYY-MM-DD（含）。"
+      },
+      "s_app_id": {
+        "type": "string",
+        "required": true,
+        "description": "应用 ID；'' 表示全部应用。"
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台筛选；'' 全部；与 meta sourceOptions 的 value 一致。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码；'' 全部；大写 ISO 3166-1 alpha-2。"
+      }
     },
     "response": {
       "data": {
         "type": "PlatformCpiBarData",
         "required": true,
-        "description": "target（目标 CPI）+ items（每个广告平台的 name/cpi/color/status）。"
+        "description": "target（目标 CPI 参考线）+ items（各广告平台柱条）。"
       }
     },
     "PlatformCpiBarData": {
-      "target": { "type": "number", "description": "目标 CPI 阈值，用于画参考线。" },
+      "target": {
+        "type": "number",
+        "required": true,
+        "description": "目标 CPI 阈值（USD），用于 UI 参考线与达标态。"
+      },
       "items": {
         "type": "PlatformCpiBarItem[]",
-        "description": "name/cpi/color/status（good|near|over）。"
+        "required": true,
+        "description": "横向柱图序列。"
+      }
+    },
+    "PlatformCpiBarItem": {
+      "name": { "type": "string", "required": true, "description": "广告平台展示名。" },
+      "cpi": {
+        "type": "number",
+        "required": true,
+        "description": "CPI（USD），展示时保留两位小数。"
+      },
+      "color": { "type": "string", "required": true, "description": "柱条颜色（CSS 色值）。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["good", "near", "over"],
+        "description": "相对 target：good 达标、near 接近、over 超标。"
       }
     }
   },
@@ -48,5 +93,8 @@
     "priority": "P0",
     "requestBody": "date_start, date_end, s_app_id, source, s_country_code",
     "responseBody": "PlatformCpiBarData"
+  },
+  "apiSuggestion": {
+    "notes": ["sample 中 status 枚举三类均已出现，便于联调标签色。"]
   }
 }
