@@ -49,6 +49,7 @@ import { loadingService } from '@/utils/ui'
 import { useCommon } from '@/hooks/core/useCommon'
 import { useWorktabStore } from '@/store/modules/worktab'
 import { fetchGetUserInfo } from '@/api/auth'
+import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
 import { ApiStatus } from '@/utils/http/status'
 import { isHttpError } from '@/utils/http/error'
 import { RouteRegistry, MenuProcessor, IframeRouteManager, RoutePermissionValidator } from '../core'
@@ -339,6 +340,11 @@ async function handleDynamicRoutes(
     await fetchUserInfo()
     profiler.end('fetchUserInfo')
 
+    // 1.1 公用顶栏筛选项（session 命中则不请求；失败不阻断路由）
+    profiler.start('cockpitMetaFilter')
+    await useCockpitMetaFilterStore().ensureLoaded()
+    profiler.end('cockpitMetaFilter')
+
     // 2. 获取菜单数据
     profiler.start('getMenuList')
     const menuList = await menuProcessor.getMenuList()
@@ -454,6 +460,7 @@ async function fetchUserInfo(): Promise<void> {
  */
 export function resetRouterState(delay: number): void {
   setTimeout(() => {
+    useCockpitMetaFilterStore().reset()
     routeRegistry?.unregister()
     IframeRouteManager.getInstance().clear()
 

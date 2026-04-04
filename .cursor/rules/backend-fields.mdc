@@ -336,7 +336,7 @@ alwaysApply: true
 | `hourLabels` | 小时/时段横轴标签数组（与各序列等长）。 |
 | `costSeries` | 与 `hourLabels` 对齐的花费序列（USD）。 |
 | `roiPercentSeries` | 与 `hourLabels` 对齐的 ROI 序列（百分比数值）。 |
-| `CockpitMetaFilterOptionsData` | （TS 响应体类型）公用 `.../cockpit/meta-filter-options` 业务体；定义见 `src/types/cockpit-meta-filter.ts`。 |
+| `CockpitMetaFilterOptionsData` | （TS 响应体类型）公用 **`GET`** `.../analysis/cockpit/meta-filter-options`（无参）业务体；定义见 `src/types/cockpit-meta-filter.ts`。**与同构顶栏配套时**：页面 **直接读** **`useCockpitMetaFilterStore().data`**（或 `useCockpitMetaFilterOptions().cockpitMeta`）；勿在各模块 `mock/backend-api` 再建重复契约 JSON，仅在 README 标注并引用 **`paid-analysis/mock/backend-api/README.md` 附录 A**（见 `api-contract-and-mock-conventions.mdc`）。 |
 | `CockpitMetaOptionItem` | （TS 类型）上述 meta 中单项 `{ label, value }`；定义见 `src/types/cockpit-meta-filter.ts`。 |
 | `PaidAnalysisChannelTabOverviewData` | （TS）付费分析 channel Tab 概览接口体；契约 `02-tab-channel-overview.json`（`views/user-growth/paid-analysis/mock/backend-api/` 根目录扁平）。 |
 | `PaidAnalysisChannelTabTablesData` | （TS）channel Tab 表格接口体；契约 `02-tab-channel-tables.json`（同目录根扁平）。 |

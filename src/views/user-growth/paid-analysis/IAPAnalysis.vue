@@ -23,11 +23,12 @@
             class="iap-filter-select"
             :prefix-icon="Grid"
           >
-            <ElOption label="全部" value="all" />
-            <ElOption label="Weather5" value="weather5" />
-            <ElOption label="PhoneTracker" value="phonetracker" />
-            <ElOption label="YearCam" value="yearcam" />
-            <ElOption label="AgeCam" value="agecam" />
+            <ElOption
+              v-for="opt in appSelectOptions"
+              :key="opt.value === '' ? '__all_app__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </ElSelect>
           <ElSelect
             v-model="filters.platform"
@@ -35,9 +36,12 @@
             class="iap-filter-select"
             :prefix-icon="Monitor"
           >
-            <ElOption label="Android&iOS" value="all" />
-            <ElOption label="iOS" value="ios" />
-            <ElOption label="Android" value="android" />
+            <ElOption
+              v-for="opt in platformSelectOptions"
+              :key="opt.value === '' ? '__all_plat__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </ElSelect>
           <ElSelect
             v-model="filters.country"
@@ -45,11 +49,12 @@
             class="iap-filter-select"
             :prefix-icon="Flag"
           >
-            <ElOption label="全部" value="all" />
-            <ElOption label="US" value="us" />
-            <ElOption label="KR" value="kr" />
-            <ElOption label="DE" value="de" />
-            <ElOption label="JP" value="jp" />
+            <ElOption
+              v-for="opt in countrySelectOptions"
+              :key="opt.value === '' ? '__all_country__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </ElSelect>
           <div class="iap-filter-actions">
             <ElButton round class="iap-search-btn" @click="handleSearch">检索</ElButton>
@@ -127,12 +132,35 @@
 
 <script setup lang="ts">
   import { Calendar, Flag, Grid, Monitor } from '@element-plus/icons-vue'
+  import { storeToRefs } from 'pinia'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import IAPChannelTab from './IAPChannelTab.vue'
   import IAPProductTab from './IAPProductTab.vue'
   import IAPOrderTab from './IAPOrderTab.vue'
 
   defineOptions({ name: 'IAPAnalysis' })
+
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
+
+  function fallbackOptions(label: string): CockpitMetaOptionItem[] {
+    return [{ label, value: '' }]
+  }
+
+  const appSelectOptions = computed(() => {
+    const list = cockpitMeta.value?.appOptions
+    return list?.length ? list : fallbackOptions('全部')
+  })
+  const platformSelectOptions = computed(() => {
+    const list = cockpitMeta.value?.platformOptions
+    return list?.length ? list : fallbackOptions('全部')
+  })
+  const countrySelectOptions = computed(() => {
+    const list = cockpitMeta.value?.countryOptions
+    return list?.length ? list : fallbackOptions('全部')
+  })
 
   const activeTab = ref<'channel' | 'product' | 'order'>('channel')
 
@@ -143,9 +171,9 @@
   ]
 
   const filters = reactive({
-    appId: 'all',
-    platform: 'all',
-    country: 'all',
+    appId: '',
+    platform: '',
+    country: '',
     date: getAppTodayYYYYMMDD()
   })
 
@@ -158,6 +186,7 @@
   let bootTimer: ReturnType<typeof setTimeout> | null = null
 
   onMounted(() => {
+    void metaStore.ensureLoaded()
     bootTimer = setTimeout(() => {
       bootLoading.value = false
       bootTimer = null
