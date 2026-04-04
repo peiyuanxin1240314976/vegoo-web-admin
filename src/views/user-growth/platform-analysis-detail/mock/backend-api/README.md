@@ -8,7 +8,7 @@
 
 （见 `src/api/user-growth/platform-analysis-detail.ts` 中 `PLATFORM_ANALYSIS_DETAIL_BASE`；若网关另有映射，以 `src/api` 为准并在本目录契约 `_comment` 中备注。）
 
-约定：**POST**，各接口请求体均为 **`{ name, from? }`**（与钻取 query 一致）。**不含**独立 `meta-filter-options` 契约；顶栏若与驾驶舱同构筛选项，见项目规则与付费分析附录 A。
+约定：**POST**，各接口请求体均为 **`{ name, startDate, endDate, appId, source, s_country_code }`**（`name` 与路由 query `name` 一致；日期与三维度筛选与页面顶栏一致，「全部」维度传 `""`）。**不含**独立 `meta-filter-options` 契约；应用/广告平台/国家选项来自 **`GET .../cockpit/meta-filter-options`**（前端读 `useCockpitMetaFilterStore`），见项目规则与付费分析附录 A。
 
 ## 数据源开关
 
@@ -38,6 +38,6 @@
 
 ## 与综合分析的关系
 
-- 钻取时 `query.name`、`query.from` 传入各接口请求体。
+- 钻取时 `query.name` 与各接口请求体 `name` 一致；另传 `startDate`/`endDate`/`appId`/`source`/`s_country_code`（与顶栏筛选同步）。
 - 国家行仅用 **`s_country_code`**（ISO alpha-2）+ 前端 `flag-icons`，勿返回国旗 emoji。
 - 顶栏 **`KpiCard`** 与综合分析页类型同构（`src/views/user-growth/comprehensive-analysis/types.ts`）。

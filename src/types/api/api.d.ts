@@ -232,8 +232,16 @@ declare namespace Api {
     interface PlatformAnalysisDetailRequest {
       /** 钻取实体名称（与路由 query `name` 一致，如应用名） */
       name: string
-      /** 来源页面标识，如 comprehensive-analysis；可空字符串 */
-      from?: string
+      /** 查询起始日期（含），YYYY-MM-DD */
+      startDate: string
+      /** 查询结束日期（含），YYYY-MM-DD */
+      endDate: string
+      /** 应用筛选；空字符串表示全部（与 cockpit meta `appOptions` 的 value 一致，UI `all` 须映射为 ''） */
+      appId: string
+      /** 广告平台筛选；空字符串表示全部；枚举值为 string（如 `"1"`） */
+      source: string
+      /** 国家代码筛选；空字符串表示全部；小写 ISO 3166-1 alpha-2 */
+      s_country_code: string
     }
 
     /** 广告平台分析 - 筛选项元数据单项（响应 data.apps | platforms | sources[]） */

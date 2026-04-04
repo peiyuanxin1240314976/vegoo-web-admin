@@ -141,7 +141,7 @@
   function handleDrillDown(name: string) {
     router.push({
       path: '/user-growth/comprehensive-analysis/platform-analysis-detail',
-      query: { name, from: 'comprehensive-analysis' }
+      query: { name }
     })
   }
 

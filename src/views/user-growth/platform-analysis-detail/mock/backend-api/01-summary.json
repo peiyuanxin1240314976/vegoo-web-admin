@@ -7,10 +7,30 @@
         "required": true,
         "description": "钻取实体名称，与路由 query `name` 一致。"
       },
-      "from": {
+      "startDate": {
         "type": "string",
-        "required": false,
-        "description": "来源页标识，如 comprehensive-analysis。"
+        "required": true,
+        "description": "查询起始日期（含），YYYY-MM-DD；与页面顶栏日期范围一致。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询结束日期（含），YYYY-MM-DD。"
+      },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用筛选；空字符串表示全部。选项来自 GET .../cockpit/meta-filter-options 的 appOptions。"
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台筛选；空字符串表示全部；枚举值为 string（如 \"1\"）。选项来自 meta `sourceOptions`。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码筛选；空字符串表示全部；小写 ISO 3166-1 alpha-2。选项来自 meta `countryOptions`。"
       }
     },
     "response": {
@@ -91,7 +111,11 @@
   },
   "sampleRequest": {
     "name": "PhoneTracker",
-    "from": "comprehensive-analysis"
+    "startDate": "2026-02-27",
+    "endDate": "2026-03-05",
+    "appId": "",
+    "source": "",
+    "s_country_code": ""
   },
   "sampleResponse": {
     "data": {
@@ -174,7 +198,7 @@
     "url": "POST /api/v1/datacenter/analysis/user-growth/comprehensive-analysis/platform-analysis-detail/summary",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "name (必填), from?",
+    "requestBody": "name, startDate, endDate, appId, source, s_country_code (均为 string；筛选「全部」用 \"\")",
     "responseBody": "PlatformAnalysisDetailSummary"
   },
   "apiSuggestion": {
@@ -191,7 +215,7 @@
         "prerequisite": "登录态；config/data-source.ts 开关。"
       }
     ],
-    "defaultSelection": "name 来自 route.query.name，缺省为「应用」；from 默认空字符串。",
+    "defaultSelection": "name 来自 route.query.name，缺省为「应用」；日期默认近 7 天（与 resolveDateRangeFromPreset('7d') 一致）；appId/source/s_country_code 默认 \"\"；筛选项来自 useCockpitMetaFilterStore。",
     "dedupe": "可与其它分片共用同一组 query；换钻取对象时应整页重拉。"
   }
 }

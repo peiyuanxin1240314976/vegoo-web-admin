@@ -1,280 +1,366 @@
 <template>
   <div class="pad-page art-full-height">
     <div class="pad-page-fx" aria-hidden="true" />
-    <!-- ── 顶栏 KPI（结构与综合分析页 KpiCard 一致）──────────────── -->
-    <section class="pad-kpi-grid">
-      <article
-        v-for="(card, kpiIndex) in pageData?.kpis ?? []"
-        :key="card.id"
-        class="pad-kpi"
-        :class="`pad-kpi--${kpiCardTheme(kpiIndex)}`"
-      >
-        <div class="pad-kpi__border-spin" aria-hidden="true" />
-        <div class="pad-kpi__inner">
-          <div class="pad-kpi__title">{{ card.title }}</div>
-          <div class="pad-kpi__value tabular-nums">{{ card.primaryValue }}</div>
-          <div v-if="card.subTitle" class="pad-kpi__sub">{{ card.subTitle }}</div>
-          <div class="pad-kpi__tip-row">
-            <div class="pad-kpi__compare" :class="card.trendUp ? 'is-up' : 'is-down'">
-              <el-icon class="pad-kpi__compare-icon" aria-hidden="true">
-                <Top v-if="card.trendUp" />
-                <Bottom v-else />
-              </el-icon>
-              <span class="pad-kpi__compare-pct tabular-nums">{{ card.trendText }}</span>
-              <span v-if="card.trendCompareLabel" class="pad-kpi__compare-label">{{
-                card.trendCompareLabel
-              }}</span>
+
+    <!-- ── 顶栏筛选（日期自定义；应用/广告平台/国家来自 cockpit meta-filter Store）──── -->
+    <header class="pad-filter-bar">
+      <div class="pad-filter-bar__inner">
+        <div class="pad-filter-item pad-filter-item--date">
+          <ElIcon class="pad-filter-item__icon" aria-hidden="true"><Calendar /></ElIcon>
+          <span v-if="isLast7DaysPreset" class="pad-filter-date-preset">近7天</span>
+          <ElDatePicker
+            v-model="dateRange"
+            type="daterange"
+            unlink-panels
+            range-separator="~"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
+            :clearable="false"
+            class="pad-filter-date"
+            popper-class="pad-filter-date-popper"
+          />
+        </div>
+
+        <div class="pad-filter-item pad-filter-item--select">
+          <span class="pad-filter-item__prefix">应用：</span>
+          <ElSelect
+            v-model="filters.appId"
+            class="pad-filter-select pad-filter-select--app"
+            filterable
+            placeholder="全部"
+            popper-class="pad-filter-select-popper"
+          >
+            <ElOption
+              v-for="opt in appOptions"
+              :key="opt.value === '' ? '__all_app__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
+        </div>
+
+        <div class="pad-filter-item pad-filter-item--select">
+          <span class="pad-filter-item__prefix">广告平台：</span>
+          <ElSelect
+            v-model="filters.source"
+            class="pad-filter-select pad-filter-select--source"
+            placeholder="全部"
+            popper-class="pad-filter-select-popper"
+          >
+            <ElOption
+              v-for="opt in sourceOptions"
+              :key="opt.value === '' ? '__all_src__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
+        </div>
+
+        <div class="pad-filter-item pad-filter-item--select">
+          <span class="pad-filter-item__prefix">国家：</span>
+          <ElSelect
+            v-model="filters.s_country_code"
+            class="pad-filter-select pad-filter-select--country"
+            filterable
+            placeholder="全部"
+            popper-class="pad-filter-select-popper"
+          >
+            <ElOption
+              v-for="opt in countryOptions"
+              :key="opt.value === '' ? '__all_cty__' : opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
+        </div>
+
+        <ElButton round class="pad-filter-search" :icon="Search" @click="loadPage">查询</ElButton>
+      </div>
+    </header>
+
+    <div v-loading="pageLoading" class="pad-page-content">
+      <!-- ── 顶栏 KPI（结构与综合分析页 KpiCard 一致）──────────────── -->
+      <section class="pad-kpi-grid">
+        <article
+          v-for="(card, kpiIndex) in pageData?.kpis ?? []"
+          :key="card.id"
+          class="pad-kpi"
+          :class="`pad-kpi--${kpiCardTheme(kpiIndex)}`"
+        >
+          <div class="pad-kpi__border-spin" aria-hidden="true" />
+          <div class="pad-kpi__inner">
+            <div class="pad-kpi__title">{{ card.title }}</div>
+            <div class="pad-kpi__value tabular-nums">{{ card.primaryValue }}</div>
+            <div v-if="card.subTitle" class="pad-kpi__sub">{{ card.subTitle }}</div>
+            <div class="pad-kpi__tip-row">
+              <div class="pad-kpi__compare" :class="card.trendUp ? 'is-up' : 'is-down'">
+                <el-icon class="pad-kpi__compare-icon" aria-hidden="true">
+                  <Top v-if="card.trendUp" />
+                  <Bottom v-else />
+                </el-icon>
+                <span class="pad-kpi__compare-pct tabular-nums">{{ card.trendText }}</span>
+                <span v-if="card.trendCompareLabel" class="pad-kpi__compare-label">{{
+                  card.trendCompareLabel
+                }}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </article>
-    </section>
+        </article>
+      </section>
 
-    <main class="pad-main">
-      <!-- ── 面包屑导航 ──────────────────────────────────────── -->
-      <div class="pad-nav-bar">
-        <el-breadcrumb separator="›" class="pad-breadcrumb">
-          <el-breadcrumb-item to="/user-growth/comprehensive-analysis">综合分析</el-breadcrumb-item>
-          <el-breadcrumb-item>应用层面</el-breadcrumb-item>
-        </el-breadcrumb>
-        <div class="pad-current-view">
-          <span class="pad-current-view__badge">当前查看</span>
-          <span class="pad-current-view__text">
-            <strong>{{ sourceName }}</strong>
-            <span class="pad-current-view__dim">×</span>
-            <span>全部平台</span>
-            <span class="pad-current-view__dim">×</span>
-            <span>全部国家</span>
-          </span>
-        </div>
-      </div>
-
-      <!-- ── 左右主体 ──────────────────────────────────────────── -->
-      <div class="pad-body">
-        <!-- ── 左列 ──────────────────────────────────────────── -->
-        <div class="pad-left">
-          <!-- 第一行：安卓 / iOS / 合计 三张卡片横排 -->
-          <div class="pad-stat-row">
-            <div
-              v-for="card in pageData?.statCards ?? []"
-              :key="card.label"
-              class="pad-stat-card"
-              :class="padStatCardThemeClass(card.platform)"
+      <main class="pad-main">
+        <!-- ── 面包屑导航 ──────────────────────────────────────── -->
+        <div class="pad-nav-bar">
+          <el-breadcrumb separator="›" class="pad-breadcrumb">
+            <el-breadcrumb-item to="/user-growth/comprehensive-analysis"
+              >综合分析</el-breadcrumb-item
             >
-              <div class="pad-stat-card__content">
-                <div class="pad-stat-card__header">
-                  <span class="pad-stat-card__label">{{ card.label }}</span>
-                  <span
-                    v-if="card.platform === 'android'"
-                    class="pad-os-badge pad-os-badge--android"
-                    >安卓</span
-                  >
-                  <span v-else-if="card.platform === 'ios'" class="pad-os-badge pad-os-badge--ios"
-                    >iOS</span
-                  >
-                </div>
-                <div class="pad-stat-rows">
-                  <div class="pad-stat-row-item">
-                    <span class="pad-stat-label">广告支出</span>
-                    <span class="pad-stat-value tabular-nums">{{ card.adSpend }}</span>
-                  </div>
-                  <div class="pad-stat-row-item">
-                    <span class="pad-stat-label">首日ROI</span>
-                    <span class="pad-stat-value pad-stat-value--accent tabular-nums">{{
-                      card.roi
-                    }}</span>
-                  </div>
-                  <div class="pad-stat-row-item">
-                    <span class="pad-stat-label">安装数</span>
-                    <span class="pad-stat-value tabular-nums">{{ card.installs }}</span>
-                  </div>
-                  <div class="pad-stat-row-item">
-                    <span class="pad-stat-label">预估利润</span>
-                    <span class="pad-stat-value tabular-nums">{{ card.profit }}</span>
-                  </div>
-                  <div class="pad-stat-row-item">
-                    <span class="pad-stat-label">活跃平台</span>
-                    <span class="pad-stat-value tabular-nums">{{ card.activePlatforms }}个</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 第二行：CPI 趋势 + ECPM 趋势左右并排 -->
-          <div class="pad-charts-row">
-            <ElCard class="pad-panel pad-panel--split-chart pad-panel--chart-cpi" shadow="never">
-              <template #header>
-                <span class="pad-chart-card__title">广告平台 CPI 趋势</span>
-              </template>
-              <div class="pad-chart-plot">
-                <div ref="cpiTrendRef" class="pad-chart pad-chart--trend"></div>
-              </div>
-            </ElCard>
-            <ElCard class="pad-panel pad-panel--split-chart pad-panel--chart-ecpm" shadow="never">
-              <template #header>
-                <span class="pad-chart-card__title">ECPM 趋势</span>
-              </template>
-              <div class="pad-chart-plot pad-chart-plot--with-footer">
-                <div ref="ecpmRef" class="pad-chart pad-chart--ecpm"></div>
-              </div>
-              <div v-if="pageData?.ecpmMetrics" class="ecpm-metrics">
-                <div class="ecpm-metric ecpm-metric--teal">
-                  <div class="ecpm-metric__label">预估ECPM</div>
-                  <div class="ecpm-metric__value tabular-nums">
-                    {{ pageData.ecpmMetrics.estimatedEcpm }}
-                  </div>
-                </div>
-                <div class="ecpm-metric ecpm-metric--orange">
-                  <div class="ecpm-metric__label">真实ECPM</div>
-                  <div class="ecpm-metric__value tabular-nums">
-                    {{ pageData.ecpmMetrics.actualEcpm }}
-                  </div>
-                </div>
-                <div class="ecpm-metric ecpm-metric--red">
-                  <div class="ecpm-metric__label">偏差率</div>
-                  <div class="ecpm-metric__value tabular-nums">
-                    {{ pageData.ecpmMetrics.biasRate }}
-                  </div>
-                </div>
-                <div class="ecpm-metric ecpm-metric--red">
-                  <div class="ecpm-metric__label">偏差金额</div>
-                  <div class="ecpm-metric__value tabular-nums">
-                    {{ pageData.ecpmMetrics.biasAmount }}
-                  </div>
-                </div>
-              </div>
-            </ElCard>
+            <el-breadcrumb-item>应用层面</el-breadcrumb-item>
+          </el-breadcrumb>
+          <div class="pad-current-view">
+            <span class="pad-current-view__badge">当前查看</span>
+            <span class="pad-current-view__text">
+              <strong>{{ sourceName }}</strong>
+              <span class="pad-current-view__dim">×</span>
+              <span>{{ selectedAppLabel }}</span>
+              <span class="pad-current-view__dim">×</span>
+              <span>{{ selectedSourceLabel }}</span>
+              <span class="pad-current-view__dim">×</span>
+              <span>{{ selectedCountryLabel }}</span>
+            </span>
           </div>
         </div>
 
-        <!-- ── 右列：广告平台 × 国家 明细表（高度与左列趋势区对齐）──── -->
-        <div class="pad-right">
-          <ElCard class="pad-panel pad-panel--matrix" shadow="never">
-            <template #header>
-              <div class="panel-header-row">
-                <span class="pad-matrix-card__title">广告平台 × 国家 明细表</span>
-                <div class="matrix-actions">
-                  <ElButton size="small" round plain @click="expandAll">全部展开</ElButton>
-                  <ElButton size="small" round plain @click="collapseAll">全部收起</ElButton>
-                  <ElButton size="small" round plain>自定义列</ElButton>
-                  <ElButton size="small" round type="primary" plain>↓ 导出</ElButton>
-                </div>
-              </div>
-            </template>
-
-            <div class="pad-matrix-body">
-              <ElTable
-                ref="matrixTableRef"
-                class="pad-matrix-table"
-                :data="pageData?.matrixTable.rows ?? []"
-                row-key="id"
-                :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-                :row-class-name="getRowClassName"
-                :row-style="getRowStyle"
-                size="small"
-                stripe
-                style="width: 100%"
-                height="100%"
-                default-expand-all
+        <!-- ── 左右主体 ──────────────────────────────────────────── -->
+        <div class="pad-body">
+          <!-- ── 左列 ──────────────────────────────────────────── -->
+          <div class="pad-left">
+            <!-- 第一行：安卓 / iOS / 合计 三张卡片横排 -->
+            <div class="pad-stat-row">
+              <div
+                v-for="card in pageData?.statCards ?? []"
+                :key="card.label"
+                class="pad-stat-card"
+                :class="padStatCardThemeClass(card.platform)"
               >
-                <ElTableColumn
-                  prop="platform"
-                  label="广告平台"
-                  min-width="80"
-                  show-overflow-tooltip
-                  fixed
-                >
-                  <template #default="{ row }">
-                    <div v-if="!row.isCountry" class="platform-cell">
-                      <span class="platform-name">{{ row.platform }}</span>
-                      <span class="country-count">共{{ row.countryCount }}个国家</span>
+                <div class="pad-stat-card__content">
+                  <div class="pad-stat-card__header">
+                    <span class="pad-stat-card__label">{{ card.label }}</span>
+                    <span
+                      v-if="card.platform === 'android'"
+                      class="pad-os-badge pad-os-badge--android"
+                      >安卓</span
+                    >
+                    <span v-else-if="card.platform === 'ios'" class="pad-os-badge pad-os-badge--ios"
+                      >iOS</span
+                    >
+                  </div>
+                  <div class="pad-stat-rows">
+                    <div class="pad-stat-row-item">
+                      <span class="pad-stat-label">广告支出</span>
+                      <span class="pad-stat-value tabular-nums">{{ card.adSpend }}</span>
                     </div>
-                    <div v-else class="country-cell">
-                      <span
-                        v-if="countryFlagFiClass(row.s_country_code)"
-                        class="country-flag fi"
-                        :class="'fi-' + countryFlagFiClass(row.s_country_code)"
-                        aria-hidden="true"
-                      />
-                      <span class="country-name">{{ row.country }}</span>
+                    <div class="pad-stat-row-item">
+                      <span class="pad-stat-label">首日ROI</span>
+                      <span class="pad-stat-value pad-stat-value--accent tabular-nums">{{
+                        card.roi
+                      }}</span>
                     </div>
-                  </template>
-                </ElTableColumn>
-                <ElTableColumn prop="adSpend" label="广告支出" min-width="70" align="left" />
-                <ElTableColumn prop="cpi" label="CPI" min-width="68" align="center">
-                  <template #default="{ row }">
-                    <span class="cpi-badge" :class="`cpi-badge--${row.cpiLevel}`">{{
-                      row.cpi
-                    }}</span>
-                  </template>
-                </ElTableColumn>
-                <ElTableColumn prop="cpm" label="CPM" min-width="60" align="left" />
-                <ElTableColumn prop="cpc" label="CPC" min-width="50" align="left" />
-                <ElTableColumn prop="roiD1" label="首日ROI" min-width="72" align="center">
-                  <template #default="{ row }">
-                    <span class="roi-badge" :class="`roi-badge--${row.roiD1Level}`">{{
-                      row.roiD1
-                    }}</span>
-                  </template>
-                </ElTableColumn>
-                <ElTableColumn prop="roiD3" label="3日ROI" min-width="68" align="left" />
-                <ElTableColumn prop="roiD7" label="7日ROI" min-width="68" align="left" />
-                <ElTableColumn prop="profit" label="预估利润" min-width="70" align="left">
-                  <template #default="{ row }">
-                    <span :class="{ 'profit-neg': row.profitNeg }">{{ row.profit }}</span>
-                  </template>
-                </ElTableColumn>
-                <ElTableColumn label="走势" min-width="68" align="left">
-                  <template #default="{ row }">
-                    <svg class="sparkline" viewBox="0 0 60 24">
-                      <polyline
-                        :points="sparklinePoints(row.sparkline)"
-                        :stroke="row.profitNeg ? '#ef4444' : '#22c55e'"
-                        stroke-width="1.5"
-                        fill="none"
-                      />
-                    </svg>
-                  </template>
-                </ElTableColumn>
-              </ElTable>
-
-              <div v-if="pageData?.matrixTable.total" class="matrix-total-row">
-                <span class="total-label">合计</span>
-                <span>{{ pageData.matrixTable.total.adSpend }}</span>
-                <span>{{ pageData.matrixTable.total.cpi }}</span>
-                <span>{{ pageData.matrixTable.total.cpm }}</span>
-                <span>{{ pageData.matrixTable.total.cpc }}</span>
-                <span>{{ pageData.matrixTable.total.roiD1 }}</span>
-                <span>{{ pageData.matrixTable.total.roiD3 }}</span>
-                <span>{{ pageData.matrixTable.total.roiD7 }}</span>
-                <span>{{ pageData.matrixTable.total.profit }}</span>
-                <span class="matrix-total-spark" aria-hidden="true">—</span>
+                    <div class="pad-stat-row-item">
+                      <span class="pad-stat-label">安装数</span>
+                      <span class="pad-stat-value tabular-nums">{{ card.installs }}</span>
+                    </div>
+                    <div class="pad-stat-row-item">
+                      <span class="pad-stat-label">预估利润</span>
+                      <span class="pad-stat-value tabular-nums">{{ card.profit }}</span>
+                    </div>
+                    <div class="pad-stat-row-item">
+                      <span class="pad-stat-label">活跃平台</span>
+                      <span class="pad-stat-value tabular-nums">{{ card.activePlatforms }}个</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </ElCard>
-        </div>
-      </div>
 
-      <!-- ── 底部智能预警栏 ─────────────────────────────────── -->
-      <div class="pad-alert-bar">
-        <template v-for="(alert, i) in pageData?.alertBar ?? []" :key="alert.id">
-          <span v-if="i > 0" class="alert-sep"></span>
-          <span class="alert-item" :class="`alert-item--${alert.level}`">
-            <span class="alert-dot" :class="`alert-dot--${alert.level}`"></span>
-            {{ alert.text }}
-          </span>
-        </template>
-      </div>
-    </main>
+            <!-- 第二行：CPI 趋势 + ECPM 趋势左右并排 -->
+            <div class="pad-charts-row">
+              <ElCard class="pad-panel pad-panel--split-chart pad-panel--chart-cpi" shadow="never">
+                <template #header>
+                  <span class="pad-chart-card__title">广告平台 CPI 趋势</span>
+                </template>
+                <div class="pad-chart-plot">
+                  <div ref="cpiTrendRef" class="pad-chart pad-chart--trend"></div>
+                </div>
+              </ElCard>
+              <ElCard class="pad-panel pad-panel--split-chart pad-panel--chart-ecpm" shadow="never">
+                <template #header>
+                  <span class="pad-chart-card__title">ECPM 趋势</span>
+                </template>
+                <div class="pad-chart-plot pad-chart-plot--with-footer">
+                  <div ref="ecpmRef" class="pad-chart pad-chart--ecpm"></div>
+                </div>
+                <div v-if="pageData?.ecpmMetrics" class="ecpm-metrics">
+                  <div class="ecpm-metric ecpm-metric--teal">
+                    <div class="ecpm-metric__label">预估ECPM</div>
+                    <div class="ecpm-metric__value tabular-nums">
+                      {{ pageData.ecpmMetrics.estimatedEcpm }}
+                    </div>
+                  </div>
+                  <div class="ecpm-metric ecpm-metric--orange">
+                    <div class="ecpm-metric__label">真实ECPM</div>
+                    <div class="ecpm-metric__value tabular-nums">
+                      {{ pageData.ecpmMetrics.actualEcpm }}
+                    </div>
+                  </div>
+                  <div class="ecpm-metric ecpm-metric--red">
+                    <div class="ecpm-metric__label">偏差率</div>
+                    <div class="ecpm-metric__value tabular-nums">
+                      {{ pageData.ecpmMetrics.biasRate }}
+                    </div>
+                  </div>
+                  <div class="ecpm-metric ecpm-metric--red">
+                    <div class="ecpm-metric__label">偏差金额</div>
+                    <div class="ecpm-metric__value tabular-nums">
+                      {{ pageData.ecpmMetrics.biasAmount }}
+                    </div>
+                  </div>
+                </div>
+              </ElCard>
+            </div>
+          </div>
+
+          <!-- ── 右列：广告平台 × 国家 明细表（高度与左列趋势区对齐）──── -->
+          <div class="pad-right">
+            <ElCard class="pad-panel pad-panel--matrix" shadow="never">
+              <template #header>
+                <div class="panel-header-row">
+                  <span class="pad-matrix-card__title">广告平台 × 国家 明细表</span>
+                  <div class="matrix-actions">
+                    <ElButton size="small" round plain @click="expandAll">全部展开</ElButton>
+                    <ElButton size="small" round plain @click="collapseAll">全部收起</ElButton>
+                    <ElButton size="small" round plain>自定义列</ElButton>
+                    <ElButton size="small" round type="primary" plain>↓ 导出</ElButton>
+                  </div>
+                </div>
+              </template>
+
+              <div class="pad-matrix-body">
+                <ElTable
+                  ref="matrixTableRef"
+                  class="pad-matrix-table"
+                  :data="pageData?.matrixTable.rows ?? []"
+                  row-key="id"
+                  :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
+                  :row-class-name="getRowClassName"
+                  :row-style="getRowStyle"
+                  size="small"
+                  stripe
+                  style="width: 100%"
+                  height="100%"
+                  default-expand-all
+                >
+                  <ElTableColumn
+                    prop="platform"
+                    label="广告平台"
+                    min-width="80"
+                    show-overflow-tooltip
+                    fixed
+                  >
+                    <template #default="{ row }">
+                      <div v-if="!row.isCountry" class="platform-cell">
+                        <span class="platform-name">{{ row.platform }}</span>
+                        <span class="country-count">共{{ row.countryCount }}个国家</span>
+                      </div>
+                      <div v-else class="country-cell">
+                        <span
+                          v-if="countryFlagFiClass(row.s_country_code)"
+                          class="country-flag fi"
+                          :class="'fi-' + countryFlagFiClass(row.s_country_code)"
+                          aria-hidden="true"
+                        />
+                        <span class="country-name">{{ row.country }}</span>
+                      </div>
+                    </template>
+                  </ElTableColumn>
+                  <ElTableColumn prop="adSpend" label="广告支出" min-width="70" align="left" />
+                  <ElTableColumn prop="cpi" label="CPI" min-width="68" align="center">
+                    <template #default="{ row }">
+                      <span class="cpi-badge" :class="`cpi-badge--${row.cpiLevel}`">{{
+                        row.cpi
+                      }}</span>
+                    </template>
+                  </ElTableColumn>
+                  <ElTableColumn prop="cpm" label="CPM" min-width="60" align="left" />
+                  <ElTableColumn prop="cpc" label="CPC" min-width="50" align="left" />
+                  <ElTableColumn prop="roiD1" label="首日ROI" min-width="72" align="center">
+                    <template #default="{ row }">
+                      <span class="roi-badge" :class="`roi-badge--${row.roiD1Level}`">{{
+                        row.roiD1
+                      }}</span>
+                    </template>
+                  </ElTableColumn>
+                  <ElTableColumn prop="roiD3" label="3日ROI" min-width="68" align="left" />
+                  <ElTableColumn prop="roiD7" label="7日ROI" min-width="68" align="left" />
+                  <ElTableColumn prop="profit" label="预估利润" min-width="70" align="left">
+                    <template #default="{ row }">
+                      <span :class="{ 'profit-neg': row.profitNeg }">{{ row.profit }}</span>
+                    </template>
+                  </ElTableColumn>
+                  <ElTableColumn label="走势" min-width="68" align="left">
+                    <template #default="{ row }">
+                      <svg class="sparkline" viewBox="0 0 60 24">
+                        <polyline
+                          :points="sparklinePoints(row.sparkline)"
+                          :stroke="row.profitNeg ? '#ef4444' : '#22c55e'"
+                          stroke-width="1.5"
+                          fill="none"
+                        />
+                      </svg>
+                    </template>
+                  </ElTableColumn>
+                </ElTable>
+
+                <div v-if="pageData?.matrixTable.total" class="matrix-total-row">
+                  <span class="total-label">合计</span>
+                  <span>{{ pageData.matrixTable.total.adSpend }}</span>
+                  <span>{{ pageData.matrixTable.total.cpi }}</span>
+                  <span>{{ pageData.matrixTable.total.cpm }}</span>
+                  <span>{{ pageData.matrixTable.total.cpc }}</span>
+                  <span>{{ pageData.matrixTable.total.roiD1 }}</span>
+                  <span>{{ pageData.matrixTable.total.roiD3 }}</span>
+                  <span>{{ pageData.matrixTable.total.roiD7 }}</span>
+                  <span>{{ pageData.matrixTable.total.profit }}</span>
+                  <span class="matrix-total-spark" aria-hidden="true">—</span>
+                </div>
+              </div>
+            </ElCard>
+          </div>
+        </div>
+
+        <!-- ── 底部智能预警栏 ─────────────────────────────────── -->
+        <div class="pad-alert-bar">
+          <template v-for="(alert, i) in pageData?.alertBar ?? []" :key="alert.id">
+            <span v-if="i > 0" class="alert-sep"></span>
+            <span class="alert-item" :class="`alert-item--${alert.level}`">
+              <span class="alert-dot" :class="`alert-dot--${alert.level}`"></span>
+              {{ alert.text }}
+            </span>
+          </template>
+        </div>
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
   import 'flag-icons/css/flag-icons.min.css'
-  import { ref, computed, onMounted, watch } from 'vue'
+  import { ref, reactive, computed, onMounted, watch } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { useRoute } from 'vue-router'
-  import { Top, Bottom } from '@element-plus/icons-vue'
+  import { Top, Bottom, Calendar, Search } from '@element-plus/icons-vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import { resolveDateRangeFromPreset } from '../comprehensive-analysis/utils/buildApiParams'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { PlatformAnalysisDetailData } from './types'
@@ -284,8 +370,89 @@
 
   const route = useRoute()
 
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMetaRef } = storeToRefs(cockpitMetaStore)
+
   const pageData = ref<PlatformAnalysisDetailData | null>(null)
+  const pageLoading = ref(false)
   const matrixTableRef = ref()
+
+  const preset7d = resolveDateRangeFromPreset('7d')
+  const dateRange = ref<[string, string]>([preset7d.date_start, preset7d.date_end])
+
+  const filters = reactive({
+    appId: '' as string,
+    source: '' as string,
+    s_country_code: '' as string
+  })
+
+  const appOptions = ref<{ label: string; value: string }[]>([])
+  const sourceOptions = ref<{ label: string; value: string }[]>([])
+  const countryOptions = ref<{ label: string; value: string }[]>([])
+
+  function normalizeMetaOptions(list: { label: string; value: string }[]) {
+    return list.map((o) => ({
+      ...o,
+      value: o.value === 'all' ? '' : o.value
+    }))
+  }
+
+  function syncMetaOptions() {
+    const m = cockpitMetaRef.value
+    if (!m) return
+    appOptions.value = normalizeMetaOptions(m.appOptions)
+    sourceOptions.value = normalizeMetaOptions(m.sourceOptions)
+    countryOptions.value = normalizeMetaOptions(m.countryOptions)
+  }
+
+  const isLast7DaysPreset = computed(() => {
+    const cur = dateRange.value
+    if (!cur?.[0] || !cur?.[1]) return false
+    const p = resolveDateRangeFromPreset('7d')
+    return cur[0] === p.date_start && cur[1] === p.date_end
+  })
+
+  function optionLabel(value: string, options: { label: string; value: string }[]) {
+    if (value === '' || value === 'all') return '全部'
+    const o = options.find((x) => x.value === value)
+    return o?.label ?? value
+  }
+
+  const selectedAppLabel = computed(() => optionLabel(filters.appId, appOptions.value))
+  const selectedSourceLabel = computed(() => optionLabel(filters.source, sourceOptions.value))
+  const selectedCountryLabel = computed(() =>
+    optionLabel(filters.s_country_code, countryOptions.value)
+  )
+
+  function dimensionToApi(v: string) {
+    return v === 'all' || v === '' ? '' : v
+  }
+
+  function buildRequest(): Api.UserGrowth.PlatformAnalysisDetailRequest {
+    const name = ((route.query.name as string) || '应用').trim()
+    const dr = dateRange.value
+    const fallback = resolveDateRangeFromPreset('7d')
+    return {
+      name,
+      startDate: dr?.[0] ?? fallback.date_start,
+      endDate: dr?.[1] ?? fallback.date_end,
+      appId: dimensionToApi(filters.appId),
+      source: dimensionToApi(filters.source),
+      s_country_code: dimensionToApi(filters.s_country_code)
+    }
+  }
+
+  async function loadPage() {
+    pageLoading.value = true
+    try {
+      pageData.value = await loadPlatformAnalysisDetailPage(buildRequest())
+    } catch {
+      // 错误提示由 http 拦截器处理
+    } finally {
+      pageLoading.value = false
+    }
+    renderCharts()
+  }
 
   /** 与广告成效 KPI 卡片一致的主题轮换（光晕 / 旋转边框色） */
   function kpiCardTheme(index: number): string {
@@ -505,16 +672,19 @@
 
   watch(pageData, renderCharts, { deep: true })
 
-  onMounted(async () => {
-    try {
-      pageData.value = await loadPlatformAnalysisDetailPage({
-        name: ((route.query.name as string) || '应用').trim(),
-        from: (route.query.from as string) ?? ''
-      })
-    } catch {
-      // 错误提示由 http 拦截器处理；避免未捕获 Promise 导致整页白屏
+  watch(cockpitMetaRef, syncMetaOptions, { immediate: true })
+
+  watch(
+    () => route.query.name,
+    () => {
+      loadPage()
     }
-    renderCharts()
+  )
+
+  onMounted(async () => {
+    await cockpitMetaStore.ensureLoaded()
+    syncMetaOptions()
+    await loadPage()
   })
 </script>
 
@@ -592,6 +762,170 @@
     > *:not(.pad-page-fx) {
       position: relative;
       z-index: 1;
+    }
+  }
+
+  .pad-page-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 320px;
+  }
+
+  .pad-filter-bar {
+    flex-shrink: 0;
+    margin-bottom: 14px;
+  }
+
+  .pad-filter-bar__inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    align-items: center;
+    padding: 14px 18px;
+    background: color-mix(in srgb, rgb(8 8 12) 94%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 26%, var(--default-border));
+    border-radius: 14px;
+    box-shadow:
+      0 6px 28px rgb(0 0 0 / 38%),
+      inset 0 1px 0 rgb(255 255 255 / 8%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 10%, transparent);
+  }
+
+  .pad-filter-item {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    min-height: 40px;
+    padding: 4px 14px;
+    background: color-mix(in srgb, var(--default-box-color) 50%, rgb(10 12 20));
+    border: 1px solid color-mix(in srgb, var(--default-border) 90%, rgb(148 163 184 / 20%));
+    border-radius: 12px;
+    transition:
+      border-color var(--duration-fast) var(--ease-default),
+      box-shadow var(--duration-fast) var(--ease-default);
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--art-primary) 40%, var(--default-border));
+      box-shadow: 0 0 18px color-mix(in srgb, var(--art-primary) 12%, transparent);
+    }
+
+    &--date {
+      flex: 1 1 300px;
+      min-width: min(100%, 272px);
+    }
+
+    &--select {
+      flex: 0 1 auto;
+    }
+
+    &__icon {
+      flex-shrink: 0;
+      font-size: 18px;
+      color: var(--art-primary);
+    }
+
+    &__prefix {
+      flex-shrink: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+  }
+
+  .pad-filter-date-preset {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  :deep(.pad-filter-date.el-date-editor) {
+    flex: 1 1 200px;
+    width: auto !important;
+    min-width: 0;
+  }
+
+  :deep(.pad-filter-date .el-input__wrapper) {
+    padding: 2px 6px 2px 2px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  :deep(.pad-filter-date .el-input__inner) {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  :deep(.pad-filter-date .el-range-separator) {
+    padding: 0 4px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+  }
+
+  :deep(.pad-filter-date .el-range-input) {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .pad-filter-select {
+    width: 168px;
+    min-width: 120px;
+
+    &--app {
+      min-width: 148px;
+    }
+
+    &--country {
+      min-width: 136px;
+    }
+  }
+
+  :deep(.pad-filter-select .el-select__wrapper) {
+    min-height: 32px;
+    padding: 2px 10px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  :deep(.pad-filter-select .el-select__placeholder) {
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+
+  :deep(.pad-filter-select .el-select__selected-item) {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  :deep(.pad-filter-select .el-select__caret) {
+    color: var(--text-tertiary);
+  }
+
+  .pad-filter-search {
+    --el-button-bg-color: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    --el-button-text-color: var(--el-color-primary);
+    --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 42%, transparent);
+    --el-button-hover-text-color: var(--text-primary);
+    --el-button-hover-border-color: var(--el-color-primary);
+    --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
+
+    box-shadow: 0 0 14px color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    transition:
+      box-shadow 0.22s var(--ease-default),
+      transform 0.18s var(--ease-default);
+
+    &:hover {
+      box-shadow: 0 0 22px color-mix(in srgb, var(--el-color-primary) 22%, transparent);
+      transform: translateY(-1px);
     }
   }
 
@@ -977,6 +1311,10 @@
     }
 
     .pad-page-fx {
+      transform: none;
+    }
+
+    .pad-filter-search:hover {
       transform: none;
     }
 

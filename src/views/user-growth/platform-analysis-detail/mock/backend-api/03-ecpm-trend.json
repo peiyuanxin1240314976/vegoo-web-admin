@@ -3,7 +3,31 @@
   "fieldDescription": {
     "request": {
       "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
-      "from": { "type": "string", "required": false, "description": "来源页标识。" }
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询起始日期（含），YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "查询结束日期（含），YYYY-MM-DD。"
+      },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用筛选；空字符串表示全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台筛选；空字符串表示全部。"
+      },
+      "s_country_code": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码筛选；空字符串表示全部。"
+      }
     },
     "response": {
       "data": {
@@ -49,7 +73,11 @@
   },
   "sampleRequest": {
     "name": "PhoneTracker",
-    "from": "comprehensive-analysis"
+    "startDate": "2026-02-27",
+    "endDate": "2026-03-05",
+    "appId": "",
+    "source": "",
+    "s_country_code": ""
   },
   "sampleResponse": {
     "data": {
@@ -80,7 +108,7 @@
     "url": "POST /api/v1/datacenter/analysis/user-growth/comprehensive-analysis/platform-analysis-detail/ecpm-trend",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "name (必填), from?",
+    "requestBody": "name, startDate, endDate, appId, source, s_country_code",
     "responseBody": "PlatformAnalysisDetailEcpmBlock"
   },
   "apiSuggestion": {
@@ -97,7 +125,7 @@
         "prerequisite": "无"
       }
     ],
-    "defaultSelection": "与 summary 共用 name/from。",
+    "defaultSelection": "与 summary 共用请求体。",
     "dedupe": "整页重拉时与其它分片并行。"
   }
 }

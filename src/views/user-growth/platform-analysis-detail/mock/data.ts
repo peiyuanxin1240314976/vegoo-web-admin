@@ -134,12 +134,13 @@ function buildMatrixRows(displayName: string, jitter: number): PlatformRow[] {
 /**
  * @param params.name 路由 query `name`，与钻取应用名一致
  */
-export function buildMockPlatformAnalysisDetailData(params: {
-  name: string
-  from?: string
-}): PlatformAnalysisDetailData {
+export function buildMockPlatformAnalysisDetailData(
+  params: Api.UserGrowth.PlatformAnalysisDetailRequest
+): PlatformAnalysisDetailData {
   const displayName = params.name?.trim() || '应用'
-  const h = hashStr(`${displayName}|${params.from ?? ''}`)
+  const h = hashStr(
+    `${displayName}|${params.startDate}|${params.endDate}|${params.appId}|${params.source}|${params.s_country_code}`
+  )
   const jitter = 0.92 + (h % 17) / 100
 
   const dates = ['02-27', '02-28', '03-01', '03-02', '03-03', '03-04', '03-05']
@@ -328,8 +329,7 @@ export function buildMockPlatformAnalysisDetailData(params: {
       {
         id: 'alert-3',
         level: 'info',
-        text:
-          params.from === 'comprehensive-analysis' ? '来自综合分析钻取（Mock）' : '详情页 Mock 数据'
+        text: '详情页 Mock 数据'
       },
       {
         id: 'alert-4',
@@ -340,39 +340,34 @@ export function buildMockPlatformAnalysisDetailData(params: {
   }
 }
 
-export function mockFetchPlatformAnalysisDetailSummary(params: {
-  name: string
-  from?: string
-}): PlatformAnalysisDetailSummary {
+export function mockFetchPlatformAnalysisDetailSummary(
+  params: Api.UserGrowth.PlatformAnalysisDetailRequest
+): PlatformAnalysisDetailSummary {
   const d = buildMockPlatformAnalysisDetailData(params)
   return { sourceName: d.sourceName, kpis: d.kpis, statCards: d.statCards }
 }
 
-export function mockFetchPlatformAnalysisDetailCpiTrend(params: {
-  name: string
-  from?: string
-}): ChartTrend {
+export function mockFetchPlatformAnalysisDetailCpiTrend(
+  params: Api.UserGrowth.PlatformAnalysisDetailRequest
+): ChartTrend {
   return buildMockPlatformAnalysisDetailData(params).cpiTrend
 }
 
-export function mockFetchPlatformAnalysisDetailEcpm(params: {
-  name: string
-  from?: string
-}): PlatformAnalysisDetailEcpmBlock {
+export function mockFetchPlatformAnalysisDetailEcpm(
+  params: Api.UserGrowth.PlatformAnalysisDetailRequest
+): PlatformAnalysisDetailEcpmBlock {
   const d = buildMockPlatformAnalysisDetailData(params)
   return { ecpmTrend: d.ecpmTrend, ecpmMetrics: d.ecpmMetrics }
 }
 
-export function mockFetchPlatformAnalysisDetailMatrixTable(params: {
-  name: string
-  from?: string
-}): MatrixTableData {
+export function mockFetchPlatformAnalysisDetailMatrixTable(
+  params: Api.UserGrowth.PlatformAnalysisDetailRequest
+): MatrixTableData {
   return buildMockPlatformAnalysisDetailData(params).matrixTable
 }
 
-export function mockFetchPlatformAnalysisDetailAlertBar(params: {
-  name: string
-  from?: string
-}): AlertBarItem[] {
+export function mockFetchPlatformAnalysisDetailAlertBar(
+  params: Api.UserGrowth.PlatformAnalysisDetailRequest
+): AlertBarItem[] {
   return buildMockPlatformAnalysisDetailData(params).alertBar
 }
