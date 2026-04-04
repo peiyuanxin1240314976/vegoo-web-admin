@@ -22,7 +22,21 @@
               </span>
             </div>
             <div class="pace-item-bottom">
-              <div class="pace-icon-placeholder" title="APP 图标占位" />
+              <div
+                class="pace-icon-placeholder"
+                :class="{ 'pace-icon-placeholder--iconfont': paceIconDisplay(item).iconClass }"
+                :title="item.name"
+              >
+                <i
+                  v-if="paceIconDisplay(item).iconClass"
+                  class="iconfont"
+                  :class="paceIconDisplay(item).iconClass"
+                  aria-hidden="true"
+                />
+                <span v-else class="pace-icon-fallback-letter">{{
+                  paceIconDisplay(item).letter
+                }}</span>
+              </div>
               <div class="pace-bar-wrap">
                 <div class="pace-bar-track" :style="barFillStyle(item)">
                   <span class="pace-bar-percent tabular-nums">{{
@@ -50,7 +64,21 @@
               </span>
             </div>
             <div class="pace-item-bottom">
-              <div class="pace-icon-placeholder" title="APP 图标占位" />
+              <div
+                class="pace-icon-placeholder"
+                :class="{ 'pace-icon-placeholder--iconfont': paceIconDisplay(item).iconClass }"
+                :title="item.name"
+              >
+                <i
+                  v-if="paceIconDisplay(item).iconClass"
+                  class="iconfont"
+                  :class="paceIconDisplay(item).iconClass"
+                  aria-hidden="true"
+                />
+                <span v-else class="pace-icon-fallback-letter">{{
+                  paceIconDisplay(item).letter
+                }}</span>
+              </div>
               <div class="pace-bar-wrap">
                 <div class="pace-bar-track" :style="barFillStyle(item)">
                   <span class="pace-bar-percent tabular-nums">{{
@@ -72,6 +100,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
+  import { getAdPlatformIconDisplay } from '@/utils/ui/ad-platform-iconfont'
   import type { CockpitSpendPaceItem } from '../types'
   import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
@@ -94,6 +123,10 @@
 
   function formatPercent(n: number): string {
     return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%'
+  }
+
+  function paceIconDisplay(item: CockpitSpendPaceItem) {
+    return getAdPlatformIconDisplay({ platform: item.platform, name: item.name })
   }
 
   function barFillStyle(item: CockpitSpendPaceItem) {
@@ -415,9 +448,13 @@
   }
 
   .pace-icon-placeholder {
+    display: flex;
     flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
     width: 28px;
     height: 28px;
+    overflow: hidden;
     background: var(--el-fill-color-dark);
     border: 1px solid var(--el-border-color-lighter);
     border-radius: 8px;
@@ -426,6 +463,23 @@
       background: linear-gradient(145deg, rgb(39 39 42 / 85%), rgb(24 24 27 / 55%));
       border-color: color-mix(in srgb, var(--pace-accent) 28%, transparent);
       box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
+    }
+
+    &--iconfont {
+      padding: 0;
+      color: var(--text-secondary);
+    }
+
+    & .iconfont {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .pace-icon-fallback-letter {
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--text-secondary);
     }
   }
 

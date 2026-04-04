@@ -88,13 +88,16 @@ export type MyAdsSummaryStatCardsMock = {
 }
 
 export type MyAdsSummaryProgressRowMock = {
+  id?: string
   name: string
   spend: string
   budget: string
   progress: number
-  roi: string
-  status: string
-  statusType: 'ok' | 'warn' | 'inactive'
+  platformIcon?: string
+  roi?: string
+  roi1?: number
+  status?: string
+  statusType?: 'ok' | 'warn' | 'inactive' | null
 }
 
 export type MyAdsSummaryAppBarMock = {

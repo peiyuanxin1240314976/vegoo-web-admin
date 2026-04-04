@@ -45,7 +45,16 @@
   const estProfitCard = computed(() => statCards.value.estProfit)
 
   function progressDisplayRoi(row: Api.UserGrowth.MyAdsSummaryProgressItemDto): string {
-    return row.roi ?? '--'
+    const pre = row.roi
+    if (pre != null && String(pre).trim() !== '') return String(pre)
+    const r1 = row.roi1
+    if (r1 != null && Number.isFinite(r1)) {
+      return `${r1.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}%`
+    }
+    return '--'
   }
 
   // function progressDisplayStatus(row: Api.UserGrowth.MyAdsSummaryProgressItemDto): string {
@@ -337,7 +346,7 @@
     pieChart = null
   })
 
-  function progressColor(p: number, type: string) {
+  function progressColor(p: number, type: string | null | undefined) {
     if (type === 'warn') return '#f59e0b'
     if (type === 'inactive') return '#374151'
     if (p >= 90) return '#f59e0b'

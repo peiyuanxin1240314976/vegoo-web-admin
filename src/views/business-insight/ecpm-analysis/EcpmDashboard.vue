@@ -317,8 +317,8 @@
           </div>
         </div>
 
-        <!-- Top 10 国家 -->
-        <div class="card" style="margin-top: 10px">
+        <!-- Top 10 国家（与右侧列整体等高，图表区自适应拉伸） -->
+        <div class="card card-top10" style="margin-top: 10px">
           <div class="card-title">ECPM Top 10 国家</div>
           <div class="chart-loading-wrap">
             <div ref="top10Ref" class="echart echart-top10" />
@@ -431,6 +431,7 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+  import { useResizeObserver } from '@vueuse/core'
   import * as echarts from 'echarts'
   import type { ECharts } from 'echarts'
   import { TrendCharts, Money, Location, Grid, Warning } from '@element-plus/icons-vue'
@@ -453,6 +454,7 @@
     EcpmTrendBundle
   } from './types'
   import type { ColumnOption } from '@/types'
+  import { ISO2_TO_ECHARTS_WORLD_GEO_NAME } from './config/world-map-iso-to-geo-json-name'
 
   defineOptions({ name: 'EcpmDashboard' })
 
@@ -646,19 +648,9 @@
   let mapRequestSeq = 0
   let top10RequestSeq = 0
 
-  const WORLD_GEO_COORD_MAP: Record<string, [number, number]> = {
-    'United States': [-95.7129, 37.0902],
-    'South Korea': [127.7669, 35.9078],
-    Germany: [10.4515, 51.1657],
-    'United Kingdom': [-3.436, 55.3781],
-    Japan: [138.2529, 36.2048],
-    France: [2.2137, 46.2276],
-    Canada: [-106.3468, 56.1304],
-    Australia: [133.7751, -25.2744],
-    Brazil: [-51.9253, -14.235],
-    'South Africa': [22.9375, -30.5595],
-    Kazakhstan: [66.9237, 48.0196]
-  }
+  useResizeObserver(top10Ref, () => {
+    nextTick(() => top10Chart?.resize())
+  })
 
   // ─── Spark Line Helper ────────────────────────────────────────────────────
   function toSelectValue(value: string) {
@@ -686,6 +678,27 @@
         return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)},${y.toFixed(1)}`
       })
       .join(' ')
+  }
+
+  /** 趋势折线图左侧数值轴：按当前序列留出上下边距，无有效数据时交给 ECharts 自适应 */
+  function trendValueAxisFromSeries(values: number[]) {
+    const nums = values.map((v) => Number(v)).filter((n) => Number.isFinite(n))
+    if (!nums.length) {
+      return {
+        yMin: null as number | null,
+        yMax: null as number | null,
+        yInterval: null as number | null
+      }
+    }
+    const minV = Math.min(...nums)
+    const maxV = Math.max(...nums)
+    const span = maxV - minV || (Math.abs(maxV) > 1e-9 ? Math.abs(maxV) * 0.1 : 1)
+    const padLow = span * 0.05
+    const padHigh = span * 0.12
+    let min = minV - padLow
+    let max = maxV + padHigh
+    if (minV >= 0 && min < 0) min = 0
+    return { yMin: min, yMax: max, yInterval: null as number | null }
   }
 
   // ─── ECharts Theme ────────────────────────────────────────────────────────
@@ -728,6 +741,7 @@
       }
     }
     if (activeTrendTab.value === '真实ECPM') {
+      const axis = trendValueAxisFromSeries(trendData.value.series_real)
       return {
         legend: ['真实ECPM'],
         series: [
@@ -746,11 +760,12 @@
             }
           }
         ],
-        yMin: 2.8,
-        yMax: 4.5,
-        yInterval: 0.5
+        yMin: axis.yMin,
+        yMax: axis.yMax,
+        yInterval: axis.yInterval
       }
     }
+    const axisEst = trendValueAxisFromSeries(trendData.value.series_estimated)
     return {
       legend: ['预估ECPM'],
       series: [
@@ -769,9 +784,9 @@
           }
         }
       ],
-      yMin: 2.8,
-      yMax: 4.5,
-      yInterval: 0.5
+      yMin: axisEst.yMin,
+      yMax: axisEst.yMax,
+      yInterval: axisEst.yInterval
     }
   }
 
@@ -825,9 +840,9 @@
       },
       yAxis: {
         type: 'value',
-        min: 2.8,
-        max: 4.5,
-        interval: 0.5,
+        min: null,
+        max: null,
+        interval: null,
         splitLine: { lineStyle: { color: AXIS_COLOR, type: 'dashed' } },
         axisLabel: { color: LABEL_COLOR, fontSize: 10 },
         axisLine: { show: false },
@@ -876,6 +891,7 @@
       'Russian Federation': 'Russia',
       'Korea, South': 'South Korea',
       'Korea (Republic Of)': 'South Korea',
+      'South Korea': 'Korea',
       'United Kingdom Of Great Britain And Northern Ireland': 'United Kingdom',
       'Brunei Darussalam': 'Brunei'
     }
@@ -883,32 +899,46 @@
     return aliasMap[normalized] ?? normalized
   }
 
-  function getMapCountryName(item: { geo_name?: string; s_country_code?: string }) {
+  /** 与 `public/geo/world.json` 的 `properties.name` 对齐，供 map / geo 系列匹配 */
+  function resolveWorldMapSeriesName(item: { geo_name?: string; s_country_code?: string }) {
+    const code = String(item.s_country_code ?? '')
+      .trim()
+      .toUpperCase()
+    if (code && ISO2_TO_ECHARTS_WORLD_GEO_NAME[code]) {
+      return ISO2_TO_ECHARTS_WORLD_GEO_NAME[code]
+    }
     return normalizeMapCountryName(item.geo_name || item.s_country_code || '')
+  }
+
+  function mapVisualValueMax() {
+    const vals = mapSeriesData().map((d) => Number(d.value))
+    return Math.max(10, ...vals, 0)
   }
 
   function mapSeriesData() {
     return mapCountries.value.map((c) => ({
-      name: getMapCountryName(c),
+      name: resolveWorldMapSeriesName(c),
       value: mapMode.value === 'estimated' ? c.d_ecpm_estimated : c.d_ecpm_real
     }))
   }
 
+  function mapEffectScatterSymbolSize(_val: unknown, params: { data?: { value?: unknown } }) {
+    const v = Number(params?.data?.value ?? 0)
+    return Math.max(7, Math.min(20, v * 2))
+  }
+
+  /** Top N：用国家名让 geo 解析经纬度（勿再依赖手写坐标表） */
   function mapPulseData() {
     return mapCountries.value
       .map((c) => {
         const value = mapMode.value === 'estimated' ? c.d_ecpm_estimated : c.d_ecpm_real
-        const name = getMapCountryName(c)
-        const coord = WORLD_GEO_COORD_MAP[name]
-        if (!coord) return null
-        return {
-          name,
-          value: [...coord, value]
-        }
+        const name = resolveWorldMapSeriesName(c)
+        if (!name) return null
+        return { name, value }
       })
-      .filter(Boolean)
-      .sort((a, b) => Number((b as any).value[2]) - Number((a as any).value[2]))
-      .slice(0, 8) as Array<{ name: string; value: [number, number, number] }>
+      .filter((d): d is { name: string; value: number } => d !== null)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8)
   }
 
   // ─── World Map ────────────────────────────────────────────────────────────
@@ -931,7 +961,9 @@
           ...TOOLTIP_STYLE,
           formatter: (params: any) => {
             const rawValue = Array.isArray(params.value) ? params.value[2] : params.value
-            return `${params.name}<br/>$${rawValue ?? 'N/A'}`
+            const row = mapCountries.value.find((c) => resolveWorldMapSeriesName(c) === params.name)
+            const label = String(row?.geo_name ?? '').trim() || String(params.name ?? '')
+            return `${label}<br/>$${rawValue != null && rawValue !== '' ? fmt2(Number(rawValue)) : 'N/A'}`
           }
         },
         geo: {
@@ -964,7 +996,7 @@
         visualMap: {
           show: false,
           min: 0,
-          max: 10,
+          max: mapVisualValueMax(),
           left: 'left',
           bottom: 8,
           orient: 'horizontal',
@@ -986,7 +1018,7 @@
             type: 'effectScatter',
             coordinateSystem: 'geo',
             zlevel: 3,
-            symbolSize: (val: number[]) => Math.max(7, Math.min(20, Number(val[2] ?? 0) * 2)),
+            symbolSize: mapEffectScatterSymbolSize,
             rippleEffect: {
               period: 3,
               scale: 4,
@@ -1186,13 +1218,30 @@
         const pulse = mapPulseData()
         worldMapChart.setOption(
           {
+            visualMap: { min: 0, max: mapVisualValueMax() },
             series: [
               { type: 'map', geoIndex: 0, label: { show: false }, data: mapSeriesData() },
-              { type: 'effectScatter', coordinateSystem: 'geo', zlevel: 3, data: pulse },
+              {
+                type: 'effectScatter',
+                coordinateSystem: 'geo',
+                zlevel: 3,
+                symbolSize: mapEffectScatterSymbolSize,
+                rippleEffect: { period: 3, scale: 4, brushType: 'stroke' },
+                showEffectOn: 'render',
+                itemStyle: {
+                  color: '#ffd166',
+                  shadowBlur: 16,
+                  shadowColor: 'rgb(255 209 102 / 68%)'
+                },
+                emphasis: { scale: true },
+                data: pulse
+              },
               {
                 type: 'scatter',
                 coordinateSystem: 'geo',
                 zlevel: 2,
+                symbolSize: 4,
+                itemStyle: { color: '#7dd3fc', opacity: 0.9 },
                 silent: true,
                 data: pulse.map((d) => ({ name: d.name, value: d.value }))
               }
@@ -2058,6 +2107,7 @@
     display: grid;
     grid-template-columns: 38% 38% 24%;
     gap: 10px;
+    align-items: stretch;
     padding: 14px 20px 20px;
   }
 
@@ -2078,6 +2128,10 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
+  }
+
+  .col-mid {
+    min-height: 0;
   }
 
   /* ── Card ────────────────────────────────────────────────────── */
@@ -2165,6 +2219,21 @@
     margin-bottom: 0;
   }
 
+  /* Top 10：在网格行内与右侧区块底部对齐，图表高度随列剩余空间变化 */
+  .card.card-top10 {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .card-top10 .chart-loading-wrap {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
   /* ── Charts ──────────────────────────────────────────────────── */
   .echart {
     width: 100%;
@@ -2186,7 +2255,9 @@
   }
 
   .echart-top10 {
-    height: 220px;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 160px;
   }
 
   /* ── Trend Tabs ──────────────────────────────────────────────── */

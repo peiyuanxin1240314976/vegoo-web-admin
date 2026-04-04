@@ -54,7 +54,7 @@
             v-if="data.periodType === 'month'"
             :loading="cardLoading"
             :title="data.spendProgress.title"
-            :data="data.spendProgress.data"
+            :list="data.spendProgress.list"
             :hint-text="spendAchievementHint"
           />
           <MyPerformancePanelPerformanceHistory
@@ -133,12 +133,30 @@
 
   const cardLoading = computed(() => loading.value || detailLoading.value)
 
+  function parseSpendTotalPair(value: string): { spend: number; target: number } | null {
+    const parts = String(value).split(/\s*\/\s*/)
+    if (parts.length !== 2) return null
+    const toNum = (s: string) => {
+      const n = Number(String(s).replace(/[$,\s]/g, ''))
+      return Number.isFinite(n) ? n : NaN
+    }
+    const spend = toNum(parts[0])
+    const target = toNum(parts[1])
+    if (!Number.isFinite(spend) || !Number.isFinite(target)) return null
+    return { spend, target }
+  }
+
   const spendAchievementHint = computed(() => {
-    const d = data.value.spendProgress?.data
-    if (!d) return ''
-    const remaining = d.target - d.spend
+    const rows = data.value.spendProgress?.list ?? []
+    const totalRow = rows.find((x) => x.label.includes('总消耗')) ?? rows[0]
+    if (!totalRow) return ''
+    const pair = parseSpendTotalPair(totalRow.value)
+    if (!pair) return ''
+    const remaining = pair.target - pair.spend
     if (remaining <= 0) return t('myPerformance.spendAchievement.hintReached')
-    const amount = '$' + remaining.toLocaleString('en-US', { maximumFractionDigits: 0 })
+    const amount =
+      '$' +
+      remaining.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     return t('myPerformance.spendAchievement.hint', { amount })
   })
 </script>

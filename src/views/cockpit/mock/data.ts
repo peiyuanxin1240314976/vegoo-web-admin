@@ -110,7 +110,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       trend: [900, 950, 1100, 1050, 1150, 1200, 1150]
     },
     {
-      channel: 'Mintefral',
+      channel: 'Mintegral',
       spend: 7500,
       installs: 4500,
       cpi: 1.2,
@@ -186,8 +186,8 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       tagType: 'danger'
     },
     {
-      name: 'Mintefral',
-      platform: 'mintefral',
+      name: 'Mintegral',
+      platform: 'mintegral',
       current: 5500,
       budget: 10000,
       percent: 55,

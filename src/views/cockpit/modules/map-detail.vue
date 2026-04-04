@@ -143,10 +143,22 @@
 
   const countryCodeParam = computed(() => String(route.params.country || '').toUpperCase())
   const countryCode = computed(() => countryCodeParam.value || '—')
-  const countryName = computed(() => {
-    const c = String(route.params.country || '')
-    return countryNameMap[c] || c || '—'
-  })
+
+  /** 路由里多为小写 ISO（与地图 data-country-code 一致），须规范化后再查名 */
+  function getCountryNameZhFromIso(iso: string): string {
+    const raw = String(iso || '').trim()
+    if (!raw) return '—'
+    const upper = raw.toUpperCase()
+    if (!/^[A-Z]{2}$/.test(upper)) return raw
+    try {
+      const dn = new Intl.DisplayNames(['zh-CN'], { type: 'region' })
+      return dn.of(upper) ?? upper
+    } catch {
+      return upper
+    }
+  }
+
+  const countryName = computed(() => getCountryNameZhFromIso(String(route.params.country || '')))
 
   function buildCountryDateParams(): { countryCode: string; startDate: string; endDate: string } {
     const code = countryCodeParam.value
@@ -156,17 +168,6 @@
       startDate: startDate || '',
       endDate: endDate || ''
     }
-  }
-
-  const countryNameMap: Record<string, string> = {
-    US: '美国',
-    CN: '中国',
-    JP: '日本',
-    GB: '英国',
-    DE: '德国',
-    IN: '印度',
-    BR: '巴西',
-    FR: '法国'
   }
 
   // 第一排：5 个统计卡片（来自接口 /api/v1/datacenter/analysis/countryInfo/overall）

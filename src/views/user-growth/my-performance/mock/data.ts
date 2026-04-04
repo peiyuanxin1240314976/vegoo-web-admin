@@ -50,7 +50,7 @@ export function buildMyPerformanceMockData(
     topKpis: overview.topKpis,
     kpiAchievement: achievement.kpiAchievement,
     roiTrend: { title: roiTrend.title, points: roiTrend.points },
-    spendProgress: { title: spendProgress.title, data: spendProgress.data },
+    spendProgress: { title: spendProgress.title, list: spendProgress.list },
     performanceHistory: { title: performanceHistory.title, list: performanceHistory.list },
     appTable: { title: appTable.title, list: appTable.list, summary: appTable.summary }
   }

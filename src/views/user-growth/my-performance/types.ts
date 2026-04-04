@@ -45,10 +45,26 @@ export interface MyPerformanceRoiTrendResponse {
   points: MyPerformanceRoiTrendPoint[]
 }
 
-/** POST spend-progress 响应 */
+/** POST spend-progress 响应（网关 `data.spendProgress` 内层与之一致） */
+export type MyPerformanceSpendProgressTone =
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'primary'
+  | 'default'
+
+export interface MyPerformanceSpendProgressItem {
+  label: string
+  /** 后端已格式化的展示文案，如 `"$31,521.26 / $37,825.51"` 或单金额 */
+  value: string
+  /** 进度比例 0-100 */
+  rate: number
+  type?: MyPerformanceSpendProgressTone
+}
+
 export interface MyPerformanceSpendProgressResponse {
   title: string
-  data: MyPerformanceSpendProgress
+  list: MyPerformanceSpendProgressItem[]
 }
 
 /** POST performance-history 响应 */
@@ -112,13 +128,6 @@ export interface MyPerformanceRoiTrendPoint {
   roi: number
   /** 目标 ROI（%）；存在时图表画第二条线 */
   targetRoi?: number
-}
-
-export interface MyPerformanceSpendProgress {
-  spend: number
-  target: number
-  /** 0-100 */
-  rate: number
 }
 
 export interface MyPerformanceHistoryItem {
@@ -205,7 +214,7 @@ export interface MyPerformancePageData {
   /** 消耗进度 */
   spendProgress: {
     title: string
-    data: MyPerformanceSpendProgress
+    list: MyPerformanceSpendProgressItem[]
   }
 
   /** 绩效历史 */

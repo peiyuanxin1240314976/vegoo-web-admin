@@ -58,7 +58,7 @@ export function mockFetchMyPerformanceSpendProgress(
   const page = slicePage(body)
   return Promise.resolve({
     title: page.spendProgress.title,
-    data: page.spendProgress.data
+    list: page.spendProgress.list
   })
 }
 

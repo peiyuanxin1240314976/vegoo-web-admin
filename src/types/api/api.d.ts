@@ -562,8 +562,12 @@ declare namespace Api {
       spend: string
       progress: number
       platformIcon: string
-      statusType: string
-      roi?: string
+      /** ok | warn | inactive；接口可为 null */
+      statusType: string | null
+      /** 预格式化首日 ROI 文案（如 41.2%）；与 roi1 二选一或并存时优先有内容的 roi */
+      roi?: string | null
+      /** 首日 ROI 百分比数值（非 0-1），无 roi 时前端格式化为两位小数 + % */
+      roi1?: number | null
       status?: string
     }
 

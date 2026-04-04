@@ -262,7 +262,7 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
-  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
   import {
     Download,
     Refresh,
@@ -299,8 +299,15 @@
     Download
   }
 
+  const defaultRangeStart = (() => {
+    const day = cloneAppDate(getAppNow())
+    day.setHours(0, 0, 0, 0)
+    day.setDate(day.getDate() - 7)
+    return formatYYYYMMDD(day)
+  })()
+
   const defaultFilters: IapFilterState = {
-    startDate: getAppTodayYYYYMMDD(),
+    startDate: defaultRangeStart,
     endDate: getAppTodayYYYYMMDD(),
     s_app_id: 'all',
     s_country_code: 'all',

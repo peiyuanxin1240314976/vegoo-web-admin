@@ -102,9 +102,7 @@ export type RevenueDeviationHistoryRow = {
   d_deviation_rate_pct: number
 }
 
-/** 08-table-matrix */
-export type MatrixPlatformKey = 'admob' | 'facebook' | 'applovin' | 'vungle'
-
+/** 08-table-matrix：列 key 与行内字段名一一对应，由接口动态给出（不止固定四家平台） */
 export type RevenueDeviationMatrixCell = {
   estimated: string
   real: string
@@ -115,15 +113,12 @@ export type RevenueDeviationMatrixRow = {
   s_app_name: string
   s_app_icon_emoji: string
   s_icon_color: string
-  admob: RevenueDeviationMatrixCell
-  facebook: RevenueDeviationMatrixCell
-  applovin: RevenueDeviationMatrixCell
-  vungle: RevenueDeviationMatrixCell
+  [key: string]: string | RevenueDeviationMatrixCell | undefined
 }
 
 export type RevenueDeviationMatrixCol = {
   name: string
-  key: MatrixPlatformKey
+  key: string
   total: RevenueDeviationMatrixCell
 }
 

@@ -372,55 +372,62 @@
           <div v-else-if="isMatrixEmpty" class="rd-card-empty rd-card-empty--matrix">
             <ElEmpty description="暂无明细数据" :image-size="80" />
           </div>
-          <table v-else class="rd-table rd-matrix-table">
-            <thead>
-              <tr>
-                <th>应用</th>
-                <th v-for="col in matrixCols" :key="col.name" colspan="1">
-                  <div class="rd-matrix-col-head">
-                    <span>{{ col.name }}</span>
-                    <span class="rd-matrix-col-sub">预估/真实/偏差率</span>
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in matrixData" :key="row.app">
-                <td class="rd-matrix-app">
-                  <span class="rd-app-icon" :style="{ background: row.iconColor }">{{
-                    row.icon
-                  }}</span>
-                  {{ row.app }}
-                </td>
-                <td
-                  v-for="col in matrixCols"
-                  :key="col.name"
-                  class="rd-matrix-cell"
-                  :class="getMatrixClass(matrixCell(row, col.key)?.deviation ?? '')"
-                >
-                  <template v-if="matrixCell(row, col.key)">
-                    <span class="rd-matrix-est">{{ matrixCell(row, col.key)?.estimated }}</span>
-                    <span class="rd-matrix-real">/{{ matrixCell(row, col.key)?.real }}</span>
+          <div v-else class="rd-matrix-table-inner">
+            <table class="rd-table rd-matrix-table">
+              <thead>
+                <tr>
+                  <th>{{ matrixFirstColLabel }}</th>
+                  <th v-for="col in matrixCols" :key="col.name" colspan="1">
+                    <div class="rd-matrix-col-head">
+                      <span>{{ col.name }}</span>
+                      <span class="rd-matrix-col-sub">预估/真实/偏差率</span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in matrixData" :key="row.rowKey">
+                  <td class="rd-matrix-app">
+                    <span class="rd-app-icon" :style="{ background: row.iconColor }">{{
+                      row.icon
+                    }}</span>
+                    {{ row.app }}
+                  </td>
+                  <td
+                    v-for="col in matrixCols"
+                    :key="col.name"
+                    class="rd-matrix-cell"
+                    :class="getMatrixClass(matrixCell(row, col.key)?.deviation ?? '')"
+                  >
+                    <template v-if="matrixCell(row, col.key)">
+                      <span class="rd-matrix-est">{{ matrixCell(row, col.key)?.estimated }}</span>
+                      <span class="rd-matrix-real">/{{ matrixCell(row, col.key)?.real }}</span>
+                      <span
+                        class="rd-matrix-dev"
+                        :class="getDeviationClass(matrixCell(row, col.key)?.deviation ?? '')"
+                      >
+                        /{{ matrixCell(row, col.key)?.deviation }}
+                      </span>
+                    </template>
+                  </td>
+                </tr>
+                <!-- 合计行 -->
+                <tr class="rd-table__total">
+                  <td>合计</td>
+                  <td v-for="col in matrixCols" :key="col.name" class="rd-matrix-cell">
+                    <span class="rd-matrix-est">{{ col.total.estimated }}</span>
+                    <span class="rd-matrix-real">/{{ col.total.real }}</span>
                     <span
                       class="rd-matrix-dev"
-                      :class="getDeviationClass(matrixCell(row, col.key)?.deviation ?? '')"
+                      :class="getDeviationClass(col.total.deviation ?? '')"
                     >
-                      /{{ matrixCell(row, col.key)?.deviation }}
+                      /{{ col.total.deviation }}
                     </span>
-                  </template>
-                </td>
-              </tr>
-              <!-- 合计行 -->
-              <tr class="rd-table__total">
-                <td>合计</td>
-                <td v-for="col in matrixCols" :key="col.name" class="rd-matrix-cell">
-                  <span class="rd-matrix-est">{{ col.total.estimated }}</span>
-                  <span class="rd-matrix-real">/{{ col.total.real }}</span>
-                  <span class="rd-matrix-dev rd-text--red">/{{ col.total.deviation }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
         <div class="rd-matrix-note">
           说明：预估收入通过客户端埋点展示广告事件计算，真实收入来源于广告平台对账数据，偏差率可用于校正各维度ROI计算。
@@ -468,8 +475,6 @@
 
   defineOptions({ name: 'RevenueDeviation' })
 
-  type MatrixPlatformKey = 'admob' | 'facebook' | 'applovin' | 'vungle'
-
   interface MatrixCell {
     estimated: string
     real: string
@@ -477,19 +482,50 @@
   }
 
   type MatrixRow = {
+    /** 展示名重复时仍保证列表 key 唯一 */
+    rowKey: string
     app: string
     icon: string
     iconColor: string
-  } & Record<MatrixPlatformKey, MatrixCell>
+    cells: Record<string, MatrixCell | undefined>
+  }
 
   interface MatrixColDef {
     name: string
-    key: MatrixPlatformKey
+    key: string
     total: MatrixCell
   }
 
-  function matrixCell(row: MatrixRow, key: MatrixPlatformKey): MatrixCell | undefined {
-    return row[key]
+  function matrixCell(row: MatrixRow, key: string): MatrixCell | undefined {
+    return row.cells[key]
+  }
+
+  function isMatrixCell(v: unknown): v is MatrixCell {
+    if (v === null || typeof v !== 'object') return false
+    const o = v as Record<string, unknown>
+    return (
+      typeof o.estimated === 'string' &&
+      typeof o.real === 'string' &&
+      typeof o.deviation === 'string'
+    )
+  }
+
+  function toMatrixVmRows(rows: RdmRow[], colKeys: string[]): MatrixRow[] {
+    return rows.map((r, idx) => {
+      const raw = r as Record<string, unknown>
+      const cells: Record<string, MatrixCell | undefined> = {}
+      for (const k of colKeys) {
+        const v = raw[k]
+        cells[k] = isMatrixCell(v) ? v : undefined
+      }
+      return {
+        rowKey: `${String(r.s_app_name)}-${idx}`,
+        app: r.s_app_name,
+        icon: r.s_app_icon_emoji,
+        iconColor: r.s_icon_color,
+        cells
+      }
+    })
   }
 
   const ALL_SOURCE_VALUE = '__ALL_SOURCE__'
@@ -599,6 +635,15 @@
     { flush: 'sync' }
   )
 
+  const matrixFirstColLabel = computed(() => {
+    const map: Record<RevenueDeviationMatrixRowDim, string> = {
+      app: '应用',
+      platform: '广告平台',
+      date: '日期'
+    }
+    return map[activeRowDim.value]
+  })
+
   const loadingKpi = ref(false)
   const loadingTrend = ref(false)
   const loadingPlatformTable = ref(false)
@@ -660,18 +705,6 @@
     }
   }
 
-  function toMatrixVmRows(rows: RdmRow[]): MatrixRow[] {
-    return rows.map((r) => ({
-      app: r.s_app_name,
-      icon: r.s_app_icon_emoji,
-      iconColor: r.s_icon_color,
-      admob: r.admob,
-      facebook: r.facebook,
-      applovin: r.applovin,
-      vungle: r.vungle
-    }))
-  }
-
   function cssVar(name: string) {
     const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
     return v || name
@@ -689,7 +722,10 @@
         key: c.key,
         total: c.total
       }))
-      matrixData.value = toMatrixVmRows(matrix.rows)
+      matrixData.value = toMatrixVmRows(
+        matrix.rows,
+        matrix.cols.map((c) => c.key)
+      )
     } catch {
       if (id !== matrixRequestId.value) return
       matrixCols.value = []
@@ -782,19 +818,26 @@
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
+  /** 接口可能返回 en dash（8–15）或 ASCII 连字符（8-15），分类时统一比较 */
+  function normalizeDeviationBracket(val: string) {
+    return val.replace(/\u2013|\u2014/g, '-')
+  }
+
   function getDeviationClass(val: string) {
     if (!val) return ''
     if (val.startsWith('+')) return 'rd-text--red'
     if (val.startsWith('-')) return 'rd-text--green'
-    if (val.includes('>15')) return 'rd-text--red'
-    if (val.includes('8–15')) return 'rd-text--orange'
+    const n = normalizeDeviationBracket(val)
+    if (n.includes('>15')) return 'rd-text--red'
+    if (n.includes('8-15')) return 'rd-text--orange'
     return 'rd-text--muted'
   }
 
   function getMatrixClass(deviation: string) {
     if (!deviation) return ''
-    if (deviation.includes('>15')) return 'rd-matrix-cell--red'
-    if (deviation.includes('8–15')) return 'rd-matrix-cell--orange'
+    const n = normalizeDeviationBracket(deviation)
+    if (n.includes('>15')) return 'rd-matrix-cell--red'
+    if (n.includes('8-15')) return 'rd-matrix-cell--orange'
     return ''
   }
 
@@ -1053,24 +1096,7 @@
     initCountryChart()
   })
 
-  watch(
-    [dateRange, platform, appFilter],
-    async () => {
-      matrixPlatform.value = platform.value
-      matrixLoading.value = true
-      await loadAllCards()
-      await loadMatrixOnly()
-      await nextTick()
-      trendChart?.dispose()
-      trendChart = null
-      countryChart?.dispose()
-      countryChart = null
-      initTrendChart()
-      initCountryChart()
-    },
-    { deep: true }
-  )
-
+  /** 四维度偏差明细表：平台 / 行维 / 列维 切换单独拉矩阵接口，不依赖顶部「查询」 */
   watch([matrixPlatform, activeRowDim, activeColDim], async () => {
     await loadMatrixOnly()
   })
@@ -1700,6 +1726,10 @@
     background: color-mix(in srgb, var(--art-primary) 6%, transparent);
   }
 
+  .rd-matrix-table tbody tr:hover td:first-child {
+    background: color-mix(in srgb, var(--art-primary) 6%, var(--default-box-color));
+  }
+
   .rd-table__total td {
     font-weight: 600;
     color: var(--text-primary) !important;
@@ -2015,6 +2045,7 @@
   .rd-country-card,
   .rd-history-card,
   .rd-matrix-card {
+    min-width: 0;
     height: 100%;
     min-height: 0;
   }
@@ -2104,10 +2135,56 @@
   }
 
   .rd-matrix-scroll {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
     flex: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     min-height: 0;
     max-height: 340px;
     overflow: auto;
+    overscroll-behavior-x: contain;
+
+    /* 始终显示可拖拽滚动条（覆盖系统「叠加滚动条」观感） */
+    scrollbar-width: auto;
+    scrollbar-color: color-mix(in srgb, var(--art-gray-500) 75%, transparent) var(--default-border);
+  }
+
+  .rd-matrix-scroll::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+
+  .rd-matrix-scroll::-webkit-scrollbar-track {
+    background: color-mix(in srgb, var(--default-border) 65%, transparent);
+    border-radius: 6px;
+  }
+
+  .rd-matrix-scroll::-webkit-scrollbar-thumb {
+    min-width: 40px;
+    min-height: 40px;
+    background: color-mix(in srgb, var(--art-gray-600) 70%, var(--default-border));
+    border: 2px solid color-mix(in srgb, var(--default-border) 65%, transparent);
+    border-radius: 6px;
+  }
+
+  .rd-matrix-scroll::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--art-gray-500) 85%, var(--art-primary));
+  }
+
+  .rd-matrix-scroll::-webkit-scrollbar-corner {
+    background: var(--default-box-color);
+  }
+
+  /*
+   * 块级 + fit-content：min-width 相对 .rd-matrix-scroll 计算，避免 inline-block+table 上 min-width:100% 循环导致表被压成容器宽、横向永远不溢出。
+   */
+  .rd-matrix-table-inner {
+    display: block;
+    width: fit-content;
+    min-width: 100%;
   }
 
   .rd-matrix-scroll--busy {
@@ -2148,8 +2225,15 @@
     max-width: 100%;
   }
 
-  .rd-matrix-table {
-    min-width: 600px;
+  /*
+   * 双类提高优先级，压过 .rd-table { width:100% }；列为每格设 min-width，列少时总宽仍可能超过卡片，才能出现横向条。
+   */
+  .rd-matrix-table.rd-table {
+    width: max-content;
+    max-width: none;
+    table-layout: auto;
+    border-spacing: 0;
+    border-collapse: separate;
   }
 
   .rd-matrix-table thead th {
@@ -2158,6 +2242,32 @@
     z-index: 2;
     background: var(--default-box-color);
     box-shadow: 0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  .rd-matrix-table thead th:first-child {
+    left: 0;
+    z-index: 5;
+    min-width: 7.5rem;
+    box-shadow:
+      0 1px 0 color-mix(in srgb, var(--art-primary) 14%, transparent),
+      1px 0 0 color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  .rd-matrix-table thead th:not(:first-child) {
+    min-width: 9.5rem;
+  }
+
+  .rd-matrix-table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    min-width: 7.5rem;
+    background: var(--default-box-color);
+    box-shadow: 1px 0 0 color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  .rd-matrix-table tbody td:not(:first-child) {
+    min-width: 9.5rem;
   }
 
   .rd-matrix-col-head {
