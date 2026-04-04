@@ -10,7 +10,8 @@ function formatYmd(d: Date) {
 }
 
 function allToEmpty(v: string) {
-  return v === 'all' ? '' : v
+  if (v === 'all' || v === '') return ''
+  return v
 }
 
 export function resolveDateRangeFromPreset(dateRange: string): {

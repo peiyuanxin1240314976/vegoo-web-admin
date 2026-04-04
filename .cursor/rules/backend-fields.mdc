@@ -312,6 +312,10 @@ alwaysApply: true
 
 | `advertising` | 用户广告 |
 
+| `detailApp` | 整体回收明细表行可选字段：与页内「应用」子筛选项 `value` 对齐（如 `weather5`）；接口未按应用拆行时可省略，省略则该行不受应用子筛选过滤。 |
+
+| `detailChannel` | 整体回收明细表行可选字段：与页内「广告平台」子筛选项 `value` 对齐（如 `google`、`facebook`）；未拆维度时可省略。 |
+
 
 
 ### 前端展示与契约结构字段（必须入表）

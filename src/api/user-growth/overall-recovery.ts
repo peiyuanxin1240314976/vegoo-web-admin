@@ -1,14 +1,14 @@
 /**
  * 用户增长 - 整体回收 API（Mock / 远程由模块 `views/user-growth/overall-recovery/config/data-source` 切换）
+ *
+ * 顶栏筛选项复用公用 **`GET .../cockpit/meta-filter-options`**（`useCockpitMetaFilterStore`），本模块不提供 meta-filter-options。
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
 import type {
-  OverallRecoveryFilterOptions,
   OverallRecoveryFilterState,
   OverallTabData,
-  OrganicTabData,
-  SelectOption
+  OrganicTabData
 } from '@/views/user-growth/overall-recovery/types'
 import { buildOverallRecoveryApiParams } from '@/views/user-growth/overall-recovery/utils/buildApiParams'
 import {
@@ -36,24 +36,6 @@ function asArray<T>(value: unknown): T[] {
 
 function asRecord(value: unknown): Record<string, any> {
   return value && typeof value === 'object' ? (value as Record<string, any>) : {}
-}
-
-/** 整体回收 - 下拉筛选选项 */
-export function fetchOverallRecoveryFilterOptions() {
-  if (isOverallRecoveryEndpointMock(OverallRecoveryEndpoint.MetaFilterOptions)) {
-    return overallRecoveryMock.mockFetchOverallRecoveryMetaFilterOptions()
-  }
-  return request
-    .post<any>({
-      url: `${OVERALL_RECOVERY_BASE}/meta-filter-options`,
-      data: {}
-    })
-    .then((res) => unwrapDataDeep<OverallRecoveryFilterOptions>(res))
-    .then((opts) => ({
-      appOptions: asArray<SelectOption>(opts?.appOptions),
-      sourceOptions: asArray<SelectOption>(opts?.sourceOptions),
-      countryOptions: asArray<SelectOption>(opts?.countryOptions)
-    }))
 }
 
 /** 整体回收 - Tab1 整体回收数据 */

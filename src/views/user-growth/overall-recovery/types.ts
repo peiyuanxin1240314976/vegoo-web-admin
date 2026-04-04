@@ -13,19 +13,6 @@ export interface OverallRecoveryFilterState {
   s_country_code: string
 }
 
-/** 下拉选项 */
-export interface SelectOption {
-  label: string
-  value: string
-}
-
-/** 筛选下拉选项 */
-export interface OverallRecoveryFilterOptions {
-  appOptions: SelectOption[]
-  sourceOptions: SelectOption[]
-  countryOptions: SelectOption[]
-}
-
 // ─── Tab1: 整体回收 ───────────────────────────────────────────
 
 /** 顶部 KPI 卡片 */
@@ -73,6 +60,10 @@ export interface RoiCompareRow {
 
 /** 明细数据表行 */
 export interface RecoveryDetailRow {
+  /** 与卡片内应用子筛选项 value 对齐（如 weather5）；接口未拆维度时可省略，省略则不受应用子筛选影响 */
+  detailApp?: string
+  /** 与卡片内广告平台子筛选项 value 对齐（如 google、facebook）；接口未拆维度时可省略 */
+  detailChannel?: string
   date: string
   adSpend: number
   cpi: number

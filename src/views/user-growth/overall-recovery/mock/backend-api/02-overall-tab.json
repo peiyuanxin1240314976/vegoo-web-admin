@@ -34,7 +34,7 @@
       },
       "detailRows": {
         "type": "RecoveryDetailRow[]",
-        "description": "明细数据表（date/adSpend/cpi/paidUsers/totalUsers/organicUsers/roiDayN/rush/threeStar/sevenStar/retDayN）。"
+        "description": "明细数据表（date/adSpend/cpi/paidUsers/totalUsers/organicUsers/roiDayN/rush/threeStar/sevenStar/retDayN）；可选 detailApp/detailChannel 与页内子筛选 value 对齐，未返回时该行不受子筛选约束。"
       }
     }
   },
@@ -154,6 +154,8 @@
       ],
       "detailRows": [
         {
+          "detailApp": "weather5",
+          "detailChannel": "google",
           "date": "03-09",
           "adSpend": 8754,
           "cpi": 1.13,

@@ -119,12 +119,13 @@
               <ElOption label="Google" value="google" />
               <ElOption label="Facebook" value="facebook" />
             </ElSelect>
-            <ElButton size="small" type="primary" plain>导出</ElButton>
+            <ElButton round size="small" type="primary" @click="onDetailSearch">检索</ElButton>
+            <ElButton size="small" type="primary" plain round>导出</ElButton>
           </div>
         </div>
       </template>
       <ElTable
-        :data="tabData?.detailRows ?? []"
+        :data="displayedDetailRows"
         size="small"
         class="detail-table"
         stripe
@@ -211,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, watch, nextTick } from 'vue'
+  import { ref, computed, onMounted, watch, nextTick } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { OverallRecoveryFilterState, OverallTabData } from '../types'
@@ -227,6 +228,32 @@
   let loadSeq = 0
   const detailApp = ref('all')
   const detailChannel = ref('all')
+  const appliedDetailApp = ref('all')
+  const appliedDetailChannel = ref('all')
+
+  function filterDetailRows(rows: OverallTabData['detailRows']): OverallTabData['detailRows'] {
+    return rows.filter((row) => {
+      if (appliedDetailApp.value !== 'all') {
+        if (row.detailApp !== undefined && row.detailApp !== appliedDetailApp.value) return false
+      }
+      if (appliedDetailChannel.value !== 'all') {
+        if (row.detailChannel !== undefined && row.detailChannel !== appliedDetailChannel.value) {
+          return false
+        }
+      }
+      return true
+    })
+  }
+
+  const displayedDetailRows = computed(() => {
+    const rows = tabData.value?.detailRows ?? []
+    return filterDetailRows(rows)
+  })
+
+  function onDetailSearch() {
+    appliedDetailApp.value = detailApp.value
+    appliedDetailChannel.value = detailChannel.value
+  }
 
   const curveChart = useChart()
   const volumeChart = useChart()
@@ -350,6 +377,10 @@
       })
       if (seq !== loadSeq) return
       tabData.value = res
+      detailApp.value = 'all'
+      detailChannel.value = 'all'
+      appliedDetailApp.value = 'all'
+      appliedDetailChannel.value = 'all'
       await nextTick()
       if (seq !== loadSeq) return
       curveChart.initChart(buildCurveOption())
