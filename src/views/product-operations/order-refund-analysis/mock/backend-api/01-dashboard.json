@@ -1,21 +1,21 @@
 {
-  "_comment": "订单退款分析 - 看板聚合。对应 types.ts: DashboardPayload、api/order-refund-analysis.ts: getDashboard。",
+  "_comment": "订单退款分析 - 看板聚合。对应 types.ts: DashboardPayload、OrderRefundDashboardParams；实现 @/api/product-operations/order-refund-analysis.ts: getDashboard。",
   "fieldDescription": {
     "request": {
-      "app": {
+      "appId": {
         "type": "string",
         "required": true,
-        "description": "应用筛选，all 表示全部。"
+        "description": "应用筛选；自有应用 ID。选「全部」时传空字符串 \"\"（勿传字面量 all）。"
       },
       "startDate": {
         "type": "string",
         "required": true,
-        "description": "开始日期，YYYY-MM-DD。"
+        "description": "开始日期，YYYY-MM-DD（含）。"
       },
       "endDate": {
         "type": "string",
         "required": true,
-        "description": "结束日期，YYYY-MM-DD。"
+        "description": "结束日期，YYYY-MM-DD（含）。"
       },
       "compareType": {
         "type": "string",
@@ -23,22 +23,22 @@
         "enum": ["last_month", "last_week", "last_year"],
         "description": "对比期间类型。"
       },
-      "country": {
+      "countryCode": {
         "type": "string",
         "required": true,
-        "description": "国家，all 或 ISO 3166-1 alpha-2。"
+        "description": "国家 ISO 3166-1 alpha-2 小写；不限国家时传 \"\"（与 UI「全部」映射一致）。"
       },
-      "payment_platform": {
+      "paymentPlatform": {
         "type": "string",
         "required": true,
-        "description": "支付平台筛选：all、google_play、app_store、stripe 等。"
+        "description": "支付平台筛选项（如 google_play、app_store、stripe）；「全部」传 \"\"。"
       }
     },
     "response": {
       "data": {
         "type": "DashboardPayload",
         "required": true,
-        "description": "网关包裹时为 data 内结构。"
+        "description": "网关包裹时为 data 内业务体。"
       }
     },
     "DashboardPayload": {
@@ -46,12 +46,12 @@
       "trend": {
         "type": "TrendPoint[]",
         "required": true,
-        "description": "退款趋势点（通常 30 天）。"
+        "description": "退款趋势点（通常约 30 天，与日期范围对齐）。"
       },
       "reasonData": {
         "type": "{ name: string; value: number }[]",
         "required": true,
-        "description": "退款原因占比（与饼图一致，value 可为百分比或相对权重）。"
+        "description": "退款原因占比（饼图；value 为百分比或相对权重，与产品口径一致）。"
       },
       "countryData": {
         "type": "CountryRate[]",
@@ -61,22 +61,59 @@
       "orderData": {
         "type": "OrderRecord[]",
         "required": true,
-        "description": "退款订单明细表。"
+        "description": "退款订单明细表主数据。"
       },
       "alertMessage": {
         "type": "string",
         "required": true,
         "description": "底部预警条文案；空字符串表示不展示。"
       }
+    },
+    "CountryRate": {
+      "countryCode": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码，ISO 3166-1 alpha-2 小写。"
+      },
+      "rate": {
+        "type": "number",
+        "required": true,
+        "description": "退款率等指标（百分比数值，口径见产品）。"
+      },
+      "level": {
+        "type": "string",
+        "required": true,
+        "enum": ["good", "warning", "danger", "critical"],
+        "description": "与条形图色阶一致。"
+      },
+      "badge": { "type": "string", "required": false, "description": "可选角标文案。" }
+    },
+    "OrderRecord": {
+      "orderId": { "type": "string", "required": true, "description": "订单号。" },
+      "user": { "type": "string", "required": true, "description": "用户标识（脱敏展示）。" },
+      "amount": {
+        "type": "number",
+        "required": true,
+        "description": "金额（USD 等，与产品一致）。"
+      },
+      "reason": { "type": "string", "required": true, "description": "退款原因文案。" },
+      "platform": { "type": "string", "required": true, "description": "支付渠道/商店展示名。" },
+      "date": { "type": "string", "required": true, "description": "日期 YYYY-MM-DD。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["refunded", "processing", "pending"],
+        "description": "订单退款状态。"
+      }
     }
   },
   "sampleRequest": {
-    "app": "all",
-    "startDate": "2024-01-01",
-    "endDate": "2024-01-31",
+    "appId": "",
+    "startDate": "2026-01-01",
+    "endDate": "2026-01-31",
     "compareType": "last_month",
-    "country": "all",
-    "payment_platform": "all"
+    "countryCode": "",
+    "paymentPlatform": ""
   },
   "sampleResponse": {
     "data": {
@@ -90,12 +127,28 @@
         "avgAmount": 6.74,
         "revenueRatio": 4.8
       },
-      "trend": [{ "date": "1/1", "refundAmount": 28000, "ma7": 30000 }],
+      "trend": [
+        { "date": "1/1", "refundAmount": 28000, "ma7": 30000 },
+        { "date": "1/2", "refundAmount": 31000, "ma7": 30500 },
+        { "date": "1/3", "refundAmount": 35000, "ma7": 31200 }
+      ],
       "reasonData": [
         { "name": "用户主动取消", "value": 45 },
-        { "name": "功能不符预期", "value": 28 }
+        { "name": "功能不符预期", "value": 28 },
+        { "name": "订阅重复扣费", "value": 12 },
+        { "name": "支付失败", "value": 8 },
+        { "name": "其他", "value": 7 }
       ],
-      "countryData": [{ "country": "US", "rate": 2.8, "level": "good", "badge": "Acceptable" }],
+      "countryData": [
+        { "countryCode": "us", "rate": 2.8, "level": "good", "badge": "Acceptable" },
+        { "countryCode": "gb", "rate": 3.1, "level": "warning" },
+        { "countryCode": "de", "rate": 4.2, "level": "warning" },
+        { "countryCode": "fr", "rate": 5.8, "level": "danger", "badge": "High" },
+        { "countryCode": "jp", "rate": 2.1, "level": "good" },
+        { "countryCode": "cn", "rate": 6.2, "level": "critical", "badge": "Highest" },
+        { "countryCode": "au", "rate": 3.5, "level": "warning" },
+        { "countryCode": "ca", "rate": 2.9, "level": "good" }
+      ],
       "orderData": [
         {
           "orderId": "ORD-123456",
@@ -103,8 +156,26 @@
           "amount": 15.0,
           "reason": "用户主动取消",
           "platform": "Google Play",
-          "date": "2024-01-23",
+          "date": "2026-01-23",
           "status": "refunded"
+        },
+        {
+          "orderId": "ORD-789012",
+          "user": "jane.smith@...",
+          "amount": 5.5,
+          "reason": "订阅重复扣费",
+          "platform": "App Store",
+          "date": "2026-01-22",
+          "status": "processing"
+        },
+        {
+          "orderId": "ORD-345678",
+          "user": "mike.brown@...",
+          "amount": 9.99,
+          "reason": "功能不符预期",
+          "platform": "Stripe",
+          "date": "2026-01-22",
+          "status": "pending"
         }
       ],
       "alertMessage": "高退款率预警：法国地区退款率达5.8%，超过预警阈值5%，建议检查当地付费渠道和定价策略"
@@ -119,7 +190,28 @@
   },
   "apiSuggestion": {
     "notes": [
-      "成功响应需符合项目 BaseResponse：`{ code, data, msg }`，`request` 拦截器返回 `data` 字段。"
+      "成功响应需符合项目 BaseResponse：`{ code, data, msg }`，`request` 拦截器返回解包后的业务体。",
+      "筛选「全部」维度统一传空字符串 \"\"，与 backend-fields「接口请求 · 筛选「全部」」一致。"
     ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "进入页面 onMounted",
+        "detail": "使用当前已应用筛选调用 overview/dashboard，填充 KPI、四图、订单表与预警条。",
+        "prerequisite": "appliedFilters 已由默认值或上次查询确定。"
+      },
+      {
+        "moment": "点击「查询」",
+        "detail": "将草稿筛选同步为已应用筛选后重新请求 dashboard。",
+        "prerequisite": "日期范围合法。"
+      },
+      {
+        "moment": "点击「刷新」",
+        "detail": "在不清改筛选的前提下用当前已应用条件重新请求 dashboard。"
+      }
+    ],
+    "defaultSelection": "应用/国家/支付平台默认「全部」对应请求体空串；对比期默认 last_month。",
+    "dedupe": "单页单聚合接口；无并行重复拉取同一 endpoint 的必要。"
   }
 }

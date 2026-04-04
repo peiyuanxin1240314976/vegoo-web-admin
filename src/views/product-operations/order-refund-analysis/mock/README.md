@@ -8,20 +8,20 @@
 
 - `.cursor/rules/api-contract-and-mock-conventions.mdc`
 - `.cursor/rules/module-api-mock-config.mdc`
-- `.cursor/rules/backend-fields.mdc`（如 `payment_platform` 表示支付平台）
+- `.cursor/rules/backend-fields.mdc`（契约键名 camelCase；国家 `countryCode`、支付平台 `paymentPlatform` 等）
 
 ## 目录结构
 
-| 路径                                     | 说明                                            |
-| ---------------------------------------- | ----------------------------------------------- |
-| `README.md`                              | 本说明                                          |
-| `backend-api/README.md`                  | 父级 API、接口清单                              |
-| `backend-api/01-*.json`                  | 各接口字段解释与 sample                         |
-| `api-mock/*.json`                        | 与 `backend-api` 的 `sampleResponse` 对齐的示例 |
-| `../mocks/order-refund-analysis-mock.ts` | Mock 实现                                       |
+| 路径 | 说明 |
+| --- | --- |
+| `README.md` | 本说明 |
+| `backend-api/README.md` | 父级 API、接口清单 |
+| `backend-api/01-*.json` | 各接口字段解释、`sampleRequest` / `sampleResponse`、`interaction` |
+| `api-mock/*.json` | 与对应契约 `sampleResponse` 中 **业务体（常为 `data`）** 同构的示例 JSON |
+| `order-refund-analysis-api-mock.ts` | Mock 实现（`mockFetch*`），命名与 `reviews-ratings-monitor` 下 `*-api-mock.ts` 一致 |
 
 ## 与代码的对应关系
 
-- 类型：`../types.ts`、`../api/order-refund-analysis.ts`（再导出）
-- 数据源开关：`../config/data-source.ts`
-- API：`../api/order-refund-analysis.ts`，按 config 分支 mock 或 `request`
+- 类型：`../types.ts`
+- 数据源开关：`../config/data-source.ts`（与 `backend-api` 接口一一对应）
+- HTTP 封装：`@/api/product-operations/order-refund-analysis.ts`（按 config 分支 mock 或 `request`）
