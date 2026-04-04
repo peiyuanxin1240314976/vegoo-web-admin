@@ -1,5 +1,5 @@
 {
-  "_comment": "广告平台分析详情 - CPI 趋势折线图。响应 data 为 ChartTrend（dates + target? + series[]）。对应 types: ChartTrend、TrendSeries。",
+  "_comment": "综合分析应用详情 - CPI 趋势折线图。响应 data 为 ChartTrend（dates + target? + series[]）。对应 types: ChartTrend、TrendSeries。",
   "fieldDescription": {
     "request": {
       "name": {
@@ -88,7 +88,7 @@
     }
   },
   "api": {
-    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/cpi-trend",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/comprehensive-analysis/platform-analysis-detail/cpi-trend",
     "method": "POST",
     "priority": "P0",
     "requestBody": "name (必填), from?",

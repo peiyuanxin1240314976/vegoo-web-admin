@@ -1,5 +1,5 @@
 {
-  "_comment": "广告平台分析详情 - 顶栏 KPI + 左列安卓/iOS/合计三卡 + sourceName。对应 types: PlatformAnalysisDetailSummary。网关路径以前端 PLATFORM_ANALYSIS_DETAIL_BASE + /summary 为准。",
+  "_comment": "综合分析应用详情 - 顶栏 KPI + 左列安卓/iOS/合计三卡 + sourceName。对应 types: PlatformAnalysisDetailSummary。网关路径以前端 PLATFORM_ANALYSIS_DETAIL_BASE + /summary 为准。",
   "fieldDescription": {
     "request": {
       "name": {
@@ -171,7 +171,7 @@
     }
   },
   "api": {
-    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/summary",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/comprehensive-analysis/platform-analysis-detail/summary",
     "method": "POST",
     "priority": "P0",
     "requestBody": "name (必填), from?",

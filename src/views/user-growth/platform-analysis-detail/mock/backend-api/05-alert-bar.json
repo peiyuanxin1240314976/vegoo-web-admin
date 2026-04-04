@@ -1,5 +1,5 @@
 {
-  "_comment": "广告平台分析详情 - 底部智能预警条。响应 data 可为 AlertBarItem[]，或 { alertBar: AlertBarItem[] }（前端 asAlertBarPayload 兼容）。",
+  "_comment": "综合分析应用详情 - 底部智能预警条。响应 data 可为 AlertBarItem[]，或 { alertBar: AlertBarItem[] }（前端 asAlertBarPayload 兼容）。",
   "fieldDescription": {
     "request": {
       "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
@@ -52,7 +52,7 @@
     ]
   },
   "api": {
-    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/alert-bar",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/comprehensive-analysis/platform-analysis-detail/alert-bar",
     "method": "POST",
     "priority": "P1",
     "requestBody": "name (必填), from?",

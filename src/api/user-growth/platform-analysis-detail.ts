@@ -23,8 +23,8 @@ import {
   isPlatformAnalysisDetailEndpointMock
 } from '@/views/user-growth/platform-analysis-detail/config/data-source'
 
-/** 与综合分析同级：`.../analysis/user-growth/platform-analysis-detail` */
-export const PLATFORM_ANALYSIS_DETAIL_BASE = `${ANALYSIS_API_BASE}/user-growth/platform-analysis-detail`
+/** 挂在综合分析下：`.../analysis/user-growth/comprehensive-analysis/platform-analysis-detail` */
+export const PLATFORM_ANALYSIS_DETAIL_BASE = `${ANALYSIS_API_BASE}/user-growth/comprehensive-analysis/platform-analysis-detail`
 
 function unwrapDataDeep<T = unknown>(value: unknown, maxDepth = 3): T {
   let cur: any = value

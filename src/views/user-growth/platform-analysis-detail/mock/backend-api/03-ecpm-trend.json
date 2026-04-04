@@ -1,5 +1,5 @@
 {
-  "_comment": "广告平台分析详情 - ECPM 双折线 + 卡片区四指标。对应 types: PlatformAnalysisDetailEcpmBlock（ecpmTrend + ecpmMetrics）。",
+  "_comment": "综合分析应用详情 - ECPM 双折线 + 卡片区四指标。对应 types: PlatformAnalysisDetailEcpmBlock（ecpmTrend + ecpmMetrics）。",
   "fieldDescription": {
     "request": {
       "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
@@ -77,7 +77,7 @@
     }
   },
   "api": {
-    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/ecpm-trend",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/comprehensive-analysis/platform-analysis-detail/ecpm-trend",
     "method": "POST",
     "priority": "P0",
     "requestBody": "name (必填), from?",

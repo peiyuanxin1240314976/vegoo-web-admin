@@ -4,7 +4,7 @@
 
 与路由 `/user-growth/comprehensive-analysis/platform-analysis-detail` 对齐。前端实际请求前缀为：
 
-**`/api/v1/datacenter/analysis/user-growth/platform-analysis-detail`**
+**`/api/v1/datacenter/analysis/user-growth/comprehensive-analysis/platform-analysis-detail`**
 
 （见 `src/api/user-growth/platform-analysis-detail.ts` 中 `PLATFORM_ANALYSIS_DETAIL_BASE`；若网关另有映射，以 `src/api` 为准并在本目录契约 `_comment` 中备注。）
 

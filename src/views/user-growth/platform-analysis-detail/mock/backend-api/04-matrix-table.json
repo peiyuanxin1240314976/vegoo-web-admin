@@ -1,5 +1,5 @@
 {
-  "_comment": "广告平台分析详情 - 广告平台×国家树形表及表脚合计。对应 types: MatrixTableData。国家子行须含 s_country_code（ISO 3166-1 alpha-2）；勿返回国旗 emoji。",
+  "_comment": "综合分析应用详情 - 广告平台×国家树形表及表脚合计。对应 types: MatrixTableData。国家子行须含 s_country_code（ISO 3166-1 alpha-2）；勿返回国旗 emoji。",
   "fieldDescription": {
     "request": {
       "name": { "type": "string", "required": true, "description": "钻取实体名称。" },
@@ -325,7 +325,7 @@
     }
   },
   "api": {
-    "url": "POST /api/v1/datacenter/analysis/user-growth/platform-analysis-detail/matrix-table",
+    "url": "POST /api/v1/datacenter/analysis/user-growth/comprehensive-analysis/platform-analysis-detail/matrix-table",
     "method": "POST",
     "priority": "P0",
     "requestBody": "name (必填), from?",
