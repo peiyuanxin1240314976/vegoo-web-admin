@@ -2,15 +2,15 @@
   "_comment": "实时数据 - 应用详情弹窗。对应 types.ts: AppDetailData。",
   "fieldDescription": {
     "request": {
-      "s_app_id": {
+      "appId": {
         "type": "string",
         "required": true,
-        "description": "应用 ID。"
+        "description": "要查看详情的应用 ID（当前卡片行 id，与 cockpit appOptions[].value 同源）。"
       },
       "n_source": {
         "type": "string",
-        "required": false,
-        "description": "若弹窗内需按单一广告平台过滤，可选；空字符串或不传为全平台汇总。"
+        "required": true,
+        "description": "与列表顶部广告平台筛选一致；空字符串表示弹窗内展示全平台汇总。"
       }
     },
     "response": {
@@ -115,7 +115,8 @@
     }
   },
   "sampleRequest": {
-    "s_app_id": "weather5"
+    "appId": "weather5",
+    "n_source": ""
   },
   "sampleResponse": {
     "detail": {
@@ -169,23 +170,23 @@
     "triggers": [
       {
         "moment": "用户打开详情",
-        "detail": "点击卡片「展开明细」等，`AppDetailModal` 打开时按当前卡片的 s_app_id 请求；不依赖 03 列表内嵌详情。",
-        "prerequisite": "s_app_id 有效"
+        "detail": "点击卡片「展开明细」等，`AppDetailModal` 打开时按当前卡片的 appId 请求；不依赖列表内嵌详情。",
+        "prerequisite": "appId 有效"
       }
     ],
     "defaultSelection": "继承列表当前筛选的 n_source（可选）；弹窗内若仅展示不触发新维度则不再请求。",
-    "dedupe": "同一 s_app_id 短缓存可选；关闭弹窗可丢弃。"
+    "dedupe": "同一 appId 短缓存可选；关闭弹窗可丢弃。"
   },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/app-detail",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_app_id, n_source?",
+    "requestBody": "appId, n_source",
     "responseBody": "detail: AppDetailData"
   },
   "apiSuggestion": {
     "notes": [
-      "弹窗打开时请求；关闭可丢弃缓存或按 s_app_id 短缓存。",
+      "弹窗打开时请求；关闭可丢弃缓存或按 appId 短缓存。",
       "channels 内 name 为展示用；统计口径以 n_source 为准。"
     ]
   }

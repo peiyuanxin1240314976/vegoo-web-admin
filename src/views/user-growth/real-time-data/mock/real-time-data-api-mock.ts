@@ -15,11 +15,12 @@ import {
 
 function filterRowsByParams(params?: RealtimeDataQueryParams) {
   let rows = mockRealtimeAppCardRows.map((row) => ({ ...row, chartData: [...row.chartData] }))
-  if (params?.s_app_id) {
-    rows = rows.filter((r) => r.id === params.s_app_id)
+  const appKey = params?.appId
+  if (appKey) {
+    rows = rows.filter((r) => r.id === appKey)
   }
   if (params?.n_source) {
-    rows = rows.filter((r) => rowHasSourcePlatform(r.id, params.n_source as string))
+    rows = rows.filter((r) => rowHasSourcePlatform(r.id, params.n_source))
   }
   return rows
 }
@@ -45,7 +46,7 @@ export function mockFetchRealtimeOverviewKpiSummary(params?: RealtimeDataQueryPa
       warningApps: 0
     })
   }
-  if (!params?.s_app_id && !params?.n_source) {
+  if (!params?.appId && !params?.n_source) {
     return Promise.resolve<RealtimeKpiSummary>({ ...mockRealtimeKpiSummary })
   }
   const todaySpend = rows.reduce((s, r) => s + r.spend, 0)
@@ -71,7 +72,7 @@ export function mockFetchRealtimeTableAppCards(params?: RealtimeDataQueryParams)
 
 /** 03 — 详情弹窗 */
 export function mockFetchRealtimeAppDetail(params: RealtimeAppDetailRequestBody) {
-  const raw = mockRealtimeAppDetailsById[params.s_app_id] ?? mockRealtimeAppDetailsById.weather5
+  const raw = mockRealtimeAppDetailsById[params.appId] ?? mockRealtimeAppDetailsById.weather5
   const detail = {
     ...raw,
     channels: raw.channels.map((c) => ({ ...c }))
@@ -87,8 +88,8 @@ export function mockFetchRealtimeOverviewHourlySpendComparison(params?: Realtime
     ...s,
     costSeries: [...s.costSeries]
   }))
-  if (params?.s_app_id) {
-    series = series.filter((s) => s.s_app_id === params.s_app_id)
+  if (params?.appId) {
+    series = series.filter((s) => s.s_app_id === params.appId)
   }
   if (params?.n_source) {
     const allowed = new Set(filterRowsByParams(params).map((r) => r.id))

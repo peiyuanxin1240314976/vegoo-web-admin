@@ -2,15 +2,15 @@
   "_comment": "实时数据 - 应用卡片列表（不含详情）。对应 types.ts: RealtimeAppCardRow[]。sampleResponse.items 需覆盖列表形态：多应用、可选环比字段缺失、roiGood=false、actionTagType 四枚举；前 7 条与 mock/data.ts 卡片行一致，riskdemo 为 red 联调样例。",
   "fieldDescription": {
     "request": {
-      "s_app_id": {
+      "appId": {
         "type": "string",
-        "required": false,
-        "description": "应用 ID；空字符串表示「全部应用」；勿传字面量 all。不传可省略。"
+        "required": true,
+        "description": "应用 ID；与 cockpit appOptions[].value 同源；空字符串表示「全部应用」；勿传字面量 all。"
       },
       "n_source": {
         "type": "string",
-        "required": false,
-        "description": "广告平台枚举字符串；空字符串表示不限；勿用 JSON number。"
+        "required": true,
+        "description": "广告平台枚举字符串；与 sourceOptions[].value 同源；空字符串表示不限；勿用 JSON number。"
       }
     },
     "response": {
@@ -24,7 +24,7 @@
       "id": {
         "type": "string",
         "required": true,
-        "description": "与 s_app_id 对齐的应用标识（前端卡片 key）。"
+        "description": "应用标识（与 appId 筛选、详情 appId 及响应体 series[].s_app_id 同值语义；前端卡片 key）。"
       },
       "name": { "type": "string", "required": true, "description": "应用名称。" },
       "iconText": {
@@ -136,7 +136,8 @@
     }
   },
   "sampleRequest": {
-    "s_app_id": ""
+    "appId": "",
+    "n_source": ""
   },
   "sampleResponse": {
     "items": [
@@ -335,7 +336,7 @@
     "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/table/app-cards",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_app_id?, n_source?",
+    "requestBody": "appId, n_source",
     "responseBody": "items: RealtimeAppCardRow[]"
   },
   "apiSuggestion": {

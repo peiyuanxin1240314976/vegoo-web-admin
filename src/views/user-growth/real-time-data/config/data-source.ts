@@ -24,10 +24,10 @@ export enum RealtimeDataEndpoint {
 }
 
 export const REALTIME_DATA_USE_MOCK: Record<RealtimeDataEndpoint, boolean> = {
-  [RealtimeDataEndpoint.OverviewKpiSummary]: true,
-  [RealtimeDataEndpoint.TableAppCards]: true,
-  [RealtimeDataEndpoint.AppDetail]: true,
-  [RealtimeDataEndpoint.OverviewHourlySpendComparison]: true
+  [RealtimeDataEndpoint.OverviewKpiSummary]: false,
+  [RealtimeDataEndpoint.TableAppCards]: false,
+  [RealtimeDataEndpoint.AppDetail]: false,
+  [RealtimeDataEndpoint.OverviewHourlySpendComparison]: false
 }
 
 export function isRealtimeDataEndpointMock(endpoint: RealtimeDataEndpoint): boolean {

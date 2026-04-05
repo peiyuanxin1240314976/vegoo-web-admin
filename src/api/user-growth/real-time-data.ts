@@ -22,6 +22,8 @@ import * as realtimeDataMock from '@/views/user-growth/real-time-data/mock/real-
 /** 与 `COMPREHENSIVE_ANALYSIS_BASE` 同级：`.../analysis/user-growth/real-time-data` */
 export const REALTIME_DATA_BASE = `${ANALYSIS_API_BASE}/user-growth/real-time-data`
 
+const EMPTY_REALTIME_QUERY: RealtimeDataQueryParams = { appId: '', n_source: '' }
+
 function unwrapDataDeep<T = unknown>(value: unknown, maxDepth = 3): T {
   let cur: unknown = value
   let depth = 0
@@ -45,7 +47,7 @@ export function fetchRealtimeOverviewKpiSummary(params?: RealtimeDataQueryParams
   return request
     .post<RealtimeKpiSummary>({
       url: `${REALTIME_DATA_BASE}/overview-kpi-summary`,
-      data: params ?? {}
+      data: params ?? EMPTY_REALTIME_QUERY
     })
     .then((res) => unwrapDataDeep<RealtimeKpiSummary>(res))
 }
@@ -58,7 +60,7 @@ export function fetchRealtimeTableAppCards(params?: RealtimeDataQueryParams) {
   return request
     .post<RealtimeAppCardsTableBody>({
       url: `${REALTIME_DATA_BASE}/table/app-cards`,
-      data: params ?? {}
+      data: params ?? EMPTY_REALTIME_QUERY
     })
     .then((res) => unwrapDataDeep<RealtimeAppCardsTableBody>(res))
 }
@@ -84,7 +86,7 @@ export function fetchRealtimeOverviewHourlySpendComparison(params?: RealtimeData
   return request
     .post<RealtimeHourlySpendComparison>({
       url: `${REALTIME_DATA_BASE}/overview-hourly-spend-comparison`,
-      data: params ?? {}
+      data: params ?? EMPTY_REALTIME_QUERY
     })
     .then((res) => unwrapDataDeep<RealtimeHourlySpendComparison>(res))
 }

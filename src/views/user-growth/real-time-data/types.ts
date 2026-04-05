@@ -4,12 +4,13 @@
  * 形态见 `CockpitMetaFilterOptionsData`（`@/types/cockpit-meta-filter`）。
  *
  * 「全部应用」等：请求入参用空字符串 `''`，勿传字面量 `all`（见 `.cursor/rules/backend-fields.mdc`「接口请求 · 筛选「全部」」）。
+ * 与公用 cockpit 及 `PaidAnalysisFilterBody` 对齐：应用维度请求键名为 **`appId`**（与 `appOptions[].value` 同源），勿再仅传 `s_app_id`（数仓行字段名，网关可能不读）。
  */
 export interface RealtimeDataQueryParams {
-  /** 应用 ID；`''` 表示全部 */
-  s_app_id?: string
-  /** 广告平台（与数据字典枚举一致，如 `1` Google）；`''` 表示不限；筛选入参一律 string */
-  n_source?: string
+  /** 应用 ID；与 cockpit `appOptions[].value` 一致；`''` 表示全部 */
+  appId: string
+  /** 广告平台（与 `sourceOptions` / 数据字典 `n_source` 一致，如 `1`）；`''` 表示不限；一律 string */
+  n_source: string
 }
 
 export interface ChannelData {
@@ -107,8 +108,10 @@ export interface RealtimeAppCardsTableBody {
   items: RealtimeAppCardRow[]
 }
 
-export interface RealtimeAppDetailRequestBody extends RealtimeDataQueryParams {
-  s_app_id: string
+/** 详情弹窗：目标应用为 `appId`；`n_source` 与列表筛选一致（`''` 为不限）。勿把列表「应用筛选」与当前卡片 id 混在一个字段里重复覆盖。 */
+export interface RealtimeAppDetailRequestBody {
+  appId: string
+  n_source: string
 }
 
 /** 契约 03-app-detail 响应体 */

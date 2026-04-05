@@ -16,11 +16,10 @@
 
 ### 筛选项（不在本目录）
 
-应用 / 广告平台等筛选项 **不复用** 本模块独立契约，统一使用分析网关公用接口：
+应用 / 广告平台等筛选项 **不复用** 本模块独立契约，统一使用 **cockpit** 公用接口（与 `paid-analysis` 附录 A 一致）：
 
-- `POST ${ANALYSIS_API_BASE}/user-growth/comprehensive-analysis/meta-filter-options`
-- 前端封装：`src/api/user-growth/comprehensive-analysis.ts` → `fetchComprehensiveAnalysisFilterOptions`
-- Mock / 开关：`views/user-growth/comprehensive-analysis/config/data-source.ts`
+- `GET ${ANALYSIS_API_BASE}/cockpit/meta-filter-options`
+- 前端：`useCockpitMetaFilterStore`（`src/store/modules/cockpit-meta-filter.ts`）
 
 本页数据接口（01～04）请求体 **不含** `startDate` / `endDate`；实时口径由服务端按业务日/当前时刻处理。
 
@@ -35,29 +34,29 @@
 
 ### 场景 → 接口（与各 JSON 根级 `interaction` 一致）
 
-| 用户场景          | 契约 JSON                       | 触发时机                             |
-| ----------------- | ------------------------------- | ------------------------------------ |
-| 首屏筛选项        | （公用 comprehensive-analysis） | 进入页面初始化（可与 01/02/04 并行） |
-| 首屏 KPI          | `01`                            | 初始化；筛选/刷新                    |
-| 卡片列表 + 火花图 | `02`                            | 初始化；筛选/刷新                    |
-| 详情弹窗          | `03`                            | 点击卡片打开 `AppDetailModal`        |
-| 底部对比图        | `04`                            | 初始化；筛选/刷新                    |
+| 用户场景          | 契约 JSON                            | 触发时机                             |
+| ----------------- | ------------------------------------ | ------------------------------------ |
+| 首屏筛选项        | （公用 cockpit meta-filter-options） | 进入页面初始化（可与 01/02/04 并行） |
+| 首屏 KPI          | `01`                                 | 初始化；筛选/刷新                    |
+| 卡片列表 + 火花图 | `02`                                 | 初始化；筛选/刷新                    |
+| 详情弹窗          | `03`                                 | 点击卡片打开 `AppDetailModal`        |
+| 底部对比图        | `04`                                 | 初始化；筛选/刷新                    |
 
 ### 拆分原则
 
 - **列表与详情分离**：`02` 仅服务卡片网格；打开弹窗再请求 `03`。
 - **KPI / 分时图分离**：顶部汇总与底部小时对比独立。
-- **筛选项**：见上文公用 `comprehensive-analysis` 契约与 config。
+- **筛选项**：见上文公用 cockpit meta；本页 POST 请求体带 **`appId`**（与 `appOptions[].value` 同源）、**`n_source`**（与 `sourceOptions[].value` 同源）。
 
 ### 数据源开关
 
-按接口粒度配置见 **`../config/data-source.ts`**（与本表 01～04 一一对应）；Mock 实现见 **`../real-time-data-api-mock.ts`**。筛选项 mock 见 **`../../comprehensive-analysis/config/data-source.ts`**。
+按接口粒度配置见 **`../config/data-source.ts`**（与本表 01～04 一一对应）；Mock 实现见 **`../real-time-data-api-mock.ts`**。
 
 ### 字段与数据字典
 
-- 应用：`s_app_id`（卡片行上可与 `id` 同值）。
+- 应用：**请求体键名 `appId`**（与 cockpit `appOptions[].value`、卡片行 `id` 同源）；不限时 `""`。
 - 终端平台：`platform`（若后续按 Android/iOS 区分）。
-- 广告平台：请求/筛选 `n_source` 为 **string**（如 `"1"`），不限时 `""`；选项见公用 meta-filter-options。
+- 广告平台：请求体 **`n_source`** 为 **string**（如 `"1"`），不限时 `""`；与 `sourceOptions` 对齐。
 - 花费：响应中与 **`cost` 同语义** 的度量在部分 UI 仍显示为 `spend`，联调时在适配层对齐命名。
 
 ### JSON 命名

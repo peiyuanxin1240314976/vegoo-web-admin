@@ -2,15 +2,15 @@
   "_comment": "实时数据 - 底部多应用小时花费对比 + 全局 ROI 折线。对应 types.ts: RealtimeHourlySpendComparison。",
   "fieldDescription": {
     "request": {
-      "s_app_id": {
+      "appId": {
         "type": "string",
-        "required": false,
-        "description": "空字符串或不传时返回默认对比集（如头部四应用）；若传单个 ID 可只返回该应用 + ROI。勿传字面量 all。"
+        "required": true,
+        "description": "与 cockpit appOptions[].value 同源；空字符串时返回默认对比集（如头部多应用）；传单个 ID 可只返回该应用柱序列 + ROI。勿传字面量 all。"
       },
       "n_source": {
         "type": "string",
-        "required": false,
-        "description": "按广告平台过滤；枚举字符串；空字符串表示不限。"
+        "required": true,
+        "description": "按广告平台过滤；与 sourceOptions[].value 同源；空字符串表示不限。"
       }
     },
     "response": {
@@ -50,7 +50,8 @@
     }
   },
   "sampleRequest": {
-    "s_app_id": ""
+    "appId": "",
+    "n_source": ""
   },
   "sampleResponse": {
     "hourLabels": ["0:00", "2:00", "4:00", "6:00", "8:00", "10:00", "12:00", "14:00"],
@@ -95,14 +96,14 @@
         "prerequisite": "无"
       }
     ],
-    "defaultSelection": "s_app_id 为空字符串或未传时返回约定对比应用集合（如头部多应用）；与当前 UI 固定四应用柱序列对齐时可由前端映射 series。",
+    "defaultSelection": "appId 为空字符串时返回约定对比应用集合（如头部多应用）；响应 series[].s_app_id 仍为应用维度主键字段名。",
     "dedupe": "可并行 01/02；大数据量时保持独立接口避免拖慢首屏。"
   },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/overview-hourly-spend-comparison",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "s_app_id?, n_source?",
+    "requestBody": "appId, n_source",
     "responseBody": "RealtimeHourlySpendComparison"
   },
   "apiSuggestion": {

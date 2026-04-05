@@ -39,12 +39,20 @@ function mapUiSourceToNSource(uiValue: string): string {
   return slugMap[uiValue] ?? uiValue
 }
 
+/** 与 `buildComprehensiveAnalysisApiParams` 一致：meta 里「全部」可能为 `all` / `''` */
+function dimensionToApiValue(v: string | undefined | null) {
+  const s = v ?? ''
+  return s === 'all' || s === '' ? '' : s
+}
+
+/**
+ * 列表/KPI/底部图请求体：始终带齐 `appId`、`n_source`（空串表示不限），与 cockpit 附录 A、网关真实接口一致。
+ */
 function buildQueryParams(filterAppId: string, filterSourceUi: string): RealtimeDataQueryParams {
-  const p: RealtimeDataQueryParams = {}
-  if (filterAppId) p.s_app_id = filterAppId
-  const ns = mapUiSourceToNSource(filterSourceUi)
-  if (ns) p.n_source = ns
-  return p
+  return {
+    appId: dimensionToApiValue(filterAppId),
+    n_source: mapUiSourceToNSource(dimensionToApiValue(filterSourceUi))
+  }
 }
 
 /**
@@ -114,8 +122,8 @@ export function useRealtimeDashboard() {
       const detailResults = await Promise.all(
         rows.map((row) =>
           fetchRealtimeAppDetail({
-            s_app_id: row.id,
-            ...params
+            appId: row.id,
+            n_source: params.n_source
           })
         )
       )
