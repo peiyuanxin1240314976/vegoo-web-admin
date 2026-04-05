@@ -1,0 +1,151 @@
+import { ref, computed } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
+import {
+  fetchRealtimeOverviewKpiSummary,
+  fetchRealtimeTableAppCards,
+  fetchRealtimeOverviewHourlySpendComparison,
+  fetchRealtimeAppDetail
+} from '@/api/user-growth/real-time-data'
+import type {
+  AppCard,
+  RealtimeDataQueryParams,
+  RealtimeHourlySpendComparison,
+  RealtimeKpiSummary
+} from '../types'
+
+const EMPTY_KPI: RealtimeKpiSummary = {
+  onlineApps: 0,
+  totalApps: 0,
+  todaySpend: 0,
+  spendChange: '—',
+  roiAvg: 0,
+  roiTarget: 0,
+  warningApps: 0
+}
+
+/**
+ * 综合分析 meta 里部分 Mock 使用 slug（google / facebook），实时数据契约入参为 `n_source` 字符串枚举。
+ * 已为标准枚举值的选项会原样透传。
+ */
+function mapUiSourceToNSource(uiValue: string): string {
+  if (!uiValue) return ''
+  const slugMap: Record<string, string> = {
+    google: '1',
+    facebook: '2',
+    tiktok: '7'
+  }
+  return slugMap[uiValue] ?? uiValue
+}
+
+function buildQueryParams(filterAppId: string, filterSourceUi: string): RealtimeDataQueryParams {
+  const p: RealtimeDataQueryParams = {}
+  if (filterAppId) p.s_app_id = filterAppId
+  const ns = mapUiSourceToNSource(filterSourceUi)
+  if (ns) p.n_source = ns
+  return p
+}
+
+/**
+ * 实时数据看板：筛选项读 `useCockpitMetaFilterStore().data`（`ensureLoaded` 拉取/复用 session）；列表/KPI/底部图来自 `fetchRealtime*`。
+ */
+export function useRealtimeDashboard() {
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+
+  const apps = ref<AppCard[]>([])
+  const kpiData = ref<RealtimeKpiSummary>({ ...EMPTY_KPI })
+  const hourlyComparison = ref<RealtimeHourlySpendComparison | null>(null)
+
+  const rawAppOptions = computed(
+    () => cockpitMetaFilterStore.data?.appOptions ?? ([] as CockpitMetaOptionItem[])
+  )
+  const rawSourceOptions = computed(
+    () => cockpitMetaFilterStore.data?.sourceOptions ?? ([] as CockpitMetaOptionItem[])
+  )
+
+  /** 与契约一致：空字符串表示「全部应用」 */
+  const filterAppId = ref('')
+  /** 下拉原始 value（可能为 Mock slug 或后端 `n_source` 字符串） */
+  const filterSourceUi = ref('')
+
+  const filterOptionsLoading = ref(false)
+  const dashboardLoading = ref(false)
+
+  const appSelectOptions = computed<CockpitMetaOptionItem[]>(() => {
+    const rest = rawAppOptions.value.filter((o) => o.value !== 'all')
+    return [{ label: '全部应用', value: '' }, ...rest]
+  })
+
+  const sourceSelectOptions = computed<CockpitMetaOptionItem[]>(() => {
+    const rest = rawSourceOptions.value.filter((o) => o.value !== 'all')
+    return [{ label: '全部广告平台', value: '' }, ...rest]
+  })
+
+  async function loadFilterOptions() {
+    filterOptionsLoading.value = true
+    try {
+      const data = await cockpitMetaFilterStore.ensureLoaded()
+      if (!data) {
+        ElMessage.error('筛选项加载失败')
+      }
+    } finally {
+      filterOptionsLoading.value = false
+    }
+  }
+
+  async function loadDashboard() {
+    const appId = filterAppId.value ?? ''
+    const srcUi = filterSourceUi.value ?? ''
+    filterAppId.value = appId
+    filterSourceUi.value = srcUi
+    const params = buildQueryParams(appId, srcUi)
+    dashboardLoading.value = true
+    try {
+      const [kpi, table, hourly] = await Promise.all([
+        fetchRealtimeOverviewKpiSummary(params),
+        fetchRealtimeTableAppCards(params),
+        fetchRealtimeOverviewHourlySpendComparison(params)
+      ])
+      kpiData.value = kpi
+      hourlyComparison.value = hourly
+
+      const rows = table.items ?? []
+      const detailResults = await Promise.all(
+        rows.map((row) =>
+          fetchRealtimeAppDetail({
+            s_app_id: row.id,
+            ...params
+          })
+        )
+      )
+      apps.value = rows.map((row, i) => ({
+        ...row,
+        detail: detailResults[i].detail
+      }))
+    } catch (e) {
+      console.error(e)
+      ElMessage.error('实时数据加载失败')
+      apps.value = []
+      kpiData.value = { ...EMPTY_KPI }
+      hourlyComparison.value = null
+    } finally {
+      dashboardLoading.value = false
+    }
+  }
+
+  return {
+    apps,
+    kpiData,
+    hourlyComparison,
+    filterAppId,
+    filterSourceUi,
+    appSelectOptions,
+    sourceSelectOptions,
+    filterOptionsLoading,
+    dashboardLoading,
+    loadFilterOptions,
+    loadDashboard,
+    buildQueryParams: () => buildQueryParams(filterAppId.value, filterSourceUi.value)
+  }
+}

@@ -8,8 +8,7 @@
  *
  * `src/api/user-growth/real-time-data.ts` 通过 `isRealtimeDataEndpointMock()` 读取本表。
  *
- * 筛选项（meta-filter-options）不在此枚举：请使用 `comprehensive-analysis` 模块的 `fetchComprehensiveAnalysisFilterOptions`
- * 与 `views/user-growth/comprehensive-analysis/config/data-source.ts`。
+ * 筛选项（公用 cockpit meta-filter-options）不在此枚举：请使用 `@/store/modules/cockpit-meta-filter` 的 `ensureLoaded()`。
  */
 
 /** ---------- 单页：概览 + 表 + 详情弹窗 + 底部图（共 4 个数据接口） ---------- */

@@ -9,7 +9,7 @@ import {
 /**
  * 实时数据看板数据源（当前为本地 `mock/data` 聚合）。
  *
- * 联调：筛选项用 `@/api/user-growth/comprehensive-analysis` 的 `fetchComprehensiveAnalysisFilterOptions`；
+ * 联调：筛选项用 `useCockpitMetaFilterStore().ensureLoaded()`（`@/store/modules/cockpit-meta-filter`）；
  * 数据用 `@/api/user-growth/real-time-data` 下四个 `fetchRealtime*`，开关见 `config/data-source.ts`；契约见 `mock/backend-api/*.json`。
  */
 export function useRealtimeDashboardMock() {

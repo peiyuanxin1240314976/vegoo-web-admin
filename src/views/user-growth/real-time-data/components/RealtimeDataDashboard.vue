@@ -1,13 +1,25 @@
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+  import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
   import * as echarts from 'echarts'
   import AppDetailModal from './AppDetailModal.vue'
   import type { AppCard, AppDetailData } from '../types'
-  import { useRealtimeDashboardMock } from '../composables/useRealtimeDashboardMock'
+  import { useRealtimeDashboard } from '../composables/useRealtimeDashboard'
 
   defineOptions({ name: 'RealtimeDataDashboard' })
 
-  const { apps, kpiData, bottomSeries } = useRealtimeDashboardMock()
+  const {
+    apps,
+    kpiData,
+    hourlyComparison,
+    filterAppId,
+    filterSourceUi,
+    appSelectOptions,
+    sourceSelectOptions,
+    filterOptionsLoading,
+    dashboardLoading,
+    loadFilterOptions,
+    loadDashboard
+  } = useRealtimeDashboard()
 
   // ===== Modal =====
   const showModal = ref(false)
@@ -34,14 +46,28 @@
   }
 
   // ===== Sparkline charts =====
-  const sparklineEls = ref<(HTMLDivElement | null)[]>(new Array(apps.value.length).fill(null))
+  const sparklineEls = ref<(HTMLDivElement | null)[]>([])
   const sparklineInstances: echarts.ECharts[] = []
+
+  watch(
+    () => apps.value.length,
+    (n) => {
+      sparklineEls.value = new Array(Math.max(0, n)).fill(null)
+    },
+    { immediate: true }
+  )
 
   function setSparkRef(el: unknown, idx: number) {
     sparklineEls.value[idx] = el as HTMLDivElement | null
   }
 
+  function disposeSparklines() {
+    sparklineInstances.forEach((c) => c.dispose())
+    sparklineInstances.length = 0
+  }
+
   function initSparklines() {
+    disposeSparklines()
     apps.value.forEach((app, idx) => {
       const el = sparklineEls.value[idx]
       if (!el) return
@@ -75,11 +101,46 @@
   const bottomChartEl = ref<HTMLDivElement | null>(null)
   let bottomChart: echarts.ECharts | null = null
 
-  const HOURS = ['0:00', '2:00', '4:00', '6:00', '8:00', '10:00', '12:00', '14:00']
+  function disposeBottomChart() {
+    bottomChart?.dispose()
+    bottomChart = null
+  }
 
   function initBottomChart() {
     if (!bottomChartEl.value) return
+    disposeBottomChart()
     bottomChart = echarts.init(bottomChartEl.value, null, { renderer: 'canvas' })
+    const hc = hourlyComparison.value
+    if (!hc?.series?.length) {
+      bottomChart.setOption({
+        backgroundColor: 'transparent',
+        title: {
+          text: '暂无数据',
+          left: 'center',
+          top: 'center',
+          textStyle: { color: '#4a5a72', fontSize: 12 }
+        }
+      })
+      return
+    }
+
+    const maxCost = Math.max(1, ...hc.series.flatMap((s) => s.costSeries))
+    const yMax = Math.max(250, Math.ceil(maxCost / 250) * 250)
+    const yInterval = Math.max(50, Math.round(yMax / 4))
+
+    const roiVals = hc.roiPercentSeries ?? []
+    const maxRoi = Math.max(100, ...roiVals, 1)
+    const roiAxisMax = Math.ceil(maxRoi / 50) * 50
+    const roiInterval = Math.max(25, Math.round(roiAxisMax / 4))
+
+    const barSeries = hc.series.map((s) => ({
+      name: s.name,
+      type: 'bar' as const,
+      data: s.costSeries,
+      itemStyle: { color: s.color, borderRadius: [2, 2, 0, 0] },
+      barMaxWidth: 14
+    }))
+
     bottomChart.setOption({
       backgroundColor: 'transparent',
       animation: false,
@@ -92,7 +153,7 @@
       },
       xAxis: {
         type: 'category',
-        data: HOURS,
+        data: hc.hourLabels,
         axisLine: { lineStyle: { color: '#1e2d42' } },
         axisLabel: { color: '#4a5a72', fontSize: 11 },
         axisTick: { show: false }
@@ -101,8 +162,8 @@
         {
           type: 'value',
           min: 0,
-          max: 1000,
-          interval: 250,
+          max: yMax,
+          interval: yInterval,
           axisLabel: { color: '#4a5a72', fontSize: 11, formatter: (v: number) => `$${v}` },
           splitLine: { lineStyle: { color: '#151f30', type: 'dashed' } },
           axisLine: { show: false },
@@ -111,8 +172,8 @@
         {
           type: 'value',
           min: 0,
-          max: 150,
-          interval: 50,
+          max: roiAxisMax,
+          interval: roiInterval,
           axisLabel: { color: '#4a5a72', fontSize: 11, formatter: (v: number) => `${v}%` },
           splitLine: { show: false },
           axisLine: { show: false },
@@ -120,39 +181,12 @@
         }
       ],
       series: [
-        {
-          name: 'Weather5',
-          type: 'bar',
-          data: bottomSeries.weather5,
-          itemStyle: { color: '#00cfc0', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 14
-        },
-        {
-          name: 'PhoneTracker',
-          type: 'bar',
-          data: bottomSeries.phonetracker,
-          itemStyle: { color: '#ffa040', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 14
-        },
-        {
-          name: 'BloodSugar2',
-          type: 'bar',
-          data: bottomSeries.bloodsugar2,
-          itemStyle: { color: '#4d9eff', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 14
-        },
-        {
-          name: 'PhoneTracker2',
-          type: 'bar',
-          data: bottomSeries.phonetracker2,
-          itemStyle: { color: '#a855f7', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 14
-        },
+        ...barSeries,
         {
           name: 'ROI',
           type: 'line',
           yAxisIndex: 1,
-          data: bottomSeries.roi,
+          data: roiVals,
           smooth: true,
           symbol: 'circle',
           symbolSize: 4,
@@ -172,23 +206,49 @@
   /** 首屏骨架（测试体验用）；结束后与原先一致初始化图表 */
   const showContentSkeleton = ref(true)
 
+  function normalizeFilterModels() {
+    if (filterAppId.value == null || filterAppId.value === undefined) filterAppId.value = ''
+    if (filterSourceUi.value == null || filterSourceUi.value === undefined) {
+      filterSourceUi.value = ''
+    }
+  }
+
+  async function applyFilters() {
+    normalizeFilterModels()
+    if (showContentSkeleton.value) return
+    await loadDashboard()
+    nextTick(() => {
+      disposeSparklines()
+      initSparklines()
+      initBottomChart()
+    })
+  }
+
+  async function onManualRefresh() {
+    await applyFilters()
+  }
+
   // ===== Lifecycle =====
   onMounted(() => {
     startCountdown()
     window.addEventListener('resize', onResize)
+    void loadFilterOptions()
     window.setTimeout(() => {
-      showContentSkeleton.value = false
-      nextTick(() => {
-        initSparklines()
-        initBottomChart()
-      })
+      void (async () => {
+        await loadDashboard()
+        showContentSkeleton.value = false
+        nextTick(() => {
+          initSparklines()
+          initBottomChart()
+        })
+      })()
     }, 520)
   })
 
   onBeforeUnmount(() => {
     if (countdownTimer) clearInterval(countdownTimer)
-    sparklineInstances.forEach((c) => c.dispose())
-    bottomChart?.dispose()
+    disposeSparklines()
+    disposeBottomChart()
     window.removeEventListener('resize', onResize)
   })
 
@@ -203,7 +263,6 @@
 
 <template>
   <div class="dashboard dashboard--ap-fx art-full-height">
-    <div class="rtd-page-fx" aria-hidden="true"></div>
     <!-- ===== Header ===== -->
     <div class="top-header rtd-entry-1">
       <div class="breadcrumb">
@@ -214,7 +273,7 @@
       </div>
       <div class="header-actions">
         <span class="last-update">⏱ 最后更新：14:40:20</span>
-        <button class="btn-refresh">↻ 手动刷新</button>
+        <button type="button" class="btn-refresh" @click="onManualRefresh">↻ 手动刷新</button>
         <button class="btn-auto">⚙ 设置自动刷新</button>
       </div>
     </div>
@@ -235,13 +294,45 @@
     <!-- ===== Filters ===== -->
     <div class="filter-bar rtd-entry-3">
       <div class="rtd-filter-panel">
-        <div class="filter-group">
-          <span class="filter-label">应用筛选：</span>
-          <button type="button" class="filter-btn">全部应用 ▾</button>
+        <div class="filter-group rtd-filter-field">
+          <span class="filter-label">应用筛选</span>
+          <ElSelect
+            v-model="filterAppId"
+            class="rtd-filter-select"
+            placeholder="全部应用"
+            clearable
+            filterable
+            :loading="filterOptionsLoading"
+            popper-class="rtd-filter-select-popper"
+            @change="applyFilters"
+          >
+            <ElOption
+              v-for="opt in appSelectOptions"
+              :key="'app-' + (opt.value || 'all')"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
         </div>
-        <div class="filter-group">
-          <span class="filter-label">渠道筛选：</span>
-          <button type="button" class="filter-btn">全部渠道 ▾</button>
+        <div class="filter-group rtd-filter-field">
+          <span class="filter-label">广告平台</span>
+          <ElSelect
+            v-model="filterSourceUi"
+            class="rtd-filter-select"
+            placeholder="全部广告平台"
+            clearable
+            filterable
+            :loading="filterOptionsLoading"
+            popper-class="rtd-filter-select-popper"
+            @change="applyFilters"
+          >
+            <ElOption
+              v-for="opt in sourceSelectOptions"
+              :key="'src-' + (opt.value || 'all')"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
         </div>
       </div>
     </div>
@@ -328,7 +419,7 @@
       </div>
 
       <!-- ===== App Cards Grid ===== -->
-      <div class="app-grid rtd-entry-5">
+      <div v-loading="dashboardLoading" class="app-grid rtd-entry-5">
         <div
           v-for="(app, idx) in apps"
           :key="app.id"
@@ -414,17 +505,8 @@
         <div class="bottom-header">
           <span class="bottom-title">实时小时消耗趋势对比</span>
           <div class="legend-list">
-            <span class="legend-item">
-              <span class="legend-dot" style="background: #00cfc0"></span>Weather5
-            </span>
-            <span class="legend-item">
-              <span class="legend-dot" style="background: #ffa040"></span>PhoneTracker
-            </span>
-            <span class="legend-item">
-              <span class="legend-dot" style="background: #4d9eff"></span>BloodSugar2
-            </span>
-            <span class="legend-item">
-              <span class="legend-dot" style="background: #a855f7"></span>PhoneTracker2
+            <span v-for="s in hourlyComparison?.series ?? []" :key="s.s_app_id" class="legend-item">
+              <span class="legend-dot" :style="{ background: s.color }"></span>{{ s.name }}
             </span>
           </div>
         </div>
@@ -474,30 +556,10 @@
       mask-image: linear-gradient(to bottom, black 0%, black 24%, transparent 52%);
     }
 
-    > *:not(.rtd-page-fx) {
+    > * {
       position: relative;
       z-index: 1;
     }
-  }
-
-  .rtd-page-fx {
-    position: absolute;
-    inset: -10% -10% 48%;
-    z-index: 0;
-    pointer-events: none;
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      transparent 0deg,
-      rgb(59 130 246 / 10%) 55deg,
-      rgb(16 185 129 / 8%) 120deg,
-      transparent 200deg,
-      rgb(6 182 212 / 7%) 280deg,
-      transparent 360deg
-    );
-    opacity: 0.78;
-    mask-image: linear-gradient(to bottom, black 0%, black 44%, transparent 80%);
-    animation: rtd-fx-spin 48s linear infinite;
-    will-change: transform;
   }
 
   @keyframes rtd-aurora-drift {
@@ -509,12 +571,6 @@
     100% {
       opacity: 1;
       transform: scale(1.03) translate(0.8%, -0.6%);
-    }
-  }
-
-  @keyframes rtd-fx-spin {
-    to {
-      transform: rotate(360deg);
     }
   }
 
@@ -746,30 +802,32 @@
     color: #e2ebf8;
   }
 
-  /* ===== Filters（霓虹条 + 广告成效绿色胶囊按钮） ===== */
+  /* ===== Filters（与顶栏霓虹面板一致：主色描边 + 胶囊选择器） ===== */
   .filter-bar {
-    padding: 10px 24px 14px;
+    padding: 12px 24px 18px;
+    background: linear-gradient(180deg, rgb(59 130 246 / 5%) 0%, rgb(59 130 246 / 0%) 100%);
     border-bottom: 1px solid rgb(96 165 250 / 12%);
   }
 
   .rtd-filter-panel {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px 20px;
-    align-items: center;
-    padding: 10px 16px;
+    gap: 14px 8px;
+    align-items: stretch;
+    padding: 14px 20px;
     overflow: hidden;
+    border: 1px solid rgb(96 165 250 / 18%);
     border-radius: 16px;
 
     @include ap.ap-neon-bg;
     @include ap.ap-card-mesh;
 
     transition:
-      box-shadow 0.35s cubic-bezier(0, 0, 0.2, 1),
-      border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-color var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow var(--duration-normal, 250ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
 
     &:hover {
-      border-color: rgb(96 165 250 / 48%);
+      border-color: rgb(96 165 250 / 42%);
       box-shadow:
         0 12px 40px rgb(0 0 0 / 44%),
         0 0 0 1px rgb(96 165 250 / 22%),
@@ -789,9 +847,52 @@
     align-items: center;
   }
 
+  .rtd-filter-field {
+    gap: 12px;
+    align-items: center;
+    min-height: 40px;
+
+    & + .rtd-filter-field {
+      padding-left: 22px;
+      margin-left: 6px;
+      border-left: 1px solid rgb(96 165 250 / 14%);
+    }
+
+    @media (width <= 640px) {
+      & + .rtd-filter-field {
+        padding-left: 0;
+        margin-left: 0;
+        border-left: none;
+      }
+    }
+  }
+
   .filter-label {
+    position: relative;
+    flex-shrink: 0;
+    padding-left: 11px;
     font-size: 12px;
-    color: #94a3b8;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-secondary, #94a3b8);
+    letter-spacing: 0.02em;
+
+    &::before {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 3px;
+      height: 14px;
+      content: '';
+      background: linear-gradient(
+        180deg,
+        var(--art-primary, #3b82f6) 0%,
+        rgb(34 211 238 / 88%) 100%
+      );
+      border-radius: 2px;
+      box-shadow: 0 0 10px rgb(59 130 246 / 45%);
+      transform: translateY(-50%);
+    }
   }
 
   .filter-btn {
@@ -814,6 +915,66 @@
   .filter-btn:hover {
     border-color: rgb(16 185 129 / 58%);
     box-shadow: 0 0 14px rgb(16 185 129 / 16%);
+  }
+
+  .rtd-filter-select {
+    flex: 1;
+    width: min(248px, 100%);
+    min-width: min(200px, 100%);
+
+    :deep(.el-select__wrapper) {
+      min-height: 38px;
+      padding: 5px 14px 5px 16px;
+      background: rgb(15 23 42 / 52%);
+      border: 1px solid rgb(96 165 250 / 24%);
+      border-radius: 9999px;
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 5%),
+        0 1px 2px rgb(0 0 0 / 12%);
+      transition:
+        border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        box-shadow var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        background var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+    }
+
+    :deep(.el-select__wrapper:hover) {
+      border-color: rgb(96 165 250 / 48%);
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 7%),
+        0 0 18px rgb(59 130 246 / 14%);
+    }
+
+    :deep(.el-select__wrapper.is-focused) {
+      border-color: rgb(96 165 250 / 58%);
+      box-shadow:
+        0 0 0 2px rgb(59 130 246 / 22%),
+        inset 0 1px 0 rgb(255 255 255 / 8%),
+        0 0 22px rgb(59 130 246 / 16%);
+    }
+
+    :deep(.el-select__placeholder) {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-tertiary, #64748b);
+    }
+
+    :deep(.el-select__selected-item) {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary, #e2e8f0);
+    }
+
+    :deep(.el-select__caret) {
+      color: rgb(148 163 184 / 95%);
+    }
+
+    :deep(.el-select__suffix) {
+      color: rgb(148 163 184 / 90%);
+    }
+
+    :deep(.el-icon.el-select__loading) {
+      color: var(--art-primary, #3b82f6);
+    }
   }
 
   .view-toggle {
@@ -1287,10 +1448,6 @@
       animation: none;
     }
 
-    .rtd-page-fx {
-      animation: none;
-    }
-
     .rtd-entry-1,
     .rtd-entry-2,
     .rtd-entry-3,
@@ -1323,6 +1480,57 @@
 
     .live-dot {
       animation: none;
+    }
+  }
+</style>
+
+<!-- 下拉挂到 body，须单独块（与实时数据筛选视觉一致） -->
+<style lang="scss">
+  .rtd-filter-select-popper.el-select__popper {
+    overflow: hidden;
+    background: rgb(15 23 42 / 96%) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgb(96 165 250 / 28%) !important;
+    border-radius: 14px !important;
+    box-shadow:
+      0 20px 50px rgb(0 0 0 / 48%),
+      0 0 0 1px rgb(96 165 250 / 12%),
+      inset 0 1px 0 rgb(255 255 255 / 5%) !important;
+  }
+
+  .rtd-filter-select-popper .el-select-dropdown__list {
+    padding: 6px;
+  }
+
+  .rtd-filter-select-popper .el-select-dropdown__item {
+    margin: 2px 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #cbd5e1;
+    border-radius: 10px;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .rtd-filter-select-popper .el-select-dropdown__item:hover {
+    color: #f1f5f9;
+    background: rgb(59 130 246 / 14%);
+  }
+
+  .rtd-filter-select-popper .el-select-dropdown__item.is-selected {
+    font-weight: 600;
+    color: #fff;
+    background: rgb(59 130 246 / 22%);
+  }
+
+  .rtd-filter-select-popper .el-select-dropdown__item.is-hovering {
+    background: rgb(59 130 246 / 12%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rtd-filter-select-popper .el-select-dropdown__item {
+      transition: none;
     }
   }
 </style>

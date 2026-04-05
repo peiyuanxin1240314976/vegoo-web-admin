@@ -1,7 +1,7 @@
 /**
  * 实时数据接口通用筛选（契约 01～04）。
- * 筛选项下拉请复用公用接口：`fetchComprehensiveAnalysisFilterOptions`（`src/api/user-growth/comprehensive-analysis.ts`），
- * 响应形态见 `ComprehensiveAnalysisFilterOptions`（`views/user-growth/comprehensive-analysis/types.ts`）。
+ * 筛选项下拉请读 `useCockpitMetaFilterStore().data`（`@/store/modules/cockpit-meta-filter`，`ensureLoaded`），
+ * 形态见 `CockpitMetaFilterOptionsData`（`@/types/cockpit-meta-filter`）。
  *
  * 「全部应用」等：请求入参用空字符串 `''`，勿传字面量 `all`（见 `.cursor/rules/backend-fields.mdc`「接口请求 · 筛选「全部」」）。
  */

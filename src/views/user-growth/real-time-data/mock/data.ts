@@ -53,9 +53,16 @@ const mockRealtimeAppCardsSource: AppCard[] = [
       budgetProgress: 68,
       budgetDaysLeft: '~5天后',
       channels: [
-        { name: 'Google Ads', iconColor: '#ea4335', spend: 4800, cpi: 2.25, roi: 96 },
-        { name: 'Meta Ads', iconColor: '#1877f2', spend: 2500, cpi: 2.48, roi: 91 },
-        { name: 'TikTok Ads', iconColor: '#000000', spend: 1072, cpi: 2.61, roi: 89 }
+        {
+          name: 'Google Ads',
+          n_source: '1',
+          iconColor: '#ea4335',
+          spend: 4800,
+          cpi: 2.25,
+          roi: 96
+        },
+        { name: 'Meta Ads', n_source: '2', iconColor: '#1877f2', spend: 2500, cpi: 2.48, roi: 91 },
+        { name: 'TikTok Ads', n_source: '7', iconColor: '#000000', spend: 1072, cpi: 2.61, roi: 89 }
       ],
       hourlyData: [30, 60, 100, 220, 380, 620, 520, 650],
       hourlyRoi: [18, 22, 38, 55, 72, 90, 92, 96]
@@ -101,9 +108,16 @@ const mockRealtimeAppCardsSource: AppCard[] = [
       budgetProgress: 92,
       budgetDaysLeft: '~1天后',
       channels: [
-        { name: 'Google Ads', iconColor: '#ea4335', spend: 1600, cpi: 2.72, roi: 112 },
-        { name: 'Meta Ads', iconColor: '#1877f2', spend: 900, cpi: 2.91, roi: 104 },
-        { name: 'TikTok Ads', iconColor: '#000000', spend: 386, cpi: 3.02, roi: 99 }
+        {
+          name: 'Google Ads',
+          n_source: '1',
+          iconColor: '#ea4335',
+          spend: 1600,
+          cpi: 2.72,
+          roi: 112
+        },
+        { name: 'Meta Ads', n_source: '2', iconColor: '#1877f2', spend: 900, cpi: 2.91, roi: 104 },
+        { name: 'TikTok Ads', n_source: '7', iconColor: '#000000', spend: 386, cpi: 3.02, roi: 99 }
       ],
       hourlyData: [20, 40, 80, 140, 220, 340, 430, 500],
       hourlyRoi: [30, 38, 52, 72, 90, 106, 112, 118]
@@ -146,9 +160,16 @@ const mockRealtimeAppCardsSource: AppCard[] = [
       budgetProgress: 76,
       budgetDaysLeft: '~3天后',
       channels: [
-        { name: 'Google Ads', iconColor: '#ea4335', spend: 5800, cpi: 2.28, roi: 99 },
-        { name: 'Meta Ads', iconColor: '#1877f2', spend: 3200, cpi: 2.51, roi: 94 },
-        { name: 'TikTok Ads', iconColor: '#000000', spend: 1638, cpi: 2.6, roi: 89 }
+        {
+          name: 'Google Ads',
+          n_source: '1',
+          iconColor: '#ea4335',
+          spend: 5800,
+          cpi: 2.28,
+          roi: 99
+        },
+        { name: 'Meta Ads', n_source: '2', iconColor: '#1877f2', spend: 3200, cpi: 2.51, roi: 94 },
+        { name: 'TikTok Ads', n_source: '7', iconColor: '#000000', spend: 1638, cpi: 2.6, roi: 89 }
       ],
       hourlyData: [60, 100, 180, 320, 500, 760, 600, 680],
       hourlyRoi: [22, 30, 48, 68, 84, 96, 98, 100]
@@ -191,9 +212,16 @@ const mockRealtimeAppCardsSource: AppCard[] = [
       budgetProgress: 42,
       budgetDaysLeft: '~12天后',
       channels: [
-        { name: 'Google Ads', iconColor: '#ea4335', spend: 48, cpi: 0.19, roi: 104 },
-        { name: 'Meta Ads', iconColor: '#1877f2', spend: 28, cpi: 0.24, roi: 98 },
-        { name: 'TikTok Ads', iconColor: '#000000', spend: 13.68, cpi: 0.26, roi: 95 }
+        { name: 'Google Ads', n_source: '1', iconColor: '#ea4335', spend: 48, cpi: 0.19, roi: 104 },
+        { name: 'Meta Ads', n_source: '2', iconColor: '#1877f2', spend: 28, cpi: 0.24, roi: 98 },
+        {
+          name: 'TikTok Ads',
+          n_source: '7',
+          iconColor: '#000000',
+          spend: 13.68,
+          cpi: 0.26,
+          roi: 95
+        }
       ],
       hourlyData: [5, 8, 12, 16, 14, 12, 10, 11],
       hourlyRoi: [40, 52, 68, 88, 96, 102, 108, 112]
@@ -237,9 +265,9 @@ const mockRealtimeAppCardsSource: AppCard[] = [
       budgetProgress: 55,
       budgetDaysLeft: '~7天后',
       channels: [
-        { name: 'Google Ads', iconColor: '#ea4335', spend: 980, cpi: 2.28, roi: 68 },
-        { name: 'Meta Ads', iconColor: '#1877f2', spend: 620, cpi: 2.44, roi: 62 },
-        { name: 'TikTok Ads', iconColor: '#000000', spend: 326, cpi: 2.58, roi: 58 }
+        { name: 'Google Ads', n_source: '1', iconColor: '#ea4335', spend: 980, cpi: 2.28, roi: 68 },
+        { name: 'Meta Ads', n_source: '2', iconColor: '#1877f2', spend: 620, cpi: 2.44, roi: 62 },
+        { name: 'TikTok Ads', n_source: '7', iconColor: '#000000', spend: 326, cpi: 2.58, roi: 58 }
       ],
       hourlyData: [180, 210, 240, 260, 220, 180, 140, 100],
       hourlyRoi: [40, 48, 58, 64, 62, 58, 52, 48]
@@ -282,9 +310,9 @@ const mockRealtimeAppCardsSource: AppCard[] = [
       budgetProgress: 60,
       budgetDaysLeft: '~6天后',
       channels: [
-        { name: 'Google Ads', iconColor: '#ea4335', spend: 620, cpi: 0.48, roi: 98 },
-        { name: 'Meta Ads', iconColor: '#1877f2', spend: 400, cpi: 0.54, roi: 94 },
-        { name: 'TikTok Ads', iconColor: '#000000', spend: 200, cpi: 0.56, roi: 90 }
+        { name: 'Google Ads', n_source: '1', iconColor: '#ea4335', spend: 620, cpi: 0.48, roi: 98 },
+        { name: 'Meta Ads', n_source: '2', iconColor: '#1877f2', spend: 400, cpi: 0.54, roi: 94 },
+        { name: 'TikTok Ads', n_source: '7', iconColor: '#000000', spend: 200, cpi: 0.56, roi: 90 }
       ],
       hourlyData: [40, 80, 140, 220, 200, 160, 140, 130],
       hourlyRoi: [30, 46, 65, 82, 90, 92, 96, 100]
@@ -327,9 +355,9 @@ const mockRealtimeAppCardsSource: AppCard[] = [
       budgetProgress: 48,
       budgetDaysLeft: '~9天后',
       channels: [
-        { name: 'Google Ads', iconColor: '#ea4335', spend: 480, cpi: 0.7, roi: 90 },
-        { name: 'Meta Ads', iconColor: '#1877f2', spend: 290, cpi: 0.76, roi: 86 },
-        { name: 'TikTok Ads', iconColor: '#000000', spend: 150, cpi: 0.82, roi: 84 }
+        { name: 'Google Ads', n_source: '1', iconColor: '#ea4335', spend: 480, cpi: 0.7, roi: 90 },
+        { name: 'Meta Ads', n_source: '2', iconColor: '#1877f2', spend: 290, cpi: 0.76, roi: 86 },
+        { name: 'TikTok Ads', n_source: '7', iconColor: '#000000', spend: 150, cpi: 0.82, roi: 84 }
       ],
       hourlyData: [30, 60, 90, 140, 160, 200, 180, 160],
       hourlyRoi: [28, 40, 58, 72, 82, 88, 90, 92]

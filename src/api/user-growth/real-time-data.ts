@@ -1,7 +1,7 @@
 /**
  * 用户增长 - 实时数据 API（Mock / 远程由 `views/user-growth/real-time-data/config/data-source` 切换）
  *
- * 筛选项下拉请使用公用 `fetchComprehensiveAnalysisFilterOptions`（`./comprehensive-analysis`），本文件不包含 meta-filter-options。
+ * 筛选项下拉请使用 `useCockpitMetaFilterStore`（`@/store/modules/cockpit-meta-filter`），本文件不包含 meta-filter-options。
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
