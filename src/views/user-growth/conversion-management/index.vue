@@ -89,7 +89,20 @@
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
   import { useIntervalFn } from '@vueuse/core'
-  import { fetchConversionMetaConversionTypeOptions } from '@/api/user-growth/conversion-management'
+  import {
+    fetchBatchUpdateConversionMappingStatus,
+    fetchConversionDataTabOverviewKpi,
+    fetchConversionDataTabSidePanels,
+    fetchConversionDataTabTableRows,
+    fetchConversionMappingDetail,
+    fetchConversionMappingList,
+    fetchConversionMappingStats,
+    fetchConversionMetaConversionTypeOptions,
+    fetchCreateConversionMapping,
+    fetchDeleteConversionMapping,
+    fetchExportConversionMappings,
+    fetchUpdateConversionMapping
+  } from '@/api/user-growth/conversion-management'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import ConversionTabs from './modules/conversion-tabs.vue'
   import ConversionFilters from './modules/conversion-filters.vue'
@@ -101,14 +114,7 @@
   import ConversionDataSidePanel from './modules/conversion-data-side-panel.vue'
   import ConversionMappingDialog from './modules/conversion-mapping-dialog.vue'
   import ConversionDeleteDialog from './modules/conversion-delete-dialog.vue'
-  import {
-    fetchConversionMappingListMock,
-    MOCK_TYPE_DISTRIBUTION,
-    MOCK_MAPPING_STATS,
-    MOCK_PLATFORM_STATS,
-    MOCK_CONVERSION_TYPE_OPTIONS
-  } from './mock/data'
-  import { fetchConversionDataMock } from './mock/data-tab'
+  import { MOCK_CONVERSION_TYPE_OPTIONS } from './mock/data'
   import type {
     ConversionDataFilterParams,
     ConversionDataSidePanels,
@@ -116,7 +122,8 @@
     ConversionFilterParams,
     ConversionKpi,
     ConversionMappingItem,
-    ConversionMappingForm
+    ConversionMappingForm,
+    ConversionTypeDistributionItem
   } from './types'
   import { ElMessage } from 'element-plus'
   import { getAppNow, cloneAppDate } from '@/utils/app-now'
@@ -147,7 +154,7 @@
     handleCurrentChange
   } = useTable({
     core: {
-      apiFn: fetchConversionMappingListMock,
+      apiFn: fetchConversionMappingList,
       apiParams: {
         current: 1,
         size: 20,
@@ -163,13 +170,32 @@
 
   const filterForForm = computed(() => searchParams as ConversionFilterParams)
 
-  const sideStats = computed(() => ({
-    typeDistribution: MOCK_TYPE_DISTRIBUTION,
-    mappingStats: MOCK_MAPPING_STATS,
-    platformStats: MOCK_PLATFORM_STATS
-  }))
+  const sideStats = ref({
+    typeDistribution: [] as ConversionTypeDistributionItem[],
+    mappingStats: { mapped: 0, duplicate: 0, unmapped: 0 },
+    platformStats: { android: 0, ios: 0 }
+  })
 
-  function handleSearch(payload: ConversionFilterParams) {
+  async function loadNameTabStats() {
+    try {
+      const res = await fetchConversionMappingStats({
+        platform: searchParams.platform ?? '',
+        appId: searchParams.appId ?? '',
+        conversionType: searchParams.conversionType ?? '',
+        status: searchParams.status ?? '',
+        keyword: searchParams.keyword ?? ''
+      })
+      sideStats.value = {
+        typeDistribution: res.typeDistribution ?? [],
+        mappingStats: res.mappingStats ?? { mapped: 0, duplicate: 0, unmapped: 0 },
+        platformStats: res.platformStats ?? { android: 0, ios: 0 }
+      }
+    } catch (error) {
+      console.warn('[conversion-management] 加载统计失败', error)
+    }
+  }
+
+  async function handleSearch(payload: ConversionFilterParams) {
     Object.assign(searchParams, {
       platform: payload.platform ?? '',
       appId: payload.appId ?? '',
@@ -177,23 +203,52 @@
       status: payload.status ?? '',
       keyword: payload.keyword ?? ''
     })
-    getData()
+    await Promise.resolve(getData())
+    await loadNameTabStats()
   }
 
   const dialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
   const dialogRowData = ref<Partial<ConversionMappingItem> | null>(null)
 
-  function openDialog(type: 'add' | 'edit', row?: ConversionMappingItem) {
+  async function openDialog(type: 'add' | 'edit', row?: ConversionMappingItem) {
     dialogType.value = type
-    dialogRowData.value = row ?? null
+    if (type === 'edit' && row?.id) {
+      try {
+        const detail = await fetchConversionMappingDetail({ id: row.id })
+        dialogRowData.value = detail
+      } catch {
+        dialogRowData.value = row ?? null
+      }
+    } else {
+      dialogRowData.value = row ?? null
+    }
     dialogVisible.value = true
   }
 
-  function handleDialogSubmit(form: ConversionMappingForm) {
-    console.log('Mapping submit (mock):', form)
-    dialogVisible.value = false
-    getData()
+  async function handleDialogSubmit(form: ConversionMappingForm) {
+    try {
+      if (dialogType.value === 'add') {
+        await fetchCreateConversionMapping(form)
+        ElMessage.success('新增成功')
+      } else {
+        const id = dialogRowData.value?.id
+        if (!id) return
+        await fetchUpdateConversionMapping({
+          id,
+          systemDisplayName: form.systemDisplayName ?? '',
+          conversionDisplayType: form.conversionDisplayType,
+          status: form.status,
+          remarks: form.remarks
+        })
+        ElMessage.success('保存成功')
+      }
+      dialogVisible.value = false
+      await Promise.resolve(getData())
+      await loadNameTabStats()
+    } catch {
+      ElMessage.error(dialogType.value === 'add' ? '新增失败' : '保存失败')
+    }
   }
 
   const deleteDialogVisible = ref(false)
@@ -204,21 +259,77 @@
     deleteDialogVisible.value = true
   }
 
-  function handleDeleteConfirm(row: ConversionMappingItem) {
-    console.log('Delete (mock):', row.id)
-    getData()
+  async function handleDeleteConfirm(row: ConversionMappingItem) {
+    try {
+      await fetchDeleteConversionMapping({ id: row.id })
+      ElMessage.success('删除成功')
+      await Promise.resolve(getData())
+      await loadNameTabStats()
+    } catch {
+      ElMessage.error('删除失败')
+    }
   }
 
-  function handleBatchEnable() {
-    ElMessage.info('批量启用（待接接口）')
+  async function handleBatchEnable() {
+    try {
+      const res = await fetchBatchUpdateConversionMappingStatus({
+        mode: 'byFilter',
+        filters: {
+          platform: searchParams.platform ?? '',
+          appId: searchParams.appId ?? '',
+          conversionType: searchParams.conversionType ?? '',
+          status: searchParams.status ?? '',
+          keyword: searchParams.keyword ?? ''
+        },
+        targetStatus: 'enabled'
+      })
+      ElMessage.success(res.message || `批量启用成功，影响 ${res.affectedCount} 条`)
+      await Promise.resolve(getData())
+      await loadNameTabStats()
+    } catch {
+      ElMessage.error('批量启用失败')
+    }
   }
 
-  function handleBatchDisable() {
-    ElMessage.info('批量禁用（待接接口）')
+  async function handleBatchDisable() {
+    try {
+      const res = await fetchBatchUpdateConversionMappingStatus({
+        mode: 'byFilter',
+        filters: {
+          platform: searchParams.platform ?? '',
+          appId: searchParams.appId ?? '',
+          conversionType: searchParams.conversionType ?? '',
+          status: searchParams.status ?? '',
+          keyword: searchParams.keyword ?? ''
+        },
+        targetStatus: 'unmapped'
+      })
+      ElMessage.success(res.message || `批量禁用成功，影响 ${res.affectedCount} 条`)
+      await Promise.resolve(getData())
+      await loadNameTabStats()
+    } catch {
+      ElMessage.error('批量禁用失败')
+    }
   }
 
-  function handleExport() {
-    ElMessage.info('导出映射表（待接接口）')
+  async function handleExport() {
+    try {
+      const res = await fetchExportConversionMappings({
+        platform: searchParams.platform ?? '',
+        appId: searchParams.appId ?? '',
+        conversionType: searchParams.conversionType ?? '',
+        status: searchParams.status ?? '',
+        keyword: searchParams.keyword ?? '',
+        format: 'xlsx'
+      })
+      if (res.downloadUrl) {
+        window.open(res.downloadUrl, '_blank', 'noopener,noreferrer')
+      } else {
+        ElMessage.success('导出请求已提交')
+      }
+    } catch {
+      ElMessage.error('导出失败')
+    }
   }
 
   async function loadConversionTypeOptions() {
@@ -279,11 +390,18 @@
     const seq = ++dataLoadSeq
     dataLoading.value = true
     try {
-      const res = await fetchConversionDataMock({ ...dataFilter })
+      const params = { ...dataFilter }
+      const [kpiRes, rowsRes, sideRes] = await Promise.all([
+        fetchConversionDataTabOverviewKpi(params),
+        fetchConversionDataTabTableRows(params),
+        fetchConversionDataTabSidePanels(params)
+      ])
       if (seq !== dataLoadSeq || activeTab.value !== 'data') return
-      dataKpi.value = res.kpi
-      dataTableRows.value = res.tableRows
-      dataSidePanels.value = res.sidePanels
+      dataKpi.value = kpiRes.kpi
+      dataTableRows.value = rowsRes.tableRows
+      dataSidePanels.value = sideRes.sidePanels
+    } catch (error) {
+      console.warn('[conversion-management] 加载 data tab 失败', error)
     } finally {
       if (seq === dataLoadSeq) dataLoading.value = false
     }
@@ -339,6 +457,7 @@
   onMounted(() => {
     void cockpitMetaFilterStore.ensureLoaded()
     void loadConversionTypeOptions()
+    void loadNameTabStats()
   })
 </script>
 

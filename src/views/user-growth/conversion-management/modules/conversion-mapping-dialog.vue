@@ -170,12 +170,15 @@
   import type { FormInstance, FormRules } from 'element-plus'
   import type { AdPlatformType, ConversionMappingItem, ConversionMappingForm } from '../types'
   import {
+    fetchConversionMetaDialogOptions,
+    fetchConversionMetaDisplayTypeOptions
+  } from '@/api/user-growth/conversion-management'
+  import {
     MOCK_AD_PLATFORM_OPTIONS,
-    MOCK_MCC_BY_PLATFORM,
     MOCK_APP_OPTIONS_FOR_DIALOG,
-    MOCK_CONVERSION_DISPLAY_TYPE_OPTIONS,
-    MOCK_CONVERSION_LIST
+    MOCK_CONVERSION_DISPLAY_TYPE_OPTIONS
   } from '../mock/data'
+  import { ElMessage } from 'element-plus'
   import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'ConversionMappingDialog' })
@@ -199,8 +202,19 @@
   const formRef = ref<FormInstance>()
   const submitLoading = ref(false)
 
-  const adPlatformOptions = MOCK_AD_PLATFORM_OPTIONS
-  const appOptionsForDialog = MOCK_APP_OPTIONS_FOR_DIALOG
+  const adPlatformOptions = ref(MOCK_AD_PLATFORM_OPTIONS)
+  const appOptionsForDialog = ref(MOCK_APP_OPTIONS_FOR_DIALOG)
+  const conversionNameMetaOptions = ref<
+    {
+      conversionName: string
+      conversionId: string
+      billingType?: string
+      platformConversionType?: string
+    }[]
+  >([])
+  const conversionDisplayTypeMetaOptions = ref(
+    MOCK_CONVERSION_DISPLAY_TYPE_OPTIONS.map((o) => ({ label: o.label, value: o.value }))
+  )
 
   const conversionDisplayTypeKeyMap: Record<string, string> = {
     paid: 'conversionTypePaid',
@@ -209,16 +223,18 @@
     revenue: 'conversionTypeRevenue'
   }
   const conversionDisplayTypeOptions = computed(() =>
-    MOCK_CONVERSION_DISPLAY_TYPE_OPTIONS.map((o) => ({
-      label: t(`conversionManagement.${conversionDisplayTypeKeyMap[o.value] ?? o.value}`),
+    conversionDisplayTypeMetaOptions.value.map((o) => ({
+      label: t(`conversionManagement.${conversionDisplayTypeKeyMap[o.value] ?? o.value}`, o.label),
       value: o.value
     }))
   )
 
-  const conversionNameOptions = computed(() => {
-    const names = [...new Set(MOCK_CONVERSION_LIST.map((r) => r.conversionName))]
-    return names.map((n) => ({ label: n, value: n }))
-  })
+  const conversionNameOptions = computed(() =>
+    conversionNameMetaOptions.value.map((o) => ({
+      label: o.conversionName,
+      value: o.conversionName
+    }))
+  )
 
   const mccPlaceholder = computed(() =>
     form.source ? '' : t('conversionManagement.hintAfterSelectPlatform')
@@ -252,17 +268,36 @@
     systemDisplayName: [{ required: true, message: '请输入系统显示名称', trigger: 'blur' }]
   }
 
-  function onSourceChange() {
-    const key = form.source || form.adPlatform
-    const list = key ? MOCK_MCC_BY_PLATFORM[key] : []
-    form.mccAccount = list?.[0]?.value ?? ''
+  async function loadDialogMeta(params: { source?: string; mccAccount?: string; appId?: string }) {
+    try {
+      const res = await fetchConversionMetaDialogOptions({
+        source: params.source,
+        adPlatform: params.source,
+        mccAccount: params.mccAccount,
+        appId: params.appId
+      })
+      adPlatformOptions.value = res.adPlatforms?.length ? res.adPlatforms : MOCK_AD_PLATFORM_OPTIONS
+      appOptionsForDialog.value = res.apps?.length ? res.apps : MOCK_APP_OPTIONS_FOR_DIALOG
+      conversionNameMetaOptions.value = res.conversions ?? []
+      form.mccAccount = res.mccAccounts?.[0]?.value ?? params.mccAccount ?? ''
+    } catch {
+      ElMessage.error('加载弹窗选项失败')
+    }
+  }
+
+  async function onSourceChange() {
     form.adPlatform = form.source
+    await loadDialogMeta({ source: form.source })
   }
 
   function onConversionNameChange() {
     if (form.conversionName) {
-      const found = MOCK_CONVERSION_LIST.find((r) => r.conversionName === form.conversionName)
+      const found = conversionNameMetaOptions.value.find(
+        (r) => r.conversionName === form.conversionName
+      )
       form.conversionId = found?.conversionId ?? `auto-${Date.now()}`
+      form.billingType = found?.billingType ?? ''
+      form.platformConversionType = found?.platformConversionType
     } else {
       form.conversionId = ''
     }
@@ -272,19 +307,22 @@
     form.status = val === true || val === 'true' ? 'enabled' : 'unmapped'
   }
 
-  /** 根据 MCC 账户从 mock 数据反查广告平台（编辑回显用） */
+  /** 根据平台选项反查 source（编辑回显兜底） */
   function getAdPlatformByMcc(mccAccount: string): AdPlatformType | undefined {
     if (!mccAccount) return undefined
-    const entry = Object.entries(MOCK_MCC_BY_PLATFORM).find(([, list]) =>
-      list.some((item) => item.value === mccAccount)
-    )
-    return entry ? (entry[0] as AdPlatformType) : undefined
+    return undefined
   }
 
   watch(
     () => [props.visible, props.rowData],
     () => {
       if (props.visible) {
+        void fetchConversionMetaDisplayTypeOptions()
+          .then((res) => {
+            if (res.options?.length) conversionDisplayTypeMetaOptions.value = res.options
+          })
+          .catch(() => {})
+
         if (props.type === 'edit' && props.rowData) {
           const row = props.rowData as ConversionMappingForm
           const mcc = props.rowData.mccAccount ?? ''
@@ -302,17 +340,18 @@
             status: props.rowData.status ?? 'enabled',
             remarks: row.remarks ?? ''
           })
+          void loadDialogMeta({
+            source: form.source,
+            mccAccount: form.mccAccount,
+            appId: form.appId
+          })
         } else {
           Object.assign(form, defaultForm)
+          void loadDialogMeta({})
         }
       }
     },
     { immediate: true }
-  )
-
-  watch(
-    () => form.source,
-    () => onSourceChange()
   )
 
   function handleClose() {
