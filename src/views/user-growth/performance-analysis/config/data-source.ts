@@ -21,15 +21,15 @@ export enum PerformanceAnalysisEndpoint {
 }
 
 export const PERFORMANCE_ANALYSIS_USE_MOCK: Record<PerformanceAnalysisEndpoint, boolean> = {
-  [PerformanceAnalysisEndpoint.ListFilterOptions]: true,
-  [PerformanceAnalysisEndpoint.PerformanceList]: true,
-  [PerformanceAnalysisEndpoint.OverviewMetrics]: true,
-  [PerformanceAnalysisEndpoint.CompareCandidates]: true,
-  [PerformanceAnalysisEndpoint.ComparisonOverview]: true,
-  [PerformanceAnalysisEndpoint.ComparisonCharts]: true,
-  [PerformanceAnalysisEndpoint.ComparisonRankings]: true,
-  [PerformanceAnalysisEndpoint.ComparisonScoreDetail]: true,
-  [PerformanceAnalysisEndpoint.ComparisonAlerts]: true
+  [PerformanceAnalysisEndpoint.ListFilterOptions]: false,
+  [PerformanceAnalysisEndpoint.PerformanceList]: false,
+  [PerformanceAnalysisEndpoint.OverviewMetrics]: false,
+  [PerformanceAnalysisEndpoint.CompareCandidates]: false,
+  [PerformanceAnalysisEndpoint.ComparisonOverview]: false,
+  [PerformanceAnalysisEndpoint.ComparisonCharts]: false,
+  [PerformanceAnalysisEndpoint.ComparisonRankings]: false,
+  [PerformanceAnalysisEndpoint.ComparisonScoreDetail]: false,
+  [PerformanceAnalysisEndpoint.ComparisonAlerts]: false
 }
 
 export function isPerformanceAnalysisEndpointMock(endpoint: PerformanceAnalysisEndpoint): boolean {

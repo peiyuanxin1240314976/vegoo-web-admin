@@ -205,6 +205,17 @@
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import {
     fetchPerformanceCompareCandidates,
+    fetchPerformanceComparisonAlerts,
+    fetchPerformanceComparisonCharts,
+    fetchPerformanceComparisonOverview,
+    fetchPerformanceComparisonRankings,
+    fetchPerformanceComparisonScoreDetail,
+    type ComparisonStaffRequest,
+    type PerformanceComparisonAlertsResponse,
+    type PerformanceComparisonChartsResponse,
+    type PerformanceComparisonOverviewResponse,
+    type PerformanceComparisonRankingsResponse,
+    type PerformanceComparisonScoreDetailResponse,
     type PerformanceCompareCandidatesItem
   } from '@/api/user-growth/performance-analysis'
 
@@ -330,20 +341,6 @@
     }
   }
 
-  const SCORE_DETAIL_DATA: Record<
-    string,
-    { spend: number; roi: number; cpi: number; profit: number; total: number }
-  > = {
-    zhao6: { spend: 28, roi: 30, cpi: 20, profit: 18, total: 96 },
-    zhang3: { spend: 25, roi: 30, cpi: 20, profit: 19, total: 94 },
-    li4: { spend: 22, roi: 28, cpi: 20, profit: 18, total: 88 },
-    wang5: { spend: 15, roi: 18, cpi: 16, profit: 23, total: 72 },
-    liu7: { spend: 23, roi: 29, cpi: 20, profit: 18, total: 90 },
-    chen8: { spend: 21, roi: 26, cpi: 19, profit: 17, total: 83 },
-    zhou9: { spend: 20, roi: 25, cpi: 18, profit: 17, total: 80 },
-    wu10: { spend: 19, roi: 24, cpi: 18, profit: 17, total: 78 }
-  }
-
   // ─── Router ───────────────────────────────────────────────
   const router = useRouter()
   const route = useRoute()
@@ -354,6 +351,12 @@
   const compareCandidatesLoading = ref(false)
   const compareCandidates = ref<PerformanceCompareCandidatesItem[]>([])
   const pendingAddIds = ref<string[]>([])
+  const comparisonLoading = ref(false)
+  const comparisonOverview = ref<PerformanceComparisonOverviewResponse | null>(null)
+  const comparisonCharts = ref<PerformanceComparisonChartsResponse | null>(null)
+  const comparisonRankings = ref<PerformanceComparisonRankingsResponse | null>(null)
+  const comparisonScoreDetail = ref<PerformanceComparisonScoreDetailResponse | null>(null)
+  const comparisonAlerts = ref<PerformanceComparisonAlertsResponse | null>(null)
 
   // Parse IDs from route query
   const selectedStaff = ref<StaffSummary[]>([])
@@ -381,6 +384,7 @@
 
   // ─── Computed KPIs ────────────────────────────────────────
   const kpis = computed(() => {
+    if (comparisonOverview.value) return comparisonOverview.value
     const ids = selectedStaff.value.map((s) => s.id)
     const totalAd = ids.reduce((acc, id) => acc + (ALL_STAFF[id]?.adSpend ?? 0), 0)
     const avgRoi = 89
@@ -395,65 +399,11 @@
     }
   })
 
-  const rankData = computed(() => [
-    {
-      metric: '广告支出',
-      r1: `赵六 $52,100`,
-      r2: `张三 $49,279`,
-      r3: `李四 $37,838`
-    },
-    {
-      metric: '首日ROI',
-      r1: `赵六 96%`,
-      r2: `张三 93%`,
-      r3: `李四 88%`
-    },
-    {
-      metric: '预估利润',
-      r1: `赵六 +$15,600`,
-      r2: `张三 +$12,400`,
-      r3: `李四 +$6,800`
-    },
-    {
-      metric: '最低利润',
-      r1: `赵六 +$9,800`,
-      r2: `张三 +$8,200`,
-      r3: `李四 +$3,200`
-    },
-    {
-      metric: '绩效得分',
-      r1: `赵六 96分`,
-      r2: `张三 94分`,
-      r3: `李四 88分`
-    }
-  ])
+  const rankData = computed(() => comparisonRankings.value?.rows ?? [])
 
-  function buildScoreDetailById(id: string) {
-    const scoreData = SCORE_DETAIL_DATA[id]
-    if (scoreData) return scoreData
+  const scoreDetail = computed(() => comparisonScoreDetail.value?.list ?? [])
 
-    const total = ALL_STAFF[id]?.score ?? 80
-    const spend = Math.round(total * 0.26)
-    const roi = Math.round(total * 0.31)
-    const cpi = Math.round(total * 0.21)
-    const profit = Math.max(0, total - spend - roi - cpi)
-    return { spend, roi, cpi, profit, total }
-  }
-
-  const scoreDetail = computed(() =>
-    selectedStaff.value.map((s) => ({
-      name: s.name,
-      color: ALL_STAFF[s.id]?.color ?? '#fff',
-      ...buildScoreDetailById(s.id),
-      status: ALL_STAFF[s.id]?.status ?? '',
-      statusClass: ALL_STAFF[s.id]?.statusClass ?? ''
-    }))
-  )
-
-  const alerts = ref([
-    { id: 1, level: 'warn', text: '王五 连续7日首日ROI低于80%达标线，建议尽快安排读师会议' },
-    { id: 2, level: 'error', text: '王五 预估利润连续为负，建议调整投放策略' }
-  ])
+  const alerts = computed(() => comparisonAlerts.value?.list ?? [])
 
   // ─── Chart refs ────────────────────────────────────────────
   const roiChartRef = ref<HTMLDivElement | null>(null)
@@ -468,16 +418,22 @@
 
   // ─── Chart options ─────────────────────────────────────────
   function buildRoiOption(): echarts.EChartsOption {
+    const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
-    const series = ids.map((id, i) => ({
-      name: ALL_STAFF[id]?.name ?? id,
+    const dates = c?.dates?.length ? c.dates : DATES
+    const roiTrend = c?.roiTrend?.length
+      ? c.roiTrend
+      : ids.map((id) => ({ id, name: ALL_STAFF[id]?.name ?? id, values: ROI_TRENDS[id] ?? [] }))
+
+    const series = roiTrend.map((s, i) => ({
+      name: s.name,
       type: 'line' as const,
       smooth: true,
       symbol: 'circle',
       symbolSize: 5,
       lineStyle: { width: 2, color: COLORS[i] },
       itemStyle: { color: COLORS[i] },
-      data: ROI_TRENDS[id] ?? [],
+      data: s.values ?? [],
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           { offset: 0, color: COLORS[i] + '30' },
@@ -511,7 +467,7 @@
       },
       xAxis: {
         type: 'category',
-        data: DATES,
+        data: dates,
         axisLine: { lineStyle: { color: '#1f2d47' } },
         axisTick: { show: false },
         axisLabel: { color: '#64748b', fontSize: 11 }
@@ -528,7 +484,7 @@
         {
           name: '达标线',
           type: 'line' as const,
-          data: Array(7).fill(85),
+          data: Array(dates.length).fill(85),
           lineStyle: { color: '#ef4444', type: 'dashed', width: 1 },
           itemStyle: { color: '#ef4444' },
           symbol: 'none',
@@ -538,7 +494,7 @@
         {
           name: '最低要求',
           type: 'line' as const,
-          data: Array(7).fill(80),
+          data: Array(dates.length).fill(80),
           lineStyle: { color: '#f97316', type: 'dashed', width: 1 },
           itemStyle: { color: '#f97316' },
           symbol: 'none',
@@ -549,6 +505,7 @@
   }
 
   function buildRadarOption(): echarts.EChartsOption {
+    const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
     const radarValues: Record<string, number[]> = {
       zhao6: [28, 30, 20, 18, 96],
@@ -577,13 +534,15 @@
       radar: {
         center: ['50%', '48%'],
         radius: '58%',
-        indicator: [
-          { name: '花费达成', max: 30 },
-          { name: '首日ROI', max: 30 },
-          { name: 'CPI控制', max: 20 },
-          { name: '利润达成', max: 25 },
-          { name: '绩效得分', max: 100 }
-        ],
+        indicator: c?.radarIndicators?.length
+          ? c.radarIndicators
+          : [
+              { name: '花费达成', max: 30 },
+              { name: '首日ROI', max: 30 },
+              { name: 'CPI控制', max: 20 },
+              { name: '利润达成', max: 25 },
+              { name: '绩效得分', max: 100 }
+            ],
         axisLine: { lineStyle: { color: '#1f2d47' } },
         splitLine: { lineStyle: { color: '#1f2d47' } },
         splitArea: { areaStyle: { color: ['rgba(31,45,71,0.3)', 'rgba(31,45,71,0.1)'] } },
@@ -592,9 +551,16 @@
       series: [
         {
           type: 'radar' as const,
-          data: ids.map((id, i) => ({
-            name: ALL_STAFF[id]?.name ?? id,
-            value: radarValues[id] ?? [0, 0, 0, 0, 0],
+          data: (c?.radarSeries?.length
+            ? c.radarSeries
+            : ids.map((id) => ({
+                id,
+                name: ALL_STAFF[id]?.name ?? id,
+                values: radarValues[id] ?? [0, 0, 0, 0, 0]
+              }))
+          ).map((s, i) => ({
+            name: s.name,
+            value: (s as any).values ?? (s as any).value ?? [],
             lineStyle: { color: COLORS[i], width: 2 },
             itemStyle: { color: COLORS[i] },
             areaStyle: { color: COLORS[i] + '25' },
@@ -607,7 +573,12 @@
   }
 
   function buildAdOption(): echarts.EChartsOption {
+    const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
+    const dates = c?.dates?.length ? c.dates : DATES
+    const series = c?.adSpendTrend?.length
+      ? c.adSpendTrend
+      : ids.map((id) => ({ id, name: ALL_STAFF[id]?.name ?? id, values: AD_TRENDS[id] ?? [] }))
     return {
       backgroundColor: 'transparent',
       grid: { left: 40, right: 16, top: 40, bottom: 36 },
@@ -626,7 +597,7 @@
       },
       xAxis: {
         type: 'category',
-        data: DATES,
+        data: dates,
         axisLine: { lineStyle: { color: '#1f2d47' } },
         axisTick: { show: false },
         axisLabel: { color: '#64748b', fontSize: 11 }
@@ -640,21 +611,29 @@
           formatter: (v: number) => (v >= 1000 ? `$${v / 1000}K` : `$${v}`)
         }
       },
-      series: ids.map((id, i) => ({
-        name: ALL_STAFF[id]?.name ?? id,
+      series: series.map((s, i) => ({
+        name: s.name,
         type: 'bar' as const,
         barMaxWidth: 16,
         barGap: '15%',
         itemStyle: { color: COLORS[i], borderRadius: [3, 3, 0, 0] },
-        data: AD_TRENDS[id] ?? []
+        data: s.values ?? []
       }))
     }
   }
 
   function buildProfitOption(): echarts.EChartsOption {
+    const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
+    const bars = c?.profitBars?.length
+      ? c.profitBars
+      : ids.map((id) => ({
+          id,
+          name: ALL_STAFF[id]?.name ?? id,
+          value: ALL_STAFF[id]?.estProfit ?? 0
+        }))
     const avgProfit = Math.round(
-      ids.reduce((a, id) => a + (ALL_STAFF[id]?.estProfit ?? 0), 0) / ids.length
+      bars.reduce((a, b) => a + (b.value ?? 0), 0) / Math.max(1, bars.length)
     )
 
     return {
@@ -678,7 +657,7 @@
       },
       yAxis: {
         type: 'category',
-        data: ids.map((id) => ALL_STAFF[id]?.name ?? id),
+        data: bars.map((b) => b.name),
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: { color: '#94a3b8', fontSize: 12 }
@@ -700,11 +679,11 @@
           itemStyle: {
             borderRadius: [0, 4, 4, 0],
             color: (params: any) => {
-              const id = ids[params.dataIndex]
-              return ALL_STAFF[id]?.estProfit >= 0 ? COLORS[params.dataIndex] : '#ef4444'
+              const row = bars[params.dataIndex]
+              return (row?.value ?? 0) >= 0 ? COLORS[params.dataIndex] : '#ef4444'
             }
           },
-          data: ids.map((id) => ALL_STAFF[id]?.estProfit ?? 0),
+          data: bars.map((b) => b.value ?? 0),
           markLine: {
             silent: true,
             symbol: 'none',
@@ -756,6 +735,7 @@
   onMounted(() => {
     initCharts()
     window.addEventListener('resize', resizeCharts)
+    void loadComparisonAll()
   })
 
   onUnmounted(() => {
@@ -814,6 +794,44 @@
     })
   }
 
+  function buildComparisonBody(): ComparisonStaffRequest {
+    const [startDate, endDate] = selectedDateRange.value
+    return {
+      startDate,
+      endDate,
+      staffIds: selectedStaff.value.map((s) => s.id)
+    }
+  }
+
+  async function loadComparisonAll() {
+    if (selectedStaff.value.length === 0) return
+    comparisonLoading.value = true
+    try {
+      const body = buildComparisonBody()
+      const [o, c, r, s, a] = await Promise.all([
+        fetchPerformanceComparisonOverview(body),
+        fetchPerformanceComparisonCharts(body),
+        fetchPerformanceComparisonRankings(body),
+        fetchPerformanceComparisonScoreDetail(body),
+        fetchPerformanceComparisonAlerts(body)
+      ])
+      comparisonOverview.value = o
+      comparisonCharts.value = c
+      comparisonRankings.value = r
+      comparisonScoreDetail.value = s
+      comparisonAlerts.value = a
+
+      const nameMap = new Map(s.list.map((x) => [x.id, x.name]))
+      selectedStaff.value = selectedStaff.value.map((x) => ({
+        id: x.id,
+        name: nameMap.get(x.id) ?? x.name
+      }))
+      refreshAllCharts()
+    } finally {
+      comparisonLoading.value = false
+    }
+  }
+
   function confirmAddCompare() {
     if (pendingAddIds.value.length === 0) {
       ElMessage.warning('请先选择要添加的人员')
@@ -825,12 +843,12 @@
       .map((id) => ({ id, name: ALL_STAFF[id]?.name ?? id }))
     selectedStaff.value = [...selectedStaff.value, ...appendList]
     closeAddCompareModal()
-    refreshAllCharts()
+    void loadComparisonAll()
   }
 
   function removeStaff(id: string) {
     selectedStaff.value = selectedStaff.value.filter((s) => s.id !== id)
-    refreshAllCharts()
+    void loadComparisonAll()
   }
 
   function viewAlertDetail(id: number) {
@@ -843,6 +861,13 @@
     pendingAddIds.value = []
     void loadCompareCandidates()
   })
+
+  watch(
+    () => selectedDateRange.value,
+    () => {
+      void loadComparisonAll()
+    }
+  )
 </script>
 
 <style scoped lang="scss">
