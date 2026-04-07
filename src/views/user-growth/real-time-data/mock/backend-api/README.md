@@ -46,7 +46,7 @@
 
 - **列表与详情分离**：`02` 仅服务卡片网格；打开弹窗再请求 `03`。
 - **KPI / 分时图分离**：顶部汇总与底部小时对比独立。
-- **筛选项**：见上文公用 cockpit meta；本页 POST 请求体带 **`appId`**（与 `appOptions[].value` 同源）、**`n_source`**（与 `sourceOptions[].value` 同源）。
+- **筛选项**：见上文公用 cockpit meta；本页 POST 请求体带 **`appId`**（与 `appOptions[].value` 同源）、**`source`**（与 `sourceOptions[].value` 同源）。
 
 ### 数据源开关
 
@@ -56,7 +56,7 @@
 
 - 应用：**请求体键名 `appId`**（与 cockpit `appOptions[].value`、卡片行 `id` 同源）；不限时 `""`。
 - 终端平台：`platform`（若后续按 Android/iOS 区分）。
-- 广告平台：请求体 **`n_source`** 为 **string**（如 `"1"`），不限时 `""`；与 `sourceOptions` 对齐。
+- 广告平台：请求体 **`source`** 为 **string**（如 `"1"`），不限时 `""`；与 `sourceOptions` 对齐。
 - 花费：响应中与 **`cost` 同语义** 的度量在部分 UI 仍显示为 `spend`，联调时在适配层对齐命名。
 
 ### JSON 命名

@@ -7,7 +7,7 @@
         "required": true,
         "description": "要查看详情的应用 ID（当前卡片行 id，与 cockpit appOptions[].value 同源）。"
       },
-      "n_source": {
+      "source": {
         "type": "string",
         "required": true,
         "description": "与列表顶部广告平台筛选一致；空字符串表示弹窗内展示全平台汇总。"
@@ -116,7 +116,7 @@
   },
   "sampleRequest": {
     "appId": "weather5",
-    "n_source": ""
+    "source": ""
   },
   "sampleResponse": {
     "detail": {
@@ -174,14 +174,14 @@
         "prerequisite": "appId 有效"
       }
     ],
-    "defaultSelection": "继承列表当前筛选的 n_source（可选）；弹窗内若仅展示不触发新维度则不再请求。",
+    "defaultSelection": "继承列表当前筛选的 source（可选）；弹窗内若仅展示不触发新维度则不再请求。",
     "dedupe": "同一 appId 短缓存可选；关闭弹窗可丢弃。"
   },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/app-detail",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "appId, n_source",
+    "requestBody": "appId, source",
     "responseBody": "detail: AppDetailData"
   },
   "apiSuggestion": {

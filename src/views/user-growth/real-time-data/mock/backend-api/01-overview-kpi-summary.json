@@ -7,7 +7,7 @@
         "required": true,
         "description": "应用 ID；与 cockpit GET meta-filter-options 的 appOptions[].value 同源；空字符串表示「全部应用」；勿传字面量 all。"
       },
-      "n_source": {
+      "source": {
         "type": "string",
         "required": true,
         "description": "广告平台枚举字符串（如 1、7）；与 sourceOptions[].value 同源；空字符串表示不限；勿用 JSON number。"
@@ -53,7 +53,7 @@
   },
   "sampleRequest": {
     "appId": "",
-    "n_source": ""
+    "source": ""
   },
   "sampleResponse": {
     "onlineApps": 8,
@@ -77,14 +77,14 @@
         "prerequisite": "无"
       }
     ],
-    "defaultSelection": "应用为「全部」时 appId 传 \"\"；广告平台不限时 n_source 传 \"\"；与付费分析等 cockpit 同构接口一致。",
+    "defaultSelection": "应用为「全部」时 appId 传 \"\"；广告平台不限时 source 传 \"\"；与付费分析等 cockpit 同构接口一致。",
     "dedupe": "可与 02 共参数快照，避免参数漂移。"
   },
   "api": {
     "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/overview-kpi-summary",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "appId, n_source",
+    "requestBody": "appId, source",
     "responseBody": "RealtimeKpiSummary"
   },
   "apiSuggestion": {
