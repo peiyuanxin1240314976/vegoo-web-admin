@@ -9,6 +9,9 @@
         >
           <ConversionFilters
             :filter="filterForForm"
+            :platform-options="platformOptions"
+            :app-options="appOptions"
+            :conversion-type-options="conversionTypeOptions"
             @search="handleSearch"
             @add-mapping="openDialog('add')"
           />
@@ -44,7 +47,13 @@
         <div
           class="conversion-management-page__section conversion-data-page__section--filters cm-entry-1"
         >
-          <ConversionDataFilters :filter="dataFilterForForm" @search="handleDataSearch" />
+          <ConversionDataFilters
+            :filter="dataFilterForForm"
+            :platform-options="platformOptions"
+            :app-options="appOptions"
+            :conversion-type-options="conversionTypeOptions"
+            @search="handleDataSearch"
+          />
         </div>
         <ElRow :gutter="16" class="conversion-management-page__body cm-entry-2 flex-1 min-h-0">
           <ElCol :xs="24" :md="15" :xl="15" class="conversion-management-page__left">
@@ -80,6 +89,8 @@
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
   import { useIntervalFn } from '@vueuse/core'
+  import { fetchConversionMetaConversionTypeOptions } from '@/api/user-growth/conversion-management'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import ConversionTabs from './modules/conversion-tabs.vue'
   import ConversionFilters from './modules/conversion-filters.vue'
   import ConversionTable from './modules/conversion-table.vue'
@@ -94,7 +105,8 @@
     fetchConversionMappingListMock,
     MOCK_TYPE_DISTRIBUTION,
     MOCK_MAPPING_STATS,
-    MOCK_PLATFORM_STATS
+    MOCK_PLATFORM_STATS,
+    MOCK_CONVERSION_TYPE_OPTIONS
   } from './mock/data'
   import { fetchConversionDataMock } from './mock/data-tab'
   import type {
@@ -110,6 +122,18 @@
   import { getAppNow, cloneAppDate } from '@/utils/app-now'
 
   defineOptions({ name: 'ConversionManagement' })
+
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+  const conversionTypeOptions = ref<{ label: string; value: string }[]>(
+    MOCK_CONVERSION_TYPE_OPTIONS
+  )
+
+  const platformOptions = computed(
+    () => cockpitMetaFilterStore.data?.platformOptions ?? [{ label: '全部终端平台', value: '' }]
+  )
+  const appOptions = computed(
+    () => cockpitMetaFilterStore.data?.appOptions ?? [{ label: '全部应用', value: '' }]
+  )
 
   const activeTab = ref<'name' | 'data'>('name')
 
@@ -195,6 +219,19 @@
 
   function handleExport() {
     ElMessage.info('导出映射表（待接接口）')
+  }
+
+  async function loadConversionTypeOptions() {
+    try {
+      const res = await fetchConversionMetaConversionTypeOptions()
+      conversionTypeOptions.value =
+        res.conversionTypeOptions?.length > 0
+          ? res.conversionTypeOptions
+          : MOCK_CONVERSION_TYPE_OPTIONS
+    } catch (error) {
+      console.warn('[conversion-management] 加载转化类型下拉失败，回退 mock 选项', error)
+      conversionTypeOptions.value = MOCK_CONVERSION_TYPE_OPTIONS
+    }
   }
 
   /**
@@ -297,6 +334,11 @@
 
   onBeforeUnmount(() => {
     interval.pause()
+  })
+
+  onMounted(() => {
+    void cockpitMetaFilterStore.ensureLoaded()
+    void loadConversionTypeOptions()
   })
 </script>
 

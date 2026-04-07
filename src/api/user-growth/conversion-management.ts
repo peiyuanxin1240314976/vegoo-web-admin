@@ -6,8 +6,17 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import type { ConversionMetaConversionTypeOptionsBody } from '@/views/user-growth/conversion-management/types'
 
 const USER_GROWTH_ANALYSIS_BASE = `${ANALYSIS_API_BASE}/user-growth`
+
+/** 契约 08-meta-conversion-type-options：转化类型筛选项（页面独有） */
+export function fetchConversionMetaConversionTypeOptions() {
+  return request.post<ConversionMetaConversionTypeOptionsBody>({
+    url: `${USER_GROWTH_ANALYSIS_BASE}/conversion-management/meta-conversion-type-options`,
+    data: {}
+  })
+}
 
 /** 获取转化映射列表（占位：可先使用 views 下 mock 的 fetchConversionMappingListMock） */
 export function fetchConversionMappingList(params: Api.UserGrowth.ConversionMappingListParams) {
