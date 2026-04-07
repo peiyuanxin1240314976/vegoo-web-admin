@@ -13,7 +13,7 @@ import type {
   OrderRefundDashboardParams
 } from '@/views/product-operations/order-refund-analysis/types'
 
-const BASE_URL = '/api/product-operations/order-refund-analysis'
+const BASE_URL = '/api/v1/datacenter/analysis/product-operations/order-refund-analysis'
 
 export type {
   DashboardPayload,

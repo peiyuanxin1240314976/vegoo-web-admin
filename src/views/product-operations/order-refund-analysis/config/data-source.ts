@@ -13,7 +13,7 @@ export enum OrderRefundEndpoint {
 }
 
 export const ORDER_REFUND_USE_MOCK: Record<OrderRefundEndpoint, boolean> = {
-  [OrderRefundEndpoint.Dashboard]: true
+  [OrderRefundEndpoint.Dashboard]: false
 }
 
 export function isOrderRefundEndpointMock(endpoint: OrderRefundEndpoint): boolean {
