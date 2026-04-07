@@ -44,24 +44,24 @@ export enum ConversionManagementEndpoint {
 }
 
 export const CONVERSION_MANAGEMENT_USE_MOCK: Record<ConversionManagementEndpoint, boolean> = {
-  [ConversionManagementEndpoint.MappingsList]: true,
-  [ConversionManagementEndpoint.MappingsStats]: true,
-  [ConversionManagementEndpoint.MetaConversionTypeOptions]: true,
-  [ConversionManagementEndpoint.MetaDialogOptions]: true,
-  [ConversionManagementEndpoint.MappingsDetail]: true,
+  [ConversionManagementEndpoint.MappingsList]: false,
+  [ConversionManagementEndpoint.MappingsStats]: false,
+  [ConversionManagementEndpoint.MetaConversionTypeOptions]: false,
+  [ConversionManagementEndpoint.MetaDialogOptions]: false,
+  [ConversionManagementEndpoint.MappingsDetail]: false,
 
-  [ConversionManagementEndpoint.MappingsCreate]: true,
-  [ConversionManagementEndpoint.MappingsUpdate]: true,
-  [ConversionManagementEndpoint.MappingsDelete]: true,
-  [ConversionManagementEndpoint.MappingsBatchUpdateStatus]: true,
-  [ConversionManagementEndpoint.MappingsExport]: true,
+  [ConversionManagementEndpoint.MappingsCreate]: false,
+  [ConversionManagementEndpoint.MappingsUpdate]: false,
+  [ConversionManagementEndpoint.MappingsDelete]: false,
+  [ConversionManagementEndpoint.MappingsBatchUpdateStatus]: false,
+  [ConversionManagementEndpoint.MappingsExport]: false,
 
-  [ConversionManagementEndpoint.DataTabOverviewKpi]: true,
-  [ConversionManagementEndpoint.DataTabTableRows]: true,
-  [ConversionManagementEndpoint.DataTabSidePanels]: true,
+  [ConversionManagementEndpoint.DataTabOverviewKpi]: false,
+  [ConversionManagementEndpoint.DataTabTableRows]: false,
+  [ConversionManagementEndpoint.DataTabSidePanels]: false,
 
-  [ConversionManagementEndpoint.DataExport]: true,
-  [ConversionManagementEndpoint.MetaConversionDisplayTypeOptions]: true
+  [ConversionManagementEndpoint.DataExport]: false,
+  [ConversionManagementEndpoint.MetaConversionDisplayTypeOptions]: false
 }
 
 export function isConversionManagementEndpointMock(
