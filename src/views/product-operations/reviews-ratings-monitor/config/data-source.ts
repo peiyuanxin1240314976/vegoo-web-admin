@@ -22,11 +22,11 @@ export enum ReviewMonitorEndpoint {
 
 /** 是否对该接口使用 Mock（逐项修改） */
 export const REVIEW_MONITOR_USE_MOCK: Record<ReviewMonitorEndpoint, boolean> = {
-  [ReviewMonitorEndpoint.OverviewSummary]: true,
-  [ReviewMonitorEndpoint.TableList]: true,
-  [ReviewMonitorEndpoint.ReplyAction]: true,
-  [ReviewMonitorEndpoint.AutoReply]: true,
-  [ReviewMonitorEndpoint.Templates]: true
+  [ReviewMonitorEndpoint.OverviewSummary]: false,
+  [ReviewMonitorEndpoint.TableList]: false,
+  [ReviewMonitorEndpoint.ReplyAction]: false,
+  [ReviewMonitorEndpoint.AutoReply]: false,
+  [ReviewMonitorEndpoint.Templates]: false
 }
 
 export function isReviewMonitorEndpointMock(endpoint: ReviewMonitorEndpoint): boolean {

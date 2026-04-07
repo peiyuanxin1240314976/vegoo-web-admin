@@ -9,7 +9,7 @@ import {
 } from '@/views/product-operations/reviews-ratings-monitor/config/data-source'
 import * as reviewMonitorMock from '@/views/product-operations/reviews-ratings-monitor/mock/review-monitor-api-mock'
 
-const BASE_URL = '/api/product-operations/reviews-ratings-monitor'
+const BASE_URL = '/api/v1/datacenter/analysis/product-operations/reviews-ratings-monitor'
 
 // ─────────────────────────────────────────────
 // 类型定义（与 backend-api 契约一致）
