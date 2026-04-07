@@ -1,5 +1,8 @@
 <template>
   <div class="product-tab">
+    <div v-if="loadError" class="card" style="padding: 10px 12px; color: #f87171">
+      {{ loadError }}
+    </div>
     <!-- ── KPI Cards ─────────────────────────────── -->
     <div class="kpi-row">
       <div
@@ -207,8 +210,14 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+  import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import * as echarts from 'echarts'
+  import type { PaidAnalysisFilterBody } from './types'
+  import {
+    fetchPaidAnalysisTabProductCharts,
+    fetchPaidAnalysisTabProductOverview,
+    fetchPaidAnalysisTabProductRanking
+  } from '@/api/user-growth/paid-analysis'
 
   defineOptions({ name: 'IAPProductTab' })
 
@@ -221,6 +230,29 @@
     }
     searchToken: number
   }>()
+
+  const loading = ref(false)
+  const loadError = ref('')
+
+  function buildBody(): PaidAnalysisFilterBody {
+    const date = props.filters.date || ''
+    return {
+      startDate: date,
+      endDate: date,
+      appId: props.filters.appId || '',
+      platform: props.filters.platform || '',
+      countryCode: props.filters.country || '',
+      source: ''
+    }
+  }
+
+  function formatUsd0(n: number) {
+    return `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+  }
+
+  function formatUsd2(n: number) {
+    return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
 
   /* ── Refs ─────────────────────────────────────── */
   const donutRef = ref<HTMLElement | null>(null)
@@ -270,7 +302,7 @@
   /** 商品收入排行表：子 Tab 仅前端按维度降序排序，不重拉接口（与契约 03-tab-product interaction 一致） */
   const sortedProductRows = computed(() => {
     const key = activeSubTab.value
-    const rows = [...productRows]
+    const rows = [...productRows.value]
     rows.sort((a, b) => {
       let va = 0
       let vb = 0
@@ -292,252 +324,129 @@
     return rows
   })
 
-  /* ── KPI ─────────────────────────────────────── */
-  const kpiCards = [
+  const kpiCards = ref<
     {
-      label: '商品总收入',
-      value: '$284,520',
-      trendUp: true,
-      trendVal: '8.4% vs.上月',
-      sub: '',
-      color: '#22d3ee',
-      sparkData: [6.2, 7.1, 6.8, 7.5, 8.0, 8.3, 8.7],
-      sparkType: 'line'
-    },
-    {
-      label: '订阅收入占比',
-      value: '70.0%',
-      trendUp: false,
-      trendVal: '',
-      sub: '年订+月订',
-      color: '#8b5cf6',
-      sparkData: [68, 69, 70, 69, 71, 70, 70],
-      sparkType: 'line'
-    },
-    {
-      label: '活跃商品数',
-      value: '7个',
-      trendUp: false,
-      trendVal: '',
-      sub: '共4类型',
-      color: '#3b82f6',
-      sparkData: [5, 6, 6, 7, 7, 7, 7],
-      sparkType: 'bar'
-    },
-    {
-      label: '平均ARPPU',
-      value: '$30.82',
-      trendUp: true,
-      trendVal: '2.3% vs.上月',
-      sub: '',
-      color: '#f59e0b',
-      sparkData: [29, 30, 29, 31, 30, 31, 31],
-      sparkType: 'line'
-    },
-    {
-      label: '订阅续费率',
-      value: '68.4%',
-      trendUp: true,
-      trendVal: '3.2pp vs.上月',
-      sub: '',
-      color: '#10b981',
-      sparkData: [63, 65, 64, 66, 67, 68, 68],
-      sparkType: 'line'
-    }
-  ]
+      label: string
+      value: string
+      trendUp: boolean
+      trendVal: string
+      sub: string
+      color: string
+      sparkData: number[]
+      sparkType: 'line' | 'bar'
+    }[]
+  >([])
 
-  /* ── Product Rows ─────────────────────────────── */
-  const productRows = [
+  const productRows = ref<
     {
-      name: 'Weather Premium Annual',
-      price: '$89.99',
-      type: '年度订阅',
-      typeClass: 'type-year',
-      revenue: '$119,480',
-      pct: 42.0,
-      orders: '1,328',
-      arppu: '$89.99',
-      retention: '78.4',
-      countries: 'US/KR/DE',
-      trendData: [3.2, 3.5, 3.8, 4.0, 3.9, 4.2, 4.4]
-    },
-    {
-      name: 'Weather Premium Monthly',
-      price: '$9.99',
-      type: '月度订阅',
-      typeClass: 'type-month',
-      revenue: '$79,680',
-      pct: 28.0,
-      orders: '7,976',
-      arppu: '$9.99',
-      retention: '58.2',
-      countries: 'US/JP/TW',
-      trendData: [2.6, 2.4, 2.7, 2.9, 3.1, 3.0, 3.2]
-    },
-    {
-      name: 'Weather Lifetime Unlock',
-      price: '$49.99',
-      type: '终身购买',
-      typeClass: 'type-lifetime',
-      revenue: '$51,190',
-      pct: 18.0,
-      orders: '1,024',
-      arppu: '$49.99',
-      retention: 'N/A',
-      countries: 'US/DE/GB',
-      trendData: [1.6, 1.8, 1.7, 2.0, 1.9, 2.1, 2.0]
-    },
-    {
-      name: 'Coin Pack 1000',
-      price: '$9.99',
-      type: '虚拟币',
-      typeClass: 'type-coin',
-      revenue: '$22,756',
-      pct: 8.0,
-      orders: '2,278',
-      arppu: '$9.99',
-      retention: 'N/A',
-      countries: 'US/KR/TW',
-      trendData: [0.8, 0.7, 0.9, 1.0, 0.8, 0.9, 1.0]
-    },
-    {
-      name: 'Coin Pack 500',
-      price: '$4.99',
-      type: '虚拟币',
-      typeClass: 'type-coin',
-      revenue: '$8,527',
-      pct: 3.0,
-      orders: '1,709',
-      arppu: '$4.99',
-      retention: 'N/A',
-      countries: 'US/KR/JP',
-      trendData: [0.3, 0.4, 0.4, 0.5, 0.3, 0.4, 0.4]
-    },
-    {
-      name: 'Weather Pro Monthly',
-      price: '$6.99',
-      type: '月度订阅',
-      typeClass: 'type-month',
-      revenue: '$2,887',
-      pct: 1.0,
-      orders: '413',
-      arppu: '$6.99',
-      retention: '52.4',
-      countries: 'US/CA/AU',
-      trendData: [0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1]
-    }
-  ]
+      name: string
+      price: string
+      type: string
+      typeClass: string
+      revenue: string
+      pct: number
+      orders: string
+      arppu: string
+      retention: string
+      countries: string
+      trendData: number[]
+    }[]
+  >([])
 
-  /* ── Donut Legend ─────────────────────────────── */
-  const donutLegend = [
-    { name: '年度订阅', pct: 42, val: '$119,480', color: '#22d3ee' },
-    { name: '月度订阅', pct: 28, val: '$79,680', color: '#3b82f6' },
-    { name: '终身购买', pct: 18, val: '$51,190', color: '#8b5cf6' },
-    { name: '虚拟币', pct: 8, val: '$22,756', color: '#f59e0b' },
-    { name: '其他', pct: 4, val: '$11,414', color: '#475569' }
-  ]
+  const donutLegend = ref<{ name: string; pct: number; val: string; color: string }[]>([])
 
-  /* ── Date Rows ────────────────────────────────── */
-  const dateRows = [
+  const dateRows = ref<
     {
-      date: '2026-03-05',
-      total: 1024,
-      paid: 105,
-      sub: 98,
-      iap: 17,
-      renew: 6,
-      refund: 1,
-      cancel: 2,
-      revPaid: '$4,103',
-      revSub: '$3,212',
-      revIap: '$691',
-      revRenew: '$2,230'
-    },
-    {
-      date: '2026-03-04',
-      total: 987,
-      paid: 97,
-      sub: 91,
-      iap: 15,
-      renew: 4,
-      refund: 1,
-      cancel: 1,
-      revPaid: '$3,715',
-      revSub: '$2,974',
-      revIap: '$595',
-      revRenew: '$2,015'
-    },
-    {
-      date: '2026-03-03',
-      total: 1102,
-      paid: 112,
-      sub: 104,
-      iap: 17,
-      renew: 6,
-      refund: 1,
-      cancel: 1,
-      revPaid: '$4,389',
-      revSub: '$3,455',
-      revIap: '$664',
-      revRenew: '$2,264'
-    },
-    {
-      date: '2026-03-02',
-      total: 1089,
-      paid: 108,
-      sub: 99,
-      iap: 15,
-      renew: 5,
-      refund: 0,
-      cancel: 2,
-      revPaid: '$4,102',
-      revSub: '$3,301',
-      revIap: '$620',
-      revRenew: '$2,108'
-    },
-    {
-      date: '2026-03-01',
-      total: 1156,
-      paid: 118,
-      sub: 110,
-      iap: 17,
-      renew: 6,
-      refund: 1,
-      cancel: 2,
-      revPaid: '$4,512',
-      revSub: '$3,598',
-      revIap: '$691',
-      revRenew: '$2,230'
-    },
-    {
-      date: '2026-02-28',
-      total: 1234,
-      paid: 128,
-      sub: 119,
-      iap: 17,
-      renew: 8,
-      refund: 1,
-      cancel: 3,
-      revPaid: '$4,987',
-      revSub: '$3,856',
-      revIap: '$691',
-      revRenew: '$2,715'
-    },
-    {
-      date: '2026-02-27',
-      total: 1198,
-      paid: 121,
-      sub: 113,
-      iap: 17,
-      renew: 7,
-      refund: 1,
-      cancel: 2,
-      revPaid: '$4,712',
-      revSub: '$3,698',
-      revIap: '$691',
-      revRenew: '$2,337'
+      date: string
+      total: number
+      paid: number
+      sub: number
+      iap: number
+      renew: number
+      refund: number
+      cancel: number
+      revPaid: string
+      revSub: string
+      revIap: string
+      revRenew: string
+    }[]
+  >([])
+
+  const revenueTrend30d = ref<{ t_date: string; revenue: number }[]>([])
+  const subscriptionRetentionMatrix = ref<
+    { skuName: string; m1: number; m2: number; m3: number; m4: number; m5: number }[]
+  >([])
+  const countryBarTop = ref<
+    { s_country_code: string; segments: { kind: string; revenue: number }[] }[]
+  >([])
+
+  function kindClass(key: string) {
+    if (key === 'year_sub') return 'type-year'
+    if (key === 'month_sub') return 'type-month'
+    if (key === 'lifetime') return 'type-lifetime'
+    if (key === 'coin') return 'type-coin'
+    return 'type-other'
+  }
+
+  async function load() {
+    loadError.value = ''
+    loading.value = true
+    try {
+      const body = buildBody()
+      const [overview, ranking, charts] = await Promise.all([
+        fetchPaidAnalysisTabProductOverview(body),
+        fetchPaidAnalysisTabProductRanking(body),
+        fetchPaidAnalysisTabProductCharts(body)
+      ])
+
+      kpiCards.value = overview.kpis
+      productRows.value = ranking.productRows.map((r) => ({
+        name: r.skuName,
+        price: formatUsd2(r.priceUsd),
+        type: r.productKind,
+        typeClass: kindClass(r.productKindKey),
+        revenue: formatUsd0(r.revenueUsd),
+        pct: r.sharePercent,
+        orders: r.orderCount.toLocaleString('en-US'),
+        arppu: formatUsd2(r.arppuUsd),
+        retention: r.retentionPercent == null ? 'N/A' : String(r.retentionPercent),
+        countries: r.topCountries.join('/'),
+        trendData: r.trendPoints
+      }))
+
+      donutLegend.value = charts.mixLegend.map((d) => ({
+        name: d.name,
+        pct: d.pct,
+        val: formatUsd0(d.revenueUsd),
+        color: d.color
+      }))
+
+      dateRows.value = charts.paidDateSummaryRows.map((r) => ({
+        date: r.t_date,
+        total: r.totalSubscriptions,
+        paid: r.orderPaid,
+        sub: r.orderSub,
+        iap: r.orderIap,
+        renew: r.orderRenew,
+        refund: r.orderRefund,
+        cancel: r.orderCancel,
+        revPaid: formatUsd0(r.revPaidUsd),
+        revSub: formatUsd0(r.revSubUsd),
+        revIap: formatUsd0(r.revIapUsd),
+        revRenew: formatUsd0(r.revRenewUsd)
+      }))
+
+      revenueTrend30d.value = charts.revenueTrend30d
+      subscriptionRetentionMatrix.value = charts.subscriptionRetentionMatrix
+      countryBarTop.value = charts.countryBarTop
+
+      rebuildCharts()
+    } catch (e) {
+      loadError.value = e instanceof Error ? e.message : String(e)
+    } finally {
+      loading.value = false
     }
-  ]
+  }
 
   /* ── Product Retention Heatmap ───────────────── */
   const prodRetenRows = [
@@ -555,11 +464,7 @@
 
   /* ── ECharts ──────────────────────────────────── */
   onMounted(() => {
-    initSparklines()
-    initMiniTrends()
-    initDonut()
-    initTrend()
-    initCountry()
+    void load()
   })
 
   onUnmounted(() => {
@@ -579,7 +484,7 @@
   watch(
     () => props.searchToken,
     () => {
-      rebuildCharts()
+      void load()
     }
   )
 
@@ -588,7 +493,7 @@
   })
 
   function initSparklines() {
-    kpiCards.forEach((kpi, i) => {
+    kpiCards.value.forEach((kpi, i) => {
       const el = sparkRefs.value[i]
       if (!el) return
       const c = echarts.init(el)
@@ -676,7 +581,7 @@
           type: 'pie',
           radius: ['45%', '70%'],
           center: ['50%', '50%'],
-          data: donutLegend.map((d) => ({
+          data: donutLegend.value.map((d) => ({
             name: d.name,
             value: d.pct,
             itemStyle: { color: d.color }
@@ -684,7 +589,13 @@
           label: {
             show: true,
             position: 'center',
-            formatter: () => '$284,520',
+            formatter: () => {
+              const t = donutLegend.value.reduce(
+                (s, d) => s + (Number(d.val.replace(/[$,]/g, '')) || 0),
+                0
+              )
+              return formatUsd0(t)
+            },
             color: '#e2e8f5',
             fontSize: 12,
             fontWeight: 'bold'
@@ -699,7 +610,7 @@
     if (!trendRef.value) return
     const c = echarts.init(trendRef.value)
     chartInstances.push(c)
-    const dates = ['Feb5', 'Feb11', 'Feb21', 'Feb23', 'Mar4', 'Mar5']
+    const dates = revenueTrend30d.value.map((x) => x.t_date)
     const mk = (name: string, data: number[], color: string) => ({
       name,
       type: 'line' as const,
@@ -731,11 +642,11 @@
         splitLine: { lineStyle: { color: '#1a2240' } }
       },
       series: [
-        mk('Weather Premium Annual', [3200, 3500, 3800, 3700, 4200, 4400], '#22d3ee'),
-        mk('月度订阅', [2100, 2400, 2600, 2500, 2900, 3200], '#3b82f6'),
-        mk('终身购买', [1600, 1800, 1700, 1900, 2000, 2100], '#8b5cf6'),
-        mk('虚拟币', [600, 700, 650, 800, 750, 900], '#f59e0b'),
-        mk('其他', [200, 250, 220, 280, 260, 300], '#64748b')
+        mk(
+          'Revenue',
+          revenueTrend30d.value.map((x) => x.revenue),
+          '#22d3ee'
+        )
       ]
     })
   }
@@ -744,6 +655,24 @@
     if (!countryRef.value) return
     const c = echarts.init(countryRef.value)
     chartInstances.push(c)
+    const rows = countryBarTop.value
+    const cats = rows.map((r) => String(r.s_country_code || '').toUpperCase())
+    const kinds = Array.from(new Set(rows.flatMap((r) => r.segments.map((s) => s.kind))))
+    const kindColors: Record<string, string> = {
+      year_sub: '#22d3ee',
+      month_sub: '#3b82f6',
+      lifetime: '#8b5cf6',
+      coin: '#f59e0b',
+      other: '#64748b'
+    }
+    const series = kinds.map((k) => ({
+      name: k,
+      type: 'bar' as const,
+      stack: 'rev',
+      data: rows.map((r) => r.segments.find((s) => s.kind === k)?.revenue ?? 0),
+      itemStyle: { color: kindColors[k] ?? '#64748b', borderRadius: [2, 2, 0, 0] },
+      barMaxWidth: 14
+    }))
     c.setOption({
       backgroundColor: 'transparent',
       grid: { top: 10, right: 10, bottom: 30, left: 36 },
@@ -755,7 +684,7 @@
       },
       xAxis: {
         type: 'category',
-        data: ['US', 'KR', 'DE', 'TW', 'JP', 'GB'],
+        data: cats,
         axisLabel: { color: '#8892a8', fontSize: 10 },
         axisLine: { lineStyle: { color: '#1e2540' } },
         axisTick: { show: false }
@@ -765,36 +694,7 @@
         axisLabel: { color: '#8892a8', fontSize: 10, formatter: (v: number) => `$${v / 1000}K` },
         splitLine: { lineStyle: { color: '#1a2240' } }
       },
-      series: [
-        {
-          name: '年订',
-          type: 'bar',
-          data: [42000, 28000, 18000, 14000, 10000, 8000],
-          itemStyle: { color: '#22d3ee', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 12
-        },
-        {
-          name: '月订',
-          type: 'bar',
-          data: [18000, 12000, 8000, 6000, 5000, 4000],
-          itemStyle: { color: '#3b82f6', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 12
-        },
-        {
-          name: '终身',
-          type: 'bar',
-          data: [12000, 8000, 6000, 4000, 3000, 3000],
-          itemStyle: { color: '#8b5cf6', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 12
-        },
-        {
-          name: '虚拟币',
-          type: 'bar',
-          data: [5000, 3000, 2000, 2000, 1500, 1000],
-          itemStyle: { color: '#f59e0b', borderRadius: [2, 2, 0, 0] },
-          barMaxWidth: 12
-        }
-      ]
+      series
     })
   }
 </script>

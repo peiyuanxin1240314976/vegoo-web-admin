@@ -1,5 +1,8 @@
 <template>
   <div class="order-tab">
+    <div v-if="loadError" class="card" style="padding: 10px 12px; color: #f87171">
+      {{ loadError }}
+    </div>
     <!-- ── KPI Cards ─────────────────────────────── -->
     <div class="kpi-row">
       <div
@@ -120,8 +123,8 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="r in filteredAppPlatRows" :key="r.app + r.platform">
-                  <td class="ch-name">{{ r.app }}</td>
+                <tr v-for="r in filteredAppPlatRows" :key="r.appName + r.platform">
+                  <td class="ch-name">{{ r.appName }}</td>
                   <td
                     ><span
                       class="plat-tag"
@@ -135,7 +138,7 @@
                       >{{ r.platform }}</span
                     ></td
                   >
-                  <td>{{ r.total }}</td>
+                  <td>{{ r.totalSubscriptions }}</td>
                   <td>{{ r.paid }}</td
                   ><td>{{ r.sub }}</td
                   ><td>{{ r.iap }}</td> <td>{{ r.renew }}</td
@@ -292,10 +295,15 @@
                   ? '已退款'
                   : '支付失败'
             }}</span>
-            <span class="pay-amount">{{ selectedOrder.amount }} USD</span>
+            <span class="pay-amount">{{
+              selectedOrderDetail?.priceLabel ?? selectedOrder.amount
+            }}</span>
           </div>
 
           <div class="detail-sections">
+            <div v-if="selectedOrderDetailLoading" class="detail-section">
+              <div class="ds-title">加载中…</div>
+            </div>
             <div class="detail-section">
               <div class="ds-title">基本信息</div>
               <div class="ds-grid">
@@ -309,25 +317,35 @@
                 >
                 <div class="ds-row"
                   ><span class="ds-k">应用</span
-                  ><span class="ds-v">{{ selectedOrder.app }}</span></div
+                  ><span class="ds-v">{{
+                    selectedOrderDetail?.appName ?? selectedOrder.app
+                  }}</span></div
                 >
                 <div class="ds-row"
-                  ><span class="ds-k">平台</span><span class="ds-v">iOS</span></div
+                  ><span class="ds-k">平台</span
+                  ><span class="ds-v">{{ selectedOrderDetail?.platform ?? '--' }}</span></div
                 >
                 <div class="ds-row"
                   ><span class="ds-k">商品</span
-                  ><span class="ds-v">{{ selectedOrder.product }}</span></div
+                  ><span class="ds-v">{{
+                    selectedOrderDetail?.skuName ?? selectedOrder.product
+                  }}</span></div
                 >
                 <div class="ds-row"
                   ><span class="ds-k">商品ID</span
-                  ><span class="ds-v val-muted">weather_premium_annual</span></div
+                  ><span class="ds-v val-muted">{{ selectedOrderDetail?.skuId ?? '--' }}</span></div
                 >
                 <div class="ds-row"
                   ><span class="ds-k">价格</span
-                  ><span class="ds-v">{{ selectedOrder.amount }} USD</span></div
+                  ><span class="ds-v">{{
+                    selectedOrderDetail?.priceLabel ?? selectedOrder.amount
+                  }}</span></div
                 >
                 <div class="ds-row"
-                  ><span class="ds-k">支付方式</span><span class="ds-v">App Store</span></div
+                  ><span class="ds-k">支付方式</span
+                  ><span class="ds-v">{{
+                    selectedOrderDetail?.paymentPlatform ?? selectedOrder.payMethod
+                  }}</span></div
                 >
               </div>
             </div>
@@ -337,24 +355,34 @@
               <div class="ds-grid">
                 <div class="ds-row"
                   ><span class="ds-k">广告平台</span
-                  ><span class="ds-v">{{ selectedOrder.channel }}</span></div
+                  ><span class="ds-v">{{
+                    selectedOrderDetail?.source ?? selectedOrder.channel
+                  }}</span></div
                 >
                 <div class="ds-row"
                   ><span class="ds-k">国家/地区</span>
                   <span class="ds-v ds-v--country">
                     <span
-                      v-if="selectedOrder.countryCode"
+                      v-if="selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode"
                       class="fi mr-1"
-                      :class="'fi-' + selectedOrder.countryCode"
+                      :class="
+                        'fi-' + (selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode)
+                      "
                     />
-                    {{ selectedOrder.countryCode.toUpperCase() }}
+                    {{
+                      (
+                        selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode
+                      ).toUpperCase()
+                    }}
                   </span></div
                 >
                 <div class="ds-row"
-                  ><span class="ds-k">时区</span><span class="ds-v">PST (UTC-8)</span></div
+                  ><span class="ds-k">时区</span
+                  ><span class="ds-v">{{ selectedOrderDetail?.timezoneLabel ?? '--' }}</span></div
                 >
                 <div class="ds-row"
-                  ><span class="ds-k">货币</span><span class="ds-v">USD</span></div
+                  ><span class="ds-k">货币</span
+                  ><span class="ds-v">{{ selectedOrderDetail?.currency ?? 'USD' }}</span></div
                 >
               </div>
             </div>
@@ -364,23 +392,33 @@
               <div class="ds-grid">
                 <div class="ds-row"
                   ><span class="ds-k">下单时间</span
-                  ><span class="ds-v">2026-03-05 14:32:18</span></div
+                  ><span class="ds-v">{{ selectedOrderDetail?.orderTime ?? '--' }}</span></div
                 >
                 <div class="ds-row"
                   ><span class="ds-k">支付时间</span
-                  ><span class="ds-v">2026-03-05 14:32:45</span></div
+                  ><span class="ds-v">{{ selectedOrderDetail?.payTime ?? '--' }}</span></div
                 >
                 <div class="ds-row"
-                  ><span class="ds-k">订阅开始</span><span class="ds-v">2026-03-05</span></div
+                  ><span class="ds-k">订阅开始</span
+                  ><span class="ds-v">{{ selectedOrderDetail?.subStartDate ?? '--' }}</span></div
                 >
                 <div class="ds-row"
-                  ><span class="ds-k">订阅到期</span><span class="ds-v">2027-03-05</span></div
+                  ><span class="ds-k">订阅到期</span
+                  ><span class="ds-v">{{ selectedOrderDetail?.subEndDate ?? '--' }}</span></div
                 >
                 <div class="ds-row"
-                  ><span class="ds-k">首次付费</span><span class="ds-v val-green">是</span></div
+                  ><span class="ds-k">首次付费</span
+                  ><span
+                    class="ds-v"
+                    :class="selectedOrderDetail?.isFirstPay ? 'val-green' : 'val-muted'"
+                    >{{ selectedOrderDetail?.isFirstPay ? '是' : '否' }}</span
+                  ></div
                 >
                 <div class="ds-row"
-                  ><span class="ds-k">首次付费周期</span><span class="ds-v">2.1天</span></div
+                  ><span class="ds-k">首次付费周期</span
+                  ><span class="ds-v"
+                    >{{ selectedOrderDetail?.firstPayCycleDays ?? 0 }}天</span
+                  ></div
                 >
               </div>
             </div>
@@ -442,6 +480,17 @@
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import * as echarts from 'echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import type {
+    PaidAnalysisFilterBody,
+    PaidAnalysisOrderDetailData,
+    PaidAnalysisOrderListData,
+    PaidAnalysisOrderTabSummaryData
+  } from './types'
+  import {
+    fetchPaidAnalysisOrderDetail,
+    fetchPaidAnalysisOrderList,
+    fetchPaidAnalysisTabOrderSummary
+  } from '@/api/user-growth/paid-analysis'
 
   defineOptions({ name: 'IAPOrderTab' })
 
@@ -459,6 +508,9 @@
     }
     searchToken: number
   }>()
+
+  const loading = ref(false)
+  const loadError = ref('')
 
   interface OrderRow {
     uid: string
@@ -507,8 +559,12 @@
   })
 
   const selectedOrder = ref<OrderRow | null>(null)
+  const selectedOrderDetail = ref<PaidAnalysisOrderDetailData | null>(null)
+  const selectedOrderDetailLoading = ref(false)
+
   function selectOrder(r: OrderRow) {
     selectedOrder.value = r
+    void loadOrderDetail(r.id)
   }
 
   const hourRef = ref<HTMLElement | null>(null)
@@ -544,6 +600,39 @@
     orderDateRange.value = [formatYYYYMMDD(s), endYmd]
   }
 
+  function buildSummaryBody(): PaidAnalysisFilterBody {
+    const r = orderDateRange.value
+    const startDate = r?.[0] ?? props.filters.date ?? getAppTodayYYYYMMDD()
+    const endDate = r?.[1] ?? props.filters.date ?? getAppTodayYYYYMMDD()
+    return {
+      startDate,
+      endDate,
+      appId: props.filters.appId || '',
+      platform: props.filters.platform || '',
+      countryCode: props.filters.country || '',
+      source: ''
+    }
+  }
+
+  function buildListParams(): Parameters<typeof fetchPaidAnalysisOrderList>[0] {
+    const r = orderDateRange.value
+    const startDate = r?.[0] ?? props.filters.date ?? getAppTodayYYYYMMDD()
+    const endDate = r?.[1] ?? props.filters.date ?? getAppTodayYYYYMMDD()
+    return {
+      startDate,
+      endDate,
+      appId: isAllFilter(fApp.value) ? props.filters.appId || '' : fApp.value,
+      platform: props.filters.platform || '',
+      countryCode: isAllFilter(fCountry.value) ? props.filters.country || '' : fCountry.value,
+      source: isAllFilter(fChannel.value) ? '' : fChannel.value,
+      keyword: searchKw.value.trim(),
+      productSku: isAllFilter(fProduct.value) ? '' : fProduct.value,
+      orderStatus: isAllFilter(fStatus.value) ? '' : fStatus.value,
+      current: 1,
+      size: 8
+    }
+  }
+
   function pushAppliedFromForm() {
     const r = orderDateRange.value
     const dateStart = r?.[0] ?? props.filters.date ?? getAppTodayYYYYMMDD()
@@ -566,315 +655,44 @@
     }
     pushAppliedFromForm()
     selectedOrder.value = null
+    selectedOrderDetail.value = null
+    void loadAll()
     nextTick(() => rebuildCharts())
   }
 
-  const APP_PLAT_SOURCE = [
-    {
-      app: '汇总',
-      platform: '--',
-      total: '28,xxx',
-      paid: '16,xxx',
-      sub: '15,xxx',
-      iap: 296,
-      renew: 9,
-      refund: 14,
-      cancel: 0,
-      rPaid: '$85,xxx',
-      rSub: '$76,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
-    },
-    {
-      app: 'PhoneTracker',
-      platform: 'Android',
-      total: '28,xxx',
-      paid: '16,xxx',
-      sub: '15,xxx',
-      iap: 296,
-      renew: 9,
-      refund: 14,
-      cancel: 0,
-      rPaid: '$85,xxx',
-      rSub: '$76,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
-    },
-    {
-      app: 'YearCam',
-      platform: 'iOS',
-      total: '14,xxx',
-      paid: '7,xxx',
-      sub: '15,xxx',
-      iap: 116,
-      renew: 8,
-      refund: 0,
-      cancel: 0,
-      rPaid: '$75,xxx',
-      rSub: '$66,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
-    },
-    {
-      app: 'PhoneTracker2',
-      platform: 'iOS',
-      total: '14,xxx',
-      paid: '7,xxx',
-      sub: '1,xxx',
-      iap: 72,
-      renew: 0,
-      refund: 14,
-      cancel: 0,
-      rPaid: '$85,xxx',
-      rSub: '$29,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
-    },
-    {
-      app: 'AgeCam',
-      platform: 'Android',
-      total: '14,xxx',
-      paid: '6,xxx',
-      sub: '5,xxx',
-      iap: 5,
-      renew: 0,
-      refund: 3,
-      cancel: 0,
-      rPaid: '$86,xxx',
-      rSub: '$69,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
-    },
-    {
-      app: 'AgeCam',
-      platform: 'iOS',
-      total: '11,xxx',
-      paid: '2,xxx',
-      sub: '4,xxx',
-      iap: 4,
-      renew: 0,
-      refund: 2,
-      cancel: 0,
-      rPaid: '$75,xxx',
-      rSub: '$75,xxx',
-      rIap: '$89,xxx',
-      rRenew: '$6x,xxx'
-    }
-  ]
+  const summary = ref<PaidAnalysisOrderTabSummaryData | null>(null)
+  const orderList = ref<PaidAnalysisOrderListData | null>(null)
 
-  /* ── Daily Rows ───────────────────────────────── */
-  const DAILY_SOURCE = [
-    {
-      date: '2026-02-25',
-      rev: '$4,103',
-      users: 118,
-      payRate: '90.5%',
-      orders: 136,
-      adSpend: '$2,750',
-      cpa: 0.03,
-      newUsers: 1,
-      reten: '20%'
-    },
-    {
-      date: '2026-02-25',
-      rev: '$4,103',
-      users: 75,
-      payRate: '80.2%',
-      orders: 39,
-      adSpend: '$1,888',
-      cpa: 0.04,
-      newUsers: 6,
-      reten: '20%'
-    },
-    {
-      date: '2026-02-29',
-      rev: '$4,103',
-      users: 19,
-      payRate: '70.0%',
-      orders: 19,
-      adSpend: '$4,780',
-      cpa: 0.04,
-      newUsers: 1,
-      reten: '20%'
-    },
-    {
-      date: '2026-03-01',
-      rev: '$4,103',
-      users: 102,
-      payRate: '89.9%',
-      orders: 155,
-      adSpend: '$1,480',
-      cpa: 0.04,
-      newUsers: 8,
-      reten: '20%'
-    },
-    {
-      date: '2026-03-01',
-      rev: '$4,103',
-      users: 71,
-      payRate: '53.3%',
-      orders: 36,
-      adSpend: '$1,918',
-      cpa: 0.04,
-      newUsers: 4,
-      reten: '10%'
-    },
-    {
-      date: '2026-03-02',
-      rev: '$4,103',
-      users: 35,
-      payRate: '45.7%',
-      orders: 20,
-      adSpend: '$2,789',
-      cpa: 0.04,
-      newUsers: 4,
-      reten: '20%'
-    },
-    {
-      date: '2026-03-03',
-      rev: '$4,103',
-      users: 85,
-      payRate: '70.5%',
-      orders: 15,
-      adSpend: '$1,480',
-      cpa: 0.03,
-      newUsers: 1,
-      reten: '20%'
-    },
-    {
-      date: '2026-03-05',
-      rev: '$4,103',
-      users: 58,
-      payRate: '60.6%',
-      orders: 75,
-      adSpend: '$1,788',
-      cpa: 0.06,
-      newUsers: 20,
-      reten: '6%'
-    }
-  ]
-  const ORDER_SOURCE: OrderRow[] = [
-    {
-      uid: 'o1',
-      id: 'ORD-20260305-8842',
-      userId: 'USR-284920',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      countryCode: 'us',
-      sortDate: '2026-03-05',
-      time: '03-05 14:32',
-      payMethod: 'App Store',
-      status: '成功',
-      statusClass: 'st-ok'
-    },
-    {
-      uid: 'o2',
-      id: 'ORD-20260305-8843',
-      userId: 'USR-284920',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      countryCode: 'us',
-      sortDate: '2026-03-05',
-      time: '03-05 14:32',
-      payMethod: 'App Store',
-      status: '成功',
-      statusClass: 'st-ok'
-    },
-    {
-      uid: 'o3',
-      id: 'ORD-20260305-8848',
-      userId: 'USR-284928',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      countryCode: 'de',
-      sortDate: '2026-03-05',
-      time: '03-05 14:32',
-      payMethod: 'App Store',
-      status: '退款',
-      statusClass: 'st-refund'
-    },
-    {
-      uid: 'o4',
-      id: 'ORD-20260305-8850',
-      userId: 'USR-284921',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Facebook',
-      countryCode: 'jp',
-      sortDate: '2026-03-05',
-      time: '03-05 14:30',
-      payMethod: 'App Store',
-      status: '成功',
-      statusClass: 'st-ok'
-    },
-    {
-      uid: 'o5',
-      id: 'ORD-20260305-8851',
-      userId: 'USR-284920',
-      app: 'Weather5',
-      product: 'Monthly $9.99',
-      amount: '$9.99',
-      channel: 'Google',
-      countryCode: 'kr',
-      sortDate: '2026-03-05',
-      time: '03-05 14:30',
-      payMethod: 'App Store',
-      status: '退款',
-      statusClass: 'st-refund'
-    },
-    {
-      uid: 'o6',
-      id: 'ORD-20260305-8852',
-      userId: 'USR-284929',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Google',
-      countryCode: 'ca',
-      sortDate: '2026-03-05',
-      time: '03-05 14:30',
-      payMethod: 'Play Store',
-      status: '失败',
-      statusClass: 'st-fail'
-    },
-    {
-      uid: 'o7',
-      id: 'ORD-20260305-8853',
-      userId: 'USR-284930',
-      app: 'YearCam',
-      product: 'Pro $6.99',
-      amount: '$6.99',
-      channel: 'TikTok',
-      countryCode: 'gb',
-      sortDate: '2026-03-05',
-      time: '03-05 14:28',
-      payMethod: 'App Store',
-      status: '失败',
-      statusClass: 'st-fail'
-    },
-    {
-      uid: 'o8',
-      id: 'ORD-20260305-8854',
-      userId: 'USR-284920',
-      app: 'Weather5',
-      product: 'Annual $89.99',
-      amount: '$89.99',
-      channel: 'Organic',
-      countryCode: 'ca',
-      sortDate: '2026-03-05',
-      time: '03-05 14:25',
-      payMethod: 'App Store',
-      status: '成功',
-      statusClass: 'st-ok'
-    }
-  ]
+  const appPlatRows = computed(() => summary.value?.appPlatformRows ?? [])
+  const dailyRows = computed(() => summary.value?.dailyRows ?? [])
+
+  const orderRows = computed<OrderRow[]>(() => {
+    const records = orderList.value?.records ?? []
+    return records.map((r, idx) => {
+      const statusMap: Record<string, { label: string; cls: string }> = {
+        success: { label: '成功', cls: 'st-ok' },
+        refund: { label: '退款', cls: 'st-refund' },
+        fail: { label: '失败', cls: 'st-fail' }
+      }
+      const s = statusMap[r.status] ?? { label: String(r.status), cls: '' }
+      const sortDate = props.filters.date || ''
+      return {
+        uid: `${r.s_order_id}-${idx}`,
+        id: r.s_order_id,
+        userId: r.user_display_id,
+        app: r.appName,
+        product: r.productBrief,
+        amount: r.amountLabel,
+        channel: r.sourceLabel,
+        countryCode: r.s_country_code,
+        sortDate,
+        time: r.orderTimeLabel,
+        payMethod: r.paymentMethod,
+        status: s.label,
+        statusClass: s.cls
+      }
+    })
+  })
 
   function matchProductScope(product: string, f: string) {
     if (isAllFilter(f)) return true
@@ -885,24 +703,35 @@
 
   const filteredAppPlatRows = computed(() => {
     const f = applied.value.app
-    const details = APP_PLAT_SOURCE.filter((r) => r.app !== '汇总')
-    if (isAllFilter(f)) return APP_PLAT_SOURCE
+    const details = appPlatRows.value.filter((r) => r.appName !== '汇总')
+    if (isAllFilter(f)) return appPlatRows.value
     const want = APP_KEY_MAP[f]
     if (!want) return details.filter(() => false)
-    return details.filter((r) => r.app === want)
+    return details.filter((r) => r.appName === want)
   })
 
   const filteredDailyRows = computed(() => {
     const { dateStart, dateEnd } = applied.value
-    if (!dateStart || !dateEnd) return DAILY_SOURCE
-    return DAILY_SOURCE.filter((r) => r.date >= dateStart && r.date <= dateEnd)
+    const rows = dailyRows.value.map((r) => ({
+      date: r.t_date,
+      rev: r.paidRevenueLabel,
+      users: r.paidUsers,
+      payRate: r.payRateLabel,
+      orders: r.orders,
+      adSpend: r.adSpendLabel,
+      cpa: r.cpa,
+      newUsers: r.newUsers,
+      reten: r.renewRateLabel
+    }))
+    if (!dateStart || !dateEnd) return rows
+    return rows.filter((r) => r.date >= dateStart && r.date <= dateEnd)
   })
 
   const highlightDailyDate = computed(() => applied.value.dateEnd || '')
 
   const filteredOrderRows = computed(() => {
     const a = applied.value
-    return ORDER_SOURCE.filter((r) => {
+    return orderRows.value.filter((r) => {
       if (r.sortDate < a.dateStart || r.sortDate > a.dateEnd) return false
       if (!isAllFilter(a.app)) {
         const want = APP_KEY_MAP[a.app]
@@ -926,69 +755,25 @@
     })
   })
 
-  function sumOrderAmountUsd(rows: OrderRow[]) {
-    let s = 0
-    for (const r of rows) {
-      const n = Number(String(r.amount).replace(/[$,]/g, ''))
-      if (Number.isFinite(n)) s += n
-    }
-    return s.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  }
-
   const displayKpiCards = computed(() => {
-    const rows = filteredOrderRows.value
-    const n = rows.length
-    const ok = rows.filter((r) => r.status === '成功').length
-    const refund = rows.filter((r) => r.status === '退款').length
-    const fail = rows.filter((r) => r.status === '失败').length
-    const rateOk = n ? ((ok / n) * 100).toFixed(1) : '0.0'
-    const rateRef = n ? ((refund / n) * 100).toFixed(1) : '0.0'
-    return [
-      {
-        label: '订单总量',
-        value: `${n.toLocaleString('en-US')}笔`,
-        trendUp: true,
-        trendVal: '',
-        sub: `成功${ok} · 退款${refund} · 失败${fail}`,
-        color: '#22d3ee'
-      },
-      {
-        label: '订单成功率',
-        value: `${rateOk}%`,
-        trendUp: Number(rateOk) >= 90,
-        trendVal: '',
-        sub: fail ? `失败 ${fail} 笔` : '',
-        color: '#10b981'
-      },
-      {
-        label: '退款率',
-        value: `${rateRef}%`,
-        trendUp: false,
-        trendVal: '',
-        sub: `退款 ${refund} 笔`,
-        color: '#f59e0b'
-      },
-      {
-        label: '订单总金额',
-        value: `$${sumOrderAmountUsd(rows)}`,
-        trendUp: n > 0,
-        trendVal: '',
-        sub: '按当前筛选样本',
-        color: '#3b82f6'
-      }
-    ]
+    const k = summary.value?.kpis ?? []
+    return k.map((x) => ({
+      label: x.label,
+      value: x.value,
+      trendUp: x.trendUp,
+      trendVal: x.trendRef,
+      sub: x.subNotes,
+      color: x.color
+    }))
   })
 
   const orderListRangeText = computed(() => {
-    const n = filteredOrderRows.value.length
-    if (!n) return '暂无数据'
-    return `共 ${n.toLocaleString('en-US')} 条（当前筛选）`
+    const total = orderList.value?.total ?? 0
+    if (!total) return '暂无数据'
+    return `共 ${total.toLocaleString('en-US')} 条（当前筛选）`
   })
 
-  const HOUR_BASE = [
-    200, 180, 120, 100, 80, 90, 200, 400, 600, 1200, 1800, 2200, 3000, 4000, 5000, 6000, 7200, 8400,
-    9000, 10200, 11000, 12840, 9000, 5000
-  ]
+  const hourAmounts = computed(() => summary.value?.hourAmounts ?? [])
 
   /* ── ECharts ──────────────────────────────────── */
   onMounted(() => {
@@ -996,6 +781,7 @@
     fApp.value = props.filters.appId
     fCountry.value = props.filters.country
     pushAppliedFromForm()
+    void loadAll()
     initHourChart()
     initTypeChart()
   })
@@ -1018,27 +804,18 @@
       fCountry.value = props.filters.country
       pushAppliedFromForm()
       selectedOrder.value = null
+      selectedOrderDetail.value = null
+      void loadAll()
       nextTick(() => rebuildCharts())
     }
   )
-
-  function bucketProductKind(r: OrderRow) {
-    const p = r.product
-    if (/Annual|\$89\.99|年订/i.test(p)) return 'Annual' as const
-    if (/Month|\$9\.99|\$6\.99|月订/i.test(p)) return 'Monthly' as const
-    if (/Life|终身/i.test(p)) return 'Lifetime' as const
-    if (/Coin|币/i.test(p)) return 'Coins' as const
-    return 'Other' as const
-  }
 
   function initHourChart() {
     if (!hourRef.value) return
     const c = echarts.init(hourRef.value)
     chartInstances.push(c)
     const hours = Array.from({ length: 24 }, (_, i) => `${i}-${i + 1}h`)
-    const n = filteredOrderRows.value.length
-    const scale = n <= 0 ? 0.25 : Math.max(0.35, Math.min(1.35, n / 8))
-    const data = HOUR_BASE.map((v) => Math.round(v * scale))
+    const data = hourAmounts.value.length ? hourAmounts.value : Array.from({ length: 24 }, () => 0)
     c.setOption({
       backgroundColor: 'transparent',
       grid: { top: 10, right: 10, bottom: 40, left: 44 },
@@ -1076,7 +853,7 @@
             data: [
               { xAxis: '13-14h', lineStyle: { color: '#ef444488', width: 1, type: 'dashed' } }
             ],
-            label: { formatter: '13-15h\n$12,840', color: '#ef4444', fontSize: 9 },
+            label: { formatter: '峰值时段', color: '#ef4444', fontSize: 9 },
             symbol: ['none', 'none']
           }
         }
@@ -1088,20 +865,14 @@
     if (!typeRef.value) return
     const c = echarts.init(typeRef.value)
     chartInstances.push(c)
-    const rows = filteredOrderRows.value
-    const counts = { Other: 0, Coins: 0, Lifetime: 0, Monthly: 0, Annual: 0 }
-    for (const r of rows) {
-      const k = bucketProductKind(r)
-      counts[k]++
-    }
-    const total = rows.length || 1
-    const pct = (x: number) => Math.max(0, Math.round((x / total) * 100))
-    const pOther = pct(counts.Other)
-    const pCoins = pct(counts.Coins)
-    const pLife = pct(counts.Lifetime)
-    const pMon = pct(counts.Monthly)
-    const pAnn = pct(counts.Annual)
-    const maxX = Math.min(52, Math.max(12, pAnn + 8))
+    const share = summary.value?.productTypeShare ?? []
+    const get = (name: string) => share.find((x) => x.name === name)?.percent ?? 0
+    const pOther = get('Other')
+    const pCoins = get('Coins')
+    const pLife = get('Lifetime')
+    const pMon = get('Monthly')
+    const pAnn = get('Annual')
+    const maxX = Math.min(80, Math.max(12, pAnn + 8))
     c.setOption({
       backgroundColor: 'transparent',
       grid: { top: 10, right: 10, bottom: 10, left: 60, containLabel: false },
@@ -1135,6 +906,34 @@
         }
       ]
     })
+  }
+
+  async function loadAll() {
+    loadError.value = ''
+    loading.value = true
+    try {
+      const [s, list] = await Promise.all([
+        fetchPaidAnalysisTabOrderSummary(buildSummaryBody()),
+        fetchPaidAnalysisOrderList(buildListParams())
+      ])
+      summary.value = s
+      orderList.value = list
+    } catch (e) {
+      loadError.value = e instanceof Error ? e.message : String(e)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function loadOrderDetail(orderId: string) {
+    selectedOrderDetail.value = null
+    selectedOrderDetailLoading.value = true
+    try {
+      const res = await fetchPaidAnalysisOrderDetail({ s_order_id: orderId })
+      selectedOrderDetail.value = res.detail
+    } finally {
+      selectedOrderDetailLoading.value = false
+    }
   }
 </script>
 
