@@ -79,7 +79,6 @@
 
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
-  import { useIntervalFn } from '@vueuse/core'
   import ConversionTabs from './modules/conversion-tabs.vue'
   import ConversionFilters from './modules/conversion-filters.vue'
   import ConversionTable from './modules/conversion-table.vue'
@@ -240,8 +239,6 @@
   /**
    * 转化数据（Data Tab）
    */
-  const refreshIntervalMs = 30_000
-
   function getDefaultDateBounds(): { startDate: string; endDate: string } {
     const end = getAppNow()
     const start = cloneAppDate(end)
@@ -296,21 +293,6 @@
     }
   }
 
-  const interval = useIntervalFn(
-    () => {
-      if (activeTab.value !== 'data') return
-      if (dataLoading.value) return
-      void loadDataTab()
-    },
-    refreshIntervalMs,
-    { immediate: false }
-  )
-
-  function restartInterval() {
-    interval.pause()
-    interval.resume()
-  }
-
   function handleDataSearch(payload: ConversionDataFilterParams) {
     const bounds =
       payload.startDate && payload.endDate
@@ -324,24 +306,18 @@
       adPlatform: payload.source ?? payload.adPlatform ?? '',
       conversionType: payload.conversionType ?? ''
     })
-    void loadDataTab().then(() => restartInterval())
+    void loadDataTab()
   }
 
   watch(
     () => activeTab.value,
     (tab) => {
       if (tab === 'data') {
-        void loadDataTab().then(() => restartInterval())
-      } else {
-        interval.pause()
+        void loadDataTab()
       }
     },
     { immediate: true }
   )
-
-  onBeforeUnmount(() => {
-    interval.pause()
-  })
 </script>
 
 <style scoped lang="scss">
