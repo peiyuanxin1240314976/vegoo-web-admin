@@ -22,7 +22,7 @@ import * as realtimeDataMock from '@/views/user-growth/real-time-data/mock/real-
 /** 与 `COMPREHENSIVE_ANALYSIS_BASE` 同级：`.../analysis/user-growth/real-time-data` */
 export const REALTIME_DATA_BASE = `${ANALYSIS_API_BASE}/user-growth/real-time-data`
 
-const EMPTY_REALTIME_QUERY: RealtimeDataQueryParams = { appId: '', n_source: '' }
+const EMPTY_REALTIME_QUERY: RealtimeDataQueryParams = { appId: '', source: '' }
 
 function unwrapDataDeep<T = unknown>(value: unknown, maxDepth = 3): T {
   let cur: unknown = value

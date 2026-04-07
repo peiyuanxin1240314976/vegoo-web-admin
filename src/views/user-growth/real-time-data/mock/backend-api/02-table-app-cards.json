@@ -7,7 +7,7 @@
         "required": true,
         "description": "应用 ID；与 cockpit appOptions[].value 同源；空字符串表示「全部应用」；勿传字面量 all。"
       },
-      "n_source": {
+      "source": {
         "type": "string",
         "required": true,
         "description": "广告平台枚举字符串；与 sourceOptions[].value 同源；空字符串表示不限；勿用 JSON number。"
@@ -137,7 +137,7 @@
   },
   "sampleRequest": {
     "appId": "",
-    "n_source": ""
+    "source": ""
   },
   "sampleResponse": {
     "items": [
@@ -336,7 +336,7 @@
     "url": "POST /api/v1/datacenter/analysis/user-growth/real-time-data/table/app-cards",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "appId, n_source",
+    "requestBody": "appId, source",
     "responseBody": "items: RealtimeAppCardRow[]"
   },
   "apiSuggestion": {

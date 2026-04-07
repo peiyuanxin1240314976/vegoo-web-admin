@@ -26,10 +26,10 @@ const EMPTY_KPI: RealtimeKpiSummary = {
 }
 
 /**
- * 综合分析 meta 里部分 Mock 使用 slug（google / facebook），实时数据契约入参为 `n_source` 字符串枚举。
+ * 综合分析 meta 里部分 Mock 使用 slug（google / facebook），实时数据筛选入参使用 `source` 字符串枚举。
  * 已为标准枚举值的选项会原样透传。
  */
-function mapUiSourceToNSource(uiValue: string): string {
+function mapUiSourceToApiSource(uiValue: string): string {
   if (!uiValue) return ''
   const slugMap: Record<string, string> = {
     google: '1',
@@ -46,12 +46,12 @@ function dimensionToApiValue(v: string | undefined | null) {
 }
 
 /**
- * 列表/KPI/底部图请求体：始终带齐 `appId`、`n_source`（空串表示不限），与 cockpit 附录 A、网关真实接口一致。
+ * 列表/KPI/底部图请求体：始终带齐 `appId`、`source`（空串表示不限），与 cockpit 附录 A、网关真实接口一致。
  */
 function buildQueryParams(filterAppId: string, filterSourceUi: string): RealtimeDataQueryParams {
   return {
     appId: dimensionToApiValue(filterAppId),
-    n_source: mapUiSourceToNSource(dimensionToApiValue(filterSourceUi))
+    source: mapUiSourceToApiSource(dimensionToApiValue(filterSourceUi))
   }
 }
 
@@ -74,7 +74,7 @@ export function useRealtimeDashboard() {
 
   /** 与契约一致：空字符串表示「全部应用」 */
   const filterAppId = ref('')
-  /** 下拉原始 value（可能为 Mock slug 或后端 `n_source` 字符串） */
+  /** 下拉原始 value（可能为 Mock slug 或后端 `source` 字符串） */
   const filterSourceUi = ref('')
 
   const filterOptionsLoading = ref(false)
@@ -123,7 +123,7 @@ export function useRealtimeDashboard() {
         rows.map((row) =>
           fetchRealtimeAppDetail({
             appId: row.id,
-            n_source: params.n_source
+            source: params.source
           })
         )
       )

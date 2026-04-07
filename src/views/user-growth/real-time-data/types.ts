@@ -9,8 +9,8 @@
 export interface RealtimeDataQueryParams {
   /** 应用 ID；与 cockpit `appOptions[].value` 一致；`''` 表示全部 */
   appId: string
-  /** 广告平台（与 `sourceOptions` / 数据字典 `n_source` 一致，如 `1`）；`''` 表示不限；一律 string */
-  n_source: string
+  /** 广告平台（筛选维度键名统一为 source）；`''` 表示不限；一律 string（如 `1`、`7`），勿用 JSON number */
+  source: string
 }
 
 export interface ChannelData {
@@ -19,7 +19,7 @@ export interface ChannelData {
   spend: number
   cpi: number
   roi: number
-  /** 广告平台枚举，string（如 `1`），与请求入参 `n_source` 一致 */
+  /** 广告平台枚举，string（如 `1`），与请求入参 `source` 一致 */
   n_source?: string
 }
 
@@ -108,10 +108,10 @@ export interface RealtimeAppCardsTableBody {
   items: RealtimeAppCardRow[]
 }
 
-/** 详情弹窗：目标应用为 `appId`；`n_source` 与列表筛选一致（`''` 为不限）。勿把列表「应用筛选」与当前卡片 id 混在一个字段里重复覆盖。 */
+/** 详情弹窗：目标应用为 `appId`；`source` 与列表筛选一致（`''` 为不限）。勿把列表「应用筛选」与当前卡片 id 混在一个字段里重复覆盖。 */
 export interface RealtimeAppDetailRequestBody {
   appId: string
-  n_source: string
+  source: string
 }
 
 /** 契约 03-app-detail 响应体 */

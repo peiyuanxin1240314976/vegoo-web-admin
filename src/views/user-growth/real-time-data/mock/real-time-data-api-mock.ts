@@ -19,17 +19,17 @@ function filterRowsByParams(params?: RealtimeDataQueryParams) {
   if (appKey) {
     rows = rows.filter((r) => r.id === appKey)
   }
-  if (params?.n_source) {
-    rows = rows.filter((r) => rowHasSourcePlatform(r.id, params.n_source))
+  if (params?.source) {
+    rows = rows.filter((r) => rowHasSourcePlatform(r.id, params.source))
   }
   return rows
 }
 
-/** 详情里 channels 与 `n_source` 对齐时用于本地 Mock 筛选（契约字段 `n_source` 为 string） */
-function rowHasSourcePlatform(sAppId: string, nSource: string): boolean {
+/** 详情里 channels 与广告平台枚举对齐时用于本地 Mock 筛选（请求字段 `source` 为 string） */
+function rowHasSourcePlatform(sAppId: string, source: string): boolean {
   const detail = mockRealtimeAppDetailsById[sAppId]
   if (!detail?.channels?.length) return true
-  return detail.channels.some((c) => c.n_source === nSource)
+  return detail.channels.some((c) => c.n_source === source)
 }
 
 /** 01 — 顶部 KPI */
@@ -46,7 +46,7 @@ export function mockFetchRealtimeOverviewKpiSummary(params?: RealtimeDataQueryPa
       warningApps: 0
     })
   }
-  if (!params?.appId && !params?.n_source) {
+  if (!params?.appId && !params?.source) {
     return Promise.resolve<RealtimeKpiSummary>({ ...mockRealtimeKpiSummary })
   }
   const todaySpend = rows.reduce((s, r) => s + r.spend, 0)
@@ -91,7 +91,7 @@ export function mockFetchRealtimeOverviewHourlySpendComparison(params?: Realtime
   if (params?.appId) {
     series = series.filter((s) => s.s_app_id === params.appId)
   }
-  if (params?.n_source) {
+  if (params?.source) {
     const allowed = new Set(filterRowsByParams(params).map((r) => r.id))
     series = series.filter((s) => allowed.has(s.s_app_id))
   }

@@ -7,7 +7,7 @@
 须同时遵循：
 
 - `.cursor/rules/api-contract-and-mock-conventions.mdc`（Mock 目录、`backend-api` 契约格式、按 UI 拆接口）
-- `.cursor/rules/backend-fields.mdc`（业务字段语义：如应用 `s_app_id`、花费 `cost`、广告平台 `source` / `n_source`、安装 `installs` 等）
+- `.cursor/rules/backend-fields.mdc`（业务字段语义：如应用 `s_app_id`、花费 `cost`、广告平台 `source`、安装 `installs` 等）
 
 **后续新建/扩展业务页**：请在对应 `views/<模块>/<页面>/mock/` 下按同样结构补齐 `README.md`、`backend-api/README.md`、按接口拆分的 `*.json`，并（推荐）维护 `api-mock/` 与 `sampleResponse` 对齐。
 
@@ -29,4 +29,4 @@
 
 ## 文案与筛选
 
-- 页面上「渠道筛选」等 UI 文案在实现时应使用 **「广告平台」**（见 `project-conventions.mdc`）；契约请求字段使用 `source` / `n_source` 等与数据字典一致。
+- 页面上「渠道筛选」等 UI 文案在实现时应使用 **「广告平台」**（见 `project-conventions.mdc`）；契约请求字段使用 `source`（string；不限为 `""`）。
