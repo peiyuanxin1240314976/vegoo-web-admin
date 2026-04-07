@@ -13,9 +13,9 @@ export interface PaidAnalysisFilterBody {
   /** 终端平台：'' | 'android' | 'ios'（小写，与 UI 映射一致） */
   platform?: string
   /** 国家 ISO alpha-2 小写；「全部」为 '' */
-  s_country_code?: string
+  countryCode?: string
   /** 广告平台枚举 string；「全部」为 '' */
-  n_source?: string
+  source?: string
   /**
    * 商品排行排序维度：留空则前端本地排序；若后端接管排序则传 revenue | orders | retention | country
    */

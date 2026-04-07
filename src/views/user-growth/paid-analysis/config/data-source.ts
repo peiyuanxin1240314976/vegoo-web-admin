@@ -30,22 +30,22 @@ export enum PaidAnalysisExportEndpoints {
 }
 
 export const paidAnalysisTabMock: Record<PaidAnalysisTabEndpoints, boolean> = {
-  [PaidAnalysisTabEndpoints.TabChannelOverview]: true,
-  [PaidAnalysisTabEndpoints.TabChannelTables]: true,
-  [PaidAnalysisTabEndpoints.TabChannelCharts]: true,
-  [PaidAnalysisTabEndpoints.TabProductOverview]: true,
-  [PaidAnalysisTabEndpoints.TabProductRanking]: true,
-  [PaidAnalysisTabEndpoints.TabProductCharts]: true,
-  [PaidAnalysisTabEndpoints.TabOrderSummary]: true
+  [PaidAnalysisTabEndpoints.TabChannelOverview]: false,
+  [PaidAnalysisTabEndpoints.TabChannelTables]: false,
+  [PaidAnalysisTabEndpoints.TabChannelCharts]: false,
+  [PaidAnalysisTabEndpoints.TabProductOverview]: false,
+  [PaidAnalysisTabEndpoints.TabProductRanking]: false,
+  [PaidAnalysisTabEndpoints.TabProductCharts]: false,
+  [PaidAnalysisTabEndpoints.TabOrderSummary]: false
 }
 
 export const paidAnalysisOrderMock: Record<PaidAnalysisOrderEndpoints, boolean> = {
-  [PaidAnalysisOrderEndpoints.OrderList]: true,
-  [PaidAnalysisOrderEndpoints.OrderDetail]: true
+  [PaidAnalysisOrderEndpoints.OrderList]: false,
+  [PaidAnalysisOrderEndpoints.OrderDetail]: false
 }
 
 export const paidAnalysisExportMock: Record<PaidAnalysisExportEndpoints, boolean> = {
-  [PaidAnalysisExportEndpoints.ExportOrders]: true
+  [PaidAnalysisExportEndpoints.ExportOrders]: false
 }
 
 export function isPaidAnalysisTabEndpointMock(key: PaidAnalysisTabEndpoints): boolean {
