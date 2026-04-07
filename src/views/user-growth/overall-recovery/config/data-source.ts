@@ -28,12 +28,12 @@ export enum OverallRecoveryEndpoint {
 }
 
 export const OVERALL_RECOVERY_USE_MOCK: Record<OverallRecoveryEndpoint, boolean> = {
-  [OverallRecoveryEndpoint.OverallTabKpis]: true,
-  [OverallRecoveryEndpoint.OverallTabRecoveryCurve]: true,
-  [OverallRecoveryEndpoint.OverallTabDailyVolume]: true,
-  [OverallRecoveryEndpoint.OverallTabRoiCompare]: true,
-  [OverallRecoveryEndpoint.OverallTabDetailRecords]: true,
-  [OverallRecoveryEndpoint.OrganicTab]: true
+  [OverallRecoveryEndpoint.OverallTabKpis]: false,
+  [OverallRecoveryEndpoint.OverallTabRecoveryCurve]: false,
+  [OverallRecoveryEndpoint.OverallTabDailyVolume]: false,
+  [OverallRecoveryEndpoint.OverallTabRoiCompare]: false,
+  [OverallRecoveryEndpoint.OverallTabDetailRecords]: false,
+  [OverallRecoveryEndpoint.OrganicTab]: false
 }
 
 export function isOverallRecoveryEndpointMock(endpoint: OverallRecoveryEndpoint): boolean {
