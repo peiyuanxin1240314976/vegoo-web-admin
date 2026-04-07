@@ -164,6 +164,14 @@ export function fetchConversionMetaConversionDisplayTypeOptions() {
     .then((res) => unwrapDataDeep<{ options: { label: string; value: string }[] }>(res))
 }
 
+/**
+ * 兼容旧导出名：部分页面仍在 import `fetchConversionMetaDisplayTypeOptions`
+ * 实际能力为「转化展示分类」下拉选项（paid/activation/behavior/revenue）。
+ */
+export function fetchConversionMetaDisplayTypeOptions() {
+  return fetchConversionMetaConversionDisplayTypeOptions()
+}
+
 /** 兼容：有的页面仍需要静态展示「平台转化类型」下拉（若改走接口 08，可替换为 fetchConversionMetaConversionTypeOptions） */
 export function getConversionPlatformConversionTypeOptionsForUi() {
   return MOCK_CONVERSION_TYPE_OPTIONS
