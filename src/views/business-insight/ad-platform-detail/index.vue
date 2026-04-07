@@ -2,9 +2,22 @@
   import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useRoute, useRouter } from 'vue-router'
+  import { ElMessage } from 'element-plus'
   import * as echarts from 'echarts'
+  import {
+    fetchAdPlatformDetailAiInsights,
+    fetchAdPlatformDetailOverviewKpis,
+    fetchAdPlatformDetailOverviewTrend,
+    fetchAdPlatformDetailTableApps
+  } from '@/api/ad-platform-detail'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
+  import type {
+    AdPlatformDetailAiInsightItem,
+    AdPlatformDetailAppRow,
+    AdPlatformDetailKpiItem
+  } from './types'
 
   const router = useRouter()
   const route = useRoute()
@@ -117,7 +130,7 @@
   const dateOptions = ['最近7天', '最近30天', '最近90天', '自定义']
 
   // ─── KPI Cards ───────────────────────────────────────────────────────────────
-  const kpiCards: KpiCard[] = [
+  const INITIAL_KPI_CARDS: KpiCard[] = [
     {
       label: '总收入',
       value: '$1.25M',
@@ -152,8 +165,12 @@
     }
   ]
 
+  const kpiCards = ref<KpiCard[]>(
+    INITIAL_KPI_CARDS.map((c) => ({ ...c, sparkData: [...c.sparkData] }))
+  )
+
   // ─── AI Insights ─────────────────────────────────────────────────────────────
-  const aiInsights: AiInsight[] = [
+  const INITIAL_AI_INSIGHTS: AiInsight[] = [
     {
       title: '应用表现差异',
       content:
@@ -173,8 +190,10 @@
     }
   ]
 
+  const aiInsights = ref<AiInsight[]>([...INITIAL_AI_INSIGHTS])
+
   // ─── Table Data ───────────────────────────────────────────────────────────────
-  const tableData: AppRow[] = [
+  const INITIAL_TABLE: AppRow[] = [
     {
       app: 'Weather8',
       revenue: '$850K',
@@ -233,11 +252,13 @@
     }
   ]
 
+  const tableData = ref<AppRow[]>([...INITIAL_TABLE])
+
   // ─── Chart ───────────────────────────────────────────────────────────────────
   const chartRef = ref<HTMLElement>()
   let chartInstance: echarts.ECharts | null = null
 
-  const xDates = [
+  const chartCategories = ref([
     '10月1日',
     '10月4日',
     '10月7日',
@@ -248,29 +269,156 @@
     '10月21日',
     '10月24日',
     '10月28日'
-  ]
+  ])
 
-  const revenueData = [17000, 19500, 22000, 28000, 35000, 42500, 38000, 36000, 37500, 39000]
-  const ecpmData = [3.1, 3.2, 3.0, 3.35, 3.45, 3.5, 3.3, 3.25, 3.35, 3.4]
-  const fillData = [96.5, 95, 95.5, 96, 97, 93, 94, 93.5, 95, 97.5]
+  const revenueSeries = ref([17000, 19500, 22000, 28000, 35000, 42500, 38000, 36000, 37500, 39000])
+  const ecpmSeriesRaw = ref([3.1, 3.2, 3.0, 3.35, 3.45, 3.5, 3.3, 3.25, 3.35, 3.4])
+  const fillSeriesRaw = ref([96.5, 95, 95.5, 96, 97, 93, 94, 93.5, 95, 97.5])
+
+  function resolveDateRangeLabel(label: string): { startDate: string; endDate: string } {
+    const end = cloneAppDate(getAppNow())
+    end.setHours(0, 0, 0, 0)
+    const start = cloneAppDate(end)
+    let days = 30
+    if (label === '最近7天') days = 7
+    else if (label === '最近90天') days = 90
+    else if (label === '自定义') days = 30
+    start.setDate(end.getDate() - (days - 1))
+    return { startDate: formatYYYYMMDD(start), endDate: formatYYYYMMDD(end) }
+  }
+
+  function mapKpiItemToCard(item: AdPlatformDetailKpiItem): KpiCard {
+    return {
+      label: item.label,
+      value: item.valueText,
+      change: item.changeText,
+      positive: item.positive,
+      color: item.color,
+      sparkData: [...item.chartData]
+    }
+  }
+
+  function formatUsdTable(n: number): string {
+    if (n >= 1_000_000) {
+      return `$${(n / 1_000_000).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}M`
+    }
+    if (n >= 1_000) {
+      return `$${(n / 1_000).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      })}K`
+    }
+    return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+
+  function formatImpressionShort(n: number): string {
+    if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)}M`
+    if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`
+    return String(Math.round(n))
+  }
+
+  function mapAppRecordToRow(r: AdPlatformDetailAppRow): AppRow {
+    return {
+      app: r.app,
+      revenue: formatUsdTable(r.revenue),
+      revenueShare: `${r.percent.toLocaleString('en-US', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      })}%`,
+      ecpm: `$${r.d_ecpm.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`,
+      fillRate: `${r.d_fill_rate.toLocaleString('en-US', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      })}%`,
+      impressions: formatImpressionShort(r.n_impression)
+    }
+  }
+
+  function mapAiItemToInsight(item: AdPlatformDetailAiInsightItem): AiInsight {
+    return {
+      title: item.title,
+      content: item.content,
+      highlights: [...item.highlights]
+    }
+  }
 
   async function runQuery() {
     if (pendingQuery.value) return
     pendingQuery.value = true
     try {
-      // TODO: 接真实接口时，把请求放到这里。
-      // 当前页面为静态 mock 展示，先只记录「已应用筛选」用于控制查询触发时机。
+      const { startDate, endDate } = resolveDateRangeLabel(dateRange.value)
+      const src = platformDisplayNameFromRoute()
+      const body = {
+        startDate,
+        endDate,
+        appId: appFilter.value,
+        s_country_code: countryFilter.value,
+        ...(src ? { source: src } : {})
+      }
+
+      const [kpiR, trendR, tableR, aiR] = await Promise.allSettled([
+        fetchAdPlatformDetailOverviewKpis(body),
+        fetchAdPlatformDetailOverviewTrend(body),
+        fetchAdPlatformDetailTableApps(body),
+        fetchAdPlatformDetailAiInsights(body)
+      ])
+
+      if (kpiR.status === 'fulfilled') {
+        kpiCards.value = kpiR.value.kpis.map(mapKpiItemToCard)
+      } else {
+        console.error(kpiR.reason)
+        ElMessage.error('KPI 加载失败')
+      }
+
+      if (trendR.status === 'fulfilled') {
+        const t = trendR.value
+        chartCategories.value = [...t.categories]
+        revenueSeries.value = [...t.revenue]
+        ecpmSeriesRaw.value = [...t.d_ecpm]
+        fillSeriesRaw.value = [...t.d_fill_rate]
+      } else {
+        console.error(trendR.reason)
+        ElMessage.error('核心指标趋势加载失败')
+      }
+
+      if (tableR.status === 'fulfilled') {
+        tableData.value = tableR.value.records.map(mapAppRecordToRow)
+      } else {
+        console.error(tableR.reason)
+        ElMessage.error('应用细分表加载失败')
+      }
+
+      if (aiR.status === 'fulfilled') {
+        aiInsights.value = aiR.value.insights.map(mapAiItemToInsight)
+      } else {
+        console.error(aiR.reason)
+        ElMessage.error('AI 洞察加载失败')
+      }
+
       appliedFilters.value = {
         dateRange: dateRange.value,
         appFilter: appFilter.value,
         countryFilter: countryFilter.value
       }
+
+      await nextTick()
+      chartInstance?.setOption(buildChartOption(), true)
     } finally {
       pendingQuery.value = false
     }
   }
 
   function buildChartOption() {
+    const revMax = Math.max(...revenueSeries.value, 1)
+    const ecpmScaled = ecpmSeriesRaw.value.map((v) => v * 10000)
+    const fillScaled = fillSeriesRaw.value.map((v) => v * 450)
     return {
       backgroundColor: 'transparent',
       tooltip: {
@@ -282,15 +430,25 @@
         padding: [12, 16],
         textStyle: { color: '#e2e8f0', fontSize: 13 },
         formatter(params: any[]) {
-          const date = params[0].axisValue
-          const rev = params.find((p: any) => p.seriesName === '收入')
-          const ecpm = params.find((p: any) => p.seriesName === 'eCPM')
-          const fill = params.find((p: any) => p.seriesName === '填充率')
+          const p0 = params[0]
+          const idx = typeof p0?.dataIndex === 'number' ? p0.dataIndex : 0
+          const date = p0?.axisValue ?? ''
+          const revVal = revenueSeries.value[idx] ?? 0
+          const eVal = ecpmSeriesRaw.value[idx] ?? 0
+          const fVal = fillSeriesRaw.value[idx] ?? 0
+          const ecpmTxt = eVal.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })
+          const fTxt = fVal.toLocaleString('en-US', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          })
           return `
           <div style="font-weight:600;margin-bottom:8px;color:#94a3b8">${date}</div>
-          ${rev ? `<div style="margin:4px 0"><span style="color:#38bdf8">●</span> 收入: <b style="color:#fff">$${rev.value.toLocaleString()}</b></div>` : ''}
-          ${ecpm ? `<div style="margin:4px 0"><span style="color:#a78bfa">●</span> eCPM: <b style="color:#fff">$${ecpm.value}</b></div>` : ''}
-          ${fill ? `<div style="margin:4px 0"><span style="color:#34d399">●</span> 填充率: <b style="color:#fff">${fill.value}%</b></div>` : ''}
+          <div style="margin:4px 0"><span style="color:#38bdf8">●</span> 收入: <b style="color:#fff">$${revVal.toLocaleString()}</b></div>
+          <div style="margin:4px 0"><span style="color:#a78bfa">●</span> eCPM: <b style="color:#fff">$${ecpmTxt}</b></div>
+          <div style="margin:4px 0"><span style="color:#34d399">●</span> 填充率: <b style="color:#fff">${fTxt}%</b></div>
         `
         }
       },
@@ -298,7 +456,7 @@
       grid: { top: 20, right: 70, bottom: 30, left: 80, containLabel: false },
       xAxis: {
         type: 'category',
-        data: xDates,
+        data: chartCategories.value,
         axisLine: { lineStyle: { color: '#2e3a50' } },
         axisTick: { show: false },
         axisLabel: { color: '#64748b', fontSize: 12 },
@@ -318,7 +476,7 @@
           },
           splitLine: { lineStyle: { color: '#1e2a3a', type: 'dashed' } },
           min: 0,
-          max: 50000
+          max: Math.ceil(revMax * 1.1)
         },
         {
           type: 'value',
@@ -352,7 +510,7 @@
               { offset: 1, color: 'rgba(56,189,248,0.02)' }
             ])
           },
-          data: revenueData,
+          data: revenueSeries.value,
           yAxisIndex: 0,
           z: 3
         },
@@ -375,7 +533,7 @@
               { offset: 1, color: 'rgba(167,139,250,0.02)' }
             ])
           },
-          data: ecpmData.map((v) => v * 10000), // 映射到左轴显示
+          data: ecpmScaled,
           yAxisIndex: 0,
           z: 2
         },
@@ -398,7 +556,7 @@
               { offset: 1, color: 'rgba(52,211,153,0.02)' }
             ])
           },
-          data: fillData.map((v) => v * 450), // 映射到左轴
+          data: fillScaled,
           yAxisIndex: 0,
           z: 4
         }

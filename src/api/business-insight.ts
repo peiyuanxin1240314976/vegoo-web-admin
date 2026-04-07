@@ -78,6 +78,18 @@ export {
 } from './iap-analysis'
 export type { IapOverviewTableQuery } from './iap-analysis'
 
+export {
+  fetchAdPlatformDetailAiInsights,
+  fetchAdPlatformDetailOverviewKpis,
+  fetchAdPlatformDetailOverviewTrend,
+  fetchAdPlatformDetailTableApps,
+  fetchAppAdPlatformPerformanceAiInsights,
+  fetchAppAdPlatformPerformanceOverviewKpis,
+  fetchAppAdPlatformPerformanceOverviewTrend,
+  fetchAppAdPlatformPerformanceTableAdUnits,
+  fetchAppAdPlatformPerformanceWaterfall
+} from './ad-platform-detail'
+
 const IAA_BASE = `${ANALYSIS_API_BASE}/business-insight/iaa-analysis`
 const REVENUE_OVERVIEW_BASE = `${ANALYSIS_API_BASE}/business-insight/revenue-overview`
 const ECPM_ANALYSIS_BASE = `${ANALYSIS_API_BASE}/business-insight/ecpm-analysis`

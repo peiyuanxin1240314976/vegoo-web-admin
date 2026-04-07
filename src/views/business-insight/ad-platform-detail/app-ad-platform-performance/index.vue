@@ -63,105 +63,33 @@
       <div class="left-panel">
         <!-- KPI 卡片区 -->
         <div class="kpi-grid">
-          <!-- 收入卡片 -->
           <div
-            class="kpi-card kpi-revenue"
-            :class="{ 'is-active': activeKpi === 'revenue' }"
-            @click="activeKpi = 'revenue'"
+            v-for="card in appKpiCards"
+            :key="card.id"
+            class="kpi-card"
+            :class="[kpiCardRootClass(card.id), { 'is-active': activeKpi === card.id }]"
+            @click="activeKpi = card.id"
           >
-            <div class="kpi-bg-glow revenue-glow" />
-            <div class="kpi-label">收入</div>
-            <div class="kpi-value revenue-value">
-              <span class="kpi-number" ref="revenueEl">$937.5K</span>
-            </div>
-            <div class="kpi-sparkline">
-              <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
-                <polyline
-                  points="0,20 10,14 20,18 30,8 40,12 50,6 60,10 70,4 80,8"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  fill="none"
-                  opacity="0.8"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <!-- eCPM 卡片 -->
-          <div
-            class="kpi-card kpi-ecpm"
-            :class="{ 'is-active': activeKpi === 'ecpm' }"
-            @click="activeKpi = 'ecpm'"
-          >
-            <div class="kpi-bg-glow ecpm-glow" />
-            <div class="kpi-label">eCPM</div>
-            <div class="kpi-value ecpm-value">
-              <span class="kpi-number">¥3.10</span>
-              <div class="kpi-badge badge-up">
+            <div class="kpi-bg-glow" :class="kpiGlowClass(card.id)" />
+            <div class="kpi-label">{{ card.label }}</div>
+            <div class="kpi-value" :class="kpiValueClass(card.id)">
+              <span class="kpi-number">{{ card.valueText }}</span>
+              <div
+                v-if="card.changeText"
+                class="kpi-badge"
+                :class="card.positive ? 'badge-up' : 'badge-down'"
+              >
                 <svg width="10" height="10" viewBox="0 0 10 10">
-                  <path d="M5 2L8 6H2L5 2Z" fill="currentColor" />
+                  <path v-if="card.positive" d="M5 2L8 6H2L5 2Z" fill="currentColor" />
+                  <path v-else d="M5 8L2 4H8L5 8Z" fill="currentColor" />
                 </svg>
-                +12.3%
+                {{ card.changeText }}
               </div>
             </div>
             <div class="kpi-sparkline">
               <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
                 <polyline
-                  points="0,16 10,12 20,14 30,8 40,10 50,4 60,6 70,2 80,4"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  fill="none"
-                  opacity="0.8"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <!-- 填充率卡片 -->
-          <div
-            class="kpi-card kpi-fill"
-            :class="{ 'is-active': activeKpi === 'fill' }"
-            @click="activeKpi = 'fill'"
-          >
-            <div class="kpi-bg-glow fill-glow" />
-            <div class="kpi-label">填充率</div>
-            <div class="kpi-value fill-value">
-              <span class="kpi-number">98%</span>
-              <div class="kpi-badge badge-down">
-                <svg width="10" height="10" viewBox="0 0 10 10">
-                  <path d="M5 8L2 4H8L5 8Z" fill="currentColor" />
-                </svg>
-                -3.2%
-              </div>
-            </div>
-            <div class="kpi-sparkline">
-              <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
-                <polyline
-                  points="0,8 10,10 20,6 30,12 40,8 50,14 60,10 70,16 80,12"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  fill="none"
-                  opacity="0.8"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <!-- 展示次数卡片 -->
-          <div
-            class="kpi-card kpi-impression"
-            :class="{ 'is-active': activeKpi === 'impression' }"
-            @click="activeKpi = 'impression'"
-          >
-            <div class="kpi-bg-glow impression-glow" />
-            <div class="kpi-label">展示次数</div>
-            <div class="kpi-value impression-value">
-              <span class="kpi-number">302M</span>
-            </div>
-            <div class="kpi-sparkline">
-              <svg viewBox="0 0 80 24" fill="none" preserveAspectRatio="none">
-                <polyline
-                  points="0,12 10,8 20,14 30,6 40,10 50,4 60,8 70,2 80,6"
+                  :points="sparkPolylinePoints(card.chartData)"
                   stroke="currentColor"
                   stroke-width="1.5"
                   fill="none"
@@ -362,9 +290,24 @@
   import { storeToRefs } from 'pinia'
   import { useRoute, useRouter } from 'vue-router'
   import type { LocationQueryValue } from 'vue-router'
+  import { ElMessage } from 'element-plus'
   import * as echarts from 'echarts'
+  import {
+    fetchAppAdPlatformPerformanceAiInsights,
+    fetchAppAdPlatformPerformanceOverviewKpis,
+    fetchAppAdPlatformPerformanceOverviewTrend,
+    fetchAppAdPlatformPerformanceTableAdUnits,
+    fetchAppAdPlatformPerformanceWaterfall
+  } from '@/api/ad-platform-detail'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
+  import type {
+    AdPlatformDetailKpiItem,
+    AppAdPlatformAdUnitRow,
+    AppAdPlatformAiInsightRow,
+    WaterfallNetworkItem
+  } from '../types'
 
   defineOptions({ name: 'AppAdPlatformPerformance' })
 
@@ -445,8 +388,89 @@
   /** 与 meta `countryOptions` 的 value 对齐，「全部」为 `""` */
   const countryFilter = ref('')
 
-  // ─── KPI ──────────────────────────────────────────────────────
+  // ─── KPI（契约字段驱动）──────────────────────────────────────────
+  const INITIAL_APP_KPIS: AdPlatformDetailKpiItem[] = [
+    {
+      id: 'revenue',
+      label: '收入',
+      valueText: '$937.5K',
+      changeText: '',
+      positive: true,
+      color: '#f59e0b',
+      chartData: [650, 720, 680, 800, 750, 820, 900, 780, 810, 850, 880, 937]
+    },
+    {
+      id: 'ecpm',
+      label: 'eCPM',
+      valueText: '¥3.10',
+      changeText: '+12.3%',
+      positive: true,
+      color: '#3b82f6',
+      chartData: [2.6, 2.7, 2.8, 2.9, 2.85, 2.95, 3.0, 2.98, 3.05, 3.08, 3.09, 3.1]
+    },
+    {
+      id: 'fill',
+      label: '填充率',
+      valueText: '98%',
+      changeText: '-3.2%',
+      positive: false,
+      color: '#10b981',
+      chartData: [99, 98, 99, 97, 98, 98, 99, 97, 98, 98, 97, 98]
+    },
+    {
+      id: 'impressions',
+      label: '展示次数',
+      valueText: '302M',
+      changeText: '',
+      positive: true,
+      color: '#a855f7',
+      chartData: [260, 275, 268, 290, 285, 295, 300, 292, 298, 305, 310, 302]
+    }
+  ]
+
+  const appKpiCards = ref<AdPlatformDetailKpiItem[]>(
+    INITIAL_APP_KPIS.map((k) => ({ ...k, chartData: [...k.chartData] }))
+  )
+
   const activeKpi = ref('revenue')
+
+  function kpiCardRootClass(id: string) {
+    if (id === 'impressions') return 'kpi-impression'
+    return `kpi-${id}`
+  }
+
+  function kpiGlowClass(id: string) {
+    const map: Record<string, string> = {
+      revenue: 'revenue-glow',
+      ecpm: 'ecpm-glow',
+      fill: 'fill-glow',
+      impressions: 'impression-glow'
+    }
+    return map[id] ?? 'revenue-glow'
+  }
+
+  function kpiValueClass(id: string) {
+    const map: Record<string, string> = {
+      revenue: 'revenue-value',
+      ecpm: 'ecpm-value',
+      fill: 'fill-value',
+      impressions: 'impression-value'
+    }
+    return map[id] ?? 'revenue-value'
+  }
+
+  function sparkPolylinePoints(data: number[], w = 80, h = 24): string {
+    if (!data.length) return ''
+    const min = Math.min(...data)
+    const max = Math.max(...data)
+    return data
+      .map((v, i) => {
+        const x = (i / (data.length - 1 || 1)) * w
+        const y = h - 2 - ((v - min) / (max - min || 1)) * (h - 4)
+        return `${x},${y}`
+      })
+      .join(' ')
+  }
 
   // ─── 图表 ─────────────────────────────────────────────────────
   const chartRef = ref<HTMLElement | null>(null)
@@ -464,7 +488,7 @@
       chartInstance.dispatchAction({ type: 'legendToggleSelect', name: item.label })
   }
 
-  const xAxisData = [
+  const xAxisData = ref([
     '10/1',
     '10/3',
     '10/5',
@@ -481,17 +505,17 @@
     '10/27',
     '10/29',
     '10/31'
-  ]
-  const revenueData = [
+  ])
+  const revenueData = ref([
     780, 650, 820, 590, 750, 680, 900, 620, 800, 720, 870, 640, 760, 810, 690, 937
-  ]
-  const ecpmData = [2.8, 2.6, 3.0, 2.5, 2.9, 2.7, 3.1, 2.6, 3.0, 2.8, 3.1, 2.6, 2.9, 3.0, 2.8, 3.1]
-  const fillData = [97, 96, 98, 95, 98, 97, 99, 96, 98, 97, 99, 96, 98, 98, 97, 98]
+  ])
+  const ecpmData = ref([
+    2.8, 2.6, 3.0, 2.5, 2.9, 2.7, 3.1, 2.6, 3.0, 2.8, 3.1, 2.6, 2.9, 3.0, 2.8, 3.1
+  ])
+  const fillData = ref([97, 96, 98, 95, 98, 97, 99, 96, 98, 97, 99, 96, 98, 98, 97, 98])
 
-  function initChart() {
-    if (!chartRef.value) return
-    chartInstance = echarts.init(chartRef.value, 'dark')
-    const option: echarts.EChartsOption = {
+  function buildAppPerfChartOption(): echarts.EChartsOption {
+    return {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'axis',
@@ -502,17 +526,14 @@
         textStyle: { color: '#e2e8f0', fontSize: 12 },
         formatter(params: any) {
           const p = Array.isArray(params) ? params : [params]
+          const idx = typeof p[0]?.dataIndex === 'number' ? p[0].dataIndex : 0
+          const rev = revenueData.value[idx] ?? 0
+          const ecpm = ecpmData.value[idx] ?? 0
+          const fill = fillData.value[idx] ?? 0
           let html = `<div style="font-weight:600;margin-bottom:6px;color:#94a3b8">${p[0]?.axisValue}</div>`
-          p.forEach((s: any) => {
-            const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${s.color};margin-right:6px"></span>`
-            const val =
-              s.seriesName === 'Revenue'
-                ? `$${s.value}K`
-                : s.seriesName === 'eCPM'
-                  ? `¥${s.value}`
-                  : `${s.value}%`
-            html += `<div style="display:flex;align-items:center;gap:4px;padding:2px 0">${dot}${s.seriesName}: <b style="margin-left:auto;padding-left:12px">${val}</b></div>`
-          })
+          html += `<div style="display:flex;align-items:center;gap:4px;padding:2px 0"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:6px"></span>Revenue: <b style="margin-left:auto;padding-left:12px">$${rev}K</b></div>`
+          html += `<div style="display:flex;align-items:center;gap:4px;padding:2px 0"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-right:6px"></span>eCPM: <b style="margin-left:auto;padding-left:12px">${ecpm.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b></div>`
+          html += `<div style="display:flex;align-items:center;gap:4px;padding:2px 0"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px"></span>Fill Rate: <b style="margin-left:auto;padding-left:12px">${fill}%</b></div>`
           return html
         },
         axisPointer: {
@@ -524,7 +545,7 @@
       grid: { left: 56, right: 56, top: 16, bottom: 36 },
       xAxis: {
         type: 'category',
-        data: xAxisData,
+        data: xAxisData.value,
         axisLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
         axisTick: { show: false },
         axisLabel: { color: '#64748b', fontSize: 11 }
@@ -559,7 +580,7 @@
         {
           name: 'Revenue',
           type: 'line',
-          data: revenueData,
+          data: revenueData.value,
           yAxisIndex: 0,
           smooth: 0.4,
           symbol: 'circle',
@@ -576,7 +597,7 @@
         {
           name: 'eCPM',
           type: 'line',
-          data: ecpmData,
+          data: ecpmData.value,
           yAxisIndex: 0,
           smooth: 0.4,
           symbol: 'circle',
@@ -593,7 +614,7 @@
         {
           name: 'Fill Rate',
           type: 'line',
-          data: fillData,
+          data: fillData.value,
           yAxisIndex: 1,
           smooth: 0.4,
           symbol: 'circle',
@@ -609,7 +630,12 @@
         }
       ]
     }
-    chartInstance.setOption(option)
+  }
+
+  function initChart() {
+    if (!chartRef.value) return
+    chartInstance = echarts.init(chartRef.value, 'dark')
+    chartInstance.setOption(buildAppPerfChartOption())
   }
 
   // ─── 瀑布流 ───────────────────────────────────────────────────
@@ -617,7 +643,7 @@
   const dragIdx = ref(-1)
   const dragOverIdx = ref(-1)
 
-  const waterfallItems = ref<Record<string, any[]>>({
+  const waterfallItems = ref<Record<string, WaterfallNetworkItem[]>>({
     banner: [
       { name: 'AppLovin', icon: 'A', color: '#e85d04', ecpm: '3.80', enabled: true },
       { name: 'AppLovin', icon: 'A', color: '#e85d04', ecpm: '3.50', enabled: true },
@@ -655,7 +681,7 @@
 
   // ─── 广告位表格 ───────────────────────────────────────────────
   const hoverRow = ref(-1)
-  const adUnitData = [
+  const adUnitData = ref<AppAdPlatformAdUnitRow[]>([
     {
       network: 'AdMob',
       format: '插屏',
@@ -726,7 +752,7 @@
       impressions: '12.0M',
       revenueHighlight: false
     }
-  ]
+  ])
 
   function getFillColor(fill: string) {
     const v = parseInt(fill)
@@ -737,7 +763,7 @@
 
   // ─── AI 洞察 ──────────────────────────────────────────────────
   const expandedInsight = ref(-1)
-  const insights = [
+  const insights = ref<AppAdPlatformAiInsightRow[]>([
     {
       type: '瀑布流优化',
       text: '在 Interstitial_LevelEnd 广告位中，AdMob 的填充率高达 99%，但 eCPM 低于 AppLovin，当前排序合理，可考虑提升 AppLovin floor price 以测试收益空间。'
@@ -750,7 +776,7 @@
       type: '填充率预警',
       text: 'Unity Ads 在激励视频广告位填充率仅为 92%，低于行业均值。建议补充备用广告网络或调整 waterfall 层级，避免库存浪费。'
     }
-  ]
+  ])
 
   // ─── resize ───────────────────────────────────────────────────
   function handleResize() {
@@ -764,15 +790,97 @@
     countryFilter: countryFilter.value
   })
 
+  function resolveMonthRangeYmd(ym: string): { startDate: string; endDate: string } {
+    const m = /^(\d{4})-(\d{2})$/.exec(ym.trim())
+    if (!m) {
+      const end = cloneAppDate(getAppNow())
+      end.setHours(0, 0, 0, 0)
+      const start = cloneAppDate(end)
+      start.setDate(end.getDate() - 29)
+      return { startDate: formatYYYYMMDD(start), endDate: formatYYYYMMDD(end) }
+    }
+    const y = Number(m[1])
+    const mo = Number(m[2])
+    const start = new Date(y, mo - 1, 1)
+    const end = new Date(y, mo, 0)
+    return { startDate: formatYYYYMMDD(start), endDate: formatYYYYMMDD(end) }
+  }
+
   async function runQuery() {
     if (pendingQuery.value) return
     pendingQuery.value = true
     try {
-      // TODO: 接真实接口时，把请求放到这里（appId 来自 route.query.app，非筛选项）
+      const { startDate, endDate } = resolveMonthRangeYmd(dateRange.value)
+      const appId = routeAppQueryDecoded.value || ''
+      const sourceStr =
+        querySourceLabelString(route.query.source).trim() ||
+        querySourceLabelString(route.query.sourceLabel).trim()
+      const body = {
+        startDate,
+        endDate,
+        appId,
+        s_country_code: countryFilter.value,
+        ...(sourceStr ? { source: safeDecodeURIComponent(sourceStr) } : {})
+      }
+
+      const [kpiR, trendR, wfR, tableR, aiR] = await Promise.allSettled([
+        fetchAppAdPlatformPerformanceOverviewKpis(body),
+        fetchAppAdPlatformPerformanceOverviewTrend(body),
+        fetchAppAdPlatformPerformanceWaterfall(body),
+        fetchAppAdPlatformPerformanceTableAdUnits(body),
+        fetchAppAdPlatformPerformanceAiInsights(body)
+      ])
+
+      if (kpiR.status === 'fulfilled') {
+        appKpiCards.value = kpiR.value.kpis.map((k) => ({ ...k, chartData: [...k.chartData] }))
+      } else {
+        console.error(kpiR.reason)
+        ElMessage.error('KPI 加载失败')
+      }
+
+      if (trendR.status === 'fulfilled') {
+        const t = trendR.value
+        xAxisData.value = [...t.categories]
+        revenueData.value = [...t.revenue]
+        ecpmData.value = [...t.d_ecpm]
+        fillData.value = [...t.d_fill_rate]
+      } else {
+        console.error(trendR.reason)
+        ElMessage.error('核心指标趋势加载失败')
+      }
+
+      if (wfR.status === 'fulfilled') {
+        const w = wfR.value.waterfallByTab
+        waterfallItems.value = JSON.parse(JSON.stringify(w)) as Record<
+          string,
+          WaterfallNetworkItem[]
+        >
+      } else {
+        console.error(wfR.reason)
+        ElMessage.error('瀑布流加载失败')
+      }
+
+      if (tableR.status === 'fulfilled') {
+        adUnitData.value = tableR.value.records.map((r) => ({ ...r }))
+      } else {
+        console.error(tableR.reason)
+        ElMessage.error('广告位表现加载失败')
+      }
+
+      if (aiR.status === 'fulfilled') {
+        insights.value = aiR.value.insights.map((x: AppAdPlatformAiInsightRow) => ({ ...x }))
+      } else {
+        console.error(aiR.reason)
+        ElMessage.error('AI 洞察加载失败')
+      }
+
       appliedFilters.value = {
         dateRange: dateRange.value,
         countryFilter: countryFilter.value
       }
+
+      await nextTick()
+      chartInstance?.setOption(buildAppPerfChartOption(), true)
     } finally {
       pendingQuery.value = false
     }
