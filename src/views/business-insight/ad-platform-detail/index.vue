@@ -83,10 +83,10 @@
     return safeDecodeURIComponent(queryStringParam(route.query.sourceLabel).trim())
   }
 
-  const adPlatformPerformanceHeading = computed(() => {
-    const raw = platformDisplayNameFromRoute()
-    return raw ? `${raw}表现详情` : '广告平台表现详情'
-  })
+  // const adPlatformPerformanceHeading = computed(() => {
+  //   const raw = platformDisplayNameFromRoute()
+  //   return raw ? `${raw}表现详情` : '广告平台表现详情'
+  // })
 
   function goToAppAdPlatformPerformance(row: AppRow) {
     const source = queryStringParam(route.query.source).trim()
@@ -652,7 +652,9 @@
       <!-- Page header -->
       <div class="page-header">
         <div class="filters filters-panel">
-          <h2 class="filter-detail-heading">{{ adPlatformPerformanceHeading }}</h2>
+          <h2 class="filter-detail-heading">{{
+            route.query['platform-name'] + ' 广告平台详情'
+          }}</h2>
           <div class="filter-field">
             <span class="filter-label">日期范围</span>
             <el-select v-model="dateRange" size="default" class="filter-select">
