@@ -10,7 +10,7 @@
       "startDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
       "endDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
       "appId": { "type": "string", "required": true, "description": "应用；空为全部。" },
-      "s_country_code": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "countryCode": { "type": "string", "required": true, "description": "国家；空为全部。" },
       "source": {
         "type": "string",
         "required": false,
@@ -44,7 +44,7 @@
     "startDate": "2025-10-01",
     "endDate": "2025-10-28",
     "appId": "",
-    "s_country_code": "",
+    "countryCode": "",
     "source": "Google"
   },
   "sampleResponse": {
@@ -68,7 +68,7 @@
     "url": "POST /api/business-insight/ad-platform-detail/overview/trend",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "startDate, endDate, appId, s_country_code, source?",
+    "requestBody": "startDate, endDate, appId, countryCode, source?",
     "responseBody": "{ categories, revenue, d_ecpm, d_fill_rate }"
   },
   "apiSuggestion": {

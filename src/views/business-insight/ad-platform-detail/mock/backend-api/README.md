@@ -14,7 +14,7 @@
 ## 拆分原则
 
 - 按 **KPI / 趋势图 / 表格 / AI 洞察** 拆接口，避免单接口整页大包。
-- 筛选入参：`startDate`、`endDate`（`YYYY-MM-DD`）、`appId`（`""` 表全部应用）、`s_country_code`（`""` 表全部国家）、`source`（可选，广告平台，与路由钻取 query `source` 及数据字典 `source`/`n_source` 语义一致，值为展示名或枚举 string 以联调为准）。
+- 筛选入参：`startDate`、`endDate`（`YYYY-MM-DD`）、`appId`（`""` 表全部应用）、`countryCode`（`""` 表全部国家）、`source`（可选，广告平台，与路由钻取 query `source` 及数据字典 `source`/`n_source` 语义一致，值为展示名或枚举 string 以联调为准）。
 
 ## 接口清单
 

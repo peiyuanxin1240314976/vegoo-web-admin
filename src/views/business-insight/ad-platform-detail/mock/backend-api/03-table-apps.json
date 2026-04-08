@@ -14,7 +14,7 @@
         "required": true,
         "description": "应用筛选；空为全部；非空时表格可仅返回该应用一行。"
       },
-      "s_country_code": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "countryCode": { "type": "string", "required": true, "description": "国家；空为全部。" },
       "source": {
         "type": "string",
         "required": false,
@@ -50,7 +50,7 @@
     "startDate": "2025-10-01",
     "endDate": "2025-10-31",
     "appId": "",
-    "s_country_code": "",
+    "countryCode": "",
     "source": "Google"
   },
   "sampleResponse": {
@@ -106,7 +106,7 @@
     "url": "POST /api/business-insight/ad-platform-detail/table/apps",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "startDate, endDate, appId, s_country_code, source?",
+    "requestBody": "startDate, endDate, appId, countryCode, source?",
     "responseBody": "{ records: AdPlatformDetailAppRow[] }"
   },
   "apiSuggestion": {

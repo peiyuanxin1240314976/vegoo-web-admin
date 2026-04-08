@@ -46,7 +46,7 @@ function buildQueryBody(body: AdPlatformDetailQueryBody): Record<string, unknown
     startDate: body.startDate,
     endDate: body.endDate,
     appId: body.appId ?? '',
-    s_country_code: body.s_country_code ?? ''
+    countryCode: body.countryCode ?? ''
   }
   if (body.source !== undefined && body.source !== '') {
     out.source = body.source

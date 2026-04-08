@@ -819,7 +819,7 @@
         startDate,
         endDate,
         appId,
-        s_country_code: countryFilter.value,
+        countryCode: countryFilter.value,
         ...(sourceStr ? { source: safeDecodeURIComponent(sourceStr) } : {})
       }
 
