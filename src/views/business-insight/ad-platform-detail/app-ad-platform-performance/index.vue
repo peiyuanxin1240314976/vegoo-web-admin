@@ -643,6 +643,10 @@
   const dragIdx = ref(-1)
   const dragOverIdx = ref(-1)
 
+  function createEmptyWaterfallItems(): Record<string, WaterfallNetworkItem[]> {
+    return { banner: [], interstitial: [], rewarded: [], other: [] }
+  }
+
   const waterfallItems = ref<Record<string, WaterfallNetworkItem[]>>({
     banner: [
       { name: 'AppLovin', icon: 'A', color: '#e85d04', ecpm: '3.80', enabled: true },
@@ -832,7 +836,8 @@
       ])
 
       if (kpiR.status === 'fulfilled') {
-        appKpiCards.value = kpiR.value.kpis.map((k) => ({ ...k, chartData: [...k.chartData] }))
+        const kpis = Array.isArray(kpiR.value.kpis) ? kpiR.value.kpis : []
+        appKpiCards.value = kpis.map((k) => ({ ...k, chartData: [...k.chartData] }))
       } else {
         console.error(kpiR.reason)
         ElMessage.error('KPI 加载失败')
@@ -840,35 +845,39 @@
 
       if (trendR.status === 'fulfilled') {
         const t = trendR.value
-        xAxisData.value = [...t.categories]
-        revenueData.value = [...t.revenue]
-        ecpmData.value = [...t.d_ecpm]
-        fillData.value = [...t.d_fill_rate]
+        xAxisData.value = Array.isArray(t.categories) ? [...t.categories] : []
+        revenueData.value = Array.isArray(t.revenue) ? [...t.revenue] : []
+        ecpmData.value = Array.isArray(t.d_ecpm) ? [...t.d_ecpm] : []
+        fillData.value = Array.isArray(t.d_fill_rate) ? [...t.d_fill_rate] : []
       } else {
         console.error(trendR.reason)
         ElMessage.error('核心指标趋势加载失败')
       }
 
       if (wfR.status === 'fulfilled') {
-        const w = wfR.value.waterfallByTab
-        waterfallItems.value = JSON.parse(JSON.stringify(w)) as Record<
-          string,
-          WaterfallNetworkItem[]
-        >
+        const w = wfR.value?.waterfallByTab
+        if (w && typeof w === 'object' && !Array.isArray(w)) {
+          const safe = JSON.parse(JSON.stringify(w)) as Record<string, WaterfallNetworkItem[]>
+          waterfallItems.value = { ...createEmptyWaterfallItems(), ...safe }
+        } else {
+          waterfallItems.value = createEmptyWaterfallItems()
+        }
       } else {
         console.error(wfR.reason)
         ElMessage.error('瀑布流加载失败')
       }
 
       if (tableR.status === 'fulfilled') {
-        adUnitData.value = tableR.value.records.map((r) => ({ ...r }))
+        const records = Array.isArray(tableR.value.records) ? tableR.value.records : []
+        adUnitData.value = records.map((r) => ({ ...r }))
       } else {
         console.error(tableR.reason)
         ElMessage.error('广告位表现加载失败')
       }
 
       if (aiR.status === 'fulfilled') {
-        insights.value = aiR.value.insights.map((x: AppAdPlatformAiInsightRow) => ({ ...x }))
+        const list = Array.isArray(aiR.value.insights) ? aiR.value.insights : []
+        insights.value = list.map((x: AppAdPlatformAiInsightRow) => ({ ...x }))
       } else {
         console.error(aiR.reason)
         ElMessage.error('AI 洞察加载失败')
