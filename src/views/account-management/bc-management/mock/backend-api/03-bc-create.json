@@ -1,0 +1,67 @@
+{
+  "_comment": "BC 管理页面 - 新建 BC。",
+  "fieldDescription": {
+    "request": {
+      "bmId": { "type": "string", "required": true, "description": "BM 平台 ID。" },
+      "bmName": { "type": "string", "required": true, "description": "BM 名称。" },
+      "source": { "type": "string", "required": true, "description": "广告平台。" },
+      "group": { "type": "string", "required": true, "description": "归属组。" },
+      "status": { "type": "string", "required": true, "description": "状态。" },
+      "ownerType": { "type": "string", "required": true, "description": "开户主体。" },
+      "manager": { "type": "string", "required": true, "description": "管理员。" },
+      "banRecord": { "type": "string", "required": true, "description": "封户记录。" },
+      "banDesc": { "type": "string", "required": false, "description": "封户说明。" },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "data": { "type": "BcItem", "required": true, "description": "新建后的 BC 行数据。" }
+    }
+  },
+  "sampleRequest": {
+    "bmId": "912345678901234",
+    "bmName": "新建BM",
+    "source": "Meta Ads",
+    "group": "新组",
+    "status": "健康",
+    "ownerType": "企业户",
+    "manager": "周八",
+    "banRecord": "无",
+    "banDesc": "",
+    "remark": "新增测试"
+  },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "id": "BM-106",
+      "bmId": "912345678901234",
+      "bmName": "新建BM",
+      "source": "Meta Ads",
+      "group": "新组",
+      "status": "健康",
+      "ownerType": "企业户",
+      "manager": "周八",
+      "banRecord": "无",
+      "banDesc": "",
+      "createTime": "2026-04-08",
+      "remark": "新增测试",
+      "linkedAccounts": 0,
+      "activeAccounts": 0,
+      "inactiveAccounts": 0,
+      "monthSpend": 0,
+      "monthOpenCount": 0
+    }
+  },
+  "api": {
+    "url": "POST /api/account-management/bc-management/create",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "BcFormModel",
+    "responseBody": "BcItem"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "用户操作", "detail": "新建弹窗提交后调用。" }],
+    "defaultSelection": "无",
+    "dedupe": "提交中禁用按钮。"
+  }
+}

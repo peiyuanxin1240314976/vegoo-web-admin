@@ -4,64 +4,69 @@
     <div class="filter-bar">
       <div class="filter-group">
         <span class="filter-label">广告平台：</span>
-        <div class="toggle-tabs">
-          <button
-            :class="['toggle-tab', { 'toggle-tab--active': sourceFilter === '' }]"
-            @click="sourceFilter = ''"
-            >全部</button
-          >
-          <button
-            v-for="p in bcPlatforms"
-            :key="p.value"
-            :class="[
-              'toggle-tab toggle-tab--platform',
-              { 'toggle-tab--active': sourceFilter === p.value }
-            ]"
-            :style="
-              sourceFilter === p.value
-                ? { color: p.color, borderColor: p.color, background: p.bg }
-                : {}
-            "
-            @click="sourceFilter = p.value"
-            >{{ p.shortLabel }}</button
-          >
-        </div>
+        <ElSelect
+          v-model="sourceFilter"
+          class="filter-select"
+          placeholder="全部"
+          clearable
+          filterable
+          :loading="sourceFilterLoading"
+        >
+          <ElOption
+            v-for="o in sourceOptions"
+            :key="o.value || 'all'"
+            :label="o.label"
+            :value="o.value"
+          />
+        </ElSelect>
       </div>
       <div class="filter-group">
         <span class="filter-label">状态：</span>
-        <div class="toggle-tabs">
-          <button
+        <ElSelect
+          v-model="statusFilter"
+          class="filter-select filter-select--narrow"
+          placeholder="全部"
+          clearable
+        >
+          <ElOption
             v-for="s in statusOptions"
-            :key="s.value"
-            :class="['toggle-tab', { 'toggle-tab--active': statusFilter === s.value }]"
-            @click="statusFilter = s.value"
-            >{{ s.label }}</button
-          >
-        </div>
+            :key="s.value || 'all'"
+            :label="s.label"
+            :value="s.value"
+          />
+        </ElSelect>
       </div>
       <div class="filter-group">
         <span class="filter-label">开户主体：</span>
-        <div class="toggle-tabs">
-          <button
+        <ElSelect
+          v-model="ownerTypeFilter"
+          class="filter-select filter-select--narrow"
+          placeholder="全部"
+          clearable
+        >
+          <ElOption
             v-for="o in ownerTypeOptions"
-            :key="o.value"
-            :class="['toggle-tab', { 'toggle-tab--active': ownerTypeFilter === o.value }]"
-            @click="ownerTypeFilter = o.value"
-            >{{ o.label }}</button
-          >
-        </div>
+            :key="o.value || 'all'"
+            :label="o.label"
+            :value="o.value"
+          />
+        </ElSelect>
       </div>
       <div class="filter-group">
         <span class="filter-label">封户记录：</span>
-        <div class="toggle-tabs">
-          <button
+        <ElSelect
+          v-model="banRecordFilter"
+          class="filter-select filter-select--narrow"
+          placeholder="全部"
+          clearable
+        >
+          <ElOption
             v-for="b in banRecordOptions"
-            :key="b.value"
-            :class="['toggle-tab', { 'toggle-tab--active': banRecordFilter === b.value }]"
-            @click="banRecordFilter = b.value"
-            >{{ b.label }}</button
-          >
-        </div>
+            :key="b.value || 'all'"
+            :label="b.label"
+            :value="b.value"
+          />
+        </ElSelect>
       </div>
     </div>
 
@@ -189,8 +194,17 @@
 
 <script setup lang="ts">
   import { onMounted, ref, computed, watch } from 'vue'
+  import { useRoute } from 'vue-router'
+  import { storeToRefs } from 'pinia'
   import { fetchBcTable } from '@/api/config-management/account-management'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import { AccountApiSource } from '../config/data-source'
+  import {
+    BcManagementEndpoint,
+    isBcManagementEndpointMock
+  } from '@/views/account-management/bc-management/config/data-source'
+  import { mockFetchBcTable } from '@/views/account-management/bc-management/mock/bc-management-api-mock'
   import { PLATFORM_CONFIGS } from '../types'
   import type { BcItem } from '../types'
 
@@ -207,8 +221,23 @@
     delete: [row: BcItem]
   }>()
 
-  // 只展示有 BC 的平台
+  // 广告平台筛选：直接使用 cockpit-meta-filter 实时数据
   const bcPlatforms = PLATFORM_CONFIGS.filter((p) => ['Meta Ads', 'TikTok Ads'].includes(p.value))
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaFilterStore)
+  const sourceFilterLoading = ref(false)
+
+  const sourceOptions = computed(() => {
+    const metaSources = (cockpitMeta.value?.sourceOptions ?? []) as CockpitMetaOptionItem[]
+    const mapped = metaSources
+      .filter((opt) => opt.value !== 'all')
+      .map((opt) => ({ label: opt.label, value: opt.value }))
+    if (mapped.length > 0) return [{ label: '全部', value: '' }, ...mapped]
+    return [
+      { label: '全部', value: '' },
+      ...bcPlatforms.map((p) => ({ label: p.label, value: p.value }))
+    ]
+  })
 
   const statusOptions = [
     { label: '全部', value: '' },
@@ -395,8 +424,24 @@
   ]
 
   const bcList = ref<BcItem[]>([])
+  const route = useRoute()
+  const isAccountBcPage = computed(() => route.path.includes('/account-management/bc-management'))
 
   const loadList = async () => {
+    if (isAccountBcPage.value && isBcManagementEndpointMock(BcManagementEndpoint.Table)) {
+      const mockRes = await mockFetchBcTable({
+        current: 1,
+        size: 1000,
+        keyword: '',
+        source: '',
+        status: '',
+        ownerType: '',
+        banRecord: ''
+      })
+      bcList.value = mockRes.records
+      autoSelectFirst()
+      return
+    }
     if (!AccountApiSource.bcTable) {
       try {
         const response = await fetchBcTable({
@@ -433,7 +478,13 @@
     }
   }
 
-  onMounted(() => {
+  onMounted(async () => {
+    sourceFilterLoading.value = true
+    try {
+      await cockpitMetaFilterStore.ensureLoaded()
+    } finally {
+      sourceFilterLoading.value = false
+    }
     void loadList()
   })
 
@@ -560,38 +611,30 @@
     color: #94a3b8;
   }
 
-  .toggle-tabs {
-    display: flex;
-    gap: 4px;
-  }
+  .filter-select {
+    width: 168px;
 
-  .toggle-tab {
-    padding: 4px 10px;
-    font-size: 12px;
-    color: #94a3b8;
-    cursor: pointer;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 7%);
-    border-radius: 5px;
-    transition: all 0.15s;
+    &--narrow {
+      width: 140px;
+    }
 
-    &:hover {
+    :deep(.el-input__wrapper),
+    :deep(.el-select__wrapper) {
+      background: rgb(255 255 255 / 4%) !important;
+      border: 1px solid rgb(255 255 255 / 8%) !important;
+      border-radius: 9999px;
+      box-shadow: none !important;
+      transition: border-color var(--duration-fast) var(--ease-default);
+
+      &:focus-within {
+        border-color: #3b82f6 !important;
+      }
+    }
+
+    :deep(.el-input__inner),
+    :deep(.el-select__placeholder) {
+      font-size: 12px;
       color: #e2e8f0;
-      border-color: rgb(255 255 255 / 15%);
-    }
-
-    &--active {
-      color: #3b82f6;
-      background: rgb(59 130 246 / 12%);
-      border-color: rgb(59 130 246 / 30%);
-    }
-
-    &--platform {
-      min-width: 32px;
-      padding: 3px 7px;
-      font-size: 11px;
-      font-weight: 600;
-      text-align: center;
     }
   }
 
@@ -619,15 +662,19 @@
     font-size: 26px;
     font-weight: 700;
     line-height: 1;
+
     &--white {
       color: #e2e8f0;
     }
+
     &--green {
       color: #22c55e;
     }
+
     &--amber {
       color: #f59e0b;
     }
+
     &--blue {
       color: #3b82f6;
     }
@@ -656,18 +703,23 @@
       font-size: 12px;
       background: transparent;
     }
+
     :deep(td.el-table__cell) {
       font-size: 13px;
     }
+
     :deep(.el-table__inner-wrapper::before) {
       display: none;
     }
+
     :deep(.row--selected td.el-table__cell) {
       background: rgb(59 130 246 / 8%) !important;
     }
+
     :deep(.row--banned td.el-table__cell) {
       background: rgb(245 158 11 / 5%) !important;
     }
+
     :deep(.row--inactive td.el-table__cell) {
       opacity: 0.5;
     }
@@ -677,9 +729,11 @@
     font-family: 'SF Mono', monospace;
     font-size: 12px;
     color: #e2e8f0;
+
     &--banned {
       color: #f59e0b;
     }
+
     &--inactive {
       color: #64748b;
     }
@@ -687,6 +741,7 @@
 
   .bm-name {
     font-weight: 500;
+
     &--inactive {
       color: #64748b;
     }
@@ -720,15 +775,19 @@
     &.status--healthy {
       color: #22c55e;
     }
+
     &.status--available {
       color: #3b82f6;
     }
+
     &.status--banned {
       color: #f59e0b;
     }
+
     &.status--inactive {
       color: #64748b;
     }
+
     &.status--other {
       color: #94a3b8;
     }
@@ -804,18 +863,23 @@
 
     &--view {
       color: #3b82f6;
+
       &:hover {
         opacity: 0.75;
       }
     }
+
     &--edit {
       color: #22c55e;
+
       &:hover {
         opacity: 0.75;
       }
     }
+
     &--del {
       color: #f87171;
+
       &:hover {
         opacity: 0.75;
       }
@@ -848,6 +912,7 @@
         background: rgb(59 130 246 / 15%);
         border-radius: 4px;
       }
+
       &:hover:not(.is-active) {
         color: #e2e8f0;
       }
@@ -857,6 +922,7 @@
     :deep(.btn-next) {
       color: #94a3b8;
       background: transparent;
+
       &:hover {
         color: #e2e8f0;
       }

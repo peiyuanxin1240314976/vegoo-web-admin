@@ -15,7 +15,9 @@
           class="header-search"
           clearable
         >
-          <template #prefix><el-icon><Search /></el-icon></template>
+          <template #prefix
+            ><el-icon><Search /></el-icon
+          ></template>
         </el-input>
       </div>
     </div>
@@ -33,10 +35,7 @@
         />
       </div>
       <div class="detail-side">
-        <BcDetailPanel
-          :bc-data="currentBc"
-          @edit="handleEdit"
-        />
+        <BcDetailPanel :bc-data="currentBc" @edit="handleEdit" />
       </div>
     </div>
 
@@ -66,7 +65,13 @@
     exportBcList,
     updateBc
   } from '@/api/config-management/account-management'
-  import { AccountApiSource } from '@/views/config-management/account-management/config/data-source'
+  import { BcManagementEndpoint, isBcManagementEndpointMock } from './config/data-source'
+  import {
+    mockCreateBc,
+    mockDeleteBc,
+    mockExportBcList,
+    mockUpdateBc
+  } from './mock/bc-management-api-mock'
   import BcTab from '@/views/config-management/account-management/modules/bc-tab.vue'
   import BcDetailPanel from '@/views/config-management/account-management/modules/bc-detail-panel.vue'
   import BcFormDialog from '@/views/config-management/account-management/modules/bc-form-dialog.vue'
@@ -94,12 +99,13 @@
   }
 
   const handleExport = () => {
-    if (!AccountApiSource.exportBc) {
+    if (!isBcManagementEndpointMock(BcManagementEndpoint.Export)) {
       exportBcList({})
         .then(() => ElMessage.success('导出成功'))
         .catch(() => ElMessage.error('导出失败'))
       return
     }
+    mockExportBcList()
     ElMessage.success('导出成功')
   }
 
@@ -115,16 +121,24 @@
 
   const handleFormSuccess = async (data: any) => {
     const wasEditing = !!editData.value
-    if (wasEditing && editData.value?.id && !AccountApiSource.updateBc) {
+    if (wasEditing && editData.value?.id) {
       try {
-        await updateBc(editData.value.id, data)
+        if (isBcManagementEndpointMock(BcManagementEndpoint.Update)) {
+          await mockUpdateBc(editData.value.id, data)
+        } else {
+          await updateBc(editData.value.id, data)
+        }
       } catch {
         /* backend not ready */
       }
     }
-    if (!wasEditing && !AccountApiSource.createBc) {
+    if (!wasEditing) {
       try {
-        await createBc(data)
+        if (isBcManagementEndpointMock(BcManagementEndpoint.Create)) {
+          await mockCreateBc(data)
+        } else {
+          await createBc(data)
+        }
       } catch {
         /* backend not ready */
       }
@@ -137,12 +151,14 @@
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget.value) return
-    if (!AccountApiSource.deleteBc) {
-      try {
+    try {
+      if (isBcManagementEndpointMock(BcManagementEndpoint.Delete)) {
+        await mockDeleteBc(deleteTarget.value.id)
+      } else {
         await deleteBc(deleteTarget.value.id)
-      } catch {
-        /* backend not ready */
       }
+    } catch {
+      /* backend not ready */
     }
     bcTabRef.value?.removeFromList?.(deleteTarget.value.id)
     if (currentBc.value?.id === deleteTarget.value.id) currentBc.value = null
@@ -240,15 +256,22 @@
       border: 1px solid var(--border) !important;
       border-radius: 7px;
       box-shadow: none !important;
-      &:hover, &:focus-within { border-color: var(--accent) !important; }
+      &:hover,
+      &:focus-within {
+        border-color: var(--accent) !important;
+      }
     }
 
     :deep(.el-input__inner) {
       font-size: 13px;
       color: var(--text-primary);
-      &::placeholder { color: var(--text-muted); }
+      &::placeholder {
+        color: var(--text-muted);
+      }
     }
 
-    :deep(.el-input__prefix) { color: var(--text-muted); }
+    :deep(.el-input__prefix) {
+      color: var(--text-muted);
+    }
   }
 </style>
