@@ -25,7 +25,7 @@
           </article>
         </div>
 
-        <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
+        <ElCard class="iaa-panel iaa-neon-panel iaa-panel--scatter-full" shadow="never">
           <template #header>
             <span>广告单元 Top15 收入表</span>
             <div class="iaa-unit-filters">
@@ -116,6 +116,7 @@
         </ElCard> </div
       ><!-- iaa-main-left -->
       <div class="iaa-main-right">
+        <!--
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>广告单元充填率分布</span>
@@ -127,9 +128,10 @@
             {{ fillRateInsight }}
           </div>
         </ElCard>
+        -->
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
-            <span>广告单元ECPM vs 充填率关联分析</span>
+            <span>广告单元 ECPM 对比</span>
           </template>
           <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
           <div v-else ref="scatterChartRef" class="iaa-chart iaa-chart--scatter"></div>
@@ -176,7 +178,6 @@
   const tabData = ref<IaaAdUnitTabData | null>(null)
 
   const kpis = computed(() => tabData.value?.kpis ?? [])
-  const fillRateInsight = computed(() => tabData.value?.fillRateInsight ?? '')
 
   const allRows = computed(() => tabData.value?.tableRows ?? [])
 
@@ -263,7 +264,6 @@
     { prop: 'status', label: '状态', minWidth: 72, useSlot: true, slotName: 'status' }
   ])
 
-  const FILL_RATE_COLORS = ['#EF4444', '#F59E0B', '#EAB308', '#26C2AD', '#0D9488']
   const AD_TYPE_COLORS: Record<string, string> = {
     开屏: '#26C2AD',
     插页式: '#3B82F6',
@@ -271,75 +271,28 @@
     横幅: '#F59E0B'
   }
 
-  const useFillRate = useChart()
   const useScatter = useChart()
   const useTrend = useChart()
-  const fillRateChartRef = useFillRate.chartRef
   const scatterChartRef = useScatter.chartRef
   const trendChartRef = useTrend.chartRef
 
-  function buildFillRateOption(): EChartsOption {
-    const buckets = tabData.value?.fillRateBuckets ?? []
-    return {
-      backgroundColor: 'transparent',
-      grid: { left: 56, right: 16, top: 16, bottom: 40 },
-      tooltip: {
-        trigger: 'axis',
-        backgroundColor: '#1e293b',
-        borderColor: '#334155',
-        textStyle: { color: '#f1f5f9' }
-      },
-      xAxis: {
-        type: 'category',
-        data: buckets.map((b) => b.range),
-        axisLabel: { color: '#94a3b8', fontSize: 11 },
-        axisLine: { lineStyle: { color: '#1e293b' } }
-      },
-      yAxis: {
-        type: 'value',
-        axisLabel: { color: '#94a3b8', fontSize: 10 },
-        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
-      },
-      series: [
-        {
-          type: 'bar',
-          data: buckets.map((b, i) => ({
-            value: b.count,
-            itemStyle: { color: FILL_RATE_COLORS[i], borderRadius: [3, 3, 0, 0] }
-          })),
-          barMaxWidth: 40,
-          label: {
-            show: true,
-            position: 'top',
-            color: '#94a3b8',
-            fontSize: 11,
-            formatter: (p: { value?: number }) => String(p.value ?? '')
-          }
-        }
-      ]
-    } as unknown as EChartsOption
-  }
-
   function buildScatterOption(): EChartsOption {
-    const scatter = tabData.value?.scatterData ?? []
-    const typeMap: Record<string, [number, number][]> = {}
-    scatter.forEach((p) => {
-      if (!typeMap[p.adType]) typeMap[p.adType] = []
-      typeMap[p.adType].push([p.ecpm, p.fillRate])
-    })
+    const ecpmData = tabData.value?.scatterData ?? []
+    const sortedData = [...ecpmData].sort((a, b) => b.ecpm - a.ecpm)
     return {
       backgroundColor: 'transparent',
-      grid: { left: 56, right: 24, top: 16, bottom: 40 },
+      grid: { left: 132, right: 24, top: 16, bottom: 28 },
       tooltip: {
         trigger: 'item',
         backgroundColor: '#1e293b',
         borderColor: '#334155',
-        textStyle: { color: '#f1f5f9' }
-      },
-      legend: {
-        data: Object.keys(typeMap),
-        bottom: 0,
-        textStyle: { color: '#64748b', fontSize: 11 }
+        textStyle: { color: '#f1f5f9' },
+        formatter: (params: any) => {
+          const d = params?.data as { unitId?: string; ecpm?: number; adType?: string } | undefined
+          if (!d) return ''
+          const ecpmText = typeof d.ecpm === 'number' ? d.ecpm.toFixed(2) : '-'
+          return `${d.unitId ?? '-'}\n广告类型: ${d.adType ?? '-'}\nECPM: ${ecpmText}`
+        }
       },
       xAxis: {
         type: 'value',
@@ -349,19 +302,36 @@
         splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
       },
       yAxis: {
-        type: 'value',
-        name: '充填率%',
+        type: 'category',
+        data: sortedData.map((item) => item.unitId),
         nameTextStyle: { color: '#64748b' },
-        axisLabel: { color: '#94a3b8', fontSize: 10, formatter: '{value}%' },
+        axisLabel: {
+          color: '#94a3b8',
+          fontSize: 10,
+          width: 116,
+          overflow: 'truncate'
+        },
         splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
       },
-      series: Object.entries(typeMap).map(([type, pts]) => ({
-        name: type,
-        type: 'scatter' as const,
-        data: pts,
-        symbolSize: 12,
-        itemStyle: { color: AD_TYPE_COLORS[type] ?? '#94A3B8' }
-      }))
+      series: [
+        {
+          type: 'bar',
+          data: sortedData.map((item) => ({
+            value: item.ecpm,
+            unitId: item.unitId,
+            adType: item.adType,
+            itemStyle: { color: AD_TYPE_COLORS[item.adType] ?? '#94A3B8' }
+          })),
+          barMaxWidth: 16,
+          label: {
+            show: true,
+            position: 'right',
+            color: '#94a3b8',
+            fontSize: 10,
+            formatter: (p: any) => (typeof p?.value === 'number' ? p.value.toFixed(2) : '')
+          }
+        }
+      ]
     }
   }
 
@@ -369,7 +339,7 @@
     const { dates, series } = tabData.value?.trend7d ?? { dates: [], series: [] }
     return {
       backgroundColor: 'transparent',
-      grid: { left: 56, right: 48, top: 16, bottom: 36 },
+      grid: { left: 56, right: 48, top: 16, bottom: 170 },
       tooltip: {
         trigger: 'axis',
         backgroundColor: '#1e293b',
@@ -378,8 +348,13 @@
       },
       legend: {
         data: series.map((s) => s.name),
-        bottom: 0,
-        textStyle: { color: '#64748b', fontSize: 11 }
+        bottom: 8,
+        left: 8,
+        right: 8,
+        itemWidth: 10,
+        itemHeight: 10,
+        itemGap: 8,
+        textStyle: { color: '#64748b', fontSize: 10 }
       },
       xAxis: {
         type: 'category',
@@ -407,9 +382,17 @@
 
   function refreshCharts() {
     if (!tabData.value) return
-    useFillRate.updateChart(buildFillRateOption())
     useScatter.updateChart(buildScatterOption())
     useTrend.updateChart(buildTrendOption())
+    // 卡片高度在布局完成后会再次变化，补一次 resize 确保图表真正铺满 card-body
+    requestAnimationFrame(() => {
+      useScatter.handleResize()
+      useTrend.handleResize()
+      requestAnimationFrame(() => {
+        useScatter.handleResize()
+        useTrend.handleResize()
+      })
+    })
   }
 
   async function loadTabData() {
@@ -521,8 +504,14 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    align-self: stretch;
     min-width: 0;
-    min-height: 0;
+    min-height: 650px;
+
+    .iaa-panel {
+      flex: 1;
+      min-height: 0;
+    }
   }
 
   .iaa-panel {
@@ -594,6 +583,7 @@
   .iaa-chart {
     flex: 1;
     width: 100%;
+    height: 100%;
     min-height: 0;
 
     &--bar {
@@ -606,6 +596,16 @@
 
     &--line {
       min-height: 160px;
+    }
+  }
+
+  .iaa-panel--scatter-full {
+    :deep(.el-card__body) {
+      padding: 0;
+    }
+
+    .iaa-chart--scatter {
+      height: 100%;
     }
   }
 

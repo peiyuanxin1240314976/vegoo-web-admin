@@ -110,11 +110,10 @@ export interface IaaFillRateBucket {
   count: number
 }
 
-/** ECPM vs 充填率散点项 */
+/** 广告单元 ECPM 对比项 */
 export interface IaaEcpmFillPoint {
   unitId: string
   ecpm: number
-  fillRate: number
   adType: string
 }
 

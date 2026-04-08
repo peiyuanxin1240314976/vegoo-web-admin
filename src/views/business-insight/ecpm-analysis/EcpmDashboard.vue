@@ -1082,6 +1082,7 @@
       yAxis: {
         type: 'category',
         data: countries,
+        inverse: true,
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: { color: TEXT_COLOR, fontSize: 11 }

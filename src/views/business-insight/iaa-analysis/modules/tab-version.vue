@@ -77,7 +77,7 @@
         </ElCard>
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
-            <span>版本广告渗透率 vs 崩溃率</span>
+            <span>版本广告渗透率</span>
           </template>
           <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
           <div v-else ref="penetrationCrashRef" class="iaa-chart iaa-chart--dual"></div>
@@ -339,14 +339,13 @@
   }
 
   function buildPenetrationCrashOption(): EChartsOption {
-    const { versions, penetration, crash } = tabData.value?.penetrationCrash ?? {
+    const { versions, penetration } = tabData.value?.penetrationCrash ?? {
       versions: [],
-      penetration: [],
-      crash: []
+      penetration: []
     }
     return {
       backgroundColor: 'transparent',
-      grid: { left: 56, right: 56, top: 16, bottom: 36 },
+      grid: { left: 56, right: 24, top: 44, bottom: 24 },
       tooltip: {
         trigger: 'axis',
         backgroundColor: '#1e293b',
@@ -354,8 +353,9 @@
         textStyle: { color: '#f1f5f9' }
       },
       legend: {
-        data: ['广告用户渗透率', '崩溃率'],
-        bottom: 0,
+        data: ['广告用户渗透率'],
+        top: 6,
+        left: 'center',
         textStyle: { color: '#64748b', fontSize: 11 }
       },
       xAxis: {
@@ -364,23 +364,14 @@
         axisLabel: { color: '#64748b', fontSize: 10, rotate: 30 },
         axisLine: { lineStyle: { color: '#1e293b' } }
       },
-      yAxis: [
-        {
-          type: 'value',
-          name: '渗透率%',
-          nameTextStyle: { color: '#64748b' },
-          max: 100,
-          axisLabel: { color: '#64748b', fontSize: 10, formatter: '{value}%' },
-          splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
-        },
-        {
-          type: 'value',
-          name: '崩溃率%',
-          nameTextStyle: { color: '#64748b' },
-          axisLabel: { color: '#64748b', fontSize: 10 },
-          splitLine: { show: false }
-        }
-      ],
+      yAxis: {
+        type: 'value',
+        name: '渗透率%',
+        nameTextStyle: { color: '#64748b' },
+        max: 100,
+        axisLabel: { color: '#64748b', fontSize: 10, formatter: '{value}%' },
+        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+      },
       series: [
         {
           name: '广告用户渗透率',
@@ -388,16 +379,6 @@
           data: penetration,
           itemStyle: { color: '#26C2AD', borderRadius: [3, 3, 0, 0] },
           barMaxWidth: 24
-        },
-        {
-          name: '崩溃率',
-          type: 'line',
-          data: crash,
-          yAxisIndex: 1,
-          symbol: 'circle',
-          symbolSize: 7,
-          lineStyle: { color: '#8B5CF6', width: 2 },
-          itemStyle: { color: '#8B5CF6' }
         }
       ]
     }

@@ -772,14 +772,23 @@
 
   const router = useRouter()
 
-  /** IAA 广告平台 Tab 行点击进入商业洞察 · 广告平台详情，携带 `source`（与行上 s_platform_name / s_name 一致） */
+  /** IAA 广告平台 Tab 行点击进入商业洞察 · 广告平台详情 */
   function onIaaTableRowClick(row: Record<string, unknown>) {
     if (iaaTab.value !== 'platform') return
-    const name = typeof row.s_name === 'string' ? row.s_name.trim() : ''
-    if (!name || name === '合计') return
+    const platformName =
+      typeof row.s_platform_name === 'string'
+        ? row.s_platform_name.trim()
+        : typeof row.s_name === 'string'
+          ? row.s_name.trim()
+          : ''
+    if (!platformName || platformName === '合计') return
+    const source = typeof row.source === 'string' ? row.source.trim() : ''
     void router.push({
       name: 'AdPlatformDetail',
-      query: { source: name }
+      query: {
+        'platform-name': platformName,
+        source
+      }
     })
   }
 
@@ -1400,6 +1409,8 @@
       const rows = iaaPlatformRows.value.map((r) => ({
         _rowKey: `pf-${r.s_platform_name}`,
         s_name: r.s_platform_name,
+        s_platform_name: r.s_platform_name,
+        source: String((r as any).source ?? ''),
         revenue: r.revenue,
         percent: r.percent,
         n_impression: r.n_impression,
@@ -1412,6 +1423,8 @@
       rows.push({
         _rowKey: 'pf-total',
         s_name: '合计',
+        s_platform_name: '合计',
+        source: '',
         revenue: sumR,
         percent: 100,
         n_impression: sumI,
