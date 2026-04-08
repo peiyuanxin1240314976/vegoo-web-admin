@@ -61,7 +61,7 @@ export default ({ mode }: { mode: string }) => {
     },
     build: {
       target: 'es2015',
-      outDir: 'dist',
+      outDir: 'app',
       chunkSizeWarningLimit: 2000,
       minify: 'terser',
       terserOptions: {
