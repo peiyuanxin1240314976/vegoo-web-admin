@@ -9,7 +9,8 @@ import {
   fetchRealtimeAppDetail
 } from '@/api/user-growth/real-time-data'
 import type {
-  AppCard,
+  AppDetailData,
+  RealtimeAppCardRow,
   RealtimeDataQueryParams,
   RealtimeHourlySpendComparison,
   RealtimeKpiSummary
@@ -61,9 +62,10 @@ function buildQueryParams(filterAppId: string, filterSourceUi: string): Realtime
 export function useRealtimeDashboard() {
   const cockpitMetaFilterStore = useCockpitMetaFilterStore()
 
-  const apps = ref<AppCard[]>([])
+  const apps = ref<RealtimeAppCardRow[]>([])
   const kpiData = ref<RealtimeKpiSummary>({ ...EMPTY_KPI })
   const hourlyComparison = ref<RealtimeHourlySpendComparison | null>(null)
+  const detailCache = ref<Record<string, AppDetailData>>({})
 
   const rawAppOptions = computed(
     () => cockpitMetaFilterStore.data?.appOptions ?? ([] as CockpitMetaOptionItem[])
@@ -118,19 +120,7 @@ export function useRealtimeDashboard() {
       kpiData.value = kpi
       hourlyComparison.value = hourly
 
-      const rows = table.items ?? []
-      const detailResults = await Promise.all(
-        rows.map((row) =>
-          fetchRealtimeAppDetail({
-            appId: row.id,
-            source: params.source
-          })
-        )
-      )
-      apps.value = rows.map((row, i) => ({
-        ...row,
-        detail: detailResults[i].detail
-      }))
+      apps.value = table.items ?? []
     } catch (e) {
       console.error(e)
       ElMessage.error('实时数据加载失败')
@@ -139,6 +129,25 @@ export function useRealtimeDashboard() {
       hourlyComparison.value = null
     } finally {
       dashboardLoading.value = false
+    }
+  }
+
+  async function loadAppDetail(appId: string): Promise<AppDetailData | null> {
+    const params = buildQueryParams(filterAppId.value ?? '', filterSourceUi.value ?? '')
+    const cacheKey = `${appId}::${params.source}`
+    const cached = detailCache.value[cacheKey]
+    if (cached) return cached
+    try {
+      const res = await fetchRealtimeAppDetail({
+        appId,
+        source: params.source
+      })
+      detailCache.value[cacheKey] = res.detail
+      return res.detail
+    } catch (e) {
+      console.error(e)
+      ElMessage.error('应用详情加载失败')
+      return null
     }
   }
 
@@ -154,6 +163,7 @@ export function useRealtimeDashboard() {
     dashboardLoading,
     loadFilterOptions,
     loadDashboard,
+    loadAppDetail,
     buildQueryParams: () => buildQueryParams(filterAppId.value, filterSourceUi.value)
   }
 }

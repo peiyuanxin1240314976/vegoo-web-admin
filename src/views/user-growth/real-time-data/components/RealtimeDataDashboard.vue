@@ -2,7 +2,7 @@
   import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
   import * as echarts from 'echarts'
   import AppDetailModal from './AppDetailModal.vue'
-  import type { AppCard, AppDetailData } from '../types'
+  import type { AppDetailData, RealtimeAppCardRow } from '../types'
   import { useRealtimeDashboard } from '../composables/useRealtimeDashboard'
 
   defineOptions({ name: 'RealtimeDataDashboard' })
@@ -18,15 +18,18 @@
     filterOptionsLoading,
     dashboardLoading,
     loadFilterOptions,
-    loadDashboard
+    loadDashboard,
+    loadAppDetail
   } = useRealtimeDashboard()
 
   // ===== Modal =====
   const showModal = ref(false)
   const selectedApp = ref<AppDetailData | null>(null)
 
-  function openDetail(app: AppCard) {
-    selectedApp.value = app.detail
+  async function openDetail(app: RealtimeAppCardRow) {
+    const detail = await loadAppDetail(app.id)
+    if (!detail) return
+    selectedApp.value = detail
     showModal.value = true
   }
 
