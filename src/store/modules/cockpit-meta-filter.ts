@@ -13,6 +13,82 @@ import {
   writeCockpitMetaFilterToSession
 } from '@/utils/cockpit-meta-filter-session'
 
+type RawOption = Record<string, unknown> | string | number | null | undefined
+
+function toStringValue(input: unknown): string {
+  if (typeof input === 'string') return input.trim()
+  if (typeof input === 'number') return String(input)
+  return ''
+}
+
+function normalizeOptionList(
+  raw: unknown,
+  valueKeys: string[],
+  labelKeys: string[]
+): CockpitMetaFilterOptionsData['appOptions'] {
+  if (!Array.isArray(raw)) return []
+  const result: CockpitMetaFilterOptionsData['appOptions'] = []
+  const used = new Set<string>()
+
+  for (const item of raw as RawOption[]) {
+    if (typeof item === 'string' || typeof item === 'number') {
+      const text = toStringValue(item)
+      if (!text || used.has(text)) continue
+      result.push({ label: text, value: text })
+      used.add(text)
+      continue
+    }
+    if (!item || typeof item !== 'object') continue
+
+    let value = ''
+    let label = ''
+
+    for (const key of valueKeys) {
+      value = toStringValue(item[key])
+      if (value) break
+    }
+    for (const key of labelKeys) {
+      label = toStringValue(item[key])
+      if (label) break
+    }
+
+    if (!value && label) value = label
+    if (!label && value) label = value
+    if (!value || used.has(value)) continue
+
+    result.push({ label, value })
+    used.add(value)
+  }
+
+  return result
+}
+
+function normalizeCockpitMetaPayload(raw: unknown): CockpitMetaFilterOptionsData {
+  const payload = (raw ?? {}) as Record<string, unknown>
+  return {
+    appOptions: normalizeOptionList(
+      payload.appOptions,
+      ['value', 'appId', 'id'],
+      ['label', 'appName', 'name']
+    ),
+    platformOptions: normalizeOptionList(
+      payload.platformOptions,
+      ['value', 'platform', 'id'],
+      ['label', 'platformName', 'name']
+    ),
+    sourceOptions: normalizeOptionList(
+      payload.sourceOptions,
+      ['value', 'source', 'id'],
+      ['label', 'sourceName', 'name']
+    ),
+    countryOptions: normalizeOptionList(
+      payload.countryOptions,
+      ['value', 'countryCode', 'id'],
+      ['label', 'countryName', 'name']
+    )
+  }
+}
+
 export const useCockpitMetaFilterStore = defineStore('cockpitMetaFilter', () => {
   const data = shallowRef<CockpitMetaFilterOptionsData | null>(null)
   let loadPromise: Promise<CockpitMetaFilterOptionsData | null> | null = null
@@ -38,9 +114,10 @@ export const useCockpitMetaFilterStore = defineStore('cockpitMetaFilter', () => 
     loadPromise = (async () => {
       try {
         const res = await fetchCockpitMetaFilterOptions()
-        data.value = res
-        writeCockpitMetaFilterToSession(res)
-        return res
+        const normalized = normalizeCockpitMetaPayload(res)
+        data.value = normalized
+        writeCockpitMetaFilterToSession(normalized)
+        return normalized
       } catch (e) {
         console.warn('[cockpit-meta-filter] 拉取 meta-filter-options 失败', e)
         return null

@@ -1,0 +1,69 @@
+{
+  "_comment": "账户管理 - 编辑广告账户。id 放入请求体。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "string", "required": true, "description": "账户ID，如 ACC-001。" },
+      "accountName": { "type": "string", "required": false, "description": "账户名称。" },
+      "bcBm": { "type": "string", "required": false, "description": "归属BC/BM。" },
+      "apps": { "type": "string[]", "required": false, "description": "投放应用列表。" },
+      "platform": { "type": "string[]", "required": false, "description": "投放平台。" },
+      "purposes": { "type": "string[]", "required": false, "description": "账户用途。" },
+      "credential": { "type": "string", "required": false, "description": "关联凭据名称。" },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "data": { "type": "AdAccountItem", "required": true, "description": "更新后的完整账户信息。" }
+    }
+  },
+  "sampleRequest": {
+    "id": "ACC-001",
+    "accountName": "Google-US-Main",
+    "bcBm": "Vegoo Google BM",
+    "apps": ["BloodSugar2", "WeatherApp"],
+    "platform": ["安卓"],
+    "purposes": ["广告投放", "用户获取"],
+    "credential": "AdCost",
+    "remark": "美国主力投放账户"
+  },
+  "sampleResponse": {
+    "data": {
+      "id": "ACC-001",
+      "accountName": "Google-US-Main",
+      "source": "Google Ads",
+      "agency": "直投",
+      "accountType": "直投",
+      "balance": 12450,
+      "monthSpend": 85420,
+      "status": "正常",
+      "bcBm": "Vegoo Google BM",
+      "apps": ["BloodSugar2", "WeatherApp"],
+      "platform": ["安卓"],
+      "purposes": ["广告投放", "用户获取"],
+      "credential": "AdCost",
+      "spendLimit": 200000,
+      "spendProgress": 42.7,
+      "currency": "USD",
+      "lastRechargeTime": "2024-01-25",
+      "lastRechargeAmount": 2000,
+      "createTime": "2023-01-15",
+      "remark": "美国主力投放账户"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/account/update",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ id, ...Partial<AccountFormModel> }",
+    "responseBody": "AdAccountItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "编辑广告账户弹窗提交，`updateAccount`。"
+      }
+    ],
+    "defaultSelection": "请求体带当前行 id 与变更字段。",
+    "dedupe": "无"
+  }
+}

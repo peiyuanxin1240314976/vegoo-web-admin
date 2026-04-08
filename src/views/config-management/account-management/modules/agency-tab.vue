@@ -5,45 +5,45 @@
       <!-- 广告平台 -->
       <div class="filter-group">
         <span class="filter-label">广告平台：</span>
-        <div class="toggle-tabs">
-          <button
-            :class="['toggle-tab', { 'toggle-tab--active': sourceFilter === '' }]"
-            @click="sourceFilter = ''"
-          >全部</button>
-          <button
-            v-for="p in PLATFORM_CONFIGS"
-            :key="p.value"
-            :class="['toggle-tab', 'toggle-tab--platform', { 'toggle-tab--active': sourceFilter === p.value }]"
-            :style="sourceFilter === p.value ? { color: p.color, borderColor: p.color, background: p.bg } : {}"
-            @click="sourceFilter = p.value"
-          >
-            {{ p.shortLabel }}
-          </button>
-        </div>
+        <el-select
+          v-model="sourceFilter"
+          placeholder="全部"
+          class="filter-select filter-select--platform"
+          clearable
+          filterable
+          :loading="sourceFilterLoading"
+        >
+          <el-option
+            v-for="option in platformOptions"
+            :key="option.value || 'all'"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
       </div>
       <!-- 合作模式 -->
       <div class="filter-group">
         <span class="filter-label">合作模式：</span>
-        <div class="toggle-tabs">
-          <button
+        <el-select v-model="coopModeFilter" placeholder="全部" class="filter-select" clearable>
+          <el-option
             v-for="m in coopModeOptions"
-            :key="m.value"
-            :class="['toggle-tab', { 'toggle-tab--active': coopModeFilter === m.value }]"
-            @click="coopModeFilter = m.value"
-          >{{ m.label }}</button>
-        </div>
+            :key="m.value || 'all'"
+            :label="m.label"
+            :value="m.value"
+          />
+        </el-select>
       </div>
       <!-- 状态 -->
       <div class="filter-group">
         <span class="filter-label">状态：</span>
-        <div class="toggle-tabs">
-          <button
+        <el-select v-model="statusFilter" placeholder="全部" class="filter-select" clearable>
+          <el-option
             v-for="s in statusOptions"
-            :key="s.value"
-            :class="['toggle-tab', { 'toggle-tab--active': statusFilter === s.value }]"
-            @click="statusFilter = s.value"
-          >{{ s.label }}</button>
-        </div>
+            :key="s.value || 'all'"
+            :label="s.label"
+            :value="s.value"
+          />
+        </el-select>
       </div>
     </div>
 
@@ -63,7 +63,9 @@
       </div>
       <div class="stat-card">
         <div class="stat-label">本月总消耗</div>
-        <div class="stat-value stat-value--spend">${{ stats.monthSpend.toLocaleString('en-US') }}</div>
+        <div class="stat-value stat-value--spend"
+          >${{ stats.monthSpend.toLocaleString('en-US') }}</div
+        >
       </div>
     </div>
 
@@ -78,7 +80,7 @@
       >
         <el-table-column type="index" label="序号" width="60" align="center">
           <template #default="{ $index }">
-            <span class="row-index">{{ ($index + 1) + (currentPage - 1) * pageSize }}</span>
+            <span class="row-index">{{ $index + 1 + (currentPage - 1) * pageSize }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="id" label="代理商ID" min-width="100" show-overflow-tooltip>
@@ -100,7 +102,12 @@
         </el-table-column>
         <el-table-column label="合作模式" min-width="100" align="center">
           <template #default="{ row }">
-            <span :class="['coop-badge', row.coopMode === '授权代理' ? 'coop-badge--auth' : 'coop-badge--direct']">
+            <span
+              :class="[
+                'coop-badge',
+                row.coopMode === '授权代理' ? 'coop-badge--auth' : 'coop-badge--direct'
+              ]"
+            >
               {{ row.coopMode }}
             </span>
           </template>
@@ -117,7 +124,9 @@
         </el-table-column>
         <el-table-column label="到期日期" min-width="110" align="center">
           <template #default="{ row }">
-            <span :class="['expire-date', isExpiringSoon(row.expireDate) ? 'expire-date--warn' : '']">
+            <span
+              :class="['expire-date', isExpiringSoon(row.expireDate) ? 'expire-date--warn' : '']"
+            >
               {{ row.expireDate || '--' }}
             </span>
           </template>
@@ -169,8 +178,11 @@
 
 <script setup lang="ts">
   import { onMounted, ref, computed, watch } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { fetchAgencyTable } from '@/api/config-management/account-management'
   import { getAppNowMs } from '@/utils/app-now'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import { AccountApiSource } from '../config/data-source'
   import { cloneAgencyMockList } from '../mock/data'
   import { PLATFORM_CONFIGS } from '../types'
@@ -202,6 +214,21 @@
     { label: '已到期', value: '已到期' },
     { label: '已终止', value: '已终止' }
   ]
+
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaFilterStore)
+  const sourceFilterLoading = ref(false)
+  const platformOptions = computed(() => {
+    const metaSources = (cockpitMeta.value?.sourceOptions ?? []) as CockpitMetaOptionItem[]
+    const mapped = metaSources
+      .filter((opt) => opt.value !== 'all')
+      .map((opt) => ({ label: opt.label, value: opt.value }))
+    if (mapped.length > 0) return [{ label: '全部', value: '' }, ...mapped]
+    return [
+      { label: '全部', value: '' },
+      ...PLATFORM_CONFIGS.map((item) => ({ label: item.shortLabel, value: item.value }))
+    ]
+  })
 
   const sourceFilter = ref('')
   const coopModeFilter = ref('')
@@ -239,7 +266,13 @@
     }
   }
 
-  onMounted(() => {
+  onMounted(async () => {
+    sourceFilterLoading.value = true
+    try {
+      await cockpitMetaFilterStore.ensureLoaded()
+    } finally {
+      sourceFilterLoading.value = false
+    }
     loadAgencyList()
   })
 
@@ -253,7 +286,7 @@
       ) {
         return false
       }
-      if (sourceFilter.value && item.source !== sourceFilter.value) return false
+      if (!rowMatchesSourceFilter(item, sourceFilter.value)) return false
       if (coopModeFilter.value && item.coopMode !== coopModeFilter.value) return false
       if (statusFilter.value && item.status !== statusFilter.value) return false
       return true
@@ -276,13 +309,24 @@
 
   watch(
     () => [props.searchKeyword, sourceFilter.value, coopModeFilter.value, statusFilter.value],
-    () => { currentPage.value = 1 }
+    () => {
+      currentPage.value = 1
+    }
   )
 
   function getPlatformStyle(source: string) {
     const cfg = PLATFORM_CONFIGS.find((p) => p.value === source)
     if (!cfg) return {}
     return { color: cfg.color, background: cfg.bg }
+  }
+
+  function rowMatchesSourceFilter(row: AgencyItem, filterValue: string) {
+    if (!filterValue) return true
+    if (row.source === filterValue) return true
+    const opts = cockpitMeta.value?.sourceOptions ?? []
+    const byMeta = opts.find((o) => o.value === filterValue)
+    if (byMeta) return row.source === byMeta.label
+    return false
   }
 
   function getStatusClass(status: string) {
@@ -338,79 +382,76 @@
   .filter-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px 24px;
+    gap: 12px 16px;
     align-items: center;
     padding: 14px 16px;
-    background: var(--bg-card, #131c2e);
+    background: linear-gradient(180deg, rgb(19 28 46 / 90%) 0%, rgb(19 28 46 / 75%) 100%);
     border: 1px solid var(--border, rgb(255 255 255 / 7%));
-    border-radius: 10px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 18%);
   }
 
   .filter-group {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
   }
 
   .filter-label {
     flex-shrink: 0;
     font-size: 13px;
+    font-weight: 500;
     color: var(--text-secondary, #94a3b8);
   }
 
   .filter-select {
-    width: 150px;
+    width: 140px;
 
-    :deep(.el-input__wrapper) {
+    :deep(.el-select__wrapper) {
+      min-height: 34px;
+      color: var(--text-primary, #e2e8f0);
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid var(--border, rgb(255 255 255 / 7%)) !important;
+      border-radius: 9999px;
       box-shadow: none !important;
-
-      &:hover,
-      &:focus-within {
-        border-color: var(--accent, #3b82f6) !important;
-      }
+      transition:
+        border-color var(--duration-fast, 150ms) var(--ease-default, ease),
+        background-color var(--duration-fast, 150ms) var(--ease-default, ease),
+        box-shadow var(--duration-fast, 150ms) var(--ease-default, ease);
     }
 
-    :deep(.el-input__inner) {
+    :deep(.el-select__wrapper:hover) {
+      background: rgb(59 130 246 / 10%) !important;
+      border-color: rgb(59 130 246 / 55%) !important;
+    }
+
+    :deep(.el-select__wrapper.is-focused) {
+      border-color: var(--accent, #3b82f6) !important;
+      box-shadow: 0 0 0 2px rgb(59 130 246 / 22%) !important;
+    }
+
+    :deep(.el-select__placeholder),
+    :deep(.el-select__selected-item) {
       font-size: 13px;
       color: var(--text-primary, #e2e8f0);
     }
+
+    :deep(.el-select__caret) {
+      color: var(--text-secondary, #94a3b8);
+    }
   }
 
-  .toggle-tabs {
-    display: flex;
-    gap: 4px;
+  .filter-select--platform {
+    width: 150px;
   }
 
-  .toggle-tab {
-    padding: 5px 12px;
-    font-size: 12px;
-    color: var(--text-secondary, #94a3b8);
-    cursor: pointer;
-    background: transparent;
-    border: 1px solid var(--border, rgb(255 255 255 / 7%));
-    border-radius: 6px;
-    transition: all 0.18s;
+  :deep(.el-select-dropdown__item.is-selected) {
+    font-weight: 600;
+    color: var(--accent, #3b82f6);
+  }
 
-    &:hover {
-      color: var(--text-primary, #e2e8f0);
-      border-color: rgb(255 255 255 / 15%);
-    }
-
-    &--active {
-      color: var(--accent, #3b82f6);
-      background: rgb(59 130 246 / 12%);
-      border-color: rgb(59 130 246 / 30%);
-    }
-
-    &--platform {
-      min-width: 36px;
-      padding: 4px 8px;
-      font-size: 11px;
-      font-weight: 600;
-      text-align: center;
-    }
+  :deep(.el-select-dropdown__item:hover) {
+    background: rgb(59 130 246 / 12%);
   }
 
   // ─── 统计卡片 ────────────────────────────────────────
@@ -440,10 +481,18 @@
     font-weight: 700;
     line-height: 1;
 
-    &--total { color: #e2e8f0; }
-    &--active { color: #22c55e; }
-    &--accounts { color: #3b82f6; }
-    &--spend { color: #f59e0b; }
+    &--total {
+      color: #e2e8f0;
+    }
+    &--active {
+      color: #22c55e;
+    }
+    &--accounts {
+      color: #3b82f6;
+    }
+    &--spend {
+      color: #f59e0b;
+    }
   }
 
   // ─── 表格 ────────────────────────────────────────────
@@ -558,21 +607,27 @@
       color: #22c55e;
       background: rgb(34 197 94 / 10%);
 
-      .status-dot { background: #22c55e; }
+      .status-dot {
+        background: #22c55e;
+      }
     }
 
     &--pending {
       color: #f59e0b;
       background: rgb(245 158 11 / 10%);
 
-      .status-dot { background: #f59e0b; }
+      .status-dot {
+        background: #f59e0b;
+      }
     }
 
     &--terminated {
       color: #64748b;
       background: rgb(100 116 139 / 10%);
 
-      .status-dot { background: #64748b; }
+      .status-dot {
+        background: #64748b;
+      }
     }
   }
 
@@ -602,7 +657,9 @@
       background: rgb(59 130 246 / 10%);
       border-color: rgb(59 130 246 / 20%);
 
-      &:hover { background: rgb(59 130 246 / 20%); }
+      &:hover {
+        background: rgb(59 130 246 / 20%);
+      }
     }
 
     &--edit {
@@ -610,7 +667,9 @@
       background: rgb(52 211 153 / 10%);
       border-color: rgb(52 211 153 / 20%);
 
-      &:hover { background: rgb(52 211 153 / 20%); }
+      &:hover {
+        background: rgb(52 211 153 / 20%);
+      }
     }
 
     &--del {
@@ -618,7 +677,9 @@
       background: rgb(248 113 113 / 10%);
       border-color: rgb(248 113 113 / 20%);
 
-      &:hover { background: rgb(248 113 113 / 20%); }
+      &:hover {
+        background: rgb(248 113 113 / 20%);
+      }
     }
   }
 
@@ -659,8 +720,12 @@
       color: #94a3b8;
       background: transparent;
 
-      &:hover { color: #e2e8f0; }
-      &:disabled { opacity: 0.4; }
+      &:hover {
+        color: #e2e8f0;
+      }
+      &:disabled {
+        opacity: 0.4;
+      }
     }
   }
 

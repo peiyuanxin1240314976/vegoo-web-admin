@@ -1,0 +1,65 @@
+{
+  "_comment": "账户管理 · 广告账户 — 批量导入。对应 `importAccountList` body: { items: AccountFormModel[] }。",
+  "fieldDescription": {
+    "request": {
+      "items": {
+        "type": "AccountFormModel[]",
+        "required": true,
+        "description": "待导入账户列表，字段与新建账户一致。"
+      }
+    },
+    "response": {
+      "successCount": { "type": "number", "required": true, "description": "成功条数。" },
+      "failedCount": { "type": "number", "required": true, "description": "失败条数。" },
+      "errors": {
+        "type": "array",
+        "required": false,
+        "description": "可选：失败行详情 { row, message }。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "items": [
+      {
+        "source": "Google Ads",
+        "accountName": "Import-ACC-01",
+        "accountType": "直投",
+        "openAmount": 0,
+        "agency": "",
+        "bcBm": "Vegoo Google BM",
+        "apps": ["BloodSugar2"],
+        "platform": ["安卓"],
+        "purposes": ["广告投放"],
+        "credential": "AdCost",
+        "remark": "批量导入"
+      }
+    ]
+  },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "successCount": 1,
+      "failedCount": 0,
+      "errors": []
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/account/import",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "{ items }",
+    "responseBody": "ImportResult"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "页头导入完成解析后提交 `importAccountList`。",
+        "prerequisite": "`AccountApiSource.importAccount` 为 false 时走网关。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "无"
+  }
+}

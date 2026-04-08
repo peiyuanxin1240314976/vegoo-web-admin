@@ -5,55 +5,53 @@
       <!-- 广告平台 -->
       <div class="filter-group">
         <span class="filter-label">广告平台：</span>
-        <div class="platform-tabs">
-          <button
-            :class="['platform-tab', { 'platform-tab--active': sourceFilter === '' }]"
-            @click="sourceFilter = ''"
-          >
-            全部
-          </button>
-          <button
-            v-for="p in PLATFORM_CONFIGS"
-            :key="p.value"
-            :class="['platform-tab', { 'platform-tab--active': sourceFilter === p.value }]"
-            @click="sourceFilter = p.value"
-          >
-            {{ p.shortLabel }}
-          </button>
-        </div>
+        <el-select
+          v-model="sourceFilter"
+          placeholder="全部"
+          class="filter-select filter-select--platform"
+          clearable
+        >
+          <el-option
+            v-for="option in platformOptions"
+            :key="option.value || 'all'"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
       </div>
       <!-- 账户类型 -->
       <div class="filter-group">
         <span class="filter-label">账户类型：</span>
-        <div class="type-tabs">
-          <button
+        <el-select v-model="accountTypeFilter" placeholder="全部" class="filter-select" clearable>
+          <el-option
             v-for="t in accountTypeOptions"
-            :key="t.value"
-            :class="['type-tab', { 'type-tab--active': accountTypeFilter === t.value }]"
-            @click="accountTypeFilter = t.value"
-          >
-            {{ t.label }}
-          </button>
-        </div>
+            :key="t.value || 'all'"
+            :label="t.label"
+            :value="t.value"
+          />
+        </el-select>
       </div>
       <!-- 状态 -->
       <div class="filter-group">
         <span class="filter-label">状态：</span>
-        <div class="type-tabs">
-          <button
+        <el-select v-model="statusFilter" placeholder="全部" class="filter-select" clearable>
+          <el-option
             v-for="s in statusOptions"
-            :key="s.value"
-            :class="['type-tab', { 'type-tab--active': statusFilter === s.value }]"
-            @click="statusFilter = s.value"
-          >
-            {{ s.label }}
-          </button>
-        </div>
+            :key="s.value || 'all'"
+            :label="s.label"
+            :value="s.value"
+          />
+        </el-select>
       </div>
       <!-- 应用 -->
       <div class="filter-group">
         <span class="filter-label">应用：</span>
-        <el-select v-model="appFilter" placeholder="全部" class="app-select" clearable>
+        <el-select
+          v-model="appFilter"
+          placeholder="全部"
+          class="filter-select filter-select--app"
+          clearable
+        >
           <el-option v-for="app in appOptions" :key="app" :label="app" :value="app" />
         </el-select>
       </div>
@@ -229,6 +227,16 @@
     { label: '已停用', value: '已停用' }
   ]
 
+  const platformOptions = computed(() => {
+    return [
+      { label: '全部', value: '' },
+      ...PLATFORM_CONFIGS.map((item) => ({
+        label: item.shortLabel,
+        value: item.value
+      }))
+    ]
+  })
+
   const sourceFilter = ref('')
   const accountTypeFilter = ref('')
   const statusFilter = ref('')
@@ -383,67 +391,82 @@
   .filter-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px 20px;
+    gap: 12px 16px;
     align-items: center;
     padding: 14px 16px;
     margin-bottom: 16px;
-    background: var(--bg-card);
+    background: linear-gradient(180deg, rgb(19 28 46 / 90%) 0%, rgb(19 28 46 / 75%) 100%);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 18%);
   }
 
   .filter-group {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
   }
 
   .filter-label {
     flex-shrink: 0;
     font-size: 13px;
+    font-weight: 500;
     color: var(--text-secondary);
     white-space: nowrap;
   }
 
-  .platform-tabs,
-  .type-tabs {
-    display: flex;
-    gap: 4px;
-  }
-
-  .platform-tab,
-  .type-tab {
-    padding: 4px 10px;
-    font-size: 12px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    background: rgb(255 255 255 / 4%);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    transition: all 0.15s;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent);
-    }
-
-    &--active {
-      color: var(--accent);
-      background: var(--accent-dim);
-      border-color: var(--accent);
-    }
-  }
-
-  .app-select {
-    width: 120px;
+  .filter-select {
+    width: 140px;
 
     :deep(.el-select__wrapper) {
+      min-height: 34px;
       color: var(--text-primary);
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid var(--border) !important;
-      border-radius: 6px;
+      border-radius: 9999px;
       box-shadow: none !important;
+      transition:
+        border-color var(--duration-fast, 150ms) var(--ease-default, ease),
+        background-color var(--duration-fast, 150ms) var(--ease-default, ease),
+        box-shadow var(--duration-fast, 150ms) var(--ease-default, ease);
     }
+
+    :deep(.el-select__wrapper:hover) {
+      background: rgb(59 130 246 / 10%) !important;
+      border-color: rgb(59 130 246 / 55%) !important;
+    }
+
+    :deep(.el-select__wrapper.is-focused) {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 2px rgb(59 130 246 / 22%) !important;
+    }
+
+    :deep(.el-select__placeholder),
+    :deep(.el-select__selected-item) {
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    :deep(.el-select__caret) {
+      color: var(--text-secondary);
+    }
+  }
+
+  .filter-select--platform {
+    width: 150px;
+  }
+
+  .filter-select--app {
+    width: 190px;
+  }
+
+  :deep(.el-select-dropdown__item.is-selected) {
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  :deep(.el-select-dropdown__item:hover) {
+    background: rgb(59 130 246 / 12%);
   }
 
   // ─── 统计卡片 ───────────────────────────────────────────
@@ -474,12 +497,15 @@
     &--total::before {
       background: var(--accent);
     }
+
     &--active::before {
       background: var(--green);
     }
+
     &--proxy::before {
       background: #a78bfa;
     }
+
     &--new::before {
       background: var(--amber);
     }
@@ -501,12 +527,15 @@
     &--total {
       color: var(--accent);
     }
+
     &--active {
       color: var(--green);
     }
+
     &--proxy {
       color: #a78bfa;
     }
+
     &--new {
       color: var(--amber);
     }
@@ -660,9 +689,11 @@
     .status-badge--normal & {
       background: var(--green);
     }
+
     .status-badge--warning & {
       background: var(--amber);
     }
+
     .status-badge--disabled & {
       background: var(--text-muted);
     }
