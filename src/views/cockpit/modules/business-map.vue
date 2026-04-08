@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, nextTick, watch, computed, onDeactivated } from 'vue'
+  import { ref, onMounted, onBeforeUnmount, nextTick, watch, computed, onDeactivated } from 'vue'
   import { useMediaQuery } from '@vueuse/core'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import { storeToRefs } from 'pinia'
@@ -805,7 +805,8 @@
     initWorldMap()
   })
 
-  onUnmounted(() => {
+  /** 在卸载前期释放地图与 RAF，减轻离驾驶舱时与下一页挂载叠在同一段主线程上的压力 */
+  onBeforeUnmount(() => {
     resetHoverTooltip()
     if (mapMoveRaf) {
       cancelAnimationFrame(mapMoveRaf)

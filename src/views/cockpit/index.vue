@@ -155,26 +155,34 @@
       </ElRow>
     </div>
 
-    <ScenarioSimulationDialog v-model="showScenarioSimulation" />
+    <ScenarioSimulationDialog v-if="showScenarioSimulation" v-model="showScenarioSimulation" />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
+  import { ref, watch, defineAsyncComponent } from 'vue'
   import { useCockpitData } from './composables/useCockpitData'
   import type { CockpitDateRange } from './types'
   import CockpitDateRangeTabs from './modules/date-range-tabs.vue'
   import CockpitTopBarActions from './modules/top-bar-actions.vue'
   import CockpitGlobalKpiCards from './modules/global-kpi-cards.vue'
   import CockpitAlertMessages from './modules/alert-messages.vue'
-  import CockpitRevenueCostTrend from './modules/revenue-cost-trend.vue'
-  import CockpitSpendPaceMonitor from './modules/spend-pace-monitor.vue'
-  import CockpitBusinessMap from './modules/business-map.vue'
-  import CockpitTop3Panels from './modules/top3-panels.vue'
-  import CockpitSmartAlerts from './modules/smart-alerts.vue'
-  import CockpitRevenueStructureFlow from './modules/revenue-structure-flow.vue'
-  import ScenarioSimulationDialog from './modules/scenario-simulation-dialog.vue'
-  // dev测试提交
+  /** 重组件异步分包，减轻首进驾驶舱的 parse/执行与离页卸载峰值 */
+  const CockpitRevenueCostTrend = defineAsyncComponent(
+    () => import('./modules/revenue-cost-trend.vue')
+  )
+  const CockpitSpendPaceMonitor = defineAsyncComponent(
+    () => import('./modules/spend-pace-monitor.vue')
+  )
+  const CockpitBusinessMap = defineAsyncComponent(() => import('./modules/business-map.vue'))
+  const CockpitTop3Panels = defineAsyncComponent(() => import('./modules/top3-panels.vue'))
+  const CockpitSmartAlerts = defineAsyncComponent(() => import('./modules/smart-alerts.vue'))
+  const CockpitRevenueStructureFlow = defineAsyncComponent(
+    () => import('./modules/revenue-structure-flow.vue')
+  )
+  const ScenarioSimulationDialog = defineAsyncComponent(
+    () => import('./modules/scenario-simulation-dialog.vue')
+  )
   defineOptions({ name: 'Cockpit' })
 
   const showScenarioSimulation = ref(false)

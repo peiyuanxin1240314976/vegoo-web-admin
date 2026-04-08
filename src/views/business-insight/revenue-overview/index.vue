@@ -156,7 +156,7 @@
                 <span class="rev-kpi__subitem">{{ k.subLeftLabel }} {{ k.subLeftValue }}</span>
                 <span class="rev-kpi__subitem">{{ k.subRightLabel }} {{ k.subRightValue }}</span>
               </div>
-              <div :ref="(el) => setSparkRef(k.id, el)" class="rev-kpi__spark" />
+              <RevenueKpiSpark :spark="k.spark" :accent="k.accent" />
             </article>
           </section>
 
@@ -728,6 +728,9 @@
     fetchRevenueOverviewIaaAdType,
     fetchRevenueOverviewOverviewKpis
   } from '@/api/business-insight'
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Vetur 对 <script setup> 的误报
+  import RevenueKpiSpark from './modules/revenue-kpi-spark.vue'
   import {
     MOCK_REVENUE_OVERVIEW_ECPM_7D,
     MOCK_REVENUE_OVERVIEW_FILTERS,
@@ -880,24 +883,6 @@
     if (iapTrendInited.value && iapTab.value === 'trend') {
       chartIapTrend.updateChart(buildIapTrendOption())
     }
-    kpis.value.forEach((k) => {
-      const dom = sparkRefs.value[k.id]
-      const chart = sparkCharts.get(k.id)
-      if (!dom || !chart) return
-      const accent =
-        k.accent === 'blue'
-          ? getVar(dom, '--rev-c-blue', '#60a5fa')
-          : k.accent === 'teal'
-            ? getVar(dom, '--rev-c-teal', '#20d6b5')
-            : k.accent === 'purple'
-              ? getVar(dom, '--rev-c-purple', '#a78bfa')
-              : k.accent === 'amber'
-                ? getVar(dom, '--rev-c-amber', '#f59e0b')
-                : k.accent === 'green'
-                  ? getVar(dom, '--rev-c-green', '#22c55e')
-                  : getVar(dom, '--rev-c-indigo', '#60a5fa')
-      chart.updateChart(buildSparkOption(k.spark, accent))
-    })
   }
 
   function onQuery() {
@@ -969,33 +954,6 @@
     try {
       const data = await fetchRevenueOverviewOverviewKpis({ ...filters })
       if (Array.isArray(data.kpis)) kpis.value = data.kpis
-      await nextTick()
-      kpis.value.forEach((k) => {
-        let isNewChart = false
-        let chart = sparkCharts.get(k.id)
-        if (!chart) {
-          chart = useChart({ autoTheme: true })
-          sparkCharts.set(k.id, chart)
-          isNewChart = true
-        }
-        const dom = sparkRefs.value[k.id]
-        if (!dom) return
-        chart.chartRef!.value = dom
-        const accent =
-          k.accent === 'blue'
-            ? getVar(dom, '--rev-c-blue', '#60a5fa')
-            : k.accent === 'teal'
-              ? getVar(dom, '--rev-c-teal', '#20d6b5')
-              : k.accent === 'purple'
-                ? getVar(dom, '--rev-c-purple', '#a78bfa')
-                : k.accent === 'amber'
-                  ? getVar(dom, '--rev-c-amber', '#f59e0b')
-                  : k.accent === 'green'
-                    ? getVar(dom, '--rev-c-green', '#22c55e')
-                    : getVar(dom, '--rev-c-indigo', '#60a5fa')
-        if (isNewChart) chart.initChart(buildSparkOption(k.spark, accent))
-        else chart.updateChart(buildSparkOption(k.spark, accent))
-      })
     } catch {
       // 失败时保留当前卡片，避免首屏闪断
     }
@@ -2078,38 +2036,7 @@
     return v || fallback
   }
 
-  // --- 图表：KPI sparkline（每卡一个） ---
-  const sparkRefs = ref<Record<string, HTMLElement>>({})
-  function setSparkRef(id: string, el: unknown) {
-    if (el instanceof HTMLElement) sparkRefs.value[id] = el
-    else if (el === null) delete sparkRefs.value[id]
-  }
-  const sparkCharts = new Map<string, ReturnType<typeof useChart>>()
-  kpis.value.forEach((k) => sparkCharts.set(k.id, useChart({ autoTheme: true })))
-
-  function buildSparkOption(data: number[], accent: string): EChartsOption {
-    return {
-      grid: { left: 0, right: 0, top: 2, bottom: 0 },
-      xAxis: { type: 'category', show: false, data: data.map((_, i) => i) },
-      yAxis: { type: 'value', show: false, scale: true },
-      series: [
-        {
-          type: 'line',
-          data,
-          smooth: true,
-          symbol: 'none',
-          lineStyle: { color: accent, width: 1.8 },
-          areaStyle: {
-            color: new graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: accent },
-              { offset: 1, color: 'rgba(0,0,0,0)' }
-            ]),
-            opacity: 0.22
-          }
-        }
-      ]
-    }
-  }
+  // --- KPI sparkline 已拆至 modules/revenue-kpi-spark.vue（在子组件 setup 内注册 useChart，避免 await 后调用触发 Vue 警告）---
 
   // --- 图表：趋势 / 饼图 / eCPM / IAA 构成 ---
   const trend7dRef = ref<HTMLElement>()
@@ -2528,28 +2455,6 @@
   async function initCharts() {
     await nextTick()
 
-    // KPI sparks
-    kpis.value.forEach((k) => {
-      const dom = sparkRefs.value[k.id]
-      if (!dom) return
-      const chart = sparkCharts.get(k.id)
-      if (!chart) return
-      chart.chartRef!.value = dom
-      const accent =
-        k.accent === 'blue'
-          ? getVar(dom, '--rev-c-blue', '#60a5fa')
-          : k.accent === 'teal'
-            ? getVar(dom, '--rev-c-teal', '#20d6b5')
-            : k.accent === 'purple'
-              ? getVar(dom, '--rev-c-purple', '#a78bfa')
-              : k.accent === 'amber'
-                ? getVar(dom, '--rev-c-amber', '#f59e0b')
-                : k.accent === 'green'
-                  ? getVar(dom, '--rev-c-green', '#22c55e')
-                  : getVar(dom, '--rev-c-indigo', '#60a5fa')
-      chart.initChart(buildSparkOption(k.spark, accent))
-    })
-
     if (trend7dRef.value) {
       chartTrend7d.chartRef!.value = trend7dRef.value
       chartTrend7d.initChart(buildTrend7dOption())
@@ -2605,7 +2510,6 @@
   })
 
   onUnmounted(() => {
-    sparkCharts.forEach((c) => c.destroyChart?.())
     chartTrend7d.destroyChart?.()
     chartEcpm.destroyChart?.()
     chartPie.destroyChart?.()

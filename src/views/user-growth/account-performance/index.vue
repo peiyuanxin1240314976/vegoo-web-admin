@@ -349,15 +349,18 @@
     appCurrentPage.value = 1
   }
 
-  function onQuery() {
+  /** KPI 优先，其余图表/预警并行，降低首屏与「查询」瞬间的请求与渲染峰值 */
+  async function onQuery() {
     applyFilters()
-    void loadKpiCards()
-    void loadChannelSpend()
-    void loadUsageBuckets()
-    void loadDay1RoiTrend()
-    void loadTodaySpendPace()
-    void loadAlerts()
-    if (modelValue.value === '应用') void loadAppTableTree()
+    await loadKpiCards()
+    await Promise.all([
+      loadChannelSpend(),
+      loadUsageBuckets(),
+      loadDay1RoiTrend(),
+      loadTodaySpendPace(),
+      loadAlerts()
+    ])
+    if (modelValue.value === '应用') await loadAppTableTree()
   }
 
   // 应用×平台×账户明细树形表：独立请求 + 局部骨架屏
@@ -1190,13 +1193,13 @@
   }
 
   onMounted(() => {
-    void loadMetaFilterOptions()
-    renderAllCharts()
-    // 首次进入：自动提交一次默认筛选（等价于用户点一次“查询”）
-    onQuery()
-
-    // 默认初始化：如果初始就是「应用」，首次进入页面也需要拉取 table-tree
-    if (modelValue.value === '应用') void loadAppTableTree()
+    void (async () => {
+      await loadMetaFilterOptions()
+      // 让出首帧给布局与骨架，再初始化空图表，避免与 meta 请求抢主线程
+      await new Promise<void>((r) => requestAnimationFrame(() => r()))
+      renderAllCharts()
+      await onQuery()
+    })()
   })
 
   /* 深色/浅色切换时重绘图表，保证坐标轴、图例、边框等颜色正确 */
@@ -2170,6 +2173,18 @@
   @media (width <= 768px) {
     .account-performance-page {
       padding-bottom: 16px;
+    }
+  }
+
+  /* 与驾驶舱一致：窄屏去掉装饰层，降低合成与持续动画开销 */
+  @media (width <= 992px) {
+    .account-performance-page::before,
+    .account-performance-page::after {
+      content: none;
+    }
+
+    .ac-perf-page-fx {
+      display: none;
     }
   }
 

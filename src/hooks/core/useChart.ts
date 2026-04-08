@@ -52,6 +52,7 @@
 import { echarts, type EChartsOption } from '@/plugins/echarts'
 import { storeToRefs } from 'pinia'
 import { useSettingStore } from '@/store/modules/setting'
+import { registerChartResizer, scheduleLayoutResize } from '@/utils/chart-resize-hub'
 import { getCssVar } from '@/utils/ui'
 import type { BaseChartProps, ChartThemeConfig, UseChartOptions } from '@/types/component/chart'
 
@@ -77,89 +78,18 @@ export const useChartOps = (): ChartThemeConfig => ({
   ]
 })
 
-// 常量定义
-const RESIZE_DELAYS = [50, 100, 200, 350] as const
-const MENU_RESIZE_DELAYS = [50, 100, 200] as const
-const RESIZE_DEBOUNCE_DELAY = 100
-
 export function useChart(options: UseChartOptions = {}) {
   const { initOptions, initDelay = 0, threshold = 0.1, autoTheme = true, echartsInitOpts } = options
 
-  const settingStore = useSettingStore()
-  const { isDark, menuOpen, menuType } = storeToRefs(settingStore)
+  const { isDark } = storeToRefs(useSettingStore())
 
   const chartRef = ref<HTMLElement>()
   let chart: echarts.ECharts | null = null
   let intersectionObserver: IntersectionObserver | null = null
   let pendingOptions: EChartsOption | null = null
-  let resizeTimeoutId: number | null = null
-  let resizeFrameId: number | null = null
   let isDestroyed = false
   let emptyStateDiv: HTMLElement | null = null
-
-  // 清理定时器的统一方法
-  const clearTimers = () => {
-    if (resizeTimeoutId) {
-      clearTimeout(resizeTimeoutId)
-      resizeTimeoutId = null
-    }
-    if (resizeFrameId) {
-      cancelAnimationFrame(resizeFrameId)
-      resizeFrameId = null
-    }
-  }
-
-  // 使用 requestAnimationFrame 优化 resize 处理
-  const requestAnimationResize = () => {
-    if (resizeFrameId) {
-      cancelAnimationFrame(resizeFrameId)
-    }
-    resizeFrameId = requestAnimationFrame(() => {
-      handleResize()
-      resizeFrameId = null
-    })
-  }
-
-  // 防抖的resize处理（用于窗口resize事件）
-  const debouncedResize = () => {
-    if (resizeTimeoutId) {
-      clearTimeout(resizeTimeoutId)
-    }
-    resizeTimeoutId = window.setTimeout(() => {
-      requestAnimationResize()
-      resizeTimeoutId = null
-    }, RESIZE_DEBOUNCE_DELAY)
-  }
-
-  // 多延迟resize处理 - 统一方法
-  const multiDelayResize = (delays: readonly number[]) => {
-    // 立即调用一次，快速响应
-    nextTick(requestAnimationResize)
-
-    // 使用延迟时间，确保图表正确适应变化
-    delays.forEach((delay) => {
-      setTimeout(requestAnimationResize, delay)
-    })
-  }
-
-  // 收缩菜单时，重新计算图表大小（仅在图表存在时监听）
-  let menuOpenStopHandle: (() => void) | null = null
-  let menuTypeStopHandle: (() => void) | null = null
-
-  const setupMenuWatchers = () => {
-    menuOpenStopHandle = watch(menuOpen, () => multiDelayResize(RESIZE_DELAYS))
-    menuTypeStopHandle = watch(menuType, () => {
-      nextTick(requestAnimationResize)
-      setTimeout(() => multiDelayResize(MENU_RESIZE_DELAYS), 0)
-    })
-  }
-
-  const cleanupMenuWatchers = () => {
-    menuOpenStopHandle?.()
-    menuTypeStopHandle?.()
-    menuOpenStopHandle = null
-    menuTypeStopHandle = null
-  }
+  let unregisterResizeHub: (() => void) | null = null
 
   // 主题变化时重新设置图表选项
   let themeStopHandle: (() => void) | null = null
@@ -397,7 +327,7 @@ export function useChart(options: UseChartOptions = {}) {
               try {
                 if (!chart && chartRef.value) {
                   chart = echarts.init(entry.target as HTMLElement, undefined, echartsInitOpts)
-                  setupMenuWatchers()
+                  ensureResizeHubRegistered()
                   setupThemeWatcher()
                 }
                 if (chart && !isDestroyed) {
@@ -444,8 +374,7 @@ export function useChart(options: UseChartOptions = {}) {
   const performChartInit = (options: EChartsOption) => {
     if (!chart && chartRef.value && !isDestroyed) {
       chart = echarts.init(chartRef.value, undefined, echartsInitOpts)
-      // 图表创建后立即设置监听器
-      setupMenuWatchers()
+      ensureResizeHubRegistered()
       setupThemeWatcher()
     }
     if (chart && !isDestroyed) {
@@ -581,8 +510,20 @@ export function useChart(options: UseChartOptions = {}) {
     }
   }
 
+  /** 与 chart-resize-hub 单例对齐，每实例仅注册一次 */
+  const ensureResizeHubRegistered = () => {
+    if (unregisterResizeHub) return
+    unregisterResizeHub = registerChartResizer(() => handleResize())
+  }
+
+  const unregisterFromResizeHub = () => {
+    unregisterResizeHub?.()
+    unregisterResizeHub = null
+  }
+
   // 销毁图表
   const destroyChart = () => {
+    unregisterFromResizeHub()
     isDestroyed = true
 
     if (chart) {
@@ -596,11 +537,9 @@ export function useChart(options: UseChartOptions = {}) {
     }
 
     // 清理所有监听器和资源
-    cleanupMenuWatchers()
     cleanupThemeWatcher()
     emptyStateManager.remove()
     cleanupIntersectionObserver()
-    clearTimers()
     clearStyleCache()
     pendingOptions = null
   }
@@ -611,15 +550,11 @@ export function useChart(options: UseChartOptions = {}) {
   // 获取图表是否已初始化
   const isChartInitialized = () => chart !== null
 
-  onMounted(() => {
-    window.addEventListener('resize', debouncedResize)
-  })
-
   // KeepAlive + 工作区 Tab 切走时 DOM 会隐藏，ECharts 常保持 0 宽高；切回需重新 layout
   onActivated(() => {
     if (isDestroyed) return
     nextTick(() => {
-      multiDelayResize(RESIZE_DELAYS)
+      scheduleLayoutResize()
       if (chartRef.value && isContainerVisible(chartRef.value) && pendingOptions && !chart) {
         cleanupIntersectionObserver()
         const opts = pendingOptions
@@ -631,10 +566,6 @@ export function useChart(options: UseChartOptions = {}) {
         }
       }
     })
-  })
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('resize', debouncedResize)
   })
 
   onUnmounted(() => {

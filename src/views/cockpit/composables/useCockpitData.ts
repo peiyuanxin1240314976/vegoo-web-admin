@@ -119,9 +119,10 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
     // 统一 date：优先显式传 date，其次根据 range 计算；并回写到 state，保证两处筛选同步
     const nextDate = params?.date ?? dateRangeToDate(range)
     date.value = nextDate
-    const tasks: Promise<unknown>[] = []
+    /** 首屏优先：仅 overall + overview，避免 7 路请求同时打满主线程与连接 */
+    const wave1: Promise<unknown>[] = []
 
-    tasks.push(
+    wave1.push(
       fetchCockpitOverview({ dateRange: range, date: nextDate })
         .then((restOverview) => {
           if (seq !== requestSeq) return
@@ -144,7 +145,7 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
         })
     )
 
-    tasks.push(
+    wave1.push(
       fetchCockpitOverall({ date: nextDate })
         .then((overallRes) => {
           if (seq !== requestSeq) return
@@ -171,6 +172,16 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
           if (seq === requestSeq) moduleLoading.value.kpiAlert = false
         })
     )
+
+    await Promise.allSettled(wave1)
+    if (seq !== requestSeq) return
+
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve())
+    })
+    if (seq !== requestSeq) return
+
+    const tasks: Promise<unknown>[] = []
 
     tasks.push(
       fetchConsumptionRhythmMonitoring({ date: nextDate })
