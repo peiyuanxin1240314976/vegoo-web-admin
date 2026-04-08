@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
+  import { computed, ref, onMounted, onUnmounted, onActivated, nextTick, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
@@ -135,6 +135,7 @@
   const countryFilter = ref('all')
   const activeMetric = ref<'revenue' | 'ecpm' | 'fillRate'>('revenue')
   const pendingQuery = ref(false)
+  const hasLoadedOnce = ref(false)
 
   const appliedFilters = ref({
     dateRange: dateRange.value,
@@ -454,13 +455,67 @@
       chartInstance?.setOption(buildChartOption(), true)
     } finally {
       pendingQuery.value = false
+      hasLoadedOnce.value = true
     }
   }
 
   function buildChartOption() {
-    const revMax = Math.max(...revenueSeries.value, 1)
-    const ecpmScaled = ecpmSeriesRaw.value.map((v) => v * 10000)
-    const fillScaled = fillSeriesRaw.value.map((v) => v * 450)
+    const metric = activeMetric.value
+
+    const metricConfig = {
+      revenue: {
+        name: '收入',
+        color: '#38bdf8',
+        areaHigh: 'rgba(56,189,248,0.25)',
+        areaLow: 'rgba(56,189,248,0.02)',
+        data: revenueSeries.value,
+        yAxisName: '收入 ($USD)',
+        yAxisFormatter: (v: number) => `$${(v / 1000).toFixed(0)}k`,
+        tooltipFormatter: (idx: number) => {
+          const v = revenueSeries.value[idx] ?? 0
+          return `<span style="color:#38bdf8">●</span> 收入: <b style="color:#fff">$${v.toLocaleString()}</b>`
+        }
+      },
+      ecpm: {
+        name: 'eCPM',
+        color: '#a78bfa',
+        areaHigh: 'rgba(167,139,250,0.20)',
+        areaLow: 'rgba(167,139,250,0.02)',
+        data: ecpmSeriesRaw.value,
+        yAxisName: 'eCPM ($)',
+        yAxisFormatter: (v: number) =>
+          `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        tooltipFormatter: (idx: number) => {
+          const v = ecpmSeriesRaw.value[idx] ?? 0
+          const txt = v.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })
+          return `<span style="color:#a78bfa">●</span> eCPM: <b style="color:#fff">$${txt}</b>`
+        }
+      },
+      fillRate: {
+        name: '填充率',
+        color: '#34d399',
+        areaHigh: 'rgba(52,211,153,0.15)',
+        areaLow: 'rgba(52,211,153,0.02)',
+        data: fillSeriesRaw.value,
+        yAxisName: '填充率 (%)',
+        yAxisFormatter: (v: number) =>
+          `${v.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
+        tooltipFormatter: (idx: number) => {
+          const v = fillSeriesRaw.value[idx] ?? 0
+          const txt = v.toLocaleString('en-US', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          })
+          return `<span style="color:#34d399">●</span> 填充率: <b style="color:#fff">${txt}%</b>`
+        }
+      }
+    }
+
+    const cfg = metricConfig[metric]
+
     return {
       backgroundColor: 'transparent',
       tooltip: {
@@ -475,27 +530,14 @@
           const p0 = params[0]
           const idx = typeof p0?.dataIndex === 'number' ? p0.dataIndex : 0
           const date = p0?.axisValue ?? ''
-          const revVal = revenueSeries.value[idx] ?? 0
-          const eVal = ecpmSeriesRaw.value[idx] ?? 0
-          const fVal = fillSeriesRaw.value[idx] ?? 0
-          const ecpmTxt = eVal.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })
-          const fTxt = fVal.toLocaleString('en-US', {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1
-          })
           return `
-          <div style="font-weight:600;margin-bottom:8px;color:#94a3b8">${date}</div>
-          <div style="margin:4px 0"><span style="color:#38bdf8">●</span> 收入: <b style="color:#fff">$${revVal.toLocaleString()}</b></div>
-          <div style="margin:4px 0"><span style="color:#a78bfa">●</span> eCPM: <b style="color:#fff">$${ecpmTxt}</b></div>
-          <div style="margin:4px 0"><span style="color:#34d399">●</span> 填充率: <b style="color:#fff">${fTxt}%</b></div>
-        `
+            <div style="font-weight:600;margin-bottom:8px;color:#94a3b8">${date}</div>
+            <div style="margin:4px 0">${cfg.tooltipFormatter(idx)}</div>
+          `
         }
       },
       legend: { show: false },
-      grid: { top: 20, right: 70, bottom: 30, left: 80, containLabel: false },
+      grid: { top: 20, right: 20, bottom: 30, left: 80, containLabel: false },
       xAxis: {
         type: 'category',
         data: chartCategories.value,
@@ -507,34 +549,17 @@
       yAxis: [
         {
           type: 'value',
-          name: '收入 ($USD)',
+          name: cfg.yAxisName,
           nameTextStyle: { color: '#64748b', fontSize: 11 },
           axisLine: { show: false },
           axisTick: { show: false },
-          axisLabel: {
-            color: '#64748b',
-            fontSize: 11,
-            formatter: (v: number) => `$${(v / 1000).toFixed(0)}k`
-          },
-          splitLine: { lineStyle: { color: '#1e2a3a', type: 'dashed' } },
-          min: 0,
-          max: Math.ceil(revMax * 1.1)
-        },
-        {
-          type: 'value',
-          name: 'eCPM/填充',
-          nameTextStyle: { color: '#64748b', fontSize: 11 },
-          axisLine: { show: false },
-          axisTick: { show: false },
-          axisLabel: { color: '#64748b', fontSize: 11 },
-          splitLine: { show: false },
-          min: 88,
-          max: 100
+          axisLabel: { color: '#64748b', fontSize: 11, formatter: cfg.yAxisFormatter },
+          splitLine: { lineStyle: { color: '#1e2a3a', type: 'dashed' } }
         }
       ],
       series: [
         {
-          name: '收入',
+          name: cfg.name,
           type: 'line',
           smooth: true,
           symbol: 'circle',
@@ -542,69 +567,26 @@
           showSymbol: false,
           emphasis: {
             showSymbol: true,
-            itemStyle: { color: '#38bdf8', borderColor: '#fff', borderWidth: 2 }
+            itemStyle: { color: cfg.color, borderColor: '#fff', borderWidth: 2 }
           },
-          lineStyle: { color: '#38bdf8', width: 2.5 },
-          itemStyle: { color: '#38bdf8' },
+          lineStyle: { color: cfg.color, width: 2.5 },
+          itemStyle: { color: cfg.color },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(56,189,248,0.25)' },
-              { offset: 1, color: 'rgba(56,189,248,0.02)' }
+              { offset: 0, color: cfg.areaHigh },
+              { offset: 1, color: cfg.areaLow }
             ])
           },
-          data: revenueSeries.value,
-          yAxisIndex: 0,
-          z: 3
-        },
-        {
-          name: 'eCPM',
-          type: 'line',
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          showSymbol: false,
-          emphasis: {
-            showSymbol: true,
-            itemStyle: { color: '#a78bfa', borderColor: '#fff', borderWidth: 2 }
-          },
-          lineStyle: { color: '#a78bfa', width: 2.5 },
-          itemStyle: { color: '#a78bfa' },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(167,139,250,0.20)' },
-              { offset: 1, color: 'rgba(167,139,250,0.02)' }
-            ])
-          },
-          data: ecpmScaled,
-          yAxisIndex: 0,
-          z: 2
-        },
-        {
-          name: '填充率',
-          type: 'line',
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          showSymbol: false,
-          emphasis: {
-            showSymbol: true,
-            itemStyle: { color: '#34d399', borderColor: '#fff', borderWidth: 2 }
-          },
-          lineStyle: { color: '#34d399', width: 2.5 },
-          itemStyle: { color: '#34d399' },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(52,211,153,0.15)' },
-              { offset: 1, color: 'rgba(52,211,153,0.02)' }
-            ])
-          },
-          data: fillScaled,
-          yAxisIndex: 0,
-          z: 4
+          data: cfg.data,
+          yAxisIndex: 0
         }
       ]
     }
   }
+
+  watch(activeMetric, () => {
+    chartInstance?.setOption(buildChartOption(), true)
+  })
 
   function initChart() {
     if (!chartRef.value) return
@@ -616,12 +598,56 @@
     chartInstance?.resize()
   }
 
+  let hasInitialized = false
+  let lastParamKey = ''
+
+  function currentParamKey() {
+    return [
+      route.query.source ?? '',
+      route.query.sourceLabel ?? '',
+      route.query['platform-name'] ?? ''
+    ].join('|')
+  }
+
+  // 同页内参数切换（source/platform-name 变化）
+  watch(
+    () => ({
+      name: route.name,
+      source: route.query.source,
+      sourceLabel: route.query.sourceLabel,
+      platformName: route.query['platform-name']
+    }),
+    (newVal, oldVal) => {
+      if (!hasInitialized) return
+      if (newVal.name !== 'AdPlatformDetail') return
+      if (
+        newVal.source !== oldVal.source ||
+        newVal.sourceLabel !== oldVal.sourceLabel ||
+        newVal.platformName !== oldVal.platformName
+      ) {
+        lastParamKey = currentParamKey()
+        runQuery()
+      }
+    }
+  )
+
   onMounted(async () => {
     await cockpitMetaStore.ensureLoaded()
     await nextTick()
     initChart()
     window.addEventListener('resize', handleResize)
+    lastParamKey = currentParamKey()
     await runQuery()
+    hasInitialized = true
+  })
+
+  // keep-alive 重新激活时，若参数已变则重新请求
+  onActivated(() => {
+    const key = currentParamKey()
+    if (key !== lastParamKey) {
+      lastParamKey = key
+      runQuery()
+    }
   })
 
   onUnmounted(() => {
@@ -709,145 +735,195 @@
       </div>
 
       <!-- ── Main content grid ───────────────────────────────────── -->
-      <div class="main-grid">
-        <!-- Left column -->
-        <div class="left-col">
-          <!-- KPI cards -->
-          <div class="kpi-row">
-            <div
-              v-for="card in kpiCards"
-              :key="card.label"
-              class="kpi-card"
-              :style="{ '--accent': card.color }"
-            >
-              <div class="kpi-top">
-                <span class="kpi-label">{{ card.label }}</span>
-                <div class="kpi-spark">
-                  <svg viewBox="0 0 80 28" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient :id="`g-${card.label}`" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" :stop-color="card.color" stop-opacity="0.6" />
-                        <stop offset="100%" :stop-color="card.color" stop-opacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <polyline
-                      :points="sparkPolylinePoints(card.sparkData)"
-                      fill="none"
-                      :stroke="card.color"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
+      <div class="content-wrap">
+        <!-- 鱼骨屏骨架（首次加载） -->
+        <div v-if="pendingQuery && !hasLoadedOnce" class="fishbone-skeleton" aria-hidden="true">
+          <div class="fishbone-skeleton__left">
+            <div class="fishbone-skeleton__kpis">
+              <div v-for="i in 4" :key="i" class="fishbone-card">
+                <div class="fishbone-line fishbone-line--sm" />
+                <div class="fishbone-line fishbone-line--lg" />
+                <div class="fishbone-bones" />
+              </div>
+            </div>
+            <div class="fishbone-panel">
+              <div class="fishbone-panel__header">
+                <div class="fishbone-line fishbone-line--md" />
+                <div class="fishbone-chip-row">
+                  <span v-for="i in 3" :key="i" class="fishbone-chip" />
                 </div>
               </div>
-              <div class="kpi-value" :style="{ color: card.color }">{{ card.value }}</div>
-              <div class="kpi-change" :class="card.positive ? 'pos' : 'neg'">
-                <svg width="12" height="12" viewBox="0 0 12 12">
-                  <path v-if="card.positive" d="M6 2l4 6H2l4-6z" fill="currentColor" />
-                  <path v-else d="M6 10L2 4h8L6 10z" fill="currentColor" />
-                </svg>
-                {{ card.change }}
+              <div class="fishbone-chart" />
+            </div>
+          </div>
+          <div class="fishbone-skeleton__right">
+            <div class="fishbone-panel">
+              <div class="fishbone-panel__header">
+                <div class="fishbone-line fishbone-line--md" />
+              </div>
+              <div class="fishbone-ai">
+                <div v-for="i in 3" :key="i" class="fishbone-ai__card">
+                  <div class="fishbone-line fishbone-line--sm" />
+                  <div class="fishbone-line fishbone-line--row" />
+                  <div class="fishbone-line fishbone-line--row2" />
+                </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Chart card -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <span class="section-title">核心指标趋势</span>
-              <div class="metric-btns">
-                <button
-                  :class="['metric-btn', activeMetric === 'revenue' && 'active-revenue']"
-                  @click="activeMetric = 'revenue'"
-                  >收入</button
-                >
-                <button
-                  :class="['metric-btn', activeMetric === 'ecpm' && 'active-ecpm']"
-                  @click="activeMetric = 'ecpm'"
-                  >eCPM</button
-                >
-                <button
-                  :class="['metric-btn', activeMetric === 'fillRate' && 'active-fill']"
-                  @click="activeMetric = 'fillRate'"
-                  >填充率</button
-                >
+        <div class="main-grid" :class="{ 'is-loading': pendingQuery && !hasLoadedOnce }">
+          <!-- Left column -->
+          <div class="left-col">
+            <!-- KPI cards -->
+            <div class="kpi-row">
+              <div
+                v-for="card in kpiCards"
+                :key="card.label"
+                class="kpi-card"
+                :style="{ '--accent': card.color }"
+              >
+                <div class="kpi-top">
+                  <span class="kpi-label">{{ card.label }}</span>
+                  <div class="kpi-spark">
+                    <svg viewBox="0 0 80 28" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient :id="`g-${card.label}`" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" :stop-color="card.color" stop-opacity="0.6" />
+                          <stop offset="100%" :stop-color="card.color" stop-opacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <polyline
+                        :points="sparkPolylinePoints(card.sparkData)"
+                        fill="none"
+                        :stroke="card.color"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div class="kpi-value" :style="{ color: card.color }">{{ card.value }}</div>
+                <div class="kpi-change" :class="card.positive ? 'pos' : 'neg'">
+                  <svg width="12" height="12" viewBox="0 0 12 12">
+                    <path v-if="card.positive" d="M6 2l4 6H2l4-6z" fill="currentColor" />
+                    <path v-else d="M6 10L2 4h8L6 10z" fill="currentColor" />
+                  </svg>
+                  {{ card.change }}
+                </div>
               </div>
             </div>
-            <div ref="chartRef" class="chart-canvas" />
-          </div>
-        </div>
 
-        <!-- Right column: AI Insights -->
-        <div class="ai-panel">
-          <div class="ai-header">
-            <span class="section-title">AI洞察与建议</span>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="ai-icon">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
-              <path
-                d="M8 12s1-3 4-3 4 3 4 3-1 3-4 3-4-3-4-3z"
-                stroke="currentColor"
-                stroke-width="1.5"
-              />
-              <circle cx="12" cy="12" r="2" fill="currentColor" />
-              <path
-                d="M12 2v2M12 20v2M2 12h2M20 12h2"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-            </svg>
-          </div>
-          <div class="ai-insights">
-            <div v-for="(ins, i) in aiInsights" :key="i" class="insight-item">
-              <div class="insight-title">{{ ins.title }}</div>
-              <!-- eslint-disable-next-line vue/no-v-html -->
-              <div class="insight-body" v-html="highlightText(ins.content, ins.highlights)" />
+            <!-- Chart card -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <span class="section-title">核心指标趋势</span>
+                <div class="metric-btns">
+                  <button
+                    :class="['metric-btn', activeMetric === 'revenue' && 'active-revenue']"
+                    @click="activeMetric = 'revenue'"
+                    >收入</button
+                  >
+                  <button
+                    :class="['metric-btn', activeMetric === 'ecpm' && 'active-ecpm']"
+                    @click="activeMetric = 'ecpm'"
+                    >eCPM</button
+                  >
+                  <button
+                    :class="['metric-btn', activeMetric === 'fillRate' && 'active-fill']"
+                    @click="activeMetric = 'fillRate'"
+                    >填充率</button
+                  >
+                </div>
+              </div>
+              <div ref="chartRef" class="chart-canvas" />
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- ── Table ───────────────────────────────────────────────── -->
-      <div class="table-card">
-        <div class="table-head">
-          <div class="section-title section-title--glow">按应用表现细分</div>
-        </div>
-        <div class="table-scroll">
-          <el-table :data="tableData" style="width: 100%" :row-class-name="() => 'admob-row'">
-            <el-table-column prop="app" label="应用" sortable min-width="160" align="left" />
-            <el-table-column prop="revenue" label="总收入" sortable min-width="110" align="left" />
-            <el-table-column
-              prop="revenueShare"
-              label="收入占比"
-              sortable
-              min-width="110"
-              align="left"
-            />
-            <el-table-column prop="ecpm" label="eCPM" sortable min-width="110" align="left" />
-            <el-table-column prop="fillRate" label="填充率" sortable min-width="110" align="left" />
-            <el-table-column
-              prop="impressions"
-              label="展示次数"
-              sortable
-              min-width="120"
-              align="left"
-            />
-            <el-table-column label="操作" min-width="120" align="center">
-              <template #default="{ row }">
-                <el-button
-                  size="small"
-                  class="detail-btn"
-                  round
-                  @click="goToAppAdPlatformPerformance(row)"
-                >
-                  查看详情
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-      </div>
+          <!-- Right column: AI Insights -->
+          <div class="ai-panel">
+            <div class="ai-header">
+              <span class="section-title">AI洞察与建议</span>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="ai-icon">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
+                <path
+                  d="M8 12s1-3 4-3 4 3 4 3-1 3-4 3-4-3-4-3z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <circle cx="12" cy="12" r="2" fill="currentColor" />
+                <path
+                  d="M12 2v2M12 20v2M2 12h2M20 12h2"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            <div class="ai-insights">
+              <div v-for="(ins, i) in aiInsights" :key="i" class="insight-item">
+                <div class="insight-title">{{ ins.title }}</div>
+                <!-- eslint-disable-next-line vue/no-v-html -->
+                <div class="insight-body" v-html="highlightText(ins.content, ins.highlights)" />
+              </div>
+            </div>
+          </div> </div
+        ><!-- /main-grid -->
+
+        <!-- ── Table ───────────────────────────────────────────────── -->
+        <div class="table-card" :class="{ 'is-loading': pendingQuery && !hasLoadedOnce }">
+          <div class="table-head">
+            <div class="section-title section-title--glow">按应用表现细分</div>
+          </div>
+          <div class="table-scroll">
+            <el-table :data="tableData" style="width: 100%" :row-class-name="() => 'admob-row'">
+              <el-table-column prop="app" label="应用" sortable min-width="160" align="left" />
+              <el-table-column
+                prop="revenue"
+                label="总收入"
+                sortable
+                min-width="110"
+                align="left"
+              />
+              <el-table-column
+                prop="revenueShare"
+                label="收入占比"
+                sortable
+                min-width="110"
+                align="left"
+              />
+              <el-table-column prop="ecpm" label="eCPM" sortable min-width="110" align="left" />
+              <el-table-column
+                prop="fillRate"
+                label="填充率"
+                sortable
+                min-width="110"
+                align="left"
+              />
+              <el-table-column
+                prop="impressions"
+                label="展示次数"
+                sortable
+                min-width="120"
+                align="left"
+              />
+              <el-table-column label="操作" min-width="120" align="center">
+                <template #default="{ row }">
+                  <el-button
+                    size="small"
+                    class="detail-btn"
+                    round
+                    @click="goToAppAdPlatformPerformance(row)"
+                  >
+                    查看详情
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div> </div
+        ><!-- /table-card --> </div
+      ><!-- /content-wrap -->
     </div>
   </div>
 </template>
@@ -995,6 +1071,198 @@
   // ─── Page body ───────────────────────────────────────────────────────────────
   .page-body {
     padding: 24px 28px;
+  }
+
+  // ─── Content wrap (鱼骨屏容器) ────────────────────────────────────────────────
+  .content-wrap {
+    position: relative;
+  }
+
+  .is-loading {
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  // ─── 鱼骨屏骨架 ───────────────────────────────────────────────────────────────
+  .fishbone-skeleton {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 16px;
+  }
+
+  .fishbone-skeleton__left,
+  .fishbone-skeleton__right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .fishbone-skeleton__kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(8px, 1.2vw, 12px);
+  }
+
+  .fishbone-card,
+  .fishbone-panel {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 20% 10%,
+        color-mix(in srgb, var(--art-primary) 10%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card2) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
+    border-radius: 16px;
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+  }
+
+  .fishbone-card {
+    min-height: 110px;
+    padding: 18px 16px 12px;
+  }
+
+  .fishbone-panel {
+    padding: 16px;
+  }
+
+  .fishbone-panel__header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .fishbone-line,
+  .fishbone-chip,
+  .fishbone-dot {
+    position: relative;
+    overflow: hidden;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
+    border-radius: 9999px;
+  }
+
+  .fishbone-line::after,
+  .fishbone-chip::after,
+  .fishbone-dot::after {
+    position: absolute;
+    inset: -2px;
+    content: '';
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      color-mix(in srgb, var(--art-primary) 22%, transparent) 40%,
+      color-mix(in srgb, var(--art-success) 18%, transparent) 55%,
+      transparent 70%
+    );
+    transform: translateX(-80%);
+    animation: fishbone-shimmer 1.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) infinite;
+  }
+
+  .fishbone-line--sm {
+    width: 34%;
+    height: 10px;
+    margin-bottom: 10px;
+  }
+
+  .fishbone-line--md {
+    width: 42%;
+    height: 12px;
+  }
+
+  .fishbone-line--lg {
+    width: 66%;
+    height: 18px;
+    margin-bottom: 12px;
+  }
+
+  .fishbone-bones {
+    height: 24px;
+    background-image: repeating-linear-gradient(
+      120deg,
+      rgb(255 255 255 / 4%) 0,
+      rgb(255 255 255 / 4%) 10px,
+      transparent 10px,
+      transparent 18px
+    );
+    border: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border-radius: 12px;
+    opacity: 0.9;
+  }
+
+  .fishbone-chip-row {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .fishbone-chip {
+    width: 56px;
+    height: 20px;
+  }
+
+  .fishbone-chart {
+    height: clamp(200px, 22vw, 260px);
+    background-image:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--art-primary) 7%, transparent) 0%,
+        transparent 100%
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent 0,
+        transparent 32px,
+        rgb(255 255 255 / 3%) 32px,
+        rgb(255 255 255 / 3%) 33px
+      );
+    border: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
+    border-radius: 14px;
+  }
+
+  .fishbone-line--row {
+    width: 100%;
+    height: 10px;
+  }
+
+  .fishbone-line--row2 {
+    width: 100%;
+    height: 10px;
+    opacity: 0.78;
+  }
+
+  .fishbone-ai {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .fishbone-ai__card {
+    padding: 10px 12px;
+    background: rgb(255 255 255 / 2.5%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, var(--default-border));
+    border-radius: 10px;
+  }
+
+  @keyframes fishbone-shimmer {
+    0% {
+      opacity: 0.85;
+      transform: translateX(-85%);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateX(85%);
+    }
   }
 
   .page-header {
