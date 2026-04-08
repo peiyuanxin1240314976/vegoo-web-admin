@@ -32,12 +32,12 @@
     const [start, end] = f.dateRange || []
     return {
       platform: f.platform || undefined,
-      app_store: f.appStore || undefined,
-      s_app_id: f.app || undefined,
+      appStore: f.appStore || undefined,
+      appId: f.app || undefined,
       source: f.adPlatform || undefined,
       channel: f.channel || undefined,
-      t_date_start: start ? formatYYYYMMDD(start) : undefined,
-      t_date_end: end ? formatYYYYMMDD(end) : undefined,
+      startDate: start ? formatYYYYMMDD(start) : undefined,
+      endDate: end ? formatYYYYMMDD(end) : undefined,
       currency: f.currency || undefined
     }
   }

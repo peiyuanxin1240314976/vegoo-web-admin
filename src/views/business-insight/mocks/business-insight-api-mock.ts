@@ -763,11 +763,11 @@ export function mockFetchIaaAdUnitTabData(_params: IaaFilterState) {
     ],
     fillRateInsight: '12个单元充填率<80%，建议检查广告位配置',
     scatterData: [
-      { unitId: 'Splash_001', ecpm: 19.2, fillRate: 97.6, adType: '开屏' },
-      { unitId: 'HomeResume_001', ecpm: 4.7, fillRate: 95.8, adType: '插页式' },
-      { unitId: 'Native_001', ecpm: 1.82, fillRate: 93.7, adType: '原生' },
-      { unitId: 'Banner_001', ecpm: 0.52, fillRate: 76.4, adType: '横幅' },
-      { unitId: 'Native_002', ecpm: 1.62, fillRate: 85.2, adType: '原生' }
+      { unitId: 'Splash_001', ecpm: 19.2, adType: '开屏' },
+      { unitId: 'HomeResume_001', ecpm: 4.7, adType: '插页式' },
+      { unitId: 'Native_001', ecpm: 1.82, adType: '原生' },
+      { unitId: 'Banner_001', ecpm: 0.52, adType: '横幅' },
+      { unitId: 'Native_002', ecpm: 1.62, adType: '原生' }
     ],
     trend7d: {
       dates: ['Feb27', 'Feb28', 'Mar1', 'Mar2', 'Mar3', 'Mar4', 'Mar5'],

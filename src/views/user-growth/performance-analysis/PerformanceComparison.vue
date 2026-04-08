@@ -851,7 +851,7 @@
     void loadComparisonAll()
   }
 
-  function viewAlertDetail(id: number) {
+  function viewAlertDetail(id: string) {
     void id
     // Navigate to alert detail or open modal
   }

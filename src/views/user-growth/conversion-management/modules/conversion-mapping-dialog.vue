@@ -168,7 +168,12 @@
 
 <script setup lang="ts">
   import type { FormInstance, FormRules } from 'element-plus'
-  import type { AdPlatformType, ConversionMappingItem, ConversionMappingForm } from '../types'
+  import type {
+    AdPlatformType,
+    BillingType,
+    ConversionMappingItem,
+    ConversionMappingForm
+  } from '../types'
   import {
     fetchConversionMetaDialogOptions,
     fetchConversionMetaDisplayTypeOptions
@@ -212,6 +217,32 @@
       platformConversionType?: string
     }[]
   >([])
+
+  function normalizeBillingType(input: unknown): BillingType | undefined {
+    if (input === 'CPA' || input === 'CPI' || input === 'CPE' || input === '') return input
+    return undefined
+  }
+
+  function normalizeConversionOptions(input: unknown) {
+    if (!Array.isArray(input)) return []
+    return input
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null
+        const row = item as Record<string, unknown>
+        const conversionName =
+          typeof row.conversionName === 'string' ? row.conversionName : undefined
+        const conversionId = typeof row.conversionId === 'string' ? row.conversionId : undefined
+        if (!conversionName || !conversionId) return null
+        return {
+          conversionName,
+          conversionId,
+          billingType: normalizeBillingType(row.billingType),
+          platformConversionType:
+            typeof row.platformConversionType === 'string' ? row.platformConversionType : undefined
+        }
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+  }
   const conversionDisplayTypeMetaOptions = ref(
     MOCK_CONVERSION_DISPLAY_TYPE_OPTIONS.map((o) => ({ label: o.label, value: o.value }))
   )
@@ -278,7 +309,7 @@
       })
       adPlatformOptions.value = res.adPlatforms?.length ? res.adPlatforms : MOCK_AD_PLATFORM_OPTIONS
       appOptionsForDialog.value = res.apps?.length ? res.apps : MOCK_APP_OPTIONS_FOR_DIALOG
-      conversionNameMetaOptions.value = res.conversions ?? []
+      conversionNameMetaOptions.value = normalizeConversionOptions(res.conversions)
       form.mccAccount = res.mccAccounts?.[0]?.value ?? params.mccAccount ?? ''
     } catch {
       ElMessage.error('加载弹窗选项失败')
@@ -296,7 +327,7 @@
         (r) => r.conversionName === form.conversionName
       )
       form.conversionId = found?.conversionId ?? `auto-${Date.now()}`
-      form.billingType = found?.billingType ?? ''
+      form.billingType = normalizeBillingType(found?.billingType) ?? ''
       form.platformConversionType = found?.platformConversionType
     } else {
       form.conversionId = ''

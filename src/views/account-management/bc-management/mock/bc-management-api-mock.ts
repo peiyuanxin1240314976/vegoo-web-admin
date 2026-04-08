@@ -80,7 +80,12 @@ export async function mockCreateBc(data: BcFormModel) {
 export async function mockUpdateBc(id: string, data: Partial<BcFormModel>) {
   const idx = bcState.findIndex((i) => i.id === id)
   if (idx < 0) throw new Error('BC 不存在')
-  bcState[idx] = { ...bcState[idx], ...data }
+  const { source, ...rest } = data
+  bcState[idx] = {
+    ...bcState[idx],
+    ...rest,
+    ...(source ? { source } : {})
+  }
   return { ...bcState[idx] }
 }
 
