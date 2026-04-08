@@ -25,25 +25,38 @@
   const cockpitMetaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
 
+  function toUiFilterValue(value: string): string {
+    return value === '' || value === 'all' ? 'all' : value
+  }
+
+  function toApiFilterValue(value: string): string {
+    return value === 'all' ? '' : value
+  }
+
   function normalizeMetaOptions(list: CockpitMetaOptionItem[]): CockpitMetaOptionItem[] {
-    return list.map((o) => ({
+    const normalized = list.map((o) => ({
       ...o,
-      value: o.value === 'all' ? '' : o.value
+      value: toUiFilterValue(o.value)
     }))
+    const deduped = normalized.filter(
+      (item, idx, arr) => arr.findIndex((x) => x.value === item.value) === idx
+    )
+    if (deduped.some((o) => o.value === 'all')) return deduped
+    return [{ label: '全部', value: 'all' }, ...deduped]
   }
 
   function fallbackMetaOptions(label: string): CockpitMetaOptionItem[] {
-    return [{ label, value: '' }]
+    return [{ label, value: 'all' }]
   }
 
   const appBarOptions = computed(() => {
     const list = cockpitMeta.value?.appOptions
-    return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部应用')
+    return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部')
   })
 
   const countryBarOptions = computed(() => {
     const list = cockpitMeta.value?.countryOptions
-    return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部国家')
+    return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部')
   })
 
   /**
@@ -65,7 +78,7 @@
   }
 
   function platformDisplayNameFromRoute(): string {
-    const src = safeDecodeURIComponent(queryStringParam(route.query.source).trim())
+    const src = safeDecodeURIComponent(queryStringParam(route.query['platform-name']).trim())
     if (src) return src
     return safeDecodeURIComponent(queryStringParam(route.query.sourceLabel).trim())
   }
@@ -114,10 +127,11 @@
 
   // ─── State ───────────────────────────────────────────────────────────────────
   const dateRange = ref('最近30天')
+  const customDateRange = ref<[Date, Date] | []>([])
   /** 与 meta `appOptions` 的 value 对齐，「全部应用」为 `""` */
-  const appFilter = ref('')
+  const appFilter = ref('all')
   /** 与 meta `countryOptions` 的 value 对齐（多为小写 ISO2），「全部」为 `""` */
-  const countryFilter = ref('')
+  const countryFilter = ref('all')
   const activeMetric = ref<'revenue' | 'ecpm' | 'fillRate'>('revenue')
   const pendingQuery = ref(false)
 
@@ -287,6 +301,17 @@
     return { startDate: formatYYYYMMDD(start), endDate: formatYYYYMMDD(end) }
   }
 
+  function resolveDateRangeParams(): { startDate: string; endDate: string } {
+    if (dateRange.value === '自定义' && customDateRange.value.length === 2) {
+      const [start, end] = customDateRange.value
+      return {
+        startDate: formatYYYYMMDD(start),
+        endDate: formatYYYYMMDD(end)
+      }
+    }
+    return resolveDateRangeLabel(dateRange.value)
+  }
+
   function mapKpiItemToCard(item: AdPlatformDetailKpiItem): KpiCard {
     return {
       label: item.label,
@@ -353,13 +378,13 @@
     if (pendingQuery.value) return
     pendingQuery.value = true
     try {
-      const { startDate, endDate } = resolveDateRangeLabel(dateRange.value)
+      const { startDate, endDate } = resolveDateRangeParams()
       const src = platformDisplayNameFromRoute()
       const body = {
         startDate,
         endDate,
-        appId: appFilter.value,
-        s_country_code: countryFilter.value,
+        appId: toApiFilterValue(appFilter.value),
+        s_country_code: toApiFilterValue(countryFilter.value),
         ...(src ? { source: src } : {})
       }
 
@@ -617,6 +642,16 @@
             <el-select v-model="dateRange" size="default" class="filter-select">
               <el-option v-for="o in dateOptions" :key="o" :label="o" :value="o" />
             </el-select>
+            <el-date-picker
+              v-if="dateRange === '自定义'"
+              v-model="customDateRange"
+              type="daterange"
+              unlink-panels
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              class="filter-date-picker"
+            />
           </div>
           <div class="filter-field">
             <span class="filter-label">应用</span>
@@ -1083,6 +1118,18 @@
 
     :deep(.el-select__caret) {
       color: var(--text-2);
+    }
+  }
+
+  .filter-date-picker {
+    width: 280px;
+
+    :deep(.el-input__wrapper) {
+      color: var(--text-1);
+      background: rgb(0 0 0 / 22%);
+      border-color: color-mix(in srgb, var(--art-primary) 22%, transparent);
+      border-radius: 10px;
+      box-shadow: none;
     }
   }
 

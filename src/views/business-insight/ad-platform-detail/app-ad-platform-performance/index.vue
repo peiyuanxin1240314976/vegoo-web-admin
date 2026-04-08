@@ -353,7 +353,7 @@
   }
 
   const platformTitlePart = computed(() => {
-    const src = safeDecodeURIComponent(querySourceLabelString(route.query.source).trim())
+    const src = safeDecodeURIComponent(querySourceLabelString(route.query['platform-name']).trim())
     if (src) return src
     const s = safeDecodeURIComponent(querySourceLabelString(route.query.sourceLabel).trim())
     return s || '广告平台'
