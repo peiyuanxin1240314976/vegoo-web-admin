@@ -59,8 +59,73 @@
 
     <!-- 主体内容：左右分栏 -->
     <div class="main-layout">
+      <!-- 鱼骨屏骨架（loading） -->
+      <div v-if="pendingQuery" class="fishbone-skeleton" aria-hidden="true">
+        <div class="fishbone-skeleton__left">
+          <div class="fishbone-skeleton__kpis">
+            <div v-for="i in 4" :key="i" class="fishbone-card">
+              <div class="fishbone-line fishbone-line--sm" />
+              <div class="fishbone-line fishbone-line--lg" />
+              <div class="fishbone-bones" />
+            </div>
+          </div>
+          <div class="fishbone-panel">
+            <div class="fishbone-panel__header">
+              <div class="fishbone-line fishbone-line--md" />
+              <div class="fishbone-chip-row">
+                <span v-for="i in 3" :key="i" class="fishbone-chip" />
+              </div>
+            </div>
+            <div class="fishbone-chart" />
+          </div>
+          <div class="fishbone-panel">
+            <div class="fishbone-panel__header">
+              <div class="fishbone-line fishbone-line--md" />
+              <div class="fishbone-chip-row">
+                <span v-for="i in 4" :key="i" class="fishbone-chip" />
+              </div>
+            </div>
+            <div class="fishbone-list">
+              <div v-for="i in 6" :key="i" class="fishbone-row">
+                <span class="fishbone-dot" />
+                <span class="fishbone-line fishbone-line--row" />
+                <span class="fishbone-line fishbone-line--row2" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fishbone-skeleton__right">
+          <div class="fishbone-panel">
+            <div class="fishbone-panel__header">
+              <div class="fishbone-line fishbone-line--md" />
+            </div>
+            <div class="fishbone-table">
+              <div class="fishbone-table__head">
+                <span v-for="i in 6" :key="i" class="fishbone-line fishbone-line--th" />
+              </div>
+              <div v-for="i in 7" :key="i" class="fishbone-table__tr">
+                <span v-for="j in 6" :key="j" class="fishbone-line fishbone-line--td" />
+              </div>
+            </div>
+          </div>
+          <div class="fishbone-panel">
+            <div class="fishbone-panel__header">
+              <div class="fishbone-line fishbone-line--md" />
+            </div>
+            <div class="fishbone-ai">
+              <div v-for="i in 3" :key="i" class="fishbone-ai__card">
+                <div class="fishbone-line fishbone-line--sm" />
+                <div class="fishbone-line fishbone-line--row" />
+                <div class="fishbone-line fishbone-line--row2" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 左侧主内容 -->
-      <div class="left-panel">
+      <div class="left-panel" :class="{ 'is-loading': pendingQuery }">
         <!-- KPI 卡片区 -->
         <div class="kpi-grid">
           <div
@@ -166,7 +231,7 @@
       </div>
 
       <!-- 右侧面板 -->
-      <div class="right-panel">
+      <div class="right-panel" :class="{ 'is-loading': pendingQuery }">
         <!-- 广告位表现 -->
         <div class="table-panel">
           <h3 class="panel-title">广告位表现</h3>
@@ -1159,10 +1224,245 @@
    主体布局
 ═══════════════════════════════════════════════ */
   .main-layout {
+    position: relative;
     display: grid;
     grid-template-columns: 1fr 440px;
     gap: 16px;
     padding: 0 24px;
+  }
+
+  .left-panel.is-loading,
+  .right-panel.is-loading {
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .fishbone-skeleton {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr 440px;
+    gap: 16px;
+    padding: 0 24px;
+  }
+
+  .fishbone-skeleton__left,
+  .fishbone-skeleton__right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .fishbone-skeleton__kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(8px, 1.2vw, 12px);
+  }
+
+  .fishbone-card,
+  .fishbone-panel {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 20% 10%,
+        color-mix(in srgb, var(--art-primary) 10%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
+    border-radius: var(--radius-lg);
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 44%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
+  }
+
+  .fishbone-card {
+    min-height: 118px;
+    padding: 18px 16px 12px;
+  }
+
+  .fishbone-panel {
+    padding: 16px;
+  }
+
+  .fishbone-panel__header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .fishbone-line,
+  .fishbone-chip,
+  .fishbone-dot {
+    position: relative;
+    overflow: hidden;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
+    border-radius: 9999px;
+  }
+
+  .fishbone-line::after,
+  .fishbone-chip::after,
+  .fishbone-dot::after {
+    position: absolute;
+    inset: -2px;
+    content: '';
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      color-mix(in srgb, var(--art-primary) 22%, transparent) 40%,
+      color-mix(in srgb, var(--art-success) 18%, transparent) 55%,
+      transparent 70%
+    );
+    transform: translateX(-80%);
+    animation: fishbone-shimmer 1.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)) infinite;
+  }
+
+  .fishbone-line--sm {
+    width: 34%;
+    height: 10px;
+    margin-bottom: 10px;
+  }
+
+  .fishbone-line--md {
+    width: 42%;
+    height: 12px;
+  }
+
+  .fishbone-line--lg {
+    width: 66%;
+    height: 18px;
+    margin-bottom: 12px;
+  }
+
+  .fishbone-bones {
+    height: 24px;
+    background-image: repeating-linear-gradient(
+      120deg,
+      rgb(255 255 255 / 4%) 0,
+      rgb(255 255 255 / 4%) 10px,
+      transparent 10px,
+      transparent 18px
+    );
+    border: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border-radius: 12px;
+    opacity: 0.9;
+  }
+
+  .fishbone-chip-row {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .fishbone-chip {
+    width: 56px;
+    height: 20px;
+  }
+
+  .fishbone-chart {
+    height: clamp(200px, 22vw, 260px);
+    background-image:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--art-primary) 7%, transparent) 0%,
+        transparent 100%
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent 0,
+        transparent 32px,
+        rgb(255 255 255 / 3%) 32px,
+        rgb(255 255 255 / 3%) 33px
+      );
+    border: 1px solid color-mix(in srgb, var(--art-primary) 12%, transparent);
+    border-radius: 14px;
+  }
+
+  .fishbone-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .fishbone-row {
+    display: grid;
+    grid-template-columns: 12px 1fr 0.9fr;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .fishbone-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .fishbone-line--row {
+    width: 100%;
+    height: 10px;
+  }
+
+  .fishbone-line--row2 {
+    width: 100%;
+    height: 10px;
+    opacity: 0.78;
+  }
+
+  .fishbone-table__head,
+  .fishbone-table__tr {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
+  }
+
+  .fishbone-table__head {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  .fishbone-line--th {
+    height: 10px;
+  }
+
+  .fishbone-table__tr {
+    padding: 8px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+  }
+
+  .fishbone-line--td {
+    height: 10px;
+  }
+
+  .fishbone-ai {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .fishbone-ai__card {
+    padding: 10px 12px;
+    background: rgb(255 255 255 / 2.5%);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, var(--default-border));
+    border-radius: var(--radius-md);
+  }
+
+  @keyframes fishbone-shimmer {
+    0% {
+      opacity: 0.85;
+      transform: translateX(-85%);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateX(85%);
+    }
   }
 
   .left-panel {
@@ -1984,6 +2284,12 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .fishbone-line::after,
+    .fishbone-chip::after,
+    .fishbone-dot::after {
+      animation: none !important;
+    }
+
     .kpi-card,
     .chart-panel,
     .waterfall-panel,
