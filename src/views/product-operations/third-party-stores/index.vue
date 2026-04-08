@@ -322,7 +322,7 @@
               label: {
                 show: true,
                 position: 'right',
-                formatter: () => `$${v}  ${ratios[i]}%`,
+                formatter: () => `${fmtUsd2(v)}  ${ratios[i]}%`,
                 color: '#d1d5db',
                 fontSize: 12
               },
@@ -341,30 +341,28 @@
     }
   }
 
+  function onResize() {
+    donutChart?.resize()
+    barChart?.resize()
+  }
+
   onMounted(() => {
     loadDashboard()
-    window.addEventListener('resize', () => {
-      donutChart?.resize()
-      barChart?.resize()
-    })
+    window.addEventListener('resize', onResize)
   })
 
   onBeforeUnmount(() => {
     donutChart?.dispose()
     barChart?.dispose()
+    window.removeEventListener('resize', onResize)
   })
 </script>
 
 <template>
   <div class="store-mgmt">
-    <!-- ── Header ─────────────────────────────────────────────────────────── -->
-    <div class="header-bar">
-      <div class="breadcrumb">
-        <span class="breadcrumb-parent">商店运营</span>
-        <span class="breadcrumb-sep">›</span>
-        <span class="breadcrumb-current">三方商店管理</span>
-      </div>
-      <div class="header-actions">
+    <!-- ── Filters（对齐广告成效：非固定吸顶，不改功能） ─────────────────────── -->
+    <div class="tps-filters">
+      <div class="tps-filters__left">
         <el-date-picker
           v-model="filters.dateRange"
           type="daterange"
@@ -381,6 +379,17 @@
             :value="o.value"
           />
         </el-select>
+      </div>
+      <div class="tps-filters__right">
+        <el-button
+          size="small"
+          type="primary"
+          :loading="loading"
+          class="tps-btn-query"
+          @click="applyFilters"
+        >
+          查询
+        </el-button>
         <el-button size="small" type="primary" class="btn-add">
           <el-icon><Plus /></el-icon> 新增平台
         </el-button>
@@ -475,7 +484,6 @@
 
     <!-- ── Filter Bar ─────────────────────────────────────────────────────── -->
     <div class="filter-bar">
-      <span class="filter-label">筛选条件：</span>
       <div class="filter-items">
         <el-select v-model="filters.platform" size="small" placeholder="平台: 全部" clearable>
           <el-option
@@ -547,161 +555,175 @@
 
     <!-- ── App Store Data Table ───────────────────────────────────────────── -->
     <section class="section">
-      <h2 class="section-title">应用商店数据明细</h2>
-      <div v-loading="loading" class="data-table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>应用</th>
-              <th>平台</th>
-              <th>应用商店</th>
-              <th>广告平台</th>
-              <th class="num">新用户</th>
-              <th class="num">总收入</th>
-              <th class="num">广告收入</th>
-              <th class="num">付费收入</th>
-              <th class="num">广告占比</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="row in flatAppStoreRows" :key="row.key">
-              <tr
-                class="data-row"
-                :class="{ 'group-row': row.isGroup, 'child-row': row.indent > 0 }"
-              >
-                <td>
-                  <div class="cell-app" :style="{ paddingLeft: row.indent * 20 + 'px' }">
-                    <span
-                      v-if="row.isGroup"
-                      class="expand-toggle"
-                      @click="toggleExpand(row.key, 'app')"
-                    >
-                      {{ row.expanded ? '▼' : '▶' }}
-                    </span>
-                    <span v-if="row.app" class="app-name-link">{{ row.app }}</span>
-                    <span v-else class="empty-dash">—</span>
-                  </div>
-                </td>
-                <td>{{ row.platform || '—' }}</td>
-                <td>{{ row.adStore || '—' }}</td>
-                <td>{{ row.adPlatform || '—' }}</td>
-                <td class="num" :class="{ 'val-highlight': row.newUsers > 0 }">
-                  {{ row.newUsers > 0 ? row.newUsers : '—' }}
-                </td>
+      <ElCard shadow="never" class="tps-section-card" body-class="tps-section-card__body">
+        <template #header>
+          <div class="tps-section-card__header">
+            <span class="tps-section-card__title">应用商店数据明细</span>
+          </div>
+        </template>
+        <div v-loading="loading" class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>应用</th>
+                <th>平台</th>
+                <th>应用商店</th>
+                <th>广告平台</th>
+                <th class="num">新用户</th>
+                <th class="num">总收入</th>
+                <th class="num">广告收入</th>
+                <th class="num">付费收入</th>
+                <th class="num">广告占比</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-for="row in flatAppStoreRows" :key="row.key">
+                <tr
+                  class="data-row"
+                  :class="{ 'group-row': row.isGroup, 'child-row': row.indent > 0 }"
+                >
+                  <td>
+                    <div class="cell-app" :style="{ paddingLeft: row.indent * 20 + 'px' }">
+                      <span
+                        v-if="row.isGroup"
+                        class="expand-toggle"
+                        @click="toggleExpand(row.key, 'app')"
+                      >
+                        {{ row.expanded ? '▼' : '▶' }}
+                      </span>
+                      <span v-if="row.app" class="app-name-link">{{ row.app }}</span>
+                      <span v-else class="empty-dash">—</span>
+                    </div>
+                  </td>
+                  <td>{{ row.platform || '—' }}</td>
+                  <td>{{ row.adStore || '—' }}</td>
+                  <td>{{ row.adPlatform || '—' }}</td>
+                  <td class="num" :class="{ 'val-highlight': row.newUsers > 0 }">
+                    {{ row.newUsers > 0 ? row.newUsers : '—' }}
+                  </td>
+                  <td class="num val-green"
+                    >${{ row.totalRevenue > 0 ? row.totalRevenue.toLocaleString() : '—' }}</td
+                  >
+                  <td class="num val-teal"
+                    >${{ row.adRevenue > 0 ? row.adRevenue.toLocaleString() : '$0' }}</td
+                  >
+                  <td class="num val-purple">{{
+                    row.paidRevenue > 0 ? '$' + row.paidRevenue : '—'
+                  }}</td>
+                  <td class="num">
+                    <div v-if="row.adRatio > 0" class="ratio-cell">
+                      <span class="ratio-text">{{ row.adRatio }}%</span>
+                      <div class="ratio-bar">
+                        <div class="ratio-fill" :style="{ width: row.adRatio + '%' }"></div>
+                      </div>
+                    </div>
+                    <span v-else class="empty-dash">0%</span>
+                  </td>
+                </tr>
+              </template>
+              <!-- Total row -->
+              <tr class="total-row">
+                <td>合计</td><td>—</td><td>—</td><td>—</td>
+                <td class="num val-highlight">{{ appStoreTotals.newUsers }}</td>
                 <td class="num val-green"
-                  >${{ row.totalRevenue > 0 ? row.totalRevenue.toLocaleString() : '—' }}</td
+                  >${{ appStoreTotals.totalRevenue.toLocaleString('en-US') }}</td
                 >
                 <td class="num val-teal"
-                  >${{ row.adRevenue > 0 ? row.adRevenue.toLocaleString() : '$0' }}</td
+                  >${{ appStoreTotals.adRevenue.toLocaleString('en-US') }}</td
                 >
-                <td class="num val-purple">{{
-                  row.paidRevenue > 0 ? '$' + row.paidRevenue : '—'
-                }}</td>
-                <td class="num">
-                  <div v-if="row.adRatio > 0" class="ratio-cell">
-                    <span class="ratio-text">{{ row.adRatio }}%</span>
-                    <div class="ratio-bar">
-                      <div class="ratio-fill" :style="{ width: row.adRatio + '%' }"></div>
-                    </div>
-                  </div>
-                  <span v-else class="empty-dash">0%</span>
-                </td>
+                <td class="num val-purple"
+                  >${{ appStoreTotals.paidRevenue.toLocaleString('en-US') }}</td
+                >
+                <td class="num">{{ appStoreTotals.adRatioPct }}%</td>
               </tr>
-            </template>
-            <!-- Total row -->
-            <tr class="total-row">
-              <td>合计</td><td>—</td><td>—</td><td>—</td>
-              <td class="num val-highlight">{{ appStoreTotals.newUsers }}</td>
-              <td class="num val-green"
-                >${{ appStoreTotals.totalRevenue.toLocaleString('en-US') }}</td
-              >
-              <td class="num val-teal">${{ appStoreTotals.adRevenue.toLocaleString('en-US') }}</td>
-              <td class="num val-purple"
-                >${{ appStoreTotals.paidRevenue.toLocaleString('en-US') }}</td
-              >
-              <td class="num">{{ appStoreTotals.adRatioPct }}%</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+            </tbody>
+          </table>
+        </div>
+      </ElCard>
     </section>
 
     <!-- ── Channel Data Table ─────────────────────────────────────────────── -->
     <section class="section">
-      <h2 class="section-title">推广渠道数据明细</h2>
-      <div v-loading="loading" class="data-table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>应用</th>
-              <th>平台</th>
-              <th>渠道</th>
-              <th>广告系列</th>
-              <th class="num">新用户</th>
-              <th class="num">总收入</th>
-              <th class="num">广告收入</th>
-              <th class="num">付费收入</th>
-              <th class="num">渠道占比</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="row in flatChannelRows" :key="row.key">
-              <tr
-                class="data-row"
-                :class="{ 'group-row': row.isGroup, 'child-row': row.indent > 0 }"
-              >
-                <td>
-                  <div class="cell-app" :style="{ paddingLeft: row.indent * 20 + 'px' }">
-                    <span
-                      v-if="row.isGroup"
-                      class="expand-toggle"
-                      @click="toggleExpand(row.key, 'channel')"
-                      >{{ row.expanded ? '▼' : '▶' }}</span
-                    >
-                    <span v-if="row.app" class="app-name-link">{{ row.app }}</span>
-                    <span v-else class="empty-dash">—</span>
-                  </div>
-                </td>
-                <td>{{ row.platform || '—' }}</td>
-                <td>{{ row.channel || '—' }}</td>
-                <td>{{ row.adCampaign || '—' }}</td>
-                <td class="num">{{ row.newUsers }}</td>
-                <td class="num val-green">${{ row.totalRevenue.toLocaleString() }}</td>
-                <td class="num val-teal">${{ row.adRevenue.toLocaleString() }}</td>
-                <td class="num val-purple">${{ row.paidRevenue }}</td>
-                <td class="num">
-                  <div v-if="row.channelRatio > 0" class="ratio-cell">
-                    <span class="ratio-text">{{ row.channelRatio }}%</span>
-                    <div class="ratio-bar">
-                      <div
-                        class="ratio-fill purple-fill"
-                        :style="{ width: row.channelRatio * 3 + '%' }"
-                      ></div>
-                    </div>
-                  </div>
-                  <span v-else class="empty-dash">—</span>
-                </td>
+      <ElCard shadow="never" class="tps-section-card" body-class="tps-section-card__body">
+        <template #header>
+          <div class="tps-section-card__header">
+            <span class="tps-section-card__title">推广渠道数据明细</span>
+          </div>
+        </template>
+        <div v-loading="loading" class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>应用</th>
+                <th>平台</th>
+                <th>渠道</th>
+                <th>广告系列</th>
+                <th class="num">新用户</th>
+                <th class="num">总收入</th>
+                <th class="num">广告收入</th>
+                <th class="num">付费收入</th>
+                <th class="num">渠道占比</th>
               </tr>
-            </template>
-            <!-- Total -->
-            <tr class="total-row">
-              <td>合计</td><td>—</td><td>—</td><td>—</td>
-              <td class="num">{{ channelTotals.newUsers }}</td>
-              <td class="num val-green"
-                >${{ channelTotals.totalRevenue.toLocaleString('en-US') }}</td
-              >
-              <td class="num val-teal">${{ channelTotals.adRevenue.toLocaleString('en-US') }}</td>
-              <td class="num val-purple"
-                >${{ channelTotals.paidRevenue.toLocaleString('en-US') }}</td
-              >
-              <td class="num">{{ channelTotals.ratioPct }}%</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="table-tip">
-          提示：InAppShare 为应用内分享推广渠道，不包含外部广告投放消耗，无法计算 ROI
+            </thead>
+            <tbody>
+              <template v-for="row in flatChannelRows" :key="row.key">
+                <tr
+                  class="data-row"
+                  :class="{ 'group-row': row.isGroup, 'child-row': row.indent > 0 }"
+                >
+                  <td>
+                    <div class="cell-app" :style="{ paddingLeft: row.indent * 20 + 'px' }">
+                      <span
+                        v-if="row.isGroup"
+                        class="expand-toggle"
+                        @click="toggleExpand(row.key, 'channel')"
+                        >{{ row.expanded ? '▼' : '▶' }}</span
+                      >
+                      <span v-if="row.app" class="app-name-link">{{ row.app }}</span>
+                      <span v-else class="empty-dash">—</span>
+                    </div>
+                  </td>
+                  <td>{{ row.platform || '—' }}</td>
+                  <td>{{ row.channel || '—' }}</td>
+                  <td>{{ row.adCampaign || '—' }}</td>
+                  <td class="num">{{ row.newUsers }}</td>
+                  <td class="num val-green">${{ row.totalRevenue.toLocaleString() }}</td>
+                  <td class="num val-teal">${{ row.adRevenue.toLocaleString() }}</td>
+                  <td class="num val-purple">${{ row.paidRevenue }}</td>
+                  <td class="num">
+                    <div v-if="row.channelRatio > 0" class="ratio-cell">
+                      <span class="ratio-text">{{ row.channelRatio }}%</span>
+                      <div class="ratio-bar">
+                        <div
+                          class="ratio-fill purple-fill"
+                          :style="{ width: row.channelRatio * 3 + '%' }"
+                        ></div>
+                      </div>
+                    </div>
+                    <span v-else class="empty-dash">—</span>
+                  </td>
+                </tr>
+              </template>
+              <!-- Total -->
+              <tr class="total-row">
+                <td>合计</td><td>—</td><td>—</td><td>—</td>
+                <td class="num">{{ channelTotals.newUsers }}</td>
+                <td class="num val-green"
+                  >${{ channelTotals.totalRevenue.toLocaleString('en-US') }}</td
+                >
+                <td class="num val-teal">${{ channelTotals.adRevenue.toLocaleString('en-US') }}</td>
+                <td class="num val-purple"
+                  >${{ channelTotals.paidRevenue.toLocaleString('en-US') }}</td
+                >
+                <td class="num">{{ channelTotals.ratioPct }}%</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="table-tip">
+            提示：InAppShare 为应用内分享推广渠道，不包含外部广告投放消耗，无法计算 ROI
+          </div>
         </div>
-      </div>
+      </ElCard>
     </section>
 
     <!-- ── Bottom Charts ──────────────────────────────────────────────────── -->
@@ -718,59 +740,162 @@
   </div>
 </template>
 
-<style scoped>
-  /* ── Base ─────────────────────────────────────────────────────────────────── */
+<style scoped lang="scss">
+  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as *;
+
+  /* 仅调整样式：DOM 结构保持不变 */
   .store-mgmt {
+    position: relative;
     min-height: 100vh;
     padding: 0 0 40px;
-    font-family:
-      'PingFang SC',
-      'Microsoft YaHei',
-      -apple-system,
-      sans-serif;
+    overflow-x: clip;
     font-size: 13px;
-    color: #e2e8f0;
-    background: #0f1117;
+    color: var(--text-primary);
+    background: var(--default-bg-color);
   }
 
-  /* ── Header ───────────────────────────────────────────────────────────────── */
-  .header-bar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
+  /* 极光背景（对齐广告成效的顶部氛围） */
+  .store-mgmt::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        ellipse 70% 50% at 6% 6%,
+        rgb(16 185 129 / 32%) 0%,
+        rgb(6 182 212 / 14%) 38%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 55% 42% at 94% 8%,
+        rgb(59 130 246 / 28%) 0%,
+        rgb(139 92 246 / 12%) 38%,
+        transparent 58%
+      ),
+      radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 12%) 0%, transparent 55%);
+    mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
+    animation: tps-aurora-drift 14s ease-in-out infinite alternate;
+  }
+
+  .store-mgmt::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(rgb(186 230 253 / 4%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(186 230 253 / 4%) 1px, transparent 1px);
+    background-size:
+      40px 40px,
+      40px 40px;
+    mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+  }
+
+  @keyframes tps-aurora-drift {
+    0% {
+      filter: hue-rotate(0deg);
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    100% {
+      filter: hue-rotate(-12deg);
+      opacity: 0.92;
+      transform: scale(1.04) translate(-1.2%, 1.2%);
+    }
+  }
+
+  /* 保证内容层级在背景之上 */
+  .store-mgmt > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Filters（对齐广告成效）────────────────────────────────────────────── */
+  .tps-filters {
+    position: relative;
     display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 24px;
-    background: #0f1117;
-    border-bottom: 1px solid #1e2332;
+    padding: 18px 20px;
+    margin: 24px 24px 0;
+    background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--default-border) 70%, transparent);
+    border-radius: 16px;
+    box-shadow:
+      0 10px 36px rgb(0 0 0 / 22%),
+      inset 0 1px 0 rgb(255 255 255 / 8%);
   }
 
-  .breadcrumb {
+  .tps-filters__left,
+  .tps-filters__right {
     display: flex;
-    gap: 6px;
+    flex-wrap: wrap;
+    gap: 10px 12px;
     align-items: center;
   }
 
-  .breadcrumb-parent {
+  /* 筛选项尺寸统一：40px 高度 + 胶囊；按钮与选择器对齐 */
+  :deep(.tps-filters),
+  :deep(.filter-bar) {
+    --el-component-size: 40px;
+  }
+
+  :deep(.tps-filters .el-input__wrapper),
+  :deep(.filter-bar .el-input__wrapper) {
+    min-height: 40px;
+    padding: 0 12px;
+  }
+
+  /* Element Plus Select 在部分版本使用 el-select__wrapper（不是 el-input__wrapper） */
+  :deep(.tps-filters .el-select__wrapper),
+  :deep(.filter-bar .el-select__wrapper) {
+    min-height: 40px;
+    padding: 0 12px;
+    border-radius: 9999px !important;
+  }
+
+  :deep(.tps-filters .el-range-editor.el-input__wrapper) {
+    min-height: 40px;
+  }
+
+  :deep(.tps-filters .el-button--small),
+  :deep(.filter-bar .el-button--small) {
+    height: 40px;
+    padding: 0 16px;
     font-size: 13px;
-    color: #6b7280;
+    border-radius: 9999px !important;
   }
 
-  .breadcrumb-sep {
-    color: #4b5563;
+  :deep(.tps-filters .el-button--small .el-icon),
+  :deep(.filter-bar .el-button--small .el-icon) {
+    margin-right: 6px;
   }
 
-  .breadcrumb-current {
-    font-size: 13px;
-    font-weight: 500;
-    color: #f1f5f9;
+  :deep(.tps-filters .el-input__wrapper) {
+    background: rgb(255 255 255 / 4%) !important;
+    border: 1px solid rgb(96 165 250 / 18%) !important;
+    border-radius: 9999px !important;
+    box-shadow: none !important;
   }
 
-  .header-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+  :deep(.tps-filters .el-input__wrapper:hover) {
+    border-color: rgb(96 165 250 / 45%) !important;
+    box-shadow: 0 0 12px rgb(59 130 246 / 14%) !important;
+  }
+
+  :deep(.tps-filters .el-input__wrapper.is-focus) {
+    border-color: var(--art-primary) !important;
+    box-shadow: 0 0 0 2px rgb(59 130 246 / 20%) !important;
+  }
+
+  :deep(.tps-filters .el-button--small) {
+    border-radius: 9999px !important;
   }
 
   .date-picker {
@@ -781,20 +906,21 @@
     width: 80px;
   }
 
-  .btn-add.el-button--primary {
-    background: #3b82f6;
-    border-color: #3b82f6;
+  /* 按项目规范：按钮统一圆角 */
+  .btn-add,
+  .btn-export {
+    border-radius: 9999px;
   }
 
   .btn-export {
-    color: #94a3b8;
-    background: #1e2332;
-    border-color: #2d3748;
+    color: var(--text-secondary);
+    background: rgb(255 255 255 / 6%);
+    border-color: rgb(96 165 250 / 18%);
   }
 
   .btn-export:hover {
-    color: #e2e8f0;
-    border-color: #4b6080;
+    color: var(--text-primary);
+    border-color: rgb(96 165 250 / 45%);
   }
 
   /* ── Section ──────────────────────────────────────────────────────────────── */
@@ -806,7 +932,49 @@
     margin: 0 0 14px;
     font-size: 14px;
     font-weight: 600;
-    color: #f1f5f9;
+
+    @include ap-title-gradient;
+
+    line-height: 1.2;
+  }
+
+  .tps-section-card {
+    /* 卡片额外质感 */
+    position: relative;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--default-border) 75%, transparent);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgb(0 0 0 / 35%);
+
+    @include ap-card-mesh;
+    @include ap-panel-hover;
+  }
+
+  :deep(.tps-section-card .el-card__header) {
+    padding: 14px 16px;
+    background: color-mix(in srgb, var(--default-bg-color) 72%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--default-border) 70%, transparent);
+  }
+
+  :deep(.tps-section-card__body.el-card__body) {
+    padding: 14px 16px;
+  }
+
+  .tps-section-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+  }
+
+  .tps-section-card__title {
+    font-size: 13px;
+    font-weight: 700;
+
+    @include ap-title-gradient;
+
+    line-height: 1.2;
   }
 
   /* ── Status Summary Grid ─────────────────────────────────────────────────── */
@@ -818,60 +986,134 @@
   }
 
   .summary-card {
+    --tps-accent: var(--art-primary);
+    --tps-accent-2: #22d3ee;
+
+    /* 效果留给卡片（筛选不加背景特效） */
+    position: relative;
     padding: 16px 20px;
-    background: #151b2d;
-    border: 1px solid #1e2332;
-    border-radius: 8px;
-    transition: border-color 0.2s;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--default-border) 70%, transparent);
+    border-radius: 16px;
+    box-shadow:
+      0 10px 36px rgb(0 0 0 / 42%),
+      inset 0 1px 0 rgb(255 255 255 / 10%);
+    transition:
+      box-shadow 0.42s var(--ease-out),
+      border-color 0.32s var(--ease-default);
+
+    @include ap-card-mesh;
+    @include ap-panel-hover;
+
+    /* 色彩氛围层：淡淡的双端渐变 */
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(
+          ellipse 80% 60% at 10% 0%,
+          color-mix(in srgb, var(--tps-accent) 26%, transparent) 0%,
+          transparent 55%
+        ),
+        radial-gradient(
+          ellipse 80% 60% at 100% 100%,
+          color-mix(in srgb, var(--tps-accent-2) 18%, transparent) 0%,
+          transparent 58%
+        );
+      opacity: 0.9;
+    }
+
+    /* 顶部高光线 */
+    &::after {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      z-index: 1;
+      width: 82%;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--tps-accent) 85%, transparent),
+        color-mix(in srgb, var(--tps-accent-2) 85%, transparent),
+        transparent
+      );
+      opacity: 0.7;
+      transform: translateX(-50%);
+    }
+
+    > * {
+      position: relative;
+      z-index: 2;
+    }
   }
 
   .summary-card:hover {
-    border-color: #2d3f6b;
+    border-color: color-mix(in srgb, var(--art-primary) 45%, var(--default-border));
+    box-shadow:
+      0 24px 72px rgb(0 0 0 / 52%),
+      0 0 72px rgb(59 130 246 / 10%);
   }
 
   .summary-card.blue {
-    border-left: 3px solid #3b82f6;
+    --tps-accent: var(--art-primary);
+    --tps-accent-2: #22d3ee;
+
+    border-color: color-mix(in srgb, var(--art-primary) 35%, var(--default-border));
   }
 
   .summary-card.orange {
-    border-left: 3px solid #f59e0b;
+    --tps-accent: var(--art-warning);
+    --tps-accent-2: #fbbf24;
+
+    border-color: color-mix(in srgb, var(--art-warning) 35%, var(--default-border));
   }
 
   .summary-card.purple {
-    border-left: 3px solid #8b5cf6;
+    --tps-accent: #a855f7;
+    --tps-accent-2: #818cf8;
+
+    border-color: color-mix(in srgb, #a855f7 30%, var(--default-border));
   }
 
   .summary-value {
     font-size: 28px;
-    font-weight: 700;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
     line-height: 1.2;
-    color: #f1f5f9;
+    color: var(--text-primary);
   }
 
   .summary-unit {
     margin-left: 2px;
     font-size: 14px;
-    font-weight: 400;
-    color: #9ca3af;
+    font-weight: 500;
+    color: var(--text-secondary);
   }
 
   .summary-label {
     margin: 4px 0 2px;
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--text-secondary);
   }
 
   .summary-sub {
     font-size: 11px;
-    color: #6b7280;
+    color: var(--text-tertiary);
   }
 
   .green-dot {
-    color: #22c55e;
+    color: var(--text-success);
   }
 
   .warning-dot {
-    color: #f59e0b;
+    color: var(--text-warning);
   }
 
   /* ── Platform Cards Grid ─────────────────────────────────────────────────── */
@@ -883,27 +1125,96 @@
   }
 
   .platform-card {
+    --tps-platform-accent: var(--art-primary);
+    --tps-platform-glow: rgb(59 130 246 / 16%);
+
+    position: relative;
     padding: 14px 16px;
-    background: #151b2d;
-    border: 1px solid #1e2332;
-    border-radius: 8px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--default-box-color) 86%, transparent);
+    border: 1px solid color-mix(in srgb, var(--default-border) 70%, transparent);
+    border-radius: 16px;
+    box-shadow: 0 10px 38px rgb(0 0 0 / 42%);
     transition:
-      border-color 0.2s,
-      transform 0.15s;
+      box-shadow 0.42s var(--ease-out),
+      border-color 0.32s var(--ease-default),
+      transform 0.22s var(--ease-out);
+
+    @include ap-card-mesh;
+    @include ap-panel-hover;
+
+    /* 与上方状态卡区分：角落“徽记式”色彩，而不是整面渐变 */
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(
+          ellipse 55% 45% at 12% 8%,
+          color-mix(in srgb, var(--tps-platform-accent) 28%, transparent) 0%,
+          transparent 58%
+        ),
+        radial-gradient(
+          ellipse 45% 40% at 100% 110%,
+          color-mix(in srgb, var(--tps-platform-accent) 16%, transparent) 0%,
+          transparent 62%
+        );
+      opacity: 0.85;
+    }
+
+    /* 左侧细色条：更像“状态标识”，避免和上面卡片同款 */
+    &::after {
+      position: absolute;
+      top: 14px;
+      bottom: 14px;
+      left: 10px;
+      z-index: 1;
+      width: 3px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--tps-platform-accent) 92%, transparent),
+        transparent
+      );
+      filter: drop-shadow(0 0 14px var(--tps-platform-glow));
+      border-radius: 9999px;
+      opacity: 0.55;
+    }
+
+    > * {
+      position: relative;
+      z-index: 2;
+    }
   }
 
   .platform-card:hover {
-    border-color: #2d4070;
-    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--art-primary) 45%, var(--default-border));
+    box-shadow:
+      0 24px 72px rgb(0 0 0 / 52%),
+      0 0 72px rgb(59 130 246 / 10%);
+    transform: translateY(-2px);
   }
 
   .platform-card.warning {
-    border-color: #7c4a0d;
+    --tps-platform-accent: var(--art-warning);
+    --tps-platform-glow: rgb(249 115 22 / 18%);
+
+    border-color: color-mix(in srgb, var(--art-warning) 40%, var(--default-border));
   }
 
   .platform-card.pending {
-    border-color: #1e2332;
-    opacity: 0.8;
+    --tps-platform-accent: color-mix(in srgb, var(--default-border) 60%, transparent);
+    --tps-platform-glow: rgb(148 163 184 / 10%);
+
+    opacity: 0.78;
+  }
+
+  .platform-card.connected {
+    --tps-platform-accent: var(--art-success);
+    --tps-platform-glow: rgb(16 185 129 / 16%);
   }
 
   .platform-card-header {
@@ -920,7 +1231,8 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    border-radius: 8px;
+    border-radius: 12px;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 18%);
   }
 
   .platform-icon-letter {
@@ -931,8 +1243,8 @@
 
   .platform-name {
     font-size: 13px;
-    font-weight: 600;
-    color: #e2e8f0;
+    font-weight: 700;
+    color: var(--text-primary);
   }
 
   .platform-status-badge {
@@ -944,15 +1256,15 @@
   }
 
   .platform-status-badge.connected {
-    color: #22c55e;
+    color: var(--text-success);
   }
 
   .platform-status-badge.warning {
-    color: #f59e0b;
+    color: var(--text-warning);
   }
 
   .platform-status-badge.pending {
-    color: #6b7280;
+    color: var(--text-tertiary);
   }
 
   .status-dot {
@@ -966,11 +1278,11 @@
   .platform-meta {
     margin-bottom: 10px;
     font-size: 11px;
-    color: #6b7280;
+    color: var(--text-tertiary);
   }
 
   .warning-text {
-    color: #f59e0b;
+    color: var(--text-warning);
   }
 
   .platform-card-footer {
@@ -982,38 +1294,60 @@
   .btn-fix,
   .btn-config {
     width: 100%;
-    border-radius: 4px;
+    border-radius: 9999px;
   }
 
   .btn-detail {
-    color: #94a3b8;
+    color: var(--text-secondary);
     background: transparent;
-    border-color: #2d3748;
+    border-color: color-mix(in srgb, var(--default-border) 80%, transparent);
   }
 
   .btn-detail:hover {
-    color: #4b90e2;
-    border-color: #4b90e2;
+    color: var(--text-link);
+    border-color: color-mix(in srgb, var(--art-primary) 60%, transparent);
   }
 
   /* ── Filter Bar ───────────────────────────────────────────────────────────── */
   .filter-bar {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
     padding: 16px 24px;
-    margin-top: 20px;
-    background: #151b2d;
-    border-top: 1px solid #1e2332;
-    border-bottom: 1px solid #1e2332;
+    margin: 20px 24px 0;
+    overflow: visible;
+    background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--default-border) 70%, transparent);
+    border-radius: 16px;
+    box-shadow:
+      0 10px 36px rgb(0 0 0 / 22%),
+      inset 0 1px 0 rgb(255 255 255 / 8%);
   }
 
-  .filter-label {
-    font-size: 13px;
-    color: #9ca3af;
-    white-space: nowrap;
+  .filter-items .el-button--small {
+    border-radius: 9999px;
   }
+
+  :deep(.filter-bar .el-input__wrapper) {
+    background: rgb(255 255 255 / 4%) !important;
+    border: 1px solid rgb(96 165 250 / 18%) !important;
+    border-radius: 9999px !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.filter-bar .el-input__wrapper:hover) {
+    border-color: rgb(96 165 250 / 45%) !important;
+    box-shadow: 0 0 12px rgb(59 130 246 / 14%) !important;
+  }
+
+  :deep(.filter-bar .el-input__wrapper.is-focus) {
+    border-color: var(--art-primary) !important;
+    box-shadow: 0 0 0 2px rgb(59 130 246 / 20%) !important;
+  }
+
+  /* filter-label DOM 已移除 */
 
   .filter-items {
     display: flex;
@@ -1028,17 +1362,34 @@
 
   /* ── Metrics Grid ─────────────────────────────────────────────────────────── */
   .metrics-grid {
+    position: relative;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 0;
     margin: 0 24px;
     margin-top: 20px;
     overflow: hidden;
-    background: #151b2d;
-    border-top: 1px solid #1e2332;
-    border-bottom: 1px solid #1e2332;
-    border-radius: 8px;
+    background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--default-border) 75%, transparent);
+    border-radius: 16px;
     animation: slideUp 0.4s ease;
+  }
+
+  .metrics-grid::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(ellipse 60% 80% at 0% 0%, rgb(59 130 246 / 10%) 0%, transparent 62%),
+      radial-gradient(ellipse 55% 80% at 100% 0%, rgb(16 185 129 / 8%) 0%, transparent 60%);
+    opacity: 0.85;
+  }
+
+  .metrics-grid > * {
+    position: relative;
+    z-index: 1;
   }
 
   @keyframes slideUp {
@@ -1054,9 +1405,60 @@
   }
 
   .metric-card {
+    --tps-metric-accent: var(--art-primary);
+    --tps-metric-glow: rgb(59 130 246 / 14%);
+
+    position: relative;
     padding: 18px 20px;
+    overflow: hidden;
     border-right: 1px solid #1e2332;
     transition: background 0.2s;
+
+    @include ap-card-mesh;
+
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(
+          ellipse 70% 60% at 18% 0%,
+          color-mix(in srgb, var(--tps-metric-accent) 24%, transparent) 0%,
+          transparent 60%
+        ),
+        radial-gradient(
+          ellipse 70% 60% at 100% 120%,
+          color-mix(in srgb, var(--tps-metric-accent) 14%, transparent) 0%,
+          transparent 62%
+        );
+      opacity: 0.9;
+    }
+
+    &::after {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      z-index: 1;
+      width: 70%;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--tps-metric-accent) 85%, transparent),
+        transparent
+      );
+      opacity: 0.65;
+      transform: translateX(-50%);
+    }
+
+    > * {
+      position: relative;
+      z-index: 2;
+    }
   }
 
   .metric-card:last-child {
@@ -1064,26 +1466,37 @@
   }
 
   .metric-card:hover {
-    background: #1a2236;
+    background: color-mix(in srgb, var(--default-box-color) 92%, transparent);
+    box-shadow: 0 0 60px var(--tps-metric-glow);
   }
 
   .metric-card.accent-orange {
     background: rgb(251 146 60 / 5%);
+
+    --tps-metric-accent: #f97316;
+    --tps-metric-glow: rgb(249 115 22 / 16%);
   }
 
   .metric-card.accent-purple {
     background: rgb(139 92 246 / 5%);
+
+    --tps-metric-accent: #a855f7;
+    --tps-metric-glow: rgb(168 85 247 / 16%);
   }
 
   .metric-card.accent-teal {
     background: rgb(20 184 166 / 5%);
+
+    --tps-metric-accent: #22d3ee;
+    --tps-metric-glow: rgb(34 211 238 / 14%);
   }
 
   .metric-value {
     font-size: 22px;
-    font-weight: 700;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
     line-height: 1.3;
-    color: #f1f5f9;
+    color: var(--text-primary);
   }
 
   .metric-unit {
@@ -1110,20 +1523,21 @@
   .metric-label {
     margin: 4px 0 2px;
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--text-secondary);
   }
 
   .metric-sub {
     font-size: 11px;
-    color: #6b7280;
+    color: var(--text-tertiary);
   }
 
   /* ── Data Tables ──────────────────────────────────────────────────────────── */
   .data-table-wrap {
     margin-bottom: 4px;
     overflow: hidden;
-    border: 1px solid #1e2332;
-    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--default-border) 75%, transparent);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgb(0 0 0 / 35%);
   }
 
   .data-table {
@@ -1133,16 +1547,16 @@
   }
 
   .data-table thead tr {
-    background: #0d1017;
+    background: color-mix(in srgb, var(--default-bg-color) 92%, transparent);
   }
 
   .data-table th {
     padding: 10px 12px;
     font-weight: 500;
-    color: #6b7280;
+    color: var(--text-secondary);
     text-align: left;
     white-space: nowrap;
-    border-bottom: 1px solid #1e2332;
+    border-bottom: 1px solid color-mix(in srgb, var(--default-border) 70%, transparent);
   }
 
   .data-table th.num {
@@ -1150,12 +1564,12 @@
   }
 
   .data-row {
-    border-bottom: 1px solid #141926;
+    border-bottom: 1px solid color-mix(in srgb, var(--default-border) 55%, transparent);
     transition: background 0.15s;
   }
 
   .data-row:hover {
-    background: #1a2236;
+    background: color-mix(in srgb, var(--art-primary) 10%, transparent);
   }
 
   .group-row {
@@ -1167,19 +1581,19 @@
   }
 
   .total-row {
-    background: #0d1017;
-    border-top: 1px solid #2d3748;
+    background: color-mix(in srgb, var(--default-bg-color) 94%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--default-border) 75%, transparent);
   }
 
   .total-row td {
     padding: 10px 12px;
-    font-weight: 600;
-    color: #e2e8f0;
+    font-weight: 800;
+    color: var(--text-primary);
   }
 
   .data-table td {
     padding: 8px 12px;
-    color: #9ca3af;
+    color: var(--text-secondary);
     white-space: nowrap;
   }
 
@@ -1196,18 +1610,18 @@
   .expand-toggle {
     width: 12px;
     font-size: 10px;
-    color: #4b5563;
+    color: var(--text-tertiary);
     cursor: pointer;
     user-select: none;
     transition: color 0.15s;
   }
 
   .expand-toggle:hover {
-    color: #94a3b8;
+    color: var(--text-secondary);
   }
 
   .app-name-link {
-    color: #60a5fa;
+    color: var(--text-link);
     cursor: pointer;
   }
 
@@ -1216,20 +1630,20 @@
   }
 
   .empty-dash {
-    color: #374151;
+    color: var(--text-tertiary);
   }
 
   .val-highlight {
-    font-weight: 600;
-    color: #f1f5f9;
+    font-weight: 800;
+    color: var(--text-primary);
   }
 
   .val-green {
-    color: #4ade80;
+    color: var(--text-success);
   }
 
   .val-teal {
-    color: #2dd4bf;
+    color: #22d3ee;
   }
 
   .val-purple {
@@ -1253,15 +1667,15 @@
     width: 60px;
     height: 4px;
     overflow: hidden;
-    background: #1e2332;
-    border-radius: 2px;
+    background: color-mix(in srgb, var(--default-border) 60%, transparent);
+    border-radius: 9999px;
   }
 
   .ratio-fill {
     height: 100%;
-    background: linear-gradient(90deg, #22c55e, #4ade80);
-    border-radius: 2px;
-    transition: width 0.4s ease;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    border-radius: 9999px;
+    transition: width 0.35s var(--ease-out);
   }
 
   .ratio-fill.purple-fill {
@@ -1271,9 +1685,9 @@
   .table-tip {
     padding: 8px 12px;
     font-size: 11px;
-    color: #4b5563;
-    background: #0d1017;
-    border-top: 1px solid #1e2332;
+    color: var(--text-tertiary);
+    background: color-mix(in srgb, var(--default-bg-color) 92%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--default-border) 70%, transparent);
   }
 
   /* ── Charts ───────────────────────────────────────────────────────────────── */
@@ -1285,21 +1699,81 @@
   }
 
   .chart-card {
+    position: relative;
     padding: 16px 20px;
-    background: #151b2d;
-    border: 1px solid #1e2332;
-    border-radius: 8px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--default-border) 75%, transparent);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgb(0 0 0 / 35%);
+
+    /* 把“描边框感”提升到外层卡片上（不要画在图表容器里） */
+    box-shadow:
+      0 10px 40px rgb(0 0 0 / 35%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 28%, transparent) inset,
+      0 0 42px rgb(59 130 246 / 10%);
+
+    @include ap-card-mesh;
+    @include ap-panel-hover;
+    @include ap-card-title-hover('.chart-title');
+
+    /* 内部层次：顶部轻微反光 + 底部暗角 */
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(ellipse 80% 55% at 50% 0%, rgb(255 255 255 / 6%) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 55% at 50% 120%, rgb(0 0 0 / 28%) 0%, transparent 65%);
+      opacity: 0.9;
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
   }
 
   .chart-title {
     margin: 0 0 12px;
     font-size: 13px;
-    font-weight: 600;
-    color: #e2e8f0;
+    font-weight: 700;
+
+    @include ap-title-gradient;
+
+    line-height: 1.2;
   }
 
+  /* 图表容器 */
   .chart-container {
+    position: relative;
     width: 100%;
+    overflow: hidden;
+    background: transparent;
+    border-radius: 14px;
+  }
+
+  .chart-container::before {
+    content: none;
+  }
+
+  /* ECharts canvas/SVG 圆角裁切（不同渲染器都覆盖） */
+  :deep(.chart-container canvas),
+  :deep(.chart-container svg) {
+    position: relative;
+    z-index: 1;
+    border-radius: 14px;
+  }
+
+  /* ECharts 外层包裹 div 也一起裁切，避免“内层框”观感残留 */
+  :deep(.chart-container > div) {
+    overflow: hidden;
+    background: transparent !important;
+    border-radius: 14px;
+    outline: none !important;
+    box-shadow: none !important;
   }
 
   .donut-chart {
@@ -1312,8 +1786,9 @@
 
   /* ── Element Plus Overrides ──────────────────────────────────────────────── */
   :deep(.el-input__wrapper) {
-    background: #1a2133 !important;
-    border-color: #2d3748 !important;
+    background: rgb(255 255 255 / 4%) !important;
+    border-color: rgb(96 165 250 / 18%) !important;
+    border-radius: 9999px;
     box-shadow: none !important;
   }
 
@@ -1332,8 +1807,8 @@
   }
 
   :deep(.el-select .el-input.is-focus .el-input__wrapper) {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 1px #3b82f6 !important;
+    border-color: var(--art-primary) !important;
+    box-shadow: 0 0 0 2px rgb(59 130 246 / 20%) !important;
   }
 
   :deep(.el-button--small) {
@@ -1377,6 +1852,12 @@
 
     .platform-grid {
       grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .store-mgmt::before {
+      animation: none;
     }
   }
 </style>

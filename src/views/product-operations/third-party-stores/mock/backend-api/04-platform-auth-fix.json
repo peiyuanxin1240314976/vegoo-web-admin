@@ -1,0 +1,59 @@
+{
+  "_comment": "商品运营 - 三方商店管理：修复认证（对应平台卡片「修复认证」）。对应 types.ts: ThirdPartyStoresPlatformFixAuthResponse。",
+  "fieldDescription": {
+    "request": {
+      "platformId": {
+        "type": "string",
+        "required": true,
+        "description": "平台 id（来自 OverviewDashboard 的 platformCards[].id）。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "ThirdPartyStoresPlatformFixAuthResponse",
+        "required": true,
+        "description": "修复后平台详情（用于更新卡片状态）。网关包裹时位于 data 内。"
+      }
+    },
+    "ThirdPartyStoresPlatformFixAuthResponse": {
+      "detail": {
+        "type": "ThirdPartyStoresPlatformDetail",
+        "required": true,
+        "description": "修复后详情。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "platformId": "samsung"
+  },
+  "sampleResponse": {
+    "data": {
+      "detail": {
+        "id": "samsung",
+        "name": "Samsung Galaxy Store",
+        "status": "connected",
+        "appCount": 12,
+        "lastSync": "Just now",
+        "createdAt": "2026-03-01T00:00:00.000Z",
+        "updatedAt": "2026-04-08T00:00:00.000Z",
+        "remarks": ""
+      }
+    }
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "点击平台卡片「修复认证」触发；若需要弹窗输入凭证，可先走前端表单，再提交该接口。成功后建议刷新 `overview/dashboard`。"
+      }
+    ],
+    "dedupe": "同一 platformId 并发点击需去重；服务端可幂等处理。"
+  },
+  "api": {
+    "url": "POST /api/product-operations/third-party-stores/platform/auth-fix",
+    "method": "POST",
+    "priority": "P2",
+    "requestBody": "platformId（必填）",
+    "responseBody": "ThirdPartyStoresPlatformFixAuthResponse（或网关包裹于 data）"
+  }
+}
