@@ -323,6 +323,19 @@
     }
   }
 
+  function sparkPolylinePoints(data: number[], w = 80, h = 28): string {
+    if (!data.length) return ''
+    const min = Math.min(...data)
+    const max = Math.max(...data)
+    return data
+      .map((v, i) => {
+        const x = (i / (data.length - 1 || 1)) * w
+        const y = h - 2 - ((v - min) / (max - min || 1)) * (h - 4)
+        return `${x},${y}`
+      })
+      .join(' ')
+  }
+
   function formatUsdTable(n: number): string {
     if (n >= 1_000_000) {
       return `$${(n / 1_000_000).toLocaleString('en-US', {
@@ -396,7 +409,8 @@
       ])
 
       if (kpiR.status === 'fulfilled') {
-        kpiCards.value = kpiR.value.kpis.map(mapKpiItemToCard)
+        const kpis = Array.isArray(kpiR.value.kpis) ? kpiR.value.kpis : []
+        kpiCards.value = kpis.map(mapKpiItemToCard)
       } else {
         console.error(kpiR.reason)
         ElMessage.error('KPI 加载失败')
@@ -404,24 +418,26 @@
 
       if (trendR.status === 'fulfilled') {
         const t = trendR.value
-        chartCategories.value = [...t.categories]
-        revenueSeries.value = [...t.revenue]
-        ecpmSeriesRaw.value = [...t.d_ecpm]
-        fillSeriesRaw.value = [...t.d_fill_rate]
+        chartCategories.value = Array.isArray(t.categories) ? [...t.categories] : []
+        revenueSeries.value = Array.isArray(t.revenue) ? [...t.revenue] : []
+        ecpmSeriesRaw.value = Array.isArray(t.d_ecpm) ? [...t.d_ecpm] : []
+        fillSeriesRaw.value = Array.isArray(t.d_fill_rate) ? [...t.d_fill_rate] : []
       } else {
         console.error(trendR.reason)
         ElMessage.error('核心指标趋势加载失败')
       }
 
       if (tableR.status === 'fulfilled') {
-        tableData.value = tableR.value.records.map(mapAppRecordToRow)
+        const records = Array.isArray(tableR.value.records) ? tableR.value.records : []
+        tableData.value = records.map(mapAppRecordToRow)
       } else {
         console.error(tableR.reason)
         ElMessage.error('应用细分表加载失败')
       }
 
       if (aiR.status === 'fulfilled') {
-        aiInsights.value = aiR.value.insights.map(mapAiItemToInsight)
+        const insights = Array.isArray(aiR.value.insights) ? aiR.value.insights : []
+        aiInsights.value = insights.map(mapAiItemToInsight)
       } else {
         console.error(aiR.reason)
         ElMessage.error('AI 洞察加载失败')
@@ -712,17 +728,7 @@
                       </linearGradient>
                     </defs>
                     <polyline
-                      :points="
-                        card.sparkData
-                          .map((v, i) => {
-                            const min = Math.min(...card.sparkData)
-                            const max = Math.max(...card.sparkData)
-                            const x = (i / (card.sparkData.length - 1)) * 80
-                            const y = 26 - ((v - min) / (max - min || 1)) * 24
-                            return `${x},${y}`
-                          })
-                          .join(' ')
-                      "
+                      :points="sparkPolylinePoints(card.sparkData)"
                       fill="none"
                       :stroke="card.color"
                       stroke-width="1.8"
@@ -1553,7 +1559,8 @@
   }
 
   .table-scroll {
-    overflow: auto hidden;
+    max-height: 520px;
+    overflow: auto;
     -webkit-overflow-scrolling: touch;
 
     &::-webkit-scrollbar {

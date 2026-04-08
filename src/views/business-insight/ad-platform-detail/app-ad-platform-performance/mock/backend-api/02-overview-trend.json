@@ -9,7 +9,7 @@
     "request": {
       "startDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
       "endDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
-      "s_country_code": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "countryCode": { "type": "string", "required": true, "description": "国家；空为全部。" },
       "appId": { "type": "string", "required": true, "description": "应用，来自路由 query.app。" },
       "source": { "type": "string", "required": false, "description": "广告平台上下文。" }
     },
@@ -27,7 +27,7 @@
   "sampleRequest": {
     "startDate": "2025-10-01",
     "endDate": "2025-10-31",
-    "s_country_code": "",
+    "countryCode": "",
     "appId": "Weather8",
     "source": "Google"
   },
@@ -58,7 +58,7 @@
     "url": "POST /api/business-insight/ad-platform-detail/app-ad-platform-performance/overview/trend",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "startDate, endDate, s_country_code, appId, source?",
+    "requestBody": "startDate, endDate, countryCode, appId, source?",
     "responseBody": "{ categories, revenue, d_ecpm, d_fill_rate }"
   },
   "apiSuggestion": {

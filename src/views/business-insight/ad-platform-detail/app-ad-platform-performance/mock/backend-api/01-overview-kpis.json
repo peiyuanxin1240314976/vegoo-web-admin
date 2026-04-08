@@ -9,7 +9,7 @@
     "request": {
       "startDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
       "endDate": { "type": "string", "required": true, "description": "YYYY-MM-DD。" },
-      "s_country_code": { "type": "string", "required": true, "description": "国家；空为全部。" },
+      "countryCode": { "type": "string", "required": true, "description": "国家；空为全部。" },
       "appId": {
         "type": "string",
         "required": true,
@@ -49,7 +49,7 @@
   "sampleRequest": {
     "startDate": "2025-12-01",
     "endDate": "2025-12-31",
-    "s_country_code": "",
+    "countryCode": "",
     "appId": "Weather8",
     "source": "Google"
   },
@@ -97,7 +97,7 @@
     "url": "POST /api/business-insight/ad-platform-detail/app-ad-platform-performance/overview/kpis",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "startDate, endDate, s_country_code, appId, source?",
+    "requestBody": "startDate, endDate, countryCode, appId, source?",
     "responseBody": "{ kpis }"
   },
   "apiSuggestion": {
