@@ -432,7 +432,7 @@
   const selectedAppDisplayName = computed(() => routeAppQueryDecoded.value || '应用')
 
   const pageDetailTitle = computed(
-    () => `${platformTitlePart.value}在${selectedAppDisplayName.value}中的表现详情`
+    () => `${selectedAppDisplayName.value}在${platformTitlePart.value}中的表现详情`
   )
 
   function goBack() {

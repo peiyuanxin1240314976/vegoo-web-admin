@@ -94,6 +94,7 @@
     router.push({
       name: 'AppAdPlatformPerformance',
       query: {
+        'platform-name': route.query['platform-name'],
         app: row.app,
         ...(source ? { source } : sourceLabel ? { sourceLabel } : {})
       }
