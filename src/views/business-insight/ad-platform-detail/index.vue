@@ -862,10 +862,31 @@
               </svg>
             </div>
             <div class="ai-insights">
-              <div v-for="(ins, i) in aiInsights" :key="i" class="insight-item">
-                <div class="insight-title">{{ ins.title }}</div>
-                <!-- eslint-disable-next-line vue/no-v-html -->
-                <div class="insight-body" v-html="highlightText(ins.content, ins.highlights)" />
+              <template v-if="aiInsights.length">
+                <div v-for="(ins, i) in aiInsights" :key="i" class="insight-item">
+                  <div class="insight-title">{{ ins.title }}</div>
+                  <!-- eslint-disable-next-line vue/no-v-html -->
+                  <div class="insight-body" v-html="highlightText(ins.content, ins.highlights)" />
+                </div>
+              </template>
+              <div v-else class="ai-empty">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" class="ai-empty__icon">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                    stroke-dasharray="3 2"
+                  />
+                  <path
+                    d="M9 10h.01M15 10h.01M9 14s1 2 3 2 3-2 3-2"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <span class="ai-empty__text">暂无 AI 洞察</span>
               </div>
             </div>
           </div> </div
@@ -1753,6 +1774,25 @@
     display: flex;
     flex-direction: column;
     gap: 0;
+  }
+
+  .ai-empty {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    color: var(--text-3);
+
+    &__icon {
+      opacity: 0.4;
+    }
+
+    &__text {
+      font-size: 13px;
+      opacity: 0.6;
+    }
   }
 
   .insight-item {
