@@ -78,7 +78,7 @@
   }
 
   function platformDisplayNameFromRoute(): string {
-    const src = safeDecodeURIComponent(queryStringParam(route.query['platform-name']).trim())
+    const src = safeDecodeURIComponent(queryStringParam(route.query.source).trim())
     if (src) return src
     return safeDecodeURIComponent(queryStringParam(route.query.sourceLabel).trim())
   }
@@ -397,7 +397,7 @@
         startDate,
         endDate,
         appId: toApiFilterValue(appFilter.value),
-        s_country_code: toApiFilterValue(countryFilter.value),
+        countryCode: toApiFilterValue(countryFilter.value),
         ...(src ? { source: src } : {})
       }
 
