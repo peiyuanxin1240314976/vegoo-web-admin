@@ -1,0 +1,92 @@
+{
+  "_comment": "开户页面 - 新建开户记录。",
+  "fieldDescription": {
+    "request": {
+      "source": { "type": "string", "required": true, "description": "广告平台。" },
+      "app": { "type": "string", "required": true, "description": "应用名称。" },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["安卓", "iOS", "网页"],
+        "description": "投放平台。"
+      },
+      "accountType": {
+        "type": "string",
+        "required": true,
+        "enum": ["企业户", "个人户", "小额广告户"],
+        "description": "开户类型。"
+      },
+      "agency": { "type": "string", "required": true, "description": "归属代理商。" },
+      "amount": { "type": "string", "required": true, "description": "开户金额（字符串输入）。" },
+      "applicant": { "type": "string", "required": true, "description": "申请人。" },
+      "adAccountId": { "type": "string", "required": false, "description": "广告账户 ID。" },
+      "adAccountName": { "type": "string", "required": false, "description": "广告账户名称。" },
+      "credential": { "type": "string", "required": false, "description": "凭据名称。" },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "data": { "type": "OpenAccountItem", "required": true, "description": "创建后的开户记录。" }
+    }
+  },
+  "sampleRequest": {
+    "source": "Meta Ads",
+    "app": "BloodSugar2",
+    "platform": "安卓",
+    "accountType": "企业户",
+    "agency": "星达传媒",
+    "amount": "5000",
+    "applicant": "张三",
+    "adAccountId": "",
+    "adAccountName": "",
+    "credential": "",
+    "remark": "美国新账户"
+  },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "id": "OA-105",
+      "source": "Meta Ads",
+      "app": "BloodSugar2",
+      "platform": "安卓",
+      "accountType": "企业户",
+      "agency": "星达传媒",
+      "amount": 5000,
+      "applicant": "张三",
+      "registerTime": "2026-04-08 10:20",
+      "status": "待分配",
+      "remark": "美国新账户",
+      "adAccountId": "",
+      "adAccountName": "",
+      "credential": "",
+      "credentialStatus": "",
+      "feishuRecords": [
+        {
+          "time": "2026-04-08 10:20",
+          "event": "开户登记",
+          "result": "成功",
+          "target": "广告账户群"
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/create",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "OpenAccountFormModel",
+    "responseBody": "OpenAccountItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "点击新建并提交表单后调用。",
+        "prerequisite": "表单校验通过。"
+      },
+      { "moment": "提交成功后", "detail": "关闭弹窗并刷新列表数据。" }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "提交按钮可短时禁用避免重复提交。"
+  }
+}

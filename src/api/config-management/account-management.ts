@@ -211,6 +211,18 @@ export function fetchOpenAccountTable(params: OpenAccountTableQuery) {
   })
 }
 
+/** 开户筛选项（状态、代理商） */
+export function fetchOpenAccountFilterOptions() {
+  return request.post<{
+    statusOptions: { label: string; value: string; count?: number }[]
+    agencyOptions: { label: string; value: string }[]
+  }>({
+    url: '/api/config-management/open-account/filter-options',
+    data: {},
+    showErrorMessage: false
+  })
+}
+
 /** 新建开户记录 */
 export function createOpenAccount(data: OpenAccountFormModel) {
   return request.post<OpenAccountItem>({

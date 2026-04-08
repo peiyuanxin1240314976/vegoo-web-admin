@@ -1,0 +1,43 @@
+{
+  "_comment": "开户页面 - 飞书推送配置保存。",
+  "fieldDescription": {
+    "request": {
+      "enabled": { "type": "boolean", "required": true, "description": "是否开启推送。" },
+      "webhook": { "type": "string", "required": false, "description": "机器人 webhook。" },
+      "mentionAll": { "type": "boolean", "required": false, "description": "是否 @所有人。" }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "保存是否成功。" }
+    }
+  },
+  "sampleRequest": {
+    "enabled": true,
+    "webhook": "https://open.feishu.cn/open-apis/bot/v2/hook/abcdefg",
+    "mentionAll": false
+  },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "success": true
+    }
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/feishu-config/save",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "{ enabled, webhook?, mentionAll? }",
+    "responseBody": "{ success }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "在飞书设置区域点击保存时调用。",
+        "prerequisite": "enabled=true 时可校验 webhook 格式。"
+      }
+    ],
+    "defaultSelection": "无。",
+    "dedupe": "保存按钮提交中需禁用。"
+  }
+}

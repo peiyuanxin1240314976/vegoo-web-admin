@@ -1,0 +1,70 @@
+{
+  "_comment": "开户页面 - 导出开户记录。",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "关键词筛选。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "广告平台筛选。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "enum": ["", "待分配", "已激活", "开户失败"],
+        "description": "状态筛选。"
+      },
+      "agency": {
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "代理商筛选。"
+      },
+      "app": { "type": "string", "required": false, "default": "", "description": "应用筛选。" }
+    },
+    "response": {
+      "taskId": { "type": "string", "required": true, "description": "导出任务 ID。" },
+      "downloadUrl": { "type": "string", "required": true, "description": "导出文件下载地址。" }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "source": "",
+    "status": "",
+    "agency": "",
+    "app": ""
+  },
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "taskId": "open_account_export_20260408_001",
+      "downloadUrl": "https://mock.vegoo.com/export/open-account/open_account_export_20260408_001.xlsx"
+    }
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "Partial<OpenAccountTableQuery>",
+    "responseBody": "{ taskId, downloadUrl }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "点击导出按钮时触发，筛选条件与列表保持一致。",
+        "prerequisite": "无。"
+      }
+    ],
+    "defaultSelection": "筛选为空时导出全部。",
+    "dedupe": "同一条件短时间内可复用同一 taskId。"
+  }
+}

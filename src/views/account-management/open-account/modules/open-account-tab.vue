@@ -9,7 +9,7 @@
       :app-select-options="appSelectOptions"
       :filter-meta-loading="filterMetaLoading"
       :status-options="statusOptions"
-      :agency-options="agencyOptions"
+      :agency-options="agencySelectOptions"
       :feishu-enabled="feishuEnabled"
       @open-feishu="handleOpenFeishuSetting"
     />
@@ -38,16 +38,26 @@
   import { ElMessage } from 'element-plus'
   import { storeToRefs } from 'pinia'
   import {
+    fetchOpenAccountFilterOptions,
     fetchOpenAccountFeishuConfig,
     fetchOpenAccountTable,
     saveOpenAccountFeishuConfig
   } from '@/api/config-management/account-management'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
-  import { AccountApiSource } from '../config/data-source'
-  import { cloneOpenAccountMockList, agencyOptions, appOptions as mockAppNames } from '../mock/data'
-  import { PLATFORM_CONFIGS } from '../types'
-  import type { OpenAccountItem } from '../types'
+  import {
+    OpenAccountEndpoint,
+    isOpenAccountEndpointMock
+  } from '@/views/account-management/open-account/config/data-source'
+  import { openAccountAppOptions as mockAppNames } from '@/views/account-management/open-account/mock/data'
+  import {
+    mockFetchOpenAccountFilterOptions,
+    mockFetchOpenAccountTable,
+    mockFetchOpenAccountFeishuConfig,
+    mockSaveOpenAccountFeishuConfig
+  } from '@/views/account-management/open-account/mock/open-account-api-mock'
+  import { PLATFORM_CONFIGS } from '@/views/config-management/account-management/types'
+  import type { OpenAccountItem } from '@/views/config-management/account-management/types'
   import OpenAccountFiltersBar from './open-account/open-account-filters-bar.vue'
   import OpenAccountStatCards from './open-account/open-account-stat-cards.vue'
   import OpenAccountRecordTable from './open-account/open-account-record-table.vue'
@@ -77,6 +87,15 @@
   const list = ref<OpenAccountItem[]>([])
   const feishuEnabled = ref(true)
   const filterMetaLoading = ref(false)
+  const agencySelectOptions = ref<string[]>([])
+  const statusOptionsState = ref<
+    { label: string; value: string; type: 'default' | 'warn' | 'ok' | 'fail'; count?: number }[]
+  >([
+    { label: '全部', value: '', type: 'default' },
+    { label: '待分配', value: '待分配', type: 'warn' },
+    { label: '已激活', value: '已激活', type: 'ok' },
+    { label: '开户失败', value: '开户失败', type: 'fail' }
+  ])
 
   const rawAppOptions = computed(
     () => cockpitMeta.value?.appOptions ?? ([] as CockpitMetaOptionItem[])
@@ -121,7 +140,7 @@
   }
 
   const loadOpenAccountList = async () => {
-    if (!AccountApiSource.openAccountTable) {
+    if (!isOpenAccountEndpointMock(OpenAccountEndpoint.Table)) {
       try {
         const response = await fetchOpenAccountTable({ current: 1, size: 1000 })
         const rows = (response as any)?.records ?? (response as any)?.list ?? []
@@ -134,8 +153,53 @@
         // remote unavailable, fallback to mock
       }
     }
-    list.value = cloneOpenAccountMockList()
+    const mockRes = await mockFetchOpenAccountTable({ current: 1, size: 1000 })
+    list.value = mockRes.records
     autoSelectFirst()
+  }
+
+  const statusTypeMap: Record<string, 'default' | 'warn' | 'ok' | 'fail'> = {
+    '': 'default',
+    待分配: 'warn',
+    已激活: 'ok',
+    开户失败: 'fail'
+  }
+
+  const loadFilterOptions = async () => {
+    if (isOpenAccountEndpointMock(OpenAccountEndpoint.FilterOptions)) {
+      const res = await mockFetchOpenAccountFilterOptions()
+      agencySelectOptions.value = res.agencyOptions
+        .filter((i) => i.value !== '')
+        .map((i) => i.label)
+      statusOptionsState.value = res.statusOptions.map((i) => ({
+        label: i.label,
+        value: i.value,
+        type: statusTypeMap[i.value] ?? 'default',
+        count: i.count
+      }))
+      return
+    }
+    try {
+      const res = await fetchOpenAccountFilterOptions()
+      const agencyRaw = (res as any)?.agencyOptions ?? []
+      const statusRaw = (res as any)?.statusOptions ?? []
+      agencySelectOptions.value = Array.isArray(agencyRaw)
+        ? agencyRaw
+            .filter((i: any) => i?.value !== '')
+            .map((i: any) => i?.label ?? i?.value)
+            .filter(Boolean)
+        : []
+      statusOptionsState.value = Array.isArray(statusRaw)
+        ? statusRaw.map((i: any) => ({
+            label: i?.label ?? '',
+            value: i?.value ?? '',
+            type: statusTypeMap[i?.value ?? ''] ?? 'default',
+            count: i?.count
+          }))
+        : statusOptionsState.value
+    } catch {
+      // fallback keep default
+    }
   }
 
   const autoSelectFirst = () => {
@@ -147,7 +211,11 @@
   }
 
   const loadFeishuConfig = async () => {
-    if (AccountApiSource.fetchOpenAccountFeishuConfig) return
+    if (isOpenAccountEndpointMock(OpenAccountEndpoint.FeishuConfigFetch)) {
+      const response = await mockFetchOpenAccountFeishuConfig()
+      feishuEnabled.value = !!response.enabled
+      return
+    }
     try {
       const response = await fetchOpenAccountFeishuConfig()
       feishuEnabled.value = !!(response as any)?.enabled
@@ -163,6 +231,7 @@
     } finally {
       filterMetaLoading.value = false
     }
+    await loadFilterOptions()
     loadOpenAccountList()
     loadFeishuConfig()
   })
@@ -200,12 +269,15 @@
     failed: list.value.filter((i) => i.status === '开户失败').length
   }))
 
-  const statusOptions = computed(() => [
-    { label: '全部', value: '', type: 'default' as const },
-    { label: '待分配', value: '待分配', type: 'warn' as const, count: stats.value.pending },
-    { label: '已激活', value: '已激活', type: 'ok' as const, count: stats.value.active },
-    { label: '开户失败', value: '开户失败', type: 'fail' as const, count: stats.value.failed }
-  ])
+  const statusOptions = computed(() =>
+    statusOptionsState.value.map((item) => {
+      if (item.value === '待分配') return { ...item, count: stats.value.pending }
+      if (item.value === '已激活') return { ...item, count: stats.value.active }
+      if (item.value === '开户失败') return { ...item, count: stats.value.failed }
+      if (item.value === '') return { ...item, count: stats.value.total }
+      return item
+    })
+  )
 
   watch(
     () => [
@@ -234,7 +306,9 @@
 
   const handleOpenFeishuSetting = async () => {
     const nextEnabled = !feishuEnabled.value
-    if (!AccountApiSource.saveOpenAccountFeishuConfig) {
+    if (isOpenAccountEndpointMock(OpenAccountEndpoint.FeishuConfigSave)) {
+      await mockSaveOpenAccountFeishuConfig({ enabled: nextEnabled })
+    } else {
       try {
         await saveOpenAccountFeishuConfig({ enabled: nextEnabled })
       } catch {

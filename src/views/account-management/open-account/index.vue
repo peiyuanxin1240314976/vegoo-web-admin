@@ -1,28 +1,14 @@
 <template>
   <div class="oa-page art-full-height">
-    <!-- 顶部操作栏 -->
-    <div class="page-header">
-      <div class="header-actions">
-        <ElButton round class="btn-add" @click="handleNew">
-          <ElIcon><Plus /></ElIcon>新建开户记录
-        </ElButton>
-        <ElButton round class="btn-secondary" @click="handleExport">
-          <ElIcon><Download /></ElIcon>导出
-        </ElButton>
-        <el-input
-          v-model="searchKeyword"
-          placeholder="搜索开户记录..."
-          class="header-search"
-          clearable
-        >
-          <template #prefix><el-icon><Search /></el-icon></template>
-        </el-input>
-      </div>
-    </div>
+    <div class="oa-page-fx" aria-hidden="true"></div>
+    <OpenAccountToolbar
+      v-model:search-keyword="searchKeyword"
+      @new="handleNew"
+      @export="handleExport"
+    />
 
-    <!-- 主体：左列表 + 右详情 -->
-    <div class="main-content">
-      <div class="list-side">
+    <div class="oa-page__main">
+      <div class="oa-page__list">
         <OpenAccountTab
           ref="openAccountTabRef"
           :search-keyword="searchKeyword"
@@ -32,7 +18,7 @@
           @delete="handleDeleteOpen"
         />
       </div>
-      <div class="detail-side">
+      <div class="oa-page__detail">
         <OpenAccountDetailPanel
           :data="currentRecord"
           @assign="handleAssignOpen"
@@ -41,20 +27,14 @@
       </div>
     </div>
 
-    <!-- 新建弹窗 -->
-    <OpenAccountFormDialog
-      v-model:visible="formVisible"
-      @success="handleFormSuccess"
-    />
+    <OpenAccountFormDialog v-model:visible="formVisible" @success="handleFormSuccess" />
 
-    <!-- 分配凭据弹窗 -->
     <OpenAccountAssignDialog
       v-model:visible="assignVisible"
       :data="assignTarget"
       @success="handleAssignSuccess"
     />
 
-    <!-- 删除确认弹窗 -->
     <OpenAccountDeleteDialog
       v-model:visible="deleteVisible"
       :data="deleteTarget"
@@ -65,9 +45,9 @@
 
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { Plus, Download, Search } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
-  import OpenAccountTab from '@/views/config-management/account-management/modules/open-account-tab.vue'
+  import OpenAccountToolbar from './modules/open-account-toolbar.vue'
+  import OpenAccountTab from './modules/open-account-tab.vue'
   import OpenAccountDetailPanel from '@/views/config-management/account-management/modules/open-account-detail-panel.vue'
   import OpenAccountFormDialog from '@/views/config-management/account-management/modules/open-account-form-dialog.vue'
   import OpenAccountAssignDialog from '@/views/config-management/account-management/modules/open-account-assign-dialog.vue'
@@ -132,102 +112,112 @@
 
 <style lang="scss" scoped>
   .oa-page {
-    --bg-page: #0b1120;
-    --border: rgb(255 255 255 / 7%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #3b82f6;
-    --teal: #0d9488;
-
+    position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    padding: 0 24px 24px;
-    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    min-height: 100%;
+    padding: 0 var(--space-6) var(--space-6);
+    overflow-x: clip;
     color: var(--text-primary);
-    background: var(--bg-page);
+    background: var(--default-bg-color);
+    isolation: isolate;
   }
 
-  .page-header {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: flex-end;
-    padding: 20px 0 16px;
+  .oa-page::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(ellipse 72% 52% at 6% 6%, rgb(16 185 129 / 26%) 0%, transparent 58%),
+      radial-gradient(ellipse 58% 44% at 94% 8%, rgb(59 130 246 / 26%) 0%, transparent 58%),
+      radial-gradient(ellipse 42% 34% at 50% 14%, rgb(168 85 247 / 12%) 0%, transparent 55%);
+    mask-image: linear-gradient(to bottom, black 0%, black 36%, transparent 66%);
+    animation: oa-aurora-drift 14s ease-in-out infinite alternate;
   }
 
-  .header-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
+  .oa-page::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: linear-gradient(to bottom, black 0%, black 24%, transparent 48%);
   }
 
-  .main-content {
+  .oa-page > *:not(.oa-page-fx) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .oa-page-fx {
+    position: absolute;
+    inset: -12% -12% 52%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      rgb(59 130 246 / 10%) 55deg,
+      rgb(6 182 212 / 7%) 80deg,
+      transparent 130deg,
+      rgb(16 185 129 / 8%) 200deg,
+      transparent 285deg,
+      rgb(168 85 247 / 7%) 330deg,
+      transparent 360deg
+    );
+    opacity: 0.78;
+    mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 82%);
+    animation: oa-fx-spin 52s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes oa-aurora-drift {
+    0% {
+      opacity: 0.72;
+      transform: scale(1) translate(0, 0);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1.04) translate(1%, -0.8%);
+    }
+  }
+
+  @keyframes oa-fx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .oa-page__main {
     display: flex;
     flex: 1;
-    gap: 16px;
+    gap: var(--space-4);
     min-height: 0;
   }
 
-  .list-side {
+  .oa-page__list {
     flex: 1;
     min-width: 0;
     overflow: hidden;
   }
 
-  .detail-side {
+  .oa-page__detail {
     display: flex;
     flex-shrink: 0;
     align-items: stretch;
   }
 
-  .btn-add {
-    padding: 8px 16px !important;
-    font-weight: 600 !important;
-    color: #fff !important;
-    background: var(--teal) !important;
-    border: none !important;
-    border-radius: 8px !important;
-    transition: all 0.2s;
-
-    &:hover {
-      filter: brightness(1.1);
-      transform: translateY(-1px);
+  @media (prefers-reduced-motion: reduce) {
+    .oa-page::before,
+    .oa-page-fx {
+      animation: none;
     }
-  }
-
-  .btn-secondary {
-    padding: 8px 14px !important;
-    color: var(--text-secondary) !important;
-    background: transparent !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 8px !important;
-    transition: all 0.2s;
-
-    &:hover {
-      color: var(--accent) !important;
-      border-color: var(--accent) !important;
-    }
-  }
-
-  .header-search {
-    width: 220px;
-
-    :deep(.el-input__wrapper) {
-      background: rgb(255 255 255 / 4%) !important;
-      border: 1px solid var(--border) !important;
-      border-radius: 7px;
-      box-shadow: none !important;
-      &:hover, &:focus-within { border-color: var(--accent) !important; }
-    }
-
-    :deep(.el-input__inner) {
-      font-size: 13px;
-      color: var(--text-primary);
-      &::placeholder { color: var(--text-muted); }
-    }
-
-    :deep(.el-input__prefix) { color: var(--text-muted); }
   }
 </style>

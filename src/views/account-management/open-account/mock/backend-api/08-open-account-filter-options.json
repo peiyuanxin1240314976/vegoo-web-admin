@@ -1,0 +1,64 @@
+{
+  "_comment": "开户页面 - 状态/代理商筛选项。该能力为页面独有 filter-options，不属于 cockpit 公用 meta。",
+  "fieldDescription": {
+    "request": {},
+    "response": {
+      "statusOptions": {
+        "type": "FilterOptionItem[]",
+        "required": true,
+        "description": "开户状态选项；value 为空字符串表示全部。"
+      },
+      "agencyOptions": {
+        "type": "FilterOptionItem[]",
+        "required": true,
+        "description": "代理商选项；value 为空字符串表示全部。"
+      }
+    },
+    "FilterOptionItem": {
+      "label": { "type": "string", "required": true, "description": "选项展示文案。" },
+      "value": { "type": "string", "required": true, "description": "选项值；全部为\"\"。" },
+      "count": { "type": "number", "required": false, "description": "可选，当前筛选口径下计数。" }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "statusOptions": [
+        { "label": "全部", "value": "", "count": 4 },
+        { "label": "待分配", "value": "待分配", "count": 1 },
+        { "label": "已激活", "value": "已激活", "count": 2 },
+        { "label": "开户失败", "value": "开户失败", "count": 1 }
+      ],
+      "agencyOptions": [
+        { "label": "全部", "value": "" },
+        { "label": "星达传媒", "value": "星达传媒" },
+        { "label": "天联广告", "value": "天联广告" },
+        { "label": "海潮营销", "value": "海潮营销" },
+        { "label": "亚太传播", "value": "亚太传播" }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/filter-options",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{}",
+    "responseBody": "{ statusOptions, agencyOptions }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面初始化",
+        "detail": "open-account-tab 挂载时先拉取状态/代理商筛选项，再渲染筛选区。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "通常无需重复请求；若服务端按权限动态下发可在刷新页面时更新。"
+      }
+    ],
+    "defaultSelection": "statusFilter = \"\"，agencyFilter = \"\"。",
+    "dedupe": "可与列表请求并行；本页实现默认初始化一次。"
+  }
+}
