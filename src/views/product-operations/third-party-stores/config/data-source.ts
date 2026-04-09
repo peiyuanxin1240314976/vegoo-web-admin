@@ -20,12 +20,12 @@ export enum ThirdPartyStoresEndpoint {
 }
 
 export const THIRD_PARTY_STORES_USE_MOCK: Record<ThirdPartyStoresEndpoint, boolean> = {
-  [ThirdPartyStoresEndpoint.OverviewDashboard]: true,
-  [ThirdPartyStoresEndpoint.FilterOptions]: true,
-  [ThirdPartyStoresEndpoint.PlatformDetail]: true,
-  [ThirdPartyStoresEndpoint.PlatformCreate]: true,
-  [ThirdPartyStoresEndpoint.PlatformAuthFix]: true,
-  [ThirdPartyStoresEndpoint.ExportDashboard]: true
+  [ThirdPartyStoresEndpoint.OverviewDashboard]: false,
+  [ThirdPartyStoresEndpoint.FilterOptions]: false,
+  [ThirdPartyStoresEndpoint.PlatformDetail]: false,
+  [ThirdPartyStoresEndpoint.PlatformCreate]: false,
+  [ThirdPartyStoresEndpoint.PlatformAuthFix]: false,
+  [ThirdPartyStoresEndpoint.ExportDashboard]: false
 }
 
 export function isThirdPartyStoresEndpointMock(endpoint: ThirdPartyStoresEndpoint): boolean {

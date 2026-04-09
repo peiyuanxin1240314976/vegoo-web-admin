@@ -18,9 +18,9 @@ export enum TextManagementEndpoint {
 
 /** 是否对该接口使用 Mock（逐项修改） */
 export const TEXT_MANAGEMENT_USE_MOCK: Record<TextManagementEndpoint, boolean> = {
-  [TextManagementEndpoint.StoreListingDraft]: true,
-  [TextManagementEndpoint.AuditWordLists]: true,
-  [TextManagementEndpoint.Translate]: true
+  [TextManagementEndpoint.StoreListingDraft]: false,
+  [TextManagementEndpoint.AuditWordLists]: false,
+  [TextManagementEndpoint.Translate]: false
 }
 
 export function isTextManagementEndpointMock(endpoint: TextManagementEndpoint): boolean {

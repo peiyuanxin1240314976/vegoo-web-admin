@@ -7,7 +7,7 @@ import type { AppContent, AIModel, Translation } from '../types'
 import { TextManagementEndpoint, isTextManagementEndpointMock } from '../config/data-source'
 import * as textManagementMock from '../mocks/text-management-api-mock'
 
-const BASE_URL = '/api/product-operations/text-management'
+const BASE_URL = '/api/v1/datacenter/analysis/product-operations/text-management'
 
 export interface StoreListingDraft {
   appContent: AppContent

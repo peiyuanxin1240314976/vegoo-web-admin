@@ -93,6 +93,15 @@
 
   const activeFilters = ref<FilterState>({ ...filters.value })
   const loading = ref(false)
+  const skeletonLoading = computed(() => {
+    return (
+      loading.value &&
+      platformCards.value.length === 0 &&
+      summaryPayload.value === null &&
+      appStoreData.value.length === 0 &&
+      channelData.value.length === 0
+    )
+  })
 
   const platformCards = ref<PlatformCard[]>([])
   const statusSummary = ref<ThirdPartyStoresStatusSummary>({
@@ -268,7 +277,18 @@
       if (!donutChart) donutChart = echarts.init(donutChartRef.value, 'dark')
       donutChart.setOption({
         backgroundColor: 'transparent',
-        tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+        tooltip: {
+          trigger: 'item',
+          confine: true,
+          backgroundColor: 'rgba(24, 24, 27, 0.92)',
+          borderColor: 'rgba(39, 39, 42, 0.9)',
+          borderWidth: 1,
+          padding: [8, 10],
+          textStyle: { color: '#F4F4F5', fontSize: 12, lineHeight: 18 },
+          extraCssText:
+            'border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.45); backdrop-filter: blur(8px);',
+          formatter: '{b}: {d}%'
+        },
         legend: {
           orient: 'vertical',
           right: '5%',
@@ -304,7 +324,18 @@
       const ratios = b.ratios
       barChart.setOption({
         backgroundColor: 'transparent',
-        tooltip: { trigger: 'axis', axisPointer: { type: 'none' } },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: { type: 'none' },
+          confine: true,
+          backgroundColor: 'rgba(24, 24, 27, 0.92)',
+          borderColor: 'rgba(39, 39, 42, 0.9)',
+          borderWidth: 1,
+          padding: [8, 10],
+          textStyle: { color: '#F4F4F5', fontSize: 12, lineHeight: 18 },
+          extraCssText:
+            'border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.45); backdrop-filter: blur(8px);'
+        },
         grid: { left: 80, right: 80, top: 10, bottom: 10 },
         xAxis: { show: false, type: 'value' },
         yAxis: {
@@ -403,83 +434,111 @@
     <section class="section">
       <h2 class="section-title">平台接入状态</h2>
 
-      <!-- Summary cards -->
-      <div class="status-summary-grid">
-        <div class="summary-card blue">
-          <div class="summary-value"
-            >{{ statusSummary.connectedPlatforms }}<span class="summary-unit">个</span></div
-          >
-          <div class="summary-label">已接入平台</div>
-          <div class="summary-sub green-dot">● 全部正常</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-value"
-            >{{ statusSummary.totalApps }}<span class="summary-unit">个</span></div
-          >
-          <div class="summary-label">总应用数</div>
-          <div class="summary-sub">覆盖 6 个平台</div>
-        </div>
-        <div class="summary-card orange">
-          <div class="summary-value"
-            >{{ statusSummary.pendingSync }}<span class="summary-unit">个</span></div
-          >
-          <div class="summary-label">待同步</div>
-          <div class="summary-sub warning-dot">▲ 需处理</div>
-        </div>
-        <div class="summary-card purple">
-          <div class="summary-value"
-            >{{ statusSummary.newPlatformsThisMonth }}<span class="summary-unit">个</span></div
-          >
-          <div class="summary-label">本月新增平台</div>
-          <div class="summary-sub">{{ statusSummary.newPlatformName }}</div>
-        </div>
-      </div>
-
-      <!-- Platform cards grid -->
-      <div class="platform-grid">
-        <div v-for="p in platformCards" :key="p.id" class="platform-card" :class="p.status">
-          <div class="platform-card-header">
-            <div class="platform-icon" :style="{ backgroundColor: p.iconBg }">
-              <!-- Platform Logo SVG placeholders -->
-              <span class="platform-icon-letter">{{ p.name[0] }}</span>
+      <ElSkeleton :loading="skeletonLoading" animated>
+        <template #template>
+          <div class="status-summary-grid">
+            <div v-for="i in 4" :key="i" class="summary-card">
+              <ElSkeletonItem variant="text" style="width: 60%; height: 28px" />
+              <ElSkeletonItem variant="text" style="width: 40%; margin-top: 10px" />
+              <ElSkeletonItem variant="text" style="width: 55%; margin-top: 8px" />
             </div>
-            <div class="platform-info">
-              <div class="platform-name">{{ p.name }}</div>
-              <div class="platform-status-badge" :class="p.status">
-                <span class="status-dot"></span>
-                {{
-                  p.status === 'connected'
-                    ? 'Connected'
-                    : p.status === 'warning'
-                      ? 'Warning'
-                      : 'Pending'
-                }}
+          </div>
+          <div class="platform-grid">
+            <div v-for="i in 3" :key="i" class="platform-card">
+              <div class="platform-card-header">
+                <ElSkeletonItem variant="circle" style="width: 36px; height: 36px" />
+                <div style="flex: 1; min-width: 0">
+                  <ElSkeletonItem variant="text" style="width: 46%" />
+                  <ElSkeletonItem variant="text" style="width: 34%; margin-top: 8px" />
+                </div>
+              </div>
+              <ElSkeletonItem variant="text" style="width: 70%; margin-top: 10px" />
+              <ElSkeletonItem variant="rect" style="width: 100%; height: 32px; margin-top: 12px" />
+            </div>
+          </div>
+        </template>
+        <template #default>
+          <!-- Summary cards -->
+          <div class="status-summary-grid">
+            <div class="summary-card blue">
+              <div class="summary-value"
+                >{{ statusSummary.connectedPlatforms }}<span class="summary-unit">个</span></div
+              >
+              <div class="summary-label">已接入平台</div>
+              <div class="summary-sub green-dot">● 全部正常</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value"
+                >{{ statusSummary.totalApps }}<span class="summary-unit">个</span></div
+              >
+              <div class="summary-label">总应用数</div>
+              <div class="summary-sub">覆盖 6 个平台</div>
+            </div>
+            <div class="summary-card orange">
+              <div class="summary-value"
+                >{{ statusSummary.pendingSync }}<span class="summary-unit">个</span></div
+              >
+              <div class="summary-label">待同步</div>
+              <div class="summary-sub warning-dot">▲ 需处理</div>
+            </div>
+            <div class="summary-card purple">
+              <div class="summary-value"
+                >{{ statusSummary.newPlatformsThisMonth }}<span class="summary-unit">个</span></div
+              >
+              <div class="summary-label">本月新增平台</div>
+              <div class="summary-sub">{{ statusSummary.newPlatformName }}</div>
+            </div>
+          </div>
+
+          <!-- Platform cards grid -->
+          <div class="platform-grid">
+            <div v-for="p in platformCards" :key="p.id" class="platform-card" :class="p.status">
+              <div class="platform-card-header">
+                <div class="platform-icon" :style="{ backgroundColor: p.iconBg }">
+                  <!-- Platform Logo SVG placeholders -->
+                  <span class="platform-icon-letter">{{ p.name[0] }}</span>
+                </div>
+                <div class="platform-info">
+                  <div class="platform-name">{{ p.name }}</div>
+                  <div class="platform-status-badge" :class="p.status">
+                    <span class="status-dot"></span>
+                    {{
+                      p.status === 'connected'
+                        ? 'Connected'
+                        : p.status === 'warning'
+                          ? 'Warning'
+                          : 'Pending'
+                    }}
+                  </div>
+                </div>
+              </div>
+              <div class="platform-meta">
+                <template v-if="p.status !== 'pending'">
+                  <span>{{ p.appCount }} apps</span>
+                  <span v-if="p.status !== 'warning'"> | Last sync {{ p.lastSync }}</span>
+                  <span v-else class="warning-text"> {{ p.lastSync }}</span>
+                </template>
+                <span v-else>0 apps | {{ p.lastSync }}</span>
+              </div>
+              <div class="platform-card-footer">
+                <el-button v-if="p.status === 'connected'" size="small" class="btn-detail"
+                  >查看详情</el-button
+                >
+                <el-button
+                  v-else-if="p.status === 'warning'"
+                  size="small"
+                  type="warning"
+                  class="btn-fix"
+                  >修复认证</el-button
+                >
+                <el-button v-else size="small" type="primary" class="btn-config"
+                  >开始配置</el-button
+                >
               </div>
             </div>
           </div>
-          <div class="platform-meta">
-            <template v-if="p.status !== 'pending'">
-              <span>{{ p.appCount }} apps</span>
-              <span v-if="p.status !== 'warning'"> | Last sync {{ p.lastSync }}</span>
-              <span v-else class="warning-text"> {{ p.lastSync }}</span>
-            </template>
-            <span v-else>0 apps | {{ p.lastSync }}</span>
-          </div>
-          <div class="platform-card-footer">
-            <el-button v-if="p.status === 'connected'" size="small" class="btn-detail"
-              >查看详情</el-button
-            >
-            <el-button
-              v-else-if="p.status === 'warning'"
-              size="small"
-              type="warning"
-              class="btn-fix"
-              >修复认证</el-button
-            >
-            <el-button v-else size="small" type="primary" class="btn-config">开始配置</el-button>
-          </div>
-        </div>
-      </div>
+        </template>
+      </ElSkeleton>
     </section>
 
     <!-- ── Filter Bar ─────────────────────────────────────────────────────── -->
@@ -523,35 +582,48 @@
     </div>
 
     <!-- ── Summary Metrics ────────────────────────────────────────────────── -->
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <div class="metric-value primary"
-          >{{ summaryMetrics.newUsers.value }} <span class="metric-unit">人</span></div
-        >
-        <div class="metric-label">{{ summaryMetrics.newUsers.label }}</div>
-        <div class="metric-sub">{{ summaryMetrics.newUsers.sublabel }}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-value">{{ summaryMetrics.totalRevenue.value }}</div>
-        <div class="metric-label">{{ summaryMetrics.totalRevenue.label }}</div>
-        <div class="metric-sub">{{ summaryMetrics.totalRevenue.sublabel }}</div>
-      </div>
-      <div class="metric-card accent-orange">
-        <div class="metric-value orange">{{ summaryMetrics.adRevenue.value }}</div>
-        <div class="metric-label">{{ summaryMetrics.adRevenue.label }}</div>
-        <div class="metric-sub">{{ summaryMetrics.adRevenue.sublabel }}</div>
-      </div>
-      <div class="metric-card accent-purple">
-        <div class="metric-value purple">{{ summaryMetrics.paidRevenue.value }}</div>
-        <div class="metric-label">{{ summaryMetrics.paidRevenue.label }}</div>
-        <div class="metric-sub">{{ summaryMetrics.paidRevenue.sublabel }}</div>
-      </div>
-      <div class="metric-card accent-teal">
-        <div class="metric-value teal">{{ summaryMetrics.arpu.value }}</div>
-        <div class="metric-label">{{ summaryMetrics.arpu.label }}</div>
-        <div class="metric-sub">{{ summaryMetrics.arpu.sublabel }}</div>
-      </div>
-    </div>
+    <ElSkeleton :loading="skeletonLoading" animated>
+      <template #template>
+        <div class="metrics-grid">
+          <div v-for="i in 5" :key="i" class="metric-card">
+            <ElSkeletonItem variant="text" style="width: 62%; height: 22px" />
+            <ElSkeletonItem variant="text" style="width: 34%; margin-top: 10px" />
+            <ElSkeletonItem variant="text" style="width: 78%; margin-top: 8px" />
+          </div>
+        </div>
+      </template>
+      <template #default>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value primary"
+              >{{ summaryMetrics.newUsers.value }} <span class="metric-unit">人</span></div
+            >
+            <div class="metric-label">{{ summaryMetrics.newUsers.label }}</div>
+            <div class="metric-sub">{{ summaryMetrics.newUsers.sublabel }}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">{{ summaryMetrics.totalRevenue.value }}</div>
+            <div class="metric-label">{{ summaryMetrics.totalRevenue.label }}</div>
+            <div class="metric-sub">{{ summaryMetrics.totalRevenue.sublabel }}</div>
+          </div>
+          <div class="metric-card accent-orange">
+            <div class="metric-value orange">{{ summaryMetrics.adRevenue.value }}</div>
+            <div class="metric-label">{{ summaryMetrics.adRevenue.label }}</div>
+            <div class="metric-sub">{{ summaryMetrics.adRevenue.sublabel }}</div>
+          </div>
+          <div class="metric-card accent-purple">
+            <div class="metric-value purple">{{ summaryMetrics.paidRevenue.value }}</div>
+            <div class="metric-label">{{ summaryMetrics.paidRevenue.label }}</div>
+            <div class="metric-sub">{{ summaryMetrics.paidRevenue.sublabel }}</div>
+          </div>
+          <div class="metric-card accent-teal">
+            <div class="metric-value teal">{{ summaryMetrics.arpu.value }}</div>
+            <div class="metric-label">{{ summaryMetrics.arpu.label }}</div>
+            <div class="metric-sub">{{ summaryMetrics.arpu.sublabel }}</div>
+          </div>
+        </div>
+      </template>
+    </ElSkeleton>
 
     <!-- ── App Store Data Table ───────────────────────────────────────────── -->
     <section class="section">
@@ -561,84 +633,103 @@
             <span class="tps-section-card__title">应用商店数据明细</span>
           </div>
         </template>
-        <div v-loading="loading" class="data-table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>应用</th>
-                <th>平台</th>
-                <th>应用商店</th>
-                <th>广告平台</th>
-                <th class="num">新用户</th>
-                <th class="num">总收入</th>
-                <th class="num">广告收入</th>
-                <th class="num">付费收入</th>
-                <th class="num">广告占比</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-for="row in flatAppStoreRows" :key="row.key">
-                <tr
-                  class="data-row"
-                  :class="{ 'group-row': row.isGroup, 'child-row': row.indent > 0 }"
-                >
-                  <td>
-                    <div class="cell-app" :style="{ paddingLeft: row.indent * 20 + 'px' }">
-                      <span
-                        v-if="row.isGroup"
-                        class="expand-toggle"
-                        @click="toggleExpand(row.key, 'app')"
+        <ElSkeleton :loading="skeletonLoading" animated>
+          <template #template>
+            <div class="data-table-wrap">
+              <div style="padding: 12px 12px 4px">
+                <ElSkeletonItem variant="rect" style="width: 100%; height: 34px" />
+              </div>
+              <div style="padding: 0 12px 12px">
+                <ElSkeletonItem
+                  v-for="i in 6"
+                  :key="i"
+                  variant="rect"
+                  style="width: 100%; height: 28px; margin-top: 10px"
+                />
+              </div>
+            </div>
+          </template>
+          <template #default>
+            <div v-loading="loading && !skeletonLoading" class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>应用</th>
+                    <th>平台</th>
+                    <th>应用商店</th>
+                    <th>广告平台</th>
+                    <th class="num">新用户</th>
+                    <th class="num">总收入</th>
+                    <th class="num">广告收入</th>
+                    <th class="num">付费收入</th>
+                    <th class="num">广告占比</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template v-for="row in flatAppStoreRows" :key="row.key">
+                    <tr
+                      class="data-row"
+                      :class="{ 'group-row': row.isGroup, 'child-row': row.indent > 0 }"
+                    >
+                      <td>
+                        <div class="cell-app" :style="{ paddingLeft: row.indent * 20 + 'px' }">
+                          <span
+                            v-if="row.isGroup"
+                            class="expand-toggle"
+                            @click="toggleExpand(row.key, 'app')"
+                          >
+                            {{ row.expanded ? '▼' : '▶' }}
+                          </span>
+                          <span v-if="row.app" class="app-name-link">{{ row.app }}</span>
+                          <span v-else class="empty-dash">—</span>
+                        </div>
+                      </td>
+                      <td>{{ row.platform || '—' }}</td>
+                      <td>{{ row.adStore || '—' }}</td>
+                      <td>{{ row.adPlatform || '—' }}</td>
+                      <td class="num" :class="{ 'val-highlight': row.newUsers > 0 }">
+                        {{ row.newUsers > 0 ? row.newUsers : '—' }}
+                      </td>
+                      <td class="num val-green"
+                        >${{ row.totalRevenue > 0 ? row.totalRevenue.toLocaleString() : '—' }}</td
                       >
-                        {{ row.expanded ? '▼' : '▶' }}
-                      </span>
-                      <span v-if="row.app" class="app-name-link">{{ row.app }}</span>
-                      <span v-else class="empty-dash">—</span>
-                    </div>
-                  </td>
-                  <td>{{ row.platform || '—' }}</td>
-                  <td>{{ row.adStore || '—' }}</td>
-                  <td>{{ row.adPlatform || '—' }}</td>
-                  <td class="num" :class="{ 'val-highlight': row.newUsers > 0 }">
-                    {{ row.newUsers > 0 ? row.newUsers : '—' }}
-                  </td>
-                  <td class="num val-green"
-                    >${{ row.totalRevenue > 0 ? row.totalRevenue.toLocaleString() : '—' }}</td
-                  >
-                  <td class="num val-teal"
-                    >${{ row.adRevenue > 0 ? row.adRevenue.toLocaleString() : '$0' }}</td
-                  >
-                  <td class="num val-purple">{{
-                    row.paidRevenue > 0 ? '$' + row.paidRevenue : '—'
-                  }}</td>
-                  <td class="num">
-                    <div v-if="row.adRatio > 0" class="ratio-cell">
-                      <span class="ratio-text">{{ row.adRatio }}%</span>
-                      <div class="ratio-bar">
-                        <div class="ratio-fill" :style="{ width: row.adRatio + '%' }"></div>
-                      </div>
-                    </div>
-                    <span v-else class="empty-dash">0%</span>
-                  </td>
-                </tr>
-              </template>
-              <!-- Total row -->
-              <tr class="total-row">
-                <td>合计</td><td>—</td><td>—</td><td>—</td>
-                <td class="num val-highlight">{{ appStoreTotals.newUsers }}</td>
-                <td class="num val-green"
-                  >${{ appStoreTotals.totalRevenue.toLocaleString('en-US') }}</td
-                >
-                <td class="num val-teal"
-                  >${{ appStoreTotals.adRevenue.toLocaleString('en-US') }}</td
-                >
-                <td class="num val-purple"
-                  >${{ appStoreTotals.paidRevenue.toLocaleString('en-US') }}</td
-                >
-                <td class="num">{{ appStoreTotals.adRatioPct }}%</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                      <td class="num val-teal"
+                        >${{ row.adRevenue > 0 ? row.adRevenue.toLocaleString() : '$0' }}</td
+                      >
+                      <td class="num val-purple">{{
+                        row.paidRevenue > 0 ? '$' + row.paidRevenue : '—'
+                      }}</td>
+                      <td class="num">
+                        <div v-if="row.adRatio > 0" class="ratio-cell">
+                          <span class="ratio-text">{{ row.adRatio }}%</span>
+                          <div class="ratio-bar">
+                            <div class="ratio-fill" :style="{ width: row.adRatio + '%' }"></div>
+                          </div>
+                        </div>
+                        <span v-else class="empty-dash">0%</span>
+                      </td>
+                    </tr>
+                  </template>
+                  <!-- Total row -->
+                  <tr class="total-row">
+                    <td>合计</td><td>—</td><td>—</td><td>—</td>
+                    <td class="num val-highlight">{{ appStoreTotals.newUsers }}</td>
+                    <td class="num val-green"
+                      >${{ appStoreTotals.totalRevenue.toLocaleString('en-US') }}</td
+                    >
+                    <td class="num val-teal"
+                      >${{ appStoreTotals.adRevenue.toLocaleString('en-US') }}</td
+                    >
+                    <td class="num val-purple"
+                      >${{ appStoreTotals.paidRevenue.toLocaleString('en-US') }}</td
+                    >
+                    <td class="num">{{ appStoreTotals.adRatioPct }}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </template>
+        </ElSkeleton>
       </ElCard>
     </section>
 
@@ -650,92 +741,133 @@
             <span class="tps-section-card__title">推广渠道数据明细</span>
           </div>
         </template>
-        <div v-loading="loading" class="data-table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>应用</th>
-                <th>平台</th>
-                <th>渠道</th>
-                <th>广告系列</th>
-                <th class="num">新用户</th>
-                <th class="num">总收入</th>
-                <th class="num">广告收入</th>
-                <th class="num">付费收入</th>
-                <th class="num">渠道占比</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-for="row in flatChannelRows" :key="row.key">
-                <tr
-                  class="data-row"
-                  :class="{ 'group-row': row.isGroup, 'child-row': row.indent > 0 }"
-                >
-                  <td>
-                    <div class="cell-app" :style="{ paddingLeft: row.indent * 20 + 'px' }">
-                      <span
-                        v-if="row.isGroup"
-                        class="expand-toggle"
-                        @click="toggleExpand(row.key, 'channel')"
-                        >{{ row.expanded ? '▼' : '▶' }}</span
-                      >
-                      <span v-if="row.app" class="app-name-link">{{ row.app }}</span>
-                      <span v-else class="empty-dash">—</span>
-                    </div>
-                  </td>
-                  <td>{{ row.platform || '—' }}</td>
-                  <td>{{ row.channel || '—' }}</td>
-                  <td>{{ row.adCampaign || '—' }}</td>
-                  <td class="num">{{ row.newUsers }}</td>
-                  <td class="num val-green">${{ row.totalRevenue.toLocaleString() }}</td>
-                  <td class="num val-teal">${{ row.adRevenue.toLocaleString() }}</td>
-                  <td class="num val-purple">${{ row.paidRevenue }}</td>
-                  <td class="num">
-                    <div v-if="row.channelRatio > 0" class="ratio-cell">
-                      <span class="ratio-text">{{ row.channelRatio }}%</span>
-                      <div class="ratio-bar">
-                        <div
-                          class="ratio-fill purple-fill"
-                          :style="{ width: row.channelRatio * 3 + '%' }"
-                        ></div>
-                      </div>
-                    </div>
-                    <span v-else class="empty-dash">—</span>
-                  </td>
-                </tr>
-              </template>
-              <!-- Total -->
-              <tr class="total-row">
-                <td>合计</td><td>—</td><td>—</td><td>—</td>
-                <td class="num">{{ channelTotals.newUsers }}</td>
-                <td class="num val-green"
-                  >${{ channelTotals.totalRevenue.toLocaleString('en-US') }}</td
-                >
-                <td class="num val-teal">${{ channelTotals.adRevenue.toLocaleString('en-US') }}</td>
-                <td class="num val-purple"
-                  >${{ channelTotals.paidRevenue.toLocaleString('en-US') }}</td
-                >
-                <td class="num">{{ channelTotals.ratioPct }}%</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="table-tip">
-            提示：InAppShare 为应用内分享推广渠道，不包含外部广告投放消耗，无法计算 ROI
-          </div>
-        </div>
+        <ElSkeleton :loading="skeletonLoading" animated>
+          <template #template>
+            <div class="data-table-wrap">
+              <div style="padding: 12px 12px 4px">
+                <ElSkeletonItem variant="rect" style="width: 100%; height: 34px" />
+              </div>
+              <div style="padding: 0 12px 12px">
+                <ElSkeletonItem
+                  v-for="i in 6"
+                  :key="i"
+                  variant="rect"
+                  style="width: 100%; height: 28px; margin-top: 10px"
+                />
+              </div>
+            </div>
+          </template>
+          <template #default>
+            <div v-loading="loading && !skeletonLoading" class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>应用</th>
+                    <th>平台</th>
+                    <th>渠道</th>
+                    <th>广告系列</th>
+                    <th class="num">新用户</th>
+                    <th class="num">总收入</th>
+                    <th class="num">广告收入</th>
+                    <th class="num">付费收入</th>
+                    <th class="num">渠道占比</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template v-for="row in flatChannelRows" :key="row.key">
+                    <tr
+                      class="data-row"
+                      :class="{ 'group-row': row.isGroup, 'child-row': row.indent > 0 }"
+                    >
+                      <td>
+                        <div class="cell-app" :style="{ paddingLeft: row.indent * 20 + 'px' }">
+                          <span
+                            v-if="row.isGroup"
+                            class="expand-toggle"
+                            @click="toggleExpand(row.key, 'channel')"
+                            >{{ row.expanded ? '▼' : '▶' }}</span
+                          >
+                          <span v-if="row.app" class="app-name-link">{{ row.app }}</span>
+                          <span v-else class="empty-dash">—</span>
+                        </div>
+                      </td>
+                      <td>{{ row.platform || '—' }}</td>
+                      <td>{{ row.channel || '—' }}</td>
+                      <td>{{ row.adCampaign || '—' }}</td>
+                      <td class="num">{{ row.newUsers }}</td>
+                      <td class="num val-green">${{ row.totalRevenue.toLocaleString() }}</td>
+                      <td class="num val-teal">${{ row.adRevenue.toLocaleString() }}</td>
+                      <td class="num val-purple">${{ row.paidRevenue }}</td>
+                      <td class="num">
+                        <div v-if="row.channelRatio > 0" class="ratio-cell">
+                          <span class="ratio-text">{{ row.channelRatio }}%</span>
+                          <div class="ratio-bar">
+                            <div
+                              class="ratio-fill purple-fill"
+                              :style="{ width: row.channelRatio * 3 + '%' }"
+                            ></div>
+                          </div>
+                        </div>
+                        <span v-else class="empty-dash">—</span>
+                      </td>
+                    </tr>
+                  </template>
+                  <!-- Total -->
+                  <tr class="total-row">
+                    <td>合计</td><td>—</td><td>—</td><td>—</td>
+                    <td class="num">{{ channelTotals.newUsers }}</td>
+                    <td class="num val-green"
+                      >${{ channelTotals.totalRevenue.toLocaleString('en-US') }}</td
+                    >
+                    <td class="num val-teal"
+                      >${{ channelTotals.adRevenue.toLocaleString('en-US') }}</td
+                    >
+                    <td class="num val-purple"
+                      >${{ channelTotals.paidRevenue.toLocaleString('en-US') }}</td
+                    >
+                    <td class="num">{{ channelTotals.ratioPct }}%</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="table-tip">
+                提示：InAppShare 为应用内分享推广渠道，不包含外部广告投放消耗，无法计算 ROI
+              </div>
+            </div>
+          </template>
+        </ElSkeleton>
       </ElCard>
     </section>
 
     <!-- ── Bottom Charts ──────────────────────────────────────────────────── -->
     <div class="charts-row">
-      <div class="chart-card">
-        <h3 class="chart-title">广告平台收入占比</h3>
-        <div ref="donutChartRef" class="chart-container donut-chart"></div>
-      </div>
-      <div class="chart-card">
-        <h3 class="chart-title">推广渠道应用收入分布</h3>
-        <div ref="barChartRef" class="chart-container bar-chart"></div>
-      </div>
+      <ElSkeleton :loading="skeletonLoading" animated>
+        <template #template>
+          <div class="chart-card">
+            <ElSkeletonItem variant="text" style="width: 46%" />
+            <ElSkeletonItem variant="rect" style="width: 100%; height: 220px; margin-top: 12px" />
+          </div>
+        </template>
+        <template #default>
+          <div class="chart-card">
+            <h3 class="chart-title">广告平台收入占比</h3>
+            <div ref="donutChartRef" class="chart-container donut-chart"></div>
+          </div>
+        </template>
+      </ElSkeleton>
+      <ElSkeleton :loading="skeletonLoading" animated>
+        <template #template>
+          <div class="chart-card">
+            <ElSkeletonItem variant="text" style="width: 52%" />
+            <ElSkeletonItem variant="rect" style="width: 100%; height: 220px; margin-top: 12px" />
+          </div>
+        </template>
+        <template #default>
+          <div class="chart-card">
+            <h3 class="chart-title">推广渠道应用收入分布</h3>
+            <div ref="barChartRef" class="chart-container bar-chart"></div>
+          </div>
+        </template>
+      </ElSkeleton>
     </div>
   </div>
 </template>
