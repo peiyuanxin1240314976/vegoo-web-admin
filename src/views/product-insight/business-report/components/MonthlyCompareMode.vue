@@ -133,18 +133,37 @@
           </span>
         </div>
         <div class="period-controls">
-          <button class="period-nav">‹</button>
-          <span class="period-label">{{ periodLabel }}</span>
-          <button class="period-nav">›</button>
-          <span class="compare-toggle-label">{{
-            props.period === 'monthly'
-              ? '对比上月'
-              : props.period === 'weekly'
-                ? '对比上周'
-                : '对比昨日'
-          }}</span>
-          <div class="mini-toggle active"><span class="mini-knob" /></div>
-          <span class="toggle-on-text">ON</span>
+          <ElDatePicker
+            v-if="props.period === 'daily'"
+            v-model="localStartDate"
+            class="compare-date-picker compare-date-picker--single"
+            size="small"
+            type="date"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
+            :clearable="false"
+          />
+          <ElDatePicker
+            v-else
+            v-model="localDateRange"
+            class="compare-date-picker"
+            size="small"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :clearable="false"
+          />
+          <span class="compare-toggle-label">{{ localCompareLabel }}</span>
+          <ElSwitch
+            v-model="localCompareEnabled"
+            size="small"
+            inline-prompt
+            active-text="ON"
+            inactive-text="OFF"
+          />
         </div>
       </div>
 
@@ -197,7 +216,7 @@
         <!-- MAU Chart -->
         <div class="mau-chart-panel">
           <div class="chart-header">
-            <span class="chart-title">MAU 对比（月报专有）</span>
+            <span class="chart-title">{{ userChartTitle }}</span>
             <div class="chart-legend">
               <span v-for="app in selectedApps" :key="app.id" class="legend-item">
                 <span class="legend-dot" :style="{ background: app.iconColor }" />
@@ -214,7 +233,7 @@
         <!-- Trend Chart -->
         <div class="trend-section">
           <div class="trend-header">
-            <span class="section-title">总收尾走势对比（近 6 个月）</span>
+            <span class="section-title">{{ trendTitle }}</span>
             <div class="trend-legend">
               <span v-for="app in selectedApps" :key="app.id" class="legend-item">
                 <span class="legend-line" :style="{ background: app.iconColor }" />
@@ -306,6 +325,9 @@
   const compareOverview = ref<CompareOverviewResponse | null>(null)
   const compareTrends = ref<CompareTrendsResponse | null>(null)
   const compareMetrics = ref<CompareMetricsResponse | null>(null)
+  const localStartDate = ref(props.startDate)
+  const localEndDate = ref(props.endDate)
+  const localCompareEnabled = ref(true)
 
   watch(
     baseAppList,
@@ -365,11 +387,56 @@
     return '$' + val
   }
 
-  const periodLabel = computed(() => {
-    const end = props.endDate
-    if (props.period === 'daily') return end
-    if (props.period === 'weekly') return `${props.startDate} ~ ${props.endDate}`
-    return end.slice(0, 7)
+  function parseYmd(ymd: string): Date {
+    const [y, m, d] = ymd.split('-').map(Number)
+    return new Date(y, m - 1, d, 12, 0, 0, 0)
+  }
+  function formatYmd(d: Date): string {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+  function addDays(ymd: string, n: number): string {
+    const d = parseYmd(ymd)
+    d.setDate(d.getDate() + n)
+    return formatYmd(d)
+  }
+  function addMonths(ymd: string, n: number): string {
+    const d = parseYmd(ymd)
+    d.setMonth(d.getMonth() + n)
+    return formatYmd(d)
+  }
+  const localDateRange = computed<string[]>({
+    get: () => [localStartDate.value, localEndDate.value],
+    set: (val: string[]) => {
+      if (!Array.isArray(val) || val.length !== 2) return
+      localStartDate.value = val[0]
+      localEndDate.value = val[1]
+    }
+  })
+  const localCompareLabel = computed(() => {
+    if (props.period === 'monthly') return '对比上月'
+    if (props.period === 'weekly') return '对比上周'
+    return '对比昨日'
+  })
+  const userChartTitle = computed(() => (props.period === 'monthly' ? 'MAU 对比' : 'DAU 对比'))
+  const trendTitle = computed(() => {
+    if (props.period === 'monthly') return '总收尾走势对比（近 6 个月）'
+    if (props.period === 'weekly') return '总收尾走势对比（近 8 周）'
+    return '总收尾走势对比（近 7 天）'
+  })
+  const localCompareStartDate = computed(() => {
+    if (!localCompareEnabled.value) return localStartDate.value
+    if (props.period === 'daily') return addDays(localStartDate.value, -1)
+    if (props.period === 'weekly') return addDays(localStartDate.value, -7)
+    return addMonths(localStartDate.value, -1)
+  })
+  const localCompareEndDate = computed(() => {
+    if (!localCompareEnabled.value) return localEndDate.value
+    if (props.period === 'daily') return addDays(localEndDate.value, -1)
+    if (props.period === 'weekly') return addDays(localEndDate.value, -7)
+    return addMonths(localEndDate.value, -1)
   })
 
   function compareRevenueText(appId: string): string {
@@ -542,11 +609,11 @@
     }
     const params: CompareQueryParams = {
       period: props.period,
-      startDate: props.startDate,
-      endDate: props.endDate,
-      compareStartDate: props.compareStartDate,
-      compareEndDate: props.compareEndDate,
-      compareEnabled: true,
+      startDate: localStartDate.value,
+      endDate: localEndDate.value,
+      compareStartDate: localCompareStartDate.value,
+      compareEndDate: localCompareEndDate.value,
+      compareEnabled: localCompareEnabled.value,
       appId: '',
       appIds: selectedApps.value.map((app) => app.id),
       platform: '',
@@ -571,16 +638,49 @@
   watch(
     () => [
       props.period,
-      props.startDate,
-      props.endDate,
-      props.compareStartDate,
-      props.compareEndDate,
+      localStartDate.value,
+      localEndDate.value,
+      localCompareEnabled.value,
+      localCompareStartDate.value,
+      localCompareEndDate.value,
       ...selectedApps.value.map((a) => a.id)
     ],
     () => {
       void refreshCompareData()
     },
     { deep: true, immediate: true }
+  )
+
+  watch(
+    () => props.period,
+    () => {
+      localStartDate.value = props.startDate
+      localEndDate.value = props.endDate
+      localCompareEnabled.value = true
+    }
+  )
+
+  watch(
+    () => localStartDate.value,
+    (val) => {
+      if (props.period === 'daily') {
+        localEndDate.value = val
+        return
+      }
+      if (localEndDate.value < val) {
+        localEndDate.value = val
+      }
+    }
+  )
+
+  watch(
+    () => localEndDate.value,
+    (val) => {
+      if (props.period === 'daily') return
+      if (val < localStartDate.value) {
+        localStartDate.value = val
+      }
+    }
   )
 
   // Resize handler
@@ -932,43 +1032,17 @@
     font-size: 12px;
   }
 
-  .period-nav {
-    padding: 1px 6px;
-    color: var(--rp-muted);
-    cursor: pointer;
-    background: none;
-    border: 1px solid var(--rp-border);
-    border-radius: 3px;
+  .compare-date-picker {
+    width: 260px;
+  }
+
+  .compare-date-picker--single {
+    width: 150px;
   }
 
   .compare-toggle-label {
     font-size: 11px;
     color: var(--rp-muted);
-  }
-
-  .mini-toggle {
-    position: relative;
-    width: 36px;
-    height: 18px;
-    cursor: pointer;
-    background: var(--rp-accent);
-    border-radius: 9px;
-  }
-
-  .mini-knob {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 14px;
-    height: 14px;
-    background: #fff;
-    border-radius: 50%;
-  }
-
-  .toggle-on-text {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--rp-accent);
   }
 
   /* ── Top Grid ── */
@@ -1176,18 +1250,14 @@
     padding: 8px 10px;
     font-weight: 500;
     color: var(--rp-muted);
-    text-align: right;
+    text-align: left;
     white-space: nowrap;
     border-bottom: 1px solid var(--rp-border);
   }
 
-  .metrics-table th:first-child {
-    text-align: left;
-  }
-
   .metrics-table td {
     padding: 7px 10px;
-    text-align: right;
+    text-align: left;
     white-space: nowrap;
     border-bottom: 1px solid rgb(255 255 255 / 3%);
   }
@@ -1198,7 +1268,7 @@
   }
 
   .best-cell {
-    text-align: right;
+    text-align: left;
   }
 
   .best-tag {

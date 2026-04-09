@@ -254,6 +254,7 @@ export async function pushReportNow(config: LarkPushConfig): Promise<void> {
 }
 
 function mockCompareOverview(params: CompareQueryParams): CompareOverviewResponse {
+  const compareOn = params.compareEnabled
   const apps: CompareOverviewResponse['apps'] = compareApps
     .filter((item) => params.appIds.includes(item.id))
     .map((item) => ({
@@ -261,61 +262,106 @@ function mockCompareOverview(params: CompareQueryParams): CompareOverviewRespons
       name: item.name,
       color: item.color,
       revenue: item.revenue,
-      revenueChange: item.revenueChange,
+      revenueChange: compareOn ? item.revenueChange : 0,
       metrics: [
         {
           label: params.period === 'monthly' ? 'MAU' : 'DAU',
           value: item.mau,
-          change: `${item.mauChange >= 0 ? '+' : ''}${item.mauChange}%`,
-          changeType: item.mauChange >= 0 ? 'positive' : 'negative'
+          change: compareOn ? `${item.mauChange >= 0 ? '+' : ''}${item.mauChange}%` : '--',
+          changeType: compareOn ? (item.mauChange >= 0 ? 'positive' : 'negative') : 'neutral'
         },
         {
           label: '预估利润',
           value: item.profit,
-          change: `${item.profitChange >= 0 ? '+' : ''}${item.profitChange}%`,
-          changeType: item.profitChange >= 0 ? 'positive' : 'negative'
+          change: compareOn ? `${item.profitChange >= 0 ? '+' : ''}${item.profitChange}%` : '--',
+          changeType: compareOn ? (item.profitChange >= 0 ? 'positive' : 'negative') : 'neutral'
         },
         {
           label: '付费收入',
           value: item.paid,
-          change: `${item.paidChange >= 0 ? '+' : ''}${item.paidChange}%`,
-          changeType: item.paidChange >= 0 ? 'positive' : 'negative'
+          change: compareOn ? `${item.paidChange >= 0 ? '+' : ''}${item.paidChange}%` : '--',
+          changeType: compareOn ? (item.paidChange >= 0 ? 'positive' : 'negative') : 'neutral'
         },
         {
           label: '费用抄扣',
           value: item.fee,
-          change: `${item.feeChange >= 0 ? '+' : ''}${item.feeChange}%`,
-          changeType: item.feeChange >= 0 ? 'negative' : 'positive'
+          change: compareOn ? `${item.feeChange >= 0 ? '+' : ''}${item.feeChange}%` : '--',
+          changeType: compareOn ? (item.feeChange >= 0 ? 'negative' : 'positive') : 'neutral'
         }
       ]
     }))
   return { apps }
 }
 
-function mockTrendLabels(period: ReportQueryParams['period']): string[] {
-  if (period === 'daily') return ['D-6', 'D-5', 'D-4', 'D-3', 'D-2', 'D-1', 'D0']
-  if (period === 'weekly') return ['W-7', 'W-6', 'W-5', 'W-4', 'W-3', 'W-2', 'W-1', 'W0']
-  return ['M-5', 'M-4', 'M-3', 'M-2', 'M-1', 'M0']
+function parseYmd(ymd: string): Date {
+  const [y, m, d] = ymd.split('-').map(Number)
+  return new Date(y, m - 1, d, 12, 0, 0, 0)
+}
+
+function fmtMd(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${m}-${day}`
+}
+
+function fmtYm(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  return `${y}-${m}`
+}
+
+function mockTrendLabels(params: CompareQueryParams): string[] {
+  const end = parseYmd(params.endDate)
+  if (params.period === 'daily') {
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(end)
+      d.setDate(end.getDate() - (6 - i))
+      return fmtMd(d)
+    })
+  }
+
+  if (params.period === 'weekly') {
+    return Array.from({ length: 8 }, (_, i) => {
+      const wEnd = new Date(end)
+      wEnd.setDate(end.getDate() - (7 - i) * 7)
+      const wStart = new Date(wEnd)
+      wStart.setDate(wEnd.getDate() - 6)
+      return `${fmtMd(wStart)}~${fmtMd(wEnd)}`
+    })
+  }
+
+  return Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(end)
+    d.setMonth(end.getMonth() - (5 - i))
+    return fmtYm(d)
+  })
 }
 
 function mockCompareTrends(params: CompareQueryParams): CompareTrendsResponse {
+  const dateSeed =
+    params.startDate.split('-').reduce((acc, x) => acc + Number(x), 0) +
+    params.endDate.split('-').reduce((acc, x) => acc + Number(x), 0)
+  const factor = 0.92 + (dateSeed % 13) * 0.01
+  const compareFactor = params.compareEnabled ? 1 : 0.96
   const selected = compareApps.filter((item) => params.appIds.includes(item.id))
-  const labels = mockTrendLabels(params.period)
+  const labels = mockTrendLabels(params)
   const revenueSeries = selected.map((item) => ({
     id: item.id,
     name: item.name,
     color: item.color,
-    values: labels.map((_, idx) =>
-      Math.round((Number(item.revenue.replace(/[$,]/g, '')) / 8) * (0.7 + idx * 0.06))
-    )
+    values: labels.map((_, idx) => {
+      const base = (Number(item.revenue.replace(/[$,]/g, '')) / 8) * (0.7 + idx * 0.06)
+      return Math.round(base * factor * compareFactor)
+    })
   }))
   const userSeries = selected.map((item) => ({
     id: item.id,
     name: item.name,
     color: item.color,
-    values: labels.map((_, idx) =>
-      Math.round((Number(item.mau.replace(/[万,]/g, '')) / 8) * (0.72 + idx * 0.05))
-    )
+    values: labels.map((_, idx) => {
+      const base = (Number(item.mau.replace(/[万,]/g, '')) / 8) * (0.72 + idx * 0.05)
+      return Math.round(base * factor)
+    })
   }))
   return { labels, revenueSeries, userSeries }
 }

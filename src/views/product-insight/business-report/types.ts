@@ -264,6 +264,10 @@ export interface ApcOsEntry {
 export interface LarkPushConfig {
   groups: LarkTarget[] // 飞书群列表
   persons: LarkTarget[] // 指定人员列表
+  /** 可选：后端返回的最近一次推送时间（ISO 字符串或展示文本） */
+  lastPushAt?: string
+  /** 可选：后端返回的最近一次推送目标（群名称） */
+  lastPushTarget?: string
   daily: {
     enabled: boolean
     day: string // '每天' / '工作日'

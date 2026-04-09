@@ -8,7 +8,11 @@
   "interaction": {
     "triggers": [
       { "moment": "进入对比模式", "detail": "先请求该接口渲染顶部应用卡片" },
-      { "moment": "勾选应用变化", "detail": "重新请求卡片数据" }
+      { "moment": "勾选应用变化", "detail": "重新请求卡片数据" },
+      {
+        "moment": "对比模式右上角切换日期/开关",
+        "detail": "独立于顶部筛选栏，变更 compareEnabled 与对比日期后刷新卡片"
+      }
     ]
   },
   "sampleRequest": {
@@ -56,6 +60,12 @@
           { "label": "DAU", "value": "14.4万", "change": "+3.2%", "changeType": "positive" }
         ]
       }
+    ]
+  },
+  "apiSuggestion": {
+    "notes": [
+      "对比模式右上角日期与开关为独立控制，勿复用顶部筛选栏日期状态。",
+      "compareEnabled=false 时，卡片涨跌字段建议返回 0 或占位文案（与前端开关关闭态一致）。"
     ]
   }
 }

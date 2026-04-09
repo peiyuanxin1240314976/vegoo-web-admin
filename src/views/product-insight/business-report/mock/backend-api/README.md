@@ -66,6 +66,13 @@
 | `07-lark-config-save.json` | 保存飞书推送配置 | `/lark/push-config` | POST | P2     |
 | `08-lark-push-now.json`    | 立即推送一次     | `/lark/push-now`    | POST | P2     |
 
+## 契约使用口径（联调必读）
+
+- 本目录每个 `*.json` 的 `sampleRequest` / `sampleResponse` 作为**业务体契约**。
+- 其中 `sampleResponse` 默认表示网关返回中的 **`data` 业务体**（即前端解包后拿到的结构）。
+- 网关外层包装（如 `code`、`message`、`timestamp`）可按网关统一规范返回，不在每个报告 JSON 重复展开。
+- 若某接口文件明确在 `fieldDescription.response` 写了外层包装，则以该文件内说明为准。
+
 ## 通用请求体（报告数据接口）
 
 | 参数          | 类型     | 必填 | 说明                       |
@@ -87,21 +94,29 @@
 | `compareStartDate` | `string`   | ✅   | 对比期起始日期                |
 | `compareEndDate`   | `string`   | ✅   | 对比期结束日期                |
 
-## 通用响应包装
+## 场景 -> 接口 -> 触发时机
 
-所有接口统一使用以下格式包装：
+| 场景 | 接口 | 触发时机 |
+| --- | --- | --- |
+| 页面首屏（日报/周报/月报） | `*-01-overview`、`*-02-ad-platform`、`*-03-by-country`、`*-04-platform-country`、`*-05-campaigns` | 切换周期、筛选条件或应用时重拉 |
+| 进入对比模式 | `*-06-compare-overview`、`*-07-compare-trends`、`*-08-compare-metrics` | 打开对比模式后并行加载 |
+| 对比模式右上角日期/开关变化 | `*-06/07/08` 三个 compare 接口 | **独立于顶部筛选栏**，只受对比模式内部状态控制 |
+| 对比模式勾选应用变化 | `*-06/07/08` 三个 compare 接口 | 勾选列表变化后重拉 |
+| 飞书弹窗打开与配置回显 | `06-lark-config-get.json` | 页面初始化或打开弹窗前读取 |
+| 飞书弹窗点击保存 | `07-lark-config-save.json` | 仅保存配置，不触发立即推送 |
+| 飞书弹窗点击立即推送 | `08-lark-push-now.json` | 触发一次即时推送 |
+
+## 网关响应包装（说明）
+
+网关可统一使用以下包装；本目录大多数 `sampleResponse` 仅描述 `data` 业务体：
 
 ```json
-{
-  "code": 0,
-  "message": "success",
-  "data": { ... },
-  "timestamp": 1742688000000
-}
+{ "code": 0, "message": "success", "data": { ... }, "timestamp": 1742688000000 }
 ```
 
-- `code = 0` 表示成功，非 0 表示错误
-- `data` 字段为各接口实际数据，见各 JSON 文件 `sampleResponse`
+- `code = 0` 表示成功，非 0 表示错误。
+- `data` 字段为各接口实际业务数据，形态见各 JSON 文件 `sampleResponse`。
+- 报告类接口（`daily|weekly|monthly-*`）联调时请优先按 `sampleResponse` 的业务体结构实现字段。
 
 ## 数据格式约定
 
@@ -114,6 +129,8 @@
 | DAU 占比          | `number 0~100`             | `42.3`（用于进度条，非 0~1） |
 | ROI 值            | 字符串（带 %）             | `"98%"`、`"101%"`            |
 | 布尔型状态        | `'active' \| 'paused'`     | 广告系列状态                 |
+
+> 对比趋势接口 `sampleResponse.labels` 为**真实日期标签示例**（如 `04-03`、`02-16~02-22`、`2026-04`），实际返回应按请求 `endDate` 与周期动态生成，不使用固定占位（如 `D-6` / `W0` / `M0`）。
 
 ## 字段一致性要求
 

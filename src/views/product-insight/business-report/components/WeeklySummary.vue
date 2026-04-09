@@ -5,12 +5,12 @@
       <div class="ws-title-left">
         <span class="ws-title-app">整体</span>
         <span class="ws-title-app">全部平台</span>
-        <span class="ws-title-badge">周报</span>
-        <span class="ws-title-date">2026年第10周 （3/9-3/15）</span>
+        <span class="ws-title-badge">{{ reportLabel }}</span>
+        <span class="ws-title-date">{{ titleDateText }}</span>
       </div>
       <div class="ws-title-right">
-        <span class="ws-update">数据更新时间：今日 08:30</span>
-        <span class="ws-refresh">↺</span>
+        <span class="ws-update">数据更新时间：{{ updateTimeText }}</span>
+        <button class="ws-refresh" :disabled="ctx?.loading.value" @click="refreshNow">↺</button>
       </div>
     </div>
 
@@ -31,8 +31,8 @@
               <thead>
                 <tr>
                   <th>指标</th>
-                  <th>本周 3/9-3/15</th>
-                  <th>上周 3/2-3/8</th>
+                  <th>本期 {{ currentRangeLabel }}</th>
+                  <th>上期 {{ previousRangeLabel }}</th>
                   <th>周环比</th>
                 </tr>
               </thead>
@@ -130,7 +130,7 @@
 
     <!-- ── 底部推送栏 ───────────────────────────────────────────── -->
     <div class="ws-push-bar">
-      <span class="ws-push-last">上次推送：本周一 08:30 飞书群《经营周报》</span>
+      <span class="ws-push-last">{{ pushText }}</span>
       <button class="ws-push-btn" @click="openPushModal()">立即推送</button>
     </div>
   </div>
@@ -201,6 +201,46 @@
   const revenueMetrics = computed(
     () => ctx?.summary.value?.revenueMetrics ?? weeklyRevenueMetricsFallback
   )
+  const reportLabel = computed(() => {
+    if (ctx?.period.value === 'daily') return '日报'
+    if (ctx?.period.value === 'monthly') return '月报'
+    return '周报'
+  })
+  function shiftDay(ymd: string, offset: number): string {
+    const [y, m, d] = ymd.split('-').map(Number)
+    const date = new Date(y, m - 1, d)
+    date.setDate(date.getDate() + offset)
+    const yy = date.getFullYear()
+    const mm = String(date.getMonth() + 1).padStart(2, '0')
+    const dd = String(date.getDate()).padStart(2, '0')
+    return `${yy}-${mm}-${dd}`
+  }
+  const titleDateText = computed(() => {
+    const range = ctx?.reportRange.value
+    if (!range) return '--'
+    if (ctx?.period.value === 'monthly') return range.startDate.slice(0, 7)
+    if (ctx?.period.value === 'daily') return range.startDate
+    return `${range.startDate} - ${range.endDate}`
+  })
+  const currentRangeLabel = computed(() => {
+    const range = ctx?.reportRange.value
+    if (!range) return '--'
+    return `${range.startDate} - ${range.endDate}`
+  })
+  const previousRangeLabel = computed(() => {
+    const range = ctx?.reportRange.value
+    if (!range) return '--'
+    return `${shiftDay(range.startDate, -7)} - ${shiftDay(range.endDate, -7)}`
+  })
+  const updateTimeText = '--'
+  const pushText = computed(
+    () =>
+      ctx?.getLastPushText?.(ctx?.period.value ?? 'weekly') ??
+      `上次推送：-- 飞书群《经营${reportLabel.value}》`
+  )
+  async function refreshNow() {
+    await ctx?.refreshReport()
+  }
 
   const roiColor = (val: string) => {
     if (val === '-') return ''
@@ -277,9 +317,12 @@
   }
 
   .ws-refresh {
+    padding: 0;
     font-size: 14px;
     color: rgb(255 255 255 / 35%);
     cursor: pointer;
+    background: none;
+    border: none;
     transition: color 0.15s;
 
     &:hover {

@@ -253,13 +253,13 @@
   const periodLabel = computed(() =>
     props.period === 'daily' ? '日报' : props.period === 'weekly' ? '周报' : '月报'
   )
-  const dateLabel = computed(() =>
-    props.period === 'monthly'
-      ? '2025年12月'
-      : props.period === 'weekly'
-        ? '2026年第10周 (3/9-3/15)'
-        : '2026年3月13日'
-  )
+  const dateLabel = computed(() => {
+    const range = ctx?.reportRange.value
+    if (!range) return '--'
+    if (props.period === 'monthly') return range.startDate.slice(0, 7)
+    if (props.period === 'weekly') return `${range.startDate} - ${range.endDate}`
+    return range.startDate
+  })
   const changeLabel = computed(() =>
     props.period === 'daily' ? '日环比' : props.period === 'weekly' ? '周环比' : '月环比'
   )

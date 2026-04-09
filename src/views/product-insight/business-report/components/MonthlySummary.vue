@@ -4,10 +4,13 @@
     <div class="section-header">
       <span class="title-main">整体</span>
       <span class="title-main">全部平台</span>
-      <span class="period-badge">月报</span>
-      <span class="period-text">2025年12月</span>
+      <span class="period-badge">{{ reportLabel }}</span>
+      <span class="period-text">{{ currentMonthLabel }}</span>
       <span class="update-time"
-        >数据更新时间：2026-01-02 09:00 <button class="refresh-btn" title="刷新">↻</button></span
+        >数据更新时间：{{ updateTimeText }}
+        <button class="refresh-btn" title="刷新" :disabled="ctx?.loading.value" @click="refreshNow">
+          ↻
+        </button></span
       >
     </div>
 
@@ -26,8 +29,8 @@
             <thead>
               <tr>
                 <th>指标</th>
-                <th>2025年12月</th>
-                <th>2025年11月</th>
+                <th>{{ currentMonthLabel }}</th>
+                <th>{{ previousMonthLabel }}</th>
                 <th>月环比</th>
               </tr>
             </thead>
@@ -49,8 +52,8 @@
             <thead>
               <tr>
                 <th>指标</th>
-                <th>2025年12月</th>
-                <th>2025年11月</th>
+                <th>{{ currentMonthLabel }}</th>
+                <th>{{ previousMonthLabel }}</th>
                 <th>月环比</th>
               </tr>
             </thead>
@@ -74,8 +77,8 @@
             <thead>
               <tr>
                 <th>ROI类型</th>
-                <th>2025年12月</th>
-                <th>2025年11月</th>
+                <th>{{ currentMonthLabel }}</th>
+                <th>{{ previousMonthLabel }}</th>
                 <th>月环比</th>
               </tr>
             </thead>
@@ -96,8 +99,8 @@
             <thead>
               <tr>
                 <th>指标</th>
-                <th>2025年12月</th>
-                <th>2025年11月</th>
+                <th>{{ currentMonthLabel }}</th>
+                <th>{{ previousMonthLabel }}</th>
                 <th>月环比</th>
               </tr>
             </thead>
@@ -164,7 +167,7 @@
 
     <!-- Push Bar -->
     <div class="ms-push-bar">
-      <span class="ms-push-last">上次推送：2026-01-01 09:00 飞书群《经营月报》</span>
+      <span class="ms-push-last">{{ pushText }}</span>
       <button class="ms-push-btn" type="button" @click="openPushModal()">立即推送</button>
     </div>
   </div>
@@ -200,6 +203,32 @@
     () => ctx?.summary.value?.revenueMetrics ?? monthlyRevenueMetricsMock
   )
   const feeItems = computed(() => ctx?.summary.value?.feeDeductions ?? feeDeductionsMock)
+  const reportLabel = computed(() => {
+    if (ctx?.period.value === 'daily') return '日报'
+    if (ctx?.period.value === 'weekly') return '周报'
+    return '月报'
+  })
+  function prevMonthLabel(ym: string): string {
+    const [y, m] = ym.split('-').map(Number)
+    const d = new Date(y, m - 2, 1)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  }
+  const currentMonthLabel = computed(() => {
+    const range = ctx?.reportRange.value
+    return range ? range.startDate.slice(0, 7) : '--'
+  })
+  const previousMonthLabel = computed(() =>
+    currentMonthLabel.value === '--' ? '--' : prevMonthLabel(currentMonthLabel.value)
+  )
+  const updateTimeText = '--'
+  const pushText = computed(
+    () =>
+      ctx?.getLastPushText?.(ctx?.period.value ?? 'monthly') ??
+      `上次推送：-- 飞书群《经营${reportLabel.value}》`
+  )
+  async function refreshNow() {
+    await ctx?.refreshReport()
+  }
 
   function changeClass(type?: string) {
     if (type === 'positive') return 'positive'

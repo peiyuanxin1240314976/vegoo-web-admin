@@ -23,11 +23,10 @@
           <span class="toggle-knob" />
         </button>
 
-        <button class="header-btn lark-btn" @click="showLarkModal = true">
+        <button class="header-btn lark-btn" @click="openLarkModal">
           <span class="lark-icon">✈</span> 飞书推送
         </button>
         <button class="header-btn export-btn"> <span>↑</span> 导出 </button>
-        <button class="header-btn icon-btn">⚙</button>
       </div>
     </header>
 
@@ -476,7 +475,15 @@
       </template>
     </div>
 
-    <LarkPushModal :visible="showLarkModal" @close="showLarkModal = false" />
+    <LarkPushModal
+      :visible="showLarkModal"
+      :model-value="larkConfig"
+      :saving="larkSaving"
+      :pushing="larkPushing"
+      @close="showLarkModal = false"
+      @save="handleLarkSave"
+      @push="handleLarkPushNow"
+    />
 
     <Transition name="fade">
       <div v-if="switching" class="page-transition" />
@@ -488,6 +495,7 @@
   import 'flag-icons/css/flag-icons.min.css'
   import { storeToRefs } from 'pinia'
   import { ref, computed, provide, watch, onMounted } from 'vue'
+  import { ElMessage } from 'element-plus'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
@@ -499,7 +507,8 @@
     AdPlatformResponse,
     ByCountryResponse,
     PlatformCountryResponse,
-    CampaignsResponse
+    CampaignsResponse,
+    LarkPushConfig
   } from './types'
   import { businessReportContextKey } from './composables/business-report-context'
   import {
@@ -507,7 +516,10 @@
     getAdPlatform,
     getByCountry,
     getPlatformCountry,
-    getCampaigns
+    getCampaigns,
+    getLarkConfig,
+    saveLarkConfig,
+    pushReportNow
   } from './reportService'
 
   import AppSidebar from './components/AppSidebar.vue'
@@ -627,8 +639,44 @@
     return `fi fi-${c}`
   }
 
+  function formatLarkPushAtText(input?: string): string | null {
+    if (!input) return null
+    // 后端可能直接返回展示文本，优先原样展示
+    if (!/^\d{4}-\d{2}-\d{2}T/.test(input)) return input
+    const date = new Date(input)
+    if (Number.isNaN(date.getTime())) return input
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+      date.getDate()
+    ).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(
+      date.getMinutes()
+    ).padStart(2, '0')}`
+  }
+
+  function reportName(periodKey: ReportPeriod): string {
+    return periodKey === 'daily' ? '日报' : periodKey === 'weekly' ? '周报' : '月报'
+  }
+
+  async function ensureLarkConfigLoaded() {
+    if (larkConfig.value || larkLoading.value) return
+    larkLoading.value = true
+    try {
+      larkConfig.value = await getLarkConfig()
+    } catch (error) {
+      console.error('[BusinessReport] getLarkConfig(silent)', error)
+    } finally {
+      larkLoading.value = false
+    }
+  }
+
+  function getLastPushText(periodKey: ReportPeriod): string {
+    const pushAt = formatLarkPushAtText(larkConfig.value?.lastPushAt) ?? '--'
+    const target = larkConfig.value?.lastPushTarget || `经营${reportName(periodKey)}`
+    return `上次推送：${pushAt} 飞书群《${target}》`
+  }
+
   onMounted(() => {
     void metaStore.ensureLoaded()
+    void ensureLarkConfigLoaded()
   })
 
   const brFilterSelectPopperClass = 'br-filter-el-select__popper'
@@ -804,17 +852,58 @@
     return 'dau'
   })
   const showLarkModal = ref(false)
-  provide('openPushModal', () => {
-    showLarkModal.value = true
-  })
+  const larkConfig = ref<LarkPushConfig | null>(null)
+  const larkLoading = ref(false)
+  const larkSaving = ref(false)
+  const larkPushing = ref(false)
 
-  provide(businessReportContextKey, {
-    loading,
-    summary,
-    adPlatform,
-    byCountry,
-    platformCountry,
-    campaigns
+  async function openLarkModal() {
+    showLarkModal.value = true
+    try {
+      await ensureLarkConfigLoaded()
+    } catch (error) {
+      ElMessage.error('加载飞书配置失败')
+      console.error('[BusinessReport] getLarkConfig', error)
+    }
+  }
+
+  async function handleLarkSave(config: LarkPushConfig) {
+    larkSaving.value = true
+    try {
+      await saveLarkConfig(config)
+      larkConfig.value = config
+      ElMessage.success('推送配置已保存')
+      showLarkModal.value = false
+    } catch (error) {
+      ElMessage.error('保存失败，请稍后重试')
+      console.error('[BusinessReport] saveLarkConfig', error)
+    } finally {
+      larkSaving.value = false
+    }
+  }
+
+  async function handleLarkPushNow(config: LarkPushConfig) {
+    larkPushing.value = true
+    try {
+      await pushReportNow(config)
+      const now = getAppNow()
+      larkConfig.value = {
+        ...config,
+        lastPushAt: now.toISOString(),
+        lastPushTarget: config.groups[0]?.name || `经营${reportName(period.value)}`
+      }
+      ElMessage.success('推送成功，已发送至飞书群')
+      showLarkModal.value = false
+    } catch (error) {
+      ElMessage.error('推送失败，请稍后重试')
+      console.error('[BusinessReport] pushReportNow', error)
+    } finally {
+      larkPushing.value = false
+    }
+  }
+
+  provide('openPushModal', () => {
+    void openLarkModal()
   })
 
   const reportRange = computed(() => {
@@ -865,6 +954,19 @@
       startDate: formatYYYYMMDD(prevStart),
       endDate: formatYYYYMMDD(prevEnd)
     }
+  })
+
+  provide(businessReportContextKey, {
+    loading,
+    period,
+    reportRange,
+    refreshReport: refreshReportData,
+    getLastPushText,
+    summary,
+    adPlatform,
+    byCountry,
+    platformCountry,
+    campaigns
   })
 
   function buildReportParams(): ReportQueryParams {
@@ -1169,11 +1271,6 @@
 
   .export-btn:hover {
     background: rgb(74 158 245 / 20%);
-  }
-
-  .icon-btn {
-    padding: 5px 8px;
-    font-size: 14px;
   }
 
   .lark-icon {

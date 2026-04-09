@@ -5,7 +5,8 @@
  * - `true`  = 使用本地 Mock（`mockData.ts`）
  * - `false` = 走真实 HTTP（`src/api/business-report.ts`，根路径见同目录 `api-base.ts`）
  *
- * 默认全部为 `false`（对接后端）；本地可逐项改为 `true` 使用 `mockData.ts`。
+ * 当前默认全部为 `true`（前端自测阶段统一走 Mock）。
+ * 需要联调真实接口时，再按接口粒度改为 `false`。
  */
 
 export enum BusinessReportReadEndpoint {
@@ -40,33 +41,33 @@ export enum BusinessReportReadEndpoint {
 
 /** 是否对该接口使用 Mock（逐项修改） */
 export const BUSINESS_REPORT_USE_MOCK: Record<BusinessReportReadEndpoint, boolean> = {
-  [BusinessReportReadEndpoint.DailyOverview]: false,
-  [BusinessReportReadEndpoint.DailyAdPlatform]: false,
-  [BusinessReportReadEndpoint.DailyByCountry]: false,
-  [BusinessReportReadEndpoint.DailyPlatformCountry]: false,
-  [BusinessReportReadEndpoint.DailyCampaigns]: false,
-  [BusinessReportReadEndpoint.DailyCompareOverview]: false,
-  [BusinessReportReadEndpoint.DailyCompareTrends]: false,
-  [BusinessReportReadEndpoint.DailyCompareMetrics]: false,
-  [BusinessReportReadEndpoint.WeeklyOverview]: false,
-  [BusinessReportReadEndpoint.WeeklyAdPlatform]: false,
-  [BusinessReportReadEndpoint.WeeklyByCountry]: false,
-  [BusinessReportReadEndpoint.WeeklyPlatformCountry]: false,
-  [BusinessReportReadEndpoint.WeeklyCampaigns]: false,
-  [BusinessReportReadEndpoint.WeeklyCompareOverview]: false,
-  [BusinessReportReadEndpoint.WeeklyCompareTrends]: false,
-  [BusinessReportReadEndpoint.WeeklyCompareMetrics]: false,
-  [BusinessReportReadEndpoint.MonthlyOverview]: false,
-  [BusinessReportReadEndpoint.MonthlyAdPlatform]: false,
-  [BusinessReportReadEndpoint.MonthlyByCountry]: false,
-  [BusinessReportReadEndpoint.MonthlyPlatformCountry]: false,
-  [BusinessReportReadEndpoint.MonthlyCampaigns]: false,
-  [BusinessReportReadEndpoint.MonthlyCompareOverview]: false,
-  [BusinessReportReadEndpoint.MonthlyCompareTrends]: false,
-  [BusinessReportReadEndpoint.MonthlyCompareMetrics]: false,
-  [BusinessReportReadEndpoint.LarkConfigGet]: false,
-  [BusinessReportReadEndpoint.LarkConfigSave]: false,
-  [BusinessReportReadEndpoint.LarkPushNow]: false
+  [BusinessReportReadEndpoint.DailyOverview]: true,
+  [BusinessReportReadEndpoint.DailyAdPlatform]: true,
+  [BusinessReportReadEndpoint.DailyByCountry]: true,
+  [BusinessReportReadEndpoint.DailyPlatformCountry]: true,
+  [BusinessReportReadEndpoint.DailyCampaigns]: true,
+  [BusinessReportReadEndpoint.DailyCompareOverview]: true,
+  [BusinessReportReadEndpoint.DailyCompareTrends]: true,
+  [BusinessReportReadEndpoint.DailyCompareMetrics]: true,
+  [BusinessReportReadEndpoint.WeeklyOverview]: true,
+  [BusinessReportReadEndpoint.WeeklyAdPlatform]: true,
+  [BusinessReportReadEndpoint.WeeklyByCountry]: true,
+  [BusinessReportReadEndpoint.WeeklyPlatformCountry]: true,
+  [BusinessReportReadEndpoint.WeeklyCampaigns]: true,
+  [BusinessReportReadEndpoint.WeeklyCompareOverview]: true,
+  [BusinessReportReadEndpoint.WeeklyCompareTrends]: true,
+  [BusinessReportReadEndpoint.WeeklyCompareMetrics]: true,
+  [BusinessReportReadEndpoint.MonthlyOverview]: true,
+  [BusinessReportReadEndpoint.MonthlyAdPlatform]: true,
+  [BusinessReportReadEndpoint.MonthlyByCountry]: true,
+  [BusinessReportReadEndpoint.MonthlyPlatformCountry]: true,
+  [BusinessReportReadEndpoint.MonthlyCampaigns]: true,
+  [BusinessReportReadEndpoint.MonthlyCompareOverview]: true,
+  [BusinessReportReadEndpoint.MonthlyCompareTrends]: true,
+  [BusinessReportReadEndpoint.MonthlyCompareMetrics]: true,
+  [BusinessReportReadEndpoint.LarkConfigGet]: true,
+  [BusinessReportReadEndpoint.LarkConfigSave]: true,
+  [BusinessReportReadEndpoint.LarkPushNow]: true
 }
 
 export function isBusinessReportMock(endpoint: BusinessReportReadEndpoint): boolean {

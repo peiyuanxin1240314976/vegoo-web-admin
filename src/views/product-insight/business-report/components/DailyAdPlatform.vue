@@ -5,8 +5,8 @@
       <div class="dap-title-left">
         <span class="dap-title-app">整体</span>
         <span class="dap-title-app">全部平台</span>
-        <span class="dap-title-badge">日报</span>
-        <span class="dap-title-date">2026年3月13日</span>
+        <span class="dap-title-badge">{{ reportLabel }}</span>
+        <span class="dap-title-date">{{ titleDateText }}</span>
       </div>
     </div>
 
@@ -136,7 +136,7 @@
     </div>
     <!-- ── 右下角推送 ─────────────────────────────────────── -->
     <div class="dap-push-bar">
-      <span class="dap-push-last">上次推送：今日 08:30 飞书群《经营日报》</span>
+      <span class="dap-push-last">{{ pushText }}</span>
       <button class="dap-push-btn" @click="openPushModal()">立即推送</button>
     </div>
   </div>
@@ -151,6 +151,23 @@
   const ctx = inject(businessReportContextKey)
 
   const cardList = computed(() => ctx?.adPlatform.value?.platforms ?? adPlatformCards)
+  const reportLabel = computed(() => {
+    if (ctx?.period.value === 'weekly') return '周报'
+    if (ctx?.period.value === 'monthly') return '月报'
+    return '日报'
+  })
+  const titleDateText = computed(() => {
+    const range = ctx?.reportRange.value
+    if (!range) return '--'
+    if (ctx?.period.value === 'weekly') return `${range.startDate} - ${range.endDate}`
+    if (ctx?.period.value === 'monthly') return range.startDate.slice(0, 7)
+    return range.startDate
+  })
+  const pushText = computed(
+    () =>
+      ctx?.getLastPushText?.(ctx?.period.value ?? 'daily') ??
+      `上次推送：-- 飞书群《经营${reportLabel.value}》`
+  )
 
   const mainPlatforms = computed(() => cardList.value.slice(0, 5))
   const otherPlatforms = computed(() => cardList.value.slice(5))

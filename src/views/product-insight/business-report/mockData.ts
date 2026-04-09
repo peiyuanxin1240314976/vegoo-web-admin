@@ -1866,11 +1866,6 @@ export const compareMetrics = [
     metric: '预估利润增长',
     values: { overall: '+8.3%', health: '+14.1%', ai: '+4.2%' },
     bestId: 'health'
-  },
-  {
-    metric: '费用抄扣收缴比',
-    values: { overall: '1.75%', health: '1.74%', ai: '1.79%' },
-    bestId: 'health'
   }
 ]
 
@@ -2575,6 +2570,8 @@ export const larkPushConfigMock: LarkPushConfig = {
     { id: 'ou_person_001', name: '王总' },
     { id: 'ou_person_002', name: '李总' }
   ],
+  lastPushAt: '2026-04-09T08:30:00+08:00',
+  lastPushTarget: '经营日报群',
   daily: { enabled: true, day: '每天', time: '09:00', workdayOnly: true },
   weekly: { enabled: true, day: '每周一', time: '09:00', showChange: true },
   monthly: { enabled: true, day: '每月 1 日', time: '09:00', showFee: true },

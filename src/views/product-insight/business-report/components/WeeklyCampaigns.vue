@@ -5,8 +5,8 @@
       <div class="wcc-title-left">
         <span class="wcc-title-app">整体</span>
         <span class="wcc-title-app">全部平台</span>
-        <span class="wcc-title-badge">周报</span>
-        <span class="wcc-title-date">2026年第10周（3/9-3/15）</span>
+        <span class="wcc-title-badge">{{ reportLabel }}</span>
+        <span class="wcc-title-date">{{ titleDateText }}</span>
       </div>
       <div class="wcc-title-stats">
         <div class="wcc-stat">
@@ -118,7 +118,7 @@
         {{ totalSpendDisplay }}
       </span>
       <div class="wcc-push-right">
-        <span class="wcc-push-last">上次推送：本周一 08:30 飞书群《经营周报》</span>
+        <span class="wcc-push-last">{{ lastPushText }}</span>
         <button class="wcc-push-btn" type="button" @click="openPushModal()">立即推送</button>
       </div>
     </div>
@@ -145,6 +145,18 @@
   const ctx = inject(businessReportContextKey)
 
   const campaigns = computed(() => ctx?.campaigns.value?.rows ?? weeklyCampaignsMock)
+  const reportLabel = computed(() => {
+    if (ctx?.period.value === 'daily') return '日报'
+    if (ctx?.period.value === 'monthly') return '月报'
+    return '周报'
+  })
+  const titleDateText = computed(() => {
+    const range = ctx?.reportRange.value
+    if (!range) return '--'
+    if (ctx?.period.value === 'monthly') return range.startDate.slice(0, 7)
+    if (ctx?.period.value === 'daily') return range.startDate
+    return `${range.startDate} - ${range.endDate}`
+  })
 
   const activeCount = computed(() => campaigns.value.filter((c) => c.status === 'active').length)
   const pausedCount = computed(() => campaigns.value.filter((c) => c.status === 'paused').length)
@@ -156,6 +168,11 @@
     }, 0)
     return '$' + sum.toLocaleString('en-US')
   })
+  const lastPushText = computed(
+    () =>
+      ctx?.getLastPushText?.(ctx?.period.value ?? 'weekly') ??
+      `上次推送：-- 飞书群《经营${reportLabel.value}》`
+  )
 
   const miniChartRef = ref<HTMLElement>()
   let chart: echarts.ECharts | null = null

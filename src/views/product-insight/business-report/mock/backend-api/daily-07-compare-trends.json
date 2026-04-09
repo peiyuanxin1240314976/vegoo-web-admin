@@ -6,7 +6,13 @@
     "priority": "P0"
   },
   "interaction": {
-    "triggers": [{ "moment": "卡片加载后并行", "detail": "加载趋势图（收入 + 用户）" }]
+    "triggers": [
+      { "moment": "卡片加载后并行", "detail": "加载趋势图（收入 + 用户）" },
+      {
+        "moment": "对比模式右上角切换日期/开关",
+        "detail": "独立于顶部筛选栏，参数变化后重拉趋势图"
+      }
+    ]
   },
   "sampleRequest": {
     "startDate": "2026-04-09",
@@ -22,7 +28,7 @@
     "compareEndDate": "2026-04-08"
   },
   "sampleResponse": {
-    "labels": ["D-6", "D-5", "D-4", "D-3", "D-2", "D-1", "D0"],
+    "labels": ["04-03", "04-04", "04-05", "04-06", "04-07", "04-08", "04-09"],
     "revenueSeries": [
       {
         "id": "overall",
@@ -62,6 +68,12 @@
         "color": "#8B5CF6",
         "values": [126000, 131000, 136000, 139000, 141000, 143000, 144000]
       }
+    ]
+  },
+  "apiSuggestion": {
+    "notes": [
+      "趋势横轴 labels 与请求 endDate 联动，示例采用真实日期标签而非 D-6 / D0 占位。",
+      "compareEnabled=false 时可返回当前期序列（不叠加对比影响），保持图形可读。"
     ]
   }
 }

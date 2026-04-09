@@ -5,7 +5,15 @@
     "method": "POST",
     "priority": "P0"
   },
-  "interaction": { "triggers": [{ "moment": "月报对比卡片后并行", "detail": "加载近6月趋势" }] },
+  "interaction": {
+    "triggers": [
+      { "moment": "月报对比卡片后并行", "detail": "加载近6月趋势" },
+      {
+        "moment": "对比模式右上角切换日期/开关",
+        "detail": "独立于顶部筛选栏，参数变化后重拉趋势图"
+      }
+    ]
+  },
   "sampleRequest": {
     "startDate": "2026-04-01",
     "endDate": "2026-04-30",
@@ -20,7 +28,7 @@
     "compareEndDate": "2026-03-31"
   },
   "sampleResponse": {
-    "labels": ["M-5", "M-4", "M-3", "M-2", "M-1", "M0"],
+    "labels": ["2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04"],
     "revenueSeries": [
       {
         "id": "overall",
@@ -60,6 +68,12 @@
         "color": "#8B5CF6",
         "values": [1520000, 1560000, 1600000, 1620000, 1640000, 1654000]
       }
+    ]
+  },
+  "apiSuggestion": {
+    "notes": [
+      "趋势横轴 labels 与请求 endDate 联动，示例采用真实月份标签而非 M-5 / M0 占位。",
+      "compareEnabled=false 时可返回当前期序列（不叠加对比影响），保持图形可读。"
     ]
   }
 }

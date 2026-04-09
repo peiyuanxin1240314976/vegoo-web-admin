@@ -6,11 +6,33 @@
     "priority": "P2",
     "queryParams": "（无）"
   },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "进入页面后静默加载",
+        "detail": "页面初始化时拉取当前飞书推送配置，用于弹窗默认值与“上次推送”展示。"
+      },
+      {
+        "moment": "点击“飞书推送”前",
+        "detail": "若本地尚无配置，先请求该接口再打开弹窗。"
+      }
+    ]
+  },
   "fieldDescription": {
     "request": {},
     "response": {
       "groups": { "type": "LarkTarget[]", "required": true, "description": "飞书推送群组列表" },
       "persons": { "type": "LarkTarget[]", "required": true, "description": "指定推送人员列表" },
+      "lastPushAt": {
+        "type": "string",
+        "required": false,
+        "description": "最近一次推送时间，推荐 ISO 8601；用于页面底部“上次推送”展示"
+      },
+      "lastPushTarget": {
+        "type": "string",
+        "required": false,
+        "description": "最近一次推送目标群名称，用于页面底部“上次推送”展示"
+      },
       "daily": {
         "enabled": { "type": "boolean", "required": true, "description": "是否启用日报推送" },
         "day": { "type": "string", "required": true, "description": "推送频率：每天 / 工作日" },
@@ -72,6 +94,8 @@
       { "id": "ou_person_001", "name": "王总" },
       { "id": "ou_person_002", "name": "李总" }
     ],
+    "lastPushAt": "2026-04-09T08:30:00+08:00",
+    "lastPushTarget": "经营日报群",
     "daily": {
       "enabled": true,
       "day": "每天",
@@ -97,5 +121,11 @@
       "platformCountry": false,
       "campaigns": true
     }
+  },
+  "apiSuggestion": {
+    "notes": [
+      "返回体建议与前端 unwrap 逻辑一致（允许网关包裹后 data 解包）。",
+      "lastPushAt 与 lastPushTarget 建议由后端维护并在查询时返回，前端仅展示。"
+    ]
   }
 }

@@ -263,93 +263,43 @@
           v-if="overallItem"
           class="camp-overall"
           :class="{
-            'camp-selected': selectedId === overallItem.id,
-            'wc-camp-overall':
-              sidebarKey === 'weekly-campaigns' || sidebarKey === 'monthly-campaigns'
+            'camp-selected': selectedId === overallItem.id
           }"
           @click="$emit('select', overallItem.id)"
         >
-          <!-- 周报/月报：左侧文案 + 右侧迷你分组柱 -->
-          <div
-            v-if="sidebarKey === 'weekly-campaigns' || sidebarKey === 'monthly-campaigns'"
-            class="wc-camp-ov-body"
-          >
-            <div class="wc-camp-ov-main">
-              <div class="camp-ov-title-row">
-                <div class="camp-ov-name-block">
-                  <span class="camp-ov-name">整体</span>
-                  <span class="camp-ov-cat">全部平台</span>
-                </div>
-                <span v-if="selectedId === overallItem.id" class="camp-selected-badge"
-                  >SELECTED</span
-                >
-              </div>
-              <div class="camp-ov-spend-label">广告支出</div>
-              <div class="camp-ov-spend-row">
-                <span class="camp-ov-amount">${{ formatNum(overallItem.adSpend ?? 0) }}</span>
-                <span :class="['camp-ov-change', changeClass(overallItem.adSpendChange ?? 0)]">
-                  {{ changeStr(overallItem.adSpendChange ?? 0) }}
-                </span>
-              </div>
-              <div class="camp-ov-stats">
-                <span class="camp-stat-item">
-                  <span class="camp-stat-dot active"></span>
-                  在投系列 <b>{{ overallItem.activeCampaigns }}个</b>
-                </span>
-                <span class="camp-stat-sep">|</span>
-                <span class="camp-stat-item">
-                  <span class="camp-stat-dot paused"></span>
-                  已暂停 <b class="camp-paused-val">{{ overallItem.pausedCampaigns ?? 3 }}个</b>
-                </span>
-              </div>
+          <div class="camp-ov-title-row">
+            <div class="camp-ov-name-block">
+              <span class="camp-ov-name">整体</span>
+              <span class="camp-ov-cat">全部平台</span>
             </div>
-            <div class="wc-mini-chart" aria-hidden="true">
-              <div v-for="lab in wcMiniChartLabels" :key="lab" class="wc-mini-group">
-                <div class="wc-mini-bars">
-                  <span class="wc-bar wc-bar--teal" />
-                  <span class="wc-bar wc-bar--orange" />
-                </div>
-                <span class="wc-mini-lab">{{ lab }}</span>
-              </div>
-            </div>
+            <span v-if="selectedId === overallItem.id" class="camp-selected-badge">SELECTED</span>
           </div>
-
-          <!-- 日报：原布局 + 底部分平台条 -->
-          <template v-else>
-            <div class="camp-ov-title-row">
-              <div class="camp-ov-name-block">
-                <span class="camp-ov-name">整体</span>
-                <span class="camp-ov-cat">全部平台</span>
-              </div>
-              <span v-if="selectedId === overallItem.id" class="camp-selected-badge">SELECTED</span>
-            </div>
-            <div class="camp-ov-spend-label">广告支出</div>
-            <div class="camp-ov-spend-row">
-              <span class="camp-ov-amount">${{ formatNum(overallItem.adSpend ?? 0) }}</span>
-              <span :class="['camp-ov-change', changeClass(overallItem.adSpendChange ?? 0)]">
-                {{ changeStr(overallItem.adSpendChange ?? 0) }}
-              </span>
-            </div>
-            <div class="camp-ov-stats">
-              <span class="camp-stat-item">
-                <span class="camp-stat-dot active"></span>
-                在投系列 <b>{{ overallItem.activeCampaigns }}个</b>
-              </span>
-              <span class="camp-stat-sep">|</span>
-              <span class="camp-stat-item">
-                <span class="camp-stat-dot paused"></span>
-                已暂停 <b>{{ overallItem.pausedCampaigns ?? 3 }}个</b>
-              </span>
-            </div>
-            <div class="camp-platform-bar">
-              <div
-                v-for="seg in overallItem.platformBreakdown ?? []"
-                :key="seg.name"
-                class="camp-seg"
-                :style="{ width: seg.percent + '%', background: seg.color }"
-              ></div>
-            </div>
-          </template>
+          <div class="camp-ov-spend-label">广告支出</div>
+          <div class="camp-ov-spend-row">
+            <span class="camp-ov-amount">${{ formatNum(overallItem.adSpend ?? 0) }}</span>
+            <span :class="['camp-ov-change', changeClass(overallItem.adSpendChange ?? 0)]">
+              {{ changeStr(overallItem.adSpendChange ?? 0) }}
+            </span>
+          </div>
+          <div class="camp-ov-stats">
+            <span class="camp-stat-item">
+              <span class="camp-stat-dot active"></span>
+              在投系列 <b>{{ overallItem.activeCampaigns }}个</b>
+            </span>
+            <span class="camp-stat-sep">|</span>
+            <span class="camp-stat-item">
+              <span class="camp-stat-dot paused"></span>
+              已暂停 <b>{{ overallItem.pausedCampaigns ?? 3 }}个</b>
+            </span>
+          </div>
+          <div class="camp-platform-bar">
+            <div
+              v-for="seg in overallItem.platformBreakdown ?? []"
+              :key="seg.name"
+              class="camp-seg"
+              :style="{ width: seg.percent + '%', background: seg.color }"
+            ></div>
+          </div>
         </div>
 
         <!-- 日报：单列列表 / 月报复用 -->
@@ -869,9 +819,6 @@
   const toggleSort = () => {
     sortDir.value = sortDir.value === 'desc' ? 'asc' : 'desc'
   }
-
-  /** 周报在投侧栏迷你图横轴标签（与主内容区平台维度一致） */
-  const wcMiniChartLabels = ['安卓', 'iOS', '网站'] as const
 
   // ── Normal mode (汇总等旧样式) ──────────────────────────────
   const groupApps = computed(() => {

@@ -5,8 +5,8 @@
       <div class="dc-title-left">
         <span class="dc-title-app">整体</span>
         <span class="dc-title-app">全部平台</span>
-        <span class="dc-title-badge">日报</span>
-        <span class="dc-title-date">2026-3-13</span>
+        <span class="dc-title-badge">{{ reportLabel }}</span>
+        <span class="dc-title-date">{{ titleDateText }}</span>
       </div>
       <div class="dc-title-stats">
         <div class="dc-stat">
@@ -22,7 +22,7 @@
         <div class="dc-stat-sep"></div>
         <div class="dc-stat">
           <span class="dc-stat-label">总广告支出</span>
-          <span class="dc-stat-val spend">$41,100</span>
+          <span class="dc-stat-val spend">{{ totalSpendDisplay }}</span>
         </div>
       </div>
     </div>
@@ -117,10 +117,10 @@
     <div class="dc-push-bar">
       <span class="dc-push-summary">
         在投 {{ activeCampaigns }} 个 &nbsp;|&nbsp; 已暂停 {{ pausedCampaigns }} 个 &nbsp;|&nbsp;
-        总广告支出 $41,100
+        总广告支出 {{ totalSpendDisplay }}
       </span>
       <div class="dc-push-right">
-        <span class="dc-push-last">上次推送：今日 08:30 飞书群《经营日报》</span>
+        <span class="dc-push-last">{{ lastPushText }}</span>
         <button class="dc-push-btn" @click="openPushModal()">立即推送</button>
       </div>
     </div>
@@ -136,12 +136,36 @@
   const ctx = inject(businessReportContextKey)
 
   const campaigns = computed(() => ctx?.campaigns.value?.rows ?? campaignData)
+  const reportLabel = computed(() => {
+    if (ctx?.period.value === 'weekly') return '周报'
+    if (ctx?.period.value === 'monthly') return '月报'
+    return '日报'
+  })
+  const titleDateText = computed(() => {
+    const range = ctx?.reportRange.value
+    if (!range) return '--'
+    if (ctx?.period.value === 'weekly') return `${range.startDate} - ${range.endDate}`
+    if (ctx?.period.value === 'monthly') return range.startDate.slice(0, 7)
+    return range.startDate
+  })
 
   const activeCampaigns = computed(
     () => campaigns.value.filter((c) => c.status === 'active').length
   )
   const pausedCampaigns = computed(
     () => campaigns.value.filter((c) => c.status === 'paused').length
+  )
+  const totalSpendDisplay = computed(() => {
+    const sum = campaigns.value.reduce((acc, c) => {
+      const n = Number(c.adSpend.replace(/[$,]/g, ''))
+      return Number.isFinite(n) ? acc + n : acc
+    }, 0)
+    return `$${sum.toLocaleString('en-US')}`
+  })
+  const lastPushText = computed(
+    () =>
+      ctx?.getLastPushText?.(ctx?.period.value ?? 'daily') ??
+      `上次推送：-- 飞书群《经营${reportLabel.value}》`
   )
 
   const changeColor = (v: number) => (v >= 0 ? 'chg-pos' : 'chg-neg')
