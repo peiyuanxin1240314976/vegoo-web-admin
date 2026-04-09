@@ -1,0 +1,66 @@
+{
+  "_comment": "周报-分国家。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/weekly/by-country",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "切换周报分国家 Tab", "detail": "按周聚合加载国家行" }]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-06",
+    "endDate": "2026-04-12",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "countryCode": "",
+    "account": ""
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "flag": "🇺🇸",
+        "name": "美国",
+        "revenue": "$312,340",
+        "adSpend": "$192,200",
+        "roi1d": "40%",
+        "roi7d": "102%"
+      },
+      {
+        "flag": "🇩🇪",
+        "name": "德国",
+        "revenue": "$187,760",
+        "adSpend": "$115,500",
+        "roi1d": "38%",
+        "roi7d": "98%"
+      },
+      {
+        "flag": "🇯🇵",
+        "name": "日本",
+        "revenue": "$154,830",
+        "adSpend": "$91,100",
+        "roi1d": "37%",
+        "roi7d": "96%"
+      }
+    ],
+    "othersRow": {
+      "flag": "🌐",
+      "name": "其他国家",
+      "subLabel": "12个国家",
+      "revenue": "$409,170",
+      "adSpend": "$255,900",
+      "roi1d": "34%",
+      "roi7d": "88%"
+    },
+    "appList": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "revenue": 1064100,
+        "revenueChange": 8.4,
+        "profit": 762300
+      }
+    ]
+  }
+}

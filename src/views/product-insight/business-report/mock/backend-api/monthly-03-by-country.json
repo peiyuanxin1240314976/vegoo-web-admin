@@ -1,0 +1,66 @@
+{
+  "_comment": "月报-分国家。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/monthly/by-country",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "切换月报分国家 Tab", "detail": "按月聚合加载国家行" }]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-30",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "countryCode": "",
+    "account": ""
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "flag": "🇺🇸",
+        "name": "美国",
+        "revenue": "$1,523,400",
+        "adSpend": "$932,200",
+        "roi1d": "40%",
+        "roi7d": "102%"
+      },
+      {
+        "flag": "🇩🇪",
+        "name": "德国",
+        "revenue": "$887,600",
+        "adSpend": "$575,500",
+        "roi1d": "38%",
+        "roi7d": "98%"
+      },
+      {
+        "flag": "🇯🇵",
+        "name": "日本",
+        "revenue": "$748,300",
+        "adSpend": "$451,100",
+        "roi1d": "37%",
+        "roi7d": "96%"
+      }
+    ],
+    "othersRow": {
+      "flag": "🌐",
+      "name": "其他国家",
+      "subLabel": "12个国家",
+      "revenue": "$1,361,700",
+      "adSpend": "$888,100",
+      "roi1d": "34%",
+      "roi7d": "88%"
+    },
+    "appList": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "revenue": 4521000,
+        "revenueChange": 9.7,
+        "profit": 3234000
+      }
+    ]
+  }
+}

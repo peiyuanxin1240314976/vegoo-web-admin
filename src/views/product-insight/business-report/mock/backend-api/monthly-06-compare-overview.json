@@ -1,0 +1,56 @@
+{
+  "_comment": "月报-对比模式-卡片数据。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/monthly/compare-overview",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": { "triggers": [{ "moment": "进入月报对比模式", "detail": "应用变化时刷新卡片" }] },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-30",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "countryCode": "",
+    "account": "",
+    "appIds": ["overall", "health", "ai"],
+    "compareEnabled": true,
+    "compareStartDate": "2026-03-01",
+    "compareEndDate": "2026-03-31"
+  },
+  "sampleResponse": {
+    "apps": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "color": "#00D4A1",
+        "revenue": "$4,521,000",
+        "revenueChange": 9.7,
+        "metrics": [
+          { "label": "MAU", "value": "8,234万", "change": "+4.4%", "changeType": "positive" }
+        ]
+      },
+      {
+        "id": "health",
+        "name": "健康",
+        "color": "#FF6B9D",
+        "revenue": "$1,234,000",
+        "revenueChange": 12.3,
+        "metrics": [
+          { "label": "MAU", "value": "2,456万", "change": "+8.1%", "changeType": "positive" }
+        ]
+      },
+      {
+        "id": "ai",
+        "name": "AI应用",
+        "color": "#8B5CF6",
+        "revenue": "$876,000",
+        "revenueChange": 5.6,
+        "metrics": [
+          { "label": "MAU", "value": "1,654万", "change": "+3.2%", "changeType": "positive" }
+        ]
+      }
+    ]
+  }
+}

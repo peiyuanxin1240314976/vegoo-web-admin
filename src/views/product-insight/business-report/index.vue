@@ -15,15 +15,13 @@
       </div>
 
       <div class="header-right">
-        <template v-if="period === 'monthly'">
-          <span class="compare-mode-label">对比模式</span>
-          <button
-            :class="['toggle-pill', { active: compareMode }]"
-            @click="compareMode = !compareMode"
-          >
-            <span class="toggle-knob" />
-          </button>
-        </template>
+        <span class="compare-mode-label">对比模式</span>
+        <button
+          :class="['toggle-pill', { active: compareMode }]"
+          @click="compareMode = !compareMode"
+        >
+          <span class="toggle-knob" />
+        </button>
 
         <button class="header-btn lark-btn" @click="showLarkModal = true">
           <span class="lark-icon">✈</span> 飞书推送
@@ -424,10 +422,16 @@
 
     <!-- ──────────────────────────── MAIN CONTENT ────────────── -->
     <div :class="['br-content', { 'no-sidebar': compareMode && period === 'monthly' }]">
-      <!-- Monthly compare mode: no sidebar -->
-      <template v-if="compareMode && period === 'monthly'">
+      <!-- Compare mode: no sidebar -->
+      <template v-if="compareMode">
         <main v-loading="contentLoading" class="br-main br-main--compare">
-          <MonthlyCompareMode />
+          <MonthlyCompareMode
+            :period="period"
+            :start-date="reportRange.startDate"
+            :end-date="reportRange.endDate"
+            :compare-start-date="compareRange.startDate"
+            :compare-end-date="compareRange.endDate"
+          />
         </main>
       </template>
 
@@ -813,18 +817,66 @@
     campaigns
   })
 
-  function reportDateQueryValue(): string {
-    if (period.value === 'daily') return reportDayYmd.value
-    if (period.value === 'weekly') return reportWeekStartYmd.value
-    return `${reportMonthYm.value}-01`
-  }
+  const reportRange = computed(() => {
+    if (period.value === 'daily') {
+      return { startDate: reportDayYmd.value, endDate: reportDayYmd.value }
+    }
+    if (period.value === 'weekly') {
+      const ws = parseYmdLocal(reportWeekStartYmd.value)
+      return {
+        startDate: formatYYYYMMDD(ws),
+        endDate: formatYYYYMMDD(addDays(ws, 6))
+      }
+    }
+    return {
+      startDate: `${reportMonthYm.value}-01`,
+      endDate: formatYYYYMMDD(
+        new Date(
+          Number(reportMonthYm.value.slice(0, 4)),
+          Number(reportMonthYm.value.slice(5, 7)),
+          0
+        )
+      )
+    }
+  })
+
+  const compareRange = computed(() => {
+    if (period.value === 'daily') {
+      const d = addDays(parseYmdLocal(reportDayYmd.value), -1)
+      const ymd = formatYYYYMMDD(d)
+      return { startDate: ymd, endDate: ymd }
+    }
+    if (period.value === 'weekly') {
+      const ws = parseYmdLocal(reportWeekStartYmd.value)
+      const pStart = addDays(ws, -7)
+      return {
+        startDate: formatYYYYMMDD(pStart),
+        endDate: formatYYYYMMDD(addDays(pStart, 6))
+      }
+    }
+    const cur = new Date(
+      Number(reportMonthYm.value.slice(0, 4)),
+      Number(reportMonthYm.value.slice(5, 7)) - 1,
+      1
+    )
+    const prevStart = new Date(cur.getFullYear(), cur.getMonth() - 1, 1)
+    const prevEnd = new Date(cur.getFullYear(), cur.getMonth(), 0)
+    return {
+      startDate: formatYYYYMMDD(prevStart),
+      endDate: formatYYYYMMDD(prevEnd)
+    }
+  })
 
   function buildReportParams(): ReportQueryParams {
     const id = selectedAppId.value
     return {
       period: period.value,
+      startDate: reportRange.value.startDate,
+      endDate: reportRange.value.endDate,
       appId: id === 'overall' ? undefined : id,
-      date: reportDateQueryValue()
+      platform: barPlatformValues.value[0] ?? '',
+      source: barSourceValues.value[0] ?? '',
+      countryCode: barCountryValues.value[0] ?? ''
     }
   }
 

@@ -14,8 +14,6 @@ import type {
   CampaignRow,
   PlatformCountryRow,
   ApcOsEntry,
-  CompareAppData,
-  CompareMetricRow,
   LarkPushConfig
 } from './types'
 
@@ -1791,7 +1789,7 @@ export const platformCountryData: PlatformCountryRow[] = [
 ]
 
 // ── Compare Mode Data ──────────────────────────────────────────
-export const compareApps: CompareAppData[] = [
+export const compareApps = [
   {
     id: 'overall',
     name: '整体',
@@ -1844,7 +1842,7 @@ export const compareApps: CompareAppData[] = [
     adChange: 4.8
   }
 ]
-export const compareMetrics: CompareMetricRow[] = [
+export const compareMetrics = [
   {
     metric: 'MAU',
     values: { overall: '8,234万', health: '2,456万', ai: '1,654万' },
@@ -1877,7 +1875,7 @@ export const compareMetrics: CompareMetricRow[] = [
 ]
 
 // ── AdPlatformByCountry 结构化数据（ApcOsEntry[]）─────────────
-// 对应 GET /api/v1/datacenter/analysis/report/platform-country → osEntries
+// 对应 POST /api/v1/datacenter/analysis/report/{period}/platform-country → osEntries
 export const adPlatformByCountryData: ApcOsEntry[] = [
   {
     id: 'android',

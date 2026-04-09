@@ -1,0 +1,39 @@
+{
+  "_comment": "日报-汇总。页面首屏初始化与切换应用时触发。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/daily/overview",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": {
+    "triggers": [
+      { "moment": "页面首屏", "detail": "日报默认 Tab=summary 时拉取" },
+      { "moment": "筛选变化", "detail": "应用/平台/国家筛选变化后刷新" }
+    ]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-09",
+    "endDate": "2026-04-09",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "countryCode": "",
+    "account": ""
+  },
+  "sampleResponse": {
+    "kpis": [{ "key": "revenue", "label": "总收入", "value": "$152,300", "change": 8.4 }],
+    "userMetrics": [
+      { "name": "新增用户", "current": "4.5万", "previous": "4.2万", "change": "+7.1%" }
+    ],
+    "revenueMetrics": [
+      { "name": "广告收入", "current": "$98,200", "previous": "$90,100", "change": "+9.0%" }
+    ],
+    "roiMetrics": [{ "type": "首日ROI", "current": "36%", "previous": "34%", "change": "+2pp" }],
+    "retentionMetrics": [
+      { "day": "次留", "current": "42.3%", "previous": "41.8%", "change": "+0.5pp" }
+    ],
+    "appList": [
+      { "id": "overall", "name": "整体", "revenue": 152300, "revenueChange": 8.4, "profit": 108900 }
+    ]
+  }
+}

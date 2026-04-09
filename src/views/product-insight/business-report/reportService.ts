@@ -15,10 +15,14 @@ import type {
   ByCountryResponse,
   PlatformCountryResponse,
   CampaignsResponse,
-  LarkPushConfig
+  LarkPushConfig,
+  CompareQueryParams,
+  CompareOverviewResponse,
+  CompareTrendsResponse,
+  CompareMetricsResponse
 } from './types'
 
-import { BusinessReportEndpoint, isBusinessReportMock } from './config/data-source'
+import { BusinessReportReadEndpoint, isBusinessReportMock } from './config/data-source'
 
 import {
   fetchBusinessReportSummary,
@@ -26,6 +30,9 @@ import {
   fetchBusinessReportByCountry,
   fetchBusinessReportPlatformCountry,
   fetchBusinessReportCampaigns,
+  fetchBusinessReportCompareOverview,
+  fetchBusinessReportCompareTrends,
+  fetchBusinessReportCompareMetrics,
   fetchBusinessReportLarkConfig,
   saveBusinessReportLarkConfig,
   pushBusinessReportLarkNow
@@ -52,7 +59,9 @@ import {
   adPlatformByCountryData,
   platformCountryData,
   campaignData as campaignRows,
-  larkPushConfigMock
+  larkPushConfigMock,
+  compareApps,
+  compareMetrics
 } from './mockData'
 
 // ── 模拟延迟（mock 模式下，便于测试加载状态） ────────────────
@@ -60,12 +69,66 @@ function mockDelay<T>(data: T, ms = 300): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(data), ms))
 }
 
+function endpointByPeriod(
+  period: ReportQueryParams['period'],
+  tab: 'overview' | 'adPlatform' | 'byCountry' | 'platformCountry' | 'campaigns'
+): BusinessReportReadEndpoint {
+  const map = {
+    daily: {
+      overview: BusinessReportReadEndpoint.DailyOverview,
+      adPlatform: BusinessReportReadEndpoint.DailyAdPlatform,
+      byCountry: BusinessReportReadEndpoint.DailyByCountry,
+      platformCountry: BusinessReportReadEndpoint.DailyPlatformCountry,
+      campaigns: BusinessReportReadEndpoint.DailyCampaigns
+    },
+    weekly: {
+      overview: BusinessReportReadEndpoint.WeeklyOverview,
+      adPlatform: BusinessReportReadEndpoint.WeeklyAdPlatform,
+      byCountry: BusinessReportReadEndpoint.WeeklyByCountry,
+      platformCountry: BusinessReportReadEndpoint.WeeklyPlatformCountry,
+      campaigns: BusinessReportReadEndpoint.WeeklyCampaigns
+    },
+    monthly: {
+      overview: BusinessReportReadEndpoint.MonthlyOverview,
+      adPlatform: BusinessReportReadEndpoint.MonthlyAdPlatform,
+      byCountry: BusinessReportReadEndpoint.MonthlyByCountry,
+      platformCountry: BusinessReportReadEndpoint.MonthlyPlatformCountry,
+      campaigns: BusinessReportReadEndpoint.MonthlyCampaigns
+    }
+  } as const
+  return map[period][tab]
+}
+
+function compareEndpointByPeriod(
+  period: ReportQueryParams['period'],
+  tab: 'overview' | 'trends' | 'metrics'
+): BusinessReportReadEndpoint {
+  const map = {
+    daily: {
+      overview: BusinessReportReadEndpoint.DailyCompareOverview,
+      trends: BusinessReportReadEndpoint.DailyCompareTrends,
+      metrics: BusinessReportReadEndpoint.DailyCompareMetrics
+    },
+    weekly: {
+      overview: BusinessReportReadEndpoint.WeeklyCompareOverview,
+      trends: BusinessReportReadEndpoint.WeeklyCompareTrends,
+      metrics: BusinessReportReadEndpoint.WeeklyCompareMetrics
+    },
+    monthly: {
+      overview: BusinessReportReadEndpoint.MonthlyCompareOverview,
+      trends: BusinessReportReadEndpoint.MonthlyCompareTrends,
+      metrics: BusinessReportReadEndpoint.MonthlyCompareMetrics
+    }
+  } as const
+  return map[period][tab]
+}
+
 // ============================================================
-// 1. 汇总表  GET /api/v1/datacenter/analysis/report/summary
-// 契约：mock/backend-api/01-summary.json
+// 1. 汇总表  POST /api/v1/datacenter/analysis/report/{period}/overview
+// 契约：mock/backend-api/daily|weekly|monthly-01-overview.json
 // ============================================================
 export async function getSummary(params: ReportQueryParams): Promise<SummaryResponse> {
-  if (isBusinessReportMock(BusinessReportEndpoint.Summary)) {
+  if (isBusinessReportMock(endpointByPeriod(params.period, 'overview'))) {
     const { period } = params
     return mockDelay<SummaryResponse>({
       kpis: period === 'daily' ? dailyKpis : period === 'weekly' ? weeklyKpis : monthlyKpis,
@@ -91,11 +154,11 @@ export async function getSummary(params: ReportQueryParams): Promise<SummaryResp
 }
 
 // ============================================================
-// 2. 广告平台  GET /api/v1/datacenter/analysis/report/ad-platform
-// 契约：mock/backend-api/02-ad-platform.json
+// 2. 广告平台  POST /api/v1/datacenter/analysis/report/{period}/ad-platform
+// 契约：mock/backend-api/daily|weekly|monthly-02-ad-platform.json
 // ============================================================
 export async function getAdPlatform(params: ReportQueryParams): Promise<AdPlatformResponse> {
-  if (isBusinessReportMock(BusinessReportEndpoint.AdPlatform)) {
+  if (isBusinessReportMock(endpointByPeriod(params.period, 'adPlatform'))) {
     // 广告平台结构三个周期一致，数值由后端按 period 聚合；mock 共用同一份数据
     return mockDelay<AdPlatformResponse>({
       platforms: adPlatformCards,
@@ -106,11 +169,11 @@ export async function getAdPlatform(params: ReportQueryParams): Promise<AdPlatfo
 }
 
 // ============================================================
-// 3. 分国家汇总  GET /api/v1/datacenter/analysis/report/by-country
-// 契约：mock/backend-api/03-by-country.json
+// 3. 分国家汇总  POST /api/v1/datacenter/analysis/report/{period}/by-country
+// 契约：mock/backend-api/daily|weekly|monthly-03-by-country.json
 // ============================================================
 export async function getByCountry(params: ReportQueryParams): Promise<ByCountryResponse> {
-  if (isBusinessReportMock(BusinessReportEndpoint.ByCountry)) {
+  if (isBusinessReportMock(endpointByPeriod(params.period, 'byCountry'))) {
     // 分国家结构三个周期一致，数值由后端按 period 聚合；mock 共用同一份数据
     return mockDelay<ByCountryResponse>({
       rows: countryRows,
@@ -122,13 +185,13 @@ export async function getByCountry(params: ReportQueryParams): Promise<ByCountry
 }
 
 // ============================================================
-// 4. 广告平台分国家  GET /api/v1/datacenter/analysis/report/platform-country
-// 契约：mock/backend-api/04-platform-country.json
+// 4. 广告平台分国家  POST /api/v1/datacenter/analysis/report/{period}/platform-country
+// 契约：mock/backend-api/daily|weekly|monthly-04-platform-country.json
 // ============================================================
 export async function getPlatformCountry(
   params: ReportQueryParams
 ): Promise<PlatformCountryResponse> {
-  if (isBusinessReportMock(BusinessReportEndpoint.PlatformCountry)) {
+  if (isBusinessReportMock(endpointByPeriod(params.period, 'platformCountry'))) {
     return mockDelay<PlatformCountryResponse>({
       osEntries: adPlatformByCountryData,
       flatRows: platformCountryData,
@@ -143,11 +206,11 @@ export async function getPlatformCountry(
 }
 
 // ============================================================
-// 5. 在投广告系列  GET /api/v1/datacenter/analysis/report/campaigns
-// 契约：mock/backend-api/05-campaigns.json
+// 5. 在投广告系列  POST /api/v1/datacenter/analysis/report/{period}/campaigns
+// 契约：mock/backend-api/daily|weekly|monthly-05-campaigns.json
 // ============================================================
 export async function getCampaigns(params: ReportQueryParams): Promise<CampaignsResponse> {
-  if (isBusinessReportMock(BusinessReportEndpoint.Campaigns)) {
+  if (isBusinessReportMock(endpointByPeriod(params.period, 'campaigns'))) {
     // 广告系列结构三个周期一致；mock 共用同一份数据
     return mockDelay<CampaignsResponse>({
       rows: campaignRows,
@@ -162,7 +225,7 @@ export async function getCampaigns(params: ReportQueryParams): Promise<Campaigns
 // 契约：mock/backend-api/06-lark-config-get.json
 // ============================================================
 export async function getLarkConfig(): Promise<LarkPushConfig> {
-  if (isBusinessReportMock(BusinessReportEndpoint.LarkConfigGet)) {
+  if (isBusinessReportMock(BusinessReportReadEndpoint.LarkConfigGet)) {
     return mockDelay<LarkPushConfig>(larkPushConfigMock)
   }
   return fetchBusinessReportLarkConfig()
@@ -173,7 +236,7 @@ export async function getLarkConfig(): Promise<LarkPushConfig> {
 // 契约：mock/backend-api/07-lark-config-save.json
 // ============================================================
 export async function saveLarkConfig(config: LarkPushConfig): Promise<void> {
-  if (isBusinessReportMock(BusinessReportEndpoint.LarkConfigSave)) {
+  if (isBusinessReportMock(BusinessReportReadEndpoint.LarkConfigSave)) {
     return mockDelay<void>(undefined)
   }
   await saveBusinessReportLarkConfig(config)
@@ -184,8 +247,112 @@ export async function saveLarkConfig(config: LarkPushConfig): Promise<void> {
 // 契约：mock/backend-api/08-lark-push-now.json
 // ============================================================
 export async function pushReportNow(config: LarkPushConfig): Promise<void> {
-  if (isBusinessReportMock(BusinessReportEndpoint.LarkPushNow)) {
+  if (isBusinessReportMock(BusinessReportReadEndpoint.LarkPushNow)) {
     return mockDelay<void>(undefined, 800)
   }
   await pushBusinessReportLarkNow(config)
+}
+
+function mockCompareOverview(params: CompareQueryParams): CompareOverviewResponse {
+  const apps: CompareOverviewResponse['apps'] = compareApps
+    .filter((item) => params.appIds.includes(item.id))
+    .map((item) => ({
+      id: item.id,
+      name: item.name,
+      color: item.color,
+      revenue: item.revenue,
+      revenueChange: item.revenueChange,
+      metrics: [
+        {
+          label: params.period === 'monthly' ? 'MAU' : 'DAU',
+          value: item.mau,
+          change: `${item.mauChange >= 0 ? '+' : ''}${item.mauChange}%`,
+          changeType: item.mauChange >= 0 ? 'positive' : 'negative'
+        },
+        {
+          label: '预估利润',
+          value: item.profit,
+          change: `${item.profitChange >= 0 ? '+' : ''}${item.profitChange}%`,
+          changeType: item.profitChange >= 0 ? 'positive' : 'negative'
+        },
+        {
+          label: '付费收入',
+          value: item.paid,
+          change: `${item.paidChange >= 0 ? '+' : ''}${item.paidChange}%`,
+          changeType: item.paidChange >= 0 ? 'positive' : 'negative'
+        },
+        {
+          label: '费用抄扣',
+          value: item.fee,
+          change: `${item.feeChange >= 0 ? '+' : ''}${item.feeChange}%`,
+          changeType: item.feeChange >= 0 ? 'negative' : 'positive'
+        }
+      ]
+    }))
+  return { apps }
+}
+
+function mockTrendLabels(period: ReportQueryParams['period']): string[] {
+  if (period === 'daily') return ['D-6', 'D-5', 'D-4', 'D-3', 'D-2', 'D-1', 'D0']
+  if (period === 'weekly') return ['W-7', 'W-6', 'W-5', 'W-4', 'W-3', 'W-2', 'W-1', 'W0']
+  return ['M-5', 'M-4', 'M-3', 'M-2', 'M-1', 'M0']
+}
+
+function mockCompareTrends(params: CompareQueryParams): CompareTrendsResponse {
+  const selected = compareApps.filter((item) => params.appIds.includes(item.id))
+  const labels = mockTrendLabels(params.period)
+  const revenueSeries = selected.map((item) => ({
+    id: item.id,
+    name: item.name,
+    color: item.color,
+    values: labels.map((_, idx) =>
+      Math.round((Number(item.revenue.replace(/[$,]/g, '')) / 8) * (0.7 + idx * 0.06))
+    )
+  }))
+  const userSeries = selected.map((item) => ({
+    id: item.id,
+    name: item.name,
+    color: item.color,
+    values: labels.map((_, idx) =>
+      Math.round((Number(item.mau.replace(/[万,]/g, '')) / 8) * (0.72 + idx * 0.05))
+    )
+  }))
+  return { labels, revenueSeries, userSeries }
+}
+
+function mockCompareMetrics(params: CompareQueryParams): CompareMetricsResponse {
+  const allowed = new Set(params.appIds)
+  const rows = compareMetrics.map((row) => {
+    const values: Record<string, string> = {}
+    for (const [k, v] of Object.entries(row.values)) {
+      if (allowed.has(k)) values[k] = v
+    }
+    return { metric: row.metric, values, bestId: row.bestId }
+  })
+  return { rows }
+}
+
+export async function getCompareOverview(
+  params: CompareQueryParams
+): Promise<CompareOverviewResponse> {
+  if (isBusinessReportMock(compareEndpointByPeriod(params.period, 'overview'))) {
+    return mockDelay<CompareOverviewResponse>(mockCompareOverview(params))
+  }
+  return fetchBusinessReportCompareOverview(params)
+}
+
+export async function getCompareTrends(params: CompareQueryParams): Promise<CompareTrendsResponse> {
+  if (isBusinessReportMock(compareEndpointByPeriod(params.period, 'trends'))) {
+    return mockDelay<CompareTrendsResponse>(mockCompareTrends(params))
+  }
+  return fetchBusinessReportCompareTrends(params)
+}
+
+export async function getCompareMetrics(
+  params: CompareQueryParams
+): Promise<CompareMetricsResponse> {
+  if (isBusinessReportMock(compareEndpointByPeriod(params.period, 'metrics'))) {
+    return mockDelay<CompareMetricsResponse>(mockCompareMetrics(params))
+  }
+  return fetchBusinessReportCompareMetrics(params)
 }

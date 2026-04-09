@@ -15,25 +15,23 @@ mock/
 ├── README.md             # 本文件：模块总览
 └── backend-api/
     ├── README.md         # 接口契约清单（交付后端开发的参考文档）
-    ├── 01-summary.json
-    ├── 02-ad-platform.json
-    ├── 03-by-country.json
-    ├── 04-platform-country.json
-    ├── 05-campaigns.json
+    ├── daily-01~08.json
+    ├── weekly-01~08.json
+    ├── monthly-01~08.json
     ├── 06-lark-config-get.json
     ├── 07-lark-config-save.json
-    └── 08-lark-push-now.json
+    ├── 08-lark-push-now.json
+    └── rollout-checklist.md
 ```
 
 ## 与页面的对应关系
 
 | 页面 / Tab | 主要数据来源（契约） |
-| --- | --- |
-| 日报 / 周报 / 月报 — 汇总 | `01-summary` |
-| 日报 / 周报 / 月报 — 广告平台 | `02-ad-platform` |
-| 日报 / 周报 / 月报 — 分国家 | `03-by-country` |
-| 日报 / 周报 / 月报 — 广告平台分国家 | `04-platform-country` |
-| 日报 / 周报 / 月报 — 在投广告系列 | `05-campaigns` |
+| --- | --- | --- | --- |
+| 日报 — 汇总/广告平台/分国家/平台分国家/在投系列 | `daily-01~05` |
+| 周报 — 汇总/广告平台/分国家/平台分国家/在投系列 | `weekly-01~05` |
+| 月报 — 汇总/广告平台/分国家/平台分国家/在投系列 | `monthly-01~05` |
+| 对比模式（日报/周报/月报） | `daily | weekly | monthly-06~08` |
 | 飞书推送配置弹窗 | `06-lark-config-get`、`07-lark-config-save`、`08-lark-push-now` |
 
 ## Mock 开关
@@ -41,11 +39,16 @@ mock/
 在 `config/data-source.ts` 中可逐接口切换 Mock / 真实：
 
 ```ts
-import { BUSINESS_REPORT_USE_MOCK, BusinessReportEndpoint } from './config/data-source'
+import { BUSINESS_REPORT_USE_MOCK, BusinessReportReadEndpoint } from './config/data-source'
 
 // 将某接口改为 false 即可接入真实后端
-BUSINESS_REPORT_USE_MOCK[BusinessReportEndpoint.Summary] = false
+BUSINESS_REPORT_USE_MOCK[BusinessReportReadEndpoint.DailyOverview] = false
 ```
+
+## 灰度收口状态
+
+- 新主链路：`daily-* / weekly-* / monthly-*`（三周期主接口 + 对比模式）
+- 旧兼容链路：`01~05`（Deprecated，仅兜底，不再扩展）
 
 ## 数据来源
 

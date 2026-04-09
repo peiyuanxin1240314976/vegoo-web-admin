@@ -1,0 +1,53 @@
+{
+  "_comment": "日报-对比模式-指标矩阵。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/daily/compare-metrics",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "趋势图加载后并行", "detail": "加载指标表（最佳项标记）" }]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-09",
+    "endDate": "2026-04-09",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "countryCode": "",
+    "account": "",
+    "appIds": ["overall", "health", "ai"],
+    "compareEnabled": true,
+    "compareStartDate": "2026-04-08",
+    "compareEndDate": "2026-04-08"
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "metric": "DAU",
+        "values": { "overall": "78.3万", "health": "29.2万", "ai": "14.4万" },
+        "bestId": "overall"
+      },
+      {
+        "metric": "首日ROI",
+        "values": { "overall": "36%", "health": "34%", "ai": "31%" },
+        "bestId": "overall"
+      },
+      {
+        "metric": "7日ROI",
+        "values": { "overall": "96%", "health": "91%", "ai": "84%" },
+        "bestId": "overall"
+      },
+      {
+        "metric": "30日ROI",
+        "values": { "overall": "113%", "health": "108%", "ai": "99%" },
+        "bestId": "overall"
+      },
+      {
+        "metric": "费用抄扣收缴比",
+        "values": { "overall": "1.75%", "health": "1.74%", "ai": "1.79%" },
+        "bestId": "health"
+      }
+    ]
+  }
+}

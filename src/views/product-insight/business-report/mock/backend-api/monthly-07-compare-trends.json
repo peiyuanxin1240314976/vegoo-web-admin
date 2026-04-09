@@ -1,0 +1,65 @@
+{
+  "_comment": "月报-对比模式-趋势图数据。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/monthly/compare-trends",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": { "triggers": [{ "moment": "月报对比卡片后并行", "detail": "加载近6月趋势" }] },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-30",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "countryCode": "",
+    "account": "",
+    "appIds": ["overall", "health", "ai"],
+    "compareEnabled": true,
+    "compareStartDate": "2026-03-01",
+    "compareEndDate": "2026-03-31"
+  },
+  "sampleResponse": {
+    "labels": ["M-5", "M-4", "M-3", "M-2", "M-1", "M0"],
+    "revenueSeries": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "color": "#00D4A1",
+        "values": [645000, 689000, 721000, 763000, 802000, 835000]
+      },
+      {
+        "id": "health",
+        "name": "健康",
+        "color": "#FF6B9D",
+        "values": [164000, 171000, 184000, 198000, 214000, 228000]
+      },
+      {
+        "id": "ai",
+        "name": "AI应用",
+        "color": "#8B5CF6",
+        "values": [113000, 124000, 131000, 145000, 153000, 161000]
+      }
+    ],
+    "userSeries": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "color": "#00D4A1",
+        "values": [7730000, 7810000, 7920000, 8010000, 8120000, 8234000]
+      },
+      {
+        "id": "health",
+        "name": "健康",
+        "color": "#FF6B9D",
+        "values": [2240000, 2280000, 2330000, 2390000, 2440000, 2456000]
+      },
+      {
+        "id": "ai",
+        "name": "AI应用",
+        "color": "#8B5CF6",
+        "values": [1520000, 1560000, 1600000, 1620000, 1640000, 1654000]
+      }
+    ]
+  }
+}

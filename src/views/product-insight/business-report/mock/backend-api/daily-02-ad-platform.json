@@ -1,0 +1,51 @@
+{
+  "_comment": "日报-广告平台。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/daily/ad-platform",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "切换到广告平台 Tab", "detail": "按当前筛选加载平台卡片" }]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-09",
+    "endDate": "2026-04-09",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "countryCode": "",
+    "account": ""
+  },
+  "sampleResponse": {
+    "platforms": [
+      {
+        "id": "google",
+        "name": "Google",
+        "adSpend": "$45,600",
+        "adSpendChange": 8.1,
+        "roi1d": "38%",
+        "roi7d": "98%"
+      },
+      {
+        "id": "facebook",
+        "name": "Facebook",
+        "adSpend": "$32,100",
+        "adSpendChange": 7.4,
+        "roi1d": "35%",
+        "roi7d": "91%"
+      },
+      {
+        "id": "unity",
+        "name": "Unity",
+        "adSpend": "$14,300",
+        "adSpendChange": 6.9,
+        "roi1d": "33%",
+        "roi7d": "90%"
+      }
+    ],
+    "appList": [
+      { "id": "overall", "name": "整体", "revenue": 152300, "revenueChange": 8.4, "profit": 108900 }
+    ]
+  }
+}

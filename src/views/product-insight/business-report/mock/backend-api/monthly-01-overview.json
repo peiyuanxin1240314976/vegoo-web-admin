@@ -1,0 +1,47 @@
+{
+  "_comment": "月报-汇总（含费用抄扣）。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/monthly/overview",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "月报 summary 加载", "detail": "首屏与筛选变化触发" }]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-30",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "countryCode": "",
+    "account": ""
+  },
+  "sampleResponse": {
+    "kpis": [{ "key": "revenue", "label": "总收入", "value": "$4,521,000", "change": 9.7 }],
+    "userMetrics": [
+      { "name": "MAU", "current": "823.4万", "previous": "788.1万", "change": "+4.5%" }
+    ],
+    "revenueMetrics": [
+      { "name": "广告收入", "current": "$3,287,000", "previous": "$2,996,000", "change": "+9.7%" }
+    ],
+    "roiMetrics": [{ "type": "30日ROI", "current": "113%", "previous": "108%", "change": "+5pp" }],
+    "retentionMetrics": [
+      { "day": "次留", "current": "42.5%", "previous": "41.9%", "change": "+0.6pp" }
+    ],
+    "feeDeductions": [
+      { "name": "Google Play 手续费", "amount": "-$45,672.00", "isPositive": false },
+      { "name": "App Store 手续费", "amount": "-$18,293.28", "isPositive": false },
+      { "name": "广告返点", "amount": "+$6,737.28", "isPositive": true }
+    ],
+    "appList": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "revenue": 4521000,
+        "revenueChange": 9.7,
+        "profit": 3234000
+      }
+    ]
+  }
+}

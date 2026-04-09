@@ -1,0 +1,60 @@
+{
+  "_comment": "月报-广告平台。",
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/monthly/ad-platform",
+    "method": "POST",
+    "priority": "P0"
+  },
+  "interaction": {
+    "triggers": [{ "moment": "切换月报广告平台 Tab", "detail": "按月聚合加载平台卡片" }]
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-30",
+    "appId": "",
+    "platform": "",
+    "source": "",
+    "countryCode": "",
+    "account": ""
+  },
+  "sampleResponse": {
+    "platforms": [
+      {
+        "id": "google",
+        "name": "Google",
+        "adSpend": "$1,245,600",
+        "adSpendChange": 8.1,
+        "roi1d": "38%",
+        "roi7d": "98%",
+        "roi14d": "101%"
+      },
+      {
+        "id": "facebook",
+        "name": "Facebook",
+        "adSpend": "$921,300",
+        "adSpendChange": 7.4,
+        "roi1d": "35%",
+        "roi7d": "91%",
+        "roi14d": "96%"
+      },
+      {
+        "id": "unity",
+        "name": "Unity",
+        "adSpend": "$402,700",
+        "adSpendChange": 6.9,
+        "roi1d": "33%",
+        "roi7d": "90%",
+        "roi14d": "95%"
+      }
+    ],
+    "appList": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "revenue": 4521000,
+        "revenueChange": 9.7,
+        "profit": 3234000
+      }
+    ]
+  }
+}
