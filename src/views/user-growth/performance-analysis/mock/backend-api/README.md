@@ -8,7 +8,7 @@
 
 ## 公用驾驶舱顶栏 meta（无本目录 JSON）
 
-与同构顶栏配套时数据来自 **`useCockpitMetaFilterStore().data`**，勿在本目录建 `*meta-filter-options*.json`。说明见 `src/views/user-growth/paid-analysis/mock/backend-api/README.md` 附录 A。
+与同构顶栏配套时数据来自 `**useCockpitMetaFilterStore().data**`，勿在本目录建 `*meta-filter-options*.json`。说明见 `src/views/user-growth/paid-analysis/mock/backend-api/README.md` 附录 A。
 
 列表页独有筛选项见 `01-list-filter-options.json`（非 cockpit GET）。
 
