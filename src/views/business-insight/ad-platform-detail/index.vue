@@ -96,6 +96,7 @@
       query: {
         'platform-name': route.query['platform-name'],
         app: row.app,
+        appId: row.appId,
         ...(source ? { source } : sourceLabel ? { sourceLabel } : {})
       }
     })
@@ -112,6 +113,8 @@
   }
 
   interface AppRow {
+    /** 自有应用 ID，与子页接口请求体 `appId` 一致 */
+    appId: string
     app: string
     revenue: string
     revenueShare: string
@@ -213,6 +216,7 @@
   // ─── Table Data ───────────────────────────────────────────────────────────────
   const INITIAL_TABLE: AppRow[] = [
     {
+      appId: 'app-weather8',
       app: 'Weather8',
       revenue: '$850K',
       revenueShare: '75%',
@@ -221,6 +225,7 @@
       impressions: '302M'
     },
     {
+      appId: 'app-phonetracker2',
       app: 'PhoneTracker2',
       revenue: '$620K',
       revenueShare: '68%',
@@ -229,6 +234,7 @@
       impressions: '81M'
     },
     {
+      appId: 'app-batterymax',
       app: 'BatteryMax',
       revenue: '$380K',
       revenueShare: '52%',
@@ -237,6 +243,7 @@
       impressions: '302M'
     },
     {
+      appId: 'app-cleanmaster',
       app: 'CleanMaster',
       revenue: '$180K',
       revenueShare: '38%',
@@ -245,6 +252,7 @@
       impressions: '81M'
     },
     {
+      appId: 'app-speedbooster',
       app: 'SpeedBooster',
       revenue: '$125K',
       revenueShare: '29%',
@@ -253,6 +261,7 @@
       impressions: '302M'
     },
     {
+      appId: 'app-vpn-shield',
       app: 'VPN Shield',
       revenue: '$850K',
       revenueShare: '75%',
@@ -261,6 +270,7 @@
       impressions: '81M'
     },
     {
+      appId: 'app-file-manager',
       app: 'File Manager',
       revenue: '$620K',
       revenueShare: '61%',
@@ -365,6 +375,7 @@
 
   function mapAppRecordToRow(r: AdPlatformDetailAppRow): AppRow {
     return {
+      appId: r.appId,
       app: r.app,
       revenue: formatUsdTable(r.revenue),
       revenueShare: `${r.percent.toLocaleString('en-US', {

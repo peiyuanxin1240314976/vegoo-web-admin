@@ -433,6 +433,13 @@
     safeDecodeURIComponent(querySourceLabelString(route.query.app).trim())
   )
 
+  /** 接口请求体 `appId`：优先 `query.appId`（列表行自有 ID），兼容仅传 `query.app`（展示名或历史） */
+  const routeAppIdForApi = computed(() => {
+    const byId = safeDecodeURIComponent(querySourceLabelString(route.query.appId).trim())
+    if (byId) return byId
+    return routeAppQueryDecoded.value
+  })
+
   /** 应用由路由 `query.app` 固定，不提供筛选；展示名即入参原文或后续接口回填 */
   const selectedAppDisplayName = computed(() => routeAppQueryDecoded.value || '应用')
 
@@ -893,7 +900,7 @@
     pendingQuery.value = true
     try {
       const { startDate, endDate } = resolveDateRangeYmd()
-      const appId = routeAppQueryDecoded.value || ''
+      const appId = routeAppIdForApi.value || ''
       const sourceStr =
         querySourceLabelString(route.query.source).trim() ||
         querySourceLabelString(route.query.sourceLabel).trim()
