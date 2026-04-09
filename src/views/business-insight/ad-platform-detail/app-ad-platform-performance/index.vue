@@ -189,50 +189,6 @@
           </div>
           <div ref="chartRef" class="echarts-container" />
         </div>
-
-        <!-- 瀑布流设置 -->
-        <div class="waterfall-panel">
-          <h3 class="panel-title">瀑布流设置</h3>
-          <el-tabs v-model="waterfallTab" class="custom-tabs">
-            <el-tab-pane label="横幅" name="banner" />
-            <el-tab-pane label="插屏" name="interstitial" />
-            <el-tab-pane label="激励" name="rewarded" />
-            <el-tab-pane label="其他" name="other" />
-          </el-tabs>
-          <div class="waterfall-grid">
-            <div
-              v-for="(item, idx) in waterfallItems[waterfallTab]"
-              :key="idx"
-              class="waterfall-item"
-              :draggable="true"
-              @dragstart="dragStart(idx)"
-              @dragover.prevent
-              @drop="dragDrop(idx)"
-              :class="{ 'drag-over': dragOverIdx === idx }"
-              @dragenter="dragOverIdx = idx"
-              @dragleave="dragOverIdx = -1"
-            >
-              <div class="drag-handle">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="4" cy="3" r="1" fill="currentColor" />
-                  <circle cx="8" cy="3" r="1" fill="currentColor" />
-                  <circle cx="4" cy="6" r="1" fill="currentColor" />
-                  <circle cx="8" cy="6" r="1" fill="currentColor" />
-                  <circle cx="4" cy="9" r="1" fill="currentColor" />
-                  <circle cx="8" cy="9" r="1" fill="currentColor" />
-                </svg>
-              </div>
-              <div class="network-icon" :style="{ background: item.color }">
-                <span>{{ item.icon }}</span>
-              </div>
-              <span class="network-name">{{ item.name }}</span>
-              <div class="item-actions">
-                <span class="item-ecpm">¥{{ item.ecpm }}</span>
-                <el-switch v-model="item.enabled" size="small" class="custom-switch" />
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- 右侧面板 -->
@@ -366,8 +322,7 @@
     fetchAppAdPlatformPerformanceAiInsights,
     fetchAppAdPlatformPerformanceOverviewKpis,
     fetchAppAdPlatformPerformanceOverviewTrend,
-    fetchAppAdPlatformPerformanceTableAdUnits,
-    fetchAppAdPlatformPerformanceWaterfall
+    fetchAppAdPlatformPerformanceTableAdUnits
   } from '@/api/ad-platform-detail'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
@@ -375,8 +330,7 @@
   import type {
     AdPlatformDetailKpiItem,
     AppAdPlatformAdUnitRow,
-    AppAdPlatformAiInsightRow,
-    WaterfallNetworkItem
+    AppAdPlatformAiInsightRow
   } from '../types'
 
   defineOptions({ name: 'AppAdPlatformPerformance' })
@@ -387,20 +341,34 @@
   const cockpitMetaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
 
-  function normalizeMetaOptions(list: CockpitMetaOptionItem[]): CockpitMetaOptionItem[] {
-    return list.map((o) => ({
-      ...o,
-      value: o.value === 'all' ? '' : o.value
-    }))
+  /** UI 选「全部」用 `all`，与接口 `countryCode` 空串区分，便于 el-select 选中 */
+  function toUiCountryValue(value: string): string {
+    return value === '' || value === 'all' ? 'all' : value
   }
 
-  function fallbackMetaOptions(label: string): CockpitMetaOptionItem[] {
-    return [{ label, value: '' }]
+  function toApiCountryCode(value: string): string {
+    return value === 'all' ? '' : value
+  }
+
+  function normalizeCountryOptions(list: CockpitMetaOptionItem[]): CockpitMetaOptionItem[] {
+    const normalized = list.map((o) => ({
+      ...o,
+      value: toUiCountryValue(o.value)
+    }))
+    const deduped = normalized.filter(
+      (item, idx, arr) => arr.findIndex((x) => x.value === item.value) === idx
+    )
+    if (deduped.some((o) => o.value === 'all')) return deduped
+    return [{ label: '全部', value: 'all' }, ...deduped]
+  }
+
+  function fallbackCountryOptions(): CockpitMetaOptionItem[] {
+    return [{ label: '全部', value: 'all' }]
   }
 
   const countryBarOptions = computed(() => {
     const list = cockpitMeta.value?.countryOptions
-    return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部国家')
+    return list?.length ? normalizeCountryOptions(list) : fallbackCountryOptions()
   })
 
   function querySourceLabelString(
@@ -476,8 +444,8 @@
   const initialDateRange = buildDefaultDateRangeStrings()
   /** `YYYY-MM-DD` 起止；与接口 `startDate` / `endDate` 一致 */
   const dateRange = ref<[string, string] | null>(initialDateRange)
-  /** 与 meta `countryOptions` 的 value 对齐，「全部」为 `""` */
-  const countryFilter = ref('')
+  /** 与 `countryBarOptions` 对齐，「全部」为 UI 值 `all`；请求前用 `toApiCountryCode` 映射为 `""` */
+  const countryFilter = ref('all')
 
   // ─── KPI（契约字段驱动）──────────────────────────────────────────
   const INITIAL_APP_KPIS: AdPlatformDetailKpiItem[] = [
@@ -729,51 +697,6 @@
     chartInstance.setOption(buildAppPerfChartOption())
   }
 
-  // ─── 瀑布流 ───────────────────────────────────────────────────
-  const waterfallTab = ref('banner')
-  const dragIdx = ref(-1)
-  const dragOverIdx = ref(-1)
-
-  function createEmptyWaterfallItems(): Record<string, WaterfallNetworkItem[]> {
-    return { banner: [], interstitial: [], rewarded: [], other: [] }
-  }
-
-  const waterfallItems = ref<Record<string, WaterfallNetworkItem[]>>({
-    banner: [
-      { name: 'AppLovin', icon: 'A', color: '#e85d04', ecpm: '3.80', enabled: true },
-      { name: 'AppLovin', icon: 'A', color: '#e85d04', ecpm: '3.50', enabled: true },
-      { name: 'Facebook', icon: 'F', color: '#1877f2', ecpm: '3.20', enabled: false },
-      { name: 'Unity Ads', icon: 'U', color: '#222c37', ecpm: '2.90', enabled: true }
-    ],
-    interstitial: [
-      { name: 'AdMob', icon: 'G', color: '#4285f4', ecpm: '4.20', enabled: true },
-      { name: 'IronSource', icon: 'I', color: '#00b4d8', ecpm: '3.80', enabled: true },
-      { name: 'AppLovin', icon: 'A', color: '#e85d04', ecpm: '3.60', enabled: true },
-      { name: 'Unity Ads', icon: 'U', color: '#222c37', ecpm: '3.10', enabled: false }
-    ],
-    rewarded: [
-      { name: 'AppLovin', icon: 'A', color: '#e85d04', ecpm: '7.50', enabled: true },
-      { name: 'Unity Ads', icon: 'U', color: '#222c37', ecpm: '6.80', enabled: true },
-      { name: 'IronSource', icon: 'I', color: '#00b4d8', ecpm: '6.20', enabled: true }
-    ],
-    other: [
-      { name: 'Google Ads', icon: 'G', color: '#4285f4', ecpm: '2.10', enabled: true },
-      { name: 'Facebook', icon: 'F', color: '#1877f2', ecpm: '1.90', enabled: false }
-    ]
-  })
-
-  function dragStart(idx: number) {
-    dragIdx.value = idx
-  }
-  function dragDrop(targetIdx: number) {
-    if (dragIdx.value < 0 || dragIdx.value === targetIdx) return
-    const list = waterfallItems.value[waterfallTab.value]
-    const moved = list.splice(dragIdx.value, 1)[0]
-    list.splice(targetIdx, 0, moved)
-    dragIdx.value = -1
-    dragOverIdx.value = -1
-  }
-
   // ─── 广告位表格 ───────────────────────────────────────────────
   const hoverRow = ref(-1)
   const adUnitData = ref<AppAdPlatformAdUnitRow[]>([
@@ -908,14 +831,13 @@
         startDate,
         endDate,
         appId,
-        countryCode: countryFilter.value,
+        countryCode: toApiCountryCode(countryFilter.value),
         ...(sourceStr ? { source: safeDecodeURIComponent(sourceStr) } : {})
       }
 
-      const [kpiR, trendR, wfR, tableR, aiR] = await Promise.allSettled([
+      const [kpiR, trendR, tableR, aiR] = await Promise.allSettled([
         fetchAppAdPlatformPerformanceOverviewKpis(body),
         fetchAppAdPlatformPerformanceOverviewTrend(body),
-        fetchAppAdPlatformPerformanceWaterfall(body),
         fetchAppAdPlatformPerformanceTableAdUnits(body),
         fetchAppAdPlatformPerformanceAiInsights(body)
       ])
@@ -937,19 +859,6 @@
       } else {
         console.error(trendR.reason)
         ElMessage.error('核心指标趋势加载失败')
-      }
-
-      if (wfR.status === 'fulfilled') {
-        const w = wfR.value?.waterfallByTab
-        if (w && typeof w === 'object' && !Array.isArray(w)) {
-          const safe = JSON.parse(JSON.stringify(w)) as Record<string, WaterfallNetworkItem[]>
-          waterfallItems.value = { ...createEmptyWaterfallItems(), ...safe }
-        } else {
-          waterfallItems.value = createEmptyWaterfallItems()
-        }
-      } else {
-        console.error(wfR.reason)
-        ElMessage.error('瀑布流加载失败')
       }
 
       if (tableR.status === 'fulfilled') {
@@ -1811,160 +1720,6 @@
   }
 
   /* ═══════════════════════════════════════════════
-   瀑布流设置
-═══════════════════════════════════════════════ */
-  .waterfall-panel {
-    padding: 18px 16px;
-    background:
-      radial-gradient(
-        circle at 14% 10%,
-        color-mix(in srgb, var(--art-primary) 12%, transparent) 0%,
-        transparent 60%
-      ),
-      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, var(--default-border));
-    border-radius: var(--radius-lg);
-    box-shadow:
-      0 12px 40px rgb(0 0 0 / 44%),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 10%, transparent);
-    transition:
-      transform 0.32s cubic-bezier(0, 0, 0.2, 1),
-      box-shadow 0.32s cubic-bezier(0, 0, 0.2, 1),
-      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .waterfall-panel:hover {
-    border-color: color-mix(in srgb, var(--art-primary) 32%, var(--default-border));
-    box-shadow:
-      0 20px 52px -14px rgb(0 0 0 / 62%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 16%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-primary) 12%, transparent),
-      0 0 44px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateY(-4px);
-  }
-
-  /* Tabs 深色适配 */
-  :deep(.custom-tabs .el-tabs__nav-wrap::after) {
-    display: none;
-  }
-
-  :deep(.custom-tabs .el-tabs__header) {
-    margin-bottom: 14px;
-  }
-
-  :deep(.custom-tabs .el-tabs__nav-wrap) {
-    border-bottom: 1px solid var(--border);
-  }
-
-  :deep(.custom-tabs .el-tabs__item) {
-    height: 32px;
-    padding: 0 14px;
-    font-size: 12px;
-    color: var(--text-muted) !important;
-  }
-
-  :deep(.custom-tabs .el-tabs__item.is-active) {
-    color: var(--text-primary) !important;
-  }
-
-  :deep(.custom-tabs .el-tabs__active-bar) {
-    background: var(--accent-blue) !important;
-  }
-
-  .waterfall-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 8px;
-  }
-
-  .waterfall-item {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    padding: 8px 10px;
-    cursor: grab;
-    user-select: none;
-    background: rgb(255 255 255 / 3%);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, var(--default-border));
-    border-radius: var(--radius-md);
-    transition:
-      background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
-      transform 0.2s cubic-bezier(0, 0, 0.2, 1);
-  }
-
-  .waterfall-item:hover {
-    background: var(--bg-hover);
-    border-color: color-mix(in srgb, var(--art-primary) 26%, var(--default-border));
-    box-shadow:
-      0 12px 34px -16px rgb(0 0 0 / 58%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 14%, transparent),
-      0 0 26px -10px color-mix(in srgb, var(--art-primary) 14%, transparent);
-    transform: translateY(-2px);
-  }
-
-  .waterfall-item:active {
-    cursor: grabbing;
-  }
-
-  .waterfall-item.drag-over {
-    background: color-mix(in srgb, var(--art-primary) 10%, transparent);
-    border-color: color-mix(in srgb, var(--art-primary) 40%, var(--default-border));
-    transform: scale(1.01);
-  }
-
-  .drag-handle {
-    flex-shrink: 0;
-    color: var(--text-muted);
-    opacity: 0.5;
-  }
-
-  .network-icon {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #fff;
-    border-radius: 6px;
-  }
-
-  .network-name {
-    flex: 1;
-    overflow: hidden;
-    font-size: 12px;
-    color: var(--text-primary);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .item-actions {
-    display: flex;
-    flex-shrink: 0;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .item-ecpm {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent-green);
-  }
-
-  :deep(.custom-switch .el-switch__core) {
-    background: rgb(255 255 255 / 10%) !important;
-    border-color: transparent !important;
-  }
-
-  :deep(.custom-switch.is-checked .el-switch__core) {
-    background: var(--accent-blue) !important;
-  }
-
-  /* ═══════════════════════════════════════════════
    广告位表格
 ═══════════════════════════════════════════════ */
   .table-panel {
@@ -2299,10 +2054,6 @@
     .right-panel {
       grid-template-columns: 1fr;
     }
-
-    .waterfall-grid {
-      grid-template-columns: 1fr;
-    }
   }
 
   @media (width <= 600px) {
@@ -2339,10 +2090,8 @@
 
     .kpi-card,
     .chart-panel,
-    .waterfall-panel,
     .table-panel,
     .ai-insight-panel,
-    .waterfall-item,
     .filter-query-btn,
     .back-btn,
     :deep(.custom-select .el-input__wrapper),
@@ -2353,10 +2102,8 @@
     .kpi-card:hover,
     .kpi-card:active,
     .chart-panel:hover,
-    .waterfall-panel:hover,
     .table-panel:hover,
-    .ai-insight-panel:hover,
-    .waterfall-item:hover {
+    .ai-insight-panel:hover {
       filter: none !important;
       box-shadow: none !important;
       transform: none !important;
