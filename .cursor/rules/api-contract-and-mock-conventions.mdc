@@ -11,6 +11,7 @@ alwaysApply: true
 
 - **`mock/backend-api/*.json` 为接口契约的源文件**：由**前端**在仓库内维护，在 JSON 中定义 `fieldDescription`（请求/响应字段说明）、`sampleRequest`、`sampleResponse`、`api`（路径、方法、requestBody/responseBody 摘要）等。**后端按该契约实现**接口路径、入参、出参结构与语义，**不是**由后端先定一套字段再要求前端改契约迁就。
 - **联调顺序建议**：先有契约 JSON（及同目录 `README.md` 接口清单）→ 前端 `types.ts` / `src/api/*.ts` 与契约对齐 → 后端按 JSON 开发与自测 → 前后端联调。
+- **不阻塞主流程（强制）**：对接/整理契约时，必须保证页面在 **接口未返回、返回为空、或请求失败** 的情况下依然能进入并完成主流程的浏览/操作路径（至少能看到完整 UI 框架 + 合理空态/占位），禁止把页面“是否可用”绑定到接口“必须有数据”这一前提上。
 - **变更流程**：增删改字段或业务含义时，须**前后端协商一致**后，**优先更新契约 JSON**（及 README），再同步改前端类型与请求封装、Mock、后端实现；禁止长期存在「文档一套、接口一套、前端一套」。
 - **字段与数据字典**：新建或修订契约 JSON 时，**逐字段**对照 `.cursor/rules/backend-fields.mdc`：`fieldDescription` 与 `sampleRequest` / `sampleResponse` 中的字段名、业务含义须可映射到字典；无法映射时须在 `_comment` 或 `mock/backend-api/README.md` 说明，并推动补全字典条目。
 - **契约键名（驼峰 · 禁止下划线）**：`sampleRequest` / `sampleResponse` / `fieldDescription` 所涉**业务字段键名**须 **camelCase**，**不得**含 `_`（禁止 `s_*`、`n_*`、`date_start`、`request_quantity` 等）；细则见 **`backend-fields.mdc`**「接口契约与 HTTP JSON 命名」。
@@ -25,6 +26,27 @@ alwaysApply: true
   - **Mock / 契约（禁止重复 JSON）**：凡顶栏筛选与上述接口 **同构**（仅依赖 `appOptions`、`platformOptions`、`sourceOptions`、`countryOptions` 等公用形态），**不得**在该模块 `mock/backend-api` 再新增 `*meta-filter-options*.json` 或等价重复契约。**仅在** 模块 `mock/backend-api/README.md`（及需要时在 `mock/README.md`）中 **用表格一行 + 附录/引用** 标注：接口 URL、`fetch*` 名、**无独立 JSON**、说明详见 **付费分析 `backend-api/README.md` 附录 A**。整理契约时 **不** 为该机造「占位 JSON」凑数。
   - **例外**：若某页顶栏在公用四类之外还有 **本页独有** 筛选项（如转化类型、商品类型），**仅** 为 **独有维度** 维护独立契约 JSON（独立 endpoint）；**仍不得** 把与 cockpit 同构的四类选项再复制进该 JSON 或另建「整页 meta」重复契约。
   - **驾驶舱视图**：勿为 `src/views/cockpit` 在 mock 目录 **额外** 增改仅服务于同构顶栏的契约；顶栏联调以上述公用接口与类型为准。
+
+## 七、非阻塞主流程与空数据策略（强制）
+
+> 目标：接口联调期间/线上异常时，页面仍能展示与操作，不因“暂无数据”或“接口未就绪”阻塞主流程。
+
+### 7.1 契约层（backend-api JSON）必须描述「空数据」与「失败兜底」
+
+- **空数据形态（必须明确）**：对所有列表/表格/图表接口，在 `fieldDescription.response`（或 `apiSuggestion.notes`）中写清：
+  - 数组字段在无数据时返回 `[]`（例如 `records/items/series/options`），而不是 `null`；
+  - 计数字段在无数据时返回 `0`（例如 `total`）；
+  - 可选字段缺失/空串的语义（例如筛选条件未命中、权限不足、后端尚未接入）。
+- **示例覆盖**：
+  - `sampleResponse` 仍以“可联调的完整示例”为主（尤其表格 ≥3 条）；
+  - 若该接口存在关键 UI 分支依赖空态（例如“无匹配结果”“无权限”“首次进入无数据”），应在 `apiSuggestion` 中补充对应空态约定（必要时另加 `sampleResponseEmpty`（可选字段）描述空数据业务体结构）。
+- **保持 shape 稳定**：即使无数据，也应返回与有数据时相同的业务体结构（同名键、同层级），避免前端分支判断复杂化。
+
+### 7.2 前端对接（types / fetch / 页面）必须做到「不阻塞」
+
+- **默认值兜底（必须）**：页面/组件状态初始化时给出可渲染的默认结构（如 `records: []`、`total: 0`、图表 `categories: [] / series: []` 等），避免 `undefined` 导致渲染报错。
+- **加载与空态**：接口加载时允许展示骨架屏/占位；接口返回空数组时展示空态，但 **页面布局与筛选区/Tab/操作按钮** 不应消失。
+- **错误降级**：请求失败应可提示错误（toast/空态文案均可），但不得阻塞用户继续切换 Tab、修改筛选或再次发起查询。
 
 ## 一、接口地址抽象：路由 → 模块 → 功能
 
