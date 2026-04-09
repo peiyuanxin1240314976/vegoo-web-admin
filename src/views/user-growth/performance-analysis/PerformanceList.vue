@@ -84,7 +84,32 @@
 
         <!-- Table -->
         <div class="table-wrap pa-neon-table-wrap pa-entry-3">
+          <div v-if="listLoading" class="pa-skeleton-table" aria-label="表格加载中">
+            <ElSkeleton animated>
+              <template #template>
+                <div class="pa-skeleton-table__header">
+                  <ElSkeletonItem variant="text" class="sk sk-w-24" />
+                  <ElSkeletonItem variant="text" class="sk sk-w-40" />
+                  <ElSkeletonItem variant="text" class="sk sk-w-28" />
+                  <ElSkeletonItem variant="text" class="sk sk-w-36" />
+                  <ElSkeletonItem variant="text" class="sk sk-w-32" />
+                  <ElSkeletonItem variant="text" class="sk sk-w-28" />
+                </div>
+                <div class="pa-skeleton-table__rows">
+                  <div v-for="i in 10" :key="i" class="pa-skeleton-table__row">
+                    <ElSkeletonItem variant="text" class="sk sk-w-18" />
+                    <ElSkeletonItem variant="text" class="sk sk-w-46" />
+                    <ElSkeletonItem variant="text" class="sk sk-w-22" />
+                    <ElSkeletonItem variant="text" class="sk sk-w-30" />
+                    <ElSkeletonItem variant="text" class="sk sk-w-26" />
+                    <ElSkeletonItem variant="text" class="sk sk-w-24" />
+                  </div>
+                </div>
+              </template>
+            </ElSkeleton>
+          </div>
           <ArtTable
+            v-else
             :data="pagedData"
             row-key="id"
             size="small"
@@ -238,44 +263,84 @@
         </div>
         <div v-show="!isSidebarCollapsed" class="sidebar-content">
           <div class="metric-card pa-neon-lift-card">
-            <div class="metric-title">团队广告支出</div>
-            <div class="metric-main-row">
-              <div class="metric-val">${{ fmt(overviewMetrics.adSpend) }}</div>
-              <div class="metric-side">
-                <span>周环比</span>
-                <span class="pos-text">+8%</span>
-              </div>
-            </div>
+            <ElSkeleton :loading="overviewLoading" animated>
+              <template #template>
+                <ElSkeletonItem variant="text" class="sk sk-w-32" />
+                <ElSkeletonItem variant="h1" class="sk sk-w-44 sk-mt-8" />
+                <ElSkeletonItem variant="text" class="sk sk-w-28 sk-mt-10" />
+              </template>
+              <template #default>
+                <div class="metric-title">团队广告支出</div>
+                <div class="metric-main-row">
+                  <div class="metric-val">${{ fmt(overviewMetrics.adSpend) }}</div>
+                  <div class="metric-side">
+                    <span>周环比</span>
+                    <span class="pos-text">+8%</span>
+                  </div>
+                </div>
+              </template>
+            </ElSkeleton>
           </div>
           <div class="metric-card pa-neon-lift-card">
-            <div class="metric-title">首日ROI均值</div>
-            <div class="metric-main-row">
-              <div class="metric-val gold-text">{{ overviewMetrics.avgRoi1.toFixed(2) }}%</div>
-              <div class="metric-badge-inline">{{ overviewMetrics.roiStatusLabel }}</div>
-            </div>
+            <ElSkeleton :loading="overviewLoading" animated>
+              <template #template>
+                <ElSkeletonItem variant="text" class="sk sk-w-28" />
+                <ElSkeletonItem variant="h1" class="sk sk-w-40 sk-mt-8" />
+                <ElSkeletonItem variant="text" class="sk sk-w-22 sk-mt-10" />
+              </template>
+              <template #default>
+                <div class="metric-title">首日ROI均值</div>
+                <div class="metric-main-row">
+                  <div class="metric-val gold-text">{{ overviewMetrics.avgRoi1.toFixed(2) }}%</div>
+                  <div class="metric-badge-inline">{{ overviewMetrics.roiStatusLabel }}</div>
+                </div>
+              </template>
+            </ElSkeleton>
           </div>
           <div class="metric-card pa-neon-lift-card">
-            <div class="metric-title">团队预估利润</div>
-            <div class="metric-main-row">
-              <div
-                :class="['metric-val', overviewMetrics.estProfit >= 0 ? 'pos-text' : 'red-text']"
-              >
-                {{ overviewMetrics.estProfit >= 0 ? '+' : '-' }}${{
-                  fmt(Math.abs(overviewMetrics.estProfit))
-                }}
-              </div>
-              <div class="metric-side">
-                <span>周环比</span>
-                <span class="pos-text">+12%</span>
-              </div>
-            </div>
+            <ElSkeleton :loading="overviewLoading" animated>
+              <template #template>
+                <ElSkeletonItem variant="text" class="sk sk-w-30" />
+                <ElSkeletonItem variant="h1" class="sk sk-w-46 sk-mt-8" />
+                <ElSkeletonItem variant="text" class="sk sk-w-24 sk-mt-10" />
+              </template>
+              <template #default>
+                <div class="metric-title">团队预估利润</div>
+                <div class="metric-main-row">
+                  <div
+                    :class="[
+                      'metric-val',
+                      overviewMetrics.estProfit >= 0 ? 'pos-text' : 'red-text'
+                    ]"
+                  >
+                    {{ overviewMetrics.estProfit >= 0 ? '+' : '-' }}${{
+                      fmt(Math.abs(overviewMetrics.estProfit))
+                    }}
+                  </div>
+                  <div class="metric-side">
+                    <span>周环比</span>
+                    <span class="pos-text">+12%</span>
+                  </div>
+                </div>
+              </template>
+            </ElSkeleton>
           </div>
           <div class="metric-card pa-neon-lift-card alert-card">
-            <div class="metric-title">未达标人员</div>
-            <div class="metric-main-row metric-main-col">
-              <div class="metric-val red-text">{{ overviewMetrics.failCount }} 人</div>
-              <div class="metric-sub red-text">{{ failNamesText }}</div>
-            </div>
+            <ElSkeleton :loading="overviewLoading" animated>
+              <template #template>
+                <ElSkeletonItem variant="text" class="sk sk-w-26" />
+                <ElSkeletonItem variant="h1" class="sk sk-w-24 sk-mt-8" />
+                <ElSkeletonItem variant="text" class="sk sk-w-56 sk-mt-10" />
+                <ElSkeletonItem variant="text" class="sk sk-w-46 sk-mt-6" />
+              </template>
+              <template #default>
+                <div class="metric-title">未达标人员</div>
+                <div class="metric-main-row metric-main-col">
+                  <div class="metric-val red-text">{{ overviewMetrics.failCount }} 人</div>
+                  <div class="metric-sub red-text">{{ failNamesText }}</div>
+                </div>
+              </template>
+            </ElSkeleton>
           </div>
         </div>
       </div>
@@ -378,6 +443,10 @@
   const currentPage = ref(1)
   const pageSize = ref(20)
   const isSidebarCollapsed = ref(false)
+  const filterOptionsLoading = ref(false)
+  const listLoading = ref(false)
+  const overviewLoading = ref(false)
+  let loadSeq = 0
 
   // ─── Computed ────────────────────────────────────────────
   const failNamesText = computed(() => {
@@ -592,18 +661,39 @@
   }
 
   async function loadFilterOptions() {
+    const seq = ++loadSeq
     const [startDate, endDate] = getActiveDateRange()
-    const res = await fetchPerformanceListFilterOptions({ startDate, endDate })
-    personOptions.value = res.personOptions
-    appCategoryOptions.value = res.appCategoryOptions
-    statusOptions.value = res.statusOptions
+    filterOptionsLoading.value = true
+    try {
+      const res = await fetchPerformanceListFilterOptions({ startDate, endDate })
+      if (seq !== loadSeq) return
+      personOptions.value = res.personOptions
+      appCategoryOptions.value = res.appCategoryOptions
+      statusOptions.value = res.statusOptions
+    } finally {
+      if (seq === loadSeq) filterOptionsLoading.value = false
+    }
   }
 
-  async function loadListAndOverview() {
+  async function loadList(seq: number) {
     const body = buildListRequest()
-    const [listRes, metricsRes] = await Promise.all([
-      fetchPerformanceList(body),
-      fetchPerformanceOverviewMetrics({
+    listLoading.value = true
+    try {
+      const listRes = await fetchPerformanceList(body)
+      if (seq !== loadSeq) return
+      tableRows.value = listRes.list
+      tableTotal.value = listRes.total
+      tableTotals.value = listRes.totals
+    } finally {
+      if (seq === loadSeq) listLoading.value = false
+    }
+  }
+
+  async function loadOverview(seq: number) {
+    const body = buildListRequest()
+    overviewLoading.value = true
+    try {
+      const metricsRes = await fetchPerformanceOverviewMetrics({
         startDate: body.startDate,
         endDate: body.endDate,
         personFilter: body.personFilter,
@@ -611,31 +701,37 @@
         statusFilter: body.statusFilter,
         keyword: body.keyword
       })
-    ])
-    tableRows.value = listRes.list
-    tableTotal.value = listRes.total
-    tableTotals.value = listRes.totals
-    overviewMetrics.value = metricsRes
+      if (seq !== loadSeq) return
+      overviewMetrics.value = metricsRes
+    } finally {
+      if (seq === loadSeq) overviewLoading.value = false
+    }
+  }
+
+  function loadListAndOverview() {
+    const seq = ++loadSeq
+    void loadList(seq)
+    void loadOverview(seq)
   }
 
   onMounted(async () => {
     await loadFilterOptions()
-    await loadListAndOverview()
+    loadListAndOverview()
   })
 
   watch([activeDateRange, customDateRangeValue], async () => {
     currentPage.value = 1
     await loadFilterOptions()
-    await loadListAndOverview()
+    loadListAndOverview()
   })
 
   watch([activePersonFilter, activeAppFilter, activeStatusFilter, searchKw], async () => {
     currentPage.value = 1
-    await loadListAndOverview()
+    loadListAndOverview()
   })
 
   watch([currentPage, pageSize, sortField, sortAsc], async () => {
-    await loadListAndOverview()
+    loadListAndOverview()
   })
 </script>
 
@@ -815,6 +911,107 @@
       background: color-mix(in srgb, var(--art-primary) 14%, transparent);
       border-radius: 9999px;
     }
+  }
+
+  .pa-skeleton-table {
+    height: 100%;
+    padding: 14px 14px 18px;
+    background: color-mix(in srgb, var(--default-box-color) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+    border-radius: 14px;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 8%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--art-gray-900) 8%, transparent);
+  }
+
+  .pa-skeleton-table__header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 6px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+  }
+
+  .pa-skeleton-table__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 12px;
+  }
+
+  .pa-skeleton-table__row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 6px;
+    background: color-mix(in srgb, var(--default-bg-color) 25%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border-radius: 10px;
+  }
+
+  .sk {
+    height: 12px;
+    border-radius: 9999px;
+  }
+
+  .sk-mt-6 {
+    margin-top: 6px;
+  }
+
+  .sk-mt-8 {
+    margin-top: 8px;
+  }
+
+  .sk-mt-10 {
+    margin-top: 10px;
+  }
+
+  .sk-w-18 {
+    width: 18%;
+  }
+
+  .sk-w-22 {
+    width: 22%;
+  }
+
+  .sk-w-24 {
+    width: 24%;
+  }
+
+  .sk-w-26 {
+    width: 26%;
+  }
+
+  .sk-w-28 {
+    width: 28%;
+  }
+
+  .sk-w-30 {
+    width: 30%;
+  }
+
+  .sk-w-32 {
+    width: 32%;
+  }
+
+  .sk-w-36 {
+    width: 36%;
+  }
+
+  .sk-w-40 {
+    width: 40%;
+  }
+
+  .sk-w-44 {
+    width: 44%;
+  }
+
+  .sk-w-46 {
+    width: 46%;
+  }
+
+  .sk-w-56 {
+    width: 56%;
   }
 
   .th-sortable {

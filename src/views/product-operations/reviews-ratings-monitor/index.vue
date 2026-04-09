@@ -23,20 +23,8 @@
 
   /** 已应用条件（传入子组件，仅点「查询」后更新） */
   const appliedFilters = reactive<GlobalFilter>(createDefaultFilter())
-  /** 表单草稿（与 applied 对比得到 isDirty） */
+  /** 表单草稿（用于编辑筛选条件） */
   const draftFilters = reactive<GlobalFilter>({ ...createDefaultFilter() })
-
-  const isDirty = computed(() => {
-    const a = appliedFilters
-    const d = draftFilters
-    return (
-      String(a.appId) !== String(d.appId) ||
-      String(a.platform) !== String(d.platform) ||
-      String(a.startDate ?? '') !== String(d.startDate ?? '') ||
-      String(a.endDate ?? '') !== String(d.endDate ?? '') ||
-      String(a.language) !== String(d.language)
-    )
-  })
 
   function onQuery() {
     Object.assign(appliedFilters, draftFilters)
@@ -201,7 +189,6 @@
           <ElButton
             round
             class="rrm-filter-action-btn rrm-filter-action-btn--query"
-            :disabled="!isDirty"
             @click="onQuery"
           >
             查询

@@ -19,7 +19,7 @@ import type {
   ThirdPartyStoresPlatformFixAuthResponse
 } from '../types'
 
-const BASE_URL = '/api/product-operations/third-party-stores'
+const BASE_URL = '/api/v1/datacenter/analysis/product-operations/third-party-stores'
 
 export type { ThirdPartyStoresDashboardPayload, ThirdPartyStoresQueryParams } from '../types'
 
