@@ -22,11 +22,16 @@
       <div class="filters filters-panel">
         <div class="filter-item filter-field">
           <span class="filter-label">日期范围</span>
-          <el-select v-model="dateRange" class="custom-select filter-select filter-select--date">
-            <el-option label="2025年12月01日 - 2025年12月31日" value="2025-12" />
-            <el-option label="2025年11月01日 - 2025年11月30日" value="2025-11" />
-            <el-option label="2025年10月01日 - 2025年10月31日" value="2025-10" />
-          </el-select>
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            unlink-panels
+            class="filter-date-picker filter-select--date"
+          />
         </div>
         <div class="filter-item filter-field">
           <span class="filter-label">国家</span>
@@ -435,21 +440,35 @@
     () => `${selectedAppDisplayName.value}在${platformTitlePart.value}中的表现详情`
   )
 
+  /** 回到父页，示例：`/business-insight/ad-platform-detail?platform-name=Liftoff&source=8` */
   function goBack() {
-    const sourceStr = querySourceLabelString(route.query.source)
-    const sourceLabelStr = querySourceLabelString(route.query.sourceLabel)
+    const source = querySourceLabelString(route.query.source).trim()
+    const sourceLabel = querySourceLabelString(route.query.sourceLabel).trim()
+    const platformName = querySourceLabelString(route.query['platform-name']).trim()
+
+    const query: Record<string, string> = {}
+    if (platformName) query['platform-name'] = platformName
+    if (source) query.source = source
+    else if (sourceLabel) query.sourceLabel = sourceLabel
+
     router.push({
-      name: 'AdPlatformDetail',
-      query: sourceStr
-        ? { source: sourceStr }
-        : sourceLabelStr
-          ? { sourceLabel: sourceLabelStr }
-          : {}
+      path: '/business-insight/ad-platform-detail',
+      query
     })
   }
 
   // ─── 筛选器状态（仅日期 + 国家；应用固定为路由 query.app）────────────────
-  const dateRange = ref('2025-12')
+  function buildDefaultDateRangeStrings(): [string, string] {
+    const end = cloneAppDate(getAppNow())
+    end.setHours(0, 0, 0, 0)
+    const start = cloneAppDate(end)
+    start.setDate(end.getDate() - 29)
+    return [formatYYYYMMDD(start), formatYYYYMMDD(end)]
+  }
+
+  const initialDateRange = buildDefaultDateRangeStrings()
+  /** `YYYY-MM-DD` 起止；与接口 `startDate` / `endDate` 一致 */
+  const dateRange = ref<[string, string] | null>(initialDateRange)
   /** 与 meta `countryOptions` 的 value 对齐，「全部」为 `""` */
   const countryFilter = ref('')
 
@@ -855,31 +874,25 @@
   const pendingQuery = ref(false)
 
   const appliedFilters = ref({
-    dateRange: dateRange.value,
+    startDate: initialDateRange[0],
+    endDate: initialDateRange[1],
     countryFilter: countryFilter.value
   })
 
-  function resolveMonthRangeYmd(ym: string): { startDate: string; endDate: string } {
-    const m = /^(\d{4})-(\d{2})$/.exec(ym.trim())
-    if (!m) {
-      const end = cloneAppDate(getAppNow())
-      end.setHours(0, 0, 0, 0)
-      const start = cloneAppDate(end)
-      start.setDate(end.getDate() - 29)
-      return { startDate: formatYYYYMMDD(start), endDate: formatYYYYMMDD(end) }
+  function resolveDateRangeYmd(): { startDate: string; endDate: string } {
+    const dr = dateRange.value
+    if (dr && dr.length === 2 && dr[0] && dr[1]) {
+      return { startDate: dr[0], endDate: dr[1] }
     }
-    const y = Number(m[1])
-    const mo = Number(m[2])
-    const start = new Date(y, mo - 1, 1)
-    const end = new Date(y, mo, 0)
-    return { startDate: formatYYYYMMDD(start), endDate: formatYYYYMMDD(end) }
+    const [s, e] = buildDefaultDateRangeStrings()
+    return { startDate: s, endDate: e }
   }
 
   async function runQuery() {
     if (pendingQuery.value) return
     pendingQuery.value = true
     try {
-      const { startDate, endDate } = resolveMonthRangeYmd(dateRange.value)
+      const { startDate, endDate } = resolveDateRangeYmd()
       const appId = routeAppQueryDecoded.value || ''
       const sourceStr =
         querySourceLabelString(route.query.source).trim() ||
@@ -949,7 +962,8 @@
       }
 
       appliedFilters.value = {
-        dateRange: dateRange.value,
+        startDate,
+        endDate,
         countryFilter: countryFilter.value
       }
 
@@ -1150,6 +1164,32 @@
   .filter-select--country {
     width: 150px;
     min-width: 130px;
+  }
+
+  /* 日期范围：与筛选条视觉一致 */
+  :deep(.filter-date-picker.el-date-editor) {
+    --el-date-editor-width: 100%;
+  }
+
+  :deep(.filter-date-picker .el-input__wrapper) {
+    min-height: 34px;
+    background: rgb(0 0 0 / 22%) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-primary) 22%, transparent) !important;
+    transition:
+      box-shadow 0.25s cubic-bezier(0, 0, 0.2, 1),
+      border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  :deep(.filter-date-picker .el-input__wrapper:hover) {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 44%, transparent) inset,
+      0 0 20px color-mix(in srgb, var(--art-primary) 12%, transparent) !important;
+  }
+
+  :deep(.filter-date-picker .el-input__inner) {
+    font-size: 12px;
+    color: var(--text-primary) !important;
   }
 
   /* Element Plus select 深色适配 */
@@ -2298,7 +2338,8 @@
     .waterfall-item,
     .filter-query-btn,
     .back-btn,
-    :deep(.custom-select .el-input__wrapper) {
+    :deep(.custom-select .el-input__wrapper),
+    :deep(.filter-date-picker .el-input__wrapper) {
       transition: none !important;
     }
 
