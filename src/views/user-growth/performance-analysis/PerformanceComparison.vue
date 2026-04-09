@@ -16,7 +16,7 @@
       <div class="header-right">
         <button class="btn-back" @click="goBack">← 返回列表</button>
         <ElDatePicker
-          v-model="selectedDateRange"
+          v-model="selectedDateRangeDraft"
           class="date-range-picker"
           type="daterange"
           range-separator="~"
@@ -26,6 +26,21 @@
           format="YYYY-MM-DD"
           popper-class="pa-or-filter-popper"
         />
+        <ElButton
+          round
+          type="primary"
+          class="btn-query"
+          :loading="
+            overviewLoading ||
+            chartsLoading ||
+            rankingsLoading ||
+            scoreDetailLoading ||
+            alertsLoading
+          "
+          @click="onQuery"
+        >
+          查询
+        </ElButton>
         <button class="btn-export">↑ 导出</button>
       </div>
     </div>
@@ -48,27 +63,63 @@
     <!-- ─── KPI Row ───────────────────────────────── -->
     <div class="kpi-row pa-entry-2">
       <div class="kpi-card pa-neon-lift-card">
-        <div class="kpi-title">广告支出合计</div>
-        <div class="kpi-value">${{ fmt(kpis.totalAd) }}</div>
-        <div class="kpi-sub pos-text">周环比 +8%</div>
+        <ElSkeleton :loading="overviewLoading" animated>
+          <template #template>
+            <ElSkeletonItem variant="text" class="sk sk-w-40" />
+            <ElSkeletonItem variant="h1" class="sk sk-w-56 sk-mt-10" />
+            <ElSkeletonItem variant="text" class="sk sk-w-28 sk-mt-10" />
+          </template>
+          <template #default>
+            <div class="kpi-title">广告支出合计</div>
+            <div class="kpi-value">${{ fmt(kpis.totalAd) }}</div>
+            <div class="kpi-sub pos-text">周环比 +8%</div>
+          </template>
+        </ElSkeleton>
       </div>
       <div class="kpi-card pa-neon-lift-card">
-        <div class="kpi-title">首日ROI均值</div>
-        <div class="kpi-value gold-text">{{ kpis.avgRoi }}%</div>
-        <div class="kpi-row-inline">
-          <span class="kpi-hint">达标线 85%</span>
-          <span class="badge-pass">达标</span>
-        </div>
+        <ElSkeleton :loading="overviewLoading" animated>
+          <template #template>
+            <ElSkeletonItem variant="text" class="sk sk-w-44" />
+            <ElSkeletonItem variant="h1" class="sk sk-w-40 sk-mt-10" />
+            <ElSkeletonItem variant="text" class="sk sk-w-32 sk-mt-10" />
+          </template>
+          <template #default>
+            <div class="kpi-title">首日ROI均值</div>
+            <div class="kpi-value gold-text">{{ kpis.avgRoi }}%</div>
+            <div class="kpi-row-inline">
+              <span class="kpi-hint">达标线 85%</span>
+              <span class="badge-pass">达标</span>
+            </div>
+          </template>
+        </ElSkeleton>
       </div>
       <div class="kpi-card pa-neon-lift-card">
-        <div class="kpi-title">预估利润合计</div>
-        <div class="kpi-value pos-text">+${{ fmt(kpis.totalProfit) }}</div>
-        <div class="kpi-sub pos-text">周环比 +12%</div>
+        <ElSkeleton :loading="overviewLoading" animated>
+          <template #template>
+            <ElSkeletonItem variant="text" class="sk sk-w-46" />
+            <ElSkeletonItem variant="h1" class="sk sk-w-56 sk-mt-10" />
+            <ElSkeletonItem variant="text" class="sk sk-w-30 sk-mt-10" />
+          </template>
+          <template #default>
+            <div class="kpi-title">预估利润合计</div>
+            <div class="kpi-value pos-text">+${{ fmt(kpis.totalProfit) }}</div>
+            <div class="kpi-sub pos-text">周环比 +12%</div>
+          </template>
+        </ElSkeleton>
       </div>
       <div class="kpi-card pa-neon-lift-card kpi-alert">
-        <div class="kpi-title">未达标人员</div>
-        <div class="kpi-value red-text">{{ kpis.failCount }} 人</div>
-        <div class="kpi-fail-name red-text">{{ kpis.failName }}</div>
+        <ElSkeleton :loading="overviewLoading" animated>
+          <template #template>
+            <ElSkeletonItem variant="text" class="sk sk-w-38" />
+            <ElSkeletonItem variant="h1" class="sk sk-w-28 sk-mt-10" />
+            <ElSkeletonItem variant="text" class="sk sk-w-70 sk-mt-10" />
+          </template>
+          <template #default>
+            <div class="kpi-title">未达标人员</div>
+            <div class="kpi-value red-text">{{ kpis.failCount }} 人</div>
+            <div class="kpi-fail-name red-text">{{ kpis.failName }}</div>
+          </template>
+        </ElSkeleton>
       </div>
     </div>
 
@@ -79,25 +130,61 @@
         <!-- ROI 趋势 -->
         <div class="chart-card pa-neon-panel">
           <div class="chart-title">首日ROI 趋势对比</div>
-          <div ref="roiChartRef" class="chart-body"></div>
+          <div class="chart-shell">
+            <div v-if="!chartsReady" class="chart-text-skeleton" aria-label="图表加载中">
+              <div class="sk-line sk-w-46"></div>
+              <div class="sk-line sk-w-62"></div>
+              <div class="sk-line sk-w-54"></div>
+              <div class="sk-line sk-w-70"></div>
+              <div class="sk-hint">正在加载趋势数据…</div>
+            </div>
+            <div v-else ref="roiChartRef" class="chart-body"></div>
+          </div>
         </div>
 
         <!-- Radar -->
         <div class="chart-card pa-neon-panel">
           <div class="chart-title">综合效能雷达图</div>
-          <div ref="radarChartRef" class="chart-body"></div>
+          <div class="chart-shell">
+            <div v-if="!chartsReady" class="chart-text-skeleton" aria-label="图表加载中">
+              <div class="sk-line sk-w-40"></div>
+              <div class="sk-line sk-w-58"></div>
+              <div class="sk-line sk-w-52"></div>
+              <div class="sk-line sk-w-66"></div>
+              <div class="sk-hint">正在加载雷达指标…</div>
+            </div>
+            <div v-else ref="radarChartRef" class="chart-body"></div>
+          </div>
         </div>
 
         <!-- 广告支出趋势 -->
         <div class="chart-card pa-neon-panel">
           <div class="chart-title">广告支出 趋势对比</div>
-          <div ref="adChartRef" class="chart-body"></div>
+          <div class="chart-shell">
+            <div v-if="!chartsReady" class="chart-text-skeleton" aria-label="图表加载中">
+              <div class="sk-line sk-w-44"></div>
+              <div class="sk-line sk-w-60"></div>
+              <div class="sk-line sk-w-48"></div>
+              <div class="sk-line sk-w-72"></div>
+              <div class="sk-hint">正在加载花费数据…</div>
+            </div>
+            <div v-else ref="adChartRef" class="chart-body"></div>
+          </div>
         </div>
 
         <!-- 利润对比 -->
         <div class="chart-card pa-neon-panel">
           <div class="chart-title">预估利润对比</div>
-          <div ref="profitChartRef" class="chart-body"></div>
+          <div class="chart-shell">
+            <div v-if="!chartsReady" class="chart-text-skeleton" aria-label="图表加载中">
+              <div class="sk-line sk-w-42"></div>
+              <div class="sk-line sk-w-56"></div>
+              <div class="sk-line sk-w-50"></div>
+              <div class="sk-line sk-w-68"></div>
+              <div class="sk-hint">正在加载利润对比…</div>
+            </div>
+            <div v-else ref="profitChartRef" class="chart-body"></div>
+          </div>
         </div>
       </div>
 
@@ -106,65 +193,92 @@
         <!-- 指标排名 -->
         <div class="panel-card pa-neon-panel">
           <div class="panel-title">指标排名</div>
-          <table class="rank-table">
-            <thead>
-              <tr>
-                <th>指标</th>
-                <th class="rank-1">🏆 第1</th>
-                <th class="rank-2">🥈 第2</th>
-                <th class="rank-3">🥉 第3</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="r in rankData" :key="r.metric">
-                <td class="metric-name">{{ r.metric }}</td>
-                <td class="rank-1">{{ r.r1 }}</td>
-                <td class="rank-2">{{ r.r2 }}</td>
-                <td class="rank-3">{{ r.r3 }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <ElSkeleton :loading="rankingsLoading" animated>
+            <template #template>
+              <div class="pa-skeleton-block">
+                <ElSkeletonItem variant="rect" style="width: 100%; height: 160px" />
+              </div>
+            </template>
+            <template #default>
+              <table class="rank-table">
+                <thead>
+                  <tr>
+                    <th>指标</th>
+                    <th class="rank-1">🏆 第1</th>
+                    <th class="rank-2">🥈 第2</th>
+                    <th class="rank-3">🥉 第3</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="r in rankData" :key="r.metric">
+                    <td class="metric-name">{{ r.metric }}</td>
+                    <td class="rank-1">{{ r.r1 }}</td>
+                    <td class="rank-2">{{ r.r2 }}</td>
+                    <td class="rank-3">{{ r.r3 }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </template>
+          </ElSkeleton>
         </div>
 
         <!-- 绩效得分明细 -->
         <div class="panel-card pa-neon-panel">
           <div class="panel-title">绩效得分明细</div>
-          <table class="score-table">
-            <thead>
-              <tr>
-                <th>人员</th>
-                <th>花费分</th>
-                <th>ROI分</th>
-                <th>CPI分</th>
-                <th>利润分</th>
-                <th>综合得分</th>
-                <th>状态</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="s in scoreDetail" :key="s.name">
-                <td :style="{ color: s.color }" class="score-name">{{ s.name }}</td>
-                <td>{{ s.spend }}</td>
-                <td>{{ s.roi }}</td>
-                <td>{{ s.cpi }}</td>
-                <td>{{ s.profit }}</td>
-                <td :style="{ color: s.color }" class="total-score">{{ s.total }}分</td>
-                <td>
-                  <span :class="['s-badge', `sb-${s.statusClass}`]">{{ s.status }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <ElSkeleton :loading="scoreDetailLoading" animated>
+            <template #template>
+              <div class="pa-skeleton-block">
+                <ElSkeletonItem variant="rect" style="width: 100%; height: 200px" />
+              </div>
+            </template>
+            <template #default>
+              <table class="score-table">
+                <thead>
+                  <tr>
+                    <th>人员</th>
+                    <th>花费分</th>
+                    <th>ROI分</th>
+                    <th>CPI分</th>
+                    <th>利润分</th>
+                    <th>综合得分</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="s in scoreDetail" :key="s.name">
+                    <td :style="{ color: s.color }" class="score-name">{{ s.name }}</td>
+                    <td>{{ s.spend }}</td>
+                    <td>{{ s.roi }}</td>
+                    <td>{{ s.cpi }}</td>
+                    <td>{{ s.profit }}</td>
+                    <td :style="{ color: s.color }" class="total-score">{{ s.total }}分</td>
+                    <td>
+                      <span :class="['s-badge', `sb-${s.statusClass}`]">{{ s.status }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </template>
+          </ElSkeleton>
         </div>
 
         <!-- 异常预警 -->
         <div class="panel-card pa-neon-panel alert-panel">
           <div class="panel-title warning-title">⚠ 异常预警</div>
-          <div class="alert-item" v-for="a in alerts" :key="a.id">
-            <span :class="['alert-icon', a.level]">{{ a.level === 'warn' ? '△' : '▲' }}</span>
-            <span class="alert-text">{{ a.text }}</span>
-            <button class="alert-link" @click="viewAlertDetail(a.id)">查看详情</button>
-          </div>
+          <ElSkeleton :loading="alertsLoading" animated>
+            <template #template>
+              <div class="pa-skeleton-block">
+                <ElSkeletonItem variant="rect" style="width: 100%; height: 120px" />
+              </div>
+            </template>
+            <template #default>
+              <div class="alert-item" v-for="a in alerts" :key="a.id">
+                <span :class="['alert-icon', a.level]">{{ a.level === 'warn' ? '△' : '▲' }}</span>
+                <span class="alert-text">{{ a.text }}</span>
+                <button class="alert-link" @click="viewAlertDetail(a.id)">查看详情</button>
+              </div>
+            </template>
+          </ElSkeleton>
         </div>
       </div>
     </div>
@@ -347,11 +461,20 @@
 
   // ─── State ────────────────────────────────────────────────
   const showAddModal = ref(false)
-  const selectedDateRange = ref<[string, string]>(buildDefaultDateRange())
+  /** 日期范围（草稿）：仅用于选择器展示，不自动触发请求 */
+  const selectedDateRangeDraft = ref<[string, string]>(buildDefaultDateRange())
+  /** 日期范围（已查询）：用于实际请求；进入页面/加人/删人会按它自动拉取 */
+  const selectedDateRangeApplied = ref<[string, string]>([...selectedDateRangeDraft.value])
   const compareCandidatesLoading = ref(false)
   const compareCandidates = ref<PerformanceCompareCandidatesItem[]>([])
   const pendingAddIds = ref<string[]>([])
-  const comparisonLoading = ref(false)
+  const overviewLoading = ref(false)
+  const chartsLoading = ref(false)
+  const chartsReady = ref(false)
+  const rankingsLoading = ref(false)
+  const scoreDetailLoading = ref(false)
+  const alertsLoading = ref(false)
+  let loadSeq = 0
   const comparisonOverview = ref<PerformanceComparisonOverviewResponse | null>(null)
   const comparisonCharts = ref<PerformanceComparisonChartsResponse | null>(null)
   const comparisonRankings = ref<PerformanceComparisonRankingsResponse | null>(null)
@@ -370,7 +493,8 @@
     const startDate = route.query.startDate as string | undefined
     const endDate = route.query.endDate as string | undefined
     if (startDate && endDate) {
-      selectedDateRange.value = [startDate, endDate]
+      selectedDateRangeDraft.value = [startDate, endDate]
+      selectedDateRangeApplied.value = [startDate, endDate]
     }
   }
   initFromRoute()
@@ -697,32 +821,53 @@
   }
 
   // ─── Lifecycle ────────────────────────────────────────────
-  function initCharts() {
-    nextTick(() => {
-      if (roiChartRef.value) {
-        roiChart = echarts.init(roiChartRef.value, 'dark')
-        roiChart.setOption(buildRoiOption())
-      }
-      if (radarChartRef.value) {
-        radarChart = echarts.init(radarChartRef.value, 'dark')
-        radarChart.setOption(buildRadarOption())
-      }
-      if (adChartRef.value) {
-        adChart = echarts.init(adChartRef.value, 'dark')
-        adChart.setOption(buildAdOption())
-      }
-      if (profitChartRef.value) {
-        profitChart = echarts.init(profitChartRef.value, 'dark')
-        profitChart.setOption(buildProfitOption())
-      }
-    })
+  async function initCharts() {
+    await nextTick()
+    await ensureChartsInited()
+    refreshAllCharts()
   }
 
-  function disposeCharts() {
+  function disposeChartsHard() {
     roiChart?.dispose()
     radarChart?.dispose()
     adChart?.dispose()
     profitChart?.dispose()
+    roiChart = null
+    radarChart = null
+    adChart = null
+    profitChart = null
+  }
+
+  async function ensureChartsInited() {
+    await nextTick()
+
+    // v-if 会重建 DOM；若实例绑定旧 DOM，则销毁重建
+    if (roiChart && roiChartRef.value && roiChart.getDom() !== roiChartRef.value) {
+      roiChart.dispose()
+      roiChart = null
+    }
+    if (radarChart && radarChartRef.value && radarChart.getDom() !== radarChartRef.value) {
+      radarChart.dispose()
+      radarChart = null
+    }
+    if (adChart && adChartRef.value && adChart.getDom() !== adChartRef.value) {
+      adChart.dispose()
+      adChart = null
+    }
+    if (profitChart && profitChartRef.value && profitChart.getDom() !== profitChartRef.value) {
+      profitChart.dispose()
+      profitChart = null
+    }
+
+    if (!roiChart && roiChartRef.value) roiChart = echarts.init(roiChartRef.value, 'dark')
+    if (!radarChart && radarChartRef.value) radarChart = echarts.init(radarChartRef.value, 'dark')
+    if (!adChart && adChartRef.value) adChart = echarts.init(adChartRef.value, 'dark')
+    if (!profitChart && profitChartRef.value)
+      profitChart = echarts.init(profitChartRef.value, 'dark')
+  }
+
+  function disposeCharts() {
+    disposeChartsHard()
   }
 
   function resizeCharts() {
@@ -735,7 +880,7 @@
   onMounted(() => {
     initCharts()
     window.addEventListener('resize', resizeCharts)
-    void loadComparisonAll()
+    loadComparisonAll()
   })
 
   onUnmounted(() => {
@@ -762,7 +907,7 @@
   }
 
   async function loadCompareCandidates() {
-    const [startDate, endDate] = selectedDateRange.value
+    const [startDate, endDate] = selectedDateRangeApplied.value
     compareCandidatesLoading.value = true
     try {
       const filters = resolveCompareRequestFilters()
@@ -786,16 +931,15 @@
   }
 
   function refreshAllCharts() {
-    nextTick(() => {
-      roiChart?.setOption(buildRoiOption(), true)
-      radarChart?.setOption(buildRadarOption(), true)
-      adChart?.setOption(buildAdOption(), true)
-      profitChart?.setOption(buildProfitOption(), true)
-    })
+    roiChart?.setOption(buildRoiOption(), true)
+    radarChart?.setOption(buildRadarOption(), true)
+    adChart?.setOption(buildAdOption(), true)
+    profitChart?.setOption(buildProfitOption(), true)
+    resizeCharts()
   }
 
   function buildComparisonBody(): ComparisonStaffRequest {
-    const [startDate, endDate] = selectedDateRange.value
+    const [startDate, endDate] = selectedDateRangeApplied.value
     return {
       startDate,
       endDate,
@@ -803,33 +947,110 @@
     }
   }
 
-  async function loadComparisonAll() {
-    if (selectedStaff.value.length === 0) return
-    comparisonLoading.value = true
-    try {
-      const body = buildComparisonBody()
-      const [o, c, r, s, a] = await Promise.all([
-        fetchPerformanceComparisonOverview(body),
-        fetchPerformanceComparisonCharts(body),
-        fetchPerformanceComparisonRankings(body),
-        fetchPerformanceComparisonScoreDetail(body),
-        fetchPerformanceComparisonAlerts(body)
-      ])
-      comparisonOverview.value = o
-      comparisonCharts.value = c
-      comparisonRankings.value = r
-      comparisonScoreDetail.value = s
-      comparisonAlerts.value = a
+  function onQuery() {
+    selectedDateRangeApplied.value = [...selectedDateRangeDraft.value] as [string, string]
+    loadComparisonAll()
+  }
 
-      const nameMap = new Map(s.list.map((x) => [x.id, x.name]))
-      selectedStaff.value = selectedStaff.value.map((x) => ({
-        id: x.id,
-        name: nameMap.get(x.id) ?? x.name
-      }))
+  function resetComparisonForReload() {
+    comparisonOverview.value = null
+    comparisonCharts.value = null
+    comparisonRankings.value = null
+    comparisonScoreDetail.value = null
+    comparisonAlerts.value = null
+    chartsReady.value = false
+    disposeChartsHard()
+  }
+
+  function syncSelectedStaffNamesFromScoreDetail(seq: number) {
+    if (seq !== loadSeq) return
+    const list = comparisonScoreDetail.value?.list ?? []
+    if (list.length === 0) return
+    const nameMap = new Map(list.map((x) => [x.id, x.name]))
+    selectedStaff.value = selectedStaff.value.map((x) => ({
+      id: x.id,
+      name: nameMap.get(x.id) ?? x.name
+    }))
+  }
+
+  async function loadComparisonOverview(seq: number, body: ComparisonStaffRequest) {
+    overviewLoading.value = true
+    try {
+      const o = await fetchPerformanceComparisonOverview(body)
+      if (seq !== loadSeq) return
+      comparisonOverview.value = o
+    } finally {
+      if (seq === loadSeq) overviewLoading.value = false
+    }
+  }
+
+  async function loadComparisonCharts(seq: number, body: ComparisonStaffRequest) {
+    const startedAt = performance.now()
+    chartsLoading.value = true
+    // 确保骨架层先进入 DOM（避免接口过快导致“看不到”加载态）
+    await nextTick()
+    try {
+      const c = await fetchPerformanceComparisonCharts(body)
+      if (seq !== loadSeq) return
+      comparisonCharts.value = c
+      chartsReady.value = true
+      await nextTick()
+      await ensureChartsInited()
       refreshAllCharts()
     } finally {
-      comparisonLoading.value = false
+      const elapsed = performance.now() - startedAt
+      const minMs = 300
+      if (elapsed < minMs) {
+        await new Promise((r) => setTimeout(r, minMs - elapsed))
+      }
+      if (seq === loadSeq) chartsLoading.value = false
     }
+  }
+
+  async function loadComparisonRankings(seq: number, body: ComparisonStaffRequest) {
+    rankingsLoading.value = true
+    try {
+      const r = await fetchPerformanceComparisonRankings(body)
+      if (seq !== loadSeq) return
+      comparisonRankings.value = r
+    } finally {
+      if (seq === loadSeq) rankingsLoading.value = false
+    }
+  }
+
+  async function loadComparisonScoreDetail(seq: number, body: ComparisonStaffRequest) {
+    scoreDetailLoading.value = true
+    try {
+      const s = await fetchPerformanceComparisonScoreDetail(body)
+      if (seq !== loadSeq) return
+      comparisonScoreDetail.value = s
+      syncSelectedStaffNamesFromScoreDetail(seq)
+    } finally {
+      if (seq === loadSeq) scoreDetailLoading.value = false
+    }
+  }
+
+  async function loadComparisonAlerts(seq: number, body: ComparisonStaffRequest) {
+    alertsLoading.value = true
+    try {
+      const a = await fetchPerformanceComparisonAlerts(body)
+      if (seq !== loadSeq) return
+      comparisonAlerts.value = a
+    } finally {
+      if (seq === loadSeq) alertsLoading.value = false
+    }
+  }
+
+  function loadComparisonAll() {
+    if (selectedStaff.value.length === 0) return
+    const seq = ++loadSeq
+    resetComparisonForReload()
+    const body = buildComparisonBody()
+    void loadComparisonOverview(seq, body)
+    void loadComparisonCharts(seq, body)
+    void loadComparisonRankings(seq, body)
+    void loadComparisonScoreDetail(seq, body)
+    void loadComparisonAlerts(seq, body)
   }
 
   function confirmAddCompare() {
@@ -843,12 +1064,12 @@
       .map((id) => ({ id, name: ALL_STAFF[id]?.name ?? id }))
     selectedStaff.value = [...selectedStaff.value, ...appendList]
     closeAddCompareModal()
-    void loadComparisonAll()
+    loadComparisonAll()
   }
 
   function removeStaff(id: string) {
     selectedStaff.value = selectedStaff.value.filter((s) => s.id !== id)
-    void loadComparisonAll()
+    loadComparisonAll()
   }
 
   function viewAlertDetail(id: string) {
@@ -862,10 +1083,14 @@
     void loadCompareCandidates()
   })
 
+  // 不监听日期草稿变化；日期变更需点「查询」
+
   watch(
-    () => selectedDateRange.value,
-    () => {
-      void loadComparisonAll()
+    () => chartsLoading.value,
+    (loading) => {
+      if (loading) return
+      if (!chartsReady.value) return
+      void initCharts()
     }
   )
 </script>
@@ -935,6 +1160,10 @@
     display: flex;
     gap: 10px;
     align-items: center;
+  }
+
+  .btn-query {
+    font-weight: 700;
   }
 
   .add-compare-body {
@@ -1088,6 +1317,131 @@
       min-height: 140px;
       padding: 4px;
     }
+  }
+
+  .chart-shell {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .chart-shell .chart-body {
+    height: 100%;
+  }
+
+  .chart-text-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    padding: 14px 14px 12px;
+  }
+
+  .sk-line {
+    height: 10px;
+    background: color-mix(in srgb, var(--art-primary) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+    border-radius: 9999px;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%);
+  }
+
+  .sk-hint {
+    margin-top: auto;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .pa-skeleton-block {
+    padding: 6px 0;
+  }
+
+  .sk {
+    height: 12px;
+    border-radius: 9999px;
+  }
+
+  .sk-mt-10 {
+    margin-top: 10px;
+  }
+
+  .sk-w-28 {
+    width: 28%;
+  }
+
+  .sk-w-30 {
+    width: 30%;
+  }
+
+  .sk-w-32 {
+    width: 32%;
+  }
+
+  .sk-w-38 {
+    width: 38%;
+  }
+
+  .sk-w-40 {
+    width: 40%;
+  }
+
+  .sk-w-42 {
+    width: 42%;
+  }
+
+  .sk-w-44 {
+    width: 44%;
+  }
+
+  .sk-w-46 {
+    width: 46%;
+  }
+
+  .sk-w-48 {
+    width: 48%;
+  }
+
+  .sk-w-50 {
+    width: 50%;
+  }
+
+  .sk-w-52 {
+    width: 52%;
+  }
+
+  .sk-w-54 {
+    width: 54%;
+  }
+
+  .sk-w-56 {
+    width: 56%;
+  }
+
+  .sk-w-58 {
+    width: 58%;
+  }
+
+  .sk-w-60 {
+    width: 60%;
+  }
+
+  .sk-w-62 {
+    width: 62%;
+  }
+
+  .sk-w-66 {
+    width: 66%;
+  }
+
+  .sk-w-68 {
+    width: 68%;
+  }
+
+  .sk-w-70 {
+    width: 70%;
+  }
+
+  .sk-w-72 {
+    width: 72%;
   }
 
   // ─── Right Panel ─────────────────────────────────────────

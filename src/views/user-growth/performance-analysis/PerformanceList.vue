@@ -23,6 +23,24 @@
         </div>
 
         <div class="perf-header__actions">
+          <ElButton
+            round
+            type="primary"
+            class="perf-header__btn perf-header__btn--query"
+            :disabled="!isDirty"
+            :loading="listLoading || overviewLoading"
+            @click="onQuery"
+          >
+            查询
+          </ElButton>
+          <ElButton
+            round
+            class="perf-header__btn perf-header__btn--reset"
+            :disabled="!isDirty"
+            @click="onReset"
+          >
+            重置
+          </ElButton>
           <ElButton round plain type="primary" class="perf-header__btn">
             <span class="perf-header__btn-icon" aria-hidden="true">↓</span>
             导出
@@ -40,24 +58,18 @@
       <div class="main-area">
         <!-- Filters -->
         <div class="filter-block">
-          <div class="filter-row">
+          <div class="filter-row filter-row--person">
             <span class="filter-label">人员：</span>
-            <button
-              v-for="p in personOptions"
-              :key="p.value || '__all__'"
-              type="button"
-              :class="['filter-chip', { active: activePersonFilter === p.value }]"
-              @click="activePersonFilter = p.value"
-              >{{ p.label }}</button
-            >
-            <input
-              v-model="searchKw"
-              type="search"
-              class="search-input"
-              placeholder="搜索人员…"
-              aria-label="搜索人员"
-              spellcheck="false"
-            />
+            <div class="filter-chip-group">
+              <button
+                v-for="p in personOptions"
+                :key="p.value || '__all__'"
+                type="button"
+                :class="['filter-chip', { active: activePersonFilter === p.value }]"
+                @click="activePersonFilter = p.value"
+                >{{ p.label }}</button
+              >
+            </div>
           </div>
           <div class="filter-row">
             <span class="filter-label">应用：</span>
@@ -436,7 +448,9 @@
   const activePersonFilter = ref('')
   const activeAppFilter = ref('')
   const activeStatusFilter = ref('')
-  const searchKw = ref('')
+  const appliedPersonFilter = ref('')
+  const appliedAppFilter = ref('')
+  const appliedStatusFilter = ref('')
   const checkedIds = ref<string[]>([])
   const sortField = ref('')
   const sortAsc = ref(true)
@@ -444,9 +458,11 @@
   const pageSize = ref(20)
   const isSidebarCollapsed = ref(false)
   const filterOptionsLoading = ref(false)
-  const listLoading = ref(false)
-  const overviewLoading = ref(false)
-  let loadSeq = 0
+  // 首次进入页面时先展示骨架，避免“先看到空页面再加载”
+  const listLoading = ref(true)
+  const overviewLoading = ref(true)
+  let dataLoadSeq = 0
+  let filterLoadSeq = 0
 
   // ─── Computed ────────────────────────────────────────────
   const failNamesText = computed(() => {
@@ -462,6 +478,14 @@
     () =>
       pagedData.value.length > 0 && pagedData.value.every((r) => checkedIds.value.includes(r.id))
   )
+  const isDirty = computed(() => {
+    return (
+      activePersonFilter.value !== appliedPersonFilter.value ||
+      activeAppFilter.value !== appliedAppFilter.value ||
+      activeStatusFilter.value !== appliedStatusFilter.value ||
+      false
+    )
+  })
 
   // ─── Methods ─────────────────────────────────────────────
   function fmt(n: number) {
@@ -581,10 +605,10 @@
         ids: id,
         startDate,
         endDate,
-        personFilter: activePersonFilter.value,
-        appFilter: activeAppFilter.value,
-        statusFilter: activeStatusFilter.value,
-        keyword: searchKw.value
+        personFilter: appliedPersonFilter.value,
+        appFilter: appliedAppFilter.value,
+        statusFilter: appliedStatusFilter.value,
+        keyword: ''
       }
     })
   }
@@ -598,10 +622,10 @@
         ids: checkedIds.value.join(','),
         startDate,
         endDate,
-        personFilter: activePersonFilter.value,
-        appFilter: activeAppFilter.value,
-        statusFilter: activeStatusFilter.value,
-        keyword: searchKw.value
+        personFilter: appliedPersonFilter.value,
+        appFilter: appliedAppFilter.value,
+        statusFilter: appliedStatusFilter.value,
+        keyword: ''
       }
     })
   }
@@ -649,10 +673,10 @@
     return {
       startDate,
       endDate,
-      personFilter: activePersonFilter.value,
-      appFilter: activeAppFilter.value,
-      statusFilter: activeStatusFilter.value,
-      keyword: searchKw.value.trim(),
+      personFilter: appliedPersonFilter.value,
+      appFilter: appliedAppFilter.value,
+      statusFilter: appliedStatusFilter.value,
+      keyword: '',
       sortField: sortField.value || undefined,
       sortAsc: sortAsc.value,
       current: currentPage.value,
@@ -660,18 +684,33 @@
     }
   }
 
+  function onQuery() {
+    appliedPersonFilter.value = activePersonFilter.value
+    appliedAppFilter.value = activeAppFilter.value
+    appliedStatusFilter.value = activeStatusFilter.value
+    currentPage.value = 1
+    loadListAndOverview()
+  }
+
+  function onReset() {
+    activePersonFilter.value = ''
+    activeAppFilter.value = ''
+    activeStatusFilter.value = ''
+    onQuery()
+  }
+
   async function loadFilterOptions() {
-    const seq = ++loadSeq
+    const seq = ++filterLoadSeq
     const [startDate, endDate] = getActiveDateRange()
     filterOptionsLoading.value = true
     try {
       const res = await fetchPerformanceListFilterOptions({ startDate, endDate })
-      if (seq !== loadSeq) return
+      if (seq !== filterLoadSeq) return
       personOptions.value = res.personOptions
       appCategoryOptions.value = res.appCategoryOptions
       statusOptions.value = res.statusOptions
     } finally {
-      if (seq === loadSeq) filterOptionsLoading.value = false
+      if (seq === filterLoadSeq) filterOptionsLoading.value = false
     }
   }
 
@@ -680,12 +719,12 @@
     listLoading.value = true
     try {
       const listRes = await fetchPerformanceList(body)
-      if (seq !== loadSeq) return
+      if (seq !== dataLoadSeq) return
       tableRows.value = listRes.list
       tableTotal.value = listRes.total
       tableTotals.value = listRes.totals
     } finally {
-      if (seq === loadSeq) listLoading.value = false
+      if (seq === dataLoadSeq) listLoading.value = false
     }
   }
 
@@ -701,32 +740,28 @@
         statusFilter: body.statusFilter,
         keyword: body.keyword
       })
-      if (seq !== loadSeq) return
+      if (seq !== dataLoadSeq) return
       overviewMetrics.value = metricsRes
     } finally {
-      if (seq === loadSeq) overviewLoading.value = false
+      if (seq === dataLoadSeq) overviewLoading.value = false
     }
   }
 
   function loadListAndOverview() {
-    const seq = ++loadSeq
+    const seq = ++dataLoadSeq
     void loadList(seq)
     void loadOverview(seq)
   }
 
-  onMounted(async () => {
-    await loadFilterOptions()
-    loadListAndOverview()
+  onMounted(() => {
+    // 进入页面：先触发列表/概览请求，让骨架立即出现；筛选项异步补齐即可
+    onQuery()
+    void loadFilterOptions()
   })
 
   watch([activeDateRange, customDateRangeValue], async () => {
     currentPage.value = 1
     await loadFilterOptions()
-    loadListAndOverview()
-  })
-
-  watch([activePersonFilter, activeAppFilter, activeStatusFilter, searchKw], async () => {
-    currentPage.value = 1
     loadListAndOverview()
   })
 
@@ -1693,5 +1728,23 @@
       background: transparent !important;
       box-shadow: none;
     }
+  }
+
+  .filter-row--person {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+
+  .filter-chip-group {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .filter-row--person .search-input {
+    flex: 0 0 auto;
   }
 </style>
