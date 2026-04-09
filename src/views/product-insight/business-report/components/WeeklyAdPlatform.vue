@@ -27,35 +27,33 @@
             <span class="pc-name">{{ p.name }}</span>
           </div>
 
-          <div class="pc-label-row">
-            <span class="pc-label">广告支出</span>
-            <span class="pc-label">周环比</span>
-          </div>
-          <div class="pc-value-row">
+          <div class="pc-main-line">
+            <span class="pc-main-label">广告支出</span>
             <span class="pc-spend-val">{{ p.adSpend }}</span>
+            <span class="pc-main-label">周环比</span>
             <span :class="['pc-chg', p.adSpendChange >= 0 ? 'pos' : 'neg']">
               {{ p.adSpendChange >= 0 ? '+' : '' }}{{ p.adSpendChange }}%
             </span>
           </div>
 
-          <div class="pc-label-row pc-label-row--stats">
-            <span class="pc-label">买量用户</span>
-            <span class="pc-label">广告系列数</span>
-          </div>
-          <div class="pc-value-row">
+          <div class="pc-sub-line">
+            <span class="pc-main-label">买量用户</span>
             <span class="pc-val">{{ p.acquisitions }}</span>
-            <span class="pc-val">{{ p.campaigns }}</span>
+            <span class="pc-sub-sep">|</span>
+            <span class="pc-main-label">广告系列数</span>
+            <span class="pc-val">{{ formatCampaignCountPlain(p.campaigns) }}</span>
           </div>
 
-          <div class="pc-label-row pc-label-row--triple">
-            <span class="pc-label">CPI</span>
-            <span class="pc-label">CPM</span>
-            <span class="pc-label">CPC</span>
-          </div>
-          <div class="pc-value-row pc-value-row--triple">
-            <span class="pc-val">{{ p.cpi }}</span>
-            <span class="pc-val">{{ p.cpm }}</span>
-            <span class="pc-val">{{ p.cpc }}</span>
+          <div class="pc-kpi3-line">
+            <div class="pc-kpi3-item"
+              ><span class="pc-main-label">CPI</span><span class="pc-val">{{ p.cpi }}</span></div
+            >
+            <div class="pc-kpi3-item"
+              ><span class="pc-main-label">CPM</span><span class="pc-val">{{ p.cpm }}</span></div
+            >
+            <div class="pc-kpi3-item"
+              ><span class="pc-main-label">CPC</span><span class="pc-val">{{ p.cpc }}</span></div
+            >
           </div>
 
           <div class="pc-roi">
@@ -84,12 +82,10 @@
         <!-- 其他平台 -->
         <div class="platform-card others-card" :style="{ '--accent': '#6b7280' }">
           <div class="others-h">其他平台</div>
-          <div class="pc-label-row">
-            <span class="pc-label">广告支出</span>
-            <span class="pc-label">周环比</span>
-          </div>
-          <div class="pc-value-row">
+          <div class="pc-main-line others-main-line">
+            <span class="pc-main-label">广告支出</span>
             <span class="pc-spend-val">$17,100</span>
+            <span class="pc-main-label">周环比</span>
             <span class="pc-chg pos">+4.2%</span>
           </div>
           <div v-for="p in otherPlatforms" :key="p.id" class="other-row">
@@ -179,6 +175,12 @@
   function parseWanToNumber(s: string): number {
     const n = parseFloat(String(s).replace(/[^\d.]/g, ''))
     return Number.isFinite(n) ? n : 0
+  }
+
+  function formatCampaignCountPlain(v: string | number) {
+    const text = String(v ?? '').trim()
+    if (!text) return '--'
+    return text.replace(/系列$/, '')
   }
 
   function mapCardsToWeeklyTableRows(cards: AdPlatformCard[]) {
@@ -492,52 +494,53 @@
     color: rgb(255 255 255 / 92%);
   }
 
-  .pc-label-row {
+  .pc-main-line {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 2px;
-  }
-
-  .pc-label-row--stats {
-    margin-top: 6px;
-  }
-
-  .pc-label-row--triple {
     gap: 8px;
-    justify-content: flex-start;
-  }
-
-  .pc-label-row--triple .pc-label {
-    flex: 1;
-    text-align: left;
-  }
-
-  .pc-label {
-    flex: 1;
-    font-size: 10px;
-    color: rgb(255 255 255 / 42%);
-  }
-
-  .pc-value-row {
-    display: flex;
     align-items: baseline;
-    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .pc-sub-line {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+
+  .pc-sub-sep {
+    color: rgb(255 255 255 / 32%);
+  }
+
+  .pc-kpi3-line {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
     margin-bottom: 8px;
   }
 
-  .pc-value-row--triple {
-    gap: 8px;
-    justify-content: flex-start;
-  }
-
-  .pc-value-row--triple .pc-val {
-    flex: 1;
+  .pc-kpi3-item {
+    display: flex;
+    gap: 4px;
+    align-items: baseline;
     min-width: 0;
   }
 
+  .pc-main-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgb(255 255 255 / 62%);
+    white-space: nowrap;
+  }
+
+  .others-main-line {
+    margin-bottom: 10px;
+  }
+
   .pc-spend-val {
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 700;
+    line-height: 1.1;
     color: #fff;
     letter-spacing: -0.02em;
   }
@@ -545,12 +548,15 @@
   .pc-val {
     font-size: 13px;
     font-weight: 600;
+    line-height: 1.2;
     color: rgb(255 255 255 / 88%);
   }
 
   .pc-chg {
     font-size: 12px;
     font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
   }
 
   .pos {
