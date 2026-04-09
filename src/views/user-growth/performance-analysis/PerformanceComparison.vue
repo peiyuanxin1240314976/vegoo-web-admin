@@ -1351,6 +1351,35 @@
     color: var(--text-secondary);
   }
 
+  .pa-skeleton-block {
+    padding: 6px 0;
+  }
+
+  .sk {
+    height: 12px;
+    border-radius: 9999px;
+  }
+
+  .sk-mt-10 {
+    margin-top: 10px;
+  }
+
+  .sk-w-28 {
+    width: 28%;
+  }
+
+  .sk-w-30 {
+    width: 30%;
+  }
+
+  .sk-w-32 {
+    width: 32%;
+  }
+
+  .sk-w-38 {
+    width: 38%;
+  }
+
   .sk-w-40 {
     width: 40%;
   }
@@ -1602,35 +1631,6 @@
 
   .gold-text {
     color: $gold;
-  }
-
-  .pa-skeleton-block {
-    padding: 6px 0;
-  }
-
-  .sk {
-    height: 12px;
-    border-radius: 9999px;
-  }
-
-  .sk-mt-10 {
-    margin-top: 10px;
-  }
-
-  .sk-w-28 {
-    width: 28%;
-  }
-
-  .sk-w-30 {
-    width: 30%;
-  }
-
-  .sk-w-32 {
-    width: 32%;
-  }
-
-  .sk-w-38 {
-    width: 38%;
   }
 </style>
 
