@@ -138,7 +138,6 @@
   const pendingQuery = ref(true)
   /** 避免并发重复请求；勿用 pendingQuery 作互斥，否则首屏 pendingQuery=true 会拦掉 runQuery */
   const queryInFlight = ref(false)
-  const hasLoadedOnce = ref(false)
 
   const appliedFilters = ref({
     dateRange: dateRange.value,
@@ -460,7 +459,6 @@
     } finally {
       pendingQuery.value = false
       queryInFlight.value = false
-      hasLoadedOnce.value = true
     }
   }
 
@@ -685,7 +683,7 @@
       <div class="page-header">
         <div class="filters filters-panel">
           <h2 class="filter-detail-heading">{{
-            route.query['platform-name'] + ' 广告平台详情'
+            (route.query['platform-name'] ?? '') + ' 广告平台详情'
           }}</h2>
           <div class="filter-field">
             <span class="filter-label">日期范围</span>
@@ -741,8 +739,8 @@
 
       <!-- ── Main content grid ───────────────────────────────────── -->
       <div class="content-wrap">
-        <!-- 鱼骨屏骨架（首次加载） -->
-        <div v-if="pendingQuery && !hasLoadedOnce" class="fishbone-skeleton" aria-hidden="true">
+        <!-- 鱼骨屏骨架（任意请求进行中：首屏 / 点击查询等） -->
+        <div v-if="pendingQuery" class="fishbone-skeleton" aria-hidden="true">
           <div class="fishbone-skeleton__left">
             <div class="fishbone-skeleton__kpis">
               <div v-for="i in 4" :key="i" class="fishbone-card">
@@ -777,13 +775,8 @@
           </div>
         </div>
 
-        <div
-          class="content-body"
-          v-loading="pendingQuery && hasLoadedOnce"
-          element-loading-text="加载中..."
-          element-loading-background="rgba(10, 10, 10, 0.55)"
-        >
-          <div class="main-grid" :class="{ 'is-loading': pendingQuery && !hasLoadedOnce }">
+        <div class="content-body">
+          <div class="main-grid" :class="{ 'is-loading': pendingQuery }">
             <!-- Left column -->
             <div class="left-col">
               <!-- KPI cards -->
@@ -910,7 +903,7 @@
           ><!-- /main-grid -->
 
           <!-- ── Table ───────────────────────────────────────────────── -->
-          <div class="table-card" :class="{ 'is-loading': pendingQuery && !hasLoadedOnce }">
+          <div class="table-card" :class="{ 'is-loading': pendingQuery }">
             <div class="table-head">
               <div class="section-title section-title--glow">按应用表现细分</div>
             </div>
