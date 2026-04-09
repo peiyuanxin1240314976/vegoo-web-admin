@@ -2,7 +2,7 @@
   "_comment": "文本管理 - 商店列表文案草稿。对应 types.ts: AppContent、Translation；步骤完成状态用于恢复顶部步骤条。",
   "fieldDescription": {
     "request": {
-      "s_app_id": {
+      "appId": {
         "type": "string",
         "required": false,
         "description": "应用 ID（自有）。空表示当前上下文默认应用。"
@@ -86,7 +86,17 @@
       }
     }
   },
-  "sampleRequest": {},
+  "interaction": {
+    "triggers": [
+      { "moment": "页面初始化", "detail": "进入文本管理页时加载草稿主体、译文列表与步骤状态。" },
+      { "moment": "文本审核页切换应用", "detail": "按所选 appId 重新拉取该应用草稿与译文列表。" },
+      {
+        "moment": "点击保存草稿",
+        "detail": "提交当前 appContent + translations + step 状态覆盖保存，返回 success。"
+      }
+    ]
+  },
+  "sampleRequest": { "appId": "" },
   "sampleResponse": {
     "data": {
       "appContent": {
@@ -127,6 +137,38 @@
           "shortDescLimit": 80,
           "fullDescLimit": 4000,
           "selected": false
+        },
+        {
+          "id": "5",
+          "lang": "德语",
+          "langCode": "de",
+          "status": "over_limit",
+          "appName": "Personensuche, Personenfinder und Smart-Suche",
+          "shortDesc": "KI-Personensuche, Personen nach Name finden",
+          "fullDesc": "Informationen aus mehreren offenen Quellen...",
+          "appNameCount": 31,
+          "shortDescCount": 65,
+          "fullDescCount": 2234,
+          "appNameLimit": 30,
+          "shortDescLimit": 80,
+          "fullDescLimit": 4000,
+          "selected": false
+        },
+        {
+          "id": "10",
+          "lang": "俄语",
+          "langCode": "ru",
+          "status": "pending",
+          "appName": "",
+          "shortDesc": "",
+          "fullDesc": "",
+          "appNameCount": 0,
+          "shortDescCount": 0,
+          "fullDescCount": 0,
+          "appNameLimit": 30,
+          "shortDescLimit": 80,
+          "fullDescLimit": 4000,
+          "selected": true
         }
       ],
       "step1Done": false,
@@ -135,15 +177,16 @@
     }
   },
   "api": {
-    "url": "GET /api/product-operations/text-management/store-listing/draft",
+    "url": "GET /api/v1/datacenter/analysis/product-operations/text-management/store-listing/draft",
     "method": "GET",
     "priority": "P0",
-    "requestBody": "s_app_id?",
+    "requestBody": "GET: query.appId?；POST: body=StoreListingDraft",
     "responseBody": "StoreListingDraft"
   },
   "apiSuggestion": {
     "notes": [
       "保存草稿可使用同一资源 POST，body 与 GET 的 data 结构一致。",
+      "若 GET 不接 appId，可由后端基于当前登录态返回默认应用草稿。",
       "网关若统一包裹 code/msg，则业务字段在 data 内。"
     ]
   }

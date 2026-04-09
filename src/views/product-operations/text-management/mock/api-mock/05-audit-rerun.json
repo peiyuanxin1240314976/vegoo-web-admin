@@ -1,0 +1,7 @@
+{
+  "data": {
+    "repeatWords": ["search", "people"],
+    "bannedWords": ["fucking", "shit"],
+    "brandWords": ["Facebook", "TikTok", "Google"]
+  }
+}

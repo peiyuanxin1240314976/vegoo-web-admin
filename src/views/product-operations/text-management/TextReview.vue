@@ -1,27 +1,35 @@
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue'
+  import { ElMessage } from 'element-plus'
+  import { fetchAuditConfirm, fetchAuditRerun } from './api/text-management'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { AppContent } from './types'
 
   const props = defineProps<{
     appContent: AppContent
+    auditWordLists?: {
+      bannedWords: string[]
+      brandWords: string[]
+    }
   }>()
 
   const emit = defineEmits<{
     'update:appContent': [val: AppContent]
     auditPass: []
+    appChange: [appId: string]
   }>()
 
   // ─── Local editable state ────────────────────────────────────────────────────
-  const appName = ref(props.appContent.appName)
-  const shortDesc = ref(props.appContent.shortDesc)
-  const fullDesc = ref(props.appContent.fullDesc)
+  const appName = ref(props.appContent.appName ?? '')
+  const shortDesc = ref(props.appContent.shortDesc ?? '')
+  const fullDesc = ref(props.appContent.fullDesc ?? '')
 
   watch(
     () => props.appContent,
     (v) => {
-      appName.value = v.appName
-      shortDesc.value = v.shortDesc
-      fullDesc.value = v.fullDesc
+      appName.value = v.appName ?? ''
+      shortDesc.value = v.shortDesc ?? ''
+      fullDesc.value = v.fullDesc ?? ''
     },
     { deep: true }
   )
@@ -36,21 +44,8 @@
   })
 
   // ─── Word lists (configurable, would come from API in production) ─────────────
-  const BANNED_WORDS_DB = ref<string[]>(['fucking', 'shit', 'damn', 'bitch', 'crap', 'asshole'])
-  const BRAND_WORDS_DB = ref<string[]>([
-    'Facebook',
-    'TikTok',
-    'Disney',
-    'Google',
-    'Apple',
-    'Amazon',
-    'Microsoft',
-    'YouTube',
-    'Instagram',
-    'Twitter',
-    'WhatsApp',
-    'Netflix'
-  ])
+  const BANNED_WORDS_DB = computed(() => props.auditWordLists?.bannedWords ?? [])
+  const BRAND_WORDS_DB = computed(() => props.auditWordLists?.brandWords ?? [])
 
   // ─── Issue status tracking ────────────────────────────────────────────────────
   type IssueStatus = 'pending' | 'ignored' | 'located'
@@ -146,7 +141,9 @@
 
   // Run on mount and on content change
   runAudit()
-  watch([appName, shortDesc, fullDesc], runAudit, { debounce: 400 } as any)
+  watch([appName, shortDesc, fullDesc, BANNED_WORDS_DB, BRAND_WORDS_DB], runAudit, {
+    deep: true
+  })
 
   // ─── Adjacent word check ──────────────────────────────────────────────────────
   function checkAdjacent(text: string, word: string): boolean {
@@ -201,7 +198,22 @@
   }
 
   // ─── Confirm all ─────────────────────────────────────────────────────────────
-  const confirmAll = () => {
+  const confirmAll = async () => {
+    try {
+      await fetchAuditConfirm({
+        appContent: {
+          appName: appName.value,
+          shortDesc: shortDesc.value,
+          fullDesc: fullDesc.value
+        },
+        repeatWords: repeatIssues.value.filter((i) => i.status === 'pending').map((i) => i.word),
+        bannedWords: bannedIssues.value.filter((i) => i.status === 'pending').map((i) => i.word),
+        brandWords: brandIssues.value.filter((i) => i.status === 'pending').map((i) => i.word)
+      })
+    } catch {
+      ElMessage.error('审核确认接口失败，请检查后重试')
+      return
+    }
     repeatIssues.value.forEach((i) => {
       i.status = 'ignored'
       ignoredRepeat.value.add(i.word)
@@ -216,7 +228,19 @@
     })
   }
 
-  const reAudit = () => {
+  const reAudit = async () => {
+    try {
+      await fetchAuditRerun({
+        appContent: {
+          appName: appName.value,
+          shortDesc: shortDesc.value,
+          fullDesc: fullDesc.value
+        }
+      })
+    } catch {
+      ElMessage.error('重新审核接口失败，请检查后重试')
+      return
+    }
     ignoredRepeat.value.clear()
     ignoredBanned.value.clear()
     ignoredBrand.value.clear()
@@ -279,8 +303,22 @@
     fullDescRef.value.focus()
   }
 
-  // ─── App switcher (demo) ──────────────────────────────────────────────────────
-  const currentApp = ref('PeopleSearch - People Finder')
+  // ─── App switcher (cockpit meta filter options) ───────────────────────────────
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+  const selectedAppId = ref('')
+  const appOptions = computed(() => cockpitMetaFilterStore.data?.appOptions ?? [])
+  const selectedAppLabel = computed(() => {
+    const hit = appOptions.value.find((o) => o.value === selectedAppId.value)
+    return hit?.label || appName.value || '--'
+  })
+
+  if (!cockpitMetaFilterStore.data) {
+    void cockpitMetaFilterStore.ensureLoaded()
+  }
+
+  watch(selectedAppId, (val) => {
+    emit('appChange', val || '')
+  })
 </script>
 
 <template>
@@ -294,10 +332,22 @@
         <span class="label">当前应用：</span>
         <div class="app-chip">
           <span class="app-icon">📱</span>
-          {{ currentApp }}
-          <span class="arrow">▾</span>
+          <el-select
+            v-model="selectedAppId"
+            class="app-select"
+            clearable
+            placeholder="请选择应用"
+            size="small"
+          >
+            <el-option
+              v-for="opt in appOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
         </div>
-        <span class="switch-link">切换应用</span>
+        <span class="switch-link">{{ selectedAppLabel }}</span>
       </div>
 
       <!-- App name -->
@@ -583,9 +633,19 @@
         border-color: #3de8c4;
       }
 
-      .arrow {
-        font-size: 11px;
-        color: #8b949e;
+      :deep(.app-select) {
+        width: 240px;
+      }
+
+      :deep(.app-select .el-input__wrapper) {
+        background: transparent;
+        border: none;
+        box-shadow: none !important;
+      }
+
+      :deep(.app-select .el-input__inner) {
+        font-size: 13px;
+        color: #e6edf3;
       }
     }
 

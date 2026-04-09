@@ -1,0 +1,58 @@
+{
+  "_comment": "自动填充 - 单条译文编辑保存。",
+  "fieldDescription": {
+    "request": {
+      "translation": {
+        "type": "Translation",
+        "required": true,
+        "description": "被编辑保存的译文对象。"
+      }
+    },
+    "response": {
+      "data": { "type": "TranslationEditSaveResult", "required": true, "description": "保存结果。" }
+    },
+    "TranslationEditSaveResult": {
+      "saved": { "type": "boolean", "required": true, "description": "是否保存成功。" },
+      "updatedAt": { "type": "string", "required": true, "description": "保存时间（ISO 8601）。" }
+    }
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "自动填充-右侧编辑器点击“保存修改”",
+        "detail": "提交当前编辑中的单条译文并返回保存结果。"
+      }
+    ]
+  },
+  "sampleRequest": {
+    "translation": {
+      "id": "2",
+      "lang": "日语",
+      "langCode": "ja",
+      "status": "completed",
+      "appName": "人物検索、人物ファインダー",
+      "shortDesc": "AI人物検索、名前で人物を探す、スマート検索",
+      "fullDesc": "複数のオープンソースからの情報を提供します。",
+      "appNameCount": 12,
+      "shortDescCount": 23,
+      "fullDescCount": 23,
+      "appNameLimit": 30,
+      "shortDescLimit": 80,
+      "fullDescLimit": 4000,
+      "selected": false
+    }
+  },
+  "sampleResponse": {
+    "data": {
+      "saved": true,
+      "updatedAt": "2026-04-09T20:30:00.000Z"
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/product-operations/text-management/action/translation-edit-save",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "translation",
+    "responseBody": "TranslationEditSaveResult"
+  }
+}

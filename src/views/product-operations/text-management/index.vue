@@ -1,186 +1,35 @@
 <script setup lang="ts">
-  import { ref, computed, provide } from 'vue'
+  import { ref, computed, provide, onMounted } from 'vue'
   import TextReview from './TextReview.vue'
   import AutoFill from './AutoFill.vue'
   import PreviewFramework from './PreviewFramework.vue'
   import type { Step, AppContent, Translation } from './types'
+  import {
+    fetchAuditWordLists,
+    fetchGetStoreListingDraft,
+    fetchSaveStoreListingDraft,
+    fetchSubmitStore,
+    fetchTranslationsExport,
+    type StoreListingDraft
+  } from './api/text-management'
+  import { ElMessage } from 'element-plus'
 
   // ─── Current step ────────────────────────────────────────────────────────────
   const currentStep = ref<Step>(1)
 
   // ─── Shared app content ───────────────────────────────────────────────────────
   const appContent = ref<AppContent>({
-    appName: 'People Search, People Finder',
-    shortDesc: 'AI People Search, People Finder, Find People by Name with Smart Search App',
-    fullDesc:
-      'information across multiple open sources. Simply enter a name, and the system will discover relevant public data, organize it clearly, and present it in one place. Instead of endless manual searching, PeopleSearch uses AI to recognise meaningful patterns and deliver clear results through safe search practices.\n\nPeopleSearch combines AI, people finder, and smart search into one simple tool. It helps you search, discover, and Facebook, TikTok, and fucking find people efficiently while keeping everything clear and responsible.'
+    appName: '',
+    shortDesc: '',
+    fullDesc: ''
+  })
+  const auditWordLists = ref<{ bannedWords: string[]; brandWords: string[] }>({
+    bannedWords: [],
+    brandWords: []
   })
 
   // ─── Translation list ────────────────────────────────────────────────────────
-  const translations = ref<Translation[]>([
-    {
-      id: '1',
-      lang: '简体中文',
-      langCode: 'zh-CN',
-      status: 'completed',
-      appName: '人物搜索，人物查找器',
-      shortDesc: 'AI人物搜索，按姓名查找人物，智能搜索应用',
-      fullDesc:
-        '跨多个公开来源的信息。只需输入姓名，系统就会发现相关的公开数据，清晰地整理并呈现在一个地方。无需无尽地手动搜索，PeopleSearch 使用 AI 识别有意义的模式并通过安全搜索实践提供清晰的结果。',
-      appNameCount: 8,
-      shortDescCount: 45,
-      fullDescCount: 1876,
-      appNameLimit: 30,
-      shortDescLimit: 80,
-      fullDescLimit: 4000,
-      selected: false,
-      aiSuggestion: '可将"智能搜索"替换为"智能查找"以更符合居民表达'
-    },
-    {
-      id: '2',
-      lang: '日语',
-      langCode: 'ja',
-      status: 'completed',
-      appName: '人物検索、人物ファインダー',
-      shortDesc: 'AI人物検索、名前で人物を探す、スマート検索',
-      fullDesc: '複数のオープンソースからの情報を提供します。名前を入力するだけで...',
-      appNameCount: 12,
-      shortDescCount: 52,
-      fullDescCount: 2103,
-      appNameLimit: 30,
-      shortDescLimit: 80,
-      fullDescLimit: 4000,
-      selected: false
-    },
-    {
-      id: '3',
-      lang: '韩语',
-      langCode: 'ko',
-      status: 'completed',
-      appName: '인물 검색, 인물 파인더',
-      shortDesc: 'AI 인물 검색, 이름으로 사람 찾기',
-      fullDesc: '여러 공개 소스의 정보를 제공합니다...',
-      appNameCount: 15,
-      shortDescCount: 61,
-      fullDescCount: 1954,
-      appNameLimit: 30,
-      shortDescLimit: 80,
-      fullDescLimit: 4000,
-      selected: false
-    },
-    {
-      id: '4',
-      lang: '法语',
-      langCode: 'fr',
-      status: 'completed',
-      appName: 'Recherche de personnes, chercheur de personnes',
-      shortDesc: 'Recherche de personnes par IA, trouver des gens par nom',
-      fullDesc: 'Informations provenant de plusieurs sources ouvertes...',
-      appNameCount: 22,
-      shortDescCount: 78,
-      fullDescCount: 3876,
-      appNameLimit: 30,
-      shortDescLimit: 80,
-      fullDescLimit: 4000,
-      selected: false
-    },
-    {
-      id: '5',
-      lang: '德语',
-      langCode: 'de',
-      status: 'over_limit',
-      appName: 'Personensuche, Personenfinder und Smart-Suche',
-      shortDesc: 'KI-Personensuche, Personen nach Name finden',
-      fullDesc: 'Informationen aus mehreren offenen Quellen...',
-      appNameCount: 31,
-      shortDescCount: 65,
-      fullDescCount: 2234,
-      appNameLimit: 30,
-      shortDescLimit: 80,
-      fullDescLimit: 4000,
-      selected: false
-    },
-    {
-      id: '6',
-      lang: '西班牙语',
-      langCode: 'es',
-      status: 'completed',
-      appName: 'Búsqueda de personas, buscador',
-      shortDesc: 'Búsqueda de personas con IA, encontrar por nombre',
-      fullDesc: 'Información de múltiples fuentes abiertas...',
-      appNameCount: 19,
-      shortDescCount: 72,
-      fullDescCount: 2567,
-      appNameLimit: 30,
-      shortDescLimit: 80,
-      fullDescLimit: 4000,
-      selected: false
-    },
-    {
-      id: '7',
-      lang: '阿拉伯语',
-      langCode: 'ar',
-      status: 'completed',
-      appName: 'بحث الأشخاص، محدد الأشخاص',
-      shortDesc: 'بحث الأشخاص بالذكاء الاصطناعي، ابحث عن الناس بالاسم',
-      fullDesc: 'معلومات من مصادر مفتوحة متعددة...',
-      appNameCount: 18,
-      shortDescCount: 58,
-      fullDescCount: 1823,
-      appNameLimit: 30,
-      shortDescLimit: 80,
-      fullDescLimit: 4000,
-      selected: false
-    },
-    {
-      id: '8',
-      lang: '葡萄牙语',
-      langCode: 'pt-BR',
-      status: 'translating',
-      appName: '',
-      shortDesc: '',
-      fullDesc: '',
-      appNameCount: 0,
-      shortDescCount: 0,
-      fullDescCount: 0,
-      appNameLimit: 30,
-      shortDescLimit: 80,
-      fullDescLimit: 4000,
-      selected: false
-    },
-    {
-      id: '9',
-      lang: '印度尼西亚语',
-      langCode: 'id',
-      status: 'pending',
-      appName: '',
-      shortDesc: '',
-      fullDesc: '',
-      appNameCount: 0,
-      shortDescCount: 0,
-      fullDescCount: 0,
-      appNameLimit: 30,
-      shortDescLimit: 80,
-      fullDescLimit: 4000,
-      selected: false
-    },
-    {
-      id: '10',
-      lang: '意大利语',
-      langCode: 'it',
-      status: 'pending',
-      appName: '',
-      shortDesc: '',
-      fullDesc: '',
-      appNameCount: 0,
-      shortDescCount: 0,
-      fullDescCount: 0,
-      appNameLimit: 30,
-      shortDescLimit: 80,
-      fullDescLimit: 4000,
-      selected: false
-    }
-  ])
+  const translations = ref<Translation[]>([])
 
   // ─── Provide shared state to children ────────────────────────────────────────
   provide('appContent', appContent)
@@ -205,22 +54,23 @@
   }
 
   // ─── Header button labels ─────────────────────────────────────────────────────
+  type HeaderAction = 'saveDraft' | 'auditPass' | 'goPreview' | 'export' | 'import' | 'submitStore'
   const headerBtns = computed(() => {
     if (currentStep.value === 1)
       return [
-        { label: '保存草稿', type: 'secondary' },
-        { label: '通过审核，进入自动填充 →', type: 'primary' }
+        { label: '保存草稿', type: 'secondary', action: 'saveDraft' as HeaderAction },
+        { label: '通过审核，进入自动填充 →', type: 'primary', action: 'auditPass' as HeaderAction }
       ]
     if (currentStep.value === 2)
       return [
-        { label: '保存草稿', type: 'secondary' },
-        { label: '导出译文', type: 'secondary', dropdown: true },
-        { label: '进入预演框架 →', type: 'primary' }
+        { label: '保存草稿', type: 'secondary', action: 'saveDraft' as HeaderAction },
+        { label: '导出译文', type: 'secondary', action: 'export' as HeaderAction, dropdown: true },
+        { label: '进入预演框架 →', type: 'primary', action: 'goPreview' as HeaderAction }
       ]
     return [
-      { label: '导入译文', type: 'secondary' },
-      { label: '导出译文', type: 'secondary', dropdown: true },
-      { label: '提交到商店后台', type: 'primary' }
+      { label: '导入译文', type: 'secondary', action: 'import' as HeaderAction },
+      { label: '导出译文', type: 'secondary', action: 'export' as HeaderAction, dropdown: true },
+      { label: '提交到商店后台', type: 'primary', action: 'submitStore' as HeaderAction }
     ]
   })
 
@@ -239,11 +89,96 @@
     currentStep.value = 3
   }
 
-  const handleSaveDraft = () => {
-    ElMessage.success('草稿已保存')
+  const handleSaveDraft = async () => {
+    try {
+      const payload: StoreListingDraft = {
+        appContent: appContent.value,
+        translations: translations.value,
+        step1Done: step1Done.value,
+        step2Done: step2Done.value
+      }
+      await fetchSaveStoreListingDraft(payload)
+      ElMessage.success('草稿已保存')
+    } catch {
+      ElMessage.error('保存失败，请检查接口或稍后重试')
+    }
   }
 
-  import { ElMessage } from 'element-plus'
+  const handleExport = async (scope: 'completed' | 'selected' = 'completed') => {
+    try {
+      const res = await fetchTranslationsExport({
+        format: 'xlsx',
+        scope,
+        langCodes:
+          scope === 'selected'
+            ? translations.value.filter((t) => t.selected).map((t) => t.langCode)
+            : translations.value.filter((t) => t.status === 'completed').map((t) => t.langCode)
+      })
+      ElMessage.success(`导出任务已生成：${res.fileName}`)
+    } catch {
+      ElMessage.error('导出失败，请检查接口后重试')
+    }
+  }
+
+  const handleImport = () => {
+    ElMessage.info('请在右侧“导入译文”区域选择文件，导入会触发接口')
+  }
+
+  const handleSubmitStore = async () => {
+    try {
+      const res = await fetchSubmitStore({
+        appContent: appContent.value,
+        translations: translations.value,
+        platform: 'google_play'
+      })
+      ElMessage.success(`已提交到商店后台，任务ID：${res.taskId}`)
+    } catch {
+      ElMessage.error('提交失败，请检查接口后重试')
+    }
+  }
+
+  const handleHeaderAction = async (action: HeaderAction) => {
+    if (action === 'saveDraft') return handleSaveDraft()
+    if (action === 'auditPass') return handleAuditPass()
+    if (action === 'goPreview') return handleGoPreview()
+    if (action === 'export') return handleExport()
+    if (action === 'import') return handleImport()
+    if (action === 'submitStore') return handleSubmitStore()
+  }
+
+  const loadDraftByApp = async (appId = '') => {
+    const draft = await fetchGetStoreListingDraft(appId)
+    appContent.value = {
+      appName: draft.appContent?.appName ?? '',
+      shortDesc: draft.appContent?.shortDesc ?? '',
+      fullDesc: draft.appContent?.fullDesc ?? ''
+    }
+    translations.value = Array.isArray(draft.translations) ? draft.translations : []
+    step1Done.value = draft.step1Done === true
+    step2Done.value = draft.step2Done === true
+    currentStep.value = step2Done.value ? 3 : step1Done.value ? 2 : 1
+  }
+
+  const handleAppChange = async (appId: string) => {
+    try {
+      await loadDraftByApp(appId)
+      ElMessage.success('应用草稿已切换')
+    } catch {
+      ElMessage.error('切换应用失败，请检查接口后重试')
+    }
+  }
+
+  onMounted(async () => {
+    try {
+      const [, words] = await Promise.all([loadDraftByApp(''), fetchAuditWordLists()])
+      auditWordLists.value = {
+        bannedWords: words.bannedWords ?? [],
+        brandWords: words.brandWords ?? []
+      }
+    } catch {
+      ElMessage.warning('初始化接口拉取失败，当前展示为本地内容')
+    }
+  })
 </script>
 
 <template>
@@ -257,28 +192,26 @@
       </div>
       <div class="header-actions">
         <template v-for="btn in headerBtns" :key="btn.label">
-          <el-dropdown v-if="btn.dropdown" trigger="click">
+          <el-dropdown
+            v-if="btn.dropdown"
+            trigger="click"
+            @command="(scope) => void handleExport(scope as 'completed' | 'selected')"
+          >
             <el-button :class="btn.type === 'primary' ? 'btn-primary' : 'btn-secondary'">
               {{ btn.label }}
               <span class="dropdown-arrow">▼</span>
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item>全部导出</el-dropdown-item>
-                <el-dropdown-item>选择语种导出</el-dropdown-item>
+                <el-dropdown-item command="completed">全部导出</el-dropdown-item>
+                <el-dropdown-item command="selected">选择语种导出</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
           <el-button
             v-else
             :class="btn.type === 'primary' ? 'btn-primary' : 'btn-secondary'"
-            @click="
-              btn.label.includes('审核')
-                ? handleAuditPass()
-                : btn.label.includes('预演')
-                  ? handleGoPreview()
-                  : handleSaveDraft()
-            "
+            @click="void handleHeaderAction(btn.action)"
           >
             {{ btn.label }}
           </el-button>
@@ -322,8 +255,10 @@
           <TextReview
             v-if="currentStep === 1"
             :app-content="appContent"
+            :audit-word-lists="auditWordLists"
             @update:app-content="(v) => Object.assign(appContent, v)"
             @audit-pass="handleAuditPass"
+            @app-change="(appId) => void handleAppChange(appId)"
           />
           <AutoFill
             v-else-if="currentStep === 2"

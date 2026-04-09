@@ -1,0 +1,79 @@
+{
+  "_comment": "预演框架 - 导入译文文件，解析后返回可直接替换的译文列表。",
+  "fieldDescription": {
+    "request": {
+      "fileName": { "type": "string", "required": true, "description": "导入文件名。" },
+      "fileType": {
+        "type": "string",
+        "required": true,
+        "enum": ["xlsx", "csv", "json"],
+        "description": "导入文件格式。"
+      },
+      "payload": {
+        "type": "string",
+        "required": true,
+        "description": "文件内容（文本或 base64 编码）。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "TranslationsImportResult",
+        "required": true,
+        "description": "导入结果与译文列表。"
+      }
+    },
+    "TranslationsImportResult": {
+      "translations": {
+        "type": "Translation[]",
+        "required": true,
+        "description": "导入后译文列表。"
+      },
+      "importedCount": { "type": "number", "required": true, "description": "成功导入条数。" },
+      "overwrittenCount": { "type": "number", "required": true, "description": "覆盖原有条数。" }
+    }
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "预演框架点击“导入译文”并选择文件",
+        "detail": "上传文件内容，后端解析并返回标准译文列表。"
+      }
+    ]
+  },
+  "sampleRequest": {
+    "fileName": "translations.json",
+    "fileType": "json",
+    "payload": "[{\"langCode\":\"en\",\"appName\":\"People Search\"}]"
+  },
+  "sampleResponse": {
+    "data": {
+      "translations": [
+        {
+          "id": "11",
+          "lang": "英语",
+          "langCode": "en",
+          "status": "completed",
+          "appName": "People Search, People Finder",
+          "shortDesc": "AI people finder by name",
+          "fullDesc": "Discover public profile information from open sources.",
+          "appNameCount": 28,
+          "shortDescCount": 24,
+          "fullDescCount": 59,
+          "appNameLimit": 30,
+          "shortDescLimit": 80,
+          "fullDescLimit": 4000,
+          "selected": false
+        }
+      ],
+      "importedCount": 1,
+      "overwrittenCount": 1
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/product-operations/text-management/action/translations-import",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "fileName, fileType, payload",
+    "responseBody": "TranslationsImportResult"
+  }
+}

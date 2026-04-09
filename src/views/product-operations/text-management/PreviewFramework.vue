@@ -2,6 +2,7 @@
   import { ref, computed, watch, nextTick } from 'vue'
   import { ElMessage } from 'element-plus'
   import type { AppContent, Translation } from './types'
+  import { fetchTranslationsExport, fetchTranslationsImport } from './api/text-management'
 
   const props = defineProps<{
     appContent: AppContent
@@ -165,41 +166,23 @@
     { value: 'json', label: 'JSON' }
   ]
 
-  const doExport = () => {
+  const doExport = async () => {
     const langs =
       exportScope.value === 'completed'
         ? localTranslations.value.filter((t) => t.status === 'completed')
         : exportScope.value === 'selected'
           ? localTranslations.value.filter((t) => selectForExport.value.has(t.id))
           : localTranslations.value.filter((t) => customLangs.value.includes(t.langCode))
-
-    if (exportFormat.value === 'json') {
-      const blob = new Blob([JSON.stringify(langs, null, 2)], { type: 'application/json' })
-      triggerDownload(blob, 'translations.json')
-    } else if (exportFormat.value === 'csv') {
-      const header = 'langCode,lang,appName,shortDesc,fullDesc\n'
-      const rows = langs.map(
-        (t) =>
-          `"${t.langCode}","${t.lang}","${t.appName}","${t.shortDesc}","${t.fullDesc.replace(/"/g, '""')}"`
-      )
-      const blob = new Blob([header + rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
-      triggerDownload(blob, 'translations.csv')
-    } else {
-      // xlsx stub - in real project use SheetJS
-      ElMessage.info('Excel 导出需要 SheetJS 支持，已导出为 JSON')
-      const blob = new Blob([JSON.stringify(langs, null, 2)], { type: 'application/json' })
-      triggerDownload(blob, 'translations.json')
+    try {
+      const res = await fetchTranslationsExport({
+        format: exportFormat.value,
+        scope: exportScope.value,
+        langCodes: langs.map((t) => t.langCode)
+      })
+      ElMessage.success(`导出任务已生成：${res.fileName}`)
+    } catch {
+      ElMessage.error('导出失败，请检查接口后重试')
     }
-    ElMessage.success(`已导出 ${langs.length} 种语言`)
-  }
-
-  function triggerDownload(blob: Blob, filename: string) {
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
   }
 
   // ─── Import ───────────────────────────────────────────────────────────────────
@@ -217,14 +200,26 @@
     if (file) handleImportFile(file)
   }
 
-  const handleImportFile = (file: File) => {
+  const handleImportFile = async (file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase()
     if (!['xlsx', 'csv', 'json'].includes(ext || '')) {
       ElMessage.error('仅支持 .xlsx .csv .json 格式')
       return
     }
-    ElMessage.success(`正在导入 ${file.name}...`)
-    // In real project: parse file and call API to update translations
+    const payload = await file.text()
+    try {
+      const res = await fetchTranslationsImport({
+        fileName: file.name,
+        fileType: ext || 'json',
+        payload
+      })
+      localTranslations.value = JSON.parse(JSON.stringify(res.translations))
+      selectedLang.value = localTranslations.value[0] ?? null
+      emitTranslations()
+      ElMessage.success(`导入成功：${res.importedCount} 条，覆盖 ${res.overwrittenCount} 条`)
+    } catch {
+      ElMessage.error('导入失败，请检查接口后重试')
+    }
   }
 
   // ─── Preview helpers ──────────────────────────────────────────────────────────
@@ -235,13 +230,13 @@
   const taskSummary = computed(() => {
     const total = Math.max(1, localTranslations.value.length)
     return {
-      appName: 'PeopleSearch - People Finder',
-      store: 'Google Play',
+      appName: props.appContent.appName || '--',
+      store: PLATFORMS.find((p) => p.key === selectedPlatform.value)?.label || '--',
       progress: tabCounts.value.completed,
       total: localTranslations.value.length,
       percent: Math.round((tabCounts.value.completed / total) * 100),
       overLimit: tabCounts.value.over_limit,
-      lastSaved: '2026-03-13 15:42'
+      lastSaved: '--'
     }
   })
 </script>
