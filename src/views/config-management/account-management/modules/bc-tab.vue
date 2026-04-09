@@ -38,19 +38,12 @@
       </div>
       <div class="filter-group">
         <span class="filter-label">开户主体：</span>
-        <ElSelect
+        <ElInput
           v-model="ownerTypeFilter"
           class="filter-select filter-select--narrow"
-          placeholder="全部"
+          placeholder="请输入"
           clearable
-        >
-          <ElOption
-            v-for="o in ownerTypeOptions"
-            :key="o.value || 'all'"
-            :label="o.label"
-            :value="o.value"
-          />
-        </ElSelect>
+        />
       </div>
       <div class="filter-group">
         <span class="filter-label">封户记录：</span>
@@ -246,12 +239,6 @@
     { label: '不再使用', value: '不再使用' },
     { label: '封禁', value: '封禁' },
     { label: '其他', value: '其他' }
-  ]
-  const ownerTypeOptions = [
-    { label: '全部', value: '' },
-    { label: '企业户', value: '企业户' },
-    { label: '个人户', value: '个人户' },
-    { label: '小额广告户', value: '小额广告户' }
   ]
   const banRecordOptions = [
     { label: '全部', value: '' },
@@ -508,7 +495,11 @@
         return false
       if (sourceFilter.value && item.source !== sourceFilter.value) return false
       if (statusFilter.value && item.status !== statusFilter.value) return false
-      if (ownerTypeFilter.value && item.ownerType !== ownerTypeFilter.value) return false
+      if (
+        ownerTypeFilter.value &&
+        !item.ownerType.toLowerCase().includes(ownerTypeFilter.value.toLowerCase())
+      )
+        return false
       if (banRecordFilter.value && item.banRecord !== banRecordFilter.value) return false
       return true
     })

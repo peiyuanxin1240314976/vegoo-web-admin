@@ -341,7 +341,7 @@ export interface OpenAccountTableQuery {
 // ─── BC / BM 管理 ──────────────────────────────────────────
 
 export type BcStatus = '健康' | '可用' | '不再使用' | '封禁' | '其他'
-export type BcOwnerType = '企业户' | '个人户' | '小额广告户'
+export type BcOwnerType = '企业户' | '个人户' | '小额广告户' | (string & {})
 export type BcBanRecord = '无' | '有'
 
 export interface BcItem {
