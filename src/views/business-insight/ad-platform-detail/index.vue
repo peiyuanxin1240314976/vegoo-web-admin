@@ -134,7 +134,10 @@
   /** 与 meta `countryOptions` 的 value 对齐（多为小写 ISO2），「全部」为 `""` */
   const countryFilter = ref('all')
   const activeMetric = ref<'revenue' | 'ecpm' | 'fillRate'>('revenue')
-  const pendingQuery = ref(false)
+  /** 请求进行中（含首屏），用于骨架/遮罩与按钮 loading */
+  const pendingQuery = ref(true)
+  /** 避免并发重复请求；勿用 pendingQuery 作互斥，否则首屏 pendingQuery=true 会拦掉 runQuery */
+  const queryInFlight = ref(false)
   const hasLoadedOnce = ref(false)
 
   const appliedFilters = ref({
@@ -390,7 +393,8 @@
   }
 
   async function runQuery() {
-    if (pendingQuery.value) return
+    if (queryInFlight.value) return
+    queryInFlight.value = true
     pendingQuery.value = true
     try {
       const { startDate, endDate } = resolveDateRangeParams()
@@ -455,6 +459,7 @@
       chartInstance?.setOption(buildChartOption(), true)
     } finally {
       pendingQuery.value = false
+      queryInFlight.value = false
       hasLoadedOnce.value = true
     }
   }
@@ -772,179 +777,195 @@
           </div>
         </div>
 
-        <div class="main-grid" :class="{ 'is-loading': pendingQuery && !hasLoadedOnce }">
-          <!-- Left column -->
-          <div class="left-col">
-            <!-- KPI cards -->
-            <div class="kpi-row">
-              <div
-                v-for="card in kpiCards"
-                :key="card.label"
-                class="kpi-card"
-                :style="{ '--accent': card.color }"
-              >
-                <div class="kpi-top">
-                  <span class="kpi-label">{{ card.label }}</span>
-                  <div class="kpi-spark">
-                    <svg viewBox="0 0 80 28" preserveAspectRatio="none">
-                      <defs>
-                        <linearGradient :id="`g-${card.label}`" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" :stop-color="card.color" stop-opacity="0.6" />
-                          <stop offset="100%" :stop-color="card.color" stop-opacity="0" />
-                        </linearGradient>
-                      </defs>
-                      <polyline
-                        :points="sparkPolylinePoints(card.sparkData)"
-                        fill="none"
-                        :stroke="card.color"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
+        <div
+          class="content-body"
+          v-loading="pendingQuery && hasLoadedOnce"
+          element-loading-text="加载中..."
+          element-loading-background="rgba(10, 10, 10, 0.55)"
+        >
+          <div class="main-grid" :class="{ 'is-loading': pendingQuery && !hasLoadedOnce }">
+            <!-- Left column -->
+            <div class="left-col">
+              <!-- KPI cards -->
+              <div class="kpi-row">
+                <div
+                  v-for="card in kpiCards"
+                  :key="card.label"
+                  class="kpi-card"
+                  :style="{ '--accent': card.color }"
+                >
+                  <div class="kpi-top">
+                    <span class="kpi-label">{{ card.label }}</span>
+                    <div class="kpi-spark">
+                      <svg viewBox="0 0 80 28" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient :id="`g-${card.label}`" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" :stop-color="card.color" stop-opacity="0.6" />
+                            <stop offset="100%" :stop-color="card.color" stop-opacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <polyline
+                          :points="sparkPolylinePoints(card.sparkData)"
+                          fill="none"
+                          :stroke="card.color"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="kpi-value" :style="{ color: card.color }">{{ card.value }}</div>
+                  <div class="kpi-change" :class="card.positive ? 'pos' : 'neg'">
+                    <svg width="12" height="12" viewBox="0 0 12 12">
+                      <path v-if="card.positive" d="M6 2l4 6H2l4-6z" fill="currentColor" />
+                      <path v-else d="M6 10L2 4h8L6 10z" fill="currentColor" />
                     </svg>
+                    {{ card.change }}
                   </div>
                 </div>
-                <div class="kpi-value" :style="{ color: card.color }">{{ card.value }}</div>
-                <div class="kpi-change" :class="card.positive ? 'pos' : 'neg'">
-                  <svg width="12" height="12" viewBox="0 0 12 12">
-                    <path v-if="card.positive" d="M6 2l4 6H2l4-6z" fill="currentColor" />
-                    <path v-else d="M6 10L2 4h8L6 10z" fill="currentColor" />
-                  </svg>
-                  {{ card.change }}
+              </div>
+
+              <!-- Chart card -->
+              <div class="chart-card">
+                <div class="chart-header">
+                  <span class="section-title">核心指标趋势</span>
+                  <div class="metric-btns">
+                    <button
+                      :class="['metric-btn', activeMetric === 'revenue' && 'active-revenue']"
+                      @click="activeMetric = 'revenue'"
+                      >收入</button
+                    >
+                    <button
+                      :class="['metric-btn', activeMetric === 'ecpm' && 'active-ecpm']"
+                      @click="activeMetric = 'ecpm'"
+                      >eCPM</button
+                    >
+                    <button
+                      :class="['metric-btn', activeMetric === 'fillRate' && 'active-fill']"
+                      @click="activeMetric = 'fillRate'"
+                      >填充率</button
+                    >
+                  </div>
                 </div>
+                <div ref="chartRef" class="chart-canvas" />
               </div>
             </div>
 
-            <!-- Chart card -->
-            <div class="chart-card">
-              <div class="chart-header">
-                <span class="section-title">核心指标趋势</span>
-                <div class="metric-btns">
-                  <button
-                    :class="['metric-btn', activeMetric === 'revenue' && 'active-revenue']"
-                    @click="activeMetric = 'revenue'"
-                    >收入</button
-                  >
-                  <button
-                    :class="['metric-btn', activeMetric === 'ecpm' && 'active-ecpm']"
-                    @click="activeMetric = 'ecpm'"
-                    >eCPM</button
-                  >
-                  <button
-                    :class="['metric-btn', activeMetric === 'fillRate' && 'active-fill']"
-                    @click="activeMetric = 'fillRate'"
-                    >填充率</button
-                  >
-                </div>
-              </div>
-              <div ref="chartRef" class="chart-canvas" />
-            </div>
-          </div>
-
-          <!-- Right column: AI Insights -->
-          <div class="ai-panel">
-            <div class="ai-header">
-              <span class="section-title">AI洞察与建议</span>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="ai-icon">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
-                <path
-                  d="M8 12s1-3 4-3 4 3 4 3-1 3-4 3-4-3-4-3z"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                />
-                <circle cx="12" cy="12" r="2" fill="currentColor" />
-                <path
-                  d="M12 2v2M12 20v2M2 12h2M20 12h2"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </div>
-            <div class="ai-insights">
-              <template v-if="aiInsights.length">
-                <div v-for="(ins, i) in aiInsights" :key="i" class="insight-item">
-                  <div class="insight-title">{{ ins.title }}</div>
-                  <!-- eslint-disable-next-line vue/no-v-html -->
-                  <div class="insight-body" v-html="highlightText(ins.content, ins.highlights)" />
-                </div>
-              </template>
-              <div v-else class="ai-empty">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" class="ai-empty__icon">
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="9"
-                    stroke="currentColor"
-                    stroke-width="1.2"
-                    stroke-dasharray="3 2"
-                  />
+            <!-- Right column: AI Insights -->
+            <div class="ai-panel">
+              <div class="ai-header">
+                <span class="section-title">AI洞察与建议</span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="ai-icon">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
                   <path
-                    d="M9 10h.01M15 10h.01M9 14s1 2 3 2 3-2 3-2"
+                    d="M8 12s1-3 4-3 4 3 4 3-1 3-4 3-4-3-4-3z"
                     stroke="currentColor"
-                    stroke-width="1.4"
+                    stroke-width="1.5"
+                  />
+                  <circle cx="12" cy="12" r="2" fill="currentColor" />
+                  <path
+                    d="M12 2v2M12 20v2M2 12h2M20 12h2"
+                    stroke="currentColor"
+                    stroke-width="1.5"
                     stroke-linecap="round"
                   />
                 </svg>
-                <span class="ai-empty__text">暂无 AI 洞察</span>
               </div>
-            </div>
-          </div> </div
-        ><!-- /main-grid -->
-
-        <!-- ── Table ───────────────────────────────────────────────── -->
-        <div class="table-card" :class="{ 'is-loading': pendingQuery && !hasLoadedOnce }">
-          <div class="table-head">
-            <div class="section-title section-title--glow">按应用表现细分</div>
-          </div>
-          <div class="table-scroll">
-            <el-table :data="tableData" style="width: 100%" :row-class-name="() => 'admob-row'">
-              <el-table-column prop="app" label="应用" sortable min-width="160" align="left" />
-              <el-table-column
-                prop="revenue"
-                label="总收入"
-                sortable
-                min-width="110"
-                align="left"
-              />
-              <el-table-column
-                prop="revenueShare"
-                label="收入占比"
-                sortable
-                min-width="110"
-                align="left"
-              />
-              <el-table-column prop="ecpm" label="eCPM" sortable min-width="110" align="left" />
-              <el-table-column
-                prop="fillRate"
-                label="填充率"
-                sortable
-                min-width="110"
-                align="left"
-              />
-              <el-table-column
-                prop="impressions"
-                label="展示次数"
-                sortable
-                min-width="120"
-                align="left"
-              />
-              <el-table-column label="操作" min-width="120" align="center">
-                <template #default="{ row }">
-                  <el-button
-                    size="small"
-                    class="detail-btn"
-                    round
-                    @click="goToAppAdPlatformPerformance(row)"
-                  >
-                    查看详情
-                  </el-button>
+              <div class="ai-insights">
+                <template v-if="aiInsights.length">
+                  <div v-for="(ins, i) in aiInsights" :key="i" class="insight-item">
+                    <div class="insight-title">{{ ins.title }}</div>
+                    <!-- eslint-disable-next-line vue/no-v-html -->
+                    <div class="insight-body" v-html="highlightText(ins.content, ins.highlights)" />
+                  </div>
                 </template>
-              </el-table-column>
-            </el-table>
-          </div> </div
-        ><!-- /table-card --> </div
-      ><!-- /content-wrap -->
+                <div v-else class="ai-empty">
+                  <svg
+                    width="36"
+                    height="36"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    class="ai-empty__icon"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-dasharray="3 2"
+                    />
+                    <path
+                      d="M9 10h.01M15 10h.01M9 14s1 2 3 2 3-2 3-2"
+                      stroke="currentColor"
+                      stroke-width="1.4"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <span class="ai-empty__text">暂无 AI 洞察</span>
+                </div>
+              </div>
+            </div> </div
+          ><!-- /main-grid -->
+
+          <!-- ── Table ───────────────────────────────────────────────── -->
+          <div class="table-card" :class="{ 'is-loading': pendingQuery && !hasLoadedOnce }">
+            <div class="table-head">
+              <div class="section-title section-title--glow">按应用表现细分</div>
+            </div>
+            <div class="table-scroll">
+              <el-table :data="tableData" style="width: 100%" :row-class-name="() => 'admob-row'">
+                <el-table-column prop="app" label="应用" sortable min-width="160" align="left" />
+                <el-table-column
+                  prop="revenue"
+                  label="总收入"
+                  sortable
+                  min-width="110"
+                  align="left"
+                />
+                <el-table-column
+                  prop="revenueShare"
+                  label="收入占比"
+                  sortable
+                  min-width="110"
+                  align="left"
+                />
+                <el-table-column prop="ecpm" label="eCPM" sortable min-width="110" align="left" />
+                <el-table-column
+                  prop="fillRate"
+                  label="填充率"
+                  sortable
+                  min-width="110"
+                  align="left"
+                />
+                <el-table-column
+                  prop="impressions"
+                  label="展示次数"
+                  sortable
+                  min-width="120"
+                  align="left"
+                />
+                <el-table-column label="操作" min-width="120" align="center">
+                  <template #default="{ row }">
+                    <el-button
+                      size="small"
+                      class="detail-btn"
+                      round
+                      @click="goToAppAdPlatformPerformance(row)"
+                    >
+                      查看详情
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+          <!-- /table-card -->
+        </div>
+        <!-- /content-body -->
+      </div>
+      <!-- /content-wrap -->
     </div>
   </div>
 </template>
@@ -1096,6 +1117,10 @@
 
   // ─── Content wrap (鱼骨屏容器) ────────────────────────────────────────────────
   .content-wrap {
+    position: relative;
+  }
+
+  .content-body {
     position: relative;
   }
 
