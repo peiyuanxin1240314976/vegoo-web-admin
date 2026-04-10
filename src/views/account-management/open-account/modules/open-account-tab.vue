@@ -14,7 +14,7 @@
       @open-feishu="handleOpenFeishuSetting"
     />
 
-    <OpenAccountStatCards :stats="stats" />
+    <OpenAccountStatCards :stats="finalStats" />
 
     <OpenAccountRecordTable
       :paged-list="pagedList"
@@ -39,6 +39,7 @@
   import { storeToRefs } from 'pinia'
   import {
     fetchOpenAccountFilterOptions,
+    fetchOpenAccountOverviewStats,
     fetchOpenAccountFeishuConfig,
     fetchOpenAccountTable,
     saveOpenAccountFeishuConfig
@@ -85,6 +86,12 @@
   const innerSelectedId = ref('')
 
   const list = ref<OpenAccountItem[]>([])
+  const remoteStats = ref<{
+    total: number
+    pending: number
+    active: number
+    failed: number
+  } | null>(null)
   const feishuEnabled = ref(true)
   const filterMetaLoading = ref(false)
   const agencySelectOptions = ref<string[]>([])
@@ -233,6 +240,7 @@
     }
     await loadFilterOptions()
     loadOpenAccountList()
+    loadOverviewStats()
     loadFeishuConfig()
   })
 
@@ -269,6 +277,26 @@
     failed: list.value.filter((i) => i.status === '开户失败').length
   }))
 
+  const finalStats = computed(() => remoteStats.value ?? stats.value)
+
+  const loadOverviewStats = async () => {
+    if (isOpenAccountEndpointMock(OpenAccountEndpoint.OverviewStats)) {
+      remoteStats.value = null
+      return
+    }
+    try {
+      remoteStats.value = await fetchOpenAccountOverviewStats({
+        keyword: props.searchKeyword,
+        source: sourceFilter.value,
+        status: statusFilter.value,
+        agency: agencyFilter.value,
+        app: appFilter.value
+      })
+    } catch {
+      remoteStats.value = null
+    }
+  }
+
   const statusOptions = computed(() =>
     statusOptionsState.value.map((item) => {
       if (item.value === '待分配') return { ...item, count: stats.value.pending }
@@ -289,6 +317,7 @@
     ],
     () => {
       currentPage.value = 1
+      loadOverviewStats()
     }
   )
 

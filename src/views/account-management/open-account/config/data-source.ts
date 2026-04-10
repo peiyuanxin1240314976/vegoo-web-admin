@@ -8,6 +8,7 @@ import { AccountApiSource } from '@/views/config-management/account-management/c
 
 export enum OpenAccountEndpoint {
   Table = 'table',
+  OverviewStats = 'overviewStats',
   FilterOptions = 'filterOptions',
   Create = 'create',
   Assign = 'assign',
@@ -22,6 +23,7 @@ const OPEN_ACCOUNT_ENDPOINT_TO_SOURCE_KEY: Record<
   keyof typeof AccountApiSource
 > = {
   [OpenAccountEndpoint.Table]: 'openAccountTable',
+  [OpenAccountEndpoint.OverviewStats]: 'openAccountOverviewStats',
   [OpenAccountEndpoint.FilterOptions]: 'openAccountTable',
   [OpenAccountEndpoint.Create]: 'createOpenAccount',
   [OpenAccountEndpoint.Assign]: 'assignOpenAccountCredential',
