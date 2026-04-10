@@ -52,6 +52,12 @@
   import OpenAccountFormDialog from '@/views/config-management/account-management/modules/open-account-form-dialog.vue'
   import OpenAccountAssignDialog from '@/views/config-management/account-management/modules/open-account-assign-dialog.vue'
   import OpenAccountDeleteDialog from '@/views/config-management/account-management/modules/open-account-delete-dialog.vue'
+  import { exportOpenAccountList } from '@/api/config-management/account-management'
+  import {
+    OpenAccountEndpoint,
+    isOpenAccountEndpointMock
+  } from '@/views/account-management/open-account/config/data-source'
+  import { mockExportOpenAccountList } from '@/views/account-management/open-account/mock/open-account-api-mock'
   import type { OpenAccountItem } from '@/views/config-management/account-management/types'
 
   defineOptions({ name: 'OpenAccount' })
@@ -75,6 +81,15 @@
   }
 
   const handleExport = () => {
+    const useMock = isOpenAccountEndpointMock(OpenAccountEndpoint.Export)
+    if (!useMock) {
+      exportOpenAccountList({})
+        .then(() => ElMessage.success('导出成功'))
+        .catch(() => ElMessage.error('导出失败'))
+      return
+    }
+    // mock 分支：仅模拟返回 downloadUrl（不发网络请求）
+    void mockExportOpenAccountList()
     ElMessage.success('导出成功')
   }
 

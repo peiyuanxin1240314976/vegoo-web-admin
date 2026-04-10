@@ -22,7 +22,7 @@ import type {
   CompareMetricsResponse
 } from '@/views/product-insight/business-report/types'
 
-const LARK_BASE = '/api/v1/lark'
+const LARK_BASE = '/api/v1/datacenter/lark'
 
 /** 向下剥离网关嵌套的 `data`，直至得到业务体（axios 已解包一层 BaseResponse.data） */
 function unwrapReportPayload<T>(raw: unknown, maxDepth = 4): T {

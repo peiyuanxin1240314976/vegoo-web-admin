@@ -39,6 +39,7 @@
   import { storeToRefs } from 'pinia'
   import {
     fetchOpenAccountFeishuConfig,
+    fetchOpenAccountOverviewStats,
     fetchOpenAccountTable,
     saveOpenAccountFeishuConfig
   } from '@/api/config-management/account-management'
@@ -156,6 +157,31 @@
     }
   }
 
+  const remoteStats = ref<{
+    total: number
+    pending: number
+    active: number
+    failed: number
+  } | null>(null)
+
+  const loadOverviewStats = async () => {
+    if (AccountApiSource.openAccountOverviewStats) {
+      remoteStats.value = null
+      return
+    }
+    try {
+      remoteStats.value = await fetchOpenAccountOverviewStats({
+        keyword: props.searchKeyword,
+        source: sourceFilter.value,
+        status: statusFilter.value,
+        agency: agencyFilter.value,
+        app: appFilter.value
+      })
+    } catch {
+      remoteStats.value = null
+    }
+  }
+
   onMounted(async () => {
     filterMetaLoading.value = true
     try {
@@ -164,6 +190,7 @@
       filterMetaLoading.value = false
     }
     loadOpenAccountList()
+    loadOverviewStats()
     loadFeishuConfig()
   })
 
@@ -193,12 +220,15 @@
     return filteredList.value.slice(s, s + pageSize.value)
   })
 
-  const stats = computed(() => ({
-    total: list.value.length,
-    pending: list.value.filter((i) => i.status === '待分配').length,
-    active: list.value.filter((i) => i.status === '已激活').length,
-    failed: list.value.filter((i) => i.status === '开户失败').length
-  }))
+  const stats = computed(() => {
+    if (remoteStats.value) return remoteStats.value
+    return {
+      total: list.value.length,
+      pending: list.value.filter((i) => i.status === '待分配').length,
+      active: list.value.filter((i) => i.status === '已激活').length,
+      failed: list.value.filter((i) => i.status === '开户失败').length
+    }
+  })
 
   const statusOptions = computed(() => [
     { label: '全部', value: '', type: 'default' as const },
@@ -217,6 +247,7 @@
     ],
     () => {
       currentPage.value = 1
+      void loadOverviewStats()
     }
   )
 

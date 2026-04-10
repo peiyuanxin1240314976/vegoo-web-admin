@@ -8,6 +8,7 @@ import { AccountApiSource } from '@/views/config-management/account-management/c
 
 export enum BcManagementEndpoint {
   Table = 'table',
+  OverviewStats = 'overviewStats',
   FilterOptions = 'filterOptions',
   Create = 'create',
   Update = 'update',
@@ -20,6 +21,7 @@ const BC_MANAGEMENT_ENDPOINT_TO_SOURCE_KEY: Record<
   keyof typeof AccountApiSource
 > = {
   [BcManagementEndpoint.Table]: 'bcTable',
+  [BcManagementEndpoint.OverviewStats]: 'bcOverviewStats',
   [BcManagementEndpoint.FilterOptions]: 'bcTable',
   [BcManagementEndpoint.Create]: 'createBc',
   [BcManagementEndpoint.Update]: 'updateBc',

@@ -35,6 +35,7 @@ export const AccountApiSource: Record<
   | 'exportCredential'
   | 'validateCredentialBatch'
   | 'openAccountTable'
+  | 'openAccountOverviewStats'
   | 'createOpenAccount'
   | 'assignOpenAccountCredential'
   | 'deleteOpenAccount'
@@ -42,6 +43,7 @@ export const AccountApiSource: Record<
   | 'fetchOpenAccountFeishuConfig'
   | 'saveOpenAccountFeishuConfig'
   | 'bcTable'
+  | 'bcOverviewStats'
   | 'createBc'
   | 'updateBc'
   | 'deleteBc'
@@ -72,17 +74,19 @@ export const AccountApiSource: Record<
   exportCredential: false,
   validateCredentialBatch: false,
   // ── 开户 Tab ─────────────────────────────────────────
-  openAccountTable: true,
-  createOpenAccount: true,
-  assignOpenAccountCredential: true,
-  deleteOpenAccount: true,
-  exportOpenAccount: true,
-  fetchOpenAccountFeishuConfig: true,
-  saveOpenAccountFeishuConfig: true,
+  openAccountTable: false,
+  openAccountOverviewStats: false,
+  createOpenAccount: false,
+  assignOpenAccountCredential: false,
+  deleteOpenAccount: false,
+  exportOpenAccount: false,
+  fetchOpenAccountFeishuConfig: false,
+  saveOpenAccountFeishuConfig: false,
   // ── BC/BM（路由 `/account-management/bc-management`）────────────────
-  bcTable: true,
-  createBc: true,
-  updateBc: true,
-  deleteBc: true,
-  exportBc: true
+  bcTable: false,
+  bcOverviewStats: false,
+  createBc: false,
+  updateBc: false,
+  deleteBc: false,
+  exportBc: false
 }

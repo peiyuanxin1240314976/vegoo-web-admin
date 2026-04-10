@@ -99,7 +99,11 @@
   }
 
   const handleExport = () => {
-    if (!isBcManagementEndpointMock(BcManagementEndpoint.Export)) {
+    const useMock = isBcManagementEndpointMock(BcManagementEndpoint.Export)
+    if (import.meta.env.DEV) {
+      console.debug('[bc-management] export click, useMock =', useMock)
+    }
+    if (!useMock) {
       exportBcList({})
         .then(() => ElMessage.success('导出成功'))
         .catch(() => ElMessage.error('导出失败'))
@@ -256,6 +260,7 @@
       border: 1px solid var(--border) !important;
       border-radius: 7px;
       box-shadow: none !important;
+
       &:hover,
       &:focus-within {
         border-color: var(--accent) !important;
@@ -265,6 +270,7 @@
     :deep(.el-input__inner) {
       font-size: 13px;
       color: var(--text-primary);
+
       &::placeholder {
         color: var(--text-muted);
       }

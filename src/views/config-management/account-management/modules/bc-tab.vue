@@ -189,7 +189,7 @@
   import { onMounted, ref, computed, watch } from 'vue'
   import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia'
-  import { fetchBcTable } from '@/api/config-management/account-management'
+  import { fetchBcOverviewStats, fetchBcTable } from '@/api/config-management/account-management'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import { AccountApiSource } from '../config/data-source'
@@ -413,6 +413,12 @@
   const bcList = ref<BcItem[]>([])
   const route = useRoute()
   const isAccountBcPage = computed(() => route.path.includes('/account-management/bc-management'))
+  const remoteStats = ref<{
+    total: number
+    healthy: number
+    banned: number
+    monthOpen: number
+  } | null>(null)
 
   const loadList = async () => {
     const query = {
@@ -425,12 +431,43 @@
       banRecord: ''
     }
 
-    // 独立 BC 管理页：按页面级开关决定是否 mock
-    if (isAccountBcPage.value && isBcManagementEndpointMock(BcManagementEndpoint.Table)) {
-      const mockRes = await mockFetchBcTable(query)
-      bcList.value = mockRes.records
-      autoSelectFirst()
-      return
+    const maybeLoadRemoteStats = async () => {
+      if (!isAccountBcPage.value) return
+      if (isBcManagementEndpointMock(BcManagementEndpoint.OverviewStats)) {
+        remoteStats.value = null
+        return
+      }
+      try {
+        remoteStats.value = await fetchBcOverviewStats(query)
+      } catch {
+        remoteStats.value = null
+      }
+    }
+
+    // 独立 BC 管理页：按页面级开关决定是否 mock/远程
+    if (isAccountBcPage.value) {
+      if (isBcManagementEndpointMock(BcManagementEndpoint.Table)) {
+        const mockRes = await mockFetchBcTable(query)
+        bcList.value = mockRes.records
+        void maybeLoadRemoteStats()
+        autoSelectFirst()
+        return
+      }
+      try {
+        const response = await fetchBcTable(query)
+        const rows =
+          (response as { records?: BcItem[] })?.records ??
+          (response as { list?: BcItem[] })?.list ??
+          []
+        if (Array.isArray(rows)) {
+          bcList.value = rows
+          void maybeLoadRemoteStats()
+          autoSelectFirst()
+          return
+        }
+      } catch {
+        // remote unavailable, fallback to mock
+      }
     }
 
     // 配置管理 Tab：按 AccountApiSource 决定是否远程
@@ -453,6 +490,7 @@
 
     // fallback: 内置 mock list
     bcList.value = mockBcList.map((i) => ({ ...i }))
+    void maybeLoadRemoteStats()
     autoSelectFirst()
   }
 
@@ -510,12 +548,15 @@
     return filteredList.value.slice(start, start + pageSize.value)
   })
 
-  const stats = computed(() => ({
-    total: bcList.value.length,
-    healthy: bcList.value.filter((i) => i.status === '健康' || i.status === '可用').length,
-    banned: bcList.value.filter((i) => i.banRecord === '有').length,
-    monthOpen: bcList.value.reduce((s, i) => s + i.monthOpenCount, 0)
-  }))
+  const stats = computed(() => {
+    if (remoteStats.value) return remoteStats.value
+    return {
+      total: bcList.value.length,
+      healthy: bcList.value.filter((i) => i.status === '健康' || i.status === '可用').length,
+      banned: bcList.value.filter((i) => i.banRecord === '有').length,
+      monthOpen: bcList.value.reduce((s, i) => s + i.monthOpenCount, 0)
+    }
+  })
 
   watch(
     () => [
