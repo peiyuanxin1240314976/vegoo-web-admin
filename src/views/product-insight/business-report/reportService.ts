@@ -10,6 +10,8 @@
 
 import type {
   ReportQueryParams,
+  ReportAppListQueryParams,
+  ReportAppListResponse,
   SummaryResponse,
   AdPlatformResponse,
   ByCountryResponse,
@@ -25,6 +27,7 @@ import type {
 import { BusinessReportReadEndpoint, isBusinessReportMock } from './config/data-source'
 
 import {
+  fetchBusinessReportAppList,
   fetchBusinessReportSummary,
   fetchBusinessReportAdPlatform,
   fetchBusinessReportByCountry,
@@ -99,6 +102,15 @@ function endpointByPeriod(
   return map[period][tab]
 }
 
+function appListEndpointByPeriod(period: ReportQueryParams['period']): BusinessReportReadEndpoint {
+  const map = {
+    daily: BusinessReportReadEndpoint.DailyAppList,
+    weekly: BusinessReportReadEndpoint.WeeklyAppList,
+    monthly: BusinessReportReadEndpoint.MonthlyAppList
+  } as const
+  return map[period]
+}
+
 function compareEndpointByPeriod(
   period: ReportQueryParams['period'],
   tab: 'overview' | 'trends' | 'metrics'
@@ -124,6 +136,20 @@ function compareEndpointByPeriod(
 }
 
 // ============================================================
+// 0. 侧栏应用列表  POST /api/v1/datacenter/analysis/report/{period}/app-list
+// 契约：mock/backend-api/daily|weekly|monthly-00-app-list.json
+// ============================================================
+export async function getReportAppList(
+  params: ReportAppListQueryParams
+): Promise<ReportAppListResponse> {
+  if (isBusinessReportMock(appListEndpointByPeriod(params.period))) {
+    const items = params.period === 'weekly' ? weeklyAppList : appListData
+    return mockDelay<ReportAppListResponse>({ items })
+  }
+  return fetchBusinessReportAppList(params)
+}
+
+// ============================================================
 // 1. 汇总表  POST /api/v1/datacenter/analysis/report/{period}/overview
 // 契约：mock/backend-api/daily|weekly|monthly-01-overview.json
 // ============================================================
@@ -146,8 +172,7 @@ export async function getSummary(params: ReportQueryParams): Promise<SummaryResp
             : monthlyRevenueMetrics,
       roiMetrics,
       retentionMetrics,
-      feeDeductions: period === 'monthly' ? feeDeductions : undefined,
-      appList: period === 'weekly' ? weeklyAppList : appListData
+      feeDeductions: period === 'monthly' ? feeDeductions : undefined
     })
   }
   return fetchBusinessReportSummary(params)
@@ -161,8 +186,7 @@ export async function getAdPlatform(params: ReportQueryParams): Promise<AdPlatfo
   if (isBusinessReportMock(endpointByPeriod(params.period, 'adPlatform'))) {
     // 广告平台结构三个周期一致，数值由后端按 period 聚合；mock 共用同一份数据
     return mockDelay<AdPlatformResponse>({
-      platforms: adPlatformCards,
-      appList: params.period === 'weekly' ? weeklyAppList : appListData
+      platforms: adPlatformCards
     })
   }
   return fetchBusinessReportAdPlatform(params)
@@ -177,8 +201,7 @@ export async function getByCountry(params: ReportQueryParams): Promise<ByCountry
     // 分国家结构三个周期一致，数值由后端按 period 聚合；mock 共用同一份数据
     return mockDelay<ByCountryResponse>({
       rows: countryRows,
-      othersRow: countryOthersRow,
-      appList: params.period === 'weekly' ? weeklyAppList : appListData
+      othersRow: countryOthersRow
     })
   }
   return fetchBusinessReportByCountry(params)
@@ -213,8 +236,7 @@ export async function getCampaigns(params: ReportQueryParams): Promise<Campaigns
   if (isBusinessReportMock(endpointByPeriod(params.period, 'campaigns'))) {
     // 广告系列结构三个周期一致；mock 共用同一份数据
     return mockDelay<CampaignsResponse>({
-      rows: campaignRows,
-      appList: params.period === 'weekly' ? weeklyAppList : appListData
+      rows: campaignRows
     })
   }
   return fetchBusinessReportCampaigns(params)

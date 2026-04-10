@@ -317,7 +317,7 @@
 
   const ctx = inject(businessReportContextKey)
 
-  const baseAppList = computed(() => ctx?.summary.value?.appList ?? [])
+  const baseAppList = computed(() => ctx?.sidebarAppList.value ?? [])
 
   type EnrichedApp = AppListItem & { sparklineData: number[] }
   const enrichedApps = ref<EnrichedApp[]>([])
@@ -607,6 +607,12 @@
       compareMetrics.value = { rows: [] }
       return
     }
+    const f = ctx?.topBarFilters.value ?? {
+      filterAppIds: [],
+      platformList: [],
+      sourceList: [],
+      countryCodeList: []
+    }
     const params: CompareQueryParams = {
       period: props.period,
       startDate: localStartDate.value,
@@ -616,10 +622,8 @@
       compareEnabled: localCompareEnabled.value,
       appId: '',
       appIds: selectedApps.value.map((app) => app.id),
-      platform: '',
-      source: '',
-      countryCode: '',
-      account: ''
+      account: '',
+      ...f
     }
     const [overviewRes, trendsRes, metricsRes] = await Promise.all([
       getCompareOverview(params),
@@ -643,7 +647,8 @@
       localCompareEnabled.value,
       localCompareStartDate.value,
       localCompareEndDate.value,
-      ...selectedApps.value.map((a) => a.id)
+      ...selectedApps.value.map((a) => a.id),
+      JSON.stringify(ctx?.topBarFilters.value ?? {})
     ],
     () => {
       void refreshCompareData()

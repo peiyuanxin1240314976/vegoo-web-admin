@@ -12,9 +12,10 @@
     "startDate": "2026-04-06",
     "endDate": "2026-04-12",
     "appId": "",
-    "platform": "",
-    "source": "",
-    "countryCode": "",
+    "filterAppIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
     "account": ""
   },
   "sampleResponse": {
@@ -52,15 +53,6 @@
       "adSpend": "$255,900",
       "roi1d": "34%",
       "roi7d": "88%"
-    },
-    "appList": [
-      {
-        "id": "overall",
-        "name": "整体",
-        "revenue": 1064100,
-        "revenueChange": 8.4,
-        "profit": 762300
-      }
-    ]
+    }
   }
 }

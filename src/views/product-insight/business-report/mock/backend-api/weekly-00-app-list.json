@@ -1,0 +1,117 @@
+{
+  "_comment": "周报-侧栏应用列表。与 weekly overview 等详情解耦；契约字段同 daily-00-app-list，仅路径 period=weekly。app-list 设计说明见 README「侧栏 app-list 接口设计说明（给后端）」。",
+  "fieldDescription": {
+    "request": {
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "周起始日（含），YYYY-MM-DD，一般为周一。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "周结束日（含），YYYY-MM-DD，一般为周日。"
+      },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "须为空串 \"\"。顶栏应用范围见 filterAppIds（与 daily-00-app-list 一致）。与详情接口统一 POST 形态，非旧版兼容。"
+      },
+      "filterAppIds": {
+        "type": "string[]",
+        "required": true,
+        "description": "顶栏应用多选；[] 不限。"
+      },
+      "platformList": {
+        "type": "string[]",
+        "required": true,
+        "description": "顶栏终端平台多选；[] 不限。"
+      },
+      "sourceList": {
+        "type": "string[]",
+        "required": true,
+        "description": "顶栏广告平台多选；[] 不限。"
+      },
+      "countryCodeList": {
+        "type": "string[]",
+        "required": true,
+        "description": "顶栏国家多选；[] 不限。"
+      },
+      "account": {
+        "type": "string",
+        "required": false,
+        "description": "广告账户，空串不限；与全局维度键名对齐，当前页恒传空串。非旧版兼容。"
+      },
+      "tab": {
+        "type": "string",
+        "required": true,
+        "enum": ["summary", "adPlatform", "byCountry", "platformCountry", "campaigns"]
+      }
+    },
+    "response": {
+      "items": { "type": "AppListItem[]", "required": true, "description": "同日报侧栏结构。" }
+    }
+  },
+  "sampleRequest": {
+    "startDate": "2026-04-06",
+    "endDate": "2026-04-12",
+    "appId": "",
+    "filterAppIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
+    "account": "",
+    "tab": "summary"
+  },
+  "sampleResponse": {
+    "items": [
+      {
+        "id": "overall",
+        "name": "整体",
+        "platforms": ["安卓", "iOS"],
+        "iconEmoji": "📊",
+        "iconColor": "#00D4A1",
+        "iconBg": "rgba(0,212,161,0.15)",
+        "revenue": 980000,
+        "revenueChange": 5.2,
+        "profit": 702000,
+        "dau": 76.1,
+        "isOverall": true,
+        "sparkline": [90, 92, 91, 94, 93, 95, 96, 97]
+      },
+      {
+        "id": "health",
+        "name": "健康",
+        "platforms": ["安卓", "iOS"],
+        "iconEmoji": "🏥",
+        "iconColor": "#3B82F6",
+        "iconBg": "rgba(59,130,246,0.15)",
+        "revenue": 265000,
+        "revenueChange": 7.1,
+        "profit": 189000,
+        "dau": 28.4,
+        "sparkline": [24, 25, 25, 26, 26, 27, 27, 28]
+      },
+      {
+        "id": "weather",
+        "name": "天气",
+        "platforms": ["安卓", "iOS"],
+        "iconEmoji": "🌤",
+        "iconColor": "#94A3B8",
+        "iconBg": "rgba(148,163,184,0.15)",
+        "revenue": 210000,
+        "revenueChange": -1.2,
+        "profit": 150000,
+        "dau": 17.2,
+        "sparkline": [18, 18, 17, 17, 17, 17, 17, 17]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/report/weekly/app-list",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "同 daily-00-app-list",
+    "responseBody": "{ items: AppListItem[] }"
+  }
+}

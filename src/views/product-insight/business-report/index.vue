@@ -436,11 +436,11 @@
 
       <!-- Each period×tab combination has its own completely independent sidebar + content -->
       <template v-else>
-        <aside class="br-sidebar">
+        <aside v-loading="sidebarLoading" class="br-sidebar">
           <div class="sidebar-card">
             <AppSidebar
               :key="`${period}-${activeTab}`"
-              :app-list="currentAppList"
+              :app-list="sidebarAppList"
               :selected-id="selectedAppId"
               :show-field="tabShowField"
               :tab="activeTab"
@@ -500,8 +500,11 @@
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import type {
+    AppListItem,
     ReportPeriod,
     ReportQueryParams,
+    ReportAppListQueryParams,
+    ReportTopBarFilterArrays,
     ReportTab,
     SummaryResponse,
     AdPlatformResponse,
@@ -512,6 +515,7 @@
   } from './types'
   import { businessReportContextKey } from './composables/business-report-context'
   import {
+    getReportAppList,
     getSummary,
     getAdPlatform,
     getByCountry,
@@ -543,8 +547,6 @@
   import MonthlyPlatformCountry from './components/MonthlyPlatformCountry.vue'
   import MonthlyCampaigns from './components/MonthlyCampaigns.vue'
   import MonthlyCompareMode from './components/MonthlyCompareMode.vue'
-
-  import { appList, weeklyAppList } from './mockData'
 
   defineOptions({ name: 'BusinessReport' })
 
@@ -593,6 +595,14 @@
   const barPlatformValues = ref<string[]>([])
   const barSourceValues = ref<string[]>([])
   const barCountryValues = ref<string[]>([])
+
+  /** 顶栏多选 → 与报告 POST 体 `filterAppIds` / `*List` 一致；空数组表示不限 */
+  const topBarFilters = computed<ReportTopBarFilterArrays>(() => ({
+    filterAppIds: [...barAppValues.value],
+    platformList: [...barPlatformValues.value],
+    sourceList: [...barSourceValues.value],
+    countryCodeList: [...barCountryValues.value]
+  }))
 
   function onBarAppUpdate(v: string[]) {
     barAppValues.value = normalizeMetaMulti([...barAppValues.value], v)
@@ -824,7 +834,10 @@
   )
 
   function selectApp(id: string) {
-    selectedAppIds.value[`${period.value}-${activeTab.value}`] = id
+    const key = `${period.value}-${activeTab.value}`
+    if ((selectedAppIds.value[key] ?? 'overall') === id) return
+    selectedAppIds.value[key] = id
+    void refreshReportDetail()
   }
 
   // Composite key for independent period×tab right-side content
@@ -837,13 +850,9 @@
   const platformCountry = ref<PlatformCountryResponse | null>(null)
   const campaigns = ref<CampaignsResponse | null>(null)
 
-  // 侧栏应用列表：优先使用 summary 接口返回的 appList
-  const currentAppList = computed(() => {
-    const fromApi = summary.value?.appList
-    if (fromApi && fromApi.length > 0) return fromApi
-    if (period.value === 'weekly') return weeklyAppList
-    return appList
-  })
+  /** 侧栏列表：仅由 app-list 接口更新，与右侧详情解耦 */
+  const sidebarAppList = ref<AppListItem[]>([])
+  const sidebarLoading = ref(false)
 
   // Each tab shows a different secondary metric in the sidebar
   const tabShowField = computed((): 'dau' | 'mau' | 'adSpend' => {
@@ -960,8 +969,10 @@
     loading,
     period,
     reportRange,
-    refreshReport: refreshReportData,
+    refreshReport: refreshReportDetail,
     getLastPushText,
+    topBarFilters,
+    sidebarAppList,
     summary,
     adPlatform,
     byCountry,
@@ -969,28 +980,74 @@
     campaigns
   })
 
+  function buildSidebarParams(): ReportAppListQueryParams {
+    return {
+      period: period.value,
+      startDate: reportRange.value.startDate,
+      endDate: reportRange.value.endDate,
+      tab: activeTab.value,
+      account: '',
+      ...topBarFilters.value
+    }
+  }
+
   function buildReportParams(): ReportQueryParams {
     const id = selectedAppId.value
     return {
       period: period.value,
       startDate: reportRange.value.startDate,
       endDate: reportRange.value.endDate,
-      appId: id === 'overall' ? undefined : id,
-      platform: barPlatformValues.value[0] ?? '',
-      source: barSourceValues.value[0] ?? '',
-      countryCode: barCountryValues.value[0] ?? ''
+      appId: id === 'overall' ? '' : id,
+      account: '',
+      ...topBarFilters.value
     }
   }
 
   let reportRequestSeq = 0
-  async function refreshReportData() {
+  let sidebarRequestSeq = 0
+
+  async function refreshSidebarAppList(resetSelectionToOverall: boolean) {
+    if (compareMode.value) return
+    const seq = ++sidebarRequestSeq
+    const selectionKey = `${period.value}-${activeTab.value}`
+    const selectionAtStart = selectedAppIds.value[selectionKey] ?? 'overall'
+    sidebarLoading.value = true
+    try {
+      const { items } = await getReportAppList(buildSidebarParams())
+      if (seq !== sidebarRequestSeq) return
+      sidebarAppList.value = items
+
+      if (resetSelectionToOverall) {
+        const current = selectedAppIds.value[selectionKey] ?? 'overall'
+        if (current === selectionAtStart) {
+          selectedAppIds.value[selectionKey] = 'overall'
+        }
+      }
+
+      const ids = new Set(items.map((i) => i.id))
+      let sel = selectedAppIds.value[selectionKey] ?? 'overall'
+      if (!ids.has(sel)) {
+        sel = ids.has('overall') ? 'overall' : (items[0]?.id ?? 'overall')
+        selectedAppIds.value[selectionKey] = sel
+      }
+
+      await refreshReportDetail()
+    } catch (e) {
+      console.error('[BusinessReport] refreshSidebarAppList', e)
+    } finally {
+      if (seq === sidebarRequestSeq) sidebarLoading.value = false
+    }
+  }
+
+  async function refreshReportDetail() {
+    if (compareMode.value) return
     const seq = ++reportRequestSeq
     const params = buildReportParams()
     const tab = activeTab.value
     loading.value = true
     try {
       const sum = await getSummary(params)
-      if (seq !== reportRequestSeq) return
+      if (compareMode.value || seq !== reportRequestSeq) return
       summary.value = sum
 
       if (tab !== 'adPlatform') adPlatform.value = null
@@ -1000,33 +1057,62 @@
 
       if (tab === 'adPlatform') {
         const r = await getAdPlatform(params)
-        if (seq !== reportRequestSeq) return
+        if (compareMode.value || seq !== reportRequestSeq) return
         adPlatform.value = r
       } else if (tab === 'byCountry') {
         const r = await getByCountry(params)
-        if (seq !== reportRequestSeq) return
+        if (compareMode.value || seq !== reportRequestSeq) return
         byCountry.value = r
       } else if (tab === 'platformCountry') {
         const r = await getPlatformCountry(params)
-        if (seq !== reportRequestSeq) return
+        if (compareMode.value || seq !== reportRequestSeq) return
         platformCountry.value = r
       } else if (tab === 'campaigns') {
         const r = await getCampaigns(params)
-        if (seq !== reportRequestSeq) return
+        if (compareMode.value || seq !== reportRequestSeq) return
         campaigns.value = r
       }
     } catch (e) {
-      console.error('[BusinessReport] refreshReportData', e)
+      console.error('[BusinessReport] refreshReportDetail', e)
     } finally {
       if (seq === reportRequestSeq) loading.value = false
     }
   }
 
   watch(
-    [period, selectedAppId, activeTab, reportDayYmd, reportWeekStartYmd, reportMonthYm],
-    refreshReportData,
-    { immediate: true }
+    [
+      period,
+      activeTab,
+      reportDayYmd,
+      reportWeekStartYmd,
+      reportMonthYm,
+      barAppValues,
+      barPlatformValues,
+      barSourceValues,
+      barCountryValues
+    ],
+    (now, prev) => {
+      if (compareMode.value) return
+      const first = !prev
+      const onlyTabChanged =
+        !first &&
+        now[0] === prev![0] &&
+        now[1] !== prev![1] &&
+        now[2] === prev![2] &&
+        now[3] === prev![3] &&
+        now[4] === prev![4] &&
+        now[5] === prev![5] &&
+        now[6] === prev![6] &&
+        now[7] === prev![7] &&
+        now[8] === prev![8]
+      void refreshSidebarAppList(!onlyTabChanged)
+    },
+    { deep: true, immediate: true }
   )
+
+  watch(compareMode, (on) => {
+    if (!on) void refreshSidebarAppList(true)
+  })
 
   const contentLoading = computed(() => loading.value)
 </script>

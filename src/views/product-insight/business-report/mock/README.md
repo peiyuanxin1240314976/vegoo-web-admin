@@ -8,16 +8,20 @@
 - 与 `types.ts`、页面组件、`reportService.ts` 保持数据结构一致
 - 接口就绪后通过 `config/data-source.ts` 逐接口平滑切换为真实请求
 
+**页面操作与「何时调哪些接口」的说明**：见 [`docs/经营报告-操作与接口说明.md`](../docs/经营报告-操作与接口说明.md)。
+
+**与后端真实联调前的字段/路径核对**：见 [`docs/后端联调核对清单.md`](../docs/后端联调核对清单.md)。
+
 ## 目录结构
 
 ```
 mock/
 ├── README.md             # 本文件：模块总览
 └── backend-api/
-    ├── README.md         # 接口契约清单（交付后端开发的参考文档）
-    ├── daily-01~08.json
-    ├── weekly-01~08.json
-    ├── monthly-01~08.json
+    ├── README.md         # 接口契约清单（交付后端）；含「侧栏 app-list 接口设计说明（给后端）」
+    ├── daily-00-app-list.json + daily-01~08.json
+    ├── weekly-00-app-list.json + weekly-01~08.json
+    ├── monthly-00-app-list.json + monthly-01~08.json
     ├── 06-lark-config-get.json
     ├── 07-lark-config-save.json
     ├── 08-lark-push-now.json
@@ -28,6 +32,7 @@ mock/
 
 | 页面 / Tab | 主要数据来源（契约） |
 | --- | --- | --- | --- |
+| 侧栏应用列表（三周期） | `daily | weekly | monthly-00-app-list` |
 | 日报 — 汇总/广告平台/分国家/平台分国家/在投系列 | `daily-01~05` |
 | 周报 — 汇总/广告平台/分国家/平台分国家/在投系列 | `weekly-01~05` |
 | 月报 — 汇总/广告平台/分国家/平台分国家/在投系列 | `monthly-01~05` |
@@ -45,10 +50,9 @@ import { BUSINESS_REPORT_USE_MOCK, BusinessReportReadEndpoint } from './config/d
 BUSINESS_REPORT_USE_MOCK[BusinessReportReadEndpoint.DailyOverview] = false
 ```
 
-## 灰度收口状态
+## 契约与实现口径
 
-- 新主链路：`daily-* / weekly-* / monthly-*`（三周期主接口 + 对比模式）
-- 旧兼容链路：`01~05`（Deprecated，仅兜底，不再扩展）
+- 仅维护 **`daily-* / weekly-* / monthly-*`** 契约与对应 `fetch*`；前端**不再**做旧路径或旧响应字段（如详情里嵌套 `appList`）的兼容。
 
 ## 数据来源
 

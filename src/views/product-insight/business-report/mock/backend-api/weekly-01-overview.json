@@ -12,9 +12,10 @@
     "startDate": "2026-04-06",
     "endDate": "2026-04-12",
     "appId": "",
-    "platform": "",
-    "source": "",
-    "countryCode": "",
+    "filterAppIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
     "account": ""
   },
   "sampleResponse": {
@@ -28,15 +29,6 @@
     "roiMetrics": [{ "type": "7日ROI", "current": "93%", "previous": "91%", "change": "+2pp" }],
     "retentionMetrics": [
       { "day": "次留", "current": "42.0%", "previous": "41.5%", "change": "+0.5pp" }
-    ],
-    "appList": [
-      {
-        "id": "overall",
-        "name": "整体",
-        "revenue": 1064100,
-        "revenueChange": 8.4,
-        "profit": 762300
-      }
     ]
   }
 }

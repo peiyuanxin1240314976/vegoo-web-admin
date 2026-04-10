@@ -10,6 +10,7 @@
  */
 
 export enum BusinessReportReadEndpoint {
+  DailyAppList = 'dailyAppList',
   DailyOverview = 'dailyOverview',
   DailyAdPlatform = 'dailyAdPlatform',
   DailyByCountry = 'dailyByCountry',
@@ -18,6 +19,7 @@ export enum BusinessReportReadEndpoint {
   DailyCompareOverview = 'dailyCompareOverview',
   DailyCompareTrends = 'dailyCompareTrends',
   DailyCompareMetrics = 'dailyCompareMetrics',
+  WeeklyAppList = 'weeklyAppList',
   WeeklyOverview = 'weeklyOverview',
   WeeklyAdPlatform = 'weeklyAdPlatform',
   WeeklyByCountry = 'weeklyByCountry',
@@ -26,6 +28,7 @@ export enum BusinessReportReadEndpoint {
   WeeklyCompareOverview = 'weeklyCompareOverview',
   WeeklyCompareTrends = 'weeklyCompareTrends',
   WeeklyCompareMetrics = 'weeklyCompareMetrics',
+  MonthlyAppList = 'monthlyAppList',
   MonthlyOverview = 'monthlyOverview',
   MonthlyAdPlatform = 'monthlyAdPlatform',
   MonthlyByCountry = 'monthlyByCountry',
@@ -41,6 +44,7 @@ export enum BusinessReportReadEndpoint {
 
 /** 是否对该接口使用 Mock（逐项修改） */
 export const BUSINESS_REPORT_USE_MOCK: Record<BusinessReportReadEndpoint, boolean> = {
+  [BusinessReportReadEndpoint.DailyAppList]: true,
   [BusinessReportReadEndpoint.DailyOverview]: true,
   [BusinessReportReadEndpoint.DailyAdPlatform]: true,
   [BusinessReportReadEndpoint.DailyByCountry]: true,
@@ -49,6 +53,7 @@ export const BUSINESS_REPORT_USE_MOCK: Record<BusinessReportReadEndpoint, boolea
   [BusinessReportReadEndpoint.DailyCompareOverview]: true,
   [BusinessReportReadEndpoint.DailyCompareTrends]: true,
   [BusinessReportReadEndpoint.DailyCompareMetrics]: true,
+  [BusinessReportReadEndpoint.WeeklyAppList]: true,
   [BusinessReportReadEndpoint.WeeklyOverview]: true,
   [BusinessReportReadEndpoint.WeeklyAdPlatform]: true,
   [BusinessReportReadEndpoint.WeeklyByCountry]: true,
@@ -57,6 +62,7 @@ export const BUSINESS_REPORT_USE_MOCK: Record<BusinessReportReadEndpoint, boolea
   [BusinessReportReadEndpoint.WeeklyCompareOverview]: true,
   [BusinessReportReadEndpoint.WeeklyCompareTrends]: true,
   [BusinessReportReadEndpoint.WeeklyCompareMetrics]: true,
+  [BusinessReportReadEndpoint.MonthlyAppList]: true,
   [BusinessReportReadEndpoint.MonthlyOverview]: true,
   [BusinessReportReadEndpoint.MonthlyAdPlatform]: true,
   [BusinessReportReadEndpoint.MonthlyByCountry]: true,

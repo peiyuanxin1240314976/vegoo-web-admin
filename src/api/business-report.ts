@@ -8,6 +8,8 @@ import request from '@/utils/http'
 import { BUSINESS_REPORT_DATA_BASE } from '@/views/product-insight/business-report/config/api-base'
 import type {
   ReportQueryParams,
+  ReportAppListQueryParams,
+  ReportAppListResponse,
   SummaryResponse,
   AdPlatformResponse,
   ByCountryResponse,
@@ -22,7 +24,7 @@ import type {
 
 const LARK_BASE = '/api/v1/lark'
 
-/** 兼容网关在业务 data 外再包一层或多层 `data`（axios 已解包 BaseResponse.data） */
+/** 向下剥离网关嵌套的 `data`，直至得到业务体（axios 已解包一层 BaseResponse.data） */
 function unwrapReportPayload<T>(raw: unknown, maxDepth = 4): T {
   let cur: unknown = raw
   let depth = 0
@@ -39,14 +41,19 @@ function unwrapReportPayload<T>(raw: unknown, maxDepth = 4): T {
   return cur as T
 }
 
+/**
+ * 报告类 POST 业务体（与 `mock/backend-api/README.md` 一致；`period` 仅在 URL 路径，不进 body）。
+ * 键名须与后端契约 camelCase 对齐：`appId` 整体/不限为 `""`；四个 `*List`/filter 数组空表示该维度不限。
+ */
 function reportBody(params: ReportQueryParams): Record<string, unknown> {
   return {
     startDate: params.startDate,
     endDate: params.endDate,
-    appId: params.appId ?? '',
-    platform: params.platform ?? '',
-    source: params.source ?? '',
-    countryCode: params.countryCode ?? '',
+    appId: params.appId,
+    filterAppIds: params.filterAppIds ?? [],
+    platformList: params.platformList ?? [],
+    sourceList: params.sourceList ?? [],
+    countryCodeList: params.countryCodeList ?? [],
     account: params.account ?? ''
   }
 }
@@ -59,8 +66,38 @@ async function reportPost<T>(path: string, params: ReportQueryParams): Promise<T
   return unwrapReportPayload<T>(raw)
 }
 
+function appListBody(params: ReportAppListQueryParams): Record<string, unknown> {
+  return {
+    startDate: params.startDate,
+    endDate: params.endDate,
+    appId: '',
+    filterAppIds: params.filterAppIds ?? [],
+    platformList: params.platformList ?? [],
+    sourceList: params.sourceList ?? [],
+    countryCodeList: params.countryCodeList ?? [],
+    account: params.account ?? '',
+    tab: params.tab
+  }
+}
+
+async function reportAppListPost<T>(path: string, params: ReportAppListQueryParams): Promise<T> {
+  const raw = await request.post<unknown>({
+    url: `${BUSINESS_REPORT_DATA_BASE}${path}`,
+    data: appListBody(params)
+  })
+  return unwrapReportPayload<T>(raw)
+}
+
 function reportPeriodPath(period: ReportQueryParams['period'], feature: string): string {
   return `/${period}/${feature}`
+}
+
+/** POST …/datacenter/analysis/report/{period}/app-list */
+export function fetchBusinessReportAppList(params: ReportAppListQueryParams) {
+  return reportAppListPost<ReportAppListResponse>(
+    reportPeriodPath(params.period, 'app-list'),
+    params
+  )
 }
 
 /** POST …/datacenter/analysis/report/{period}/overview */
@@ -103,7 +140,7 @@ function compareBody(params: CompareQueryParams): Record<string, unknown> {
 
 async function comparePost<T>(feature: string, params: CompareQueryParams): Promise<T> {
   const raw = await request.post<unknown>({
-    url: `${BUSINESS_REPORT_DATA_BASE}/${params.period}/${feature}`,
+    url: `${BUSINESS_REPORT_DATA_BASE}${reportPeriodPath(params.period, feature)}`,
     data: compareBody(params)
   })
   return unwrapReportPayload<T>(raw)

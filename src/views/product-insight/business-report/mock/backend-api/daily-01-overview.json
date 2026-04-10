@@ -1,5 +1,5 @@
 {
-  "_comment": "日报-汇总。页面首屏初始化与切换应用时触发。",
+  "_comment": "日报-汇总（详情）。侧栏应用列表已拆至 daily-00-app-list；本接口按 appId 返回当前应用 KPI/表格等。",
   "api": {
     "url": "POST /api/v1/datacenter/analysis/report/daily/overview",
     "method": "POST",
@@ -15,9 +15,10 @@
     "startDate": "2026-04-09",
     "endDate": "2026-04-09",
     "appId": "",
-    "platform": "",
-    "source": "",
-    "countryCode": "",
+    "filterAppIds": [],
+    "platformList": [],
+    "sourceList": [],
+    "countryCodeList": [],
     "account": ""
   },
   "sampleResponse": {
@@ -31,9 +32,6 @@
     "roiMetrics": [{ "type": "首日ROI", "current": "36%", "previous": "34%", "change": "+2pp" }],
     "retentionMetrics": [
       { "day": "次留", "current": "42.3%", "previous": "41.8%", "change": "+0.5pp" }
-    ],
-    "appList": [
-      { "id": "overall", "name": "整体", "revenue": 152300, "revenueChange": 8.4, "profit": 108900 }
     ]
   }
 }

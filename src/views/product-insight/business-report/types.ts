@@ -307,17 +307,38 @@ export interface ApiResponse<T> {
   timestamp: number // Unix 时间戳（ms）
 }
 
+/** 顶栏多选筛选项（与 ElSelect multiple 一致；空数组表示不限） */
+export type ReportTopBarFilterArrays = {
+  filterAppIds: string[]
+  platformList: string[]
+  sourceList: string[]
+  countryCodeList: string[]
+}
+
 /** 报告查询参数（所有模块通用） */
-export interface ReportQueryParams {
+export interface ReportQueryParams extends ReportTopBarFilterArrays {
   period: ReportPeriod // 'daily' | 'weekly' | 'monthly'
   startDate: string // YYYY-MM-DD
   endDate: string // YYYY-MM-DD
-  appId?: string // 不传或空串返回整体数据
-  platform?: string // 终端平台
-  source?: string // 广告平台
-  countryCode?: string // 国家代码
-  account?: string // 广告账户
+  /** 侧栏当前选中应用；整体为 \"\" */
+  appId: string
+  account?: string // 广告账户；不限传 ""
   tab?: ReportTab
+}
+
+/** 侧栏应用列表（独立接口；`appId` 固定空串表示拉列表，与侧栏选中无关） */
+export interface ReportAppListQueryParams extends ReportTopBarFilterArrays {
+  period: ReportPeriod
+  startDate: string
+  endDate: string
+  /** 与页面二级 Tab 一致，用于侧栏卡片次要指标口径 */
+  tab: ReportTab
+  account?: string
+}
+
+/** POST …/report/{period}/app-list 业务体 */
+export interface ReportAppListResponse {
+  items: AppListItem[]
 }
 
 // ── 各模块接口响应类型 ────────────────────────────────────────
@@ -330,20 +351,17 @@ export interface SummaryResponse {
   roiMetrics: RoiRow[]
   retentionMetrics: RetentionRow[]
   feeDeductions?: FeeItem[] // 仅月报（period='monthly'）时返回
-  appList: AppListItem[]
 }
 
 /** POST /api/v1/datacenter/analysis/report/{period}/ad-platform */
 export interface AdPlatformResponse {
   platforms: AdPlatformCard[]
-  appList: AppListItem[]
 }
 
 /** POST /api/v1/datacenter/analysis/report/{period}/by-country */
 export interface ByCountryResponse {
   rows: CountryRow[]
   othersRow: CountryRow // 合并的"其他 N 个国家"行
-  appList: AppListItem[]
 }
 
 /** POST /api/v1/datacenter/analysis/report/{period}/platform-country */
@@ -357,7 +375,6 @@ export interface PlatformCountryResponse {
 /** POST /api/v1/datacenter/analysis/report/{period}/campaigns */
 export interface CampaignsResponse {
   rows: CampaignRow[]
-  appList: AppListItem[]
 }
 
 /** GET /api/v1/lark/push-config */

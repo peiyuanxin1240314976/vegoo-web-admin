@@ -393,6 +393,11 @@ alwaysApply: true
 | 字段 | 业务概念 |
 |------|----------|
 | `items` | 列表数据项数组（非分页时也可用）。 |
+| `tab` | 经营报告「侧栏应用列表」等接口请求体：与页面二级 Tab 对齐的 `string` 枚举键（如 `summary`、`adPlatform`、`byCountry`、`platformCountry`、`campaigns`），用于侧栏卡片次要指标口径。 |
+| `filterAppIds` | 经营报告等顶栏「应用」**多选**：`string[]`，元素为自有应用 ID（与 `appId` 筛选维度一致）；**空数组 `[]` 表示不限**。与侧栏选中行的 `appId`（详情入参）区分。 |
+| `platformList` | 经营报告顶栏「终端平台」多选：`string[]`，元素与 `platform` 入参取值域一致；**`[]` 表示不限**（替代单笔 `platform` 字符串）。 |
+| `sourceList` | 经营报告顶栏「广告平台」多选：`string[]`，元素与 `source` 枚举 string 一致；**`[]` 表示不限**。 |
+| `countryCodeList` | 经营报告顶栏「国家」多选：`string[]`，小写 ISO 3166-1 alpha-2；**`[]` 表示不限**。 |
 | `records` | 列表/表格主数据数组（分页接口常见键名，与 `items` 并存时以模块契约为准）。 |
 | `current` | 当前页码（分页，一般从 1 起）。 |
 | `size` | 每页条数（分页）。 |
