@@ -2,6 +2,7 @@
  * 配置管理 · 账户管理 API（广告账户 / 代理商 / 凭据 / 开户 / BC，与 `views/config-management/account-management` 对齐）
  */
 import request from '@/utils/http'
+import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
 import type {
   AdAccountItem,
   AccountFormModel,
@@ -22,10 +23,12 @@ import type {
   BcTableQuery
 } from '@/views/config-management/account-management/types'
 
+const CONFIG_MANAGEMENT_BASE = `${ANALYSIS_API_BASE}/config-management`
+
 /** 广告账户分页列表 */
 export function fetchAccountTable(params: AccountTableQuery) {
   return request.post<Api.Common.PaginatedResponse<AdAccountItem>>({
-    url: '/api/config-management/account/table',
+    url: `${CONFIG_MANAGEMENT_BASE}/account/table`,
     data: params,
     showErrorMessage: false
   })
@@ -34,7 +37,7 @@ export function fetchAccountTable(params: AccountTableQuery) {
 /** 新建广告账户（提交开户申请） */
 export function createAccount(data: AccountFormModel) {
   return request.post<AdAccountItem>({
-    url: '/api/config-management/account',
+    url: `${CONFIG_MANAGEMENT_BASE}/account`,
     data,
     showErrorMessage: false
   })
@@ -43,7 +46,7 @@ export function createAccount(data: AccountFormModel) {
 /** 编辑广告账户（id 放入请求体） */
 export function updateAccount(id: string, data: Partial<AccountFormModel>) {
   return request.post<AdAccountItem>({
-    url: '/api/config-management/account/update',
+    url: `${CONFIG_MANAGEMENT_BASE}/account/update`,
     data: { id, ...data },
     showErrorMessage: false
   })
@@ -52,7 +55,7 @@ export function updateAccount(id: string, data: Partial<AccountFormModel>) {
 /** 停用广告账户（id 放入请求体） */
 export function disableAccount(id: string) {
   return request.post<unknown>({
-    url: '/api/config-management/account/disable',
+    url: `${CONFIG_MANAGEMENT_BASE}/account/disable`,
     data: { id },
     showErrorMessage: false
   })
@@ -61,7 +64,7 @@ export function disableAccount(id: string) {
 /** 启用广告账户（id 放入请求体） */
 export function enableAccount(id: string) {
   return request.post<unknown>({
-    url: '/api/config-management/account/enable',
+    url: `${CONFIG_MANAGEMENT_BASE}/account/enable`,
     data: { id },
     showErrorMessage: false
   })
@@ -70,7 +73,7 @@ export function enableAccount(id: string) {
 /** 账户充值（id 放入请求体） */
 export function rechargeAccount(id: string, data: RechargeFormModel) {
   return request.post<unknown>({
-    url: '/api/config-management/account/recharge',
+    url: `${CONFIG_MANAGEMENT_BASE}/account/recharge`,
     data: { id, ...data },
     showErrorMessage: false
   })
@@ -79,7 +82,7 @@ export function rechargeAccount(id: string, data: RechargeFormModel) {
 /** 导出账户列表 */
 export function exportAccountList(params: Partial<AccountTableQuery>) {
   return request.post<unknown>({
-    url: '/api/config-management/account/export',
+    url: `${CONFIG_MANAGEMENT_BASE}/account/export`,
     data: params,
     showErrorMessage: false
   })
@@ -88,7 +91,7 @@ export function exportAccountList(params: Partial<AccountTableQuery>) {
 /** 批量导入账户 */
 export function importAccountList(data: { items: AccountFormModel[] }) {
   return request.post<unknown>({
-    url: '/api/config-management/account/import',
+    url: `${CONFIG_MANAGEMENT_BASE}/account/import`,
     data,
     showErrorMessage: false
   })
@@ -97,7 +100,7 @@ export function importAccountList(data: { items: AccountFormModel[] }) {
 /** 代理商分页列表 */
 export function fetchAgencyTable(params: AgencyTableQuery) {
   return request.post<Api.Common.PaginatedResponse<AgencyItem>>({
-    url: '/api/config-management/agency/table',
+    url: `${CONFIG_MANAGEMENT_BASE}/agency/table`,
     data: params,
     showErrorMessage: false
   })
@@ -106,7 +109,7 @@ export function fetchAgencyTable(params: AgencyTableQuery) {
 /** 新增代理商 */
 export function createAgency(data: AgencyFormModel) {
   return request.post<AgencyItem>({
-    url: '/api/config-management/agency',
+    url: `${CONFIG_MANAGEMENT_BASE}/agency`,
     data,
     showErrorMessage: false
   })
@@ -115,7 +118,7 @@ export function createAgency(data: AgencyFormModel) {
 /** 编辑代理商（id 放入请求体） */
 export function updateAgency(id: string, data: Partial<AgencyFormModel>) {
   return request.post<AgencyItem>({
-    url: '/api/config-management/agency/update',
+    url: `${CONFIG_MANAGEMENT_BASE}/agency/update`,
     data: { id, ...data },
     showErrorMessage: false
   })
@@ -124,7 +127,7 @@ export function updateAgency(id: string, data: Partial<AgencyFormModel>) {
 /** 删除代理商（id 放入请求体） */
 export function deleteAgency(id: string) {
   return request.post<unknown>({
-    url: '/api/config-management/agency/delete',
+    url: `${CONFIG_MANAGEMENT_BASE}/agency/delete`,
     data: { id },
     showErrorMessage: false
   })
@@ -133,7 +136,7 @@ export function deleteAgency(id: string) {
 /** 导出代理商列表 */
 export function exportAgencyList(params: Partial<AgencyTableQuery>) {
   return request.post<unknown>({
-    url: '/api/config-management/agency/export',
+    url: `${CONFIG_MANAGEMENT_BASE}/agency/export`,
     data: params,
     showErrorMessage: false
   })
@@ -142,7 +145,7 @@ export function exportAgencyList(params: Partial<AgencyTableQuery>) {
 /** 凭据分页列表 */
 export function fetchCredentialTable(params: CredentialTableQuery) {
   return request.post<Api.Common.PaginatedResponse<CredentialItem>>({
-    url: '/api/config-management/credential/table',
+    url: `${CONFIG_MANAGEMENT_BASE}/credential/table`,
     data: params,
     showErrorMessage: false
   })
@@ -151,7 +154,7 @@ export function fetchCredentialTable(params: CredentialTableQuery) {
 /** 新建凭据 */
 export function createCredential(data: CredentialFormModel) {
   return request.post<CredentialItem>({
-    url: '/api/config-management/credential',
+    url: `${CONFIG_MANAGEMENT_BASE}/credential`,
     data,
     showErrorMessage: false
   })
@@ -160,7 +163,7 @@ export function createCredential(data: CredentialFormModel) {
 /** 更新凭据（id 放入请求体） */
 export function updateCredential(id: string, data: Partial<CredentialFormModel>) {
   return request.post<CredentialItem>({
-    url: '/api/config-management/credential/update',
+    url: `${CONFIG_MANAGEMENT_BASE}/credential/update`,
     data: { id, ...data },
     showErrorMessage: false
   })
@@ -169,7 +172,7 @@ export function updateCredential(id: string, data: Partial<CredentialFormModel>)
 /** 手动触发凭据验证 */
 export function validateCredential(id: string) {
   return request.post<CredentialValidateResult>({
-    url: '/api/config-management/credential/validate',
+    url: `${CONFIG_MANAGEMENT_BASE}/credential/validate`,
     data: { id },
     showErrorMessage: false
   })
@@ -178,7 +181,7 @@ export function validateCredential(id: string) {
 /** 删除凭据（id 放入请求体） */
 export function deleteCredential(id: string) {
   return request.post<unknown>({
-    url: '/api/config-management/credential/delete',
+    url: `${CONFIG_MANAGEMENT_BASE}/credential/delete`,
     data: { id },
     showErrorMessage: false
   })
@@ -187,7 +190,7 @@ export function deleteCredential(id: string) {
 /** 导出凭据列表 */
 export function exportCredentialList(params: Partial<CredentialTableQuery>) {
   return request.post<unknown>({
-    url: '/api/config-management/credential/export',
+    url: `${CONFIG_MANAGEMENT_BASE}/credential/export`,
     data: params,
     showErrorMessage: false
   })
@@ -196,7 +199,7 @@ export function exportCredentialList(params: Partial<CredentialTableQuery>) {
 /** 批量验证凭据 */
 export function validateCredentialBatch(ids?: string[]) {
   return request.post<unknown>({
-    url: '/api/config-management/credential/validate-batch',
+    url: `${CONFIG_MANAGEMENT_BASE}/credential/validate-batch`,
     data: { ids: ids ?? [] },
     showErrorMessage: false
   })
@@ -205,7 +208,7 @@ export function validateCredentialBatch(ids?: string[]) {
 /** 开户记录分页列表 */
 export function fetchOpenAccountTable(params: OpenAccountTableQuery) {
   return request.post<Api.Common.PaginatedResponse<OpenAccountItem>>({
-    url: '/api/config-management/open-account/table',
+    url: `${CONFIG_MANAGEMENT_BASE}/open-account/table`,
     data: params,
     showErrorMessage: false
   })
@@ -217,7 +220,7 @@ export function fetchOpenAccountFilterOptions() {
     statusOptions: { label: string; value: string; count?: number }[]
     agencyOptions: { label: string; value: string }[]
   }>({
-    url: '/api/config-management/open-account/filter-options',
+    url: `${CONFIG_MANAGEMENT_BASE}/open-account/filter-options`,
     data: {},
     showErrorMessage: false
   })
@@ -226,7 +229,7 @@ export function fetchOpenAccountFilterOptions() {
 /** 新建开户记录 */
 export function createOpenAccount(data: OpenAccountFormModel) {
   return request.post<OpenAccountItem>({
-    url: '/api/config-management/open-account',
+    url: `${CONFIG_MANAGEMENT_BASE}/open-account`,
     data,
     showErrorMessage: false
   })
@@ -235,7 +238,7 @@ export function createOpenAccount(data: OpenAccountFormModel) {
 /** 分配凭据并激活（id 放入请求体） */
 export function assignOpenAccountCredential(id: string, credential: string) {
   return request.post<OpenAccountItem>({
-    url: '/api/config-management/open-account/assign',
+    url: `${CONFIG_MANAGEMENT_BASE}/open-account/assign`,
     data: { id, credential },
     showErrorMessage: false
   })
@@ -244,7 +247,7 @@ export function assignOpenAccountCredential(id: string, credential: string) {
 /** 删除开户记录（id 放入请求体） */
 export function deleteOpenAccount(id: string) {
   return request.post<unknown>({
-    url: '/api/config-management/open-account/delete',
+    url: `${CONFIG_MANAGEMENT_BASE}/open-account/delete`,
     data: { id },
     showErrorMessage: false
   })
@@ -253,7 +256,7 @@ export function deleteOpenAccount(id: string) {
 /** 导出开户记录 */
 export function exportOpenAccountList(params: Partial<OpenAccountTableQuery>) {
   return request.post<unknown>({
-    url: '/api/config-management/open-account/export',
+    url: `${CONFIG_MANAGEMENT_BASE}/open-account/export`,
     data: params,
     showErrorMessage: false
   })
@@ -262,7 +265,7 @@ export function exportOpenAccountList(params: Partial<OpenAccountTableQuery>) {
 /** 读取飞书推送设置 */
 export function fetchOpenAccountFeishuConfig() {
   return request.post<{ enabled: boolean; webhook?: string; mentionAll?: boolean }>({
-    url: '/api/config-management/open-account/feishu-config',
+    url: `${CONFIG_MANAGEMENT_BASE}/open-account/feishu-config`,
     data: {},
     showErrorMessage: false
   })
@@ -275,7 +278,7 @@ export function saveOpenAccountFeishuConfig(data: {
   mentionAll?: boolean
 }) {
   return request.post<unknown>({
-    url: '/api/config-management/open-account/feishu-config/save',
+    url: `${CONFIG_MANAGEMENT_BASE}/open-account/feishu-config/save`,
     data,
     showErrorMessage: false
   })
@@ -284,7 +287,7 @@ export function saveOpenAccountFeishuConfig(data: {
 /** BC/BM 分页列表 */
 export function fetchBcTable(params: BcTableQuery) {
   return request.post<Api.Common.PaginatedResponse<BcItem>>({
-    url: '/api/config-management/bc/table',
+    url: `${CONFIG_MANAGEMENT_BASE}/bc/table`,
     data: params,
     showErrorMessage: false
   })
@@ -293,7 +296,7 @@ export function fetchBcTable(params: BcTableQuery) {
 /** 新建 BC */
 export function createBc(data: BcFormModel) {
   return request.post<BcItem>({
-    url: '/api/config-management/bc',
+    url: `${CONFIG_MANAGEMENT_BASE}/bc`,
     data,
     showErrorMessage: false
   })
@@ -302,7 +305,7 @@ export function createBc(data: BcFormModel) {
 /** 编辑 BC */
 export function updateBc(id: string, data: Partial<BcFormModel>) {
   return request.post<BcItem>({
-    url: '/api/config-management/bc/update',
+    url: `${CONFIG_MANAGEMENT_BASE}/bc/update`,
     data: { id, ...data },
     showErrorMessage: false
   })
@@ -311,7 +314,7 @@ export function updateBc(id: string, data: Partial<BcFormModel>) {
 /** 删除 BC */
 export function deleteBc(id: string) {
   return request.post<unknown>({
-    url: '/api/config-management/bc/delete',
+    url: `${CONFIG_MANAGEMENT_BASE}/bc/delete`,
     data: { id },
     showErrorMessage: false
   })
@@ -320,7 +323,7 @@ export function deleteBc(id: string) {
 /** 导出 BC 列表 */
 export function exportBcList(params: Partial<BcTableQuery>) {
   return request.post<unknown>({
-    url: '/api/config-management/bc/export',
+    url: `${CONFIG_MANAGEMENT_BASE}/bc/export`,
     data: params,
     showErrorMessage: false
   })

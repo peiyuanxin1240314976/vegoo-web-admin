@@ -4,6 +4,8 @@
  * false: 调用远程接口
  */
 
+import { AccountApiSource } from '@/views/config-management/account-management/config/data-source'
+
 export enum OpenAccountEndpoint {
   Table = 'table',
   FilterOptions = 'filterOptions',
@@ -15,21 +17,29 @@ export enum OpenAccountEndpoint {
   Export = 'export'
 }
 
-const OPEN_ACCOUNT_ENDPOINT_MOCK_MAP: Record<OpenAccountEndpoint, boolean> = {
-  [OpenAccountEndpoint.Table]: true,
-  [OpenAccountEndpoint.FilterOptions]: true,
-  [OpenAccountEndpoint.Create]: true,
-  [OpenAccountEndpoint.Assign]: true,
-  [OpenAccountEndpoint.Delete]: true,
-  [OpenAccountEndpoint.FeishuConfigFetch]: true,
-  [OpenAccountEndpoint.FeishuConfigSave]: true,
-  [OpenAccountEndpoint.Export]: true
+const OPEN_ACCOUNT_ENDPOINT_TO_SOURCE_KEY: Record<
+  OpenAccountEndpoint,
+  keyof typeof AccountApiSource
+> = {
+  [OpenAccountEndpoint.Table]: 'openAccountTable',
+  [OpenAccountEndpoint.FilterOptions]: 'openAccountTable',
+  [OpenAccountEndpoint.Create]: 'createOpenAccount',
+  [OpenAccountEndpoint.Assign]: 'assignOpenAccountCredential',
+  [OpenAccountEndpoint.Delete]: 'deleteOpenAccount',
+  [OpenAccountEndpoint.FeishuConfigFetch]: 'fetchOpenAccountFeishuConfig',
+  [OpenAccountEndpoint.FeishuConfigSave]: 'saveOpenAccountFeishuConfig',
+  [OpenAccountEndpoint.Export]: 'exportOpenAccount'
 }
 
 export function isOpenAccountEndpointMock(endpoint: OpenAccountEndpoint): boolean {
-  return OPEN_ACCOUNT_ENDPOINT_MOCK_MAP[endpoint]
+  return AccountApiSource[OPEN_ACCOUNT_ENDPOINT_TO_SOURCE_KEY[endpoint]]
 }
 
 export function getOpenAccountEndpointMockMap() {
-  return { ...OPEN_ACCOUNT_ENDPOINT_MOCK_MAP }
+  return Object.fromEntries(
+    Object.entries(OPEN_ACCOUNT_ENDPOINT_TO_SOURCE_KEY).map(([k, sourceKey]) => [
+      k,
+      AccountApiSource[sourceKey]
+    ])
+  ) as Record<OpenAccountEndpoint, boolean>
 }

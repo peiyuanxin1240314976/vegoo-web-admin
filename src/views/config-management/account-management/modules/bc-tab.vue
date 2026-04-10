@@ -415,31 +415,28 @@
   const isAccountBcPage = computed(() => route.path.includes('/account-management/bc-management'))
 
   const loadList = async () => {
+    const query = {
+      current: 1,
+      size: 1000,
+      keyword: '',
+      source: '',
+      status: '',
+      ownerType: '',
+      banRecord: ''
+    }
+
+    // 独立 BC 管理页：按页面级开关决定是否 mock
     if (isAccountBcPage.value && isBcManagementEndpointMock(BcManagementEndpoint.Table)) {
-      const mockRes = await mockFetchBcTable({
-        current: 1,
-        size: 1000,
-        keyword: '',
-        source: '',
-        status: '',
-        ownerType: '',
-        banRecord: ''
-      })
+      const mockRes = await mockFetchBcTable(query)
       bcList.value = mockRes.records
       autoSelectFirst()
       return
     }
-    if (!AccountApiSource.bcTable) {
+
+    // 配置管理 Tab：按 AccountApiSource 决定是否远程
+    if (!isAccountBcPage.value && !AccountApiSource.bcTable) {
       try {
-        const response = await fetchBcTable({
-          current: 1,
-          size: 1000,
-          keyword: '',
-          source: '',
-          status: '',
-          ownerType: '',
-          banRecord: ''
-        })
+        const response = await fetchBcTable(query)
         const rows =
           (response as { records?: BcItem[] })?.records ??
           (response as { list?: BcItem[] })?.list ??
@@ -453,6 +450,8 @@
         // remote unavailable, fallback to mock
       }
     }
+
+    // fallback: 内置 mock list
     bcList.value = mockBcList.map((i) => ({ ...i }))
     autoSelectFirst()
   }

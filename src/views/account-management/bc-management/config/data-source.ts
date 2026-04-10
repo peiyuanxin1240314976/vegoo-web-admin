@@ -4,6 +4,8 @@
  * false: 调用真实接口
  */
 
+import { AccountApiSource } from '@/views/config-management/account-management/config/data-source'
+
 export enum BcManagementEndpoint {
   Table = 'table',
   FilterOptions = 'filterOptions',
@@ -13,19 +15,27 @@ export enum BcManagementEndpoint {
   Export = 'export'
 }
 
-const BC_MANAGEMENT_ENDPOINT_MOCK_MAP: Record<BcManagementEndpoint, boolean> = {
-  [BcManagementEndpoint.Table]: true,
-  [BcManagementEndpoint.FilterOptions]: true,
-  [BcManagementEndpoint.Create]: true,
-  [BcManagementEndpoint.Update]: true,
-  [BcManagementEndpoint.Delete]: true,
-  [BcManagementEndpoint.Export]: true
+const BC_MANAGEMENT_ENDPOINT_TO_SOURCE_KEY: Record<
+  BcManagementEndpoint,
+  keyof typeof AccountApiSource
+> = {
+  [BcManagementEndpoint.Table]: 'bcTable',
+  [BcManagementEndpoint.FilterOptions]: 'bcTable',
+  [BcManagementEndpoint.Create]: 'createBc',
+  [BcManagementEndpoint.Update]: 'updateBc',
+  [BcManagementEndpoint.Delete]: 'deleteBc',
+  [BcManagementEndpoint.Export]: 'exportBc'
 }
 
 export function isBcManagementEndpointMock(endpoint: BcManagementEndpoint): boolean {
-  return BC_MANAGEMENT_ENDPOINT_MOCK_MAP[endpoint]
+  return AccountApiSource[BC_MANAGEMENT_ENDPOINT_TO_SOURCE_KEY[endpoint]]
 }
 
 export function getBcManagementEndpointMockMap() {
-  return { ...BC_MANAGEMENT_ENDPOINT_MOCK_MAP }
+  return Object.fromEntries(
+    Object.entries(BC_MANAGEMENT_ENDPOINT_TO_SOURCE_KEY).map(([k, sourceKey]) => [
+      k,
+      AccountApiSource[sourceKey]
+    ])
+  ) as Record<BcManagementEndpoint, boolean>
 }
