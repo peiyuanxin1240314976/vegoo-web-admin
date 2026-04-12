@@ -110,14 +110,29 @@
         <div class="panel-header-row">
           <span>整体回收明细数据</span>
           <div class="detail-filters">
-            <ElSelect v-model="detailApp" size="small" style="width: 100px">
-              <ElOption label="全部" value="all" />
-              <ElOption label="Weather5" value="weather5" />
+            <ElSelect
+              v-model="detailApp"
+              size="small"
+              class="or-detail-select or-detail-select--app"
+            >
+              <ElOption
+                v-for="opt in appOptions"
+                :key="opt.value === '' ? '__or_detail_all_app__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
             </ElSelect>
-            <ElSelect v-model="detailChannel" size="small" style="width: 90px">
-              <ElOption label="全部" value="all" />
-              <ElOption label="Google" value="google" />
-              <ElOption label="Facebook" value="facebook" />
+            <ElSelect
+              v-model="detailChannel"
+              size="small"
+              class="or-detail-select or-detail-select--src"
+            >
+              <ElOption
+                v-for="opt in sourceOptions"
+                :key="opt.value === '' ? '__or_detail_all_src__' : opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
             </ElSelect>
             <ElButton round size="small" type="primary" @click="onDetailSearch">检索</ElButton>
             <ElButton size="small" type="primary" plain round>导出</ElButton>
@@ -216,6 +231,7 @@
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
   import type { OverallRecoveryFilterState, OverallTabData } from '../types'
+  import { useOverallRecoveryFilters } from '../composables/useOverallRecoveryFilters'
   import { fetchOverallTabData, fetchOverallTabDetailRecords } from '@/api/user-growth'
   import { Top, Bottom } from '@element-plus/icons-vue'
 
@@ -223,11 +239,13 @@
 
   const props = defineProps<{ filter: OverallRecoveryFilterState }>()
 
+  const { appOptions, sourceOptions } = useOverallRecoveryFilters()
+
   const tabData = ref<OverallTabData | null>(null)
   const loading = ref(false)
   let loadSeq = 0
-  const detailApp = ref('all')
-  const detailChannel = ref('all')
+  const detailApp = ref('')
+  const detailChannel = ref('')
 
   async function onDetailSearch() {
     if (!tabData.value) return
@@ -365,8 +383,8 @@
       })
       if (seq !== loadSeq) return
       tabData.value = res
-      detailApp.value = 'all'
-      detailChannel.value = 'all'
+      detailApp.value = ''
+      detailChannel.value = ''
       await nextTick()
       if (seq !== loadSeq) return
       curveChart.initChart(buildCurveOption())
@@ -677,6 +695,14 @@
     display: flex;
     gap: 8px;
     align-items: center;
+  }
+
+  .or-detail-select--app {
+    min-width: 112px;
+  }
+
+  .or-detail-select--src {
+    min-width: 120px;
   }
 
   /* ROI 单元格 */

@@ -1,0 +1,30 @@
+---
+description: 与 frontend-design Skill 对齐：技术栈锁定 Vue+Element+Tailwind，去 AI 味，复用项目样式与公共组件
+alwaysApply: true
+---
+
+# 前端审美与实现约束（长期）
+
+本规则与已安装的 **frontend-design** Skill、以及 `project-conventions.mdc`、`style-conventions.mdc`、`vue-and-views.mdc` 一起生效。做界面美化、改版、还原设计时优先遵守本节。
+
+## 技术栈（禁止跑偏）
+
+- **只使用**：Vue 3（单文件组件 + script setup + TypeScript）+ **Element Plus** + **Tailwind CSS 4** + **SCSS**（scoped + :deep），状态与路由见项目规范。
+- **禁止**引入或生成：**React**、**Next.js**、**JSX/TSX（非 Vue）**、**Angular**、**Svelte**，以及 **Framer Motion** 等 React 专用动效库，除非用户明确要求单独演示仓库。
+- **动效**：用 **CSS**、**Vue Transition**、项目已有工具；不新增 React 专用动画库。
+
+## 与 frontend-design Skill 的配合方式
+
+- Skill 中的审美原则（层次、色板、留白、动效克制、避免千篇一律）**照做**；**实现层**一律落到 **Vue 单文件组件 + Element 组件 + 项目既有类名/变量**。
+- 字体与主题：优先 **Element Plus 主题变量**（如 `var(--el-text-color-primary)`、`var(--el-color-primary)`）和项目已有 `@styles`，不要为了换字体而全局改栈；若需品牌字体，在全局样式已有方案上扩展，避免与整站冲突的随机 Webfont 堆叠。
+- **避免**典型的「AI 味」默认审美：无目的地使用 **Inter / Roboto / Arial 堆叠**、**白底紫渐变 Hero**、**无目的对称卡片矩阵**、与业务无关的装饰性大渐变背景（除非产品与 `style-conventions` 中已有模块明确采用类似语言）。
+
+## 与现有项目一致
+
+- 布局与组件：优先 **Art 前缀公共组件**和 **Element**；业务页面结构、类名前缀（如 cockpit-*、*-page）、art-full-height 等遵循 **`style-conventions.mdc`**。
+- 同一需求下 **间距、圆角、色面** 与邻近页面保持一致；改样式时优先改 **SCSS 模块块** 或 **复用 Tailwind 工具类**，避免同一屏混用多套无关联的 spacing 尺度。
+- 深色模式：延续 **`html.dark`** 与 `var(--el-*)` 写法，不另起一套硬编码浅色专用方案。
+
+## 自检提示
+
+改完 UI 前确认：未新增 React 或非 Vue 依赖；未用无关「通用模板」配色替代现有设计体系；关键交互仍具备 **focus / hover / disabled** 与可读对比度。
