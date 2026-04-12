@@ -5,11 +5,21 @@
     <div class="or-filters-wrap or-entry-1">
       <div class="or-filters-inner">
         <div class="or-filters-row">
-          <div class="or-filter-chip or-filter-chip--static">
-            <ElIcon class="or-filter-chip__icon"><Calendar /></ElIcon>
-            <span class="or-filter-chip__label">统计周期</span>
-            <span class="or-filter-chip__value">{{ dateRangeLabel }}</span>
-          </div>
+          <ElDatePicker
+            v-model="dateRangeModel"
+            type="daterange"
+            unlink-panels
+            :shortcuts="dateShortcuts"
+            range-separator="—"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            :prefix-icon="Calendar"
+            clearable
+            class="or-filter-date"
+            popper-class="or-filter-popper"
+          />
           <ElSelect
             v-model="filters.s_app_id"
             class="or-filter-select"
@@ -54,7 +64,7 @@
             />
           </ElSelect>
           <div class="or-filter-actions">
-            <ElButton round class="or-search-btn" @click="handleSearch">检索</ElButton>
+            <ElButton round class="or-search-btn" @click="handleSearch">查询</ElButton>
           </div>
         </div>
       </div>
@@ -94,7 +104,9 @@
   import type { Component } from 'vue'
   import { Calendar, Flag, Grid, Promotion } from '@element-plus/icons-vue'
   import type { OverallRecoveryTabKey, OverallRecoveryFilterState } from './types'
+  import { resolveDateRangeFromPreset } from './utils/buildApiParams'
   import { useOverallRecoveryFilters } from './composables/useOverallRecoveryFilters'
+  import { cloneAppDate, getAppNow } from '@/utils/app-now'
   import TabOverall from './modules/tab-overall.vue'
   import TabOrganic from './modules/tab-organic.vue'
 
@@ -107,8 +119,10 @@
 
   const activeTab = ref<OverallRecoveryTabKey>('overall')
 
+  const defaultRange = resolveDateRangeFromPreset('30d')
   const filters = reactive<OverallRecoveryFilterState>({
-    dateRange: '30d',
+    startDate: defaultRange.startDate,
+    endDate: defaultRange.endDate,
     s_app_id: '',
     source: '',
     s_country_code: ''
@@ -119,10 +133,45 @@
 
   const { appOptions, sourceOptions, countryOptions } = useOverallRecoveryFilters()
 
-  const dateRangeLabel = computed(() => {
-    if (filters.dateRange === '30d') return '近30天'
-    return filters.dateRange
+  const dateRangeModel = computed<[string, string] | null>({
+    get() {
+      if (!filters.startDate || !filters.endDate) return null
+      return [filters.startDate, filters.endDate]
+    },
+    set(v) {
+      if (v?.[0] && v?.[1]) {
+        filters.startDate = v[0]
+        filters.endDate = v[1]
+        return
+      }
+      const d = resolveDateRangeFromPreset('30d')
+      filters.startDate = d.startDate
+      filters.endDate = d.endDate
+    }
   })
+
+  const dateShortcuts = [
+    {
+      text: '近7天',
+      value: () => {
+        const end = cloneAppDate(getAppNow())
+        end.setHours(0, 0, 0, 0)
+        const start = cloneAppDate(end)
+        start.setDate(start.getDate() - 6)
+        return [start, end]
+      }
+    },
+    {
+      text: '近30天',
+      value: () => {
+        const end = cloneAppDate(getAppNow())
+        end.setHours(0, 0, 0, 0)
+        const start = cloneAppDate(end)
+        start.setDate(start.getDate() - 29)
+        return [start, end]
+      }
+    }
+  ]
 
   const tabComponents: Record<OverallRecoveryTabKey, Component> = {
     overall: TabOverall,
@@ -199,35 +248,70 @@
     }
   }
 
-  .or-filter-chip {
-    display: inline-flex;
-    gap: 7px;
-    align-items: center;
-    min-height: 40px;
-    padding: 0 14px;
-    white-space: nowrap;
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 30%);
-    border-radius: 9999px;
-    box-shadow: 0 0 16px rgb(16 185 129 / 10%);
+  .or-filter-date {
+    flex: 0 0 auto;
+    width: 320px;
+    min-width: 0;
+    max-width: 100%;
   }
 
-  .or-filter-chip__icon {
+  :deep(.or-filter-date.el-date-editor) {
+    flex: 0 0 auto;
+    width: 320px;
+    max-width: 100%;
+
+    --el-input-focus-border-color: #10b981;
+    --el-border-color-hover: rgb(16 185 129 / 75%);
+    --el-color-primary: #10b981;
+    --el-border-color-focus: #10b981;
+    --el-component-size: 40px;
+  }
+
+  :deep(.or-filter-date .el-range__icon) {
     font-size: 16px;
     color: #10b981;
-    filter: drop-shadow(0 0 6px rgb(16 185 129 / 55%));
+    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
   }
 
-  .or-filter-chip__label {
-    font-size: 12px;
+  :deep(.or-filter-date .el-range-input) {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  :deep(.or-filter-date .el-range-separator) {
     color: var(--el-text-color-secondary);
   }
 
-  .or-filter-chip__value {
-    font-size: 13px;
-    font-weight: 600;
+  :deep(.or-filter-date .el-range__close-icon) {
     color: #10b981;
-    text-shadow: 0 0 10px rgb(16 185 129 / 50%);
+  }
+
+  :deep(.or-filter-date.el-date-editor .el-range-input) {
+    width: 42%;
+  }
+
+  :deep(.or-filter-date .el-input__wrapper) {
+    min-height: 40px;
+    padding: 0 12px;
+    background: rgb(16 185 129 / 6%);
+    border: 1px solid rgb(16 185 129 / 28%);
+    border-radius: 9999px;
+    box-shadow: none;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
+  }
+
+  :deep(.or-filter-date .el-input__wrapper.is-focus) {
+    background: rgb(16 185 129 / 10%) !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+  }
+
+  :deep(.or-filter-date .el-input__wrapper:hover) {
+    border-color: rgb(16 185 129 / 60%);
+    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
   }
 
   .or-filter-select {
@@ -356,6 +440,15 @@
   @media (width <= 768px) {
     .or-filters-inner {
       padding: 14px 16px;
+    }
+
+    .or-filter-date {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+
+    :deep(.or-filter-date.el-date-editor) {
+      width: 100%;
     }
 
     .or-filter-select,

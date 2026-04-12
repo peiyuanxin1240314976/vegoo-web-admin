@@ -31,10 +31,30 @@ export function resolveDateRangeFromPreset(dateRange: string): {
   return { startDate: formatYmd(start), endDate: formatYmd(end) }
 }
 
+function normalizeDateRange(filters: Pick<OverallRecoveryFilterState, 'startDate' | 'endDate'>): {
+  startDate: string
+  endDate: string
+} {
+  let start = (filters.startDate ?? '').trim()
+  let end = (filters.endDate ?? '').trim()
+  if (!start || !end) {
+    return resolveDateRangeFromPreset('30d')
+  }
+  if (start > end) {
+    const t = start
+    start = end
+    end = t
+  }
+  return { startDate: start, endDate: end }
+}
+
 export function buildOverallRecoveryCommonBody(
-  filters: Pick<OverallRecoveryFilterState, 'dateRange' | 's_app_id' | 'source' | 's_country_code'>
+  filters: Pick<
+    OverallRecoveryFilterState,
+    'startDate' | 'endDate' | 's_app_id' | 'source' | 's_country_code'
+  >
 ): OverallRecoveryCommonRequestBody {
-  const { startDate, endDate } = resolveDateRangeFromPreset(filters.dateRange)
+  const { startDate, endDate } = normalizeDateRange(filters)
   return {
     startDate,
     endDate,
@@ -45,7 +65,10 @@ export function buildOverallRecoveryCommonBody(
 }
 
 export function buildOverallRecoveryDetailRecordsBody(
-  filters: Pick<OverallRecoveryFilterState, 'dateRange' | 's_app_id' | 'source' | 's_country_code'>,
+  filters: Pick<
+    OverallRecoveryFilterState,
+    'startDate' | 'endDate' | 's_app_id' | 'source' | 's_country_code'
+  >,
   detail: { detailApp: string; detailChannel: string }
 ): OverallRecoveryDetailRecordsBody {
   return {

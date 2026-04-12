@@ -88,7 +88,8 @@ export interface ConversionSideStats {
 
 /** 新增/编辑映射表单 */
 export interface ConversionMappingForm {
-  platform?: PlatformType
+  /** 终端平台，与公用 meta `platformOptions.value` 一致（如 android / ios） */
+  platform?: string
   /**
    * 广告平台字段（与接口约定一致）
    * - source: 推荐使用

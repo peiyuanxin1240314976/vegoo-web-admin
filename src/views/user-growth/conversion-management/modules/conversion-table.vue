@@ -105,7 +105,20 @@
       prop: 'conversionName',
       label: t('conversionManagement.conversionName'),
       minWidth: 100,
-      showOverflowTooltip: true
+      showOverflowTooltip: true,
+      formatter: (row) => {
+        const name = row.conversionName ?? ''
+        const platformText =
+          row.platform === 'android'
+            ? t('conversionManagement.android')
+            : row.platform === 'ios'
+              ? t('conversionManagement.ios')
+              : row.platform
+                ? String(row.platform)
+                : ''
+        const text = platformText ? `${name}（${platformText}）` : name
+        return h('span', { class: 'conversion-table__conversion-name' }, text)
+      }
     },
     {
       prop: 'conversionId',

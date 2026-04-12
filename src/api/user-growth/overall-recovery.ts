@@ -48,7 +48,7 @@ function asRecord(value: unknown): Record<string, any> {
 
 type OverallFilterPick = Pick<
   OverallRecoveryFilterState,
-  'dateRange' | 's_app_id' | 'source' | 's_country_code'
+  'startDate' | 'endDate' | 's_app_id' | 'source' | 's_country_code'
 >
 
 /** Tab1 — KPI */

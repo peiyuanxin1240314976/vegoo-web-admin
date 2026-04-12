@@ -116,6 +116,8 @@ export function fetchConversionMetaDialogOptions(params: {
   adPlatform?: string
   mccAccount?: string
   appId?: string
+  /** 终端平台，与 meta-filter `platform` 一致 */
+  platform?: string
 }) {
   if (isConversionManagementEndpointMock(ConversionManagementEndpoint.MetaDialogOptions)) {
     const src = params.source ?? params.adPlatform ?? ''

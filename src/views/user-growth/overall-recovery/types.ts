@@ -5,9 +5,10 @@
 /** 当前选中的 Tab */
 export type OverallRecoveryTabKey = 'overall' | 'organic'
 
-/** 全局筛选状态 */
+/** 全局筛选状态（日期为 YYYY-MM-DD，含起止） */
 export interface OverallRecoveryFilterState {
-  dateRange: string
+  startDate: string
+  endDate: string
   s_app_id: string
   source: string
   s_country_code: string

@@ -376,7 +376,8 @@
     loading.value = true
     try {
       const res = await fetchOverallTabData({
-        dateRange: props.filter.dateRange,
+        startDate: props.filter.startDate,
+        endDate: props.filter.endDate,
         s_app_id: props.filter.s_app_id,
         source: props.filter.source,
         s_country_code: props.filter.s_country_code

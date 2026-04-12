@@ -94,6 +94,7 @@
 
 <script setup lang="ts">
   import { CircleCheck, CollectionTag, Grid, Monitor, Plus, Search } from '@element-plus/icons-vue'
+  import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
   import type { ConversionFilterParams } from '../types'
   import {
     MOCK_PLATFORM_OPTIONS,
@@ -101,8 +102,12 @@
     MOCK_CONVERSION_TYPE_OPTIONS,
     MOCK_STATUS_OPTIONS
   } from '../mock/data'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'ConversionFilters' })
+
+  const { t } = useI18n()
+  const { cockpitMeta, ensureCockpitMetaLoaded } = useCockpitMetaFilterOptions()
 
   const props = defineProps<{
     filter: ConversionFilterParams
@@ -117,7 +122,15 @@
     (e: 'add-mapping'): void
   }>()
 
-  const platformOptions = computed(() => props.platformOptions ?? MOCK_PLATFORM_OPTIONS)
+  /** 与公用 `cockpit/meta-filter-options` 的 `platformOptions` 一致；无数据时回退 mock，并保证含「全部」`value: ''` */
+  const platformOptionsFromStore = computed(() => {
+    const raw = cockpitMeta.value?.platformOptions
+    const list = raw?.length ? raw : MOCK_PLATFORM_OPTIONS
+    if (list.some((o) => o.value === '')) return list
+    return [{ label: t('conversionManagement.filterPlatform'), value: '' }, ...list]
+  })
+
+  const platformOptions = computed(() => props.platformOptions ?? platformOptionsFromStore.value)
   const appOptions = computed(() => props.appOptions ?? MOCK_DATA_TAB_APP_OPTIONS)
   const conversionTypeOptions = computed(
     () => props.conversionTypeOptions ?? MOCK_CONVERSION_TYPE_OPTIONS
@@ -130,6 +143,10 @@
     conversionType: String(props.filter?.conversionType ?? ''),
     status: String(props.filter?.status ?? ''),
     keyword: String(props.filter?.keyword ?? '')
+  })
+
+  onMounted(() => {
+    void ensureCockpitMetaLoaded()
   })
 
   watch(
