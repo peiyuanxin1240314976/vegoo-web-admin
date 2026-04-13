@@ -6,6 +6,7 @@ dist
 dist-ssr
 app
 *.local
+.env
 
 # Auto-generated files
 src/types/import/auto-imports.d.ts

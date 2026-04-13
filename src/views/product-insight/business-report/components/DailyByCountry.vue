@@ -237,12 +237,17 @@
       `上次推送：-- 飞书群《经营${reportLabel.value}》`
   )
 
-  function parseDisplayNumber(value: string): number {
-    const raw = value.trim().replace(/[$,%\s,]/g, '')
+  function parseDisplayNumber(value: string | number | null | undefined): number {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : 0
+    if (value == null) return 0
+    const raw = String(value)
+      .trim()
+      .replace(/[$,%\s,]/g, '')
     if (!raw) return 0
     if (raw.endsWith('亿')) return Number(raw.slice(0, -1)) * 100000000
     if (raw.endsWith('万')) return Number(raw.slice(0, -1)) * 10000
-    return Number(raw)
+    const parsed = Number(raw)
+    return Number.isFinite(parsed) ? parsed : 0
   }
   function formatCompactCn(value: number): string {
     if (value >= 100000000) return `${(value / 100000000).toFixed(1)}亿`

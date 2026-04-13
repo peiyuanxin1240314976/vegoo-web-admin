@@ -9,7 +9,12 @@
       <span class="kpi-change" :style="{ color: metric.change >= 0 ? '#00D4A1' : '#FF5C5C' }">
         {{ metric.changeLabel }}
       </span>
-      <SparklineChart :data="metric.sparkline" :color="metric.color" :width="90" :height="36" />
+      <SparklineChart
+        :data="metric.sparkline ?? []"
+        :color="metric.color"
+        :width="90"
+        :height="36"
+      />
     </div>
   </div>
 </template>

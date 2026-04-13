@@ -890,9 +890,11 @@
   const sparkData = [3800, 4000, 3900, 4200, 4100, 4350, 4400, 4521]
 
   /** Format with commas: 41100 → "41,100" */
-  const formatNum = (v: number) => {
-    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M'
-    return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  const formatNum = (v: number | null | undefined) => {
+    const num = Number(v ?? 0)
+    if (!Number.isFinite(num)) return '0'
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M'
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   }
 
   const changeStr = (change: number) => (change >= 0 ? '+' : '') + change + '%'
@@ -912,6 +914,7 @@
   .app-sidebar {
     display: flex;
     flex-direction: column;
+    height: 100%;
     min-height: 0;
   }
 
@@ -1908,12 +1911,13 @@
      ════════════════════════════════════════════════════════ */
   .nm-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     padding: 0 10px 10px;
   }
 
   .nm-card {
+    min-width: 0;
     padding: 10px;
     cursor: pointer;
     background: rgb(255 255 255 / 4%);

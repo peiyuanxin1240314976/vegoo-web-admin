@@ -1594,6 +1594,7 @@
     display: flex;
     flex: 1;
     min-width: 0;
+    min-height: 0;
   }
 
   .br-sidebar {
@@ -1604,6 +1605,10 @@
   }
 
   .sidebar-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: calc(100vh - 190px);
     overflow: hidden;
     background: rgb(255 255 255 / 3%);
     border: 1px solid rgb(255 255 255 / 7%);

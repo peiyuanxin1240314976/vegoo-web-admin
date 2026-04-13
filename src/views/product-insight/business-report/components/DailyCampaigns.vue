@@ -54,8 +54,8 @@
           </thead>
           <tbody>
             <tr
-              v-for="row in campaigns"
-              :key="row.id"
+              v-for="(row, index) in campaigns"
+              :key="`${row.id}-${row.platform}-${row.adPlatform}-${row.country}-${index}`"
               :class="{ 'row-paused': row.status === 'paused' }"
             >
               <td class="sticky-col app-cell">{{ row.app }}</td>
