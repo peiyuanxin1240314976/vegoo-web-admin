@@ -5,6 +5,7 @@
 export * from './account-management'
 export * from './app-assignment'
 export * from './application-management'
+export * from './app-store-management'
 export * from './cost-coefficient'
 export * from './country-management'
 export * from './exchange-rate-management'

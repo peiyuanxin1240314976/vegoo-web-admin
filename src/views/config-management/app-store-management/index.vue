@@ -26,7 +26,7 @@
           </svg>
           测试连接
         </button>
-        <button class="btn btn-secondary">
+        <button class="btn btn-secondary" @click="handleExport">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path
               d="M7 1v8M4 6l3 3 3-3M2 11h10"
@@ -40,23 +40,27 @@
         </button>
         <div class="filter-group">
           <span class="filter-label">平台</span>
-          <select v-model="filterPlatform" class="filter-select">
+          <select v-model="filterPlatformInput" class="filter-select">
             <option value="">全部</option>
-            <option value="Google Play">Google Play</option>
-            <option value="App Store">App Store</option>
-            <option value="Huawei AppGallery">华为应用市场</option>
-            <option value="Samsung Galaxy Store">三星应用商店</option>
+            <option
+              v-for="option in platformFilterOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
           </select>
         </div>
         <div class="filter-group">
           <span class="filter-label">状态</span>
-          <select v-model="filterStatus" class="filter-select">
+          <select v-model="filterStatusInput" class="filter-select">
             <option value="">全部</option>
             <option value="正常">正常</option>
             <option value="即将过期">即将过期</option>
             <option value="连接异常">连接异常</option>
           </select>
         </div>
+        <button class="btn btn-secondary" @click="handleQuery">查询</button>
       </div>
     </div>
 
@@ -155,8 +159,6 @@
                     row.status === '连接异常' ? '重试' : row.status === '即将过期' ? '续期' : '测试'
                   }}
                 </button>
-                <span class="action-sep">|</span>
-                <button class="action-btn" @click="handleView">查看</button>
               </div>
             </td>
           </tr>
@@ -164,14 +166,14 @@
       </table>
     </div>
 
-    <!-- 底部警告栏 -->
-    <div v-if="hasErrors" class="alert-bar">
+    <!-- 底部警告栏（数据来自连接异常接口） -->
+    <div v-if="hasAlertAnomalies" class="alert-bar">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
         <path d="M8 1L1 14h14L8 1z" stroke="#faad14" stroke-width="1.5" stroke-linejoin="round" />
         <path d="M8 6v4M8 11.5v.5" stroke="#faad14" stroke-width="1.5" stroke-linecap="round" />
       </svg>
-      <span>Huawei AppGallery 和 Samsung Galaxy Store 连接异常，请检查凭据配置或网络连接 |</span>
-      <button class="alert-link">查看详情</button>
+      <span>{{ alertBarSummaryText }}</span>
+      <button type="button" class="alert-link" @click="openAlertConnectionDetail">查看详情</button>
     </div>
 
     <!-- ===== 新增 / 编辑 凭据弹窗（共用同一个表单结构） ===== -->
@@ -192,19 +194,26 @@
             <!-- 平台 -->
             <div class="form-field">
               <label class="form-label">平台 <span class="required">*</span></label>
-              <div class="platform-selector">
-                <div
-                  v-for="p in platforms"
-                  :key="p.value"
-                  :class="[
-                    'platform-option',
-                    credForm.platform === p.value && 'platform-option--active'
-                  ]"
-                  @click="credForm.platform = p.value"
-                >
-                  <img :src="p.icon" :alt="p.label" class="platform-option-icon" />
-                  <span>{{ p.label }}</span>
-                </div>
+              <div class="custom-select-wrap">
+                <select v-model="credForm.platform" class="form-select">
+                  <option value="">请选择平台</option>
+                  <option
+                    v-for="platform in credentialPlatformOptions"
+                    :key="platform.value"
+                    :value="platform.value"
+                  >
+                    {{ platform.label }}
+                  </option>
+                </select>
+                <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path
+                    d="M2 4l4 4 4-4"
+                    stroke="#8899aa"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
               </div>
             </div>
 
@@ -214,7 +223,9 @@
               <div class="custom-select-wrap">
                 <select v-model="credForm.app" class="form-select">
                   <option value="">请选择应用</option>
-                  <option v-for="app in appOptions" :key="app" :value="app">{{ app }}</option>
+                  <option v-for="app in credentialAppOptions" :key="app.value" :value="app.value">
+                    {{ app.label }}
+                  </option>
                 </select>
                 <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path
@@ -294,31 +305,26 @@
             <div class="form-field form-field--row">
               <label class="form-label">过期时间</label>
               <div class="date-input-wrap">
-                <input type="date" v-model="credForm.expiry" class="form-input form-input--date" />
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="date-icon">
-                  <rect
-                    x="1"
-                    y="2"
-                    width="12"
-                    height="11"
-                    rx="2"
-                    stroke="#8899aa"
-                    stroke-width="1.2"
-                  />
-                  <path
-                    d="M4 1v2M10 1v2M1 5h12"
-                    stroke="#8899aa"
-                    stroke-width="1.2"
-                    stroke-linecap="round"
-                  />
-                </svg>
+                <ElDatePicker
+                  v-model="credForm.expiry"
+                  type="date"
+                  value-format="YYYY-MM-DD"
+                  format="YYYY-MM-DD"
+                  placeholder="请选择日期"
+                  class="form-date-picker"
+                />
               </div>
             </div>
 
             <!-- 备注 -->
             <div class="form-field form-field--row">
               <label class="form-label">备注</label>
-              <input type="text" v-model="credForm.remark" class="form-input" />
+              <textarea
+                v-model="credForm.remark"
+                class="form-input form-textarea"
+                rows="3"
+                placeholder="请输入备注"
+              />
             </div>
           </div>
 
@@ -410,22 +416,44 @@
           </div>
 
           <div class="result-title result-title--error">连接失败</div>
-          <div class="result-subtitle">Firebase | Service Account</div>
+          <div v-if="activeErrorDetail" class="result-subtitle">
+            {{ activeErrorDetail.platform }} | {{ activeErrorDetail.credType }}
+          </div>
 
-          <div class="error-info">
+          <div v-if="dialogAnomalyItems.length > 1" class="error-anomaly-select">
+            <span class="error-anomaly-label">异常连接</span>
+            <div class="custom-select-wrap custom-select-wrap--compact">
+              <select v-model="selectedAnomalyId" class="form-select">
+                <option v-for="it in dialogAnomalyItems" :key="it.id" :value="it.id">
+                  {{ it.platform }} · {{ it.appName }} · {{ it.account }}
+                </option>
+              </select>
+              <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path
+                  d="M2 4l4 4 4-4"
+                  stroke="#8899aa"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
+
+          <div v-if="activeErrorDetail" class="error-info">
             <div class="error-row">
               <span class="error-key">错误信息：</span>
-              <code class="error-code">Invalid credentials - Token expired</code>
+              <code class="error-code">{{ activeErrorDetail.errorMessage }}</code>
             </div>
             <div class="error-row">
               <span class="error-key">失效时间：</span>
-              <span class="error-val">2024-01-30 22:15:32</span>
+              <span class="error-val">{{ activeErrorDetail.expiredAt }}</span>
             </div>
             <div class="error-suggestions">
               <div class="sug-title">建议操作：</div>
-              <div class="sug-item">1. 检查 Service Account JSON 是否有效</div>
-              <div class="sug-item">2. 确认应用权限是否已授予</div>
-              <div class="sug-item">3. 检查项目 ID 是否正确</div>
+              <div v-for="(sug, si) in activeErrorDetail.suggestions" :key="si" class="sug-item">
+                {{ si + 1 }}. {{ sug }}
+              </div>
             </div>
           </div>
 
@@ -441,7 +469,12 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import { fetchAppStoreConnectionAnomalies } from '@/api/config-management/app-store-management'
+  import type { AppStoreConnectionAnomalyItem } from '@/views/config-management/app-store-management/types'
+
+  defineOptions({ name: 'AppStoreCredentialManagement' })
 
   // ─── 类型 ───────────────────────────────────────────────────────────
   interface Credential {
@@ -457,6 +490,20 @@
   }
 
   // ─── 平台图标（内联 SVG data URI） ───────────────────────────────────
+  interface SelectOption {
+    label: string
+    value: string
+  }
+
+  const normalizeStorePlatformValue = (value: string, label: string): string => {
+    const raw = `${value} ${label}`.toLowerCase()
+    if (raw.includes('google')) return 'Google Play'
+    if (raw.includes('app store') || raw.includes('apple')) return 'App Store'
+    if (raw.includes('huawei') || raw.includes('华为')) return 'Huawei AppGallery'
+    if (raw.includes('samsung') || raw.includes('三星')) return 'Samsung Galaxy Store'
+    return value
+  }
+
   const platformIcon = (name: string): string => {
     const icons: Record<string, string> = {
       'Google Play':
@@ -470,27 +517,6 @@
     }
     return icons[name] ?? icons['Google Play']
   }
-
-  // ─── 弹窗图标 ─────────────────────────────────────────────────────────
-  const platforms = [
-    { value: 'Google Play', label: '[Google Play]', icon: platformIcon('Google Play') },
-    { value: 'App Store', label: '[App Store]', icon: platformIcon('App Store') },
-    { value: 'Huawei AppGallery', label: '[Huawei]', icon: platformIcon('Huawei AppGallery') },
-    {
-      value: 'Samsung Galaxy Store',
-      label: '[Samsung]',
-      icon: platformIcon('Samsung Galaxy Store')
-    }
-  ]
-
-  const appOptions = [
-    'Vegoo Keyboard',
-    'Vegoo Camera',
-    'Vegoo Notes',
-    'Vegoo Cleaner',
-    'Vegoo Launcher',
-    'Vegoo VPN'
-  ]
 
   // ─── 表格数据 ─────────────────────────────────────────────────────────
   const credentials = ref<Credential[]>([
@@ -585,8 +611,53 @@
   ])
 
   // ─── 过滤 ─────────────────────────────────────────────────────────────
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+  const fallbackPlatformFilterOptions: SelectOption[] = [
+    { label: 'Google Play', value: 'Google Play' },
+    { label: 'App Store', value: 'App Store' },
+    { label: '华为应用市场', value: 'Huawei AppGallery' },
+    { label: '三星应用商店', value: 'Samsung Galaxy Store' }
+  ]
+  const platformFilterOptions = computed<SelectOption[]>(() => {
+    const sourceOptions = cockpitMetaFilterStore.data?.sourceOptions ?? []
+    if (sourceOptions.length > 0) {
+      return sourceOptions.map((item) => ({
+        label: item.label,
+        value: normalizeStorePlatformValue(item.value, item.label)
+      }))
+    }
+    return fallbackPlatformFilterOptions
+  })
+  const fallbackCredentialAppOptions: SelectOption[] = [
+    { label: 'Vegoo Keyboard', value: 'Vegoo Keyboard' },
+    { label: 'Vegoo Camera', value: 'Vegoo Camera' },
+    { label: 'Vegoo Notes', value: 'Vegoo Notes' },
+    { label: 'Vegoo Cleaner', value: 'Vegoo Cleaner' },
+    { label: 'Vegoo Launcher', value: 'Vegoo Launcher' },
+    { label: 'Vegoo VPN', value: 'Vegoo VPN' }
+  ]
+  const credentialPlatformOptions = computed<SelectOption[]>(() => platformFilterOptions.value)
+  const credentialAppOptions = computed<SelectOption[]>(() => {
+    const appOptions = cockpitMetaFilterStore.data?.appOptions ?? []
+    if (appOptions.length > 0) {
+      return appOptions.map((item) => ({
+        label: item.label,
+        // 表单回填与当前 mock 列表按应用名称匹配，value 统一使用 label
+        value: item.label
+      }))
+    }
+    return fallbackCredentialAppOptions
+  })
+
+  const filterPlatformInput = ref('')
+  const filterStatusInput = ref('')
   const filterPlatform = ref('')
   const filterStatus = ref('')
+
+  const handleQuery = () => {
+    filterPlatform.value = filterPlatformInput.value
+    filterStatus.value = filterStatusInput.value
+  }
 
   const filteredCredentials = computed(() => {
     return credentials.value.filter((row) => {
@@ -603,7 +674,20 @@
     expiring: credentials.value.filter((r) => r.status === '即将过期').length
   }))
 
-  const hasErrors = computed(() => stats.value.error > 0)
+  const connectionAnomalies = ref<AppStoreConnectionAnomalyItem[]>([])
+  const hasAlertAnomalies = computed(() => connectionAnomalies.value.length > 0)
+  const alertBarSummaryText = computed(() => {
+    const items = connectionAnomalies.value
+    if (!items.length) return ''
+    const ps = [...new Set(items.map((i) => i.platform))]
+    const head =
+      ps.length === 1
+        ? ps[0]
+        : ps.length === 2
+          ? `${ps[0]} 和 ${ps[1]}`
+          : `${ps.slice(0, 2).join('、')} 等 ${ps.length} 个平台`
+    return `${head} 连接异常，请检查凭据配置或网络连接 |`
+  })
 
   const statusClass = (s: string) =>
     (({ 正常: 'normal', 即将过期: 'expiring', 连接异常: 'error' }) as Record<string, string>)[s] ??
@@ -615,6 +699,43 @@
   const showSuccessDialog = ref(false)
   const showErrorDialog = ref(false)
   const testingRow = ref<Credential | null>(null)
+  const dialogAnomalyItems = ref<AppStoreConnectionAnomalyItem[]>([])
+  const selectedAnomalyId = ref('')
+
+  const activeErrorDetail = computed(() => {
+    const id = selectedAnomalyId.value
+    return dialogAnomalyItems.value.find((i) => i.id === id) ?? null
+  })
+
+  const rowToAnomalyItem = (row: Credential): AppStoreConnectionAnomalyItem => ({
+    id: String(row.id),
+    platform: row.platform,
+    appName: row.appName,
+    account: row.account,
+    credType: row.credType,
+    errorMessage: '连接验证失败，请根据建议操作排查后重试。',
+    expiredAt: row.expiry === '永久' ? '—' : row.expiry,
+    suggestions: [
+      '检查凭据文件或密钥内容是否有效',
+      '确认应用商店侧权限是否已授予',
+      '检查账号、项目或包名配置是否与实际一致'
+    ]
+  })
+
+  const openErrorDialogWithItems = (items: AppStoreConnectionAnomalyItem[]) => {
+    dialogAnomalyItems.value = items
+    selectedAnomalyId.value = items[0]?.id ?? ''
+    showErrorDialog.value = true
+  }
+
+  const openAlertConnectionDetail = () => {
+    openErrorDialogWithItems(connectionAnomalies.value.map((r) => ({ ...r })))
+  }
+
+  watch(selectedAnomalyId, (id) => {
+    const row = credentials.value.find((r) => String(r.id) === id)
+    testingRow.value = row ?? null
+  })
 
   // ─── 统一凭据表单（新增 & 编辑共用） ─────────────────────────────────
   const defaultCredForm = () => ({
@@ -655,14 +776,17 @@
   const handleTest = (row: Credential) => {
     testingRow.value = row
     setTimeout(() => {
-      if (row.status === '正常') showSuccessDialog.value = true
-      else showErrorDialog.value = true
+      if (row.status === '正常') {
+        showSuccessDialog.value = true
+      } else {
+        openErrorDialogWithItems([rowToAnomalyItem(row)])
+      }
     }, 300)
   }
 
   const handleRetry = (row: Credential) => {
     testingRow.value = row
-    showErrorDialog.value = true
+    openErrorDialogWithItems([rowToAnomalyItem(row)])
   }
 
   const handleBatchTest = () => {
@@ -684,7 +808,29 @@
     showEditDialog.value = true
   }
 
-  const handleView = () => {}
+  const handleExport = () => {
+    const header = ['平台', '应用名称', '凭据类型', '帐号/Key', '过期时间', '最后验证', '状态']
+    const lines = [header.join(',')]
+    filteredCredentials.value.forEach((row) => {
+      const values = [
+        row.platform,
+        row.appName,
+        row.credType,
+        row.account,
+        row.expiry,
+        row.lastVerify,
+        row.status
+      ].map((value) => `"${String(value).replace(/"/g, '""')}"`)
+      lines.push(values.join(','))
+    })
+    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `credential-export-${Date.now()}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const closeFormDialog = () => {
     showAddDialog.value = false
@@ -707,19 +853,40 @@
   }
 
   const handleReconfig = () => {
+    const id = selectedAnomalyId.value
     showErrorDialog.value = false
-    // 重新配置时打开编辑弹窗
+    const row = credentials.value.find((r) => String(r.id) === id)
+    if (row) {
+      handleEdit(row)
+      return
+    }
     credForm.value = defaultCredForm()
     showEditDialog.value = true
   }
 
   const handleRetryConn = () => {
+    const id = selectedAnomalyId.value
     showErrorDialog.value = false
+    const row = credentials.value.find((r) => String(r.id) === id)
+    testingRow.value = row ?? credentials.value[0] ?? null
     setTimeout(() => {
-      testingRow.value = credentials.value[0]
       showSuccessDialog.value = true
     }, 300)
   }
+
+  const loadConnectionAnomalies = async () => {
+    try {
+      const data = await fetchAppStoreConnectionAnomalies()
+      connectionAnomalies.value = Array.isArray(data.items) ? data.items : []
+    } catch {
+      connectionAnomalies.value = []
+    }
+  }
+
+  onMounted(() => {
+    cockpitMetaFilterStore.ensureLoaded()
+    loadConnectionAnomalies()
+  })
 </script>
 
 <style scoped>
@@ -1478,16 +1645,39 @@
     flex: 1;
   }
 
-  .form-input--date {
-    padding-right: 32px;
+  .form-date-picker {
+    width: 100%;
   }
 
-  .date-icon {
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    pointer-events: none;
-    transform: translateY(-50%);
+  .date-input-wrap :deep(.form-date-picker.el-date-editor) {
+    display: flex;
+    width: 100% !important;
+  }
+
+  .date-input-wrap :deep(.form-date-picker .el-input__wrapper) {
+    width: 100%;
+    min-height: 34px;
+    padding: 8px 10px;
+    background: #0a1925;
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px var(--border) inset;
+    transition: box-shadow 0.2s;
+  }
+
+  .date-input-wrap :deep(.form-date-picker .el-input__inner) {
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .date-input-wrap :deep(.form-date-picker .el-input__prefix),
+  .date-input-wrap :deep(.form-date-picker .el-input__suffix) {
+    color: var(--text-secondary);
+  }
+
+  .date-input-wrap :deep(.form-date-picker:hover .el-input__wrapper),
+  .date-input-wrap :deep(.form-date-picker.is-focus .el-input__wrapper) {
+    box-shadow: 0 0 0 1px var(--teal) inset;
   }
 
   /* slide-down 凭据内容区过渡 */
@@ -1693,6 +1883,27 @@
   /* ── 失败弹窗：标准 header + 错误信息 + 三按钮 ── */
   .modal-result--error {
     text-align: center;
+  }
+
+  .error-anomaly-select {
+    width: 100%;
+    padding: 0 20px 14px;
+    text-align: left;
+  }
+
+  .error-anomaly-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .modal-result--error .custom-select-wrap--compact {
+    max-width: 100%;
+  }
+
+  .modal-result--error .custom-select-wrap--compact .form-select {
+    width: 100%;
   }
 
   .error-info {
