@@ -132,7 +132,25 @@
           {{ $t('conversionManagement.hintSystemDisplayName') }}
         </div>
       </ElFormItem>
-      <ElFormItem :label="$t('conversionManagement.conversionType')" prop="conversionDisplayType">
+      <ElFormItem :label="$t('conversionManagement.conversionType')" prop="platformConversionType">
+        <ElSelect
+          v-model="form.platformConversionType"
+          :placeholder="$t('conversionManagement.selectConversionType')"
+          popper-class="conversion-dialog-select-dropdown"
+          style="width: 100%"
+        >
+          <ElOption
+            v-for="opt in platformConversionTypeSelectOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
+        </ElSelect>
+      </ElFormItem>
+      <ElFormItem
+        :label="$t('conversionManagement.conversionDisplayType')"
+        prop="conversionDisplayType"
+      >
         <ElSelect
           v-model="form.conversionDisplayType"
           popper-class="conversion-dialog-select-dropdown"
@@ -197,18 +215,26 @@
   import type {
     AdPlatformType,
     BillingType,
+    ConversionDisplayType,
     ConversionMappingItem,
     ConversionMappingForm
   } from '../types'
   import {
+    fetchConversionMappingsDetail,
     fetchConversionMetaDialogOptions,
     fetchConversionMetaDisplayTypeOptions
   } from '@/api/user-growth/conversion-management'
   import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
   import {
+    findConversionTypeOptionByValue,
+    normalizeConversionTypeValueToOption,
+    useConversionMetaConversionTypeOptions
+  } from '@/composables/use-conversion-meta-conversion-type'
+  import {
     MOCK_AD_PLATFORM_OPTIONS,
     MOCK_APP_OPTIONS_FOR_DIALOG,
     MOCK_CONVERSION_DISPLAY_TYPE_OPTIONS,
+    MOCK_CONVERSION_TYPE_OPTIONS,
     MOCK_PLATFORM_OPTIONS
   } from '../mock/data'
   import { getAppNowMs } from '@/utils/app-now'
@@ -219,6 +245,8 @@
 
   const { t } = useI18n()
   const { cockpitMeta, ensureCockpitMetaLoaded } = useCockpitMetaFilterOptions()
+  const { optionsForLabelMatch, ensureLoaded: ensureConversionMetaConversionTypeLoaded } =
+    useConversionMetaConversionTypeOptions()
 
   /** 公用 meta：终端平台 → `platformOptions`（弹窗内不含「全部」空值项） */
   const platformOptionsForDialog = computed(() => {
@@ -291,6 +319,39 @@
       })
       .filter((item): item is NonNullable<typeof item> => item !== null)
   }
+  const platformConversionTypeMetaOptions = ref<{ label: string; value: string }[]>([])
+
+  function applyPlatformConversionTypeFallback() {
+    platformConversionTypeMetaOptions.value = MOCK_CONVERSION_TYPE_OPTIONS.filter(
+      (o) => o.value !== ''
+    )
+  }
+
+  async function loadPlatformConversionTypeOptions() {
+    try {
+      await ensureConversionMetaConversionTypeLoaded()
+      const list = optionsForLabelMatch.value
+      if (list.length) {
+        platformConversionTypeMetaOptions.value = [...list]
+      } else {
+        applyPlatformConversionTypeFallback()
+        ElMessage.warning(t('conversionManagement.loadConversionTypeOptionsEmpty'))
+      }
+    } catch {
+      applyPlatformConversionTypeFallback()
+      ElMessage.error(t('conversionManagement.loadConversionTypeOptionsFailed'))
+    }
+  }
+
+  const platformConversionTypeSelectOptions = computed(() => {
+    const base = platformConversionTypeMetaOptions.value
+    const cur = form.platformConversionType
+    if (typeof cur === 'string' && cur && !findConversionTypeOptionByValue(base, cur)) {
+      return [{ label: cur, value: cur }, ...base]
+    }
+    return base
+  })
+
   const conversionDisplayTypeMetaOptions = ref(
     MOCK_CONVERSION_DISPLAY_TYPE_OPTIONS.map((o) => ({ label: o.label, value: o.value }))
   )
@@ -332,6 +393,7 @@
     appId: '',
     conversionName: '',
     conversionId: '',
+    platformConversionType: '',
     systemDisplayName: 'IAP购买',
     conversionDisplayType: 'paid',
     billingType: 'CPI',
@@ -348,6 +410,18 @@
     appId: [{ required: true, message: '请选择应用', trigger: 'change' }],
     conversionName: [{ required: true, message: '请选择或输入转化名称', trigger: 'change' }],
     systemDisplayName: [{ required: true, message: '请输入系统显示名称', trigger: 'blur' }],
+    platformConversionType: [
+      {
+        validator: (_rule, value, callback) => {
+          if (value === undefined || value === null || value === '') {
+            callback(new Error(t('conversionManagement.selectConversionType')))
+            return
+          }
+          callback()
+        },
+        trigger: 'change'
+      }
+    ],
     billingType: [{ required: true, message: '请选择计费类型', trigger: 'change' }]
   }
 
@@ -395,7 +469,7 @@
     const name = typeof raw === 'string' ? raw.trim() : ''
     if (!name) {
       form.conversionId = ''
-      form.platformConversionType = undefined
+      form.platformConversionType = ''
       return
     }
     const found = conversionNameMetaOptions.value.find((r) => r.conversionName === name)
@@ -403,11 +477,13 @@
       form.conversionId = found.conversionId
       const bt = normalizeBillingType(found.billingType)
       if (bt) form.billingType = billingTypeForForm(bt)
-      form.platformConversionType = found.platformConversionType
+      form.platformConversionType =
+        typeof found.platformConversionType === 'string' ? found.platformConversionType : ''
     } else {
       form.conversionId = ''
-      form.platformConversionType = undefined
+      form.platformConversionType = ''
     }
+    syncFormPlatformConversionTypeFromOptions()
   }
 
   /** 手动输入的转化名称在失焦后生成转化 ID（时间戳）；下拉选中项在 change 时已带入平台 ID */
@@ -417,7 +493,7 @@
     const name = typeof raw === 'string' ? raw.trim() : ''
     if (!name) {
       form.conversionId = ''
-      form.platformConversionType = undefined
+      form.platformConversionType = ''
       return
     }
     const found = conversionNameMetaOptions.value.find((r) => r.conversionName === name)
@@ -425,10 +501,12 @@
       form.conversionId = found.conversionId
       const bt = normalizeBillingType(found.billingType)
       if (bt) form.billingType = billingTypeForForm(bt)
-      form.platformConversionType = found.platformConversionType
+      form.platformConversionType =
+        typeof found.platformConversionType === 'string' ? found.platformConversionType : ''
     } else if (!form.conversionId) {
       form.conversionId = String(getAppNowMs())
     }
+    syncFormPlatformConversionTypeFromOptions()
   }
 
   function onStatusChange(val: string | number | boolean) {
@@ -441,46 +519,104 @@
     return undefined
   }
 
-  watch(
-    () => [props.visible, props.rowData],
-    () => {
-      if (props.visible) {
-        void ensureCockpitMetaLoaded()
-        void fetchConversionMetaDisplayTypeOptions()
-          .then((res) => {
-            if (res.options?.length) conversionDisplayTypeMetaOptions.value = res.options
-          })
-          .catch(() => {})
+  /** 与 meta `value` 一致的广告平台转化类型取值（列表 `conversionDisplayType` 可能仅存此类 value） */
+  const META_PLATFORM_CONVERSION_VALUES = new Set([
+    'PHONE_CALL_LEAD',
+    'DOWNLOAD',
+    'PURCHASE',
+    'ADD_TO_CART',
+    'PAGE_VIEW',
+    'BEGIN_CHECKOUT'
+  ])
 
-        if (props.type === 'edit' && props.rowData) {
-          const row = props.rowData as ConversionMappingForm
-          const mcc = props.rowData.mccAccount ?? ''
-          Object.assign(form, {
-            platform: props.rowData.platform ?? '',
-            source: row.source ?? row.adPlatform ?? getAdPlatformByMcc(mcc),
-            adPlatform: row.source ?? row.adPlatform ?? getAdPlatformByMcc(mcc),
-            mccAccount: props.rowData.mccAccount ?? '',
-            appId: props.rowData.appId ?? '',
-            conversionName: props.rowData.conversionName ?? '',
-            conversionId: props.rowData.conversionId ?? '',
-            systemDisplayName: props.rowData.systemDisplayName ?? '',
-            conversionDisplayType: (row.conversionDisplayType ??
-              'paid') as ConversionMappingForm['conversionDisplayType'],
-            billingType: billingTypeForForm(props.rowData.billingType),
-            status: props.rowData.status ?? 'enabled',
-            remarks: row.remarks ?? ''
-          })
-          void loadDialogMeta({
-            source: form.source,
-            platform: form.platform,
-            mccAccount: form.mccAccount,
-            appId: form.appId
-          })
-        } else {
-          Object.assign(form, defaultForm)
-          void loadDialogMeta({})
-        }
+  function pickFormConversionDisplayCategory(
+    m: Partial<ConversionMappingItem>
+  ): ConversionDisplayType {
+    const x = m.conversionDisplayType
+    if (x === 'paid' || x === 'activation' || x === 'behavior' || x === 'revenue') {
+      return x
+    }
+    return 'paid'
+  }
+
+  function pickPlatformConversionValue(m: Partial<ConversionMappingItem>): string {
+    if (typeof m.platformConversionType === 'string' && m.platformConversionType) {
+      return m.platformConversionType
+    }
+    const d = m.conversionDisplayType
+    if (typeof d === 'string' && d) {
+      if ([...META_PLATFORM_CONVERSION_VALUES].some((x) => x.toLowerCase() === d.toLowerCase())) {
+        return d
       }
+    }
+    return ''
+  }
+
+  function syncFormPlatformConversionTypeFromOptions() {
+    const list = platformConversionTypeMetaOptions.value
+    form.platformConversionType = normalizeConversionTypeValueToOption(
+      list,
+      form.platformConversionType
+    )
+  }
+
+  /** 编辑回显：详情覆盖列表；列表 `conversionDisplayType` 可能为 meta value，详情同字段为展示分类 paid 等 */
+  async function applyEditFormFromRow(rowData: Partial<ConversionMappingItem>) {
+    let merged: Partial<ConversionMappingItem> = { ...rowData }
+    if (rowData.id) {
+      try {
+        const detail = await fetchConversionMappingsDetail({ id: String(rowData.id) })
+        if (detail && typeof detail === 'object') {
+          merged = { ...rowData, ...detail }
+        }
+      } catch {
+        // 保留列表行
+      }
+    }
+    const row = merged as ConversionMappingForm
+    const mcc = merged.mccAccount ?? ''
+    Object.assign(form, {
+      platform: merged.platform ?? '',
+      source: row.source ?? row.adPlatform ?? getAdPlatformByMcc(mcc),
+      adPlatform: row.source ?? row.adPlatform ?? getAdPlatformByMcc(mcc),
+      mccAccount: merged.mccAccount ?? '',
+      appId: merged.appId ?? '',
+      conversionName: merged.conversionName ?? '',
+      conversionId: merged.conversionId ?? '',
+      platformConversionType: pickPlatformConversionValue(merged),
+      systemDisplayName: merged.systemDisplayName ?? '',
+      conversionDisplayType: pickFormConversionDisplayCategory(merged),
+      billingType: billingTypeForForm(merged.billingType),
+      status: merged.status ?? 'enabled',
+      remarks: row.remarks ?? ''
+    })
+    void loadDialogMeta({
+      source: form.source,
+      platform: form.platform,
+      mccAccount: form.mccAccount,
+      appId: form.appId
+    })
+  }
+
+  watch(
+    () => [props.visible, props.type, props.rowData] as const,
+    async () => {
+      if (!props.visible) return
+      void ensureCockpitMetaLoaded()
+      await loadPlatformConversionTypeOptions()
+      void fetchConversionMetaDisplayTypeOptions()
+        .then((res) => {
+          if (res.options?.length) conversionDisplayTypeMetaOptions.value = res.options
+        })
+        .catch(() => {})
+
+      if (props.type === 'edit' && props.rowData) {
+        await applyEditFormFromRow(props.rowData)
+      } else {
+        Object.assign(form, defaultForm)
+        void loadDialogMeta({})
+      }
+      syncFormPlatformConversionTypeFromOptions()
     },
     { immediate: true }
   )

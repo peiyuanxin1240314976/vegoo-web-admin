@@ -33,7 +33,11 @@ import type {
   ConversionFilterParams,
   ConversionKpi,
   ConversionMappingForm,
-  ConversionMappingItem
+  ConversionMappingItem,
+  ConversionSideStats,
+  ConversionTypeDistributionItem,
+  MappingStats,
+  PlatformStats
 } from '@/views/user-growth/conversion-management/types'
 
 export const CONVERSION_MANAGEMENT_BASE = `${ANALYSIS_API_BASE}/user-growth/conversion-management`
@@ -51,6 +55,119 @@ function unwrapDataDeep<T = unknown>(value: unknown, maxDepth = 3): T {
     depth++
   }
   return cur as T
+}
+
+/**
+ * 连续解包 `data`，仅当下一层为非 null 的 object 时才继续。
+ * 避免业务体上误带 `data: null` 时像 `unwrapDataDeep` 一样整段变成 `null`。
+ */
+function unwrapNestedDataObjects(value: unknown, maxDepth = 3): unknown {
+  let cur: unknown = value
+  let depth = 0
+  while (
+    depth < maxDepth &&
+    cur &&
+    typeof cur === 'object' &&
+    'data' in (cur as Record<string, unknown>)
+  ) {
+    const next = (cur as Record<string, unknown>).data
+    if (next == null || typeof next !== 'object') break
+    cur = next
+    depth++
+  }
+  return cur
+}
+
+function numOrZero(v: unknown): number {
+  return typeof v === 'number' && !Number.isNaN(v) ? v : 0
+}
+
+/**
+ * 将 mappings-stats 业务体规范为页面契约：
+ * - 兼容契约字段（mapped / duplicate / unmapped、android / ios、name + value + count）
+ * - 兼容后端现网：`enabledCount`/`duplicateCount`/`unmappedCount`、`androidCount`/`iosCount`、
+ *   分布项 `{ type, count }`（无占比时按各 count 占总数换算百分比）
+ */
+function normalizeMappingsStatsResponse(raw: unknown): ConversionSideStats {
+  const unwrapped = unwrapNestedDataObjects(raw)
+  const r = unwrapped && typeof unwrapped === 'object' ? (unwrapped as Record<string, unknown>) : {}
+
+  const tdRaw = r.typeDistribution ?? r.type_distribution
+  const typeRows: { name: string; count: number; valuePct: number | null }[] = Array.isArray(tdRaw)
+    ? tdRaw.map((item) => {
+        if (!item || typeof item !== 'object') return { name: '', count: 0, valuePct: null }
+        const it = item as Record<string, unknown>
+        const label =
+          typeof it.name === 'string'
+            ? it.name
+            : typeof it.type === 'string'
+              ? it.type
+              : String(it.name ?? it.type ?? '')
+        const count = numOrZero(it.count)
+        const pctRaw = it.value
+        const hasExplicitPct = typeof pctRaw === 'number' && !Number.isNaN(pctRaw)
+        return {
+          name: label.trim() || '—',
+          count,
+          valuePct: hasExplicitPct ? numOrZero(pctRaw) : null
+        }
+      })
+    : []
+
+  const sumCount = typeRows.reduce((s, row) => s + row.count, 0)
+  const typeDistribution: ConversionTypeDistributionItem[] = typeRows.map((row) => {
+    let value: number
+    if (row.valuePct != null) {
+      value = row.valuePct
+    } else if (sumCount > 0) {
+      value = Math.round((row.count / sumCount) * 10000) / 100
+    } else {
+      value = 0
+    }
+    return { name: row.name, value, count: row.count }
+  })
+
+  const msRaw = r.mappingStats ?? r.mapping_stats
+  const mappingStats: MappingStats = (() => {
+    if (!msRaw || typeof msRaw !== 'object') {
+      return { mapped: 0, duplicate: 0, unmapped: 0 }
+    }
+    const m = msRaw as Record<string, unknown>
+    const pick = (primary: string, ...fallbacks: string[]): number => {
+      const keys = [primary, ...fallbacks]
+      for (const k of keys) {
+        const v = m[k]
+        if (typeof v === 'number' && !Number.isNaN(v)) return v
+      }
+      return 0
+    }
+    return {
+      mapped: pick('mapped', 'enabledCount', 'enabled'),
+      duplicate: pick('duplicate', 'duplicateCount'),
+      unmapped: pick('unmapped', 'unmappedCount')
+    }
+  })()
+
+  const psRaw = r.platformStats ?? r.platform_stats
+  const platformStats: PlatformStats = (() => {
+    if (!psRaw || typeof psRaw !== 'object') {
+      return { android: 0, ios: 0 }
+    }
+    const p = psRaw as Record<string, unknown>
+    const pick = (primary: string, alt: string) => {
+      const a = p[primary]
+      const b = p[alt]
+      if (typeof a === 'number' && !Number.isNaN(a)) return a
+      if (typeof b === 'number' && !Number.isNaN(b)) return b
+      return 0
+    }
+    return {
+      android: pick('android', 'androidCount'),
+      ios: pick('ios', 'iosCount')
+    }
+  })()
+
+  return { typeDistribution, mappingStats, platformStats }
 }
 
 /** 01-mappings-list — POST */
@@ -78,21 +195,11 @@ export function fetchConversionMappingsStats(
     })
   }
   return request
-    .post<{
-      typeDistribution: ConversionDataSidePanels['typeDistribution']
-      mappingStats: typeof MOCK_MAPPING_STATS
-      platformStats: typeof MOCK_PLATFORM_STATS
-    }>({
+    .post<unknown>({
       url: `${CONVERSION_MANAGEMENT_BASE}/mappings-stats`,
       data: params
     })
-    .then((res) =>
-      unwrapDataDeep<{
-        typeDistribution: ConversionDataSidePanels['typeDistribution']
-        mappingStats: typeof MOCK_MAPPING_STATS
-        platformStats: typeof MOCK_PLATFORM_STATS
-      }>(res)
-    )
+    .then((res) => normalizeMappingsStatsResponse(res))
 }
 
 /** 08-meta-conversion-type-options — POST */

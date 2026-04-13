@@ -31,6 +31,7 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     conversionName: 'Phone Tracker: Family Locator (Android) app_store_subscription_convert',
     conversionId: '7217482984',
     platformConversionType: 'PHONE_CALL_LEAD',
+    conversionDisplayType: 'PHONE_CALL_LEAD',
     systemDisplayName: '订阅转化',
     billingType: 'CPA',
     status: 'enabled'
@@ -43,6 +44,7 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     conversionName: 'Phone Tracker install',
     conversionId: '7217482985',
     platformConversionType: 'DOWNLOAD',
+    conversionDisplayType: 'DOWNLOAD',
     systemDisplayName: '首次安装',
     billingType: 'CPI',
     status: 'enabled'
@@ -55,6 +57,7 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     conversionName: 'IAP purchase complete',
     conversionId: '7217482986',
     platformConversionType: 'PURCHASE',
+    conversionDisplayType: 'PURCHASE',
     systemDisplayName: 'IAP购买',
     billingType: 'CPA',
     status: 'enabled'
@@ -67,6 +70,7 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     conversionName: 'add_to_cart_event',
     conversionId: '7217482987',
     platformConversionType: 'ADD_TO_CART',
+    conversionDisplayType: 'ADD_TO_CART',
     systemDisplayName: '加购',
     billingType: 'CPE',
     status: 'enabled'
@@ -79,6 +83,7 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     conversionName: 'page_view_landing',
     conversionId: '7217482988',
     platformConversionType: 'PAGE_VIEW',
+    conversionDisplayType: 'PAGE_VIEW',
     systemDisplayName: '页面浏览',
     billingType: '',
     status: 'enabled'
@@ -91,6 +96,7 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     conversionName: 'begin_checkout',
     conversionId: '7217482989',
     platformConversionType: 'BEGIN_CHECKOUT',
+    conversionDisplayType: 'BEGIN_CHECKOUT',
     systemDisplayName: '发起结账',
     billingType: 'CPA',
     status: 'enabled'
@@ -103,6 +109,7 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     conversionName: 'lead_form_submit',
     conversionId: '7217482990',
     platformConversionType: 'PHONE_CALL_LEAD',
+    conversionDisplayType: 'PHONE_CALL_LEAD',
     systemDisplayName: '订阅转化',
     billingType: 'CPA',
     status: 'duplicate'
@@ -115,6 +122,7 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
     conversionName: 'unknown_conversion',
     conversionId: '7217482991',
     platformConversionType: 'PAGE_VIEW',
+    conversionDisplayType: 'PAGE_VIEW',
     systemDisplayName: '',
     billingType: '',
     status: 'unmapped'
@@ -123,6 +131,7 @@ const _MOCK_ROWS: ConversionMappingItem[] = [
 for (let i = 9; i <= 18; i++) {
   const typeIndex = (i - 1) % PLATFORM_TYPES.length
   const billingIndex = (i - 1) % BILLING.length
+  const metaVal = PLATFORM_TYPES[typeIndex]
   _MOCK_ROWS.push({
     id: String(i),
     platform: 'android',
@@ -130,7 +139,8 @@ for (let i = 9; i <= 18; i++) {
     appId: i % 2 ? '10001' : '10002',
     conversionName: `Conversion Event ${i}`,
     conversionId: String(7217482990 + i),
-    platformConversionType: PLATFORM_TYPES[typeIndex],
+    platformConversionType: metaVal,
+    conversionDisplayType: metaVal,
     systemDisplayName: SYSTEM_NAMES[typeIndex] ?? SYSTEM_NAMES[0],
     billingType: BILLING[billingIndex],
     status: i === 10 || i === 11 ? 'duplicate' : i === 12 ? 'unmapped' : 'enabled'
@@ -232,7 +242,14 @@ export function fetchConversionMappingListMock(
   let list = [...MOCK_CONVERSION_LIST]
   if (platform) list = list.filter((r) => r.platform === platform)
   if (appId) list = list.filter((r) => r.appId === appId)
-  if (conversionType) list = list.filter((r) => r.platformConversionType === conversionType)
+  if (conversionType) {
+    const ct = conversionType.toLowerCase()
+    list = list.filter(
+      (r) =>
+        String(r.platformConversionType).toLowerCase() === ct ||
+        String(r.conversionDisplayType ?? '').toLowerCase() === ct
+    )
+  }
   if (status) list = list.filter((r) => r.status === status)
   if (keyword) {
     const k = keyword.toLowerCase()

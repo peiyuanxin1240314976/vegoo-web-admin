@@ -38,6 +38,11 @@ export interface ConversionMappingItem {
   conversionName: string
   conversionId: string
   platformConversionType: PlatformConversionType
+  /**
+   * 列表接口：与 `meta-conversion-type-options` 的 **value** 一致（camelCase 字段名），表格「广告平台转化类型」用其匹配 **label** 展示。
+   * 详情/编辑回显「转化展示分类」时可为 paid/activation/behavior/revenue，以 `mappings-detail` 为准。
+   */
+  conversionDisplayType?: string
   systemDisplayName: string
   billingType: BillingType
   status: MappingStatus

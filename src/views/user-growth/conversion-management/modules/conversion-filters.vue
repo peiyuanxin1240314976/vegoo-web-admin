@@ -95,11 +95,11 @@
 <script setup lang="ts">
   import { CircleCheck, CollectionTag, Grid, Monitor, Plus, Search } from '@element-plus/icons-vue'
   import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
+  import { useConversionMetaConversionTypeOptions } from '@/composables/use-conversion-meta-conversion-type'
   import type { ConversionFilterParams } from '../types'
   import {
     MOCK_PLATFORM_OPTIONS,
     MOCK_DATA_TAB_APP_OPTIONS,
-    MOCK_CONVERSION_TYPE_OPTIONS,
     MOCK_STATUS_OPTIONS
   } from '../mock/data'
   import { useI18n } from 'vue-i18n'
@@ -108,6 +108,8 @@
 
   const { t } = useI18n()
   const { cockpitMeta, ensureCockpitMetaLoaded } = useCockpitMetaFilterOptions()
+  const { filterConversionTypeOptions, ensureLoaded: ensureConversionMetaConversionTypeLoaded } =
+    useConversionMetaConversionTypeOptions()
 
   const props = defineProps<{
     filter: ConversionFilterParams
@@ -133,7 +135,7 @@
   const platformOptions = computed(() => props.platformOptions ?? platformOptionsFromStore.value)
   const appOptions = computed(() => props.appOptions ?? MOCK_DATA_TAB_APP_OPTIONS)
   const conversionTypeOptions = computed(
-    () => props.conversionTypeOptions ?? MOCK_CONVERSION_TYPE_OPTIONS
+    () => props.conversionTypeOptions ?? filterConversionTypeOptions.value
   )
   const statusOptions = computed(() => props.statusOptions ?? MOCK_STATUS_OPTIONS)
 
@@ -147,6 +149,7 @@
 
   onMounted(() => {
     void ensureCockpitMetaLoaded()
+    void ensureConversionMetaConversionTypeLoaded()
   })
 
   watch(
