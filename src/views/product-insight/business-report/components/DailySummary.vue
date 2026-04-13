@@ -149,6 +149,7 @@
   import { computed, inject } from 'vue'
   import KpiCard from './KpiCard.vue'
   import { businessReportContextKey } from '../composables/business-report-context'
+  import type { KpiMetric } from '../types'
   import {
     dailyKpis,
     dailyUserMetrics,
@@ -181,7 +182,44 @@
   const openPushModal = inject<() => void>('openPushModal', () => {})
   const ctx = inject(businessReportContextKey)
 
-  const kpis = computed(() => ctx?.summary.value?.kpis ?? dailyKpis)
+  const KPI_FALLBACK_THEME: Array<Pick<KpiMetric, 'color' | 'bg'>> = [
+    {
+      color: '#00D4A1',
+      bg: 'linear-gradient(135deg, rgba(0,212,161,0.22), rgba(0,212,161,0.08))'
+    },
+    {
+      color: '#22C55E',
+      bg: 'linear-gradient(135deg, rgba(34,197,94,0.22), rgba(34,197,94,0.08))'
+    },
+    {
+      color: '#3B82F6',
+      bg: 'linear-gradient(135deg, rgba(59,130,246,0.22), rgba(59,130,246,0.08))'
+    },
+    {
+      color: '#F59E0B',
+      bg: 'linear-gradient(135deg, rgba(245,158,11,0.22), rgba(245,158,11,0.08))'
+    },
+    {
+      color: '#8B5CF6',
+      bg: 'linear-gradient(135deg, rgba(139,92,246,0.22), rgba(139,92,246,0.08))'
+    }
+  ]
+
+  const kpis = computed<KpiMetric[]>(() => {
+    const source = ctx?.summary.value?.kpis ?? dailyKpis
+    return source.map((metric, index) => {
+      const theme = KPI_FALLBACK_THEME[index % KPI_FALLBACK_THEME.length]
+      return {
+        ...metric,
+        color: metric.color || theme.color,
+        bg: metric.bg || theme.bg,
+        sparkline: metric.sparkline ?? [],
+        changeLabel:
+          metric.changeLabel ||
+          `${metric.change >= 0 ? '环比昨日 ↑ ' : '环比昨日 ↓ '}${Math.abs(metric.change)}%`
+      }
+    })
+  })
   const userMetrics = computed(() => ctx?.summary.value?.userMetrics ?? dailyUserMetrics)
   const roiRows = computed(() => ctx?.summary.value?.roiMetrics ?? roiMetrics)
   const retention = computed(() => ctx?.summary.value?.retentionMetrics ?? retentionMetrics)
