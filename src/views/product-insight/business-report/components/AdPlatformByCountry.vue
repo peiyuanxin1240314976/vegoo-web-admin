@@ -12,7 +12,7 @@
     <div class="table-scroll">
       <table class="apc-table">
         <colgroup>
-          <col style="width: 16%" /><!-- 应用 -->
+          <col style="width: 4%" /><!-- 应用 -->
           <col style="width: 5%" />
           <!-- 平台 -->
           <col style="width: 6%" />
@@ -161,9 +161,9 @@
                       <td class="sticky-left" colspan="4">
                         <div class="expand-cell indent-3">
                           <span
-                            v-if="countryFiClass(country.flag)"
+                            v-if="resolveCountryFiClass(country.flag)"
                             class="fi country-fi"
-                            :class="countryFiClass(country.flag)"
+                            :class="resolveCountryFiClass(country.flag)"
                           />
                           <span v-else class="flag">{{ country.flag }}</span>
                           <span class="row-label">{{ country.name }}</span>
@@ -340,7 +340,7 @@
     return /^[a-z]{2}$/.test(code) ? code : undefined
   }
 
-  function countryFiClass(flag: string): string | undefined {
+  function resolveCountryFiClass(flag: string): string | undefined {
     const code = parseCountryCodeFromEmoji(flag)
     return code ? `fi-${code}` : undefined
   }
