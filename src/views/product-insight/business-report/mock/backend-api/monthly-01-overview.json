@@ -19,7 +19,38 @@
     "account": ""
   },
   "sampleResponse": {
-    "kpis": [{ "key": "revenue", "label": "总收入", "value": "$4,521,000", "change": 9.7 }],
+    "kpis": [
+      {
+        "key": "revenue",
+        "label": "总收缴",
+        "value": "$4,521,000",
+        "change": 9.7,
+        "changeLabel": "月环比 ↑ +9.7%",
+        "color": "#00D4A1",
+        "bg": "linear-gradient(135deg, rgba(0,168,117,0.35) 0%, rgba(0,100,70,0.2) 100%)",
+        "sparkline": [3800, 4000, 3900, 4100, 4200, 4300, 4400, 4521]
+      },
+      {
+        "key": "paidRevenue",
+        "label": "付费收缴",
+        "value": "$1,234,000",
+        "change": 9.9,
+        "changeLabel": "月环比 ↑ +9.9%",
+        "color": "#22C55E",
+        "bg": "linear-gradient(135deg, rgba(34,197,94,0.3) 0%, rgba(20,120,56,0.15) 100%)",
+        "sparkline": [1050, 1080, 1100, 1120, 1150, 1180, 1210, 1234]
+      },
+      {
+        "key": "mau",
+        "label": "MAU",
+        "value": "823.4万",
+        "change": 4.5,
+        "changeLabel": "月环比 ↑ +4.5%",
+        "color": "#06B6D4",
+        "bg": "linear-gradient(135deg, rgba(6,182,212,0.3) 0%, rgba(3,105,161,0.15) 100%)",
+        "sparkline": [7600, 7700, 7800, 7850, 7900, 7980, 8100, 8234]
+      }
+    ],
     "userMetrics": [
       { "name": "MAU", "current": "823.4万", "previous": "788.1万", "change": "+4.5%" }
     ],

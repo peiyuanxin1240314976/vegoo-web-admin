@@ -464,7 +464,7 @@
             <SparklineChart
               class="nm-gc-spark"
               :data="item.sparkline ?? sparkData"
-              :color="item.iconColor"
+              color="#10b981"
               :width="110"
               :height="26"
             />
@@ -522,7 +522,7 @@
             <SparklineChart
               class="nm-gc-spark"
               :data="item.sparkline ?? sparkData"
-              :color="item.iconColor"
+              color="#10b981"
               :width="110"
               :height="26"
             />
@@ -722,7 +722,7 @@
             <SparklineChart
               class="mss-gc-spark"
               :data="item.sparkline ?? sparkData"
-              :color="item.iconColor"
+              color="#10b981"
               :width="110"
               :height="22"
             />

@@ -16,45 +16,80 @@
     "platformList": [],
     "sourceList": [],
     "countryCodeList": [],
-    "account": ""
+    "account": "",
+    "currentPage": 0,
+    "pageSize": 20
   },
   "sampleResponse": {
+    "currentPage": 0,
+    "pageSize": 20,
+    "total": 3,
     "rows": [
       {
         "id": "camp_001",
+        "app": "VG Weather",
+        "platform": "安卓",
         "campaignName": "VG_Android_DE_Brand",
         "status": "active",
         "adPlatform": "Google",
+        "adPlatformColor": "#4285F4",
         "country": "德国",
+        "countryFlag": "🇩🇪",
         "adSpend": "$312,400",
         "adSpendChange": 7.4,
         "cpi": "$1.26",
+        "cpm": "$8.42",
+        "cpc": "$0.68",
+        "acquisitions": "24.6万",
         "roi1d": "37%",
-        "roi7d": "96%"
+        "roi3d": "62%",
+        "roi7d": "96%",
+        "roi14d": "112%",
+        "roi30d": "136%"
       },
       {
         "id": "camp_002",
+        "app": "VG Fit",
+        "platform": "iOS",
         "campaignName": "VG_iOS_US_UAC",
         "status": "active",
         "adPlatform": "Google",
+        "adPlatformColor": "#4285F4",
         "country": "美国",
+        "countryFlag": "🇺🇸",
         "adSpend": "$258,600",
         "adSpendChange": 5.2,
         "cpi": "$1.28",
+        "cpm": "$9.16",
+        "cpc": "$0.73",
+        "acquisitions": "20.2万",
         "roi1d": "39%",
-        "roi7d": "100%"
+        "roi3d": "66%",
+        "roi7d": "100%",
+        "roi14d": "116%",
+        "roi30d": "142%"
       },
       {
         "id": "camp_003",
+        "app": "VG Sleep",
+        "platform": "安卓",
         "campaignName": "VG_Android_JP_Retarget",
         "status": "paused",
         "adPlatform": "Facebook",
+        "adPlatformColor": "#1877F2",
         "country": "日本",
+        "countryFlag": "🇯🇵",
         "adSpend": "$0",
         "adSpendChange": -100,
         "cpi": "-",
+        "cpm": "-",
+        "cpc": "-",
+        "acquisitions": "0",
         "roi1d": "34%",
-        "roi7d": "88%"
+        "roi3d": "52%",
+        "roi7d": "88%",
+        "roi14d": "95%",
+        "roi30d": "101%"
       }
     ]
   }

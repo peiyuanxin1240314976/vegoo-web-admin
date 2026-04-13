@@ -234,9 +234,16 @@ export async function getPlatformCountry(
 // ============================================================
 export async function getCampaigns(params: ReportQueryParams): Promise<CampaignsResponse> {
   if (isBusinessReportMock(endpointByPeriod(params.period, 'campaigns'))) {
-    // 广告系列结构三个周期一致；mock 共用同一份数据
+    // 广告系列结构三个周期一致；mock 共用同一份数据（按分页参数切片）
+    const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : 20
+    const reqCurrentPage = params.currentPage && params.currentPage > 0 ? params.currentPage : 1
+    const start = (reqCurrentPage - 1) * pageSize
+    const rows = campaignRows.slice(start, start + pageSize)
     return mockDelay<CampaignsResponse>({
-      rows: campaignRows
+      currentPage: reqCurrentPage,
+      pageSize,
+      total: campaignRows.length,
+      rows
     })
   }
   return fetchBusinessReportCampaigns(params)

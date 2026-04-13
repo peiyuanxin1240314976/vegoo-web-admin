@@ -145,12 +145,46 @@
 <script setup lang="ts">
   import { computed, inject } from 'vue'
   import { businessReportContextKey } from '../composables/business-report-context'
+  import type { AdPlatformCard } from '../types'
   import { adPlatformCards } from '../mockData'
 
   const openPushModal = inject<() => void>('openPushModal', () => {})
   const ctx = inject(businessReportContextKey)
 
-  const cardList = computed(() => ctx?.adPlatform.value?.platforms ?? adPlatformCards)
+  const PLATFORM_VISUAL_MAP: Record<string, { logo: string; color: string }> = {
+    google: { logo: 'G', color: '#4285F4' },
+    facebook: { logo: 'f', color: '#1877F2' },
+    fb: { logo: 'f', color: '#1877F2' },
+    unity: { logo: 'U', color: '#22C55E' },
+    mintegral: { logo: 'M', color: '#F59E0B' },
+    tiktok: { logo: '♪', color: '#FF4D4F' },
+    snapchat: { logo: '👻', color: '#FFFC00' }
+  }
+
+  const DEFAULT_PLATFORM_VISUAL = { logo: '•', color: '#64748B' }
+
+  const resolvePlatformVisual = (platform: Partial<AdPlatformCard>) => {
+    const rawKey = `${platform.id ?? platform.name ?? ''}`.trim().toLowerCase()
+    const normalizedKey = rawKey.replace(/\s+/g, '')
+    return (
+      PLATFORM_VISUAL_MAP[normalizedKey] ?? PLATFORM_VISUAL_MAP[rawKey] ?? DEFAULT_PLATFORM_VISUAL
+    )
+  }
+
+  const cardList = computed<AdPlatformCard[]>(() => {
+    const source = ctx?.adPlatform.value?.platforms ?? adPlatformCards
+    return source.map((platform, index) => {
+      const visual = resolvePlatformVisual(platform)
+      return {
+        ...platform,
+        id: platform.id || `platform-${index}`,
+        name: platform.name || `平台 ${index + 1}`,
+        logo: platform.logo || visual.logo,
+        color: platform.color || visual.color,
+        sharePercent: typeof platform.sharePercent === 'number' ? platform.sharePercent : 0
+      }
+    })
+  })
   const reportLabel = computed(() => {
     if (ctx?.period.value === 'weekly') return '周报'
     if (ctx?.period.value === 'monthly') return '月报'

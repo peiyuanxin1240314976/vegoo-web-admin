@@ -46,7 +46,7 @@ function unwrapReportPayload<T>(raw: unknown, maxDepth = 4): T {
  * 键名须与后端契约 camelCase 对齐：`appId` 整体/不限为 `""`；四个 `*List`/filter 数组空表示该维度不限。
  */
 function reportBody(params: ReportQueryParams): Record<string, unknown> {
-  return {
+  const body: Record<string, unknown> = {
     startDate: params.startDate,
     endDate: params.endDate,
     appId: params.appId,
@@ -56,6 +56,13 @@ function reportBody(params: ReportQueryParams): Record<string, unknown> {
     countryCodeList: params.countryCodeList ?? [],
     account: params.account ?? ''
   }
+  if (typeof params.currentPage === 'number') {
+    body.currentPage = params.currentPage
+  }
+  if (typeof params.pageSize === 'number') {
+    body.pageSize = params.pageSize
+  }
+  return body
 }
 
 async function reportPost<T>(path: string, params: ReportQueryParams): Promise<T> {

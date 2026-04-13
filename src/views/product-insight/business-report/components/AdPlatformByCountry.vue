@@ -12,7 +12,7 @@
     <div class="table-scroll">
       <table class="apc-table">
         <colgroup>
-          <col style="width: 16%" /><!-- 应用 -->
+          <col style="width: 4%" /><!-- 应用 -->
           <col style="width: 5%" />
           <!-- 平台 -->
           <col style="width: 6%" />
@@ -160,7 +160,12 @@
                     <tr v-for="country in platform.countries" :key="country.id" class="row-country">
                       <td class="sticky-left" colspan="4">
                         <div class="expand-cell indent-3">
-                          <span class="flag">{{ country.flag }}</span>
+                          <span
+                            v-if="resolveCountryFiClass(country.flag)"
+                            class="fi country-fi"
+                            :class="resolveCountryFiClass(country.flag)"
+                          />
+                          <span v-else class="flag">{{ country.flag }}</span>
                           <span class="row-label">{{ country.name }}</span>
                         </div>
                       </td>
@@ -238,8 +243,9 @@
 </template>
 
 <script setup lang="ts">
+  import 'flag-icons/css/flag-icons.min.css'
   import { ref, computed, inject } from 'vue'
-  import type { ApcOsEntry } from '../types'
+  import type { ApcOsEntry, PlatformCountryRow } from '../types'
   import { businessReportContextKey } from '../composables/business-report-context'
   import { adPlatformByCountryData } from '../mockData'
 
@@ -293,9 +299,131 @@
     return 'roi-orange'
   }
 
+  const PLATFORM_VISUAL_MAP: Record<string, { logo: string; color: string }> = {
+    google: { logo: 'G', color: '#4285F4' },
+    facebook: { logo: 'f', color: '#1877F2' },
+    unity: { logo: 'U', color: '#22C55E' },
+    mintegral: { logo: 'M', color: '#F59E0B' },
+    tiktok: { logo: '♪', color: '#FF4D4F' },
+    snapchat: { logo: '👻', color: '#FFFC00' },
+    kwai: { logo: 'K', color: '#F97316' },
+    newsbreak: { logo: 'N', color: '#60A5FA' }
+  }
+
+  const DEFAULT_PLATFORM_VISUAL = { logo: '•', color: '#64748B' }
+
+  function getPlatformVisual(name: string) {
+    const key = name.trim().toLowerCase()
+    return PLATFORM_VISUAL_MAP[key] ?? DEFAULT_PLATFORM_VISUAL
+  }
+
+  function asMetricText(value: string | number | null | undefined): string {
+    if (value == null || value === '') return '-'
+    return String(value)
+  }
+
+  function parseCountryCodeFromEmoji(flag: string): string | undefined {
+    const symbols = [...flag].filter((char) => {
+      const codePoint = char.codePointAt(0) ?? 0
+      return codePoint >= 0x1f1e6 && codePoint <= 0x1f1ff
+    })
+    if (symbols.length < 2) return undefined
+    const code = symbols
+      .slice(0, 2)
+      .map((char) => {
+        const codePoint = char.codePointAt(0) ?? 0
+        const offset = codePoint - 0x1f1e6
+        return String.fromCharCode(97 + offset)
+      })
+      .join('')
+      .toLowerCase()
+    return /^[a-z]{2}$/.test(code) ? code : undefined
+  }
+
+  function resolveCountryFiClass(flag: string): string | undefined {
+    const code = parseCountryCodeFromEmoji(flag)
+    return code ? `fi-${code}` : undefined
+  }
+
   const tableData = computed<ApcOsEntry[]>(() => {
     const api = ctx?.platformCountry.value?.osEntries
-    if (api && api.length) return api
+    const flatRows = ctx?.platformCountry.value?.flatRows ?? []
+    if (api && api.length) {
+      const flatPlatformMap = new Map<string, PlatformCountryRow>()
+      const flatCountryByPlatform = new Map<string, PlatformCountryRow[]>()
+
+      flatRows.forEach((row) => {
+        if (row.level === 'platform') {
+          flatPlatformMap.set(row.id, row)
+          return
+        }
+        if (row.level === 'country') {
+          const parentPlatformId = row.id.split('-').slice(0, 2).join('-')
+          const bucket = flatCountryByPlatform.get(parentPlatformId) ?? []
+          bucket.push(row)
+          flatCountryByPlatform.set(parentPlatformId, bucket)
+        }
+      })
+
+      return api.map((os) => ({
+        ...os,
+        platforms: os.platforms.map((platform) => {
+          const flatPlatform = flatPlatformMap.get(platform.id)
+          const visual = getPlatformVisual(platform.name)
+          const flatCountries = flatCountryByPlatform.get(platform.id) ?? []
+          const normalizedCountries = platform.countries.map((country) => {
+            const flatCountry =
+              flatCountries.find((item) => item.country === country.name) ??
+              flatCountries.find((item) => item.id.endsWith(`-${country.id.split('-').pop()}`))
+            return {
+              ...country,
+              users: asMetricText(flatCountry?.acquisitions),
+              campaigns: flatCountry?.campaigns ?? 0,
+              cpi: asMetricText(flatCountry?.cpi),
+              cpm: asMetricText(flatCountry?.cpm),
+              cpc: asMetricText(flatCountry?.cpc),
+              roi1d: asMetricText(flatCountry?.roi1d),
+              roi3d: asMetricText(flatCountry?.roi3d),
+              roi7d: asMetricText(flatCountry?.roi7d),
+              roi14d: asMetricText(flatCountry?.roi14d),
+              roi30d: asMetricText(flatCountry?.roi30d),
+              profit: asMetricText(flatCountry?.profit)
+            }
+          })
+
+          return {
+            ...platform,
+            logo: (platform as { logo?: string }).logo || visual.logo,
+            color: (platform as { color?: string }).color || visual.color,
+            users: asMetricText(flatPlatform?.acquisitions),
+            campaigns: flatPlatform?.campaigns ?? 0,
+            cpi: asMetricText(flatPlatform?.cpi),
+            cpm: asMetricText(flatPlatform?.cpm),
+            cpc: asMetricText(flatPlatform?.cpc),
+            roi1d: asMetricText(flatPlatform?.roi1d),
+            roi3d: asMetricText(flatPlatform?.roi3d),
+            roi7d: asMetricText(flatPlatform?.roi7d),
+            roi14d: asMetricText(flatPlatform?.roi14d),
+            roi30d: asMetricText(flatPlatform?.roi30d),
+            profit: asMetricText(flatPlatform?.profit),
+            subtotalSpend: asMetricText(platform.spend),
+            subtotalChange: asMetricText(platform.change),
+            subtotalUsers: asMetricText(flatPlatform?.acquisitions),
+            subtotalCampaigns: flatPlatform?.campaigns ?? 0,
+            subtotalCpi: asMetricText(flatPlatform?.cpi),
+            subtotalCpm: asMetricText(flatPlatform?.cpm),
+            subtotalCpc: asMetricText(flatPlatform?.cpc),
+            subtotalRoi1d: asMetricText(flatPlatform?.roi1d),
+            subtotalRoi3d: asMetricText(flatPlatform?.roi3d),
+            subtotalRoi7d: asMetricText(flatPlatform?.roi7d),
+            subtotalRoi14d: asMetricText(flatPlatform?.roi14d),
+            subtotalRoi30d: asMetricText(flatPlatform?.roi30d),
+            subtotalProfit: asMetricText(flatPlatform?.profit),
+            countries: normalizedCountries
+          }
+        })
+      }))
+    }
     return adPlatformByCountryData
   })
 
@@ -485,6 +613,15 @@
   .flag {
     flex-shrink: 0;
     font-size: 14px;
+  }
+
+  .country-fi {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    overflow: hidden;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 12%);
   }
 
   .platform-logo {

@@ -323,6 +323,8 @@ export interface ReportQueryParams extends ReportTopBarFilterArrays {
   /** 侧栏当前选中应用；整体为 \"\" */
   appId: string
   account?: string // 广告账户；不限传 ""
+  currentPage?: number // 分页页码（从 0 开始，仅在需要分页的接口使用）
+  pageSize?: number // 每页条数（仅在需要分页的接口使用）
   tab?: ReportTab
 }
 
@@ -374,6 +376,9 @@ export interface PlatformCountryResponse {
 
 /** POST /api/v1/datacenter/analysis/report/{period}/campaigns */
 export interface CampaignsResponse {
+  currentPage: number
+  pageSize: number
+  total: number
   rows: CampaignRow[]
 }
 

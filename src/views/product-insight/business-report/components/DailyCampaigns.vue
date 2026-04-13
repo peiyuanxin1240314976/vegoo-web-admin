@@ -54,7 +54,7 @@
           </thead>
           <tbody>
             <tr
-              v-for="(row, index) in campaigns"
+              v-for="(row, index) in pagedCampaigns"
               :key="`${row.id}-${row.platform}-${row.adPlatform}-${row.country}-${index}`"
               :class="{ 'row-paused': row.status === 'paused' }"
             >
@@ -111,6 +111,17 @@
           </tbody>
         </table>
       </div>
+      <div class="dc-pagination">
+        <ElPagination
+          small
+          background
+          layout="prev, pager, next"
+          :total="campaignsTotal"
+          :page-size="resolvedPageSize"
+          :current-page="paginationCurrentPage"
+          @current-change="handlePageChange"
+        />
+      </div>
     </div>
 
     <!-- ── 底部推送栏 ─────────────────────────────────────────── -->
@@ -128,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, inject } from 'vue'
+  import { computed, inject, ref, watch } from 'vue'
   import { businessReportContextKey } from '../composables/business-report-context'
   import { campaignData } from '../mockData'
 
@@ -136,6 +147,22 @@
   const ctx = inject(businessReportContextKey)
 
   const campaigns = computed(() => ctx?.campaigns.value?.rows ?? campaignData)
+  const campaignsPagination = computed(
+    () =>
+      ctx?.campaigns.value as
+        | { currentPage?: number; pageSize?: number; total?: number }
+        | null
+        | undefined
+  )
+  const responseCurrentPage = computed(() => {
+    const page = campaignsPagination.value?.currentPage ?? 1
+    return page > 0 ? page : 1
+  })
+  const resolvedPageSize = computed(() => {
+    const size = campaignsPagination.value?.pageSize ?? 20
+    return size > 0 ? size : 20
+  })
+  const paginationCurrentPage = ref(1)
   const reportLabel = computed(() => {
     if (ctx?.period.value === 'weekly') return '周报'
     if (ctx?.period.value === 'monthly') return '月报'
@@ -167,6 +194,25 @@
       ctx?.getLastPushText?.(ctx?.period.value ?? 'daily') ??
       `上次推送：-- 飞书群《经营${reportLabel.value}》`
   )
+
+  const campaignsTotal = computed(() => campaignsPagination.value?.total ?? campaigns.value.length)
+  const pagedCampaigns = computed(() => campaigns.value)
+
+  watch(
+    [campaigns, responseCurrentPage],
+    () => {
+      paginationCurrentPage.value = responseCurrentPage.value
+    },
+    { immediate: true }
+  )
+
+  const handlePageChange = (page: number) => {
+    if (ctx?.setCampaignsPage) {
+      ctx.setCampaignsPage(page)
+      return
+    }
+    paginationCurrentPage.value = page
+  }
 
   const changeColor = (v: number) => (v >= 0 ? 'chg-pos' : 'chg-neg')
 
@@ -284,6 +330,9 @@
 
   /* ── 数据卡片 ───────────────────────────────────────────────── */
   .data-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     padding: 0;
     overflow: hidden;
     background: rgb(255 255 255 / 2%);
@@ -293,6 +342,18 @@
 
   .table-wrap {
     overflow-x: auto;
+  }
+
+  .dc-pagination {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 10px 10px;
+  }
+
+  :deep(.dc-pagination .el-pagination) {
+    --el-pagination-bg-color: rgb(255 255 255 / 3%);
+    --el-pagination-button-color: rgb(255 255 255 / 70%);
+    --el-pagination-hover-color: var(--art-primary);
   }
 
   /* ── 表格 ──────────────────────────────────────────────────── */
