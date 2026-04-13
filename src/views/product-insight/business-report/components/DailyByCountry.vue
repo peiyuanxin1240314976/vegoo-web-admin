@@ -46,9 +46,9 @@
             >
               <td class="sticky-col country-cell">
                 <span
-                  v-if="isWeekly && countryFiClass(row.name)"
+                  v-if="countryFiClass(row)"
                   class="fi country-fi"
-                  :class="countryFiClass(row.name)"
+                  :class="countryFiClass(row)"
                 />
                 <span v-else class="flag">{{ row.flag }}</span>
                 <span>{{ row.name }}</span>
@@ -342,8 +342,27 @@
     波兰: 'pl'
   }
 
-  function countryFiClass(name: string): string | undefined {
-    const code = COUNTRY_FI[name]
+  function parseCountryCodeFromEmoji(flag: string): string | undefined {
+    const symbols = [...flag].filter((char) => {
+      const codePoint = char.codePointAt(0) ?? 0
+      return codePoint >= 0x1f1e6 && codePoint <= 0x1f1ff
+    })
+    if (symbols.length < 2) return undefined
+    const code = symbols
+      .slice(0, 2)
+      .map((char) => {
+        const codePoint = char.codePointAt(0) ?? 0
+        const offset = codePoint - 0x1f1e6
+        return String.fromCharCode(97 + offset)
+      })
+      .join('')
+      .toLowerCase()
+    return /^[a-z]{2}$/.test(code) ? code : undefined
+  }
+
+  function countryFiClass(row: { name: string; flag: string }): string | undefined {
+    const emojiCode = parseCountryCodeFromEmoji(row.flag)
+    const code = emojiCode || COUNTRY_FI[row.name]
     return code ? `fi-${code}` : undefined
   }
 

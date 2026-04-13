@@ -1,0 +1,471 @@
+{
+  "code": 200,
+  "message": "查询成功",
+  "data": {
+    "osEntries": [
+      {
+        "id": "android",
+        "name": "安卓",
+        "platforms": [
+          {
+            "id": "android-google",
+            "name": "Google",
+            "spend": "$100,530",
+            "change": "+165.8%",
+            "countries": [
+              {
+                "id": "google-hk",
+                "name": "中国香港",
+                "flag": "🇭🇰",
+                "spend": "$100,530"
+              },
+              {
+                "id": "google-us",
+                "name": "美国",
+                "flag": "🇺🇸",
+                "spend": "$5,439"
+              },
+              {
+                "id": "google-kr",
+                "name": "韩国",
+                "flag": "🇰🇷",
+                "spend": "$4,162"
+              },
+              {
+                "id": "google-br",
+                "name": "巴西",
+                "flag": "🇧🇷",
+                "spend": "$4,044"
+              },
+              {
+                "id": "google-de",
+                "name": "德国",
+                "flag": "🇩🇪",
+                "spend": "$2,048"
+              },
+              {
+                "id": "google-mx",
+                "name": "墨西哥",
+                "flag": "🇲🇽",
+                "spend": "$1,663"
+              },
+              {
+                "id": "google-pl",
+                "name": "波兰",
+                "flag": "🇵🇱",
+                "spend": "$1,577"
+              },
+              {
+                "id": "google-th",
+                "name": "泰国",
+                "flag": "🇹🇭",
+                "spend": "$1,392"
+              },
+              {
+                "id": "google-za",
+                "name": "南非",
+                "flag": "🇿🇦",
+                "spend": "$1,316"
+              },
+              {
+                "id": "google-id",
+                "name": "印度尼西亚",
+                "flag": "🇮🇩",
+                "spend": "$1,195"
+              }
+            ]
+          },
+          {
+            "id": "android-facebook",
+            "name": "Facebook",
+            "spend": "$9,899",
+            "change": "-3.9%",
+            "countries": [
+              {
+                "id": "facebook-bj",
+                "name": "贝宁",
+                "flag": "🇧🇯",
+                "spend": "$9,899"
+              },
+              {
+                "id": "facebook-us",
+                "name": "美国",
+                "flag": "🇺🇸",
+                "spend": "$1,615"
+              },
+              {
+                "id": "facebook-br",
+                "name": "巴西",
+                "flag": "🇧🇷",
+                "spend": "$1,549"
+              },
+              {
+                "id": "facebook-th",
+                "name": "泰国",
+                "flag": "🇹🇭",
+                "spend": "$1,014"
+              },
+              {
+                "id": "facebook-vn",
+                "name": "越南",
+                "flag": "🇻🇳",
+                "spend": "$594"
+              },
+              {
+                "id": "facebook-it",
+                "name": "意大利",
+                "flag": "🇮🇹",
+                "spend": "$563"
+              },
+              {
+                "id": "facebook-mx",
+                "name": "墨西哥",
+                "flag": "🇲🇽",
+                "spend": "$556"
+              },
+              {
+                "id": "facebook-id",
+                "name": "印度尼西亚",
+                "flag": "🇮🇩",
+                "spend": "$324"
+              },
+              {
+                "id": "facebook-pl",
+                "name": "波兰",
+                "flag": "🇵🇱",
+                "spend": "$311"
+              },
+              {
+                "id": "facebook-za",
+                "name": "南非",
+                "flag": "🇿🇦",
+                "spend": "$216"
+              }
+            ]
+          },
+          {
+            "id": "android-mintegral",
+            "name": "Mintegral",
+            "spend": "$953",
+            "change": "+10.3%",
+            "countries": [
+              {
+                "id": "mintegral-tr",
+                "name": "土耳其",
+                "flag": "🇹🇷",
+                "spend": "$953"
+              },
+              {
+                "id": "mintegral-in",
+                "name": "印度",
+                "flag": "🇮🇳",
+                "spend": "$181"
+              },
+              {
+                "id": "mintegral-id",
+                "name": "印度尼西亚",
+                "flag": "🇮🇩",
+                "spend": "$60"
+              },
+              {
+                "id": "mintegral-mx",
+                "name": "墨西哥",
+                "flag": "🇲🇽",
+                "spend": "$51"
+              },
+              {
+                "id": "mintegral-sa",
+                "name": "沙特阿拉伯",
+                "flag": "🇸🇦",
+                "spend": "$36"
+              },
+              {
+                "id": "mintegral-kr",
+                "name": "韩国",
+                "flag": "🇰🇷",
+                "spend": "$28"
+              },
+              {
+                "id": "mintegral-pk",
+                "name": "巴基斯坦",
+                "flag": "🇵🇰",
+                "spend": "$26"
+              },
+              {
+                "id": "mintegral-sd",
+                "name": "苏丹",
+                "flag": "🇸🇩",
+                "spend": "$21"
+              },
+              {
+                "id": "mintegral-br",
+                "name": "巴西",
+                "flag": "🇧🇷",
+                "spend": "$21"
+              },
+              {
+                "id": "mintegral-bd",
+                "name": "孟加拉国",
+                "flag": "🇧🇩",
+                "spend": "$21"
+              }
+            ]
+          },
+          {
+            "id": "android-tiktok",
+            "name": "TikTok",
+            "spend": "$2,456",
+            "change": "+52.9%",
+            "countries": [
+              {
+                "id": "tiktok-ua",
+                "name": "乌克兰",
+                "flag": "🇺🇦",
+                "spend": "$2,456"
+              },
+              {
+                "id": "tiktok-za",
+                "name": "南非",
+                "flag": "🇿🇦",
+                "spend": "$254"
+              },
+              {
+                "id": "tiktok-es",
+                "name": "西班牙",
+                "flag": "🇪🇸",
+                "spend": "$235"
+              },
+              {
+                "id": "tiktok-br",
+                "name": "巴西",
+                "flag": "🇧🇷",
+                "spend": "$235"
+              },
+              {
+                "id": "tiktok-id",
+                "name": "印度尼西亚",
+                "flag": "🇮🇩",
+                "spend": "$166"
+              },
+              {
+                "id": "tiktok-ae",
+                "name": "阿拉伯联合酋长国",
+                "flag": "🇦🇪",
+                "spend": "$124"
+              },
+              {
+                "id": "tiktok-kr",
+                "name": "韩国",
+                "flag": "🇰🇷",
+                "spend": "$121"
+              },
+              {
+                "id": "tiktok-mx",
+                "name": "墨西哥",
+                "flag": "🇲🇽",
+                "spend": "$106"
+              },
+              {
+                "id": "tiktok-pe",
+                "name": "秘鲁",
+                "flag": "🇵🇪",
+                "spend": "$92"
+              },
+              {
+                "id": "tiktok-th",
+                "name": "泰国",
+                "flag": "🇹🇭",
+                "spend": "$81"
+              }
+            ]
+          },
+          {
+            "id": "android-kwai",
+            "name": "Kwai",
+            "spend": "$2,324",
+            "change": "+86.4%",
+            "countries": [
+              {
+                "id": "kwai-br",
+                "name": "巴西",
+                "flag": "🇧🇷",
+                "spend": "$2,324"
+              }
+            ]
+          },
+          {
+            "id": "android-newsbreak",
+            "name": "NewsBreak",
+            "spend": "$290",
+            "change": "+112.6%",
+            "countries": [
+              {
+                "id": "newsbreak-us",
+                "name": "美国",
+                "flag": "🇺🇸",
+                "spend": "$290"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "flatRows": [
+      {
+        "id": "android",
+        "level": "os",
+        "osPlatform": "安卓",
+        "platform": null,
+        "country": null,
+        "countryFlag": null,
+        "adSpend": "$100,530",
+        "change": null,
+        "cpi": "$0.12",
+        "cpm": "$1.21",
+        "cpc": "$0.03",
+        "roi1d": "87%",
+        "roi3d": "98%",
+        "roi7d": "0%",
+        "roi14d": "0%",
+        "roi30d": "0%",
+        "profit": "$-1,732"
+      },
+      {
+        "id": "android-google",
+        "level": "platform",
+        "osPlatform": null,
+        "platform": "Google",
+        "country": null,
+        "countryFlag": null,
+        "adSpend": "$100,530",
+        "change": "+165.8%",
+        "cpi": "$0.12",
+        "cpm": "$1.21",
+        "cpc": "$0.03",
+        "roi1d": "87%",
+        "roi3d": "98%",
+        "roi7d": "0%",
+        "roi14d": "0%",
+        "roi30d": "0%",
+        "profit": "$-1,732"
+      },
+      {
+        "id": "android-google-hk",
+        "level": "country",
+        "osPlatform": null,
+        "platform": null,
+        "country": "中国香港",
+        "countryFlag": "🇭🇰",
+        "adSpend": "$100,530",
+        "change": "+63161.5%",
+        "cpi": "$0.12",
+        "cpm": "$1.21",
+        "cpc": "$0.03",
+        "roi1d": "87%",
+        "roi3d": "98%",
+        "roi7d": "0%",
+        "roi14d": "0%",
+        "roi30d": "0%",
+        "profit": "$-1,732"
+      },
+      {
+        "id": "android-google-us",
+        "level": "country",
+        "osPlatform": null,
+        "platform": null,
+        "country": "美国",
+        "countryFlag": "🇺🇸",
+        "adSpend": "$5,439",
+        "change": "+15.9%",
+        "cpi": "$0.80",
+        "cpm": "$13.32",
+        "cpc": "$0.30",
+        "roi1d": "78%",
+        "roi3d": "91%",
+        "roi7d": "0%",
+        "roi14d": "0%",
+        "roi30d": "0%",
+        "profit": "$-509"
+      },
+      {
+        "id": "android-google-kr",
+        "level": "country",
+        "osPlatform": null,
+        "platform": null,
+        "country": "韩国",
+        "countryFlag": "🇰🇷",
+        "adSpend": "$4,162",
+        "change": "+22.0%",
+        "cpi": "$0.52",
+        "cpm": "$6.08",
+        "cpc": "$0.17",
+        "roi1d": "71%",
+        "roi3d": "83%",
+        "roi7d": "0%",
+        "roi14d": "0%",
+        "roi30d": "0%",
+        "profit": "$-705"
+      },
+
+      {
+        "id": "android-facebook",
+        "level": "platform",
+        "osPlatform": null,
+        "platform": "Facebook",
+        "country": null,
+        "countryFlag": null,
+        "adSpend": "$9,899",
+        "change": "-3.9%",
+        "cpi": "$0.14",
+        "cpm": "$1.60",
+        "cpc": "$0.04",
+        "roi1d": "97%",
+        "roi3d": "103%",
+        "roi7d": "0%",
+        "roi14d": "0%",
+        "roi30d": "0%",
+        "profit": "$299"
+      },
+      {
+        "id": "android-facebook-bj",
+        "level": "country",
+        "osPlatform": null,
+        "platform": null,
+        "country": "贝宁",
+        "countryFlag": "🇧🇯",
+        "adSpend": "$9,899",
+        "change": "+20329.9%",
+        "cpi": "$0.14",
+        "cpm": "$1.60",
+        "cpc": "$0.04",
+        "roi1d": "97%",
+        "roi3d": "103%",
+        "roi7d": "0%",
+        "roi14d": "0%",
+        "roi30d": "0%",
+        "profit": "$299"
+      },
+      {
+        "id": "android-facebook-us",
+        "level": "country",
+        "osPlatform": null,
+        "platform": null,
+        "country": "美国",
+        "countryFlag": "🇺🇸",
+        "adSpend": "$1,615",
+        "change": "-14.5%",
+        "cpi": "$0.96",
+        "cpm": "$14.84",
+        "cpc": "$0.23",
+        "roi1d": "95%",
+        "roi3d": "103%",
+        "roi7d": "0%",
+        "roi14d": "0%",
+        "roi30d": "0%",
+        "profit": "$42"
+      }
+    ],
+    "totalPlatforms": 6,
+    "totalCountries": 241
+  }
+}
