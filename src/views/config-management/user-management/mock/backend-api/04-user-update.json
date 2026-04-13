@@ -1,0 +1,113 @@
+{
+  "_comment": "配置管理 - 用户管理 - 编辑用户（来自弹窗编辑）。",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "number", "required": true, "description": "用户主键。" },
+      "userName": { "type": "string", "required": true, "description": "用户名。" },
+      "userPhone": { "type": "string", "required": true, "description": "手机号。" },
+      "userGender": {
+        "type": "string",
+        "required": true,
+        "enum": ["男", "女"],
+        "description": "性别。"
+      },
+      "userRoles": { "type": "string[]", "required": true, "description": "角色编码数组。" },
+      "userEmail": { "type": "string", "required": false, "description": "邮箱。" },
+      "nickName": { "type": "string", "required": false, "description": "昵称。" },
+      "accessibleApps": {
+        "type": "string[]",
+        "required": false,
+        "description": "可访问应用列表。"
+      },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "success": { "type": "boolean", "required": true, "description": "是否更新成功。" },
+      "updatedUser": {
+        "type": "UserListItem",
+        "required": true,
+        "description": "更新后的用户记录。"
+      }
+    },
+    "UserListItem": {
+      "id": { "type": "number", "required": true, "description": "用户主键。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["1", "2", "3", "4"],
+        "description": "用户状态。"
+      },
+      "userName": { "type": "string", "required": true, "description": "用户名。" },
+      "nickName": { "type": "string", "required": true, "description": "昵称。" },
+      "userGender": { "type": "string", "required": true, "description": "性别。" },
+      "userPhone": { "type": "string", "required": true, "description": "手机号。" },
+      "userEmail": { "type": "string", "required": true, "description": "邮箱。" },
+      "userRoles": { "type": "string[]", "required": true, "description": "角色编码数组。" },
+      "accessibleApps": {
+        "type": "string[]",
+        "required": false,
+        "description": "可访问应用列表。"
+      },
+      "remark": { "type": "string", "required": false, "description": "备注。" },
+      "createBy": { "type": "string", "required": true, "description": "创建人。" },
+      "createTime": { "type": "string", "required": true, "description": "创建时间。" },
+      "updateBy": { "type": "string", "required": true, "description": "最后更新人。" },
+      "updateTime": { "type": "string", "required": true, "description": "最后更新时间。" }
+    }
+  },
+  "sampleRequest": {
+    "id": 102,
+    "userName": "bob",
+    "userPhone": "13800130022",
+    "userGender": "男",
+    "userRoles": ["ops", "auditor"],
+    "userEmail": "bob@example.com",
+    "nickName": "Bob-新版",
+    "accessibleApps": ["weather5", "bloodsugar2"],
+    "remark": "兼任审计"
+  },
+  "sampleResponse": {
+    "success": true,
+    "updatedUser": {
+      "id": 102,
+      "avatar": "",
+      "status": "1",
+      "userName": "bob",
+      "nickName": "Bob-新版",
+      "userGender": "男",
+      "userPhone": "13800130022",
+      "userEmail": "bob@example.com",
+      "userRoles": ["ops", "auditor"],
+      "accessibleApps": ["weather5", "bloodsugar2"],
+      "remark": "兼任审计",
+      "createBy": "admin",
+      "createTime": "2026-03-02 11:20:00",
+      "updateBy": "alice",
+      "updateTime": "2026-04-13 09:25:00"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/user-management/update",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "UpdateUserPayload",
+    "responseBody": "{ success: boolean; updatedUser: UserListItem }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "该接口服务弹窗编辑用户基础信息。",
+      "更新成功后建议返回 updatedUser，便于前端局部更新右侧详情与列表行。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "表格行点击编辑后，弹窗提交触发更新。",
+        "prerequisite": "弹窗表单校验通过"
+      }
+    ],
+    "defaultSelection": "编辑弹窗默认值来自当前行数据。",
+    "dedupe": "提交中锁定按钮，成功后刷新列表。"
+  }
+}

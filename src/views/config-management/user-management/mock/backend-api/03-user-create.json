@@ -1,0 +1,107 @@
+{
+  "_comment": "配置管理 - 用户管理 - 新建用户。",
+  "fieldDescription": {
+    "request": {
+      "userName": {
+        "type": "string",
+        "required": true,
+        "description": "用户名（登录名），2-20 字符。"
+      },
+      "userPhone": { "type": "string", "required": true, "description": "手机号。" },
+      "userGender": {
+        "type": "string",
+        "required": true,
+        "enum": ["男", "女"],
+        "description": "性别。"
+      },
+      "userRoles": {
+        "type": "string[]",
+        "required": true,
+        "description": "角色编码数组，至少 1 项。"
+      },
+      "userEmail": { "type": "string", "required": false, "description": "邮箱，可选。" },
+      "nickName": { "type": "string", "required": false, "description": "昵称，可选。" },
+      "accessibleApps": {
+        "type": "string[]",
+        "required": false,
+        "description": "可访问应用列表，可为空数组。"
+      },
+      "remark": { "type": "string", "required": false, "description": "备注。" }
+    },
+    "response": {
+      "id": { "type": "number", "required": true, "description": "新建用户主键。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["1", "2", "3", "4"],
+        "description": "初始状态，默认 1（在线）或按业务规则下发。"
+      },
+      "userName": { "type": "string", "required": true, "description": "用户名。" },
+      "nickName": { "type": "string", "required": true, "description": "昵称。" },
+      "userGender": { "type": "string", "required": true, "description": "性别。" },
+      "userPhone": { "type": "string", "required": true, "description": "手机号。" },
+      "userEmail": { "type": "string", "required": true, "description": "邮箱。" },
+      "userRoles": { "type": "string[]", "required": true, "description": "角色编码数组。" },
+      "accessibleApps": {
+        "type": "string[]",
+        "required": false,
+        "description": "可访问应用列表。"
+      },
+      "remark": { "type": "string", "required": false, "description": "备注。" },
+      "createBy": { "type": "string", "required": true, "description": "创建人。" },
+      "createTime": { "type": "string", "required": true, "description": "创建时间。" },
+      "updateBy": { "type": "string", "required": true, "description": "最后更新人。" },
+      "updateTime": { "type": "string", "required": true, "description": "最后更新时间。" }
+    }
+  },
+  "sampleRequest": {
+    "userName": "eva",
+    "userPhone": "13800130005",
+    "userGender": "女",
+    "userRoles": ["ops"],
+    "userEmail": "eva@example.com",
+    "nickName": "Eva",
+    "accessibleApps": ["weather5"],
+    "remark": "新入职优化师"
+  },
+  "sampleResponse": {
+    "id": 105,
+    "status": "1",
+    "userName": "eva",
+    "nickName": "Eva",
+    "userGender": "女",
+    "userPhone": "13800130005",
+    "userEmail": "eva@example.com",
+    "userRoles": ["ops"],
+    "accessibleApps": ["weather5"],
+    "remark": "新入职优化师",
+    "createBy": "alice",
+    "createTime": "2026-04-13 09:10:00",
+    "updateBy": "alice",
+    "updateTime": "2026-04-13 09:10:00"
+  },
+  "api": {
+    "url": "POST /api/config-management/user-management/create",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "CreateUserPayload",
+    "responseBody": "UserListItem"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "创建成功后前端关闭弹窗并刷新列表。",
+      "若用户名或手机号重复，建议返回业务错误码并附冲突字段。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "点击「新建用户」弹窗提交，校验通过后调用。",
+        "prerequisite": "用户名、手机号、性别、角色校验通过"
+      }
+    ],
+    "defaultSelection": "弹窗默认 userGender='男'，userRoles=[]。",
+    "dedupe": "提交中禁用确认按钮，防止重复创建。"
+  }
+}
