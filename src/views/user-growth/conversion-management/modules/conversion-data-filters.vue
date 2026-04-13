@@ -82,14 +82,14 @@
 
 <script setup lang="ts">
   import { Calendar, Grid, Monitor, TrendCharts } from '@element-plus/icons-vue'
+  import { useConversionMetaConversionTypeOptions } from '@/composables/use-conversion-meta-conversion-type'
   import type { ConversionDataFilterParams } from '../types'
-  import {
-    MOCK_DATA_TAB_APP_OPTIONS,
-    MOCK_CONVERSION_TYPE_OPTIONS,
-    MOCK_PLATFORM_OPTIONS
-  } from '../mock/data'
+  import { MOCK_DATA_TAB_APP_OPTIONS, MOCK_PLATFORM_OPTIONS } from '../mock/data'
 
   defineOptions({ name: 'ConversionDataFilters' })
+
+  const { filterConversionTypeOptions, ensureLoaded: ensureConversionMetaConversionTypeLoaded } =
+    useConversionMetaConversionTypeOptions()
 
   const props = defineProps<{
     filter: ConversionDataFilterParams
@@ -105,7 +105,7 @@
   const platformOptions = computed(() => props.platformOptions ?? MOCK_PLATFORM_OPTIONS)
   const appOptions = computed(() => props.appOptions ?? MOCK_DATA_TAB_APP_OPTIONS)
   const conversionTypeOptions = computed(
-    () => props.conversionTypeOptions ?? MOCK_CONVERSION_TYPE_OPTIONS
+    () => props.conversionTypeOptions ?? filterConversionTypeOptions.value
   )
 
   const form = reactive({
@@ -119,6 +119,10 @@
     const r = form.dateRange
     if (r?.[0] && r?.[1]) return `${r[0]} — ${r[1]}`
     return '—'
+  })
+
+  onMounted(() => {
+    void ensureConversionMetaConversionTypeLoaded()
   })
 
   watch(

@@ -29,14 +29,24 @@
 
 <script setup lang="ts">
   import { h } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { ElTag, ElButton } from 'element-plus'
   import { useI18n } from 'vue-i18n'
+  import { findConversionTypeOptionByValue } from '@/composables/use-conversion-meta-conversion-type'
+  import { useConversionMetaConversionTypeStore } from '@/store/modules/conversion-meta-conversion-type'
   import type { ColumnOption } from '@/types'
   import type { ConversionMappingItem, MappingStatus } from '../types'
 
   defineOptions({ name: 'ConversionTable' })
 
   const { t } = useI18n()
+
+  /** `meta-conversion-type-options` 已在 store，表格只从这里做 value→label（去掉「全部」空 value） */
+  const conversionMetaStore = useConversionMetaConversionTypeStore()
+  const { conversionTypeOptions } = storeToRefs(conversionMetaStore)
+  const metaOptionsForLabelMatch = computed(() =>
+    (conversionTypeOptions.value ?? []).filter((o) => o && o.value !== '')
+  )
 
   defineProps<{
     data: ConversionMappingItem[]
@@ -66,6 +76,7 @@
     }
   }
 
+  /** 行内标签色：与 `platformConversionType` 取值一致（接口枚举 value） */
   const TYPE_TAG_COLOR: Record<string, string> = {
     PHONE_CALL_LEAD: '#4ABEFF',
     DOWNLOAD: '#67c23a',
@@ -74,6 +85,10 @@
     PAGE_VIEW: '#909399',
     BEGIN_CHECKOUT: '#f56c6c'
   }
+
+  onMounted(() => {
+    void conversionMetaStore.ensureLoaded()
+  })
 
   const columns = computed<ColumnOption<ConversionMappingItem>[]>(() => [
     {
@@ -127,11 +142,19 @@
       showOverflowTooltip: true
     },
     {
-      prop: 'platformConversionType',
+      prop: 'conversionDisplayType',
       label: t('conversionManagement.platformConversionType'),
       width: 168,
       formatter: (row) => {
-        const color = TYPE_TAG_COLOR[row.platformConversionType] ?? '#909399'
+        /** 列表以 `conversionDisplayType` 为 meta 枚举 value（camelCase）；缺省回退 `platformConversionType` */
+        const v = row.conversionDisplayType ?? row.platformConversionType
+        const opt = findConversionTypeOptionByValue(metaOptionsForLabelMatch.value, v)
+        const text = opt?.label ?? (v ? String(v) : '-')
+        const colorKey = opt?.value ?? v
+        const color =
+          typeof colorKey === 'string'
+            ? (TYPE_TAG_COLOR[colorKey] ?? TYPE_TAG_COLOR[colorKey.toUpperCase()] ?? '#909399')
+            : '#909399'
         return h(
           ElTag,
           {
@@ -144,7 +167,7 @@
               borderRadius: '9999px'
             }
           },
-          () => row.platformConversionType
+          () => text
         )
       }
     },

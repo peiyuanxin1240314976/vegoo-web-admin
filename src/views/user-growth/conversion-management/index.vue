@@ -110,8 +110,12 @@
   } from './types'
   import { ElMessage } from 'element-plus'
   import { getAppNow, cloneAppDate } from '@/utils/app-now'
+  import { useConversionMetaConversionTypeOptions } from '@/composables/use-conversion-meta-conversion-type'
 
   defineOptions({ name: 'ConversionManagement' })
+
+  const { ensureLoaded: ensureConversionMetaConversionTypeLoaded } =
+    useConversionMetaConversionTypeOptions()
 
   const activeTab = ref<'name' | 'data'>('name')
 
@@ -143,6 +147,7 @@
 
   onMounted(() => {
     void loadSideStats()
+    void ensureConversionMetaConversionTypeLoaded()
   })
 
   const sideStats = ref({
