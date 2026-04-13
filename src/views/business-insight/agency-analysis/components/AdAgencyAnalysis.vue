@@ -1789,6 +1789,7 @@
   }
 
   .filter-date {
+    flex: none !important;
     width: 150px !important;
 
     :deep(.el-input__wrapper) {
