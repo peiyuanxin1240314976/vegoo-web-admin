@@ -211,6 +211,7 @@
     createApplication,
     deleteApplication,
     exportApplicationList,
+    fetchApplicationOverviewStats,
     fetchApplicationTable,
     updateApplication
   } from '@/api/config-management/application-management'
@@ -271,21 +272,12 @@
 
   async function loadStats() {
     try {
-      const res = await fetchApplicationTable({
-        current: 1,
-        size: 10000,
-        keyword: '',
-        category: '',
-        platform: '',
-        status: '',
-        creator: ''
-      })
-      const list = res.records
+      const res = await fetchApplicationOverviewStats(tableQueryBase())
       stats.value = {
-        total: res.total,
-        ios: list.filter((i) => i.platform === 'iOS').length,
-        android: list.filter((i) => i.platform === 'Android').length,
-        pending: list.filter((i) => i.status === '禁用').length
+        total: res.totalApplications,
+        ios: res.iosCount,
+        android: res.androidCount,
+        pending: res.pendingCount
       }
     } catch {
       /* request / mock 已统一走 fetch* */
@@ -325,6 +317,7 @@
   watch(
     () => ({ ...filterForm }),
     () => {
+      loadStats()
       if (currentPage.value !== 1) currentPage.value = 1
       else loadTable()
     },

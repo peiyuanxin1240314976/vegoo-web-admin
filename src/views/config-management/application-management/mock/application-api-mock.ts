@@ -2,7 +2,13 @@
  * 应用管理 Mock，与 `mock/backend-api` 契约及 `Api.Common.PaginatedResponse` 一致。
  */
 import { getAppNow } from '@/utils/app-now'
-import type { ApplicationAppItem, ApplicationFormPayload, ApplicationTableQuery } from '../types'
+import type {
+  ApplicationAppItem,
+  ApplicationFormPayload,
+  ApplicationOverviewStats,
+  ApplicationOverviewStatsQuery,
+  ApplicationTableQuery
+} from '../types'
 import { deriveIconColorFromId } from '../types'
 import { cloneApplicationMockList } from './data'
 
@@ -36,6 +42,26 @@ export function mockFetchApplicationTable(
     total: filtered.length,
     current: params.current,
     size: params.size
+  })
+}
+
+export function mockFetchApplicationOverviewStats(
+  params: ApplicationOverviewStatsQuery
+): Promise<ApplicationOverviewStats> {
+  const filtered = filterApps(mockList, {
+    current: 1,
+    size: 1,
+    keyword: params.keyword,
+    category: params.category,
+    platform: params.platform,
+    status: params.status,
+    creator: params.creator
+  })
+  return Promise.resolve({
+    totalApplications: filtered.length,
+    iosCount: filtered.filter((i) => i.platform === 'iOS').length,
+    androidCount: filtered.filter((i) => i.platform === 'Android').length,
+    pendingCount: filtered.filter((i) => i.status === '禁用').length
   })
 }
 

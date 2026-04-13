@@ -434,6 +434,10 @@ alwaysApply: true
 | `PaidAnalysisProductTabRankingData` | （TS）product Tab `productRows` 接口体；`03-tab-product-ranking.json`。 |
 | `PaidAnalysisProductTabChartsData` | （TS）product Tab 图例与图表接口体；`03-tab-product-charts.json`。 |
 | `PaidAnalysisProductTabData` | （TS）product Tab 三段响应合并后的交叉类型。 |
+| `totalApplications` | 应用管理顶部统计接口：当前筛选条件下应用总条数（整数；与列表分页 `total` 口径一致）。 |
+| `iosCount` | 应用管理顶部统计：终端平台为 iOS 的应用数（整数）。 |
+| `androidCount` | 应用管理顶部统计：终端平台为 Android 的应用数（整数）。 |
+| `pendingCount` | 应用管理顶部统计：待处理条数；本页与 UI「待处理」一致，口径为状态「禁用」的应用数（整数）。 |
 
 #### 下拉/筛选选项字段
 

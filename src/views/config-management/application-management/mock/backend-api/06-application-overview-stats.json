@@ -1,0 +1,79 @@
+{
+  "_comment": "应用管理 - 顶部四张统计卡片（与分页列表响应分离）。对应 types.ts: ApplicationOverviewStatsQuery / ApplicationOverviewStats。",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "应用名称或业务 ID 模糊搜索；空串表示不限。"
+      },
+      "category": { "type": "string", "required": false, "description": "类别；空串表示不限。" },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台：Android / iOS；空串表示不限。"
+      },
+      "status": { "type": "string", "required": false, "description": "状态；空串表示不限。" },
+      "creator": { "type": "string", "required": false, "description": "创建人；空串表示不限。" }
+    },
+    "response": {
+      "totalApplications": {
+        "type": "number",
+        "required": true,
+        "description": "当前筛选条件下的应用总条数（整数）。"
+      },
+      "iosCount": {
+        "type": "number",
+        "required": true,
+        "description": "其中终端平台为 iOS 的应用数（整数）。"
+      },
+      "androidCount": {
+        "type": "number",
+        "required": true,
+        "description": "其中终端平台为 Android 的应用数（整数）。"
+      },
+      "pendingCount": {
+        "type": "number",
+        "required": true,
+        "description": "待处理应用数；本页与 UI「待处理」一致，口径为状态「禁用」的应用数（整数）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "category": "",
+    "platform": "",
+    "status": "",
+    "creator": ""
+  },
+  "sampleResponse": {
+    "totalApplications": 8,
+    "iosCount": 1,
+    "androidCount": 7,
+    "pendingCount": 1
+  },
+  "api": {
+    "url": "POST /api/config-management/application/overview-stats",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?, category?, platform?, status?, creator?（与列表筛选同参；空串表示不限）",
+    "responseBody": "ApplicationOverviewStats"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "无数据时仍返回上述四键，数值均为 0。",
+      "不要求与「分页列表」接口合并返回；卡片专用本接口，列表仍用 table 接口。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "进入页面 / 筛选条件变更 / 新增或编辑成功 / 删除成功",
+        "detail": "调用 fetchApplicationOverviewStats，请求体与当前列表筛选一致，便于卡片与「共 N 条」同口径。",
+        "prerequisite": "无"
+      }
+    ],
+    "defaultSelection": "各筛选字段空串表示不限，与列表页一致。",
+    "dedupe": "可与列表请求并行发起；失败时卡片保留上次成功值或置零由前端约定。"
+  }
+}

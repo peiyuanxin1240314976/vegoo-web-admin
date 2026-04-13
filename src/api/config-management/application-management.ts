@@ -5,6 +5,8 @@ import request from '@/utils/http'
 import type {
   ApplicationAppItem,
   ApplicationFormPayload,
+  ApplicationOverviewStats,
+  ApplicationOverviewStatsQuery,
   ApplicationTableQuery
 } from '@/views/config-management/application-management/types'
 import {
@@ -20,6 +22,18 @@ export function fetchApplicationTable(params: ApplicationTableQuery) {
   }
   return request.post<Api.Common.PaginatedResponse<ApplicationAppItem>>({
     url: '/api/config-management/application/table',
+    data: params,
+    showErrorMessage: false
+  })
+}
+
+/** 顶部统计卡片（与列表契约分离） */
+export function fetchApplicationOverviewStats(params: ApplicationOverviewStatsQuery) {
+  if (isApplicationEndpointMock(ApplicationEndpoint.OverviewStats)) {
+    return applicationMock.mockFetchApplicationOverviewStats(params)
+  }
+  return request.post<ApplicationOverviewStats>({
+    url: '/api/config-management/application/overview-stats',
     data: params,
     showErrorMessage: false
   })

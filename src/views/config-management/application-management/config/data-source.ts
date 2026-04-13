@@ -7,6 +7,7 @@
 
 export enum ApplicationEndpoint {
   Table = 'table',
+  OverviewStats = 'overview-stats',
   Create = 'create',
   Update = 'update',
   Delete = 'delete',
@@ -17,6 +18,7 @@ type UseMock = boolean
 
 const ApplicationApiMockDefaults: Record<ApplicationEndpoint, UseMock> = {
   [ApplicationEndpoint.Table]: true,
+  [ApplicationEndpoint.OverviewStats]: true,
   [ApplicationEndpoint.Create]: true,
   [ApplicationEndpoint.Update]: true,
   [ApplicationEndpoint.Delete]: true,
