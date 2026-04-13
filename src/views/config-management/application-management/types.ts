@@ -1,6 +1,6 @@
 /** 应用管理：列表 / 详情 / 表单共用类型（Mock 与后续接口对齐） */
 
-export type ApplicationPlatform = 'Android' | 'iOS'
+export type ApplicationPlatform = 'Android' | 'iOS' | 'Web'
 
 export interface ApplicationAppItem {
   id: string
@@ -80,6 +80,17 @@ export interface ApplicationOverviewStats {
   androidCount: number
   /** 待处理：状态为「禁用」的应用数 */
   pendingCount: number
+}
+
+export interface OptionItem {
+  label: string
+  value: string
+}
+
+export interface ApplicationFilterFormOptions {
+  categoryOptions: OptionItem[]
+  creatorOptions: OptionItem[]
+  timezoneOptions: OptionItem[]
 }
 
 /** 表单内部模型（与 ElForm 绑定） */

@@ -8,6 +8,7 @@
 export enum ApplicationEndpoint {
   Table = 'table',
   OverviewStats = 'overview-stats',
+  FilterFormOptions = 'filter-form-options',
   Create = 'create',
   Update = 'update',
   Delete = 'delete',
@@ -19,6 +20,7 @@ type UseMock = boolean
 const ApplicationApiMockDefaults: Record<ApplicationEndpoint, UseMock> = {
   [ApplicationEndpoint.Table]: true,
   [ApplicationEndpoint.OverviewStats]: true,
+  [ApplicationEndpoint.FilterFormOptions]: true,
   [ApplicationEndpoint.Create]: true,
   [ApplicationEndpoint.Update]: true,
   [ApplicationEndpoint.Delete]: true,

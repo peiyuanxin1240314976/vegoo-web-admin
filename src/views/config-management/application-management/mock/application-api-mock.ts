@@ -4,6 +4,7 @@
 import { getAppNow } from '@/utils/app-now'
 import type {
   ApplicationAppItem,
+  ApplicationFilterFormOptions,
   ApplicationFormPayload,
   ApplicationOverviewStats,
   ApplicationOverviewStatsQuery,
@@ -62,6 +63,32 @@ export function mockFetchApplicationOverviewStats(
     iosCount: filtered.filter((i) => i.platform === 'iOS').length,
     androidCount: filtered.filter((i) => i.platform === 'Android').length,
     pendingCount: filtered.filter((i) => i.status === '禁用').length
+  })
+}
+
+export function mockFetchApplicationFilterFormOptions(): Promise<ApplicationFilterFormOptions> {
+  return Promise.resolve({
+    categoryOptions: [
+      { label: 'Weather', value: 'Weather' },
+      { label: 'Health', value: 'Health' },
+      { label: 'Finance', value: 'Finance' },
+      { label: 'Travel', value: 'Travel' },
+      { label: 'Shopping', value: 'Shopping' },
+      { label: 'Entertainment', value: 'Entertainment' }
+    ],
+    creatorOptions: [
+      { label: '张三', value: '张三' },
+      { label: '李四', value: '李四' },
+      { label: '王五', value: '王五' }
+    ],
+    timezoneOptions: [
+      { label: 'PST', value: 'PST' },
+      { label: 'EST', value: 'EST' },
+      { label: 'CST', value: 'CST' },
+      { label: 'MST', value: 'MST' },
+      { label: 'UTC', value: 'UTC' },
+      { label: 'GMT+8', value: 'GMT+8' }
+    ]
   })
 }
 

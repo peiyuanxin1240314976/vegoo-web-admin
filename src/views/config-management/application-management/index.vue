@@ -43,8 +43,12 @@
         </el-select>
         <span class="filter-label">平台</span>
         <el-select v-model="filterForm.platform" placeholder="全部" class="filter-select" clearable>
-          <el-option label="Android" value="Android" />
-          <el-option label="iOS" value="iOS" />
+          <el-option
+            v-for="opt in platformOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </el-select>
         <span class="filter-label">状态</span>
         <el-select v-model="filterForm.status" placeholder="全部" class="filter-select" clearable>
@@ -110,7 +114,11 @@
             <span
               :class="[
                 'platform-badge',
-                row.platform === 'Android' ? 'platform-badge--android' : 'platform-badge--ios'
+                row.platform === 'Android'
+                  ? 'platform-badge--android'
+                  : row.platform === 'iOS'
+                    ? 'platform-badge--ios'
+                    : 'platform-badge--web'
               ]"
             >
               <span class="platform-dot" />{{ row.platform }}
@@ -190,6 +198,9 @@
     <AppFormDialog
       v-model:visible="formVisible"
       :edit-data="editData"
+      :category-options="categoryOptions"
+      :timezone-options="timezoneOptions"
+      :platform-options="platformOptions"
       @success="handleFormSuccess"
     />
 
@@ -203,7 +214,7 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, reactive, ref, watch } from 'vue'
+  import { computed, onMounted, reactive, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { Plus, Download, Search, EditPen, Delete, View } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
@@ -211,21 +222,23 @@
     createApplication,
     deleteApplication,
     exportApplicationList,
+    fetchApplicationFilterFormOptions,
     fetchApplicationOverviewStats,
     fetchApplicationTable,
     updateApplication
   } from '@/api/config-management/application-management'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { useUserStore } from '@/store/modules/user'
   import AppDetailDrawer from './modules/app-detail-drawer.vue'
   import AppFormDialog from './modules/app-form-dialog.vue'
   import AppDeleteDialog from './modules/app-delete-dialog.vue'
-  import { applicationCategoryOptions, applicationCreatorOptions } from './mock/data'
-  import { type ApplicationAppItem, type ApplicationFormPayload } from './types'
+  import { type ApplicationAppItem, type ApplicationFormPayload, type OptionItem } from './types'
 
   defineOptions({ name: 'ApplicationManagement' })
 
   const { t } = useI18n()
   const userStore = useUserStore()
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
 
   /** 筛选（可与 meta-filter-options 对齐） */
   const filterForm = reactive({
@@ -251,8 +264,48 @@
   const editData = ref<ApplicationAppItem | null>(null)
   const deleteData = ref<ApplicationAppItem | null>(null)
 
-  const categoryOptions = applicationCategoryOptions
-  const creatorOptions = applicationCreatorOptions
+  const categoryOptions = ref<OptionItem[]>([])
+  const creatorOptions = ref<OptionItem[]>([])
+  const timezoneOptions = ref<OptionItem[]>([])
+  const fallbackPlatformOptions = ref<Array<{ label: string; value: 'Android' | 'iOS' | 'Web' }>>([
+    { label: 'Android', value: 'Android' },
+    { label: 'iOS', value: 'iOS' },
+    { label: 'Web', value: 'Web' }
+  ])
+
+  function normalizePlatformLabel(value: string, label: string): 'Android' | 'iOS' | 'Web' | '' {
+    const normalizedValue = value.trim()
+    const normalizedLabel = label.trim().toLowerCase()
+
+    if (normalizedValue === '0') return 'Android'
+    if (normalizedValue === '1') return 'iOS'
+    if (normalizedValue === '6') return 'Web'
+
+    if (normalizedLabel.includes('android') || normalizedLabel.includes('安卓')) return 'Android'
+    if (normalizedLabel.includes('ios') || normalizedLabel.includes('苹果')) return 'iOS'
+    if (normalizedLabel.includes('web')) return 'Web'
+
+    return ''
+  }
+
+  const platformOptions = computed(() => {
+    const source = cockpitMetaFilterStore.data?.platformOptions ?? []
+    const mapped = source
+      .map((item) => {
+        const normalized = normalizePlatformLabel(item.value, item.label)
+        if (!normalized) return null
+        return { label: normalized, value: normalized }
+      })
+      .filter(
+        (item): item is { label: 'Android' | 'iOS' | 'Web'; value: 'Android' | 'iOS' | 'Web' } =>
+          !!item
+      )
+
+    if (!mapped.length) return fallbackPlatformOptions.value
+    return mapped.filter(
+      (item, index, arr) => arr.findIndex((target) => target.value === item.value) === index
+    )
+  })
 
   function tableQueryBase() {
     return {
@@ -284,6 +337,19 @@
     }
   }
 
+  async function loadFilterAndFormOptions() {
+    try {
+      const res = await fetchApplicationFilterFormOptions()
+      categoryOptions.value = res.categoryOptions ?? []
+      creatorOptions.value = res.creatorOptions ?? []
+      timezoneOptions.value = res.timezoneOptions ?? []
+    } catch {
+      categoryOptions.value = []
+      creatorOptions.value = []
+      timezoneOptions.value = []
+    }
+  }
+
   async function loadTable() {
     tableLoading.value = true
     try {
@@ -310,6 +376,8 @@
   }
 
   onMounted(() => {
+    void cockpitMetaFilterStore.ensureLoaded()
+    loadFilterAndFormOptions()
     loadStats()
     loadTable()
   })
@@ -496,6 +564,8 @@
     --android-bg: rgb(34 197 94 / 12%);
     --ios-blue: #60a5fa;
     --ios-bg: rgb(96 165 250 / 12%);
+    --web-purple: #a78bfa;
+    --web-bg: rgb(167 139 250 / 12%);
     --status-normal: #22c55e;
     --status-bg: rgb(34 197 94 / 12%);
     --red: #ef4444;
@@ -809,6 +879,11 @@
       color: var(--ios-blue);
       background: var(--ios-bg);
     }
+
+    &--web {
+      color: var(--web-purple);
+      background: var(--web-bg);
+    }
   }
 
   .platform-dot {
@@ -822,6 +897,10 @@
 
     .platform-badge--ios & {
       background: var(--ios-blue);
+    }
+
+    .platform-badge--web & {
+      background: var(--web-purple);
     }
   }
 

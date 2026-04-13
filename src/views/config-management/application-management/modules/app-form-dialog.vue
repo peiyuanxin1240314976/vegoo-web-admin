@@ -26,14 +26,23 @@
             <div class="form-label">平台 <span class="required">*</span></div>
             <el-form-item prop="platform">
               <el-select v-model="form.platform" class="dark-select full-width">
-                <el-option value="Android">
-                  <span class="platform-opt platform-opt--android">
-                    <span class="platform-dot" />Android
-                  </span>
-                </el-option>
-                <el-option value="iOS">
-                  <span class="platform-opt platform-opt--ios">
-                    <span class="platform-dot" />iOS
+                <el-option
+                  v-for="opt in platformOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  :label="opt.label"
+                >
+                  <span
+                    :class="[
+                      'platform-opt',
+                      opt.value === 'Android'
+                        ? 'platform-opt--android'
+                        : opt.value === 'iOS'
+                          ? 'platform-opt--ios'
+                          : 'platform-opt--web'
+                    ]"
+                  >
+                    <span class="platform-dot" />{{ opt.label }}
                   </span>
                 </el-option>
               </el-select>
@@ -49,10 +58,10 @@
                 class="dark-select full-width"
               >
                 <el-option
-                  v-for="opt in APPLICATION_CATEGORY_VALUES"
-                  :key="opt"
-                  :label="opt"
-                  :value="opt"
+                  v-for="opt in categoryOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
                 />
               </el-select>
             </el-form-item>
@@ -154,7 +163,12 @@
           <div class="form-item">
             <div class="form-label">报表时区</div>
             <el-select v-model="form.timezone" class="dark-select full-width">
-              <el-option v-for="tz in timezoneOptions" :key="tz" :label="tz" :value="tz" />
+              <el-option
+                v-for="opt in timezoneOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
             </el-select>
           </div>
           <!-- 优先级 -->
@@ -254,15 +268,17 @@
   import { ref, reactive, computed, watch } from 'vue'
   import { Upload } from '@element-plus/icons-vue'
   import type { FormInstance, FormRules } from 'element-plus'
-  import { APPLICATION_CATEGORY_VALUES } from '../mock/data'
   import { deriveIconColorFromId } from '../types'
-  import type { ApplicationFormModel, ApplicationFormPayload } from '../types'
+  import type { ApplicationFormModel, ApplicationFormPayload, OptionItem } from '../types'
 
   defineOptions({ name: 'AppFormDialog' })
 
   const props = defineProps<{
     visible: boolean
     editData?: ApplicationFormModel | null
+    categoryOptions: OptionItem[]
+    timezoneOptions: OptionItem[]
+    platformOptions: Array<{ label: string; value: string }>
   }>()
 
   const emit = defineEmits<{
@@ -317,8 +333,9 @@
     { immediate: true }
   )
 
-  // ─── 选项配置 ──────────────────────────────────────────
-  const timezoneOptions = ['PST', 'EST', 'CST', 'MST', 'UTC', 'GMT+8']
+  const categoryOptions = computed(() => props.categoryOptions)
+  const timezoneOptions = computed(() => props.timezoneOptions)
+  const platformOptions = computed(() => props.platformOptions)
 
   // ─── 表单校验 ──────────────────────────────────────────
   const rules: FormRules = {
@@ -780,6 +797,10 @@
     &--ios {
       color: #60a5fa;
     }
+
+    &--web {
+      color: #a78bfa;
+    }
   }
 
   .platform-dot {
@@ -793,6 +814,10 @@
 
     .platform-opt--ios & {
       background: #60a5fa;
+    }
+
+    .platform-opt--web & {
+      background: #a78bfa;
     }
   }
 </style>

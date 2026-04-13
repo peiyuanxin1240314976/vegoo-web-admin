@@ -4,6 +4,7 @@
 import request from '@/utils/http'
 import type {
   ApplicationAppItem,
+  ApplicationFilterFormOptions,
   ApplicationFormPayload,
   ApplicationOverviewStats,
   ApplicationOverviewStatsQuery,
@@ -35,6 +36,18 @@ export function fetchApplicationOverviewStats(params: ApplicationOverviewStatsQu
   return request.post<ApplicationOverviewStats>({
     url: '/api/config-management/application/overview-stats',
     data: params,
+    showErrorMessage: false
+  })
+}
+
+/** 筛选与新增/编辑弹窗选项 */
+export function fetchApplicationFilterFormOptions() {
+  if (isApplicationEndpointMock(ApplicationEndpoint.FilterFormOptions)) {
+    return applicationMock.mockFetchApplicationFilterFormOptions()
+  }
+  return request.post<ApplicationFilterFormOptions>({
+    url: '/api/config-management/application/filter-form-options',
+    data: {},
     showErrorMessage: false
   })
 }
