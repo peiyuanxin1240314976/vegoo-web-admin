@@ -5,6 +5,7 @@
   import CampaignTab from './CampaignTab.vue'
   import { fetchMyAdsPageHeader, fetchMyAdsSummary, fetchMyAdsPlatform } from '@/api/user-growth'
   import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type { MyAdsStaffOption, MyAdsUserCardMock, MyAdsMetricStripItem } from '../types'
 
   defineOptions({ name: 'MyAdsPageContent' })
@@ -218,6 +219,7 @@
             v-model="dateRange"
             type="daterange"
             range-separator="~"
+            :shortcuts="dateRangeShortcuts"
             start-placeholder="开始"
             end-placeholder="结束"
             format="YYYY-MM-DD"

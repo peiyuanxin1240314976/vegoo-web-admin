@@ -7,7 +7,7 @@
   import ReviewMonitorSummary from './components/ReviewMonitorSummary.vue'
   import ReviewMonitorDetail from './components/ReviewMonitorDetail.vue'
   import type { GlobalFilter } from '@/api/product-operations/reviews-ratings-monitor'
-  import { cloneAppDate, getAppNow } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
 
   defineOptions({ name: 'ReviewsRatingsMonitor' })
 
@@ -55,34 +55,7 @@
     { label: 'Español', value: 'es' }
   ]
 
-  const dateShortcuts = [
-    {
-      text: '最近 7 天',
-      value: () => {
-        const end = getAppNow()
-        const start = cloneAppDate(end)
-        start.setDate(start.getDate() - 6)
-        return [start, end]
-      }
-    },
-    {
-      text: '最近 30 天',
-      value: () => {
-        const end = getAppNow()
-        const start = cloneAppDate(end)
-        start.setDate(start.getDate() - 29)
-        return [start, end]
-      }
-    },
-    {
-      text: '本月',
-      value: () => {
-        const now = getAppNow()
-        const start = new Date(now.getFullYear(), now.getMonth(), 1)
-        return [start, now]
-      }
-    }
-  ]
+  const dateShortcuts = dateRangeShortcuts
 
   const dateRange = computed({
     get: () =>

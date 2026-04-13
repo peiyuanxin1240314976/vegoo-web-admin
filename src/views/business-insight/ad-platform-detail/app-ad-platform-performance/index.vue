@@ -25,6 +25,7 @@
           <el-date-picker
             v-model="dateRange"
             type="daterange"
+            :shortcuts="dateRangeShortcuts"
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
@@ -318,6 +319,7 @@
   import type { LocationQueryValue } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import * as echarts from 'echarts'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchAppAdPlatformPerformanceAiInsights,
     fetchAppAdPlatformPerformanceOverviewKpis,

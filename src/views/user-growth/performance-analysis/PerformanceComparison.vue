@@ -18,6 +18,7 @@
         <ElDatePicker
           v-model="selectedDateRangeDraft"
           class="date-range-picker"
+          :shortcuts="dateRangeShortcuts"
           type="daterange"
           range-separator="~"
           start-placeholder="开始日期"
@@ -317,6 +318,7 @@
   import { ElMessage } from 'element-plus'
   import * as echarts from 'echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchPerformanceCompareCandidates,
     fetchPerformanceComparisonAlerts,

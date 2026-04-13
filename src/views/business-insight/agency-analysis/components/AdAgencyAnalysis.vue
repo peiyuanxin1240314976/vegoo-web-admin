@@ -5,6 +5,7 @@
   import * as echarts from 'echarts'
   import ScreenshotModal from './ScreenshotModal.vue'
   import { formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchAgencyAnalysisMetaFilterOptions,
     fetchAgencyAnalysisOverview,
@@ -633,6 +634,7 @@
         <template v-else>
           <el-date-picker
             v-model="filterDate"
+            :shortcuts="dateShortcuts"
             type="date"
             format="YYYY-MM-DD"
             value-format="YYYY-MM-DD"

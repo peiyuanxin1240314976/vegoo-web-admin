@@ -367,6 +367,7 @@
       <ElDatePicker
         v-model="customDateRangeDraft"
         type="daterange"
+        :shortcuts="dateRangeShortcuts"
         start-placeholder="开始日期"
         end-placeholder="结束日期"
         value-format="YYYY-MM-DD"
@@ -387,6 +388,7 @@
   import { ElMessage } from 'element-plus'
   import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchPerformanceList,
     fetchPerformanceListFilterOptions,

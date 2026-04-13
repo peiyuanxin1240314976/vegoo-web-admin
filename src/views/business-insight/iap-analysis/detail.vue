@@ -18,6 +18,7 @@
           <ElDatePicker
             v-model="dateRange"
             type="daterange"
+            :shortcuts="dateRangeShortcuts"
             size="small"
             range-separator="-"
             start-placeholder="开始日期"
@@ -253,6 +254,7 @@
   import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { ArrowUp, ArrowDown, Download, Monitor } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
   import {

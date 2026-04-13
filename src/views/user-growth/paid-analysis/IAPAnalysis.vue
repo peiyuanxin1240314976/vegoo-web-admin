@@ -12,6 +12,7 @@
           <ElDatePicker
             v-model="filters.date"
             type="date"
+            :shortcuts="dateShortcuts"
             value-format="YYYY-MM-DD"
             format="YYYY-MM-DD"
             placeholder="选择日期"
@@ -134,6 +135,7 @@
   import { Calendar, Flag, Grid, Monitor } from '@element-plus/icons-vue'
   import { storeToRefs } from 'pinia'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateShortcuts } from '@/utils/form/date-shortcuts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import IAPChannelTab from './IAPChannelTab.vue'

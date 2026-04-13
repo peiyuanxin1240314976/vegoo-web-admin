@@ -22,6 +22,7 @@
               size="small"
               v-model="datePickerValue"
               type="daterange"
+              :shortcuts="dateRangeShortcuts"
               unlink-panels
               range-separator="至"
               start-placeholder="开始日期"
@@ -45,6 +46,7 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type {
     AdPlatformInfoDateRangePreset,
     AdPlatformInfoFilterState,

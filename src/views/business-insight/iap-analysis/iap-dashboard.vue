@@ -28,6 +28,7 @@
           <ElDatePicker
             v-model="dateRange"
             type="daterange"
+            :shortcuts="dateRangeShortcuts"
             range-separator="-"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
@@ -263,6 +264,7 @@
   import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
   import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     Download,
     Refresh,

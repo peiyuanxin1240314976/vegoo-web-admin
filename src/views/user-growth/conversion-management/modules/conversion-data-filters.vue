@@ -13,6 +13,7 @@
         <ElDatePicker
           v-model="form.dateRange"
           type="daterange"
+          :shortcuts="dateRangeShortcuts"
           unlink-panels
           range-separator="-"
           value-format="YYYY-MM-DD"
@@ -85,6 +86,7 @@
   import { useConversionMetaConversionTypeOptions } from '@/composables/use-conversion-meta-conversion-type'
   import type { ConversionDataFilterParams } from '../types'
   import { MOCK_DATA_TAB_APP_OPTIONS, MOCK_PLATFORM_OPTIONS } from '../mock/data'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
 
   defineOptions({ name: 'ConversionDataFilters' })
 

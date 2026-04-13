@@ -31,7 +31,7 @@
             end-placeholder="止"
             value-format="YYYY-MM-DD"
             class="ora-filter-date"
-            :shortcuts="dateShortcuts"
+            :shortcuts="dateRangeShortcuts"
             popper-class="ora-filter-popper"
           />
 
@@ -236,6 +236,7 @@
   import type { ECharts, EChartsOption } from 'echarts'
   import { ElMessage } from 'element-plus'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { orderRefundAnalysisApi } from '@/api/product-operations/order-refund-analysis'
   import type {
     CountryRate,
@@ -368,35 +369,6 @@
     if (s && e) return `${s} ~ ${e}`
     return '请选择'
   })
-
-  const dateShortcuts = [
-    {
-      text: '最近 7 天',
-      value: () => {
-        const end = getAppNow()
-        const start = cloneAppDate(end)
-        start.setDate(start.getDate() - 6)
-        return [start, end]
-      }
-    },
-    {
-      text: '最近 30 天',
-      value: () => {
-        const end = getAppNow()
-        const start = cloneAppDate(end)
-        start.setDate(start.getDate() - 29)
-        return [start, end]
-      }
-    },
-    {
-      text: '本月',
-      value: () => {
-        const now = getAppNow()
-        const start = new Date(now.getFullYear(), now.getMonth(), 1)
-        return [start, now]
-      }
-    }
-  ]
 
   // KPI data
   const kpiRaw = reactive({
