@@ -117,6 +117,7 @@
     ElTreeSelect,
     type FormInstance
   } from 'element-plus'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { calculateResponsiveSpan, type ResponsiveBreakpoint } from '@/utils/form/responsive'
 
   defineOptions({ name: 'ArtForm' })
@@ -221,10 +222,18 @@
   const rootProps = ['label', 'labelWidth', 'key', 'type', 'hidden', 'span', 'slots']
 
   const getProps = (item: FormItem) => {
-    if (item.props) return item.props
-    const props = { ...item }
-    rootProps.forEach((key) => delete (props as Record<string, any>)[key])
-    return props
+    const base = item.props
+      ? { ...item.props }
+      : (() => {
+          const p = { ...item }
+          rootProps.forEach((key) => delete (p as Record<string, any>)[key])
+          return p
+        })()
+    // 日期范围类自动注入默认 shortcuts，页面显式传 shortcuts 则不覆盖
+    if ((item.type === 'daterange' || item.type === 'datetimerange') && !('shortcuts' in base)) {
+      ;(base as Record<string, any>).shortcuts = dateRangeShortcuts
+    }
+    return base
   }
 
   // 获取插槽

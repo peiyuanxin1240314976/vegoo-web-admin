@@ -31,6 +31,7 @@
         <ElDatePicker
           v-model="orderDateRange"
           type="daterange"
+          :shortcuts="dateRangeShortcuts"
           unlink-panels
           value-format="YYYY-MM-DD"
           format="YYYY-MM-DD"
@@ -480,6 +481,7 @@
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import * as echarts from 'echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type {
     PaidAnalysisFilterBody,
     PaidAnalysisOrderDetailData,

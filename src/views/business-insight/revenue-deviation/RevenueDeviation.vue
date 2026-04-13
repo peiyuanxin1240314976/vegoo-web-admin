@@ -8,6 +8,7 @@
         <el-date-picker
           v-model="dateRange"
           type="daterange"
+          :shortcuts="dateRangeShortcuts"
           range-separator="~"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
@@ -451,6 +452,7 @@
   import { TopRight } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchRevenueDeviationMetaFilterOptions,
     fetchRevenueDeviationOverviewCountryTop10,

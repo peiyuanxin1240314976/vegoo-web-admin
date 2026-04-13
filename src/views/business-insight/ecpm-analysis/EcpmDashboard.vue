@@ -14,6 +14,7 @@
           <el-date-picker
             v-model="dateRange"
             type="daterange"
+            :shortcuts="dateRangeShortcuts"
             size="default"
             range-separator="~"
             start-placeholder="开始日期"
@@ -436,6 +437,7 @@
   import type { ECharts } from 'echarts'
   import { TrendCharts, Money, Location, Grid, Warning } from '@element-plus/icons-vue'
   import { getAppNow, cloneAppDate } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchEcpmMetaFilterOptions,
     fetchEcpmOverviewAdSlotRanking,

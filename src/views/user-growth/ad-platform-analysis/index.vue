@@ -11,6 +11,7 @@
                 v-model="dateRange"
                 type="daterange"
                 range-separator="~"
+                :shortcuts="dateRangeShortcuts"
                 start-placeholder="开始日期"
                 end-placeholder="结束日期"
                 value-format="YYYY-MM-DD"
@@ -195,6 +196,7 @@
   import { ElMessage } from 'element-plus'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type { ColumnOption } from '@/types'
   import ApaTop10Panel from './modules/top10-panel.vue'
   import ApaMetricsTablePanel from './modules/metrics-table-panel.vue'

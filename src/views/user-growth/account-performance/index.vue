@@ -34,6 +34,7 @@
           <ElDatePicker
             v-model="draftDateRange"
             type="daterange"
+            :shortcuts="dateRangeShortcuts"
             range-separator="~"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
@@ -260,6 +261,7 @@
   import { useChart } from '@/hooks/core/useChart'
   import { useSettingStore } from '@/store/modules/setting'
   import request from '@/utils/http'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { AD_PERFORMANCE_BASE } from '@/views/user-growth/ad-performance/config/api-base'
   import type { AdPerformanceMetaFilterResponse } from '@/views/user-growth/ad-performance/types'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'

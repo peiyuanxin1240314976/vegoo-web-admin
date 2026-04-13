@@ -61,6 +61,7 @@
           <ElDatePicker
             v-model="filtersDraft.t_date"
             type="date"
+            :shortcuts="dateShortcuts"
             value-format="YYYY-MM-DD"
             format="YYYY-MM-DD"
             class="iaa-date"
@@ -137,6 +138,7 @@
 <script setup lang="ts">
   import { ref, computed, reactive, watch } from 'vue'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { dateShortcuts } from '@/utils/form/date-shortcuts'
   import type { IaaTabKey, IaaFilterState } from './types'
   import { useIaaFilters } from './composables/useIaaFilters'
   import { provideIaaPageLoading } from './composables/useIaaPageLoading'

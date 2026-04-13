@@ -4,6 +4,7 @@
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import * as echarts from 'echarts'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchAdPlatformDetailAiInsights,
     fetchAdPlatformDetailOverviewKpis,
@@ -705,6 +706,7 @@
               v-if="dateRange === '自定义'"
               v-model="customDateRange"
               type="daterange"
+              :shortcuts="dateRangeShortcuts"
               unlink-panels
               range-separator="至"
               start-placeholder="开始日期"

@@ -1,14 +1,13 @@
 <template>
   <div class="cockpit-top-bar">
-    <ElDatePicker
-      v-model="selectedDate"
-      type="date"
+    <ElInput
+      :model-value="displayDate"
       size="default"
-      class="cockpit-date-picker"
+      class="cockpit-date-display"
       placeholder="选择日期"
-      format="YYYY年MM月DD日"
-      value-format="YYYY-MM-DD"
       :prefix-icon="Calendar"
+      readonly
+      tabindex="-1"
     />
     <div class="actions">
       <ElButton size="default" type="primary" @click="emit('openScenarioSimulation')">
@@ -24,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, watch } from 'vue'
+  import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
   import { Calendar, DataAnalysis, FullScreen } from '@element-plus/icons-vue'
   import { useTableStore } from '@/store/modules/table'
   import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
@@ -63,8 +62,13 @@
     }
   )
 
-  watch(selectedDate, (v) => {
-    if (v && v !== props.modelValue) emit('update:modelValue', v)
+  const displayDate = computed(() => {
+    const v = selectedDate.value
+    // v 形如：YYYY-MM-DD
+    if (!v) return ''
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v)
+    if (!m) return v
+    return `${m[1]}年${m[2]}月${m[3]}日`
   })
 
   const toggleFullScreen = () => {
@@ -119,8 +123,18 @@
     align-items: center;
     justify-content: space-between;
 
-    :deep(.cockpit-date-picker) {
+    :deep(.cockpit-date-display) {
       width: 150px !important;
+    }
+
+    /* 纯展示：看起来像输入框，但不允许编辑/聚焦交互 */
+    :deep(.cockpit-date-display .el-input__wrapper) {
+      cursor: default;
+    }
+
+    :deep(.cockpit-date-display .el-input__inner) {
+      cursor: default;
+      user-select: none;
     }
 
     .actions {

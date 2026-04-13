@@ -106,7 +106,7 @@
   import type { OverallRecoveryTabKey, OverallRecoveryFilterState } from './types'
   import { resolveDateRangeFromPreset } from './utils/buildApiParams'
   import { useOverallRecoveryFilters } from './composables/useOverallRecoveryFilters'
-  import { cloneAppDate, getAppNow } from '@/utils/app-now'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import TabOverall from './modules/tab-overall.vue'
   import TabOrganic from './modules/tab-organic.vue'
 
@@ -150,28 +150,7 @@
     }
   })
 
-  const dateShortcuts = [
-    {
-      text: '近7天',
-      value: () => {
-        const end = cloneAppDate(getAppNow())
-        end.setHours(0, 0, 0, 0)
-        const start = cloneAppDate(end)
-        start.setDate(start.getDate() - 6)
-        return [start, end]
-      }
-    },
-    {
-      text: '近30天',
-      value: () => {
-        const end = cloneAppDate(getAppNow())
-        end.setHours(0, 0, 0, 0)
-        const start = cloneAppDate(end)
-        start.setDate(start.getDate() - 29)
-        return [start, end]
-      }
-    }
-  ]
+  const dateShortcuts = dateRangeShortcuts
 
   const tabComponents: Record<OverallRecoveryTabKey, Component> = {
     overall: TabOverall,

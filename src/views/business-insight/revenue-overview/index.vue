@@ -90,6 +90,7 @@
             <ElDatePicker
               v-model="filtersDraft.t_date"
               type="date"
+              :shortcuts="dateShortcuts"
               value-format="YYYY-MM-DD"
               format="YYYY-MM-DD"
               class="rev-date"
@@ -711,6 +712,7 @@
   import 'flag-icons/css/flag-icons.min.css'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
+  import { dateShortcuts } from '@/utils/form/date-shortcuts'
   import type { ColumnOption } from '@/types'
   import {
     fetchRevenueOverviewTopCountries,

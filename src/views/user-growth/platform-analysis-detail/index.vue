@@ -11,6 +11,7 @@
           <ElDatePicker
             v-model="dateRange"
             type="daterange"
+            :shortcuts="dateRangeShortcuts"
             unlink-panels
             range-separator="~"
             value-format="YYYY-MM-DD"
@@ -359,6 +360,7 @@
   import { storeToRefs } from 'pinia'
   import { useRoute } from 'vue-router'
   import { Top, Bottom, Calendar, Search } from '@element-plus/icons-vue'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { resolveDateRangeFromPreset } from '../comprehensive-analysis/utils/buildApiParams'
   import { useChart } from '@/hooks/core/useChart'
