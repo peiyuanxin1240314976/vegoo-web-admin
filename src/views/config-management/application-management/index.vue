@@ -64,6 +64,7 @@
             :value="opt.value"
           />
         </el-select>
+        <ElButton round class="btn-query" @click="handleSearch">查询</ElButton>
       </div>
     </div>
 
@@ -382,19 +383,18 @@
     loadTable()
   })
 
-  watch(
-    () => ({ ...filterForm }),
-    () => {
-      loadStats()
-      if (currentPage.value !== 1) currentPage.value = 1
-      else loadTable()
-    },
-    { deep: true }
-  )
-
   watch([currentPage, pageSize], () => {
     loadTable()
   })
+
+  const handleSearch = () => {
+    loadStats()
+    if (currentPage.value !== 1) {
+      currentPage.value = 1
+      return
+    }
+    loadTable()
+  }
 
   const handleAdd = () => {
     editData.value = null
@@ -507,7 +507,7 @@
 
     try {
       if (editing && editingId) {
-        await updateApplication(body)
+        await updateApplication({ ...body, id: editingId })
       } else {
         await createApplication(body)
       }
@@ -645,6 +645,20 @@
     &:hover {
       color: var(--accent) !important;
       border-color: var(--accent) !important;
+    }
+  }
+
+  .btn-query {
+    padding: 8px 16px !important;
+    font-weight: 600 !important;
+    color: #0b1120 !important;
+    background: var(--accent) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    transition: all 0.2s;
+
+    &:hover {
+      filter: brightness(1.08);
     }
   }
 

@@ -5,6 +5,7 @@ import { getAppNow } from '@/utils/app-now'
 import type {
   ApplicationAppItem,
   ApplicationFilterFormOptions,
+  ApplicationIconUploadResponse,
   ApplicationFormPayload,
   ApplicationOverviewStats,
   ApplicationOverviewStatsQuery,
@@ -92,14 +93,27 @@ export function mockFetchApplicationFilterFormOptions(): Promise<ApplicationFilt
   })
 }
 
+export function mockUploadApplicationIcon(file: File): Promise<ApplicationIconUploadResponse> {
+  const safeName = file.name.replace(/\s+/g, '-').toLowerCase()
+  const now = getAppNow().getTime()
+  return Promise.resolve({
+    fileKey: `mock/app-icons/${now}-${safeName}`,
+    iconUrl: `https://cdn.example.com/mock/app-icons/${now}-${safeName}`
+  })
+}
+
 export function mockCreateApplication(data: ApplicationFormPayload): Promise<ApplicationAppItem> {
-  if (mockList.some((a) => a.id === data.id)) {
+  const generatedId = `APP${getAppNow().getTime()}`
+  const createdId = (data.id ?? '').trim() || generatedId
+  if (mockList.some((a) => a.id === createdId)) {
     return Promise.reject(new Error('应用 ID 已存在'))
   }
   const dateStr = getAppNow().toISOString().slice(0, 10)
   const item: ApplicationAppItem = {
     ...data,
-    iconColor: data.iconColor ?? deriveIconColorFromId(data.id),
+    id: createdId,
+    iconColor: data.iconColor ?? deriveIconColorFromId(createdId),
+    iconUrl: data.iconFileKey ?? data.iconUrl,
     packageId: data.packageId ?? data.bundleId,
     shortName: data.shortName ?? '',
     timezone: data.timezone ?? 'PST',

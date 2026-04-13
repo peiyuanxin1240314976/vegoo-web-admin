@@ -25,17 +25,18 @@ export interface ApplicationAppItem {
   showOrderReport?: boolean
   lastModifier?: string
   lastModifyTime?: string
+  iconUrl?: string
 }
 
 /** 新增/编辑表单提交载荷 */
-export type ApplicationFormPayload = Partial<ApplicationAppItem> & {
+export type ApplicationFormPayload = Omit<Partial<ApplicationAppItem>, 'id'> & {
   appName: string
   platform: ApplicationPlatform
   category: string
-  id: string
+  id?: string | null
   bundleId: string
-  /** 列表色块；未上传图标时由 id 派生 */
-  iconColor?: string
+  /** 上传图标后的文件标识或 URL（可选） */
+  iconFileKey?: string
 }
 
 /** 由应用 ID 生成稳定色值（HSL），用于列表首字母色块 */
@@ -93,11 +94,16 @@ export interface ApplicationFilterFormOptions {
   timezoneOptions: OptionItem[]
 }
 
+export interface ApplicationIconUploadResponse {
+  fileKey: string
+  iconUrl: string
+}
+
 /** 表单内部模型（与 ElForm 绑定） */
 export type ApplicationFormModel = Partial<ApplicationAppItem> & {
   appName: string
   platform: ApplicationPlatform
   category: string
-  id: string
+  id?: string
   bundleId: string
 }

@@ -88,16 +88,14 @@
               @change="handleIconChange"
             />
           </div>
-          <!-- ID -->
+          <!-- ID（编辑态只读展示，新增由后端生成） -->
           <div class="form-item">
             <div class="form-label">ID <span class="required">*</span></div>
-            <el-form-item prop="id">
-              <el-input
-                v-model="form.id"
-                placeholder="如：Weather5A"
-                class="dark-input"
-                :disabled="isEdit"
-              />
+            <el-form-item v-if="isEdit" prop="id">
+              <el-input v-model="form.id" placeholder="系统生成ID" class="dark-input" disabled />
+            </el-form-item>
+            <el-form-item v-else>
+              <el-input model-value="创建后由系统自动生成" class="dark-input" disabled />
             </el-form-item>
           </div>
           <!-- 应用简称 -->
@@ -255,7 +253,7 @@
         <div class="footer-btns">
           <span class="required-hint">标有 * 为必填项</span>
           <ElButton round class="btn-cancel" @click="handleClose">取消</ElButton>
-          <ElButton round class="btn-submit" @click="handleSubmit">
+          <ElButton round class="btn-submit" :loading="submitLoading" @click="handleSubmit">
             {{ isEdit ? '保存修改' : '确认创建' }}
           </ElButton>
         </div>
@@ -267,7 +265,9 @@
 <script setup lang="ts">
   import { ref, reactive, computed, watch } from 'vue'
   import { Upload } from '@element-plus/icons-vue'
+  import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { uploadApplicationIcon } from '@/api/config-management/application-management'
   import { deriveIconColorFromId } from '../types'
   import type { ApplicationFormModel, ApplicationFormPayload, OptionItem } from '../types'
 
@@ -290,6 +290,8 @@
   const formRef = ref<FormInstance>()
   const iconInputRef = ref<HTMLInputElement>()
   const iconPreview = ref<string>('')
+  const iconFile = ref<File | null>(null)
+  const submitLoading = ref(false)
 
   const isEdit = computed(() => !!props.editData?.id)
   const dialogVisible = computed({
@@ -298,7 +300,7 @@
   })
 
   const defaultForm = (): ApplicationFormModel => ({
-    id: '',
+    id: undefined,
     appName: '',
     platform: 'Android',
     category: '',
@@ -355,6 +357,7 @@
   const handleIconChange = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (!file) return
+    iconFile.value = file
     const reader = new FileReader()
     reader.onload = (ev) => {
       iconPreview.value = ev.target?.result as string
@@ -363,21 +366,43 @@
   }
 
   const handleSubmit = async () => {
-    if (!formRef.value) return
-    await formRef.value.validate((valid) => {
-      if (!valid) return
-      const iconColor =
-        props.editData?.iconColor && !iconPreview.value
-          ? props.editData.iconColor
-          : deriveIconColorFromId(form.id)
-      emit('success', { ...form, iconColor } as ApplicationFormPayload)
-    })
+    if (!formRef.value || submitLoading.value) return
+    const valid = await formRef.value.validate().catch(() => false)
+    if (!valid) return
+
+    submitLoading.value = true
+    try {
+      const payload: ApplicationFormPayload = {
+        ...form,
+        id: isEdit.value ? form.id : undefined
+      }
+
+      if (iconFile.value) {
+        const uploadRes = await uploadApplicationIcon(iconFile.value)
+        payload.iconFileKey = uploadRes.fileKey
+        payload.iconUrl = uploadRes.iconUrl
+      }
+
+      // 编辑且未上传新图标时，沿用当前展示色；新增由后端或 mock 生成
+      if (isEdit.value) {
+        payload.iconColor =
+          props.editData?.iconColor && !iconFile.value
+            ? props.editData.iconColor
+            : deriveIconColorFromId(form.id ?? props.editData?.id ?? 'app')
+      }
+      emit('success', payload)
+    } catch {
+      ElMessage.error('图标上传失败，请重试')
+    } finally {
+      submitLoading.value = false
+    }
   }
 
   const handleClose = () => {
     emit('update:visible', false)
     formRef.value?.resetFields()
     iconPreview.value = ''
+    iconFile.value = null
   }
 </script>
 
