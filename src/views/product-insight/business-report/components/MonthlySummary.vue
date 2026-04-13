@@ -177,6 +177,7 @@
   import { computed, inject } from 'vue'
   import KpiCard from './KpiCard.vue'
   import { businessReportContextKey } from '../composables/business-report-context'
+  import type { KpiMetric } from '../types'
   import {
     monthlyKpis as monthlyKpisMock,
     monthlyUserMetrics as monthlyUserMetricsMock,
@@ -188,10 +189,42 @@
 
   defineOptions({ name: 'MonthlySummary' })
 
+  const KPI_COLOR_PALETTE = ['#00D4A1', '#22C55E', '#06B6D4', '#8B5CF6', '#F59E0B', '#EF4444']
+
   const openPushModal = inject<() => void>('openPushModal', () => {})
   const ctx = inject(businessReportContextKey)
 
-  const monthlyKpis = computed(() => ctx?.summary.value?.kpis ?? monthlyKpisMock)
+  function normalizeKpis(kpis?: KpiMetric[]) {
+    if (!kpis?.length) return monthlyKpisMock
+    const mockByKey = new Map(monthlyKpisMock.map((item) => [item.key, item]))
+    return kpis.map((item, index) => {
+      const mock = mockByKey.get(item.key)
+      const color = item.color || mock?.color || KPI_COLOR_PALETTE[index % KPI_COLOR_PALETTE.length]
+      const bg =
+        item.bg ||
+        mock?.bg ||
+        `linear-gradient(135deg, color-mix(in srgb, ${color} 32%, transparent) 0%, rgb(13 21 41 / 68%) 100%)`
+      const change =
+        typeof item.change === 'number' && Number.isFinite(item.change)
+          ? item.change
+          : (mock?.change ?? 0)
+      const value = item.value || mock?.value || '--'
+      return {
+        ...item,
+        color,
+        bg,
+        value,
+        change,
+        changeLabel:
+          item.changeLabel ||
+          mock?.changeLabel ||
+          `月环比 ${change >= 0 ? '↑ +' : '↓ '}${Math.abs(change).toFixed(1)}%`,
+        sparkline: item.sparkline?.length ? item.sparkline : (mock?.sparkline ?? [])
+      }
+    })
+  }
+
+  const monthlyKpis = computed(() => normalizeKpis(ctx?.summary.value?.kpis))
   const monthlyUserMetrics = computed(
     () => ctx?.summary.value?.userMetrics ?? monthlyUserMetricsMock
   )
@@ -306,8 +339,14 @@
 
   .kpi-row {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 12px;
+  }
+
+  @media (width <= 1200px) {
+    .kpi-row {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 
   .content-grid {

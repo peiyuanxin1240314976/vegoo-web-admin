@@ -141,14 +141,46 @@
   import KpiCard from './KpiCard.vue'
   import { businessReportContextKey } from '../composables/business-report-context'
   import { weeklyKpis, weeklyUserMetrics, roiMetrics, retentionMetrics } from '../mockData'
-  import type { RevenueRow } from '../types'
+  import type { KpiMetric, RevenueRow } from '../types'
 
   defineOptions({ name: 'WeeklySummary' })
 
   const openPushModal = inject<() => void>('openPushModal', () => {})
   const ctx = inject(businessReportContextKey)
 
-  const kpis = computed(() => ctx?.summary.value?.kpis ?? weeklyKpis)
+  const KPI_COLOR_PALETTE = ['#00D4A1', '#22C55E', '#06B6D4', '#8B5CF6', '#F59E0B', '#EF4444']
+
+  function normalizeKpis(kpis?: KpiMetric[]) {
+    if (!kpis?.length) return weeklyKpis
+    const mockByKey = new Map(weeklyKpis.map((item) => [item.key, item]))
+    return kpis.map((item, index) => {
+      const mock = mockByKey.get(item.key)
+      const color = item.color || mock?.color || KPI_COLOR_PALETTE[index % KPI_COLOR_PALETTE.length]
+      const bg =
+        item.bg ||
+        mock?.bg ||
+        `linear-gradient(135deg, color-mix(in srgb, ${color} 32%, transparent) 0%, rgb(13 21 41 / 68%) 100%)`
+      const change =
+        typeof item.change === 'number' && Number.isFinite(item.change)
+          ? item.change
+          : (mock?.change ?? 0)
+      const value = item.value || mock?.value || '--'
+      return {
+        ...item,
+        color,
+        bg,
+        value,
+        change,
+        changeLabel:
+          item.changeLabel ||
+          mock?.changeLabel ||
+          `周环比 ${change >= 0 ? '↑ +' : '↓ '}${Math.abs(change).toFixed(1)}%`,
+        sparkline: item.sparkline?.length ? item.sparkline : (mock?.sparkline ?? [])
+      }
+    })
+  }
+
+  const kpis = computed(() => normalizeKpis(ctx?.summary.value?.kpis))
   const userMetrics = computed(() => ctx?.summary.value?.userMetrics ?? weeklyUserMetrics)
   const roiRows = computed(() => ctx?.summary.value?.roiMetrics ?? roiMetrics)
   const retention = computed(() => ctx?.summary.value?.retentionMetrics ?? retentionMetrics)

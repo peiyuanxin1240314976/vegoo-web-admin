@@ -172,6 +172,71 @@
 
   defineOptions({ name: 'MonthlyAdPlatform' })
 
+  const PLATFORM_VISUAL_MAP: Record<string, { color: string; logo: string }> = {
+    google: { color: '#4285f4', logo: 'G' },
+    facebook: { color: '#8b5cf6', logo: 'f' },
+    tiktok: { color: '#ef4444', logo: '♪' },
+    mintegral: { color: '#f59e0b', logo: 'M' },
+    kwai: { color: '#22c55e', logo: 'K' },
+    snapchat: { color: '#facc15', logo: '👻' }
+  }
+
+  function parseCurrencyToNumber(text: string): number {
+    const num = Number.parseFloat(String(text ?? '').replace(/[^\d.]/g, ''))
+    return Number.isFinite(num) ? num : 0
+  }
+
+  function resolvePlatformVisual(card: AdPlatformCard) {
+    const key = String(card.id ?? '').toLowerCase()
+    const fallback = PLATFORM_VISUAL_MAP[key]
+    const safeColor = card.color || fallback?.color || '#3b82f6'
+    const safeLogo =
+      card.logo ||
+      fallback?.logo ||
+      String(card.name ?? '')
+        .trim()
+        .charAt(0)
+        .toUpperCase() ||
+      '?'
+    return { color: safeColor, logo: safeLogo }
+  }
+
+  function normalizePlatformCards(cards: AdPlatformCard[]) {
+    if (!cards.length) return []
+    const spendTotal = cards.reduce((acc, item) => acc + parseCurrencyToNumber(item.adSpend), 0)
+    return cards.map((item) => {
+      const spend = parseCurrencyToNumber(item.adSpend)
+      const sharePercent =
+        typeof item.sharePercent === 'number' && Number.isFinite(item.sharePercent)
+          ? item.sharePercent
+          : spendTotal > 0
+            ? Number(((spend / spendTotal) * 100).toFixed(1))
+            : 0
+      const visual = resolvePlatformVisual(item)
+      return {
+        ...item,
+        ...visual,
+        adSpendChange:
+          typeof item.adSpendChange === 'number' && Number.isFinite(item.adSpendChange)
+            ? item.adSpendChange
+            : 0,
+        acquisitions: item.acquisitions || '--',
+        campaigns:
+          typeof item.campaigns === 'number' && Number.isFinite(item.campaigns)
+            ? item.campaigns
+            : 0,
+        cpi: item.cpi || '--',
+        cpm: item.cpm || '--',
+        cpc: item.cpc || '--',
+        profit: item.profit || '--',
+        roi1d: item.roi1d || '--',
+        roi7d: item.roi7d || '--',
+        roi14d: item.roi14d || '0%',
+        sharePercent
+      }
+    })
+  }
+
   function parseWanToNumber(s: string): number {
     const n = parseFloat(String(s).replace(/[^\d.]/g, ''))
     return Number.isFinite(n) ? n : 0
@@ -227,7 +292,7 @@
 
   const mainPlatforms = computed(() => {
     const api = cardList.value
-    if (api && api.length) return api.slice(0, 5)
+    if (api && api.length) return normalizePlatformCards(api).slice(0, 5)
     return adPlatformCards.slice(0, 5).map((p) => {
       const base = parseInt(p.adSpend.replace(/[$,]/g, ''), 10)
       const accent = p.id === 'facebook' ? '#8B5CF6' : p.color
@@ -246,10 +311,12 @@
   const otherPlatforms = computed(() => {
     const api = cardList.value
     if (api && api.length) {
-      return api.slice(5).map((p) => ({
-        ...p,
-        monthlySpend: p.adSpend
-      }))
+      return normalizePlatformCards(api)
+        .slice(5)
+        .map((p) => ({
+          ...p,
+          monthlySpend: p.adSpend
+        }))
     }
     return adPlatformCards.slice(5).map((p) => {
       const base = parseInt(p.adSpend.replace(/[$,]/g, ''), 10)
@@ -367,7 +434,7 @@
 
   const tableData = computed(() => {
     const api = cardList.value
-    if (api && api.length) return mapCardsToMonthlyTableRows(api)
+    if (api && api.length) return mapCardsToMonthlyTableRows(normalizePlatformCards(api))
     return monthlyAdPlatformTableMock
   })
 </script>
