@@ -624,21 +624,22 @@
           </ElButton>
         </template>
         <template v-else>
-          <el-date-picker
-            v-model="filterDateRange"
-            :shortcuts="dateRangeShortcuts"
-            type="daterange"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            range-separator="~"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            size="default"
-            class="filter-date"
-            style="width: 150px"
-            popper-class="aa-agency-filter-popper"
-            unlink-panels
-          />
+          <div class="filter-date-wrap">
+            <el-date-picker
+              v-model="filterDateRange"
+              :shortcuts="dateRangeShortcuts"
+              type="daterange"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              range-separator="~"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              size="default"
+              class="filter-date"
+              popper-class="aa-agency-filter-popper"
+              unlink-panels
+            />
+          </div>
 
           <el-select
             v-model="filterAppId"
@@ -1786,6 +1787,16 @@
 
   .block-empty :deep(.el-empty__image) {
     opacity: 0.85;
+  }
+
+  .filter-date-wrap {
+    flex: none;
+    width: 190px;
+
+    :deep(.el-date-editor) {
+      width: 100% !important;
+      min-width: 0 !important;
+    }
   }
 
   .filter-date {
