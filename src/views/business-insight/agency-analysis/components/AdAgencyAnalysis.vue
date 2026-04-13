@@ -5,7 +5,7 @@
   import * as echarts from 'echarts'
   import ScreenshotModal from './ScreenshotModal.vue'
   import { formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
-  import { dateShortcuts } from '@/utils/form/date-shortcuts'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchAgencyAnalysisMetaFilterOptions,
     fetchAgencyAnalysisOverview,
@@ -40,14 +40,6 @@
     const d = ymdToLocalDate(ymd)
     d.setDate(d.getDate() + delta)
     return formatYYYYMMDD(d)
-  }
-
-  function last7Range(endYmd: string) {
-    return { t_start_date: addDaysYmd(endYmd, -6), t_end_date: endYmd }
-  }
-
-  function last30Range(endYmd: string) {
-    return { t_start_date: addDaysYmd(endYmd, -29), t_end_date: endYmd }
   }
 
   // ─────────────────── KPI Cards ───────────────────
@@ -390,7 +382,8 @@
     }
   }
 
-  const filterDate = ref(getAppTodayYYYYMMDD())
+  const _today = getAppTodayYYYYMMDD()
+  const filterDateRange = ref<[string, string]>([addDaysYmd(_today, -6), _today])
   const filterAppId = ref('all')
   const filterAgencyId = ref('all')
   const filterSource = ref('all')
@@ -448,7 +441,8 @@
   }
 
   const filterQuery = () => ({
-    t_date: filterDate.value,
+    startDate: filterDateRange.value[0],
+    endDate: filterDateRange.value[1],
     s_app_id: filterAppId.value,
     agency_id: filterAgencyId.value,
     source: filterSource.value
@@ -503,8 +497,6 @@
     pageLoading.value = true
     try {
       const q = filterQuery()
-      const d7 = last7Range(q.t_date)
-      const d30 = last30Range(q.t_date)
 
       const [
         overview,
@@ -519,11 +511,11 @@
         fetchAgencyAnalysisOverview(q),
         fetchAgencyAnalysisAgencySummary(q),
         fetchAgencyAnalysisCampaignTable(q),
-        fetchAgencyAnalysisDailyComparison({ ...q, ...d7 }),
+        fetchAgencyAnalysisDailyComparison(q),
         fetchAgencyAnalysisDonutSpendShare(q),
         fetchAgencyAnalysisChannelDistribution(q),
         fetchAgencyAnalysisCountryTop8(q),
-        fetchAgencyAnalysisSpendTrend30d({ ...q, ...d30 })
+        fetchAgencyAnalysisSpendTrend30d(q)
       ])
 
       kpiCards.value = overview.kpiCards ?? []
@@ -553,7 +545,7 @@
   }
 
   watch(
-    [filterDate, filterAppId, filterAgencyId, filterSource],
+    [filterDateRange, filterAppId, filterAgencyId, filterSource],
     () => {
       if (!metaReady.value) return
     },
@@ -632,37 +624,22 @@
           </ElButton>
         </template>
         <template v-else>
-          <el-date-picker
-            v-model="filterDate"
-            :shortcuts="dateShortcuts"
-            type="date"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            size="default"
-            class="filter-date"
-            popper-class="aa-agency-filter-popper"
-            prefix-icon=""
-          >
-            <template #prefix>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-right: 2px">
-                <rect
-                  x="1"
-                  y="2"
-                  width="12"
-                  height="11"
-                  rx="2"
-                  stroke="#64748b"
-                  stroke-width="1.2"
-                />
-                <path
-                  d="M1 5h12M4 1v2M10 1v2"
-                  stroke="#64748b"
-                  stroke-width="1.2"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </template>
-          </el-date-picker>
+          <div class="filter-date-wrap">
+            <el-date-picker
+              v-model="filterDateRange"
+              :shortcuts="dateRangeShortcuts"
+              type="daterange"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              range-separator="~"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              size="default"
+              class="filter-date"
+              popper-class="aa-agency-filter-popper"
+              unlink-panels
+            />
+          </div>
 
           <el-select
             v-model="filterAppId"
@@ -674,21 +651,6 @@
             <el-option
               v-for="opt in appOptions"
               :key="`app-${opt.value}`"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
-
-          <el-select
-            v-model="filterAgencyId"
-            size="default"
-            class="filter-select"
-            popper-class="aa-agency-filter-popper"
-            style="width: 140px"
-          >
-            <el-option
-              v-for="opt in agencyOptions"
-              :key="`agency-${opt.value}`"
               :label="opt.label"
               :value="opt.value"
             />
@@ -796,7 +758,7 @@
               代投方汇总
             </div>
             <div class="section-actions">
-              <span class="data-date">数据日期: {{ filterDate }}</span>
+              <span class="data-date">{{ filterDateRange[0] }} ~ {{ filterDateRange[1] }}</span>
               <button class="btn-small-outline">导出</button>
             </div>
           </div>
@@ -939,7 +901,9 @@
                               >
                               <span class="exp-badge active">ACTIVE</span>
                               <span class="exp-meta">广告投放代理商</span>
-                              <span class="exp-meta">数据日期: {{ filterDate }}</span>
+                              <span class="exp-meta"
+                                >{{ filterDateRange[0] }} ~ {{ filterDateRange[1] }}</span
+                              >
                             </div>
                             <div class="exp-hd-right">
                               <!-- <button class="btn-sm-teal">展开全部</button>
@@ -1454,7 +1418,7 @@
     <ScreenshotModal
       v-model="showScreenshot"
       :agency-name="screenshotTitleName"
-      :data-date="filterDate"
+      :data-date="filterDateRange[0] + ' ~ ' + filterDateRange[1]"
       :page-loading="pageLoading"
       :kpi-cards="kpiCards"
       :agencies="agencies"
@@ -1825,8 +1789,19 @@
     opacity: 0.85;
   }
 
+  .filter-date-wrap {
+    flex: none;
+    width: 190px;
+
+    :deep(.el-date-editor) {
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+  }
+
   .filter-date {
-    width: 130px !important;
+    flex: none !important;
+    width: 150px !important;
 
     :deep(.el-input__wrapper) {
       min-height: 40px;

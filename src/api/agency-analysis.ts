@@ -34,7 +34,8 @@ import type {
 const AGENCY_ANALYSIS_BASE = `${ANALYSIS_API_BASE}/business-insight/agency-analysis`
 
 export type AgencyAnalysisFilterQuery = {
-  t_date: string
+  startDate: string
+  endDate: string
   s_app_id?: string
   agency_id?: string
   source?: string
@@ -42,7 +43,23 @@ export type AgencyAnalysisFilterQuery = {
 
 function overviewBody(q: AgencyAnalysisFilterQuery) {
   return {
-    t_date: q.t_date,
+    // TODO: 后端入参升级后删除 t_date
+    t_date: q.endDate,
+    startDate: q.startDate,
+    endDate: q.endDate,
+    s_app_id: q.s_app_id ?? 'all',
+    agency_id: q.agency_id ?? 'all',
+    source: q.source ?? 'all'
+  }
+}
+
+function rangeBody(q: AgencyAnalysisFilterQuery) {
+  return {
+    // TODO: 后端入参升级后删除 t_start_date / t_end_date
+    t_start_date: q.startDate,
+    t_end_date: q.endDate,
+    startDate: q.startDate,
+    endDate: q.endDate,
     s_app_id: q.s_app_id ?? 'all',
     agency_id: q.agency_id ?? 'all',
     source: q.source ?? 'all'
@@ -51,18 +68,6 @@ function overviewBody(q: AgencyAnalysisFilterQuery) {
 
 function chartBody(q: AgencyAnalysisFilterQuery) {
   return overviewBody(q)
-}
-
-function spendTrend30dBody(
-  q: AgencyAnalysisFilterQuery & { t_start_date: string; t_end_date: string }
-) {
-  return {
-    t_start_date: q.t_start_date,
-    t_end_date: q.t_end_date,
-    s_app_id: q.s_app_id ?? 'all',
-    agency_id: q.agency_id ?? 'all',
-    source: q.source ?? 'all'
-  }
 }
 
 /** 契约 09：真实对接无请求体 */
@@ -155,21 +160,13 @@ export function fetchAgencyAnalysisCampaignTable(params: AgencyAnalysisFilterQue
   })
 }
 
-export function fetchAgencyAnalysisDailyComparison(
-  params: AgencyAnalysisFilterQuery & { t_start_date: string; t_end_date: string }
-) {
+export function fetchAgencyAnalysisDailyComparison(params: AgencyAnalysisFilterQuery) {
   if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.DailyComparison)) {
     return mockFetchAgencyDailyComparison()
   }
   return request.post<{ dailyRows: DailyRow[] }>({
     url: `${AGENCY_ANALYSIS_BASE}/table/daily-comparison`,
-    data: {
-      t_start_date: params.t_start_date,
-      t_end_date: params.t_end_date,
-      s_app_id: params.s_app_id ?? 'all',
-      agency_id: params.agency_id ?? 'all',
-      source: params.source ?? 'all'
-    }
+    data: rangeBody(params)
   })
 }
 
@@ -206,9 +203,7 @@ export function fetchAgencyAnalysisCountryTop8(params: AgencyAnalysisFilterQuery
   })
 }
 
-export function fetchAgencyAnalysisSpendTrend30d(
-  params: AgencyAnalysisFilterQuery & { t_start_date: string; t_end_date: string }
-) {
+export function fetchAgencyAnalysisSpendTrend30d(params: AgencyAnalysisFilterQuery) {
   if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.SpendTrend30d)) {
     return mockFetchAgencySpendTrend30d()
   }
@@ -217,6 +212,6 @@ export function fetchAgencyAnalysisSpendTrend30d(
     series: { name: string; color: string; values: number[] }[]
   }>({
     url: `${AGENCY_ANALYSIS_BASE}/chart/spend-trend30d`,
-    data: spendTrend30dBody(params)
+    data: rangeBody(params)
   })
 }

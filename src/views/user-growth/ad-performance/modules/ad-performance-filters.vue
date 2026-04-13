@@ -1,13 +1,18 @@
 <template>
   <div class="ad-performance-filters">
     <div class="ad-performance-filters__left">
-      <div class="ad-performance-filter-chip ad-performance-filter-chip--static">
-        <ElIcon class="ad-performance-filter-chip__icon"><Calendar /></ElIcon>
-        <span class="ad-performance-filter-chip__label">
-          {{ tr('adPerformance.filterDate', '日期') }}
-        </span>
-        <span class="ad-performance-filter-chip__value">{{ dateRangeLabel }}</span>
-      </div>
+      <ElDatePicker
+        v-model="dateRangeValue"
+        type="daterange"
+        value-format="YYYY-MM-DD"
+        range-separator="~"
+        :start-placeholder="tr('adPerformance.startDate', '开始日期')"
+        :end-placeholder="tr('adPerformance.endDate', '结束日期')"
+        class="ad-performance-date-picker"
+        :prefix-icon="Calendar"
+        :shortcuts="datePickerShortcuts"
+        unlink-panels
+      />
 
       <ElSelect
         :model-value="draft.app"
@@ -96,27 +101,6 @@
         @click="$emit('refresh')"
       />
     </div>
-
-    <div
-      class="ad-performance-date-slider"
-      :style="dateSliderStyle"
-      role="tablist"
-      aria-label="日期筛选"
-    >
-      <div class="ad-performance-date-slider__thumb" aria-hidden="true" />
-      <button
-        v-for="opt in dateRangeOptions"
-        :key="opt.key"
-        type="button"
-        class="ad-performance-date-slider__item"
-        :class="{ 'is-active': opt.key === activeDateKey }"
-        role="tab"
-        :aria-selected="opt.key === activeDateKey"
-        @click="onDateChange(opt.key)"
-      >
-        {{ opt.label }}
-      </button>
-    </div>
   </div>
 </template>
 
@@ -125,7 +109,7 @@
   import { computed, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import type { AdPerformanceFilter, AdPerformanceMetaFilterResponse } from '../types'
-  import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { cloneAppDate, getAppNow } from '@/utils/app-now'
 
   defineOptions({ name: 'AdPerformanceFilters' })
 
@@ -171,42 +155,6 @@
     draft.value = { ...draft.value, ...partial }
   }
 
-  type DatePresetKey = 'today' | 'yesterday' | 'last7d' | 'month'
-
-  function resolvePresetRange(key: DatePresetKey): { startDate: string; endDate: string } {
-    const today = getAppNow()
-    if (key === 'today') {
-      const ymd = getAppTodayYYYYMMDD()
-      return { startDate: ymd, endDate: ymd }
-    }
-    if (key === 'yesterday') {
-      const d = cloneAppDate(today)
-      d.setDate(d.getDate() - 1)
-      const ymd = formatYYYYMMDD(d)
-      return { startDate: ymd, endDate: ymd }
-    }
-    if (key === 'last7d') {
-      const end = formatYYYYMMDD(today)
-      const startD = cloneAppDate(today)
-      startD.setDate(startD.getDate() - 6)
-      const start = formatYYYYMMDD(startD)
-      return { startDate: start, endDate: end }
-    }
-    // month：本月 1 号 ~ 今天
-    const end = formatYYYYMMDD(today)
-    const startD = cloneAppDate(today)
-    startD.setDate(1)
-    const start = formatYYYYMMDD(startD)
-    return { startDate: start, endDate: end }
-  }
-
-  const activeDateKey = ref<DatePresetKey>('today')
-
-  function onDateChange(key: DatePresetKey) {
-    activeDateKey.value = key
-    patchDraft(resolvePresetRange(key))
-  }
-
   function onAppChange(v: string) {
     patchDraft({ app: v ?? '' })
   }
@@ -223,34 +171,76 @@
     patchDraft({ country: v ?? '' })
   }
 
-  const dateRangeOptions = computed(() => {
-    return [
-      { key: 'today' as const, label: '今日' },
-      { key: 'yesterday' as const, label: '昨日' },
-      { key: 'last7d' as const, label: '近7天' },
-      { key: 'month' as const, label: '本月' }
-    ]
+  const dateRangeValue = computed<[string, string] | null>({
+    get() {
+      const start = draft.value.startDate?.trim()
+      const end = draft.value.endDate?.trim()
+      if (start && end) return [start, end]
+      return null
+    },
+    set(v) {
+      if (v) {
+        patchDraft({ startDate: v[0], endDate: v[1] })
+      }
+    }
   })
 
-  const dateRangeLabel = computed(() => {
-    const hit = dateRangeOptions.value.find((item) => item.key === activeDateKey.value)
-    const label = hit?.label ?? '自定义'
-    const start = draft.value.startDate?.trim() || '-'
-    const end = draft.value.endDate?.trim() || '-'
-    return `${label} ${start} ~ ${end}`
-  })
-
-  const activeDateIndex = computed(() => {
-    const idx = dateRangeOptions.value.findIndex((item) => item.key === activeDateKey.value)
-    return idx >= 0 ? idx : 0
-  })
-
-  const dateSliderStyle = computed(() => {
-    return {
-      '--date-slider-count': String(dateRangeOptions.value.length),
-      '--date-slider-index': String(activeDateIndex.value)
-    } as Record<string, string>
-  })
+  const datePickerShortcuts = [
+    {
+      text: '今日',
+      value: () => {
+        const d = getAppNow()
+        return [d, d]
+      }
+    },
+    {
+      text: '昨日',
+      value: () => {
+        const d = cloneAppDate(getAppNow())
+        d.setDate(d.getDate() - 1)
+        return [d, d]
+      }
+    },
+    {
+      text: '近7天',
+      value: () => {
+        const end = getAppNow()
+        const start = cloneAppDate(end)
+        start.setDate(start.getDate() - 6)
+        return [start, end]
+      }
+    },
+    {
+      text: '本月',
+      value: () => {
+        const end = getAppNow()
+        const start = cloneAppDate(end)
+        start.setDate(1)
+        return [start, end]
+      }
+    },
+    {
+      text: '上月',
+      value: () => {
+        const today = getAppNow()
+        const start = cloneAppDate(today)
+        start.setDate(1)
+        start.setMonth(start.getMonth() - 1)
+        const end = cloneAppDate(today)
+        end.setDate(0)
+        return [start, end]
+      }
+    },
+    {
+      text: '近30天',
+      value: () => {
+        const end = getAppNow()
+        const start = cloneAppDate(end)
+        start.setDate(start.getDate() - 29)
+        return [start, end]
+      }
+    }
+  ]
 
   const appAllLabel = computed(() => (props.appCount ? `全部(${props.appCount})` : '全部'))
 
@@ -301,23 +291,6 @@
   })
 
   watch(
-    () => [draft.value.startDate, draft.value.endDate] as const,
-    () => {
-      const current = {
-        startDate: String(draft.value.startDate ?? '').trim(),
-        endDate: String(draft.value.endDate ?? '').trim()
-      }
-      const presets: DatePresetKey[] = ['today', 'yesterday', 'last7d', 'month']
-      const hit = presets.find((k) => {
-        const r = resolvePresetRange(k)
-        return r.startDate === current.startDate && r.endDate === current.endDate
-      })
-      activeDateKey.value = hit ?? 'today'
-    },
-    { immediate: true }
-  )
-
-  watch(
     () => props.filter,
     (v) => {
       draft.value = { ...v }
@@ -356,40 +329,72 @@
     min-width: 0;
   }
 
-  /* ── 日期显示徽章 ────────────────────────────────────────────── */
-  .ad-performance-filter-chip {
-    --ad-performance-filter-accent: #10b981;
+  /* ── 日期区间选择器 ──────────────────────────────────────────── */
+  .ad-performance-date-picker {
+    width: 248px;
+    min-width: 200px;
+    max-width: 100%;
+  }
 
-    display: inline-flex;
-    gap: 7px;
-    align-items: center;
-    min-height: 40px;
-    padding: 0 14px;
-    font-size: 14px;
-    color: var(--el-text-color-regular);
-    white-space: nowrap;
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 30%);
+  :deep(.ad-performance-date-picker) {
+    --el-input-focus-border-color: #10b981;
+    --el-border-color-hover: rgb(16 185 129 / 75%);
+    --el-color-primary: #10b981;
+    --el-border-color-focus: #10b981;
+    --el-component-size: 40px;
+  }
+
+  :deep(.ad-performance-date-picker .el-input__wrapper),
+  :deep(.ad-performance-date-picker.el-date-editor .el-range-input),
+  :deep(.ad-performance-date-picker.el-date-editor) {
+    background: rgb(16 185 129 / 6%);
+    border: 1px solid rgb(16 185 129 / 28%);
     border-radius: 9999px;
-    box-shadow: 0 0 16px rgb(16 185 129 / 10%);
+    box-shadow: none;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
   }
 
-  .ad-performance-filter-chip__icon {
-    font-size: 16px;
-    color: var(--ad-performance-filter-accent);
-    filter: drop-shadow(0 0 6px rgb(16 185 129 / 55%));
+  :deep(.ad-performance-date-picker.el-date-editor) {
+    height: 40px;
+    padding: 0 12px;
   }
 
-  .ad-performance-filter-chip__label {
+  :deep(.ad-performance-date-picker.el-date-editor .el-range-input) {
+    font-size: 13px;
+    color: var(--el-text-color-primary);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  :deep(.ad-performance-date-picker.el-date-editor .el-range-separator) {
     font-size: 13px;
     color: var(--el-text-color-secondary);
   }
 
-  .ad-performance-filter-chip__value {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ad-performance-filter-accent);
-    text-shadow: 0 0 10px rgb(16 185 129 / 50%);
+  :deep(.ad-performance-date-picker.el-date-editor .el-range__icon) {
+    color: #10b981;
+    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+  }
+
+  :deep(.ad-performance-date-picker.el-date-editor .el-range__close-icon) {
+    color: var(--el-text-color-secondary);
+  }
+
+  :deep(.ad-performance-date-picker.el-date-editor:hover) {
+    border-color: rgb(16 185 129 / 60%);
+    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+  }
+
+  :deep(.ad-performance-date-picker.el-date-editor.is-active),
+  :deep(.ad-performance-date-picker.el-date-editor:focus-within) {
+    background: rgb(16 185 129 / 10%);
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%);
   }
 
   /* ── 下拉选择器 ──────────────────────────────────────────────── */
@@ -482,88 +487,6 @@
     box-shadow: 0 0 0 3px rgb(16 185 129 / 40%);
   }
 
-  .ad-performance-filters__date-tabs {
-    flex: none;
-  }
-
-  /* ── 日期切换滑动条 ─────────────────────────────────────────── */
-  .ad-performance-date-slider {
-    position: relative;
-    display: inline-grid;
-    flex-shrink: 0;
-    grid-template-columns: repeat(var(--date-slider-count), 1fr);
-    align-items: center;
-    height: var(--date-slider-height);
-    padding: var(--date-slider-pad);
-    overflow: hidden;
-    user-select: none;
-    background: rgb(255 255 255 / 5%);
-    border: 1px solid rgb(16 185 129 / 25%);
-    border-radius: 9999px;
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 8%),
-      0 0 20px rgb(16 185 129 / 10%);
-
-    --date-slider-height: 40px;
-    --date-slider-pad: 4px;
-    --date-slider-thumb-radius: 9999px;
-    --date-slider-inner-width: calc(100% - var(--date-slider-pad) * 2);
-    --date-slider-step: calc(var(--date-slider-inner-width) / var(--date-slider-count));
-  }
-
-  .ad-performance-date-slider__thumb {
-    position: absolute;
-    top: var(--date-slider-pad);
-    bottom: var(--date-slider-pad);
-    left: calc(var(--date-slider-pad) + var(--date-slider-step) * var(--date-slider-index));
-    width: var(--date-slider-step);
-    background: linear-gradient(90deg, #10b981, #34d399);
-    border-radius: var(--date-slider-thumb-radius);
-    box-shadow:
-      0 0 0 1px rgb(255 255 255 / 10%) inset,
-      0 0 16px rgb(16 185 129 / 45%),
-      0 0 30px rgb(16 185 129 / 20%);
-    transition:
-      left 180ms ease,
-      width 180ms ease;
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none;
-    }
-  }
-
-  .ad-performance-date-slider__item {
-    position: relative;
-    z-index: 1;
-    height: calc(var(--date-slider-height) - var(--date-slider-pad) * 2);
-    padding: 0 16px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--el-text-color-secondary);
-    white-space: nowrap;
-    touch-action: manipulation;
-    cursor: pointer;
-    background: transparent;
-    border: none;
-    border-radius: 9999px;
-    outline: none;
-    transition: color 0.18s ease;
-  }
-
-  .ad-performance-date-slider__item:hover {
-    color: var(--el-text-color-primary);
-  }
-
-  .ad-performance-date-slider__item.is-active {
-    font-weight: 700;
-    color: #fff;
-    text-shadow: 0 0 10px rgb(255 255 255 / 55%);
-  }
-
-  .ad-performance-date-slider__item:focus-visible {
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 40%);
-  }
-
   /* ── 小屏响应 ─────────────────────────────────────────────────── */
   @media (width <= 768px) {
     .ad-performance-filters {
@@ -576,12 +499,9 @@
       justify-content: flex-start;
     }
 
-    .ad-performance-date-slider {
+    .ad-performance-date-picker {
       width: 100%;
-    }
-
-    .ad-performance-date-slider__item {
-      padding: 0 10px;
+      max-width: 100%;
     }
   }
 </style>
