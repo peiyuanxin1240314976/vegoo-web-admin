@@ -25,6 +25,7 @@ export type BusinessReportContext = {
   byCountry: Ref<ByCountryResponse | null>
   platformCountry: Ref<PlatformCountryResponse | null>
   campaigns: Ref<CampaignsResponse | null>
+  setCampaignsPage: (page: number) => void
 }
 
 export const businessReportContextKey: InjectionKey<BusinessReportContext> =

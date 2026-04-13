@@ -849,6 +849,8 @@
   const byCountry = ref<ByCountryResponse | null>(null)
   const platformCountry = ref<PlatformCountryResponse | null>(null)
   const campaigns = ref<CampaignsResponse | null>(null)
+  const campaignsCurrentPage = ref(1)
+  const campaignsPageSize = ref(20)
 
   /** 侧栏列表：仅由 app-list 接口更新，与右侧详情解耦 */
   const sidebarAppList = ref<AppListItem[]>([])
@@ -977,7 +979,8 @@
     adPlatform,
     byCountry,
     platformCountry,
-    campaigns
+    campaigns,
+    setCampaignsPage
   })
 
   function buildSidebarParams(): ReportAppListQueryParams {
@@ -993,18 +996,33 @@
 
   function buildReportParams(): ReportQueryParams {
     const id = selectedAppId.value
+    const campaignsPaginationParams =
+      activeTab.value === 'campaigns'
+        ? {
+            currentPage: campaignsCurrentPage.value,
+            pageSize: campaignsPageSize.value
+          }
+        : {}
     return {
       period: period.value,
       startDate: reportRange.value.startDate,
       endDate: reportRange.value.endDate,
       appId: id === 'overall' ? '' : id,
       account: '',
-      ...topBarFilters.value
+      ...topBarFilters.value,
+      ...campaignsPaginationParams
     }
   }
 
   let reportRequestSeq = 0
   let sidebarRequestSeq = 0
+
+  function setCampaignsPage(page: number) {
+    const next = page > 0 ? page : 1
+    if (campaignsCurrentPage.value === next) return
+    campaignsCurrentPage.value = next
+    void refreshReportDetail()
+  }
 
   async function refreshSidebarAppList(resetSelectionToOverall: boolean) {
     if (compareMode.value) return
@@ -1093,6 +1111,7 @@
     ],
     (now, prev) => {
       if (compareMode.value) return
+      campaignsCurrentPage.value = 1
       const first = !prev
       const onlyTabChanged =
         !first &&
