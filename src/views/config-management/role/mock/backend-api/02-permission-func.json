@@ -1,0 +1,136 @@
+{
+  "_comment": "角色管理 - 中间面板 Tab 1：功能权限树与当前角色的勾选状态",
+  "fieldDescription": {
+    "request": {
+      "roleId": { "type": "number", "required": true, "description": "当前选中的角色 ID" }
+    },
+    "response": {
+      "modules": {
+        "type": "FuncPermissionModule[]",
+        "required": true,
+        "description": "大模块与功能权限点集合"
+      }
+    },
+    "FuncPermissionModule": {
+      "moduleId": { "type": "string", "required": true, "description": "模块唯一标识" },
+      "moduleName": { "type": "string", "required": true, "description": "模块名称" },
+      "permissions": {
+        "type": "FuncPermissionItem[]",
+        "required": true,
+        "description": "具体功能权限点"
+      }
+    },
+    "FuncPermissionItem": {
+      "permissionId": { "type": "string", "required": true, "description": "功能权限点 ID" },
+      "permissionName": { "type": "string", "required": true, "description": "权限点名称" },
+      "type": {
+        "type": "string",
+        "required": true,
+        "description": "权限类型：查看还是操作",
+        "enum": ["view", "operation"]
+      },
+      "checked": { "type": "boolean", "required": true, "description": "该角色当前是否拥有此权限" },
+      "statusText": {
+        "type": "string",
+        "required": true,
+        "description": "UI 上展示的具体权限状态短文案（如 '查看', '操作', '—', '×禁止'）"
+      }
+    }
+  },
+  "sampleRequest": { "roleId": 3 },
+  "sampleResponse": {
+    "modules": [
+      {
+        "moduleId": "cockpit",
+        "moduleName": "经营驾驶舱",
+        "permissions": [
+          {
+            "permissionId": "cockpit:view:kpi",
+            "permissionName": "查看核心KPI指标",
+            "type": "view",
+            "checked": true,
+            "statusText": "查看"
+          },
+          {
+            "permissionId": "cockpit:op:export",
+            "permissionName": "导出报表",
+            "type": "operation",
+            "checked": true,
+            "statusText": "操作"
+          },
+          {
+            "permissionId": "cockpit:op:delete",
+            "permissionName": "删除报表",
+            "type": "operation",
+            "checked": false,
+            "statusText": "×禁止"
+          }
+        ]
+      },
+      {
+        "moduleId": "delivery",
+        "moduleName": "投放管理",
+        "permissions": [
+          {
+            "permissionId": "delivery:view:list",
+            "permissionName": "查看广告系列列表",
+            "type": "view",
+            "checked": true,
+            "statusText": "查看"
+          },
+          {
+            "permissionId": "delivery:op:create",
+            "permissionName": "创建广告系列",
+            "type": "operation",
+            "checked": true,
+            "statusText": "操作"
+          },
+          {
+            "permissionId": "delivery:op:delete",
+            "permissionName": "删除广告",
+            "type": "operation",
+            "checked": false,
+            "statusText": "×禁止"
+          }
+        ]
+      },
+      {
+        "moduleId": "revenue",
+        "moduleName": "变现管理",
+        "permissions": [
+          {
+            "permissionId": "revenue:view:data",
+            "permissionName": "查看变现数据",
+            "type": "view",
+            "checked": true,
+            "statusText": "查看"
+          },
+          {
+            "permissionId": "revenue:op:configure",
+            "permissionName": "修改变现配置",
+            "type": "operation",
+            "checked": false,
+            "statusText": "×禁止"
+          },
+          {
+            "permissionId": "revenue:op:export",
+            "permissionName": "导出变现报表",
+            "type": "operation",
+            "checked": true,
+            "statusText": "操作"
+          }
+        ]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/role/permissions/func",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "roleId (必填)",
+    "responseBody": "modules[]"
+  },
+  "apiSuggestion": {
+    "notes": ["UI 切换到 Tab 1 或选中新角色时调用，专注功能点（View/Op）映射。"]
+  }
+}

@@ -1,31 +1,29 @@
 <!-- 权限配置 - 功能权限 Tab 内容 -->
 <template>
-  <div class="role-permission-func flex flex-col">
+  <div class="role-permission-func flex flex-col" v-loading="loading">
     <ElScrollbar class="permission-scroll">
-      <div v-for="module in permissionModules" :key="module.key" class="module-card">
-        <div class="module-card__head" @click="toggleModule(module.key)">
-          <span class="module-name">{{ module.name }}</span>
+      <div v-for="module in permissionModules" :key="module.moduleId" class="module-card">
+        <div class="module-card__head" @click="toggleModule(module.moduleId)">
+          <span class="module-name">{{ module.moduleName }}</span>
           <ElSwitch v-model="module.enabled" size="small" @click.stop />
         </div>
         <div
-          v-show="module.enabled && expandedModules.includes(module.key)"
+          v-show="module.enabled && expandedModules.includes(module.moduleId)"
           class="module-card__body"
         >
-          <div v-for="perm in module.permissions" :key="perm.key" class="perm-row">
-            <span class="perm-name">{{ perm.name }}</span>
-            <span class="perm-view">{{ perm.view }}</span>
-            <span class="perm-op">{{ perm.operation }}</span>
-            <span class="perm-scope">{{ perm.dataScope }}</span>
+          <div v-for="perm in module.permissions" :key="perm.permissionId" class="perm-row">
+            <span class="perm-name">{{ perm.permissionName }}</span>
+            <span class="perm-view">{{ perm.type === 'view' ? perm.statusText : '—' }}</span>
+            <span class="perm-op">{{ perm.type === 'operation' ? perm.statusText : '—' }}</span>
+            <span class="perm-scope">—</span>
           </div>
         </div>
         <div
-          v-if="module.enabled && !expandedModules.includes(module.key)"
+          v-if="module.enabled && !expandedModules.includes(module.moduleId)"
           class="module-card__summary"
-          @click="toggleModule(module.key)"
+          @click="toggleModule(module.moduleId)"
         >
-          查看:{{ module.viewCount }}项 / 操作:{{ module.opCount }}项 / 数据范围:{{
-            module.dataScopeText
-          }}
+          已配置功能权限点: {{ module.permissions.filter((p: any) => p.checked).length }} 项
         </div>
       </div>
     </ElScrollbar>
@@ -36,21 +34,51 @@
 </template>
 
 <script setup lang="ts">
-  import { MOCK_PERMISSION_MODULES } from '../mock/data'
-  import type { MockPermissionModule } from '../mock/data'
+  import { fetchRolePermissionFunc } from '@/api/config-management/role'
+  import { watch, ref } from 'vue'
 
   defineOptions({ name: 'RolePermissionFunc' })
+
+  const props = defineProps<{
+    roleId?: number
+  }>()
 
   defineEmits<{
     (e: 'compare'): void
   }>()
 
-  const expandedModules = ref<string[]>(['cockpit', 'delivery'])
-  const permissionModules = ref<MockPermissionModule[]>([...MOCK_PERMISSION_MODULES])
+  const expandedModules = ref<string[]>([])
+  const permissionModules = ref<any[]>([])
+  const loading = ref(false)
+
+  async function loadData() {
+    if (!props.roleId) {
+      permissionModules.value = []
+      return
+    }
+    loading.value = true
+    try {
+      const res = await fetchRolePermissionFunc({ roleId: props.roleId })
+      permissionModules.value = res.data?.modules || []
+      // 默认展开有权限的前几个模块（简化处理）
+      expandedModules.value = permissionModules.value.slice(0, 2).map((m: any) => m.moduleId)
+    } catch (error) {
+      console.error('获取功能权限失败', error)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  watch(
+    () => props.roleId,
+    () => {
+      loadData()
+    },
+    { immediate: true }
+  )
 
   function reset() {
-    expandedModules.value = ['cockpit', 'delivery']
-    permissionModules.value = [...MOCK_PERMISSION_MODULES]
+    loadData()
   }
 
   defineExpose({ reset })

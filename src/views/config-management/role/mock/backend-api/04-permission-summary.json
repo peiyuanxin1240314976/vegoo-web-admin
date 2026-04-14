@@ -1,0 +1,71 @@
+{
+  "_comment": "角色管理 - 右上角：特定角色的权限摘要统计（占比与对比）",
+  "fieldDescription": {
+    "request": {
+      "roleId": { "type": "number", "required": true, "description": "当前选中的角色 ID" }
+    },
+    "response": {
+      "summary": { "type": "PermissionSummary", "required": true, "description": "统计详情对象" }
+    },
+    "PermissionSummary": {
+      "funcEnabled": {
+        "type": "number",
+        "required": true,
+        "description": "当前角色已启用的功能权限数"
+      },
+      "funcTotal": { "type": "number", "required": true, "description": "系统功能权限总数" },
+      "dataScopeText": {
+        "type": "string",
+        "required": true,
+        "description": "整体数据权限范围概括文案（如 '中等范围'）"
+      },
+      "percent": {
+        "type": "number",
+        "required": true,
+        "description": "该角色的权限绝对覆盖率占比 (0-100)"
+      },
+      "rolePercentList": {
+        "type": "SummaryRoleItem[]",
+        "required": true,
+        "description": "其他所有角色的权限对比占比列表"
+      }
+    },
+    "SummaryRoleItem": {
+      "roleId": { "type": "number", "required": true, "description": "对比角色的 ID" },
+      "roleName": { "type": "string", "required": true, "description": "对比角色名称" },
+      "percent": { "type": "number", "required": true, "description": "该角色的权限占比 (0-100)" },
+      "isCurrent": {
+        "type": "boolean",
+        "required": false,
+        "description": "是否是当前正在查看的这个角色（用于高亮）"
+      }
+    }
+  },
+  "sampleRequest": { "roleId": 3 },
+  "sampleResponse": {
+    "summary": {
+      "funcEnabled": 32,
+      "funcTotal": 58,
+      "dataScopeText": "中等范围",
+      "percent": 55,
+      "rolePercentList": [
+        { "roleId": 1, "roleName": "超级管理员", "percent": 100 },
+        { "roleId": 2, "roleName": "CEO管理", "percent": 85 },
+        { "roleId": 3, "roleName": "投放人员", "percent": 55, "isCurrent": true },
+        { "roleId": 4, "roleName": "变现人员", "percent": 40 },
+        { "roleId": 5, "roleName": "素材设计师", "percent": 35 },
+        { "roleId": 6, "roleName": "运营维护", "percent": 30 }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/role/permissions/summary",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "roleId (必填)",
+    "responseBody": "summary"
+  },
+  "apiSuggestion": {
+    "notes": ["此为概览统计组件专用的按需加载接口，避免混入中间树表的庞大 payload 中。"]
+  }
+}

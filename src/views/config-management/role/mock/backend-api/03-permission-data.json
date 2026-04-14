@@ -1,0 +1,67 @@
+{
+  "_comment": "角色管理 - 中间面板 Tab 2：数据权限范围映射",
+  "fieldDescription": {
+    "request": {
+      "roleId": { "type": "number", "required": true, "description": "当前选中的角色 ID" }
+    },
+    "response": {
+      "modules": {
+        "type": "DataPermissionModule[]",
+        "required": true,
+        "description": "按大模块下发当前的数据权限作用域"
+      }
+    },
+    "DataPermissionModule": {
+      "moduleId": { "type": "string", "required": true, "description": "模块唯一标识" },
+      "moduleName": { "type": "string", "required": true, "description": "模块名称" },
+      "dataScope": {
+        "type": "string",
+        "required": true,
+        "description": "该模块的数据权限范围枚举标识",
+        "enum": ["all", "personal", "readonly", "none"]
+      },
+      "dataScopeText": { "type": "string", "required": true, "description": "数据权限范围展示文案" }
+    }
+  },
+  "sampleRequest": { "roleId": 3 },
+  "sampleResponse": {
+    "modules": [
+      {
+        "moduleId": "cockpit",
+        "moduleName": "经营驾驶舱",
+        "dataScope": "all",
+        "dataScopeText": "全部应用"
+      },
+      {
+        "moduleId": "delivery",
+        "moduleName": "投放管理",
+        "dataScope": "personal",
+        "dataScopeText": "仅自己负责的"
+      },
+      {
+        "moduleId": "revenue",
+        "moduleName": "变现管理",
+        "dataScope": "readonly",
+        "dataScopeText": "只读模式"
+      },
+      {
+        "moduleId": "material",
+        "moduleName": "素材管理",
+        "dataScope": "none",
+        "dataScopeText": "—"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/role/permissions/data",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "roleId (必填)",
+    "responseBody": "modules[]"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "UI 切换到 Tab 2 或选中新角色时调用，专门拉取数据隔离配置。如果后端合并在一个宽表也可以，但前端契约和调用时按 Tab 逻辑切分保证响应最快。"
+    ]
+  }
+}

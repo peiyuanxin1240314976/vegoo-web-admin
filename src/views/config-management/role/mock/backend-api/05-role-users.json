@@ -1,0 +1,71 @@
+{
+  "_comment": "角色管理 - 右下角：当前角色下的关联用户列表",
+  "fieldDescription": {
+    "request": {
+      "roleId": { "type": "number", "required": true, "description": "当前选中的角色 ID" }
+    },
+    "response": {
+      "items": { "type": "RoleUserItem[]", "required": true, "description": "用户列表（暂不分页）" }
+    },
+    "RoleUserItem": {
+      "id": { "type": "string", "required": true, "description": "用户 ID" },
+      "userName": { "type": "string", "required": true, "description": "用户名" },
+      "userEmail": { "type": "string", "required": true, "description": "邮箱" },
+      "avatarText": { "type": "string", "required": true, "description": "头像缩写（UI展示）" },
+      "statusText": {
+        "type": "string",
+        "required": true,
+        "description": "在线状态短文案（如 '活跃', '离线'）"
+      },
+      "statusClass": {
+        "type": "string",
+        "required": true,
+        "description": "控制状态小圆点颜色的 class 标记",
+        "enum": ["status-dot--active", "status-dot--offline"]
+      },
+      "lastActive": { "type": "string", "required": true, "description": "最近活跃时间 YYYY-MM-DD" }
+    }
+  },
+  "sampleRequest": { "roleId": 3 },
+  "sampleResponse": {
+    "items": [
+      {
+        "id": "5",
+        "userName": "张三",
+        "userEmail": "zhangsan@vegoo.com",
+        "avatarText": "ZS",
+        "statusText": "活跃",
+        "statusClass": "status-dot--active",
+        "lastActive": "2026-01-15"
+      },
+      {
+        "id": "6",
+        "userName": "李四",
+        "userEmail": "lisi@vegoo.com",
+        "avatarText": "LS",
+        "statusText": "活跃",
+        "statusClass": "status-dot--active",
+        "lastActive": "2026-01-10"
+      },
+      {
+        "id": "7",
+        "userName": "王五",
+        "userEmail": "wangwu@vegoo.com",
+        "avatarText": "WW",
+        "statusText": "离线",
+        "statusClass": "status-dot--offline",
+        "lastActive": "2026-01-08"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/role/users",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "roleId (必填)",
+    "responseBody": "items[]"
+  },
+  "apiSuggestion": {
+    "notes": ["右侧列表单独调用。当无用户时返回 items: []。"]
+  }
+}

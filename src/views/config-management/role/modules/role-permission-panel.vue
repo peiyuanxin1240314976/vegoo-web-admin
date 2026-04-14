@@ -17,7 +17,11 @@
               功能权限
             </span>
           </template>
-          <RolePermissionFunc ref="funcRef" @compare="emit('compare')" />
+          <RolePermissionFunc
+            :role-id="selectedRole?.roleId"
+            ref="funcRef"
+            @compare="emit('compare')"
+          />
         </ElTabPane>
         <ElTabPane label="数据权限" name="data">
           <RolePermissionData

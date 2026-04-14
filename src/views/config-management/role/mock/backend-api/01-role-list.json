@@ -1,0 +1,66 @@
+{
+  "_comment": "角色管理 - 左侧角色列表",
+  "fieldDescription": {
+    "request": {
+      "keyword": { "type": "string", "required": false, "description": "角色名称关键字搜索" }
+    },
+    "response": {
+      "items": {
+        "type": "RoleListItem[]",
+        "required": true,
+        "description": "角色列表数组（目前不分页）"
+      }
+    },
+    "RoleListItem": {
+      "roleId": { "type": "number", "required": true, "description": "角色ID" },
+      "roleName": { "type": "string", "required": true, "description": "角色名称" },
+      "roleCode": { "type": "string", "required": true, "description": "角色编码" },
+      "description": { "type": "string", "required": true, "description": "角色描述" },
+      "enabled": { "type": "boolean", "required": true, "description": "是否启用" },
+      "createTime": {
+        "type": "string",
+        "required": true,
+        "description": "创建时间 YYYY-MM-DD HH:mm:ss"
+      }
+    }
+  },
+  "sampleRequest": {},
+  "sampleResponse": {
+    "items": [
+      {
+        "roleId": 1,
+        "roleName": "超级管理员",
+        "roleCode": "super_admin",
+        "description": "系统最高权限",
+        "enabled": true,
+        "createTime": "2025-01-01 00:00:00"
+      },
+      {
+        "roleId": 2,
+        "roleName": "CEO管理",
+        "roleCode": "ceo",
+        "description": "经营决策时图",
+        "enabled": true,
+        "createTime": "2025-01-01 00:00:00"
+      },
+      {
+        "roleId": 3,
+        "roleName": "投放人员",
+        "roleCode": "delivery",
+        "description": "投放操作与分析",
+        "enabled": true,
+        "createTime": "2025-01-01 00:00:00"
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/config-management/role/list",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?",
+    "responseBody": "items[]"
+  },
+  "apiSuggestion": {
+    "notes": ["若无数据，必须返回 items: []。列表数据较少时可由前端本地过滤。"]
+  }
+}

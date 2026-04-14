@@ -61,22 +61,22 @@
   import type { RoleUserItem } from './modules/role-user-panel.vue'
   import RoleEditDialog from './modules/role-edit-dialog.vue'
   import RolePermissionDialog from './modules/role-permission-dialog.vue'
+  import { getMockRoleDescription } from './mock/data'
   import {
-    getMockRoleUsers,
-    getMockPermissionSummary,
-    getMockRoleDescription,
-    MOCK_ROLE_LIST
-  } from './mock/data'
+    fetchRoleList,
+    fetchRoleUsers,
+    fetchRolePermissionSummary
+  } from '@/api/config-management/role'
   import { ElMessage } from 'element-plus'
 
   defineOptions({ name: 'Role' })
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
-  /** 左侧角色列表：使用假数据，见 @/views/config-management/role/mock/data.ts */
-  const roleList = ref<RoleListItem[]>(MOCK_ROLE_LIST as RoleListItem[])
+  /** 左侧角色列表：现在从 API 请求，而不是直接使用本地假数据常量 */
+  const roleList = ref<RoleListItem[]>([])
   /** 当前选中的角色，默认选中第一项以保证中间列、右侧列有内容展示 */
-  const selectedRole = ref<RoleListItem | null>(MOCK_ROLE_LIST[0] as RoleListItem)
+  const selectedRole = ref<RoleListItem | null>(null)
   const dialogVisible = ref(false)
   const permissionDialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
@@ -92,14 +92,10 @@
     6: 3
   })
 
-  /** 当前选中角色下的用户（假数据，见 @/views/config-management/role/mock/data.ts） */
-  const currentRoleUsers = computed<RoleUserItem[]>(() => {
-    if (!selectedRole.value) return []
-    return getMockRoleUsers(selectedRole.value.roleId)
-  })
-
-  /** 权限摘要（假数据，见 @/views/config-management/role/mock/data.ts） */
-  const permissionSummary = computed(() => getMockPermissionSummary(selectedRole.value?.roleId))
+  /** 当前选中角色下的用户列表数据（通过监听选中角色后从 API 获取） */
+  const currentRoleUsers = ref<RoleUserItem[]>([])
+  /** 权限摘要数据（通过监听选中角色后从 API 获取） */
+  const permissionSummary = ref<any>(null)
 
   /** 角色说明（假数据，见 @/views/config-management/role/mock/data.ts） */
   const roleDescription = computed(() => {
@@ -107,11 +103,45 @@
     return selectedRole.value.description || getMockRoleDescription(selectedRole.value.roleName)
   })
 
-  /** 刷新角色列表（当前用假数据，仅重置为 mock 列表并选中第一项） */
-  function loadRoleList() {
-    roleList.value = MOCK_ROLE_LIST as RoleListItem[]
-    if (roleList.value.length && !selectedRole.value) {
-      selectedRole.value = roleList.value[0]
+  /** 监听选中角色的变化，获取该角色下的用户与摘要数据 */
+  watch(
+    () => selectedRole.value,
+    async (newVal) => {
+      if (newVal) {
+        const { roleId } = newVal
+        try {
+          const [usersRes, summaryRes] = await Promise.all([
+            fetchRoleUsers({ roleId }),
+            fetchRolePermissionSummary({ roleId })
+          ])
+          currentRoleUsers.value = usersRes.data?.items || []
+          permissionSummary.value = summaryRes.data?.summary || null
+        } catch (error) {
+          console.error('获取角色详情数据失败', error)
+        }
+      } else {
+        currentRoleUsers.value = []
+        permissionSummary.value = null
+      }
+    }
+  )
+
+  /** 刷新角色列表（调用接口并根据结果重新选中第一项） */
+  async function loadRoleList() {
+    try {
+      const res = await fetchRoleList()
+      roleList.value = res.data?.items || []
+      // 只要有数据且当前未选中或选中的不在新列表中，就默认选中第一个
+      if (roleList.value.length) {
+        const currentId = selectedRole.value?.roleId
+        if (!currentId || !roleList.value.some((r) => r.roleId === currentId)) {
+          selectedRole.value = roleList.value[0]
+        }
+      } else {
+        selectedRole.value = null
+      }
+    } catch (error) {
+      console.error('获取角色列表失败', error)
     }
   }
 
