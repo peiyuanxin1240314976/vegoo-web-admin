@@ -57,13 +57,21 @@
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetUserList } from '@/api/system-manage'
+  import {
+    fetchStats,
+    fetchUserList,
+    createUser,
+    updateUser,
+    updatePermission,
+    disableUser
+  } from '@/api/config-management'
   import UserLeftPanel from './modules/user-left-panel.vue'
   import UserRightPanel from './modules/user-right-panel.vue'
   import UserDialog from './modules/user-dialog.vue'
   import { ElTag, ElMessageBox, ElImage, ElMessage } from 'element-plus'
   import { DialogType } from '@/types'
-  import type { UserStats, UserFilterForm } from './modules/user-left-panel.vue'
+  import type { UserFilterForm } from './modules/user-left-panel.vue'
+  import type { UserStats } from './types'
 
   defineOptions({ name: 'User' })
 
@@ -150,7 +158,7 @@
   } = useTable({
     // 核心配置
     core: {
-      apiFn: fetchGetUserList,
+      apiFn: fetchUserList,
       apiParams: {
         current: 1,
         size: USER_LIST_MAX_PAGE_SIZE,
@@ -234,17 +242,23 @@
   })
 
   /**
-   * 用户统计：total 为服务端分页总数；其余三项为「当前页」条数（与接口未返回全局分布时对齐）
+   * 用户统计：来自独立接口
    */
-  const userStats = computed<UserStats>(() => {
-    const list = data?.value ?? []
-    const totalCount = pagination?.total ?? 0
-    return {
-      total: totalCount,
-      active: list.filter((r: UserListItem) => r.status === '1').length,
-      disabled: list.filter((r: UserListItem) => r.status === '4').length,
-      pending: list.filter((r: UserListItem) => r.status === '2' || r.status === '3').length
+  const userStats = ref<UserStats>({ total: 0, active: 0, disabled: 0, pending: 0 })
+
+  /** 加载统计卡片 */
+  const loadStats = async () => {
+    try {
+      const res = await fetchStats()
+      userStats.value = res
+    } catch {
+      // 统计接口失败不影响主流程
     }
+  }
+
+  /** 初始化 */
+  onMounted(() => {
+    loadStats()
   })
 
   /**
@@ -287,26 +301,47 @@
   }
 
   /**
-   * 删除用户
+   * 删除用户（禁用）
    */
   const deleteUser = (row: UserListItem): void => {
-    console.log('删除用户:', row)
+    console.log('禁用用户:', row)
     ElMessageBox.confirm(`确定要禁用该用户吗？`, '禁用用户', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'error'
-    }).then(() => {
+    }).then(async () => {
+      await disableUser({ id: row.id, operator: 'current_user' })
       ElMessage.success('已禁用')
+      if (currentDetailUser.value?.id === row.id) {
+        currentDetailUser.value = null
+      }
+      refreshData()
+      loadStats()
     })
   }
 
   /**
    * 处理弹窗提交事件
    */
-  const handleDialogSubmit = async () => {
+  const handleDialogSubmit = async (formData: Record<string, unknown>) => {
     try {
+      const payload = {
+        userName: String(formData.username),
+        userPhone: String(formData.phone),
+        userGender: String(formData.gender),
+        userRoles: Array.isArray(formData.role) ? formData.role : []
+      }
+      if (dialogType.value === 'add') {
+        await createUser(payload)
+        ElMessage.success('创建成功')
+      } else {
+        await updateUser({ id: Number(currentUserData.value?.id), ...payload })
+        ElMessage.success('更新成功')
+      }
       dialogVisible.value = false
       currentUserData.value = {}
+      refreshData()
+      loadStats()
     } catch (error) {
       console.error('提交失败:', error)
     }
@@ -337,9 +372,25 @@
   }
 
   /** 右侧面板保存（角色、可访问应用、备注） */
-  const handleRightPanelSave = (payload: { role: string; apps: string[]; remark: string }) => {
-    console.log('保存用户详情:', currentDetailUser.value?.id, payload)
-    ElMessage.success('保存成功')
+  const handleRightPanelSave = async (payload: {
+    role: string
+    apps: string[]
+    remark: string
+  }) => {
+    if (!currentDetailUser.value) return
+    try {
+      await updatePermission({
+        id: currentDetailUser.value.id,
+        role: payload.role,
+        apps: payload.apps,
+        remark: payload.remark
+      })
+      ElMessage.success('保存成功')
+      refreshData()
+      loadStats()
+    } catch (error) {
+      console.error('保存失败:', error)
+    }
   }
 
   /** 右侧面板禁用当前用户 */
@@ -349,9 +400,12 @@
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
-    }).then(() => {
+    }).then(async () => {
+      await disableUser({ id: currentDetailUser.value!.id, operator: 'current_user' })
       ElMessage.success('已禁用')
       currentDetailUser.value = null
+      refreshData()
+      loadStats()
     })
   }
 </script>

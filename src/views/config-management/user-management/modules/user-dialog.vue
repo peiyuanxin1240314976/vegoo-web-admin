@@ -50,7 +50,7 @@
 
   interface Emits {
     (e: 'update:visible', value: boolean): void
-    (e: 'submit'): void
+    (e: 'submit', payload: Record<string, unknown>): void
   }
 
   const props = defineProps<Props>()
@@ -134,9 +134,8 @@
 
     await formRef.value.validate((valid) => {
       if (valid) {
-        ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
         dialogVisible.value = false
-        emit('submit')
+        emit('submit', { ...formData })
       }
     })
   }
