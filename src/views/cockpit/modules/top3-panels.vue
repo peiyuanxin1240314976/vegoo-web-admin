@@ -1,7 +1,13 @@
 <template>
   <div class="cockpit-top3-panels">
     <!-- Top3 收入应用 - 黄色 -->
-    <div class="top3-module top3-module--revenue">
+    <div
+      :class="[
+        'top3-module',
+        'top3-module--revenue',
+        { 'top3-module--fills': dateRange === 'today' }
+      ]"
+    >
       <div class="top3-border-spin" aria-hidden="true" />
       <div class="top3-module__header">
         <span class="top3-module__icon top3-module__icon--trophy">
@@ -27,7 +33,7 @@
     </div>
 
     <!-- Top3 差评产品 - 红色 -->
-    <div class="top3-module top3-module--badreview">
+    <div v-if="dateRange !== 'today'" class="top3-module top3-module--badreview">
       <div class="top3-border-spin" aria-hidden="true" />
       <div class="top3-module__header">
         <span class="top3-module__icon top3-module__icon--dislike">
@@ -51,7 +57,13 @@
     </div>
 
     <!-- Top3 用户增长 - 绿色 -->
-    <div class="top3-module top3-module--growth">
+    <div
+      :class="[
+        'top3-module',
+        'top3-module--growth',
+        { 'top3-module--fills': dateRange === 'today' }
+      ]"
+    >
       <div class="top3-border-spin" aria-hidden="true" />
       <div class="top3-module__header">
         <span class="top3-module__icon top3-module__icon--trend">
@@ -133,8 +145,9 @@
       topRevenue?: CockpitTopRevenueItem[]
       topBadReview?: CockpitTopBadReviewItem[]
       topUser?: CockpitTopUserItem[]
+      dateRange?: string
     }>(),
-    { topRevenue: () => [], topBadReview: () => [], topUser: () => [] }
+    { topRevenue: () => [], topBadReview: () => [], topUser: () => [], dateRange: '' }
   )
 
   type DisplayTopBadReviewItem = {
@@ -176,15 +189,10 @@
 
   .top3-module {
     --top3-accent: #3b82f6;
-    --top3-accent-2: #06b6d4;
-    --top3-glow: rgb(59 130 246 / 45%);
-    --top3-glow-2: rgb(6 182 212 / 25%);
-    --top3-spin-a: rgb(16 185 129 / 55%);
-    --top3-spin-b: rgb(59 130 246 / 48%);
-    --top3-spin-c: rgb(168 85 247 / 38%);
 
     position: relative;
     display: flex;
+    flex: 0 0 auto;
     flex-direction: column;
     overflow: hidden;
     background-color: rgb(8 8 12 / 98%);
@@ -212,6 +220,17 @@
     transition:
       box-shadow 0.4s var(--ease-out),
       border-color 0.28s var(--ease-default);
+
+    &.top3-module--fills {
+      flex: 1;
+    }
+
+    --top3-accent-2: #06b6d4;
+    --top3-glow: rgb(59 130 246 / 45%);
+    --top3-glow-2: rgb(6 182 212 / 25%);
+    --top3-spin-a: rgb(16 185 129 / 55%);
+    --top3-spin-b: rgb(59 130 246 / 48%);
+    --top3-spin-c: rgb(168 85 247 / 38%);
 
     > *:not(.top3-border-spin) {
       position: relative;

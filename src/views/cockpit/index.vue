@@ -95,11 +95,14 @@
                   />
                 </div>
               </template>
-              <CockpitTop3Panels
-                :top-revenue="overview?.topRevenue ?? []"
-                :top-bad-review="overview?.topBadReview ?? []"
-                :top-user="overview?.topUser ?? []"
-              />
+              <div class="cockpit-top3-panels-wrap">
+                <CockpitTop3Panels
+                  :top-revenue="overview?.topRevenue ?? []"
+                  :top-bad-review="overview?.topBadReview ?? []"
+                  :top-user="overview?.topUser ?? []"
+                  :date-range="dateRange"
+                />
+              </div>
             </ElSkeleton>
           </div>
         </ElCol>
@@ -395,8 +398,26 @@
     }
   }
 
-  .cockpit-row-2 .cockpit-col3-row1 {
-    margin-bottom: 0;
+  .cockpit-row-2 {
+    align-items: stretch;
+
+    .cockpit-col3-row1 {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      margin-bottom: 0;
+    }
+  }
+
+  .cockpit-top3-panels-wrap {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .cockpit-top3-panels-wrap :deep(.cockpit-top3-panels) {
+    height: 100%;
   }
 
   @media (width <= 768px) {
