@@ -1731,11 +1731,11 @@
     color: $color-text-axure;
   }
 
-  /* 广告成效：绿色胶囊日期范围（与 filter-select 同系） */
+  /* 广告成效：胶囊日期范围 */
   .aps-filter-toolbar .header-left :deep(.aps-date-picker) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
+    --el-input-focus-border-color: var(--theme-color);
+    --el-border-color-hover: color-mix(in srgb, var(--theme-color) 75%, transparent);
+    --el-color-primary: var(--theme-color);
 
     width: 268px;
 
@@ -1744,8 +1744,8 @@
       min-height: 40px;
       padding: 0 14px;
       color: $color-text-axure;
-      background: rgb(16 185 129 / 6%);
-      border: 1px solid rgb(16 185 129 / 28%);
+      background: color-mix(in srgb, var(--theme-color) 6%, transparent);
+      border: 1px solid color-mix(in srgb, var(--theme-color) 28%, transparent);
       border-radius: 9999px;
       box-shadow: none;
       transition:
@@ -1756,15 +1756,15 @@
 
     .el-range-editor:hover,
     .el-range-editor.el-input__wrapper:hover {
-      border-color: rgb(16 185 129 / 60%);
-      box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+      border-color: color-mix(in srgb, var(--theme-color) 60%, transparent);
+      box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 18%, transparent);
     }
 
     .el-range-editor.is-active,
     .el-range-editor.el-input__wrapper.is-focus {
-      background: rgb(16 185 129 / 10%);
-      border-color: #10b981;
-      box-shadow: 0 0 0 2px rgb(16 185 129 / 20%);
+      background: color-mix(in srgb, var(--theme-color) 10%, transparent);
+      border-color: var(--theme-color);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 20%, transparent);
     }
 
     .el-range-input,
@@ -1774,7 +1774,7 @@
 
     .el-range__icon,
     .el-range__close-icon {
-      color: #10b981;
+      color: var(--theme-color);
     }
   }
 
@@ -1785,21 +1785,21 @@
     .el-range-editor,
     .el-range-editor.el-input__wrapper {
       color: var(--aps-text-primary);
-      background: rgb(16 185 129 / 8%);
-      border: 1px solid rgb(16 185 129 / 30%);
+      background: color-mix(in srgb, var(--theme-color) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--theme-color) 30%, transparent);
     }
 
     .el-range-editor:hover,
     .el-range-editor.el-input__wrapper:hover {
-      border-color: rgb(5 150 105 / 45%);
-      box-shadow: 0 0 12px rgb(16 185 129 / 14%);
+      border-color: color-mix(in srgb, var(--theme-color) 45%, transparent);
+      box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 14%, transparent);
     }
 
     .el-range-editor.is-active,
     .el-range-editor.el-input__wrapper.is-focus {
-      background: rgb(16 185 129 / 12%);
-      border-color: #10b981;
-      box-shadow: 0 0 0 2px rgb(16 185 129 / 18%);
+      background: color-mix(in srgb, var(--theme-color) 12%, transparent);
+      border-color: var(--theme-color);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 18%, transparent);
     }
 
     .el-range-input,
@@ -1840,12 +1840,12 @@
     flex: 0 0 auto;
   }
 
-  /* 广告成效：绿色胶囊下拉 */
+  /* 广告成效：胶囊下拉 */
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
+    --el-input-focus-border-color: var(--theme-color);
+    --el-border-color-hover: color-mix(in srgb, var(--theme-color) 75%, transparent);
+    --el-color-primary: var(--theme-color);
+    --el-border-color-focus: var(--theme-color);
     --el-component-size: 40px;
   }
 
@@ -1853,8 +1853,8 @@
     min-height: 40px;
     padding: 0 12px;
     color: $color-text-axure;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
+    background: color-mix(in srgb, var(--theme-color) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--theme-color) 28%, transparent);
     border-radius: 9999px;
     box-shadow: none;
     transition:
@@ -1864,18 +1864,18 @@
   }
 
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+    border-color: color-mix(in srgb, var(--theme-color) 60%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 18%, transparent);
   }
 
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__wrapper.is-focused) {
-    background: rgb(16 185 129 / 10%);
-    border-color: #10b981;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%);
+    background: color-mix(in srgb, var(--theme-color) 10%, transparent);
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 20%, transparent);
   }
 
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__caret) {
-    color: #10b981;
+    color: var(--theme-color);
   }
 
   :global(html:not(.dark) .finance-screen-root)
@@ -1883,80 +1883,71 @@
     .header-filters
     :deep(.aps-filter-select .el-select__wrapper) {
     color: var(--aps-text-primary);
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 30%);
+    background: color-mix(in srgb, var(--theme-color) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--theme-color) 30%, transparent);
   }
 
   :global(html:not(.dark) .finance-screen-root)
     .aps-filter-toolbar
     .header-filters
     :deep(.aps-filter-select .el-select__wrapper:hover) {
-    border-color: rgb(5 150 105 / 45%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 14%);
+    border-color: color-mix(in srgb, var(--theme-color) 45%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 14%, transparent);
   }
 
   :global(html:not(.dark) .finance-screen-root)
     .aps-filter-toolbar
     .header-filters
     :deep(.aps-filter-select .el-select__wrapper.is-focused) {
-    background: rgb(16 185 129 / 12%);
-    border-color: #10b981;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 18%);
+    background: color-mix(in srgb, var(--theme-color) 12%, transparent);
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 18%, transparent);
   }
 
   :global(html:not(.dark) .finance-screen-root)
     .aps-filter-toolbar
     .header-filters
     :deep(.aps-filter-select .el-select__caret) {
-    color: #059669;
+    color: var(--theme-color);
   }
 
-  /* 广告成效：导出为绿色描边主按钮 */
+  /* 广告成效：实心主按钮 */
   .aps-filter-toolbar .btn-export {
     flex: 0 0 auto;
     height: 40px;
     padding: 0 16px;
-    font-family:
-      'PingFang SC',
-      Inter,
-      system-ui,
-      -apple-system,
-      'Segoe UI',
-      Roboto,
-      Arial,
-      'Microsoft YaHei',
-      sans-serif;
     font-size: 14px;
     font-weight: 500;
-    color: #10b981;
+    color: #fff;
     cursor: pointer;
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 40%);
+    background: var(--theme-color);
+    border: none;
     border-radius: 9999px;
-    box-shadow: 0 0 14px rgb(16 185 129 / 12%);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--theme-color) 40%, transparent);
     transition:
       box-shadow 0.22s ease,
-      background 0.22s ease,
-      border-color 0.22s ease,
-      color 0.22s ease;
+      background 0.22s ease;
 
     &:hover {
-      color: #34d399;
-      background: rgb(16 185 129 / 16%);
-      border-color: #10b981;
-      box-shadow: 0 0 22px rgb(16 185 129 / 28%);
+      background: color-mix(in srgb, var(--theme-color) 85%, #000);
+      box-shadow: 0 0 22px color-mix(in srgb, var(--theme-color) 55%, transparent);
+    }
+
+    &:active {
+      background: color-mix(in srgb, var(--theme-color) 75%, #000);
     }
   }
 
   :global(html:not(.dark) .finance-screen-root) .aps-filter-toolbar .btn-export {
-    color: #059669;
-    background: rgb(16 185 129 / 10%);
-    border-color: rgb(16 185 129 / 38%);
+    color: #fff;
+    background: var(--theme-color);
 
     &:hover {
-      color: #047857;
-      background: rgb(16 185 129 / 16%);
-      border-color: #10b981;
+      background: color-mix(in srgb, var(--theme-color) 80%, #000);
+    }
+
+    &:active {
+      background: color-mix(in srgb, var(--theme-color) 70%, #000);
     }
   }
 
@@ -2820,16 +2811,16 @@
   :global(html.dark .aps-filter-popper.el-popper) {
     overflow: hidden;
     background: rgb(24 24 27 / 98%) !important;
-    border: 1px solid rgb(16 185 129 / 32%) !important;
+    border: 1px solid color-mix(in srgb, var(--theme-color) 32%, transparent) !important;
     border-radius: 12px !important;
     box-shadow:
       0 18px 52px rgb(0 0 0 / 58%),
-      0 0 0 1px rgb(16 185 129 / 12%),
-      inset 0 1px 0 rgb(167 243 208 / 8%) !important;
+      0 0 0 1px color-mix(in srgb, var(--theme-color) 12%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--theme-color) 8%, transparent) !important;
   }
 
   :global(html:not(.dark) .aps-filter-popper.el-popper) {
-    border: 1px solid rgb(16 185 129 / 22%) !important;
+    border: 1px solid color-mix(in srgb, var(--theme-color) 22%, transparent) !important;
     border-radius: 12px !important;
     box-shadow: 0 14px 40px rgb(15 23 42 / 12%) !important;
   }
