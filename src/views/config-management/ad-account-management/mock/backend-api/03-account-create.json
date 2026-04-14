@@ -1,0 +1,141 @@
+{
+  "_comment": "Ad account management - create account.",
+  "fieldDescription": {
+    "request": {
+      "appName": {
+        "type": "string",
+        "required": true,
+        "enum": ["Weather5", "Weather6", "Weather8", "Weather9"],
+        "description": "App name."
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["Android", "iOS"],
+        "description": "OS platform."
+      },
+      "adPlatform": {
+        "type": "string",
+        "required": true,
+        "enum": ["Google", "TikTok", "Mintegral", "NewsBreak"],
+        "description": "Ad platform."
+      },
+      "managerAccount": {
+        "type": "string",
+        "required": true,
+        "description": "Manager account ID or name."
+      },
+      "credential": {
+        "type": "string",
+        "required": false,
+        "description": "Credential name. Empty string is allowed."
+      },
+      "adAccounts": {
+        "type": "string[]",
+        "required": true,
+        "description": "Ad account ID list. [] is allowed."
+      },
+      "token": {
+        "type": "string",
+        "required": false,
+        "description": "API token. Empty string is allowed."
+      }
+    },
+    "response": {
+      "id": { "type": "number", "required": true, "description": "Created account ID." },
+      "created": { "type": "boolean", "required": true, "description": "Create result." },
+      "record": {
+        "type": "AdAccountRow",
+        "required": true,
+        "description": "Complete created row for immediate frontend refresh."
+      }
+    },
+    "AdAccountRow": {
+      "id": { "type": "number", "required": true, "description": "Primary key ID." },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["enabled", "disabled"],
+        "description": "Status after create."
+      },
+      "appName": {
+        "type": "string",
+        "required": true,
+        "enum": ["Weather5", "Weather6", "Weather8", "Weather9"],
+        "description": "App name."
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["Android", "iOS"],
+        "description": "OS platform."
+      },
+      "adPlatform": {
+        "type": "string",
+        "required": true,
+        "enum": ["Google", "TikTok", "Mintegral", "NewsBreak"],
+        "description": "Ad platform."
+      },
+      "managerAccount": {
+        "type": "string",
+        "required": true,
+        "description": "Manager account ID or name."
+      },
+      "adAccounts": { "type": "string[]", "required": true, "description": "Ad account ID list." },
+      "credential": { "type": "string", "required": true, "description": "Credential name." },
+      "token": {
+        "type": "string|null",
+        "required": true,
+        "description": "Raw token value or null."
+      }
+    }
+  },
+  "sampleRequest": {
+    "appName": "Weather5",
+    "platform": "Android",
+    "adPlatform": "Google",
+    "managerAccount": "560-369-9741",
+    "credential": "AdCost",
+    "adAccounts": ["385-510-4056", "250-161-1888", "542-141-4898"],
+    "token": "32ba778abac3978d34a0a46db475d7147f1997b8"
+  },
+  "sampleResponse": {
+    "id": 105,
+    "created": true,
+    "record": {
+      "id": 105,
+      "status": "enabled",
+      "appName": "Weather5",
+      "platform": "Android",
+      "adPlatform": "Google",
+      "managerAccount": "560-369-9741",
+      "adAccounts": ["385-510-4056", "250-161-1888", "542-141-4898"],
+      "credential": "AdCost",
+      "token": "32ba778abac3978d34a0a46db475d7147f1997b8"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/ad-account-management/account/create",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "appName, platform, adPlatform, managerAccount, credential?, adAccounts, token?",
+    "responseBody": "CreateAdAccountResult"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "Validate duplicate combination of appName, platform, adPlatform and managerAccount.",
+      "Empty token can be normalized to null in response.",
+      "Return complete record to avoid an extra detail request."
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "user action",
+        "detail": "Submit when the add dialog save button is clicked."
+      }
+    ],
+    "defaultSelection": "Dialog defaults: appName=Weather5, platform=Android, adPlatform=Google.",
+    "dedupe": "Disable repeated submits while request is in flight."
+  }
+}

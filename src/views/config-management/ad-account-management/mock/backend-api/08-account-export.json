@@ -1,0 +1,73 @@
+{
+  "_comment": "Ad account management - export current filtered result.",
+  "fieldDescription": {
+    "request": {
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "Keyword filter. Empty string means no keyword filter."
+      },
+      "appName": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "Weather5", "Weather6", "Weather8", "Weather9"],
+        "description": "App filter. Empty string means all."
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "Android", "iOS"],
+        "description": "Platform filter. Empty string means all."
+      },
+      "adPlatform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "Google", "TikTok", "Mintegral", "NewsBreak"],
+        "description": "Ad platform filter. Empty string means all."
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "enabled", "disabled"],
+        "description": "Status filter. Empty string means all."
+      }
+    },
+    "response": {
+      "_note": "Binary file stream. Filename should come from Content-Disposition."
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "appName": "",
+    "platform": "",
+    "adPlatform": "",
+    "status": ""
+  },
+  "sampleResponse": {
+    "_note": "binary blob (text/csv or application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)"
+  },
+  "api": {
+    "url": "POST /api/config-management/ad-account-management/account/export",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "keyword?, appName?, platform?, adPlatform?, status?",
+    "responseBody": "blob"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "Return file stream, not JSON.",
+      "Suggested export columns: status, appName, platform, adPlatform, managerAccount, adAccounts, credential, tokenConfigured.",
+      "If no rows match, still return a valid file with header only."
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "user action",
+        "detail": "Called when the top export button is clicked."
+      }
+    ],
+    "defaultSelection": "Use the current page keyword and filters.",
+    "dedupe": "Disable export button while exporting."
+  }
+}

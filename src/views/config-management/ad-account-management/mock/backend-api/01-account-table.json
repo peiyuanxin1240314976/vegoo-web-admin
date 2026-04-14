@@ -1,0 +1,188 @@
+{
+  "_comment": "Ad account management - paginated table query. Used by search, filters, pagination and table rendering.",
+  "fieldDescription": {
+    "request": {
+      "current": {
+        "type": "number",
+        "required": true,
+        "description": "Current page number, starts from 1."
+      },
+      "size": { "type": "number", "required": true, "description": "Page size." },
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "Fuzzy keyword for appName and managerAccount. Empty string means no keyword filter."
+      },
+      "appName": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "Weather5", "Weather6", "Weather8", "Weather9"],
+        "description": "App filter. Empty string means all."
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "Android", "iOS"],
+        "description": "Platform filter. Empty string means all."
+      },
+      "adPlatform": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "Google", "TikTok", "Mintegral", "NewsBreak"],
+        "description": "Ad platform filter. Empty string means all."
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "enum": ["", "enabled", "disabled"],
+        "description": "Status filter. Empty string means all."
+      }
+    },
+    "response": {
+      "records": {
+        "type": "AdAccountRow[]",
+        "required": true,
+        "description": "Current page records. Return [] when no data."
+      },
+      "current": { "type": "number", "required": true, "description": "Current page number." },
+      "size": { "type": "number", "required": true, "description": "Page size." },
+      "total": { "type": "number", "required": true, "description": "Total matched rows." }
+    },
+    "AdAccountRow": {
+      "id": { "type": "number", "required": true, "description": "Primary key ID." },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["enabled", "disabled"],
+        "description": "Account status."
+      },
+      "appName": {
+        "type": "string",
+        "required": true,
+        "enum": ["Weather5", "Weather6", "Weather8", "Weather9"],
+        "description": "App name."
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["Android", "iOS"],
+        "description": "OS platform."
+      },
+      "adPlatform": {
+        "type": "string",
+        "required": true,
+        "enum": ["Google", "TikTok", "Mintegral", "NewsBreak"],
+        "description": "Ad platform."
+      },
+      "managerAccount": {
+        "type": "string",
+        "required": true,
+        "description": "Manager account ID or name."
+      },
+      "adAccounts": {
+        "type": "string[]",
+        "required": true,
+        "description": "Ad account ID list. Return [] when not configured."
+      },
+      "credential": {
+        "type": "string",
+        "required": true,
+        "description": "Credential name. Empty string is allowed."
+      },
+      "token": {
+        "type": "string|null",
+        "required": true,
+        "description": "Raw token value or null. Frontend masks it by itself."
+      }
+    }
+  },
+  "sampleRequest": {
+    "current": 1,
+    "size": 10,
+    "keyword": "",
+    "appName": "",
+    "platform": "",
+    "adPlatform": "",
+    "status": ""
+  },
+  "sampleResponse": {
+    "records": [
+      {
+        "id": 101,
+        "status": "enabled",
+        "appName": "Weather5",
+        "platform": "Android",
+        "adPlatform": "Google",
+        "managerAccount": "560-369-9741",
+        "adAccounts": ["385-510-4056", "250-161-1888", "542-141-4898", "292-126-4627"],
+        "credential": "AdCost",
+        "token": "32ba778abac3978d34a0a46db475d7147f1997b8"
+      },
+      {
+        "id": 102,
+        "status": "enabled",
+        "appName": "Weather6",
+        "platform": "iOS",
+        "adPlatform": "TikTok",
+        "managerAccount": "744708116631368720",
+        "adAccounts": ["744708116631368721", "744708116631368722"],
+        "credential": "TikTokGlobalMain",
+        "token": "tt_x9w2k4v8c1m5n7p3s6d0f2g4h8j1"
+      },
+      {
+        "id": 103,
+        "status": "enabled",
+        "appName": "Weather8",
+        "platform": "Android",
+        "adPlatform": "Mintegral",
+        "managerAccount": "vegoo",
+        "adAccounts": [],
+        "credential": "MintegralAdCost1",
+        "token": null
+      },
+      {
+        "id": 104,
+        "status": "disabled",
+        "appName": "Weather9",
+        "platform": "iOS",
+        "adPlatform": "NewsBreak",
+        "managerAccount": "196006482456592752",
+        "adAccounts": [],
+        "credential": "NewsBreakCost2",
+        "token": null
+      }
+    ],
+    "current": 1,
+    "size": 10,
+    "total": 4
+  },
+  "api": {
+    "url": "POST /api/config-management/ad-account-management/account/table",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "current, size, keyword?, appName?, platform?, adPlatform?, status?",
+    "responseBody": "Api.Common.PaginatedResponse<AdAccountRow>"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "Return records: [] and total: 0 when there is no data.",
+      "Do server-side pagination by current and size.",
+      "Token can be returned as raw value or null because masking is handled on the frontend."
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "page init",
+        "detail": "Load table data when /config-management/ad-account-management is opened.",
+        "prerequisite": "none"
+      },
+      {
+        "moment": "user action",
+        "detail": "Reload when keyword, appName, platform, adPlatform, status, current or size changes."
+      }
+    ],
+    "defaultSelection": "keyword, appName, platform, adPlatform and status default to empty string. current defaults to 1 and size defaults to 10.",
+    "dedupe": "Use the latest request result when filters change quickly."
+  }
+}

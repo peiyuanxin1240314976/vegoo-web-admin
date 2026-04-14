@@ -141,6 +141,7 @@ export function mockUpdateApplication(data: ApplicationFormPayload): Promise<App
   const next: ApplicationAppItem = {
     ...prev,
     ...data,
+    id: data.id ?? prev.id,
     iconColor: data.iconColor ?? prev.iconColor,
     packageId: data.packageId ?? data.bundleId ?? prev.packageId,
     lastModifier: data.lastModifier ?? prev.lastModifier,

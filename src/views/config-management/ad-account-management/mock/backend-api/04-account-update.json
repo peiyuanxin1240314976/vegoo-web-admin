@@ -1,0 +1,120 @@
+{
+  "_comment": "Ad account management - update account.",
+  "fieldDescription": {
+    "request": {
+      "id": { "type": "number", "required": true, "description": "Target account ID." },
+      "managerAccount": {
+        "type": "string",
+        "required": true,
+        "description": "Manager account ID or name."
+      },
+      "credential": {
+        "type": "string",
+        "required": false,
+        "description": "Credential name. Empty string is allowed."
+      },
+      "adAccounts": {
+        "type": "string[]",
+        "required": true,
+        "description": "Ad account ID list. [] is allowed."
+      },
+      "token": {
+        "type": "string",
+        "required": false,
+        "description": "API token. Empty string is allowed."
+      }
+    },
+    "response": {
+      "updated": { "type": "boolean", "required": true, "description": "Update result." },
+      "record": {
+        "type": "AdAccountRow",
+        "required": true,
+        "description": "Complete updated row for immediate frontend replacement."
+      }
+    },
+    "AdAccountRow": {
+      "id": { "type": "number", "required": true, "description": "Primary key ID." },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["enabled", "disabled"],
+        "description": "Account status."
+      },
+      "appName": {
+        "type": "string",
+        "required": true,
+        "enum": ["Weather5", "Weather6", "Weather8", "Weather9"],
+        "description": "App name."
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["Android", "iOS"],
+        "description": "OS platform."
+      },
+      "adPlatform": {
+        "type": "string",
+        "required": true,
+        "enum": ["Google", "TikTok", "Mintegral", "NewsBreak"],
+        "description": "Ad platform."
+      },
+      "managerAccount": {
+        "type": "string",
+        "required": true,
+        "description": "Manager account ID or name."
+      },
+      "adAccounts": { "type": "string[]", "required": true, "description": "Ad account ID list." },
+      "credential": { "type": "string", "required": true, "description": "Credential name." },
+      "token": {
+        "type": "string|null",
+        "required": true,
+        "description": "Raw token value or null."
+      }
+    }
+  },
+  "sampleRequest": {
+    "id": 101,
+    "managerAccount": "560-369-9741",
+    "credential": "AdCost-Primary",
+    "adAccounts": ["385-510-4056", "250-161-1888", "542-141-4898", "292-126-4627"],
+    "token": "32ba778abac3978d34a0a46db475d7147f1997b8"
+  },
+  "sampleResponse": {
+    "updated": true,
+    "record": {
+      "id": 101,
+      "status": "enabled",
+      "appName": "Weather5",
+      "platform": "Android",
+      "adPlatform": "Google",
+      "managerAccount": "560-369-9741",
+      "adAccounts": ["385-510-4056", "250-161-1888", "542-141-4898", "292-126-4627"],
+      "credential": "AdCost-Primary",
+      "token": "32ba778abac3978d34a0a46db475d7147f1997b8"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/ad-account-management/account/update",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "id, managerAccount, credential?, adAccounts, token?",
+    "responseBody": "UpdateAdAccountResult"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "Current page only edits managerAccount, credential, adAccounts and token.",
+      "Still return the full row to keep frontend merge logic simple.",
+      "Passing adAccounts as [] means clearing all ad account IDs."
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "user action",
+        "detail": "Submit when save is clicked in dialog edit mode."
+      }
+    ],
+    "defaultSelection": "Initial values come from the selected table row.",
+    "dedupe": "Disable repeated submits while request is in flight."
+  }
+}
