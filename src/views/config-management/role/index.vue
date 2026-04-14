@@ -15,6 +15,7 @@
     <!-- 第二列：权限配置 -->
     <div class="role-page-center">
       <RolePermissionPanel
+        ref="permissionPanelRef"
         :selected-role="selectedRole"
         @save="handleSavePermission"
         @compare="showCompareDialog"
@@ -64,8 +65,11 @@
   import { getMockRoleDescription } from './mock/data'
   import {
     fetchRoleList,
+    fetchRolePermissionsUpdate,
+    fetchRolePermissionSummary,
     fetchRoleUsers,
-    fetchRolePermissionSummary
+    type RolePermissionSummary,
+    type RolePermissionUpdatePayload
   } from '@/api/config-management/role'
   import { ElMessage } from 'element-plus'
 
@@ -81,6 +85,7 @@
   const permissionDialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
   const currentRoleData = ref<RoleListItem | undefined>(undefined)
+  const permissionPanelRef = ref<InstanceType<typeof RolePermissionPanel> | null>(null)
 
   /** 角色对应用户数（若接口未返回，可来自单独接口或 mock） */
   const roleUserCountMap = ref<Record<number, number>>({
@@ -95,13 +100,23 @@
   /** 当前选中角色下的用户列表数据（通过监听选中角色后从 API 获取） */
   const currentRoleUsers = ref<RoleUserItem[]>([])
   /** 权限摘要数据（通过监听选中角色后从 API 获取） */
-  const permissionSummary = ref<any>(null)
+  const permissionSummary = ref<RolePermissionSummary | undefined>(undefined)
 
   /** 角色说明（假数据，见 @/views/config-management/role/mock/data.ts） */
   const roleDescription = computed(() => {
     if (!selectedRole.value) return ''
     return selectedRole.value.description || getMockRoleDescription(selectedRole.value.roleName)
   })
+
+  async function loadSelectedRoleSideData(roleId: number) {
+    const [usersRes, summaryRes] = await Promise.all([
+      fetchRoleUsers({ roleId }),
+      fetchRolePermissionSummary({ roleId })
+    ])
+
+    currentRoleUsers.value = usersRes.items || []
+    permissionSummary.value = summaryRes.summary || undefined
+  }
 
   /** 监听选中角色的变化，获取该角色下的用户与摘要数据 */
   watch(
@@ -110,18 +125,13 @@
       if (newVal) {
         const { roleId } = newVal
         try {
-          const [usersRes, summaryRes] = await Promise.all([
-            fetchRoleUsers({ roleId }),
-            fetchRolePermissionSummary({ roleId })
-          ])
-          currentRoleUsers.value = usersRes.data?.items || []
-          permissionSummary.value = summaryRes.data?.summary || null
+          await loadSelectedRoleSideData(roleId)
         } catch (error) {
           console.error('获取角色详情数据失败', error)
         }
       } else {
         currentRoleUsers.value = []
-        permissionSummary.value = null
+        permissionSummary.value = undefined
       }
     }
   )
@@ -130,7 +140,7 @@
   async function loadRoleList() {
     try {
       const res = await fetchRoleList()
-      roleList.value = res.data?.items || []
+      roleList.value = res.items || []
       // 只要有数据且当前未选中或选中的不在新列表中，就默认选中第一个
       if (roleList.value.length) {
         const currentId = selectedRole.value?.roleId
@@ -160,8 +170,24 @@
     permissionDialogVisible.value = true
   }
 
-  function handleSavePermission() {
-    ElMessage.success('权限配置已保存')
+  async function handleSavePermission() {
+    const payload =
+      permissionPanelRef.value?.getSavePayload?.() as RolePermissionUpdatePayload | null
+    if (!payload || !payload.roleId) {
+      ElMessage.warning('请先选择角色后再保存权限配置')
+      return
+    }
+
+    try {
+      const res = await fetchRolePermissionsUpdate(payload)
+      if (res.success) {
+        ElMessage.success('权限配置已保存')
+        permissionPanelRef.value?.reset?.()
+        await loadSelectedRoleSideData(payload.roleId)
+      }
+    } catch (error) {
+      console.error('保存权限配置失败', error)
+    }
   }
 
   function handleEditUser() {

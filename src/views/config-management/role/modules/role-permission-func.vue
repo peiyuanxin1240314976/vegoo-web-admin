@@ -34,7 +34,10 @@
 </template>
 
 <script setup lang="ts">
-  import { fetchRolePermissionFunc } from '@/api/config-management/role'
+  import {
+    fetchRolePermissionFunc,
+    type RoleFuncPermissionModule
+  } from '@/api/config-management/role'
   import { watch, ref } from 'vue'
 
   defineOptions({ name: 'RolePermissionFunc' })
@@ -48,7 +51,7 @@
   }>()
 
   const expandedModules = ref<string[]>([])
-  const permissionModules = ref<any[]>([])
+  const permissionModules = ref<RoleFuncPermissionModule[]>([])
   const loading = ref(false)
 
   async function loadData() {
@@ -59,9 +62,9 @@
     loading.value = true
     try {
       const res = await fetchRolePermissionFunc({ roleId: props.roleId })
-      permissionModules.value = res.data?.modules || []
+      permissionModules.value = res.modules || []
       // 默认展开有权限的前几个模块（简化处理）
-      expandedModules.value = permissionModules.value.slice(0, 2).map((m: any) => m.moduleId)
+      expandedModules.value = permissionModules.value.slice(0, 2).map((m) => m.moduleId)
     } catch (error) {
       console.error('获取功能权限失败', error)
     } finally {
@@ -77,11 +80,20 @@
     { immediate: true }
   )
 
+  function getPermissionIds(): string[] {
+    return permissionModules.value.flatMap((module) => {
+      if (!module.enabled) return []
+      return module.permissions
+        .filter((permission) => permission.checked)
+        .map((permission) => permission.permissionId)
+    })
+  }
+
   function reset() {
     loadData()
   }
 
-  defineExpose({ reset })
+  defineExpose({ reset, getPermissionIds })
 
   function toggleModule(key: string) {
     const idx = expandedModules.value.indexOf(key)

@@ -26,6 +26,7 @@
         <ElTabPane label="数据权限" name="data">
           <RolePermissionData
             ref="dataRef"
+            :role-id="selectedRole?.roleId"
             :role-name="selectedRole?.roleName"
             preview-user-name="张三"
           />
@@ -51,6 +52,7 @@
 </template>
 
 <script setup lang="ts">
+  import type { RolePermissionUpdatePayload } from '@/api/config-management/role'
   import { CircleCheck } from '@element-plus/icons-vue'
   import RolePermissionFunc from './role-permission-func.vue'
   import RolePermissionData from './role-permission-data.vue'
@@ -59,7 +61,7 @@
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
-  defineProps<{
+  const props = defineProps<{
     selectedRole?: RoleListItem | null
   }>()
 
@@ -76,6 +78,21 @@
     funcRef.value?.reset?.()
     dataRef.value?.reset?.()
   }
+
+  function getSavePayload(): RolePermissionUpdatePayload | null {
+    if (!props.selectedRole?.roleId) return null
+
+    return {
+      roleId: props.selectedRole.roleId,
+      permissionIds: funcRef.value?.getPermissionIds?.() ?? [],
+      moduleDataScopes: dataRef.value?.getModuleDataScopes?.() ?? []
+    }
+  }
+
+  defineExpose({
+    reset: handleReset,
+    getSavePayload
+  })
 </script>
 
 <style scoped lang="scss">
