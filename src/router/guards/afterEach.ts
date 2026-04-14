@@ -24,10 +24,7 @@ export function setupAfterEachGuard(router: Router) {
     const settingStore = useSettingStore()
     if (settingStore.showNprogress) {
       NProgress.done()
-      // 确保进度条完全移除，避免残影
-      setTimeout(() => {
-        NProgress.remove()
-      }, 600)
+      NProgress.remove()
     }
 
     // 关闭 loading 效果
