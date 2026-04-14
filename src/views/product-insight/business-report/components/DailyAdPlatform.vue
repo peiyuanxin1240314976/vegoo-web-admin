@@ -128,7 +128,7 @@
               <td>{{ p.cpc }}</td>
               <td :class="roiColor(p.roi1d)">{{ p.roi1d }}</td>
               <td :class="roiColor(p.roi7d)">{{ p.roi7d }}</td>
-              <td>—</td>
+              <td :class="profitClass(p.profit)">{{ p.profit || '—' }}</td>
             </tr>
           </tbody>
         </table>
@@ -213,6 +213,15 @@
     if (n >= 80) return 'roi-orange'
     return 'roi-normal'
   }
+
+  const profitClass = (val: string) => {
+    const raw = `${val ?? ''}`.trim()
+    if (!raw || raw === '—' || raw === '-') return 'profit-neutral'
+    // 兼容 "$-14,644" / "-$14,644" / "-14644"
+    const normalized = raw.replace(/[$,]/g, '').replace(/\s+/g, '')
+    if (normalized.startsWith('-')) return 'profit-neg'
+    return 'profit-pos'
+  }
 </script>
 
 <style scoped>
@@ -278,6 +287,7 @@
   }
 
   .platform-card {
+    position: relative;
     padding: 12px;
     background: linear-gradient(
       145deg,
@@ -287,13 +297,66 @@
     border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
     border-radius: 10px;
     transition:
-      border-color 0.2s,
-      transform 0.15s;
+      border-color 0.25s var(--ease-out),
+      transform 0.2s var(--ease-out),
+      box-shadow 0.25s var(--ease-out);
+  }
+
+  /* 顶部左边框发光线条 */
+  .platform-card::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 28px;
+    height: 2px;
+    content: '';
+    background: linear-gradient(
+      90deg,
+      var(--accent) 0%,
+      color-mix(in srgb, var(--accent) 42%, transparent) 100%
+    );
+    border-radius: 2px 0;
+    opacity: 0.9;
+    transition:
+      width 0.25s var(--ease-out),
+      opacity 0.25s var(--ease-out);
+  }
+
+  /* 底部进度条发光 */
+  .platform-card::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    content: '';
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--accent) 68%, transparent) 40%,
+      var(--accent) 100%
+    );
+    border-radius: 0 0 2px 2px;
+    opacity: 0.6;
+    transition: opacity 0.25s var(--ease-out);
   }
 
   .platform-card:hover {
     border-color: color-mix(in srgb, var(--accent) 60%, transparent);
-    transform: translateY(-2px);
+    box-shadow:
+      0 14px 36px rgb(0 0 0 / 28%),
+      0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent),
+      0 0 32px color-mix(in srgb, var(--accent) 10%, transparent);
+    transform: translateY(-3px);
+  }
+
+  .platform-card:hover::before {
+    width: 42px;
+    opacity: 1;
+  }
+
+  .platform-card:hover::after {
+    opacity: 1;
   }
 
   /* 卡片标题 */
@@ -563,6 +626,20 @@
     color: rgb(255 255 255 / 75%);
   }
 
+  .profit-pos {
+    font-weight: 600;
+    color: var(--art-success);
+  }
+
+  .profit-neg {
+    font-weight: 600;
+    color: var(--art-danger);
+  }
+
+  .profit-neutral {
+    color: rgb(255 255 255 / 55%);
+  }
+
   /* ── 右下角推送栏 ─────────────────────────────────────────── */
   .dap-push-bar {
     position: absolute;
@@ -591,6 +668,21 @@
 
     &:hover {
       opacity: 0.85;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .platform-card {
+      transition: none;
+    }
+
+    .platform-card::before,
+    .platform-card::after {
+      transition: none;
+    }
+
+    .platform-card:hover {
+      transform: none;
     }
   }
 </style>

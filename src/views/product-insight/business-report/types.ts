@@ -36,10 +36,13 @@ export interface AppListItem {
   adSpendChange?: number // 广告支出环比变化率
   activeCampaigns?: number // 在投广告系列数
   pausedCampaigns?: number // 已暂停广告系列数
+  campaignCount?: number // 广告系列数（new, from API field campaignCount）
   countries?: number // 投放国家数
+  countryCount?: number // 投放国家数（new, from API field countryCount）
   isOverall?: boolean // 是否为整体汇总行
   sparkline?: number[] // 迷你图数据（8 个点）
-  paidUsers?: number // 买量用户（万）；对应其他接口的 acquisitions 字段
+  paidUsers?: number // 买量用户（万）(legacy)
+  buyingUsers?: number // 买量用户（万）(new, from API field buyingUsers)
   platformBreakdown?: Array<{
     name: string
     color: string
