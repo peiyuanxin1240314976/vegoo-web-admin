@@ -14,11 +14,6 @@
           <span class="dc-stat-label">在投系列</span>
           <span class="dc-stat-val">{{ activeCampaigns }}个</span>
         </div>
-        <div class="dc-stat">
-          <span class="dc-stat-dot paused"></span>
-          <span class="dc-stat-label">已暂停</span>
-          <span class="dc-stat-val paused">{{ pausedCampaigns }}个</span>
-        </div>
         <div class="dc-stat-sep"></div>
         <div class="dc-stat">
           <span class="dc-stat-label">总广告支出</span>
