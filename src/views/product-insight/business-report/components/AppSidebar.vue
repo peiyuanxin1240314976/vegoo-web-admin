@@ -319,7 +319,9 @@
             </div>
             <div class="camp-row-right">
               <span class="camp-row-amount">${{ formatNum(item.adSpend ?? 0) }}</span>
-              <span class="camp-row-count">{{ item.activeCampaigns ?? 0 }}个在投</span>
+              <span class="camp-row-count"
+                >{{ item.campaignCount ?? item.activeCampaigns ?? 0 }}个在投</span
+              >
             </div>
           </div>
         </div>
@@ -338,7 +340,9 @@
               <span class="wc-tile-cat">{{ item.category }}</span>
             </div>
             <div class="wc-tile-amt">${{ formatNum(item.adSpend ?? 0) }}</div>
-            <div class="wc-tile-foot">{{ item.activeCampaigns ?? 0 }} 个在投</div>
+            <div class="wc-tile-foot"
+              >{{ item.campaignCount ?? item.activeCampaigns ?? 0 }} 个在投</div
+            >
           </div>
         </div>
       </template>
@@ -799,7 +803,8 @@
     >
       <template v-if="sidebarKey === 'daily-campaigns' || sidebarKey === 'weekly-campaigns'">
         <span class="app-count">
-          共 {{ appList.length - 1 }} 个应用 | {{ overallItem?.activeCampaigns ?? 14 }} 个在投系列
+          共 {{ appList.length - 1 }} 个应用 |
+          {{ overallItem?.campaignCount ?? overallItem?.activeCampaigns ?? 14 }} 个在投系列
         </span>
       </template>
       <template v-else>
