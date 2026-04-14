@@ -171,19 +171,52 @@
     )
   }
 
-  const cardList = computed<AdPlatformCard[]>(() => {
-    const source = ctx?.adPlatform.value?.platforms ?? adPlatformCards
-    return source.map((platform, index) => {
-      const visual = resolvePlatformVisual(platform)
+  function parseCurrencyToNumber(text: string): number {
+    const num = Number.parseFloat(String(text ?? '').replace(/[^\d.]/g, ''))
+    return Number.isFinite(num) ? num : 0
+  }
+
+  function normalizePlatformCards(cards: AdPlatformCard[]) {
+    if (!cards.length) return []
+    const spendTotal = cards.reduce((acc, item) => acc + parseCurrencyToNumber(item.adSpend), 0)
+    return cards.map((item) => {
+      const spend = parseCurrencyToNumber(item.adSpend)
+      const sharePercent =
+        typeof item.sharePercent === 'number' && Number.isFinite(item.sharePercent)
+          ? item.sharePercent
+          : spendTotal > 0
+            ? Number(((spend / spendTotal) * 100).toFixed(1))
+            : 0
+      const visual = resolvePlatformVisual(item)
       return {
-        ...platform,
-        id: platform.id || `platform-${index}`,
-        name: platform.name || `平台 ${index + 1}`,
-        logo: platform.logo || visual.logo,
-        color: platform.color || visual.color,
-        sharePercent: typeof platform.sharePercent === 'number' ? platform.sharePercent : 0
+        ...item,
+        id: item.id || `platform-${Math.random().toString(36).slice(2)}`,
+        name: item.name || '',
+        logo: item.logo || visual.logo,
+        color: item.color || visual.color,
+        adSpendChange:
+          typeof item.adSpendChange === 'number' && Number.isFinite(item.adSpendChange)
+            ? item.adSpendChange
+            : 0,
+        acquisitions: item.acquisitions || '--',
+        campaigns:
+          typeof item.campaigns === 'number' && Number.isFinite(item.campaigns)
+            ? item.campaigns
+            : 0,
+        cpi: item.cpi || '--',
+        cpm: item.cpm || '--',
+        cpc: item.cpc || '--',
+        profit: item.profit || '--',
+        roi1d: item.roi1d || '--',
+        roi7d: item.roi7d || '--',
+        sharePercent
       }
     })
+  }
+
+  const cardList = computed<ReturnType<typeof normalizePlatformCards>>(() => {
+    const source = ctx?.adPlatform.value?.platforms ?? adPlatformCards
+    return normalizePlatformCards(source)
   })
   const reportLabel = computed(() => {
     if (ctx?.period.value === 'weekly') return '周报'
