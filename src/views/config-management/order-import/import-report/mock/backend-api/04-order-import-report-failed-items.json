@@ -1,0 +1,79 @@
+{
+  "_comment": "导入报告失败明细列表，供异常态表格展示。",
+  "fieldDescription": {
+    "request": {
+      "taskId": { "type": "string", "required": true, "description": "任务 ID。" }
+    },
+    "response": {
+      "records": {
+        "type": "FailedRecordItem[]",
+        "required": true,
+        "description": "失败明细列表。"
+      },
+      "total": { "type": "number", "required": true, "description": "失败总条数。" }
+    },
+    "FailedRecordItem": {
+      "rowNo": { "type": "number", "required": true, "description": "行号。" },
+      "transactionDate": { "type": "string", "required": true, "description": "交易日期。" },
+      "sku": { "type": "string", "required": true, "description": "SKU。" },
+      "errorType": {
+        "type": "string",
+        "required": true,
+        "enum": ["missing_field", "amount_format", "date_format", "country_code", "other"],
+        "description": "错误类型。"
+      },
+      "errorMsg": { "type": "string", "required": true, "description": "错误信息。" },
+      "suggestion": { "type": "string", "required": true, "description": "处理建议。" }
+    }
+  },
+  "sampleRequest": { "taskId": "IMP-020" },
+  "sampleResponse": {
+    "data": {
+      "records": [
+        {
+          "rowNo": 47,
+          "transactionDate": "Feb 3, 2026",
+          "sku": "vip_yearly",
+          "errorType": "missing_field",
+          "errorMsg": "必填字段缺失：Sku Id 为空",
+          "suggestion": "确保 SKU 字段非空"
+        },
+        {
+          "rowNo": 112,
+          "transactionDate": "Feb 8, 2026",
+          "sku": "pt_vip_monthly",
+          "errorType": "amount_format",
+          "errorMsg": "金额格式异常：包含非数字字符",
+          "suggestion": "检查 Amount 字段数据格式"
+        },
+        {
+          "rowNo": 156,
+          "transactionDate": "Feb 12, 2026",
+          "sku": "season_subs29",
+          "errorType": "country_code",
+          "errorMsg": "国家代码异常：长度超过 2 位",
+          "suggestion": "使用标准 2 位国家代码"
+        }
+      ],
+      "total": 30
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/order-import/report/failed-items",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ taskId }",
+    "responseBody": "{ records, total }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "并行调用 `fetchOrderImportReportFailedItems(taskId)`，用于失败明细表。",
+        "prerequisite": "`OrderImportReportApiSource.reportFailedItems`。"
+      }
+    ],
+    "defaultSelection": "taskId 必填。",
+    "dedupe": "taskId 不变时可复用缓存。"
+  }
+}

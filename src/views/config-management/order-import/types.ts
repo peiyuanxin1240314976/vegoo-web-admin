@@ -8,7 +8,7 @@ export interface ImportTask {
   uploadTime: string
   totalRecords: number
   newImports: number
-  duplicateSkipped: number | null  // null 表示处理中，尚未统计
+  duplicateSkipped: number | null // null 表示处理中，尚未统计
   failedCount: number | null
   status: ImportStatus
   remark?: string
@@ -45,6 +45,14 @@ export interface FailedRecordItem {
   suggestion: string
 }
 
+export interface ErrorDistributionItem {
+  type: ErrorType
+  label: string
+  count: number
+  pct: number
+  color: string
+}
+
 export interface ImportReportDetail {
   taskId: string
   dataSource: ImportDataSource
@@ -60,4 +68,31 @@ export interface ImportReportDetail {
   previewList: ImportReportItem[]
   previewTotal: number
   duplicateRatio: number
+  failedItems?: FailedRecordItem[]
+  errorDistribution?: ErrorDistributionItem[]
+}
+
+export interface ImportReportTaskInfo {
+  taskId: string
+  dataSource: ImportDataSource
+  fileName: string
+  uploadTime: string
+  completedTime: string
+  durationSec: number
+  status: ImportStatus
+}
+
+export interface ImportReportDataStats {
+  totalRecords: number
+  newImports: number
+  duplicateSkipped: number
+  failedCount: number
+  duplicateRatio: number
+}
+
+export interface ImportReportPreviewListData {
+  records: ImportReportItem[]
+  total: number
+  current: number
+  size: number
 }

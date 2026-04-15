@@ -14,26 +14,19 @@
         <ElButton round class="btn-import" @click="importVisible = true">
           <ElIcon><Plus /></ElIcon>导入订单
         </ElButton>
-        <el-select
-          v-model="filterDataSource"
-          class="filter-select"
-          @change="currentPage = 1"
-        >
+        <el-select v-model="filterDataSource" class="filter-select" @change="currentPage = 1">
           <el-option value="" label="数据源 全部" />
           <el-option value="appstore" label="App Store" />
           <el-option value="googleplay" label="Google Play" />
         </el-select>
-        <el-select
-          v-model="filterStatus"
-          class="filter-select"
-          @change="currentPage = 1"
-        >
+        <el-select v-model="filterStatus" class="filter-select" @change="handleFilterChange">
           <el-option value="" label="状态 全部" />
           <el-option value="completed" label="已完成" />
           <el-option value="processing" label="处理中" />
           <el-option value="partial" label="部分成功" />
           <el-option value="failed" label="失败" />
         </el-select>
+        <ElButton round class="btn-query" @click="handleQuery">查询</ElButton>
       </div>
     </div>
 
@@ -72,11 +65,12 @@
       <div class="filter-bar">
         <ElIcon class="filter-icon"><Clock /></ElIcon>
         <span class="filter-title">上传历史</span>
-        <span class="filter-count">共 {{ filteredList.length }} 条记录</span>
+        <span class="filter-count">共 {{ total }} 条记录</span>
       </div>
 
       <el-table
-        :data="pagedList"
+        v-loading="loading"
+        :data="list"
         class="oi-table"
         style="width: 100%"
         :row-class-name="getRowClass"
@@ -109,7 +103,9 @@
         </el-table-column>
         <el-table-column label="重复跳过" min-width="100" align="right">
           <template #default="{ row }">
-            <span v-if="row.duplicateSkipped !== null">{{ row.duplicateSkipped.toLocaleString() }}</span>
+            <span v-if="row.duplicateSkipped !== null">{{
+              row.duplicateSkipped.toLocaleString()
+            }}</span>
             <span v-else class="text-muted">—</span>
           </template>
         </el-table-column>
@@ -152,25 +148,22 @@
         <el-pagination
           v-model:current-page="currentPage"
           :page-size="pageSize"
-          :total="filteredList.length"
+          :total="total"
           layout="prev, pager, next, jumper"
           class="oi-pagination"
+          @current-change="handlePageChange"
         />
         <span class="total-text">第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
       </div>
     </div>
 
     <!-- ── 导入弹窗 ────────────────────────────────────── -->
-    <ImportDialog
-      v-model:visible="importVisible"
-      @success="handleImportSuccess"
-    />
-
+    <ImportDialog v-model:visible="importVisible" @success="handleImportSuccess" />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { computed, onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import { Plus, Clock } from '@element-plus/icons-vue'
@@ -180,8 +173,7 @@
     pauseOrderImport,
     cancelOrderImport
   } from '@/api/config-management/order-import'
-  import { OrderImportApiSource } from './config/data-source'
-  import { cloneTaskList, DATA_SOURCE_LABELS, STATUS_CONFIGS } from './mock/data'
+  import { DATA_SOURCE_LABELS, STATUS_CONFIGS } from './mock/data'
   import ImportDialog from './modules/import-dialog.vue'
   import type { ImportTask } from './types'
 
@@ -190,39 +182,28 @@
   const router = useRouter()
 
   // 图标（用文字替代，实际项目替换为真实图标路径）
-  const appstoreIcon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzFkNmZjZSIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTQuNSAxNGgtOWMtLjgzIDAtMS41LS42Ny0xLjUtMS41VjExaC0xVjloMVY4YzAtMi4yMSAxLjc5LTQgNC00aDFWNmgtMWMtMS4xIDAtMiAuOS0yIDJ2MWg0VjZoMnYzaDF2MmgtMXYzLjVjMCAuODMtLjY3IDEuNS0xLjUgMS41eiIvPjwvc3ZnPg=='
-  const googleplayIcon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzFhOGE0MyIgZD0iTTMgMjAuNVYzLjVjMC0uOTEgMS4wNC0xLjQgMS43NS0uODVsMTUgOC41Yy42OC4zOS42OCEuMzkgMCAxLjM5LjM5bC0xNSA4LjVDNC4wNCAyMS45IDMgMjEuNDEgMyAyMC41eiIvPjwvc3ZnPg=='
+  const appstoreIcon =
+    'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzFkNmZjZSIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTQuNSAxNGgtOWMtLjgzIDAtMS41LS42Ny0xLjUtMS41VjExaC0xVjloMVY4YzAtMi4yMSAxLjc5LTQgNC00aDFWNmgtMWMtMS4xIDAtMiAuOS0yIDJ2MWg0VjZoMnYzaDF2MmgtMXYzLjVjMCAuODMtLjY3IDEuNS0xLjUgMS41eiIvPjwvc3ZnPg=='
+  const googleplayIcon =
+    'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzFhOGE0MyIgZD0iTTMgMjAuNVYzLjVjMC0uOTEgMS4wNC0xLjQgMS43NS0uODVsMTUgOC41Yy42OC4zOS42OCEuMzkgMCAxLjM5LjM5bC0xNSA4LjVDNC4wNCAyMS45IDMgMjEuNDEgMyAyMC41eiIvPjwvc3ZnPg=='
 
   // ─── 数据 ──────────────────────────────────────────────
-  const list = ref<ImportTask[]>(cloneTaskList())
+  const list = ref<ImportTask[]>([])
+  const total = ref(0)
   const filterDataSource = ref('')
   const filterStatus = ref('')
   const currentPage = ref(1)
-  const pageSize = ref(7)
+  const pageSize = ref(10)
+  const loading = ref(false)
 
   // ─── KPI ────────────────────────────────────────────────
-  const kpi = computed(() => ({
-    todayTotal: 5,
-    completed: list.value.filter((r) => r.status === 'completed').length,
-    processing: list.value.filter((r) => r.status === 'processing').length,
-    failed: list.value.filter((r) => r.status === 'failed').length
-  }))
-
-  // ─── 筛选 ───────────────────────────────────────────────
-  const filteredList = computed(() => {
-    return list.value.filter((row) => {
-      if (filterDataSource.value && row.dataSource !== filterDataSource.value) return false
-      if (filterStatus.value && row.status !== filterStatus.value) return false
-      return true
-    })
+  const kpi = ref({
+    todayTotal: 0,
+    completed: 0,
+    processing: 0,
+    failed: 0
   })
-
-  const totalPages = computed(() => Math.ceil(filteredList.value.length / pageSize.value))
-
-  const pagedList = computed(() => {
-    const start = (currentPage.value - 1) * pageSize.value
-    return filteredList.value.slice(start, start + pageSize.value)
-  })
+  const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 
   const getRowClass = ({ row }: { row: ImportTask }) =>
     row.status === 'processing' ? 'row-processing' : ''
@@ -233,19 +214,15 @@
   }
 
   const handlePause = (row: ImportTask) => {
-    if (!OrderImportApiSource.pauseImport) {
-      pauseOrderImport(row.taskId).catch(() => undefined)
-    }
+    pauseOrderImport(row.taskId).catch(() => undefined)
     ElMessage.info(`已暂停任务 ${row.taskId}`)
+    handleQuery()
   }
 
   const handleCancel = (row: ImportTask) => {
-    if (!OrderImportApiSource.cancelImport) {
-      cancelOrderImport(row.taskId).catch(() => undefined)
-    }
-    const idx = list.value.findIndex((r) => r.id === row.id)
-    if (idx >= 0) list.value.splice(idx, 1)
+    cancelOrderImport(row.taskId).catch(() => undefined)
     ElMessage.warning(`已取消任务 ${row.taskId}`)
+    handleQuery()
   }
 
   // ─── 导入弹窗 ───────────────────────────────────────────
@@ -257,21 +234,53 @@
   }
 
   const loadImportTable = async () => {
-    if (OrderImportApiSource.importTable) return
+    loading.value = true
     try {
-      await fetchOrderImportTable({
-        page: currentPage.value,
-        pageSize: pageSize.value,
-        dataSource: filterDataSource.value || undefined,
-        status: filterStatus.value || undefined
-      })
-      await fetchOrderImportSummary()
+      const [tableRes, summaryRes] = await Promise.all([
+        fetchOrderImportTable({
+          page: currentPage.value,
+          pageSize: pageSize.value,
+          dataSource: filterDataSource.value || undefined,
+          status: filterStatus.value || undefined
+        }),
+        fetchOrderImportSummary({
+          dataSource: filterDataSource.value || undefined,
+          status: filterStatus.value || undefined
+        })
+      ])
+      list.value = tableRes.records ?? []
+      total.value = tableRes.total ?? 0
+      kpi.value = {
+        todayTotal: summaryRes.todayTotal ?? 0,
+        completed: summaryRes.completed ?? 0,
+        processing: summaryRes.processing ?? 0,
+        failed: summaryRes.failed ?? 0
+      }
     } catch {
-      // fallback to local mock list
+      list.value = []
+      total.value = 0
+      kpi.value = { todayTotal: 0, completed: 0, processing: 0, failed: 0 }
+    } finally {
+      loading.value = false
     }
   }
 
-  loadImportTable()
+  const handleFilterChange = () => {
+    currentPage.value = 1
+  }
+
+  const handleQuery = () => {
+    currentPage.value = 1
+    loadImportTable()
+  }
+
+  const handlePageChange = () => {
+    loadImportTable()
+  }
+
+  onMounted(() => {
+    loadImportTable()
+  })
 </script>
 
 <style lang="scss" scoped>
@@ -295,11 +304,11 @@
   // ─── 顶栏 ───────────────────────────────────────────────
   .page-topbar {
     display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
     align-items: flex-end;
     justify-content: space-between;
     padding: 20px 0 16px;
-    flex-wrap: wrap;
-    gap: 12px;
   }
 
   .breadcrumb {
@@ -310,16 +319,22 @@
     font-size: 13px;
   }
 
-  .bc-parent  { color: var(--text-secondary); }
-  .bc-sep     { color: var(--text-muted); }
-  .bc-current { color: var(--text-secondary); }
+  .bc-parent {
+    color: var(--text-secondary);
+  }
+  .bc-sep {
+    color: var(--text-muted);
+  }
+  .bc-current {
+    color: var(--text-secondary);
+  }
 
   .page-title {
     margin: 0;
     font-size: 22px;
     font-weight: 700;
-    color: var(--text-primary);
     line-height: 1;
+    color: var(--text-primary);
   }
 
   .topbar-actions {
@@ -341,7 +356,17 @@
     border-radius: 8px !important;
     transition: all 0.2s;
 
-    &:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    &:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+  }
+
+  .btn-query {
+    font-weight: 600 !important;
+    color: #0b1120 !important;
+    background: var(--accent) !important;
+    border: none !important;
   }
 
   .filter-select {
@@ -354,7 +379,9 @@
       border-radius: 8px;
       box-shadow: none !important;
 
-      &:hover { border-color: var(--accent) !important; }
+      &:hover {
+        border-color: var(--accent) !important;
+      }
     }
   }
 
@@ -370,13 +397,22 @@
     padding: 20px 24px;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 10px;
     border-left: 4px solid;
+    border-radius: 10px;
 
-    &--blue  { border-left-color: #3b82f6; background: linear-gradient(135deg, #131c2e 0%, #0f1e3a 100%); }
-    &--teal  { border-left-color: #2dd4bf; }
-    &--amber { border-left-color: #f59e0b; }
-    &--red   { border-left-color: #ef4444; }
+    &--blue {
+      background: linear-gradient(135deg, #131c2e 0%, #0f1e3a 100%);
+      border-left-color: #3b82f6;
+    }
+    &--teal {
+      border-left-color: #2dd4bf;
+    }
+    &--amber {
+      border-left-color: #f59e0b;
+    }
+    &--red {
+      border-left-color: #ef4444;
+    }
   }
 
   .kpi-label {
@@ -390,10 +426,18 @@
     font-weight: 700;
     line-height: 1;
 
-    &--blue  { color: #60a5fa; }
-    &--teal  { color: #2dd4bf; }
-    &--amber { color: #f59e0b; }
-    &--red   { color: #ef4444; }
+    &--blue {
+      color: #60a5fa;
+    }
+    &--teal {
+      color: #2dd4bf;
+    }
+    &--amber {
+      color: #f59e0b;
+    }
+    &--red {
+      color: #ef4444;
+    }
   }
 
   .kpi-unit {
@@ -408,18 +452,33 @@
     font-size: 12px;
     color: var(--text-muted);
 
-    &--loading { color: #f59e0b; display: flex; align-items: center; gap: 1px; }
+    &--loading {
+      display: flex;
+      gap: 1px;
+      align-items: center;
+      color: #f59e0b;
+    }
   }
 
   .dot-anim {
     animation: dotPulse 1.4s infinite;
-    &--2 { animation-delay: 0.2s; }
-    &--3 { animation-delay: 0.4s; }
+    &--2 {
+      animation-delay: 0.2s;
+    }
+    &--3 {
+      animation-delay: 0.4s;
+    }
   }
 
   @keyframes dotPulse {
-    0%, 80%, 100% { opacity: 0.2; }
-    40% { opacity: 1; }
+    0%,
+    80%,
+    100% {
+      opacity: 0.2;
+    }
+    40% {
+      opacity: 1;
+    }
   }
 
   // ─── 表格面板 ────────────────────────────────────────────
@@ -439,8 +498,8 @@
   }
 
   .filter-icon {
-    color: var(--text-muted);
     font-size: 15px;
+    color: var(--text-muted);
   }
 
   .filter-title {
@@ -450,8 +509,8 @@
   }
 
   .filter-count {
-    margin-left: 8px;
     padding: 2px 8px;
+    margin-left: 8px;
     font-size: 12px;
     color: var(--text-muted);
     background: rgb(255 255 255 / 5%);
@@ -483,8 +542,12 @@
       border-bottom: 1px solid var(--border) !important;
     }
 
-    :deep(tr) { background: transparent !important; }
-    :deep(.el-table__inner-wrapper::before) { display: none; }
+    :deep(tr) {
+      background: transparent !important;
+    }
+    :deep(.el-table__inner-wrapper::before) {
+      display: none;
+    }
 
     :deep(.row-processing td) {
       background: rgb(245 158 11 / 6%) !important;
@@ -507,11 +570,13 @@
   .source-icon {
     width: 20px;
     height: 20px;
-    border-radius: 4px;
     object-fit: contain;
+    border-radius: 4px;
   }
 
-  .text-muted { color: var(--text-muted); }
+  .text-muted {
+    color: var(--text-muted);
+  }
 
   // ── 状态 ────────────────────────────────────────────────
   .status-badge {
@@ -522,32 +587,49 @@
     font-size: 12px;
     border-radius: 4px;
 
-    &.status--completed  { color: #22c55e; background: rgb(34 197 94 / 12%); }
-    &.status--processing { color: #f59e0b; background: rgb(245 158 11 / 12%); }
-    &.status--partial    { color: #f59e0b; background: rgb(245 158 11 / 12%); }
-    &.status--failed     { color: #ef4444; background: rgb(239 68 68 / 12%); }
+    &.status--completed {
+      color: #22c55e;
+      background: rgb(34 197 94 / 12%);
+    }
+
+    &.status--processing {
+      color: #f59e0b;
+      background: rgb(245 158 11 / 12%);
+    }
+
+    &.status--partial {
+      color: #f59e0b;
+      background: rgb(245 158 11 / 12%);
+    }
+
+    &.status--failed {
+      color: #ef4444;
+      background: rgb(239 68 68 / 12%);
+    }
   }
 
   .status-dot {
+    flex-shrink: 0;
     width: 6px;
     height: 6px;
-    border-radius: 50%;
     background: currentcolor;
-    flex-shrink: 0;
+    border-radius: 50%;
   }
 
   .status-spinner {
+    flex-shrink: 0;
     width: 8px;
     height: 8px;
     border: 1.5px solid currentcolor;
     border-top-color: transparent;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
-    flex-shrink: 0;
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   // ── 操作按钮 ────────────────────────────────────────────
@@ -569,21 +651,30 @@
       color: var(--accent);
       background: transparent;
 
-      &:hover { color: #fff; background: var(--accent); }
+      &:hover {
+        color: #fff;
+        background: var(--accent);
+      }
     }
 
     &--warn {
       color: #f59e0b;
       background: transparent;
 
-      &:hover { color: #0b1120; background: #f59e0b; }
+      &:hover {
+        color: #0b1120;
+        background: #f59e0b;
+      }
     }
 
     &--del {
       color: #ef4444;
       background: transparent;
 
-      &:hover { color: #fff; background: #ef4444; }
+      &:hover {
+        color: #fff;
+        background: #ef4444;
+      }
     }
   }
 
@@ -613,7 +704,9 @@
       background: transparent;
       border-radius: 5px;
 
-      &:hover { color: var(--accent); }
+      &:hover {
+        color: var(--accent);
+      }
 
       &.is-active {
         font-weight: 700;
@@ -645,7 +738,8 @@
   :deep(.el-select-dropdown__item) {
     color: var(--text-secondary) !important;
 
-    &:hover, &.is-hovering {
+    &:hover,
+    &.is-hovering {
       color: var(--accent) !important;
       background: rgb(45 212 191 / 8%) !important;
     }

@@ -68,18 +68,17 @@
             <div class="stats-legend">
               <div class="legend-item">
                 <span class="legend-dot legend-dot--teal" />
-                新增导入 {{ report.newImports.toLocaleString() }} 条
-                ({{ pct(report.newImports) }}%)
+                新增导入 {{ report.newImports.toLocaleString() }} 条 ({{ pct(report.newImports) }}%)
               </div>
               <div class="legend-item">
                 <span class="legend-dot legend-dot--amber" />
-                重复跳过 {{ report.duplicateSkipped.toLocaleString() }} 条
-                ({{ pct(report.duplicateSkipped) }}%)
+                重复跳过 {{ report.duplicateSkipped.toLocaleString() }} 条 ({{
+                  pct(report.duplicateSkipped)
+                }}%)
               </div>
               <div class="legend-item">
                 <span class="legend-dot legend-dot--red" />
-                失败记录 {{ report.failedCount }} 条
-                ({{ pct(report.failedCount) }}%)
+                失败记录 {{ report.failedCount }} 条 ({{ pct(report.failedCount) }}%)
               </div>
             </div>
           </div>
@@ -87,14 +86,18 @@
             <svg class="donut" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="38" class="donut-track" />
               <circle
-                cx="50" cy="50" r="38"
+                cx="50"
+                cy="50"
+                r="38"
                 class="donut-seg donut-seg--teal"
                 :stroke-dasharray="`${newArc} ${donutCirc - newArc}`"
                 stroke-dashoffset="0"
                 transform="rotate(-90 50 50)"
               />
               <circle
-                cx="50" cy="50" r="38"
+                cx="50"
+                cy="50"
+                r="38"
                 class="donut-seg donut-seg--amber"
                 :stroke-dasharray="`${dupArc} ${donutCirc - dupArc}`"
                 :stroke-dashoffset="-newArc"
@@ -102,7 +105,9 @@
               />
               <circle
                 v-if="report.failedCount > 0"
-                cx="50" cy="50" r="38"
+                cx="50"
+                cy="50"
+                r="38"
                 class="donut-seg donut-seg--red"
                 :stroke-dasharray="`${failArc} ${donutCirc - failArc}`"
                 :stroke-dashoffset="-(newArc + dupArc)"
@@ -148,7 +153,12 @@
         <el-table :data="pagedPreview" class="ir-table" style="width: 100%">
           <el-table-column prop="transactionDate" label="交易日期" min-width="100" />
           <el-table-column prop="settlementDate" label="结算日期" min-width="100" />
-          <el-table-column prop="productName" label="产品名称" min-width="140" show-overflow-tooltip />
+          <el-table-column
+            prop="productName"
+            label="产品名称"
+            min-width="140"
+            show-overflow-tooltip
+          />
           <el-table-column prop="sku" label="SKU" min-width="130" show-overflow-tooltip />
           <el-table-column prop="country" label="销售国家" min-width="80" />
           <el-table-column label="分成金额" min-width="90" align="right">
@@ -163,6 +173,7 @@
             :total="report.previewTotal"
             layout="prev, pager, next"
             class="ir-pagination"
+            @current-change="handlePreviewPageChange"
           />
           <span class="footer-text">共 {{ previewTotalPages }} 页</span>
         </div>
@@ -182,12 +193,15 @@
         <div class="dup-ratio-row">
           <span class="sq-label">重复数据占比</span>
           <span class="sq-value">
-            {{ (report.duplicateRatio * 100).toFixed(1) }}%
-            ({{ report.duplicateSkipped }} / {{ report.totalRecords }})
+            {{ (report.duplicateRatio * 100).toFixed(1) }}% ({{ report.duplicateSkipped }} /
+            {{ report.totalRecords }})
           </span>
         </div>
         <div class="progress-bar-wrap">
-          <div class="progress-bar-fill progress-bar-fill--amber" :style="{ width: (report.duplicateRatio * 100).toFixed(1) + '%' }" />
+          <div
+            class="progress-bar-fill progress-bar-fill--amber"
+            :style="{ width: (report.duplicateRatio * 100).toFixed(1) + '%' }"
+          />
         </div>
         <p class="side-tip">如需查看重复数据明细，请在任务详情中查看「重复数据」标签页</p>
         <button class="btn-text-link">进入任务详情</button>
@@ -220,7 +234,12 @@
               </span>
             </template>
           </el-table-column>
-          <el-table-column prop="suggestion" label="处理建议" min-width="160" show-overflow-tooltip />
+          <el-table-column
+            prop="suggestion"
+            label="处理建议"
+            min-width="160"
+            show-overflow-tooltip
+          />
         </el-table>
         <div class="table-footer">
           <span class="footer-text">
@@ -237,7 +256,10 @@
           <div v-for="item in errorDist" :key="item.type" class="error-dist-item">
             <span class="error-dist-label">{{ item.label }}</span>
             <div class="error-dist-bar-wrap">
-              <div class="error-dist-bar" :style="{ width: item.pct + '%', background: item.color }" />
+              <div
+                class="error-dist-bar"
+                :style="{ width: item.pct + '%', background: item.color }"
+              />
               <span class="error-dist-pct">{{ item.pct }}%</span>
             </div>
             <span class="error-dist-count">{{ item.count }} 条</span>
@@ -267,11 +289,16 @@
   import { useRouter, useRoute } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import { Download, CircleCheckFilled, WarningFilled } from '@element-plus/icons-vue'
-  import { fetchOrderImportReport, exportOrderImportReport } from '@/api/config-management/order-import'
-  import { OrderImportApiSource } from '../config/data-source'
-  import { cloneAppDate, getAppNow } from '@/utils/app-now'
-  import { cloneTaskList, getReport, getFailedItems, getErrorDistribution } from '../mock/data'
-  import type { ImportReportDetail, ImportReportItem } from '../types'
+  import {
+    exportOrderImportReport,
+    fetchOrderImportReportDataStats,
+    fetchOrderImportReportErrorDistribution,
+    fetchOrderImportReportFailedItems,
+    fetchOrderImportReportPreviewList,
+    fetchOrderImportReportTaskInfo
+  } from '@/api/config-management/order-import'
+  import { getErrorDistribution } from '../mock/data'
+  import type { ErrorDistributionItem, ImportReportDetail, ImportReportItem } from '../types'
 
   defineOptions({ name: 'OrderImportReport' })
 
@@ -288,63 +315,60 @@
 
   // ─── 报告数据 ──────────────────────────────────────────
   const report = ref<ImportReportDetail>({
-    taskId: '', dataSource: 'appstore', fileName: '',
-    uploadTime: '', completedTime: '', durationSec: 0,
-    status: 'completed', totalRecords: 0, newImports: 0,
-    duplicateSkipped: 0, failedCount: 0,
-    previewList: [], previewTotal: 0, duplicateRatio: 0
+    taskId: '',
+    dataSource: 'appstore',
+    fileName: '',
+    uploadTime: '',
+    completedTime: '',
+    durationSec: 0,
+    status: 'completed',
+    totalRecords: 0,
+    newImports: 0,
+    duplicateSkipped: 0,
+    failedCount: 0,
+    previewList: [],
+    previewTotal: 0,
+    duplicateRatio: 0
   })
 
-  const failedItems = ref<ReturnType<typeof getFailedItems>>([])
+  const failedItems = ref<NonNullable<ImportReportDetail['failedItems']>>([])
+  const errorDistribution = ref<ErrorDistributionItem[]>([])
+
+  const loadReport = async () => {
+    if (!taskId.value) return
+    try {
+      const [taskInfo, dataStats, previewData, failedData, errorData] = await Promise.all([
+        fetchOrderImportReportTaskInfo(taskId.value),
+        fetchOrderImportReportDataStats(taskId.value),
+        fetchOrderImportReportPreviewList({
+          taskId: taskId.value,
+          page: previewPage.value,
+          pageSize: previewPageSize
+        }),
+        fetchOrderImportReportFailedItems(taskId.value),
+        fetchOrderImportReportErrorDistribution(taskId.value)
+      ])
+      report.value = {
+        ...report.value,
+        ...taskInfo,
+        ...dataStats,
+        previewList: previewData.records,
+        previewTotal: previewData.total
+      }
+      failedItems.value = failedData.records ?? []
+      errorDistribution.value = errorData.items ?? []
+    } catch {
+      ElMessage.error('报告加载失败，请稍后重试')
+    }
+  }
 
   onMounted(() => {
-    const task = cloneTaskList().find((t) => t.taskId === taskId.value)
-    if (!task) return
-
-    const rawItems = getReport(task.taskId)
-    const previewList: ImportReportItem[] = rawItems.slice(0, 20).map((r, i) => ({
-      ...r,
-      transactionDate: `02/${String(28 - i).padStart(2, '0')}/2026`,
-      settlementDate: '03/15/2026',
-      productName: ['Monthly Premium', 'Weekly Premium', 'Vip for one year', 'Season Subs'][i % 4],
-      sku: ['pt_vip_monthly', 'pt_vip_weekly', 'vip_yearly', 'season_subs29'][i % 4],
-      country: ['AT', 'AR', 'AE', 'DE', 'US'][i % 5],
-      partnerShare: [7.08, 4.24, 8.49, 97.13, 4.24][i % 5],
-      currency: ['EUR', 'USD', 'AED', 'EUR', 'USD'][i % 5]
-    }))
-
-    report.value = {
-      taskId: task.taskId,
-      dataSource: task.dataSource,
-      fileName: `${task.taskId.replace('-', '').toLowerCase()}_S.csv`,
-      uploadTime: task.uploadTime,
-      completedTime: task.uploadTime.replace(/(\d{2}:\d{2})$/, (_, hm) => {
-        const [h, m] = hm.split(':').map(Number)
-        const d = cloneAppDate(getAppNow())
-        d.setHours(h, m + 12)
-        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-      }),
-      durationSec: 802,
-      status: task.status,
-      totalRecords: task.totalRecords,
-      newImports: task.newImports,
-      duplicateSkipped: task.duplicateSkipped ?? 0,
-      failedCount: task.failedCount ?? 0,
-      previewList,
-      previewTotal: task.newImports,
-      duplicateRatio: (task.duplicateSkipped ?? 0) / (task.totalRecords || 1)
-    }
-
-    failedItems.value = getFailedItems(task.taskId)
-
-    if (!OrderImportApiSource.importReport) {
-      fetchOrderImportReport(task.taskId).catch(() => undefined)
-    }
+    loadReport()
   })
 
   // ─── 计算属性 ──────────────────────────────────────────
-  const hasFailures = computed(() =>
-    report.value.status === 'partial' || report.value.status === 'failed'
+  const hasFailures = computed(
+    () => report.value.status === 'partial' || report.value.status === 'failed'
   )
 
   const durationText = computed(() => {
@@ -361,39 +385,57 @@
       : 0
     return failRate === 0 ? 'good' : failRate < 0.05 ? 'medium' : 'bad'
   })
-  const qualityText = computed(() => ({ good: '优秀', medium: '需关注', bad: '较差' }[qualityLevel.value]))
+  const qualityText = computed(
+    () => ({ good: '优秀', medium: '需关注', bad: '较差' })[qualityLevel.value]
+  )
   const suggestText = computed(() =>
-    qualityLevel.value === 'good'
-      ? '无异常，数据已全部入库'
-      : '请下载失败数据并修正后重新上传'
+    qualityLevel.value === 'good' ? '无异常，数据已全部入库' : '请下载失败数据并修正后重新上传'
   )
 
   // ─── 环形图 ─────────────────────────────────────────────
   const donutCirc = Math.PI * 2 * 38
-  const newArc = computed(() => pct(report.value.newImports) / 100 * donutCirc)
-  const dupArc = computed(() => pct(report.value.duplicateSkipped) / 100 * donutCirc)
-  const failArc = computed(() => pct(report.value.failedCount) / 100 * donutCirc)
+  const newArc = computed(() => (pct(report.value.newImports) / 100) * donutCirc)
+  const dupArc = computed(() => (pct(report.value.duplicateSkipped) / 100) * donutCirc)
+  const failArc = computed(() => (pct(report.value.failedCount) / 100) * donutCirc)
 
   // ─── 成功态：预览分页 ──────────────────────────────────
   const previewPage = ref(1)
   const previewPageSize = 6
   const previewTotalPages = computed(() => Math.ceil(report.value.previewTotal / previewPageSize))
-  const pagedPreview = computed(() => {
-    const start = (previewPage.value - 1) * previewPageSize
-    return report.value.previewList.slice(start, start + previewPageSize)
-  })
+  const pagedPreview = computed<ImportReportItem[]>(() => report.value.previewList)
+
+  const handlePreviewPageChange = async () => {
+    if (!taskId.value) return
+    try {
+      const previewData = await fetchOrderImportReportPreviewList({
+        taskId: taskId.value,
+        page: previewPage.value,
+        pageSize: previewPageSize
+      })
+      report.value.previewList = previewData.records
+      report.value.previewTotal = previewData.total
+    } catch {
+      ElMessage.error('预览列表加载失败，请稍后重试')
+    }
+  }
 
   // ─── 失败态：错误分布 ──────────────────────────────────
-  const errorDist = computed(() => getErrorDistribution(failedItems.value))
+  const errorDist = computed(() =>
+    errorDistribution.value.length
+      ? errorDistribution.value
+      : getErrorDistribution(failedItems.value)
+  )
   const displayedFailedItems = computed(() => failedItems.value.slice(0, 5))
 
   // ─── 操作 ──────────────────────────────────────────────
   const goBack = () => router.push({ name: 'OrderImport' })
-  const handleDownloadFailed = () => {
-    if (!OrderImportApiSource.exportReport) {
-      exportOrderImportReport(taskId.value).catch(() => undefined)
+  const handleDownloadFailed = async () => {
+    try {
+      await exportOrderImportReport(taskId.value)
+      ElMessage.success('已触发失败数据导出')
+    } catch {
+      ElMessage.error('导出失败，请稍后重试')
     }
-    ElMessage.info('已触发失败数据导出')
   }
 </script>
 
@@ -421,11 +463,11 @@
   // ─── 顶栏 ───────────────────────────────────────────────
   .page-topbar {
     display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
     align-items: flex-end;
     justify-content: space-between;
     padding: 20px 0 16px;
-    flex-wrap: wrap;
-    gap: 12px;
   }
 
   .breadcrumb {
@@ -439,11 +481,17 @@
   .bc-item {
     color: var(--text-secondary);
     cursor: pointer;
-    &:hover { color: var(--accent); }
+    &:hover {
+      color: var(--accent);
+    }
   }
 
-  .bc-sep     { color: var(--text-muted); }
-  .bc-current { color: var(--text-secondary); }
+  .bc-sep {
+    color: var(--text-muted);
+  }
+  .bc-current {
+    color: var(--text-secondary);
+  }
 
   .page-title {
     display: flex;
@@ -457,15 +505,30 @@
 
   .task-id-badge {
     padding: 3px 10px;
+    font-family: monospace;
     font-size: 14px;
     font-weight: 500;
-    font-family: monospace;
     border-radius: 6px;
 
-    &--completed  { color: #60a5fa; background: rgb(59 130 246 / 12%); }
-    &--partial    { color: var(--amber); background: rgb(245 158 11 / 12%); }
-    &--failed     { color: var(--red); background: rgb(239 68 68 / 12%); }
-    &--processing { color: #60a5fa; background: rgb(59 130 246 / 12%); }
+    &--completed {
+      color: #60a5fa;
+      background: rgb(59 130 246 / 12%);
+    }
+
+    &--partial {
+      color: var(--amber);
+      background: rgb(245 158 11 / 12%);
+    }
+
+    &--failed {
+      color: var(--red);
+      background: rgb(239 68 68 / 12%);
+    }
+
+    &--processing {
+      color: #60a5fa;
+      background: rgb(59 130 246 / 12%);
+    }
   }
 
   .topbar-actions {
@@ -476,8 +539,8 @@
 
   .btn-download {
     display: inline-flex !important;
-    align-items: center !important;
     gap: 5px !important;
+    align-items: center !important;
     color: var(--amber) !important;
     background: transparent !important;
     border: 1px solid rgb(245 158 11 / 50%) !important;
@@ -491,13 +554,15 @@
   }
 
   .btn-back {
-    color: #0b1120 !important;
     font-weight: 600 !important;
+    color: #0b1120 !important;
     background: var(--accent) !important;
     border: none !important;
     border-radius: 8px !important;
 
-    &:hover { filter: brightness(1.1); }
+    &:hover {
+      filter: brightness(1.1);
+    }
   }
 
   // ─── 三卡信息行 ──────────────────────────────────────────
@@ -515,8 +580,8 @@
     border-radius: 10px;
 
     &--warn {
-      border-color: var(--border-warn);
       background: linear-gradient(135deg, #131c2e 0%, #1e1608 100%);
+      border-color: var(--border-warn);
     }
   }
 
@@ -539,8 +604,19 @@
     gap: 3px;
   }
 
-  .info-label  { font-size: 12px; color: var(--text-muted); }
-  .info-value  { font-size: 13px; color: var(--text-primary); &--mono { font-family: monospace; } }
+  .info-label {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .info-value {
+    font-size: 13px;
+    color: var(--text-primary);
+
+    &--mono {
+      font-family: monospace;
+    }
+  }
 
   .source-badge {
     display: inline-flex;
@@ -549,8 +625,15 @@
     font-size: 12px;
     border-radius: 4px;
 
-    &--appstore   { color: #60a5fa; background: rgb(29 111 206 / 15%); }
-    &--googleplay { color: #4ade80; background: rgb(26 138 67 / 15%); }
+    &--appstore {
+      color: #60a5fa;
+      background: rgb(29 111 206 / 15%);
+    }
+
+    &--googleplay {
+      color: #4ade80;
+      background: rgb(26 138 67 / 15%);
+    }
   }
 
   // ─── 数据统计卡 ──────────────────────────────────────────
@@ -560,49 +643,79 @@
     align-items: center;
   }
 
-  .stats-left { flex: 1; }
+  .stats-left {
+    flex: 1;
+  }
 
   .stats-total {
+    margin-bottom: 4px;
     font-size: 36px;
     font-weight: 700;
-    color: var(--text-primary);
     line-height: 1;
-    margin-bottom: 4px;
+    color: var(--text-primary);
   }
 
   .stats-total-label {
+    margin-bottom: 12px;
     font-size: 12px;
     color: var(--text-muted);
-    margin-bottom: 12px;
   }
 
   .legend-item {
     display: flex;
     gap: 6px;
     align-items: center;
+    margin-bottom: 5px;
     font-size: 12px;
     color: var(--text-secondary);
-    margin-bottom: 5px;
   }
 
   .legend-dot {
+    flex-shrink: 0;
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    flex-shrink: 0;
-    &--teal  { background: #2dd4bf; }
-    &--amber { background: #f59e0b; }
-    &--red   { background: #ef4444; }
+    &--teal {
+      background: #2dd4bf;
+    }
+    &--amber {
+      background: #f59e0b;
+    }
+    &--red {
+      background: #ef4444;
+    }
   }
 
-  .stats-right { flex-shrink: 0; width: 90px; height: 90px; }
-  .donut { width: 100%; height: 100%; }
+  .stats-right {
+    flex-shrink: 0;
+    width: 90px;
+    height: 90px;
+  }
 
-  .donut-track { fill: none; stroke: rgb(255 255 255 / 6%); stroke-width: 14; }
-  .donut-seg   { fill: none; stroke-width: 14; }
-  .donut-seg--teal  { stroke: #2dd4bf; }
-  .donut-seg--amber { stroke: #f59e0b; }
-  .donut-seg--red   { stroke: #ef4444; }
+  .donut {
+    width: 100%;
+    height: 100%;
+  }
+
+  .donut-track {
+    fill: none;
+    stroke: rgb(255 255 255 / 6%);
+    stroke-width: 14;
+  }
+
+  .donut-seg {
+    fill: none;
+    stroke-width: 14;
+  }
+  .donut-seg--teal {
+    stroke: #2dd4bf;
+  }
+  .donut-seg--amber {
+    stroke: #f59e0b;
+  }
+  .donut-seg--red {
+    stroke: #ef4444;
+  }
 
   // ─── 状态卡 ──────────────────────────────────────────────
   .status-body {
@@ -616,10 +729,18 @@
     gap: 8px;
     align-items: center;
 
-    &--completed { color: #22c55e; }
-    &--partial   { color: var(--amber); }
-    &--failed    { color: var(--red); }
-    &--processing { color: #60a5fa; }
+    &--completed {
+      color: #22c55e;
+    }
+    &--partial {
+      color: var(--amber);
+    }
+    &--failed {
+      color: var(--red);
+    }
+    &--processing {
+      color: #60a5fa;
+    }
   }
 
   .status-label {
@@ -635,12 +756,21 @@
     font-size: 13px;
   }
 
-  .sq-label { color: var(--text-muted); }
+  .sq-label {
+    color: var(--text-muted);
+  }
+
   .sq-value {
     color: var(--text-secondary);
-    &--good   { color: #22c55e; }
-    &--medium { color: var(--amber); }
-    &--bad    { color: var(--red); }
+    &--good {
+      color: #22c55e;
+    }
+    &--medium {
+      color: var(--amber);
+    }
+    &--bad {
+      color: var(--red);
+    }
   }
 
   .status-suggest {
@@ -650,7 +780,9 @@
     color: var(--text-muted);
   }
 
-  .suggest-label { flex-shrink: 0; }
+  .suggest-label {
+    flex-shrink: 0;
+  }
 
   // ─── 底部布局 ────────────────────────────────────────────
   .bottom-row {
@@ -685,12 +817,14 @@
     font-size: 12px;
     color: var(--accent);
 
-    &--red { color: var(--red); }
+    &--red {
+      color: var(--red);
+    }
   }
 
   .btn-link {
-    margin-left: auto;
     padding: 3px 10px;
+    margin-left: auto;
     font-size: 12px;
     color: var(--accent);
     cursor: pointer;
@@ -699,23 +833,29 @@
     border-radius: 4px;
     transition: all 0.15s;
 
-    &:hover { background: rgb(45 212 191 / 10%); }
+    &:hover {
+      background: rgb(45 212 191 / 10%);
+    }
 
     &--amber {
       color: var(--amber);
       border-color: rgb(245 158 11 / 30%);
-      &:hover { background: rgb(245 158 11 / 10%); }
+      &:hover {
+        background: rgb(245 158 11 / 10%);
+      }
     }
   }
 
   .ir-table {
     width: 100%;
+
     --el-table-bg-color: transparent;
     --el-table-header-bg-color: #0d1626;
     --el-table-row-hover-bg-color: #162035;
     --el-table-border-color: var(--border);
     --el-table-text-color: var(--text-primary);
     --el-table-header-text-color: var(--text-secondary);
+
     background: transparent !important;
 
     :deep(th.el-table__cell) {
@@ -731,8 +871,12 @@
       border-bottom: 1px solid var(--border) !important;
     }
 
-    :deep(tr) { background: transparent !important; }
-    :deep(.el-table__inner-wrapper::before) { display: none; }
+    :deep(tr) {
+      background: transparent !important;
+    }
+    :deep(.el-table__inner-wrapper::before) {
+      display: none;
+    }
   }
 
   .row-num {
@@ -746,11 +890,21 @@
     font-size: 12px;
     font-weight: 500;
 
-    &--missing_field { color: var(--red); }
-    &--amount_format { color: var(--amber); }
-    &--date_format   { color: #f97316; }
-    &--country_code  { color: var(--amber); }
-    &--other         { color: var(--text-muted); }
+    &--missing_field {
+      color: var(--red);
+    }
+    &--amount_format {
+      color: var(--amber);
+    }
+    &--date_format {
+      color: #f97316;
+    }
+    &--country_code {
+      color: var(--amber);
+    }
+    &--other {
+      color: var(--text-muted);
+    }
   }
 
   .table-footer {
@@ -763,38 +917,56 @@
   }
 
   .footer-text {
+    display: flex;
+    gap: 4px;
+    align-items: center;
     font-size: 12px;
     color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 4px;
   }
 
   .ir-pagination {
     :deep(.el-pager li) {
-      min-width: 26px; height: 26px; font-size: 12px; line-height: 26px;
-      color: var(--text-secondary); background: transparent; border-radius: 4px;
-      &:hover { color: var(--accent); }
-      &.is-active { color: #0b1120; background: var(--accent); font-weight: 700; }
+      min-width: 26px;
+      height: 26px;
+      font-size: 12px;
+      line-height: 26px;
+      color: var(--text-secondary);
+      background: transparent;
+      border-radius: 4px;
+      &:hover {
+        color: var(--accent);
+      }
+
+      &.is-active {
+        font-weight: 700;
+        color: #0b1120;
+        background: var(--accent);
+      }
     }
-    :deep(.btn-prev), :deep(.btn-next) {
+
+    :deep(.btn-prev),
+    :deep(.btn-next) {
       color: var(--text-secondary) !important;
       background: rgb(255 255 255 / 4%) !important;
       border: 1px solid var(--border) !important;
       border-radius: 4px;
-      &:hover { color: var(--accent) !important; border-color: var(--accent) !important; }
+
+      &:hover {
+        color: var(--accent) !important;
+        border-color: var(--accent) !important;
+      }
     }
   }
 
   // ─── 侧边面板 ────────────────────────────────────────────
   .side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
     padding: 20px;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
   }
 
   .side-panel-title {
@@ -812,16 +984,16 @@
   }
 
   .dup-rule-label {
+    margin-bottom: 4px;
     font-size: 12px;
     font-weight: 600;
     color: var(--amber);
-    margin-bottom: 4px;
   }
 
   .dup-rule-text {
+    margin-bottom: 6px;
     font-size: 13px;
     color: var(--text-primary);
-    margin-bottom: 6px;
   }
 
   .dup-rule-desc {
@@ -832,41 +1004,45 @@
 
   .dup-ratio-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     font-size: 12px;
   }
 
   .progress-bar-wrap {
     height: 6px;
+    overflow: hidden;
     background: rgb(255 255 255 / 6%);
     border-radius: 3px;
-    overflow: hidden;
   }
 
   .progress-bar-fill {
     height: 100%;
     border-radius: 3px;
-    &--amber { background: var(--amber); }
+    &--amber {
+      background: var(--amber);
+    }
   }
 
   .side-tip {
     margin: 0;
     font-size: 12px;
-    color: var(--text-muted);
     line-height: 1.5;
+    color: var(--text-muted);
   }
 
   .btn-text-link {
     padding: 0;
     font-size: 13px;
     color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
     cursor: pointer;
     background: transparent;
     border: none;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    &:hover { opacity: 0.8; }
+    &:hover {
+      opacity: 0.8;
+    }
   }
 
   // 失败态：错误分布
@@ -885,27 +1061,27 @@
   }
 
   .error-dist-label {
-    color: var(--text-secondary);
-    white-space: nowrap;
     overflow: hidden;
+    color: var(--text-secondary);
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .error-dist-bar-wrap {
+    position: relative;
     display: flex;
-    align-items: center;
     gap: 6px;
-    background: rgb(255 255 255 / 4%);
-    border-radius: 3px;
+    align-items: center;
     height: 14px;
     overflow: hidden;
-    position: relative;
+    background: rgb(255 255 255 / 4%);
+    border-radius: 3px;
   }
 
   .error-dist-bar {
+    min-width: 4px;
     height: 100%;
     border-radius: 3px;
-    min-width: 4px;
     transition: width 0.5s ease;
   }
 
@@ -913,9 +1089,9 @@
     position: absolute;
     right: 4px;
     font-size: 11px;
-    color: #fff;
     font-weight: 600;
-    text-shadow: 0 0 4px rgba(0,0,0,0.8);
+    color: #fff;
+    text-shadow: 0 0 4px rgb(0 0 0 / 80%);
   }
 
   .error-dist-count {
@@ -934,15 +1110,15 @@
   }
 
   .fix-suggest-title {
+    margin-bottom: 8px;
     font-size: 13px;
     font-weight: 600;
     color: var(--accent);
-    margin-bottom: 8px;
   }
 
   .fix-suggest-list {
-    margin: 0;
     padding-left: 18px;
+    margin: 0;
     font-size: 12px;
     line-height: 1.8;
     color: var(--text-secondary);
@@ -950,15 +1126,15 @@
 
   .btn-download-full {
     display: inline-flex !important;
-    align-items: center !important;
     gap: 6px !important;
-    width: 100% !important;
+    align-items: center !important;
     justify-content: center !important;
+    width: 100% !important;
+    padding: 10px !important;
     color: var(--amber) !important;
     background: transparent !important;
     border: 1px solid rgb(245 158 11 / 50%) !important;
     border-radius: 8px !important;
-    padding: 10px !important;
 
     &:hover {
       color: #0b1120 !important;

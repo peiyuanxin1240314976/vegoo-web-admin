@@ -1,0 +1,109 @@
+{
+  "_comment": "导入报告成功预览列表（分页），供成功态表格与分页使用。",
+  "fieldDescription": {
+    "request": {
+      "taskId": { "type": "string", "required": true, "description": "任务 ID。" },
+      "page": { "type": "number", "required": true, "description": "页码。", "default": 1 },
+      "pageSize": { "type": "number", "required": true, "description": "每页条数。", "default": 6 }
+    },
+    "response": {
+      "records": {
+        "type": "ImportReportItem[]",
+        "required": true,
+        "description": "预览记录列表。"
+      },
+      "total": { "type": "number", "required": true, "description": "预览总条数。" },
+      "current": { "type": "number", "required": true, "description": "当前页码。" },
+      "size": { "type": "number", "required": true, "description": "每页条数。" }
+    },
+    "ImportReportItem": {
+      "rowNo": { "type": "number", "required": true, "description": "行号。" },
+      "orderId": { "type": "string", "required": true, "description": "订单号。" },
+      "transactionDate": { "type": "string", "required": true, "description": "交易日期。" },
+      "settlementDate": { "type": "string", "required": true, "description": "结算日期。" },
+      "productName": { "type": "string", "required": true, "description": "产品名称。" },
+      "sku": { "type": "string", "required": true, "description": "SKU。" },
+      "country": { "type": "string", "required": true, "description": "销售国家代码。" },
+      "partnerShare": { "type": "number", "required": true, "description": "分成金额。" },
+      "currency": { "type": "string", "required": true, "description": "币种。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["success", "duplicate", "failed"],
+        "description": "记录状态。"
+      },
+      "reason": { "type": "string", "required": false, "description": "失败/重复原因。" }
+    }
+  },
+  "sampleRequest": { "taskId": "IMP-020", "page": 1, "pageSize": 6 },
+  "sampleResponse": {
+    "data": {
+      "records": [
+        {
+          "rowNo": 1,
+          "orderId": "ORD-IMP-020-0001",
+          "transactionDate": "02/28/2026",
+          "settlementDate": "03/15/2026",
+          "productName": "Monthly Premium",
+          "sku": "pt_vip_monthly",
+          "country": "US",
+          "partnerShare": 7.08,
+          "currency": "USD",
+          "status": "success",
+          "reason": ""
+        },
+        {
+          "rowNo": 2,
+          "orderId": "ORD-IMP-020-0002",
+          "transactionDate": "02/27/2026",
+          "settlementDate": "03/15/2026",
+          "productName": "Weekly Premium",
+          "sku": "pt_vip_weekly",
+          "country": "DE",
+          "partnerShare": 4.24,
+          "currency": "EUR",
+          "status": "duplicate",
+          "reason": "记录已存在"
+        },
+        {
+          "rowNo": 3,
+          "orderId": "ORD-IMP-020-0003",
+          "transactionDate": "02/26/2026",
+          "settlementDate": "03/15/2026",
+          "productName": "Vip for one year",
+          "sku": "vip_yearly",
+          "country": "AE",
+          "partnerShare": 8.49,
+          "currency": "AED",
+          "status": "failed",
+          "reason": "金额格式错误"
+        }
+      ],
+      "total": 2450,
+      "current": 1,
+      "size": 6
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/order-import/report/preview-list",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "{ taskId, page, pageSize }",
+    "responseBody": "{ records, total, current, size }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "成功态与异常态都会调用 `fetchOrderImportReportPreviewList` 用于表格展示。",
+        "prerequisite": "`OrderImportReportApiSource.reportPreviewList`。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "点击分页器后，按 `page/pageSize` 重新请求当前任务预览列表。"
+      }
+    ],
+    "defaultSelection": "page=1, pageSize=6。",
+    "dedupe": "切页时以最新请求结果覆盖。"
+  }
+}
