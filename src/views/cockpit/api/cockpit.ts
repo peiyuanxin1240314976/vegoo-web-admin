@@ -33,6 +33,8 @@ import type {
   CockpitRevenueStructureInsight,
   CockpitAlertBanner,
   CockpitAlertSummaryMetric,
+  CockpitTodaySummaryCard,
+  CockpitYesterdaySummarySection,
   CockpitWarnListItem,
   CockpitAppSimulationParams,
   CockpitAppSimulationData,
@@ -107,6 +109,12 @@ const COCKPIT_BUSINESS_MAP_URL = `${ANALYSIS_API_BASE}/cockpit/businessMap`
 
 /** 收入结构接口（近7日收入结构流向桑基图） */
 const COCKPIT_INCOME_STRUCTURE_URL = `${ANALYSIS_API_BASE}/cockpit/incomeStructure`
+
+/** 今日 Tab 专属：四卡片汇总 */
+const COCKPIT_TODAY_SUMMARY_CARDS_URL = `${ANALYSIS_API_BASE}/cockpit/today-summary-cards`
+
+/** 昨日 Tab 专属：汇总面板（分组块） */
+const COCKPIT_YESTERDAY_SUMMARY_PANEL_URL = `${ANALYSIS_API_BASE}/cockpit/yesterday-summary-panel`
 
 /** 情景模拟接口 */
 const COCKPIT_APP_SIMULATION_URL = `${ANALYSIS_API_BASE}/cockpit/appSimulation`
@@ -1296,6 +1304,38 @@ export async function fetchIncomeStructure(params?: {
     data: params?.date ? { date: params.date } : {}
   })
   return Array.isArray(list) ? list : []
+}
+
+/**
+ * 获取今日 Tab 专属：四卡片汇总
+ * POST /api/v1/datacenter/analysis/cockpit/today-summary-cards，请求体：{ date: 'YYYY-MM-DD' }
+ */
+export async function fetchCockpitTodaySummaryCards(params?: {
+  date?: string
+}): Promise<CockpitTodaySummaryCard[]> {
+  if (COCKPIT_USE_MOCK) {
+    return Promise.resolve(MOCK_COCKPIT_OVERVIEW.todaySummaryCards ?? [])
+  }
+  return request.post<CockpitTodaySummaryCard[]>({
+    url: COCKPIT_TODAY_SUMMARY_CARDS_URL,
+    data: params?.date ? { date: params.date } : {}
+  })
+}
+
+/**
+ * 获取昨日 Tab 专属：汇总面板（分组块）
+ * POST /api/v1/datacenter/analysis/cockpit/yesterday-summary-panel，请求体：{ date: 'YYYY-MM-DD' }
+ */
+export async function fetchCockpitYesterdaySummaryPanel(params?: {
+  date?: string
+}): Promise<CockpitYesterdaySummarySection[]> {
+  if (COCKPIT_USE_MOCK) {
+    return Promise.resolve(MOCK_COCKPIT_OVERVIEW.yesterdaySummarySections ?? [])
+  }
+  return request.post<CockpitYesterdaySummarySection[]>({
+    url: COCKPIT_YESTERDAY_SUMMARY_PANEL_URL,
+    data: params?.date ? { date: params.date } : {}
+  })
 }
 
 /**

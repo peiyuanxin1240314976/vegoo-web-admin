@@ -1,0 +1,123 @@
+{
+  "_comment": "驾驶舱（昨日 Tab）- 汇总面板（分组块）。用于 alerts 下方新增一张面板卡片展示多分组内容。",
+  "fieldDescription": {
+    "request": {
+      "date": {
+        "type": "string",
+        "required": true,
+        "description": "查询日期，格式 YYYY-MM-DD（昨日 Tab 传当日对应的昨日）。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "CockpitYesterdaySummaryPanelData",
+        "required": true,
+        "description": "昨日汇总面板主体。"
+      }
+    },
+    "CockpitYesterdaySummaryPanelData": {
+      "sections": {
+        "type": "CockpitYesterdaySummarySection[]",
+        "required": true,
+        "description": "分组块数组；无数据返回 []。"
+      }
+    },
+    "CockpitYesterdaySummarySection": {
+      "key": {
+        "type": "string",
+        "required": true,
+        "description": "分组块唯一标识（如 adSpendSummary / proxySummary / proxyDetail / app-xxx）。"
+      },
+      "title": {
+        "type": "string",
+        "required": true,
+        "description": "分组块标题（如 广告支出汇总、代投汇总、代投明细、PhoneTracker 等）。"
+      },
+      "items": {
+        "type": "CockpitYesterdaySummaryMetricItem[]",
+        "required": true,
+        "description": "分组块内行列表。无数据返回 []。"
+      }
+    },
+    "CockpitYesterdaySummaryMetricItem": {
+      "label": {
+        "type": "string",
+        "required": true,
+        "description": "行名称（平台名/字段名/应用指标名等）。"
+      },
+      "valueText": {
+        "type": "string",
+        "required": true,
+        "description": "主值展示文案（可预格式化：$17163 / 128324 / 53% 等）。"
+      },
+      "changeText": {
+        "type": "string",
+        "required": false,
+        "description": "变化值展示文案（可预格式化：$631 / 20 / 77.9 等）。无变化可不返回或返回空字符串。"
+      },
+      "trend": {
+        "type": "string",
+        "required": false,
+        "enum": ["up", "down"],
+        "description": "变化方向，用于前端展示绿色上升/红色下降箭头。仅当 changeText 存在时才有意义。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "date": "2026-04-14"
+  },
+  "sampleResponse": {
+    "data": {
+      "sections": [
+        {
+          "key": "adSpendSummary",
+          "title": "广告支出汇总",
+          "items": [
+            { "label": "Google", "valueText": "$17163", "changeText": "$344", "trend": "up" },
+            { "label": "Facebook", "valueText": "$9209", "changeText": "$631", "trend": "down" },
+            { "label": "Mintegral", "valueText": "$2107", "changeText": "$158", "trend": "down" }
+          ]
+        },
+        {
+          "key": "proxySummary",
+          "title": "代投汇总",
+          "items": [
+            { "label": "广告支出", "valueText": "$132", "changeText": "$20.8", "trend": "down" },
+            { "label": "Facebook", "valueText": "$132", "changeText": "$20.8", "trend": "down" }
+          ]
+        },
+        {
+          "key": "app-phonetracker",
+          "title": "PhoneTracker",
+          "items": [
+            { "label": "总收入", "valueText": "$6609", "changeText": "$1105", "trend": "down" },
+            { "label": "广告支出", "valueText": "$5304", "changeText": "$967", "trend": "down" },
+            { "label": "广告系列", "valueText": "187", "changeText": "20", "trend": "up" }
+          ]
+        },
+        {
+          "key": "app-phonetracker2",
+          "title": "PhoneTracker2",
+          "items": [
+            { "label": "总收入", "valueText": "$4288", "changeText": "$802", "trend": "down" },
+            { "label": "广告支出", "valueText": "$3612", "changeText": "$655", "trend": "down" },
+            { "label": "广告系列", "valueText": "143", "changeText": "12", "trend": "up" }
+          ]
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/cockpit/yesterday-summary-panel",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "date (YYYY-MM-DD)",
+    "responseBody": "CockpitYesterdaySummaryPanelData"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "建议后端直接返回 valueText/changeText（预格式化），避免前端处理货币符号、小数位与千分位差异。",
+      "sections 的顺序即前端展示顺序。"
+    ]
+  }
+}
