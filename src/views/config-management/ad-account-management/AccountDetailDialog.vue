@@ -57,7 +57,7 @@
   )
 
   const dialogTitle = computed(() => {
-    if (!props.account) return 'Account Detail'
+    if (!props.account) return '账户详情'
     return `${props.account.appName} / ${props.account.platform} / ${props.account.adPlatform}`
   })
 
@@ -71,14 +71,15 @@
 
   const operationLogs = computed(() => {
     if (!props.account) return []
+    const statusLabel = props.account.status === 'enabled' ? '已启用' : '已停用'
     return [
       {
         date: '2026-04-14',
-        text: `Last known status: ${props.account.status}`
+        text: `最近状态：${statusLabel}`
       },
       {
         date: '2026-04-14',
-        text: `Manager account: ${props.account.managerAccount}`
+        text: `经理账户：${props.account.managerAccount}`
       }
     ]
   })
@@ -114,7 +115,7 @@
   function handleSave() {
     if (!form.value) return
     if (!form.value.managerAccount.trim()) {
-      ElMessage.warning('Manager account is required')
+      ElMessage.warning('请填写经理账户')
       return
     }
     emit('update', {
@@ -129,7 +130,7 @@
     const token = form.value?.token
     if (!token) return
     await navigator.clipboard.writeText(token)
-    ElMessage.success('Token copied')
+    ElMessage.success('已复制令牌')
   }
 </script>
 
@@ -143,39 +144,39 @@
   >
     <template v-if="form">
       <div class="toolbar">
-        <el-button v-if="!isEditing" type="primary" plain @click="enterEdit">
+        <el-button v-if="!isEditing" type="primary" plain round @click="enterEdit">
           <el-icon><Edit /></el-icon>
-          Edit
+          编辑
         </el-button>
       </div>
 
       <el-descriptions :column="2" border class="summary">
-        <el-descriptions-item label="Status">
+        <el-descriptions-item label="状态">
           <el-tag :type="form.status === 'enabled' ? 'success' : 'danger'">
-            {{ form.status }}
+            {{ form.status === 'enabled' ? '已启用' : '已停用' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="App">{{ form.appName }}</el-descriptions-item>
-        <el-descriptions-item label="Platform">{{ form.platform }}</el-descriptions-item>
-        <el-descriptions-item label="Ad Platform">{{ form.adPlatform }}</el-descriptions-item>
+        <el-descriptions-item label="应用">{{ form.appName }}</el-descriptions-item>
+        <el-descriptions-item label="终端平台">{{ form.platform }}</el-descriptions-item>
+        <el-descriptions-item label="广告平台">{{ form.adPlatform }}</el-descriptions-item>
       </el-descriptions>
 
       <el-form label-position="top" class="detail-form">
-        <el-form-item label="Manager Account">
+        <el-form-item label="经理账户">
           <el-input
             v-if="isEditing"
             v-model="form.managerAccount"
-            placeholder="Enter manager account id"
+            placeholder="请输入经理账户 ID"
           />
           <div v-else class="mono">{{ form.managerAccount }}</div>
         </el-form-item>
 
-        <el-form-item label="Credential">
-          <el-input v-if="isEditing" v-model="form.credential" placeholder="Enter credential" />
+        <el-form-item label="凭证">
+          <el-input v-if="isEditing" v-model="form.credential" placeholder="请输入凭证" />
           <div v-else class="mono">{{ form.credential || '-' }}</div>
         </el-form-item>
 
-        <el-form-item label="Ad Account IDs">
+        <el-form-item label="广告子账户 ID">
           <div class="tag-list">
             <el-tag
               v-for="(item, index) in form.adAccounts"
@@ -185,19 +186,19 @@
             >
               {{ item }}
             </el-tag>
-            <span v-if="!form.adAccounts.length" class="empty-text">No ad account ids</span>
+            <span v-if="!form.adAccounts.length" class="empty-text">暂无广告子账户</span>
           </div>
           <div v-if="isEditing" class="tag-editor">
             <el-input
               v-model="newAccountId"
-              placeholder="Enter account id and press Enter"
+              placeholder="输入子账户 ID 后按回车或点击添加"
               @keyup.enter="addAccountId"
             />
-            <el-button @click="addAccountId">Add</el-button>
+            <el-button round @click="addAccountId">添加</el-button>
           </div>
         </el-form-item>
 
-        <el-form-item label="Token">
+        <el-form-item label="令牌">
           <template v-if="isEditing">
             <el-input v-model="form.token" :type="showToken ? 'text' : 'password'">
               <template #suffix>
@@ -213,11 +214,11 @@
               <div class="token-buttons">
                 <el-button text @click="showToken = !showToken">
                   <el-icon><View /></el-icon>
-                  {{ showToken ? 'Hide' : 'Show' }}
+                  {{ showToken ? '隐藏' : '显示' }}
                 </el-button>
                 <el-button text :disabled="!form.token" @click="copyToken">
                   <el-icon><CopyDocument /></el-icon>
-                  Copy
+                  复制
                 </el-button>
               </div>
             </div>
@@ -226,7 +227,7 @@
       </el-form>
 
       <div class="log-section">
-        <div class="log-title">Operation Logs</div>
+        <div class="log-title">操作记录</div>
         <ul class="log-list">
           <li v-for="log in operationLogs" :key="`${log.date}-${log.text}`">
             <span class="log-date">{{ log.date }}</span>
@@ -239,11 +240,11 @@
     <template #footer>
       <div class="dialog-footer">
         <template v-if="isEditing">
-          <el-button :disabled="submitting" @click="cancelEdit">Cancel</el-button>
-          <el-button type="primary" :loading="submitting" @click="handleSave">Save</el-button>
+          <el-button round :disabled="submitting" @click="cancelEdit">取消</el-button>
+          <el-button type="primary" round :loading="submitting" @click="handleSave">保存</el-button>
         </template>
         <template v-else>
-          <el-button @click="close">Close</el-button>
+          <el-button round @click="close">关闭</el-button>
         </template>
       </div>
     </template>

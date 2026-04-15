@@ -96,7 +96,7 @@
       tableData.value = response.records
       total.value = response.total
     } catch (error) {
-      ElMessage.error(getErrorMessage(error, 'Failed to load ad account table'))
+      ElMessage.error(getErrorMessage(error, '加载广告账户列表失败'))
     } finally {
       tableLoading.value = false
     }
@@ -107,7 +107,7 @@
     try {
       stats.value = await fetchAdAccountOverviewStats(statsQuery.value)
     } catch (error) {
-      ElMessage.error(getErrorMessage(error, 'Failed to load overview stats'))
+      ElMessage.error(getErrorMessage(error, '加载概览统计失败'))
     } finally {
       statsLoading.value = false
     }
@@ -146,9 +146,10 @@
   }
 
   async function handleToggleStatus(row: AdAccount) {
-    const action = row.status === 'enabled' ? 'disable' : 'enable'
+    const confirmMessage =
+      row.status === 'enabled' ? '确定要禁用该账户吗？' : '确定要启用该账户吗？'
     try {
-      await ElMessageBox.confirm(`Confirm to ${action} this account?`, 'Confirm', {
+      await ElMessageBox.confirm(confirmMessage, '确认', {
         type: 'warning'
       })
     } catch {
@@ -158,47 +159,44 @@
     try {
       if (row.status === 'enabled') {
         await disableAdAccount(row.id)
-        ElMessage.success('Account disabled')
+        ElMessage.success('已禁用账户')
       } else {
         await enableAdAccount(row.id)
-        ElMessage.success('Account enabled')
+        ElMessage.success('已启用账户')
       }
       await reloadAll()
     } catch (error) {
-      ElMessage.error(getErrorMessage(error, `Failed to ${action} account`))
+      const fallback = row.status === 'enabled' ? '禁用账户失败' : '启用账户失败'
+      ElMessage.error(getErrorMessage(error, fallback))
     }
   }
 
   async function handleDelete(row: AdAccount) {
     try {
-      await ElMessageBox.confirm(
-        'This action will permanently delete the account. Continue?',
-        'Warning',
-        { type: 'error' }
-      )
+      await ElMessageBox.confirm('此操作将永久删除该账户，是否继续？', '警告', { type: 'error' })
     } catch {
       return
     }
 
     try {
       await deleteAdAccount(row.id)
-      ElMessage.success('Account deleted')
+      ElMessage.success('已删除账户')
       if (selectedAccount.value?.id === row.id) {
         detailDialogVisible.value = false
         selectedAccount.value = null
       }
       await reloadAll()
     } catch (error) {
-      ElMessage.error(getErrorMessage(error, 'Failed to delete account'))
+      ElMessage.error(getErrorMessage(error, '删除账户失败'))
     }
   }
 
   async function handleExport() {
     try {
       await exportAdAccountList(tableQuery.value)
-      ElMessage.success('Export started')
+      ElMessage.success('已开始导出')
     } catch (error) {
-      ElMessage.error(getErrorMessage(error, 'Failed to export table data'))
+      ElMessage.error(getErrorMessage(error, '导出失败'))
     }
   }
 
@@ -214,11 +212,11 @@
     createSubmitting.value = true
     try {
       await createAdAccount(form)
-      ElMessage.success('Account created')
+      ElMessage.success('创建成功')
       addDialogVisible.value = false
       await reloadAll()
     } catch (error) {
-      ElMessage.error(getErrorMessage(error, 'Failed to create account'))
+      ElMessage.error(getErrorMessage(error, '创建账户失败'))
     } finally {
       createSubmitting.value = false
     }
@@ -230,18 +228,18 @@
     try {
       const updated = await updateAdAccount(selectedAccount.value.id, payload)
       selectedAccount.value = updated
-      ElMessage.success('Account updated')
+      ElMessage.success('更新成功')
       detailDialogVisible.value = false
       await reloadAll()
     } catch (error) {
-      ElMessage.error(getErrorMessage(error, 'Failed to update account'))
+      ElMessage.error(getErrorMessage(error, '更新账户失败'))
     } finally {
       updateSubmitting.value = false
     }
   }
 
   function formatAdAccounts(accounts: string[]) {
-    if (!accounts.length) return 'NULL'
+    if (!accounts.length) return '无'
     if (accounts.length <= 2) return accounts.join(', ')
     return accounts.slice(0, 2).join(', ')
   }
@@ -257,29 +255,27 @@
   <div class="ad-account-page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">Ad Account Management</h1>
-        <p class="page-subtitle">
-          Manage account credentials and platform mappings for each application.
-        </p>
+        <h1 class="page-title">广告账户管理</h1>
+        <p class="page-subtitle">管理各应用的账户凭证与广告平台映射关系。</p>
       </div>
-      <el-button type="primary" @click="addDialogVisible = true"> Create Account </el-button>
+      <el-button type="primary" round @click="addDialogVisible = true">新建账户</el-button>
     </div>
 
     <div class="stats-grid" v-loading="statsLoading">
       <div class="stat-card">
-        <div class="stat-label">Total Accounts</div>
+        <div class="stat-label">账户总数</div>
         <div class="stat-value">{{ stats.total }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Enabled</div>
+        <div class="stat-label">已启用</div>
         <div class="stat-value stat-green">{{ stats.enabled }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Disabled</div>
+        <div class="stat-label">已停用</div>
         <div class="stat-value stat-red">{{ stats.disabled }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Platforms</div>
+        <div class="stat-label">广告平台数</div>
         <div class="stat-value stat-blue">{{ stats.platformCount }}</div>
       </div>
     </div>
@@ -289,25 +285,25 @@
         v-model="filters.keyword"
         class="filter-search"
         clearable
-        placeholder="Search app or manager account"
+        placeholder="搜索应用或经理账户"
         :prefix-icon="Search"
       />
-      <el-select v-model="filters.appName" clearable placeholder="App" class="filter-select">
-        <el-option label="All" value="" />
+      <el-select v-model="filters.appName" clearable placeholder="应用" class="filter-select">
+        <el-option label="全部" value="" />
         <el-option v-for="app in appOptions" :key="app" :label="app" :value="app" />
       </el-select>
-      <el-select v-model="filters.platform" clearable placeholder="Platform" class="filter-select">
-        <el-option label="All" value="" />
-        <el-option label="Android" value="Android" />
+      <el-select v-model="filters.platform" clearable placeholder="终端平台" class="filter-select">
+        <el-option label="全部" value="" />
+        <el-option label="安卓" value="Android" />
         <el-option label="iOS" value="iOS" />
       </el-select>
       <el-select
         v-model="filters.adPlatform"
         clearable
-        placeholder="Ad Platform"
+        placeholder="广告平台"
         class="filter-select"
       >
-        <el-option label="All" value="" />
+        <el-option label="全部" value="" />
         <el-option
           v-for="platform in adPlatformOptions"
           :key="platform"
@@ -315,14 +311,14 @@
           :value="platform"
         />
       </el-select>
-      <el-select v-model="filters.status" clearable placeholder="Status" class="filter-select">
-        <el-option label="All" value="" />
-        <el-option label="Enabled" value="enabled" />
-        <el-option label="Disabled" value="disabled" />
+      <el-select v-model="filters.status" clearable placeholder="状态" class="filter-select">
+        <el-option label="全部" value="" />
+        <el-option label="已启用" value="enabled" />
+        <el-option label="已停用" value="disabled" />
       </el-select>
       <div class="filter-actions">
-        <el-button @click="resetFilter">Reset</el-button>
-        <el-button :icon="Upload" @click="handleExport">Export</el-button>
+        <el-button round @click="resetFilter">重置</el-button>
+        <el-button round :icon="Upload" @click="handleExport">导出</el-button>
       </div>
     </div>
 
@@ -335,7 +331,7 @@
           (row) => (row.row.status === 'disabled' ? { background: 'rgba(239,68,68,0.04)' } : {})
         "
       >
-        <el-table-column label="Status" width="80" align="center">
+        <el-table-column label="状态" width="80" align="center">
           <template #default="{ row }">
             <span
               class="status-dot"
@@ -344,7 +340,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="App" min-width="140">
+        <el-table-column label="应用" min-width="140">
           <template #default="{ row }">
             <div class="app-cell">
               <div class="app-icon">{{ row.appName.slice(0, 1) }}</div>
@@ -353,13 +349,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="Platform" width="120">
+        <el-table-column label="终端平台" width="120">
           <template #default="{ row }">
             <span class="platform-badge">{{ row.platform }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="Ad Platform" width="160">
+        <el-table-column label="广告平台" width="160">
           <template #default="{ row }">
             <div class="adplatform-cell">
               <span
@@ -376,13 +372,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="Manager Account" min-width="180">
+        <el-table-column label="经理账户" min-width="180">
           <template #default="{ row }">
             <span class="mono-text">{{ row.managerAccount }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="Ad Accounts" min-width="220">
+        <el-table-column label="广告子账户" min-width="220">
           <template #default="{ row }">
             <template v-if="row.adAccounts.length">
               <span class="mono-text">{{ formatAdAccounts(row.adAccounts) }}</span>
@@ -390,17 +386,17 @@
                 +{{ row.adAccounts.length - 2 }}
               </el-tag>
             </template>
-            <span v-else class="null-text">NULL</span>
+            <span v-else class="null-text">无</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="Credential" min-width="140">
+        <el-table-column label="凭证" min-width="140">
           <template #default="{ row }">
             <span class="mono-text">{{ row.credential || '-' }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="Token" width="180">
+        <el-table-column label="令牌" width="180">
           <template #default="{ row }">
             <div class="token-cell" v-if="row.token">
               <span class="token-mask">{{ maskToken(row.token) }}</span>
@@ -412,20 +408,20 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="Actions" width="200" fixed="right">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <div class="action-cell">
-              <span class="action-btn action-edit" @click="handleEdit(row)">Edit</span>
+              <span class="action-btn action-edit" @click="handleEdit(row)">编辑</span>
               <span class="action-divider">|</span>
               <span
                 class="action-btn"
                 :class="row.status === 'enabled' ? 'action-disable' : 'action-enable'"
                 @click="handleToggleStatus(row)"
               >
-                {{ row.status === 'enabled' ? 'Disable' : 'Enable' }}
+                {{ row.status === 'enabled' ? '禁用' : '启用' }}
               </span>
               <span class="action-divider">|</span>
-              <span class="action-btn action-delete" @click="handleDelete(row)">Delete</span>
+              <span class="action-btn action-delete" @click="handleDelete(row)">删除</span>
             </div>
           </template>
         </el-table-column>
@@ -433,7 +429,7 @@
     </div>
 
     <div class="pagination-bar">
-      <span class="pagination-total">Total {{ total }} records</span>
+      <span class="pagination-total">共 {{ total }} 条</span>
       <el-pagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"

@@ -76,7 +76,7 @@
 
   function handleSave() {
     if (!form.managerAccount.trim()) {
-      ElMessage.warning('Manager account is required')
+      ElMessage.warning('请填写经理账户')
       return
     }
     emit('save', {
@@ -92,28 +92,28 @@
 <template>
   <el-dialog
     :model-value="visible"
-    title="Create Ad Account"
+    title="新建广告账户"
     width="560px"
     destroy-on-close
     @close="close"
   >
     <div class="dialog-body">
       <el-form label-position="top">
-        <el-form-item label="App" required>
+        <el-form-item label="应用" required>
           <el-select v-model="form.appName" style="width: 100%">
             <el-option v-for="app in appOptions" :key="app" :label="app" :value="app" />
           </el-select>
         </el-form-item>
 
         <div class="grid-2">
-          <el-form-item label="Platform" required>
+          <el-form-item label="终端平台" required>
             <el-radio-group v-model="form.platform">
-              <el-radio-button label="Android" value="Android" />
-              <el-radio-button label="iOS" value="iOS" />
+              <el-radio-button label="Android">安卓</el-radio-button>
+              <el-radio-button label="iOS">iOS</el-radio-button>
             </el-radio-group>
           </el-form-item>
 
-          <el-form-item label="Ad Platform" required>
+          <el-form-item label="广告平台" required>
             <el-select v-model="form.adPlatform" style="width: 100%">
               <el-option
                 v-for="platform in adPlatformOptions"
@@ -125,15 +125,15 @@
           </el-form-item>
         </div>
 
-        <el-form-item label="Manager Account" required>
-          <el-input v-model="form.managerAccount" placeholder="Enter manager account id" />
+        <el-form-item label="经理账户" required>
+          <el-input v-model="form.managerAccount" placeholder="请输入经理账户 ID" />
         </el-form-item>
 
-        <el-form-item label="Credential">
-          <el-input v-model="form.credential" placeholder="Enter credential name" />
+        <el-form-item label="凭证">
+          <el-input v-model="form.credential" placeholder="请输入凭证名称" />
         </el-form-item>
 
-        <el-form-item label="Ad Account IDs">
+        <el-form-item label="广告子账户 ID">
           <div class="account-input">
             <div class="tag-list">
               <el-tag
@@ -148,19 +148,19 @@
             <div class="tag-editor">
               <el-input
                 v-model="newAccountId"
-                placeholder="Enter account id and press Enter"
+                placeholder="输入子账户 ID 后按回车或点击添加"
                 @keyup.enter="addAccountId"
               />
-              <el-button @click="addAccountId">Add</el-button>
+              <el-button round @click="addAccountId">添加</el-button>
             </div>
           </div>
         </el-form-item>
 
-        <el-form-item label="Token">
+        <el-form-item label="令牌">
           <el-input
             v-model="form.token"
             :type="showToken ? 'text' : 'password'"
-            placeholder="Enter token"
+            placeholder="请输入令牌"
           >
             <template #suffix>
               <el-icon class="token-toggle" @click="showToken = !showToken">
@@ -174,8 +174,8 @@
 
     <template #footer>
       <div class="dialog-footer">
-        <el-button :disabled="submitting" @click="close">Cancel</el-button>
-        <el-button type="primary" :loading="submitting" @click="handleSave">Save</el-button>
+        <el-button round :disabled="submitting" @click="close">取消</el-button>
+        <el-button type="primary" round :loading="submitting" @click="handleSave">保存</el-button>
       </div>
     </template>
   </el-dialog>
