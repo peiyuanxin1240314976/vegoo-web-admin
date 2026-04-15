@@ -3,20 +3,25 @@
    * 评论与评分监控 — 页面容器（样式对齐广告成效页）
    */
   import { ref, reactive, computed } from 'vue'
-  import { Calendar, Grid, Iphone, Reading } from '@element-plus/icons-vue'
+  import { Grid, Iphone, Reading } from '@element-plus/icons-vue'
   import ReviewMonitorSummary from './components/ReviewMonitorSummary.vue'
   import ReviewMonitorDetail from './components/ReviewMonitorDetail.vue'
   import type { GlobalFilter } from '@/api/product-operations/reviews-ratings-monitor'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 
   defineOptions({ name: 'ReviewsRatingsMonitor' })
 
   function createDefaultFilter(): GlobalFilter {
+    const end = getAppNow()
+    const start = cloneAppDate(end)
+    // 保持原默认跨度（近 7 天）：结束为今天，开始往前推 6 天
+    start.setDate(start.getDate() - 6)
     return {
       appId: '',
       platform: '',
-      startDate: '2026-02-28',
-      endDate: '2026-03-06',
+      startDate: formatYYYYMMDD(start),
+      endDate: formatYYYYMMDD(end),
       language: ''
     }
   }
@@ -73,12 +78,12 @@
     }
   })
 
-  const dateRangeDisplay = computed(() => {
-    const s = draftFilters.startDate?.trim()
-    const e = draftFilters.endDate?.trim()
-    if (s && e) return `${s} ~ ${e}`
-    return '请选择'
-  })
+  // const dateRangeDisplay = computed(() => {
+  //   const s = draftFilters.startDate?.trim()
+  //   const e = draftFilters.endDate?.trim()
+  //   if (s && e) return `${s} ~ ${e}`
+  //   return '请选择'
+  // })
 
   const tabSliderStyle = computed(() => ({
     '--rrm-tab-count': '2',
@@ -101,11 +106,11 @@
     >
       <div class="rrm-filters">
         <div class="rrm-filters__left">
-          <div class="rrm-filter-chip">
+          <!-- <div class="rrm-filter-chip">
             <ElIcon class="rrm-filter-chip__icon"><Calendar /></ElIcon>
             <span class="rrm-filter-chip__label">日期范围</span>
             <span class="rrm-filter-chip__value">{{ dateRangeDisplay }}</span>
-          </div>
+          </div> -->
 
           <ElSelect
             v-model="draftFilters.appId"
@@ -386,6 +391,7 @@
 
   /* ── 筛选栏（对齐 ad-performance-filters）── */
   .rrm-filters {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     gap: 14px 16px;
@@ -393,7 +399,9 @@
     justify-content: flex-start;
     min-width: 0;
     padding: 18px 20px;
+    overflow: hidden;
     background: rgb(10 10 14 / 82%);
+    isolation: isolate;
     backdrop-filter: blur(12px);
     border: 1px solid rgb(96 165 250 / 20%);
     border-radius: 16px;
@@ -401,6 +409,45 @@
       0 8px 32px rgb(0 0 0 / 40%),
       inset 0 1px 0 rgb(186 230 253 / 10%),
       0 0 40px rgb(59 130 246 / 8%);
+
+    &::before {
+      position: absolute;
+      top: -35%;
+      right: -12%;
+      width: 44%;
+      height: 170%;
+      pointer-events: none;
+      content: '';
+      background: radial-gradient(
+        ellipse at center,
+        color-mix(in srgb, var(--art-primary) 32%, transparent) 0%,
+        transparent 65%
+      );
+      opacity: 0.65;
+    }
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: '';
+      background-image:
+        linear-gradient(
+          color-mix(in srgb, var(--art-primary) 7%, transparent) 1px,
+          transparent 1px
+        ),
+        linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--art-primary) 7%, transparent) 1px,
+          transparent 1px
+        );
+      background-size:
+        28px 28px,
+        28px 28px;
+      opacity: 0.32;
+      mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+    }
   }
 
   .rrm-filters__left {
@@ -411,6 +458,18 @@
     align-items: center;
     justify-content: flex-start;
     min-width: 0;
+    padding: 10px 12px;
+    background: color-mix(in srgb, var(--default-box-color) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent);
+    border-radius: 14px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 7%),
+      0 0 18px color-mix(in srgb, var(--art-primary) 12%, transparent);
+  }
+
+  .rrm-filters > * {
+    position: relative;
+    z-index: 1;
   }
 
   .rrm-filter-chip {
@@ -567,6 +626,15 @@
     }
   }
 
+  .rrm-filter-action-btn--query {
+    --el-button-bg-color: color-mix(in srgb, var(--el-color-primary) 24%, transparent);
+    --el-button-text-color: var(--el-color-white);
+    --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 58%, transparent);
+    --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 34%, transparent);
+    --el-button-hover-text-color: var(--el-color-white);
+    --el-button-hover-border-color: var(--el-color-primary);
+  }
+
   .rrm-filter-action-btn--query:disabled {
     cursor: not-allowed;
     opacity: 0.42;
@@ -711,6 +779,7 @@
 
     .rrm-filters__left {
       justify-content: flex-start;
+      padding: 8px;
     }
 
     .rrm-filter-select,
@@ -776,6 +845,11 @@
 
     .rrm-tab-slider__thumb {
       transition: none;
+    }
+
+    .rrm-filters::before,
+    .rrm-filters::after {
+      display: none;
     }
   }
 </style>
