@@ -358,9 +358,6 @@
       0 10px 32px rgb(0 0 0 / 26%),
       inset 0 1px 0 rgb(244 244 245 / 7%),
       0 0 40px rgb(59 130 246 / 4%);
-    transition:
-      box-shadow 0.45s var(--ease-out),
-      border-color 0.35s var(--ease-default);
 
     &:hover {
       border-color: rgb(96 165 250 / 45%);
@@ -393,7 +390,6 @@
         rgb(59 130 246 / 50%)
       );
       border-radius: 3px 0 0 3px;
-      animation: hint-line-glow 3s ease-in-out infinite alternate;
     }
 
     &::after {
@@ -414,23 +410,6 @@
         transparent 300deg
       );
       opacity: 0.45;
-      animation: hint-sweep 8s linear infinite;
-    }
-  }
-
-  @keyframes hint-line-glow {
-    0% {
-      box-shadow: 0 0 8px rgb(16 185 129 / 30%);
-    }
-
-    100% {
-      box-shadow: 0 0 16px rgb(34 211 238 / 45%);
-    }
-  }
-
-  @keyframes hint-sweep {
-    to {
-      transform: rotate(360deg);
     }
   }
 
@@ -451,9 +430,6 @@
     -webkit-background-clip: text;
     background-clip: text;
     background-size: 100%;
-    transition:
-      transform 0.35s var(--ease-out),
-      filter 0.35s var(--ease-out);
     -webkit-text-fill-color: transparent;
   }
 
@@ -464,10 +440,6 @@
     margin: 0;
     font-size: var(--font-size-aux);
     line-height: 1.7;
-
-    li {
-      transition: color 0.3s var(--ease-out);
-    }
 
     li + li {
       margin-top: 3px;

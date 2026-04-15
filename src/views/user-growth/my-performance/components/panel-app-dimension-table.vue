@@ -739,7 +739,6 @@
       0 -4px 20px rgb(0 0 0 / 25%),
       0 0 40px rgb(59 130 246 / 6%),
       inset 0 1px 0 rgb(244 244 245 / 5%);
-    animation: summary-sheen 6s ease-in-out infinite;
 
     &::before {
       position: absolute;
@@ -752,31 +751,6 @@
         rgb(34 211 238 / 6%) 50%,
         transparent 60%
       );
-      animation: summary-glint 4s ease-in-out infinite;
-    }
-  }
-
-  @keyframes summary-sheen {
-    0%,
-    100% {
-      background-position: 0% 50%;
-    }
-
-    50% {
-      background-position: 100% 50%;
-    }
-  }
-
-  @keyframes summary-glint {
-    0%,
-    100% {
-      opacity: 0;
-      transform: translateX(-30%);
-    }
-
-    50% {
-      opacity: 1;
-      transform: translateX(30%);
     }
   }
 
