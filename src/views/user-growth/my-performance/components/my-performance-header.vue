@@ -63,6 +63,7 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import { WarningFilled } from '@element-plus/icons-vue'
+  import { getAppNow } from '@/utils/app-now'
   import type {
     MyPerformancePeriodOption,
     MyPerformancePeriodType,
@@ -135,7 +136,12 @@
   const activeMonthLabel = computed(() => {
     const monthOpts = props.periodOptions?.month ?? []
     const found = monthOpts.find((o) => o.value === props.periodValue)
-    return (props.periodType === 'month' ? found?.value : monthOpts[0]?.value) ?? ''
+    if (props.periodType === 'month') return found?.value ?? ''
+
+    const y = getAppNow().getFullYear()
+    const m = String(getAppNow().getMonth() + 1).padStart(2, '0')
+    const appNowMonth = `${y}-${m}`
+    return monthOpts.find((o) => o.value === appNowMonth)?.value ?? monthOpts[0]?.value ?? ''
   })
 
   const personLabel = computed(() => props.personLabel)

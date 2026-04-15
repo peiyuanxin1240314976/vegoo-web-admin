@@ -8,8 +8,8 @@
         :period-type="data.periodType"
         :period-value="data.selectedPeriodValue"
         :period-options="data.periodOptions"
-        left-primary="当前日期：2026-03-04"
-        left-secondary="计算日期：2026-03-01 至 2026-03-04"
+        :left-primary="leftPrimaryText"
+        :left-secondary="leftSecondaryText"
         left-tertiary="时区：PST (UTC-8)"
         left-quaternary="货币：USD"
         left-hint="注意：一周内及回收周期内的数据会回更，此页面数据仅供参考，并非最终绩效结果；每个月度前3天仍然展示上个月度的数据。"
@@ -108,6 +108,7 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import MyPerformanceHeader from './components/my-performance-header.vue'
   import MyPerformanceTopCard from './components/my-performance-top-card.vue'
   import MyPerformancePanelKpiAchievement from './components/panel-kpi-achievement.vue'
@@ -132,6 +133,15 @@
   } = useMyPerformancePage()
 
   const cardLoading = computed(() => loading.value || detailLoading.value)
+  const currentDateText = computed(() => formatYYYYMMDD(getAppNow()))
+  const computeRangeText = computed(() => {
+    const end = getAppNow()
+    const start = cloneAppDate(end)
+    start.setDate(start.getDate() - 3)
+    return `${formatYYYYMMDD(start)} 至 ${formatYYYYMMDD(end)}`
+  })
+  const leftPrimaryText = computed(() => `当前日期：${currentDateText.value}`)
+  const leftSecondaryText = computed(() => `计算日期：${computeRangeText.value}`)
 
   function parseSpendTotalPair(value: string): { spend: number; target: number } | null {
     const parts = String(value).split(/\s*\/\s*/)

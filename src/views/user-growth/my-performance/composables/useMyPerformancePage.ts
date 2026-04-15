@@ -20,13 +20,14 @@ import type {
   MyPerformanceQueryBody
 } from '../types'
 
-/** 月度口径：固定使用当年 3 月（`YYYY-03`） */
-function pickFixedMarchPeriodValue(monthOptions: MyPerformancePeriodOption[]): string {
+/** 月度口径：优先使用应用“当前月”（由 getAppNow 控制） */
+function pickAppNowMonthPeriodValue(monthOptions: MyPerformancePeriodOption[]): string {
   const y = getAppNow().getFullYear()
-  const target = `${y}-03`
+  const m = String(getAppNow().getMonth() + 1).padStart(2, '0')
+  const target = `${y}-${m}`
   if (monthOptions.some((o) => o.value === target)) return target
-  const anyMarch = monthOptions.find((o) => /-03$/.test(o.value))
-  if (anyMarch) return anyMarch.value
+  const anySameMonth = monthOptions.find((o) => o.value.endsWith(`-${m}`))
+  if (anySameMonth) return anySameMonth.value
   return target
 }
 
@@ -62,7 +63,7 @@ function normalizeMetaPeriodPayload(
       return {
         periodOptions,
         periodType: 'month',
-        selectedPeriodValue: pickFixedMarchPeriodValue(periodOptions.month)
+        selectedPeriodValue: pickAppNowMonthPeriodValue(periodOptions.month)
       }
     }
     return { periodOptions, periodType: sp.periodType, selectedPeriodValue: sp.periodValue }
@@ -72,7 +73,7 @@ function normalizeMetaPeriodPayload(
     return {
       periodOptions,
       periodType: 'month',
-      selectedPeriodValue: pickFixedMarchPeriodValue(periodOptions.month)
+      selectedPeriodValue: pickAppNowMonthPeriodValue(periodOptions.month)
     }
   }
   const q0 = periodOptions.quarter[0]?.value
@@ -82,7 +83,7 @@ function normalizeMetaPeriodPayload(
   return {
     periodOptions,
     periodType: 'month',
-    selectedPeriodValue: pickFixedMarchPeriodValue(periodOptions.month)
+    selectedPeriodValue: pickAppNowMonthPeriodValue(periodOptions.month)
   }
 }
 
@@ -303,7 +304,7 @@ export function useMyPerformancePage() {
     const nextValue =
       periodType === 'quarter'
         ? (data.value.periodOptions.quarter[0]?.value ?? data.value.selectedPeriodValue)
-        : pickFixedMarchPeriodValue(data.value.periodOptions.month)
+        : pickAppNowMonthPeriodValue(data.value.periodOptions.month)
     data.value.selectedPeriodValue = nextValue
     await loadDetail()
   }
