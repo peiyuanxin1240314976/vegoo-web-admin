@@ -24,16 +24,16 @@ export enum ExchangeRateEndpoint {
 }
 
 export const ExchangeRateApiSource: Record<ExchangeRateEndpoint, UseMock> = {
-  [ExchangeRateEndpoint.RateTable]: true,
-  [ExchangeRateEndpoint.OverviewKpi]: true,
-  [ExchangeRateEndpoint.TrendSeries]: true,
-  [ExchangeRateEndpoint.SyncConfigDetail]: true,
-  [ExchangeRateEndpoint.SyncMetaOptions]: true,
-  [ExchangeRateEndpoint.ManualCreate]: true,
-  [ExchangeRateEndpoint.SyncRates]: true,
-  [ExchangeRateEndpoint.SaveSyncConfig]: true,
-  [ExchangeRateEndpoint.RateOverride]: true,
-  [ExchangeRateEndpoint.ExportRates]: true
+  [ExchangeRateEndpoint.RateTable]: false,
+  [ExchangeRateEndpoint.OverviewKpi]: false,
+  [ExchangeRateEndpoint.TrendSeries]: false,
+  [ExchangeRateEndpoint.SyncConfigDetail]: false,
+  [ExchangeRateEndpoint.SyncMetaOptions]: false,
+  [ExchangeRateEndpoint.ManualCreate]: false,
+  [ExchangeRateEndpoint.SyncRates]: false,
+  [ExchangeRateEndpoint.SaveSyncConfig]: false,
+  [ExchangeRateEndpoint.RateOverride]: false,
+  [ExchangeRateEndpoint.ExportRates]: false
 }
 
 /** 读取方：`src/api/config-management.ts` 汇率段（`ExchangeRateApiSource` 可继续作说明/导出默认值） */

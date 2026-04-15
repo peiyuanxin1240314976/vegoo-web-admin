@@ -25,18 +25,18 @@ export enum CountryEndpoint {
 }
 
 export const CountryApiSource: Record<CountryEndpoint, UseMock> = {
-  [CountryEndpoint.CountryTable]: true,
-  [CountryEndpoint.Detail]: true,
-  [CountryEndpoint.MetaOptions]: true,
-  [CountryEndpoint.OverviewKpi]: true,
-  [CountryEndpoint.RegionDistribution]: true,
-  [CountryEndpoint.MainMarketShare]: true,
-  [CountryEndpoint.CreateCountry]: true,
-  [CountryEndpoint.UpdateCountry]: true,
-  [CountryEndpoint.DeleteCountry]: true,
-  [CountryEndpoint.ExportCountry]: true,
-  [CountryEndpoint.ImportCountry]: true,
-  [CountryEndpoint.FlagIconUpload]: true
+  [CountryEndpoint.CountryTable]: false,
+  [CountryEndpoint.Detail]: false,
+  [CountryEndpoint.MetaOptions]: false,
+  [CountryEndpoint.OverviewKpi]: false,
+  [CountryEndpoint.RegionDistribution]: false,
+  [CountryEndpoint.MainMarketShare]: false,
+  [CountryEndpoint.CreateCountry]: false,
+  [CountryEndpoint.UpdateCountry]: false,
+  [CountryEndpoint.DeleteCountry]: false,
+  [CountryEndpoint.ExportCountry]: false,
+  [CountryEndpoint.ImportCountry]: false,
+  [CountryEndpoint.FlagIconUpload]: false
 }
 
 /** 读取方：`src/api/config-management.ts` 国家段 */

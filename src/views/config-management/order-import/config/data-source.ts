@@ -26,11 +26,11 @@ export enum OrderImportReportEndpoint {
 }
 
 export const OrderImportListApiSource: Record<OrderImportListEndpoint, UseMock> = {
-  [OrderImportListEndpoint.ImportTable]: true,
-  [OrderImportListEndpoint.ImportSummary]: true,
-  [OrderImportListEndpoint.SubmitImport]: true,
-  [OrderImportListEndpoint.PauseImport]: true,
-  [OrderImportListEndpoint.CancelImport]: true
+  [OrderImportListEndpoint.ImportTable]: false,
+  [OrderImportListEndpoint.ImportSummary]: false,
+  [OrderImportListEndpoint.SubmitImport]: false,
+  [OrderImportListEndpoint.PauseImport]: false,
+  [OrderImportListEndpoint.CancelImport]: false
 }
 
 export const OrderImportReportApiSource: Record<OrderImportReportEndpoint, UseMock> = {

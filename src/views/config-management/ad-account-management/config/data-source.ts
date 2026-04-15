@@ -27,19 +27,19 @@ export enum AdAccountManagementEndpoint {
 
 export const AdAccountManagementApiSource: Record<AdAccountManagementEndpoint, UseMock> = {
   // index.vue main table list
-  [AdAccountManagementEndpoint.Table]: true,
+  [AdAccountManagementEndpoint.Table]: false,
   // top overview stat cards
-  [AdAccountManagementEndpoint.OverviewStats]: true,
+  [AdAccountManagementEndpoint.OverviewStats]: false,
   // AddAccountDialog save action
-  [AdAccountManagementEndpoint.Create]: true,
+  [AdAccountManagementEndpoint.Create]: false,
   // AccountDetailDialog edit-save action
-  [AdAccountManagementEndpoint.Update]: true,
+  [AdAccountManagementEndpoint.Update]: false,
   // row action: enable
-  [AdAccountManagementEndpoint.Enable]: true,
+  [AdAccountManagementEndpoint.Enable]: false,
   // row action: disable
-  [AdAccountManagementEndpoint.Disable]: true,
+  [AdAccountManagementEndpoint.Disable]: false,
   // row action: delete
-  [AdAccountManagementEndpoint.Delete]: true,
+  [AdAccountManagementEndpoint.Delete]: false,
   // page header export button
   [AdAccountManagementEndpoint.Export]: true
 }

@@ -19,10 +19,10 @@ export enum PerfConfigEndpoint {
 }
 
 export const PerfConfigApiSource: Record<PerfConfigEndpoint, UseMock> = {
-  [PerfConfigEndpoint.Table]: true,
-  [PerfConfigEndpoint.OverviewKpi]: true,
-  [PerfConfigEndpoint.Create]: true,
-  [PerfConfigEndpoint.Activate]: true,
-  [PerfConfigEndpoint.Export]: true,
-  [PerfConfigEndpoint.ExportVersionCompare]: true
+  [PerfConfigEndpoint.Table]: false,
+  [PerfConfigEndpoint.OverviewKpi]: false,
+  [PerfConfigEndpoint.Create]: false,
+  [PerfConfigEndpoint.Activate]: false,
+  [PerfConfigEndpoint.Export]: false,
+  [PerfConfigEndpoint.ExportVersionCompare]: false
 }

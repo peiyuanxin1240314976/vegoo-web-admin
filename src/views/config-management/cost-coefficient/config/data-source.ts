@@ -17,12 +17,12 @@ export enum CostCoefficientEndpoint {
 }
 
 export const CostCoefficientApiSource: Record<CostCoefficientEndpoint, UseMock> = {
-  [CostCoefficientEndpoint.CoefficientTable]: true,
-  [CostCoefficientEndpoint.CoefficientOverviewKpi]: true,
-  [CostCoefficientEndpoint.CreateCoefficient]: true,
-  [CostCoefficientEndpoint.UpdateCoefficient]: true,
-  [CostCoefficientEndpoint.DeleteCoefficient]: true,
-  [CostCoefficientEndpoint.CoefficientHistory]: true
+  [CostCoefficientEndpoint.CoefficientTable]: false,
+  [CostCoefficientEndpoint.CoefficientOverviewKpi]: false,
+  [CostCoefficientEndpoint.CreateCoefficient]: false,
+  [CostCoefficientEndpoint.UpdateCoefficient]: false,
+  [CostCoefficientEndpoint.DeleteCoefficient]: false,
+  [CostCoefficientEndpoint.CoefficientHistory]: false
 }
 
 /** 读取方：`src/api/config-management.ts` 成本系数段 */

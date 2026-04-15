@@ -20,12 +20,12 @@ export enum OptimizerEndpoint {
 type UseMock = boolean
 
 const OptimizerApiMockDefaults: Record<OptimizerEndpoint, UseMock> = {
-  [OptimizerEndpoint.Table]: true,
-  [OptimizerEndpoint.Overview]: true,
-  [OptimizerEndpoint.MetaSystemUsers]: true,
-  [OptimizerEndpoint.Create]: true,
-  [OptimizerEndpoint.Update]: true,
-  [OptimizerEndpoint.Export]: true
+  [OptimizerEndpoint.Table]: false,
+  [OptimizerEndpoint.Overview]: false,
+  [OptimizerEndpoint.MetaSystemUsers]: false,
+  [OptimizerEndpoint.Create]: false,
+  [OptimizerEndpoint.Update]: false,
+  [OptimizerEndpoint.Export]: false
 }
 
 export function isOptimizerEndpointMock(endpoint: OptimizerEndpoint): boolean {
