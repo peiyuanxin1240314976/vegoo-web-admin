@@ -1,11 +1,14 @@
 import request from '@/utils/http'
 import { RoleEndpoint, isRoleEndpointMock } from '@/views/config-management/role/config/data-source'
+import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
 import {
   MOCK_PERMISSION_MODULES,
   MOCK_ROLE_LIST,
   getMockPermissionSummary,
   getMockRoleUsers
 } from '@/views/config-management/role/mock/data'
+
+const ROLE_BASE = `${ANALYSIS_API_BASE}/config-management/role`
 
 export interface RoleListQuery {
   keyword?: string
@@ -145,7 +148,7 @@ export function fetchRoleList(params: RoleListQuery = {}) {
   }
 
   return request.post<RoleListResponse>({
-    url: '/api/config-management/role/list',
+    url: `${ROLE_BASE}/list`,
     data: params,
     showErrorMessage: false
   })
@@ -158,7 +161,7 @@ export function fetchRolePermissionFunc(data: { roleId: number }) {
   }
 
   return request.post<RoleFuncPermissionResponse>({
-    url: '/api/config-management/role/permissions/func',
+    url: `${ROLE_BASE}/permissions/func`,
     data,
     showErrorMessage: false
   })
@@ -171,7 +174,7 @@ export function fetchRolePermissionData(data: { roleId: number }) {
   }
 
   return request.post<RoleDataPermissionResponse>({
-    url: '/api/config-management/role/permissions/data',
+    url: `${ROLE_BASE}/permissions/data`,
     data,
     showErrorMessage: false
   })
@@ -186,7 +189,7 @@ export function fetchRolePermissionSummary(data: { roleId: number }) {
   }
 
   return request.post<RolePermissionSummaryResponse>({
-    url: '/api/config-management/role/permissions/summary',
+    url: `${ROLE_BASE}/permissions/summary`,
     data,
     showErrorMessage: false
   })
@@ -201,7 +204,7 @@ export function fetchRoleUsers(data: { roleId: number }) {
   }
 
   return request.post<RoleUsersResponse>({
-    url: '/api/config-management/role/users',
+    url: `${ROLE_BASE}/users`,
     data,
     showErrorMessage: false
   })
@@ -216,7 +219,7 @@ export function fetchRolePermissionsUpdate(data: RolePermissionUpdatePayload) {
   }
 
   return request.post<RolePermissionUpdateResponse>({
-    url: '/api/config-management/role/permissions-update',
+    url: `${ROLE_BASE}/permissions-update`,
     data,
     showErrorMessage: false
   })
