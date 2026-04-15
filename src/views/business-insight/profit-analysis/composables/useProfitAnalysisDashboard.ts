@@ -26,6 +26,7 @@ import {
   fetchProfitOverviewTrend30d,
   fetchProfitTableAppProfit
 } from '@/api/business-insight'
+import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 
 const DEFAULT_FILTER_OPTIONS: ProfitFilterOptions = {
   appOptions: [{ label: '全部', value: 'all' }],
@@ -94,10 +95,17 @@ export interface UseProfitAnalysisDashboardReturn {
 }
 
 export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
+  const appNow = getAppNow()
+  const defaultEnd = formatYYYYMMDD(appNow)
+  const defaultStartDate = cloneAppDate(appNow)
+  // 保持原有默认跨度（5 天）：结束为“今天”，开始往前推 4 天
+  defaultStartDate.setDate(defaultStartDate.getDate() - 4)
+  const defaultStart = formatYYYYMMDD(defaultStartDate)
+
   const query = reactive<ProfitAnalysisQueryParams>({
     currentPage: 0,
     pageSize: 0,
-    dateRange: '2026-03-01,2026-03-05',
+    dateRange: `${defaultStart},${defaultEnd}`,
     platform: 'all',
     sAppId: 'all',
     sCountryCode: 'all'
@@ -145,9 +153,9 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
         return {
           text: p.label,
           value: () => {
-            const end = new Date()
+            const end = cloneAppDate(getAppNow())
             end.setHours(0, 0, 0, 0)
-            const start = new Date(end)
+            const start = cloneAppDate(end)
             start.setDate(start.getDate() - (n - 1))
             return [start, end]
           }
