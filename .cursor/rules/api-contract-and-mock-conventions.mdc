@@ -143,6 +143,14 @@ src/views/<模块>/<页面>/
 - 每个字段的 `description` 要能直接用于联调沟通：含义、单位、范围（例如百分比是 0-100 还是 0-1）、空值策略、格式（日期格式等）。
 - **筛选类 `request` 字段**：若字段为枚举型筛选（如广告平台 **`source`**），`fieldDescription.request` 的 `type` 须为 **`string`**（键名驼峰，勿 `n_source`），且 `sampleRequest` 中的示例值类型须与 `type` 一致，详见 `backend-fields.mdc`「接口请求 · 筛选字段类型（枚举 string）」。
 
+### 导出 / 下载类接口（HTTP 文件流 · 硬性）
+
+凡页面「导出 / 下载 Excel·CSV 等文件」能力在 **`mock/backend-api` 立约并联调**时，**必须**按 **HTTP 二进制文件流** 描述与实现，**禁止**把该导出 endpoint 的**主响应**约定为「仅返回 JSON（内含 Base64 文件、或仅 `downloadUrl` 字符串）」来冒充文件下载（**例外**：若产品明确为**异步导出**，任务状态与结果 URL 应使用**独立契约** endpoint，与「即时流式下载」拆分，不在此混用同一语义）。
+
+- **契约 JSON**：`fieldDescription.response` 须写清响应为 **非 JSON 业务体**（原始字节流），并说明 **`Content-Type`**、**`Content-Disposition`**（文件名）等响应头约定；`sampleResponse` 可用 `_note` 或占位说明「二进制流无法用 JSON 表达」，**不得**用伪业务 JSON 充当文件内容示例。
+- **后端**：响应体为 **stream / blob**（整块 `application/octet-stream` 或具体 MIME 亦可），按需 chunked；无数据时仍返回合法空文件或仅表头的流，头字段与有数据时保持一致。
+- **前端 `src/api`**：使用 `responseType: 'blob'` 或项目既有 **`requestBlob`** 等封装，从响应头解析文件名；Mock 分支返回 **`Blob`** + 文件名，与契约一致。
+
 ### 同模块 `sampleResponse` 形态复用
 
 - 同一 `mock/backend-api` 目录（同一业务聚合单元）内，**同类 UI**（分页列表、KPI 卡片、趋势序列、meta 下拉等）的 **`sampleResponse` 业务体**尽量与存量契约 **结构一致**（键名层级、列表字段名、分页字段等），便于前端复用解析逻辑。

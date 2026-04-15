@@ -1,5 +1,5 @@
 {
-  "_comment": "Ad account management - paginated table query. Used by search, filters, pagination and table rendering.",
+  "_comment": "Ad account management - paginated table query. Used by search, filters, pagination and table rendering. Dimension values align with GET cockpit/meta-filter-options (appOptions/platformOptions/sourceOptions value).",
   "fieldDescription": {
     "request": {
       "current": {
@@ -11,25 +11,22 @@
       "keyword": {
         "type": "string",
         "required": false,
-        "description": "Fuzzy keyword for appName and managerAccount. Empty string means no keyword filter."
+        "description": "Fuzzy keyword for appName, appId and managerAccount. Empty string means no keyword filter."
       },
-      "appName": {
+      "appId": {
         "type": "string",
         "required": false,
-        "enum": ["", "Weather5", "Weather6", "Weather8", "Weather9"],
-        "description": "App filter. Empty string means all."
+        "description": "App filter; value matches cockpit appOptions[].value (e.g. package id). Empty string means all."
       },
       "platform": {
         "type": "string",
         "required": false,
-        "enum": ["", "Android", "iOS"],
-        "description": "Platform filter. Empty string means all."
+        "description": "Terminal platform filter; value matches cockpit platformOptions[].value (e.g. \"0\" Android, \"1\" iOS). Empty string means all."
       },
-      "adPlatform": {
+      "source": {
         "type": "string",
         "required": false,
-        "enum": ["", "Google", "TikTok", "Mintegral", "NewsBreak"],
-        "description": "Ad platform filter. Empty string means all."
+        "description": "Ad platform filter; value matches cockpit sourceOptions[].value (string enum). Empty string means all."
       },
       "status": {
         "type": "string",
@@ -56,23 +53,25 @@
         "enum": ["enabled", "disabled"],
         "description": "Account status."
       },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "Application id; same value domain as cockpit appOptions[].value."
+      },
       "appName": {
         "type": "string",
         "required": true,
-        "enum": ["Weather5", "Weather6", "Weather8", "Weather9"],
-        "description": "App name."
+        "description": "Application display name for UI."
       },
       "platform": {
         "type": "string",
         "required": true,
-        "enum": ["Android", "iOS"],
-        "description": "OS platform."
+        "description": "Terminal platform value; same value domain as cockpit platformOptions[].value."
       },
-      "adPlatform": {
+      "source": {
         "type": "string",
         "required": true,
-        "enum": ["Google", "TikTok", "Mintegral", "NewsBreak"],
-        "description": "Ad platform."
+        "description": "Ad platform value; same value domain as cockpit sourceOptions[].value."
       },
       "managerAccount": {
         "type": "string",
@@ -100,9 +99,9 @@
     "current": 1,
     "size": 10,
     "keyword": "",
-    "appName": "",
+    "appId": "",
     "platform": "",
-    "adPlatform": "",
+    "source": "",
     "status": ""
   },
   "sampleResponse": {
@@ -110,9 +109,10 @@
       {
         "id": 101,
         "status": "enabled",
+        "appId": "com.accurate.weather.forecast.live",
         "appName": "Weather5",
-        "platform": "Android",
-        "adPlatform": "Google",
+        "platform": "0",
+        "source": "1",
         "managerAccount": "560-369-9741",
         "adAccounts": ["385-510-4056", "250-161-1888", "542-141-4898", "292-126-4627"],
         "credential": "AdCost",
@@ -121,9 +121,10 @@
       {
         "id": 102,
         "status": "enabled",
+        "appId": "com.accurate.local.weather.forecast.live",
         "appName": "Weather6",
-        "platform": "iOS",
-        "adPlatform": "TikTok",
+        "platform": "1",
+        "source": "10",
         "managerAccount": "744708116631368720",
         "adAccounts": ["744708116631368721", "744708116631368722"],
         "credential": "TikTokGlobalMain",
@@ -132,9 +133,10 @@
       {
         "id": 103,
         "status": "enabled",
+        "appId": "com.accurate.live.weather.widget",
         "appName": "Weather8",
-        "platform": "Android",
-        "adPlatform": "Mintegral",
+        "platform": "0",
+        "source": "9",
         "managerAccount": "vegoo",
         "adAccounts": [],
         "credential": "MintegralAdCost1",
@@ -143,9 +145,10 @@
       {
         "id": 104,
         "status": "disabled",
+        "appId": "com.accurate.local.live.weather",
         "appName": "Weather9",
-        "platform": "iOS",
-        "adPlatform": "NewsBreak",
+        "platform": "1",
+        "source": "20",
         "managerAccount": "196006482456592752",
         "adAccounts": [],
         "credential": "NewsBreakCost2",
@@ -160,14 +163,15 @@
     "url": "POST /api/config-management/ad-account-management/account/table",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "current, size, keyword?, appName?, platform?, adPlatform?, status?",
+    "requestBody": "current, size, keyword?, appId?, platform?, source?, status?",
     "responseBody": "Api.Common.PaginatedResponse<AdAccountRow>"
   },
   "apiSuggestion": {
     "notes": [
       "Return records: [] and total: 0 when there is no data.",
       "Do server-side pagination by current and size.",
-      "Token can be returned as raw value or null because masking is handled on the frontend."
+      "Token can be returned as raw value or null because masking is handled on the frontend.",
+      "appId/platform/source filter values must match cockpit meta-filter-options option values."
     ]
   },
   "interaction": {
@@ -179,10 +183,10 @@
       },
       {
         "moment": "user action",
-        "detail": "Reload when keyword, appName, platform, adPlatform, status, current or size changes."
+        "detail": "Reload when keyword, appId, platform, source, status, current or size changes."
       }
     ],
-    "defaultSelection": "keyword, appName, platform, adPlatform and status default to empty string. current defaults to 1 and size defaults to 10.",
+    "defaultSelection": "keyword, appId, platform, source and status default to empty string. current defaults to 1 and size defaults to 10.",
     "dedupe": "Use the latest request result when filters change quickly."
   }
 }

@@ -144,6 +144,7 @@ alwaysApply: true
 
 - **先 Mock 再开发组件**：开发大模块时，先在该模块下建立/完善 **Mock 数据**（如 `views/<模块>/<页面>/mock/data.ts` 或 `mock.ts`），并同步定义好 **类型**（`types.ts` 或类型与 mock 同文件）。待大模块的数据结构与字段约定清晰后，再进行页面入口与 `modules/` 内子组件的开发；组件内优先用 mock 做展示与联调，接口就绪后再切换为真实请求。
 - **契约 + 真实请求 + 小模块 config 开关**：使用 Mock 开发时，须按 **`mock/backend-api` 契约**在 `src/api` 写好 **`fetch*`**，并在 **该小模块** `config/` 内维护开关；契约格式与协作见 **`api-contract-and-mock-conventions.mdc`**，实现细则见 **`module-api-mock-config.mdc`**。
+- **导出 / 下载文件**：新增或对接「导出」类接口的 **`mock/backend-api` 契约与 `fetch*`** 时，**一律**按 **HTTP 二进制文件流**（`blob` / `requestBlob`、响应头 `Content-Type` + `Content-Disposition`）约定与实现，**禁止**把该导出 endpoint 的主响应写成「仅 JSON + Base64」等替代形态；完整条款见 **`api-contract-and-mock-conventions.mdc`**「导出 / 下载类接口（HTTP 文件流 · 硬性）」（异步任务类导出另立契约，不与即时流式导出混用）。
 
 ### Mock 与数据源开关（与 module-api-mock-config 一致）
 

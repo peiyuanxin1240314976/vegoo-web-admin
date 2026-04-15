@@ -12,9 +12,10 @@ const MOCK_SEED: AdAccount[] = [
   {
     id: 101,
     status: 'enabled',
+    appId: 'com.accurate.weather.forecast.live',
     appName: 'Weather5',
-    platform: 'Android',
-    adPlatform: 'Google',
+    platform: '0',
+    source: '1',
     managerAccount: '560-369-9741',
     adAccounts: ['385-510-4056', '250-161-1888', '542-141-4898', '292-126-4627'],
     credential: 'AdCost',
@@ -23,9 +24,10 @@ const MOCK_SEED: AdAccount[] = [
   {
     id: 102,
     status: 'enabled',
+    appId: 'com.accurate.local.weather.forecast.live',
     appName: 'Weather6',
-    platform: 'iOS',
-    adPlatform: 'TikTok',
+    platform: '1',
+    source: '10',
     managerAccount: '744708116631368720',
     adAccounts: ['744708116631368721', '744708116631368722'],
     credential: 'TikTokGlobalMain',
@@ -34,9 +36,10 @@ const MOCK_SEED: AdAccount[] = [
   {
     id: 103,
     status: 'enabled',
+    appId: 'com.accurate.live.weather.widget',
     appName: 'Weather8',
-    platform: 'Android',
-    adPlatform: 'Mintegral',
+    platform: '0',
+    source: '9',
     managerAccount: 'vegoo',
     adAccounts: [],
     credential: 'MintegralAdCost1',
@@ -45,9 +48,10 @@ const MOCK_SEED: AdAccount[] = [
   {
     id: 104,
     status: 'disabled',
+    appId: 'com.accurate.local.live.weather',
     appName: 'Weather9',
-    platform: 'iOS',
-    adPlatform: 'NewsBreak',
+    platform: '1',
+    source: '20',
     managerAccount: '196006482456592752',
     adAccounts: [],
     credential: 'NewsBreakCost2',
@@ -81,13 +85,14 @@ function filterAccounts(list: AdAccount[], params: AdAccountOverviewStatsQuery):
     if (
       keyword &&
       !item.appName.toLowerCase().includes(keyword) &&
+      !item.appId.toLowerCase().includes(keyword) &&
       !item.managerAccount.toLowerCase().includes(keyword)
     ) {
       return false
     }
-    if (params.appName && item.appName !== params.appName) return false
+    if (params.appId && item.appId !== params.appId) return false
     if (params.platform && item.platform !== params.platform) return false
-    if (params.adPlatform && item.adPlatform !== params.adPlatform) return false
+    if (params.source && item.source !== params.source) return false
     if (params.status && item.status !== params.status) return false
     return true
   })
@@ -124,16 +129,16 @@ export function mockFetchAdAccountOverviewStats(
     total: filtered.length,
     enabled: filtered.filter((item) => item.status === 'enabled').length,
     disabled: filtered.filter((item) => item.status === 'disabled').length,
-    platformCount: new Set(filtered.map((item) => item.adPlatform)).size
+    platformCount: new Set(filtered.map((item) => item.source)).size
   })
 }
 
 export function mockCreateAdAccount(payload: AdAccountForm): Promise<AdAccount> {
   const duplicated = mockList.some(
     (item) =>
-      item.appName === payload.appName &&
+      item.appId === payload.appId &&
       item.platform === payload.platform &&
-      item.adPlatform === payload.adPlatform &&
+      item.source === payload.source &&
       item.managerAccount === payload.managerAccount
   )
 
@@ -144,9 +149,10 @@ export function mockCreateAdAccount(payload: AdAccountForm): Promise<AdAccount> 
   const item: AdAccount = {
     id: getAppNow().getTime(),
     status: 'enabled',
-    appName: payload.appName,
+    appId: payload.appId.trim(),
+    appName: String(payload.appName ?? '').trim() || payload.appId.trim(),
     platform: payload.platform,
-    adPlatform: payload.adPlatform,
+    source: payload.source,
     managerAccount: payload.managerAccount.trim(),
     credential: payload.credential.trim(),
     adAccounts: payload.adAccounts.map((value) => value.trim()).filter(Boolean),
@@ -166,6 +172,10 @@ export function mockUpdateAdAccount(
   account.credential = payload.credential.trim()
   account.adAccounts = payload.adAccounts.map((value) => value.trim()).filter(Boolean)
   account.token = normalizeToken(payload.token)
+  account.appId = payload.appId.trim()
+  account.appName = payload.appName.trim() || account.appName
+  account.platform = payload.platform
+  account.source = payload.source
   return Promise.resolve(cloneAccount(account))
 }
 
@@ -198,9 +208,10 @@ export function mockExportAdAccountList(
   const header = [
     'id',
     'status',
+    'appId',
     'appName',
     'platform',
-    'adPlatform',
+    'source',
     'managerAccount',
     'adAccounts',
     'credential',
@@ -209,9 +220,10 @@ export function mockExportAdAccountList(
   const rows = filtered.map((item) => [
     String(item.id),
     item.status,
+    item.appId,
     item.appName,
     item.platform,
-    item.adPlatform,
+    item.source,
     item.managerAccount,
     item.adAccounts.join('|'),
     item.credential,

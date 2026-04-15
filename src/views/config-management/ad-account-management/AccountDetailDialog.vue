@@ -2,6 +2,8 @@
   import { computed, ref, watch } from 'vue'
   import { ElMessage } from 'element-plus'
   import { CopyDocument, Edit, View } from '@element-plus/icons-vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import type { AdAccount, AdAccountUpdatePayload } from './types'
 
   const props = withDefaults(
@@ -20,6 +22,17 @@
     update: [value: AdAccountUpdatePayload]
   }>()
 
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+
+  const metaAppOptions = computed(() => cockpitMetaStore.data?.appOptions ?? [])
+  const metaPlatformOptions = computed(() => cockpitMetaStore.data?.platformOptions ?? [])
+  const metaSourceOptions = computed(() => cockpitMetaStore.data?.sourceOptions ?? [])
+
+  function optionLabel(options: CockpitMetaOptionItem[], value: string): string {
+    if (!value) return ''
+    return options.find((o) => o.value === value)?.label ?? value
+  }
+
   const isEditing = ref(false)
   const showToken = ref(false)
   const newAccountId = ref('')
@@ -29,7 +42,8 @@
     return account
       ? {
           ...account,
-          adAccounts: [...account.adAccounts]
+          adAccounts: [...account.adAccounts],
+          token: account.token ?? ''
         }
       : null
   }
@@ -48,7 +62,9 @@
   watch(
     () => props.visible,
     (visible) => {
-      if (!visible) {
+      if (visible) {
+        void cockpitMetaStore.ensureLoaded()
+      } else {
         isEditing.value = false
         showToken.value = false
         newAccountId.value = ''
@@ -58,7 +74,11 @@
 
   const dialogTitle = computed(() => {
     if (!props.account) return '账户详情'
-    return `${props.account.appName} / ${props.account.platform} / ${props.account.adPlatform}`
+    const app = optionLabel(metaAppOptions.value, props.account.appId) || props.account.appName
+    const plat =
+      optionLabel(metaPlatformOptions.value, props.account.platform) || props.account.platform
+    const src = optionLabel(metaSourceOptions.value, props.account.source) || props.account.source
+    return `${app} / ${plat} / ${src}`
   })
 
   const maskedToken = computed(() => {
@@ -114,11 +134,29 @@
 
   function handleSave() {
     if (!form.value) return
+    if (!form.value.appId) {
+      ElMessage.warning('请选择应用')
+      return
+    }
+    if (!form.value.platform) {
+      ElMessage.warning('请选择终端平台')
+      return
+    }
+    if (!form.value.source) {
+      ElMessage.warning('请选择广告平台')
+      return
+    }
     if (!form.value.managerAccount.trim()) {
       ElMessage.warning('请填写经理账户')
       return
     }
+    const appName =
+      metaAppOptions.value.find((o) => o.value === form.value!.appId)?.label ?? form.value.appName
     emit('update', {
+      appId: form.value.appId.trim(),
+      appName: appName.trim(),
+      platform: form.value.platform,
+      source: form.value.source,
       managerAccount: form.value.managerAccount.trim(),
       credential: form.value.credential.trim(),
       adAccounts: [...form.value.adAccounts],
@@ -156,9 +194,51 @@
             {{ form.status === 'enabled' ? '已启用' : '已停用' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="应用">{{ form.appName }}</el-descriptions-item>
-        <el-descriptions-item label="终端平台">{{ form.platform }}</el-descriptions-item>
-        <el-descriptions-item label="广告平台">{{ form.adPlatform }}</el-descriptions-item>
+        <el-descriptions-item label="应用">
+          <template v-if="isEditing">
+            <el-select v-model="form.appId" filterable placeholder="请选择应用" style="width: 100%">
+              <el-option
+                v-for="opt in metaAppOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </el-select>
+          </template>
+          <template v-else>
+            {{ optionLabel(metaAppOptions, form.appId) || form.appName }}
+          </template>
+        </el-descriptions-item>
+        <el-descriptions-item label="终端平台">
+          <template v-if="isEditing">
+            <el-select v-model="form.platform" placeholder="请选择终端平台" style="width: 100%">
+              <el-option
+                v-for="opt in metaPlatformOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </el-select>
+          </template>
+          <template v-else>
+            {{ optionLabel(metaPlatformOptions, form.platform) || form.platform }}
+          </template>
+        </el-descriptions-item>
+        <el-descriptions-item label="广告平台">
+          <template v-if="isEditing">
+            <el-select v-model="form.source" placeholder="请选择广告平台" style="width: 100%">
+              <el-option
+                v-for="opt in metaSourceOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </el-select>
+          </template>
+          <template v-else>
+            {{ optionLabel(metaSourceOptions, form.source) || form.source }}
+          </template>
+        </el-descriptions-item>
       </el-descriptions>
 
       <el-form label-position="top" class="detail-form">

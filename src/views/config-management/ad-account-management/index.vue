@@ -12,6 +12,8 @@
     fetchAdAccountTable,
     updateAdAccount
   } from '@/api/config-management/ad-account-management'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import AccountDetailDialog from './AccountDetailDialog.vue'
   import AddAccountDialog from './AddAccountDialog.vue'
   import type {
@@ -23,17 +25,28 @@
     AdAccountUpdatePayload
   } from './types'
 
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+
+  const metaAppOptions = computed(() => cockpitMetaStore.data?.appOptions ?? [])
+  const metaPlatformOptions = computed(() => cockpitMetaStore.data?.platformOptions ?? [])
+  const metaSourceOptions = computed(() => cockpitMetaStore.data?.sourceOptions ?? [])
+
+  function optionLabel(options: CockpitMetaOptionItem[], value: string): string {
+    if (!value) return ''
+    return options.find((o) => o.value === value)?.label ?? value
+  }
+
   const filters = reactive<{
     keyword: string
-    appName: string
-    platform: '' | 'Android' | 'iOS'
-    adPlatform: '' | 'Google' | 'TikTok' | 'Mintegral' | 'NewsBreak'
+    appId: string
+    platform: string
+    source: string
     status: '' | 'enabled' | 'disabled'
   }>({
     keyword: '',
-    appName: '',
+    appId: '',
     platform: '',
-    adPlatform: '',
+    source: '',
     status: ''
   })
 
@@ -57,31 +70,41 @@
   const addDialogVisible = ref(false)
   const selectedAccount = ref<AdAccount | null>(null)
 
-  const appOptions = ['Weather5', 'Weather6', 'Weather8', 'Weather9']
-  const adPlatformOptions = ['Google', 'TikTok', 'Mintegral', 'NewsBreak']
+  const sourceBadgeStyle: Record<string, { color: string; letter: string; bg: string }> = {
+    '1': { color: '#4285F4', letter: 'G', bg: 'rgba(66,133,244,0.15)' },
+    '10': { color: '#111111', letter: 'TT', bg: 'rgba(255,255,255,0.85)' },
+    '9': { color: '#00C896', letter: 'M', bg: 'rgba(0,200,150,0.15)' },
+    '20': { color: '#FF4B4B', letter: 'NB', bg: 'rgba(255,75,75,0.15)' }
+  }
 
-  const platformConfig: Record<string, { color: string; letter: string; bg: string }> = {
-    Google: { color: '#4285F4', letter: 'G', bg: 'rgba(66,133,244,0.15)' },
-    TikTok: { color: '#111111', letter: 'TT', bg: 'rgba(255,255,255,0.85)' },
-    Mintegral: { color: '#00C896', letter: 'M', bg: 'rgba(0,200,150,0.15)' },
-    NewsBreak: { color: '#FF4B4B', letter: 'NB', bg: 'rgba(255,75,75,0.15)' }
+  function getSourceBadge(row: AdAccount) {
+    const label = optionLabel(metaSourceOptions.value, row.source)
+    const preset = sourceBadgeStyle[row.source]
+    if (preset) return { ...preset, name: label }
+    const letter = label ? label.slice(0, 2).toUpperCase() : row.source
+    return {
+      color: '#94a3b8',
+      letter,
+      bg: 'rgba(148,163,184,0.12)',
+      name: label
+    }
   }
 
   const tableQuery = computed<AdAccountTableQuery>(() => ({
     current: currentPage.value,
     size: pageSize.value,
     keyword: filters.keyword.trim(),
-    appName: filters.appName,
+    appId: filters.appId,
     platform: filters.platform,
-    adPlatform: filters.adPlatform,
+    source: filters.source,
     status: filters.status
   }))
 
   const statsQuery = computed<AdAccountOverviewStatsQuery>(() => ({
     keyword: filters.keyword.trim(),
-    appName: filters.appName,
+    appId: filters.appId,
     platform: filters.platform,
-    adPlatform: filters.adPlatform,
+    source: filters.source,
     status: filters.status
   }))
 
@@ -118,7 +141,7 @@
   }
 
   watch(
-    () => [filters.keyword, filters.appName, filters.platform, filters.adPlatform, filters.status],
+    () => [filters.keyword, filters.appId, filters.platform, filters.source, filters.status],
     () => {
       if (currentPage.value !== 1) {
         currentPage.value = 1
@@ -133,7 +156,8 @@
     void loadTable()
   })
 
-  onMounted(() => {
+  onMounted(async () => {
+    await cockpitMetaStore.ensureLoaded()
     void reloadAll()
   })
 
@@ -202,9 +226,9 @@
 
   function resetFilter() {
     filters.keyword = ''
-    filters.appName = ''
+    filters.appId = ''
     filters.platform = ''
-    filters.adPlatform = ''
+    filters.source = ''
     filters.status = ''
   }
 
@@ -288,27 +312,37 @@
         placeholder="搜索应用或经理账户"
         :prefix-icon="Search"
       />
-      <el-select v-model="filters.appName" clearable placeholder="应用" class="filter-select">
-        <el-option label="全部" value="" />
-        <el-option v-for="app in appOptions" :key="app" :label="app" :value="app" />
-      </el-select>
-      <el-select v-model="filters.platform" clearable placeholder="终端平台" class="filter-select">
-        <el-option label="全部" value="" />
-        <el-option label="安卓" value="Android" />
-        <el-option label="iOS" value="iOS" />
-      </el-select>
       <el-select
-        v-model="filters.adPlatform"
+        v-model="filters.appId"
         clearable
-        placeholder="广告平台"
+        filterable
+        placeholder="应用"
         class="filter-select"
       >
         <el-option label="全部" value="" />
         <el-option
-          v-for="platform in adPlatformOptions"
-          :key="platform"
-          :label="platform"
-          :value="platform"
+          v-for="opt in metaAppOptions"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
+      </el-select>
+      <el-select v-model="filters.platform" clearable placeholder="终端平台" class="filter-select">
+        <el-option label="全部" value="" />
+        <el-option
+          v-for="opt in metaPlatformOptions"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
+      </el-select>
+      <el-select v-model="filters.source" clearable placeholder="广告平台" class="filter-select">
+        <el-option label="全部" value="" />
+        <el-option
+          v-for="opt in metaSourceOptions"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
         />
       </el-select>
       <el-select v-model="filters.status" clearable placeholder="状态" class="filter-select">
@@ -351,7 +385,9 @@
 
         <el-table-column label="终端平台" width="120">
           <template #default="{ row }">
-            <span class="platform-badge">{{ row.platform }}</span>
+            <span class="platform-badge">{{
+              optionLabel(metaPlatformOptions, row.platform) || row.platform
+            }}</span>
           </template>
         </el-table-column>
 
@@ -361,13 +397,13 @@
               <span
                 class="adplatform-badge"
                 :style="{
-                  color: platformConfig[row.adPlatform]?.color,
-                  background: platformConfig[row.adPlatform]?.bg
+                  color: getSourceBadge(row).color,
+                  background: getSourceBadge(row).bg
                 }"
               >
-                {{ platformConfig[row.adPlatform]?.letter }}
+                {{ getSourceBadge(row).letter }}
               </span>
-              <span class="adplatform-name">{{ row.adPlatform }}</span>
+              <span class="adplatform-name">{{ getSourceBadge(row).name }}</span>
             </div>
           </template>
         </el-table-column>

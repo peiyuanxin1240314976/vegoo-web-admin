@@ -31,9 +31,10 @@
 
 ## 表单与字段约定
 
-- 列表查询使用 `keyword` 模糊匹配 `appName`、`managerAccount`。
-- 新增表单提交完整配置：`appName`、`platform`、`adPlatform`、`managerAccount`、`credential`、`adAccounts`、`token`。
-- 编辑表单当前页面只编辑 `managerAccount`、`credential`、`adAccounts`、`token`，但响应体仍返回完整账户对象，便于前端直接回填。
+- 列表查询使用 `keyword` 模糊匹配 `appName`、`appId`、`managerAccount`。
+- 筛选与请求体维度键名：`appId`、`platform`、`source`（取值与公用 `GET .../cockpit/meta-filter-options` 的 `appOptions` / `platformOptions` / `sourceOptions` 的 `value` 一致；「全部」为 `""`）。**不在本目录重复 meta 契约**，见付费分析 `mock/backend-api/README.md` 附录 A。
+- 新增表单提交：`appId`、`platform`、`source`、`managerAccount`、`credential`、`adAccounts`、`token`；可选带 `appName` 供展示。
+- 编辑保存提交：`appId`、`appName`、`platform`、`source`、`managerAccount`、`credential`、`adAccounts`、`token`，响应体仍返回完整账户对象。
 - `adAccounts` 无数据时固定返回 `[]`，不要返回 `null`。
 - `token` 无值时固定返回 `null`；有值时返回完整字符串，前端自行做掩码显示。
 

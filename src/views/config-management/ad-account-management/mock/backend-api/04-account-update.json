@@ -3,6 +3,26 @@
   "fieldDescription": {
     "request": {
       "id": { "type": "number", "required": true, "description": "Target account ID." },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "Application id; cockpit appOptions[].value."
+      },
+      "appName": {
+        "type": "string",
+        "required": true,
+        "description": "Application display name for list and detail."
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "Terminal platform; cockpit platformOptions[].value."
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "Ad platform; cockpit sourceOptions[].value."
+      },
       "managerAccount": {
         "type": "string",
         "required": true,
@@ -40,23 +60,17 @@
         "enum": ["enabled", "disabled"],
         "description": "Account status."
       },
-      "appName": {
-        "type": "string",
-        "required": true,
-        "enum": ["Weather5", "Weather6", "Weather8", "Weather9"],
-        "description": "App name."
-      },
+      "appId": { "type": "string", "required": true, "description": "Application id." },
+      "appName": { "type": "string", "required": true, "description": "Application display name." },
       "platform": {
         "type": "string",
         "required": true,
-        "enum": ["Android", "iOS"],
-        "description": "OS platform."
+        "description": "Terminal platform value."
       },
-      "adPlatform": {
+      "source": {
         "type": "string",
         "required": true,
-        "enum": ["Google", "TikTok", "Mintegral", "NewsBreak"],
-        "description": "Ad platform."
+        "description": "Ad platform value."
       },
       "managerAccount": {
         "type": "string",
@@ -74,6 +88,10 @@
   },
   "sampleRequest": {
     "id": 101,
+    "appId": "com.accurate.weather.forecast.live",
+    "appName": "Weather5",
+    "platform": "0",
+    "source": "1",
     "managerAccount": "560-369-9741",
     "credential": "AdCost-Primary",
     "adAccounts": ["385-510-4056", "250-161-1888", "542-141-4898", "292-126-4627"],
@@ -84,9 +102,10 @@
     "record": {
       "id": 101,
       "status": "enabled",
+      "appId": "com.accurate.weather.forecast.live",
       "appName": "Weather5",
-      "platform": "Android",
-      "adPlatform": "Google",
+      "platform": "0",
+      "source": "1",
       "managerAccount": "560-369-9741",
       "adAccounts": ["385-510-4056", "250-161-1888", "542-141-4898", "292-126-4627"],
       "credential": "AdCost-Primary",
@@ -97,14 +116,14 @@
     "url": "POST /api/config-management/ad-account-management/account/update",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "id, managerAccount, credential?, adAccounts, token?",
+    "requestBody": "id, appId, appName, platform, source, managerAccount, credential?, adAccounts, token?",
     "responseBody": "UpdateAdAccountResult"
   },
   "apiSuggestion": {
     "notes": [
-      "Current page only edits managerAccount, credential, adAccounts and token.",
-      "Still return the full row to keep frontend merge logic simple.",
-      "Passing adAccounts as [] means clearing all ad account IDs."
+      "Return the full row to keep frontend merge logic simple.",
+      "Passing adAccounts as [] means clearing all ad account IDs.",
+      "appId/platform/source must stay aligned with cockpit meta option values."
     ]
   },
   "interaction": {

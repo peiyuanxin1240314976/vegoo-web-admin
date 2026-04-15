@@ -7,23 +7,20 @@
         "required": false,
         "description": "Same keyword rule as table API."
       },
-      "appName": {
+      "appId": {
         "type": "string",
         "required": false,
-        "enum": ["", "Weather5", "Weather6", "Weather8", "Weather9"],
-        "description": "App filter. Empty string means all."
+        "description": "App filter; cockpit appOptions[].value. Empty string means all."
       },
       "platform": {
         "type": "string",
         "required": false,
-        "enum": ["", "Android", "iOS"],
-        "description": "Platform filter. Empty string means all."
+        "description": "Terminal platform filter; cockpit platformOptions[].value. Empty string means all."
       },
-      "adPlatform": {
+      "source": {
         "type": "string",
         "required": false,
-        "enum": ["", "Google", "TikTok", "Mintegral", "NewsBreak"],
-        "description": "Ad platform filter. Empty string means all."
+        "description": "Ad platform filter; cockpit sourceOptions[].value. Empty string means all."
       },
       "status": {
         "type": "string",
@@ -39,15 +36,15 @@
       "platformCount": {
         "type": "number",
         "required": true,
-        "description": "Distinct ad platform count under current filters."
+        "description": "Distinct ad platform (source) count under current filters."
       }
     }
   },
   "sampleRequest": {
     "keyword": "",
-    "appName": "",
+    "appId": "",
     "platform": "",
-    "adPlatform": "",
+    "source": "",
     "status": ""
   },
   "sampleResponse": {
@@ -60,7 +57,7 @@
     "url": "POST /api/config-management/ad-account-management/account/overview-stats",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "keyword?, appName?, platform?, adPlatform?, status?",
+    "requestBody": "keyword?, appId?, platform?, source?, status?",
     "responseBody": "AdAccountOverviewStats"
   },
   "apiSuggestion": {

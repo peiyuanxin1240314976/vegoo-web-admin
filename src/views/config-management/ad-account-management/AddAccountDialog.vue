@@ -1,7 +1,8 @@
 <script setup lang="ts">
-  import { reactive, ref, watch } from 'vue'
+  import { computed, onMounted, reactive, ref, watch } from 'vue'
   import { ElMessage } from 'element-plus'
   import { View } from '@element-plus/icons-vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { AdAccountForm } from './types'
 
   const props = withDefaults(
@@ -19,26 +20,36 @@
     save: [value: AdAccountForm]
   }>()
 
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+
+  const metaAppOptions = computed(() => cockpitMetaStore.data?.appOptions ?? [])
+  const metaPlatformOptions = computed(() => cockpitMetaStore.data?.platformOptions ?? [])
+  const metaSourceOptions = computed(() => cockpitMetaStore.data?.sourceOptions ?? [])
+
   const showToken = ref(false)
   const newAccountId = ref('')
 
   const form = reactive<AdAccountForm>({
-    appName: 'Weather5',
-    platform: 'Android',
-    adPlatform: 'Google',
+    appId: '',
+    platform: '',
+    source: '',
     managerAccount: '',
     credential: '',
     adAccounts: [],
     token: ''
   })
 
-  const appOptions = ['Weather5', 'Weather6', 'Weather8', 'Weather9']
-  const adPlatformOptions = ['Google', 'TikTok', 'Mintegral', 'NewsBreak'] as const
+  function pickDefaultMeta() {
+    const apps = metaAppOptions.value
+    const plats = metaPlatformOptions.value
+    const sources = metaSourceOptions.value
+    form.appId = apps[0]?.value ?? ''
+    form.platform = plats[0]?.value ?? ''
+    form.source = sources[0]?.value ?? ''
+  }
 
   function resetForm() {
-    form.appName = 'Weather5'
-    form.platform = 'Android'
-    form.adPlatform = 'Google'
+    pickDefaultMeta()
     form.managerAccount = ''
     form.credential = ''
     form.adAccounts = []
@@ -50,11 +61,21 @@
   watch(
     () => props.visible,
     (visible) => {
-      if (!visible) {
+      if (visible) {
+        void cockpitMetaStore.ensureLoaded().then(() => {
+          if (!form.appId && !form.platform && !form.source) pickDefaultMeta()
+        })
+      } else {
         resetForm()
       }
     }
   )
+
+  onMounted(() => {
+    void cockpitMetaStore.ensureLoaded().then(() => {
+      pickDefaultMeta()
+    })
+  })
 
   function close() {
     if (props.submitting) return
@@ -75,12 +96,26 @@
   }
 
   function handleSave() {
+    if (!form.appId) {
+      ElMessage.warning('请选择应用')
+      return
+    }
+    if (!form.platform) {
+      ElMessage.warning('请选择终端平台')
+      return
+    }
+    if (!form.source) {
+      ElMessage.warning('请选择广告平台')
+      return
+    }
     if (!form.managerAccount.trim()) {
       ElMessage.warning('请填写经理账户')
       return
     }
+    const appName = metaAppOptions.value.find((o) => o.value === form.appId)?.label
     emit('save', {
       ...form,
+      appName,
       managerAccount: form.managerAccount.trim(),
       credential: form.credential.trim(),
       adAccounts: [...form.adAccounts],
@@ -100,26 +135,35 @@
     <div class="dialog-body">
       <el-form label-position="top">
         <el-form-item label="应用" required>
-          <el-select v-model="form.appName" style="width: 100%">
-            <el-option v-for="app in appOptions" :key="app" :label="app" :value="app" />
+          <el-select v-model="form.appId" filterable placeholder="请选择应用" style="width: 100%">
+            <el-option
+              v-for="opt in metaAppOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </el-select>
         </el-form-item>
 
         <div class="grid-2">
           <el-form-item label="终端平台" required>
-            <el-radio-group v-model="form.platform">
-              <el-radio-button label="Android">安卓</el-radio-button>
-              <el-radio-button label="iOS">iOS</el-radio-button>
-            </el-radio-group>
+            <el-select v-model="form.platform" placeholder="请选择终端平台" style="width: 100%">
+              <el-option
+                v-for="opt in metaPlatformOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </el-select>
           </el-form-item>
 
           <el-form-item label="广告平台" required>
-            <el-select v-model="form.adPlatform" style="width: 100%">
+            <el-select v-model="form.source" placeholder="请选择广告平台" style="width: 100%">
               <el-option
-                v-for="platform in adPlatformOptions"
-                :key="platform"
-                :label="platform"
-                :value="platform"
+                v-for="opt in metaSourceOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
               />
             </el-select>
           </el-form-item>
