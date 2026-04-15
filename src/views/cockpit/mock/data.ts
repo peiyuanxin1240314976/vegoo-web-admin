@@ -82,6 +82,109 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       suggestion: '需关注'
     }
   ],
+  todaySummaryCards: [
+    {
+      key: 'adRevenueSummary',
+      title: '广告收入汇总',
+      items: [
+        { label: '广告收入', valueText: '$25207', changeText: '$1770', trend: 'down' },
+        { label: '广告支出', valueText: '$23379', changeText: '$41799', trend: 'down' },
+        { label: '买量用户', valueText: '204920', changeText: '7', trend: 'down' },
+        { label: '广告账户', valueText: '129', changeText: '7', trend: 'down' },
+        { label: '广告系列', valueText: '916', changeText: '86', trend: 'down' }
+      ]
+    },
+    {
+      key: 'adSpendSummary',
+      title: '广告支出汇总',
+      items: [
+        { label: 'Google', valueText: '$13342', changeText: '$1216', trend: 'down' },
+        { label: 'Facebook', valueText: '$7185', changeText: '$293', trend: 'up' },
+        { label: 'Mintegral', valueText: '$1413', changeText: '$368', trend: 'down' },
+        { label: 'TikTok', valueText: '$1201', changeText: '$407', trend: 'down' },
+        { label: 'Kwai', valueText: '$164', changeText: '$44.1', trend: 'down' },
+        { label: 'NewsBreak', valueText: '$73.6', changeText: '$28.0', trend: 'down' }
+      ]
+    },
+    {
+      key: 'paidUsersSummary',
+      title: '买量用户汇总',
+      items: [
+        { label: 'Google', valueText: '89726', changeText: '22020', trend: 'down' },
+        { label: 'Facebook', valueText: '54706', changeText: '1686', trend: 'down' },
+        { label: 'Mintegral', valueText: '46133', changeText: '12032', trend: 'down' },
+        { label: 'TikTok', valueText: '13409', changeText: '5860', trend: 'down' },
+        { label: 'Kwai', valueText: '847', changeText: '179', trend: 'down' },
+        { label: 'NewsBreak', valueText: '99', changeText: '22', trend: 'down' }
+      ]
+    },
+    {
+      key: 'roiSummary',
+      title: 'ROI',
+      items: [
+        { label: 'Google', valueText: '53%' },
+        { label: 'Facebook', valueText: '82%' },
+        { label: 'Mintegral', valueText: '95%' },
+        { label: 'TikTok', valueText: '95%' },
+        { label: 'Kwai', valueText: '72%' },
+        { label: 'NewsBreak', valueText: '53%' }
+      ]
+    }
+  ],
+  yesterdaySummarySections: [
+    {
+      key: 'adSpendSummary',
+      title: '广告支出汇总',
+      items: [
+        { label: 'Google', valueText: '$17163', changeText: '$344', trend: 'up' },
+        { label: 'Facebook', valueText: '$9209', changeText: '$631', trend: 'down' },
+        { label: 'Mintegral', valueText: '$2107', changeText: '$158', trend: 'down' },
+        { label: 'TikTok', valueText: '$1946', changeText: '$261', trend: 'up' },
+        { label: 'Kwai', valueText: '$239', changeText: '$77.9', trend: 'down' },
+        { label: 'NewsBreak', valueText: '$102', changeText: '$20.1', trend: 'down' }
+      ]
+    },
+    {
+      key: 'proxySummary',
+      title: '代投汇总',
+      items: [
+        { label: '广告支出', valueText: '$132', changeText: '$20.8', trend: 'down' },
+        { label: 'Facebook', valueText: '$132', changeText: '$20.8', trend: 'down' }
+      ]
+    },
+    {
+      key: 'proxyDetail',
+      title: '代投明细',
+      items: [
+        { label: '—', valueText: '$114', changeText: '$22.1', trend: 'down' },
+        { label: 'GatherOne', valueText: '$17.6', changeText: '$1.35', trend: 'up' }
+      ]
+    },
+    {
+      key: 'app-phonetracker',
+      title: 'PhoneTracker',
+      items: [
+        { label: '总收入', valueText: '$6609', changeText: '$1105', trend: 'down' },
+        { label: '广告支出', valueText: '$5304', changeText: '$967', trend: 'down' },
+        { label: '预估利润', valueText: '$1276', changeText: '$155', trend: 'down' },
+        { label: '活跃用户', valueText: '128324', changeText: '1308', trend: 'down' },
+        { label: '新用户', valueText: '68367', changeText: '321', trend: 'down' },
+        { label: '广告系列', valueText: '187', changeText: '20', trend: 'up' }
+      ]
+    },
+    {
+      key: 'app-phonetracker2',
+      title: 'PhoneTracker2',
+      items: [
+        { label: '总收入', valueText: '$4288', changeText: '$802', trend: 'down' },
+        { label: '广告支出', valueText: '$3612', changeText: '$655', trend: 'down' },
+        { label: '预估利润', valueText: '$906', changeText: '$147', trend: 'down' },
+        { label: '活跃用户', valueText: '90412', changeText: '985', trend: 'down' },
+        { label: '新用户', valueText: '45210', changeText: '284', trend: 'down' },
+        { label: '广告系列', valueText: '143', changeText: '12', trend: 'up' }
+      ]
+    }
+  ],
   revenueCostTrend: {
     dates: ['10.15', '10.20', '10.25', '10.30', '11.05', '11.10', '11.15'],
     revenue: [620, 732, 601, 634, 590, 730, 620],

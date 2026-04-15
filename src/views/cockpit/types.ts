@@ -365,6 +365,30 @@ export interface CockpitAlertSummaryMetric {
   trend?: 'up' | 'down'
 }
 
+/** 今日 Tab 专属：四卡片 - 单行指标 */
+export interface CockpitTodaySummaryMetricItem {
+  label: string
+  /** 主值展示（可能为预格式化：$25207 / 129 / 53% 等） */
+  valueText: string
+  /** 右侧变化展示（可能为预格式化：$1770 / 7 / 28.0 等） */
+  changeText?: string
+  trend?: 'up' | 'down'
+}
+
+/** 今日 Tab 专属：四卡片 - 卡片单项 */
+export interface CockpitTodaySummaryCard {
+  key: 'adRevenueSummary' | 'adSpendSummary' | 'paidUsersSummary' | 'roiSummary'
+  title: string
+  items: CockpitTodaySummaryMetricItem[]
+}
+
+/** 昨日 Tab 专属：汇总面板 - 分组块（与截图的“广告支出汇总/代投汇总/代投明细/应用汇总”等一致） */
+export interface CockpitYesterdaySummarySection {
+  key: string
+  title: string
+  items: CockpitTodaySummaryMetricItem[]
+}
+
 /** 收入与成本趋势图 */
 export interface CockpitRevenueCostTrend {
   dates: string[]
@@ -647,6 +671,10 @@ export interface CockpitOverview {
   /** 警示模块左侧：运营摘要指标（DNU、自然量、买量应用等） */
   alertSummaryMetrics?: CockpitAlertSummaryMetric[]
   alertBanners: CockpitAlertBanner[]
+  /** 今日 Tab 专属：四卡片数据 */
+  todaySummaryCards?: CockpitTodaySummaryCard[]
+  /** 昨日 Tab 专属：汇总面板（分组块列表） */
+  yesterdaySummarySections?: CockpitYesterdaySummarySection[]
   revenueCostTrend: CockpitRevenueCostTrend
   /** 广告平台 ROI&安装量表格数据 */
   channelRoiInstall?: CockpitChannelRoiInstallItem[]

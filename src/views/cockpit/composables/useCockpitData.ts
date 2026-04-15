@@ -21,7 +21,9 @@ import {
   mapBusinessMapToMapCountries,
   mapCountriesToLegend,
   fetchIncomeStructure,
-  mapIncomeStructureToFlow
+  mapIncomeStructureToFlow,
+  fetchCockpitTodaySummaryCards,
+  fetchCockpitYesterdaySummaryPanel
 } from '../api/cockpit'
 import type {
   CockpitOverview,
@@ -83,6 +85,8 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
   const loading = ref(true)
   const moduleLoading = ref({
     kpiAlert: true,
+    todayCards: true,
+    yesterdayPanel: true,
     spendPace: true,
     map: true,
     top3: true,
@@ -108,6 +112,8 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
     loading.value = true
     moduleLoading.value = {
       kpiAlert: true,
+      todayCards: true,
+      yesterdayPanel: true,
       spendPace: true,
       map: true,
       top3: true,
@@ -182,6 +188,42 @@ export function useCockpitData(initialDateRange: CockpitDateRange = 'today') {
     if (seq !== requestSeq) return
 
     const tasks: Promise<unknown>[] = []
+
+    // 今日专属四卡片：仅今日加载；非今日直接清空，避免残留
+    if (range === 'today') {
+      tasks.push(
+        fetchCockpitTodaySummaryCards({ date: nextDate })
+          .then((cards) => {
+            if (seq !== requestSeq) return
+            mergeOverview({ todaySummaryCards: Array.isArray(cards) ? cards : [] })
+          })
+          .catch(() => null)
+          .finally(() => {
+            if (seq === requestSeq) moduleLoading.value.todayCards = false
+          })
+      )
+    } else {
+      mergeOverview({ todaySummaryCards: [] })
+      moduleLoading.value.todayCards = false
+    }
+
+    // 昨日专属汇总面板：仅昨日加载；非昨日清空
+    if (range === 'yesterday') {
+      tasks.push(
+        fetchCockpitYesterdaySummaryPanel({ date: nextDate })
+          .then((sections) => {
+            if (seq !== requestSeq) return
+            mergeOverview({ yesterdaySummarySections: Array.isArray(sections) ? sections : [] })
+          })
+          .catch(() => null)
+          .finally(() => {
+            if (seq === requestSeq) moduleLoading.value.yesterdayPanel = false
+          })
+      )
+    } else {
+      mergeOverview({ yesterdaySummarySections: [] })
+      moduleLoading.value.yesterdayPanel = false
+    }
 
     tasks.push(
       fetchConsumptionRhythmMonitoring({ date: nextDate })

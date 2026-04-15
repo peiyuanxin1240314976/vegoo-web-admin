@@ -44,6 +44,36 @@
           :alert-banners="overview?.alertBanners ?? []"
         />
       </ElSkeleton>
+
+      <!-- 5. 今日专属：四卡片汇总（仅今日 Tab 展示） -->
+      <ElSkeleton v-if="dateRange === 'today'" :loading="moduleLoading.todayCards" animated>
+        <template #template>
+          <div class="cockpit-skeleton-card-list">
+            <ElSkeletonItem
+              v-for="i in 4"
+              :key="`today-card-${i}`"
+              variant="p"
+              class="cockpit-s-line w24"
+            />
+          </div>
+        </template>
+        <CockpitTodaySummaryCards :cards="overview?.todaySummaryCards ?? []" />
+      </ElSkeleton>
+
+      <!-- 6. 昨日专属：汇总面板（仅昨日 Tab 展示） -->
+      <ElSkeleton v-if="dateRange === 'yesterday'" :loading="moduleLoading.yesterdayPanel" animated>
+        <template #template>
+          <div class="cockpit-skeleton-panel">
+            <ElSkeletonItem
+              v-for="i in 10"
+              :key="`yesterday-panel-${i}`"
+              variant="p"
+              class="cockpit-s-line w95"
+            />
+          </div>
+        </template>
+        <CockpitYesterdaySummaryPanel :sections="overview?.yesterdaySummarySections ?? []" />
+      </ElSkeleton>
     </div>
 
     <div class="cockpit-entry-3">
@@ -108,9 +138,9 @@
         </ElCol>
       </ElRow>
 
-      <!-- 第三排：三列（左25% | 中50% 近7日收入结构流向 | 右25%） -->
-      <ElRow :gutter="16" class="cockpit-body cockpit-row-3">
-        <ElCol :xs="24" :md="6">
+      <!-- 第三排：单独一排（突出）广告平台ROI&安装量 -->
+      <ElRow :gutter="16" class="cockpit-body cockpit-row-roi">
+        <ElCol :xs="24" :md="24" class="cockpit-row-roi__col">
           <ElSkeleton :loading="moduleLoading.channelRoi" animated>
             <template #template>
               <div class="cockpit-skeleton-panel">
@@ -125,7 +155,11 @@
             <CockpitRevenueCostTrend :list="overview?.channelRoiInstall" />
           </ElSkeleton>
         </ElCol>
-        <ElCol :xs="24" :md="12">
+      </ElRow>
+
+      <!-- 第三排：三列（左25% | 中50% 近7日收入结构流向 | 右25%） -->
+      <ElRow :gutter="16" class="cockpit-body cockpit-row-3">
+        <ElCol :xs="24" :md="16">
           <ElSkeleton :loading="moduleLoading.revenueFlow" animated>
             <template #template>
               <div class="cockpit-skeleton-panel">
@@ -140,7 +174,7 @@
             <CockpitRevenueStructureFlow :flow-data="overview?.revenueStructureFlow" />
           </ElSkeleton>
         </ElCol>
-        <ElCol :xs="24" :md="6">
+        <ElCol :xs="24" :md="8">
           <ElSkeleton :loading="moduleLoading.smartAlerts" animated>
             <template #template>
               <div class="cockpit-skeleton-panel">
@@ -170,6 +204,8 @@
   import CockpitTopBarActions from './modules/top-bar-actions.vue'
   import CockpitGlobalKpiCards from './modules/global-kpi-cards.vue'
   import CockpitAlertMessages from './modules/alert-messages.vue'
+  import CockpitTodaySummaryCards from './modules/today-summary-cards.vue'
+  import CockpitYesterdaySummaryPanel from './modules/yesterday-summary-panel.vue'
   /** 重组件异步分包，减轻首进驾驶舱的 parse/执行与离页卸载峰值 */
   const CockpitRevenueCostTrend = defineAsyncComponent(
     () => import('./modules/revenue-cost-trend.vue')
@@ -407,6 +443,10 @@
       height: 100%;
       margin-bottom: 0;
     }
+  }
+
+  .cockpit-row-roi__col {
+    min-width: 0;
   }
 
   .cockpit-top3-panels-wrap {
