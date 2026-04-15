@@ -418,6 +418,7 @@ alwaysApply: true
 | `valueText` | KPI/卡片主指标的预格式化展示文案（与纯数值派生展示二选一以模块契约为准）。 |
 | `changeText` | 环比/同比等变化量的展示文案（可含符号与百分号）。 |
 | `positive` | 指标变化是否为正向（用于涨跌配色等 UI）。 |
+| `dataSourceLabel` | 数据来源展示文案（如 `Open Exchange`，用于 KPI/卡片静态文案后端下发场景）。 |
 | `insights` | AI/分析洞察项数组（元素字段见各模块 `mock/backend-api`）。 |
 | `formatType` | 广告位/表格行上的版位类型键（如 `banner`、`interstitial`、`rewarded`），用于标签样式与分支展示。 |
 | `waterfallByTab` | 瀑布流配置按 Tab（广告形式）分组的映射；键为 `banner`、`interstitial`、`rewarded`、`other` 等与 UI Tab 一致。 |
@@ -445,6 +446,7 @@ alwaysApply: true
 | `CountryOverviewKpi` | （TS）国家管理顶栏 KPI 响应体；契约 `views/config-management/country-management/mock/backend-api/09-country-overview-kpi.json`。内含 **`total`**（当前筛选下国家总数）、**`currencies`**（非空 `currency` 去重数）、**`mainMarkets`**（`isMainMarket=true` 条数）、**`noCurrency`**（`currency` 为空条数）。 |
 | `CountryRegionDistributionItem` | （TS）国家管理地区分布图单项；契约 `views/config-management/country-management/mock/backend-api/10-country-region-distribution.json`。含 **`region`**、**`count`**、**`percent`**。 |
 | `CountryMainMarketShareItem` | （TS）国家管理主要市场占比图单项；契约 `views/config-management/country-management/mock/backend-api/11-country-main-market-share.json`。含 **`countryCode`**、**`countryName`**、**`sharePercent`**。 |
+| `ExchangeRateOverviewKpi` / `ExchangeRateTrendPoint` | （TS）汇率管理左列 KPI 与右列走势图响应体；契约 `views/config-management/exchange-rate-management/mock/backend-api/07-exchange-rate-overview-kpi.json` 与 `08-exchange-rate-trend.json`。前者含 **`total`**、**`abnormal`**、**`lastSyncTime`**；后者含 **`date`**、**`rate`**。 |
 
 #### 下拉/筛选选项字段
 
@@ -456,10 +458,11 @@ alwaysApply: true
 | `statusOptions` | 映射等业务**状态**筛选项数组（如启用/重复/未映射）。 |
 | `options` | 通用配置项数组（元素多为 `{ label, value }`；如转化展示分类等 meta 接口）。 |
 | `sourceOptions` | 广告平台筛选下拉选项数组。 |
+| `pairOptions` | 汇率管理同步弹窗中的货币对选项数组（项为 `{ label, value }`，`value` 如 `USD/EUR`）。 |
 | `countryOptions` | 国家筛选下拉选项数组（`value` 为小写 ISO 3166-1 alpha-2）。 |
 | `timezoneOptions` | 国家管理等页面的时区下拉选项数组（值如 `GMT+8`）。 |
 | `regionOptions` | 国家管理等页面的地区下拉选项数组（如 `亚太`、`欧洲`、`北美`、`其他`）。 |
-| `currencyOptions` | 国家管理等页面的货币下拉选项数组（值如 `USD - 美元`）。 |
+| `currencyOptions` | 国家管理、汇率管理等页面的货币下拉选项数组（国家管理可为 `USD - 美元`，汇率管理可为 `USD`）。 |
 | `label` | 选项展示文案。 |
 | `value` | 选项值（UI 中「全部」常用 `all`；**提交接口入参时**须按上文「接口请求 · 筛选「全部」」映射为 `""`）。 |
 

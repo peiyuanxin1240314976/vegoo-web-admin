@@ -69,7 +69,7 @@
             <div class="kpi-icon-wrap kpi-icon-wrap--teal">🔗</div>
             <div class="kpi-body">
               <div class="kpi-label">数据来源</div>
-              <div class="kpi-value kpi-value--source">Open Exchange</div>
+              <div class="kpi-value kpi-value--source">{{ kpi.dataSourceLabel }}</div>
             </div>
             <div class="kpi-accent kpi-accent--teal" />
           </div>
@@ -240,9 +240,12 @@
   import { LineChart } from 'echarts/charts'
   import { TooltipComponent, GridComponent } from 'echarts/components'
   import { CanvasRenderer } from 'echarts/renderers'
-  import { getAppNow, cloneAppDate } from '@/utils/app-now'
+  import { getAppNow } from '@/utils/app-now'
   import {
     fetchExchangeRateTable,
+    fetchExchangeRateOverviewKpi,
+    fetchExchangeRateTrend,
+    fetchExchangeRateSyncConfig,
     createExchangeRate,
     syncExchangeRates,
     saveSyncConfig,
@@ -253,8 +256,15 @@
   import RateSyncDialog from './modules/rate-sync-dialog.vue'
   import RateSyncProgressDialog from './modules/rate-sync-progress-dialog.vue'
   import RateSyncDoneDialog from './modules/rate-sync-done-dialog.vue'
-  import { ALL_CURRENCY_PAIRS, mockTrendData, mockSyncConfig } from './mock/data'
-  import type { ExchangeRateItem, ManualRateFormModel, SyncResult, SyncConfig } from './types'
+  import { ALL_CURRENCY_PAIRS } from './mock/data'
+  import type {
+    ExchangeRateItem,
+    ExchangeRateOverviewKpi,
+    ExchangeRateTrendPoint,
+    ManualRateFormModel,
+    SyncResult,
+    SyncConfig
+  } from './types'
 
   echarts.use([LineChart, TooltipComponent, GridComponent, CanvasRenderer])
 
@@ -278,13 +288,20 @@
 
   // ─── 同步设置 ───────────────────────────────────────────
   const syncConfig = reactive<SyncConfig & { alertThreshold: number }>({
-    ...mockSyncConfig,
-    alertThreshold: mockSyncConfig.alertThreshold
+    frequency: 'hourly',
+    alertThreshold: 2,
+    primarySource: 'openexchange',
+    backupSourceEnabled: true
   })
 
   // ─── KPI ────────────────────────────────────────────────
   const lastSyncTime = ref(getAppNow())
-  const kpiData = ref({ total: 0, abnormal: 0 })
+  const kpiData = ref<ExchangeRateOverviewKpi>({
+    total: 0,
+    abnormal: 0,
+    lastSyncTime: '',
+    dataSourceLabel: 'Open Exchange'
+  })
 
   const kpi = computed(() => {
     const diff = Math.round((getAppNow().getTime() - lastSyncTime.value.getTime()) / 60000)
@@ -292,7 +309,8 @@
     return {
       total: kpiData.value.total,
       lastSyncLabel: diffLabel,
-      abnormal: kpiData.value.abnormal
+      abnormal: kpiData.value.abnormal,
+      dataSourceLabel: kpiData.value.dataSourceLabel
     }
   })
 
@@ -320,17 +338,13 @@
 
   async function loadKpiFromApi() {
     try {
-      const res = await fetchExchangeRateTable({
+      const data = await fetchExchangeRateOverviewKpi({
         ...tableQueryBase(),
-        page: 1,
-        pageSize: 10000
+        alertThreshold: syncConfig.alertThreshold
       })
-      const r = res as Api.Common.PaginatedResponse<ExchangeRateItem>
-      const rows = r.records ?? []
-      kpiData.value = {
-        total: r.total ?? rows.length,
-        abnormal: rows.filter((row) => Math.abs(row.changePercent) > syncConfig.alertThreshold)
-          .length
+      kpiData.value = data
+      if (data.lastSyncTime) {
+        lastSyncTime.value = new Date(data.lastSyncTime.replace(' ', 'T'))
       }
     } catch {
       // 保持 KPI 上轮值
@@ -342,6 +356,9 @@
   })
   watch([filterPair, filterDate], () => {
     void loadKpiFromApi()
+  })
+  watch(filterDate, () => {
+    void loadTrend()
   })
   watch(
     () => syncConfig.alertThreshold,
@@ -368,13 +385,28 @@
   // ─── 折线图 ─────────────────────────────────────────────
   const lineEl = ref<HTMLElement | null>(null)
   let lineChart: echarts.ECharts | null = null
+  const trendPoints = ref<ExchangeRateTrendPoint[]>([])
+
+  async function loadTrend() {
+    try {
+      trendPoints.value = await fetchExchangeRateTrend({
+        pair: activePair.value,
+        date: filterDate.value || undefined
+      })
+      lineChart?.setOption(buildLineOption())
+    } catch {
+      trendPoints.value = []
+      lineChart?.setOption(buildLineOption())
+      ElMessage.error('加载走势图失败')
+    }
+  }
 
   function buildLineOption() {
-    const dates = Array.from({ length: 30 }, (_, i) => {
-      const d = cloneAppDate(getAppNow())
-      d.setDate(d.getDate() - (29 - i))
+    const dates = trendPoints.value.map((item) => {
+      const d = new Date(item.date)
       return `${d.getMonth() + 1}/${d.getDate()}`
     })
+    const trendData = trendPoints.value.map((item) => item.rate)
     return {
       backgroundColor: 'transparent',
       grid: { left: 8, right: 8, top: 12, bottom: 6, containLabel: true },
@@ -405,7 +437,7 @@
       series: [
         {
           type: 'line',
-          data: mockTrendData,
+          data: trendData,
           smooth: true,
           symbol: 'none',
           lineStyle: { color: '#2dd4bf', width: 2 },
@@ -430,8 +462,20 @@
       }
     })
     window.addEventListener('resize', resizeChart)
+    void (async () => {
+      try {
+        const config = await fetchExchangeRateSyncConfig()
+        syncConfig.frequency = config.frequency
+        syncConfig.alertThreshold = config.alertThreshold
+        syncConfig.primarySource = config.primarySource
+        syncConfig.backupSourceEnabled = config.backupSourceEnabled
+      } catch {
+        // 保持默认配置
+      }
+    })()
     void loadTable()
     void loadKpiFromApi()
+    void loadTrend()
   })
 
   onBeforeUnmount(() => {
@@ -442,6 +486,7 @@
   // ─── 操作 ──────────────────────────────────────────────
   const handleRowClick = (row: ExchangeRateItem) => {
     activePair.value = row.pair
+    void loadTrend()
   }
 
   const toggleOverride = async (row: ExchangeRateItem) => {
@@ -742,9 +787,11 @@
     &--teal {
       background: rgb(45 212 191 / 15%);
     }
+
     &--blue {
       background: rgb(96 165 250 / 15%);
     }
+
     &--amber {
       background: rgb(245 158 11 / 15%);
     }
@@ -813,9 +860,11 @@
     &--teal {
       background: linear-gradient(90deg, #2dd4bf, transparent);
     }
+
     &--blue {
       background: linear-gradient(90deg, #60a5fa, transparent);
     }
+
     &--amber {
       background: linear-gradient(90deg, #f59e0b, transparent);
     }

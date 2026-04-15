@@ -12,6 +12,9 @@ type UseMock = boolean
 /** 与契约文件、`fetch*` 一一对应，避免散落字符串 key */
 export enum ExchangeRateEndpoint {
   RateTable = 'rateTable',
+  OverviewKpi = 'overviewKpi',
+  TrendSeries = 'trendSeries',
+  SyncConfigDetail = 'syncConfigDetail',
   ManualCreate = 'manualCreate',
   SyncRates = 'syncRates',
   SaveSyncConfig = 'saveSyncConfig',
@@ -21,6 +24,9 @@ export enum ExchangeRateEndpoint {
 
 export const ExchangeRateApiSource: Record<ExchangeRateEndpoint, UseMock> = {
   [ExchangeRateEndpoint.RateTable]: true,
+  [ExchangeRateEndpoint.OverviewKpi]: true,
+  [ExchangeRateEndpoint.TrendSeries]: true,
+  [ExchangeRateEndpoint.SyncConfigDetail]: true,
   [ExchangeRateEndpoint.ManualCreate]: true,
   [ExchangeRateEndpoint.SyncRates]: true,
   [ExchangeRateEndpoint.SaveSyncConfig]: true,

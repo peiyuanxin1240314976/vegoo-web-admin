@@ -1,0 +1,55 @@
+{
+  "_comment": "汇率管理右列 30 天走势，对应 ExchangeRateTrendPoint[]。",
+  "fieldDescription": {
+    "request": {
+      "pair": { "type": "string", "required": true, "description": "货币对，如 USD/EUR。" },
+      "date": {
+        "type": "string",
+        "required": false,
+        "description": "基准日期 YYYY-MM-DD，不传时以应用当前时间为准。"
+      }
+    },
+    "response": {
+      "items": {
+        "type": "ExchangeRateTrendPoint[]",
+        "required": true,
+        "description": "30天趋势点。"
+      }
+    },
+    "ExchangeRateTrendPoint": {
+      "date": { "type": "string", "required": true, "description": "日期 YYYY-MM-DD。" },
+      "rate": { "type": "number", "required": true, "description": "当日汇率值，保留 4 位小数。" }
+    }
+  },
+  "sampleRequest": { "pair": "USD/EUR", "date": "" },
+  "sampleResponse": {
+    "data": {
+      "items": [
+        { "date": "2026-03-17", "rate": 0.9213 },
+        { "date": "2026-03-18", "rate": 0.9234 },
+        { "date": "2026-03-19", "rate": 0.9198 }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/exchange-rate/trend",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "pair, date?",
+    "responseBody": "{ items: ExchangeRateTrendPoint[] }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "默认加载 `activePair`（初始 USD/EUR）的 30 天走势。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "点击表格行切换货币对后刷新走势。"
+      }
+    ],
+    "defaultSelection": "首屏 `pair=USD/EUR`。",
+    "dedupe": "相同 pair/date 可按需短时缓存。"
+  }
+}

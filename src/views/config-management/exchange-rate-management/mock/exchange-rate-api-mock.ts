@@ -2,8 +2,15 @@
  * 汇率管理 Mock，与契约及 `Api.Common.PaginatedResponse` 一致。
  */
 import { getAppNow } from '@/utils/app-now'
-import type { ExchangeRateItem, ExchangeRateQuery, ManualRateFormModel, SyncConfig } from '../types'
-import { cloneRateList, mockSyncConfig } from './data'
+import type {
+  ExchangeRateItem,
+  ExchangeRateOverviewKpi,
+  ExchangeRateQuery,
+  ExchangeRateTrendPoint,
+  ManualRateFormModel,
+  SyncConfig
+} from '../types'
+import { cloneRateList, mockSyncConfig, mockTrendData } from './data'
 
 let mockList: ExchangeRateItem[] = cloneRateList()
 let mockSyncStore: SyncConfig = { ...mockSyncConfig }
@@ -32,6 +39,46 @@ export function mockFetchExchangeRateTable(
     current: params.page,
     size: params.pageSize
   })
+}
+
+export function mockFetchExchangeRateOverviewKpi(
+  params: Partial<ExchangeRateQuery> & { alertThreshold?: number }
+): Promise<ExchangeRateOverviewKpi> {
+  const filtered = filterByQuery(mockList, {
+    pair: params.pair,
+    date: params.date,
+    page: 1,
+    pageSize: 100000
+  })
+  const threshold = params.alertThreshold ?? mockSyncStore.alertThreshold
+  return Promise.resolve({
+    total: filtered.length,
+    abnormal: filtered.filter((row) => Math.abs(row.changePercent) > threshold).length,
+    lastSyncTime: getAppNow().toISOString().slice(0, 19).replace('T', ' '),
+    dataSourceLabel: 'Open Exchange'
+  })
+}
+
+export function mockFetchExchangeRateTrend(params: {
+  pair: string
+  date?: string
+}): Promise<ExchangeRateTrendPoint[]> {
+  const seed = params.pair.charCodeAt(0) % 7
+  const points = mockTrendData.map((rate, idx) => {
+    const d = new Date(getAppNow())
+    d.setDate(d.getDate() - (mockTrendData.length - 1 - idx))
+    return {
+      date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+        d.getDate()
+      ).padStart(2, '0')}`,
+      rate: Number((rate + seed * 0.001).toFixed(4))
+    }
+  })
+  return Promise.resolve(points)
+}
+
+export function mockFetchExchangeRateSyncConfig(): Promise<SyncConfig> {
+  return Promise.resolve({ ...mockSyncStore })
 }
 
 export function mockCreateExchangeRate(data: ManualRateFormModel): Promise<ExchangeRateItem> {
@@ -107,7 +154,9 @@ export function mockUpdateExchangeRateOverride(
   return Promise.resolve({})
 }
 
-export function mockExportExchangeRates(params: Partial<ExchangeRateQuery>): Promise<unknown> {
+export function mockExportExchangeRates(
+  params: Partial<ExchangeRateQuery>
+): Promise<{ blob: Blob; fileName: string }> {
   const filtered = filterByQuery(mockList, {
     pair: params.pair,
     date: params.date,
@@ -124,11 +173,8 @@ export function mockExportExchangeRates(params: Partial<ExchangeRateQuery>): Pro
     )
   }
   const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `exchange_rates_${getAppNow().getTime()}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
-  return Promise.resolve({ ok: true })
+  return Promise.resolve({
+    blob,
+    fileName: `exchange_rates_${getAppNow().getTime()}.csv`
+  })
 }

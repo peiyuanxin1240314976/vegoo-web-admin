@@ -1,0 +1,67 @@
+{
+  "_comment": "汇率管理左列 KPI 概览，对应 ExchangeRateOverviewKpi。",
+  "fieldDescription": {
+    "request": {
+      "pair": { "type": "string", "required": false, "description": "货币对筛选。" },
+      "date": { "type": "string", "required": false, "description": "日期筛选 YYYY-MM-DD。" },
+      "alertThreshold": {
+        "type": "number",
+        "required": false,
+        "description": "异常阈值（%），不传时按已保存同步设置。"
+      }
+    },
+    "response": {
+      "total": {
+        "type": "number",
+        "required": true,
+        "description": "已配置货币对数量（按当前筛选聚合，不受分页影响）。"
+      },
+      "abnormal": {
+        "type": "number",
+        "required": true,
+        "description": "异常汇率数量（绝对变动幅度大于 alertThreshold）。"
+      },
+      "lastSyncTime": {
+        "type": "string",
+        "required": true,
+        "description": "最后同步时间，格式 YYYY-MM-DD HH:mm:ss。"
+      },
+      "dataSourceLabel": {
+        "type": "string",
+        "required": true,
+        "description": "数据来源展示文案（对应页面右上 KPI 卡片“数据来源”）。"
+      }
+    }
+  },
+  "sampleRequest": { "pair": "", "date": "", "alertThreshold": 2 },
+  "sampleResponse": {
+    "data": {
+      "total": 12,
+      "abnormal": 2,
+      "lastSyncTime": "2026-04-15 16:20:00",
+      "dataSourceLabel": "Open Exchange"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/exchange-rate/overview/kpi",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "pair?, date?, alertThreshold?",
+    "responseBody": "{ total, abnormal, lastSyncTime, dataSourceLabel }"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面首屏初始化",
+        "detail": "`/config-management/exchange-rate-management` 进入后加载 KPI 卡片。",
+        "prerequisite": "`ExchangeRateApiSource.overviewKpi`。"
+      },
+      {
+        "moment": "用户操作",
+        "detail": "筛选货币对、日期变更后刷新 KPI。"
+      }
+    ],
+    "defaultSelection": "按当前筛选条件聚合，不受表格分页影响。",
+    "dedupe": "同筛选条件 300ms 内复用前次请求可选。"
+  }
+}
