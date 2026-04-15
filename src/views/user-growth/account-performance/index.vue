@@ -7,14 +7,6 @@
     >
       <div class="ac-perf-filter-panel">
         <div class="ap-filters">
-          <ElSelect v-model="draftSource" placeholder="广告平台" class="ap-filter-select">
-            <ElOption
-              v-for="opt in metaAdPlatformOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
           <ElSelect v-model="draftPlatform" placeholder="应用" class="ap-filter-select">
             <ElOption
               v-for="opt in metaAppOptions"
@@ -23,6 +15,16 @@
               :value="opt.value"
             />
           </ElSelect>
+
+          <ElSelect v-model="draftSource" placeholder="广告平台" class="ap-filter-select">
+            <ElOption
+              v-for="opt in metaAdPlatformOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </ElSelect>
+
           <ElSelect v-model="draftFilterOwner" placeholder="广告账户" class="ap-filter-select">
             <ElOption
               v-for="opt in metaAccountOptions"

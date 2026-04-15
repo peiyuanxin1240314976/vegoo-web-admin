@@ -20,6 +20,7 @@
             <ElSelect
               v-model="filters.s_app_id"
               class="ca-filter-select ca-filter-select--app"
+              placeholder="应用"
               popper-class="ca-select-popper"
             >
               <ElOption
@@ -33,6 +34,7 @@
             <ElSelect
               v-model="filters.adPlatform"
               class="ca-filter-select ca-filter-select--source"
+              placeholder="广告平台"
               popper-class="ca-select-popper"
             >
               <ElOption
@@ -42,10 +44,10 @@
                 :value="opt.value"
               />
             </ElSelect>
-
             <ElSelect
               v-model="filters.s_country_code"
               class="ca-filter-select ca-filter-select--country"
+              placeholder="国家"
               popper-class="ca-select-popper"
               filterable
             >

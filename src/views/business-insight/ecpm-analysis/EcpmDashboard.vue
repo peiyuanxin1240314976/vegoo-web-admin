@@ -25,14 +25,14 @@
         </div>
 
         <div class="ecpm-pill">
-          <span class="ecpm-pill__k">广告平台</span>
+          <span class="ecpm-pill__k">App</span>
           <el-skeleton :loading="loadingMetaFilterOptions" animated>
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
             </template>
-            <el-select v-model="filterPlatform" size="default" class="ecpm-select">
+            <el-select v-model="filterApp" size="default" class="ecpm-select">
               <el-option
-                v-for="item in sourceOptions"
+                v-for="item in appOptions"
                 :key="item.value"
                 :label="item.label"
                 :value="toSelectValue(item.value)"
@@ -42,14 +42,14 @@
         </div>
 
         <div class="ecpm-pill">
-          <span class="ecpm-pill__k">App</span>
+          <span class="ecpm-pill__k">广告平台</span>
           <el-skeleton :loading="loadingMetaFilterOptions" animated>
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
             </template>
-            <el-select v-model="filterApp" size="default" class="ecpm-select">
+            <el-select v-model="filterPlatform" size="default" class="ecpm-select">
               <el-option
-                v-for="item in appOptions"
+                v-for="item in sourceOptions"
                 :key="item.value"
                 :label="item.label"
                 :value="toSelectValue(item.value)"

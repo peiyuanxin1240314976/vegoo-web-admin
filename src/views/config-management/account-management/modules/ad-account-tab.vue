@@ -2,6 +2,23 @@
   <div class="ad-account-tab">
     <!-- 筛选栏 -->
     <div class="filter-bar">
+      <!-- 应用 -->
+      <div class="filter-group">
+        <span class="filter-label">应用：</span>
+        <el-select
+          v-model="appFilter"
+          placeholder="全部"
+          class="filter-select filter-select--app"
+          clearable
+        >
+          <el-option
+            v-for="option in appSelectOptions"
+            :key="option.value || 'all'"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </div>
       <!-- 广告平台 -->
       <div class="filter-group">
         <span class="filter-label">广告平台：</span>
@@ -41,18 +58,6 @@
             :label="s.label"
             :value="s.value"
           />
-        </el-select>
-      </div>
-      <!-- 应用 -->
-      <div class="filter-group">
-        <span class="filter-label">应用：</span>
-        <el-select
-          v-model="appFilter"
-          placeholder="全部"
-          class="filter-select filter-select--app"
-          clearable
-        >
-          <el-option v-for="app in appOptions" :key="app" :label="app" :value="app" />
         </el-select>
       </div>
     </div>
@@ -192,6 +197,7 @@
 <script setup lang="ts">
   import { onMounted, ref, computed, watch } from 'vue'
   import { ElMessage } from 'element-plus'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { enableAccount, fetchAccountTable } from '@/api/config-management/account-management'
   import { AccountApiSource } from '../config/data-source'
   import { cloneAccountMockList, appOptions } from '../mock/data'
@@ -227,11 +233,29 @@
     { label: '已停用', value: '已停用' }
   ]
 
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+
+  const appSelectOptions = computed(() => {
+    const source = cockpitMetaFilterStore.data?.appOptions
+    if (!source?.length) {
+      return appOptions.map((app) => ({ label: app, value: app }))
+    }
+    // 当前页表格中的应用字段使用应用名，故 value 使用 label 保持过滤兼容。
+    return source.map((item) => ({
+      label: item.label || item.value,
+      value: item.label || item.value
+    }))
+  })
+
   const platformOptions = computed(() => {
+    const source = cockpitMetaFilterStore.data?.sourceOptions
+    if (source?.length) {
+      return [{ label: '全部', value: '' }, ...source]
+    }
     return [
       { label: '全部', value: '' },
       ...PLATFORM_CONFIGS.map((item) => ({
-        label: item.shortLabel,
+        label: item.label,
         value: item.value
       }))
     ]
@@ -273,6 +297,9 @@
   }
 
   onMounted(() => {
+    if (!cockpitMetaFilterStore.data) {
+      cockpitMetaFilterStore.ensureLoaded()
+    }
     loadAccountList()
   })
 

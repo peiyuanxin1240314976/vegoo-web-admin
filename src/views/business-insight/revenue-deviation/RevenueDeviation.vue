@@ -19,20 +19,6 @@
           popper-class="rd-filter-popper"
         />
         <el-select
-          v-model="platform"
-          class="rd-filter-select"
-          placeholder="广告平台"
-          popper-class="rd-filter-popper"
-          :teleported="true"
-        >
-          <el-option
-            v-for="item in sourceOptions"
-            :key="`source-${item.value}-${item.label}`"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
-        <el-select
           v-model="appFilter"
           class="rd-filter-select"
           placeholder="应用"
@@ -42,6 +28,21 @@
           <el-option
             v-for="item in appOptions"
             :key="`app-${item.value}-${item.label}`"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+
+        <el-select
+          v-model="platform"
+          class="rd-filter-select"
+          placeholder="广告平台"
+          popper-class="rd-filter-popper"
+          :teleported="true"
+        >
+          <el-option
+            v-for="item in sourceOptions"
+            :key="`source-${item.value}-${item.label}`"
             :label="item.label"
             :value="item.value"
           />
