@@ -128,8 +128,3 @@ export interface AssignmentAssignableSelectOption {
 export interface AppAssignmentMetaVersionsResponse {
   versions: PerformanceVersion[]
 }
-
-/** 导出异步凭证（契约 export；与 perf-config 导出形态对齐，真实联调可为文件流另议） */
-export interface AppAssignmentExportResponse {
-  fileToken: string
-}

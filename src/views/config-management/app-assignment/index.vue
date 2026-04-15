@@ -429,20 +429,16 @@
 
   const handleExport = async () => {
     try {
-      const res = await exportAppAssignmentList({
+      await exportAppAssignmentList({
         keyword: filterForm.keyword.trim() || undefined,
         platform: filterForm.platform || undefined,
         source: filterForm.adPlatform || undefined,
         optimizer: filterForm.optimizer || undefined,
         status: filterForm.status || undefined
       })
-      const token =
-        res && typeof res === 'object' && 'fileToken' in res
-          ? (res as { fileToken: string }).fileToken
-          : ''
-      ElMessage.success(token ? `导出任务已提交：${token}` : '导出任务已提交')
-    } catch {
-      /* request 层已提示 */
+      ElMessage.success('导出成功')
+    } catch (e) {
+      ElMessage.error(e instanceof Error ? e.message : '导出失败')
     }
   }
 </script>

@@ -1,9 +1,10 @@
 /**
  * 配置管理 · 应用分配 API（与 `views/config-management/app-assignment` 对齐）
  */
-import request from '@/utils/http'
+import request, { requestBlob } from '@/utils/http'
+import FileSaver from 'file-saver'
+import { getAppNow } from '@/utils/app-now'
 import type {
-  AppAssignmentExportResponse,
   AppAssignmentItem,
   AppAssignmentMetaAssignableAppsResponse,
   AppAssignmentMetaFilterResponse,
@@ -18,6 +19,67 @@ import {
   isAppAssignmentEndpointMock
 } from '@/views/config-management/app-assignment/config/data-source'
 import * as appAssignmentMock from '@/views/config-management/app-assignment/mock/app-assignment-api-mock'
+
+const APP_ASSIGNMENT_EXPORT_URL = '/api/config-management/app-assignment/export'
+
+function getFilenameFromContentDisposition(value?: string): string | undefined {
+  if (!value) return
+  const v = String(value)
+  const mStar = v.match(/filename\*\s*=\s*UTF-8''([^;]+)/i)
+  if (mStar?.[1]) {
+    try {
+      return decodeURIComponent(mStar[1].trim().replace(/^"|"$/g, ''))
+    } catch {
+      return mStar[1].trim().replace(/^"|"$/g, '')
+    }
+  }
+  const m = v.match(/filename\s*=\s*("?)([^";]+)\1/i)
+  if (m?.[2]) return m[2].trim()
+}
+
+async function downloadAppAssignmentExport(params: Partial<AssignmentTableQuery>) {
+  const res = await requestBlob({
+    url: APP_ASSIGNMENT_EXPORT_URL,
+    method: 'POST',
+    data: params,
+    headers: {
+      Accept:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,*/*'
+    },
+    showErrorMessage: false
+  })
+
+  const contentType = String(res.headers?.['content-type'] ?? '').toLowerCase()
+
+  if (contentType.includes('application/json')) {
+    let text = ''
+    try {
+      text = await res.data.text()
+    } catch {
+      /* ignore */
+    }
+    throw new Error(
+      text ? `导出接口未返回文件流（返回 JSON）：${text}` : '导出接口未返回文件流（返回 JSON）'
+    )
+  }
+
+  const filenameFromHeader = getFilenameFromContentDisposition(res.headers?.['content-disposition'])
+  const hasAttachment = !!filenameFromHeader
+  if (
+    !hasAttachment &&
+    !contentType.includes('spreadsheetml') &&
+    !contentType.includes('excel') &&
+    !contentType.includes('text/csv')
+  ) {
+    throw new Error(`导出接口未返回可识别的文件流（content-type=${contentType || 'unknown'}）`)
+  }
+  const ext =
+    contentType.includes('text/csv') || contentType.includes('application/csv') ? 'csv' : 'xlsx'
+  const fallback = `app-assignment_${getAppNow().getTime()}.${ext}`
+  const filename = filenameFromHeader || fallback
+
+  FileSaver.saveAs(res.data, filename)
+}
 
 /** 页头 KPI */
 export function fetchAppAssignmentOverview() {
@@ -115,14 +177,10 @@ export function updateAppAssignment(data: AssignmentUpdatePayload) {
   })
 }
 
-/** 导出 */
-export function exportAppAssignmentList(params: Partial<AssignmentTableQuery>) {
+/** 导出（文件流，成功后由浏览器保存） */
+export async function exportAppAssignmentList(params: Partial<AssignmentTableQuery>) {
   if (isAppAssignmentEndpointMock(AppAssignmentEndpoint.Export)) {
     return appAssignmentMock.mockExportAppAssignmentList(params)
   }
-  return request.post<AppAssignmentExportResponse>({
-    url: '/api/config-management/app-assignment/export',
-    data: params,
-    showErrorMessage: false
-  })
+  await downloadAppAssignmentExport(params)
 }

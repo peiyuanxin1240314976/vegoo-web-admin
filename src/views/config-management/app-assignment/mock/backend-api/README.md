@@ -3,7 +3,7 @@
 **路由**：`/config-management/app-assignment`（菜单「应用分配」）。
 
 **父级 API 路径**：`/api/config-management/app-assignment`  
-**约定**：一律 **POST + JSON**；网关统一 `{ code, message, data }` 时，各 JSON 的 `sampleResponse` 表示 **unwrap 后的 `data`**，与 `request.post` 泛型一致。
+**约定**：一律 **POST + JSON** 请求体；网关统一 `{ code, message, data }` 时，各 JSON 的 `sampleResponse` 表示 **unwrap 后的 `data`**，与 `request.post` 泛型一致。**例外**：`09-app-assignment-export` 响应为 **二进制文件流**（非 JSON `data`），前端使用 `requestBlob`。
 
 ## 1. 接口清单
 
@@ -29,7 +29,7 @@
 | 新建 · 打开弹窗 | `meta-assignable-apps`；选应用后 `meta-performance-versions` | 03、04 | 详见对应 JSON `interaction` |
 | 新建 · 提交 | `create`（路径 `POST /`） | 07 | `assignment-form-dialog` 提交 |
 | 编辑 · 提交 | `update` | 08 | 同上，`id` 必填 |
-| 导出 | `export` | 09 | 页头「导出」；若返回文件流在 `apiSuggestion` 另行约定 |
+| 导出 | `export` | 09 | 页头「导出」；**文件流**（`requestBlob` + `Content-Disposition`） |
 
 ## 3. 目录约定
 
@@ -40,4 +40,4 @@
 ## 4. 与代码对齐
 
 - 类型：`src/views/config-management/app-assignment/types.ts`
-- `fetch*`：`src/api/config-management.ts`（`fetchAppAssignment*`、`createAppAssignment`、`updateAppAssignment`、`exportAppAssignmentList`）
+- `fetch*`：`src/api/config-management/app-assignment.ts`（`fetchAppAssignment*`、`createAppAssignment`、`updateAppAssignment`、`exportAppAssignmentList`）

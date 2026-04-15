@@ -1,5 +1,5 @@
 {
-  "_comment": "应用分配 - 导出列表。对应 types.ts: AppAssignmentExportResponse；与绩效导出类似可先返 fileToken，或直接文件流（见 apiSuggestion）。",
+  "_comment": "应用分配 - 导出列表。后端返回二进制文件流；前端使用 `requestBlob`（responseType: blob）并触发浏览器下载。",
   "interaction": {
     "triggers": [
       {
@@ -20,11 +20,7 @@
       "status": { "type": "string", "required": false, "description": "同 table。" }
     },
     "response": {
-      "fileToken": {
-        "type": "string",
-        "required": true,
-        "description": "异步导出任务令牌或下载凭证；前端再调下载接口（若适用）。"
-      }
+      "_note": "文件流响应（blob），由 Content-Type 与 Content-Disposition 提供类型与文件名；非 JSON 业务体。"
     }
   },
   "sampleRequest": {
@@ -35,19 +31,21 @@
     "status": ""
   },
   "sampleResponse": {
-    "fileToken": "app-assignment-export-20260327"
+    "_note": "binary blob（text/csv 或 application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）"
   },
   "api": {
     "url": "POST /api/config-management/app-assignment/export",
     "method": "POST",
     "priority": "P1",
     "requestBody": "与 table 筛选字段一致（可无分页）",
-    "responseBody": "AppAssignmentExportResponse"
+    "responseBody": "blob"
   },
   "apiSuggestion": {
     "notes": [
-      "若直接返回 `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` 流，需在 `src/utils/http` 单独配置 responseType，契约改为说明响应头 Content-Disposition。",
-      "`sampleResponse` 为 unwrap 后 `data`。"
+      "前端使用 `@/utils/http` 的 `requestBlob`（默认 responseType: blob），与 `src/api/config-management/app-assignment.ts` 中 `exportAppAssignmentList` 一致。",
+      "建议在响应头设置 `Content-Disposition: attachment; filename*=UTF-8''...` 或 `filename=\"...\"` 以提供文件名。",
+      "若网关仍包裹 JSON 错误体且 `Content-Type: application/json`，前端会提示「未返回文件流」并中止下载。",
+      "若筛选后无数据，仍建议返回仅含表头的有效文件流。"
     ]
   }
 }
