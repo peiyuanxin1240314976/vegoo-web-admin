@@ -19,14 +19,14 @@ export enum ApplicationEndpoint {
 type UseMock = boolean
 
 const ApplicationApiMockDefaults: Record<ApplicationEndpoint, UseMock> = {
-  [ApplicationEndpoint.Table]: true,
-  [ApplicationEndpoint.OverviewStats]: true,
-  [ApplicationEndpoint.FilterFormOptions]: true,
-  [ApplicationEndpoint.UploadIcon]: true,
-  [ApplicationEndpoint.Create]: true,
-  [ApplicationEndpoint.Update]: true,
-  [ApplicationEndpoint.Delete]: true,
-  [ApplicationEndpoint.Export]: true
+  [ApplicationEndpoint.Table]: false,
+  [ApplicationEndpoint.OverviewStats]: false,
+  [ApplicationEndpoint.FilterFormOptions]: false,
+  [ApplicationEndpoint.UploadIcon]: false,
+  [ApplicationEndpoint.Create]: false,
+  [ApplicationEndpoint.Update]: false,
+  [ApplicationEndpoint.Delete]: false,
+  [ApplicationEndpoint.Export]: false
 }
 
 export function isApplicationEndpointMock(endpoint: ApplicationEndpoint): boolean {

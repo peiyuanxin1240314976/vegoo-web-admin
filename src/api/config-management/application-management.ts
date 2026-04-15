@@ -23,7 +23,7 @@ export function fetchApplicationTable(params: ApplicationTableQuery) {
     return applicationMock.mockFetchApplicationTable(params)
   }
   return request.post<Api.Common.PaginatedResponse<ApplicationAppItem>>({
-    url: '/api/config-management/application/table',
+    url: '/api/v1/datacenter/analysis/config-management/application/table',
     data: params,
     showErrorMessage: false
   })
@@ -35,7 +35,7 @@ export function fetchApplicationOverviewStats(params: ApplicationOverviewStatsQu
     return applicationMock.mockFetchApplicationOverviewStats(params)
   }
   return request.post<ApplicationOverviewStats>({
-    url: '/api/config-management/application/overview-stats',
+    url: '/api/v1/datacenter/analysis/config-management/application/overview-stats',
     data: params,
     showErrorMessage: false
   })
@@ -47,7 +47,7 @@ export function fetchApplicationFilterFormOptions() {
     return applicationMock.mockFetchApplicationFilterFormOptions()
   }
   return request.post<ApplicationFilterFormOptions>({
-    url: '/api/config-management/application/filter-form-options',
+    url: '/api/v1/datacenter/analysis/config-management/application/filter-form-options',
     data: {},
     showErrorMessage: false
   })
@@ -61,7 +61,7 @@ export function uploadApplicationIcon(file: File) {
   const formData = new FormData()
   formData.append('file', file)
   return request.post<ApplicationIconUploadResponse>({
-    url: '/api/config-management/application/upload-icon',
+    url: '/api/v1/datacenter/analysis/config-management/application/upload-icon',
     data: formData,
     showErrorMessage: false
   })
@@ -73,7 +73,7 @@ export function createApplication(data: ApplicationFormPayload) {
     return applicationMock.mockCreateApplication(data)
   }
   return request.post<ApplicationAppItem>({
-    url: '/api/config-management/application',
+    url: '/api/v1/datacenter/analysis/config-management/application',
     data,
     showErrorMessage: false
   })
@@ -85,7 +85,7 @@ export function updateApplication(data: ApplicationFormPayload) {
     return applicationMock.mockUpdateApplication(data)
   }
   return request.put<ApplicationAppItem>({
-    url: `/api/config-management/application/${data.id}`,
+    url: `/api/v1/datacenter/analysis/config-management/application/${data.id}`,
     data,
     showErrorMessage: false
   })
@@ -97,7 +97,7 @@ export function deleteApplication(id: string) {
     return applicationMock.mockDeleteApplication(id)
   }
   return request.del<unknown>({
-    url: `/api/config-management/application/${id}`,
+    url: `/api/v1/datacenter/analysis/config-management/application/${id}`,
     showErrorMessage: false
   })
 }
@@ -108,7 +108,7 @@ export function exportApplicationList(params: Partial<ApplicationTableQuery>) {
     return applicationMock.mockExportApplicationList(params)
   }
   return request.post<unknown>({
-    url: '/api/config-management/application/export',
+    url: '/api/v1/datacenter/analysis/config-management/application/export',
     data: params,
     showErrorMessage: false
   })

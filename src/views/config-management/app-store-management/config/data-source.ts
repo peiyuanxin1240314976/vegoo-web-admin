@@ -7,11 +7,29 @@
 type UseMock = boolean
 
 export enum AppStoreEndpoint {
+  CredentialTable = 'credentialTable',
+  OverviewStats = 'overviewStats',
+  CredentialCreate = 'credentialCreate',
+  CredentialUpdate = 'credentialUpdate',
+  TestConnection = 'testConnection',
+  BatchTestConnection = 'batchTestConnection',
+  RetryConnection = 'retryConnection',
+  CredentialDetail = 'credentialDetail',
+  CredentialExport = 'credentialExport',
   ConnectionAnomalies = 'connectionAnomalies'
 }
 
 export const AppStoreApiSource: Record<AppStoreEndpoint, UseMock> = {
-  [AppStoreEndpoint.ConnectionAnomalies]: true
+  [AppStoreEndpoint.CredentialTable]: false,
+  [AppStoreEndpoint.OverviewStats]: false,
+  [AppStoreEndpoint.CredentialCreate]: false,
+  [AppStoreEndpoint.CredentialUpdate]: false,
+  [AppStoreEndpoint.TestConnection]: false,
+  [AppStoreEndpoint.BatchTestConnection]: false,
+  [AppStoreEndpoint.RetryConnection]: false,
+  [AppStoreEndpoint.CredentialDetail]: false,
+  [AppStoreEndpoint.CredentialExport]: false,
+  [AppStoreEndpoint.ConnectionAnomalies]: false
 }
 
 export function isAppStoreEndpointMock(endpoint: AppStoreEndpoint): boolean {

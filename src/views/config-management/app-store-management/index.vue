@@ -469,27 +469,32 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch, onMounted } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
-  import { fetchAppStoreConnectionAnomalies } from '@/api/config-management/app-store-management'
-  import type { AppStoreConnectionAnomalyItem } from '@/views/config-management/app-store-management/types'
+  import {
+    batchTestAppStoreCredentialConnection,
+    createAppStoreCredential,
+    exportAppStoreCredentials,
+    fetchAppStoreConnectionAnomalies,
+    fetchAppStoreCredentialDetail,
+    fetchAppStoreCredentialTable,
+    fetchAppStoreOverviewStats,
+    retryAppStoreCredentialConnection,
+    testAppStoreCredentialConnection,
+    updateAppStoreCredential
+  } from '@/api/config-management/app-store-management'
+  import type {
+    AppStoreConnectionAnomalyItem,
+    AppStoreConnectionCheckItem,
+    AppStoreCredentialConnectionTestResult,
+    AppStoreCredentialOverviewStatsData,
+    AppStoreCredentialRow
+  } from '@/views/config-management/app-store-management/types'
 
   defineOptions({ name: 'AppStoreCredentialManagement' })
 
-  // ─── 类型 ───────────────────────────────────────────────────────────
-  interface Credential {
-    id: number
-    platform: string
-    appName: string
-    credType: string
-    account: string
-    expiry: string
-    lastVerify: string
-    verifyOk: boolean
-    status: '正常' | '即将过期' | '连接异常'
-  }
+  type Credential = AppStoreCredentialRow
 
-  // ─── 平台图标（内联 SVG data URI） ───────────────────────────────────
   interface SelectOption {
     label: string
     value: string
@@ -499,8 +504,8 @@
     const raw = `${value} ${label}`.toLowerCase()
     if (raw.includes('google')) return 'Google Play'
     if (raw.includes('app store') || raw.includes('apple')) return 'App Store'
-    if (raw.includes('huawei') || raw.includes('华为')) return 'Huawei AppGallery'
-    if (raw.includes('samsung') || raw.includes('三星')) return 'Samsung Galaxy Store'
+    if (raw.includes('huawei') || raw.includes('\u534e\u4e3a')) return 'Huawei AppGallery'
+    if (raw.includes('samsung') || raw.includes('\u4e09\u661f')) return 'Samsung Galaxy Store'
     return value
   }
 
@@ -518,106 +523,14 @@
     return icons[name] ?? icons['Google Play']
   }
 
-  // ─── 表格数据 ─────────────────────────────────────────────────────────
-  const credentials = ref<Credential[]>([
-    {
-      id: 1,
-      platform: 'Google Play',
-      appName: 'Vegoo Keyboard',
-      credType: 'Service Account JSON',
-      account: 'vegoo-sa@...iam.gserviceaccount.com',
-      expiry: '永久',
-      lastVerify: '10分钟前',
-      verifyOk: true,
-      status: '正常'
-    },
-    {
-      id: 2,
-      platform: 'Google Play',
-      appName: 'Vegoo Camera',
-      credType: 'Service Account JSON',
-      account: 'vegoo-cam@...iam.gserviceaccount.com',
-      expiry: '永久',
-      lastVerify: '10分钟前',
-      verifyOk: true,
-      status: '正常'
-    },
-    {
-      id: 3,
-      platform: 'App Store',
-      appName: 'Vegoo Keyboard',
-      credType: 'API Key (P8)',
-      account: 'Key ID: ABC123DEF',
-      expiry: '2024-12-31',
-      lastVerify: '1小时前',
-      verifyOk: true,
-      status: '正常'
-    },
-    {
-      id: 4,
-      platform: 'App Store',
-      appName: 'Vegoo Notes',
-      credType: 'API Key (P8)',
-      account: 'Key ID: XYZ789GHI',
-      expiry: '2024-02-28',
-      lastVerify: '1小时前',
-      verifyOk: true,
-      status: '即将过期'
-    },
-    {
-      id: 5,
-      platform: 'Huawei AppGallery',
-      appName: 'Vegoo Cleaner',
-      credType: 'OAuth Client',
-      account: 'Client ID: hw_vegoo_cleaner',
-      expiry: '2024-06-30',
-      lastVerify: '昨日',
-      verifyOk: false,
-      status: '连接异常'
-    },
-    {
-      id: 6,
-      platform: 'Samsung Galaxy Store',
-      appName: 'Vegoo Launcher',
-      credType: 'API Token',
-      account: 'Token: sgst_*****8f2a',
-      expiry: '永久',
-      lastVerify: '2天前',
-      verifyOk: false,
-      status: '连接异常'
-    },
-    {
-      id: 7,
-      platform: 'Google Play',
-      appName: 'Vegoo VPN',
-      credType: 'Service Account JSON',
-      account: 'vegoo-vpn@...iam.gserviceaccount.com',
-      expiry: '永久',
-      lastVerify: '10分钟前',
-      verifyOk: true,
-      status: '正常'
-    },
-    {
-      id: 8,
-      platform: 'App Store',
-      appName: 'Vegoo Camera',
-      credType: 'API Key (P8)',
-      account: 'Key ID: CAM456JKL',
-      expiry: '2025-03-31',
-      lastVerify: '1小时前',
-      verifyOk: true,
-      status: '正常'
-    }
-  ])
-
-  // ─── 过滤 ─────────────────────────────────────────────────────────────
   const cockpitMetaFilterStore = useCockpitMetaFilterStore()
   const fallbackPlatformFilterOptions: SelectOption[] = [
     { label: 'Google Play', value: 'Google Play' },
     { label: 'App Store', value: 'App Store' },
-    { label: '华为应用市场', value: 'Huawei AppGallery' },
-    { label: '三星应用商店', value: 'Samsung Galaxy Store' }
+    { label: '\u534e\u4e3a\u5e94\u7528\u5e02\u573a', value: 'Huawei AppGallery' },
+    { label: '\u4e09\u661f\u5e94\u7528\u5546\u5e97', value: 'Samsung Galaxy Store' }
   ]
+
   const platformFilterOptions = computed<SelectOption[]>(() => {
     const sourceOptions = cockpitMetaFilterStore.data?.sourceOptions ?? []
     if (sourceOptions.length > 0) {
@@ -628,6 +541,7 @@
     }
     return fallbackPlatformFilterOptions
   })
+
   const fallbackCredentialAppOptions: SelectOption[] = [
     { label: 'Vegoo Keyboard', value: 'Vegoo Keyboard' },
     { label: 'Vegoo Camera', value: 'Vegoo Camera' },
@@ -636,64 +550,57 @@
     { label: 'Vegoo Launcher', value: 'Vegoo Launcher' },
     { label: 'Vegoo VPN', value: 'Vegoo VPN' }
   ]
+
   const credentialPlatformOptions = computed<SelectOption[]>(() => platformFilterOptions.value)
   const credentialAppOptions = computed<SelectOption[]>(() => {
     const appOptions = cockpitMetaFilterStore.data?.appOptions ?? []
     if (appOptions.length > 0) {
       return appOptions.map((item) => ({
         label: item.label,
-        // 表单回填与当前 mock 列表按应用名称匹配，value 统一使用 label
         value: item.label
       }))
     }
     return fallbackCredentialAppOptions
   })
 
+  const credentials = ref<Credential[]>([])
+  const stats = ref<AppStoreCredentialOverviewStatsData>({
+    configured: 0,
+    normal: 0,
+    error: 0,
+    expiring: 0
+  })
+  const connectionAnomalies = ref<AppStoreConnectionAnomalyItem[]>([])
+
   const filterPlatformInput = ref('')
   const filterStatusInput = ref('')
   const filterPlatform = ref('')
   const filterStatus = ref('')
 
-  const handleQuery = () => {
-    filterPlatform.value = filterPlatformInput.value
-    filterStatus.value = filterStatusInput.value
-  }
-
-  const filteredCredentials = computed(() => {
-    return credentials.value.filter((row) => {
-      const pOk = !filterPlatform.value || row.platform === filterPlatform.value
-      const sOk = !filterStatus.value || row.status === filterStatus.value
-      return pOk && sOk
-    })
-  })
-
-  const stats = computed(() => ({
-    configured: credentials.value.length,
-    normal: credentials.value.filter((r) => r.status === '正常').length,
-    error: credentials.value.filter((r) => r.status === '连接异常').length,
-    expiring: credentials.value.filter((r) => r.status === '即将过期').length
-  }))
-
-  const connectionAnomalies = ref<AppStoreConnectionAnomalyItem[]>([])
+  const filteredCredentials = computed(() => credentials.value)
   const hasAlertAnomalies = computed(() => connectionAnomalies.value.length > 0)
   const alertBarSummaryText = computed(() => {
     const items = connectionAnomalies.value
     if (!items.length) return ''
-    const ps = [...new Set(items.map((i) => i.platform))]
-    const head =
-      ps.length === 1
-        ? ps[0]
-        : ps.length === 2
-          ? `${ps[0]} 和 ${ps[1]}`
-          : `${ps.slice(0, 2).join('、')} 等 ${ps.length} 个平台`
-    return `${head} 连接异常，请检查凭据配置或网络连接 |`
+    const platforms = [...new Set(items.map((item) => item.platform))]
+    const summary =
+      platforms.length === 1
+        ? platforms[0]
+        : platforms.length === 2
+          ? `${platforms[0]} / ${platforms[1]}`
+          : `${platforms.slice(0, 2).join(', ')} +${platforms.length - 2}`
+    return `${summary} connection anomalies detected.`
   })
 
-  const statusClass = (s: string) =>
-    (({ 正常: 'normal', 即将过期: 'expiring', 连接异常: 'error' }) as Record<string, string>)[s] ??
-    'normal'
+  const statusClass = (status: string) =>
+    (
+      ({
+        '\u6b63\u5e38': 'normal',
+        '\u5373\u5c06\u8fc7\u671f': 'expiring',
+        '\u8fde\u63a5\u5f02\u5e38': 'error'
+      }) as Record<string, string>
+    )[status] ?? 'normal'
 
-  // ─── 弹窗状态 ─────────────────────────────────────────────────────────
   const showAddDialog = ref(false)
   const showEditDialog = ref(false)
   const showSuccessDialog = ref(false)
@@ -701,24 +608,27 @@
   const testingRow = ref<Credential | null>(null)
   const dialogAnomalyItems = ref<AppStoreConnectionAnomalyItem[]>([])
   const selectedAnomalyId = ref('')
+  const editingId = ref('')
+  const successChecks = ref<AppStoreConnectionCheckItem[]>([])
+  const successDurationText = ref('0s')
 
   const activeErrorDetail = computed(() => {
     const id = selectedAnomalyId.value
-    return dialogAnomalyItems.value.find((i) => i.id === id) ?? null
+    return dialogAnomalyItems.value.find((item) => item.id === id) ?? null
   })
 
   const rowToAnomalyItem = (row: Credential): AppStoreConnectionAnomalyItem => ({
-    id: String(row.id),
+    id: row.id,
     platform: row.platform,
     appName: row.appName,
     account: row.account,
     credType: row.credType,
-    errorMessage: '连接验证失败，请根据建议操作排查后重试。',
-    expiredAt: row.expiry === '永久' ? '—' : row.expiry,
+    errorMessage: 'Connection validation failed. Please verify the credential settings and retry.',
+    expiredAt: row.expiry === '\u6c38\u4e45' ? '--' : row.expiry,
     suggestions: [
-      '检查凭据文件或密钥内容是否有效',
-      '确认应用商店侧权限是否已授予',
-      '检查账号、项目或包名配置是否与实际一致'
+      'Check whether the credential content is valid',
+      'Confirm the marketplace permission scope',
+      'Check account and project configuration consistency'
     ]
   })
 
@@ -729,29 +639,28 @@
   }
 
   const openAlertConnectionDetail = () => {
-    openErrorDialogWithItems(connectionAnomalies.value.map((r) => ({ ...r })))
+    openErrorDialogWithItems(connectionAnomalies.value.map((item) => ({ ...item })))
   }
 
   watch(selectedAnomalyId, (id) => {
-    const row = credentials.value.find((r) => String(r.id) === id)
-    testingRow.value = row ?? null
+    testingRow.value = credentials.value.find((item) => item.id === id) ?? null
   })
 
-  // ─── 统一凭据表单（新增 & 编辑共用） ─────────────────────────────────
   const defaultCredForm = () => ({
     platform: 'Google Play' as string,
     app: '' as string,
     credInputType: 'file' as 'file' | 'paste',
     credContent: '' as string,
     fileName: '' as string,
-    expiry: '2024-01-30',
+    expiry: '2026-12-31',
     remark: ''
   })
-  const credForm = ref(defaultCredForm())
 
-  // ─── 文件上传 ─────────────────────────────────────────────────────────
+  const credForm = ref(defaultCredForm())
   const fileInputRef = ref<HTMLInputElement | null>(null)
+
   const triggerFileInput = () => fileInputRef.value?.click()
+
   const handleFileChange = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (file) {
@@ -764,114 +673,51 @@
     }
   }
 
-  // ─── 成功检查列表 ─────────────────────────────────────────────────────
-  const successChecks = [
-    { label: '认证方式：', value: 'Service Account' },
-    { label: '应用访问权限：', value: '已授权' },
-    { label: '订阅数据访问：', value: '可访问' },
-    { label: '评论回复权限：', value: '可访问' }
-  ]
-
-  // ─── 交互处理 ─────────────────────────────────────────────────────────
-  const handleTest = (row: Credential) => {
-    testingRow.value = row
-    setTimeout(() => {
-      if (row.status === '正常') {
-        showSuccessDialog.value = true
-      } else {
-        openErrorDialogWithItems([rowToAnomalyItem(row)])
-      }
-    }, 300)
-  }
-
-  const handleRetry = (row: Credential) => {
-    testingRow.value = row
-    openErrorDialogWithItems([rowToAnomalyItem(row)])
-  }
-
-  const handleBatchTest = () => {
-    testingRow.value = credentials.value[0]
-    showSuccessDialog.value = true
-  }
-
-  const handleEdit = (row: Credential) => {
-    // 回填已有数据到统一表单
-    credForm.value = {
-      platform: row.platform,
-      app: row.appName,
-      credInputType: 'file',
-      credContent: '',
-      fileName: '',
-      expiry: row.expiry === '永久' ? '2024-01-30' : row.expiry,
-      remark: ''
-    }
-    showEditDialog.value = true
-  }
-
-  const handleExport = () => {
-    const header = ['平台', '应用名称', '凭据类型', '帐号/Key', '过期时间', '最后验证', '状态']
-    const lines = [header.join(',')]
-    filteredCredentials.value.forEach((row) => {
-      const values = [
-        row.platform,
-        row.appName,
-        row.credType,
-        row.account,
-        row.expiry,
-        row.lastVerify,
-        row.status
-      ].map((value) => `"${String(value).replace(/"/g, '""')}"`)
-      lines.push(values.join(','))
-    })
-    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `credential-export-${Date.now()}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
   const closeFormDialog = () => {
     showAddDialog.value = false
     showEditDialog.value = false
-  }
-
-  /** 新增 / 编辑 统一保存 */
-  const handleSaveForm = () => {
-    if (showAddDialog.value) {
-      showAddDialog.value = false
-      // 新增时保存并测试
-      setTimeout(() => {
-        testingRow.value = credentials.value[0]
-        showSuccessDialog.value = true
-      }, 200)
-    } else {
-      showEditDialog.value = false
-    }
+    editingId.value = ''
     credForm.value = defaultCredForm()
   }
 
-  const handleReconfig = () => {
-    const id = selectedAnomalyId.value
-    showErrorDialog.value = false
-    const row = credentials.value.find((r) => String(r.id) === id)
-    if (row) {
-      handleEdit(row)
-      return
-    }
-    credForm.value = defaultCredForm()
-    showEditDialog.value = true
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = filename
+    anchor.click()
+    URL.revokeObjectURL(url)
   }
 
-  const handleRetryConn = () => {
-    const id = selectedAnomalyId.value
-    showErrorDialog.value = false
-    const row = credentials.value.find((r) => String(r.id) === id)
-    testingRow.value = row ?? credentials.value[0] ?? null
-    setTimeout(() => {
-      showSuccessDialog.value = true
-    }, 300)
+  const setSuccessState = (result: AppStoreCredentialConnectionTestResult) => {
+    successChecks.value = result.checks ?? []
+    successDurationText.value = `${(result.durationMs / 1000).toFixed(1)}s`
+    showSuccessDialog.value = true
+  }
+
+  const setErrorState = async (
+    id: string,
+    fallbackRow?: Credential | null,
+    fallbackResult?: AppStoreCredentialConnectionTestResult
+  ) => {
+    try {
+      const detail = await fetchAppStoreCredentialDetail(id)
+      openErrorDialogWithItems([
+        {
+          id,
+          platform: detail.detail.platform || fallbackRow?.platform || '',
+          appName: detail.detail.appName || fallbackRow?.appName || '',
+          account: detail.detail.account || fallbackRow?.account || '',
+          credType: detail.detail.credType || fallbackRow?.credType || '',
+          errorMessage:
+            detail.detail.errorMessage || fallbackResult?.errorMessage || 'Connection failed',
+          expiredAt: fallbackResult?.invalidAt || detail.detail.expiryDate || '--',
+          suggestions: detail.detail.suggestions || fallbackResult?.suggestions || []
+        }
+      ])
+    } catch {
+      if (fallbackRow) openErrorDialogWithItems([rowToAnomalyItem(fallbackRow)])
+    }
   }
 
   const loadConnectionAnomalies = async () => {
@@ -883,9 +729,177 @@
     }
   }
 
+  const loadTableData = async () => {
+    const data = await fetchAppStoreCredentialTable({
+      current: 1,
+      size: 100,
+      platform: filterPlatform.value,
+      status: filterStatus.value
+    })
+    credentials.value = Array.isArray(data.records) ? data.records : []
+  }
+
+  const loadStatsData = async () => {
+    stats.value = await fetchAppStoreOverviewStats({
+      platform: filterPlatform.value,
+      status: filterStatus.value
+    })
+  }
+
+  const loadPageData = async () => {
+    await Promise.all([loadTableData(), loadStatsData(), loadConnectionAnomalies()])
+  }
+
+  const handleQuery = async () => {
+    filterPlatform.value = filterPlatformInput.value
+    filterStatus.value = filterStatusInput.value
+    await loadPageData()
+  }
+
+  const handleTest = async (row: Credential) => {
+    testingRow.value = row
+    const result = await testAppStoreCredentialConnection(row.id)
+    await loadPageData()
+    if (result.success) {
+      setSuccessState(result)
+      return
+    }
+    await setErrorState(row.id, row, result)
+  }
+
+  const handleRetry = async (row: Credential) => {
+    testingRow.value = row
+    await setErrorState(row.id, row)
+  }
+
+  const handleBatchTest = async () => {
+    const result = await batchTestAppStoreCredentialConnection({
+      platform: filterPlatform.value,
+      status: filterStatus.value
+    })
+    const successItem = result.results.find((item) => item.success)
+    testingRow.value =
+      credentials.value.find((item) => item.id === successItem?.id) ?? credentials.value[0] ?? null
+    await loadPageData()
+    successChecks.value = [
+      { label: 'Batch Task', value: result.taskId, passed: true },
+      { label: 'Success', value: String(result.summary.success), passed: true },
+      {
+        label: 'Failed',
+        value: String(result.summary.failed),
+        passed: result.summary.failed === 0
+      },
+      { label: 'Total', value: String(result.summary.total), passed: true }
+    ]
+    successDurationText.value = `${(result.summary.durationMs / 1000).toFixed(1)}s`
+    showSuccessDialog.value = true
+  }
+
+  const handleEdit = async (row: Credential) => {
+    editingId.value = row.id
+    try {
+      const detail = await fetchAppStoreCredentialDetail(row.id)
+      credForm.value = {
+        platform: detail.detail.platform || row.platform,
+        app: detail.detail.appName || row.appName,
+        credInputType: 'file',
+        credContent: '',
+        fileName: '',
+        expiry:
+          detail.detail.expiryDate || (row.expiry === '\u6c38\u4e45' ? '2026-12-31' : row.expiry),
+        remark: detail.detail.remark || ''
+      }
+    } catch {
+      credForm.value = {
+        platform: row.platform,
+        app: row.appName,
+        credInputType: 'file',
+        credContent: '',
+        fileName: '',
+        expiry: row.expiry === '\u6c38\u4e45' ? '2026-12-31' : row.expiry,
+        remark: ''
+      }
+    }
+    showEditDialog.value = true
+  }
+
+  const handleExport = async () => {
+    const blob = await exportAppStoreCredentials({
+      platform: filterPlatform.value,
+      status: filterStatus.value
+    })
+    downloadBlob(blob, `credential-export-${Date.now()}.csv`)
+  }
+
+  const handleSaveForm = async () => {
+    const payload = {
+      id: showEditDialog.value ? editingId.value : undefined,
+      platform: credForm.value.platform,
+      appName: credForm.value.app,
+      credInputType: credForm.value.credInputType,
+      credentialContent: credForm.value.credContent,
+      fileName: credForm.value.fileName,
+      expiryDate: credForm.value.expiry,
+      remark: credForm.value.remark
+    }
+
+    if (showAddDialog.value) {
+      const created = await createAppStoreCredential(payload)
+      showAddDialog.value = false
+      await loadPageData()
+      const row =
+        credentials.value.find((item) => item.id === created.id) ?? credentials.value[0] ?? null
+      if (row) {
+        testingRow.value = row
+        const result = await testAppStoreCredentialConnection(row.id)
+        await loadPageData()
+        if (result.success) {
+          setSuccessState(result)
+        } else {
+          await setErrorState(row.id, row, result)
+        }
+      }
+    } else {
+      await updateAppStoreCredential(payload)
+      showEditDialog.value = false
+      await loadPageData()
+    }
+
+    editingId.value = ''
+    credForm.value = defaultCredForm()
+  }
+
+  const handleReconfig = () => {
+    const id = selectedAnomalyId.value
+    showErrorDialog.value = false
+    const row = credentials.value.find((item) => item.id === id)
+    if (row) {
+      void handleEdit(row)
+      return
+    }
+    editingId.value = id
+    credForm.value = defaultCredForm()
+    showEditDialog.value = true
+  }
+
+  const handleRetryConn = async () => {
+    const id = selectedAnomalyId.value
+    showErrorDialog.value = false
+    const result = await retryAppStoreCredentialConnection(id)
+    await loadPageData()
+    testingRow.value =
+      credentials.value.find((item) => item.id === id) ?? credentials.value[0] ?? null
+    successChecks.value = [
+      { label: 'Retry Result', value: result.message, passed: result.success },
+      { label: 'Latest Status', value: result.statusAfterRetry, passed: result.success }
+    ]
+    successDurationText.value = `${(result.durationMs / 1000).toFixed(1)}s`
+    showSuccessDialog.value = result.success
+  }
+
   onMounted(() => {
     cockpitMetaFilterStore.ensureLoaded()
-    loadConnectionAnomalies()
+    void loadPageData()
   })
 </script>
 
