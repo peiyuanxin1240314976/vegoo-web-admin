@@ -34,7 +34,12 @@
         <div class="form-item">
           <div class="form-label">三位数代码 <span class="required">*</span></div>
           <el-form-item prop="code3">
-            <el-input v-model="form.code3" placeholder="e.g. 840" class="dark-input" maxlength="3" />
+            <el-input
+              v-model="form.code3"
+              placeholder="e.g. 840"
+              class="dark-input"
+              maxlength="3"
+            />
           </el-form-item>
         </div>
       </div>
@@ -48,13 +53,35 @@
           </el-form-item>
         </div>
         <div class="form-item form-item--flag">
-          <div class="form-label">国旗</div>
-          <div class="flag-row">
-            <button class="flag-btn" type="button" @click="refreshFlag">
-              <span class="flag-emoji">{{ flagEmoji }}</span>
-              {{ isEdit ? '更换国旗' : '选择国旗' }}
+          <div class="form-label">国旗图标</div>
+          <div class="form-hint flag-hint">PNG / JPG / WebP，最大 512KB；保存前需上传成功</div>
+          <div class="flag-upload-row">
+            <ElUpload
+              :key="flagUploadKey"
+              class="flag-uploader"
+              :show-file-list="false"
+              :auto-upload="false"
+              :limit="1"
+              accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+              :on-change="onFlagFileChange"
+            >
+              <div v-if="form.flagIconUrl" class="flag-uploader-trigger" role="button" tabindex="0">
+                <img :src="form.flagIconUrl" alt="" class="flag-preview-img" />
+                <span class="flag-uploader-text">{{ isEdit ? '更换' : '上传' }}</span>
+              </div>
+              <div v-else class="flag-uploader-trigger flag-uploader-trigger--empty">
+                <el-icon class="flag-uploader-plus"><Plus /></el-icon>
+                <span>上传图标</span>
+              </div>
+            </ElUpload>
+            <button
+              v-if="form.flagIconUrl"
+              class="flag-clear-btn"
+              type="button"
+              @click="clearFlagIcon"
+            >
+              清除
             </button>
-            <span v-if="flagEmoji" class="flag-preview">{{ flagEmoji }}</span>
           </div>
         </div>
       </div>
@@ -74,7 +101,11 @@
         <div class="form-item">
           <div class="form-label">国家名称 <span class="required">*</span></div>
           <el-form-item prop="nameEn">
-            <el-input v-model="form.nameEn" placeholder="请输入国家名称（英文）" class="dark-input" />
+            <el-input
+              v-model="form.nameEn"
+              placeholder="请输入国家名称（英文）"
+              class="dark-input"
+            />
           </el-form-item>
         </div>
       </div>
@@ -96,12 +127,7 @@
           </button>
         </div>
       </div>
-      <button
-        v-if="form.aliases.length < 5"
-        class="add-alias-btn"
-        type="button"
-        @click="addAlias"
-      >
+      <button v-if="form.aliases.length < 5" class="add-alias-btn" type="button" @click="addAlias">
         <el-icon><Plus /></el-icon> 添加别名
       </button>
 
@@ -111,7 +137,7 @@
           <div class="form-label">时区 <span class="required">*</span></div>
           <el-form-item prop="timezone">
             <el-select v-model="form.timezone" class="dark-select full-width">
-              <el-option v-for="tz in timezoneOptions" :key="tz" :label="tz" :value="tz" />
+              <el-option v-for="tz in props.timezoneOptions" :key="tz" :label="tz" :value="tz" />
             </el-select>
           </el-form-item>
         </div>
@@ -135,18 +161,14 @@
               placeholder="请选择货币"
               @change="onCurrencyChange"
             >
-              <el-option v-for="c in currencyOptions" :key="c" :label="c" :value="c" />
+              <el-option v-for="c in props.currencyOptions" :key="c" :label="c" :value="c" />
             </el-select>
           </el-form-item>
         </div>
         <div class="form-item">
           <div class="form-label">货币符号</div>
           <el-form-item prop="currencySymbol">
-            <el-input
-              v-model="form.currencySymbol"
-              placeholder="e.g. ¥"
-              class="dark-input"
-            />
+            <el-input v-model="form.currencySymbol" placeholder="e.g. ¥" class="dark-input" />
           </el-form-item>
         </div>
       </div>
@@ -156,8 +178,12 @@
         <div class="form-item">
           <div class="form-label">地区</div>
           <el-form-item prop="region">
-            <el-select v-model="form.region" class="dark-select full-width" placeholder="请选择地区">
-              <el-option v-for="r in regionOptions" :key="r" :label="r" :value="r" />
+            <el-select
+              v-model="form.region"
+              class="dark-select full-width"
+              placeholder="请选择地区"
+            >
+              <el-option v-for="r in props.regionOptions" :key="r" :label="r" :value="r" />
             </el-select>
           </el-form-item>
         </div>
@@ -182,9 +208,10 @@
 <script setup lang="ts">
   import { ref, reactive, computed, watch } from 'vue'
   import { Delete, Plus } from '@element-plus/icons-vue'
-  import type { FormInstance, FormRules } from 'element-plus'
+  import { ElMessage } from 'element-plus'
+  import type { FormInstance, FormRules, UploadFile } from 'element-plus'
+  import { uploadCountryFlagIcon } from '@/api/config-management/country-management'
   import type { CountryItem, CountryFormModel } from '../types'
-  import { timezoneOptions, currencyOptions, regionOptions } from '../mock/data'
 
   defineOptions({ name: 'CountryFormDialog' })
 
@@ -205,6 +232,9 @@
   const props = defineProps<{
     visible: boolean
     editData?: CountryItem | null
+    timezoneOptions: string[]
+    regionOptions: string[]
+    currencyOptions: string[]
   }>()
 
   const emit = defineEmits<{
@@ -220,10 +250,14 @@
     set: (val) => emit('update:visible', val)
   })
 
+  const MAX_FLAG_BYTES = 512 * 1024
+  const flagUploadKey = ref(0)
+
   const defaultForm = (): CountryFormModel => ({
     code: '',
     code3: '',
     criteriaId: '',
+    flagIconUrl: '',
     nameCn: '',
     nameEn: '',
     aliases: [],
@@ -236,12 +270,6 @@
   })
 
   const form = reactive<CountryFormModel>(defaultForm())
-
-  const flagEmoji = computed(() => {
-    const code = form.code.toUpperCase()
-    if (code.length !== 2 || !/^[A-Z]{2}$/.test(code)) return ''
-    return code.split('').map((c) => String.fromCodePoint(c.charCodeAt(0) + 127397)).join('')
-  })
 
   watch(
     () => props.editData,
@@ -277,8 +305,28 @@
     }
   }
 
-  const refreshFlag = () => {
-    // flag is auto-derived from code – nothing to do, just visual feedback
+  const onFlagFileChange = async (uploadFile: UploadFile) => {
+    const raw = uploadFile.raw
+    if (!raw) return
+    if (!raw.type.startsWith('image/')) {
+      ElMessage.error('请上传图片文件')
+      return
+    }
+    if (raw.size > MAX_FLAG_BYTES) {
+      ElMessage.error('图片需小于 512KB')
+      return
+    }
+    try {
+      const { url } = await uploadCountryFlagIcon(raw)
+      form.flagIconUrl = url
+    } catch {
+      ElMessage.error('上传失败，请重试')
+    }
+  }
+
+  const clearFlagIcon = () => {
+    form.flagIconUrl = ''
+    flagUploadKey.value += 1
   }
 
   const onCurrencyChange = (val: string) => {
@@ -439,38 +487,81 @@
     color: #ef4444;
   }
 
-  // ─── 国旗 ──────────────────────────────────────────────
-  .flag-row {
+  .flag-hint {
+    margin-top: -2px;
+  }
+
+  .flag-upload-row {
     display: flex;
     gap: 10px;
     align-items: center;
   }
 
-  .flag-btn {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-    padding: 6px 14px;
-    font-size: 13px;
-    color: #2dd4bf;
-    cursor: pointer;
-    background: rgb(45 212 191 / 10%);
-    border: 1px solid rgb(45 212 191 / 35%);
-    border-radius: 7px;
-    transition: all 0.15s;
-
-    &:hover {
-      background: rgb(45 212 191 / 18%);
+  .flag-uploader {
+    :deep(.el-upload) {
+      border: none;
     }
   }
 
-  .flag-emoji {
-    font-size: 16px;
+  .flag-uploader-trigger {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    min-width: 140px;
+    padding: 6px 12px;
+    cursor: pointer;
+    background: rgb(45 212 191 / 10%);
+    border: 1px dashed rgb(45 212 191 / 45%);
+    border-radius: 8px;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+
+    &:hover {
+      background: rgb(45 212 191 / 16%);
+      border-color: rgb(45 212 191 / 65%);
+    }
+
+    &--empty {
+      min-height: 44px;
+      font-size: 13px;
+      color: #2dd4bf;
+    }
   }
 
-  .flag-preview {
-    font-size: 28px;
-    line-height: 1;
+  .flag-preview-img {
+    width: 40px;
+    height: 30px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .flag-uploader-text {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .flag-uploader-plus {
+    font-size: 18px;
+    color: #2dd4bf;
+  }
+
+  .flag-clear-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #94a3b8;
+    cursor: pointer;
+    background: rgb(255 255 255 / 5%);
+    border: 1px solid rgb(255 255 255 / 10%);
+    border-radius: 6px;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease;
+
+    &:hover {
+      color: #e2e8f0;
+      border-color: rgb(255 255 255 / 18%);
+    }
   }
 
   // ─── 别名 ──────────────────────────────────────────────
@@ -514,8 +605,8 @@
     padding: 4px 10px;
     font-size: 12px;
     color: #ef4444;
-    cursor: pointer;
     white-space: nowrap;
+    cursor: pointer;
     background: rgb(239 68 68 / 8%);
     border: 1px solid rgb(239 68 68 / 20%);
     border-radius: 6px;

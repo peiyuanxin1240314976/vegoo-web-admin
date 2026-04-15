@@ -1,0 +1,70 @@
+{
+  "_comment": "国家管理 - 主要市场收入占比图表。按与列表同筛选条件返回主要市场前 N 项占比（非当前页）。",
+  "fieldDescription": {
+    "request": {
+      "keyword": { "type": "string", "required": false, "description": "关键词筛选，同 table。" },
+      "region": { "type": "string", "required": false, "description": "地区筛选，同 table。" },
+      "currency": { "type": "string", "required": false, "description": "货币筛选，同 table。" }
+    },
+    "response": {
+      "items": {
+        "type": "CountryMainMarketShareItem[]",
+        "required": true,
+        "description": "主要市场占比数组，建议最多返回 6 条。"
+      }
+    },
+    "CountryMainMarketShareItem": {
+      "countryCode": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码（用于 y 轴标签）。"
+      },
+      "countryName": {
+        "type": "string",
+        "required": true,
+        "description": "国家中文名（tooltip 展示）。"
+      },
+      "sharePercent": { "type": "number", "required": true, "description": "占比百分比（0-100）。" }
+    }
+  },
+  "sampleRequest": {
+    "keyword": "",
+    "region": "",
+    "currency": ""
+  },
+  "sampleResponse": {
+    "code": 200,
+    "data": {
+      "items": [
+        { "countryCode": "US", "countryName": "美国", "sharePercent": 28.57 },
+        { "countryCode": "JP", "countryName": "日本", "sharePercent": 23.81 },
+        { "countryCode": "DE", "countryName": "德国", "sharePercent": 19.05 },
+        { "countryCode": "GB", "countryName": "英国", "sharePercent": 14.29 },
+        { "countryCode": "FR", "countryName": "法国", "sharePercent": 9.52 },
+        { "countryCode": "AU", "countryName": "澳大利亚", "sharePercent": 4.76 }
+      ]
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/country/charts/main-market-share",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "keyword?, region?, currency?",
+    "responseBody": "{ items: CountryMainMarketShareItem[] }"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "图表数据必须基于筛选后的全量国家，不受分页影响。",
+      "若主要市场为空，返回 `items: []`，前端展示空图态。"
+    ]
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面初始化 / 点击查询 / 数据变更后",
+        "detail": "`index.vue` 调用 `fetchCountryMainMarketShare` 更新右侧主要市场占比图。"
+      }
+    ],
+    "defaultSelection": "与当前筛选条件一致。"
+  }
+}

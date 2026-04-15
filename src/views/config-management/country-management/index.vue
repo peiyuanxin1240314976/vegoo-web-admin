@@ -25,12 +25,13 @@
         </el-input>
         <span class="filter-label">地区</span>
         <el-select v-model="filterForm.region" placeholder="全部" class="header-select" clearable>
-          <el-option v-for="r in regionOptions" :key="r" :label="r" :value="r" />
+          <el-option v-for="r in metaRegionOptions" :key="r" :label="r" :value="r" />
         </el-select>
         <span class="filter-label">货币</span>
         <el-select v-model="filterForm.currency" placeholder="全部" class="header-select" clearable>
-          <el-option v-for="c in currencyOptions" :key="c" :label="c" :value="c" />
+          <el-option v-for="c in metaCurrencyOptions" :key="c" :label="c" :value="c" />
         </el-select>
+        <ElButton round class="btn-secondary" @click="handleQuery">查询</ElButton>
       </div>
     </div>
 
@@ -93,9 +94,10 @@
             @row-click="handleRowClick"
           >
             <el-table-column prop="code" label="国家代码" width="120" show-overflow-tooltip />
-            <el-table-column label="国旗" width="80" align="center">
+            <el-table-column label="国旗" width="72" align="center">
               <template #default="{ row }">
-                <span class="flag-cell">{{ getFlagEmoji(row.code) }}</span>
+                <img v-if="row.flagIconUrl" :src="row.flagIconUrl" alt="" class="flag-cell-img" />
+                <span v-else class="flag-cell-fallback">{{ row.code }}</span>
               </template>
             </el-table-column>
             <el-table-column prop="nameCn" label="中文名称" width="110" show-overflow-tooltip />
@@ -165,11 +167,21 @@
               <span class="legend-dot" :style="{ background: item.color }" />{{ item.name }}
             </span>
           </div>
+          <div v-if="chartLoading || regionChartEmpty" class="chart-state-mask">
+            <div class="chart-state-text">
+              {{ chartLoading ? '图表加载中...' : '暂无地区分布数据' }}
+            </div>
+          </div>
         </div>
         <!-- 主要市场收入占比 -->
         <div class="chart-card">
           <div class="chart-title">主要市场收入占比</div>
           <div ref="barEl" class="bar-chart" />
+          <div v-if="chartLoading || mainMarketChartEmpty" class="chart-state-mask">
+            <div class="chart-state-text">
+              {{ chartLoading ? '图表加载中...' : '暂无主要市场占比数据' }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -185,6 +197,9 @@
     <CountryFormDialog
       v-model:visible="formVisible"
       :edit-data="editData"
+      :timezone-options="metaTimezoneOptions"
+      :region-options="metaRegionOptions"
+      :currency-options="metaCurrencyOptions"
       @success="handleFormSuccess"
     />
 
@@ -201,6 +216,11 @@
   import { TooltipComponent, LegendComponent, GridComponent } from 'echarts/components'
   import { CanvasRenderer } from 'echarts/renderers'
   import {
+    fetchCountryDetail,
+    fetchCountryMetaOptions,
+    fetchCountryMainMarketShare,
+    fetchCountryOverviewKpi,
+    fetchCountryRegionDistribution,
     fetchCountryTable,
     createCountry,
     updateCountry,
@@ -211,8 +231,12 @@
   import CountryDetailDrawer from './modules/country-detail-drawer.vue'
   import CountryFormDialog from './modules/country-form-dialog.vue'
   import CountryImportDialog from './modules/country-import-dialog.vue'
-  import { regionOptions, currencyOptions } from './mock/data'
-  import type { CountryItem, CountryFormModel } from './types'
+  import type {
+    CountryFormModel,
+    CountryItem,
+    CountryMainMarketShareItem,
+    CountryRegionDistributionItem
+  } from './types'
 
   echarts.use([
     PieChart,
@@ -224,16 +248,6 @@
   ])
 
   defineOptions({ name: 'CountryManagement' })
-
-  // ─── 工具 ──────────────────────────────────────────────
-  function getFlagEmoji(code: string): string {
-    if (!code || code.length !== 2) return '🏳️'
-    return code
-      .toUpperCase()
-      .split('')
-      .map((c) => String.fromCodePoint(c.charCodeAt(0) + 127397))
-      .join('')
-  }
 
   // ─── 数据 ──────────────────────────────────────────────
   const countryList = ref<CountryItem[]>([])
@@ -247,6 +261,75 @@
   const importVisible = ref(false)
   const currentCountry = ref<CountryItem | null>(null)
   const editData = ref<CountryItem | null>(null)
+  const metaTimezoneOptions = ref<string[]>([])
+  const metaRegionOptions = ref<string[]>([])
+  const metaCurrencyOptions = ref<string[]>([])
+  const overviewKpi = ref({
+    total: 0,
+    currencies: 0,
+    mainMarkets: 0,
+    noCurrency: 0
+  })
+  const chartLoading = ref(false)
+  const regionChartData = ref<CountryRegionDistributionItem[]>([])
+  const mainMarketShareData = ref<CountryMainMarketShareItem[]>([])
+  const REGION_COLOR_MAP: Record<string, string> = {
+    亚太: '#2dd4bf',
+    欧洲: '#60a5fa',
+    北美: '#a78bfa',
+    其他: '#f59e0b'
+  }
+
+  const loadCountryMetaOptions = async () => {
+    try {
+      const data = await fetchCountryMetaOptions()
+      metaTimezoneOptions.value = data.timezoneOptions ?? []
+      metaRegionOptions.value = data.regionOptions ?? []
+      metaCurrencyOptions.value = data.currencyOptions ?? []
+    } catch {
+      metaTimezoneOptions.value = []
+      metaRegionOptions.value = []
+      metaCurrencyOptions.value = []
+    }
+  }
+
+  const loadCountryOverviewKpi = async () => {
+    try {
+      overviewKpi.value = await fetchCountryOverviewKpi({
+        keyword: filterForm.keyword.trim() || undefined,
+        region: filterForm.region || undefined,
+        currency: filterForm.currency || undefined
+      })
+    } catch {
+      overviewKpi.value = { total: 0, currencies: 0, mainMarkets: 0, noCurrency: 0 }
+    }
+  }
+
+  const loadCountryCharts = async () => {
+    chartLoading.value = true
+    try {
+      const params = {
+        keyword: filterForm.keyword.trim() || undefined,
+        region: filterForm.region || undefined,
+        currency: filterForm.currency || undefined
+      }
+      const [regionRes, mainMarketRes] = await Promise.all([
+        fetchCountryRegionDistribution(params),
+        fetchCountryMainMarketShare(params)
+      ])
+      regionChartData.value = regionRes
+      mainMarketShareData.value = mainMarketRes
+    } catch {
+      regionChartData.value = []
+      mainMarketShareData.value = []
+    } finally {
+      chartLoading.value = false
+      nextTick(() => {
+        donutChart?.setOption(buildDonutOption())
+        barChart?.setOption(buildBarOption())
+      })
+    }
+  }
 
   const loadCountryTable = async () => {
     const params = {
@@ -269,52 +352,33 @@
         : (r.data?.list ?? (Array.isArray(r.list) ? r.list : []))
       countryList.value = records
       total.value = Number(r.total ?? r.data?.total ?? 0)
-      nextTick(() => {
-        donutChart?.setOption(buildDonutOption())
-        barChart?.setOption(buildBarOption())
-      })
     } finally {
       loading.value = false
     }
   }
 
-  watch(
-    () => ({ ...filterForm }),
-    () => {
-      if (currentPage.value !== 1) {
-        currentPage.value = 1
-        return
-      }
-      loadCountryTable()
-    },
-    { deep: true }
-  )
-
   watch([currentPage, pageSize], () => {
-    loadCountryTable()
+    void loadCountryTable()
   })
 
   const pagedList = computed(() => countryList.value)
 
   // ─── KPI ────────────────────────────────────────────────
-  const kpi = computed(() => {
-    const list = countryList.value
-    const uniqCurrencies = new Set(list.map((c) => c.currency).filter(Boolean))
-    return {
-      total: list.length,
-      currencies: uniqCurrencies.size,
-      mainMarkets: list.filter((c) => c.isMainMarket).length,
-      noCurrency: list.filter((c) => !c.currency).length
-    }
-  })
+  const kpi = computed(() => overviewKpi.value)
 
   // ─── 图表数据 ───────────────────────────────────────────
-  const regionDist = [
-    { name: '亚太', color: '#2dd4bf' },
-    { name: '欧洲', color: '#60a5fa' },
-    { name: '北美', color: '#a78bfa' },
-    { name: '其他', color: '#f59e0b' }
-  ]
+  const regionDist = computed(() =>
+    regionChartData.value.map((item) => ({
+      name: item.region,
+      color: REGION_COLOR_MAP[item.region] ?? '#94a3b8'
+    }))
+  )
+  const regionChartEmpty = computed(
+    () => !chartLoading.value && regionChartData.value.every((item) => item.count === 0)
+  )
+  const mainMarketChartEmpty = computed(
+    () => !chartLoading.value && mainMarketShareData.value.length === 0
+  )
 
   const donutEl = ref<HTMLElement | null>(null)
   const barEl = ref<HTMLElement | null>(null)
@@ -322,11 +386,10 @@
   let barChart: echarts.ECharts | null = null
 
   function buildDonutOption() {
-    const list = countryList.value
-    const regionCount = regionDist.map((r) => ({
-      name: r.name,
-      value: list.filter((c) => c.region === r.name).length,
-      itemStyle: { color: r.color }
+    const regionCount = regionChartData.value.map((item) => ({
+      name: item.region,
+      value: item.count,
+      itemStyle: { color: REGION_COLOR_MAP[item.region] ?? '#94a3b8' }
     }))
     return {
       backgroundColor: 'transparent',
@@ -358,9 +421,8 @@
   }
 
   function buildBarOption() {
-    const mainCountries = countryList.value.filter((c) => c.isMainMarket).slice(0, 6)
-    const labels = mainCountries.map((c) => c.code)
-    const pcts = mainCountries.map((_, i) => Math.max(5, 40 - i * 6))
+    const labels = mainMarketShareData.value.map((item) => item.countryCode)
+    const pcts = mainMarketShareData.value.map((item) => item.sharePercent)
     const colors = ['#2dd4bf', '#60a5fa', '#a78bfa', '#f59e0b', '#f472b6', '#94a3b8']
     return {
       backgroundColor: 'transparent',
@@ -429,7 +491,10 @@
 
   onMounted(() => {
     initCharts()
-    loadCountryTable()
+    void loadCountryMetaOptions()
+    void loadCountryOverviewKpi()
+    void loadCountryCharts()
+    void loadCountryTable()
     window.addEventListener('resize', resizeCharts)
   })
 
@@ -445,9 +510,18 @@
     formVisible.value = true
   }
 
+  const openDetail = async (row: CountryItem) => {
+    try {
+      const detail = await fetchCountryDetail({ code: row.code })
+      currentCountry.value = detail
+      drawerVisible.value = true
+    } catch {
+      ElMessage.error('获取详情失败，请稍后重试')
+    }
+  }
+
   const handleView = (row: CountryItem) => {
-    currentCountry.value = row
-    drawerVisible.value = true
+    void openDetail(row)
   }
 
   const handleEdit = (row: CountryItem) => {
@@ -457,8 +531,7 @@
   }
 
   const handleRowClick = (row: CountryItem) => {
-    currentCountry.value = row
-    drawerVisible.value = true
+    void openDetail(row)
   }
 
   const handleDelete = async (row: CountryItem) => {
@@ -488,6 +561,8 @@
       drawerVisible.value = false
     }
     await loadCountryTable()
+    await loadCountryOverviewKpi()
+    await loadCountryCharts()
     ElMessage.success('删除成功')
   }
 
@@ -500,6 +575,8 @@
         return
       }
       await loadCountryTable()
+      await loadCountryOverviewKpi()
+      await loadCountryCharts()
       ElMessage.success('保存成功')
     } else {
       try {
@@ -509,6 +586,8 @@
         return
       }
       await loadCountryTable()
+      await loadCountryOverviewKpi()
+      await loadCountryCharts()
       ElMessage.success('创建成功')
     }
 
@@ -529,6 +608,8 @@
     }
 
     await loadCountryTable()
+    await loadCountryOverviewKpi()
+    await loadCountryCharts()
     importVisible.value = false
     ElMessage.success('批量导入成功')
   }
@@ -547,6 +628,15 @@
       return
     }
     ElMessage.success('导出成功')
+  }
+
+  const handleQuery = () => {
+    if (currentPage.value !== 1) {
+      currentPage.value = 1
+    }
+    void loadCountryOverviewKpi()
+    void loadCountryCharts()
+    void loadCountryTable()
   }
 </script>
 
@@ -742,12 +832,15 @@
     &--teal {
       background: rgb(45 212 191 / 15%);
     }
+
     &--blue {
       background: rgb(96 165 250 / 15%);
     }
+
     &--green {
       background: rgb(34 197 94 / 15%);
     }
+
     &--amber {
       background: rgb(245 158 11 / 15%);
     }
@@ -772,12 +865,15 @@
     &--teal {
       color: #2dd4bf;
     }
+
     &--blue {
       color: #60a5fa;
     }
+
     &--green {
       color: #22c55e;
     }
+
     &--amber {
       color: #f59e0b;
     }
@@ -802,12 +898,15 @@
     &--teal {
       background: linear-gradient(90deg, #2dd4bf, transparent);
     }
+
     &--blue {
       background: linear-gradient(90deg, #60a5fa, transparent);
     }
+
     &--green {
       background: linear-gradient(90deg, #22c55e, transparent);
     }
+
     &--amber {
       background: linear-gradient(90deg, #f59e0b, transparent);
     }
@@ -815,6 +914,7 @@
 
   // ─── 图表卡片 ───────────────────────────────────────────
   .chart-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     padding: 16px 14px 12px;
@@ -864,6 +964,23 @@
     height: 220px;
   }
 
+  .chart-state-mask {
+    position: absolute;
+    inset: 38px 12px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(11 17 32 / 72%);
+    backdrop-filter: blur(1px);
+    border: 1px dashed rgb(148 163 184 / 30%);
+    border-radius: 8px;
+  }
+
+  .chart-state-text {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
   // ─── 表格面板 ───────────────────────────────────────────
   .table-panel {
     overflow: hidden;
@@ -910,9 +1027,26 @@
     }
   }
 
-  .flag-cell {
-    font-size: 20px;
-    line-height: 1;
+  .flag-cell-img {
+    display: block;
+    width: 28px;
+    height: 21px;
+    margin: 0 auto;
+    object-fit: cover;
+    border-radius: 3px;
+  }
+
+  .flag-cell-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    padding: 2px 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #94a3b8;
+    background: rgb(255 255 255 / 6%);
+    border-radius: 3px;
   }
 
   .market-badge {

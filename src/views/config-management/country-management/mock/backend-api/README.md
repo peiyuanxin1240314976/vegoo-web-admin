@@ -2,14 +2,20 @@
 
 父级 API 路径：`/api/config-management/country`
 
-| 文件                     | 接口            | 说明             | 优先级 |
-| ------------------------ | --------------- | ---------------- | ------ |
-| `01-country-table.json`  | `POST /table`   | 国家分页列表查询 | P0     |
-| `02-country-create.json` | `POST /`        | 新增国家         | P0     |
-| `03-country-update.json` | `PUT /:code`    | 编辑国家         | P0     |
-| `04-country-delete.json` | `DELETE /:code` | 删除国家         | P0     |
-| `05-country-export.json` | `POST /export`  | 导出国家列表     | P1     |
-| `06-country-import.json` | `POST /import`  | 批量导入国家     | P0     |
+| 文件 | 接口 | 说明 | 优先级 |
+| --- | --- | --- | --- |
+| `01-country-table.json` | `POST /table` | 国家分页列表查询 | P0 |
+| `02-country-create.json` | `POST /` | 新增国家 | P0 |
+| `03-country-update.json` | `PUT /:code` | 编辑国家 | P0 |
+| `04-country-delete.json` | `DELETE /:code` | 删除国家 | P0 |
+| `05-country-export.json` | `POST /export` | 导出国家列表 | P1 |
+| `06-country-import.json` | `POST /import` | 批量导入国家 | P0 |
+| `07-country-flag-icon-upload.json` | `POST /flag-icon/upload` | 国旗图标上传，返回 `url` | P1 |
+| `08-country-meta-options.json` | `POST /meta-options` | 时区/地区/货币选项元数据 | P0 |
+| `09-country-overview-kpi.json` | `POST /overview/kpi` | 顶栏 KPI 全量统计 | P0 |
+| `10-country-region-distribution.json` | `POST /charts/region-distribution` | 地区分布图表数据 | P0 |
+| `11-country-main-market-share.json` | `POST /charts/main-market-share` | 主要市场占比图表数据 | P0 |
+| `12-country-detail.json` | `POST /detail` | 查看抽屉详情 | P1 |
 
 说明：
 
@@ -19,14 +25,20 @@
 
 ## 场景 → 接口（`/config-management/country-management`）
 
-| 场景                   | 契约文件                 | `src/api`                          |
-| ---------------------- | ------------------------ | ---------------------------------- |
-| 列表首屏 / 筛选 / 分页 | `01-country-table.json`  | `fetchCountryTable`                |
-| 新建国家               | `02-country-create.json` | `createCountry`                    |
-| 编辑国家               | `03-country-update.json` | `updateCountry`（当前 **PUT**）    |
-| 删除国家               | `04-country-delete.json` | `deleteCountry`（当前 **DELETE**） |
-| 导出                   | `05-country-export.json` | `exportCountryList`                |
-| 批量导入               | `06-country-import.json` | `importCountryList`                |
+| 场景 | 契约文件 | `src/api` |
+| --- | --- | --- |
+| 列表首屏 / 筛选 / 分页 | `01-country-table.json` | `fetchCountryTable` |
+| 新建国家 | `02-country-create.json` | `createCountry` |
+| 编辑国家 | `03-country-update.json` | `updateCountry`（当前 **PUT**） |
+| 删除国家 | `04-country-delete.json` | `deleteCountry`（当前 **DELETE**） |
+| 导出 | `05-country-export.json` | `exportCountryList` |
+| 批量导入 | `06-country-import.json` | `importCountryList` |
+| 国旗图标上传 | `07-country-flag-icon-upload.json` | `uploadCountryFlagIcon` |
+| 时区/地区/货币选项 | `08-country-meta-options.json` | `fetchCountryMetaOptions` |
+| 顶栏 KPI（全量统计） | `09-country-overview-kpi.json` | `fetchCountryOverviewKpi` |
+| 地区分布图表 | `10-country-region-distribution.json` | `fetchCountryRegionDistribution` |
+| 主要市场占比图表 | `11-country-main-market-share.json` | `fetchCountryMainMarketShare` |
+| 查看详情抽屉 | `12-country-detail.json` | `fetchCountryDetail` |
 
 ## HTTP 方法与后续统一
 

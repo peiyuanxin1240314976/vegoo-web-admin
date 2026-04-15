@@ -441,6 +441,10 @@ alwaysApply: true
 | `androidCount` | 应用管理顶部统计：终端平台为 Android 的应用数（整数）。 |
 | `pendingCount` | 应用管理顶部统计：待处理条数；本页与 UI「待处理」一致，口径为状态「禁用」的应用数（整数）。 |
 | `PerfConfigOverviewKpi` | （TS）绩效配置顶栏 KPI 响应体；契约 `views/config-management/perf-config/mock/backend-api/06-perf-config-overview-kpi.json`。内含 **`total`**（当前筛选下配置总行数，与列表分页 `total` 口径一致）、**`published`** / **`draft`** / **`archived`**（按激活版本 `status` 聚合的条数，整数）。 |
+| `flagIconUrl` | 配置管理·国家：国旗**图标**展示用 URL（`string`）；先经 `POST .../country/flag-icon/upload` 等上传能力得到地址后写入国家创建/更新/列表；空字符串表示未配置；勿用国旗 emoji 替代持久化字段。 |
+| `CountryOverviewKpi` | （TS）国家管理顶栏 KPI 响应体；契约 `views/config-management/country-management/mock/backend-api/09-country-overview-kpi.json`。内含 **`total`**（当前筛选下国家总数）、**`currencies`**（非空 `currency` 去重数）、**`mainMarkets`**（`isMainMarket=true` 条数）、**`noCurrency`**（`currency` 为空条数）。 |
+| `CountryRegionDistributionItem` | （TS）国家管理地区分布图单项；契约 `views/config-management/country-management/mock/backend-api/10-country-region-distribution.json`。含 **`region`**、**`count`**、**`percent`**。 |
+| `CountryMainMarketShareItem` | （TS）国家管理主要市场占比图单项；契约 `views/config-management/country-management/mock/backend-api/11-country-main-market-share.json`。含 **`countryCode`**、**`countryName`**、**`sharePercent`**。 |
 
 #### 下拉/筛选选项字段
 
@@ -453,6 +457,9 @@ alwaysApply: true
 | `options` | 通用配置项数组（元素多为 `{ label, value }`；如转化展示分类等 meta 接口）。 |
 | `sourceOptions` | 广告平台筛选下拉选项数组。 |
 | `countryOptions` | 国家筛选下拉选项数组（`value` 为小写 ISO 3166-1 alpha-2）。 |
+| `timezoneOptions` | 国家管理等页面的时区下拉选项数组（值如 `GMT+8`）。 |
+| `regionOptions` | 国家管理等页面的地区下拉选项数组（如 `亚太`、`欧洲`、`北美`、`其他`）。 |
+| `currencyOptions` | 国家管理等页面的货币下拉选项数组（值如 `USD - 美元`）。 |
 | `label` | 选项展示文案。 |
 | `value` | 选项值（UI 中「全部」常用 `all`；**提交接口入参时**须按上文「接口请求 · 筛选「全部」」映射为 `""`）。 |
 

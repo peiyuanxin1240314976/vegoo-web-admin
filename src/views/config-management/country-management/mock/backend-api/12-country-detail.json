@@ -1,0 +1,61 @@
+{
+  "_comment": "国家管理 - 国家详情。按 code 获取完整国家信息，供右侧“查看”抽屉展示。",
+  "fieldDescription": {
+    "request": {
+      "code": {
+        "type": "string",
+        "required": true,
+        "description": "国家代码（ISO alpha-2）。"
+      }
+    },
+    "response": {
+      "data": {
+        "type": "CountryItem",
+        "required": true,
+        "description": "国家完整详情对象。字段同 `01-country-table` 中 `CountryItem`。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "code": "US"
+  },
+  "sampleResponse": {
+    "code": 200,
+    "data": {
+      "code": "US",
+      "code3": "840",
+      "criteriaId": "2840",
+      "flagIconUrl": "",
+      "nameCn": "美国",
+      "nameEn": "United States",
+      "aliases": ["USA", "America", "United States of America", "US"],
+      "timezone": "GMT-5",
+      "phoneCode": "1",
+      "currency": "USD - 美元",
+      "currencySymbol": "$",
+      "region": "北美",
+      "isMainMarket": true,
+      "createdBy": "admin",
+      "createdTime": "2024-01-10 09:00:00",
+      "updatedBy": "admin",
+      "updatedTime": "2024-06-15 14:30:00"
+    }
+  },
+  "api": {
+    "url": "POST /api/config-management/country/detail",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "{ code }",
+    "responseBody": "CountryItem"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户操作",
+        "detail": "列表“查看”按钮和行点击调用 `fetchCountryDetail({ code })` 后打开 `CountryDetailDrawer`。"
+      }
+    ],
+    "defaultSelection": "无",
+    "dedupe": "同 code 可做短时缓存。"
+  }
+}

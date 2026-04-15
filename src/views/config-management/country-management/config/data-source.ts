@@ -11,20 +11,32 @@ type UseMock = boolean
 
 export enum CountryEndpoint {
   CountryTable = 'countryTable',
+  Detail = 'countryDetail',
+  MetaOptions = 'countryMetaOptions',
+  OverviewKpi = 'countryOverviewKpi',
+  RegionDistribution = 'countryRegionDistribution',
+  MainMarketShare = 'countryMainMarketShare',
   CreateCountry = 'createCountry',
   UpdateCountry = 'updateCountry',
   DeleteCountry = 'deleteCountry',
   ExportCountry = 'exportCountry',
-  ImportCountry = 'importCountry'
+  ImportCountry = 'importCountry',
+  FlagIconUpload = 'countryFlagIconUpload'
 }
 
 export const CountryApiSource: Record<CountryEndpoint, UseMock> = {
   [CountryEndpoint.CountryTable]: true,
+  [CountryEndpoint.Detail]: true,
+  [CountryEndpoint.MetaOptions]: true,
+  [CountryEndpoint.OverviewKpi]: true,
+  [CountryEndpoint.RegionDistribution]: true,
+  [CountryEndpoint.MainMarketShare]: true,
   [CountryEndpoint.CreateCountry]: true,
   [CountryEndpoint.UpdateCountry]: true,
   [CountryEndpoint.DeleteCountry]: true,
   [CountryEndpoint.ExportCountry]: true,
-  [CountryEndpoint.ImportCountry]: true
+  [CountryEndpoint.ImportCountry]: true,
+  [CountryEndpoint.FlagIconUpload]: true
 }
 
 /** 读取方：`src/api/config-management.ts` 国家段 */
