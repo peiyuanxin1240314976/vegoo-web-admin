@@ -1,5 +1,5 @@
 {
-  "_comment": "绩效配置 — 分页列表。请求与 `fetchPerfTable` 一致：page、pageSize。响应建议与 `Api.Common.PaginatedResponse<PerfConfigItem>` 对齐：records、total、current、size；若网关暂为 { total, list }，联调时在网关层映射或与前端约定后更新本契约。对应 types.ts: PerfConfigItem / PerfVersion。",
+  "_comment": "绩效配置 — 分页列表。请求与 `fetchPerfTable` 一致。应用/终端平台/广告平台维度与公用 `GET .../cockpit/meta-filter-options` 的 `value` 对齐（`appId`、`platform`、`source`）；不在本目录重复 meta 契约。对应 types.ts: PerfConfigItem / PerfVersion。",
   "fieldDescription": {
     "request": {
       "page": { "type": "number", "required": true, "description": "页码。", "default": 1 },
@@ -9,14 +9,31 @@
         "description": "每页条数。",
         "default": 20
       },
-      "keyword": { "type": "string", "required": false, "description": "应用关键词。" },
-      "appPlatform": {
+      "keyword": {
         "type": "string",
         "required": false,
-        "description": "应用平台：android | ios。"
+        "description": "应用展示名或 appId 关键词。"
       },
-      "adPlatform": { "type": "string", "required": false, "description": "广告平台筛选。" },
-      "status": { "type": "string", "required": false, "description": "配置/运行状态筛选。" }
+      "appId": {
+        "type": "string",
+        "required": false,
+        "description": "应用筛选；cockpit appOptions[].value；空字符串表示全部。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "终端平台筛选；cockpit platformOptions[].value；空字符串表示全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "description": "广告平台筛选；cockpit sourceOptions[].value；匹配行 `source` 或 `sourceList` 任一项；空字符串表示全部。"
+      },
+      "status": {
+        "type": "string",
+        "required": false,
+        "description": "配置版本状态筛选（如 published/draft/archived）。"
+      }
     },
     "response": {
       "records": { "type": "PerfConfigItem[]", "required": true, "description": "列表行。" },
@@ -31,14 +48,69 @@
         "required": true,
         "description": "每页条数（与请求 pageSize 一致）。"
       }
+    },
+    "PerfConfigItem": {
+      "id": { "type": "string", "required": true, "description": "配置 ID。" },
+      "appId": {
+        "type": "string",
+        "required": true,
+        "description": "应用 ID，与 cockpit appOptions[].value 一致。"
+      },
+      "appName": { "type": "string", "required": true, "description": "应用展示名。" },
+      "appIcon": { "type": "string", "required": true, "description": "列表图标色（CSS 颜色）。" },
+      "platform": { "type": "string", "required": true, "description": "终端平台 value。" },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "主广告平台 value，与 sourceList[0] 一致。"
+      },
+      "sourceList": {
+        "type": "string[]",
+        "required": true,
+        "description": "已选广告平台枚举值列表。"
+      },
+      "runStatus": {
+        "type": "string",
+        "required": true,
+        "enum": ["running", "paused", "stopped"],
+        "description": "投放状态。"
+      },
+      "allowMulti": { "type": "boolean", "required": true, "description": "是否允许多投。" },
+      "activeVersion": { "type": "PerfVersion", "required": true, "description": "当前激活版本。" },
+      "versions": { "type": "PerfVersion[]", "required": true, "description": "版本历史。" }
+    },
+    "PerfVersion": {
+      "version": { "type": "number", "required": true, "description": "版本号。" },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["published", "draft", "archived"],
+        "description": "版本状态。"
+      },
+      "publishedAt": { "type": "string", "required": true, "description": "发布时间。" },
+      "publishedBy": { "type": "string", "required": true, "description": "发布人。" },
+      "evalMethod": {
+        "type": "string",
+        "required": true,
+        "enum": ["ROI", "CPA"],
+        "description": "评估方式。"
+      },
+      "evalDays": { "type": "number", "required": true, "description": "评估天数。" },
+      "targetRate": { "type": "number", "required": true, "description": "达标要求。" },
+      "minRate": { "type": "number", "required": true, "description": "最低要求。" },
+      "difficultyFactor": { "type": "number", "required": true, "description": "难度系数。" },
+      "minProfit": { "type": "number|null", "required": true, "description": "最低利润。" },
+      "extraCondition": { "type": "string", "required": true, "description": "附加条件。" },
+      "isActive": { "type": "boolean", "required": true, "description": "是否为当前激活版本。" }
     }
   },
   "sampleRequest": {
     "page": 1,
     "pageSize": 20,
     "keyword": "",
-    "appPlatform": "",
-    "adPlatform": "",
+    "appId": "",
+    "platform": "",
+    "source": "",
     "status": ""
   },
   "sampleResponse": {
@@ -46,10 +118,12 @@
       "records": [
         {
           "id": "PF-001",
+          "appId": "com.blood.sugar.monitor",
           "appName": "BloodSugar",
           "appIcon": "#3B82F6",
-          "appPlatform": "android",
-          "adPlatform": "Google",
+          "platform": "0",
+          "source": "1",
+          "sourceList": ["1"],
           "runStatus": "running",
           "allowMulti": true,
           "activeVersion": {
@@ -96,9 +170,91 @@
               "isActive": false
             }
           ]
+        },
+        {
+          "id": "PF-002",
+          "appId": "com.accurate.live.weather.widget",
+          "appName": "Weather8",
+          "appIcon": "#6366f1",
+          "platform": "0",
+          "source": "2",
+          "sourceList": ["2"],
+          "runStatus": "running",
+          "allowMulti": true,
+          "activeVersion": {
+            "version": 1,
+            "status": "published",
+            "publishedAt": "2026-03-18 10:00:00",
+            "publishedBy": "admin",
+            "evalMethod": "ROI",
+            "evalDays": 3,
+            "targetRate": 53,
+            "minRate": 50,
+            "difficultyFactor": 1.2,
+            "minProfit": null,
+            "extraCondition": "",
+            "isActive": true
+          },
+          "versions": [
+            {
+              "version": 1,
+              "status": "published",
+              "publishedAt": "2026-03-18 10:00:00",
+              "publishedBy": "admin",
+              "evalMethod": "ROI",
+              "evalDays": 3,
+              "targetRate": 53,
+              "minRate": 50,
+              "difficultyFactor": 1.2,
+              "minProfit": null,
+              "extraCondition": "",
+              "isActive": true
+            }
+          ]
+        },
+        {
+          "id": "PF-003",
+          "appId": "com.locate.phone.track",
+          "appName": "PhoneTracker",
+          "appIcon": "#8b5cf6",
+          "platform": "0",
+          "source": "10",
+          "sourceList": ["10"],
+          "runStatus": "running",
+          "allowMulti": true,
+          "activeVersion": {
+            "version": 1,
+            "status": "published",
+            "publishedAt": "2026-03-01 10:00:00",
+            "publishedBy": "admin",
+            "evalMethod": "ROI",
+            "evalDays": 1,
+            "targetRate": 95,
+            "minRate": 90,
+            "difficultyFactor": 1,
+            "minProfit": null,
+            "extraCondition": "",
+            "isActive": true
+          },
+          "versions": [
+            {
+              "version": 1,
+              "status": "published",
+              "publishedAt": "2026-03-01 10:00:00",
+              "publishedBy": "admin",
+              "evalMethod": "ROI",
+              "evalDays": 1,
+              "targetRate": 95,
+              "minRate": 90,
+              "difficultyFactor": 1,
+              "minProfit": null,
+              "extraCondition": "",
+              "isActive": true
+            }
+          ]
         }
       ],
-      "total": 1,
+      "total": 3,
       "current": 1,
       "size": 20
     }
@@ -107,7 +263,7 @@
     "url": "POST /api/config-management/perf-config/table",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "page, pageSize, keyword?, appPlatform?, adPlatform?, status?",
+    "requestBody": "page, pageSize, keyword?, appId?, platform?, source?, status?",
     "responseBody": "PaginatedResponse<PerfConfigItem>（推荐）或 { total, list } 待映射"
   },
   "interaction": {

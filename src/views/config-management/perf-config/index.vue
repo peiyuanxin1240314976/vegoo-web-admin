@@ -56,13 +56,22 @@
           ></template>
         </el-input>
         <el-select v-model="filterPlatform" class="filter-select" @change="currentPage = 1">
-          <el-option value="" label="平台：全部" />
-          <el-option value="android" label="安卓" />
-          <el-option value="ios" label="iOS" />
+          <el-option value="" label="终端平台：全部" />
+          <el-option
+            v-for="opt in metaPlatformOptions"
+            :key="opt.value"
+            :value="opt.value"
+            :label="'终端：' + opt.label"
+          />
         </el-select>
-        <el-select v-model="filterAdPlatform" class="filter-select" @change="currentPage = 1">
+        <el-select v-model="filterSource" class="filter-select" @change="currentPage = 1">
           <el-option value="" label="广告平台：全部" />
-          <el-option v-for="p in AD_PLATFORMS" :key="p" :value="p" :label="p" />
+          <el-option
+            v-for="opt in metaSourceOptions"
+            :key="opt.value"
+            :value="opt.value"
+            :label="opt.label"
+          />
         </el-select>
         <el-select v-model="filterStatus" class="filter-select" @change="currentPage = 1">
           <el-option value="" label="状态：全部" />
@@ -91,12 +100,16 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="平台" min-width="90">
+        <el-table-column label="终端平台" min-width="100">
           <template #default="{ row }">
-            <span class="platform-tag">{{ row.appPlatform === 'android' ? '安卓' : 'iOS' }}</span>
+            <span class="platform-tag">{{ platformCellLabel(row) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="adPlatform" label="广告平台" min-width="120" />
+        <el-table-column label="广告平台" min-width="140">
+          <template #default="{ row }">
+            {{ sourceCellLabels(row) }}
+          </template>
+        </el-table-column>
         <el-table-column label="评估方式" min-width="100" align="center">
           <template #default="{ row }">{{ row.activeVersion.evalMethod }}</template>
         </el-table-column>
@@ -195,10 +208,13 @@
             <div class="drawer-app-info">
               <span class="drawer-app-name">{{ drawerItem.appName }}</span>
               <div class="drawer-app-tags">
-                <span class="drawer-tag">{{
-                  drawerItem.appPlatform === 'android' ? '安卓' : 'iOS'
-                }}</span>
-                <span class="drawer-tag">{{ drawerItem.adPlatform }}</span>
+                <span class="drawer-tag">{{ platformCellLabel(drawerItem) }}</span>
+                <span
+                  v-for="(t, i) in sourceCellLabelParts(drawerItem)"
+                  :key="i"
+                  class="drawer-tag"
+                  >{{ t }}</span
+                >
               </div>
             </div>
           </div>
@@ -235,14 +251,12 @@
                 <span class="di-value">{{ drawerItem.appName }}</span>
               </div>
               <div class="drawer-item">
-                <span class="di-label">平台</span>
-                <span class="di-value">{{
-                  drawerItem.appPlatform === 'android' ? '安卓' : 'iOS'
-                }}</span>
+                <span class="di-label">终端平台</span>
+                <span class="di-value">{{ platformCellLabel(drawerItem) }}</span>
               </div>
               <div class="drawer-item">
                 <span class="di-label">广告平台</span>
-                <span class="di-value">{{ drawerItem.adPlatform }}</span>
+                <span class="di-value">{{ sourceCellLabels(drawerItem) }}</span>
               </div>
               <div class="drawer-item">
                 <span class="di-label">运行状态</span>
@@ -391,50 +405,99 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import { Plus, Download, Search, Edit, Close } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import {
+    fetchPerfOverviewKpi,
     fetchPerfTable,
     createPerfConfig,
     activatePerfConfig,
     exportPerfConfig
   } from '@/api/config-management/perf-config'
-  import { PerfConfigApiSource } from './config/data-source'
-  import { clonePerfList, AD_PLATFORMS, STATUS_CONFIG, RUN_STATUS_CONFIG } from './mock/data'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
+  import { PerfConfigApiSource, PerfConfigEndpoint } from './config/data-source'
+  import { clonePerfList, STATUS_CONFIG, RUN_STATUS_CONFIG } from './mock/data'
   import PerfCreateDialog from './modules/perf-create-dialog.vue'
   import VersionCompareDialog from './modules/version-compare-dialog.vue'
   import type { PerfConfigItem, PerfVersion } from './types'
 
   defineOptions({ name: 'PerfConfig' })
 
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const metaPlatformOptions = computed(() => cockpitMetaStore.data?.platformOptions ?? [])
+  const metaSourceOptions = computed(() => cockpitMetaStore.data?.sourceOptions ?? [])
+
+  function optionLabel(options: CockpitMetaOptionItem[], value: string): string {
+    if (!value) return ''
+    return options.find((o) => o.value === value)?.label ?? value
+  }
+
+  function platformCellLabel(row: PerfConfigItem) {
+    return optionLabel(metaPlatformOptions.value, row.platform) || row.platform
+  }
+
+  function sourceCodes(row: PerfConfigItem) {
+    return row.sourceList?.length ? row.sourceList : [row.source]
+  }
+
+  function sourceCellLabels(row: PerfConfigItem) {
+    return sourceCodes(row)
+      .map((c) => optionLabel(metaSourceOptions.value, c) || c)
+      .join('、')
+  }
+
+  function sourceCellLabelParts(row: PerfConfigItem) {
+    return sourceCodes(row).map((c) => optionLabel(metaSourceOptions.value, c) || c)
+  }
+
   // ─── 数据 ──────────────────────────────────────────────
   const list = ref<PerfConfigItem[]>(clonePerfList())
   const filterKeyword = ref('')
   const filterPlatform = ref('')
-  const filterAdPlatform = ref('')
+  const filterSource = ref('')
   const filterStatus = ref('')
   const currentPage = ref(1)
   const pageSize = ref(20)
 
-  // ─── KPI ────────────────────────────────────────────────
-  const kpi = computed(() => ({
-    total: list.value.length,
-    published: list.value.filter((r) => r.activeVersion.status === 'published').length,
-    draft: list.value.filter((r) => r.activeVersion.status === 'draft').length,
-    archived: list.value.filter((r) => r.activeVersion.status === 'archived').length
-  }))
+  // ─── KPI（独立接口：与列表同筛选、全量聚合，非当前页） ───────
+  const overviewKpi = ref({ total: 0, published: 0, draft: 0, archived: 0 })
+  const kpi = computed(() => overviewKpi.value)
+
+  const loadOverviewKpi = async () => {
+    try {
+      overviewKpi.value = await fetchPerfOverviewKpi(
+        {
+          keyword: filterKeyword.value || undefined,
+          platform: filterPlatform.value || undefined,
+          source: filterSource.value || undefined,
+          status: filterStatus.value || undefined
+        },
+        list.value
+      )
+    } catch {
+      overviewKpi.value = { total: 0, published: 0, draft: 0, archived: 0 }
+    }
+  }
+
+  watch(
+    [filterKeyword, filterPlatform, filterSource, filterStatus],
+    () => {
+      void loadOverviewKpi()
+    },
+    { flush: 'post' }
+  )
 
   // ─── 筛选 ───────────────────────────────────────────────
   const filteredList = computed(() =>
     list.value.filter((row) => {
-      if (
-        filterKeyword.value &&
-        !row.appName.toLowerCase().includes(filterKeyword.value.toLowerCase())
-      )
+      const kw = filterKeyword.value.trim().toLowerCase()
+      if (kw && !row.appName.toLowerCase().includes(kw) && !row.appId.toLowerCase().includes(kw)) {
         return false
-      if (filterPlatform.value && row.appPlatform !== filterPlatform.value) return false
-      if (filterAdPlatform.value && row.adPlatform !== filterAdPlatform.value) return false
+      }
+      if (filterPlatform.value && row.platform !== filterPlatform.value) return false
+      if (filterSource.value && !sourceCodes(row).includes(filterSource.value)) return false
       if (filterStatus.value && row.activeVersion.status !== filterStatus.value) return false
       return true
     })
@@ -469,12 +532,13 @@
   const createVisible = ref(false)
 
   const handleCreateSuccess = (item: PerfConfigItem) => {
-    if (!PerfConfigApiSource.perfCreate) {
+    if (!PerfConfigApiSource[PerfConfigEndpoint.Create]) {
       createPerfConfig({
         step1: {
+          appId: item.appId,
           appName: item.appName,
-          appPlatform: item.appPlatform,
-          adPlatforms: [item.adPlatform],
+          platform: item.platform,
+          sourceList: [...item.sourceList],
           runStatus: item.runStatus,
           allowMulti: item.allowMulti
         },
@@ -491,6 +555,7 @@
       }).catch(() => undefined)
     }
     list.value.unshift(item)
+    void loadOverviewKpi()
     ElMessage.success('配置已保存')
   }
 
@@ -507,7 +572,7 @@
 
   const handleActivate = (ver: PerfVersion) => {
     if (!drawerItem.value) return
-    if (!PerfConfigApiSource.perfActivate) {
+    if (!PerfConfigApiSource[PerfConfigEndpoint.Activate]) {
       activatePerfConfig(drawerItem.value.id, ver.version).catch(() => undefined)
     }
     drawerItem.value.versions.forEach((v) => {
@@ -529,27 +594,30 @@
     compareVisible.value = true
   }
 
-  const handleExport = () => {
-    if (!PerfConfigApiSource.perfExport) {
-      exportPerfConfig({
+  const handleExport = async () => {
+    try {
+      await exportPerfConfig({
         keyword: filterKeyword.value || undefined,
-        appPlatform: filterPlatform.value || undefined,
-        adPlatform: filterAdPlatform.value || undefined,
+        platform: filterPlatform.value || undefined,
+        source: filterSource.value || undefined,
         status: filterStatus.value || undefined
-      }).catch(() => undefined)
+      })
+      ElMessage.success('已开始导出')
+    } catch (error) {
+      const msg = error instanceof Error && error.message ? error.message : '导出失败'
+      ElMessage.error(msg)
     }
-    ElMessage.success('导出任务已提交')
   }
 
   const loadPerfTable = async () => {
-    if (PerfConfigApiSource.perfTable) return
+    if (PerfConfigApiSource[PerfConfigEndpoint.Table]) return
     try {
       await fetchPerfTable({
         page: currentPage.value,
         pageSize: pageSize.value,
         keyword: filterKeyword.value || undefined,
-        appPlatform: filterPlatform.value || undefined,
-        adPlatform: filterAdPlatform.value || undefined,
+        platform: filterPlatform.value || undefined,
+        source: filterSource.value || undefined,
         status: filterStatus.value || undefined
       })
     } catch {
@@ -557,7 +625,11 @@
     }
   }
 
-  loadPerfTable()
+  onMounted(async () => {
+    await cockpitMetaStore.ensureLoaded()
+    void loadOverviewKpi()
+    void loadPerfTable()
+  })
 </script>
 
 <style lang="scss" scoped>
@@ -1076,6 +1148,7 @@
     background: rgb(45 212 191 / 5%);
     border-bottom: 1px solid var(--border);
   }
+
   .active-label {
     color: var(--text-muted);
   }
@@ -1111,6 +1184,7 @@
   .drawer-section {
     padding: 14px 18px;
     border-bottom: 1px solid var(--border);
+
     &:last-child {
       border-bottom: none;
     }

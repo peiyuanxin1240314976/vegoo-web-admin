@@ -11,14 +11,18 @@ type UseMock = boolean
 
 export enum PerfConfigEndpoint {
   Table = 'perfTable',
+  OverviewKpi = 'perfOverviewKpi',
   Create = 'perfCreate',
   Activate = 'perfActivate',
-  Export = 'perfExport'
+  Export = 'perfExport',
+  ExportVersionCompare = 'perfExportVersionCompare'
 }
 
 export const PerfConfigApiSource: Record<PerfConfigEndpoint, UseMock> = {
   [PerfConfigEndpoint.Table]: true,
+  [PerfConfigEndpoint.OverviewKpi]: true,
   [PerfConfigEndpoint.Create]: true,
   [PerfConfigEndpoint.Activate]: true,
-  [PerfConfigEndpoint.Export]: true
+  [PerfConfigEndpoint.Export]: true,
+  [PerfConfigEndpoint.ExportVersionCompare]: true
 }

@@ -1,41 +1,45 @@
 export type PerfStatus = 'published' | 'draft' | 'archived'
 export type EvalMethod = 'ROI' | 'CPA'
-export type AdPlatform = 'Google' | 'Facebook' | 'TikTok' | 'Kwai' | 'Mintegral' | 'NewsBreak' | 'Unity' | 'IronSource'
-export type AppPlatform = 'android' | 'ios'
 export type RunStatus = 'running' | 'paused' | 'stopped'
 
 export interface PerfVersion {
-  version: number          // v1 / v2 / v3
+  version: number
   status: PerfStatus
   publishedAt: string
   publishedBy: string
   evalMethod: EvalMethod
   evalDays: number
-  targetRate: number       // 达标要求 %（ROI）或 $ (CPA)
-  minRate: number          // 最低要求
-  difficultyFactor: number // 难度系数
-  minProfit: number | null // 最低利润 $
-  extraCondition: string   // 附加条件
+  targetRate: number
+  minRate: number
+  difficultyFactor: number
+  minProfit: number | null
+  extraCondition: string
   isActive: boolean
 }
 
+/** 列表行；应用 / 终端平台 / 广告平台与 cockpit meta-filter-options 的 value 对齐 */
 export interface PerfConfigItem {
   id: string
+  appId: string
   appName: string
-  appIcon: string          // 首字母色块颜色
-  appPlatform: AppPlatform
-  adPlatform: AdPlatform
+  appIcon: string
+  /** 终端平台，与 `platformOptions[].value` 一致，如 `"0"` 安卓、`"1"` iOS */
+  platform: string
+  /** 主广告平台（多选时取展示/筛选主键，与 `sourceList[0]` 一致） */
+  source: string
+  /** 已选广告平台枚举值列表，与 `sourceOptions[].value` 一致 */
+  sourceList: string[]
   runStatus: RunStatus
   allowMulti: boolean
   activeVersion: PerfVersion
   versions: PerfVersion[]
 }
 
-// ── 新建表单 ──────────────────────────────────────────────
 export interface PerfStep1Form {
+  appId: string
   appName: string
-  appPlatform: AppPlatform
-  adPlatforms: AdPlatform[]
+  platform: string
+  sourceList: string[]
   runStatus: RunStatus
   allowMulti: boolean
 }
@@ -51,3 +55,11 @@ export interface PerfStep2Form {
 }
 
 export type SaveMode = 'draft' | 'publish'
+
+/** 顶栏 KPI：与列表相同筛选条件下、全量数据的统计（非当前页） */
+export interface PerfConfigOverviewKpi {
+  total: number
+  published: number
+  draft: number
+  archived: number
+}

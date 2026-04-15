@@ -20,8 +20,8 @@
             <span class="vcd-title">版本对比</span>
             <div class="vcd-subtitle-tags">
               <span class="vcd-tag">{{ item.appName }}</span>
-              <span class="vcd-tag">{{ item.appPlatform === 'android' ? '安卓' : 'iOS' }}</span>
-              <span class="vcd-tag">{{ item.adPlatform }}</span>
+              <span class="vcd-tag">{{ platformLabel }}</span>
+              <span class="vcd-tag">{{ sourceSummary }}</span>
             </div>
           </div>
         </div>
@@ -125,7 +125,11 @@
 
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue'
+  import { ElMessage } from 'element-plus'
   import { Close, Download } from '@element-plus/icons-vue'
+  import { exportPerfVersionCompare } from '@/api/config-management/perf-config'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import { STATUS_CONFIG } from '../mock/data'
   import type { PerfConfigItem, PerfVersion } from '../types'
 
@@ -136,6 +140,23 @@
     item: PerfConfigItem
     defaultVersion?: PerfVersion | null
   }>()
+
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+
+  function optLabel(options: CockpitMetaOptionItem[], value: string) {
+    if (!value) return ''
+    return options.find((o) => o.value === value)?.label ?? value
+  }
+
+  const platformLabel = computed(() =>
+    optLabel(cockpitMetaStore.data?.platformOptions ?? [], props.item.platform)
+  )
+
+  const sourceSummary = computed(() => {
+    const opts = cockpitMetaStore.data?.sourceOptions ?? []
+    const codes = props.item.sourceList?.length ? props.item.sourceList : [props.item.source]
+    return codes.map((c) => optLabel(opts, c) || c).join('、')
+  })
 
   const emit = defineEmits<{
     'update:visible': [val: boolean]
@@ -156,6 +177,7 @@
     () => props.visible,
     (v) => {
       if (!v) return
+      void cockpitMetaStore.ensureLoaded()
       const versions = props.item.versions
       if (props.defaultVersion) {
         const idx = versions.findIndex((v) => v.version === props.defaultVersion!.version)
@@ -280,8 +302,17 @@
     visible.value = false
   }
 
-  const handleExport = () => {
-    ElMessage.info('导出功能联调后启用')
+  const handleExport = async () => {
+    try {
+      await exportPerfVersionCompare({
+        configId: props.item.id,
+        versionA: verA.value.version,
+        versionB: verB.value.version
+      })
+      ElMessage.success('导出成功')
+    } catch {
+      ElMessage.error('导出失败，请稍后重试')
+    }
   }
 
   const handleClose = () => {
