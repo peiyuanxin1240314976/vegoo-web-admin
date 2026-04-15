@@ -13,19 +13,24 @@
       <div class="pair-row">
         <ElFormItem label="货币对" prop="baseCurrency" class="pair-item">
           <ElSelect v-model="form.baseCurrency" placeholder="来源货币">
-            <ElOption v-for="c in CURRENCIES" :key="c" :label="c" :value="c" />
+            <ElOption v-for="c in currencyList" :key="c" :label="c" :value="c" />
           </ElSelect>
         </ElFormItem>
         <span class="pair-sep">/</span>
         <ElFormItem label=" " prop="quoteCurrency" class="pair-item">
           <ElSelect v-model="form.quoteCurrency" placeholder="目标货币">
-            <ElOption v-for="c in CURRENCIES" :key="c" :label="c" :value="c" />
+            <ElOption v-for="c in currencyList" :key="c" :label="c" :value="c" />
           </ElSelect>
         </ElFormItem>
       </div>
 
       <ElFormItem label="汇率值" prop="rate">
-        <ElInput v-model.number="form.rate" placeholder="请输入汇率值" type="number" step="0.0001" />
+        <ElInput
+          v-model.number="form.rate"
+          placeholder="请输入汇率值"
+          type="number"
+          step="0.0001"
+        />
       </ElFormItem>
 
       <div class="date-row">
@@ -57,12 +62,7 @@
       </ElFormItem>
 
       <ElFormItem label="备注" prop="remark">
-        <ElInput
-          v-model="form.remark"
-          type="textarea"
-          :rows="2"
-          placeholder="可选备注信息"
-        />
+        <ElInput v-model="form.remark" type="textarea" :rows="2" placeholder="可选备注信息" />
       </ElFormItem>
     </ElForm>
 
@@ -74,31 +74,38 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, watch } from 'vue'
+  import { computed, reactive, ref, watch } from 'vue'
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
-  import { CURRENCIES } from '../mock/data'
-  import type { ManualRateFormModel } from '../types'
+  import type { ManualRateFormModel, OptionItem } from '../types'
 
   defineOptions({ name: 'RateManualDialog' })
 
   interface Props {
     visible: boolean
+    currencyOptions?: OptionItem[]
   }
 
-  defineProps<Props>()
+  const props = withDefaults(defineProps<Props>(), {
+    currencyOptions: () => []
+  })
 
   const emit = defineEmits<{
     'update:visible': [val: boolean]
     success: [payload: ManualRateFormModel]
   }>()
 
+  const currencyValues = computed(() => props.currencyOptions.map((item) => item.value))
+  const currencyList = computed(() =>
+    currencyValues.value.length > 0 ? currencyValues.value : ['USD', 'EUR', 'GBP', 'JPY']
+  )
+
   const formRef = ref<FormInstance>()
   const saving = ref(false)
 
   const form = reactive<ManualRateFormModel>({
-    baseCurrency: 'USD',
-    quoteCurrency: 'EUR',
+    baseCurrency: '',
+    quoteCurrency: '',
     rate: 0,
     effectiveDate: '',
     effectiveTime: '00:00',
@@ -134,6 +141,18 @@
     }
   )
 
+  watch(
+    () => props.visible,
+    (visible) => {
+      if (!visible) return
+      const base = currencyList.value[0] ?? 'USD'
+      const quote = currencyList.value.find((item) => item !== base) ?? base
+      form.baseCurrency = base
+      form.quoteCurrency = quote
+    },
+    { immediate: true }
+  )
+
   const handleSave = async () => {
     if (!formRef.value) return
     const valid = await formRef.value.validate().catch(() => false)
@@ -163,8 +182,8 @@
     margin-bottom: 4px;
     font-size: 18px;
     font-weight: 600;
-    color: #64748b;
     line-height: 32px;
+    color: #64748b;
   }
 
   .date-row {

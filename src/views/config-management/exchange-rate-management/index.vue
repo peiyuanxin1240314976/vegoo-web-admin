@@ -215,9 +215,18 @@
     </div>
 
     <!-- ── 弹窗 ─────────────────────────────────────────── -->
-    <RateManualDialog v-model:visible="manualVisible" @success="handleManualSuccess" />
+    <RateManualDialog
+      v-model:visible="manualVisible"
+      :currency-options="syncMetaOptions.currencyOptions"
+      @success="handleManualSuccess"
+    />
 
-    <RateSyncDialog v-model:visible="syncDialogVisible" @sync="handleStartSync" />
+    <RateSyncDialog
+      v-model:visible="syncDialogVisible"
+      :source-options="syncMetaOptions.sourceOptions"
+      :pair-options="syncMetaOptions.pairOptions"
+      @sync="handleStartSync"
+    />
 
     <RateSyncProgressDialog
       v-model:visible="syncProgressVisible"
@@ -246,6 +255,7 @@
     fetchExchangeRateOverviewKpi,
     fetchExchangeRateTrend,
     fetchExchangeRateSyncConfig,
+    fetchExchangeRateSyncMetaOptions,
     createExchangeRate,
     syncExchangeRates,
     saveSyncConfig,
@@ -260,6 +270,7 @@
   import type {
     ExchangeRateItem,
     ExchangeRateOverviewKpi,
+    ExchangeRateSyncMetaOptions,
     ExchangeRateTrendPoint,
     ManualRateFormModel,
     SyncResult,
@@ -278,6 +289,11 @@
   const currentPage = ref(1)
   const pageSize = ref(10)
   const activePair = ref('USD/EUR')
+  const syncMetaOptions = ref<ExchangeRateSyncMetaOptions>({
+    sourceOptions: [],
+    pairOptions: [],
+    currencyOptions: []
+  })
 
   watch(filterPair, () => {
     currentPage.value = 1
@@ -333,6 +349,14 @@
       serverTotal.value = r.total ?? 0
     } catch {
       ElMessage.error('加载列表失败')
+    }
+  }
+
+  async function loadSyncMetaOptions() {
+    try {
+      syncMetaOptions.value = await fetchExchangeRateSyncMetaOptions()
+    } catch {
+      // 保持组件内默认兜底
     }
   }
 
@@ -462,6 +486,7 @@
       }
     })
     window.addEventListener('resize', resizeChart)
+    void loadSyncMetaOptions()
     void (async () => {
       try {
         const config = await fetchExchangeRateSyncConfig()

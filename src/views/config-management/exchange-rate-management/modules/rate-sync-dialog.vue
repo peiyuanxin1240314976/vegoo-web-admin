@@ -13,7 +13,7 @@
       <div class="section-label">数据源</div>
       <div class="source-tabs">
         <button
-          v-for="s in SOURCE_OPTIONS"
+          v-for="s in sourceOptionsView"
           :key="s.value"
           :class="['source-tab', selectedSource === s.value && 'source-tab--active']"
           @click="selectedSource = s.value"
@@ -39,7 +39,7 @@
         </ElCheckbox>
       </div>
       <ElCheckboxGroup v-model="selectedPairs" class="pairs-grid">
-        <ElCheckbox v-for="pair in ALL_CURRENCY_PAIRS" :key="pair" :label="pair">
+        <ElCheckbox v-for="pair in pairValues" :key="pair" :label="pair">
           {{ pair }}
         </ElCheckbox>
       </ElCheckboxGroup>
@@ -65,39 +65,59 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
-  import { ALL_CURRENCY_PAIRS } from '../mock/data'
+  import { computed, ref, watch } from 'vue'
+  import type { OptionItem } from '../types'
 
   defineOptions({ name: 'RateSyncDialog' })
 
   interface Props {
     visible: boolean
+    sourceOptions?: OptionItem[]
+    pairOptions?: OptionItem[]
   }
 
-  defineProps<Props>()
+  const props = withDefaults(defineProps<Props>(), {
+    sourceOptions: () => [],
+    pairOptions: () => []
+  })
 
   const emit = defineEmits<{
     'update:visible': [val: boolean]
     sync: [pairs: string[], source: string]
   }>()
 
-  const SOURCE_OPTIONS = [
+  const DEFAULT_SOURCE_OPTIONS: OptionItem[] = [
     { label: 'Open Exchange Rates', value: 'openexchange' },
     { label: 'Fixer.io', value: 'fixer' },
     { label: '自定义API', value: 'custom' }
   ]
 
-  const selectedSource = ref('openexchange')
-  const selectedPairs = ref<string[]>([...ALL_CURRENCY_PAIRS])
+  const sourceOptionsView = computed(() =>
+    props.sourceOptions.length > 0 ? props.sourceOptions : DEFAULT_SOURCE_OPTIONS
+  )
+  const pairValues = computed(() => props.pairOptions.map((item) => item.value))
 
-  const allSelected = computed(() => selectedPairs.value.length === ALL_CURRENCY_PAIRS.length)
+  const selectedSource = ref('openexchange')
+  const selectedPairs = ref<string[]>([])
+
+  watch(
+    () => props.visible,
+    (visible) => {
+      if (!visible) return
+      selectedSource.value = sourceOptionsView.value[0]?.value ?? 'openexchange'
+      selectedPairs.value = [...pairValues.value]
+    },
+    { immediate: true }
+  )
+
+  const allSelected = computed(() => selectedPairs.value.length === pairValues.value.length)
 
   const isIndeterminate = computed(
-    () => selectedPairs.value.length > 0 && selectedPairs.value.length < ALL_CURRENCY_PAIRS.length
+    () => selectedPairs.value.length > 0 && selectedPairs.value.length < pairValues.value.length
   )
 
   const handleSelectAll = (val: string | number | boolean) => {
-    selectedPairs.value = val === true ? [...ALL_CURRENCY_PAIRS] : []
+    selectedPairs.value = val === true ? [...pairValues.value] : []
   }
 
   const handleStartSync = () => {

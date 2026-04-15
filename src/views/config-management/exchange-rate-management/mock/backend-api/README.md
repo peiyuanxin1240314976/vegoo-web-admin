@@ -28,6 +28,6 @@
 | KPI 概览 | `07-exchange-rate-overview-kpi.json` | `fetchExchangeRateOverviewKpi` |
 | 30 天走势 | `08-exchange-rate-trend.json` | `fetchExchangeRateTrend` |
 | 同步设置回填 | `09-exchange-rate-sync-config-detail.json` | `fetchExchangeRateSyncConfig` |
-| 同步/手动弹窗元数据 | `10-exchange-rate-sync-meta-options.json` | `fetchExchangeRateSyncMetaOptions`（待接入） |
+| 同步/手动弹窗元数据 | `10-exchange-rate-sync-meta-options.json` | `fetchExchangeRateSyncMetaOptions` |
 
 开关：[`../../config/data-source.ts`](../../config/data-source.ts) → `ExchangeRateApiSource`（含 `rateOverride` 等，见文件内枚举说明）。

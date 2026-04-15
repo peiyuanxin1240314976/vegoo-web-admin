@@ -68,3 +68,14 @@ export interface ExchangeRateTrendPoint {
   date: string
   rate: number
 }
+
+export interface OptionItem {
+  label: string
+  value: string
+}
+
+export interface ExchangeRateSyncMetaOptions {
+  sourceOptions: OptionItem[]
+  pairOptions: OptionItem[]
+  currencyOptions: OptionItem[]
+}

@@ -6,11 +6,18 @@ import type {
   ExchangeRateItem,
   ExchangeRateOverviewKpi,
   ExchangeRateQuery,
+  ExchangeRateSyncMetaOptions,
   ExchangeRateTrendPoint,
   ManualRateFormModel,
   SyncConfig
 } from '../types'
-import { cloneRateList, mockSyncConfig, mockTrendData } from './data'
+import {
+  ALL_CURRENCY_PAIRS,
+  CURRENCIES,
+  cloneRateList,
+  mockSyncConfig,
+  mockTrendData
+} from './data'
 
 let mockList: ExchangeRateItem[] = cloneRateList()
 let mockSyncStore: SyncConfig = { ...mockSyncConfig }
@@ -79,6 +86,18 @@ export function mockFetchExchangeRateTrend(params: {
 
 export function mockFetchExchangeRateSyncConfig(): Promise<SyncConfig> {
   return Promise.resolve({ ...mockSyncStore })
+}
+
+export function mockFetchExchangeRateSyncMetaOptions(): Promise<ExchangeRateSyncMetaOptions> {
+  return Promise.resolve({
+    sourceOptions: [
+      { label: 'Open Exchange Rates', value: 'openexchange' },
+      { label: 'Fixer.io', value: 'fixer' },
+      { label: '自定义API', value: 'custom' }
+    ],
+    pairOptions: ALL_CURRENCY_PAIRS.map((pair) => ({ label: pair, value: pair })),
+    currencyOptions: CURRENCIES.map((currency) => ({ label: currency, value: currency }))
+  })
 }
 
 export function mockCreateExchangeRate(data: ManualRateFormModel): Promise<ExchangeRateItem> {

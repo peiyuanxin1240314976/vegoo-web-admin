@@ -408,7 +408,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="经理账户" min-width="180">
+        <el-table-column label="管理账户" min-width="180">
           <template #default="{ row }">
             <span class="mono-text">{{ row.managerAccount }}</span>
           </template>

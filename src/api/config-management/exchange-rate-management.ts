@@ -8,6 +8,7 @@ import type {
   ExchangeRateItem,
   ExchangeRateOverviewKpi,
   ExchangeRateQuery,
+  ExchangeRateSyncMetaOptions,
   ExchangeRateTrendPoint,
   ManualRateFormModel,
   SyncConfig
@@ -77,6 +78,18 @@ export function fetchExchangeRateSyncConfig() {
   }
   return request.post<SyncConfig>({
     url: '/api/config-management/exchange-rate/sync-config/detail',
+    data: {},
+    showErrorMessage: false
+  })
+}
+
+/** 读取同步/手动弹窗元数据 */
+export function fetchExchangeRateSyncMetaOptions() {
+  if (isExchangeRateEndpointMock(ExchangeRateEndpoint.SyncMetaOptions)) {
+    return exchangeRateMock.mockFetchExchangeRateSyncMetaOptions()
+  }
+  return request.post<ExchangeRateSyncMetaOptions>({
+    url: '/api/config-management/exchange-rate/sync-meta-options',
     data: {},
     showErrorMessage: false
   })
