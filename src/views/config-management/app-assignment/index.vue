@@ -59,17 +59,21 @@
           clearable
           placeholder="平台：全部"
         >
-          <el-option label="Android（安卓）" value="Android" />
-          <el-option label="iOS" value="iOS" />
+          <el-option
+            v-for="opt in terminalPlatformFilterOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </el-select>
         <el-select
-          v-model="filterForm.adPlatform"
+          v-model="filterForm.source"
           class="filter-select"
           clearable
           placeholder="广告平台：全部"
         >
           <el-option
-            v-for="opt in adPlatformOptions"
+            v-for="opt in sourceFilterOptions"
             :key="opt.value"
             :label="opt.label"
             :value="opt.value"
@@ -186,7 +190,7 @@
     <AssignmentFormDialog
       v-model:visible="formVisible"
       :edit-data="editData"
-      :ad-platform-options="metaFilter.adPlatformOptions"
+      :source-options="sourceFilterOptions"
       :optimizer-options="metaFilter.optimizerOptions"
       :assignable-apps="assignableAppOptions"
       :load-versions="loadPerformanceVersions"
@@ -202,6 +206,9 @@
   import { computed, reactive, ref, watch, onMounted } from 'vue'
   import { Plus, Download, Search } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
+  import { assignmentSourceFallbackOptions } from './mock/data'
   import {
     createAppAssignment,
     exportAppAssignmentList,
@@ -223,6 +230,7 @@
     AppAssignableAppMetaItem,
     AssignmentAssignableSelectOption,
     AssignmentFormModel,
+    AssignmentPlatform,
     AssignmentStatus
   } from './types'
 
@@ -232,7 +240,7 @@
   const filterForm = reactive({
     keyword: '',
     platform: '',
-    adPlatform: '',
+    source: '',
     optimizer: '',
     status: ''
   })
@@ -244,8 +252,9 @@
   const tableTotal = ref(0)
   const overview = ref<AppAssignmentOverviewResponse | null>(null)
 
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+
   const metaFilter = reactive<AppAssignmentMetaFilterResponse>({
-    adPlatformOptions: [],
     optimizerOptions: []
   })
   const assignableAppsRaw = ref<AppAssignableAppMetaItem[]>([])
@@ -259,7 +268,44 @@
     }))
   )
 
-  const adPlatformOptions = computed(() => metaFilter.adPlatformOptions)
+  function normalizeTerminalPlatform(value: string, label: string): AssignmentPlatform | '' {
+    const normalizedValue = value.trim()
+    const normalizedLabel = label.trim().toLowerCase()
+    if (normalizedValue === '0') return 'Android'
+    if (normalizedValue === '1') return 'iOS'
+    if (normalizedLabel.includes('android') || normalizedLabel.includes('安卓')) return 'Android'
+    if (normalizedLabel.includes('ios') || normalizedLabel.includes('苹果')) return 'iOS'
+    return ''
+  }
+
+  const terminalPlatformFilterOptions = computed(() => {
+    const raw = cockpitMetaFilterStore.data?.platformOptions ?? []
+    const mapped = raw
+      .map((item) => {
+        const normalized = normalizeTerminalPlatform(item.value, item.label)
+        if (!normalized) return null
+        return {
+          label: normalized === 'Android' ? 'Android（安卓）' : 'iOS',
+          value: normalized
+        }
+      })
+      .filter((item): item is { label: string; value: AssignmentPlatform } => !!item)
+    const dedup = mapped.filter(
+      (item, index, arr) => arr.findIndex((t) => t.value === item.value) === index
+    )
+    if (dedup.length) return dedup
+    return [
+      { label: 'Android（安卓）', value: 'Android' as const },
+      { label: 'iOS', value: 'iOS' as const }
+    ]
+  })
+
+  const sourceFilterOptions = computed<CockpitMetaOptionItem[]>(() => {
+    const fromStore = cockpitMetaFilterStore.data?.sourceOptions ?? []
+    if (fromStore.length) return fromStore
+    return assignmentSourceFallbackOptions
+  })
+
   const optimizerOptions = computed(() => metaFilter.optimizerOptions)
 
   // ─── 统计卡片（与 overview 契约一致）──────────────────────
@@ -296,7 +342,7 @@
         size: pageSize.value,
         keyword: filterForm.keyword.trim() || undefined,
         platform: filterForm.platform || undefined,
-        source: filterForm.adPlatform || undefined,
+        source: filterForm.source || undefined,
         optimizer: filterForm.optimizer || undefined,
         status: filterForm.status || undefined
       })
@@ -316,11 +362,9 @@
         fetchAppAssignmentMetaFilterOptions(),
         fetchAppAssignmentMetaAssignableApps()
       ])
-      metaFilter.adPlatformOptions = filterRes.adPlatformOptions ?? []
       metaFilter.optimizerOptions = filterRes.optimizerOptions ?? []
       assignableAppsRaw.value = appsRes.apps ?? []
     } catch {
-      metaFilter.adPlatformOptions = []
       metaFilter.optimizerOptions = []
       assignableAppsRaw.value = []
     }
@@ -349,7 +393,7 @@
   })
 
   onMounted(async () => {
-    await loadMeta()
+    await Promise.all([cockpitMetaFilterStore.ensureLoaded(), loadMeta()])
     await Promise.all([loadOverview(), loadTable()])
   })
 
@@ -432,7 +476,7 @@
       await exportAppAssignmentList({
         keyword: filterForm.keyword.trim() || undefined,
         platform: filterForm.platform || undefined,
-        source: filterForm.adPlatform || undefined,
+        source: filterForm.source || undefined,
         optimizer: filterForm.optimizer || undefined,
         status: filterForm.status || undefined
       })

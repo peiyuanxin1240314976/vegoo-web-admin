@@ -75,14 +75,14 @@
             <div class="form-item">
               <div class="form-label">广告平台 <span class="required">*</span></div>
               <div class="form-hint">根据应用的绩效配置自动筛选</div>
-              <el-form-item prop="adPlatform">
+              <el-form-item prop="source">
                 <el-select
-                  v-model="form.adPlatform"
+                  v-model="form.source"
                   placeholder="请选择广告平台..."
                   class="dark-select full-width"
                 >
                   <el-option
-                    v-for="opt in adPlatformOptions"
+                    v-for="opt in sourceOptions"
                     :key="opt.value"
                     :label="opt.label"
                     :value="opt.value"
@@ -281,6 +281,7 @@
   import { ref, reactive, computed, watch, nextTick } from 'vue'
   import { Lock, ArrowDown, Check, Warning } from '@element-plus/icons-vue'
   import type { FormInstance, FormRules } from 'element-plus'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import type {
     AppAssignmentItem,
     AssignmentAssignableSelectOption,
@@ -310,14 +311,14 @@
     defineProps<{
       visible: boolean
       editData?: AppAssignmentItem | null
-      adPlatformOptions: { label: string; value: string }[]
+      sourceOptions: CockpitMetaOptionItem[]
       optimizerOptions: { label: string; value: string }[]
       assignableApps: AssignmentAssignableSelectOption[]
       loadVersions: (appId: string) => Promise<PerformanceVersion[]>
     }>(),
     {
       editData: null,
-      adPlatformOptions: () => [],
+      sourceOptions: () => [],
       optimizerOptions: () => [],
       assignableApps: () => [],
       loadVersions: () => Promise.resolve([])
@@ -367,7 +368,7 @@
   const defaultForm = (): AssignmentFormModel => ({
     appId: '',
     platform: 'Android',
-    adPlatform: '',
+    source: '',
     optimizer: '',
     note: '',
     configVersionId: '',
@@ -387,7 +388,7 @@
       if (val) {
         form.appId = val.appId
         form.platform = val.platform
-        form.adPlatform = val.adPlatform
+        form.source = val.source
         form.optimizer = val.optimizer
         form.note = val.note
         form.configVersionId = val.configVersionId
@@ -401,7 +402,7 @@
 
   // 新建时，切换 app 时请求绩效版本列表
   const handleAppChange = async () => {
-    form.adPlatform = ''
+    form.source = ''
     form.configVersionId = ''
     if (!form.appId) {
       availableVersions.value = []
@@ -443,7 +444,7 @@
   const rules = computed<FormRules>(() => ({
     appId: [{ required: !isEdit.value, message: '请选择应用', trigger: 'change' }],
     platform: [{ required: !isEdit.value, message: '请选择平台', trigger: 'change' }],
-    adPlatform: [{ required: !isEdit.value, message: '请选择广告平台', trigger: 'change' }],
+    source: [{ required: !isEdit.value, message: '请选择广告平台', trigger: 'change' }],
     optimizer: [{ required: true, message: '请选择负责优化师', trigger: 'change' }],
     configVersionId: [{ required: true, message: '请选择绩效配置版本', trigger: 'change' }],
     changeReason: [

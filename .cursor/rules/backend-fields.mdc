@@ -422,6 +422,7 @@ alwaysApply: true
 | `formatType` | 广告位/表格行上的版位类型键（如 `banner`、`interstitial`、`rewarded`），用于标签样式与分支展示。 |
 | `waterfallByTab` | 瀑布流配置按 Tab（广告形式）分组的映射；键为 `banner`、`interstitial`、`rewarded`、`other` 等与 UI Tab 一致。 |
 | `network` | 广告网络展示名（表格/瀑布流等 UI，与 `ad_network` 语义对应）。 |
+| `adPlatform`（应用分配列表/详情） | 与同行 **`source`**（广告平台 **string** 枚举）配对的**展示文案**；筛选与 POST 主键仍用 **`source`**（及 cockpit `sourceOptions`）。 |
 | `text` | 段落类正文纯文案（如部分 AI 洞察卡片的 `text` 字段）。 |
 | `CockpitMetaFilterOptionsData` | （TS 响应体类型）公用 **`GET`** `.../analysis/cockpit/meta-filter-options`（无参）业务体；定义见 `src/types/cockpit-meta-filter.ts`。**与同构顶栏配套时**：页面 **直接读** **`useCockpitMetaFilterStore().data`**（或 `useCockpitMetaFilterOptions().cockpitMeta`）；业务 **POST** 请求体维度键名须符合上文 **「接口请求 · 统一筛选维度键名」**（`appId` / `platform` / `source` / `countryCode` / `account`）。勿在各模块 `mock/backend-api` 再建重复契约 JSON，仅在 README 标注并引用 **`paid-analysis/mock/backend-api/README.md` 附录 A**（见 `api-contract-and-mock-conventions.mdc`）。 |
 | `CockpitMetaOptionItem` | （TS 类型）上述 meta 中单项 `{ label, value }`；定义见 `src/types/cockpit-meta-filter.ts`。 |

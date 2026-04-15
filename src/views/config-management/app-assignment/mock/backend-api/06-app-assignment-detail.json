@@ -35,6 +35,7 @@
     "appId": "Weather8A",
     "iconColor": "#a78bfa",
     "platform": "Android",
+    "source": "1",
     "adPlatform": "Facebook",
     "optimizer": "张三",
     "configVersionId": "v3",
