@@ -41,7 +41,7 @@
             value-format="YYYY-MM-DD"
             class="ap-date-picker"
           />
-          <ElButton round type="primary" :disabled="!isFilterDirty" @click="onQuery">查询</ElButton>
+          <ElButton round type="primary" @click="onQuery">查询</ElButton>
           <ElButton round type="primary" @click="onExport">导出</ElButton>
         </div>
       </div>
@@ -262,6 +262,7 @@
   import { useSettingStore } from '@/store/modules/setting'
   import request from '@/utils/http'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { AD_PERFORMANCE_BASE } from '@/views/user-growth/ad-performance/config/api-base'
   import type { AdPerformanceMetaFilterResponse } from '@/views/user-growth/ad-performance/types'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
@@ -295,13 +296,17 @@
   const draftPlatform = ref('')
   /** 顶部第三项：对接 meta accountOptions，请求体仍走 ownerId 字段名 */
   const draftFilterOwner = ref('')
-  const draftDateRange = ref<[string, string]>([...MOCK_ACCOUNT_PERFORMANCE.dateRange])
+  function buildDefaultDateRange(): [string, string] {
+    const today = formatYYYYMMDD(getAppNow())
+    return [today, today]
+  }
+  const draftDateRange = ref<[string, string]>(buildDefaultDateRange())
 
   /** 点击“查询”后才会更新 applied，并触发请求 */
   const appliedSource = ref('')
   const appliedPlatform = ref('')
   const appliedFilterOwner = ref('')
-  const appliedDateRange = ref<[string, string]>([...MOCK_ACCOUNT_PERFORMANCE.dateRange])
+  const appliedDateRange = ref<[string, string]>(buildDefaultDateRange())
 
   const metaAdPlatformOptions = ref<AdPerformanceMetaFilterResponse['adPlatformOptions']>([])
   const metaAppOptions = ref<AdPerformanceMetaFilterResponse['appOptions']>([])
@@ -328,18 +333,6 @@
   function selectRange(value: string) {
     modelValue.value = value
   }
-
-  const isFilterDirty = computed(() => {
-    const [ds, de] = draftDateRange.value || ['', '']
-    const [as, ae] = appliedDateRange.value || ['', '']
-    return (
-      String(draftSource.value ?? '') !== String(appliedSource.value ?? '') ||
-      String(draftPlatform.value ?? '') !== String(appliedPlatform.value ?? '') ||
-      String(draftFilterOwner.value ?? '') !== String(appliedFilterOwner.value ?? '') ||
-      String(ds ?? '') !== String(as ?? '') ||
-      String(de ?? '') !== String(ae ?? '')
-    )
-  })
 
   function applyFilters() {
     appliedSource.value = draftSource.value ?? ''
@@ -1523,13 +1516,31 @@
   }
 
   .ap-date-picker {
-    flex: 0 0 auto;
-    width: 200px;
+    flex: 0 0 200px;
+    width: 250px;
+    min-width: 250px;
     max-width: 100%;
 
     @media (width <=768px) {
+      flex: 1 1 100%;
       width: 100%;
       min-width: 0;
+    }
+  }
+
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange) {
+    flex: 0 0 250px !important;
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+  }
+
+  @media (width <=768px) {
+    .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange) {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
     }
   }
 

@@ -12,8 +12,8 @@ function getFixedNow(): Date {
   // month: 0-11
   return new Date(
     2026,
-    2,
-    5,
+    1,
+    10,
     real.getHours(),
     real.getMinutes(),
     real.getSeconds(),
