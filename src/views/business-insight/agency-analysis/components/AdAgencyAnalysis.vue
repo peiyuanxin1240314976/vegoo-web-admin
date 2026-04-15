@@ -1791,7 +1791,7 @@
 
   .filter-date-wrap {
     flex: none;
-    width: 190px;
+    width: 250px;
 
     :deep(.el-date-editor) {
       width: 100% !important;
