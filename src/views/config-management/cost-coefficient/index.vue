@@ -60,7 +60,7 @@
             >
               <el-option :value="''" label="全部" />
               <el-option
-                v-for="p in AD_PLATFORMS"
+                v-for="p in adPlatformOptions"
                 :key="p.nSource"
                 :value="p.nSource"
                 :label="p.name"
@@ -189,12 +189,14 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch, onMounted } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { Plus, Search } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import { getAppNow } from '@/utils/app-now'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import {
     fetchCostCoefficientTable,
+    fetchCostCoefficientOverviewKpi,
     createCostCoefficient,
     updateCostCoefficient,
     deleteCostCoefficient,
@@ -207,12 +209,14 @@
   import type {
     CostCoefficientItem,
     CostCoefficientFormModel,
-    CostCoefficientHistory
+    CostCoefficientHistory,
+    CostCoefficientOverviewKpi
   } from './types'
 
   defineOptions({ name: 'CostCoefficient' })
 
   // ─── 数据 ──────────────────────────────────────────────
+  const cockpitMetaFilterStore = useCockpitMetaFilterStore()
   const list = ref<CostCoefficientItem[]>([])
   const serverTotal = ref(0)
   const filterNSource = ref<number | ''>('')
@@ -220,31 +224,40 @@
   const filterKeyword = ref('')
   const currentPage = ref(1)
   const pageSize = ref(10)
+  const adPlatformOptions = computed(() => {
+    const source = cockpitMetaFilterStore.data?.sourceOptions ?? []
+    const mapped = source
+      .map((item) => ({
+        nSource: Number(item.value),
+        name: item.label
+      }))
+      .filter((item) => Number.isFinite(item.nSource) && item.nSource > 0)
+    return mapped.length > 0 ? mapped : AD_PLATFORMS.map((item) => ({ ...item }))
+  })
 
   // 判断是否生效中（t_start <= today）
   const isActive = (row: CostCoefficientItem) => {
     return row.tStart <= getAppNow().toISOString().slice(0, 10)
   }
 
-  const kpiData = ref({ total: 0, active: 0, platforms: 0, monthChanges: 6 })
+  const kpiData = ref<CostCoefficientOverviewKpi>({
+    total: 0,
+    active: 0,
+    platforms: 0,
+    monthChanges: 0
+  })
+
+  function tableQueryBase() {
+    return {
+      nSource: filterNSource.value || undefined,
+      tStartYear: filterYear.value || undefined,
+      keyword: filterKeyword.value || undefined
+    }
+  }
 
   async function loadKpiFromApi() {
     try {
-      const res = await fetchCostCoefficientTable({
-        nSource: filterNSource.value || undefined,
-        tStartYear: filterYear.value || undefined,
-        keyword: filterKeyword.value || undefined,
-        page: 1,
-        pageSize: 10000
-      })
-      const r = res as Api.Common.PaginatedResponse<CostCoefficientItem>
-      const rows = r.records ?? []
-      kpiData.value = {
-        total: r.total ?? rows.length,
-        active: rows.filter(isActive).length,
-        platforms: new Set(rows.map((row) => row.nSource)).size,
-        monthChanges: 6
-      }
+      kpiData.value = await fetchCostCoefficientOverviewKpi(tableQueryBase())
     } catch {
       /* 保持上一屏 KPI */
     }
@@ -253,9 +266,7 @@
   async function loadTable() {
     try {
       const res = await fetchCostCoefficientTable({
-        nSource: filterNSource.value || undefined,
-        tStartYear: filterYear.value || undefined,
-        keyword: filterKeyword.value || undefined,
+        ...tableQueryBase(),
         page: currentPage.value,
         pageSize: pageSize.value
       })
@@ -278,6 +289,9 @@
   })
 
   onMounted(() => {
+    if (!cockpitMetaFilterStore.data) {
+      void cockpitMetaFilterStore.ensureLoaded()
+    }
     loadTable()
     loadKpiFromApi()
   })
@@ -398,9 +412,11 @@
   .bc-parent {
     color: var(--text-secondary);
   }
+
   .bc-sep {
     color: var(--text-muted);
   }
+
   .bc-current {
     color: var(--text-secondary);
   }
@@ -450,12 +466,15 @@
     &--teal {
       border-left-color: #2dd4bf;
     }
+
     &--blue {
       border-left-color: #60a5fa;
     }
+
     &--amber {
       border-left-color: #f59e0b;
     }
+
     &--purple {
       border-left-color: #a78bfa;
     }
@@ -475,12 +494,15 @@
     &--teal {
       color: #2dd4bf;
     }
+
     &--blue {
       color: #60a5fa;
     }
+
     &--amber {
       color: #f59e0b;
     }
+
     &--purple {
       color: #a78bfa;
     }
@@ -636,6 +658,7 @@
     :deep(tr) {
       background: transparent !important;
     }
+
     :deep(.el-table__inner-wrapper::before) {
       display: none;
     }

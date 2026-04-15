@@ -9,6 +9,7 @@ type UseMock = boolean
 
 export enum CostCoefficientEndpoint {
   CoefficientTable = 'coefficientTable',
+  CoefficientOverviewKpi = 'coefficientOverviewKpi',
   CreateCoefficient = 'createCoefficient',
   UpdateCoefficient = 'updateCoefficient',
   DeleteCoefficient = 'deleteCoefficient',
@@ -17,6 +18,7 @@ export enum CostCoefficientEndpoint {
 
 export const CostCoefficientApiSource: Record<CostCoefficientEndpoint, UseMock> = {
   [CostCoefficientEndpoint.CoefficientTable]: true,
+  [CostCoefficientEndpoint.CoefficientOverviewKpi]: true,
   [CostCoefficientEndpoint.CreateCoefficient]: true,
   [CostCoefficientEndpoint.UpdateCoefficient]: true,
   [CostCoefficientEndpoint.DeleteCoefficient]: true,

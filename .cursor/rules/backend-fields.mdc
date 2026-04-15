@@ -447,6 +447,7 @@ alwaysApply: true
 | `CountryRegionDistributionItem` | （TS）国家管理地区分布图单项；契约 `views/config-management/country-management/mock/backend-api/10-country-region-distribution.json`。含 **`region`**、**`count`**、**`percent`**。 |
 | `CountryMainMarketShareItem` | （TS）国家管理主要市场占比图单项；契约 `views/config-management/country-management/mock/backend-api/11-country-main-market-share.json`。含 **`countryCode`**、**`countryName`**、**`sharePercent`**。 |
 | `ExchangeRateOverviewKpi` / `ExchangeRateTrendPoint` | （TS）汇率管理左列 KPI 与右列走势图响应体；契约 `views/config-management/exchange-rate-management/mock/backend-api/07-exchange-rate-overview-kpi.json` 与 `08-exchange-rate-trend.json`。前者含 **`total`**、**`abnormal`**、**`lastSyncTime`**；后者含 **`date`**、**`rate`**。 |
+| `CostCoefficientOverviewKpi` | （TS）成本系数管理 KPI 响应体；契约 `views/config-management/cost-coefficient/mock/backend-api/06-cost-coefficient-overview-kpi.json`。内含 **`total`**（配置总条数）、**`active`**（已启用条数）、**`platforms`**（平台覆盖数）、**`monthChanges`**（本月变更次数）。 |
 
 #### 下拉/筛选选项字段
 
