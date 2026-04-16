@@ -6,7 +6,10 @@
 import { defineStore } from 'pinia'
 import { shallowRef } from 'vue'
 import { fetchCockpitMetaFilterOptions } from '@/api/cockpit-meta-filter'
-import type { CockpitMetaFilterOptionsData } from '@/types/cockpit-meta-filter'
+import type {
+  CockpitMetaFilterOptionsData,
+  CockpitSettingAppItem
+} from '@/types/cockpit-meta-filter'
 import {
   clearCockpitMetaFilterSession,
   readCockpitMetaFilterFromSession,
@@ -63,13 +66,51 @@ function normalizeOptionList(
   return result
 }
 
+function normalizeSettingApps(raw: unknown): CockpitSettingAppItem[] {
+  if (!Array.isArray(raw)) return []
+  const result: CockpitSettingAppItem[] = []
+  const used = new Set<string>()
+
+  for (const item of raw as RawOption[]) {
+    if (!item || typeof item !== 'object') continue
+
+    const sAppId = toStringValue(item.sAppId ?? item.appId ?? item.value ?? item.id)
+    const platformName = toStringValue(item.platformName ?? item.platform_label ?? item.platform)
+    const sAppName = toStringValue(item.sAppName ?? item.appName ?? item.label ?? item.name)
+    const sAppShortName = toStringValue(item.sAppShortName ?? item.appShortName ?? item.shortName)
+    const categoryName = toStringValue(item.categoryName ?? item.category_label ?? item.category)
+    const nPlatformRaw = item.nPlatform ?? item.platformCode ?? item.platform_value ?? ''
+    const nCategoryRaw = item.nCategory ?? item.categoryId ?? item.category_value ?? ''
+    const nPlatform =
+      typeof nPlatformRaw === 'number' || typeof nPlatformRaw === 'string' ? nPlatformRaw : ''
+    const nCategory =
+      typeof nCategoryRaw === 'number' || typeof nCategoryRaw === 'string' ? nCategoryRaw : ''
+    const uniqueKey = `${sAppId}__${String(nPlatform)}`
+
+    if (!sAppId || used.has(uniqueKey)) continue
+
+    result.push({
+      sAppId,
+      nPlatform,
+      platformName,
+      sAppName,
+      sAppShortName,
+      nCategory,
+      categoryName
+    })
+    used.add(uniqueKey)
+  }
+
+  return result
+}
+
 function normalizeCockpitMetaPayload(raw: unknown): CockpitMetaFilterOptionsData {
   const payload = (raw ?? {}) as Record<string, unknown>
   return {
     appOptions: normalizeOptionList(
-      payload.appOptions,
-      ['value', 'appId', 'id'],
-      ['label', 'appName', 'name']
+      payload.appOptions ?? payload.settingApps,
+      ['value', 'appId', 'sAppId', 'id'],
+      ['label', 'appName', 'sAppName', 'name']
     ),
     platformOptions: normalizeOptionList(
       payload.platformOptions,
@@ -85,7 +126,8 @@ function normalizeCockpitMetaPayload(raw: unknown): CockpitMetaFilterOptionsData
       payload.countryOptions,
       ['value', 'countryCode', 'id'],
       ['label', 'countryName', 'name']
-    )
+    ),
+    settingApps: normalizeSettingApps(payload.settingApps)
   }
 }
 

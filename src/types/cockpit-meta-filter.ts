@@ -9,10 +9,21 @@ export interface CockpitMetaOptionItem {
   value: string
 }
 
+export interface CockpitSettingAppItem {
+  sAppId: string
+  nPlatform: number | string
+  platformName: string
+  sAppName: string
+  sAppShortName: string
+  nCategory: number | string
+  categoryName: string
+}
+
 /** 上述接口业务体（网关若包一层则指解包后的 data） */
 export interface CockpitMetaFilterOptionsData {
   appOptions: CockpitMetaOptionItem[]
   platformOptions: CockpitMetaOptionItem[]
   sourceOptions: CockpitMetaOptionItem[]
   countryOptions: CockpitMetaOptionItem[]
+  settingApps: CockpitSettingAppItem[]
 }

@@ -4,7 +4,7 @@
 
 import type { CockpitMetaFilterOptionsData } from '@/types/cockpit-meta-filter'
 
-const SESSION_KEY = 'vegoo-session-cockpit-meta-filter-v1'
+const SESSION_KEY = 'vegoo-session-cockpit-meta-filter-v2'
 
 function isRecord(x: unknown): x is Record<string, unknown> {
   return x !== null && typeof x === 'object' && !Array.isArray(x)
@@ -17,13 +17,29 @@ function isOptionList(x: unknown): boolean {
   )
 }
 
+function isSettingAppList(x: unknown): boolean {
+  if (!Array.isArray(x)) return false
+  return x.every(
+    (it) =>
+      isRecord(it) &&
+      typeof it.sAppId === 'string' &&
+      (typeof it.nPlatform === 'string' || typeof it.nPlatform === 'number') &&
+      typeof it.platformName === 'string' &&
+      typeof it.sAppName === 'string' &&
+      typeof it.sAppShortName === 'string' &&
+      (typeof it.nCategory === 'string' || typeof it.nCategory === 'number') &&
+      typeof it.categoryName === 'string'
+  )
+}
+
 export function isCockpitMetaFilterPayload(x: unknown): x is CockpitMetaFilterOptionsData {
   if (!isRecord(x)) return false
   return (
     isOptionList(x.appOptions) &&
     isOptionList(x.platformOptions) &&
     isOptionList(x.sourceOptions) &&
-    isOptionList(x.countryOptions)
+    isOptionList(x.countryOptions) &&
+    isSettingAppList(x.settingApps)
   )
 }
 

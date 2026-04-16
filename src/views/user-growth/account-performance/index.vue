@@ -7,14 +7,17 @@
     >
       <div class="ac-perf-filter-panel">
         <div class="ap-filters">
-          <ElSelect v-model="draftPlatform" placeholder="应用" class="ap-filter-select">
-            <ElOption
-              v-for="opt in metaAppOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+          <AppPlatformSearchSelect
+            v-model="draftPlatform"
+            mode="app"
+            placeholder="应用"
+            search-placeholder="搜索类别/应用名称/应用简称"
+            :setting-apps="metaSettingApps"
+            :height="36"
+            :min-width="200"
+            :max-width="240"
+            input-class="ap-filter-select"
+          />
 
           <ElSelect v-model="draftSource" placeholder="广告平台" class="ap-filter-select">
             <ElOption
@@ -260,7 +263,9 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, watch, watchEffect } from 'vue'
   import { storeToRefs } from 'pinia'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useChart } from '@/hooks/core/useChart'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { useSettingStore } from '@/store/modules/setting'
   import request from '@/utils/http'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
@@ -292,6 +297,8 @@
 
   const settingStore = useSettingStore()
   const { isDark } = storeToRefs(settingStore)
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
 
   const mock = ref(MOCK_ACCOUNT_PERFORMANCE)
   const draftSource = ref('')
@@ -311,8 +318,8 @@
   const appliedDateRange = ref<[string, string]>(buildDefaultDateRange())
 
   const metaAdPlatformOptions = ref<AdPerformanceMetaFilterResponse['adPlatformOptions']>([])
-  const metaAppOptions = ref<AdPerformanceMetaFilterResponse['appOptions']>([])
   const metaAccountOptions = ref<NonNullable<AdPerformanceMetaFilterResponse['accountOptions']>>([])
+  const metaSettingApps = computed(() => cockpitMeta.value?.settingApps ?? [])
   const tableSearch = ref('')
   const expandAll = ref(false)
   const expandedRowKeys = ref<string[]>([])
@@ -392,6 +399,7 @@
 
   async function loadMetaFilterOptions() {
     try {
+      await cockpitMetaStore.ensureLoaded()
       const data = await request.post<AdPerformanceMetaFilterResponse>({
         url: `${AD_PERFORMANCE_BASE}/meta-filter-options`,
         data: {}
@@ -399,11 +407,9 @@
       metaAdPlatformOptions.value = Array.isArray(data.adPlatformOptions)
         ? data.adPlatformOptions
         : []
-      metaAppOptions.value = Array.isArray(data.appOptions) ? data.appOptions : []
       metaAccountOptions.value = Array.isArray(data.accountOptions) ? data.accountOptions : []
     } catch {
       metaAdPlatformOptions.value = []
-      metaAppOptions.value = []
       metaAccountOptions.value = []
     }
   }
@@ -1507,13 +1513,14 @@
 
   .ap-filter-select {
     flex: 0 0 auto;
-    width: 150px;
-    min-width: 100px;
-    max-width: 100%;
+    width: 240px;
+    min-width: 200px;
+    max-width: 240px;
 
     @media (width <=768px) {
       flex: 0 0 auto;
       min-width: 0;
+      max-width: 100%;
     }
   }
 

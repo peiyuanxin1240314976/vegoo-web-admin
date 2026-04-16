@@ -22,37 +22,20 @@
               />
             </div>
             <div class="header-filters">
-              <el-select
-                v-model="filters.app"
-                class="aps-filter-select"
-                popper-class="aps-filter-popper"
-                :teleported="true"
-                :fit-input-width="true"
-                :placeholder="filtersPlaceholders.app"
-              >
-                <el-option
-                  v-for="opt in appOptions"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </el-select>
-
-              <el-select
-                v-model="filters.platform"
-                class="aps-filter-select"
-                popper-class="aps-filter-popper"
-                :teleported="true"
-                :fit-input-width="true"
-                :placeholder="filtersPlaceholders.platform"
-              >
-                <el-option
-                  v-for="opt in platformOptions"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </el-select>
+              <AppPlatformSearchSelect
+                v-model="combinedFilterValue"
+                mode="combined"
+                placeholder="全部 Apps / 平台"
+                search-placeholder="搜索类别/应用名称/应用简称"
+                :setting-apps="combinedSettingApps"
+                :platform-options="combinedPlatformOptions"
+                :min-width="200"
+                :max-width="220"
+                :height="36"
+                input-class="aps-filter-select"
+                dropdown-class="aps-filter-popper"
+                @change="onCombinedFilterChange"
+              />
 
               <el-select
                 v-model="filters.channelKey"
@@ -194,8 +177,12 @@
   import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
+  import AppPlatformSearchSelect, {
+    type AppPlatformSearchSelectPayload
+  } from '@/components/filter/app-platform-search-select.vue'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type { ColumnOption } from '@/types'
   import ApaTop10Panel from './modules/top10-panel.vue'
@@ -218,6 +205,7 @@
 
   defineOptions({ name: 'FinanceScreen' })
   const router = useRouter()
+  const cockpitMetaStore = useCockpitMetaFilterStore()
 
   const KPI_SKELETON_CARD_COUNT = 5
 
@@ -297,6 +285,7 @@
     platform: 'all' as string,
     channelKey: 'all' as string
   })
+  const combinedFilterValue = ref('')
 
   const filtersPlaceholders = {
     app: '全部Apps',
@@ -342,10 +331,64 @@
 
     const srcVals = new Set([ALL_SOURCE_OPTION, ...metaSourceOptions.value].map((o) => o.value))
     if (!srcVals.has(filters.value.channelKey)) filters.value.channelKey = 'all'
+
+    syncCombinedFilterValue()
+  }
+
+  function syncCombinedFilterValue() {
+    if (filters.value.app !== 'all' && filters.value.app) {
+      const hit = combinedSettingApps.value.find(
+        (item) =>
+          String(item.sAppId ?? '').trim() === String(filters.value.app).trim() &&
+          String(item.platformName ?? '')
+            .trim()
+            .toLowerCase() === selectedPlatformLabel.value.toLowerCase()
+      )
+      if (hit) {
+        combinedFilterValue.value = `app::${filters.value.app}::${filters.value.platform}`
+        return
+      }
+      combinedFilterValue.value = `app::${filters.value.app}::${filters.value.platform}`
+      return
+    }
+    if (filters.value.platform !== 'all' && filters.value.platform) {
+      combinedFilterValue.value = `platform::${filters.value.platform}`
+      return
+    }
+    combinedFilterValue.value = ''
+  }
+
+  const selectedPlatformLabel = computed(() => {
+    const value = String(filters.value.platform ?? '').trim()
+    if (!value || value === 'all') return ''
+    return String(
+      metaPlatformOptions.value.find((item) => item.value === value)?.label ?? ''
+    ).trim()
+  })
+
+  function onCombinedFilterChange(payload: AppPlatformSearchSelectPayload | null) {
+    if (!payload) {
+      filters.value.app = 'all'
+      filters.value.platform = 'all'
+      combinedFilterValue.value = ''
+      return
+    }
+
+    if (payload.selectionType === 'platform') {
+      filters.value.platform = String(payload.platformCode || payload.value || 'all')
+      filters.value.app = 'all'
+      syncCombinedFilterValue()
+      return
+    }
+
+    filters.value.app = payload.appId || 'all'
+    filters.value.platform = String(payload.platformCode || '').trim() || 'all'
+    syncCombinedFilterValue()
   }
 
   async function loadFiltersMeta() {
     try {
+      await cockpitMetaStore.ensureLoaded()
       const data = await fetchAdPlatformAnalysisFiltersMeta()
       metaAppOptions.value = normalizeFiltersMetaOptions(data?.apps)
       metaPlatformOptions.value = normalizeFiltersMetaOptions(data?.platforms)
@@ -361,12 +404,37 @@
     }
   }
 
-  const appOptions = computed<SelectOption[]>(() => [ALL_APP_OPTION, ...metaAppOptions.value])
-
   const platformOptions = computed<SelectOption[]>(() => [
     ALL_PLATFORM_OPTION,
     ...metaPlatformOptions.value
   ])
+  const combinedPlatformOptions = computed<SelectOption[]>(() =>
+    platformOptions.value.filter((item) => item.value !== 'all')
+  )
+  const combinedSettingApps = computed(() => {
+    const settingApps = cockpitMetaStore.data?.settingApps ?? []
+    const appValueSet = new Set(metaAppOptions.value.map((item) => item.value))
+    const platformValueSet = new Set(metaPlatformOptions.value.map((item) => item.value))
+
+    return settingApps.filter((item) => {
+      const appId = String(item.sAppId ?? '').trim()
+      if (appValueSet.size > 0 && !appValueSet.has(appId)) return false
+      if (platformValueSet.size === 0) return true
+      const platformName = String(item.platformName ?? '')
+        .trim()
+        .toLowerCase()
+      const platformCode = String(item.nPlatform ?? '')
+        .trim()
+        .toLowerCase()
+      return (
+        platformValueSet.has(platformCode) ||
+        (platformCode === '0' && platformValueSet.has('android')) ||
+        (platformCode === '1' && platformValueSet.has('ios')) ||
+        (platformCode === '2' && platformValueSet.has('web')) ||
+        [...platformValueSet].some((value) => platformName === value.toLowerCase())
+      )
+    })
+  })
 
   function normalizeChannelKey(name: string) {
     return name
@@ -1821,7 +1889,9 @@
     }
 
     :deep(.aps-filter-select) {
-      width: 150px;
+      width: 220px;
+      min-width: 200px;
+      max-width: 220px;
     }
 
     :deep(.aps-filter-select .el-select__selected-item) {
@@ -1846,7 +1916,53 @@
     --el-border-color-hover: color-mix(in srgb, var(--theme-color) 75%, transparent);
     --el-color-primary: var(--theme-color);
     --el-border-color-focus: var(--theme-color);
-    --el-component-size: 40px;
+    --el-component-size: 36px;
+  }
+
+  .aps-filter-toolbar .header-filters :deep(.app-platform-search-select.aps-filter-select) {
+    --app-platform-select-height: 36px;
+    --app-platform-select-radius: 9999px;
+
+    width: 220px;
+    min-width: 200px;
+    max-width: 220px;
+    padding: 0 11px;
+    color: $color-text-axure;
+    background: color-mix(in srgb, var(--theme-color) 6%, transparent);
+    border-color: color-mix(in srgb, var(--theme-color) 28%, transparent);
+    box-shadow: none;
+  }
+
+  .aps-filter-toolbar .header-filters :deep(.app-platform-search-select.aps-filter-select:hover) {
+    border-color: color-mix(in srgb, var(--theme-color) 60%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 18%, transparent);
+  }
+
+  .aps-filter-toolbar .header-filters :deep(.app-platform-search-select.aps-filter-select.is-open) {
+    background: color-mix(in srgb, var(--theme-color) 10%, transparent);
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 20%, transparent);
+  }
+
+  .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select .app-platform-search-select__text) {
+    color: $color-text-axure;
+  }
+
+  .aps-filter-toolbar
+    .header-filters
+    :deep(
+      .app-platform-search-select.aps-filter-select .app-platform-search-select__text.is-placeholder
+    ) {
+    color: $color-text-axure;
+    opacity: 0.85;
+  }
+
+  .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select .app-platform-search-select__suffix) {
+    color: var(--theme-color);
   }
 
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__wrapper) {
@@ -1875,6 +1991,56 @@
   }
 
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__caret) {
+    color: var(--theme-color);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select) {
+    color: var(--aps-text-primary);
+    background: color-mix(in srgb, var(--theme-color) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--theme-color) 30%, transparent);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select:hover) {
+    border-color: color-mix(in srgb, var(--theme-color) 45%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 14%, transparent);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select.is-open) {
+    background: color-mix(in srgb, var(--theme-color) 12%, transparent);
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 18%, transparent);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select .app-platform-search-select__text) {
+    color: var(--aps-text-primary);
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(
+      .app-platform-search-select.aps-filter-select .app-platform-search-select__text.is-placeholder
+    ) {
+    color: var(--aps-text-primary);
+    opacity: 0.78;
+  }
+
+  :global(html:not(.dark) .finance-screen-root)
+    .aps-filter-toolbar
+    .header-filters
+    :deep(.app-platform-search-select.aps-filter-select .app-platform-search-select__suffix) {
     color: var(--theme-color);
   }
 
@@ -2819,10 +2985,36 @@
       inset 0 1px 0 color-mix(in srgb, var(--theme-color) 8%, transparent) !important;
   }
 
+  :global(html.dark .aps-filter-popper .app-platform-search-select__panel) {
+    color: var(--aps-text-primary);
+  }
+
+  :global(html.dark .aps-filter-popper .app-platform-search-select__header) {
+    color: rgb(226 232 240 / 72%);
+  }
+
+  :global(html.dark .aps-filter-popper .app-platform-search-select__row:hover),
+  :global(html.dark .aps-filter-popper .app-platform-search-select__row.is-active) {
+    background: color-mix(in srgb, var(--theme-color) 14%, transparent);
+  }
+
   :global(html:not(.dark) .aps-filter-popper.el-popper) {
     border: 1px solid color-mix(in srgb, var(--theme-color) 22%, transparent) !important;
     border-radius: 12px !important;
     box-shadow: 0 14px 40px rgb(15 23 42 / 12%) !important;
+  }
+
+  :global(html:not(.dark) .aps-filter-popper .app-platform-search-select__panel) {
+    color: var(--aps-text-primary);
+  }
+
+  :global(html:not(.dark) .aps-filter-popper .app-platform-search-select__header) {
+    color: rgb(15 23 42 / 62%);
+  }
+
+  :global(html:not(.dark) .aps-filter-popper .app-platform-search-select__row:hover),
+  :global(html:not(.dark) .aps-filter-popper .app-platform-search-select__row.is-active) {
+    background: color-mix(in srgb, var(--theme-color) 10%, transparent);
   }
 
   /* ========== 无障碍：减少动画 ========== */
