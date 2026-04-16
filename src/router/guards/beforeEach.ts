@@ -357,8 +357,10 @@ async function handleDynamicRoutes(
 
     // 4. 注册动态路由
     profiler.start('registerRoutes')
+    profiler.start('registerRoutes')
     routeRegistry?.register(menuList)
     profiler.end('registerRoutes')
+    routeRegistry?.preloadRouteComponents(menuList)
 
     // 5. 保存菜单数据到 store
     const menuStore = useMenuStore()
