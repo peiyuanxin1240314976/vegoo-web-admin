@@ -59,6 +59,35 @@ export class RouteRegistry {
   }
 
   /**
+   * 预加载菜单对应的页面组件，降低首次进入页面的白屏感知
+   */
+  preloadRouteComponents(menuList: AppRouteRecord[]): void {
+    const loaders = new Set<() => Promise<any>>()
+
+    const collectLoaders = (routes: AppRouteRecord[]): void => {
+      routes.forEach((route) => {
+        if (route.component && !route.meta?.isIframe) {
+          loaders.add(this.componentLoader.load(route.component as string))
+        }
+
+        if (route.children?.length) {
+          collectLoaders(route.children)
+        }
+      })
+    }
+
+    collectLoaders(menuList)
+
+    if (!loaders.size) {
+      return
+    }
+
+    void Promise.allSettled(Array.from(loaders, (loader) => loader())).catch((error) => {
+      console.warn('[RouteRegistry] 预加载路由组件失败', error)
+    })
+  }
+
+  /**
    * 移除所有动态路由
    */
   unregister(): void {
