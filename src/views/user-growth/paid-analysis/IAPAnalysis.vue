@@ -249,19 +249,19 @@
     display: inline-flex;
     gap: 7px;
     align-items: center;
-    min-height: 40px;
+    min-height: 36px;
     padding: 0 14px;
     white-space: nowrap;
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 30%);
-    border-radius: 9999px;
-    box-shadow: 0 0 16px rgb(16 185 129 / 10%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 16px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 10%, transparent);
   }
 
   .iap-filter-chip__icon {
     font-size: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 6px rgb(16 185 129 / 55%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .iap-filter-chip__label {
@@ -272,8 +272,7 @@
   .iap-filter-chip__value {
     font-size: 13px;
     font-weight: 600;
-    color: #10b981;
-    text-shadow: 0 0 10px rgb(16 185 129 / 50%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .iap-filter-date {
@@ -282,12 +281,12 @@
     min-width: 140px;
   }
 
-  :deep(.iap-filter-date .el-input__wrapper) {
-    min-height: 40px;
+  :deep(.iap-filter-date.el-date-editor) {
+    min-height: 36px;
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -295,15 +294,40 @@
       background 0.22s ease;
   }
 
+  :deep(.iap-filter-date .el-input__wrapper) {
+    padding: 0;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.iap-filter-date.el-date-editor.is-active),
   :deep(.iap-filter-date .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.iap-filter-date:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
   }
 
   :deep(.iap-filter-date .el-input__inner) {
     font-size: 13px;
     color: var(--el-text-color-primary);
+  }
+
+  :deep(.iap-filter-date .el-input__prefix-inner),
+  :deep(.iap-filter-date .el-input__icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .iap-filter-select {
@@ -313,18 +337,20 @@
   }
 
   :deep(.iap-filter-select) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
+  :deep(.iap-filter-select .el-select__wrapper),
   :deep(.iap-filter-select .el-input__wrapper) {
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -340,23 +366,30 @@
   :deep(.iap-filter-select .el-input__prefix-inner svg) {
     width: 16px;
     height: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.iap-filter-select .el-select__caret) {
-    color: #10b981;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
+  :deep(.iap-filter-select .el-select__wrapper.is-focused),
   :deep(.iap-filter-select .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
+  :deep(.iap-filter-select .el-select__wrapper:hover),
   :deep(.iap-filter-select .el-input__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   .iap-filter-actions {
@@ -366,23 +399,27 @@
   }
 
   .iap-search-btn {
-    --el-button-size: 40px;
+    --el-button-size: 36px;
 
-    height: 40px;
+    height: 36px;
     padding: 0 20px;
     font-size: 14px;
-    color: var(--art-success);
-    background: color-mix(in srgb, var(--art-success) 16%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-success) 45%, transparent);
-    box-shadow:
-      0 0 18px color-mix(in srgb, var(--art-success) 20%, transparent),
-      inset 0 1px 0 rgb(255 255 255 / 10%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
     transition: box-shadow 0.22s ease;
 
     &:hover {
-      box-shadow:
-        0 0 26px color-mix(in srgb, var(--art-success) 34%, transparent),
-        inset 0 1px 0 rgb(255 255 255 / 16%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 26px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
     }
   }
 
@@ -393,8 +430,8 @@
     gap: 8px;
     padding: 4px;
     margin-bottom: 16px;
-    background: color-mix(in srgb, var(--default-box-color) 75%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-success) 35%, var(--default-border));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     border-radius: 9999px;
   }
 
@@ -417,19 +454,29 @@
       box-shadow 0.15s ease;
 
     &:hover {
-      color: var(--art-success);
-      background: color-mix(in srgb, var(--art-success) 12%, transparent);
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+        transparent
+      );
     }
 
     &.is-active {
       font-weight: 700;
-      color: var(--art-success);
-      background: color-mix(in srgb, var(--art-success) 18%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-success) 45%, transparent) inset;
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 18%,
+        transparent
+      );
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 45%, transparent) inset;
     }
 
     &:focus-visible {
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--art-success) 45%, transparent);
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 45%, transparent);
     }
   }
 

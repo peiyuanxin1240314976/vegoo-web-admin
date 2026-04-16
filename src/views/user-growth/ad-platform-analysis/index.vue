@@ -1804,35 +1804,49 @@
     --el-input-focus-border-color: var(--theme-color);
     --el-border-color-hover: color-mix(in srgb, var(--theme-color) 75%, transparent);
     --el-color-primary: var(--theme-color);
+    --el-border-color: var(--theme-color);
 
     width: 268px;
 
+    &.el-date-editor,
+    &.el-date-editor.el-input__wrapper {
+      background: color-mix(in srgb, var(--theme-color) 6%, transparent) !important;
+      border: 1px solid color-mix(in srgb, var(--theme-color) 28%, transparent) !important;
+      border-radius: var(--el-border-radius-base, 4px) !important;
+      box-shadow: none !important;
+    }
+
     .el-range-editor,
     .el-range-editor.el-input__wrapper {
-      min-height: 40px;
+      min-height: 36px;
       padding: 0 14px;
       color: $color-text-axure;
-      background: color-mix(in srgb, var(--theme-color) 6%, transparent);
-      border: 1px solid color-mix(in srgb, var(--theme-color) 28%, transparent);
-      border-radius: 9999px;
-      box-shadow: none;
+      background: color-mix(in srgb, var(--theme-color) 6%, transparent) !important;
+      border: 1px solid color-mix(in srgb, var(--theme-color) 28%, transparent) !important;
+      border-radius: var(--el-border-radius-base, 4px) !important;
+      box-shadow: none !important;
       transition:
         border-color 0.22s ease,
         box-shadow 0.22s ease,
         background 0.22s ease;
     }
 
+    &.el-date-editor:hover,
+    &.el-date-editor.el-input__wrapper:hover,
     .el-range-editor:hover,
     .el-range-editor.el-input__wrapper:hover {
-      border-color: color-mix(in srgb, var(--theme-color) 60%, transparent);
-      box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 18%, transparent);
+      border-color: color-mix(in srgb, var(--theme-color) 60%, transparent) !important;
+      box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 18%, transparent) !important;
     }
 
+    &.el-date-editor.is-active,
+    &.el-date-editor.el-input__wrapper.is-focus,
+    &.el-date-editor:focus-within,
     .el-range-editor.is-active,
     .el-range-editor.el-input__wrapper.is-focus {
-      background: color-mix(in srgb, var(--theme-color) 10%, transparent);
-      border-color: var(--theme-color);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 20%, transparent);
+      background: color-mix(in srgb, var(--theme-color) 10%, transparent) !important;
+      border-color: var(--theme-color) !important;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 20%, transparent) !important;
     }
 
     .el-range-input,
@@ -1850,24 +1864,36 @@
     .aps-filter-toolbar
     .header-left
     :deep(.aps-date-picker) {
+    &.el-date-editor,
+    &.el-date-editor.el-input__wrapper {
+      color: var(--aps-text-primary);
+      background: color-mix(in srgb, var(--theme-color) 8%, transparent) !important;
+      border: 1px solid color-mix(in srgb, var(--theme-color) 30%, transparent) !important;
+    }
+
     .el-range-editor,
     .el-range-editor.el-input__wrapper {
       color: var(--aps-text-primary);
-      background: color-mix(in srgb, var(--theme-color) 8%, transparent);
-      border: 1px solid color-mix(in srgb, var(--theme-color) 30%, transparent);
+      background: color-mix(in srgb, var(--theme-color) 8%, transparent) !important;
+      border: 1px solid color-mix(in srgb, var(--theme-color) 30%, transparent) !important;
     }
 
+    &.el-date-editor:hover,
+    &.el-date-editor.el-input__wrapper:hover,
     .el-range-editor:hover,
     .el-range-editor.el-input__wrapper:hover {
-      border-color: color-mix(in srgb, var(--theme-color) 45%, transparent);
-      box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 14%, transparent);
+      border-color: color-mix(in srgb, var(--theme-color) 45%, transparent) !important;
+      box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 14%, transparent) !important;
     }
 
+    &.el-date-editor.is-active,
+    &.el-date-editor.el-input__wrapper.is-focus,
+    &.el-date-editor:focus-within,
     .el-range-editor.is-active,
     .el-range-editor.el-input__wrapper.is-focus {
-      background: color-mix(in srgb, var(--theme-color) 12%, transparent);
-      border-color: var(--theme-color);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 18%, transparent);
+      background: color-mix(in srgb, var(--theme-color) 12%, transparent) !important;
+      border-color: var(--theme-color) !important;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 18%, transparent) !important;
     }
 
     .el-range-input,
@@ -1921,7 +1947,7 @@
 
   .aps-filter-toolbar .header-filters :deep(.app-platform-search-select.aps-filter-select) {
     --app-platform-select-height: 36px;
-    --app-platform-select-radius: 9999px;
+    --app-platform-select-radius: var(--el-border-radius-base, 4px);
 
     width: 220px;
     min-width: 200px;
@@ -1966,12 +1992,12 @@
   }
 
   .aps-filter-toolbar .header-filters :deep(.aps-filter-select .el-select__wrapper) {
-    min-height: 40px;
+    min-height: 36px;
     padding: 0 12px;
     color: $color-text-axure;
     background: color-mix(in srgb, var(--theme-color) 6%, transparent);
     border: 1px solid color-mix(in srgb, var(--theme-color) 28%, transparent);
-    border-radius: 9999px;
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,

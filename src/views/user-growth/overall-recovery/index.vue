@@ -207,23 +207,27 @@
   }
 
   .or-search-btn {
-    --el-button-size: 40px;
+    --el-button-size: 36px;
 
-    height: 40px;
+    height: 36px;
     padding: 0 20px;
     font-size: 14px;
-    color: var(--art-success);
-    background: color-mix(in srgb, var(--art-success) 16%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-success) 45%, transparent);
-    box-shadow:
-      0 0 18px color-mix(in srgb, var(--art-success) 20%, transparent),
-      inset 0 1px 0 rgb(255 255 255 / 10%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
     transition: box-shadow 0.22s ease;
 
     &:hover {
-      box-shadow:
-        0 0 26px color-mix(in srgb, var(--art-success) 34%, transparent),
-        inset 0 1px 0 rgb(255 255 255 / 16%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 26px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
     }
   }
 
@@ -239,17 +243,17 @@
     width: 320px;
     max-width: 100%;
 
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
   :deep(.or-filter-date .el-range__icon) {
     font-size: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.or-filter-date .el-range-input) {
@@ -262,7 +266,7 @@
   }
 
   :deep(.or-filter-date .el-range__close-icon) {
-    color: #10b981;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.or-filter-date.el-date-editor .el-range-input) {
@@ -270,11 +274,11 @@
   }
 
   :deep(.or-filter-date .el-input__wrapper) {
-    min-height: 40px;
+    min-height: 36px;
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -283,14 +287,20 @@
   }
 
   :deep(.or-filter-date .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   :deep(.or-filter-date .el-input__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   .or-filter-select {
@@ -305,19 +315,20 @@
   }
 
   :deep(.or-filter-select) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
   :deep(.or-filter-select .el-select__wrapper) {
-    min-height: 40px;
+    min-height: 36px;
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -342,23 +353,28 @@
   :deep(.or-filter-select .el-select__prefix svg) {
     width: 16px;
     height: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.or-filter-select .el-select__caret) {
-    color: #10b981;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.or-filter-select .el-select__wrapper.is-focused) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   :deep(.or-filter-select .el-select__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   .or-tab-nav {
@@ -368,8 +384,8 @@
     gap: 8px;
     padding: 4px;
     margin-bottom: 16px;
-    background: color-mix(in srgb, var(--default-box-color) 75%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-success) 35%, var(--default-border));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     border-radius: 9999px;
   }
 
@@ -392,19 +408,29 @@
       box-shadow 0.15s ease;
 
     &:hover {
-      color: var(--art-success);
-      background: color-mix(in srgb, var(--art-success) 12%, transparent);
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+        transparent
+      );
     }
 
     &.is-active {
       font-weight: 700;
-      color: var(--art-success);
-      background: color-mix(in srgb, var(--art-success) 18%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--art-success) 45%, transparent) inset;
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 18%,
+        transparent
+      );
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 45%, transparent) inset;
     }
 
     &:focus-visible {
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--art-success) 45%, transparent);
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 45%, transparent);
     }
   }
 
@@ -461,16 +487,16 @@
   .or-filter-popper.el-popper {
     z-index: var(--z-dropdown) !important;
     background: rgb(10 10 14 / 96%) !important;
-    border: 1px solid rgb(96 165 250 / 28%) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
     border-radius: 12px !important;
     box-shadow:
       0 16px 48px rgb(0 0 0 / 55%),
-      0 0 0 1px rgb(16 185 129 / 12%),
+      0 0 0 1px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 12%, transparent),
       0 0 32px rgb(59 130 246 / 15%) !important;
   }
 
   .or-filter-popper .el-popper__arrow::before {
     background: rgb(10 10 14 / 96%) !important;
-    border: 1px solid rgb(96 165 250 / 25%) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
   }
 </style>

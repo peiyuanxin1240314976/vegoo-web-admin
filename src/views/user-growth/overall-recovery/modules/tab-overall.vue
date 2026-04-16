@@ -134,8 +134,14 @@
                 :value="opt.value"
               />
             </ElSelect>
-            <ElButton round size="small" type="primary" @click="onDetailSearch">检索</ElButton>
-            <ElButton size="small" type="primary" plain round>导出</ElButton>
+            <ElButton
+              size="small"
+              class="or-detail-btn or-detail-btn--search"
+              @click="onDetailSearch"
+            >
+              检索
+            </ElButton>
+            <ElButton size="small" class="or-detail-btn or-detail-btn--export">导出</ElButton>
           </div>
         </div>
       </template>
@@ -698,12 +704,76 @@
     align-items: center;
   }
 
+  :deep(.or-detail-select) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 32px;
+  }
+
+  :deep(.or-detail-select .el-select__wrapper) {
+    min-height: 32px;
+    padding: 0 10px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+  }
+
+  :deep(.or-detail-select .el-select__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  :deep(.or-detail-select .el-select__wrapper.is-focused) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.or-detail-select .el-select__caret) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
   .or-detail-select--app {
     min-width: 112px;
   }
 
   .or-detail-select--src {
     min-width: 120px;
+  }
+
+  .or-detail-btn {
+    min-height: 32px;
+    padding: 0 14px;
+    font-size: 12px;
+    color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+  }
+
+  .or-detail-btn:hover {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+      transparent
+    ) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
   }
 
   /* ROI 单元格 */

@@ -1524,6 +1524,46 @@
     }
   }
 
+  .ap-filters :deep(.ap-filter-select .el-select__wrapper) {
+    min-height: 36px;
+    padding: 4px 12px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .ap-filters :deep(.ap-filter-select .el-select__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  .ap-filters :deep(.ap-filter-select .el-select__wrapper.is-focused) {
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
+  }
+
+  .ap-filters :deep(.ap-filter-select .el-select__selected-item) {
+    color: var(--el-text-color-primary);
+  }
+
+  .ap-filters :deep(.ap-filter-select .el-select__placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  .ap-filters :deep(.ap-filter-select .el-select__caret),
+  .ap-filters :deep(.ap-filter-select .el-select__suffix),
+  .ap-filters :deep(.ap-filter-select .el-select__icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
   .ap-date-picker {
     flex: 0 0 200px;
     width: 250px;
@@ -1537,11 +1577,59 @@
     }
   }
 
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range-input),
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range-separator),
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range__icon),
+  .ap-filters
+    :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range__close-icon) {
+    color: var(--el-text-color-primary);
+  }
+
   .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange) {
     flex: 0 0 250px !important;
     width: 250px !important;
     min-width: 250px !important;
     max-width: 250px !important;
+
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-datepicker-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange.is-active),
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange:focus-within) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  .ap-filters :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range__icon),
+  .ap-filters
+    :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange .el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   @media (width <=768px) {

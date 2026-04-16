@@ -272,18 +272,24 @@
   }
 
   :deep(.person-select .el-select__wrapper) {
-    background: rgb(16 185 129 / 10%);
-    border: 1px solid rgb(16 185 129 / 28%);
+    min-height: 36px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
   }
 
   :deep(.person-select .el-select__wrapper.is-hovering) {
-    border-color: rgb(16 185 129 / 45%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   :deep(.person-select .el-select__wrapper.is-focused) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 12%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
   }
 
   :deep(.person-select .el-select__placeholder) {
@@ -295,21 +301,29 @@
   }
 
   :deep(.person-select .el-select__caret) {
-    color: rgb(16 185 129 / 85%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.my-performance-person-popper) {
-    --el-color-primary: rgb(16 185 129);
-    --el-fill-color-light: rgb(16 185 129 / 10%);
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-fill-color-light: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+      transparent
+    );
   }
 
   :deep(.my-performance-person-popper .el-select-dropdown__item.is-selected) {
     font-weight: 650;
-    color: rgb(16 185 129 / 95%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.my-performance-person-popper .el-select-dropdown__item:hover) {
-    background: rgb(16 185 129 / 12%);
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+      transparent
+    );
   }
 
   .export-btn {
@@ -323,22 +337,25 @@
     align-items: center;
     padding: 3px;
     overflow: hidden;
-    background: rgb(16 185 129 / 12%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 8%, transparent);
     backdrop-filter: blur(10px);
-    border: 1px solid rgb(16 185 129 / 25%);
-    border-radius: 9999px;
+    border: 1px solid
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 55%, transparent);
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow:
-      0 4px 20px rgb(16 185 129 / 10%),
+      0 4px 20px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 10%, transparent),
       inset 0 1px 0 rgb(244 244 245 / 4%);
     transition:
       box-shadow 0.35s var(--ease-out),
       border-color 0.35s;
 
     &:hover {
-      border-color: rgb(16 185 129 / 38%);
+      border-color: var(--theme-color, var(--art-primary, #3b82f6));
       box-shadow:
-        0 8px 28px rgb(16 185 129 / 16%),
-        0 0 36px rgb(16 185 129 / 8%),
+        0 8px 28px
+          color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 16%, transparent),
+        0 0 36px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 8%, transparent),
         inset 0 1px 0 rgb(244 244 245 / 6%);
     }
 
@@ -350,7 +367,7 @@
       background: linear-gradient(
         90deg,
         transparent 0%,
-        rgb(16 185 129 / 8%) 50%,
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 8%, transparent) 50%,
         transparent 100%
       );
       animation: switch-shimmer 4s ease-in-out infinite;
@@ -382,7 +399,7 @@
     cursor: pointer;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 9999px;
+    border-radius: var(--el-border-radius-base, 4px);
     transition:
       background-color 0.3s var(--ease-out),
       color 0.3s var(--ease-out),
@@ -399,47 +416,75 @@
 
   .period-tab.is-active {
     color: rgb(244 244 245 / 98%);
-    background: rgb(16 185 129 / 25%);
-    border-color: rgb(16 185 129 / 55%);
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+      transparent
+    );
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow:
-      0 4px 16px rgb(16 185 129 / 15%),
-      0 0 24px rgb(16 185 129 / 10%),
-      inset 0 0 12px rgb(16 185 129 / 6%);
+      0 4px 16px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 15%, transparent),
+      0 0 24px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 10%, transparent),
+      inset 0 0 12px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
   }
 
   .period-tab.is-active .period-tab__value {
-    color: rgb(16 185 129 / 98%);
-    text-shadow: 0 0 12px rgb(16 185 129 / 30%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    text-shadow: 0 0 12px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 30%, transparent);
   }
 
   .period-tab:hover:not(.is-active) {
     color: rgb(244 244 245 / 90%);
-    background: rgb(16 185 129 / 12%);
-    border-color: rgb(16 185 129 / 22%);
-    box-shadow: 0 4px 14px rgb(16 185 129 / 10%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 8%, transparent);
+    border-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 45%,
+      transparent
+    );
+    box-shadow: 0 4px 14px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 10%, transparent);
   }
 
   :deep(.export-btn.el-button--success) {
-    --el-button-bg-color: rgb(16 185 129 / 20%);
-    --el-button-border-color: rgb(16 185 129 / 55%);
-    --el-button-text-color: rgb(244 244 245 / 95%);
-    --el-button-hover-bg-color: rgb(16 185 129 / 30%);
-    --el-button-hover-border-color: rgb(16 185 129 / 70%);
-    --el-button-active-bg-color: rgb(16 185 129 / 35%);
-    --el-button-active-border-color: rgb(16 185 129 / 75%);
+    --el-button-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    );
+    --el-button-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+      transparent
+    );
+    --el-button-hover-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-active-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+      transparent
+    );
+    --el-button-active-border-color: var(--theme-color, var(--art-primary, #3b82f6));
 
     backdrop-filter: blur(8px);
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow:
-      0 4px 18px rgb(16 185 129 / 12%),
-      0 0 24px rgb(16 185 129 / 6%);
+      0 4px 18px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 12%, transparent),
+      0 0 24px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
     transition:
       background-color 0.3s var(--ease-out),
       box-shadow 0.3s var(--ease-out);
 
     &:hover {
       box-shadow:
-        0 8px 28px rgb(16 185 129 / 20%),
-        0 0 36px rgb(16 185 129 / 10%);
+        0 8px 28px
+          color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent),
+        0 0 36px
+          color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 10%, transparent);
     }
   }
 

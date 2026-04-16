@@ -1069,8 +1069,135 @@
     max-width: 320px;
   }
 
+  :deep(.fi-range.el-date-editor),
+  :deep(.fi-range.el-date-editor--daterange) {
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-input-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+
+    min-height: 36px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.fi-range .el-input__wrapper),
+  :deep(.fi-range .el-range-editor.el-input__wrapper) {
+    padding: 0 12px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.fi-range:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.fi-range.is-active),
+  :deep(.fi-range .el-input__wrapper.is-focus) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
   :deep(.fi-range .el-range-input) {
     font-size: 12px;
+    color: var(--el-text-color-primary);
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.fi-range .el-range__icon),
+  :deep(.fi-range .el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  :deep(.fi-sel) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+  }
+
+  :deep(.fi-sel .el-select__wrapper),
+  :deep(.fi-sel .el-input__wrapper) {
+    min-height: 36px;
+    padding: 0 12px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.fi-sel .el-select__wrapper:hover),
+  :deep(.fi-sel .el-input__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.fi-sel .el-select__wrapper.is-focused),
+  :deep(.fi-sel .el-input__wrapper.is-focus) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.fi-sel .el-select__caret) {
+    color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+  }
+
+  :deep(.fi-search .el-input__wrapper) {
+    min-height: 36px;
+    padding: 0 12px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.fi-search .el-input__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.fi-search .el-input__wrapper.is-focus) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   .filter-row-actions {
@@ -1083,14 +1210,19 @@
 
   .order-search-btn {
     font-size: 12px;
-    color: #10b981 !important;
-    background: rgb(16 185 129 / 14%) !important;
-    border: 1px solid rgb(16 185 129 / 40%) !important;
+    color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
   }
 
   .fi-search-icon {
     font-size: 14px;
-    color: #5a6a8a;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .country-flag.fi {
@@ -1103,9 +1235,14 @@
 
   .export-btn-sm {
     font-size: 12px;
-    color: #8892a8 !important;
-    background: transparent !important;
-    border: 1px solid #1e2a44 !important;
+    color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
   }
 
   /* Main Layout */
@@ -1605,10 +1742,6 @@
   :deep(.fi-search .el-input__inner) {
     font-size: 12px;
     color: #e2e8f5 !important;
-  }
-
-  :deep(.fi-sel .el-select__caret) {
-    color: #5a6a8a !important;
   }
 
   /* Scrollbar */

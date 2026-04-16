@@ -79,22 +79,18 @@
       </ElSelect>
 
       <ElButton
-        round
         class="ad-performance-filter-action-btn ad-performance-filter-action-btn--query"
-        :disabled="!isDirty"
         @click="onQuery"
       >
         {{ tr('adPerformance.query', '查询') }}
       </ElButton>
       <ElButton
-        round
         class="ad-performance-filter-action-btn ad-performance-filter-action-btn--export"
         @click="$emit('export')"
       >
         {{ tr('adPerformance.exportReport', '导出报表') }}
       </ElButton>
       <ElButton
-        round
         aria-label="刷新数据"
         class="ad-performance-filter-action-btn ad-performance-filter-action-btn--refresh"
         :icon="RefreshRight"
@@ -133,19 +129,6 @@
   }>()
 
   const draft = ref<AdPerformanceFilter>({ ...props.filter })
-
-  const isDirty = computed(() => {
-    const a = props.filter
-    const b = draft.value
-    return (
-      String(a.startDate ?? '') !== String(b.startDate ?? '') ||
-      String(a.endDate ?? '') !== String(b.endDate ?? '') ||
-      String(a.app ?? '') !== String(b.app ?? '') ||
-      String(a.adPlatform ?? '') !== String(b.adPlatform ?? '') ||
-      String(a.account ?? '') !== String(b.account ?? '') ||
-      String(a.country ?? '') !== String(b.country ?? '')
-    )
-  })
 
   function onQuery() {
     emit('search', { ...draft.value })
@@ -331,26 +314,33 @@
 
   /* ── 日期区间选择器 ──────────────────────────────────────────── */
   .ad-performance-date-picker {
-    width: 248px;
-    min-width: 200px;
+    width: 280px;
+    min-width: 280px;
     max-width: 100%;
   }
 
   :deep(.ad-performance-date-picker) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
+    --el-date-editor-width: 280px;
+    --el-date-editor-daterange-width: 280px;
   }
 
   :deep(.ad-performance-date-picker .el-input__wrapper),
-  :deep(.ad-performance-date-picker.el-date-editor .el-range-input),
+  :deep(.ad-performance-date-picker .el-range-editor.el-input__wrapper),
   :deep(.ad-performance-date-picker.el-date-editor) {
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
-    box-shadow: none;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
     transition:
       border-color 0.22s ease,
       box-shadow 0.22s ease,
@@ -358,12 +348,15 @@
   }
 
   :deep(.ad-performance-date-picker.el-date-editor) {
-    height: 40px;
-    padding: 0 12px;
+    width: 280px !important;
+    min-width: 280px;
+    max-width: 280px;
+    height: 36px;
+    padding: 0 10px;
   }
 
   :deep(.ad-performance-date-picker.el-date-editor .el-range-input) {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--el-text-color-primary);
     background: transparent;
     border: none;
@@ -372,29 +365,34 @@
   }
 
   :deep(.ad-performance-date-picker.el-date-editor .el-range-separator) {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--el-text-color-secondary);
   }
 
   :deep(.ad-performance-date-picker.el-date-editor .el-range__icon) {
-    color: #10b981;
-    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.ad-performance-date-picker.el-date-editor .el-range__close-icon) {
-    color: var(--el-text-color-secondary);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.ad-performance-date-picker.el-date-editor:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
   }
 
   :deep(.ad-performance-date-picker.el-date-editor.is-active),
   :deep(.ad-performance-date-picker.el-date-editor:focus-within) {
-    background: rgb(16 185 129 / 10%);
-    border-color: #10b981;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%);
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   /* ── 下拉选择器 ──────────────────────────────────────────────── */
@@ -405,18 +403,20 @@
   }
 
   :deep(.ad-performance-filter-select) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
+  :deep(.ad-performance-filter-select .el-select__wrapper),
   :deep(.ad-performance-filter-select .el-input__wrapper) {
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -437,54 +437,77 @@
   :deep(.ad-performance-filter-select .el-input__prefix-inner svg) {
     width: 16px;
     height: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.ad-performance-filter-select .el-select__caret) {
-    color: #10b981;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
+  :deep(.ad-performance-filter-select .el-select__wrapper.is-focused),
   :deep(.ad-performance-filter-select .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
+  :deep(.ad-performance-filter-select .el-select__wrapper:hover),
   :deep(.ad-performance-filter-select .el-input__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   /* ── 操作按钮 ─────────────────────────────────────────────────── */
   .ad-performance-filter-action-btn {
-    --el-button-size: 40px;
-    --el-button-bg-color: rgb(16 185 129 / 8%);
-    --el-button-text-color: #10b981;
-    --el-button-border-color: rgb(16 185 129 / 40%);
-    --el-button-hover-text-color: #34d399;
-    --el-button-hover-border-color: #10b981;
-    --el-button-hover-bg-color: rgb(16 185 129 / 16%);
-    --el-button-active-text-color: #34d399;
-    --el-button-active-border-color: #10b981;
-    --el-button-active-bg-color: rgb(16 185 129 / 22%);
+    --el-button-size: 36px;
+    --el-button-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    );
+    --el-button-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+      transparent
+    );
+    --el-button-active-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-active-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-active-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+      transparent
+    );
 
     font-size: 14px;
-    box-shadow: 0 0 14px rgb(16 185 129 / 12%);
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 14px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 12%, transparent);
     transition: box-shadow 0.22s ease;
 
     &:hover {
-      box-shadow: 0 0 22px rgb(16 185 129 / 28%);
+      box-shadow: 0 0 22px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
     }
   }
 
   :deep(.ad-performance-filter-action-btn .el-icon) {
     font-size: 16px;
-    color: #10b981;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .ad-performance-filter-action-btn:focus-visible {
-    box-shadow: 0 0 0 3px rgb(16 185 129 / 40%);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 40%, transparent);
   }
 
   /* ── 小屏响应 ─────────────────────────────────────────────────── */

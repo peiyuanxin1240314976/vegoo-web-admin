@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
-import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
+import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
 import {
   fetchRealtimeOverviewKpiSummary,
   fetchRealtimeTableAppCards,
@@ -69,6 +69,9 @@ export function useRealtimeDashboard() {
 
   const rawAppOptions = computed(
     () => cockpitMetaFilterStore.data?.appOptions ?? ([] as CockpitMetaOptionItem[])
+  )
+  const settingApps = computed(
+    () => cockpitMetaFilterStore.data?.settingApps ?? ([] as CockpitSettingAppItem[])
   )
   const rawSourceOptions = computed(
     () => cockpitMetaFilterStore.data?.sourceOptions ?? ([] as CockpitMetaOptionItem[])
@@ -158,6 +161,7 @@ export function useRealtimeDashboard() {
     filterAppId,
     filterSourceUi,
     appSelectOptions,
+    settingApps,
     sourceSelectOptions,
     filterOptionsLoading,
     dashboardLoading,

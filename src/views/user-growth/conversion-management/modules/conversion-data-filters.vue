@@ -69,7 +69,6 @@
         </ElSelect>
         <ElButton
           type="primary"
-          round
           class="conversion-data-filter-action-btn"
           @click="doSearch"
           v-ripple
@@ -179,26 +178,26 @@
   }
 
   .conversion-data-filter-chip {
-    --cm-filter-accent: #10b981;
+    --cm-filter-accent: var(--theme-color, var(--art-primary, #3b82f6));
 
     display: inline-flex;
     gap: 7px;
     align-items: center;
-    min-height: 40px;
+    min-height: 36px;
     padding: 0 14px;
     font-size: 14px;
     color: var(--el-text-color-regular);
     white-space: nowrap;
-    background: rgb(16 185 129 / 8%);
-    border: 1px solid rgb(16 185 129 / 30%);
-    border-radius: 9999px;
-    box-shadow: 0 0 16px rgb(16 185 129 / 10%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 16px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 10%, transparent);
   }
 
   .conversion-data-filter-chip__icon {
     font-size: 16px;
     color: var(--cm-filter-accent);
-    filter: drop-shadow(0 0 6px rgb(16 185 129 / 55%));
   }
 
   .conversion-data-filter-chip__label {
@@ -213,7 +212,6 @@
     font-size: 13px;
     font-weight: 600;
     color: var(--cm-filter-accent);
-    text-shadow: 0 0 10px rgb(16 185 129 / 50%);
   }
 
   .conversion-data-filters__date {
@@ -232,11 +230,11 @@
   }
 
   :deep(.conversion-data-filters__date .el-input__wrapper) {
-    min-height: 40px;
+    min-height: 36px;
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -245,9 +243,14 @@
   }
 
   :deep(.conversion-data-filters__date .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   :deep(.conversion-data-filters__date .el-range-separator) {
@@ -266,18 +269,20 @@
   }
 
   :deep(.conversion-data-filter-select) {
-    --el-input-focus-border-color: #10b981;
-    --el-border-color-hover: rgb(16 185 129 / 75%);
-    --el-color-primary: #10b981;
-    --el-border-color-focus: #10b981;
-    --el-component-size: 40px;
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 36px;
   }
 
+  :deep(.conversion-data-filter-select .el-select__wrapper),
   :deep(.conversion-data-filter-select .el-input__wrapper) {
     padding: 0 12px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -298,44 +303,56 @@
   :deep(.conversion-data-filter-select .el-input__prefix-inner svg) {
     width: 16px;
     height: 16px;
-    color: #10b981;
-    filter: drop-shadow(0 0 5px rgb(16 185 129 / 50%));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.conversion-data-filter-select .el-select__caret) {
-    color: #10b981;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
+  :deep(.conversion-data-filter-select .el-select__wrapper.is-focused),
   :deep(.conversion-data-filter-select .el-input__wrapper.is-focus) {
-    background: rgb(16 185 129 / 10%) !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
+  :deep(.conversion-data-filter-select .el-select__wrapper:hover),
   :deep(.conversion-data-filter-select .el-input__wrapper:hover) {
-    border-color: rgb(16 185 129 / 60%);
-    box-shadow: 0 0 12px rgb(16 185 129 / 18%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   .conversion-data-filter-action-btn {
-    --el-button-size: 40px;
+    --el-button-size: 36px;
 
-    height: 40px;
+    height: 36px;
     padding: 0 20px;
     font-size: 14px;
-    background: linear-gradient(135deg, rgb(16 185 129 / 92%), rgb(5 150 105 / 88%));
-    border: 1px solid rgb(16 185 129 / 55%);
-    box-shadow:
-      0 0 18px rgb(16 185 129 / 28%),
-      inset 0 1px 0 rgb(255 255 255 / 12%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
     transition:
       box-shadow 0.22s ease,
       transform 0.18s ease;
 
     &:hover {
-      box-shadow:
-        0 0 26px rgb(16 185 129 / 42%),
-        inset 0 1px 0 rgb(255 255 255 / 18%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 26px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
       transform: translateY(-1px);
     }
 

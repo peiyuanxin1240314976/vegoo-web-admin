@@ -369,16 +369,26 @@
     width: 100%;
     padding: 0 11px;
     cursor: pointer;
-    background: var(--el-fill-color-blank, var(--el-bg-color));
-    border: 1px solid var(--el-border-color);
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     transition:
       border-color 0.2s ease,
       box-shadow 0.2s ease;
 
     &:hover,
     &.is-open {
-      border-color: var(--el-color-primary);
-      box-shadow: 0 0 0 1px rgb(64 158 255 / 18%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 1%,
+        transparent
+      );
+      border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
     }
 
     &.is-disabled {
@@ -407,7 +417,7 @@
   }
 
   .app-platform-search-select__suffix {
-    color: var(--el-text-color-secondary);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .app-platform-search-select__panel {

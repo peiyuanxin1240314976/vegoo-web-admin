@@ -671,7 +671,9 @@
             />
           </el-select>
 
-          <ElButton type="primary" plain round @click="handleSearch" v-ripple> 查询 </ElButton>
+          <ElButton type="primary" plain class="btn-search" @click="handleSearch" v-ripple>
+            查询
+          </ElButton>
         </template>
 
         <button type="button" class="btn-screenshot" @click="openScreenshot()">
@@ -1708,28 +1710,45 @@
   }
 
   .btn-search {
-    --el-button-size: 40px;
+    --el-button-size: 36px;
+    --el-button-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    );
+    --el-button-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+      transparent
+    );
+    --el-button-hover-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-border-color: var(--theme-color, var(--art-primary, #3b82f6));
 
     flex-shrink: 0;
-    height: 40px;
+    height: 36px;
     padding: 0 16px;
     font-size: 13px;
-    background: linear-gradient(135deg, #059669 0%, #10b981 48%, #34d399 100%);
-    border: 1px solid rgb(16 185 129 / 45%);
-    border-radius: 9999px;
-    box-shadow:
-      0 0 18px rgb(16 185 129 / 30%),
-      inset 0 1px 0 rgb(255 255 255 / 12%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
     transition:
       box-shadow 0.22s ease,
       transform 0.18s ease,
-      filter 0.22s ease;
+      background 0.22s ease;
 
     &:hover {
-      filter: brightness(1.06);
-      box-shadow:
-        0 0 28px rgb(16 185 129 / 42%),
-        inset 0 1px 0 rgb(255 255 255 / 16%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 28px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
       transform: translateY(-1px);
     }
 
@@ -1799,16 +1818,53 @@
     }
   }
 
-  .filter-date {
+  :deep(.filter-date.el-date-editor),
+  :deep(.filter-date.el-date-editor--daterange) {
     flex: none !important;
-    width: 150px !important;
+    width: 250px !important;
 
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-input-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-date-editor-width: 250px;
+    --el-date-editor-daterange-width: 250px;
+
+    min-height: 36px;
+    padding: 0 12px;
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
+  }
+
+  :deep(.filter-date.el-date-editor--daterange) {
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+  }
+
+  .filter-date {
+    :deep(.el-date-editor),
+    :deep(.el-range-editor),
+    :deep(.el-date-editor.el-input__wrapper),
+    :deep(.el-range-editor.el-input__wrapper),
     :deep(.el-input__wrapper) {
-      min-height: 40px;
+      min-height: 36px;
       padding: 0 12px;
-      background: rgb(16 185 129 / 6%) !important;
-      border: 1px solid rgb(16 185 129 / 28%) !important;
-      border-radius: 9999px !important;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      border-radius: var(--el-border-radius-base, 4px) !important;
       box-shadow: none !important;
       transition:
         border-color 0.22s ease,
@@ -1816,36 +1872,77 @@
         background 0.22s ease;
     }
 
+    :deep(.el-date-editor:hover),
+    :deep(.el-range-editor:hover),
     :deep(.el-input__wrapper:hover) {
-      border-color: rgb(16 185 129 / 55%) !important;
-      box-shadow: 0 0 12px rgb(16 185 129 / 18%) !important;
+      border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
     }
 
+    :deep(.el-date-editor.is-active),
+    :deep(.el-range-editor.is-active),
+    :deep(.el-date-editor.el-input__wrapper.is-focus),
     :deep(.el-input__wrapper.is-focus) {
-      background: rgb(16 185 129 / 10%) !important;
-      border-color: #10b981 !important;
-      box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
     }
 
+    :deep(.el-range-input),
     :deep(.el-input__inner) {
       font-size: 12px;
       color: $text-primary !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
     }
 
-    :deep(.el-input__prefix-inner) {
-      color: #10b981;
+    :deep(.el-input__prefix-inner),
+    :deep(.el-range__icon),
+    :deep(.el-range__close-icon) {
+      color: var(--theme-color, var(--art-primary, #3b82f6));
     }
+  }
+
+  :deep(.filter-date.el-date-editor:hover),
+  :deep(.filter-date.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.filter-date.el-date-editor.is-active),
+  :deep(.filter-date.el-date-editor--daterange.is-active) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   .filter-select {
     width: 130px !important;
 
+    :deep(.el-select__wrapper),
     :deep(.el-input__wrapper) {
-      min-height: 40px;
+      min-height: 36px;
       padding: 0 12px;
-      background: rgb(16 185 129 / 6%) !important;
-      border: 1px solid rgb(16 185 129 / 28%) !important;
-      border-radius: 9999px !important;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      border-radius: var(--el-border-radius-base, 4px) !important;
       box-shadow: none !important;
       transition:
         border-color 0.22s ease,
@@ -1853,15 +1950,23 @@
         background 0.22s ease;
     }
 
+    :deep(.el-select__wrapper:hover),
     :deep(.el-input__wrapper:hover) {
-      border-color: rgb(16 185 129 / 55%) !important;
-      box-shadow: 0 0 12px rgb(16 185 129 / 18%) !important;
+      border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
     }
 
+    :deep(.el-select__wrapper.is-focused),
     :deep(.el-input__wrapper.is-focus) {
-      background: rgb(16 185 129 / 10%) !important;
-      border-color: #10b981 !important;
-      box-shadow: 0 0 0 2px rgb(16 185 129 / 20%) !important;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
     }
 
     :deep(.el-input__inner) {
@@ -1871,7 +1976,7 @@
 
     :deep(.el-select__suffix),
     :deep(.el-select__caret) {
-      color: #10b981 !important;
+      color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
     }
   }
 
@@ -1882,25 +1987,27 @@
     margin-left: auto;
     font-size: 12px;
     font-weight: 600;
-    color: #ecfdf5;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
     white-space: nowrap;
     cursor: pointer;
-    background: linear-gradient(135deg, #059669 0%, #10b981 48%, #34d399 100%);
-    border: 1px solid rgb(16 185 129 / 45%);
-    border-radius: 9999px;
-    box-shadow:
-      0 0 18px rgb(16 185 129 / 35%),
-      inset 0 1px 0 rgb(255 255 255 / 12%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
     transition:
       box-shadow 0.22s ease,
       transform 0.18s ease,
-      filter 0.22s ease;
+      background 0.22s ease;
 
     &:hover {
-      filter: brightness(1.06);
-      box-shadow:
-        0 0 28px rgb(16 185 129 / 45%),
-        inset 0 1px 0 rgb(255 255 255 / 16%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 8%,
+        transparent
+      );
+      box-shadow: 0 0 28px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent);
       transform: translateY(-1px);
     }
 

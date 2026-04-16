@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
   import * as echarts from 'echarts'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import AppDetailModal from './AppDetailModal.vue'
   import type { AppDetailData, RealtimeAppCardRow } from '../types'
   import { useRealtimeDashboard } from '../composables/useRealtimeDashboard'
@@ -13,7 +14,7 @@
     hourlyComparison,
     filterAppId,
     filterSourceUi,
-    appSelectOptions,
+    settingApps,
     sourceSelectOptions,
     filterOptionsLoading,
     dashboardLoading,
@@ -231,6 +232,10 @@
     await applyFilters()
   }
 
+  async function onQuery() {
+    await applyFilters()
+  }
+
   // ===== Lifecycle =====
   onMounted(() => {
     startCountdown()
@@ -299,23 +304,19 @@
       <div class="rtd-filter-panel">
         <div class="filter-group rtd-filter-field">
           <span class="filter-label">应用筛选</span>
-          <ElSelect
+          <AppPlatformSearchSelect
             v-model="filterAppId"
+            mode="app"
             class="rtd-filter-select"
             placeholder="全部应用"
-            clearable
-            filterable
-            :loading="filterOptionsLoading"
-            popper-class="rtd-filter-select-popper"
-            @change="applyFilters"
-          >
-            <ElOption
-              v-for="opt in appSelectOptions"
-              :key="'app-' + (opt.value || 'all')"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+            search-placeholder="搜索类别/应用名称/应用简称"
+            :setting-apps="settingApps"
+            :height="38"
+            :min-width="200"
+            :max-width="248"
+            input-class="rtd-filter-select"
+            dropdown-class="rtd-filter-select-popper"
+          />
         </div>
         <div class="filter-group rtd-filter-field">
           <span class="filter-label">广告平台</span>
@@ -327,7 +328,6 @@
             filterable
             :loading="filterOptionsLoading"
             popper-class="rtd-filter-select-popper"
-            @change="applyFilters"
           >
             <ElOption
               v-for="opt in sourceSelectOptions"
@@ -337,6 +337,7 @@
             />
           </ElSelect>
         </div>
+        <button type="button" class="filter-btn" @click="onQuery">查询</button>
       </div>
     </div>
 
@@ -903,11 +904,11 @@
     padding: 6px 16px;
     font-size: 12px;
     font-weight: 500;
-    color: #e2e8f0;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
     cursor: pointer;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 28%);
-    border-radius: 9999px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s ease,
@@ -916,8 +917,10 @@
   }
 
   .filter-btn:hover {
-    border-color: rgb(16 185 129 / 58%);
-    box-shadow: 0 0 14px rgb(16 185 129 / 16%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 14px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 16%, transparent);
   }
 
   .rtd-filter-select {
@@ -925,15 +928,64 @@
     width: min(248px, 100%);
     min-width: min(200px, 100%);
 
+    :deep(.app-platform-search-select) {
+      color: var(--text-primary, #e2e8f0);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+      border-radius: var(--el-border-radius-base, 4px);
+      box-shadow: none;
+      transition:
+        border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        box-shadow var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        background var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+    }
+
+    :deep(.app-platform-search-select:hover) {
+      border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+    }
+
+    :deep(.app-platform-search-select.is-open) {
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
+    }
+
+    :deep(.app-platform-search-select__text) {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary, #e2e8f0);
+    }
+
+    :deep(.app-platform-search-select__text.is-placeholder) {
+      color: var(--text-tertiary, #64748b);
+    }
+
+    :deep(.app-platform-search-select__suffix) {
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+    }
+
     :deep(.el-select__wrapper) {
       min-height: 38px;
       padding: 5px 14px 5px 16px;
-      background: rgb(15 23 42 / 52%);
-      border: 1px solid rgb(96 165 250 / 24%);
-      border-radius: 9999px;
-      box-shadow:
-        inset 0 1px 0 rgb(255 255 255 / 5%),
-        0 1px 2px rgb(0 0 0 / 12%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      );
+      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+      border-radius: var(--el-border-radius-base, 4px);
+      box-shadow: none;
       transition:
         border-color var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
         box-shadow var(--duration-fast, 150ms) var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
@@ -941,18 +993,20 @@
     }
 
     :deep(.el-select__wrapper:hover) {
-      border-color: rgb(96 165 250 / 48%);
-      box-shadow:
-        inset 0 1px 0 rgb(255 255 255 / 7%),
-        0 0 18px rgb(59 130 246 / 14%);
+      border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
     }
 
     :deep(.el-select__wrapper.is-focused) {
-      border-color: rgb(96 165 250 / 58%);
-      box-shadow:
-        0 0 0 2px rgb(59 130 246 / 22%),
-        inset 0 1px 0 rgb(255 255 255 / 8%),
-        0 0 22px rgb(59 130 246 / 16%);
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      );
+      border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
     }
 
     :deep(.el-select__placeholder) {
@@ -968,15 +1022,15 @@
     }
 
     :deep(.el-select__caret) {
-      color: rgb(148 163 184 / 95%);
+      color: var(--theme-color, var(--art-primary, #3b82f6));
     }
 
     :deep(.el-select__suffix) {
-      color: rgb(148 163 184 / 90%);
+      color: var(--theme-color, var(--art-primary, #3b82f6));
     }
 
     :deep(.el-icon.el-select__loading) {
-      color: var(--art-primary, #3b82f6);
+      color: var(--theme-color, var(--art-primary, #3b82f6));
     }
   }
 
@@ -1529,6 +1583,23 @@
 
   .rtd-filter-select-popper .el-select-dropdown__item.is-hovering {
     background: rgb(59 130 246 / 12%);
+  }
+
+  .rtd-filter-select-popper .app-platform-search-select__panel {
+    color: #cbd5e1;
+  }
+
+  .rtd-filter-select-popper .app-platform-search-select__header {
+    color: #6b7a99;
+  }
+
+  .rtd-filter-select-popper .app-platform-search-select__row:hover,
+  .rtd-filter-select-popper .app-platform-search-select__row.is-active {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 14%,
+      transparent
+    );
   }
 
   @media (prefers-reduced-motion: reduce) {
