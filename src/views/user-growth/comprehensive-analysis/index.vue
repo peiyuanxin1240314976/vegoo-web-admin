@@ -223,50 +223,55 @@
   }
 
   .ca-filter-search {
-    --el-button-bg-color: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
-    --el-button-text-color: var(--el-color-primary);
-    --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 40%, transparent);
-    --el-button-hover-text-color: color-mix(
+    --el-button-bg-color: color-mix(
       in srgb,
-      var(--el-color-primary) 80%,
-      var(--text-primary)
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
     );
-    --el-button-hover-border-color: var(--el-color-primary);
-    --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
-    --el-button-active-text-color: color-mix(
+    --el-button-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-bg-color: color-mix(
       in srgb,
-      var(--el-color-primary) 80%,
-      var(--text-primary)
+      var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+      transparent
     );
-    --el-button-active-border-color: var(--el-color-primary);
-    --el-button-active-bg-color: color-mix(in srgb, var(--el-color-primary) 22%, transparent);
+    --el-button-active-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-active-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-active-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+      transparent
+    );
 
-    box-shadow: 0 0 14px color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    box-shadow: none;
     transition:
       box-shadow 0.22s var(--ease-default),
       transform 0.18s var(--ease-default);
 
     &:hover {
-      box-shadow: 0 0 22px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
       transform: translateY(-1px);
     }
   }
 
   .ca-filter-chip {
-    --ca-filter-accent: var(--el-color-primary);
+    --ca-filter-accent: var(--theme-color, var(--art-primary, #3b82f6));
 
     box-sizing: border-box;
     display: inline-flex;
     gap: 10px;
     align-items: center;
     min-height: 40px;
-    padding: 8px 18px;
+    padding: 8px 14px;
     color: var(--text-secondary);
     white-space: nowrap;
-    background: color-mix(in srgb, var(--ca-filter-accent) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--ca-filter-accent) 30%, transparent);
-    border-radius: 9999px;
-    box-shadow: 0 0 16px color-mix(in srgb, var(--ca-filter-accent) 10%, transparent);
+    background: color-mix(in srgb, var(--ca-filter-accent) 6%, transparent);
+    border: 1px solid var(--ca-filter-accent);
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
   }
 
   .ca-filter-chip__icon {
@@ -281,22 +286,22 @@
   }
 
   .ca-filter-select {
-    width: 134px;
-    min-width: 110px;
+    width: 160px;
+    min-width: 140px;
   }
 
   :deep(.ca-filter-select) {
-    --el-input-focus-border-color: var(--el-color-primary);
-    --el-border-color-hover: color-mix(in srgb, var(--el-color-primary) 75%, transparent);
-    --el-border-color-focus: var(--el-color-primary);
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
     --el-component-size: 40px;
   }
 
-  :deep(.ca-filter-select .el-input__wrapper) {
-    padding: 0 14px;
-    background: color-mix(in srgb, var(--el-color-primary) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent);
-    border-radius: 9999px;
+  :deep(.ca-filter-select .el-select__wrapper) {
+    padding: 0 12px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color 0.22s var(--ease-default),
@@ -304,24 +309,36 @@
       background-color 0.22s var(--ease-default);
   }
 
-  :deep(.ca-filter-select .el-input__inner) {
+  :deep(.ca-filter-select .el-select__selected-item) {
     font-size: 14px;
     color: var(--text-primary);
   }
 
-  :deep(.ca-filter-select .el-select__caret) {
-    color: var(--el-color-primary);
+  :deep(.ca-filter-select .el-select__placeholder) {
+    color: var(--el-text-color-placeholder);
   }
 
-  :deep(.ca-filter-select .el-input__wrapper.is-focus) {
-    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent) !important;
-    border-color: var(--el-color-primary) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 20%, transparent) !important;
+  :deep(.ca-filter-select .el-select__caret),
+  :deep(.ca-filter-select .el-select__suffix),
+  :deep(.ca-filter-select .el-select__icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.ca-filter-select .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--el-color-primary) 60%, transparent);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
+  :deep(.ca-filter-select .el-select__wrapper.is-focused) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.ca-filter-select .el-select__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -457,14 +474,16 @@
 <style lang="scss">
   .ca-select-popper {
     z-index: 3200 !important;
-    border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent);
-    box-shadow:
-      0 12px 36px rgb(0 0 0 / 48%),
-      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 12px 36px rgb(0 0 0 / 48%);
 
     .el-select-dropdown__item.is-selected {
-      color: var(--el-color-primary);
-      background: color-mix(in srgb, var(--el-color-primary) 12%, var(--default-box-color));
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+        var(--default-box-color)
+      );
     }
   }
 </style>

@@ -99,7 +99,9 @@
             />
           </div>
 
-          <ElButton type="primary" plain round @click="onQuery">查询</ElButton>
+          <ElButton class="rev-query-btn" type="primary" plain round @click="onQuery"
+            >查询</ElButton
+          >
         </div>
 
         <!-- <button type="button" class="rev-export" @click="onExport">Export</button> -->
@@ -2772,56 +2774,72 @@
   }
 
   .rev-filter-panel :deep(.rev-select .el-select__wrapper) {
-    min-height: 32px;
+    min-height: 36px;
     padding: 0 10px;
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 24%);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
   .rev-filter-panel :deep(.rev-date .el-input__wrapper) {
-    min-height: 32px;
+    min-height: 36px;
     padding: 0 10px;
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 24%);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-select .el-select__wrapper),
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-input__wrapper) {
-    background: rgb(255 255 255 / 90%);
-    border: 1px solid var(--rev-pill-border);
-    box-shadow: none;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  .rev-filter-panel :deep(.rev-select .el-select__wrapper:hover),
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  .rev-filter-panel :deep(.rev-select .el-select__wrapper.is-focused),
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper.is-focus),
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper:focus-within) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   .rev-filter-panel :deep(.rev-query-btn.el-button) {
     height: 36px;
     padding: 0 18px;
     font-weight: 600;
-    color: #f8fafc;
-    background: linear-gradient(135deg, rgb(37 99 235 / 96%), rgb(6 182 212 / 88%));
-    border: 1px solid rgb(96 165 250 / 55%);
-    box-shadow:
-      0 0 0 1px rgb(186 230 253 / 14%) inset,
-      0 8px 26px rgb(37 99 235 / 38%),
-      0 0 32px rgb(6 182 212 / 12%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
   }
 
   .rev-filter-panel :deep(.rev-query-btn.el-button:hover) {
-    filter: brightness(1.08);
-    border-color: rgb(147 197 253 / 62%);
-    box-shadow:
-      0 0 0 1px rgb(186 230 253 / 20%) inset,
-      0 10px 34px rgb(37 99 235 / 45%),
-      0 0 44px rgb(6 182 212 / 20%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-query-btn.el-button) {
-    color: var(--rev-text);
-    background: var(--rev-pill);
-    border: 1px solid var(--rev-pill-border);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: none;
   }
 
@@ -2965,19 +2983,13 @@
   }
 
   :deep(.rev-select .el-select__wrapper) {
-    min-height: 30px;
-    padding: 0 8px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+    min-height: 36px;
+    padding: 0 10px;
   }
 
   :deep(.rev-date .el-input__wrapper) {
-    min-height: 30px;
-    padding: 0 8px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+    min-height: 36px;
+    padding: 0 10px;
   }
 
   :deep(.rev-date .el-input__inner) {
@@ -2987,12 +2999,12 @@
   :deep(.rev-select .el-select__selected-item),
   :deep(.rev-select .el-select__placeholder),
   :deep(.rev-select .el-select__caret) {
-    color: var(--rev-text);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.rev-date .el-input__prefix),
   :deep(.rev-date .el-input__suffix) {
-    color: var(--rev-text);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .rev-kpi-grid {

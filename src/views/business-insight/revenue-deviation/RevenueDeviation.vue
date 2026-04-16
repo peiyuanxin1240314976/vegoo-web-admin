@@ -49,6 +49,7 @@
         </el-select>
 
         <el-button
+          class="rd-filter-action rd-filter-action--apply"
           type="primary"
           plain
           round
@@ -1325,10 +1326,10 @@
   }
 
   :deep(.rd-filter-date .el-input__wrapper),
-  :deep(.rd-filter-select .el-input__wrapper) {
-    background: color-mix(in srgb, var(--art-primary) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 24%, transparent);
-    border-radius: 9999px;
+  :deep(.rd-filter-select .el-select__wrapper) {
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
     transition:
       border-color var(--duration-normal) var(--ease-out),
@@ -1336,23 +1337,73 @@
       background-color var(--duration-normal) var(--ease-out);
   }
 
+  :deep(.rd-filter-date.el-date-editor.el-date-editor--daterange) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      background-color var(--duration-normal) var(--ease-out);
+  }
+
+  :deep(.rd-filter-date.el-date-editor.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.rd-filter-date.el-date-editor.el-date-editor--daterange.is-active),
+  :deep(.rd-filter-date.el-date-editor.el-date-editor--daterange:focus-within) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
   :deep(.rd-filter-date .el-input__wrapper:hover),
-  :deep(.rd-filter-select .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--art-primary) 42%, transparent);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--art-primary) 16%, transparent);
+  :deep(.rd-filter-select .el-select__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   :deep(.rd-filter-date .el-input__wrapper.is-focus),
-  :deep(.rd-filter-select .el-input__wrapper.is-focus) {
-    background: color-mix(in srgb, var(--art-primary) 10%, transparent) !important;
-    border-color: color-mix(in srgb, var(--art-primary) 55%, transparent) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--art-primary) 18%, transparent) !important;
+  :deep(.rd-filter-select .el-select__wrapper.is-focused) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   :deep(.rd-filter-date .el-input__inner),
-  :deep(.rd-filter-select .el-input__inner) {
+  :deep(.rd-filter-select .el-select__selected-item) {
     font-size: 14px;
     color: var(--text-primary);
+  }
+
+  :deep(.rd-filter-date .el-range-separator),
+  :deep(.rd-filter-date .el-range__icon),
+  :deep(.rd-filter-date .el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  :deep(.rd-filter-select .el-select__placeholder) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  :deep(.rd-filter-select .el-select__caret),
+  :deep(.rd-filter-select .el-select__suffix),
+  :deep(.rd-filter-select .el-select__icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   .rd-filter-action {
@@ -1367,31 +1418,35 @@
   }
 
   .rd-filter-action--apply {
-    --rd-btn-bg: color-mix(in srgb, var(--el-color-primary) 78%, var(--default-box-color));
-    --rd-btn-bg-hover: color-mix(in srgb, var(--el-color-primary) 88%, var(--default-box-color));
-    --rd-btn-border: color-mix(in srgb, var(--el-color-primary) 70%, transparent);
-    --rd-btn-border-hover: color-mix(in srgb, var(--el-color-primary) 86%, transparent);
-    --el-button-bg-color: var(--rd-btn-bg);
-    --el-button-border-color: var(--rd-btn-border);
-    --el-button-hover-bg-color: var(--rd-btn-bg-hover);
-    --el-button-hover-border-color: var(--rd-btn-border-hover);
+    --el-button-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    );
+    --el-button-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-bg-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+      transparent
+    );
+    --el-button-hover-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-hover-text-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-button-active-bg-color: color-mix(
       in srgb,
-      var(--el-color-primary) 94%,
-      var(--default-box-color)
+      var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+      transparent
     );
-    --el-button-active-border-color: color-mix(in srgb, var(--el-color-primary) 92%, transparent);
+    --el-button-active-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-button-active-text-color: var(--theme-color, var(--art-primary, #3b82f6));
 
-    color: var(--el-color-white) !important;
-    box-shadow:
-      0 0 18px color-mix(in srgb, var(--el-color-primary) 18%, transparent),
-      0 0 42px color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: none;
   }
 
   .rd-filter-action--apply:hover {
-    box-shadow:
-      0 0 22px color-mix(in srgb, var(--el-color-primary) 22%, transparent),
-      0 0 50px color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
     transform: translateY(-2px);
   }
 
@@ -2410,5 +2465,16 @@
 <style lang="scss">
   .rd-filter-popper {
     z-index: var(--z-dropdown);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 12px 36px rgb(0 0 0 / 48%);
+  }
+
+  .rd-filter-popper .el-select-dropdown__item.is-selected {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+      var(--default-box-color)
+    );
   }
 </style>

@@ -496,7 +496,13 @@
           </ElSelect>
         </div>
 
-        <ElButton type="primary" plain round :disabled="pendingMeta" @click="reloadDashboard"
+        <ElButton
+          class="bi-query-btn"
+          type="primary"
+          plain
+          round
+          :disabled="pendingMeta"
+          @click="reloadDashboard"
           >查询</ElButton
         >
       </div>
@@ -940,20 +946,31 @@
   }
 
   .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper),
-  .bi-filter-panel :deep(.bi-filter-date.el-date-editor .el-range-editor.el-input__wrapper) {
-    min-height: 34px;
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 26%);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange) {
+    min-height: 36px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
   .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper:hover),
-  .bi-filter-panel :deep(.bi-filter-date .el-range-editor.el-input__wrapper:hover) {
-    border-color: rgb(147 197 253 / 42%);
-    box-shadow:
-      0 0 0 1px rgb(56 189 248 / 12%) inset,
-      0 0 20px rgb(59 130 246 / 12%);
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper.is-focused),
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange.is-active),
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:focus-within) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   .bi-filter-field {
@@ -983,25 +1000,40 @@
   }
 
   :deep(.bi-filter-select .el-select__wrapper),
-  :deep(.bi-filter-date.el-date-editor) {
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 26%);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+  :deep(.bi-filter-date.el-date-editor--daterange) {
+    min-height: 36px;
   }
 
   :deep(.bi-filter-select .el-select__wrapper:hover),
-  :deep(.bi-filter-date .el-range-editor.el-input__wrapper:hover) {
-    box-shadow: 0 0 0 1px #38bdf8 inset;
+  :deep(.bi-filter-date.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.bi-filter-select .el-select__placeholder),
+  :deep(.bi-filter-select .el-select__selected-item),
+  :deep(.bi-filter-select .el-select__caret),
   :deep(.bi-filter-date .el-range-input) {
-    color: var(--text-pri);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.bi-filter-date .el-range-separator) {
-    color: var(--text-sec);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  .bi-filter-panel :deep(.bi-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 600;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
+  }
+
+  .bi-filter-panel :deep(.bi-query-btn.el-button:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   .bi-kpi-row {
@@ -1442,12 +1474,9 @@
   :global(html.dark .bi-select__popper.el-popper) {
     overflow: hidden;
     background: rgb(24 24 27 / 98%) !important;
-    border: 1px solid rgb(96 165 250 / 30%) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
     border-radius: 12px !important;
-    box-shadow:
-      0 18px 52px rgb(0 0 0 / 58%),
-      0 0 0 1px rgb(96 165 250 / 14%),
-      inset 0 1px 0 rgb(186 230 253 / 10%) !important;
+    box-shadow: 0 18px 52px rgb(0 0 0 / 58%) !important;
   }
 
   :global(html:not(.dark) .bi-select__popper.el-popper) {

@@ -874,31 +874,36 @@
     }
 
     &--query {
-      --el-button-bg-color: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
-      --el-button-text-color: var(--el-color-primary);
-      --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 40%, transparent);
-      --el-button-hover-text-color: color-mix(
+      --el-button-bg-color: color-mix(
         in srgb,
-        var(--el-color-primary) 80%,
-        var(--text-primary)
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
       );
-      --el-button-hover-border-color: var(--el-color-primary);
-      --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
-      --el-button-active-text-color: color-mix(
+      --el-button-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-hover-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-hover-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-hover-bg-color: color-mix(
         in srgb,
-        var(--el-color-primary) 80%,
-        var(--text-primary)
+        var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+        transparent
       );
-      --el-button-active-border-color: var(--el-color-primary);
-      --el-button-active-bg-color: color-mix(in srgb, var(--el-color-primary) 22%, transparent);
+      --el-button-active-text-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-active-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      --el-button-active-bg-color: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+        transparent
+      );
 
-      box-shadow: 0 0 14px color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+      box-shadow: none;
       transition:
         box-shadow 0.22s var(--ease-default),
         transform 0.18s var(--ease-default);
 
       &:hover {
-        box-shadow: 0 0 22px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
+        box-shadow: 0 0 0 1px
+          color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
         transform: translateY(-1px);
       }
     }
@@ -928,16 +933,21 @@
   }
 
   :deep(.iap-dashboard-sel) {
-    --el-input-focus-border-color: var(--el-color-primary);
-    --el-border-color-hover: color-mix(in srgb, var(--el-color-primary) 75%, transparent);
-    --el-border-color-focus: var(--el-color-primary);
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
     --el-component-size: 40px;
 
+    .el-select__wrapper,
     .el-input__wrapper {
       padding: 0 14px;
-      background: color-mix(in srgb, var(--el-color-primary) 6%, transparent) !important;
-      border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent) !important;
-      border-radius: 9999px;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      border-radius: var(--el-border-radius-base, 4px);
       box-shadow: none !important;
       transition:
         border-color 0.22s var(--ease-default),
@@ -945,29 +955,80 @@
         background-color 0.22s var(--ease-default);
     }
 
-    .el-input__inner {
+    .el-input__inner,
+    .el-select__selected-item {
       font-size: 14px;
-      color: var(--art-gray-900) !important;
+      color: var(--text-primary) !important;
     }
 
     .el-input__prefix-inner {
       margin-right: 4px;
     }
 
-    .el-select__caret {
-      color: var(--el-color-primary);
+    .el-select__placeholder {
+      color: var(--el-text-color-placeholder);
+    }
+
+    .el-select__caret,
+    .el-select__suffix,
+    .el-select__icon {
+      color: var(--theme-color, var(--art-primary, #3b82f6));
     }
   }
 
-  :deep(.iap-dashboard-sel .el-input__wrapper.is-focus) {
-    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent) !important;
-    border-color: var(--el-color-primary) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 20%, transparent) !important;
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    border-radius: var(--el-border-radius-base, 4px) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.22s var(--ease-default),
+      box-shadow 0.22s var(--ease-default),
+      background-color 0.22s var(--ease-default);
   }
 
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
+  }
+
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange.is-active),
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange:focus-within) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range-input),
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range-separator),
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range__icon),
+  :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range__close-icon) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  :deep(.iap-dashboard-sel .el-select__wrapper.is-focused),
+  :deep(.iap-dashboard-sel .el-input__wrapper.is-focus),
+  :deep(.iap-dashboard-sel.el-date-editor--daterange:focus-within .el-input__wrapper) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
+  }
+
+  :deep(.iap-dashboard-sel .el-select__wrapper:hover),
   :deep(.iap-dashboard-sel .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--el-color-primary) 60%, transparent) !important;
-    box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
   }
 
   :deep(.iap-dashboard-sel--w220) {

@@ -71,7 +71,7 @@
           />
         </div>
 
-        <ElButton type="primary" plain round @click="onQuery">查询</ElButton>
+        <ElButton class="iaa-query-btn" type="primary" plain round @click="onQuery">查询</ElButton>
       </div>
     </header>
 
@@ -296,56 +296,73 @@
   }
 
   .iaa-filter-panel :deep(.iaa-select .el-select__wrapper) {
-    min-height: 32px;
+    min-height: 36px;
     padding: 0 10px;
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 24%);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
   .iaa-filter-panel :deep(.iaa-date .el-input__wrapper) {
-    min-height: 32px;
+    min-height: 36px;
     padding: 0 10px;
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 24%);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__wrapper),
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-date .el-input__wrapper) {
-    background: rgb(255 255 255 / 90%);
-    border: 1px solid rgb(15 23 42 / 8%);
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: none;
+  }
+
+  .iaa-filter-panel :deep(.iaa-select .el-select__wrapper:hover),
+  .iaa-filter-panel :deep(.iaa-date .el-input__wrapper:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+  }
+
+  .iaa-filter-panel :deep(.iaa-select .el-select__wrapper.is-focused),
+  .iaa-filter-panel :deep(.iaa-date .el-input__wrapper.is-focus),
+  .iaa-filter-panel :deep(.iaa-date .el-input__wrapper:focus-within) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   .iaa-filter-panel :deep(.iaa-query-btn.el-button) {
     height: 36px;
     padding: 0 18px;
     font-weight: 600;
-    color: #f8fafc;
-    background: linear-gradient(135deg, rgb(37 99 235 / 96%), rgb(6 182 212 / 88%));
-    border: 1px solid rgb(96 165 250 / 55%);
-    box-shadow:
-      0 0 0 1px rgb(186 230 253 / 14%) inset,
-      0 8px 26px rgb(37 99 235 / 38%),
-      0 0 32px rgb(6 182 212 / 12%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
   }
 
   .iaa-filter-panel :deep(.iaa-query-btn.el-button:hover) {
-    filter: brightness(1.08);
-    border-color: rgb(147 197 253 / 62%);
-    box-shadow:
-      0 0 0 1px rgb(186 230 253 / 20%) inset,
-      0 10px 34px rgb(37 99 235 / 45%),
-      0 0 44px rgb(6 182 212 / 20%);
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-query-btn.el-button) {
-    color: #0f172a;
-    background: rgb(15 23 42 / 6%);
-    border: 1px solid rgb(15 23 42 / 8%);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: none;
   }
 
@@ -381,19 +398,13 @@
   }
 
   :deep(.iaa-select .el-select__wrapper) {
-    min-height: 30px;
-    padding: 0 8px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+    min-height: 36px;
+    padding: 0 10px;
   }
 
   :deep(.iaa-date .el-input__wrapper) {
-    min-height: 30px;
-    padding: 0 8px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+    min-height: 36px;
+    padding: 0 10px;
   }
 
   :deep(.iaa-date .el-input__inner) {
@@ -407,23 +418,23 @@
   :deep(.iaa-select .el-select__selected-item),
   :deep(.iaa-select .el-select__placeholder),
   :deep(.iaa-select .el-select__caret) {
-    color: var(--text-primary);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__selected-item),
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__placeholder),
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__caret) {
-    color: #0f172a;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.iaa-date .el-input__prefix),
   :deep(.iaa-date .el-input__suffix) {
-    color: var(--text-primary);
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-date .el-input__prefix),
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-date .el-input__suffix) {
-    color: #0f172a;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   /* 小屏：筛选条改为纵向堆叠 */
@@ -582,18 +593,24 @@
     z-index: 3200 !important;
     background: color-mix(in srgb, var(--default-bg-color) 92%, transparent);
     backdrop-filter: blur(12px);
-    border: 1px solid color-mix(in srgb, var(--art-primary) 28%, transparent);
-    box-shadow:
-      0 12px 36px rgb(0 0 0 / 48%),
-      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 12px 36px rgb(0 0 0 / 48%);
   }
 
   .iaa-select__popper .el-select-dropdown__item.is-selected {
-    color: var(--art-primary);
-    background: color-mix(in srgb, var(--art-primary) 12%, var(--default-box-color));
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 12%,
+      var(--default-box-color)
+    );
   }
 
   .iaa-select__popper .el-select-dropdown__item:hover {
-    background: color-mix(in srgb, var(--art-primary) 10%, var(--default-box-color));
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+      var(--default-box-color)
+    );
   }
 </style>
