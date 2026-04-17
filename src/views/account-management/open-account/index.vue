@@ -1,176 +1,254 @@
 <template>
-  <div class="oa-page art-full-height">
-    <div class="oa-page-fx" aria-hidden="true"></div>
-    <OpenAccountToolbar
-      v-model:search-keyword="searchKeyword"
-      @new="handleNew"
-      @export="handleExport"
-    />
-
-    <div class="oa-page__main">
-      <div class="oa-page__list">
-        <OpenAccountTab
-          ref="openAccountTabRef"
-          :search-keyword="searchKeyword"
-          :selected-id="currentRecord?.id"
-          @select="handleSelect"
-          @assign="handleAssignOpen"
-          @delete="handleDeleteOpen"
-        />
+  <div class="subject-page art-full-height">
+    <div class="subject-page__fx" aria-hidden="true"></div>
+    <div class="subject-page__hero">
+      <div class="subject-page__hero-copy">
+        <p class="subject-page__eyebrow">Account Management</p>
+        <h1 class="subject-page__title">开户主体配置</h1>
+        <p class="subject-page__subtitle">
+          围绕主体资质与 Facebook / TikTok 开通状态，统一管理可用性、执照信息与平台备注。
+        </p>
       </div>
-      <div class="oa-page__detail">
-        <OpenAccountDetailPanel
-          :data="currentRecord"
-          @assign="handleAssignOpen"
-          @delete="handleDeleteOpen"
-        />
+      <div class="subject-page__hero-panel">
+        <div class="subject-page__hero-kpi">
+          <span class="subject-page__hero-label">主体总数</span>
+          <strong>{{ stats.total }}</strong>
+        </div>
+        <div class="subject-page__hero-kpi">
+          <span class="subject-page__hero-label">最近更新</span>
+          <strong>{{ latestUpdateTime }}</strong>
+        </div>
       </div>
     </div>
 
-    <OpenAccountFormDialog v-model:visible="formVisible" @success="handleFormSuccess" />
+    <SubjectSettingStatCards :stats="stats" />
 
-    <OpenAccountAssignDialog
-      v-model:visible="assignVisible"
-      :data="assignTarget"
-      @success="handleAssignSuccess"
-    />
+    <div class="subject-page__surface">
+      <SubjectSettingToolbar
+        v-model:keyword="keyword"
+        v-model:platform-filter="platformFilter"
+        v-model:license-filter="licenseFilter"
+        v-model:sort-order="sortOrder"
+        @create="handleCreate"
+      />
 
-    <OpenAccountDeleteDialog
-      v-model:visible="deleteVisible"
-      :data="deleteTarget"
-      @confirm="handleDeleteConfirm"
+      <SubjectSettingTable
+        :rows="filteredRows"
+        @edit="handleEdit"
+        @toggle-platform="handleQuickToggle"
+      />
+    </div>
+
+    <SubjectSettingDrawer
+      v-model:visible="drawerVisible"
+      :mode="drawerMode"
+      :data="editingRecord"
+      @submit="handleSubmit"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { ElMessage } from 'element-plus'
-  import OpenAccountToolbar from './modules/open-account-toolbar.vue'
-  import OpenAccountTab from './modules/open-account-tab.vue'
-  import OpenAccountDetailPanel from '@/views/config-management/account-management/modules/open-account-detail-panel.vue'
-  import OpenAccountFormDialog from '@/views/config-management/account-management/modules/open-account-form-dialog.vue'
-  import OpenAccountAssignDialog from '@/views/config-management/account-management/modules/open-account-assign-dialog.vue'
-  import OpenAccountDeleteDialog from '@/views/config-management/account-management/modules/open-account-delete-dialog.vue'
-  import { exportOpenAccountList } from '@/api/config-management/account-management'
+  import SubjectSettingDrawer from './modules/subject-setting-drawer.vue'
+  import SubjectSettingStatCards from './modules/subject-setting-stat-cards.vue'
+  import SubjectSettingTable from './modules/subject-setting-table.vue'
+  import SubjectSettingToolbar from './modules/subject-setting-toolbar.vue'
+  import type {
+    SubjectPlatformKey,
+    SubjectSettingItem,
+    SubjectSettingListParams,
+    SubjectSettingStats
+  } from './types'
+  import { SubjectSettingEndpoint, isSubjectSettingEndpointMock } from './config/data-source'
   import {
-    OpenAccountEndpoint,
-    isOpenAccountEndpointMock
-  } from '@/views/account-management/open-account/config/data-source'
-  import { mockExportOpenAccountList } from '@/views/account-management/open-account/mock/open-account-api-mock'
-  import type { OpenAccountItem } from '@/views/config-management/account-management/types'
+    mockFetchSubjectSettings,
+    mockSaveSubjectSetting,
+    mockToggleSubjectPlatform
+  } from './mock/subject-setting-api-mock'
 
   defineOptions({ name: 'OpenAccount' })
 
-  const openAccountTabRef = ref<InstanceType<typeof OpenAccountTab> | null>(null)
+  type PlatformFilter = NonNullable<SubjectSettingListParams['platformStatus']>
+  type LicenseFilter = NonNullable<SubjectSettingListParams['hasBusinessLicense']>
+  type SortOrder = NonNullable<SubjectSettingListParams['sortOrder']>
+  type DrawerMode = 'create' | 'edit'
 
-  const searchKeyword = ref('')
-  const formVisible = ref(false)
-  const assignVisible = ref(false)
-  const deleteVisible = ref(false)
-  const currentRecord = ref<OpenAccountItem | null>(null)
-  const assignTarget = ref<OpenAccountItem | null>(null)
-  const deleteTarget = ref<OpenAccountItem | null>(null)
+  const keyword = ref('')
+  const platformFilter = ref<PlatformFilter>('all')
+  const licenseFilter = ref<LicenseFilter>('all')
+  const sortOrder = ref<SortOrder>('updated_desc')
 
-  const handleSelect = (row: OpenAccountItem) => {
-    currentRecord.value = row
-  }
+  const drawerVisible = ref(false)
+  const drawerMode = ref<DrawerMode>('create')
+  const editingRecord = ref<SubjectSettingItem | null>(null)
 
-  const handleNew = () => {
-    formVisible.value = true
-  }
+  const list = ref<SubjectSettingItem[]>([])
 
-  const handleExport = () => {
-    const useMock = isOpenAccountEndpointMock(OpenAccountEndpoint.Export)
-    if (!useMock) {
-      exportOpenAccountList({})
-        .then(() => ElMessage.success('导出成功'))
-        .catch(() => ElMessage.error('导出失败'))
+  const filters = computed<SubjectSettingListParams>(() => ({
+    keyword: keyword.value,
+    platformStatus: platformFilter.value,
+    hasBusinessLicense: licenseFilter.value,
+    sortOrder: sortOrder.value
+  }))
+
+  const filteredRows = computed(() => list.value)
+
+  const stats = computed<SubjectSettingStats>(() => {
+    const total = list.value.length
+    const facebookEnabled = list.value.filter((item) => item.facebookEnabled).length
+    const tiktokEnabled = list.value.filter((item) => item.tiktokEnabled).length
+    const bothEnabled = list.value.filter(
+      (item) => item.facebookEnabled && item.tiktokEnabled
+    ).length
+
+    return {
+      total,
+      facebookEnabled,
+      tiktokEnabled,
+      bothEnabled
+    }
+  })
+
+  const latestUpdateTime = computed(() => list.value[0]?.updateTime ?? '--')
+
+  async function loadList() {
+    if (isSubjectSettingEndpointMock(SubjectSettingEndpoint.List)) {
+      list.value = await mockFetchSubjectSettings(filters.value)
       return
     }
-    // mock 分支：仅模拟返回 downloadUrl（不发网络请求）
-    void mockExportOpenAccountList()
-    ElMessage.success('导出成功')
+
+    list.value = await mockFetchSubjectSettings(filters.value)
   }
 
-  const handleAssignOpen = (row: OpenAccountItem) => {
-    assignTarget.value = row
-    assignVisible.value = true
+  onMounted(() => {
+    void loadList()
+  })
+
+  watch(filters, () => {
+    void loadList()
+  })
+
+  async function refreshWithToast(message?: string) {
+    await loadList()
+    if (message) ElMessage.success(message)
   }
 
-  const handleDeleteOpen = (row: OpenAccountItem) => {
-    deleteTarget.value = row
-    deleteVisible.value = true
+  function handleCreate() {
+    drawerMode.value = 'create'
+    editingRecord.value = null
+    drawerVisible.value = true
   }
 
-  const handleFormSuccess = () => {
-    formVisible.value = false
-    openAccountTabRef.value?.reloadList?.()
-    ElMessage.success('开户记录已创建，飞书通知已发送')
+  function handleEdit(row: SubjectSettingItem) {
+    drawerMode.value = 'edit'
+    editingRecord.value = { ...row }
+    drawerVisible.value = true
   }
 
-  const handleAssignSuccess = () => {
-    assignVisible.value = false
-    assignTarget.value = null
-    openAccountTabRef.value?.reloadList?.()
-    ElMessage.success('凭据已分配，账户状态已激活')
+  async function handleQuickToggle(payload: {
+    id: string
+    platform: SubjectPlatformKey
+    enabled: boolean
+  }) {
+    try {
+      await mockToggleSubjectPlatform(payload)
+      await refreshWithToast(
+        `${payload.platform === 'facebook' ? 'Facebook' : 'TikTok'} 状态已更新`
+      )
+    } catch {
+      ElMessage.error('平台状态更新失败')
+    }
   }
 
-  const handleDeleteConfirm = () => {
-    if (!deleteTarget.value) return
-    openAccountTabRef.value?.removeFromList?.(deleteTarget.value.id)
-    if (currentRecord.value?.id === deleteTarget.value.id) currentRecord.value = null
-    deleteTarget.value = null
-    ElMessage.success('开户记录已删除')
+  async function handleSubmit(payload: SubjectSettingItem) {
+    try {
+      if (isSubjectSettingEndpointMock(SubjectSettingEndpoint.Save)) {
+        await mockSaveSubjectSetting(payload)
+      } else {
+        await mockSaveSubjectSetting(payload)
+      }
+    } catch {
+      ElMessage.error('主体保存失败')
+      return
+    }
+
+    drawerVisible.value = false
+    await refreshWithToast(drawerMode.value === 'create' ? '主体已创建' : '主体已保存')
   }
 </script>
 
 <style lang="scss" scoped>
-  .oa-page {
+  .subject-page {
+    --page-border: color-mix(in srgb, var(--art-primary) 16%, transparent);
+    --page-border-strong: color-mix(in srgb, var(--art-primary) 28%, transparent);
+    --page-surface: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    --page-surface-soft: color-mix(in srgb, var(--default-box-color) 72%, transparent);
+    --page-highlight: color-mix(in srgb, var(--theme-color) 24%, transparent);
+    --page-text-main: color-mix(in srgb, var(--text-primary) 92%, white 8%);
+    --page-text-soft: var(--text-secondary);
+    --page-text-faint: var(--text-tertiary);
+
     position: relative;
-    display: flex;
-    flex-direction: column;
     min-height: 100%;
-    padding: 0 var(--space-6) var(--space-6);
+    padding: 24px;
     overflow-x: clip;
-    color: var(--text-primary);
     background: var(--default-bg-color);
     isolation: isolate;
   }
 
-  .oa-page::before {
+  .subject-page::before {
     position: absolute;
     inset: 0;
     z-index: 0;
     pointer-events: none;
     content: '';
     background:
-      radial-gradient(ellipse 72% 52% at 6% 6%, rgb(16 185 129 / 26%) 0%, transparent 58%),
-      radial-gradient(ellipse 58% 44% at 94% 8%, rgb(59 130 246 / 26%) 0%, transparent 58%),
-      radial-gradient(ellipse 42% 34% at 50% 14%, rgb(168 85 247 / 12%) 0%, transparent 55%);
+      radial-gradient(
+        ellipse 70% 50% at 6% 6%,
+        color-mix(in srgb, var(--theme-color) 36%, transparent) 0%,
+        color-mix(in srgb, var(--art-primary) 18%, transparent) 38%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 55% 42% at 94% 8%,
+        color-mix(in srgb, var(--art-primary) 34%, transparent) 0%,
+        color-mix(in srgb, var(--theme-color) 14%, transparent) 38%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 42% 34% at 50% 14%,
+        color-mix(in srgb, var(--theme-color) 12%, transparent) 0%,
+        transparent 55%
+      );
     mask-image: linear-gradient(to bottom, black 0%, black 36%, transparent 66%);
-    animation: oa-aurora-drift 14s ease-in-out infinite alternate;
+    animation: subject-aurora-drift 14s ease-in-out infinite alternate;
   }
 
-  .oa-page::after {
+  .subject-page::after {
     position: absolute;
     inset: 0;
     z-index: 0;
     pointer-events: none;
     content: '';
     background-image:
-      linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px);
+      linear-gradient(color-mix(in srgb, var(--art-primary) 5%, transparent) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--art-primary) 5%, transparent) 1px,
+        transparent 1px
+      );
     background-size: 40px 40px;
     mask-image: linear-gradient(to bottom, black 0%, black 24%, transparent 48%);
   }
 
-  .oa-page > *:not(.oa-page-fx) {
+  .subject-page > *:not(.subject-page__fx) {
     position: relative;
     z-index: 1;
   }
 
-  .oa-page-fx {
+  .subject-page__fx {
     position: absolute;
     inset: -12% -12% 52%;
     z-index: 0;
@@ -178,21 +256,141 @@
     background: conic-gradient(
       from 0deg at 50% 50%,
       transparent 0deg,
-      rgb(59 130 246 / 10%) 55deg,
-      rgb(6 182 212 / 7%) 80deg,
+      color-mix(in srgb, var(--art-primary) 10%, transparent) 55deg,
+      color-mix(in srgb, var(--theme-color) 8%, transparent) 80deg,
       transparent 130deg,
-      rgb(16 185 129 / 8%) 200deg,
+      color-mix(in srgb, var(--theme-color) 10%, transparent) 200deg,
       transparent 285deg,
-      rgb(168 85 247 / 7%) 330deg,
+      color-mix(in srgb, var(--art-primary) 7%, transparent) 330deg,
       transparent 360deg
     );
     opacity: 0.78;
     mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 82%);
-    animation: oa-fx-spin 52s linear infinite;
+    animation: subject-fx-spin 52s linear infinite;
     will-change: transform;
   }
 
-  @keyframes oa-aurora-drift {
+  .subject-page__hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.9fr);
+    gap: 18px;
+    align-items: stretch;
+    margin-bottom: 18px;
+  }
+
+  .subject-page__hero-copy,
+  .subject-page__hero-panel,
+  .subject-page__surface {
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--page-border);
+    border-radius: 24px;
+    box-shadow:
+      0 22px 60px rgb(0 0 0 / 24%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 8%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  }
+
+  .subject-page__hero-copy {
+    position: relative;
+    padding: 28px 30px;
+    overflow: hidden;
+    color: var(--page-text-main);
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--default-box-color) 92%, black 8%),
+        color-mix(in srgb, var(--default-box-color) 82%, black 18%)
+      ),
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--theme-color) 12%, transparent),
+        color-mix(in srgb, var(--art-primary) 10%, transparent)
+      );
+  }
+
+  .subject-page__hero-copy::before {
+    position: absolute;
+    inset: 1px;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(color-mix(in srgb, white 4%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, white 4%, transparent) 1px, transparent 1px);
+    background-size: 20px 20px;
+    border-radius: inherit;
+    opacity: 0.22;
+    mask-image: linear-gradient(180deg, black 0%, rgb(0 0 0 / 45%) 68%, transparent 100%);
+  }
+
+  .subject-page__eyebrow {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    opacity: 0.72;
+  }
+
+  .subject-page__title {
+    margin: 0;
+    font-size: 32px;
+    line-height: 1.15;
+  }
+
+  .subject-page__subtitle {
+    max-width: 720px;
+    margin: 14px 0 0;
+    font-size: 14px;
+    line-height: 1.8;
+    color: color-mix(in srgb, var(--page-text-main) 74%, transparent);
+  }
+
+  .subject-page__hero-panel {
+    display: grid;
+    gap: 14px;
+    padding: 20px;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--default-box-color) 88%, transparent),
+        color-mix(in srgb, var(--default-box-color) 74%, transparent)
+      ),
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--theme-color) 8%, transparent),
+        color-mix(in srgb, var(--art-primary) 6%, transparent)
+      );
+  }
+
+  .subject-page__hero-kpi {
+    padding: 18px;
+    background: color-mix(in srgb, var(--default-bg-color) 24%, transparent);
+    border: 1px solid var(--page-border);
+    border-radius: 18px;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
+  }
+
+  .subject-page__hero-kpi strong {
+    display: block;
+    margin-top: 8px;
+    font-size: 24px;
+    color: var(--page-text-main);
+  }
+
+  .subject-page__hero-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--page-text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .subject-page__surface {
+    padding: 18px;
+    background: var(--page-surface);
+  }
+
+  @keyframes subject-aurora-drift {
     0% {
       opacity: 0.72;
       transform: scale(1) translate(0, 0);
@@ -204,35 +402,42 @@
     }
   }
 
-  @keyframes oa-fx-spin {
+  @keyframes subject-fx-spin {
     to {
       transform: rotate(360deg);
     }
   }
 
-  .oa-page__main {
-    display: flex;
-    flex: 1;
-    gap: var(--space-4);
-    min-height: 0;
-  }
-
-  .oa-page__list {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .oa-page__detail {
-    display: flex;
-    flex-shrink: 0;
-    align-items: stretch;
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .oa-page::before,
-    .oa-page-fx {
+    .subject-page::before,
+    .subject-page__fx {
       animation: none;
+    }
+  }
+
+  @media (width <= 1080px) {
+    .subject-page__hero {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (width <= 768px) {
+    .subject-page {
+      padding: 16px;
+    }
+
+    .subject-page__hero-copy,
+    .subject-page__hero-panel,
+    .subject-page__surface {
+      border-radius: 20px;
+    }
+
+    .subject-page__hero-copy {
+      padding: 22px;
+    }
+
+    .subject-page__title {
+      font-size: 26px;
     }
   }
 </style>

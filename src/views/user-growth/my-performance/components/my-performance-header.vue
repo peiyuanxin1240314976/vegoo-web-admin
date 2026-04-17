@@ -127,10 +127,36 @@
   const leftQuaternary = computed(() => props.leftQuaternary)
   const leftHint = computed(() => props.leftHint)
 
+  function pickAppNowQuarterLabel(options: MyPerformancePeriodOption[]): string {
+    const now = getAppNow()
+    const targetYear = now.getFullYear()
+    const targetQuarter = Math.floor(now.getMonth() / 3) + 1
+    const parseQuarter = (value: string) => {
+      const m = String(value).match(/(\d{4})\s*-?\s*[Qq]([1-4])/)
+      if (!m) return null
+      return { year: Number(m[1]), quarter: Number(m[2]) }
+    }
+
+    const exact = options.find((o) => {
+      const parsed = parseQuarter(o.value)
+      return parsed?.year === targetYear && parsed.quarter === targetQuarter
+    })
+    if (exact) return exact.value
+
+    const sameQuarter = options.find((o) => {
+      const parsed = parseQuarter(o.value)
+      return parsed?.quarter === targetQuarter
+    })
+    if (sameQuarter) return sameQuarter.value
+
+    return options[0]?.value ?? ''
+  }
+
   const activeQuarterLabel = computed(() => {
     const quarterOpts = props.periodOptions?.quarter ?? []
     const found = quarterOpts.find((o) => o.value === props.periodValue)
-    return (props.periodType === 'quarter' ? found?.value : quarterOpts[0]?.value) ?? ''
+    if (props.periodType === 'quarter') return found?.value ?? ''
+    return pickAppNowQuarterLabel(quarterOpts)
   })
 
   const activeMonthLabel = computed(() => {

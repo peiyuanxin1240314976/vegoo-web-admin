@@ -31,6 +31,32 @@ function pickAppNowMonthPeriodValue(monthOptions: MyPerformancePeriodOption[]): 
   return target
 }
 
+/** 季度口径：优先匹配应用“当前季度”（由 getAppNow 控制） */
+function pickAppNowQuarterPeriodValue(quarterOptions: MyPerformancePeriodOption[]): string {
+  const now = getAppNow()
+  const targetYear = now.getFullYear()
+  const targetQuarter = Math.floor(now.getMonth() / 3) + 1
+  const parseQuarter = (value: string) => {
+    const m = String(value).match(/(\d{4})\s*-?\s*[Qq]([1-4])/)
+    if (!m) return null
+    return { year: Number(m[1]), quarter: Number(m[2]) }
+  }
+
+  const exact = quarterOptions.find((o) => {
+    const parsed = parseQuarter(o.value)
+    return parsed?.year === targetYear && parsed.quarter === targetQuarter
+  })
+  if (exact) return exact.value
+
+  const sameQuarter = quarterOptions.find((o) => {
+    const parsed = parseQuarter(o.value)
+    return parsed?.quarter === targetQuarter
+  })
+  if (sameQuarter) return sameQuarter.value
+
+  return quarterOptions[0]?.value ?? ''
+}
+
 /** 兼容远程未返回 selectedPersonId、列表字段异常等情况，保证能拼出 queryBody */
 function normalizeMetaPersonPayload(
   raw: MyPerformanceMetaPersonResponse | null | undefined
@@ -66,7 +92,11 @@ function normalizeMetaPeriodPayload(
         selectedPeriodValue: pickAppNowMonthPeriodValue(periodOptions.month)
       }
     }
-    return { periodOptions, periodType: sp.periodType, selectedPeriodValue: sp.periodValue }
+    return {
+      periodOptions,
+      periodType: sp.periodType,
+      selectedPeriodValue: pickAppNowQuarterPeriodValue(periodOptions.quarter) || sp.periodValue
+    }
   }
   const m0 = periodOptions.month[0]?.value
   if (m0) {
@@ -78,7 +108,11 @@ function normalizeMetaPeriodPayload(
   }
   const q0 = periodOptions.quarter[0]?.value
   if (q0) {
-    return { periodOptions, periodType: 'quarter', selectedPeriodValue: q0 }
+    return {
+      periodOptions,
+      periodType: 'quarter',
+      selectedPeriodValue: pickAppNowQuarterPeriodValue(periodOptions.quarter)
+    }
   }
   return {
     periodOptions,
@@ -303,7 +337,8 @@ export function useMyPerformancePage() {
     data.value.periodType = periodType
     const nextValue =
       periodType === 'quarter'
-        ? (data.value.periodOptions.quarter[0]?.value ?? data.value.selectedPeriodValue)
+        ? pickAppNowQuarterPeriodValue(data.value.periodOptions.quarter) ||
+          data.value.selectedPeriodValue
         : pickAppNowMonthPeriodValue(data.value.periodOptions.month)
     data.value.selectedPeriodValue = nextValue
     await loadDetail()
