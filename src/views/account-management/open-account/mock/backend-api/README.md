@@ -10,7 +10,7 @@
 - `04-open-account-delete.json`：删除开户记录（P0）
 - `05-open-account-feishu-config-fetch.json`：飞书推送配置读取（P1）
 - `06-open-account-feishu-config-save.json`：飞书推送配置保存（P1）
-- `07-open-account-export.json`：开户记录导出（P1）
+- `07-open-account-export.json`：开户记录导出（P1，即时文件流：blob + 响应头）
 - `08-open-account-filter-options.json`：开户状态/代理商筛选项（P0）
 
 ## 场景 -> 接口
