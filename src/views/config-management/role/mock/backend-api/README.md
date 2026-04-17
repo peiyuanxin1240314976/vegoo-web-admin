@@ -1,25 +1,43 @@
 # 角色管理 API 契约
 
-本目录维护 `config-management/role` 相关的接口契约。根据项目规范，接口契约以 JSON 文件形式承载，并按页面内模块进行独立拆分。
+该目录维护 `config-management/role` 页面的接口契约。当前页面第一版聚焦三类数据：
+
+- 角色基础信息
+- 页面权限
+- 日期权限
 
 ## 父级 API 路径
 
-`/api/config-management/role`
+`/api/v1/datacenter/analysis/config-management/role`
 
 ## 接口清单
 
-| 功能             | 方法 | Endpoint               | 契约文件                          | 优先级 |
-| ---------------- | ---- | ---------------------- | --------------------------------- | ------ |
-| 获取角色列表     | POST | `/list`                | `01-role-list.json`               | P0     |
-| 获取角色功能权限 | POST | `/permissions/func`    | `02-permission-func.json`         | P0     |
-| 获取角色数据权限 | POST | `/permissions/data`    | `03-permission-data.json`         | P0     |
-| 获取角色权限摘要 | POST | `/permissions/summary` | `04-permission-summary.json`      | P1     |
-| 获取角色关联用户 | POST | `/users`               | `05-role-users.json`              | P1     |
-| 保存角色权限配置 | POST | `/permissions-update`  | `06-role-permissions-update.json` | P0     |
+| 功能             | 方法 | Endpoint               | 契约文件                       | 优先级 |
+| ---------------- | ---- | ---------------------- | ------------------------------ | ------ |
+| 获取角色列表     | POST | `/list`                | `01-role-list.json`            | P0     |
+| 获取页面权限     | POST | `/permissions/pages`   | `02-page-permissions.json`     | P0     |
+| 获取日期权限     | POST | `/permissions/date`    | `03-date-permissions.json`     | P0     |
+| 获取权限摘要     | POST | `/permissions/summary` | `04-permission-summary.json`   | P1     |
+| 获取角色成员     | POST | `/users`               | `05-role-users.json`           | P1     |
+| 保存角色权限     | POST | `/permissions/update`  | `06-role-permission-save.json` | P0     |
+| 保存角色基础信息 | POST | `/detail/save`         | `07-role-detail-save.json`     | P0     |
 
-## 拆分原则与约束对齐
+## 场景 -> 接口
 
-1. **细粒度 Endpoint**：严格根据 UI 边界将原有的“获取权限树”拆解为了 **左侧列表** (`list`)、**中间 Tab 1** (`permissions/func`)、**中间 Tab 2** (`permissions/data`)、**右上角摘要统计** (`permissions/summary`) 和 **右下角用户列表** (`users`) 五个独立的查询接口。避免了“一口气返回整页所有数据”的设计。
-2. **驼峰命名 & 类型约定**：`sampleResponse` 及 `fieldDescription` 中全面采用 camelCase，且代表 ID 的字段符合类型定义（如 `roleId`）。
-3. **枚举覆盖**：`dataScope` 等字段具备闭合的 `enum`，并在示例中给出全面覆盖。
-4. **数组数据量**：功能权限模块 `modules` 等数组在返回体中均提供了 ≥3 条有效数据示例，以支撑 UI 层对多种勾选及禁用状态的准确渲染。
+| 页面场景 | 接口 | 触发时机 | 说明 |
+| --- | --- | --- | --- |
+| 进入角色管理页 | `POST /list` | `index.vue` 初始化 | 拉左侧角色列表，默认选中第一项 |
+| 选中左侧角色 | `POST /permissions/pages` | 角色切换后 | 渲染页面权限树并回填勾选 |
+| 切到日期权限 Tab | `POST /permissions/date` | 首次进入 Tab 或角色切换 | 回填默认日期规则与页面覆盖规则 |
+| 选中左侧角色 | `POST /permissions/summary` | 角色切换后 | 刷新右侧权限摘要 |
+| 选中左侧角色 | `POST /users` | 角色切换后 | 刷新右侧角色成员列表 |
+| 点击保存权限配置 | `POST /permissions/update` | 中间面板底部保存按钮 | 统一提交页面权限与日期权限 |
+| 点击新增角色或编辑角色弹窗确认 | `POST /detail/save` | 角色基础信息弹窗提交 | 仅保存角色基础信息 |
+
+## 契约说明
+
+1. 页面权限的唯一标识使用 `routeName`，建议直接和前端路由 `name` 一致。
+2. 日期权限采用： `defaultDateScope + pageDateScopes` 这样既能快速上线，也方便后续扩展到按钮级权限和更多数据策略。
+3. `buttonPermissions.codes` 当前只做预留，前端仍会按该结构提交空数组，确保未来扩展时无需改接口根结构。
+4. 角色基础信息弹窗只维护 `roleName / roleCode / description / enabled`，权限编辑继续在主面板完成。
+5. 当前模块不涉及公共 cockpit `meta-filter-options`，因此本目录没有该类 JSON 契约文件。

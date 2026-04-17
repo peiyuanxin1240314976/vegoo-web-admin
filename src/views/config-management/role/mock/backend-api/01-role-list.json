@@ -1,66 +1,93 @@
 {
-  "_comment": "角色管理 - 左侧角色列表",
+  "_comment": "角色管理 - 左侧角色列表。",
   "fieldDescription": {
     "request": {
-      "keyword": { "type": "string", "required": false, "description": "角色名称关键字搜索" }
+      "keyword": {
+        "type": "string",
+        "required": false,
+        "description": "角色名称或角色编码关键字，空字符串表示不过滤。"
+      }
     },
     "response": {
       "items": {
         "type": "RoleListItem[]",
         "required": true,
-        "description": "角色列表数组（目前不分页）"
+        "description": "角色列表，空数据时返回 []。"
       }
     },
     "RoleListItem": {
-      "roleId": { "type": "number", "required": true, "description": "角色ID" },
-      "roleName": { "type": "string", "required": true, "description": "角色名称" },
-      "roleCode": { "type": "string", "required": true, "description": "角色编码" },
-      "description": { "type": "string", "required": true, "description": "角色描述" },
-      "enabled": { "type": "boolean", "required": true, "description": "是否启用" },
+      "roleId": { "type": "number", "required": true, "description": "角色 ID。" },
+      "roleName": { "type": "string", "required": true, "description": "角色名称。" },
+      "roleCode": {
+        "type": "string",
+        "required": true,
+        "description": "角色编码，建议与用户信息中的 permissions/roles 保持一致。"
+      },
+      "description": { "type": "string", "required": true, "description": "角色说明文案。" },
+      "enabled": { "type": "boolean", "required": true, "description": "角色是否启用。" },
       "createTime": {
         "type": "string",
         "required": true,
-        "description": "创建时间 YYYY-MM-DD HH:mm:ss"
+        "description": "创建时间，格式 YYYY-MM-DD HH:mm:ss。"
       }
     }
   },
-  "sampleRequest": {},
+  "sampleRequest": {
+    "keyword": ""
+  },
   "sampleResponse": {
     "items": [
       {
         "roleId": 1,
         "roleName": "超级管理员",
-        "roleCode": "super_admin",
-        "description": "系统最高权限",
+        "roleCode": "SuperAdmin",
+        "description": "拥有全部页面访问与全部日期范围权限",
         "enabled": true,
-        "createTime": "2025-01-01 00:00:00"
+        "createTime": "2026-01-01 09:00:00"
       },
       {
         "roleId": 2,
-        "roleName": "CEO管理",
-        "roleCode": "ceo",
-        "description": "经营决策时图",
+        "roleName": "管理层",
+        "roleCode": "Manager",
+        "description": "查看核心经营页面，日期范围较宽",
         "enabled": true,
-        "createTime": "2025-01-01 00:00:00"
+        "createTime": "2026-01-02 09:00:00"
       },
       {
         "roleId": 3,
-        "roleName": "投放人员",
-        "roleCode": "delivery",
-        "description": "投放操作与分析",
+        "roleName": "投放经理",
+        "roleCode": "DeliveryManager",
+        "description": "重点查看投放与增长分析页面",
         "enabled": true,
-        "createTime": "2025-01-01 00:00:00"
+        "createTime": "2026-01-03 09:00:00"
       }
     ]
   },
   "api": {
-    "url": "POST /api/config-management/role/list",
+    "url": "POST /api/v1/datacenter/analysis/config-management/role/list",
     "method": "POST",
     "priority": "P0",
     "requestBody": "keyword?",
-    "responseBody": "items[]"
+    "responseBody": "items"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面初始化",
+        "detail": "进入角色管理页后先拉取角色列表，默认选中第一项。"
+      },
+      {
+        "moment": "搜索角色或角色编辑成功后刷新",
+        "detail": "左侧角色列表重新加载，并回填当前选中角色。"
+      }
+    ],
+    "defaultSelection": "前端默认选中列表第一条角色，并联动加载中间与右侧数据。",
+    "dedupe": "若存在搜索输入，建议对 keyword 做轻量防抖。"
   },
   "apiSuggestion": {
-    "notes": ["若无数据，必须返回 items: []。列表数据较少时可由前端本地过滤。"]
+    "notes": [
+      "后端后续可补充 userCount、updateTime 等字段，但建议保持现有字段兼容。",
+      "roleCode 推荐直接复用用户权限返回中的角色编码。"
+    ]
   }
 }

@@ -1,15 +1,14 @@
-<!-- 权限管理 - 左侧：角色列表 -->
 <template>
   <div class="role-list-panel flex min-h-0 h-full min-w-0 flex-col">
     <div class="panel-header">
       <div class="header-title-wrap">
         <h1 class="page-title">{{ t('menus.configManagement.roleManagement') }}</h1>
-        <p class="page-desc">管理用户账号、角色与数据访问权限</p>
+        <p class="page-desc">统一管理角色可见页面与日期权限，按钮级权限先预留。</p>
       </div>
-      <ElButton type="primary" @click="$emit('add-role')" v-ripple>+ 新建角色</ElButton>
+      <ElButton type="primary" round @click="$emit('add-role')" v-ripple>+ 新建角色</ElButton>
     </div>
 
-    <div class="panel-list-title">角色列表({{ roleList.length }})</div>
+    <div class="panel-list-title">角色列表 ({{ roleList.length }})</div>
     <ElScrollbar class="role-list-scroll">
       <div
         v-for="(item, index) in roleList"
@@ -26,8 +25,20 @@
           <ElIcon class="avatar-icon" :size="20"><User /></ElIcon>
         </div>
         <div class="role-card__body">
-          <div class="role-card__name">{{ item.roleName }} ({{ getUserCount(item) }}人)</div>
-          <div class="role-card__desc">{{ item.description || '—' }}</div>
+          <div class="role-card__top">
+            <div class="role-card__name">{{ item.roleName }} ({{ getUserCount(item) }}人)</div>
+            <ElButton
+              text
+              type="primary"
+              size="small"
+              class="role-card__edit"
+              @click.stop="$emit('edit-role', item)"
+            >
+              编辑
+            </ElButton>
+          </div>
+          <div class="role-card__code">{{ item.roleCode }}</div>
+          <div class="role-card__desc">{{ item.description || '-' }}</div>
         </div>
       </div>
     </ElScrollbar>
@@ -50,12 +61,12 @@
   const props = defineProps<{
     roleList: RoleListItem[]
     selectedRole?: RoleListItem | null
-    /** 角色对应用户数，若接口未返回则用此映射 */
     roleUserCountMap?: Record<number, number>
   }>()
 
   defineEmits<{
     (e: 'add-role'): void
+    (e: 'edit-role', role: RoleListItem): void
     (e: 'select-role', role: RoleListItem): void
   }>()
 
@@ -132,7 +143,9 @@
     background: var(--el-fill-color-light);
     border: 1px solid transparent;
     border-radius: 10px;
-    transition: all 0.2s;
+    transition:
+      background-color var(--duration-fast, 150ms) ease,
+      border-color var(--duration-fast, 150ms) ease;
 
     &:hover {
       background: var(--el-fill-color);
@@ -204,10 +217,30 @@
     min-width: 0;
   }
 
+  .role-card__top {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
   .role-card__name {
+    overflow: hidden;
     font-size: 14px;
     font-weight: 500;
     color: var(--el-text-color-primary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .role-card__edit {
+    flex-shrink: 0;
+  }
+
+  .role-card__code {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--el-color-primary);
   }
 
   .role-card__desc {

@@ -1,28 +1,24 @@
-<!-- 权限管理 - 三列：角色列表 | 权限配置 | 用户列表 -->
 <template>
   <div class="role-page art-full-height flex">
-    <!-- 第一列：角色列表 -->
     <div class="role-page-left">
       <RoleListPanel
         :role-list="roleList"
         :selected-role="selectedRole"
         :role-user-count-map="roleUserCountMap"
         @add-role="showDialog('add')"
+        @edit-role="showDialog('edit', $event)"
         @select-role="selectedRole = $event"
       />
     </div>
 
-    <!-- 第二列：权限配置 -->
     <div class="role-page-center">
       <RolePermissionPanel
         ref="permissionPanelRef"
         :selected-role="selectedRole"
         @save="handleSavePermission"
-        @compare="showCompareDialog"
       />
     </div>
 
-    <!-- 第三列：用户列表 -->
     <div class="role-page-right">
       <RoleUserPanel
         :selected-role="selectedRole"
@@ -34,75 +30,51 @@
         @batch-assign="handleBatchAssign"
         @batch-export="handleBatchExport"
         @batch-disable="handleBatchDisable"
-        @edit-desc="handleEditDesc"
+        @edit-role="handleEditRole"
       />
     </div>
 
-    <!-- 角色新增/编辑弹窗 -->
     <RoleEditDialog
       v-model="dialogVisible"
       :dialog-type="dialogType"
       :role-data="currentRoleData"
-      @success="refreshRoleList"
-    />
-
-    <!-- 对比其他角色（可选，沿用原菜单权限弹窗或新弹窗） -->
-    <RolePermissionDialog
-      v-model="permissionDialogVisible"
-      :role-data="currentRoleData"
-      @success="refreshRoleList"
+      @success="handleRoleDialogSuccess"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-  import RoleListPanel from './modules/role-list-panel.vue'
-  import RolePermissionPanel from './modules/role-permission-panel.vue'
-  import RoleUserPanel from './modules/role-user-panel.vue'
-  import type { RoleUserItem } from './modules/role-user-panel.vue'
-  import RoleEditDialog from './modules/role-edit-dialog.vue'
-  import RolePermissionDialog from './modules/role-permission-dialog.vue'
-  import { getMockRoleDescription } from './mock/data'
+  import { ElMessage } from 'element-plus'
   import {
     fetchRoleList,
-    fetchRolePermissionsUpdate,
     fetchRolePermissionSummary,
+    fetchRolePermissionsUpdate,
     fetchRoleUsers,
     type RolePermissionSummary,
     type RolePermissionUpdatePayload
   } from '@/api/config-management/role'
-  import { ElMessage } from 'element-plus'
+  import { getMockRoleDescription, getMockRoleUsers } from './mock/data'
+  import RoleEditDialog from './modules/role-edit-dialog.vue'
+  import RoleListPanel from './modules/role-list-panel.vue'
+  import RolePermissionPanel from './modules/role-permission-panel.vue'
+  import RoleUserPanel from './modules/role-user-panel.vue'
+  import type { RoleUserItem } from './modules/role-user-panel.vue'
 
   defineOptions({ name: 'Role' })
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
-  /** 左侧角色列表：现在从 API 请求，而不是直接使用本地假数据常量 */
   const roleList = ref<RoleListItem[]>([])
-  /** 当前选中的角色，默认选中第一项以保证中间列、右侧列有内容展示 */
   const selectedRole = ref<RoleListItem | null>(null)
   const dialogVisible = ref(false)
-  const permissionDialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
   const currentRoleData = ref<RoleListItem | undefined>(undefined)
   const permissionPanelRef = ref<InstanceType<typeof RolePermissionPanel> | null>(null)
-
-  /** 角色对应用户数（若接口未返回，可来自单独接口或 mock） */
-  const roleUserCountMap = ref<Record<number, number>>({
-    1: 1,
-    2: 3,
-    3: 3,
-    4: 3,
-    5: 3,
-    6: 3
-  })
-
-  /** 当前选中角色下的用户列表数据（通过监听选中角色后从 API 获取） */
+  const roleUserCountMap = ref<Record<number, number>>({})
   const currentRoleUsers = ref<RoleUserItem[]>([])
-  /** 权限摘要数据（通过监听选中角色后从 API 获取） */
   const permissionSummary = ref<RolePermissionSummary | undefined>(undefined)
+  const pendingFocusRoleId = ref<number | null>(null)
 
-  /** 角色说明（假数据，见 @/views/config-management/role/mock/data.ts） */
   const roleDescription = computed(() => {
     if (!selectedRole.value) return ''
     return selectedRole.value.description || getMockRoleDescription(selectedRole.value.roleName)
@@ -118,45 +90,54 @@
     permissionSummary.value = summaryRes.summary || undefined
   }
 
-  /** 监听选中角色的变化，获取该角色下的用户与摘要数据 */
   watch(
     () => selectedRole.value,
     async (newVal) => {
-      if (newVal) {
-        const { roleId } = newVal
-        try {
-          await loadSelectedRoleSideData(roleId)
-        } catch (error) {
-          console.error('获取角色详情数据失败', error)
-        }
-      } else {
+      if (!newVal) {
         currentRoleUsers.value = []
         permissionSummary.value = undefined
+        return
+      }
+
+      try {
+        await loadSelectedRoleSideData(newVal.roleId)
+      } catch (error) {
+        console.error('获取角色详情数据失败', error)
       }
     }
   )
 
-  /** 刷新角色列表（调用接口并根据结果重新选中第一项） */
-  async function loadRoleList() {
+  async function loadRoleList(preferredRoleId?: number) {
     try {
       const res = await fetchRoleList()
       roleList.value = res.items || []
-      // 只要有数据且当前未选中或选中的不在新列表中，就默认选中第一个
+      roleUserCountMap.value = Object.fromEntries(
+        roleList.value.map((item) => [item.roleId, getMockRoleUsers(item.roleId).length])
+      )
+
       if (roleList.value.length) {
-        const currentId = selectedRole.value?.roleId
-        if (!currentId || !roleList.value.some((r) => r.roleId === currentId)) {
+        const targetId = preferredRoleId ?? pendingFocusRoleId.value ?? selectedRole.value?.roleId
+        const matchedRole = targetId
+          ? roleList.value.find((item) => item.roleId === targetId)
+          : undefined
+
+        if (matchedRole) {
+          selectedRole.value = matchedRole
+        } else {
           selectedRole.value = roleList.value[0]
         }
       } else {
         selectedRole.value = null
       }
+
+      pendingFocusRoleId.value = null
     } catch (error) {
       console.error('获取角色列表失败', error)
     }
   }
 
-  function refreshRoleList() {
-    loadRoleList()
+  async function refreshRoleList(preferredRoleId?: number) {
+    await loadRoleList(preferredRoleId)
   }
 
   function showDialog(type: 'add' | 'edit', row?: RoleListItem) {
@@ -165,9 +146,9 @@
     dialogVisible.value = true
   }
 
-  function showCompareDialog() {
-    currentRoleData.value = selectedRole.value ?? undefined
-    permissionDialogVisible.value = true
+  async function handleRoleDialogSuccess(payload: { roleId: number; dialogType: 'add' | 'edit' }) {
+    pendingFocusRoleId.value = payload.roleId
+    await refreshRoleList(payload.roleId)
   }
 
   async function handleSavePermission() {
@@ -191,27 +172,31 @@
   }
 
   function handleEditUser() {
-    ElMessage.info('编辑用户（可跳转用户管理或打开弹窗）')
+    ElMessage.info('后续可跳转到用户管理进行调整')
   }
 
   function handleDisableUser() {
-    ElMessage.info('禁用用户')
+    ElMessage.info('用户禁用能力待接入')
   }
 
   function handleBatchAssign() {
-    ElMessage.info('批量分配角色')
+    ElMessage.info('批量分配角色能力待接入')
   }
 
   function handleBatchExport() {
-    ElMessage.info('批量导出')
+    ElMessage.info('批量导出能力待接入')
   }
 
   function handleBatchDisable() {
-    ElMessage.info('批量禁用')
+    ElMessage.info('批量禁用能力待接入')
   }
 
-  function handleEditDesc() {
-    ElMessage.info('编辑角色说明（可打开弹窗或内联编辑）')
+  function handleEditRole() {
+    if (!selectedRole.value) {
+      ElMessage.warning('请先选择角色')
+      return
+    }
+    showDialog('edit', selectedRole.value)
   }
 
   onMounted(() => {
@@ -220,7 +205,6 @@
 </script>
 
 <style scoped lang="scss">
-  /* 三列横向分栏：为整页与左列提供确定高度，避免 ElScrollbar（flex:1）在父高为 auto 时被压成 0 */
   .role-page {
     flex-direction: row;
     width: 100%;
@@ -280,7 +264,7 @@
 
     .role-page-center {
       flex: none;
-      min-height: 360px;
+      min-height: 420px;
     }
 
     .role-page-right {

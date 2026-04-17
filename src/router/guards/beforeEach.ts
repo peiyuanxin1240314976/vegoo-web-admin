@@ -449,6 +449,7 @@ async function fetchUserInfo(): Promise<void> {
   const userStore = useUserStore()
   const hasCachedUserInfo = userStore.info?.id != null || userStore.info?.userId != null
   if (hasCachedUserInfo) {
+    userStore.setUserInfo(userStore.info as Api.Auth.UserInfo)
     userStore.checkAndClearWorktabs()
     return
   }

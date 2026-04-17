@@ -1,11 +1,19 @@
 import request from '@/utils/http'
-import { RoleEndpoint, isRoleEndpointMock } from '@/views/config-management/role/config/data-source'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import { RoleEndpoint, isRoleEndpointMock } from '@/views/config-management/role/config/data-source'
 import {
-  MOCK_PERMISSION_MODULES,
   MOCK_ROLE_LIST,
+  getMockCheckedRouteNames,
+  getMockDatePageOptions,
+  getMockDefaultDateScope,
+  getMockPageDateScopes,
   getMockPermissionSummary,
-  getMockRoleUsers
+  getMockRoleRouteTree,
+  getMockRoleUsers,
+  type RoleDatePageOption,
+  type RoleDateScopeConfig,
+  type RolePageDateScope,
+  type RolePermissionTreeNode
 } from '@/views/config-management/role/mock/data'
 
 const ROLE_BASE = `${ANALYSIS_API_BASE}/config-management/role`
@@ -18,47 +26,41 @@ export interface RoleListResponse {
   items: Api.SystemManage.RoleListItem[]
 }
 
-export interface RolePermissionItem {
-  permissionId: string
-  permissionName: string
-  type: 'view' | 'operation'
-  checked: boolean
-  statusText: string
-}
-
-export interface RoleFuncPermissionModule {
-  moduleId: string
-  moduleName: string
+export interface RoleDetailSavePayload {
+  roleId?: number
+  roleName: string
+  roleCode: string
+  description: string
   enabled: boolean
-  permissions: RolePermissionItem[]
 }
 
-export interface RoleFuncPermissionResponse {
-  modules: RoleFuncPermissionModule[]
+export interface RoleDetailSaveResponse {
+  success: boolean
+  roleId: number
+  message?: string
 }
 
-export interface RoleDataPermissionModule {
-  moduleId: string
-  moduleName: string
-  dataScope: string
-  dataScopeText: string
+export interface RolePagePermissionResponse {
+  routeTree: RolePermissionTreeNode[]
+  checkedRouteNames: string[]
+  reservedButtonPermissionCodes: string[]
 }
 
-export interface RoleDataPermissionResponse {
-  modules: RoleDataPermissionModule[]
+export interface RoleDatePermissionResponse {
+  defaultDateScope: RoleDateScopeConfig
+  pageDateScopes: RolePageDateScope[]
+  pageOptions: RoleDatePageOption[]
 }
 
 export interface RolePermissionSummary {
-  funcEnabled: number
-  funcTotal: number
-  dataScope: string
-  percent: number
-  rolePercentList: Array<{
-    roleId: number
-    roleName: string
-    percent: number
-    isCurrent?: boolean
-  }>
+  routeGrantedCount: number
+  routeTotalCount: number
+  defaultDateScopeText: string
+  overridePageCount: number
+  allowCustomRange: boolean
+  lastUpdatedAt: string
+  lastUpdatedBy: string
+  highlightedRoutes: string[]
 }
 
 export interface RolePermissionSummaryResponse {
@@ -71,15 +73,21 @@ export interface RoleUsersResponse {
 
 export interface RolePermissionUpdatePayload {
   roleId: number
-  permissionIds: string[]
-  moduleDataScopes: Array<{
-    moduleId: string
-    dataScope: string
-  }>
+  routePermissions: {
+    routeNames: string[]
+  }
+  datePermissions: {
+    defaultDateScope: RoleDateScopeConfig
+    pageDateScopes: RolePageDateScope[]
+  }
+  buttonPermissions: {
+    codes: string[]
+  }
 }
 
 export interface RolePermissionUpdateResponse {
   success: boolean
+  message?: string
 }
 
 function buildMockRoleList(params: RoleListQuery = {}): RoleListResponse {
@@ -95,53 +103,6 @@ function buildMockRoleList(params: RoleListQuery = {}): RoleListResponse {
   }
 }
 
-function buildMockFuncPermissions(): RoleFuncPermissionResponse {
-  return {
-    modules: MOCK_PERMISSION_MODULES.map((module) => ({
-      moduleId: module.key,
-      moduleName: module.name,
-      enabled: module.enabled,
-      permissions: module.permissions.flatMap((permission) => {
-        const result: RolePermissionItem[] = []
-
-        if (permission.view && permission.view !== '—') {
-          result.push({
-            permissionId: `${module.key}:${permission.key}:view`,
-            permissionName: permission.name,
-            type: 'view',
-            checked: permission.view !== '×禁止',
-            statusText: permission.view
-          })
-        }
-
-        if (permission.operation && permission.operation !== '—') {
-          result.push({
-            permissionId: `${module.key}:${permission.key}:operation`,
-            permissionName: permission.name,
-            type: 'operation',
-            checked: permission.operation !== '×禁止',
-            statusText: permission.operation
-          })
-        }
-
-        return result
-      })
-    }))
-  }
-}
-
-function buildMockDataPermissions(): RoleDataPermissionResponse {
-  return {
-    modules: MOCK_PERMISSION_MODULES.map((module) => ({
-      moduleId: module.key,
-      moduleName: module.name,
-      dataScope: module.enabled ? 'all' : 'none',
-      dataScopeText: module.dataScopeText
-    }))
-  }
-}
-
-/** 获取角色列表 */
 export function fetchRoleList(params: RoleListQuery = {}) {
   if (isRoleEndpointMock(RoleEndpoint.LIST)) {
     return Promise.resolve(buildMockRoleList(params))
@@ -154,36 +115,57 @@ export function fetchRoleList(params: RoleListQuery = {}) {
   })
 }
 
-/** 获取角色功能权限 */
-export function fetchRolePermissionFunc(data: { roleId: number }) {
-  if (isRoleEndpointMock(RoleEndpoint.PERMISSION_FUNC)) {
-    return Promise.resolve(buildMockFuncPermissions())
+export function fetchRoleDetailSave(data: RoleDetailSavePayload) {
+  if (isRoleEndpointMock(RoleEndpoint.DETAIL_SAVE)) {
+    return Promise.resolve<RoleDetailSaveResponse>({
+      success: true,
+      roleId: data.roleId ?? 999,
+      message: 'mock save success'
+    })
   }
 
-  return request.post<RoleFuncPermissionResponse>({
-    url: `${ROLE_BASE}/permissions/func`,
+  return request.post<RoleDetailSaveResponse>({
+    url: `${ROLE_BASE}/detail/save`,
     data,
     showErrorMessage: false
   })
 }
 
-/** 获取角色数据权限 */
-export function fetchRolePermissionData(data: { roleId: number }) {
-  if (isRoleEndpointMock(RoleEndpoint.PERMISSION_DATA)) {
-    return Promise.resolve(buildMockDataPermissions())
+export function fetchRolePermissionPages(data: { roleId: number }) {
+  if (isRoleEndpointMock(RoleEndpoint.PERMISSION_PAGES)) {
+    return Promise.resolve<RolePagePermissionResponse>({
+      routeTree: getMockRoleRouteTree(),
+      checkedRouteNames: getMockCheckedRouteNames(data.roleId),
+      reservedButtonPermissionCodes: []
+    })
   }
 
-  return request.post<RoleDataPermissionResponse>({
-    url: `${ROLE_BASE}/permissions/data`,
+  return request.post<RolePagePermissionResponse>({
+    url: `${ROLE_BASE}/permissions/pages`,
     data,
     showErrorMessage: false
   })
 }
 
-/** 获取角色右上角权限摘要统计 */
+export function fetchRolePermissionDate(data: { roleId: number }) {
+  if (isRoleEndpointMock(RoleEndpoint.PERMISSION_DATE)) {
+    return Promise.resolve<RoleDatePermissionResponse>({
+      defaultDateScope: getMockDefaultDateScope(data.roleId),
+      pageDateScopes: getMockPageDateScopes(data.roleId),
+      pageOptions: getMockDatePageOptions()
+    })
+  }
+
+  return request.post<RoleDatePermissionResponse>({
+    url: `${ROLE_BASE}/permissions/date`,
+    data,
+    showErrorMessage: false
+  })
+}
+
 export function fetchRolePermissionSummary(data: { roleId: number }) {
   if (isRoleEndpointMock(RoleEndpoint.PERMISSION_SUMMARY)) {
-    return Promise.resolve({
+    return Promise.resolve<RolePermissionSummaryResponse>({
       summary: getMockPermissionSummary(data.roleId)
     })
   }
@@ -195,10 +177,9 @@ export function fetchRolePermissionSummary(data: { roleId: number }) {
   })
 }
 
-/** 获取角色关联用户列表 */
 export function fetchRoleUsers(data: { roleId: number }) {
   if (isRoleEndpointMock(RoleEndpoint.USERS)) {
-    return Promise.resolve({
+    return Promise.resolve<RoleUsersResponse>({
       items: getMockRoleUsers(data.roleId)
     })
   }
@@ -210,16 +191,16 @@ export function fetchRoleUsers(data: { roleId: number }) {
   })
 }
 
-/** 保存权限配置 */
 export function fetchRolePermissionsUpdate(data: RolePermissionUpdatePayload) {
   if (isRoleEndpointMock(RoleEndpoint.PERMISSIONS_UPDATE)) {
-    return Promise.resolve({
-      success: true
+    return Promise.resolve<RolePermissionUpdateResponse>({
+      success: true,
+      message: 'mock save success'
     })
   }
 
   return request.post<RolePermissionUpdateResponse>({
-    url: `${ROLE_BASE}/permissions-update`,
+    url: `${ROLE_BASE}/permissions/update`,
     data,
     showErrorMessage: false
   })

@@ -80,12 +80,35 @@ export const useUserStore = defineStore(
      * @param newInfo 新的用户信息（来自 get user 接口）
      */
     const setUserInfo = (newInfo: Api.Auth.UserInfo) => {
+      const normalizedRoles = newInfo.roles ?? newInfo.permissions ?? []
+      const normalizedButtons =
+        newInfo.buttons ??
+        newInfo.permissionConfig?.buttonPermissions?.codes ??
+        newInfo.permissions ??
+        []
+
       info.value = {
         ...newInfo,
         userId: newInfo.userId ?? newInfo.id,
         userName: newInfo.userName ?? newInfo.username,
-        roles: newInfo.roles ?? newInfo.permissions ?? [],
-        buttons: newInfo.buttons ?? newInfo.permissions ?? []
+        roles: normalizedRoles,
+        buttons: normalizedButtons,
+        permissionConfig: newInfo.permissionConfig ?? {
+          routePermissions: {
+            routeNames: normalizedRoles
+          },
+          datePermissions: {
+            defaultDateScope: {
+              maxHistoryDays: -1,
+              defaultRangeDays: 7,
+              allowCustomRange: true
+            },
+            pageDateScopes: []
+          },
+          buttonPermissions: {
+            codes: normalizedButtons
+          }
+        }
       }
     }
 

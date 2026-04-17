@@ -1,76 +1,169 @@
-<!-- 权限配置 - 功能权限 Tab 内容 -->
 <template>
-  <div class="role-permission-func flex flex-col" v-loading="loading">
-    <ElScrollbar class="permission-scroll">
-      <div v-for="module in permissionModules" :key="module.moduleId" class="module-card">
-        <div class="module-card__head" @click="toggleModule(module.moduleId)">
-          <span class="module-name">{{ module.moduleName }}</span>
-          <ElSwitch v-model="module.enabled" size="small" @click.stop />
-        </div>
-        <div
-          v-show="module.enabled && expandedModules.includes(module.moduleId)"
-          class="module-card__body"
-        >
-          <div v-for="perm in module.permissions" :key="perm.permissionId" class="perm-row">
-            <span class="perm-name">{{ perm.permissionName }}</span>
-            <span class="perm-view">{{ perm.type === 'view' ? perm.statusText : '—' }}</span>
-            <span class="perm-op">{{ perm.type === 'operation' ? perm.statusText : '—' }}</span>
-            <span class="perm-scope">—</span>
-          </div>
-        </div>
-        <div
-          v-if="module.enabled && !expandedModules.includes(module.moduleId)"
-          class="module-card__summary"
-          @click="toggleModule(module.moduleId)"
-        >
-          已配置功能权限点: {{ module.permissions.filter((p: any) => p.checked).length }} 项
-        </div>
+  <div class="role-permission-pages flex h-full min-h-0 flex-col" v-loading="loading">
+    <div class="panel-intro">
+      <div>
+        <h3 class="panel-intro__title">页面访问范围</h3>
+        <p class="panel-intro__desc">勾选后角色可在侧边导航和直达访问中看到对应页面。</p>
       </div>
+      <div class="panel-intro__stats">
+        <ElTag type="primary" effect="plain" round
+          >{{ checkedCount }} / {{ totalCount }} 个路由</ElTag
+        >
+      </div>
+    </div>
+
+    <div class="panel-toolbar">
+      <ElButton round @click="expandAll">展开全部</ElButton>
+      <ElButton round @click="collapseAll">收起全部</ElButton>
+      <ElButton round @click="checkAll">全选</ElButton>
+      <ElButton round @click="clearAll">清空</ElButton>
+    </div>
+
+    <ElScrollbar class="tree-scroll">
+      <ElTree
+        ref="treeRef"
+        :data="routeTree"
+        node-key="routeName"
+        show-checkbox
+        default-expand-all
+        class="route-tree"
+        :props="treeProps"
+      >
+        <template #default="{ data }">
+          <div class="route-node">
+            <div class="route-node__main">
+              <span class="route-node__title">{{ resolveTitle(data.title) }}</span>
+              <span class="route-node__path">{{ data.path }}</span>
+            </div>
+            <ElTag v-if="data.children?.length" size="small" type="info" effect="plain" round>
+              目录
+            </ElTag>
+          </div>
+        </template>
+      </ElTree>
     </ElScrollbar>
-    <div class="panel-actions">
-      <ElButton link type="primary" @click="$emit('compare')">对比其他角色</ElButton>
+
+    <div class="panel-tip">
+      <ElAlert
+        title="按钮级权限本期不落地，保存时会预留 buttonPermissions.codes 字段。"
+        type="info"
+        :closable="false"
+        show-icon
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import { ElTree } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import {
-    fetchRolePermissionFunc,
-    type RoleFuncPermissionModule
+    fetchRolePermissionPages,
+    type RolePagePermissionResponse
   } from '@/api/config-management/role'
-  import { watch, ref } from 'vue'
 
-  defineOptions({ name: 'RolePermissionFunc' })
+  defineOptions({ name: 'RolePermissionPages' })
 
   const props = defineProps<{
     roleId?: number
   }>()
 
-  defineEmits<{
-    (e: 'compare'): void
-  }>()
+  const { t } = useI18n()
 
-  const expandedModules = ref<string[]>([])
-  const permissionModules = ref<RoleFuncPermissionModule[]>([])
   const loading = ref(false)
+  const routeTree = ref<RolePagePermissionResponse['routeTree']>([])
+  const checkedRouteNames = ref<string[]>([])
+  const treeRef = ref<InstanceType<typeof ElTree> | null>(null)
+  const treeProps = {
+    label: 'title',
+    children: 'children'
+  }
+
+  const totalCount = computed(() => countNodes(routeTree.value))
+  const checkedCount = computed(() => {
+    const keys = getRouteNames()
+    return new Set(keys).size
+  })
+
+  function countNodes(nodes: RolePagePermissionResponse['routeTree']): number {
+    return nodes.reduce((sum, item) => sum + 1 + countNodes(item.children ?? []), 0)
+  }
+
+  function resolveTitle(title: string): string {
+    return title.startsWith('menus.') ? t(title) : title
+  }
 
   async function loadData() {
     if (!props.roleId) {
-      permissionModules.value = []
+      routeTree.value = []
+      checkedRouteNames.value = []
       return
     }
+
     loading.value = true
     try {
-      const res = await fetchRolePermissionFunc({ roleId: props.roleId })
-      permissionModules.value = res.modules || []
-      // 默认展开有权限的前几个模块（简化处理）
-      expandedModules.value = permissionModules.value.slice(0, 2).map((m) => m.moduleId)
+      const res = await fetchRolePermissionPages({ roleId: props.roleId })
+      routeTree.value = res.routeTree || []
+      checkedRouteNames.value = res.checkedRouteNames || []
+
+      await nextTick()
+      treeRef.value?.setCheckedKeys(checkedRouteNames.value)
     } catch (error) {
-      console.error('获取功能权限失败', error)
+      console.error('获取页面权限失败', error)
+      routeTree.value = []
+      checkedRouteNames.value = []
     } finally {
       loading.value = false
     }
   }
+
+  function getRouteNames(): string[] {
+    const tree = treeRef.value as any
+    const checkedKeys = (tree?.getCheckedKeys(false) as string[] | undefined) ?? []
+    const halfCheckedKeys = (tree?.getHalfCheckedKeys() as string[] | undefined) ?? []
+    return Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))
+  }
+
+  function checkAll() {
+    const allKeys = flattenRouteNames(routeTree.value)
+    treeRef.value?.setCheckedKeys(allKeys)
+  }
+
+  function clearAll() {
+    treeRef.value?.setCheckedKeys([])
+  }
+
+  function expandAll() {
+    setExpandState(true)
+  }
+
+  function collapseAll() {
+    setExpandState(false)
+  }
+
+  function setExpandState(expanded: boolean) {
+    const store = (treeRef.value as any)?.store
+    const nodeMap = store?.nodesMap ?? {}
+    Object.keys(nodeMap).forEach((key) => {
+      nodeMap[key].expanded = expanded
+    })
+  }
+
+  function flattenRouteNames(nodes: RolePagePermissionResponse['routeTree']): string[] {
+    return nodes.flatMap((item) => [
+      item.routeName,
+      ...(item.children?.length ? flattenRouteNames(item.children) : [])
+    ])
+  }
+
+  function reset() {
+    loadData()
+  }
+
+  defineExpose({
+    reset,
+    getRouteNames
+  })
 
   watch(
     () => props.roleId,
@@ -79,107 +172,94 @@
     },
     { immediate: true }
   )
-
-  function getPermissionIds(): string[] {
-    return permissionModules.value.flatMap((module) => {
-      if (!module.enabled) return []
-      return module.permissions
-        .filter((permission) => permission.checked)
-        .map((permission) => permission.permissionId)
-    })
-  }
-
-  function reset() {
-    loadData()
-  }
-
-  defineExpose({ reset, getPermissionIds })
-
-  function toggleModule(key: string) {
-    const idx = expandedModules.value.indexOf(key)
-    if (idx >= 0) {
-      expandedModules.value = expandedModules.value.filter((k) => k !== key)
-    } else {
-      expandedModules.value = [...expandedModules.value, key]
-    }
-  }
 </script>
 
 <style scoped lang="scss">
-  .role-permission-func {
-    height: 100%;
-    min-height: 0;
+  .role-permission-pages {
+    gap: 12px;
   }
 
-  .permission-scroll {
-    flex: 1;
-    min-height: 0;
-    margin-bottom: 12px;
-  }
-
-  .module-card {
-    margin-bottom: 12px;
-    overflow: hidden;
-    border: 1px solid var(--el-border-color-lighter);
+  .panel-intro {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--el-fill-color-light);
+    border: 1px solid var(--el-border-color);
     border-radius: 8px;
   }
 
-  .module-card__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    cursor: pointer;
-    background: var(--el-fill-color-light);
+  .panel-intro__title {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
   }
 
-  .module-name {
-    font-size: 14px;
+  .panel-intro__desc {
+    margin: 0;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .panel-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tree-scroll {
+    flex: 1;
+    min-height: 0;
+    padding: 1px;
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color);
+    border-radius: 8px;
+
+    :deep(.el-scrollbar__wrap) {
+      padding: 12px;
+    }
+  }
+
+  .route-tree {
+    :deep(.el-tree-node__content) {
+      height: auto;
+      padding: 6px 0;
+    }
+  }
+
+  .route-node {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .route-node__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .route-node__title {
+    font-size: 13px;
     font-weight: 500;
     color: var(--el-text-color-primary);
   }
 
-  .module-card__body {
-    padding: 12px 16px;
-    font-size: 13px;
-    border-top: 1px solid var(--el-border-color-lighter);
-  }
-
-  .perm-row {
-    display: grid;
-    grid-template-columns: 1fr 80px 80px 120px;
-    gap: 12px;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--el-border-color-extra-light);
-
-    &:last-child {
-      border-bottom: none;
-    }
-  }
-
-  .perm-name {
-    color: var(--el-text-color-primary);
-  }
-
-  .perm-view,
-  .perm-op,
-  .perm-scope {
+  .route-node__path {
+    margin-top: 2px;
+    overflow: hidden;
     font-size: 12px;
     color: var(--el-text-color-secondary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .module-card__summary {
-    padding: 8px 16px;
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
-    cursor: pointer;
-    border-top: 1px solid var(--el-border-color-lighter);
-  }
-
-  .panel-actions {
-    display: flex;
+  .panel-tip {
     flex-shrink: 0;
-    gap: 12px;
   }
 </style>

@@ -1,0 +1,132 @@
+{
+  "_comment": "角色管理 - 中间面板页面权限 Tab，对应侧边导航与直达页面访问范围。",
+  "fieldDescription": {
+    "request": {
+      "roleId": { "type": "number", "required": true, "description": "当前选中的角色 ID。" }
+    },
+    "response": {
+      "routeTree": {
+        "type": "RoutePermissionNode[]",
+        "required": true,
+        "description": "可配置的页面路由树，空数据时返回 []。"
+      },
+      "checkedRouteNames": {
+        "type": "string[]",
+        "required": true,
+        "description": "该角色当前已拥有的 routeName 列表。"
+      },
+      "reservedButtonPermissionCodes": {
+        "type": "string[]",
+        "required": true,
+        "description": "按钮级权限预留编码，本期固定返回 []。"
+      }
+    },
+    "RoutePermissionNode": {
+      "routeName": {
+        "type": "string",
+        "required": true,
+        "description": "前端路由 name，作为权限配置唯一标识。"
+      },
+      "title": {
+        "type": "string",
+        "required": true,
+        "description": "路由展示标题，可直接展示，或由前端按 i18n key 翻译。"
+      },
+      "path": { "type": "string", "required": true, "description": "前端访问路径。" },
+      "children": {
+        "type": "RoutePermissionNode[]",
+        "required": false,
+        "description": "子路由节点，目录节点可包含 children。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "roleId": 3
+  },
+  "sampleResponse": {
+    "routeTree": [
+      {
+        "routeName": "Cockpit",
+        "title": "menus.cockpit.title",
+        "path": "/cockpit",
+        "children": []
+      },
+      {
+        "routeName": "UserGrowth",
+        "title": "menus.userGrowth.title",
+        "path": "/user-growth",
+        "children": [
+          {
+            "routeName": "MyAds",
+            "title": "menus.userGrowth.myAds",
+            "path": "/user-growth/my-ads"
+          },
+          {
+            "routeName": "PerformanceAnalysis",
+            "title": "menus.userGrowth.performanceAnalysis",
+            "path": "/user-growth/performance-analysis"
+          },
+          {
+            "routeName": "ComprehensiveAnalysis",
+            "title": "menus.userGrowth.comprehensiveAnalysis",
+            "path": "/user-growth/comprehensive-analysis"
+          }
+        ]
+      },
+      {
+        "routeName": "BusinessInsight",
+        "title": "menus.businessInsight.title",
+        "path": "/business-insight",
+        "children": [
+          {
+            "routeName": "AgencyAnalysis",
+            "title": "menus.userGrowth.agencyAnalysis",
+            "path": "/business-insight/agency-analysis"
+          },
+          {
+            "routeName": "ProfitAnalysis",
+            "title": "menus.businessInsight.profitAnalysis",
+            "path": "/business-insight/profit-analysis"
+          }
+        ]
+      }
+    ],
+    "checkedRouteNames": [
+      "UserGrowth",
+      "MyAds",
+      "PerformanceAnalysis",
+      "ComprehensiveAnalysis",
+      "BusinessInsight",
+      "AgencyAnalysis"
+    ],
+    "reservedButtonPermissionCodes": []
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/config-management/role/permissions/pages",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "roleId",
+    "responseBody": "routeTree, checkedRouteNames, reservedButtonPermissionCodes"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "页面初始化或切换左侧角色",
+        "detail": "RolePermissionPanel 内的页面权限 Tab 首次加载时请求，用于渲染勾选树。",
+        "prerequisite": "selectedRole.roleId 已存在。"
+      },
+      {
+        "moment": "点击重置按钮",
+        "detail": "重新请求并覆盖当前勾选状态，恢复为后端已保存配置。"
+      }
+    ],
+    "defaultSelection": "前端用 checkedRouteNames 回填树组件勾选状态；半选父节点由树组件自动计算。",
+    "dedupe": "角色切换时仅保留最新一次请求结果。"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "routeName 建议直接与前端 router.modules 中的 name 一致，避免 path 调整后权限失效。",
+      "隐藏详情页、跳转页可不进入 routeTree，以降低角色配置复杂度。"
+    ]
+  }
+}

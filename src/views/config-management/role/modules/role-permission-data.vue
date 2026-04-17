@@ -1,154 +1,256 @@
-<!-- 权限配置 - 数据权限 Tab：数据访问范围配置 -->
 <template>
-  <div class="role-permission-data" v-loading="loading">
-    <div class="data-config-header">
-      <h3 class="data-config-title">数据访问范围配置</h3>
-      <p class="data-config-desc">控制该角色可以查看的数据范围，未包含在范围内的数据将被自动过滤</p>
+  <div class="role-permission-date flex h-full min-h-0 flex-col" v-loading="loading">
+    <div class="date-card">
+      <h3 class="date-card__title">全局默认日期规则</h3>
+      <p class="date-card__desc">未单独覆盖的页面，都会使用这里的日期权限。</p>
+
+      <div class="date-grid">
+        <div class="date-field">
+          <span class="date-field__label">最大可回看天数</span>
+          <ElSelect v-model="form.defaultDateScope.maxHistoryDays" class="date-field__control">
+            <ElOption
+              v-for="option in historyDayOptions"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </ElSelect>
+        </div>
+
+        <div class="date-field">
+          <span class="date-field__label">默认展示范围</span>
+          <ElSelect v-model="form.defaultDateScope.defaultRangeDays" class="date-field__control">
+            <ElOption
+              v-for="option in defaultRangeOptions"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </ElSelect>
+        </div>
+
+        <div class="date-field">
+          <span class="date-field__label">允许自定义日期</span>
+          <ElSwitch v-model="form.defaultDateScope.allowCustomRange" />
+        </div>
+      </div>
     </div>
 
-    <ElScrollbar class="data-config-scroll">
-      <div class="config-list">
-        <div v-for="item in configItems" :key="item.key" class="config-item">
-          <div class="config-item__label-wrap">
-            <span class="config-item__label">{{ item.label }}</span>
-            <span class="config-item__desc">{{ item.desc }}</span>
-          </div>
-          <div class="config-item__control">
-            <ElSelect
-              size="small"
-              v-model="form[item.key]"
-              class="config-select"
-              placeholder="请选择"
-              @change="updatePreview"
-            >
+    <div class="override-header">
+      <div>
+        <h3 class="override-header__title">页面覆盖规则</h3>
+        <p class="override-header__desc">只给特殊页面额外限制，避免角色配置过度复杂。</p>
+      </div>
+      <ElButton type="primary" round @click="addOverride">新增页面覆盖</ElButton>
+    </div>
+
+    <ElScrollbar class="override-scroll">
+      <div v-if="form.pageDateScopes.length" class="override-list">
+        <div
+          v-for="(item, index) in form.pageDateScopes"
+          :key="`${item.pageKey}-${index}`"
+          class="override-item"
+        >
+          <div class="override-item__top">
+            <ElSelect v-model="item.pageKey" class="override-item__page" placeholder="请选择页面">
               <ElOption
-                v-for="opt in item.options"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
+                v-for="option in pageOptions"
+                :key="option.pageKey"
+                :label="resolvePageName(option.pageName)"
+                :value="option.pageKey"
+                :disabled="isPageOptionDisabled(option.pageKey, index)"
               />
             </ElSelect>
-            <ElRadioGroup
-              size="small"
-              v-model="form[item.key]"
-              class="config-radios"
-              @change="updatePreview"
-            >
-              <ElRadio
-                v-for="opt in item.options"
-                :key="opt.value"
-                :label="opt.value"
-                class="config-radio"
-              >
-                {{ opt.label }}
-              </ElRadio>
-            </ElRadioGroup>
+            <ElButton text type="danger" @click="removeOverride(index)">删除</ElButton>
+          </div>
+
+          <div class="date-grid">
+            <div class="date-field">
+              <span class="date-field__label">最大可回看天数</span>
+              <ElSelect v-model="item.maxHistoryDays" class="date-field__control">
+                <ElOption
+                  v-for="option in historyDayOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
+              </ElSelect>
+            </div>
+
+            <div class="date-field">
+              <span class="date-field__label">默认展示范围</span>
+              <ElSelect v-model="item.defaultRangeDays" class="date-field__control">
+                <ElOption
+                  v-for="option in defaultRangeOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
+              </ElSelect>
+            </div>
+
+            <div class="date-field">
+              <span class="date-field__label">允许自定义日期</span>
+              <ElSwitch v-model="item.allowCustomRange" />
+            </div>
           </div>
         </div>
       </div>
+
+      <ElEmpty v-else description="当前角色还没有页面覆盖规则，默认只使用全局规则。" />
     </ElScrollbar>
 
-    <div class="preview-section">
-      <h4 class="preview-title">权限预览效果</h4>
-      <p class="preview-text">{{ previewText }}</p>
+    <div class="preview-card">
+      <h4 class="preview-card__title">权限预览</h4>
+      <p class="preview-card__text">{{ previewText }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import {
-    fetchRolePermissionData,
-    type RoleDataPermissionModule
+    fetchRolePermissionDate,
+    type RoleDatePermissionResponse
   } from '@/api/config-management/role'
 
-  defineOptions({ name: 'RolePermissionData' })
+  defineOptions({ name: 'RolePermissionDate' })
 
-  type ScopeOption = {
-    value: string
-    label: string
-  }
+  const props = defineProps<{
+    roleId?: number
+  }>()
 
-  type ConfigItem = {
-    key: string
-    label: string
-    desc: string
-    options: ScopeOption[]
-  }
+  const { t } = useI18n()
 
-  const props = withDefaults(
-    defineProps<{
-      roleId?: number
-      roleName?: string
-      previewUserName?: string
-    }>(),
-    {
-      roleName: '投放人员',
-      previewUserName: '张三'
-    }
-  )
+  const loading = ref(false)
+  const pageOptions = ref<RoleDatePermissionResponse['pageOptions']>([])
+  const form = reactive<{
+    defaultDateScope: RoleDatePermissionResponse['defaultDateScope']
+    pageDateScopes: RoleDatePermissionResponse['pageDateScopes']
+  }>({
+    defaultDateScope: {
+      maxHistoryDays: 30,
+      defaultRangeDays: 7,
+      allowCustomRange: true
+    },
+    pageDateScopes: []
+  })
 
-  const scopeOptions: ScopeOption[] = [
-    { value: 'all', label: '全部数据' },
-    { value: 'personal', label: '仅自己负责的' },
-    { value: 'readonly', label: '只读模式' },
-    { value: 'none', label: '不可访问' }
+  const historyDayOptions = [
+    { label: '不限', value: -1 },
+    { label: '近 3 天', value: 3 },
+    { label: '近 7 天', value: 7 },
+    { label: '近 15 天', value: 15 },
+    { label: '近 30 天', value: 30 },
+    { label: '近 60 天', value: 60 },
+    { label: '近 90 天', value: 90 },
+    { label: '近 180 天', value: 180 },
+    { label: '近 365 天', value: 365 }
   ]
 
-  const form = ref<Record<string, string>>({})
-  const configItems = ref<ConfigItem[]>([])
-  const loading = ref(false)
-  const previewText = ref('')
+  const defaultRangeOptions = [
+    { label: '1 天', value: 1 },
+    { label: '3 天', value: 3 },
+    { label: '7 天', value: 7 },
+    { label: '15 天', value: 15 },
+    { label: '30 天', value: 30 }
+  ]
 
-  function getOptionLabel(value: string): string {
-    return scopeOptions.find((option) => option.value === value)?.label ?? value
+  const previewText = computed(() => {
+    const globalText = [
+      `默认最多查看${formatHistoryDays(form.defaultDateScope.maxHistoryDays)}`,
+      `默认展示${form.defaultDateScope.defaultRangeDays}天`,
+      form.defaultDateScope.allowCustomRange ? '允许自定义日期' : '不允许自定义日期'
+    ].join('，')
+
+    if (!form.pageDateScopes.length) {
+      return `当前角色采用统一日期规则：${globalText}。`
+    }
+
+    const overrideText = form.pageDateScopes
+      .map((item) => {
+        const pageName =
+          pageOptions.value.find((option) => option.pageKey === item.pageKey)?.pageName ??
+          item.pageKey
+        return `${resolvePageName(pageName)}(${formatHistoryDays(item.maxHistoryDays)})`
+      })
+      .join('、')
+
+    return `当前角色默认规则为：${globalText}；单独覆盖页面：${overrideText}。`
+  })
+
+  function resolvePageName(pageName: string): string {
+    return pageName.startsWith('menus.') ? t(pageName) : pageName
   }
 
-  function updatePreview() {
-    const segments = configItems.value.map((item) => {
-      const currentValue = form.value[item.key] ?? 'none'
-      return `${item.label}:${getOptionLabel(currentValue)}`
-    })
-
-    previewText.value = segments.length
-      ? `${props.previewUserName}(${props.roleName}) 登录后将看到的数据范围为：${segments.join('；')}`
-      : `${props.previewUserName}(${props.roleName}) 当前暂无可配置的数据权限模块。`
-  }
-
-  function applyDataModules(modules: RoleDataPermissionModule[]) {
-    configItems.value = modules.map((module) => ({
-      key: module.moduleId,
-      label: module.moduleName,
-      desc: `配置「${module.moduleName}」模块的数据访问范围`,
-      options: scopeOptions
-    }))
-
-    form.value = modules.reduce<Record<string, string>>((acc, module) => {
-      acc[module.moduleId] = module.dataScope
-      return acc
-    }, {})
-
-    updatePreview()
+  function formatHistoryDays(value: number): string {
+    return value === -1 ? '不限' : `近${value}天`
   }
 
   async function loadData() {
     if (!props.roleId) {
-      configItems.value = []
-      form.value = {}
-      updatePreview()
+      pageOptions.value = []
+      resetForm()
       return
     }
 
     loading.value = true
     try {
-      const res = await fetchRolePermissionData({ roleId: props.roleId })
-      applyDataModules(res.modules || [])
+      const res = await fetchRolePermissionDate({ roleId: props.roleId })
+      pageOptions.value = res.pageOptions || []
+      form.defaultDateScope = { ...res.defaultDateScope }
+      form.pageDateScopes = (res.pageDateScopes || []).map((item) => ({ ...item }))
     } catch (error) {
-      console.error('获取数据权限失败', error)
-      configItems.value = []
-      form.value = {}
-      updatePreview()
+      console.error('获取日期权限失败', error)
+      pageOptions.value = []
+      resetForm()
     } finally {
       loading.value = false
+    }
+  }
+
+  function resetForm() {
+    form.defaultDateScope = {
+      maxHistoryDays: 30,
+      defaultRangeDays: 7,
+      allowCustomRange: true
+    }
+    form.pageDateScopes = []
+  }
+
+  function addOverride() {
+    const nextOption = pageOptions.value.find(
+      (option) => !form.pageDateScopes.some((item) => item.pageKey === option.pageKey)
+    )
+    form.pageDateScopes.push({
+      pageKey: nextOption?.pageKey ?? '',
+      maxHistoryDays: form.defaultDateScope.maxHistoryDays,
+      defaultRangeDays: form.defaultDateScope.defaultRangeDays,
+      allowCustomRange: form.defaultDateScope.allowCustomRange
+    })
+  }
+
+  function removeOverride(index: number) {
+    form.pageDateScopes.splice(index, 1)
+  }
+
+  function isPageOptionDisabled(pageKey: string, currentIndex: number): boolean {
+    return form.pageDateScopes.some(
+      (item, index) => index !== currentIndex && item.pageKey === pageKey
+    )
+  }
+
+  function getDatePermissionPayload() {
+    return {
+      defaultDateScope: { ...form.defaultDateScope },
+      pageDateScopes: form.pageDateScopes
+        .filter((item) => item.pageKey)
+        .map((item) => ({
+          pageKey: item.pageKey,
+          maxHistoryDays: item.maxHistoryDays,
+          defaultRangeDays: item.defaultRangeDays,
+          allowCustomRange: item.allowCustomRange
+        }))
     }
   }
 
@@ -156,14 +258,10 @@
     loadData()
   }
 
-  function getModuleDataScopes() {
-    return configItems.value.map((item) => ({
-      moduleId: item.key,
-      dataScope: form.value[item.key] ?? 'none'
-    }))
-  }
-
-  defineExpose({ reset, getModuleDataScopes })
+  defineExpose({
+    reset,
+    getDatePermissionPayload
+  })
 
   watch(
     () => props.roleId,
@@ -172,147 +270,109 @@
     },
     { immediate: true }
   )
-
-  watch(
-    () => props.roleName,
-    () => {
-      updatePreview()
-    }
-  )
 </script>
 
 <style scoped lang="scss">
-  .role-permission-data {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    height: 100%;
-    min-height: 0;
-    padding: 0 4px;
+  .role-permission-date {
+    gap: 12px;
   }
 
-  .data-config-header {
-    flex-shrink: 0;
-    padding: 14px 16px;
+  .date-card,
+  .preview-card {
+    padding: 16px;
     background: var(--el-fill-color-light);
     border: 1px solid var(--el-border-color);
     border-radius: 8px;
   }
 
-  .data-config-title {
+  .date-card__title,
+  .preview-card__title,
+  .override-header__title {
     margin: 0 0 6px;
     font-size: 15px;
     font-weight: 600;
     color: var(--el-text-color-primary);
   }
 
-  .data-config-desc {
+  .date-card__desc,
+  .override-header__desc,
+  .preview-card__text {
     margin: 0;
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.6;
     color: var(--el-text-color-secondary);
   }
 
-  .data-config-scroll {
+  .date-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .date-field__label {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .date-field__control {
+    width: 100%;
+  }
+
+  .override-header {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .override-scroll {
     flex: 1;
     min-height: 0;
-    padding: 1px; /* 避免边框被裁切 */
-    background: var(--el-bg-color);
+    padding: 1px;
     border: 1px solid var(--el-border-color);
     border-radius: 8px;
 
     :deep(.el-scrollbar__wrap) {
-      padding: 16px;
+      padding: 12px;
     }
   }
 
-  .config-list {
+  .override-list {
     display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .config-item {
-    display: flex;
-    gap: 24px;
-    align-items: flex-start;
-    padding: 16px;
-    margin-bottom: 12px;
-    background: var(--el-fill-color-blank);
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 6px;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  .config-item__label-wrap {
-    flex-shrink: 0;
-    width: 120px;
-  }
-
-  .config-item__label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--el-text-color-primary);
-  }
-
-  .config-item__desc {
-    display: block;
-    margin-top: 4px;
-    font-size: 12px;
-    line-height: 1.4;
-    color: var(--el-text-color-secondary);
-  }
-
-  .config-item__control {
-    display: flex;
-    flex: 1;
     flex-direction: column;
     gap: 12px;
-    min-width: 0;
   }
 
-  .config-select {
-    width: 100%;
-    max-width: 280px;
-  }
-
-  .config-radios {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 16px;
-  }
-
-  .config-radio {
-    margin-right: 0;
-
-    :deep(.el-radio__label) {
-      font-size: 13px;
-    }
-  }
-
-  .preview-section {
-    flex-shrink: 0;
+  .override-item {
     padding: 16px;
-    background: var(--el-fill-color-light);
-    border: 1px solid var(--el-border-color);
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color-lighter);
     border-radius: 8px;
   }
 
-  .preview-title {
-    margin: 0 0 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
+  .override-item__top {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
   }
 
-  .preview-text {
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--el-text-color-regular);
+  .override-item__page {
+    width: 280px;
+    max-width: 100%;
+  }
+
+  @media (width <= 900px) {
+    .date-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

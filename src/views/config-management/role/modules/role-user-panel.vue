@@ -1,9 +1,8 @@
-<!-- 权限管理 - 右侧：用户列表、权限摘要、角色说明 -->
 <template>
   <div class="role-user-panel flex h-full min-h-0 min-w-0 flex-col">
     <template v-if="selectedRole">
       <div class="panel-header">
-        <h2 class="panel-title">用户列表-{{ selectedRole.roleName }}({{ roleUsers.length }}人)</h2>
+        <h2 class="panel-title">角色成员 - {{ selectedRole.roleName }} ({{ roleUsers.length }})</h2>
       </div>
 
       <ElScrollbar class="user-list-scroll">
@@ -13,7 +12,6 @@
             <div class="user-card__body">
               <div class="user-card__name-row">
                 <span class="user-name">{{ user.userName }}</span>
-                <ElButton v-if="user.isLast" link type="primary" size="small">+ 邀请成员</ElButton>
               </div>
               <div class="user-email">{{ user.userEmail }}</div>
               <div class="user-meta">
@@ -35,45 +33,51 @@
         </div>
 
         <div class="batch-actions">
-          <ElButton size="small" @click="$emit('batch-assign')">批量分配角色</ElButton>
-          <ElButton size="small" @click="$emit('batch-export')">批量导出</ElButton>
-          <ElButton size="small" @click="$emit('batch-disable')">批量禁用</ElButton>
+          <ElButton size="small" round @click="$emit('batch-assign')">批量分配角色</ElButton>
+          <ElButton size="small" round @click="$emit('batch-export')">批量导出</ElButton>
+          <ElButton size="small" round @click="$emit('batch-disable')">批量禁用</ElButton>
         </div>
 
-        <!-- 权限摘要 -->
         <ElCard class="summary-card" shadow="never">
           <template #header>
             <span class="section-title">权限摘要</span>
           </template>
-          <div class="summary-content">
-            <p class="summary-line"
-              >功能权限: {{ permissionSummary.funcEnabled }}/{{
-                permissionSummary.funcTotal
-              }}
-              项已开启</p
-            >
-            <p class="summary-line">数据权限: {{ permissionSummary.dataScope }}</p>
-            <ElProgress
-              :percentage="permissionSummary.percent"
-              :stroke-width="8"
-              class="summary-progress"
-            />
-            <div class="role-percent-list">
-              <div
-                v-for="r in permissionSummary.rolePercentList"
-                :key="r.roleId"
-                class="role-percent-row"
-                :class="{ 'role-percent-row--current': r.isCurrent }"
-              >
-                <span class="role-percent-name">{{ r.roleName }}</span>
-                <ElProgress :percentage="r.percent" :stroke-width="6" class="role-percent-bar" />
-                <span v-if="r.isCurrent" class="current-tag">←当前角色</span>
-              </div>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-item__label">页面权限</span>
+              <span class="summary-item__value">
+                {{ permissionSummary.routeGrantedCount }}/{{ permissionSummary.routeTotalCount }}
+              </span>
             </div>
+            <div class="summary-item">
+              <span class="summary-item__label">默认日期规则</span>
+              <span class="summary-item__value">{{ permissionSummary.defaultDateScopeText }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-item__label">页面覆盖数</span>
+              <span class="summary-item__value">{{ permissionSummary.overridePageCount }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-item__label">最近更新</span>
+              <span class="summary-item__value">
+                {{ permissionSummary.lastUpdatedBy }} / {{ permissionSummary.lastUpdatedAt }}
+              </span>
+            </div>
+          </div>
+
+          <div v-if="permissionSummary.highlightedRoutes.length" class="summary-tags">
+            <ElTag
+              v-for="routeName in permissionSummary.highlightedRoutes"
+              :key="routeName"
+              size="small"
+              effect="plain"
+              round
+            >
+              {{ routeName }}
+            </ElTag>
           </div>
         </ElCard>
 
-        <!-- 角色说明 -->
         <ElCard class="summary-card" shadow="never">
           <template #header>
             <span class="section-title">角色说明</span>
@@ -81,9 +85,9 @@
               type="primary"
               :underline="false"
               class="edit-desc-link"
-              @click="$emit('edit-desc')"
+              @click="$emit('edit-role')"
             >
-              编辑说明
+              编辑角色
             </ElLink>
           </template>
           <p class="role-desc">{{ roleDescription }}</p>
@@ -93,8 +97,8 @@
 
     <ElCard v-else class="panel-empty" shadow="never">
       <div class="empty-tip">
-        <p class="empty-text">请从左侧选择角色</p>
-        <p class="empty-desc">查看该角色下的用户与权限摘要</p>
+        <p class="empty-text">请先从左侧选择角色</p>
+        <p class="empty-desc">右侧会展示角色成员、权限摘要与说明信息。</p>
       </div>
     </ElCard>
   </div>
@@ -121,37 +125,30 @@
       selectedRole?: RoleListItem | null
       roleUsers?: RoleUserItem[]
       permissionSummary?: {
-        funcEnabled: number
-        funcTotal: number
-        dataScope: string
-        percent: number
-        rolePercentList: Array<{
-          roleId: number
-          roleName: string
-          percent: number
-          isCurrent?: boolean
-        }>
+        routeGrantedCount: number
+        routeTotalCount: number
+        defaultDateScopeText: string
+        overridePageCount: number
+        allowCustomRange: boolean
+        lastUpdatedAt: string
+        lastUpdatedBy: string
+        highlightedRoutes: string[]
       }
       roleDescription?: string
     }>(),
     {
       roleUsers: () => [],
       permissionSummary: () => ({
-        funcEnabled: 32,
-        funcTotal: 58,
-        dataScope: '中等范围',
-        percent: 55,
-        rolePercentList: [
-          { roleId: 1, roleName: '超级管理员', percent: 100 },
-          { roleId: 2, roleName: 'CEO管理', percent: 85 },
-          { roleId: 3, roleName: '投放人员', percent: 55, isCurrent: true },
-          { roleId: 4, roleName: '变现人员', percent: 40 },
-          { roleId: 5, roleName: '素材设计师', percent: 35 },
-          { roleId: 6, roleName: '运营维护', percent: 30 }
-        ]
+        routeGrantedCount: 0,
+        routeTotalCount: 0,
+        defaultDateScopeText: '-',
+        overridePageCount: 0,
+        allowCustomRange: false,
+        lastUpdatedAt: '-',
+        lastUpdatedBy: '-',
+        highlightedRoutes: []
       }),
-      roleDescription: () =>
-        '可查看所有投放数据，可创建和编辑自己负责的广告系列，可调整预算，但不能删除广告，不能访问变现配置和系统管理功能。'
+      roleDescription: () => '当前角色用于管理页面可见性与日期范围权限。'
     }
   )
 
@@ -161,25 +158,18 @@
     (e: 'batch-assign'): void
     (e: 'batch-export'): void
     (e: 'batch-disable'): void
-    (e: 'edit-desc'): void
+    (e: 'edit-role'): void
   }>()
 </script>
 
 <style scoped lang="scss">
   .role-user-panel {
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    width: 380px;
-    min-width: 320px;
-    min-height: 0;
     padding: 16px;
     background: var(--el-bg-color);
   }
 
   .panel-header {
-    flex-shrink: 0;
     margin-bottom: 12px;
   }
 
@@ -244,20 +234,19 @@
     color: var(--el-text-color-primary);
   }
 
-  .user-email {
-    margin-bottom: 4px;
+  .user-email,
+  .user-meta {
     font-size: 12px;
     color: var(--el-text-color-secondary);
   }
 
-  .user-meta {
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
+  .user-email {
+    margin-bottom: 4px;
+  }
 
-    .meta-sep {
-      margin: 0 6px;
-      opacity: 0.7;
-    }
+  .meta-sep {
+    margin: 0 6px;
+    opacity: 0.7;
   }
 
   .status-dot {
@@ -307,59 +296,33 @@
     }
   }
 
-  .section-title {
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .summary-item__label {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .summary-item__value {
+    font-size: 13px;
     color: var(--el-text-color-primary);
   }
 
-  .edit-desc-link {
-    font-size: 13px;
-    font-weight: 400;
-  }
-
-  .summary-content {
-    font-size: 13px;
-    color: var(--el-text-color-secondary);
-  }
-
-  .summary-line {
-    margin: 0 0 8px;
-  }
-
-  .summary-progress {
-    margin: 12px 0;
-  }
-
-  .role-percent-list {
-    margin-top: 12px;
-  }
-
-  .role-percent-row {
+  .summary-tags {
     display: flex;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 8px;
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
-
-    &--current {
-      color: var(--el-text-color-primary);
-    }
-  }
-
-  .role-percent-name {
-    flex-shrink: 0;
-    width: 80px;
-  }
-
-  .role-percent-bar {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .current-tag {
-    flex-shrink: 0;
-    font-size: 11px;
-    color: var(--el-color-primary);
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
   }
 
   .role-desc {
@@ -374,7 +337,6 @@
     flex: 1;
     align-items: center;
     justify-content: center;
-    min-height: 200px;
 
     :deep(.el-card__body) {
       width: 100%;
@@ -382,17 +344,16 @@
     }
   }
 
-  .empty-tip {
-    color: var(--el-text-color-secondary);
-  }
-
   .empty-text {
     margin-bottom: 6px;
     font-size: 14px;
+    color: var(--el-text-color-secondary);
   }
 
   .empty-desc {
+    margin: 0;
     font-size: 12px;
+    color: var(--el-text-color-secondary);
     opacity: 0.8;
   }
 </style>

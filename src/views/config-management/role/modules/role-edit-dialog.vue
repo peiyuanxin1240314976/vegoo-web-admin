@@ -1,39 +1,70 @@
 <template>
   <ElDialog
     v-model="visible"
-    :title="dialogType === 'add' ? '新增角色' : '编辑角色'"
-    width="30%"
+    :title="dialogType === 'add' ? '新增角色' : '角色详情 / 编辑角色'"
+    width="640px"
     align-center
+    header-class="role-edit-dialog-hd"
+    body-class="role-edit-dialog-bd"
+    footer-class="role-edit-dialog-ft"
     @close="handleClose"
   >
-    <ElForm ref="formRef" :model="form" :rules="rules" label-width="120px">
-      <ElFormItem label="角色名称" prop="roleName">
-        <ElInput v-model="form.roleName" placeholder="请输入角色名称" />
-      </ElFormItem>
-      <ElFormItem label="角色编码" prop="roleCode">
-        <ElInput v-model="form.roleCode" placeholder="请输入角色编码" />
-      </ElFormItem>
-      <ElFormItem label="描述" prop="description">
+    <ElForm ref="formRef" :model="form" :rules="rules" label-width="110px" class="role-edit-form">
+      <div class="role-edit-grid">
+        <ElFormItem label="角色名称" prop="roleName">
+          <ElInput v-model="form.roleName" placeholder="请输入角色名称，例如：投放经理" />
+        </ElFormItem>
+
+        <ElFormItem label="角色编码" prop="roleCode">
+          <ElInput v-model="form.roleCode" placeholder="请输入角色编码，例如：DeliveryManager" />
+        </ElFormItem>
+      </div>
+
+      <ElFormItem label="角色说明" prop="description">
         <ElInput
           v-model="form.description"
           type="textarea"
-          :rows="3"
-          placeholder="请输入角色描述"
+          :rows="4"
+          maxlength="120"
+          show-word-limit
+          placeholder="请输入角色定位说明，便于成员理解该角色负责哪些业务。"
         />
       </ElFormItem>
-      <ElFormItem label="启用">
-        <ElSwitch v-model="form.enabled" />
+
+      <ElFormItem label="启用状态">
+        <ElSwitch v-model="form.enabled" active-text="启用" inactive-text="停用" />
+      </ElFormItem>
+
+      <ElFormItem label="权限配置">
+        <div class="role-edit-note">
+          <ElAlert
+            title="页面权限和日期权限请在主面板中配置，按钮级权限本期仅预留字段。"
+            type="info"
+            :closable="false"
+            show-icon
+          />
+          <div class="role-edit-note__tips">
+            <p>角色编码会作为用户接口中的 `permissions / roles` 返回值使用。</p>
+            <p>建议编码使用稳定英文标识，避免后续改名影响权限识别。</p>
+          </div>
+        </div>
       </ElFormItem>
     </ElForm>
+
     <template #footer>
-      <ElButton @click="handleClose">取消</ElButton>
-      <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+      <ElButton round @click="handleClose">取消</ElButton>
+      <ElButton type="primary" round @click="handleSubmit">
+        {{ dialogType === 'add' ? '创建角色' : '保存角色信息' }}
+      </ElButton>
     </template>
   </ElDialog>
 </template>
 
 <script setup lang="ts">
   import type { FormInstance, FormRules } from 'element-plus'
+  import { fetchRoleDetailSave, type RoleDetailSavePayload } from '@/api/config-management/role'
+
+  defineOptions({ name: 'RoleEditDialog' })
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -45,7 +76,7 @@
 
   interface Emits {
     (e: 'update:modelValue', value: boolean): void
-    (e: 'success'): void
+    (e: 'success', payload: { roleId: number; dialogType: 'add' | 'edit' }): void
   }
 
   const props = withDefaults(defineProps<Props>(), {
@@ -58,44 +89,88 @@
 
   const formRef = ref<FormInstance>()
 
-  /**
-   * 弹窗显示状态双向绑定
-   */
   const visible = computed({
     get: () => props.modelValue,
     set: (value) => emit('update:modelValue', value)
   })
 
-  /**
-   * 表单验证规则
-   */
-  const rules = reactive<FormRules>({
-    roleName: [
-      { required: true, message: '请输入角色名称', trigger: 'blur' },
-      { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
-    ],
-    roleCode: [
-      { required: true, message: '请输入角色编码', trigger: 'blur' },
-      { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
-    ],
-    description: [{ required: true, message: '请输入角色描述', trigger: 'blur' }]
-  })
-
-  /**
-   * 表单数据
-   */
-  const form = reactive<RoleListItem>({
-    roleId: 0,
+  const form = reactive<RoleDetailSavePayload>({
+    roleId: undefined,
     roleName: '',
     roleCode: '',
     description: '',
-    createTime: '',
     enabled: true
   })
 
-  /**
-   * 监听弹窗打开，初始化表单数据
-   */
+  const rules = reactive<FormRules>({
+    roleName: [
+      { required: true, message: '请输入角色名称', trigger: 'blur' },
+      { min: 2, max: 20, message: '角色名称长度需在 2 到 20 个字符之间', trigger: 'blur' }
+    ],
+    roleCode: [
+      { required: true, message: '请输入角色编码', trigger: 'blur' },
+      {
+        pattern: /^[A-Za-z][A-Za-z0-9]+$/,
+        message: '角色编码需以字母开头，且只包含字母和数字',
+        trigger: 'blur'
+      },
+      { min: 2, max: 50, message: '角色编码长度需在 2 到 50 个字符之间', trigger: 'blur' }
+    ],
+    description: [
+      { required: true, message: '请输入角色说明', trigger: 'blur' },
+      { min: 4, max: 120, message: '角色说明长度需在 4 到 120 个字符之间', trigger: 'blur' }
+    ]
+  })
+
+  function initForm() {
+    if (props.dialogType === 'edit' && props.roleData) {
+      Object.assign(form, {
+        roleId: props.roleData.roleId,
+        roleName: props.roleData.roleName,
+        roleCode: props.roleData.roleCode,
+        description: props.roleData.description,
+        enabled: props.roleData.enabled
+      })
+      return
+    }
+
+    Object.assign(form, {
+      roleId: undefined,
+      roleName: '',
+      roleCode: '',
+      description: '',
+      enabled: true
+    })
+  }
+
+  function handleClose() {
+    visible.value = false
+    formRef.value?.resetFields()
+  }
+
+  async function handleSubmit() {
+    if (!formRef.value) return
+
+    try {
+      await formRef.value.validate()
+      const res = await fetchRoleDetailSave({
+        roleId: form.roleId,
+        roleName: form.roleName.trim(),
+        roleCode: form.roleCode.trim(),
+        description: form.description.trim(),
+        enabled: form.enabled
+      })
+
+      if (res.success) {
+        ElMessage.success(props.dialogType === 'add' ? '角色创建成功' : '角色信息已更新')
+        emit('success', { roleId: res.roleId, dialogType: props.dialogType })
+        handleClose()
+      }
+    } catch (error) {
+      console.error('角色信息提交失败', error)
+    }
+  }
+
   watch(
     () => props.modelValue,
     (newVal) => {
@@ -103,60 +178,80 @@
     }
   )
 
-  /**
-   * 监听角色数据变化，更新表单
-   */
   watch(
     () => props.roleData,
-    (newData) => {
-      if (newData && props.modelValue) initForm()
+    () => {
+      if (props.modelValue) initForm()
     },
     { deep: true }
   )
-
-  /**
-   * 初始化表单数据
-   * 根据弹窗类型填充表单或重置表单
-   */
-  const initForm = () => {
-    if (props.dialogType === 'edit' && props.roleData) {
-      Object.assign(form, props.roleData)
-    } else {
-      Object.assign(form, {
-        roleId: 0,
-        roleName: '',
-        roleCode: '',
-        description: '',
-        createTime: '',
-        enabled: true
-      })
-    }
-  }
-
-  /**
-   * 关闭弹窗并重置表单
-   */
-  const handleClose = () => {
-    visible.value = false
-    formRef.value?.resetFields()
-  }
-
-  /**
-   * 提交表单
-   * 验证通过后调用接口保存数据
-   */
-  const handleSubmit = async () => {
-    if (!formRef.value) return
-
-    try {
-      await formRef.value.validate()
-      // TODO: 调用新增/编辑接口
-      const message = props.dialogType === 'add' ? '新增成功' : '修改成功'
-      ElMessage.success(message)
-      emit('success')
-      handleClose()
-    } catch (error) {
-      console.log('表单验证失败:', error)
-    }
-  }
 </script>
+
+<style scoped lang="scss">
+  .role-edit-form {
+    padding-top: 8px;
+  }
+
+  .role-edit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 12px;
+  }
+
+  .role-edit-note {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .role-edit-note__tips {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--el-text-color-secondary);
+
+    p {
+      margin: 0;
+    }
+  }
+
+  @media (width <= 768px) {
+    .role-edit-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<style lang="scss">
+  .el-dialog:has(.role-edit-dialog-bd) {
+    background: var(--cm-dialog-bg-inner) !important;
+    border: 1px solid var(--cm-dialog-border);
+    box-shadow: var(--cm-dialog-shadow) !important;
+  }
+
+  .el-dialog:has(.role-edit-dialog-bd) .el-dialog__header.role-edit-dialog-hd {
+    background: var(--cm-dialog-bg-inner);
+    border-bottom: 1px solid var(--cm-dialog-border);
+  }
+
+  .el-dialog:has(.role-edit-dialog-bd) .el-dialog__body.role-edit-dialog-bd {
+    background: var(--cm-dialog-bg-inner);
+  }
+
+  .el-dialog:has(.role-edit-dialog-bd) .el-dialog__footer.role-edit-dialog-ft {
+    background: var(--cm-dialog-bg-inner);
+    border-top: 1px solid var(--cm-dialog-border);
+  }
+
+  .el-dialog:has(.role-edit-dialog-bd) .el-dialog__title {
+    color: var(--cm-dialog-text-primary) !important;
+  }
+
+  .el-dialog:has(.role-edit-dialog-bd) .el-dialog__headerbtn .el-icon {
+    color: var(--cm-dialog-text-muted) !important;
+
+    &:hover {
+      color: var(--cm-dialog-text-primary) !important;
+    }
+  }
+</style>

@@ -73,15 +73,46 @@ declare namespace Api {
     /** 登录响应：后端返回的 token 字符串 */
     type LoginResponse = string
 
+    interface RoutePermissionsConfig {
+      routeNames: string[]
+    }
+
+    interface DateScopeConfig {
+      maxHistoryDays: number
+      defaultRangeDays: number
+      allowCustomRange: boolean
+    }
+
+    interface PageDateScopeConfig extends DateScopeConfig {
+      pageKey: string
+    }
+
+    interface DatePermissionsConfig {
+      defaultDateScope: DateScopeConfig
+      pageDateScopes: PageDateScopeConfig[]
+    }
+
+    interface ButtonPermissionsConfig {
+      codes: string[]
+    }
+
+    interface PermissionConfig {
+      routePermissions: RoutePermissionsConfig
+      datePermissions: DatePermissionsConfig
+      buttonPermissions: ButtonPermissionsConfig
+    }
+
     /** 用户信息（与 GET /api/v1/datacenter/biz/user/get 响应一致） */
     interface UserInfo {
       id: number
       username: string
+      name?: string
       email: string
       phone: string
       /** 0 非管理员，1 管理员 */
       isAdmin: number
       permissions: string[]
+      permissionConfig?: PermissionConfig
       /** 兼容：与 id 相同，用于 store 等 */
       userId?: number
       /** 兼容：与 username 相同 */
