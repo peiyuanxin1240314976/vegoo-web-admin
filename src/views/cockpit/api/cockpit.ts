@@ -1059,14 +1059,13 @@ export function mapChannelRoiInstallToItems(
   return data.map((row) => {
     const list = row.list ?? []
     const first = list[0] ?? { cost: null, cpl: null, install: null, roi: null }
-    const trend = list.map((d) => num(d.cost))
     return {
       channel: row.channel ?? '—',
       spend: num(first.cost),
       installs: num(first.install),
       roi: num((first as { roi?: unknown }).roi),
       cpi: num(first.cpl),
-      trend
+      trend: []
     }
   })
 }

@@ -50,13 +50,6 @@
               row.cpi.toFixed(2)
             }}</span>
           </template>
-          <template #trend="{ row, $index }">
-            <CockpitRoiTrendSpark
-              v-if="row.trend?.length"
-              :trend="row.trend"
-              :line-color="getTrendLineColorByIndex($index)"
-            />
-          </template>
         </ArtTable>
       </template>
       <div v-else class="roi-empty">暂无数据</div>
@@ -69,7 +62,6 @@
   import { useMediaQuery } from '@vueuse/core'
   import { getAdPlatformIconDisplay } from '@/utils/ui/ad-platform-iconfont'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import CockpitRoiTrendSpark from './cockpit-roi-trend-spark.vue'
   import type { ColumnOption } from '@/types'
   import type { CockpitChannelRoiInstallItem } from '../types'
   import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
@@ -78,7 +70,7 @@
 
   /**
    * 统一表格行：兼容已 map 的项，以及接口 { channel, list[] }（list 为近 7 日，含 install/cost/cpl/cpi）
-   * 迷你图：无 trend 时由 list 近 7 日生成，默认用每日 cost（与「消耗」列一致）
+   * 迷你图：仅使用后端/数据源明确返回的 trend；不再从 list 自行推导
    */
   function normalizeChannelRoiRows(raw: unknown[]): CockpitChannelRoiInstallItem[] {
     if (!raw.length) return []
@@ -86,10 +78,6 @@
       const r = item as Record<string, unknown>
       const list =
         (r.list as { install?: unknown; cost?: unknown; cpl?: unknown; roi?: unknown }[]) ?? []
-      let trend = Array.isArray(r.trend) ? (r.trend as unknown[]).map((x) => num(x)) : []
-      if (!trend.length && list.length) {
-        trend = list.map((d) => num(d.cost))
-      }
       const first = list[0] ?? {}
       const platformRaw = r.platform
       const platform =
@@ -102,8 +90,7 @@
         spend: num(r.spend ?? r.cost ?? first.cost),
         installs: num(r.installs ?? r.install ?? first.install),
         roi: num(r.roi ?? first.roi),
-        cpi: num(r.cpi ?? r.cpl ?? first.cpl),
-        trend
+        cpi: num(r.cpi ?? r.cpl ?? first.cpl)
       }
     })
   }
@@ -127,8 +114,7 @@
         useSlot: true
       },
       { prop: 'roi', label: 'ROI', minWidth: baseWidth, align: 'left', useSlot: true },
-      { prop: 'cpi', label: 'CPI', minWidth: baseWidth, align: 'left', useSlot: true },
-      { prop: 'trend', label: '近7日', minWidth: baseWidth, align: 'center', useSlot: true }
+      { prop: 'cpi', label: 'CPI', minWidth: baseWidth, align: 'left', useSlot: true }
     ]
   })
 
@@ -152,12 +138,7 @@
     const spend = rows.reduce((s: number, r: CockpitChannelRoiInstallItem) => s + r.spend, 0)
     const installs = rows.reduce((s: number, r: CockpitChannelRoiInstallItem) => s + r.installs, 0)
     const cpi = spend > 0 ? spend / installs : 0
-    const roi =
-      spend > 0
-        ? rows.reduce((s: number, r: CockpitChannelRoiInstallItem) => s + r.roi * r.spend, 0) /
-          spend
-        : 0
-    return { spend, installs, roi, cpi }
+    return { spend, installs, cpi }
   })
 
   /** CPI 三档：绿(<1.0) / 黄(1.0~1.3) / 红(>=1.3) */
@@ -185,33 +166,7 @@
   /** ElTable 合计行 */
   function getSummaries(): string[] {
     const t = totals.value
-    return [
-      '合计',
-      formatMoney(t.spend),
-      formatNumber(t.installs),
-      formatRoi(t.roi),
-      '$' + t.cpi.toFixed(2),
-      ''
-    ]
-  }
-
-  /** 近 7 日折线：自上而下按行序循环取色（与 CPI 列绿/黄/红无关） */
-  const TREND_LINE_PALETTE = [
-    '#3B82F6',
-    '#10B981',
-    '#F97316',
-    '#EF4444',
-    '#8B5CF6',
-    '#06B6D4',
-    '#EC4899',
-    '#EAB308',
-    '#14B8A6',
-    '#A855F7'
-  ] as const
-
-  function getTrendLineColorByIndex(index: number): string {
-    const i = Number.isFinite(index) && index >= 0 ? index : 0
-    return TREND_LINE_PALETTE[i % TREND_LINE_PALETTE.length]
+    return ['合计', formatMoney(t.spend), formatNumber(t.installs), '—', '$' + t.cpi.toFixed(2)]
   }
 </script>
 
