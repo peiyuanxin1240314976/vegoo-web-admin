@@ -360,7 +360,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       label: '广告支出',
       valueKey: 'dCost',
       format: 'money',
-      changeKey: 'adCostChange',
+      changeKey: 'dCostChange',
       listKey: 'dCostList',
       detail: () => undefined
     },
@@ -406,7 +406,12 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
     const prev = (last[valueKey] as number | null | undefined) ?? 0
     const value = format === 'money' ? formatMoney(curr) : formatInt(curr)
     const lastStr = format === 'money' ? formatMoney(prev) : formatInt(prev)
-    const change = changeKey ? (data[changeKey] as number | undefined) : undefined
+    const change =
+      type === 'adSpend'
+        ? (data.dCostChange ?? data.adCostChange)
+        : changeKey
+          ? (data[changeKey] as number | undefined)
+          : undefined
     const { compare, compareUp } = buildCompareFromChange(change, lastStr, format)
     const chartData = listKey
       ? seriesToChartData(data[listKey] as CockpitOverallSeriesItem[] | undefined)
@@ -481,9 +486,16 @@ export function mapOverallDataToAlertSummaryMetrics(
   })
 
   // 买量用户：取值 now.initialCount，null 按 0 展示
+  const initialCountChange = data.initialCountChange
   metrics.push({
     label: '买量用户',
-    value: `${formatInt(now.initialCount)}个`
+    value: `${formatInt(now.initialCount)}个`,
+    ...(initialCountChange != null && Number.isFinite(initialCountChange)
+      ? {
+          change: Math.abs(initialCountChange),
+          trend: (initialCountChange >= 0 ? 'up' : 'down') as 'up' | 'down'
+        }
+      : {})
   })
 
   // 广告系列：取值 now.adGroupCount，null 按 0 展示
@@ -1062,10 +1074,12 @@ export function mapChannelRoiInstallToItems(
     return {
       channel: row.channel ?? '—',
       spend: num(first.cost),
+      spendChange: num((row as { costChange?: unknown }).costChange),
       installs: num(first.install),
+      installsChange: num((row as { installChange?: unknown }).installChange),
       roi: num((first as { roi?: unknown }).roi),
-      cpi: num(first.cpl),
-      trend: []
+      roiChange: num((row as { roiChange?: unknown }).roiChange),
+      cpi: num(first.cpl)
     }
   })
 }

@@ -37,13 +37,50 @@
             </div>
           </template>
           <template #spend="{ row }">
-            <span class="col-number tabular-nums">{{ formatMoney(row.spend) }}</span>
+            <div class="cell-metric cell-metric--inline">
+              <span class="col-number tabular-nums">{{ formatMoney(row.spend) }}</span>
+              <span
+                v-if="
+                  row.spendChange != null &&
+                  Number.isFinite(row.spendChange) &&
+                  row.spendChange !== 0
+                "
+                class="cell-delta tabular-nums"
+                :class="row.spendChange > 0 ? 'delta-up' : 'delta-down'"
+              >
+                {{ row.spendChange > 0 ? '↑' : '↓' }}{{ formatMoneyAbs(row.spendChange) }}
+              </span>
+            </div>
           </template>
           <template #installs="{ row }">
-            <span class="col-number tabular-nums">{{ formatNumber(row.installs) }}</span>
+            <div class="cell-metric cell-metric--inline">
+              <span class="col-number tabular-nums">{{ formatNumber(row.installs) }}</span>
+              <span
+                v-if="
+                  row.installsChange != null &&
+                  Number.isFinite(row.installsChange) &&
+                  row.installsChange !== 0
+                "
+                class="cell-delta tabular-nums"
+                :class="row.installsChange > 0 ? 'delta-up' : 'delta-down'"
+              >
+                {{ row.installsChange > 0 ? '↑' : '↓' }}{{ formatIntAbs(row.installsChange) }}
+              </span>
+            </div>
           </template>
           <template #roi="{ row }">
-            <span class="col-number tabular-nums">{{ formatRoi(row.roi) }}</span>
+            <div class="cell-metric cell-metric--inline">
+              <span class="col-number tabular-nums">{{ formatRoi(row.roi) }}</span>
+              <span
+                v-if="
+                  row.roiChange != null && Number.isFinite(row.roiChange) && row.roiChange !== 0
+                "
+                class="cell-delta tabular-nums"
+                :class="row.roiChange > 0 ? 'delta-up' : 'delta-down'"
+              >
+                {{ row.roiChange > 0 ? '↑' : '↓' }}{{ formatRoiAbs(row.roiChange) }}
+              </span>
+            </div>
           </template>
           <template #cpi="{ row }">
             <span class="col-cpi tabular-nums" :class="getCpiClass(row.cpi)">{{
@@ -70,7 +107,6 @@
 
   /**
    * 统一表格行：兼容已 map 的项，以及接口 { channel, list[] }（list 为近 7 日，含 install/cost/cpl/cpi）
-   * 迷你图：仅使用后端/数据源明确返回的 trend；不再从 list 自行推导
    */
   function normalizeChannelRoiRows(raw: unknown[]): CockpitChannelRoiInstallItem[] {
     if (!raw.length) return []
@@ -84,15 +120,20 @@
         platformRaw != null && String(platformRaw).trim() !== ''
           ? String(platformRaw).trim()
           : undefined
-      const trend = Array.isArray(r.trend) ? r.trend.map((point) => num(point)) : []
       return {
         channel: String(r.channel ?? '—'),
         platform,
         spend: num(r.spend ?? r.cost ?? first.cost),
+        spendChange: Number.isFinite(num(r.spendChange ?? r.costChange))
+          ? num(r.spendChange ?? r.costChange)
+          : undefined,
         installs: num(r.installs ?? r.install ?? first.install),
+        installsChange: Number.isFinite(num(r.installsChange ?? r.installChange))
+          ? num(r.installsChange ?? r.installChange)
+          : undefined,
         roi: num(r.roi ?? first.roi),
-        cpi: num(r.cpi ?? r.cpl ?? first.cpl),
-        trend
+        roiChange: Number.isFinite(num(r.roiChange)) ? num(r.roiChange) : undefined,
+        cpi: num(r.cpi ?? r.cpl ?? first.cpl)
       }
     })
   }
@@ -160,9 +201,23 @@
     return n.toLocaleString('en-US', { maximumFractionDigits: 0 })
   }
 
+  function formatMoneyAbs(n: number): string {
+    return formatMoney(Math.abs(n))
+  }
+
+  function formatIntAbs(n: number): string {
+    const v = Math.abs(n)
+    return Number.isFinite(v) ? Math.round(v).toLocaleString('en-US') : '0'
+  }
+
   function formatRoi(roi: number): string {
     if (!Number.isFinite(roi) || roi <= 0) return '—'
     return roi.toFixed(2)
+  }
+
+  function formatRoiAbs(roi: number): string {
+    const v = Math.abs(roi)
+    return Number.isFinite(v) ? v.toFixed(2) : '0.00'
   }
 
   /** ElTable 合计行 */
@@ -429,6 +484,30 @@
 
     .col-number {
       white-space: nowrap;
+    }
+
+    .cell-metric {
+      display: flex;
+      gap: 6px;
+      align-items: baseline;
+      line-height: 1.1;
+    }
+
+    .cell-metric--inline {
+      flex-direction: row;
+    }
+
+    .cell-delta {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .delta-up {
+      color: var(--text-success);
+    }
+
+    .delta-down {
+      color: var(--text-danger);
     }
 
     .col-cpi {
