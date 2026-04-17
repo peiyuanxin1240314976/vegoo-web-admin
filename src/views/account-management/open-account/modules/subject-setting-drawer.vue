@@ -18,22 +18,33 @@
 
         <el-form ref="formRef" :model="form" label-position="top" :rules="rules">
           <el-form-item label="主体名称" prop="subjectName">
-            <el-input v-model="form.subjectName" placeholder="请输入主体名称" />
+            <el-input v-model="form.subjectName" maxlength="200" placeholder="请输入主体名称" />
           </el-form-item>
 
           <el-form-item label="主体 ID" prop="subjectId">
             <el-input
               v-model="form.subjectId"
+              maxlength="100"
               placeholder="请输入主体唯一标识"
               :disabled="mode === 'edit'"
             />
           </el-form-item>
 
-          <el-form-item label="营业执照地址" prop="businessLicense">
-            <el-input
-              v-model="form.businessLicense"
-              placeholder="可填写 OSS 地址、文件编号或业务侧可追溯路径"
-            />
+          <el-form-item label="营业执照文件" prop="businessLicense">
+            <div class="subject-drawer__license-upload">
+              <div class="subject-drawer__license-value">
+                <span v-if="form.businessLicense">{{ form.businessLicense }}</span>
+                <span v-else class="subject-drawer__license-placeholder">暂未上传营业执照</span>
+              </div>
+              <el-upload
+                :show-file-list="false"
+                :auto-upload="false"
+                :before-upload="handleLicenseSelect"
+                accept=".pdf,.png,.jpg,.jpeg"
+              >
+                <el-button :loading="licenseUploading">上传执照</el-button>
+              </el-upload>
+            </div>
           </el-form-item>
         </el-form>
       </section>
@@ -63,6 +74,8 @@
               v-model="form.facebookRemark"
               type="textarea"
               :rows="4"
+              maxlength="2000"
+              show-word-limit
               placeholder="例如：美国主体优先，需走指定代理渠道"
             />
           </article>
@@ -85,6 +98,8 @@
               v-model="form.tiktokRemark"
               type="textarea"
               :rows="4"
+              maxlength="2000"
+              show-word-limit
               placeholder="例如：仅支持东南亚投放，需补齐税务材料"
             />
           </article>
@@ -103,7 +118,8 @@
 
 <script setup lang="ts">
   import { computed, reactive, ref, watch } from 'vue'
-  import type { FormInstance, FormRules } from 'element-plus'
+  import { ElMessage } from 'element-plus'
+  import type { FormInstance, FormRules, UploadRawFile } from 'element-plus'
   import type { SubjectSettingItem } from '../types'
 
   defineOptions({ name: 'SubjectSettingDrawer' })
@@ -112,6 +128,7 @@
     visible: boolean
     mode: 'create' | 'edit'
     data: SubjectSettingItem | null
+    uploadLicense: (file: File) => Promise<string>
   }>()
 
   const emit = defineEmits<{
@@ -142,10 +159,20 @@
   })
 
   const form = reactive<SubjectSettingItem>(createEmptyForm())
+  const licenseUploading = ref(false)
 
   const rules = computed<FormRules>(() => ({
-    subjectName: [{ required: true, message: '请输入主体名称', trigger: 'blur' }],
-    subjectId: [{ required: true, message: '请输入主体 ID', trigger: 'blur' }]
+    subjectName: [
+      { required: true, message: '请输入主体名称', trigger: 'blur' },
+      { max: 200, message: '主体名称最多 200 个字符', trigger: 'blur' }
+    ],
+    subjectId: [
+      { required: true, message: '请输入主体 ID', trigger: 'blur' },
+      { max: 100, message: '主体 ID 最多 100 个字符', trigger: 'blur' }
+    ],
+    businessLicense: [{ max: 200, message: '营业执照地址最多 200 个字符', trigger: 'blur' }],
+    facebookRemark: [{ max: 2000, message: 'Facebook 备注最多 2000 个字符', trigger: 'blur' }],
+    tiktokRemark: [{ max: 2000, message: 'TikTok 备注最多 2000 个字符', trigger: 'blur' }]
   }))
 
   watch(
@@ -159,6 +186,21 @@
 
   function handleClose() {
     emit('update:visible', false)
+  }
+
+  async function handleLicenseSelect(uploadFile: UploadRawFile) {
+    if (!uploadFile) return false
+    licenseUploading.value = true
+    try {
+      const url = await props.uploadLicense(uploadFile)
+      form.businessLicense = url
+      ElMessage.success('营业执照上传成功')
+    } catch {
+      ElMessage.error('营业执照上传失败')
+    } finally {
+      licenseUploading.value = false
+    }
+    return false
   }
 
   async function handleSubmit() {
@@ -266,6 +308,35 @@
     gap: 12px;
     justify-content: flex-end;
     width: 100%;
+  }
+
+  .subject-drawer__license-upload {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .subject-drawer__license-value {
+    flex: 1;
+    min-height: 32px;
+    padding: 6px 10px;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
+    border-radius: 8px;
+  }
+
+  .subject-drawer__license-placeholder {
+    color: var(--text-tertiary);
+  }
+
+  .subject-drawer__license-upload :deep(.el-upload) {
+    flex-shrink: 0;
   }
 
   .subject-drawer :deep(.el-drawer__header) {

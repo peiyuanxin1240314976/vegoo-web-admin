@@ -1,0 +1,134 @@
+{
+  "_comment": "开户主体配置-平台开关快速切换。对应 types.ts: SubjectPlatformKey。",
+  "interaction": {
+    "entry": "表格行内 ElSwitch 切换 Facebook/TikTok 状态时触发。",
+    "uiBinding": [
+      "modules/subject-setting-table.vue -> emit togglePlatform",
+      "index.vue -> handleQuickToggle()"
+    ],
+    "errorHandling": "subjectId 不存在时返回失败信息，前端展示“平台状态更新失败”。"
+  },
+  "fieldDescription": {
+    "request": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "目标主体 ID（对应 subjectId）。"
+      },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "enum": ["facebook", "tiktok"],
+        "description": "要切换的平台。"
+      },
+      "enabled": {
+        "type": "boolean",
+        "required": true,
+        "description": "目标开关状态，true 开启，false 关闭。"
+      }
+    },
+    "response": {
+      "record": {
+        "type": "SubjectSettingItem",
+        "required": true,
+        "description": "切换后的主体完整记录。"
+      }
+    },
+    "SubjectSettingItem": {
+      "subjectId": {
+        "type": "string",
+        "required": true,
+        "description": "主体唯一标识。"
+      },
+      "subjectName": {
+        "type": "string",
+        "required": true,
+        "description": "主体名称。"
+      },
+      "businessLicense": {
+        "type": "string",
+        "required": true,
+        "description": "营业执照地址或文件标识；空字符串表示未上传。"
+      },
+      "facebookEnabled": {
+        "type": "boolean",
+        "required": true,
+        "description": "Facebook 是否可用。"
+      },
+      "facebookRemark": {
+        "type": "string",
+        "required": true,
+        "description": "Facebook 备注。"
+      },
+      "tiktokEnabled": {
+        "type": "boolean",
+        "required": true,
+        "description": "TikTok 是否可用。"
+      },
+      "tiktokRemark": {
+        "type": "string",
+        "required": true,
+        "description": "TikTok 备注。"
+      },
+      "inputTime": {
+        "type": "string",
+        "required": true,
+        "description": "录入时间，格式 YYYY-MM-DD HH:mm:ss。"
+      },
+      "creatorId": {
+        "type": "number | null",
+        "required": true,
+        "description": "创建人 ID。"
+      },
+      "createTime": {
+        "type": "string",
+        "required": true,
+        "description": "创建时间，格式 YYYY-MM-DD HH:mm:ss。"
+      },
+      "updaterId": {
+        "type": "number | null",
+        "required": true,
+        "description": "更新人 ID。"
+      },
+      "updateTime": {
+        "type": "string",
+        "required": true,
+        "description": "更新时间，格式 YYYY-MM-DD HH:mm:ss。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "id": "SUBJ-US-002",
+    "platform": "tiktok",
+    "enabled": true
+  },
+  "sampleResponse": {
+    "record": {
+      "subjectId": "SUBJ-US-002",
+      "subjectName": "Vegoo Media LLC",
+      "businessLicense": "oss://licenses/vegoo-us-002.pdf",
+      "facebookEnabled": true,
+      "facebookRemark": "美国主体适合做主投账户，历史稳定性较好。",
+      "tiktokEnabled": true,
+      "tiktokRemark": "已补齐税务文件，可开启 TikTok。",
+      "inputTime": "2026-04-10 14:30:00",
+      "creatorId": 1002,
+      "createTime": "2026-04-10 14:30:00",
+      "updaterId": 9999,
+      "updateTime": "2026-04-17 16:32:40"
+    }
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/subject-settings/toggle-platform",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "id, platform, enabled",
+    "responseBody": "record: SubjectSettingItem"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "仅更新对应 platform 的 enabled 值，另一平台状态保持不变。",
+      "成功后返回最新 record，便于前端无损刷新。"
+    ]
+  }
+}

@@ -66,9 +66,10 @@
         </template>
       </el-table-column>
 
-      <el-table-column fixed="right" width="120" label="操作">
+      <el-table-column fixed="right" width="140" label="操作">
         <template #default="{ row }">
           <el-button type="primary" link @click="emit('edit', row)">编辑</el-button>
+          <el-button type="danger" link @click="emit('delete', row)">删除</el-button>
         </template>
       </el-table-column>
 
@@ -79,6 +80,19 @@
         </div>
       </template>
     </el-table>
+
+    <div class="subject-table__pagination">
+      <el-pagination
+        background
+        layout="total, sizes, prev, pager, next"
+        :current-page="current"
+        :page-size="size"
+        :page-sizes="[10, 20, 50, 100]"
+        :total="total"
+        @current-change="emit('pageChange', $event)"
+        @size-change="emit('sizeChange', $event)"
+      />
+    </div>
   </div>
 </template>
 
@@ -89,11 +103,17 @@
 
   defineProps<{
     rows: SubjectSettingItem[]
+    current: number
+    size: number
+    total: number
   }>()
 
   const emit = defineEmits<{
     edit: [row: SubjectSettingItem]
+    delete: [row: SubjectSettingItem]
     togglePlatform: [payload: { id: string; platform: SubjectPlatformKey; enabled: boolean }]
+    pageChange: [value: number]
+    sizeChange: [value: number]
   }>()
 
   function emitToggle(
@@ -205,5 +225,15 @@
 
   .subject-table :deep(.el-button--primary.is-link) {
     color: color-mix(in srgb, var(--theme-color) 92%, white 8%);
+  }
+
+  .subject-table :deep(.el-button--danger.is-link) {
+    color: var(--text-danger);
+  }
+
+  .subject-table__pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
   }
 </style>

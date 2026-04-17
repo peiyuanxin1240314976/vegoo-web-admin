@@ -1,6 +1,5 @@
 <template>
   <div class="subject-page art-full-height">
-    <div class="subject-page__fx" aria-hidden="true"></div>
     <div class="subject-page__hero">
       <div class="subject-page__hero-copy">
         <p class="subject-page__eyebrow">Account Management</p>
@@ -27,6 +26,9 @@
       <SubjectSettingToolbar
         v-model:keyword="keyword"
         v-model:platform-filter="platformFilter"
+        :platform-status-options="platformStatusOptions"
+        :license-status-options="licenseStatusOptions"
+        :sort-order-options="sortOrderOptions"
         v-model:license-filter="licenseFilter"
         v-model:sort-order="sortOrder"
         @create="handleCreate"
@@ -34,8 +36,14 @@
 
       <SubjectSettingTable
         :rows="filteredRows"
+        :current="current"
+        :size="size"
+        :total="total"
         @edit="handleEdit"
+        @delete="handleDelete"
         @toggle-platform="handleQuickToggle"
+        @page-change="handlePageChange"
+        @size-change="handleSizeChange"
       />
     </div>
 
@@ -43,6 +51,7 @@
       v-model:visible="drawerVisible"
       :mode="drawerMode"
       :data="editingRecord"
+      :upload-license="handleUploadLicense"
       @submit="handleSubmit"
     />
   </div>
@@ -50,7 +59,16 @@
 
 <script setup lang="ts">
   import { computed, onMounted, ref, watch } from 'vue'
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, ElMessageBox } from 'element-plus'
+  import {
+    deleteSubjectSetting,
+    fetchSubjectSettingFilterOptions,
+    fetchSubjectSettingList,
+    fetchSubjectSettingOverviewCards,
+    saveSubjectSetting,
+    toggleSubjectSettingPlatform,
+    uploadSubjectSettingLicense
+  } from '@/api/account-management/open-account'
   import SubjectSettingDrawer from './modules/subject-setting-drawer.vue'
   import SubjectSettingStatCards from './modules/subject-setting-stat-cards.vue'
   import SubjectSettingTable from './modules/subject-setting-table.vue'
@@ -59,14 +77,11 @@
     SubjectPlatformKey,
     SubjectSettingItem,
     SubjectSettingListParams,
+    SubjectSettingLicenseUploadParams,
+    SubjectSettingOptionItem,
+    SubjectSettingSaveParams,
     SubjectSettingStats
   } from './types'
-  import { SubjectSettingEndpoint, isSubjectSettingEndpointMock } from './config/data-source'
-  import {
-    mockFetchSubjectSettings,
-    mockSaveSubjectSetting,
-    mockToggleSubjectPlatform
-  } from './mock/subject-setting-api-mock'
 
   defineOptions({ name: 'OpenAccount' })
 
@@ -85,53 +100,60 @@
   const editingRecord = ref<SubjectSettingItem | null>(null)
 
   const list = ref<SubjectSettingItem[]>([])
+  const total = ref(0)
+  const current = ref(1)
+  const size = ref(10)
+  const stats = ref<SubjectSettingStats>({
+    total: 0,
+    facebookEnabled: 0,
+    tiktokEnabled: 0,
+    bothEnabled: 0
+  })
+  const latestUpdateTime = ref('--')
+  const platformStatusOptions = ref<SubjectSettingOptionItem[]>([])
+  const licenseStatusOptions = ref<SubjectSettingOptionItem[]>([])
+  const sortOrderOptions = ref<SubjectSettingOptionItem[]>([])
 
   const filters = computed<SubjectSettingListParams>(() => ({
     keyword: keyword.value,
     platformStatus: platformFilter.value,
     hasBusinessLicense: licenseFilter.value,
-    sortOrder: sortOrder.value
+    sortOrder: sortOrder.value,
+    current: current.value,
+    size: size.value
   }))
 
   const filteredRows = computed(() => list.value)
 
-  const stats = computed<SubjectSettingStats>(() => {
-    const total = list.value.length
-    const facebookEnabled = list.value.filter((item) => item.facebookEnabled).length
-    const tiktokEnabled = list.value.filter((item) => item.tiktokEnabled).length
-    const bothEnabled = list.value.filter(
-      (item) => item.facebookEnabled && item.tiktokEnabled
-    ).length
+  async function loadListAndStats() {
+    const [listResponse, cardsResponse] = await Promise.all([
+      fetchSubjectSettingList(filters.value),
+      fetchSubjectSettingOverviewCards(filters.value)
+    ])
 
-    return {
-      total,
-      facebookEnabled,
-      tiktokEnabled,
-      bothEnabled
+    list.value = listResponse.records
+    total.value = listResponse.total
+    stats.value = {
+      total: cardsResponse.total,
+      facebookEnabled: cardsResponse.facebookEnabled,
+      tiktokEnabled: cardsResponse.tiktokEnabled,
+      bothEnabled: cardsResponse.bothEnabled
     }
-  })
-
-  const latestUpdateTime = computed(() => list.value[0]?.updateTime ?? '--')
-
-  async function loadList() {
-    if (isSubjectSettingEndpointMock(SubjectSettingEndpoint.List)) {
-      list.value = await mockFetchSubjectSettings(filters.value)
-      return
-    }
-
-    list.value = await mockFetchSubjectSettings(filters.value)
+    latestUpdateTime.value = cardsResponse.latestUpdateTime
   }
 
   onMounted(() => {
-    void loadList()
+    void loadFilterOptions()
+    void loadListAndStats()
   })
 
-  watch(filters, () => {
-    void loadList()
+  watch([keyword, platformFilter, licenseFilter, sortOrder], () => {
+    current.value = 1
+    void loadListAndStats()
   })
 
   async function refreshWithToast(message?: string) {
-    await loadList()
+    await loadListAndStats()
     if (message) ElMessage.success(message)
   }
 
@@ -153,7 +175,7 @@
     enabled: boolean
   }) {
     try {
-      await mockToggleSubjectPlatform(payload)
+      await toggleSubjectSettingPlatform(payload)
       await refreshWithToast(
         `${payload.platform === 'facebook' ? 'Facebook' : 'TikTok'} 状态已更新`
       )
@@ -163,12 +185,18 @@
   }
 
   async function handleSubmit(payload: SubjectSettingItem) {
+    const savePayload: SubjectSettingSaveParams = {
+      subjectId: payload.subjectId,
+      subjectName: payload.subjectName,
+      businessLicense: payload.businessLicense,
+      facebookEnabled: payload.facebookEnabled,
+      facebookRemark: payload.facebookRemark,
+      tiktokEnabled: payload.tiktokEnabled,
+      tiktokRemark: payload.tiktokRemark
+    }
+
     try {
-      if (isSubjectSettingEndpointMock(SubjectSettingEndpoint.Save)) {
-        await mockSaveSubjectSetting(payload)
-      } else {
-        await mockSaveSubjectSetting(payload)
-      }
+      await saveSubjectSetting(savePayload)
     } catch {
       ElMessage.error('主体保存失败')
       return
@@ -176,6 +204,93 @@
 
     drawerVisible.value = false
     await refreshWithToast(drawerMode.value === 'create' ? '主体已创建' : '主体已保存')
+  }
+
+  async function handleDelete(row: SubjectSettingItem) {
+    try {
+      await ElMessageBox.confirm(
+        `确认删除主体 ${row.subjectName}（${row.subjectId}）吗？`,
+        '删除确认',
+        {
+          type: 'warning',
+          confirmButtonText: '确认删除',
+          cancelButtonText: '取消'
+        }
+      )
+    } catch {
+      return
+    }
+
+    try {
+      await deleteSubjectSetting(row.subjectId)
+      if (list.value.length === 1 && current.value > 1) {
+        current.value -= 1
+      }
+      await refreshWithToast('主体已删除')
+    } catch {
+      ElMessage.error('主体删除失败')
+    }
+  }
+
+  function handlePageChange(value: number) {
+    current.value = value
+    void loadListAndStats()
+  }
+
+  function handleSizeChange(value: number) {
+    size.value = value
+    current.value = 1
+    void loadListAndStats()
+  }
+
+  async function handleUploadLicense(file: File): Promise<string> {
+    const toBase64 = (raw: File) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          const result = String(reader.result ?? '')
+          const base64 = result.includes(',') ? result.split(',')[1] : result
+          resolve(base64)
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(raw)
+      })
+
+    const payload: SubjectSettingLicenseUploadParams = {
+      fileName: file.name,
+      fileType: file.type || 'application/octet-stream',
+      fileSize: file.size,
+      fileContentBase64: await toBase64(file)
+    }
+    const response = await uploadSubjectSettingLicense(payload)
+    return response.licenseUrl
+  }
+
+  async function loadFilterOptions() {
+    try {
+      const response = await fetchSubjectSettingFilterOptions()
+      platformStatusOptions.value = response.platformStatusOptions
+      licenseStatusOptions.value = response.licenseStatusOptions
+      sortOrderOptions.value = response.sortOrderOptions
+    } catch {
+      platformStatusOptions.value = [
+        { label: '全部平台状态', value: 'all' },
+        { label: 'Facebook 可用', value: 'facebook' },
+        { label: 'TikTok 可用', value: 'tiktok' },
+        { label: '双平台可用', value: 'both' },
+        { label: '全部未启用', value: 'none' }
+      ]
+      licenseStatusOptions.value = [
+        { label: '全部执照状态', value: 'all' },
+        { label: '有营业执照', value: 'yes' },
+        { label: '无营业执照', value: 'no' }
+      ]
+      sortOrderOptions.value = [
+        { label: '最近更新优先', value: 'updated_desc' },
+        { label: '最早更新优先', value: 'updated_asc' }
+      ]
+      ElMessage.warning('筛选下拉选项加载失败，已使用默认选项')
+    }
   }
 </script>
 
@@ -243,31 +358,9 @@
     mask-image: linear-gradient(to bottom, black 0%, black 24%, transparent 48%);
   }
 
-  .subject-page > *:not(.subject-page__fx) {
+  .subject-page > * {
     position: relative;
     z-index: 1;
-  }
-
-  .subject-page__fx {
-    position: absolute;
-    inset: -12% -12% 52%;
-    z-index: 0;
-    pointer-events: none;
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      transparent 0deg,
-      color-mix(in srgb, var(--art-primary) 10%, transparent) 55deg,
-      color-mix(in srgb, var(--theme-color) 8%, transparent) 80deg,
-      transparent 130deg,
-      color-mix(in srgb, var(--theme-color) 10%, transparent) 200deg,
-      transparent 285deg,
-      color-mix(in srgb, var(--art-primary) 7%, transparent) 330deg,
-      transparent 360deg
-    );
-    opacity: 0.78;
-    mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 82%);
-    animation: subject-fx-spin 52s linear infinite;
-    will-change: transform;
   }
 
   .subject-page__hero {
@@ -402,15 +495,8 @@
     }
   }
 
-  @keyframes subject-fx-spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .subject-page::before,
-    .subject-page__fx {
+    .subject-page::before {
       animation: none;
     }
   }

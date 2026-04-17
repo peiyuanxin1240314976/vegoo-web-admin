@@ -18,11 +18,12 @@
         class="subject-toolbar__select"
         @update:model-value="emit('update:platformFilter', $event)"
       >
-        <el-option label="全部平台状态" value="all" />
-        <el-option label="Facebook 可用" value="facebook" />
-        <el-option label="TikTok 可用" value="tiktok" />
-        <el-option label="双平台可用" value="both" />
-        <el-option label="全部未启用" value="none" />
+        <el-option
+          v-for="item in platformStatusOptions"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
       </el-select>
 
       <el-select
@@ -30,9 +31,12 @@
         class="subject-toolbar__select"
         @update:model-value="emit('update:licenseFilter', $event)"
       >
-        <el-option label="全部执照状态" value="all" />
-        <el-option label="有营业执照" value="yes" />
-        <el-option label="无营业执照" value="no" />
+        <el-option
+          v-for="item in licenseStatusOptions"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
       </el-select>
 
       <el-select
@@ -40,8 +44,12 @@
         class="subject-toolbar__select"
         @update:model-value="emit('update:sortOrder', $event)"
       >
-        <el-option label="最近更新优先" value="updated_desc" />
-        <el-option label="最早更新优先" value="updated_asc" />
+        <el-option
+          v-for="item in sortOrderOptions"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
       </el-select>
     </div>
 
@@ -54,12 +62,16 @@
 
 <script setup lang="ts">
   import { Plus, Search } from '@element-plus/icons-vue'
+  import type { SubjectSettingOptionItem } from '../types'
 
   defineOptions({ name: 'SubjectSettingToolbar' })
 
   defineProps<{
     keyword: string
     platformFilter: 'all' | 'facebook' | 'tiktok' | 'both' | 'none'
+    platformStatusOptions: SubjectSettingOptionItem[]
+    licenseStatusOptions: SubjectSettingOptionItem[]
+    sortOrderOptions: SubjectSettingOptionItem[]
     licenseFilter: 'all' | 'yes' | 'no'
     sortOrder: 'updated_desc' | 'updated_asc'
   }>()

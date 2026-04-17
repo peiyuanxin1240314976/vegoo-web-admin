@@ -1,0 +1,73 @@
+{
+  "_comment": "开户主体配置-营业执照上传。独立上传接口，供保存前获取 businessLicense 文件地址。",
+  "interaction": {
+    "entry": "抽屉中上传营业执照文件时触发。",
+    "uiBinding": ["modules/subject-setting-drawer.vue -> 营业执照上传控件（待接入）"],
+    "constraints": "仅处理文件上传与地址返回，不在此接口写入主体业务字段。"
+  },
+  "fieldDescription": {
+    "request": {
+      "fileName": {
+        "type": "string",
+        "required": true,
+        "description": "原始文件名。"
+      },
+      "fileType": {
+        "type": "string",
+        "required": true,
+        "description": "MIME 类型，例如 application/pdf。"
+      },
+      "fileSize": {
+        "type": "number",
+        "required": true,
+        "description": "文件大小（字节）。"
+      },
+      "fileContentBase64": {
+        "type": "string",
+        "required": true,
+        "description": "文件内容 base64（不含 data URL 前缀）。"
+      }
+    },
+    "response": {
+      "licenseUrl": {
+        "type": "string",
+        "required": true,
+        "description": "上传成功后的执照地址，可直接写入 businessLicense。"
+      },
+      "fileId": {
+        "type": "string",
+        "required": true,
+        "description": "文件 ID。"
+      },
+      "uploadedAt": {
+        "type": "string",
+        "required": true,
+        "description": "上传时间，格式 YYYY-MM-DD HH:mm:ss。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "fileName": "vegoo-hk-license.pdf",
+    "fileType": "application/pdf",
+    "fileSize": 264189,
+    "fileContentBase64": "JVBERi0xLjQKJ...(省略)"
+  },
+  "sampleResponse": {
+    "licenseUrl": "oss://licenses/vegoo-hk-001.pdf",
+    "fileId": "lic_20260417_0001",
+    "uploadedAt": "2026-04-17 16:51:30"
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/subject-settings/license-upload",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "fileName, fileType, fileSize, fileContentBase64",
+    "responseBody": "licenseUrl, fileId, uploadedAt"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "生产建议改为 multipart/form-data 或预签名上传流程；当前契约用 JSON 便于前后端联调。",
+      "返回 licenseUrl 后，由保存接口写入 businessLicense 字段。"
+    ]
+  }
+}

@@ -4,28 +4,31 @@
 
 ## 接口清单
 
-- `01-open-account-table.json`：开户记录分页列表（P0）
-- `02-open-account-create.json`：新建开户记录（P0）
-- `03-open-account-assign.json`：分配凭据并激活（P0）
-- `04-open-account-delete.json`：删除开户记录（P0）
-- `05-open-account-feishu-config-fetch.json`：飞书推送配置读取（P1）
-- `06-open-account-feishu-config-save.json`：飞书推送配置保存（P1）
-- `07-open-account-export.json`：开户记录导出（P1，即时文件流：blob + 响应头）
-- `08-open-account-filter-options.json`：开户状态/代理商筛选项（P0）
+- `00-subject-setting-overview-cards.json`：顶部卡片统计（P0）
+- `01-subject-setting-list.json`：主体配置分页列表查询（P0）
+- `02-subject-setting-save.json`：主体保存（新建/编辑）（P0）
+- `03-subject-setting-toggle-platform.json`：平台开关快速切换（P0）
+- `04-subject-setting-license-upload.json`：营业执照上传（P0）
+- `05-subject-setting-delete.json`：主体删除（P0）
+- `07-subject-setting-filter-options.json`：筛选下拉选项（平台状态/执照状态/排序）（P1）
 
 ## 场景 -> 接口
 
-| 场景              | 触发时机                   | 契约 JSON                                  |
-| ----------------- | -------------------------- | ------------------------------------------ |
-| 列表首屏加载      | 页面进入后加载记录         | `01-open-account-table.json`               |
-| 新建开户          | 点击新建后提交             | `02-open-account-create.json`              |
-| 分配凭据          | 待分配行点击分配并确认     | `03-open-account-assign.json`              |
-| 删除记录          | 行操作删除并确认           | `04-open-account-delete.json`              |
-| 飞书状态展示      | 页面加载或设置弹窗打开     | `05-open-account-feishu-config-fetch.json` |
-| 飞书状态更新      | 设置保存                   | `06-open-account-feishu-config-save.json`  |
-| 导出记录          | 点击导出按钮               | `07-open-account-export.json`              |
-| 状态/代理商筛选项 | 页面初始化，筛选组件渲染前 | `08-open-account-filter-options.json`      |
+| 场景 | 触发时机 | 契约 JSON |
+| --- | --- | --- |
+| 顶部卡片加载 | 页面进入后拉取统计卡片 | `00-subject-setting-overview-cards.json` |
+| 列表首屏加载 | 页面进入后自动拉取分页列表 | `01-subject-setting-list.json` |
+| 筛选查询 | keyword / 平台状态 / 执照状态 / 排序变化 | `01-subject-setting-list.json` |
+| 分页切换 | 页码或每页条数变化 | `01-subject-setting-list.json` |
+| 新建主体 | 抽屉 mode=create 点击保存 | `02-subject-setting-save.json` |
+| 编辑主体 | 表格行点击编辑后保存 | `02-subject-setting-save.json` |
+| 快速切平台状态 | 表格行内 Facebook/TikTok 开关切换 | `03-subject-setting-toggle-platform.json` |
+| 营业执照上传 | 抽屉上传执照文件 | `04-subject-setting-license-upload.json` |
+| 删除主体 | 列表行删除并确认 | `05-subject-setting-delete.json` |
+| 筛选选项加载 | 筛选栏初始化时拉取平台/执照/排序下拉 | `07-subject-setting-filter-options.json` |
 
-## 公用顶栏 meta 说明（无独立 JSON）
+## 说明
 
-本页面应用/广告平台选项与 cockpit 同构，直接读取 `useCockpitMetaFilterStore().data`；不在本目录重复维护 `meta-filter-options` 契约 JSON。
+- 本目录契约按页面需求拆分：卡片统计与分页列表分离。
+- 接口统一采用 `POST + JSON body`。
+- 页面当前优先使用 `07-subject-setting-filter-options.json` 驱动筛选栏三项下拉。

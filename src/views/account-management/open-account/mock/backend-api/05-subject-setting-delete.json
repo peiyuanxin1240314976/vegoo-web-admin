@@ -1,0 +1,49 @@
+{
+  "_comment": "开户主体配置-列表删除主体记录。",
+  "interaction": {
+    "entry": "列表行点击删除并确认后触发。",
+    "uiBinding": ["modules/subject-setting-table.vue -> 行操作删除（待接入）"],
+    "postAction": "删除成功后刷新卡片与分页列表。"
+  },
+  "fieldDescription": {
+    "request": {
+      "subjectId": {
+        "type": "string",
+        "required": true,
+        "description": "要删除的主体 ID。"
+      }
+    },
+    "response": {
+      "success": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否删除成功。"
+      },
+      "deletedId": {
+        "type": "string",
+        "required": true,
+        "description": "已删除主体 ID。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "subjectId": "SUBJ-AE-004"
+  },
+  "sampleResponse": {
+    "success": true,
+    "deletedId": "SUBJ-AE-004"
+  },
+  "api": {
+    "url": "POST /api/account-management/open-account/subject-settings/delete",
+    "method": "POST",
+    "priority": "P0",
+    "requestBody": "subjectId",
+    "responseBody": "success, deletedId"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "若 subjectId 不存在，建议返回业务错误码并保持 success=false。",
+      "删除后前端按当前分页重拉列表，若页码越界可回退到上一页。"
+    ]
+  }
+}

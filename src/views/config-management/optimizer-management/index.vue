@@ -86,7 +86,7 @@
           <template #default="{ row }">
             <div class="optimizer-name">
               <div class="avatar" :style="{ background: row.avatarColor }">
-                {{ row.userName.charAt(0) }}
+                {{ getUserInitial(row.userName) }}
               </div>
               <span>{{ row.userName }}</span>
             </div>
@@ -301,8 +301,8 @@
     return optimizerList.value.filter((item) => {
       if (
         kw &&
-        !item.userName.toLowerCase().includes(kw) &&
-        !item.sCode.toLowerCase().includes(kw)
+        !(item.userName ?? '').toLowerCase().includes(kw) &&
+        !(item.sCode ?? '').toLowerCase().includes(kw)
       ) {
         return false
       }
@@ -388,6 +388,11 @@
   const truncateCode = (code: string, keep = 8) => {
     if (code.length <= keep + 2) return code
     return `${code.slice(0, keep)}...${code.slice(-2)}`
+  }
+
+  const getUserInitial = (userName?: string | null) => {
+    const normalized = (userName ?? '').trim()
+    return normalized ? normalized.charAt(0) : '-'
   }
 
   const handleCopy = (text: string) => {

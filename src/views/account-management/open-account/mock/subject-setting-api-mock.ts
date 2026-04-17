@@ -1,4 +1,15 @@
-import type { SubjectPlatformKey, SubjectSettingItem, SubjectSettingListParams } from '../types'
+import { getAppNow } from '@/utils/app-now'
+import type {
+  SubjectPlatformKey,
+  SubjectSettingItem,
+  SubjectSettingListParams,
+  SubjectSettingListResponse,
+  SubjectSettingLicenseUploadParams,
+  SubjectSettingLicenseUploadResponse,
+  SubjectSettingSaveParams,
+  SubjectSettingFilterOptionsResponse,
+  SubjectSettingOverviewCardsResponse
+} from '../types'
 import { cloneSubjectSettingMockData } from './data'
 
 let subjectSettingState: SubjectSettingItem[] = cloneSubjectSettingMockData()
@@ -38,7 +49,7 @@ function applyFilters(rows: SubjectSettingItem[], params: SubjectSettingListPara
 }
 
 function nowString() {
-  const now = new Date()
+  const now = getAppNow()
   const pad = (value: number) => String(value).padStart(2, '0')
 
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(
@@ -46,12 +57,41 @@ function nowString() {
   )}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
 }
 
-export async function mockFetchSubjectSettings(params: SubjectSettingListParams) {
+export async function mockFetchSubjectSettings(
+  params: SubjectSettingListParams
+): Promise<SubjectSettingListResponse> {
   const filtered = applyFilters(subjectSettingState, params)
-  return sortRows(filtered, params.sortOrder ?? 'updated_desc').map((item) => ({ ...item }))
+  const sorted = sortRows(filtered, params.sortOrder ?? 'updated_desc')
+  const current = params.current ?? 1
+  const size = params.size ?? 10
+  const start = (current - 1) * size
+  const end = start + size
+  const pageRecords = sorted.slice(start, end).map((item) => ({ ...item }))
+
+  return {
+    records: pageRecords,
+    current,
+    size,
+    total: sorted.length
+  }
 }
 
-export async function mockSaveSubjectSetting(payload: SubjectSettingItem) {
+export async function mockFetchSubjectSettingOverviewCards(
+  params: SubjectSettingListParams
+): Promise<SubjectSettingOverviewCardsResponse> {
+  const filtered = applyFilters(subjectSettingState, params)
+  const sorted = sortRows(filtered, 'updated_desc')
+
+  return {
+    total: filtered.length,
+    facebookEnabled: filtered.filter((item) => item.facebookEnabled).length,
+    tiktokEnabled: filtered.filter((item) => item.tiktokEnabled).length,
+    bothEnabled: filtered.filter((item) => item.facebookEnabled && item.tiktokEnabled).length,
+    latestUpdateTime: sorted[0]?.updateTime ?? '--'
+  }
+}
+
+export async function mockSaveSubjectSetting(payload: SubjectSettingSaveParams) {
   const index = subjectSettingState.findIndex((item) => item.subjectId === payload.subjectId)
   const timestamp = nowString()
 
@@ -95,4 +135,49 @@ export async function mockToggleSubjectPlatform(payload: {
   }
 
   return { ...subjectSettingState[index] }
+}
+
+export async function mockUploadSubjectLicense(
+  params: SubjectSettingLicenseUploadParams
+): Promise<SubjectSettingLicenseUploadResponse> {
+  const now = getAppNow()
+  const timestamp = nowString()
+
+  return {
+    licenseUrl: `oss://licenses/${params.fileName.replace(/\s+/g, '-').toLowerCase()}`,
+    fileId: `lic_${now.getTime()}`,
+    uploadedAt: timestamp
+  }
+}
+
+export async function mockDeleteSubjectSetting(subjectId: string) {
+  const index = subjectSettingState.findIndex((item) => item.subjectId === subjectId)
+  if (index < 0) throw new Error('subject not found')
+
+  subjectSettingState.splice(index, 1)
+  return {
+    success: true,
+    deletedId: subjectId
+  }
+}
+
+export async function mockFetchSubjectSettingFilterOptions(): Promise<SubjectSettingFilterOptionsResponse> {
+  return {
+    platformStatusOptions: [
+      { label: '全部平台状态', value: 'all' },
+      { label: 'Facebook 可用', value: 'facebook' },
+      { label: 'TikTok 可用', value: 'tiktok' },
+      { label: '双平台可用', value: 'both' },
+      { label: '全部未启用', value: 'none' }
+    ],
+    licenseStatusOptions: [
+      { label: '全部执照状态', value: 'all' },
+      { label: '有营业执照', value: 'yes' },
+      { label: '无营业执照', value: 'no' }
+    ],
+    sortOrderOptions: [
+      { label: '最近更新优先', value: 'updated_desc' },
+      { label: '最早更新优先', value: 'updated_asc' }
+    ]
+  }
 }
