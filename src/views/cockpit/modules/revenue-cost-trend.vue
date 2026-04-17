@@ -84,13 +84,15 @@
         platformRaw != null && String(platformRaw).trim() !== ''
           ? String(platformRaw).trim()
           : undefined
+      const trend = Array.isArray(r.trend) ? r.trend.map((point) => num(point)) : []
       return {
         channel: String(r.channel ?? '—'),
         platform,
         spend: num(r.spend ?? r.cost ?? first.cost),
         installs: num(r.installs ?? r.install ?? first.install),
         roi: num(r.roi ?? first.roi),
-        cpi: num(r.cpi ?? r.cpl ?? first.cpl)
+        cpi: num(r.cpi ?? r.cpl ?? first.cpl),
+        trend
       }
     })
   }
