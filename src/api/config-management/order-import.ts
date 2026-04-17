@@ -30,7 +30,7 @@ export function fetchOrderImportTable(params: {
     return orderImportMock.mockFetchOrderImportTable(params)
   }
   return request.post<Api.Common.PaginatedResponse<ImportTask>>({
-    url: '/api/config-management/order-import/table',
+    url: '/api/v1/datacenter/analysis/config-management/order-import/table',
     data: params,
     showErrorMessage: false
   })
@@ -47,7 +47,7 @@ export function fetchOrderImportSummary(params?: { dataSource?: string; status?:
     processing: number
     failed: number
   }>({
-    url: '/api/config-management/order-import/summary',
+    url: '/api/v1/datacenter/analysis/config-management/order-import/summary',
     data: params ?? {},
     showErrorMessage: false
   })
@@ -59,7 +59,7 @@ export function submitOrderImport(data: FormData) {
     return orderImportMock.mockSubmitOrderImport(data)
   }
   return request.post<{ taskId: string }>({
-    url: '/api/config-management/order-import/submit',
+    url: '/api/v1/datacenter/analysis/config-management/order-import/submit',
     data,
     showErrorMessage: false
   })
@@ -71,7 +71,7 @@ export function pauseOrderImport(taskId: string) {
     return orderImportMock.mockPauseOrderImport(taskId)
   }
   return request.post<unknown>({
-    url: '/api/config-management/order-import/pause',
+    url: '/api/v1/datacenter/analysis/config-management/order-import/pause',
     data: { taskId },
     showErrorMessage: false
   })
@@ -83,7 +83,7 @@ export function cancelOrderImport(taskId: string) {
     return orderImportMock.mockCancelOrderImport(taskId)
   }
   return request.post<unknown>({
-    url: '/api/config-management/order-import/cancel',
+    url: '/api/v1/datacenter/analysis/config-management/order-import/cancel',
     data: { taskId },
     showErrorMessage: false
   })
@@ -95,7 +95,7 @@ export function fetchOrderImportReportTaskInfo(taskId: string) {
     return orderImportMock.mockFetchOrderImportReportTaskInfo(taskId)
   }
   return request.post<ImportReportTaskInfo>({
-    url: '/api/config-management/order-import/report/task-info',
+    url: '/api/v1/datacenter/analysis/config-management/order-import/report/task-info',
     data: { taskId },
     showErrorMessage: false
   })
@@ -107,7 +107,7 @@ export function fetchOrderImportReportDataStats(taskId: string) {
     return orderImportMock.mockFetchOrderImportReportDataStats(taskId)
   }
   return request.post<ImportReportDataStats>({
-    url: '/api/config-management/order-import/report/data-stats',
+    url: '/api/v1/datacenter/analysis/config-management/order-import/report/data-stats',
     data: { taskId },
     showErrorMessage: false
   })
@@ -123,7 +123,7 @@ export function fetchOrderImportReportPreviewList(params: {
     return orderImportMock.mockFetchOrderImportReportPreviewList(params)
   }
   return request.post<ImportReportPreviewListData>({
-    url: '/api/config-management/order-import/report/preview-list',
+    url: '/api/v1/datacenter/analysis/config-management/order-import/report/preview-list',
     data: params,
     showErrorMessage: false
   })
@@ -135,7 +135,7 @@ export function fetchOrderImportReportFailedItems(taskId: string) {
     return orderImportMock.mockFetchOrderImportReportFailedItems(taskId)
   }
   return request.post<{ records: FailedRecordItem[]; total: number }>({
-    url: '/api/config-management/order-import/report/failed-items',
+    url: '/api/v1/datacenter/analysis/config-management/order-import/report/failed-items',
     data: { taskId },
     showErrorMessage: false
   })
@@ -147,7 +147,7 @@ export function fetchOrderImportReportErrorDistribution(taskId: string) {
     return orderImportMock.mockFetchOrderImportReportErrorDistribution(taskId)
   }
   return request.post<{ items: ErrorDistributionItem[] }>({
-    url: '/api/config-management/order-import/report/error-distribution',
+    url: '/api/v1/datacenter/analysis/config-management/order-import/report/error-distribution',
     data: { taskId },
     showErrorMessage: false
   })
@@ -161,7 +161,7 @@ export async function exportOrderImportReport(taskId: string) {
     return
   }
   const response = await requestBlob({
-    url: '/api/config-management/order-import/report/export',
+    url: '/api/v1/datacenter/analysis/config-management/order-import/report/export',
     method: 'POST',
     data: { taskId }
   })

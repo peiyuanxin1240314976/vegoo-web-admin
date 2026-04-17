@@ -119,12 +119,12 @@
           />
           <el-table-column label="折算比例(d_cost_ratio)" min-width="160" align="right">
             <template #default="{ row }">
-              {{ row.dCostRatio.toFixed(3) }}
+              {{ formatRatio(row.dCostRatio) }}
             </template>
           </el-table-column>
           <el-table-column label="安装成本(d_install_cost)" min-width="170" align="right">
             <template #default="{ row }">
-              {{ row.dInstallCost.toFixed(5) }}
+              {{ formatInstallCost(row.dInstallCost) }}
             </template>
           </el-table-column>
           <el-table-column prop="updatedAt" label="最后修改时间" min-width="155" />
@@ -255,6 +255,35 @@
     }
   }
 
+  function pickFiniteNumber(v: unknown, fallback = 0): number {
+    const n = typeof v === 'number' ? v : Number(v)
+    return Number.isFinite(n) ? n : fallback
+  }
+
+  /** 兼容后端缺省/null、蛇形字段别名 */
+  function normalizeCostCoefficientItem(raw: Record<string, unknown>): CostCoefficientItem {
+    return {
+      id: String(raw.id ?? ''),
+      nSource: pickFiniteNumber(raw.nSource ?? raw.n_source, 0),
+      platformName: String(raw.platformName ?? raw.platform_name ?? ''),
+      tStart: String(raw.tStart ?? raw.t_start ?? ''),
+      dCostRatio: pickFiniteNumber(raw.dCostRatio ?? raw.d_cost_ratio, 0),
+      dInstallCost: pickFiniteNumber(raw.dInstallCost ?? raw.d_install_cost, 0),
+      updatedAt: String(raw.updatedAt ?? raw.updated_at ?? ''),
+      updatedBy: String(raw.updatedBy ?? raw.updated_by ?? ''),
+      remark: String(raw.remark ?? ''),
+      isDeleted: Boolean(raw.isDeleted ?? raw.is_deleted ?? false)
+    }
+  }
+
+  function formatRatio(v: number | null | undefined) {
+    return pickFiniteNumber(v, 0).toFixed(3)
+  }
+
+  function formatInstallCost(v: number | null | undefined) {
+    return pickFiniteNumber(v, 0).toFixed(5)
+  }
+
   async function loadKpiFromApi() {
     try {
       kpiData.value = await fetchCostCoefficientOverviewKpi(tableQueryBase())
@@ -270,9 +299,17 @@
         page: currentPage.value,
         pageSize: pageSize.value
       })
-      const r = res as Api.Common.PaginatedResponse<CostCoefficientItem>
-      list.value = r.records ?? []
-      serverTotal.value = r.total ?? 0
+      const r = res as Api.Common.PaginatedResponse<CostCoefficientItem> & {
+        data?: { list?: Record<string, unknown>[]; total?: number }
+        list?: Record<string, unknown>[]
+      }
+      const rawRows = Array.isArray(r.records)
+        ? r.records
+        : (r.data?.list ?? (Array.isArray(r.list) ? r.list : []))
+      list.value = rawRows.map((row) =>
+        normalizeCostCoefficientItem(row as Record<string, unknown>)
+      )
+      serverTotal.value = Number(r.total ?? r.data?.total ?? 0)
     } catch {
       list.value = []
       serverTotal.value = 0

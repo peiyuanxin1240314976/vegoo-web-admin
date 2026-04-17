@@ -17,13 +17,20 @@ import {
 } from '@/views/config-management/country-management/config/data-source'
 import * as countryMock from '@/views/config-management/country-management/mock/country-api-mock'
 
+/** 兼容后端 `{ items: T[] }` 与直连数组两种业务体 */
+function unwrapItemsList<T>(data: T[] | { items?: T[] } | undefined): T[] {
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && Array.isArray(data.items)) return data.items
+  return []
+}
+
 /** 国家分页列表 */
 export function fetchCountryTable(params: CountryTableQuery) {
   if (isCountryEndpointMock(CountryEndpoint.CountryTable)) {
     return countryMock.mockFetchCountryTable(params)
   }
   return request.post<Api.Common.PaginatedResponse<CountryItem>>({
-    url: '/api/config-management/country/table',
+    url: '/api/v1/datacenter/analysis/config-management/country/table',
     data: params,
     showErrorMessage: false
   })
@@ -35,7 +42,7 @@ export function fetchCountryDetail(params: { code: string }) {
     return countryMock.mockFetchCountryDetail(params)
   }
   return request.post<CountryItem>({
-    url: '/api/config-management/country/detail',
+    url: '/api/v1/datacenter/analysis/config-management/country/detail',
     data: params,
     showErrorMessage: false
   })
@@ -47,7 +54,7 @@ export function fetchCountryMetaOptions() {
     return countryMock.mockFetchCountryMetaOptions()
   }
   return request.post<CountryMetaOptionsResponse>({
-    url: '/api/config-management/country/meta-options',
+    url: '/api/v1/datacenter/analysis/config-management/country/meta-options',
     data: {},
     showErrorMessage: false
   })
@@ -63,7 +70,7 @@ export function fetchCountryOverviewKpi(params: {
     return countryMock.mockFetchCountryOverviewKpi(params)
   }
   return request.post<CountryOverviewKpi>({
-    url: '/api/config-management/country/overview/kpi',
+    url: '/api/v1/datacenter/analysis/config-management/country/overview/kpi',
     data: params,
     showErrorMessage: false
   })
@@ -78,11 +85,13 @@ export function fetchCountryRegionDistribution(params: {
   if (isCountryEndpointMock(CountryEndpoint.RegionDistribution)) {
     return countryMock.mockFetchCountryRegionDistribution(params)
   }
-  return request.post<CountryRegionDistributionItem[]>({
-    url: '/api/config-management/country/charts/region-distribution',
-    data: params,
-    showErrorMessage: false
-  })
+  return request
+    .post<CountryRegionDistributionItem[] | { items: CountryRegionDistributionItem[] }>({
+      url: '/api/v1/datacenter/analysis/config-management/country/charts/region-distribution',
+      data: params,
+      showErrorMessage: false
+    })
+    .then(unwrapItemsList)
 }
 
 /** 主要市场占比图表：与列表同筛选、全量聚合 */
@@ -94,11 +103,13 @@ export function fetchCountryMainMarketShare(params: {
   if (isCountryEndpointMock(CountryEndpoint.MainMarketShare)) {
     return countryMock.mockFetchCountryMainMarketShare(params)
   }
-  return request.post<CountryMainMarketShareItem[]>({
-    url: '/api/config-management/country/charts/main-market-share',
-    data: params,
-    showErrorMessage: false
-  })
+  return request
+    .post<CountryMainMarketShareItem[] | { items: CountryMainMarketShareItem[] }>({
+      url: '/api/v1/datacenter/analysis/config-management/country/charts/main-market-share',
+      data: params,
+      showErrorMessage: false
+    })
+    .then(unwrapItemsList)
 }
 
 /** 国旗图标上传（multipart）；Mock 时返回 data URL 模拟网关返回的 `url` */
@@ -109,7 +120,7 @@ export function uploadCountryFlagIcon(file: File) {
   const fd = new FormData()
   fd.append('file', file)
   return request.post<{ url: string }>({
-    url: '/api/config-management/country/flag-icon/upload',
+    url: '/api/v1/datacenter/analysis/config-management/country/flag-icon/upload',
     data: fd,
     showErrorMessage: false
   })
@@ -121,7 +132,7 @@ export function createCountry(data: CountryFormModel) {
     return countryMock.mockCreateCountry(data)
   }
   return request.post<CountryItem>({
-    url: '/api/config-management/country',
+    url: '/api/v1/datacenter/analysis/config-management/country',
     data,
     showErrorMessage: false
   })
@@ -133,7 +144,7 @@ export function updateCountry(code: string, data: Partial<CountryFormModel>) {
     return countryMock.mockUpdateCountry(code, data)
   }
   return request.put<CountryItem>({
-    url: `/api/config-management/country/${code}`,
+    url: `/api/v1/datacenter/analysis/config-management/country/${code}`,
     data,
     showErrorMessage: false
   })
@@ -145,7 +156,7 @@ export function deleteCountry(code: string) {
     return countryMock.mockDeleteCountry(code)
   }
   return request.del<unknown>({
-    url: `/api/config-management/country/${code}`,
+    url: `/api/v1/datacenter/analysis/config-management/country/${code}`,
     showErrorMessage: false
   })
 }
@@ -156,7 +167,7 @@ export function exportCountryList(params: Partial<CountryTableQuery>) {
     return countryMock.mockExportCountryList(params)
   }
   return request.post<unknown>({
-    url: '/api/config-management/country/export',
+    url: '/api/v1/datacenter/analysis/config-management/country/export',
     data: params,
     showErrorMessage: false
   })
@@ -168,7 +179,7 @@ export function importCountryList(data: { items: CountryFormModel[] }) {
     return countryMock.mockImportCountryList(data)
   }
   return request.post<unknown>({
-    url: '/api/config-management/country/import',
+    url: '/api/v1/datacenter/analysis/config-management/country/import',
     data,
     showErrorMessage: false
   })

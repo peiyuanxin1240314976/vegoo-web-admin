@@ -20,7 +20,8 @@ import {
 } from '@/views/config-management/app-assignment/config/data-source'
 import * as appAssignmentMock from '@/views/config-management/app-assignment/mock/app-assignment-api-mock'
 
-const APP_ASSIGNMENT_EXPORT_URL = '/api/config-management/app-assignment/export'
+const APP_ASSIGNMENT_EXPORT_URL =
+  '/api/v1/datacenter/analysis/config-management/app-assignment/export'
 
 function getFilenameFromContentDisposition(value?: string): string | undefined {
   if (!value) return
@@ -87,7 +88,7 @@ export function fetchAppAssignmentOverview() {
     return appAssignmentMock.mockFetchAppAssignmentOverview()
   }
   return request.post<AppAssignmentOverviewResponse>({
-    url: '/api/config-management/app-assignment/overview',
+    url: '/api/v1/datacenter/analysis/config-management/app-assignment/overview',
     data: {},
     showErrorMessage: false
   })
@@ -99,7 +100,7 @@ export function fetchAppAssignmentMetaFilterOptions() {
     return appAssignmentMock.mockFetchAppAssignmentMetaFilterOptions()
   }
   return request.post<AppAssignmentMetaFilterResponse>({
-    url: '/api/config-management/app-assignment/meta-filter-options',
+    url: '/api/v1/datacenter/analysis/config-management/app-assignment/meta-filter-options',
     data: {},
     showErrorMessage: false
   })
@@ -111,7 +112,7 @@ export function fetchAppAssignmentMetaAssignableApps() {
     return appAssignmentMock.mockFetchAppAssignmentMetaAssignableApps()
   }
   return request.post<AppAssignmentMetaAssignableAppsResponse>({
-    url: '/api/config-management/app-assignment/meta-assignable-apps',
+    url: '/api/v1/datacenter/analysis/config-management/app-assignment/meta-assignable-apps',
     data: {},
     showErrorMessage: false
   })
@@ -123,7 +124,7 @@ export function fetchAppAssignmentMetaPerformanceVersions(body: { appId: string 
     return appAssignmentMock.mockFetchAppAssignmentMetaPerformanceVersions(body)
   }
   return request.post<AppAssignmentMetaVersionsResponse>({
-    url: '/api/config-management/app-assignment/meta-performance-versions',
+    url: '/api/v1/datacenter/analysis/config-management/app-assignment/meta-performance-versions',
     data: body,
     showErrorMessage: false
   })
@@ -135,7 +136,7 @@ export function fetchAppAssignmentTable(params: AssignmentTableQuery) {
     return appAssignmentMock.mockFetchAppAssignmentTable(params)
   }
   return request.post<Api.Common.PaginatedResponse<AppAssignmentItem>>({
-    url: '/api/config-management/app-assignment/table',
+    url: '/api/v1/datacenter/analysis/config-management/app-assignment/table',
     data: params,
     showErrorMessage: false
   })
@@ -147,7 +148,7 @@ export function fetchAppAssignmentDetail(body: { id: string }) {
     return appAssignmentMock.mockFetchAppAssignmentDetail(body)
   }
   return request.post<AppAssignmentItem | null>({
-    url: '/api/config-management/app-assignment/detail',
+    url: '/api/v1/datacenter/analysis/config-management/app-assignment/detail',
     data: body,
     showErrorMessage: false
   })
@@ -159,7 +160,7 @@ export function createAppAssignment(data: AssignmentCreatePayload) {
     return appAssignmentMock.mockCreateAppAssignment(data)
   }
   return request.post<AppAssignmentItem>({
-    url: '/api/config-management/app-assignment',
+    url: '/api/v1/datacenter/analysis/config-management/app-assignment',
     data,
     showErrorMessage: false
   })
@@ -171,7 +172,7 @@ export function updateAppAssignment(data: AssignmentUpdatePayload) {
     return appAssignmentMock.mockUpdateAppAssignment(data)
   }
   return request.post<AppAssignmentItem>({
-    url: '/api/config-management/app-assignment/update',
+    url: '/api/v1/datacenter/analysis/config-management/app-assignment/update',
     data,
     showErrorMessage: false
   })

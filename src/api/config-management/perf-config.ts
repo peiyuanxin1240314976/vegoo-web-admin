@@ -48,7 +48,7 @@ export function fetchPerfOverviewKpi(
     return Promise.resolve(perfConfigMock.computePerfOverviewKpi(params, clientList))
   }
   return request.post<PerfConfigOverviewKpi>({
-    url: '/api/config-management/perf-config/overview/kpi',
+    url: '/api/v1/datacenter/analysis/config-management/perf-config/overview/kpi',
     data: params,
     showErrorMessage: false
   })
@@ -65,7 +65,7 @@ export function fetchPerfTable(params: {
   status?: string
 }) {
   return request.post<Api.Common.PaginatedResponse<PerfConfigItem>>({
-    url: '/api/config-management/perf-config/table',
+    url: '/api/v1/datacenter/analysis/config-management/perf-config/table',
     data: params,
     showErrorMessage: false
   })
@@ -78,7 +78,7 @@ export function createPerfConfig(data: {
   saveMode: SaveMode
 }) {
   return request.post<PerfConfigItem>({
-    url: '/api/config-management/perf-config',
+    url: '/api/v1/datacenter/analysis/config-management/perf-config',
     data,
     showErrorMessage: false
   })
@@ -87,7 +87,7 @@ export function createPerfConfig(data: {
 /** 激活指定版本 */
 export function activatePerfConfig(id: string, version: number) {
   return request.post<PerfConfigItem>({
-    url: `/api/config-management/perf-config/${id}/activate`,
+    url: `/api/v1/datacenter/analysis/config-management/perf-config/${id}/activate`,
     data: { version },
     showErrorMessage: false
   })
@@ -108,7 +108,7 @@ export async function exportPerfConfig(params: {
   }
 
   const response = await requestBlob({
-    url: '/api/config-management/perf-config/export',
+    url: '/api/v1/datacenter/analysis/config-management/perf-config/export',
     method: 'POST',
     data: params,
     headers: {
@@ -135,7 +135,7 @@ export async function exportPerfVersionCompare(params: PerfVersionCompareExportP
   }
 
   const response = await requestBlob({
-    url: '/api/config-management/perf-config/version-compare/export',
+    url: '/api/v1/datacenter/analysis/config-management/perf-config/version-compare/export',
     method: 'POST',
     data: params,
     headers: {

@@ -19,6 +19,13 @@ import {
 } from '@/views/config-management/exchange-rate-management/config/data-source'
 import * as exchangeRateMock from '@/views/config-management/exchange-rate-management/mock/exchange-rate-api-mock'
 
+/** 兼容后端 `{ items: T[] }` 与直连数组两种业务体 */
+function unwrapItemsList<T>(data: T[] | { items?: T[] } | undefined): T[] {
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && Array.isArray(data.items)) return data.items
+  return []
+}
+
 function getFilenameFromContentDisposition(value?: string): string | undefined {
   if (!value) return
   const mStar = String(value).match(/filename\*\s*=\s*UTF-8''([^;]+)/i)
@@ -39,7 +46,7 @@ export function fetchExchangeRateTable(params: ExchangeRateQuery) {
     return exchangeRateMock.mockFetchExchangeRateTable(params)
   }
   return request.post<Api.Common.PaginatedResponse<ExchangeRateItem>>({
-    url: '/api/config-management/exchange-rate/table',
+    url: '/api/v1/datacenter/analysis/config-management/exchange-rate/table',
     data: params,
     showErrorMessage: false
   })
@@ -53,7 +60,7 @@ export function fetchExchangeRateOverviewKpi(
     return exchangeRateMock.mockFetchExchangeRateOverviewKpi(params)
   }
   return request.post<ExchangeRateOverviewKpi>({
-    url: '/api/config-management/exchange-rate/overview/kpi',
+    url: '/api/v1/datacenter/analysis/config-management/exchange-rate/overview/kpi',
     data: params,
     showErrorMessage: false
   })
@@ -64,11 +71,13 @@ export function fetchExchangeRateTrend(params: { pair: string; date?: string }) 
   if (isExchangeRateEndpointMock(ExchangeRateEndpoint.TrendSeries)) {
     return exchangeRateMock.mockFetchExchangeRateTrend(params)
   }
-  return request.post<ExchangeRateTrendPoint[]>({
-    url: '/api/config-management/exchange-rate/trend',
-    data: params,
-    showErrorMessage: false
-  })
+  return request
+    .post<ExchangeRateTrendPoint[] | { items: ExchangeRateTrendPoint[] }>({
+      url: '/api/v1/datacenter/analysis/config-management/exchange-rate/trend',
+      data: params,
+      showErrorMessage: false
+    })
+    .then(unwrapItemsList)
 }
 
 /** 读取同步设置 */
@@ -77,7 +86,7 @@ export function fetchExchangeRateSyncConfig() {
     return exchangeRateMock.mockFetchExchangeRateSyncConfig()
   }
   return request.post<SyncConfig>({
-    url: '/api/config-management/exchange-rate/sync-config/detail',
+    url: '/api/v1/datacenter/analysis/config-management/exchange-rate/sync-config/detail',
     data: {},
     showErrorMessage: false
   })
@@ -89,7 +98,7 @@ export function fetchExchangeRateSyncMetaOptions() {
     return exchangeRateMock.mockFetchExchangeRateSyncMetaOptions()
   }
   return request.post<ExchangeRateSyncMetaOptions>({
-    url: '/api/config-management/exchange-rate/sync-meta-options',
+    url: '/api/v1/datacenter/analysis/config-management/exchange-rate/sync-meta-options',
     data: {},
     showErrorMessage: false
   })
@@ -101,7 +110,7 @@ export function createExchangeRate(data: ManualRateFormModel) {
     return exchangeRateMock.mockCreateExchangeRate(data)
   }
   return request.post<unknown>({
-    url: '/api/config-management/exchange-rate',
+    url: '/api/v1/datacenter/analysis/config-management/exchange-rate',
     data,
     showErrorMessage: false
   })
@@ -113,7 +122,7 @@ export function syncExchangeRates(pairs: string[], source: string) {
     return exchangeRateMock.mockSyncExchangeRates(pairs, source)
   }
   return request.post<unknown>({
-    url: '/api/config-management/exchange-rate/sync',
+    url: '/api/v1/datacenter/analysis/config-management/exchange-rate/sync',
     data: { pairs, source },
     showErrorMessage: false
   })
@@ -125,7 +134,7 @@ export function saveSyncConfig(data: SyncConfig) {
     return exchangeRateMock.mockSaveSyncConfig(data)
   }
   return request.post<unknown>({
-    url: '/api/config-management/exchange-rate/sync-config',
+    url: '/api/v1/datacenter/analysis/config-management/exchange-rate/sync-config',
     data,
     showErrorMessage: false
   })
@@ -137,7 +146,7 @@ export function updateExchangeRateOverride(id: string, overrideAuto: boolean) {
     return exchangeRateMock.mockUpdateExchangeRateOverride(id, overrideAuto)
   }
   return request.post<unknown>({
-    url: '/api/config-management/exchange-rate/override',
+    url: '/api/v1/datacenter/analysis/config-management/exchange-rate/override',
     data: { id, overrideAuto },
     showErrorMessage: false
   })
@@ -152,7 +161,7 @@ export async function exportExchangeRates(params: Partial<ExchangeRateQuery>) {
   }
 
   const response = await requestBlob({
-    url: '/api/config-management/exchange-rate/export',
+    url: '/api/v1/datacenter/analysis/config-management/exchange-rate/export',
     method: 'POST',
     data: params,
     headers: {

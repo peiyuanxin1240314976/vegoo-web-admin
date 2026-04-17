@@ -14,7 +14,7 @@ export function fetchOptimizerTable(params: Api.ConfigManagement.Optimizer.Table
     return optimizerMock.mockFetchOptimizerTable(params)
   }
   return request.post<Api.Common.PaginatedResponse<Api.ConfigManagement.Optimizer.ListItem>>({
-    url: '/api/config-management/optimizer/table',
+    url: '/api/v1/datacenter/analysis/config-management/optimizer/table',
     data: params,
     showErrorMessage: false
   })
@@ -26,7 +26,7 @@ export function fetchOptimizerOverview() {
     return optimizerMock.mockFetchOptimizerOverview()
   }
   return request.post<Api.ConfigManagement.Optimizer.OverviewResponse>({
-    url: '/api/config-management/optimizer/overview',
+    url: '/api/v1/datacenter/analysis/config-management/optimizer/overview',
     data: {},
     showErrorMessage: false
   })
@@ -38,7 +38,7 @@ export function fetchOptimizerMetaSystemUsers() {
     return optimizerMock.mockFetchOptimizerMetaSystemUsers()
   }
   return request.post<Api.ConfigManagement.Optimizer.MetaSystemUserItem[]>({
-    url: '/api/config-management/optimizer/meta-system-users',
+    url: '/api/v1/datacenter/analysis/config-management/optimizer/meta-system-users',
     data: {},
     showErrorMessage: false
   })
@@ -50,7 +50,7 @@ export function createOptimizer(data: Api.ConfigManagement.Optimizer.FormPayload
     return optimizerMock.mockCreateOptimizer(data)
   }
   return request.post<Api.ConfigManagement.Optimizer.ListItem>({
-    url: '/api/config-management/optimizer',
+    url: '/api/v1/datacenter/analysis/config-management/optimizer',
     data,
     showErrorMessage: false
   })
@@ -62,7 +62,7 @@ export function updateOptimizer(data: Api.ConfigManagement.Optimizer.FormPayload
     return optimizerMock.mockUpdateOptimizer(data)
   }
   return request.post<Api.ConfigManagement.Optimizer.ListItem>({
-    url: '/api/config-management/optimizer/update',
+    url: '/api/v1/datacenter/analysis/config-management/optimizer/update',
     data,
     showErrorMessage: false
   })
@@ -74,7 +74,7 @@ export function exportOptimizerList(params: Partial<Api.ConfigManagement.Optimiz
     return optimizerMock.mockExportOptimizerList(params)
   }
   return request.post<Api.ConfigManagement.Optimizer.ExportResponse>({
-    url: '/api/config-management/optimizer/export',
+    url: '/api/v1/datacenter/analysis/config-management/optimizer/export',
     data: params,
     showErrorMessage: false
   })

@@ -34,12 +34,12 @@ export const OrderImportListApiSource: Record<OrderImportListEndpoint, UseMock> 
 }
 
 export const OrderImportReportApiSource: Record<OrderImportReportEndpoint, UseMock> = {
-  [OrderImportReportEndpoint.ReportTaskInfo]: true,
-  [OrderImportReportEndpoint.ReportDataStats]: true,
-  [OrderImportReportEndpoint.ReportPreviewList]: true,
-  [OrderImportReportEndpoint.ReportFailedItems]: true,
-  [OrderImportReportEndpoint.ReportErrorDistribution]: true,
-  [OrderImportReportEndpoint.ExportReport]: true
+  [OrderImportReportEndpoint.ReportTaskInfo]: false,
+  [OrderImportReportEndpoint.ReportDataStats]: false,
+  [OrderImportReportEndpoint.ReportPreviewList]: false,
+  [OrderImportReportEndpoint.ReportFailedItems]: false,
+  [OrderImportReportEndpoint.ReportErrorDistribution]: false,
+  [OrderImportReportEndpoint.ExportReport]: false
 }
 
 export function isOrderImportListEndpointMock(endpoint: OrderImportListEndpoint): boolean {
