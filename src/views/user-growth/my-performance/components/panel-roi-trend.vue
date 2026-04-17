@@ -52,6 +52,7 @@
 
   const chartRef = ref<HTMLElement | null>(null)
   let chart: ReturnType<typeof echarts.init> | null = null
+  let initRetryTimer: number | null = null
 
   function formatXLabel(date: string): string {
     if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -157,8 +158,33 @@
     }
   }
 
+  function clearInitRetryTimer() {
+    if (initRetryTimer != null) {
+      window.clearTimeout(initRetryTimer)
+      initRetryTimer = null
+    }
+  }
+
+  function canInitChart(el: HTMLElement) {
+    return el.clientWidth > 0 && el.clientHeight > 0
+  }
+
+  function scheduleSyncChartRetry() {
+    if (initRetryTimer != null) return
+    initRetryTimer = window.setTimeout(() => {
+      initRetryTimer = null
+      syncChart()
+    }, 80)
+  }
+
   function syncChart() {
     if (props.loading || !chartRef.value) return
+    if (!canInitChart(chartRef.value)) {
+      // 容器尺寸为 0 时跳过本次初始化，延迟重试可避免 ECharts 0 宽高告警
+      scheduleSyncChartRetry()
+      return
+    }
+    clearInitRetryTimer()
     if (!chart) chart = echarts.init(chartRef.value)
     chart.setOption(buildOption())
     chart.resize()
@@ -191,6 +217,7 @@
     () => props.loading,
     async (ld) => {
       if (ld) {
+        clearInitRetryTimer()
         chart?.dispose()
         chart = null
         return
@@ -210,6 +237,7 @@
   )
 
   onBeforeUnmount(() => {
+    clearInitRetryTimer()
     window.removeEventListener('resize', resize)
     chart?.dispose()
     chart = null

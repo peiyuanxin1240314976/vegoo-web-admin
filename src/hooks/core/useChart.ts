@@ -55,6 +55,7 @@ import { useSettingStore } from '@/store/modules/setting'
 import { registerChartResizer, scheduleLayoutResize } from '@/utils/chart-resize-hub'
 import { getCssVar } from '@/utils/ui'
 import type { BaseChartProps, ChartThemeConfig, UseChartOptions } from '@/types/component/chart'
+import { getCurrentInstance } from 'vue'
 
 // 图表主题配置
 export const useChartOps = (): ChartThemeConfig => ({
@@ -550,27 +551,30 @@ export function useChart(options: UseChartOptions = {}) {
   // 获取图表是否已初始化
   const isChartInitialized = () => chart !== null
 
-  // KeepAlive + 工作区 Tab 切走时 DOM 会隐藏，ECharts 常保持 0 宽高；切回需重新 layout
-  onActivated(() => {
-    if (isDestroyed) return
-    nextTick(() => {
-      scheduleLayoutResize()
-      if (chartRef.value && isContainerVisible(chartRef.value) && pendingOptions && !chart) {
-        cleanupIntersectionObserver()
-        const opts = pendingOptions
-        pendingOptions = null
-        if (initDelay > 0) {
-          setTimeout(() => performChartInit(opts), initDelay)
-        } else {
-          performChartInit(opts)
+  const setupInstance = getCurrentInstance()
+  if (setupInstance) {
+    // KeepAlive + 工作区 Tab 切走时 DOM 会隐藏，ECharts 常保持 0 宽高；切回需重新 layout
+    onActivated(() => {
+      if (isDestroyed) return
+      nextTick(() => {
+        scheduleLayoutResize()
+        if (chartRef.value && isContainerVisible(chartRef.value) && pendingOptions && !chart) {
+          cleanupIntersectionObserver()
+          const opts = pendingOptions
+          pendingOptions = null
+          if (initDelay > 0) {
+            setTimeout(() => performChartInit(opts), initDelay)
+          } else {
+            performChartInit(opts)
+          }
         }
-      }
+      })
     })
-  })
 
-  onUnmounted(() => {
-    destroyChart()
-  })
+    onUnmounted(() => {
+      destroyChart()
+    })
+  }
 
   return {
     isDark,
