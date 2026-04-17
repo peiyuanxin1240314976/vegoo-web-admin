@@ -1,5 +1,5 @@
 {
-  "_comment": "利润分析 - 应用利润详情表 + 合计行。对应 types.ts: ProfitAppRow[], ProfitAppTotal。",
+  "_comment": "利润分析 - 应用利润详情表 + 合计行。趋势改为按筛选日期范围返回利润序列。对应 types.ts: ProfitAppRow[], ProfitAppTotal。",
   "fieldDescription": {
     "request": {
       "dateRange": { "type": "string", "required": true, "description": "日期范围。" },
@@ -39,11 +39,18 @@
       "profitColor": { "type": "string", "required": true, "description": "利润颜色 HEX。" },
       "rate": { "type": "string", "required": true, "description": "利润率，如 32.8% 或 N/A。" },
       "rateColor": { "type": "string", "required": true, "description": "利润率颜色 HEX。" },
-      "trend": {
-        "type": "string",
+      "profitTrend": {
+        "type": "ProfitTrendPoint[]",
         "required": true,
-        "enum": ["up", "down", "flat", "none"],
-        "description": "趋势：上升/下降/持平/无数据。"
+        "description": "按筛选日期范围返回的利润趋势点，前端据此绘制趋势图。"
+      }
+    },
+    "ProfitTrendPoint": {
+      "date": { "type": "string", "required": true, "description": "日期（YYYY-MM-DD）。" },
+      "profit": {
+        "type": "number",
+        "required": true,
+        "description": "当日利润数值（USD，可正可负）。"
       }
     },
     "ProfitAppTotal": {
@@ -75,7 +82,13 @@
         "profitColor": "#4ade80",
         "rate": "32.8%",
         "rateColor": "#4ade80",
-        "trend": "up"
+        "profitTrend": [
+          { "date": "2026-03-01", "profit": 3720 },
+          { "date": "2026-03-02", "profit": 3910 },
+          { "date": "2026-03-03", "profit": 4020 },
+          { "date": "2026-03-04", "profit": 3580 },
+          { "date": "2026-03-05", "profit": 3570 }
+        ]
       },
       {
         "app": "PhoneTracker",
@@ -87,7 +100,31 @@
         "profitColor": "#4ade80",
         "rate": "39.1%",
         "rateColor": "#4ade80",
-        "trend": "up"
+        "profitTrend": [
+          { "date": "2026-03-01", "profit": 2650 },
+          { "date": "2026-03-02", "profit": 2810 },
+          { "date": "2026-03-03", "profit": 2940 },
+          { "date": "2026-03-04", "profit": 3010 },
+          { "date": "2026-03-05", "profit": 2990 }
+        ]
+      },
+      {
+        "app": "BloodSugar2",
+        "adRev": "$24,400",
+        "paidRev": "$7,140",
+        "total": "$31,540",
+        "adSpend": "$28,200",
+        "profit": "+$3,340",
+        "profitColor": "#4ade80",
+        "rate": "11.8%",
+        "rateColor": "#4ade80",
+        "profitTrend": [
+          { "date": "2026-03-01", "profit": 460 },
+          { "date": "2026-03-02", "profit": 710 },
+          { "date": "2026-03-03", "profit": 890 },
+          { "date": "2026-03-04", "profit": 640 },
+          { "date": "2026-03-05", "profit": 640 }
+        ]
       }
     ],
     "total": {

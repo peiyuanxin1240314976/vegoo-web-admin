@@ -1,12 +1,8 @@
 <script setup lang="ts">
   import 'flag-icons/css/flag-icons.min.css'
-  import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+  import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import * as echarts from 'echarts'
-  import type { ProfitCountryRow, ProfitMapDataItem } from './types'
-  import {
-    buildProfitMapScatterChartData,
-    normalizeProfitMapDataForEchartsMapSeries
-  } from './country-profit-map-centroids'
+  import type { ProfitCountryRow } from './types'
   import { resolveProfitCountryIso } from './country-flag-iso'
   import { useProfitAnalysisDashboard } from './composables/useProfitAnalysisDashboard'
 
@@ -22,7 +18,6 @@
     appRows,
     appTotal,
     mapData,
-    mapScatter,
     countryRows,
     trend30d,
     sankeyNodes,
@@ -37,30 +32,23 @@
     reloadDashboard
   } = useProfitAnalysisDashboard()
 
-  const mapRef = ref<HTMLElement | null>(null)
   const trendRef = ref<HTMLElement | null>(null)
   const sankeyRef = ref<HTMLElement | null>(null)
 
-  let mapChart: echarts.ECharts | null = null
   let trendChart: echarts.ECharts | null = null
   let sankeyChart: echarts.ECharts | null = null
-  let mapGeoReady = false
-  let mapResizeObserver: ResizeObserver | null = null
 
-  function teardownMapResizeObserver() {
-    mapResizeObserver?.disconnect()
-    mapResizeObserver = null
-  }
-
-  function setupMapResizeObserver() {
-    teardownMapResizeObserver()
-    const el = mapRef.value
-    if (!el || typeof ResizeObserver === 'undefined') return
-    mapResizeObserver = new ResizeObserver(() => {
-      mapChart?.resize()
-    })
-    mapResizeObserver.observe(el)
-  }
+  const countryDistributionRows = computed(() => {
+    return mapData.value
+      .slice()
+      .sort((a, b) => b.value - a.value)
+      .map((item, index) => ({
+        rank: index + 1,
+        name: item.name,
+        countryCode: resolveCountryDistributionIso(item),
+        value: item.value
+      }))
+  })
 
   function fiCountryClass(code: string | undefined) {
     if (!code?.trim()) return ''
@@ -76,112 +64,28 @@
     return fiCountryClass(resolveProfitCountryIso(row))
   }
 
-  async function ensureWorldGeo() {
-    if (mapGeoReady) return
-    const res = await fetch('/geo/world.json')
-    const geoJson = await res.json()
-    echarts.registerMap('world', geoJson)
-    mapGeoReady = true
+  function resolveCountryDistributionIso(item: {
+    name: string
+    countryCode?: string
+    s_country_code?: string
+  }) {
+    const normalizedCode = item.countryCode?.trim() || item.s_country_code?.trim()
+    if (normalizedCode) return normalizedCode
+    return resolveProfitCountryIso({ name: item.name } as ProfitCountryRow)
   }
 
-  async function syncMapChart() {
-    if (!mapRef.value) return
-    await ensureWorldGeo()
-    if (!mapChart) {
-      mapChart = echarts.init(mapRef.value, 'dark', { renderer: 'canvas' })
-    }
-    const mapSeriesData = normalizeProfitMapDataForEchartsMapSeries(mapData.value)
-    const maxVal = Math.max(1, ...mapData.value.map((d: ProfitMapDataItem) => d.value))
-    const scatterSeriesData = buildProfitMapScatterChartData(mapScatter.value, mapData.value)
-    mapChart.setOption({
-      backgroundColor: 'transparent',
-      geo: {
-        map: 'world',
-        roam: true,
-        scaleLimit: { min: 0.85, max: 8 },
-        /** 让地图绘制区域占满画布，避免「外层 div 变高但地图仍缩在中间」的留白感 */
-        layoutCenter: ['50%', '50%'],
-        layoutSize: '118%',
-        silent: false,
-        itemStyle: {
-          areaColor: '#1a2744',
-          borderColor: '#0f1f3d',
-          borderWidth: 0.5
-        },
-        emphasis: {
-          itemStyle: { areaColor: '#2563eb' },
-          label: { show: false }
-        }
-      },
-      series: [
-        {
-          type: 'map',
-          map: 'world',
-          geoIndex: 0,
-          zlevel: 0,
-          z: 1,
-          data: mapSeriesData,
-          silent: false
-        },
-        {
-          type: 'effectScatter',
-          coordinateSystem: 'geo',
-          geoIndex: 0,
-          /** 关闭裁剪：涟漪向外扩散时不会被 geo 区域切掉，否则动画看起来像「没出来」 */
-          clip: false,
-          zlevel: 2,
-          z: 10,
-          showEffectOn: 'render',
-          /** 定位点尽量小；涟漪单独用半透明暖色 fill，比 stroke 在深色底上更明显 */
-          symbol: 'circle',
-          symbolSize: 7,
-          rippleEffect: {
-            brushType: 'fill',
-            color: 'rgba(251, 146, 60, 0.45)',
-            scale: 4,
-            period: 2.2,
-            number: 3
-          },
-          itemStyle: {
-            color: '#fb923c',
-            borderColor: '#fde68a',
-            borderWidth: 1,
-            shadowBlur: 6,
-            shadowColor: 'rgb(251 146 60 / 50%)'
-          },
-          emphasis: {
-            itemStyle: {
-              color: '#fbbf24',
-              borderColor: '#fff7ed',
-              shadowBlur: 10,
-              shadowColor: 'rgb(251 191 36 / 55%)'
-            }
-          },
-          data: scatterSeriesData,
-          label: {
-            show: scatterSeriesData.length > 0,
-            formatter: (p: { name?: string }) => p.name ?? '',
-            position: 'right',
-            color: '#fde68a',
-            fontSize: 11,
-            distance: 6
-          }
-        }
-      ],
-      visualMap: {
-        min: 0,
-        max: maxVal,
-        show: false,
-        seriesIndex: 0,
-        inRange: {
-          color: ['#1a2744', '#1e4080', '#1d6fa4', '#22c55e']
-        }
-      }
-    })
-    await nextTick()
-    mapChart.resize()
-    requestAnimationFrame(() => {
-      mapChart?.resize()
+  function countryDistributionFiClass(item: {
+    name: string
+    countryCode?: string
+    s_country_code?: string
+  }) {
+    return fiCountryClass(resolveCountryDistributionIso(item))
+  }
+
+  function formatCountryDistributionProfit(value: number) {
+    return value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     })
   }
 
@@ -345,28 +249,9 @@
   }
 
   function handleResize() {
-    mapChart?.resize()
     trendChart?.resize()
     sankeyChart?.resize()
   }
-
-  watch(
-    () => mapRef.value,
-    () => {
-      setupMapResizeObserver()
-    },
-    { flush: 'post', immediate: true }
-  )
-
-  watch(
-    () => [pendingCountry.value, mapData.value, mapScatter.value],
-    async () => {
-      if (pendingCountry.value) return
-      await nextTick()
-      await syncMapChart()
-    },
-    { deep: true, flush: 'post' }
-  )
 
   watch(
     () => [pendingTrend.value, trend30d.value],
@@ -396,11 +281,8 @@
 
   onUnmounted(() => {
     window.removeEventListener('resize', handleResize)
-    teardownMapResizeObserver()
-    mapChart?.dispose()
     trendChart?.dispose()
     sankeyChart?.dispose()
-    mapChart = null
     trendChart = null
     sankeyChart = null
   })
@@ -547,7 +429,7 @@
             >
           </div>
           <div class="kpi-value" :style="{ color: card.valueColor }">{{ card.value }}</div>
-          <div class="kpi-sub">{{ card.sub }}</div>
+          <!-- <div class="kpi-sub">{{ card.sub }}</div> -->
         </div>
       </template>
     </section>
@@ -631,8 +513,38 @@
       <div class="bi-card bi-map-panel">
         <div class="card-title">国家或地区利润分布</div>
         <div class="bi-chart-host bi-chart-host--map">
-          <!-- 地图容器始终占位，避免 v-show:none 时 ECharts 在 0×0 初始化导致不绘制 -->
-          <div ref="mapRef" class="world-map" aria-label="国家利润分布地图"></div>
+          <div v-show="!pendingCountry" class="country-distribution">
+            <table class="data-table country-distribution-table">
+              <thead>
+                <tr>
+                  <th>排名</th>
+                  <th>国家或地区</th>
+                  <th>利润</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in countryDistributionRows" :key="row.countryCode || row.name">
+                  <td class="td-rank">
+                    <span class="rank-badge">{{ row.rank }}</span>
+                  </td>
+                  <td class="td-country">
+                    <span
+                      v-if="countryDistributionFiClass(row)"
+                      :class="countryDistributionFiClass(row)"
+                      class="cflag cflag--fi"
+                      aria-hidden="true"
+                    />
+                    <span class="country-name">{{ row.name }}</span>
+                  </td>
+                  <td class="td-profit">
+                    <span class="profit-chip">
+                      {{ formatCountryDistributionProfit(row.value) }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <div v-show="pendingCountry" class="bi-map-loading-mask">
             <div class="bi-skeleton-block bi-skeleton-block--map bi-skeleton--fx">
               <ElSkeleton animated :rows="0">
@@ -1236,7 +1148,7 @@
 
   .bi-mid-row {
     display: grid;
-    grid-template-columns: 1fr 420px;
+    grid-template-columns: minmax(0, 1fr) 470px;
     gap: 14px;
     padding: 14px 24px 0;
   }
@@ -1371,11 +1283,18 @@
   }
 
   .td-country {
-    display: flex;
-    gap: 6px;
-    align-items: center;
     font-weight: 500;
     color: var(--text-pri) !important;
+    white-space: nowrap;
+  }
+
+  .td-country .cflag {
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .td-country .country-name {
+    vertical-align: middle;
   }
 
   .cflag {
@@ -1396,13 +1315,90 @@
     border-bottom: none;
   }
 
-  .world-map {
-    display: block;
-    width: 100%;
-    height: 240px;
+  .country-distribution {
     min-height: 220px;
+    max-height: 240px;
+    overflow-y: auto;
+    background:
+      linear-gradient(180deg, rgb(15 23 42 / 80%) 0%, rgb(15 23 42 / 55%) 100%),
+      radial-gradient(circle at top right, rgb(16 185 129 / 12%), transparent 45%);
+    border: 1px solid rgb(59 130 246 / 20%);
+    border-radius: 10px;
+  }
+
+  .country-distribution-table {
+    width: 100%;
+    table-layout: fixed;
+
+    th,
+    td {
+      padding: 8px 10px;
+      vertical-align: middle;
+    }
+
+    th:first-child,
+    td:first-child {
+      width: 56px;
+      text-align: center;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      text-align: left;
+    }
+
+    th:last-child,
+    td:last-child {
+      width: 140px;
+      text-align: right;
+    }
+
+    th:last-child {
+      text-align: left;
+    }
+  }
+
+  .td-rank {
+    text-align: center !important;
+  }
+
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #cbd5e1;
+    background: rgb(30 64 128 / 35%);
+    border: 1px solid rgb(96 165 250 / 30%);
+    border-radius: 999px;
+  }
+
+  .country-name {
     overflow: hidden;
-    border-radius: 6px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .td-profit {
+    text-align: left !important;
+  }
+
+  .profit-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 96px;
+    padding: 2px 10px;
+    font-weight: 600;
+    color: #86efac;
+    background: rgb(34 197 94 / 12%);
+    border: 1px solid rgb(34 197 94 / 30%);
+    border-radius: 999px;
   }
 
   .country-table th,
