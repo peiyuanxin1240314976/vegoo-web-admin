@@ -341,7 +341,10 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'money',
       changeKey: 'totalRevenueChange',
       listKey: 'totalRevenueList',
-      detail: (n) => `广告 ${formatMoney(n.adRevenue ?? 0)}  付费 ${formatMoney(n.payRevenue ?? 0)}`
+      detail: (n) => {
+        const ad = (n as { dAdRevenue?: number; adRevenue?: number }).dAdRevenue ?? n.adRevenue ?? 0
+        return `广告 ${formatMoney(ad)}  付费 ${formatMoney(n.payRevenue ?? 0)}`
+      }
     },
     {
       type: 'paidRevenue',
@@ -445,7 +448,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
 }
 
 /**
- * 从 overall 接口的 now + *Change 组装警示摘要指标（DNU、自然量、买量应用、广告系列、广告账户）
+ * 从 overall 接口的 now + *Change 组装警示摘要指标（DNU、自然量、买量用户、广告系列、广告账户）
  * 返回 null 的字段默认按 0 展示
  */
 export function mapOverallDataToAlertSummaryMetrics(
@@ -477,9 +480,9 @@ export function mapOverallDataToAlertSummaryMetrics(
       : {})
   })
 
-  // 买量应用：取值 now.initialCount，null 按 0 展示
+  // 买量用户：取值 now.initialCount，null 按 0 展示
   metrics.push({
-    label: '买量应用',
+    label: '买量用户',
     value: `${formatInt(now.initialCount)}个`
   })
 
@@ -1055,14 +1058,14 @@ export function mapChannelRoiInstallToItems(
   const num = (v: unknown) => (v != null && Number.isFinite(Number(v)) ? Number(v) : 0)
   return data.map((row) => {
     const list = row.list ?? []
-    const first = list[0] ?? { cost: null, cpl: null, install: null }
-    const trend = list.map((d) => num(d.cost))
+    const first = list[0] ?? { cost: null, cpl: null, install: null, roi: null }
     return {
       channel: row.channel ?? '—',
       spend: num(first.cost),
       installs: num(first.install),
+      roi: num((first as { roi?: unknown }).roi),
       cpi: num(first.cpl),
-      trend
+      trend: []
     }
   })
 }

@@ -61,7 +61,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
   alertSummaryMetrics: [
     { label: 'DNU', value: '374,920', change: 8649, trend: 'down' },
     { label: '自然量', value: '50,372', change: 649, trend: 'up' },
-    { label: '买量应用', value: '23个' },
+    { label: '买量用户', value: '23个' },
     { label: '广告系列', value: '604个', change: 47, trend: 'down' },
     { label: '广告账户', value: '97个', change: 3, trend: 'up' }
   ],
@@ -195,6 +195,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       channel: 'Google Ads',
       spend: 7500,
       installs: 42500,
+      roi: 1.32,
       cpi: 1.2,
       trend: [3200, 3800, 4200, 5800, 6200, 6500, 6800]
     },
@@ -202,6 +203,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       channel: 'Facebook',
       spend: 7500,
       installs: 18500,
+      roi: 1.18,
       cpi: 1.4,
       trend: [2200, 2400, 2600, 2500, 2700, 2600, 2800]
     },
@@ -209,6 +211,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       channel: 'TikTok',
       spend: 7500,
       installs: 7500,
+      roi: 0.92,
       cpi: 0.82,
       trend: [900, 950, 1100, 1050, 1150, 1200, 1150]
     },
@@ -216,6 +219,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       channel: 'Mintegral',
       spend: 7500,
       installs: 4500,
+      roi: 1.05,
       cpi: 1.2,
       trend: [500, 580, 620, 650, 680, 720, 750]
     },
@@ -223,6 +227,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       channel: 'Kwai',
       spend: 7500,
       installs: 3500,
+      roi: 0.88,
       cpi: 1.35,
       trend: [480, 460, 520, 500, 510, 530, 500]
     },
@@ -230,6 +235,7 @@ export const MOCK_COCKPIT_OVERVIEW: CockpitOverview = {
       channel: 'NewsBreak',
       spend: 7500,
       installs: 2500,
+      roi: 1.11,
       cpi: 1.5,
       trend: [320, 350, 360, 340, 380, 370, 380]
     }

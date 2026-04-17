@@ -51,6 +51,8 @@ export interface CockpitOverallDataPeriod {
   adAccountCount?: number
   adCost?: number
   adRevenue?: number
+  /** 广告收入（部分数据源字段名为 dAdRevenue，这里兼容） */
+  dAdRevenue?: number
   dCost: number
   dnu?: number
   dau: number
@@ -65,7 +67,7 @@ export interface CockpitOverallDataPeriod {
   proxyCost?: number
   /** 自然量（警示摘要用） */
   naturalCount?: number
-  /** 买量应用数（警示摘要用，单位：个） */
+  /** 买量用户数（警示摘要用，单位：个） */
   initialCount?: number
   /** 广告系列数（警示摘要用，单位：个） */
   adGroupCount?: number
@@ -403,6 +405,8 @@ export interface CockpitChannelRoiInstallItem {
   platform?: string
   spend: number
   installs: number
+  /** ROI（比例值，如 1.23） */
+  roi: number
   cpi: number
   /** 近7日趋势，用于最后一列迷你折线图 */
   trend: number[]
@@ -413,6 +417,7 @@ export interface CockpitChannelRoiInstallDayItem {
   cost?: number | null
   cpl?: number | null
   install?: number | null
+  roi?: number | null
 }
 
 /** 广告平台 ROI&安装量接口：单广告平台（data 数组中每个元素，list 为近 7 日数据） */
@@ -668,7 +673,7 @@ export interface CockpitTop10CampaignItem {
 /** 驾驶舱全量数据（与后端 /api/v1/datacenter/analysis/cockpit/overview 返回结构对齐） */
 export interface CockpitOverview {
   kpi: CockpitKpiCard[]
-  /** 警示模块左侧：运营摘要指标（DNU、自然量、买量应用等） */
+  /** 警示模块左侧：运营摘要指标（DNU、自然量、买量用户等） */
   alertSummaryMetrics?: CockpitAlertSummaryMetric[]
   alertBanners: CockpitAlertBanner[]
   /** 今日 Tab 专属：四卡片数据 */
