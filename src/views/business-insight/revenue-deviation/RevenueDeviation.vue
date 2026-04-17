@@ -33,7 +33,7 @@
           />
         </el-select>
 
-        <el-select
+        <!-- <el-select
           v-model="platform"
           class="rd-filter-select"
           placeholder="广告平台"
@@ -46,7 +46,7 @@
             :label="item.label"
             :value="item.value"
           />
-        </el-select>
+        </el-select> -->
 
         <el-button
           class="rd-filter-action rd-filter-action--apply"
@@ -588,11 +588,11 @@
 
   const rowDims: { label: string; value: RevenueDeviationMatrixRowDim }[] = [
     { label: '应用', value: 'app' },
-    { label: '平台', value: 'platform' },
+    { label: '广告平台', value: 'platform' },
     { label: '日期', value: 'date' }
   ]
   const colDims: { label: string; value: RevenueDeviationMatrixColDim }[] = [
-    { label: '平台', value: 'platform' },
+    { label: '广告平台', value: 'platform' },
     { label: '日期', value: 'date' }
   ]
 
