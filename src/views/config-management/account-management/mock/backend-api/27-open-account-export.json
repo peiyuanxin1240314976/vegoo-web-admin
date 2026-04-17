@@ -6,13 +6,17 @@
       "source": { "type": "string", "required": false, "description": "广告平台筛选。" },
       "status": { "type": "string", "required": false, "description": "状态筛选。" },
       "agency": { "type": "string", "required": false, "description": "代理商筛选。" },
-      "app": { "type": "string", "required": false, "description": "应用筛选。" }
+      "appIds": {
+        "type": "string[]",
+        "required": false,
+        "description": "应用筛选 ID 列表（当前页面仅支持单选，最多传 1 个）。"
+      }
     },
     "response": {
       "taskId": { "type": "string", "required": true, "description": "导出任务 ID。" }
     }
   },
-  "sampleRequest": { "keyword": "", "source": "", "status": "", "agency": "", "app": "" },
+  "sampleRequest": { "keyword": "", "source": "", "status": "", "agency": "", "appIds": [] },
   "sampleResponse": {
     "code": 200,
     "message": "success",

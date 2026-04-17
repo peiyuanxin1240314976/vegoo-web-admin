@@ -170,12 +170,13 @@
       return
     }
     try {
+      const appIds = appFilter.value ? [appFilter.value] : []
       remoteStats.value = await fetchOpenAccountOverviewStats({
         keyword: props.searchKeyword,
         source: sourceFilter.value,
         status: statusFilter.value,
         agency: agencyFilter.value,
-        app: appFilter.value
+        appIds
       })
     } catch {
       remoteStats.value = null

@@ -335,7 +335,7 @@ export interface OpenAccountTableQuery {
   source?: string
   status?: string
   agency?: string
-  app?: string
+  appIds?: string[]
 }
 
 // ─── BC / BM 管理 ──────────────────────────────────────────

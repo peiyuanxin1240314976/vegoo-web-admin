@@ -15,4 +15,4 @@
 ## 字段规范
 
 - JSON 业务字段统一 camelCase。
-- 筛选入参使用 `source`、`app`、`status`、`agency` 等页面实际存在字段；不额外堆砌无 UI 维度。
+- 筛选入参使用 `source`、`appIds`、`status`、`agency` 等页面实际存在字段；其中 `appIds` 为 `string[]`，当前页面仅支持单选（最多 1 个元素）。

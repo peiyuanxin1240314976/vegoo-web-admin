@@ -27,7 +27,12 @@
         "default": "",
         "description": "代理商筛选。"
       },
-      "app": { "type": "string", "required": false, "default": "", "description": "应用筛选。" }
+      "appIds": {
+        "type": "string[]",
+        "required": false,
+        "default": [],
+        "description": "应用筛选 ID 列表（当前页面仅支持单选，最多传 1 个）。"
+      }
     },
     "response": {
       "fileStream": {
@@ -52,7 +57,7 @@
     "source": "",
     "status": "",
     "agency": "",
-    "app": ""
+    "appIds": []
   },
   "sampleResponse": {
     "_note": "该接口返回二进制文件流，无法用 JSON 展示 sampleResponse 业务体。联调以 Content-Type/Content-Disposition + blob 为准。"
