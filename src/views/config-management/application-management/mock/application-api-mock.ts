@@ -109,9 +109,11 @@ export function mockCreateApplication(data: ApplicationFormPayload): Promise<App
     return Promise.reject(new Error('应用 ID 已存在'))
   }
   const dateStr = getAppNow().toISOString().slice(0, 10)
+  const appIdResolved = String(data.appId ?? createdId).trim() || createdId
   const item: ApplicationAppItem = {
     ...data,
     id: createdId,
+    appId: appIdResolved,
     iconColor: data.iconColor ?? deriveIconColorFromId(createdId),
     iconUrl: data.iconFileKey ?? data.iconUrl,
     packageId: data.packageId ?? data.bundleId,
@@ -142,6 +144,7 @@ export function mockUpdateApplication(data: ApplicationFormPayload): Promise<App
     ...prev,
     ...data,
     id: data.id ?? prev.id,
+    appId: data.appId ?? prev.appId,
     iconColor: data.iconColor ?? prev.iconColor,
     packageId: data.packageId ?? data.bundleId ?? prev.packageId,
     lastModifier: data.lastModifier ?? prev.lastModifier,
