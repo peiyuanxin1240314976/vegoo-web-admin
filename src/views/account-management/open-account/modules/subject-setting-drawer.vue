@@ -33,13 +33,19 @@
           <el-form-item label="营业执照文件" prop="businessLicense">
             <div class="subject-drawer__license-upload">
               <div class="subject-drawer__license-value">
-                <span v-if="form.businessLicense">{{ form.businessLicense }}</span>
+                <img
+                  v-if="previewImageUrl"
+                  :src="previewImageUrl"
+                  alt="营业执照预览"
+                  class="subject-drawer__license-preview"
+                />
+                <span v-else-if="form.businessLicense">{{ form.businessLicense }}</span>
                 <span v-else class="subject-drawer__license-placeholder">暂未上传营业执照</span>
               </div>
               <el-upload
                 :show-file-list="false"
                 :auto-upload="false"
-                :before-upload="handleLicenseSelect"
+                :on-change="handleLicenseSelect"
                 accept=".pdf,.png,.jpg,.jpeg"
               >
                 <el-button :loading="licenseUploading">上传执照</el-button>
@@ -119,7 +125,7 @@
 <script setup lang="ts">
   import { computed, reactive, ref, watch } from 'vue'
   import { ElMessage } from 'element-plus'
-  import type { FormInstance, FormRules, UploadRawFile } from 'element-plus'
+  import type { FormInstance, FormRules, UploadFile } from 'element-plus'
   import type { SubjectSettingItem } from '../types'
 
   defineOptions({ name: 'SubjectSettingDrawer' })
@@ -160,6 +166,11 @@
 
   const form = reactive<SubjectSettingItem>(createEmptyForm())
   const licenseUploading = ref(false)
+  const localImagePreviewUrl = ref('')
+  const uploadedImagePreviewUrl = ref('')
+  const previewImageUrl = computed(
+    () => uploadedImagePreviewUrl.value || localImagePreviewUrl.value
+  )
 
   const rules = computed<FormRules>(() => ({
     subjectName: [
@@ -178,29 +189,52 @@
   watch(
     () => [props.visible, props.data, props.mode],
     () => {
+      resetLocalImagePreview()
       const next = props.data ? { ...props.data } : createEmptyForm()
       Object.assign(form, next)
+      uploadedImagePreviewUrl.value = resolveRemoteImageUrl(next.businessLicense)
     },
     { immediate: true }
   )
 
   function handleClose() {
+    resetLocalImagePreview()
     emit('update:visible', false)
   }
 
-  async function handleLicenseSelect(uploadFile: UploadRawFile) {
-    if (!uploadFile) return false
+  function resolveRemoteImageUrl(url: string): string {
+    if (!url) return ''
+    if (/^https?:\/\//i.test(url) && /\.(png|jpe?g|webp|gif)$/i.test(url)) return url
+    return ''
+  }
+
+  function resetLocalImagePreview() {
+    if (localImagePreviewUrl.value) {
+      URL.revokeObjectURL(localImagePreviewUrl.value)
+      localImagePreviewUrl.value = ''
+    }
+  }
+
+  async function handleLicenseSelect(uploadFile: UploadFile) {
+    const rawFile = uploadFile.raw
+    if (!rawFile) return
+
+    resetLocalImagePreview()
+    if (rawFile.type.startsWith('image/')) {
+      localImagePreviewUrl.value = URL.createObjectURL(rawFile)
+    }
+
     licenseUploading.value = true
     try {
-      const url = await props.uploadLicense(uploadFile)
+      const url = await props.uploadLicense(rawFile)
       form.businessLicense = url
+      uploadedImagePreviewUrl.value = resolveRemoteImageUrl(url)
       ElMessage.success('营业执照上传成功')
     } catch {
       ElMessage.error('营业执照上传失败')
     } finally {
       licenseUploading.value = false
     }
-    return false
   }
 
   async function handleSubmit() {
@@ -329,6 +363,13 @@
     background: color-mix(in srgb, var(--default-box-color) 78%, transparent);
     border: 1px solid color-mix(in srgb, var(--art-primary) 14%, transparent);
     border-radius: 8px;
+  }
+
+  .subject-drawer__license-preview {
+    display: block;
+    max-width: 100%;
+    max-height: 120px;
+    object-fit: contain;
   }
 
   .subject-drawer__license-placeholder {

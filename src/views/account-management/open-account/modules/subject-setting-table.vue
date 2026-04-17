@@ -16,8 +16,26 @@
             <el-tag :type="row.businessLicense ? 'success' : 'info'" effect="light" round>
               {{ row.businessLicense ? '已上传' : '未上传' }}
             </el-tag>
+            <el-image
+              v-if="isPreviewableImage(row.businessLicense)"
+              :src="row.businessLicense"
+              :preview-src-list="[row.businessLicense]"
+              fit="cover"
+              preview-teleported
+              class="subject-table__license-thumb"
+            >
+              <template #error>
+                <div class="subject-table__license-thumb-fallback">预览失败</div>
+              </template>
+            </el-image>
             <span class="subject-table__license-text">
-              {{ row.businessLicense || '建议补充执照地址或文件标识' }}
+              {{
+                row.businessLicense
+                  ? isPreviewableImage(row.businessLicense)
+                    ? '点击缩略图可预览营业执照'
+                    : row.businessLicense
+                  : '建议补充执照地址或文件标识'
+              }}
             </span>
           </div>
         </template>
@@ -127,6 +145,24 @@
       enabled: Boolean(enabled)
     })
   }
+
+  function isPreviewableImage(url?: string): url is string {
+    if (!url) return false
+    const normalized = url.trim()
+    if (!normalized) return false
+
+    // 明确非图片的文件类型直接走文本展示
+    if (/\.(pdf|docx?|xlsx?|pptx?|zip|rar)(\?.*)?$/i.test(normalized)) return false
+
+    if (normalized.startsWith('data:image/')) return true
+    // 显式图片后缀
+    if (/\.(png|jpe?g|webp|gif|bmp|svg)(\?.*)?$/i.test(normalized)) return true
+
+    // 无后缀的对象存储 key（如 oss://bucket/key）按图片处理，交给 ElImage 实际加载
+    if (/^(https?:\/\/|oss:\/\/)/i.test(normalized)) return true
+
+    return false
+  }
 </script>
 
 <style lang="scss" scoped>
@@ -192,10 +228,31 @@
   }
 
   .subject-table__remark {
+    line-clamp: 2;
     display: -webkit-box;
     overflow: hidden;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+  }
+
+  .subject-table__license-thumb {
+    width: 72px;
+    height: 72px;
+    cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 18%, transparent);
+    border-radius: 10px;
+    box-shadow: var(--shadow-xs);
+  }
+
+  .subject-table__license-thumb-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--default-box-color) 80%, transparent);
   }
 
   .subject-table__empty {

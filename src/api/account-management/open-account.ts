@@ -1,18 +1,5 @@
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
-import {
-  SubjectSettingEndpoint,
-  isSubjectSettingEndpointMock
-} from '@/views/account-management/open-account/config/data-source'
-import {
-  mockDeleteSubjectSetting,
-  mockFetchSubjectSettingFilterOptions,
-  mockFetchSubjectSettingOverviewCards,
-  mockFetchSubjectSettings,
-  mockSaveSubjectSetting,
-  mockToggleSubjectPlatform,
-  mockUploadSubjectLicense
-} from '@/views/account-management/open-account/mock/subject-setting-api-mock'
 import type {
   SubjectPlatformKey,
   SubjectSettingItem,
@@ -28,10 +15,6 @@ import type {
 const OPEN_ACCOUNT_BASE = `${ANALYSIS_API_BASE}/account-management/open-account`
 
 export function fetchSubjectSettingOverviewCards(params: SubjectSettingListParams) {
-  if (isSubjectSettingEndpointMock(SubjectSettingEndpoint.OverviewCards)) {
-    return mockFetchSubjectSettingOverviewCards(params)
-  }
-
   return request.post<SubjectSettingOverviewCardsResponse>({
     url: `${OPEN_ACCOUNT_BASE}/subject-settings/overview-cards`,
     data: params,
@@ -40,10 +23,6 @@ export function fetchSubjectSettingOverviewCards(params: SubjectSettingListParam
 }
 
 export function fetchSubjectSettingList(params: SubjectSettingListParams) {
-  if (isSubjectSettingEndpointMock(SubjectSettingEndpoint.List)) {
-    return mockFetchSubjectSettings(params)
-  }
-
   return request.post<SubjectSettingListResponse>({
     url: `${OPEN_ACCOUNT_BASE}/subject-settings/list`,
     data: params,
@@ -52,10 +31,6 @@ export function fetchSubjectSettingList(params: SubjectSettingListParams) {
 }
 
 export function fetchSubjectSettingFilterOptions() {
-  if (isSubjectSettingEndpointMock(SubjectSettingEndpoint.FilterOptions)) {
-    return mockFetchSubjectSettingFilterOptions()
-  }
-
   return request.post<SubjectSettingFilterOptionsResponse>({
     url: `${OPEN_ACCOUNT_BASE}/subject-settings/filter-options`,
     data: {},
@@ -64,10 +39,6 @@ export function fetchSubjectSettingFilterOptions() {
 }
 
 export function saveSubjectSetting(payload: SubjectSettingSaveParams) {
-  if (isSubjectSettingEndpointMock(SubjectSettingEndpoint.Save)) {
-    return mockSaveSubjectSetting(payload)
-  }
-
   return request.post<{
     record: SubjectSettingItem
     action: 'created' | 'updated'
@@ -83,10 +54,6 @@ export function toggleSubjectSettingPlatform(payload: {
   platform: SubjectPlatformKey
   enabled: boolean
 }) {
-  if (isSubjectSettingEndpointMock(SubjectSettingEndpoint.TogglePlatform)) {
-    return mockToggleSubjectPlatform(payload)
-  }
-
   return request.post<{
     record: SubjectSettingItem
   }>({
@@ -97,10 +64,6 @@ export function toggleSubjectSettingPlatform(payload: {
 }
 
 export function uploadSubjectSettingLicense(params: SubjectSettingLicenseUploadParams) {
-  if (isSubjectSettingEndpointMock(SubjectSettingEndpoint.UploadLicense)) {
-    return mockUploadSubjectLicense(params)
-  }
-
   return request.post<SubjectSettingLicenseUploadResponse>({
     url: `${OPEN_ACCOUNT_BASE}/subject-settings/license-upload`,
     data: params,
@@ -109,10 +72,6 @@ export function uploadSubjectSettingLicense(params: SubjectSettingLicenseUploadP
 }
 
 export function deleteSubjectSetting(subjectId: string) {
-  if (isSubjectSettingEndpointMock(SubjectSettingEndpoint.Delete)) {
-    return mockDeleteSubjectSetting(subjectId)
-  }
-
   return request.post<{
     success: boolean
     deletedId: string

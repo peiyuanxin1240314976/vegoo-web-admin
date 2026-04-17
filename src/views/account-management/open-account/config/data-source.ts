@@ -9,13 +9,13 @@ export enum SubjectSettingEndpoint {
 }
 
 const SUBJECT_SETTING_ENDPOINT_MOCK_MAP: Record<SubjectSettingEndpoint, boolean> = {
-  [SubjectSettingEndpoint.OverviewCards]: true,
-  [SubjectSettingEndpoint.FilterOptions]: true,
-  [SubjectSettingEndpoint.List]: true,
-  [SubjectSettingEndpoint.Save]: true,
-  [SubjectSettingEndpoint.TogglePlatform]: true,
-  [SubjectSettingEndpoint.UploadLicense]: true,
-  [SubjectSettingEndpoint.Delete]: true
+  [SubjectSettingEndpoint.OverviewCards]: false,
+  [SubjectSettingEndpoint.FilterOptions]: false,
+  [SubjectSettingEndpoint.List]: false,
+  [SubjectSettingEndpoint.Save]: false,
+  [SubjectSettingEndpoint.TogglePlatform]: false,
+  [SubjectSettingEndpoint.UploadLicense]: false,
+  [SubjectSettingEndpoint.Delete]: false
 }
 
 export function isSubjectSettingEndpointMock(endpoint: SubjectSettingEndpoint): boolean {
