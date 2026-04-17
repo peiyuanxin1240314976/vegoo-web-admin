@@ -77,13 +77,6 @@
       </div>
     </div>
     <div v-else-if="kpiOverview" class="rd-kpi-grid rd-entry-2">
-      <div class="rd-kpi-card rd-kpi-card--green">
-        <div class="rd-kpi-card__label">广告收入（预估）</div>
-        <div class="rd-kpi-card__value rd-kpi-card__value--green">
-          {{ formatUsd2(kpiOverview.d_revenue_estimated) }}
-        </div>
-        <div class="rd-kpi-card__sub">广告平台上报 / 客户端埋点展示事件计算</div>
-      </div>
       <div class="rd-kpi-card rd-kpi-card--gold">
         <div class="rd-kpi-card__label">广告收入（真实）</div>
         <div class="rd-kpi-card__value rd-kpi-card__value--gold">
@@ -91,6 +84,14 @@
         </div>
         <div class="rd-kpi-card__sub">实际入账金额 / 平台对账数据</div>
       </div>
+      <div class="rd-kpi-card rd-kpi-card--green">
+        <div class="rd-kpi-card__label">广告收入（预估）</div>
+        <div class="rd-kpi-card__value rd-kpi-card__value--green">
+          {{ formatUsd2(kpiOverview.d_revenue_estimated) }}
+        </div>
+        <div class="rd-kpi-card__sub">广告平台上报 / 客户端埋点展示事件计算</div>
+      </div>
+
       <div class="rd-kpi-card rd-kpi-card--red">
         <div class="rd-kpi-card__header-row">
           <div class="rd-kpi-card__label">偏差金额</div>
@@ -183,16 +184,16 @@
           <thead>
             <tr>
               <th>广告平台</th>
-              <th>预估($)</th>
               <th>真实($)</th>
+              <th>预估($)</th>
               <th>偏差率</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="row in platformTable?.rows ?? []" :key="row.s_source_label">
               <td>{{ row.s_source_label }}</td>
-              <td>{{ formatUsd2(row.d_estimated_usd) }}</td>
               <td>{{ formatUsd2(row.d_real_usd) }}</td>
+              <td>{{ formatUsd2(row.d_estimated_usd) }}</td>
               <td :class="getDeviationClass(fmtPctSigned(row.d_deviation_rate_pct))">
                 {{ fmtPctSigned(row.d_deviation_rate_pct) }}
               </td>
@@ -243,56 +244,6 @@
           <ElEmpty description="暂无国家分布数据" :image-size="90" />
         </div>
         <div v-else ref="countryChartRef" class="rd-country-chart"></div>
-      </div>
-
-      <!-- 偏差历史记录 -->
-      <div class="rd-card rd-history-card">
-        <div class="rd-card__title">偏差历史记录</div>
-        <div v-if="loadingHistory" class="rd-table-skeleton rd-table-skeleton--dense">
-          <ElSkeleton animated :throttle="0">
-            <template #template>
-              <div class="rd-table-skeleton__head">
-                <ElSkeletonItem
-                  v-for="h in 4"
-                  :key="`hh-${h}`"
-                  variant="text"
-                  class="rd-table-skeleton__cell"
-                />
-              </div>
-              <div v-for="r in 8" :key="`hr-${r}`" class="rd-table-skeleton__row">
-                <ElSkeletonItem
-                  v-for="c in 4"
-                  :key="`hr-${r}-${c}`"
-                  variant="text"
-                  class="rd-table-skeleton__cell"
-                />
-              </div>
-            </template>
-          </ElSkeleton>
-        </div>
-        <div v-else-if="isHistoryEmpty" class="rd-card-empty rd-card-empty--table">
-          <ElEmpty description="暂无历史记录" :image-size="80" />
-        </div>
-        <table v-else class="rd-table">
-          <thead>
-            <tr>
-              <th>月份</th>
-              <th>预估收入</th>
-              <th>真实收入</th>
-              <th>偏差率</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in historyRows" :key="row.t_month">
-              <td>{{ row.t_month }}</td>
-              <td>{{ formatUsd2(row.d_estimated_usd) }}</td>
-              <td>{{ formatUsd2(row.d_real_usd) }}</td>
-              <td :class="getDeviationClass(fmtPctSigned(row.d_deviation_rate_pct))">
-                {{ fmtPctSigned(row.d_deviation_rate_pct) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
 
       <!-- 四维度偏差明细分析表 -->
@@ -383,7 +334,7 @@
                   <th v-for="col in matrixCols" :key="col.name" colspan="1">
                     <div class="rd-matrix-col-head">
                       <span>{{ col.name }}</span>
-                      <span class="rd-matrix-col-sub">预估/真实/偏差率</span>
+                      <span class="rd-matrix-col-sub">真实/预估/偏差率</span>
                     </div>
                   </th>
                 </tr>
@@ -403,8 +354,8 @@
                     :class="getMatrixClass(matrixCell(row, col.key)?.deviation ?? '')"
                   >
                     <template v-if="matrixCell(row, col.key)">
-                      <span class="rd-matrix-est">{{ matrixCell(row, col.key)?.estimated }}</span>
-                      <span class="rd-matrix-real">/{{ matrixCell(row, col.key)?.real }}</span>
+                      <span class="rd-matrix-real">{{ matrixCell(row, col.key)?.real }}</span>
+                      <span class="rd-matrix-est">/{{ matrixCell(row, col.key)?.estimated }}</span>
                       <span
                         class="rd-matrix-dev"
                         :class="getDeviationClass(matrixCell(row, col.key)?.deviation ?? '')"
@@ -418,8 +369,8 @@
                 <tr class="rd-table__total">
                   <td>合计</td>
                   <td v-for="col in matrixCols" :key="col.name" class="rd-matrix-cell">
-                    <span class="rd-matrix-est">{{ col.total.estimated }}</span>
-                    <span class="rd-matrix-real">/{{ col.total.real }}</span>
+                    <span class="rd-matrix-real">{{ col.total.real }}</span>
+                    <span class="rd-matrix-est">/{{ col.total.estimated }}</span>
                     <span
                       class="rd-matrix-dev"
                       :class="getDeviationClass(col.total.deviation ?? '')"
@@ -460,14 +411,12 @@
     fetchRevenueDeviationOverviewCountryTop10,
     fetchRevenueDeviationOverviewKpis,
     fetchRevenueDeviationOverviewTrend,
-    fetchRevenueDeviationTableHistory,
     fetchRevenueDeviationTableMatrix,
     fetchRevenueDeviationTablePlatform
   } from '@/api/revenue-deviation'
   import type {
     RevenueDeviationCountryTop10,
     RevenueDeviationFilterOption,
-    RevenueDeviationHistoryRow,
     RevenueDeviationMatrixRow as RdmRow,
     RevenueDeviationOverviewKpis,
     RevenueDeviationOverviewTrend,
@@ -577,7 +526,6 @@
   const trendData = ref<RevenueDeviationOverviewTrend | null>(null)
   const platformTable = ref<RevenueDeviationPlatformTable | null>(null)
   const countryTop10 = ref<RevenueDeviationCountryTop10 | null>(null)
-  const historyRows = ref<RevenueDeviationHistoryRow[]>([])
   const matrixCols = ref<MatrixColDef[]>([])
   const matrixData = ref<MatrixRow[]>([])
 
@@ -652,7 +600,6 @@
   const loadingTrend = ref(false)
   const loadingPlatformTable = ref(false)
   const loadingCountry = ref(false)
-  const loadingHistory = ref(false)
   const querying = ref(false)
 
   const isTrendEmpty = computed(() => {
@@ -672,8 +619,6 @@
     const list = activeCountryTab.value === 'amount' ? top.tab_amount : top.tab_rate
     return !(list && list.length > 0)
   })
-
-  const isHistoryEmpty = computed(() => historyRows.value.length === 0)
 
   const isMatrixEmpty = computed(
     () => matrixCols.value.length === 0 || matrixData.value.length === 0
@@ -751,27 +696,23 @@
     loadingTrend.value = true
     loadingPlatformTable.value = true
     loadingCountry.value = true
-    loadingHistory.value = true
     try {
-      const [kpi, trend, plat, country, hist] = await Promise.allSettled([
+      const [kpi, trend, plat, country] = await Promise.allSettled([
         safeTask(() => fetchRevenueDeviationOverviewKpis(q)),
         safeTask(() => fetchRevenueDeviationOverviewTrend(q)),
         safeTask(() => fetchRevenueDeviationTablePlatform(q)),
-        safeTask(() => fetchRevenueDeviationOverviewCountryTop10(q)),
-        safeTask(() => fetchRevenueDeviationTableHistory(q))
+        safeTask(() => fetchRevenueDeviationOverviewCountryTop10(q))
       ])
 
       if (kpi.status === 'fulfilled') kpiOverview.value = kpi.value
       if (trend.status === 'fulfilled') trendData.value = trend.value
       if (plat.status === 'fulfilled') platformTable.value = plat.value
       if (country.status === 'fulfilled') countryTop10.value = country.value
-      if (hist.status === 'fulfilled') historyRows.value = hist.value
     } finally {
       loadingKpi.value = false
       loadingTrend.value = false
       loadingPlatformTable.value = false
       loadingCountry.value = false
-      loadingHistory.value = false
     }
   }
 
@@ -1677,7 +1618,6 @@
   .rd-reason-card .rd-card__title,
   .rd-advice-card .rd-card__title,
   .rd-country-card .rd-card__title,
-  .rd-history-card .rd-card__title,
   .rd-matrix-card .rd-card__title {
     @include rd-title-gradient;
 
@@ -2075,7 +2015,7 @@
   /* ── Bottom Grid ───────────────────────────────────────────────────── */
   .rd-bottom-grid {
     display: grid;
-    grid-template-columns: minmax(200px, 240px) minmax(180px, 0.6fr) minmax(min(100%, 420px), 1.4fr);
+    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
     gap: 14px;
     align-items: stretch;
   }
@@ -2102,14 +2042,12 @@
 
   /* 第三行三列同高 */
   .rd-country-card,
-  .rd-history-card,
   .rd-matrix-card {
     min-width: 0;
     height: 100%;
     min-height: 0;
   }
 
-  .rd-history-card,
   .rd-matrix-card {
     display: flex;
     flex-direction: column;
