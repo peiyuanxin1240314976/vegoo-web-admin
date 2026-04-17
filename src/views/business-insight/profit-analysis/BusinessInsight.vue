@@ -390,215 +390,222 @@
       </div>
     </header>
 
-    <section class="bi-kpi-row bi-entry-2">
-      <template v-if="pendingKpi">
-        <div v-for="i in 5" :key="i" class="kpi-card kpi-card--skeleton kpi-card--skel-fx">
-          <div class="kpi-card-decor" aria-hidden="true">
-            <span class="kpi-card-decor__bar kpi-card-decor__bar--a" />
-            <span class="kpi-card-decor__bar kpi-card-decor__bar--b" />
-            <span class="kpi-card-decor__bar kpi-card-decor__bar--c" />
-          </div>
-          <ElSkeleton animated>
-            <template #template>
-              <ElSkeletonItem variant="text" style="width: 40%; margin-bottom: 12px" />
-              <ElSkeletonItem variant="h1" style="width: 70%; height: 32px; margin-bottom: 10px" />
-              <ElSkeletonItem variant="text" style="width: 90%" />
-            </template>
-          </ElSkeleton>
-        </div>
-      </template>
-      <template v-else>
-        <div
-          v-for="card in kpiCards"
-          :key="card.label"
-          class="kpi-card"
-          :style="{ background: card.bg, '--card-border': card.border }"
-        >
-          <div class="kpi-card-decor" aria-hidden="true">
-            <span class="kpi-card-decor__bar kpi-card-decor__bar--a" />
-            <span class="kpi-card-decor__bar kpi-card-decor__bar--b" />
-            <span class="kpi-card-decor__bar kpi-card-decor__bar--c" />
-          </div>
-          <div class="kpi-top">
-            <span class="kpi-label">{{ card.label }}</span>
-            <span
-              v-if="card.badge"
-              class="kpi-badge"
-              :style="{ color: card.badgeColor, borderColor: card.badgeColor }"
-              >{{ card.badge }}</span
+    <section class="bi-mid-row bi-entry-2">
+      <div class="bi-mid-row__left">
+        <div class="bi-kpi-row">
+          <template v-if="pendingKpi">
+            <div v-for="i in 5" :key="i" class="kpi-card kpi-card--skeleton kpi-card--skel-fx">
+              <div class="kpi-card-decor" aria-hidden="true">
+                <span class="kpi-card-decor__bar kpi-card-decor__bar--a" />
+                <span class="kpi-card-decor__bar kpi-card-decor__bar--b" />
+                <span class="kpi-card-decor__bar kpi-card-decor__bar--c" />
+              </div>
+              <ElSkeleton animated>
+                <template #template>
+                  <ElSkeletonItem variant="text" style="width: 40%; margin-bottom: 12px" />
+                  <ElSkeletonItem
+                    variant="h1"
+                    style="width: 70%; height: 32px; margin-bottom: 10px"
+                  />
+                  <ElSkeletonItem variant="text" style="width: 90%" />
+                </template>
+              </ElSkeleton>
+            </div>
+          </template>
+          <template v-else>
+            <div
+              v-for="card in kpiCards"
+              :key="card.label"
+              class="kpi-card"
+              :style="{ background: card.bg, '--card-border': card.border }"
             >
-          </div>
-          <div class="kpi-value" :style="{ color: card.valueColor }">{{ card.value }}</div>
-          <!-- <div class="kpi-sub">{{ card.sub }}</div> -->
+              <div class="kpi-card-decor" aria-hidden="true">
+                <span class="kpi-card-decor__bar kpi-card-decor__bar--a" />
+                <span class="kpi-card-decor__bar kpi-card-decor__bar--b" />
+                <span class="kpi-card-decor__bar kpi-card-decor__bar--c" />
+              </div>
+              <div class="kpi-top">
+                <span class="kpi-label">{{ card.label }}</span>
+                <span
+                  v-if="card.badge"
+                  class="kpi-badge"
+                  :style="{ color: card.badgeColor, borderColor: card.badgeColor }"
+                  >{{ card.badge }}</span
+                >
+              </div>
+              <div class="kpi-value" :style="{ color: card.valueColor }">{{ card.value }}</div>
+              <!-- <div class="kpi-sub">{{ card.sub }}</div> -->
+            </div>
+          </template>
         </div>
-      </template>
-    </section>
 
-    <section class="bi-mid-row bi-entry-3">
-      <div class="bi-card bi-app-table">
-        <div class="card-title">应用利润详情</div>
-        <div class="bi-table-host">
-          <div v-show="pendingApp" class="bi-skeleton-block bi-skeleton--fx">
-            <ElSkeleton animated :rows="6">
-              <template #template>
-                <ElSkeletonItem
-                  v-for="n in 6"
-                  :key="n"
-                  variant="text"
-                  style="width: 100%; height: 28px; margin-bottom: 8px"
-                />
-              </template>
-            </ElSkeleton>
-          </div>
-          <table v-show="!pendingApp" class="data-table">
-            <thead>
-              <tr>
-                <th>应用</th>
-                <th>广告收入(预)</th>
-                <th>付费收入</th>
-                <th>总收入</th>
-                <th>广告支出</th>
-                <th>预估利润</th>
-                <th>利润率</th>
-                <th class="th-trend">趋势</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in appRows" :key="row.app">
-                <td class="td-app">{{ row.app }}</td>
-                <td>{{ row.adRev }}</td>
-                <td>{{ row.paidRev }}</td>
-                <td>{{ row.total }}</td>
-                <td>{{ row.adSpend }}</td>
-                <td :style="{ color: row.profitColor, fontWeight: 600 }">{{ row.profit }}</td>
-                <td :style="{ color: row.rateColor, fontWeight: 600 }">{{ row.rate }}</td>
-                <td class="td-trend">
-                  <div class="td-trend__inner">
-                    <svg
-                      v-if="normalizeAppTrend(row.trend) !== 'none'"
-                      width="60"
-                      height="20"
-                      viewBox="0 0 60 20"
-                      class="td-trend__svg"
-                    >
-                      <path
-                        :d="getTrendPath(row.trend)"
-                        fill="none"
-                        :stroke="getTrendColor(row.trend)"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                      />
-                    </svg>
-                    <span v-else class="td-trend__dash">—</span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr class="tr-total">
-                <td class="td-app">Total</td>
-                <td>{{ appTotal.adRev }}</td>
-                <td>{{ appTotal.paidRev }}</td>
-                <td>{{ appTotal.total }}</td>
-                <td>{{ appTotal.adSpend }}</td>
-                <td style="font-weight: 700; color: #4ade80">{{ appTotal.profit }}</td>
-                <td style="font-weight: 700; color: #4ade80">{{ appTotal.rate }}</td>
-                <td class="td-trend"></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-
-      <div class="bi-card bi-map-panel">
-        <div class="card-title">国家或地区利润分布</div>
-        <div class="bi-chart-host bi-chart-host--map">
-          <div v-show="!pendingCountry" class="country-distribution">
-            <table class="data-table country-distribution-table">
+        <div class="bi-card bi-app-table bi-entry-3">
+          <div class="card-title">应用利润详情</div>
+          <div class="bi-table-host">
+            <div v-show="pendingApp" class="bi-skeleton-block bi-skeleton--fx">
+              <ElSkeleton animated :rows="6">
+                <template #template>
+                  <ElSkeletonItem
+                    v-for="n in 6"
+                    :key="n"
+                    variant="text"
+                    style="width: 100%; height: 28px; margin-bottom: 8px"
+                  />
+                </template>
+              </ElSkeleton>
+            </div>
+            <table v-show="!pendingApp" class="data-table">
               <thead>
                 <tr>
-                  <th>排名</th>
-                  <th>国家或地区</th>
-                  <th>利润</th>
+                  <th>应用</th>
+                  <th>广告收入(预)</th>
+                  <th>付费收入</th>
+                  <th>总收入</th>
+                  <th>广告支出</th>
+                  <th>预估利润</th>
+                  <th>利润率</th>
+                  <th class="th-trend">趋势</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="row in countryDistributionRows" :key="row.countryCode || row.name">
-                  <td class="td-rank">
-                    <span class="rank-badge">{{ row.rank }}</span>
+                <tr v-for="row in appRows" :key="row.app">
+                  <td class="td-app">{{ row.app }}</td>
+                  <td>{{ row.adRev }}</td>
+                  <td>{{ row.paidRev }}</td>
+                  <td>{{ row.total }}</td>
+                  <td>{{ row.adSpend }}</td>
+                  <td :style="{ color: row.profitColor, fontWeight: 600 }">{{ row.profit }}</td>
+                  <td :style="{ color: row.rateColor, fontWeight: 600 }">{{ row.rate }}</td>
+                  <td class="td-trend">
+                    <div class="td-trend__inner">
+                      <svg
+                        v-if="normalizeAppTrend(row.trend) !== 'none'"
+                        width="60"
+                        height="20"
+                        viewBox="0 0 60 20"
+                        class="td-trend__svg"
+                      >
+                        <path
+                          :d="getTrendPath(row.trend)"
+                          fill="none"
+                          :stroke="getTrendColor(row.trend)"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                        />
+                      </svg>
+                      <span v-else class="td-trend__dash">—</span>
+                    </div>
                   </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="tr-total">
+                  <td class="td-app">Total</td>
+                  <td>{{ appTotal.adRev }}</td>
+                  <td>{{ appTotal.paidRev }}</td>
+                  <td>{{ appTotal.total }}</td>
+                  <td>{{ appTotal.adSpend }}</td>
+                  <td style="font-weight: 700; color: #4ade80">{{ appTotal.profit }}</td>
+                  <td style="font-weight: 700; color: #4ade80">{{ appTotal.rate }}</td>
+                  <td class="td-trend"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="bi-mid-row__right bi-entry-3">
+        <div class="bi-card bi-map-panel">
+          <div class="card-title">国家或地区利润分布</div>
+          <div class="bi-chart-host bi-chart-host--map">
+            <div v-show="!pendingCountry" class="country-distribution">
+              <table class="data-table country-distribution-table">
+                <thead>
+                  <tr>
+                    <th>排名</th>
+                    <th>国家或地区</th>
+                    <th>利润</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in countryDistributionRows" :key="row.countryCode || row.name">
+                    <td class="td-rank">
+                      <span class="rank-badge">{{ row.rank }}</span>
+                    </td>
+                    <td class="td-country">
+                      <span
+                        v-if="countryDistributionFiClass(row)"
+                        :class="countryDistributionFiClass(row)"
+                        class="cflag cflag--fi"
+                        aria-hidden="true"
+                      />
+                      <span class="country-name">{{ row.name }}</span>
+                    </td>
+                    <td class="td-profit">
+                      <span class="profit-chip">
+                        {{ formatCountryDistributionProfit(row.value) }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-show="pendingCountry" class="bi-map-loading-mask">
+              <div class="bi-skeleton-block bi-skeleton-block--map bi-skeleton--fx">
+                <ElSkeleton animated :rows="0">
+                  <template #template>
+                    <ElSkeletonItem variant="rect" style="width: 100%; height: 100%" />
+                  </template>
+                </ElSkeleton>
+              </div>
+            </div>
+          </div>
+          <div class="card-title" style="margin-top: 12px">国家利润详情 Top10</div>
+          <div class="bi-table-host bi-table-host--country">
+            <div v-show="pendingCountry" class="bi-skeleton-block bi-skeleton--fx">
+              <ElSkeleton animated :rows="5">
+                <template #template>
+                  <ElSkeletonItem
+                    v-for="n in 5"
+                    :key="n"
+                    variant="text"
+                    style="width: 100%; height: 24px; margin-bottom: 6px"
+                  />
+                </template>
+              </ElSkeleton>
+            </div>
+            <table v-show="!pendingCountry" class="data-table country-table">
+              <thead>
+                <tr>
+                  <th>国家</th>
+                  <th>广告收入</th>
+                  <th>付费收入</th>
+                  <th>广告支出</th>
+                  <th>利润</th>
+                  <th>利润率</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in countryRows" :key="row.name + (row.s_country_code ?? '')">
                   <td class="td-country">
                     <span
-                      v-if="countryDistributionFiClass(row)"
-                      :class="countryDistributionFiClass(row)"
+                      v-if="countryRowFiClass(row)"
+                      :class="countryRowFiClass(row)"
                       class="cflag cflag--fi"
                       aria-hidden="true"
                     />
-                    <span class="country-name">{{ row.name }}</span>
+                    {{ row.name }}
                   </td>
-                  <td class="td-profit">
-                    <span class="profit-chip">
-                      {{ formatCountryDistributionProfit(row.value) }}
-                    </span>
-                  </td>
+                  <td>{{ row.adRev }}</td>
+                  <td>{{ row.paidRev }}</td>
+                  <td>{{ row.adSpend }}</td>
+                  <td :style="{ color: row.profitColor, fontWeight: 600 }">{{ row.profit }}</td>
+                  <td :style="{ color: row.rateColor, fontWeight: 600 }">{{ row.rate }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <div v-show="pendingCountry" class="bi-map-loading-mask">
-            <div class="bi-skeleton-block bi-skeleton-block--map bi-skeleton--fx">
-              <ElSkeleton animated :rows="0">
-                <template #template>
-                  <ElSkeletonItem variant="rect" style="width: 100%; height: 100%" />
-                </template>
-              </ElSkeleton>
-            </div>
-          </div>
-        </div>
-        <div class="card-title" style="margin-top: 12px">国家利润详情 Top10</div>
-        <div class="bi-table-host bi-table-host--country">
-          <div v-show="pendingCountry" class="bi-skeleton-block bi-skeleton--fx">
-            <ElSkeleton animated :rows="5">
-              <template #template>
-                <ElSkeletonItem
-                  v-for="n in 5"
-                  :key="n"
-                  variant="text"
-                  style="width: 100%; height: 24px; margin-bottom: 6px"
-                />
-              </template>
-            </ElSkeleton>
-          </div>
-          <table v-show="!pendingCountry" class="data-table country-table">
-            <thead>
-              <tr>
-                <th>国家</th>
-                <th>广告收入</th>
-                <th>付费收入</th>
-                <th>广告支出</th>
-                <th>利润</th>
-                <th>利润率</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in countryRows" :key="row.name + (row.s_country_code ?? '')">
-                <td class="td-country">
-                  <span
-                    v-if="countryRowFiClass(row)"
-                    :class="countryRowFiClass(row)"
-                    class="cflag cflag--fi"
-                    aria-hidden="true"
-                  />
-                  {{ row.name }}
-                </td>
-                <td>{{ row.adRev }}</td>
-                <td>{{ row.paidRev }}</td>
-                <td>{{ row.adSpend }}</td>
-                <td :style="{ color: row.profitColor, fontWeight: 600 }">{{ row.profit }}</td>
-                <td :style="{ color: row.rateColor, fontWeight: 600 }">{{ row.rate }}</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
     </section>
@@ -952,7 +959,6 @@
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 14px;
-    padding: 16px 24px 0;
   }
 
   .kpi-card {
@@ -1150,7 +1156,27 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) 470px;
     gap: 14px;
+    align-items: stretch;
     padding: 14px 24px 0;
+  }
+
+  .bi-mid-row__left {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .bi-mid-row__right {
+    display: flex;
+    min-width: 0;
+  }
+
+  .bi-mid-row__right .bi-map-panel {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
   }
 
   .bi-table-host {
@@ -1316,8 +1342,8 @@
   }
 
   .country-distribution {
-    min-height: 220px;
-    max-height: 240px;
+    min-height: 320px;
+    max-height: 360px;
     overflow-y: auto;
     background:
       linear-gradient(180deg, rgb(15 23 42 / 80%) 0%, rgb(15 23 42 / 55%) 100%),
