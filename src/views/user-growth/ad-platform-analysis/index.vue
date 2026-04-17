@@ -37,7 +37,7 @@
                 @change="onCombinedFilterChange"
               />
 
-              <el-select
+              <!-- <el-select
                 v-model="filters.channelKey"
                 class="aps-filter-select"
                 popper-class="aps-filter-popper"
@@ -53,7 +53,7 @@
                   :label="opt.label"
                   :value="opt.value"
                 />
-              </el-select>
+              </el-select> -->
             </div>
             <button type="button" class="btn-export" @click="runDashboardQuery">查询</button>
             <button type="button" class="btn-export">导出报表</button>
@@ -287,11 +287,11 @@
   })
   const combinedFilterValue = ref('')
 
-  const filtersPlaceholders = {
-    app: '全部Apps',
-    platform: 'IOS & Android',
-    channel: '全部广告平台'
-  } as const
+  // const filtersPlaceholders = {
+  //   app: '全部Apps',
+  //   platform: 'IOS & Android',
+  //   channel: '全部广告平台'
+  // } as const
 
   const ALL_APP_OPTION: SelectOption = { label: '全部Apps', value: 'all' }
   const ALL_PLATFORM_OPTION: SelectOption = { label: 'IOS & Android', value: 'all' }
@@ -649,10 +649,10 @@
     return s || 'card'
   }
 
-  const channelOptions = computed<SelectOption[]>(() => [
-    ALL_SOURCE_OPTION,
-    ...metaSourceOptions.value
-  ])
+  // const channelOptions = computed<SelectOption[]>(() => [
+  //   ALL_SOURCE_OPTION,
+  //   ...metaSourceOptions.value
+  // ])
 
   /**
    * 前端本地筛选：接口 sources 的 value 可能与 KPI 名称/id 不完全一致，做多路匹配
