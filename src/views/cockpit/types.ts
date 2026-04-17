@@ -89,6 +89,9 @@ export interface CockpitOverallData {
   /** 变化量（后端已算好，直接用于升降展示） */
   activeSubscriptionChange?: number
   adAccountCountChange?: number
+  /** 广告支出变化（推荐字段：dCostChange） */
+  dCostChange?: number
+  /** 兼容字段（旧/部分数据源）：广告支出变化 */
   adCostChange?: number
   dauChange?: number
   dnuChange?: number
@@ -98,6 +101,8 @@ export interface CockpitOverallData {
   totalRevenueChange?: number
   /** 自然量变化（警示摘要用） */
   naturalCountChange?: number
+  /** 买量用户数变化（警示摘要用） */
+  initialCountChange?: number
   /** 广告系列数变化（警示摘要用） */
   adGroupCountChange?: number
   /** 第一排折线统计：运营成本/广告支出 */
@@ -404,12 +409,13 @@ export interface CockpitChannelRoiInstallItem {
   /** 广告平台 slug，与 iconfont 映射一致；可选，缺省时用 channel 文案解析 */
   platform?: string
   spend: number
+  spendChange?: number
   installs: number
+  installsChange?: number
   /** ROI（比例值，如 1.23） */
   roi: number
+  roiChange?: number
   cpi: number
-  /** 近7日趋势，用于最后一列迷你折线图 */
-  trend: number[]
 }
 
 /** 广告平台 ROI&安装量接口：单日数据（list 中每个元素，接口可能返回 null） */
@@ -424,6 +430,9 @@ export interface CockpitChannelRoiInstallDayItem {
 export interface CockpitChannelRoiInstallApiItem {
   channel: string
   list: CockpitChannelRoiInstallDayItem[]
+  costChange?: number
+  installChange?: number
+  roiChange?: number
 }
 
 /** 广告平台 ROI&安装量接口响应（/api/v1/datacenter/analysis/cockpit/installAndRoiOfChannel） */
