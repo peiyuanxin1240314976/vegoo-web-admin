@@ -42,6 +42,9 @@
           <template #installs="{ row }">
             <span class="col-number tabular-nums">{{ formatNumber(row.installs) }}</span>
           </template>
+          <template #roi="{ row }">
+            <span class="col-number tabular-nums">{{ formatRoi(row.roi) }}</span>
+          </template>
           <template #cpi="{ row }">
             <span class="col-cpi tabular-nums" :class="getCpiClass(row.cpi)">{{
               row.cpi.toFixed(2)
@@ -81,7 +84,8 @@
     if (!raw.length) return []
     return raw.map((item) => {
       const r = item as Record<string, unknown>
-      const list = (r.list as { install?: unknown; cost?: unknown; cpl?: unknown }[]) ?? []
+      const list =
+        (r.list as { install?: unknown; cost?: unknown; cpl?: unknown; roi?: unknown }[]) ?? []
       let trend = Array.isArray(r.trend) ? (r.trend as unknown[]).map((x) => num(x)) : []
       if (!trend.length && list.length) {
         trend = list.map((d) => num(d.cost))
@@ -97,6 +101,7 @@
         platform,
         spend: num(r.spend ?? r.cost ?? first.cost),
         installs: num(r.installs ?? r.install ?? first.install),
+        roi: num(r.roi ?? first.roi),
         cpi: num(r.cpi ?? r.cpl ?? first.cpl),
         trend
       }
@@ -110,18 +115,20 @@
   /** ArtTable 列配置（窄屏略收紧 minWidth，减轻横向挤压） */
   const roiColumns = computed((): ColumnOption<CockpitChannelRoiInstallItem>[] => {
     const narrow = isNarrowViewport.value
+    const baseWidth = narrow ? 78 : 120
     return [
-      { prop: 'channel', label: '广告平台', minWidth: narrow ? 68 : 100, useSlot: true },
-      { prop: 'spend', label: '消耗', minWidth: narrow ? 66 : 70, align: 'left', useSlot: true },
+      { prop: 'channel', label: '广告平台', minWidth: baseWidth, useSlot: true },
+      { prop: 'spend', label: '广告支出', minWidth: baseWidth, align: 'left', useSlot: true },
       {
         prop: 'installs',
-        label: '安装量',
-        minWidth: narrow ? 66 : 70,
+        label: '买量用户',
+        minWidth: baseWidth,
         align: 'left',
         useSlot: true
       },
-      { prop: 'cpi', label: 'CPI', width: narrow ? 48 : 50, align: 'left', useSlot: true },
-      { prop: 'trend', label: '近7日', width: narrow ? 72 : 80, align: 'center', useSlot: true }
+      { prop: 'roi', label: 'ROI', minWidth: baseWidth, align: 'left', useSlot: true },
+      { prop: 'cpi', label: 'CPI', minWidth: baseWidth, align: 'left', useSlot: true },
+      { prop: 'trend', label: '近7日', minWidth: baseWidth, align: 'center', useSlot: true }
     ]
   })
 
@@ -145,7 +152,12 @@
     const spend = rows.reduce((s: number, r: CockpitChannelRoiInstallItem) => s + r.spend, 0)
     const installs = rows.reduce((s: number, r: CockpitChannelRoiInstallItem) => s + r.installs, 0)
     const cpi = spend > 0 ? spend / installs : 0
-    return { spend, installs, cpi }
+    const roi =
+      spend > 0
+        ? rows.reduce((s: number, r: CockpitChannelRoiInstallItem) => s + r.roi * r.spend, 0) /
+          spend
+        : 0
+    return { spend, installs, roi, cpi }
   })
 
   /** CPI 三档：绿(<1.0) / 黄(1.0~1.3) / 红(>=1.3) */
@@ -165,10 +177,22 @@
     return n.toLocaleString('en-US', { maximumFractionDigits: 0 })
   }
 
+  function formatRoi(roi: number): string {
+    if (!Number.isFinite(roi) || roi <= 0) return '—'
+    return roi.toFixed(2)
+  }
+
   /** ElTable 合计行 */
   function getSummaries(): string[] {
     const t = totals.value
-    return ['合计', formatMoney(t.spend), formatNumber(t.installs), '$' + t.cpi.toFixed(2), '']
+    return [
+      '合计',
+      formatMoney(t.spend),
+      formatNumber(t.installs),
+      formatRoi(t.roi),
+      '$' + t.cpi.toFixed(2),
+      ''
+    ]
   }
 
   /** 近 7 日折线：自上而下按行序循环取色（与 CPI 列绿/黄/红无关） */
