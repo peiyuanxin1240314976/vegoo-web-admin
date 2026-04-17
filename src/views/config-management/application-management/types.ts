@@ -3,6 +3,7 @@
 export type ApplicationPlatform = 'Android' | 'iOS' | 'Web'
 
 export interface ApplicationAppItem {
+  appId: string
   id: string
   appName: string
   iconColor: string

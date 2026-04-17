@@ -111,10 +111,10 @@
           <div class="section-title">技术标识</div>
           <div class="tech-list">
             <div class="tech-item">
-              <span class="tech-key">Bundle ID</span>
+              <span class="tech-key">app ID</span>
               <div class="tech-val-row">
-                <span class="tech-val tech-val--mono">{{ appData?.bundleId }}</span>
-                <button class="icon-btn" @click="copyText(appData?.bundleId)">
+                <span class="tech-val tech-val--mono">{{ appData?.appId }}</span>
+                <button class="icon-btn" @click="copyText(appData?.appId)">
                   <el-icon><CopyDocument /></el-icon>
                 </button>
               </div>

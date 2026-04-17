@@ -88,14 +88,16 @@
               @change="handleIconChange"
             />
           </div>
-          <!-- ID（编辑态只读展示，新增由后端生成） -->
+          <!-- ID（必填，由用户填写；新增与编辑均与后端约定一致） -->
           <div class="form-item">
             <div class="form-label">ID <span class="required">*</span></div>
-            <el-form-item v-if="isEdit" prop="id">
-              <el-input v-model="form.id" placeholder="系统生成ID" class="dark-input" disabled />
-            </el-form-item>
-            <el-form-item v-else>
-              <el-input model-value="创建后由系统自动生成" class="dark-input" disabled />
+            <el-form-item prop="id">
+              <el-input
+                v-model="form.id"
+                placeholder="请输入应用 ID（仅字母与数字）"
+                class="dark-input"
+                clearable
+              />
             </el-form-item>
           </div>
           <!-- 应用简称 -->
@@ -300,7 +302,7 @@
   })
 
   const defaultForm = (): ApplicationFormModel => ({
-    id: undefined,
+    id: '',
     appName: '',
     platform: 'Android',
     category: '',
@@ -345,8 +347,21 @@
     platform: [{ required: true, message: '请选择平台', trigger: 'change' }],
     category: [{ required: true, message: '请选择类别', trigger: 'change' }],
     id: [
-      { required: true, message: '请输入应用ID', trigger: 'blur' },
-      { pattern: /^[A-Za-z0-9]+$/, message: 'ID只能包含字母和数字', trigger: 'blur' }
+      {
+        validator: (_rule, value, callback) => {
+          const s = String(value ?? '').trim()
+          if (!s) {
+            callback(new Error('请输入应用 ID'))
+            return
+          }
+          if (!/^[A-Za-z0-9]+$/.test(s)) {
+            callback(new Error('ID 只能包含字母和数字'))
+            return
+          }
+          callback()
+        },
+        trigger: 'blur'
+      }
     ],
     bundleId: [{ required: true, message: '请输入Bundle ID', trigger: 'blur' }]
   }
@@ -372,9 +387,10 @@
 
     submitLoading.value = true
     try {
+      const idTrimmed = typeof form.id === 'string' ? form.id.trim() : form.id
       const payload: ApplicationFormPayload = {
         ...form,
-        id: isEdit.value ? form.id : undefined
+        id: idTrimmed || undefined
       }
 
       if (iconFile.value) {
@@ -383,12 +399,11 @@
         payload.iconUrl = uploadRes.iconUrl
       }
 
-      // 编辑且未上传新图标时，沿用当前展示色；新增由后端或 mock 生成
-      if (isEdit.value) {
-        payload.iconColor =
-          props.editData?.iconColor && !iconFile.value
-            ? props.editData.iconColor
-            : deriveIconColorFromId(form.id ?? props.editData?.id ?? 'app')
+      const idForColor = (idTrimmed ?? props.editData?.id ?? '').trim() || 'app'
+      if (isEdit.value && props.editData?.iconColor && !iconFile.value) {
+        payload.iconColor = props.editData.iconColor
+      } else {
+        payload.iconColor = deriveIconColorFromId(idForColor)
       }
       emit('success', payload)
     } catch {

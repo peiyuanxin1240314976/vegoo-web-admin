@@ -499,15 +499,14 @@
   const handleFormSuccess = async (payload: ApplicationFormPayload) => {
     const userName = userStore.getUserInfo?.userName || userStore.getUserInfo?.username || '系统'
     const editing = !!editData.value
-    const editingId = editData.value?.id
 
     const body: ApplicationFormPayload = editing
       ? { ...payload, lastModifier: userName }
       : { ...payload, creator: userName }
 
     try {
-      if (editing && editingId) {
-        await updateApplication({ ...body, id: editingId })
+      if (editing) {
+        await updateApplication(body)
       } else {
         await createApplication(body)
       }
