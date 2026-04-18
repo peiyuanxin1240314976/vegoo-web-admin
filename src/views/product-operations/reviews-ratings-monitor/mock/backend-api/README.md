@@ -23,7 +23,7 @@
 
 ### 字段与数据字典
 
-- 应用 ID：`appId`（`string`；「全部应用」传 `""`，勿传字面量 `all`）
+- 应用范围：`appIds`（`string[]`；**`[]` 表示不限**；单选页为 0 或 1 个应用 id，与 cockpit `settingApps.sAppId` 一致）
 - 终端平台：`platform`（`google_play` / `app_store`；不限传 `""`）
 - 国家代码：`countryCode`（ISO 3166-1 alpha-2 **小写**，如 `cn`、`us`）
 - 日期范围：`startDate` / `endDate`，格式 `YYYY-MM-DD`

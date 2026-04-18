@@ -2,10 +2,10 @@
   "_comment": "评论与评分监控 - 汇总分析 Tab。对应 api/reviewMonitor.ts: SummaryData。",
   "fieldDescription": {
     "request": {
-      "appId": {
-        "type": "string",
-        "required": false,
-        "description": "应用 ID；空字符串表示全应用汇总（与顶栏「全部」映射一致）。"
+      "appIds": {
+        "type": "string[]",
+        "required": true,
+        "description": "顶栏应用范围；**`[]` 不限**，单选时最多一项（与 cockpit `settingApps.sAppId` 一致）。"
       },
       "platform": {
         "type": "string",
@@ -143,7 +143,7 @@
     }
   },
   "sampleRequest": {
-    "appId": "",
+    "appIds": [],
     "platform": "",
     "startDate": "2026-02-28",
     "endDate": "2026-03-06",
@@ -207,7 +207,7 @@
     "url": "POST /api/product-operations/reviews-ratings-monitor/overview/summary",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "appId?, platform?, startDate?, endDate?, language?",
+    "requestBody": "appIds[], platform?, startDate?, endDate?, language?",
     "responseBody": "SummaryData"
   },
   "apiSuggestion": {

@@ -15,7 +15,8 @@ const BASE_URL = '/api/v1/datacenter/analysis/product-operations/reviews-ratings
 // 类型定义（与 backend-api 契约一致）
 // ─────────────────────────────────────────────
 export interface GlobalFilter {
-  appId?: string
+  /** 顶栏应用范围；单选页：`[]` 不限，`[id]` 某一应用（与 cockpit `settingApps.sAppId` 一致） */
+  appIds: string[]
   platform?: string
   startDate?: string
   endDate?: string

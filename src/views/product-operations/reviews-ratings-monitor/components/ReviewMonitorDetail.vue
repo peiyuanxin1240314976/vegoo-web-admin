@@ -26,7 +26,7 @@
     filters?: GlobalFilter
   }
   const props = withDefaults(defineProps<Props>(), {
-    filters: () => ({})
+    filters: () => ({ appIds: [] })
   })
 
   // ─────────────────────────────────────────────

@@ -20,6 +20,16 @@ function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms))
 }
 
+/** Mock：旧静态选项 id → 列表展示名（与 mock 评论 `appName` 对齐）；真实 id 未命中时不按应用过滤 */
+const MOCK_APP_ID_TO_DISPLAY_NAME: Record<string, string> = {
+  app_001: 'ClapFinder',
+  app_002: 'CRMonitor',
+  app_003: 'Weather5',
+  app_004: 'WeatherS',
+  app_005: 'PhoneTracker',
+  app_006: 'VideoDominos'
+}
+
 /** Mock: 汇总分析 */
 export async function mockFetchOverviewSummary(filter: GlobalFilter): Promise<SummaryData> {
   void filter
@@ -30,7 +40,12 @@ export async function mockFetchOverviewSummary(filter: GlobalFilter): Promise<Su
 /** Mock: 评论明细列表 */
 export async function mockFetchTableList(filter: DetailFilter): Promise<ReviewListData> {
   await delay(400)
+  const appIds = filter.appIds ?? []
+  const appScopeName =
+    appIds.length === 1 ? (MOCK_APP_ID_TO_DISPLAY_NAME[appIds[0]!] ?? null) : null
+
   const filtered = mockReviewList.list.filter((r) => {
+    if (appScopeName && r.appName !== appScopeName) return false
     if (filter.starRating != null && r.starRating !== filter.starRating) return false
     if (filter.keyword && !r.content.includes(filter.keyword)) return false
     if (filter.replied === 'yes' && !r.replied) return false

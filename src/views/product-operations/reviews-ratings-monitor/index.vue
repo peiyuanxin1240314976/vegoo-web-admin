@@ -3,12 +3,16 @@
    * 评论与评分监控 — 页面容器（样式对齐广告成效页）
    */
   import { ref, reactive, computed } from 'vue'
-  import { Grid, Iphone, Reading } from '@element-plus/icons-vue'
+  import { storeToRefs } from 'pinia'
+  import { Iphone, Reading } from '@element-plus/icons-vue'
   import ReviewMonitorSummary from './components/ReviewMonitorSummary.vue'
   import ReviewMonitorDetail from './components/ReviewMonitorDetail.vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import type { GlobalFilter } from '@/api/product-operations/reviews-ratings-monitor'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { toAppIdsRequestBody } from '@/utils/app-id-request'
 
   defineOptions({ name: 'ReviewsRatingsMonitor' })
 
@@ -18,7 +22,7 @@
     // 保持原默认跨度（近 7 天）：结束为今天，开始往前推 6 天
     start.setDate(start.getDate() - 6)
     return {
-      appId: '',
+      appIds: [],
       platform: '',
       startDate: formatYYYYMMDD(start),
       endDate: formatYYYYMMDD(end),
@@ -37,15 +41,17 @@
 
   const activeTab = ref<'summary' | 'detail'>('summary')
 
-  const appOptions = [
-    { label: '全部应用', value: '' },
-    { label: 'ClapFinder', value: 'app_001' },
-    { label: 'CRMonitor', value: 'app_002' },
-    { label: 'Weather5', value: 'app_003' },
-    { label: 'WeatherS', value: 'app_004' },
-    { label: 'PhoneTracker', value: 'app_005' },
-    { label: 'VideoDominos', value: 'app_006' }
-  ]
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
+  const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
+
+  /** 单选应用 id ↔ `draftFilters.appIds`（POST `appIds[]`） */
+  const draftAppId = computed({
+    get: () => (draftFilters.appIds?.length === 1 ? draftFilters.appIds[0] : ''),
+    set: (v: string) => {
+      draftFilters.appIds = toAppIdsRequestBody(v)
+    }
+  })
 
   const platformOptions = [
     { label: 'Google Play / App Store', value: '' },
@@ -112,15 +118,23 @@
             <span class="rrm-filter-chip__value">{{ dateRangeDisplay }}</span>
           </div> -->
 
-          <ElSelect
-            v-model="draftFilters.appId"
+          <AppPlatformSearchSelect
+            v-model="draftAppId"
+            mode="app"
+            class="rrm-filter-app-select-wrap"
+            input-class="rrm-filter-app-select__trigger"
             placeholder="应用"
-            class="rrm-filter-select"
-            :prefix-icon="Grid"
-            popper-class="rrm-filter-popper"
-          >
-            <ElOption v-for="o in appOptions" :key="o.value" :label="o.label" :value="o.value" />
-          </ElSelect>
+            search-placeholder="搜索类别/应用名称/应用简称"
+            all-label="全部应用"
+            :setting-apps="settingAppsForSelect"
+            :height="40"
+            :width="140"
+            :min-width="110"
+            :max-width="140"
+            radius="9999px"
+            dropdown-class="rrm-filter-popper"
+            :show-platform-suffix="true"
+          />
 
           <ElSelect
             v-model="draftFilters.platform"
@@ -453,7 +467,7 @@
   .rrm-filters__left {
     display: flex;
     flex: 0 1 auto;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 10px 12px;
     align-items: center;
     justify-content: flex-start;
@@ -503,6 +517,45 @@
     font-weight: 600;
     color: var(--el-color-primary);
     text-shadow: 0 0 10px color-mix(in srgb, var(--el-color-primary) 50%, transparent);
+  }
+
+  .rrm-filter-app-select-wrap {
+    flex: 0 0 auto;
+    width: 140px;
+    min-width: 110px;
+    max-width: 100%;
+  }
+
+  :deep(.rrm-filter-app-select__trigger.app-platform-search-select) {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 12px !important;
+    font-size: 14px !important;
+    background: color-mix(in srgb, var(--el-color-primary) 6%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent) !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      background 0.22s ease;
+  }
+
+  :deep(.rrm-filter-app-select__trigger .app-platform-search-select__text) {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+
+  :deep(.rrm-filter-app-select__trigger .app-platform-search-select__suffix) {
+    color: var(--el-color-primary);
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--el-color-primary) 50%, transparent));
+  }
+
+  :deep(.rrm-filter-app-select__trigger:hover),
+  :deep(.rrm-filter-app-select__trigger.is-open) {
+    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent) !important;
+    border-color: color-mix(in srgb, var(--el-color-primary) 60%, transparent) !important;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
   }
 
   .rrm-filter-select {
@@ -753,16 +806,30 @@
       padding: 18px 18px 24px;
     }
 
+    /* 应用选择器不参与 flex-grow，否则会单独占满第一行把其余筛选项挤到下一行 */
+    .rrm-filter-app-select-wrap {
+      flex: 0 0 auto;
+      width: 140px;
+      min-width: 110px;
+      max-width: 140px;
+    }
+
     .rrm-filter-select,
     .rrm-filter-select--platform,
     .rrm-filter-select--lang {
-      flex: 1 1 160px;
+      flex: 0 1 auto;
       min-width: 0;
     }
 
     .rrm-filter-date {
-      flex: 1 1 200px;
-      min-width: 180px;
+      flex: 0 1 200px;
+      min-width: 160px;
+    }
+
+    .rrm-filters__left {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-gutter: stable;
     }
   }
 
@@ -778,10 +845,13 @@
     }
 
     .rrm-filters__left {
+      flex-wrap: wrap;
       justify-content: flex-start;
       padding: 8px;
+      overflow-x: visible;
     }
 
+    .rrm-filter-app-select-wrap,
     .rrm-filter-select,
     .rrm-filter-select--platform,
     .rrm-filter-select--lang {
@@ -822,6 +892,7 @@
       min-width: 0;
     }
 
+    .rrm-filter-app-select-wrap,
     .rrm-filter-select,
     .rrm-filter-select--platform,
     .rrm-filter-select--lang {
