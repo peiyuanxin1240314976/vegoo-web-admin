@@ -22,36 +22,19 @@
           class="conversion-data-filters__date"
           @change="doSearch"
         />
-        <ElSelect
-          v-model="form.platform"
-          :placeholder="$t('conversionManagement.filterPlatform')"
-          clearable
-          class="conversion-data-filter-select"
-          :prefix-icon="Monitor"
-          @change="doSearch"
-        >
-          <ElOption
-            v-for="opt in platformOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </ElSelect>
-        <ElSelect
+        <AppPlatformSearchSelect
           v-model="form.appId"
+          mode="app"
           :placeholder="$t('conversionManagement.filterApp')"
-          clearable
-          class="conversion-data-filter-select"
-          :prefix-icon="Grid"
+          :search-placeholder="$t('conversionManagement.filterApp')"
+          class="conversion-data-filter-select conversion-data-filter-select--app"
+          input-class="conversion-data-filter-select__input"
+          :setting-apps="settingAppsForSelect"
+          :height="36"
+          :min-width="134"
+          :max-width="220"
           @change="doSearch"
-        >
-          <ElOption
-            v-for="opt in appOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </ElSelect>
+        />
         <ElSelect
           v-model="form.conversionType"
           :placeholder="$t('conversionManagement.filterConversionType')"
@@ -81,14 +64,18 @@
 </template>
 
 <script setup lang="ts">
-  import { Calendar, Grid, Monitor, TrendCharts } from '@element-plus/icons-vue'
+  import { Calendar, TrendCharts } from '@element-plus/icons-vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import { useConversionMetaConversionTypeOptions } from '@/composables/use-conversion-meta-conversion-type'
   import type { ConversionDataFilterParams } from '../types'
-  import { MOCK_DATA_TAB_APP_OPTIONS, MOCK_PLATFORM_OPTIONS } from '../mock/data'
+  import { MOCK_DATA_TAB_APP_OPTIONS } from '../mock/data'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
 
   defineOptions({ name: 'ConversionDataFilters' })
 
+  const { cockpitMeta, ensureCockpitMetaLoaded } = useCockpitMetaFilterOptions()
   const { filterConversionTypeOptions, ensureLoaded: ensureConversionMetaConversionTypeLoaded } =
     useConversionMetaConversionTypeOptions()
 
@@ -103,8 +90,23 @@
     (e: 'search', payload: ConversionDataFilterParams): void
   }>()
 
-  const platformOptions = computed(() => props.platformOptions ?? MOCK_PLATFORM_OPTIONS)
-  const appOptions = computed(() => props.appOptions ?? MOCK_DATA_TAB_APP_OPTIONS)
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    const fallback = props.appOptions ?? MOCK_DATA_TAB_APP_OPTIONS
+    return fallback
+      .filter((opt) => opt.value !== '')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
   const conversionTypeOptions = computed(
     () => props.conversionTypeOptions ?? filterConversionTypeOptions.value
   )
@@ -123,6 +125,7 @@
   })
 
   onMounted(() => {
+    void ensureCockpitMetaLoaded()
     void ensureConversionMetaConversionTypeLoaded()
   })
 

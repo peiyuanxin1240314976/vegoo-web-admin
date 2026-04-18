@@ -1,5 +1,6 @@
 import type { ComprehensiveAnalysisApiParams, ComprehensiveAnalysisFilterState } from '../types'
 import { getAppNow, cloneAppDate } from '@/utils/app-now'
+import { toAppIdsRequestBody } from '@/utils/app-id-request'
 
 function pad2(n: number) {
   return String(n).padStart(2, '0')
@@ -38,7 +39,7 @@ export function buildComprehensiveAnalysisApiParams(
   return {
     date_start,
     date_end,
-    s_app_id: dimensionToApiValue(filters.s_app_id),
+    appIds: toAppIdsRequestBody(dimensionToApiValue(filters.s_app_id)),
     source: dimensionToApiValue(filters.adPlatform),
     s_country_code: dimensionToApiValue(filters.s_country_code)
   }

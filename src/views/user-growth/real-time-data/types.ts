@@ -3,12 +3,12 @@
  * 筛选项下拉请读 `useCockpitMetaFilterStore().data`（`@/store/modules/cockpit-meta-filter`，`ensureLoaded`），
  * 形态见 `CockpitMetaFilterOptionsData`（`@/types/cockpit-meta-filter`）。
  *
- * 「全部应用」等：请求入参用空字符串 `''`，勿传字面量 `all`（见 `.cursor/rules/backend-fields.mdc`「接口请求 · 筛选「全部」」）。
- * 与公用 cockpit 及 `PaidAnalysisFilterBody` 对齐：应用维度请求键名为 **`appId`**（与 `appOptions[].value` 同源），勿再仅传 `s_app_id`（数仓行字段名，网关可能不读）。
+ * 「全部应用」等：请求入参用空数组 `[]`，勿传字面量 `all`。
+ * 与公用 cockpit 及应用筛选统一约定对齐：应用维度请求键名为 **`appIds`**（`string[]`）。
  */
 export interface RealtimeDataQueryParams {
-  /** 应用 ID；与 cockpit `appOptions[].value` 一致；`''` 表示全部 */
-  appId: string
+  /** 应用筛选；不限 []，单选 ['appId'] */
+  appIds: string[]
   /** 广告平台（筛选维度键名统一为 source）；`''` 表示不限；一律 string（如 `1`、`7`），勿用 JSON number */
   source: string
 }

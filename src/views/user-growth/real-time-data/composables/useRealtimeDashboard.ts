@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
 import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
+import { toAppIdsRequestBody } from '@/utils/app-id-request'
 import {
   fetchRealtimeOverviewKpiSummary,
   fetchRealtimeTableAppCards,
@@ -47,11 +48,11 @@ function dimensionToApiValue(v: string | undefined | null) {
 }
 
 /**
- * 列表/KPI/底部图请求体：始终带齐 `appId`、`source`（空串表示不限），与 cockpit 附录 A、网关真实接口一致。
+ * 列表/KPI/底部图请求体：始终带齐 `appIds`、`source`（空串表示不限）。
  */
 function buildQueryParams(filterAppId: string, filterSourceUi: string): RealtimeDataQueryParams {
   return {
-    appId: dimensionToApiValue(filterAppId),
+    appIds: toAppIdsRequestBody(dimensionToApiValue(filterAppId)),
     source: mapUiSourceToApiSource(dimensionToApiValue(filterSourceUi))
   }
 }

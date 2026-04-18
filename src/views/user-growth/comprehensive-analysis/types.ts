@@ -29,7 +29,7 @@ export interface ComprehensiveAnalysisApiParams {
    * 应用 ID；空字符串表示「全部」
    * (与筛选 UI 中 `all` 对应，由 build 函数统一转换)
    */
-  s_app_id: string
+  appIds: string[]
   /**
    * 广告平台（项目约定字段名 `source`）
    * 空字符串表示「全部」

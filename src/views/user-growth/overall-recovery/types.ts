@@ -18,7 +18,7 @@ export interface OverallRecoveryFilterState {
 export interface OverallRecoveryCommonRequestBody {
   startDate: string
   endDate: string
-  appId: string
+  appIds: string[]
   source: string
   countryCode: string
 }

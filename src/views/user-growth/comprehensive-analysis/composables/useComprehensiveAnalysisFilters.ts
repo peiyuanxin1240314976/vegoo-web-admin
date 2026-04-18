@@ -19,6 +19,7 @@ export function useComprehensiveAnalysisFilters() {
   const appOptions = ref<SelectOption[]>([])
   const sourceOptions = ref<SelectOption[]>([])
   const countryOptions = ref<SelectOption[]>([])
+  const settingApps = ref<any[]>([])
 
   function syncFromMeta() {
     const m = cockpitMeta.value
@@ -26,6 +27,7 @@ export function useComprehensiveAnalysisFilters() {
     appOptions.value = normalizeOptions(m.appOptions)
     sourceOptions.value = normalizeOptions(m.sourceOptions)
     countryOptions.value = normalizeOptions(m.countryOptions)
+    settingApps.value = m.settingApps ?? []
   }
 
   watch(cockpitMeta, syncFromMeta, { immediate: true })
@@ -35,5 +37,5 @@ export function useComprehensiveAnalysisFilters() {
     syncFromMeta()
   })
 
-  return { appOptions, sourceOptions, countryOptions }
+  return { appOptions, sourceOptions, countryOptions, settingApps }
 }

@@ -184,6 +184,7 @@
   import { graphic, type EChartsOption } from '@/plugins/echarts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import { toAppIdsRequestBody } from '@/utils/app-id-request'
   import type { ColumnOption } from '@/types'
   import ApaTop10Panel from './modules/top10-panel.vue'
   import ApaMetricsTablePanel from './modules/metrics-table-panel.vue'
@@ -443,10 +444,10 @@
       .replace(/[^\w]+/g, '')
   }
 
-  /** 与后端约定：全页模块共用同一请求体；筛选项映射到 appId / platform / source */
+  /** 与后端约定：全页模块共用同一请求体；筛选项映射到 appIds / platform / source */
   function buildAdPlatformAnalysisRequestParams(): Api.UserGrowth.AdPlatformAnalysisRequestParams {
     const f = filters.value
-    const appId = f.app === 'all' ? '' : String(f.app ?? '').trim()
+    const selectedAppId = f.app === 'all' ? '' : String(f.app ?? '').trim()
     const platform =
       f.platform === 'all'
         ? ''
@@ -459,7 +460,7 @@
     const [dateStart = '', dateEnd = ''] = dateRange.value ?? []
 
     return {
-      appId,
+      appIds: toAppIdsRequestBody(selectedAppId),
       currentPage: 0,
       dateEnd,
       dateStart,

@@ -179,7 +179,7 @@ export const MOCK_AD_PERFORMANCE: AdPerformanceMock = {
   filter: {
     startDate: '2026-03-05',
     endDate: '2026-03-05',
-    app: '',
+    appId: '',
     adPlatform: '',
     account: '',
     country: ''

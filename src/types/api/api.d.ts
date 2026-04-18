@@ -294,7 +294,8 @@ declare namespace Api {
      * 例：KPI 卡片 POST /api/v1/datacenter/analysis/ad-platform/kpi/cards
      */
     interface AdPlatformAnalysisRequestParams {
-      appId: string
+      /** 应用筛选：不限 []，单选 ['appId'] */
+      appIds: string[]
       currentPage: number
       dateEnd: string
       dateStart: string

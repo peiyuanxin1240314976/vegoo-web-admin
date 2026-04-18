@@ -14,21 +14,19 @@
         unlink-panels
       />
 
-      <ElSelect
-        :model-value="draft.app"
+      <AppPlatformSearchSelect
+        :model-value="draft.appId"
+        mode="app"
         :placeholder="tr('adPerformance.filterApp', '应用')"
-        class="ad-performance-filter-select"
-        :prefix-icon="Grid"
+        :search-placeholder="tr('adPerformance.filterApp', '应用')"
+        class="ad-performance-filter-select ad-performance-filter-select--app"
+        input-class="ad-performance-filter-select__input"
+        :setting-apps="settingAppsForSelect"
+        :height="36"
+        :min-width="134"
+        :max-width="220"
         @update:model-value="onAppChange"
-      >
-        <ElOption :label="appAllLabel" value="" />
-        <ElOption
-          v-for="opt in appOptionsForSelect"
-          :key="opt.value"
-          :label="opt.label"
-          :value="opt.value"
-        />
-      </ElSelect>
+      />
 
       <ElSelect
         :model-value="draft.adPlatform"
@@ -101,9 +99,12 @@
 </template>
 
 <script setup lang="ts">
-  import { Calendar, Flag, Grid, Promotion, RefreshRight, User } from '@element-plus/icons-vue'
+  import { Calendar, Flag, Promotion, RefreshRight, User } from '@element-plus/icons-vue'
   import { computed, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import type { AdPerformanceFilter, AdPerformanceMetaFilterResponse } from '../types'
   import { cloneAppDate, getAppNow } from '@/utils/app-now'
 
@@ -111,12 +112,12 @@
 
   const { t, te } = useI18n()
   const tr = (key: string, fallback: string) => (te(key) ? t(key) : fallback)
+  const { cockpitMeta, ensureCockpitMetaLoaded } = useCockpitMetaFilterOptions()
 
   const props = withDefaults(
     defineProps<{
       filter: AdPerformanceFilter
       appCount?: number
-      /** 来自 meta-filter-options；未就绪时用本地默认选项 */
       metaOptions?: AdPerformanceMetaFilterResponse | null
     }>(),
     { appCount: 0, metaOptions: null }
@@ -130,6 +131,8 @@
 
   const draft = ref<AdPerformanceFilter>({ ...props.filter })
 
+  void ensureCockpitMetaLoaded()
+
   function onQuery() {
     emit('search', { ...draft.value })
   }
@@ -138,8 +141,8 @@
     draft.value = { ...draft.value, ...partial }
   }
 
-  function onAppChange(v: string) {
-    patchDraft({ app: v ?? '' })
+  function onAppChange(v: string | string[]) {
+    patchDraft({ appId: typeof v === 'string' ? v : '' })
   }
 
   function onAdPlatformChange(v: string) {
@@ -162,9 +165,7 @@
       return null
     },
     set(v) {
-      if (v) {
-        patchDraft({ startDate: v[0], endDate: v[1] })
-      }
+      if (v) patchDraft({ startDate: v[0], endDate: v[1] })
     }
   })
 
@@ -225,8 +226,6 @@
     }
   ]
 
-  const appAllLabel = computed(() => (props.appCount ? `全部(${props.appCount})` : '全部'))
-
   const defaultAppOptions = [
     { value: 'Weather5', label: 'Weather5' },
     { value: 'BloodSugar2', label: 'BloodSugar2' },
@@ -248,6 +247,21 @@
     const m = props.metaOptions?.appOptions?.filter((o) => o.value !== '')
     if (m?.length) return m
     return defaultAppOptions
+  })
+
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return appOptionsForSelect.value.map((opt, index) => ({
+      sAppId: String(opt.value ?? ''),
+      nPlatform: '',
+      platformName: '',
+      sAppName: String(opt.label ?? ''),
+      sAppShortName: String(opt.label ?? ''),
+      nCategory: `fallback-${index}`,
+      categoryName: '应用'
+    }))
   })
 
   const adPlatformOptionsForSelect = computed(() => {
@@ -283,7 +297,6 @@
 </script>
 
 <style scoped lang="scss">
-  /* ── 整体筛选栏容器 ─────────────────────────────────────────── */
   .ad-performance-filters {
     display: flex;
     flex-wrap: wrap;
@@ -302,7 +315,6 @@
       0 0 40px rgb(59 130 246 / 8%);
   }
 
-  /* ── 左侧筛选项行 ────────────────────────────────────────────── */
   .ad-performance-filters__left {
     display: flex;
     flex: 1;
@@ -312,7 +324,6 @@
     min-width: 0;
   }
 
-  /* ── 日期区间选择器 ──────────────────────────────────────────── */
   .ad-performance-date-picker {
     width: 280px;
     min-width: 280px;
@@ -395,14 +406,20 @@
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
-  /* ── 下拉选择器 ──────────────────────────────────────────────── */
   .ad-performance-filter-select {
     width: 134px;
     min-width: 110px;
     max-width: 100%;
   }
 
-  :deep(.ad-performance-filter-select) {
+  .ad-performance-filter-select--app {
+    width: 134px;
+    min-width: 134px;
+    max-width: 220px;
+  }
+
+  :deep(.ad-performance-filter-select),
+  :deep(.ad-performance-filter-select__input) {
     --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
     --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
@@ -412,7 +429,8 @@
   }
 
   :deep(.ad-performance-filter-select .el-select__wrapper),
-  :deep(.ad-performance-filter-select .el-input__wrapper) {
+  :deep(.ad-performance-filter-select .el-input__wrapper),
+  :deep(.ad-performance-filter-select__input) {
     padding: 0 12px;
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
     border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
@@ -440,12 +458,14 @@
     color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.ad-performance-filter-select .el-select__caret) {
+  :deep(.ad-performance-filter-select .el-select__caret),
+  :deep(.ad-performance-filter-select__input .app-platform-search-select__suffix) {
     color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :deep(.ad-performance-filter-select .el-select__wrapper.is-focused),
-  :deep(.ad-performance-filter-select .el-input__wrapper.is-focus) {
+  :deep(.ad-performance-filter-select .el-input__wrapper.is-focus),
+  :deep(.ad-performance-filter-select__input.is-open) {
     background: color-mix(
       in srgb,
       var(--theme-color, var(--art-primary, #3b82f6)) 6%,
@@ -457,13 +477,13 @@
   }
 
   :deep(.ad-performance-filter-select .el-select__wrapper:hover),
-  :deep(.ad-performance-filter-select .el-input__wrapper:hover) {
+  :deep(.ad-performance-filter-select .el-input__wrapper:hover),
+  :deep(.ad-performance-filter-select__input:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: 0 0 0 1px
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
-  /* ── 操作按钮 ─────────────────────────────────────────────────── */
   .ad-performance-filter-action-btn {
     --el-button-size: 36px;
     --el-button-bg-color: color-mix(
@@ -510,7 +530,6 @@
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 40%, transparent);
   }
 
-  /* ── 小屏响应 ─────────────────────────────────────────────────── */
   @media (width <= 768px) {
     .ad-performance-filters {
       flex-direction: column;
@@ -522,8 +541,11 @@
       justify-content: flex-start;
     }
 
-    .ad-performance-date-picker {
+    .ad-performance-date-picker,
+    .ad-performance-filter-select,
+    .ad-performance-filter-select--app {
       width: 100%;
+      min-width: 0;
       max-width: 100%;
     }
   }

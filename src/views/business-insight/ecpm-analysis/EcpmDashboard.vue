@@ -30,14 +30,18 @@
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
             </template>
-            <el-select v-model="filterApp" size="default" class="ecpm-select">
-              <el-option
-                v-for="item in appOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="toSelectValue(item.value)"
-              />
-            </el-select>
+            <AppPlatformSearchSelect
+              v-model="filterApp"
+              mode="app"
+              class="ecpm-select ecpm-select--app"
+              input-class="ecpm-select__input"
+              placeholder="应用"
+              search-placeholder="应用"
+              :setting-apps="settingAppsForSelect"
+              :height="32"
+              :min-width="140"
+              :max-width="240"
+            />
           </el-skeleton>
         </div>
 

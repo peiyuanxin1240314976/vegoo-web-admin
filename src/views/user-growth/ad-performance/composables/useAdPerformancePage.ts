@@ -22,7 +22,7 @@ import { getAppTodayYYYYMMDD } from '@/utils/app-now'
 const defaultFilter: AdPerformanceFilter = {
   startDate: getAppTodayYYYYMMDD(),
   endDate: getAppTodayYYYYMMDD(),
-  app: '',
+  appId: '',
   adPlatform: '',
   account: '',
   country: ''

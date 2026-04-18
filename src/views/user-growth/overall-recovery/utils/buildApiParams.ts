@@ -4,6 +4,7 @@ import type {
   OverallRecoveryFilterState
 } from '../types'
 import { cloneAppDate, getAppNow } from '@/utils/app-now'
+import { toAppIdsRequestBody } from '@/utils/app-id-request'
 
 function pad2(n: number) {
   return String(n).padStart(2, '0')
@@ -58,7 +59,7 @@ export function buildOverallRecoveryCommonBody(
   return {
     startDate,
     endDate,
-    appId: allToEmpty(filters.s_app_id),
+    appIds: toAppIdsRequestBody(allToEmpty(filters.s_app_id)),
     source: allToEmpty(filters.source),
     countryCode: allToEmpty(filters.s_country_code)
   }

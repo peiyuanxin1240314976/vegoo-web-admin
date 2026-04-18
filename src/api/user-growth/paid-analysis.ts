@@ -5,6 +5,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import { toAppIdsRequestBody } from '@/utils/app-id-request'
 import {
   isPaidAnalysisExportEndpointMock,
   isPaidAnalysisOrderEndpointMock,
@@ -45,11 +46,12 @@ const TAB_PRODUCT_BASE = `${PAID_ANALYSIS_BASE}/tab-product`
 function normalizePaidAnalysisFilterBody(data: PaidAnalysisFilterBody): PaidAnalysisFilterBody & {
   countryCode: string
   source: string
+  appIds: string[]
 } {
   const anyData = data as unknown as { s_country_code?: string; n_source?: string }
   return {
     ...data,
-    appId: data.appId ?? '',
+    appIds: toAppIdsRequestBody(data.appId),
     platform: data.platform ?? '',
     countryCode: data.countryCode ?? anyData.s_country_code ?? '',
     source: data.source ?? anyData.n_source ?? ''

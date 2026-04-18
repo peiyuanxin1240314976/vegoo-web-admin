@@ -6,20 +6,18 @@
       <div class="iaa-header__filters iaa-filter-panel">
         <div class="iaa-pill">
           <span class="iaa-pill__k">App:</span>
-          <ElSelect
+          <AppPlatformSearchSelect
             v-model="filtersDraft.s_app_id"
-            class="iaa-select"
-            popper-class="iaa-select__popper"
-            :teleported="true"
-            :fit-input-width="true"
-          >
-            <ElOption
-              v-for="opt in appOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+            mode="app"
+            class="iaa-select iaa-select--app"
+            input-class="iaa-select__input"
+            placeholder="应用"
+            search-placeholder="应用"
+            :setting-apps="settingAppsForSelect"
+            :height="32"
+            :min-width="140"
+            :max-width="240"
+          />
         </div>
         <div class="iaa-pill">
           <span class="iaa-pill__k">Platform:</span>
@@ -137,9 +135,13 @@
 
 <script setup lang="ts">
   import { ref, computed, reactive, watch } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateShortcuts } from '@/utils/form/date-shortcuts'
   import type { IaaTabKey, IaaFilterState } from './types'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import { useIaaFilters } from './composables/useIaaFilters'
   import { provideIaaPageLoading } from './composables/useIaaPageLoading'
   import TabAdType from './modules/tab-ad-type.vue'
@@ -150,6 +152,8 @@
   import TabVersion from './modules/tab-version.vue'
 
   defineOptions({ name: 'IaaAnalysis' })
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
 
   const tabList: { key: IaaTabKey }[] = [
     { key: 'adType' },
@@ -175,7 +179,24 @@
     countryOptions,
     loading: filterOptionsLoading
   } = useIaaFilters()
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return appOptions.value
+      .filter((opt) => opt.value && opt.value !== 'all')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
   provideIaaPageLoading()
+  void metaStore.ensureLoaded()
 
   const hasInitDefaultAppId = ref(false)
   watch(
@@ -308,6 +329,19 @@
       background 0.2s ease;
   }
 
+  .iaa-filter-panel :deep(.iaa-select__input .el-select__wrapper) {
+    min-height: 36px;
+    padding: 0 10px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
   .iaa-filter-panel :deep(.iaa-date .el-input__wrapper) {
     min-height: 36px;
     padding: 0 10px;
@@ -322,6 +356,7 @@
   }
 
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__wrapper),
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select__input .el-select__wrapper),
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-date .el-input__wrapper) {
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
     border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
@@ -329,6 +364,7 @@
   }
 
   .iaa-filter-panel :deep(.iaa-select .el-select__wrapper:hover),
+  .iaa-filter-panel :deep(.iaa-select__input .el-select__wrapper:hover),
   .iaa-filter-panel :deep(.iaa-date .el-input__wrapper:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: 0 0 0 1px
@@ -336,6 +372,7 @@
   }
 
   .iaa-filter-panel :deep(.iaa-select .el-select__wrapper.is-focused),
+  .iaa-filter-panel :deep(.iaa-select__input .el-select__wrapper.is-focused),
   .iaa-filter-panel :deep(.iaa-date .el-input__wrapper.is-focus),
   .iaa-filter-panel :deep(.iaa-date .el-input__wrapper:focus-within) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
@@ -402,6 +439,11 @@
     padding: 0 10px;
   }
 
+  :deep(.iaa-select__input .el-select__wrapper) {
+    min-height: 36px;
+    padding: 0 10px;
+  }
+
   :deep(.iaa-date .el-input__wrapper) {
     min-height: 36px;
     padding: 0 10px;
@@ -417,13 +459,19 @@
 
   :deep(.iaa-select .el-select__selected-item),
   :deep(.iaa-select .el-select__placeholder),
-  :deep(.iaa-select .el-select__caret) {
+  :deep(.iaa-select .el-select__caret),
+  :deep(.iaa-select__input .el-select__selected-item),
+  :deep(.iaa-select__input .el-select__placeholder),
+  :deep(.iaa-select__input .el-select__caret) {
     color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__selected-item),
   :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__placeholder),
-  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__caret) {
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__caret),
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select__input .el-select__selected-item),
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select__input .el-select__placeholder),
+  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select__input .el-select__caret) {
     color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 

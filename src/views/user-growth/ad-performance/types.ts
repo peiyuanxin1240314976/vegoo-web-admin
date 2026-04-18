@@ -9,7 +9,7 @@ export interface AdPerformanceFilter {
   startDate: string
   /** YYYY-MM-DD（闭区间） */
   endDate: string
-  app?: string
+  appId?: string
   adPlatform?: string
   account?: string
   country?: string

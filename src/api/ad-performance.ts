@@ -3,6 +3,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE, ANALYSIS_API_MIDDLE_PREFIX } from '@/api/analysis-api-base'
+import { toAppIdsRequestBody } from '@/utils/app-id-request'
 import {
   AdPerformanceAdDetailEndpoint,
   AdPerformanceAdEditEndpoint,
@@ -104,7 +105,7 @@ function filterBody(f: AdPerformanceFilter) {
     startDate: f.startDate,
     endDate: f.endDate,
     ...(compat ? { dateRange: compat } : {}),
-    app: f.app ?? '',
+    appIds: toAppIdsRequestBody(f.appId),
     adPlatform: f.adPlatform ?? '',
     account: f.account ?? '',
     country: f.country ?? ''

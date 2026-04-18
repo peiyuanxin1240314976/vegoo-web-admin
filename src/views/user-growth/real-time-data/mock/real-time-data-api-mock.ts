@@ -15,7 +15,7 @@ import {
 
 function filterRowsByParams(params?: RealtimeDataQueryParams) {
   let rows = mockRealtimeAppCardRows.map((row) => ({ ...row, chartData: [...row.chartData] }))
-  const appKey = params?.appId
+  const appKey = Array.isArray(params?.appIds) ? String(params.appIds[0] ?? '').trim() : ''
   if (appKey) {
     rows = rows.filter((r) => r.id === appKey)
   }
@@ -46,7 +46,7 @@ export function mockFetchRealtimeOverviewKpiSummary(params?: RealtimeDataQueryPa
       warningApps: 0
     })
   }
-  if (!params?.appId && !params?.source) {
+  if ((!params?.appIds || params.appIds.length === 0) && !params?.source) {
     return Promise.resolve<RealtimeKpiSummary>({ ...mockRealtimeKpiSummary })
   }
   const todaySpend = rows.reduce((s, r) => s + r.spend, 0)
@@ -88,8 +88,9 @@ export function mockFetchRealtimeOverviewHourlySpendComparison(params?: Realtime
     ...s,
     costSeries: [...s.costSeries]
   }))
-  if (params?.appId) {
-    series = series.filter((s) => s.s_app_id === params.appId)
+  const appKey = Array.isArray(params?.appIds) ? String(params.appIds[0] ?? '').trim() : ''
+  if (appKey) {
+    series = series.filter((s) => s.s_app_id === appKey)
   }
   if (params?.source) {
     const allowed = new Set(filterRowsByParams(params).map((r) => r.id))

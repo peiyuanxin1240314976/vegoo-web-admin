@@ -4,6 +4,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import { toAppIdsRequestBody } from '@/utils/app-id-request'
 import {
   IaaAnalysisEndpoint,
   isIaaAnalysisEndpointMock
@@ -596,7 +597,7 @@ function emptyIfAll(v: string | undefined, all = 'all') {
 
 function normalizeIaaBody(state: IaaFilterState) {
   return {
-    s_app_id: emptyIfAll(state.s_app_id),
+    appIds: toAppIdsRequestBody(emptyIfAll(state.s_app_id)),
     platform: emptyIfAll(state.platform),
     s_country_code: emptyIfAll(state.s_country_code),
     t_date: state.t_date
@@ -1246,10 +1247,18 @@ export async function fetchRevenueOverviewQualityMetrics(params: RevenueOverview
 }
 
 /** 利润分析 - 顶部 KPI POST .../overview/kpi，body 扁平 ProfitAnalysisQueryParams */
+function normalizeProfitAnalysisBody(params: ProfitAnalysisQueryParams) {
+  const { sAppId, ...rest } = params
+  return {
+    ...rest,
+    appIds: toAppIdsRequestBody(sAppId === 'all' ? '' : sAppId)
+  }
+}
+
 export function fetchProfitOverviewKpi(fo: ProfitAnalysisQueryParams) {
   return request.post<ProfitKpiOverviewDto>({
     url: `${PROFIT_BASE}/overview/kpi`,
-    data: fo
+    data: normalizeProfitAnalysisBody(fo)
   })
 }
 
@@ -1257,7 +1266,7 @@ export function fetchProfitOverviewKpi(fo: ProfitAnalysisQueryParams) {
 export function fetchProfitTableAppProfit(fo: ProfitAnalysisQueryParams) {
   return request.post<ProfitAppProfitResponseDto>({
     url: `${PROFIT_BASE}/table/app-profit`,
-    data: fo
+    data: normalizeProfitAnalysisBody(fo)
   })
 }
 
@@ -1265,7 +1274,7 @@ export function fetchProfitTableAppProfit(fo: ProfitAnalysisQueryParams) {
 export function fetchProfitOverviewCountryProfit(fo: ProfitAnalysisQueryParams) {
   return request.post<ProfitCountryProfitResponseDto>({
     url: `${PROFIT_BASE}/overview/country-profit`,
-    data: fo
+    data: normalizeProfitAnalysisBody(fo)
   })
 }
 
@@ -1273,7 +1282,7 @@ export function fetchProfitOverviewCountryProfit(fo: ProfitAnalysisQueryParams) 
 export function fetchProfitOverviewTrend30d(fo: ProfitAnalysisQueryParams) {
   return request.post<ProfitTrend30d>({
     url: `${PROFIT_BASE}/overview/trend30d`,
-    data: fo
+    data: normalizeProfitAnalysisBody(fo)
   })
 }
 
@@ -1281,7 +1290,7 @@ export function fetchProfitOverviewTrend30d(fo: ProfitAnalysisQueryParams) {
 export function fetchProfitOverviewSankey(fo: ProfitAnalysisQueryParams) {
   return request.post<ProfitSankeyDto>({
     url: `${PROFIT_BASE}/overview/sankey`,
-    data: fo
+    data: normalizeProfitAnalysisBody(fo)
   })
 }
 

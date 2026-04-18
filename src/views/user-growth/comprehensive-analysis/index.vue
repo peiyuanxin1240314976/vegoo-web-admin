@@ -8,7 +8,6 @@
   >
     <router-view v-if="isPlatformAnalysisDetail" />
     <template v-else>
-      <!-- 顶栏：筛选 + 检索（筛选项外不再套一层卡片容器） -->
       <header class="ca-header ca-entry-1">
         <div class="ca-filters-bar">
           <div class="ca-filters-left">
@@ -17,19 +16,19 @@
               <span class="ca-filter-chip__value">{{ dateRangeLabel }}</span>
             </div>
 
-            <ElSelect
+            <AppPlatformSearchSelect
               v-model="filters.s_app_id"
-              class="ca-filter-select ca-filter-select--app"
+              mode="app"
               placeholder="应用"
-              popper-class="ca-select-popper"
-            >
-              <ElOption
-                v-for="opt in appOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </ElSelect>
+              search-placeholder="应用"
+              class="ca-filter-select ca-filter-select--app"
+              input-class="ca-filter-select__input"
+              :setting-apps="settingAppsForSelect"
+              :height="40"
+              :min-width="160"
+              :max-width="240"
+              dropdown-class="ca-select-popper"
+            />
 
             <ElSelect
               v-model="filters.adPlatform"
@@ -59,15 +58,14 @@
               />
             </ElSelect>
 
-            <ElButton round class="ca-filter-search" :icon="Search" @click="loadData"
-              >查询</ElButton
-            >
+            <ElButton round class="ca-filter-search" :icon="Search" @click="loadData">
+              查询
+            </ElButton>
           </div>
         </div>
       </header>
 
       <main v-loading="loading" class="ca-main ca-entry-2">
-        <!-- KPI 行 -->
         <section class="ca-kpi-grid">
           <article
             v-for="card in pageData?.kpis ?? []"
@@ -89,15 +87,14 @@
                   <Bottom v-else />
                 </el-icon>
                 <span class="ca-kpi__trend-pct tabular-nums">{{ card.trendText }}</span>
-                <span v-if="card.trendCompareLabel" class="ca-kpi__trend-compare">{{
-                  card.trendCompareLabel
-                }}</span>
+                <span v-if="card.trendCompareLabel" class="ca-kpi__trend-compare">
+                  {{ card.trendCompareLabel }}
+                </span>
               </div>
             </div>
           </article>
         </section>
 
-        <!-- 主内容区（原「数据」视图：平台 CPI / 排行 / 地图 / 趋势等） -->
         <SectionPlatform :data="pageData" @drill-down="handleDrillDown" />
       </main>
     </template>
@@ -108,10 +105,13 @@
   import { ref, reactive, onMounted, computed, defineAsyncComponent } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { Top, Bottom, Calendar, Search } from '@element-plus/icons-vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import type { ComprehensiveAnalysisFilterState, ComprehensiveAnalysisData } from './types'
   import { useComprehensiveAnalysisFilters } from './composables/useComprehensiveAnalysisFilters'
   import { fetchComprehensiveAnalysisData } from '@/api/user-growth'
   import { resolveDateRangeFromPreset } from './utils/buildApiParams'
+
   const SectionPlatform = defineAsyncComponent(() => import('./modules/section-platform.vue'))
 
   defineOptions({ name: 'ComprehensiveAnalysis' })
@@ -126,7 +126,23 @@
     s_country_code: ''
   })
 
-  const { appOptions, sourceOptions, countryOptions } = useComprehensiveAnalysisFilters()
+  const { appOptions, sourceOptions, countryOptions, settingApps } =
+    useComprehensiveAnalysisFilters()
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    if (settingApps.value.length) return settingApps.value as CockpitSettingAppItem[]
+    return appOptions.value
+      .filter((opt) => opt.value !== '')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
+
   const pageData = ref<ComprehensiveAnalysisData | null>(null)
   const loading = ref(false)
 
@@ -157,7 +173,7 @@
         s_country_code: filters.s_country_code
       })
     } catch {
-      // 错误提示由 http 拦截器统一处理；保留上一次成功数据，避免整块空白
+      // http 拦截器统一处理错误提示
     } finally {
       loading.value = false
     }
@@ -178,7 +194,6 @@
     background: var(--default-bg-color);
   }
 
-  /* 详情子路由仍占满内容区，由子页自行布局 */
   .ca-page.is-platform-analysis-detail {
     height: var(--art-full-height);
     min-height: 0;
@@ -195,7 +210,6 @@
     margin-bottom: 14px;
   }
 
-  /* 筛选项平铺：无外层卡片边框/阴影，仅横向排列 */
   .ca-filters-bar {
     display: flex;
     flex: 1;
@@ -297,7 +311,8 @@
     --el-component-size: 40px;
   }
 
-  :deep(.ca-filter-select .el-select__wrapper) {
+  :deep(.ca-filter-select .el-select__wrapper),
+  :deep(.ca-filter-select__input) {
     padding: 0 12px;
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
     border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
@@ -320,11 +335,13 @@
 
   :deep(.ca-filter-select .el-select__caret),
   :deep(.ca-filter-select .el-select__suffix),
-  :deep(.ca-filter-select .el-select__icon) {
+  :deep(.ca-filter-select .el-select__icon),
+  :deep(.ca-filter-select__input .app-platform-search-select__suffix) {
     color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.ca-filter-select .el-select__wrapper.is-focused) {
+  :deep(.ca-filter-select .el-select__wrapper.is-focused),
+  :deep(.ca-filter-select__input.is-open) {
     background: color-mix(
       in srgb,
       var(--theme-color, var(--art-primary, #3b82f6)) 6%,
@@ -335,7 +352,8 @@
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
-  :deep(.ca-filter-select .el-select__wrapper:hover) {
+  :deep(.ca-filter-select .el-select__wrapper:hover),
+  :deep(.ca-filter-select__input:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: 0 0 0 1px
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
@@ -354,7 +372,6 @@
     padding-bottom: 20px;
   }
 
-  // ── KPI 行 ────────────────────────────────────────────────────
   .ca-kpi-grid {
     display: grid;
     flex-shrink: 0;
@@ -362,7 +379,6 @@
     gap: 12px;
   }
 
-  /* KPI 网格：适配大/中/小屏 */
   @media (width <= 1536px) {
     .ca-kpi-grid {
       grid-template-columns: repeat(4, 1fr);

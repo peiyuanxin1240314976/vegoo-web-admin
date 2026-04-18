@@ -10,7 +10,7 @@
             type="daterange"
             unlink-panels
             :shortcuts="dateShortcuts"
-            range-separator="—"
+            range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             format="YYYY-MM-DD"
@@ -20,20 +20,19 @@
             class="or-filter-date"
             popper-class="or-filter-popper"
           />
-          <ElSelect
+          <AppPlatformSearchSelect
             v-model="filters.s_app_id"
-            class="or-filter-select"
-            :prefix-icon="Grid"
+            mode="app"
             placeholder="应用"
-            popper-class="or-filter-popper"
-          >
-            <ElOption
-              v-for="opt in appOptions"
-              :key="opt.value === '' ? '__or_all_app__' : opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+            search-placeholder="应用"
+            class="or-filter-select or-filter-select--app"
+            input-class="or-filter-select__input"
+            :setting-apps="settingAppsForSelect"
+            :height="36"
+            :min-width="150"
+            :max-width="240"
+            dropdown-class="or-filter-popper"
+          />
           <ElSelect
             v-model="filters.source"
             class="or-filter-select"
@@ -102,7 +101,9 @@
 
 <script setup lang="ts">
   import type { Component } from 'vue'
-  import { Calendar, Flag, Grid, Promotion } from '@element-plus/icons-vue'
+  import { Calendar, Flag, Promotion } from '@element-plus/icons-vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import type { OverallRecoveryTabKey, OverallRecoveryFilterState } from './types'
   import { resolveDateRangeFromPreset } from './utils/buildApiParams'
   import { useOverallRecoveryFilters } from './composables/useOverallRecoveryFilters'
@@ -131,7 +132,21 @@
   const appliedFilters = ref<OverallRecoveryFilterState>({ ...filters })
   const searchToken = ref(0)
 
-  const { appOptions, sourceOptions, countryOptions } = useOverallRecoveryFilters()
+  const { appOptions, sourceOptions, countryOptions, settingApps } = useOverallRecoveryFilters()
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    if (settingApps.value.length) return settingApps.value
+    return appOptions.value
+      .filter((opt: CockpitMetaOptionItem) => opt.value !== '')
+      .map((opt: CockpitMetaOptionItem, index: number) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
 
   const dateRangeModel = computed<[string, string] | null>({
     get() {
@@ -314,6 +329,12 @@
     min-width: 140px;
   }
 
+  .or-filter-select--app {
+    width: 150px;
+    min-width: 150px;
+    max-width: 240px;
+  }
+
   :deep(.or-filter-select) {
     --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
@@ -323,7 +344,8 @@
     --el-component-size: 36px;
   }
 
-  :deep(.or-filter-select .el-select__wrapper) {
+  :deep(.or-filter-select .el-select__wrapper),
+  :deep(.or-filter-select__input) {
     min-height: 36px;
     padding: 0 12px;
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
@@ -356,11 +378,13 @@
     color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.or-filter-select .el-select__caret) {
+  :deep(.or-filter-select .el-select__caret),
+  :deep(.or-filter-select__input .app-platform-search-select__suffix) {
     color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.or-filter-select .el-select__wrapper.is-focused) {
+  :deep(.or-filter-select .el-select__wrapper.is-focused),
+  :deep(.or-filter-select__input.is-open) {
     background: color-mix(
       in srgb,
       var(--theme-color, var(--art-primary, #3b82f6)) 6%,
@@ -371,7 +395,8 @@
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
-  :deep(.or-filter-select .el-select__wrapper:hover) {
+  :deep(.or-filter-select .el-select__wrapper:hover),
+  :deep(.or-filter-select__input:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: 0 0 0 1px
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
@@ -457,7 +482,8 @@
     }
 
     .or-filter-select,
-    .or-filter-select--wide {
+    .or-filter-select--wide,
+    .or-filter-select--app {
       flex: 1 1 calc(50% - 6px);
     }
 
@@ -483,7 +509,6 @@
 </style>
 
 <style lang="scss">
-  /* 挂载在 body（popper），须非 scoped；避免下拉被内容遮挡 */
   .or-filter-popper.el-popper {
     z-index: var(--z-dropdown) !important;
     background: rgb(10 10 14 / 96%) !important;

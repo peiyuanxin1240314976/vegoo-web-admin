@@ -1,7 +1,11 @@
 <script setup lang="ts">
   import 'flag-icons/css/flag-icons.min.css'
   import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+  import { storeToRefs } from 'pinia'
   import * as echarts from 'echarts'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import type { ProfitCountryRow } from './types'
   import { resolveProfitCountryIso } from './country-flag-iso'
   import { useProfitAnalysisDashboard } from './composables/useProfitAnalysisDashboard'
@@ -34,9 +38,28 @@
 
   const trendRef = ref<HTMLElement | null>(null)
   const sankeyRef = ref<HTMLElement | null>(null)
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
 
   let trendChart: echarts.ECharts | null = null
   let sankeyChart: echarts.ECharts | null = null
+
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return filterOptions.value.appOptions
+      .filter((opt) => opt.value && opt.value !== 'all')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
 
   const countryDistributionRows = computed(() => {
     return mapData.value
@@ -275,6 +298,7 @@
 
   onMounted(async () => {
     window.addEventListener('resize', handleResize)
+    await metaStore.ensureLoaded()
     await loadFilterMeta()
     await loadDashboard()
   })
@@ -322,21 +346,21 @@
           <span class="bi-filter-label">{{
             $t('menus.businessInsight.profitAnalysisFilters.app')
           }}</span>
-          <ElSelect
+          <AppPlatformSearchSelect
             v-model="query.sAppId"
-            class="bi-filter-select"
-            popper-class="bi-select__popper"
+            mode="app"
+            class="bi-filter-select bi-filter-select--app"
+            input-class="bi-filter-select__input"
             :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
+            :search-placeholder="
+              $t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')
+            "
+            :setting-apps="settingAppsForSelect"
+            :height="36"
+            :min-width="148"
+            :max-width="220"
             :disabled="pendingMeta"
-            filterable
-          >
-            <ElOption
-              v-for="opt in filterOptions.appOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+          />
         </div>
         <div class="bi-filter-field">
           <span class="bi-filter-label">{{
@@ -358,26 +382,6 @@
             />
           </ElSelect>
         </div>
-        <div class="bi-filter-field">
-          <span class="bi-filter-label">{{
-            $t('menus.businessInsight.profitAnalysisFilters.platform')
-          }}</span>
-          <ElSelect
-            v-model="query.platform"
-            class="bi-filter-select bi-filter-select--platform"
-            popper-class="bi-select__popper"
-            :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
-            :disabled="pendingMeta"
-          >
-            <ElOption
-              v-for="opt in filterOptions.platformOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
-        </div>
-
         <ElButton
           class="bi-query-btn"
           type="primary"
@@ -865,6 +869,7 @@
   }
 
   .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper),
+  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper),
   .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange) {
     min-height: 36px;
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
@@ -878,6 +883,7 @@
   }
 
   .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper:hover),
+  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper:hover),
   .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: 0 0 0 1px
@@ -885,6 +891,7 @@
   }
 
   .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper.is-focused),
+  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper.is-focused),
   .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange.is-active),
   .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:focus-within) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
@@ -908,10 +915,10 @@
 
   .bi-filter-select {
     width: 148px;
+  }
 
-    &--platform {
-      width: 128px;
-    }
+  .bi-filter-select--app {
+    display: inline-flex;
   }
 
   .bi-filter-date {
@@ -919,11 +926,13 @@
   }
 
   :deep(.bi-filter-select .el-select__wrapper),
+  :deep(.bi-filter-select__input .el-select__wrapper),
   :deep(.bi-filter-date.el-date-editor--daterange) {
     min-height: 36px;
   }
 
   :deep(.bi-filter-select .el-select__wrapper:hover),
+  :deep(.bi-filter-select__input .el-select__wrapper:hover),
   :deep(.bi-filter-date.el-date-editor--daterange:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
   }
@@ -931,7 +940,10 @@
   :deep(.bi-filter-select .el-select__placeholder),
   :deep(.bi-filter-select .el-select__selected-item),
   :deep(.bi-filter-select .el-select__caret),
-  :deep(.bi-filter-date .el-range-input) {
+  :deep(.bi-filter-date .el-range-input),
+  :deep(.bi-filter-select__input .el-select__placeholder),
+  :deep(.bi-filter-select__input .el-select__selected-item),
+  :deep(.bi-filter-select__input .el-select__caret) {
     color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 

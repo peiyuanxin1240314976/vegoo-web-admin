@@ -39,18 +39,19 @@
         </div>
         <div class="iap-dashboard-filter__item">
           <span class="iap-dashboard-f-label">应用</span>
-          <ElSelect
+          <AppPlatformSearchSelect
             v-model="filters.s_app_id"
             class="iap-dashboard-sel iap-dashboard-sel--w110"
-            popper-class="iap-select-popper"
+            input-class="iap-dashboard-sel__input"
+            mode="app"
+            placeholder="应用"
+            search-placeholder="应用"
+            :setting-apps="settingAppsForSelect"
+            :height="40"
+            :min-width="110"
+            :max-width="220"
           >
-            <ElOption
-              v-for="opt in filterOptions?.appOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+          </AppPlatformSearchSelect>
         </div>
         <div class="iap-dashboard-filter__item">
           <span class="iap-dashboard-f-label">国家</span>
@@ -263,8 +264,11 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
+  import { storeToRefs } from 'pinia'
   import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import {
     Download,
     Refresh,
@@ -288,10 +292,13 @@
     IapOverviewTrend,
     IapPlatformCompare
   } from '@/views/business-insight/iap-analysis/types'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
 
   defineOptions({ name: 'IapDashboard' })
 
   const router = useRouter()
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
 
   const iconMap: Record<string, typeof Iphone> = {
     Iphone,
@@ -335,6 +342,22 @@
   const countryData = ref<(IapCountryRow & { barWidth?: string; barColor?: string })[]>([])
   const productTypeDonut = ref<IapProductTypeDonutItem[]>([])
   const platformCompare = ref<IapPlatformCompare | null>(null)
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return (filterOptions.value?.appOptions ?? [])
+      .filter((opt) => opt.value && opt.value !== 'all')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
 
   const donutColors: Record<string, string> = { 内购: '#0ea5e9', 订阅: '#a78bfa' }
 
@@ -768,8 +791,10 @@
   }
 
   onMounted(() => {
-    loadDashboard().then(() => {
-      window.addEventListener('resize', resizeCharts)
+    metaStore.ensureLoaded().finally(() => {
+      loadDashboard().then(() => {
+        window.addEventListener('resize', resizeCharts)
+      })
     })
   })
 
@@ -976,6 +1001,37 @@
     }
   }
 
+  :deep(.iap-dashboard-sel__input) {
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 40px;
+
+    .el-select__wrapper {
+      padding: 0 14px;
+      background: color-mix(
+        in srgb,
+        var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+        transparent
+      ) !important;
+      border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+      border-radius: var(--el-border-radius-base, 4px);
+      box-shadow: none !important;
+      transition:
+        border-color 0.22s var(--ease-default),
+        box-shadow 0.22s var(--ease-default),
+        background-color 0.22s var(--ease-default);
+    }
+
+    .el-select__selected-item,
+    .el-select__placeholder,
+    .el-select__caret,
+    .el-select__suffix,
+    .el-select__icon {
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+    }
+  }
+
   :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange) {
     background: color-mix(
       in srgb,
@@ -1012,6 +1068,7 @@
   }
 
   :deep(.iap-dashboard-sel .el-select__wrapper.is-focused),
+  :deep(.iap-dashboard-sel__input .el-select__wrapper.is-focused),
   :deep(.iap-dashboard-sel .el-input__wrapper.is-focus),
   :deep(.iap-dashboard-sel.el-date-editor--daterange:focus-within .el-input__wrapper) {
     background: color-mix(
@@ -1025,6 +1082,7 @@
   }
 
   :deep(.iap-dashboard-sel .el-select__wrapper:hover),
+  :deep(.iap-dashboard-sel__input .el-select__wrapper:hover),
   :deep(.iap-dashboard-sel .el-input__wrapper:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
     box-shadow: 0 0 0 1px

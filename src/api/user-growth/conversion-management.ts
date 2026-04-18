@@ -6,6 +6,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import { toAppIdsRequestBody } from '@/utils/app-id-request'
 import {
   ConversionManagementEndpoint,
   isConversionManagementEndpointMock
@@ -80,6 +81,14 @@ function unwrapNestedDataObjects(value: unknown, maxDepth = 3): unknown {
 
 function numOrZero(v: unknown): number {
   return typeof v === 'number' && !Number.isNaN(v) ? v : 0
+}
+
+function withRequestAppIds<T extends { appId?: string }>(params: T) {
+  const { appId, ...rest } = params
+  return {
+    ...rest,
+    appIds: toAppIdsRequestBody(appId)
+  }
 }
 
 /**
@@ -178,7 +187,7 @@ export function fetchConversionMappingsList(params: ConversionFilterParams) {
   return request
     .post<Api.Common.PaginatedResponse<ConversionMappingItem>>({
       url: `${CONVERSION_MANAGEMENT_BASE}/mappings-list`,
-      data: params
+      data: withRequestAppIds(params)
     })
     .then((res) => unwrapDataDeep<Api.Common.PaginatedResponse<ConversionMappingItem>>(res))
 }
@@ -197,7 +206,7 @@ export function fetchConversionMappingsStats(
   return request
     .post<unknown>({
       url: `${CONVERSION_MANAGEMENT_BASE}/mappings-stats`,
-      data: params
+      data: withRequestAppIds(params)
     })
     .then((res) => normalizeMappingsStatsResponse(res))
 }
@@ -354,7 +363,7 @@ export function fetchConversionMappingsExport(
   return request
     .post<{ downloadUrl?: string; fileId?: string; message?: string }>({
       url: `${CONVERSION_MANAGEMENT_BASE}/mappings-export`,
-      data
+      data: withRequestAppIds(data)
     })
     .then((res) => unwrapDataDeep<{ downloadUrl?: string; fileId?: string; message?: string }>(res))
 }
@@ -381,7 +390,7 @@ export function fetchConversionDataTabOverviewKpi(params: ConversionDataFilterPa
   return request
     .post<{ kpi: ConversionKpi }>({
       url: `${CONVERSION_MANAGEMENT_BASE}/data-tab/overview-kpi`,
-      data: params
+      data: withRequestAppIds(params)
     })
     .then((res) => unwrapDataDeep<{ kpi: ConversionKpi }>(res))
 }
@@ -394,7 +403,7 @@ export function fetchConversionDataTabTableRows(params: ConversionDataFilterPara
   return request
     .post<{ tableRows: ConversionDataRow[] }>({
       url: `${CONVERSION_MANAGEMENT_BASE}/data-tab/table-rows`,
-      data: params
+      data: withRequestAppIds(params)
     })
     .then((res) => unwrapDataDeep<{ tableRows: ConversionDataRow[] }>(res))
 }
@@ -407,7 +416,7 @@ export function fetchConversionDataTabSidePanels(params: ConversionDataFilterPar
   return request
     .post<{ sidePanels: ConversionDataSidePanels }>({
       url: `${CONVERSION_MANAGEMENT_BASE}/data-tab/side-panels`,
-      data: params
+      data: withRequestAppIds(params)
     })
     .then((res) => unwrapDataDeep<{ sidePanels: ConversionDataSidePanels }>(res))
 }
@@ -422,7 +431,7 @@ export function fetchConversionDataExport(
   return request
     .post<{ downloadUrl?: string; fileId?: string; message?: string }>({
       url: `${CONVERSION_MANAGEMENT_BASE}/data-export`,
-      data
+      data: withRequestAppIds(data)
     })
     .then((res) => unwrapDataDeep<{ downloadUrl?: string; fileId?: string; message?: string }>(res))
 }

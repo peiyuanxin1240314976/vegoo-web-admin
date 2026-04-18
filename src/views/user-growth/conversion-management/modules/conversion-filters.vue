@@ -2,34 +2,18 @@
   <div class="conversion-filters">
     <div class="conversion-filters__inner">
       <div class="conversion-filters__row">
-        <ElSelect
-          v-model="form.platform"
-          :placeholder="$t('conversionManagement.filterPlatform')"
-          clearable
-          class="conversion-name-filter-select"
-          :prefix-icon="Monitor"
-        >
-          <ElOption
-            v-for="opt in platformOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </ElSelect>
-        <ElSelect
+        <AppPlatformSearchSelect
           v-model="form.appId"
+          mode="app"
           :placeholder="$t('conversionManagement.filterApp')"
-          clearable
-          class="conversion-name-filter-select"
-          :prefix-icon="Grid"
-        >
-          <ElOption
-            v-for="opt in appOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </ElSelect>
+          :search-placeholder="$t('conversionManagement.filterApp')"
+          class="conversion-name-filter-select conversion-name-filter-select--app"
+          input-class="conversion-name-filter-select__input"
+          :setting-apps="settingAppsForSelect"
+          :height="36"
+          :min-width="140"
+          :max-width="220"
+        />
         <ElSelect
           v-model="form.conversionType"
           :placeholder="$t('conversionManagement.filterConversionType')"
@@ -91,20 +75,16 @@
 </template>
 
 <script setup lang="ts">
-  import { CircleCheck, CollectionTag, Grid, Monitor, Plus, Search } from '@element-plus/icons-vue'
+  import { CircleCheck, CollectionTag, Plus, Search } from '@element-plus/icons-vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import { useConversionMetaConversionTypeOptions } from '@/composables/use-conversion-meta-conversion-type'
   import type { ConversionFilterParams } from '../types'
-  import {
-    MOCK_PLATFORM_OPTIONS,
-    MOCK_DATA_TAB_APP_OPTIONS,
-    MOCK_STATUS_OPTIONS
-  } from '../mock/data'
-  import { useI18n } from 'vue-i18n'
+  import { MOCK_DATA_TAB_APP_OPTIONS, MOCK_STATUS_OPTIONS } from '../mock/data'
 
   defineOptions({ name: 'ConversionFilters' })
 
-  const { t } = useI18n()
   const { cockpitMeta, ensureCockpitMetaLoaded } = useCockpitMetaFilterOptions()
   const { filterConversionTypeOptions, ensureLoaded: ensureConversionMetaConversionTypeLoaded } =
     useConversionMetaConversionTypeOptions()
@@ -123,15 +103,23 @@
   }>()
 
   /** 与公用 `cockpit/meta-filter-options` 的 `platformOptions` 一致；无数据时回退 mock，并保证含「全部」`value: ''` */
-  const platformOptionsFromStore = computed(() => {
-    const raw = cockpitMeta.value?.platformOptions
-    const list = raw?.length ? raw : MOCK_PLATFORM_OPTIONS
-    if (list.some((o) => o.value === '')) return list
-    return [{ label: t('conversionManagement.filterPlatform'), value: '' }, ...list]
-  })
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
 
-  const platformOptions = computed(() => props.platformOptions ?? platformOptionsFromStore.value)
-  const appOptions = computed(() => props.appOptions ?? MOCK_DATA_TAB_APP_OPTIONS)
+    const fallback = props.appOptions ?? MOCK_DATA_TAB_APP_OPTIONS
+    return fallback
+      .filter((opt) => opt.value !== '')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
   const conversionTypeOptions = computed(
     () => props.conversionTypeOptions ?? filterConversionTypeOptions.value
   )

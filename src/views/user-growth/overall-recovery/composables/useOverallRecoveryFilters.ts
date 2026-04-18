@@ -27,10 +27,11 @@ export function useOverallRecoveryFilters() {
     const list = cockpitMeta.value?.countryOptions
     return list?.length ? list : fallbackOptions()
   })
+  const settingApps = computed(() => cockpitMeta.value?.settingApps ?? [])
 
   onMounted(() => {
     metaStore.ensureLoaded()
   })
 
-  return { appOptions, sourceOptions, countryOptions }
+  return { appOptions, sourceOptions, countryOptions, settingApps }
 }

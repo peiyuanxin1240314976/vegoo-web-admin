@@ -18,32 +18,18 @@
             placeholder="选择日期"
             class="iap-filter-date"
           />
-          <ElSelect
+          <AppPlatformSearchSelect
             v-model="filters.appId"
+            mode="app"
             placeholder="应用"
-            class="iap-filter-select"
-            :prefix-icon="Grid"
-          >
-            <ElOption
-              v-for="opt in appSelectOptions"
-              :key="opt.value === '' ? '__all_app__' : opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
-          <ElSelect
-            v-model="filters.platform"
-            placeholder="终端平台"
-            class="iap-filter-select"
-            :prefix-icon="Monitor"
-          >
-            <ElOption
-              v-for="opt in platformSelectOptions"
-              :key="opt.value === '' ? '__all_plat__' : opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+            search-placeholder="应用"
+            class="iap-filter-select iap-filter-select--app"
+            input-class="iap-filter-select__input"
+            :setting-apps="settingAppsForSelect"
+            :height="36"
+            :min-width="150"
+            :max-width="240"
+          />
           <ElSelect
             v-model="filters.country"
             placeholder="国家"
@@ -58,7 +44,7 @@
             />
           </ElSelect>
           <div class="iap-filter-actions">
-            <ElButton round class="iap-search-btn" @click="handleSearch">检索</ElButton>
+            <ElButton round class="iap-search-btn" @click="handleSearch">搜索</ElButton>
             <ElButton round class="iap-search-btn" @click="onExportClick">导出</ElButton>
           </div>
         </div>
@@ -132,12 +118,13 @@
 </template>
 
 <script setup lang="ts">
-  import { Calendar, Flag, Grid, Monitor } from '@element-plus/icons-vue'
+  import { Calendar, Flag } from '@element-plus/icons-vue'
   import { storeToRefs } from 'pinia'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateShortcuts } from '@/utils/form/date-shortcuts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
-  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
+  import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import IAPChannelTab from './IAPChannelTab.vue'
   import IAPProductTab from './IAPProductTab.vue'
   import IAPOrderTab from './IAPOrderTab.vue'
@@ -155,13 +142,25 @@
     const list = cockpitMeta.value?.appOptions
     return list?.length ? list : fallbackOptions('全部')
   })
-  const platformSelectOptions = computed(() => {
-    const list = cockpitMeta.value?.platformOptions
-    return list?.length ? list : fallbackOptions('全部')
-  })
   const countrySelectOptions = computed(() => {
     const list = cockpitMeta.value?.countryOptions
     return list?.length ? list : fallbackOptions('全部')
+  })
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return appSelectOptions.value
+      .filter((opt) => opt.value !== '')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
   })
 
   const activeTab = ref<'channel' | 'product' | 'order'>('channel')
@@ -182,7 +181,7 @@
   const appliedFilters = ref({ ...filters })
   const searchToken = ref(0)
 
-  const dateChipText = computed(() => filters.date || '—')
+  const dateChipText = computed(() => filters.date || '-')
 
   const bootLoading = ref(true)
   let bootTimer: ReturnType<typeof setTimeout> | null = null
@@ -211,7 +210,7 @@
   }
 
   function onExportClick() {
-    /* 演示占位，与改版前一致不接真实导出 */
+    // 占位，保留原交互
   }
 </script>
 
@@ -336,6 +335,12 @@
     max-width: 100%;
   }
 
+  .iap-filter-select--app {
+    width: 150px;
+    min-width: 150px;
+    max-width: 240px;
+  }
+
   :deep(.iap-filter-select) {
     --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
@@ -346,7 +351,8 @@
   }
 
   :deep(.iap-filter-select .el-select__wrapper),
-  :deep(.iap-filter-select .el-input__wrapper) {
+  :deep(.iap-filter-select .el-input__wrapper),
+  :deep(.iap-filter-select__input) {
     padding: 0 12px;
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
     border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
@@ -363,7 +369,8 @@
     color: var(--el-text-color-primary);
   }
 
-  :deep(.iap-filter-select .el-input__prefix-inner svg) {
+  :deep(.iap-filter-select .el-input__prefix-inner svg),
+  :deep(.iap-filter-select__input .app-platform-search-select__suffix) {
     width: 16px;
     height: 16px;
     color: var(--theme-color, var(--art-primary, #3b82f6));
@@ -374,7 +381,8 @@
   }
 
   :deep(.iap-filter-select .el-select__wrapper.is-focused),
-  :deep(.iap-filter-select .el-input__wrapper.is-focus) {
+  :deep(.iap-filter-select .el-input__wrapper.is-focus),
+  :deep(.iap-filter-select__input.is-open) {
     background: color-mix(
       in srgb,
       var(--theme-color, var(--art-primary, #3b82f6)) 6%,
@@ -386,7 +394,8 @@
   }
 
   :deep(.iap-filter-select .el-select__wrapper:hover),
-  :deep(.iap-filter-select .el-input__wrapper:hover) {
+  :deep(.iap-filter-select .el-input__wrapper:hover),
+  :deep(.iap-filter-select__input:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: 0 0 0 1px
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
@@ -519,8 +528,12 @@
       padding: 14px 16px;
     }
 
-    .iap-filter-select {
+    .iap-filter-select,
+    .iap-filter-select--app {
       flex: 1 1 calc(50% - 6px);
+      width: auto;
+      min-width: 0;
+      max-width: 100%;
     }
 
     .iap-filter-actions {
