@@ -1427,6 +1427,8 @@
 <style scoped>
   /* ── Root & Variables ─────────────────────────────────────────── */
   .ecpm-dash {
+    /* 优先继承布局 --theme-color，否则 Art 主色，最后回退 EP 主色（避免再强制绑死 --el-color-primary） */
+    --ecpm-accent: var(--theme-color, var(--art-primary, var(--el-color-primary)));
     --bg: #0d1422;
     --bg-card: #131d2f;
     --bg-card-2: #162038;
@@ -1642,18 +1644,49 @@
     white-space: nowrap;
   }
 
-  /* Override Element Plus to fit dark theme (sync with revenue-overview) */
+  /* Override Element Plus：边框与 Art / --theme-color 关联（默认 / 悬停 / 聚焦） */
   :deep(.ecpm-select .el-select__wrapper),
   :deep(.ecpm-date .el-input__wrapper) {
     min-height: 32px;
     padding: 0 10px;
     background: rgb(0 0 0 / 28%);
-    border: 1px solid rgb(96 165 250 / 24%);
+    border: 1px solid color-mix(in srgb, var(--ecpm-accent) 28%, transparent);
     border-radius: 10px;
-    box-shadow: 0 0 0 1px rgb(59 130 246 / 6%) inset;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ecpm-accent) 10%, transparent) inset;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  :deep(.ecpm-select .el-select__wrapper:hover),
+  :deep(.ecpm-date .el-input__wrapper:hover) {
+    border-color: color-mix(in srgb, var(--ecpm-accent) 44%, transparent);
+  }
+
+  :deep(.ecpm-select .el-select__wrapper.is-focused) {
+    border-color: var(--ecpm-accent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--ecpm-accent) 28%, transparent) inset,
+      0 0 0 2px color-mix(in srgb, var(--ecpm-accent) 22%, transparent);
+  }
+
+  /* 日期范围：EP 使用 is-focus / is-active / :focus-within，与 select 的 is-focused 不同 */
+  :deep(.ecpm-date.el-date-editor--daterange.is-active .el-input__wrapper),
+  :deep(.ecpm-date.el-date-editor--daterange:focus-within .el-input__wrapper),
+  :deep(.ecpm-date .el-input__wrapper.is-focus) {
+    border-color: var(--ecpm-accent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--ecpm-accent) 28%, transparent) inset,
+      0 0 0 2px color-mix(in srgb, var(--ecpm-accent) 22%, transparent);
   }
 
   :deep(.ecpm-date.el-date-editor) {
+    --el-input-border-color: color-mix(in srgb, var(--ecpm-accent) 28%, transparent);
+    --el-input-focus-border-color: var(--ecpm-accent);
+    --el-border-color: color-mix(in srgb, var(--ecpm-accent) 28%, transparent);
+    --el-border-color-hover: color-mix(in srgb, var(--ecpm-accent) 44%, transparent);
+    --el-border-color-focus: var(--ecpm-accent);
+
     width: 240px;
     font-size: 12px;
   }
