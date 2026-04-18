@@ -5,19 +5,24 @@
       <!-- 应用 -->
       <div class="filter-group">
         <span class="filter-label">应用：</span>
-        <el-select
-          v-model="appFilter"
-          placeholder="全部"
-          class="filter-select filter-select--app"
-          clearable
-        >
-          <el-option
-            v-for="option in appSelectOptions"
-            :key="option.value || 'all'"
-            :label="option.label"
-            :value="option.value"
+        <div class="filter-select filter-select--app">
+          <AppPlatformSearchSelect
+            v-model="appFilter"
+            mode="app"
+            input-class="ad-account-app-select__trigger"
+            placeholder="全部"
+            search-placeholder="搜索类别/应用名称/应用简称"
+            all-label="全部应用"
+            :setting-apps="settingAppsForSelect"
+            :height="34"
+            :width="190"
+            :min-width="160"
+            :max-width="220"
+            radius="9999px"
+            dropdown-class="ad-account-app-filter-popper"
+            :show-platform-suffix="true"
           />
-        </el-select>
+        </div>
       </div>
       <!-- 广告平台 -->
       <div class="filter-group">
@@ -197,10 +202,11 @@
 <script setup lang="ts">
   import { onMounted, ref, computed, watch } from 'vue'
   import { ElMessage } from 'element-plus'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { enableAccount, fetchAccountTable } from '@/api/config-management/account-management'
   import { AccountApiSource } from '../config/data-source'
-  import { cloneAccountMockList, appOptions } from '../mock/data'
+  import { cloneAccountMockList } from '../mock/data'
   import { PLATFORM_CONFIGS } from '../types'
   import type { AdAccountItem } from '../types'
 
@@ -235,17 +241,19 @@
 
   const cockpitMetaFilterStore = useCockpitMetaFilterStore()
 
-  const appSelectOptions = computed(() => {
-    const source = cockpitMetaFilterStore.data?.appOptions
-    if (!source?.length) {
-      return appOptions.map((app) => ({ label: app, value: app }))
-    }
-    // 当前页表格中的应用字段使用应用名，故 value 使用 label 保持过滤兼容。
-    return source.map((item) => ({
-      label: item.label || item.value,
-      value: item.label || item.value
-    }))
-  })
+  /** 与 AppPlatformSearchSelect 一致：来自 cockpit；无数据时列表为空（依赖 ensureLoaded） */
+  const settingAppsForSelect = computed(() => cockpitMetaFilterStore.data?.settingApps ?? [])
+
+  /** 表格行 `apps` 为应用名字符串；筛选值为 sAppId，需解析为名称再 includes */
+  function rowMatchesAppFilter(item: AdAccountItem): boolean {
+    const id = appFilter.value.trim()
+    if (!id) return true
+    const hit = settingAppsForSelect.value.find((a) => String(a.sAppId ?? '').trim() === id)
+    const name = hit ? String(hit.sAppName ?? '').trim() : ''
+    if (name && item.apps.includes(name)) return true
+    if (item.apps.includes(id)) return true
+    return false
+  }
 
   const platformOptions = computed(() => {
     const source = cockpitMetaFilterStore.data?.sourceOptions
@@ -264,6 +272,7 @@
   const sourceFilter = ref('')
   const accountTypeFilter = ref('')
   const statusFilter = ref('')
+  /** 选中的应用 sAppId；空字符串表示不限 */
   const appFilter = ref('')
   const currentPage = ref(1)
   const pageSize = ref(20)
@@ -320,7 +329,7 @@
       if (sourceFilter.value && item.source !== sourceFilter.value) return false
       if (accountTypeFilter.value && item.accountType !== accountTypeFilter.value) return false
       if (statusFilter.value && item.status !== statusFilter.value) return false
-      if (appFilter.value && !item.apps.includes(appFilter.value)) return false
+      if (!rowMatchesAppFilter(item)) return false
       return true
     })
   })
@@ -484,7 +493,43 @@
   }
 
   .filter-select--app {
+    display: inline-flex;
     width: 190px;
+  }
+
+  :deep(.ad-account-app-select__trigger.app-platform-search-select) {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    color: var(--text-primary);
+    background: rgb(255 255 255 / 4%) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: none !important;
+    transition:
+      border-color var(--duration-fast, 150ms) var(--ease-default, ease),
+      background-color var(--duration-fast, 150ms) var(--ease-default, ease),
+      box-shadow var(--duration-fast, 150ms) var(--ease-default, ease);
+  }
+
+  :deep(.ad-account-app-select__trigger .app-platform-search-select__text) {
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  :deep(.ad-account-app-select__trigger .app-platform-search-select__suffix) {
+    color: var(--text-secondary);
+  }
+
+  :deep(.ad-account-app-select__trigger:hover) {
+    background: rgb(59 130 246 / 10%) !important;
+    border-color: rgb(59 130 246 / 55%) !important;
+  }
+
+  :deep(.ad-account-app-select__trigger.is-open) {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px rgb(59 130 246 / 22%) !important;
   }
 
   :deep(.el-select-dropdown__item.is-selected) {
