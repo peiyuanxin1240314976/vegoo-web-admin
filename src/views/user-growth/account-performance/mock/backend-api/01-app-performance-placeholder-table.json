@@ -1,5 +1,5 @@
 {
-  "_comment": "账户成效页 - 应用/账户 tab 占位表（对应 modules/app-performance-placeholder.vue）。",
+  "_comment": "账户成效页 - 应用/账户 tab 占位表（对应 modules/app-performance-placeholder.vue）。广告账户维度指标集中在 adAccount 对象内，与 UI「广告账户」多级表头分组一致；筛选入参见 fieldDescription.request。sampleResponse 为节选页示例。",
   "fieldDescription": {
     "request": {
       "currentPage": {
@@ -10,7 +10,7 @@
       "pageSize": {
         "type": "number",
         "required": true,
-        "description": "每页条数。"
+        "description": "每页条数；若为 0 则由后端按约定使用默认条数（与前端分页组件联动时以实际约定为准）。"
       },
       "dateStart": {
         "type": "string",
@@ -35,7 +35,7 @@
       "appIds": {
         "type": "string[]",
         "required": false,
-        "description": "应用筛选：不限为 []，单选为 [\"应用ID\"]。"
+        "description": "应用 ID 列表（包名/业务 ID 等，与顶栏应用筛选一致）。空数组表示不按应用过滤；非空表示仅查询所选应用下账户。"
       },
       "source": {
         "type": "string",
@@ -64,7 +64,7 @@
       "total": {
         "type": "number",
         "required": true,
-        "description": "广告账户总数（用于分页/底部文案）。"
+        "description": "符合条件的广告账户总数（用于分页/底部文案，不必等于当前页条数）。"
       },
       "accounts": {
         "type": "AppPerformanceAccountRow[]",
@@ -73,25 +73,73 @@
       }
     },
     "AppPerformanceAccountRow": {
-      "id": {
+      "appId": {
         "type": "string",
         "required": true,
-        "description": "表格行唯一标识（前端仅用于 key）。"
+        "description": "应用 ID（与顶栏/应用维度一致）。"
       },
-      "name": {
-        "type": "string | null",
-        "required": false,
-        "description": "账户名称（用于展示）；无名称时可为 null，前端可回退展示 accountId。"
-      },
-      "accountId": {
+      "appName": {
         "type": "string",
         "required": true,
-        "description": "账户 ID（展示在名称后缀，允许空字符串）。"
+        "description": "应用名称（展示用）。"
       },
       "platform": {
         "type": "string",
         "required": true,
-        "description": "广告平台名称（如 TikTok/Facebook/Google/Mintegral/Kwai/NewsBreak）。"
+        "description": "终端/系统平台展示文案（如 安卓、iOS），仅列表行字段；非请求筛选字段，亦非广告渠道名。"
+      },
+      "source": {
+        "type": "string",
+        "required": true,
+        "description": "广告平台/渠道（如 Facebook、Google、TikTok），与请求体 source 筛选语义一致。"
+      },
+      "adAccount": {
+        "type": "AppPerformanceAdAccountMetrics",
+        "required": true,
+        "description": "广告账户分组：与 UI「广告账户」多级表头下子列一一对应（ID、名称、支出、预算、CPA、CPI、安装数）。"
+      },
+      "usageRate": {
+        "type": "number",
+        "required": true,
+        "description": "预算使用率（百分比数值，通常 0–100，极端可大于 100）；一般可由 spend/budget 推导；无预算时可为 0。"
+      },
+      "firstThreeDayRoi": {
+        "type": "FirstThreeDayRoi",
+        "required": true,
+        "description": "近三日每日一条 ROI：dates[i] 与 data[i] 一一对应；表头由前端对 date 做本地化（可与「广告账户」并列作为另一组多级表头）。"
+      },
+      "roi3": {
+        "type": "number",
+        "required": true,
+        "description": "3 日 ROI 汇总指标（可与 firstThreeDayRoi 折线并存；口径由后端定义）。"
+      },
+      "roi7": {
+        "type": "number",
+        "required": true,
+        "description": "7 日 ROI 汇总指标（口径由后端定义）。"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["normal", "warning", "roi_low"],
+        "description": "账户状态：normal=正常，warning=注意，roi_low=ROI 偏低。"
+      }
+    },
+    "AppPerformanceAdAccountMetrics": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "广告账户 ID（与 accountId 通常相同；前端 row-key 建议使用 adAccount.id）。"
+      },
+      "name": {
+        "type": "string | null",
+        "required": false,
+        "description": "广告账户名称；无名称时可为 null，前端可回退展示 id。"
+      },
+      "accountId": {
+        "type": "string",
+        "required": true,
+        "description": "广告账户 ID 展示用（可与 id 相同；允许空字符串）。"
       },
       "spend": {
         "type": "number",
@@ -99,14 +147,14 @@
         "description": "广告支出花费（数值）。"
       },
       "budget": {
-        "type": "number",
-        "required": true,
-        "description": "预算（数值）。"
+        "type": "number | null",
+        "required": false,
+        "description": "预算（数值）；无预算或未配置时可为 null。"
       },
-      "usageRate": {
-        "type": "number",
-        "required": true,
-        "description": "预算使用率（百分比数值，通常 0–100，极端情况可大于 100）。"
+      "cpa": {
+        "type": "number | null",
+        "required": false,
+        "description": "CPA；无数据或未接入时可为 null。"
       },
       "cpi": {
         "type": "number",
@@ -117,27 +165,18 @@
         "type": "number",
         "required": true,
         "description": "安装数。"
-      },
-      "roi1": {
-        "type": "number",
+      }
+    },
+    "FirstThreeDayRoi": {
+      "dates": {
+        "type": "string[]",
         "required": true,
-        "description": "首日 ROI（数值；后端口径可能为放大后的指标，不限于 0–100）。"
+        "description": "近 N 日横轴（通常为 3 日），YYYY-MM-DD；与 data 等长、按下标对齐；顺序由产品决定（如新→旧）。"
       },
-      "roi3": {
-        "type": "number",
+      "data": {
+        "type": "(number | null)[]",
         "required": true,
-        "description": "3 日 ROI（数值）。"
-      },
-      "roi7": {
-        "type": "number",
-        "required": true,
-        "description": "7 日 ROI（数值）。"
-      },
-      "status": {
-        "type": "string",
-        "required": true,
-        "enum": ["normal", "warning", "roi_low"],
-        "description": "账户状态：normal=正常，warning=注意，roi_low=ROI 偏低。"
+        "description": "与 dates 等长；第 i 项为 dates[i] 当日 ROI（百分比数值，如 94 表示 94%）；缺数或未统计用 null（如展示「-」）。"
       }
     }
   },
@@ -147,8 +186,8 @@
     "dateStart": "2026-02-10",
     "kw": "",
     "ownerId": "",
-    "pageSize": 10,
-    "appIds": [],
+    "pageSize": 0,
+    "appIds": ["com.photo.ai.art.agecam.fx"],
     "source": ""
   },
   "sampleResponse": {
@@ -158,153 +197,267 @@
       "total": 103,
       "accounts": [
         {
-          "id": "194-644-9164",
-          "name": null,
-          "accountId": "194-644-9164",
-          "platform": "Google",
-          "spend": 284.1,
-          "budget": 320,
-          "usageRate": 88.78,
-          "cpi": 0.06,
-          "installs": 4920,
-          "roi1": 90679.59,
-          "roi3": 105227.86,
-          "roi7": 108163.91,
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "2120987842049790",
+            "name": "GO_FB_PT_LKD_24",
+            "accountId": "2120987842049790",
+            "spend": 899,
+            "budget": 930,
+            "cpa": null,
+            "cpi": 0.17,
+            "installs": 5369
+          },
+          "usageRate": 96.67,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [94, 90, 92]
+          },
+          "roi3": 92,
+          "roi7": 91.5,
           "status": "normal"
         },
         {
-          "id": "884746097634453",
-          "name": "GO_FB_PT3_ZLWL_01",
-          "accountId": "884746097634453",
-          "platform": "Facebook",
-          "spend": 18.74,
-          "budget": 38,
-          "usageRate": 49.32,
-          "cpi": 0.17,
-          "installs": 113,
-          "roi1": 508.59,
-          "roi3": 545.09,
-          "roi7": 577.27,
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "2002274913966343",
+            "name": "GO_FB_PT_LKD_26",
+            "accountId": "2002274913966343",
+            "spend": 114,
+            "budget": 720,
+            "cpa": null,
+            "cpi": 0.19,
+            "installs": 613
+          },
+          "usageRate": 15.83,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [91, 84, 81]
+          },
+          "roi3": 85.33,
+          "roi7": 84,
           "status": "normal"
         },
         {
-          "id": "250-204-6703",
-          "name": null,
-          "accountId": "250-204-6703",
-          "platform": "Google",
-          "spend": 139.53,
-          "budget": 360,
-          "usageRate": 38.76,
-          "cpi": 0.15,
-          "installs": 934,
-          "roi1": 35102.88,
-          "roi3": 38444.48,
-          "roi7": 39368.42,
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "1520303086353687",
+            "name": "GO_FB_PT_DLBF_01",
+            "accountId": "1520303086353687",
+            "spend": 110,
+            "budget": 105,
+            "cpa": null,
+            "cpi": 0.23,
+            "installs": 475
+          },
+          "usageRate": 104.76,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [67, 79, 74]
+          },
+          "roi3": 73.33,
+          "roi7": 72,
+          "status": "warning"
+        },
+        {
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "810992215185662",
+            "name": "GIMC_FB_PT_LKD_01",
+            "accountId": "810992215185662",
+            "spend": 128,
+            "budget": 80,
+            "cpa": null,
+            "cpi": 0.31,
+            "installs": 418
+          },
+          "usageRate": 160,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [84, 94, 78]
+          },
+          "roi3": 85.33,
+          "roi7": 86,
           "status": "normal"
         },
         {
-          "id": "785-657-5839",
-          "name": null,
-          "accountId": "785-657-5839",
-          "platform": "Google",
-          "spend": 147.79,
-          "budget": 150,
-          "usageRate": 98.53,
-          "cpi": 0.11,
-          "installs": 1395,
-          "roi1": 11873.37,
-          "roi3": 12959.3,
-          "roi7": 13466.32,
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "2348015038954610",
+            "name": "GO_FB_PT_LKD_19",
+            "accountId": "2348015038954610",
+            "spend": 81.8,
+            "budget": 430,
+            "cpa": null,
+            "cpi": 1.3,
+            "installs": 63
+          },
+          "usageRate": 19.02,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [58, 88, 82]
+          },
+          "roi3": 76,
+          "roi7": 75,
+          "status": "warning"
+        },
+        {
+          "appId": "app-phone-tracker",
+          "appName": "PhoneTracker",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "904153259135506",
+            "name": "GO_FB_PT_LKD_23",
+            "accountId": "904153259135506",
+            "spend": 0.9,
+            "budget": null,
+            "cpa": null,
+            "cpi": 0.3,
+            "installs": 3
+          },
+          "usageRate": 0,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [null, 63, 70]
+          },
+          "roi3": 66.5,
+          "roi7": 68,
           "status": "normal"
         },
         {
-          "id": "566-130-6966",
-          "name": null,
-          "accountId": "566-130-6966",
-          "platform": "Google",
-          "spend": 47.8,
-          "budget": 150,
-          "usageRate": 31.87,
-          "cpi": 0.15,
-          "installs": 317,
-          "roi1": 14936.96,
-          "roi3": 17731.51,
-          "roi7": 19194.54,
+          "appId": "app-phone-tracker-2",
+          "appName": "PhoneTracker2",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "1415127786248229",
+            "name": "GO_FB_PT2_GZYJ_01",
+            "accountId": "1415127786248229",
+            "spend": 866,
+            "budget": 940,
+            "cpa": null,
+            "cpi": 0.38,
+            "installs": 2272
+          },
+          "usageRate": 92.13,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [96, 106, 92]
+          },
+          "roi3": 98,
+          "roi7": 97.5,
           "status": "normal"
         },
         {
-          "id": "463-423-2598",
-          "name": null,
-          "accountId": "463-423-2598",
-          "platform": "Google",
-          "spend": 443.3,
-          "budget": 440,
-          "usageRate": 100.75,
-          "cpi": 0.32,
-          "installs": 1364,
-          "roi1": 10763.12,
-          "roi3": 11553.33,
-          "roi7": 11986.47,
+          "appId": "app-phone-tracker-2",
+          "appName": "PhoneTracker2",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "27221597870760415",
+            "name": "GO_FB_PT2_GZYJ_10",
+            "accountId": "27221597870760415",
+            "spend": 202,
+            "budget": 373,
+            "cpa": null,
+            "cpi": 0.13,
+            "installs": 1506
+          },
+          "usageRate": 54.16,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [93, 87, 90]
+          },
+          "roi3": 90,
+          "roi7": 89.5,
           "status": "normal"
         },
         {
-          "id": "955-251-2395",
-          "name": null,
-          "accountId": "955-251-2395",
-          "platform": "Google",
-          "spend": 53.06,
-          "budget": 50,
-          "usageRate": 106.11,
-          "cpi": 0.03,
-          "installs": 1553,
-          "roi1": 16217.74,
-          "roi3": 18249.44,
-          "roi7": 18923.79,
+          "appId": "app-phone-tracker-2",
+          "appName": "PhoneTracker2",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "4446301092325872",
+            "name": "GO_FB_PT2_GZYJ_06",
+            "accountId": "4446301092325872",
+            "spend": 315,
+            "budget": 320,
+            "cpa": null,
+            "cpi": 0.12,
+            "installs": 2602
+          },
+          "usageRate": 98.44,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [94, 99, 86]
+          },
+          "roi3": 93,
+          "roi7": 92.5,
           "status": "normal"
         },
         {
-          "id": "470-484-3596",
-          "name": null,
-          "accountId": "470-484-3596",
-          "platform": "Google",
-          "spend": 533.58,
-          "budget": 1940,
-          "usageRate": 27.5,
-          "cpi": 0.17,
-          "installs": 3105,
-          "roi1": 6375.53,
-          "roi3": 8340.6,
-          "roi7": 9447.19,
+          "appId": "app-phone-tracker-2",
+          "appName": "PhoneTracker2",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "946266401296046",
+            "name": "GO_FB_PT2_GZYJ_09",
+            "accountId": "946266401296046",
+            "spend": 212,
+            "budget": 260,
+            "cpa": null,
+            "cpi": 0.14,
+            "installs": 1487
+          },
+          "usageRate": 81.54,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [95, 97, 82]
+          },
+          "roi3": 91.33,
+          "roi7": 91,
           "status": "normal"
         },
         {
-          "id": "1463553685301923",
-          "name": "GO_FB_DSA_CQLR_PG04",
-          "accountId": "1463553685301923",
-          "platform": "Facebook",
-          "spend": 76.06,
-          "budget": 105,
-          "usageRate": 72.44,
-          "cpi": 1.06,
-          "installs": 72,
-          "roi1": 56,
-          "roi3": 56,
-          "roi7": 56,
-          "status": "roi_low"
-        },
-        {
-          "id": "1459953525086639",
-          "name": "GIMC_FB_PT_LKD_05",
-          "accountId": "1459953525086639",
-          "platform": "Facebook",
-          "spend": 87.81,
-          "budget": 210,
-          "usageRate": 41.81,
-          "cpi": 0.21,
-          "installs": 427,
-          "roi1": 180.55,
-          "roi3": 187.38,
-          "roi7": 189.55,
+          "appId": "app-phone-tracker-2",
+          "appName": "PhoneTracker2",
+          "platform": "安卓",
+          "source": "Facebook",
+          "adAccount": {
+            "id": "25809345558748028",
+            "name": "GO_FB_PT2_GZYJ_08",
+            "accountId": "25809345558748028",
+            "spend": 159,
+            "budget": 765,
+            "cpa": null,
+            "cpi": 0.15,
+            "installs": 1069
+          },
+          "usageRate": 20.78,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [103, 99, 93]
+          },
+          "roi3": 98.33,
+          "roi7": 98,
           "status": "normal"
         }
       ]
@@ -315,14 +468,20 @@
     "method": "POST",
     "priority": "P1",
     "requestBody": "currentPage, pageSize, dateStart, dateEnd, kw?, ownerId?, appIds?, source?",
-    "responseBody": "code, message, data: { total, accounts }"
+    "responseBody": "code, message, data: { total, accounts[] }；accounts 含 appId, appName, platform, source, adAccount{id,name,accountId,spend,budget?,cpa?,cpi,installs}, usageRate, firstThreeDayRoi, roi3, roi7, status；无 roi1"
   },
   "apiSuggestion": {
     "notes": [
-      "status 枚举建议与前端展示逻辑一致：normal=正常，warning=注意，roi_low=ROI偏低。",
-      "name 可为 null：前端展示名称时建议回退为 accountId 或占位文案。",
-      "roi1/roi3/roi7 为后端口径数值，可能与「百分比 0–100」不同；usageRate 在超支等场景可能大于 100。",
-      "无数据时 data.accounts 返回 []，data.total 为 0；message 可为 null。"
+      "列表 UI 建议使用多级表头：顶层为「应用 / 平台 / 广告平台 / 广告账户 / 首日ROI」等分组；其中「广告账户」下再挂 ID、名称、广告支出、预算、CPA、CPI、安装数，与 adAccount 子字段一致；首日 ROI 下再挂三日子列，与 firstThreeDayRoi 一致。ElTable 可用多级 header slot 或列 children 实现。",
+      "一行=一条广告账户记录：应用维度为 appId + appName（同应用多行可重复）；终端 platform、广告渠道 source；账户指标均在 adAccount 内；usageRate、firstThreeDayRoi、roi3、roi7、status 为行级扩展指标。",
+      "sampleResponse.accounts 为节选示例（条数可少于 total）；全量时仅扩充数组元素即可。",
+      "HTTP 层统一包装为 code / message / data；业务字段在 data 内。",
+      "筛选请求体不含 platform：应用维度用 appIds（空数组=全部）；终端仅在 accounts[].platform 展示。",
+      "firstThreeDayRoi 为 dates + data；data[i] 可为 null 表示当日无数据（UI「-」）。",
+      "roi3 / roi7 为后端汇总口径，可与折线并存。",
+      "adAccount.budget 可为 null；无预算时 usageRate 建议返回 0。",
+      "无数据时 data.accounts 返回 []，data.total 为 0；message 可为 null。",
+      "status 枚举：normal=正常，warning=注意，roi_low=ROI偏低。"
     ]
   }
 }

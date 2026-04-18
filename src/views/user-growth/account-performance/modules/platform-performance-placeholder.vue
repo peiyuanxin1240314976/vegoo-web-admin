@@ -64,13 +64,48 @@
           <template #cell:cpi="{ row }">{{ formatFixed2OrEmpty(row.cpi) }}</template>
           <template #cell:installs="{ row }">{{ formatNumber(row.installs) }}</template>
 
-          <template #cell:roi1="{ row }">
-            <span
-              v-if="hasFiniteNumber(row.roi1)"
-              :class="getRoiClass(round2Number(row.roi1) ?? 0)"
+          <template #cell:firstThreeDayRoi="{ row }">
+            <ElTooltip
+              v-if="hasRoiTrend(row.firstThreeDayRoi)"
+              placement="top"
+              :show-after="100"
+              effect="dark"
             >
-              {{ formatPercentFixed2OrEmpty(row.roi1) }}
-            </span>
+              <template #content>
+                <div class="ap-roi-tooltip">
+                  <div
+                    v-for="item in roiTooltipItems(row.firstThreeDayRoi)"
+                    :key="item.key"
+                    class="ap-roi-tooltip-item"
+                  >
+                    <span>{{ item.date }}</span>
+                    <span>{{ item.value }}</span>
+                  </div>
+                </div>
+              </template>
+
+              <div class="ap-roi-trend-cell">
+                <svg
+                  class="ap-roi-trend-svg"
+                  viewBox="0 0 72 24"
+                  aria-label="首日ROI趋势"
+                  role="img"
+                >
+                  <polyline
+                    :points="roiPolylinePoints(row.firstThreeDayRoi)"
+                    class="ap-roi-trend-line"
+                  />
+                  <circle
+                    v-for="point in roiChartPoints(row.firstThreeDayRoi)"
+                    :key="point.key"
+                    :cx="point.x"
+                    :cy="point.y"
+                    r="2"
+                    class="ap-roi-trend-dot"
+                  />
+                </svg>
+              </div>
+            </ElTooltip>
             <span v-else>无数据</span>
           </template>
 
@@ -185,10 +220,15 @@
     usageRate: number
     cpi: number
     installs: number
-    roi1: number
+    firstThreeDayRoi: FirstThreeDayRoi
     roi3: number
     roi7: number
     status: 'normal' | 'warning' | 'roi_low'
+  }
+
+  interface FirstThreeDayRoi {
+    dates: string[]
+    data: (number | null)[]
   }
 
   function goCampaignDetail(row: PlatformRow) {
@@ -211,17 +251,32 @@
     iconBg?: string
     iconColor?: string
     iconChar?: string
+    roi1?: number | null
   }
 
   function normalizePlatformRow(row: PlatformApiRow): PlatformRow {
     const icon = row.iconBg && row.iconColor && row.iconChar ? row : PLATFORM_ICON_MAP[row.name]
+    const roiDates = Array.isArray(row.firstThreeDayRoi?.dates)
+      ? row.firstThreeDayRoi.dates.slice(0, 3).map(String)
+      : ['2026-04-09', '2026-04-08', '2026-04-07']
+    const roiDataIn = Array.isArray(row.firstThreeDayRoi?.data) ? row.firstThreeDayRoi.data : []
+    const roiData = [0, 1, 2].map((index) =>
+      index < roiDataIn.length ? toFiniteNumber(roiDataIn[index]) : null
+    )
+    if (roiData.every((item) => item === null) && toFiniteNumber(row.roi1) !== null) {
+      roiData[0] = toFiniteNumber(row.roi1)
+    }
     return {
       ...(row as PlatformRow),
       ...(typeof (icon as any).iconBg === 'string' ? { iconBg: (icon as any).iconBg } : {}),
       ...(typeof (icon as any).iconColor === 'string'
         ? { iconColor: (icon as any).iconColor }
         : {}),
-      ...(typeof (icon as any).iconChar === 'string' ? { iconChar: (icon as any).iconChar } : {})
+      ...(typeof (icon as any).iconChar === 'string' ? { iconChar: (icon as any).iconChar } : {}),
+      firstThreeDayRoi: {
+        dates: roiDates.length === 3 ? roiDates : ['2026-04-09', '2026-04-08', '2026-04-07'],
+        data: roiData
+      }
     }
   }
 
@@ -231,15 +286,15 @@
 
   const virtualColumns = computed<ArtVirtualTableColumn[]>(() => [
     { key: 'name', title: '广告平台', width: 170, flexGrow: 1 },
-    { key: 'accountCount', title: '账户数', width: 120, align: 'center' },
-    { key: 'spend', title: '广告支出', width: 120, align: 'center' },
+    { key: 'accountCount', title: '账户数', width: 96, align: 'center' },
+    { key: 'spend', title: '广告支出', width: 106, align: 'center' },
     { key: 'budget', title: '预算', width: 120, align: 'center' },
     { key: 'usageRate', title: '使用率', width: 150, align: 'center' },
     { key: 'cpi', title: 'CPI', width: 90, align: 'center' },
     { key: 'installs', title: '安装数', width: 120, align: 'center' },
-    { key: 'roi1', title: '首日ROI', width: 110, align: 'center' },
-    { key: 'roi3', title: '3日ROI', width: 100, align: 'center' },
-    { key: 'roi7', title: '7日ROI', width: 100, align: 'center' },
+    { key: 'firstThreeDayRoi', title: '首日ROI', width: 120, align: 'center' },
+    { key: 'roi3', title: '3日ROI', width: 126, align: 'center' },
+    { key: 'roi7', title: '7日ROI', width: 126, align: 'center' },
     { key: 'status', title: '状态', width: 70, align: 'center' },
     { key: 'operation', title: '操作', width: 70, align: 'center' }
   ])
@@ -377,6 +432,75 @@
   function formatPercentFixed2OrEmpty(v: unknown): string {
     const n = toFiniteNumber(v)
     return n === null ? EMPTY_TEXT : `${n.toFixed(2)}%`
+  }
+
+  function hasRoiTrend(roi: FirstThreeDayRoi | null | undefined): boolean {
+    return roiChartPoints(roi).length >= 2
+  }
+
+  function roiChartPoints(roi: FirstThreeDayRoi | null | undefined): Array<{
+    key: string
+    x: number
+    y: number
+    value: number
+    date: string
+  }> {
+    const dates = Array.isArray(roi?.dates) ? roi!.dates.slice(0, 3).map(String) : []
+    const raw = Array.isArray(roi?.data) ? roi!.data.slice(0, 3) : []
+    const valid = raw
+      .map((item, index) => {
+        const value = toFiniteNumber(item)
+        if (value === null) return null
+        return {
+          key: `${dates[index] ?? index}-${value}`,
+          value,
+          date: dates[index] ?? `D${index + 1}`,
+          index
+        }
+      })
+      .filter(Boolean) as Array<{ key: string; value: number; date: string; index: number }>
+
+    if (!valid.length) return []
+
+    const values = valid.map((item) => item.value)
+    const min = Math.min(...values)
+    const max = Math.max(...values)
+    const span = max - min || 1
+    const xMap = [8, 36, 64]
+
+    return valid.map((item) => ({
+      key: item.key,
+      value: item.value,
+      date: item.date,
+      x: xMap[item.index] ?? 8 + item.index * 28,
+      y: Number((20 - ((item.value - min) / span) * 12).toFixed(2))
+    }))
+  }
+
+  function roiPolylinePoints(roi: FirstThreeDayRoi | null | undefined): string {
+    return roiChartPoints(roi)
+      .map((point) => `${point.x},${point.y}`)
+      .join(' ')
+  }
+
+  function roiTooltipItems(roi: FirstThreeDayRoi | null | undefined): Array<{
+    key: string
+    date: string
+    value: string
+  }> {
+    const dates = Array.isArray(roi?.dates) ? roi!.dates.slice(0, 3).map(String) : []
+    const raw = Array.isArray(roi?.data) ? roi!.data.slice(0, 3) : []
+    return raw
+      .map((item, index) => {
+        const value = toFiniteNumber(item)
+        if (value === null) return null
+        return {
+          key: `${dates[index] ?? index}-${value}`,
+          date: dates[index] ?? `D${index + 1}`,
+          value: `${value.toFixed(2)}%`
+        }
+      })
+      .filter(Boolean) as Array<{ key: string; date: string; value: string }>
   }
 </script>
 
@@ -545,6 +669,49 @@
   .ap-roi-red {
     font-weight: 500;
     color: var(--el-color-danger);
+  }
+
+  .ap-roi-trend-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+  }
+
+  .ap-roi-trend-svg {
+    width: 72px;
+    height: 24px;
+    overflow: visible;
+  }
+
+  .ap-roi-trend-line {
+    fill: none;
+    stroke: #23e7d6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+  }
+
+  .ap-roi-trend-dot {
+    fill: #23e7d6;
+    stroke: rgb(24 24 27 / 85%);
+    stroke-width: 1;
+  }
+
+  .ap-roi-tooltip {
+    min-width: 148px;
+  }
+
+  .ap-roi-tooltip-item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+
+    & + & {
+      margin-top: 6px;
+    }
   }
 
   /* 底部汇总 */
