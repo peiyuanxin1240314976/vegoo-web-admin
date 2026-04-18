@@ -2,44 +2,74 @@
   "_comment": "账户成效页 - 平台维度占位表（对应 modules/platform-performance-placeholder.vue）。",
   "fieldDescription": {
     "request": {
-      "dateRangeStart": {
+      "currentPage": {
+        "type": "number",
+        "required": true,
+        "description": "当前页码，从 0 起算（与后端分页约定一致）。"
+      },
+      "dateStart": {
         "type": "string",
         "required": true,
         "description": "开始日期（YYYY-MM-DD）。"
       },
-      "dateRangeEnd": {
+      "dateEnd": {
         "type": "string",
         "required": true,
         "description": "结束日期（YYYY-MM-DD）。"
+      },
+      "kw": {
+        "type": "string",
+        "required": false,
+        "description": "关键词，可为空字符串。"
+      },
+      "ownerId": {
+        "type": "string",
+        "required": false,
+        "description": "广告账户/负责人筛选，对应前端 ownerId。空字符串表示全部。"
+      },
+      "pageSize": {
+        "type": "number",
+        "required": true,
+        "description": "每页条数。"
+      },
+      "platform": {
+        "type": "string",
+        "required": false,
+        "description": "应用/平台等业务筛选（与账户成效页筛选联动）。空字符串表示全部。"
       },
       "source": {
         "type": "string",
         "required": false,
         "description": "广告平台筛选。空字符串表示全部。"
-      },
-      "app": {
-        "type": "string",
-        "required": false,
-        "description": "应用筛选。空字符串表示全部。"
-      },
-      "owner": {
-        "type": "string",
-        "required": false,
-        "description": "负责人筛选。空字符串表示全部。"
       }
     },
     "response": {
-      "platformTotal": {
+      "code": {
+        "type": "number",
+        "required": true,
+        "description": "业务状态码，200 表示成功。"
+      },
+      "message": {
+        "type": "string | null",
+        "required": false,
+        "description": "提示信息，成功时可为 null。"
+      },
+      "data": {
+        "type": "object",
+        "required": true,
+        "description": "业务数据载体。"
+      },
+      "data.platformTotal": {
         "type": "number",
         "required": true,
         "description": "广告平台总数。"
       },
-      "accountTotal": {
+      "data.accountTotal": {
         "type": "number",
         "required": true,
         "description": "广告账户总数（用于底部文案）。"
       },
-      "platforms": {
+      "data.platforms": {
         "type": "PlatformPerformancePlatformRow[]",
         "required": true,
         "description": "表格平台行数据。"
@@ -49,12 +79,12 @@
       "id": {
         "type": "string",
         "required": true,
-        "description": "表格行唯一标识（前端仅用于 key）。"
+        "description": "表格行唯一标识（前端 row-key）。"
       },
       "name": {
         "type": "string",
         "required": true,
-        "description": "广告平台名称（TikTok/Facebook/Google/Mintegral/Kwai/NewsBreak）。"
+        "description": "广告平台名称（如 Google、Facebook、Other 等）。"
       },
       "iconBg": {
         "type": "string",
@@ -89,27 +119,27 @@
       "usageRate": {
         "type": "number",
         "required": true,
-        "description": "预算使用率百分比（0-100）。"
+        "description": "预算使用率百分比（可超过 100）。"
       },
       "cpi": {
         "type": "number",
         "required": true,
-        "description": "CPI（展示到 2 位小数）。"
+        "description": "CPI（展示到合适小数位）。"
       },
       "installs": {
         "type": "number",
         "required": true,
         "description": "安装数。"
       },
-      "roi1": {
-        "type": "number",
+      "firstThreeDayRoi": {
+        "type": "FirstThreeDayRoi",
         "required": true,
-        "description": "首日 ROI（百分比数值）。"
+        "description": "近三日每日一条 ROI：dates[i] 与 data[i] 一一对应，一条折线（一日一点）；表头由前端对 date 做本地化。"
       },
       "roi3": {
         "type": "number",
         "required": true,
-        "description": "3 日 ROI（百分比数值）。"
+        "description": "3 日 ROI（汇总百分比数值，可与折线并存）。"
       },
       "roi7": {
         "type": "number",
@@ -122,134 +152,173 @@
         "enum": ["normal", "warning", "roi_low"],
         "description": "平台状态：normal=正常，warning=注意，roi_low=ROI 偏低。"
       }
+    },
+    "FirstThreeDayRoi": {
+      "dates": {
+        "type": "string[]",
+        "required": true,
+        "description": "近 N 日横轴（通常为 3 日），YYYY-MM-DD；与 data 等长、按下标对齐；顺序由产品决定（如新→旧）。"
+      },
+      "data": {
+        "type": "number[]",
+        "required": true,
+        "description": "与 dates 等长的 ROI（百分比数值，如 94 表示 94%）；第 i 项为 dates[i] 当日值；可带小数。"
+      }
     }
   },
   "sampleRequest": {
-    "dateRangeStart": "2026-02-26",
-    "dateRangeEnd": "2026-03-04",
-    "source": "",
-    "app": "",
-    "owner": ""
+    "currentPage": 0,
+    "dateEnd": "2026-02-10",
+    "dateStart": "2026-02-10",
+    "kw": "",
+    "ownerId": "",
+    "pageSize": 10,
+    "platform": "",
+    "source": ""
   },
   "sampleResponse": {
-    "platformTotal": 6,
-    "accountTotal": 32,
-    "platforms": [
-      {
-        "id": "p1",
-        "name": "TikTok",
-        "iconBg": "#010101",
-        "iconColor": "#ffffff",
-        "iconChar": "♪",
-        "accountCount": 18,
-        "spend": 8847,
-        "budget": 18400,
-        "usageRate": 48.1,
-        "cpi": 0.12,
-        "installs": 143210,
-        "roi1": 103,
-        "roi3": 99,
-        "roi7": 97,
-        "status": "normal"
-      },
-      {
-        "id": "p2",
-        "name": "Facebook",
-        "iconBg": "#1877f2",
-        "iconColor": "#ffffff",
-        "iconChar": "f",
-        "accountCount": 7,
-        "spend": 5274,
-        "budget": 9800,
-        "usageRate": 53.8,
-        "cpi": 0.17,
-        "installs": 43820,
-        "roi1": 94,
-        "roi3": 91,
-        "roi7": 89,
-        "status": "normal"
-      },
-      {
-        "id": "p3",
-        "name": "Google",
-        "iconBg": "#4285f4",
-        "iconColor": "#ffffff",
-        "iconChar": "G",
-        "accountCount": 3,
-        "spend": 1361,
-        "budget": 3200,
-        "usageRate": 42.5,
-        "cpi": 0.21,
-        "installs": 12450,
-        "roi1": 88,
-        "roi3": 85,
-        "roi7": 83,
-        "status": "normal"
-      },
-      {
-        "id": "p4",
-        "name": "Mintegral",
-        "iconBg": "#7c3aed",
-        "iconColor": "#ffffff",
-        "iconChar": "M",
-        "accountCount": 2,
-        "spend": 851,
-        "budget": 2100,
-        "usageRate": 40.5,
-        "cpi": 0.19,
-        "installs": 5890,
-        "roi1": 82,
-        "roi3": 75,
-        "roi7": 74,
-        "status": "warning"
-      },
-      {
-        "id": "p5",
-        "name": "Kwai",
-        "iconBg": "#ff6d00",
-        "iconColor": "#ffffff",
-        "iconChar": "K",
-        "accountCount": 1,
-        "spend": 511,
-        "budget": 1500,
-        "usageRate": 34.1,
-        "cpi": 0.23,
-        "installs": 3244,
-        "roi1": 79,
-        "roi3": 75,
-        "roi7": 71,
-        "status": "warning"
-      },
-      {
-        "id": "p6",
-        "name": "NewsBreak",
-        "iconBg": "#e53e3e",
-        "iconColor": "#ffffff",
-        "iconChar": "N",
-        "accountCount": 1,
-        "spend": 178,
-        "budget": 800,
-        "usageRate": 22.3,
-        "cpi": 0.41,
-        "installs": 180,
-        "roi1": 61,
-        "roi3": 55,
-        "roi7": 49,
-        "status": "roi_low"
-      }
-    ]
+    "code": 200,
+    "message": null,
+    "data": {
+      "platformTotal": 6,
+      "accountTotal": 103,
+      "platforms": [
+        {
+          "id": "13",
+          "name": "Other",
+          "iconBg": "#666666",
+          "iconColor": "#ffffff",
+          "iconChar": "O",
+          "accountCount": 5,
+          "spend": 559.28,
+          "budget": 1070,
+          "usageRate": 52.27,
+          "cpi": 0.12,
+          "installs": 4669,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [88, 86, 87]
+          },
+          "roi3": 577.39,
+          "roi7": 597.41,
+          "status": "normal"
+        },
+        {
+          "id": "20",
+          "name": "Other",
+          "iconBg": "#666666",
+          "iconColor": "#ffffff",
+          "iconChar": "O",
+          "accountCount": 1,
+          "spend": 441.81,
+          "budget": 400,
+          "usageRate": 110.45,
+          "cpi": 0.68,
+          "installs": 651,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [92, 89, 90]
+          },
+          "roi3": 191.67,
+          "roi7": 198.73,
+          "status": "normal"
+        },
+        {
+          "id": "9",
+          "name": "Other",
+          "iconBg": "#666666",
+          "iconColor": "#ffffff",
+          "iconChar": "O",
+          "accountCount": 1,
+          "spend": 3673.8,
+          "budget": 13380,
+          "usageRate": 27.46,
+          "cpi": 0.05,
+          "installs": 70233,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [96, 93, 95]
+          },
+          "roi3": 708000.7,
+          "roi7": 730360.66,
+          "status": "normal"
+        },
+        {
+          "id": "1",
+          "name": "Google",
+          "iconBg": "#4285f4",
+          "iconColor": "#ffffff",
+          "iconChar": "G",
+          "accountCount": 32,
+          "spend": 21725.9,
+          "budget": 42835,
+          "usageRate": 50.72,
+          "cpi": 0.11,
+          "installs": 202150,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [94, 90, 92]
+          },
+          "roi3": 173072.22,
+          "roi7": 180395.12,
+          "status": "normal"
+        },
+        {
+          "id": "10",
+          "name": "Other",
+          "iconBg": "#666666",
+          "iconColor": "#ffffff",
+          "iconChar": "O",
+          "accountCount": 35,
+          "spend": 2723.14,
+          "budget": 15580,
+          "usageRate": 17.48,
+          "cpi": 0.09,
+          "installs": 30697,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [90, 88, 89]
+          },
+          "roi3": 31632.73,
+          "roi7": 32572.52,
+          "status": "normal"
+        },
+        {
+          "id": "2",
+          "name": "Facebook",
+          "iconBg": "#1877f2",
+          "iconColor": "#ffffff",
+          "iconChar": "f",
+          "accountCount": 29,
+          "spend": 7857.91,
+          "budget": 29874.21,
+          "usageRate": 26.3,
+          "cpi": 0.19,
+          "installs": 41592,
+          "firstThreeDayRoi": {
+            "dates": ["2026-04-09", "2026-04-08", "2026-04-07"],
+            "data": [93, 91, 91]
+          },
+          "roi3": 6677.39,
+          "roi7": 6856.74,
+          "status": "normal"
+        }
+      ]
+    }
   },
   "api": {
-    "url": "POST /api/user-growth/account-performance/platform-performance-placeholder-table",
+    "url": "POST /api/v1/datacenter/analysis/account-performance/platform-performance-placeholder-table",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "dateRangeStart, dateRangeEnd, source?, app?, owner?",
-    "responseBody": "platformTotal, accountTotal, platforms"
+    "requestBody": "currentPage, dateStart, dateEnd, kw, ownerId, pageSize, platform, source",
+    "responseBody": "code, message, data { platformTotal, accountTotal, platforms }；platforms[].firstThreeDayRoi 为 { dates, data }，一日一点"
   },
   "apiSuggestion": {
     "notes": [
-      "iconBg/iconColor/iconChar 在占位实现中用于前端徽章展示；真实接口可返回枚举后由前端映射颜色。",
-      "若前端将底部文案改为由 platforms 求和，请确保 accountTotal 与各平台 accountCount 一致。"
+      "HTTP 层统一包装为 code / message / data；业务字段在 data 内。",
+      "firstThreeDayRoi 为 dates + data：三日则长度为 3，一日一个 ROI，对应一条折线；对接 ECharts 时 xAxis.data = dates，series[0].data = data。若将来要同一图里多条对比线再扩展为 series 数组。",
+      "iconBg/iconColor/iconChar 用于前端徽章；usageRate 可能大于 100；roi3/roi7 可与折线并存。",
+      "若前端底部文案由 platforms 汇总，请与 accountTotal 对齐口径。"
     ]
   }
 }

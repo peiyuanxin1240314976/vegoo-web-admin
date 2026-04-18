@@ -229,18 +229,18 @@
   let suppressPageWatch = false
 
   const virtualColumns = computed<ArtVirtualTableColumn[]>(() => [
-    { key: 'name', title: '广告平台', width: 260, flexGrow: 1 },
+    { key: 'name', title: '广告平台', width: 170, flexGrow: 1 },
     { key: 'accountCount', title: '账户数', width: 120, align: 'center' },
     { key: 'spend', title: '广告支出', width: 120, align: 'center' },
     { key: 'budget', title: '预算', width: 120, align: 'center' },
-    { key: 'usageRate', title: '使用率', width: 160, align: 'center' },
+    { key: 'usageRate', title: '使用率', width: 150, align: 'center' },
     { key: 'cpi', title: 'CPI', width: 90, align: 'center' },
     { key: 'installs', title: '安装数', width: 120, align: 'center' },
     { key: 'roi1', title: '首日ROI', width: 110, align: 'center' },
     { key: 'roi3', title: '3日ROI', width: 100, align: 'center' },
     { key: 'roi7', title: '7日ROI', width: 100, align: 'center' },
-    { key: 'status', title: '状态', width: 120, align: 'center' },
-    { key: 'operation', title: '操作', width: 90, align: 'center' }
+    { key: 'status', title: '状态', width: 70, align: 'center' },
+    { key: 'operation', title: '操作', width: 70, align: 'center' }
   ])
 
   async function loadPlatformPerformance() {
