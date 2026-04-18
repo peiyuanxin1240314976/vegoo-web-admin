@@ -3,6 +3,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import { toAppIdsRequestBody } from '@/utils/app-id-request'
 import {
   RevenueDeviationEndpoint,
   isRevenueDeviationEndpointMock
@@ -39,7 +40,7 @@ function normalizeQuery(q: RevenueDeviationQuery) {
     t_start_date: q.t_start_date,
     t_end_date: q.t_end_date,
     source: q.source ?? '',
-    s_app_id: q.s_app_id ?? '',
+    appIds: toAppIdsRequestBody(q.s_app_id ?? ''),
     row_dim: q.row_dim ?? 'app',
     col_dim: q.col_dim ?? 'platform'
   }

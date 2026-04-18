@@ -5,7 +5,11 @@
       "t_start_date": { "type": "string", "required": true, "description": "开始日 YYYY-MM-DD。" },
       "t_end_date": { "type": "string", "required": true, "description": "结束日 YYYY-MM-DD。" },
       "source": { "type": "string", "required": false, "description": "广告平台 slug，空为全部。" },
-      "s_app_id": { "type": "string", "required": false, "description": "应用 ID，空为全部。" },
+      "appIds": {
+        "type": "string[]",
+        "required": true,
+        "description": "应用筛选；不限为 []，单选为 [\"应用ID\"]。"
+      },
       "matrix_source": {
         "type": "string",
         "required": false,
@@ -48,7 +52,7 @@
     "t_start_date": "2024-05-01",
     "t_end_date": "2024-05-31",
     "source": "",
-    "s_app_id": "",
+    "appIds": [],
     "matrix_source": "",
     "row_dim": "app",
     "col_dim": "platform"
@@ -115,7 +119,7 @@
     "url": "POST /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/trend",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "t_start_date, t_end_date, source?, s_app_id?, matrix_source?, row_dim?, col_dim?",
+    "requestBody": "t_start_date, t_end_date, source?, appIds, matrix_source?, row_dim?, col_dim?",
     "responseBody": "RevenueDeviationOverviewTrend"
   },
   "apiSuggestion": {

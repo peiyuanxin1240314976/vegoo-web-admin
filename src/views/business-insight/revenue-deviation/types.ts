@@ -37,6 +37,17 @@ export type RevenueDeviationMatrixColDim = 'platform' | 'date'
 
 export type RevenueDeviationMatrixQuery = RevenueDeviationQuery
 
+/** POST 网关请求体（`api/revenue-deviation` 中 `normalizeQuery` 产出） */
+export type RevenueDeviationPostBody = {
+  t_start_date: string
+  t_end_date: string
+  source: string
+  appIds: string[]
+  row_dim: RevenueDeviationMatrixRowDim
+  col_dim: RevenueDeviationMatrixColDim
+  matrix_source?: string
+}
+
 /** 01-overview-kpis */
 export type RevenueDeviationOverviewKpis = {
   d_revenue_estimated: number

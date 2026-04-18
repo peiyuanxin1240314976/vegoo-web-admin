@@ -18,20 +18,21 @@
           :teleported="true"
           popper-class="rd-filter-popper"
         />
-        <el-select
+        <AppPlatformSearchSelect
           v-model="appFilter"
-          class="rd-filter-select"
+          mode="app"
+          class="rd-filter-select rd-filter-app-select"
+          input-class="rd-filter-app-select__input"
           placeholder="应用"
-          popper-class="rd-filter-popper"
-          :teleported="true"
-        >
-          <el-option
-            v-for="item in appOptions"
-            :key="`app-${item.value}-${item.label}`"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
+          search-placeholder="搜索类别/应用名称/应用简称"
+          all-label="全部应用"
+          dropdown-class="rd-filter-popper"
+          :setting-apps="settingAppsForSelect"
+          :height="32"
+          :min-width="160"
+          :max-width="260"
+          :show-platform-suffix="true"
+        />
 
         <!-- <el-select
           v-model="platform"
@@ -402,8 +403,11 @@
     onActivated,
     onDeactivated
   } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { TopRight } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
@@ -427,6 +431,10 @@
   } from '@/views/business-insight/revenue-deviation/types'
 
   defineOptions({ name: 'RevenueDeviation' })
+
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
+  const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
 
   interface MatrixCell {
     estimated: string
@@ -482,7 +490,6 @@
   }
 
   const ALL_SOURCE_VALUE = '__ALL_SOURCE__'
-  const ALL_APP_VALUE = '__ALL_APP__'
 
   function toSelectOptions(
     options: RevenueDeviationFilterOption[],
@@ -509,12 +516,10 @@
   // ── State ────────────────────────────────────────────────────────────────────
   const dateRange = ref<[string, string]>(getDefaultDateRange())
   const platform = ref(ALL_SOURCE_VALUE)
-  const appFilter = ref(ALL_APP_VALUE)
+  /** 空字符串 = 不限应用；POST 由 api 层转为 appIds: [] */
+  const appFilter = ref('')
   const sourceOptions = ref<RevenueDeviationFilterOption[]>([
     { value: ALL_SOURCE_VALUE, label: '全部广告平台' }
-  ])
-  const appOptions = ref<RevenueDeviationFilterOption[]>([
-    { value: ALL_APP_VALUE, label: '全部应用' }
   ])
   const activeCountryTab = ref('amount')
   const matrixPlatform = ref(ALL_SOURCE_VALUE)
@@ -625,13 +630,12 @@
   )
 
   async function loadMetaFilterOptions() {
+    await cockpitMetaStore.ensureLoaded()
     try {
       const options = await fetchRevenueDeviationMetaFilterOptions()
       sourceOptions.value = toSelectOptions(options.sources, '全部广告平台', ALL_SOURCE_VALUE)
-      appOptions.value = toSelectOptions(options.apps, '全部应用', ALL_APP_VALUE)
     } catch {
       sourceOptions.value = [{ value: ALL_SOURCE_VALUE, label: '全部广告平台' }]
-      appOptions.value = [{ value: ALL_APP_VALUE, label: '全部应用' }]
     }
   }
 
@@ -640,7 +644,7 @@
       t_start_date: dateRange.value[0]!,
       t_end_date: dateRange.value[1]!,
       source: platform.value === ALL_SOURCE_VALUE ? '' : platform.value,
-      s_app_id: appFilter.value === ALL_APP_VALUE ? '' : appFilter.value,
+      s_app_id: appFilter.value.trim(),
       row_dim: activeRowDim.value,
       col_dim: activeColDim.value
     }
@@ -1267,7 +1271,8 @@
   }
 
   :deep(.rd-filter-date .el-input__wrapper),
-  :deep(.rd-filter-select .el-select__wrapper) {
+  :deep(.rd-filter-select .el-select__wrapper),
+  :deep(.rd-filter-app-select) {
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
     border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     border-radius: var(--el-border-radius-base, 4px);
@@ -1307,14 +1312,16 @@
   }
 
   :deep(.rd-filter-date .el-input__wrapper:hover),
-  :deep(.rd-filter-select .el-select__wrapper:hover) {
+  :deep(.rd-filter-select .el-select__wrapper:hover),
+  :deep(.rd-filter-app-select:hover) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: 0 0 0 1px
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   :deep(.rd-filter-date .el-input__wrapper.is-focus),
-  :deep(.rd-filter-select .el-select__wrapper.is-focused) {
+  :deep(.rd-filter-select .el-select__wrapper.is-focused),
+  :deep(.rd-filter-app-select.is-open) {
     background: color-mix(
       in srgb,
       var(--theme-color, var(--art-primary, #3b82f6)) 6%,
@@ -1326,7 +1333,8 @@
   }
 
   :deep(.rd-filter-date .el-input__inner),
-  :deep(.rd-filter-select .el-select__selected-item) {
+  :deep(.rd-filter-select .el-select__selected-item),
+  :deep(.rd-filter-app-select .app-platform-search-select__text) {
     font-size: 14px;
     color: var(--text-primary);
   }
@@ -1337,14 +1345,20 @@
     color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.rd-filter-select .el-select__placeholder) {
+  :deep(.rd-filter-select .el-select__placeholder),
+  :deep(.rd-filter-app-select .app-platform-search-select__text.is-placeholder) {
     color: var(--el-text-color-placeholder);
   }
 
   :deep(.rd-filter-select .el-select__caret),
   :deep(.rd-filter-select .el-select__suffix),
-  :deep(.rd-filter-select .el-select__icon) {
+  :deep(.rd-filter-select .el-select__icon),
+  :deep(.rd-filter-app-select .app-platform-search-select__suffix) {
     color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  .rd-filter-app-select {
+    width: min(260px, 100%);
   }
 
   .rd-filter-action {
@@ -2357,7 +2371,8 @@
       max-width: 100% !important;
     }
 
-    .rd-filter-select {
+    .rd-filter-select,
+    .rd-filter-app-select {
       flex: 1 1 calc(50% - 6px);
       width: auto;
       min-width: 0;
