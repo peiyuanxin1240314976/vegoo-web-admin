@@ -466,24 +466,17 @@
     }
   }
 
+  /** 仅 Tab 切回「应用」时拉表；筛选生效只在「查询」里 applyFilters + loadAppTableTree，避免与 watch(applied*) 重复请求 */
   let appTableDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [modelValue, appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
-    () => {
-      if (modelValue.value !== '应用') return
-
-      // 切换到「应用」或筛选条件变化时，立即进入 loading 态
-      // 避免 debounce 这段时间内渲染旧 DOM
-      appTableLoading.value = true
-      appCurrentPage.value = 1
-
-      if (appTableDebounceTimer) clearTimeout(appTableDebounceTimer)
-      appTableDebounceTimer = setTimeout(() => {
-        void loadAppTableTree()
-      }, 300)
-    },
-    { deep: true }
-  )
+  watch(modelValue, (v) => {
+    if (v !== '应用') return
+    appTableLoading.value = true
+    appCurrentPage.value = 1
+    if (appTableDebounceTimer) clearTimeout(appTableDebounceTimer)
+    appTableDebounceTimer = setTimeout(() => {
+      void loadAppTableTree()
+    }, 300)
+  })
 
   watch(tableSearch, () => {
     if (modelValue.value !== '应用') return
@@ -547,18 +540,7 @@
     }
   }
 
-  // 仅 KPI 联动筛选条件，避免其它模块（表格/图表）未联动造成认知不一致
-  let kpiDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
-    () => {
-      if (kpiDebounceTimer) clearTimeout(kpiDebounceTimer)
-      kpiDebounceTimer = setTimeout(() => {
-        void loadKpiCards()
-      }, 300)
-    },
-    { deep: true }
-  )
+  // KPI/图表：不在此 watch(applied*) —— 与 onQuery 内 applyFilters 重复触发双倍请求；筛选仅通过「查询」生效
 
   // 广告平台消耗分布：独立请求 + 局部骨架屏避免整页等待
   const channelSpend = ref<ChannelSpendItem[]>([])
@@ -602,19 +584,6 @@
     }
   }
 
-  // 只联动右侧该张图，避免其它区域（表格/图表）在 KPI 未就绪时来回闪烁
-  let channelDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
-    () => {
-      if (channelDebounceTimer) clearTimeout(channelDebounceTimer)
-      channelDebounceTimer = setTimeout(() => {
-        void loadChannelSpend()
-      }, 300)
-    },
-    { deep: true }
-  )
-
   // 账户预算使用率分布：独立请求 + 局部骨架屏
   const usageBuckets = ref<BudgetUsageBucket[]>([])
   const usageLoading = ref(true)
@@ -657,18 +626,6 @@
     }
   }
 
-  let usageDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
-    () => {
-      if (usageDebounceTimer) clearTimeout(usageDebounceTimer)
-      usageDebounceTimer = setTimeout(() => {
-        void loadUsageBuckets()
-      }, 300)
-    },
-    { deep: true }
-  )
-
   // 首日ROI趋势（7天）：独立请求 + 局部骨架屏
   const roiTrend = ref<Day1RoiTrendItem[]>([])
   const roiTrendLoading = ref(true)
@@ -710,18 +667,6 @@
       }
     }
   }
-
-  let roiTrendDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
-    () => {
-      if (roiTrendDebounceTimer) clearTimeout(roiTrendDebounceTimer)
-      roiTrendDebounceTimer = setTimeout(() => {
-        void loadDay1RoiTrend()
-      }, 300)
-    },
-    { deep: true }
-  )
 
   type TableRowWithMeta = AccountDetailRow & { __appId?: string }
 
@@ -1103,18 +1048,6 @@
     }
   }
 
-  let paceDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
-    () => {
-      if (paceDebounceTimer) clearTimeout(paceDebounceTimer)
-      paceDebounceTimer = setTimeout(() => {
-        void loadTodaySpendPace()
-      }, 300)
-    },
-    { deep: true }
-  )
-
   // 预警事项：暂无真实数据，不请求接口（避免开发环境 mock 仍展示）；联调后恢复 request 赋值
   const alerts = ref<AccountAlertItem[]>([])
   const alertsLoading = ref(false)
@@ -1124,18 +1057,6 @@
     if (!dateStart || !dateEnd) return
     alerts.value = []
   }
-
-  let alertsDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  watch(
-    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
-    () => {
-      if (alertsDebounceTimer) clearTimeout(alertsDebounceTimer)
-      alertsDebounceTimer = setTimeout(() => {
-        void loadAlerts()
-      }, 300)
-    },
-    { deep: true }
-  )
 
   function renderPaceChart() {
     if (paceLoading.value) return
