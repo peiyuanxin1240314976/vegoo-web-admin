@@ -172,7 +172,8 @@ function platformBarItemMatches(itemName: string, source: string): boolean {
 export function buildMockComprehensiveAnalysisData(
   params: ComprehensiveAnalysisApiParams
 ): ComprehensiveAnalysisData {
-  const key = `${params.date_start}|${params.date_end}|${params.s_app_id}|${params.source}|${params.s_country_code}`
+  const appKey = [...params.appIds].sort().join(',')
+  const key = `${params.date_start}|${params.date_end}|${appKey}|${params.source}|${params.s_country_code}`
   const h = hashStr(key)
   const jitter = 0.88 + (h % 25) / 100
   const d = cloneComprehensiveData(MOCK_COMPREHENSIVE_ANALYSIS_DATA)
@@ -220,10 +221,10 @@ export function buildMockComprehensiveAnalysisData(
 
   d.appCpiRank = d.appCpiRank.map((row, i) => {
     let cpi = row.cpi * jitter
-    if (params.s_app_id && params.s_app_id === 'weather5' && row.name === 'Weather5') {
+    if (params.appIds.includes('weather5') && row.name === 'Weather5') {
       cpi *= 0.92
     }
-    if (params.s_app_id && params.s_app_id === 'phonetracker' && row.name === 'PhoneTracker') {
+    if (params.appIds.includes('phonetracker') && row.name === 'PhoneTracker') {
       cpi *= 0.9
     }
     return {

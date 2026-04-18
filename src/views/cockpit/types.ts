@@ -416,6 +416,8 @@ export interface CockpitChannelRoiInstallItem {
   roi: number
   roiChange?: number
   cpi: number
+  /** 近 7 日等指标序列（消耗/安装等，由接口或 mock 提供；表格可不展示） */
+  trend?: number[]
 }
 
 /** 广告平台 ROI&安装量接口：单日数据（list 中每个元素，接口可能返回 null） */

@@ -261,12 +261,14 @@
       ? row.firstThreeDayRoi.dates.slice(0, 3).map(String)
       : ['2026-04-09', '2026-04-08', '2026-04-07']
     const roiDataIn = Array.isArray(row.firstThreeDayRoi?.data) ? row.firstThreeDayRoi.data : []
-    const roiData = [0, 1, 2].map((index) =>
+    const roiFromSeries: (number | null)[] = [0, 1, 2].map((index) =>
       index < roiDataIn.length ? toFiniteNumber(roiDataIn[index]) : null
     )
-    if (roiData.every((item) => item === null) && toFiniteNumber(row.roi1) !== null) {
-      roiData[0] = toFiniteNumber(row.roi1)
-    }
+    const roi1Fallback = toFiniteNumber(row.roi1)
+    const roiData: (number | null)[] =
+      roiFromSeries.every((item) => item === null) && roi1Fallback !== null
+        ? [roi1Fallback, roiFromSeries[1], roiFromSeries[2]]
+        : roiFromSeries
     return {
       ...(row as PlatformRow),
       ...(typeof (icon as any).iconBg === 'string' ? { iconBg: (icon as any).iconBg } : {}),
