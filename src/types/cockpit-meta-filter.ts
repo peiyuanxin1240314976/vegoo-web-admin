@@ -24,6 +24,8 @@ export interface CockpitMetaFilterOptionsData {
   appOptions: CockpitMetaOptionItem[]
   platformOptions: CockpitMetaOptionItem[]
   sourceOptions: CockpitMetaOptionItem[]
+  /** 广告账户等；网关未下发时为空数组 */
+  accountOptions: CockpitMetaOptionItem[]
   countryOptions: CockpitMetaOptionItem[]
   settingApps: CockpitSettingAppItem[]
 }

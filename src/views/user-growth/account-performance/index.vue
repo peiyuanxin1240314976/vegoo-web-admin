@@ -271,8 +271,7 @@
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { toAppIdsRequestBody } from '@/utils/app-id-request'
-  import { AD_PERFORMANCE_BASE } from '@/views/user-growth/ad-performance/config/api-base'
-  import type { AdPerformanceMetaFilterResponse } from '@/views/user-growth/ad-performance/types'
+  import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
@@ -318,8 +317,13 @@
   const appliedFilterOwner = ref('')
   const appliedDateRange = ref<[string, string]>(buildDefaultDateRange())
 
-  const metaAdPlatformOptions = ref<AdPerformanceMetaFilterResponse['adPlatformOptions']>([])
-  const metaAccountOptions = ref<NonNullable<AdPerformanceMetaFilterResponse['accountOptions']>>([])
+  /** 顶栏「广告平台」与公用 cockpit `sourceOptions`（n_source）对齐 */
+  const metaAdPlatformOptions = computed<CockpitMetaOptionItem[]>(
+    () => cockpitMeta.value?.sourceOptions ?? []
+  )
+  const metaAccountOptions = computed<CockpitMetaOptionItem[]>(
+    () => cockpitMeta.value?.accountOptions ?? []
+  )
   const metaSettingApps = computed(() => cockpitMeta.value?.settingApps ?? [])
   const tableSearch = ref('')
   const expandAll = ref(false)
@@ -354,18 +358,19 @@
     appCurrentPage.value = 1
   }
 
-  /** KPI 优先，其余图表/预警并行，降低首屏与「查询」瞬间的请求与渲染峰值 */
+  /** KPI / 图表 / 预警 / 应用表 并行请求，互不阻塞 */
   async function onQuery() {
     applyFilters()
-    await loadKpiCards()
-    await Promise.all([
+    const parallel: Promise<unknown>[] = [
+      loadKpiCards(),
       loadChannelSpend(),
       loadUsageBuckets(),
       loadDay1RoiTrend(),
       loadTodaySpendPace(),
       loadAlerts()
-    ])
-    if (modelValue.value === '应用') await loadAppTableTree()
+    ]
+    if (modelValue.value === '应用') parallel.push(loadAppTableTree())
+    await Promise.all(parallel)
   }
 
   // 应用×平台×账户明细树形表：独立请求 + 局部骨架屏
@@ -399,20 +404,7 @@
   })
 
   async function loadMetaFilterOptions() {
-    try {
-      await cockpitMetaStore.ensureLoaded()
-      const data = await request.post<AdPerformanceMetaFilterResponse>({
-        url: `${AD_PERFORMANCE_BASE}/meta-filter-options`,
-        data: {}
-      })
-      metaAdPlatformOptions.value = Array.isArray(data.adPlatformOptions)
-        ? data.adPlatformOptions
-        : []
-      metaAccountOptions.value = Array.isArray(data.accountOptions) ? data.accountOptions : []
-    } catch {
-      metaAdPlatformOptions.value = []
-      metaAccountOptions.value = []
-    }
+    await cockpitMetaStore.ensureLoaded()
   }
 
   const filteredAppRoots = computed(() => {
@@ -1120,9 +1112,9 @@
   }
 
   onMounted(() => {
+    void loadMetaFilterOptions()
     void (async () => {
-      await loadMetaFilterOptions()
-      // 让出首帧给布局与骨架，再初始化空图表，避免与 meta 请求抢主线程
+      // 让出首帧给布局与骨架，再初始化空图表
       await new Promise<void>((r) => requestAnimationFrame(() => r()))
       renderAllCharts()
       await onQuery()

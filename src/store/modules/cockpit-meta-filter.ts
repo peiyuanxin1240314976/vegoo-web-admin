@@ -122,6 +122,11 @@ function normalizeCockpitMetaPayload(raw: unknown): CockpitMetaFilterOptionsData
       ['value', 'source', 'id'],
       ['label', 'sourceName', 'name']
     ),
+    accountOptions: normalizeOptionList(
+      payload.accountOptions,
+      ['value', 'ownerId', 'accountId', 'id'],
+      ['label', 'accountName', 'name']
+    ),
     countryOptions: normalizeOptionList(
       payload.countryOptions,
       ['value', 'countryCode', 'id'],
