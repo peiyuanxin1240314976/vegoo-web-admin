@@ -2,7 +2,8 @@
  * 驾驶舱数据接口层
  *
  * - 第一排总数据（KPI 卡片）：真实接口 POST /api/v1/datacenter/analysis/cockpit/overall
- * - 其余子模块（警示、花费节奏、地图、Top3、收入趋势等）：仍走 Mock 或各自独立接口，结构清晰便于后续按模块接独立接口与骨架屏
+ * - Top3：POST `.../cockpit/top3`（`fetchCockpitTop3`）。
+ * - 无聚合 `cockpit/overview` / `today-summary-cards` / `yesterday-summary-panel` 时：`fetchCockpitOverview` 与 Tab 专属 fetch 返回空壳/空数组，数据由各子接口与 `overall` 合并。
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
@@ -47,13 +48,23 @@ import type {
   CountryInfoTop5CampaignItem,
   CountryInfoUserPayLaunchData
 } from '../types'
-import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
-/** 是否使用 Mock 数据（仅影响非 overall 的其余概览字段）；overall 接口始终请求真实接口 */
-const COCKPIT_USE_MOCK = true
-
-/** 驾驶舱概览接口路径（其余模块对接时替换） */
-const COCKPIT_OVERVIEW_URL = `${ANALYSIS_API_BASE}/cockpit/overview`
+/** 无 `cockpit/overview` 时首屏 merge 用空壳（不发无效聚合请求） */
+const EMPTY_COCKPIT_OVERVIEW: CockpitOverview = {
+  kpi: [],
+  alertBanners: [],
+  revenueCostTrend: { dates: [], revenue: [], cost: [] },
+  userQuality: [],
+  spendPace: [],
+  mapCountries: [],
+  mapLegend: [],
+  topRevenue: [],
+  topSpend: [],
+  topUser: [],
+  smartAlerts: [],
+  top5Apps: [],
+  top10Campaigns: []
+}
 
 /** 经营驾驶舱第一排总数据接口（KPI 卡片数据源） */
 const COCKPIT_OVERALL_URL = `${ANALYSIS_API_BASE}/cockpit/overall`
@@ -109,12 +120,6 @@ const COCKPIT_BUSINESS_MAP_URL = `${ANALYSIS_API_BASE}/cockpit/businessMap`
 
 /** 收入结构接口（近7日收入结构流向桑基图） */
 const COCKPIT_INCOME_STRUCTURE_URL = `${ANALYSIS_API_BASE}/cockpit/incomeStructure`
-
-/** 今日 Tab 专属：四卡片汇总 */
-const COCKPIT_TODAY_SUMMARY_CARDS_URL = `${ANALYSIS_API_BASE}/cockpit/today-summary-cards`
-
-/** 昨日 Tab 专属：汇总面板（分组块） */
-const COCKPIT_YESTERDAY_SUMMARY_PANEL_URL = `${ANALYSIS_API_BASE}/cockpit/yesterday-summary-panel`
 
 /** 情景模拟接口 */
 const COCKPIT_APP_SIMULATION_URL = `${ANALYSIS_API_BASE}/cockpit/appSimulation`
@@ -966,19 +971,6 @@ export function mapConsumptionRhythmToSpendPace(
   return [...selfList, ...proxyList]
 }
 
-/**
- * 获取消耗节奏监控数据（自投 + 代投）
- * 请求体：{ date: 'YYYY-MM-DD' }
- */
-export async function fetchConsumptionRhythmMonitoring(params?: {
-  date?: string
-}): Promise<CockpitConsumptionRhythmResponse> {
-  return request.post<CockpitConsumptionRhythmResponse>({
-    url: COCKPIT_CONSUMPTION_RHYTHM_URL,
-    data: params?.date ? { date: params.date } : {}
-  })
-}
-
 /** 将 Top3 接口 app 转为 TopRevenueItem */
 function mapTop3AppToRevenue(items: CockpitTop3Response['app']): CockpitTopRevenueItem[] {
   return (items || []).map((row) => {
@@ -1053,6 +1045,19 @@ export function mapTop3ResponseToOverview(res: CockpitTop3Response | null): {
 export async function fetchCockpitTop3(params?: { date?: string }): Promise<CockpitTop3Response> {
   return request.post<CockpitTop3Response>({
     url: COCKPIT_TOP3_URL,
+    data: params?.date ? { date: params.date } : {}
+  })
+}
+
+/**
+ * 获取消耗节奏监控数据（自投 + 代投）
+ * 请求体：{ date: 'YYYY-MM-DD' }
+ */
+export async function fetchConsumptionRhythmMonitoring(params?: {
+  date?: string
+}): Promise<CockpitConsumptionRhythmResponse> {
+  return request.post<CockpitConsumptionRhythmResponse>({
+    url: COCKPIT_CONSUMPTION_RHYTHM_URL,
     data: params?.date ? { date: params.date } : {}
   })
 }
@@ -1324,52 +1329,31 @@ export async function fetchIncomeStructure(params?: {
 }
 
 /**
- * 获取今日 Tab 专属：四卡片汇总
- * POST /api/v1/datacenter/analysis/cockpit/today-summary-cards，请求体：{ date: 'YYYY-MM-DD' }
+ * 今日 Tab 专属：四卡片汇总（当前网关无独立 `cockpit/today-summary-cards` 时，非 Mock 返回空数组）
  */
 export async function fetchCockpitTodaySummaryCards(params?: {
   date?: string
 }): Promise<CockpitTodaySummaryCard[]> {
-  if (COCKPIT_USE_MOCK) {
-    return Promise.resolve(MOCK_COCKPIT_OVERVIEW.todaySummaryCards ?? [])
-  }
-  return request.post<CockpitTodaySummaryCard[]>({
-    url: COCKPIT_TODAY_SUMMARY_CARDS_URL,
-    data: params?.date ? { date: params.date } : {}
-  })
+  void params
+  return Promise.resolve([])
 }
 
 /**
- * 获取昨日 Tab 专属：汇总面板（分组块）
- * POST /api/v1/datacenter/analysis/cockpit/yesterday-summary-panel，请求体：{ date: 'YYYY-MM-DD' }
+ * 昨日 Tab 专属：汇总面板分组块（当前网关无独立 `cockpit/yesterday-summary-panel` 时，非 Mock 返回空数组）
  */
 export async function fetchCockpitYesterdaySummaryPanel(params?: {
   date?: string
 }): Promise<CockpitYesterdaySummarySection[]> {
-  if (COCKPIT_USE_MOCK) {
-    return Promise.resolve(MOCK_COCKPIT_OVERVIEW.yesterdaySummarySections ?? [])
-  }
-  return request.post<CockpitYesterdaySummarySection[]>({
-    url: COCKPIT_YESTERDAY_SUMMARY_PANEL_URL,
-    data: params?.date ? { date: params.date } : {}
-  })
+  void params
+  return Promise.resolve([])
 }
 
 /**
- * 获取驾驶舱全量数据
- * - KPI 卡片：来自真实接口 fetchCockpitOverall，与 dateRange 换算的 startTime/endTime 在 useCockpitData 中调用
- * - 其余模块：Mock 或后续各子模块独立接口
+ * 驾驶舱「概览」形状数据：不发 `cockpit/overview`，返回空壳；由 overall、top3、地图等子请求写入 mergeOverview。
  */
 export async function fetchCockpitOverview(
   params?: CockpitOverviewParams
 ): Promise<CockpitOverview> {
-  if (COCKPIT_USE_MOCK) {
-    return Promise.resolve({ ...MOCK_COCKPIT_OVERVIEW })
-  }
-
-  const res = await request.get<CockpitOverview>({
-    url: COCKPIT_OVERVIEW_URL,
-    params: params ?? {}
-  })
-  return res
+  void params
+  return Promise.resolve({ ...EMPTY_COCKPIT_OVERVIEW })
 }

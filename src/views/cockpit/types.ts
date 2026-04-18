@@ -679,7 +679,7 @@ export interface CockpitTop10CampaignItem {
   roi: string
 }
 
-/** 驾驶舱全量数据（与后端 /api/v1/datacenter/analysis/cockpit/overview 返回结构对齐） */
+/** 驾驶舱页面合并用数据结构（可由单接口 overview 返回，或由 overall + top3 + 各子接口在前端合并） */
 export interface CockpitOverview {
   kpi: CockpitKpiCard[]
   /** 警示模块左侧：运营摘要指标（DNU、自然量、买量用户等） */

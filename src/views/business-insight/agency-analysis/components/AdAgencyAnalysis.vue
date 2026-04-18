@@ -771,7 +771,7 @@
                 <tr>
                   <th class="th-expand"></th>
                   <th>代投方</th>
-                  <th class="text-right">应用数</th>
+                  <th class="text-right">代投应用数</th>
                   <th class="text-right">广告平台数</th>
                   <th class="text-right">消耗($)</th>
                   <th class="text-right">安装数</th>
@@ -920,7 +920,7 @@
                           <!-- Summary metrics -->
                           <div class="exp-metrics">
                             <div class="exp-metric">
-                              <div class="exp-metric-label">应用数</div>
+                              <div class="exp-metric-label">代投应用数</div>
                               <div class="exp-metric-value">{{
                                 agencyDetailMap[ag.id].appCount
                               }}</div>
@@ -2052,26 +2052,30 @@
     position: relative;
     flex: 1;
     min-width: 0;
-    padding: 22px;
+    padding: 16px 18px 18px;
     overflow: hidden;
-    border-radius: 12px;
+    border-radius: 14px;
 
     &:not(.kpi-card--skeleton) {
       --kpi-accent: var(--art-primary);
 
-      @include ap-neon-bg;
-      @include ap-card-mesh;
-      @include ap-panel-hover;
-
+      background-color: color-mix(in srgb, rgb(15 23 42) 58%, rgb(8 12 22 / 92%));
+      background-image: linear-gradient(
+        165deg,
+        rgb(255 255 255 / 5%) 0%,
+        transparent 44%,
+        transparent 100%
+      );
       isolation: isolate;
-      border-color: color-mix(in srgb, var(--kpi-accent) 46%, transparent);
-      border-radius: 12px;
+      backdrop-filter: blur(16px);
+      border: 1px solid color-mix(in srgb, var(--kpi-accent) 22%, rgb(255 255 255 / 8%));
       box-shadow:
-        0 12px 48px rgb(0 0 0 / 48%),
-        0 0 0 1px color-mix(in srgb, var(--kpi-accent) 22%, transparent),
-        inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 16%, transparent),
-        inset 0 -12px 32px rgb(0 0 0 / 30%),
-        0 0 52px color-mix(in srgb, var(--kpi-accent) 22%, transparent);
+        0 6px 28px rgb(0 0 0 / 42%),
+        inset 0 1px 0 rgb(255 255 255 / 7%);
+      transition:
+        border-color 0.28s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        box-shadow 0.32s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+        transform 0.28s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
 
       &::before {
         position: absolute;
@@ -2079,29 +2083,27 @@
         z-index: 0;
         pointer-events: none;
         content: '';
-        background:
-          radial-gradient(
-            ellipse 118% 78% at 104% -18%,
-            color-mix(in srgb, var(--kpi-accent) 44%, transparent) 0%,
-            transparent 58%
-          ),
-          radial-gradient(
-            ellipse 82% 62% at -12% 108%,
-            color-mix(in srgb, var(--kpi-accent) 30%, transparent) 0%,
-            transparent 58%
-          );
+        background: radial-gradient(
+          ellipse 78% 52% at 4% 96%,
+          color-mix(in srgb, var(--kpi-accent) 32%, transparent) 0%,
+          transparent 62%
+        );
         border-radius: inherit;
+        opacity: 0.95;
       }
 
       &:hover {
-        border-color: color-mix(in srgb, var(--kpi-accent) 58%, transparent);
+        border-color: color-mix(in srgb, var(--kpi-accent) 38%, rgb(255 255 255 / 12%));
         box-shadow:
-          0 24px 72px rgb(0 0 0 / 52%),
-          0 0 0 1px color-mix(in srgb, var(--kpi-accent) 32%, transparent),
-          inset 0 1px 0 color-mix(in srgb, var(--kpi-accent) 22%, transparent),
-          inset 0 -12px 32px rgb(0 0 0 / 32%),
-          0 0 72px color-mix(in srgb, var(--kpi-accent) 32%, transparent),
-          0 0 120px color-mix(in srgb, var(--kpi-accent) 14%, transparent);
+          0 10px 36px rgb(0 0 0 / 48%),
+          inset 0 1px 0 rgb(255 255 255 / 9%),
+          0 0 36px color-mix(in srgb, var(--kpi-accent) 14%, transparent);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transition-duration: 0.12s;
+        transform: translateY(0);
       }
     }
   }
@@ -2109,23 +2111,26 @@
   .kpi-row > .kpi-card:not(.kpi-card--skeleton).highlighted {
     --kpi-accent: var(--art-success);
 
-    border-color: color-mix(in srgb, var(--art-success) 58%, transparent);
+    border-color: color-mix(in srgb, var(--art-success) 36%, rgb(255 255 255 / 10%));
     box-shadow:
-      0 12px 48px rgb(0 0 0 / 48%),
-      0 0 0 1px color-mix(in srgb, var(--art-success) 32%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--art-success) 22%, transparent),
-      inset 0 -12px 32px rgb(0 0 0 / 30%),
-      0 0 56px color-mix(in srgb, var(--art-success) 28%, transparent);
+      0 6px 28px rgb(0 0 0 / 42%),
+      inset 0 1px 0 color-mix(in srgb, var(--art-success) 14%, rgb(255 255 255 / 6%)),
+      0 0 44px color-mix(in srgb, var(--art-success) 16%, transparent);
+
+    &::before {
+      background: radial-gradient(
+        ellipse 82% 56% at 2% 98%,
+        color-mix(in srgb, var(--art-success) 34%, transparent) 0%,
+        transparent 64%
+      );
+    }
 
     &:hover {
-      border-color: color-mix(in srgb, var(--art-success) 68%, transparent);
+      border-color: color-mix(in srgb, var(--art-success) 48%, rgb(255 255 255 / 12%));
       box-shadow:
-        0 24px 72px rgb(0 0 0 / 52%),
-        0 0 0 1px color-mix(in srgb, var(--art-success) 40%, transparent),
-        inset 0 1px 0 color-mix(in srgb, var(--art-success) 26%, transparent),
-        inset 0 -12px 32px rgb(0 0 0 / 32%),
-        0 0 80px color-mix(in srgb, var(--art-success) 38%, transparent),
-        0 0 120px color-mix(in srgb, var(--art-success) 16%, transparent);
+        0 10px 36px rgb(0 0 0 / 48%),
+        inset 0 1px 0 color-mix(in srgb, var(--art-success) 18%, rgb(255 255 255 / 8%)),
+        0 0 52px color-mix(in srgb, var(--art-success) 22%, transparent);
     }
   }
 
@@ -2153,44 +2158,48 @@
     gap: 10px;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   .kpi-label {
     font-size: 13px;
-    font-weight: 600;
-    color: $text-muted;
+    font-weight: 500;
+    line-height: 1.25;
+    color: $text-secondary;
+    letter-spacing: 0.02em;
   }
 
   .kpi-value {
     position: relative;
     z-index: 1;
-    margin-bottom: 6px;
-    font-size: 26px;
+    margin-bottom: 4px;
+    font-size: 28px;
     font-weight: 700;
-    line-height: 1;
+    line-height: 1.05;
     color: $text-primary;
+    letter-spacing: -0.03em;
   }
 
   .kpi-change {
     flex-shrink: 0;
-    padding: 2px 8px;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.2;
-    background: rgb(148 163 184 / 10%);
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
     border-radius: 9999px;
 
     &.up {
-      color: $teal;
-      background: rgb(0 212 180 / 10%);
-      border: 1px solid rgb(0 212 180 / 22%);
+      color: color-mix(in srgb, var(--art-success) 92%, white);
+      background: color-mix(in srgb, rgb(0 0 0 / 52%) 70%, var(--art-success) 30%);
+      border: 1px solid color-mix(in srgb, var(--art-success) 42%, transparent);
+      box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
     }
 
     &.down {
-      color: $red;
-      background: rgb(239 68 68 / 10%);
-      border: 1px solid rgb(239 68 68 / 22%);
+      color: color-mix(in srgb, var(--art-danger) 88%, white);
+      background: color-mix(in srgb, rgb(0 0 0 / 55%) 72%, var(--art-danger) 28%);
+      border: 1px solid color-mix(in srgb, var(--art-danger) 48%, transparent);
+      box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
     }
   }
 
@@ -2560,7 +2569,7 @@
     overflow: visible;
     background: rgb(10 10 14 / 90%);
     border: 1px solid rgb(96 165 250 / 22%);
-    border-radius: 12px;
+    border-radius: 14px;
     box-shadow:
       0 0 24px rgb(59 130 246 / 12%),
       inset 0 0 0 1px rgb(186 230 253 / 8%);
@@ -3206,6 +3215,13 @@
 
     .kpi-card--skeleton-fx::before {
       animation: none;
+    }
+
+    .kpi-card:not(.kpi-card--skeleton) {
+      transition:
+        border-color 0.16s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+        box-shadow 0.16s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+      transform: none !important;
     }
   }
 </style>

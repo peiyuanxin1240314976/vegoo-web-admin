@@ -70,6 +70,24 @@ function chartBody(q: AgencyAnalysisFilterQuery) {
   return overviewBody(q)
 }
 
+const OVERVIEW_KPI_LABEL_ALIASES: Record<string, string> = {
+  应用数: '代投应用数',
+  渠道数: '代投渠道数',
+  代投方数: '代投方数量'
+}
+
+function normalizeOverviewKpiCards(data: { kpiCards?: KpiCardItem[] }): {
+  kpiCards: KpiCardItem[]
+} {
+  const kpis = data.kpiCards ?? []
+  return {
+    kpiCards: kpis.map((c) => {
+      const next = OVERVIEW_KPI_LABEL_ALIASES[c.label]
+      return next ? { ...c, label: next } : c
+    })
+  }
+}
+
 /** 契约 09：真实对接无请求体 */
 export function fetchAgencyAnalysisMetaFilterOptions() {
   if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.MetaFilterOptions)) {
@@ -83,12 +101,14 @@ export function fetchAgencyAnalysisMetaFilterOptions() {
 
 export function fetchAgencyAnalysisOverview(params: AgencyAnalysisFilterQuery) {
   if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.Overview)) {
-    return mockFetchAgencyOverview()
+    return mockFetchAgencyOverview().then(normalizeOverviewKpiCards)
   }
-  return request.post<{ kpiCards: KpiCardItem[] }>({
-    url: `${AGENCY_ANALYSIS_BASE}/overview`,
-    data: overviewBody(params)
-  })
+  return request
+    .post<{ kpiCards: KpiCardItem[] }>({
+      url: `${AGENCY_ANALYSIS_BASE}/overview`,
+      data: overviewBody(params)
+    })
+    .then(normalizeOverviewKpiCards)
 }
 
 function normalizeExpandCampaign(cp: CampaignDetail | Record<string, unknown>): CampaignDetail {
