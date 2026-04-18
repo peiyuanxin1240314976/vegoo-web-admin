@@ -32,24 +32,32 @@
       </div>
     </div>
 
-    <!-- Top3 差评产品 - 红色 -->
-    <div v-if="dateRange !== 'today'" class="top3-module top3-module--badreview">
+    <!-- Top3 差评数据（与收入/用户增长同排榜样式；昨日 Tab 同源 topBadReview / badApp） -->
+    <div
+      :class="[
+        'top3-module',
+        'top3-module--badreview',
+        { 'top3-module--fills': dateRange === 'today' }
+      ]"
+    >
       <div class="top3-border-spin" aria-hidden="true" />
       <div class="top3-module__header">
         <span class="top3-module__icon top3-module__icon--dislike">
           <DislikeIcon />
         </span>
-        <span class="top3-module__title">Top3差评数</span>
+        <span class="top3-module__title">Top3差评数据</span>
         <!-- <a class="top3-module__more" href="javascript:;">查看更多</a> -->
       </div>
       <div class="top3-module__list">
         <template v-if="displayTopBadReview.length">
-          <div v-for="(item, i) in displayTopBadReview" :key="'bad-' + i" class="top3-row">
+          <div
+            v-for="(item, i) in displayTopBadReview"
+            :key="'bad-' + i"
+            class="top3-row top3-row--name-only"
+          >
+            <span class="top3-row__medal iconfont" :class="medalIconClasses[i]"></span>
             <div class="top3-row__app-icon" title="应用" />
             <span class="top3-row__name">{{ item.name }}</span>
-            <span class="top3-row__tag tag-red">
-              {{ item.note }}
-            </span>
           </div>
         </template>
         <div v-else class="top3-empty">暂无数据</div>
@@ -94,7 +102,6 @@
   import { computed, defineComponent, h } from 'vue'
   import { Top } from '@element-plus/icons-vue'
   import type { CockpitTopRevenueItem, CockpitTopBadReviewItem, CockpitTopUserItem } from '../types'
-  import { MOCK_COCKPIT_OVERVIEW } from '../mock/data'
 
   defineOptions({ name: 'CockpitTop3Panels' })
 
@@ -150,27 +157,19 @@
     { topRevenue: () => [], topBadReview: () => [], topUser: () => [], dateRange: '' }
   )
 
-  type DisplayTopBadReviewItem = {
-    name: string
-    note: string
-  }
+  type DisplayTopBadReviewItem = { name: string }
 
   const displayTopRevenue = computed(() =>
-    Array.isArray(props.topRevenue) ? props.topRevenue : MOCK_COCKPIT_OVERVIEW.topRevenue
+    Array.isArray(props.topRevenue) ? props.topRevenue : []
   )
-  const displayTopBadReview = computed<DisplayTopBadReviewItem[]>(() => {
-    const raw = Array.isArray(props.topBadReview)
-      ? props.topBadReview
-      : ((MOCK_COCKPIT_OVERVIEW as { topBadReview?: CockpitTopBadReviewItem[] }).topBadReview ?? [])
 
+  const displayTopBadReview = computed<DisplayTopBadReviewItem[]>(() => {
+    const raw = Array.isArray(props.topBadReview) ? props.topBadReview : []
     return raw.map((i) => ({
-      name: i.sAppName ?? i.name ?? '—',
-      note: i.note ?? i.reasonTag ?? i.metric ?? '—'
+      name: i.sAppName ?? i.name ?? '—'
     }))
   })
-  const displayTopUser = computed(() =>
-    Array.isArray(props.topUser) ? props.topUser : MOCK_COCKPIT_OVERVIEW.topUser
-  )
+  const displayTopUser = computed(() => (Array.isArray(props.topUser) ? props.topUser : []))
 </script>
 
 <style scoped lang="scss">
@@ -518,6 +517,10 @@
       color: var(--el-text-color-primary);
     }
 
+    &--name-only &__name {
+      flex: 1;
+    }
+
     &__value {
       margin-left: auto;
       color: var(--el-text-color-regular);
@@ -535,33 +538,6 @@
       }
 
       &.down {
-        color: var(--el-color-danger);
-      }
-    }
-
-    &__tag {
-      padding: 2px 8px;
-      font-size: 12px;
-      border-radius: 4px;
-
-      &.tag-red {
-        color: #f56c6c;
-        background: rgb(245 108 108 / 20%);
-      }
-
-      &.tag-orange {
-        color: #e6a23c;
-        background: rgb(230 162 60 / 20%);
-      }
-    }
-
-    &__metric {
-      margin-left: auto;
-      font-size: 12px;
-      white-space: nowrap;
-
-      &.metric-up,
-      &.metric-down {
         color: var(--el-color-danger);
       }
     }

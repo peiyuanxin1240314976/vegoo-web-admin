@@ -1,0 +1,138 @@
+{
+  "_comment": "代投分析 - 非汇总子 Tab：近期汇总表（含首日 ROI 趋势小图数据）。对应 types.ts: AgencySubTabRecentSummaryPayload。默认区间：以应用当前业务日为 endDate，startDate = endDate 往前推 2 天（含首尾共 3 天）；不使用汇总 Tab 的筛选日期草稿/查询区间。",
+  "fieldDescription": {
+    "request": {
+      "agencyTab": {
+        "type": "string",
+        "required": true,
+        "enum": ["gatherone", "kuainiao", "chuhai"],
+        "description": "当前子 Tab（后三个 Tab）标识。"
+      },
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "近期区间起始日 YYYY-MM-DD（含）。默认：endDate 的前第 2 天（与 endDate 搭配为连续 3 个自然日）。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "近期区间结束日 YYYY-MM-DD（含）。默认：getAppTodayYYYYMMDD()。"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "应用 ID；all 代表全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "广告平台（source）；all 代表全部。"
+      }
+    },
+    "response": {
+      "rows": {
+        "type": "AgencySubTabRecentSummaryRow[]",
+        "required": true,
+        "description": "近期汇总表格行；按 app/platform/source 进行 UI 合并展示。"
+      }
+    },
+    "AgencySubTabRecentSummaryRow": {
+      "app": { "type": "string", "required": true, "description": "应用名称（展示）。" },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "平台（展示：安卓/iOS 等）。"
+      },
+      "source": { "type": "string", "required": true, "description": "广告平台（展示名）。" },
+      "accountId": { "type": "string", "required": true, "description": "广告账户 ID（展示）。" },
+      "accountName": {
+        "type": "string",
+        "required": true,
+        "description": "广告账户名称（展示）。"
+      },
+      "spend": { "type": "string", "required": true, "description": "广告支出（展示字符串）。" },
+      "budget": { "type": "string", "required": true, "description": "预算（展示字符串）。" },
+      "cpa": { "type": "string", "required": true, "description": "CPA（展示字符串；无则 '-'）。" },
+      "cpi": { "type": "string", "required": true, "description": "CPI（展示字符串）。" },
+      "installs": {
+        "type": "string",
+        "required": true,
+        "description": "代投买量用户数（展示字符串）。"
+      },
+      "roiTrend": {
+        "type": "string[]",
+        "required": true,
+        "description": "首日 ROI 趋势百分比文本数组（用于小图固定标签展示）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "agencyTab": "gatherone",
+    "startDate": "2026-04-16",
+    "endDate": "2026-04-18",
+    "appId": "all",
+    "source": "all"
+  },
+  "sampleResponse": {
+    "rows": [
+      {
+        "app": "FileRecovery",
+        "platform": "安卓",
+        "source": "Facebook",
+        "accountId": "1196169169136013",
+        "accountName": "GO_FB_FR1_ZL_PG03",
+        "spend": "$218",
+        "budget": "$196",
+        "cpa": "-",
+        "cpi": "0.09",
+        "installs": "2553",
+        "roiTrend": ["101%", "95%", "131%"]
+      },
+      {
+        "app": "FileRecovery",
+        "platform": "安卓",
+        "source": "Facebook",
+        "accountId": "1643261666838590",
+        "accountName": "GO_FB_FR1_ZL_PG04",
+        "spend": "$70.4",
+        "budget": "$56.0",
+        "cpa": "-",
+        "cpi": "0.03",
+        "installs": "2166",
+        "roiTrend": ["98%", "102%", "128%"]
+      },
+      {
+        "app": "FileRecovery",
+        "platform": "安卓",
+        "source": "Facebook",
+        "accountId": "0000000000000000",
+        "accountName": "GO_FB_FR1_ZL_PG05",
+        "spend": "$0",
+        "budget": "$0",
+        "cpa": "-",
+        "cpi": "-",
+        "installs": "0",
+        "roiTrend": ["0%", "0%", "0%"]
+      }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/subtab/table/recent-summary",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "agencyTab, startDate, endDate, appId?, source?",
+    "responseBody": "rows"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户切换到非汇总子 Tab",
+        "detail": "加载「近期汇总」表格（含首日 ROI 趋势小图）。",
+        "prerequisite": "依赖 agencyTab + 默认近 3 天区间（由应用当前业务日计算）+ 应用/广告平台维度（与汇总筛选同源）。"
+      }
+    ],
+    "defaultSelection": "agencyTab 由 Tab 决定；appId/source 默认 all；startDate/endDate 默认按「近 3 天」自动计算（不使用汇总筛选日期）。"
+  }
+}

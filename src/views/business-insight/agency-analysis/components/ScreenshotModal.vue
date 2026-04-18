@@ -2,56 +2,35 @@
   import { ref, computed, useTemplateRef } from 'vue'
   import { getAppNow } from '@/utils/app-now'
   import 'flag-icons/css/flag-icons.min.css'
-  import type {
-    AgencyRow,
-    CampaignRow,
-    DailyRow,
-    KpiCardItem,
-    AgencyExpandData,
-    CampaignDetail,
-    DonutChartItem,
-    CountryDistributionItem
-  } from '../types'
+  import type { KpiCardItem, DonutChartItem, CountryDistributionItem } from '../types'
 
   defineOptions({ name: 'ScreenshotModal' })
 
-  type ScreenType = 'current' | 'all' | 'custom'
   type OutputFmt = 'png' | 'long'
-  type CustomKey = 'agency' | 'campaign' | 'daily' | 'roi' | 'channel'
 
   interface Props {
     modelValue: boolean
-    /** 报告抬头主名称（一般为当前展开代投方） */
-    agencyName: string
+    /** 预览抬头副标题（与页面模块名一致即可） */
+    reportTitle?: string
     dataDate: string
     pageLoading: boolean
     kpiCards: KpiCardItem[]
-    agencies: AgencyRow[]
-    agencyDetailMap: Record<string, AgencyExpandData>
-    campaigns: CampaignRow[]
-    dailyRows: DailyRow[]
     donut: DonutChartItem[]
     channelDistribution: {
       categories: string[]
       series: { name: string; values: number[]; color: string }[]
     }
     countryTop8: CountryDistributionItem[]
-    focusedAgencyId: string | null
   }
 
   const props = withDefaults(defineProps<Props>(), {
-    agencyName: '',
+    reportTitle: '代投分析',
     dataDate: '',
     pageLoading: true,
     kpiCards: () => [],
-    agencies: () => [],
-    agencyDetailMap: () => ({}),
-    campaigns: () => [],
-    dailyRows: () => [],
     donut: () => [],
     channelDistribution: () => ({ categories: [], series: [] }),
-    countryTop8: () => [],
-    focusedAgencyId: null
+    countryTop8: () => []
   })
 
   const emit = defineEmits<{
@@ -60,50 +39,10 @@
     copy: []
   }>()
 
-  const ROW_CAP = 12
-
-  const selectedType = ref<ScreenType>('current')
   const outputFormat = ref<OutputFmt>('png')
 
-  const customChecks = ref<Record<CustomKey, boolean>>({
-    agency: true,
-    campaign: true,
-    daily: false,
-    roi: true,
-    channel: false
-  })
-
-  const customModuleList: { key: CustomKey; label: string }[] = [
-    { key: 'agency', label: '代投方汇总' },
-    { key: 'campaign', label: '广告系列明细' },
-    { key: 'daily', label: '逐日对比' },
-    { key: 'roi', label: '首日 ROI（3/4·3/3·3/2）' },
-    { key: 'channel', label: '分布概览' }
-  ]
-
-  const typeOptions = [
-    {
-      value: 'current' as ScreenType,
-      title: '当前代投方报告',
-      desc: '以当前展开的代投方为主：汇总 KPI、账户与系列 ROI 等（需先在列表中展开一行）',
-      tags: ['概览 KPI', '账户明细', '广告系列', '首日 ROI']
-    },
-    {
-      value: 'all' as ScreenType,
-      title: '全部代投方汇总',
-      desc: '全量代投方表、系列与逐日对比，以及广告平台 / 国家 / 代投占比分布',
-      tags: ['代投方汇总表', '广告平台分布', '国家 Top8']
-    },
-    {
-      value: 'custom' as ScreenType,
-      title: '自定义范围',
-      desc: '自行勾选要出现在报告中的模块',
-      tags: []
-    }
-  ]
-
-  const estimatedSize = computed(() => (selectedType.value === 'all' ? '~1.8MB' : '~2.4MB'))
-  const resolution = computed(() => (outputFormat.value === 'long' ? '2560x6400px' : '2560x3200px'))
+  const estimatedSize = computed(() => '~1.2MB')
+  const resolution = computed(() => (outputFormat.value === 'long' ? '2560x4800px' : '2560x3200px'))
 
   const close = () => emit('update:modelValue', false)
 
@@ -115,90 +54,7 @@
     )}:${p(d.getSeconds())}`
   })
 
-  const focusAgencyRow = computed(
-    () => props.agencies.find((a) => a.id === props.focusedAgencyId) ?? null
-  )
-
-  const agencyDetail = computed(() => {
-    const id = props.focusedAgencyId
-    if (!id) return null
-    return props.agencyDetailMap[id] ?? null
-  })
-
-  const visibility = computed(() => {
-    const t = selectedType.value
-    if (t === 'current') {
-      return {
-        kpi: true,
-        agency: true,
-        accounts: true,
-        campaign: true,
-        daily: false,
-        roi: true,
-        donut: false,
-        channelBars: false,
-        country: false
-      }
-    }
-    if (t === 'all') {
-      return {
-        kpi: true,
-        agency: true,
-        accounts: false,
-        campaign: true,
-        daily: true,
-        roi: false,
-        donut: true,
-        channelBars: true,
-        country: true
-      }
-    }
-    const c = customChecks.value
-    return {
-      kpi: true,
-      agency: c.agency,
-      accounts: c.agency && !!props.focusedAgencyId,
-      campaign: c.campaign,
-      daily: c.daily,
-      roi: c.roi && !!props.focusedAgencyId,
-      donut: c.channel,
-      channelBars: c.channel,
-      country: c.channel
-    }
-  })
-
-  const reportAgencies = computed((): AgencyRow[] => {
-    if (selectedType.value === 'current' && focusAgencyRow.value) return [focusAgencyRow.value]
-    return props.agencies
-  })
-
-  const reportCampaigns = computed((): CampaignRow[] => {
-    let rows = props.campaigns
-    if (selectedType.value === 'current' && focusAgencyRow.value) {
-      rows = rows.filter((c) => c.agency === focusAgencyRow.value!.name)
-    }
-    return rows.slice(0, ROW_CAP)
-  })
-
-  const reportDaily = computed((): DailyRow[] => {
-    let rows = props.dailyRows
-    if (selectedType.value === 'current' && focusAgencyRow.value) {
-      rows = rows.filter((d) => d.agency === focusAgencyRow.value!.name)
-    }
-    return rows.slice(0, ROW_CAP)
-  })
-
-  const roiRows = computed((): CampaignDetail[] => {
-    const d = agencyDetail.value
-    if (!d?.campaigns?.length) return []
-    return d.campaigns.slice(0, ROW_CAP)
-  })
-
-  const accountRows = computed(() => {
-    const d = agencyDetail.value
-    if (!d?.accounts?.length) return []
-    return d.accounts.slice(0, ROW_CAP)
-  })
+  const visibility = { kpi: true, donut: true, channelBars: true, country: true } as const
 
   const donutList = computed(() => {
     const items = props.donut
@@ -230,37 +86,15 @@
 
   const fmtMoney = (v: number) => `$${v.toLocaleString('en-US')}`
 
-  const roiBadgeClass = (v: number | null) => {
-    if (v === null) return ''
-    if (v >= 110) return 'roi-green'
-    if (v >= 95) return 'roi-teal'
-    if (v >= 85) return 'roi-yellow'
-    return 'roi-red'
-  }
-
   const kpiChangeClass = (card: KpiCardItem) => {
     if (!card.changeText) return 'pv-s-c--muted'
     if (card.changeUp === null) return 'pv-s-c--muted'
     return card.changeUp ? 'pv-s-c--up' : 'pv-s-c--down'
   }
 
-  const changeTxt = (v: number | null) =>
-    v === null ? '--' : `${v >= 0 ? '↑' : '↓'}${Math.abs(v).toFixed(2)}%`
-
   const isIso2Country = (code: string) => /^[a-z]{2}$/i.test(String(code || '').trim())
 
-  const reportTitleLine = computed(() => {
-    if (selectedType.value === 'current') return props.agencyName || '代投数据报告'
-    if (selectedType.value === 'all') return '全部代投方汇总'
-    return '自定义数据报告'
-  })
-
-  const previewHint = computed(() => {
-    if (selectedType.value !== 'current') return ''
-    if (!props.focusedAgencyId)
-      return '提示：先在「代投方汇总」中展开一行，即可在报告中展示账户与首日 ROI 明细。'
-    return ''
-  })
+  const reportTitleLine = computed(() => props.reportTitle || '代投分析')
 
   const reportRootRef = useTemplateRef<HTMLElement>('reportRoot')
 
@@ -297,54 +131,11 @@
 
           <div class="modal-body">
             <div class="modal-left">
-              <div class="section-label">选择截图内容</div>
-
-              <div class="type-list">
-                <div
-                  v-for="opt in typeOptions"
-                  :key="opt.value"
-                  class="type-item"
-                  :class="{ active: selectedType === opt.value }"
-                  @click="selectedType = opt.value"
-                >
-                  <div class="type-top">
-                    <span class="radio-ring" :class="{ on: selectedType === opt.value }">
-                      <span class="radio-dot" />
-                    </span>
-                    <span class="type-title">{{ opt.title }}</span>
-                  </div>
-                  <div class="type-desc">{{ opt.desc }}</div>
-                  <div v-if="opt.tags.length" class="type-tags">
-                    <span v-for="t in opt.tags" :key="t" class="type-tag">{{ t }}</span>
-                  </div>
-                  <div
-                    v-if="opt.value === 'custom' && selectedType === 'custom'"
-                    class="custom-checks"
-                    @click.stop
-                  >
-                    <label v-for="m in customModuleList" :key="m.key" class="check-item">
-                      <input
-                        type="checkbox"
-                        class="check-input"
-                        :checked="customChecks[m.key]"
-                        @change="customChecks[m.key] = ($event.target as HTMLInputElement).checked"
-                      />
-                      <span class="check-box" :class="{ checked: customChecks[m.key] }">
-                        <svg v-if="customChecks[m.key]" width="9" height="9" viewBox="0 0 9 9">
-                          <path
-                            d="M1.5 4.5L3.5 6.5L7.5 2"
-                            stroke="#00d4b4"
-                            stroke-width="1.5"
-                            fill="none"
-                            stroke-linecap="round"
-                          />
-                        </svg>
-                      </span>
-                      <span class="check-label">{{ m.label }}</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
+              <div class="section-label">截图范围</div>
+              <p class="modal-scope-desc">
+                与当前页一致：数据概览 KPI、渠道分布分析、代投方消耗占比、国家消耗
+                Top8（不含表格明细）。
+              </p>
 
               <div class="form-row">
                 <span class="form-label">数据日期</span>
@@ -396,8 +187,6 @@
                     </div>
                   </div>
 
-                  <div v-if="previewHint" class="pv-banner">{{ previewHint }}</div>
-
                   <template v-if="pageLoading">
                     <div class="pv-empty">数据加载中…</div>
                   </template>
@@ -415,182 +204,20 @@
                       </div>
                     </template>
 
-                    <template v-if="visibility.agency && reportAgencies.length">
-                      <div class="pv-sec-title mt8">代投方汇总</div>
-                      <table class="pv-table">
-                        <thead>
-                          <tr>
-                            <th>代投方</th>
-                            <th class="text-right">应用</th>
-                            <th class="text-right">广告平台</th>
-                            <th class="text-right">消耗</th>
-                            <th class="text-right">安装</th>
-                            <th class="text-right">CPI</th>
-                            <th class="text-right">CPA</th>
-                            <th class="text-right">首日ROI</th>
-                            <th class="text-right">预算%</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="ag in reportAgencies" :key="ag.id">
-                            <td :style="{ color: ag.nameColor || '#e2e8f0' }">{{ ag.name }}</td>
-                            <td class="text-right">{{ ag.appCount }}</td>
-                            <td class="text-right">{{ ag.channelCount }}</td>
-                            <td class="text-right">{{ fmtMoney(ag.spend) }}</td>
-                            <td class="text-right">{{ ag.installs.toLocaleString('en-US') }}</td>
-                            <td class="text-right">${{ ag.cpi.toFixed(2) }}</td>
-                            <td class="text-right">${{ ag.cpa.toFixed(2) }}</td>
-                            <td class="text-right pv-teal">{{ ag.roi.toFixed(2) }}%</td>
-                            <td class="text-right">{{ ag.budgetRate }}%</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </template>
-
-                    <template v-if="visibility.accounts">
-                      <div class="pv-sec-title mt8">账户汇总</div>
-                      <table v-if="accountRows.length" class="pv-table">
-                        <thead>
-                          <tr>
-                            <th>账户名称</th>
-                            <th>应用</th>
-                            <th>广告平台</th>
-                            <th class="text-right">消耗</th>
-                            <th class="text-right">ROI</th>
-                            <th class="text-right">安装</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(ac, ai) in accountRows" :key="ai">
-                            <td>{{ ac.accountName }}</td>
-                            <td>{{ ac.app }}</td>
-                            <td>{{ ac.adPlatform }}</td>
-                            <td class="text-right">{{ ac.spend }}</td>
-                            <td class="text-right pv-teal">{{ ac.roi }}%</td>
-                            <td class="text-right">{{ ac.installs.toLocaleString('en-US') }}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      <div v-else class="pv-mini-empty">暂无账户明细（请先展开代投方）</div>
-                    </template>
-
-                    <template v-if="visibility.campaign">
-                      <div class="pv-sec-title mt8">广告系列明细</div>
-                      <table v-if="reportCampaigns.length" class="pv-table">
-                        <thead>
-                          <tr>
-                            <th>代投方</th>
-                            <th>系列</th>
-                            <th>广告平台</th>
-                            <th class="text-right">消耗</th>
-                            <th class="text-right">安装</th>
-                            <th class="text-right">CPI</th>
-                            <th class="text-right">执行率</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(cp, ci) in reportCampaigns" :key="ci">
-                            <td :style="{ color: cp.agencyColor || '#e2e8f0' }">{{ cp.agency }}</td>
-                            <td>{{ cp.appName || cp.name || '--' }}</td>
-                            <td>{{ cp.channel }}</td>
-                            <td class="text-right">{{ fmtMoney(cp.spend) }}</td>
-                            <td class="text-right">{{ cp.installs.toLocaleString('en-US') }}</td>
-                            <td class="text-right">${{ cp.cpi.toFixed(2) }}</td>
-                            <td class="text-right">{{ cp.execRate }}%</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      <div v-else class="pv-mini-empty">暂无广告系列数据</div>
-                    </template>
-
-                    <template v-if="visibility.daily">
-                      <div class="pv-sec-title mt8">逐日对比（近7天）</div>
-                      <table v-if="reportDaily.length" class="pv-table">
-                        <thead>
-                          <tr>
-                            <th>日期</th>
-                            <th>代投方</th>
-                            <th class="text-right">消耗</th>
-                            <th class="text-right">安装</th>
-                            <th class="text-right">CPI</th>
-                            <th class="text-right">CPA</th>
-                            <th class="text-right">消耗环比</th>
-                            <th class="text-right">安装环比</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(row, di) in reportDaily" :key="di">
-                            <td>{{ row.date }}</td>
-                            <td :style="{ color: row.agencyColor || '#e2e8f0' }">{{
-                              row.agency
-                            }}</td>
-                            <td class="text-right">{{ fmtMoney(row.spend) }}</td>
-                            <td class="text-right">{{ row.installs.toLocaleString('en-US') }}</td>
-                            <td class="text-right">${{ row.cpi.toFixed(2) }}</td>
-                            <td class="text-right">${{ row.cpa.toFixed(2) }}</td>
-                            <td class="text-right">{{ changeTxt(row.spendChange) }}</td>
-                            <td class="text-right">{{ changeTxt(row.installsChange) }}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      <div v-else class="pv-mini-empty">暂无逐日数据</div>
-                    </template>
-
-                    <template v-if="visibility.roi">
-                      <div class="pv-sec-title mt8">首日 ROI</div>
-                      <table v-if="roiRows.length" class="pv-table pv-table--roi">
-                        <thead>
-                          <tr>
-                            <th>广告系列</th>
-                            <th class="text-right">预算</th>
-                            <th class="text-right">支出</th>
-                            <th class="text-right">CPA</th>
-                            <th class="text-right">CPI</th>
-                            <th class="text-right">安装</th>
-                            <th class="text-right">3/4</th>
-                            <th class="text-right">3/3</th>
-                            <th class="text-right">3/2</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(cp, ri) in roiRows" :key="ri">
-                            <td>{{ cp.appName || cp.name || '--' }}</td>
-                            <td class="text-right">${{ cp.budget }}</td>
-                            <td class="text-right">{{ cp.spend }}</td>
-                            <td class="text-right">{{ cp.cpa }}</td>
-                            <td class="text-right">{{ cp.cpi }}</td>
-                            <td class="text-right">{{ cp.installs }}</td>
-                            <td class="text-right">
-                              <span
-                                v-if="cp.roi34 !== null"
-                                class="pv-badge"
-                                :class="roiBadgeClass(cp.roi34)"
-                                >{{ cp.roi34 }}%</span
-                              >
-                              <span v-else class="dim">--</span>
-                            </td>
-                            <td class="text-right">
-                              <span
-                                v-if="cp.roi33 !== null"
-                                class="pv-badge"
-                                :class="roiBadgeClass(cp.roi33)"
-                                >{{ cp.roi33 }}%</span
-                              >
-                              <span v-else class="dim">--</span>
-                            </td>
-                            <td class="text-right">
-                              <span
-                                v-if="cp.roi32 !== null"
-                                class="pv-badge"
-                                :class="roiBadgeClass(cp.roi32)"
-                                >{{ cp.roi32 }}%</span
-                              >
-                              <span v-else class="dim">--</span>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      <div v-else class="pv-mini-empty">暂无首日 ROI（请先展开代投方）</div>
+                    <template v-if="visibility.channelBars && channelBars.length">
+                      <div class="pv-sec-title mt8">渠道分布分析</div>
+                      <div class="pv-bar-list">
+                        <div v-for="(b, bi) in channelBars" :key="bi" class="pv-bar-row">
+                          <span class="pv-bar-name">{{ b.name }}</span>
+                          <div class="pv-bar-track">
+                            <div
+                              class="pv-bar-fill pv-bar-fill--muted"
+                              :style="{ width: `${b.widthPct}%` }"
+                            />
+                          </div>
+                          <span class="pv-bar-val">{{ fmtMoney(b.value) }}</span>
+                        </div>
+                      </div>
                     </template>
 
                     <template v-if="visibility.donut && donutList.length">
@@ -606,22 +233,6 @@
                             />
                           </div>
                           <span class="pv-bar-pct">{{ d.pct.toFixed(1) }}%</span>
-                        </div>
-                      </div>
-                    </template>
-
-                    <template v-if="visibility.channelBars && channelBars.length">
-                      <div class="pv-sec-title mt8">广告平台分布</div>
-                      <div class="pv-bar-list">
-                        <div v-for="(b, bi) in channelBars" :key="bi" class="pv-bar-row">
-                          <span class="pv-bar-name">{{ b.name }}</span>
-                          <div class="pv-bar-track">
-                            <div
-                              class="pv-bar-fill pv-bar-fill--muted"
-                              :style="{ width: `${b.widthPct}%` }"
-                            />
-                          </div>
-                          <span class="pv-bar-val">{{ fmtMoney(b.value) }}</span>
                         </div>
                       </div>
                     </template>
@@ -649,8 +260,7 @@
 
                     <div class="pv-footnote">
                       注: 时区 PST(UTC-8), 货币 USD；ROI
-                      计算含广告收入及付费收入。预览最多展示各表前
-                      {{ ROW_CAP }} 行。
+                      计算含广告收入及付费收入。预览为当前筛选条件下 KPI 与图表数据摘要。
                     </div>
                   </template>
                 </div>
@@ -810,6 +420,13 @@
     margin-bottom: 12px;
     font-size: 12px;
     font-weight: 600;
+    color: #94a3b8;
+  }
+
+  .modal-scope-desc {
+    margin: 0 0 18px;
+    font-size: 12px;
+    line-height: 1.55;
     color: #94a3b8;
   }
 

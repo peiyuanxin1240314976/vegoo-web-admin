@@ -13,7 +13,7 @@
       <header class="rev-header rev-entry-1">
         <div class="rev-header__filters rev-filter-panel">
           <div class="rev-pill rev-pill--app-multi">
-            <span class="rev-pill__k">App:</span>
+            <span class="rev-pill__k">应用:</span>
             <AppPlatformSearchSelect
               v-model="filtersDraft.appIds"
               mode="app"
@@ -29,7 +29,7 @@
           </div>
 
           <div class="rev-pill">
-            <span class="rev-pill__k">Country:</span>
+            <span class="rev-pill__k">国家：</span>
             <ElSelect
               v-model="filtersDraft.s_country_code"
               class="rev-select"
@@ -67,7 +67,7 @@
           </div> -->
 
           <div class="rev-pill">
-            <span class="rev-pill__k">Date:</span>
+            <span class="rev-pill__k">日期：</span>
             <ElDatePicker
               v-model="filtersDraft.t_date"
               type="date"

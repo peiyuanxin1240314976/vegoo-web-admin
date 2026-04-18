@@ -2,6 +2,11 @@ import type {
   AgencyAnalysisMockPayload,
   AgencyAnalysisCharts,
   AgencyAnalysisFilterOptionsPayload,
+  AgencySubTabAccountSummaryPayload,
+  AgencySubTabAccountSummaryRow,
+  AgencySubTabRecentSummaryPayload,
+  AgencySubTabRecentSummaryRow,
+  AgencySubTabKpiPayload,
   AgencyExpandData,
   AgencyRow,
   CampaignRow,
@@ -20,7 +25,7 @@ const KPI_CARDS: KpiCardItem[] = [
     sparkColor: '#00d4b4'
   },
   {
-    label: '代投安装数',
+    label: '代投买量用户数',
     value: '8,642',
     changeText: '↑8.7%',
     changeUp: true,
@@ -466,4 +471,469 @@ export async function mockFetchAgencySpendTrend30d(): Promise<
     dates: [...CHARTS.spendTrend30d.dates],
     series: CHARTS.spendTrend30d.series.map((s) => ({ ...s, values: [...s.values] }))
   }
+}
+
+type AgencySubTabMockKey = 'gatherone' | 'kuainiao' | 'chuhai'
+
+type AgencySubTabMockQuery = {
+  agencyTab: AgencySubTabMockKey
+  /** YYYY-MM-DD */
+  date?: string
+  startDate?: string
+  endDate?: string
+}
+
+function ymdToUtcDate(ymd: string): Date {
+  const [y, m, d] = ymd.split('-').map((x) => parseInt(x, 10))
+  return new Date(Date.UTC(y, m - 1, d))
+}
+
+function inclusiveDaysBetweenYmd(start: string, end: string): number {
+  const a = ymdToUtcDate(start).getTime()
+  const b = ymdToUtcDate(end).getTime()
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return 1
+  const diff = Math.round((b - a) / 86400000)
+  return Math.max(1, diff + 1)
+}
+
+function parseMoneyToNumber(s: string): number {
+  const n = Number(String(s).replace(/[^0-9.]/g, ''))
+  return Number.isFinite(n) ? n : 0
+}
+
+function formatUsd(n: number): string {
+  const rounded = Math.round(n)
+  return `$${rounded.toLocaleString('en-US')}`
+}
+
+function bumpRoiPctString(s: string, add: number): string {
+  const n = Number(String(s).replace(/[^0-9.]/g, ''))
+  if (!Number.isFinite(n)) return s
+  const next = Math.max(0, Math.min(300, Math.round(n + add)))
+  return `${next}%`
+}
+
+function ymdToCnLabel(ymd: string | undefined): string {
+  if (!ymd || ymd.length < 10) return '当日'
+  const m = Number(ymd.slice(5, 7))
+  const d = Number(ymd.slice(8, 10))
+  if (!Number.isFinite(m) || !Number.isFinite(d)) return ymd
+  return `${m}月${d}日`
+}
+
+function subTabMockVariant(tab: AgencySubTabMockKey) {
+  switch (tab) {
+    case 'kuainiao':
+      return {
+        last7: {
+          spend: '$2,860',
+          roi1: '118%',
+          installs: '41208',
+          appCount: '2',
+          accountCount: '4',
+          campaignCount: '11',
+          adsetCount: '18',
+          countryCount: '9',
+          days: '7'
+        },
+        day: {
+          spend: '$412',
+          roi1: '141%',
+          installs: '6021',
+          appCount: '2',
+          accountCount: '2',
+          campaignCount: '11',
+          adsetCount: '18',
+          countryCount: '9',
+          days: '1'
+        },
+        recent: [
+          {
+            app: 'PhoneCleaner',
+            platform: 'iOS',
+            source: 'TikTok',
+            accountId: '7519055062153461100',
+            accountName: 'KN_TK_PC1_US_01',
+            spend: '$520',
+            budget: '$480',
+            cpa: '-',
+            cpi: '0.11',
+            installs: '4720',
+            roiTrend: ['112%', '108%', '121%']
+          },
+          {
+            app: 'PhoneCleaner',
+            platform: 'iOS',
+            source: 'TikTok',
+            accountId: '7519055062153461101',
+            accountName: 'KN_TK_PC1_US_02',
+            spend: '$188',
+            budget: '$160',
+            cpa: '-',
+            cpi: '0.08',
+            installs: '2350',
+            roiTrend: ['104%', '99%', '115%']
+          },
+          {
+            app: 'PhoneCleaner',
+            platform: 'iOS',
+            source: 'TikTok',
+            accountId: '7519055062153461102',
+            accountName: 'KN_TK_PC1_US_03',
+            spend: '$96',
+            budget: '$90',
+            cpa: '-',
+            cpi: '0.06',
+            installs: '1600',
+            roiTrend: ['96%', '101%', '109%']
+          }
+        ] as const,
+        account: [
+          {
+            app: 'PhoneCleaner',
+            platform: 'iOS',
+            source: 'TikTok',
+            accountId: '7519055062153461100',
+            accountName: 'KN_TK_PC1_US_01',
+            spend: '$6120',
+            roi1: '116%',
+            cpa: '-',
+            cpi: '0.10',
+            installs: '61200'
+          },
+          {
+            app: 'PhoneCleaner',
+            platform: 'iOS',
+            source: 'TikTok',
+            accountId: '7519055062153461101',
+            accountName: 'KN_TK_PC1_US_02',
+            spend: '$980',
+            roi1: '109%',
+            cpa: '-',
+            cpi: '0.07',
+            installs: '14000'
+          },
+          {
+            app: 'PhoneCleaner',
+            platform: 'iOS',
+            source: 'TikTok',
+            accountId: '7519055062153461102',
+            accountName: 'KN_TK_PC1_US_03',
+            spend: '$240',
+            roi1: '103%',
+            cpa: '-',
+            cpi: '0.05',
+            installs: '4800'
+          }
+        ] as const
+      }
+    case 'chuhai':
+      return {
+        last7: {
+          spend: '$3,420',
+          roi1: '96%',
+          installs: '28840',
+          appCount: '3',
+          accountCount: '6',
+          campaignCount: '14',
+          adsetCount: '22',
+          countryCount: '18',
+          days: '7'
+        },
+        day: {
+          spend: '$510',
+          roi1: '88%',
+          installs: '4310',
+          appCount: '3',
+          accountCount: '3',
+          campaignCount: '14',
+          adsetCount: '22',
+          countryCount: '18',
+          days: '1'
+        },
+        recent: [
+          {
+            app: 'SpyApp',
+            platform: '安卓',
+            source: 'Google',
+            accountId: '8822113344556677',
+            accountName: 'CH_GO_SA1_EU_01',
+            spend: '$640',
+            budget: '$600',
+            cpa: '-',
+            cpi: '0.14',
+            installs: '4580',
+            roiTrend: ['92%', '89%', '95%']
+          },
+          {
+            app: 'SpyApp',
+            platform: '安卓',
+            source: 'Google',
+            accountId: '8822113344556678',
+            accountName: 'CH_GO_SA1_EU_02',
+            spend: '$210',
+            budget: '$190',
+            cpa: '-',
+            cpi: '0.09',
+            installs: '2330',
+            roiTrend: ['88%', '90%', '93%']
+          },
+          {
+            app: 'SpyApp',
+            platform: '安卓',
+            source: 'Google',
+            accountId: '8822113344556679',
+            accountName: 'CH_GO_SA1_EU_03',
+            spend: '$120',
+            budget: '$110',
+            cpa: '-',
+            cpi: '0.07',
+            installs: '1710',
+            roiTrend: ['84%', '86%', '91%']
+          }
+        ] as const,
+        account: [
+          {
+            app: 'SpyApp',
+            platform: '安卓',
+            source: 'Google',
+            accountId: '8822113344556677',
+            accountName: 'CH_GO_SA1_EU_01',
+            spend: '$7420',
+            roi1: '94%',
+            cpa: '-',
+            cpi: '0.13',
+            installs: '57100'
+          },
+          {
+            app: 'SpyApp',
+            platform: '安卓',
+            source: 'Google',
+            accountId: '8822113344556678',
+            accountName: 'CH_GO_SA1_EU_02',
+            spend: '$1320',
+            roi1: '90%',
+            cpa: '-',
+            cpi: '0.08',
+            installs: '16500'
+          },
+          {
+            app: 'SpyApp',
+            platform: '安卓',
+            source: 'Google',
+            accountId: '8822113344556679',
+            accountName: 'CH_GO_SA1_EU_03',
+            spend: '$410',
+            roi1: '86%',
+            cpa: '-',
+            cpi: '0.06',
+            installs: '6830'
+          }
+        ] as const
+      }
+    case 'gatherone':
+    default:
+      return {
+        last7: {
+          spend: '$1,945',
+          roi1: '102%',
+          installs: '31984',
+          appCount: '1',
+          accountCount: '2',
+          campaignCount: '8',
+          adsetCount: '15',
+          countryCount: '21',
+          days: '7'
+        },
+        day: {
+          spend: '$288',
+          roi1: '130%',
+          installs: '4719',
+          appCount: '1',
+          accountCount: '1',
+          campaignCount: '8',
+          adsetCount: '15',
+          countryCount: '21',
+          days: '1'
+        },
+        recent: [
+          {
+            app: 'FileRecovery',
+            platform: '安卓',
+            source: 'Facebook',
+            accountId: '1196169169136013',
+            accountName: 'GO_FB_FR1_ZL_PG03',
+            spend: '$218',
+            budget: '$196',
+            cpa: '-',
+            cpi: '0.09',
+            installs: '2553',
+            roiTrend: ['101%', '95%', '131%']
+          },
+          {
+            app: 'FileRecovery',
+            platform: '安卓',
+            source: 'Facebook',
+            accountId: '1643261666838590',
+            accountName: 'GO_FB_FR1_ZL_PG04',
+            spend: '$70.4',
+            budget: '$56.0',
+            cpa: '-',
+            cpi: '0.03',
+            installs: '2166',
+            roiTrend: ['98%', '102%', '128%']
+          },
+          {
+            app: 'FileRecovery',
+            platform: '安卓',
+            source: 'Facebook',
+            accountId: '1196169169136014',
+            accountName: 'GO_FB_FR1_ZL_PG05',
+            spend: '$42.1',
+            budget: '$40.0',
+            cpa: '-',
+            cpi: '0.02',
+            installs: '2105',
+            roiTrend: ['93%', '97%', '105%']
+          }
+        ] as const,
+        account: [
+          {
+            app: 'FileRecovery',
+            platform: '安卓',
+            source: 'Facebook',
+            accountId: '1196169169136013',
+            accountName: 'GO_FB_FR1_ZL_PG03',
+            spend: '$2259',
+            roi1: '101%',
+            cpa: '-',
+            cpi: '0.09',
+            installs: '26526'
+          },
+          {
+            app: 'FileRecovery',
+            platform: '安卓',
+            source: 'Facebook',
+            accountId: '1643261666838590',
+            accountName: 'GO_FB_FR1_ZL_PG04',
+            spend: '$586',
+            roi1: '100%',
+            cpa: '-',
+            cpi: '0.03',
+            installs: '21926'
+          },
+          {
+            app: 'FileRecovery',
+            platform: '安卓',
+            source: 'Facebook',
+            accountId: '1196169169136014',
+            accountName: 'GO_FB_FR1_ZL_PG05',
+            spend: '$312',
+            roi1: '97%',
+            cpa: '-',
+            cpi: '0.02',
+            installs: '15600'
+          }
+        ] as const
+      }
+  }
+}
+
+export async function mockFetchAgencySubTabKpiLast7(
+  q: AgencySubTabMockQuery
+): Promise<AgencySubTabKpiPayload> {
+  const v = subTabMockVariant(q.agencyTab)
+  return {
+    periodLabel: '近7天',
+    metrics: [
+      { key: 'spend', label: '广告支出', value: v.last7.spend },
+      { key: 'roi1', label: '首日ROI', value: v.last7.roi1 },
+      { key: 'cpa', label: 'CPA', value: '-' },
+      { key: 'installs', label: '代投买量用户数', value: v.last7.installs },
+      { key: 'appCount', label: '在投应用数', value: v.last7.appCount },
+      { key: 'accountCount', label: '广告账户数', value: v.last7.accountCount },
+      { key: 'campaignCount', label: '广告系列数', value: v.last7.campaignCount },
+      { key: 'adsetCount', label: '广告组数', value: v.last7.adsetCount },
+      { key: 'countryCount', label: '投放国家数', value: v.last7.countryCount },
+      { key: 'days', label: '投放天数', value: v.last7.days }
+    ]
+  }
+}
+
+export async function mockFetchAgencySubTabKpiDay(
+  q: AgencySubTabMockQuery
+): Promise<AgencySubTabKpiPayload> {
+  const v = subTabMockVariant(q.agencyTab)
+  return {
+    periodLabel: ymdToCnLabel(q.date),
+    metrics: [
+      { key: 'spend', label: '广告支出', value: v.day.spend },
+      { key: 'roi1', label: '首日ROI', value: v.day.roi1 },
+      { key: 'cpa', label: 'CPA', value: '-' },
+      { key: 'installs', label: '代投买量用户数', value: v.day.installs },
+      { key: 'appCount', label: '在投应用数', value: v.day.appCount },
+      { key: 'accountCount', label: '广告账户数', value: v.day.accountCount },
+      { key: 'campaignCount', label: '广告系列数', value: v.day.campaignCount },
+      { key: 'adsetCount', label: '广告组数', value: v.day.adsetCount },
+      { key: 'countryCount', label: '投放国家数', value: v.day.countryCount },
+      { key: 'days', label: '投放天数', value: v.day.days }
+    ]
+  }
+}
+
+export async function mockFetchAgencySubTabRecentSummary(
+  q: AgencySubTabMockQuery
+): Promise<AgencySubTabRecentSummaryPayload> {
+  const v = subTabMockVariant(q.agencyTab)
+  const start = q.startDate ?? ''
+  const end = q.endDate ?? ''
+  const days = start && end ? inclusiveDaysBetweenYmd(start, end) : 3
+  const tag = start && end ? `${start}~${end}` : 'range'
+
+  const rows: AgencySubTabRecentSummaryRow[] = v.recent.map((r, idx) => {
+    const baseSpend = parseMoneyToNumber(r.spend)
+    const baseBudget = parseMoneyToNumber(r.budget)
+    const mult = 0.9 + Math.min(1.2, days / 7) + idx * 0.02
+    const spend = formatUsd(baseSpend * mult)
+    const budget = formatUsd(baseBudget * mult)
+    const installsNum = Number(String(r.installs).replace(/[^0-9]/g, '')) || 0
+    const installs = String(Math.max(0, Math.round(installsNum * mult)))
+    return {
+      ...r,
+      accountName: `${r.accountName}（${tag}）`,
+      spend,
+      budget,
+      installs,
+      roiTrend: r.roiTrend.map((x) => bumpRoiPctString(x, (days % 3) - 1 + idx))
+    }
+  })
+
+  return { rows }
+}
+
+export async function mockFetchAgencySubTabAccountSummary(
+  q: AgencySubTabMockQuery
+): Promise<AgencySubTabAccountSummaryPayload> {
+  const v = subTabMockVariant(q.agencyTab)
+  const start = q.startDate ?? ''
+  const end = q.endDate ?? ''
+  const days = start && end ? inclusiveDaysBetweenYmd(start, end) : 7
+  const tag = start && end ? `${start}~${end}` : 'range'
+
+  const rows: AgencySubTabAccountSummaryRow[] = v.account.map((r, idx) => {
+    const baseSpend = parseMoneyToNumber(r.spend)
+    const mult = 0.85 + Math.min(1.35, days / 14) + idx * 0.03
+    const spend = formatUsd(baseSpend * mult)
+    const installsNum = Number(String(r.installs).replace(/[^0-9]/g, '')) || 0
+    const installs = String(Math.max(0, Math.round(installsNum * mult)))
+    return {
+      ...r,
+      accountName: `${r.accountName}（${tag}）`,
+      spend,
+      roi1: bumpRoiPctString(r.roi1, (days % 5) - 2 + idx),
+      installs
+    }
+  })
+
+  return { rows }
 }
