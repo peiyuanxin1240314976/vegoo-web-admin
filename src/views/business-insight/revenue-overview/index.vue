@@ -37,7 +37,7 @@
               :teleported="true"
               :fit-input-width="true"
               filterable
-              placeholder="国家（默认不限）"
+              placeholder="国家"
             >
               <ElOption
                 v-for="opt in countryOptions"
