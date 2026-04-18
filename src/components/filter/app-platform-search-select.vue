@@ -16,7 +16,25 @@
         :class="[inputClass, { 'is-disabled': disabled, 'is-open': visible }]"
         :style="rootStyle"
       >
+        <div
+          v-if="isMultiAppDisplay"
+          class="app-platform-search-select__value app-platform-search-select__value--multi"
+        >
+          <template v-if="multipleDisplay.type === 'empty'">
+            <span class="app-platform-search-select__text is-placeholder">{{ placeholder }}</span>
+          </template>
+          <template v-else-if="multipleDisplay.type === 'single'">
+            <span class="app-platform-search-select__text">{{ multipleDisplay.text }}</span>
+          </template>
+          <template v-else>
+            <span class="app-platform-search-select__tag">{{ multipleDisplay.firstText }}</span>
+            <span v-if="multipleDisplay.more > 0" class="app-platform-search-select__more"
+              >+ {{ multipleDisplay.more }}</span
+            >
+          </template>
+        </div>
         <span
+          v-else
           class="app-platform-search-select__text"
           :class="{ 'is-placeholder': !selectedLabel }"
         >
@@ -58,7 +76,17 @@
           class="app-platform-search-select__row app-platform-search-select__row--clear"
           @click="clearSelection"
         >
-          <span>{{ allLabel }}</span>
+          <span>{{ clearRowLabel }}</span>
+        </button>
+
+        <button
+          v-if="showSelectAllRow"
+          type="button"
+          class="app-platform-search-select__row app-platform-search-select__row--select-all"
+          :class="{ 'is-active': isAllAppsSelected }"
+          @click="toggleSelectAllApps"
+        >
+          <span>{{ selectAllLabel }}</span>
         </button>
 
         <button
@@ -66,7 +94,13 @@
           :key="item.key"
           type="button"
           class="app-platform-search-select__row"
-          :class="[`is-${mode}`, { 'is-active': isRowActive(item) }]"
+          :class="[
+            `is-${mode}`,
+            {
+              'is-active': isRowActive(item),
+              'is-multiple-app-row': showAppRowCheck(item)
+            }
+          ]"
           @click="selectItem(item)"
         >
           <template v-if="mode !== 'platform'">
@@ -77,6 +111,13 @@
           <template v-else>
             <span>{{ item.displayName || '--' }}</span>
           </template>
+          <ElIcon
+            v-if="showAppRowCheck(item)"
+            class="app-platform-search-select__check"
+            :class="{ 'is-on': isRowActive(item) }"
+          >
+            <Check />
+          </ElIcon>
         </button>
 
         <ElEmpty
@@ -92,7 +133,7 @@
 
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
-  import { ArrowDown, Search } from '@element-plus/icons-vue'
+  import { ArrowDown, Check, Search } from '@element-plus/icons-vue'
   import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
 
   type SelectMode = 'platform' | 'app' | 'combined'
@@ -138,7 +179,12 @@
       multiple?: boolean
       placeholder?: string
       searchPlaceholder?: string
+      /** 单选时「清空当前选择」行文案，默认「全部」 */
       allLabel?: string
+      /** 多选应用时「清空为不限」行文案，默认「不限」 */
+      emptySelectionLabel?: string
+      /** 多选应用时「全选所有应用」行文案，默认「全部」 */
+      selectAllLabel?: string
       clearable?: boolean
       disabled?: boolean
       panelWidth?: number
@@ -160,6 +206,8 @@
       placeholder: '请选择',
       searchPlaceholder: '搜索类别/应用名称/应用简称',
       allLabel: '全部',
+      emptySelectionLabel: '不限',
+      selectAllLabel: '全部',
       clearable: true,
       disabled: false,
       panelWidth: 560,
@@ -297,25 +345,81 @@
     return Boolean(typeof props.modelValue === 'string' && props.modelValue.trim())
   })
 
-  const selectedLabel = computed(() => {
-    if (props.multiple && props.mode === 'app') {
-      const n = selectedIds.value.size
-      if (n === 0) return ''
-      if (n === 1) {
-        const id = [...selectedIds.value][0]
-        const row = appOptions.value.find((o) => o.appId === id)
-        return row?.displayName ?? id
-      }
-      return `已选 ${n} 个应用`
+  const clearRowLabel = computed(() =>
+    props.multiple && props.mode === 'app' ? props.emptySelectionLabel : props.allLabel
+  )
+
+  const isMultiAppDisplay = computed(() => props.multiple && props.mode === 'app')
+
+  /** 多选应用：来自 settingApps 的全部 appId（顺序与 appOptions 一致、去重） */
+  const allAppIds = computed(() => {
+    const out: string[] = []
+    const seen = new Set<string>()
+    for (const o of appOptions.value) {
+      const id = String(o.appId ?? '').trim()
+      if (!id || seen.has(id)) continue
+      seen.add(id)
+      out.push(id)
     }
+    return out
+  })
+
+  const isAllAppsSelected = computed(() => {
+    const all = allAppIds.value
+    if (all.length === 0) return false
+    if (selectedIds.value.size !== all.length) return false
+    return all.every((id) => selectedIds.value.has(id))
+  })
+
+  const showSelectAllRow = computed(
+    () => props.multiple && props.mode === 'app' && allAppIds.value.length > 0
+  )
+
+  type MultiDisplay =
+    | { type: 'empty' }
+    | { type: 'single'; text: string }
+    | { type: 'multi'; firstText: string; more: number }
+
+  const multipleDisplay = computed((): MultiDisplay => {
+    if (!props.multiple || props.mode !== 'app') return { type: 'empty' }
+    const arr = Array.isArray(props.modelValue) ? props.modelValue : []
+    const ids = arr.map((id) => String(id ?? '').trim()).filter(Boolean)
+    const n = ids.length
+    if (n === 0) return { type: 'empty' }
+    if (n === 1) {
+      const row = appOptions.value.find((o) => o.appId === ids[0])
+      return { type: 'single', text: row?.displayName ?? ids[0] }
+    }
+    const firstId = ids[0]
+    const row = appOptions.value.find((o) => o.appId === firstId)
+    return { type: 'multi', firstText: row?.displayName ?? firstId, more: n - 1 }
+  })
+
+  const selectedLabel = computed(() => {
+    if (props.multiple && props.mode === 'app') return ''
     return selectedItem.value?.displayName ?? ''
   })
 
+  function showAppRowCheck(item: NormalizedOption): boolean {
+    return props.multiple && props.mode === 'app' && item.selectionType === 'app'
+  }
+
   function isRowActive(item: NormalizedOption): boolean {
     if (props.multiple && props.mode === 'app' && item.selectionType === 'app') {
+      if (isAllAppsSelected.value) return true
       return selectedIds.value.has(item.appId)
     }
     return item.modelValue === props.modelValue
+  }
+
+  function toggleSelectAllApps() {
+    if (isAllAppsSelected.value) {
+      emit('update:modelValue', [])
+      emit('change', null)
+    } else {
+      emit('update:modelValue', [...allAppIds.value])
+      emit('change', null)
+    }
   }
 
   function getMatchScore(item: NormalizedOption, q: string): number {
@@ -468,6 +572,34 @@
     }
   }
 
+  .app-platform-search-select__value--multi {
+    display: flex;
+    flex: 1;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .app-platform-search-select__tag {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-platform-search-select__more {
+    flex-shrink: 0;
+    padding: 0 6px;
+    font-size: 12px;
+    line-height: 20px;
+    color: var(--el-text-color-secondary);
+    background: var(--el-fill-color);
+    border-radius: 4px;
+  }
+
   .app-platform-search-select__text {
     flex: 1;
     min-width: 0;
@@ -546,6 +678,21 @@
     &.is-platform {
       grid-template-columns: minmax(0, 1fr);
     }
+
+    &.is-multiple-app-row {
+      grid-template-columns: 110px minmax(0, 1fr) 88px 22px;
+      align-items: center;
+    }
+  }
+
+  .app-platform-search-select__check {
+    justify-self: end;
+    font-size: 16px;
+    color: var(--el-text-color-placeholder);
+
+    &.is-on {
+      color: var(--theme-color, var(--art-primary, #3b82f6));
+    }
   }
 
   .app-platform-search-select__row--clear {
@@ -554,6 +701,15 @@
     padding: 10px 8px;
     margin-bottom: 4px;
     color: var(--el-text-color-regular);
+  }
+
+  .app-platform-search-select__row--select-all {
+    display: flex;
+    align-items: center;
+    padding: 10px 8px;
+    margin-bottom: 4px;
+    font-weight: 500;
+    color: var(--el-text-color-primary);
   }
 
   .app-platform-search-select__empty {
