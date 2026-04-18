@@ -58,7 +58,7 @@
 
         <!-- 生效起始日期 -->
         <el-form-item label="生效起始日期 (t_start)" prop="tStart" class="form-item">
-          <el-date-picker
+          <AppDatePicker
             v-model="form.tStart"
             type="date"
             placeholder="选择日期"
@@ -122,6 +122,7 @@
 
 <script setup lang="ts">
   import { computed, onMounted, reactive, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'

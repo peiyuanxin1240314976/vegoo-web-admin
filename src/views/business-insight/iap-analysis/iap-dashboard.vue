@@ -21,7 +21,7 @@
       <div class="iap-dashboard-filter">
         <div class="iap-dashboard-filter__item">
           <span class="iap-dashboard-f-label">时间范围</span>
-          <ElDatePicker
+          <AppDatePicker
             v-model="dateRange"
             type="daterange"
             :shortcuts="dateRangeShortcuts"
@@ -257,6 +257,7 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'

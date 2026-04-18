@@ -5,7 +5,7 @@
     <div class="or-filters-wrap or-entry-1">
       <div class="or-filters-inner">
         <div class="or-filters-row">
-          <ElDatePicker
+          <AppDatePicker
             v-model="dateRangeModel"
             type="daterange"
             unlink-panels
@@ -104,6 +104,7 @@
   import { Calendar, Flag, Promotion } from '@element-plus/icons-vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import type { OverallRecoveryTabKey, OverallRecoveryFilterState } from './types'
   import { resolveDateRangeFromPreset } from './utils/buildApiParams'
   import { useOverallRecoveryFilters } from './composables/useOverallRecoveryFilters'

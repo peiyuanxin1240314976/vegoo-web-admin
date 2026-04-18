@@ -8,6 +8,7 @@
     AgencySubTabKpiMetricItem
   } from '@/views/business-insight/agency-analysis/types'
   import { computed, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { ElAlert, ElSkeleton } from 'element-plus'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
@@ -496,7 +497,7 @@
           <h3 class="aa-sub-mock__section-title">账户汇总</h3>
         </div>
         <div class="aa-sub-mock__section-actions" aria-label="账户汇总查询">
-          <el-date-picker
+          <AppDatePicker
             v-model="accountRangeDraft"
             :shortcuts="dateRangeShortcuts"
             type="daterange"

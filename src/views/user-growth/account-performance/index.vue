@@ -36,7 +36,7 @@
               :value="opt.value"
             />
           </ElSelect>
-          <ElDatePicker
+          <AppDatePicker
             v-model="draftDateRange"
             type="daterange"
             :shortcuts="dateRangeShortcuts"
@@ -267,6 +267,7 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, watch, watchEffect } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { storeToRefs } from 'pinia'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useChart } from '@/hooks/core/useChart'

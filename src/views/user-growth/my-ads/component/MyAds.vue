@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import SummaryTab from './SummaryTab.vue'
   import PlatformTab from './PlatformTab.vue'
   import CampaignTab from './CampaignTab.vue'
@@ -215,7 +216,7 @@
             </template>
             <ElOption v-for="s in staffList" :key="s.id" :label="`人员: ${s.name}`" :value="s.id" />
           </ElSelect>
-          <ElDatePicker
+          <AppDatePicker
             v-model="dateRange"
             type="daterange"
             range-separator="~"

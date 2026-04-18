@@ -66,6 +66,10 @@ export interface RouteMeta extends Record<string | number | symbol, unknown> {
   authMark?: string
   /** 父级路径 */
   parentPath?: string
+  /**
+   * 为 true 时，当前页 `AppDatePicker` 不应用 `permissionConfig.datePermissions`（业务数据日期回看限制）
+   */
+  skipDatePermission?: boolean
 }
 
 /**

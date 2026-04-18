@@ -3,6 +3,7 @@
    * 三方商店管理 — 數據由 API / Mock 注入（樣式保持不變）
    */
   import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts'
   import { Plus, Download } from '@element-plus/icons-vue'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
@@ -394,7 +395,7 @@
     <!-- ── Filters（对齐广告成效：非固定吸顶，不改功能） ─────────────────────── -->
     <div class="tps-filters">
       <div class="tps-filters__left">
-        <el-date-picker
+        <AppDatePicker
           v-model="filters.dateRange"
           type="daterange"
           size="small"

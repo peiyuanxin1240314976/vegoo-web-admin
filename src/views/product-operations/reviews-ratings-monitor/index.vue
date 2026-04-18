@@ -4,6 +4,7 @@
    */
   import { ref, reactive, computed } from 'vue'
   import { storeToRefs } from 'pinia'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { Iphone, Reading } from '@element-plus/icons-vue'
   import ReviewMonitorSummary from './components/ReviewMonitorSummary.vue'
   import ReviewMonitorDetail from './components/ReviewMonitorDetail.vue'
@@ -151,7 +152,7 @@
             />
           </ElSelect>
 
-          <ElDatePicker
+          <AppDatePicker
             v-model="dateRange"
             type="daterange"
             range-separator="~"

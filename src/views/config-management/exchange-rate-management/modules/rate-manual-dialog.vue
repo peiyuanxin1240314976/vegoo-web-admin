@@ -35,7 +35,7 @@
 
       <div class="date-row">
         <ElFormItem label="生效日期" prop="effectiveDate" class="date-item">
-          <ElDatePicker
+          <AppDatePicker
             v-model="form.effectiveDate"
             type="date"
             placeholder="选择日期"
@@ -75,6 +75,7 @@
 
 <script setup lang="ts">
   import { computed, reactive, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
   import type { ManualRateFormModel, OptionItem } from '../types'

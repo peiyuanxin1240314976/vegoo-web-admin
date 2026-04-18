@@ -65,11 +65,19 @@ export class MenuProcessor {
   private async processFrontendMenu(): Promise<AppRouteRecord[]> {
     const userStore = useUserStore()
     const roles = userStore.info?.roles ?? []
+    const routeNames = userStore.info?.permissionConfig?.routePermissions?.routeNames ?? []
 
     let menuList = [...asyncRoutes]
 
-    // 根据接口返回的 permissions（已映射到 roles）过滤菜单；包含 SuperAdmin 时不做过滤，展示全部
-    if (roles.length > 0 && !roles.includes(MenuProcessor.SUPER_ADMIN)) {
+    const useRouteNamesMenu =
+      import.meta.env.VITE_USE_ROUTE_NAMES_MENU === 'true' &&
+      routeNames.length > 0 &&
+      !roles.includes(MenuProcessor.SUPER_ADMIN)
+
+    if (useRouteNamesMenu) {
+      menuList = this.filterMenuByRouteNames(menuList, routeNames)
+    } else if (roles.length > 0 && !roles.includes(MenuProcessor.SUPER_ADMIN)) {
+      // 根据接口返回的 permissions（已映射到 roles）过滤菜单；包含 SuperAdmin 时不做过滤，展示全部
       menuList = this.filterMenuByRoles(menuList, roles)
     }
 
@@ -128,6 +136,31 @@ export class MenuProcessor {
     }
 
     return { ...backendItem, children: merged }
+  }
+
+  /**
+   * 按后端下发的路由 name 集合过滤菜单（与 permissionConfig.routePermissions.routeNames 对齐）
+   * 父级 name 可不在列表中，只要子树过滤后仍有节点则保留父级。
+   */
+  private filterMenuByRouteNames(menu: AppRouteRecord[], routeNames: string[]): AppRouteRecord[] {
+    return menu.reduce((acc: AppRouteRecord[], item) => {
+      const currentName = item.name ? String(item.name) : ''
+      const children = item.children?.length
+        ? this.filterMenuByRouteNames(item.children, routeNames)
+        : item.children
+
+      const selfMatched = currentName ? routeNames.includes(currentName) : false
+      const hasChildren = Boolean(children?.length)
+
+      if (selfMatched || hasChildren) {
+        acc.push({
+          ...item,
+          children
+        })
+      }
+
+      return acc
+    }, [])
   }
 
   /**

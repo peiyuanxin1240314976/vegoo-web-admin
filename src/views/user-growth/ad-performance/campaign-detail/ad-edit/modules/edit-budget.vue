@@ -30,7 +30,7 @@
       <div class="ebu__row">
         <div class="ebu__half">
           <label class="ebu__label">开始时间</label>
-          <ElDatePicker
+          <AppDatePicker
             v-model="budget.startDate"
             type="date"
             style="width: 100%"
@@ -39,7 +39,7 @@
         </div>
         <div class="ebu__half">
           <label class="ebu__label">结束时间</label>
-          <ElDatePicker
+          <AppDatePicker
             v-model="budget.endDate"
             type="date"
             style="width: 100%"
@@ -68,6 +68,7 @@
 </template>
 
 <script setup lang="ts">
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import type { AdEditBudget } from '../types'
 
   defineOptions({ name: 'EditBudget' })

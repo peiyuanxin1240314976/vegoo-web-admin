@@ -305,7 +305,7 @@
             <div class="form-field form-field--row">
               <label class="form-label">过期时间</label>
               <div class="date-input-wrap">
-                <ElDatePicker
+                <AppDatePicker
                   v-model="credForm.expiry"
                   type="date"
                   value-format="YYYY-MM-DD"
@@ -470,6 +470,7 @@
 
 <script setup lang="ts">
   import { computed, onMounted, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import {
     batchTestAppStoreCredentialConnection,

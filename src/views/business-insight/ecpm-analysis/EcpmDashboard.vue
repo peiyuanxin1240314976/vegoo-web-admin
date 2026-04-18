@@ -11,7 +11,7 @@
       <div class="header-filters ecpm-filter-panel">
         <div class="ecpm-pill ecpm-pill--date">
           <span class="ecpm-pill__k">日期</span>
-          <el-date-picker
+          <AppDatePicker
             v-model="dateRange"
             type="daterange"
             :shortcuts="dateRangeShortcuts"
@@ -443,6 +443,7 @@
   import { TrendCharts, Money, Location, Grid, Warning } from '@element-plus/icons-vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { getAppNow, cloneAppDate } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {

@@ -8,7 +8,7 @@
         <div class="pad-filter-item pad-filter-item--date">
           <ElIcon class="pad-filter-item__icon" aria-hidden="true"><Calendar /></ElIcon>
           <span v-if="isLast7DaysPreset" class="pad-filter-date-preset">近7天</span>
-          <ElDatePicker
+          <AppDatePicker
             v-model="dateRange"
             type="daterange"
             :shortcuts="dateRangeShortcuts"
@@ -357,6 +357,7 @@
 <script setup lang="ts">
   import 'flag-icons/css/flag-icons.min.css'
   import { ref, reactive, computed, onMounted, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { storeToRefs } from 'pinia'
   import { useRoute } from 'vue-router'
   import { Top, Bottom, Calendar, Search } from '@element-plus/icons-vue'

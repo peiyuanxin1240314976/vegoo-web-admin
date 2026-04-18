@@ -2,6 +2,7 @@
   import 'flag-icons/css/flag-icons.min.css'
   import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
@@ -326,7 +327,7 @@
           <span class="bi-filter-label">{{
             $t('menus.businessInsight.profitAnalysisFilters.dateRange')
           }}</span>
-          <ElDatePicker
+          <AppDatePicker
             v-model="dateRangePicker"
             type="daterange"
             unlink-panels

@@ -48,7 +48,7 @@
 ## 契约维护缺口（整理结论，非自动改代码）
 
 1. **根级 `interaction`**：本目录各 `*.json` 当前**均无** Skill 要求的根级 `interaction`（`triggers` / `defaultSelection` 等）；联调说明依赖本 README 与代码。
-2. **与 `backend-fields.mdc` 对齐**：契约与 `overviewBody` / `rangeBody` 仍含 **`s_app_id`、`t_date`、`t_start_date`、`t_end_date`** 等；字典要求新契约为 **`appId`、`startDate`、`endDate`** 等 camelCase。**迁移项**须在交付物与后端联调计划中单列（冻结目录内**仅建议、不擅自批量改名**）。
+2. **与 `backend-fields.mdc` 对齐**：契约与 `overviewBody` / `rangeBody` 仍含 **`s_app_id`、`t_date`、`t_start_date`、`t_end_date`** 等；字典要求新契约为 **`appId`、`startDate`、`endDate`** 等 camelCase。**迁移项**须在交付物与后端联调计划中单列；批量改名前与后端对齐。
 3. **「仅有 `fetch*`、当前无 UI 调用」**：`fetchAgencyAnalysisAgencySummary`、`fetchAgencyAnalysisCampaignTable`、`fetchAgencyAnalysisDailyComparison` 对应 **`02`～`04`** 契约与 mock 函数——**疑似预留**；是否下线或接子 Tab **须产品 / 需求确认**。
 4. **cockpit 与 `09` 重叠**：若产品确认顶栏应用/广告平台与驾驶舱同源，可收敛为 **cockpit Store + 仅代投方维度独立接口**（或合并进单一 meta 契约但去掉与 cockpit 重复的 options 块）。
 

@@ -7,7 +7,7 @@
         <div class="aps-filter-toolbar">
           <div class="aps-filter-toolbar__row">
             <div class="header-left">
-              <ElDatePicker
+              <AppDatePicker
                 v-model="dateRange"
                 type="daterange"
                 range-separator="~"
@@ -175,6 +175,7 @@
 
 <script setup lang="ts" name="AdPlatformAnalysis">
   import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import AppPlatformSearchSelect, {

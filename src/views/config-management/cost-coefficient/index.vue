@@ -66,7 +66,7 @@
                 :label="p.name"
               />
             </el-select>
-            <el-date-picker
+            <AppDatePicker
               v-model="filterYear"
               type="year"
               placeholder="生效日期"
@@ -190,6 +190,7 @@
 
 <script setup lang="ts">
   import { computed, onMounted, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { Plus, Search } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import { getAppNow } from '@/utils/app-now'

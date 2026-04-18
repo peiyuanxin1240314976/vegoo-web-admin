@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts'
   import ScreenshotModal from './ScreenshotModal.vue'
   import AgencySubTabPerformanceMock from './AgencySubTabPerformanceMock.vue'
@@ -650,7 +651,7 @@
           <div class="aa-tab-bar-filters" aria-label="筛选与查询">
             <template v-if="agencyTabIndex === 0">
               <div class="filter-date-wrap filter-date-wrap--tab-inline">
-                <el-date-picker
+                <AppDatePicker
                   v-model="summaryDateDraft"
                   :shortcuts="dateRangeShortcuts"
                   type="daterange"

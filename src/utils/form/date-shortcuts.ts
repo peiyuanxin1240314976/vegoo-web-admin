@@ -1,6 +1,6 @@
 /**
  * 全局统一的日期选择器快捷选项配置
- * 所有 ElDatePicker（daterange / datetimerange / date / datetime）均可复用此定义。
+ * 所有日期选择（含 AppDatePicker / daterange / datetimerange / date / datetime）均可复用此定义。
  * 如需按业务定制，只需修改此文件，全项目自动生效。
  */
 

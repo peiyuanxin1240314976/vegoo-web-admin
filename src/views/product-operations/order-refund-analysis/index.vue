@@ -31,7 +31,7 @@
             :show-platform-suffix="true"
           />
 
-          <ElDatePicker
+          <AppDatePicker
             v-model="dateRangeDraft"
             type="daterange"
             range-separator="~"
@@ -241,6 +241,7 @@
   import { Calendar, Flag, Money, RefreshRight, TrendCharts } from '@element-plus/icons-vue'
   import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts'
   import type { ECharts, EChartsOption } from 'echarts'
   import { ElMessage } from 'element-plus'

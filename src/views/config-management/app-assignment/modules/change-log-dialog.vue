@@ -51,7 +51,7 @@
       <el-select v-model="filterOperator" class="dark-select" clearable placeholder="操作人：全部">
         <el-option v-for="opt in operatorOptions" :key="opt" :label="opt" :value="opt" />
       </el-select>
-      <el-date-picker
+      <AppDatePicker
         v-model="filterDateRange"
         type="daterange"
         range-separator="—"
@@ -130,6 +130,7 @@
 
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { ArrowLeft, Download, Search, InfoFilled } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import type { AppAssignmentItem, ChangeLogType } from '../types'

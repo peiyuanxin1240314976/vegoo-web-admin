@@ -110,7 +110,6 @@
     ElCascader,
     ElCheckbox,
     ElCheckboxGroup,
-    ElDatePicker,
     ElInput,
     ElInputTag,
     ElInputNumber,
@@ -124,7 +123,7 @@
     ElTreeSelect,
     type FormInstance
   } from 'element-plus'
-  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
+  import AppDatePicker from '../AppDatePicker.vue'
   import { calculateResponsiveSpan, type ResponsiveBreakpoint } from '@/utils/form/responsive'
 
   defineOptions({ name: 'ArtSearchBar' })
@@ -138,10 +137,10 @@
     checkbox: ElCheckbox, // 复选框
     checkboxgroup: ElCheckboxGroup, // 复选框组
     radiogroup: ElRadioGroup, // 单选框组
-    date: ElDatePicker, // 日期选择器
-    daterange: ElDatePicker, // 日期范围选择器
-    datetime: ElDatePicker, // 日期时间选择器
-    datetimerange: ElDatePicker, // 日期时间范围选择器
+    date: AppDatePicker, // 日期选择器
+    daterange: AppDatePicker, // 日期范围选择器
+    datetime: AppDatePicker, // 日期时间选择器
+    datetimerange: AppDatePicker, // 日期时间范围选择器
     rate: ElRate, // 评分
     slider: ElSlider, // 滑块
     cascader: ElCascader, // 级联选择器
@@ -250,10 +249,6 @@
           rootProps.forEach((key) => delete (p as Record<string, any>)[key])
           return p
         })()
-    // 日期范围类自动注入默认 shortcuts，页面显式传 shortcuts 则不覆盖
-    if ((item.type === 'daterange' || item.type === 'datetimerange') && !('shortcuts' in base)) {
-      ;(base as Record<string, any>).shortcuts = dateRangeShortcuts
-    }
     return base
   }
 

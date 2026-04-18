@@ -15,7 +15,7 @@
       <div class="iap-actions">
         <div class="iap-pill">
           <span class="iap-pill__label">时间范围</span>
-          <ElDatePicker
+          <AppDatePicker
             v-model="dateRange"
             type="daterange"
             :shortcuts="dateRangeShortcuts"
@@ -252,6 +252,7 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRoute, useRouter } from 'vue-router'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'

@@ -145,6 +145,11 @@ export interface EnvConfig {
   VITE_USE_GZIP?: string
   // 是否开启 CDN
   VITE_USE_CDN?: string
+  /**
+   * 为 `true` 且用户信息里 `routeNames` 非空时，前端菜单模式（VITE_ACCESS_MODE=frontend）优先按 route.name 过滤菜单
+   * @see docs/新页面权限运行时接入说明.md
+   */
+  VITE_USE_ROUTE_NAMES_MENU?: string
 }
 
 // 应用配置

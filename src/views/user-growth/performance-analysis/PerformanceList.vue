@@ -364,7 +364,7 @@
       width="420px"
       append-to-body
     >
-      <ElDatePicker
+      <AppDatePicker
         v-model="customDateRangeDraft"
         type="daterange"
         :shortcuts="dateRangeShortcuts"
@@ -384,6 +384,7 @@
 
 <script setup lang="ts">
   import { computed, onMounted, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'

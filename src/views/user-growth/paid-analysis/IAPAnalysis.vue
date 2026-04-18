@@ -9,7 +9,7 @@
             <span class="iap-filter-chip__label">日期</span>
             <span class="iap-filter-chip__value">{{ dateChipText }}</span>
           </div>
-          <ElDatePicker
+          <AppDatePicker
             v-model="filters.date"
             type="date"
             :shortcuts="dateShortcuts"
@@ -118,6 +118,7 @@
 </template>
 
 <script setup lang="ts">
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { Calendar, Flag } from '@element-plus/icons-vue'
   import { storeToRefs } from 'pinia'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'

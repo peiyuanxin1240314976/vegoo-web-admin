@@ -15,7 +15,7 @@
       </div>
       <div class="header-right">
         <button class="btn-back" @click="goBack">← 返回列表</button>
-        <ElDatePicker
+        <AppDatePicker
           v-model="selectedDateRangeDraft"
           class="date-range-picker"
           :shortcuts="dateRangeShortcuts"
@@ -314,6 +314,7 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter, useRoute } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import * as echarts from 'echarts'

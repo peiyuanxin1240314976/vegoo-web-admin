@@ -95,7 +95,8 @@ export const useUserStore = defineStore(
         buttons: normalizedButtons,
         permissionConfig: newInfo.permissionConfig ?? {
           routePermissions: {
-            routeNames: normalizedRoles
+            /** 接口未带 permissionConfig 时占位：空表示「尚未下发页面级 routeNames」，避免与角色名混用导致按 name 过滤菜单被滤空 */
+            routeNames: []
           },
           datePermissions: {
             defaultDateScope: {

@@ -22,7 +22,7 @@
       <div class="filters filters-panel">
         <div class="filter-item filter-field">
           <span class="filter-label">日期范围</span>
-          <el-date-picker
+          <AppDatePicker
             v-model="dateRange"
             type="daterange"
             :shortcuts="dateRangeShortcuts"
@@ -314,6 +314,7 @@
 
 <script setup lang="ts">
   import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { storeToRefs } from 'pinia'
   import { useRoute, useRouter } from 'vue-router'
   import type { LocationQueryValue } from 'vue-router'

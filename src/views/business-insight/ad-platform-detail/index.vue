@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { computed, ref, onMounted, onUnmounted, onActivated, nextTick, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { storeToRefs } from 'pinia'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
@@ -702,7 +703,7 @@
             <el-select v-model="dateRange" size="default" class="filter-select">
               <el-option v-for="o in dateOptions" :key="o" :label="o" :value="o" />
             </el-select>
-            <el-date-picker
+            <AppDatePicker
               v-if="dateRange === '自定义'"
               v-model="customDateRange"
               type="daterange"

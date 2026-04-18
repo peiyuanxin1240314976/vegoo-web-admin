@@ -6,7 +6,7 @@ description: >-
 
 # 模块接口契约整理（工作流）
 
-执行前须同时遵守仓库规则：`.cursor/rules/backend-fields.mdc`（**整理前须用工具 Read 全文或由用户 `@` 该文件**）、`api-contract-and-mock-conventions.mdc`、`module-api-mock-config.mdc`、`project-conventions.mdc` 中与 Mock、config、`fetch*` 相关的条款；契约或代码落在 **`.cursor/rules/00-protected-user-growth-business-insight-no-m-modules.mdc`** 冻结范围内时，须遵守其红线（不得擅自修改，仅可列建议）。
+执行前须同时遵守仓库规则：`.cursor/rules/backend-fields.mdc`（**整理前须用工具 Read 全文或由用户 `@` 该文件**）、`api-contract-and-mock-conventions.mdc`、`module-api-mock-config.mdc`、`project-conventions.mdc` 中与 Mock、config、`fetch*` 相关的条款。
 
 ## 0. 契约硬性要求（本项目必须满足）
 
@@ -36,7 +36,7 @@ description: >-
 - 整理前用工具 **阅读** `.cursor/rules/backend-fields.mdc`（或由用户 `@` 该文件）；**禁止**仅凭记忆命名。
 - 核对本模块契约 `fieldDescription` 中请求/响应字段是否与字典一致；存在同义不同名时单列 **合并建议**。
 - **入参日期范围**：凡带日期范围的请求，入参键名须为 **`startDate`** / **`endDate`**（见 `backend-fields.mdc`「接口请求 · 日期范围」）；历史别名字段在交付物中列 **「迁移为 startDate/endDate」**。
-- 涉及 **`00-protected-user-growth-business-insight-no-m-modules.mdc`** 冻结目录：不得擅自改名或改契约结构；仅可列建议并请用户确认。
+- 大范围字段改名或契约结构重组时，交付物中单列影响面与迁移计划，并与联调方对齐后再改。
 
 ### 0.5 示例返回体结构统一（同模块）
 
@@ -47,7 +47,7 @@ description: >-
 - **趋势 / 时序**：点元素形状全模块统一（如 `{ t_date, ... }` 与字典一致后沿用）。
 - **meta 选项**：选项项结构统一（如 `{ label, value }`）。
 - **网关包裹**：`sampleResponse` 表示 `data` 内还是整包与模块 README **单一约定**（见 **§0.1**）。
-- **新增接口**：优先对齐本模块已有 JSON；**存量不一致**时交付物单列 **「sampleResponse 结构收敛建议」**；**冻结目录**内不擅自改（见 00 规则）。
+- **新增接口**：优先对齐本模块已有 JSON；**存量不一致**时交付物单列 **「sampleResponse 结构收敛建议」**。
 
 ### 0.6 公用 cockpit `meta-filter-options`（硬性：无独立 JSON）
 
@@ -55,7 +55,7 @@ description: >-
 - **页面 / 新 Mock 场景写法（直接取数）**：业务页与联调说明中，顶栏选项 **以读 Pinia 为准**：**`useCockpitMetaFilterStore().data`** 或 **`useCockpitMetaFilterOptions().cockpitMeta`**（`src/composables/use-cockpit-meta-filter.ts`），使用其中的 **`appOptions` / `platformOptions` / `sourceOptions` / `countryOptions`**。**不要**把「页面里再请求一次该 URL」或「每个模块单独 mock 一份 meta JSON」当作默认方案；预取与缓存见 **`api-contract-and-mock-conventions.mdc`**。**`ensureLoaded()`** 仅兜底，**不是**页面常规要调用的入口。
 - **文档义务**：在该模块 **`mock/backend-api/README.md` 接口清单** 中单列一行（优先级、说明、完整逻辑 URL、**数据读取：`useCockpitMetaFilterStore().data`**），**契约文件列写「无 JSON」**，并引用 **`src/views/user-growth/paid-analysis/mock/backend-api/README.md` 附录 A**（全项目规范锚点）或在本 README 用简短附录复述要点；**「场景 → 接口」表**写清：顶栏选项来自 **全局 Store 中的公用 meta**（守卫预载 + session），**不要求**为该能力建 JSON 根级 `interaction`。
 - **独有维度例外**：仅当顶栏还有 **本页独有** 筛选项时，**单独**为独有能力维护契约 JSON；**禁止**把与 cockpit 同构的四类选项再次写进契约。
-- **整理交付物**：对照表与清单中须 **显式标注** 该能力为 **公用 Store 数据、无 JSON**；若发现与同构顶栏重复的 `*meta-filter-options*.json`，交付物中单列 **「应删除或收敛为文档引用」**（冻结目录按 00 规则仅建议、不擅自删）。
+- **整理交付物**：对照表与清单中须 **显式标注** 该能力为 **公用 Store 数据、无 JSON**；若发现与同构顶栏重复的 `*meta-filter-options*.json`，交付物中单列 **「应删除或收敛为文档引用」**。
 
 ### 0.7 不阻塞主流程：接口无数据也要可展示（硬性）
 
@@ -120,9 +120,9 @@ description: >-
 3. **已对齐**的读/写接口；**缺契约 / 缺 fetch / 缺开关 / 缺 interaction / 仅有前端占位** 的项（逐条）。
 4. 网关路径与 JSON 示例 URL 不一致时的 **以前端 `src/api` 实际 URL 为准** 说明。
 5. 若仍存在 **子目录分散的 backend-api 或多份 config**：列出 **建议合并后的目标路径**（章节 9）。
-6. **无 UI 入口或业务不可触达**的契约 / `fetch*`（若有）：逐条列文件、URL、判定理由，标注 **须需求确认**；**不**计入「已对齐」清单，**不**在未获确认前建议删除（见 **§2.1**）。**同条须覆盖**：**公用 cockpit meta** 是否已在 README 按 **§0.6** 标注 **无 JSON**、并写明 **页面读 `useCockpitMetaFilterStore().data`**；若存在与同构顶栏重复的 `*meta-filter-options*.json`，单列收敛建议（冻结目录仅建议）。
+6. **无 UI 入口或业务不可触达**的契约 / `fetch*`（若有）：逐条列文件、URL、判定理由，标注 **须需求确认**；**不**计入「已对齐」清单，**不**在未获确认前建议删除（见 **§2.1**）。**同条须覆盖**：**公用 cockpit meta** 是否已在 README 按 **§0.6** 标注 **无 JSON**、并写明 **页面读 `useCockpitMetaFilterStore().data`**；若存在与同构顶栏重复的 `*meta-filter-options*.json`，单列收敛建议。
 7. **「字段 ↔ 数据字典对齐」**表：列 `契约字段名` | `backend-fields 条目或待定` | `同义/历史名` | `所在契约 JSON` | `备注（是否建议补字典）`；并勾选 **入参日期是否均为 startDate/endDate**（否则在表中注明例外与迁移建议）。**公用 cockpit meta** 字段对齐以 **`cockpit-meta-filter` 类型** + **`backend-fields.mdc`** 为准，**不**要求契约 JSON 行。
-8. **（可选）「sampleResponse 结构收敛建议」**：同模块内同类 UI 响应形态冲突、建议标准形态、是否涉及冻结目录（仅建议不擅自改）。
+8. **（可选）「sampleResponse 结构收敛建议」**：同模块内同类 UI 响应形态冲突、建议标准形态、必要时单列影响评估与迁移顺序。
 9. **（验收勾选）表列 / 树节点枚举覆盖**：主表、树表及 meta `options` 中带闭合 **`enum`** 的字段，是否在 **`sampleResponse` 示例中写全各取值**（见 **`api-contract-and-mock-conventions.mdc`**「表格/列表示例中的枚举须写全」）；未覆盖的逐契约列明。
 
 ## 8. 参考示例（本仓库）

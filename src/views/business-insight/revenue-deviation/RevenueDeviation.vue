@@ -5,7 +5,7 @@
     <div class="rd-header rd-entry-1">
       <!-- <div class="rd-page-title">预估收入偏差</div> -->
       <div class="rd-filters">
-        <el-date-picker
+        <AppDatePicker
           v-model="dateRange"
           type="daterange"
           :shortcuts="dateRangeShortcuts"
@@ -403,6 +403,7 @@
     onDeactivated
   } from 'vue'
   import { storeToRefs } from 'pinia'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { TopRight } from '@element-plus/icons-vue'
   import * as echarts from 'echarts'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'

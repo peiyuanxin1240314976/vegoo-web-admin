@@ -28,7 +28,7 @@
     <div class="filter-row">
       <div class="filter-item filter-item--range">
         <span class="fl">日期范围</span>
-        <ElDatePicker
+        <AppDatePicker
           v-model="orderDateRange"
           type="daterange"
           :shortcuts="dateRangeShortcuts"
@@ -487,6 +487,7 @@
   import 'flag-icons/css/flag-icons.min.css'
   import { Document, Search } from '@element-plus/icons-vue'
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'

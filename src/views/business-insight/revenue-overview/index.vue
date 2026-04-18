@@ -68,7 +68,7 @@
 
           <div class="rev-pill">
             <span class="rev-pill__k">日期：</span>
-            <ElDatePicker
+            <AppDatePicker
               v-model="filtersDraft.t_date"
               type="date"
               :shortcuts="dateShortcuts"
@@ -689,6 +689,7 @@
     watch,
     type CSSProperties
   } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'

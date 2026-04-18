@@ -10,7 +10,7 @@
           <span class="conversion-data-filter-chip__value">{{ dateRangeChipText }}</span>
         </div>
 
-        <ElDatePicker
+        <AppDatePicker
           v-model="form.dateRange"
           type="daterange"
           :shortcuts="dateRangeShortcuts"
@@ -68,6 +68,7 @@
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
   import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useConversionMetaConversionTypeOptions } from '@/composables/use-conversion-meta-conversion-type'
   import type { ConversionDataFilterParams } from '../types'
   import { MOCK_DATA_TAB_APP_OPTIONS } from '../mock/data'

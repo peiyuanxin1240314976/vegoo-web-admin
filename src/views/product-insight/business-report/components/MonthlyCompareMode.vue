@@ -133,7 +133,7 @@
           </span>
         </div>
         <div class="period-controls">
-          <ElDatePicker
+          <AppDatePicker
             v-if="props.period === 'daily'"
             v-model="localStartDate"
             class="compare-date-picker compare-date-picker--single"
@@ -143,7 +143,7 @@
             format="YYYY-MM-DD"
             :clearable="false"
           />
-          <ElDatePicker
+          <AppDatePicker
             v-else
             v-model="localDateRange"
             class="compare-date-picker"
@@ -290,6 +290,7 @@
 
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onUnmounted, nextTick, inject } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts'
   import SparklineChart from './SparklineChart.vue'
   import { businessReportContextKey } from '../composables/business-report-context'

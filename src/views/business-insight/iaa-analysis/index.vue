@@ -56,7 +56,7 @@
         </div>
         <div class="iaa-pill">
           <span class="iaa-pill__k">Date:</span>
-          <ElDatePicker
+          <AppDatePicker
             v-model="filtersDraft.t_date"
             type="date"
             :shortcuts="dateShortcuts"
@@ -138,6 +138,7 @@
   import { storeToRefs } from 'pinia'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateShortcuts } from '@/utils/form/date-shortcuts'
   import type { IaaTabKey, IaaFilterState } from './types'

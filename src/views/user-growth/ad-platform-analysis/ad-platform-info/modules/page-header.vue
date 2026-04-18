@@ -18,7 +18,7 @@
       <div class="api-header__right">
         <div class="api-actions">
           <div class="api-pill">
-            <ElDatePicker
+            <AppDatePicker
               size="small"
               v-model="datePickerValue"
               type="daterange"
@@ -45,6 +45,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type {

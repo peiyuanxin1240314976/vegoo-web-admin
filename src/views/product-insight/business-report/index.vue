@@ -307,7 +307,7 @@
       </template>
 
       <div class="date-nav">
-        <ElDatePicker
+        <AppDatePicker
           v-if="period === 'daily'"
           v-model="reportDayYmd"
           type="date"
@@ -322,7 +322,7 @@
         <template v-else-if="period === 'weekly'">
           <div class="br-week-picker-shell">
             <span class="br-week-picker-shell__label">{{ weekRangeDash }}</span>
-            <ElDatePicker
+            <AppDatePicker
               v-model="reportWeekStartYmd"
               type="week"
               value-format="YYYY-MM-DD"
@@ -335,7 +335,7 @@
             />
           </div>
         </template>
-        <ElDatePicker
+        <AppDatePicker
           v-else
           v-model="reportMonthYm"
           type="month"
@@ -449,6 +449,7 @@
   import 'flag-icons/css/flag-icons.min.css'
   import { storeToRefs } from 'pinia'
   import { ref, computed, provide, watch, onMounted } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { ElMessage } from 'element-plus'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'

@@ -1,7 +1,7 @@
 <template>
   <div class="ad-performance-filters">
     <div class="ad-performance-filters__left">
-      <ElDatePicker
+      <AppDatePicker
         v-model="dateRangeValue"
         type="daterange"
         value-format="YYYY-MM-DD"
@@ -97,6 +97,7 @@
 <script setup lang="ts">
   import { Calendar, Flag, Promotion, RefreshRight, User } from '@element-plus/icons-vue'
   import { computed, ref, watch } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useI18n } from 'vue-i18n'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'

@@ -6,7 +6,7 @@
         <MapDetailHeader :country-code="countryCode" :country-name="countryName">
           <template #right>
             <div class="detail-filters">
-              <ElDatePicker
+              <AppDatePicker
                 v-model="filterDateRange"
                 type="daterange"
                 range-separator="~"
@@ -77,6 +77,7 @@
 
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRoute } from 'vue-router'
   import { formatYYYYMMDD, getAppNow, cloneAppDate } from '@/utils/app-now'
   import {

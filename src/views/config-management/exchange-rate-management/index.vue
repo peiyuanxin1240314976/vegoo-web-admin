@@ -17,7 +17,7 @@
         <ElButton round class="btn-secondary" @click="handleExport">
           <ElIcon><Download /></ElIcon>导出
         </ElButton>
-        <ElDatePicker
+        <AppDatePicker
           v-model="filterDate"
           type="date"
           placeholder="选择日期"
@@ -245,6 +245,7 @@
   import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import { Refresh, Edit, Download } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts/core'
   import { LineChart } from 'echarts/charts'
   import { TooltipComponent, GridComponent } from 'echarts/components'
