@@ -1,0 +1,105 @@
+{
+  "_comment": "代投分析 - 非汇总子 Tab：单日 KPI 行（例如 3 月 10 日）。对应 types.ts: AgencySubTabKpiPayload。",
+  "fieldDescription": {
+    "request": {
+      "agencyTab": {
+        "type": "string",
+        "required": true,
+        "enum": ["gatherone", "kuainiao", "chuhai"],
+        "description": "当前子 Tab（后三个 Tab）标识。"
+      },
+      "date": {
+        "type": "string",
+        "required": true,
+        "description": "查询日期 YYYY-MM-DD（单日）。"
+      },
+      "appId": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "应用 ID；all 代表全部。"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "default": "all",
+        "description": "广告平台（source）；all 代表全部。"
+      }
+    },
+    "response": {
+      "periodLabel": {
+        "type": "string",
+        "required": true,
+        "description": "展示期文案（如「3月10日」或「2026-03-10」）。"
+      },
+      "metrics": {
+        "type": "AgencySubTabKpiMetricItem[]",
+        "required": true,
+        "description": "KPI 指标列表（顺序由后端控制）。"
+      }
+    },
+    "AgencySubTabKpiMetricItem": {
+      "key": {
+        "type": "string",
+        "required": true,
+        "enum": [
+          "spend",
+          "roi1",
+          "cpa",
+          "installs",
+          "appCount",
+          "accountCount",
+          "campaignCount",
+          "adsetCount",
+          "countryCount",
+          "days"
+        ],
+        "description": "指标 key（闭合枚举）。"
+      },
+      "label": { "type": "string", "required": true, "description": "指标名称。" },
+      "value": {
+        "type": "string",
+        "required": true,
+        "description": "指标展示值（含货币符号/百分比/单位等）。"
+      }
+    }
+  },
+  "sampleRequest": {
+    "agencyTab": "gatherone",
+    "date": "2026-03-10",
+    "appId": "all",
+    "source": "all"
+  },
+  "sampleResponse": {
+    "periodLabel": "3月10日",
+    "metrics": [
+      { "key": "spend", "label": "广告支出", "value": "$288" },
+      { "key": "roi1", "label": "首日ROI", "value": "130%" },
+      { "key": "cpa", "label": "CPA", "value": "-" },
+      { "key": "installs", "label": "代投买量用户数", "value": "4719" },
+      { "key": "appCount", "label": "在投应用数", "value": "1" },
+      { "key": "accountCount", "label": "广告账户数", "value": "1" },
+      { "key": "campaignCount", "label": "广告系列数", "value": "8" },
+      { "key": "adsetCount", "label": "广告组数", "value": "15" },
+      { "key": "countryCount", "label": "投放国家数", "value": "21" },
+      { "key": "days", "label": "投放天数", "value": "1" }
+    ]
+  },
+  "api": {
+    "url": "POST /api/v1/datacenter/analysis/business-insight/agency-analysis/subtab/kpi/day",
+    "method": "POST",
+    "priority": "P1",
+    "requestBody": "agencyTab, date, appId?, source?",
+    "responseBody": "periodLabel, metrics"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "用户切换到非汇总子 Tab",
+        "detail": "与子 Tab 的 KPI 区块渲染绑定：显示「单日」这一行（例如 3 月 10 日）。",
+        "prerequisite": "依赖当前筛选条件（agencyTab/date/应用/广告平台）。"
+      }
+    ],
+    "defaultSelection": "agencyTab 由 Tab 决定；appId/source 默认 all；date 默认为 endDate（页面选择器的结束日期）。"
+  }
+}

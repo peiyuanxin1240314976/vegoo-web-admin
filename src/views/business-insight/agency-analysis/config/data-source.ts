@@ -4,6 +4,10 @@
 export enum AgencyAnalysisEndpoint {
   MetaFilterOptions = 'metaFilterOptions',
   Overview = 'overview',
+  SubTabKpiLast7 = 'subTabKpiLast7',
+  SubTabKpiDay = 'subTabKpiDay',
+  SubTabRecentSummary = 'subTabRecentSummary',
+  SubTabAccountSummary = 'subTabAccountSummary',
   AgencySummary = 'agencySummary',
   CampaignTable = 'campaignTable',
   DailyComparison = 'dailyComparison',
@@ -17,6 +21,11 @@ export enum AgencyAnalysisEndpoint {
 export const AGENCY_ANALYSIS_USE_MOCK: Record<AgencyAnalysisEndpoint, boolean> = {
   [AgencyAnalysisEndpoint.MetaFilterOptions]: false,
   [AgencyAnalysisEndpoint.Overview]: false,
+  /** 子 Tab 专用接口：后端未就绪前默认走本地 mock（与 `mock/mock-data.ts` 对齐） */
+  [AgencyAnalysisEndpoint.SubTabKpiLast7]: true,
+  [AgencyAnalysisEndpoint.SubTabKpiDay]: true,
+  [AgencyAnalysisEndpoint.SubTabRecentSummary]: true,
+  [AgencyAnalysisEndpoint.SubTabAccountSummary]: true,
   [AgencyAnalysisEndpoint.AgencySummary]: false,
   [AgencyAnalysisEndpoint.CampaignTable]: false,
   [AgencyAnalysisEndpoint.DailyComparison]: false,

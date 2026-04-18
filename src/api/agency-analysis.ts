@@ -10,6 +10,10 @@ import {
 import {
   mockFetchAgencyAnalysisFilterOptions,
   mockFetchAgencyOverview,
+  mockFetchAgencySubTabKpiLast7,
+  mockFetchAgencySubTabKpiDay,
+  mockFetchAgencySubTabRecentSummary,
+  mockFetchAgencySubTabAccountSummary,
   mockFetchAgencyAgencySummary,
   mockFetchAgencyCampaignTable,
   mockFetchAgencyDailyComparison,
@@ -26,6 +30,9 @@ import type {
   DailyRow,
   KpiCardItem,
   AgencyAnalysisFilterOptionsPayload,
+  AgencySubTabKpiPayload,
+  AgencySubTabRecentSummaryPayload,
+  AgencySubTabAccountSummaryPayload,
   DonutChartItem,
   ChannelDistributionSeries,
   CountryDistributionItem
@@ -73,7 +80,9 @@ function chartBody(q: AgencyAnalysisFilterQuery) {
 const OVERVIEW_KPI_LABEL_ALIASES: Record<string, string> = {
   应用数: '代投应用数',
   渠道数: '代投渠道数',
-  代投方数: '代投方数量'
+  代投方数: '代投方数量',
+  安装量: '代投买量用户数',
+  代投安装数: '代投买量用户数'
 }
 
 function normalizeOverviewKpiCards(data: { kpiCards?: KpiCardItem[] }): {
@@ -156,6 +165,86 @@ function normalizeAgencySummaryPayload(data: {
     agencyDetailMap[k] = normalizeAgencyExpandData(data.agencyDetailMap[k])
   }
   return { agencies: data.agencies, agencyDetailMap }
+}
+
+export type AgencyAnalysisSubTabFilterQuery = {
+  startDate: string
+  endDate: string
+  /** 单日查询时使用；默认建议取 endDate */
+  date?: string
+  appId?: string
+  source?: string
+  /** 后三个 Tab 的入参维度 */
+  agencyTab: 'gatherone' | 'kuainiao' | 'chuhai'
+}
+
+export type AgencyAnalysisSubTabLast7Query = {
+  /** 近 7 天窗口起始日 YYYY-MM-DD（含首尾共 7 天：与 endDate 相差 6 天） */
+  startDate: string
+  /** 近 7 天窗口结束日 YYYY-MM-DD；前端通常取应用当前业务日 `getAppTodayYYYYMMDD()` */
+  endDate: string
+  appId?: string
+  source?: string
+  /** 后三个 Tab 的入参维度 */
+  agencyTab: 'gatherone' | 'kuainiao' | 'chuhai'
+}
+
+function subTabBody(q: AgencyAnalysisSubTabFilterQuery) {
+  return {
+    startDate: q.startDate,
+    endDate: q.endDate,
+    date: q.date,
+    appId: q.appId ?? 'all',
+    source: q.source ?? 'all',
+    agencyTab: q.agencyTab
+  }
+}
+
+export function fetchAgencySubTabKpiLast7(params: AgencyAnalysisSubTabLast7Query) {
+  if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.SubTabKpiLast7)) {
+    return mockFetchAgencySubTabKpiLast7(params)
+  }
+  return request.post<AgencySubTabKpiPayload>({
+    url: `${AGENCY_ANALYSIS_BASE}/subtab/kpi/last7`,
+    data: {
+      startDate: params.startDate,
+      endDate: params.endDate,
+      appId: params.appId ?? 'all',
+      source: params.source ?? 'all',
+      agencyTab: params.agencyTab
+    }
+  })
+}
+
+export function fetchAgencySubTabKpiDay(params: AgencyAnalysisSubTabFilterQuery) {
+  if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.SubTabKpiDay)) {
+    return mockFetchAgencySubTabKpiDay(params)
+  }
+  const body = subTabBody({ ...params, date: params.date ?? params.endDate })
+  return request.post<AgencySubTabKpiPayload>({
+    url: `${AGENCY_ANALYSIS_BASE}/subtab/kpi/day`,
+    data: body
+  })
+}
+
+export function fetchAgencySubTabRecentSummary(params: AgencyAnalysisSubTabFilterQuery) {
+  if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.SubTabRecentSummary)) {
+    return mockFetchAgencySubTabRecentSummary(params)
+  }
+  return request.post<AgencySubTabRecentSummaryPayload>({
+    url: `${AGENCY_ANALYSIS_BASE}/subtab/table/recent-summary`,
+    data: subTabBody(params)
+  })
+}
+
+export function fetchAgencySubTabAccountSummary(params: AgencyAnalysisSubTabFilterQuery) {
+  if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.SubTabAccountSummary)) {
+    return mockFetchAgencySubTabAccountSummary(params)
+  }
+  return request.post<AgencySubTabAccountSummaryPayload>({
+    url: `${AGENCY_ANALYSIS_BASE}/subtab/table/account-summary`,
+    data: subTabBody(params)
+  })
 }
 
 export function fetchAgencyAnalysisAgencySummary(params: AgencyAnalysisFilterQuery) {
