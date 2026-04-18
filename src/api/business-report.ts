@@ -50,7 +50,7 @@ function reportBody(params: ReportQueryParams): Record<string, unknown> {
     startDate: params.startDate,
     endDate: params.endDate,
     appId: params.appId,
-    filterAppIds: params.filterAppIds ?? [],
+    appIds: params.appIds ?? [],
     platformList: params.platformList ?? [],
     sourceList: params.sourceList ?? [],
     countryCodeList: params.countryCodeList ?? [],
@@ -78,7 +78,7 @@ function appListBody(params: ReportAppListQueryParams): Record<string, unknown> 
     startDate: params.startDate,
     endDate: params.endDate,
     appId: '',
-    filterAppIds: params.filterAppIds ?? [],
+    appIds: params.appIds ?? [],
     platformList: params.platformList ?? [],
     sourceList: params.sourceList ?? [],
     countryCodeList: params.countryCodeList ?? [],
@@ -138,7 +138,7 @@ export function fetchBusinessReportCampaigns(params: ReportQueryParams) {
 function compareBody(params: CompareQueryParams): Record<string, unknown> {
   return {
     ...reportBody(params),
-    appIds: params.appIds,
+    compareAppIds: params.compareAppIds,
     compareEnabled: params.compareEnabled,
     compareStartDate: params.compareStartDate,
     compareEndDate: params.compareEndDate

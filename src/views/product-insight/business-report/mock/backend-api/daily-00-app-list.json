@@ -15,9 +15,9 @@
       "appId": {
         "type": "string",
         "required": true,
-        "description": "须为空串 \"\"，表示拉取侧栏全量列表（非单应用详情）。与顶栏「应用」多选无关；顶栏应用范围见 filterAppIds。说明：此为与详情接口统一 POST 形态的约定字段，非旧版响应兼容逻辑。"
+        "description": "须为空串 \"\"，表示拉取侧栏全量列表（非单应用详情）。与顶栏「应用」多选无关；顶栏应用范围见 appIds。说明：此为与详情接口统一 POST 形态的约定字段，非旧版响应兼容逻辑。"
       },
-      "filterAppIds": {
+      "appIds": {
         "type": "string[]",
         "required": true,
         "description": "顶栏「应用」多选：与 meta `appOptions` 的 value 一致（自有应用 ID）。空数组 [] 表示不限（全部应用）。"
@@ -83,7 +83,7 @@
     "startDate": "2026-04-09",
     "endDate": "2026-04-09",
     "appId": "",
-    "filterAppIds": [],
+    "appIds": [],
     "platformList": [],
     "sourceList": [],
     "countryCodeList": [],
@@ -147,14 +147,14 @@
     "url": "POST /api/v1/datacenter/analysis/report/daily/app-list",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "startDate, endDate, appId(固定\"\"), filterAppIds[], platformList[], sourceList[], countryCodeList[], account?, tab",
+    "requestBody": "startDate, endDate, appId(固定\"\"), appIds[], platformList[], sourceList[], countryCodeList[], account?, tab",
     "responseBody": "{ items: AppListItem[] }"
   },
   "apiSuggestion": {
     "notes": [
       "无数据时 items 返回 []；整体行仍建议首项 id=overall。响应键名必须为 items，勿使用 appList。",
       "详情类接口（overview 等）不应再承载侧栏列表，避免切换应用时重复刷新侧栏。",
-      "appId 固定 \"\"：与详情共用 POST 字段表，表示「拉列表」而非单应用详情；顶栏应用范围见 filterAppIds，勿混淆。",
+      "appId 固定 \"\"：与详情共用 POST 字段表，表示「拉列表」而非单应用详情；顶栏应用范围见 appIds，勿混淆。",
       "account 当前前端恒传 \"\"（页无账户筛选）；与统一维度对齐，后端可按不限忽略。",
       "本接口非「全站应用 id 目录」：列表与卡片指标须与 startDate/endDate、tab 及顶栏四数组口径一致，详见 mock/backend-api/README.md 同节说明。"
     ]

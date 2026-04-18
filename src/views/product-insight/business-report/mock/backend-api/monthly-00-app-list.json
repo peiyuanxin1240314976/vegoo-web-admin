@@ -15,9 +15,9 @@
       "appId": {
         "type": "string",
         "required": true,
-        "description": "须为空串 \"\"；顶栏应用见 filterAppIds。与详情接口统一 POST 形态，非旧版兼容。"
+        "description": "须为空串 \"\"；顶栏应用见 appIds。与详情接口统一 POST 形态，非旧版兼容。"
       },
-      "filterAppIds": {
+      "appIds": {
         "type": "string[]",
         "required": true,
         "description": "顶栏应用多选；[] 不限。"
@@ -60,7 +60,7 @@
     "startDate": "2026-04-01",
     "endDate": "2026-04-30",
     "appId": "",
-    "filterAppIds": [],
+    "appIds": [],
     "platformList": [],
     "sourceList": [],
     "countryCodeList": [],

@@ -310,9 +310,9 @@ export interface ApiResponse<T> {
   timestamp: number // Unix 时间戳（ms）
 }
 
-/** 顶栏多选筛选项（与 ElSelect multiple 一致；空数组表示不限） */
+/** 顶栏筛选：`appIds` 为应用 id 列表（页面单选时长度 0～1，`[]` 不限）；`platformList` 等空数组表示不限 */
 export type ReportTopBarFilterArrays = {
-  filterAppIds: string[]
+  appIds: string[]
   platformList: string[]
   sourceList: string[]
   countryCodeList: string[]
@@ -396,7 +396,8 @@ export interface CampaignsResponse {
 
 /** 对比模式请求参数（三周期通用） */
 export interface CompareQueryParams extends ReportQueryParams {
-  appIds: string[] // 最多 5 个
+  /** 对比勾选的应用 id（最多 5 个）；与顶栏范围 `appIds` 分列，避免请求体键名冲突 */
+  compareAppIds: string[]
   compareEnabled: boolean
   compareStartDate: string // YYYY-MM-DD
   compareEndDate: string // YYYY-MM-DD

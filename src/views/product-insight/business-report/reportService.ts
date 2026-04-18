@@ -285,7 +285,7 @@ export async function pushReportNow(config: LarkPushConfig): Promise<void> {
 function mockCompareOverview(params: CompareQueryParams): CompareOverviewResponse {
   const compareOn = params.compareEnabled
   const apps: CompareOverviewResponse['apps'] = compareApps
-    .filter((item) => params.appIds.includes(item.id))
+    .filter((item) => params.compareAppIds.includes(item.id))
     .map((item) => ({
       id: item.id,
       name: item.name,
@@ -396,7 +396,7 @@ function mockCompareTrends(params: CompareQueryParams): CompareTrendsResponse {
 }
 
 function mockCompareMetrics(params: CompareQueryParams): CompareMetricsResponse {
-  const allowed = new Set(params.appIds)
+  const allowed = new Set(params.compareAppIds)
   const rows = compareMetrics.map((row) => {
     const values: Record<string, string> = {}
     for (const [k, v] of Object.entries(row.values)) {

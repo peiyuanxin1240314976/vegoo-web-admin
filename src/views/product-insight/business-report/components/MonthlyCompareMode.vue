@@ -608,7 +608,7 @@
       return
     }
     const f = ctx?.topBarFilters.value ?? {
-      filterAppIds: [],
+      appIds: [],
       platformList: [],
       sourceList: [],
       countryCodeList: []
@@ -621,9 +621,9 @@
       compareEndDate: localCompareEndDate.value,
       compareEnabled: localCompareEnabled.value,
       appId: '',
-      appIds: selectedApps.value.map((app) => app.id),
       account: '',
-      ...f
+      ...f,
+      compareAppIds: selectedApps.value.map((app) => app.id)
     }
     const [overviewRes, trendsRes, metricsRes] = await Promise.all([
       getCompareOverview(params),

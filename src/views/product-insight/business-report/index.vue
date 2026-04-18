@@ -35,46 +35,21 @@
       <template v-if="!compareMode">
         <div class="filter-group">
           <span class="filter-label">应用：</span>
-          <ElSelect
-            size="small"
-            :popper-class="brFilterSelectPopperClass"
-            class="br-filter-el-select br-filter-el-select--app"
-            :model-value="barAppValues"
-            multiple
-            collapse-tags
-            :max-collapse-tags="1"
-            placeholder="全部应用"
-            @update:model-value="onBarAppUpdate"
-          >
-            <ElOption
-              v-for="opt in appBarOptions"
-              :key="opt.value === '' ? '__all_app__' : opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
-        </div>
-
-        <div class="filter-group">
-          <span class="filter-label">平台：</span>
-          <ElSelect
-            size="small"
-            :popper-class="brFilterSelectPopperClass"
-            class="br-filter-el-select br-filter-el-select--platform"
-            :model-value="barPlatformValues"
-            multiple
-            collapse-tags
-            :max-collapse-tags="1"
-            placeholder="全部平台"
-            @update:model-value="onBarPlatformUpdate"
-          >
-            <ElOption
-              v-for="opt in platformBarOptions"
-              :key="opt.value === '' ? '__all_plat__' : opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+          <AppPlatformSearchSelect
+            v-model="barAppId"
+            mode="app"
+            class="br-filter-app-select"
+            input-class="br-filter-app-select__input"
+            placeholder="应用"
+            search-placeholder="搜索类别/应用名称/应用简称"
+            all-label="全部应用"
+            :dropdown-class="brFilterSelectPopperClass"
+            :setting-apps="settingAppsForSelect"
+            :height="28"
+            :min-width="100"
+            :max-width="140"
+            :show-platform-suffix="true"
+          />
         </div>
 
         <div class="filter-group filter-group--tab">
@@ -300,27 +275,6 @@
 
       <template v-else>
         <div class="filter-group">
-          <span class="filter-label">平台：</span>
-          <ElSelect
-            size="small"
-            :popper-class="brFilterSelectPopperClass"
-            class="br-filter-el-select br-filter-el-select--platform"
-            :model-value="barPlatformValues"
-            multiple
-            collapse-tags
-            :max-collapse-tags="1"
-            placeholder="全部平台"
-            @update:model-value="onBarPlatformUpdate"
-          >
-            <ElOption
-              v-for="opt in platformBarOptions"
-              :key="opt.value === '' ? '__all_plat__' : opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
-        </div>
-        <div class="filter-group">
           <span class="filter-label">广告平台：</span>
           <ElSelect
             size="small"
@@ -496,8 +450,10 @@
   import { storeToRefs } from 'pinia'
   import { ref, computed, provide, watch, onMounted } from 'vue'
   import { ElMessage } from 'element-plus'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { toAppIdsRequestBody } from '@/utils/app-id-request'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import type {
     AppListItem,
@@ -553,18 +509,12 @@
   const metaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(metaStore)
 
+  const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
+
   function fallbackMetaOptions(label: string): CockpitMetaOptionItem[] {
     return [{ label, value: '' }]
   }
 
-  const appBarOptions = computed(() => {
-    const list = cockpitMeta.value?.appOptions
-    return list?.length ? list : fallbackMetaOptions('全部应用')
-  })
-  const platformBarOptions = computed(() => {
-    const list = cockpitMeta.value?.platformOptions
-    return list?.length ? list : fallbackMetaOptions('全部平台')
-  })
   const sourceBarOptions = computed(() => {
     const list = cockpitMeta.value?.sourceOptions
     return list?.length ? list : fallbackMetaOptions('全部广告平台')
@@ -591,25 +541,18 @@
     return nonAll
   }
 
-  const barAppValues = ref<string[]>([])
-  const barPlatformValues = ref<string[]>([])
+  /** 单选应用；空串 = 不限，对应 `appIds: []` */
+  const barAppId = ref('')
   const barSourceValues = ref<string[]>([])
   const barCountryValues = ref<string[]>([])
 
-  /** 顶栏多选 → 与报告 POST 体 `filterAppIds` / `*List` 一致；空数组表示不限 */
+  /** 顶栏筛选 → 报告 POST 体；终端平台 UI 已隐藏，`platformList` 固定不限 */
   const topBarFilters = computed<ReportTopBarFilterArrays>(() => ({
-    filterAppIds: [...barAppValues.value],
-    platformList: [...barPlatformValues.value],
+    appIds: toAppIdsRequestBody(barAppId.value),
+    platformList: [],
     sourceList: [...barSourceValues.value],
     countryCodeList: [...barCountryValues.value]
   }))
-
-  function onBarAppUpdate(v: string[]) {
-    barAppValues.value = normalizeMetaMulti([...barAppValues.value], v)
-  }
-  function onBarPlatformUpdate(v: string[]) {
-    barPlatformValues.value = normalizeMetaMulti([...barPlatformValues.value], v)
-  }
   function onBarSourceUpdate(v: string[]) {
     barSourceValues.value = normalizeMetaMulti([...barSourceValues.value], v)
   }
@@ -1104,8 +1047,7 @@
       reportDayYmd,
       reportWeekStartYmd,
       reportMonthYm,
-      barAppValues,
-      barPlatformValues,
+      barAppId,
       barSourceValues,
       barCountryValues
     ],
@@ -1122,8 +1064,7 @@
         now[4] === prev![4] &&
         now[5] === prev![5] &&
         now[6] === prev![6] &&
-        now[7] === prev![7] &&
-        now[8] === prev![8]
+        now[7] === prev![7]
       void refreshSidebarAppList(!onlyTabChanged)
     },
     { deep: true, immediate: true }
@@ -1143,7 +1084,9 @@
     --rp-border: rgb(255 255 255 / 6%);
     --rp-text: rgb(255 255 255 / 85%);
     --rp-muted: rgb(255 255 255 / 40%);
-    --rp-accent: #00d4a1;
+
+    /* 与 AppPlatformSearchSelect、系统主题一致（--theme-color / --art-primary） */
+    --rp-accent: var(--theme-color, var(--art-primary, #00d4a1));
   }
 
   * {
@@ -1360,12 +1303,12 @@
 
   .lark-btn {
     color: var(--rp-accent);
-    background: rgb(0 212 161 / 12%);
-    border-color: rgb(0 212 161 / 30%);
+    background: color-mix(in srgb, var(--rp-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--rp-accent) 30%, transparent);
   }
 
   .lark-btn:hover {
-    background: rgb(0 212 161 / 20%);
+    background: color-mix(in srgb, var(--rp-accent) 20%, transparent);
   }
 
   .export-btn {
@@ -1497,7 +1440,7 @@
 
   .pill.active {
     color: var(--rp-accent);
-    background: rgb(0 212 161 / 12%);
+    background: color-mix(in srgb, var(--rp-accent) 12%, transparent);
     border-color: var(--rp-accent);
   }
 
@@ -1670,13 +1613,13 @@
     color: var(--rp-accent);
     cursor: pointer;
     background: none;
-    border: 1px solid rgb(0 212 161 / 30%);
+    border: 1px solid color-mix(in srgb, var(--rp-accent) 30%, transparent);
     border-radius: 5px;
     transition: all 0.2s;
   }
 
   .compare-mode-btn:hover {
-    background: rgb(0 212 161 / 8%);
+    background: color-mix(in srgb, var(--rp-accent) 8%, transparent);
   }
 
   .status-lark {
@@ -1757,6 +1700,43 @@
     max-width: 120px;
   }
 
+  .br-filter-app-select {
+    min-width: 100px;
+    max-width: 140px;
+  }
+
+  :deep(.br-filter-app-select) {
+    min-height: 28px !important;
+    padding: 2px 8px !important;
+    font-size: 12px !important;
+
+    /* 与 AppPlatformSearchSelect 默认态一致：主题色描边 + 浅主题底 */
+    background: color-mix(in srgb, var(--rp-accent) 6%, transparent) !important;
+    border: 1px solid var(--rp-accent) !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.br-filter-app-select:hover),
+  :deep(.br-filter-app-select.is-open) {
+    background: rgb(255 255 255 / 8%) !important;
+    border-color: var(--rp-accent) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 22%, transparent) !important;
+  }
+
+  :deep(.br-filter-app-select .app-platform-search-select__text) {
+    font-size: 12px;
+    color: var(--rp-text);
+  }
+
+  :deep(.br-filter-app-select .app-platform-search-select__text.is-placeholder) {
+    color: rgb(255 255 255 / 35%);
+  }
+
+  :deep(.br-filter-app-select .app-platform-search-select__suffix) {
+    color: var(--rp-accent);
+  }
+
   .br-filter-el-select--source {
     min-width: 110px;
     max-width: 130px;
@@ -1767,21 +1747,64 @@
     max-width: 130px;
   }
 
+  /* EP 2.11+：Select 触发器为 .el-select__wrapper，不再使用 .el-input__wrapper */
   :deep(.br-filter-el-select) {
-    --el-input-focus-border-color: #00d4a1;
-    --el-border-color-hover: rgb(0 212 161 / 45%);
-    --el-color-primary: #00d4a1;
-    --el-border-color-focus: #00d4a1;
+    --el-input-focus-border-color: var(--rp-accent);
+    --el-border-color-hover: color-mix(in srgb, var(--rp-accent) 45%, transparent);
+    --el-color-primary: var(--rp-accent);
+    --el-border-color-focus: var(--rp-accent);
 
     vertical-align: middle;
   }
 
+  :deep(.br-filter-el-select .el-select__wrapper) {
+    gap: 4px;
+    min-height: 28px;
+    padding: 2px 8px;
+    font-size: 12px;
+
+    /* 默认态与「应用」同级：主题描边 */
+    background: color-mix(in srgb, var(--rp-accent) 6%, transparent);
+    border: 1px solid var(--rp-accent);
+    border-radius: 6px;
+    box-shadow: none;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  :deep(.br-filter-el-select .el-select__placeholder) {
+    font-size: 12px;
+    color: rgb(255 255 255 / 35%);
+  }
+
+  :deep(.br-filter-el-select .el-select__input) {
+    font-size: 12px;
+    color: var(--rp-text);
+  }
+
+  :deep(.br-filter-el-select .el-select__caret) {
+    color: var(--rp-accent);
+  }
+
+  :deep(.br-filter-el-select .el-select__wrapper.is-focused) {
+    border-color: var(--rp-accent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 22%, transparent);
+  }
+
+  :deep(.br-filter-el-select .el-select__wrapper.is-hovering),
+  :deep(.br-filter-el-select .el-select__wrapper:hover) {
+    border-color: var(--rp-accent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 18%, transparent);
+  }
+
+  /* 旧版 Select 仍包一层 Input 时的兜底（一般 EP 2.11 不会命中） */
   :deep(.br-filter-el-select .el-input__wrapper) {
     min-height: 28px;
     padding: 2px 8px;
     font-size: 12px;
-    background: rgb(255 255 255 / 6%);
-    border: 1px solid var(--rp-border);
+    background: color-mix(in srgb, var(--rp-accent) 6%, transparent);
+    border: 1px solid var(--rp-accent);
     border-radius: 6px;
     box-shadow: none;
     transition:
@@ -1794,17 +1817,14 @@
     color: var(--rp-text);
   }
 
-  :deep(.br-filter-el-select .el-select__caret) {
-    color: rgb(255 255 255 / 35%);
-  }
-
   :deep(.br-filter-el-select .el-input__wrapper.is-focus) {
     border-color: var(--rp-accent);
-    box-shadow: 0 0 0 1px rgb(0 212 161 / 22%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 22%, transparent);
   }
 
   :deep(.br-filter-el-select .el-input__wrapper:hover) {
-    border-color: rgb(255 255 255 / 14%);
+    border-color: var(--rp-accent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 18%, transparent);
   }
 
   :deep(.br-filter-el-select .el-tag) {
@@ -1813,7 +1833,7 @@
     font-size: 11px;
     line-height: 18px;
     color: var(--rp-accent);
-    background: rgb(0 212 161 / 12%);
+    background: color-mix(in srgb, var(--rp-accent) 12%, transparent);
     border-color: var(--rp-accent);
   }
 
@@ -1917,11 +1937,11 @@
 
   :deep(.br-date-picker .el-input__wrapper.is-focus) {
     border-color: var(--rp-accent);
-    box-shadow: 0 0 0 1px rgb(0 212 161 / 22%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rp-accent) 22%, transparent);
   }
 
   :deep(.br-date-picker .el-input__wrapper:hover) {
-    border-color: rgb(255 255 255 / 14%);
+    border-color: color-mix(in srgb, var(--rp-accent) 35%, transparent);
   }
 </style>
 
@@ -1942,12 +1962,17 @@
 
   .br-filter-el-select__popper .el-select-dropdown__item.is-hovering,
   .br-filter-el-select__popper .el-select-dropdown__item:hover {
-    background: rgb(0 212 161 / 12%);
+    background: color-mix(in srgb, var(--rp-accent) 12%, transparent);
   }
 
   .br-filter-el-select__popper .el-select-dropdown__item.is-selected {
     font-weight: 600;
-    color: #00d4a1;
+    color: var(--rp-accent);
+  }
+
+  .br-filter-el-select__popper.app-platform-search-select__popper {
+    background: #0d1529 !important;
+    border: 1px solid rgb(255 255 255 / 10%) !important;
   }
 
   .br-date-picker__popper.el-picker__popper {
@@ -1956,10 +1981,10 @@
     --el-datepicker-header-text-color: rgb(255 255 255 / 75%);
     --el-datepicker-bg-color: #0d1529;
     --el-datepicker-inner-border-color: rgb(255 255 255 / 10%);
-    --el-datepicker-inrange-bg-color: rgb(0 212 161 / 12%);
-    --el-datepicker-inrange-hover-bg-color: rgb(0 212 161 / 18%);
-    --el-datepicker-active-color: #00d4a1;
-    --el-datepicker-hover-text-color: #00d4a1;
+    --el-datepicker-inrange-bg-color: color-mix(in srgb, var(--rp-accent) 12%, transparent);
+    --el-datepicker-inrange-hover-bg-color: color-mix(in srgb, var(--rp-accent) 18%, transparent);
+    --el-datepicker-active-color: var(--rp-accent);
+    --el-datepicker-hover-text-color: var(--rp-accent);
     --el-datepicker-icon-color: rgb(255 255 255 / 45%);
 
     background: #0d1529 !important;
