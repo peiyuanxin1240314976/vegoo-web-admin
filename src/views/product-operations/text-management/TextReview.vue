@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { ElMessage } from 'element-plus'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { fetchAuditConfirm, fetchAuditRerun } from './api/text-management'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { AppContent } from './types'
@@ -303,13 +305,19 @@
     fullDescRef.value.focus()
   }
 
-  // ─── App switcher (cockpit meta filter options) ───────────────────────────────
+  // ─── App switcher（cockpit settingApps，与全局 AppPlatformSearchSelect 一致）────────
   const cockpitMetaFilterStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaFilterStore)
+  const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
   const selectedAppId = ref('')
-  const appOptions = computed(() => cockpitMetaFilterStore.data?.appOptions ?? [])
   const selectedAppLabel = computed(() => {
-    const hit = appOptions.value.find((o) => o.value === selectedAppId.value)
-    return hit?.label || appName.value || '--'
+    const id = selectedAppId.value.trim()
+    if (!id) return appName.value || '--'
+    const hit = settingAppsForSelect.value.find((a) => String(a.sAppId ?? '').trim() === id)
+    if (!hit) return appName.value || '--'
+    const name = String(hit.sAppName ?? '').trim()
+    const platform = String(hit.platformName ?? '').trim()
+    return platform ? `${name} (${platform})` : name || id
   })
 
   if (!cockpitMetaFilterStore.data) {
@@ -332,20 +340,24 @@
         <span class="label">当前应用：</span>
         <div class="app-chip">
           <span class="app-icon">📱</span>
-          <el-select
-            v-model="selectedAppId"
-            class="app-select"
-            clearable
-            placeholder="请选择应用"
-            size="small"
-          >
-            <el-option
-              v-for="opt in appOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
+          <div class="tm-text-review-app-select-wrap">
+            <AppPlatformSearchSelect
+              v-model="selectedAppId"
+              mode="app"
+              input-class="tm-text-review-app-select__trigger"
+              placeholder="请选择应用"
+              search-placeholder="搜索类别/应用名称/应用简称"
+              all-label="全部应用"
+              :setting-apps="settingAppsForSelect"
+              :height="32"
+              :width="220"
+              :min-width="180"
+              :max-width="260"
+              :radius="6"
+              clearable
+              :show-platform-suffix="true"
             />
-          </el-select>
+          </div>
         </div>
         <span class="switch-link">{{ selectedAppLabel }}</span>
       </div>
@@ -633,19 +645,39 @@
         border-color: #3de8c4;
       }
 
-      :deep(.app-select) {
-        width: 240px;
+      .tm-text-review-app-select-wrap {
+        flex: 1;
+        width: 220px;
+        min-width: 0;
+        max-width: 100%;
       }
 
-      :deep(.app-select .el-input__wrapper) {
-        background: transparent;
-        border: none;
+      :deep(.tm-text-review-app-select__trigger.app-platform-search-select) {
+        min-height: 28px !important;
+        padding: 2px 8px !important;
+        font-size: 13px !important;
+        color: #e6edf3 !important;
+        background: transparent !important;
+        border: none !important;
         box-shadow: none !important;
       }
 
-      :deep(.app-select .el-input__inner) {
+      :deep(.tm-text-review-app-select__trigger .app-platform-search-select__text) {
         font-size: 13px;
         color: #e6edf3;
+      }
+
+      :deep(.tm-text-review-app-select__trigger .app-platform-search-select__text.is-placeholder) {
+        color: #8b949e;
+      }
+
+      :deep(.tm-text-review-app-select__trigger .app-platform-search-select__suffix) {
+        color: #3de8c4;
+      }
+
+      :deep(.tm-text-review-app-select__trigger:hover),
+      :deep(.tm-text-review-app-select__trigger.is-open) {
+        background: rgb(255 255 255 / 4%) !important;
       }
     }
 

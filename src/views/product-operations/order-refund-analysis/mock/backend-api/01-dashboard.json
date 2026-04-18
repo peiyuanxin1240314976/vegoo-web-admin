@@ -2,10 +2,10 @@
   "_comment": "订单退款分析 - 看板聚合。对应 types.ts: DashboardPayload、OrderRefundDashboardParams；实现 @/api/product-operations/order-refund-analysis.ts: getDashboard。",
   "fieldDescription": {
     "request": {
-      "appId": {
-        "type": "string",
+      "appIds": {
+        "type": "string[]",
         "required": true,
-        "description": "应用筛选；自有应用 ID。选「全部」时传空字符串 \"\"（勿传字面量 all）。"
+        "description": "应用范围；与 cockpit `settingApps.sAppId` 一致。选「全部」时传 `[]`（单选页 0 或 1 项）。"
       },
       "startDate": {
         "type": "string",
@@ -108,7 +108,7 @@
     }
   },
   "sampleRequest": {
-    "appId": "",
+    "appIds": [],
     "startDate": "2026-01-01",
     "endDate": "2026-01-31",
     "compareType": "last_month",
@@ -191,7 +191,7 @@
   "apiSuggestion": {
     "notes": [
       "成功响应需符合项目 BaseResponse：`{ code, data, msg }`，`request` 拦截器返回解包后的业务体。",
-      "筛选「全部」维度统一传空字符串 \"\"，与 backend-fields「接口请求 · 筛选「全部」」一致。"
+      "应用「全部」传 `appIds: []`；国家/支付平台「全部」传空字符串 \"\"，与 backend-fields「接口请求 · 筛选「全部」」一致。"
     ]
   },
   "interaction": {
@@ -211,7 +211,7 @@
         "detail": "在不清改筛选的前提下用当前已应用条件重新请求 dashboard。"
       }
     ],
-    "defaultSelection": "应用/国家/支付平台默认「全部」对应请求体空串；对比期默认 last_month。",
+    "defaultSelection": "应用默认「全部」对应 `appIds: []`；国家/支付平台「全部」对应请求体空串；对比期默认 last_month。",
     "dedupe": "单页单聚合接口；无并行重复拉取同一 endpoint 的必要。"
   }
 }

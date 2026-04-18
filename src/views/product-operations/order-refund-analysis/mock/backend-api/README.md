@@ -18,7 +18,7 @@
 
 ### 请求体与数据字典（摘要）
 
-- 应用：`appId`（`string`）；「全部」为 `""`
+- 应用：`appIds`（`string[]`）；「全部」为 `[]`（单选 0～1 个 id）
 - 国家：`countryCode`（ISO 3166-1 alpha-2 **小写**）；「全部」为 `""`
 - 支付平台：`paymentPlatform`（`string`）；「全部」为 `""`
 - 日期：`startDate` / `endDate`，格式 `YYYY-MM-DD`

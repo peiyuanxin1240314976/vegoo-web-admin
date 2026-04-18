@@ -3,7 +3,8 @@
  */
 
 export interface RefundFilters {
-  app: string
+  /** 应用范围；单选：`[]` 不限，`[sAppId]` 某一应用（与 cockpit `settingApps` 一致） */
+  appIds: string[]
   dateRange: [string, string]
   compareType: string
   country: string
@@ -69,8 +70,8 @@ export interface DashboardPayload {
 
 /** POST /overview/dashboard 请求体（与 mock/backend-api/01-dashboard.json 一致，camelCase） */
 export interface OrderRefundDashboardParams {
-  /** 应用 ID；UI「全部」映射为 `""` */
-  appId: string
+  /** 应用范围；UI「全部」映射为 `[]` */
+  appIds: string[]
   startDate: string
   endDate: string
   compareType: string

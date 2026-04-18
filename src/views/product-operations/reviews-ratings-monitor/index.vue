@@ -240,6 +240,8 @@
 
 <style scoped lang="scss">
   .reviews-ratings-monitor-page {
+    --rrm-accent: var(--theme-color, var(--art-primary, #3b82f6));
+
     position: relative;
     min-width: 0;
     padding: 20px 24px 28px;
@@ -532,8 +534,8 @@
     max-width: 100% !important;
     padding: 0 12px !important;
     font-size: 14px !important;
-    background: color-mix(in srgb, var(--el-color-primary) 6%, transparent) !important;
-    border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent) !important;
+    background: color-mix(in srgb, var(--rrm-accent) 6%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--rrm-accent) 28%, transparent) !important;
     box-shadow: none !important;
     transition:
       border-color 0.22s ease,
@@ -547,15 +549,15 @@
   }
 
   :deep(.rrm-filter-app-select__trigger .app-platform-search-select__suffix) {
-    color: var(--el-color-primary);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--el-color-primary) 50%, transparent));
+    color: var(--rrm-accent);
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--rrm-accent) 50%, transparent));
   }
 
   :deep(.rrm-filter-app-select__trigger:hover),
   :deep(.rrm-filter-app-select__trigger.is-open) {
-    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent) !important;
-    border-color: color-mix(in srgb, var(--el-color-primary) 60%, transparent) !important;
-    box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
+    background: color-mix(in srgb, var(--rrm-accent) 10%, transparent) !important;
+    border-color: color-mix(in srgb, var(--rrm-accent) 60%, transparent) !important;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--rrm-accent) 18%, transparent) !important;
   }
 
   .rrm-filter-select {
@@ -574,16 +576,18 @@
   }
 
   :deep(.rrm-filter-select) {
-    --el-input-focus-border-color: var(--el-color-primary);
-    --el-border-color-hover: color-mix(in srgb, var(--el-color-primary) 75%, transparent);
-    --el-border-color-focus: var(--el-color-primary);
+    --el-input-border-color: color-mix(in srgb, var(--rrm-accent) 28%, transparent);
+    --el-input-focus-border-color: var(--rrm-accent);
+    --el-border-color: color-mix(in srgb, var(--rrm-accent) 28%, transparent);
+    --el-border-color-hover: color-mix(in srgb, var(--rrm-accent) 75%, transparent);
+    --el-border-color-focus: var(--rrm-accent);
     --el-component-size: 40px;
   }
 
   :deep(.rrm-filter-select .el-input__wrapper) {
     padding: 0 12px;
-    background: color-mix(in srgb, var(--el-color-primary) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent);
+    background: color-mix(in srgb, var(--rrm-accent) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--rrm-accent) 28%, transparent);
     border-radius: 9999px;
     box-shadow: none;
     transition:
@@ -601,23 +605,23 @@
   :deep(.rrm-filter-select .el-input__prefix-inner svg) {
     width: 16px;
     height: 16px;
-    color: var(--el-color-primary);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--el-color-primary) 50%, transparent));
+    color: var(--rrm-accent);
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--rrm-accent) 50%, transparent));
   }
 
   :deep(.rrm-filter-select .el-select__caret) {
-    color: var(--el-color-primary);
+    color: var(--rrm-accent);
   }
 
   :deep(.rrm-filter-select .el-input__wrapper.is-focus) {
-    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent) !important;
-    border-color: var(--el-color-primary) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 20%, transparent) !important;
+    background: color-mix(in srgb, var(--rrm-accent) 10%, transparent) !important;
+    border-color: var(--rrm-accent) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--rrm-accent) 20%, transparent) !important;
   }
 
   :deep(.rrm-filter-select .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--el-color-primary) 60%, transparent);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
+    border-color: color-mix(in srgb, var(--rrm-accent) 60%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--rrm-accent) 18%, transparent);
   }
 
   .rrm-filter-date {
@@ -626,21 +630,37 @@
     max-width: 100%;
   }
 
+  :deep(.rrm-filter-date) {
+    --el-input-border-color: color-mix(in srgb, var(--rrm-accent) 28%, transparent);
+    --el-input-focus-border-color: var(--rrm-accent);
+    --el-border-color: color-mix(in srgb, var(--rrm-accent) 28%, transparent);
+    --el-border-color-hover: color-mix(in srgb, var(--rrm-accent) 75%, transparent);
+    --el-border-color-focus: var(--rrm-accent);
+    --el-component-size: 40px;
+  }
+
   :deep(.rrm-filter-date .el-input__wrapper) {
     min-height: 40px;
     padding: 0 6px 0 8px;
-    background: color-mix(in srgb, var(--el-color-primary) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent);
+    background: color-mix(in srgb, var(--rrm-accent) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--rrm-accent) 28%, transparent);
     border-radius: 9999px;
     box-shadow: none;
     transition:
       border-color 0.22s ease,
-      box-shadow 0.22s ease;
+      box-shadow 0.22s ease,
+      background 0.22s ease;
+  }
+
+  :deep(.rrm-filter-date .el-input__wrapper:hover) {
+    border-color: color-mix(in srgb, var(--rrm-accent) 60%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--rrm-accent) 18%, transparent);
   }
 
   :deep(.rrm-filter-date .el-input__wrapper.is-focus) {
-    border-color: var(--el-color-primary) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 20%, transparent) !important;
+    background: color-mix(in srgb, var(--rrm-accent) 10%, transparent) !important;
+    border-color: var(--rrm-accent) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--rrm-accent) 20%, transparent) !important;
   }
 
   :deep(.rrm-filter-date .el-range-input) {
@@ -659,6 +679,8 @@
 
   :deep(.rrm-filter-date .el-range__icon) {
     margin-right: 2px;
+    color: var(--rrm-accent);
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--rrm-accent) 50%, transparent));
   }
 
   .rrm-filter-action-btn {
