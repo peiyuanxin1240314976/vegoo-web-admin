@@ -12,40 +12,20 @@
       <!-- 顶部栏：筛选 + 导出（对齐原型右上角） -->
       <header class="rev-header rev-entry-1">
         <div class="rev-header__filters rev-filter-panel">
-          <div class="rev-pill">
+          <div class="rev-pill rev-pill--app-multi">
             <span class="rev-pill__k">App:</span>
-            <ElSelect
-              v-model="filtersDraft.s_app_id"
-              class="rev-select"
-              popper-class="rev-select__popper"
-              :teleported="true"
-              :fit-input-width="true"
-            >
-              <ElOption
-                v-for="opt in appOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </ElSelect>
-          </div>
-
-          <div class="rev-pill">
-            <span class="rev-pill__k">Platform:</span>
-            <ElSelect
-              v-model="filtersDraft.platform"
-              class="rev-select"
-              popper-class="rev-select__popper"
-              :teleported="true"
-              :fit-input-width="true"
-            >
-              <ElOption
-                v-for="opt in platformOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </ElSelect>
+            <AppPlatformSearchSelect
+              v-model="filtersDraft.appIds"
+              mode="app"
+              multiple
+              placeholder="应用（多选，空为不限）"
+              search-placeholder="搜索类别/应用名称/应用简称"
+              :setting-apps="metaSettingApps"
+              :height="32"
+              :min-width="220"
+              :max-width="320"
+              input-class="rev-app-platform-select"
+            />
           </div>
 
           <div class="rev-pill">
@@ -57,10 +37,11 @@
               :teleported="true"
               :fit-input-width="true"
               filterable
+              placeholder="国家（默认不限）"
             >
               <ElOption
                 v-for="opt in countryOptions"
-                :key="opt.value"
+                :key="opt.value === '' ? '__country_empty__' : opt.value"
                 :label="opt.label"
                 :value="opt.value"
               />
@@ -711,6 +692,9 @@
     type CSSProperties
   } from 'vue'
   import { useRouter } from 'vue-router'
+  import { storeToRefs } from 'pinia'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import 'flag-icons/css/flag-icons.min.css'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
@@ -728,7 +712,6 @@
     fetchRevenueOverviewIaaCountry,
     fetchRevenueOverviewIaaAdUnit,
     fetchRevenueOverviewIaaPlatform,
-    fetchRevenueOverviewMetaFilterOptions,
     fetchRevenueOverviewIaaAdType,
     fetchRevenueOverviewOverviewKpis
   } from '@/api/business-insight'
@@ -775,6 +758,9 @@
   defineOptions({ name: 'RevenueOverview' })
 
   const router = useRouter()
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
+  const metaSettingApps = computed(() => cockpitMeta.value?.settingApps ?? [])
 
   /** IAA 广告平台 Tab 行点击进入商业洞察 · 广告平台详情 */
   function onIaaTableRowClick(row: Record<string, unknown>) {
@@ -823,58 +809,52 @@
   // applied filters：仅在点击「查询」时更新，用于所有接口请求
   const filters = reactive<RevenueOverviewFilterState>({ ...MOCK_REVENUE_OVERVIEW_FILTERS })
 
-  const appOptions = ref<SelectOption[]>([
-    { label: 'Weather5', value: 'weather5' },
-    { label: 'App A', value: 'app_a' },
-    { label: 'App B', value: 'app_b' }
-  ])
-  const platformOptions = ref<SelectOption<RevenueOverviewFilterState['platform']>[]>([
-    { label: 'Android & iOS', value: 'all' },
-    { label: 'Android', value: 'android' },
-    { label: 'iOS', value: 'ios' }
-  ])
-  const countryOptions = ref<SelectOption[]>([
-    { label: '全部', value: 'all' },
+  /** 驾驶舱 meta 未就绪时的国家下拉兜底（与 store 中 CockpitMetaOptionItem 形态一致） */
+  const COUNTRY_OPTIONS_FALLBACK: SelectOption[] = [
+    { label: '不限', value: '' },
     { label: '美国', value: 'US' },
     { label: '英国', value: 'GB' },
     { label: '德国', value: 'DE' },
     { label: '台湾', value: 'TW' },
     { label: '日本', value: 'JP' }
-  ])
-  const versionOptions = ref<SelectOption[]>([
-    { label: '全部', value: 'all' },
-    { label: '1.2.0', value: '1.2.0' },
-    { label: '1.1.8', value: '1.1.8' },
-    { label: '1.1.2', value: '1.1.2' }
-  ])
+  ]
 
+  const countryOptions = computed<SelectOption[]>(() => {
+    const fromStore = cockpitMeta.value?.countryOptions
+    const emptyFirst: SelectOption = { label: '不限', value: '' }
+    if (fromStore?.length) {
+      const mapped = fromStore
+        .filter((o) => String(o.value).toLowerCase() !== 'all')
+        .map((o) => ({ label: o.label, value: o.value }))
+      const hasEmpty = mapped.some((o) => o.value === '')
+      return hasEmpty ? mapped : [emptyFirst, ...mapped]
+    }
+    return COUNTRY_OPTIONS_FALLBACK
+  })
+
+  /** 版本筛选项（模板中注释）；未在驾驶舱 meta 中提供，保持本地静态 */
+  // const versionOptions: SelectOption[] = [
+  //   { label: '全部', value: 'all' },
+  //   { label: '1.2.0', value: '1.2.0' },
+  //   { label: '1.1.8', value: '1.1.8' },
+  //   { label: '1.1.2', value: '1.1.2' }
+  // ]
+
+  /** 筛选项统一来自 `useCockpitMetaFilterStore`（GET …/cockpit/meta-filter-options），不再请求 revenue-overview 专用 meta */
   async function loadMetaFilterOptions() {
     try {
-      const data = await fetchRevenueOverviewMetaFilterOptions()
-      if (data.appOptions.length) {
-        appOptions.value = data.appOptions
-
-        const selected = String(filtersDraft.s_app_id || '')
-        const byValue = appOptions.value.find((o) => o.value === selected)
-        if (!byValue) {
-          const byLabel = appOptions.value.find((o) => o.label === selected)
-          filtersDraft.s_app_id = byLabel?.value || appOptions.value[0]?.value || ''
-        }
-      }
-      if (data.platformOptions.length) {
-        platformOptions.value = data.platformOptions as SelectOption<
-          RevenueOverviewFilterState['platform']
-        >[]
-      }
-      if (data.countryOptions.length) countryOptions.value = data.countryOptions
-      if (data.versionOptions.length) versionOptions.value = data.versionOptions
+      await cockpitMetaStore.ensureLoaded()
     } catch {
-      // 保留本地默认筛选项，避免首屏不可用
+      // 失败时仍可用 country 兜底、settingApps 为空
     }
   }
 
   function applyDraftFilters() {
-    Object.assign(filters, filtersDraft)
+    Object.assign(filters, {
+      ...filtersDraft,
+      appIds: [...filtersDraft.appIds],
+      platform: ''
+    })
   }
 
   function triggerQueryLoads() {
@@ -2862,6 +2842,16 @@
   .rev-pill__k {
     font-size: 12px;
     color: var(--rev-muted);
+  }
+
+  .rev-pill--app-multi {
+    align-items: center;
+  }
+
+  .rev-filter-panel :deep(.rev-app-platform-select) {
+    flex: 1;
+    min-width: 220px;
+    max-width: 320px;
   }
 
   .rev-export {

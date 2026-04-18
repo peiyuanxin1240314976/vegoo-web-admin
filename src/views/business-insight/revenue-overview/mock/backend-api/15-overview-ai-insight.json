@@ -2,8 +2,12 @@
   "_comment": "收入总览 — AI 洞察建议。对应 mock.ts: MOCK_REVENUE_OVERVIEW_AI_INSIGHT。",
   "fieldDescription": {
     "request": {
-      "s_app_id": { "type": "string", "required": true, "description": "应用 ID。" },
-      "platform": { "type": "string", "required": true, "description": "终端平台。" },
+      "appIds": { "type": "string[]", "required": true, "description": "应用多选，不限为 []。" },
+      "platform": {
+        "type": "string",
+        "required": true,
+        "description": "终端平台；收入概览页固定空串。"
+      },
       "s_country_code": { "type": "string", "required": true, "description": "国家码。" },
       "app_version": { "type": "string", "required": true, "description": "版本。" },
       "t_date": { "type": "string", "required": true, "description": "统计日。" }
@@ -18,9 +22,9 @@
     }
   },
   "sampleRequest": {
-    "s_app_id": "weather5",
-    "platform": "all",
-    "s_country_code": "all",
+    "appIds": [],
+    "platform": "",
+    "s_country_code": "",
     "app_version": "all",
     "t_date": "2026-03-23"
   },

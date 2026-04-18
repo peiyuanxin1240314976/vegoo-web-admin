@@ -5,11 +5,11 @@
 import { getAppTodayYYYYMMDD } from '@/utils/app-now'
 
 export type RevenueOverviewFilterState = {
-  /** 应用 */
-  s_app_id: string
-  /** 平台 */
-  platform: 'all' | 'android' | 'ios'
-  /** 国家 */
+  /** 应用多选，不限为 [] */
+  appIds: string[]
+  /** 终端平台：收入概览页固定传空串，不提供筛选 */
+  platform: ''
+  /** 国家码；空字符串表示不按国家筛选（不限） */
   s_country_code: string
   /** 版本 */
   app_version: string
@@ -175,9 +175,9 @@ export const MOCK_REVENUE_OVERVIEW_IAP_PRODUCT_FOOT = {
 } as const
 
 export const MOCK_REVENUE_OVERVIEW_FILTERS: RevenueOverviewFilterState = {
-  s_app_id: 'weather5',
-  platform: 'all',
-  s_country_code: 'all',
+  appIds: [],
+  platform: '',
+  s_country_code: '',
   app_version: 'all',
   t_date: getAppTodayYYYYMMDD()
 }

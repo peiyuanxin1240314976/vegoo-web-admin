@@ -53,7 +53,7 @@
 
       <div class="app-platform-search-select__body">
         <button
-          v-if="clearable && modelValue"
+          v-if="clearable && hasSelection"
           type="button"
           class="app-platform-search-select__row app-platform-search-select__row--clear"
           @click="clearSelection"
@@ -66,7 +66,7 @@
           :key="item.key"
           type="button"
           class="app-platform-search-select__row"
-          :class="[`is-${mode}`, { 'is-active': item.modelValue === modelValue }]"
+          :class="[`is-${mode}`, { 'is-active': isRowActive(item) }]"
           @click="selectItem(item)"
         >
           <template v-if="mode !== 'platform'">
@@ -131,8 +131,11 @@
 
   const props = withDefaults(
     defineProps<{
-      modelValue?: string
+      /** 单选：string；多选（仅 mode=app）：string[] */
+      modelValue?: string | string[]
       mode?: SelectMode
+      /** 仅 mode=app 时有效：多选应用 ID */
+      multiple?: boolean
       placeholder?: string
       searchPlaceholder?: string
       allLabel?: string
@@ -153,6 +156,7 @@
     {
       modelValue: '',
       mode: 'app',
+      multiple: false,
       placeholder: '请选择',
       searchPlaceholder: '搜索类别/应用名称/应用简称',
       allLabel: '全部',
@@ -173,7 +177,7 @@
   )
 
   const emit = defineEmits<{
-    'update:modelValue': [value: string]
+    'update:modelValue': [value: string | string[]]
     change: [payload: AppPlatformSearchSelectPayload | null]
   }>()
 
@@ -274,10 +278,45 @@
       .slice(0, 80)
   })
 
-  const selectedItem = computed(
-    () => options.value.find((item) => item.modelValue === props.modelValue) ?? null
-  )
-  const selectedLabel = computed(() => selectedItem.value?.displayName ?? '')
+  const selectedIds = computed(() => {
+    if (!props.multiple) return new Set<string>()
+    const v = props.modelValue
+    const arr = Array.isArray(v) ? v : []
+    return new Set(arr.map((id) => String(id ?? '').trim()).filter(Boolean))
+  })
+
+  const selectedItem = computed(() => {
+    if (props.multiple) return null
+    const mv = props.modelValue
+    if (typeof mv !== 'string') return null
+    return options.value.find((item) => item.modelValue === mv) ?? null
+  })
+
+  const hasSelection = computed(() => {
+    if (props.multiple) return selectedIds.value.size > 0
+    return Boolean(typeof props.modelValue === 'string' && props.modelValue.trim())
+  })
+
+  const selectedLabel = computed(() => {
+    if (props.multiple && props.mode === 'app') {
+      const n = selectedIds.value.size
+      if (n === 0) return ''
+      if (n === 1) {
+        const id = [...selectedIds.value][0]
+        const row = appOptions.value.find((o) => o.appId === id)
+        return row?.displayName ?? id
+      }
+      return `已选 ${n} 个应用`
+    }
+    return selectedItem.value?.displayName ?? ''
+  })
+
+  function isRowActive(item: NormalizedOption): boolean {
+    if (props.multiple && props.mode === 'app' && item.selectionType === 'app') {
+      return selectedIds.value.has(item.appId)
+    }
+    return item.modelValue === props.modelValue
+  }
 
   function getMatchScore(item: NormalizedOption, q: string): number {
     if (!q) return 1
@@ -328,12 +367,39 @@
   }
 
   function clearSelection() {
-    emit('update:modelValue', '')
+    if (props.multiple) {
+      emit('update:modelValue', [])
+    } else {
+      emit('update:modelValue', '')
+    }
     emit('change', null)
     visible.value = false
   }
 
   function selectItem(item: NormalizedOption) {
+    if (props.multiple && props.mode === 'app' && item.selectionType === 'app') {
+      const id = item.appId
+      if (!id) return
+      const next = new Set(selectedIds.value)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      emit('update:modelValue', [...next])
+      emit('change', {
+        mode: props.mode,
+        selectionType: item.selectionType,
+        value: item.value,
+        appId: item.appId,
+        appName: item.appName,
+        appShortName: item.appShortName,
+        platformCode: item.platformCode,
+        platformName: item.platformName,
+        categoryId: item.categoryId,
+        categoryName: item.categoryName,
+        label: item.label
+      })
+      return
+    }
+
     emit('update:modelValue', item.modelValue)
     emit('change', {
       mode: props.mode,

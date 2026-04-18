@@ -8,7 +8,7 @@
 ## 拆分原则
 
 - 每个契约对应**一个明确 UI 区块**或 Tab 数据源，避免单接口返回整页不可裁剪的大包。
-- 筛选入参统一包含：`s_app_id`、`platform`（`all` | `android` | `ios`）、`s_country_code`、`app_version`、`t_date`（`YYYY-MM-DD`），与 `mock.ts` 中 `RevenueOverviewFilterState` 一致。
+- 筛选入参统一包含：`appIds`（`string[]`，不限为 `[]`）、`platform`（收入概览页固定 `""`）、`s_country_code`（**空串 `""` 表示不按国家筛选**）、`app_version`、`t_date`（`YYYY-MM-DD`），与 `mock.ts` 中 `RevenueOverviewFilterState` 一致。
 
 ## 接口清单
 
