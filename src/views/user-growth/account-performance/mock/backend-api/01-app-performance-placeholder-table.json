@@ -2,33 +2,65 @@
   "_comment": "账户成效页 - 应用/账户 tab 占位表（对应 modules/app-performance-placeholder.vue）。",
   "fieldDescription": {
     "request": {
-      "dateRangeStart": {
+      "currentPage": {
+        "type": "number",
+        "required": true,
+        "description": "当前页码（从 0 开始）。"
+      },
+      "pageSize": {
+        "type": "number",
+        "required": true,
+        "description": "每页条数。"
+      },
+      "dateStart": {
         "type": "string",
         "required": true,
         "description": "开始日期（YYYY-MM-DD）。"
       },
-      "dateRangeEnd": {
+      "dateEnd": {
         "type": "string",
         "required": true,
         "description": "结束日期（YYYY-MM-DD）。"
+      },
+      "kw": {
+        "type": "string",
+        "required": false,
+        "description": "关键词搜索。空字符串表示不按关键词过滤。"
+      },
+      "ownerId": {
+        "type": "string",
+        "required": false,
+        "description": "负责人 ID。空字符串表示全部。"
+      },
+      "appIds": {
+        "type": "string[]",
+        "required": false,
+        "description": "应用筛选：不限为 []，单选为 [\"应用ID\"]。"
       },
       "source": {
         "type": "string",
         "required": false,
         "description": "广告平台筛选。空字符串表示全部。"
-      },
-      "app": {
-        "type": "string",
-        "required": false,
-        "description": "应用筛选。空字符串表示全部。"
-      },
-      "owner": {
-        "type": "string",
-        "required": false,
-        "description": "负责人筛选。空字符串表示全部。"
       }
     },
     "response": {
+      "code": {
+        "type": "number",
+        "required": true,
+        "description": "业务状态码，成功为 200。"
+      },
+      "message": {
+        "type": "string | null",
+        "required": false,
+        "description": "提示信息，成功时可为 null。"
+      },
+      "data": {
+        "type": "AppPerformanceTableData",
+        "required": true,
+        "description": "表格分页数据。"
+      }
+    },
+    "AppPerformanceTableData": {
       "total": {
         "type": "number",
         "required": true,
@@ -37,7 +69,7 @@
       "accounts": {
         "type": "AppPerformanceAccountRow[]",
         "required": true,
-        "description": "表格账户行数据。"
+        "description": "当前页表格账户行数据。"
       }
     },
     "AppPerformanceAccountRow": {
@@ -47,9 +79,9 @@
         "description": "表格行唯一标识（前端仅用于 key）。"
       },
       "name": {
-        "type": "string",
-        "required": true,
-        "description": "账户名称（用于展示）。"
+        "type": "string | null",
+        "required": false,
+        "description": "账户名称（用于展示）；无名称时可为 null，前端可回退展示 accountId。"
       },
       "accountId": {
         "type": "string",
@@ -59,7 +91,7 @@
       "platform": {
         "type": "string",
         "required": true,
-        "description": "广告平台名称（TikTok/Facebook/Google/Mintegral/Kwai/NewsBreak）。"
+        "description": "广告平台名称（如 TikTok/Facebook/Google/Mintegral/Kwai/NewsBreak）。"
       },
       "spend": {
         "type": "number",
@@ -74,12 +106,12 @@
       "usageRate": {
         "type": "number",
         "required": true,
-        "description": "预算使用率百分比（0-100）。"
+        "description": "预算使用率（百分比数值，通常 0–100，极端情况可大于 100）。"
       },
       "cpi": {
         "type": "number",
         "required": true,
-        "description": "CPI（展示到 2 位小数）。"
+        "description": "CPI（展示到合适小数位）。"
       },
       "installs": {
         "type": "number",
@@ -89,17 +121,17 @@
       "roi1": {
         "type": "number",
         "required": true,
-        "description": "首日 ROI（百分比数值，例如 95 表示 95%）。"
+        "description": "首日 ROI（数值；后端口径可能为放大后的指标，不限于 0–100）。"
       },
       "roi3": {
         "type": "number",
         "required": true,
-        "description": "3 日 ROI（百分比数值）。"
+        "description": "3 日 ROI（数值）。"
       },
       "roi7": {
         "type": "number",
         "required": true,
-        "description": "7 日 ROI（百分比数值）。"
+        "description": "7 日 ROI（数值）。"
       },
       "status": {
         "type": "string",
@@ -110,493 +142,187 @@
     }
   },
   "sampleRequest": {
-    "dateRangeStart": "2026-02-26",
-    "dateRangeEnd": "2026-03-04",
-    "source": "",
-    "app": "",
-    "owner": ""
+    "currentPage": 0,
+    "dateEnd": "2026-02-10",
+    "dateStart": "2026-02-10",
+    "kw": "",
+    "ownerId": "",
+    "pageSize": 10,
+    "appIds": [],
+    "source": ""
   },
   "sampleResponse": {
-    "total": 31,
-    "accounts": [
-      {
-        "id": "a01",
-        "name": "BV_TT_Vegoo_VD_09",
-        "accountId": "7589...",
-        "platform": "TikTok",
-        "spend": 502,
-        "budget": 3200,
-        "usageRate": 15.7,
-        "cpi": 0.08,
-        "installs": 2122,
-        "roi1": 115,
-        "roi3": 108,
-        "roi7": 110,
-        "status": "normal"
-      },
-      {
-        "id": "a02",
-        "name": "panda-VEGOO-PT-02",
-        "accountId": "7513...",
-        "platform": "TikTok",
-        "spend": 502,
-        "budget": 3200,
-        "usageRate": 15.7,
-        "cpi": 0.19,
-        "installs": 2649,
-        "roi1": 104,
-        "roi3": 109,
-        "roi7": 96,
-        "status": "normal"
-      },
-      {
-        "id": "a03",
-        "name": "BV_ZL_TT_PT_06",
-        "accountId": "758952...",
-        "platform": "TikTok",
-        "spend": 502,
-        "budget": 3200,
-        "usageRate": 15.7,
-        "cpi": 0.15,
-        "installs": 1290,
-        "roi1": 104,
-        "roi3": 109,
-        "roi7": 96,
-        "status": "normal"
-      },
-      {
-        "id": "a04",
-        "name": "BV_TT_Vegoo_W8_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 502,
-        "budget": 3200,
-        "usageRate": 5.5,
-        "cpi": 0.15,
-        "installs": 1290,
-        "roi1": 104,
-        "roi3": 109,
-        "roi7": 96,
-        "status": "normal"
-      },
-      {
-        "id": "a05",
-        "name": "BV_TT_Vegoo_W8_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 371,
-        "budget": 2950,
-        "usageRate": 7.8,
-        "cpi": 0.06,
-        "installs": 5168,
-        "roi1": 106,
-        "roi3": 91,
-        "roi7": 96,
-        "status": "normal"
-      },
-      {
-        "id": "a06",
-        "name": "BV_ZL_PT_04",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 500,
-        "budget": 3200,
-        "usageRate": 15.7,
-        "cpi": 0.14,
-        "installs": 2649,
-        "roi1": 74,
-        "roi3": 74,
-        "roi7": 94,
-        "status": "normal"
-      },
-      {
-        "id": "a07",
-        "name": "GIMC-TT-Vegoo_VD_07",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 196,
-        "budget": 3200,
-        "usageRate": 4.9,
-        "cpi": 0.08,
-        "installs": 821,
-        "roi1": 107,
-        "roi3": 104,
-        "roi7": 103,
-        "status": "normal"
-      },
-      {
-        "id": "a08",
-        "name": "OM_TT_Vegoo_PT_02",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 166,
-        "budget": 3200,
-        "usageRate": 6.5,
-        "cpi": 0.16,
-        "installs": 879,
-        "roi1": 63,
-        "roi3": 33,
-        "roi7": 62,
-        "status": "normal"
-      },
-      {
-        "id": "a09",
-        "name": "OM_TT_Vegoo_PT_02",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 166,
-        "budget": 3200,
-        "usageRate": 3.3,
-        "cpi": 0.18,
-        "installs": 181,
-        "roi1": 57,
-        "roi3": 33,
-        "roi7": 62,
-        "status": "normal"
-      },
-      {
-        "id": "a10",
-        "name": "BV_TT_Vegoo_PT3_03",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 68,
-        "budget": 500,
-        "usageRate": 13.6,
-        "cpi": 0.38,
-        "installs": 181,
-        "roi1": 77,
-        "roi3": 91,
-        "roi7": 70,
-        "status": "normal"
-      },
-      {
-        "id": "a11",
-        "name": "BV_ZL-SDV-03",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 61,
-        "budget": 340,
-        "usageRate": 17.8,
-        "cpi": 0.07,
-        "installs": 924,
-        "roi1": 96,
-        "roi3": 110,
-        "roi7": 92,
-        "status": "normal"
-      },
-      {
-        "id": "a12",
-        "name": "KN_TT_Vegoo_PT3_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 19,
-        "budget": 550,
-        "usageRate": 3.5,
-        "cpi": 0.26,
-        "installs": 72,
-        "roi1": 50,
-        "roi3": 46,
-        "roi7": 53,
-        "status": "roi_low"
-      },
-      {
-        "id": "a13",
-        "name": "FB_VD_Vegoo_US_01",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 842,
-        "budget": 2000,
-        "usageRate": 42.1,
-        "cpi": 0.21,
-        "installs": 4010,
-        "roi1": 91,
-        "roi3": 88,
-        "roi7": 85,
-        "status": "normal"
-      },
-      {
-        "id": "a14",
-        "name": "FB_PT_Vegoo_US_02",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 720,
-        "budget": 1800,
-        "usageRate": 40,
-        "cpi": 0.18,
-        "installs": 4000,
-        "roi1": 94,
-        "roi3": 90,
-        "roi7": 87,
-        "status": "normal"
-      },
-      {
-        "id": "a15",
-        "name": "FB_VD_Vegoo_SEA_03",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 611,
-        "budget": 1500,
-        "usageRate": 40.7,
-        "cpi": 0.15,
-        "installs": 4073,
-        "roi1": 95,
-        "roi3": 91,
-        "roi7": 88,
-        "status": "normal"
-      },
-      {
-        "id": "a16",
-        "name": "FB_PT_Vegoo_SEA_04",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 540,
-        "budget": 1400,
-        "usageRate": 38.6,
-        "cpi": 0.17,
-        "installs": 3177,
-        "roi1": 93,
-        "roi3": 89,
-        "roi7": 86,
-        "status": "normal"
-      },
-      {
-        "id": "a17",
-        "name": "FB_VD_Vegoo_BR_01",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 480,
-        "budget": 1200,
-        "usageRate": 40,
-        "cpi": 0.19,
-        "installs": 2526,
-        "roi1": 92,
-        "roi3": 88,
-        "roi7": 85,
-        "status": "normal"
-      },
-      {
-        "id": "a18",
-        "name": "FB_PT_DramaVue_01",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 380,
-        "budget": 1100,
-        "usageRate": 34.5,
-        "cpi": 0.16,
-        "installs": 2375,
-        "roi1": 90,
-        "roi3": 87,
-        "roi7": 84,
-        "status": "normal"
-      },
-      {
-        "id": "a19",
-        "name": "FB_VD_DramaVue_02",
-        "accountId": "",
-        "platform": "Facebook",
-        "spend": 261,
-        "budget": 900,
-        "usageRate": 29,
-        "cpi": 0.22,
-        "installs": 1187,
-        "roi1": 82,
-        "roi3": 78,
-        "roi7": 75,
-        "status": "warning"
-      },
-      {
-        "id": "a20",
-        "name": "GG_VD_Vegoo_US_01",
-        "accountId": "",
-        "platform": "Google",
-        "spend": 521,
-        "budget": 1200,
-        "usageRate": 43.4,
-        "cpi": 0.22,
-        "installs": 2368,
-        "roi1": 89,
-        "roi3": 86,
-        "roi7": 83,
-        "status": "normal"
-      },
-      {
-        "id": "a21",
-        "name": "GG_PT_Vegoo_US_02",
-        "accountId": "",
-        "platform": "Google",
-        "spend": 480,
-        "budget": 1200,
-        "usageRate": 40,
-        "cpi": 0.2,
-        "installs": 2400,
-        "roi1": 87,
-        "roi3": 84,
-        "roi7": 81,
-        "status": "normal"
-      },
-      {
-        "id": "a22",
-        "name": "GG_VD_DramaVue_01",
-        "accountId": "",
-        "platform": "Google",
-        "spend": 360,
-        "budget": 800,
-        "usageRate": 45,
-        "cpi": 0.21,
-        "installs": 1714,
-        "roi1": 85,
-        "roi3": 82,
-        "roi7": 79,
-        "status": "normal"
-      },
-      {
-        "id": "a23",
-        "name": "MTG_VD_Vegoo_US_01",
-        "accountId": "",
-        "platform": "Mintegral",
-        "spend": 451,
-        "budget": 1100,
-        "usageRate": 41,
-        "cpi": 0.19,
-        "installs": 2374,
-        "roi1": 83,
-        "roi3": 77,
-        "roi7": 74,
-        "status": "warning"
-      },
-      {
-        "id": "a24",
-        "name": "MTG_VD_DramaVue_01",
-        "accountId": "",
-        "platform": "Mintegral",
-        "spend": 400,
-        "budget": 1000,
-        "usageRate": 40,
-        "cpi": 0.19,
-        "installs": 2105,
-        "roi1": 80,
-        "roi3": 72,
-        "roi7": 70,
-        "status": "warning"
-      },
-      {
-        "id": "a25",
-        "name": "KW_VD_Vegoo_SEA_01",
-        "accountId": "",
-        "platform": "Kwai",
-        "spend": 511,
-        "budget": 1500,
-        "usageRate": 34.1,
-        "cpi": 0.23,
-        "installs": 3244,
-        "roi1": 79,
-        "roi3": 75,
-        "roi7": 71,
-        "status": "warning"
-      },
-      {
-        "id": "a26",
-        "name": "NB_PT_Vegoo_US_01",
-        "accountId": "",
-        "platform": "NewsBreak",
-        "spend": 178,
-        "budget": 800,
-        "usageRate": 22.3,
-        "cpi": 0.41,
-        "installs": 180,
-        "roi1": 61,
-        "roi3": 55,
-        "roi7": 49,
-        "status": "roi_low"
-      },
-      {
-        "id": "a27",
-        "name": "TT_VD_Vegoo_VD_05",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 193,
-        "budget": 3200,
-        "usageRate": 6,
-        "cpi": 0.19,
-        "installs": 1016,
-        "roi1": 65,
-        "roi3": 46,
-        "roi7": 62,
-        "status": "normal"
-      },
-      {
-        "id": "a28",
-        "name": "TT_Vegoo_PT_07",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 149,
-        "budget": 3200,
-        "usageRate": 4.7,
-        "cpi": 0.19,
-        "installs": 784,
-        "roi1": 39,
-        "roi3": 46,
-        "roi7": 62,
-        "status": "normal"
-      },
-      {
-        "id": "a29",
-        "name": "BV_TT_Vegoo_SDV_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 120,
-        "budget": 1000,
-        "usageRate": 12,
-        "cpi": 0.14,
-        "installs": 857,
-        "roi1": 98,
-        "roi3": 95,
-        "roi7": 91,
-        "status": "normal"
-      },
-      {
-        "id": "a30",
-        "name": "BV_TT_PhoneTracker_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 88,
-        "budget": 600,
-        "usageRate": 14.7,
-        "cpi": 0.12,
-        "installs": 733,
-        "roi1": 101,
-        "roi3": 97,
-        "roi7": 94,
-        "status": "normal"
-      },
-      {
-        "id": "a31",
-        "name": "BV_TT_DramaVue_01",
-        "accountId": "",
-        "platform": "TikTok",
-        "spend": 55,
-        "budget": 400,
-        "usageRate": 13.8,
-        "cpi": 0.2,
-        "installs": 275,
-        "roi1": 72,
-        "roi3": 68,
-        "roi7": 65,
-        "status": "normal"
-      }
-    ]
+    "code": 200,
+    "message": null,
+    "data": {
+      "total": 103,
+      "accounts": [
+        {
+          "id": "194-644-9164",
+          "name": null,
+          "accountId": "194-644-9164",
+          "platform": "Google",
+          "spend": 284.1,
+          "budget": 320,
+          "usageRate": 88.78,
+          "cpi": 0.06,
+          "installs": 4920,
+          "roi1": 90679.59,
+          "roi3": 105227.86,
+          "roi7": 108163.91,
+          "status": "normal"
+        },
+        {
+          "id": "884746097634453",
+          "name": "GO_FB_PT3_ZLWL_01",
+          "accountId": "884746097634453",
+          "platform": "Facebook",
+          "spend": 18.74,
+          "budget": 38,
+          "usageRate": 49.32,
+          "cpi": 0.17,
+          "installs": 113,
+          "roi1": 508.59,
+          "roi3": 545.09,
+          "roi7": 577.27,
+          "status": "normal"
+        },
+        {
+          "id": "250-204-6703",
+          "name": null,
+          "accountId": "250-204-6703",
+          "platform": "Google",
+          "spend": 139.53,
+          "budget": 360,
+          "usageRate": 38.76,
+          "cpi": 0.15,
+          "installs": 934,
+          "roi1": 35102.88,
+          "roi3": 38444.48,
+          "roi7": 39368.42,
+          "status": "normal"
+        },
+        {
+          "id": "785-657-5839",
+          "name": null,
+          "accountId": "785-657-5839",
+          "platform": "Google",
+          "spend": 147.79,
+          "budget": 150,
+          "usageRate": 98.53,
+          "cpi": 0.11,
+          "installs": 1395,
+          "roi1": 11873.37,
+          "roi3": 12959.3,
+          "roi7": 13466.32,
+          "status": "normal"
+        },
+        {
+          "id": "566-130-6966",
+          "name": null,
+          "accountId": "566-130-6966",
+          "platform": "Google",
+          "spend": 47.8,
+          "budget": 150,
+          "usageRate": 31.87,
+          "cpi": 0.15,
+          "installs": 317,
+          "roi1": 14936.96,
+          "roi3": 17731.51,
+          "roi7": 19194.54,
+          "status": "normal"
+        },
+        {
+          "id": "463-423-2598",
+          "name": null,
+          "accountId": "463-423-2598",
+          "platform": "Google",
+          "spend": 443.3,
+          "budget": 440,
+          "usageRate": 100.75,
+          "cpi": 0.32,
+          "installs": 1364,
+          "roi1": 10763.12,
+          "roi3": 11553.33,
+          "roi7": 11986.47,
+          "status": "normal"
+        },
+        {
+          "id": "955-251-2395",
+          "name": null,
+          "accountId": "955-251-2395",
+          "platform": "Google",
+          "spend": 53.06,
+          "budget": 50,
+          "usageRate": 106.11,
+          "cpi": 0.03,
+          "installs": 1553,
+          "roi1": 16217.74,
+          "roi3": 18249.44,
+          "roi7": 18923.79,
+          "status": "normal"
+        },
+        {
+          "id": "470-484-3596",
+          "name": null,
+          "accountId": "470-484-3596",
+          "platform": "Google",
+          "spend": 533.58,
+          "budget": 1940,
+          "usageRate": 27.5,
+          "cpi": 0.17,
+          "installs": 3105,
+          "roi1": 6375.53,
+          "roi3": 8340.6,
+          "roi7": 9447.19,
+          "status": "normal"
+        },
+        {
+          "id": "1463553685301923",
+          "name": "GO_FB_DSA_CQLR_PG04",
+          "accountId": "1463553685301923",
+          "platform": "Facebook",
+          "spend": 76.06,
+          "budget": 105,
+          "usageRate": 72.44,
+          "cpi": 1.06,
+          "installs": 72,
+          "roi1": 56,
+          "roi3": 56,
+          "roi7": 56,
+          "status": "roi_low"
+        },
+        {
+          "id": "1459953525086639",
+          "name": "GIMC_FB_PT_LKD_05",
+          "accountId": "1459953525086639",
+          "platform": "Facebook",
+          "spend": 87.81,
+          "budget": 210,
+          "usageRate": 41.81,
+          "cpi": 0.21,
+          "installs": 427,
+          "roi1": 180.55,
+          "roi3": 187.38,
+          "roi7": 189.55,
+          "status": "normal"
+        }
+      ]
+    }
   },
   "api": {
-    "url": "POST /api/user-growth/account-performance/app-performance-placeholder-table",
+    "url": "POST /api/v1/datacenter/analysis/account-performance/app-performance-placeholder-table",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "dateRangeStart, dateRangeEnd, source?, app?, owner?",
-    "responseBody": "total, accounts"
+    "requestBody": "currentPage, pageSize, dateStart, dateEnd, kw?, ownerId?, appIds?, source?",
+    "responseBody": "code, message, data: { total, accounts }"
   },
   "apiSuggestion": {
     "notes": [
       "status 枚举建议与前端展示逻辑一致：normal=正常，warning=注意，roi_low=ROI偏低。",
-      "若后端返回真实 accountId，可直接替换 accountId 字段并确保为空值用空字符串（避免 null 处理）。"
+      "name 可为 null：前端展示名称时建议回退为 accountId 或占位文案。",
+      "roi1/roi3/roi7 为后端口径数值，可能与「百分比 0–100」不同；usageRate 在超支等场景可能大于 100。",
+      "无数据时 data.accounts 返回 []，data.total 为 0；message 可为 null。"
     ]
   }
 }

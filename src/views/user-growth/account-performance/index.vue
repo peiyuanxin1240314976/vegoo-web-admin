@@ -8,7 +8,7 @@
       <div class="ac-perf-filter-panel">
         <div class="ap-filters">
           <AppPlatformSearchSelect
-            v-model="draftPlatform"
+            v-model="draftAppId"
             mode="app"
             placeholder="应用"
             search-placeholder="搜索类别/应用名称/应用简称"
@@ -183,14 +183,14 @@
               v-else-if="modelValue === '账户'"
               :date-range="appliedDateRange"
               :source="appliedSource"
-              :platform="appliedPlatform"
+              :selected-app-id="appliedAppId"
               :filter-owner="appliedFilterOwner"
             />
             <PlatformPerformancePlaceholder
               v-else
               :date-range="appliedDateRange"
               :source="appliedSource"
-              :platform="appliedPlatform"
+              :selected-app-id="appliedAppId"
               :filter-owner="appliedFilterOwner"
             />
           </div>
@@ -270,6 +270,7 @@
   import request from '@/utils/http'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
+  import { toAppIdsRequestBody } from '@/utils/app-id-request'
   import { AD_PERFORMANCE_BASE } from '@/views/user-growth/ad-performance/config/api-base'
   import type { AdPerformanceMetaFilterResponse } from '@/views/user-growth/ad-performance/types'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
@@ -302,7 +303,7 @@
 
   const mock = ref(MOCK_ACCOUNT_PERFORMANCE)
   const draftSource = ref('')
-  const draftPlatform = ref('')
+  const draftAppId = ref('')
   /** 顶部第三项：对接 meta accountOptions，请求体仍走 ownerId 字段名 */
   const draftFilterOwner = ref('')
   function buildDefaultDateRange(): [string, string] {
@@ -313,7 +314,7 @@
 
   /** 点击“查询”后才会更新 applied，并触发请求 */
   const appliedSource = ref('')
-  const appliedPlatform = ref('')
+  const appliedAppId = ref('')
   const appliedFilterOwner = ref('')
   const appliedDateRange = ref<[string, string]>(buildDefaultDateRange())
 
@@ -345,7 +346,7 @@
 
   function applyFilters() {
     appliedSource.value = draftSource.value ?? ''
-    appliedPlatform.value = draftPlatform.value ?? ''
+    appliedAppId.value = draftAppId.value ?? ''
     appliedFilterOwner.value = draftFilterOwner.value ?? ''
     appliedDateRange.value = [...draftDateRange.value]
 
@@ -450,7 +451,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          appIds: toAppIdsRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -467,7 +468,7 @@
 
   let appTableDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [modelValue, appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
+    [modelValue, appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
     () => {
       if (modelValue.value !== '应用') return
 
@@ -529,7 +530,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          appIds: toAppIdsRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -549,7 +550,7 @@
   // 仅 KPI 联动筛选条件，避免其它模块（表格/图表）未联动造成认知不一致
   let kpiDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
+    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
     () => {
       if (kpiDebounceTimer) clearTimeout(kpiDebounceTimer)
       kpiDebounceTimer = setTimeout(() => {
@@ -583,7 +584,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          appIds: toAppIdsRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -604,7 +605,7 @@
   // 只联动右侧该张图，避免其它区域（表格/图表）在 KPI 未就绪时来回闪烁
   let channelDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
+    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
     () => {
       if (channelDebounceTimer) clearTimeout(channelDebounceTimer)
       channelDebounceTimer = setTimeout(() => {
@@ -638,7 +639,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          appIds: toAppIdsRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -658,7 +659,7 @@
 
   let usageDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
+    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
     () => {
       if (usageDebounceTimer) clearTimeout(usageDebounceTimer)
       usageDebounceTimer = setTimeout(() => {
@@ -692,7 +693,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          appIds: toAppIdsRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -712,7 +713,7 @@
 
   let roiTrendDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
+    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
     () => {
       if (roiTrendDebounceTimer) clearTimeout(roiTrendDebounceTimer)
       roiTrendDebounceTimer = setTimeout(() => {
@@ -779,8 +780,10 @@
 
   function ensureAppRowColors() {
     const next = { ...appRowBaseColorMap.value }
-    const appIds = (appTableTree.value || []).filter((r) => r.type === 'app').map((r) => r.id)
-    for (const id of appIds) {
+    const rootAppRowIds = (appTableTree.value || [])
+      .filter((r) => r.type === 'app')
+      .map((r) => r.id)
+    for (const id of rootAppRowIds) {
       if (next[id]) continue
       const base = BASE_RGB_COLORS[hashStringToIndex(id, BASE_RGB_COLORS.length)]
       next[id] = base
@@ -1082,7 +1085,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          platform: appliedPlatform.value,
+          appIds: toAppIdsRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -1102,7 +1105,7 @@
 
   let paceDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
+    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
     () => {
       if (paceDebounceTimer) clearTimeout(paceDebounceTimer)
       paceDebounceTimer = setTimeout(() => {
@@ -1124,7 +1127,7 @@
 
   let alertsDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [appliedDateRange, appliedSource, appliedPlatform, appliedFilterOwner],
+    [appliedDateRange, appliedSource, appliedAppId, appliedFilterOwner],
     () => {
       if (alertsDebounceTimer) clearTimeout(alertsDebounceTimer)
       alertsDebounceTimer = setTimeout(() => {

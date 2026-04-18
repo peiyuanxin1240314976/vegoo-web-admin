@@ -144,6 +144,7 @@
   import { computed, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import request from '@/utils/http'
+  import { toAppIdsRequestBody } from '@/utils/app-id-request'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
@@ -157,7 +158,7 @@
   const props = defineProps<{
     dateRange: [string, string]
     source: string
-    platform: string
+    selectedAppId: string
     filterOwner: string
   }>()
 
@@ -267,7 +268,7 @@
           kw: '',
           ownerId: props.filterOwner,
           pageSize: pageSize.value,
-          platform: props.platform,
+          appIds: toAppIdsRequestBody(props.selectedAppId),
           source: props.source
         }
       })
@@ -290,7 +291,7 @@
   }
 
   watch(
-    [() => props.dateRange, () => props.source, () => props.platform, () => props.filterOwner],
+    [() => props.dateRange, () => props.source, () => props.selectedAppId, () => props.filterOwner],
     () => {
       if (debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {

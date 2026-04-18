@@ -143,6 +143,7 @@
   import { ref, computed, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import request from '@/utils/http'
+  import { toAppIdsRequestBody } from '@/utils/app-id-request'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
   import ArtVirtualTable from '@/components/core/art-virtual-table/index.vue'
   import type { ArtVirtualTableColumn } from '@/components/core/art-virtual-table/index.vue'
@@ -154,7 +155,7 @@
   const props = defineProps<{
     dateRange: [string, string]
     source: string
-    platform: string
+    selectedAppId: string
     filterOwner: string
   }>()
 
@@ -726,7 +727,7 @@
           kw: '',
           ownerId: props.filterOwner,
           pageSize: pageSize.value,
-          platform: props.platform,
+          appIds: toAppIdsRequestBody(props.selectedAppId),
           source: props.source
         }
       })
@@ -745,7 +746,7 @@
 
   let filterDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(
-    [() => props.dateRange, () => props.source, () => props.platform, () => props.filterOwner],
+    [() => props.dateRange, () => props.source, () => props.selectedAppId, () => props.filterOwner],
     () => {
       if (filterDebounceTimer) clearTimeout(filterDebounceTimer)
       filterDebounceTimer = setTimeout(() => {
