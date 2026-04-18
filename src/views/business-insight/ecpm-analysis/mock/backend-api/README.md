@@ -8,7 +8,7 @@
 ## 拆分原则
 
 - 每个契约对应**一个明确 UI 区块**，避免单接口返回整页不可裁剪的大包。
-- 筛选入参统一包含日期范围、`platform`（终端）、`source`（广告平台，可选）、`s_app_id`、`s_country_code` 等，与 `mock.ts` 中联调扩展一致。
+- 筛选入参统一包含日期范围、`platform`（终端）、`source`（广告平台，可选）、**`appIds: string[]`**（应用筛选，不限为 `[]`，见 `docs/api-appids-filter-agent-prompt.md`）、`s_country_code` 等；页面仍用 `s_app_id` 字符串组参，由 `src/api/business-insight.ts` 的 `normalizeEcpmOverviewRequestBody` 写入 `appIds`。
 
 ## 接口清单
 

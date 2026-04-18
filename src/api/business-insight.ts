@@ -180,8 +180,18 @@ type EcpmOverviewKpiParams = {
   t_end_date: string
   platform: string
   source?: string
+  /** 页面筛选的应用 ID；写入网关时为 `appIds: string[]`（见 `normalizeEcpmOverviewRequestBody`） */
   s_app_id?: string
   s_country_code?: string
+}
+
+/** 与 IAP `normalizeIapOverviewBody` 一致：POST 体使用 `appIds`，不限为 `[]` */
+function normalizeEcpmOverviewRequestBody(params: EcpmOverviewKpiParams) {
+  const { s_app_id, ...rest } = params
+  return {
+    ...rest,
+    appIds: toAppIdsRequestBody(s_app_id)
+  }
 }
 
 /** ECPM 分析 - 顶部 KPI POST .../overview/kpis */
@@ -192,7 +202,7 @@ export async function fetchEcpmOverviewKpis(params: EcpmOverviewKpiParams) {
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/kpis`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmOverviewKpis(unwrapIaaPayload<EcpmOverviewKpis>(raw))
 }
@@ -220,7 +230,7 @@ export async function fetchEcpmOverviewTrend(params: EcpmOverviewKpiParams) {
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/trend`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmTrendBundle(unwrapIaaPayload<EcpmTrendBundle>(raw))
 }
@@ -299,7 +309,7 @@ export async function fetchEcpmTablePlatform(params: EcpmOverviewKpiParams) {
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/table/platform`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmPlatformTableResponse(unwrapIaaPayload<EcpmPlatformTableResponse>(raw))
 }
@@ -339,7 +349,7 @@ export async function fetchEcpmOverviewMapCountry(params: EcpmMapCountryParams) 
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/map-country`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmMapCountryResponse(unwrapIaaPayload<EcpmMapCountryResponse>(raw))
 }
@@ -379,7 +389,7 @@ export async function fetchEcpmOverviewTop10Country(params: EcpmTop10CountryPara
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/top10-country`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmTop10CountryResponse(unwrapIaaPayload<EcpmTop10CountryResponse>(raw))
 }
@@ -419,7 +429,7 @@ export async function fetchEcpmOverviewAdSlotRanking(params: EcpmOverviewKpiPara
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/ad-slot-ranking`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmAdSlotRankingResponse(unwrapIaaPayload<EcpmAdSlotRankingResponse>(raw))
 }
@@ -459,7 +469,7 @@ export async function fetchEcpmOverviewAppRanking(params: EcpmOverviewKpiParams)
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/app-ranking`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmAppRankingResponse(unwrapIaaPayload<EcpmAppRankingResponse>(raw))
 }
@@ -484,7 +494,7 @@ export async function fetchEcpmOverviewInsightTip(params: EcpmOverviewKpiParams)
   }
   const raw = await request.post<unknown>({
     url: `${ECPM_ANALYSIS_BASE}/overview/insight-tip`,
-    data: params
+    data: normalizeEcpmOverviewRequestBody(params)
   })
   return normalizeEcpmInsightTipResponse(unwrapIaaPayload<EcpmInsightTipResponse>(raw))
 }

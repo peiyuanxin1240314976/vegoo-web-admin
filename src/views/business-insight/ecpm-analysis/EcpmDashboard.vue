@@ -436,10 +436,13 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { useResizeObserver } from '@vueuse/core'
   import * as echarts from 'echarts'
   import type { ECharts } from 'echarts'
   import { TrendCharts, Money, Location, Grid, Warning } from '@element-plus/icons-vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { getAppNow, cloneAppDate } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
@@ -463,6 +466,11 @@
   import { ISO2_TO_ECHARTS_WORLD_GEO_NAME } from './config/world-map-iso-to-geo-json-name'
 
   defineOptions({ name: 'EcpmDashboard' })
+
+  const cockpitMetaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
+  /** 应用下拉与驾驶舱 settingApps 对齐（sAppId），勿仅用 ecpm meta 的 apps 文案项 */
+  const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
 
   function fmt2(n: number) {
     return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -1123,12 +1131,17 @@
   async function loadMetaFilterOptions() {
     loadingMetaFilterOptions.value = true
     try {
+      await cockpitMetaStore.ensureLoaded()
       const response = await fetchEcpmMetaFilterOptions()
       sourceOptions.value = response.sources
       appOptions.value = response.apps
       countryOptions.value = response.countries
       filterPlatform.value = toSelectValue(response.sources[0]?.value ?? '')
-      filterApp.value = toSelectValue(response.apps[0]?.value ?? '')
+      const cockpitApps = cockpitMeta.value?.settingApps ?? []
+      filterApp.value =
+        cockpitApps.length > 0
+          ? toSelectValue(cockpitApps[0]!.sAppId)
+          : toSelectValue(response.apps[0]?.value ?? '')
       filterCountry.value = toSelectValue(response.countries[0]?.value ?? '')
     } finally {
       loadingMetaFilterOptions.value = false
@@ -1145,6 +1158,7 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
@@ -1163,6 +1177,7 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
@@ -1181,6 +1196,7 @@
         t_start_date: normalizeYmd(start),
         t_end_date: normalizeYmd(end),
         platform: 'all',
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
@@ -1215,6 +1231,7 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value),
         map_metric: mapMode.value
@@ -1277,6 +1294,7 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value),
         metric: mapMode.value
@@ -1303,6 +1321,7 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
@@ -1326,6 +1345,8 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
+        s_app_id: fromSelectValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
       appRankRows.value = response.rows
@@ -1343,6 +1364,7 @@
         t_start_date: normalizeYmd(start),
         t_end_date: normalizeYmd(end),
         platform: 'all',
+        // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
         s_app_id: fromSelectValue(filterApp.value)
       })
       insightTip.value = response.message
