@@ -33,7 +33,7 @@
       </div>
 
       <div class="field">
-        <ElButton type="success" round class="export-btn">{{ exportLabel }}</ElButton>
+        <ElButton type="primary" plain round class="export-btn">{{ exportLabel }}</ElButton>
       </div>
 
       <div class="period-switch">

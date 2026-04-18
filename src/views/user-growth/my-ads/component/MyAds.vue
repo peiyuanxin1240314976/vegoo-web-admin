@@ -230,8 +230,10 @@
             :clearable="false"
           />
 
-          <button type="button" class="export-btn" @click="commitFiltersAndRefresh">查询</button>
-          <button type="button" class="export-btn">导出报表</button>
+          <el-button type="primary" plain round @click="commitFiltersAndRefresh">查询</el-button>
+          <el-button type="primary" plain round @click="commitFiltersAndRefresh"
+            >导出报表</el-button
+          >
         </div>
       </div>
     </div>

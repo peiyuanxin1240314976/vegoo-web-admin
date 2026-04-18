@@ -63,7 +63,7 @@
             />
           </ElSelect>
           <div class="or-filter-actions">
-            <ElButton round class="or-search-btn" @click="handleSearch">查询</ElButton>
+            <ElButton type="primary" plain round @click="handleSearch">查询</ElButton>
           </div>
         </div>
       </div>

@@ -49,8 +49,7 @@
           />
         </el-select> -->
 
-        <el-button
-          class="rd-filter-action rd-filter-action--apply"
+        <ElButton
           type="primary"
           plain
           round
@@ -59,7 +58,7 @@
           @click="handleQuery"
         >
           查询
-        </el-button>
+        </ElButton>
       </div>
     </div>
 

@@ -685,20 +685,8 @@
               />
             </div>
             <div class="aa-tab-bar-filters__actions">
-              <ElButton
-                type="primary"
-                plain
-                class="btn-search btn-search--tab"
-                @click="handleSearch"
-                v-ripple
-              >
-                查询
-              </ElButton>
-              <button
-                type="button"
-                class="btn-screenshot btn-screenshot--tab"
-                @click="openScreenshot()"
-              >
+              <ElButton type="primary" plain round @click="handleSearch" v-ripple> 查询 </ElButton>
+              <ElButton type="primary" plain round @click="openScreenshot()">
                 <svg
                   width="14"
                   height="14"
@@ -718,7 +706,7 @@
                   <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.2" />
                 </svg>
                 一键截图复制
-              </button>
+              </ElButton>
             </div>
           </div>
         </div>

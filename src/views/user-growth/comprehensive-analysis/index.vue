@@ -58,9 +58,7 @@
               />
             </ElSelect>
 
-            <ElButton round class="ca-filter-search" :icon="Search" @click="loadData">
-              查询
-            </ElButton>
+            <ElButton type="primary" plain round :icon="Search" @click="loadData"> 查询 </ElButton>
           </div>
         </div>
       </header>

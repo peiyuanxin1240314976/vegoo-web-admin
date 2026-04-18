@@ -80,9 +80,7 @@
             />
           </div>
 
-          <ElButton class="rev-query-btn" type="primary" plain round @click="onQuery"
-            >查询</ElButton
-          >
+          <ElButton type="primary" plain round @click="onQuery">查询</ElButton>
         </div>
 
         <!-- <button type="button" class="rev-export" @click="onExport">Export</button> -->

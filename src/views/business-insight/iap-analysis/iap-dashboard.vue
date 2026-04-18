@@ -7,15 +7,11 @@
           <div class="iap-dashboard-subtitle">应用内购订单与收入分析</div>
         </div>
         <div class="iap-dashboard-header__actions">
-          <ElButton class="iap-dashboard-btn iap-dashboard-btn--export" round>
+          <ElButton type="info" plain round>
             <ElIcon><Download /></ElIcon>
             导出
           </ElButton>
-          <ElButton
-            class="iap-dashboard-btn iap-dashboard-btn--refresh"
-            round
-            @click="loadDashboard"
-          >
+          <ElButton type="primary" round @click="loadDashboard">
             <ElIcon><Refresh /></ElIcon>
             刷新
           </ElButton>
@@ -84,9 +80,7 @@
           </ElSelect>
         </div>
 
-        <ElButton round class="iap-dashboard-btn iap-dashboard-btn--query" @click="loadDashboard">
-          查询
-        </ElButton>
+        <ElButton type="primary" plain round @click="loadDashboard"> 查询 </ElButton>
       </div>
     </header>
 

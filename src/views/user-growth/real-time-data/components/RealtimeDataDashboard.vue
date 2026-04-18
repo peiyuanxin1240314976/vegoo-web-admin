@@ -281,8 +281,8 @@
       </div>
       <div class="header-actions">
         <span class="last-update">⏱ 最后更新：14:40:20</span>
-        <button type="button" class="btn-refresh" @click="onManualRefresh">↻ 手动刷新</button>
-        <button class="btn-auto">⚙ 设置自动刷新</button>
+        <el-button type="primary" plain round @click="onManualRefresh">↻ 手动刷新</el-button>
+        <el-button type="success" plain round @click="onManualRefresh">⚙ 设置自动刷新</el-button>
       </div>
     </div>
 
@@ -337,7 +337,7 @@
             />
           </ElSelect>
         </div>
-        <button type="button" class="filter-btn" @click="onQuery">查询</button>
+        <el-button type="primary" plain round @click="onQuery">查询</el-button>
       </div>
     </div>
 

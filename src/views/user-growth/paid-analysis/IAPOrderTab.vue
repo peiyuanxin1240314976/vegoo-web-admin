@@ -89,10 +89,18 @@
         </template>
       </el-input>
       <div class="filter-row-actions">
-        <ElButton round size="small" class="order-search-btn" @click="handleOrderSearch"
-          >检索</ElButton
+        <ElButton
+          type="primary"
+          plain
+          round
+          size="default"
+          class="order-search-btn"
+          @click="handleOrderSearch"
+          >搜索</ElButton
         >
-        <el-button size="small" class="export-btn-sm">↓ 导出数据</el-button>
+        <ElButton type="primary" plain round size="default" class="export-btn-sm"
+          >↓ 导出数据</ElButton
+        >
       </div>
     </div>
 

@@ -69,7 +69,7 @@
           />
         </div>
 
-        <ElButton class="iaa-query-btn" type="primary" plain round @click="onQuery">查询</ElButton>
+        <ElButton type="primary" plain round @click="onQuery">查询</ElButton>
       </div>
     </header>
 

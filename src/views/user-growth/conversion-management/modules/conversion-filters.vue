@@ -52,20 +52,10 @@
             <ElIcon><Search /></ElIcon>
           </template>
         </ElInput>
-        <ElButton
-          type="primary"
-          class="conversion-name-filter-action-btn"
-          @click="doSearch"
-          v-ripple
-        >
+        <ElButton type="primary" plain round @click="doSearch" v-ripple>
           {{ $t('conversionManagement.dataFilterSearch') }}
         </ElButton>
-        <ElButton
-          type="primary"
-          class="conversion-filters__add-btn"
-          @click="$emit('add-mapping')"
-          v-ripple
-        >
+        <ElButton type="primary" plain round @click="$emit('add-mapping')" v-ripple>
           <ElIcon class="mr-1"><Plus /></ElIcon>
           {{ $t('conversionManagement.addMapping') }}
         </ElButton>

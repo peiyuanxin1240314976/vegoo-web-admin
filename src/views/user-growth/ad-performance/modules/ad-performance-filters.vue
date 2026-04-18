@@ -76,21 +76,17 @@
         />
       </ElSelect>
 
-      <ElButton
-        class="ad-performance-filter-action-btn ad-performance-filter-action-btn--query"
-        @click="onQuery"
-      >
+      <ElButton type="primary" plain round @click="onQuery">
         {{ tr('adPerformance.query', '查询') }}
       </ElButton>
-      <ElButton
-        class="ad-performance-filter-action-btn ad-performance-filter-action-btn--export"
-        @click="$emit('export')"
-      >
+      <ElButton type="primary" plain round @click="$emit('export')">
         {{ tr('adPerformance.exportReport', '导出报表') }}
       </ElButton>
       <ElButton
         aria-label="刷新数据"
-        class="ad-performance-filter-action-btn ad-performance-filter-action-btn--refresh"
+        type="primary"
+        plain
+        round
         :icon="RefreshRight"
         @click="$emit('refresh')"
       />

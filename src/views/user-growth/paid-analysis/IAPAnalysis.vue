@@ -44,8 +44,8 @@
             />
           </ElSelect>
           <div class="iap-filter-actions">
-            <ElButton round class="iap-search-btn" @click="handleSearch">搜索</ElButton>
-            <ElButton round class="iap-search-btn" @click="onExportClick">导出</ElButton>
+            <ElButton type="primary" plain round @click="handleSearch">搜索</ElButton>
+            <ElButton type="primary" plain round @click="onExportClick">导出</ElButton>
           </div>
         </div>
       </div>
