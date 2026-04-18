@@ -195,6 +195,7 @@
     source: string
     selectedAppId: string
     filterOwner: string
+    keys: string
   }>()
 
   /** 平台颜色 & 图标字符配置 */
@@ -320,7 +321,7 @@
           currentPage: Math.max(0, currentPage.value - 1),
           dateEnd,
           dateStart,
-          kw: '',
+          keys: props.keys.trim(),
           ownerId: props.filterOwner,
           pageSize: pageSize.value,
           appIds: toAppIdsRequestBody(props.selectedAppId),
@@ -346,7 +347,13 @@
   }
 
   watch(
-    [() => props.dateRange, () => props.source, () => props.selectedAppId, () => props.filterOwner],
+    [
+      () => props.dateRange,
+      () => props.source,
+      () => props.selectedAppId,
+      () => props.filterOwner,
+      () => props.keys
+    ],
     () => {
       if (debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {

@@ -305,6 +305,7 @@
     source: string
     selectedAppId: string
     filterOwner: string
+    keys: string
   }>()
 
   const router = useRouter()
@@ -560,7 +561,7 @@
           currentPage: Math.max(0, currentPage.value - 1),
           dateEnd,
           dateStart,
-          kw: '',
+          keys: props.keys.trim(),
           ownerId: props.filterOwner,
           pageSize: pageSize.value,
           appIds: toAppIdsRequestBody(props.selectedAppId),
@@ -584,7 +585,13 @@
   let filterDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
   watch(
-    [() => props.dateRange, () => props.source, () => props.selectedAppId, () => props.filterOwner],
+    [
+      () => props.dateRange,
+      () => props.source,
+      () => props.selectedAppId,
+      () => props.filterOwner,
+      () => props.keys
+    ],
     () => {
       if (filterDebounceTimer) clearTimeout(filterDebounceTimer)
       filterDebounceTimer = setTimeout(() => {

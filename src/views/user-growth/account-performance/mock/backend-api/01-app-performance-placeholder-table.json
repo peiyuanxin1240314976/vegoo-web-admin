@@ -22,6 +22,11 @@
         "required": true,
         "description": "结束日期（YYYY-MM-DD）。"
       },
+      "keys": {
+        "type": "string",
+        "required": false,
+        "description": "关键词搜索。应用层级关键词过滤。"
+      },
       "kw": {
         "type": "string",
         "required": false,
@@ -185,6 +190,7 @@
     "dateEnd": "2026-02-10",
     "dateStart": "2026-02-10",
     "kw": "",
+    "keys": "",
     "ownerId": "",
     "pageSize": 0,
     "appIds": ["com.photo.ai.art.agecam.fx"],
@@ -467,7 +473,7 @@
     "url": "POST /api/v1/datacenter/analysis/account-performance/app-performance-placeholder-table",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "currentPage, pageSize, dateStart, dateEnd, kw?, ownerId?, appIds?, source?",
+    "requestBody": "currentPage, pageSize, dateStart, dateEnd, kw?, ownerId?, appIds?, source?,  keys?",
     "responseBody": "code, message, data: { total, accounts[] }；accounts 含 appId, appName, platform, source, adAccount{id,name,accountId,spend,budget?,cpa?,cpi,installs}, usageRate, firstThreeDayRoi, roi3, roi7, status；无 roi1"
   },
   "apiSuggestion": {

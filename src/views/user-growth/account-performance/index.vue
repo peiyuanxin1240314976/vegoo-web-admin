@@ -28,9 +28,9 @@
             />
           </ElSelect>
 
-          <ElSelect v-model="draftFilterOwner" placeholder="广告账户" class="ap-filter-select">
+          <ElSelect v-model="draftFilterOwner" placeholder="负责人" class="ap-filter-select">
             <ElOption
-              v-for="opt in metaAccountOptions"
+              v-for="opt in ownerOptions"
               :key="opt.value"
               :label="opt.label"
               :value="opt.value"
@@ -136,10 +136,13 @@
               </ElButton>
               <!-- <ElButton size="default" color="#13deb9" plain :dark="isDark">自定义列</ElButton> -->
               <ElInput
-                v-model="tableSearch"
-                :placeholder="'Q 搜索' + modelValue"
+                v-model="currentDraftKeys"
+                :placeholder="currentSearchPlaceholder"
                 clearable
                 class="ap-table-search"
+                @blur="commitTableSearch"
+                @clear="commitTableSearch"
+                @keyup.enter="commitTableSearch"
               />
             </div>
           </template>
@@ -185,6 +188,7 @@
               :source="appliedSource"
               :selected-app-id="appliedAppId"
               :filter-owner="appliedFilterOwner"
+              :keys="accountAppliedKeys"
             />
             <PlatformPerformancePlaceholder
               v-else
@@ -192,6 +196,7 @@
               :source="appliedSource"
               :selected-app-id="appliedAppId"
               :filter-owner="appliedFilterOwner"
+              :keys="platformAppliedKeys"
             />
           </div>
         </ElCard>
@@ -321,11 +326,14 @@
   const metaAdPlatformOptions = computed<CockpitMetaOptionItem[]>(
     () => cockpitMeta.value?.sourceOptions ?? []
   )
-  const metaAccountOptions = computed<CockpitMetaOptionItem[]>(
-    () => cockpitMeta.value?.accountOptions ?? []
-  )
   const metaSettingApps = computed(() => cockpitMeta.value?.settingApps ?? [])
-  const tableSearch = ref('')
+  const ownerOptions = ref<Array<{ label: string; value: string }>>([])
+  const appDraftKeys = ref('')
+  const appAppliedKeys = ref('')
+  const platformDraftKeys = ref('')
+  const platformAppliedKeys = ref('')
+  const accountDraftKeys = ref('')
+  const accountAppliedKeys = ref('')
   const expandAll = ref(false)
   const expandedRowKeys = ref<string[]>([])
 
@@ -344,8 +352,43 @@
   const modelValue = ref(rangeOptions[0].value)
   const rangeIndex = computed(() => rangeOptions.findIndex((o) => o.value === modelValue.value))
 
+  const currentDraftKeys = computed({
+    get: () => {
+      if (modelValue.value === '应用') return appDraftKeys.value
+      if (modelValue.value === '平台') return platformDraftKeys.value
+      return accountDraftKeys.value
+    },
+    set: (value: string) => {
+      if (modelValue.value === '应用') appDraftKeys.value = value
+      else if (modelValue.value === '平台') platformDraftKeys.value = value
+      else accountDraftKeys.value = value
+    }
+  })
+
+  const currentSearchPlaceholder = computed(() => {
+    if (modelValue.value === '应用') return '搜索应用'
+    if (modelValue.value === '平台') return '搜索平台'
+    return '搜索账户'
+  })
+
   function selectRange(value: string) {
     modelValue.value = value
+  }
+
+  function commitTableSearch() {
+    if (modelValue.value === '应用') {
+      const next = appDraftKeys.value.trim()
+      if (next === appAppliedKeys.value) return
+      appAppliedKeys.value = next
+      appCurrentPage.value = 1
+      void loadAppTableTree()
+      return
+    }
+    if (modelValue.value === '平台') {
+      platformAppliedKeys.value = platformDraftKeys.value.trim()
+      return
+    }
+    accountAppliedKeys.value = accountDraftKeys.value.trim()
   }
 
   function applyFilters() {
@@ -405,14 +448,37 @@
 
   async function loadMetaFilterOptions() {
     await cockpitMetaStore.ensureLoaded()
+
+    try {
+      const res = await request.post<{
+        data?: {
+          ownerOptions?: Array<{ id?: string; name?: string }>
+        }
+        ownerOptions?: Array<{ id?: string; name?: string }>
+      }>({
+        url: '/api/v1/datacenter/analysis/account-performance/meta-filter-options',
+        data: {}
+      })
+
+      const rawOwnerOptions = Array.isArray(res?.ownerOptions)
+        ? res.ownerOptions
+        : Array.isArray(res?.data?.ownerOptions)
+          ? res.data.ownerOptions
+          : []
+      const list = Array.isArray(rawOwnerOptions) ? rawOwnerOptions : []
+      ownerOptions.value = list
+        .map((item) => ({
+          label: String(item?.name ?? '').trim(),
+          value: String(item?.id ?? '').trim()
+        }))
+        .filter((item) => item.label && item.value)
+    } catch {
+      ownerOptions.value = []
+    }
   }
 
   const filteredAppRoots = computed(() => {
-    let list = appTableTree.value
-    const kw = tableSearch.value?.trim()
-    if (kw) list = filterTreeByName(list, kw)
-    // 根节点期望是 app，兜底仍按 type=app 过滤，避免接口变化
-    return list.filter((r) => r.type === 'app')
+    return appTableTree.value.filter((r) => r.type === 'app')
   })
 
   const pagedAppRoots = computed(() => {
@@ -440,7 +506,7 @@
           currentPage: 0,
           dateEnd,
           dateStart,
-          kw: '',
+          keys: appAppliedKeys.value,
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
           appIds: toAppIdsRequestBody(appliedAppId.value),
@@ -468,11 +534,6 @@
     appTableDebounceTimer = setTimeout(() => {
       void loadAppTableTree()
     }, 300)
-  })
-
-  watch(tableSearch, () => {
-    if (modelValue.value !== '应用') return
-    appCurrentPage.value = 1
   })
 
   // KPI 卡片：独立请求并用局部骨架屏避免整页等待
@@ -768,20 +829,6 @@
     if (!expandAll.value) return
     expandedRowKeys.value = collectExpandableRowKeys(tableData.value)
   })
-
-  function filterTreeByName(rows: AccountDetailRow[], keyword: string): AccountDetailRow[] {
-    const lower = keyword.toLowerCase()
-    return rows
-      .map((row) => {
-        if (row.name.toLowerCase().includes(lower)) return row
-        if (row.children?.length) {
-          const filtered = filterTreeByName(row.children, keyword)
-          if (filtered.length) return { ...row, children: filtered }
-        }
-        return null
-      })
-      .filter(Boolean) as AccountDetailRow[]
-  }
 
   function collectExpandableRowKeys(rows: AccountDetailRow[]): string[] {
     const keys: string[] = []

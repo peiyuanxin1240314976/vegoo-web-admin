@@ -12,6 +12,11 @@
         "required": true,
         "description": "开始日期（YYYY-MM-DD）。"
       },
+      "keys": {
+        "type": "string",
+        "required": false,
+        "description": "关键词搜索。平台维度关键词过滤。"
+      },
       "dateEnd": {
         "type": "string",
         "required": true,
@@ -171,6 +176,7 @@
     "dateEnd": "2026-02-10",
     "dateStart": "2026-02-10",
     "kw": "",
+    "keys": "",
     "ownerId": "",
     "pageSize": 10,
     "appIds": [],
@@ -310,7 +316,7 @@
     "url": "POST /api/v1/datacenter/analysis/account-performance/platform-performance-placeholder-table",
     "method": "POST",
     "priority": "P1",
-    "requestBody": "currentPage, dateStart, dateEnd, kw, ownerId, pageSize, appIds, source",
+    "requestBody": "currentPage, dateStart, dateEnd, kw, ownerId, pageSize, appIds, source, keys?",
     "responseBody": "code, message, data { platformTotal, accountTotal, platforms }；platforms[].firstThreeDayRoi 为 { dates, data }，一日一点"
   },
   "apiSuggestion": {
