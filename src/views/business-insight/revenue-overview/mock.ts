@@ -718,13 +718,13 @@ export const MOCK_REVENUE_OVERVIEW_IAP_TREND_KPIS: RevenueOverviewIapTrendKpiCar
     trendUp: true
   },
   {
-    title: '付费转化率',
+    title: '付费率',
     valueText: '2.4%',
     trendText: '-0.2%↓',
     trendUp: false
   },
   {
-    title: '订阅续费率',
+    title: '续订率',
     valueText: '76.8%',
     trendText: '+0.9%↑',
     trendUp: true

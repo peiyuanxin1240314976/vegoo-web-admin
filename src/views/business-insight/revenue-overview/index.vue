@@ -386,7 +386,7 @@
 
                   <div class="rev-iap-bottom">
                     <div class="rev-mini-kpi">
-                      <div class="rev-mini-kpi__k">付费转化率</div>
+                      <div class="rev-mini-kpi__k">付费率</div>
                       <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
                         iapProductFoot.conversionRateText
                       }}</div>
@@ -398,7 +398,7 @@
                       }}</div>
                     </div>
                     <div class="rev-mini-kpi">
-                      <div class="rev-mini-kpi__k">订阅续费率</div>
+                      <div class="rev-mini-kpi__k">续订率</div>
                       <div class="rev-mini-kpi__v rev-mini-kpi__v--accent">{{
                         iapProductFoot.renewalRateText
                       }}</div>
