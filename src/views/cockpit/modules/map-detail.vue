@@ -251,7 +251,7 @@
             color: '#3984F1'
           },
           {
-            label: '内购收入',
+            label: '付费收入',
             value: `$${(iapRev / 1000).toFixed(0)}K`,
             percent: iapPct,
             color: '#f59e0b'
@@ -376,7 +376,7 @@
   })
   const revenueCompositionData = ref<RevenueCompositionItem[]>([
     { label: '广告收入', value: '—', percent: 0, color: '#3984F1' },
-    { label: '内购收入', value: '—', percent: 0, color: '#f59e0b' }
+    { label: '付费收入', value: '—', percent: 0, color: '#f59e0b' }
   ])
   const appPerformanceData = ref<AppPerformanceRow[]>([])
   const appPerformanceLoading = ref(true)

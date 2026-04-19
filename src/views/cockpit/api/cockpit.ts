@@ -384,7 +384,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
     },
     {
       type: 'dau',
-      label: 'DAU',
+      label: '新用户',
       valueKey: 'dau',
       format: 'int',
       changeKey: 'dauChange',
@@ -403,7 +403,7 @@ export function mapOverallDataToKpiCards(data: CockpitOverallData): CockpitKpiCa
       format: 'money',
       changeKey: 'profitChange',
       listKey: 'profitList',
-      detail: () => '当前广告｜内购收入-广告支出'
+      detail: () => '当前广告｜付费收入-广告支出'
     }
   ]
   return cards.map(({ type, label, valueKey, format, changeKey, listKey, detail }) => {
@@ -470,7 +470,7 @@ export function mapOverallDataToAlertSummaryMetrics(
   // DNU：取值 now.dnu，null 按 0 展示；变化 dnuChange
   const dnuChange = data.dnuChange
   metrics.push({
-    label: 'DNU',
+    label: '新用户',
     value: formatInt(now.dnu),
     ...(dnuChange != null && Number.isFinite(dnuChange)
       ? { change: Math.abs(dnuChange), trend: (dnuChange >= 0 ? 'up' : 'down') as 'up' | 'down' }
@@ -614,7 +614,7 @@ export function mapOverallToKpiCards(
       label: '预估利润',
       valueKey: 'profit',
       format: 'money',
-      detail: () => '当前广告｜内购收入-广告支出'
+      detail: () => '当前广告｜付费收入-广告支出'
     }
   ]
   return cards.map(({ type, label, valueKey, format, detail, subItems }) => {
@@ -1200,7 +1200,7 @@ export async function fetchCockpitBusinessMap(params?: {
  *
  * 接口语义：每条记录的 dAdRevenue、dIapRevenue 是该 APP 在该国家的值；
  * 同一国家下多条记录（不同 APP）需汇总为该国家的总和；顶层为全局汇总。
- * 结构：广告收入/内购收入(depth0) -> 国家(depth1) -> 应用(depth2)
+ * 结构：广告收入/付费收入(depth0) -> 国家(depth1) -> 应用(depth2)
  */
 export function mapIncomeStructureToFlow(
   data: CockpitIncomeStructureRow[] | null
@@ -1239,7 +1239,7 @@ export function mapIncomeStructureToFlow(
     byAppTotal[appName] = (byAppTotal[appName] ?? 0) + value
   })
   const nodeAd = '广告收入'
-  const nodeIap = '内购收入'
+  const nodeIap = '付费收入'
   /** 国家节点唯一 id（避免与 app 同名如「其他」导致 ECharts 报 duplicate name） */
   const countryId = (c: string) => `country:${c}`
   /** 应用节点唯一 id */
@@ -1307,7 +1307,7 @@ export function mapIncomeStructureToFlow(
     })
     insights.push({
       color: '#409eff',
-      text: `内购收入占比 ${iapPct}%`
+      text: `付费收入占比 ${iapPct}%`
     })
   }
   return { nodes, links, insights }
