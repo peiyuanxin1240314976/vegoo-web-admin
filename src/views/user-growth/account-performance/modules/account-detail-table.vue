@@ -164,7 +164,7 @@
     { key: 'budget', title: '预算', width: 120, align: 'center' },
     { key: 'usageRate', title: '使用率', width: 160, align: 'center' },
     { key: 'cpi', title: 'CPI', width: 90, align: 'center' },
-    { key: 'installs', title: '安装数', width: 120, align: 'center' },
+    { key: 'installs', title: '买量用户', width: 120, align: 'center' },
     { key: 'roi1', title: '首日ROI', width: 110, align: 'center' },
     { key: 'roi3', title: '3日ROI', width: 100, align: 'center' },
     { key: 'roi7', title: '7日ROI', width: 100, align: 'center' },

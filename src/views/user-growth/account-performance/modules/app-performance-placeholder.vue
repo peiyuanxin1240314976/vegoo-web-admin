@@ -99,7 +99,7 @@
                 }}</template>
               </ElTableColumn>
 
-              <ElTableColumn prop="adAccount.installs" label="安装数" width="96" align="center">
+              <ElTableColumn prop="adAccount.installs" label="买量用户" width="96" align="center">
                 <template #default="{ row }">{{ formatNumber(row.adAccount?.installs) }}</template>
               </ElTableColumn>
             </ElTableColumn>
