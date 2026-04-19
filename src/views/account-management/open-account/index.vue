@@ -1,21 +1,41 @@
 <template>
   <div class="subject-page art-full-height">
     <div class="subject-page__hero">
-      <div class="subject-page__hero-copy">
-        <p class="subject-page__eyebrow">Account Management</p>
+      <div class="subject-page__hero-fx" aria-hidden="true" />
+      <div class="subject-page__hero-copy subject-page__hero-enter subject-page__hero-enter--1">
+        <div class="subject-page__hero-brand">
+          <p class="subject-page__eyebrow">
+            <span class="subject-page__eyebrow-line" aria-hidden="true" />
+            Account Management
+          </p>
+          <div class="subject-page__hero-pills" aria-hidden="true">
+            <span class="subject-page__pill subject-page__pill--fb">Facebook</span>
+            <span class="subject-page__pill subject-page__pill--tt">TikTok</span>
+          </div>
+        </div>
         <h1 class="subject-page__title">开户主体配置</h1>
         <p class="subject-page__subtitle">
           围绕主体资质与 Facebook / TikTok 开通状态，统一管理可用性、执照信息与平台备注。
         </p>
       </div>
-      <div class="subject-page__hero-panel">
-        <div class="subject-page__hero-kpi">
-          <span class="subject-page__hero-label">主体总数</span>
-          <strong>{{ stats.total }}</strong>
+      <div class="subject-page__hero-panel subject-page__hero-enter subject-page__hero-enter--2">
+        <div class="subject-page__hero-kpi subject-page__hero-kpi--total">
+          <div class="subject-page__hero-kpi-head">
+            <span class="subject-page__hero-icon">
+              <ElIcon><Histogram /></ElIcon>
+            </span>
+            <span class="subject-page__hero-label">主体总数</span>
+          </div>
+          <strong class="subject-page__hero-value">{{ stats.total }}</strong>
         </div>
-        <div class="subject-page__hero-kpi">
-          <span class="subject-page__hero-label">最近更新</span>
-          <strong>{{ latestUpdateTime }}</strong>
+        <div class="subject-page__hero-kpi subject-page__hero-kpi--updated">
+          <div class="subject-page__hero-kpi-head">
+            <span class="subject-page__hero-icon">
+              <ElIcon><Clock /></ElIcon>
+            </span>
+            <span class="subject-page__hero-label">最近更新</span>
+          </div>
+          <strong class="subject-page__hero-value">{{ latestUpdateTime }}</strong>
         </div>
       </div>
     </div>
@@ -59,7 +79,8 @@
 
 <script setup lang="ts">
   import { computed, onMounted, ref, watch } from 'vue'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElIcon, ElMessage, ElMessageBox } from 'element-plus'
+  import { Clock, Histogram } from '@element-plus/icons-vue'
   import {
     deleteSubjectSetting,
     fetchSubjectSettingFilterOptions,
@@ -364,11 +385,44 @@
   }
 
   .subject-page__hero {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.9fr);
     gap: 18px;
     align-items: stretch;
     margin-bottom: 18px;
+    overflow: hidden;
+  }
+
+  .subject-page__hero-fx {
+    position: absolute;
+    inset: -40% -20% -55%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 210deg at 50% 50%,
+      color-mix(in srgb, var(--theme-color) 22%, transparent),
+      color-mix(in srgb, var(--art-primary) 18%, transparent),
+      color-mix(in srgb, var(--art-success) 12%, transparent),
+      color-mix(in srgb, var(--theme-color) 22%, transparent)
+    );
+    filter: blur(48px);
+    opacity: 0.55;
+    transform: translateZ(0);
+    animation: subject-hero-orbit 22s linear infinite;
+  }
+
+  .subject-page__hero-enter {
+    opacity: 0;
+    animation: subject-hero-rise var(--duration-slow) var(--ease-out) forwards;
+  }
+
+  .subject-page__hero-enter--1 {
+    animation-delay: 0.05s;
+  }
+
+  .subject-page__hero-enter--2 {
+    animation-delay: 0.16s;
   }
 
   .subject-page__hero-copy,
@@ -385,6 +439,7 @@
 
   .subject-page__hero-copy {
     position: relative;
+    z-index: 1;
     padding: 28px 30px;
     overflow: hidden;
     color: var(--page-text-main);
@@ -415,19 +470,81 @@
     mask-image: linear-gradient(180deg, black 0%, rgb(0 0 0 / 45%) 68%, transparent 100%);
   }
 
+  .subject-page__hero-brand {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
   .subject-page__eyebrow {
-    margin: 0 0 10px;
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    margin: 0;
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.22em;
-    opacity: 0.72;
+    opacity: 0.78;
+  }
+
+  .subject-page__eyebrow-line {
+    display: inline-block;
+    width: 28px;
+    height: 3px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--art-primary) 55%, transparent),
+      color-mix(in srgb, var(--theme-color) 45%, transparent)
+    );
+    border-radius: 999px;
+    box-shadow: 0 0 14px color-mix(in srgb, var(--art-primary) 35%, transparent);
+  }
+
+  .subject-page__hero-pills {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .subject-page__pill {
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border: 1px solid var(--page-border);
+    border-radius: 999px;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+  }
+
+  .subject-page__pill--fb {
+    color: color-mix(in srgb, var(--page-text-main) 88%, transparent);
+    background: color-mix(in srgb, var(--art-primary) 14%, transparent);
+  }
+
+  .subject-page__pill--tt {
+    color: color-mix(in srgb, var(--page-text-main) 88%, transparent);
+    background: color-mix(in srgb, var(--theme-color) 12%, transparent);
   }
 
   .subject-page__title {
     margin: 0;
     font-size: 32px;
     line-height: 1.15;
+    background-color: transparent;
+    background-image: linear-gradient(
+      118deg,
+      var(--page-text-main) 0%,
+      color-mix(in srgb, var(--page-text-main) 72%, transparent) 42%,
+      color-mix(in srgb, var(--art-primary) 58%, var(--page-text-main) 42%) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-size: 120% 120%;
+    -webkit-text-fill-color: transparent;
   }
 
   .subject-page__subtitle {
@@ -439,6 +556,8 @@
   }
 
   .subject-page__hero-panel {
+    position: relative;
+    z-index: 1;
     display: grid;
     gap: 14px;
     padding: 20px;
@@ -456,18 +575,226 @@
   }
 
   .subject-page__hero-kpi {
-    padding: 18px;
-    background: color-mix(in srgb, var(--default-bg-color) 24%, transparent);
+    position: relative;
+    padding: 16px 18px;
+    overflow: hidden;
+    isolation: isolate;
     border: 1px solid var(--page-border);
     border-radius: 18px;
-    box-shadow: inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 6%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 6%, transparent),
+      inset 0 -18px 36px color-mix(in srgb, var(--default-bg-color) 45%, transparent);
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
   }
 
-  .subject-page__hero-kpi strong {
+  .subject-page__hero-kpi::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--art-primary) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--art-primary) 7%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 14px 14px;
+    opacity: 0.45;
+    mask-image: radial-gradient(ellipse 85% 70% at 50% 0%, black 0%, transparent 72%);
+  }
+
+  .subject-page__hero-kpi::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 0;
+    height: 2px;
+    pointer-events: none;
+    content: '';
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--art-primary) 55%, transparent) 42%,
+      color-mix(in srgb, var(--theme-color) 45%, transparent) 58%,
+      transparent 100%
+    );
+    filter: blur(0.2px);
+    opacity: 0.85;
+  }
+
+  .subject-page__hero-kpi--total {
+    background:
+      radial-gradient(
+        ellipse 118% 92% at 92% 8%,
+        color-mix(in srgb, var(--art-primary) 26%, transparent) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 72% 58% at 8% 88%,
+        color-mix(in srgb, var(--theme-color) 10%, transparent) 0%,
+        transparent 62%
+      ),
+      linear-gradient(
+        152deg,
+        color-mix(in srgb, var(--default-box-color) 78%, transparent) 0%,
+        color-mix(in srgb, var(--default-bg-color) 42%, transparent) 48%,
+        color-mix(in srgb, var(--default-box-color) 68%, transparent) 100%
+      ),
+      color-mix(in srgb, var(--default-bg-color) 30%, transparent);
+  }
+
+  .subject-page__hero-kpi--total::before {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--art-primary) 9%, transparent) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--art-primary) 9%, transparent) 1px,
+        transparent 1px
+      );
+  }
+
+  .subject-page__hero-kpi--total::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--art-primary) 62%, transparent) 38%,
+      color-mix(in srgb, var(--art-success) 22%, transparent) 72%,
+      transparent 100%
+    );
+  }
+
+  .subject-page__hero-kpi--updated {
+    background:
+      radial-gradient(
+        ellipse 110% 88% at 12% 12%,
+        color-mix(in srgb, var(--theme-color) 22%, transparent) 0%,
+        transparent 56%
+      ),
+      radial-gradient(
+        ellipse 80% 62% at 88% 92%,
+        color-mix(in srgb, var(--art-success) 14%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(
+        198deg,
+        color-mix(in srgb, var(--default-box-color) 74%, transparent) 0%,
+        color-mix(in srgb, var(--default-bg-color) 38%, transparent) 52%,
+        color-mix(in srgb, var(--default-box-color) 72%, transparent) 100%
+      ),
+      color-mix(in srgb, var(--default-bg-color) 28%, transparent);
+  }
+
+  .subject-page__hero-kpi--updated::before {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--theme-color) 8%, transparent) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--theme-color) 8%, transparent) 1px,
+        transparent 1px
+      );
+    mask-image: radial-gradient(ellipse 90% 75% at 50% 100%, black 0%, transparent 70%);
+  }
+
+  .subject-page__hero-kpi--updated::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--theme-color) 48%, transparent) 44%,
+      color-mix(in srgb, var(--art-success) 38%, transparent) 66%,
+      transparent 100%
+    );
+  }
+
+  .subject-page__hero-kpi:hover {
+    border-color: var(--page-border-strong);
+    box-shadow:
+      0 14px 32px rgb(0 0 0 / 20%),
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent),
+      0 0 36px color-mix(in srgb, var(--art-primary) 14%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 9%, transparent),
+      inset 0 -20px 40px color-mix(in srgb, var(--default-bg-color) 38%, transparent);
+    transform: translateY(-2px);
+  }
+
+  .subject-page__hero-kpi--updated:hover {
+    box-shadow:
+      0 14px 32px rgb(0 0 0 / 20%),
+      0 0 0 1px color-mix(in srgb, var(--theme-color) 14%, transparent),
+      0 0 34px color-mix(in srgb, var(--theme-color) 12%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 9%, transparent),
+      inset 0 -20px 40px color-mix(in srgb, var(--default-bg-color) 38%, transparent);
+  }
+
+  .subject-page__hero-kpi-head {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .subject-page__hero-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  }
+
+  .subject-page__hero-kpi--total .subject-page__hero-icon {
+    color: color-mix(in srgb, var(--art-primary) 88%, var(--page-text-main) 12%);
+    background:
+      radial-gradient(
+        circle at 30% 22%,
+        color-mix(in srgb, white 14%, transparent) 0%,
+        transparent 55%
+      ),
+      color-mix(in srgb, var(--art-primary) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-primary) 30%, transparent);
+  }
+
+  .subject-page__hero-kpi--updated .subject-page__hero-icon {
+    color: color-mix(in srgb, var(--theme-color) 88%, var(--page-text-main) 12%);
+    background:
+      radial-gradient(
+        circle at 70% 28%,
+        color-mix(in srgb, white 12%, transparent) 0%,
+        transparent 58%
+      ),
+      color-mix(in srgb, var(--theme-color) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--theme-color) 26%, transparent);
+  }
+
+  .subject-page__hero-icon :deep(.el-icon) {
+    font-size: 18px;
+  }
+
+  .subject-page__hero-value {
+    position: relative;
+    z-index: 1;
     display: block;
-    margin-top: 8px;
-    font-size: 24px;
+    margin-top: 10px;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.2;
     color: var(--page-text-main);
+    text-shadow: 0 0 26px color-mix(in srgb, var(--art-primary) 20%, transparent);
+    letter-spacing: -0.02em;
+  }
+
+  .subject-page__hero-kpi--updated .subject-page__hero-value {
+    text-shadow:
+      0 0 24px color-mix(in srgb, var(--theme-color) 18%, transparent),
+      0 0 18px color-mix(in srgb, var(--art-success) 12%, transparent);
   }
 
   .subject-page__hero-label {
@@ -495,9 +822,45 @@
     }
   }
 
+  @keyframes subject-hero-orbit {
+    0% {
+      transform: rotate(0deg) scale(1);
+    }
+
+    100% {
+      transform: rotate(360deg) scale(1.06);
+    }
+  }
+
+  @keyframes subject-hero-rise {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .subject-page::before {
       animation: none;
+    }
+
+    .subject-page__hero-fx {
+      animation: none;
+    }
+
+    .subject-page__hero-enter {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+
+    .subject-page__hero-kpi:hover {
+      transform: none;
     }
   }
 
