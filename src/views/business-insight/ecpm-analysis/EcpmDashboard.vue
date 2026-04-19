@@ -8,24 +8,27 @@
         <span class="bc-sep">›</span>
         <span class="bc-cur">ECPM分析</span>
       </div> -->
-      <div class="header-filters ecpm-filter-panel">
-        <div class="ecpm-pill ecpm-pill--date">
-          <span class="ecpm-pill__k">日期</span>
+      <div class="bi-filters bi-filter-panel">
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">日期</span>
           <AppDatePicker
             v-model="dateRange"
             type="daterange"
+            unlink-panels
             :shortcuts="dateRangeShortcuts"
             size="default"
-            range-separator="~"
+            range-separator="～"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             value-format="YYYY/MM/DD"
-            class="ecpm-date"
+            format="YYYY/MM/DD"
+            class="bi-filter-date"
+            popper-class="bi-select__popper"
           />
         </div>
 
-        <div class="ecpm-pill">
-          <span class="ecpm-pill__k">App</span>
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">App</span>
           <el-skeleton :loading="loadingMetaFilterOptions" animated>
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
@@ -33,25 +36,30 @@
             <AppPlatformSearchSelect
               v-model="filterApp"
               mode="app"
-              class="ecpm-select ecpm-select--app"
-              input-class="ecpm-select__input"
+              class="bi-filter-select bi-filter-select--app"
+              input-class="bi-filter-select__input"
               placeholder="应用"
               search-placeholder="应用"
               :setting-apps="settingAppsForSelect"
-              :height="32"
-              :min-width="140"
-              :max-width="240"
+              :height="36"
+              :min-width="148"
+              :max-width="220"
             />
           </el-skeleton>
         </div>
 
-        <div class="ecpm-pill">
-          <span class="ecpm-pill__k">广告平台</span>
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">广告平台</span>
           <el-skeleton :loading="loadingMetaFilterOptions" animated>
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
             </template>
-            <el-select v-model="filterPlatform" size="default" class="ecpm-select">
+            <el-select
+              v-model="filterPlatform"
+              size="default"
+              class="bi-filter-select"
+              popper-class="bi-select__popper"
+            >
               <el-option
                 v-for="item in sourceOptions"
                 :key="item.value"
@@ -62,13 +70,19 @@
           </el-skeleton>
         </div>
 
-        <div class="ecpm-pill">
-          <span class="ecpm-pill__k">国家</span>
+        <div class="bi-filter-field">
+          <span class="bi-filter-label">国家</span>
           <el-skeleton :loading="loadingMetaFilterOptions" animated>
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
             </template>
-            <el-select v-model="filterCountry" size="default" class="ecpm-select">
+            <el-select
+              v-model="filterCountry"
+              size="default"
+              class="bi-filter-select"
+              popper-class="bi-select__popper"
+              filterable
+            >
               <el-option
                 v-for="item in countryOptions"
                 :key="item.value"
@@ -80,6 +94,7 @@
         </div>
 
         <el-button
+          class="bi-query-btn"
           size="default"
           type="primary"
           plain
@@ -1455,11 +1470,14 @@
   })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+
   /* ── Root & Variables ─────────────────────────────────────────── */
   .ecpm-dash {
     /* 优先继承布局 --theme-color，否则 Art 主色，最后回退 EP 主色（避免再强制绑死 --el-color-primary） */
     --ecpm-accent: var(--theme-color, var(--art-primary, var(--el-color-primary)));
+    --text-sec: #64748b;
     --bg: #0d1422;
     --bg-card: #131d2f;
     --bg-card-2: #162038;
@@ -1601,135 +1619,144 @@
     color: var(--text);
   } */
 
-  .header-filters {
+  .bi-filters {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
     align-items: center;
   }
 
-  .ecpm-filter-panel {
+  .bi-filter-panel {
     position: relative;
     padding: 10px 14px;
     overflow: hidden;
-    background:
-      radial-gradient(880px 240px at 12% 0%, rgb(77 182 232 / 12%), transparent 60%),
-      radial-gradient(780px 260px at 92% 10%, rgb(0 212 170 / 10%), transparent 55%),
-      linear-gradient(148deg, rgb(19 29 47 / 92%), rgb(22 32 56 / 92%));
-    border: 1px solid rgb(77 182 232 / 18%);
     border-radius: 16px;
-    box-shadow:
-      0 10px 34px rgb(0 0 0 / 44%),
-      0 0 0 1px rgb(96 165 250 / 10%),
-      inset 0 1px 0 rgb(186 230 253 / 10%);
+
+    @include ap.ap-neon-bg;
+    @include ap.ap-card-mesh;
+
     transition:
-      box-shadow 0.35s cubic-bezier(0, 0, 0.2, 1),
-      border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow 0.35s var(--ease-out, cubic-bezier(0, 0, 0.2, 1)),
+      border-color 0.3s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+
+    &:hover {
+      border-color: rgb(96 165 250 / 48%);
+      box-shadow:
+        0 12px 40px rgb(0 0 0 / 44%),
+        0 0 0 1px rgb(96 165 250 / 22%),
+        inset 0 1px 0 rgb(186 230 253 / 16%),
+        0 0 48px rgb(59 130 246 / 14%);
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
   }
 
-  .ecpm-filter-panel:hover {
-    border-color: rgb(96 165 250 / 38%);
-    box-shadow:
-      0 12px 40px rgb(0 0 0 / 52%),
-      0 0 0 1px rgb(96 165 250 / 18%),
-      inset 0 1px 0 rgb(186 230 253 / 14%),
-      0 0 44px rgb(59 130 246 / 12%);
+  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper),
+  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper),
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange) {
+    min-height: 36px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border-radius: var(--el-border-radius-base, 4px);
+    box-shadow: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
 
-  .ecpm-filter-panel::after {
-    position: absolute;
-    inset: -40% -20%;
-    z-index: 0;
-    pointer-events: none;
-    content: '';
-    background:
-      linear-gradient(to right, rgb(255 255 255 / 6%) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 6%) 1px, transparent 1px);
-    background-size: 22px 22px;
-    opacity: 0.55;
-    mask-image: radial-gradient(circle at 30% 0%, #000 0%, transparent 62%);
+  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper:hover),
+  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper:hover),
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
-  .ecpm-filter-panel > * {
-    position: relative;
-    z-index: 1;
+  .bi-filter-panel :deep(.bi-filter-select .el-select__wrapper.is-focused),
+  .bi-filter-panel :deep(.bi-filter-select__input .el-select__wrapper.is-focused),
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange.is-active),
+  .bi-filter-panel :deep(.bi-filter-date.el-date-editor--daterange:focus-within) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
-  .ecpm-pill {
-    display: inline-flex;
+  .bi-filter-field {
+    display: flex;
     gap: 8px;
     align-items: center;
-    height: 36px;
-    padding: 0 10px;
-    border-radius: 9999px;
+    min-height: 32px;
   }
 
-  .ecpm-pill--date {
-    padding-right: 6px;
-  }
-
-  .ecpm-pill__k {
+  .bi-filter-label {
+    flex-shrink: 0;
     font-size: 12px;
-    font-weight: 600;
-    color: rgb(226 232 240 / 78%);
+    color: var(--text-sec);
     white-space: nowrap;
   }
 
-  /* Override Element Plus：边框与 Art / --theme-color 关联（默认 / 悬停 / 聚焦） */
-  :deep(.ecpm-select .el-select__wrapper),
-  :deep(.ecpm-date .el-input__wrapper) {
-    min-height: 32px;
-    padding: 0 10px;
-    background: rgb(0 0 0 / 28%);
-    border: 1px solid color-mix(in srgb, var(--ecpm-accent) 28%, transparent);
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ecpm-accent) 10%, transparent) inset;
-    transition:
-      border-color 0.2s ease,
-      box-shadow 0.2s ease;
+  .bi-filter-select {
+    width: 148px;
   }
 
-  :deep(.ecpm-select .el-select__wrapper:hover),
-  :deep(.ecpm-date .el-input__wrapper:hover) {
-    border-color: color-mix(in srgb, var(--ecpm-accent) 44%, transparent);
+  .bi-filter-select--app {
+    display: inline-flex;
   }
 
-  :deep(.ecpm-select .el-select__wrapper.is-focused) {
-    border-color: var(--ecpm-accent);
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--ecpm-accent) 28%, transparent) inset,
-      0 0 0 2px color-mix(in srgb, var(--ecpm-accent) 22%, transparent);
+  .bi-filter-date {
+    width: 260px;
   }
 
-  /* 日期范围：EP 使用 is-focus / is-active / :focus-within，与 select 的 is-focused 不同 */
-  :deep(.ecpm-date.el-date-editor--daterange.is-active .el-input__wrapper),
-  :deep(.ecpm-date.el-date-editor--daterange:focus-within .el-input__wrapper),
-  :deep(.ecpm-date .el-input__wrapper.is-focus) {
-    border-color: var(--ecpm-accent);
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--ecpm-accent) 28%, transparent) inset,
-      0 0 0 2px color-mix(in srgb, var(--ecpm-accent) 22%, transparent);
+  :deep(.bi-filter-select .el-select__wrapper),
+  :deep(.bi-filter-select__input .el-select__wrapper),
+  :deep(.bi-filter-date.el-date-editor--daterange) {
+    min-height: 36px;
   }
 
-  :deep(.ecpm-date.el-date-editor) {
-    --el-input-border-color: color-mix(in srgb, var(--ecpm-accent) 28%, transparent);
-    --el-input-focus-border-color: var(--ecpm-accent);
-    --el-border-color: color-mix(in srgb, var(--ecpm-accent) 28%, transparent);
-    --el-border-color-hover: color-mix(in srgb, var(--ecpm-accent) 44%, transparent);
-    --el-border-color-focus: var(--ecpm-accent);
-
-    width: 240px;
-    font-size: 12px;
+  :deep(.bi-filter-select .el-select__wrapper:hover),
+  :deep(.bi-filter-select__input .el-select__wrapper:hover),
+  :deep(.bi-filter-date.el-date-editor--daterange:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
   }
 
-  :deep(.ecpm-select.el-select) {
-    width: 140px;
+  :deep(.bi-filter-select .el-select__placeholder),
+  :deep(.bi-filter-select .el-select__selected-item),
+  :deep(.bi-filter-select .el-select__caret),
+  :deep(.bi-filter-date .el-range-input),
+  :deep(.bi-filter-select__input .el-select__placeholder),
+  :deep(.bi-filter-select__input .el-select__selected-item),
+  :deep(.bi-filter-select__input .el-select__caret) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  :deep(.bi-filter-date .el-range-separator) {
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  .bi-filter-panel :deep(.bi-query-btn.el-button) {
+    height: 36px;
+    padding: 0 18px;
+    font-weight: 600;
+    color: var(--theme-color, var(--art-primary, #3b82f6));
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: none;
+  }
+
+  .bi-filter-panel :deep(.bi-query-btn.el-button:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
   :deep(.filter-sel-skeleton.el-skeleton__item) {
-    width: 140px;
-    height: 32px;
-    border-radius: 6px;
+    width: 148px;
+    height: 36px;
+    border-radius: var(--el-border-radius-base, 4px);
   }
 
   .kpi-card-skeleton-lines,
@@ -1880,11 +1907,11 @@
       animation: none;
     }
 
-    .ecpm-filter-panel {
+    .bi-filter-panel {
       transition: none;
     }
 
-    .ecpm-filter-panel::after {
+    .bi-filter-panel::after {
       opacity: 0.35;
     }
   }
