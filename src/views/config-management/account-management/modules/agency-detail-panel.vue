@@ -184,18 +184,19 @@
 
         <!-- 消耗走势图 -->
         <section class="detail-section detail-section--last">
+          <div class="section-title">消耗走势</div>
           <svg class="spend-chart" viewBox="0 0 320 80" preserveAspectRatio="none">
             <defs>
-              <linearGradient id="ag-panel-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#0d9488" stop-opacity="0.4" />
-                <stop offset="100%" stop-color="#0d9488" stop-opacity="0" />
+              <linearGradient id="agencySpendGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop class="spend-chart__stop spend-chart__stop--top" offset="0%" />
+                <stop class="spend-chart__stop spend-chart__stop--bottom" offset="100%" />
               </linearGradient>
             </defs>
-            <path :d="areaPath" fill="url(#ag-panel-grad)" />
+            <path :d="areaPath" fill="url(#agencySpendGrad)" />
             <polyline
               :points="chartPoints"
               fill="none"
-              stroke="#0d9488"
+              stroke="currentColor"
               stroke-width="1.8"
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -282,17 +283,21 @@
 
 <style lang="scss" scoped>
   .agency-detail-panel {
-    --bg-panel: #0f1829;
-    --bg-header: #131c2e;
-    --border: rgb(255 255 255 / 7%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #3b82f6;
-    --teal: #0d9488;
-    --green: #22c55e;
-    --amber: #f59e0b;
-    --red: #ef4444;
+    --dp-border: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --dp-border-soft: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    --dp-header-bg: color-mix(in srgb, var(--default-box-color) 94%, transparent);
+    --accent-dim: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
+    --green: var(--art-success);
+    --green-bg: color-mix(in srgb, var(--art-success) 14%, transparent);
+    --amber: var(--art-warning);
+    --amber-bg: color-mix(in srgb, var(--art-warning) 14%, transparent);
+    --red: var(--art-danger);
+    --red-bg: color-mix(in srgb, var(--art-danger) 12%, transparent);
+    --purple: color-mix(in srgb, var(--theme-color) 42%, var(--el-color-primary) 58%);
+    --purple-bg: color-mix(in srgb, var(--theme-color) 12%, transparent);
 
     display: flex;
     flex-direction: column;
@@ -300,13 +305,24 @@
     min-width: 380px;
     height: 100%;
     overflow: hidden;
-    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    background:
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--default-box-color) 98%, transparent) 0%,
+        color-mix(in srgb, var(--default-bg-color) 40%, transparent) 100%
+      ),
+      linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--el-color-primary) 4%, transparent),
+        color-mix(in srgb, var(--theme-color) 3%, transparent)
+      );
+    border: 1px solid var(--dp-border);
+    border-radius: 14px;
+    box-shadow:
+      0 12px 36px rgb(0 0 0 / 8%),
+      inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
   }
 
-  // 空状态
   .empty-state {
     display: flex;
     flex: 1;
@@ -321,12 +337,11 @@
     font-size: 13px;
   }
 
-  // 头部
   .panel-header {
     flex-shrink: 0;
     padding: 14px 16px 10px;
-    background: var(--bg-header);
-    border-bottom: 1px solid var(--border);
+    background: var(--dp-header-bg);
+    border-bottom: 1px solid var(--dp-border-soft);
   }
 
   .header-name-row {
@@ -347,34 +362,40 @@
     padding: 2px 7px;
     font-size: 11px;
     color: var(--text-muted);
-    background: rgb(255 255 255 / 5%);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    border: 1px solid var(--dp-border-soft);
+    border-radius: 6px;
   }
 
   .btn-edit {
-    height: 24px !important;
+    height: 26px !important;
     padding: 0 10px !important;
     font-size: 12px !important;
-    color: var(--accent) !important;
-    background: rgb(59 130 246 / 10%) !important;
-    border: 1px solid rgb(59 130 246 / 25%) !important;
-    border-radius: 5px !important;
+    color: var(--el-color-primary) !important;
+    background: var(--accent-dim) !important;
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 30%, transparent) !important;
+    border-radius: 6px !important;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+
     &:hover {
-      background: rgb(59 130 246 / 20%) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 20%, transparent) !important;
     }
   }
 
   .btn-terminate {
-    height: 24px !important;
+    height: 26px !important;
     padding: 0 10px !important;
     font-size: 12px !important;
     color: var(--red) !important;
     background: transparent !important;
     border: 1px solid var(--red) !important;
-    border-radius: 5px !important;
+    border-radius: 6px !important;
+    transition: background-color var(--duration-fast) var(--ease-out);
+
     &:hover {
-      background: rgb(239 68 68 / 10%) !important;
+      background: var(--red-bg) !important;
     }
   }
 
@@ -392,18 +413,23 @@
 
     &.status--active {
       color: var(--green);
+
       .status-dot {
         background: var(--green);
       }
     }
+
     &.status--pending {
       color: var(--amber);
+
       .status-dot {
         background: var(--amber);
       }
     }
+
     &.status--terminated {
       color: var(--text-muted);
+
       .status-dot {
         background: var(--text-muted);
       }
@@ -416,7 +442,6 @@
     border-radius: 50%;
   }
 
-  // 滚动主体
   .panel-body {
     flex: 1;
     overflow-y: auto;
@@ -424,22 +449,36 @@
     &::-webkit-scrollbar {
       width: 3px;
     }
+
     &::-webkit-scrollbar-track {
       background: transparent;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: rgb(255 255 255 / 8%);
+      background: color-mix(in srgb, var(--default-box-color) 50%, transparent);
       border-radius: 2px;
     }
   }
 
   .detail-section {
     padding: 14px 16px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--dp-border-soft);
+
     &--last {
       border-bottom: none;
     }
+  }
+
+  .section-title {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    padding-left: 8px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--el-color-primary);
+    border-left: 3px solid var(--el-color-primary);
   }
 
   .section-label {
@@ -451,7 +490,6 @@
     letter-spacing: 0.05em;
   }
 
-  // 信息列表
   .info-list {
     display: flex;
     flex-direction: column;
@@ -475,6 +513,7 @@
   .info-val {
     display: flex;
     flex: 1;
+    flex-wrap: wrap;
     gap: 6px;
     align-items: center;
     font-size: 13px;
@@ -500,7 +539,7 @@
     padding: 1px 6px;
     font-size: 10px;
     font-weight: 600;
-    color: #fff;
+    color: var(--el-color-white);
     background: var(--amber);
     border-radius: 4px;
   }
@@ -510,20 +549,19 @@
     align-items: center;
     padding: 2px 8px;
     font-size: 11px;
-    border-radius: 4px;
+    border-radius: 6px;
 
     &--auth {
-      color: #818cf8;
-      background: rgb(129 140 248 / 12%);
+      color: var(--purple);
+      background: var(--purple-bg);
     }
 
     &--direct {
-      color: #34d399;
-      background: rgb(52 211 153 / 12%);
+      color: var(--green);
+      background: var(--green-bg);
     }
   }
 
-  // 账户统计
   .stats-row,
   .spend-row,
   .lifetime-row {
@@ -541,26 +579,29 @@
   }
 
   .stat-sep {
-    color: var(--border);
+    color: var(--dp-border-soft);
   }
 
   .stat-num {
     font-weight: 600;
+
     &--blue {
-      color: var(--accent);
+      color: var(--el-color-primary);
     }
+
     &--green {
       color: var(--green);
     }
+
     &--amber {
       color: var(--amber);
     }
+
     &--muted {
       color: var(--text-muted);
     }
   }
 
-  // BC/BM
   .bcbm-list {
     display: flex;
     flex-direction: column;
@@ -575,10 +616,13 @@
   }
 
   .bcbm-link {
-    color: var(--accent);
+    color: var(--el-color-primary);
     cursor: pointer;
+    transition: opacity var(--duration-fast) var(--ease-out);
+
     &:hover {
       text-decoration: underline;
+      opacity: 0.9;
     }
   }
 
@@ -586,7 +630,6 @@
     color: var(--text-muted);
   }
 
-  // 关联账户数
   .linked-row {
     display: flex;
     gap: 8px;
@@ -598,57 +641,84 @@
   .view-all-btn {
     padding: 2px 8px;
     font-size: 11px;
-    color: var(--accent);
+    font-weight: 500;
+    color: var(--el-color-primary);
     cursor: pointer;
-    background: rgb(59 130 246 / 10%);
+    background: var(--accent-dim);
     border: none;
-    border-radius: 4px;
-    transition: background 0.15s;
+    border-radius: 6px;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out);
+
     &:hover {
-      background: rgb(59 130 246 / 20%);
+      background: color-mix(in srgb, var(--el-color-primary) 20%, transparent);
     }
   }
 
-  // 走势图
   .spend-chart {
     display: block;
     width: 100%;
     height: 80px;
+    color: var(--el-color-primary);
   }
 
-  // 底部
+  .spend-chart__stop--top {
+    stop-color: var(--el-color-primary);
+    stop-opacity: 0.22;
+  }
+
+  .spend-chart__stop--bottom {
+    stop-color: var(--el-color-primary);
+    stop-opacity: 0;
+  }
+
   .panel-footer {
     display: flex;
     flex-shrink: 0;
     gap: 8px;
     padding: 12px 16px;
-    background: var(--bg-header);
-    border-top: 1px solid var(--border);
+    background: var(--dp-header-bg);
+    border-top: 1px solid var(--dp-border-soft);
   }
 
   .footer-btn {
     flex: 1;
-    height: 32px !important;
+    height: 34px !important;
     font-size: 12px !important;
-    border-radius: 7px !important;
+    border-radius: 8px !important;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      filter var(--duration-fast) var(--ease-out) !important;
 
     &--primary {
-      color: #fff !important;
-      background: var(--teal) !important;
-      border: none !important;
+      font-weight: 600 !important;
+      color: var(--el-color-white) !important;
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--el-color-primary) 92%, black 8%),
+        color-mix(in srgb, var(--el-color-primary) 78%, black 22%)
+      ) !important;
+      border: 1px solid color-mix(in srgb, var(--el-color-primary) 38%, transparent) !important;
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--el-color-primary) 26%, transparent) !important;
+
       &:hover {
-        filter: brightness(1.1);
+        filter: brightness(1.05);
+        box-shadow: 0 8px 20px color-mix(in srgb, var(--el-color-primary) 32%, transparent) !important;
       }
     }
 
     &--secondary {
       color: var(--text-secondary) !important;
       background: transparent !important;
-      border: 1px solid var(--border) !important;
+      border: 1px solid var(--dp-border-soft) !important;
 
       &:hover {
-        color: var(--text-primary) !important;
-        border-color: rgb(255 255 255 / 15%) !important;
+        color: var(--el-color-primary) !important;
+        border-color: color-mix(in srgb, var(--el-color-primary) 42%, transparent) !important;
       }
     }
   }

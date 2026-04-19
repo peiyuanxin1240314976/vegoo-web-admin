@@ -49,19 +49,19 @@
 
     <!-- 统计卡片 -->
     <div class="stat-cards">
-      <div class="stat-card">
+      <div class="stat-card stat-card--total">
         <div class="stat-label">代理商总数</div>
         <div class="stat-value stat-value--total">{{ stats.total }}</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card stat-card--active">
         <div class="stat-label">已合作</div>
         <div class="stat-value stat-value--active">{{ stats.active }}</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card stat-card--managed">
         <div class="stat-label">管理账户数</div>
-        <div class="stat-value stat-value--accounts">{{ stats.managedAccounts }}</div>
+        <div class="stat-value stat-value--managed">{{ stats.managedAccounts }}</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card stat-card--spend">
         <div class="stat-label">本月总消耗</div>
         <div class="stat-value stat-value--spend"
           >${{ stats.monthSpend.toLocaleString('en-US') }}</div
@@ -74,33 +74,41 @@
       <el-table
         :data="pagedList"
         class="agency-table"
-        table-layout="auto"
+        max-height="630px"
+        table-layout="fixed"
         :row-class-name="getRowClass"
         @row-click="handleRowClick"
       >
-        <el-table-column type="index" label="序号" width="60" align="center">
-          <template #default="{ $index }">
-            <span class="row-index">{{ $index + 1 + (currentPage - 1) * pageSize }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="id" label="代理商ID" min-width="100" show-overflow-tooltip>
+        <el-table-column
+          prop="id"
+          label="代理商ID"
+          min-width="100"
+          align="left"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">
             <span class="agency-id">{{ row.id }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="agencyName" label="代理商名称" min-width="130" show-overflow-tooltip>
+        <el-table-column
+          prop="agencyName"
+          label="代理商名称"
+          min-width="100"
+          align="left"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">
             <span class="agency-name">{{ row.agencyName }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="广告平台" min-width="120">
+        <el-table-column label="广告平台" min-width="100" align="left">
           <template #default="{ row }">
             <span class="platform-chip" :style="getPlatformStyle(row.source)">
               {{ row.source }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="合作模式" min-width="100" align="center">
+        <el-table-column label="合作模式" min-width="100" align="left">
           <template #default="{ row }">
             <span
               :class="[
@@ -112,17 +120,17 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="管理账户数" min-width="100" align="center">
+        <el-table-column label="管理账户数" min-width="100" align="left">
           <template #default="{ row }">
             <span class="account-count">{{ row.managedAccounts }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="本月消耗" min-width="120" align="right">
+        <el-table-column label="本月消耗" min-width="100" align="left">
           <template #default="{ row }">
             <span class="spend-val">${{ row.monthSpend.toLocaleString('en-US') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="到期日期" min-width="110" align="center">
+        <el-table-column label="到期日期" min-width="100" align="left">
           <template #default="{ row }">
             <span
               :class="['expire-date', isExpiringSoon(row.expireDate) ? 'expire-date--warn' : '']"
@@ -131,7 +139,7 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" min-width="90" align="center">
+        <el-table-column label="状态" min-width="100" align="left">
           <template #default="{ row }">
             <span :class="['status-badge', getStatusClass(row.status)]">
               <span class="status-dot" />
@@ -343,7 +351,7 @@
   }
 
   function getRowClass({ row }: { row: AgencyItem }) {
-    return row.id === (props.selectedId ?? innerSelectedId.value) ? 'row--selected' : ''
+    return row.id === (props.selectedId ?? innerSelectedId.value) ? 'row-selected' : ''
   }
 
   const handleRowClick = (row: AgencyItem) => {
@@ -373,22 +381,75 @@
 
 <style lang="scss" scoped>
   .agency-tab {
+    --ag-border: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --ag-border-strong: color-mix(in srgb, var(--el-color-primary) 24%, transparent);
+    --ag-surface: color-mix(in srgb, var(--default-box-color) 94%, transparent);
+    --ag-surface-soft: color-mix(in srgb, var(--default-box-color) 84%, transparent);
+    --ag-row-hover: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
+    --ag-header-bg: color-mix(in srgb, var(--default-box-color) 78%, black 4%);
+    --accent-dim: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
+    --green: var(--art-success);
+    --green-bg: color-mix(in srgb, var(--art-success) 14%, transparent);
+    --amber: var(--art-warning);
+    --amber-bg: color-mix(in srgb, var(--art-warning) 14%, transparent);
+    --red: var(--art-danger);
+    --red-bg: color-mix(in srgb, var(--art-danger) 12%, transparent);
+    --purple: color-mix(in srgb, var(--theme-color) 42%, var(--el-color-primary) 58%);
+    --purple-bg: color-mix(in srgb, var(--theme-color) 14%, transparent);
+
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 0;
   }
 
-  // ─── 筛选栏 ─────────────────────────────────────────
+  // ─── 筛选栏 ────────────────────────────────────────────
   .filter-bar {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     gap: 12px 16px;
     align-items: center;
-    padding: 14px 16px;
-    background: linear-gradient(180deg, rgb(19 28 46 / 90%) 0%, rgb(19 28 46 / 75%) 100%);
-    border: 1px solid var(--border, rgb(255 255 255 / 7%));
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgb(0 0 0 / 18%);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        ellipse 90% 70% at 12% 0%,
+        color-mix(in srgb, var(--el-color-primary) 12%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--default-box-color) 96%, transparent) 0%,
+        color-mix(in srgb, var(--default-box-color) 88%, transparent) 100%
+      );
+    isolation: isolate;
+    border: 1px solid var(--ag-border);
+    border-radius: 16px;
+    box-shadow:
+      0 12px 32px rgb(0 0 0 / 8%),
+      inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
+  }
+
+  .filter-bar::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 2px;
+    pointer-events: none;
+    content: '';
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--el-color-primary) 40%, transparent) 42%,
+      color-mix(in srgb, var(--theme-color) 32%, transparent) 58%,
+      transparent 100%
+    );
+    opacity: 0.85;
   }
 
   .filter-group {
@@ -401,7 +462,8 @@
     flex-shrink: 0;
     font-size: 13px;
     font-weight: 500;
-    color: var(--text-secondary, #94a3b8);
+    color: var(--text-secondary);
+    white-space: nowrap;
   }
 
   .filter-select {
@@ -409,35 +471,35 @@
 
     :deep(.el-select__wrapper) {
       min-height: 34px;
-      color: var(--text-primary, #e2e8f0);
-      background: rgb(255 255 255 / 4%) !important;
-      border: 1px solid var(--border, rgb(255 255 255 / 7%)) !important;
+      color: var(--text-primary);
+      background: color-mix(in srgb, var(--default-box-color) 72%, transparent) !important;
+      border: 1px solid var(--ag-border) !important;
       border-radius: 9999px;
       box-shadow: none !important;
       transition:
-        border-color var(--duration-fast, 150ms) var(--ease-default, ease),
-        background-color var(--duration-fast, 150ms) var(--ease-default, ease),
-        box-shadow var(--duration-fast, 150ms) var(--ease-default, ease);
+        border-color var(--duration-fast) var(--ease-out),
+        background-color var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out);
     }
 
     :deep(.el-select__wrapper:hover) {
-      background: rgb(59 130 246 / 10%) !important;
-      border-color: rgb(59 130 246 / 55%) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 9%, transparent) !important;
+      border-color: color-mix(in srgb, var(--el-color-primary) 42%, transparent) !important;
     }
 
     :deep(.el-select__wrapper.is-focused) {
-      border-color: var(--accent, #3b82f6) !important;
-      box-shadow: 0 0 0 2px rgb(59 130 246 / 22%) !important;
+      border-color: color-mix(in srgb, var(--el-color-primary) 55%, transparent) !important;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
     }
 
     :deep(.el-select__placeholder),
     :deep(.el-select__selected-item) {
       font-size: 13px;
-      color: var(--text-primary, #e2e8f0);
+      color: var(--text-primary);
     }
 
     :deep(.el-select__caret) {
-      color: var(--text-secondary, #94a3b8);
+      color: var(--text-secondary);
     }
   }
 
@@ -447,151 +509,314 @@
 
   :deep(.el-select-dropdown__item.is-selected) {
     font-weight: 600;
-    color: var(--accent, #3b82f6);
+    color: var(--el-color-primary);
   }
 
   :deep(.el-select-dropdown__item:hover) {
-    background: rgb(59 130 246 / 12%);
+    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
   }
 
-  // ─── 统计卡片 ────────────────────────────────────────
+  // ─── 统计卡片 ───────────────────────────────────────────
   .stat-cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
+    margin-bottom: 16px;
   }
 
   .stat-card {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 16px 20px;
-    background: var(--bg-card, #131c2e);
-    border: 1px solid var(--border, rgb(255 255 255 / 7%));
-    border-radius: 10px;
+    position: relative;
+    padding: 16px 18px;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid var(--ag-border);
+    border-radius: 14px;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 5%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
+
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      content: '';
+    }
+
+    &::after {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 1px;
+      pointer-events: none;
+      content: '';
+      opacity: 0.65;
+    }
+
+    &:hover {
+      border-color: var(--ag-border-strong);
+      box-shadow:
+        0 10px 24px rgb(0 0 0 / 8%),
+        0 0 0 1px color-mix(in srgb, var(--el-color-primary) 8%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+      transform: translateY(-1px);
+    }
+
+    &--total {
+      background:
+        radial-gradient(
+          ellipse 110% 85% at 92% 8%,
+          color-mix(in srgb, var(--el-color-primary) 20%, transparent) 0%,
+          transparent 58%
+        ),
+        linear-gradient(
+          155deg,
+          var(--ag-surface) 0%,
+          color-mix(in srgb, var(--default-bg-color) 35%, transparent) 100%
+        );
+
+      &::before {
+        background: var(--el-color-primary);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--el-color-primary) 35%, transparent),
+          transparent
+        );
+      }
+    }
+
+    &--active {
+      background:
+        radial-gradient(
+          ellipse 100% 80% at 88% 0%,
+          color-mix(in srgb, var(--art-success) 16%, transparent) 0%,
+          transparent 55%
+        ),
+        linear-gradient(165deg, var(--ag-surface-soft) 0%, var(--ag-surface) 100%);
+
+      &::before {
+        background: var(--green);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--art-success) 30%, transparent),
+          transparent
+        );
+      }
+    }
+
+    &--managed {
+      background:
+        radial-gradient(
+          ellipse 100% 80% at 10% 12%,
+          color-mix(in srgb, var(--theme-color) 14%, transparent) 0%,
+          transparent 56%
+        ),
+        linear-gradient(198deg, var(--ag-surface) 0%, var(--ag-surface-soft) 100%);
+
+      &::before {
+        background: var(--purple);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--theme-color) 28%, transparent),
+          transparent
+        );
+      }
+    }
+
+    &--spend {
+      background:
+        radial-gradient(
+          ellipse 95% 78% at 85% 15%,
+          color-mix(in srgb, var(--art-warning) 14%, transparent) 0%,
+          transparent 58%
+        ),
+        linear-gradient(175deg, var(--ag-surface-soft) 0%, var(--ag-surface) 100%);
+
+      &::before {
+        background: var(--amber);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--art-warning) 32%, transparent),
+          transparent
+        );
+      }
+    }
   }
 
   .stat-label {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 8px;
     font-size: 12px;
-    color: var(--text-secondary, #94a3b8);
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
   }
 
   .stat-value {
+    position: relative;
+    z-index: 1;
     font-size: 26px;
-    font-weight: 700;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
     line-height: 1;
+    letter-spacing: -0.02em;
 
     &--total {
-      color: #e2e8f0;
+      color: var(--el-color-primary);
+      text-shadow: 0 0 24px color-mix(in srgb, var(--el-color-primary) 22%, transparent);
     }
+
     &--active {
-      color: #22c55e;
+      color: var(--green);
+      text-shadow: 0 0 20px color-mix(in srgb, var(--art-success) 18%, transparent);
     }
-    &--accounts {
-      color: #3b82f6;
+
+    &--managed {
+      color: var(--purple);
+      text-shadow: 0 0 20px color-mix(in srgb, var(--theme-color) 16%, transparent);
     }
+
     &--spend {
-      color: #f59e0b;
+      color: var(--amber);
+      text-shadow: 0 0 18px color-mix(in srgb, var(--art-warning) 14%, transparent);
     }
   }
 
-  // ─── 表格 ────────────────────────────────────────────
+  // ─── 表格 ──────────────────────────────────────────────
   .table-wrapper {
-    padding: 16px;
-    background: var(--bg-card, #131c2e);
-    border: 1px solid var(--border, rgb(255 255 255 / 7%));
-    border-radius: 10px;
+    overflow: hidden;
+    background: var(--ag-surface);
+    border: 1px solid var(--ag-border);
+    border-radius: 14px;
+    box-shadow:
+      0 8px 24px rgb(0 0 0 / 6%),
+      inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
   }
 
   .agency-table {
+    width: 100%;
+    cursor: pointer;
+
     --el-table-bg-color: transparent;
-    --el-table-tr-bg-color: transparent;
-    --el-table-header-bg-color: transparent;
-    --el-table-row-hover-bg-color: rgb(255 255 255 / 3%);
-    --el-table-border-color: rgb(255 255 255 / 6%);
-    --el-table-text-color: #e2e8f0;
-    --el-table-header-text-color: #64748b;
+    --el-table-header-bg-color: var(--ag-header-bg);
+    --el-table-row-hover-bg-color: var(--ag-row-hover);
+    --el-table-border-color: var(--ag-border);
+    --el-table-text-color: var(--text-primary);
+    --el-table-header-text-color: var(--text-secondary);
+    --el-table-border: 1px solid var(--ag-border);
+
+    background: transparent !important;
 
     :deep(th.el-table__cell) {
+      padding: 12px 10px;
       font-size: 12px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
-      background: transparent;
+      font-weight: 600;
+      background: var(--ag-header-bg) !important;
+      border-bottom: 1px solid var(--ag-border) !important;
     }
 
     :deep(td.el-table__cell) {
+      padding: 10px;
       font-size: 13px;
+      border-bottom: 1px solid var(--ag-border) !important;
+    }
+
+    :deep(tr) {
+      background: transparent !important;
     }
 
     :deep(.el-table__inner-wrapper::before) {
       display: none;
     }
 
-    :deep(.row--selected td.el-table__cell) {
-      background: rgb(59 130 246 / 8%) !important;
+    :deep(tr.row-selected td.el-table__cell) {
+      background: color-mix(in srgb, var(--el-color-primary) 11%, transparent) !important;
+      border-bottom-color: color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
     }
-
-    cursor: pointer;
   }
 
   .row-index {
     font-size: 12px;
-    color: var(--text-muted, #64748b);
+    color: var(--text-muted);
   }
 
   .agency-id {
     font-family: 'SF Mono', 'Fira Code', monospace;
     font-size: 12px;
-    color: var(--text-secondary, #94a3b8);
+    color: var(--text-secondary);
   }
 
   .agency-name {
     font-weight: 500;
-    color: var(--text-primary, #e2e8f0);
+    color: var(--text-primary);
   }
 
   .platform-chip {
-    display: inline-block;
-    padding: 2px 8px;
-    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    font-size: 12px;
     font-weight: 500;
-    border-radius: 4px;
+    border-radius: 5px;
   }
 
   .coop-badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     padding: 2px 8px;
-    font-size: 11px;
-    border-radius: 4px;
+    font-size: 12px;
+    border-radius: 6px;
 
     &--auth {
-      color: #818cf8;
-      background: rgb(129 140 248 / 12%);
+      color: var(--purple);
+      background: var(--purple-bg);
     }
 
     &--direct {
-      color: #34d399;
-      background: rgb(52 211 153 / 12%);
+      color: var(--green);
+      background: var(--green-bg);
     }
   }
 
   .account-count {
     font-weight: 600;
-    color: #3b82f6;
+    color: var(--el-color-primary);
   }
 
   .spend-val {
     font-weight: 500;
-    color: #f59e0b;
+    color: var(--amber);
   }
 
   .expire-date {
     font-size: 12px;
-    color: var(--text-secondary, #94a3b8);
+    color: var(--text-secondary);
 
     &--warn {
-      color: #f59e0b;
+      color: var(--amber);
     }
   }
 
@@ -601,130 +826,152 @@
     align-items: center;
     padding: 3px 8px;
     font-size: 12px;
-    border-radius: 20px;
+    border-radius: 5px;
 
     &--active {
-      color: #22c55e;
-      background: rgb(34 197 94 / 10%);
-
-      .status-dot {
-        background: #22c55e;
-      }
+      color: var(--green);
+      background: var(--green-bg);
     }
 
     &--pending {
-      color: #f59e0b;
-      background: rgb(245 158 11 / 10%);
-
-      .status-dot {
-        background: #f59e0b;
-      }
+      color: var(--amber);
+      background: var(--amber-bg);
     }
 
     &--terminated {
-      color: #64748b;
-      background: rgb(100 116 139 / 10%);
-
-      .status-dot {
-        background: #64748b;
-      }
+      color: var(--text-muted);
+      background: color-mix(in srgb, var(--text-tertiary) 10%, transparent);
     }
   }
 
   .status-dot {
-    display: inline-block;
     width: 6px;
     height: 6px;
     border-radius: 50%;
+
+    .status-badge--active & {
+      background: var(--green);
+    }
+
+    .status-badge--pending & {
+      background: var(--amber);
+    }
+
+    .status-badge--terminated & {
+      background: var(--text-muted);
+    }
   }
 
   .action-btns {
     display: flex;
     gap: 6px;
+    align-items: center;
     justify-content: center;
   }
 
   .action-btn {
-    padding: 3px 8px;
+    padding: 4px 9px;
     font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    transition: all 0.18s;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
 
     &--view {
-      color: #3b82f6;
-      background: rgb(59 130 246 / 10%);
-      border-color: rgb(59 130 246 / 20%);
+      color: var(--text-secondary);
 
       &:hover {
-        background: rgb(59 130 246 / 20%);
+        color: var(--el-color-primary);
+        background: var(--accent-dim);
+        transform: translateY(-0.5px);
       }
     }
 
     &--edit {
-      color: #34d399;
-      background: rgb(52 211 153 / 10%);
-      border-color: rgb(52 211 153 / 20%);
+      color: var(--el-color-primary);
 
       &:hover {
-        background: rgb(52 211 153 / 20%);
+        background: var(--accent-dim);
+        transform: translateY(-0.5px);
       }
     }
 
     &--del {
-      color: #f87171;
-      background: rgb(248 113 113 / 10%);
-      border-color: rgb(248 113 113 / 20%);
+      color: var(--red);
 
       &:hover {
-        background: rgb(248 113 113 / 20%);
+        background: var(--red-bg);
+        transform: translateY(-0.5px);
       }
     }
   }
 
-  // ─── 分页 ────────────────────────────────────────────
+  // ─── 分页 ──────────────────────────────────────────────
   .pagination-bar {
     display: flex;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 10px 12px;
     align-items: center;
     justify-content: flex-end;
-    padding-top: 16px;
-    margin-top: 4px;
-    border-top: 1px solid var(--border, rgb(255 255 255 / 7%));
+    padding: 12px 16px;
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    border-top: 1px solid var(--ag-border);
   }
 
   .pagination-total {
+    margin-right: auto;
     font-size: 13px;
-    color: var(--text-secondary, #94a3b8);
+    color: var(--text-muted);
   }
 
   .agency-pagination {
     :deep(.el-pager li) {
-      color: #94a3b8;
+      min-width: 28px;
+      height: 28px;
+      font-size: 13px;
+      line-height: 28px;
+      color: var(--text-secondary);
       background: transparent;
+      border-radius: 6px;
+      transition:
+        color var(--duration-fast) var(--ease-out),
+        background-color var(--duration-fast) var(--ease-out);
 
-      &.is-active {
-        color: #3b82f6;
-        background: rgb(59 130 246 / 15%);
-        border-radius: 4px;
+      &:hover {
+        color: var(--el-color-primary);
       }
 
-      &:hover:not(.is-active) {
-        color: #e2e8f0;
+      &.is-active {
+        font-weight: 700;
+        color: var(--el-color-white);
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--el-color-primary) 94%, black 6%),
+          color-mix(in srgb, var(--el-color-primary) 82%, black 18%)
+        );
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
       }
     }
 
     :deep(.btn-prev),
     :deep(.btn-next) {
-      color: #94a3b8;
-      background: transparent;
+      color: var(--text-secondary) !important;
+      background: color-mix(in srgb, var(--default-box-color) 65%, transparent) !important;
+      border: 1px solid var(--ag-border) !important;
+      border-radius: 6px;
+      transition:
+        color var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        background-color var(--duration-fast) var(--ease-out);
 
       &:hover {
-        color: #e2e8f0;
-      }
-      &:disabled {
-        opacity: 0.4;
+        color: var(--el-color-primary) !important;
+        border-color: color-mix(in srgb, var(--el-color-primary) 45%, transparent) !important;
       }
     }
   }
@@ -734,22 +981,65 @@
     gap: 6px;
     align-items: center;
     font-size: 13px;
-    color: var(--text-secondary, #94a3b8);
+    color: var(--text-muted);
   }
 
   .jumper-input {
     width: 52px;
 
     :deep(.el-input__wrapper) {
-      background: rgb(255 255 255 / 4%) !important;
-      border: 1px solid var(--border, rgb(255 255 255 / 7%)) !important;
-      border-radius: 5px;
+      height: 28px;
+      padding: 0 6px;
+      background: color-mix(in srgb, var(--default-box-color) 72%, transparent) !important;
+      border: 1px solid var(--ag-border) !important;
+      border-radius: 6px;
       box-shadow: none !important;
+      transition:
+        border-color var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out);
+    }
+
+    :deep(.el-input__wrapper:hover),
+    :deep(.el-input__wrapper.is-focus) {
+      border-color: color-mix(in srgb, var(--el-color-primary) 45%, transparent) !important;
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--el-color-primary) 14%, transparent) !important;
     }
 
     :deep(.el-input__inner) {
-      font-size: 12px;
-      color: var(--text-primary, #e2e8f0);
+      font-size: 13px;
+      color: var(--text-primary);
+      text-align: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stat-card:hover {
+      transform: none;
+    }
+
+    .action-btn:hover {
+      transform: none;
+    }
+  }
+
+  @media (width <= 1200px) {
+    .stat-cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (width <= 560px) {
+    .stat-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .pagination-bar {
+      justify-content: center;
+    }
+
+    .pagination-total {
+      flex: 1 1 100%;
+      margin-right: 0;
       text-align: center;
     }
   }
