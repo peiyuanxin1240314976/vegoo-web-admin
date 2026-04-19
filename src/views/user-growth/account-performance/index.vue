@@ -46,8 +46,8 @@
             value-format="YYYY-MM-DD"
             class="ap-date-picker"
           />
-          <ElButton round type="primary" @click="onQuery">查询</ElButton>
-          <ElButton round type="primary" @click="onExport">导出</ElButton>
+          <ElButton round type="primary" plain @click="onQuery">查询</ElButton>
+          <ElButton round type="primary" plain @click="onExport">导出</ElButton>
         </div>
       </div>
     </div>
