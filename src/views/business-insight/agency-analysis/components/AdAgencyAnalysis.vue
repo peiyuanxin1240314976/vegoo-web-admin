@@ -378,6 +378,10 @@
     return `${r[0]} ~ ${r[1]}`
   })
 
+  const screenshotAgencyLabel = computed(() =>
+    agencyTabIndex.value > 0 ? AGENCY_TAB_LABELS[agencyTabIndex.value] : ''
+  )
+
   const todayYYYYMMDD = computed(() => getAppTodayYYYYMMDD())
   const todayCNLabel = computed(() => {
     const v = todayYYYYMMDD.value
@@ -687,7 +691,13 @@
             </div>
             <div class="aa-tab-bar-filters__actions">
               <ElButton type="primary" plain round @click="handleSearch" v-ripple> 查询 </ElButton>
-              <ElButton type="primary" plain round @click="openScreenshot()">
+              <ElButton
+                v-if="agencyTabIndex !== 0"
+                type="primary"
+                plain
+                round
+                @click="openScreenshot()"
+              >
                 <svg
                   width="14"
                   height="14"
@@ -884,14 +894,13 @@
     <ScreenshotModal
       v-model="showScreenshot"
       report-title="代投分析"
+      :agency-label="screenshotAgencyLabel"
       :data-date="screenshotDataDateLabel"
-      :page-loading="pageLoading"
-      :kpi-cards="kpiCards"
-      :donut="charts.donut"
-      :channel-distribution="charts.channelDistribution"
-      :country-top8="charts.countryTop8"
-      @download="() => {}"
-      @copy="() => {}"
+      :page-loading="subTabLoading"
+      :kpi-last7="subTabKpiLast7"
+      :kpi-day="subTabKpiDay"
+      :recent-summary="subTabRecentSummary"
+      :account-summary="subTabAccountSummary"
     />
   </div>
 </template>

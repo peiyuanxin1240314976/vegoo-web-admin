@@ -1,8 +1,13 @@
 <script setup lang="ts">
-  import { ref, computed, useTemplateRef } from 'vue'
+  import { computed, ref, useTemplateRef } from 'vue'
+  import { ElMessage } from 'element-plus'
   import { getAppNow } from '@/utils/app-now'
-  import 'flag-icons/css/flag-icons.min.css'
-  import type { KpiCardItem, DonutChartItem, CountryDistributionItem } from '../types'
+  import { elementToPngBlob } from '../utils/element-to-png'
+  import type {
+    AgencySubTabAccountSummaryPayload,
+    AgencySubTabKpiPayload,
+    AgencySubTabRecentSummaryPayload
+  } from '../types'
 
   defineOptions({ name: 'ScreenshotModal' })
 
@@ -10,41 +15,52 @@
 
   interface Props {
     modelValue: boolean
-    /** 预览抬头副标题（与页面模块名一致即可） */
     reportTitle?: string
+    agencyLabel?: string
     dataDate: string
     pageLoading: boolean
-    kpiCards: KpiCardItem[]
-    donut: DonutChartItem[]
-    channelDistribution: {
-      categories: string[]
-      series: { name: string; values: number[]; color: string }[]
-    }
-    countryTop8: CountryDistributionItem[]
+    kpiLast7?: AgencySubTabKpiPayload | null
+    kpiDay?: AgencySubTabKpiPayload | null
+    recentSummary?: AgencySubTabRecentSummaryPayload | null
+    accountSummary?: AgencySubTabAccountSummaryPayload | null
   }
 
   const props = withDefaults(defineProps<Props>(), {
     reportTitle: '代投分析',
+    agencyLabel: '',
     dataDate: '',
     pageLoading: true,
-    kpiCards: () => [],
-    donut: () => [],
-    channelDistribution: () => ({ categories: [], series: [] }),
-    countryTop8: () => []
+    kpiLast7: null,
+    kpiDay: null,
+    recentSummary: null,
+    accountSummary: null
   })
 
   const emit = defineEmits<{
     'update:modelValue': [val: boolean]
-    download: []
-    copy: []
   }>()
 
   const outputFormat = ref<OutputFmt>('png')
-
-  const estimatedSize = computed(() => '~1.2MB')
-  const resolution = computed(() => (outputFormat.value === 'long' ? '2560x4800px' : '2560x3200px'))
+  const actionLoading = ref<'download' | 'copy' | ''>('')
+  const reportRootRef = useTemplateRef<HTMLElement>('reportRoot')
 
   const close = () => emit('update:modelValue', false)
+
+  const reportWidth = 1560
+  const previewScale = computed(() => (outputFormat.value === 'long' ? 0.46 : 0.5))
+  const previewShellStyle = computed(() => ({
+    width: `${Math.round(reportWidth * previewScale.value)}px`,
+    height: 'fit-content'
+  }))
+  const previewReportStyle = computed(() => ({
+    width: `${reportWidth}px`,
+    transform: `scale(${previewScale.value})`
+  }))
+
+  const estimatedSize = computed(() => (outputFormat.value === 'long' ? '~3.4MB' : '~2.2MB'))
+  const resolution = computed(() =>
+    outputFormat.value === 'long' ? '3120 x 4800px' : '3120 x 3600px'
+  )
 
   const genTimeStr = computed(() => {
     const d = getAppNow()
@@ -54,55 +70,136 @@
     )}:${p(d.getSeconds())}`
   })
 
-  const visibility = { kpi: true, donut: true, channelBars: true, country: true } as const
+  const kpiKeys = [
+    'spend',
+    'roi1',
+    'cpa',
+    'installs',
+    'appCount',
+    'accountCount',
+    'campaignCount',
+    'adsetCount',
+    'countryCount',
+    'days'
+  ] as const
 
-  const donutList = computed(() => {
-    const items = props.donut
-    const sum = items.reduce((s, i) => s + i.value, 0)
-    if (sum <= 0) return [] as { name: string; value: number; color: string; pct: number }[]
-    return items.map((i) => ({
-      name: i.name,
-      value: i.value,
-      color: i.color,
-      pct: (i.value / sum) * 100
-    }))
+  const kpiLabels = [
+    '广告支出',
+    '首日ROI',
+    'CPA',
+    '代投买量用户数',
+    '在投应用数',
+    '广告账户数',
+    '广告系列数',
+    '广告组数',
+    '投放国家数',
+    '投放天数'
+  ] as const
+
+  const recentRows = computed(() => props.recentSummary?.rows ?? [])
+  const accountRows = computed(() => props.accountSummary?.rows ?? [])
+  const roiTrendColumnCount = computed(() =>
+    Math.max(3, ...recentRows.value.map((row) => row.roiTrend?.length ?? 0))
+  )
+
+  const reportSummaryLine = computed(() => {
+    const row = recentRows.value[0] ?? accountRows.value[0]
+    const parts = [
+      row?.app,
+      row?.platform && `平台: ${row.platform}`,
+      row?.source && `广告平台: ${row.source}`
+    ]
+      .filter(Boolean)
+      .join(' | ')
+    return parts || '当前筛选条件下的代投数据报告'
   })
 
-  const channelBars = computed(() => {
-    const { categories, series } = props.channelDistribution
-    if (!categories?.length) return [] as { name: string; value: number; widthPct: number }[]
-    const totals = categories.map((_, i) => series.reduce((s, ser) => s + (ser.values[i] ?? 0), 0))
-    const max = Math.max(...totals, 1)
-    return categories
-      .map((name, i) => ({
-        name,
-        value: totals[i],
-        widthPct: (totals[i] / max) * 100
-      }))
-      .filter((x) => x.value > 0)
+  const kpiSections = computed(() => {
+    const metricValue = (payload: AgencySubTabKpiPayload | null | undefined, key: string) =>
+      payload?.metrics?.find((item) => item.key === key)?.value ?? '--'
+
+    return [
+      {
+        title: props.kpiLast7?.periodLabel || '近7天',
+        items: kpiKeys.map((key, index) => ({
+          key,
+          label: kpiLabels[index],
+          value: metricValue(props.kpiLast7, key)
+        }))
+      },
+      {
+        title: props.kpiDay?.periodLabel || '当日',
+        items: kpiKeys.map((key, index) => ({
+          key,
+          label: kpiLabels[index],
+          value: metricValue(props.kpiDay, key)
+        }))
+      }
+    ]
   })
 
-  const countryRows = computed(() => props.countryTop8.slice(0, 8))
+  const recentColgroup = computed(() => {
+    const widths = [128, 90, 118, 126, 260, 94, 86, 76, 76, 108]
+    return [...widths, ...Array.from({ length: roiTrendColumnCount.value }, () => 74)]
+  })
 
-  const fmtMoney = (v: number) => `$${v.toLocaleString('en-US')}`
+  const accountColgroup = [128, 90, 118, 126, 260, 110, 92, 76, 76, 108]
 
-  const kpiChangeClass = (card: KpiCardItem) => {
-    if (!card.changeText) return 'pv-s-c--muted'
-    if (card.changeUp === null) return 'pv-s-c--muted'
-    return card.changeUp ? 'pv-s-c--up' : 'pv-s-c--down'
+  const exportFileName = computed(() => {
+    const title = props.agencyLabel || props.reportTitle || 'agency-analysis'
+    return `${title}-${props.dataDate || 'report'}.png`.replace(/[\\/:*?"<>|]+/g, '-')
+  })
+
+  async function buildScreenshotBlob() {
+    const reportRoot = reportRootRef.value
+    if (!reportRoot) throw new Error('截图内容还未准备完成')
+    return elementToPngBlob(reportRoot, {
+      pixelRatio: outputFormat.value === 'long' ? 2.4 : 2,
+      backgroundColor: '#ffffff'
+    })
   }
 
-  const isIso2Country = (code: string) => /^[a-z]{2}$/i.test(String(code || '').trim())
+  async function handleDownload() {
+    if (actionLoading.value) return
+    actionLoading.value = 'download'
+    try {
+      const blob = await buildScreenshotBlob()
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = exportFileName.value
+      anchor.click()
+      URL.revokeObjectURL(url)
+      ElMessage.success('PNG 已开始下载')
+    } catch (error) {
+      ElMessage.error(error instanceof Error ? error.message : '下载截图失败')
+    } finally {
+      actionLoading.value = ''
+    }
+  }
 
-  const reportTitleLine = computed(() => props.reportTitle || '代投分析')
-
-  const reportRootRef = useTemplateRef<HTMLElement>('reportRoot')
+  async function handleCopy() {
+    if (actionLoading.value) return
+    actionLoading.value = 'copy'
+    try {
+      if (!window.ClipboardItem || !navigator.clipboard?.write) {
+        throw new Error('当前浏览器不支持图片写入剪贴板')
+      }
+      const blob = await buildScreenshotBlob()
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+      ElMessage.success('截图已复制到剪贴板')
+      close()
+    } catch (error) {
+      ElMessage.error(error instanceof Error ? error.message : '复制截图失败')
+    } finally {
+      actionLoading.value = ''
+    }
+  }
 
   defineExpose({ reportRootRef })
 </script>
 
 <template>
-  <!-- 必须挂 body，避免页面内 transform/缩放导致 position:fixed 错位（与实时数据弹窗问题同源） -->
   <Teleport to="body">
     <transition name="modal-fade">
       <div v-if="modelValue" class="modal-overlay" @click.self="close">
@@ -123,7 +220,7 @@
               </div>
               <div>
                 <div class="modal-title">截图复制</div>
-                <div class="modal-subtitle">将数据报告截图并复制到剪贴板</div>
+                <div class="modal-subtitle">前端生成 PNG，可直接下载或复制到剪贴板</div>
               </div>
             </div>
             <button type="button" class="modal-close" @click="close">×</button>
@@ -133,18 +230,28 @@
             <div class="modal-left">
               <div class="section-label">截图范围</div>
               <p class="modal-scope-desc">
-                与当前页一致：数据概览 KPI、渠道分布分析、代投方消耗占比、国家消耗
-                Top8（不含表格明细）。
+                当前导出内容取自后 3 个代投机构子 Tab
+                的已加载数据。已针对宽表做加宽和禁换行，优先保证导出图片完整。
               </p>
 
               <div class="form-row">
                 <span class="form-label">数据日期</span>
-                <span class="form-readonly">{{ dataDate }}</span>
-                <span class="form-hint">与页面顶部筛选一致</span>
+                <span class="form-readonly">{{ dataDate || '--' }}</span>
+                <span class="form-hint">与页面筛选保持一致</span>
               </div>
 
               <div class="form-row">
-                <span class="form-label">输出格式</span>
+                <span class="form-label">代投机构</span>
+                <span class="form-readonly">{{ agencyLabel || '--' }}</span>
+              </div>
+
+              <div class="form-row">
+                <span class="form-label">报告标题</span>
+                <span class="form-readonly">{{ reportTitle }}</span>
+              </div>
+
+              <div class="form-row">
+                <span class="form-label">输出样式</span>
                 <div class="fmt-group">
                   <button
                     type="button"
@@ -152,7 +259,7 @@
                     :class="{ active: outputFormat === 'png' }"
                     @click="outputFormat = 'png'"
                   >
-                    图片(PNG)
+                    标准 PNG
                   </button>
                   <button
                     type="button"
@@ -160,7 +267,7 @@
                     :class="{ active: outputFormat === 'long' }"
                     @click="outputFormat = 'long'"
                   >
-                    长图截图
+                    长图留白
                   </button>
                 </div>
               </div>
@@ -168,109 +275,163 @@
 
             <div class="modal-right">
               <div class="preview-label">
-                预览 <span class="preview-sub">独立报告模板 · 将复制到剪贴板</span>
+                预览 <span class="preview-sub">预览为缩放展示，下载与复制使用原始宽度导出</span>
               </div>
               <div class="preview-wrap">
-                <div
-                  ref="reportRoot"
-                  class="preview-card"
-                  :class="{ 'preview-card--long': outputFormat === 'long' }"
-                >
-                  <div class="pv-header">
-                    <div class="pv-logo">
-                      <div class="pv-logo-icon" />
-                      <span>{{ reportTitleLine }}</span>
+                <div class="preview-shell" :style="previewShellStyle">
+                  <div
+                    ref="reportRoot"
+                    class="preview-card preview-card--report"
+                    :class="{ 'preview-card--long': outputFormat === 'long' }"
+                    :style="previewReportStyle"
+                  >
+                    <div class="pv-report-head">
+                      <div class="pv-brand">
+                        <div class="pv-brand-mark" />
+                        <div class="pv-brand-text">{{ agencyLabel || reportTitle }}</div>
+                      </div>
+                      <div class="pv-report-main-title">代投数据报告</div>
+                      <div class="pv-report-meta">数据日期: {{ dataDate || '--' }}</div>
                     </div>
-                    <div>
-                      <div class="pv-head-title">代投数据报告</div>
-                      <div class="pv-head-date">{{ dataDate }}</div>
-                    </div>
+
+                    <div class="pv-divider" />
+                    <div class="pv-summary-line">{{ reportSummaryLine }}</div>
+
+                    <template v-if="pageLoading">
+                      <div class="pv-empty">数据加载中...</div>
+                    </template>
+                    <template v-else>
+                      <section
+                        v-for="section in kpiSections"
+                        :key="section.title"
+                        class="pv-report-section"
+                      >
+                        <div class="pv-section-title">{{ section.title }}</div>
+                        <div class="pv-kpi-grid">
+                          <div v-for="item in section.items" :key="item.key" class="pv-kpi-card">
+                            <div class="pv-kpi-label">{{ item.label }}</div>
+                            <div class="pv-kpi-value">{{ item.value }}</div>
+                          </div>
+                        </div>
+                      </section>
+
+                      <section class="pv-report-section">
+                        <div class="pv-section-title">近期汇总</div>
+                        <div v-if="recentRows.length" class="pv-table-wrap">
+                          <table class="pv-table">
+                            <colgroup>
+                              <col
+                                v-for="(width, index) in recentColgroup"
+                                :key="`recent-col-${index}`"
+                                :style="{ width: `${width}px` }"
+                              />
+                            </colgroup>
+                            <thead>
+                              <tr>
+                                <th>应用</th>
+                                <th>平台</th>
+                                <th>广告平台</th>
+                                <th>账户ID</th>
+                                <th>账户名称</th>
+                                <th class="is-right">广告支出</th>
+                                <th class="is-right">预算</th>
+                                <th class="is-right">CPA</th>
+                                <th class="is-right">CPI</th>
+                                <th class="is-right">代投买量用户数</th>
+                                <th
+                                  v-for="index in roiTrendColumnCount"
+                                  :key="`r-h-${index}`"
+                                  class="is-right"
+                                >
+                                  ROI {{ index }}
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr v-for="(row, index) in recentRows" :key="`recent-${index}`">
+                                <td>{{ row.app }}</td>
+                                <td>{{ row.platform }}</td>
+                                <td>{{ row.source }}</td>
+                                <td class="is-mono">{{ row.accountId }}</td>
+                                <td>{{ row.accountName }}</td>
+                                <td class="is-right">{{ row.spend }}</td>
+                                <td class="is-right">{{ row.budget }}</td>
+                                <td class="is-right">{{ row.cpa }}</td>
+                                <td class="is-right">{{ row.cpi }}</td>
+                                <td class="is-right">{{ row.installs }}</td>
+                                <td
+                                  v-for="index in roiTrendColumnCount"
+                                  :key="`r-v-${index}`"
+                                  class="is-right"
+                                >
+                                  {{ row.roiTrend[index - 1] || '--' }}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div v-else class="pv-empty">暂无近期汇总数据</div>
+                      </section>
+
+                      <section class="pv-report-section">
+                        <div class="pv-section-title">账户汇总</div>
+                        <div v-if="accountRows.length" class="pv-table-wrap">
+                          <table class="pv-table">
+                            <colgroup>
+                              <col
+                                v-for="(width, index) in accountColgroup"
+                                :key="`account-col-${index}`"
+                                :style="{ width: `${width}px` }"
+                              />
+                            </colgroup>
+                            <thead>
+                              <tr>
+                                <th>应用</th>
+                                <th>平台</th>
+                                <th>广告平台</th>
+                                <th>账户ID</th>
+                                <th>账户名称</th>
+                                <th class="is-right">广告支出</th>
+                                <th class="is-right">首日ROI</th>
+                                <th class="is-right">CPA</th>
+                                <th class="is-right">CPI</th>
+                                <th class="is-right">代投买量用户数</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr v-for="(row, index) in accountRows" :key="`account-${index}`">
+                                <td>{{ row.app }}</td>
+                                <td>{{ row.platform }}</td>
+                                <td>{{ row.source }}</td>
+                                <td class="is-mono">{{ row.accountId }}</td>
+                                <td>{{ row.accountName }}</td>
+                                <td class="is-right">{{ row.spend }}</td>
+                                <td class="is-right">{{ row.roi1 }}</td>
+                                <td class="is-right">{{ row.cpa }}</td>
+                                <td class="is-right">{{ row.cpi }}</td>
+                                <td class="is-right">{{ row.installs }}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div v-else class="pv-empty">暂无账户汇总数据</div>
+                      </section>
+
+                      <div class="pv-footnote">
+                        <span>说明: 当前截图由前端根据页面已加载数据生成。</span>
+                        <span>生成时间: {{ genTimeStr }}</span>
+                      </div>
+                    </template>
                   </div>
-
-                  <template v-if="pageLoading">
-                    <div class="pv-empty">数据加载中…</div>
-                  </template>
-                  <template v-else>
-                    <template v-if="visibility.kpi && kpiCards.length">
-                      <div class="pv-sec-title">数据概览</div>
-                      <div class="pv-stats">
-                        <div v-for="(card, i) in kpiCards" :key="i" class="pv-stat">
-                          <div class="pv-s-l">{{ card.label }}</div>
-                          <div class="pv-s-v">{{ card.value }}</div>
-                          <div v-if="card.changeText" class="pv-s-c" :class="kpiChangeClass(card)">
-                            {{ card.changeText }}
-                          </div>
-                        </div>
-                      </div>
-                    </template>
-
-                    <template v-if="visibility.channelBars && channelBars.length">
-                      <div class="pv-sec-title mt8">渠道分布分析</div>
-                      <div class="pv-bar-list">
-                        <div v-for="(b, bi) in channelBars" :key="bi" class="pv-bar-row">
-                          <span class="pv-bar-name">{{ b.name }}</span>
-                          <div class="pv-bar-track">
-                            <div
-                              class="pv-bar-fill pv-bar-fill--muted"
-                              :style="{ width: `${b.widthPct}%` }"
-                            />
-                          </div>
-                          <span class="pv-bar-val">{{ fmtMoney(b.value) }}</span>
-                        </div>
-                      </div>
-                    </template>
-
-                    <template v-if="visibility.donut && donutList.length">
-                      <div class="pv-sec-title mt8">代投方消耗占比</div>
-                      <div class="pv-bar-list">
-                        <div v-for="(d, di) in donutList" :key="di" class="pv-bar-row">
-                          <span class="pv-bar-dot" :style="{ background: d.color }" />
-                          <span class="pv-bar-name">{{ d.name }}</span>
-                          <div class="pv-bar-track">
-                            <div
-                              class="pv-bar-fill"
-                              :style="{ width: `${d.pct}%`, background: d.color }"
-                            />
-                          </div>
-                          <span class="pv-bar-pct">{{ d.pct.toFixed(1) }}%</span>
-                        </div>
-                      </div>
-                    </template>
-
-                    <template v-if="visibility.country && countryRows.length">
-                      <div class="pv-sec-title mt8">国家消耗 Top8</div>
-                      <div class="pv-bar-list">
-                        <div v-for="(c, ci) in countryRows" :key="ci" class="pv-bar-row">
-                          <span
-                            v-if="isIso2Country(c.s_country_code)"
-                            class="pv-flag fi"
-                            :class="'fi-' + c.s_country_code.toLowerCase()"
-                          />
-                          <span class="pv-bar-name">{{ c.s_country_code.toUpperCase() }}</span>
-                          <div class="pv-bar-track">
-                            <div
-                              class="pv-bar-fill pv-bar-fill--country"
-                              :style="{ width: `${c.sharePct}%` }"
-                            />
-                          </div>
-                          <span class="pv-bar-pct">{{ c.sharePct.toFixed(2) }}%</span>
-                        </div>
-                      </div>
-                    </template>
-
-                    <div class="pv-footnote">
-                      注: 时区 PST(UTC-8), 货币 USD；ROI
-                      计算含广告收入及付费收入。预览为当前筛选条件下 KPI 与图表数据摘要。
-                    </div>
-                  </template>
                 </div>
               </div>
+
               <div class="preview-meta">
                 <span
                   >预计截图大小: <strong>{{ estimatedSize }}</strong></span
                 >
                 <span class="preview-meta-gap"
-                  >分辨率: <strong>{{ resolution }}</strong></span
+                  >建议分辨率: <strong>{{ resolution }}</strong></span
                 >
               </div>
             </div>
@@ -280,13 +441,23 @@
             <div class="gen-time">生成时间: {{ genTimeStr }}</div>
             <div class="footer-btns">
               <button type="button" class="btn-cancel" @click="close">取消</button>
-              <button type="button" class="btn-download" @click="emit('download')">
+              <button
+                type="button"
+                class="btn-download"
+                :disabled="actionLoading !== ''"
+                @click="handleDownload"
+              >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" class="btn-ic">
                   <path d="M12 16L7 11h4V4h2v7h4l-5 5zM5 20h14v-2H5v2z" />
                 </svg>
-                下载 PNG
+                {{ actionLoading === 'download' ? '生成中...' : '下载 PNG' }}
               </button>
-              <button type="button" class="btn-copy" @click="(emit('copy'), close())">
+              <button
+                type="button"
+                class="btn-copy"
+                :disabled="actionLoading !== ''"
+                @click="handleCopy"
+              >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" class="btn-ic">
                   <rect
                     x="9"
@@ -303,11 +474,11 @@
                     stroke-width="1.8"
                   />
                 </svg>
-                复制到剪贴板
+                {{ actionLoading === 'copy' ? '复制中...' : '复制到剪贴板' }}
               </button>
             </div>
           </div>
-          <div class="footer-hint">复制后可直接粘贴到微信、钉钉、邮件等任意应用</div>
+          <div class="footer-hint">复制后可直接粘贴到微信、钉钉、邮件等支持图片粘贴的应用。</div>
         </div>
       </div>
     </transition>
@@ -318,8 +489,6 @@
   .modal-overlay {
     position: fixed;
     inset: 0;
-
-    /* 高于侧栏/顶栏 sticky，且保持 body 挂载避免 fixed 参考系错误 */
     z-index: 9000;
     display: flex;
     align-items: center;
@@ -331,256 +500,122 @@
   .modal-box {
     display: flex;
     flex-direction: column;
-    width: 920px;
+    width: 1240px;
+    max-width: calc(100vw - 40px);
+    min-height: 0;
     max-height: 88vh;
     overflow: hidden;
     background: #0d1829;
     border: 1px solid #1e3a5f;
     border-radius: 12px;
     box-shadow:
-      0 30px 80px rgb(0 0 0 / 70%),
-      0 0 0 1px rgb(0 212 180 / 8%);
+      0 24px 70px rgb(2 8 23 / 55%),
+      inset 0 1px 0 rgb(255 255 255 / 4%);
   }
 
-  .modal-header {
+  .modal-header,
+  .modal-footer {
     display: flex;
-    flex-shrink: 0;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 24px 16px;
+    padding: 16px 18px;
     border-bottom: 1px solid #1e3a5f;
+  }
+
+  .modal-footer {
+    border-top: 1px solid #1e3a5f;
+    border-bottom: 0;
   }
 
   .modal-title-wrap {
     display: flex;
-    gap: 14px;
+    gap: 12px;
     align-items: center;
   }
 
   .modal-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 46px;
-    height: 46px;
-    background: rgb(0 212 180 / 8%);
-    border: 1px solid rgb(0 212 180 / 20%);
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    background: rgb(0 212 180 / 12%);
+    border: 1px solid rgb(0 212 180 / 30%);
     border-radius: 10px;
   }
 
   .modal-title {
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
     color: #e2e8f0;
   }
 
-  .modal-subtitle {
-    margin-top: 2px;
+  .modal-subtitle,
+  .footer-hint,
+  .preview-sub,
+  .gen-time {
     font-size: 12px;
-    color: #64748b;
+    color: #94a3b8;
   }
 
   .modal-close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    font-size: 18px;
-    line-height: 1;
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
     color: #94a3b8;
     cursor: pointer;
-    background: #1e2d42;
-    border: 1px solid #2d3f54;
-    border-radius: 6px;
-    transition: all 0.15s;
-
-    &:hover {
-      color: #e2e8f0;
-      background: #2d3f54;
-    }
+    background: transparent;
+    border: 0;
   }
 
   .modal-body {
-    display: flex;
+    display: grid;
     flex: 1;
+    grid-template-columns: 280px minmax(0, 1fr);
     min-height: 0;
     overflow: hidden;
   }
 
   .modal-left {
-    flex-shrink: 0;
-    width: 510px;
-    padding: 18px 22px;
-    overflow-y: auto;
+    min-height: 0;
+    padding: 18px;
+    overflow: auto;
     border-right: 1px solid #1e3a5f;
   }
 
   .section-label {
-    margin-bottom: 12px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #94a3b8;
-  }
-
-  .modal-scope-desc {
-    margin: 0 0 18px;
-    font-size: 12px;
-    line-height: 1.55;
-    color: #94a3b8;
-  }
-
-  .type-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-
-  .type-item {
-    padding: 12px 14px;
-    cursor: pointer;
-    background: #0a1422;
-    border: 1px solid #1e3a5f;
-    border-radius: 8px;
-    transition: all 0.15s;
-
-    &:hover {
-      border-color: #2d5a8a;
-    }
-
-    &.active {
-      background: rgb(0 212 180 / 5%);
-      border-color: #00d4b4;
-    }
-  }
-
-  .type-top {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 5px;
-  }
-
-  .radio-ring {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    border: 2px solid #2d3f54;
-    border-radius: 50%;
-    transition: border-color 0.15s;
-
-    &.on {
-      border-color: #00d4b4;
-    }
-  }
-
-  .radio-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    transition: background 0.15s;
-
-    .radio-ring.on & {
-      background: #00d4b4;
-    }
-  }
-
-  .type-title {
+    margin-bottom: 8px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     color: #e2e8f0;
   }
 
-  .type-desc {
-    margin-bottom: 7px;
-    margin-left: 26px;
-    font-size: 11px;
-    color: #64748b;
-  }
-
-  .type-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-left: 26px;
-  }
-
-  .type-tag {
-    padding: 2px 8px;
-    font-size: 11px;
-    color: #00d4b4;
-    background: rgb(0 212 180 / 10%);
-    border: 1px solid rgb(0 212 180 / 20%);
-    border-radius: 4px;
-  }
-
-  .custom-checks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-    margin-left: 26px;
-  }
-
-  .check-item {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    cursor: pointer;
-  }
-
-  .check-input {
-    display: none;
-  }
-
-  .check-box {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 15px;
-    height: 15px;
-    border: 1.5px solid #2d3f54;
-    border-radius: 3px;
-    transition: all 0.15s;
-
-    &.checked {
-      background: rgb(0 212 180 / 15%);
-      border-color: #00d4b4;
-    }
-  }
-
-  .check-label {
+  .modal-scope-desc {
+    margin: 0 0 16px;
     font-size: 12px;
+    line-height: 1.7;
     color: #94a3b8;
   }
 
   .form-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
+    flex-direction: column;
+    gap: 6px;
     margin-bottom: 14px;
   }
 
   .form-label {
-    flex-shrink: 0;
     font-size: 12px;
-    color: #94a3b8;
-    white-space: nowrap;
+    color: #64748b;
   }
 
   .form-readonly {
-    padding: 6px 10px;
-    font-size: 12px;
+    min-height: 36px;
+    padding: 9px 11px;
+    font-size: 13px;
     color: #e2e8f0;
-    background: #0a1422;
-    border: 1px solid #2d3f54;
-    border-radius: 6px;
+    background: #111f35;
+    border: 1px solid #1e3a5f;
+    border-radius: 8px;
   }
 
   .form-hint {
@@ -593,21 +628,22 @@
   }
 
   .fmt-btn {
-    padding: 6px 14px;
+    flex: 1;
+    height: 36px;
     font-size: 12px;
-    color: #64748b;
+    color: #94a3b8;
     cursor: pointer;
-    background: #0a1422;
+    background: #0f172a;
     border: 1px solid #2d3f54;
     transition: all 0.15s;
 
     &:first-child {
-      border-radius: 6px 0 0 6px;
+      border-radius: 8px 0 0 8px;
     }
 
     &:last-child {
       margin-left: -1px;
-      border-radius: 0 6px 6px 0;
+      border-radius: 0 8px 8px 0;
     }
 
     &.active {
@@ -622,313 +658,208 @@
     flex: 1;
     flex-direction: column;
     gap: 10px;
-    padding: 18px 18px 14px;
-    overflow-y: auto;
+    min-width: 0;
+    min-height: 0;
+    padding: 18px;
+    overflow: hidden;
   }
 
   .preview-label {
+    flex: none;
     font-size: 12px;
     font-weight: 600;
     color: #94a3b8;
   }
 
-  .preview-sub {
-    font-size: 11px;
-    font-weight: 400;
-    color: #475569;
-  }
-
   .preview-wrap {
     flex: 1;
-    padding: 12px;
-    overflow-y: auto;
+    min-height: 0;
+    padding: 18px 12px;
+    overflow: auto;
     background: #111f35;
     border: 1px solid #1e3a5f;
     border-radius: 8px;
   }
 
+  .preview-shell {
+    display: block;
+    margin: 0 auto;
+  }
+
   .preview-card {
-    padding: 12px;
-    background: #0d1829;
-    border-radius: 6px;
-
-    &--long {
-      min-height: 480px;
-    }
+    padding: 36px 42px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgb(15 23 42 / 10%);
+    transform-origin: top left;
   }
 
-  .pv-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
+  .preview-card--long {
+    padding-bottom: 82px;
   }
 
-  .pv-logo {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    font-size: 10px;
-    font-weight: 700;
-    color: #e2e8f0;
-  }
-
-  .pv-logo-icon {
-    width: 14px;
-    height: 14px;
-    background: linear-gradient(135deg, #00d4b4, #3b82f6);
-    border-radius: 3px;
-  }
-
-  .pv-head-title {
-    font-size: 9px;
-    font-weight: 700;
-    color: #e2e8f0;
-  }
-
-  .pv-head-date {
-    font-size: 8px;
-    color: #64748b;
-  }
-
-  .pv-banner {
-    padding: 8px 10px;
-    margin-bottom: 8px;
-    font-size: 10px;
-    line-height: 1.4;
-    color: #fbbf24;
-    background: rgb(245 158 11 / 12%);
-    border: 1px solid rgb(245 158 11 / 35%);
-    border-radius: 6px;
-  }
-
-  .pv-empty {
-    padding: 24px;
-    font-size: 12px;
-    color: #64748b;
-    text-align: center;
-  }
-
-  .pv-mini-empty {
-    padding: 10px;
-    font-size: 10px;
-    color: #64748b;
-  }
-
-  .pv-sec-title {
-    padding-bottom: 3px;
-    margin-bottom: 6px;
-    font-size: 9px;
-    font-weight: 600;
-    color: #64748b;
-    text-transform: uppercase;
-    border-bottom: 1px solid #1e3a5f;
-  }
-
-  .mt8 {
-    margin-top: 8px;
-  }
-
-  .pv-stats {
+  .pv-report-head {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 5px;
-    margin-bottom: 6px;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 18px;
+    align-items: center;
+    color: #172554;
   }
 
-  .pv-stat {
-    padding: 5px;
-    background: #111f35;
-    border-radius: 4px;
-  }
-
-  .pv-s-l {
-    font-size: 8px;
-    color: #64748b;
-  }
-
-  .pv-s-v {
-    font-size: 11px;
+  .pv-brand {
+    display: flex;
+    gap: 12px;
+    align-items: center;
     font-weight: 700;
-    color: #e2e8f0;
   }
 
-  .pv-s-c {
-    font-size: 8px;
+  .pv-brand-mark {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #0f766e, #2563eb);
+    border-radius: 7px;
   }
 
-  .pv-s-c--up {
-    color: #10b981;
+  .pv-brand-text {
+    font-size: 18px;
+    line-height: 1;
   }
 
-  .pv-s-c--down {
-    color: #f97316;
+  .pv-report-main-title {
+    font-size: 24px;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 0.5px;
   }
 
-  .pv-s-c--muted {
-    color: #64748b;
+  .pv-report-meta {
+    font-size: 16px;
+    font-weight: 700;
+    color: #475569;
+    text-align: right;
+    white-space: nowrap;
   }
 
-  .pv-teal {
-    color: #00d4b4;
+  .pv-divider {
+    height: 4px;
+    margin: 22px 0 18px;
+    background: linear-gradient(90deg, #17375e, #1dc7ca);
+    border-radius: 999px;
+  }
+
+  .pv-summary-line {
+    margin-bottom: 18px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #334155;
+    white-space: nowrap;
+  }
+
+  .pv-report-section {
+    margin-top: 22px;
+  }
+
+  .pv-section-title {
+    margin-bottom: 14px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #102a56;
+  }
+
+  .pv-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .pv-kpi-card {
+    min-height: 104px;
+    padding: 16px 14px;
+    background: #f7fbff;
+    border: 1px solid #d4e3f4;
+    border-radius: 14px;
+  }
+
+  .pv-kpi-label {
+    font-size: 15px;
+    color: #7b8ca6;
+    white-space: nowrap;
+  }
+
+  .pv-kpi-value {
+    margin-top: 10px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    white-space: nowrap;
+  }
+
+  .pv-table-wrap {
+    overflow: hidden;
+    border: 1px solid #d7e3f4;
+    border-radius: 10px;
   }
 
   .pv-table {
     width: 100%;
-    font-size: 9px;
+    font-size: 14px;
+    color: #0f172a;
+    table-layout: fixed;
     border-collapse: collapse;
 
-    th {
-      padding: 3px 4px;
-      color: #64748b;
-      text-align: left;
-      background: #0a1422;
-      border-bottom: 1px solid #1e3a5f;
-    }
-
+    th,
     td {
-      padding: 3px 4px;
-      color: #cbd5e1;
-      border-bottom: 1px solid #0f1c2e;
+      padding: 12px 10px;
+      white-space: nowrap;
+      vertical-align: middle;
+      border-bottom: 1px solid #e7eef8;
     }
 
-    .text-right {
-      text-align: right;
-    }
-  }
-
-  .pv-table--roi {
-    font-size: 8px;
-  }
-
-  .dim {
-    color: #475569;
-  }
-
-  .pv-badge {
-    display: inline-block;
-    padding: 1px 4px;
-    font-size: 8px;
-    font-weight: 600;
-    border-radius: 2px;
-  }
-
-  .roi-green {
-    color: #fff;
-    background: #059669;
-  }
-
-  .roi-teal {
-    color: #fff;
-    background: #00d4b4;
-  }
-
-  .roi-yellow {
-    color: #0f172a;
-    background: #fbbf24;
-  }
-
-  .roi-red {
-    color: #fff;
-    background: #ef4444;
-  }
-
-  .pv-bar-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 6px;
-  }
-
-  .pv-bar-row {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    font-size: 9px;
-  }
-
-  .pv-bar-dot {
-    flex-shrink: 0;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-  }
-
-  .pv-flag {
-    flex-shrink: 0;
-    font-size: 12px;
-    line-height: 1;
-  }
-
-  .pv-bar-name {
-    flex-shrink: 0;
-    min-width: 56px;
-    color: #94a3b8;
-  }
-
-  .pv-bar-track {
-    flex: 1;
-    height: 5px;
-    overflow: hidden;
-    background: #0a1422;
-    border-radius: 3px;
-  }
-
-  .pv-bar-fill {
-    height: 100%;
-    border-radius: 3px;
-
-    &--muted {
-      background: #3b82f6;
+    th {
+      font-weight: 700;
+      color: #fff;
+      text-align: left;
+      background: linear-gradient(180deg, #223b62, #162949);
     }
 
-    &--country {
-      background: #00d4b4;
+    tbody tr:nth-child(even) {
+      background: #f9fbff;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
     }
   }
 
-  .pv-bar-pct,
-  .pv-bar-val {
-    flex-shrink: 0;
-    min-width: 52px;
-    font-size: 8px;
-    color: #94a3b8;
-    text-align: right;
+  .is-right {
+    text-align: right !important;
+  }
+
+  .is-mono {
+    font-family: Consolas, 'Courier New', monospace;
+  }
+
+  .pv-empty {
+    padding: 28px 0;
+    font-size: 16px;
+    color: #64748b;
+    text-align: center;
   }
 
   .pv-footnote {
-    padding-top: 5px;
-    margin-top: 7px;
-    font-size: 8px;
-    color: #475569;
-    border-top: 1px solid #1e3a5f;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 22px;
+    font-size: 14px;
+    color: #64748b;
   }
 
   .preview-meta {
-    font-size: 12px;
-    color: #64748b;
-
-    strong {
-      color: #94a3b8;
-    }
-  }
-
-  .preview-meta-gap {
-    margin-left: 16px;
-  }
-
-  .modal-footer {
     display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 24px 6px;
-    border-top: 1px solid #1e3a5f;
-  }
-
-  .gen-time {
+    flex: none;
+    gap: 14px;
     font-size: 12px;
-    color: #475569;
+    color: #94a3b8;
   }
 
   .footer-btns {
@@ -936,79 +867,53 @@
     gap: 10px;
   }
 
-  .btn-ic {
-    margin-right: 5px;
+  .btn-cancel,
+  .btn-download,
+  .btn-copy {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    min-width: 116px;
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: all 0.16s;
   }
 
   .btn-cancel {
-    padding: 8px 20px;
-    font-size: 13px;
-    color: #94a3b8;
-    cursor: pointer;
+    color: #cbd5e1;
     background: transparent;
-    border: 1px solid #2d3f54;
-    border-radius: 6px;
-    transition: all 0.15s;
-
-    &:hover {
-      color: #e2e8f0;
-      border-color: #4a5568;
-    }
+    border: 1px solid #334155;
   }
 
   .btn-download {
-    display: flex;
-    align-items: center;
-    padding: 8px 18px;
-    font-size: 13px;
-    color: #94a3b8;
-    cursor: pointer;
-    background: transparent;
-    border: 1px solid #2d3f54;
-    border-radius: 6px;
-    transition: all 0.15s;
-
-    &:hover {
-      color: #e2e8f0;
-      border-color: #4a5568;
-    }
+    color: #0d1829;
+    background: #fff;
+    border: 0;
   }
 
   .btn-copy {
-    display: flex;
-    align-items: center;
-    padding: 8px 18px;
-    font-size: 13px;
-    font-weight: 600;
     color: #fff;
-    cursor: pointer;
-    background: linear-gradient(135deg, #00d4b4, #00a896);
-    border: none;
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgb(0 212 180 / 30%);
-    transition: all 0.15s;
+    background: linear-gradient(135deg, #0ea5a6, #2563eb);
+    border: 0;
+  }
 
-    &:hover {
-      background: linear-gradient(135deg, #00e6c4, #00c0a8);
-      box-shadow: 0 6px 16px rgb(0 212 180 / 40%);
-    }
+  .btn-cancel:disabled,
+  .btn-download:disabled,
+  .btn-copy:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .btn-ic {
+    flex: none;
   }
 
   .footer-hint {
-    flex-shrink: 0;
-    padding: 0 24px 12px;
-    font-size: 11px;
-    color: #475569;
-    text-align: right;
-  }
-
-  .modal-fade-enter-active,
-  .modal-fade-leave-active {
-    transition: opacity 0.2s;
-  }
-
-  .modal-fade-enter-from,
-  .modal-fade-leave-to {
-    opacity: 0;
+    padding: 0 18px 16px;
   }
 </style>
