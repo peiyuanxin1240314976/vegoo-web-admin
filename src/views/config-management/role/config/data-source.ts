@@ -15,13 +15,13 @@ export enum RoleEndpoint {
 }
 
 export const RoleMockConfig: Record<RoleEndpoint, boolean> = {
-  [RoleEndpoint.LIST]: true,
-  [RoleEndpoint.DETAIL_SAVE]: true,
-  [RoleEndpoint.PERMISSION_PAGES]: true,
-  [RoleEndpoint.PERMISSION_DATE]: true,
-  [RoleEndpoint.PERMISSION_SUMMARY]: true,
-  [RoleEndpoint.USERS]: true,
-  [RoleEndpoint.PERMISSIONS_UPDATE]: true
+  [RoleEndpoint.LIST]: false,
+  [RoleEndpoint.DETAIL_SAVE]: false,
+  [RoleEndpoint.PERMISSION_PAGES]: false,
+  [RoleEndpoint.PERMISSION_DATE]: false,
+  [RoleEndpoint.PERMISSION_SUMMARY]: false,
+  [RoleEndpoint.USERS]: false,
+  [RoleEndpoint.PERMISSIONS_UPDATE]: false
 }
 
 export function isRoleEndpointMock(endpoint: RoleEndpoint): boolean {
