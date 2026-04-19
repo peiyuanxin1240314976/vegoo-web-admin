@@ -77,7 +77,13 @@ export const MOCK_APP_ROWS: ProfitAppRow[] = [
     profitColor: '#4ade80',
     rate: '32.8%',
     rateColor: '#4ade80',
-    trend: 'up'
+    profitTrend: [
+      { date: '2026-02-06', profit: 3720 },
+      { date: '2026-02-07', profit: 3910 },
+      { date: '2026-02-08', profit: 4020 },
+      { date: '2026-02-09', profit: 3580 },
+      { date: '2026-02-10', profit: 3570 }
+    ]
   },
   {
     app: 'PhoneTracker',
@@ -89,7 +95,13 @@ export const MOCK_APP_ROWS: ProfitAppRow[] = [
     profitColor: '#4ade80',
     rate: '39.1%',
     rateColor: '#4ade80',
-    trend: 'up'
+    profitTrend: [
+      { date: '2026-02-06', profit: 2650 },
+      { date: '2026-02-07', profit: 2810 },
+      { date: '2026-02-08', profit: 2940 },
+      { date: '2026-02-09', profit: 3010 },
+      { date: '2026-02-10', profit: 2990 }
+    ]
   },
   {
     app: 'BloodSugar2',
@@ -101,7 +113,13 @@ export const MOCK_APP_ROWS: ProfitAppRow[] = [
     profitColor: '#facc15',
     rate: '9.5%',
     rateColor: '#facc15',
-    trend: 'flat'
+    profitTrend: [
+      { date: '2026-02-06', profit: 460 },
+      { date: '2026-02-07', profit: 710 },
+      { date: '2026-02-08', profit: 890 },
+      { date: '2026-02-09', profit: 640 },
+      { date: '2026-02-10', profit: 640 }
+    ]
   },
   {
     app: 'HealthTracker',
@@ -113,7 +131,13 @@ export const MOCK_APP_ROWS: ProfitAppRow[] = [
     profitColor: '#f87171',
     rate: '-6.1%',
     rateColor: '#f87171',
-    trend: 'down'
+    profitTrend: [
+      { date: '2026-02-06', profit: -120 },
+      { date: '2026-02-07', profit: -80 },
+      { date: '2026-02-08', profit: -200 },
+      { date: '2026-02-09', profit: -640 },
+      { date: '2026-02-10', profit: -700 }
+    ]
   },
   {
     app: 'FaceMe',
@@ -125,7 +149,13 @@ export const MOCK_APP_ROWS: ProfitAppRow[] = [
     profitColor: '#94a3b8',
     rate: 'N/A',
     rateColor: '#94a3b8',
-    trend: 'none'
+    profitTrend: [
+      { date: '2026-02-06', profit: 0 },
+      { date: '2026-02-07', profit: 0 },
+      { date: '2026-02-08', profit: 0 },
+      { date: '2026-02-09', profit: 0 },
+      { date: '2026-02-10', profit: 0 }
+    ]
   }
 ]
 

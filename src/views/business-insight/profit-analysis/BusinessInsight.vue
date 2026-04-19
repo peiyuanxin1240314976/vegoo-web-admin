@@ -10,6 +10,7 @@
   import type { ProfitCountryRow } from './types'
   import { resolveProfitCountryIso } from './country-flag-iso'
   import { useProfitAnalysisDashboard } from './composables/useProfitAnalysisDashboard'
+  import ProfitAppRowTrendSpark from './modules/profit-app-row-trend-spark.vue'
 
   defineOptions({ name: 'BusinessInsight' })
 
@@ -248,30 +249,6 @@
     })
   }
 
-  type SparkTrend = 'up' | 'down' | 'flat' | 'none'
-
-  function normalizeAppTrend(raw: string | undefined): SparkTrend {
-    const v = (raw ?? '').trim().toLowerCase()
-    if (v === 'up' || v === 'down' || v === 'flat' || v === 'none') return v
-    return 'none'
-  }
-
-  function getTrendPath(raw: string | undefined): string {
-    const type = normalizeAppTrend(raw)
-    if (type === 'none') return ''
-    if (type === 'flat') return 'M0,10 C10,10 20,10 30,10 C40,10 50,10 60,10'
-    if (type === 'up') return 'M0,18 C10,16 20,12 30,9 C40,6 50,4 60,2'
-    return 'M0,2 C10,4 20,6 30,9 C40,12 50,16 60,18'
-  }
-
-  function getTrendColor(raw: string | undefined): string {
-    const type = normalizeAppTrend(raw)
-    if (type === 'up') return '#4ade80'
-    if (type === 'down') return '#f87171'
-    if (type === 'flat') return '#facc15'
-    return '#475569'
-  }
-
   function handleResize() {
     trendChart?.resize()
     sankeyChart?.resize()
@@ -477,22 +454,10 @@
                   <td :style="{ color: row.rateColor, fontWeight: 600 }">{{ row.rate }}</td>
                   <td class="td-trend">
                     <div class="td-trend__inner">
-                      <svg
-                        v-if="normalizeAppTrend(row.trend) !== 'none'"
-                        width="60"
-                        height="20"
-                        viewBox="0 0 60 20"
-                        class="td-trend__svg"
-                      >
-                        <path
-                          :d="getTrendPath(row.trend)"
-                          fill="none"
-                          :stroke="getTrendColor(row.trend)"
-                          stroke-width="1.8"
-                          stroke-linecap="round"
-                        />
-                      </svg>
-                      <span v-else class="td-trend__dash">—</span>
+                      <ProfitAppRowTrendSpark
+                        :points="row.profitTrend"
+                        :line-color="row.profitColor"
+                      />
                     </div>
                   </td>
                 </tr>
@@ -1192,7 +1157,7 @@
   }
 
   .bi-app-table .bi-table-host {
-    max-height: 620px;
+    max-height: 520px;
     overflow-y: auto;
   }
 
@@ -1303,16 +1268,6 @@
     align-items: center;
     justify-content: center;
     min-height: 22px;
-  }
-
-  .td-trend__svg {
-    display: block;
-    flex-shrink: 0;
-  }
-
-  .td-trend__dash {
-    line-height: 1;
-    color: #475569;
   }
 
   .td-country {

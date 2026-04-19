@@ -57,6 +57,13 @@ export interface ProfitKpiCard {
   bg: string
 }
 
+/** 应用利润表行「利润趋势」单点（按筛选日期范围逐日） */
+export interface ProfitTrendPoint {
+  date: string
+  /** 当日利润数值（USD，可正可负） */
+  profit: number
+}
+
 /** 应用利润详情表行（对齐 ProfitAppRowDto） */
 export interface ProfitAppRow {
   app: string
@@ -68,8 +75,8 @@ export interface ProfitAppRow {
   profitColor: string
   rate: string
   rateColor: string
-  /** 趋势：常见 up / down / flat / none，其它值按无迷你图处理 */
-  trend: string
+  /** 按筛选日期范围返回的利润序列，供趋势迷你折线图使用 */
+  profitTrend: ProfitTrendPoint[]
 }
 
 /** 应用利润表合计行（对齐 ProfitAppTotalDto） */
