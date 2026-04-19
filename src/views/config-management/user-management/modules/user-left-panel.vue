@@ -1,6 +1,6 @@
 <!-- 用户管理 - 左侧面板：标题、统计卡片、筛选、用户列表 -->
 <template>
-  <div class="user-left-panel art-full-height flex flex-col">
+  <div class="user-left-panel flex min-h-0 h-full flex-col">
     <!-- 第一排：左侧标题 + 说明 + 右侧「新建用户」 -->
     <div class="panel-row header-row">
       <div class="header-title-wrap">
@@ -188,9 +188,12 @@
 
 <style scoped lang="scss">
   .user-left-panel {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 16px;
+    height: 100%;
+    min-height: 0;
   }
 
   .panel-row {

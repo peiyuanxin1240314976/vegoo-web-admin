@@ -2,7 +2,7 @@
 <template>
   <div class="user-page art-full-height flex">
     <!-- 左侧：统计卡片 + 筛选 + 列表 -->
-    <div class="user-page-left flex-1 min-w-0 flex flex-col">
+    <div class="user-page-left flex-1 min-h-0 min-w-0 flex flex-col">
       <UserLeftPanel
         :stats="userStats"
         :filter-form="filterForm"
@@ -34,7 +34,7 @@
     </div>
 
     <!-- 右侧：用户详情 -->
-    <div class="user-page-right">
+    <div class="user-page-right min-h-0">
       <UserRightPanel
         :user="currentDetailUser"
         @save="handleRightPanelSave"
@@ -417,17 +417,24 @@
     gap: 16px;
     width: 100%;
     min-width: 0;
+
+    /* 首帧 --art-full-height 可能尚未写入，避免 height 失效导致整页随内容被撑高 */
+    height: var(--art-full-height, calc(100vh - 120px));
+    min-height: 0;
+    max-height: var(--art-full-height, calc(100vh - 120px));
     overflow: hidden;
   }
 
   .user-page-left {
     flex: 1;
     min-width: 0;
+    min-height: 0;
     overflow: hidden;
   }
 
   .user-page-right {
     flex-shrink: 0;
+    align-self: stretch;
     width: 360px;
     min-width: 320px;
     max-width: 420px;
@@ -464,10 +471,12 @@
     }
   }
 
-  /* 超小屏：整体紧凑 */
+  /* 超小屏：与全局 .art-full-height 一致改为自然高度，避免 max-height 限制可滚动内容 */
   @media (width <= 640px) {
     .user-page {
       gap: 12px;
+      height: auto;
+      max-height: none;
     }
   }
 </style>
