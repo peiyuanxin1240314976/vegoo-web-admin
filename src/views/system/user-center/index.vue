@@ -98,7 +98,11 @@
         </div>
 
         <!-- 通知设置：左右两列 -->
-        <div v-show="activeTab === 'notification'" class="art-card-sm">
+        <div
+          v-show="activeTab === 'notification'"
+          class="art-card-sm"
+          v-loading="notificationDetailLoading"
+        >
           <h2 class="p-4 text-lg font-medium border-b border-g-300">通知设置</h2>
           <div class="p-5">
             <div class="notification-two-cols grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -246,7 +250,15 @@
             </div>
 
             <div class="flex justify-end pt-6 mt-2 border-t border-g-300">
-              <ElButton type="primary" v-ripple @click="saveNotification"> 保存设置 </ElButton>
+              <ElButton
+                type="primary"
+                v-ripple
+                :loading="notificationSaveLoading"
+                :disabled="notificationDetailLoading"
+                @click="saveNotification"
+              >
+                保存设置
+              </ElButton>
             </div>
           </div>
         </div>
@@ -312,6 +324,10 @@
 <script setup lang="ts">
   import { useUserStore } from '@/store/modules/user'
   import { fetchChangeEmail, fetchChangePwd } from '@/api/auth'
+  import {
+    fetchUserCenterNotificationSettings,
+    fetchUserCenterNotificationSettingsSave
+  } from '@/api/user-center'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
   // import { Plus } from '@element-plus/icons-vue'
@@ -373,7 +389,6 @@
     form.email = info?.email ?? ''
   }
 
-  onMounted(syncFormFromUserInfo)
   watch(userInfo, syncFormFromUserInfo, { deep: true })
 
   const pwdForm = reactive({
@@ -386,7 +401,7 @@
     email: [{ type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }]
   })
 
-  type FeishuNotifyKey = 'alert' | 'daily' | 'weekly' | 'approval' | 'dataAbnormal'
+  type FeishuNotifyKey = 'alert' | 'daily'
   const feishuNotifyList: { key: FeishuNotifyKey; label: string; desc: string }[] = [
     { key: 'alert', label: '预警通知', desc: '当系统检测到异常时推送' },
     { key: 'daily', label: '日报推送', desc: '每日 08:00 推送经营日报' }
@@ -397,31 +412,61 @@
 
   const weekdayLabels = ['一', '二', '三', '四', '五', '六', '日']
 
-  type AlertLevelKey = 'high' | 'medium' | 'low'
-  const notificationForm = reactive<{
-    feishu: Record<FeishuNotifyKey, boolean>
-    pushInWorkTime: boolean
-    pushStartTime: string
-    pushEndTime: string
-    pushWeekdays: number[]
-    alertChannels: Record<AlertLevelKey, string[]>
-  }>({
+  type AlertLevelKey = 'high'
+  const notificationForm = reactive<Api.UserCenter.UserNotificationSettings>({
     feishu: {
       alert: true,
-      daily: true,
-      weekly: false,
-      approval: true,
-      dataAbnormal: false
+      daily: true
     },
     pushInWorkTime: true,
     pushStartTime: '08:00',
     pushEndTime: '22:00',
     pushWeekdays: [1, 2, 3, 4, 5],
     alertChannels: {
-      high: ['feishu', 'email', 'platform'],
-      medium: ['feishu', 'platform'],
-      low: ['feishu', 'platform']
+      high: ['feishu']
     }
+  })
+
+  const notificationDetailLoading = ref(false)
+  const notificationSaveLoading = ref(false)
+  let notificationFetchSeq = 0
+
+  function applyNotificationSettings(data: Api.UserCenter.UserNotificationSettings) {
+    notificationForm.feishu.alert = data.feishu.alert
+    notificationForm.feishu.daily = data.feishu.daily
+    notificationForm.alertChannels.high = [
+      ...(data.alertChannels.high?.length ? data.alertChannels.high : ['feishu'])
+    ]
+    notificationForm.pushInWorkTime = data.pushInWorkTime
+    notificationForm.pushStartTime = data.pushStartTime
+    notificationForm.pushEndTime = data.pushEndTime
+    notificationForm.pushWeekdays = [...data.pushWeekdays]
+  }
+
+  async function loadNotificationSettings() {
+    const seq = ++notificationFetchSeq
+    notificationDetailLoading.value = true
+    try {
+      const data = await fetchUserCenterNotificationSettings()
+      if (seq !== notificationFetchSeq) return
+      applyNotificationSettings(data)
+    } catch {
+      // 请求层已提示；保留表单默认值以便继续操作
+    } finally {
+      if (seq === notificationFetchSeq) notificationDetailLoading.value = false
+    }
+  }
+
+  watch(
+    () => activeTab.value,
+    (tab) => {
+      if (tab === 'notification') void loadNotificationSettings()
+    }
+  )
+
+  onMounted(() => {
+    syncFormFromUserInfo()
+    if (activeTab.value === 'notification') void loadNotificationSettings()
   })
 
   const alertLevels: { key: AlertLevelKey; label: string; bgClass: string; labelClass: string }[] =
@@ -523,8 +568,24 @@
     setFeishuNotify(row.key, Boolean(value))
   }
 
-  const saveNotification = () => {
-    ElMessage.success('通知设置已保存')
+  const saveNotification = async () => {
+    const payload: Api.UserCenter.UserNotificationSettings = {
+      feishu: { ...notificationForm.feishu },
+      alertChannels: { high: [...notificationForm.alertChannels.high] },
+      pushInWorkTime: notificationForm.pushInWorkTime,
+      pushStartTime: notificationForm.pushStartTime,
+      pushEndTime: notificationForm.pushEndTime,
+      pushWeekdays: [...notificationForm.pushWeekdays]
+    }
+    notificationSaveLoading.value = true
+    try {
+      await fetchUserCenterNotificationSettingsSave(payload)
+      ElMessage.success('通知设置已保存')
+    } catch {
+      // 请求层已提示
+    } finally {
+      notificationSaveLoading.value = false
+    }
   }
 
   // const addReport = () => {

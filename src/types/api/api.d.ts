@@ -124,6 +124,35 @@ declare namespace Api {
     }
   }
 
+  /** 系统 · 个人中心（/system/user-center） */
+  namespace UserCenter {
+    /** 飞书通知开关（与当前表格行一致：预警、日报） */
+    interface FeishuNotifySwitches {
+      alert: boolean
+      daily: boolean
+    }
+
+    /** 预警触达渠道；当前页仅高优先级 + 飞书卡片 */
+    interface AlertChannelsConfig {
+      high: string[]
+    }
+
+    /** 通知设置查询/保存业务体，见 `views/system/user-center/mock/backend-api` */
+    interface UserNotificationSettings {
+      feishu: FeishuNotifySwitches
+      alertChannels: AlertChannelsConfig
+      pushInWorkTime: boolean
+      pushStartTime: string
+      pushEndTime: string
+      pushWeekdays: number[]
+    }
+
+    /** 保存接口 `data` 内业务体 */
+    interface NotificationSettingsSaveResult {
+      success: boolean
+    }
+  }
+
   /** 系统管理类型 */
   namespace SystemManage {
     /** 用户列表 */
