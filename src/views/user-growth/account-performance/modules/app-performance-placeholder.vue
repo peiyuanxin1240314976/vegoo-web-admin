@@ -65,7 +65,7 @@
             </ElTableColumn>
 
             <ElTableColumn label="广告账户" align="center">
-              <ElTableColumn prop="adAccount.accountId" label="ID" min-width="180" align="center">
+              <ElTableColumn prop="adAccount.accountId" label="ID" min-width="100" align="center">
                 <template #default="{ row }">
                   <span class="ap-account-id ap-account-id--solo">
                     {{ row.adAccount?.accountId?.trim() || '—' }}
@@ -73,7 +73,7 @@
                 </template>
               </ElTableColumn>
 
-              <ElTableColumn prop="adAccount.name" label="名称" min-width="240">
+              <ElTableColumn prop="adAccount.name" align="center" label="名称" min-width="100">
                 <template #default="{ row }">
                   <span class="ap-account-name">{{ row.adAccount?.name?.trim() || '—' }}</span>
                 </template>
@@ -552,13 +552,14 @@
     const seq = ++requestSeq
     accountsLoading.value = true
     accounts.value = []
-    total.value = 0
+    /* 请求进行中勿将 total 置 0：ElPagination 在 total=0 时会修正 current-page 回 1，导致翻页后立即再请求第 1 页 */
 
     try {
       const res = await request.post<{ accounts: AccountRow[]; total: number }>({
         url: `${ACCOUNT_PERFORMANCE_API_BASE}/app-performance-placeholder-table`,
         data: {
-          currentPage: Math.max(0, currentPage.value - 1),
+          /* 与 ElPagination 一致：从 1 开始；勿再减 1，否则第 1 页会请求成 0 */
+          currentPage: currentPage.value,
           dateEnd,
           dateStart,
           keys: props.keys.trim(),

@@ -5,7 +5,7 @@
       "currentPage": {
         "type": "number",
         "required": true,
-        "description": "当前页码，从 0 起算（与后端分页约定一致）。"
+        "description": "当前页码（从 1 开始，与前端 ElPagination 一致）。"
       },
       "dateStart": {
         "type": "string",
@@ -172,7 +172,7 @@
     }
   },
   "sampleRequest": {
-    "currentPage": 0,
+    "currentPage": 1,
     "dateEnd": "2026-02-10",
     "dateStart": "2026-02-10",
     "kw": "",

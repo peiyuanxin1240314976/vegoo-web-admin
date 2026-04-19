@@ -309,8 +309,7 @@
     const seq = ++requestSeq
     platformLoading.value = true
     platformData.value = []
-    platformTotal.value = 0
-    accountTotal.value = 0
+    /* 同上：勿在请求前将 platformTotal 置 0，否则分页器会把 current-page 打回 1 */
 
     try {
       const res = await request.post<{
@@ -320,7 +319,8 @@
       }>({
         url: `${ACCOUNT_PERFORMANCE_API_BASE}/platform-performance-placeholder-table`,
         data: {
-          currentPage: Math.max(0, currentPage.value - 1),
+          /* 与 ElPagination 一致：从 1 开始 */
+          currentPage: currentPage.value,
           dateEnd,
           dateStart,
           keys: props.keys.trim(),
