@@ -214,6 +214,16 @@ alwaysApply: true
 - 写样式时**优先使用上表中的 CSS 变量**，避免硬编码 HEX；若需在 JS/图表配置中引用，可使用 `getComputedStyle(document.documentElement).getPropertyValue('--art-primary')` 等。
 - 浅色模式由 `:root` 与现有 gray/primary 变量控制，与深色角色语义一致，具体色值见 `tailwind.css`。
 
+### 页面/模块与主题色关联（按钮、筛选与表单控件）
+
+后续**新增或重构**的页面入口、业务模块布局时，**主操作区与筛选区**必须与**全局主题色**联动，避免「单页一套孤立配色」导致换肤、深浅模式或**设置里更换的系统主题色**与按钮、输入框、下拉脱节。
+
+- **两套「主色」分工（须区分）**：**`--art-primary`** 为 `tailwind.css` 中的设计基准色；**`--el-color-primary`** 由运行时 **`setElementThemeColor`**（设置 → 系统主题色）写入 `document.documentElement`，随用户选择变化。**凡应跟随设置里主题色的控件与强调**（`ElButton`、筛选行、输入聚焦、与同页工具条/面板的描边与高光），**优先使用 `var(--el-color-primary)`** 及 **`color-mix(in srgb, var(--el-color-primary) …%, transparent)`**，勿仅用 `--art-primary` 画死主按钮/筛选项（否则换色后仍像「另一套蓝」）。
+- **主按钮**：优先 **`<ElButton type="primary">`**，让 Element Plus 使用 **`--el-color-primary`**；若仅加层次，可再叠 **字重、阴影、hover 位移/brightness**，**不要**用 `--art-primary` 渐变覆盖整块背景。
+- **次要按钮 / 默认按钮**：在按钮根上设置 Element 提供的 **`--el-button-bg-color` / `--el-button-border-color` / `--el-button-hover-*` / `--el-button-active-*`**（见 **`ad-account`** 等页），取值一律基于 **`var(--el-color-primary)`** 与语义文字色，与主色同源。
+- **筛选行与表单控件**（`ElInput`、`ElSelect`、`ElDatePicker`、`ElCascader`、日期范围等）：边框、悬停、聚焦的混合色用 **`var(--el-color-primary)`**；**placeholder** 用 **`var(--text-tertiary)`**，输入字色用 **`var(--text-primary)`**（或 `--text-secondary` 视层级而定）；**勿**写仅本页使用的固定强调色 HEX。
+- **模块级「面板边框/霓虹」**（与工具条同一视觉层级时）：**`--page-border`** 等建议用 **`color-mix(in srgb, var(--el-color-primary) …%, transparent)`**，与同页按钮一致；纯氛围装饰、大屏霓虹仍遵守 **`admin-ui-fx`**（token + `color-mix`，禁止业务硬编码 HEX 色盘）。
+
 ### 语义文字颜色 Token
 
 文字颜色优先使用语义变量而非直接引用灰阶（如用 `var(--text-secondary)` 而非 `var(--art-gray-600)`），亮/暗模式自动适配：

@@ -98,6 +98,7 @@
       <el-table
         :data="pagedList"
         class="account-table"
+        max-height="630px"
         table-layout="fixed"
         :row-class-name="getRowClassName"
         @row-click="handleRowClick"
@@ -123,7 +124,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="agency" label="代理商" min-width="100" show-overflow-tooltip />
-        <el-table-column label="账户类型" min-width="90" align="center">
+        <el-table-column label="账户类型" min-width="90" align="left">
           <template #default="{ row }">
             <span
               :class="[
@@ -135,19 +136,19 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="账户余额" min-width="110" align="right">
+        <el-table-column label="账户余额" min-width="110" align="left">
           <template #default="{ row }">
             <span :class="['balance', { 'balance--low': row.status === '余额不足' }]">
               ${{ row.balance.toLocaleString('en-US') }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="本月消耗" min-width="110" align="right">
+        <el-table-column label="本月消耗" min-width="110" align="left">
           <template #default="{ row }">
             <span class="spend">${{ row.monthSpend.toLocaleString('en-US') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" min-width="100" align="center">
+        <el-table-column label="状态" min-width="100" align="left">
           <template #default="{ row }">
             <span :class="['status-badge', getStatusClass(row.status)]">
               <span class="status-dot" />
@@ -407,34 +408,73 @@
 
 <style lang="scss" scoped>
   .ad-account-tab {
-    --bg-card: #131c2e;
-    --bg-row-hover: #162035;
-    --border: rgb(255 255 255 / 7%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #3b82f6;
-    --accent-dim: rgb(59 130 246 / 12%);
-    --green: #22c55e;
-    --green-bg: rgb(34 197 94 / 12%);
-    --amber: #f59e0b;
-    --amber-bg: rgb(245 158 11 / 12%);
-    --red: #ef4444;
-    --red-bg: rgb(239 68 68 / 12%);
+    --ad-border: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --ad-border-strong: color-mix(in srgb, var(--el-color-primary) 24%, transparent);
+    --ad-surface: color-mix(in srgb, var(--default-box-color) 94%, transparent);
+    --ad-surface-soft: color-mix(in srgb, var(--default-box-color) 84%, transparent);
+    --ad-row-hover: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
+    --ad-header-bg: color-mix(in srgb, var(--default-box-color) 78%, black 4%);
+    --accent: var(--el-color-primary);
+    --accent-dim: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    --accent-glow: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
+    --green: var(--art-success);
+    --green-bg: color-mix(in srgb, var(--art-success) 14%, transparent);
+    --amber: var(--art-warning);
+    --amber-bg: color-mix(in srgb, var(--art-warning) 14%, transparent);
+    --red: var(--art-danger);
+    --red-bg: color-mix(in srgb, var(--art-danger) 12%, transparent);
+    --purple: color-mix(in srgb, var(--theme-color) 42%, var(--el-color-primary) 58%);
+    --purple-bg: color-mix(in srgb, var(--theme-color) 14%, transparent);
   }
 
   // ─── 筛选栏 ────────────────────────────────────────────
   .filter-bar {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     gap: 12px 16px;
     align-items: center;
-    padding: 14px 16px;
+    padding: 16px 18px;
     margin-bottom: 16px;
-    background: linear-gradient(180deg, rgb(19 28 46 / 90%) 0%, rgb(19 28 46 / 75%) 100%);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgb(0 0 0 / 18%);
+    overflow: hidden;
+    background:
+      radial-gradient(
+        ellipse 90% 70% at 12% 0%,
+        color-mix(in srgb, var(--el-color-primary) 12%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--default-box-color) 96%, transparent) 0%,
+        color-mix(in srgb, var(--default-box-color) 88%, transparent) 100%
+      );
+    isolation: isolate;
+    border: 1px solid var(--ad-border);
+    border-radius: 16px;
+    box-shadow:
+      0 12px 32px rgb(0 0 0 / 8%),
+      inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
+  }
+
+  .filter-bar::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 2px;
+    pointer-events: none;
+    content: '';
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--el-color-primary) 40%, transparent) 42%,
+      color-mix(in srgb, var(--theme-color) 32%, transparent) 58%,
+      transparent 100%
+    );
+    opacity: 0.85;
   }
 
   .filter-group {
@@ -457,24 +497,24 @@
     :deep(.el-select__wrapper) {
       min-height: 34px;
       color: var(--text-primary);
-      background: rgb(255 255 255 / 4%) !important;
-      border: 1px solid var(--border) !important;
+      background: color-mix(in srgb, var(--default-box-color) 72%, transparent) !important;
+      border: 1px solid var(--ad-border) !important;
       border-radius: 9999px;
       box-shadow: none !important;
       transition:
-        border-color var(--duration-fast, 150ms) var(--ease-default, ease),
-        background-color var(--duration-fast, 150ms) var(--ease-default, ease),
-        box-shadow var(--duration-fast, 150ms) var(--ease-default, ease);
+        border-color var(--duration-fast) var(--ease-out),
+        background-color var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out);
     }
 
     :deep(.el-select__wrapper:hover) {
-      background: rgb(59 130 246 / 10%) !important;
-      border-color: rgb(59 130 246 / 55%) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 9%, transparent) !important;
+      border-color: color-mix(in srgb, var(--el-color-primary) 42%, transparent) !important;
     }
 
     :deep(.el-select__wrapper.is-focused) {
-      border-color: var(--accent) !important;
-      box-shadow: 0 0 0 2px rgb(59 130 246 / 22%) !important;
+      border-color: color-mix(in srgb, var(--el-color-primary) 55%, transparent) !important;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
     }
 
     :deep(.el-select__placeholder),
@@ -504,13 +544,13 @@
     padding: 0 12px !important;
     font-size: 13px !important;
     color: var(--text-primary);
-    background: rgb(255 255 255 / 4%) !important;
-    border: 1px solid var(--border) !important;
+    background: color-mix(in srgb, var(--default-box-color) 72%, transparent) !important;
+    border: 1px solid var(--ad-border) !important;
     box-shadow: none !important;
     transition:
-      border-color var(--duration-fast, 150ms) var(--ease-default, ease),
-      background-color var(--duration-fast, 150ms) var(--ease-default, ease),
-      box-shadow var(--duration-fast, 150ms) var(--ease-default, ease);
+      border-color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
   }
 
   :deep(.ad-account-app-select__trigger .app-platform-search-select__text) {
@@ -523,39 +563,46 @@
   }
 
   :deep(.ad-account-app-select__trigger:hover) {
-    background: rgb(59 130 246 / 10%) !important;
-    border-color: rgb(59 130 246 / 55%) !important;
+    background: color-mix(in srgb, var(--el-color-primary) 9%, transparent) !important;
+    border-color: color-mix(in srgb, var(--el-color-primary) 42%, transparent) !important;
   }
 
   :deep(.ad-account-app-select__trigger.is-open) {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 2px rgb(59 130 246 / 22%) !important;
+    border-color: color-mix(in srgb, var(--el-color-primary) 55%, transparent) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
   }
 
   :deep(.el-select-dropdown__item.is-selected) {
     font-weight: 600;
-    color: var(--accent);
+    color: var(--el-color-primary);
   }
 
   :deep(.el-select-dropdown__item:hover) {
-    background: rgb(59 130 246 / 12%);
+    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
   }
 
   // ─── 统计卡片 ───────────────────────────────────────────
   .stat-cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     margin-bottom: 16px;
   }
 
   .stat-card {
     position: relative;
-    padding: 18px 20px;
+    padding: 16px 18px;
     overflow: hidden;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    isolation: isolate;
+    border: 1px solid var(--ad-border);
+    border-radius: 14px;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 5%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
 
     &::before {
       position: absolute;
@@ -566,50 +613,162 @@
       content: '';
     }
 
-    &--total::before {
-      background: var(--accent);
+    &::after {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 1px;
+      pointer-events: none;
+      content: '';
+      opacity: 0.65;
     }
 
-    &--active::before {
-      background: var(--green);
+    &:hover {
+      border-color: var(--ad-border-strong);
+      box-shadow:
+        0 10px 24px rgb(0 0 0 / 8%),
+        0 0 0 1px color-mix(in srgb, var(--el-color-primary) 8%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+      transform: translateY(-1px);
     }
 
-    &--proxy::before {
-      background: #a78bfa;
+    &--total {
+      background:
+        radial-gradient(
+          ellipse 110% 85% at 92% 8%,
+          color-mix(in srgb, var(--el-color-primary) 20%, transparent) 0%,
+          transparent 58%
+        ),
+        linear-gradient(
+          155deg,
+          var(--ad-surface) 0%,
+          color-mix(in srgb, var(--default-bg-color) 35%, transparent) 100%
+        );
+
+      &::before {
+        background: var(--el-color-primary);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--el-color-primary) 35%, transparent),
+          transparent
+        );
+      }
     }
 
-    &--new::before {
-      background: var(--amber);
+    &--active {
+      background:
+        radial-gradient(
+          ellipse 100% 80% at 88% 0%,
+          color-mix(in srgb, var(--art-success) 16%, transparent) 0%,
+          transparent 55%
+        ),
+        linear-gradient(165deg, var(--ad-surface-soft) 0%, var(--ad-surface) 100%);
+
+      &::before {
+        background: var(--green);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--art-success) 30%, transparent),
+          transparent
+        );
+      }
+    }
+
+    &--proxy {
+      background:
+        radial-gradient(
+          ellipse 100% 80% at 10% 12%,
+          color-mix(in srgb, var(--theme-color) 14%, transparent) 0%,
+          transparent 56%
+        ),
+        linear-gradient(198deg, var(--ad-surface) 0%, var(--ad-surface-soft) 100%);
+
+      &::before {
+        background: var(--purple);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--theme-color) 28%, transparent),
+          transparent
+        );
+      }
+    }
+
+    &--new {
+      background:
+        radial-gradient(
+          ellipse 95% 78% at 85% 15%,
+          color-mix(in srgb, var(--art-warning) 14%, transparent) 0%,
+          transparent 58%
+        ),
+        linear-gradient(175deg, var(--ad-surface-soft) 0%, var(--ad-surface) 100%);
+
+      &::before {
+        background: var(--amber);
+      }
+
+      &::after {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--art-warning) 32%, transparent),
+          transparent
+        );
+      }
     }
   }
 
   .stat-label {
-    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 8px;
     font-size: 12px;
+    font-weight: 600;
     color: var(--text-muted);
+    letter-spacing: 0.02em;
   }
 
   .stat-value {
+    position: relative;
+    z-index: 1;
     display: flex;
     gap: 6px;
     align-items: baseline;
-    font-size: 28px;
-    font-weight: 700;
+    font-size: 26px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
 
     &--total {
-      color: var(--accent);
+      color: var(--el-color-primary);
+      text-shadow: 0 0 24px color-mix(in srgb, var(--el-color-primary) 22%, transparent);
     }
 
     &--active {
       color: var(--green);
+      text-shadow: 0 0 20px color-mix(in srgb, var(--art-success) 18%, transparent);
     }
 
     &--proxy {
-      color: #a78bfa;
+      color: var(--purple);
+      text-shadow: 0 0 20px color-mix(in srgb, var(--theme-color) 16%, transparent);
     }
 
     &--new {
       color: var(--amber);
+      text-shadow: 0 0 18px color-mix(in srgb, var(--art-warning) 14%, transparent);
     }
   }
 
@@ -624,18 +783,21 @@
   .stat-delta {
     padding: 2px 6px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--amber);
     background: var(--amber-bg);
-    border-radius: 4px;
+    border-radius: 6px;
   }
 
   // ─── 表格 ──────────────────────────────────────────────
   .table-wrapper {
     overflow: hidden;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    background: var(--ad-surface);
+    border: 1px solid var(--ad-border);
+    border-radius: 14px;
+    box-shadow:
+      0 8px 24px rgb(0 0 0 / 6%),
+      inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
   }
 
   .account-table {
@@ -643,27 +805,27 @@
     cursor: pointer;
 
     --el-table-bg-color: transparent;
-    --el-table-header-bg-color: #0f1829;
-    --el-table-row-hover-bg-color: var(--bg-row-hover);
-    --el-table-border-color: var(--border);
+    --el-table-header-bg-color: var(--ad-header-bg);
+    --el-table-row-hover-bg-color: var(--ad-row-hover);
+    --el-table-border-color: var(--ad-border);
     --el-table-text-color: var(--text-primary);
     --el-table-header-text-color: var(--text-secondary);
-    --el-table-border: 1px solid var(--border);
+    --el-table-border: 1px solid var(--ad-border);
 
     background: transparent !important;
 
     :deep(th.el-table__cell) {
-      padding: 12px 8px;
+      padding: 12px 10px;
       font-size: 12px;
-      font-weight: 500;
-      background: #0f1829 !important;
-      border-bottom: 1px solid var(--border) !important;
+      font-weight: 600;
+      background: var(--ad-header-bg) !important;
+      border-bottom: 1px solid var(--ad-border) !important;
     }
 
     :deep(td.el-table__cell) {
-      padding: 10px 8px;
+      padding: 10px;
       font-size: 13px;
-      border-bottom: 1px solid var(--border) !important;
+      border-bottom: 1px solid var(--ad-border) !important;
     }
 
     :deep(tr) {
@@ -675,8 +837,8 @@
     }
 
     :deep(tr.row-selected td.el-table__cell) {
-      background: var(--accent-dim) !important;
-      border-bottom-color: rgb(59 130 246 / 20%) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 11%, transparent) !important;
+      border-bottom-color: color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
     }
   }
 
@@ -703,16 +865,16 @@
     align-items: center;
     padding: 2px 8px;
     font-size: 12px;
-    border-radius: 4px;
+    border-radius: 6px;
 
     &--direct {
-      color: var(--accent);
+      color: var(--el-color-primary);
       background: var(--accent-dim);
     }
 
     &--proxy {
-      color: #a78bfa;
-      background: rgb(167 139 250 / 12%);
+      color: var(--purple);
+      background: var(--purple-bg);
     }
   }
 
@@ -749,7 +911,7 @@
 
     &--disabled {
       color: var(--text-muted);
-      background: rgb(255 255 255 / 5%);
+      background: color-mix(in srgb, var(--text-tertiary) 10%, transparent);
     }
   }
 
@@ -779,20 +941,25 @@
   }
 
   .action-btn {
-    padding: 3px 8px;
+    padding: 4px 9px;
     font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
     background: none;
     border: none;
-    border-radius: 4px;
-    transition: all 0.15s;
+    border-radius: 6px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
 
     &--view {
       color: var(--text-secondary);
 
       &:hover {
-        color: var(--accent);
+        color: var(--el-color-primary);
         background: var(--accent-dim);
+        transform: translateY(-0.5px);
       }
     }
 
@@ -801,14 +968,16 @@
 
       &:hover {
         background: var(--green-bg);
+        transform: translateY(-0.5px);
       }
     }
 
     &--edit {
-      color: var(--accent);
+      color: var(--el-color-primary);
 
       &:hover {
         background: var(--accent-dim);
+        transform: translateY(-0.5px);
       }
     }
 
@@ -817,6 +986,7 @@
 
       &:hover {
         background: var(--amber-bg);
+        transform: translateY(-0.5px);
       }
     }
   }
@@ -824,14 +994,17 @@
   // ─── 分页 ──────────────────────────────────────────────
   .pagination-bar {
     display: flex;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 10px 12px;
     align-items: center;
     justify-content: flex-end;
     padding: 12px 16px;
-    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    border-top: 1px solid var(--ad-border);
   }
 
   .pagination-total {
+    margin-right: auto;
     font-size: 13px;
     color: var(--text-muted);
   }
@@ -844,29 +1017,41 @@
       line-height: 28px;
       color: var(--text-secondary);
       background: transparent;
-      border-radius: 5px;
+      border-radius: 6px;
+      transition:
+        color var(--duration-fast) var(--ease-out),
+        background-color var(--duration-fast) var(--ease-out);
 
       &:hover {
-        color: var(--accent);
+        color: var(--el-color-primary);
       }
 
       &.is-active {
         font-weight: 700;
-        color: #fff;
-        background: var(--accent);
+        color: var(--el-color-white);
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--el-color-primary) 94%, black 6%),
+          color-mix(in srgb, var(--el-color-primary) 82%, black 18%)
+        );
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
       }
     }
 
     :deep(.btn-prev),
     :deep(.btn-next) {
       color: var(--text-secondary) !important;
-      background: rgb(255 255 255 / 4%) !important;
-      border: 1px solid var(--border) !important;
-      border-radius: 5px;
+      background: color-mix(in srgb, var(--default-box-color) 65%, transparent) !important;
+      border: 1px solid var(--ad-border) !important;
+      border-radius: 6px;
+      transition:
+        color var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        background-color var(--duration-fast) var(--ease-out);
 
       &:hover {
-        color: var(--accent) !important;
-        border-color: var(--accent) !important;
+        color: var(--el-color-primary) !important;
+        border-color: color-mix(in srgb, var(--el-color-primary) 45%, transparent) !important;
       }
     }
   }
@@ -880,19 +1065,61 @@
   }
 
   .jumper-input {
-    width: 48px;
+    width: 52px;
 
     :deep(.el-input__wrapper) {
       height: 28px;
       padding: 0 6px;
-      background: rgb(255 255 255 / 4%) !important;
-      border: 1px solid var(--border) !important;
+      background: color-mix(in srgb, var(--default-box-color) 72%, transparent) !important;
+      border: 1px solid var(--ad-border) !important;
+      border-radius: 6px;
       box-shadow: none !important;
+      transition:
+        border-color var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out);
+    }
+
+    :deep(.el-input__wrapper:hover),
+    :deep(.el-input__wrapper.is-focus) {
+      border-color: color-mix(in srgb, var(--el-color-primary) 45%, transparent) !important;
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--el-color-primary) 14%, transparent) !important;
     }
 
     :deep(.el-input__inner) {
       font-size: 13px;
       color: var(--text-primary);
+      text-align: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stat-card:hover {
+      transform: none;
+    }
+
+    .action-btn:hover {
+      transform: none;
+    }
+  }
+
+  @media (width <= 1200px) {
+    .stat-cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (width <= 560px) {
+    .stat-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .pagination-bar {
+      justify-content: center;
+    }
+
+    .pagination-total {
+      flex: 1 1 100%;
+      margin-right: 0;
       text-align: center;
     }
   }

@@ -186,21 +186,21 @@
             <div class="section-title">近30天消耗走势</div>
             <div class="chart-placeholder">
               <svg viewBox="0 0 280 80" class="trend-svg">
+                <defs>
+                  <linearGradient id="trendGradPanel" x1="0" y1="0" x2="0" y2="1">
+                    <stop class="trend-svg__grad-stop trend-svg__grad-stop--top" offset="0%" />
+                    <stop class="trend-svg__grad-stop trend-svg__grad-stop--bottom" offset="100%" />
+                  </linearGradient>
+                </defs>
+                <polyline :points="trendAreaPoints" fill="url(#trendGradPanel)" stroke="none" />
                 <polyline
                   :points="trendPoints"
                   fill="none"
-                  stroke="#3b82f6"
+                  stroke="currentColor"
                   stroke-width="2"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 />
-                <polyline :points="trendAreaPoints" fill="url(#trendGradPanel)" stroke="none" />
-                <defs>
-                  <linearGradient id="trendGradPanel" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2" />
-                    <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
-                  </linearGradient>
-                </defs>
               </svg>
               <div class="chart-x-labels">
                 <span v-for="lbl in xLabels" :key="lbl" class="x-label">{{ lbl }}</span>
@@ -663,20 +663,24 @@
 
 <style lang="scss" scoped>
   .account-detail-panel {
-    --bg-panel: #0f1829;
-    --bg-header: #131c2e;
-    --border: rgb(255 255 255 / 7%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #3b82f6;
-    --accent-dim: rgb(59 130 246 / 12%);
-    --green: #22c55e;
-    --green-bg: rgb(34 197 94 / 12%);
-    --amber: #f59e0b;
-    --amber-bg: rgb(245 158 11 / 12%);
-    --red: #ef4444;
-    --red-bg: rgb(239 68 68 / 10%);
+    --dp-border: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --dp-border-soft: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    --dp-surface: color-mix(in srgb, var(--default-box-color) 96%, transparent);
+    --dp-surface-raised: color-mix(in srgb, var(--default-box-color) 90%, transparent);
+    --dp-header-bg: color-mix(in srgb, var(--default-box-color) 94%, transparent);
+    --accent: var(--el-color-primary);
+    --accent-dim: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
+    --green: var(--art-success);
+    --green-bg: color-mix(in srgb, var(--art-success) 14%, transparent);
+    --amber: var(--art-warning);
+    --amber-bg: color-mix(in srgb, var(--art-warning) 14%, transparent);
+    --red: var(--art-danger);
+    --red-bg: color-mix(in srgb, var(--art-danger) 12%, transparent);
+    --purple: color-mix(in srgb, var(--theme-color) 42%, var(--el-color-primary) 58%);
+    --purple-bg: color-mix(in srgb, var(--theme-color) 12%, transparent);
 
     display: flex;
     flex-direction: column;
@@ -684,10 +688,22 @@
     min-width: 420px;
     height: 100%;
     overflow: hidden;
-    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    background:
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--default-box-color) 98%, transparent) 0%,
+        color-mix(in srgb, var(--default-bg-color) 40%, transparent) 100%
+      ),
+      linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--el-color-primary) 4%, transparent),
+        color-mix(in srgb, var(--theme-color) 3%, transparent)
+      );
+    border: 1px solid var(--dp-border);
+    border-radius: 14px;
+    box-shadow:
+      0 12px 36px rgb(0 0 0 / 8%),
+      inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
   }
 
   // ─── 空状态 ────────────────────────────────────────────
@@ -701,6 +717,11 @@
     color: var(--text-muted);
   }
 
+  .empty-icon {
+    color: color-mix(in srgb, var(--el-color-primary) 55%, var(--text-tertiary) 45%);
+    opacity: 0.85;
+  }
+
   .empty-text {
     font-size: 13px;
   }
@@ -712,8 +733,8 @@
     align-items: flex-start;
     justify-content: space-between;
     padding: 16px 16px 12px;
-    background: var(--bg-header);
-    border-bottom: 1px solid var(--border);
+    background: var(--dp-header-bg);
+    border-bottom: 1px solid var(--dp-border-soft);
   }
 
   .header-left {
@@ -744,9 +765,9 @@
     padding: 2px 7px;
     font-size: 11px;
     color: var(--text-muted);
-    background: rgb(255 255 255 / 5%);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    border: 1px solid var(--dp-border-soft);
+    border-radius: 6px;
   }
 
   .header-status-row {
@@ -764,9 +785,11 @@
     &.status--normal {
       color: var(--green);
     }
+
     &.status--warning {
       color: var(--amber);
     }
+
     &.status--disabled {
       color: var(--text-muted);
     }
@@ -780,9 +803,11 @@
     .status--normal & {
       background: var(--green);
     }
+
     .status--warning & {
       background: var(--amber);
     }
+
     .status--disabled & {
       background: var(--text-muted);
     }
@@ -800,13 +825,16 @@
     height: 26px !important;
     padding: 0 10px !important;
     font-size: 12px !important;
-    color: var(--accent) !important;
+    color: var(--el-color-primary) !important;
     background: var(--accent-dim) !important;
-    border: 1px solid rgb(59 130 246 / 30%) !important;
-    border-radius: 6px !important;
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 32%, transparent) !important;
+    border-radius: 8px !important;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
 
     &:hover {
-      background: rgb(59 130 246 / 20%) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 16%, transparent) !important;
     }
   }
 
@@ -816,8 +844,11 @@
     font-size: 12px !important;
     color: var(--red) !important;
     background: transparent !important;
-    border: 1px solid var(--red) !important;
-    border-radius: 6px !important;
+    border: 1px solid color-mix(in srgb, var(--red) 55%, transparent) !important;
+    border-radius: 8px !important;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
 
     &:hover {
       background: var(--red-bg) !important;
@@ -829,9 +860,9 @@
     display: flex;
     flex-shrink: 0;
     gap: 0;
-    padding: 0 16px;
-    background: var(--bg-header);
-    border-bottom: 1px solid var(--border);
+    padding: 0 12px;
+    background: var(--dp-header-bg);
+    border-bottom: 1px solid var(--dp-border-soft);
   }
 
   .panel-tab {
@@ -842,16 +873,19 @@
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
-    transition: all 0.15s;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      font-weight var(--duration-fast) var(--ease-out);
 
     &:hover {
       color: var(--text-primary);
     }
 
     &--active {
-      font-weight: 500;
-      color: var(--accent);
-      border-bottom-color: var(--accent);
+      font-weight: 600;
+      color: var(--el-color-primary);
+      border-bottom-color: var(--el-color-primary);
     }
   }
 
@@ -863,19 +897,20 @@
     &::-webkit-scrollbar {
       width: 3px;
     }
+
     &::-webkit-scrollbar-track {
       background: transparent;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: rgb(255 255 255 / 8%);
+      background: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
       border-radius: 2px;
     }
   }
 
   .detail-section {
     padding: 14px 16px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--dp-border-soft);
 
     &--last {
       border-bottom: none;
@@ -890,8 +925,8 @@
     margin-bottom: 12px;
     font-size: 12px;
     font-weight: 600;
-    color: var(--accent);
-    border-left: 3px solid var(--accent);
+    color: var(--el-color-primary);
+    border-left: 3px solid var(--el-color-primary);
   }
 
   .section-sub {
@@ -929,9 +964,10 @@
     color: var(--text-primary);
 
     &--link {
-      color: var(--accent);
+      color: var(--el-color-primary);
       cursor: pointer;
     }
+
     &--remark {
       color: var(--text-secondary);
     }
@@ -950,13 +986,13 @@
     border-radius: 4px;
 
     &--direct {
-      color: var(--accent);
+      color: var(--el-color-primary);
       background: var(--accent-dim);
     }
 
     &--proxy {
-      color: #a78bfa;
-      background: rgb(167 139 250 / 12%);
+      color: var(--purple);
+      background: var(--purple-bg);
     }
   }
 
@@ -971,9 +1007,9 @@
     padding: 2px 7px;
     font-size: 12px;
     color: var(--text-secondary);
-    background: rgb(255 255 255 / 5%);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
+    border: 1px solid var(--dp-border-soft);
+    border-radius: 6px;
   }
 
   .purpose-tag {
@@ -995,7 +1031,8 @@
   .balance-amount {
     font-size: 22px;
     font-weight: 700;
-    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    color: var(--el-color-primary);
   }
 
   .balance-limit {
@@ -1012,23 +1049,27 @@
   }
 
   .pct-val {
-    color: var(--accent);
+    color: var(--el-color-primary);
   }
 
   .spend-progress-bar {
     width: 100%;
-    height: 5px;
+    height: 6px;
     margin-bottom: 10px;
     overflow: hidden;
-    background: rgb(255 255 255 / 8%);
-    border-radius: 3px;
+    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    border-radius: 6px;
   }
 
   .spend-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent), #60a5fa);
-    border-radius: 3px;
-    transition: width 0.4s ease;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--el-color-primary) 88%, black 12%),
+      color-mix(in srgb, var(--theme-color) 70%, var(--el-color-primary) 30%)
+    );
+    border-radius: 6px;
+    transition: width var(--duration-slow) var(--ease-out);
   }
 
   .last-recharge-row {
@@ -1067,9 +1108,9 @@
     justify-content: space-between;
     padding: 10px 12px;
     margin-bottom: 8px;
-    background: rgb(255 255 255 / 3%);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    border: 1px solid var(--dp-border-soft);
+    border-radius: 10px;
   }
 
   .credential-left {
@@ -1088,8 +1129,8 @@
     padding: 2px 6px;
     font-size: 11px;
     color: var(--text-muted);
-    background: rgb(255 255 255 / 5%);
-    border-radius: 3px;
+    background: color-mix(in srgb, var(--default-box-color) 90%, transparent);
+    border-radius: 4px;
   }
 
   .credential-token {
@@ -1125,14 +1166,14 @@
 
   .link-btn {
     font-size: 12px;
-    color: var(--accent);
+    color: var(--el-color-primary);
     cursor: pointer;
     background: none;
     border: none;
-    transition: opacity 0.15s;
+    transition: opacity var(--duration-fast) var(--ease-out);
 
     &:hover {
-      opacity: 0.7;
+      opacity: 0.82;
     }
   }
 
@@ -1150,6 +1191,17 @@
     width: 100%;
     height: 80px;
     overflow: visible;
+    color: var(--el-color-primary);
+  }
+
+  .trend-svg__grad-stop--top {
+    stop-color: var(--el-color-primary);
+    stop-opacity: 0.22;
+  }
+
+  .trend-svg__grad-stop--bottom {
+    stop-color: var(--el-color-primary);
+    stop-opacity: 0;
   }
 
   .chart-x-labels {
@@ -1175,39 +1227,49 @@
     padding-left: 8px;
     font-size: 12px;
     font-weight: 600;
-    color: var(--accent);
-    border-left: 3px solid var(--accent);
+    color: var(--el-color-primary);
+    border-left: 3px solid var(--el-color-primary);
   }
 
   .btn-new-cred {
-    padding: 4px 10px;
+    padding: 5px 12px;
     font-size: 12px;
-    font-weight: 500;
-    color: #fff;
+    font-weight: 600;
+    color: var(--el-color-white);
     cursor: pointer;
-    background: var(--accent);
-    border: none;
-    border-radius: 6px;
-    transition: filter 0.15s;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--el-color-primary) 92%, black 8%),
+      color-mix(in srgb, var(--el-color-primary) 78%, black 22%)
+    );
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 38%, transparent);
+    border-radius: 8px;
+    box-shadow: 0 6px 14px color-mix(in srgb, var(--el-color-primary) 22%, transparent);
+    transition:
+      filter var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
 
     &:hover {
-      filter: brightness(1.1);
+      filter: brightness(1.05);
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
     }
   }
 
   // 凭据列表表格
   .cred-table {
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--dp-border-soft);
+    border-radius: 10px;
   }
 
   .cred-table-header {
     display: flex;
     padding: 8px 10px;
     font-size: 11px;
+    font-weight: 600;
     color: var(--text-muted);
-    background: rgb(255 255 255 / 3%);
-    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--default-box-color) 92%, transparent);
+    border-bottom: 1px solid var(--dp-border-soft);
   }
 
   .cred-row {
@@ -1215,19 +1277,19 @@
     padding: 8px 10px;
     font-size: 12px;
     cursor: pointer;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
+    border-bottom: 1px solid var(--dp-border-soft);
+    transition: background-color var(--duration-fast) var(--ease-out);
 
     &:last-child {
       border-bottom: none;
     }
 
     &:hover {
-      background: rgb(255 255 255 / 3%);
+      background: color-mix(in srgb, var(--el-color-primary) 5%, transparent);
     }
 
     &--active {
-      background: var(--accent-dim) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 10%, transparent) !important;
     }
   }
 
@@ -1278,9 +1340,11 @@
     &--ok {
       color: var(--green);
     }
+
     &--expiring {
       color: var(--amber);
     }
+
     &--error {
       color: var(--red);
     }
@@ -1295,9 +1359,11 @@
     .cred-status--ok & {
       background: var(--green);
     }
+
     .cred-status--expiring & {
       background: var(--amber);
     }
+
     .cred-status--error & {
       background: var(--red);
     }
@@ -1316,11 +1382,13 @@
     cursor: pointer;
     background: none;
     border: none;
-    border-radius: 3px;
-    transition: all 0.15s;
+    border-radius: 4px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
 
     &:hover {
-      color: var(--accent);
+      color: var(--el-color-primary);
       background: var(--accent-dim);
     }
 
@@ -1389,15 +1457,17 @@
     flex-shrink: 0;
     padding: 1px 6px;
     font-size: 11px;
-    color: var(--accent);
+    color: var(--el-color-primary);
     cursor: pointer;
     background: var(--accent-dim);
-    border: 1px solid rgb(59 130 246 / 25%);
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent);
     border-radius: 4px;
-    transition: all 0.15s;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
 
     &:hover {
-      background: rgb(59 130 246 / 20%);
+      background: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
     }
   }
 
@@ -1410,7 +1480,7 @@
   .cred-app-tag {
     padding: 1px 7px;
     font-size: 11px;
-    color: var(--accent);
+    color: var(--el-color-primary);
     background: var(--accent-dim);
     border-radius: 4px;
   }
@@ -1427,27 +1497,30 @@
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    border-radius: 6px;
-    transition: all 0.15s;
+    border-radius: 8px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
 
     &--revalidate {
       color: var(--green);
       background: var(--green-bg);
-      border: 1px solid rgb(34 197 94 / 25%);
+      border: 1px solid color-mix(in srgb, var(--green) 35%, transparent);
 
       &:hover {
-        background: rgb(34 197 94 / 20%);
+        background: color-mix(in srgb, var(--art-success) 20%, transparent);
       }
     }
 
     &--copy {
       color: var(--text-secondary);
       background: transparent;
-      border: 1px solid var(--border);
+      border: 1px solid var(--dp-border-soft);
 
       &:hover {
         color: var(--text-primary);
-        border-color: rgb(255 255 255 / 15%);
+        border-color: color-mix(in srgb, var(--el-color-primary) 35%, transparent);
       }
     }
   }
@@ -1456,49 +1529,60 @@
   .panel-footer {
     display: flex;
     flex-shrink: 0;
-    gap: 6px;
+    gap: 8px;
     padding: 12px 16px;
-    background: var(--bg-header);
-    border-top: 1px solid var(--border);
+    background: var(--dp-header-bg);
+    border-top: 1px solid var(--dp-border-soft);
   }
 
   .footer-btn {
     flex: 1;
     height: 34px !important;
     font-size: 12px !important;
-    border-radius: 7px !important;
-    transition: all 0.15s !important;
+    border-radius: 8px !important;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      filter var(--duration-fast) var(--ease-out) !important;
 
     &--recharge {
       font-weight: 600 !important;
-      color: #fff !important;
-      background: var(--accent) !important;
-      border: none !important;
+      color: var(--el-color-white) !important;
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--el-color-primary) 92%, black 8%),
+        color-mix(in srgb, var(--el-color-primary) 78%, black 22%)
+      ) !important;
+      border: 1px solid color-mix(in srgb, var(--el-color-primary) 38%, transparent) !important;
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--el-color-primary) 26%, transparent) !important;
 
       &:hover {
-        filter: brightness(1.1);
+        filter: brightness(1.05);
+        box-shadow: 0 8px 20px color-mix(in srgb, var(--el-color-primary) 32%, transparent) !important;
       }
     }
 
     &--report {
       color: var(--text-secondary) !important;
-      background: transparent !important;
-      border: 1px solid var(--border) !important;
+      background: color-mix(in srgb, var(--default-box-color) 70%, transparent) !important;
+      border: 1px solid var(--dp-border-soft) !important;
 
       &:hover {
         color: var(--text-primary) !important;
-        border-color: rgb(255 255 255 / 15%) !important;
+        border-color: color-mix(in srgb, var(--el-color-primary) 28%, transparent) !important;
       }
     }
 
     &--credential {
       color: var(--text-secondary) !important;
       background: transparent !important;
-      border: 1px solid var(--border) !important;
+      border: 1px solid var(--dp-border-soft) !important;
 
       &:hover {
-        color: var(--accent) !important;
-        border-color: var(--accent) !important;
+        color: var(--el-color-primary) !important;
+        border-color: color-mix(in srgb, var(--el-color-primary) 42%, transparent) !important;
       }
     }
   }

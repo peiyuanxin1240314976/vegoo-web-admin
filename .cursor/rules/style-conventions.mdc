@@ -30,6 +30,7 @@ alwaysApply: false
 
 - **优先使用 Element 变量**: `var(--el-bg-color)`、`var(--el-text-color-primary)`、`var(--el-text-color-regular)`、`var(--el-text-color-secondary)`、`var(--el-border-color-lighter)`、`var(--el-color-primary)`、`var(--el-color-danger)`、`var(--el-color-success)`、`var(--el-fill-color-light)`、`var(--el-fill-color-dark)` 等。
 - **组件内局部变量**: 可在块内定义 CSS 变量，如 `--kpi-card-accent`、`--kpi-glass-border`，便于主题与深色统一。
+- **与主题色绑定（按钮、筛选）**: 页面/模块内**主按钮、筛选框、日期与输入聚焦态**须与 **`--art-primary` / `--el-color-primary`** 等全局角色一致，禁止单页孤立强调色；完整条款见 **`project-conventions.mdc`**「页面/模块与主题色关联（按钮、筛选与表单控件）」。
 
 ## 深色模式
 
