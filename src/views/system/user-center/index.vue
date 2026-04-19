@@ -306,16 +306,16 @@
         </div>
 
         <!-- 飞书绑定 -->
-        <div v-show="activeTab === 'feishu'" class="art-card-sm">
+        <!-- <div v-show="activeTab === 'feishu'" class="art-card-sm">
           <h2 class="p-4 text-lg font-medium border-b border-g-300">飞书绑定</h2>
           <div class="p-8 text-center text-g-600"> 飞书账号绑定功能开发中，敬请期待。 </div>
-        </div>
+        </div> -->
 
         <!-- 登录记录 -->
-        <div v-show="activeTab === 'login-log'" class="art-card-sm">
+        <!-- <div v-show="activeTab === 'login-log'" class="art-card-sm">
           <h2 class="p-4 text-lg font-medium border-b border-g-300">登录记录</h2>
           <div class="p-8 text-center text-g-600"> 登录记录功能开发中，敬请期待。 </div>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
@@ -342,9 +342,9 @@
   const navItems: { key: TabKey; label: string; icon: string }[] = [
     { key: 'basic', label: '基本信息', icon: 'ri:user-3-line' },
     { key: 'notification', label: '通知设置', icon: 'ri:notification-3-line' },
-    { key: 'password', label: '密码安全', icon: 'ri:lock-line' },
-    { key: 'feishu', label: '飞书绑定', icon: 'ri:link' },
-    { key: 'login-log', label: '登录记录', icon: 'ri:file-list-3-line' }
+    { key: 'password', label: '密码安全', icon: 'ri:lock-line' }
+    // { key: 'feishu', label: '飞书绑定', icon: 'ri:link' },
+    // { key: 'login-log', label: '登录记录', icon: 'ri:file-list-3-line' }
   ]
 
   const userInitials = computed(() => {
