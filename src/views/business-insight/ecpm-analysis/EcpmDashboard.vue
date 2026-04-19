@@ -698,6 +698,27 @@
       .join(' ')
   }
 
+  /** 去掉 min/max 上的 IEEE-754 噪声，减轻 ECharts 等分刻度时出现 5.7680000000000001 */
+  function snapTrendAxisBound(n: number): number {
+    return Number.parseFloat(Number(n).toPrecision(10))
+  }
+
+  /**
+   * 趋势图 Y 轴刻度文案：避免 split 计算产生的浮点尾数直接显示在标签上
+   * （根因：JS 浮点运算 + ECharts 内部等分，与业务数据精度无关）
+   */
+  function formatTrendYAxisTick(raw: number | string): string {
+    const v = typeof raw === 'number' ? raw : Number(raw)
+    if (!Number.isFinite(v)) return ''
+    if (v === 0) return '0'
+    const snapped = Number.parseFloat(v.toPrecision(12))
+    const abs = Math.abs(snapped)
+    if (abs >= 1000) return String(Math.round(snapped))
+    if (abs >= 100) return String(Math.round(snapped))
+    if (abs >= 10) return String(Number(snapped.toFixed(1)))
+    return String(Number(snapped.toFixed(2)))
+  }
+
   /** 趋势折线图左侧数值轴：按当前序列留出上下边距，无有效数据时交给 ECharts 自适应 */
   function trendValueAxisFromSeries(values: number[]) {
     const nums = values.map((v) => Number(v)).filter((n) => Number.isFinite(n))
@@ -716,7 +737,11 @@
     let min = minV - padLow
     let max = maxV + padHigh
     if (minV >= 0 && min < 0) min = 0
-    return { yMin: min, yMax: max, yInterval: null as number | null }
+    return {
+      yMin: snapTrendAxisBound(min),
+      yMax: snapTrendAxisBound(max),
+      yInterval: null as number | null
+    }
   }
 
   // ─── ECharts Theme ────────────────────────────────────────────────────────
@@ -862,7 +887,11 @@
         max: null,
         interval: null,
         splitLine: { lineStyle: { color: AXIS_COLOR, type: 'dashed' } },
-        axisLabel: { color: LABEL_COLOR, fontSize: 10 },
+        axisLabel: {
+          color: LABEL_COLOR,
+          fontSize: 10,
+          formatter: formatTrendYAxisTick
+        },
         axisLine: { show: false },
         axisTick: { show: false }
       },
