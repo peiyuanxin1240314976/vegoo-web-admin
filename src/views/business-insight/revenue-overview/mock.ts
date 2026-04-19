@@ -2,7 +2,7 @@
  * 收入总览页 Mock 常量与类型；与 `mock/backend-api/*.json` 契约中的 sampleResponse 对齐。
  * 接入远程接口时在 `revenue-overview/config/` 按接口配置 mock/remote，并实现 `src/api` 内 fetch*。
  */
-import { getAppTodayYYYYMMDD } from '@/utils/app-now'
+import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 
 export type RevenueOverviewFilterState = {
   /** 应用多选，不限为 [] */
@@ -13,8 +13,18 @@ export type RevenueOverviewFilterState = {
   s_country_code: string
   /** 版本 */
   app_version: string
-  /** 日期 */
-  t_date: string
+  /** 统计区间开始日 YYYY-MM-DD */
+  startDate: string
+  /** 统计区间结束日 YYYY-MM-DD */
+  endDate: string
+}
+
+function buildDefaultRevenueOverviewDateRange(): { startDate: string; endDate: string } {
+  const appNow = getAppNow()
+  const endDate = formatYYYYMMDD(appNow)
+  const startD = cloneAppDate(appNow)
+  startD.setDate(startD.getDate() - 4)
+  return { startDate: formatYYYYMMDD(startD), endDate }
 }
 
 export type RevenueOverviewKpiCard = {
@@ -179,7 +189,7 @@ export const MOCK_REVENUE_OVERVIEW_FILTERS: RevenueOverviewFilterState = {
   platform: '',
   s_country_code: '',
   app_version: 'all',
-  t_date: getAppTodayYYYYMMDD()
+  ...buildDefaultRevenueOverviewDateRange()
 }
 
 export const MOCK_REVENUE_OVERVIEW_KPIS: RevenueOverviewKpiCard[] = [

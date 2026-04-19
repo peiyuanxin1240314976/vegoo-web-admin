@@ -10,7 +10,16 @@
       },
       "s_country_code": { "type": "string", "required": true, "description": "国家码。" },
       "app_version": { "type": "string", "required": true, "description": "版本。" },
-      "t_date": { "type": "string", "required": true, "description": "统计日 YYYY-MM-DD。" }
+      "startDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间开始日 YYYY-MM-DD。"
+      },
+      "endDate": {
+        "type": "string",
+        "required": true,
+        "description": "统计区间结束日 YYYY-MM-DD。"
+      }
     },
     "response": {
       "rows": {
@@ -34,7 +43,8 @@
     "platform": "",
     "s_country_code": "",
     "app_version": "all",
-    "t_date": "2026-03-23"
+    "startDate": "2026-02-06",
+    "endDate": "2026-02-10"
   },
   "sampleResponse": {
     "rows": [

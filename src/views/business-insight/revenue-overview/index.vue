@@ -69,12 +69,15 @@
           <div class="rev-pill">
             <span class="rev-pill__k">日期：</span>
             <AppDatePicker
-              v-model="filtersDraft.t_date"
-              type="date"
-              :shortcuts="dateShortcuts"
+              v-model="dateRangePicker"
+              type="daterange"
+              unlink-panels
+              range-separator="～"
+              :shortcuts="dateRangeShortcuts"
               value-format="YYYY-MM-DD"
               format="YYYY-MM-DD"
               class="rev-date"
+              popper-class="rev-select__popper"
               :teleported="true"
               :clearable="false"
             />
@@ -697,7 +700,7 @@
   import 'flag-icons/css/flag-icons.min.css'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
-  import { dateShortcuts } from '@/utils/form/date-shortcuts'
+  import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type { ColumnOption } from '@/types'
   import {
     fetchRevenueOverviewTopCountries,
@@ -807,6 +810,22 @@
   const filtersDraft = reactive<RevenueOverviewFilterState>({ ...MOCK_REVENUE_OVERVIEW_FILTERS })
   // applied filters：仅在点击「查询」时更新，用于所有接口请求
   const filters = reactive<RevenueOverviewFilterState>({ ...MOCK_REVENUE_OVERVIEW_FILTERS })
+
+  /** 与 AppDatePicker daterange 双向绑定，底层为 filtersDraft.startDate / endDate */
+  const dateRangePicker = computed<[string, string] | null>({
+    get() {
+      const a = (filtersDraft.startDate ?? '').trim()
+      const b = (filtersDraft.endDate ?? '').trim()
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(a) || !/^\d{4}-\d{2}-\d{2}$/.test(b)) return null
+      return [a, b]
+    },
+    set(v: [string, string] | null) {
+      if (v?.[0] && v?.[1]) {
+        filtersDraft.startDate = v[0]
+        filtersDraft.endDate = v[1]
+      }
+    }
+  })
 
   /** 驾驶舱 meta 未就绪时的国家下拉兜底（与 store 中 CockpitMetaOptionItem 形态一致） */
   const COUNTRY_OPTIONS_FALLBACK: SelectOption[] = [
@@ -2765,13 +2784,26 @@
       background 0.2s ease;
   }
 
-  .rev-filter-panel :deep(.rev-date .el-input__wrapper) {
+  /*
+   * 日期范围：与 .rev-select / 应用选择器同一条主题实线；EP 仍走 --el-input-border-color
+   */
+  .rev-filter-panel :deep(.rev-date.el-date-editor) {
+    --el-input-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+  }
+
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper),
+  .rev-filter-panel :deep(.rev-date.el-date-editor .el-input__wrapper),
+  .rev-filter-panel :deep(.rev-date .el-range-editor.el-input__wrapper) {
     min-height: 36px;
     padding: 0 10px;
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
     border-radius: var(--el-border-radius-base, 4px);
-    box-shadow: none;
+    box-shadow: none !important;
     transition:
       border-color 0.2s ease,
       box-shadow 0.2s ease,
@@ -2779,21 +2811,26 @@
   }
 
   :global(html:not(.dark) .rev-filter-panel) :deep(.rev-select .el-select__wrapper),
-  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-input__wrapper) {
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-input__wrapper),
+  :global(html:not(.dark) .rev-filter-panel) :deep(.rev-date .el-range-editor.el-input__wrapper) {
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: none !important;
   }
 
   .rev-filter-panel :deep(.rev-select .el-select__wrapper:hover),
-  .rev-filter-panel :deep(.rev-date .el-input__wrapper:hover) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper:hover),
+  .rev-filter-panel :deep(.rev-date.el-date-editor:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
     box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
   }
 
   .rev-filter-panel :deep(.rev-select .el-select__wrapper.is-focused),
   .rev-filter-panel :deep(.rev-date .el-input__wrapper.is-focus),
-  .rev-filter-panel :deep(.rev-date .el-input__wrapper:focus-within) {
+  .rev-filter-panel :deep(.rev-date .el-input__wrapper:focus-within),
+  .rev-filter-panel :deep(.rev-date.el-date-editor.is-active),
+  .rev-filter-panel :deep(.rev-date.el-date-editor:focus-within) {
     border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
     box-shadow: 0 0 0 2px
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
@@ -2966,9 +3003,13 @@
     animation-delay: 0.2s;
   }
 
-  .rev-select,
-  .rev-date {
+  .rev-select {
     width: 140px;
+  }
+
+  .rev-date {
+    width: min(100%, 280px);
+    min-width: 240px;
   }
 
   :deep(.rev-select .el-select__wrapper) {
