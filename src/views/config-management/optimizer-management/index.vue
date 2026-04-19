@@ -1,182 +1,199 @@
 <template>
-  <div class="optimizer-page art-full-height">
-    <!-- ── 页头：面包屑 + 操作栏 ───────────────────────────────── -->
-    <div class="page-header">
-      <span class="breadcrumb">
-        <span class="breadcrumb-parent">系统管理</span>
-        <span class="breadcrumb-sep">›</span>
-        <span class="breadcrumb-current">优化师管理</span>
-      </span>
-      <div class="header-actions">
-        <el-button class="btn-add" @click="handleAdd">
-          <el-icon><Plus /></el-icon>新增优化师
-        </el-button>
-        <el-button class="btn-export" @click="handleExport">
-          <el-icon><Download /></el-icon>导出
-        </el-button>
-        <el-input
-          v-model="filterForm.keyword"
-          placeholder="搜索名称/代号"
-          class="filter-search"
-          clearable
-        >
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
-        <span class="header-label">状态</span>
-        <el-select v-model="filterForm.status" placeholder="全部" class="filter-status" clearable>
-          <el-option label="在职" value="在职" />
-          <el-option label="离职" value="离职" />
-        </el-select>
+  <div class="account-sub-page credential-page optimizer-page art-full-height">
+    <div class="account-sub-page__toolbar">
+      <div class="account-sub-page__toolbar-fx" aria-hidden="true" />
+      <div class="account-sub-page__toolbar-row">
+        <div class="account-sub-page__toolbar-copy">
+          <span class="account-sub-page__toolbar-line" aria-hidden="true" />
+          <div class="account-sub-page__toolbar-titles">
+            <span class="account-sub-page__toolbar-eyebrow">Optimizer</span>
+            <span class="account-sub-page__toolbar-title">优化师管理</span>
+          </div>
+          <span class="account-sub-page__toolbar-hint">人员档案、消耗指标与列表导出</span>
+        </div>
+        <div class="account-sub-page__toolbar-actions">
+          <ElButton type="primary" round class="account-sub-page__btn-primary" @click="handleAdd">
+            <ElIcon><Plus /></ElIcon>新增优化师
+          </ElButton>
+          <ElButton round class="account-sub-page__btn-secondary" @click="handleExport">
+            <ElIcon><Download /></ElIcon>导出
+          </ElButton>
+        </div>
       </div>
     </div>
 
-    <!-- ── 统计卡片 ──────────────────────────────────────────────── -->
-    <div class="stat-cards">
-      <div class="stat-card stat-card--total">
-        <div class="stat-card__body">
-          <div class="stat-label">优化师总数</div>
-          <div class="stat-value teal">{{ stats.total }}<span class="stat-unit">人</span></div>
-        </div>
-        <el-icon class="stat-icon teal"><TrendCharts /></el-icon>
-      </div>
-      <div class="stat-card stat-card--active">
-        <div class="stat-card__body">
-          <div class="stat-label">在职</div>
-          <div class="stat-value teal">{{ stats.active }}<span class="stat-unit">人</span></div>
-        </div>
-        <el-icon class="stat-icon teal"><TrendCharts /></el-icon>
-      </div>
-      <div class="stat-card stat-card--consume">
-        <div class="stat-card__body">
-          <div class="stat-label">最低消耗均值</div>
-          <div class="stat-value amber">${{ stats.avgConsumption }}</div>
-        </div>
-        <el-icon class="stat-icon amber"><Right /></el-icon>
-      </div>
-      <div class="stat-card stat-card--new">
-        <div class="stat-card__body">
-          <div class="stat-label">本月新增</div>
-          <div class="stat-value blue">{{ stats.monthNew }}<span class="stat-unit">人</span></div>
-        </div>
-        <el-icon class="stat-icon blue"><TrendCharts /></el-icon>
-      </div>
-    </div>
-
-    <!-- ── 列表卡片 ──────────────────────────────────────────────── -->
-    <div class="table-wrapper">
-      <div class="table-title">优化师列表</div>
-      <el-table
-        :data="pagedList"
-        class="optimizer-table"
-        table-layout="fixed"
-        :highlight-current-row="true"
-        @row-click="handleRowClick"
-      >
-        <!-- 序号 -->
-        <el-table-column label="序号" width="80" align="center">
-          <template #default="{ $index }">
-            <span class="col-no">{{ $index + 1 + (currentPage - 1) * pageSize }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- 名称 -->
-        <el-table-column label="名称" min-width="100" show-overflow-tooltip>
-          <template #default="{ row }">
-            <div class="optimizer-name">
-              <div class="avatar" :style="{ background: row.avatarColor }">
-                {{ getUserInitial(row.userName) }}
-              </div>
-              <span>{{ row.userName }}</span>
+    <section class="account-sub-page__list-panel credential-page__panel" aria-label="优化师管理">
+      <div class="account-sub-page__list-panel-fx" aria-hidden="true" />
+      <div class="account-sub-page__list-panel-body credential-page__panel-body">
+        <!-- ── 统计卡片 ──────────────────────────────────────────────── -->
+        <div class="stat-cards">
+          <div class="stat-card stat-card--total">
+            <div class="stat-card__body">
+              <div class="stat-label">优化师总数</div>
+              <div class="stat-value teal">{{ stats.total }}<span class="stat-unit">人</span></div>
             </div>
-          </template>
-        </el-table-column>
-
-        <!-- 版本号 -->
-        <el-table-column label="版本号" min-width="100" align="center">
-          <template #default="{ row }">
-            <span class="version-badge">v{{ row.version }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- 代号 -->
-        <el-table-column label="代号" min-width="100" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span class="scode-text">{{ row.sCode }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- 代号2 -->
-        <el-table-column label="代号2" min-width="100" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span class="scode2-text">{{ row.sCode2 || '–' }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- 最低消耗要求 -->
-        <el-table-column label="最低消耗要求" min-width="100" align="right">
-          <template #default="{ row }">
-            <span class="consume-text">${{ row.minConsumption.toFixed(2) }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- 检验码 -->
-        <el-table-column label="检验码" min-width="100" show-overflow-tooltip>
-          <template #default="{ row }">
-            <div class="checkcode-cell">
-              <span class="checkcode-text">{{ truncateCode(row.checkCode, 8) }}</span>
-              <el-icon class="copy-icon" @click.stop="handleCopy(row.checkCode)"
-                ><CopyDocument
-              /></el-icon>
+            <el-icon class="stat-icon teal"><TrendCharts /></el-icon>
+          </div>
+          <div class="stat-card stat-card--active">
+            <div class="stat-card__body">
+              <div class="stat-label">在职</div>
+              <div class="stat-value teal">{{ stats.active }}<span class="stat-unit">人</span></div>
             </div>
-          </template>
-        </el-table-column>
-
-        <!-- 状态 -->
-        <el-table-column label="状态" min-width="100" align="center">
-          <template #default="{ row }">
-            <span
-              :class="[
-                'status-badge',
-                row.status === '在职' ? 'status--active' : 'status--inactive'
-              ]"
-            >
-              {{ row.status }}
-            </span>
-          </template>
-        </el-table-column>
-
-        <!-- 操作 -->
-        <el-table-column label="操作" width="220" fixed="right" align="center">
-          <template #default="{ row }">
-            <div class="action-btns">
-              <button class="action-btn btn-edit" @click.stop="handleEdit(row)">编辑</button>
-              <button class="action-btn btn-detail" @click.stop="handleDetail(row)">详情</button>
+            <el-icon class="stat-icon teal"><TrendCharts /></el-icon>
+          </div>
+          <div class="stat-card stat-card--consume">
+            <div class="stat-card__body">
+              <div class="stat-label">最低消耗均值</div>
+              <div class="stat-value amber">${{ stats.avgConsumption }}</div>
             </div>
-          </template>
-        </el-table-column>
-      </el-table>
+            <el-icon class="stat-icon amber"><Right /></el-icon>
+          </div>
+          <div class="stat-card stat-card--new">
+            <div class="stat-card__body">
+              <div class="stat-label">本月新增</div>
+              <div class="stat-value blue"
+                >{{ stats.monthNew }}<span class="stat-unit">人</span></div
+              >
+            </div>
+            <el-icon class="stat-icon blue"><TrendCharts /></el-icon>
+          </div>
+        </div>
 
-      <!-- 分页 -->
-      <div class="pagination-bar">
-        <span class="pagination-total">共 {{ total }} 条</span>
-        <el-pagination
-          v-model:current-page="currentPage"
-          :page-size="pageSize"
-          :total="total"
-          :pager-count="5"
-          layout="prev, pager, next"
-          class="app-pagination"
-        />
-        <el-select v-model="pageSize" class="page-size-select" @change="currentPage = 1">
-          <el-option label="全部" :value="9999" />
-          <el-option label="每页 10 条" :value="10" />
-          <el-option label="每页 20 条" :value="20" />
-          <el-option label="每页 50 条" :value="50" />
-        </el-select>
+        <div class="optimizer-filter-bar">
+          <el-input
+            v-model="filterForm.keyword"
+            placeholder="搜索名称/代号"
+            class="filter-search"
+            clearable
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+          <span class="optimizer-filter-bar__label">状态</span>
+          <el-select v-model="filterForm.status" placeholder="全部" class="filter-status" clearable>
+            <el-option label="在职" value="在职" />
+            <el-option label="离职" value="离职" />
+          </el-select>
+        </div>
+
+        <!-- ── 列表卡片 ──────────────────────────────────────────────── -->
+        <div class="table-wrapper">
+          <div class="table-title">优化师列表</div>
+          <el-table
+            :data="pagedList"
+            class="optimizer-table"
+            table-layout="fixed"
+            :highlight-current-row="true"
+            @row-click="handleRowClick"
+          >
+            <!-- 序号 -->
+            <el-table-column label="序号" width="80" align="center">
+              <template #default="{ $index }">
+                <span class="col-no">{{ $index + 1 + (currentPage - 1) * pageSize }}</span>
+              </template>
+            </el-table-column>
+
+            <!-- 名称 -->
+            <el-table-column label="名称" min-width="100" show-overflow-tooltip>
+              <template #default="{ row }">
+                <div class="optimizer-name">
+                  <div class="avatar" :style="{ background: row.avatarColor }">
+                    {{ getUserInitial(row.userName) }}
+                  </div>
+                  <span>{{ row.userName }}</span>
+                </div>
+              </template>
+            </el-table-column>
+
+            <!-- 版本号 -->
+            <el-table-column label="版本号" min-width="100" align="center">
+              <template #default="{ row }">
+                <span class="version-badge">v{{ row.version }}</span>
+              </template>
+            </el-table-column>
+
+            <!-- 代号 -->
+            <el-table-column label="代号" min-width="100" show-overflow-tooltip>
+              <template #default="{ row }">
+                <span class="scode-text">{{ row.sCode }}</span>
+              </template>
+            </el-table-column>
+
+            <!-- 代号2 -->
+            <el-table-column label="代号2" min-width="100" show-overflow-tooltip>
+              <template #default="{ row }">
+                <span class="scode2-text">{{ row.sCode2 || '–' }}</span>
+              </template>
+            </el-table-column>
+
+            <!-- 最低消耗要求 -->
+            <el-table-column label="最低消耗要求" min-width="100" align="right">
+              <template #default="{ row }">
+                <span class="consume-text">${{ row.minConsumption.toFixed(2) }}</span>
+              </template>
+            </el-table-column>
+
+            <!-- 检验码 -->
+            <el-table-column label="检验码" min-width="100" show-overflow-tooltip>
+              <template #default="{ row }">
+                <div class="checkcode-cell">
+                  <span class="checkcode-text">{{ truncateCode(row.checkCode, 8) }}</span>
+                  <el-icon class="copy-icon" @click.stop="handleCopy(row.checkCode)"
+                    ><CopyDocument
+                  /></el-icon>
+                </div>
+              </template>
+            </el-table-column>
+
+            <!-- 状态 -->
+            <el-table-column label="状态" min-width="100" align="center">
+              <template #default="{ row }">
+                <span
+                  :class="[
+                    'status-badge',
+                    row.status === '在职' ? 'status--active' : 'status--inactive'
+                  ]"
+                >
+                  {{ row.status }}
+                </span>
+              </template>
+            </el-table-column>
+
+            <!-- 操作 -->
+            <el-table-column label="操作" width="220" fixed="right" align="center">
+              <template #default="{ row }">
+                <div class="action-btns">
+                  <button class="action-btn btn-edit" @click.stop="handleEdit(row)">编辑</button>
+                  <button class="action-btn btn-detail" @click.stop="handleDetail(row)"
+                    >详情</button
+                  >
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <!-- 分页 -->
+          <div class="pagination-bar">
+            <span class="pagination-total">共 {{ total }} 条</span>
+            <el-pagination
+              v-model:current-page="currentPage"
+              :page-size="pageSize"
+              :total="total"
+              :pager-count="5"
+              layout="prev, pager, next"
+              class="app-pagination"
+            />
+            <el-select v-model="pageSize" class="page-size-select" @change="currentPage = 1">
+              <el-option label="全部" :value="9999" />
+              <el-option label="每页 10 条" :value="10" />
+              <el-option label="每页 20 条" :value="20" />
+              <el-option label="每页 50 条" :value="50" />
+            </el-select>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
     <!-- ── 详情抽屉 ─────────────────────────────────────────────── -->
     <OptimizerDetailDrawer v-model:visible="drawerVisible" :data="currentRow" @edit="handleEdit" />
@@ -514,123 +531,365 @@
 </script>
 
 <style lang="scss" scoped>
-  .optimizer-page {
-    --bg-page: #0b1120;
-    --bg-card: #131c2e;
-    --bg-header: #0f1829;
-    --border: rgb(255 255 255 / 7%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #2dd4bf;
-    --accent-dim: rgb(45 212 191 / 12%);
-    --blue: #60a5fa;
-    --blue-dim: rgb(96 165 250 / 12%);
-    --amber: #f59e0b;
-    --amber-dim: rgb(245 158 11 / 12%);
-    --green: #22c55e;
-    --green-dim: rgb(34 197 94 / 12%);
-    --red: #ef4444;
-    --red-dim: rgb(239 68 68 / 12%);
+  .account-sub-page.credential-page.optimizer-page {
+    --page-border: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
+    --page-text-main: color-mix(in srgb, var(--text-primary) 92%, white 8%);
+    --as-border: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --as-surface: color-mix(in srgb, var(--default-box-color) 94%, transparent);
+    --as-header-bg: color-mix(in srgb, var(--default-box-color) 78%, black 4%);
+    --bg-card: var(--as-surface);
+    --border: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
+    --accent: var(--el-color-primary);
+    --accent-dim: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --blue: var(--el-color-info);
+    --blue-dim: color-mix(in srgb, var(--el-color-info) 14%, transparent);
+    --amber: var(--art-warning);
+    --amber-dim: color-mix(in srgb, var(--art-warning) 14%, transparent);
+    --green: var(--art-success);
+    --green-dim: color-mix(in srgb, var(--art-success) 14%, transparent);
+    --red: var(--art-danger);
+    --red-dim: color-mix(in srgb, var(--art-danger) 14%, transparent);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
 
     position: relative;
-    min-height: 100vh;
-    padding: 0 24px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 24px;
+    overflow-x: clip;
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    color: var(--text-primary);
-    background: var(--bg-page);
+    font-size: 13px;
+    color: var(--page-text-main);
+    background: var(--default-bg-color);
+    isolation: isolate;
   }
 
-  // ─── 页头 ───────────────────────────────────────────────────────
-  .page-header {
+  .account-sub-page.credential-page.optimizer-page::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        ellipse 55% 40% at 88% 0%,
+        color-mix(in srgb, var(--theme-color) 22%, transparent) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 40% 32% at 12% 6%,
+        color-mix(in srgb, var(--el-color-primary) 16%, transparent) 0%,
+        transparent 55%
+      );
+    mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 55%);
+  }
+
+  .account-sub-page.credential-page.optimizer-page > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .account-sub-page__toolbar {
+    position: relative;
+    flex-shrink: 0;
+    margin-bottom: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--page-border);
+    border-radius: 20px;
+    box-shadow:
+      0 18px 48px rgb(0 0 0 / 18%),
+      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 7%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
+  }
+
+  .account-sub-page__toolbar-fx {
+    position: absolute;
+    inset: -50% -10% 35%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 200deg at 70% 40%,
+      color-mix(in srgb, var(--el-color-primary) 14%, transparent),
+      color-mix(in srgb, var(--theme-color) 12%, transparent),
+      color-mix(in srgb, var(--art-success) 8%, transparent),
+      color-mix(in srgb, var(--el-color-primary) 14%, transparent)
+    );
+    filter: blur(40px);
+    opacity: 0.5;
+  }
+
+  .account-sub-page__toolbar-row {
+    position: relative;
+    z-index: 1;
     display: flex;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 16px 20px;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 0 16px;
+    padding: 16px 18px;
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--default-box-color) 88%, transparent),
+        color-mix(in srgb, var(--default-box-color) 76%, transparent)
+      ),
+      linear-gradient(
+        118deg,
+        color-mix(in srgb, var(--theme-color) 8%, transparent),
+        color-mix(in srgb, var(--el-color-primary) 6%, transparent)
+      );
+
+    &::after {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(in srgb, var(--el-color-primary) 45%, transparent) 35%,
+        color-mix(in srgb, var(--theme-color) 38%, transparent) 65%,
+        transparent 100%
+      );
+      opacity: 0.85;
+    }
   }
 
-  .breadcrumb {
-    display: flex;
-    flex-shrink: 0;
-    gap: 6px;
+  .account-sub-page__toolbar-copy {
+    display: grid;
+    flex: 1 1 220px;
+    grid-template-rows: auto auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 4px 12px;
     align-items: center;
-    font-size: 20px;
-    font-weight: 600;
+    min-width: 0;
   }
 
-  .breadcrumb-parent {
-    font-size: 16px;
-    font-weight: 400;
-    color: var(--text-secondary);
+  .account-sub-page__toolbar-line {
+    display: inline-block;
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 4px;
+    height: 36px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--el-color-primary) 70%, transparent),
+      color-mix(in srgb, var(--theme-color) 55%, transparent)
+    );
+    border-radius: 999px;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
   }
 
-  .breadcrumb-sep {
-    font-size: 16px;
-    color: var(--text-muted);
-  }
-
-  .breadcrumb-current {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .header-actions {
+  .account-sub-page__toolbar-titles {
     display: flex;
-    flex-wrap: nowrap;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .account-sub-page__toolbar-hint {
+    grid-column: 2;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-tertiary);
+  }
+
+  .account-sub-page__toolbar-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    opacity: 0.65;
+  }
+
+  .account-sub-page__toolbar-title {
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    background-color: transparent;
+    background-image: linear-gradient(
+      105deg,
+      var(--page-text-main) 0%,
+      color-mix(in srgb, var(--el-color-primary) 72%, var(--page-text-main) 28%) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .account-sub-page__toolbar-actions {
+    display: flex;
+    flex: 1 1 280px;
+    flex-wrap: wrap;
     gap: 10px;
     align-items: center;
+    justify-content: flex-end;
   }
 
-  .header-label {
-    font-size: 13px;
-    color: var(--text-secondary);
-    white-space: nowrap;
+  .account-sub-page__list-panel {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--default-box-color) 93%, transparent) 0%,
+        color-mix(in srgb, var(--default-box-color) 86%, transparent) 100%
+      ),
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--el-color-primary) 5%, transparent),
+        color-mix(in srgb, var(--theme-color) 4%, transparent)
+      );
+    isolation: isolate;
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--page-border);
+    border-radius: 20px;
+    box-shadow:
+      0 18px 48px rgb(0 0 0 / 16%),
+      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 7%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+
+    &::before {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      z-index: 2;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(in srgb, var(--el-color-primary) 42%, transparent) 40%,
+        color-mix(in srgb, var(--theme-color) 32%, transparent) 70%,
+        transparent 100%
+      );
+      border-radius: 20px 20px 0 0;
+      opacity: 0.8;
+    }
   }
 
-  .btn-add {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-    padding: 8px 16px !important;
+  .account-sub-page__list-panel-fx {
+    position: absolute;
+    inset: -35% 20% 40%;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 80% 55% at 18% 0%,
+      color-mix(in srgb, var(--el-color-primary) 18%, transparent) 0%,
+      transparent 62%
+    );
+    filter: blur(32px);
+    opacity: 0.55;
+  }
+
+  .account-sub-page__list-panel-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    padding: 14px 14px 16px;
+    overflow: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .account-sub-page__btn-primary.el-button--primary {
     font-weight: 600 !important;
-    color: #0b1120 !important;
-    white-space: nowrap;
-    background: var(--accent) !important;
-    border: none !important;
-    border-radius: 8px !important;
-    transition: all 0.2s;
+    box-shadow:
+      0 10px 22px color-mix(in srgb, var(--el-color-primary) 28%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 14%, transparent) !important;
+    transition:
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out),
+      filter var(--duration-normal) var(--ease-out);
 
     &:hover {
-      filter: brightness(1.1);
+      filter: brightness(1.04);
+      box-shadow:
+        0 12px 28px color-mix(in srgb, var(--el-color-primary) 34%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 18%, transparent) !important;
       transform: translateY(-1px);
     }
   }
 
-  .btn-export {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-    padding: 8px 14px !important;
-    color: var(--text-secondary) !important;
-    white-space: nowrap;
-    background: transparent !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 8px !important;
-    transition: all 0.2s;
+  .account-sub-page__btn-secondary.el-button {
+    --el-button-bg-color: color-mix(in srgb, var(--default-box-color) 52%, transparent);
+    --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 20%, transparent);
+    --el-button-text-color: var(--text-secondary);
+    --el-button-hover-text-color: var(--el-color-primary);
+    --el-button-hover-border-color: color-mix(in srgb, var(--el-color-primary) 48%, transparent);
+    --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 9%, transparent);
+    --el-button-active-text-color: var(--el-color-primary);
+    --el-button-active-border-color: color-mix(in srgb, var(--el-color-primary) 55%, transparent);
+    --el-button-active-bg-color: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+
+    font-weight: 500;
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      background-color var(--duration-normal) var(--ease-out),
+      color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
 
     &:hover {
-      color: var(--accent) !important;
-      border-color: var(--accent) !important;
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+      transform: translateY(-1px);
     }
+  }
+
+  .optimizer-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    align-items: center;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    background:
+      radial-gradient(
+        ellipse 90% 70% at 12% 0%,
+        color-mix(in srgb, var(--el-color-primary) 10%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--default-box-color) 96%, transparent) 0%,
+        color-mix(in srgb, var(--default-box-color) 88%, transparent) 100%
+      );
+    border: 1px solid var(--as-border);
+    border-radius: 14px;
+    box-shadow:
+      0 8px 24px rgb(0 0 0 / 6%),
+      inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+  }
+
+  .optimizer-filter-bar__label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
   }
 
   .filter-search {
     width: 180px;
 
     :deep(.el-input__wrapper) {
-      background: rgb(255 255 255 / 4%) !important;
+      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
       border: 1px solid var(--border) !important;
       border-radius: 7px;
       box-shadow: none !important;
@@ -656,7 +915,7 @@
 
     :deep(.el-select__wrapper) {
       color: var(--text-primary);
-      background: rgb(255 255 255 / 4%) !important;
+      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
       border: 1px solid var(--border) !important;
       border-radius: 7px;
       box-shadow: none !important;
@@ -755,8 +1014,8 @@
     width: 100%;
 
     --el-table-bg-color: transparent;
-    --el-table-header-bg-color: #0f1829;
-    --el-table-row-hover-bg-color: rgb(45 212 191 / 5%);
+    --el-table-header-bg-color: var(--as-header-bg);
+    --el-table-row-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
     --el-table-border-color: var(--border);
     --el-table-text-color: var(--text-primary);
     --el-table-header-text-color: var(--text-secondary);
@@ -768,7 +1027,7 @@
       padding: 12px;
       font-size: 13px;
       font-weight: 500;
-      background: #0f1829 !important;
+      background: var(--as-header-bg) !important;
       border-bottom: 1px solid var(--border) !important;
     }
 
@@ -787,7 +1046,7 @@
     }
 
     :deep(.current-row td) {
-      background: rgb(45 212 191 / 6%) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 8%, transparent) !important;
       border-left: 2px solid var(--accent);
     }
   }
@@ -822,7 +1081,7 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--text-secondary);
-    background: rgb(255 255 255 / 8%);
+    background: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
     border-radius: 4px;
   }
 
@@ -913,7 +1172,7 @@
 
     &.btn-detail {
       color: var(--text-secondary);
-      border-color: rgb(255 255 255 / 15%);
+      border-color: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
 
       &:hover {
         color: var(--text-primary);
@@ -944,7 +1203,7 @@
     :deep(.el-select__wrapper) {
       font-size: 12px;
       color: var(--text-secondary);
-      background: rgb(255 255 255 / 4%) !important;
+      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
       border: 1px solid var(--border) !important;
       box-shadow: none !important;
     }
@@ -966,7 +1225,7 @@
 
       &.is-active {
         font-weight: 700;
-        color: #0b1120;
+        color: #fff;
         background: var(--accent);
       }
     }
@@ -974,7 +1233,7 @@
     :deep(.btn-prev),
     :deep(.btn-next) {
       color: var(--text-secondary) !important;
-      background: rgb(255 255 255 / 4%) !important;
+      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
       border: 1px solid var(--border) !important;
       border-radius: 6px;
 
@@ -987,7 +1246,7 @@
 
   // ─── Element Plus 下拉覆盖 ───────────────────────────────────────
   :deep(.el-select-dropdown) {
-    background: #1a2540 !important;
+    background: color-mix(in srgb, var(--default-box-color) 96%, transparent) !important;
     border: 1px solid var(--border) !important;
   }
 
@@ -997,12 +1256,49 @@
     &:hover,
     &.is-hovering {
       color: var(--accent) !important;
-      background: rgb(45 212 191 / 8%) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 10%, transparent) !important;
     }
 
     &.is-selected {
       color: var(--accent) !important;
-      background: rgb(45 212 191 / 12%) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 14%, transparent) !important;
+    }
+  }
+
+  @media (width <= 900px) {
+    .stat-cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .account-sub-page__toolbar-actions {
+      gap: 8px;
+    }
+  }
+
+  @media (width <= 600px) {
+    .account-sub-page__toolbar-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .account-sub-page__toolbar-actions {
+      justify-content: flex-start;
+    }
+
+    .stat-cards {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .optimizer-filter-bar .filter-search {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .account-sub-page__btn-primary.el-button--primary:hover,
+    .account-sub-page__btn-secondary.el-button:hover {
+      transform: none;
     }
   }
 </style>

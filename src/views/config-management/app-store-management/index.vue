@@ -1,180 +1,210 @@
 <template>
-  <div class="credential-page">
-    <!-- 页面标题栏 -->
-    <div class="page-header">
-      <div class="header-actions">
-        <button class="btn btn-primary" @click="showAddDialog = true">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path
-              d="M7 1v12M1 7h12"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
-          新增凭据
-        </button>
-        <button class="btn btn-secondary" @click="handleBatchTest">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path
-              d="M2 7a5 5 0 1 0 10 0A5 5 0 0 0 2 7zm0 0c0-1.5.7-2.8 1.8-3.7M12 4.5l-3 .5.5-3"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          测试连接
-        </button>
-        <button class="btn btn-secondary" @click="handleExport">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path
-              d="M7 1v8M4 6l3 3 3-3M2 11h10"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          导出
-        </button>
-        <div class="filter-group">
-          <span class="filter-label">平台</span>
-          <select v-model="filterPlatformInput" class="filter-select">
-            <option value="">全部</option>
-            <option
-              v-for="option in platformFilterOptions"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </option>
-          </select>
+  <div class="account-sub-page credential-page art-full-height">
+    <div class="account-sub-page__toolbar">
+      <div class="account-sub-page__toolbar-fx" aria-hidden="true" />
+      <div class="account-sub-page__toolbar-row">
+        <div class="account-sub-page__toolbar-copy">
+          <span class="account-sub-page__toolbar-line" aria-hidden="true" />
+          <div class="account-sub-page__toolbar-titles">
+            <span class="account-sub-page__toolbar-eyebrow">App Store</span>
+            <span class="account-sub-page__toolbar-title">应用商店凭据</span>
+          </div>
+          <span class="account-sub-page__toolbar-hint">凭据配置、批量测试与导出</span>
         </div>
-        <div class="filter-group">
-          <span class="filter-label">状态</span>
-          <select v-model="filterStatusInput" class="filter-select">
-            <option value="">全部</option>
-            <option value="正常">正常</option>
-            <option value="即将过期">即将过期</option>
-            <option value="连接异常">连接异常</option>
-          </select>
-        </div>
-        <button class="btn btn-secondary" @click="handleQuery">查询</button>
-      </div>
-    </div>
-
-    <!-- 统计卡片 -->
-    <div class="stats-grid">
-      <div class="stat-card stat-card--configured">
-        <div class="stat-label">已配置凭据</div>
-        <div class="stat-value">{{ stats.configured }}<span class="stat-unit">组</span></div>
-      </div>
-      <div class="stat-card stat-card--normal">
-        <div class="stat-label">连接正常</div>
-        <div class="stat-value">{{ stats.normal }}<span class="stat-unit">组</span></div>
-      </div>
-      <div class="stat-card stat-card--error">
-        <div class="stat-label">连接异常</div>
-        <div class="stat-value">{{ stats.error }}<span class="stat-unit">组</span></div>
-        <div class="stat-sub">需检查</div>
-      </div>
-      <div class="stat-card stat-card--expiring">
-        <div class="stat-label">即将过期</div>
-        <div class="stat-value">{{ stats.expiring }}<span class="stat-unit">组</span></div>
-        <div class="stat-sub">30天内</div>
-      </div>
-    </div>
-
-    <!-- 凭据表格 -->
-    <div class="table-container">
-      <div class="table-title">凭据列表</div>
-      <table class="cred-table">
-        <thead>
-          <tr>
-            <th>平台</th>
-            <th>应用名称</th>
-            <th>凭据类型</th>
-            <th>帐号/Key</th>
-            <th>过期时间</th>
-            <th>最后验证</th>
-            <th>状态</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(row, idx) in filteredCredentials"
-            :key="row.id"
-            class="table-row"
-            :style="{ animationDelay: idx * 0.04 + 's' }"
+        <div class="account-sub-page__toolbar-actions">
+          <ElButton
+            type="primary"
+            round
+            class="account-sub-page__btn-primary"
+            @click="showAddDialog = true"
           >
-            <td>
-              <div class="platform-cell">
-                <img :src="platformIcon(row.platform)" :alt="row.platform" class="platform-icon" />
-                <span>{{ row.platform }}</span>
-              </div>
-            </td>
-            <td>{{ row.appName }}</td>
-            <td>{{ row.credType }}</td>
-            <td class="key-cell">{{ row.account }}</td>
-            <td>{{ row.expiry }}</td>
-            <td>
-              <div class="verify-cell">
-                <span>{{ row.lastVerify }}</span>
-                <svg v-if="row.verifyOk" width="14" height="14" viewBox="0 0 14 14" class="icon-ok">
-                  <path
-                    d="M2 7l3.5 3.5L12 4"
-                    stroke="#00d2c3"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    fill="none"
-                  />
-                </svg>
-                <svg v-else width="14" height="14" viewBox="0 0 14 14" class="icon-err">
-                  <path
-                    d="M3 3l8 8M11 3l-8 8"
-                    stroke="#ff4d4f"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </div>
-            </td>
-            <td>
-              <span :class="['status-badge', `status-badge--${statusClass(row.status)}`]">
-                {{ row.status }}
-              </span>
-            </td>
-            <td>
-              <div class="action-cell">
-                <button class="action-btn" @click="handleEdit(row)">编辑</button>
-                <span class="action-sep">|</span>
-                <button
-                  class="action-btn"
-                  @click="row.status === '连接异常' ? handleRetry(row) : handleTest(row)"
-                >
-                  {{
-                    row.status === '连接异常' ? '重试' : row.status === '即将过期' ? '续期' : '测试'
-                  }}
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            <ElIcon><Plus /></ElIcon>新增凭据
+          </ElButton>
+          <ElButton round class="account-sub-page__btn-secondary" @click="handleBatchTest">
+            <ElIcon><Connection /></ElIcon>测试连接
+          </ElButton>
+          <ElButton round class="account-sub-page__btn-secondary" @click="handleExport">
+            <ElIcon><Download /></ElIcon>导出
+          </ElButton>
+        </div>
+      </div>
     </div>
 
-    <!-- 底部警告栏（数据来自连接异常接口） -->
-    <div v-if="hasAlertAnomalies" class="alert-bar">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M8 1L1 14h14L8 1z" stroke="#faad14" stroke-width="1.5" stroke-linejoin="round" />
-        <path d="M8 6v4M8 11.5v.5" stroke="#faad14" stroke-width="1.5" stroke-linecap="round" />
-      </svg>
-      <span>{{ alertBarSummaryText }}</span>
-      <button type="button" class="alert-link" @click="openAlertConnectionDetail">查看详情</button>
-    </div>
+    <section class="account-sub-page__list-panel credential-page__panel" aria-label="应用商店凭据">
+      <div class="account-sub-page__list-panel-fx" aria-hidden="true" />
+      <div class="account-sub-page__list-panel-body credential-page__panel-body">
+        <div class="app-store-filter-bar">
+          <div class="filter-group">
+            <span class="filter-label">平台</span>
+            <select v-model="filterPlatformInput" class="filter-select">
+              <option value="">全部</option>
+              <option
+                v-for="option in platformFilterOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">状态</span>
+            <select v-model="filterStatusInput" class="filter-select">
+              <option value="">全部</option>
+              <option value="正常">正常</option>
+              <option value="即将过期">即将过期</option>
+              <option value="连接异常">连接异常</option>
+            </select>
+          </div>
+          <ElButton
+            type="primary"
+            round
+            class="account-sub-page__btn-primary btn-query"
+            @click="handleQuery"
+          >
+            查询
+          </ElButton>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+          <div class="stat-card stat-card--configured">
+            <div class="stat-label">已配置凭据</div>
+            <div class="stat-value">{{ stats.configured }}<span class="stat-unit">组</span></div>
+          </div>
+          <div class="stat-card stat-card--normal">
+            <div class="stat-label">连接正常</div>
+            <div class="stat-value">{{ stats.normal }}<span class="stat-unit">组</span></div>
+          </div>
+          <div class="stat-card stat-card--error">
+            <div class="stat-label">连接异常</div>
+            <div class="stat-value">{{ stats.error }}<span class="stat-unit">组</span></div>
+            <div class="stat-sub">需检查</div>
+          </div>
+          <div class="stat-card stat-card--expiring">
+            <div class="stat-label">即将过期</div>
+            <div class="stat-value">{{ stats.expiring }}<span class="stat-unit">组</span></div>
+            <div class="stat-sub">30天内</div>
+          </div>
+        </div>
+
+        <!-- 凭据表格 -->
+        <div class="table-container">
+          <div class="table-title">凭据列表</div>
+          <table class="cred-table">
+            <thead>
+              <tr>
+                <th>平台</th>
+                <th>应用名称</th>
+                <th>凭据类型</th>
+                <th>帐号/Key</th>
+                <th>过期时间</th>
+                <th>最后验证</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(row, idx) in filteredCredentials"
+                :key="row.id"
+                class="table-row"
+                :style="{ animationDelay: idx * 0.04 + 's' }"
+              >
+                <td>
+                  <div class="platform-cell">
+                    <img
+                      :src="platformIcon(row.platform)"
+                      :alt="row.platform"
+                      class="platform-icon"
+                    />
+                    <span>{{ row.platform }}</span>
+                  </div>
+                </td>
+                <td>{{ row.appName }}</td>
+                <td>{{ row.credType }}</td>
+                <td class="key-cell">{{ row.account }}</td>
+                <td>{{ row.expiry }}</td>
+                <td>
+                  <div class="verify-cell">
+                    <span>{{ row.lastVerify }}</span>
+                    <svg
+                      v-if="row.verifyOk"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 14 14"
+                      class="icon-ok"
+                    >
+                      <path
+                        d="M2 7l3.5 3.5L12 4"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        fill="none"
+                      />
+                    </svg>
+                    <svg v-else width="14" height="14" viewBox="0 0 14 14" class="icon-err">
+                      <path
+                        d="M3 3l8 8M11 3l-8 8"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </div>
+                </td>
+                <td>
+                  <span :class="['status-badge', `status-badge--${statusClass(row.status)}`]">
+                    {{ row.status }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-cell">
+                    <button class="action-btn" @click="handleEdit(row)">编辑</button>
+                    <span class="action-sep">|</span>
+                    <button
+                      class="action-btn"
+                      @click="row.status === '连接异常' ? handleRetry(row) : handleTest(row)"
+                    >
+                      {{
+                        row.status === '连接异常'
+                          ? '重试'
+                          : row.status === '即将过期'
+                            ? '续期'
+                            : '测试'
+                      }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 底部警告栏（数据来自连接异常接口） -->
+        <div v-if="hasAlertAnomalies" class="alert-bar">
+          <svg width="16" height="16" viewBox="0 0 16 16" class="alert-bar__icon" fill="none">
+            <path
+              d="M8 1L1 14h14L8 1z"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M8 6v4M8 11.5v.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span>{{ alertBarSummaryText }}</span>
+          <button type="button" class="alert-link" @click="openAlertConnectionDetail"
+            >查看详情</button
+          >
+        </div>
+      </div>
+    </section>
 
     <!-- ===== 新增 / 编辑 凭据弹窗（共用同一个表单结构） ===== -->
     <Transition name="modal">
@@ -208,7 +238,7 @@
                 <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path
                     d="M2 4l4 4 4-4"
-                    stroke="#8899aa"
+                    stroke="currentColor"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -230,7 +260,7 @@
                 <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path
                     d="M2 4l4 4 4-4"
-                    stroke="#8899aa"
+                    stroke="currentColor"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -329,8 +359,8 @@
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-ghost" @click="closeFormDialog">取消</button>
-            <button class="btn btn-primary" @click="handleSaveForm">
+            <button type="button" class="btn btn-ghost" @click="closeFormDialog">取消</button>
+            <button type="button" class="btn btn-primary" @click="handleSaveForm">
               {{ showEditDialog ? '保存' : '保存并测试' }}
             </button>
           </div>
@@ -352,7 +382,7 @@
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <path
                 d="M7 18l7 7 15-14"
-                stroke="#00d2c3"
+                stroke="currentColor"
                 stroke-width="2.8"
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -370,7 +400,7 @@
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" class="check-icon">
                 <path
                   d="M2 6.5l3 3 6-6"
-                  stroke="#00d2c3"
+                  stroke="currentColor"
                   stroke-width="1.8"
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -408,7 +438,7 @@
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <path
                 d="M10 10l16 16M26 10L10 26"
-                stroke="#ff4d4f"
+                stroke="currentColor"
                 stroke-width="2.8"
                 stroke-linecap="round"
               />
@@ -431,7 +461,7 @@
               <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <path
                   d="M2 4l4 4 4-4"
-                  stroke="#8899aa"
+                  stroke="currentColor"
                   stroke-width="1.5"
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -470,6 +500,7 @@
 
 <script setup lang="ts">
   import { computed, onMounted, ref, watch } from 'vue'
+  import { Plus, Download, Connection } from '@element-plus/icons-vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import {
@@ -904,53 +935,359 @@
   })
 </script>
 
-<style scoped>
-  /* ════════════════════════════════════════════════
-   CSS 变量 & 全局
-════════════════════════════════════════════════ */
-  .credential-page {
-    --bg-deep: #0b1929;
-    --bg-card: #0f2236;
-    --bg-table: #0d1e30;
-    --bg-row-hover: #162840;
-    --bg-modal: #0e2035;
-    --border: #1e3a52;
-    --border-light: #1f3f5a;
-    --teal: #00d2c3;
-    --teal-dim: rgb(0 210 195 / 15%);
-    --green: #4ade80;
-    --red: #ff4d4f;
-    --orange: #f5a623;
-    --text-primary: #dde8f0;
-    --text-secondary: #89a;
-    --text-muted: #4a6070;
+<style lang="scss" scoped>
+  .account-sub-page.credential-page {
+    --page-border: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
+    --page-text-main: color-mix(in srgb, var(--text-primary) 92%, white 8%);
+    --as-border: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --as-surface: color-mix(in srgb, var(--default-box-color) 94%, transparent);
+    --as-header-bg: color-mix(in srgb, var(--default-box-color) 78%, black 4%);
+    --as-row-hover: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
+    --bg-modal: color-mix(in srgb, var(--default-box-color) 96%, transparent);
+    --bg-card: var(--as-surface);
+    --bg-table: color-mix(in srgb, var(--default-box-color) 92%, transparent);
+    --bg-row-hover: var(--as-row-hover);
+    --border: color-mix(in srgb, var(--el-color-primary) 18%, transparent);
+    --border-light: color-mix(in srgb, var(--el-color-primary) 22%, transparent);
+    --teal: var(--el-color-primary);
+    --teal-dim: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --green: var(--art-success);
+    --red: var(--art-danger);
+    --orange: var(--art-warning);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
 
+    position: relative;
     box-sizing: border-box;
-    min-height: 100vh;
-    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 24px;
+    overflow-x: clip;
     font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
     font-size: 13px;
-    color: var(--text-primary);
-    background: var(--bg-deep);
+    color: var(--page-text-main);
+    background: var(--default-bg-color);
+    isolation: isolate;
   }
 
-  /* ════════════════════════════════════════════════
-   页头
-════════════════════════════════════════════════ */
-  .page-header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    justify-content: end;
-    margin-bottom: 20px;
+  .account-sub-page.credential-page::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        ellipse 55% 40% at 88% 0%,
+        color-mix(in srgb, var(--theme-color) 22%, transparent) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 40% 32% at 12% 6%,
+        color-mix(in srgb, var(--el-color-primary) 16%, transparent) 0%,
+        transparent 55%
+      );
+    mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 55%);
   }
 
-  .header-actions {
+  .account-sub-page.credential-page > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .account-sub-page__toolbar {
+    position: relative;
+    flex-shrink: 0;
+    margin-bottom: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--page-border);
+    border-radius: 20px;
+    box-shadow:
+      0 18px 48px rgb(0 0 0 / 18%),
+      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 7%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
+  }
+
+  .account-sub-page__toolbar-fx {
+    position: absolute;
+    inset: -50% -10% 35%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from 200deg at 70% 40%,
+      color-mix(in srgb, var(--el-color-primary) 14%, transparent),
+      color-mix(in srgb, var(--theme-color) 12%, transparent),
+      color-mix(in srgb, var(--art-success) 8%, transparent),
+      color-mix(in srgb, var(--el-color-primary) 14%, transparent)
+    );
+    filter: blur(40px);
+    opacity: 0.5;
+  }
+
+  .account-sub-page__toolbar-row {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 16px 20px;
     align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--default-box-color) 88%, transparent),
+        color-mix(in srgb, var(--default-box-color) 76%, transparent)
+      ),
+      linear-gradient(
+        118deg,
+        color-mix(in srgb, var(--theme-color) 8%, transparent),
+        color-mix(in srgb, var(--el-color-primary) 6%, transparent)
+      );
+  }
+
+  .account-sub-page__toolbar-row::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 2px;
+    pointer-events: none;
+    content: '';
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--el-color-primary) 45%, transparent) 35%,
+      color-mix(in srgb, var(--theme-color) 38%, transparent) 65%,
+      transparent 100%
+    );
+    opacity: 0.85;
+  }
+
+  .account-sub-page__toolbar-copy {
+    display: grid;
+    flex: 1 1 220px;
+    grid-template-rows: auto auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 4px 12px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .account-sub-page__toolbar-line {
+    display: inline-block;
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 4px;
+    height: 36px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--el-color-primary) 70%, transparent),
+      color-mix(in srgb, var(--theme-color) 55%, transparent)
+    );
+    border-radius: 999px;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
+  }
+
+  .account-sub-page__toolbar-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .account-sub-page__toolbar-hint {
+    grid-column: 2;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-tertiary);
+  }
+
+  .account-sub-page__toolbar-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    opacity: 0.65;
+  }
+
+  .account-sub-page__toolbar-title {
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    background-color: transparent;
+    background-image: linear-gradient(
+      105deg,
+      var(--page-text-main) 0%,
+      color-mix(in srgb, var(--el-color-primary) 72%, var(--page-text-main) 28%) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .account-sub-page__toolbar-actions {
+    display: flex;
+    flex: 1 1 280px;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .account-sub-page__list-panel {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--default-box-color) 93%, transparent) 0%,
+        color-mix(in srgb, var(--default-box-color) 86%, transparent) 100%
+      ),
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--el-color-primary) 5%, transparent),
+        color-mix(in srgb, var(--theme-color) 4%, transparent)
+      );
+    isolation: isolate;
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--page-border);
+    border-radius: 20px;
+    box-shadow:
+      0 18px 48px rgb(0 0 0 / 16%),
+      0 0 0 1px color-mix(in srgb, var(--el-color-primary) 7%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+
+    &::before {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      z-index: 2;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(in srgb, var(--el-color-primary) 42%, transparent) 40%,
+        color-mix(in srgb, var(--theme-color) 32%, transparent) 70%,
+        transparent 100%
+      );
+      border-radius: 20px 20px 0 0;
+      opacity: 0.8;
+    }
+  }
+
+  .account-sub-page__list-panel-fx {
+    position: absolute;
+    inset: -35% 20% 40%;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 80% 55% at 18% 0%,
+      color-mix(in srgb, var(--el-color-primary) 18%, transparent) 0%,
+      transparent 62%
+    );
+    filter: blur(32px);
+    opacity: 0.55;
+  }
+
+  .account-sub-page__list-panel-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    padding: 14px 14px 16px;
+    overflow: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .account-sub-page__btn-primary.el-button--primary {
+    font-weight: 600 !important;
+    box-shadow:
+      0 10px 22px color-mix(in srgb, var(--el-color-primary) 28%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 14%, transparent) !important;
+    transition:
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out),
+      filter var(--duration-normal) var(--ease-out);
+
+    &:hover {
+      filter: brightness(1.04);
+      box-shadow:
+        0 12px 28px color-mix(in srgb, var(--el-color-primary) 34%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 18%, transparent) !important;
+      transform: translateY(-1px);
+    }
+  }
+
+  .account-sub-page__btn-secondary.el-button {
+    --el-button-bg-color: color-mix(in srgb, var(--default-box-color) 52%, transparent);
+    --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 20%, transparent);
+    --el-button-text-color: var(--text-secondary);
+    --el-button-hover-text-color: var(--el-color-primary);
+    --el-button-hover-border-color: color-mix(in srgb, var(--el-color-primary) 48%, transparent);
+    --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 9%, transparent);
+    --el-button-active-text-color: var(--el-color-primary);
+    --el-button-active-border-color: color-mix(in srgb, var(--el-color-primary) 55%, transparent);
+    --el-button-active-bg-color: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+
+    font-weight: 500;
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      background-color var(--duration-normal) var(--ease-out),
+      color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-normal) var(--ease-out);
+
+    &:hover {
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+      transform: translateY(-1px);
+    }
+  }
+
+  .btn-query.el-button {
+    height: 32px !important;
+    padding: 0 16px !important;
+    font-size: 13px !important;
+  }
+
+  .app-store-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    align-items: center;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    background:
+      radial-gradient(
+        ellipse 90% 70% at 12% 0%,
+        color-mix(in srgb, var(--el-color-primary) 10%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--default-box-color) 96%, transparent) 0%,
+        color-mix(in srgb, var(--default-box-color) 88%, transparent) 100%
+      );
+    border: 1px solid var(--as-border);
+    border-radius: 14px;
+    box-shadow:
+      0 8px 24px rgb(0 0 0 / 6%),
+      inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
   }
 
   /* ════════════════════════════════════════════════
@@ -972,12 +1309,16 @@
 
   .btn-primary {
     color: #fff;
-    background: linear-gradient(135deg, #00c4b6 0%, #007e96 100%);
-    box-shadow: 0 2px 12px rgb(0 210 195 / 25%);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--el-color-primary) 92%, black 8%) 0%,
+      color-mix(in srgb, var(--el-color-primary) 55%, black 45%) 100%
+    );
+    box-shadow: 0 2px 12px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
   }
 
   .btn-primary:hover {
-    box-shadow: 0 4px 16px rgb(0 210 195 / 35%);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--el-color-primary) 38%, transparent);
     transform: translateY(-1px);
   }
 
@@ -994,7 +1335,7 @@
 
   .btn-ghost {
     color: var(--text-secondary);
-    background: #1e3448;
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
     border: 1px solid var(--border);
   }
 
@@ -1005,12 +1346,20 @@
 
   .btn-danger {
     color: #fff;
-    background: linear-gradient(135deg, #c0392b, #e74c3c);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--art-danger) 85%, black 15%),
+      color-mix(in srgb, var(--art-danger) 100%, white 0%)
+    );
   }
 
   .btn-warning {
     color: #fff;
-    background: linear-gradient(135deg, #b7860a, #f39c12);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--art-warning) 75%, black 25%),
+      color-mix(in srgb, var(--art-warning) 95%, white 5%)
+    );
   }
 
   .btn-success-close {
@@ -1019,7 +1368,11 @@
     padding: 9px 32px;
     margin-top: 4px;
     color: #fff;
-    background: linear-gradient(135deg, #00a89a, #007e82);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--el-color-primary) 88%, black 12%),
+      color-mix(in srgb, var(--el-color-primary) 55%, black 45%)
+    );
     border-radius: 8px;
   }
 
@@ -1086,35 +1439,35 @@
   }
 
   .stat-card--configured {
-    border-color: #00d2c3;
+    border-color: color-mix(in srgb, var(--el-color-primary) 55%, transparent);
   }
 
   .stat-card--configured::before {
-    background: linear-gradient(135deg, #00d2c3, transparent);
+    background: linear-gradient(135deg, var(--el-color-primary), transparent);
   }
 
   .stat-card--normal {
-    border-color: #1a4d5a;
+    border-color: color-mix(in srgb, var(--art-success) 45%, transparent);
   }
 
   .stat-card--normal::before {
-    background: linear-gradient(135deg, #4ade80, transparent);
+    background: linear-gradient(135deg, var(--art-success), transparent);
   }
 
   .stat-card--error {
-    border-color: #4a1a1a;
+    border-color: color-mix(in srgb, var(--art-danger) 45%, transparent);
   }
 
   .stat-card--error::before {
-    background: linear-gradient(135deg, #ff4d4f, transparent);
+    background: linear-gradient(135deg, var(--art-danger), transparent);
   }
 
   .stat-card--expiring {
-    border-color: #4a3800;
+    border-color: color-mix(in srgb, var(--art-warning) 45%, transparent);
   }
 
   .stat-card--expiring::before {
-    background: linear-gradient(135deg, #f5a623, transparent);
+    background: linear-gradient(135deg, var(--art-warning), transparent);
   }
 
   .stat-label {
@@ -1146,7 +1499,7 @@
   }
 
   .stat-card--normal .stat-value {
-    color: var(--teal);
+    color: var(--art-success);
   }
 
   .stat-card--error .stat-value {
@@ -1196,7 +1549,7 @@
     color: var(--text-muted);
     text-align: left;
     white-space: nowrap;
-    background: #0a1925;
+    background: var(--as-header-bg);
   }
 
   .table-row {
@@ -1256,6 +1609,14 @@
     flex-shrink: 0;
   }
 
+  .icon-ok {
+    color: var(--el-color-primary);
+  }
+
+  .icon-err {
+    color: var(--art-danger);
+  }
+
   /* ── 状态徽章 ── */
   .status-badge {
     display: inline-block;
@@ -1268,20 +1629,20 @@
 
   .status-badge--normal {
     color: var(--teal);
-    background: rgb(0 210 195 / 8%);
-    border-color: rgb(0 210 195 / 30%);
+    background: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    border-color: color-mix(in srgb, var(--el-color-primary) 32%, transparent);
   }
 
   .status-badge--expiring {
     color: var(--orange);
-    background: rgb(245 166 35 / 8%);
-    border-color: rgb(245 166 35 / 30%);
+    background: color-mix(in srgb, var(--art-warning) 10%, transparent);
+    border-color: color-mix(in srgb, var(--art-warning) 32%, transparent);
   }
 
   .status-badge--error {
     color: var(--red);
-    background: rgb(255 77 79 / 8%);
-    border-color: rgb(255 77 79 / 30%);
+    background: color-mix(in srgb, var(--art-danger) 10%, transparent);
+    border-color: color-mix(in srgb, var(--art-danger) 32%, transparent);
   }
 
   /* ── 操作按钮 ── */
@@ -1321,9 +1682,14 @@
     padding: 10px 16px;
     font-size: 13px;
     color: var(--text-secondary);
-    background: rgb(250 173 20 / 6%);
-    border: 1px solid rgb(250 173 20 / 20%);
+    background: color-mix(in srgb, var(--art-warning) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--art-warning) 22%, transparent);
     border-radius: 8px;
+  }
+
+  .alert-bar__icon {
+    flex-shrink: 0;
+    color: var(--art-warning);
   }
 
   .alert-link {
@@ -1350,7 +1716,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgb(0 10 20 / 75%);
+    background: color-mix(in srgb, var(--default-bg-color) 78%, black 22%);
     backdrop-filter: blur(4px);
   }
 
@@ -1440,7 +1806,7 @@
     font-family: inherit;
     font-size: 13px;
     color: var(--text-primary);
-    background: #0a1925;
+    background: var(--bg-table);
     border: 1px solid var(--border);
     border-radius: 6px;
     outline: none;
@@ -1493,7 +1859,7 @@
     color: var(--teal);
     background: var(--teal-dim);
     border-color: var(--teal);
-    box-shadow: 0 0 12px rgb(0 210 195 / 10%);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 14%, transparent);
   }
 
   .platform-option-icon {
@@ -1579,14 +1945,18 @@
     height: 22px;
     padding: 0;
     cursor: pointer;
-    background: #1e3448;
+    background: color-mix(in srgb, var(--default-box-color) 82%, transparent);
     border: 1px solid var(--border);
     border-radius: 11px;
     transition: background 0.25s ease;
   }
 
   .toggle-btn--on {
-    background: linear-gradient(135deg, #00c4b6, #007e96);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--el-color-primary) 92%, black 8%),
+      color-mix(in srgb, var(--el-color-primary) 55%, black 45%)
+    );
     border-color: var(--teal);
   }
 
@@ -1639,6 +2009,7 @@
     position: absolute;
     top: 50%;
     right: 10px;
+    color: var(--text-secondary);
     pointer-events: none;
     transform: translateY(-50%);
   }
@@ -1673,7 +2044,7 @@
     width: 100%;
     min-height: 34px;
     padding: 8px 10px;
-    background: #0a1925;
+    background: var(--bg-table);
     border-radius: 6px;
     box-shadow: 0 0 0 1px var(--border) inset;
     transition: box-shadow 0.2s;
@@ -1763,27 +2134,29 @@
   }
 
   .result-icon--success {
-    background: rgb(0 210 195 / 6%);
+    color: var(--el-color-primary);
+    background: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
     border: 2px solid var(--teal);
     box-shadow:
-      0 0 0 6px rgb(0 210 195 / 6%),
-      0 0 24px rgb(0 210 195 / 18%);
+      0 0 0 6px color-mix(in srgb, var(--el-color-primary) 8%, transparent),
+      0 0 24px color-mix(in srgb, var(--el-color-primary) 22%, transparent);
   }
 
   .result-icon--error {
     margin-top: 20px;
-    background: rgb(255 77 79 / 6%);
+    color: var(--art-danger);
+    background: color-mix(in srgb, var(--art-danger) 8%, transparent);
     border: 2px solid var(--red);
     box-shadow:
-      0 0 0 6px rgb(255 77 79 / 6%),
-      0 0 24px rgb(255 77 79 / 18%);
+      0 0 0 6px color-mix(in srgb, var(--art-danger) 8%, transparent),
+      0 0 24px color-mix(in srgb, var(--art-danger) 22%, transparent);
   }
 
   /* 脉冲光圈动画（成功图标背景） */
   .result-icon-ring {
     position: absolute;
     inset: -8px;
-    border: 1px solid rgb(0 210 195 / 25%);
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent);
     border-radius: 50%;
     animation: pulse-ring 2.4s ease-out infinite;
   }
@@ -1830,7 +2203,7 @@
     padding: 10px 16px;
     margin: 0 20px 10px;
     text-align: left;
-    background: rgb(10 25 37 / 80%);
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
     border-radius: 8px;
   }
 
@@ -1839,7 +2212,7 @@
     align-items: center;
     padding: 5px 0;
     font-size: 13px;
-    border-bottom: 1px solid rgb(255 255 255 / 4%);
+    border-bottom: 1px solid color-mix(in srgb, var(--el-color-primary) 6%, transparent);
   }
 
   .check-row:last-child {
@@ -1859,6 +2232,7 @@
   .check-icon {
     flex-shrink: 0;
     margin-left: 4px;
+    color: var(--art-success);
   }
 
   .result-time {
@@ -1886,12 +2260,16 @@
 
   .btn-result-close--success {
     color: #fff;
-    background: linear-gradient(135deg, #00c4b6 0%, #008a8a 100%);
-    box-shadow: 0 2px 12px rgb(0 196 182 / 30%);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--el-color-primary) 92%, black 8%) 0%,
+      color-mix(in srgb, var(--el-color-primary) 55%, black 45%) 100%
+    );
+    box-shadow: 0 2px 12px color-mix(in srgb, var(--el-color-primary) 32%, transparent);
   }
 
   .btn-result-close--success:hover {
-    box-shadow: 0 4px 16px rgb(0 196 182 / 40%);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--el-color-primary) 42%, transparent);
     transform: translateY(-1px);
   }
 
@@ -1925,7 +2303,7 @@
     padding: 12px 16px;
     margin: 0 20px 16px;
     text-align: left;
-    background: rgb(10 25 37 / 80%);
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
     border-radius: 8px;
   }
 
@@ -2017,8 +2395,8 @@
       grid-template-columns: repeat(2, 1fr);
     }
 
-    .header-actions {
-      gap: 6px;
+    .account-sub-page__toolbar-actions {
+      gap: 8px;
     }
 
     .cred-table th:nth-child(3),
@@ -2034,9 +2412,40 @@
       grid-template-columns: 1fr 1fr;
     }
 
-    .page-header {
+    .account-sub-page__toolbar-row {
       flex-direction: column;
-      align-items: flex-start;
+      align-items: stretch;
+    }
+
+    .account-sub-page__toolbar-actions {
+      justify-content: flex-start;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .table-row {
+      animation: none;
+    }
+
+    .result-icon-ring {
+      animation: none;
+    }
+
+    .account-sub-page__btn-primary.el-button--primary:hover,
+    .account-sub-page__btn-secondary.el-button:hover,
+    .btn-primary:hover,
+    .btn-result-close--success:hover {
+      transform: none;
+    }
+
+    .modal-enter-active .modal-box,
+    .modal-leave-active .modal-box {
+      transition: opacity 0.15s ease;
+    }
+
+    .modal-enter-from .modal-box,
+    .modal-leave-to .modal-box {
+      transform: none;
     }
   }
 </style>

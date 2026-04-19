@@ -10,7 +10,10 @@
       <!-- ── 头部 ─────────────────────────────────── -->
       <div class="drawer-header">
         <div class="header-left">
-          <div class="app-icon" :style="{ background: appData?.iconColor || '#2dd4bf' }">
+          <div
+            class="app-icon"
+            :style="{ background: appData?.iconColor || 'var(--el-color-primary)' }"
+          >
             {{ appData?.appName?.charAt(0) || 'A' }}
           </div>
           <div class="header-info">
@@ -287,27 +290,27 @@
 </script>
 
 <style lang="scss" scoped>
-  // ─── CSS 变量 ───────────────────────────────────────────
   .app-detail-drawer,
   .drawer-overlay {
-    --bg-drawer: #0f1829;
-    --bg-header: #131c2e;
-    --bg-section: rgb(255 255 255 / 2.5%);
-    --border: rgb(255 255 255 / 7%);
-    --border-accent: rgb(45 212 191 / 30%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #2dd4bf;
-    --accent-dim: rgb(45 212 191 / 10%);
-    --android-green: #22c55e;
-    --android-bg: rgb(34 197 94 / 12%);
-    --ios-blue: #60a5fa;
-    --ios-bg: rgb(96 165 250 / 12%);
-    --status-green: #22c55e;
-    --status-bg: rgb(34 197 94 / 12%);
-    --red: #ef4444;
-    --red-dim: rgb(239 68 68 / 10%);
+    --dp-border: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --dp-border-soft: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+    --bg-drawer: color-mix(in srgb, var(--default-box-color) 97%, transparent);
+    --bg-header: color-mix(in srgb, var(--default-box-color) 94%, transparent);
+    --border: var(--dp-border-soft);
+    --border-accent: color-mix(in srgb, var(--el-color-primary) 35%, transparent);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-muted: var(--text-tertiary);
+    --accent: var(--el-color-primary);
+    --accent-dim: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    --android-green: var(--art-success);
+    --android-bg: color-mix(in srgb, var(--art-success) 14%, transparent);
+    --ios-blue: color-mix(in srgb, #60a5fa 65%, var(--el-color-primary) 35%);
+    --ios-bg: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --status-green: var(--art-success);
+    --status-bg: color-mix(in srgb, var(--art-success) 14%, transparent);
+    --red: var(--art-danger);
+    --red-dim: color-mix(in srgb, var(--art-danger) 12%, transparent);
   }
 
   // ─── 遮罩 ──────────────────────────────────────────────
@@ -330,9 +333,21 @@
     flex-direction: column;
     width: 468px;
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg-drawer);
-    border-left: 1px solid var(--border);
-    box-shadow: -12px 0 48px rgb(0 0 0 / 50%);
+    background:
+      linear-gradient(
+        175deg,
+        color-mix(in srgb, var(--default-box-color) 98%, transparent) 0%,
+        color-mix(in srgb, var(--default-bg-color) 45%, transparent) 100%
+      ),
+      linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--el-color-primary) 5%, transparent),
+        color-mix(in srgb, var(--theme-color) 4%, transparent)
+      );
+    border-left: 1px solid var(--dp-border);
+    box-shadow:
+      -12px 0 48px rgb(0 0 0 / 22%),
+      inset 1px 0 0 color-mix(in srgb, white 6%, transparent);
   }
 
   // ─── 头部 ──────────────────────────────────────────────
@@ -343,7 +358,7 @@
     justify-content: space-between;
     padding: 20px 20px 16px;
     background: var(--bg-header);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--dp-border-soft);
   }
 
   .header-left {
@@ -425,14 +440,16 @@
     padding: 5px 12px !important;
     font-size: 12px !important;
     font-weight: 500 !important;
-    color: var(--accent) !important;
+    color: var(--el-color-primary) !important;
     background: var(--accent-dim) !important;
-    border: 1px solid var(--border-accent) !important;
-    border-radius: 7px !important;
-    transition: all 0.15s;
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 32%, transparent) !important;
+    border-radius: 8px !important;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
 
     &:hover {
-      background: rgb(45 212 191 / 18%) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 20%, transparent) !important;
       transform: translateY(-1px);
     }
 
@@ -449,15 +466,18 @@
     height: 30px;
     color: var(--text-muted);
     cursor: pointer;
-    background: rgb(255 255 255 / 4%);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    transition: all 0.15s;
+    background: color-mix(in srgb, var(--default-box-color) 88%, transparent);
+    border: 1px solid var(--dp-border-soft);
+    border-radius: 8px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
 
     &:hover {
       color: var(--text-primary);
-      background: rgb(255 255 255 / 8%);
-      border-color: rgb(255 255 255 / 14%);
+      background: color-mix(in srgb, var(--default-box-color) 72%, transparent);
+      border-color: color-mix(in srgb, var(--el-color-primary) 28%, transparent);
     }
   }
 
@@ -476,7 +496,7 @@
     }
 
     &::-webkit-scrollbar-thumb {
-      background: rgb(255 255 255 / 8%);
+      background: color-mix(in srgb, var(--default-box-color) 55%, transparent);
       border-radius: 2px;
     }
   }
@@ -484,7 +504,7 @@
   // ─── Section ───────────────────────────────────────────
   .detail-section {
     padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--dp-border-soft);
 
     &--last {
       border-bottom: none;
@@ -497,8 +517,8 @@
     font-size: 13px;
     font-weight: 600;
     line-height: 1;
-    color: var(--accent);
-    border-left: 3px solid var(--accent);
+    color: var(--el-color-primary);
+    border-left: 3px solid var(--el-color-primary);
   }
 
   // ─── 二列信息网格 ──────────────────────────────────────
@@ -626,7 +646,7 @@
     &--link {
       font-family: SFMono-Regular, Consolas, monospace;
       font-size: 12px;
-      color: var(--ios-blue);
+      color: var(--el-color-primary);
       word-break: break-all;
     }
   }
@@ -645,16 +665,16 @@
     transition: all 0.15s;
 
     &:hover {
-      color: var(--accent);
+      color: var(--el-color-primary);
       background: var(--accent-dim);
     }
 
     &--link {
-      color: var(--ios-blue);
-      opacity: 0.7;
+      color: var(--el-color-primary);
+      opacity: 0.75;
 
       &:hover {
-        background: rgb(96 165 250 / 10%);
+        background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
         opacity: 1;
       }
     }
@@ -673,9 +693,9 @@
     align-items: center;
     justify-content: space-between;
     padding: 9px 12px;
-    background: rgb(255 255 255 / 2.5%);
-    border: 1px solid var(--border);
-    border-radius: 7px;
+    background: color-mix(in srgb, var(--default-box-color) 90%, transparent);
+    border: 1px solid var(--dp-border-soft);
+    border-radius: 8px;
   }
 
   .toggle-display-key {
@@ -696,7 +716,7 @@
 
     &--no {
       color: var(--text-muted);
-      background: rgb(255 255 255 / 5%);
+      background: color-mix(in srgb, var(--text-tertiary) 10%, transparent);
     }
   }
 
@@ -707,7 +727,7 @@
     gap: 12px;
     padding: 16px 20px;
     background: var(--bg-header);
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--dp-border-soft);
   }
 
   .footer-btn {
@@ -731,12 +751,17 @@
 
     &--edit {
       font-weight: 600 !important;
-      color: #0b1120 !important;
-      background: var(--accent) !important;
-      border: none !important;
+      color: var(--el-color-white) !important;
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--el-color-primary) 92%, black 8%),
+        color-mix(in srgb, var(--el-color-primary) 78%, black 22%)
+      ) !important;
+      border: 1px solid color-mix(in srgb, var(--el-color-primary) 38%, transparent) !important;
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--el-color-primary) 26%, transparent) !important;
 
       &:hover {
-        filter: brightness(1.1);
+        filter: brightness(1.05);
         transform: translateY(-1px);
       }
     }
@@ -746,6 +771,19 @@
   .drawer-slide-enter-active,
   .drawer-slide-leave-active {
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .drawer-slide-enter-active,
+    .drawer-slide-leave-active {
+      transition-duration: 0.01ms;
+    }
+
+    .edit-btn:hover,
+    .footer-btn--delete:hover,
+    .footer-btn--edit:hover {
+      transform: none;
+    }
   }
 
   .drawer-slide-enter-from,
