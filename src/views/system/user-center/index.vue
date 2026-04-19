@@ -153,10 +153,10 @@
                         class="flex flex-col gap-1.5"
                       >
                         <ElCheckbox value="feishu" size="small" class="!mr-0">飞书卡片</ElCheckbox>
-                        <ElCheckbox value="email" size="small" class="!mr-0">邮件</ElCheckbox>
+                        <!-- <ElCheckbox value="email" size="small" class="!mr-0">邮件</ElCheckbox>
                         <ElCheckbox value="platform" size="small" class="!mr-0"
                           >平台内消息</ElCheckbox
-                        >
+                        > -->
                       </ElCheckboxGroup>
                     </div>
                   </div>
@@ -209,7 +209,7 @@
                 </div>
 
                 <!-- 订阅的报表 -->
-                <div>
+                <!-- <div>
                   <div class="text-base font-medium mb-4">订阅的报表</div>
                   <ElTable :data="subscribedReports" border stripe class="subscribed-reports-table">
                     <ElTableColumn label="报表名称" min-width="140" prop="name">
@@ -241,7 +241,7 @@
                     </ElTableColumn>
                   </ElTable>
                   <ElButton class="mt-3" :icon="Plus" @click="addReport"> 添加订阅 </ElButton>
-                </div>
+                </div> -->
               </div>
             </div>
 
@@ -314,7 +314,7 @@
   import { fetchChangeEmail, fetchChangePwd } from '@/api/auth'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import { Plus } from '@element-plus/icons-vue'
+  // import { Plus } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'UserCenter' })
 
@@ -389,10 +389,10 @@
   type FeishuNotifyKey = 'alert' | 'daily' | 'weekly' | 'approval' | 'dataAbnormal'
   const feishuNotifyList: { key: FeishuNotifyKey; label: string; desc: string }[] = [
     { key: 'alert', label: '预警通知', desc: '当系统检测到异常时推送' },
-    { key: 'daily', label: '日报推送', desc: '每日 08:00 推送经营日报' },
-    { key: 'weekly', label: '周报推送', desc: '每周一 09:00 推送周报' },
-    { key: 'approval', label: '审批通知', desc: '有待审批事项时推送' },
-    { key: 'dataAbnormal', label: '数据异常', desc: '数据质量问题时推送' }
+    { key: 'daily', label: '日报推送', desc: '每日 08:00 推送经营日报' }
+    // { key: 'weekly', label: '周报推送', desc: '每周一 09:00 推送周报' },
+    // { key: 'approval', label: '审批通知', desc: '有待审批事项时推送' },
+    // { key: 'dataAbnormal', label: '数据异常', desc: '数据质量问题时推送' }
   ]
 
   const weekdayLabels = ['一', '二', '三', '四', '五', '六', '日']
@@ -428,39 +428,39 @@
     [
       {
         key: 'high',
-        label: '高优先级',
+        label: '',
         bgClass: 'bg-red-50 dark:bg-red-950/30',
         labelClass: 'text-red-600'
-      },
-      {
-        key: 'medium',
-        label: '中优先级',
-        bgClass: 'bg-amber-50 dark:bg-amber-950/30',
-        labelClass: 'text-amber-600'
-      },
-      {
-        key: 'low',
-        label: '低优先级',
-        bgClass: 'bg-sky-50 dark:bg-sky-950/30',
-        labelClass: 'text-sky-600'
       }
+      // {
+      //   key: 'medium',
+      //   label: '中优先级',
+      //   bgClass: 'bg-amber-50 dark:bg-amber-950/30',
+      //   labelClass: 'text-amber-600'
+      // },
+      // {
+      //   key: 'low',
+      //   label: '低优先级',
+      //   bgClass: 'bg-sky-50 dark:bg-sky-950/30',
+      //   labelClass: 'text-sky-600'
+      // }
     ]
 
-  interface SubscribedReport {
-    id: number
-    name: string
-    pushTime: string
-    channel: string
-    enabled: boolean
-  }
+  // interface SubscribedReport {
+  //   id: number
+  //   name: string
+  //   pushTime: string
+  //   channel: string
+  //   enabled: boolean
+  // }
 
-  const subscribedReports = ref<SubscribedReport[]>([
-    { id: 1, name: '每日经营快报', pushTime: '每日 08:00', channel: '飞书卡片', enabled: true },
-    { id: 2, name: '每周投放复盘', pushTime: '每周一 09:00', channel: '飞书卡片', enabled: true },
-    { id: 3, name: '月度经营分析', pushTime: '每月1日 09:00', channel: '飞书卡片', enabled: true }
-  ])
+  // const subscribedReports = ref<SubscribedReport[]>([
+  //   { id: 1, name: '每日经营快报', pushTime: '每日 08:00', channel: '飞书卡片', enabled: true },
+  //   { id: 2, name: '每周投放复盘', pushTime: '每周一 09:00', channel: '飞书卡片', enabled: true },
+  //   { id: 3, name: '月度经营分析', pushTime: '每月1日 09:00', channel: '飞书卡片', enabled: true }
+  // ])
 
-  let reportIdCounter = 4
+  // let reportIdCounter = 4
 
   /** 保存基本信息：二次确认后调用修改邮箱接口并更新本地 */
   const saveBasicInfo = async () => {
@@ -527,20 +527,20 @@
     ElMessage.success('通知设置已保存')
   }
 
-  const addReport = () => {
-    subscribedReports.value.push({
-      id: reportIdCounter++,
-      name: '新订阅报表',
-      pushTime: '每日 08:00',
-      channel: '飞书卡片',
-      enabled: true
-    })
-    ElMessage.info('请点击「编辑」设置报表与推送时间')
-  }
+  // const addReport = () => {
+  //   subscribedReports.value.push({
+  //     id: reportIdCounter++,
+  //     name: '新订阅报表',
+  //     pushTime: '每日 08:00',
+  //     channel: '飞书卡片',
+  //     enabled: true
+  //   })
+  //   ElMessage.info('请点击「编辑」设置报表与推送时间')
+  // }
 
-  const editReport = (report: SubscribedReport) => {
-    ElMessage.info(`编辑订阅「${report.name}」功能开发中`)
-  }
+  // const editReport = (report: SubscribedReport) => {
+  //   ElMessage.info(`编辑订阅「${report.name}」功能开发中`)
+  // }
 </script>
 
 <style scoped>
