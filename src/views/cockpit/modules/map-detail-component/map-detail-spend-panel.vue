@@ -112,7 +112,7 @@
       align: 'left',
       formatter: (row: ChannelRow) => Number(row.roi).toFixed(2)
     },
-    { prop: 'roas', label: 'ROAS', minWidth: 62, align: 'left', showOverflowTooltip: true },
+    // { prop: 'roas', label: 'ROAS', minWidth: 62, align: 'left', showOverflowTooltip: true },
     { prop: 'trend', label: '趋势', width: 60, align: 'center', useSlot: true }
   ]
 

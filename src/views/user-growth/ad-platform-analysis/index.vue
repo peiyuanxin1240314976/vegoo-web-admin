@@ -953,13 +953,13 @@
       { label: '花费', prop: 'cost', minWidth: 90, sortable: 'custom' },
       { label: '收入', prop: 'revenue', minWidth: 90, sortable: 'custom' },
       { label: 'ROI', prop: 'roi', minWidth: 90, useSlot: true, sortable: 'custom' },
-      {
-        label: 'ROAS',
-        prop: 'roas',
-        minWidth: 80,
-        sortable: 'custom',
-        formatter: (row: ChannelMetricRow) => formatNum2(row.roas)
-      },
+      // {
+      //   label: 'ROAS',
+      //   prop: 'roas',
+      //   minWidth: 80,
+      //   sortable: 'custom',
+      //   formatter: (row: ChannelMetricRow) => formatNum2(row.roas)
+      // },
       { label: 'CPI', prop: 'cpi', minWidth: 90, useSlot: true, sortable: 'custom' },
       { label: '安装量', prop: 'installs', minWidth: 80, sortable: 'custom' },
       // {
