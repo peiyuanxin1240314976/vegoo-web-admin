@@ -97,7 +97,8 @@
     <div class="main-grid">
       <!-- ══════════════════ KPI ROW ══════════════════ -->
       <div class="kpi-row">
-        <!-- 预估 ECPM -->
+        <!-- 预估 ECPM（暂隐藏；恢复时请取消本段注释，并将 .kpi-row 改回 repeat(4,1fr)，并恢复 TrendCharts 导入） -->
+        <!--
         <el-skeleton :loading="loadingOverviewKpis" animated>
           <template #template>
             <div class="kpi-card-skeleton-lines">
@@ -123,6 +124,7 @@
             </div>
           </div>
         </el-skeleton>
+        -->
 
         <!-- 真实 ECPM -->
         <el-skeleton :loading="loadingOverviewKpis" animated>
@@ -218,6 +220,7 @@
               </div>
             </div>
           </div>
+          <!-- 趋势 Tab 文案来自 trendTabs；「预估ECPM」项在脚本中注释保留 -->
           <div class="tab-row">
             <button
               v-for="tab in trendTabs"
@@ -259,9 +262,6 @@
               <template #name="{ row }">
                 <span class="pname">{{ row.name }}</span>
               </template>
-              <template #estimated="{ row }">
-                <span class="tr teal">{{ fmt2(row.estimated) }}</span>
-              </template>
               <template #real="{ row }">
                 <span class="tr blue">{{ fmt2(row.real) }}</span>
               </template>
@@ -297,11 +297,14 @@
           <div class="card-header-row">
             <span class="card-title">ECPM国家分布</span>
             <div class="toggle-group">
+              <!-- 预估ECPM（暂隐藏；恢复时请取消注释，并将 mapMode 默认值改回 estimated 如需一致） -->
+              <!--
               <button
                 :class="['tgl', mapMode === 'estimated' && 'active']"
                 @click="mapMode = 'estimated'"
                 >预估ECPM</button
               >
+              -->
               <button :class="['tgl', mapMode === 'real' && 'active']" @click="mapMode = 'real'"
                 >真实ECPM</button
               >
@@ -390,7 +393,8 @@
           <div class="card-header-row">
             <span class="card-title">ECPM应用排行</span>
             <el-select v-model="appRankType" size="small" class="mini-sel">
-              <el-option label="预估ECPM" value="estimated" />
+              <!-- 预估ECPM（暂隐藏；恢复时请取消注释，并将 appRankType 默认值改回 estimated 如需一致） -->
+              <!-- <el-option label="预估ECPM" value="estimated" /> -->
               <el-option label="真实ECPM" value="real" />
             </el-select>
           </div>
@@ -440,7 +444,13 @@
   import { useResizeObserver } from '@vueuse/core'
   import * as echarts from 'echarts'
   import type { ECharts } from 'echarts'
-  import { TrendCharts, Money, Location, Grid, Warning } from '@element-plus/icons-vue'
+  import {
+    // TrendCharts, // 与「预估 ECPM」卡片一并恢复
+    Money,
+    Location,
+    Grid,
+    Warning
+  } from '@element-plus/icons-vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
@@ -503,7 +513,6 @@
     }
   })
   const platformSubtotal = ref({
-    d_ecpm_estimated: 0,
     d_ecpm_real: 0,
     revenue_display: '',
     share_display: ''
@@ -511,7 +520,6 @@
   const platforms = ref<
     Array<{
       name: string
-      estimated: number
       real: number
       revenue: string
       share: string
@@ -585,16 +593,19 @@
   const top10Countries = ref<
     Array<{ s_country_code: string; label_zh: string; d_ecpm: number; bar_color: string }>
   >([])
-  const mapMode = ref<'estimated' | 'real'>('estimated')
-  const activeTrendTab = ref('预估ECPM')
-  const trendTabs = ['预估ECPM', '真实ECPM', '广告收入']
-  const appRankType = ref('estimated')
+  const mapMode = ref<'estimated' | 'real'>('real')
+  const activeTrendTab = ref('真实ECPM')
+  const trendTabs = [
+    // '预估ECPM', // 暂隐藏；恢复时请取消注释并将 activeTrendTab 默认改回「预估ECPM」如需一致
+    '真实ECPM',
+    '广告收入'
+  ]
+  const appRankType = ref('real')
 
   const platformTableRows = computed(() => [
     ...platforms.value.map((row) => ({ ...row, __isSubtotal: false })),
     {
       name: '小计',
-      estimated: platformSubtotal.value.d_ecpm_estimated,
       real: platformSubtotal.value.d_ecpm_real,
       revenue: platformSubtotal.value.revenue_display,
       share: platformSubtotal.value.share_display,
@@ -612,14 +623,6 @@
       useSlot: true,
       slotName: 'name',
       showOverflowTooltip: true
-    },
-    {
-      prop: 'estimated',
-      label: '预估ECPM',
-      minWidth: 100,
-      align: 'left',
-      useSlot: true,
-      slotName: 'estimated'
     },
     {
       prop: 'real',
@@ -1203,7 +1206,6 @@
       })
       platforms.value = response.rows.map((row) => ({
         name: row.name,
-        estimated: row.d_ecpm_estimated,
         real: row.d_ecpm_real,
         revenue: row.revenue_display,
         share: row.share_display,
@@ -1211,7 +1213,6 @@
         sparkData: row.spark_series
       }))
       platformSubtotal.value = {
-        d_ecpm_estimated: response.subtotal.d_ecpm_estimated,
         d_ecpm_real: response.subtotal.d_ecpm_real,
         revenue_display: response.subtotal.revenue_display,
         share_display: response.subtotal.share_display
@@ -1870,7 +1871,7 @@
   /* ── KPI Row ─────────────────────────────────────────────────── */
   .kpi-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     grid-column: 1 / -1;
     gap: 10px;
     padding: 0 0 14px;
