@@ -367,7 +367,7 @@
 
   const hasSelection = computed(() => {
     if (props.multiple) return selectedIds.value.size > 0
-    return Boolean(typeof props.modelValue === 'string' && props.modelValue.trim())
+    return selectedItem.value !== null
   })
 
   const clearRowLabel = computed(() =>

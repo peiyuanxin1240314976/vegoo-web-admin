@@ -24,11 +24,10 @@
             <div class="header-filters">
               <AppPlatformSearchSelect
                 v-model="combinedFilterValue"
-                mode="combined"
+                mode="app"
                 placeholder="全部 Apps / 平台"
                 search-placeholder="搜索类别/应用名称/应用简称"
                 :setting-apps="combinedSettingApps"
-                :platform-options="combinedPlatformOptions"
                 :min-width="200"
                 :max-width="220"
                 :height="36"
@@ -339,47 +338,17 @@
 
   function syncCombinedFilterValue() {
     if (filters.value.app !== 'all' && filters.value.app) {
-      const hit = combinedSettingApps.value.find(
-        (item) =>
-          String(item.sAppId ?? '').trim() === String(filters.value.app).trim() &&
-          String(item.platformName ?? '')
-            .trim()
-            .toLowerCase() === selectedPlatformLabel.value.toLowerCase()
-      )
-      if (hit) {
-        combinedFilterValue.value = `app::${filters.value.app}::${filters.value.platform}`
-        return
-      }
-      combinedFilterValue.value = `app::${filters.value.app}::${filters.value.platform}`
-      return
-    }
-    if (filters.value.platform !== 'all' && filters.value.platform) {
-      combinedFilterValue.value = `platform::${filters.value.platform}`
+      combinedFilterValue.value = String(filters.value.app).trim()
       return
     }
     combinedFilterValue.value = ''
   }
-
-  const selectedPlatformLabel = computed(() => {
-    const value = String(filters.value.platform ?? '').trim()
-    if (!value || value === 'all') return ''
-    return String(
-      metaPlatformOptions.value.find((item) => item.value === value)?.label ?? ''
-    ).trim()
-  })
 
   function onCombinedFilterChange(payload: AppPlatformSearchSelectPayload | null) {
     if (!payload) {
       filters.value.app = 'all'
       filters.value.platform = 'all'
       combinedFilterValue.value = ''
-      return
-    }
-
-    if (payload.selectionType === 'platform') {
-      filters.value.platform = String(payload.platformCode || payload.value || 'all')
-      filters.value.app = 'all'
-      syncCombinedFilterValue()
       return
     }
 
@@ -406,13 +375,10 @@
     }
   }
 
-  const platformOptions = computed<SelectOption[]>(() => [
-    ALL_PLATFORM_OPTION,
-    ...metaPlatformOptions.value
-  ])
-  const combinedPlatformOptions = computed<SelectOption[]>(() =>
-    platformOptions.value.filter((item) => item.value !== 'all')
-  )
+  // const platformOptions = computed<SelectOption[]>(() => [
+  //   ALL_PLATFORM_OPTION,
+  //   ...metaPlatformOptions.value
+  // ])
   const combinedSettingApps = computed(() => {
     const settingApps = cockpitMetaStore.data?.settingApps ?? []
     const appValueSet = new Set(metaAppOptions.value.map((item) => item.value))
