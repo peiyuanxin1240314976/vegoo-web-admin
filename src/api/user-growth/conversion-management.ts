@@ -6,7 +6,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
-import { toAppIdsRequestBody } from '@/utils/app-id-request'
+import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
 import {
   ConversionManagementEndpoint,
   isConversionManagementEndpointMock
@@ -87,7 +87,7 @@ function withRequestAppIds<T extends { appId?: string }>(params: T) {
   const { appId, ...rest } = params
   return {
     ...rest,
-    appIds: toAppIdsRequestBody(appId)
+    ...buildAppSelectionRequestBody(appId)
   }
 }
 

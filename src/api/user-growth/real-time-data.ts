@@ -4,6 +4,7 @@
  * 筛选项下拉请使用 `useCockpitMetaFilterStore`（`@/store/modules/cockpit-meta-filter`），本文件不包含 meta-filter-options。
  */
 import request from '@/utils/http'
+import { toAppsRequestBody } from '@/utils/app-id-request'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
 import type {
   RealtimeAppCardsTableBody,
@@ -23,6 +24,14 @@ import * as realtimeDataMock from '@/views/user-growth/real-time-data/mock/real-
 export const REALTIME_DATA_BASE = `${ANALYSIS_API_BASE}/user-growth/real-time-data`
 
 const EMPTY_REALTIME_QUERY: RealtimeDataQueryParams = { appIds: [], source: '' }
+
+function normalizeRealtimeQuery(params?: RealtimeDataQueryParams) {
+  const query = params ?? EMPTY_REALTIME_QUERY
+  return {
+    ...query,
+    apps: toAppsRequestBody(query.appIds)
+  }
+}
 
 function unwrapDataDeep<T = unknown>(value: unknown, maxDepth = 3): T {
   let cur: unknown = value
@@ -47,7 +56,7 @@ export function fetchRealtimeOverviewKpiSummary(params?: RealtimeDataQueryParams
   return request
     .post<RealtimeKpiSummary>({
       url: `${REALTIME_DATA_BASE}/overview-kpi-summary`,
-      data: params ?? EMPTY_REALTIME_QUERY
+      data: normalizeRealtimeQuery(params)
     })
     .then((res) => unwrapDataDeep<RealtimeKpiSummary>(res))
 }
@@ -60,7 +69,7 @@ export function fetchRealtimeTableAppCards(params?: RealtimeDataQueryParams) {
   return request
     .post<RealtimeAppCardsTableBody>({
       url: `${REALTIME_DATA_BASE}/table/app-cards`,
-      data: params ?? EMPTY_REALTIME_QUERY
+      data: normalizeRealtimeQuery(params)
     })
     .then((res) => unwrapDataDeep<RealtimeAppCardsTableBody>(res))
 }
@@ -86,7 +95,7 @@ export function fetchRealtimeOverviewHourlySpendComparison(params?: RealtimeData
   return request
     .post<RealtimeHourlySpendComparison>({
       url: `${REALTIME_DATA_BASE}/overview-hourly-spend-comparison`,
-      data: params ?? EMPTY_REALTIME_QUERY
+      data: normalizeRealtimeQuery(params)
     })
     .then((res) => unwrapDataDeep<RealtimeHourlySpendComparison>(res))
 }

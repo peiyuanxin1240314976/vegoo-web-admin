@@ -4,7 +4,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
-import { toAppIdsRequestBody } from '@/utils/app-id-request'
+import { buildAppSelectionRequestBody, toAppsRequestBody } from '@/utils/app-id-request'
 import {
   IaaAnalysisEndpoint,
   isIaaAnalysisEndpointMock
@@ -190,7 +190,7 @@ function normalizeEcpmOverviewRequestBody(params: EcpmOverviewKpiParams) {
   const { s_app_id, ...rest } = params
   return {
     ...rest,
-    appIds: toAppIdsRequestBody(s_app_id)
+    ...buildAppSelectionRequestBody(s_app_id)
   }
 }
 
@@ -607,7 +607,7 @@ function emptyIfAll(v: string | undefined, all = 'all') {
 
 function normalizeIaaBody(state: IaaFilterState) {
   return {
-    appIds: toAppIdsRequestBody(emptyIfAll(state.s_app_id)),
+    ...buildAppSelectionRequestBody(emptyIfAll(state.s_app_id)),
     platform: emptyIfAll(state.platform),
     s_country_code: emptyIfAll(state.s_country_code),
     t_date: state.t_date
@@ -854,7 +854,7 @@ export async function fetchRevenueOverviewOverviewKpis(params: RevenueOverviewFi
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/kpis`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewKpisResponse(unwrapIaaPayload<RevenueOverviewKpisResponse>(raw))
 }
@@ -885,7 +885,7 @@ export async function fetchRevenueOverviewIaaAdType(params: RevenueOverviewFilte
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/ad-type`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIaaAdTypeResponse(
     unwrapIaaPayload<RevenueOverviewIaaAdTypeResponse>(raw)
@@ -909,7 +909,7 @@ export async function fetchRevenueOverviewIaaPlatform(params: RevenueOverviewFil
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/platform`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIaaPlatformResponse(
     unwrapIaaPayload<RevenueOverviewIaaPlatformResponse>(raw)
@@ -933,7 +933,7 @@ export async function fetchRevenueOverviewIaaAdUnit(params: RevenueOverviewFilte
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/ad-unit`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIaaAdUnitResponse(
     unwrapIaaPayload<RevenueOverviewIaaAdUnitResponse>(raw)
@@ -957,7 +957,7 @@ export async function fetchRevenueOverviewIaaCountry(params: RevenueOverviewFilt
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/country`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIaaCountryResponse(
     unwrapIaaPayload<RevenueOverviewIaaCountryResponse>(raw)
@@ -981,7 +981,7 @@ export async function fetchRevenueOverviewIaaVersion(params: RevenueOverviewFilt
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iaa/version`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIaaVersionResponse(
     unwrapIaaPayload<RevenueOverviewIaaVersionResponse>(raw)
@@ -1022,7 +1022,7 @@ export async function fetchRevenueOverviewIapProduct(params: RevenueOverviewFilt
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iap/product`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIapProductResponse(
     unwrapIaaPayload<RevenueOverviewIapProductResponse>(raw)
@@ -1054,7 +1054,7 @@ export async function fetchRevenueOverviewIapChannel(params: RevenueOverviewFilt
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iap/channel`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIapChannelResponse(
     unwrapIaaPayload<RevenueOverviewIapChannelResponse>(raw)
@@ -1092,7 +1092,7 @@ export async function fetchRevenueOverviewIapTrend(params: RevenueOverviewFilter
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/iap/trend`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewIapTrendResponse(
     unwrapIaaPayload<RevenueOverviewIapTrendResponse>(raw)
@@ -1122,7 +1122,7 @@ export async function fetchRevenueOverviewTrend7dIaaIap(params: RevenueOverviewF
   }
   const raw = await request.post<unknown>({
     url: `${REVENUE_OVERVIEW_BASE}/overview/trend-7d/iaa-iap`,
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewTrend7dIaaIapResponse(
     unwrapIaaPayload<RevenueOverviewTrend7dIaaIapResponse>(raw)
@@ -1152,7 +1152,7 @@ export async function fetchRevenueOverviewTrend7dEcpm(params: RevenueOverviewFil
   }
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/trend-7d/ecpm',
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewTrend7dEcpmResponse(
     unwrapIaaPayload<RevenueOverviewTrend7dEcpmResponse>(raw)
@@ -1176,7 +1176,7 @@ export async function fetchRevenueOverviewPlatformPie(params: RevenueOverviewFil
   }
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/platform-pie',
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewPlatformPieResponse(
     unwrapIaaPayload<RevenueOverviewPlatformPieResponse>(raw)
@@ -1200,7 +1200,7 @@ export async function fetchRevenueOverviewTopCountries(params: RevenueOverviewFi
   }
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/top-countries',
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewTopCountriesResponse(
     unwrapIaaPayload<RevenueOverviewTopCountriesResponse>(raw)
@@ -1225,7 +1225,7 @@ export async function fetchRevenueOverviewAiInsight(params: RevenueOverviewFilte
   }
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/ai-insight',
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewAiInsightResponse(
     unwrapIaaPayload<RevenueOverviewAiInsightResponse>(raw)
@@ -1249,7 +1249,7 @@ export async function fetchRevenueOverviewQualityMetrics(params: RevenueOverview
   }
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/revenue-overview/overview/quality-metrics',
-    data: params
+    data: { ...params, apps: toAppsRequestBody(params.appIds ?? []) }
   })
   return normalizeRevenueOverviewQualityMetricsResponse(
     unwrapIaaPayload<RevenueOverviewQualityMetricsResponse>(raw)
@@ -1261,7 +1261,7 @@ function normalizeProfitAnalysisBody(params: ProfitAnalysisQueryParams) {
   const { sAppId, ...rest } = params
   return {
     ...rest,
-    appIds: toAppIdsRequestBody(sAppId === 'all' ? '' : sAppId)
+    ...buildAppSelectionRequestBody(sAppId === 'all' ? '' : sAppId)
   }
 }
 
@@ -1355,9 +1355,10 @@ function normalizeIaaOverviewUserBreakdown(
  * 新网关：POST /api/v1/datacenter/analysis/business-insight/iaa-analysis/overview/user-breakdown
  */
 export async function fetchIaaOverviewUserBreakdown(params: IaaOverviewUserBreakdownParams) {
+  const { s_app_id, ...rest } = params
   const raw = await request.post<unknown>({
     url: '/api/v1/datacenter/analysis/business-insight/iaa-analysis/overview/user-breakdown',
-    data: params
+    data: { ...rest, ...buildAppSelectionRequestBody(emptyIfAll(s_app_id)) }
   })
   const unwrapped = unwrapIaaPayload<unknown>(raw)
   const payload =

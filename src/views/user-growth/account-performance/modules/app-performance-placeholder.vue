@@ -250,7 +250,7 @@
   import { computed, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import request from '@/utils/http'
-  import { toAppIdsRequestBody } from '@/utils/app-id-request'
+  import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
   import { LEGACY_ACCOUNT_MOCK_ROWS } from './app-performance-legacy-mock'
 
@@ -565,7 +565,7 @@
           keys: props.keys.trim(),
           ownerId: props.filterOwner,
           pageSize: pageSize.value,
-          appIds: toAppIdsRequestBody(props.selectedAppId),
+          ...buildAppSelectionRequestBody(props.selectedAppId),
           source: props.source
         }
       })

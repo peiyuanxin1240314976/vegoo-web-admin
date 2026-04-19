@@ -3,6 +3,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import { toAppsRequestBody } from '@/utils/app-id-request'
 import type {
   ComprehensiveAnalysisApiParams,
   ComprehensiveAnalysisData,
@@ -30,6 +31,13 @@ import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
 
 /** 与 `MY_PERFORMANCE_BASE` 同级结构：`.../analysis/user-growth/comprehensive-analysis` */
 export const COMPREHENSIVE_ANALYSIS_BASE = `${ANALYSIS_API_BASE}/user-growth/comprehensive-analysis`
+
+function withApps<T extends { appIds: string[] }>(params: T) {
+  return {
+    ...params,
+    apps: toAppsRequestBody(params.appIds)
+  }
+}
 
 /**
  * 兼容后端多层 data 包裹：
@@ -100,7 +108,7 @@ export function fetchComprehensiveAnalysisKpi(params: ComprehensiveAnalysisApiPa
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/kpi`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => asArray<KpiCard>(unwrapDataDeep(res)))
 }
@@ -113,7 +121,7 @@ export function fetchComprehensiveAnalysisPlatformCpiBar(params: ComprehensiveAn
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/platform-cpi-bar`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => unwrapDataDeep<PlatformCpiBarData>(res))
     .then((d) => ({
@@ -130,7 +138,7 @@ export function fetchComprehensiveAnalysisAppCpiRank(params: ComprehensiveAnalys
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/app-cpi-rank`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => asArray<AppCpiRankItem>(unwrapDataDeep(res)))
 }
@@ -145,7 +153,7 @@ export function fetchComprehensiveAnalysisCountryDistribution(
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/country-distribution`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => unwrapDataDeep(res))
     .then((d) => {
@@ -165,7 +173,7 @@ export function fetchComprehensiveAnalysisAlerts(params: ComprehensiveAnalysisAp
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/alerts`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => asArray<AlertItem>(unwrapDataDeep(res)))
 }
@@ -178,7 +186,7 @@ export function fetchComprehensiveAnalysisPlatformCpiTrend(params: Comprehensive
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/platform-cpi-trend`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => unwrapDataDeep<PlatformCpiTrend>(res))
     .then((d) => ({
@@ -196,7 +204,7 @@ export function fetchComprehensiveAnalysisEcpmAnalysis(params: ComprehensiveAnal
   return request
     .post<any>({
       url: `${COMPREHENSIVE_ANALYSIS_BASE}/ecpm-analysis`,
-      data: params
+      data: withApps(params)
     })
     .then((res) => unwrapDataDeep(res))
     .then((d) => {

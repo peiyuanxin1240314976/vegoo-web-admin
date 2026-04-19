@@ -276,7 +276,7 @@
   import request from '@/utils/http'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
-  import { toAppIdsRequestBody } from '@/utils/app-id-request'
+  import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -510,7 +510,7 @@
           keys: appAppliedKeys.value,
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          appIds: toAppIdsRequestBody(appliedAppId.value),
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -577,7 +577,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          appIds: toAppIdsRequestBody(appliedAppId.value),
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -620,7 +620,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          appIds: toAppIdsRequestBody(appliedAppId.value),
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -662,7 +662,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          appIds: toAppIdsRequestBody(appliedAppId.value),
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -704,7 +704,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          appIds: toAppIdsRequestBody(appliedAppId.value),
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })
@@ -1070,7 +1070,7 @@
           kw: '',
           ownerId: appliedFilterOwner.value,
           pageSize: 0,
-          appIds: toAppIdsRequestBody(appliedAppId.value),
+          ...buildAppSelectionRequestBody(appliedAppId.value),
           source: appliedSource.value
         }
       })

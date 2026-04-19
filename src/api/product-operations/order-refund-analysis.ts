@@ -8,6 +8,7 @@ import {
   isOrderRefundEndpointMock
 } from '@/views/product-operations/order-refund-analysis/config/data-source'
 import * as orderRefundMock from '@/views/product-operations/order-refund-analysis/mock/order-refund-analysis-api-mock'
+import { toAppsRequestBody } from '@/utils/app-id-request'
 import type {
   DashboardPayload,
   OrderRefundDashboardParams
@@ -31,7 +32,7 @@ export const orderRefundAnalysisApi = {
     }
     return request.post<DashboardPayload>({
       url: `${BASE_URL}/overview/dashboard`,
-      data: params
+      data: { ...params, apps: toAppsRequestBody(params.appIds) }
     })
   }
 }

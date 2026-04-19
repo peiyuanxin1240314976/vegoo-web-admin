@@ -8,6 +8,7 @@ import {
   isReviewMonitorEndpointMock
 } from '@/views/product-operations/reviews-ratings-monitor/config/data-source'
 import * as reviewMonitorMock from '@/views/product-operations/reviews-ratings-monitor/mock/review-monitor-api-mock'
+import { toAppsRequestBody } from '@/utils/app-id-request'
 
 const BASE_URL = '/api/v1/datacenter/analysis/product-operations/reviews-ratings-monitor'
 
@@ -21,6 +22,13 @@ export interface GlobalFilter {
   startDate?: string
   endDate?: string
   language?: string
+}
+
+function withApps<T extends { appIds: string[] }>(filter: T) {
+  return {
+    ...filter,
+    apps: toAppsRequestBody(filter.appIds)
+  }
 }
 
 export interface KpiMetrics {
@@ -446,7 +454,7 @@ export const reviewMonitorApi = {
     }
     return request.post<SummaryData>({
       url: `${BASE_URL}/overview/summary`,
-      data: filter
+      data: withApps(filter)
     })
   },
 
@@ -456,7 +464,7 @@ export const reviewMonitorApi = {
     }
     return request.post<ReviewListData>({
       url: `${BASE_URL}/table/list`,
-      data: filter
+      data: withApps(filter)
     })
   },
 

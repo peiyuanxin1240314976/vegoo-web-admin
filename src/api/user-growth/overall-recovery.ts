@@ -5,6 +5,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import { toAppsRequestBody } from '@/utils/app-id-request'
 import type {
   DailyVolumeItem,
   OrganicTabData,
@@ -27,6 +28,13 @@ import * as overallRecoveryMock from '@/views/user-growth/overall-recovery/mock/
 
 /** 与其它 user-growth 模块同级结构：`.../analysis/user-growth/overall-recovery` */
 export const OVERALL_RECOVERY_BASE = `${ANALYSIS_API_BASE}/user-growth/overall-recovery`
+
+function withApps<T extends { appIds: string[] }>(body: T) {
+  return {
+    ...body,
+    apps: toAppsRequestBody(body.appIds)
+  }
+}
 
 function unwrapDataDeep<T = unknown>(value: unknown, maxDepth = 3): T {
   let cur: any = value
@@ -58,7 +66,7 @@ export function fetchOverallTabKpis(filters: OverallFilterPick) {
   }
   const data = buildOverallRecoveryCommonBody(filters)
   return request
-    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/kpis`, data })
+    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/kpis`, data: withApps(data) })
     .then((res) => asRecord(unwrapDataDeep(res)))
     .then((obj) => ({ kpis: asArray(obj.kpis) }))
 }
@@ -70,7 +78,7 @@ export function fetchOverallTabRecoveryCurve(filters: OverallFilterPick) {
   }
   const data = buildOverallRecoveryCommonBody(filters)
   return request
-    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/recovery-curve`, data })
+    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/recovery-curve`, data: withApps(data) })
     .then((res) => asRecord(unwrapDataDeep(res)))
     .then((obj) => ({
       recoveryCurve: obj.recoveryCurve ?? { days: [], series: [] }
@@ -84,7 +92,7 @@ export function fetchOverallTabDailyVolume(filters: OverallFilterPick) {
   }
   const data = buildOverallRecoveryCommonBody(filters)
   return request
-    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/daily-volume`, data })
+    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/daily-volume`, data: withApps(data) })
     .then((res) => asRecord(unwrapDataDeep(res)))
     .then((obj) => ({ dailyVolume: asArray(obj.dailyVolume) }))
 }
@@ -96,7 +104,7 @@ export function fetchOverallTabRoiCompare(filters: OverallFilterPick) {
   }
   const data = buildOverallRecoveryCommonBody(filters)
   return request
-    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/roi-compare`, data })
+    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/roi-compare`, data: withApps(data) })
     .then((res) => asRecord(unwrapDataDeep(res)))
     .then((obj) => ({ roiCompare: asArray(obj.roiCompare) }))
 }
@@ -111,7 +119,7 @@ export function fetchOverallTabDetailRecords(
     return overallRecoveryMock.mockFetchOverallTabDetailRecords(data)
   }
   return request
-    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/detail-records`, data })
+    .post<any>({ url: `${OVERALL_RECOVERY_BASE}/overall-tab/detail-records`, data: withApps(data) })
     .then((res) => asRecord(unwrapDataDeep(res)))
     .then((obj) => ({ detailRows: asArray(obj.detailRows) as RecoveryDetailRow[] }))
 }
@@ -145,7 +153,7 @@ export function fetchOrganicTabData(filters: OverallFilterPick) {
   return request
     .post<any>({
       url: `${OVERALL_RECOVERY_BASE}/organic-tab`,
-      data
+      data: withApps(data)
     })
     .then((res) => unwrapDataDeep<OrganicTabData>(res))
     .then((d) => {

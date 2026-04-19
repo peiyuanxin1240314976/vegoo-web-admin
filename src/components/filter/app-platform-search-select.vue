@@ -133,6 +133,7 @@
 
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
+  import { useRoute } from 'vue-router'
   import { ArrowDown, Check, Search } from '@element-plus/icons-vue'
   import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
 
@@ -229,8 +230,32 @@
     change: [payload: AppPlatformSearchSelectPayload | null]
   }>()
 
+  const AUTO_SELECT_FIRST_APP_ROUTES = new Set([
+    '/user-growth/account-performance',
+    '/user-growth/ad-platform-analysis',
+    '/user-growth/real-time-data',
+    '/user-growth/ad-performance',
+    '/user-growth/conversion-management',
+    '/user-growth/agency-analysis',
+    '/business-insight/agency-analysis',
+    '/user-growth/paid-analysis',
+    '/product-insight/business-report',
+    '/business-insight/revenue-overview',
+    '/business-insight/profit-analysis',
+    '/business-insight/iap-analysis',
+    '/business-insight/iaa-analysis',
+    '/business-insight/ecpm-analysis',
+    '/business-insight/revenue-deviation',
+    '/user-growth/overall-recovery',
+    '/user-growth/comprehensive-analysis',
+    '/product-operations/reviews-ratings-monitor',
+    '/product-operations/order-refund-analysis'
+  ])
+
+  const route = useRoute()
   const visible = ref(false)
   const keyword = ref('')
+  const hasAutoAppliedInitialSelection = ref(false)
 
   const rootStyle = computed<Record<string, string>>(() => {
     const style: Record<string, string> = {
@@ -400,6 +425,10 @@
     return selectedItem.value?.displayName ?? ''
   })
 
+  const shouldAutoSelectFirstApp = computed(
+    () => props.mode === 'app' && AUTO_SELECT_FIRST_APP_ROUTES.has(String(route.path ?? ''))
+  )
+
   function showAppRowCheck(item: NormalizedOption): boolean {
     return props.multiple && props.mode === 'app' && item.selectionType === 'app'
   }
@@ -480,32 +509,8 @@
     visible.value = false
   }
 
-  function selectItem(item: NormalizedOption) {
-    if (props.multiple && props.mode === 'app' && item.selectionType === 'app') {
-      const id = item.appId
-      if (!id) return
-      const next = new Set(selectedIds.value)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      emit('update:modelValue', [...next])
-      emit('change', {
-        mode: props.mode,
-        selectionType: item.selectionType,
-        value: item.value,
-        appId: item.appId,
-        appName: item.appName,
-        appShortName: item.appShortName,
-        platformCode: item.platformCode,
-        platformName: item.platformName,
-        categoryId: item.categoryId,
-        categoryName: item.categoryName,
-        label: item.label
-      })
-      return
-    }
-
-    emit('update:modelValue', item.modelValue)
-    emit('change', {
+  function toPayload(item: NormalizedOption): AppPlatformSearchSelectPayload {
+    return {
       mode: props.mode,
       selectionType: item.selectionType,
       value: item.value,
@@ -517,7 +522,38 @@
       categoryId: item.categoryId,
       categoryName: item.categoryName,
       label: item.label
-    })
+    }
+  }
+
+  function autoSelectFirstAppIfNeeded() {
+    if (hasAutoAppliedInitialSelection.value) return
+    if (!shouldAutoSelectFirstApp.value || props.disabled) return
+    if (hasSelection.value) {
+      hasAutoAppliedInitialSelection.value = true
+      return
+    }
+    const firstApp = appOptions.value[0]
+    if (!firstApp?.appId) return
+
+    hasAutoAppliedInitialSelection.value = true
+    emit('update:modelValue', props.multiple ? [firstApp.appId] : firstApp.appId)
+    emit('change', toPayload(firstApp))
+  }
+
+  function selectItem(item: NormalizedOption) {
+    if (props.multiple && props.mode === 'app' && item.selectionType === 'app') {
+      const id = item.appId
+      if (!id) return
+      const next = new Set(selectedIds.value)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      emit('update:modelValue', [...next])
+      emit('change', toPayload(item))
+      return
+    }
+
+    emit('update:modelValue', item.modelValue)
+    emit('change', toPayload(item))
     visible.value = false
   }
 
@@ -526,6 +562,14 @@
     (next) => {
       if (next) visible.value = false
     }
+  )
+
+  watch(
+    [shouldAutoSelectFirstApp, () => props.disabled, hasSelection, () => appOptions.value.length],
+    () => {
+      autoSelectFirstAppIfNeeded()
+    },
+    { immediate: true }
   )
 </script>
 

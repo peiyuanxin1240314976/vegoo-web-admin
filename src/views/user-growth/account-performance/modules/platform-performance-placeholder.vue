@@ -179,7 +179,7 @@
   import { computed, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import request from '@/utils/http'
-  import { toAppIdsRequestBody } from '@/utils/app-id-request'
+  import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
@@ -326,7 +326,7 @@
           keys: props.keys.trim(),
           ownerId: props.filterOwner,
           pageSize: pageSize.value,
-          appIds: toAppIdsRequestBody(props.selectedAppId),
+          ...buildAppSelectionRequestBody(props.selectedAppId),
           source: props.source
         }
       })

@@ -4,7 +4,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
-import { toAppIdsRequestBody } from '@/utils/app-id-request'
+import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
 import {
   IapAnalysisEndpoint,
   isIapAnalysisEndpointMock
@@ -40,7 +40,7 @@ function normalizeIapOverviewBody(params: {
   return {
     startDate: params.startDate,
     endDate: params.endDate,
-    appIds: toAppIdsRequestBody(emptyIfAll(params.s_app_id)),
+    ...buildAppSelectionRequestBody(emptyIfAll(params.s_app_id)),
     s_country_code: emptyIfAll(params.s_country_code),
     platform: emptyIfAll(params.platform)
   }

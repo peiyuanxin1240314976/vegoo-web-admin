@@ -6,6 +6,7 @@
  */
 import request from '@/utils/http'
 import { BUSINESS_REPORT_DATA_BASE } from '@/views/product-insight/business-report/config/api-base'
+import { toAppsRequestBody } from '@/utils/app-id-request'
 import type {
   ReportQueryParams,
   ReportAppListQueryParams,
@@ -51,6 +52,7 @@ function reportBody(params: ReportQueryParams): Record<string, unknown> {
     endDate: params.endDate,
     appId: params.appId,
     appIds: params.appIds ?? [],
+    apps: toAppsRequestBody(params.appIds ?? []),
     platformList: params.platformList ?? [],
     sourceList: params.sourceList ?? [],
     countryCodeList: params.countryCodeList ?? [],
@@ -79,6 +81,7 @@ function appListBody(params: ReportAppListQueryParams): Record<string, unknown> 
     endDate: params.endDate,
     appId: '',
     appIds: params.appIds ?? [],
+    apps: toAppsRequestBody(params.appIds ?? []),
     platformList: params.platformList ?? [],
     sourceList: params.sourceList ?? [],
     countryCodeList: params.countryCodeList ?? [],
