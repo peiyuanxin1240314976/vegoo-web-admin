@@ -7,13 +7,12 @@ interface ProfitDatePickerShortcut {
 }
 import type {
   ProfitAnalysisQueryParams,
-  ProfitAppTotal,
   ProfitCountryRow,
   ProfitFilterOptions,
   ProfitKpiCard,
   ProfitMapDataItem,
   ProfitMapScatterItem,
-  ProfitAppRow,
+  ProfitAppProfitTreeNode,
   ProfitSankeyLink,
   ProfitSankeyNode,
   ProfitTrend30d
@@ -38,20 +37,29 @@ const DEFAULT_FILTER_OPTIONS: ProfitFilterOptions = {
   ]
 }
 
-const EMPTY_TOTAL: ProfitAppTotal = {
-  adRev: '—',
-  paidRev: '—',
-  total: '—',
-  adSpend: '—',
-  profit: '—',
-  rate: '—'
-}
-
 const EMPTY_TREND: ProfitTrend30d = {
   days: [],
   revenue: [],
   adSpend: [],
   profit: []
+}
+
+const EMPTY_APP_PROFIT_ROOT: ProfitAppProfitTreeNode = {
+  id: 'root',
+  name: '全部应用、全部国家',
+  appName: '全部应用',
+  adRev: '—',
+  paidRev: '—',
+  adSpend: '—',
+  profit: '—',
+  profitColor: '#94a3b8',
+  roi1d: '—',
+  avgDau: '—',
+  newUsers: '—',
+  paidUsers: '—',
+  organicUsers: '—',
+  profitTrend: [],
+  children: []
 }
 
 function mergeFilterOptions(remote: ProfitFilterOptions | null): ProfitFilterOptions {
@@ -75,8 +83,7 @@ export interface UseProfitAnalysisDashboardReturn {
   dateRangePicker: ComputedRef<[string, string] | null>
   dateShortcuts: ComputedRef<ProfitDatePickerShortcut[]>
   kpiCards: Ref<ProfitKpiCard[]>
-  appRows: Ref<ProfitAppRow[]>
-  appTotal: Ref<ProfitAppTotal>
+  appProfitRoot: Ref<ProfitAppProfitTreeNode>
   mapData: Ref<ProfitMapDataItem[]>
   mapScatter: Ref<ProfitMapScatterItem[]>
   countryRows: Ref<ProfitCountryRow[]>
@@ -115,8 +122,7 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
   const pendingMeta = ref(false)
 
   const kpiCards = ref<ProfitKpiCard[]>([])
-  const appRows = ref<ProfitAppRow[]>([])
-  const appTotal = ref<ProfitAppTotal>({ ...EMPTY_TOTAL })
+  const appProfitRoot = ref<ProfitAppProfitTreeNode>({ ...EMPTY_APP_PROFIT_ROOT })
   const mapData = ref<ProfitMapDataItem[]>([])
   const mapScatter = ref<ProfitMapScatterItem[]>([])
   const countryRows = ref<ProfitCountryRow[]>([])
@@ -218,8 +224,7 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
         pendingApp,
         () => fetchProfitTableAppProfit(p),
         (d) => {
-          appRows.value = d.rows ?? []
-          appTotal.value = d.total ?? { ...EMPTY_TOTAL }
+          appProfitRoot.value = d?.root ?? { ...EMPTY_APP_PROFIT_ROOT }
         }
       ),
       run(
@@ -260,8 +265,7 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
     dateRangePicker,
     dateShortcuts,
     kpiCards,
-    appRows,
-    appTotal,
+    appProfitRoot,
     mapData,
     mapScatter,
     countryRows,

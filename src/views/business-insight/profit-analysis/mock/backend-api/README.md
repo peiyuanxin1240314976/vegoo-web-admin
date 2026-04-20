@@ -15,7 +15,7 @@
 | --- | --- | --- | --- | --- |
 | `01-meta-filter-options.json` | 筛选下拉：应用、国家、日期范围选项 | `/meta-filter-options` | GET | P0 |
 | `02-overview-kpi.json` | 顶部 5 个 KPI 卡片（预估利润、总收入、广告支出、广告收益率、付费收入占比） | `/overview/kpi` | POST | P0 |
-| `03-table-app-profit.json` | 应用利润详情表 + 合计行 | `/table/app-profit` | POST | P0 |
+| `03-table-app-profit.json` | 应用利润详情（树表）：单根节点 + 国家子节点（前端展开后增量渲染 + 虚拟列表） | `/table/app-profit` | POST | P0 |
 | `04-overview-country-profit.json` | 国家利润分布（地图数据 + Top10 表） | `/overview/country-profit` | POST | P0 |
 | `05-overview-trend30d.json` | 利润趋势近 30 天（总收入、广告支出、预估利润） | `/overview/trend30d` | POST | P0 |
 | `06-overview-sankey.json` | 利润构成桑基图（节点与连线） | `/overview/sankey` | POST | P0 |
