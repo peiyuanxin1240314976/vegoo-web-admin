@@ -55,7 +55,7 @@
   const appProfitScrollEl = ref<HTMLElement | null>(null)
   const appProfitScrollTop = ref(0)
   const appProfitViewportH = ref(520)
-  const appProfitExpanded = ref(false)
+  const appProfitExpanded = ref(true)
   const appProfitLoadedChildren = ref(0)
   const appProfitLoadingMore = ref(false)
   const appProfitTableWrapRef = ref<HTMLElement | null>(null)
@@ -313,8 +313,8 @@
   watch(
     () => appProfitRoot.value,
     () => {
-      appProfitExpanded.value = false
-      appProfitLoadedChildren.value = 0
+      appProfitExpanded.value = true
+      initAppProfitLoaded()
       appProfitScrollTop.value = 0
       nextTick(() => {
         const el = appProfitScrollEl.value
@@ -982,8 +982,6 @@
             '--kpi-accent': card.valueColor
           }"
         >
-          <!-- 旋转渐变边框（复刻 ad-performance-kpi-cards） -->
-          <div class="kpi-border-spin" aria-hidden="true"></div>
           <div class="kpi-edge kpi-edge--l" aria-hidden="true"></div>
           <div class="kpi-edge kpi-edge--r" aria-hidden="true"></div>
 
@@ -1574,33 +1572,6 @@
     }
   }
 
-  /* 旋转渐变边框层（复刻 ad-performance-kpi-cards） */
-  .kpi-border-spin {
-    position: absolute;
-    inset: -55%;
-    z-index: 0;
-    pointer-events: none;
-    background: conic-gradient(
-      from var(--kpi-border-angle),
-      transparent 0%,
-      var(--kpi-spin-a) 18%,
-      transparent 36%,
-      var(--kpi-spin-b) 56%,
-      transparent 72%,
-      var(--kpi-spin-c) 86%,
-      transparent 100%
-    );
-    filter: blur(0.5px);
-    opacity: 0.68;
-    animation: kpi-border-spin 4.6s linear infinite;
-  }
-
-  @keyframes kpi-border-spin {
-    to {
-      --kpi-border-angle: 360deg;
-    }
-  }
-
   /** 右下角微型柱状装饰（不参与信息层级） */
   .kpi-card-decor {
     position: absolute;
@@ -1792,7 +1763,7 @@
       right: 1px;
     }
 
-    > *:not(.kpi-border-spin, .kpi-edge, .kpi-badge--estimate) {
+    > *:not(.kpi-edge, .kpi-badge--estimate) {
       position: relative;
       z-index: 1;
     }
