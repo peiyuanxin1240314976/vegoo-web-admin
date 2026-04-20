@@ -76,8 +76,8 @@ export function updateUser(data: UpdateUserPayload) {
   if (isSystemUserEndpointMock(SystemUserEndpoint.Update)) {
     return userManagementMock.mockUpdateUser(data)
   }
-  return request.post<{ success: boolean; updatedUser: SystemUserItem }>({
-    url: `${USER_MANAGEMENT_BASE}/update`,
+  return request.put<{ success: boolean; updatedUser: SystemUserItem }>({
+    url: `${USER_MANAGEMENT_BASE}/${data.id}`,
     data,
     showErrorMessage: false
   })

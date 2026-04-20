@@ -367,7 +367,15 @@
         ElMessage.success('创建成功')
       } else {
         const res = await updateUser({ id: Number(currentUserData.value?.id), ...payload })
-        if (!res?.success) {
+        // 兼容两种常见返回：
+        // 1) 直返：{ success: true, updatedUser: {...} }
+        // 2) 包一层：{ code: 200, data: {...}, message? }
+        const wrappedCode = (res as any)?.code
+        if (wrappedCode != null) {
+          if (Number(wrappedCode) !== 200) {
+            throw new Error(String((res as any)?.message || '更新用户失败'))
+          }
+        } else if (!(res as any)?.success) {
           throw new Error('更新用户失败：接口未返回 success=true')
         }
         ElMessage.success('更新成功')
