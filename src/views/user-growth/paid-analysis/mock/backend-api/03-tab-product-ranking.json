@@ -60,7 +60,7 @@
       "retentionPercent": {
         "type": "number",
         "required": false,
-        "description": "续费率 0–100；无则 null。"
+        "description": "续订率 0–100；无则 null。"
       },
       "topCountries": { "type": "array", "required": true, "description": "Top 国家小写码。" },
       "trendPoints": { "type": "array", "required": true, "description": "迷你趋势序列。" }
@@ -186,12 +186,12 @@
       },
       {
         "moment": "「商品收入排行表」卡片内子 Tab 切换",
-        "detail": "类型 **A（前端本地）**：「收入 / 订单量 / 续费率 / 国家分布」不重拉接口，对 `productRows` 按维度降序排序并列强调；迷你图 nextTick 重建。类型 **B**：可传 `productRankingMode` 并重拉本接口。",
+        "detail": "类型 **A（前端本地）**：「收入 / 订单量 / 续订率 / 国家分布」不重拉接口，对 `productRows` 按维度降序排序并列强调；迷你图 nextTick 重建。类型 **B**：可传 `productRankingMode` 并重拉本接口。",
         "prerequisite": "已有 ranking 数据或同意额外请求"
       }
     ],
     "defaultSelection": "子 Tab 默认按收入；`productRankingMode` 默认 \"\"",
-    "dedupe": "续费率 null 行排序置末（前端约定）。"
+    "dedupe": "续订率 null 行排序置末（前端约定）。"
   },
   "apiSuggestion": {
     "notes": [

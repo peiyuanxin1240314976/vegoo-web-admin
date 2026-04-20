@@ -100,7 +100,7 @@
         "sparkType": "line"
       },
       {
-        "label": "订阅续费率",
+        "label": "订阅续订率",
         "value": "68.4%",
         "trendUp": true,
         "trendVal": "3.2pp vs.上月",

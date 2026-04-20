@@ -39,7 +39,7 @@
       "retentionRows": {
         "type": "array",
         "required": true,
-        "description": "续费热力档位（按渠道）。"
+        "description": "续订热力档位（按渠道）。"
       }
     },
     "PaidAnalysisChannelRow": {
@@ -57,7 +57,7 @@
         "required": true,
         "description": "首次付费周期天。"
       },
-      "retentionPercent": { "type": "number", "required": true, "description": "续费率 0–100。" },
+      "retentionPercent": { "type": "number", "required": true, "description": "续订率 0–100。" },
       "qualityScore": {
         "type": "string",
         "required": true,
@@ -75,7 +75,7 @@
       "cpaPercent": { "type": "number", "required": true, "description": "CPA 相关占比。" },
       "paidRevenue": { "type": "number", "required": true, "description": "付费收入。" },
       "paidUsers": { "type": "number", "required": true, "description": "付费用户数。" },
-      "renewRatePercent": { "type": "number", "required": true, "description": "续费率。" },
+      "renewRatePercent": { "type": "number", "required": true, "description": "续订率。" },
       "iapRevenue": { "type": "number", "required": true, "description": "IAP 收入。" },
       "iapSharePercent": { "type": "number", "required": true, "description": "IAP 占比。" },
       "iapOrders": { "type": "number", "required": true, "description": "IAP 订单数。" },

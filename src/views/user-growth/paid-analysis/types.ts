@@ -49,7 +49,7 @@ export interface PaidAnalysisChannelRow {
   arppu: number
   /** 首次付费周期（天） */
   firstPayPeriodDays: number
-  /** 续费率 0–100 */
+  /** 续订率 0–100 */
   retentionPercent: number
   /** 质量评分文案，如 ★A+ */
   qualityScore: string

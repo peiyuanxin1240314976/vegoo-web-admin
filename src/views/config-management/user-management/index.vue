@@ -7,6 +7,7 @@
         :stats="userStats"
         :filter-form="filterForm"
         :batch-mode="batchMode"
+        :role-options="roleOptions"
         @add-user="showDialog('add')"
         @search="handleSearch"
         @reset="resetSearchParams"
@@ -49,6 +50,7 @@
       v-model:visible="dialogVisible"
       :type="dialogType"
       :user-data="currentUserData"
+      :submitting="dialogSubmitting"
       @submit="handleDialogSubmit"
     />
   </div>
@@ -72,6 +74,7 @@
   import { DialogType } from '@/types'
   import type { UserFilterForm } from './modules/user-left-panel.vue'
   import type { UserStats } from './types'
+  import { useConfigRoleListStore } from '@/store/modules/config-role-list'
 
   defineOptions({ name: 'User' })
 
@@ -85,6 +88,7 @@
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
   const currentUserData = ref<Partial<UserListItem>>({})
+  const dialogSubmitting = ref(false)
 
   // 选中行
   const selectedRows = ref<UserListItem[]>([])
@@ -101,6 +105,12 @@
     role: undefined,
     status: undefined
   })
+
+  const roleListStore = useConfigRoleListStore()
+  const roleOptions = computed(() => [
+    { label: '所有角色', value: '' as const },
+    ...roleListStore.items.map((r) => ({ label: r.roleName, value: r.roleId }))
+  ])
 
   /** 列表状态标签（与 Api.SystemManage.UserListItem.status 约定一致） */
   const USER_STATUS_CONFIG = {
@@ -259,6 +269,7 @@
   /** 初始化 */
   onMounted(() => {
     loadStats()
+    roleListStore.loadRoleList({ force: false })
   })
 
   /**
@@ -324,18 +335,41 @@
    * 处理弹窗提交事件
    */
   const handleDialogSubmit = async (formData: Record<string, unknown>) => {
+    if (dialogSubmitting.value) return
     try {
+      dialogSubmitting.value = true
+      const userRoles = (Array.isArray(formData.role) ? formData.role : [])
+        .map((id) => Number(id))
+        .filter((id) => !Number.isNaN(id))
       const payload = {
         userName: String(formData.username),
         userPhone: String(formData.phone),
         userGender: String(formData.gender),
-        userRoles: Array.isArray(formData.role) ? formData.role : []
+        userRoles
       }
       if (dialogType.value === 'add') {
-        await createUser(payload)
+        const res = await createUser(payload as any)
+        // 兼容两种常见返回：
+        // 1) 直返业务体：{ id, ... }
+        // 2) 包一层：{ code: 200, data: { id, ... }, message? }
+        const wrappedCode = (res as any)?.code
+        const wrappedData = (res as any)?.data
+        const created = wrappedData ?? res
+
+        if (wrappedCode != null && Number(wrappedCode) !== 200) {
+          throw new Error(String((res as any)?.message || '创建用户失败'))
+        }
+        // 兼容 id 为 string/number：只要有值即可视为创建成功
+        const createdId = (created as any)?.id
+        if (createdId == null || String(createdId).trim() === '') {
+          throw new Error('创建用户失败：接口未返回 id')
+        }
         ElMessage.success('创建成功')
       } else {
-        await updateUser({ id: Number(currentUserData.value?.id), ...payload })
+        const res = await updateUser({ id: Number(currentUserData.value?.id), ...payload })
+        if (!res?.success) {
+          throw new Error('更新用户失败：接口未返回 success=true')
+        }
         ElMessage.success('更新成功')
       }
       dialogVisible.value = false
@@ -344,6 +378,9 @@
       loadStats()
     } catch (error) {
       console.error('提交失败:', error)
+      ElMessage.error('提交失败，请确认接口返回或稍后重试')
+    } finally {
+      dialogSubmitting.value = false
     }
   }
 

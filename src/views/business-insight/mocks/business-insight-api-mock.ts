@@ -1262,7 +1262,7 @@ export function mockFetchIapOverviewKpi(_params: {
         sparkColor: '#c084fc'
       },
       {
-        label: '续费率',
+        label: '续订率',
         value: '42.8%',
         change: '5.1%',
         up: true,
@@ -1579,7 +1579,7 @@ export function mockFetchIapDetailKpi(_params: {
         sparklineValues: [3.0, 3.2, 3.1, 3.3, 3.4, 3.35, 3.45, 3.5, 3.48, 3.6, 3.58, 3.62]
       },
       {
-        label: '续费率',
+        label: '续订率',
         value: '48.5%',
         change: '3.2%',
         up: true,

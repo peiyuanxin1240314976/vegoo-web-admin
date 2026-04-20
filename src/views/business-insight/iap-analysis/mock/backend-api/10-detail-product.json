@@ -42,7 +42,7 @@
       "retention": {
         "type": "string",
         "required": true,
-        "description": "续费率展示（可为 N/A）。"
+        "description": "续订率展示（可为 N/A）。"
       },
       "churn": { "type": "string", "required": true, "description": "退款率/流失率展示。" },
       "trend": { "type": "string", "required": true, "description": "趋势文案（如 ↑/↓）。" },
@@ -80,7 +80,7 @@
       "rates": {
         "type": "number[]",
         "required": false,
-        "description": "各周期续费率（可选，0-100）。"
+        "description": "各周期续订率（可选，0-100）。"
       }
     }
   },

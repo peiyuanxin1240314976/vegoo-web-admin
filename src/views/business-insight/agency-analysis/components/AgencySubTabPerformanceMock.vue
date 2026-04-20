@@ -205,37 +205,35 @@
   const recentRows = computed(() => props.recentSummary?.rows ?? recentRowsFallback)
   const accountRows = computed(() => props.accountSummary?.rows ?? accountRowsFallback)
 
-  const sparkPointsRecentA = computed<readonly [number, number][]>(() => {
-    const src = recentRows.value[0]?.source
-    if (src === 'TikTok') {
+  function sparkPointsBySource(source: string | undefined, variant: 'a' | 'b') {
+    const src = (source ?? '').trim()
+    if (variant === 'a') {
+      if (src === 'TikTok') {
+        return [
+          [6, 16],
+          [30, 10],
+          [54, 14],
+          [78, 6],
+          [92, 12]
+        ] as const
+      }
+      if (src === 'Google') {
+        return [
+          [6, 22],
+          [30, 18],
+          [54, 10],
+          [78, 14],
+          [92, 8]
+        ] as const
+      }
       return [
-        [6, 16],
-        [30, 10],
-        [54, 14],
-        [78, 6],
-        [92, 12]
-      ]
+        [4, 18],
+        [28, 12],
+        [52, 16],
+        [76, 8],
+        [92, 10]
+      ] as const
     }
-    if (src === 'Google') {
-      return [
-        [6, 22],
-        [30, 18],
-        [54, 10],
-        [78, 14],
-        [92, 8]
-      ]
-    }
-    return [
-      [4, 18],
-      [28, 12],
-      [52, 16],
-      [76, 8],
-      [92, 10]
-    ]
-  })
-
-  const sparkPointsRecentB = computed<readonly [number, number][]>(() => {
-    const src = recentRows.value[0]?.source
     if (src === 'TikTok') {
       return [
         [6, 18],
@@ -243,7 +241,7 @@
         [58, 12],
         [82, 4],
         [92, 10]
-      ]
+      ] as const
     }
     if (src === 'Google') {
       return [
@@ -252,7 +250,7 @@
         [58, 8],
         [82, 12],
         [92, 6]
-      ]
+      ] as const
     }
     return [
       [4, 20],
@@ -260,8 +258,21 @@
       [56, 14],
       [80, 6],
       [92, 12]
-    ]
-  })
+    ] as const
+  }
+
+  function sparkPointsForRecentRow(source: string | undefined, rowIndex: number) {
+    const variant: 'a' | 'b' = rowIndex % 2 === 0 ? 'a' : 'b'
+    return sparkPointsBySource(source, variant)
+  }
+
+  function safeRoiTrendLabels(labels: unknown): string[] {
+    if (!Array.isArray(labels)) return []
+    return labels
+      .map((x) => String(x ?? ''))
+      .filter((s) => s.trim())
+      .slice(0, 3)
+  }
 </script>
 
 <template>
@@ -357,87 +368,32 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td :rowspan="recentRows.length" class="aa-sub-mock__merge-cell">{{
-                recentRows[0].app
-              }}</td>
-              <td :rowspan="recentRows.length" class="aa-sub-mock__merge-cell">{{
-                recentRows[0].platform
-              }}</td>
-              <td :rowspan="recentRows.length" class="aa-sub-mock__merge-cell">{{
-                recentRows[0].source
-              }}</td>
-              <td class="aa-sub-mock__mono">{{ recentRows[0].accountId }}</td>
-              <td>{{ recentRows[0].accountName }}</td>
-              <td class="text-right fw-600">{{ recentRows[0].spend }}</td>
-              <td class="text-right">{{ recentRows[0].budget }}</td>
-              <td class="text-right">{{ recentRows[0].cpa }}</td>
-              <td class="text-right">{{ recentRows[0].cpi }}</td>
-              <td class="text-right">{{ recentRows[0].installs }}</td>
-              <td class="aa-sub-mock__td-spark">
-                <div
-                  class="aa-sub-mock__spark"
-                  role="img"
-                  :aria-label="`ROI 趋势 ${recentRows[0].roiTrend.join(',')}`"
-                >
-                  <svg
-                    class="aa-sub-mock__spark-svg"
-                    viewBox="0 -24 96 50"
-                    preserveAspectRatio="none"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <polyline
-                      fill="none"
-                      stroke="#34d399"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      :points="sparkPolylinePoints(sparkPointsRecentA)"
-                    />
-                    <circle
-                      v-for="(pt, i) in sparkPointsRecentA"
-                      :key="`sa-${i}`"
-                      :cx="pt[0]"
-                      :cy="pt[1]"
-                      r="2.75"
-                      class="aa-sub-mock__spark-dot"
-                    />
-                    <g
-                      v-for="(label, idx) in recentRows[0].roiTrend"
-                      :key="`tip-a-${idx}`"
-                      class="aa-sub-mock__spark-tip"
-                      :transform="`translate(${sparkRoiPoint(sparkPointsRecentA, idx)[0]}, ${sparkRoiPoint(sparkPointsRecentA, idx)[1]})`"
-                    >
-                      <rect
-                        x="-15"
-                        y="-20"
-                        width="30"
-                        height="12"
-                        rx="4"
-                        class="aa-sub-mock__spark-tip-bg"
-                      />
-                      <text x="0" y="-11" text-anchor="middle" class="aa-sub-mock__spark-label">
-                        {{ label }}
-                      </text>
-                    </g>
-                  </svg>
-                </div>
-              </td>
+            <tr v-if="!recentRows.length">
+              <td colspan="11" class="aa-sub-mock__merge-cell">暂无数据</td>
             </tr>
-            <tr>
-              <td class="aa-sub-mock__mono">{{ recentRows[1].accountId }}</td>
-              <td>{{ recentRows[1].accountName }}</td>
-              <td class="text-right fw-600">{{ recentRows[1].spend }}</td>
-              <td class="text-right">{{ recentRows[1].budget }}</td>
-              <td class="text-right">{{ recentRows[1].cpa }}</td>
-              <td class="text-right">{{ recentRows[1].cpi }}</td>
-              <td class="text-right">{{ recentRows[1].installs }}</td>
+            <tr v-for="(row, idx) in recentRows" :key="`${row.accountId}-${idx}`">
+              <template v-if="idx === 0">
+                <td :rowspan="recentRows.length" class="aa-sub-mock__merge-cell">{{ row.app }}</td>
+                <td :rowspan="recentRows.length" class="aa-sub-mock__merge-cell">{{
+                  row.platform
+                }}</td>
+                <td :rowspan="recentRows.length" class="aa-sub-mock__merge-cell">{{
+                  row.source
+                }}</td>
+              </template>
+              <td class="aa-sub-mock__mono">{{ row.accountId }}</td>
+              <td>{{ row.accountName }}</td>
+              <td class="text-right fw-600">{{ row.spend }}</td>
+              <td class="text-right">{{ row.budget }}</td>
+              <td class="text-right">{{ row.cpa }}</td>
+              <td class="text-right">{{ row.cpi }}</td>
+              <td class="text-right">{{ row.installs }}</td>
               <td class="aa-sub-mock__td-spark">
                 <div
+                  v-if="safeRoiTrendLabels(row.roiTrend).length"
                   class="aa-sub-mock__spark"
                   role="img"
-                  :aria-label="`ROI 趋势 ${recentRows[1].roiTrend.join(',')}`"
+                  :aria-label="`ROI 趋势 ${safeRoiTrendLabels(row.roiTrend).join(',')}`"
                 >
                   <svg
                     class="aa-sub-mock__spark-svg"
@@ -452,21 +408,21 @@
                       stroke-width="2"
                       stroke-linecap="round"
                       stroke-linejoin="round"
-                      :points="sparkPolylinePoints(sparkPointsRecentB)"
+                      :points="sparkPolylinePoints(sparkPointsForRecentRow(row.source, idx))"
                     />
                     <circle
-                      v-for="(pt, i) in sparkPointsRecentB"
-                      :key="`sb-${i}`"
+                      v-for="(pt, i) in sparkPointsForRecentRow(row.source, idx)"
+                      :key="`s-${idx}-${i}`"
                       :cx="pt[0]"
                       :cy="pt[1]"
                       r="2.75"
                       class="aa-sub-mock__spark-dot"
                     />
                     <g
-                      v-for="(label, idx) in recentRows[1].roiTrend"
-                      :key="`tip-b-${idx}`"
+                      v-for="(label, labelIdx) in safeRoiTrendLabels(row.roiTrend)"
+                      :key="`tip-${idx}-${labelIdx}`"
                       class="aa-sub-mock__spark-tip"
-                      :transform="`translate(${sparkRoiPoint(sparkPointsRecentB, idx)[0]}, ${sparkRoiPoint(sparkPointsRecentB, idx)[1]})`"
+                      :transform="`translate(${sparkRoiPoint(sparkPointsForRecentRow(row.source, idx), labelIdx)[0]}, ${sparkRoiPoint(sparkPointsForRecentRow(row.source, idx), labelIdx)[1]})`"
                     >
                       <rect
                         x="-15"
@@ -482,6 +438,7 @@
                     </g>
                   </svg>
                 </div>
+                <span v-else>—</span>
               </td>
             </tr>
           </tbody>
@@ -540,32 +497,26 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td :rowspan="accountRows.length" class="aa-sub-mock__merge-cell">{{
-                accountRows[0].app
-              }}</td>
-              <td :rowspan="accountRows.length" class="aa-sub-mock__merge-cell">{{
-                accountRows[0].platform
-              }}</td>
-              <td :rowspan="accountRows.length" class="aa-sub-mock__merge-cell">{{
-                accountRows[0].source
-              }}</td>
-              <td class="aa-sub-mock__mono">{{ accountRows[0].accountId }}</td>
-              <td>{{ accountRows[0].accountName }}</td>
-              <td class="text-right fw-600">{{ accountRows[0].spend }}</td>
-              <td class="text-right">{{ accountRows[0].roi1 }}</td>
-              <td class="text-right">{{ accountRows[0].cpa }}</td>
-              <td class="text-right">{{ accountRows[0].cpi }}</td>
-              <td class="text-right">{{ accountRows[0].installs }}</td>
+            <tr v-if="!accountRows.length">
+              <td colspan="10" class="aa-sub-mock__merge-cell">暂无数据</td>
             </tr>
-            <tr>
-              <td class="aa-sub-mock__mono">{{ accountRows[1].accountId }}</td>
-              <td>{{ accountRows[1].accountName }}</td>
-              <td class="text-right fw-600">{{ accountRows[1].spend }}</td>
-              <td class="text-right">{{ accountRows[1].roi1 }}</td>
-              <td class="text-right">{{ accountRows[1].cpa }}</td>
-              <td class="text-right">{{ accountRows[1].cpi }}</td>
-              <td class="text-right">{{ accountRows[1].installs }}</td>
+            <tr v-for="(row, idx) in accountRows" :key="`${row.accountId}-${idx}`">
+              <template v-if="idx === 0">
+                <td :rowspan="accountRows.length" class="aa-sub-mock__merge-cell">{{ row.app }}</td>
+                <td :rowspan="accountRows.length" class="aa-sub-mock__merge-cell">{{
+                  row.platform
+                }}</td>
+                <td :rowspan="accountRows.length" class="aa-sub-mock__merge-cell">{{
+                  row.source
+                }}</td>
+              </template>
+              <td class="aa-sub-mock__mono">{{ row.accountId }}</td>
+              <td>{{ row.accountName }}</td>
+              <td class="text-right fw-600">{{ row.spend }}</td>
+              <td class="text-right">{{ row.roi1 }}</td>
+              <td class="text-right">{{ row.cpa }}</td>
+              <td class="text-right">{{ row.cpi }}</td>
+              <td class="text-right">{{ row.installs }}</td>
             </tr>
           </tbody>
         </table>

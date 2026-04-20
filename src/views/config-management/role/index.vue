@@ -15,6 +15,7 @@
       <RolePermissionPanel
         ref="permissionPanelRef"
         :selected-role="selectedRole"
+        :saving="permissionSaving"
         @save="handleSavePermission"
       />
     </div>
@@ -46,13 +47,13 @@
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
   import {
-    fetchRoleList,
     fetchRolePermissionSummary,
     fetchRolePermissionsUpdate,
     fetchRoleUsers,
     type RolePermissionSummary,
     type RolePermissionUpdatePayload
   } from '@/api/config-management/role'
+  import { useConfigRoleListStore } from '@/store/modules/config-role-list'
   import { getMockRoleDescription, getMockRoleUsers } from './mock/data'
   import RoleEditDialog from './modules/role-edit-dialog.vue'
   import RoleListPanel from './modules/role-list-panel.vue'
@@ -64,12 +65,14 @@
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
-  const roleList = ref<RoleListItem[]>([])
+  const roleListStore = useConfigRoleListStore()
+  const roleList = computed(() => roleListStore.items)
   const selectedRole = ref<RoleListItem | null>(null)
   const dialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
   const currentRoleData = ref<RoleListItem | undefined>(undefined)
   const permissionPanelRef = ref<InstanceType<typeof RolePermissionPanel> | null>(null)
+  const permissionSaving = ref(false)
   const roleUserCountMap = ref<Record<number, number>>({})
   const currentRoleUsers = ref<RoleUserItem[]>([])
   const permissionSummary = ref<RolePermissionSummary | undefined>(undefined)
@@ -109,22 +112,20 @@
 
   async function loadRoleList(preferredRoleId?: number) {
     try {
-      const res = await fetchRoleList()
-      roleList.value = res.items || []
+      await roleListStore.loadRoleList({ force: true })
+      const list = roleListStore.items
       roleUserCountMap.value = Object.fromEntries(
-        roleList.value.map((item) => [item.roleId, getMockRoleUsers(item.roleId).length])
+        list.map((item) => [item.roleId, getMockRoleUsers(item.roleId).length])
       )
 
-      if (roleList.value.length) {
+      if (list.length) {
         const targetId = preferredRoleId ?? pendingFocusRoleId.value ?? selectedRole.value?.roleId
-        const matchedRole = targetId
-          ? roleList.value.find((item) => item.roleId === targetId)
-          : undefined
+        const matchedRole = targetId ? list.find((item) => item.roleId === targetId) : undefined
 
         if (matchedRole) {
           selectedRole.value = matchedRole
         } else {
-          selectedRole.value = roleList.value[0]
+          selectedRole.value = list[0]
         }
       } else {
         selectedRole.value = null
@@ -152,6 +153,7 @@
   }
 
   async function handleSavePermission() {
+    if (permissionSaving.value) return
     const payload =
       permissionPanelRef.value?.getSavePayload?.() as RolePermissionUpdatePayload | null
     if (!payload || !payload.roleId) {
@@ -160,6 +162,7 @@
     }
 
     try {
+      permissionSaving.value = true
       const res = await fetchRolePermissionsUpdate(payload)
       if (res.success) {
         ElMessage.success('权限配置已保存')
@@ -168,6 +171,8 @@
       }
     } catch (error) {
       console.error('保存权限配置失败', error)
+    } finally {
+      permissionSaving.value = false
     }
   }
 

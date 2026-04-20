@@ -11,7 +11,11 @@
         "enum": ["男", "女"],
         "description": "性别。"
       },
-      "userRoles": { "type": "string[]", "required": true, "description": "角色编码数组。" },
+      "userRoles": {
+        "type": "number[]",
+        "required": true,
+        "description": "角色主键数组（字段名 userRoles；元素为 RoleListItem.roleId）。"
+      },
       "userEmail": { "type": "string", "required": false, "description": "邮箱。" },
       "nickName": { "type": "string", "required": false, "description": "昵称。" },
       "accessibleApps": {
@@ -60,7 +64,7 @@
     "userName": "bob",
     "userPhone": "13800130022",
     "userGender": "男",
-    "userRoles": ["ops", "auditor"],
+    "userRoles": [2, 4],
     "userEmail": "bob@example.com",
     "nickName": "Bob-新版",
     "accessibleApps": ["weather5", "bloodsugar2"],
@@ -77,7 +81,7 @@
       "userGender": "男",
       "userPhone": "13800130022",
       "userEmail": "bob@example.com",
-      "userRoles": ["ops", "auditor"],
+      "userRoles": ["Manager", "Analyst"],
       "accessibleApps": ["weather5", "bloodsugar2"],
       "remark": "兼任审计",
       "createBy": "admin",

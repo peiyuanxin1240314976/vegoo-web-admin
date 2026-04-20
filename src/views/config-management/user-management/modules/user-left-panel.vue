@@ -103,7 +103,7 @@
 
   export interface UserFilterForm {
     userName?: string
-    role?: string
+    role?: number | ''
     status?: string
   }
 
@@ -113,16 +113,12 @@
       filterForm: UserFilterForm
       /** 是否处于批量选择模式（表格显示勾选列） */
       batchMode?: boolean
-      roleOptions?: { label: string; value: string }[]
+      roleOptions?: { label: string; value: number | '' }[]
       statusOptions?: { label: string; value: string }[]
     }>(),
     {
       batchMode: false,
-      roleOptions: () => [
-        { label: '所有角色', value: '' },
-        { label: '管理层/老板', value: 'admin' },
-        { label: '投放人员', value: 'ops' }
-      ],
+      roleOptions: () => [{ label: '所有角色', value: '' }],
       statusOptions: () => [
         { label: '所有状态', value: '' },
         { label: '在线', value: '1' },

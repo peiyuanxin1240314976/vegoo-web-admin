@@ -9,13 +9,21 @@ export interface IapSelectOption {
   value: string
 }
 
-/** 全局筛选状态（与 backend-fields：platform、s_country_code、s_app_id 等一致） */
+/** 全局筛选状态（与 backend-fields：platform、countryCode、appId 等一致） */
 export interface IapFilterState {
   startDate: string
   endDate: string
-  s_app_id: string
-  s_country_code: string
+  /** 应用筛选（单选）；「全部」由 UI 侧用 all 表示，提交接口时映射为 "" */
+  appId?: string
+  /** 国家代码（ISO 3166-1 alpha-2 小写）；「全部」由 UI 侧用 all 表示，提交接口时映射为 "" */
+  countryCode?: string
   platform: string
+  /**
+   * 兼容旧字段（snake_case），部分页面/Mock 仍在使用。
+   * 后续可逐步迁移为 appId / countryCode。
+   */
+  s_app_id?: string
+  s_country_code?: string
 }
 
 /** 筛选下拉选项（meta-filter-options 响应） */
@@ -74,15 +82,18 @@ export interface IapAppCard {
   iconBg: string
 }
 
-/** 国家/地区收入分布行（s_country_code 遵循数据字典） */
+/** 国家/地区收入分布行（countryCode 遵循数据字典，ISO 3166-1 alpha-2 小写） */
 export interface IapCountryRow {
-  s_country_code: string
+  countryCode?: string
   country: string
-  flag?: string
   orders: number
   revenue: string
   ratio: string
   arpu: string
+  /** 兼容旧字段（snake_case），用于历史 mock 数据。 */
+  s_country_code?: string
+  /** 国旗（emoji） */
+  flag?: string
   barWidth?: string
   barColor?: string
 }

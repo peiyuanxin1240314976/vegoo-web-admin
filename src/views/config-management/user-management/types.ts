@@ -36,7 +36,8 @@ export interface SystemUserSearchParams {
   size: number
   userName?: string
   status?: string
-  role?: string
+  /** 角色主键（来自 RoleListItem.roleId）；空值表示不过滤 */
+  role?: number | ''
   userGender?: string
   userPhone?: string
   userEmail?: string
@@ -74,7 +75,8 @@ export interface CreateUserPayload {
   userName: string
   userPhone: string
   userGender: string
-  userRoles: string[]
+  /** 角色主键数组（字段名 userRoles；元素为 RoleListItem.roleId） */
+  userRoles: number[]
   userEmail?: string
   nickName?: string
   accessibleApps?: string[]
@@ -87,7 +89,8 @@ export interface UpdateUserPayload {
   userName: string
   userPhone: string
   userGender: string
-  userRoles: string[]
+  /** 角色主键数组（字段名 userRoles；元素为 RoleListItem.roleId） */
+  userRoles: number[]
   userEmail?: string
   nickName?: string
   accessibleApps?: string[]

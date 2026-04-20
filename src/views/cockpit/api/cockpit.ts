@@ -895,7 +895,7 @@ export function mapLtvToChart(data: CountryInfoLtvData): { data: number[]; note:
 }
 
 /**
- * 获取国家详情用户分层（用户分层饼图 + 付费转化率文案）
+ * 获取国家详情用户分层（用户分层饼图 + 付费率文案）
  * POST /api/v1/datacenter/analysis/countryInfo/userPayLaunch，请求体：{}
  */
 export async function fetchCountryInfoUserPayLaunch(
@@ -931,7 +931,7 @@ export function mapUserPayLaunchToSegment(data: CountryInfoUserPayLaunchData): {
   const globalRate = Number(data.payConversionGlobalAvgRate) || 0
   const ratePct = rate <= 1 && rate >= 0 ? rate * 100 : rate
   const globalPct = globalRate <= 1 && globalRate >= 0 ? globalRate * 100 : globalRate
-  const note = `付费转化率 ${ratePct.toFixed(1)}% (vs 全局 ${globalPct.toFixed(1)}%)`
+  const note = `付费率 ${ratePct.toFixed(1)}% (vs 全局 ${globalPct.toFixed(1)}%)`
   return { segmentData, note }
 }
 

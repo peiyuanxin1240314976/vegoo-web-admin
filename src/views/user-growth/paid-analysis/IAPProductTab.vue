@@ -51,7 +51,7 @@
               <th>占比</th>
               <th :class="{ 'col-emphasis': activeSubTab === 'orders' }">订单量</th>
               <th>ARPPU</th>
-              <th :class="{ 'col-emphasis': activeSubTab === 'retention' }">续费率</th>
+              <th :class="{ 'col-emphasis': activeSubTab === 'retention' }">续订率</th>
               <th :class="{ 'col-emphasis': activeSubTab === 'country' }">国家Top3</th>
               <th>30天趋势</th>
             </tr>
@@ -168,7 +168,7 @@
 
         <!-- Subscription Retention by Product -->
         <div class="card">
-          <div class="card-hd">订阅续费率队列（按商品）</div>
+          <div class="card-hd">订阅续订率队列（按商品）</div>
           <table class="dt sm-dt hm-dt">
             <thead>
               <tr>
@@ -274,7 +274,7 @@
   const subTabs = [
     { key: 'revenue', label: '收入' },
     { key: 'orders', label: '订单量' },
-    { key: 'retention', label: '续费率' },
+    { key: 'retention', label: '续订率' },
     { key: 'country', label: '国家分布' }
   ]
 

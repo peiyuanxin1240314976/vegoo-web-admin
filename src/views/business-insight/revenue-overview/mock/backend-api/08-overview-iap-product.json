@@ -30,7 +30,7 @@
       "foot": {
         "type": "object",
         "required": true,
-        "description": "付费转化率、ARPPU、订阅续费率（预格式化）。"
+        "description": "付费率、ARPPU、订阅续订率（预格式化）。"
       },
       "rows": {
         "type": "RevenueOverviewIapBreakdownRow[]",

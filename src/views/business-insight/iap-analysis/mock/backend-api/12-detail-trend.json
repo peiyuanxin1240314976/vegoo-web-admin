@@ -26,7 +26,7 @@
       "conversionRetention": {
         "type": "IapConversionRetention",
         "required": true,
-        "description": "转化率、续费率趋势。"
+        "description": "转化率、续订率趋势。"
       },
       "churnTrend": { "type": "IapTrendSingle", "required": true, "description": "退款率趋势。" },
       "churnThreshold": {
@@ -54,7 +54,7 @@
       "retention": {
         "type": "number[]",
         "required": true,
-        "description": "续费率序列（百分比数值）。"
+        "description": "续订率序列（百分比数值）。"
       }
     }
   },

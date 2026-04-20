@@ -34,7 +34,7 @@
           <thead>
             <tr>
               <th>广告平台</th><th>IAP收入</th><th>占比</th> <th>付费用户</th><th>ARPPU</th>
-              <th>首次付费周期</th><th>续费率</th><th>质量评分</th>
+              <th>首次付费周期</th><th>续订率</th><th>质量评分</th>
             </tr>
           </thead>
           <tbody>
@@ -142,7 +142,7 @@
 
       <!-- Retention Heatmap -->
       <div class="card reten-card">
-        <div class="card-hd">订阅续费率队列（按广告平台）</div>
+        <div class="card-hd">订阅续订率队列（按广告平台）</div>
         <table class="dt hm-dt">
           <thead>
             <tr> <th>广告平台</th><th>Month1</th><th>Month2</th><th>Month5</th> </tr>

@@ -1876,7 +1876,7 @@
       formatter: (row: any) => `$${formatFixed(row.d_arppu, 2)}`
     },
     {
-      label: '转化率',
+      label: '付费率',
       prop: 'd_conversion_rate',
       minWidth: 88,
       useSlot: true,

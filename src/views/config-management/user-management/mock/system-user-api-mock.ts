@@ -1,6 +1,7 @@
 /**
  * 平台管理 · 用户管理 Mock，与 `mock/backend-api/*.json` 中 unwrap 后的业务体一致。
  */
+import { MOCK_ROLE_LIST } from '@/views/config-management/role/mock/data'
 import { getSystemUserMockList } from './data'
 import type {
   UserStats,
@@ -16,6 +17,11 @@ import type {
 } from '../types'
 
 const MAX_PAGE_SIZE = 10
+
+function roleIdsToRoleCodes(roleIds: number[]): string[] {
+  const idSet = new Set(roleIds)
+  return MOCK_ROLE_LIST.filter((r) => idSet.has(r.roleId)).map((r) => r.roleCode)
+}
 
 // ==================== 00-user-stats ====================
 
@@ -36,6 +42,13 @@ function matchUserName(row: SystemUserItem, kw: string): boolean {
 }
 
 function filterRows(list: SystemUserItem[], params: SystemUserSearchParams): SystemUserItem[] {
+  const roleFilter =
+    typeof params.role === 'number'
+      ? MOCK_ROLE_LIST.find((r) => r.roleId === params.role)?.roleCode
+      : typeof params.role === 'string'
+        ? params.role.trim()
+        : ''
+
   return list.filter((row) => {
     if (params.id != null && row.id !== params.id) return false
     if (params.userName && !matchUserName(row, params.userName)) return false
@@ -48,7 +61,7 @@ function filterRows(list: SystemUserItem[], params: SystemUserSearchParams): Sys
     ) {
       return false
     }
-    if (params.role && !row.userRoles.includes(params.role)) return false
+    if (roleFilter && !row.userRoles.includes(roleFilter)) return false
     return true
   })
 }
@@ -105,7 +118,7 @@ export function mockCreateUser(payload: CreateUserPayload): Promise<SystemUserIt
     userGender: payload.userGender,
     userPhone: payload.userPhone,
     userEmail: payload.userEmail ?? '',
-    userRoles: payload.userRoles,
+    userRoles: roleIdsToRoleCodes(payload.userRoles),
     accessibleApps: payload.accessibleApps ?? [],
     remark: payload.remark ?? '',
     createBy: 'current_user',
@@ -132,7 +145,7 @@ export function mockUpdateUser(
       userName: payload.userName,
       userPhone: payload.userPhone,
       userGender: payload.userGender,
-      userRoles: payload.userRoles,
+      userRoles: roleIdsToRoleCodes(payload.userRoles),
       userEmail: payload.userEmail ?? existing.userEmail,
       nickName: payload.nickName ?? existing.nickName,
       accessibleApps: payload.accessibleApps ?? existing.accessibleApps,

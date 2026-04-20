@@ -53,7 +53,13 @@
 
     <template #footer>
       <ElButton round @click="handleClose">取消</ElButton>
-      <ElButton type="primary" round @click="handleSubmit">
+      <ElButton
+        type="primary"
+        round
+        :loading="submitting"
+        :disabled="submitting"
+        @click="handleSubmit"
+      >
         {{ dialogType === 'add' ? '创建角色' : '保存角色信息' }}
       </ElButton>
     </template>
@@ -88,6 +94,7 @@
   const emit = defineEmits<Emits>()
 
   const formRef = ref<FormInstance>()
+  const submitting = ref(false)
 
   const visible = computed({
     get: () => props.modelValue,
@@ -150,8 +157,10 @@
 
   async function handleSubmit() {
     if (!formRef.value) return
+    if (submitting.value) return
 
     try {
+      submitting.value = true
       await formRef.value.validate()
       const res = await fetchRoleDetailSave({
         roleId: form.roleId,
@@ -168,6 +177,8 @@
       }
     } catch (error) {
       console.error('角色信息提交失败', error)
+    } finally {
+      submitting.value = false
     }
   }
 

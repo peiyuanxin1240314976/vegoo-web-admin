@@ -19,7 +19,13 @@
       </ElTabs>
 
       <div class="panel-footer">
-        <ElButton class="btn-save" type="primary" round @click="emit('save')"
+        <ElButton
+          class="btn-save"
+          type="primary"
+          round
+          :loading="saving"
+          :disabled="saving"
+          @click="emit('save')"
           >保存权限配置</ElButton
         >
         <ElButton round @click="handleReset">重置</ElButton>
@@ -46,6 +52,7 @@
 
   const props = defineProps<{
     selectedRole?: RoleListItem | null
+    saving?: boolean
   }>()
 
   const emit = defineEmits<{

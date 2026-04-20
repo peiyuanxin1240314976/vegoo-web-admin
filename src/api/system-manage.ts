@@ -19,7 +19,12 @@ export function fetchGetUserList(params: Api.SystemManage.UserSearchParams) {
       size: params.size ?? 10,
       userName: params.userName,
       status: params.status,
-      role: params.role,
+      role:
+        params.role != null &&
+        String(params.role).trim() !== '' &&
+        /^\d+$/.test(String(params.role))
+          ? Number(params.role)
+          : '',
       userGender: params.userGender,
       userPhone: params.userPhone,
       userEmail: params.userEmail,

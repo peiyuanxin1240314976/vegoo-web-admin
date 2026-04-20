@@ -15,9 +15,9 @@
         "description": "性别。"
       },
       "userRoles": {
-        "type": "string[]",
+        "type": "number[]",
         "required": true,
-        "description": "角色编码数组，至少 1 项。"
+        "description": "角色主键数组（字段名 userRoles；元素为 RoleListItem.roleId），至少 1 项。"
       },
       "userEmail": { "type": "string", "required": false, "description": "邮箱，可选。" },
       "nickName": { "type": "string", "required": false, "description": "昵称，可选。" },
@@ -58,7 +58,7 @@
     "userName": "eva",
     "userPhone": "13800130005",
     "userGender": "女",
-    "userRoles": ["ops"],
+    "userRoles": [3],
     "userEmail": "eva@example.com",
     "nickName": "Eva",
     "accessibleApps": ["weather5"],
@@ -72,7 +72,7 @@
     "userGender": "女",
     "userPhone": "13800130005",
     "userEmail": "eva@example.com",
-    "userRoles": ["ops"],
+    "userRoles": ["DeliveryManager"],
     "accessibleApps": ["weather5"],
     "remark": "新入职优化师",
     "createBy": "alice",
@@ -101,7 +101,7 @@
         "prerequisite": "用户名、手机号、性别、角色校验通过"
       }
     ],
-    "defaultSelection": "弹窗默认 userGender='男'，userRoles=[]。",
+    "defaultSelection": "弹窗默认 userGender='男'，role=[]（未选角色）。",
     "dedupe": "提交中禁用确认按钮，防止重复创建。"
   }
 }

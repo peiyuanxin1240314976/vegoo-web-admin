@@ -16,10 +16,9 @@
         "description": "状态筛选：空字符串=全部，1=在线，2=离线，3=异常，4=已禁用。"
       },
       "role": {
-        "type": "string",
+        "type": "number",
         "required": false,
-        "enum": ["", "ops", "admin", "auditor"],
-        "description": "角色编码筛选：空字符串=全部。"
+        "description": "角色主键筛选（RoleListItem.roleId）：空值=全部。"
       },
       "userGender": {
         "type": "string",
