@@ -2,10 +2,11 @@
   import 'flag-icons/css/flag-icons.min.css'
   import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import * as echarts from 'echarts'
-  import type { ProfitCountryRow, ProfitMapDataItem } from './types'
+  import type { ProfitCountryRow, ProfitKpiCard, ProfitMapDataItem } from './types'
   import {
     buildProfitMapScatterChartData,
-    normalizeProfitMapDataForEchartsMapSeries
+    normalizeProfitMapDataForEchartsMapSeries,
+    resolveEchartsWorldMapRegionName
   } from './country-profit-map-centroids'
   import { resolveProfitCountryIso } from './country-flag-iso'
   import { useProfitAnalysisDashboard } from './composables/useProfitAnalysisDashboard'
@@ -42,6 +43,16 @@
   const visibleKpiCards = computed(() =>
     kpiCards.value.filter((c) => !HIDDEN_KPI_LABELS.has(c.label))
   )
+  const TOP_KPI_ORDER = ['预估利润', '总收入', '广告支出', '广告收益率', '付费收入占比'] as const
+  const topKpiCards = computed(() => {
+    const byLabel = new Map(visibleKpiCards.value.map((c) => [c.label, c]))
+    const ordered = TOP_KPI_ORDER.map((k) => byLabel.get(k)).filter((x): x is ProfitKpiCard => !!x)
+    return ordered.length ? ordered : visibleKpiCards.value
+  })
+  function isEstimateBadge(card: ProfitKpiCard) {
+    const badge = String(card.badge ?? '')
+    return card.label === '预估利润' || badge.includes('预估')
+  }
 
   const mapRef = ref<HTMLElement | null>(null)
   const trendRef = ref<HTMLElement | null>(null)
@@ -96,11 +107,191 @@
     if (!mapChart) {
       mapChart = echarts.init(mapRef.value, 'dark', { renderer: 'canvas' })
     }
+    const countryRowLookup = new Map<string, ProfitCountryRow>()
+    for (const row of countryRows.value || []) {
+      const raw = String(row.name || '').trim()
+      if (raw) countryRowLookup.set(raw, row)
+      const region = raw ? resolveEchartsWorldMapRegionName(raw) : null
+      if (region) countryRowLookup.set(region, row)
+    }
     const mapSeriesData = normalizeProfitMapDataForEchartsMapSeries(mapData.value)
-    const maxVal = Math.max(1, ...mapData.value.map((d: ProfitMapDataItem) => d.value))
+    const rawVals = (mapData.value || [])
+      .map((d: ProfitMapDataItem) => Number(d.value))
+      .filter((n: number) => Number.isFinite(n))
+
+    function quantile(sorted: number[], q: number): number {
+      if (!sorted.length) return 0
+      if (sorted.length === 1) return sorted[0]!
+      const clamped = Math.min(1, Math.max(0, q))
+      const pos = (sorted.length - 1) * clamped
+      const base = Math.floor(pos)
+      const rest = pos - base
+      const a = sorted[base]!
+      const b = sorted[Math.min(sorted.length - 1, base + 1)]!
+      return a + (b - a) * rest
+    }
+
+    function buildProfitVisualMap(values: number[]) {
+      const v = [...values].sort((a, b) => a - b)
+      if (!v.length) {
+        return { min: 0, max: 1, show: false }
+      }
+
+      // 国家数量不多时，使用“精确值分段”保证最大区分度（同值会同色）
+      // 注意：visualMap piecewise 支持 { value } 精确匹配 series.data.value
+      if (v.length <= 24) {
+        const uniq = Array.from(new Set(v)).sort((a, b) => a - b)
+        const palette = [
+          '#22c55e',
+          '#38bdf8',
+          '#a78bfa',
+          '#fb923c',
+          '#f87171',
+          '#2dd4bf',
+          '#facc15',
+          '#60a5fa',
+          '#34d399',
+          '#e879f9',
+          '#f97316',
+          '#4ade80',
+          '#0ea5e9',
+          '#c084fc',
+          '#f59e0b',
+          '#10b981'
+        ]
+        // 让更高值拿到更“亮”的颜色：反向映射
+        const pieces = uniq
+          .slice()
+          .sort((a, b) => b - a)
+          .map((val, idx) => ({
+            value: val,
+            color: palette[idx % palette.length]
+          }))
+        return {
+          type: 'piecewise',
+          show: false,
+          seriesIndex: 0,
+          pieces
+        }
+      }
+
+      const hasNeg = v[0]! < 0
+      const hasPos = v[v.length - 1]! > 0
+      const EPS = 1e-9
+
+      // 分段（piecewise）比连续渐变更容易“拉开区分”
+      if (!hasNeg) {
+        // 全正：按分位数分 7 档（低→高），让高值国家更容易区分色阶
+        const q15 = quantile(v, 0.15)
+        const q30 = quantile(v, 0.3)
+        const q45 = quantile(v, 0.45)
+        const q60 = quantile(v, 0.6)
+        const q75 = quantile(v, 0.75)
+        const q90 = quantile(v, 0.9)
+        const pieces = [
+          { lte: q15, color: '#1a2744' },
+          { gt: q15, lte: q30, color: '#1e3a8a' },
+          { gt: q30, lte: q45, color: '#0ea5e9' },
+          { gt: q45, lte: q60, color: '#22d3ee' },
+          { gt: q60, lte: q75, color: '#2dd4bf' },
+          { gt: q75, lte: q90, color: '#a3e635' },
+          { gt: q90, color: '#4ade80' }
+        ]
+        return {
+          type: 'piecewise',
+          show: false,
+          seriesIndex: 0,
+          pieces
+        }
+      }
+
+      if (hasNeg && hasPos) {
+        // 有负有正：负值红/橙，接近 0 走中性，正值走绿
+        const neg = v.filter((n) => n < 0)
+        const pos = v.filter((n) => n > 0)
+        const n80 = neg.length ? quantile(neg, 0.8) : -EPS
+        const n40 = neg.length ? quantile(neg, 0.4) : -EPS
+        const p40 = pos.length ? quantile(pos, 0.4) : EPS
+        const p80 = pos.length ? quantile(pos, 0.8) : EPS
+
+        const pieces = [
+          { lte: n80, color: '#ef4444' },
+          { gt: n80, lte: n40, color: '#fb923c' },
+          { gt: n40, lte: -EPS, color: '#fbbf24' },
+          { gt: -EPS, lte: EPS, color: '#1a2744' },
+          { gt: EPS, lte: p40, color: '#1d6fa4' },
+          { gt: p40, lte: p80, color: '#22c55e' },
+          { gt: p80, color: '#4ade80' }
+        ]
+
+        return {
+          type: 'piecewise',
+          show: false,
+          seriesIndex: 0,
+          pieces
+        }
+      }
+
+      // 全负：按分位数分 5 档（更红 = 亏损更大）
+      const q20 = quantile(v, 0.2)
+      const q40 = quantile(v, 0.4)
+      const q60 = quantile(v, 0.6)
+      const q80 = quantile(v, 0.8)
+      const pieces = [
+        { lte: q20, color: '#7f1d1d' },
+        { gt: q20, lte: q40, color: '#b91c1c' },
+        { gt: q40, lte: q60, color: '#ef4444' },
+        { gt: q60, lte: q80, color: '#fb923c' },
+        { gt: q80, color: '#fbbf24' }
+      ]
+      return { type: 'piecewise', show: false, seriesIndex: 0, pieces }
+    }
     const scatterSeriesData = buildProfitMapScatterChartData(mapScatter.value, mapData.value)
     mapChart.setOption({
       backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item',
+        confine: true,
+        backgroundColor: 'rgba(15, 31, 61, 0.95)',
+        borderColor: '#1e40af',
+        borderWidth: 1,
+        padding: [10, 12],
+        textStyle: { color: '#e2e8f0', fontSize: 12 },
+        extraCssText: 'box-shadow: 0 12px 30px rgba(0,0,0,.35); border-radius: 10px;',
+        formatter: (p: any) => {
+          const name = String(p?.name ?? '').trim()
+          const row = name ? countryRowLookup.get(name) : undefined
+          const val = Array.isArray(p?.value) ? Number(p.value?.[2]) : Number(p?.value)
+          const profitText =
+            row?.profit ??
+            (Number.isFinite(val)
+              ? new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD',
+                  maximumFractionDigits: 0
+                }).format(val)
+              : '--')
+
+          const header = `<div style='font-weight:600;font-size:13px;margin-bottom:8px;color:#f8fafc;'>${
+            name || '--'
+          }</div>`
+          const kv = (k: string, v: string) =>
+            `<div style='display:flex;justify-content:space-between;gap:16px;line-height:1.7;'><span style='color:#94a3b8;'>${k}</span><span style='color:#e2e8f0;'>${v}</span></div>`
+
+          if (!row) {
+            return `${header}${kv('利润', profitText)}`
+          }
+
+          return [
+            header,
+            kv('广告收入', row.adRev ?? '--'),
+            kv('付费收入', row.paidRev ?? '--'),
+            kv('广告支出', row.adSpend ?? '--'),
+            kv('利润', profitText),
+            kv('利润率', row.rate ?? '--')
+          ].join('')
+        }
+      },
       geo: {
         map: 'world',
         roam: true,
@@ -174,15 +365,7 @@
           }
         }
       ],
-      visualMap: {
-        min: 0,
-        max: maxVal,
-        show: false,
-        seriesIndex: 0,
-        inRange: {
-          color: ['#1a2744', '#1e4080', '#1d6fa4', '#22c55e']
-        }
-      }
+      visualMap: buildProfitVisualMap(rawVals)
     })
     await nextTick()
     mapChart.resize()
@@ -502,27 +685,41 @@
       </template>
       <template v-else>
         <div
-          v-for="card in visibleKpiCards"
+          v-for="card in topKpiCards"
           :key="card.label"
-          class="kpi-card"
-          :style="{ background: card.bg, '--card-border': card.border }"
+          class="kpi-card kpi-card--neo"
+          :style="{
+            background: card.bg,
+            '--card-border': card.border,
+            '--kpi-accent': card.valueColor
+          }"
         >
-          <!-- <div class="kpi-card-decor" aria-hidden="true">
-            <span class="kpi-card-decor__bar kpi-card-decor__bar--a" />
-            <span class="kpi-card-decor__bar kpi-card-decor__bar--b" />
-            <span class="kpi-card-decor__bar kpi-card-decor__bar--c" />
-          </div> -->
+          <!-- 旋转渐变边框（复刻 ad-performance-kpi-cards） -->
+          <div class="kpi-border-spin" aria-hidden="true"></div>
+          <div class="kpi-edge kpi-edge--l" aria-hidden="true"></div>
+          <div class="kpi-edge kpi-edge--r" aria-hidden="true"></div>
+
           <div class="kpi-top">
-            <span class="kpi-label">{{ card.label }}</span>
-            <span
-              v-if="card.badge"
+            <div class="kpi-label">{{ card.label }}</div>
+            <div
+              v-if="card.badge && !isEstimateBadge(card)"
               class="kpi-badge"
-              :style="{ color: card.badgeColor, borderColor: card.badgeColor }"
-              >{{ card.badge }}</span
+              :style="{ borderColor: card.badgeColor }"
             >
+              {{ card.badge }}
+            </div>
           </div>
-          <div class="kpi-value" :style="{ color: card.valueColor }">{{ card.value }}</div>
-          <!-- dev 有 sub，这里保持你当前接口/展示一致，不强制展示 -->
+
+          <div
+            v-if="card.badge && isEstimateBadge(card)"
+            class="kpi-badge kpi-badge--estimate"
+            :style="{ borderColor: card.badgeColor, color: card.badgeColor }"
+          >
+            {{ card.badge }}
+          </div>
+
+          <div class="kpi-value">{{ card.value }}</div>
+          <div v-if="card.sub" class="kpi-sub">{{ card.sub }}</div>
         </div>
       </template>
     </section>
@@ -698,6 +895,13 @@
 
 <style scoped lang="scss">
   @use '../../user-growth/ad-performance/styles/ap-card-fx.scss' as ap;
+
+  /* 旋转渐变边框：CSS Houdini @property（复刻 ad-performance-kpi-cards） */
+  @property --kpi-border-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
 
   .bi-root {
     --bg-deep: #0f1012;
@@ -1040,11 +1244,36 @@
       mask-composite: exclude;
     }
 
+    /**
+     * 四边光晕：用一层模糊的渐变描边做外扩散光（不占内容层级）。
+     * 与 ::before 的“锐利描边”叠加，能同时保留边界清晰度与氛围光。
+     */
+    &::after {
+      position: absolute;
+      inset: -2px;
+      pointer-events: none;
+      content: '';
+      background: var(--card-border);
+      filter: blur(12px);
+      border-radius: 12px;
+      opacity: 0.32;
+      transform: translateZ(0);
+    }
+
+    /* 内发光：让四边更“亮”一点，不抢文字 */
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 4%),
+      inset 0 0 18px color-mix(in srgb, var(--kpi-glow, rgb(56 189 248)) 10%, transparent);
+
     &--skeleton {
       background: var(--bg-card);
       border: 1px solid var(--border);
 
       &::before {
+        display: none;
+      }
+
+      &::after {
         display: none;
       }
     }
@@ -1055,6 +1284,33 @@
 
     &--skel-fx:nth-child(even) {
       animation-delay: 0.12s;
+    }
+  }
+
+  /* 旋转渐变边框层（复刻 ad-performance-kpi-cards） */
+  .kpi-border-spin {
+    position: absolute;
+    inset: -55%;
+    z-index: 0;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--kpi-border-angle),
+      transparent 0%,
+      var(--kpi-spin-a) 18%,
+      transparent 36%,
+      var(--kpi-spin-b) 56%,
+      transparent 72%,
+      var(--kpi-spin-c) 86%,
+      transparent 100%
+    );
+    filter: blur(0.5px);
+    opacity: 0.68;
+    animation: kpi-border-spin 4.6s linear infinite;
+  }
+
+  @keyframes kpi-border-spin {
+    to {
+      --kpi-border-angle: 360deg;
     }
   }
 
@@ -1102,7 +1358,7 @@
     background: linear-gradient(180deg, rgb(251 146 60 / 88%) 0%, rgb(251 146 60 / 48%) 100%);
   }
 
-  .kpi-card:not(.kpi-card--skeleton) {
+  .kpi-card:not(.kpi-card--skeleton, .kpi-card--neo) {
     cursor: default;
     transition:
       box-shadow 0.32s ease,
@@ -1113,9 +1369,10 @@
       filter: brightness(1.07);
       box-shadow:
         0 20px 40px -14px rgb(0 0 0 / 72%),
-        0 0 0 1px rgb(56 189 248 / 28%),
-        0 0 32px -8px rgb(56 189 248 / 22%),
-        0 0 78px rgb(56 189 248 / 12%);
+        0 0 0 1px color-mix(in srgb, var(--kpi-glow, rgb(56 189 248)) 28%, transparent),
+        0 0 32px -8px color-mix(in srgb, var(--kpi-glow, rgb(56 189 248)) 26%, transparent),
+        0 0 78px color-mix(in srgb, var(--kpi-glow, rgb(56 189 248)) 16%, transparent),
+        inset 0 0 18px color-mix(in srgb, var(--kpi-glow, rgb(56 189 248)) 12%, transparent);
     }
 
     &:active {
@@ -1138,27 +1395,178 @@
     }
   }
 
-  .kpi-top {
-    position: relative;
-    z-index: 1;
+  /** 顶部 KPI 卡片：霓虹描边 + 顶部光带（对齐截图风格） */
+  .kpi-card--neo {
+    /* 复刻广告成效 KPI 卡片风格 */
+    --kpi-accent: #3b82f6;
+    --kpi-accent-2: color-mix(in srgb, var(--kpi-accent) 55%, #22d3ee);
+    --kpi-glow: color-mix(in srgb, var(--kpi-accent) 45%, transparent);
+    --kpi-glow-2: color-mix(in srgb, var(--kpi-accent-2) 22%, transparent);
+    --kpi-spin-a: color-mix(in srgb, var(--kpi-accent) 62%, transparent);
+    --kpi-spin-b: color-mix(in srgb, var(--kpi-accent-2) 48%, transparent);
+    --kpi-spin-c: color-mix(in srgb, #a855f7 38%, transparent);
+
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
+    justify-content: flex-start;
+    padding: 18px 12px;
+    background-color: rgb(8 8 12 / 98%);
+    background-image:
+      radial-gradient(
+        ellipse 120% 80% at 50% -18%,
+        var(--kpi-glow) 0%,
+        var(--kpi-glow-2) 30%,
+        transparent 58%
+      ),
+      linear-gradient(
+        172deg,
+        color-mix(in srgb, var(--kpi-accent) 22%, rgb(8 8 12)) 0%,
+        color-mix(in srgb, var(--kpi-accent) 38%, rgb(8 8 12)) 60%,
+        color-mix(in srgb, var(--kpi-accent-2) 15%, rgb(8 8 12)) 100%
+      );
+    border: 1px solid color-mix(in srgb, var(--kpi-accent) 55%, transparent);
+    border-radius: 14px;
+    box-shadow:
+      0 8px 40px rgb(0 0 0 / 52%),
+      0 0 0 1px color-mix(in srgb, var(--kpi-accent) 18%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 16%),
+      inset 0 -10px 28px rgb(0 0 0 / 38%),
+      0 0 28px color-mix(in srgb, var(--kpi-accent) 12%, transparent);
+    transition:
+      box-shadow 0.4s var(--ease-out),
+      border-color 0.28s var(--ease-default);
+
+    /* 顶部主题色高光弧（贴边，复刻 ad-performance） */
+    &::before {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      z-index: 0;
+      width: 80%;
+      height: 2px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        90deg,
+        transparent,
+        var(--kpi-accent),
+        var(--kpi-accent-2),
+        transparent
+      );
+      opacity: 0.8;
+      transform: translateX(-50%);
+    }
+
+    /* 底部主题色反光线（贴边，复刻 ad-performance） */
+    &::after {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      z-index: 0;
+      width: 60%;
+      height: 1px;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(90deg, transparent, var(--kpi-accent), transparent);
+      opacity: 0.45;
+      transform: translateX(-50%);
+    }
+
+    /* 左右边缘光带：补齐四周“贴边发亮” */
+    .kpi-edge {
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      z-index: 0;
+      width: 1px;
+      pointer-events: none;
+      background: linear-gradient(
+        180deg,
+        transparent,
+        color-mix(in srgb, var(--kpi-accent) 85%, transparent),
+        color-mix(in srgb, var(--kpi-accent-2) 65%, transparent),
+        transparent
+      );
+
+      /* 不依赖 blur 外扩散，避免被 overflow:hidden 裁掉 */
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--kpi-accent) 16%, transparent),
+        0 0 12px color-mix(in srgb, var(--kpi-accent) 45%, transparent),
+        0 0 26px color-mix(in srgb, var(--kpi-accent-2) 18%, transparent);
+      opacity: 0.9;
+    }
+
+    .kpi-edge--l {
+      left: 1px;
+    }
+
+    .kpi-edge--r {
+      right: 1px;
+    }
+
+    > *:not(.kpi-border-spin, .kpi-edge, .kpi-badge--estimate) {
+      position: relative;
+      z-index: 1;
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--kpi-accent) 85%, transparent);
+      box-shadow:
+        0 28px 72px rgb(0 0 0 / 55%),
+        0 0 0 1px color-mix(in srgb, var(--kpi-accent) 40%, transparent),
+        inset 0 1px 0 rgb(255 255 255 / 20%),
+        0 0 60px color-mix(in srgb, var(--kpi-accent) 35%, transparent),
+        0 0 100px color-mix(in srgb, var(--kpi-accent) 18%, transparent),
+        0 0 140px color-mix(in srgb, var(--kpi-accent-2) 12%, transparent);
+    }
+
+    .kpi-value {
+      text-shadow: 0 0 22px rgb(0 0 0 / 22%);
+    }
   }
+
+  .kpi-top {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    margin-top: -6px;
+    margin-bottom: 8px;
+    pointer-events: none;
+  }
+
+  /* 顶/底反光线已改为卡片自身 ::before/::after（贴边） */
 
   .kpi-label {
     font-size: 12px;
-    font-weight: 500;
-    color: var(--text-sec);
+    font-weight: 600;
+    color: rgb(248 250 252 / 92%);
   }
 
   .kpi-badge {
     padding: 1px 6px;
     font-size: 10px;
+    color: rgb(248 250 252 / 92%);
+    pointer-events: none;
     background: rgb(255 255 255 / 4%);
     border: 1px solid currentcolor;
     border-radius: 4px;
+  }
+
+  .kpi-badge--estimate {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    z-index: 2;
+    padding: 2px 8px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    background: color-mix(in srgb, currentcolor 10%, rgb(8 8 12 / 92%));
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, currentcolor 28%, transparent),
+      0 0 16px color-mix(in srgb, currentcolor 22%, transparent);
   }
 
   .kpi-value {
@@ -1168,14 +1576,20 @@
     font-size: 26px;
     font-weight: 700;
     line-height: 1.2;
+    color: rgb(248 250 252 / 96%);
+    text-align: center;
     letter-spacing: -0.5px;
   }
 
   .kpi-sub {
     position: relative;
     z-index: 1;
+    overflow: hidden;
     font-size: 11px;
-    color: var(--text-sec);
+    color: rgb(248 250 252 / 70%);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.92;
   }
 
   .bi-card {
