@@ -41,12 +41,12 @@
 
         <div class="panel__body">
           <div ref="excelShellRef" class="excel-shell" tabindex="0" @keydown="onShellKeydown">
-            <div class="excel-toolbar">
+            <!-- <div class="excel-toolbar">
               <div class="excel-toolbar__hint">
                 拖拽可框选，按 <span>Ctrl/Cmd + C</span> 复制选区内容
               </div>
               <div class="excel-toolbar__selection">{{ selectionLabel }}</div>
-            </div>
+            </div> -->
 
             <div ref="excelScrollRef" class="excel-scroll">
               <div class="excel-sheet">
@@ -154,6 +154,7 @@
 
 <script setup lang="ts">
   import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+  import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import {
     panelAppDimensionAppBlocks,
     panelAppDimensionDateHeaders,
@@ -174,8 +175,12 @@
     }>(),
     {
       loading: false,
-      headerHint:
-        '计算周期：2026-01-01 至 2026-03-04 | 应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算'
+      headerHint: (() => {
+        const endDate = getAppNow()
+        const startDate = cloneAppDate(endDate)
+        startDate.setDate(startDate.getDate() - 7)
+        return `计算周期：${formatYYYYMMDD(startDate)} 至 ${formatYYYYMMDD(endDate)} | 应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算`
+      })()
     }
   )
 
@@ -243,15 +248,15 @@
     }
   })
 
-  const selectionLabel = computed(() => {
-    const selection = currentSelection.value
-    if (!selection) return '未选择单元格'
+  // const selectionLabel = computed(() => {
+  //   const selection = currentSelection.value
+  //   if (!selection) return '未选择单元格'
 
-    const rows = selection.endRow - selection.startRow + 1
-    const cols = selection.endCol - selection.startCol + 1
-    const sectionLabel = selection.section === 'summary' ? '汇总区' : '明细区'
-    return `${sectionLabel} ${rows} × ${cols}`
-  })
+  //   const rows = selection.endRow - selection.startRow + 1
+  //   const cols = selection.endCol - selection.startCol + 1
+  //   const sectionLabel = selection.section === 'summary' ? '汇总区' : '明细区'
+  //   return `${sectionLabel} ${rows} × ${cols}`
+  // })
 
   const summarySelectionStyle = computed(() =>
     getSelectionStyle(summarySection.value, currentSelection.value)
@@ -842,7 +847,6 @@
     max-width: 100%;
     max-height: 620px;
     padding: 10px;
-    overflow: auto;
     overflow: auto;
     background: linear-gradient(180deg, #f5f7fa 0%, #edf1f5 100%);
     border: 1px solid rgb(124 134 152 / 22%);

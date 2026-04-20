@@ -68,10 +68,9 @@
         <div class="right-wrap">
           <MyPerformancePanelAppDimensionTable
             :loading="cardLoading"
-            :title="data.appTable.title"
+            title="按应用绩效评估 | 近7天绩效评估"
             :list="data.appTable.list"
             :summary="data.appTable.summary"
-            :header-hint="$t('myPerformance.appTableHeader.hint')"
             :col-app="$t('myPerformance.table.col.app')"
             :col-platform="$t('myPerformance.table.col.platform')"
             :col-source="$t('myPerformance.table.col.source')"
