@@ -5,6 +5,7 @@ import { buildMyPerformanceMockData } from './data'
 import metaPersonApi from './api-mock/meta-person-options.json'
 import metaPeriodApi from './api-mock/meta-period-options.json'
 import type {
+  MyPerformanceAppDimensionTableQueryBody,
   MyPerformanceAppDimensionTableResponse,
   MyPerformanceKpiAchievementResponse,
   MyPerformanceMetaPeriodResponse,
@@ -73,9 +74,9 @@ export function mockFetchMyPerformancePerformanceHistory(
 }
 
 export function mockFetchMyPerformanceAppDimensionTable(
-  body: MyPerformanceQueryBody
+  body: MyPerformanceAppDimensionTableQueryBody
 ): Promise<MyPerformanceAppDimensionTableResponse> {
-  const page = slicePage(body)
+  const page = buildMyPerformanceMockData('month', body.endDate.slice(0, 7), body.personId)
   return Promise.resolve({
     title: page.appTable.title,
     list: page.appTable.list,

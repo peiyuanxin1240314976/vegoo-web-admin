@@ -11,6 +11,13 @@ export interface MyPerformanceQueryBody {
   periodValue: string
 }
 
+/** 应用维度评估表（按日期范围）请求体 */
+export interface MyPerformanceAppDimensionTableQueryBody {
+  personId: string
+  startDate: string
+  endDate: string
+}
+
 /** GET meta-person-options 响应 */
 export interface MyPerformanceMetaPersonResponse {
   personOptions: MyPerformancePersonOption[]
@@ -78,6 +85,21 @@ export interface MyPerformanceAppDimensionTableResponse {
   title: string
   list: MyPerformanceAppTreeRow[]
   summary: MyPerformanceAppTableSummary
+  excelTables?: {
+    dateHeaders: string[]
+    summaryRows: Array<{
+      label: string
+      total: string | number
+      days: Array<string | number>
+    }>
+    appBlocks: Array<{
+      app: string
+      platform: string
+      allRows: Array<{ label: string; values: Array<string | number> }>
+      googleRows: Array<{ label: string; values: Array<string | number> }>
+      alt?: boolean
+    }>
+  }
 }
 
 export interface MyPerformancePersonOption {

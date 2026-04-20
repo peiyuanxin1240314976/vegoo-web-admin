@@ -10,8 +10,9 @@ import {
   fetchMyPerformanceRoiTrend,
   fetchMyPerformanceSpendProgress
 } from '@/api/user-growth/my-performance'
-import { getAppNow } from '@/utils/app-now'
+import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 import type {
+  MyPerformanceAppDimensionTableQueryBody,
   MyPerformanceMetaPersonResponse,
   MyPerformanceMetaPeriodResponse,
   MyPerformancePageData,
@@ -193,6 +194,19 @@ export function useMyPerformancePage() {
     }
   }
 
+  function appDimensionTableQueryBody(): MyPerformanceAppDimensionTableQueryBody | null {
+    const { selectedPersonId } = data.value
+    if (!selectedPersonId) return null
+    const end = getAppNow()
+    const start = cloneAppDate(end)
+    start.setDate(start.getDate() - 7)
+    return {
+      personId: selectedPersonId,
+      startDate: formatYYYYMMDD(start),
+      endDate: formatYYYYMMDD(end)
+    }
+  }
+
   /**
    * 先拉人员再拉统计口径：多数后端口径随人员变化，并行时不带 personId 会导致口径失败/为空，
    * 进而 selectedPeriodValue 为空，loadDetail 不会发任何详情请求。
@@ -230,6 +244,8 @@ export function useMyPerformancePage() {
 
   async function loadDetail() {
     const body = queryBody()
+    const appTableBody = appDimensionTableQueryBody()
+    if (!appTableBody) return
     if (!body) {
       if (data.value.selectedPersonId && !data.value.selectedPeriodValue) {
         ElMessage.warning('统计口径下暂无可用月份或季度，无法加载绩效详情')
@@ -271,7 +287,7 @@ export function useMyPerformancePage() {
         {
           key: 'appDimensionTable',
           run: async () => {
-            const r = await fetchMyPerformanceAppDimensionTable(body)
+            const r = await fetchMyPerformanceAppDimensionTable(appTableBody)
             data.value.appTable = { title: r.title, list: r.list, summary: r.summary }
           }
         }

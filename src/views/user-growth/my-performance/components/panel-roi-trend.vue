@@ -61,6 +61,14 @@
     return date
   }
 
+  function calcYAxisMax(values: number[]): number {
+    const nums = values.map((v) => Number(v)).filter((n) => Number.isFinite(n))
+    const rawMax = nums.length ? Math.max(...nums) : 100
+    if (rawMax <= 100) return 110
+    // 向上取整到 10 的倍数并留出一点顶部空间，避免线条顶到图例区域
+    return Math.ceil((rawMax * 1.08) / 10) * 10
+  }
+
   function buildOption(): EChartsOption {
     const x = props.points.map((p) => formatXLabel(p.date))
     const y = props.points.map((p) => p.roi)
@@ -70,6 +78,7 @@
     const yTarget = hasTarget
       ? props.points.map((p) => (p.targetRoi != null ? p.targetRoi : 0))
       : []
+    const yAxisMax = calcYAxisMax([...y, ...yTarget])
 
     const series: EChartsOption['series'] = [
       {
@@ -77,6 +86,7 @@
         type: 'line',
         data: y,
         smooth: true,
+        smoothMonotone: 'x',
         symbolSize: 8,
         emphasis: {
           focus: 'series',
@@ -121,6 +131,7 @@
         type: 'line',
         data: yTarget,
         smooth: true,
+        smoothMonotone: 'x',
         symbolSize: 4,
         lineStyle: {
           width: 2,
@@ -132,7 +143,7 @@
     }
 
     return {
-      grid: { top: hasTarget ? 38 : 22, right: 16, bottom: 26, left: 38 },
+      grid: { top: hasTarget ? 46 : 24, right: 16, bottom: 26, left: 38 },
       legend: hasTarget
         ? {
             top: 0,
@@ -150,7 +161,7 @@
       yAxis: {
         type: 'value',
         min: 0,
-        max: 100,
+        max: yAxisMax,
         splitLine: { lineStyle: { color: 'rgba(148,163,184,0.12)' } },
         axisLabel: { color: 'rgba(161,161,170,0.9)', formatter: '{value}%' }
       },
