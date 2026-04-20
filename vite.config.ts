@@ -122,27 +122,14 @@ export default ({ mode }: { mode: string }) => {
     ],
     // 依赖预构建：避免运行时重复请求与转换，提升首次加载速度
     optimizeDeps: {
-      include: [
-        'echarts/core',
-        'echarts/charts',
-        'echarts/components',
-        'echarts/renderers',
-        'xlsx',
-        'xgplayer',
-        'crypto-js',
-        'file-saver',
-        'vue-img-cutter',
-        'element-plus/es',
-        'element-plus/es/components/*/style/css',
-        'element-plus/es/components/*/style/index'
-      ]
+      include: ['echarts/core', 'echarts/charts', 'echarts/components', 'echarts/renderers']
     },
     css: {
       preprocessorOptions: {
         // sass variable and mixin
         scss: {
           additionalData: `
-            @use "@styles/core/el-light.scss" as *; 
+            @use "@styles/core/el-light.scss";
             @use "@styles/core/mixin.scss" as *;
           `
         }

@@ -162,7 +162,7 @@
     }
   ] as const
 
-  function sparkPolylinePoints(pts: readonly [number, number][]): string {
+  function sparkPolylinePoints(pts: readonly (readonly [number, number])[]): string {
     return pts.map(([x, y]) => `${x},${y}`).join(' ')
   }
 
@@ -170,7 +170,7 @@
   const SPARK_ROI_LABEL_VERTEX_INDEX: readonly [1, 2, 3] = [1, 2, 3]
 
   function sparkRoiPoint(
-    pts: readonly [number, number][],
+    pts: readonly (readonly [number, number])[],
     labelIndex: number
   ): readonly [number, number] {
     const vi = SPARK_ROI_LABEL_VERTEX_INDEX[labelIndex as 0 | 1 | 2]

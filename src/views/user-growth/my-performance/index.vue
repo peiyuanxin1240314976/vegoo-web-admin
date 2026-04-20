@@ -176,7 +176,7 @@
     position: relative;
     min-width: 0;
     padding: var(--space-4) var(--space-5) var(--space-6);
-    overflow-x: clip;
+    overflow-x: visible;
 
     &::before {
       position: absolute;
@@ -337,7 +337,7 @@
 
   .right-wrap {
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .table-hint {

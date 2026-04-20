@@ -3,215 +3,146 @@
     <ElSkeleton :loading="loading" animated>
       <template #template>
         <div class="panel__header">
-          <ElSkeletonItem variant="text" class="app-table-sk-title" />
+          <ElSkeletonItem variant="text" class="excel-sk-title" />
+          <ElSkeletonItem variant="text" class="excel-sk-hint" />
         </div>
         <div class="panel__body">
-          <div class="table-scroll app-table-sk">
-            <div class="app-table-sk-toolbar">
-              <ElSkeletonItem v-for="c in 10" :key="c" variant="text" class="app-table-sk-th" />
+          <div class="excel-sk-shell">
+            <div class="excel-sk-grid excel-sk-grid--summary">
+              <ElSkeletonItem v-for="c in 9" :key="`s-${c}`" variant="text" class="excel-sk-cell" />
             </div>
-            <div v-for="r in 6" :key="r" class="app-table-sk-row">
-              <ElSkeletonItem variant="text" class="app-table-sk-cell app-table-sk-cell--app" />
-              <ElSkeletonItem v-for="c in 9" :key="c" variant="text" class="app-table-sk-cell" />
-            </div>
-            <div class="app-table-sk-summary">
-              <ElSkeletonItem variant="text" class="app-table-sk-sum-line" />
+            <div class="excel-sk-grid excel-sk-grid--detail">
+              <ElSkeletonItem
+                v-for="c in 11"
+                :key="`h-${c}`"
+                variant="text"
+                class="excel-sk-cell"
+              />
+              <template v-for="r in 9" :key="`r-${r}`">
+                <ElSkeletonItem
+                  v-for="c in 11"
+                  :key="`r-${r}-c-${c}`"
+                  variant="text"
+                  class="excel-sk-cell"
+                />
+              </template>
             </div>
           </div>
         </div>
       </template>
+
       <template #default>
         <div class="panel__header">
-          <div class="header-left">
-            <span class="title">{{ title }}</span>
-            <span v-if="headerHint" class="header-hint">{{ headerHint }}</span>
+          <div class="header-copy">
+            <div class="title">{{ title }}</div>
+            <div class="hint">{{ resolvedHeaderHint }}</div>
           </div>
         </div>
 
         <div class="panel__body">
-          <div class="table-scroll">
-            <ElTable
-              :data="tableData"
-              row-key="id"
-              :tree-props="{ children: 'children' }"
-              :default-expand-all="false"
-              :expand-row-keys="expandedRowKeys"
-              :row-style="getRowStyle"
-              :cell-style="getCellStyle"
-              stripe
-              size="default"
-              class="mp-detail-table"
-              table-layout="fixed"
-              :header-cell-style="{ fontWeight: 600 }"
-            >
-              <ElTableColumn :label="colApp" min-width="220" show-overflow-tooltip>
-                <template #default="{ row }">
-                  <span class="name-cell">
-                    <span
-                      v-if="row.type === 'app' && row.__appId"
-                      class="app-dot"
-                      :class="'app-dot--' + appDotFromAppId(row.__appId)"
-                    ></span>
-                    <span class="name" :class="'is-' + row.type" :style="getNameStyle(row)">{{
-                      row.name
-                    }}</span>
-                  </span>
-                </template>
-              </ElTableColumn>
+          <div ref="excelShellRef" class="excel-shell" tabindex="0" @keydown="onShellKeydown">
+            <div class="excel-toolbar">
+              <div class="excel-toolbar__hint">
+                拖拽可框选，按 <span>Ctrl/Cmd + C</span> 复制选区内容
+              </div>
+              <div class="excel-toolbar__selection">{{ selectionLabel }}</div>
+            </div>
 
-              <ElTableColumn :label="colPlatform" width="90" show-overflow-tooltip>
-                <template #default="{ row }">
-                  <span v-if="row.platform" class="dim dim--platform">{{ row.platform }}</span>
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
+            <div ref="excelScrollRef" class="excel-scroll">
+              <div class="excel-sheet">
+                <section class="excel-section">
+                  <div class="excel-table-wrap" :style="getWrapStyle(summarySection)">
+                    <div
+                      v-if="summarySelectionStyle"
+                      class="excel-selection"
+                      :style="summarySelectionStyle"
+                    ></div>
 
-              <ElTableColumn :label="colSource" width="110" show-overflow-tooltip>
-                <template #default="{ row }">
-                  <span
-                    v-if="row.type === 'source'"
-                    class="dim dim--source"
-                    :style="getSourceTextStyle(row)"
-                  >
-                    {{ row.name }}
-                  </span>
-                  <span
-                    v-else-if="row.type === 'app'"
-                    class="dim dim--source"
-                    :style="getSourceTextStyle(row)"
-                    >全部</span
-                  >
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
+                    <table class="excel-table">
+                      <colgroup>
+                        <col
+                          v-for="(width, index) in summarySection.columns"
+                          :key="`summary-col-${index}`"
+                          :style="{ width: `${width}px` }"
+                        />
+                      </colgroup>
+                      <tbody>
+                        <tr
+                          v-for="(row, rowIndex) in summarySection.renderRows"
+                          :key="`summary-row-${rowIndex}`"
+                          :style="{ height: `${summarySection.rows[rowIndex]}px` }"
+                        >
+                          <template
+                            v-for="(cell, cellIndex) in row"
+                            :key="cell?.id ?? `summary-empty-${rowIndex}-${cellIndex}`"
+                          >
+                            <td
+                              v-if="cell"
+                              :rowspan="cell.rowSpan ?? 1"
+                              :colspan="cell.colSpan ?? 1"
+                              class="excel-cell"
+                              :class="getCellClass(summarySection, cell)"
+                              :style="{ textAlign: cell.align ?? 'left' }"
+                              @mousedown.left.prevent="
+                                onCellPointerDown(summarySection.key, cell, $event)
+                              "
+                              @mouseenter="onCellPointerEnter(summarySection.key, cell)"
+                            >
+                              <span class="excel-cell__text">{{ cell.text }}</span>
+                            </td>
+                          </template>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
 
-              <ElTableColumn :label="colWindow" width="70" show-overflow-tooltip>
-                <template #default="{ row }">
-                  {{ row.windowLabel ?? (row.type === 'app' ? '--' : '--') }}
-                </template>
-              </ElTableColumn>
+                <section class="excel-section">
+                  <div class="excel-table-wrap" :style="getWrapStyle(detailSection)">
+                    <div
+                      v-if="detailSelectionStyle"
+                      class="excel-selection"
+                      :style="detailSelectionStyle"
+                    ></div>
 
-              <ElTableColumn :label="colReachRate" width="80" align="right">
-                <template #default="{ row }">{{ fmtNum(row.reachRate, '%') }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colMinRate" width="80" align="right">
-                <template #default="{ row }">{{ fmtNum(row.minRate, '%') }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colDeviationCoef" width="90" align="right">
-                <template #default="{ row }">{{ fmtNum(row.deviationCoef) }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colMinProfit" width="110" align="right">
-                <template #default="{ row }">{{ fmtMoney(row.minProfit) }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colAdSpend" width="110" align="right">
-                <template #default="{ row }">
-                  <span class="ad-spend">{{ fmtMoney(row.adSpend) }}</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colCalculatedSpend" width="110" align="right">
-                <template #default="{ row }">{{ fmtMoney(row.calculatedSpend) }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colRoi" width="80" align="right">
-                <template #default="{ row }">
-                  <span
-                    v-if="row.roi != null"
-                    class="roi-pill"
-                    :class="roiClass(row.roi)"
-                    :style="getRoiPillStyle(row)"
-                  >
-                    {{ row.roi }}%
-                  </span>
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colCommissionSpend" width="110" align="right">
-                <template #default="{ row }">{{ fmtMoney(row.commissionSpend) }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colEstimatedProfit" width="120" align="right">
-                <template #default="{ row }">
-                  <span
-                    v-if="row.estimatedProfit != null"
-                    :class="profitClass(row.estimatedProfit)"
-                  >
-                    {{ fmtSignedMoney(row.estimatedProfit) }}
-                  </span>
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colCpa" width="90" align="right">
-                <template #default="{ row }">{{
-                  row.cpa != null ? '$' + row.cpa.toFixed(2) : '--'
-                }}</template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colScore" width="80" align="right">
-                <template #default="{ row }">
-                  <span v-if="row.score != null" class="score">{{ row.score }}分</span>
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn :label="colStatus" width="90" show-overflow-tooltip>
-                <template #default="{ row }">
-                  <span
-                    v-if="row.type === 'source' && row.status"
-                    class="status-pill"
-                    :class="'is-' + row.status"
-                    :style="getStatusPillStyle(row)"
-                  >
-                    {{ row.statusText }}
-                  </span>
-                  <span v-else>--</span>
-                </template>
-              </ElTableColumn>
-            </ElTable>
-
-            <div class="summary-footer">
-              <div class="summary-footer__label">合计/均值：</div>
-              <div class="summary-footer__items">
-                <div class="sf-item">
-                  <span class="sf-k">基础系数</span>
-                  <span class="sf-v">--</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">广告支出</span>
-                  <span class="sf-v is-primary">{{ money(summary.adSpend) }}</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">预算</span>
-                  <span class="sf-v is-info">{{ money(summary.calculatedSpend) }}</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">平均ROI</span>
-                  <span class="sf-v is-warning">{{ summary.roi }}%</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">代投消耗</span>
-                  <span class="sf-v is-info">{{ money(summary.commissionSpend) }}</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">预估利润</span>
-                  <span class="sf-v" :class="profitClass(summary.estimatedProfit)">{{
-                    signedMoney(summary.estimatedProfit)
-                  }}</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">平均CPA</span>
-                  <span class="sf-v">{{ '$' + summary.cpa.toFixed(2) }}</span>
-                </div>
-                <div class="sf-item">
-                  <span class="sf-k">绩效分数</span>
-                  <span class="sf-v is-strong">{{ summary.score }}分</span>
-                </div>
+                    <table class="excel-table">
+                      <colgroup>
+                        <col
+                          v-for="(width, index) in detailSection.columns"
+                          :key="`detail-col-${index}`"
+                          :style="{ width: `${width}px` }"
+                        />
+                      </colgroup>
+                      <tbody>
+                        <tr
+                          v-for="(row, rowIndex) in detailSection.renderRows"
+                          :key="`detail-row-${rowIndex}`"
+                          :style="{ height: `${detailSection.rows[rowIndex]}px` }"
+                        >
+                          <template
+                            v-for="(cell, cellIndex) in row"
+                            :key="cell?.id ?? `detail-empty-${rowIndex}-${cellIndex}`"
+                          >
+                            <td
+                              v-if="cell"
+                              :rowspan="cell.rowSpan ?? 1"
+                              :colspan="cell.colSpan ?? 1"
+                              class="excel-cell"
+                              :class="getCellClass(detailSection, cell)"
+                              :style="{ textAlign: cell.align ?? 'left' }"
+                              @mousedown.left.prevent="
+                                onCellPointerDown(detailSection.key, cell, $event)
+                              "
+                              @mouseenter="onCellPointerEnter(detailSection.key, cell)"
+                            >
+                              <span class="excel-cell__text">{{ cell.text }}</span>
+                            </td>
+                          </template>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
               </div>
             </div>
           </div>
@@ -222,15 +153,16 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
-  import { storeToRefs } from 'pinia'
-  import { useSettingStore } from '@/store/modules/setting'
+  import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+  import {
+    panelAppDimensionAppBlocks,
+    panelAppDimensionDateHeaders,
+    panelAppDimensionSummaryRows,
+    panelAppDimensionText
+  } from '../mock/panel-app-dimension-table.mock'
   import type { MyPerformanceAppTableSummary, MyPerformanceAppTreeRow } from '../types'
 
   defineOptions({ name: 'MyPerformancePanelAppDimensionTable' })
-
-  const settingStore = useSettingStore()
-  const { isDark } = storeToRefs(settingStore)
 
   const props = withDefaults(
     defineProps<{
@@ -239,460 +171,624 @@
       list: MyPerformanceAppTreeRow[]
       summary: MyPerformanceAppTableSummary
       headerHint?: string
-      colApp?: string
-      colPlatform?: string
-      colSource?: string
-      colWindow?: string
-      colReachRate?: string
-      colMinRate?: string
-      colDeviationCoef?: string
-      colMinProfit?: string
-      colAdSpend?: string
-      colCalculatedSpend?: string
-      colRoi?: string
-      colCommissionSpend?: string
-      colEstimatedProfit?: string
-      colCpa?: string
-      colScore?: string
-      colStatus?: string
     }>(),
     {
       loading: false,
-      colApp: '应用',
-      colPlatform: '平台',
-      colSource: '广告平台',
-      colWindow: '天数',
-      colReachRate: '达标要求',
-      colMinRate: '最低要求',
-      colDeviationCoef: '违度系数',
-      colMinProfit: '最低利润',
-      colAdSpend: '广告支出',
-      colCalculatedSpend: '预算',
-      colRoi: 'ROI',
-      colCommissionSpend: '代投消耗',
-      colEstimatedProfit: '预估利润',
-      colCpa: 'CPA',
-      colScore: '分数',
-      colStatus: '状态'
+      headerHint:
+        '计算周期：2026-01-01 至 2026-03-04 | 应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算'
     }
   )
 
-  const headerHint = computed(() => props.headerHint)
-  const colApp = computed(() => props.colApp)
-  const colPlatform = computed(() => props.colPlatform)
-  const colSource = computed(() => props.colSource)
-  const colWindow = computed(() => props.colWindow)
-  const colReachRate = computed(() => props.colReachRate)
-  const colMinRate = computed(() => props.colMinRate)
-  const colDeviationCoef = computed(() => props.colDeviationCoef)
-  const colMinProfit = computed(() => props.colMinProfit)
-  const colAdSpend = computed(() => props.colAdSpend)
-  const colCalculatedSpend = computed(() => props.colCalculatedSpend)
-  const colRoi = computed(() => props.colRoi)
-  const colCommissionSpend = computed(() => props.colCommissionSpend)
-  const colEstimatedProfit = computed(() => props.colEstimatedProfit)
-  const colCpa = computed(() => props.colCpa)
-  const colScore = computed(() => props.colScore)
-  const colStatus = computed(() => props.colStatus)
+  type CellAlign = 'left' | 'center' | 'right'
 
-  type TableRowWithMeta = MyPerformanceAppTreeRow & { __appId?: string }
+  type GridCell = {
+    id: string
+    row: number
+    col: number
+    rowSpan?: number
+    colSpan?: number
+    text: string
+    align?: CellAlign
+    header?: boolean
+    strong?: boolean
+    alt?: boolean
+    negative?: boolean
+  }
 
-  const tableData = computed(() => attachAppMeta(props.list))
+  type GridSection = {
+    key: 'summary' | 'detail'
+    columns: number[]
+    rows: number[]
+    cells: GridCell[]
+    values: string[][]
+    renderRows: Array<Array<GridCell | null>>
+  }
 
-  const expandedRowKeys = computed(() => {
-    const rows = tableData.value ?? []
-    const appWithChildren = rows.filter((r) => r.type === 'app' && r.children?.length)
-    const collapseCount = Math.min(2, Math.max(1, appWithChildren.length ? 2 : 0))
-    const collapsed = new Set(appWithChildren.slice(-collapseCount).map((r) => r.id))
-    return appWithChildren.filter((r) => !collapsed.has(r.id)).map((r) => r.id)
+  type CellPoint = {
+    section: GridSection['key']
+    row: number
+    col: number
+  }
+
+  const excelShellRef = ref<HTMLDivElement>()
+  const excelScrollRef = ref<HTMLDivElement>()
+  const dragging = ref(false)
+  const activeCell = ref<CellPoint | null>(null)
+  const selectionStart = ref<CellPoint | null>(null)
+  const selectionEnd = ref<CellPoint | null>(null)
+  const availableWidth = ref(910)
+  const MIN_SECTION_WIDTH = 910
+  const SUMMARY_BASE_COLUMNS = [90, 78, 78, 78, 78, 78, 78, 78, 78]
+  const DETAIL_BASE_COLUMNS = [114, 24, 80, 64, 54, 54, 54, 54, 54, 54, 54]
+  let resizeObserver: ResizeObserver | null = null
+
+  const textMap = panelAppDimensionText
+  const title = computed(() => props.title)
+  const resolvedHeaderHint = computed(() => props.headerHint)
+
+  const summarySection = computed<GridSection>(() => buildSummarySection())
+  const detailSection = computed<GridSection>(() => buildDetailSection())
+
+  const currentSelection = computed(() => {
+    const start = selectionStart.value
+    const end = selectionEnd.value
+    if (!start || !end || start.section !== end.section) return null
+
+    return {
+      section: start.section,
+      startRow: Math.min(start.row, end.row),
+      endRow: Math.max(start.row, end.row),
+      startCol: Math.min(start.col, end.col),
+      endCol: Math.max(start.col, end.col)
+    }
   })
 
-  /**
-   * 基色调色板：保持稳定且“随机感”
-   * 仅用透明度区分层级与深浅，避免过度花哨
-   */
-  const BASE_RGB_COLORS = [
-    { r: 64, g: 158, b: 255 }, // 蓝
-    { r: 103, g: 194, b: 58 }, // 绿
-    { r: 230, g: 162, b: 60 }, // 橙
-    { r: 245, g: 108, b: 108 }, // 红
-    { r: 144, g: 147, b: 153 }, // 灰
-    { r: 114, g: 46, b: 209 } // 紫
-  ]
+  const selectionLabel = computed(() => {
+    const selection = currentSelection.value
+    if (!selection) return '未选择单元格'
 
-  const ROW_BG_ALPHA_LIGHT = 0.12
-  const ROW_BG_ALPHA_DARK = 0.18
-  const NAME_TEXT_ALPHA_LIGHT = 0.92
-  const NAME_TEXT_ALPHA_DARK = 0.9
+    const rows = selection.endRow - selection.startRow + 1
+    const cols = selection.endCol - selection.startCol + 1
+    const sectionLabel = selection.section === 'summary' ? '汇总区' : '明细区'
+    return `${sectionLabel} ${rows} × ${cols}`
+  })
 
-  function getRowBgAlpha() {
-    return isDark.value ? ROW_BG_ALPHA_DARK : ROW_BG_ALPHA_LIGHT
-  }
+  const summarySelectionStyle = computed(() =>
+    getSelectionStyle(summarySection.value, currentSelection.value)
+  )
+  const detailSelectionStyle = computed(() =>
+    getSelectionStyle(detailSection.value, currentSelection.value)
+  )
 
-  function getNameTextAlpha() {
-    return isDark.value ? NAME_TEXT_ALPHA_DARK : NAME_TEXT_ALPHA_LIGHT
-  }
+  onMounted(() => {
+    window.addEventListener('mouseup', stopDragging)
+    updateAvailableWidth()
 
-  function hashStringToIndex(input: string, mod: number) {
-    let h = 5381
-    for (let i = 0; i < input.length; i++) {
-      h = (h * 33) ^ input.charCodeAt(i)
+    if (typeof ResizeObserver !== 'undefined' && excelScrollRef.value) {
+      resizeObserver = new ResizeObserver(() => {
+        updateAvailableWidth()
+      })
+      resizeObserver.observe(excelScrollRef.value)
     }
-    return Math.abs(h) % mod
-  }
+  })
 
-  function hashToUnit(input: string) {
-    // 0 ~ 1
-    const idx = hashStringToIndex(input, 10000)
-    return idx / 9999
-  }
+  onBeforeUnmount(() => {
+    window.removeEventListener('mouseup', stopDragging)
+    resizeObserver?.disconnect()
+    resizeObserver = null
+  })
 
-  function randRange(input: string, min: number, max: number) {
-    const u = hashToUnit(input)
-    return min + (max - min) * u
-  }
+  function buildSummarySection(): GridSection {
+    const headers = [textMap.item, textMap.total, ...panelAppDimensionDateHeaders]
+    const rows = [40, 34, 34, 34, 34]
+    const columns = buildResponsiveColumns(SUMMARY_BASE_COLUMNS)
+    const values = Array.from({ length: rows.length }, () =>
+      Array.from({ length: columns.length }, () => '')
+    )
+    const cells: GridCell[] = []
 
-  function pickMin(list: Array<number | null | undefined>) {
-    const nums = list.filter((v): v is number => typeof v === 'number')
-    if (!nums.length) return undefined
-    return Math.min(...nums)
-  }
-
-  function rgba(c: { r: number; g: number; b: number }, a: number) {
-    return `rgba(${c.r}, ${c.g}, ${c.b}, ${a})`
-  }
-
-  function getBaseColor(appId: string) {
-    const base = BASE_RGB_COLORS[hashStringToIndex(appId, BASE_RGB_COLORS.length)]
-    return base ?? BASE_RGB_COLORS[0]
-  }
-
-  function attachAppMeta(
-    rows: MyPerformanceAppTreeRow[],
-    currentAppId?: string
-  ): TableRowWithMeta[] {
-    return (rows ?? []).map((row) => {
-      const appId = row.type === 'app' ? row.id : currentAppId
-      const next: TableRowWithMeta = { ...(row as TableRowWithMeta), __appId: appId }
-      if (row.children?.length) {
-        next.children = attachAppMeta(row.children, appId)
-      }
-
-      if (next.type === 'app' && next.children?.length) {
-        const children = next.children
-
-        const adSpendSum = sum(children.map((c) => c.adSpend))
-        const calculatedSum = sum(children.map((c) => c.calculatedSpend))
-        const commissionSum = sum(children.map((c) => c.commissionSpend))
-        const estimatedProfitSum = sum(children.map((c) => c.estimatedProfit))
-
-        const totalAdSpend = adSpendSum ?? 0
-        const weightedRoi: number | undefined =
-          totalAdSpend > 0
-            ? Math.round(
-                children.reduce((acc, c) => acc + (c.roi ?? 0) * (c.adSpend ?? 0), 0) / totalAdSpend
-              )
-            : undefined
-
-        const avgCpa = average(children.map((c) => c.cpa))
-        const avgScore = average(children.map((c) => c.score))
-        const avgReachRate = average(children.map((c) => c.reachRate))
-        const avgMinRate = average(children.map((c) => c.minRate))
-        const avgCoef = average(children.map((c) => c.deviationCoef))
-        const minMinProfit = pickMin(children.map((c) => c.minProfit))
-
-        next.adSpend = adSpendSum || undefined
-        next.calculatedSpend = calculatedSum || undefined
-        next.commissionSpend = commissionSum || undefined
-        next.estimatedProfit = estimatedProfitSum || undefined
-        next.roi = weightedRoi
-        next.cpa = avgCpa ?? undefined
-        next.score = avgScore != null ? Math.round(avgScore) : undefined
-        next.reachRate = avgReachRate != null ? Math.round(avgReachRate) : undefined
-        next.minRate = avgMinRate != null ? Math.round(avgMinRate) : undefined
-        next.deviationCoef = avgCoef != null ? Math.round(avgCoef * 10) / 10 : undefined
-        next.minProfit = minMinProfit
-      }
-
-      if (next.type === 'app' && (!next.children || next.children.length === 0)) {
-        // 没有子级时，为了展示效果生成稳定随机值
-        const seed = next.id || next.name
-        next.platform = '安卓'
-        next.windowLabel = '--'
-
-        const reach = Math.round(randRange(seed + ':reach', 50, 100))
-        const min = Math.max(0, Math.min(reach, Math.round(randRange(seed + ':min', 45, 98))))
-        const coef = Math.round(randRange(seed + ':coef', 7, 15)) / 10
-
-        const adSpend = Math.round(randRange(seed + ':adSpend', 1200, 46000) / 10) * 10
-        const calculated = Math.round(adSpend * randRange(seed + ':calcRate', 0.75, 0.98))
-        const commission = Math.round(adSpend * randRange(seed + ':commissionRate', 0.05, 0.18))
-        const estimated = Math.round(randRange(seed + ':profit', -500, 4500))
-        const cpa = Math.round(randRange(seed + ':cpa', 0.5, 3.2) * 100) / 100
-        const score = Math.round(randRange(seed + ':score', 0, 30))
-        const minProfit = Math.round(randRange(seed + ':minProfit', 0, 50000) / 100) * 100
-
-        next.reachRate = reach
-        next.minRate = min
-        next.deviationCoef = coef
-        next.minProfit = minProfit || undefined
-        next.adSpend = adSpend
-        next.calculatedSpend = calculated
-        next.roi = Math.round(randRange(seed + ':roi', 50, 99))
-        next.commissionSpend = commission
-        next.estimatedProfit = estimated
-        next.cpa = cpa
-        next.score = score
-      }
-
-      return next
+    headers.forEach((label, col) => {
+      cells.push({
+        id: `summary-header-${col}`,
+        row: 0,
+        col,
+        text: label,
+        header: true,
+        align: 'center',
+        strong: true
+      })
+      values[0][col] = label
     })
+
+    panelAppDimensionSummaryRows.forEach((row, index) => {
+      const rowIndex = index + 1
+      const rowLabel = String(row.label)
+      const rowTotal = String(row.total)
+
+      cells.push({
+        id: `summary-label-${rowIndex}`,
+        row: rowIndex,
+        col: 0,
+        text: rowLabel,
+        strong: true
+      })
+      values[rowIndex][0] = rowLabel
+
+      cells.push({
+        id: `summary-total-${rowIndex}`,
+        row: rowIndex,
+        col: 1,
+        text: rowTotal,
+        strong: true,
+        align: 'left'
+      })
+      values[rowIndex][1] = rowTotal
+
+      row.days.forEach((value, dayIndex) => {
+        const text = String(value)
+        cells.push({
+          id: `summary-value-${rowIndex}-${dayIndex}`,
+          row: rowIndex,
+          col: dayIndex + 2,
+          text,
+          strong: true,
+          align: 'left'
+        })
+        values[rowIndex][dayIndex + 2] = text
+      })
+    })
+
+    return createSection('summary', columns, rows, cells, values)
   }
 
-  function sum(list: Array<number | null | undefined>): number {
-    let total = 0
-    for (const v of list) total += typeof v === 'number' ? v : 0
-    return total
+  function buildDetailSection(): GridSection {
+    const headers = [
+      textMap.app,
+      textMap.platform,
+      textMap.adPlatform,
+      textMap.item,
+      ...panelAppDimensionDateHeaders
+    ]
+    const columns = buildResponsiveColumns(DETAIL_BASE_COLUMNS)
+    const rows = [34, ...Array.from({ length: panelAppDimensionAppBlocks.length * 4 }, () => 28)]
+    const values = Array.from({ length: rows.length }, () =>
+      Array.from({ length: columns.length }, () => '')
+    )
+    const cells: GridCell[] = []
+
+    headers.forEach((label, col) => {
+      cells.push({
+        id: `detail-header-${col}`,
+        row: 0,
+        col,
+        text: label,
+        header: true,
+        align: 'center',
+        strong: true
+      })
+      values[0][col] = label
+    })
+
+    let rowOffset = 1
+
+    panelAppDimensionAppBlocks.forEach((block, blockIndex) => {
+      const blockAlt = !!block.alt
+      const blockRows = [...block.allRows, ...block.googleRows]
+
+      cells.push({
+        id: `detail-app-${blockIndex}`,
+        row: rowOffset,
+        col: 0,
+        rowSpan: 4,
+        text: block.app,
+        strong: true,
+        alt: blockAlt
+      })
+      values[rowOffset][0] = block.app
+
+      cells.push({
+        id: `detail-platform-${blockIndex}`,
+        row: rowOffset,
+        col: 1,
+        rowSpan: 4,
+        text: block.platform,
+        strong: true,
+        align: 'center',
+        alt: blockAlt
+      })
+      values[rowOffset][1] = block.platform
+
+      cells.push({
+        id: `detail-all-${blockIndex}`,
+        row: rowOffset,
+        col: 2,
+        rowSpan: 2,
+        text: textMap.all,
+        strong: true,
+        alt: blockAlt
+      })
+      values[rowOffset][2] = textMap.all
+
+      cells.push({
+        id: `detail-google-${blockIndex}`,
+        row: rowOffset + 2,
+        col: 2,
+        rowSpan: 2,
+        text: 'Google',
+        strong: true,
+        alt: blockAlt
+      })
+      values[rowOffset + 2][2] = 'Google'
+
+      blockRows.forEach((metricRow, metricIndex) => {
+        const rowIndex = rowOffset + metricIndex
+
+        cells.push({
+          id: `detail-metric-${blockIndex}-${metricIndex}`,
+          row: rowIndex,
+          col: 3,
+          text: metricRow.label,
+          strong: true,
+          alt: blockAlt
+        })
+        values[rowIndex][3] = metricRow.label
+
+        metricRow.values.forEach((rawValue, dayIndex) => {
+          const text = String(rawValue)
+          cells.push({
+            id: `detail-value-${blockIndex}-${metricIndex}-${dayIndex}`,
+            row: rowIndex,
+            col: dayIndex + 4,
+            text,
+            strong: true,
+            align: 'left',
+            negative: isNegative(text),
+            alt: blockAlt
+          })
+          values[rowIndex][dayIndex + 4] = text
+        })
+      })
+
+      rowOffset += 4
+    })
+
+    return createSection('detail', columns, rows, cells, values)
   }
 
-  function average(list: Array<number | null | undefined>): number | undefined {
-    const nums = list.filter((v): v is number => typeof v === 'number')
-    if (!nums.length) return undefined
-    let total = 0
-    for (const n of nums) total += n
-    return total / nums.length
-  }
-
-  function getRowStyle({ row }: { row: TableRowWithMeta }) {
-    if (!row.__appId) return {}
-    const base = getBaseColor(row.__appId)
-    return { backgroundColor: rgba(base, getRowBgAlpha()) }
-  }
-
-  function getCellStyle({ row }: { row: TableRowWithMeta }) {
-    // stripe 的底色在 td 上，用 cell-style 才能稳定覆盖
-    return getRowStyle({ row })
-  }
-
-  function getNameStyle(row: TableRowWithMeta) {
-    if (!row.__appId) return {}
-    const base = getBaseColor(row.__appId)
-    return { color: rgba(base, getNameTextAlpha()), fontWeight: row.type === 'source' ? 600 : 700 }
-  }
-
-  function getRoiPillStyle(row: TableRowWithMeta) {
-    if (!row.__appId) return {}
-    const base = getBaseColor(row.__appId)
-    const roi = row.roi
-    const tone = typeof roi === 'number' ? roiClass(roi) : ''
-
-    // 同一色系：根据 ROI 档位只调透明度与边框强度
-    const bgAlpha = tone === 'is-good' ? 0.18 : tone === 'is-mid' ? 0.14 : 0.1
-    const borderAlpha = tone === 'is-good' ? 0.32 : tone === 'is-mid' ? 0.26 : 0.2
-    const textAlpha = 0.95
-
+  function createSection(
+    key: GridSection['key'],
+    columns: number[],
+    rows: number[],
+    cells: GridCell[],
+    values: string[][]
+  ): GridSection {
     return {
-      background: rgba(base, bgAlpha),
-      borderColor: rgba(base, borderAlpha),
-      color: rgba(base, textAlpha)
+      key,
+      columns,
+      rows,
+      cells,
+      values,
+      renderRows: buildRenderRows(rows.length, columns.length, cells)
     }
   }
 
-  function getSourceTextStyle(row: TableRowWithMeta) {
-    if (!row.__appId) return {}
-    const base = getBaseColor(row.__appId)
-    return { color: rgba(base, 0.92) }
+  function buildRenderRows(rowCount: number, columnCount: number, cells: GridCell[]) {
+    const matrix = Array.from({ length: rowCount }, () =>
+      Array.from({ length: columnCount }, () => null as GridCell | null)
+    )
+
+    cells.forEach((cell) => {
+      matrix[cell.row][cell.col] = cell
+      for (let rowOffset = 0; rowOffset < (cell.rowSpan ?? 1); rowOffset += 1) {
+        for (let colOffset = 0; colOffset < (cell.colSpan ?? 1); colOffset += 1) {
+          if (rowOffset === 0 && colOffset === 0) continue
+          matrix[cell.row + rowOffset][cell.col + colOffset] = null
+        }
+      }
+    })
+
+    return matrix
   }
 
-  function getStatusPillStyle(row: TableRowWithMeta) {
-    if (!row.__appId) return {}
-    const base = getBaseColor(row.__appId)
-    const status = row.status
-
-    const bgAlpha = status === 'running' ? 0.18 : status === 'warning' ? 0.14 : 0.1
-    const borderAlpha = status === 'running' ? 0.32 : status === 'warning' ? 0.26 : 0.2
-    const textAlpha = 0.95
+  function getWrapStyle(section: GridSection) {
+    const width = `${sum(section.columns)}px`
 
     return {
-      background: rgba(base, bgAlpha),
-      borderColor: rgba(base, borderAlpha),
-      color: rgba(base, textAlpha)
+      width,
+      minWidth: width,
+      maxWidth: width,
+      height: `${sum(section.rows)}px`
     }
   }
 
-  function money(n: number) {
-    return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  function buildResponsiveColumns(baseColumns: number[]) {
+    const targetWidth = Math.max(MIN_SECTION_WIDTH, availableWidth.value)
+    const baseTotal = sum(baseColumns)
+
+    if (targetWidth <= baseTotal) {
+      return [...baseColumns]
+    }
+
+    return scaleColumns(baseColumns, targetWidth)
   }
 
-  function signedMoney(n: number) {
-    const s = money(Math.abs(n))
-    return (n >= 0 ? '+' : '-') + s
+  function scaleColumns(baseColumns: number[], targetWidth: number) {
+    const baseTotal = sum(baseColumns)
+    const ratio = targetWidth / baseTotal
+    const scaled = baseColumns.map((width) => Math.max(32, Math.round(width * ratio)))
+    const diff = targetWidth - sum(scaled)
+
+    scaled[scaled.length - 1] += diff
+
+    return scaled
   }
 
-  function roiClass(roi: number) {
-    if (roi >= 90) return 'is-good'
-    if (roi >= 80) return 'is-mid'
-    return 'is-bad'
+  function updateAvailableWidth() {
+    const element = excelScrollRef.value
+    if (!element) return
+
+    const computedStyle = window.getComputedStyle(element)
+    const paddingLeft = Number.parseFloat(computedStyle.paddingLeft) || 0
+    const paddingRight = Number.parseFloat(computedStyle.paddingRight) || 0
+    const nextWidth = Math.floor(element.clientWidth - paddingLeft - paddingRight)
+
+    availableWidth.value = Math.max(MIN_SECTION_WIDTH, nextWidth)
   }
 
-  function profitClass(p: number) {
-    return p >= 0 ? 'is-profit' : 'is-loss'
+  function getCellClass(section: GridSection, cell: GridCell) {
+    const active = activeCell.value?.section === section.key ? activeCell.value : null
+    const selection =
+      currentSelection.value?.section === section.key ? currentSelection.value : null
+
+    return {
+      'is-header': !!cell.header,
+      'is-strong': !!cell.strong,
+      'is-alt': !!cell.alt,
+      'is-negative': !!cell.negative,
+      'is-active': isCellActive(active, cell),
+      'is-highlight-row': isCellInHighlightedRow(active, cell),
+      'is-highlight-col': isCellInHighlightedCol(active, cell),
+      'is-selected': isCellIntersectSelection(selection, cell)
+    }
   }
 
-  function appDotFromAppId(appId: string) {
-    const id = (appId || '').toLowerCase()
-    if (id.includes('weather')) return 'weather'
-    if (id.includes('phone')) return 'phone'
-    if (id.includes('blood')) return 'blood'
-    return 'default'
+  function onCellPointerDown(section: GridSection['key'], cell: GridCell, event: MouseEvent) {
+    const point = {
+      section,
+      row: cell.row,
+      col: cell.col
+    }
+
+    dragging.value = true
+    activeCell.value = point
+    selectionStart.value = point
+    selectionEnd.value = point
+    excelShellRef.value?.focus()
+
+    if (event.detail === 2) {
+      copyCurrentSelection()
+    }
   }
 
-  function fmtNum(v?: number, suffix = '') {
-    if (v == null) return '--'
-    return String(v) + suffix
+  function onCellPointerEnter(section: GridSection['key'], cell: GridCell) {
+    if (!dragging.value || !selectionStart.value) return
+
+    selectionEnd.value = {
+      section,
+      row: cell.row,
+      col: cell.col
+    }
   }
 
-  function fmtMoney(v?: number) {
-    if (v == null) return '--'
-    return money(v)
+  function stopDragging() {
+    dragging.value = false
   }
 
-  function fmtSignedMoney(v?: number) {
-    if (v == null) return '--'
-    return signedMoney(v)
+  function onShellKeydown(event: KeyboardEvent) {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
+      event.preventDefault()
+      copyCurrentSelection()
+      return
+    }
+
+    if (!activeCell.value) return
+
+    const section = getSectionByKey(activeCell.value.section)
+    const next = moveActiveCell(section, activeCell.value, event.key)
+    if (!next) return
+
+    event.preventDefault()
+    activeCell.value = next
+    selectionStart.value = next
+    selectionEnd.value = next
+  }
+
+  function moveActiveCell(section: GridSection, point: CellPoint, key: string) {
+    let row = point.row
+    let col = point.col
+
+    if (key === 'ArrowUp') row -= 1
+    else if (key === 'ArrowDown') row += 1
+    else if (key === 'ArrowLeft') col -= 1
+    else if (key === 'ArrowRight') col += 1
+    else return null
+
+    return {
+      section: section.key,
+      row: clamp(row, 0, section.rows.length - 1),
+      col: clamp(col, 0, section.columns.length - 1)
+    }
+  }
+
+  async function copyCurrentSelection() {
+    const selection = currentSelection.value
+    if (!selection) return
+
+    const section = getSectionByKey(selection.section)
+    const text = section.values
+      .slice(selection.startRow, selection.endRow + 1)
+      .map((row) => row.slice(selection.startCol, selection.endCol + 1).join('\t'))
+      .join('\n')
+
+    await copyText(text)
+  }
+
+  function getSectionByKey(key: GridSection['key']) {
+    return key === 'summary' ? summarySection.value : detailSection.value
+  }
+
+  function getSelectionStyle(
+    section: GridSection,
+    selection: {
+      section: GridSection['key']
+      startRow: number
+      endRow: number
+      startCol: number
+      endCol: number
+    } | null
+  ) {
+    if (!selection || selection.section !== section.key) return null
+
+    const top = getOffset(section.rows, selection.startRow)
+    const left = getOffset(section.columns, selection.startCol)
+    const width = spanSize(
+      section.columns,
+      selection.startCol,
+      selection.endCol - selection.startCol + 1
+    )
+    const height = spanSize(
+      section.rows,
+      selection.startRow,
+      selection.endRow - selection.startRow + 1
+    )
+
+    return {
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${Math.max(width, 1)}px`,
+      height: `${Math.max(height, 1)}px`
+    }
+  }
+
+  function isCellActive(active: CellPoint | null, cell: GridCell) {
+    if (!active) return false
+    return active.row === cell.row && active.col === cell.col
+  }
+
+  function isCellInHighlightedRow(active: CellPoint | null, cell: GridCell) {
+    if (!active) return false
+    return active.row >= cell.row && active.row < cell.row + (cell.rowSpan ?? 1)
+  }
+
+  function isCellInHighlightedCol(active: CellPoint | null, cell: GridCell) {
+    if (!active) return false
+    return active.col >= cell.col && active.col < cell.col + (cell.colSpan ?? 1)
+  }
+
+  function isCellIntersectSelection(
+    selection: {
+      startRow: number
+      endRow: number
+      startCol: number
+      endCol: number
+    } | null,
+    cell: GridCell
+  ) {
+    if (!selection) return false
+
+    const rowEnd = cell.row + (cell.rowSpan ?? 1) - 1
+    const colEnd = cell.col + (cell.colSpan ?? 1) - 1
+
+    return !(
+      selection.endRow < cell.row ||
+      selection.startRow > rowEnd ||
+      selection.endCol < cell.col ||
+      selection.startCol > colEnd
+    )
+  }
+
+  async function copyText(text: string) {
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text)
+        return
+      } catch {
+        // fall through
+      }
+    }
+
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    textarea.style.pointerEvents = 'none'
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+  }
+
+  function getOffset(sizes: number[], start: number) {
+    return sum(sizes.slice(0, start))
+  }
+
+  function spanSize(sizes: number[], start: number, span: number) {
+    return sum(sizes.slice(start, start + span))
+  }
+
+  function sum(values: number[]) {
+    return values.reduce((total, current) => total + current, 0)
+  }
+
+  function isNegative(value: string) {
+    return value.trim().startsWith('-')
+  }
+
+  function clamp(value: number, min: number, max: number) {
+    return Math.min(Math.max(value, min), max)
   }
 </script>
 
 <style scoped lang="scss">
-  @use '../styles/mp-card-fx.scss' as *;
-
   .panel {
     position: relative;
     overflow: hidden;
+    background:
+      linear-gradient(180deg, rgb(17 24 39 / 96%) 0%, rgb(19 28 44 / 92%) 100%),
+      radial-gradient(circle at top right, rgb(59 130 246 / 10%), transparent 35%);
     backdrop-filter: blur(16px) saturate(1.08);
-    border: 1px solid rgb(63 63 70 / 42%);
-    border-radius: 16px;
-
-    @include mp-neon-stack;
-    @include mp-card-mesh;
-    @include mp-panel-hover-lift;
-    @include mp-panel-header-title-hover;
-
-    &::before {
-      position: absolute;
-      top: -40%;
-      left: 50%;
-      z-index: 0;
-      width: 80%;
-      height: 85%;
-      pointer-events: none;
-      content: '';
-      background: radial-gradient(ellipse at center, rgb(99 102 241 / 9%) 0%, transparent 68%);
-      transform: translateX(-50%);
-      animation: app-table-aurora 12s ease-in-out infinite alternate;
-    }
-  }
-
-  .app-table-sk-title {
-    width: 32% !important;
-    height: 16px !important;
-  }
-
-  .app-table-sk {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-height: 280px;
-    padding: 4px 2px 8px;
-  }
-
-  .app-table-sk-toolbar {
-    display: grid;
-    grid-template-columns: 2.2fr repeat(9, 1fr);
-    gap: 8px;
-    padding-bottom: 8px;
-    margin-bottom: 4px;
-    border-bottom: 1px solid rgb(63 63 70 / 25%);
-  }
-
-  .app-table-sk-th {
-    width: 100% !important;
-    height: 12px !important;
-  }
-
-  .app-table-sk-row {
-    display: grid;
-    grid-template-columns: 2.2fr repeat(9, 1fr);
-    gap: 8px;
-    align-items: center;
-    padding: 8px 4px;
-    border-radius: 8px;
-  }
-
-  .app-table-sk-cell {
-    width: 100% !important;
-    height: 14px !important;
-  }
-
-  .app-table-sk-cell--app {
-    width: 88% !important;
-  }
-
-  .app-table-sk-summary {
-    padding-top: 10px;
-    margin-top: 6px;
-    border-top: 1px solid rgb(63 63 70 / 25%);
-  }
-
-  .app-table-sk-sum-line {
-    width: 72% !important;
-    height: 16px !important;
-  }
-
-  @keyframes app-table-aurora {
-    0% {
-      opacity: 0.35;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    100% {
-      opacity: 0.85;
-      transform: translateX(-48%) translateY(4%);
-    }
+    border: 1px solid rgb(82 91 111 / 48%);
+    border-radius: 18px;
+    box-shadow:
+      0 18px 48px rgb(0 0 0 / 26%),
+      inset 0 1px 0 rgb(255 255 255 / 7%);
   }
 
   .panel__header {
     position: relative;
     z-index: 1;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 12px 16px;
-    border-bottom: 1px solid rgb(63 63 70 / 30%);
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
   }
 
-  .header-left {
+  .header-copy {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    align-items: flex-start;
-    min-width: 0;
+    gap: 6px;
   }
 
   .title {
     font-size: 14px;
-
-    @include mp-title-gradient;
+    font-weight: 700;
+    color: rgb(244 244 245 / 96%);
+    letter-spacing: 0.01em;
   }
 
-  .header-hint {
-    min-width: 0;
-    overflow: hidden;
+  .hint {
     font-size: 12px;
-    color: var(--text-secondary);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-weight: 600;
+    line-height: 1.45;
+    color: rgb(226 232 240 / 72%);
   }
 
   .panel__body {
@@ -701,386 +797,244 @@
     padding: 12px 14px 16px;
   }
 
-  .table-scroll {
+  .excel-shell {
     position: relative;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-
-    :deep(.el-table) {
-      min-width: 980px;
-    }
-  }
-
-  .summary-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 3;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    min-width: 980px;
-    padding: 12px 14px;
-    margin-top: 10px;
+    padding: 10px;
     overflow: hidden;
-    background: linear-gradient(
-      90deg,
-      rgb(24 24 27 / 92%) 0%,
-      rgb(39 39 42 / 88%) 25%,
-      rgb(30 58 138 / 18%) 50%,
-      rgb(39 39 42 / 88%) 75%,
-      rgb(24 24 27 / 92%) 100%
-    );
-    background-size: 200% 100%;
-    backdrop-filter: blur(12px);
-    border: 1px solid rgb(63 63 70 / 45%);
-    border-radius: 12px;
+    background:
+      linear-gradient(180deg, rgb(8 15 27 / 52%) 0%, rgb(10 18 30 / 18%) 100%),
+      linear-gradient(135deg, rgb(255 255 255 / 3%), transparent 44%);
+    border: 1px solid rgb(138 150 174 / 22%);
+    border-radius: 14px;
+    outline: none;
     box-shadow:
-      0 -4px 20px rgb(0 0 0 / 25%),
-      0 0 40px rgb(59 130 246 / 6%),
-      inset 0 1px 0 rgb(244 244 245 / 5%);
-
-    &::before {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      content: '';
-      background: linear-gradient(
-        105deg,
-        transparent 40%,
-        rgb(34 211 238 / 6%) 50%,
-        transparent 60%
-      );
-    }
+      inset 0 1px 0 rgb(255 255 255 / 9%),
+      0 8px 24px rgb(0 0 0 / 22%);
   }
 
-  .summary-footer__label {
-    position: relative;
-    z-index: 1;
-    flex: none;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-primary);
-    text-shadow: 0 0 10px rgb(244 244 245 / 18%);
-  }
-
-  .summary-footer__items {
-    position: relative;
-    z-index: 1;
+  .excel-toolbar {
     display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
+    gap: 12px;
     align-items: center;
-    min-width: 0;
+    justify-content: space-between;
+    padding: 0 4px 10px;
+    color: rgb(226 232 240 / 80%);
   }
 
-  .sf-item {
-    display: inline-flex;
-    gap: 8px;
-    align-items: baseline;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  .sf-k {
+  .excel-toolbar__hint,
+  .excel-toolbar__selection {
     font-size: 12px;
-    color: var(--text-secondary);
+    line-height: 1.4;
   }
 
-  .sf-v {
-    font-size: 13px;
+  .excel-toolbar__hint span {
     font-weight: 700;
-    color: rgb(244 244 245 / 92%);
+    color: #fff;
   }
 
-  .sf-v.is-primary {
-    color: rgb(96 165 250 / 98%);
-    text-shadow: 0 0 10px rgb(59 130 246 / 25%);
+  .excel-toolbar__selection {
+    font-variant-numeric: tabular-nums;
+    color: rgb(191 219 254 / 90%);
   }
 
-  .sf-v.is-info {
-    color: rgb(34 211 238 / 95%);
-    text-shadow: 0 0 10px rgb(34 211 238 / 25%);
+  .excel-scroll {
+    width: 100%;
+    max-width: 100%;
+    max-height: 620px;
+    padding: 10px;
+    overflow: auto;
+    overflow: auto;
+    background: linear-gradient(180deg, #f5f7fa 0%, #edf1f5 100%);
+    border: 1px solid rgb(124 134 152 / 22%);
+    border-radius: 12px;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 84%);
+    scrollbar-gutter: stable both-edges;
+    scrollbar-width: auto;
+    scrollbar-color: rgb(120 137 167 / 88%) rgb(222 228 237 / 92%);
   }
 
-  .sf-v.is-warning {
-    color: rgb(249 115 22 / 98%);
-    text-shadow: 0 0 10px rgb(249 115 22 / 25%);
+  .excel-scroll::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
   }
 
-  .sf-v.is-strong {
-    color: rgb(244 244 245);
-    text-shadow: 0 0 10px rgb(244 244 245 / 20%);
+  .excel-scroll::-webkit-scrollbar-track {
+    background: rgb(222 228 237 / 92%);
+    border-radius: 999px;
   }
 
-  .mp-detail-table {
-    font-size: 14px;
-    transition: filter 0.45s var(--ease-out);
-
-    --el-table-border-color: var(--el-border-color-lighter);
-    --el-table-header-bg-color: var(--el-fill-color-light);
-
-    :deep(.el-table__cell .cell) {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    :deep(.el-table__row) {
-      transition:
-        background-color 0.25s var(--ease-out),
-        box-shadow 0.25s var(--ease-out);
-    }
-
-    :deep(.el-table__row:hover > td) {
-      background-color: rgb(39 39 42 / 45%) !important;
-      box-shadow: inset 0 0 0 1px rgb(59 130 246 / 12%);
-    }
-
-    :deep(.el-table__row:hover > td:first-child) {
-      box-shadow:
-        inset 0 0 0 1px rgb(59 130 246 / 12%),
-        inset 3px 0 12px rgb(59 130 246 / 6%);
-    }
+  .excel-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgb(148 163 184 / 96%), rgb(100 116 139 / 96%));
+    border: 2px solid rgb(222 228 237 / 92%);
+    border-radius: 999px;
   }
 
-  .panel:hover .mp-detail-table {
-    filter: brightness(1.04) drop-shadow(0 6px 24px rgb(59 130 246 / 6%));
+  .excel-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgb(120 137 167 / 96%), rgb(71 85 105 / 96%));
   }
 
-  html.dark .mp-detail-table {
-    --el-table-border-color: rgb(63 63 70 / 40%);
-    --el-table-header-bg-color: rgb(24 24 27 / 70%);
-    --el-table-header-text-color: #fff;
-
-    :deep(.el-table__header-wrapper th),
-    :deep(.el-table__header-wrapper th .cell) {
-      color: #fff;
-    }
-
-    :deep(.el-table__header-wrapper) {
-      backdrop-filter: blur(4px);
-    }
+  .excel-scroll::-webkit-scrollbar-corner {
+    background: rgb(222 228 237 / 92%);
   }
 
-  .app-dot {
+  .excel-sheet {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 12px;
+    width: max-content;
+    min-width: max-content;
+  }
+
+  .excel-section {
     display: inline-block;
-    width: 10px;
-    height: 10px;
-    margin-right: 8px;
+    width: max-content;
+    min-width: max-content;
+    max-width: none;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #d2d7df;
+    border-radius: 6px;
+  }
+
+  .excel-table-wrap {
+    position: relative;
+    display: inline-block;
+    width: max-content;
+    min-width: max-content;
+  }
+
+  .excel-table {
+    width: max-content;
+    min-width: max-content;
+    max-width: none;
+    table-layout: auto;
+    border-collapse: collapse;
+    user-select: none;
+    background: #fff;
+    border: 1px solid #8f8f8f;
+  }
+
+  .excel-selection {
+    position: absolute;
+    z-index: 3;
+    box-sizing: border-box;
+    pointer-events: none;
+    background: rgb(34 197 94 / 10%);
+    border: 2px solid #16a34a;
+  }
+
+  .excel-cell {
+    position: relative;
+    z-index: 1;
+    padding: 2px 6px;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.1;
+    color: #1f2937;
     vertical-align: middle;
-    border-radius: 4px;
-    transition: box-shadow var(--duration-fast) var(--ease-default);
-
-    &.app-dot--weather {
-      background: linear-gradient(135deg, #93c5fd, #60a5fa);
-      box-shadow: 0 0 8px rgb(96 165 250 / 35%);
-    }
-
-    &.app-dot--phone {
-      background: linear-gradient(135deg, #86efac, #22c55e);
-      box-shadow: 0 0 8px rgb(34 197 94 / 35%);
-    }
-
-    &.app-dot--blood {
-      background: linear-gradient(135deg, #f87171, #ef4444);
-      box-shadow: 0 0 8px rgb(239 68 68 / 35%);
-    }
-
-    &.app-dot--default {
-      background: rgb(161 161 170 / 45%);
-      box-shadow: 0 0 6px rgb(161 161 170 / 15%);
-    }
+    background: #fff;
+    border: 1px solid #8f8f8f;
+    transition:
+      background-color 120ms ease,
+      box-shadow 120ms ease;
   }
 
-  .roi-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 54px;
-    height: 22px;
-    padding: 0 8px;
-    font-size: 12px;
-    font-weight: 750;
-    font-variant-numeric: tabular-nums;
-    line-height: 22px;
-    border: 1px solid transparent;
-    border-radius: 9999px;
-    transition: box-shadow 0.25s var(--ease-out);
-
-    &:hover {
-      box-shadow: 0 0 16px rgb(34 211 238 / 18%);
-    }
-
-    &.is-good {
-      box-shadow:
-        0 0 10px rgb(16 185 129 / 28%),
-        0 0 20px rgb(16 185 129 / 12%);
-      animation: pill-neon-green 2.6s ease-in-out infinite;
-    }
-
-    &.is-mid {
-      box-shadow:
-        0 0 10px rgb(245 158 11 / 22%),
-        0 0 20px rgb(245 158 11 / 8%);
-      animation: pill-neon-amber 2.8s ease-in-out infinite;
-    }
-
-    &.is-bad {
-      box-shadow:
-        0 0 10px rgb(244 63 94 / 22%),
-        0 0 20px rgb(244 63 94 / 8%);
-      animation: pill-neon-rose 3s ease-in-out infinite;
-    }
-  }
-
-  @keyframes pill-neon-green {
-    0%,
-    100% {
-      box-shadow:
-        0 0 8px rgb(16 185 129 / 22%),
-        0 0 18px rgb(16 185 129 / 8%);
-    }
-
-    50% {
-      box-shadow:
-        0 0 14px rgb(16 185 129 / 38%),
-        0 0 28px rgb(16 185 129 / 14%);
-    }
-  }
-
-  @keyframes pill-neon-amber {
-    0%,
-    100% {
-      box-shadow:
-        0 0 8px rgb(245 158 11 / 18%),
-        0 0 16px rgb(245 158 11 / 6%);
-    }
-
-    50% {
-      box-shadow:
-        0 0 14px rgb(245 158 11 / 32%),
-        0 0 26px rgb(245 158 11 / 10%);
-    }
-  }
-
-  @keyframes pill-neon-rose {
-    0%,
-    100% {
-      box-shadow:
-        0 0 8px rgb(244 63 94 / 18%),
-        0 0 16px rgb(244 63 94 / 6%);
-    }
-
-    50% {
-      box-shadow:
-        0 0 14px rgb(244 63 94 / 32%),
-        0 0 26px rgb(244 63 94 / 10%);
-    }
-  }
-
-  .ad-spend {
-    font-weight: 850;
-    font-variant-numeric: tabular-nums;
-    color: rgb(56 189 248 / 98%);
-    text-shadow: 0 0 8px rgb(56 189 248 / 20%);
-  }
-
-  .is-profit {
-    color: var(--art-success);
-    text-shadow: 0 0 6px rgb(16 185 129 / 20%);
-  }
-
-  .is-loss {
-    color: var(--art-danger);
-    text-shadow: 0 0 6px rgb(239 68 68 / 20%);
-  }
-
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 22px;
-    padding: 0 10px;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 22px;
-    white-space: nowrap;
-    border: 1px solid transparent;
-    border-radius: 9999px;
-    transition: box-shadow var(--duration-fast) var(--ease-default);
-
-    &:hover {
-      box-shadow: 0 0 18px rgb(59 130 246 / 14%);
-    }
-  }
-
-  .name-cell {
-    display: inline-flex;
-    gap: 8px;
-    align-items: center;
-    min-width: 0;
-  }
-
-  .name {
-    min-width: 0;
+  .excel-cell__text {
+    display: block;
+    width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .dim {
-    font-size: 12px;
-    color: rgb(244 244 245 / 70%);
-  }
-
-  .score {
+  .excel-cell.is-header {
     font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: rgb(148 163 184 / 95%);
-    text-shadow: 0 0 6px rgb(148 163 184 / 15%);
+    text-align: center !important;
+    background: #fff;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .panel {
-      transition: none;
+  .excel-cell.is-strong .excel-cell__text {
+    font-weight: 700;
+  }
+
+  .excel-cell.is-alt {
+    background: #d9d9d9;
+  }
+
+  .excel-cell.is-negative {
+    color: #111827;
+  }
+
+  .excel-cell.is-highlight-row,
+  .excel-cell.is-highlight-col {
+    background: #eef6ff;
+  }
+
+  .excel-cell.is-highlight-row.is-alt,
+  .excel-cell.is-highlight-col.is-alt {
+    background: #d5e3f2;
+  }
+
+  .excel-cell.is-selected {
+    background: #e7f7ed;
+  }
+
+  .excel-cell.is-selected.is-alt {
+    background: #d8ebdf;
+  }
+
+  .excel-cell.is-active {
+    z-index: 4;
+    box-shadow: inset 0 0 0 2px #16a34a;
+  }
+
+  .excel-sk-title {
+    width: 180px !important;
+    height: 16px !important;
+    margin-bottom: 8px;
+  }
+
+  .excel-sk-hint {
+    width: 58% !important;
+    height: 12px !important;
+  }
+
+  .excel-sk-shell {
+    display: grid;
+    gap: 16px;
+    padding: 8px;
+  }
+
+  .excel-sk-grid {
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+    background: rgb(255 255 255 / 5%);
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: 12px;
+  }
+
+  .excel-sk-grid--summary {
+    grid-template-columns: 1.4fr 1.2fr repeat(7, 1fr);
+  }
+
+  .excel-sk-grid--detail {
+    grid-template-columns: 1.3fr 0.8fr 1fr 1fr repeat(7, 1fr);
+  }
+
+  .excel-sk-cell {
+    width: 100% !important;
+    height: 18px !important;
+  }
+
+  @media (width <= 1200px) {
+    .hint {
+      line-height: 1.6;
     }
 
-    .panel:hover {
-      transform: none;
-    }
-
-    .panel:hover .panel__header .title {
-      filter: none;
-      transform: none;
-    }
-
-    .panel:hover .mp-detail-table {
-      filter: none;
-      transform: none;
-    }
-
-    .mp-detail-table {
-      transition: none;
-    }
-
-    .panel::before {
-      animation: none;
-    }
-
-    .panel::after {
-      opacity: 0.12;
-    }
-
-    .summary-footer,
-    .summary-footer::before {
-      animation: none;
-    }
-
-    .roi-pill.is-good,
-    .roi-pill.is-mid,
-    .roi-pill.is-bad {
-      animation: none;
+    .excel-toolbar {
+      flex-direction: column;
+      align-items: flex-start;
     }
   }
 </style>
