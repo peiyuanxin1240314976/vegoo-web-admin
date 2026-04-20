@@ -1869,14 +1869,7 @@
   }
 
   .kpi-sub {
-    position: relative;
-    z-index: 1;
-    overflow: hidden;
-    font-size: 11px;
-    color: rgb(248 250 252 / 70%);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    opacity: 0.92;
+    display: none;
   }
 
   .bi-card {
