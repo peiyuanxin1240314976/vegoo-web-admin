@@ -1,5 +1,5 @@
 {
-  "_comment": "利润分析 - 应用利润详情表 + 合计行。趋势改为按筛选日期范围返回利润序列。对应 types.ts: ProfitAppRow[], ProfitAppTotal。",
+  "_comment": "利润分析 - 应用利润详情（树表）：单根节点「全部应用、全部国家」+ children 为国家行。前端展开后首屏仅渲染 20 条，滚动到底每次追加 10 条，并使用虚拟列表避免一次性渲染 200+ 国家行。对应 types.ts: ProfitAppProfitTreeNode, ProfitAppProfitResponseDto。",
   "fieldDescription": {
     "request": {
       "dateRange": { "type": "string", "required": true, "description": "日期范围。" },
@@ -14,35 +14,64 @@
       "sCountryCode": { "type": "string", "required": false, "description": "国家代码，全部 all。" }
     },
     "response": {
-      "rows": {
-        "type": "ProfitAppRow[]",
-        "required": true,
-        "description": "应用维度利润表行。"
-      },
-      "total": {
-        "type": "ProfitAppTotal",
-        "required": true,
-        "description": "合计行。"
-      }
+      "root": { "type": "ProfitAppProfitTreeNode", "required": true, "description": "树表根节点。" }
     },
-    "ProfitAppRow": {
-      "app": { "type": "string", "required": true, "description": "应用名称或 s_app_id 展示名。" },
+    "ProfitAppProfitTreeNode": {
+      "id": {
+        "type": "string",
+        "required": true,
+        "description": "稳定主键。根固定为 root；国家行可用 countryCode 或拼接。"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "首列展示名。根为「全部应用、全部国家」；子节点为国家名。"
+      },
+      "appName": {
+        "type": "string",
+        "required": false,
+        "description": "应用展示名。根行可为「全部应用」；子行用于表格「应用」列展示具体应用。"
+      },
+      "countryCode": {
+        "type": "string",
+        "required": false,
+        "description": "国家代码（ISO 3166-1 alpha-2 小写）。根节点可省略或为空串。"
+      },
       "adRev": {
         "type": "string",
         "required": true,
         "description": "广告收入(预) 展示值，如 $45,200。"
       },
       "paidRev": { "type": "string", "required": true, "description": "付费收入展示值。" },
-      "total": { "type": "string", "required": true, "description": "总收入展示值。" },
       "adSpend": { "type": "string", "required": true, "description": "广告支出展示值。" },
       "profit": { "type": "string", "required": true, "description": "预估利润，如 +$18,800。" },
       "profitColor": { "type": "string", "required": true, "description": "利润颜色 HEX。" },
-      "rate": { "type": "string", "required": true, "description": "利润率，如 32.8% 或 N/A。" },
-      "rateColor": { "type": "string", "required": true, "description": "利润率颜色 HEX。" },
+      "roi1d": {
+        "type": "string",
+        "required": true,
+        "description": "首日ROI（百分比展示值，如 86.52%）。"
+      },
+      "avgDau": { "type": "string", "required": true, "description": "平均DAU（整数展示值）。" },
+      "newUsers": { "type": "string", "required": true, "description": "新用户（整数展示值）。" },
+      "paidUsers": {
+        "type": "string",
+        "required": true,
+        "description": "买量用户（整数展示值）。"
+      },
+      "organicUsers": {
+        "type": "string",
+        "required": true,
+        "description": "自然量（整数展示值）。"
+      },
       "profitTrend": {
         "type": "ProfitTrendPoint[]",
         "required": true,
         "description": "按筛选日期范围返回的利润趋势点，前端据此绘制趋势图。"
+      },
+      "children": {
+        "type": "ProfitAppProfitTreeNode[]",
+        "required": false,
+        "description": "子节点数组。当前业务：根节点 children 为国家行。无数据返回 []。"
       }
     },
     "ProfitTrendPoint": {
@@ -52,14 +81,6 @@
         "required": true,
         "description": "当日利润数值（USD，可正可负）。"
       }
-    },
-    "ProfitAppTotal": {
-      "adRev": { "type": "string", "required": true, "description": "广告收入合计。" },
-      "paidRev": { "type": "string", "required": true, "description": "付费收入合计。" },
-      "total": { "type": "string", "required": true, "description": "总收入合计。" },
-      "adSpend": { "type": "string", "required": true, "description": "广告支出合计。" },
-      "profit": { "type": "string", "required": true, "description": "预估利润合计。" },
-      "rate": { "type": "string", "required": true, "description": "利润率合计。" }
     }
   },
   "sampleRequest": {
@@ -71,69 +92,90 @@
     "sCountryCode": "all"
   },
   "sampleResponse": {
-    "rows": [
-      {
-        "app": "Weather5",
-        "adRev": "$45,200",
-        "paidRev": "$12,100",
-        "total": "$57,300",
-        "adSpend": "$38,500",
-        "profit": "+$18,800",
-        "profitColor": "#4ade80",
-        "rate": "32.8%",
-        "rateColor": "#4ade80",
-        "profitTrend": [
-          { "date": "2026-03-01", "profit": 3720 },
-          { "date": "2026-03-02", "profit": 3910 },
-          { "date": "2026-03-03", "profit": 4020 },
-          { "date": "2026-03-04", "profit": 3580 },
-          { "date": "2026-03-05", "profit": 3570 }
-        ]
-      },
-      {
-        "app": "PhoneTracker",
-        "adRev": "$28,600",
-        "paidRev": "$8,200",
-        "total": "$36,800",
-        "adSpend": "$22,400",
-        "profit": "+$14,400",
-        "profitColor": "#4ade80",
-        "rate": "39.1%",
-        "rateColor": "#4ade80",
-        "profitTrend": [
-          { "date": "2026-03-01", "profit": 2650 },
-          { "date": "2026-03-02", "profit": 2810 },
-          { "date": "2026-03-03", "profit": 2940 },
-          { "date": "2026-03-04", "profit": 3010 },
-          { "date": "2026-03-05", "profit": 2990 }
-        ]
-      },
-      {
-        "app": "BloodSugar2",
-        "adRev": "$24,400",
-        "paidRev": "$7,140",
-        "total": "$31,540",
-        "adSpend": "$28,200",
-        "profit": "+$3,340",
-        "profitColor": "#4ade80",
-        "rate": "11.8%",
-        "rateColor": "#4ade80",
-        "profitTrend": [
-          { "date": "2026-03-01", "profit": 460 },
-          { "date": "2026-03-02", "profit": 710 },
-          { "date": "2026-03-03", "profit": 890 },
-          { "date": "2026-03-04", "profit": 640 },
-          { "date": "2026-03-05", "profit": 640 }
-        ]
-      }
-    ],
-    "total": {
+    "root": {
+      "id": "root",
+      "name": "全部应用、全部国家",
+      "appName": "全部应用",
       "adRev": "$98,200",
       "paidRev": "$27,440",
-      "total": "$125,640",
       "adSpend": "$89,240",
       "profit": "+$36,400",
-      "rate": "40.8%"
+      "profitColor": "#4ade80",
+      "roi1d": "40.79%",
+      "avgDau": "1,246",
+      "newUsers": "5,842",
+      "paidUsers": "1,902",
+      "organicUsers": "3,940",
+      "profitTrend": [
+        { "date": "2026-03-01", "profit": 6830 },
+        { "date": "2026-03-02", "profit": 7120 },
+        { "date": "2026-03-03", "profit": 6980 }
+      ],
+      "children": [
+        {
+          "id": "country-us-1",
+          "name": "美国",
+          "appName": "Weather5",
+          "countryCode": "us",
+          "adRev": "$52,000",
+          "paidRev": "$14,200",
+          "adSpend": "$38,500",
+          "profit": "+$27,700",
+          "profitColor": "#4ade80",
+          "roi1d": "71.95%",
+          "avgDau": "1,820",
+          "newUsers": "402",
+          "paidUsers": "128",
+          "organicUsers": "274",
+          "profitTrend": [
+            { "date": "2026-03-01", "profit": 3720 },
+            { "date": "2026-03-02", "profit": 3910 },
+            { "date": "2026-03-03", "profit": 4020 }
+          ]
+        },
+        {
+          "id": "country-kr-2",
+          "name": "韩国",
+          "appName": "PhoneTracker",
+          "countryCode": "kr",
+          "adRev": "$11,200",
+          "paidRev": "$3,100",
+          "adSpend": "$8,400",
+          "profit": "+$5,900",
+          "profitColor": "#4ade80",
+          "roi1d": "70.24%",
+          "avgDau": "1,102",
+          "newUsers": "188",
+          "paidUsers": "66",
+          "organicUsers": "122",
+          "profitTrend": [
+            { "date": "2026-03-01", "profit": 820 },
+            { "date": "2026-03-02", "profit": 910 },
+            { "date": "2026-03-03", "profit": 880 }
+          ]
+        },
+        {
+          "id": "country-za-3",
+          "name": "南非",
+          "appName": "BloodSugar2",
+          "countryCode": "za",
+          "adRev": "$9,600",
+          "paidRev": "$1,200",
+          "adSpend": "$12,200",
+          "profit": "-$1,400",
+          "profitColor": "#f87171",
+          "roi1d": "-11.48%",
+          "avgDau": "736",
+          "newUsers": "140",
+          "paidUsers": "54",
+          "organicUsers": "86",
+          "profitTrend": [
+            { "date": "2026-03-01", "profit": -120 },
+            { "date": "2026-03-02", "profit": -80 },
+            { "date": "2026-03-03", "profit": -200 }
+          ]
+        }
+      ]
     }
   },
   "api": {
@@ -141,6 +183,6 @@
     "method": "POST",
     "priority": "P0",
     "requestBody": "扁平 ProfitAnalysisQueryParams（列表带 currentPage、pageSize）",
-    "responseBody": "rows (ProfitAppRow[]), total (ProfitAppTotal)"
+    "responseBody": "root (ProfitAppProfitTreeNode，含 children 国家行)"
   }
 }

@@ -118,7 +118,7 @@
           <thead>
             <tr>
               <th>日期区间</th><th>ROI</th><th>CPA</th> <th>付费收入</th><th>付费人数</th
-              ><th>续率</th> <th>付费收入</th><th>内购占比</th><th>内购订单</th><th>内购人数</th>
+              ><th>续订率</th> <th>付费收入</th><th>内购占比</th><th>内购订单</th><th>内购人数</th>
             </tr>
           </thead>
           <tbody>
@@ -334,7 +334,10 @@
         fetchPaidAnalysisTabChannelCharts(body)
       ])
 
-      kpiCards.value = overview.kpis
+      kpiCards.value = overview.kpis.map((k) => ({
+        ...k,
+        label: k.label === '订阅续费率' ? '续订率' : k.label
+      }))
       aiTips.value = overview.aiTips
 
       channelRows.value = tables.channelRows.map((r) => ({

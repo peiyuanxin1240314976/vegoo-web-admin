@@ -58,6 +58,10 @@ import type {
   ProfitSankeyDto,
   ProfitTrend30d
 } from '@/views/business-insight/profit-analysis/types'
+import {
+  ProfitAnalysisEndpoint,
+  isProfitAnalysisEndpointMock
+} from '@/views/business-insight/profit-analysis/config/data-source'
 import type {
   EcpmMetaFilterOptions,
   EcpmOverviewKpis,
@@ -863,6 +867,13 @@ const PROFIT_BASE = `${ANALYSIS_API_BASE}/business-insight/profit-analysis`
 
 /** 利润分析 - 顶栏筛选项 GET .../meta-filter-options（仅依赖全局 Token，无 query/body） */
 export function fetchProfitMetaFilterOptions() {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.MetaFilterOptions)) {
+    return Promise.resolve(
+      import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then((m) =>
+        m.mockFetchProfitMetaFilterOptions()
+      )
+    )
+  }
   return request.get<ProfitFilterOptions>({
     url: `${PROFIT_BASE}/meta-filter-options`
   })
@@ -1266,6 +1277,11 @@ function normalizeProfitAnalysisBody(params: ProfitAnalysisQueryParams) {
 }
 
 export function fetchProfitOverviewKpi(fo: ProfitAnalysisQueryParams) {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.OverviewKpi)) {
+    return import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then(
+      (m) => m.mockFetchProfitOverviewKpi()
+    )
+  }
   return request.post<ProfitKpiOverviewDto>({
     url: `${PROFIT_BASE}/overview/kpi`,
     data: normalizeProfitAnalysisBody(fo)
@@ -1274,6 +1290,11 @@ export function fetchProfitOverviewKpi(fo: ProfitAnalysisQueryParams) {
 
 /** 利润分析 - 应用利润详情表 POST .../table/app-profit */
 export function fetchProfitTableAppProfit(fo: ProfitAnalysisQueryParams) {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.TableAppProfit)) {
+    return import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then(
+      (m) => m.mockFetchProfitTableAppProfit()
+    )
+  }
   return request.post<ProfitAppProfitResponseDto>({
     url: `${PROFIT_BASE}/table/app-profit`,
     data: normalizeProfitAnalysisBody(fo)
@@ -1282,6 +1303,11 @@ export function fetchProfitTableAppProfit(fo: ProfitAnalysisQueryParams) {
 
 /** 利润分析 - 国家利润分布 POST .../overview/country-profit */
 export function fetchProfitOverviewCountryProfit(fo: ProfitAnalysisQueryParams) {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.OverviewCountryProfit)) {
+    return import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then(
+      (m) => m.mockFetchProfitOverviewCountryProfit()
+    )
+  }
   return request.post<ProfitCountryProfitResponseDto>({
     url: `${PROFIT_BASE}/overview/country-profit`,
     data: normalizeProfitAnalysisBody(fo)
@@ -1290,6 +1316,11 @@ export function fetchProfitOverviewCountryProfit(fo: ProfitAnalysisQueryParams) 
 
 /** 利润分析 - 近 30 天趋势 POST .../profit-analysis/overview/trend30d，响应 data 为 ProfitTrend30d */
 export function fetchProfitOverviewTrend30d(fo: ProfitAnalysisQueryParams) {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.OverviewTrend30d)) {
+    return import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then(
+      (m) => m.mockFetchProfitOverviewTrend30d()
+    )
+  }
   return request.post<ProfitTrend30d>({
     url: `${PROFIT_BASE}/overview/trend30d`,
     data: normalizeProfitAnalysisBody(fo)
@@ -1298,6 +1329,11 @@ export function fetchProfitOverviewTrend30d(fo: ProfitAnalysisQueryParams) {
 
 /** 利润分析 - 利润构成桑基图 POST .../overview/sankey */
 export function fetchProfitOverviewSankey(fo: ProfitAnalysisQueryParams) {
+  if (isProfitAnalysisEndpointMock(ProfitAnalysisEndpoint.OverviewSankey)) {
+    return import('@/views/business-insight/profit-analysis/mock/profit-analysis-api-mock').then(
+      (m) => m.mockFetchProfitOverviewSankey()
+    )
+  }
   return request.post<ProfitSankeyDto>({
     url: `${PROFIT_BASE}/overview/sankey`,
     data: normalizeProfitAnalysisBody(fo)
