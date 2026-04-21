@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts'
   import ScreenshotModal from './ScreenshotModal.vue'
@@ -20,7 +21,11 @@
     fetchAgencySubTabRecentSummary,
     fetchAgencySubTabAccountSummary
   } from '@/api/agency-analysis'
-  import type { AgencyAnalysisCharts, KpiCardItem } from '../types'
+  import type {
+    AgencyAnalysisCharts,
+    KpiCardItem,
+    AgencyAnalysisFilterOptionsPayload
+  } from '../types'
 
   defineOptions({ name: 'AdAgencyAnalysis' })
 
@@ -321,7 +326,23 @@
   /** 最近一次查询使用的日期区间；仅 handleSearch 写入 */
   const summaryDateApplied = ref<[string, string] | null>(null)
   const cockpitMetaFilterStore = useCockpitMetaFilterStore()
-  const settingAppsForSelect = computed(() => cockpitMetaFilterStore.data?.settingApps ?? [])
+  const agencyMetaFilterOptions = ref<AgencyAnalysisFilterOptionsPayload | null>(null)
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMetaFilterStore.data?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return (agencyMetaFilterOptions.value?.appOptions ?? [])
+      .filter((opt) => opt.value && opt.value !== 'all')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
 
   /** AppPlatformSearchSelect：sAppId；空 = 全部应用（接口字段仍用 `'all'`） */
   const selectedAppId = ref('')
@@ -419,8 +440,9 @@
     metaLoading.value = true
     metaLoadError.value = false
     try {
-      await fetchAgencyAnalysisMetaFilterOptions()
+      agencyMetaFilterOptions.value = await fetchAgencyAnalysisMetaFilterOptions()
     } catch {
+      agencyMetaFilterOptions.value = null
       metaLoadError.value = true
       agencyTabIndex.value = 0
     } finally {

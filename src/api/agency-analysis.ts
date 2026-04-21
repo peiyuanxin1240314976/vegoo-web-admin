@@ -3,6 +3,7 @@
  */
 import request from '@/utils/http'
 import { ANALYSIS_API_BASE } from '@/api/analysis-api-base'
+import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
 import {
   AgencyAnalysisEndpoint,
   isAgencyAnalysisMock
@@ -49,25 +50,31 @@ export type AgencyAnalysisFilterQuery = {
 }
 
 function overviewBody(q: AgencyAnalysisFilterQuery) {
+  const appSelection = buildAppSelectionRequestBody(
+    q.s_app_id && q.s_app_id !== 'all' ? q.s_app_id : ''
+  )
   return {
     // TODO: 后端入参升级后删除 t_date
     t_date: q.endDate,
     startDate: q.startDate,
     endDate: q.endDate,
-    s_app_id: q.s_app_id ?? 'all',
+    ...appSelection,
     agency_id: q.agency_id ?? 'all',
     source: q.source ?? 'all'
   }
 }
 
 function rangeBody(q: AgencyAnalysisFilterQuery) {
+  const appSelection = buildAppSelectionRequestBody(
+    q.s_app_id && q.s_app_id !== 'all' ? q.s_app_id : ''
+  )
   return {
     // TODO: 后端入参升级后删除 t_start_date / t_end_date
     t_start_date: q.startDate,
     t_end_date: q.endDate,
     startDate: q.startDate,
     endDate: q.endDate,
-    s_app_id: q.s_app_id ?? 'all',
+    ...appSelection,
     agency_id: q.agency_id ?? 'all',
     source: q.source ?? 'all'
   }
@@ -190,11 +197,12 @@ export type AgencyAnalysisSubTabLast7Query = {
 }
 
 function subTabBody(q: AgencyAnalysisSubTabFilterQuery) {
+  const appSelection = buildAppSelectionRequestBody(q.appId && q.appId !== 'all' ? q.appId : '')
   return {
     startDate: q.startDate,
     endDate: q.endDate,
     date: q.date,
-    appId: q.appId ?? 'all',
+    ...appSelection,
     source: q.source ?? 'all',
     agencyTab: q.agencyTab
   }
@@ -204,12 +212,15 @@ export function fetchAgencySubTabKpiLast7(params: AgencyAnalysisSubTabLast7Query
   if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.SubTabKpiLast7)) {
     return mockFetchAgencySubTabKpiLast7(params)
   }
+  const appSelection = buildAppSelectionRequestBody(
+    params.appId && params.appId !== 'all' ? params.appId : ''
+  )
   return request.post<AgencySubTabKpiPayload>({
     url: `${AGENCY_ANALYSIS_BASE}/subtab/kpi/last7`,
     data: {
       startDate: params.startDate,
       endDate: params.endDate,
-      appId: params.appId ?? 'all',
+      ...appSelection,
       source: params.source ?? 'all',
       agencyTab: params.agencyTab
     }
