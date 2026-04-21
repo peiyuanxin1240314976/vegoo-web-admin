@@ -45,7 +45,7 @@
           </ElSelect>
           <div class="iap-filter-actions">
             <ElButton type="primary" plain round @click="handleSearch">搜索</ElButton>
-            <ElButton type="primary" plain round @click="onExportClick">导出</ElButton>
+            <!-- <ElButton type="primary" plain round @click="onExportClick">导出</ElButton> -->
           </div>
         </div>
       </div>
@@ -210,9 +210,9 @@
     }, 260)
   }
 
-  function onExportClick() {
-    // 占位，保留原交互
-  }
+  // function onExportClick() {
+  //   // 占位，保留原交互
+  // }
 </script>
 
 <style scoped lang="scss">

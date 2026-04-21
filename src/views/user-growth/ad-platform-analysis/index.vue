@@ -55,7 +55,7 @@
               </el-select> -->
             </div>
             <el-button type="primary" plain round @click="runDashboardQuery">查询</el-button>
-            <el-button type="primary" plain round @click="runDashboardQuery">导出报表</el-button>
+            <!-- <el-button type="primary" plain round @click="runDashboardQuery">导出报表</el-button> -->
           </div>
         </div>
       </header>

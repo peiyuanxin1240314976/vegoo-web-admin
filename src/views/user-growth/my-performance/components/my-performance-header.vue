@@ -33,7 +33,7 @@
       </div>
 
       <div class="field">
-        <ElButton type="primary" plain round class="export-btn">{{ exportLabel }}</ElButton>
+        <!-- <ElButton type="primary" plain round class="export-btn">{{ exportLabel }}</ElButton> -->
       </div>
 
       <div class="period-switch">
@@ -86,7 +86,7 @@
       leftHint?: string
       personLabel?: string
       personPlaceholder?: string
-      exportLabel?: string
+      // exportLabel?: string
       quarterLabel?: string
       monthLabel?: string
     }>(),
@@ -98,7 +98,7 @@
       leftHint: '',
       personLabel: '人员',
       personPlaceholder: '请选择',
-      exportLabel: '导出绩效报告',
+      // exportLabel: '导出绩效报告',
       quarterLabel: '当前季度',
       monthLabel: '当前月份'
     }
@@ -172,7 +172,7 @@
 
   const personLabel = computed(() => props.personLabel)
   const personPlaceholder = computed(() => props.personPlaceholder)
-  const exportLabel = computed(() => props.exportLabel)
+  // const exportLabel = computed(() => props.exportLabel)
   const quarterLabel = computed(() => props.quarterLabel)
   const monthLabel = computed(() => props.monthLabel)
 </script>

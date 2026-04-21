@@ -79,9 +79,9 @@
       <ElButton type="primary" plain round @click="onQuery">
         {{ tr('adPerformance.query', '查询') }}
       </ElButton>
-      <ElButton type="primary" plain round @click="$emit('export')">
+      <!-- <ElButton type="primary" plain round @click="$emit('export')">
         {{ tr('adPerformance.exportReport', '导出报表') }}
-      </ElButton>
+      </ElButton> -->
       <ElButton
         aria-label="刷新数据"
         type="primary"

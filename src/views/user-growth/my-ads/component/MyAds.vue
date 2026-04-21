@@ -232,9 +232,9 @@
           />
 
           <el-button type="primary" plain round @click="commitFiltersAndRefresh">查询</el-button>
-          <el-button type="primary" plain round @click="commitFiltersAndRefresh"
+          <!-- <el-button type="primary" plain round @click="commitFiltersAndRefresh"
             >导出报表</el-button
-          >
+          > -->
         </div>
       </div>
     </div>

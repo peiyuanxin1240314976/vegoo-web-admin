@@ -27,28 +27,22 @@
             round
             type="primary"
             class="perf-header__btn perf-header__btn--query"
-            :disabled="!isDirty"
             :loading="listLoading || overviewLoading"
             @click="onQuery"
           >
             查询
           </ElButton>
-          <ElButton
-            round
-            class="perf-header__btn perf-header__btn--reset"
-            :disabled="!isDirty"
-            @click="onReset"
-          >
+          <ElButton round class="perf-header__btn perf-header__btn--reset" @click="onReset">
             重置
           </ElButton>
-          <ElButton round plain type="primary" class="perf-header__btn">
+          <!-- <ElButton round plain type="primary" class="perf-header__btn">
             <span class="perf-header__btn-icon" aria-hidden="true">↓</span>
             导出
-          </ElButton>
-          <ElButton round plain type="warning" class="perf-header__btn perf-header__btn--admin">
+          </ElButton> -->
+          <!-- <ElButton round plain type="warning" class="perf-header__btn perf-header__btn--admin">
             <span class="perf-header__btn-icon" aria-hidden="true">🔐</span>
             管理员编辑
-          </ElButton>
+          </ElButton> -->
         </div>
       </div>
     </div>
@@ -481,14 +475,14 @@
     () =>
       pagedData.value.length > 0 && pagedData.value.every((r) => checkedIds.value.includes(r.id))
   )
-  const isDirty = computed(() => {
-    return (
-      activePersonFilter.value !== appliedPersonFilter.value ||
-      activeAppFilter.value !== appliedAppFilter.value ||
-      activeStatusFilter.value !== appliedStatusFilter.value ||
-      false
-    )
-  })
+  // const isDirty = computed(() => {
+  //   return (
+  //     activePersonFilter.value !== appliedPersonFilter.value ||
+  //     activeAppFilter.value !== appliedAppFilter.value ||
+  //     activeStatusFilter.value !== appliedStatusFilter.value ||
+  //     false
+  //   )
+  // })
 
   // ─── Methods ─────────────────────────────────────────────
   function fmt(n: number) {
