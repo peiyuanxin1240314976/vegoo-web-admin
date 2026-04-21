@@ -1,256 +1,264 @@
 <template>
-  <!-- 遮罩层 -->
-  <transition name="fade">
-    <div v-if="visible" class="drawer-overlay" @click="handleClose" />
-  </transition>
+  <Teleport to="body">
+    <!-- 遮罩层 -->
+    <transition name="fade">
+      <div v-if="visible" class="drawer-overlay" @click="handleClose" />
+    </transition>
 
-  <!-- 抽屉主体 -->
-  <transition name="drawer-slide">
-    <div v-if="visible" class="app-detail-drawer">
-      <!-- ── 头部 ─────────────────────────────────── -->
-      <div class="drawer-header">
-        <div class="header-left">
-          <div
-            class="app-icon"
-            :style="{ background: appData?.iconColor || 'var(--el-color-primary)' }"
-          >
-            {{ appData?.appName?.charAt(0) || 'A' }}
+    <!-- 抽屉主体 -->
+    <transition name="drawer-slide">
+      <div v-if="visible" class="app-detail-drawer">
+        <!-- ── 头部 ─────────────────────────────────── -->
+        <div class="drawer-header">
+          <div class="header-left">
+            <div
+              class="app-icon"
+              :style="{ background: appData?.iconColor || 'var(--el-color-primary)' }"
+            >
+              {{ appData?.appName?.charAt(0) || 'A' }}
+            </div>
+            <div class="header-info">
+              <div class="header-name-row">
+                <span class="app-name">{{ appData?.appName }}</span>
+                <span
+                  :class="[
+                    'platform-badge',
+                    appData?.platform === 'Android'
+                      ? 'platform-badge--android'
+                      : 'platform-badge--ios'
+                  ]"
+                >
+                  <span class="platform-dot" />
+                  {{ appData?.platform }}
+                </span>
+              </div>
+              <div class="header-meta">
+                <span class="id-chip">{{ appData?.id }}</span>
+                <span class="meta-text">类别：{{ appData?.category }}</span>
+                <span
+                  :class="[
+                    'status-badge',
+                    appData?.status === '正常' ? 'status-badge--normal' : 'status-badge--disabled'
+                  ]"
+                  >{{ appData?.status }}</span
+                >
+              </div>
+            </div>
           </div>
-          <div class="header-info">
-            <div class="header-name-row">
-              <span class="app-name">{{ appData?.appName }}</span>
-              <span
-                :class="[
-                  'platform-badge',
-                  appData?.platform === 'Android'
-                    ? 'platform-badge--android'
-                    : 'platform-badge--ios'
-                ]"
-              >
-                <span class="platform-dot" />
-                {{ appData?.platform }}
-              </span>
-            </div>
-            <div class="header-meta">
-              <span class="id-chip">{{ appData?.id }}</span>
-              <span class="meta-text">类别：{{ appData?.category }}</span>
-              <span
-                :class="[
-                  'status-badge',
-                  appData?.status === '正常' ? 'status-badge--normal' : 'status-badge--disabled'
-                ]"
-                >{{ appData?.status }}</span
-              >
-            </div>
+          <div class="header-right">
+            <ElButton round class="edit-btn" size="small" @click="handleEdit">
+              <ElIcon><EditPen /></ElIcon>编辑
+            </ElButton>
+            <button class="close-btn" @click="handleClose">
+              <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+                <path
+                  d="M2 2l12 12M14 2L2 14"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
           </div>
         </div>
-        <div class="header-right">
-          <ElButton round class="edit-btn" size="small" @click="handleEdit">
-            <ElIcon><EditPen /></ElIcon>编辑
+
+        <!-- ── 正文滚动区 ──────────────────────────── -->
+        <div class="drawer-body">
+          <!-- 基础信息 -->
+          <section class="detail-section">
+            <div class="section-title">基础信息</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-key">应用名</span>
+                <span class="info-val">{{ appData?.appName }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">应用简称</span>
+                <span class="info-val">{{ appData?.shortName }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">ID</span>
+                <span class="info-val">{{ appData?.id }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">类别</span>
+                <span class="info-val">{{ appData?.category }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">平台</span>
+                <span
+                  :class="[
+                    'platform-badge',
+                    appData?.platform === 'Android'
+                      ? 'platform-badge--android'
+                      : 'platform-badge--ios'
+                  ]"
+                >
+                  <span class="platform-dot" />{{ appData?.platform }}
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">状态</span>
+                <span
+                  :class="[
+                    'status-badge',
+                    appData?.status === '正常' ? 'status-badge--normal' : 'status-badge--disabled'
+                  ]"
+                  >{{ appData?.status }}</span
+                >
+              </div>
+            </div>
+          </section>
+
+          <!-- 技术标识 -->
+          <section class="detail-section">
+            <div class="section-title">技术标识</div>
+            <div class="tech-list">
+              <div class="tech-item">
+                <span class="tech-key">app ID</span>
+                <div class="tech-val-row">
+                  <span class="tech-val tech-val--mono">{{ appData?.appId }}</span>
+                  <button class="icon-btn" @click="copyText(appData?.appId)">
+                    <el-icon><CopyDocument /></el-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="tech-item">
+                <span class="tech-key">软件包ID</span>
+                <div class="tech-val-row">
+                  <span class="tech-val tech-val--mono">{{ appData?.packageId }}</span>
+                  <button class="icon-btn" @click="copyText(appData?.packageId)">
+                    <el-icon><CopyDocument /></el-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="tech-item">
+                <span class="tech-key">应用商店ID</span>
+                <div class="tech-val-row">
+                  <span class="tech-val tech-val--mono">
+                    {{ appData?.storeId || appData?.bundleId }}
+                  </span>
+                  <button class="icon-btn icon-btn--link">
+                    <el-icon><Link /></el-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="tech-item">
+                <span class="tech-key">地址</span>
+                <div class="tech-val-row">
+                  <span class="tech-val tech-val--link">
+                    {{ appData?.url || `https://${appData?.bundleId}` }}
+                  </span>
+                  <button class="icon-btn icon-btn--link">
+                    <el-icon><Link /></el-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 报表配置 -->
+          <section class="detail-section">
+            <div class="section-title">报表配置</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-key">报表时区</span>
+                <span class="info-val">{{ appData?.timezone || 'PST' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">优先级</span>
+                <span class="info-val">{{ appData?.priority }}</span>
+              </div>
+            </div>
+            <div class="toggle-display-grid">
+              <div class="toggle-display-item">
+                <span class="toggle-display-key">数据独立</span>
+                <span
+                  :class="[
+                    'bool-chip',
+                    appData?.dataIsolation ? 'bool-chip--yes' : 'bool-chip--no'
+                  ]"
+                >
+                  {{ appData?.dataIsolation ? '是' : '否' }}
+                </span>
+              </div>
+              <div class="toggle-display-item">
+                <span class="toggle-display-key">启用工具</span>
+                <span
+                  :class="['bool-chip', appData?.toolEnabled ? 'bool-chip--yes' : 'bool-chip--no']"
+                >
+                  {{ appData?.toolEnabled ? '是' : '否' }}
+                </span>
+              </div>
+              <div class="toggle-display-item">
+                <span class="toggle-display-key">预生成报表文件</span>
+                <span
+                  :class="['bool-chip', appData?.preGenReport ? 'bool-chip--yes' : 'bool-chip--no']"
+                >
+                  {{ appData?.preGenReport ? '是' : '否' }}
+                </span>
+              </div>
+              <div class="toggle-display-item">
+                <span class="toggle-display-key">使用订单明细</span>
+                <span
+                  :class="[
+                    'bool-chip',
+                    appData?.useOrderDetail ? 'bool-chip--yes' : 'bool-chip--no'
+                  ]"
+                >
+                  {{ appData?.useOrderDetail ? '是' : '否' }}
+                </span>
+              </div>
+              <div class="toggle-display-item">
+                <span class="toggle-display-key">报表展示订单</span>
+                <span
+                  :class="[
+                    'bool-chip',
+                    appData?.showOrderReport ? 'bool-chip--yes' : 'bool-chip--no'
+                  ]"
+                >
+                  {{ appData?.showOrderReport ? '是' : '否' }}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 操作记录 -->
+          <section class="detail-section detail-section--last">
+            <div class="section-title">操作记录</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-key">创建人</span>
+                <span class="info-val">{{ appData?.creator }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">创建时间</span>
+                <span class="info-val">{{ appData?.createTime || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">最后修改人</span>
+                <span class="info-val">{{ appData?.lastModifier || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">最后修改时间</span>
+                <span class="info-val">{{ appData?.lastModifyTime || '—' }}</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ── 底部操作栏 ───────────────────────────── -->
+        <div class="drawer-footer">
+          <ElButton round class="footer-btn footer-btn--delete" @click="handleDelete">
+            删除应用
           </ElButton>
-          <button class="close-btn" @click="handleClose">
-            <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
-              <path
-                d="M2 2l12 12M14 2L2 14"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-              />
-            </svg>
-          </button>
+          <ElButton round class="footer-btn footer-btn--edit" @click="handleEdit">
+            编辑应用
+          </ElButton>
         </div>
       </div>
-
-      <!-- ── 正文滚动区 ──────────────────────────── -->
-      <div class="drawer-body">
-        <!-- 基础信息 -->
-        <section class="detail-section">
-          <div class="section-title">基础信息</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-key">应用名</span>
-              <span class="info-val">{{ appData?.appName }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">应用简称</span>
-              <span class="info-val">{{ appData?.shortName }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">ID</span>
-              <span class="info-val">{{ appData?.id }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">类别</span>
-              <span class="info-val">{{ appData?.category }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">平台</span>
-              <span
-                :class="[
-                  'platform-badge',
-                  appData?.platform === 'Android'
-                    ? 'platform-badge--android'
-                    : 'platform-badge--ios'
-                ]"
-              >
-                <span class="platform-dot" />{{ appData?.platform }}
-              </span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">状态</span>
-              <span
-                :class="[
-                  'status-badge',
-                  appData?.status === '正常' ? 'status-badge--normal' : 'status-badge--disabled'
-                ]"
-                >{{ appData?.status }}</span
-              >
-            </div>
-          </div>
-        </section>
-
-        <!-- 技术标识 -->
-        <section class="detail-section">
-          <div class="section-title">技术标识</div>
-          <div class="tech-list">
-            <div class="tech-item">
-              <span class="tech-key">app ID</span>
-              <div class="tech-val-row">
-                <span class="tech-val tech-val--mono">{{ appData?.appId }}</span>
-                <button class="icon-btn" @click="copyText(appData?.appId)">
-                  <el-icon><CopyDocument /></el-icon>
-                </button>
-              </div>
-            </div>
-            <div class="tech-item">
-              <span class="tech-key">软件包ID</span>
-              <div class="tech-val-row">
-                <span class="tech-val tech-val--mono">{{ appData?.packageId }}</span>
-                <button class="icon-btn" @click="copyText(appData?.packageId)">
-                  <el-icon><CopyDocument /></el-icon>
-                </button>
-              </div>
-            </div>
-            <div class="tech-item">
-              <span class="tech-key">应用商店ID</span>
-              <div class="tech-val-row">
-                <span class="tech-val tech-val--mono">
-                  {{ appData?.storeId || appData?.bundleId }}
-                </span>
-                <button class="icon-btn icon-btn--link">
-                  <el-icon><Link /></el-icon>
-                </button>
-              </div>
-            </div>
-            <div class="tech-item">
-              <span class="tech-key">地址</span>
-              <div class="tech-val-row">
-                <span class="tech-val tech-val--link">
-                  {{ appData?.url || `https://${appData?.bundleId}` }}
-                </span>
-                <button class="icon-btn icon-btn--link">
-                  <el-icon><Link /></el-icon>
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 报表配置 -->
-        <section class="detail-section">
-          <div class="section-title">报表配置</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-key">报表时区</span>
-              <span class="info-val">{{ appData?.timezone || 'PST' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">优先级</span>
-              <span class="info-val">{{ appData?.priority }}</span>
-            </div>
-          </div>
-          <div class="toggle-display-grid">
-            <div class="toggle-display-item">
-              <span class="toggle-display-key">数据独立</span>
-              <span
-                :class="['bool-chip', appData?.dataIsolation ? 'bool-chip--yes' : 'bool-chip--no']"
-              >
-                {{ appData?.dataIsolation ? '是' : '否' }}
-              </span>
-            </div>
-            <div class="toggle-display-item">
-              <span class="toggle-display-key">启用工具</span>
-              <span
-                :class="['bool-chip', appData?.toolEnabled ? 'bool-chip--yes' : 'bool-chip--no']"
-              >
-                {{ appData?.toolEnabled ? '是' : '否' }}
-              </span>
-            </div>
-            <div class="toggle-display-item">
-              <span class="toggle-display-key">预生成报表文件</span>
-              <span
-                :class="['bool-chip', appData?.preGenReport ? 'bool-chip--yes' : 'bool-chip--no']"
-              >
-                {{ appData?.preGenReport ? '是' : '否' }}
-              </span>
-            </div>
-            <div class="toggle-display-item">
-              <span class="toggle-display-key">使用订单明细</span>
-              <span
-                :class="['bool-chip', appData?.useOrderDetail ? 'bool-chip--yes' : 'bool-chip--no']"
-              >
-                {{ appData?.useOrderDetail ? '是' : '否' }}
-              </span>
-            </div>
-            <div class="toggle-display-item">
-              <span class="toggle-display-key">报表展示订单</span>
-              <span
-                :class="[
-                  'bool-chip',
-                  appData?.showOrderReport ? 'bool-chip--yes' : 'bool-chip--no'
-                ]"
-              >
-                {{ appData?.showOrderReport ? '是' : '否' }}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <!-- 操作记录 -->
-        <section class="detail-section detail-section--last">
-          <div class="section-title">操作记录</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-key">创建人</span>
-              <span class="info-val">{{ appData?.creator }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">创建时间</span>
-              <span class="info-val">{{ appData?.createTime || '—' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">最后修改人</span>
-              <span class="info-val">{{ appData?.lastModifier || '—' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">最后修改时间</span>
-              <span class="info-val">{{ appData?.lastModifyTime || '—' }}</span>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- ── 底部操作栏 ───────────────────────────── -->
-      <div class="drawer-footer">
-        <ElButton round class="footer-btn footer-btn--delete" @click="handleDelete">
-          删除应用
-        </ElButton>
-        <ElButton round class="footer-btn footer-btn--edit" @click="handleEdit">
-          编辑应用
-        </ElButton>
-      </div>
-    </div>
-  </transition>
+    </transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">

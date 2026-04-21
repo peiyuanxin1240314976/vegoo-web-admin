@@ -380,34 +380,66 @@
     reader.readAsDataURL(file)
   }
 
+  const getErrorMessage = (error: unknown) => {
+    const fallback = isEdit.value ? '保存失败，请重试' : '创建失败，请重试'
+    if (!error) return fallback
+
+    if (error instanceof Error && error.message?.trim()) {
+      return error.message.trim()
+    }
+
+    if (typeof error === 'object') {
+      const errObj = error as {
+        message?: unknown
+        msg?: unknown
+        data?: { message?: unknown; msg?: unknown } | null
+      }
+      const messageCandidates = [errObj.message, errObj.msg, errObj.data?.message, errObj.data?.msg]
+      for (const item of messageCandidates) {
+        if (typeof item === 'string' && item.trim()) {
+          return item.trim()
+        }
+      }
+    }
+
+    return fallback
+  }
+
   const handleSubmit = async () => {
     if (!formRef.value || submitLoading.value) return
     const valid = await formRef.value.validate().catch(() => false)
     if (!valid) return
 
     submitLoading.value = true
-    try {
-      const idTrimmed = typeof form.id === 'string' ? form.id.trim() : form.id
-      const payload: ApplicationFormPayload = {
-        ...form,
-        id: idTrimmed || undefined
-      }
+    const idTrimmed = typeof form.id === 'string' ? form.id.trim() : form.id
+    const payload: ApplicationFormPayload = {
+      ...form,
+      id: idTrimmed || undefined
+    }
 
-      if (iconFile.value) {
+    if (iconFile.value) {
+      try {
         const uploadRes = await uploadApplicationIcon(iconFile.value)
         payload.iconFileKey = uploadRes.fileKey
         payload.iconUrl = uploadRes.iconUrl
+      } catch {
+        ElMessage.error('图标上传失败，请重试')
+        submitLoading.value = false
+        return
       }
+    }
 
-      const idForColor = (idTrimmed ?? props.editData?.id ?? '').trim() || 'app'
-      if (isEdit.value && props.editData?.iconColor && !iconFile.value) {
-        payload.iconColor = props.editData.iconColor
-      } else {
-        payload.iconColor = deriveIconColorFromId(idForColor)
-      }
+    const idForColor = (idTrimmed ?? props.editData?.id ?? '').trim() || 'app'
+    if (isEdit.value && props.editData?.iconColor && !iconFile.value) {
+      payload.iconColor = props.editData.iconColor
+    } else {
+      payload.iconColor = deriveIconColorFromId(idForColor)
+    }
+
+    try {
       emit('success', payload)
-    } catch {
-      ElMessage.error('图标上传失败，请重试')
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error))
     } finally {
       submitLoading.value = false
     }
