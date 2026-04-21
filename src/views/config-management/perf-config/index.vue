@@ -175,7 +175,7 @@
                 </span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" min-width="120" align="center" fixed="right">
+            <el-table-column label="操作" min-width="180" align="center" fixed="right">
               <template #default="{ row }">
                 <button class="action-btn" @click.stop="handleEdit(row)">编辑</button>
                 <button class="action-btn action-btn--detail" @click.stop="handleRowClick(row)"

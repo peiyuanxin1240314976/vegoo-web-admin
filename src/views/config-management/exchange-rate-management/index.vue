@@ -141,7 +141,7 @@
                     </span>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="90" align="center" fixed="right">
+                <el-table-column label="操作" width="110" align="center" fixed="right">
                   <template #default="{ row }">
                     <button
                       :class="['override-btn', row.overrideAuto && 'override-btn--active']"

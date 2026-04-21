@@ -151,7 +151,7 @@
                   </span>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" width="130" align="center" fixed="right">
+              <el-table-column label="操作" width="160" align="center" fixed="right">
                 <template #default="{ row }">
                   <div class="action-btns">
                     <button class="action-btn action-btn--edit" @click.stop="handleEdit(row)">
