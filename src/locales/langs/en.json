@@ -597,6 +597,69 @@
       ]
     }
   },
+  "realtimeDashboard": {
+    "header": {
+      "lastUpdate": "⏱ Last updated: {time}",
+      "waiting": "—",
+      "manualRefresh": "↻ Refresh",
+      "autoRefreshSettings": "⚙ Auto-refresh"
+    },
+    "banner": {
+      "autoRefreshHint": "Data refreshes every {minutes} minutes. For the latest numbers, click",
+      "manualRefresh": "Refresh",
+      "shortcut": "(shortcut)",
+      "nextAutoRefresh": "Next auto-refresh:"
+    },
+    "filters": {
+      "app": "App",
+      "allAppsPlaceholder": "All apps",
+      "searchPlaceholder": "Search category / name / short name",
+      "adPlatform": "Ad platform",
+      "allPlatformsPlaceholder": "All platforms",
+      "query": "Apply"
+    },
+    "skeleton": {
+      "bottomTitle": "Hourly spend comparison"
+    },
+    "kpi": {
+      "onlineApps": "Apps online",
+      "unitCount": "",
+      "totalApps": "{n} apps total",
+      "todaySpend": "Spend today (all apps)",
+      "wowChange": "WoW",
+      "roiAvg": "Avg. live ROI (all apps)",
+      "roiTargetLine": "Target {n}%",
+      "badgeReach": "On target",
+      "warningApps": "Apps in alert",
+      "warnOverBudget": "Over budget",
+      "warnLowActive": "Low activity"
+    },
+    "card": {
+      "todaySpend": "Spend today",
+      "todayInstalls": "Installs today",
+      "liveCpi": "Live CPI",
+      "activeSeriesLabel": "Active series",
+      "activeSeries": "{n} active",
+      "currentRoi": "Current ROI"
+    },
+    "chart": {
+      "empty": "No data",
+      "roiSeries": "ROI",
+      "bottomTitle": "Hourly spend comparison"
+    },
+    "dialog": {
+      "title": "Auto-refresh interval",
+      "minutesLabel": "Interval (minutes)",
+      "hint": "Between 1 and 60 minutes. Default is 30."
+    },
+    "composable": {
+      "filterLoadFailed": "Failed to load filters",
+      "dashboardLoadFailed": "Failed to load realtime data",
+      "appDetailLoadFailed": "Failed to load app detail",
+      "allApps": "All apps",
+      "allAdPlatforms": "All ad platforms"
+    }
+  },
   "table": {
     "form": {
       "reset": "Reset",

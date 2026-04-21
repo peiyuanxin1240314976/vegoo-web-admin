@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
 import type { CockpitMetaOptionItem, CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
@@ -61,6 +62,7 @@ function buildQueryParams(filterAppId: string, filterSourceUi: string): Realtime
  * 实时数据看板：筛选项读 `useCockpitMetaFilterStore().data`（`ensureLoaded` 拉取/复用 session）；列表/KPI/底部图来自 `fetchRealtime*`。
  */
 export function useRealtimeDashboard() {
+  const { t } = useI18n()
   const cockpitMetaFilterStore = useCockpitMetaFilterStore()
 
   const apps = ref<RealtimeAppCardRow[]>([])
@@ -88,12 +90,12 @@ export function useRealtimeDashboard() {
 
   const appSelectOptions = computed<CockpitMetaOptionItem[]>(() => {
     const rest = rawAppOptions.value.filter((o) => o.value !== 'all')
-    return [{ label: '全部应用', value: '' }, ...rest]
+    return [{ label: t('realtimeDashboard.composable.allApps'), value: '' }, ...rest]
   })
 
   const sourceSelectOptions = computed<CockpitMetaOptionItem[]>(() => {
     const rest = rawSourceOptions.value.filter((o) => o.value !== 'all')
-    return [{ label: '全部广告平台', value: '' }, ...rest]
+    return [{ label: t('realtimeDashboard.composable.allAdPlatforms'), value: '' }, ...rest]
   })
 
   async function loadFilterOptions() {
@@ -101,7 +103,7 @@ export function useRealtimeDashboard() {
     try {
       const data = await cockpitMetaFilterStore.ensureLoaded()
       if (!data) {
-        ElMessage.error('筛选项加载失败')
+        ElMessage.error(t('realtimeDashboard.composable.filterLoadFailed'))
       }
     } finally {
       filterOptionsLoading.value = false
@@ -127,7 +129,7 @@ export function useRealtimeDashboard() {
       apps.value = table.items ?? []
     } catch (e) {
       console.error(e)
-      ElMessage.error('实时数据加载失败')
+      ElMessage.error(t('realtimeDashboard.composable.dashboardLoadFailed'))
       apps.value = []
       kpiData.value = { ...EMPTY_KPI }
       hourlyComparison.value = null
@@ -150,7 +152,7 @@ export function useRealtimeDashboard() {
       return res.detail
     } catch (e) {
       console.error(e)
-      ElMessage.error('应用详情加载失败')
+      ElMessage.error(t('realtimeDashboard.composable.appDetailLoadFailed'))
       return null
     }
   }

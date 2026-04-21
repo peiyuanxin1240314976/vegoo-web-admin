@@ -597,6 +597,69 @@
       ]
     }
   },
+  "realtimeDashboard": {
+    "header": {
+      "lastUpdate": "⏱ 最后更新：{time}",
+      "waiting": "—",
+      "manualRefresh": "↻ 手动刷新",
+      "autoRefreshSettings": "⚙ 设置自动刷新"
+    },
+    "banner": {
+      "autoRefreshHint": "实时数据每 {minutes} 分钟会自动更新一次；如需最新数据请点击",
+      "manualRefresh": "手动刷新",
+      "shortcut": "《快捷》",
+      "nextAutoRefresh": "下次自动刷新："
+    },
+    "filters": {
+      "app": "应用筛选",
+      "allAppsPlaceholder": "全部应用",
+      "searchPlaceholder": "搜索类别/应用名称/应用简称",
+      "adPlatform": "广告平台",
+      "allPlatformsPlaceholder": "全部广告平台",
+      "query": "查询"
+    },
+    "skeleton": {
+      "bottomTitle": "实时小时消耗趋势对比"
+    },
+    "kpi": {
+      "onlineApps": "在线应用数",
+      "unitCount": "个",
+      "totalApps": "共 {n} 个应用",
+      "todaySpend": "全应用今日花费",
+      "wowChange": "周环比",
+      "roiAvg": "全应用实时ROI均值",
+      "roiTargetLine": "达标线 {n}%",
+      "badgeReach": "达标",
+      "warningApps": "预警应用",
+      "warnOverBudget": "超预算",
+      "warnLowActive": "低活跃"
+    },
+    "card": {
+      "todaySpend": "今日花费",
+      "todayInstalls": "今日安装",
+      "liveCpi": "实时CPI",
+      "activeSeriesLabel": "活跃系列",
+      "activeSeries": "{n} 个",
+      "currentRoi": "当前量目ROI"
+    },
+    "chart": {
+      "empty": "暂无数据",
+      "roiSeries": "ROI",
+      "bottomTitle": "实时小时消耗趋势对比"
+    },
+    "dialog": {
+      "title": "自动刷新间隔",
+      "minutesLabel": "间隔（分钟）",
+      "hint": "可设置 1–60 分钟，默认 30 分钟。"
+    },
+    "composable": {
+      "filterLoadFailed": "筛选项加载失败",
+      "dashboardLoadFailed": "实时数据加载失败",
+      "appDetailLoadFailed": "应用详情加载失败",
+      "allApps": "全部应用",
+      "allAdPlatforms": "全部广告平台"
+    }
+  },
   "table": {
     "form": {
       "reset": "重置",

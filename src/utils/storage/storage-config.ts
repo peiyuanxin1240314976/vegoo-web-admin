@@ -42,6 +42,10 @@ export class StorageConfig {
   /** 上次登录用户ID键名（用于判断是否为同一用户登录） */
   static readonly LAST_USER_ID_KEY = 'sys-last-user-id'
 
+  /** 实时数据看板：自动刷新间隔（分钟）持久化 storeId（配合 generateStorageKey） */
+  static readonly REALTIME_DASHBOARD_AUTO_REFRESH_MINUTES_STORE_ID =
+    'ug-realtime-auto-refresh-minutes'
+
   /** 跳过升级检查的版本 */
   static readonly SKIP_UPGRADE_VERSION = '1.0.0'
 

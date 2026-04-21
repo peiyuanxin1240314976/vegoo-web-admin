@@ -1,12 +1,22 @@
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+  import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import * as echarts from 'echarts'
+  import { LanguageEnum } from '@/enums/appEnum'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import AppDetailModal from './AppDetailModal.vue'
   import type { AppDetailData, RealtimeAppCardRow } from '../types'
   import { useRealtimeDashboard } from '../composables/useRealtimeDashboard'
+  import {
+    readRealtimeAutoRefreshMinutes,
+    writeRealtimeAutoRefreshMinutes,
+    REALTIME_AUTO_REFRESH_MIN_MINUTES,
+    REALTIME_AUTO_REFRESH_MAX_MINUTES
+  } from '../utils/auto-refresh-storage'
 
   defineOptions({ name: 'RealtimeDataDashboard' })
+
+  const { t, locale } = useI18n()
 
   const {
     apps,
@@ -34,19 +44,91 @@
     showModal.value = true
   }
 
-  // ===== Countdown =====
-  const nextRefreshDisplay = ref('15:10:23')
-  let countdownSecs = 50 * 60
-  let countdownTimer: ReturnType<typeof setInterval> | null = null
+  // ===== Auto refresh =====
+  const autoRefreshMinutes = ref(readRealtimeAutoRefreshMinutes())
+  const nextRefreshAt = ref(0)
+  const pauseRemainingMs = ref<number | null>(null)
+  const nextRefreshDisplay = ref('00:00')
+  let refreshTickTimer: ReturnType<typeof setInterval> | null = null
+  let autoRefreshInFlight = false
 
-  function startCountdown() {
-    countdownTimer = setInterval(() => {
-      countdownSecs--
-      if (countdownSecs < 0) countdownSecs = 50 * 60
-      const m = Math.floor(countdownSecs / 60)
-      const s = countdownSecs % 60
-      nextRefreshDisplay.value = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-    }, 1000)
+  const autoRefreshDialogVisible = ref(false)
+  const dialogMinutes = ref(autoRefreshMinutes.value)
+
+  /** 首屏骨架；结束后与原先一致初始化图表 */
+  const showContentSkeleton = ref(true)
+
+  const lastUpdatedAt = ref<Date | null>(null)
+
+  function touchLastUpdated() {
+    lastUpdatedAt.value = new Date()
+  }
+
+  const lastUpdateTimeStr = computed(() => {
+    if (!lastUpdatedAt.value) return t('realtimeDashboard.header.waiting')
+    const loc = locale.value === LanguageEnum.ZH ? 'zh-CN' : 'en-US'
+    return new Intl.DateTimeFormat(loc, {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(lastUpdatedAt.value)
+  })
+
+  function formatCountdown(totalSec: number) {
+    const m = Math.floor(totalSec / 60)
+    const s = totalSec % 60
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
+
+  function scheduleNextRefreshFromNow() {
+    nextRefreshAt.value = Date.now() + autoRefreshMinutes.value * 60 * 1000
+  }
+
+  function onVisibilityChange() {
+    if (document.hidden) {
+      pauseRemainingMs.value = Math.max(0, nextRefreshAt.value - Date.now())
+    } else if (pauseRemainingMs.value != null) {
+      nextRefreshAt.value = Date.now() + pauseRemainingMs.value
+      pauseRemainingMs.value = null
+    }
+  }
+
+  function refreshTick() {
+    if (document.hidden) {
+      const ms = pauseRemainingMs.value ?? Math.max(0, nextRefreshAt.value - Date.now())
+      const sec = Math.max(0, Math.ceil(ms / 1000))
+      nextRefreshDisplay.value = formatCountdown(sec)
+      return
+    }
+
+    const remMs = nextRefreshAt.value - Date.now()
+    const sec = Math.max(0, Math.ceil(remMs / 1000))
+    nextRefreshDisplay.value = formatCountdown(sec)
+
+    if (remMs <= 0 && !autoRefreshInFlight && !showContentSkeleton.value) {
+      autoRefreshInFlight = true
+      void applyFilters().finally(() => {
+        autoRefreshInFlight = false
+      })
+    }
+  }
+
+  function startRefreshTimer() {
+    if (refreshTickTimer) clearInterval(refreshTickTimer)
+    refreshTickTimer = setInterval(refreshTick, 1000)
+  }
+
+  function openAutoRefreshDialog() {
+    dialogMinutes.value = autoRefreshMinutes.value
+    autoRefreshDialogVisible.value = true
+  }
+
+  function confirmAutoRefreshDialog() {
+    writeRealtimeAutoRefreshMinutes(dialogMinutes.value)
+    autoRefreshMinutes.value = readRealtimeAutoRefreshMinutes()
+    scheduleNextRefreshFromNow()
+    autoRefreshDialogVisible.value = false
   }
 
   // ===== Sparkline charts =====
@@ -119,7 +201,7 @@
       bottomChart.setOption({
         backgroundColor: 'transparent',
         title: {
-          text: '暂无数据',
+          text: t('realtimeDashboard.chart.empty'),
           left: 'center',
           top: 'center',
           textStyle: { color: '#4a5a72', fontSize: 12 }
@@ -187,7 +269,7 @@
       series: [
         ...barSeries,
         {
-          name: 'ROI',
+          name: t('realtimeDashboard.chart.roiSeries'),
           type: 'line',
           yAxisIndex: 1,
           data: roiVals,
@@ -207,9 +289,6 @@
     bottomChart?.resize()
   }
 
-  /** 首屏骨架（测试体验用）；结束后与原先一致初始化图表 */
-  const showContentSkeleton = ref(true)
-
   function normalizeFilterModels() {
     if (filterAppId.value == null || filterAppId.value === undefined) filterAppId.value = ''
     if (filterSourceUi.value == null || filterSourceUi.value === undefined) {
@@ -221,11 +300,12 @@
     normalizeFilterModels()
     if (showContentSkeleton.value) return
     await loadDashboard()
-    nextTick(() => {
-      disposeSparklines()
-      initSparklines()
-      initBottomChart()
-    })
+    touchLastUpdated()
+    scheduleNextRefreshFromNow()
+    await nextTick()
+    disposeSparklines()
+    initSparklines()
+    initBottomChart()
   }
 
   async function onManualRefresh() {
@@ -236,25 +316,34 @@
     await applyFilters()
   }
 
+  watch(locale, () => {
+    void nextTick(() => {
+      initBottomChart()
+    })
+  })
+
   // ===== Lifecycle =====
   onMounted(() => {
-    startCountdown()
     window.addEventListener('resize', onResize)
+    document.addEventListener('visibilitychange', onVisibilityChange)
     void loadFilterOptions()
     window.setTimeout(() => {
       void (async () => {
         await loadDashboard()
+        touchLastUpdated()
+        scheduleNextRefreshFromNow()
         showContentSkeleton.value = false
-        nextTick(() => {
-          initSparklines()
-          initBottomChart()
-        })
+        await nextTick()
+        initSparklines()
+        initBottomChart()
+        startRefreshTimer()
       })()
     }, 520)
   })
 
   onBeforeUnmount(() => {
-    if (countdownTimer) clearInterval(countdownTimer)
+    if (refreshTickTimer) clearInterval(refreshTickTimer)
+    document.removeEventListener('visibilitychange', onVisibilityChange)
     disposeSparklines()
     disposeBottomChart()
     window.removeEventListener('resize', onResize)
@@ -280,9 +369,15 @@
         <!-- <div class="bc-subtitle">按需要调整匹配产品的最新广告投战数据</div> -->
       </div>
       <div class="header-actions">
-        <span class="last-update">⏱ 最后更新：14:40:20</span>
-        <el-button type="primary" plain round @click="onManualRefresh">↻ 手动刷新</el-button>
-        <el-button type="success" plain round @click="onManualRefresh">⚙ 设置自动刷新</el-button>
+        <span class="last-update">{{
+          t('realtimeDashboard.header.lastUpdate', { time: lastUpdateTimeStr })
+        }}</span>
+        <el-button type="primary" plain round @click="onManualRefresh">{{
+          t('realtimeDashboard.header.manualRefresh')
+        }}</el-button>
+        <el-button type="success" plain round @click="openAutoRefreshDialog">{{
+          t('realtimeDashboard.header.autoRefreshSettings')
+        }}</el-button>
       </div>
     </div>
 
@@ -290,12 +385,17 @@
     <div class="alert-banner rtd-entry-2">
       <div class="banner-left">
         <span class="banner-icon">⚠</span>
-        <span class="banner-text"> 实时数据每 30 分钟自动更新一次，如需额外需新数据请点击 </span>
-        <button class="banner-link">手动刷新</button>
-        <span class="banner-shortcut">《快捷》</span>
+        <span class="banner-text">
+          {{ t('realtimeDashboard.banner.autoRefreshHint', { minutes: autoRefreshMinutes }) }}
+        </span>
+        <button class="banner-link" @click="onManualRefresh">
+          {{ t('realtimeDashboard.banner.manualRefresh') }}
+        </button>
+        <span class="banner-shortcut">{{ t('realtimeDashboard.banner.shortcut') }}</span>
       </div>
       <div class="banner-right">
-        下次自动刷新：<span class="countdown">{{ nextRefreshDisplay }}</span>
+        {{ t('realtimeDashboard.banner.nextAutoRefresh')
+        }}<span class="countdown">{{ nextRefreshDisplay }}</span>
       </div>
     </div>
 
@@ -303,13 +403,13 @@
     <div class="filter-bar rtd-entry-3">
       <div class="rtd-filter-panel">
         <div class="filter-group rtd-filter-field">
-          <span class="filter-label">应用筛选</span>
+          <span class="filter-label">{{ t('realtimeDashboard.filters.app') }}</span>
           <AppPlatformSearchSelect
             v-model="filterAppId"
             mode="app"
             class="rtd-filter-select"
-            placeholder="全部应用"
-            search-placeholder="搜索类别/应用名称/应用简称"
+            :placeholder="t('realtimeDashboard.filters.allAppsPlaceholder')"
+            :search-placeholder="t('realtimeDashboard.filters.searchPlaceholder')"
             :setting-apps="settingApps"
             :height="38"
             :min-width="200"
@@ -319,11 +419,11 @@
           />
         </div>
         <div class="filter-group rtd-filter-field">
-          <span class="filter-label">广告平台</span>
+          <span class="filter-label">{{ t('realtimeDashboard.filters.adPlatform') }}</span>
           <ElSelect
             v-model="filterSourceUi"
             class="rtd-filter-select"
-            placeholder="全部广告平台"
+            :placeholder="t('realtimeDashboard.filters.allPlatformsPlaceholder')"
             clearable
             filterable
             :loading="filterOptionsLoading"
@@ -337,7 +437,9 @@
             />
           </ElSelect>
         </div>
-        <el-button type="primary" plain round @click="onQuery">查询</el-button>
+        <el-button type="primary" plain round @click="onQuery">{{
+          t('realtimeDashboard.filters.query')
+        }}</el-button>
       </div>
     </div>
 
@@ -376,7 +478,7 @@
       </div>
       <div class="bottom-section rtd-skel-bottom rtd-entry-6">
         <div class="bottom-header">
-          <span class="bottom-title">实时小时消耗趋势对比</span>
+          <span class="bottom-title">{{ t('realtimeDashboard.skeleton.bottomTitle') }}</span>
         </div>
         <ElSkeleton animated>
           <template #template>
@@ -389,35 +491,45 @@
       <!-- ===== Summary KPI Cards ===== -->
       <div class="kpi-summary rtd-entry-4">
         <div class="summary-card">
-          <div class="sum-label">在线应用数</div>
-          <div class="sum-value">{{ kpiData.onlineApps }} <span class="sum-unit">个</span></div>
-          <div class="sum-sub">共 {{ kpiData.totalApps }} 个应用</div>
+          <div class="sum-label">{{ t('realtimeDashboard.kpi.onlineApps') }}</div>
+          <div class="sum-value"
+            >{{ kpiData.onlineApps }}
+            <span v-if="t('realtimeDashboard.kpi.unitCount')" class="sum-unit">{{
+              t('realtimeDashboard.kpi.unitCount')
+            }}</span></div
+          >
+          <div class="sum-sub">
+            {{ t('realtimeDashboard.kpi.totalApps', { n: kpiData.totalApps }) }}
+          </div>
         </div>
         <div class="summary-card">
-          <div class="sum-label">全应用今日花费</div>
+          <div class="sum-label">{{ t('realtimeDashboard.kpi.todaySpend') }}</div>
           <div class="sum-value">{{ fmtBigMoney(kpiData.todaySpend) }}</div>
           <div class="sum-sub">
-            周环比
+            {{ t('realtimeDashboard.kpi.wowChange') }}
             <span class="sum-up">{{ kpiData.spendChange }} ↑</span>
           </div>
         </div>
         <div class="summary-card">
-          <div class="sum-label">全应用实时ROI均值</div>
+          <div class="sum-label">{{ t('realtimeDashboard.kpi.roiAvg') }}</div>
           <div class="sum-value green-text">{{ kpiData.roiAvg }}%</div>
           <div class="sum-sub">
-            达标线 {{ kpiData.roiTarget }}%
-            <span class="badge-reach">达标</span>
+            {{ t('realtimeDashboard.kpi.roiTargetLine', { n: kpiData.roiTarget }) }}
+            <span class="badge-reach">{{ t('realtimeDashboard.kpi.badgeReach') }}</span>
           </div>
         </div>
         <div class="summary-card warning-card">
-          <div class="sum-label">预警应用</div>
+          <div class="sum-label">{{ t('realtimeDashboard.kpi.warningApps') }}</div>
           <div class="sum-value orange-text"
-            >{{ kpiData.warningApps }} <span class="sum-unit">个</span></div
+            >{{ kpiData.warningApps }}
+            <span v-if="t('realtimeDashboard.kpi.unitCount')" class="sum-unit">{{
+              t('realtimeDashboard.kpi.unitCount')
+            }}</span></div
           >
           <div class="sum-sub">
-            <span class="warn-tag">超预算</span>
+            <span class="warn-tag">{{ t('realtimeDashboard.kpi.warnOverBudget') }}</span>
             <span class="mx4">/</span>
-            <span class="warn-tag">低活跃</span>
+            <span class="warn-tag">{{ t('realtimeDashboard.kpi.warnLowActive') }}</span>
           </div>
         </div>
       </div>
@@ -453,7 +565,7 @@
           <!-- Spend & Installs -->
           <div class="card-row2">
             <div class="cr-block">
-              <div class="cr-label">今日花费</div>
+              <div class="cr-label">{{ t('realtimeDashboard.card.todaySpend') }}</div>
               <div class="cr-value">
                 {{ fmtSpend(app.spend) }}
                 <span
@@ -466,7 +578,7 @@
               </div>
             </div>
             <div class="cr-block cr-right">
-              <div class="cr-label">今日安装</div>
+              <div class="cr-label">{{ t('realtimeDashboard.card.todayInstalls') }}</div>
               <div class="cr-value">{{ app.installs.toLocaleString() }}</div>
             </div>
           </div>
@@ -474,7 +586,7 @@
           <!-- CPI & Active -->
           <div class="card-row3">
             <div class="cr-block">
-              <div class="cr-label">实时CPI</div>
+              <div class="cr-label">{{ t('realtimeDashboard.card.liveCpi') }}</div>
               <div class="cr-value cpi-val">
                 ${{ app.cpi.toFixed(2) }}
                 <span v-if="app.cpiChange" class="change" :class="app.cpiUp ? 'chg-up' : 'chg-dn'"
@@ -483,8 +595,10 @@
               </div>
             </div>
             <div class="cr-block cr-right">
-              <div class="cr-label">活跃系列</div>
-              <div class="cr-value">{{ app.activeSeries }} 个</div>
+              <div class="cr-label">{{ t('realtimeDashboard.card.activeSeriesLabel') }}</div>
+              <div class="cr-value">{{
+                t('realtimeDashboard.card.activeSeries', { n: app.activeSeries })
+              }}</div>
             </div>
           </div>
 
@@ -494,7 +608,7 @@
           <!-- ROI Footer -->
           <div class="card-footer">
             <div class="roi-block">
-              <div class="roi-label">当前量目ROI</div>
+              <div class="roi-label">{{ t('realtimeDashboard.card.currentRoi') }}</div>
               <div class="roi-val" :style="{ color: app.roiColor }">{{ app.roi }}%</div>
             </div>
             <div class="action-tag" :class="`tag-${app.actionTagType}`">
@@ -507,7 +621,7 @@
       <!-- ===== Bottom Chart ===== -->
       <div class="bottom-section rtd-entry-6">
         <div class="bottom-header">
-          <span class="bottom-title">实时小时消耗趋势对比</span>
+          <span class="bottom-title">{{ t('realtimeDashboard.chart.bottomTitle') }}</span>
           <div class="legend-list">
             <span v-for="s in hourlyComparison?.series ?? []" :key="s.s_app_id" class="legend-item">
               <span class="legend-dot" :style="{ background: s.color }"></span>{{ s.name }}
@@ -517,6 +631,34 @@
         <div ref="bottomChartEl" class="bottom-chart"></div>
       </div>
     </template>
+
+    <ElDialog
+      v-model="autoRefreshDialogVisible"
+      :title="t('realtimeDashboard.dialog.title')"
+      width="420px"
+      destroy-on-close
+      align-center
+    >
+      <ElForm label-position="top">
+        <ElFormItem :label="t('realtimeDashboard.dialog.minutesLabel')">
+          <ElInputNumber
+            v-model="dialogMinutes"
+            :min="REALTIME_AUTO_REFRESH_MIN_MINUTES"
+            :max="REALTIME_AUTO_REFRESH_MAX_MINUTES"
+            :step="1"
+            controls-position="right"
+            style="width: 100%"
+          />
+        </ElFormItem>
+        <p class="rtd-auto-refresh-hint">{{ t('realtimeDashboard.dialog.hint') }}</p>
+      </ElForm>
+      <template #footer>
+        <ElButton @click="autoRefreshDialogVisible = false">{{ t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="confirmAutoRefreshDialog">{{
+          t('common.confirm')
+        }}</ElButton>
+      </template>
+    </ElDialog>
 
     <!-- ===== Detail Modal ===== -->
     <AppDetailModal v-model="showModal" :app-data="selectedApp" />
@@ -706,6 +848,13 @@
     font-size: 12px;
     color: #4a5a72;
     white-space: nowrap;
+  }
+
+  .rtd-auto-refresh-hint {
+    margin: 0 0 4px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
   }
 
   .btn-refresh {

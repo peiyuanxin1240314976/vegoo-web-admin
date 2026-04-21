@@ -201,6 +201,12 @@ export const useUserStore = defineStore(
         }
       })
 
+      localStorage.removeItem(
+        StorageConfig.generateStorageKey(
+          StorageConfig.REALTIME_DASHBOARD_AUTO_REFRESH_MINUTES_STORE_ID
+        )
+      )
+
       // 移除iframe路由缓存
       sessionStorage.removeItem('iframeRoutes')
       // 公用顶栏 meta 的 session 缓存（Pinia 内存在 resetRouterState 中清空）
