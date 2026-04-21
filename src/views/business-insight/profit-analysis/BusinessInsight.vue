@@ -3,8 +3,12 @@
   import 'element-plus/theme-chalk/el-table-v2.css'
   import 'element-plus/theme-chalk/el-virtual-list.css'
   import { computed, h, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { ElTableV2 } from 'element-plus'
   import * as echarts from 'echarts'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import type {
     ProfitCountryRow,
     ProfitKpiCard,
@@ -44,6 +48,24 @@
     loadDashboard,
     reloadDashboard
   } = useProfitAnalysisDashboard()
+  const metaStore = useCockpitMetaFilterStore()
+  const { data: cockpitMeta } = storeToRefs(metaStore)
+  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
+    const fromCockpit = cockpitMeta.value?.settingApps ?? []
+    if (fromCockpit.length) return fromCockpit
+
+    return (filterOptions.value?.appOptions ?? [])
+      .filter((opt) => opt.value && opt.value !== 'all')
+      .map((opt, index) => ({
+        sAppId: String(opt.value ?? ''),
+        nPlatform: '',
+        platformName: '',
+        sAppName: String(opt.label ?? ''),
+        sAppShortName: String(opt.label ?? ''),
+        nCategory: `fallback-${index}`,
+        categoryName: '应用'
+      }))
+  })
 
   type AppProfitFlatRow = {
     node: ProfitAppProfitTreeNode
@@ -850,6 +872,9 @@
 
   onMounted(async () => {
     window.addEventListener('resize', handleResize)
+    await metaStore.ensureLoaded().catch(() => {
+      // cockpit 元数据异常时，应用下拉回退为本页 meta appOptions
+    })
     await loadFilterMeta()
     await loadDashboard()
     await nextTick()
@@ -902,21 +927,20 @@
           <span class="bi-filter-label">{{
             $t('menus.businessInsight.profitAnalysisFilters.app')
           }}</span>
-          <ElSelect
+          <AppPlatformSearchSelect
             v-model="query.sAppId"
             class="bi-filter-select"
-            popper-class="bi-select__popper"
             :placeholder="$t('menus.businessInsight.profitAnalysisFilters.selectPlaceholder')"
             :disabled="pendingMeta"
-            filterable
+            search-placeholder="搜索类别/应用名称/应用简称"
+            mode="app"
+            :setting-apps="settingAppsForSelect"
+            :height="36"
+            :min-width="148"
+            :max-width="220"
+            input-class="bi-filter-select__input"
           >
-            <ElOption
-              v-for="opt in filterOptions.appOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+          </AppPlatformSearchSelect>
         </div>
         <div class="bi-filter-field">
           <span class="bi-filter-label">{{
