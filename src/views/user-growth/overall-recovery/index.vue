@@ -132,6 +132,7 @@
 
   const appliedFilters = ref<OverallRecoveryFilterState>({ ...filters })
   const searchToken = ref(0)
+  const hasSyncedInitialAutoApp = ref(false)
 
   const { appOptions, sourceOptions, countryOptions, settingApps } = useOverallRecoveryFilters()
   const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
@@ -179,6 +180,17 @@
     appliedFilters.value = { ...filters }
     searchToken.value += 1
   }
+
+  watch(
+    () => filters.s_app_id,
+    (appId) => {
+      // AppPlatformSearchSelect 自动选中首个应用后，首屏立即同步查询参数。
+      if (hasSyncedInitialAutoApp.value) return
+      if (!appId) return
+      hasSyncedInitialAutoApp.value = true
+      handleSearch()
+    }
+  )
 </script>
 
 <style scoped lang="scss">

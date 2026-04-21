@@ -181,6 +181,7 @@
 
   const appliedFilters = ref({ ...filters })
   const searchToken = ref(0)
+  const hasSyncedInitialAutoApp = ref(false)
 
   const dateChipText = computed(() => filters.date || '-')
 
@@ -209,6 +210,17 @@
       bootTimer = null
     }, 260)
   }
+
+  watch(
+    () => filters.appId,
+    (appId) => {
+      // AppPlatformSearchSelect 会自动选首个应用；首屏把该值同步到 appliedFilters 并触发一次查询。
+      if (hasSyncedInitialAutoApp.value) return
+      if (!appId) return
+      hasSyncedInitialAutoApp.value = true
+      handleSearch()
+    }
+  )
 
   // function onExportClick() {
   //   // 占位，保留原交互
