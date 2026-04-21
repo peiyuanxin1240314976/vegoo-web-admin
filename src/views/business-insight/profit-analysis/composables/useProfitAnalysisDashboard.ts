@@ -130,11 +130,11 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
   const sankeyNodes = ref<ProfitSankeyNode[]>([])
   const sankeyLinks = ref<ProfitSankeyLink[]>([])
 
-  const pendingKpi = ref(false)
-  const pendingApp = ref(false)
-  const pendingCountry = ref(false)
-  const pendingTrend = ref(false)
-  const pendingSankey = ref(false)
+  const pendingKpi = ref(true)
+  const pendingApp = ref(true)
+  const pendingCountry = ref(true)
+  const pendingTrend = ref(true)
+  const pendingSankey = ref(true)
 
   const dateRangePicker = computed({
     get(): [string, string] | null {

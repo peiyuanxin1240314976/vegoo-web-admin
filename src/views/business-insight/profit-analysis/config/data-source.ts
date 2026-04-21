@@ -16,12 +16,12 @@ export enum ProfitAnalysisEndpoint {
 
 // 默认全部走 Mock，便于页面开发与性能验证
 const PROFIT_ANALYSIS_MOCK: Record<ProfitAnalysisEndpoint, boolean> = {
-  [ProfitAnalysisEndpoint.MetaFilterOptions]: true,
-  [ProfitAnalysisEndpoint.OverviewKpi]: true,
-  [ProfitAnalysisEndpoint.TableAppProfit]: true,
-  [ProfitAnalysisEndpoint.OverviewCountryProfit]: true,
-  [ProfitAnalysisEndpoint.OverviewTrend30d]: true,
-  [ProfitAnalysisEndpoint.OverviewSankey]: true
+  [ProfitAnalysisEndpoint.MetaFilterOptions]: false,
+  [ProfitAnalysisEndpoint.OverviewKpi]: false,
+  [ProfitAnalysisEndpoint.TableAppProfit]: false,
+  [ProfitAnalysisEndpoint.OverviewCountryProfit]: false,
+  [ProfitAnalysisEndpoint.OverviewTrend30d]: false,
+  [ProfitAnalysisEndpoint.OverviewSankey]: false
 }
 
 export function isProfitAnalysisEndpointMock(endpoint: ProfitAnalysisEndpoint) {

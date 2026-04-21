@@ -35,7 +35,7 @@ export const MY_PERFORMANCE_USE_MOCK: Record<MyPerformanceEndpoint, boolean> = {
   [MyPerformanceEndpoint.RoiTrend]: false,
   [MyPerformanceEndpoint.SpendProgress]: false,
   [MyPerformanceEndpoint.AppDimensionTable]: false,
-  [MyPerformanceEndpoint.AppDimensionTableByDateRange]: true,
+  [MyPerformanceEndpoint.AppDimensionTableByDateRange]: false,
   [MyPerformanceEndpoint.PerformanceHistory]: false
 }
 

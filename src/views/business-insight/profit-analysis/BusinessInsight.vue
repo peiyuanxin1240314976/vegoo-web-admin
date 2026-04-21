@@ -52,6 +52,8 @@
   }
 
   const APP_PROFIT_ROW_HEIGHT = 40
+  const APP_PROFIT_LOAD_BATCH = 24
+  const APP_PROFIT_PRELOAD_ROWS = 6
   const appProfitScrollEl = ref<HTMLElement | null>(null)
   const appProfitScrollTop = ref(0)
   const appProfitViewportH = ref(520)
@@ -241,7 +243,10 @@
   }
 
   function initAppProfitLoaded() {
-    appProfitLoadedChildren.value = Math.min(20, appProfitChildrenAll.value.length)
+    appProfitLoadedChildren.value = Math.min(
+      APP_PROFIT_LOAD_BATCH,
+      appProfitChildrenAll.value.length
+    )
   }
 
   function toggleAppProfitExpanded() {
@@ -259,7 +264,7 @@
     const total = appProfitChildrenAll.value.length
     const loaded = appProfitLoadedChildren.value
     if (loaded >= total) return
-    appProfitLoadedChildren.value = Math.min(total, loaded + 10)
+    appProfitLoadedChildren.value = Math.min(total, loaded + APP_PROFIT_LOAD_BATCH)
   }
 
   const appProfitMaxScrollTop = computed(() => {
@@ -275,16 +280,20 @@
     const loaded = appProfitLoadedChildren.value
     if (loaded >= total) return
     appProfitLoadingMore.value = true
-    // 给一个很短的延迟，让“加载中”动画有机会呈现；接真接口时可替换为真实 await
-    await new Promise((r) => setTimeout(r, 300))
+    // 本地虚拟列表扩容不需要人为延迟，避免滚动触底时明显顿挫。
     maybeLoadMoreAppProfitChildren()
+    await nextTick()
     appProfitLoadingMore.value = false
   }
 
   function handleAppProfitTableScroll({ scrollTop }: { scrollTop: number }) {
     appProfitScrollTop.value = scrollTop
-    const atBottom = scrollTop >= appProfitMaxScrollTop.value - 1
-    if (atBottom) {
+    const preloadThreshold = Math.max(
+      0,
+      appProfitMaxScrollTop.value - APP_PROFIT_ROW_HEIGHT * APP_PROFIT_PRELOAD_ROWS
+    )
+    const needPreload = scrollTop >= preloadThreshold
+    if (needPreload) {
       loadMoreAppProfitChildrenIfNeeded()
     }
   }
