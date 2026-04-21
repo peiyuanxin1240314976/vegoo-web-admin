@@ -96,13 +96,13 @@
           >
             查询
           </ElButton>
-          <ElButton
+          <!-- <ElButton
             round
             class="ora-filter-action-btn ora-filter-action-btn--export"
             @click="handleExport"
           >
             导出
-          </ElButton>
+          </ElButton> -->
           <ElButton
             round
             aria-label="刷新数据"
@@ -905,21 +905,21 @@
     void fetchDashboardData()
   }
 
-  function handleExport(): void {
-    const p = buildOrderRefundDashboardParams(appliedFilters)
-    const params = new URLSearchParams({
-      appIds: p.appIds.join(','),
-      startDate: p.startDate,
-      endDate: p.endDate,
-      compareType: p.compareType,
-      countryCode: p.countryCode,
-      paymentPlatform: p.paymentPlatform,
-      format: 'xlsx'
-    })
-    // Actual export: window.open(`${(import.meta as any).env?.VITE_API_BASE_URL ?? '/api'}/refund/export?${params}`)
-    ElMessage.success('正在生成导出文件...')
-    console.log('[Export]', params.toString())
-  }
+  // function handleExport(): void {
+  //   const p = buildOrderRefundDashboardParams(appliedFilters)
+  //   const params = new URLSearchParams({
+  //     appIds: p.appIds.join(','),
+  //     startDate: p.startDate,
+  //     endDate: p.endDate,
+  //     compareType: p.compareType,
+  //     countryCode: p.countryCode,
+  //     paymentPlatform: p.paymentPlatform,
+  //     format: 'xlsx'
+  //   })
+  //   // Actual export: window.open(`${(import.meta as any).env?.VITE_API_BASE_URL ?? '/api'}/refund/export?${params}`)
+  //   ElMessage.success('正在生成导出文件...')
+  //   console.log('[Export]', params.toString())
+  // }
 
   // ════════════════════════════════════════════════════════════
   // LIFECYCLE

@@ -413,19 +413,13 @@
         </el-select>
       </div>
       <div class="tps-filters__right">
-        <el-button
-          size="small"
-          type="primary"
-          :loading="loading"
-          class="tps-btn-query"
-          @click="applyFilters"
-        >
+        <el-button size="small" type="primary" :loading="loading" plain @click="applyFilters">
           查询
         </el-button>
-        <el-button size="small" type="primary" class="btn-add">
+        <el-button size="small" type="primary" plain>
           <el-icon><Plus /></el-icon> 新增平台
         </el-button>
-        <el-button size="small" class="btn-export">
+        <el-button size="small" plain>
           <el-icon><Download /></el-icon> 导出
         </el-button>
       </div>
@@ -575,10 +569,10 @@
         <el-select v-model="filters.channel" size="small" placeholder="渠道: 全部" clearable>
           <el-option v-for="o in channelOptions" :key="o.value" :label="o.label" :value="o.value" />
         </el-select>
-        <el-button size="small" type="primary" :loading="loading" @click="applyFilters"
+        <el-button size="small" type="primary" plain :loading="loading" @click="applyFilters"
           >查询</el-button
         >
-        <el-button size="small" @click="resetFilters">重置</el-button>
+        <el-button size="small" plain @click="resetFilters">重置</el-button>
       </div>
     </div>
 

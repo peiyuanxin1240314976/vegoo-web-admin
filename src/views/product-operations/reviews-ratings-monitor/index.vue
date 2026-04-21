@@ -97,9 +97,9 @@
     '--rrm-tab-index': activeTab.value === 'summary' ? '0' : '1'
   }))
 
-  function handleExport() {
-    console.log('导出数据', appliedFilters)
-  }
+  // function handleExport() {
+  //   console.log('导出数据', appliedFilters)
+  // }
 
   const totalCount = ref(988)
 </script>
@@ -187,13 +187,13 @@
             查询
           </ElButton>
 
-          <ElButton
+          <!-- <ElButton
             round
             class="rrm-filter-action-btn rrm-filter-action-btn--export"
             @click="handleExport"
           >
             导出
-          </ElButton>
+          </ElButton> -->
         </div>
       </div>
     </div>

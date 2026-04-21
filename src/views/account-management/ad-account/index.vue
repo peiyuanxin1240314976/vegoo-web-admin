@@ -20,12 +20,12 @@
           >
             <ElIcon><Plus /></ElIcon>新建广告账户
           </ElButton>
-          <ElButton round class="account-sub-page__btn-secondary" @click="handleBatchImport">
+          <!-- <ElButton round class="account-sub-page__btn-secondary" @click="handleBatchImport">
             <ElIcon><Upload /></ElIcon>批量导入
-          </ElButton>
-          <ElButton round class="account-sub-page__btn-secondary" @click="handleExport">
+          </ElButton> -->
+          <!-- <ElButton round class="account-sub-page__btn-secondary" @click="handleExport">
             <ElIcon><Download /></ElIcon>导出
-          </ElButton>
+          </ElButton> -->
           <el-input
             v-model="searchKeyword"
             placeholder="搜索账户名称/ID..."
@@ -98,13 +98,17 @@
 
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { Plus, Upload, Download, Search } from '@element-plus/icons-vue'
+  import {
+    Plus,
+    //  Upload, Download,
+    Search
+  } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import {
     createAccount,
     disableAccount,
-    exportAccountList,
-    importAccountList,
+    // exportAccountList,
+    // importAccountList,
     rechargeAccount,
     updateAccount
   } from '@/api/config-management/account-management'
@@ -138,25 +142,25 @@
     formVisible.value = true
   }
 
-  const handleBatchImport = () => {
-    if (!AccountApiSource.importAccount) {
-      importAccountList({ items: [] })
-        .then(() => ElMessage.success('批量导入任务已提交'))
-        .catch(() => ElMessage.error('批量导入任务提交失败'))
-      return
-    }
-    ElMessage.info('批量导入功能开发中')
-  }
+  // const handleBatchImport = () => {
+  //   if (!AccountApiSource.importAccount) {
+  //     importAccountList({ items: [] })
+  //       .then(() => ElMessage.success('批量导入任务已提交'))
+  //       .catch(() => ElMessage.error('批量导入任务提交失败'))
+  //     return
+  //   }
+  //   ElMessage.info('批量导入功能开发中')
+  // }
 
-  const handleExport = () => {
-    if (!AccountApiSource.exportAccount) {
-      exportAccountList({})
-        .then(() => ElMessage.success('导出成功'))
-        .catch(() => ElMessage.error('导出失败'))
-      return
-    }
-    ElMessage.success('导出成功')
-  }
+  // const handleExport = () => {
+  //   if (!AccountApiSource.exportAccount) {
+  //     exportAccountList({})
+  //       .then(() => ElMessage.success('导出成功'))
+  //       .catch(() => ElMessage.error('导出失败'))
+  //     return
+  //   }
+  //   ElMessage.success('导出成功')
+  // }
 
   const handleEdit = (row: AdAccountItem) => {
     editData.value = { ...row }
