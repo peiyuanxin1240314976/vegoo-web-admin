@@ -25,7 +25,7 @@
     <section class="account-sub-page__list-panel credential-page__panel" aria-label="应用分配">
       <div class="account-sub-page__list-panel-fx" aria-hidden="true" />
       <div class="account-sub-page__list-panel-body credential-page__panel-body">
-        <!-- ── 统计卡片 ───────────────────────────────────────── -->
+        <!-- ── 统计卡片（不与右侧详情并排）───────────────────────── -->
         <div class="stat-cards">
           <div class="stat-card stat-card--total">
             <div class="stat-label">总分配数</div>
@@ -45,163 +45,184 @@
           </div>
         </div>
 
-        <!-- ── 筛选栏 ─────────────────────────────────────────── -->
-        <div class="app-assignment-filter-bar">
-          <el-input
-            v-model="filterForm.keyword"
-            placeholder="搜索应用名称 / 优化师..."
-            class="filter-search"
-            clearable
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-          </el-input>
-          <div class="filter-selects">
-            <el-select
-              v-model="filterForm.platform"
-              class="filter-select"
-              clearable
-              placeholder="平台：全部"
-            >
-              <el-option
-                v-for="opt in terminalPlatformFilterOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </el-select>
-            <el-select
-              v-model="filterForm.source"
-              class="filter-select"
-              clearable
-              placeholder="广告平台：全部"
-            >
-              <el-option
-                v-for="opt in sourceFilterOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </el-select>
-            <el-select
-              v-model="filterForm.optimizer"
-              class="filter-select"
-              clearable
-              placeholder="优化师：全部"
-            >
-              <el-option
-                v-for="opt in optimizerOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :value="opt.value"
-              />
-            </el-select>
-            <el-select
-              v-model="filterForm.status"
-              class="filter-select"
-              clearable
-              placeholder="状态：全部"
-            >
-              <el-option label="活跃" value="活跃" />
-              <el-option label="草稿配置" value="草稿配置" />
-              <el-option label="已归档" value="已归档" />
-            </el-select>
-          </div>
-        </div>
-
-        <!-- ── 数据表格 ───────────────────────────────────────── -->
-        <div class="table-wrapper">
-          <el-table
-            v-loading="tableLoading"
-            :data="tableRecords"
-            class="assignment-table"
-            style="width: 100%"
-            :row-class-name="rowClass"
-            @row-click="handleRowClick"
-          >
-            <el-table-column label="应用名称" min-width="20%" show-overflow-tooltip>
-              <template #default="{ row }">
-                <div class="app-name-cell">
-                  <div class="app-icon-sm" :style="{ background: row.iconColor }">
-                    {{ row.appName.charAt(0) }}
-                  </div>
-                  <span class="app-name-text">{{ row.appName }}</span>
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column label="平台" min-width="10%" align="center">
-              <template #default="{ row }">
-                <span
-                  :class="[
-                    'platform-badge',
-                    row.platform === 'Android' ? 'platform-badge--android' : 'platform-badge--ios'
-                  ]"
+        <div class="app-assignment-layout">
+          <div class="app-assignment-layout__left">
+            <!-- ── 筛选栏 ─────────────────────────────────────────── -->
+            <div class="app-assignment-filter-bar">
+              <el-input
+                v-model="filterForm.keyword"
+                placeholder="搜索应用名称 / 优化师..."
+                class="filter-search"
+                clearable
+              >
+                <template #prefix>
+                  <el-icon><Search /></el-icon>
+                </template>
+              </el-input>
+              <div class="filter-selects">
+                <el-select
+                  v-model="filterForm.platform"
+                  class="filter-select"
+                  clearable
+                  placeholder="平台：全部"
                 >
-                  {{ row.platform === 'Android' ? '安卓' : 'iOS' }}
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column
-              label="广告平台"
-              min-width="14%"
-              prop="adPlatform"
-              show-overflow-tooltip
-            />
-            <el-table-column
-              label="优化师"
-              min-width="12%"
-              prop="optimizer"
-              show-overflow-tooltip
-            />
-            <el-table-column label="绩效配置版本" min-width="15%">
-              <template #default="{ row }">
-                <span :class="['version-badge', versionBadgeClass(row)]">
-                  {{ row.configVersionLabel }}
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="assignTime" label="分配时间" min-width="13%" align="center" />
-            <el-table-column label="状态" min-width="12%" align="center">
-              <template #default="{ row }">
-                <span :class="['status-badge', statusClass(row.status)]">
-                  <span class="status-dot" />{{ row.status }}
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="120" fixed="right" align="center">
-              <template #default="{ row }">
-                <button class="edit-btn" @click.stop="handleEdit(row)">编辑</button>
-              </template>
-            </el-table-column>
-          </el-table>
+                  <el-option
+                    v-for="opt in terminalPlatformFilterOptions"
+                    :key="opt.value"
+                    :label="opt.label"
+                    :value="opt.value"
+                  />
+                </el-select>
+                <el-select
+                  v-model="filterForm.source"
+                  class="filter-select"
+                  clearable
+                  placeholder="广告平台：全部"
+                >
+                  <el-option
+                    v-for="opt in sourceFilterOptions"
+                    :key="opt.value"
+                    :label="opt.label"
+                    :value="opt.value"
+                  />
+                </el-select>
+                <el-select
+                  v-model="filterForm.optimizer"
+                  class="filter-select"
+                  clearable
+                  placeholder="优化师：全部"
+                >
+                  <el-option
+                    v-for="opt in optimizerOptions"
+                    :key="opt.value"
+                    :label="opt.label"
+                    :value="opt.value"
+                  />
+                </el-select>
+                <el-select
+                  v-model="filterForm.status"
+                  class="filter-select"
+                  clearable
+                  placeholder="状态：全部"
+                >
+                  <el-option label="活跃" value="活跃" />
+                  <el-option label="草稿配置" value="草稿配置" />
+                  <el-option label="已归档" value="已归档" />
+                </el-select>
+              </div>
+            </div>
 
-          <!-- 分页 -->
-          <div class="pagination-bar">
-            <span class="page-total">共 {{ tableTotal }} 条</span>
-            <el-select v-model="pageSize" class="page-size-select" @change="handlePageSizeChange">
-              <el-option label="每页 20 条" :value="20" />
-              <el-option label="每页 50 条" :value="50" />
-            </el-select>
-            <el-pagination
-              v-model:current-page="currentPage"
-              :page-size="pageSize"
-              :total="tableTotal"
-              layout="prev, pager, next"
-              class="app-pagination"
-            />
+            <!-- ── 数据表格（与右侧详情同高，内部滚动）────────────────── -->
+            <div class="table-wrapper">
+              <el-table
+                v-loading="tableLoading"
+                :data="tableRecords"
+                class="assignment-table"
+                style="width: 100%"
+                height="100%"
+                :row-class-name="rowClass"
+                @row-click="handleRowClick"
+              >
+                <el-table-column label="应用名称" min-width="20%" show-overflow-tooltip>
+                  <template #default="{ row }">
+                    <div class="app-name-cell">
+                      <div class="app-icon-sm" :style="{ background: row.iconColor }">
+                        {{ row.appName.charAt(0) }}
+                      </div>
+                      <span class="app-name-text">{{ row.appName }}</span>
+                    </div>
+                  </template>
+                </el-table-column>
+                <el-table-column label="平台" min-width="10%" align="center">
+                  <template #default="{ row }">
+                    <span
+                      :class="[
+                        'platform-badge',
+                        row.platform === 'Android'
+                          ? 'platform-badge--android'
+                          : 'platform-badge--ios'
+                      ]"
+                    >
+                      {{ row.platform === 'Android' ? '安卓' : 'iOS' }}
+                    </span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  label="广告平台"
+                  min-width="14%"
+                  prop="adPlatform"
+                  show-overflow-tooltip
+                />
+                <el-table-column
+                  label="优化师"
+                  min-width="12%"
+                  prop="optimizer"
+                  show-overflow-tooltip
+                />
+                <el-table-column label="绩效配置版本" min-width="15%">
+                  <template #default="{ row }">
+                    <span :class="['version-badge', versionBadgeClass(row)]">
+                      {{ row.configVersionLabel }}
+                    </span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="assignTime"
+                  label="分配时间"
+                  min-width="13%"
+                  align="center"
+                />
+                <el-table-column label="状态" min-width="12%" align="center">
+                  <template #default="{ row }">
+                    <span :class="['status-badge', statusClass(row.status)]">
+                      <span class="status-dot" />{{ row.status }}
+                    </span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="120" fixed="right" align="center">
+                  <template #default="{ row }">
+                    <button class="edit-btn" @click.stop="handleEdit(row)">编辑</button>
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <!-- 分页 -->
+              <div class="pagination-bar">
+                <span class="page-total">共 {{ tableTotal }} 条</span>
+                <el-select
+                  v-model="pageSize"
+                  class="page-size-select"
+                  @change="handlePageSizeChange"
+                >
+                  <el-option label="每页 20 条" :value="20" />
+                  <el-option label="每页 50 条" :value="50" />
+                </el-select>
+                <el-pagination
+                  v-model:current-page="currentPage"
+                  :page-size="pageSize"
+                  :total="tableTotal"
+                  layout="prev, pager, next"
+                  class="app-pagination"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="app-assignment-layout__right">
+            <div class="assignment-detail-wrapper">
+              <AssignmentDetailDrawer
+                :visible="true"
+                mode="side"
+                :assignment="currentAssignment"
+                @update:visible="handleSideDrawerClose"
+                @edit="handleEdit"
+                @view-logs="handleViewLogs"
+              />
+            </div>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- ── 右侧详情抽屉 ──────────────────────────────────── -->
-    <AssignmentDetailDrawer
-      v-model:visible="drawerVisible"
-      :assignment="currentAssignment"
-      @edit="handleEdit"
-      @view-logs="handleViewLogs"
-    />
 
     <!-- ── 新建/编辑弹窗 ─────────────────────────────────── -->
     <AssignmentFormDialog
@@ -415,7 +436,6 @@
   })
 
   // ─── 弹窗 / 抽屉状态 ────────────────────────────────────
-  const drawerVisible = ref(false)
   const formVisible = ref(false)
   const logVisible = ref(false)
   const currentAssignment = ref<AppAssignmentItem | null>(null)
@@ -446,7 +466,6 @@
   // ─── 事件处理 ────────────────────────────────────────────
   const handleRowClick = async (row: AppAssignmentItem) => {
     currentAssignment.value = row
-    drawerVisible.value = true
     try {
       const detail = await fetchAppAssignmentDetail({ id: row.id })
       if (detail) currentAssignment.value = detail
@@ -463,12 +482,15 @@
   const handleEdit = (row: AppAssignmentItem) => {
     editData.value = row
     formVisible.value = true
-    drawerVisible.value = false
   }
 
   const handleViewLogs = (row: AppAssignmentItem) => {
     logAssignment.value = row
     logVisible.value = true
+  }
+
+  const handleSideDrawerClose = () => {
+    currentAssignment.value = null
   }
 
   const handleFormSuccess = async (payload: AssignmentFormModel) => {
@@ -777,8 +799,31 @@
     flex-direction: column;
     min-height: 0;
     padding: 14px 14px 16px;
-    overflow: auto;
+    overflow: hidden;
     scrollbar-gutter: stable;
+  }
+
+  .app-assignment-layout {
+    --assignment-panel-max-h: clamp(640px, 76vh, 1000px);
+
+    display: grid;
+    flex: 1;
+    grid-template-columns: minmax(0, 1fr) 480px;
+    gap: 14px;
+    align-items: start;
+    min-height: 0;
+  }
+
+  .app-assignment-layout__left {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .app-assignment-layout__right {
+    min-width: 0;
+    min-height: 0;
   }
 
   .account-sub-page__btn-primary.el-button--primary {
@@ -972,10 +1017,21 @@
 
   // ─── 表格 ──────────────────────────────────────────────
   .table-wrapper {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    max-height: var(--assignment-panel-max-h);
     overflow: hidden;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 10px;
+  }
+
+  .assignment-detail-wrapper {
+    height: var(--assignment-panel-max-h);
+    overflow: hidden;
+    border-radius: 14px;
   }
 
   .assignment-table {
@@ -987,6 +1043,8 @@
     --el-table-header-text-color: var(--text-secondary);
     --el-table-border: 1px solid var(--border);
 
+    flex: 1;
+    min-height: 0;
     cursor: pointer;
     background: transparent !important;
 
@@ -1235,6 +1293,14 @@
   }
 
   @media (width <= 900px) {
+    .app-assignment-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .app-assignment-layout__right {
+      order: 2;
+    }
+
     .stat-cards {
       grid-template-columns: repeat(2, 1fr);
     }

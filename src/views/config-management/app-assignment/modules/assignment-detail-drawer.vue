@@ -1,13 +1,6 @@
 <template>
-  <!-- 遮罩 -->
-  <transition name="fade">
-    <div v-if="visible" class="drawer-overlay" @click="handleClose" />
-  </transition>
-
-  <!-- 抽屉 -->
-  <transition name="drawer-slide">
-    <div v-if="visible" class="assignment-detail-drawer">
-      <!-- ── 头部 ─────────────────────────────────────────── -->
+  <template v-if="isSide">
+    <div v-show="visible" class="assignment-detail-drawer assignment-detail-drawer--side">
       <div class="drawer-header">
         <div class="header-main">
           <div class="app-icon" :style="{ background: assignment?.iconColor || '#2dd4bf' }">
@@ -15,8 +8,9 @@
           </div>
           <div class="header-info">
             <div class="header-name-row">
-              <span class="app-name">{{ assignment?.appName }}</span>
+              <span class="app-name">{{ assignment?.appName || '详情' }}</span>
               <span
+                v-if="assignment?.platform"
                 :class="[
                   'platform-badge',
                   assignment?.platform === 'Android'
@@ -26,20 +20,22 @@
               >
                 {{ assignment?.platform === 'Android' ? '安卓' : 'iOS' }}
               </span>
-              <span class="ad-platform-badge">{{ assignment?.adPlatform }}</span>
+              <span v-if="assignment?.adPlatform" class="ad-platform-badge">{{
+                assignment?.adPlatform
+              }}</span>
             </div>
             <div class="optimizer-row">
               <span class="optimizer-label">优化师：</span>
-              <span class="optimizer-name">{{ assignment?.optimizer }}</span>
-              <span class="optimizer-tag">当前负责人</span>
+              <span class="optimizer-name">{{ assignment?.optimizer ?? '—' }}</span>
+              <span v-if="assignment?.optimizer" class="optimizer-tag">当前负责人</span>
             </div>
           </div>
         </div>
         <div class="header-actions">
-          <ElButton size="small" round class="edit-btn" @click="handleEdit">
+          <ElButton size="small" round class="edit-btn" :disabled="!assignment" @click="handleEdit">
             <ElIcon><EditPen /></ElIcon>编辑
           </ElButton>
-          <button class="close-btn" @click="handleClose">
+          <button class="close-btn" @click="handleClose" aria-label="关闭详情">
             <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
               <path
                 d="M2 2l12 12M14 2L2 14"
@@ -52,118 +48,291 @@
         </div>
       </div>
 
-      <!-- ── 正文 ─────────────────────────────────────────── -->
       <div class="drawer-body">
-        <!-- 绩效配置 -->
-        <section class="drawer-section">
-          <div class="section-title">绩效配置</div>
-          <div class="version-bar">
-            <span class="version-label">
-              {{ activeVersion?.version }} {{ activeVersion?.status }}
-            </span>
-            <span v-if="activeVersion?.isActive" class="active-mark">★ 当前激活</span>
-            <button class="switch-version-btn" @click="handleSwitchVersion">
-              切换版本 <el-icon><ArrowDown /></el-icon>
-            </button>
-          </div>
-          <div class="config-grid">
-            <div class="config-item">
-              <span class="config-key">评估方式</span>
-              <span class="config-val">{{ activeVersion?.evalMethod ?? '—' }}</span>
-            </div>
-            <div class="config-item">
-              <span class="config-key">评估天数</span>
-              <span class="config-val">{{
-                activeVersion ? `${activeVersion.evalDays}天` : '—'
-              }}</span>
-            </div>
-            <div class="config-item">
-              <span class="config-key">达标要求</span>
-              <span class="config-val config-val--accent">{{
-                activeVersion?.targetRate ?? '—'
-              }}</span>
-            </div>
-            <div class="config-item">
-              <span class="config-key">最低要求</span>
-              <span class="config-val">{{ activeVersion?.minRate ?? '—' }}</span>
-            </div>
-            <div class="config-item">
-              <span class="config-key">难度系数</span>
-              <span class="config-val">{{ activeVersion?.difficulty ?? '—' }}</span>
-            </div>
-            <div class="config-item">
-              <span class="config-key">最低利润</span>
-              <span class="config-val">{{ activeVersion?.minProfit ?? '—' }}</span>
-            </div>
-            <div class="config-item config-item--full">
-              <span class="config-key">附加条件</span>
-              <span class="config-val">{{ activeVersion?.extraCondition ?? '—' }}</span>
-            </div>
-          </div>
-          <button class="detail-link">查看绩效配置详情 →</button>
-        </section>
-
-        <!-- 分配信息 -->
-        <section class="drawer-section">
-          <div class="section-title">分配信息</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-key">分配时间</span>
-              <span class="info-val">{{ assignment?.assignTime ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">分配操作人</span>
-              <span class="info-val">{{ assignment?.operator ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">生效时间</span>
-              <span class="info-val">{{ assignment?.effectiveTime ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-key">状态</span>
-              <span :class="['status-badge', statusClass(assignment?.status)]">
-                {{ assignment?.status }}
+        <div v-if="!assignment" class="drawer-empty">
+          <div class="drawer-empty__title">请选择一条分配</div>
+          <div class="drawer-empty__desc">点击左侧表格任意一行，在右侧查看详情。</div>
+        </div>
+        <template v-else>
+          <!-- 绩效配置 -->
+          <section class="drawer-section">
+            <div class="section-title">绩效配置</div>
+            <div class="version-bar">
+              <span class="version-label">
+                {{ activeVersion?.version }} {{ activeVersion?.status }}
               </span>
+              <span v-if="activeVersion?.isActive" class="active-mark">★ 当前激活</span>
+              <button class="switch-version-btn" @click="handleSwitchVersion">
+                切换版本 <el-icon><ArrowDown /></el-icon>
+              </button>
             </div>
-          </div>
-          <div v-if="assignment?.note" class="note-row">
-            <span class="info-key">备注</span>
-            <span class="note-val">{{ assignment.note }}</span>
-          </div>
-        </section>
+            <div class="config-grid">
+              <div class="config-item">
+                <span class="config-key">评估方式</span>
+                <span class="config-val">{{ activeVersion?.evalMethod ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">评估天数</span>
+                <span class="config-val">{{
+                  activeVersion ? `${activeVersion.evalDays}天` : '—'
+                }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">达标要求</span>
+                <span class="config-val config-val--accent">{{
+                  activeVersion?.targetRate ?? '—'
+                }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">最低要求</span>
+                <span class="config-val">{{ activeVersion?.minRate ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">难度系数</span>
+                <span class="config-val">{{ activeVersion?.difficulty ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">最低利润</span>
+                <span class="config-val">{{ activeVersion?.minProfit ?? '—' }}</span>
+              </div>
+              <div class="config-item config-item--full">
+                <span class="config-key">附加条件</span>
+                <span class="config-val">{{ activeVersion?.extraCondition ?? '—' }}</span>
+              </div>
+            </div>
+            <button class="detail-link">查看绩效配置详情 →</button>
+          </section>
 
-        <!-- 变更记录（最近3条） -->
-        <section class="drawer-section drawer-section--last">
-          <div class="section-title">变更记录</div>
-          <div class="change-timeline">
-            <div
-              v-for="(log, index) in recentLogs"
-              :key="log.id"
-              :class="[
-                'timeline-item',
-                index === recentLogs.length - 1 ? 'timeline-item--last' : ''
-              ]"
-            >
-              <div class="timeline-dot">
-                <span :class="['dot', typeColorClass(log.type)]" />
-                <span v-if="index < recentLogs.length - 1" class="dot-line" />
+          <!-- 分配信息 -->
+          <section class="drawer-section">
+            <div class="section-title">分配信息</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-key">分配时间</span>
+                <span class="info-val">{{ assignment?.assignTime ?? '—' }}</span>
               </div>
-              <div class="timeline-content">
-                <div class="timeline-header">
-                  <span class="timeline-time">{{ log.time }}</span>
-                  <span class="timeline-operator">{{ log.operator }}</span>
-                  <span :class="['timeline-type', typeColorClass(log.type)]">{{ log.type }}</span>
-                </div>
-                <div class="timeline-body">{{ log.content }}</div>
+              <div class="info-item">
+                <span class="info-key">分配操作人</span>
+                <span class="info-val">{{ assignment?.operator ?? '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">生效时间</span>
+                <span class="info-val">{{ assignment?.effectiveTime ?? '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">状态</span>
+                <span :class="['status-badge', statusClass(assignment?.status)]">
+                  {{ assignment?.status }}
+                </span>
               </div>
             </div>
-            <div v-if="!recentLogs.length" class="timeline-empty">暂无变更记录</div>
-          </div>
-          <button class="view-all-btn" @click="handleViewAllLogs">查看全部记录</button>
-        </section>
+            <div v-if="assignment?.note" class="note-row">
+              <span class="info-key">备注</span>
+              <span class="note-val">{{ assignment.note }}</span>
+            </div>
+          </section>
+
+          <!-- 变更记录（最近3条） -->
+          <section class="drawer-section drawer-section--last">
+            <div class="section-title">变更记录</div>
+            <div class="change-timeline">
+              <div
+                v-for="(log, index) in recentLogs"
+                :key="log.id"
+                :class="[
+                  'timeline-item',
+                  index === recentLogs.length - 1 ? 'timeline-item--last' : ''
+                ]"
+              >
+                <div class="timeline-dot">
+                  <span :class="['dot', typeColorClass(log.type)]" />
+                  <span v-if="index < recentLogs.length - 1" class="dot-line" />
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-header">
+                    <span class="timeline-time">{{ log.time }}</span>
+                    <span class="timeline-operator">{{ log.operator }}</span>
+                    <span :class="['timeline-type', typeColorClass(log.type)]">{{ log.type }}</span>
+                  </div>
+                  <div class="timeline-body">{{ log.content }}</div>
+                </div>
+              </div>
+              <div v-if="!recentLogs.length" class="timeline-empty">暂无变更记录</div>
+            </div>
+            <button class="view-all-btn" @click="handleViewAllLogs">查看全部记录</button>
+          </section>
+        </template>
       </div>
     </div>
-  </transition>
+  </template>
+
+  <template v-else>
+    <!-- 遮罩 -->
+    <transition name="fade">
+      <div v-if="visible" class="drawer-overlay" @click="handleClose" />
+    </transition>
+
+    <!-- 抽屉 -->
+    <transition name="drawer-slide">
+      <div v-if="visible" class="assignment-detail-drawer">
+        <!-- ── 头部 ─────────────────────────────────────────── -->
+        <div class="drawer-header">
+          <div class="header-main">
+            <div class="app-icon" :style="{ background: assignment?.iconColor || '#2dd4bf' }">
+              {{ assignment?.appName?.charAt(0) || 'A' }}
+            </div>
+            <div class="header-info">
+              <div class="header-name-row">
+                <span class="app-name">{{ assignment?.appName }}</span>
+                <span
+                  :class="[
+                    'platform-badge',
+                    assignment?.platform === 'Android'
+                      ? 'platform-badge--android'
+                      : 'platform-badge--ios'
+                  ]"
+                >
+                  {{ assignment?.platform === 'Android' ? '安卓' : 'iOS' }}
+                </span>
+                <span class="ad-platform-badge">{{ assignment?.adPlatform }}</span>
+              </div>
+              <div class="optimizer-row">
+                <span class="optimizer-label">优化师：</span>
+                <span class="optimizer-name">{{ assignment?.optimizer }}</span>
+                <span class="optimizer-tag">当前负责人</span>
+              </div>
+            </div>
+          </div>
+          <div class="header-actions">
+            <ElButton size="small" round class="edit-btn" @click="handleEdit">
+              <ElIcon><EditPen /></ElIcon>编辑
+            </ElButton>
+            <button class="close-btn" @click="handleClose">
+              <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
+                <path
+                  d="M2 2l12 12M14 2L2 14"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── 正文 ─────────────────────────────────────────── -->
+        <div class="drawer-body">
+          <!-- 绩效配置 -->
+          <section class="drawer-section">
+            <div class="section-title">绩效配置</div>
+            <div class="version-bar">
+              <span class="version-label">
+                {{ activeVersion?.version }} {{ activeVersion?.status }}
+              </span>
+              <span v-if="activeVersion?.isActive" class="active-mark">★ 当前激活</span>
+              <button class="switch-version-btn" @click="handleSwitchVersion">
+                切换版本 <el-icon><ArrowDown /></el-icon>
+              </button>
+            </div>
+            <div class="config-grid">
+              <div class="config-item">
+                <span class="config-key">评估方式</span>
+                <span class="config-val">{{ activeVersion?.evalMethod ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">评估天数</span>
+                <span class="config-val">{{
+                  activeVersion ? `${activeVersion.evalDays}天` : '—'
+                }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">达标要求</span>
+                <span class="config-val config-val--accent">{{
+                  activeVersion?.targetRate ?? '—'
+                }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">最低要求</span>
+                <span class="config-val">{{ activeVersion?.minRate ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">难度系数</span>
+                <span class="config-val">{{ activeVersion?.difficulty ?? '—' }}</span>
+              </div>
+              <div class="config-item">
+                <span class="config-key">最低利润</span>
+                <span class="config-val">{{ activeVersion?.minProfit ?? '—' }}</span>
+              </div>
+              <div class="config-item config-item--full">
+                <span class="config-key">附加条件</span>
+                <span class="config-val">{{ activeVersion?.extraCondition ?? '—' }}</span>
+              </div>
+            </div>
+            <button class="detail-link">查看绩效配置详情 →</button>
+          </section>
+
+          <!-- 分配信息 -->
+          <section class="drawer-section">
+            <div class="section-title">分配信息</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-key">分配时间</span>
+                <span class="info-val">{{ assignment?.assignTime ?? '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">分配操作人</span>
+                <span class="info-val">{{ assignment?.operator ?? '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">生效时间</span>
+                <span class="info-val">{{ assignment?.effectiveTime ?? '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-key">状态</span>
+                <span :class="['status-badge', statusClass(assignment?.status)]">
+                  {{ assignment?.status }}
+                </span>
+              </div>
+            </div>
+            <div v-if="assignment?.note" class="note-row">
+              <span class="info-key">备注</span>
+              <span class="note-val">{{ assignment.note }}</span>
+            </div>
+          </section>
+
+          <!-- 变更记录（最近3条） -->
+          <section class="drawer-section drawer-section--last">
+            <div class="section-title">变更记录</div>
+            <div class="change-timeline">
+              <div
+                v-for="(log, index) in recentLogs"
+                :key="log.id"
+                :class="[
+                  'timeline-item',
+                  index === recentLogs.length - 1 ? 'timeline-item--last' : ''
+                ]"
+              >
+                <div class="timeline-dot">
+                  <span :class="['dot', typeColorClass(log.type)]" />
+                  <span v-if="index < recentLogs.length - 1" class="dot-line" />
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-header">
+                    <span class="timeline-time">{{ log.time }}</span>
+                    <span class="timeline-operator">{{ log.operator }}</span>
+                    <span :class="['timeline-type', typeColorClass(log.type)]">{{ log.type }}</span>
+                  </div>
+                  <div class="timeline-body">{{ log.content }}</div>
+                </div>
+              </div>
+              <div v-if="!recentLogs.length" class="timeline-empty">暂无变更记录</div>
+            </div>
+            <button class="view-all-btn" @click="handleViewAllLogs">查看全部记录</button>
+          </section>
+        </div>
+      </div>
+    </transition>
+  </template>
 </template>
 
 <script setup lang="ts">
@@ -176,6 +345,7 @@
   const props = defineProps<{
     visible: boolean
     assignment: AppAssignmentItem | null
+    mode?: 'overlay' | 'side'
   }>()
 
   const emit = defineEmits<{
@@ -183,6 +353,8 @@
     edit: [data: AppAssignmentItem]
     viewLogs: [data: AppAssignmentItem]
   }>()
+
+  const isSide = computed(() => props.mode === 'side')
 
   const activeVersion = computed(
     () =>
@@ -260,6 +432,42 @@
     background: var(--bg-drawer);
     border-left: 1px solid var(--border);
     box-shadow: -12px 0 48px rgb(0 0 0 / 50%);
+  }
+
+  .assignment-detail-drawer--side {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    box-shadow:
+      0 18px 48px rgb(0 0 0 / 16%),
+      0 0 0 1px rgb(255 255 255 / 6%),
+      inset 0 1px 0 rgb(255 255 255 / 6%);
+  }
+
+  .drawer-empty {
+    display: grid;
+    gap: 6px;
+    place-content: center;
+    height: 100%;
+    padding: 18px;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  .drawer-empty__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .drawer-empty__desc {
+    font-size: 12px;
+    color: var(--text-muted);
   }
 
   // ─── 头部 ──────────────────────────────────────────────
