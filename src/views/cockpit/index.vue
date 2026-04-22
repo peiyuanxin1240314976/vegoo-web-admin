@@ -411,6 +411,64 @@
     }
   }
 
+  .cockpit-row-2 :deep(.channel-roi-panel) {
+    min-height: 100%;
+  }
+
+  .cockpit-row-2 :deep(.channel-roi-panel .panel-header) {
+    padding: 10px 14px;
+  }
+
+  .cockpit-row-2 :deep(.channel-roi-panel .panel-body) {
+    padding: 8px 10px 10px;
+  }
+
+  .cockpit-row-2 :deep(.channel-roi-panel .roi-table) {
+    font-size: 12px;
+  }
+
+  .cockpit-row-2 :deep(.cockpit-map-kpi .cockpit-map-panel > .el-card__header) {
+    padding: 10px 14px;
+  }
+
+  .cockpit-row-2 :deep(.cockpit-map-kpi .map-wrap) {
+    min-height: 0;
+  }
+
+  .cockpit-row-2 :deep(.cockpit-map-kpi .map-chart) {
+    height: clamp(300px, 46vh, 460px);
+  }
+
+  .cockpit-row-2 :deep(.cockpit-map-kpi .map-empty) {
+    min-height: clamp(300px, 43vh, 440px);
+  }
+
+  .cockpit-row-2 :deep(.cockpit-top3-panels) {
+    gap: 10px;
+  }
+
+  .cockpit-row-2 :deep(.top3-module__header) {
+    padding: 10px 12px;
+  }
+
+  .cockpit-row-2 :deep(.top3-module__list) {
+    padding: 6px 10px 10px;
+  }
+
+  .cockpit-row-2 :deep(.top3-row) {
+    min-height: 32px;
+    padding: 4px 0;
+  }
+
+  .cockpit-row-2 :deep(.top3-row__app-icon) {
+    width: 24px;
+    height: 24px;
+  }
+
+  .cockpit-row-2 :deep(.top3-row__medal) {
+    font-size: 20px;
+  }
+
   .cockpit-row-3-stack {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
