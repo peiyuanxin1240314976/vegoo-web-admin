@@ -208,8 +208,9 @@
       size="400px"
       direction="rtl"
       class="pc-detail-drawer"
-      :modal="false"
-      :append-to-body="false"
+      append-to-body
+      :close-on-click-modal="true"
+      :close-on-press-escape="true"
       @close="drawerItem = null"
     >
       <div v-if="drawerItem" class="drawer-inner">
@@ -236,7 +237,7 @@
             <ElIcon class="drawer-icon-btn" title="编辑" @click="handleEdit(drawerItem)"
               ><Edit
             /></ElIcon>
-            <ElIcon class="drawer-icon-btn" title="关闭" @click="drawerVisible = false"
+            <ElIcon class="drawer-icon-btn" title="关闭" @click="closeDetailDrawer"
               ><Close
             /></ElIcon>
           </div>
@@ -396,7 +397,7 @@
             type="primary"
             round
             class="account-sub-page__btn-primary drawer-footer__btn"
-            @click="createVisible = true"
+            @click="openCreateDialogFromDrawer"
           >
             <ElIcon><Plus /></ElIcon>新建版本
           </ElButton>
@@ -406,6 +407,13 @@
             @click="handleExport"
           >
             <ElIcon><Download /></ElIcon>导出
+          </ElButton>
+          <ElButton
+            round
+            class="account-sub-page__btn-secondary drawer-footer__btn"
+            @click="closeDetailDrawer"
+          >
+            <ElIcon><Close /></ElIcon>关闭
           </ElButton>
         </div>
       </div>
@@ -539,6 +547,10 @@
   const getRowClass = ({ row }: { row: PerfConfigItem }) =>
     drawerItem.value?.id === row.id ? 'row-selected' : ''
 
+  const closeDetailDrawer = () => {
+    drawerVisible.value = false
+  }
+
   const handleRowClick = (row: PerfConfigItem) => {
     if (drawerItem.value?.id === row.id) {
       drawerVisible.value = false
@@ -550,6 +562,11 @@
 
   // ─── 新建 ───────────────────────────────────────────────
   const createVisible = ref(false)
+
+  function openCreateDialogFromDrawer() {
+    createVisible.value = true
+    closeDetailDrawer()
+  }
 
   const handleCreateSuccess = (item: PerfConfigItem) => {
     if (!PerfConfigApiSource[PerfConfigEndpoint.Create]) {
@@ -1575,6 +1592,7 @@
   .drawer-footer {
     display: flex;
     flex-shrink: 0;
+    flex-wrap: wrap;
     gap: 8px;
     padding: 14px 18px;
     border-top: 1px solid var(--border);
