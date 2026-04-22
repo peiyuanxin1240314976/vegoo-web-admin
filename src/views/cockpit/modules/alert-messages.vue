@@ -86,7 +86,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 
   .alert-block {
@@ -94,8 +94,8 @@
     flex: 1;
     align-items: center;
     min-width: 0;
-    min-height: 48px;
-    padding: 12px 16px;
+    min-height: 42px;
+    padding: 8px 12px;
     border-radius: 10px;
   }
 

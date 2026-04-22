@@ -1029,14 +1029,14 @@
     }
   }
 
-  html.dark .map-panel-title {
-    @include ap-title-gradient;
-  }
+  // html.dark .map-panel-title {
+  //   @include ap-title-gradient;
+  // }
 
   .map-panel-title {
     font-size: 14px;
     font-weight: 700;
-    color: #eef2f7;
+    color: #e0e0e0;
     text-shadow:
       0 0 12px rgb(125 211 252 / 18%),
       0 0 22px rgb(34 211 238 / 10%);
@@ -1180,19 +1180,24 @@
       pointer-events: none;
       content: '';
       background:
-        radial-gradient(circle at 76% 56%, rgb(255 255 255 / 4%), transparent 18%),
-        radial-gradient(circle at 28% 78%, rgb(77 183 255 / 4%), transparent 16%),
-        radial-gradient(circle at 50% 30%, rgb(255 255 255 / 4%), transparent 20%),
-        linear-gradient(rgb(148 163 184 / 6.5%) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(148 163 184 / 6.5%) 1px, transparent 1px);
+        radial-gradient(circle at 76% 56%, rgb(255 255 255 / 2.8%), transparent 18%),
+        radial-gradient(circle at 28% 78%, rgb(77 183 255 / 2.8%), transparent 16%),
+        radial-gradient(circle at 50% 30%, rgb(255 255 255 / 2.8%), transparent 20%),
+        linear-gradient(rgb(148 163 184 / 7.5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(148 163 184 / 7.5%) 1px, transparent 1px);
       background-size:
         auto,
         auto,
         auto,
         44px 44px,
         44px 44px;
-      opacity: 0.72;
-      mask-image: radial-gradient(circle at center, #fff 38%, transparent 88%);
+      opacity: 0.9;
+      mask-image: radial-gradient(
+        circle at center,
+        #fff 34%,
+        rgb(255 255 255 / 92%) 62%,
+        transparent 90%
+      );
     }
 
     &::after {
@@ -1219,46 +1224,6 @@
   .map-wrap > * {
     position: relative;
     z-index: 2;
-  }
-
-  .map-wrap > .map-chart::before {
-    position: absolute;
-    inset: 12% auto auto 50%;
-    z-index: 0;
-    width: min(56%, 420px);
-    aspect-ratio: 1;
-    pointer-events: none;
-    content: '';
-    background:
-      radial-gradient(
-        circle at 50% 50%,
-        rgb(255 255 255 / 5%) 0%,
-        rgb(255 255 255 / 1.4%) 28%,
-        transparent 64%
-      ),
-      radial-gradient(
-        circle at 50% 50%,
-        transparent 0 58%,
-        rgb(125 211 252 / 14%) 62%,
-        transparent 68%
-      ),
-      repeating-radial-gradient(
-        circle at 50% 50%,
-        rgb(255 255 255 / 5.2%) 0 1px,
-        transparent 1px 18px
-      ),
-      repeating-linear-gradient(90deg, rgb(148 163 184 / 5.6%) 0 1px, transparent 1px 30px),
-      repeating-linear-gradient(0deg, rgb(148 163 184 / 4.8%) 0 1px, transparent 1px 24px);
-    filter: blur(9px);
-    border-radius: 50%;
-    opacity: 0.36;
-    mask-image: radial-gradient(
-      circle at center,
-      #fff 0%,
-      rgb(255 255 255 / 85%) 52%,
-      transparent 76%
-    );
-    transform: translateX(-50%);
   }
 
   .map-wrap > .map-chart::after {

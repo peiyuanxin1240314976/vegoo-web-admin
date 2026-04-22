@@ -220,7 +220,7 @@
   .cockpit-page {
     position: relative;
     min-width: 0;
-    padding: 20px 24px 28px;
+    padding: 10px;
 
     &::before {
       position: absolute;
@@ -336,22 +336,22 @@
   }
 
   .cockpit-page__section--header {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
   }
 
   .cockpit-skeleton-card-list {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
   }
 
   .cockpit-skeleton-block,
   .cockpit-skeleton-panel {
     display: grid;
     gap: 10px;
-    padding: 12px;
-    margin-bottom: 16px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
     background: #131d2f;
     border: 1px solid rgb(148 163 184 / 25%);
     border-radius: 10px;

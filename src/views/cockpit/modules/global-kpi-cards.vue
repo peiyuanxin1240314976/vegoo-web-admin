@@ -161,7 +161,7 @@
   @use '../../user-growth/ad-performance/styles/ap-card-fx' as *;
 
   .cockpit-kpi-row {
-    margin-bottom: 16px;
+    margin-bottom: 8px;
 
     /* 同一行内多列等高，避免单卡增高后其余卡底部留白不协调 */
     :deep(.el-col) {
@@ -191,8 +191,8 @@
     flex: 1;
     flex-direction: column;
     width: 100%;
-    min-height: 188px;
-    padding: 16px;
+    min-height: 164px;
+    padding: 5px 10px;
     overflow: hidden;
     cursor: default;
     isolation: isolate;
@@ -257,7 +257,7 @@
       display: inline-flex;
       gap: 8px;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       font-size: 14px;
       font-weight: 700;
       opacity: 0.9;
@@ -295,13 +295,13 @@
 
     .kpi-value-row {
       position: relative;
-      min-height: 28px;
-      margin-bottom: 4px;
+      min-height: 24px;
+      margin-bottom: 2px;
     }
 
     .kpi-value {
-      padding-right: 8px;
-      font-size: 20px;
+      padding: 8px 8px 0 0;
+      font-size: 18px;
       font-weight: 600;
       line-height: 1.3;
     }
@@ -372,7 +372,7 @@
     }
 
     .kpi-detail {
-      margin-bottom: 2px;
+      margin-bottom: 0;
       font-size: 12px;
       opacity: 0.85;
     }
@@ -422,7 +422,7 @@
 
     .kpi-progress {
       flex-shrink: 0;
-      margin: 6px 0;
+      margin: 4px 0;
     }
 
     .kpi-compare {
@@ -446,9 +446,9 @@
     .kpi-mini-chart {
       flex-shrink: 0;
       width: 100%;
-      height: 48px;
-      padding: 6px 0;
-      margin: 8px 0;
+      height: 36px;
+      padding: 4px 0;
+      margin: 4px 0;
       // background: rgb(0 0 0 / 6%);
       border-radius: 8px;
 
