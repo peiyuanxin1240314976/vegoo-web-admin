@@ -384,9 +384,23 @@ export function fetchMyPerformanceSpendProgress(body: MyPerformanceQueryBody) {
 }
 
 /** 契约 09-app-dimension-table-by-date-range — POST */
-export function fetchMyPerformanceAppDimensionTable(body: MyPerformanceAppDimensionTableQueryBody) {
-  if (isMyPerformanceEndpointMock(MyPerformanceEndpoint.AppDimensionTableByDateRange)) {
+export function fetchMyPerformanceAppDimensionTable(body: MyPerformanceQueryBody) {
+  if (isMyPerformanceEndpointMock(MyPerformanceEndpoint.AppDimensionTable)) {
     return myPerformanceMock.mockFetchMyPerformanceAppDimensionTable(body)
+  }
+  return request
+    .post({
+      url: `${MY_PERFORMANCE_BASE}/app-dimension-table`,
+      data: bodyForRemote(body)
+    })
+    .then((raw) => unwrapMyPerformancePayload<MyPerformanceAppDimensionTableResponse>(raw))
+}
+
+export function fetchMyPerformanceAppDimensionTableByDateRange(
+  body: MyPerformanceAppDimensionTableQueryBody
+) {
+  if (isMyPerformanceEndpointMock(MyPerformanceEndpoint.AppDimensionTableByDateRange)) {
+    return myPerformanceMock.mockFetchMyPerformanceAppDimensionTableByDateRange(body)
   }
   return request
     .post({

@@ -12,7 +12,7 @@
         :left-secondary="leftSecondaryText"
         left-tertiary="时区：PST (UTC-8)"
         left-quaternary="货币：USD"
-        left-hint="注意：一周内及回收周期内的数据会回更，此页面数据仅供参考，并非最终绩效结果；每个月度前3天仍然展示上个月度的数据。"
+        left-hint="注意：一周内及回收周期内的数据会持续回流，当前页面数据仅供参考，并非最终绩效结果；每个月度前 3 天仍可能展示上月数据。"
         :person-label="$t('myPerformance.header.person')"
         :export-label="$t('myPerformance.header.export')"
         :quarter-label="$t('myPerformance.header.quarter')"
@@ -35,7 +35,7 @@
     <ElRow :gutter="16" class="data-row">
       <ElCol :xs="24" :lg="7" class="left-col">
         <div class="left-stack">
-          <MyPerformancePanelKpiAchievement
+          <!-- <MyPerformancePanelKpiAchievement
             :loading="cardLoading"
             :title="$t('myPerformance.panels.kpiAchievement')"
             :achievement="data.kpiAchievement"
@@ -44,7 +44,7 @@
             :col-actual="$t('myPerformance.kpiTable.col.actual')"
             :col-rate="$t('myPerformance.kpiTable.col.rate')"
             :col-score="$t('myPerformance.kpiTable.col.score')"
-          />
+          /> -->
           <MyPerformancePanelRoiTrend
             :loading="cardLoading"
             :title="data.roiTrend.title"
@@ -64,30 +64,69 @@
           />
         </div>
       </ElCol>
+
       <ElCol :xs="24" :lg="17" class="right-col">
         <div class="right-wrap">
-          <MyPerformancePanelAppDimensionTable
+          <MyPerformancePanelAppHierarchyTable
+            v-if="activeAppTable === 'period'"
             :loading="cardLoading"
-            title="按应用绩效评估 | 近7天绩效评估"
-            :list="data.appTable.list"
-            :summary="data.appTable.summary"
-            :col-app="$t('myPerformance.table.col.app')"
-            :col-platform="$t('myPerformance.table.col.platform')"
-            :col-source="$t('myPerformance.table.col.source')"
-            :col-window="$t('myPerformance.table.col.window')"
-            :col-reach-rate="$t('myPerformance.table.col.reachRate')"
-            :col-min-rate="$t('myPerformance.table.col.minRate')"
-            :col-deviation-coef="$t('myPerformance.table.col.deviationCoef')"
-            :col-min-profit="$t('myPerformance.table.col.minProfit')"
-            :col-ad-spend="$t('myPerformance.table.col.adSpend')"
-            :col-calculated-spend="$t('myPerformance.table.col.calculatedSpend')"
-            :col-roi="$t('myPerformance.table.col.roi')"
-            :col-commission-spend="$t('myPerformance.table.col.commissionSpend')"
-            :col-estimated-profit="$t('myPerformance.table.col.estimatedProfit')"
-            :col-cpa="$t('myPerformance.table.col.cpa')"
-            :col-score="$t('myPerformance.table.col.score')"
-            :col-status="$t('myPerformance.table.col.status')"
-          />
+            :list="data.appDimensionTable.list"
+            :summary="data.appDimensionTable.summary"
+          >
+            <template #prepend>
+              <div class="table-switch-block">
+                <div
+                  class="table-switch"
+                  role="tablist"
+                  :aria-label="$t('myPerformance.tableSwitch.ariaLabel')"
+                >
+                  <button
+                    v-for="item in tableSwitches"
+                    :key="item.key"
+                    type="button"
+                    class="table-switch__item"
+                    :class="{ 'is-active': activeAppTable === item.key }"
+                    :aria-selected="activeAppTable === item.key"
+                    @click="activeAppTable = item.key"
+                  >
+                    {{ item.label }}
+                  </button>
+                </div>
+                <div class="table-switch__hint">{{ appTableHintText }}</div>
+              </div>
+            </template>
+          </MyPerformancePanelAppHierarchyTable>
+
+          <MyPerformancePanelAppDimensionTable
+            v-else
+            :loading="cardLoading"
+            :list="data.appDateRangeTable.list"
+            :summary="data.appDateRangeTable.summary"
+            header-hint=""
+          >
+            <template #prepend>
+              <div class="table-switch-block">
+                <div
+                  class="table-switch"
+                  role="tablist"
+                  :aria-label="$t('myPerformance.tableSwitch.ariaLabel')"
+                >
+                  <button
+                    v-for="item in tableSwitches"
+                    :key="item.key"
+                    type="button"
+                    class="table-switch__item"
+                    :class="{ 'is-active': activeAppTable === item.key }"
+                    :aria-selected="activeAppTable === item.key"
+                    @click="activeAppTable = item.key"
+                  >
+                    {{ item.label }}
+                  </button>
+                </div>
+                <div class="table-switch__hint">{{ appTableHintText }}</div>
+              </div>
+            </template>
+          </MyPerformancePanelAppDimensionTable>
 
           <div class="table-hint">
             <div class="table-hint__title">{{ $t('myPerformance.tableHint.title') }}</div>
@@ -105,12 +144,13 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
+  import { computed, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import MyPerformanceHeader from './components/my-performance-header.vue'
   import MyPerformanceTopCard from './components/my-performance-top-card.vue'
-  import MyPerformancePanelKpiAchievement from './components/panel-kpi-achievement.vue'
+  import MyPerformancePanelAppHierarchyTable from './components/panel-app-hierarchy-table.vue'
+  // import MyPerformancePanelKpiAchievement from './components/panel-kpi-achievement.vue'
   import MyPerformancePanelRoiTrend from './components/panel-roi-trend.vue'
   import MyPerformancePanelAppDimensionTable from './components/panel-app-dimension-table.vue'
   import MyPerformancePanelSpendProgress from './components/panel-spend-progress.vue'
@@ -120,6 +160,7 @@
   defineOptions({ name: 'MyPerformance' })
 
   const { t } = useI18n()
+  const activeAppTable = ref<'period' | 'recent'>('period')
 
   const {
     data,
@@ -142,12 +183,23 @@
   const leftPrimaryText = computed(() => `当前日期：${currentDateText.value}`)
   const leftSecondaryText = computed(() => `计算日期：${computeRangeText.value}`)
 
+  const tableSwitches = computed(() => [
+    { key: 'period' as const, label: t('myPerformance.tableSwitch.period') },
+    { key: 'recent' as const, label: t('myPerformance.tableSwitch.recent') }
+  ])
+  const appTableHintText = computed(() => {
+    const end = getAppNow()
+    const start = cloneAppDate(end)
+    start.setDate(start.getDate() - 7)
+    return `计算周期：${formatYYYYMMDD(start)} 至 ${formatYYYYMMDD(end)} | 应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算`
+  })
+
   function parseSpendTotalPair(value: string): { spend: number; target: number } | null {
     const parts = String(value).split(/\s*\/\s*/)
     if (parts.length !== 2) return null
-    const toNum = (s: string) => {
-      const n = Number(String(s).replace(/[$,\s]/g, ''))
-      return Number.isFinite(n) ? n : NaN
+    const toNum = (text: string) => {
+      const num = Number(String(text).replace(/[$,\s]/g, ''))
+      return Number.isFinite(num) ? num : NaN
     }
     const spend = toNum(parts[0])
     const target = toNum(parts[1])
@@ -157,7 +209,7 @@
 
   const spendAchievementHint = computed(() => {
     const rows = data.value.spendProgress?.list ?? []
-    const totalRow = rows.find((x) => x.label.includes('总消耗')) ?? rows[0]
+    const totalRow = rows.find((item) => item.label.includes('总消耗')) ?? rows[0]
     if (!totalRow) return ''
     const pair = parseSpendTotalPair(totalRow.value)
     if (!pair) return ''
@@ -339,6 +391,105 @@
     overflow: visible;
   }
 
+  .table-switch-block {
+    margin-bottom: 8px;
+  }
+
+  .table-switch {
+    display: inline-flex;
+    gap: 0;
+    align-items: center;
+    padding: 2px 4px 6px;
+    margin-bottom: 4px;
+    background: linear-gradient(180deg, rgb(7 13 25 / 78%) 0%, rgb(7 13 25 / 24%) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgb(255 255 255 / 5%);
+    border-radius: 12px;
+    box-shadow:
+      0 10px 26px rgb(0 0 0 / 22%),
+      inset 0 1px 0 rgb(255 255 255 / 6%);
+  }
+
+  .table-switch__item {
+    position: relative;
+    padding: 4px 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: rgb(203 213 225 / 66%);
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    transition:
+      color 180ms ease,
+      text-shadow 180ms ease,
+      opacity 180ms ease;
+  }
+
+  .table-switch__item + .table-switch__item {
+    padding-left: 12px;
+    margin-left: 12px;
+  }
+
+  .table-switch__item + .table-switch__item::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 1px;
+    height: 12px;
+    content: '';
+    background: linear-gradient(
+      180deg,
+      rgb(148 163 184 / 0%),
+      rgb(148 163 184 / 46%),
+      rgb(148 163 184 / 0%)
+    );
+    transform: translate(-12px, -50%);
+  }
+
+  .table-switch__item:hover {
+    color: rgb(244 244 245 / 92%);
+    text-shadow: 0 0 12px rgb(59 130 246 / 18%);
+  }
+
+  .table-switch__item.is-active {
+    color: #fff;
+    text-shadow:
+      0 0 16px rgb(14 165 233 / 24%),
+      0 0 28px rgb(37 99 235 / 16%);
+  }
+
+  .table-switch__item.is-active::after {
+    position: absolute;
+    right: -2px;
+    bottom: -5px;
+    left: -2px;
+    height: 3px;
+    content: '';
+    background: linear-gradient(90deg, rgb(34 211 238), rgb(59 130 246));
+    border-radius: 999px;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 10%),
+      0 0 16px rgb(56 189 248 / 32%);
+  }
+
+  .table-switch__item.is-active::before {
+    position: absolute;
+    inset: -4px -8px;
+    z-index: -1;
+    pointer-events: none;
+    content: '';
+    background: radial-gradient(circle, rgb(37 99 235 / 16%) 0%, transparent 70%);
+    opacity: 0.9;
+  }
+
+  .table-switch__hint {
+    padding-left: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: rgb(148 163 184 / 82%);
+  }
+
   .table-hint {
     position: relative;
     padding: 14px 18px 14px 20px;
@@ -462,32 +613,20 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .my-performance-page::before {
-      animation: none;
-    }
-
+    .my-performance-page::before,
     .mp-page-fx {
       animation: none;
     }
 
-    .table-hint {
+    .table-hint,
+    .table-hint__title,
+    .table-switch__item {
       transition: none;
     }
 
-    .table-hint:hover {
+    .table-hint:hover,
+    .table-switch__item.is-active {
       transform: none;
-    }
-
-    .table-hint::before {
-      animation: none;
-    }
-
-    .table-hint::after {
-      animation: none;
-    }
-
-    .table-hint__title {
-      transition: none;
     }
 
     .mp-entry-header,

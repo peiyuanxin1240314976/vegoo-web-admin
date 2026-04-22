@@ -9,6 +9,7 @@ import roiTrendApi from './api-mock/roi-trend.json'
 import spendProgressApi from './api-mock/spend-progress.json'
 import performanceHistoryApi from './api-mock/performance-history.json'
 import appTableApi from './api-mock/app-dimension-table.json'
+import appDateRangeApi from './backend-api/09-app-dimension-table-by-date-range.json'
 import type { MyPerformancePageData, MyPerformancePeriodType } from '../types'
 
 type PeriodKey = 'month' | 'quarter'
@@ -40,6 +41,7 @@ export function buildMyPerformanceMockData(
   const spendProgress = (spendProgressApi.sampleResponse as any)[key]
   const performanceHistory = (performanceHistoryApi.sampleResponse as any)[key]
   const appTable = (appTableApi.sampleResponse as any)[key]
+  const appDateRangeTable = appDateRangeApi.sampleResponse as any
 
   return {
     personOptions: personRes.personOptions,
@@ -52,7 +54,12 @@ export function buildMyPerformanceMockData(
     roiTrend: { title: roiTrend.title, points: roiTrend.points },
     spendProgress: { title: spendProgress.title, list: spendProgress.list },
     performanceHistory: { title: performanceHistory.title, list: performanceHistory.list },
-    appTable: { title: appTable.title, list: appTable.list, summary: appTable.summary }
+    appDimensionTable: { title: appTable.title, list: appTable.list, summary: appTable.summary },
+    appDateRangeTable: {
+      title: appDateRangeTable.title,
+      list: appDateRangeTable.list,
+      summary: appDateRangeTable.summary
+    }
   }
 }
 

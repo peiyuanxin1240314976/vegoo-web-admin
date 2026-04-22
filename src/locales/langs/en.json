@@ -584,6 +584,19 @@
         "status": "Status"
       }
     },
+    "tableSwitch": {
+      "ariaLabel": "Performance table switch",
+      "period": "By App Performance",
+      "recent": "Recent 7-Day Performance",
+      "summaryLabel": "Total / Average",
+      "empty": "No app performance data",
+      "total": "Total {n} apps",
+      "pageSize": "{n} rows / page",
+      "allLabel": "All",
+      "statusRunning": "Running",
+      "statusPaused": "Paused",
+      "statusWarning": "Warning"
+    },
     "appTableHeader": {
       "hint": "Calc period: 2026-01-01 to 2026-03-04 | App-level est. profit is based on actual revenue; ad-platform est. profit is based on payback."
     },

@@ -32,14 +32,15 @@
       </template>
 
       <template #default>
-        <div class="panel__header">
+        <div v-if="resolvedHeaderHint" class="panel__header">
           <div class="header-copy">
-            <div class="title">{{ title }}</div>
+            <!-- <div class="title">{{ title }}</div> -->
             <div class="hint">{{ resolvedHeaderHint }}</div>
           </div>
         </div>
 
         <div class="panel__body">
+          <slot name="prepend"></slot>
           <div ref="excelShellRef" class="excel-shell" tabindex="0" @keydown="onShellKeydown">
             <!-- <div class="excel-toolbar">
               <div class="excel-toolbar__hint">
@@ -168,7 +169,7 @@
   const props = withDefaults(
     defineProps<{
       loading?: boolean
-      title: string
+      // title: string
       list: MyPerformanceAppTreeRow[]
       summary: MyPerformanceAppTableSummary
       headerHint?: string
@@ -228,7 +229,7 @@
   let resizeObserver: ResizeObserver | null = null
 
   const textMap = panelAppDimensionText
-  const title = computed(() => props.title)
+  // const title = computed(() => props.title)
   const resolvedHeaderHint = computed(() => props.headerHint)
 
   const summarySection = computed<GridSection>(() => buildSummarySection())

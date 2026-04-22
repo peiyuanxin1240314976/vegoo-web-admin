@@ -4,6 +4,7 @@
 import { buildMyPerformanceMockData } from './data'
 import metaPersonApi from './api-mock/meta-person-options.json'
 import metaPeriodApi from './api-mock/meta-period-options.json'
+import appDateRangeApi from './backend-api/09-app-dimension-table-by-date-range.json'
 import type {
   MyPerformanceAppDimensionTableQueryBody,
   MyPerformanceAppDimensionTableResponse,
@@ -74,12 +75,25 @@ export function mockFetchMyPerformancePerformanceHistory(
 }
 
 export function mockFetchMyPerformanceAppDimensionTable(
+  body: MyPerformanceQueryBody
+): Promise<MyPerformanceAppDimensionTableResponse> {
+  const page = slicePage(body)
+  return Promise.resolve({
+    title: page.appDimensionTable.title,
+    list: page.appDimensionTable.list,
+    summary: page.appDimensionTable.summary
+  })
+}
+
+export function mockFetchMyPerformanceAppDimensionTableByDateRange(
   body: MyPerformanceAppDimensionTableQueryBody
 ): Promise<MyPerformanceAppDimensionTableResponse> {
-  const page = buildMyPerformanceMockData('month', body.endDate.slice(0, 7), body.personId)
+  void body
+  const page = appDateRangeApi.sampleResponse as MyPerformanceAppDimensionTableResponse
   return Promise.resolve({
-    title: page.appTable.title,
-    list: page.appTable.list,
-    summary: page.appTable.summary
+    title: page.title,
+    list: page.list,
+    summary: page.summary,
+    excelTables: page.excelTables
   })
 }

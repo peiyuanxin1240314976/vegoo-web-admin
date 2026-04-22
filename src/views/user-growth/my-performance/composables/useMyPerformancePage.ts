@@ -2,6 +2,7 @@ import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   fetchMyPerformanceAppDimensionTable,
+  fetchMyPerformanceAppDimensionTableByDateRange,
   fetchMyPerformanceKpiAchievement,
   fetchMyPerformanceMetaPeriodOptions,
   fetchMyPerformanceMetaPersonOptions,
@@ -21,7 +22,6 @@ import type {
   MyPerformanceQueryBody
 } from '../types'
 
-/** 月度口径：优先使用应用“当前月”（由 getAppNow 控制） */
 function pickAppNowMonthPeriodValue(monthOptions: MyPerformancePeriodOption[]): string {
   const y = getAppNow().getFullYear()
   const m = String(getAppNow().getMonth() + 1).padStart(2, '0')
@@ -32,15 +32,14 @@ function pickAppNowMonthPeriodValue(monthOptions: MyPerformancePeriodOption[]): 
   return target
 }
 
-/** 季度口径：优先匹配应用“当前季度”（由 getAppNow 控制） */
 function pickAppNowQuarterPeriodValue(quarterOptions: MyPerformancePeriodOption[]): string {
   const now = getAppNow()
   const targetYear = now.getFullYear()
   const targetQuarter = Math.floor(now.getMonth() / 3) + 1
   const parseQuarter = (value: string) => {
-    const m = String(value).match(/(\d{4})\s*-?\s*[Qq]([1-4])/)
-    if (!m) return null
-    return { year: Number(m[1]), quarter: Number(m[2]) }
+    const match = String(value).match(/(\d{4})\s*-?\s*[Qq]([1-4])/)
+    if (!match) return null
+    return { year: Number(match[1]), quarter: Number(match[2]) }
   }
 
   const exact = quarterOptions.find((o) => {
@@ -58,7 +57,6 @@ function pickAppNowQuarterPeriodValue(quarterOptions: MyPerformancePeriodOption[
   return quarterOptions[0]?.value ?? ''
 }
 
-/** 兼容远程未返回 selectedPersonId、列表字段异常等情况，保证能拼出 queryBody */
 function normalizeMetaPersonPayload(
   raw: MyPerformanceMetaPersonResponse | null | undefined
 ): Pick<MyPerformancePageData, 'personOptions' | 'selectedPersonId'> {
@@ -70,7 +68,6 @@ function normalizeMetaPersonPayload(
   return { personOptions: list, selectedPersonId: selected }
 }
 
-/** 兼容远程返回缺字段、`data` 为空等情况，避免 periodOptions / selectedPeriod 为 undefined */
 function normalizeMetaPeriodPayload(
   raw: MyPerformanceMetaPeriodResponse | null | undefined
 ): Pick<MyPerformancePageData, 'periodOptions' | 'periodType' | 'selectedPeriodValue'> {
@@ -80,6 +77,7 @@ function normalizeMetaPeriodPayload(
     month: Array.isArray(po?.month) ? po.month : []
   }
   const sp = raw?.selectedPeriod
+
   if (
     sp &&
     (sp.periodType === 'quarter' || sp.periodType === 'month') &&
@@ -95,30 +93,49 @@ function normalizeMetaPeriodPayload(
     }
     return {
       periodOptions,
-      periodType: sp.periodType,
+      periodType: 'quarter',
       selectedPeriodValue: pickAppNowQuarterPeriodValue(periodOptions.quarter) || sp.periodValue
     }
   }
-  const m0 = periodOptions.month[0]?.value
-  if (m0) {
+
+  const monthValue = periodOptions.month[0]?.value
+  if (monthValue) {
     return {
       periodOptions,
       periodType: 'month',
       selectedPeriodValue: pickAppNowMonthPeriodValue(periodOptions.month)
     }
   }
-  const q0 = periodOptions.quarter[0]?.value
-  if (q0) {
+
+  const quarterValue = periodOptions.quarter[0]?.value
+  if (quarterValue) {
     return {
       periodOptions,
       periodType: 'quarter',
       selectedPeriodValue: pickAppNowQuarterPeriodValue(periodOptions.quarter)
     }
   }
+
   return {
     periodOptions,
     periodType: 'month',
     selectedPeriodValue: pickAppNowMonthPeriodValue(periodOptions.month)
+  }
+}
+
+function createEmptyTable() {
+  return {
+    title: '',
+    list: [],
+    summary: {
+      adSpend: 0,
+      calculatedSpend: 0,
+      roi: 0,
+      commissionSpend: 0,
+      estimatedProfit: 0,
+      cpa: 0,
+      score: 0
+    }
   }
 }
 
@@ -141,19 +158,8 @@ function emptyPageData(): MyPerformancePageData {
       list: []
     },
     performanceHistory: { title: '', list: [] },
-    appTable: {
-      title: '',
-      list: [],
-      summary: {
-        adSpend: 0,
-        calculatedSpend: 0,
-        roi: 0,
-        commissionSpend: 0,
-        estimatedProfit: 0,
-        cpa: 0,
-        score: 0
-      }
-    }
+    appDimensionTable: createEmptyTable(),
+    appDateRangeTable: createEmptyTable()
   }
 }
 
@@ -161,9 +167,10 @@ const DETAIL_LABELS: Record<string, string> = {
   overviewKpi: '顶部 KPI',
   kpiAchievement: 'KPI 达成',
   roiTrend: 'ROI 趋势',
-  spendProgress: '消耗进度',
+  spendProgress: '花费达成',
   performanceHistory: '绩效历史',
-  appDimensionTable: '应用维度表'
+  appPeriodTable: '按应用绩效评估',
+  appDateRangeTable: '近7天绩效评估'
 }
 
 export function useMyPerformancePage() {
@@ -173,8 +180,8 @@ export function useMyPerformancePage() {
 
   const selectedPerson = computed(() => {
     const list = data.value.personOptions
-    const cur = list.find((p) => p.id === data.value.selectedPersonId) ?? list[0]
-    if (cur) return cur
+    const current = list.find((p) => p.id === data.value.selectedPersonId) ?? list[0]
+    if (current) return current
     return {
       id: '',
       name: '',
@@ -194,7 +201,7 @@ export function useMyPerformancePage() {
     }
   }
 
-  function appDimensionTableQueryBody(): MyPerformanceAppDimensionTableQueryBody | null {
+  function appDateRangeTableQueryBody(): MyPerformanceAppDimensionTableQueryBody | null {
     const { selectedPersonId } = data.value
     if (!selectedPersonId) return null
     const end = getAppNow()
@@ -207,17 +214,13 @@ export function useMyPerformancePage() {
     }
   }
 
-  /**
-   * 先拉人员再拉统计口径：多数后端口径随人员变化，并行时不带 personId 会导致口径失败/为空，
-   * 进而 selectedPeriodValue 为空，loadDetail 不会发任何详情请求。
-   */
   async function loadMeta(personIdOverride?: string) {
     let personOk = false
     try {
       const personRaw = await fetchMyPerformanceMetaPersonOptions()
-      const n = normalizeMetaPersonPayload(personRaw)
-      data.value.personOptions = n.personOptions
-      data.value.selectedPersonId = n.selectedPersonId
+      const normalized = normalizeMetaPersonPayload(personRaw)
+      data.value.personOptions = normalized.personOptions
+      data.value.selectedPersonId = normalized.selectedPersonId
       personOk = true
     } catch {
       ElMessage.error('加载人员选项失败')
@@ -230,10 +233,10 @@ export function useMyPerformancePage() {
       const periodRaw = await fetchMyPerformanceMetaPeriodOptions(
         personIdForPeriod ? { personId: personIdForPeriod } : undefined
       )
-      const n = normalizeMetaPeriodPayload(periodRaw)
-      data.value.periodOptions = n.periodOptions
-      data.value.periodType = n.periodType
-      data.value.selectedPeriodValue = n.selectedPeriodValue
+      const normalized = normalizeMetaPeriodPayload(periodRaw)
+      data.value.periodOptions = normalized.periodOptions
+      data.value.periodType = normalized.periodType
+      data.value.selectedPeriodValue = normalized.selectedPeriodValue
       periodOk = true
     } catch {
       ElMessage.error('加载统计口径选项失败')
@@ -244,11 +247,11 @@ export function useMyPerformancePage() {
 
   async function loadDetail() {
     const body = queryBody()
-    const appTableBody = appDimensionTableQueryBody()
-    if (!appTableBody) return
+    const dateRangeBody = appDateRangeTableQueryBody()
+    if (!dateRangeBody) return
     if (!body) {
       if (data.value.selectedPersonId && !data.value.selectedPeriodValue) {
-        ElMessage.warning('统计口径下暂无可用月份或季度，无法加载绩效详情')
+        ElMessage.warning('当前统计口径暂无可用月份或季度，无法加载绩效详情')
       }
       return
     }
@@ -259,36 +262,51 @@ export function useMyPerformancePage() {
         {
           key: 'overviewKpi',
           run: async () => {
-            const r = await fetchMyPerformanceOverviewKpi(body)
-            data.value.topKpis = r.topKpis
+            const response = await fetchMyPerformanceOverviewKpi(body)
+            data.value.topKpis = response.topKpis
           }
         },
         {
           key: 'kpiAchievement',
           run: async () => {
-            const r = await fetchMyPerformanceKpiAchievement(body)
-            data.value.kpiAchievement = r.kpiAchievement
+            const response = await fetchMyPerformanceKpiAchievement(body)
+            data.value.kpiAchievement = response.kpiAchievement
           }
         },
         {
           key: 'roiTrend',
           run: async () => {
-            const r = await fetchMyPerformanceRoiTrend(body)
-            data.value.roiTrend = { title: r.title, points: r.points }
+            const response = await fetchMyPerformanceRoiTrend(body)
+            data.value.roiTrend = { title: response.title, points: response.points }
           }
         },
         {
           key: 'performanceHistory',
           run: async () => {
-            const r = await fetchMyPerformancePerformanceHistory(body)
-            data.value.performanceHistory = { title: r.title, list: r.list }
+            const response = await fetchMyPerformancePerformanceHistory(body)
+            data.value.performanceHistory = { title: response.title, list: response.list }
           }
         },
         {
-          key: 'appDimensionTable',
+          key: 'appPeriodTable',
           run: async () => {
-            const r = await fetchMyPerformanceAppDimensionTable(appTableBody)
-            data.value.appTable = { title: r.title, list: r.list, summary: r.summary }
+            const response = await fetchMyPerformanceAppDimensionTable(body)
+            data.value.appDimensionTable = {
+              title: response.title,
+              list: response.list,
+              summary: response.summary
+            }
+          }
+        },
+        {
+          key: 'appDateRangeTable',
+          run: async () => {
+            const response = await fetchMyPerformanceAppDimensionTableByDateRange(dateRangeBody)
+            data.value.appDateRangeTable = {
+              title: response.title,
+              list: response.list,
+              summary: response.summary
+            }
           }
         }
       ]
@@ -297,8 +315,8 @@ export function useMyPerformancePage() {
         tasks.push({
           key: 'spendProgress',
           run: async () => {
-            const r = await fetchMyPerformanceSpendProgress(body)
-            data.value.spendProgress = { title: r.title, list: r.list }
+            const response = await fetchMyPerformanceSpendProgress(body)
+            data.value.spendProgress = { title: response.title, list: response.list }
           }
         })
       } else {
@@ -308,12 +326,11 @@ export function useMyPerformancePage() {
         }
       }
 
-      const results = await Promise.allSettled(tasks.map((t) => t.run()))
-      results.forEach((res, i) => {
-        if (res.status === 'rejected') {
-          const key = tasks[i]!.key
-          const label = DETAIL_LABELS[key] ?? key
-          ElMessage.error(`加载${label}失败`)
+      const results = await Promise.allSettled(tasks.map((task) => task.run()))
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          const key = tasks[index]!.key
+          ElMessage.error(`加载${DETAIL_LABELS[key] ?? key}失败`)
         }
       })
     } finally {
@@ -339,10 +356,10 @@ export function useMyPerformancePage() {
     data.value.selectedPersonId = personId
     try {
       const periodRes = await fetchMyPerformanceMetaPeriodOptions({ personId })
-      const n = normalizeMetaPeriodPayload(periodRes)
-      data.value.periodOptions = n.periodOptions
-      data.value.periodType = n.periodType
-      data.value.selectedPeriodValue = n.selectedPeriodValue
+      const normalized = normalizeMetaPeriodPayload(periodRes)
+      data.value.periodOptions = normalized.periodOptions
+      data.value.periodType = normalized.periodType
+      data.value.selectedPeriodValue = normalized.selectedPeriodValue
     } catch {
       ElMessage.error('加载统计口径选项失败')
     }

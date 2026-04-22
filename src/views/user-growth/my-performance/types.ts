@@ -246,7 +246,13 @@ export interface MyPerformancePageData {
   }
 
   /** 应用维度绩效评估表 */
-  appTable: {
+  appDimensionTable: {
+    title: string
+    list: MyPerformanceAppTreeRow[]
+    summary: MyPerformanceAppTableSummary
+  }
+
+  appDateRangeTable: {
     title: string
     list: MyPerformanceAppTreeRow[]
     summary: MyPerformanceAppTableSummary

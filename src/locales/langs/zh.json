@@ -584,6 +584,19 @@
         "status": "状态"
       }
     },
+    "tableSwitch": {
+      "ariaLabel": "绩效表切换",
+      "period": "按应用绩效评估",
+      "recent": "近7天绩效评估",
+      "summaryLabel": "合计/均值",
+      "empty": "暂无应用绩效数据",
+      "total": "共 {n} 条",
+      "pageSize": "{n}条/页",
+      "allLabel": "全部",
+      "statusRunning": "投放中",
+      "statusPaused": "已暂停",
+      "statusWarning": "预警中"
+    },
     "appTableHeader": {
       "hint": "计算日期：2026-01-01 至 2026-03-04｜应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算"
     },
