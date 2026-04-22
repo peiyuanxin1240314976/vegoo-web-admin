@@ -225,8 +225,10 @@ async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> 
     const res = await axiosInstance.request<BaseResponse<T>>(config)
 
     // 显示成功消息
-    if (config.showSuccessMessage && res.data.msg) {
-      showSuccess(res.data.msg)
+    if (config.showSuccessMessage) {
+      const payload = res.data as BaseResponse<T> & { message?: string }
+      const text = (payload.msg ?? payload.message ?? '').trim()
+      if (text) showSuccess(text)
     }
 
     return res.data.data as T
