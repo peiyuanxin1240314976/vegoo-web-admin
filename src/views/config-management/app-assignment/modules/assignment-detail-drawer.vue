@@ -394,18 +394,19 @@
   // ─── CSS 变量 ───────────────────────────────────────────
   .assignment-detail-drawer,
   .drawer-overlay {
-    --bg-drawer: #0f1829;
-    --bg-section: rgb(255 255 255 / 2.5%);
-    --border: rgb(255 255 255 / 7%);
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #2dd4bf;
-    --accent-dim: rgb(45 212 191 / 10%);
-    --android-green: #22c55e;
-    --ios-blue: #60a5fa;
-    --amber: #f59e0b;
-    --red: #ef4444;
+    --drawer-accent: var(--theme-color, var(--art-primary, #3b82f6));
+    --bg-drawer: color-mix(in srgb, var(--default-box-color, #0f172a) 92%, rgb(2 6 23) 8%);
+    --bg-section: color-mix(in srgb, var(--drawer-accent) 6%, transparent);
+    --border: color-mix(in srgb, var(--drawer-accent) 20%, transparent);
+    --text-primary: var(--el-text-color-primary, #e2e8f0);
+    --text-secondary: var(--el-text-color-regular, #94a3b8);
+    --text-muted: var(--el-text-color-secondary, #64748b);
+    --accent: var(--drawer-accent);
+    --accent-dim: color-mix(in srgb, var(--drawer-accent) 16%, transparent);
+    --android-green: var(--art-success, #22c55e);
+    --ios-blue: var(--el-color-info, #60a5fa);
+    --amber: var(--art-warning, #f59e0b);
+    --red: var(--art-danger, #ef4444);
     --purple: #a78bfa;
   }
 
@@ -477,7 +478,7 @@
     align-items: flex-start;
     justify-content: space-between;
     padding: 18px 18px 16px;
-    background: #131c2e;
+    background: color-mix(in srgb, var(--bg-drawer) 90%, white 2%);
     border-bottom: 1px solid var(--border);
   }
 
@@ -530,12 +531,12 @@
 
     &--android {
       color: var(--android-green);
-      background: rgb(34 197 94 / 12%);
+      background: color-mix(in srgb, var(--android-green) 14%, transparent);
     }
 
     &--ios {
       color: var(--ios-blue);
-      background: rgb(96 165 250 / 12%);
+      background: color-mix(in srgb, var(--ios-blue) 14%, transparent);
     }
   }
 
@@ -543,8 +544,8 @@
     padding: 2px 7px;
     font-size: 11px;
     font-weight: 500;
-    color: #94a3b8;
-    background: rgb(255 255 255 / 6%);
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--drawer-accent) 10%, transparent);
     border-radius: 4px;
   }
 
@@ -569,9 +570,9 @@
     padding: 1px 6px;
     font-size: 11px;
     font-weight: 500;
-    color: #f59e0b;
-    background: rgb(245 158 11 / 12%);
-    border: 1px solid rgb(245 158 11 / 25%);
+    color: var(--amber);
+    background: color-mix(in srgb, var(--amber) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--amber) 28%, transparent);
     border-radius: 4px;
   }
 
@@ -589,11 +590,11 @@
     font-size: 12px !important;
     color: var(--accent) !important;
     background: var(--accent-dim) !important;
-    border: 1px solid rgb(45 212 191 / 25%) !important;
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent) !important;
     border-radius: 6px !important;
 
     &:hover {
-      background: rgb(45 212 191 / 16%) !important;
+      background: color-mix(in srgb, var(--accent) 22%, transparent) !important;
     }
   }
 
@@ -669,7 +670,7 @@
     font-weight: 600;
     color: var(--accent);
     background: var(--accent-dim);
-    border: 1px solid rgb(45 212 191 / 25%);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
     border-radius: 4px;
   }
 
@@ -680,16 +681,16 @@
     padding: 2px 8px;
     margin-left: auto;
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--text-secondary);
     cursor: pointer;
-    background: rgb(255 255 255 / 4%);
-    border: 1px solid rgb(255 255 255 / 8%);
+    background: color-mix(in srgb, var(--drawer-accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--drawer-accent) 20%, transparent);
     border-radius: 5px;
     transition: all 0.15s;
 
     &:hover {
       color: var(--accent);
-      border-color: rgb(45 212 191 / 25%);
+      border-color: color-mix(in srgb, var(--accent) 34%, transparent);
     }
   }
 
@@ -773,18 +774,18 @@
     border-radius: 4px;
 
     &--active {
-      color: #22c55e;
-      background: rgb(34 197 94 / 12%);
+      color: var(--android-green);
+      background: color-mix(in srgb, var(--android-green) 14%, transparent);
     }
 
     &--draft {
       color: var(--amber);
-      background: rgb(245 158 11 / 12%);
+      background: color-mix(in srgb, var(--amber) 14%, transparent);
     }
 
     &--archived {
       color: var(--text-muted);
-      background: rgb(255 255 255 / 5%);
+      background: color-mix(in srgb, var(--drawer-accent) 10%, transparent);
     }
   }
 
@@ -793,8 +794,8 @@
     flex-direction: column;
     gap: 3px;
     padding: 8px 10px;
-    background: rgb(255 255 255 / 2%);
-    border: 1px solid rgb(255 255 255 / 6%);
+    background: color-mix(in srgb, var(--drawer-accent) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--drawer-accent) 16%, transparent);
     border-radius: 6px;
   }
 
@@ -837,7 +838,7 @@
     border-radius: 50%;
 
     &.color--teal {
-      background: #2dd4bf;
+      background: var(--accent);
     }
 
     &.color--purple {
@@ -845,15 +846,15 @@
     }
 
     &.color--amber {
-      background: #f59e0b;
+      background: var(--amber);
     }
 
     &.color--blue {
-      background: #60a5fa;
+      background: var(--ios-blue);
     }
 
     &.color--red {
-      background: #ef4444;
+      background: var(--red);
     }
   }
 
@@ -861,7 +862,7 @@
     flex: 1;
     width: 1px;
     margin: 4px 0;
-    background: rgb(255 255 255 / 7%);
+    background: color-mix(in srgb, var(--drawer-accent) 20%, transparent);
   }
 
   .timeline-content {
@@ -895,8 +896,8 @@
     border-radius: 3px;
 
     &.color--teal {
-      color: #2dd4bf;
-      background: rgb(45 212 191 / 10%);
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
     }
 
     &.color--purple {
@@ -905,18 +906,18 @@
     }
 
     &.color--amber {
-      color: #f59e0b;
-      background: rgb(245 158 11 / 10%);
+      color: var(--amber);
+      background: color-mix(in srgb, var(--amber) 12%, transparent);
     }
 
     &.color--blue {
-      color: #60a5fa;
-      background: rgb(96 165 250 / 10%);
+      color: var(--ios-blue);
+      background: color-mix(in srgb, var(--ios-blue) 12%, transparent);
     }
 
     &.color--red {
-      color: #ef4444;
-      background: rgb(239 68 68 / 10%);
+      color: var(--red);
+      background: color-mix(in srgb, var(--red) 12%, transparent);
     }
   }
 

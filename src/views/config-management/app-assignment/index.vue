@@ -127,9 +127,9 @@
                   <template #default="{ row }">
                     <div class="app-name-cell">
                       <div class="app-icon-sm" :style="{ background: row.iconColor }">
-                        {{ row.appName.charAt(0) }}
+                        {{ (row.appName || 'A').charAt(0) }}
                       </div>
-                      <span class="app-name-text">{{ row.appName }}</span>
+                      <span class="app-name-text">{{ row.appName || '未命名应用' }}</span>
                     </div>
                   </template>
                 </el-table-column>
@@ -179,9 +179,12 @@
                     </span>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="120" fixed="right" align="center">
+                <el-table-column label="操作" width="168" fixed="right" align="center">
                   <template #default="{ row }">
-                    <button class="edit-btn" @click.stop="handleEdit(row)">编辑</button>
+                    <div class="action-btns">
+                      <button class="view-btn" @click.stop="handleView(row)">查看</button>
+                      <button class="edit-btn" @click.stop="handleEdit(row)">编辑</button>
+                    </div>
                   </template>
                 </el-table-column>
               </el-table>
@@ -207,22 +210,19 @@
               </div>
             </div>
           </div>
-
-          <div class="app-assignment-layout__right">
-            <div class="assignment-detail-wrapper">
-              <AssignmentDetailDrawer
-                :visible="true"
-                mode="side"
-                :assignment="currentAssignment"
-                @update:visible="handleSideDrawerClose"
-                @edit="handleEdit"
-                @view-logs="handleViewLogs"
-              />
-            </div>
-          </div>
         </div>
       </div>
     </section>
+
+    <Teleport to="body">
+      <AssignmentDetailDrawer
+        :visible="detailDrawerVisible"
+        :assignment="currentAssignment"
+        @update:visible="handleDrawerVisibleChange"
+        @edit="handleEdit"
+        @view-logs="handleViewLogs"
+      />
+    </Teleport>
 
     <!-- ── 新建/编辑弹窗 ─────────────────────────────────── -->
     <AssignmentFormDialog
@@ -438,6 +438,7 @@
   // ─── 弹窗 / 抽屉状态 ────────────────────────────────────
   const formVisible = ref(false)
   const logVisible = ref(false)
+  const detailDrawerVisible = ref(false)
   const currentAssignment = ref<AppAssignmentItem | null>(null)
   const editData = ref<AppAssignmentItem | null>(null)
   const logAssignment = ref<AppAssignmentItem | null>(null)
@@ -464,7 +465,7 @@
   }
 
   // ─── 事件处理 ────────────────────────────────────────────
-  const handleRowClick = async (row: AppAssignmentItem) => {
+  const loadAssignmentDetail = async (row: AppAssignmentItem) => {
     currentAssignment.value = row
     try {
       const detail = await fetchAppAssignmentDetail({ id: row.id })
@@ -472,6 +473,15 @@
     } catch {
       currentAssignment.value = row
     }
+  }
+
+  const handleRowClick = (row: AppAssignmentItem) => {
+    currentAssignment.value = row
+  }
+
+  const handleView = async (row: AppAssignmentItem) => {
+    await loadAssignmentDetail(row)
+    detailDrawerVisible.value = true
   }
 
   const handleAdd = () => {
@@ -489,8 +499,9 @@
     logVisible.value = true
   }
 
-  const handleSideDrawerClose = () => {
-    currentAssignment.value = null
+  const handleDrawerVisibleChange = (visible: boolean) => {
+    detailDrawerVisible.value = visible
+    if (!visible) currentAssignment.value = null
   }
 
   const handleFormSuccess = async (payload: AssignmentFormModel) => {
@@ -808,7 +819,7 @@
 
     display: grid;
     flex: 1;
-    grid-template-columns: minmax(0, 1fr) 480px;
+    grid-template-columns: minmax(0, 1fr);
     gap: 14px;
     align-items: start;
     min-height: 0;
@@ -817,11 +828,6 @@
   .app-assignment-layout__left {
     display: flex;
     flex-direction: column;
-    min-width: 0;
-    min-height: 0;
-  }
-
-  .app-assignment-layout__right {
     min-width: 0;
     min-height: 0;
   }
@@ -1028,12 +1034,6 @@
     border-radius: 10px;
   }
 
-  .assignment-detail-wrapper {
-    height: var(--assignment-panel-max-h);
-    overflow: hidden;
-    border-radius: 14px;
-  }
-
   .assignment-table {
     --el-table-bg-color: transparent;
     --el-table-header-bg-color: var(--as-header-bg);
@@ -1194,6 +1194,14 @@
     border-radius: 50%;
   }
 
+  .action-btns {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .view-btn,
   .edit-btn {
     padding: 3px 10px;
     font-size: 12px;
@@ -1207,6 +1215,12 @@
     &:hover {
       background: color-mix(in srgb, var(--el-color-primary) 16%, transparent);
     }
+  }
+
+  .view-btn {
+    color: color-mix(in srgb, var(--theme-color) 86%, white 14%);
+    background: color-mix(in srgb, var(--theme-color) 10%, transparent);
+    border-color: color-mix(in srgb, var(--theme-color) 28%, transparent);
   }
 
   // ─── 分页 ──────────────────────────────────────────────
@@ -1295,10 +1309,6 @@
   @media (width <= 900px) {
     .app-assignment-layout {
       grid-template-columns: 1fr;
-    }
-
-    .app-assignment-layout__right {
-      order: 2;
     }
 
     .stat-cards {

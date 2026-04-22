@@ -401,14 +401,14 @@
     align-items: center;
     padding: 2px 4px 6px;
     margin-bottom: 4px;
-    background: linear-gradient(180deg, rgb(7 13 25 / 78%) 0%, rgb(7 13 25 / 24%) 100%);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgb(255 255 255 / 5%);
-    border-radius: 12px;
-    box-shadow:
-      0 10px 26px rgb(0 0 0 / 22%),
-      inset 0 1px 0 rgb(255 255 255 / 6%);
   }
+  // background: linear-gradient(180deg, rgb(7 13 25 / 78%) 0%, rgb(7 13 25 / 24%) 100%);
+  //   backdrop-filter: blur(10px);
+  //   border: 1px solid rgb(255 255 255 / 5%);
+  //   border-radius: 12px;
+  //   box-shadow:
+  //     0 10px 26px rgb(0 0 0 / 22%),
+  //     inset 0 1px 0 rgb(255 255 255 / 6%);
 
   .table-switch__item {
     position: relative;
