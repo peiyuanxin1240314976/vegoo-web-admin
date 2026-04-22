@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="cockpit-map-kpi">
     <div class="map-kpi-border-spin" aria-hidden="true" />
     <ElCard class="cockpit-map-panel" :class="{ 'cockpit-map-panel--dark': isDark }" shadow="never">
@@ -30,12 +30,12 @@
       <!-- <div class="map-legend">
       <div v-for="r in regionList" :key="r.name" class="legend-item">
         <span class="dot" :style="{ background: r.color }"></span>
-        <span>{{ r.name }}（{{ r.value }} {{ r.trend }}）</span>
+        <span>{{ r.name }}锛坽{ r.value }} {{ r.trend }}锛?/span>
       </div>
     </div> -->
     </ElCard>
   </div>
-  <!-- 悬浮 tooltip：Teleport 到 body，避免父卡片 transform/overflow:hidden 导致定位失效或被裁切 -->
+  <!-- 鎮诞 tooltip锛歍eleport 鍒?body锛岄伩鍏嶇埗鍗＄墖 transform/overflow:hidden 瀵艰嚧瀹氫綅澶辨晥鎴栬瑁佸垏 -->
   <Teleport to="body">
     <div
       v-show="hoverTooltipVisible"
@@ -61,10 +61,10 @@
 
   defineOptions({ name: 'CockpitBusinessMap' })
 
-  // 使用 base 路径，打包部署到子路径（如 /admin/）时也能正确加载
+  // 浣跨敤 base 璺緞锛屾墦鍖呴儴缃插埌瀛愯矾寰勶紙濡?/admin/锛夋椂涔熻兘姝ｇ‘鍔犺浇
   const WORLD_JSON_URL = `${import.meta.env.BASE_URL}geo/world.json`
 
-  /** 国家/地区英文名 → ISO 3166-1 alpha-2（与 world.json GeoJSON 的 name 字段一致，覆盖全部地图区域以显示国旗） */
+  /** 鍥藉/鍦板尯鑻辨枃鍚?鈫?ISO 3166-1 alpha-2锛堜笌 world.json GeoJSON 鐨?name 瀛楁涓€鑷达紝瑕嗙洊鍏ㄩ儴鍦板浘鍖哄煙浠ユ樉绀哄浗鏃楋級 */
   const COUNTRY_NAME_TO_ISO: Record<string, string> = {
     'United States of America': 'US',
     'United States': 'US',
@@ -113,10 +113,10 @@
     Comoros: 'KM',
     Congo: 'CG',
     'Costa Rica': 'CR',
-    "Côte d'Ivoire": 'CI',
+    "C么te d'Ivoire": 'CI',
     Croatia: 'HR',
     Cuba: 'CU',
-    Curaçao: 'CW',
+    Cura莽ao: 'CW',
     Cyprus: 'CY',
     'Czech Rep.': 'CZ',
     'Czech Republic': 'CZ',
@@ -232,7 +232,7 @@
     Romania: 'RO',
     Russia: 'RU',
     Rwanda: 'RW',
-    'São Tomé and Príncipe': 'ST',
+    'S茫o Tom茅 and Pr铆ncipe': 'ST',
     'S. Geo. and S. Sandw. Is.': 'GS',
     'S. Sudan': 'SS',
     'Saint Helena': 'SH',
@@ -306,7 +306,9 @@
   const mapChartRef = ref<HTMLElement | null>(null)
   const mapLoading = ref(true)
   const mapMetric = ref<'revenue' | 'spend' | 'user'>('revenue')
-  /** 与布局 md 断点一致：窄屏降低地图绘制与交互成本 */
+  const mapViewportWidth = ref(0)
+  const mapViewportHeight = ref(0)
+  /** 涓庡竷灞€ md 鏂偣涓€鑷达細绐勫睆闄嶄綆鍦板浘缁樺埗涓庝氦浜掓垚鏈?*/
   const isNarrowViewport = useMediaQuery('(max-width: 992px)')
   const narrowAtSetup =
     typeof window !== 'undefined' && window.matchMedia('(max-width: 992px)').matches
@@ -320,14 +322,14 @@
   })
   const geoCoordMap = ref<Record<string, [number, number]>>({})
 
-  /** 悬浮 tooltip：仅在有数据国家显示，按收入/消耗/用户切换内容 */
+  /** 鎮诞 tooltip锛氫粎鍦ㄦ湁鏁版嵁鍥藉鏄剧ず锛屾寜收入/娑堣€?鐢ㄦ埛鍒囨崲鍐呭 */
   const hoverTooltipVisible = ref(false)
   const hoverTooltipX = ref(0)
   const hoverTooltipY = ref(0)
   const hoverTooltipHtml = ref('')
   const lastMouseX = ref(0)
   const lastMouseY = ref(0)
-  /** 当前悬浮的国家名（用于切换收入/消耗/用户时刷新悬浮 tooltip 内容） */
+  /** 褰撳墠鎮诞鐨勫浗瀹跺悕锛堢敤浜庡垏鎹㈡敹鍏?娑堣€?鐢ㄦ埛鏃跺埛鏂版偓娴?tooltip 鍐呭锛?*/
   const hoveredCountryNameEn = ref<string | null>(null)
 
   const metricOptions: { value: 'revenue' | 'spend' | 'user'; label: string }[] = [
@@ -351,7 +353,7 @@
     }
   }
 
-  /** 解析趋势字符串，返回是否为正（用于显示 ↑ 绿色 / ↓ 红色） */
+  /** 瑙ｆ瀽瓒嬪娍瀛楃涓诧紝杩斿洖鏄惁涓烘锛堢敤浜庢樉绀?鈫?缁胯壊 / 鈫?绾㈣壊锛?*/
   function isTrendUp(trend: string | undefined): boolean {
     if (!trend) return true
     return trend.startsWith('+') || !trend.includes('-')
@@ -362,52 +364,52 @@
     return isK ? `${v}K` : v.toLocaleString()
   }
 
-  /** 根据国家英文名解析 ISO 代码（与 GeoJSON 常用名称对齐） */
+  /** 鏍规嵁鍥藉鑻辨枃鍚嶈В鏋?ISO 浠ｇ爜锛堜笌 GeoJSON 甯哥敤鍚嶇О瀵归綈锛?*/
   function getCountryCode(nameEn: string): string {
     const code = COUNTRY_NAME_TO_ISO[nameEn]
     if (code) return code
-    // 尝试去掉 "of X" 等后缀再匹配
+    // 灏濊瘯鍘绘帀 "of X" 绛夊悗缂€鍐嶅尮閰?
     const key = Object.keys(COUNTRY_NAME_TO_ISO).find(
       (k) => k.startsWith(nameEn) || nameEn.startsWith(k)
     )
     return key ? COUNTRY_NAME_TO_ISO[key] : ''
   }
 
-  /** 无数据国家悬浮时只显示国旗+国家名（使用 GeoJSON 英文名） */
+  /** 鏃犳暟鎹浗瀹舵偓娴椂鍙樉绀哄浗鏃?鍥藉鍚嶏紙浣跨敤 GeoJSON 鑻辨枃鍚嶏級 */
   function getMinimalHoverTooltipHtml(nameEn: string): string {
     const isoCode = getCountryCode(nameEn).toLowerCase()
     const hasFlag = /^[a-z]{2}$/.test(isoCode)
     const title = hasFlag
-      ? `<div class="cockpit-map-tt-title"><span class="cockpit-map-tt-flag fi fi-${isoCode}"></span> ${nameEn}</div>`
-      : `<div class="cockpit-map-tt-title">${nameEn}</div>`
-    return title
+      ? `<div class="cockpit-map-tt-title"><span class="cockpit-map-tt-flag fi fi-${isoCode}"></span><span>${nameEn}</span></div>`
+      : `<div class="cockpit-map-tt-title"><span>${nameEn}</span></div>`
+    return `<div class="cockpit-map-hover-card cockpit-map-hover-card--minimal">${title}</div>`
   }
 
-  /** 悬浮 tooltip 内容：第一排国旗+中文名，第二/三排按收入/消耗/用户按钮切换 */
+  /** 鎮诞 tooltip 鍐呭锛氱涓€鎺掑浗鏃?涓枃鍚嶏紝绗簩/涓夋帓鎸夋敹鍏?娑堣€?鐢ㄦ埛鎸夐挳鍒囨崲 */
   function getHoverTooltipHtml(c: CockpitMapCountry): string {
     const isoCode = (c.code || getCountryCode(c.nameEn) || '').toLowerCase()
     const hasFlag = /^[a-z]{2}$/.test(isoCode)
     const title = hasFlag
-      ? `<div class="cockpit-map-tt-title"><span class="cockpit-map-tt-flag fi fi-${isoCode}"></span> ${c.name}</div>`
-      : `<div class="cockpit-map-tt-title">${c.name}</div>`
+      ? `<div class="cockpit-map-tt-title"><span class="cockpit-map-tt-flag fi fi-${isoCode}"></span><span>${c.name}</span></div>`
+      : `<div class="cockpit-map-tt-title"><span>${c.name}</span></div>`
     const upClass = isDark.value ? 'color:#34d399' : 'color:var(--el-color-success)'
     const downClass = isDark.value ? 'color:#f87171' : 'color:var(--el-color-danger)'
     if (mapMetric.value === 'revenue') {
       const up = isTrendUp(c.trend)
-      return `${title}<div class="cockpit-map-tt-row"><span>收入:</span> <span style="${up ? upClass : downClass}">$${fmtValue(c.revenue, true)} ${c.trend}</span></div>`
+      return `<div class="cockpit-map-hover-card">${title}<div class="cockpit-map-tt-row"><span>收入</span><span style="${up ? upClass : downClass}">$${fmtValue(c.revenue, true)} ${c.trend}</span></div></div>`
     }
     if (mapMetric.value === 'spend') {
       const spendTrend = c.spendTrend ?? c.trend
       const up = isTrendUp(spendTrend)
-      return `${title}<div class="cockpit-map-tt-row"><span>广告支出:</span> <span style="${up ? upClass : downClass}">$${fmtValue(c.spend, true)} ${spendTrend}</span></div>`
+      return `<div class="cockpit-map-hover-card">${title}<div class="cockpit-map-tt-row"><span>消耗</span><span style="${up ? upClass : downClass}">$${fmtValue(c.spend, true)} ${spendTrend}</span></div></div>`
     }
-    // 用户：第二排新增用户+变化，第三排活跃用户+变化
+    // 鐢ㄦ埛锛氱浜屾帓新增用户+鍙樺寲锛岀涓夋帓活跃用户+鍙樺寲
     const newUserTrend = c.newUserTrend ?? c.trend
     const userTrendVal = c.userTrend ?? c.trend
-    return `${title}<div class="cockpit-map-tt-row"><span>新增用户:</span> <span style="${isTrendUp(newUserTrend) ? upClass : downClass}">${(c.newUser ?? 0).toLocaleString()} ${newUserTrend}</span></div><div class="cockpit-map-tt-row"><span>活跃用户:</span> <span style="${isTrendUp(userTrendVal) ? upClass : downClass}">${(c.user ?? 0).toLocaleString()} ${userTrendVal}</span></div>`
+    return `<div class="cockpit-map-hover-card">${title}<div class="cockpit-map-tt-row"><span>新增用户</span><span style="${isTrendUp(newUserTrend) ? upClass : downClass}">${(c.newUser ?? 0).toLocaleString()} ${newUserTrend}</span></div><div class="cockpit-map-tt-row"><span>活跃用户</span><span style="${isTrendUp(userTrendVal) ? upClass : downClass}">${(c.user ?? 0).toLocaleString()} ${userTrendVal}</span></div></div>`
   }
 
-  /** map 系列一行（与 buildOption 中 mapData 项一致）；effectScatter 的 params.data 只有坐标+指标，须按 name 回查 */
+  /** map 绯诲垪涓€琛岋紙涓?buildOption 涓?mapData 椤逛竴鑷达級锛沞ffectScatter 鐨?params.data 鍙湁鍧愭爣+鎸囨爣锛岄』鎸?name 鍥炴煡 */
   type MapTooltipRow = {
     name: string
     value: number
@@ -423,7 +425,7 @@
     ecpmTrend?: string
   }
 
-  /** 仅当区域名称在有数据的国家集合中时才显示 tooltip；定位点与地图区域共用同一套文案 */
+  /** 浠呭綋鍖哄煙鍚嶇О鍦ㄦ湁鏁版嵁鐨勫浗瀹堕泦鍚堜腑鏃舵墠鏄剧ず tooltip锛涘畾浣嶇偣涓庡湴鍥惧尯鍩熷叡鐢ㄥ悓涓€濂楁枃妗?*/
   function buildTooltipFormatter(
     isDarkTheme: boolean,
     regionNamesWithData: Set<string>,
@@ -432,7 +434,7 @@
     return (params: any) => {
       const nameEn = (params?.name ?? params?.data?.name) as string | undefined
       if (!nameEn || !regionNamesWithData.has(nameEn)) {
-        return '' // 数据中无此国家时不显示 tooltip
+        return ''
       }
       const d = dataByNameEn[nameEn]
       if (!d) return ''
@@ -441,42 +443,84 @@
       const revenueUp = isTrendUp(d.trend)
       const newUserTrend = d.newUserTrend ?? d.trend
       const ecpmTrend = d.ecpmTrend ?? d.trend
-      const revArrow = revenueUp ? `↑${d.trend}` : `↓${d.trend}`
+      const revArrow = `${revenueUp ? '↑' : '↓'}${d.trend}`
       const spendVal = d.spend ?? 0
-      const spendTrend = spendVal > 500 ? '↓-5%' : `↑${d.trend}`
+      const spendTrend = spendVal > 500 ? '↓5%' : `${isTrendUp(d.trend) ? '↑' : '↓'}${d.trend}`
       const spendUp = isTrendUp(spendTrend)
       const newUserStr =
         d.newUser != null
           ? `${d.newUser.toLocaleString()} ${isTrendUp(newUserTrend) ? '↑' : '↓'}${newUserTrend}`
-          : `${(d.user ?? 0).toLocaleString()} ↑${d.trend}`
+          : `${(d.user ?? 0).toLocaleString()} ${isTrendUp(d.trend) ? '↑' : '↓'}${d.trend}`
       const ecpmStr =
         d.ecpm != null ? `$${d.ecpm} ${isTrendUp(ecpmTrend) ? '↑' : '↓'}${ecpmTrend}` : ''
       const isoCodeRaw = d.code || getCountryCode(params.name) || ''
       const isoCode = isoCodeRaw.toLowerCase()
       const hasFlag = /^[a-z]{2}$/.test(isoCode)
       const titleHtml = hasFlag
-        ? `<div class="cockpit-map-tt-title"><span class="cockpit-map-tt-flag fi fi-${isoCode}"></span> ${d.nameCn || params.name}</div>`
-        : `<div class="cockpit-map-tt-title">${d.nameCn || params.name}</div>`
+        ? `<div class="cockpit-map-tt-title"><span class="cockpit-map-tt-flag fi fi-${isoCode}"></span><span>${d.nameCn || params.name}</span></div>`
+        : `<div class="cockpit-map-tt-title"><span>${d.nameCn || params.name}</span></div>`
       const lines = [
+        '<div class="cockpit-map-detail-card">',
         titleHtml,
-        `<div class="cockpit-map-tt-row"><span>收入:</span> <span style="${revenueUp ? upClass : downClass}">$${fmtValue(d.revenue, true)} ${revArrow}</span></div>`,
-        `<div class="cockpit-map-tt-row"><span>广告支出:</span> <span style="${spendUp ? upClass : downClass}">$${fmtValue(spendVal, true)} ${spendTrend}</span></div>`,
-        `<div class="cockpit-map-tt-row"><span>活跃用户:</span> <span style="${upClass}">${(d.user ?? 0).toLocaleString()} ↑${d.trend}</span></div>`,
+        `<div class="cockpit-map-tt-row"><span>收入</span><span style="${revenueUp ? upClass : downClass}">$${fmtValue(d.revenue, true)} ${revArrow}</span></div>`,
+        `<div class="cockpit-map-tt-row"><span>广告支出</span><span style="${spendUp ? upClass : downClass}">$${fmtValue(spendVal, true)} ${spendTrend}</span></div>`,
+        `<div class="cockpit-map-tt-row"><span>活跃用户</span><span style="${upClass}">${(d.user ?? 0).toLocaleString()} ↑${d.trend}</span></div>`,
         d.newUser != null
-          ? `<div class="cockpit-map-tt-row"><span>新增用户:</span> <span style="${upClass}">${newUserStr}</span></div>`
+          ? `<div class="cockpit-map-tt-row"><span>新增用户</span><span style="${upClass}">${newUserStr}</span></div>`
           : '',
         ecpmStr
-          ? `<div class="cockpit-map-tt-row"><span>eCPM:</span> <span style="${upClass}">${ecpmStr}</span></div>`
+          ? `<div class="cockpit-map-tt-row"><span>eCPM</span><span style="${upClass}">${ecpmStr}</span></div>`
           : '',
-        `<div class="cockpit-map-tt-link" data-country-code="${(isoCodeRaw || '').replace(/"/g, '&quot;')}" data-country-en="${(d.name || params.name || '').replace(/"/g, '&quot;')}" data-country-cn="${(d.nameCn || params.name || '').replace(/"/g, '&quot;')}">查看${d.nameCn || params.name}详情 →</div>`
+        `<div class="cockpit-map-tt-link" data-country-code="${(isoCodeRaw || '').replace(/"/g, '&quot;')}" data-country-en="${(d.name || params.name || '').replace(/"/g, '&quot;')}" data-country-cn="${(d.nameCn || params.name || '').replace(/"/g, '&quot;')}">查看${d.nameCn || params.name}详情 →</div>`,
+        '</div>'
       ].filter(Boolean)
       return lines.join('')
+    }
+  }
+
+  function syncMapViewport() {
+    const el = mapChartRef.value
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    mapViewportWidth.value = Math.round(rect.width)
+    mapViewportHeight.value = Math.round(rect.height)
+  }
+
+  function getGeoResponsiveLayout(lite: boolean) {
+    const width = mapViewportWidth.value || (lite ? 760 : 1180)
+    const height = mapViewportHeight.value || (lite ? 360 : 520)
+    const aspect = width / Math.max(height, 1)
+
+    const widthPenalty = width < 1100 ? Math.min((1100 - width) / 320, 1) : 0
+    const extraWidthPenalty = width < 820 ? Math.min((820 - width) / 220, 1) : 0
+    const heightPenalty = height < 440 ? Math.min((440 - height) / 140, 1) : 0
+    const aspectPenalty = aspect < 1.78 ? Math.min((1.78 - aspect) / 0.5, 1) : 0
+
+    const shrinkFactor =
+      widthPenalty * 0.38 + extraWidthPenalty * 0.3 + heightPenalty * 0.26 + aspectPenalty * 0.34
+
+    const layoutSizeBase = lite ? 119 : 128
+    const zoomBase = lite ? 1.08 : 1.15
+    const topBase = lite ? 8 : 4
+    const bottomBase = lite ? 8 : 0
+    const horizontalBase = lite ? 4 : -2
+    const centerYBase = lite ? 54.5 : 55.5
+
+    return {
+      layoutCenter: ['50%', `${centerYBase - shrinkFactor * 1.15}%`],
+      layoutSize: `${Math.max(layoutSizeBase - shrinkFactor * 14, lite ? 103 : 111)}%`,
+      zoom: Math.max(zoomBase - shrinkFactor * 0.13, lite ? 0.96 : 1.02),
+      top: Math.round(topBase + shrinkFactor * 5),
+      bottom: Math.round(bottomBase + shrinkFactor * 5),
+      left: Math.round(horizontalBase + shrinkFactor * 4),
+      right: Math.round(horizontalBase + shrinkFactor * 4)
     }
   }
 
   function buildOption(): EChartsOption {
     const dark = isDark.value
     const lite = isNarrowViewport.value
+    const geoLayout = getGeoResponsiveLayout(lite)
     const mapData = countryData.value.map((item) => ({
       name: item.nameEn,
       value: getValueByMetric(item),
@@ -492,16 +536,17 @@
       ecpmTrend: item.ecpmTrend
     }))
 
-    // 深色模式：低值端用较亮色避免“全黑”；浅色模式：边框更浅、低值/无数据区域更亮，避免发黑
-    const visualMapColors = dark
-      ? ['#f87171', '#fbbf24', '#34d399'] // 亮红→琥珀→翠绿
-      : ['#fecaca', '#fde047', '#86efac'] // 浅粉红→浅黄→浅绿，低值更亮
+    // 娣辫壊妯″紡锛氫綆鍊肩鐢ㄨ緝浜壊閬垮厤鈥滃叏榛戔€濓紱娴呰壊妯″紡锛氳竟妗嗘洿娴呫€佷綆鍊?鏃犳暟鎹尯鍩熸洿浜紝閬垮厤鍙戦粦
 
-    const unhighlightedArea = dark ? 'rgba(71,85,105,0.75)' : '#f1f5f9'
-    const borderColor = dark ? 'rgba(100,116,139,0.65)' : 'rgba(0,0,0,0.12)'
-    const emphasisArea = dark ? 'rgba(52,211,153,0.35)' : 'var(--el-color-primary-light-5)'
-    const emphasisBorder = dark ? 'rgba(52,211,153,0.8)' : 'var(--el-color-primary)'
-    const emphasisShadow = dark ? 'rgba(52,211,153,0.35)' : 'rgba(0,0,0,0.15)'
+    const visualMapColors = dark
+      ? ['#8e2029', '#ff5c33', '#f0d54f', '#59f57b']
+      : ['#fca5a5', '#fdba74', '#facc15', '#4ade80']
+
+    const unhighlightedArea = dark ? '#2a3139' : '#edf2f7'
+    const borderColor = dark ? 'rgba(84,97,111,0.58)' : 'rgba(51,65,85,0.14)'
+    const emphasisArea = dark ? 'rgba(102,255,137,0.96)' : '#86efac'
+    const emphasisBorder = dark ? 'rgba(199,255,214,0.95)' : '#22c55e'
+    const emphasisShadow = dark ? 'rgba(102,255,137,0.42)' : 'rgba(34,197,94,0.25)'
 
     const dataValues = mapData.map((d) => d.value).filter((v) => Number.isFinite(v))
     const dataMin = dataValues.length ? Math.min(...dataValues) : 0
@@ -514,23 +559,6 @@
       string,
       MapTooltipRow
     >
-    const pulseData = lite
-      ? ([] as Array<{ name: string; value: [number, number, number] }>)
-      : (mapData
-          .map((d) => {
-            const coord = geoCoordMap.value[d.name]
-            if (!coord) return null
-            const metricValue = Number(d.value ?? 0)
-            if (!Number.isFinite(metricValue) || metricValue <= 0) return null
-            return {
-              name: d.name,
-              value: [...coord, metricValue]
-            }
-          })
-          .filter(Boolean)
-          .sort((a, b) => Number((b as any).value[2]) - Number((a as any).value[2]))
-          .slice(0, 6) as Array<{ name: string; value: [number, number, number] }>)
-
     return {
       animation: !lite,
       animationDuration: lite ? 0 : 900,
@@ -540,44 +568,55 @@
       geo: {
         map: 'world',
         roam: !lite,
-        zoom: 1.15,
+        layoutCenter: geoLayout.layoutCenter,
+        layoutSize: geoLayout.layoutSize,
+        zoom: geoLayout.zoom,
         scaleLimit: { min: 0.6, max: 4 },
+        top: geoLayout.top,
+        bottom: geoLayout.bottom,
+        left: geoLayout.left,
+        right: geoLayout.right,
         itemStyle: {
           areaColor: unhighlightedArea,
           borderColor,
-          borderWidth: 0.9
+          borderWidth: dark ? 0.9 : 0.9,
+          shadowBlur: dark ? 5 : 0,
+          shadowColor: dark ? 'rgba(0,0,0,0.42)' : 'transparent'
         },
         emphasis: {
           itemStyle: {
             areaColor: emphasisArea,
             borderColor: emphasisBorder,
-            borderWidth: 1.4,
-            shadowBlur: lite ? 6 : dark ? 18 : 12,
+            borderWidth: 1.1,
+            shadowBlur: lite ? 14 : dark ? 28 : 14,
             shadowColor: emphasisShadow
           },
           label: {
-            show: true,
-            color: dark ? '#f1f5f9' : '#1f2937',
+            show: false,
+            color: dark ? '#f8fafc' : '#1f2937',
             fontSize: 11,
             fontWeight: 600
           }
         },
         select: {
           itemStyle: { areaColor: emphasisArea },
-          label: { show: true }
+          label: { show: false }
         },
         label: { show: false }
       },
       tooltip: {
         trigger: 'item',
-        triggerOn: 'click', // 改为点击显示，避免悬浮时盖住邻国误触
+        triggerOn: 'click', // 鏀逛负鐐瑰嚮鏄剧ず锛岄伩鍏嶆偓娴椂鐩栦綇閭诲浗璇Е
         confine: true,
-        enterable: true, // 允许鼠标移入 tooltip，便于点击「查看详情」（仅在有数据的国家显示链接）
+        enterable: true, // 鍏佽榧犳爣绉诲叆 tooltip锛屼究浜庣偣鍑汇€屾煡鐪嬭鎯呫€嶏紙浠呭湪鏈夋暟鎹殑鍥藉鏄剧ず閾炬帴锛?
         transitionDuration: 0.2,
-        backgroundColor: dark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.98)',
-        borderColor: dark ? 'rgba(71,85,105,0.6)' : 'var(--el-border-color-lighter)',
+        backgroundColor: dark ? 'rgba(20,24,29,0.96)' : 'rgba(255,255,255,0.98)',
+        borderColor: dark ? 'rgba(129,255,177,0.16)' : 'rgba(34,197,94,0.18)',
         borderWidth: 1,
-        padding: [12, 16],
+        extraCssText: dark
+          ? 'backdrop-filter: blur(12px); border-radius: 14px; box-shadow: 0 24px 56px rgba(0,0,0,0.52);'
+          : 'border-radius: 14px; box-shadow: 0 16px 40px rgba(15,23,42,0.16);',
+        padding: [0, 0],
         textStyle: {
           fontSize: 12,
           color: dark ? '#e2e8f0' : 'var(--el-text-color-primary)'
@@ -610,43 +649,6 @@
           name: '业务分布',
           data: mapData,
           label: { show: false }
-        },
-        {
-          type: 'effectScatter',
-          coordinateSystem: 'geo',
-          zlevel: 3,
-          symbolSize: (val: number[]) => Math.max(4, Math.min(10, Number(val[2] ?? 0) * 0.8)),
-          rippleEffect: {
-            period: 4,
-            scale: 2.2,
-            brushType: 'stroke'
-          },
-          showEffectOn: 'render',
-          itemStyle: {
-            color: '#ffd166',
-            opacity: 0.75,
-            shadowBlur: 8,
-            shadowColor: 'rgb(255 209 102 / 35%)'
-          },
-          emphasis: {
-            scale: true
-          },
-          data: pulseData
-        },
-        {
-          type: 'scatter',
-          coordinateSystem: 'geo',
-          zlevel: 2,
-          symbolSize: 2,
-          itemStyle: {
-            color: '#7dd3fc',
-            opacity: 0.55
-          },
-          silent: true,
-          data: pulseData.map((d) => ({
-            name: d.name,
-            value: d.value
-          }))
         }
       ]
     }
@@ -663,11 +665,12 @@
 
   watch(isNarrowViewport, () => {
     if (!getChartInstance()) return
+    syncMapViewport()
     updateChart(buildOption())
     nextTick(() => getChartInstance()?.resize())
   })
 
-  /** 父组件 overview 异步加载，首次 onMounted 时 mapChartRef 可能尚未渲染（countryData 为空）；数据到达后再初始化 */
+  /** 鐖剁粍浠?overview 寮傛鍔犺浇锛岄娆?onMounted 鏃?mapChartRef 鍙兘灏氭湭娓叉煋锛坈ountryData 涓虹┖锛夛紱鏁版嵁鍒拌揪鍚庡啀鍒濆鍖?*/
   watch(
     () => countryData.value.length,
     (len) => {
@@ -676,6 +679,21 @@
   )
 
   let mapInitialized = false
+  let mapResizeObserver: ResizeObserver | null = null
+  let mapResizeRaf = 0
+
+  function refreshMapLayout() {
+    if (mapResizeRaf) cancelAnimationFrame(mapResizeRaf)
+    mapResizeRaf = requestAnimationFrame(() => {
+      mapResizeRaf = 0
+      syncMapViewport()
+      const chart = getChartInstance()
+      if (!chart) return
+      updateChart(buildOption())
+      chart.resize()
+    })
+  }
+
   async function initWorldMap() {
     if (!mapChartRef.value) return
     try {
@@ -701,6 +719,7 @@
       echarts.registerMap('world', worldJson)
       ;(chartRef as { value: HTMLElement | null }).value = mapChartRef.value
       nextTick(() => {
+        syncMapViewport()
         initChart(buildOption())
         mapLoading.value = false
         if (!mapInitialized) {
@@ -713,17 +732,43 @@
           }
           mapChartRef.value?.addEventListener('click', handleTooltipLinkClick)
           mapChartRef.value?.addEventListener('mousemove', handleMapContainerMouseMove)
+          if (typeof ResizeObserver !== 'undefined' && mapChartRef.value) {
+            mapResizeObserver = new ResizeObserver(() => refreshMapLayout())
+            mapResizeObserver.observe(mapChartRef.value)
+          }
           mapInitialized = true
         }
       })
     } catch (e) {
-      console.error('[Cockpit] 世界地图 GeoJSON 加载失败', e)
+      console.error('[Cockpit] 涓栫晫鍦板浘 GeoJSON 鍔犺浇澶辫触', e)
       mapLoading.value = false
     }
   }
 
   const router = useRouter()
-  /** 悬浮到任意国家时显示 tooltip：有数据则按收入/消耗/用户显示指标，无数据则仅显示国旗+国家名 */
+
+  function ensureMapDetailRoute() {
+    if (router.hasRoute('CockpitMapDetail')) return
+    router.addRoute({
+      path: '/cockpit-map-detail',
+      component: () => import('@/views/index/index.vue'),
+      children: [
+        {
+          name: 'CockpitMapDetail',
+          path: ':country',
+          component: () => import('./map-detail.vue'),
+          meta: {
+            title: '地区详情',
+            isHide: true,
+            keepAlive: false,
+            roles: ['R_SUPER', 'R_ADMIN']
+          }
+        }
+      ]
+    })
+  }
+
+  /** 鎮诞鍒颁换鎰忓浗瀹舵椂鏄剧ず tooltip锛氭湁鏁版嵁鍒欐寜收入/娑堣€?鐢ㄦ埛鏄剧ず鎸囨爣锛屾棤鏁版嵁鍒欎粎鏄剧ず鍥芥棗+鍥藉鍚?*/
   function handleMapMouseOver(params: any) {
     if (params?.componentSubType !== 'map' || !params?.name) return
     const country = countryData.value.find((c) => c.nameEn === params.name)
@@ -735,12 +780,12 @@
     hoverTooltipY.value = lastMouseY.value
     hoverTooltipVisible.value = true
   }
-  /** 鼠标离开某个地图区域时先隐藏，进入新区域时 mouseover 会再显示新国家的 tooltip */
+  /** 榧犳爣绂诲紑鏌愪釜鍦板浘鍖哄煙鏃跺厛闅愯棌锛岃繘鍏ユ柊鍖哄煙鏃?mouseover 浼氬啀鏄剧ず鏂板浗瀹剁殑 tooltip */
   function handleMapMouseOut() {
     hoverTooltipVisible.value = false
     hoveredCountryNameEn.value = null
   }
-  /** 鼠标离开整个图表时隐藏悬浮 tooltip */
+  /** 榧犳爣绂诲紑鏁翠釜鍥捐〃鏃堕殣钘忔偓娴?tooltip */
   function handleMapGlobalOut() {
     hoverTooltipVisible.value = false
     hoveredCountryNameEn.value = null
@@ -752,7 +797,7 @@
   }
   let pendingMapMove: MouseEvent | null = null
   let mapMoveRaf = 0
-  /** 地图容器 mousemove：rAF 合并，减轻小屏/触控下高频事件压力 */
+  /** 鍦板浘瀹瑰櫒 mousemove锛歳AF 鍚堝苟锛屽噺杞诲皬灞?瑙︽帶涓嬮珮棰戜簨浠跺帇鍔?*/
   function handleMapContainerMouseMove(e: MouseEvent) {
     pendingMapMove = e
     if (mapMoveRaf) return
@@ -770,7 +815,7 @@
       }
     })
   }
-  /** 点击地图区域时，若该国家不在数据中则隐藏 tooltip，使点击显示 tooltip 不生效；并隐藏悬浮 tooltip */
+  /** 鐐瑰嚮鍦板浘鍖哄煙鏃讹紝鑻ヨ鍥藉涓嶅湪鏁版嵁涓垯闅愯棌 tooltip锛屼娇鐐瑰嚮鏄剧ず tooltip 涓嶇敓鏁堬紱骞堕殣钘忔偓娴?tooltip */
   function handleMapItemClick(params: any) {
     resetHoverTooltip()
     const namesWithData = new Set(countryData.value.map((c) => c.nameEn))
@@ -778,7 +823,7 @@
       getChartInstance()?.dispatchAction({ type: 'hideTip' })
     }
   }
-  /** 点击 tooltip 内「查看详情」时跳转地区详情页 */
+  /** 鐐瑰嚮 tooltip 鍐呫€屾煡鐪嬭鎯呫€嶆椂璺宠浆鍦板尯详情椤?*/
   function handleTooltipLinkClick(e: MouseEvent) {
     const link = (e.target as HTMLElement).closest('.cockpit-map-tt-link')
     if (!link) return
@@ -787,6 +832,7 @@
     getChartInstance()?.dispatchAction({ type: 'hideTip' })
     const countryCode = link.getAttribute('data-country-code') ?? ''
     if (countryCode) {
+      ensureMapDetailRoute()
       router.push({ name: 'CockpitMapDetail', params: { country: countryCode } })
     }
   }
@@ -805,7 +851,7 @@
     initWorldMap()
   })
 
-  /** 在卸载前期释放地图与 RAF，减轻离驾驶舱时与下一页挂载叠在同一段主线程上的压力 */
+  /** 鍦ㄥ嵏杞藉墠鏈熼噴鏀惧湴鍥句笌 RAF锛屽噺杞荤椹鹃┒鑸辨椂涓庝笅涓€椤垫寕杞藉彔鍦ㄥ悓涓€娈典富绾跨▼涓婄殑鍘嬪姏 */
   onBeforeUnmount(() => {
     resetHoverTooltip()
     if (mapMoveRaf) {
@@ -813,6 +859,12 @@
       mapMoveRaf = 0
       pendingMapMove = null
     }
+    if (mapResizeRaf) {
+      cancelAnimationFrame(mapResizeRaf)
+      mapResizeRaf = 0
+    }
+    mapResizeObserver?.disconnect()
+    mapResizeObserver = null
     if (mapChartRef.value) {
       mapChartRef.value.removeEventListener('click', handleTooltipLinkClick)
       mapChartRef.value.removeEventListener('mousemove', handleMapContainerMouseMove)
@@ -831,13 +883,13 @@
   }
 
   .cockpit-map-kpi {
-    --map-accent: #3b82f6;
-    --map-accent-2: #22d3ee;
-    --map-glow: rgb(59 130 246 / 45%);
-    --map-glow-2: rgb(34 211 238 / 22%);
-    --map-spin-a: rgb(59 130 246 / 62%);
-    --map-spin-b: rgb(34 211 238 / 48%);
-    --map-spin-c: rgb(16 185 129 / 38%);
+    --map-accent: #59c7ff;
+    --map-accent-2: #24e3ff;
+    --map-glow: rgb(89 199 255 / 10%);
+    --map-glow-2: rgb(36 227 255 / 7%);
+    --map-spin-a: rgb(89 199 255 / 16%);
+    --map-spin-b: rgb(36 227 255 / 13%);
+    --map-spin-c: rgb(103 232 249 / 10%);
 
     position: relative;
     display: flex;
@@ -845,30 +897,21 @@
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    background-color: rgb(8 8 12 / 98%);
-    background-image:
-      radial-gradient(
-        ellipse 120% 80% at 50% -18%,
-        var(--map-glow) 0%,
-        var(--map-glow-2) 30%,
-        transparent 58%
-      ),
-      linear-gradient(
-        172deg,
-        color-mix(in srgb, var(--map-accent) 22%, rgb(8 8 12)) 0%,
-        color-mix(in srgb, var(--map-accent) 38%, rgb(8 8 12)) 60%,
-        color-mix(in srgb, var(--map-accent-2) 15%, rgb(8 8 12)) 100%
-      );
-    border: 1px solid color-mix(in srgb, var(--map-accent) 55%, transparent);
-    border-radius: 14px;
+    background:
+      radial-gradient(circle at 50% -8%, rgb(255 255 255 / 4%), transparent 28%),
+      radial-gradient(circle at 16% 22%, rgb(89 199 255 / 7%), transparent 22%),
+      radial-gradient(circle at 84% 16%, rgb(36 227 255 / 5%), transparent 18%),
+      linear-gradient(180deg, rgb(4 7 10 / 100%) 0%, rgb(8 11 14 / 100%) 100%);
+    border: 1px solid rgb(96 165 250 / 22%);
+    border-radius: 16px;
     box-shadow:
-      0 8px 40px rgb(0 0 0 / 52%),
-      0 0 0 1px color-mix(in srgb, var(--map-accent) 18%, transparent),
-      inset 0 1px 0 rgb(255 255 255 / 16%),
-      inset 0 -10px 28px rgb(0 0 0 / 38%),
-      0 0 28px color-mix(in srgb, var(--map-accent) 12%, transparent);
+      0 18px 48px rgb(0 0 0 / 56%),
+      0 0 0 1px rgb(96 165 250 / 8%),
+      inset 0 1px 0 rgb(255 255 255 / 4%),
+      inset 0 -24px 44px rgb(0 0 0 / 28%),
+      0 0 72px rgb(59 130 246 / 9%);
     transition:
-      box-shadow 0.4s var(--ease-out),
+      box-shadow 0.3s var(--ease-out),
       border-color 0.28s var(--ease-default);
 
     > *:not(.map-kpi-border-spin) {
@@ -878,82 +921,86 @@
 
     &::before {
       position: absolute;
-      top: 0;
-      left: 50%;
-      z-index: 0;
-      width: 80%;
-      height: 2px;
+      inset: 0;
       pointer-events: none;
       content: '';
-      background: linear-gradient(
-        90deg,
-        transparent,
-        var(--map-accent),
-        var(--map-accent-2),
-        transparent
-      );
-      opacity: 0.8;
-      transform: translateX(-50%);
+      background:
+        linear-gradient(
+          90deg,
+          transparent 0%,
+          rgb(125 211 252 / 34%) 18%,
+          rgb(34 211 238 / 18%) 54%,
+          transparent 100%
+        ),
+        radial-gradient(circle at 74% 72%, rgb(255 255 255 / 2.5%), transparent 14%),
+        radial-gradient(circle at 18% 82%, rgb(89 199 255 / 2.8%), transparent 12%),
+        linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 3%) 50%, transparent 100%),
+        linear-gradient(180deg, rgb(255 255 255 / 2%) 0%, transparent 10%);
+      background-repeat: no-repeat;
+      background-position:
+        top 0 left 0,
+        center,
+        center,
+        center,
+        center;
+      background-size:
+        100% 1px,
+        auto,
+        auto,
+        auto,
+        auto;
+      opacity: 0.72;
     }
 
     &::after {
       position: absolute;
-      bottom: 0;
-      left: 50%;
-      z-index: 0;
-      width: 60%;
-      height: 1px;
+      inset: 12px;
       pointer-events: none;
       content: '';
-      background: linear-gradient(90deg, transparent, var(--map-accent), transparent);
-      opacity: 0.45;
-      transform: translateX(-50%);
+      border: 1px solid rgb(255 255 255 / 3%);
+      border-radius: 12px;
+      opacity: 0.28;
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
     }
 
     &:hover {
-      border-color: color-mix(in srgb, var(--map-accent) 85%, transparent);
+      border-color: rgb(96 165 250 / 42%);
       box-shadow:
-        0 28px 72px rgb(0 0 0 / 55%),
-        0 0 0 1px color-mix(in srgb, var(--map-accent) 40%, transparent),
-        inset 0 1px 0 rgb(255 255 255 / 20%),
-        0 0 60px color-mix(in srgb, var(--map-accent) 35%, transparent),
-        0 0 100px color-mix(in srgb, var(--map-accent) 18%, transparent),
-        0 0 140px color-mix(in srgb, var(--map-accent-2) 12%, transparent);
-    }
-
-    &:active {
-      transition-duration: 0.12s;
+        0 24px 60px rgb(0 0 0 / 60%),
+        0 0 0 1px rgb(96 165 250 / 18%),
+        inset 0 1px 0 rgb(255 255 255 / 5%),
+        0 0 72px rgb(59 130 246 / 16%),
+        0 0 120px rgb(6 182 212 / 10%);
     }
   }
 
   .map-kpi-border-spin {
     position: absolute;
     inset: -1px;
-    z-index: 2;
-    padding: 1.5px;
+    z-index: 0;
+    padding: 1px;
     pointer-events: none;
     background: conic-gradient(
       from var(--map-kpi-border-angle, 0deg) at 50% 50%,
       transparent 0deg,
-      var(--map-spin-a) 45deg,
-      transparent 95deg,
-      transparent 145deg,
-      var(--map-spin-b) 195deg,
-      transparent 250deg,
-      transparent 300deg,
-      var(--map-spin-c) 340deg,
+      var(--map-spin-a) 52deg,
+      transparent 110deg,
+      transparent 180deg,
+      var(--map-spin-b) 232deg,
+      transparent 286deg,
+      var(--map-spin-c) 330deg,
       transparent 360deg
     );
-    filter: blur(0.3px);
+    filter: blur(10px);
     border-radius: inherit;
-    opacity: 0.92;
+    opacity: 0.26;
     mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
     mask-composite: exclude;
-    animation: map-kpi-border-spin 4s linear infinite;
-
-    --map-kpi-border-angle: 0deg;
+    animation: map-kpi-border-spin 14s linear infinite;
   }
 
   @keyframes map-kpi-border-spin {
@@ -963,30 +1010,22 @@
   }
 
   html:not(.dark) .cockpit-map-kpi {
-    background-color: #fff;
-    background-image: none;
-    border: 1px solid var(--el-border-color-lighter);
+    background:
+      radial-gradient(circle at 18% 16%, rgb(74 222 128 / 12%), transparent 24%),
+      radial-gradient(circle at 82% 20%, rgb(251 146 60 / 12%), transparent 22%),
+      linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    border: 1px solid rgb(148 163 184 / 24%);
     box-shadow:
-      0 8px 24px rgb(15 23 42 / 8%),
-      inset 0 1px 0 rgb(255 255 255 / 90%);
-
-    &::before {
-      opacity: 0.7;
-    }
+      0 14px 32px rgb(15 23 42 / 10%),
+      inset 0 1px 0 rgb(255 255 255 / 85%);
 
     &::after {
-      opacity: 0.35;
-    }
-
-    &:hover {
-      border-color: color-mix(in srgb, var(--map-accent) 45%, var(--el-border-color-lighter));
-      box-shadow:
-        0 14px 36px rgb(15 23 42 / 12%),
-        0 0 0 1px color-mix(in srgb, var(--map-accent) 22%, transparent);
+      border-color: rgb(148 163 184 / 16%);
+      opacity: 0.75;
     }
 
     .map-kpi-border-spin {
-      opacity: 0.45;
+      opacity: 0.22;
     }
   }
 
@@ -994,59 +1033,89 @@
     @include ap-title-gradient;
   }
 
+  .map-panel-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #eef2f7;
+    text-shadow:
+      0 0 12px rgb(125 211 252 / 18%),
+      0 0 22px rgb(34 211 238 / 10%);
+    letter-spacing: 0.04em;
+  }
+
   html:not(.dark) .map-panel-title {
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    color: #0f172a;
   }
 
   .cockpit-map-kpi :deep(.el-card.cockpit-map-panel) {
     height: 100%;
     background: transparent !important;
-    border: none !important;
+    // border: none !important;
     box-shadow: none !important;
   }
 
   .cockpit-map-kpi :deep(.el-card__header) {
     display: flex;
+    gap: 16px;
     align-items: center;
     justify-content: space-between;
-    padding: 5px 15px;
+    padding: 10px 18px 6px;
     background: transparent !important;
-    border-bottom: 1px solid color-mix(in srgb, var(--map-accent) 28%, transparent);
+    border-bottom: none;
   }
 
   .cockpit-map-kpi :deep(.el-card__body) {
-    padding: 5px;
+    display: flex;
+    flex: 1;
+    padding: 0 10px 10px;
     background: transparent !important;
-  }
-
-  html:not(.dark) .cockpit-map-kpi :deep(.el-card__header) {
-    border-bottom-color: var(--el-border-color-lighter);
-  }
-
-  html.dark .map-metric-box {
-    background: rgb(0 0 0 / 28%);
-    border-color: color-mix(in srgb, var(--map-accent) 28%, transparent);
   }
 
   .map-metric-box {
     position: relative;
     display: inline-flex;
-    padding: 3px;
-    background: var(--el-fill-color-light);
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 8px;
+    padding: 4px;
+    background: rgb(13 18 25 / 92%);
+    border: 1px solid
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 34%, transparent);
+    border-radius: 12px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 6%),
+      0 8px 18px rgb(0 0 0 / 22%),
+      0 0 18px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 16%, transparent);
+  }
+
+  html:not(.dark) .map-metric-box {
+    background: rgb(255 255 255 / 92%);
+    border-color: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 28%,
+      rgb(148 163 184 / 28%)
+    );
+    box-shadow:
+      0 8px 18px rgb(15 23 42 / 8%),
+      0 0 12px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 12%, transparent);
   }
 
   .map-metric-slider {
     position: absolute;
-    top: 3px;
-    left: 3px;
-    width: calc((100% - 6px) / 3);
-    height: calc(100% - 6px);
+    top: 4px;
+    left: 4px;
+    width: calc((100% - 8px) / 3);
+    height: calc(100% - 8px);
     pointer-events: none;
-    background: var(--el-color-primary);
-    border-radius: 6px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 72%, white 28%) 0%,
+      var(--theme-color, var(--art-primary, #3b82f6)) 100%
+    );
+    border: 1px solid
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 62%, white 38%);
+    border-radius: 9px;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 16%, transparent),
+      0 0 18px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 32%);
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -1054,22 +1123,33 @@
     position: relative;
     z-index: 1;
     flex: 1;
-    min-width: 60px;
-    padding: 6px 12px;
+    min-width: 56px;
+    padding: 7px 14px;
     font-size: 13px;
-    color: var(--el-text-color-regular);
+    font-weight: 600;
+    color: rgb(203 213 225 / 88%);
+    letter-spacing: 0.02em;
     cursor: pointer;
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: 9px;
     transition: color 0.2s ease;
   }
 
   .map-metric-btn:hover {
-    color: var(--el-text-color-primary);
+    color: #fff;
   }
 
   .map-metric-btn.active {
+    color: #fff;
+  }
+
+  html:not(.dark) .map-metric-btn {
+    color: #475569;
+  }
+
+  html:not(.dark) .map-metric-btn:hover,
+  html:not(.dark) .map-metric-btn.active {
     color: #fff;
   }
 
@@ -1081,32 +1161,139 @@
 
   .map-wrap {
     position: relative;
-    min-height: 470px;
-
-    /* 创建独立的绘制容器，切断父级 filter/backdrop-filter 合成层对 Canvas 的纹理采样"污染" */
+    flex: 1;
+    min-height: 0;
+    background:
+      linear-gradient(180deg, rgb(3 5 8 / 96%) 0%, rgb(3 5 8 / 92%) 100%),
+      url('@/assets/images/draw/2.webp') center 100% / cover no-repeat,
+      radial-gradient(circle at 50% 22%, rgb(255 255 255 / 3%), transparent 28%),
+      radial-gradient(circle at 18% 48%, rgb(89 199 255 / 4%), transparent 18%),
+      radial-gradient(circle at 82% 42%, rgb(36 227 255 / 3%), transparent 18%),
+      linear-gradient(180deg, rgb(8 11 14 / 98%) 0%, rgb(6 8 11 / 100%) 100%);
     isolation: isolate;
+    border-radius: 14px;
     contain: paint;
+
+    &::before {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      content: '';
+      background:
+        radial-gradient(circle at 76% 56%, rgb(255 255 255 / 4%), transparent 18%),
+        radial-gradient(circle at 28% 78%, rgb(77 183 255 / 4%), transparent 16%),
+        radial-gradient(circle at 50% 30%, rgb(255 255 255 / 4%), transparent 20%),
+        linear-gradient(rgb(148 163 184 / 6.5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(148 163 184 / 6.5%) 1px, transparent 1px);
+      background-size:
+        auto,
+        auto,
+        auto,
+        44px 44px,
+        44px 44px;
+      opacity: 0.72;
+      mask-image: radial-gradient(circle at center, #fff 38%, transparent 88%);
+    }
+
+    &::after {
+      position: absolute;
+      inset: 14px;
+      pointer-events: none;
+      content: '';
+      border: 1px solid rgb(255 255 255 / 3%);
+      border-radius: 12px;
+      opacity: 0.22;
+    }
+  }
+
+  .map-wrap :deep(canvas) {
+    position: relative;
+    z-index: 2;
+  }
+
+  .map-wrap::before,
+  .map-wrap::after {
+    z-index: 0;
+  }
+
+  .map-wrap > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .map-wrap > .map-chart::before {
+    position: absolute;
+    inset: 12% auto auto 50%;
+    z-index: 0;
+    width: min(56%, 420px);
+    aspect-ratio: 1;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        rgb(255 255 255 / 5%) 0%,
+        rgb(255 255 255 / 1.4%) 28%,
+        transparent 64%
+      ),
+      radial-gradient(
+        circle at 50% 50%,
+        transparent 0 58%,
+        rgb(125 211 252 / 14%) 62%,
+        transparent 68%
+      ),
+      repeating-radial-gradient(
+        circle at 50% 50%,
+        rgb(255 255 255 / 5.2%) 0 1px,
+        transparent 1px 18px
+      ),
+      repeating-linear-gradient(90deg, rgb(148 163 184 / 5.6%) 0 1px, transparent 1px 30px),
+      repeating-linear-gradient(0deg, rgb(148 163 184 / 4.8%) 0 1px, transparent 1px 24px);
+    filter: blur(9px);
+    border-radius: 50%;
+    opacity: 0.36;
+    mask-image: radial-gradient(
+      circle at center,
+      #fff 0%,
+      rgb(255 255 255 / 85%) 52%,
+      transparent 76%
+    );
+    transform: translateX(-50%);
+  }
+
+  .map-wrap > .map-chart::after {
+    position: absolute;
+    inset: auto auto 10% 12%;
+    z-index: 0;
+    width: 28%;
+    height: 18%;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(circle at 30% 50%, rgb(89 199 255 / 10%), transparent 52%),
+      linear-gradient(90deg, transparent, rgb(255 255 255 / 4%), transparent);
+    filter: blur(24px);
+    opacity: 0.24;
   }
 
   .map-empty {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 470px;
+    min-height: clamp(360px, 55vh, 560px);
     font-size: 13px;
     color: var(--el-text-color-secondary);
     text-align: center;
   }
 
   .map-chart {
+    position: relative;
     width: 100%;
-    height: 470px;
-
-    /* 将 Canvas 提升为独立 GPU 合成层，在 DPR=1 外接屏下避免与父级 filter 层做纹理采样插值模糊 */
+    height: clamp(360px, 58vh, 580px);
     will-change: transform;
 
     @media (width <= 992px) {
-      /* 小屏 GPU 内存有限，撤销合成层提升，由浏览器自行决定 */
+      height: clamp(320px, 50vh, 480px);
       will-change: auto;
     }
   }
@@ -1114,21 +1301,19 @@
   .cockpit-map-hover-tt {
     position: fixed;
     z-index: 2000;
-    min-width: 140px;
-    padding: 10px 14px;
+    min-width: 132px;
+    padding: 0;
     font-size: 12px;
     line-height: 1.4;
+    color: #e2e8f0;
     pointer-events: none;
-    background: rgb(255 255 255 / 98%);
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    box-shadow: none;
 
     &.cockpit-map-hover-tt--dark {
       color: #e2e8f0;
-      background: rgb(30 41 59 / 95%);
-      border-color: rgb(71 85 105 / 60%);
-      box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
     }
   }
 
@@ -1153,6 +1338,23 @@
     }
   }
 
+  @media (width <= 992px) {
+    .cockpit-map-kpi :deep(.el-card__header) {
+      flex-direction: column;
+      align-items: flex-start;
+      padding-bottom: 8px;
+    }
+
+    .map-metric-box {
+      align-self: stretch;
+      width: 100%;
+    }
+
+    .map-metric-btn {
+      min-width: 0;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .map-kpi-border-spin {
       opacity: 0;
@@ -1161,24 +1363,75 @@
 
     .cockpit-map-kpi {
       transition: none;
-
-      &:hover,
-      &:active {
-        transform: none;
-      }
     }
   }
 </style>
 
 <style lang="scss">
-  /* 地图 tooltip 全局样式（渲染在 body，需非 scoped） */
+  .cockpit-map-hover-card,
+  .cockpit-map-detail-card {
+    position: relative;
+    min-width: 148px;
+    padding: 12px 14px;
+    color: #e2e8f0;
+    background: linear-gradient(180deg, rgb(31 38 46 / 94%) 0%, rgb(17 22 28 / 98%) 100%);
+    border: 1px solid rgb(96 165 250 / 24%);
+    border-radius: 14px;
+    box-shadow:
+      0 18px 42px rgb(0 0 0 / 46%),
+      0 0 0 1px rgb(96 165 250 / 10%),
+      inset 0 1px 0 rgb(255 255 255 / 5%),
+      0 0 42px rgb(59 130 246 / 12%);
+  }
+
+  .cockpit-map-hover-card::after,
+  .cockpit-map-detail-card::after {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      linear-gradient(
+        90deg,
+        transparent 0%,
+        rgb(125 211 252 / 28%) 18%,
+        rgb(34 211 238 / 16%) 56%,
+        transparent 100%
+      ),
+      linear-gradient(180deg, rgb(255 255 255 / 3%) 0%, transparent 32%);
+    background-repeat: no-repeat;
+    background-position:
+      top left,
+      center;
+    background-size:
+      100% 1px,
+      auto;
+    border-radius: inherit;
+  }
+
+  .cockpit-map-hover-card--minimal {
+    min-width: 108px;
+    padding: 10px 12px;
+  }
+
+  .cockpit-map-detail-card {
+    min-width: 220px;
+    padding: 14px 16px;
+    backdrop-filter: blur(12px);
+  }
+
   .cockpit-map-tt-title {
     display: flex;
     gap: 8px;
     align-items: center;
-    margin-bottom: 8px;
-    font-size: 13px;
-    font-weight: 600;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #f8fafc;
+    text-shadow:
+      0 0 10px rgb(125 211 252 / 16%),
+      0 0 18px rgb(34 211 238 / 8%);
+    letter-spacing: 0.01em;
   }
 
   .cockpit-map-tt-flag.fi {
@@ -1187,35 +1440,43 @@
     min-width: 20px;
     height: 0.9em;
     min-height: 14px;
+    overflow: hidden;
     vertical-align: middle;
     background-size: cover;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 10%);
   }
 
   .cockpit-map-tt-row {
-    margin-bottom: 4px;
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    white-space: nowrap;
 
     span:first-child {
-      margin-right: 6px;
+      color: #94a3b8;
+    }
+
+    span:last-child {
+      font-weight: 600;
+      color: #f8fafc;
+      text-align: right;
     }
   }
 
   .cockpit-map-tt-link {
-    margin-top: 8px;
+    padding-top: 10px;
+    margin-top: 10px;
     font-size: 12px;
-    color: var(--el-color-primary);
+    font-weight: 600;
+    color: #7dd3fc;
     cursor: pointer;
+    border-top: 1px solid rgb(148 163 184 / 14%);
   }
 
-  /*
-   * 点击地图区域时，阻止父卡片 :active 伪类触发 ap-panel-hover 的抖动动画。
-   * 使用 :has() 检测点击目标是否在 .map-chart 内，若是则将 transform 锁定在悬浮位置，
-   * 仅点击地图外区域（如 Header 按钮）才允许触发 :active 效果。
-   */
-  html.dark .cockpit-map-kpi:has(.map-chart:active) {
-    transition: none;
-    transform: none;
-  }
-
+  html.dark .cockpit-map-kpi:has(.map-chart:active),
   html:not(.dark) .cockpit-map-kpi:has(.map-chart:active) {
     transition: none;
     transform: none;

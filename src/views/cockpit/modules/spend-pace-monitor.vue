@@ -317,7 +317,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 16px;
+    padding: 11px 14px;
     font-size: 14px;
     border-bottom: 1px solid color-mix(in srgb, var(--pace-accent) 28%, transparent);
   }
@@ -336,7 +336,7 @@
 
   .pace-body {
     flex: 1;
-    padding: 12px 16px;
+    padding: 9px 12px;
     overflow-y: auto;
   }
 
@@ -348,7 +348,7 @@
   }
 
   .pace-section {
-    margin-bottom: 14px;
+    margin-bottom: 8px;
 
     &:last-child {
       margin-bottom: 0;
@@ -356,8 +356,8 @@
   }
 
   .pace-section-title {
-    padding: 6px 12px;
-    margin-bottom: 10px;
+    padding: 4px 10px;
+    margin-bottom: 6px;
     font-size: 12px;
     font-weight: 600;
     color: var(--el-text-color-primary);
@@ -388,9 +388,9 @@
   .pace-item {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 10px 12px;
-    margin-bottom: 10px;
+    gap: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
     border-radius: 10px;
     transition:
       border-color var(--duration-fast) var(--ease-default),
@@ -443,7 +443,7 @@
 
   .pace-item-bottom {
     display: flex;
-    gap: 10px 12px;
+    gap: 8px 10px;
     align-items: center;
   }
 
@@ -452,8 +452,8 @@
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     overflow: hidden;
     background: var(--el-fill-color-dark);
     border: 1px solid var(--el-border-color-lighter);
@@ -471,7 +471,7 @@
     }
 
     & .iconfont {
-      font-size: 18px;
+      font-size: 16px;
       line-height: 1;
     }
 
@@ -486,7 +486,7 @@
   .pace-bar-wrap {
     flex: 1;
     min-width: 80px;
-    height: 18px;
+    height: 16px;
     overflow: hidden;
     background: var(--el-fill-color-dark);
     border-radius: 999px;
@@ -521,7 +521,7 @@
 
   .pace-tag {
     flex-shrink: 0;
-    padding: 2px 8px;
+    padding: 1px 7px;
     font-size: 11px;
     font-weight: 600;
     border-radius: 999px;

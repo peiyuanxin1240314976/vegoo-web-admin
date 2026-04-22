@@ -2,7 +2,7 @@
   <div class="channel-roi-panel">
     <div class="channel-roi-border-spin" aria-hidden="true" />
     <div class="panel-header">
-      <span class="panel-title">广告平台ROI&安装量</span>
+      <span class="panel-title">广告平台ROI&买量用户</span>
       <!-- <a class="panel-more" href="javascript:;">查看更多</a> -->
     </div>
     <div class="panel-body">
@@ -148,7 +148,7 @@
     const baseWidth = narrow ? 78 : 120
     return [
       { prop: 'channel', label: '广告平台', minWidth: baseWidth, useSlot: true },
-      { prop: 'spend', label: '广告支出', minWidth: baseWidth, align: 'left', useSlot: true },
+      { prop: 'roi', label: 'ROI', minWidth: baseWidth, align: 'left', useSlot: true },
       {
         prop: 'installs',
         label: '买量用户',
@@ -156,7 +156,8 @@
         align: 'left',
         useSlot: true
       },
-      { prop: 'roi', label: 'ROI', minWidth: baseWidth, align: 'left', useSlot: true },
+      { prop: 'spend', label: '广告支出', minWidth: baseWidth, align: 'left', useSlot: true },
+
       { prop: 'cpi', label: 'CPI', minWidth: baseWidth, align: 'left', useSlot: true }
     ]
   })
@@ -220,10 +221,18 @@
     return Number.isFinite(v) ? v.toFixed(2) : '0.00'
   }
 
-  /** ElTable 合计行 */
-  function getSummaries(): string[] {
+  /** ElTable 合计行（按列 prop 动态映射，避免列顺序调整后错位） */
+  function getSummaries(params: { columns: Array<{ property?: string }> }): string[] {
     const t = totals.value
-    return ['合计', formatMoney(t.spend), formatNumber(t.installs), '—', '$' + t.cpi.toFixed(2)]
+    return params.columns.map((col, index) => {
+      const prop = col.property
+      if (index === 0 || prop === 'channel') return '合计'
+      if (prop === 'spend') return formatMoney(t.spend)
+      if (prop === 'installs') return formatNumber(t.installs)
+      if (prop === 'roi') return '—'
+      if (prop === 'cpi') return '$' + t.cpi.toFixed(2)
+      return ''
+    })
   }
 </script>
 

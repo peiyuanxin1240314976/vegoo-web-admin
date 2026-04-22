@@ -49,7 +49,7 @@
     <div class="cockpit-entry-3">
       <!-- 第二排：三列（左25% | 中50% 业务分布地图 | 右25%） -->
       <ElRow :gutter="16" class="cockpit-body cockpit-row-2">
-        <ElCol :xs="24" :md="6">
+        <ElCol :xs="24" :md="7">
           <ElSkeleton :loading="moduleLoading.channelRoi" animated>
             <template #template>
               <div class="cockpit-skeleton-panel">
@@ -82,7 +82,7 @@
             />
           </ElSkeleton>
         </ElCol>
-        <ElCol :xs="24" :md="6">
+        <ElCol :xs="24" :md="5">
           <div class="cockpit-col3-row1">
             <ElSkeleton :loading="moduleLoading.top3" animated>
               <template #template>
@@ -108,9 +108,9 @@
         </ElCol>
       </ElRow>
 
-      <!-- 第三排：三列（左25% ROI&安装量 | 中50% 收入结构流向 | 右25% 智能预警） -->
+      <!-- 第三排：左侧保留，右侧两块上下结构 -->
       <ElRow :gutter="16" class="cockpit-body cockpit-row-3">
-        <ElCol :xs="24" :md="6">
+        <ElCol :xs="24" :md="7">
           <ElSkeleton :loading="moduleLoading.spendPace" animated>
             <template #template>
               <div class="cockpit-skeleton-panel">
@@ -125,35 +125,37 @@
             <CockpitSpendPaceMonitor :list="overview?.spendPace ?? []" />
           </ElSkeleton>
         </ElCol>
-        <ElCol :xs="24" :md="12">
-          <ElSkeleton :loading="moduleLoading.revenueFlow" animated>
-            <template #template>
-              <div class="cockpit-skeleton-panel">
-                <ElSkeletonItem
-                  v-for="i in 10"
-                  :key="`flow-${i}`"
-                  variant="p"
-                  class="cockpit-s-line w95"
-                />
-              </div>
-            </template>
-            <CockpitRevenueStructureFlow :flow-data="overview?.revenueStructureFlow" />
-          </ElSkeleton>
-        </ElCol>
-        <ElCol :xs="24" :md="6">
-          <ElSkeleton :loading="moduleLoading.smartAlerts" animated>
-            <template #template>
-              <div class="cockpit-skeleton-panel">
-                <ElSkeletonItem
-                  v-for="i in 8"
-                  :key="`smart-${i}`"
-                  variant="p"
-                  class="cockpit-s-line w92"
-                />
-              </div>
-            </template>
-            <CockpitSmartAlerts :alerts="overview?.smartAlerts ?? []" />
-          </ElSkeleton>
+
+        <ElCol :xs="24" :md="17">
+          <div class="cockpit-row-3-stack">
+            <ElSkeleton :loading="moduleLoading.revenueFlow" animated>
+              <template #template>
+                <div class="cockpit-skeleton-panel">
+                  <ElSkeletonItem
+                    v-for="i in 10"
+                    :key="`flow-${i}`"
+                    variant="p"
+                    class="cockpit-s-line w95"
+                  />
+                </div>
+              </template>
+              <CockpitRevenueStructureFlow :flow-data="overview?.revenueStructureFlow" />
+            </ElSkeleton>
+
+            <ElSkeleton :loading="moduleLoading.smartAlerts" animated>
+              <template #template>
+                <div class="cockpit-skeleton-panel">
+                  <ElSkeletonItem
+                    v-for="i in 8"
+                    :key="`smart-${i}`"
+                    variant="p"
+                    class="cockpit-s-line w92"
+                  />
+                </div>
+              </template>
+              <CockpitSmartAlerts :alerts="overview?.smartAlerts ?? []" />
+            </ElSkeleton>
+          </div>
         </ElCol>
       </ElRow>
     </div>
@@ -407,6 +409,12 @@
       height: 100%;
       margin-bottom: 0;
     }
+  }
+
+  .cockpit-row-3-stack {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
   }
 
   .cockpit-row-roi__col {
