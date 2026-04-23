@@ -224,7 +224,7 @@
         </div>
 
         <!-- 绩效得分明细 -->
-        <div class="panel-card pa-neon-panel">
+        <!-- <div class="panel-card pa-neon-panel">
           <div class="panel-title">绩效得分明细</div>
           <ElSkeleton :loading="scoreDetailLoading" animated>
             <template #template>
@@ -261,7 +261,7 @@
               </table>
             </template>
           </ElSkeleton>
-        </div>
+        </div> -->
 
         <!-- 异常预警 -->
         <div class="panel-card pa-neon-panel alert-panel">
@@ -528,7 +528,7 @@
 
   const rankData = computed(() => comparisonRankings.value?.rows ?? [])
 
-  const scoreDetail = computed(() => comparisonScoreDetail.value?.list ?? [])
+  // const scoreDetail = computed(() => comparisonScoreDetail.value?.list ?? [])
 
   const alerts = computed(() => comparisonAlerts.value?.list ?? [])
 
