@@ -375,7 +375,7 @@
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { ArrowUp, ArrowDown, Download, Monitor } from '@element-plus/icons-vue'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import {
     fetchIapDetailKpi,
     fetchIapDetailProduct,
@@ -465,13 +465,13 @@
   const convTrendRef = ref<HTMLElement>()
   const churnTrendRef = ref<HTMLElement>()
 
-  const chartInstances: echarts.ECharts[] = []
+  const chartInstances: Array<ReturnType<typeof echarts.init>> = []
 
   const kpiSparklineRefs = ref<(HTMLElement | null)[]>([])
   const skuTrendSparklineRefs = ref<Record<string, HTMLElement | null>>({})
 
   /** 主图表：入场 + 数据更新动效（option 可覆盖 animation*） */
-  const iapChartAnim: echarts.EChartsOption = {
+  const iapChartAnim: import('echarts').EChartsOption = {
     animation: true,
     animationDuration: 880,
     animationEasing: 'cubicOut',
@@ -481,7 +481,7 @@
   }
 
   /** KPI / SKU 迷你图：更短，避免列表里拖沓 */
-  const iapSparklineAnim: echarts.EChartsOption = {
+  const iapSparklineAnim: import('echarts').EChartsOption = {
     animation: true,
     animationDuration: 480,
     animationEasing: 'cubicOut',
@@ -492,7 +492,7 @@
 
   function initChart(
     el: HTMLElement | undefined,
-    option: echarts.EChartsOption,
+    option: import('echarts').EChartsOption,
     animVariant: 'full' | 'spark' = 'full'
   ) {
     if (!el) return
@@ -533,7 +533,7 @@
   }
 
   /** 坐标轴悬浮：指示线 + 轴上高亮类目文案 */
-  const iapTooltipAxis: echarts.TooltipComponentOption = {
+  const iapTooltipAxis: import('echarts').TooltipComponentOption = {
     trigger: 'axis',
     confine: true,
     backgroundColor: 'rgba(24, 24, 27, 0.96)',
@@ -555,7 +555,7 @@
     }
   }
 
-  const iapTooltipAxisShadow: echarts.TooltipComponentOption = {
+  const iapTooltipAxisShadow: import('echarts').TooltipComponentOption = {
     trigger: 'axis',
     confine: true,
     backgroundColor: 'rgba(24, 24, 27, 0.96)',
@@ -577,7 +577,7 @@
     }
   }
 
-  const iapTooltipItem: echarts.TooltipComponentOption = {
+  const iapTooltipItem: import('echarts').TooltipComponentOption = {
     trigger: 'item',
     confine: true,
     backgroundColor: 'rgba(24, 24, 27, 0.96)',

@@ -59,6 +59,7 @@ let routeRegistry: RouteRegistry | null = null
 
 // 菜单处理器实例
 const menuProcessor = new MenuProcessor()
+const CRITICAL_HOME_ROUTE = '/cockpit'
 
 // 跟踪是否需要关闭 loading
 let pendingLoading = false
@@ -360,7 +361,6 @@ async function handleDynamicRoutes(
     profiler.start('registerRoutes')
     routeRegistry?.register(menuList)
     profiler.end('registerRoutes')
-    routeRegistry?.preloadRouteComponents(menuList)
 
     // 5. 保存菜单数据到 store
     const menuStore = useMenuStore()
@@ -384,6 +384,7 @@ async function handleDynamicRoutes(
       homePath.value || '/'
     )
     profiler.end('validatePathPermission')
+    routeRegistry?.preloadRouteComponents(menuList, [CRITICAL_HOME_ROUTE, validatedPath])
 
     // 初始化成功，重置进行中标记
     routeInitInProgress = false

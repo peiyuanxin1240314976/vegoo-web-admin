@@ -405,7 +405,7 @@
   import { storeToRefs } from 'pinia'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { TopRight } from '@element-plus/icons-vue'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
@@ -794,8 +794,8 @@
   const trendChartRef = ref<HTMLElement | null>(null)
   const countryChartRef = ref<HTMLElement | null>(null)
 
-  let trendChart: echarts.ECharts | null = null
-  let countryChart: echarts.ECharts | null = null
+  let trendChart: ReturnType<typeof echarts.init> | null = null
+  let countryChart: ReturnType<typeof echarts.init> | null = null
   let chartResizeObserver: ResizeObserver | null = null
   let windowResizeBound = false
 

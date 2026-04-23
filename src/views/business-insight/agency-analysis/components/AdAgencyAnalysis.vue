@@ -2,7 +2,7 @@
   import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import ScreenshotModal from './ScreenshotModal.vue'
   import AgencySubTabPerformanceMock from './AgencySubTabPerformanceMock.vue'
   import { formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
@@ -72,7 +72,7 @@
   const barRef = ref<HTMLElement | null>(null)
   const countryRef = ref<HTMLElement | null>(null)
   const trendRef = ref<HTMLElement | null>(null)
-  let chartInstances: echarts.ECharts[] = []
+  let chartInstances: Array<ReturnType<typeof echarts.init>> = []
   let chartsResizeObserver: ResizeObserver | null = null
 
   const disposeCharts = () => {

@@ -249,9 +249,6 @@
           transparent 58%
         );
       mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
-      animation:
-        cockpit-aurora-drift 14s ease-in-out infinite alternate,
-        cockpit-bg-flow 22s ease-in-out infinite alternate;
     }
 
     &::after {
@@ -274,35 +271,6 @@
     > * {
       position: relative;
       z-index: 1;
-    }
-  }
-
-  @keyframes cockpit-aurora-drift {
-    0% {
-      opacity: 0.72;
-      transform: scale(1) translate(0, 0);
-    }
-
-    50% {
-      opacity: 1;
-      transform: scale(1.06) translate(1.2%, -1.2%);
-    }
-
-    100% {
-      opacity: 0.82;
-      transform: scale(1) translate(-1.2%, 1.2%);
-    }
-  }
-
-  @keyframes cockpit-bg-flow {
-    0% {
-      opacity: 0.7;
-      transform: scaleY(1);
-    }
-
-    100% {
-      opacity: 1;
-      transform: scaleY(1.04);
     }
   }
 

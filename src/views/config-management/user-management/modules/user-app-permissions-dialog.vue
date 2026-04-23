@@ -57,7 +57,7 @@
   /** 减轻多选全选时 Popper 与滚动容器合成层导致的选项区闪烁 */
   const appPermSelectPopperOptions = {
     modifiers: [{ name: 'computeStyles', options: { adaptive: false, gpuAcceleration: false } }]
-  } as const
+  }
 
   interface Props {
     visible: boolean

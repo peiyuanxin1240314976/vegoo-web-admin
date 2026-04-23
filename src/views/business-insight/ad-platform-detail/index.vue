@@ -4,7 +4,7 @@
   import { storeToRefs } from 'pinia'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchAdPlatformDetailAiInsights,
@@ -286,7 +286,7 @@
 
   // ─── Chart ───────────────────────────────────────────────────────────────────
   const chartRef = ref<HTMLElement>()
-  let chartInstance: echarts.ECharts | null = null
+  let chartInstance: ReturnType<typeof echarts.init> | null = null
 
   const chartCategories = ref([
     '10月1日',
@@ -607,6 +607,7 @@
   function initChart() {
     if (!chartRef.value) return
     chartInstance = echarts.init(chartRef.value, undefined, { renderer: 'canvas' })
+    if (!chartInstance) return
     chartInstance.setOption(buildChartOption())
   }
 

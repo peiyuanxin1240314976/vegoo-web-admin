@@ -13,7 +13,8 @@ export const businessInsightRoutes: AppRouteRecord = {
   meta: {
     title: 'menus.businessInsight.title',
     icon: 'ri:bar-chart-box-line',
-    roles: ['R_SUPER', 'R_ADMIN']
+    roles: ['R_SUPER', 'R_ADMIN'],
+    preload: true
   },
   children: [
     {

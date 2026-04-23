@@ -319,7 +319,7 @@
   import { useRoute, useRouter } from 'vue-router'
   import type { LocationQueryValue } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import * as echarts from 'echarts'
+  import { echarts, type EChartsOption } from '@/plugins/echarts'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
     fetchAppAdPlatformPerformanceAiInsights,
@@ -536,7 +536,7 @@
 
   // ─── 图表 ─────────────────────────────────────────────────────
   const chartRef = ref<HTMLElement | null>(null)
-  let chartInstance: echarts.ECharts | null = null
+  let chartInstance: ReturnType<typeof echarts.init> | null = null
 
   const legendItems = ref([
     { key: 'revenue', label: 'Revenue', color: '#f59e0b', active: true },
@@ -576,7 +576,7 @@
   ])
   const fillData = ref([97, 96, 98, 95, 98, 97, 99, 96, 98, 97, 99, 96, 98, 98, 97, 98])
 
-  function buildAppPerfChartOption(): echarts.EChartsOption {
+  function buildAppPerfChartOption(): EChartsOption {
     return {
       backgroundColor: 'transparent',
       tooltip: {
@@ -697,6 +697,7 @@
   function initChart() {
     if (!chartRef.value) return
     chartInstance = echarts.init(chartRef.value, 'dark')
+    if (!chartInstance) return
     chartInstance.setOption(buildAppPerfChartOption())
   }
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
 
   defineOptions({ name: 'SummaryTab' })
 
@@ -69,8 +69,8 @@
 
   const lineChartEl = ref<HTMLElement | null>(null)
   const pieChartEl = ref<HTMLElement | null>(null)
-  let lineChart: echarts.ECharts | null = null
-  let pieChart: echarts.ECharts | null = null
+  let lineChart: ReturnType<typeof echarts.init> | null = null
+  let pieChart: ReturnType<typeof echarts.init> | null = null
 
   function updateLineChart() {
     if (!lineChartEl.value || !props.data?.trend) return
@@ -85,6 +85,7 @@
     if (!lineChart) {
       lineChart = echarts.init(dom, 'dark')
     }
+    if (!lineChart) return
     const t = props.data.trend
     lineChart.setOption({
       backgroundColor: 'transparent',
@@ -207,6 +208,7 @@
     if (!pieChart) {
       pieChart = echarts.init(dom, 'dark')
     }
+    if (!pieChart) return
     const cd = channelData.value
     const centerAmount = pieCenterValue.value.replace(/[{}]/g, '')
     const el = pieChartEl.value

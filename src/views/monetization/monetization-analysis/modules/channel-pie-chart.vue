@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-  import * as echarts from 'echarts'
+  import { type EChartsOption } from '@/plugins/echarts'
   import { useChart } from '@/hooks/core/useChart'
   import type { MonetizationPieItem } from '../types'
   import { MOCK_MONETIZATION_ANALYSIS } from '../mock/data'
@@ -22,7 +22,7 @@
     props.data?.length ? props.data : MOCK_MONETIZATION_ANALYSIS.channelPie
   )
 
-  const option = computed<echarts.EChartsOption>(() => ({
+  const option = computed<EChartsOption>(() => ({
     tooltip: {
       trigger: 'item',
       formatter: '{b}: {c}%'

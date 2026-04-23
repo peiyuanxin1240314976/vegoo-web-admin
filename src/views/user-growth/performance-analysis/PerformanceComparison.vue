@@ -317,7 +317,7 @@
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter, useRoute } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import * as echarts from 'echarts'
+  import { echarts, type EChartsOption } from '@/plugins/echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import {
@@ -538,13 +538,13 @@
   const adChartRef = ref<HTMLDivElement | null>(null)
   const profitChartRef = ref<HTMLDivElement | null>(null)
 
-  let roiChart: echarts.ECharts | null = null
-  let radarChart: echarts.ECharts | null = null
-  let adChart: echarts.ECharts | null = null
-  let profitChart: echarts.ECharts | null = null
+  let roiChart: ReturnType<typeof echarts.init> | null = null
+  let radarChart: ReturnType<typeof echarts.init> | null = null
+  let adChart: ReturnType<typeof echarts.init> | null = null
+  let profitChart: ReturnType<typeof echarts.init> | null = null
 
   // ─── Chart options ─────────────────────────────────────────
-  function buildRoiOption(): echarts.EChartsOption {
+  function buildRoiOption(): EChartsOption {
     const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
     const dates = c?.dates?.length ? c.dates : DATES
@@ -631,7 +631,7 @@
     }
   }
 
-  function buildRadarOption(): echarts.EChartsOption {
+  function buildRadarOption(): EChartsOption {
     const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
     const radarValues: Record<string, number[]> = {
@@ -699,7 +699,7 @@
     }
   }
 
-  function buildAdOption(): echarts.EChartsOption {
+  function buildAdOption(): EChartsOption {
     const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
     const dates = c?.dates?.length ? c.dates : DATES
@@ -749,7 +749,7 @@
     }
   }
 
-  function buildProfitOption(): echarts.EChartsOption {
+  function buildProfitOption(): EChartsOption {
     const c = comparisonCharts.value
     const ids = selectedStaff.value.map((s) => s.id)
     const bars = c?.profitBars?.length

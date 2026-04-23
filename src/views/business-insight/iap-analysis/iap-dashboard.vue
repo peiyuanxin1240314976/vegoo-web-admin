@@ -359,7 +359,7 @@
     VideoCamera,
     Sunny
   } from '@element-plus/icons-vue'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import { loadIapDashboardOverviewModules } from './composables/useIapDashboardModules'
   import type {
     IapFilterState,
@@ -452,9 +452,9 @@
   const donutRef = ref<HTMLElement>()
   const platformRef = ref<HTMLElement>()
 
-  const charts: echarts.ECharts[] = []
+  const charts: Array<ReturnType<typeof echarts.init>> = []
 
-  const dashChartAnim: echarts.EChartsOption = {
+  const dashChartAnim: import('echarts').EChartsOption = {
     animation: true,
     animationDuration: 880,
     animationEasing: 'cubicOut',
@@ -463,7 +463,7 @@
     animationEasingUpdate: 'cubicOut'
   }
 
-  const dashSparklineAnim: echarts.EChartsOption = {
+  const dashSparklineAnim: import('echarts').EChartsOption = {
     animation: true,
     animationDuration: 480,
     animationEasing: 'cubicOut',
@@ -472,7 +472,7 @@
     animationEasingUpdate: 'cubicOut'
   }
 
-  function initChart(el: HTMLElement | undefined, opt: echarts.EChartsOption) {
+  function initChart(el: HTMLElement | undefined, opt: import('echarts').EChartsOption) {
     if (!el) return
     const c = echarts.init(el, 'dark')
     c.setOption({ ...dashChartAnim, ...opt })
@@ -503,7 +503,7 @@
     return 28
   }
 
-  const dashTooltipAxis: echarts.TooltipComponentOption = {
+  const dashTooltipAxis: import('echarts').TooltipComponentOption = {
     trigger: 'axis',
     confine: true,
     backgroundColor: 'rgba(24, 24, 27, 0.96)',
@@ -525,7 +525,7 @@
     }
   }
 
-  const dashTooltipItem: echarts.TooltipComponentOption = {
+  const dashTooltipItem: import('echarts').TooltipComponentOption = {
     trigger: 'item',
     confine: true,
     backgroundColor: 'rgba(24, 24, 27, 0.96)',

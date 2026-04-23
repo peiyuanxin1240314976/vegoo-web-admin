@@ -488,7 +488,7 @@
   import { Document, Search } from '@element-plus/icons-vue'
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import { cloneAppDate, formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type {
@@ -580,7 +580,7 @@
 
   const hourRef = ref<HTMLElement | null>(null)
   const typeRef = ref<HTMLElement | null>(null)
-  const chartInstances: echarts.ECharts[] = []
+  const chartInstances: Array<ReturnType<typeof echarts.init>> = []
 
   const APP_KEY_MAP: Record<string, string> = {
     weather5: 'Weather5',

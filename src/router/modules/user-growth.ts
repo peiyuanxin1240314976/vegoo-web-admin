@@ -10,7 +10,8 @@ export const userGrowthRoutes: AppRouteRecord = {
   meta: {
     title: 'menus.userGrowth.title',
     icon: 'ri:user-add-line',
-    roles: ['R_SUPER', 'R_ADMIN']
+    roles: ['R_SUPER', 'R_ADMIN'],
+    preload: true
   },
   children: [
     {

@@ -8,8 +8,6 @@ import '@styles/index.scss'                         // 样式
 import '@utils/sys/console.ts'                      // 控制台输出内容
 import { setupGlobDirectives } from './directives'
 import { setupErrorHandle } from './utils/sys/error-handle'
-import VueParticles from '@tsparticles/vue3'
-import { loadSlim } from '@tsparticles/slim'
 
 document.addEventListener(
   'touchstart',
@@ -24,9 +22,4 @@ setupGlobDirectives(app)
 setupErrorHandle(app)
 
 app.use(language)
-app.use(VueParticles, {
-  init: async (engine) => {
-    await loadSlim(engine)
-  }
-})
 app.mount('#app')

@@ -5,7 +5,7 @@
   import { computed, h, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
   import { ElTableV2 } from 'element-plus'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
@@ -375,9 +375,9 @@
   const trendRef = ref<HTMLElement | null>(null)
   const sankeyRef = ref<HTMLElement | null>(null)
 
-  let mapChart: echarts.ECharts | null = null
-  let trendChart: echarts.ECharts | null = null
-  let sankeyChart: echarts.ECharts | null = null
+  let mapChart: ReturnType<typeof echarts.init> | null = null
+  let trendChart: ReturnType<typeof echarts.init> | null = null
+  let sankeyChart: ReturnType<typeof echarts.init> | null = null
   let mapGeoReady = false
   let mapResizeObserver: ResizeObserver | null = null
 

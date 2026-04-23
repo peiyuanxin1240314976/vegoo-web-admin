@@ -211,7 +211,7 @@
 
 <script setup lang="ts">
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import type { PaidAnalysisFilterBody } from './types'
   import {
     fetchPaidAnalysisTabProductCharts,
@@ -260,7 +260,7 @@
   const countryRef = ref<HTMLElement | null>(null)
   const sparkRefs = ref<(HTMLElement | null)[]>([])
   const miniRefs = new Map<string, HTMLElement>()
-  const chartInstances: echarts.ECharts[] = []
+  const chartInstances: Array<ReturnType<typeof echarts.init>> = []
 
   function setSparkRef(el: HTMLElement | null, i: number) {
     sparkRefs.value[i] = el

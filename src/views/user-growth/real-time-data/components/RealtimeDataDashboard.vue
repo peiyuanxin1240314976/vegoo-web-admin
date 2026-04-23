@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import { LanguageEnum } from '@/enums/appEnum'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import AppDetailModal from './AppDetailModal.vue'
@@ -133,7 +133,7 @@
 
   // ===== Sparkline charts =====
   const sparklineEls = ref<(HTMLDivElement | null)[]>([])
-  const sparklineInstances: echarts.ECharts[] = []
+  const sparklineInstances: Array<ReturnType<typeof echarts.init>> = []
 
   watch(
     () => apps.value.length,
@@ -185,7 +185,7 @@
 
   // ===== Bottom chart =====
   const bottomChartEl = ref<HTMLDivElement | null>(null)
-  let bottomChart: echarts.ECharts | null = null
+  let bottomChart: ReturnType<typeof echarts.init> | null = null
 
   function disposeBottomChart() {
     bottomChart?.dispose()
@@ -196,6 +196,7 @@
     if (!bottomChartEl.value) return
     disposeBottomChart()
     bottomChart = echarts.init(bottomChartEl.value, null, { renderer: 'canvas' })
+    if (!bottomChart) return
     const hc = hourlyComparison.value
     if (!hc?.series?.length) {
       bottomChart.setOption({

@@ -457,8 +457,7 @@
   import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useResizeObserver } from '@vueuse/core'
-  import * as echarts from 'echarts'
-  import type { ECharts } from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import {
     // TrendCharts, // 与「预估 ECPM」卡片一并恢复
     Money,
@@ -675,9 +674,9 @@
   const worldMapRef = ref<HTMLDivElement>()
   const top10Ref = ref<HTMLDivElement>()
 
-  let trendChart: ECharts | null = null
-  let worldMapChart: ECharts | null = null
-  let top10Chart: ECharts | null = null
+  let trendChart: ReturnType<typeof echarts.init> | null = null
+  let worldMapChart: ReturnType<typeof echarts.init> | null = null
+  let top10Chart: ReturnType<typeof echarts.init> | null = null
   let mapRequestSeq = 0
   let top10RequestSeq = 0
 

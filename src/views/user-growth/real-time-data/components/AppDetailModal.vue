@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ref, onBeforeUnmount, watch, nextTick } from 'vue'
-  import * as echarts from 'echarts'
+  import { echarts } from '@/plugins/echarts'
   import type { AppDetailData } from '../types'
 
   export type { AppDetailData, ChannelData } from '../types'
@@ -23,7 +23,7 @@
 
   // ===== Chart =====
   const chartRef = ref<HTMLDivElement | null>(null)
-  let chartInstance: echarts.ECharts | null = null
+  let chartInstance: ReturnType<typeof echarts.init> | null = null
 
   const HOURS = ['0:00', '2:00', '4:00', '6:00', '8:00', '10:00', '12:00', '14:00']
 
@@ -31,6 +31,7 @@
     if (!chartRef.value || !props.appData) return
     if (chartInstance) chartInstance.dispose()
     chartInstance = echarts.init(chartRef.value, null, { renderer: 'canvas' })
+    if (!chartInstance) return
     chartInstance.setOption({
       backgroundColor: 'transparent',
       animation: false,
