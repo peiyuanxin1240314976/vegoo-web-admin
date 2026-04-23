@@ -3,209 +3,236 @@
     <div v-if="loadError" class="card" style="padding: 10px 12px; color: #f87171">
       {{ loadError }}
     </div>
-    <!-- ── KPI Cards ─────────────────────────────── -->
-    <div class="kpi-row">
-      <div
-        class="kpi-card"
-        v-for="(kpi, i) in kpiCards"
-        :key="i"
-        :style="{ '--accent': kpi.color }"
-      >
-        <div class="kpi-info">
-          <div class="kpi-label">{{ kpi.label }}</div>
-          <div class="kpi-value" :style="{ color: kpi.color }">{{ kpi.value }}</div>
-          <div class="kpi-meta">
-            <span :class="kpi.trendUp !== false ? 'trend-up' : 'trend-down'" v-if="kpi.trendVal">
-              {{ kpi.trendUp !== false ? '↑' : '↓' }}{{ kpi.trendVal }}
-            </span>
-            <span class="kpi-sub">{{ kpi.sub }}</span>
-          </div>
+    <div v-else-if="loading" class="iap-tab-skeleton">
+      <div class="iap-tab-skeleton__kpis">
+        <div v-for="i in 4" :key="`product-kpi-${i}`" class="iap-tab-skeleton__kpi card">
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <ElSkeletonItem variant="text" style="width: 44%; margin-bottom: 10px" />
+              <ElSkeletonItem variant="h3" style="width: 66%; margin-bottom: 8px" />
+              <ElSkeletonItem variant="text" style="width: 52%" />
+            </template>
+          </ElSkeleton>
         </div>
-        <div class="kpi-spark" :ref="(el) => setSparkRef(el as HTMLElement, i)"></div>
       </div>
-    </div>
-
-    <!-- ── Top Grid: Product Table + Donut ───────── -->
-    <div class="top-grid">
-      <!-- Product Revenue Table with sub-tabs -->
-      <div class="card product-table-card">
-        <div class="table-header-row">
-          <span class="card-hd">商品收入排行表</span>
-          <div class="sub-tabs">
-            <span
-              v-for="st in subTabs"
-              :key="st.key"
-              class="sub-tab"
-              :class="{ 'sub-tab-active': activeSubTab === st.key }"
-              @click="activeSubTab = st.key"
-            >
-              {{ st.label }}
-            </span>
-          </div>
-        </div>
-        <table class="dt product-rank-table">
-          <thead>
-            <tr>
-              <th>商品名称</th><th>价格</th><th>类型</th>
-              <th :class="{ 'col-emphasis': activeSubTab === 'revenue' }">收入</th>
-              <th>占比</th>
-              <th :class="{ 'col-emphasis': activeSubTab === 'orders' }">订单量</th>
-              <th>ARPPU</th>
-              <th :class="{ 'col-emphasis': activeSubTab === 'retention' }">续订率</th>
-              <th :class="{ 'col-emphasis': activeSubTab === 'country' }">国家Top3</th>
-              <th>30天趋势</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="r in sortedProductRows" :key="r.name">
-              <td class="pname">{{ r.name }}</td>
-              <td>{{ r.price }}</td>
-              <td
-                ><span class="type-tag" :class="r.typeClass">{{ r.type }}</span></td
-              >
-              <td
-                class="text-white font-semibold"
-                :class="{ 'col-emphasis': activeSubTab === 'revenue' }"
-                >{{ r.revenue }}</td
-              >
-              <td>{{ r.pct }}%</td>
-              <td :class="{ 'col-emphasis': activeSubTab === 'orders' }">{{ r.orders }}</td>
-              <td>{{ r.arppu }}</td>
-              <td :class="{ 'col-emphasis': activeSubTab === 'retention' }">
-                <span :class="parseFloat(r.retention) >= 60 ? 'val-green' : 'val-red'">
-                  {{ r.retention }}%
-                </span>
-              </td>
-              <td class="val-muted" :class="{ 'col-emphasis': activeSubTab === 'country' }">{{
-                r.countries
-              }}</td>
-              <td>
-                <div
-                  class="mini-trend"
-                  :ref="(el) => setMiniRef(el as HTMLElement, r.name)"
-                  style="display: inline-block; width: 60px; height: 24px"
-                ></div>
-              </td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr class="total-row">
-              <td>合计</td><td>--</td><td>--</td> <td><b>$284,520</b></td
-              ><td><b>100%</b></td> <td><b>14,728</b></td
-              ><td><b>$30.82</b></td> <td><b>68.4%</b></td
-              ><td>--</td><td>--</td>
-            </tr>
-          </tfoot>
-        </table>
+      <div class="iap-tab-skeleton__grid">
+        <div class="card"><ElSkeleton animated :rows="8" /></div>
+        <div class="card"><ElSkeleton animated :rows="6" /></div>
       </div>
-
-      <!-- Revenue Composition Donut -->
-      <div class="card donut-card">
-        <div class="card-hd">商品收入构成</div>
-        <div ref="donutRef" style="height: 200px"></div>
-        <div class="donut-legend">
-          <div v-for="item in donutLegend" :key="item.name" class="dl-item">
-            <span class="dl-dot" :style="{ background: item.color }"></span>
-            <span class="dl-name">{{ item.name }}</span>
-            <span class="dl-pct">{{ item.pct }}%</span>
-            <span class="dl-val">{{ item.val }}</span>
-          </div>
+      <div class="iap-tab-skeleton__grid iap-tab-skeleton__grid--bottom">
+        <div class="card"><ElSkeleton animated :rows="8" /></div>
+        <div class="iap-tab-skeleton__stack">
+          <div class="card"><ElSkeleton animated :rows="5" /></div>
+          <div class="card"><ElSkeleton animated :rows="6" /></div>
+          <div class="card"><ElSkeleton animated :rows="5" /></div>
         </div>
       </div>
     </div>
-
-    <!-- ── Bottom Grid: Date Table + Right Charts ─── -->
-    <div class="btm-grid">
-      <!-- Date-based Order Summary -->
-      <div class="card date-table-card">
-        <div class="card-hd">按付费日期订单汇总（订阅/首购/续订/内购分类）</div>
-        <div class="card-sub-hd">注：总订阅数为截止到指定日期有效的订阅订单数量</div>
-        <table class="dt sm-dt">
-          <thead>
-            <tr>
-              <th rowspan="2">付费日期</th>
-              <th rowspan="2">总订阅数</th>
-              <th colspan="5">订单数量</th>
-              <th colspan="4">收入 (USD)</th>
-            </tr>
-            <tr>
-              <th>付费</th><th>订阅</th><th>内购</th><th>续订</th> <th>退款</th><th>取消</th>
-              <th>付费</th><th>订阅</th><th>内购</th><th>续订</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="r in dateRows" :key="r.date">
-              <td>{{ r.date }}</td>
-              <td>{{ r.total }}</td>
-              <td>{{ r.paid }}</td
-              ><td>{{ r.sub }}</td> <td>{{ r.iap }}</td
-              ><td>{{ r.renew }}</td> <td>{{ r.refund }}</td
-              ><td>{{ r.cancel }}</td>
-              <td class="val-cyan">{{ r.revPaid }}</td>
-              <td>{{ r.revSub }}</td>
-              <td>{{ r.revIap }}</td>
-              <td>{{ r.revRenew }}</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr class="total-row">
-              <td>合计</td><td>8,790</td> <td>889</td><td>834</td><td>115</td><td>42</td><td>1</td
-              ><td>6</td>
-              <td>$13</td>
-              <td class="val-cyan">$34,520</td><td>$27,094</td> <td>$4,643</td><td>$15,899</td>
-            </tr>
-          </tfoot>
-        </table>
+    <template v-else>
+      <!-- ── KPI Cards ─────────────────────────────── -->
+      <div class="kpi-row">
+        <div
+          class="kpi-card"
+          v-for="(kpi, i) in kpiCards"
+          :key="i"
+          :style="{ '--accent': kpi.color }"
+        >
+          <div class="kpi-info">
+            <div class="kpi-label">{{ kpi.label }}</div>
+            <div class="kpi-value" :style="{ color: kpi.color }">{{ kpi.value }}</div>
+            <div class="kpi-meta">
+              <span :class="kpi.trendUp !== false ? 'trend-up' : 'trend-down'" v-if="kpi.trendVal">
+                {{ kpi.trendUp !== false ? '↑' : '↓' }}{{ kpi.trendVal }}
+              </span>
+              <span class="kpi-sub">{{ kpi.sub }}</span>
+            </div>
+          </div>
+          <div class="kpi-spark" :ref="(el) => setSparkRef(el as HTMLElement, i)"></div>
+        </div>
       </div>
 
-      <!-- Right column: trend + retention + bar -->
-      <div class="right-col">
-        <!-- Revenue Trend Line -->
-        <div class="card">
-          <div class="card-hd">商品收入趋势近30天</div>
-          <div ref="trendRef" style="height: 150px"></div>
-        </div>
-
-        <!-- Subscription Retention by Product -->
-        <div class="card">
-          <div class="card-hd">订阅续订率队列（按商品）</div>
-          <table class="dt sm-dt hm-dt">
+      <!-- ── Top Grid: Product Table + Donut ───────── -->
+      <div class="top-grid">
+        <!-- Product Revenue Table with sub-tabs -->
+        <div class="card product-table-card">
+          <div class="table-header-row">
+            <span class="card-hd">商品收入排行表</span>
+            <div class="sub-tabs">
+              <span
+                v-for="st in subTabs"
+                :key="st.key"
+                class="sub-tab"
+                :class="{ 'sub-tab-active': activeSubTab === st.key }"
+                @click="activeSubTab = st.key"
+              >
+                {{ st.label }}
+              </span>
+            </div>
+          </div>
+          <table class="dt product-rank-table">
             <thead>
               <tr>
-                <th>商品</th>
-                <th>Month1</th><th>Month2</th> <th>Month3</th><th>Month4</th><th>Month5</th>
+                <th>商品名称</th><th>价格</th><th>类型</th>
+                <th :class="{ 'col-emphasis': activeSubTab === 'revenue' }">收入</th>
+                <th>占比</th>
+                <th :class="{ 'col-emphasis': activeSubTab === 'orders' }">订单量</th>
+                <th>ARPPU</th>
+                <th :class="{ 'col-emphasis': activeSubTab === 'retention' }">续订率</th>
+                <th :class="{ 'col-emphasis': activeSubTab === 'country' }">国家Top3</th>
+                <th>30天趋势</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="r in prodRetenRows" :key="r.name">
-                <td class="pname-sm">{{ r.name }}</td>
+              <tr v-for="r in sortedProductRows" :key="r.name">
+                <td class="pname">{{ r.name }}</td>
+                <td>{{ r.price }}</td>
                 <td
-                  ><span class="hm-cell" :class="hmCls(r.m1)">{{ r.m1 }}%</span></td
+                  ><span class="type-tag" :class="r.typeClass">{{ r.type }}</span></td
                 >
                 <td
-                  ><span class="hm-cell" :class="hmCls(r.m2)">{{ r.m2 }}%</span></td
+                  class="text-white font-semibold"
+                  :class="{ 'col-emphasis': activeSubTab === 'revenue' }"
+                  >{{ r.revenue }}</td
                 >
-                <td
-                  ><span class="hm-cell" :class="hmCls(r.m3)">{{ r.m3 }}%</span></td
-                >
-                <td
-                  ><span class="hm-cell" :class="hmCls(r.m4)">{{ r.m4 }}%</span></td
-                >
-                <td
-                  ><span class="hm-cell" :class="hmCls(r.m5)">{{ r.m5 }}%</span></td
-                >
+                <td>{{ r.pct }}%</td>
+                <td :class="{ 'col-emphasis': activeSubTab === 'orders' }">{{ r.orders }}</td>
+                <td>{{ r.arppu }}</td>
+                <td :class="{ 'col-emphasis': activeSubTab === 'retention' }">
+                  <span :class="parseFloat(r.retention) >= 60 ? 'val-green' : 'val-red'">
+                    {{ r.retention }}%
+                  </span>
+                </td>
+                <td class="val-muted" :class="{ 'col-emphasis': activeSubTab === 'country' }">{{
+                  r.countries
+                }}</td>
+                <td>
+                  <div
+                    class="mini-trend"
+                    :ref="(el) => setMiniRef(el as HTMLElement, r.name)"
+                    style="display: inline-block; width: 60px; height: 24px"
+                  ></div>
+                </td>
               </tr>
             </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td>合计</td><td>--</td><td>--</td> <td><b>$284,520</b></td
+                ><td><b>100%</b></td> <td><b>14,728</b></td
+                ><td><b>$30.82</b></td> <td><b>68.4%</b></td
+                ><td>--</td><td>--</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
-        <!-- Country Distribution Bar -->
-        <div class="card">
-          <div class="card-hd">商品国家分布 Top6</div>
-          <div ref="countryRef" style="height: 150px"></div>
+        <!-- Revenue Composition Donut -->
+        <div class="card donut-card">
+          <div class="card-hd">商品收入构成</div>
+          <div ref="donutRef" style="height: 200px"></div>
+          <div class="donut-legend">
+            <div v-for="item in donutLegend" :key="item.name" class="dl-item">
+              <span class="dl-dot" :style="{ background: item.color }"></span>
+              <span class="dl-name">{{ item.name }}</span>
+              <span class="dl-pct">{{ item.pct }}%</span>
+              <span class="dl-val">{{ item.val }}</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      <!-- ── Bottom Grid: Date Table + Right Charts ─── -->
+      <div class="btm-grid">
+        <!-- Date-based Order Summary -->
+        <div class="card date-table-card">
+          <div class="card-hd">按付费日期订单汇总（订阅/首购/续订/内购分类）</div>
+          <div class="card-sub-hd">注：总订阅数为截止到指定日期有效的订阅订单数量</div>
+          <table class="dt sm-dt">
+            <thead>
+              <tr>
+                <th rowspan="2">付费日期</th>
+                <th rowspan="2">总订阅数</th>
+                <th colspan="5">订单数量</th>
+                <th colspan="4">收入 (USD)</th>
+              </tr>
+              <tr>
+                <th>付费</th><th>订阅</th><th>内购</th><th>续订</th> <th>退款</th><th>取消</th>
+                <th>付费</th><th>订阅</th><th>内购</th><th>续订</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="r in dateRows" :key="r.date">
+                <td>{{ r.date }}</td>
+                <td>{{ r.total }}</td>
+                <td>{{ r.paid }}</td
+                ><td>{{ r.sub }}</td> <td>{{ r.iap }}</td
+                ><td>{{ r.renew }}</td> <td>{{ r.refund }}</td
+                ><td>{{ r.cancel }}</td>
+                <td class="val-cyan">{{ r.revPaid }}</td>
+                <td>{{ r.revSub }}</td>
+                <td>{{ r.revIap }}</td>
+                <td>{{ r.revRenew }}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td>合计</td><td>8,790</td> <td>889</td><td>834</td><td>115</td><td>42</td><td>1</td
+                ><td>6</td>
+                <td>$13</td>
+                <td class="val-cyan">$34,520</td><td>$27,094</td> <td>$4,643</td><td>$15,899</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Right column: trend + retention + bar -->
+        <div class="right-col">
+          <!-- Revenue Trend Line -->
+          <div class="card">
+            <div class="card-hd">商品收入趋势近30天</div>
+            <div ref="trendRef" style="height: 150px"></div>
+          </div>
+
+          <!-- Subscription Retention by Product -->
+          <div class="card">
+            <div class="card-hd">订阅续订率队列（按商品）</div>
+            <table class="dt sm-dt hm-dt">
+              <thead>
+                <tr>
+                  <th>商品</th>
+                  <th>Month1</th><th>Month2</th> <th>Month3</th><th>Month4</th><th>Month5</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in prodRetenRows" :key="r.name">
+                  <td class="pname-sm">{{ r.name }}</td>
+                  <td
+                    ><span class="hm-cell" :class="hmCls(r.m1)">{{ r.m1 }}%</span></td
+                  >
+                  <td
+                    ><span class="hm-cell" :class="hmCls(r.m2)">{{ r.m2 }}%</span></td
+                  >
+                  <td
+                    ><span class="hm-cell" :class="hmCls(r.m3)">{{ r.m3 }}%</span></td
+                  >
+                  <td
+                    ><span class="hm-cell" :class="hmCls(r.m4)">{{ r.m4 }}%</span></td
+                  >
+                  <td
+                    ><span class="hm-cell" :class="hmCls(r.m5)">{{ r.m5 }}%</span></td
+                  >
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Country Distribution Bar -->
+          <div class="card">
+            <div class="card-hd">商品国家分布 Top6</div>
+            <div ref="countryRef" style="height: 150px"></div>
+          </div>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -390,6 +417,8 @@
 
   async function load() {
     loadError.value = ''
+    chartInstances.forEach((c) => c.dispose())
+    chartInstances.length = 0
     loading.value = true
     try {
       const body = buildBody()
@@ -439,12 +468,13 @@
       revenueTrend30d.value = charts.revenueTrend30d
       subscriptionRetentionMatrix.value = charts.subscriptionRetentionMatrix
       countryBarTop.value = charts.countryBarTop
-
+      loading.value = false
+      await nextTick()
       rebuildCharts()
     } catch (e) {
       loadError.value = e instanceof Error ? e.message : String(e)
     } finally {
-      loading.value = false
+      if (loading.value) loading.value = false
     }
   }
 
@@ -706,6 +736,42 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+
+  .iap-tab-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__kpi {
+    padding: 16px 18px;
+  }
+
+  .iap-tab-skeleton__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 0.9fr);
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__grid--bottom {
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 0.9fr);
+    align-items: start;
+  }
+
+  .iap-tab-skeleton__stack {
+    display: grid;
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton :deep(.el-skeleton) {
+    padding: 16px 18px;
   }
 
   /* KPI */

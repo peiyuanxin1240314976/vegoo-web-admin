@@ -71,6 +71,46 @@
   const pieChartEl = ref<HTMLElement | null>(null)
   let lineChart: ReturnType<typeof echarts.init> | null = null
   let pieChart: ReturnType<typeof echarts.init> | null = null
+  let chartResizeObserver: ResizeObserver | null = null
+
+  function observeChartContainers() {
+    chartResizeObserver?.disconnect()
+    chartResizeObserver = null
+
+    if (typeof ResizeObserver === 'undefined') return
+
+    chartResizeObserver = new ResizeObserver(() => {
+      if (showSkeleton.value) return
+      if (!trendIsEmpty.value) {
+        updateLineChart()
+        lineChart?.resize()
+      }
+      if (!sourcePieIsEmpty.value) {
+        updatePieChart()
+        pieChart?.resize()
+      }
+    })
+
+    if (lineChartEl.value) chartResizeObserver.observe(lineChartEl.value)
+    if (pieChartEl.value) chartResizeObserver.observe(pieChartEl.value)
+  }
+
+  async function renderCharts() {
+    await nextTick()
+    await nextTick()
+
+    if (!trendIsEmpty.value) {
+      updateLineChart()
+      lineChart?.resize()
+    }
+
+    if (!sourcePieIsEmpty.value) {
+      updatePieChart()
+      pieChart?.resize()
+    }
+
+    observeChartContainers()
+  }
 
   function updateLineChart() {
     if (!lineChartEl.value || !props.data?.trend) return
@@ -324,9 +364,11 @@
         pieChart.dispose()
         pieChart = null
       } else if (props.data && !sourcePieIsEmpty.value) {
-        await nextTick()
-        updatePieChart()
+        await renderCharts()
+        return
       }
+
+      observeChartContainers()
     },
     { immediate: true }
   )
@@ -342,6 +384,8 @@
 
   onUnmounted(() => {
     window.removeEventListener('resize', handleResize)
+    chartResizeObserver?.disconnect()
+    chartResizeObserver = null
     lineChart?.dispose()
     pieChart?.dispose()
     lineChart = null

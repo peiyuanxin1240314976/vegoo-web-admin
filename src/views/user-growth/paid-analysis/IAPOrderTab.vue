@@ -3,483 +3,510 @@
     <div v-if="loadError" class="card" style="padding: 10px 12px; color: #f87171">
       {{ loadError }}
     </div>
-    <!-- ── KPI Cards ─────────────────────────────── -->
-    <div class="kpi-row">
-      <div
-        class="kpi-card"
-        v-for="(kpi, i) in displayKpiCards"
-        :key="i"
-        :style="{ '--accent': kpi.color }"
-      >
-        <div class="kpi-info">
-          <div class="kpi-label">{{ kpi.label }}</div>
-          <div class="kpi-value" :style="{ color: kpi.color }">{{ kpi.value }}</div>
-          <div class="kpi-meta">
-            <span :class="kpi.trendUp ? 'trend-up' : 'trend-down'" v-if="kpi.trendVal">
-              {{ kpi.trendUp ? '↑' : '↓' }}{{ kpi.trendVal }}
-            </span>
-            <span class="kpi-sub">{{ kpi.sub }}</span>
-          </div>
+    <div v-else-if="loading" class="iap-tab-skeleton">
+      <div class="iap-tab-skeleton__kpis">
+        <div v-for="i in 4" :key="`order-kpi-${i}`" class="iap-tab-skeleton__kpi card">
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <ElSkeletonItem variant="text" style="width: 44%; margin-bottom: 10px" />
+              <ElSkeletonItem variant="h3" style="width: 66%; margin-bottom: 8px" />
+              <ElSkeletonItem variant="text" style="width: 52%" />
+            </template>
+          </ElSkeleton>
         </div>
+      </div>
+      <div class="card"><ElSkeleton animated :rows="3" /></div>
+      <div class="iap-tab-skeleton__grid">
+        <div class="card"><ElSkeleton animated :rows="8" /></div>
+        <div class="card"><ElSkeleton animated :rows="8" /></div>
+      </div>
+      <div class="iap-tab-skeleton__grid iap-tab-skeleton__grid--bottom">
+        <div class="card"><ElSkeleton animated :rows="10" /></div>
+        <div class="card"><ElSkeleton animated :rows="8" /></div>
       </div>
     </div>
-
-    <!-- ── Filters Row ────────────────────────────── -->
-    <div class="filter-row">
-      <div class="filter-item filter-item--range">
-        <span class="fl">日期范围</span>
-        <AppDatePicker
-          v-model="orderDateRange"
-          type="daterange"
-          :shortcuts="dateRangeShortcuts"
-          unlink-panels
-          value-format="YYYY-MM-DD"
-          format="YYYY-MM-DD"
-          range-separator="~"
-          start-placeholder="开始"
-          end-placeholder="结束"
-          class="fi-range"
-        />
-      </div>
-      <el-select v-model="fApp" size="small" placeholder="应用" class="fi-sel">
-        <el-option label="全部" value="all" />
-        <el-option label="Weather5" value="weather5" />
-        <el-option label="PhoneTracker" value="phonetracker" />
-        <el-option label="PhoneTracker2" value="phonetracker2" />
-        <el-option label="YearCam" value="yearcam" />
-        <el-option label="AgeCam" value="agecam" />
-      </el-select>
-      <el-select v-model="fChannel" size="small" placeholder="广告平台" class="fi-sel">
-        <el-option label="全部" value="all" />
-        <el-option label="Google" value="google" />
-        <el-option label="Facebook" value="facebook" />
-        <el-option label="TikTok" value="tiktok" />
-        <el-option label="自然量" value="organic" />
-      </el-select>
-      <el-select v-model="fCountry" size="small" placeholder="国家" class="fi-sel">
-        <el-option label="全部" value="all" />
-        <el-option label="US" value="us" />
-        <el-option label="DE" value="de" />
-        <el-option label="JP" value="jp" />
-        <el-option label="KR" value="kr" />
-        <el-option label="CA" value="ca" />
-        <el-option label="GB" value="gb" />
-      </el-select>
-      <el-select v-model="fProduct" size="small" placeholder="商品" class="fi-sel">
-        <el-option label="全部" value="all" />
-        <el-option label="年订" value="annual" />
-        <el-option label="月订" value="monthly" />
-      </el-select>
-      <el-select v-model="fStatus" size="small" placeholder="状态" class="fi-sel">
-        <el-option label="全部" value="all" />
-        <el-option label="成功" value="success" />
-        <el-option label="退款" value="refund" />
-        <el-option label="失败" value="fail" />
-      </el-select>
-      <el-input
-        v-model="searchKw"
-        size="small"
-        placeholder="订单号/用户ID"
-        class="fi-search"
-        clearable
-        @keyup.enter="handleOrderSearch"
-      >
-        <template #prefix>
-          <ElIcon class="fi-search-icon"><Search /></ElIcon>
-        </template>
-      </el-input>
-      <div class="filter-row-actions">
-        <ElButton
-          type="primary"
-          plain
-          round
-          size="default"
-          class="order-search-btn"
-          @click="handleOrderSearch"
-          >搜索</ElButton
+    <template v-else>
+      <!-- ── KPI Cards ─────────────────────────────── -->
+      <div class="kpi-row">
+        <div
+          class="kpi-card"
+          v-for="(kpi, i) in displayKpiCards"
+          :key="i"
+          :style="{ '--accent': kpi.color }"
         >
-        <ElButton type="primary" plain round size="default" class="export-btn-sm"
-          >↓ 导出数据</ElButton
-        >
-      </div>
-    </div>
-
-    <!-- ── Main Content ───────────────────────────── -->
-    <div class="main-layout" :class="{ 'detail-open': !!selectedOrder }">
-      <div class="left-content">
-        <!-- Top Two-column -->
-        <div class="dual-grid">
-          <!-- App × Platform Summary -->
-          <div class="card">
-            <div class="card-hd">
-              应用 × 平台 订单汇总
-              <span class="card-note"
-                >注：安卓仅支持指定日期之后的数据，平台未配置的应用归入其他，总订阅数为截止到指定日期有效的订阅订单数量</span
-              >
-            </div>
-            <table class="dt sm-dt">
-              <thead>
-                <tr>
-                  <th rowspan="2">应用</th>
-                  <th rowspan="2">平台</th>
-                  <th rowspan="2">总订阅数</th>
-                  <th colspan="6">订单数量</th>
-                  <th colspan="4">收入 (USD)</th>
-                </tr>
-                <tr>
-                  <th>付费</th><th>订阅</th><th>内购</th> <th>续订</th><th>退款</th><th>取消</th>
-                  <th>付费</th><th>订阅</th><th>内购</th><th>续订</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="r in filteredAppPlatRows" :key="r.appName + r.platform">
-                  <td class="ch-name">{{ r.appName }}</td>
-                  <td
-                    ><span
-                      class="plat-tag"
-                      :class="
-                        r.platform === 'iOS'
-                          ? 'plat-ios'
-                          : r.platform === 'Android'
-                            ? 'plat-android'
-                            : ''
-                      "
-                      >{{ r.platform }}</span
-                    ></td
-                  >
-                  <td>{{ r.totalSubscriptions }}</td>
-                  <td>{{ r.paid }}</td
-                  ><td>{{ r.sub }}</td
-                  ><td>{{ r.iap }}</td> <td>{{ r.renew }}</td
-                  ><td>{{ r.refund }}</td
-                  ><td>{{ r.cancel }}</td>
-                  <td class="val-cyan">{{ r.rPaid }}</td>
-                  <td>{{ r.rSub }}</td
-                  ><td>{{ r.rIap }}</td
-                  ><td>{{ r.rRenew }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Daily Summary -->
-          <div class="card">
-            <div class="card-hd">
-              按日期订单汇总
-              <div class="card-action">国家下钻: 全部 ▾</div>
-            </div>
-            <table class="dt sm-dt">
-              <thead>
-                <tr>
-                  <th>日期</th><th>付费收入</th><th>付费人数</th> <th>付费率</th><th>订单量</th
-                  ><th>广告支出</th> <th>CPA</th><th>新用户</th><th>续订率</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="r in filteredDailyRows"
-                  :key="r.date + '-' + r.users + '-' + r.orders"
-                  :class="{ 'row-selected': r.date === highlightDailyDate }"
-                >
-                  <td class="val-cyan cursor-pointer">{{ r.date }}</td>
-                  <td>{{ r.rev }}</td
-                  ><td>{{ r.users }}</td> <td>{{ r.payRate }}</td
-                  ><td>{{ r.orders }}</td> <td>{{ r.adSpend }}</td
-                  ><td>{{ r.cpa }}</td>
-                  <td>{{ r.newUsers }}</td>
-                  <td>
-                    <span
-                      class="reten-pill"
-                      :class="parseFloat(r.reten) >= 20 ? 'ret-high' : 'ret-low'"
-                    >
-                      {{ r.reten }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr class="total-row">
-                  <td>合计</td><td>$4,103</td><td>1,503</td> <td>90.0%</td><td>430</td>
-                  <td>$1,750</td><td>0.04</td><td>17</td>
-                  <td><span class="reten-pill ret-high">20%</span></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-
-        <!-- Order List + Charts Row -->
-        <div class="order-charts-grid">
-          <!-- Order List -->
-          <div class="card order-list-card">
-            <div class="list-header">
-              <span class="card-hd" style="margin: 0">订单列表</span>
-              <span class="record-count">{{ orderListRangeText }}</span>
-            </div>
-            <table class="dt order-dt">
-              <thead>
-                <tr>
-                  <th>订单号</th><th>用户ID</th><th>应用</th> <th>商品</th><th>金额</th
-                  ><th>广告平台</th> <th>国家</th><th>下单时间</th><th>支付方式</th> <th>状态</th
-                  ><th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="r in filteredOrderRows"
-                  :key="r.uid"
-                  :class="{ 'row-selected': selectedOrder?.uid === r.uid }"
-                >
-                  <td class="order-id" @click="selectOrder(r)">{{ r.id }}</td>
-                  <td class="val-blue">{{ r.userId }}</td>
-                  <td>{{ r.app }}</td>
-                  <td class="order-product">{{ r.product }}</td>
-                  <td>{{ r.amount }}</td>
-                  <td>{{ r.channel }}</td>
-                  <td>
-                    <span
-                      v-if="r.countryCode"
-                      class="country-flag fi"
-                      :class="'fi-' + r.countryCode"
-                    />
-                  </td>
-                  <td class="val-muted">{{ r.time }}</td>
-                  <td class="val-muted">{{ r.payMethod }}</td>
-                  <td>
-                    <span class="status-tag" :class="r.statusClass">{{ r.status }}</span>
-                  </td>
-                  <td>
-                    <span class="link-btn" @click="selectOrder(r)">查看</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="pagination">
-              <span class="page-btn">‹ 1</span>
-              <span class="page-cur">2</span>
-              <span class="page-btn">… 813 ›</span>
-              <span class="page-info">showing 1-8 of 9,749</span>
-            </div>
-          </div>
-
-          <!-- Right Charts -->
-          <div class="charts-col">
-            <div class="card">
-              <div class="card-hd">24小时订单金额分布</div>
-              <div ref="hourRef" style="height: 160px"></div>
-            </div>
-            <div class="card">
-              <div class="card-hd">商品类型订单占比</div>
-              <div ref="typeRef" style="height: 160px"></div>
+          <div class="kpi-info">
+            <div class="kpi-label">{{ kpi.label }}</div>
+            <div class="kpi-value" :style="{ color: kpi.color }">{{ kpi.value }}</div>
+            <div class="kpi-meta">
+              <span :class="kpi.trendUp ? 'trend-up' : 'trend-down'" v-if="kpi.trendVal">
+                {{ kpi.trendUp ? '↑' : '↓' }}{{ kpi.trendVal }}
+              </span>
+              <span class="kpi-sub">{{ kpi.sub }}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── Order Detail Panel ────────────────── -->
-      <transition name="slide">
-        <div class="detail-panel" v-if="selectedOrder">
-          <div class="detail-header">
-            <div class="detail-title">
-              <el-icon><Document /></el-icon>
-              订单详情
-            </div>
-            <div class="detail-order-id">{{ selectedOrder.id }}</div>
-            <span class="close-btn" @click="selectedOrder = null">✕</span>
-          </div>
-
-          <div
-            class="pay-status"
-            :class="{
-              'pay-status--ok': selectedOrder.status === '成功',
-              'pay-status--refund': selectedOrder.status === '退款',
-              'pay-status--fail': selectedOrder.status === '失败'
-            }"
+      <!-- ── Filters Row ────────────────────────────── -->
+      <div class="filter-row">
+        <div class="filter-item filter-item--range">
+          <span class="fl">日期范围</span>
+          <AppDatePicker
+            v-model="orderDateRange"
+            type="daterange"
+            :shortcuts="dateRangeShortcuts"
+            unlink-panels
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
+            range-separator="~"
+            start-placeholder="开始"
+            end-placeholder="结束"
+            class="fi-range"
+          />
+        </div>
+        <el-select v-model="fApp" size="small" placeholder="应用" class="fi-sel">
+          <el-option label="全部" value="all" />
+          <el-option label="Weather5" value="weather5" />
+          <el-option label="PhoneTracker" value="phonetracker" />
+          <el-option label="PhoneTracker2" value="phonetracker2" />
+          <el-option label="YearCam" value="yearcam" />
+          <el-option label="AgeCam" value="agecam" />
+        </el-select>
+        <el-select v-model="fChannel" size="small" placeholder="广告平台" class="fi-sel">
+          <el-option label="全部" value="all" />
+          <el-option label="Google" value="google" />
+          <el-option label="Facebook" value="facebook" />
+          <el-option label="TikTok" value="tiktok" />
+          <el-option label="自然量" value="organic" />
+        </el-select>
+        <el-select v-model="fCountry" size="small" placeholder="国家" class="fi-sel">
+          <el-option label="全部" value="all" />
+          <el-option label="US" value="us" />
+          <el-option label="DE" value="de" />
+          <el-option label="JP" value="jp" />
+          <el-option label="KR" value="kr" />
+          <el-option label="CA" value="ca" />
+          <el-option label="GB" value="gb" />
+        </el-select>
+        <el-select v-model="fProduct" size="small" placeholder="商品" class="fi-sel">
+          <el-option label="全部" value="all" />
+          <el-option label="年订" value="annual" />
+          <el-option label="月订" value="monthly" />
+        </el-select>
+        <el-select v-model="fStatus" size="small" placeholder="状态" class="fi-sel">
+          <el-option label="全部" value="all" />
+          <el-option label="成功" value="success" />
+          <el-option label="退款" value="refund" />
+          <el-option label="失败" value="fail" />
+        </el-select>
+        <el-input
+          v-model="searchKw"
+          size="small"
+          placeholder="订单号/用户ID"
+          class="fi-search"
+          clearable
+          @keyup.enter="handleOrderSearch"
+        >
+          <template #prefix>
+            <ElIcon class="fi-search-icon"><Search /></ElIcon>
+          </template>
+        </el-input>
+        <div class="filter-row-actions">
+          <ElButton
+            type="primary"
+            plain
+            round
+            size="default"
+            class="order-search-btn"
+            @click="handleOrderSearch"
+            >搜索</ElButton
           >
-            <span class="pay-ok-dot">{{ selectedOrder.status === '成功' ? '✓' : '!' }}</span>
-            <span class="pay-ok-text">{{
-              selectedOrder.status === '成功'
-                ? '支付成功'
-                : selectedOrder.status === '退款'
-                  ? '已退款'
-                  : '支付失败'
-            }}</span>
-            <span class="pay-amount">{{
-              selectedOrderDetail?.priceLabel ?? selectedOrder.amount
-            }}</span>
-          </div>
+          <ElButton type="primary" plain round size="default" class="export-btn-sm"
+            >↓ 导出数据</ElButton
+          >
+        </div>
+      </div>
 
-          <div class="detail-sections">
-            <div v-if="selectedOrderDetailLoading" class="detail-section">
-              <div class="ds-title">加载中…</div>
-            </div>
-            <div class="detail-section">
-              <div class="ds-title">基本信息</div>
-              <div class="ds-grid">
-                <div class="ds-row"
-                  ><span class="ds-k">订单号</span
-                  ><span class="ds-v">{{ selectedOrder.id }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">用户ID</span
-                  ><span class="ds-v val-blue">{{ selectedOrder.userId }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">应用</span
-                  ><span class="ds-v">{{
-                    selectedOrderDetail?.appName ?? selectedOrder.app
-                  }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">平台</span
-                  ><span class="ds-v">{{ selectedOrderDetail?.platform ?? '--' }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">商品</span
-                  ><span class="ds-v">{{
-                    selectedOrderDetail?.skuName ?? selectedOrder.product
-                  }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">商品ID</span
-                  ><span class="ds-v val-muted">{{ selectedOrderDetail?.skuId ?? '--' }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">价格</span
-                  ><span class="ds-v">{{
-                    selectedOrderDetail?.priceLabel ?? selectedOrder.amount
-                  }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">支付方式</span
-                  ><span class="ds-v">{{
-                    selectedOrderDetail?.paymentPlatform ?? selectedOrder.payMethod
-                  }}</span></div
+      <!-- ── Main Content ───────────────────────────── -->
+      <div class="main-layout" :class="{ 'detail-open': !!selectedOrder }">
+        <div class="left-content">
+          <!-- Top Two-column -->
+          <div class="dual-grid">
+            <!-- App × Platform Summary -->
+            <div class="card">
+              <div class="card-hd">
+                应用 × 平台 订单汇总
+                <span class="card-note"
+                  >注：安卓仅支持指定日期之后的数据，平台未配置的应用归入其他，总订阅数为截止到指定日期有效的订阅订单数量</span
                 >
               </div>
+              <table class="dt sm-dt">
+                <thead>
+                  <tr>
+                    <th rowspan="2">应用</th>
+                    <th rowspan="2">平台</th>
+                    <th rowspan="2">总订阅数</th>
+                    <th colspan="6">订单数量</th>
+                    <th colspan="4">收入 (USD)</th>
+                  </tr>
+                  <tr>
+                    <th>付费</th><th>订阅</th><th>内购</th> <th>续订</th><th>退款</th><th>取消</th>
+                    <th>付费</th><th>订阅</th><th>内购</th><th>续订</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="r in filteredAppPlatRows" :key="r.appName + r.platform">
+                    <td class="ch-name">{{ r.appName }}</td>
+                    <td
+                      ><span
+                        class="plat-tag"
+                        :class="
+                          r.platform === 'iOS'
+                            ? 'plat-ios'
+                            : r.platform === 'Android'
+                              ? 'plat-android'
+                              : ''
+                        "
+                        >{{ r.platform }}</span
+                      ></td
+                    >
+                    <td>{{ r.totalSubscriptions }}</td>
+                    <td>{{ r.paid }}</td
+                    ><td>{{ r.sub }}</td
+                    ><td>{{ r.iap }}</td> <td>{{ r.renew }}</td
+                    ><td>{{ r.refund }}</td
+                    ><td>{{ r.cancel }}</td>
+                    <td class="val-cyan">{{ r.rPaid }}</td>
+                    <td>{{ r.rSub }}</td
+                    ><td>{{ r.rIap }}</td
+                    ><td>{{ r.rRenew }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <div class="detail-section">
-              <div class="ds-title">广告平台与地区</div>
-              <div class="ds-grid">
-                <div class="ds-row"
-                  ><span class="ds-k">广告平台</span
-                  ><span class="ds-v">{{
-                    selectedOrderDetail?.source ?? selectedOrder.channel
-                  }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">国家/地区</span>
-                  <span class="ds-v ds-v--country">
-                    <span
-                      v-if="selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode"
-                      class="fi mr-1"
-                      :class="
-                        'fi-' + (selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode)
-                      "
-                    />
-                    {{
-                      (
-                        selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode
-                      ).toUpperCase()
-                    }}
-                  </span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">时区</span
-                  ><span class="ds-v">{{ selectedOrderDetail?.timezoneLabel ?? '--' }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">货币</span
-                  ><span class="ds-v">{{ selectedOrderDetail?.currency ?? 'USD' }}</span></div
-                >
+            <!-- Daily Summary -->
+            <div class="card">
+              <div class="card-hd">
+                按日期订单汇总
+                <div class="card-action">国家下钻: 全部 ▾</div>
               </div>
-            </div>
-
-            <div class="detail-section">
-              <div class="ds-title">时间信息</div>
-              <div class="ds-grid">
-                <div class="ds-row"
-                  ><span class="ds-k">下单时间</span
-                  ><span class="ds-v">{{ selectedOrderDetail?.orderTime ?? '--' }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">支付时间</span
-                  ><span class="ds-v">{{ selectedOrderDetail?.payTime ?? '--' }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">订阅开始</span
-                  ><span class="ds-v">{{ selectedOrderDetail?.subStartDate ?? '--' }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">订阅到期</span
-                  ><span class="ds-v">{{ selectedOrderDetail?.subEndDate ?? '--' }}</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">首次付费</span
-                  ><span
-                    class="ds-v"
-                    :class="selectedOrderDetail?.isFirstPay ? 'val-green' : 'val-muted'"
-                    >{{ selectedOrderDetail?.isFirstPay ? '是' : '否' }}</span
-                  ></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">首次付费周期</span
-                  ><span class="ds-v"
-                    >{{ selectedOrderDetail?.firstPayCycleDays ?? 0 }}天</span
-                  ></div
-                >
-              </div>
-            </div>
-
-            <div class="detail-section">
-              <div class="ds-title">订阅状态</div>
-              <div class="ds-grid">
-                <div class="ds-row"
-                  ><span class="ds-k">订阅类型</span><span class="ds-v">年度订阅</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">自动续费</span><span class="ds-v val-green">已开启</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">续费次数</span><span class="ds-v">0次（首次）</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">预计续费日</span><span class="ds-v">2027-03-05</span></div
-                >
-              </div>
-            </div>
-
-            <div class="detail-section">
-              <div class="ds-title">收入归因</div>
-              <div class="ds-grid">
-                <div class="ds-row"
-                  ><span class="ds-k">归因广告平台</span><span class="ds-v">Google UAC</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">Campaign</span
-                  ><span class="ds-v val-muted">Weather5_US_Annual_0305</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">广告组</span
-                  ><span class="ds-v val-muted">AG_US_iOS_Annual</span></div
-                >
-                <div class="ds-row"
-                  ><span class="ds-k">归因模型</span><span class="ds-v">Last Click</span></div
-                >
-              </div>
+              <table class="dt sm-dt">
+                <thead>
+                  <tr>
+                    <th>日期</th><th>付费收入</th><th>付费人数</th> <th>付费率</th><th>订单量</th
+                    ><th>广告支出</th> <th>CPA</th><th>新用户</th><th>续订率</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="r in filteredDailyRows"
+                    :key="r.date + '-' + r.users + '-' + r.orders"
+                    :class="{ 'row-selected': r.date === highlightDailyDate }"
+                  >
+                    <td class="val-cyan cursor-pointer">{{ r.date }}</td>
+                    <td>{{ r.rev }}</td
+                    ><td>{{ r.users }}</td> <td>{{ r.payRate }}</td
+                    ><td>{{ r.orders }}</td> <td>{{ r.adSpend }}</td
+                    ><td>{{ r.cpa }}</td>
+                    <td>{{ r.newUsers }}</td>
+                    <td>
+                      <span
+                        class="reten-pill"
+                        :class="parseFloat(r.reten) >= 20 ? 'ret-high' : 'ret-low'"
+                      >
+                        {{ r.reten }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class="total-row">
+                    <td>合计</td><td>$4,103</td><td>1,503</td> <td>90.0%</td><td>430</td>
+                    <td>$1,750</td><td>0.04</td><td>17</td>
+                    <td><span class="reten-pill ret-high">20%</span></td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
           </div>
 
-          <div class="detail-footer">
-            <el-button size="small" class="detail-btn">‹ 上一条</el-button>
-            <el-button size="small" class="detail-btn">下一条 ›</el-button>
-            <el-button size="small" class="detail-btn-primary">复制订单号</el-button>
-            <el-button size="small" class="detail-btn-outline">导出此订单</el-button>
+          <!-- Order List + Charts Row -->
+          <div class="order-charts-grid">
+            <!-- Order List -->
+            <div class="card order-list-card">
+              <div class="list-header">
+                <span class="card-hd" style="margin: 0">订单列表</span>
+                <span class="record-count">{{ orderListRangeText }}</span>
+              </div>
+              <table class="dt order-dt">
+                <thead>
+                  <tr>
+                    <th>订单号</th><th>用户ID</th><th>应用</th> <th>商品</th><th>金额</th
+                    ><th>广告平台</th> <th>国家</th><th>下单时间</th><th>支付方式</th> <th>状态</th
+                    ><th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="r in filteredOrderRows"
+                    :key="r.uid"
+                    :class="{ 'row-selected': selectedOrder?.uid === r.uid }"
+                  >
+                    <td class="order-id" @click="selectOrder(r)">{{ r.id }}</td>
+                    <td class="val-blue">{{ r.userId }}</td>
+                    <td>{{ r.app }}</td>
+                    <td class="order-product">{{ r.product }}</td>
+                    <td>{{ r.amount }}</td>
+                    <td>{{ r.channel }}</td>
+                    <td>
+                      <span
+                        v-if="r.countryCode"
+                        class="country-flag fi"
+                        :class="'fi-' + r.countryCode"
+                      />
+                    </td>
+                    <td class="val-muted">{{ r.time }}</td>
+                    <td class="val-muted">{{ r.payMethod }}</td>
+                    <td>
+                      <span class="status-tag" :class="r.statusClass">{{ r.status }}</span>
+                    </td>
+                    <td>
+                      <span class="link-btn" @click="selectOrder(r)">查看</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="pagination">
+                <span class="page-btn">‹ 1</span>
+                <span class="page-cur">2</span>
+                <span class="page-btn">… 813 ›</span>
+                <span class="page-info">showing 1-8 of 9,749</span>
+              </div>
+            </div>
+
+            <!-- Right Charts -->
+            <div class="charts-col">
+              <div class="card">
+                <div class="card-hd">24小时订单金额分布</div>
+                <div ref="hourRef" style="height: 160px"></div>
+              </div>
+              <div class="card">
+                <div class="card-hd">商品类型订单占比</div>
+                <div ref="typeRef" style="height: 160px"></div>
+              </div>
+            </div>
           </div>
         </div>
-      </transition>
-    </div>
+
+        <!-- ── Order Detail Panel ────────────────── -->
+        <transition name="slide">
+          <div class="detail-panel" v-if="selectedOrder">
+            <div class="detail-header">
+              <div class="detail-title">
+                <el-icon><Document /></el-icon>
+                订单详情
+              </div>
+              <div class="detail-order-id">{{ selectedOrder.id }}</div>
+              <span class="close-btn" @click="selectedOrder = null">✕</span>
+            </div>
+
+            <div
+              class="pay-status"
+              :class="{
+                'pay-status--ok': selectedOrder.status === '成功',
+                'pay-status--refund': selectedOrder.status === '退款',
+                'pay-status--fail': selectedOrder.status === '失败'
+              }"
+            >
+              <span class="pay-ok-dot">{{ selectedOrder.status === '成功' ? '✓' : '!' }}</span>
+              <span class="pay-ok-text">{{
+                selectedOrder.status === '成功'
+                  ? '支付成功'
+                  : selectedOrder.status === '退款'
+                    ? '已退款'
+                    : '支付失败'
+              }}</span>
+              <span class="pay-amount">{{
+                selectedOrderDetail?.priceLabel ?? selectedOrder.amount
+              }}</span>
+            </div>
+
+            <div class="detail-sections">
+              <div v-if="selectedOrderDetailLoading" class="detail-section">
+                <div class="ds-title">加载中…</div>
+              </div>
+              <div class="detail-section">
+                <div class="ds-title">基本信息</div>
+                <div class="ds-grid">
+                  <div class="ds-row"
+                    ><span class="ds-k">订单号</span
+                    ><span class="ds-v">{{ selectedOrder.id }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">用户ID</span
+                    ><span class="ds-v val-blue">{{ selectedOrder.userId }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">应用</span
+                    ><span class="ds-v">{{
+                      selectedOrderDetail?.appName ?? selectedOrder.app
+                    }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">平台</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.platform ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">商品</span
+                    ><span class="ds-v">{{
+                      selectedOrderDetail?.skuName ?? selectedOrder.product
+                    }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">商品ID</span
+                    ><span class="ds-v val-muted">{{
+                      selectedOrderDetail?.skuId ?? '--'
+                    }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">价格</span
+                    ><span class="ds-v">{{
+                      selectedOrderDetail?.priceLabel ?? selectedOrder.amount
+                    }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">支付方式</span
+                    ><span class="ds-v">{{
+                      selectedOrderDetail?.paymentPlatform ?? selectedOrder.payMethod
+                    }}</span></div
+                  >
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="ds-title">广告平台与地区</div>
+                <div class="ds-grid">
+                  <div class="ds-row"
+                    ><span class="ds-k">广告平台</span
+                    ><span class="ds-v">{{
+                      selectedOrderDetail?.source ?? selectedOrder.channel
+                    }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">国家/地区</span>
+                    <span class="ds-v ds-v--country">
+                      <span
+                        v-if="selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode"
+                        class="fi mr-1"
+                        :class="
+                          'fi-' + (selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode)
+                        "
+                      />
+                      {{
+                        (
+                          selectedOrderDetail?.s_country_code ?? selectedOrder.countryCode
+                        ).toUpperCase()
+                      }}
+                    </span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">时区</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.timezoneLabel ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">货币</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.currency ?? 'USD' }}</span></div
+                  >
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="ds-title">时间信息</div>
+                <div class="ds-grid">
+                  <div class="ds-row"
+                    ><span class="ds-k">下单时间</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.orderTime ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">支付时间</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.payTime ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">订阅开始</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.subStartDate ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">订阅到期</span
+                    ><span class="ds-v">{{ selectedOrderDetail?.subEndDate ?? '--' }}</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">首次付费</span
+                    ><span
+                      class="ds-v"
+                      :class="selectedOrderDetail?.isFirstPay ? 'val-green' : 'val-muted'"
+                      >{{ selectedOrderDetail?.isFirstPay ? '是' : '否' }}</span
+                    ></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">首次付费周期</span
+                    ><span class="ds-v"
+                      >{{ selectedOrderDetail?.firstPayCycleDays ?? 0 }}天</span
+                    ></div
+                  >
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="ds-title">订阅状态</div>
+                <div class="ds-grid">
+                  <div class="ds-row"
+                    ><span class="ds-k">订阅类型</span><span class="ds-v">年度订阅</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">自动续费</span
+                    ><span class="ds-v val-green">已开启</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">续费次数</span><span class="ds-v">0次（首次）</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">预计续费日</span><span class="ds-v">2027-03-05</span></div
+                  >
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="ds-title">收入归因</div>
+                <div class="ds-grid">
+                  <div class="ds-row"
+                    ><span class="ds-k">归因广告平台</span><span class="ds-v">Google UAC</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">Campaign</span
+                    ><span class="ds-v val-muted">Weather5_US_Annual_0305</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">广告组</span
+                    ><span class="ds-v val-muted">AG_US_iOS_Annual</span></div
+                  >
+                  <div class="ds-row"
+                    ><span class="ds-k">归因模型</span><span class="ds-v">Last Click</span></div
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-footer">
+              <el-button size="small" class="detail-btn">‹ 上一条</el-button>
+              <el-button size="small" class="detail-btn">下一条 ›</el-button>
+              <el-button size="small" class="detail-btn-primary">复制订单号</el-button>
+              <el-button size="small" class="detail-btn-outline">导出此订单</el-button>
+            </div>
+          </div>
+        </transition>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -921,6 +948,8 @@
 
   async function loadAll() {
     loadError.value = ''
+    chartInstances.forEach((c) => c.dispose())
+    chartInstances.length = 0
     loading.value = true
     try {
       const [s, list] = await Promise.all([
@@ -929,10 +958,13 @@
       ])
       summary.value = s
       orderList.value = list
+      loading.value = false
+      await nextTick()
+      rebuildCharts()
     } catch (e) {
       loadError.value = e instanceof Error ? e.message : String(e)
     } finally {
-      loading.value = false
+      if (loading.value) loading.value = false
     }
   }
 
@@ -955,6 +987,36 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+
+  .iap-tab-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__kpi {
+    padding: 16px 18px;
+  }
+
+  .iap-tab-skeleton__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__grid--bottom {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  }
+
+  .iap-tab-skeleton :deep(.el-skeleton) {
+    padding: 16px 18px;
   }
 
   /* KPI */

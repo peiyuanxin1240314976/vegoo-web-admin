@@ -3,189 +3,219 @@
     <div v-if="loadError" class="card" style="padding: 10px 12px; color: #f87171">
       {{ loadError }}
     </div>
-    <!-- ── KPI Cards ─────────────────────────────── -->
-    <div class="kpi-row">
-      <div
-        class="kpi-card"
-        v-for="(kpi, i) in kpiCards"
-        :key="i"
-        :style="{ '--accent': kpi.color }"
-      >
-        <div class="kpi-info">
-          <div class="kpi-label">{{ kpi.label }}</div>
-          <div class="kpi-value" :style="{ color: kpi.color }">{{ kpi.value }}</div>
-          <div class="kpi-meta">
-            <span :class="kpi.trendUp ? 'trend-up' : 'trend-down'">
-              {{ kpi.trendUp ? '↑' : '↓' }}{{ kpi.trendVal }}
-            </span>
-            <span class="kpi-sub">{{ kpi.sub }}</span>
+    <div v-else-if="loading" class="iap-tab-skeleton">
+      <div class="iap-tab-skeleton__kpis">
+        <div v-for="i in 5" :key="`channel-kpi-${i}`" class="iap-tab-skeleton__kpi card">
+          <ElSkeleton animated :throttle="0">
+            <template #template>
+              <ElSkeletonItem variant="text" style="width: 44%; margin-bottom: 10px" />
+              <ElSkeletonItem variant="h3" style="width: 66%; margin-bottom: 8px" />
+              <ElSkeletonItem variant="text" style="width: 52%" />
+            </template>
+          </ElSkeleton>
+        </div>
+      </div>
+      <div class="iap-tab-skeleton__grid">
+        <div class="card"><ElSkeleton animated :rows="7" /></div>
+        <div class="card"><ElSkeleton animated :rows="6" /></div>
+        <div class="card"><ElSkeleton animated :rows="6" /></div>
+      </div>
+      <div class="iap-tab-skeleton__grid iap-tab-skeleton__grid--bottom">
+        <div class="card"><ElSkeleton animated :rows="8" /></div>
+        <div class="card"><ElSkeleton animated :rows="6" /></div>
+        <div class="iap-tab-skeleton__stack">
+          <div class="card"><ElSkeleton animated :rows="5" /></div>
+          <div class="card"><ElSkeleton animated :rows="4" /></div>
+        </div>
+      </div>
+    </div>
+    <template v-else>
+      <!-- ── KPI Cards ─────────────────────────────── -->
+      <div class="kpi-row">
+        <div
+          class="kpi-card"
+          v-for="(kpi, i) in kpiCards"
+          :key="i"
+          :style="{ '--accent': kpi.color }"
+        >
+          <div class="kpi-info">
+            <div class="kpi-label">{{ kpi.label }}</div>
+            <div class="kpi-value" :style="{ color: kpi.color }">{{ kpi.value }}</div>
+            <div class="kpi-meta">
+              <span :class="kpi.trendUp ? 'trend-up' : 'trend-down'">
+                {{ kpi.trendUp ? '↑' : '↓' }}{{ kpi.trendVal }}
+              </span>
+              <span class="kpi-sub">{{ kpi.sub }}</span>
+            </div>
+          </div>
+          <div class="kpi-spark" :ref="(el) => setSparkRef(el as HTMLElement, i)"></div>
+        </div>
+      </div>
+
+      <!-- ── Middle Grid: Table + 2 Charts ─────────── -->
+      <div class="mid-grid">
+        <!-- Channel IAP Table -->
+        <div class="card span-table">
+          <div class="card-hd">广告平台 IAP 转化质量对比表</div>
+          <table class="dt">
+            <thead>
+              <tr>
+                <th>广告平台</th><th>IAP收入</th><th>占比</th> <th>付费用户</th><th>ARPPU</th>
+                <th>首次付费周期</th><th>续订率</th><th>质量评分</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="r in channelRows" :key="r.ch">
+                <td class="ch-name">{{ r.ch }}</td>
+                <td>{{ r.rev }}</td>
+                <td>
+                  <span class="badge" :style="{ color: pctColor(r.revPct) }">
+                    {{ r.revPct }}
+                  </span>
+                </td>
+                <td>{{ r.users }}</td>
+                <td>{{ r.arppu }}</td>
+                <td>{{ r.period }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    :style="{
+                      color:
+                        r.retention >= 65 ? '#10b981' : r.retention >= 55 ? '#f59e0b' : '#ef4444'
+                    }"
+                  >
+                    {{ r.retention }}%
+                  </span>
+                </td>
+                <td>
+                  <span class="quality-tag" :class="r.quality.includes('A') ? 'q-a' : 'q-b'">
+                    {{ r.quality }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td>合计</td>
+                <td
+                  ><b>{{ formatUsd(totalRow.totalRevenueUsd) }}</b></td
+                >
+                <td
+                  ><b>{{ totalRow.totalShare }}%</b></td
+                >
+                <td
+                  ><b>{{ totalRow.totalUsers.toLocaleString('en-US') }}</b></td
+                >
+                <td
+                  ><b>{{ formatUsd(totalRow.avgArppu) }}</b></td
+                >
+                <td
+                  ><b>{{ totalRow.avgPeriod.toFixed(1) }}</b></td
+                >
+                <td
+                  ><b>{{ totalRow.avgRetention.toFixed(1) }}%</b></td
+                >
+                <td>--</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- ARPPU Horizontal Bar -->
+        <div class="card span-arppu">
+          <div class="card-hd">广告平台 ARPPU 对比</div>
+          <div ref="arppuRef" style="height: 230px"></div>
+        </div>
+
+        <!-- Revenue Trend -->
+        <div class="card span-trend">
+          <div class="card-hd">IAP 收入趋势（近30天）</div>
+          <div ref="trendRef" style="height: 230px"></div>
+        </div>
+      </div>
+
+      <!-- ── Bottom Grid ────────────────────────────── -->
+      <div class="btm-grid">
+        <!-- ROI Cohort Table -->
+        <div class="card roi-card">
+          <div class="card-hd">ROI 队列分析（按日期区间）</div>
+          <div class="card-sub-hd"
+            >ROI = 付费入数的区间，ROI= 同期消费收入入数，N-day定义：扣期期期</div
+          >
+          <table class="dt sm-dt">
+            <thead>
+              <tr>
+                <th>日期区间</th><th>ROI</th><th>CPA</th> <th>付费收入</th><th>付费人数</th
+                ><th>续订率</th> <th>付费收入</th><th>内购占比</th><th>内购订单</th
+                ><th>内购人数</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="r in roiRows" :key="r.period">
+                <td>{{ r.period }}</td>
+                <td>
+                  <span class="roi-pill" :class="roiClass(r.roiNum)">{{ r.roi }}</span>
+                </td>
+                <td>{{ r.cpa }}</td>
+                <td>{{ r.rev }}</td>
+                <td>{{ r.users }}</td>
+                <td>{{ r.reten }}</td>
+                <td>{{ r.iapRev }}</td>
+                <td>{{ r.iapPct }}</td>
+                <td>{{ r.iapOrd }}</td>
+                <td>{{ r.iapUsers }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Retention Heatmap -->
+        <div class="card reten-card">
+          <div class="card-hd">订阅续订率队列（按广告平台）</div>
+          <table class="dt hm-dt">
+            <thead>
+              <tr> <th>广告平台</th><th>Month1</th><th>Month2</th><th>Month5</th> </tr>
+            </thead>
+            <tbody>
+              <tr v-for="r in retenRows" :key="r.ch">
+                <td>{{ r.ch }}</td>
+                <td
+                  ><span class="hm-cell" :class="hmClass(r.m1)">{{ r.m1 }}</span></td
+                >
+                <td
+                  ><span class="hm-cell" :class="hmClass(r.m2)">{{ r.m2 }}</span></td
+                >
+                <td
+                  ><span class="hm-cell" :class="hmClass(r.m5)">{{ r.m5 }}</span></td
+                >
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Right: Donut + AI -->
+        <div class="right-col">
+          <div class="card donut-card">
+            <div class="card-hd">商品类型收入占比</div>
+            <div ref="donutRef" style="height: 170px"></div>
+          </div>
+          <div class="card ai-card">
+            <div class="card-hd">AI 洞察建议</div>
+            <ul class="ai-list">
+              <li v-for="tip in aiTips" :key="tip.id" class="ai-item">
+                <span class="ai-dot" :style="{ background: tip.color }"></span>
+                <span>{{ tip.text }}</span>
+              </li>
+            </ul>
           </div>
         </div>
-        <div class="kpi-spark" :ref="(el) => setSparkRef(el as HTMLElement, i)"></div>
       </div>
-    </div>
-
-    <!-- ── Middle Grid: Table + 2 Charts ─────────── -->
-    <div class="mid-grid">
-      <!-- Channel IAP Table -->
-      <div class="card span-table">
-        <div class="card-hd">广告平台 IAP 转化质量对比表</div>
-        <table class="dt">
-          <thead>
-            <tr>
-              <th>广告平台</th><th>IAP收入</th><th>占比</th> <th>付费用户</th><th>ARPPU</th>
-              <th>首次付费周期</th><th>续订率</th><th>质量评分</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="r in channelRows" :key="r.ch">
-              <td class="ch-name">{{ r.ch }}</td>
-              <td>{{ r.rev }}</td>
-              <td>
-                <span class="badge" :style="{ color: pctColor(r.revPct) }">
-                  {{ r.revPct }}
-                </span>
-              </td>
-              <td>{{ r.users }}</td>
-              <td>{{ r.arppu }}</td>
-              <td>{{ r.period }}</td>
-              <td>
-                <span
-                  class="badge"
-                  :style="{
-                    color: r.retention >= 65 ? '#10b981' : r.retention >= 55 ? '#f59e0b' : '#ef4444'
-                  }"
-                >
-                  {{ r.retention }}%
-                </span>
-              </td>
-              <td>
-                <span class="quality-tag" :class="r.quality.includes('A') ? 'q-a' : 'q-b'">
-                  {{ r.quality }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr class="total-row">
-              <td>合计</td>
-              <td
-                ><b>{{ formatUsd(totalRow.totalRevenueUsd) }}</b></td
-              >
-              <td
-                ><b>{{ totalRow.totalShare }}%</b></td
-              >
-              <td
-                ><b>{{ totalRow.totalUsers.toLocaleString('en-US') }}</b></td
-              >
-              <td
-                ><b>{{ formatUsd(totalRow.avgArppu) }}</b></td
-              >
-              <td
-                ><b>{{ totalRow.avgPeriod.toFixed(1) }}</b></td
-              >
-              <td
-                ><b>{{ totalRow.avgRetention.toFixed(1) }}%</b></td
-              >
-              <td>--</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      <!-- ARPPU Horizontal Bar -->
-      <div class="card span-arppu">
-        <div class="card-hd">广告平台 ARPPU 对比</div>
-        <div ref="arppuRef" style="height: 230px"></div>
-      </div>
-
-      <!-- Revenue Trend -->
-      <div class="card span-trend">
-        <div class="card-hd">IAP 收入趋势（近30天）</div>
-        <div ref="trendRef" style="height: 230px"></div>
-      </div>
-    </div>
-
-    <!-- ── Bottom Grid ────────────────────────────── -->
-    <div class="btm-grid">
-      <!-- ROI Cohort Table -->
-      <div class="card roi-card">
-        <div class="card-hd">ROI 队列分析（按日期区间）</div>
-        <div class="card-sub-hd"
-          >ROI = 付费入数的区间，ROI= 同期消费收入入数，N-day定义：扣期期期</div
-        >
-        <table class="dt sm-dt">
-          <thead>
-            <tr>
-              <th>日期区间</th><th>ROI</th><th>CPA</th> <th>付费收入</th><th>付费人数</th
-              ><th>续订率</th> <th>付费收入</th><th>内购占比</th><th>内购订单</th><th>内购人数</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="r in roiRows" :key="r.period">
-              <td>{{ r.period }}</td>
-              <td>
-                <span class="roi-pill" :class="roiClass(r.roiNum)">{{ r.roi }}</span>
-              </td>
-              <td>{{ r.cpa }}</td>
-              <td>{{ r.rev }}</td>
-              <td>{{ r.users }}</td>
-              <td>{{ r.reten }}</td>
-              <td>{{ r.iapRev }}</td>
-              <td>{{ r.iapPct }}</td>
-              <td>{{ r.iapOrd }}</td>
-              <td>{{ r.iapUsers }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Retention Heatmap -->
-      <div class="card reten-card">
-        <div class="card-hd">订阅续订率队列（按广告平台）</div>
-        <table class="dt hm-dt">
-          <thead>
-            <tr> <th>广告平台</th><th>Month1</th><th>Month2</th><th>Month5</th> </tr>
-          </thead>
-          <tbody>
-            <tr v-for="r in retenRows" :key="r.ch">
-              <td>{{ r.ch }}</td>
-              <td
-                ><span class="hm-cell" :class="hmClass(r.m1)">{{ r.m1 }}</span></td
-              >
-              <td
-                ><span class="hm-cell" :class="hmClass(r.m2)">{{ r.m2 }}</span></td
-              >
-              <td
-                ><span class="hm-cell" :class="hmClass(r.m5)">{{ r.m5 }}</span></td
-              >
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Right: Donut + AI -->
-      <div class="right-col">
-        <div class="card donut-card">
-          <div class="card-hd">商品类型收入占比</div>
-          <div ref="donutRef" style="height: 170px"></div>
-        </div>
-        <div class="card ai-card">
-          <div class="card-hd">AI 洞察建议</div>
-          <ul class="ai-list">
-            <li v-for="tip in aiTips" :key="tip.id" class="ai-item">
-              <span class="ai-dot" :style="{ background: tip.color }"></span>
-              <span>{{ tip.text }}</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+  import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import { echarts } from '@/plugins/echarts'
   import type { PaidAnalysisFilterBody } from './types'
   import {
@@ -325,6 +355,8 @@
 
   async function load() {
     loadError.value = ''
+    chartInstances.forEach((c) => c.dispose())
+    chartInstances.length = 0
     loading.value = true
     try {
       const body = buildBody()
@@ -376,12 +408,13 @@
       arppuBar.value = charts.arppuBar
       productMixDonut.value = charts.productMixDonut
       donutCenterRevenueUsd.value = charts.donutCenterRevenueUsd
-
+      loading.value = false
+      await nextTick()
       rebuildCharts()
     } catch (e) {
       loadError.value = e instanceof Error ? e.message : String(e)
     } finally {
-      loading.value = false
+      if (loading.value) loading.value = false
     }
   }
 
@@ -657,6 +690,42 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+
+  .iap-tab-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__kpis {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__kpi {
+    padding: 16px 18px;
+  }
+
+  .iap-tab-skeleton__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton__grid--bottom {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) minmax(0, 0.9fr);
+    align-items: start;
+  }
+
+  .iap-tab-skeleton__stack {
+    display: grid;
+    gap: 12px;
+  }
+
+  .iap-tab-skeleton :deep(.el-skeleton) {
+    padding: 16px 18px;
   }
 
   /* KPI Row */
