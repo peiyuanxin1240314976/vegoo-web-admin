@@ -423,13 +423,30 @@ export interface AdPerformanceDetailDailyRow {
   statusText: string
 }
 
-export interface AdPerformanceDetailDateTabData {
-  range: AdPerformanceDetailDateRange
+export interface AdPerformanceDetailDateRangeData {
   spendRoiTrend: AdPerformanceDetailTrendPoint[]
   cpiTrend: AdPerformanceDetailTrendPoint[]
   dailyRows: AdPerformanceDetailDailyRow[]
+}
+
+export interface AdPerformanceDetailDateTabData {
+  /** 默认选中的范围（与抽屉内部 range tabs 同步） */
+  range: AdPerformanceDetailDateRange
+  /**
+   * 一次性返回三套数据：last7d / last14d / month
+   * 前端根据 activeRange 选择对应数据渲染。
+   */
+  datasets: Record<AdPerformanceDetailDateRange, AdPerformanceDetailDateRangeData>
   roiTarget: number
   cpiTarget: number
+
+  /**
+   * 兼容旧结构（后端未升级时仍可能返回）。
+   * 新代码优先读取 datasets。
+   */
+  spendRoiTrend?: AdPerformanceDetailTrendPoint[]
+  cpiTrend?: AdPerformanceDetailTrendPoint[]
+  dailyRows?: AdPerformanceDetailDailyRow[]
 }
 
 export interface AdPerformanceDetailCountrySpendRow {

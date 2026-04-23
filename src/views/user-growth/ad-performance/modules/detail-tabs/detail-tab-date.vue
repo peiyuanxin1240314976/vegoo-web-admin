@@ -48,7 +48,11 @@
           <span class="ad-performance-detail-card__meta">12px</span>
         </div>
       </template>
-      <ElTable :data="data?.dailyRows ?? []" size="small" class="ad-performance-detail-table">
+      <ElTable
+        :data="activeDataset.dailyRows ?? []"
+        size="small"
+        class="ad-performance-detail-table"
+      >
         <ElTableColumn prop="date" label="日期" width="120" />
         <ElTableColumn prop="spend" label="消耗" width="100" align="right">
           <template #default="{ row }">{{ formatMoney(row.spend, 0) }}</template>
@@ -90,7 +94,11 @@
   import { computed, onMounted, ref, watch } from 'vue'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic } from '@/plugins/echarts'
-  import type { AdPerformanceDetailDateRange, AdPerformanceDetailDateTabData } from '../../types'
+  import type {
+    AdPerformanceDetailDateRange,
+    AdPerformanceDetailDateRangeData,
+    AdPerformanceDetailDateTabData
+  } from '../../types'
 
   defineOptions({ name: 'AdPerformanceDetailTabDate' })
 
@@ -120,8 +128,18 @@
   const cpiChart = useChart()
   const cpiRef = cpiChart.chartRef
 
-  const spendRoiData = computed(() => props.data?.spendRoiTrend ?? [])
-  const cpiData = computed(() => props.data?.cpiTrend ?? [])
+  const activeDataset = computed<AdPerformanceDetailDateRangeData>(() => {
+    const ds = props.data?.datasets?.[activeRange.value]
+    if (ds) return ds
+    return {
+      spendRoiTrend: props.data?.spendRoiTrend ?? [],
+      cpiTrend: props.data?.cpiTrend ?? [],
+      dailyRows: props.data?.dailyRows ?? []
+    }
+  })
+
+  const spendRoiData = computed(() => activeDataset.value.spendRoiTrend ?? [])
+  const cpiData = computed(() => activeDataset.value.cpiTrend ?? [])
 
   function renderDualAxis() {
     const data = spendRoiData.value

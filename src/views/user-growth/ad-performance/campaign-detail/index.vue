@@ -132,7 +132,9 @@
           <CampaignAdList
             :rows="data.adRows"
             :campaign-id="String(route.query.id ?? '')"
+            :status="adListStatus"
             @refresh-ad-list="reloadAdList"
+            @change-status="onChangeAdListStatus"
           />
         </div>
         <div class="cd-col cd-col--right">
@@ -180,6 +182,7 @@
   const route = useRoute()
   const loading = ref(true)
   const data = reactive<CampaignDetailData>(createEmptyCampaignDetail())
+  const adListStatus = ref<'all' | 'active' | 'paused' | 'completed'>('all')
 
   function goToEdit() {
     router.push({
@@ -200,7 +203,7 @@
     }
     const [o, ads, cr, ai] = await Promise.all([
       fetchCampaignDetailOverview({ campaignId }),
-      fetchCampaignDetailAdList({ campaignId, status: 'all' }),
+      fetchCampaignDetailAdList({ campaignId, status: adListStatus.value }),
       fetchCampaignDetailCreativeTop5({ campaignId }),
       fetchCampaignDetailAiInsights({ campaignId })
     ])
@@ -211,11 +214,16 @@
     const campaignId = String(route.query.id ?? '')
     if (!campaignId) return
     try {
-      const ads = await fetchCampaignDetailAdList({ campaignId, status: 'all' })
+      const ads = await fetchCampaignDetailAdList({ campaignId, status: adListStatus.value })
       data.adRows = Array.isArray(ads?.rows) ? ads.rows : []
     } catch {
       ElMessage.error('刷新广告列表失败')
     }
+  }
+
+  async function onChangeAdListStatus(v: 'all' | 'active' | 'paused' | 'completed') {
+    adListStatus.value = v
+    await reloadAdList()
   }
 
   // async function onCampaignAction(actionType: CampaignDetailCampaignActionType) {

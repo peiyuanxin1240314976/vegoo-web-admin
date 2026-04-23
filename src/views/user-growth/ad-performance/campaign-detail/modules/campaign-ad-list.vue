@@ -10,7 +10,7 @@
             type="button"
             class="cal__tab"
             :class="{ 'is-active': activeStatus === tab.value }"
-            @click="activeStatus = tab.value"
+            @click="onSwitchStatus(tab.value)"
           >
             {{ tab.label }}
           </button>
@@ -18,7 +18,7 @@
       </div>
     </template>
 
-    <ElTable :data="filteredRows" size="small" style="width: 100%" stripe>
+    <ElTable :data="props.rows" size="small" style="width: 100%" stripe>
       <ElTableColumn prop="adGroupName" label="广告组" min-width="180">
         <template #default="{ row }">
           <span class="cal__ad-name">{{ row.adGroupName }}</span>
@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import { View, VideoPause } from '@element-plus/icons-vue'
@@ -87,14 +87,20 @@
 
   defineOptions({ name: 'CampaignAdList' })
 
-  const emit = defineEmits<{ 'refresh-ad-list': [] }>()
+  type StatusFilter = 'all' | 'active' | 'paused' | 'completed'
+
+  const emit = defineEmits<{
+    'refresh-ad-list': []
+    'change-status': [StatusFilter]
+  }>()
 
   const props = withDefaults(
     defineProps<{
       rows?: CampaignAdRow[]
       campaignId?: string
+      status?: StatusFilter
     }>(),
-    { rows: () => [], campaignId: '' }
+    { rows: () => [], campaignId: '', status: 'all' }
   )
 
   const router = useRouter()
@@ -126,8 +132,6 @@
     }
   }
 
-  type StatusFilter = 'all' | 'active' | 'paused' | 'completed'
-
   const statusTabs: { value: StatusFilter; label: string }[] = [
     { value: 'all', label: '全部' },
     { value: 'active', label: '正常' },
@@ -135,12 +139,20 @@
     { value: 'completed', label: '完成' }
   ]
 
-  const activeStatus = ref<StatusFilter>('all')
+  const activeStatus = ref<StatusFilter>(props.status)
 
-  const filteredRows = computed(() => {
-    if (activeStatus.value === 'all') return props.rows
-    return props.rows.filter((r) => r.status === activeStatus.value)
-  })
+  watch(
+    () => props.status,
+    (v) => {
+      if (v && activeStatus.value !== v) activeStatus.value = v
+    }
+  )
+
+  function onSwitchStatus(v: StatusFilter) {
+    if (activeStatus.value === v) return
+    activeStatus.value = v
+    emit('change-status', v)
+  }
 
   function statusLabel(s: string) {
     const map: Record<string, string> = { active: '启用', paused: '暂停', completed: '完成' }
