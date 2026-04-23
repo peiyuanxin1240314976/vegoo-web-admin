@@ -48,6 +48,7 @@ export class MenuProcessor {
 
     // 过滤已弃用的 dashboard/console 路由（后端菜单可能仍在下发）
     menuList = this.filterDeprecatedRoutes(menuList)
+    menuList = this.mergeHiddenRoutes(menuList, asyncRoutes)
 
     // 在规范化路径之前，验证原始路径配置
     this.validateMenuPaths(menuList)
@@ -138,6 +139,96 @@ export class MenuProcessor {
     return { ...backendItem, children: merged }
   }
 
+  private mergeHiddenRoutes(
+    menuList: AppRouteRecord[],
+    staticList: AppRouteRecord[]
+  ): AppRouteRecord[] {
+    const merged = menuList.map((item) => this.cloneRoute(item))
+
+    for (const staticRoute of staticList) {
+      const existing = this.findMatchingRoute(merged, staticRoute)
+      if (existing) {
+        this.mergeHiddenChildren(existing, staticRoute)
+        continue
+      }
+
+      const hiddenBranch = this.extractHiddenRouteBranch(staticRoute)
+      if (hiddenBranch) {
+        merged.push(hiddenBranch)
+      }
+    }
+
+    return merged
+  }
+
+  private mergeHiddenChildren(target: AppRouteRecord, source: AppRouteRecord): void {
+    const hiddenChildren =
+      source.children
+        ?.map((child) => this.extractHiddenRouteBranch(child))
+        .filter((child): child is AppRouteRecord => child !== null) ?? []
+
+    if (!hiddenChildren.length) {
+      return
+    }
+
+    const targetChildren = [...(target.children ?? [])]
+
+    for (const hiddenChild of hiddenChildren) {
+      const existingChild = this.findMatchingRoute(targetChildren, hiddenChild)
+      if (existingChild) {
+        this.mergeHiddenChildren(existingChild, hiddenChild)
+        continue
+      }
+
+      targetChildren.push(hiddenChild)
+    }
+
+    target.children = targetChildren
+  }
+
+  private extractHiddenRouteBranch(route: AppRouteRecord): AppRouteRecord | null {
+    const hiddenChildren =
+      route.children
+        ?.map((child) => this.extractHiddenRouteBranch(child))
+        .filter((child): child is AppRouteRecord => child !== null) ?? []
+
+    const shouldKeepSelf = Boolean(route.meta?.isHide)
+    if (!shouldKeepSelf && hiddenChildren.length === 0) {
+      return null
+    }
+
+    return {
+      ...route,
+      meta: shouldKeepSelf
+        ? { ...route.meta }
+        : {
+            ...route.meta,
+            isHide: true
+          },
+      children: hiddenChildren.length ? hiddenChildren : route.children ? [] : undefined
+    }
+  }
+
+  private findMatchingRoute(
+    routes: AppRouteRecord[],
+    target: Pick<AppRouteRecord, 'name' | 'path'>
+  ): AppRouteRecord | undefined {
+    return routes.find((route) => {
+      if (route.name && target.name) {
+        return String(route.name) === String(target.name)
+      }
+      return route.path === target.path
+    })
+  }
+
+  private cloneRoute(route: AppRouteRecord): AppRouteRecord {
+    return {
+      ...route,
+      meta: { ...route.meta },
+      children: route.children?.map((child) => this.cloneRoute(child))
+    }
+  }
+
   /**
    * 按后端下发的路由 name 集合过滤菜单（与 permissionConfig.routePermissions.routeNames 对齐）
    * 父级 name 可不在列表中，只要子树过滤后仍有节点则保留父级。
@@ -150,9 +241,10 @@ export class MenuProcessor {
         : item.children
 
       const selfMatched = currentName ? routeNames.includes(currentName) : false
+      const hiddenRoute = Boolean(item.meta?.isHide)
       const hasChildren = Boolean(children?.length)
 
-      if (selfMatched || hasChildren) {
+      if (selfMatched || hiddenRoute || hasChildren) {
         acc.push({
           ...item,
           children
