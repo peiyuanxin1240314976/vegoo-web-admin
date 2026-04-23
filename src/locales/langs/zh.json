@@ -313,7 +313,8 @@
       "costCoefficient": "成本系数管理",
       "perfConfig": "绩效配置",
       "orderImport": "导入商店订单",
-      "orderImportReport": "导入报告"
+      "orderImportReport": "导入报告",
+      "notificationConfig": "通知配置"
     },
     "userGrowth": {
       "title": "用户增长",

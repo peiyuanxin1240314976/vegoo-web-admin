@@ -21,7 +21,11 @@ export enum SystemUserEndpoint {
   /** 05-user-permission-update：右侧详情保存 */
   PermissionUpdate = 'permissionUpdate',
   /** 06-user-disable：禁用用户 */
-  Disable = 'disable'
+  Disable = 'disable',
+  /** 07-user-app-permissions-options：应用权限弹窗选项 */
+  AppPermissionsOptions = 'appPermissionsOptions',
+  /** 08-user-app-permissions-save：应用权限弹窗保存 */
+  AppPermissionsSave = 'appPermissionsSave'
 }
 
 const SystemUserApiMockDefaults: Record<SystemUserEndpoint, boolean> = {
@@ -31,7 +35,9 @@ const SystemUserApiMockDefaults: Record<SystemUserEndpoint, boolean> = {
   [SystemUserEndpoint.Create]: false,
   [SystemUserEndpoint.Update]: false,
   [SystemUserEndpoint.PermissionUpdate]: false,
-  [SystemUserEndpoint.Disable]: false
+  [SystemUserEndpoint.Disable]: false,
+  [SystemUserEndpoint.AppPermissionsOptions]: false,
+  [SystemUserEndpoint.AppPermissionsSave]: false
 }
 
 export function isSystemUserEndpointMock(endpoint: SystemUserEndpoint): boolean {

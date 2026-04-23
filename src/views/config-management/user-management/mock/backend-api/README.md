@@ -2,7 +2,7 @@
 
 **路由**：`/config-management/user-management`  
 **父级路径**：`/api/config-management/user-management`  
-**数据源开关**：`../config/data-source.ts`（当前仅 `01-user-list` 已接入开关，其他接口为契约先行待接入）。
+**数据源开关**：`../config/data-source.ts`（与各 `fetch*` 一一对应；默认远程，单接口可切 Mock）。
 
 ## 接口清单
 
@@ -14,18 +14,24 @@
 | P0 | 编辑用户基础信息 | `/update` | POST | `04-user-update.json` |
 | P0 | 右侧权限面板保存（角色/应用/备注） | `/permission-update` | POST | `05-user-permission-update.json` |
 | P0 | 禁用用户（非物理删除） | `/disable` | POST | `06-user-disable.json` |
+| P0 | 应用权限弹窗 · 选项 | `/app-permissions/options` | GET | `07-user-app-permissions-options.json` |
+| P0 | 应用权限弹窗 · 保存 | `/app-permissions` | POST | `08-user-app-permissions-save.json` |
+
+**网关前缀（与代码一致）**：`/api/v1/datacenter/analysis/config-management/user`；上表逻辑 URL 为相对该前缀的路径。
 
 ## 场景 → 接口
 
-| 场景                  | 契约文件                         | 触发时机摘要                     |
-| --------------------- | -------------------------------- | -------------------------------- |
-| 页面首屏加载列表      | `01-user-list.json`              | `index.vue` 的 `useTable` 初始化 |
-| 搜索/筛选/分页/刷新   | `01-user-list.json`              | 关键词、角色、状态、分页变化     |
-| 页面首屏加载筛选项    | `02-user-meta-options.json`      | 进入页面后加载角色与状态选项     |
-| 新建用户弹窗提交      | `03-user-create.json`            | 点击「新建用户」并提交           |
-| 编辑用户弹窗提交      | `04-user-update.json`            | 列表行编辑弹窗提交               |
-| 右侧面板点击保存      | `05-user-permission-update.json` | 修改角色、应用、备注后保存       |
-| 列表删除/右侧禁用确认 | `06-user-disable.json`           | 两处禁用动作共用                 |
+| 场景 | 契约文件 | 触发时机摘要 |
+| --- | --- | --- |
+| 页面首屏加载列表 | `01-user-list.json` | `index.vue` 的 `useTable` 初始化 |
+| 搜索/筛选/分页/刷新 | `01-user-list.json` | 关键词、角色、状态、分页变化 |
+| 页面首屏加载筛选项 | `02-user-meta-options.json` | 进入页面后加载角色与状态选项 |
+| 新建用户弹窗提交 | `03-user-create.json` | 点击「新建用户」并提交 |
+| 编辑用户弹窗提交 | `04-user-update.json` | 列表行编辑弹窗提交 |
+| 右侧面板点击保存 | `05-user-permission-update.json` | 修改角色、应用、备注后保存 |
+| 列表删除/右侧禁用确认 | `06-user-disable.json` | 两处禁用动作共用 |
+| 列表操作打开应用权限 | `07-user-app-permissions-options.json` | 弹窗打开后按 userId 拉选项与回显 |
+| 应用权限弹窗保存 | `08-user-app-permissions-save.json` | 提交 allowedAppUuids |
 
 ## 联调与落地说明
 

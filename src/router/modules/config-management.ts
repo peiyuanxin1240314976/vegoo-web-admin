@@ -135,6 +135,16 @@ export const configManagementRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'notification-config',
+      name: 'NotificationConfig',
+      component: '/config-management/notification-config',
+      meta: {
+        title: 'menus.configManagement.notificationConfig',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
       path: 'order-import/import-report/:taskId',
       name: 'OrderImportReport',
       component: '/config-management/order-import/import-report',

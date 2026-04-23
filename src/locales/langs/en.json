@@ -313,7 +313,8 @@
       "costCoefficient": "Cost Coefficient",
       "perfConfig": "Performance Config",
       "orderImport": "Import Store Orders",
-      "orderImportReport": "Import Report"
+      "orderImportReport": "Import Report",
+      "notificationConfig": "Notification Settings"
     },
     "userGrowth": {
       "title": "User Growth",

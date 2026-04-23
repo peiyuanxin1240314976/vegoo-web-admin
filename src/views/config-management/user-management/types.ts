@@ -119,3 +119,26 @@ export interface DisableUserResponse {
   status: string
   updateTime: string
 }
+
+/** 应用权限 · 单条应用（options 中 apps 元素） */
+export interface UserAppPermissionAppItem {
+  appId: string
+  appName: string
+  appUuid: string
+  permitted: boolean
+  platform: number
+  status: number
+}
+
+/** GET app-permissions/options 解包后的 data */
+export interface UserAppPermissionsOptionsData {
+  apps: UserAppPermissionAppItem[]
+  mode: string
+  userId: number
+}
+
+/** POST app-permissions 请求体 */
+export interface SaveUserAppPermissionsPayload {
+  userId: number
+  allowedAppUuids: string[]
+}

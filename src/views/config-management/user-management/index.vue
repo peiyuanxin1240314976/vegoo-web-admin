@@ -53,6 +53,12 @@
       :submitting="dialogSubmitting"
       @submit="handleDialogSubmit"
     />
+
+    <UserAppPermissionsDialog
+      v-model:visible="appPermDialogVisible"
+      :user-id="appPermDialogUserId"
+      @success="refreshData"
+    />
   </div>
 </template>
 
@@ -70,6 +76,7 @@
   import UserLeftPanel from './modules/user-left-panel.vue'
   import UserRightPanel from './modules/user-right-panel.vue'
   import UserDialog from './modules/user-dialog.vue'
+  import UserAppPermissionsDialog from './modules/user-app-permissions-dialog.vue'
   import { ElTag, ElMessageBox, ElImage, ElMessage } from 'element-plus'
   import { DialogType } from '@/types'
   import type { UserFilterForm } from './modules/user-left-panel.vue'
@@ -89,6 +96,9 @@
   const dialogVisible = ref(false)
   const currentUserData = ref<Partial<UserListItem>>({})
   const dialogSubmitting = ref(false)
+
+  const appPermDialogVisible = ref(false)
+  const appPermDialogUserId = ref(0)
 
   // 选中行
   const selectedRows = ref<UserListItem[]>([])
@@ -233,7 +243,7 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 120,
+          width: 150,
           fixed: 'right', // 固定列
           formatter: (row) =>
             h('div', [
@@ -244,6 +254,10 @@
               h(ArtButtonTable, {
                 type: 'delete',
                 onClick: () => deleteUser(row)
+              }),
+              h(ArtButtonTable, {
+                type: 'view',
+                onClick: () => userRoleList(row)
               })
             ])
         }
@@ -271,6 +285,11 @@
     loadStats()
     roleListStore.loadRoleList({ force: false })
   })
+
+  const userRoleList = (row: UserListItem) => {
+    appPermDialogUserId.value = row.id
+    appPermDialogVisible.value = true
+  }
 
   /**
    * 搜索处理

@@ -310,6 +310,12 @@
           "title": "menus.configManagement.orderImport",
           "path": "/config-management/order-import",
           "children": []
+        },
+        {
+          "routeName": "NotificationConfig",
+          "title": "menus.configManagement.notificationConfig",
+          "path": "/config-management/notification-config",
+          "children": []
         }
       ]
     },
@@ -1102,6 +1108,22 @@
           "titleZh": "导入商店订单",
           "componentPath": "/config-management/order-import",
           "viewFile": "src/views/config-management/order-import/index.vue"
+        },
+        {
+          "routeName": "NotificationConfig",
+          "title": "menus.configManagement.notificationConfig",
+          "path": "notification-config",
+          "fullPath": "/config-management/notification-config",
+          "parentRouteName": "ConfigManagement",
+          "sortOrder": 12,
+          "nodeKind": "leaf",
+          "permissionUiVisible": true,
+          "datePermissionEligible": true,
+          "keepAlive": true,
+          "routeRoles": ["R_SUPER", "R_ADMIN"],
+          "titleZh": "通知配置",
+          "componentPath": "/config-management/notification-config",
+          "viewFile": "src/views/config-management/notification-config/index.vue"
         }
       ]
     },
@@ -2047,6 +2069,24 @@
       "titleZh": "导入商店订单",
       "componentPath": "/config-management/order-import",
       "viewFile": "src/views/config-management/order-import/index.vue",
+      "depth": 1
+    },
+    {
+      "id": 55,
+      "routeName": "NotificationConfig",
+      "title": "menus.configManagement.notificationConfig",
+      "path": "notification-config",
+      "fullPath": "/config-management/notification-config",
+      "parentRouteName": "ConfigManagement",
+      "sortOrder": 12,
+      "nodeKind": "leaf",
+      "permissionUiVisible": true,
+      "datePermissionEligible": true,
+      "keepAlive": true,
+      "routeRoles": ["R_SUPER", "R_ADMIN"],
+      "titleZh": "通知配置",
+      "componentPath": "/config-management/notification-config",
+      "viewFile": "src/views/config-management/notification-config/index.vue",
       "depth": 1
     },
     {

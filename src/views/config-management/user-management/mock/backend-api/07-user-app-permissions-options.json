@@ -1,0 +1,88 @@
+{
+  "_comment": "配置管理 - 用户管理 - 表格操作「应用权限」弹窗：拉取可选应用及已授权回显（permitted）。",
+  "fieldDescription": {
+    "request": {
+      "userId": { "type": "number", "required": true, "description": "用户主键，对应列表行 id。" }
+    },
+    "response": {
+      "apps": {
+        "type": "UserAppPermissionAppItem[]",
+        "required": true,
+        "description": "可选应用列表；appUuid 为选项值，appName 为展示文案，permitted 表示当前是否已授权（用于多选回显）。"
+      },
+      "mode": {
+        "type": "string",
+        "required": true,
+        "description": "服务端策略标识，前端可不展示。"
+      },
+      "userId": { "type": "number", "required": true, "description": "与请求一致的用户主键。" }
+    },
+    "UserAppPermissionAppItem": {
+      "appId": { "type": "string", "required": true, "description": "应用业务 id。" },
+      "appName": { "type": "string", "required": true, "description": "应用名称（下拉展示）。" },
+      "appUuid": {
+        "type": "string",
+        "required": true,
+        "description": "应用唯一标识（选项 value、保存 allowedAppUuids）。"
+      },
+      "permitted": {
+        "type": "boolean",
+        "required": true,
+        "description": "是否已授权，用于初始选中。"
+      },
+      "platform": { "type": "number", "required": true, "description": "平台枚举。" },
+      "status": { "type": "number", "required": true, "description": "应用状态。" }
+    }
+  },
+  "sampleRequest": {
+    "userId": 101
+  },
+  "sampleResponse": {
+    "mode": "whitelist",
+    "userId": 101,
+    "apps": [
+      {
+        "appId": "app-weather",
+        "appName": "天气助手",
+        "appUuid": "550e8400-e29b-41d4-a716-446655440001",
+        "permitted": true,
+        "platform": 1,
+        "status": 1
+      },
+      {
+        "appId": "app-tracker",
+        "appName": "手机定位",
+        "appUuid": "550e8400-e29b-41d4-a716-446655440002",
+        "permitted": true,
+        "platform": 1,
+        "status": 1
+      },
+      {
+        "appId": "app-sugar",
+        "appName": "血糖管理",
+        "appUuid": "550e8400-e29b-41d4-a716-446655440003",
+        "permitted": false,
+        "platform": 2,
+        "status": 0
+      }
+    ]
+  },
+  "api": {
+    "url": "GET /api/v1/datacenter/analysis/config-management/user/app-permissions/options?userId={userId}",
+    "method": "GET",
+    "priority": "P0",
+    "requestBody": "无，query userId",
+    "responseBody": "HTTP 200 且 code=200 时 data 为 { apps, mode, userId }（与 sampleResponse 同形）。"
+  },
+  "interaction": {
+    "triggers": [
+      {
+        "moment": "点击列表操作「查看」打开应用权限弹窗",
+        "detail": "弹窗打开后根据当前行 id 作为 userId 请求 options。",
+        "prerequisite": "登录态有效"
+      }
+    ],
+    "defaultSelection": "多选初始值为 permitted=true 的项的 appUuid。",
+    "dedupe": "同一用户重复打开应重新请求或依赖缓存策略由产品决定；当前实现为每次打开重新请求。"
+  }
+}

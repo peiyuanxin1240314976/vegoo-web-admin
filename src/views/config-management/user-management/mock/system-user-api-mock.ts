@@ -13,7 +13,9 @@ import type {
   UpdateUserPayload,
   PermissionUpdatePayload,
   DisableUserPayload,
-  DisableUserResponse
+  DisableUserResponse,
+  UserAppPermissionsOptionsData,
+  SaveUserAppPermissionsPayload
 } from '../types'
 
 const MAX_PAGE_SIZE = 10
@@ -186,4 +188,52 @@ export function mockDisableUser(payload: DisableUserPayload): Promise<DisableUse
   const fmt = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
   return Promise.resolve({ success: true, id: payload.id, status: '4', updateTime: fmt(now) })
+}
+
+// ==================== 07-user-app-permissions-options ====================
+
+const MOCK_APP_PERMISSION_OPTIONS: UserAppPermissionsOptionsData['apps'] = [
+  {
+    appId: 'app-weather',
+    appName: '天气助手',
+    appUuid: '550e8400-e29b-41d4-a716-446655440001',
+    permitted: true,
+    platform: 1,
+    status: 1
+  },
+  {
+    appId: 'app-tracker',
+    appName: '手机定位',
+    appUuid: '550e8400-e29b-41d4-a716-446655440002',
+    permitted: true,
+    platform: 1,
+    status: 1
+  },
+  {
+    appId: 'app-sugar',
+    appName: '血糖管理',
+    appUuid: '550e8400-e29b-41d4-a716-446655440003',
+    permitted: false,
+    platform: 2,
+    status: 0
+  }
+]
+
+export function mockFetchUserAppPermissionsOptions(
+  userId: number
+): Promise<UserAppPermissionsOptionsData> {
+  return Promise.resolve({
+    userId,
+    mode: 'whitelist',
+    apps: MOCK_APP_PERMISSION_OPTIONS.map((a) => ({ ...a }))
+  })
+}
+
+// ==================== 08-user-app-permissions-save ====================
+
+export function mockSaveUserAppPermissions(
+  payload: SaveUserAppPermissionsPayload
+): Promise<{ success: boolean }> {
+  void payload
+  return Promise.resolve({ success: true })
 }

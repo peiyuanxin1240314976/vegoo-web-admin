@@ -13,7 +13,9 @@ import type {
   PermissionUpdatePayload,
   DisableUserPayload,
   DisableUserResponse,
-  SystemUserItem
+  SystemUserItem,
+  UserAppPermissionsOptionsData,
+  SaveUserAppPermissionsPayload
 } from '@/views/config-management/user-management/types'
 import {
   SystemUserEndpoint,
@@ -104,5 +106,29 @@ export function disableUser(data: DisableUserPayload) {
     url: `${USER_MANAGEMENT_BASE}/disable`,
     data,
     showErrorMessage: false
+  })
+}
+
+/** 应用权限弹窗 · 选项（GET，query userId） */
+export function fetchUserAppPermissionsOptions(userId: number) {
+  if (isSystemUserEndpointMock(SystemUserEndpoint.AppPermissionsOptions)) {
+    return userManagementMock.mockFetchUserAppPermissionsOptions(userId)
+  }
+  return request.get<UserAppPermissionsOptionsData>({
+    url: `${USER_MANAGEMENT_BASE}/app-permissions/options`,
+    params: { userId },
+    showErrorMessage: true
+  })
+}
+
+/** 应用权限弹窗 · 保存 */
+export function saveUserAppPermissions(data: SaveUserAppPermissionsPayload) {
+  if (isSystemUserEndpointMock(SystemUserEndpoint.AppPermissionsSave)) {
+    return userManagementMock.mockSaveUserAppPermissions(data)
+  }
+  return request.post<{ success: boolean }>({
+    url: `${USER_MANAGEMENT_BASE}/app-permissions`,
+    data,
+    showErrorMessage: true
   })
 }
