@@ -420,7 +420,6 @@
     return {
       '--row-bg': theme.bg,
       '--row-border': theme.border,
-      '--row-glow': theme.glow,
       '--badge-bg': theme.badgeBg
     }
   }
@@ -601,29 +600,25 @@
   const ROW_THEMES = [
     {
       parent: {
-        bg: 'linear-gradient(90deg, rgba(21,104,88,.96), rgba(16,60,68,.96))',
+        bg: 'rgb(22 78 99 / 96%)',
         border: 'rgba(79,215,177,.3)',
-        glow: 'rgba(68,255,199,.18)',
         badgeBg: 'linear-gradient(135deg,#3cd479,#1e8f60)'
       },
       child: {
-        bg: 'linear-gradient(90deg, rgba(27,39,60,.96), rgba(19,28,45,.96))',
+        bg: 'rgb(24 39 67 / 96%)',
         border: 'rgba(112,138,190,.22)',
-        glow: 'rgba(108,164,255,.16)',
         badgeBg: 'linear-gradient(135deg,#5d8df8,#2852cb)'
       }
     },
     {
       parent: {
-        bg: 'linear-gradient(90deg, rgba(110,81,24,.96), rgba(61,43,17,.96))',
+        bg: 'rgb(110 76 27 / 96%)',
         border: 'rgba(230,181,74,.28)',
-        glow: 'rgba(241,180,57,.18)',
         badgeBg: 'linear-gradient(135deg,#ffcb55,#f1a42b)'
       },
       child: {
-        bg: 'linear-gradient(90deg, rgba(36,38,67,.96), rgba(24,27,46,.96))',
+        bg: 'rgb(39 43 77 / 96%)',
         border: 'rgba(133,144,215,.22)',
-        glow: 'rgba(129,140,248,.16)',
         badgeBg: 'linear-gradient(135deg,#6f6ef6,#4a42ca)'
       }
     }
