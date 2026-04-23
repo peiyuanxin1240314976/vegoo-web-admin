@@ -274,7 +274,8 @@
   })
 
   watch(
-    () => [dualAxisChart.isDark.value, cpiChart.isDark.value, props.data] as const,
+    () =>
+      [dualAxisChart.isDark.value, cpiChart.isDark.value, props.data, activeRange.value] as const,
     () => {
       renderAll()
     },
