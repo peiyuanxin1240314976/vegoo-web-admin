@@ -57,11 +57,11 @@
             :list="data.spendProgress.list"
             :hint-text="spendAchievementHint"
           />
-          <MyPerformancePanelPerformanceHistory
+          <!-- <MyPerformancePanelPerformanceHistory
             :loading="cardLoading"
             :title="data.performanceHistory.title"
             :list="data.performanceHistory.list"
-          />
+          /> -->
         </div>
       </ElCol>
 
@@ -155,7 +155,7 @@
   import MyPerformancePanelRoiTrend from './components/panel-roi-trend.vue'
   import MyPerformancePanelAppDimensionTable from './components/panel-app-dimension-table.vue'
   import MyPerformancePanelSpendProgress from './components/panel-spend-progress.vue'
-  import MyPerformancePanelPerformanceHistory from './components/panel-performance-history.vue'
+  // import MyPerformancePanelPerformanceHistory from './components/panel-performance-history.vue'
   import { useMyPerformancePage } from './composables/useMyPerformancePage'
 
   defineOptions({ name: 'MyPerformance' })
