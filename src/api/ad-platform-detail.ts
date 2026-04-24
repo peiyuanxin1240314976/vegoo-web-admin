@@ -46,6 +46,8 @@ function buildQueryBody(body: AdPlatformDetailQueryBody): Record<string, unknown
     startDate: body.startDate,
     endDate: body.endDate,
     appId: body.appId ?? '',
+    appIds: Array.isArray(body.appIds) ? body.appIds : [],
+    apps: Array.isArray(body.apps) ? body.apps : [],
     countryCode: body.countryCode ?? ''
   }
   if (body.source !== undefined && body.source !== '') {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { computed, ref, onMounted, onUnmounted, onActivated, nextTick, watch } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { storeToRefs } from 'pinia'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
@@ -14,6 +15,7 @@
   } from '@/api/ad-platform-detail'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import type {
     AdPlatformDetailAiInsightItem,
@@ -54,6 +56,17 @@
   const appBarOptions = computed(() => {
     const list = cockpitMeta.value?.appOptions
     return list?.length ? normalizeMetaOptions(list) : fallbackMetaOptions('全部')
+  })
+
+  const appFilterSettingApps = computed(() => {
+    const settingApps = cockpitMeta.value?.settingApps ?? []
+    const appIdSet = new Set(
+      appBarOptions.value
+        .map((item) => String(item.value ?? '').trim())
+        .filter((v) => v && v !== 'all')
+    )
+    if (appIdSet.size === 0) return settingApps
+    return settingApps.filter((item) => appIdSet.has(String(item.sAppId ?? '').trim()))
   })
 
   const countryBarOptions = computed(() => {
@@ -135,7 +148,7 @@
   const dateRange = ref('最近30天')
   const customDateRange = ref<[Date, Date] | []>([])
   /** 与 meta `appOptions` 的 value 对齐，「全部应用」为 `""` */
-  const appFilter = ref('all')
+  const appFilter = ref<string | string[]>([])
   /** 与 meta `countryOptions` 的 value 对齐（多为小写 ISO2），「全部」为 `""` */
   const countryFilter = ref('all')
   const activeMetric = ref<'revenue' | 'ecpm' | 'fillRate'>('revenue')
@@ -411,10 +424,13 @@
     try {
       const { startDate, endDate } = resolveDateRangeParams()
       const src = platformDisplayNameFromRoute()
+      const appSelection = buildAppSelectionRequestBody(appFilter.value, appFilterSettingApps.value)
       const body = {
         startDate,
         endDate,
-        appId: toApiFilterValue(appFilter.value),
+        appId: appSelection.appIds[0] ?? '',
+        appIds: appSelection.appIds,
+        apps: appSelection.apps,
         countryCode: toApiFilterValue(countryFilter.value),
         ...(src ? { source: src } : {})
       }
@@ -718,14 +734,21 @@
           </div>
           <div class="filter-field">
             <span class="filter-label">应用</span>
-            <el-select v-model="appFilter" size="default" class="filter-select">
-              <el-option
-                v-for="(o, idx) in appBarOptions"
-                :key="`app-${idx}-${o.value || 'all'}`"
-                :label="o.label"
-                :value="o.value"
-              />
-            </el-select>
+            <AppPlatformSearchSelect
+              v-model="appFilter"
+              class="filter-select"
+              mode="app"
+              placeholder="全部"
+              search-placeholder="搜索类别/应用名称/应用简称"
+              empty-selection-label="全部"
+              select-all-label="全部"
+              :setting-apps="appFilterSettingApps"
+              :height="32"
+              :min-width="150"
+              :max-width="150"
+              input-class="filter-select"
+              dropdown-class="ad-platform-detail-app-popper"
+            />
           </div>
           <div class="filter-field">
             <span class="filter-label">国家</span>
@@ -1450,6 +1473,50 @@
     :deep(.el-select__caret) {
       color: var(--text-2);
     }
+  }
+
+  /* 应用筛选：与国家筛选（ElSelect）完全对齐，覆盖子组件默认/内联样式 */
+  .filter-field :deep(.app-platform-search-select.filter-select) {
+    gap: 6px;
+    align-items: center;
+    width: 150px;
+    min-height: 32px !important;
+    padding: 0 10px !important;
+    color: var(--text-1);
+    background: rgb(0 0 0 / 22%) !important;
+    border: 1px solid color-mix(in srgb, var(--art-primary) 22%, transparent) !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    transition:
+      border-color 0.2s var(--ease-default, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow 0.25s var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+  }
+
+  .filter-field :deep(.app-platform-search-select.filter-select:hover),
+  .filter-field :deep(.app-platform-search-select.filter-select.is-open) {
+    border-color: color-mix(in srgb, var(--art-primary) 44%, transparent) !important;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--art-primary) 12%, transparent) inset,
+      0 0 20px color-mix(in srgb, var(--art-primary) 12%, transparent) !important;
+  }
+
+  .filter-field :deep(.app-platform-search-select.filter-select .app-platform-search-select__text) {
+    font-size: 13px;
+    color: var(--text-1);
+  }
+
+  .filter-field
+    :deep(
+      .app-platform-search-select.filter-select .app-platform-search-select__text.is-placeholder
+    ) {
+    font-size: 13px;
+    color: var(--text-2);
+  }
+
+  .filter-field
+    :deep(.app-platform-search-select.filter-select .app-platform-search-select__suffix) {
+    font-size: 12px;
+    color: var(--text-2);
   }
 
   .filter-date-picker {

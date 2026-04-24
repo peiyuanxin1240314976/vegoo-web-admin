@@ -4,6 +4,8 @@ export type AdPlatformDetailQueryBody = {
   startDate: string
   endDate: string
   appId: string
+  appIds?: string[]
+  apps?: Array<{ appId: string; platform: number }>
   /** 国家代码（ISO 3166-1 alpha-2 小写）；空字符串表示全部 */
   countryCode: string
   source?: string
