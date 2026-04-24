@@ -71,7 +71,8 @@
     createUser,
     updateUser,
     updatePermission,
-    disableUser
+    disableUser,
+    saveUserAppPermissions
   } from '@/api/config-management'
   import UserLeftPanel from './modules/user-left-panel.vue'
   import UserRightPanel from './modules/user-right-panel.vue'
@@ -443,6 +444,16 @@
   }) => {
     if (!currentDetailUser.value) return
     try {
+      await saveUserAppPermissions({
+        userId: currentDetailUser.value.id,
+        allowedAppUuids: payload.apps
+      })
+      currentDetailUser.value = {
+        ...currentDetailUser.value,
+        accessibleApps: [...payload.apps],
+        remark: payload.remark,
+        userRoles: payload.role ? [payload.role] : currentDetailUser.value.userRoles
+      }
       await updatePermission({
         id: currentDetailUser.value.id,
         role: payload.role,

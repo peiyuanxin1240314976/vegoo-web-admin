@@ -2,7 +2,7 @@
  * 平台管理 · 用户管理 Mock，与 `mock/backend-api/*.json` 中 unwrap 后的业务体一致。
  */
 import { MOCK_ROLE_LIST } from '@/views/config-management/role/mock/data'
-import { getSystemUserMockList } from './data'
+import { getSystemUserMockList, patchSystemUserMockItem } from './data'
 import type {
   UserStats,
   SystemUserItem,
@@ -168,16 +168,18 @@ export function mockPermissionUpdate(
   const fmt = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
   const existing = all.find((r) => r.id === payload.id) ?? all[0]
+  const updatedUser = {
+    ...existing,
+    userRoles: [payload.role],
+    accessibleApps: payload.apps,
+    remark: payload.remark ?? existing.remark,
+    updateBy: 'current_user',
+    updateTime: fmt(now)
+  }
+  patchSystemUserMockItem(payload.id, updatedUser)
   return Promise.resolve({
     success: true,
-    updatedUser: {
-      ...existing,
-      userRoles: [payload.role],
-      accessibleApps: payload.apps,
-      remark: payload.remark ?? existing.remark,
-      updateBy: 'current_user',
-      updateTime: fmt(now)
-    }
+    updatedUser
   })
 }
 
@@ -234,6 +236,8 @@ export function mockFetchUserAppPermissionsOptions(
 export function mockSaveUserAppPermissions(
   payload: SaveUserAppPermissionsPayload
 ): Promise<{ success: boolean }> {
-  void payload
+  patchSystemUserMockItem(payload.userId, {
+    accessibleApps: [...payload.allowedAppUuids]
+  })
   return Promise.resolve({ success: true })
 }

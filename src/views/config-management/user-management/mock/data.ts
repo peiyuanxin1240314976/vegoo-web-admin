@@ -54,3 +54,15 @@ export function getSystemUserMockList(): Api.SystemManage.UserListItem[] {
   }
   return cachedSeed.map((r) => ({ ...r }))
 }
+
+export function patchSystemUserMockItem(
+  id: number,
+  patch: Partial<Api.SystemManage.UserListItem>
+): void {
+  if (!cachedSeed) {
+    cachedSeed = buildSystemUserMockSeed()
+  }
+  const index = cachedSeed.findIndex((item) => item.id === id)
+  if (index < 0) return
+  cachedSeed[index] = { ...cachedSeed[index], ...patch }
+}
