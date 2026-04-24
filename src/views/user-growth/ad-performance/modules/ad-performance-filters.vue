@@ -10,8 +10,6 @@
         :end-placeholder="tr('adPerformance.endDate', '结束日期')"
         class="ad-performance-date-picker"
         :prefix-icon="Calendar"
-        :shortcuts="datePickerShortcuts"
-        unlink-panels
       />
 
       <AppPlatformSearchSelect
@@ -104,7 +102,6 @@
   import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
   import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import type { AdPerformanceFilter, AdPerformanceMetaFilterResponse } from '../types'
-  import { cloneAppDate, getAppNow } from '@/utils/app-now'
 
   defineOptions({ name: 'AdPerformanceFilters' })
 
@@ -166,63 +163,6 @@
       if (v) patchDraft({ startDate: v[0], endDate: v[1] })
     }
   })
-
-  const datePickerShortcuts = [
-    {
-      text: '今日',
-      value: () => {
-        const d = getAppNow()
-        return [d, d]
-      }
-    },
-    {
-      text: '昨日',
-      value: () => {
-        const d = cloneAppDate(getAppNow())
-        d.setDate(d.getDate() - 1)
-        return [d, d]
-      }
-    },
-    {
-      text: '近7天',
-      value: () => {
-        const end = getAppNow()
-        const start = cloneAppDate(end)
-        start.setDate(start.getDate() - 6)
-        return [start, end]
-      }
-    },
-    {
-      text: '本月',
-      value: () => {
-        const end = getAppNow()
-        const start = cloneAppDate(end)
-        start.setDate(1)
-        return [start, end]
-      }
-    },
-    {
-      text: '上月',
-      value: () => {
-        const today = getAppNow()
-        const start = cloneAppDate(today)
-        start.setDate(1)
-        start.setMonth(start.getMonth() - 1)
-        const end = cloneAppDate(today)
-        end.setDate(0)
-        return [start, end]
-      }
-    },
-    {
-      text: '近30天',
-      value: () => {
-        const end = getAppNow()
-        const start = cloneAppDate(end)
-        start.setDate(start.getDate() - 29)
-        return [start, end]
-      }
-    }
-  ]
 
   const defaultAppOptions = [
     { value: 'Weather5', label: 'Weather5' },

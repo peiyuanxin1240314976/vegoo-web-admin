@@ -9,6 +9,15 @@ import { getAppNow, cloneAppDate } from '@/utils/app-now'
 /** 日期范围 shortcuts（所有 daterange / datetimerange 共用） */
 export const dateRangeShortcuts = [
   {
+    text: '近3天',
+    value: () => {
+      const end = getAppNow()
+      const start = cloneAppDate(end)
+      start.setDate(start.getDate() - 2)
+      return [start, end]
+    }
+  },
+  {
     text: '近7天',
     value: () => {
       const end = getAppNow()
@@ -24,22 +33,6 @@ export const dateRangeShortcuts = [
       const start = cloneAppDate(end)
       start.setDate(start.getDate() - 29)
       return [start, end]
-    }
-  },
-  {
-    text: '本月',
-    value: () => {
-      const now = getAppNow()
-      const start = new Date(now.getFullYear(), now.getMonth(), 1)
-      return [start, now]
-    }
-  },
-  {
-    text: '本年',
-    value: () => {
-      const now = getAppNow()
-      const start = new Date(now.getFullYear(), 0, 1)
-      return [start, now]
     }
   }
 ]
