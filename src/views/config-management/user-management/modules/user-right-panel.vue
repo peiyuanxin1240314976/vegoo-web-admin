@@ -30,7 +30,7 @@
           <span class="section-title">分配角色</span>
         </template>
         <ElSelect
-          v-model="form.role"
+          v-model="form.roleId"
           placeholder="投放人员"
           clearable
           class="full-width"
@@ -117,18 +117,18 @@
   const props = withDefaults(
     defineProps<{
       user?: Api.SystemManage.UserListItem | null
-      roleOptions?: { label: string; value: string }[]
+      roleOptions?: { label: string; value: number }[]
     }>(),
     {
       roleOptions: () => [
-        { label: '投放人员', value: 'ops' },
-        { label: '管理员/老板', value: 'admin' }
+        { label: '投放经理', value: 3 },
+        { label: '超级管理员', value: 1 }
       ]
     }
   )
 
   const emit = defineEmits<{
-    (e: 'save', payload: { role: string; apps: string[]; remark: string }): void
+    (e: 'save', payload: { roleId: number | ''; accessibleApps: string[]; remark: string }): void
     (e: 'cancel'): void
     (e: 'edit'): void
     (e: 'disable'): void
@@ -136,7 +136,7 @@
   }>()
 
   const form = ref({
-    role: '',
+    roleId: '' as number | '',
     apps: [] as string[],
     remark: ''
   })
@@ -160,15 +160,22 @@
     props.user ? `status-dot--${statusMap[props.user.status]?.dot ?? 'default'}` : ''
   )
 
+  function normalizeRoleId(input: unknown): number | '' {
+    if (input == null) return ''
+    const n = typeof input === 'number' ? input : Number(String(input).trim())
+    if (!Number.isFinite(n)) return ''
+    return n
+  }
+
   watch(
     () => props.user,
     (u) => {
       if (u) {
-        form.value.role = u.userRoles?.[0] ?? ''
+        form.value.roleId = normalizeRoleId((u as any)?.userRoles?.[0])
         form.value.remark = u.remark ?? ''
         void loadAppOptions(u.id, u.accessibleApps ?? [])
       } else {
-        form.value = { role: '', apps: [], remark: '' }
+        form.value = { roleId: '', apps: [], remark: '' }
         appOptions.value = []
         appsLoaded.value = false
         appsLoadError.value = ''
@@ -209,8 +216,8 @@
 
   function handleSave() {
     emit('save', {
-      role: form.value.role,
-      apps: form.value.apps,
+      roleId: form.value.roleId,
+      accessibleApps: form.value.apps,
       remark: form.value.remark
     })
   }

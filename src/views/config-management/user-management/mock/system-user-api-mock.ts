@@ -1,7 +1,6 @@
 /**
  * 平台管理 · 用户管理 Mock，与 `mock/backend-api/*.json` 中 unwrap 后的业务体一致。
  */
-import { MOCK_ROLE_LIST } from '@/views/config-management/role/mock/data'
 import { getSystemUserMockList, patchSystemUserMockItem } from './data'
 import type {
   UserStats,
@@ -20,9 +19,11 @@ import type {
 
 const MAX_PAGE_SIZE = 10
 
-function roleIdsToRoleCodes(roleIds: number[]): string[] {
-  const idSet = new Set(roleIds)
-  return MOCK_ROLE_LIST.filter((r) => idSet.has(r.roleId)).map((r) => r.roleCode)
+function roleIdsToRoleIdStrings(roleIds: number[]): string[] {
+  return (Array.isArray(roleIds) ? roleIds : [])
+    .map((id) => Number(id))
+    .filter((n) => Number.isFinite(n))
+    .map((n) => String(n))
 }
 
 // ==================== 00-user-stats ====================
@@ -44,12 +45,7 @@ function matchUserName(row: SystemUserItem, kw: string): boolean {
 }
 
 function filterRows(list: SystemUserItem[], params: SystemUserSearchParams): SystemUserItem[] {
-  const roleFilter =
-    typeof params.role === 'number'
-      ? MOCK_ROLE_LIST.find((r) => r.roleId === params.role)?.roleCode
-      : typeof params.role === 'string'
-        ? params.role.trim()
-        : ''
+  const roleFilter = typeof params.role === 'number' ? String(params.role) : ''
 
   return list.filter((row) => {
     if (params.id != null && row.id !== params.id) return false
@@ -63,7 +59,7 @@ function filterRows(list: SystemUserItem[], params: SystemUserSearchParams): Sys
     ) {
       return false
     }
-    if (roleFilter && !row.userRoles.includes(roleFilter)) return false
+    if (roleFilter && !(row.userRoles ?? []).includes(roleFilter)) return false
     return true
   })
 }
@@ -120,7 +116,7 @@ export function mockCreateUser(payload: CreateUserPayload): Promise<SystemUserIt
     userGender: payload.userGender,
     userPhone: payload.userPhone,
     userEmail: payload.userEmail ?? '',
-    userRoles: roleIdsToRoleCodes(payload.userRoles),
+    userRoles: roleIdsToRoleIdStrings(payload.userRoles),
     accessibleApps: payload.accessibleApps ?? [],
     remark: payload.remark ?? '',
     createBy: 'current_user',
@@ -147,7 +143,7 @@ export function mockUpdateUser(
       userName: payload.userName,
       userPhone: payload.userPhone,
       userGender: payload.userGender,
-      userRoles: roleIdsToRoleCodes(payload.userRoles),
+      userRoles: roleIdsToRoleIdStrings(payload.userRoles),
       userEmail: payload.userEmail ?? existing.userEmail,
       nickName: payload.nickName ?? existing.nickName,
       accessibleApps: payload.accessibleApps ?? existing.accessibleApps,
@@ -170,8 +166,8 @@ export function mockPermissionUpdate(
   const existing = all.find((r) => r.id === payload.id) ?? all[0]
   const updatedUser = {
     ...existing,
-    userRoles: [payload.role],
-    accessibleApps: payload.apps,
+    userRoles: payload.roleId === '' ? existing.userRoles : [String(payload.roleId)],
+    accessibleApps: payload.accessibleApps,
     remark: payload.remark ?? existing.remark,
     updateBy: 'current_user',
     updateTime: fmt(now)

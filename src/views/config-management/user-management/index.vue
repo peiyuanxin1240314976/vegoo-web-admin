@@ -38,6 +38,7 @@
     <div class="user-page-right min-h-0">
       <UserRightPanel
         :user="currentDetailUser"
+        :role-options="assignRoleOptions"
         @save="handleRightPanelSave"
         @cancel="currentDetailUser = null"
         @edit="() => currentDetailUser && showDialog('edit', currentDetailUser)"
@@ -71,8 +72,7 @@
     createUser,
     updateUser,
     updatePermission,
-    disableUser,
-    saveUserAppPermissions
+    disableUser
   } from '@/api/config-management'
   import UserLeftPanel from './modules/user-left-panel.vue'
   import UserRightPanel from './modules/user-right-panel.vue'
@@ -122,6 +122,20 @@
     { label: '所有角色', value: '' as const },
     ...roleListStore.items.map((r) => ({ label: r.roleName, value: r.roleId }))
   ])
+
+  // 右侧「分配角色」用 roleId 作为 value，用于回显 userRoles[0]（来自 user/table）
+  const assignRoleOptions = computed(() =>
+    roleListStore.items
+      .filter((r) => typeof r.roleId === 'number' && !Number.isNaN(r.roleId))
+      .map((r) => ({ label: r.roleName, value: r.roleId }))
+  )
+
+  const roleIdNameMap = computed<Record<string, string>>(() => {
+    const pairs = roleListStore.items
+      .map((r) => [String(r.roleId ?? ''), String(r.roleName ?? '')] as const)
+      .filter(([id, name]) => id.trim() !== '' && name.trim() !== '')
+    return Object.fromEntries(pairs)
+  })
 
   /** 列表状态标签（与 Api.SystemManage.UserListItem.status 约定一致） */
   const USER_STATUS_CONFIG = {
@@ -220,6 +234,20 @@
           width: 100,
           showOverflowTooltip: true,
           formatter: (row) => row.nickName || '—'
+        },
+        {
+          prop: 'userRoles',
+          label: '角色',
+          width: 140,
+          showOverflowTooltip: true,
+          formatter: (row) => {
+            const ids = (row.userRoles ?? []).map((v) => String(v).trim()).filter(Boolean)
+            if (!ids.length) return '—'
+            const names = ids
+              .map((id) => roleIdNameMap.value[id])
+              .filter((name) => String(name ?? '').trim() !== '')
+            return names.length ? names.join('，') : ids.join('，')
+          }
         },
         {
           prop: 'userGender',
@@ -438,28 +466,27 @@
 
   /** 右侧面板保存（角色、可访问应用、备注） */
   const handleRightPanelSave = async (payload: {
-    role: string
-    apps: string[]
+    roleId: number | ''
+    accessibleApps: string[]
     remark: string
   }) => {
     if (!currentDetailUser.value) return
     try {
-      await saveUserAppPermissions({
-        userId: currentDetailUser.value.id,
-        allowedAppUuids: payload.apps
+      await updatePermission({
+        id: currentDetailUser.value.id,
+        roleId: payload.roleId,
+        accessibleApps: payload.accessibleApps,
+        remark: payload.remark
       })
       currentDetailUser.value = {
         ...currentDetailUser.value,
-        accessibleApps: [...payload.apps],
+        accessibleApps: [...payload.accessibleApps],
         remark: payload.remark,
-        userRoles: payload.role ? [payload.role] : currentDetailUser.value.userRoles
+        userRoles:
+          payload.roleId !== ''
+            ? [String(payload.roleId)]
+            : [...(currentDetailUser.value.userRoles ?? [])]
       }
-      await updatePermission({
-        id: currentDetailUser.value.id,
-        role: payload.role,
-        apps: payload.apps,
-        remark: payload.remark
-      })
       ElMessage.success('保存成功')
       refreshData()
       loadStats()

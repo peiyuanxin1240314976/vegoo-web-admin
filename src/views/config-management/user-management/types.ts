@@ -100,8 +100,10 @@ export interface UpdateUserPayload {
 /** 右侧详情保存请求体 */
 export interface PermissionUpdatePayload {
   id: number
-  role: string
-  apps: string[]
+  /** 单选角色主键（RoleListItem.roleId）；空值表示不修改 */
+  roleId: number | ''
+  /** 可访问应用列表，空数组表示回收全部应用权限 */
+  accessibleApps: string[]
   remark?: string
 }
 
