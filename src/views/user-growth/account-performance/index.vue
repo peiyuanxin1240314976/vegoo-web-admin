@@ -133,7 +133,7 @@
                 :dark="isDark"
                 @click="toggleExpandAll"
               >
-                {{ expandAll ? '收起全部' : '展开全部' }}
+                {{ isAllExpanded ? '收起全部' : '展开全部' }}
               </ElButton>
               <!-- <ElButton size="default" color="#13deb9" plain :dark="isDark">自定义列</ElButton> -->
               <ElInput
@@ -267,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch, watchEffect } from 'vue'
+  import { ref, computed, onMounted, onActivated, onDeactivated, watch, watchEffect } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { storeToRefs } from 'pinia'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
@@ -342,7 +342,6 @@
   const platformAppliedKeys = ref('')
   const accountDraftKeys = ref('')
   const accountAppliedKeys = ref('')
-  const expandAll = ref(false)
   const expandedRowKeys = ref<string[]>([])
 
   // 模板内禁止写 `as any`，这里预先放宽签名给子组件透传
@@ -535,7 +534,10 @@
   /** 仅 Tab 切回「应用」时拉表；筛选生效只在「查询」里 applyFilters + loadAppTableTree，避免与 watch(applied*) 重复请求 */
   let appTableDebounceTimer: ReturnType<typeof setTimeout> | null = null
   watch(modelValue, (v) => {
-    if (v !== '应用') return
+    if (v !== '应用') {
+      resetExpandedRows()
+      return
+    }
     appTableLoading.value = true
     appCurrentPage.value = 1
     if (appTableDebounceTimer) clearTimeout(appTableDebounceTimer)
@@ -833,11 +835,6 @@
     return { color: rgba(base, getNameTextAlpha()), fontWeight: 600 }
   }
 
-  watchEffect(() => {
-    if (!expandAll.value) return
-    expandedRowKeys.value = collectExpandableRowKeys(tableData.value)
-  })
-
   function collectExpandableRowKeys(rows: AccountDetailRow[]): string[] {
     const keys: string[] = []
     const walk = (list: AccountDetailRow[]) => {
@@ -852,9 +849,19 @@
     return keys
   }
 
+  const isAllExpanded = computed(() => {
+    const allKeys = collectExpandableRowKeys(tableData.value)
+    if (!allKeys.length) return false
+    const expanded = new Set(expandedRowKeys.value.map((k) => String(k)))
+    return allKeys.every((key) => expanded.has(String(key)))
+  })
+
+  function resetExpandedRows() {
+    expandedRowKeys.value = []
+  }
+
   function toggleExpandAll() {
-    expandAll.value = !expandAll.value
-    expandedRowKeys.value = expandAll.value ? collectExpandableRowKeys(tableData.value) : []
+    expandedRowKeys.value = isAllExpanded.value ? [] : collectExpandableRowKeys(tableData.value)
   }
 
   /** 操作列：展开 / 收起当前行的下一级（树节点） */
@@ -863,7 +870,6 @@
     const id = String(row.id)
     const open = expandedRowKeys.value.includes(id)
     if (open) {
-      expandAll.value = false
       expandedRowKeys.value = expandedRowKeys.value.filter((k) => k !== id)
     } else {
       expandedRowKeys.value = [...expandedRowKeys.value, id]
@@ -1177,6 +1183,15 @@
       renderAllCharts()
       await onQuery()
     })()
+  })
+
+  // 路由切出/切回时，统一重置父层展开 keys，避免按钮文案与当前列表展示不一致
+  onDeactivated(() => {
+    resetExpandedRows()
+  })
+
+  onActivated(() => {
+    resetExpandedRows()
   })
 
   /* 深色/浅色切换时重绘图表，保证坐标轴、图例、边框等颜色正确 */
