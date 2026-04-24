@@ -13,7 +13,10 @@ export interface ComprehensiveAnalysisFilterOptions {
 
 /** 页面筛选 UI 状态（与请求体无关的字段勿放入 ComprehensiveAnalysisApiParams） */
 export interface ComprehensiveAnalysisFilterState {
-  dateRange: string
+  /** @deprecated 历史预设字段，保留仅用于兼容旧调用 */
+  dateRange?: string
+  date_start: string
+  date_end: string
   s_app_id: string | string[]
   adPlatform: string
   s_country_code: string

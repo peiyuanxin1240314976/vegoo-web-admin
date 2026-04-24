@@ -35,10 +35,9 @@ function dimensionToApiValue(v: string) {
 export function buildComprehensiveAnalysisApiParams(
   filters: ComprehensiveAnalysisFilterState
 ): ComprehensiveAnalysisApiParams {
-  const { date_start, date_end } = resolveDateRangeFromPreset(filters.dateRange)
   return {
-    date_start,
-    date_end,
+    date_start: filters.date_start,
+    date_end: filters.date_end,
     appIds: toAppIdsRequestBody(filters.s_app_id),
     source: dimensionToApiValue(filters.adPlatform),
     s_country_code: dimensionToApiValue(filters.s_country_code)

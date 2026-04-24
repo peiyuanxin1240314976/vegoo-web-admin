@@ -11,17 +11,23 @@
       <header class="ca-header ca-entry-1">
         <div class="ca-filters-bar">
           <div class="ca-filters-left">
-            <div class="ca-filter-chip ca-filter-chip--static">
-              <ElIcon class="ca-filter-chip__icon"><Calendar /></ElIcon>
-              <span class="ca-filter-chip__value">{{ dateRangeLabel }}</span>
-            </div>
+            <AppDatePicker
+              v-model="dateRangeValue"
+              type="daterange"
+              value-format="YYYY-MM-DD"
+              range-separator="~"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              class="ca-filter-date-picker"
+              :prefix-icon="Calendar"
+            />
 
             <AppPlatformSearchSelect
               v-model="filters.s_app_id"
               mode="app"
               placeholder="应用"
               search-placeholder="应用"
-              class="ca-filter-select ca-filter-select--app"
+              class="ca-filter-select ca-filter-select--app comprehensive-analysis-date-picker"
               input-class="ca-filter-select__input"
               :setting-apps="settingAppsForSelect"
               :height="40"
@@ -103,6 +109,7 @@
   import { ref, reactive, onMounted, computed, defineAsyncComponent, watch } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { Top, Bottom, Calendar, Search } from '@element-plus/icons-vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import type { ComprehensiveAnalysisFilterState, ComprehensiveAnalysisData } from './types'
@@ -117,8 +124,11 @@
   const router = useRouter()
   const route = useRoute()
 
+  const defaultDateRange = resolveDateRangeFromPreset('7d')
+
   const filters = reactive<ComprehensiveAnalysisFilterState>({
-    dateRange: '7d',
+    date_start: defaultDateRange.date_start,
+    date_end: defaultDateRange.date_end,
     s_app_id: [],
     adPlatform: '',
     s_country_code: ''
@@ -146,12 +156,16 @@
   const loading = ref(false)
   const hasBootstrappedInitialLoad = ref(false)
 
-  const dateRangeLabel = computed(() => {
-    const { date_start, date_end } = resolveDateRangeFromPreset(filters.dateRange)
-    if (filters.dateRange === '7d') {
-      return `近7天 ${date_start} ~ ${date_end}`
+  const dateRangeValue = computed<[string, string] | null>({
+    get() {
+      if (filters.date_start && filters.date_end) return [filters.date_start, filters.date_end]
+      return null
+    },
+    set(v) {
+      if (!v) return
+      filters.date_start = v[0]
+      filters.date_end = v[1]
     }
-    return `${date_start} ~ ${date_end}`
   })
 
   const isPlatformAnalysisDetail = computed(() => route.name === 'PlatformAnalysisDetail')
@@ -167,7 +181,8 @@
     loading.value = true
     try {
       pageData.value = await fetchComprehensiveAnalysisData({
-        dateRange: filters.dateRange,
+        date_start: filters.date_start,
+        date_end: filters.date_end,
         s_app_id: filters.s_app_id,
         adPlatform: filters.adPlatform,
         s_country_code: filters.s_country_code
@@ -294,32 +309,65 @@
     }
   }
 
-  .ca-filter-chip {
-    --ca-filter-accent: var(--theme-color, var(--art-primary, #3b82f6));
+  .ca-filter-date-picker {
+    width: 280px;
+    min-width: 280px;
+    max-width: 100%;
+  }
 
-    box-sizing: border-box;
-    display: inline-flex;
-    gap: 10px;
-    align-items: center;
-    min-height: 40px;
-    padding: 8px 14px;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    background: color-mix(in srgb, var(--ca-filter-accent) 6%, transparent);
-    border: 1px solid var(--ca-filter-accent);
+  :deep(.ca-filter-date-picker) {
+    --el-date-editor-width: 280px;
+    --el-date-editor-daterange-width: 280px;
+    --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-component-size: 40px;
+  }
+
+  :deep(.ca-filter-date-picker.el-date-editor) {
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 100% !important;
+  }
+
+  :deep(.ca-filters-left > .ca-filter-date-picker.el-date-editor.el-input__wrapper) {
+    flex: 0 0 280px !important;
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 100% !important;
+  }
+
+  :deep(.ca-filter-date-picker .el-input__wrapper),
+  :deep(.ca-filter-date-picker .el-range-editor.el-input__wrapper),
+  :deep(.ca-filter-date-picker.el-date-editor) {
+    padding: 0 12px;
+    background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
+    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
     border-radius: var(--el-border-radius-base, 4px);
     box-shadow: none;
+    transition:
+      border-color 0.22s var(--ease-default),
+      box-shadow 0.22s var(--ease-default),
+      background-color 0.22s var(--ease-default);
   }
 
-  .ca-filter-chip__icon {
-    font-size: 16px;
-    color: var(--ca-filter-accent);
+  :deep(.ca-filter-date-picker.el-date-editor:hover) {
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent);
   }
 
-  .ca-filter-chip__value {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
+  :deep(.ca-filter-date-picker.el-date-editor.is-active),
+  :deep(.ca-filter-date-picker.el-date-editor:focus-within) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
+      transparent
+    ) !important;
+    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
   }
 
   .ca-filter-select {
@@ -511,6 +559,12 @@
 </style>
 
 <style lang="scss">
+  .comprehensive-analysis-date-picker {
+    width: 280px;
+    min-width: 280px;
+    max-width: 100%;
+  }
+
   .ca-select-popper {
     z-index: 3200 !important;
     border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
