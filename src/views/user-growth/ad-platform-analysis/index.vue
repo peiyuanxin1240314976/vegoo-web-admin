@@ -179,9 +179,7 @@
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import AppPlatformSearchSelect, {
-    type AppPlatformSearchSelectPayload
-  } from '@/components/filter/app-platform-search-select.vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useChart } from '@/hooks/core/useChart'
   import { graphic, type EChartsOption } from '@/plugins/echarts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
@@ -355,14 +353,7 @@
     combinedFilterValue.value = []
   }
 
-  function onCombinedFilterChange(payload: AppPlatformSearchSelectPayload | null) {
-    if (!payload) {
-      filters.value.app = 'all'
-      filters.value.platform = 'all'
-      combinedFilterValue.value = []
-      return
-    }
-
+  function onCombinedFilterChange() {
     const next = Array.isArray(combinedFilterValue.value)
       ? combinedFilterValue.value.filter(Boolean)
       : String(combinedFilterValue.value ?? '').trim()
@@ -1401,6 +1392,7 @@
 
 <style lang="scss" scoped>
   @use '../ad-performance/styles/ap-card-fx.scss' as ap;
+  @use '../styles/app-platform-select-ad-theme.scss' as apSelect;
 
   /* ========== 设计变量（与原型/设计图一致，便于统一修改） ========== */
 
@@ -1933,30 +1925,14 @@
     --el-component-size: 36px;
   }
 
-  .aps-filter-toolbar .header-filters :deep(.app-platform-search-select.aps-filter-select) {
-    --app-platform-select-height: 36px;
-    --app-platform-select-radius: var(--el-border-radius-base, 4px);
-
-    width: 220px;
-    min-width: 200px;
-    max-width: 220px;
-    padding: 0 11px;
-    color: $color-text-axure;
-    background: color-mix(in srgb, var(--theme-color) 6%, transparent);
-    border-color: color-mix(in srgb, var(--theme-color) 28%, transparent);
-    box-shadow: none;
-  }
-
-  .aps-filter-toolbar .header-filters :deep(.app-platform-search-select.aps-filter-select:hover) {
-    border-color: color-mix(in srgb, var(--theme-color) 60%, transparent);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 18%, transparent);
-  }
-
-  .aps-filter-toolbar .header-filters :deep(.app-platform-search-select.aps-filter-select.is-open) {
-    background: color-mix(in srgb, var(--theme-color) 10%, transparent);
-    border-color: var(--theme-color);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 20%, transparent);
-  }
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.aps-filter-toolbar .header-filters',
+    'aps-filter-select',
+    'aps-filter-popper',
+    220px,
+    200px,
+    220px
+  );
 
   .aps-filter-toolbar
     .header-filters
@@ -3009,36 +2985,10 @@
       inset 0 1px 0 color-mix(in srgb, var(--theme-color) 8%, transparent) !important;
   }
 
-  :global(html.dark .aps-filter-popper .app-platform-search-select__panel) {
-    color: var(--aps-text-primary);
-  }
-
-  :global(html.dark .aps-filter-popper .app-platform-search-select__header) {
-    color: rgb(226 232 240 / 72%);
-  }
-
-  :global(html.dark .aps-filter-popper .app-platform-search-select__row:hover),
-  :global(html.dark .aps-filter-popper .app-platform-search-select__row.is-active) {
-    background: color-mix(in srgb, var(--theme-color) 14%, transparent);
-  }
-
   :global(html:not(.dark) .aps-filter-popper.el-popper) {
     border: 1px solid color-mix(in srgb, var(--theme-color) 22%, transparent) !important;
     border-radius: 12px !important;
     box-shadow: 0 14px 40px rgb(15 23 42 / 12%) !important;
-  }
-
-  :global(html:not(.dark) .aps-filter-popper .app-platform-search-select__panel) {
-    color: var(--aps-text-primary);
-  }
-
-  :global(html:not(.dark) .aps-filter-popper .app-platform-search-select__header) {
-    color: rgb(15 23 42 / 62%);
-  }
-
-  :global(html:not(.dark) .aps-filter-popper .app-platform-search-select__row:hover),
-  :global(html:not(.dark) .aps-filter-popper .app-platform-search-select__row.is-active) {
-    background: color-mix(in srgb, var(--theme-color) 10%, transparent);
   }
 
   /* ========== 无障碍：减少动画 ========== */

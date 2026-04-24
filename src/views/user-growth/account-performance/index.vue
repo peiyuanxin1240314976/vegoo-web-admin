@@ -17,6 +17,7 @@
             :min-width="200"
             :max-width="240"
             input-class="ap-filter-select"
+            dropdown-class="ap-filter-popper"
           />
 
           <ElSelect v-model="draftSource" placeholder="广告平台" class="ap-filter-select">
@@ -1189,6 +1190,7 @@
 
 <style scoped lang="scss">
   @use '../ad-performance/styles/ap-card-fx.scss' as *;
+  @use '../styles/app-platform-select-ad-theme.scss' as apSelect;
 
   .account-performance-page {
     position: relative;
@@ -1496,6 +1498,15 @@
       max-width: 100%;
     }
   }
+
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.ap-filters',
+    'ap-filter-select',
+    'ap-filter-popper',
+    240px,
+    200px,
+    240px
+  );
 
   .ap-filters :deep(.ap-filter-select .el-select__wrapper) {
     min-height: 36px;

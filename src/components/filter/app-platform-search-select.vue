@@ -71,7 +71,7 @@
 
       <div class="app-platform-search-select__body">
         <button
-          v-if="clearable && hasSelection"
+          v-if="clearable && hasSelection && !isMultiAppMode"
           type="button"
           class="app-platform-search-select__row app-platform-search-select__row--clear"
           @click="clearSelection"
