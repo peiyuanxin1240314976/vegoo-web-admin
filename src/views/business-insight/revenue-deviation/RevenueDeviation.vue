@@ -518,7 +518,7 @@
   const dateRange = ref<[string, string]>(getDefaultDateRange())
   const platform = ref(ALL_SOURCE_VALUE)
   /** 空字符串 = 不限应用；POST 由 api 层转为 appIds: [] */
-  const appFilter = ref('')
+  const appFilter = ref<string | string[]>([])
   const sourceOptions = ref<RevenueDeviationFilterOption[]>([
     { value: ALL_SOURCE_VALUE, label: '全部广告平台' }
   ])
@@ -645,7 +645,7 @@
       t_start_date: dateRange.value[0]!,
       t_end_date: dateRange.value[1]!,
       source: platform.value === ALL_SOURCE_VALUE ? '' : platform.value,
-      s_app_id: appFilter.value.trim(),
+      s_app_id: appFilter.value,
       row_dim: activeRowDim.value,
       col_dim: activeColDim.value
     }

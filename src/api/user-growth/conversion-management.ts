@@ -83,7 +83,7 @@ function numOrZero(v: unknown): number {
   return typeof v === 'number' && !Number.isNaN(v) ? v : 0
 }
 
-function withRequestAppIds<T extends { appId?: string }>(params: T) {
+function withRequestAppIds<T extends { appId?: string | string[] }>(params: T) {
   const { appId, ...rest } = params
   return {
     ...rest,
@@ -231,7 +231,7 @@ export function fetchConversionMetaDialogOptions(params: {
   source?: string
   adPlatform?: string
   mccAccount?: string
-  appId?: string
+  appId?: string | string[]
   /** 终端平台，与 meta-filter `platform` 一致 */
   platform?: string
 }) {

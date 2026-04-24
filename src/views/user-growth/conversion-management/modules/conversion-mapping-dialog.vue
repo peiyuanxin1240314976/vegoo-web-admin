@@ -428,7 +428,7 @@
   async function loadDialogMeta(params: {
     source?: string
     mccAccount?: string
-    appId?: string
+    appId?: string | string[]
     platform?: string
   }) {
     try {

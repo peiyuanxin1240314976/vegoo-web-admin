@@ -43,7 +43,8 @@ function mapUiSourceToApiSource(uiValue: string): string {
 }
 
 /** 与 `buildComprehensiveAnalysisApiParams` 一致：meta 里「全部」可能为 `all` / `''` */
-function dimensionToApiValue(v: string | undefined | null) {
+function dimensionToApiValue(v: string | string[] | undefined | null) {
+  if (Array.isArray(v)) return v
   const s = v ?? ''
   return s === 'all' || s === '' ? '' : s
 }
@@ -51,10 +52,14 @@ function dimensionToApiValue(v: string | undefined | null) {
 /**
  * 列表/KPI/底部图请求体：始终带齐 `appIds`、`source`（空串表示不限）。
  */
-function buildQueryParams(filterAppId: string, filterSourceUi: string): RealtimeDataQueryParams {
+function buildQueryParams(
+  filterAppId: string | string[],
+  filterSourceUi: string
+): RealtimeDataQueryParams {
+  const sourceValue = dimensionToApiValue(filterSourceUi)
   return {
     appIds: toAppIdsRequestBody(dimensionToApiValue(filterAppId)),
-    source: mapUiSourceToApiSource(dimensionToApiValue(filterSourceUi))
+    source: mapUiSourceToApiSource(Array.isArray(sourceValue) ? '' : sourceValue)
   }
 }
 
@@ -81,7 +86,7 @@ export function useRealtimeDashboard() {
   )
 
   /** 与契约一致：空字符串表示「全部应用」 */
-  const filterAppId = ref('')
+  const filterAppId = ref<string | string[]>([])
   /** 下拉原始 value（可能为 Mock slug 或后端 `source` 字符串） */
   const filterSourceUi = ref('')
 

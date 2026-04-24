@@ -125,7 +125,7 @@
   const filters = reactive<OverallRecoveryFilterState>({
     startDate: defaultRange.startDate,
     endDate: defaultRange.endDate,
-    s_app_id: '',
+    s_app_id: [],
     source: '',
     s_country_code: ''
   })
@@ -186,7 +186,7 @@
     (appId) => {
       // AppPlatformSearchSelect 自动选中首个应用后，首屏立即同步查询参数。
       if (hasSyncedInitialAutoApp.value) return
-      if (!appId) return
+      if (Array.isArray(appId) ? appId.length === 0 : !appId) return
       hasSyncedInitialAutoApp.value = true
       handleSearch()
     }

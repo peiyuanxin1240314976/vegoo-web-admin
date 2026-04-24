@@ -308,7 +308,7 @@
 
   const mock = ref(MOCK_ACCOUNT_PERFORMANCE)
   const draftSource = ref('')
-  const draftAppId = ref('')
+  const draftAppId = ref<string | string[]>([])
   /** 顶部第三项：对接 meta accountOptions，请求体仍走 ownerId 字段名 */
   const draftFilterOwner = ref('')
   function buildDefaultDateRange(): [string, string] {
@@ -319,7 +319,7 @@
 
   /** 点击“查询”后才会更新 applied，并触发请求 */
   const appliedSource = ref('')
-  const appliedAppId = ref('')
+  const appliedAppId = ref<string | string[]>([])
   const appliedFilterOwner = ref('')
   const appliedDateRange = ref<[string, string]>(buildDefaultDateRange())
 
@@ -329,6 +329,11 @@
   )
   const metaSettingApps = computed(() => cockpitMeta.value?.settingApps ?? [])
   const firstMetaAppId = computed(() => String(metaSettingApps.value[0]?.sAppId ?? '').trim())
+  const hasSelectedDraftApp = computed(() =>
+    Array.isArray(draftAppId.value)
+      ? draftAppId.value.length > 0
+      : !!String(draftAppId.value).trim()
+  )
   const ownerOptions = ref<Array<{ label: string; value: string }>>([])
   const appDraftKeys = ref('')
   const appAppliedKeys = ref('')
@@ -395,7 +400,7 @@
 
   function applyFilters() {
     appliedSource.value = draftSource.value ?? ''
-    appliedAppId.value = draftAppId.value ?? ''
+    appliedAppId.value = draftAppId.value ?? []
     appliedFilterOwner.value = draftFilterOwner.value ?? ''
     appliedDateRange.value = [...draftDateRange.value]
 
@@ -1163,7 +1168,7 @@
   onMounted(() => {
     void (async () => {
       await loadMetaFilterOptions()
-      if (!draftAppId.value && firstMetaAppId.value) {
+      if (!hasSelectedDraftApp.value && firstMetaAppId.value) {
         draftAppId.value = firstMetaAppId.value
       }
       // 让出首帧给布局与骨架，再初始化空图表

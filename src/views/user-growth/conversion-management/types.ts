@@ -56,7 +56,7 @@ export interface ConversionMappingItem {
 export interface ConversionFilterParams {
   platform?: string
   /** 应用筛选（自有应用 ID）；「全部」为 `''`。 */
-  appId?: string
+  appId?: string | string[]
   conversionType?: string
   status?: string
   keyword?: string
@@ -103,7 +103,7 @@ export interface ConversionMappingForm {
   source?: AdPlatformType
   adPlatform?: AdPlatformType
   mccAccount?: string
-  appId?: string
+  appId?: string | string[]
   conversionName?: string
   conversionId?: string
   platformConversionType?: PlatformConversionType
@@ -134,7 +134,7 @@ export interface ConversionDataFilterParams {
   endDate?: string
   platform?: string
   /** 应用筛选（自有应用 ID）；「全部」为 `''` */
-  appId?: string
+  appId?: string | string[]
   /**
    * 广告平台字段（与接口约定一致）
    * - source: 推荐使用

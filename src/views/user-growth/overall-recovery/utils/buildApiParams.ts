@@ -14,9 +14,14 @@ function formatYmd(d: Date) {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 
-function allToEmpty(v: string) {
+function allToEmpty(v: string | string[]) {
+  if (Array.isArray(v)) return v
   if (v === 'all' || v === '') return ''
   return v
+}
+
+function allToEmptyString(v: string) {
+  return v === 'all' || v === '' ? '' : v
 }
 
 export function resolveDateRangeFromPreset(dateRange: string): {
@@ -60,8 +65,8 @@ export function buildOverallRecoveryCommonBody(
     startDate,
     endDate,
     appIds: toAppIdsRequestBody(allToEmpty(filters.s_app_id)),
-    source: allToEmpty(filters.source),
-    countryCode: allToEmpty(filters.s_country_code)
+    source: allToEmptyString(filters.source),
+    countryCode: allToEmptyString(filters.s_country_code)
   }
 }
 
@@ -74,7 +79,7 @@ export function buildOverallRecoveryDetailRecordsBody(
 ): OverallRecoveryDetailRecordsBody {
   return {
     ...buildOverallRecoveryCommonBody(filters),
-    detailApp: allToEmpty(detail.detailApp),
-    detailChannel: allToEmpty(detail.detailChannel)
+    detailApp: allToEmptyString(detail.detailApp),
+    detailChannel: allToEmptyString(detail.detailChannel)
   }
 }

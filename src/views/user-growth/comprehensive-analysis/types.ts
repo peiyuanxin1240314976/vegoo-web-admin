@@ -14,7 +14,7 @@ export interface ComprehensiveAnalysisFilterOptions {
 /** 页面筛选 UI 状态（与请求体无关的字段勿放入 ComprehensiveAnalysisApiParams） */
 export interface ComprehensiveAnalysisFilterState {
   dateRange: string
-  s_app_id: string
+  s_app_id: string | string[]
   adPlatform: string
   s_country_code: string
 }

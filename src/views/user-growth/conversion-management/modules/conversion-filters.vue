@@ -115,9 +115,15 @@
   )
   const statusOptions = computed(() => props.statusOptions ?? MOCK_STATUS_OPTIONS)
 
-  const form = reactive<Record<string, string>>({
+  const form = reactive<{
+    platform: string
+    appId: string | string[]
+    conversionType: string
+    status: string
+    keyword: string
+  }>({
     platform: String(props.filter?.platform ?? ''),
-    appId: String(props.filter?.appId ?? ''),
+    appId: props.filter?.appId ?? [],
     conversionType: String(props.filter?.conversionType ?? ''),
     status: String(props.filter?.status ?? ''),
     keyword: String(props.filter?.keyword ?? '')
@@ -133,7 +139,7 @@
     (v) => {
       if (v) {
         form.platform = v.platform ?? ''
-        form.appId = v.appId ?? ''
+        form.appId = v.appId ?? []
         form.conversionType = v.conversionType ?? ''
         form.status = v.status ?? ''
         form.keyword = v.keyword ?? ''

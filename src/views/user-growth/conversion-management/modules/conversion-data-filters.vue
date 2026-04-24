@@ -112,10 +112,15 @@
     () => props.conversionTypeOptions ?? filterConversionTypeOptions.value
   )
 
-  const form = reactive({
+  const form = reactive<{
+    dateRange: [string, string]
+    platform: string
+    appId: string | string[]
+    conversionType: string
+  }>({
     dateRange: [props.filter?.startDate ?? '', props.filter?.endDate ?? ''] as [string, string],
     platform: String(props.filter?.platform ?? ''),
-    appId: String(props.filter?.appId ?? ''),
+    appId: props.filter?.appId ?? [],
     conversionType: String(props.filter?.conversionType ?? '')
   })
 
@@ -136,7 +141,7 @@
       if (!v) return
       form.dateRange = [v.startDate ?? '', v.endDate ?? ''] as [string, string]
       form.platform = v.platform ?? ''
-      form.appId = v.appId ?? ''
+      form.appId = v.appId ?? []
       form.conversionType = v.conversionType ?? ''
     },
     { deep: true }

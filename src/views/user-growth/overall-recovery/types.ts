@@ -9,7 +9,7 @@ export type OverallRecoveryTabKey = 'overall' | 'organic'
 export interface OverallRecoveryFilterState {
   startDate: string
   endDate: string
-  s_app_id: string
+  s_app_id: string | string[]
   source: string
   s_country_code: string
 }

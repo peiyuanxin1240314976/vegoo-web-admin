@@ -22,7 +22,7 @@ import { getAppTodayYYYYMMDD } from '@/utils/app-now'
 const defaultFilter: AdPerformanceFilter = {
   startDate: getAppTodayYYYYMMDD(),
   endDate: getAppTodayYYYYMMDD(),
-  appId: '',
+  appId: [],
   adPlatform: '',
   account: '',
   country: ''
@@ -31,6 +31,11 @@ const defaultFilter: AdPerformanceFilter = {
 function getFirstAppId(meta: AdPerformanceMetaFilterResponse | null): string {
   const first = (meta?.appOptions ?? []).find((item) => String(item.value ?? '').trim() !== '')
   return String(first?.value ?? '').trim()
+}
+
+function hasSelectedApp(appId: AdPerformanceFilter['appId']): boolean {
+  if (Array.isArray(appId)) return appId.length > 0
+  return !!String(appId ?? '').trim()
 }
 
 function emptyPage(): AdPerformanceMock {
@@ -99,8 +104,8 @@ export function useAdPerformancePage() {
     try {
       meta.value = await fetchAdPerformanceMetaFilterOptions()
       const firstAppId = getFirstAppId(meta.value)
-      if (!page.value.filter.appId && firstAppId) {
-        page.value.filter = { ...page.value.filter, appId: firstAppId }
+      if (!hasSelectedApp(page.value.filter.appId) && firstAppId) {
+        page.value.filter = { ...page.value.filter, appId: [firstAppId] }
       }
     } catch {
       ElMessage.error('加载筛选选项失败')

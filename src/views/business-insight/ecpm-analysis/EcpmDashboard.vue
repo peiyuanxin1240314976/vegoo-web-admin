@@ -575,7 +575,7 @@
     formatYmdSlash(defaultEnd)
   ])
   const filterPlatform = ref(ALL_OPTION_VALUE)
-  const filterApp = ref(ALL_OPTION_VALUE)
+  const filterApp = ref<string | string[]>([])
   const filterCountry = ref(ALL_OPTION_VALUE)
   const loadingMetaFilterOptions = ref(false)
   const loadingOverviewKpis = ref(false)
@@ -689,7 +689,16 @@
     return value === '' ? ALL_OPTION_VALUE : value
   }
 
-  function fromSelectValue(value: string) {
+  function fromSelectValue(value: string): string {
+    return value === ALL_OPTION_VALUE ? '' : value
+  }
+
+  function fromSelectAppValue(value: string | string[]): string | string[] {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => String(item ?? '').trim())
+        .filter((item) => item && item !== ALL_OPTION_VALUE)
+    }
     return value === ALL_OPTION_VALUE ? '' : value
   }
 
@@ -1187,8 +1196,8 @@
       const cockpitApps = cockpitMeta.value?.settingApps ?? []
       filterApp.value =
         cockpitApps.length > 0
-          ? toSelectValue(cockpitApps[0]!.sAppId)
-          : toSelectValue(response.apps[0]?.value ?? '')
+          ? [String(cockpitApps[0]!.sAppId ?? '').trim()].filter(Boolean)
+          : [String(response.apps[0]?.value ?? '').trim()].filter(Boolean)
       filterCountry.value = toSelectValue(response.countries[0]?.value ?? '')
     } finally {
       loadingMetaFilterOptions.value = false
@@ -1206,7 +1215,7 @@
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
-        s_app_id: fromSelectValue(filterApp.value),
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
     } finally {
@@ -1225,7 +1234,7 @@
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
-        s_app_id: fromSelectValue(filterApp.value),
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
       if (trendChart) initTrendChart()
@@ -1244,7 +1253,7 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
-        s_app_id: fromSelectValue(filterApp.value),
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
       platforms.value = response.rows.map((row) => ({
@@ -1277,7 +1286,7 @@
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
-        s_app_id: fromSelectValue(filterApp.value),
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value),
         map_metric: mapMode.value
       })
@@ -1340,7 +1349,7 @@
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
-        s_app_id: fromSelectValue(filterApp.value),
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value),
         metric: mapMode.value
       })
@@ -1367,7 +1376,7 @@
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
-        s_app_id: fromSelectValue(filterApp.value),
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
       adSlots.value = response.rows.map((row) => ({
@@ -1391,7 +1400,7 @@
         platform: 'all',
         source: fromSelectValue(filterPlatform.value),
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
-        s_app_id: fromSelectValue(filterApp.value),
+        s_app_id: fromSelectAppValue(filterApp.value),
         s_country_code: fromSelectValue(filterCountry.value)
       })
       appRankRows.value = response.rows
@@ -1410,7 +1419,7 @@
         t_end_date: normalizeYmd(end),
         platform: 'all',
         // 网关 POST 体由 fetchEcpm* 转为 appIds: string[]（见 api/business-insight.ts）
-        s_app_id: fromSelectValue(filterApp.value)
+        s_app_id: fromSelectAppValue(filterApp.value)
       })
       insightTip.value = response.message
     } finally {

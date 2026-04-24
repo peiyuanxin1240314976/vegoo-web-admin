@@ -44,15 +44,13 @@ const AGENCY_ANALYSIS_BASE = `${ANALYSIS_API_BASE}/business-insight/agency-analy
 export type AgencyAnalysisFilterQuery = {
   startDate: string
   endDate: string
-  s_app_id?: string
+  s_app_id?: string | string[]
   agency_id?: string
   source?: string
 }
 
 function overviewBody(q: AgencyAnalysisFilterQuery) {
-  const appSelection = buildAppSelectionRequestBody(
-    q.s_app_id && q.s_app_id !== 'all' ? q.s_app_id : ''
-  )
+  const appSelection = buildAppSelectionRequestBody(q.s_app_id === 'all' ? '' : (q.s_app_id ?? ''))
   return {
     // TODO: 后端入参升级后删除 t_date
     t_date: q.endDate,
@@ -65,9 +63,7 @@ function overviewBody(q: AgencyAnalysisFilterQuery) {
 }
 
 function rangeBody(q: AgencyAnalysisFilterQuery) {
-  const appSelection = buildAppSelectionRequestBody(
-    q.s_app_id && q.s_app_id !== 'all' ? q.s_app_id : ''
-  )
+  const appSelection = buildAppSelectionRequestBody(q.s_app_id === 'all' ? '' : (q.s_app_id ?? ''))
   return {
     // TODO: 后端入参升级后删除 t_start_date / t_end_date
     t_start_date: q.startDate,
@@ -179,7 +175,7 @@ export type AgencyAnalysisSubTabFilterQuery = {
   endDate: string
   /** 单日查询时使用；默认建议取 endDate */
   date?: string
-  appId?: string
+  appId?: string | string[]
   source?: string
   /** 后三个 Tab 的入参维度 */
   agencyTab: 'gatherone' | 'kuainiao' | 'chuhai'
@@ -190,14 +186,14 @@ export type AgencyAnalysisSubTabLast7Query = {
   startDate: string
   /** 近 7 天窗口结束日 YYYY-MM-DD；前端通常取应用当前业务日 `getAppTodayYYYYMMDD()` */
   endDate: string
-  appId?: string
+  appId?: string | string[]
   source?: string
   /** 后三个 Tab 的入参维度 */
   agencyTab: 'gatherone' | 'kuainiao' | 'chuhai'
 }
 
 function subTabBody(q: AgencyAnalysisSubTabFilterQuery) {
-  const appSelection = buildAppSelectionRequestBody(q.appId && q.appId !== 'all' ? q.appId : '')
+  const appSelection = buildAppSelectionRequestBody(q.appId === 'all' ? '' : (q.appId ?? ''))
   return {
     startDate: q.startDate,
     endDate: q.endDate,
@@ -213,7 +209,7 @@ export function fetchAgencySubTabKpiLast7(params: AgencyAnalysisSubTabLast7Query
     return mockFetchAgencySubTabKpiLast7(params)
   }
   const appSelection = buildAppSelectionRequestBody(
-    params.appId && params.appId !== 'all' ? params.appId : ''
+    params.appId === 'all' ? '' : (params.appId ?? '')
   )
   return request.post<AgencySubTabKpiPayload>({
     url: `${AGENCY_ANALYSIS_BASE}/subtab/kpi/last7`,

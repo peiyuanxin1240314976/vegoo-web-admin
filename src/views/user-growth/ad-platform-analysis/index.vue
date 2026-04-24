@@ -284,11 +284,11 @@
   type SelectOption<T extends string = string> = { label: string; value: T }
 
   const filters = ref({
-    app: 'all' as string,
+    app: 'all' as string | string[],
     platform: 'all' as string,
     channelKey: 'all' as string
   })
-  const combinedFilterValue = ref('')
+  const combinedFilterValue = ref<string | string[]>([])
 
   // const filtersPlaceholders = {
   //   app: '全部Apps',
@@ -325,7 +325,12 @@
 
   function ensureFilterSelectionsInMeta() {
     const appVals = new Set([ALL_APP_OPTION, ...metaAppOptions.value].map((o) => o.value))
-    if (!appVals.has(filters.value.app)) filters.value.app = 'all'
+    const selectedAppIds = Array.isArray(filters.value.app)
+      ? filters.value.app
+      : filters.value.app === 'all'
+        ? []
+        : [filters.value.app]
+    if (selectedAppIds.some((id) => !appVals.has(id))) filters.value.app = 'all'
 
     const platVals = new Set(
       [ALL_PLATFORM_OPTION, ...metaPlatformOptions.value].map((o) => o.value)
@@ -339,24 +344,32 @@
   }
 
   function syncCombinedFilterValue() {
-    if (filters.value.app !== 'all' && filters.value.app) {
-      combinedFilterValue.value = String(filters.value.app).trim()
+    if (Array.isArray(filters.value.app)) {
+      combinedFilterValue.value = filters.value.app
       return
     }
-    combinedFilterValue.value = ''
+    if (filters.value.app !== 'all' && filters.value.app) {
+      combinedFilterValue.value = [String(filters.value.app).trim()]
+      return
+    }
+    combinedFilterValue.value = []
   }
 
   function onCombinedFilterChange(payload: AppPlatformSearchSelectPayload | null) {
     if (!payload) {
       filters.value.app = 'all'
       filters.value.platform = 'all'
-      combinedFilterValue.value = ''
+      combinedFilterValue.value = []
       return
     }
 
-    filters.value.app = payload.appId || 'all'
-    filters.value.platform = String(payload.platformCode || '').trim() || 'all'
-    syncCombinedFilterValue()
+    const next = Array.isArray(combinedFilterValue.value)
+      ? combinedFilterValue.value.filter(Boolean)
+      : String(combinedFilterValue.value ?? '').trim()
+        ? [String(combinedFilterValue.value).trim()]
+        : []
+    filters.value.app = next.length ? next : 'all'
+    filters.value.platform = 'all'
   }
 
   async function loadFiltersMeta() {
@@ -416,7 +429,8 @@
   /** 与后端约定：全页模块共用同一请求体；筛选项映射到 appIds / platform / source */
   function buildAdPlatformAnalysisRequestParams(): Api.UserGrowth.AdPlatformAnalysisRequestParams {
     const f = filters.value
-    const selectedAppId = f.app === 'all' ? '' : String(f.app ?? '').trim()
+    const selectedAppId =
+      f.app === 'all' ? [] : Array.isArray(f.app) ? f.app : String(f.app ?? '').trim()
     const platform =
       f.platform === 'all'
         ? ''
@@ -700,7 +714,9 @@
     let appId = String(row.appId ?? '').trim()
     let appName = String(row.appName ?? '').trim()
     if (!appId && filters.value.app !== 'all' && filters.value.app) {
-      appId = String(filters.value.app).trim()
+      appId = Array.isArray(filters.value.app)
+        ? String(filters.value.app[0] ?? '').trim()
+        : String(filters.value.app).trim()
     }
     if (!appName && appId) {
       appName = String(metaAppOptions.value.find((o) => o.value === appId)?.label ?? '').trim()

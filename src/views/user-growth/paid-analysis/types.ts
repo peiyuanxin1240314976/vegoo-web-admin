@@ -9,7 +9,7 @@ export interface PaidAnalysisFilterBody {
   startDate: string
   endDate: string
   /** 应用 ID；与公用 meta `appOptions[].value` 一致；不限时 **''**（勿与 `appName` 展示字段混用） */
-  appId?: string
+  appId?: string | string[]
   /** 终端平台：'' | 'android' | 'ios'（小写，与 UI 映射一致） */
   platform?: string
   /** 国家 ISO alpha-2 小写；「全部」为 '' */

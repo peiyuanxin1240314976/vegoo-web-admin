@@ -22,7 +22,7 @@ export interface IapFilterState {
    * 兼容旧字段（snake_case），部分页面/Mock 仍在使用。
    * 后续可逐步迁移为 appId / countryCode。
    */
-  s_app_id?: string
+  s_app_id?: string | string[]
   s_country_code?: string
 }
 

@@ -39,7 +39,7 @@ export function buildComprehensiveAnalysisApiParams(
   return {
     date_start,
     date_end,
-    appIds: toAppIdsRequestBody(dimensionToApiValue(filters.s_app_id)),
+    appIds: toAppIdsRequestBody(filters.s_app_id),
     source: dimensionToApiValue(filters.adPlatform),
     s_country_code: dimensionToApiValue(filters.s_country_code)
   }

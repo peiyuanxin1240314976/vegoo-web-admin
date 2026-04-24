@@ -539,7 +539,7 @@
 
   const props = defineProps<{
     filters: {
-      appId: string
+      appId: string | string[]
       platform: string
       country: string
       date: string
@@ -584,6 +584,11 @@
   const fProduct = ref('all')
   const fStatus = ref('all')
   const searchKw = ref('')
+
+  function normalizeAppFilterValue(v: string | string[]): string {
+    if (Array.isArray(v)) return v[0] ?? 'all'
+    return v || 'all'
+  }
 
   const applied = ref<AppliedOrderFilters>({
     dateStart: '',
@@ -816,7 +821,7 @@
   /* ── ECharts ──────────────────────────────────── */
   onMounted(() => {
     syncDateRangeFromParentDate(props.filters.date || getAppTodayYYYYMMDD())
-    fApp.value = props.filters.appId
+    fApp.value = normalizeAppFilterValue(props.filters.appId)
     fCountry.value = props.filters.country
     pushAppliedFromForm()
     void loadAll()
@@ -838,7 +843,7 @@
     () => props.searchToken,
     () => {
       syncDateRangeFromParentDate(props.filters.date || getAppTodayYYYYMMDD())
-      fApp.value = props.filters.appId
+      fApp.value = normalizeAppFilterValue(props.filters.appId)
       fCountry.value = props.filters.country
       pushAppliedFromForm()
       selectedOrder.value = null

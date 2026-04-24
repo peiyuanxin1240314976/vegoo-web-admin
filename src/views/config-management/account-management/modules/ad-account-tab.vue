@@ -247,13 +247,20 @@
 
   /** 表格行 `apps` 为应用名字符串；筛选值为 sAppId，需解析为名称再 includes */
   function rowMatchesAppFilter(item: AdAccountItem): boolean {
-    const id = appFilter.value.trim()
-    if (!id) return true
-    const hit = settingAppsForSelect.value.find((a) => String(a.sAppId ?? '').trim() === id)
-    const name = hit ? String(hit.sAppName ?? '').trim() : ''
-    if (name && item.apps.includes(name)) return true
-    if (item.apps.includes(id)) return true
-    return false
+    const ids = Array.isArray(appFilter.value)
+      ? appFilter.value.map((id) => String(id ?? '').trim()).filter(Boolean)
+      : String(appFilter.value ?? '')
+          .trim()
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean)
+    if (ids.length === 0) return true
+    return ids.some((id) => {
+      const hit = settingAppsForSelect.value.find((a) => String(a.sAppId ?? '').trim() === id)
+      const name = hit ? String(hit.sAppName ?? '').trim() : ''
+      if (name && item.apps.includes(name)) return true
+      return item.apps.includes(id)
+    })
   }
 
   const platformOptions = computed(() => {
@@ -274,7 +281,7 @@
   const accountTypeFilter = ref('')
   const statusFilter = ref('')
   /** 选中的应用 sAppId；空字符串表示不限 */
-  const appFilter = ref('')
+  const appFilter = ref<string | string[]>([])
   const currentPage = ref(1)
   const pageSize = ref(20)
   const jumpPage = ref('')

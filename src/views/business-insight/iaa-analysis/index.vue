@@ -168,7 +168,7 @@
   const activeTab = ref<IaaTabKey>('adType')
 
   const filtersDraft = reactive<IaaFilterState>({
-    s_app_id: '',
+    s_app_id: [],
     platform: 'all',
     s_country_code: 'all',
     t_date: getAppTodayYYYYMMDD()
@@ -207,7 +207,7 @@
       if (!opts?.length) return
       if (!opts[0]?.value) return
 
-      filtersDraft.s_app_id = opts[0].value
+      filtersDraft.s_app_id = [opts[0].value]
       hasInitDefaultAppId.value = true
       onQuery()
     },

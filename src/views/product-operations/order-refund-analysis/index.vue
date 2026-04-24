@@ -287,8 +287,8 @@
 
   /** 单选应用 id ↔ `draftFilters.appIds`（POST `appIds[]`） */
   const draftAppId = computed({
-    get: () => (draftFilters.appIds.length === 1 ? draftFilters.appIds[0]! : ''),
-    set: (v: string) => {
+    get: () => [...draftFilters.appIds],
+    set: (v: string | string[]) => {
       draftFilters.appIds = toAppIdsRequestBody(v)
     }
   })

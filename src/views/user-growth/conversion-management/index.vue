@@ -134,7 +134,7 @@
         current: 1,
         size: 20,
         platform: '',
-        appId: '',
+        appId: [],
         conversionType: '',
         status: '',
         keyword: ''
@@ -174,7 +174,7 @@
   function handleSearch(payload: ConversionFilterParams) {
     Object.assign(searchParams, {
       platform: payload.platform ?? '',
-      appId: payload.appId ?? '',
+      appId: payload.appId ?? [],
       conversionType: payload.conversionType ?? '',
       status: payload.status ?? '',
       keyword: payload.keyword ?? ''
@@ -260,7 +260,7 @@
   const dataFilter = reactive<ConversionDataFilterParams>({
     ...getDefaultDateBounds(),
     platform: '',
-    appId: '',
+    appId: [],
     source: '',
     adPlatform: '',
     conversionType: ''
@@ -306,7 +306,7 @@
     Object.assign(dataFilter, {
       ...bounds,
       platform: payload.platform ?? '',
-      appId: payload.appId ?? '',
+      appId: payload.appId ?? [],
       source: payload.source ?? payload.adPlatform ?? '',
       adPlatform: payload.source ?? payload.adPlatform ?? '',
       conversionType: payload.conversionType ?? ''

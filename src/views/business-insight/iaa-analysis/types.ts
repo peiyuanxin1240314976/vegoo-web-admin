@@ -8,7 +8,7 @@ export type IaaTabKey = 'adType' | 'adPlatform' | 'adPlacement' | 'adUnit' | 'co
 
 /** 全局筛选状态 */
 export interface IaaFilterState {
-  s_app_id: string
+  s_app_id: string | string[]
   platform: string
   s_country_code: string
   t_date: string

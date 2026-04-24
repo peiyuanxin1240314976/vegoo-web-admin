@@ -193,7 +193,7 @@
   const props = defineProps<{
     dateRange: [string, string]
     source: string
-    selectedAppId: string
+    selectedAppId: string | string[]
     filterOwner: string
     keys: string
   }>()

@@ -345,10 +345,12 @@
   })
 
   /** AppPlatformSearchSelect：sAppId；空 = 全部应用（接口字段仍用 `'all'`） */
-  const selectedAppId = ref('')
-  const filterAppIdForRequest = computed(() => {
-    const id = selectedAppId.value.trim()
-    return id ? id : 'all'
+  const selectedAppId = ref<string | string[]>([])
+  const firstAppId = computed(() => String(settingAppsForSelect.value[0]?.sAppId ?? '').trim())
+  const filterAppIdForRequest = computed<string | string[]>(() => {
+    if (Array.isArray(selectedAppId.value)) return selectedAppId.value.filter(Boolean)
+    const id = String(selectedAppId.value ?? '').trim()
+    return id ? id : []
   })
 
   /** 当前选中的顶部 Tab：0=汇总（挂载整页）；其余为占位，不改变接口入参 */
@@ -441,6 +443,12 @@
     metaLoadError.value = false
     try {
       agencyMetaFilterOptions.value = await fetchAgencyAnalysisMetaFilterOptions()
+      const hasSelectedApp = Array.isArray(selectedAppId.value)
+        ? selectedAppId.value.length > 0
+        : !!String(selectedAppId.value ?? '').trim()
+      if (!hasSelectedApp && firstAppId.value) {
+        selectedAppId.value = [firstAppId.value]
+      }
     } catch {
       agencyMetaFilterOptions.value = null
       metaLoadError.value = true

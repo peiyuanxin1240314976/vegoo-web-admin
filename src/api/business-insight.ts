@@ -185,7 +185,7 @@ type EcpmOverviewKpiParams = {
   platform: string
   source?: string
   /** 页面筛选的应用 ID；写入网关时为 `appIds: string[]`（见 `normalizeEcpmOverviewRequestBody`） */
-  s_app_id?: string
+  s_app_id?: string | string[]
   s_country_code?: string
 }
 
@@ -604,7 +604,8 @@ export type RevenueOverviewQualityMetricsResponse = {
   metrics: RevenueOverviewQualityMetric[]
 }
 
-function emptyIfAll(v: string | undefined, all = 'all') {
+function emptyIfAll(v: string | string[] | undefined, all = 'all') {
+  if (Array.isArray(v)) return v.filter((item) => String(item ?? '').trim() !== all)
   if (v === undefined || v === '' || v === all) return ''
   return v
 }
@@ -1272,7 +1273,7 @@ function normalizeProfitAnalysisBody(params: ProfitAnalysisQueryParams) {
   const { sAppId, ...rest } = params
   return {
     ...rest,
-    ...buildAppSelectionRequestBody(sAppId === 'all' ? '' : sAppId)
+    ...buildAppSelectionRequestBody(sAppId === 'all' ? '' : (sAppId ?? ''))
   }
 }
 
@@ -1353,7 +1354,7 @@ export async function fetchIaaAdTypeTabData(params: IaaFilterState) {
 
 type IaaOverviewUserBreakdownParams = {
   platform: string
-  s_app_id: string
+  s_app_id: string | string[]
   s_app_version: string
   s_country_code: string
   t_date: string

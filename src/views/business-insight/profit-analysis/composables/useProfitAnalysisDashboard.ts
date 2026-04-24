@@ -114,7 +114,7 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
     pageSize: 0,
     dateRange: `${defaultStart},${defaultEnd}`,
     platform: 'all',
-    sAppId: 'all',
+    sAppId: [],
     sCountryCode: 'all'
   })
 
@@ -186,6 +186,16 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
     try {
       const data = await fetchProfitMetaFilterOptions()
       filterOptions.value = mergeFilterOptions(data)
+      const hasSelectedApp = Array.isArray(query.sAppId)
+        ? query.sAppId.length > 0
+        : !!String(query.sAppId ?? '').trim()
+      const firstAppId = String(
+        filterOptions.value.appOptions.find((item) => String(item.value ?? '').trim() !== 'all')
+          ?.value ?? ''
+      ).trim()
+      if (!hasSelectedApp && firstAppId) {
+        query.sAppId = [firstAppId]
+      }
     } catch {
       filterOptions.value = { ...DEFAULT_FILTER_OPTIONS }
     } finally {

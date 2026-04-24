@@ -291,7 +291,7 @@
   }
 
   function normalizeFilterModels() {
-    if (filterAppId.value == null || filterAppId.value === undefined) filterAppId.value = ''
+    if (filterAppId.value == null || filterAppId.value === undefined) filterAppId.value = []
     if (filterSourceUi.value == null || filterSourceUi.value === undefined) {
       filterSourceUi.value = ''
     }

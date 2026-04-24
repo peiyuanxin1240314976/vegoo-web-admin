@@ -13,7 +13,7 @@ export interface ProfitAnalysisQueryParams {
   dateRange: string
   platform: string
   /** 应用 ID，全部传 all */
-  sAppId: string
+  sAppId: string | string[]
   /** 国家代码，全部传 all */
   sCountryCode: string
 }

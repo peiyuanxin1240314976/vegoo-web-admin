@@ -9,7 +9,7 @@ export type RevenueDeviationQuery = {
   /** 广告平台 slug，空为全部（与页面 `platform` 筛选项一致） */
   source?: string
   /** 应用，空为全部 */
-  s_app_id?: string
+  s_app_id?: string | string[]
   /**
    * 右上角「平台」筛选（广告平台编码，空为全部）
    * 当前产品要求：作为全局筛选参数，下方所有卡片接口均透传

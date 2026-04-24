@@ -228,7 +228,7 @@
 
   const props = defineProps<{
     filters: {
-      appId: string
+      appId: string | string[]
       platform: string
       country: string
       date: string

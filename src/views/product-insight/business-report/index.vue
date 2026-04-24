@@ -543,7 +543,7 @@
   }
 
   /** 单选应用；空串 = 不限，对应 `appIds: []` */
-  const barAppId = ref('')
+  const barAppId = ref<string | string[]>([])
   const barSourceValues = ref<string[]>([])
   const barCountryValues = ref<string[]>([])
 

@@ -397,7 +397,7 @@
   const defaultFilters: IapFilterState = {
     startDate: defaultRangeStart,
     endDate: getAppTodayYYYYMMDD(),
-    s_app_id: 'all',
+    s_app_id: [],
     s_country_code: 'all',
     platform: 'all'
   }

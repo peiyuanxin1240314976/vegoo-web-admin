@@ -256,6 +256,12 @@
   const visible = ref(false)
   const keyword = ref('')
   const hasAutoAppliedInitialSelection = ref(false)
+  const isTextManagementRoute = computed(() =>
+    String(route.path ?? '').startsWith('/product-operations/text-management')
+  )
+  const isMultiAppMode = computed(
+    () => props.mode === 'app' && (props.multiple || !isTextManagementRoute.value)
+  )
 
   const rootStyle = computed<Record<string, string>>(() => {
     const style: Record<string, string> = {
@@ -352,29 +358,29 @@
   })
 
   const selectedIds = computed(() => {
-    if (!props.multiple) return new Set<string>()
+    if (!isMultiAppMode.value) return new Set<string>()
     const v = props.modelValue
-    const arr = Array.isArray(v) ? v : []
+    const arr = Array.isArray(v) ? v : typeof v === 'string' && v.trim() ? [v] : []
     return new Set(arr.map((id) => String(id ?? '').trim()).filter(Boolean))
   })
 
   const selectedItem = computed(() => {
-    if (props.multiple) return null
+    if (isMultiAppMode.value) return null
     const mv = props.modelValue
     if (typeof mv !== 'string') return null
     return options.value.find((item) => item.modelValue === mv) ?? null
   })
 
   const hasSelection = computed(() => {
-    if (props.multiple) return selectedIds.value.size > 0
+    if (isMultiAppMode.value) return selectedIds.value.size > 0
     return selectedItem.value !== null
   })
 
   const clearRowLabel = computed(() =>
-    props.multiple && props.mode === 'app' ? props.emptySelectionLabel : props.allLabel
+    isMultiAppMode.value ? props.emptySelectionLabel : props.allLabel
   )
 
-  const isMultiAppDisplay = computed(() => props.multiple && props.mode === 'app')
+  const isMultiAppDisplay = computed(() => isMultiAppMode.value)
 
   /** 多选应用：来自 settingApps 的全部 appId（顺序与 appOptions 一致、去重） */
   const allAppIds = computed(() => {
@@ -396,9 +402,7 @@
     return all.every((id) => selectedIds.value.has(id))
   })
 
-  const showSelectAllRow = computed(
-    () => props.multiple && props.mode === 'app' && allAppIds.value.length > 0
-  )
+  const showSelectAllRow = computed(() => isMultiAppMode.value && allAppIds.value.length > 0)
 
   type MultiDisplay =
     | { type: 'empty' }
@@ -406,8 +410,12 @@
     | { type: 'multi'; firstText: string; more: number }
 
   const multipleDisplay = computed((): MultiDisplay => {
-    if (!props.multiple || props.mode !== 'app') return { type: 'empty' }
-    const arr = Array.isArray(props.modelValue) ? props.modelValue : []
+    if (!isMultiAppMode.value) return { type: 'empty' }
+    const arr = Array.isArray(props.modelValue)
+      ? props.modelValue
+      : typeof props.modelValue === 'string' && props.modelValue.trim()
+        ? [props.modelValue]
+        : []
     const ids = arr.map((id) => String(id ?? '').trim()).filter(Boolean)
     const n = ids.length
     if (n === 0) return { type: 'empty' }
@@ -421,7 +429,7 @@
   })
 
   const selectedLabel = computed(() => {
-    if (props.multiple && props.mode === 'app') return ''
+    if (isMultiAppMode.value) return ''
     return selectedItem.value?.displayName ?? ''
   })
 
@@ -430,11 +438,11 @@
   )
 
   function showAppRowCheck(item: NormalizedOption): boolean {
-    return props.multiple && props.mode === 'app' && item.selectionType === 'app'
+    return isMultiAppMode.value && item.selectionType === 'app'
   }
 
   function isRowActive(item: NormalizedOption): boolean {
-    if (props.multiple && props.mode === 'app' && item.selectionType === 'app') {
+    if (isMultiAppMode.value && item.selectionType === 'app') {
       if (isAllAppsSelected.value) return true
       return selectedIds.value.has(item.appId)
     }
@@ -500,7 +508,7 @@
   }
 
   function clearSelection() {
-    if (props.multiple) {
+    if (isMultiAppMode.value) {
       emit('update:modelValue', [])
     } else {
       emit('update:modelValue', '')
@@ -536,12 +544,12 @@
     if (!firstApp?.appId) return
 
     hasAutoAppliedInitialSelection.value = true
-    emit('update:modelValue', props.multiple ? [firstApp.appId] : firstApp.appId)
+    emit('update:modelValue', isMultiAppMode.value ? [firstApp.appId] : firstApp.appId)
     emit('change', toPayload(firstApp))
   }
 
   function selectItem(item: NormalizedOption) {
-    if (props.multiple && props.mode === 'app' && item.selectionType === 'app') {
+    if (isMultiAppMode.value && item.selectionType === 'app') {
       const id = item.appId
       if (!id) return
       const next = new Set(selectedIds.value)

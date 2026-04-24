@@ -21,7 +21,7 @@
     /** 当前子 Tab key：gatherone / kuainiao / chuhai（汇总页不会渲染本组件） */
     agencyTab?: 'summary' | 'gatherone' | 'kuainiao' | 'chuhai'
     /** 与汇总页应用筛选同源（值域与 meta 下拉一致） */
-    filterAppId?: string
+    filterAppId?: string | string[]
     /** 用于初始化「账户汇总」独立日期区间（默认对齐汇总草稿区间） */
     defaultAccountRange?: [string, string]
     kpiLast7?: AgencySubTabKpiPayload | null

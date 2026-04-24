@@ -119,7 +119,7 @@
 
   const filters = reactive<ComprehensiveAnalysisFilterState>({
     dateRange: '7d',
-    s_app_id: '',
+    s_app_id: [],
     adPlatform: '',
     s_country_code: ''
   })
@@ -182,7 +182,8 @@
   watch(
     [() => filters.s_app_id, firstAppId],
     async ([appId, fallbackAppId]) => {
-      if (appId) {
+      const hasAppId = Array.isArray(appId) ? appId.length > 0 : !!appId
+      if (hasAppId) {
         if (hasBootstrappedInitialLoad.value) return
         hasBootstrappedInitialLoad.value = true
         await loadData()
@@ -195,7 +196,10 @@
   )
 
   onMounted(() => {
-    if (!filters.s_app_id && firstAppId.value) {
+    if (
+      (Array.isArray(filters.s_app_id) ? filters.s_app_id.length === 0 : !filters.s_app_id) &&
+      firstAppId.value
+    ) {
       filters.s_app_id = firstAppId.value
     }
   })

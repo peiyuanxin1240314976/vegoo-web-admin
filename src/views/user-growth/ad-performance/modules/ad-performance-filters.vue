@@ -139,7 +139,7 @@
   }
 
   function onAppChange(v: string | string[]) {
-    patchDraft({ appId: typeof v === 'string' ? v : '' })
+    patchDraft({ appId: v })
   }
 
   function onAdPlatformChange(v: string) {
@@ -301,7 +301,7 @@
   watch(
     [() => draft.value.appId, firstAppId],
     ([appId, fallbackAppId]) => {
-      if (appId || !fallbackAppId) return
+      if ((Array.isArray(appId) ? appId.length > 0 : !!appId) || !fallbackAppId) return
       patchDraft({ appId: fallbackAppId })
     },
     { immediate: true }
