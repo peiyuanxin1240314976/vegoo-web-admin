@@ -24,20 +24,21 @@
 
         <div class="pad-filter-item pad-filter-item--select">
           <span class="pad-filter-item__prefix">应用：</span>
-          <ElSelect
+          <AppPlatformSearchSelect
             v-model="filters.appId"
             class="pad-filter-select pad-filter-select--app"
-            filterable
             placeholder="全部"
-            popper-class="pad-filter-select-popper"
-          >
-            <ElOption
-              v-for="opt in appOptions"
-              :key="opt.value === '' ? '__all_app__' : opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
+            search-placeholder="搜索类别/应用名称/应用简称"
+            mode="app"
+            empty-selection-label="全部"
+            select-all-label="全部"
+            :setting-apps="filterSettingApps"
+            :height="32"
+            :min-width="188"
+            :max-width="220"
+            input-class="pad-filter-select"
+            dropdown-class="pad-filter-select-popper"
+          />
         </div>
 
         <div class="pad-filter-item pad-filter-item--select">
@@ -358,11 +359,13 @@
   import 'flag-icons/css/flag-icons.min.css'
   import { ref, reactive, computed, onMounted, watch } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { storeToRefs } from 'pinia'
   import { useRoute } from 'vue-router'
   import { Top, Bottom, Calendar, Search } from '@element-plus/icons-vue'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
+  import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
   import { resolveDateRangeFromPreset } from '../comprehensive-analysis/utils/buildApiParams'
   import { useChart } from '@/hooks/core/useChart'
   import type { EChartsOption } from '@/plugins/echarts'
@@ -384,7 +387,7 @@
   const dateRange = ref<[string, string]>([preset7d.date_start, preset7d.date_end])
 
   const filters = reactive({
-    appId: '' as string,
+    appId: [] as string | string[],
     source: '' as string,
     s_country_code: '' as string
   })
@@ -392,6 +395,14 @@
   const appOptions = ref<{ label: string; value: string }[]>([])
   const sourceOptions = ref<{ label: string; value: string }[]>([])
   const countryOptions = ref<{ label: string; value: string }[]>([])
+  const filterSettingApps = computed(() => {
+    const settingApps = cockpitMetaRef.value?.settingApps ?? []
+    const appIdSet = new Set(
+      appOptions.value.map((item) => String(item.value ?? '').trim()).filter(Boolean)
+    )
+    if (appIdSet.size === 0) return settingApps
+    return settingApps.filter((item) => appIdSet.has(String(item.sAppId ?? '').trim()))
+  })
 
   function normalizeMetaOptions(list: { label: string; value: string }[]) {
     return list.map((o) => ({
@@ -421,7 +432,20 @@
     return o?.label ?? value
   }
 
-  const selectedAppLabel = computed(() => optionLabel(filters.appId, appOptions.value))
+  function getSelectedAppIds(value: string | string[]) {
+    if (Array.isArray(value)) return value.map((id) => String(id ?? '').trim()).filter(Boolean)
+    const id = String(value ?? '').trim()
+    return id ? [id] : []
+  }
+
+  const selectedAppLabel = computed(() => {
+    const ids = getSelectedAppIds(filters.appId)
+    if (ids.length === 0) return '全部'
+    const labels = ids.map((id) => optionLabel(id, appOptions.value)).filter(Boolean)
+    if (labels.length === 0) return '全部'
+    if (labels.length === 1) return labels[0]
+    return `${labels[0]} +${labels.length - 1}`
+  })
   const selectedSourceLabel = computed(() => optionLabel(filters.source, sourceOptions.value))
   const selectedCountryLabel = computed(() =>
     optionLabel(filters.s_country_code, countryOptions.value)
@@ -431,15 +455,24 @@
     return v === 'all' || v === '' ? '' : v
   }
 
-  function buildRequest(): Api.UserGrowth.PlatformAnalysisDetailRequest {
+  type PlatformAnalysisDetailRequestWithApps = Api.UserGrowth.PlatformAnalysisDetailRequest & {
+    appIds: string[]
+    apps: Array<{ appId: string; platform: number }>
+  }
+
+  function buildRequest(): PlatformAnalysisDetailRequestWithApps {
     const name = ((route.query.name as string) || '应用').trim()
     const dr = dateRange.value
     const fallback = resolveDateRangeFromPreset('7d')
+    const appSelection = buildAppSelectionRequestBody(filters.appId, filterSettingApps.value)
+    const normalizedAppId = appSelection.appIds[0] ?? ''
     return {
       name,
       startDate: dr?.[0] ?? fallback.date_start,
       endDate: dr?.[1] ?? fallback.date_end,
-      appId: dimensionToApi(filters.appId),
+      appId: dimensionToApi(normalizedAppId),
+      appIds: appSelection.appIds,
+      apps: appSelection.apps,
       source: dimensionToApi(filters.source),
       s_country_code: dimensionToApi(filters.s_country_code)
     }
@@ -816,12 +849,13 @@
     }
 
     &--date {
-      flex: 1 1 300px;
-      min-width: min(100%, 272px);
+      flex: 0 1 320px;
+      min-width: min(100%, 300px);
     }
 
     &--select {
       flex: 0 1 auto;
+      flex-wrap: nowrap;
     }
 
     &__icon {
@@ -847,9 +881,19 @@
   }
 
   :deep(.pad-filter-date.el-date-editor) {
-    flex: 1 1 200px;
+    flex: 0 1 220px;
     width: auto !important;
     min-width: 0;
+  }
+
+  :deep(.pad-filter-select--source .el-select__wrapper),
+  :deep(.pad-filter-select--country .el-select__wrapper) {
+    min-width: 104px;
+  }
+
+  :deep(.pad-filter-select--source),
+  :deep(.pad-filter-select--country) {
+    width: 112px;
   }
 
   :deep(.pad-filter-date .el-input__wrapper) {
@@ -898,7 +942,20 @@
     box-shadow: none;
   }
 
+  :deep(.pad-filter-select.app-platform-search-select) {
+    min-height: 32px;
+    padding: 2px 10px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
   :deep(.pad-filter-select .el-select__placeholder) {
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+
+  :deep(.pad-filter-select .app-platform-search-select__text.is-placeholder) {
     font-size: 13px;
     color: var(--text-tertiary);
   }
@@ -909,7 +966,17 @@
     color: var(--text-primary);
   }
 
+  :deep(.pad-filter-select .app-platform-search-select__text) {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
   :deep(.pad-filter-select .el-select__caret) {
+    color: var(--text-tertiary);
+  }
+
+  :deep(.pad-filter-select .app-platform-search-select__suffix) {
     color: var(--text-tertiary);
   }
 

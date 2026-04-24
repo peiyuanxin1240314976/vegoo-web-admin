@@ -298,6 +298,10 @@ declare namespace Api {
       endDate: string
       /** 应用筛选；空字符串表示全部（与 cockpit meta `appOptions` 的 value 一致，UI `all` 须映射为 ''） */
       appId: string
+      /** 应用筛选（兼容 account-performance 的 appIds 结构） */
+      appIds?: string[]
+      /** 应用筛选（兼容 account-performance 的 apps 结构） */
+      apps?: Array<{ appId: string; platform: number }>
       /** 广告平台筛选；空字符串表示全部；枚举值为 string（如 `"1"`） */
       source: string
       /** 国家代码筛选；空字符串表示全部；小写 ISO 3166-1 alpha-2 */
