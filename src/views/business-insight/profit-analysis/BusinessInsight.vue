@@ -356,15 +356,13 @@
     { deep: true }
   )
 
-  const HIDDEN_KPI_LABELS = new Set(['平均DAU', '新用户', '买量用户', '自然量', '首日ROI'])
-  const visibleKpiCards = computed(() =>
-    kpiCards.value.filter((c) => !HIDDEN_KPI_LABELS.has(c.label))
-  )
   const TOP_KPI_ORDER = ['预估利润', '总收入', '广告支出', '广告收益率', '付费收入占比'] as const
   const topKpiCards = computed(() => {
-    const byLabel = new Map(visibleKpiCards.value.map((c) => [c.label, c]))
+    const byLabel = new Map(kpiCards.value.map((c) => [c.label, c]))
     const ordered = TOP_KPI_ORDER.map((k) => byLabel.get(k)).filter((x): x is ProfitKpiCard => !!x)
-    return ordered.length ? ordered : visibleKpiCards.value
+    const orderedLabels = new Set(ordered.map((card) => card.label))
+    const rest = kpiCards.value.filter((card) => !orderedLabels.has(card.label))
+    return [...ordered, ...rest]
   })
   function isEstimateBadge(card: ProfitKpiCard) {
     const badge = String(card.badge ?? '')
