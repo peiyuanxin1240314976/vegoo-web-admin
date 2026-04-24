@@ -137,12 +137,13 @@
       place-items: center;
       width: 44px;
       height: 44px;
-      background: rgb(16 185 129 / 8%);
-      border: 1px solid rgb(16 185 129 / 32%);
+      color: var(--el-color-primary);
+      background: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--el-color-primary) 35%, transparent);
       border-radius: 14px;
       box-shadow:
         0 14px 32px rgb(0 0 0 / 28%),
-        0 0 20px rgb(16 185 129 / 12%);
+        0 0 20px color-mix(in srgb, var(--el-color-primary) 20%, transparent);
     }
 
     &__meta {
@@ -187,10 +188,10 @@
     align-items: center;
     min-width: 280px;
     padding: 4px 6px;
-    background: rgb(16 185 129 / 6%);
-    border: 1px solid rgb(16 185 129 / 30%);
+    background: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 30%, transparent);
     border-radius: 9999px;
-    box-shadow: 0 0 16px rgb(16 185 129 / 8%);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--el-color-primary) 16%, transparent);
 
     :deep(.el-range-editor.el-input__wrapper) {
       width: 100%;
@@ -206,13 +207,13 @@
     }
 
     :deep(.el-range-editor.el-input__wrapper:hover) {
-      background: rgb(16 185 129 / 6%);
-      box-shadow: 0 0 12px rgb(16 185 129 / 14%);
+      background: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
+      box-shadow: 0 0 12px color-mix(in srgb, var(--el-color-primary) 22%, transparent);
     }
 
     :deep(.el-range-editor.el-input__wrapper.is-focus) {
-      background: rgb(16 185 129 / 10%);
-      box-shadow: 0 0 0 2px rgb(16 185 129 / 22%);
+      background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
     }
 
     :deep(.el-range-input) {
