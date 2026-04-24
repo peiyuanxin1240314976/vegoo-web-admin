@@ -94,7 +94,7 @@
                 </div>
               </div> -->
 
-              <div class="dimension-table-wrap">
+              <div class="dimension-table-wrap dimension-table-wrap--detail">
                 <table class="dimension-table dimension-table--detail">
                   <colgroup>
                     <col
@@ -488,6 +488,11 @@
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 4%),
       0 6px 18px rgb(2 6 23 / 8%);
+  }
+
+  .dimension-table-wrap--detail {
+    max-height: 576px;
+    overflow-y: auto;
   }
 
   .dimension-table-wrap::-webkit-scrollbar {
