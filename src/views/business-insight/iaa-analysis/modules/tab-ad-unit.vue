@@ -92,7 +92,7 @@
           </template>
           <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
           <ArtTable
-            v-else
+            v-else-if="hasTableData"
             :data="tableData"
             :columns="tableColumns"
             row-key="s_ad_unit_id"
@@ -113,6 +113,7 @@
               </span>
             </template>
           </ArtTable>
+          <ElEmpty v-else class="iaa-panel-empty" description="暂无数据" />
         </ElCard> </div
       ><!-- iaa-main-left -->
       <div class="iaa-main-right">
@@ -134,14 +135,20 @@
             <span>广告单元 ECPM 对比</span>
           </template>
           <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
-          <div v-else ref="scatterChartRef" class="iaa-chart iaa-chart--scatter"></div>
+          <div
+            v-else-if="hasScatterData"
+            ref="scatterChartRef"
+            class="iaa-chart iaa-chart--scatter"
+          ></div>
+          <ElEmpty v-else class="iaa-panel-empty iaa-panel-empty--scatter" description="暂无数据" />
         </ElCard>
         <ElCard class="iaa-panel iaa-neon-panel" shadow="never">
           <template #header>
             <span>广告单元收入趋势(近7天)</span>
           </template>
           <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
-          <div v-else ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
+          <div v-else-if="hasTrendData" ref="trendChartRef" class="iaa-chart iaa-chart--line"></div>
+          <ElEmpty v-else class="iaa-panel-empty iaa-panel-empty--line" description="暂无数据" />
         </ElCard>
       </div>
     </section>
@@ -209,6 +216,13 @@
         r.placementName.toLowerCase().includes(kw)
       return matchSrc && matchPlacement && matchAdType && matchKw
     })
+  })
+  const hasTableData = computed(() => filteredRows.value.length > 0)
+  const hasScatterData = computed(() => (tabData.value?.scatterData?.length ?? 0) > 0)
+  const hasTrendData = computed(() => {
+    const trend = tabData.value?.trend7d
+    if (!trend || trend.dates.length === 0) return false
+    return trend.series.some((item) => Array.isArray(item.data) && item.data.length > 0)
   })
 
   const pagination = reactive({ current: 1, size: 10, total: 0 })
@@ -382,15 +396,23 @@
 
   function refreshCharts() {
     if (!tabData.value) return
-    useScatter.updateChart(buildScatterOption())
-    useTrend.updateChart(buildTrendOption())
+    if (hasScatterData.value) {
+      useScatter.updateChart(buildScatterOption())
+    } else {
+      useScatter.destroyChart()
+    }
+    if (hasTrendData.value) {
+      useTrend.updateChart(buildTrendOption())
+    } else {
+      useTrend.destroyChart()
+    }
     // 卡片高度在布局完成后会再次变化，补一次 resize 确保图表真正铺满 card-body
     requestAnimationFrame(() => {
-      useScatter.handleResize()
-      useTrend.handleResize()
+      if (hasScatterData.value) useScatter.handleResize()
+      if (hasTrendData.value) useTrend.handleResize()
       requestAnimationFrame(() => {
-        useScatter.handleResize()
-        useTrend.handleResize()
+        if (hasScatterData.value) useScatter.handleResize()
+        if (hasTrendData.value) useTrend.handleResize()
       })
     })
   }
@@ -597,6 +619,22 @@
     &--line {
       min-height: 160px;
     }
+  }
+
+  .iaa-panel-empty {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+  }
+
+  .iaa-panel-empty--scatter {
+    min-height: 220px;
+  }
+
+  .iaa-panel-empty--line {
+    min-height: 160px;
   }
 
   .iaa-panel--scatter-full {

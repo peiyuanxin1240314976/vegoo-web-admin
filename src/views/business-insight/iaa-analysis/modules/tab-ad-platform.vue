@@ -47,7 +47,7 @@
           <template #header><span>平台详细对比表</span></template>
           <div v-if="loading" class="iaa-chart-sk iaa-chart-sk--line"></div>
           <ArtTable
-            v-else
+            v-else-if="hasTableData"
             :data="tableData"
             :columns="tableColumns"
             row-key="sourceName"
@@ -69,6 +69,7 @@
               </span>
             </template>
           </ArtTable>
+          <ElEmpty v-else class="iaa-panel-empty iaa-panel-empty--table" description="暂无数据" />
         </ElCard>
       </div>
 
@@ -141,6 +142,7 @@
 
   const kpis = computed(() => tabData.value?.kpis ?? [])
   const tableData = computed(() => tabData.value?.tableRows ?? [])
+  const hasTableData = computed(() => tableData.value.length > 0)
   const platformInsight = computed(() => tabData.value?.platformInsight ?? '')
   const donutData = computed(() => tabData.value?.donut ?? [])
 
@@ -721,5 +723,16 @@
     &.down {
       color: var(--art-success);
     }
+  }
+
+  .iaa-panel-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .iaa-panel-empty--table {
+    min-height: 240px;
   }
 </style>
