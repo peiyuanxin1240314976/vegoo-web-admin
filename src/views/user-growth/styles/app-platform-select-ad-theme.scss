@@ -12,20 +12,12 @@
     max-width: $max-width;
     padding: 0 11px;
     background: color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 6%, transparent);
-    border-color: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 28%,
-      transparent
-    );
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: none;
   }
 
   #{$scope-selector} :deep(.app-platform-search-select.#{$select-class}:hover) {
-    border-color: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 60%,
-      transparent
-    );
+    border-color: var(--theme-color, var(--art-primary, #3b82f6));
     box-shadow: 0 0 12px
       color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
   }

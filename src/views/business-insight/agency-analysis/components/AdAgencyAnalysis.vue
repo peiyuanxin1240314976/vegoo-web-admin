@@ -1079,53 +1079,6 @@
     align-items: center;
   }
 
-  .aa-tab-bar-filters :deep(.aa-app-platform-select__trigger.app-platform-search-select) {
-    box-sizing: border-box;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 36px;
-    padding: 0 12px !important;
-    font-size: 12px !important;
-    background: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
-      transparent
-    ) !important;
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    border-radius: var(--el-border-radius-base, 4px) !important;
-    box-shadow: none !important;
-    transition:
-      border-color 0.22s ease,
-      box-shadow 0.22s ease,
-      background 0.22s ease;
-  }
-
-  .aa-tab-bar-filters :deep(.aa-app-platform-select__trigger:hover) {
-    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    box-shadow: 0 0 0 1px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 14%, transparent) !important;
-  }
-
-  .aa-tab-bar-filters :deep(.aa-app-platform-select__trigger.is-open) {
-    background: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 6%,
-      transparent
-    ) !important;
-    border-color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent) !important;
-  }
-
-  .aa-tab-bar-filters :deep(.aa-app-platform-select__trigger .app-platform-search-select__text) {
-    font-size: 12px;
-    color: $text-primary;
-  }
-
-  .aa-tab-bar-filters :deep(.aa-app-platform-select__trigger .app-platform-search-select__suffix) {
-    color: var(--theme-color, var(--art-primary, #3b82f6)) !important;
-  }
-
   .agency-analysis-page__section--agency-sub-mock {
     min-width: 0;
     padding: 18px 20px 24px;
@@ -2932,7 +2885,7 @@
 <style lang="scss">
   /* 挂载在 body，须非 scoped；与广告成效筛选下拉视觉对齐 */
   .aa-agency-filter-popper.el-popper {
-    background: rgb(10 10 14 / 96%) !important;
+    // background: rgb(10 10 14 / 96%) !important;
     border: 1px solid rgb(96 165 250 / 28%) !important;
     border-radius: 12px !important;
     box-shadow:

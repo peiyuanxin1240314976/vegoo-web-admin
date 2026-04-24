@@ -596,7 +596,8 @@
       var(--theme-color, var(--art-primary, #3b82f6)) 6%,
       transparent
     ) !important;
-    border: 1px solid var(--theme-color, var(--art-primary, #3b82f6));
+    border: 1px solid
+      var(--app-platform-select-border-color, var(--theme-color, var(--art-primary, #3b82f6))) !important;
     transition:
       border-color 0.2s ease,
       box-shadow 0.2s ease;
@@ -608,7 +609,10 @@
         var(--theme-color, var(--art-primary, #3b82f6)) 1%,
         transparent
       );
-      border-color: var(--theme-color, var(--art-primary, #3b82f6));
+      border-color: var(
+        --app-platform-select-border-color-hover,
+        var(--theme-color, var(--art-primary, #3b82f6))
+      );
       box-shadow: 0 0 0 1px
         color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent);
     }
@@ -766,5 +770,61 @@
 
   .app-platform-search-select__empty {
     padding: 12px 0 4px;
+  }
+
+  :global(.app-platform-search-select__popper.el-popper) {
+    border: 1px solid
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 22%, transparent) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 14px 40px rgb(15 23 42 / 12%) !important;
+  }
+
+  :global(.app-platform-search-select__popper .app-platform-search-select__panel) {
+    color: var(--el-text-color-primary);
+    background: color-mix(in srgb, #fff 96%, var(--theme-color, var(--art-primary, #3b82f6)) 4%);
+  }
+
+  :global(.app-platform-search-select__popper .app-platform-search-select__header) {
+    color: color-mix(in srgb, var(--el-text-color-secondary) 85%, #111827);
+  }
+
+  :global(.app-platform-search-select__popper .app-platform-search-select__row:hover),
+  :global(.app-platform-search-select__popper .app-platform-search-select__row.is-active) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 10%,
+      transparent
+    );
+  }
+
+  :global(html.dark .app-platform-search-select__popper.el-popper) {
+    border: 1px solid
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 22%, transparent) !important;
+    border-radius: 12px !important;
+    box-shadow:
+      0 18px 52px rgb(0 0 0 / 58%),
+      0 0 0 1px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 12%, transparent),
+      inset 0 1px 0
+        color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 8%, transparent) !important;
+  }
+
+  :global(html.dark .app-platform-search-select__popper .app-platform-search-select__panel) {
+    color: var(--el-text-color-primary);
+    background: color-mix(in srgb, var(--el-bg-color-overlay) 88%, transparent);
+  }
+
+  :global(html.dark .app-platform-search-select__popper .app-platform-search-select__header) {
+    color: color-mix(in srgb, var(--el-text-color-regular) 78%, #fff);
+  }
+
+  :global(html.dark .app-platform-search-select__popper .app-platform-search-select__row:hover),
+  :global(
+    html.dark .app-platform-search-select__popper .app-platform-search-select__row.is-active
+  ) {
+    background: color-mix(
+      in srgb,
+      var(--theme-color, var(--art-primary, #3b82f6)) 14%,
+      transparent
+    );
   }
 </style>

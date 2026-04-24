@@ -21,6 +21,7 @@
         :search-placeholder="tr('adPerformance.filterApp', '应用')"
         class="ad-performance-filter-select ad-performance-filter-select--app"
         input-class="ad-performance-filter-select__input"
+        dropdown-class="ad-performance-filter-popper"
         :setting-apps="settingAppsForSelect"
         :height="36"
         :min-width="134"
@@ -309,6 +310,8 @@
 </script>
 
 <style scoped lang="scss">
+  @use '../../styles/app-platform-select-ad-theme.scss' as apSelect;
+
   .ad-performance-filters {
     display: flex;
     flex-wrap: wrap;
@@ -429,6 +432,15 @@
     min-width: 134px;
     max-width: 220px;
   }
+
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.ad-performance-filters__left',
+    'ad-performance-filter-select__input',
+    'ad-performance-filter-popper',
+    220px,
+    134px,
+    220px
+  );
 
   :deep(.ad-performance-filter-select),
   :deep(.ad-performance-filter-select__input) {

@@ -29,6 +29,7 @@
           :search-placeholder="$t('conversionManagement.filterApp')"
           class="conversion-data-filter-select conversion-data-filter-select--app"
           input-class="conversion-data-filter-select__input"
+          dropdown-class="conversion-data-filter-popper"
           :setting-apps="settingAppsForSelect"
           :height="36"
           :min-width="134"
@@ -159,6 +160,8 @@
 </script>
 
 <style scoped lang="scss">
+  @use '../../styles/app-platform-select-ad-theme.scss' as apSelect;
+
   .conversion-data-filters__inner {
     display: flex;
     flex-wrap: wrap;
@@ -276,6 +279,15 @@
     min-width: 110px;
     max-width: 100%;
   }
+
+  @include apSelect.apply-app-platform-select-ad-theme(
+    '.conversion-data-filters__row',
+    'conversion-data-filter-select__input',
+    'conversion-data-filter-popper',
+    220px,
+    134px,
+    220px
+  );
 
   :deep(.conversion-data-filter-select) {
     --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));

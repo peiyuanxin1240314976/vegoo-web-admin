@@ -1791,7 +1791,7 @@
     &.el-date-editor,
     &.el-date-editor.el-input__wrapper {
       background: color-mix(in srgb, var(--theme-color) 6%, transparent) !important;
-      border: 1px solid color-mix(in srgb, var(--theme-color) 28%, transparent) !important;
+      border: 1px solid var(--theme-color) !important;
       border-radius: var(--el-border-radius-base, 4px) !important;
       box-shadow: none !important;
     }
@@ -1802,7 +1802,7 @@
       padding: 0 14px;
       color: $color-text-axure;
       background: color-mix(in srgb, var(--theme-color) 6%, transparent) !important;
-      border: 1px solid color-mix(in srgb, var(--theme-color) 28%, transparent) !important;
+      border: 1px solid var(--theme-color) !important;
       border-radius: var(--el-border-radius-base, 4px) !important;
       box-shadow: none !important;
       transition:
@@ -1815,7 +1815,7 @@
     &.el-date-editor.el-input__wrapper:hover,
     .el-range-editor:hover,
     .el-range-editor.el-input__wrapper:hover {
-      border-color: color-mix(in srgb, var(--theme-color) 60%, transparent) !important;
+      border-color: var(--theme-color) !important;
       box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 18%, transparent) !important;
     }
 
@@ -1848,21 +1848,21 @@
     &.el-date-editor.el-input__wrapper {
       color: var(--aps-text-primary);
       background: color-mix(in srgb, var(--theme-color) 8%, transparent) !important;
-      border: 1px solid color-mix(in srgb, var(--theme-color) 30%, transparent) !important;
+      border: 1px solid var(--theme-color) !important;
     }
 
     .el-range-editor,
     .el-range-editor.el-input__wrapper {
       color: var(--aps-text-primary);
       background: color-mix(in srgb, var(--theme-color) 8%, transparent) !important;
-      border: 1px solid color-mix(in srgb, var(--theme-color) 30%, transparent) !important;
+      border: 1px solid var(--theme-color) !important;
     }
 
     &.el-date-editor:hover,
     &.el-date-editor.el-input__wrapper:hover,
     .el-range-editor:hover,
     .el-range-editor.el-input__wrapper:hover {
-      border-color: color-mix(in srgb, var(--theme-color) 45%, transparent) !important;
+      border-color: var(--theme-color) !important;
       box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color) 14%, transparent) !important;
     }
 
