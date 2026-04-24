@@ -135,7 +135,8 @@ function createEmptyTable() {
       estimatedProfit: 0,
       cpa: 0,
       score: 0
-    }
+    },
+    excelTables: undefined
   }
 }
 
@@ -305,7 +306,8 @@ export function useMyPerformancePage() {
             data.value.appDateRangeTable = {
               title: response.title,
               list: response.list,
-              summary: response.summary
+              summary: response.summary,
+              excelTables: response.excelTables
             }
           }
         }

@@ -102,6 +102,7 @@
             :loading="cardLoading"
             :list="data.appDateRangeTable.list"
             :summary="data.appDateRangeTable.summary"
+            :excel-tables="data.appDateRangeTable.excelTables"
             header-hint=""
           >
             <template #prepend>

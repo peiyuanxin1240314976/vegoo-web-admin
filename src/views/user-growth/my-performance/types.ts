@@ -85,21 +85,34 @@ export interface MyPerformanceAppDimensionTableResponse {
   title: string
   list: MyPerformanceAppTreeRow[]
   summary: MyPerformanceAppTableSummary
-  excelTables?: {
-    dateHeaders: string[]
-    summaryRows: Array<{
-      label: string
-      total: string | number
-      days: Array<string | number>
-    }>
-    appBlocks: Array<{
-      app: string
-      platform: string
-      allRows: Array<{ label: string; values: Array<string | number> }>
-      googleRows: Array<{ label: string; values: Array<string | number> }>
-      alt?: boolean
-    }>
-  }
+  excelTables?: MyPerformanceExcelTables
+}
+
+export type MyPerformanceExcelDailyValue = string | number
+
+export interface MyPerformanceExcelMetricRow {
+  label: string
+  values: MyPerformanceExcelDailyValue[]
+}
+
+export interface MyPerformanceExcelSummaryRow {
+  label: string
+  total: MyPerformanceExcelDailyValue
+  days: MyPerformanceExcelDailyValue[]
+}
+
+export interface MyPerformanceExcelAppBlock {
+  app: string
+  platform: string
+  allRows: MyPerformanceExcelMetricRow[]
+  googleRows: MyPerformanceExcelMetricRow[]
+  alt?: boolean
+}
+
+export interface MyPerformanceExcelTables {
+  dateHeaders: string[]
+  summaryRows: MyPerformanceExcelSummaryRow[]
+  appBlocks: MyPerformanceExcelAppBlock[]
 }
 
 export interface MyPerformancePersonOption {
@@ -256,5 +269,6 @@ export interface MyPerformancePageData {
     title: string
     list: MyPerformanceAppTreeRow[]
     summary: MyPerformanceAppTableSummary
+    excelTables?: MyPerformanceExcelTables
   }
 }

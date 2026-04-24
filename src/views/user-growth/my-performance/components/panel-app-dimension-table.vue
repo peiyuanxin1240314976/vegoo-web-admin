@@ -3,29 +3,26 @@
     <ElSkeleton :loading="loading" animated>
       <template #template>
         <div class="panel__header">
-          <ElSkeletonItem variant="text" class="excel-sk-title" />
-          <ElSkeletonItem variant="text" class="excel-sk-hint" />
+          <ElSkeletonItem variant="text" class="table-sk-title" />
+          <ElSkeletonItem variant="text" class="table-sk-hint" />
         </div>
         <div class="panel__body">
-          <div class="excel-sk-shell">
-            <div class="excel-sk-grid excel-sk-grid--summary">
-              <ElSkeletonItem v-for="c in 9" :key="`s-${c}`" variant="text" class="excel-sk-cell" />
-            </div>
-            <div class="excel-sk-grid excel-sk-grid--detail">
+          <div class="table-sk-shell">
+            <div class="table-sk-grid table-sk-grid--summary">
               <ElSkeletonItem
-                v-for="c in 11"
-                :key="`h-${c}`"
+                v-for="i in 9"
+                :key="`summary-${i}`"
                 variant="text"
-                class="excel-sk-cell"
+                class="table-sk-cell"
               />
-              <template v-for="r in 9" :key="`r-${r}`">
-                <ElSkeletonItem
-                  v-for="c in 11"
-                  :key="`r-${r}-c-${c}`"
-                  variant="text"
-                  class="excel-sk-cell"
-                />
-              </template>
+            </div>
+            <div class="table-sk-grid table-sk-grid--detail">
+              <ElSkeletonItem
+                v-for="i in 12"
+                :key="`detail-${i}`"
+                variant="text"
+                class="table-sk-cell"
+              />
             </div>
           </div>
         </div>
@@ -34,118 +31,116 @@
       <template #default>
         <div v-if="resolvedHeaderHint" class="panel__header">
           <div class="header-copy">
-            <!-- <div class="title">{{ title }}</div> -->
             <div class="hint">{{ resolvedHeaderHint }}</div>
           </div>
         </div>
 
         <div class="panel__body">
           <slot name="prepend"></slot>
-          <div ref="excelShellRef" class="excel-shell" tabindex="0" @keydown="onShellKeydown">
-            <!-- <div class="excel-toolbar">
-              <div class="excel-toolbar__hint">
-                拖拽可框选，按 <span>Ctrl/Cmd + C</span> 复制选区内容
+
+          <div class="dimension-shell">
+            <section class="dimension-section">
+              <!-- <div class="dimension-section__head">
+                <div>
+                  <div class="dimension-section__eyebrow">Overview</div>
+                  <div class="dimension-section__title">7D Overview</div>
+                </div>
+                <div class="dimension-section__meta">
+                  <span>{{ summaryRows.length }} metrics</span>
+                  <span>{{ resolvedExcelTables.dateHeaders.length }} days</span>
+                </div>
+              </div> -->
+
+              <div class="dimension-table-wrap">
+                <table class="dimension-table dimension-table--summary">
+                  <colgroup>
+                    <col
+                      v-for="column in summaryColumns"
+                      :key="column.key"
+                      :style="{ width: column.width }"
+                    />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th v-for="column in summaryColumns" :key="column.key">{{ column.label }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="row in summaryRows" :key="row.label">
+                      <td class="cell-label">{{ row.label }}</td>
+                      <td class="cell-strong">{{ row.total }}</td>
+                      <td
+                        v-for="(value, index) in row.days"
+                        :key="`${row.label}-${index}`"
+                        class="cell-strong"
+                      >
+                        {{ value }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-              <div class="excel-toolbar__selection">{{ selectionLabel }}</div>
-            </div> -->
+            </section>
 
-            <div ref="excelScrollRef" class="excel-scroll">
-              <div class="excel-sheet">
-                <section class="excel-section">
-                  <div class="excel-table-wrap" :style="getWrapStyle(summarySection)">
-                    <div
-                      v-if="summarySelectionStyle"
-                      class="excel-selection"
-                      :style="summarySelectionStyle"
-                    ></div>
+            <section class="dimension-section">
+              <!-- <div class="dimension-section__head">
+                <div>
+                  <div class="dimension-section__eyebrow">Breakdown</div>
+                  <div class="dimension-section__title">App Breakdown</div>
+                </div>
+                <div class="dimension-section__meta">
+                  <span>{{ resolvedExcelTables.appBlocks.length }} apps</span>
+                  <span>grouped by source</span>
+                </div>
+              </div> -->
 
-                    <table class="excel-table">
-                      <colgroup>
-                        <col
-                          v-for="(width, index) in summarySection.columns"
-                          :key="`summary-col-${index}`"
-                          :style="{ width: `${width}px` }"
-                        />
-                      </colgroup>
-                      <tbody>
-                        <tr
-                          v-for="(row, rowIndex) in summarySection.renderRows"
-                          :key="`summary-row-${rowIndex}`"
-                          :style="{ height: `${summarySection.rows[rowIndex]}px` }"
-                        >
-                          <template
-                            v-for="(cell, cellIndex) in row"
-                            :key="cell?.id ?? `summary-empty-${rowIndex}-${cellIndex}`"
-                          >
-                            <td
-                              v-if="cell"
-                              :rowspan="cell.rowSpan ?? 1"
-                              :colspan="cell.colSpan ?? 1"
-                              class="excel-cell"
-                              :class="getCellClass(summarySection, cell)"
-                              :style="{ textAlign: cell.align ?? 'left' }"
-                              @mousedown.left.prevent="
-                                onCellPointerDown(summarySection.key, cell, $event)
-                              "
-                              @mouseenter="onCellPointerEnter(summarySection.key, cell)"
-                            >
-                              <span class="excel-cell__text">{{ cell.text }}</span>
-                            </td>
-                          </template>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-
-                <section class="excel-section">
-                  <div class="excel-table-wrap" :style="getWrapStyle(detailSection)">
-                    <div
-                      v-if="detailSelectionStyle"
-                      class="excel-selection"
-                      :style="detailSelectionStyle"
-                    ></div>
-
-                    <table class="excel-table">
-                      <colgroup>
-                        <col
-                          v-for="(width, index) in detailSection.columns"
-                          :key="`detail-col-${index}`"
-                          :style="{ width: `${width}px` }"
-                        />
-                      </colgroup>
-                      <tbody>
-                        <tr
-                          v-for="(row, rowIndex) in detailSection.renderRows"
-                          :key="`detail-row-${rowIndex}`"
-                          :style="{ height: `${detailSection.rows[rowIndex]}px` }"
-                        >
-                          <template
-                            v-for="(cell, cellIndex) in row"
-                            :key="cell?.id ?? `detail-empty-${rowIndex}-${cellIndex}`"
-                          >
-                            <td
-                              v-if="cell"
-                              :rowspan="cell.rowSpan ?? 1"
-                              :colspan="cell.colSpan ?? 1"
-                              class="excel-cell"
-                              :class="getCellClass(detailSection, cell)"
-                              :style="{ textAlign: cell.align ?? 'left' }"
-                              @mousedown.left.prevent="
-                                onCellPointerDown(detailSection.key, cell, $event)
-                              "
-                              @mouseenter="onCellPointerEnter(detailSection.key, cell)"
-                            >
-                              <span class="excel-cell__text">{{ cell.text }}</span>
-                            </td>
-                          </template>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
+              <div class="dimension-table-wrap">
+                <table class="dimension-table dimension-table--detail">
+                  <colgroup>
+                    <col
+                      v-for="column in detailColumns"
+                      :key="column.key"
+                      :style="{ width: column.width }"
+                    />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th v-for="column in detailColumns" :key="column.key">{{ column.label }}</th>
+                    </tr>
+                  </thead>
+                  <tbody v-if="detailRows.length">
+                    <tr v-for="row in detailRows" :key="row.key" :class="{ 'is-alt': row.alt }">
+                      <td v-if="row.showApp" :rowspan="row.appRowSpan" class="cell-app cell-strong">
+                        {{ row.app }}
+                      </td>
+                      <td
+                        v-if="row.showPlatform"
+                        :rowspan="row.platformRowSpan"
+                        class="cell-platform cell-strong"
+                      >
+                        {{ row.platform }}
+                      </td>
+                      <td class="cell-ad-platform cell-strong">
+                        {{ row.adPlatform }}
+                      </td>
+                      <td class="cell-label cell-strong">{{ row.label }}</td>
+                      <td
+                        v-for="(value, index) in row.values"
+                        :key="`${row.key}-${index}`"
+                        :class="['cell-value', { 'is-negative': isNegativeValue(value) }]"
+                      >
+                        {{ value }}
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tbody v-else>
+                    <tr class="empty-row">
+                      <td :colspan="detailColumns.length">No data</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </template>
@@ -154,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+  import { computed } from 'vue'
   import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
   import {
     panelAppDimensionAppBlocks,
@@ -162,16 +157,36 @@
     panelAppDimensionSummaryRows,
     panelAppDimensionText
   } from '../mock/panel-app-dimension-table.mock'
-  import type { MyPerformanceAppTableSummary, MyPerformanceAppTreeRow } from '../types'
+  import type {
+    MyPerformanceAppTableSummary,
+    MyPerformanceAppTreeRow,
+    MyPerformanceExcelAppBlock,
+    MyPerformanceExcelSummaryRow,
+    MyPerformanceExcelTables
+  } from '../types'
 
   defineOptions({ name: 'MyPerformancePanelAppDimensionTable' })
+
+  type DetailDisplayRow = {
+    key: string
+    app: string
+    platform: string
+    adPlatform: string
+    label: string
+    values: Array<string | number>
+    alt: boolean
+    showApp: boolean
+    showPlatform: boolean
+    appRowSpan: number
+    platformRowSpan: number
+  }
 
   const props = withDefaults(
     defineProps<{
       loading?: boolean
-      // title: string
       list: MyPerformanceAppTreeRow[]
       summary: MyPerformanceAppTableSummary
+      excelTables?: MyPerformanceExcelTables
       headerHint?: string
     }>(),
     {
@@ -185,596 +200,195 @@
     }
   )
 
-  type CellAlign = 'left' | 'center' | 'right'
-
-  type GridCell = {
-    id: string
-    row: number
-    col: number
-    rowSpan?: number
-    colSpan?: number
-    text: string
-    align?: CellAlign
-    header?: boolean
-    strong?: boolean
-    alt?: boolean
-    negative?: boolean
-  }
-
-  type GridSection = {
-    key: 'summary' | 'detail'
-    columns: number[]
-    rows: number[]
-    cells: GridCell[]
-    values: string[][]
-    renderRows: Array<Array<GridCell | null>>
-  }
-
-  type CellPoint = {
-    section: GridSection['key']
-    row: number
-    col: number
-  }
-
-  const excelShellRef = ref<HTMLDivElement>()
-  const excelScrollRef = ref<HTMLDivElement>()
-  const dragging = ref(false)
-  const activeCell = ref<CellPoint | null>(null)
-  const selectionStart = ref<CellPoint | null>(null)
-  const selectionEnd = ref<CellPoint | null>(null)
-  const availableWidth = ref(910)
-  const MIN_SECTION_WIDTH = 910
-  const SUMMARY_BASE_COLUMNS = [90, 78, 78, 78, 78, 78, 78, 78, 78]
-  const DETAIL_BASE_COLUMNS = [114, 24, 80, 64, 54, 54, 54, 54, 54, 54, 54]
-  let resizeObserver: ResizeObserver | null = null
-
-  const textMap = panelAppDimensionText
-  // const title = computed(() => props.title)
   const resolvedHeaderHint = computed(() => props.headerHint)
 
-  const summarySection = computed<GridSection>(() => buildSummarySection())
-  const detailSection = computed<GridSection>(() => buildDetailSection())
-
-  const currentSelection = computed(() => {
-    const start = selectionStart.value
-    const end = selectionEnd.value
-    if (!start || !end || start.section !== end.section) return null
+  const resolvedExcelTables = computed<MyPerformanceExcelTables>(() => {
+    if (props.excelTables?.dateHeaders?.length) {
+      return props.excelTables
+    }
 
     return {
-      section: start.section,
-      startRow: Math.min(start.row, end.row),
-      endRow: Math.max(start.row, end.row),
-      startCol: Math.min(start.col, end.col),
-      endCol: Math.max(start.col, end.col)
+      dateHeaders: [...panelAppDimensionDateHeaders],
+      summaryRows: [...panelAppDimensionSummaryRows],
+      appBlocks: [...panelAppDimensionAppBlocks]
     }
   })
 
-  // const selectionLabel = computed(() => {
-  //   const selection = currentSelection.value
-  //   if (!selection) return '未选择单元格'
+  const summaryColumns = computed(() => [
+    { key: 'item', label: panelAppDimensionText.item, width: '128px' },
+    { key: 'total', label: panelAppDimensionText.total, width: '112px' },
+    ...resolvedExcelTables.value.dateHeaders.map((label, index) => ({
+      key: `day-${index}`,
+      label,
+      width: '112px'
+    }))
+  ])
 
-  //   const rows = selection.endRow - selection.startRow + 1
-  //   const cols = selection.endCol - selection.startCol + 1
-  //   const sectionLabel = selection.section === 'summary' ? '汇总区' : '明细区'
-  //   return `${sectionLabel} ${rows} × ${cols}`
-  // })
+  const detailColumns = computed(() => [
+    { key: 'app', label: panelAppDimensionText.app, width: '132px' },
+    { key: 'platform', label: panelAppDimensionText.platform, width: '72px' },
+    { key: 'adPlatform', label: panelAppDimensionText.adPlatform, width: '124px' },
+    { key: 'item', label: panelAppDimensionText.item, width: '96px' },
+    ...resolvedExcelTables.value.dateHeaders.map((label, index) => ({
+      key: `detail-day-${index}`,
+      label,
+      width: '100px'
+    }))
+  ])
 
-  const summarySelectionStyle = computed(() =>
-    getSelectionStyle(summarySection.value, currentSelection.value)
+  const summaryRows = computed<MyPerformanceExcelSummaryRow[]>(
+    () => resolvedExcelTables.value.summaryRows
   )
-  const detailSelectionStyle = computed(() =>
-    getSelectionStyle(detailSection.value, currentSelection.value)
+
+  const detailRows = computed<DetailDisplayRow[]>(() =>
+    resolvedExcelTables.value.appBlocks.flatMap((block, blockIndex) =>
+      buildDetailRows(block, blockIndex)
+    )
   )
 
-  onMounted(() => {
-    window.addEventListener('mouseup', stopDragging)
-    updateAvailableWidth()
+  function buildDetailRows(
+    block: MyPerformanceExcelAppBlock,
+    blockIndex: number
+  ): DetailDisplayRow[] {
+    const rows: DetailDisplayRow[] = []
+    const allRows = block.allRows ?? []
+    const googleRows = block.googleRows ?? []
+    const totalRows = allRows.length + googleRows.length
+    const alt = !!block.alt
 
-    if (typeof ResizeObserver !== 'undefined' && excelScrollRef.value) {
-      resizeObserver = new ResizeObserver(() => {
-        updateAvailableWidth()
-      })
-      resizeObserver.observe(excelScrollRef.value)
-    }
-  })
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('mouseup', stopDragging)
-    resizeObserver?.disconnect()
-    resizeObserver = null
-  })
-
-  function buildSummarySection(): GridSection {
-    const headers = [textMap.item, textMap.total, ...panelAppDimensionDateHeaders]
-    const rows = [40, 34, 34, 34, 34]
-    const columns = buildResponsiveColumns(SUMMARY_BASE_COLUMNS)
-    const values = Array.from({ length: rows.length }, () =>
-      Array.from({ length: columns.length }, () => '')
-    )
-    const cells: GridCell[] = []
-
-    headers.forEach((label, col) => {
-      cells.push({
-        id: `summary-header-${col}`,
-        row: 0,
-        col,
-        text: label,
-        header: true,
-        align: 'center',
-        strong: true
-      })
-      values[0][col] = label
-    })
-
-    panelAppDimensionSummaryRows.forEach((row, index) => {
-      const rowIndex = index + 1
-      const rowLabel = String(row.label)
-      const rowTotal = String(row.total)
-
-      cells.push({
-        id: `summary-label-${rowIndex}`,
-        row: rowIndex,
-        col: 0,
-        text: rowLabel,
-        strong: true
-      })
-      values[rowIndex][0] = rowLabel
-
-      cells.push({
-        id: `summary-total-${rowIndex}`,
-        row: rowIndex,
-        col: 1,
-        text: rowTotal,
-        strong: true,
-        align: 'left'
-      })
-      values[rowIndex][1] = rowTotal
-
-      row.days.forEach((value, dayIndex) => {
-        const text = String(value)
-        cells.push({
-          id: `summary-value-${rowIndex}-${dayIndex}`,
-          row: rowIndex,
-          col: dayIndex + 2,
-          text,
-          strong: true,
-          align: 'left'
-        })
-        values[rowIndex][dayIndex + 2] = text
+    allRows.forEach((row, index) => {
+      rows.push({
+        key: `${blockIndex}-all-${index}`,
+        app: block.app,
+        platform: block.platform,
+        adPlatform: panelAppDimensionText.all,
+        label: row.label,
+        values: row.values,
+        alt,
+        showApp: index === 0,
+        showPlatform: index === 0,
+        appRowSpan: totalRows,
+        platformRowSpan: totalRows
       })
     })
 
-    return createSection('summary', columns, rows, cells, values)
-  }
-
-  function buildDetailSection(): GridSection {
-    const headers = [
-      textMap.app,
-      textMap.platform,
-      textMap.adPlatform,
-      textMap.item,
-      ...panelAppDimensionDateHeaders
-    ]
-    const columns = buildResponsiveColumns(DETAIL_BASE_COLUMNS)
-    const rows = [34, ...Array.from({ length: panelAppDimensionAppBlocks.length * 4 }, () => 28)]
-    const values = Array.from({ length: rows.length }, () =>
-      Array.from({ length: columns.length }, () => '')
-    )
-    const cells: GridCell[] = []
-
-    headers.forEach((label, col) => {
-      cells.push({
-        id: `detail-header-${col}`,
-        row: 0,
-        col,
-        text: label,
-        header: true,
-        align: 'center',
-        strong: true
+    googleRows.forEach((row, index) => {
+      rows.push({
+        key: `${blockIndex}-google-${index}`,
+        app: block.app,
+        platform: block.platform,
+        adPlatform: 'Google',
+        label: row.label,
+        values: row.values,
+        alt,
+        showApp: false,
+        showPlatform: false,
+        appRowSpan: totalRows,
+        platformRowSpan: totalRows
       })
-      values[0][col] = label
     })
 
-    let rowOffset = 1
-
-    panelAppDimensionAppBlocks.forEach((block, blockIndex) => {
-      const blockAlt = !!block.alt
-      const blockRows = [...block.allRows, ...block.googleRows]
-
-      cells.push({
-        id: `detail-app-${blockIndex}`,
-        row: rowOffset,
-        col: 0,
-        rowSpan: 4,
-        text: block.app,
-        strong: true,
-        alt: blockAlt
-      })
-      values[rowOffset][0] = block.app
-
-      cells.push({
-        id: `detail-platform-${blockIndex}`,
-        row: rowOffset,
-        col: 1,
-        rowSpan: 4,
-        text: block.platform,
-        strong: true,
-        align: 'center',
-        alt: blockAlt
-      })
-      values[rowOffset][1] = block.platform
-
-      cells.push({
-        id: `detail-all-${blockIndex}`,
-        row: rowOffset,
-        col: 2,
-        rowSpan: 2,
-        text: textMap.all,
-        strong: true,
-        alt: blockAlt
-      })
-      values[rowOffset][2] = textMap.all
-
-      cells.push({
-        id: `detail-google-${blockIndex}`,
-        row: rowOffset + 2,
-        col: 2,
-        rowSpan: 2,
-        text: 'Google',
-        strong: true,
-        alt: blockAlt
-      })
-      values[rowOffset + 2][2] = 'Google'
-
-      blockRows.forEach((metricRow, metricIndex) => {
-        const rowIndex = rowOffset + metricIndex
-
-        cells.push({
-          id: `detail-metric-${blockIndex}-${metricIndex}`,
-          row: rowIndex,
-          col: 3,
-          text: metricRow.label,
-          strong: true,
-          alt: blockAlt
-        })
-        values[rowIndex][3] = metricRow.label
-
-        metricRow.values.forEach((rawValue, dayIndex) => {
-          const text = String(rawValue)
-          cells.push({
-            id: `detail-value-${blockIndex}-${metricIndex}-${dayIndex}`,
-            row: rowIndex,
-            col: dayIndex + 4,
-            text,
-            strong: true,
-            align: 'left',
-            negative: isNegative(text),
-            alt: blockAlt
-          })
-          values[rowIndex][dayIndex + 4] = text
-        })
-      })
-
-      rowOffset += 4
-    })
-
-    return createSection('detail', columns, rows, cells, values)
+    return rows
   }
 
-  function createSection(
-    key: GridSection['key'],
-    columns: number[],
-    rows: number[],
-    cells: GridCell[],
-    values: string[][]
-  ): GridSection {
-    return {
-      key,
-      columns,
-      rows,
-      cells,
-      values,
-      renderRows: buildRenderRows(rows.length, columns.length, cells)
-    }
-  }
-
-  function buildRenderRows(rowCount: number, columnCount: number, cells: GridCell[]) {
-    const matrix = Array.from({ length: rowCount }, () =>
-      Array.from({ length: columnCount }, () => null as GridCell | null)
-    )
-
-    cells.forEach((cell) => {
-      matrix[cell.row][cell.col] = cell
-      for (let rowOffset = 0; rowOffset < (cell.rowSpan ?? 1); rowOffset += 1) {
-        for (let colOffset = 0; colOffset < (cell.colSpan ?? 1); colOffset += 1) {
-          if (rowOffset === 0 && colOffset === 0) continue
-          matrix[cell.row + rowOffset][cell.col + colOffset] = null
-        }
-      }
-    })
-
-    return matrix
-  }
-
-  function getWrapStyle(section: GridSection) {
-    const width = `${sum(section.columns)}px`
-
-    return {
-      width,
-      minWidth: width,
-      maxWidth: width,
-      height: `${sum(section.rows)}px`
-    }
-  }
-
-  function buildResponsiveColumns(baseColumns: number[]) {
-    const targetWidth = Math.max(MIN_SECTION_WIDTH, availableWidth.value)
-    const baseTotal = sum(baseColumns)
-
-    if (targetWidth <= baseTotal) {
-      return [...baseColumns]
-    }
-
-    return scaleColumns(baseColumns, targetWidth)
-  }
-
-  function scaleColumns(baseColumns: number[], targetWidth: number) {
-    const baseTotal = sum(baseColumns)
-    const ratio = targetWidth / baseTotal
-    const scaled = baseColumns.map((width) => Math.max(32, Math.round(width * ratio)))
-    const diff = targetWidth - sum(scaled)
-
-    scaled[scaled.length - 1] += diff
-
-    return scaled
-  }
-
-  function updateAvailableWidth() {
-    const element = excelScrollRef.value
-    if (!element) return
-
-    const computedStyle = window.getComputedStyle(element)
-    const paddingLeft = Number.parseFloat(computedStyle.paddingLeft) || 0
-    const paddingRight = Number.parseFloat(computedStyle.paddingRight) || 0
-    const nextWidth = Math.floor(element.clientWidth - paddingLeft - paddingRight)
-
-    availableWidth.value = Math.max(MIN_SECTION_WIDTH, nextWidth)
-  }
-
-  function getCellClass(section: GridSection, cell: GridCell) {
-    const active = activeCell.value?.section === section.key ? activeCell.value : null
-    const selection =
-      currentSelection.value?.section === section.key ? currentSelection.value : null
-
-    return {
-      'is-header': !!cell.header,
-      'is-strong': !!cell.strong,
-      'is-alt': !!cell.alt,
-      'is-negative': !!cell.negative,
-      'is-active': isCellActive(active, cell),
-      'is-highlight-row': isCellInHighlightedRow(active, cell),
-      'is-highlight-col': isCellInHighlightedCol(active, cell),
-      'is-selected': isCellIntersectSelection(selection, cell)
-    }
-  }
-
-  function onCellPointerDown(section: GridSection['key'], cell: GridCell, event: MouseEvent) {
-    const point = {
-      section,
-      row: cell.row,
-      col: cell.col
-    }
-
-    dragging.value = true
-    activeCell.value = point
-    selectionStart.value = point
-    selectionEnd.value = point
-    excelShellRef.value?.focus()
-
-    if (event.detail === 2) {
-      copyCurrentSelection()
-    }
-  }
-
-  function onCellPointerEnter(section: GridSection['key'], cell: GridCell) {
-    if (!dragging.value || !selectionStart.value) return
-
-    selectionEnd.value = {
-      section,
-      row: cell.row,
-      col: cell.col
-    }
-  }
-
-  function stopDragging() {
-    dragging.value = false
-  }
-
-  function onShellKeydown(event: KeyboardEvent) {
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
-      event.preventDefault()
-      copyCurrentSelection()
-      return
-    }
-
-    if (!activeCell.value) return
-
-    const section = getSectionByKey(activeCell.value.section)
-    const next = moveActiveCell(section, activeCell.value, event.key)
-    if (!next) return
-
-    event.preventDefault()
-    activeCell.value = next
-    selectionStart.value = next
-    selectionEnd.value = next
-  }
-
-  function moveActiveCell(section: GridSection, point: CellPoint, key: string) {
-    let row = point.row
-    let col = point.col
-
-    if (key === 'ArrowUp') row -= 1
-    else if (key === 'ArrowDown') row += 1
-    else if (key === 'ArrowLeft') col -= 1
-    else if (key === 'ArrowRight') col += 1
-    else return null
-
-    return {
-      section: section.key,
-      row: clamp(row, 0, section.rows.length - 1),
-      col: clamp(col, 0, section.columns.length - 1)
-    }
-  }
-
-  async function copyCurrentSelection() {
-    const selection = currentSelection.value
-    if (!selection) return
-
-    const section = getSectionByKey(selection.section)
-    const text = section.values
-      .slice(selection.startRow, selection.endRow + 1)
-      .map((row) => row.slice(selection.startCol, selection.endCol + 1).join('\t'))
-      .join('\n')
-
-    await copyText(text)
-  }
-
-  function getSectionByKey(key: GridSection['key']) {
-    return key === 'summary' ? summarySection.value : detailSection.value
-  }
-
-  function getSelectionStyle(
-    section: GridSection,
-    selection: {
-      section: GridSection['key']
-      startRow: number
-      endRow: number
-      startCol: number
-      endCol: number
-    } | null
-  ) {
-    if (!selection || selection.section !== section.key) return null
-
-    const top = getOffset(section.rows, selection.startRow)
-    const left = getOffset(section.columns, selection.startCol)
-    const width = spanSize(
-      section.columns,
-      selection.startCol,
-      selection.endCol - selection.startCol + 1
-    )
-    const height = spanSize(
-      section.rows,
-      selection.startRow,
-      selection.endRow - selection.startRow + 1
-    )
-
-    return {
-      top: `${top}px`,
-      left: `${left}px`,
-      width: `${Math.max(width, 1)}px`,
-      height: `${Math.max(height, 1)}px`
-    }
-  }
-
-  function isCellActive(active: CellPoint | null, cell: GridCell) {
-    if (!active) return false
-    return active.row === cell.row && active.col === cell.col
-  }
-
-  function isCellInHighlightedRow(active: CellPoint | null, cell: GridCell) {
-    if (!active) return false
-    return active.row >= cell.row && active.row < cell.row + (cell.rowSpan ?? 1)
-  }
-
-  function isCellInHighlightedCol(active: CellPoint | null, cell: GridCell) {
-    if (!active) return false
-    return active.col >= cell.col && active.col < cell.col + (cell.colSpan ?? 1)
-  }
-
-  function isCellIntersectSelection(
-    selection: {
-      startRow: number
-      endRow: number
-      startCol: number
-      endCol: number
-    } | null,
-    cell: GridCell
-  ) {
-    if (!selection) return false
-
-    const rowEnd = cell.row + (cell.rowSpan ?? 1) - 1
-    const colEnd = cell.col + (cell.colSpan ?? 1) - 1
-
-    return !(
-      selection.endRow < cell.row ||
-      selection.startRow > rowEnd ||
-      selection.endCol < cell.col ||
-      selection.startCol > colEnd
-    )
-  }
-
-  async function copyText(text: string) {
-    if (navigator.clipboard?.writeText) {
-      try {
-        await navigator.clipboard.writeText(text)
-        return
-      } catch {
-        // fall through
-      }
-    }
-
-    const textarea = document.createElement('textarea')
-    textarea.value = text
-    textarea.style.position = 'fixed'
-    textarea.style.opacity = '0'
-    textarea.style.pointerEvents = 'none'
-    document.body.appendChild(textarea)
-    textarea.select()
-    document.execCommand('copy')
-    document.body.removeChild(textarea)
-  }
-
-  function getOffset(sizes: number[], start: number) {
-    return sum(sizes.slice(0, start))
-  }
-
-  function spanSize(sizes: number[], start: number, span: number) {
-    return sum(sizes.slice(start, start + span))
-  }
-
-  function sum(values: number[]) {
-    return values.reduce((total, current) => total + current, 0)
-  }
-
-  function isNegative(value: string) {
-    return value.trim().startsWith('-')
-  }
-
-  function clamp(value: number, min: number, max: number) {
-    return Math.min(Math.max(value, min), max)
+  function isNegativeValue(value: string | number) {
+    return String(value).trim().startsWith('-')
   }
 </script>
 
 <style scoped lang="scss">
   .panel {
-    position: relative;
+    --panel-bg: linear-gradient(180deg, rgb(15 23 42 / 96%) 0%, rgb(17 24 39 / 94%) 100%);
+    --panel-border: rgb(82 91 111 / 48%);
+    --panel-shadow: 0 12px 30px rgb(0 0 0 / 18%), inset 0 1px 0 rgb(255 255 255 / 7%);
+    --panel-header-border: rgb(255 255 255 / 8%);
+    --panel-hint-color: rgb(203 213 225 / 66%);
+    --table-shell-bg: linear-gradient(180deg, rgb(16 24 39 / 92%) 0%, rgb(18 27 45 / 92%) 100%);
+    --table-shell-border: rgb(255 255 255 / 9%);
+    --section-bg: linear-gradient(180deg, rgb(12 19 33 / 50%) 0%, rgb(15 23 42 / 26%) 100%);
+    --section-border: rgb(255 255 255 / 6%);
+    --section-shadow: inset 0 1px 0 rgb(255 255 255 / 3%);
+    --section-eyebrow: rgb(148 163 184 / 72%);
+    --section-title: rgb(248 250 252 / 96%);
+    --section-meta: rgb(148 163 184 / 72%);
+    --table-wrap-bg: rgb(15 23 42 / 88%);
+    --table-wrap-border: rgb(255 255 255 / 7%);
+    --table-head-bg: linear-gradient(180deg, rgb(42 52 70 / 96%) 0%, rgb(28 35 49 / 96%) 100%);
+    --table-head-text: rgb(226 232 240 / 74%);
+    --table-text: rgb(226 232 240 / 88%);
+    --table-cell-bg: rgb(23 33 52 / 90%);
+    --table-cell-alt-bg: rgb(24 45 62 / 90%);
+    --table-border: rgb(255 255 255 / 7%);
+    --table-strong: rgb(241 245 249 / 90%);
+    --table-negative: rgb(248 113 113 / 96%);
+    --table-hover: rgb(255 255 255 / 2%);
+    --table-app-cell: linear-gradient(180deg, rgb(27 39 60 / 94%) 0%, rgb(24 34 54 / 94%) 100%);
+    --table-ad-platform-cell: #162033;
+    --scrollbar-track: rgb(15 23 42 / 76%);
+    --scrollbar-thumb-start: rgb(96 165 250 / 96%);
+    --scrollbar-thumb-end: rgb(59 130 246 / 96%);
+    --scrollbar-thumb-hover-start: rgb(125 211 252 / 96%);
+    --scrollbar-thumb-hover-end: rgb(37 99 235 / 96%);
+    --sk-grid-bg: rgb(255 255 255 / 5%);
+    --sk-grid-border: rgb(255 255 255 / 8%);
+
     overflow: hidden;
-    background:
-      linear-gradient(180deg, rgb(17 24 39 / 96%) 0%, rgb(19 28 44 / 92%) 100%),
-      radial-gradient(circle at top right, rgb(59 130 246 / 10%), transparent 35%);
+    background: var(--panel-bg);
     backdrop-filter: blur(16px) saturate(1.08);
-    border: 1px solid rgb(82 91 111 / 48%);
+    border: 1px solid var(--panel-border);
     border-radius: 18px;
-    box-shadow:
-      0 18px 48px rgb(0 0 0 / 26%),
-      inset 0 1px 0 rgb(255 255 255 / 7%);
+    box-shadow: var(--panel-shadow);
+  }
+
+  :global(html:not(.dark)) .panel {
+    --panel-bg:
+      linear-gradient(180deg, rgb(255 255 255 / 96%) 0%, rgb(247 250 252 / 98%) 100%),
+      radial-gradient(circle at top right, rgb(59 130 246 / 8%), transparent 35%);
+    --panel-border: rgb(203 213 225 / 88%);
+    --panel-shadow: 0 10px 24px rgb(15 23 42 / 8%), inset 0 1px 0 rgb(255 255 255 / 92%);
+    --panel-header-border: rgb(226 232 240 / 92%);
+    --panel-hint-color: rgb(71 85 105 / 70%);
+    --table-shell-bg: linear-gradient(
+      180deg,
+      rgb(255 255 255 / 92%) 0%,
+      rgb(248 250 252 / 92%) 100%
+    );
+    --table-shell-border: rgb(203 213 225 / 90%);
+    --section-bg: linear-gradient(180deg, rgb(255 255 255 / 78%) 0%, rgb(248 250 252 / 84%) 100%);
+    --section-border: rgb(203 213 225 / 58%);
+    --section-shadow: inset 0 1px 0 rgb(255 255 255 / 86%);
+    --section-eyebrow: rgb(100 116 139 / 72%);
+    --section-title: rgb(15 23 42 / 96%);
+    --section-meta: rgb(100 116 139 / 76%);
+    --table-wrap-bg: #fff;
+    --table-wrap-border: #d2d7df;
+    --table-head-bg: #fff;
+    --table-head-text: rgb(31 41 55 / 78%);
+    --table-text: rgb(31 41 55 / 88%);
+    --table-cell-bg: #fff;
+    --table-cell-alt-bg: rgb(241 245 249 / 94%);
+    --table-border: rgb(143 143 143 / 72%);
+    --table-strong: rgb(31 41 55 / 92%);
+    --table-negative: #111827;
+    --table-hover: rgb(148 163 184 / 6%);
+    --table-app-cell: linear-gradient(
+      180deg,
+      rgb(248 250 252 / 98%) 0%,
+      rgb(241 245 249 / 98%) 100%
+    );
+    --table-ad-platform-cell: #162033;
+    --scrollbar-track: rgb(226 232 240 / 92%);
+    --scrollbar-thumb-start: rgb(148 163 184 / 96%);
+    --scrollbar-thumb-end: rgb(100 116 139 / 96%);
+    --scrollbar-thumb-hover-start: rgb(120 137 167 / 96%);
+    --scrollbar-thumb-hover-end: rgb(71 85 105 / 96%);
+    --sk-grid-bg: rgb(255 255 255 / 88%);
+    --sk-grid-border: rgb(226 232 240 / 92%);
   }
 
   .panel__header {
-    position: relative;
-    z-index: 1;
     padding: 14px 18px 10px;
-    border-bottom: 1px solid rgb(255 255 255 / 8%);
+    border-bottom: 1px solid var(--panel-header-border);
   }
 
   .header-copy {
@@ -783,263 +397,260 @@
     gap: 6px;
   }
 
-  .title {
-    font-size: 14px;
-    font-weight: 700;
-    color: rgb(244 244 245 / 96%);
-    letter-spacing: 0.01em;
-  }
-
   .hint {
     font-size: 12px;
     font-weight: 600;
     line-height: 1.45;
-    color: rgb(226 232 240 / 72%);
+    color: var(--panel-hint-color);
   }
 
   .panel__body {
-    position: relative;
-    z-index: 1;
     padding: 12px 14px 16px;
   }
 
-  .excel-shell {
-    position: relative;
-    padding: 10px;
-    overflow: hidden;
-    background:
-      linear-gradient(180deg, rgb(8 15 27 / 52%) 0%, rgb(10 18 30 / 18%) 100%),
-      linear-gradient(135deg, rgb(255 255 255 / 3%), transparent 44%);
-    border: 1px solid rgb(138 150 174 / 22%);
-    border-radius: 14px;
-    outline: none;
+  .dimension-shell {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+    padding: 12px;
+    background: var(--table-shell-bg);
+    border: 1px solid var(--table-shell-border);
+    border-radius: 16px;
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 9%),
-      0 8px 24px rgb(0 0 0 / 22%);
+      inset 0 1px 0 rgb(255 255 255 / 5%),
+      0 6px 18px rgb(0 0 0 / 12%);
   }
 
-  .excel-toolbar {
+  .dimension-section {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    background: var(--section-bg);
+    border: 1px solid var(--section-border);
+    border-radius: 16px;
+    box-shadow: var(--section-shadow);
+  }
+
+  .dimension-section__head {
     display: flex;
     gap: 12px;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
-    padding: 0 4px 10px;
-    color: rgb(226 232 240 / 80%);
+    padding: 2px 2px 0;
   }
 
-  .excel-toolbar__hint,
-  .excel-toolbar__selection {
+  .dimension-section__eyebrow {
+    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--section-eyebrow);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .dimension-section__title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--section-title);
+    letter-spacing: 0.01em;
+  }
+
+  .dimension-section__meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
     font-size: 12px;
-    line-height: 1.4;
-  }
-
-  .excel-toolbar__hint span {
     font-weight: 700;
-    color: #fff;
+    color: var(--section-meta);
   }
 
-  .excel-toolbar__selection {
-    font-variant-numeric: tabular-nums;
-    color: rgb(191 219 254 / 90%);
+  .dimension-section__meta span {
+    padding: 4px 10px;
+    background: rgb(255 255 255 / 4%);
+    border: 1px solid rgb(255 255 255 / 6%);
+    border-radius: 999px;
   }
 
-  .excel-scroll {
-    width: 100%;
+  :global(html:not(.dark)) .dimension-section__meta span {
+    background: rgb(255 255 255 / 76%);
+    border-color: rgb(203 213 225 / 92%);
+  }
+
+  .dimension-table-wrap {
     max-width: 100%;
-    max-height: 620px;
-    padding: 10px;
     overflow: auto;
-    background: linear-gradient(180deg, #f5f7fa 0%, #edf1f5 100%);
-    border: 1px solid rgb(124 134 152 / 22%);
-    border-radius: 12px;
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 84%);
-    scrollbar-gutter: stable both-edges;
+    background: var(--table-wrap-bg);
+    border: 1px solid var(--table-wrap-border);
+    border-radius: 14px;
+    scrollbar-gutter: stable;
     scrollbar-width: auto;
-    scrollbar-color: rgb(120 137 167 / 88%) rgb(222 228 237 / 92%);
+    scrollbar-color: var(--scrollbar-thumb-end) var(--scrollbar-track);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 4%),
+      0 6px 18px rgb(2 6 23 / 8%);
   }
 
-  .excel-scroll::-webkit-scrollbar {
+  .dimension-table-wrap::-webkit-scrollbar {
     width: 12px;
     height: 12px;
   }
 
-  .excel-scroll::-webkit-scrollbar-track {
-    background: rgb(222 228 237 / 92%);
+  .dimension-table-wrap::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
     border-radius: 999px;
   }
 
-  .excel-scroll::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgb(148 163 184 / 96%), rgb(100 116 139 / 96%));
-    border: 2px solid rgb(222 228 237 / 92%);
+  .dimension-table-wrap::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--scrollbar-thumb-start), var(--scrollbar-thumb-end));
+    border: 2px solid var(--scrollbar-track);
     border-radius: 999px;
   }
 
-  .excel-scroll::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, rgb(120 137 167 / 96%), rgb(71 85 105 / 96%));
+  .dimension-table-wrap::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      180deg,
+      var(--scrollbar-thumb-hover-start),
+      var(--scrollbar-thumb-hover-end)
+    );
   }
 
-  .excel-scroll::-webkit-scrollbar-corner {
-    background: rgb(222 228 237 / 92%);
-  }
-
-  .excel-sheet {
-    display: inline-flex;
-    flex-direction: column;
-    gap: 12px;
+  .dimension-table {
     width: max-content;
-    min-width: max-content;
-  }
-
-  .excel-section {
-    display: inline-block;
-    width: max-content;
-    min-width: max-content;
-    max-width: none;
-    padding: 6px;
-    background: #fff;
-    border: 1px solid #d2d7df;
-    border-radius: 6px;
-  }
-
-  .excel-table-wrap {
-    position: relative;
-    display: inline-block;
-    width: max-content;
-    min-width: max-content;
-  }
-
-  .excel-table {
-    width: max-content;
-    min-width: max-content;
-    max-width: none;
-    table-layout: auto;
+    min-width: 100%;
+    color: var(--table-text);
+    table-layout: fixed;
+    border-spacing: 0;
     border-collapse: collapse;
-    user-select: none;
-    background: #fff;
-    border: 1px solid #8f8f8f;
   }
 
-  .excel-selection {
-    position: absolute;
-    z-index: 3;
-    box-sizing: border-box;
-    pointer-events: none;
-    background: rgb(34 197 94 / 10%);
-    border: 2px solid #16a34a;
-  }
-
-  .excel-cell {
-    position: relative;
-    z-index: 1;
-    padding: 2px 6px;
-    overflow: hidden;
+  .dimension-table th,
+  .dimension-table td {
+    padding: 10px;
     font-size: 12px;
-    line-height: 1.1;
-    color: #1f2937;
-    vertical-align: middle;
-    background: #fff;
-    border: 1px solid #8f8f8f;
-    transition:
-      background-color 120ms ease,
-      box-shadow 120ms ease;
+    line-height: 1.25;
+    white-space: nowrap;
+    border: 1px solid var(--table-border);
   }
 
-  .excel-cell__text {
-    display: block;
-    width: 100%;
+  .dimension-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    font-weight: 700;
+    color: var(--table-head-text);
+    text-align: center;
+    background: var(--table-head-bg);
+    backdrop-filter: blur(8px);
+  }
+
+  .dimension-table td {
+    font-weight: 500;
+    background: var(--table-cell-bg);
+    transition: background-color 160ms ease;
+  }
+
+  .dimension-table tbody tr.is-alt td {
+    background: var(--table-cell-alt-bg);
+  }
+
+  .dimension-table tbody tr:hover td {
+    background: color-mix(in srgb, var(--table-cell-bg) 88%, var(--table-hover));
+  }
+
+  .dimension-table tbody tr.is-alt:hover td {
+    background: color-mix(in srgb, var(--table-cell-alt-bg) 88%, var(--table-hover));
+  }
+
+  .cell-app,
+  .cell-platform,
+  .cell-ad-platform,
+  .cell-label {
+    color: var(--table-strong);
+  }
+
+  .cell-app {
+    max-width: 132px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    vertical-align: middle;
+    background: var(--table-app-cell) !important;
   }
 
-  .excel-cell.is-header {
-    font-weight: 700;
-    text-align: center !important;
-    background: #fff;
+  .cell-platform {
+    vertical-align: middle;
   }
 
-  .excel-cell.is-strong .excel-cell__text {
-    font-weight: 700;
+  .cell-ad-platform {
+    vertical-align: middle;
+    background: var(--table-ad-platform-cell) !important;
   }
 
-  .excel-cell.is-alt {
-    background: #d9d9d9;
+  .cell-strong {
+    font-weight: 600;
   }
 
-  .excel-cell.is-negative {
-    color: #111827;
+  .dimension-table--summary td:not(:first-child),
+  .dimension-table--detail td:not(.cell-app, .cell-platform, .cell-ad-platform, .cell-label) {
+    font-variant-numeric: tabular-nums;
   }
 
-  .excel-cell.is-highlight-row,
-  .excel-cell.is-highlight-col {
-    background: #eef6ff;
+  .cell-value.is-negative {
+    color: var(--table-negative);
   }
 
-  .excel-cell.is-highlight-row.is-alt,
-  .excel-cell.is-highlight-col.is-alt {
-    background: #d5e3f2;
+  .empty-row td {
+    padding: 24px 16px;
+    text-align: center;
   }
 
-  .excel-cell.is-selected {
-    background: #e7f7ed;
-  }
-
-  .excel-cell.is-selected.is-alt {
-    background: #d8ebdf;
-  }
-
-  .excel-cell.is-active {
-    z-index: 4;
-    box-shadow: inset 0 0 0 2px #16a34a;
-  }
-
-  .excel-sk-title {
+  .table-sk-title {
     width: 180px !important;
     height: 16px !important;
     margin-bottom: 8px;
   }
 
-  .excel-sk-hint {
+  .table-sk-hint {
     width: 58% !important;
     height: 12px !important;
   }
 
-  .excel-sk-shell {
+  .table-sk-shell {
     display: grid;
     gap: 16px;
     padding: 8px;
   }
 
-  .excel-sk-grid {
+  .table-sk-grid {
     display: grid;
     gap: 6px;
     padding: 12px;
-    background: rgb(255 255 255 / 5%);
-    border: 1px solid rgb(255 255 255 / 8%);
+    background: var(--sk-grid-bg);
+    border: 1px solid var(--sk-grid-border);
     border-radius: 12px;
   }
 
-  .excel-sk-grid--summary {
-    grid-template-columns: 1.4fr 1.2fr repeat(7, 1fr);
+  .table-sk-grid--summary {
+    grid-template-columns: repeat(9, 1fr);
   }
 
-  .excel-sk-grid--detail {
-    grid-template-columns: 1.3fr 0.8fr 1fr 1fr repeat(7, 1fr);
+  .table-sk-grid--detail {
+    grid-template-columns: repeat(6, 1fr);
   }
 
-  .excel-sk-cell {
+  .table-sk-cell {
     width: 100% !important;
     height: 18px !important;
   }
 
   @media (width <= 1200px) {
-    .hint {
-      line-height: 1.6;
-    }
-
-    .excel-toolbar {
+    .dimension-section__head {
       flex-direction: column;
       align-items: flex-start;
+    }
+
+    .dimension-section__meta {
+      flex-wrap: wrap;
     }
   }
 </style>
