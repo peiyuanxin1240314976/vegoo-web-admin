@@ -5,13 +5,9 @@
  * 上线后：只需要把 `getFixedNow()` 改为返回 `new Date()`（或改为读取环境变量）即可全局恢复真实今天。
  */
 
-/** 动态返回“昨天”（基于当前时间减一天） */
+/** 动态返回“今天”（真实当前时间） */
 function getFixedNow(): Date {
-  // 保持真实时分秒，仅将日期回退一天
-  const real = new Date()
-  const yesterday = new Date(real)
-  yesterday.setDate(yesterday.getDate() - 1)
-  return yesterday
+  return new Date()
 }
 
 export function getAppNow(): Date {
