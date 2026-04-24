@@ -650,8 +650,9 @@
   .hierarchy-table-wrap {
     display: block;
     max-width: 100%;
+    max-height: 600px;
     padding-bottom: 8px;
-    overflow: scroll hidden;
+    overflow: auto;
     border: 1px solid rgb(255 255 255 / 9%);
     border-radius: 16px;
     scrollbar-gutter: stable;
