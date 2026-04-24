@@ -152,6 +152,38 @@
         </template>
       </div>
 
+      <!-- 国家偏差分布 Top 10 -->
+      <div class="rd-card rd-country-card">
+        <div class="rd-card__header-row">
+          <div class="rd-card__title">国家偏差分布 Top 10</div>
+          <el-icon class="rd-icon-link"><TopRight /></el-icon>
+        </div>
+        <div class="rd-tab-group">
+          <button
+            v-for="tab in countryTabs"
+            :key="tab.value"
+            class="rd-tab-btn"
+            :class="{ 'rd-tab-btn--active': activeCountryTab === tab.value }"
+            @click="activeCountryTab = tab.value"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+        <div v-if="loadingCountry" class="rd-chart-sk rd-chart-sk--tall"></div>
+        <div v-else-if="isCountryChartEmpty" class="rd-card-empty rd-card-empty--country">
+          <ElEmpty description="暂无国家分布数据" :image-size="90" />
+        </div>
+        <div v-else ref="countryChartRef" class="rd-country-chart"></div>
+      </div>
+
+      <!-- 右侧模块（偏差原因分析 / 对账建议）已下线：
+           - /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/reason
+           - /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/advice
+      -->
+    </div>
+
+    <!-- ========== Bottom Row ========== -->
+    <div class="rd-bottom-grid rd-entry-4">
       <!-- 平台偏差对比 -->
       <div class="rd-card rd-platform-card">
         <div class="rd-card__title">平台偏差对比</div>
@@ -212,38 +244,6 @@
             </tr>
           </tfoot>
         </table>
-      </div>
-
-      <!-- 右侧模块（偏差原因分析 / 对账建议）已下线：
-           - /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/reason
-           - /api/v1/datacenter/analysis/business-insight/revenue-deviation/overview/advice
-      -->
-    </div>
-
-    <!-- ========== Bottom Row ========== -->
-    <div class="rd-bottom-grid rd-entry-4">
-      <!-- 国家偏差分布 Top 10 -->
-      <div class="rd-card rd-country-card">
-        <div class="rd-card__header-row">
-          <div class="rd-card__title">国家偏差分布 Top 10</div>
-          <el-icon class="rd-icon-link"><TopRight /></el-icon>
-        </div>
-        <div class="rd-tab-group">
-          <button
-            v-for="tab in countryTabs"
-            :key="tab.value"
-            class="rd-tab-btn"
-            :class="{ 'rd-tab-btn--active': activeCountryTab === tab.value }"
-            @click="activeCountryTab = tab.value"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
-        <div v-if="loadingCountry" class="rd-chart-sk rd-chart-sk--tall"></div>
-        <div v-else-if="isCountryChartEmpty" class="rd-card-empty rd-card-empty--country">
-          <ElEmpty description="暂无国家分布数据" :image-size="90" />
-        </div>
-        <div v-else ref="countryChartRef" class="rd-country-chart"></div>
       </div>
 
       <!-- 四维度偏差明细分析表 -->
@@ -1570,13 +1570,13 @@
   /* ── Middle Grid ───────────────────────────────────────────────────── */
   .rd-middle-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px) minmax(240px, 280px);
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
     gap: 14px;
     align-items: stretch;
     margin-bottom: 16px;
   }
 
-  .rd-platform-card {
+  .rd-middle-grid > .rd-platform-card {
     grid-column: 2 / -1;
     min-width: 0;
   }
@@ -1586,7 +1586,7 @@
       grid-template-columns: 1fr;
     }
 
-    .rd-platform-card {
+    .rd-middle-grid > .rd-platform-card {
       grid-column: auto;
     }
   }
@@ -2048,18 +2048,14 @@
   /* ── Bottom Grid ───────────────────────────────────────────────────── */
   .rd-bottom-grid {
     display: grid;
-    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+    grid-template-columns: minmax(360px, 460px) minmax(0, 1fr);
     gap: 14px;
     align-items: stretch;
   }
 
-  @media (width <= 1399px) {
+  @media (width <= 1199px) {
     .rd-bottom-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .rd-matrix-card {
-      grid-column: 1 / -1;
+      grid-template-columns: 1fr;
     }
   }
 
