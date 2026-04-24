@@ -93,7 +93,9 @@
           </div>
         </div>
       </template>
-      <div v-else class="pace-empty">暂无数据</div>
+      <div v-else class="pace-empty">
+        <ElEmpty description="暂无数据" :image-size="80" />
+      </div>
     </div>
   </div>
 </template>
@@ -341,10 +343,12 @@
   }
 
   .pace-empty {
-    padding: 32px 16px;
-    font-size: 13px;
-    color: var(--text-secondary);
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 100%;
+    padding: 16px;
   }
 
   .pace-section {

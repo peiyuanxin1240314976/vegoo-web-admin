@@ -22,10 +22,7 @@
         </div>
       </template>
       <div v-loading="mapLoading" class="map-wrap">
-        <template v-if="countryData.length">
-          <div ref="mapChartRef" class="map-chart"></div>
-        </template>
-        <div v-else class="map-empty">暂无数据</div>
+        <div ref="mapChartRef" class="map-chart"></div>
       </div>
       <!-- <div class="map-legend">
       <div v-for="r in regionList" :key="r.name" class="legend-item">
@@ -672,10 +669,23 @@
 
   /** 鐖剁粍浠?overview 寮傛鍔犺浇锛岄娆?onMounted 鏃?mapChartRef 鍙兘灏氭湭娓叉煋锛坈ountryData 涓虹┖锛夛紱鏁版嵁鍒拌揪鍚庡啀鍒濆鍖?*/
   watch(
-    () => countryData.value.length,
-    (len) => {
-      if (len > 0) nextTick(initWorldMap)
-    }
+    countryData,
+    () => {
+      if (!mapChartRef.value) return
+      if (!getChartInstance()) {
+        nextTick(initWorldMap)
+        return
+      }
+      updateChart(buildOption())
+      if (
+        hoverTooltipVisible.value &&
+        hoveredCountryNameEn.value &&
+        !countryData.value.some((c) => c.nameEn === hoveredCountryNameEn.value)
+      ) {
+        resetHoverTooltip()
+      }
+    },
+    { deep: true }
   )
 
   let mapInitialized = false
