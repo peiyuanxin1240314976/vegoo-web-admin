@@ -1,13 +1,11 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
-  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { echarts } from '@/plugins/echarts'
   import ScreenshotModal from './ScreenshotModal.vue'
   import AgencySubTabPerformanceMock from './AgencySubTabPerformanceMock.vue'
-  import { formatYYYYMMDD, getAppTodayYYYYMMDD } from '@/utils/app-now'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
-  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import {
     fetchAgencyAnalysisMetaFilterOptions,
@@ -21,28 +19,13 @@
     fetchAgencySubTabRecentSummary,
     fetchAgencySubTabAccountSummary
   } from '@/api/agency-analysis'
-  import type {
-    AgencyAnalysisCharts,
-    KpiCardItem,
-    AgencyAnalysisFilterOptionsPayload
-  } from '../types'
+  import type { AgencyAnalysisCharts, KpiCardItem } from '../types'
 
   defineOptions({ name: 'AdAgencyAnalysis' })
 
   /** 顶部 Tab 文案；与接口筛选无关——全页数据仅在「汇总」下展示，请求固定 agency_id=all */
   const AGENCY_TAB_LABELS = ['汇总', 'GatherOne', '快鸟', '出海者'] as const
   const AGENCY_TAB_KEYS = ['summary', 'gatherone', 'kuainiao', 'chuhai'] as const
-
-  function ymdToLocalDate(ymd: string): Date {
-    const [y, m, d] = ymd.split('-').map((x) => parseInt(x, 10))
-    return new Date(y, m - 1, d)
-  }
-
-  function addDaysYmd(ymd: string, delta: number): string {
-    const d = ymdToLocalDate(ymd)
-    d.setDate(d.getDate() + delta)
-    return formatYYYYMMDD(d)
-  }
 
   // ─────────────────── KPI Cards ───────────────────
   const kpiCards = ref<KpiCardItem[]>([])
@@ -320,39 +303,13 @@
     requestAnimationFrame(() => resizeCharts())
   }
 
-  const _today = getAppTodayYYYYMMDD()
+  const DEFAULT_START_DATE = '2026-04-18'
+  const DEFAULT_END_DATE = '2026-04-24'
   /** 汇总专用：日期选择器绑定（点「查询」后才写入 applied 并请求） */
-  const summaryDateDraft = ref<[string, string]>([addDaysYmd(_today, -6), _today])
+  const summaryDateDraft = ref<[string, string]>([DEFAULT_START_DATE, DEFAULT_END_DATE])
   /** 最近一次查询使用的日期区间；仅 handleSearch 写入 */
   const summaryDateApplied = ref<[string, string] | null>(null)
   const cockpitMetaFilterStore = useCockpitMetaFilterStore()
-  const agencyMetaFilterOptions = ref<AgencyAnalysisFilterOptionsPayload | null>(null)
-  const settingAppsForSelect = computed<CockpitSettingAppItem[]>(() => {
-    const fromCockpit = cockpitMetaFilterStore.data?.settingApps ?? []
-    if (fromCockpit.length) return fromCockpit
-
-    return (agencyMetaFilterOptions.value?.appOptions ?? [])
-      .filter((opt) => opt.value && opt.value !== 'all')
-      .map((opt, index) => ({
-        sAppId: String(opt.value ?? ''),
-        nPlatform: '',
-        platformName: '',
-        sAppName: String(opt.label ?? ''),
-        sAppShortName: String(opt.label ?? ''),
-        nCategory: `fallback-${index}`,
-        categoryName: '应用'
-      }))
-  })
-
-  /** AppPlatformSearchSelect：sAppId；空 = 全部应用（接口字段仍用 `'all'`） */
-  const selectedAppId = ref<string | string[]>([])
-  const firstAppId = computed(() => String(settingAppsForSelect.value[0]?.sAppId ?? '').trim())
-  const filterAppIdForRequest = computed<string | string[]>(() => {
-    if (Array.isArray(selectedAppId.value)) return selectedAppId.value.filter(Boolean)
-    const id = String(selectedAppId.value ?? '').trim()
-    return id ? id : []
-  })
-
   /** 当前选中的顶部 Tab：0=汇总（挂载整页）；其余为占位，不改变接口入参 */
   const agencyTabIndex = ref(0)
 
@@ -385,8 +342,12 @@
   function handleSearch() {
     if (!metaReady.value) return
     syncSummaryAppliedRangeFromDraft()
-    hasSummaryQueried.value = true
-    void loadPageData()
+    if (activeAgencyTabKey.value === 'summary') {
+      hasSummaryQueried.value = true
+      void loadPageData()
+      return
+    }
+    void loadSubTabData()
   }
 
   /** meta 就绪后的默认/刷新拉数：与当前草稿日期、应用一致（渠道固定为全部） */
@@ -442,15 +403,8 @@
     metaLoading.value = true
     metaLoadError.value = false
     try {
-      agencyMetaFilterOptions.value = await fetchAgencyAnalysisMetaFilterOptions()
-      const hasSelectedApp = Array.isArray(selectedAppId.value)
-        ? selectedAppId.value.length > 0
-        : !!String(selectedAppId.value ?? '').trim()
-      if (!hasSelectedApp && firstAppId.value) {
-        selectedAppId.value = [firstAppId.value]
-      }
+      await fetchAgencyAnalysisMetaFilterOptions()
     } catch {
-      agencyMetaFilterOptions.value = null
       metaLoadError.value = true
       agencyTabIndex.value = 0
     } finally {
@@ -473,7 +427,6 @@
     return {
       startDate: range[0],
       endDate: range[1],
-      s_app_id: filterAppIdForRequest.value,
       agency_id: 'all',
       source: 'all'
     }
@@ -482,39 +435,21 @@
   async function loadSubTabData() {
     if (!metaReady.value) return
     if (activeAgencyTabKey.value === 'summary') return
-    const range = summaryDateDraft.value
-    const today = todayYYYYMMDD.value
+    const range = summaryDateApplied.value ?? summaryDateDraft.value
+    const endDate = range[1]
     subTabLoading.value = true
     subTabError.value = false
     try {
       const qBase = {
         startDate: range[0],
         endDate: range[1],
-        appId: filterAppIdForRequest.value,
         source: 'all',
         agencyTab: activeAgencyTabKey.value as 'gatherone' | 'kuainiao' | 'chuhai'
       }
-      const last7End = today
-      const last7Start = addDaysYmd(last7End, -6)
-      // 近期汇总：固定取「应用当前业务日」往前 3 天（含首尾共 3 天），不使用汇总筛选区的日期草稿/查询区间
-      const recentEnd = today
-      const recentStart = addDaysYmd(recentEnd, -2)
       const [k7, kd, recent, acct] = await Promise.all([
-        // 近 7 天：以应用当前业务日为 endDate，startDate = endDate 往前 6 天（含首尾共 7 天）
-        fetchAgencySubTabKpiLast7({
-          startDate: last7Start,
-          endDate: last7End,
-          appId: qBase.appId,
-          source: qBase.source,
-          agencyTab: qBase.agencyTab
-        }),
-        // 单日：使用当前日期；展示期同样取当前日期（不固定写死）
-        fetchAgencySubTabKpiDay({ ...qBase, date: today }),
-        fetchAgencySubTabRecentSummary({
-          ...qBase,
-          startDate: recentStart,
-          endDate: recentEnd
-        }),
+        fetchAgencySubTabKpiLast7(qBase),
+        fetchAgencySubTabKpiDay({ ...qBase, date: endDate }),
+        fetchAgencySubTabRecentSummary(qBase),
         fetchAgencySubTabAccountSummary(qBase)
       ])
       subTabKpiLast7.value = k7
@@ -540,7 +475,6 @@
       const data = await fetchAgencySubTabAccountSummary({
         startDate: payload.startDate,
         endDate: payload.endDate,
-        appId: filterAppIdForRequest.value,
         source: 'all',
         agencyTab: activeAgencyTabKey.value as 'gatherone' | 'kuainiao' | 'chuhai'
       })
@@ -683,40 +617,20 @@
             </button>
           </div>
           <div class="aa-tab-bar-filters" aria-label="筛选与查询">
-            <template v-if="agencyTabIndex === 0">
-              <div class="filter-date-wrap filter-date-wrap--tab-inline">
-                <AppDatePicker
-                  v-model="summaryDateDraft"
-                  :shortcuts="dateRangeShortcuts"
-                  type="daterange"
-                  format="YYYY-MM-DD"
-                  value-format="YYYY-MM-DD"
-                  range-separator="~"
-                  start-placeholder="开始日期"
-                  end-placeholder="结束日期"
-                  size="default"
-                  class="filter-date"
-                  popper-class="aa-agency-filter-popper"
-                  unlink-panels
-                />
-              </div>
-            </template>
-            <div class="aa-app-select-wrap filter-select filter-select--tab filter-select--tab-app">
-              <AppPlatformSearchSelect
-                v-model="selectedAppId"
-                mode="app"
-                input-class="aa-app-platform-select__trigger"
-                placeholder="应用"
-                search-placeholder="搜索类别/应用名称/应用简称"
-                all-label="全部应用"
-                :setting-apps="settingAppsForSelect"
-                :height="36"
-                :width="140"
-                :min-width="120"
-                :max-width="180"
-                radius="var(--el-border-radius-base, 4px)"
-                dropdown-class="aa-agency-filter-popper"
-                :show-platform-suffix="true"
+            <div class="filter-date-wrap filter-date-wrap--tab-inline">
+              <AppDatePicker
+                v-model="summaryDateDraft"
+                :shortcuts="dateRangeShortcuts"
+                type="daterange"
+                format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD"
+                range-separator="~"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                size="default"
+                class="filter-date"
+                popper-class="aa-agency-filter-popper"
+                unlink-panels
               />
             </div>
             <div class="aa-tab-bar-filters__actions">
@@ -910,7 +824,6 @@
         :error="subTabError"
         :current-day-label="todayCNLabel"
         :agency-tab="activeAgencyTabKey"
-        :filter-app-id="filterAppIdForRequest"
         :default-account-range="summaryDateDraft"
         :kpi-last7="subTabKpiLast7"
         :kpi-day="subTabKpiDay"
@@ -1066,17 +979,6 @@
   .btn-search--tab {
     flex-shrink: 0;
     align-self: center;
-  }
-
-  .aa-tab-bar-filters .filter-select.filter-select--tab-app {
-    width: 140px !important;
-    max-width: 100%;
-  }
-
-  .aa-tab-bar-filters .aa-app-select-wrap {
-    display: inline-flex;
-    flex: 0 0 auto;
-    align-items: center;
   }
 
   .agency-analysis-page__section--agency-sub-mock {
