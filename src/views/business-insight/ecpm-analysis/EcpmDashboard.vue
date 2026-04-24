@@ -1738,11 +1738,18 @@
   :deep(.bi-filter-select__input .el-select__placeholder),
   :deep(.bi-filter-select__input .el-select__selected-item),
   :deep(.bi-filter-select__input .el-select__caret) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
+    color: #fff;
   }
 
   :deep(.bi-filter-date .el-range-separator) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
+    color: #fff;
+  }
+
+  :deep(.bi-filter-date .el-range__icon),
+  :deep(.bi-filter-date .el-input__prefix),
+  :deep(.bi-filter-date .el-input__suffix),
+  :deep(.bi-filter-date .el-input__inner) {
+    color: #fff;
   }
 
   .bi-filter-panel :deep(.bi-query-btn.el-button) {

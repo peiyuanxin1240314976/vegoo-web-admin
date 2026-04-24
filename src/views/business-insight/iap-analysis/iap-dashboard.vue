@@ -1150,7 +1150,7 @@
   :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range-separator),
   :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range__icon),
   :deep(.iap-dashboard-sel.el-date-editor.el-date-editor--daterange .el-range__close-icon) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
+    color: #fff;
   }
 
   :deep(.iap-dashboard-sel .el-select__wrapper.is-focused),

@@ -5,7 +5,7 @@
     <header class="iaa-header iaa-entry-1">
       <div class="iaa-header__filters iaa-filter-panel">
         <div class="iaa-pill">
-          <span class="iaa-pill__k">App:</span>
+          <span class="iaa-pill__k">应用:</span>
           <AppPlatformSearchSelect
             v-model="filtersDraft.s_app_id"
             mode="app"
@@ -20,24 +20,7 @@
           />
         </div>
         <div class="iaa-pill">
-          <span class="iaa-pill__k">Platform:</span>
-          <ElSelect
-            v-model="filtersDraft.platform"
-            class="iaa-select"
-            popper-class="iaa-select__popper"
-            :teleported="true"
-            :fit-input-width="true"
-          >
-            <ElOption
-              v-for="opt in platformOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </ElSelect>
-        </div>
-        <div class="iaa-pill">
-          <span class="iaa-pill__k">Country:</span>
+          <span class="iaa-pill__k">国家:</span>
           <ElSelect
             v-model="filtersDraft.s_country_code"
             class="iaa-select"
@@ -55,7 +38,7 @@
           </ElSelect>
         </div>
         <div class="iaa-pill">
-          <span class="iaa-pill__k">Date:</span>
+          <span class="iaa-pill__k">日期:</span>
           <AppDatePicker
             v-model="filtersDraft.t_date"
             type="date"
@@ -176,7 +159,7 @@
 
   const {
     appOptions,
-    platformOptions,
+    // platformOptions,
     countryOptions,
     loading: filterOptionsLoading
   } = useIaaFilters()
@@ -426,8 +409,10 @@
   }
 
   .iaa-pill__k {
+    flex-shrink: 0;
     font-size: 12px;
     color: var(--text-secondary);
+    white-space: nowrap;
   }
 
   .iaa-select,
@@ -451,11 +436,7 @@
   }
 
   :deep(.iaa-date .el-input__inner) {
-    color: var(--text-primary);
-  }
-
-  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-date .el-input__inner) {
-    color: #0f172a;
+    color: #fff;
   }
 
   :deep(.iaa-select .el-select__selected-item),
@@ -464,26 +445,12 @@
   :deep(.iaa-select__input .el-select__selected-item),
   :deep(.iaa-select__input .el-select__placeholder),
   :deep(.iaa-select__input .el-select__caret) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
-  }
-
-  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__selected-item),
-  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__placeholder),
-  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select .el-select__caret),
-  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select__input .el-select__selected-item),
-  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select__input .el-select__placeholder),
-  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-select__input .el-select__caret) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
+    color: #fff;
   }
 
   :deep(.iaa-date .el-input__prefix),
   :deep(.iaa-date .el-input__suffix) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
-  }
-
-  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-date .el-input__prefix),
-  :global(html:not(.dark) .iaa-filter-panel) :deep(.iaa-date .el-input__suffix) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
+    color: #fff;
   }
 
   /* 小屏：筛选条改为纵向堆叠 */

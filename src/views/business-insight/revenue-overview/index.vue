@@ -2793,11 +2793,11 @@
     --el-input-focus-border-color: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-focus: var(--theme-color, var(--art-primary, #3b82f6));
     --el-border-color-hover: var(--theme-color, var(--art-primary, #3b82f6));
-    --el-text-color-primary: var(--theme-color, var(--art-primary, #3b82f6));
+    --el-text-color-primary: #fff;
   }
 
   .rev-filter-panel :deep(.rev-date .el-range-input) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
+    color: #fff;
   }
 
   .rev-filter-panel :deep(.rev-date .el-range-input::placeholder) {
@@ -2805,11 +2805,7 @@
   }
 
   .rev-filter-panel :deep(.rev-date .el-range-separator) {
-    color: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 78%,
-      var(--rev-muted)
-    );
+    color: #fff;
   }
 
   .rev-filter-panel :deep(.rev-date .el-input__wrapper),
@@ -3040,7 +3036,7 @@
   }
 
   :deep(.rev-date .el-range-input) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
+    color: #fff;
   }
 
   :deep(.rev-date .el-range-input::placeholder) {
@@ -3048,27 +3044,23 @@
   }
 
   :deep(.rev-date .el-input__inner) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
+    color: #fff;
   }
 
   :deep(.rev-date .el-range-separator) {
-    color: color-mix(
-      in srgb,
-      var(--theme-color, var(--art-primary, #3b82f6)) 78%,
-      var(--rev-muted)
-    );
+    color: #fff;
   }
 
   :deep(.rev-select .el-select__selected-item),
   :deep(.rev-select .el-select__placeholder),
   :deep(.rev-select .el-select__caret) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
+    color: #fff;
   }
 
   :deep(.rev-date .el-input__prefix),
   :deep(.rev-date .el-input__suffix),
   :deep(.rev-date .el-range__icon) {
-    color: var(--theme-color, var(--art-primary, #3b82f6));
+    color: #fff;
   }
 
   .rev-kpi-grid {
