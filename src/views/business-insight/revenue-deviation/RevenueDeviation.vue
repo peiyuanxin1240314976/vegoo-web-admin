@@ -767,6 +767,12 @@
     return `${n.toFixed(1)}pp`
   }
 
+  function formatCountryBarLabel(value: number) {
+    if (!Number.isFinite(value)) return '--'
+    if (activeCountryTab.value === 'rate') return `${value.toFixed(1)}%`
+    return value.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────────────
   /** 接口可能返回 en dash（8–15）或 ASCII 连字符（8-15），分类时统一比较 */
   function normalizeDeviationBracket(val: string) {
@@ -954,7 +960,7 @@
     const amounts = list.map((i) => i.n_value)
     countryChart.setOption({
       backgroundColor: 'transparent',
-      grid: { top: 5, right: 20, bottom: 5, left: 60 },
+      grid: { top: 5, right: 76, bottom: 5, left: 60 },
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'none' },
@@ -981,6 +987,15 @@
           type: 'bar',
           data: amounts,
           barMaxWidth: 14,
+          label: {
+            show: true,
+            position: 'right',
+            distance: 8,
+            color: axisText,
+            fontSize: 11,
+            formatter: (params: { value: number | string }) =>
+              formatCountryBarLabel(Number(params.value))
+          },
           itemStyle: {
             color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
               { offset: 0, color: barColor },
@@ -2033,7 +2048,7 @@
   /* ── Bottom Grid ───────────────────────────────────────────────────── */
   .rd-bottom-grid {
     display: grid;
-    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
     gap: 14px;
     align-items: stretch;
   }
