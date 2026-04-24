@@ -135,7 +135,7 @@
     <div class="rd-middle-grid rd-entry-3">
       <!-- 趋势图 -->
       <div class="rd-card rd-trend-card">
-        <div class="rd-card__title">收入偏差趋势（30天）</div>
+        <div class="rd-card__title">收入偏差趋势（{{ trendDaySpanText }}）</div>
         <div v-if="loadingTrend" class="rd-chart-sk"></div>
         <div v-else-if="isTrendEmpty" class="rd-card-empty rd-card-empty--trend">
           <ElEmpty description="暂无趋势数据" :image-size="90" />
@@ -772,6 +772,26 @@
     if (activeCountryTab.value === 'rate') return `${value.toFixed(1)}%`
     return value.toLocaleString('en-US', { maximumFractionDigits: 0 })
   }
+
+  function parseYmdToUtcMs(ymd: string) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd)
+    if (!m) return NaN
+    const year = Number(m[1])
+    const month = Number(m[2])
+    const day = Number(m[3])
+    return Date.UTC(year, month - 1, day)
+  }
+
+  const trendDaySpanText = computed(() => {
+    const [start, end] = dateRange.value
+    if (!start || !end) return '--天'
+    const startMs = parseYmdToUtcMs(start)
+    const endMs = parseYmdToUtcMs(end)
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) return '--天'
+    const dayMs = 24 * 60 * 60 * 1000
+    const span = Math.floor(Math.abs(endMs - startMs) / dayMs) + 1
+    return `${span}天`
+  })
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
   /** 接口可能返回 en dash（8–15）或 ASCII 连字符（8-15），分类时统一比较 */
