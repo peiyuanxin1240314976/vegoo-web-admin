@@ -28,7 +28,7 @@
         </div>
 
         <div class="bi-filter-field">
-          <span class="bi-filter-label">App</span>
+          <span class="bi-filter-label">应用</span>
           <el-skeleton :loading="loadingMetaFilterOptions" animated>
             <template #template>
               <el-skeleton-item variant="text" class="filter-sel-skeleton" />
