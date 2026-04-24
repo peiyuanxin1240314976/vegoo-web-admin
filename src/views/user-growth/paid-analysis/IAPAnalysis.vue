@@ -4,11 +4,11 @@
     <header class="iap-analysis-page__section--filters iap-entry-1">
       <div class="iap-filters-inner">
         <div class="iap-filters-row">
-          <div class="iap-filter-chip iap-filter-chip--static">
+          <!-- <div class="iap-filter-chip iap-filter-chip--static">
             <ElIcon class="iap-filter-chip__icon"><Calendar /></ElIcon>
             <span class="iap-filter-chip__label">日期</span>
             <span class="iap-filter-chip__value">{{ dateChipText }}</span>
-          </div>
+          </div> -->
           <AppDatePicker
             v-model="filters.date"
             type="date"
@@ -119,7 +119,7 @@
 
 <script setup lang="ts">
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
-  import { Calendar, Flag } from '@element-plus/icons-vue'
+  import { Flag } from '@element-plus/icons-vue'
   import { storeToRefs } from 'pinia'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { getAppTodayYYYYMMDD } from '@/utils/app-now'
@@ -185,7 +185,7 @@
   const searchToken = ref(0)
   const hasSyncedInitialAutoApp = ref(false)
 
-  const dateChipText = computed(() => filters.date || '-')
+  // const dateChipText = computed(() => filters.date || '-')
 
   const bootLoading = ref(true)
   let bootTimer: ReturnType<typeof setTimeout> | null = null
