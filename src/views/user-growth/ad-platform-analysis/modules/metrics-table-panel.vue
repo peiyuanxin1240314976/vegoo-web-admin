@@ -23,12 +23,12 @@
           >
             <template #roi="{ row }">
               <span class="detail-cell detail-cell--metric">
-                <span class="detail-metric-value">{{ formatNum2(row.roi) }}</span>
+                <span class="detail-metric-value">{{ formatNum2(row.roi * 100) }}%</span>
                 <div
                   class="detail-sparkline"
                   :class="row.roiTrendUp ? 'is-good' : 'is-bad'"
                   role="img"
-                  :aria-label="`ROI 趋势 ${formatNum2(row.roi)}`"
+                  :aria-label="`ROI 趋势 ${formatNum2(row.roi * 100)}%`"
                 >
                   <span
                     v-for="(h, i) in metricSparklineBars(row, 'roi')"

@@ -96,7 +96,9 @@
             </div>
           </div>
           <div class="kpi-card-roi">
-            <span class="roi-value">{{ formatKpiRoi(card.roi) }}</span>
+            <span class="roi-value"
+              ><span class="roi-label">ROI</span>{{ formatKpiRoi(card.roi) }}</span
+            >
             <span class="roi-change" :class="card.roiChangeUp ? 'up' : 'down'">
               {{ card.roiChangeUp ? '+' : '' }}{{ formatNum2(card.roiChange) }}%
             </span>
@@ -607,7 +609,9 @@
   }
 
   function formatKpiRoi(roi: number) {
-    return formatNum2(roi)
+    const text = formatNum2(roi * 100)
+    if (text === '—') return text
+    return `${text}%`
   }
 
   /** CSS 类名安全后缀（接口 id 可能与历史 mock 选择器不一致，仅影响品牌占位配色） */
@@ -1295,7 +1299,7 @@
                 : typeof raw === 'number'
                   ? raw
                   : Number(raw)
-            const val = Number.isFinite(num) ? formatNum2(num) : '—'
+            const val = Number.isFinite(num) ? `${formatNum2(num * 100)}%` : '—'
             return `${item.marker ?? ''}${item.seriesName ?? ''}: ${val}`
           })
           return [header, ...lines].filter(Boolean).join('<br/>')
@@ -1318,7 +1322,7 @@
         axisLabel: {
           color: theme.axis,
           fontSize: 11,
-          formatter: (value: string | number) => formatNum2(value)
+          formatter: (value: string | number) => `${formatNum2(Number(value) * 100)}%`
         }
       },
       series: d.series.map((s, i) => ({
@@ -2254,10 +2258,20 @@
       margin-bottom: 10px;
 
       .roi-value {
+        display: inline-flex;
+        gap: 4px;
+        align-items: baseline;
         margin-right: 8px;
         font-size: $font-size-roi;
         font-weight: 700;
         color: $color-text-primary;
+      }
+
+      .roi-label {
+        font-size: 50%;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        opacity: 0.85;
       }
 
       .roi-change {

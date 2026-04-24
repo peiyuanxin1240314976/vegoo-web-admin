@@ -48,7 +48,9 @@
         </ElTableColumn>
         <ElTableColumn label="ROI" width="auto" align="left">
           <template #default="{ row }">
-            <span class="top10-roi" :class="roiTone(row.roi)">{{ formatNum2(row.roi) }}</span>
+            <span class="top10-roi" :class="roiTone(row.roi)"
+              >{{ formatNum2(row.roi * 100) }}%</span
+            >
           </template>
         </ElTableColumn>
         <ElTableColumn label="操作" width="auto" align="center">
