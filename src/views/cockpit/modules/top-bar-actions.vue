@@ -1,13 +1,16 @@
 <template>
   <div class="cockpit-top-bar">
-    <ElInput
-      :model-value="displayDate"
+    <AppDatePicker
+      v-model="selectedDate"
+      type="date"
+      value-format="YYYY-MM-DD"
+      format="YYYY-MM-DD"
       size="default"
       class="cockpit-date-display"
       placeholder="选择日期"
       :prefix-icon="Calendar"
-      readonly
-      tabindex="-1"
+      :disabled-date="disableNotToday"
+      @update:model-value="onDateChange"
     />
     <div class="actions">
       <ElButton size="default" type="primary" @click="emit('openScenarioSimulation')">
@@ -23,8 +26,9 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+  import { ref, onMounted, onUnmounted, watch } from 'vue'
   import { Calendar, DataAnalysis, FullScreen } from '@element-plus/icons-vue'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useTableStore } from '@/store/modules/table'
   import { formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 
@@ -62,14 +66,20 @@
     }
   )
 
-  const displayDate = computed(() => {
-    const v = selectedDate.value
-    // v 形如：YYYY-MM-DD
-    if (!v) return ''
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v)
-    if (!m) return v
-    return `${m[1]}年${m[2]}月${m[3]}日`
-  })
+  function disableNotToday(date: Date): boolean {
+    const d = formatYYYYMMDD(date)
+    return d !== todayStr()
+  }
+
+  function onDateChange(value: string | undefined) {
+    if (!value) {
+      selectedDate.value = todayStr()
+      emit('update:modelValue', selectedDate.value)
+      return
+    }
+    selectedDate.value = value
+    emit('update:modelValue', value)
+  }
 
   const toggleFullScreen = () => {
     const el = document.querySelector(`.${props.fullClass}`)
