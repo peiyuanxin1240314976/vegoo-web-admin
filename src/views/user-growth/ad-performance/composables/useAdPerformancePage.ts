@@ -28,6 +28,11 @@ const defaultFilter: AdPerformanceFilter = {
   country: ''
 }
 
+function getFirstAppId(meta: AdPerformanceMetaFilterResponse | null): string {
+  const first = (meta?.appOptions ?? []).find((item) => String(item.value ?? '').trim() !== '')
+  return String(first?.value ?? '').trim()
+}
+
 function emptyPage(): AdPerformanceMock {
   return {
     dataTime: '',
@@ -93,6 +98,10 @@ export function useAdPerformancePage() {
     metaLoading.value = true
     try {
       meta.value = await fetchAdPerformanceMetaFilterOptions()
+      const firstAppId = getFirstAppId(meta.value)
+      if (!page.value.filter.appId && firstAppId) {
+        page.value.filter = { ...page.value.filter, appId: firstAppId }
+      }
     } catch {
       ElMessage.error('加载筛选选项失败')
     } finally {
@@ -180,9 +189,9 @@ export function useAdPerformancePage() {
     })
   }
 
-  onMounted(() => {
+  onMounted(async () => {
     // options 下拉单独加载；其余接口并发发起，互不阻塞
-    void loadMeta()
+    await loadMeta()
     void runOverview()
     void runTable()
   })
@@ -196,7 +205,7 @@ export function useAdPerformancePage() {
 
   async function refreshAll() {
     // 与 filterSearch 一致：除 options 外其余请求互不阻塞
-    void loadMeta()
+    await loadMeta()
     void runOverview()
     void runTable()
   }

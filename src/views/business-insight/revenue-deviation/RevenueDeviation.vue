@@ -435,6 +435,7 @@
   const cockpitMetaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(cockpitMetaStore)
   const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
+  const firstAppId = computed(() => String(settingAppsForSelect.value[0]?.sAppId ?? '').trim())
 
   interface MatrixCell {
     estimated: string
@@ -1000,6 +1001,9 @@
 
   onMounted(async () => {
     await loadMetaFilterOptions()
+    if (!appFilter.value && firstAppId.value) {
+      appFilter.value = firstAppId.value
+    }
     matrixPlatform.value = platform.value
     await loadAllCards()
     await loadMatrixOnly()

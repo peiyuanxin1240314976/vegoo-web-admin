@@ -328,6 +328,7 @@
     () => cockpitMeta.value?.sourceOptions ?? []
   )
   const metaSettingApps = computed(() => cockpitMeta.value?.settingApps ?? [])
+  const firstMetaAppId = computed(() => String(metaSettingApps.value[0]?.sAppId ?? '').trim())
   const ownerOptions = ref<Array<{ label: string; value: string }>>([])
   const appDraftKeys = ref('')
   const appAppliedKeys = ref('')
@@ -1160,8 +1161,11 @@
   }
 
   onMounted(() => {
-    void loadMetaFilterOptions()
     void (async () => {
+      await loadMetaFilterOptions()
+      if (!draftAppId.value && firstMetaAppId.value) {
+        draftAppId.value = firstMetaAppId.value
+      }
       // 让出首帧给布局与骨架，再初始化空图表
       await new Promise<void>((r) => requestAnimationFrame(() => r()))
       renderAllCharts()

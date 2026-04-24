@@ -284,12 +284,27 @@
     ]
   })
 
+  const firstAppId = computed(() => {
+    const firstSettingAppId = String(settingAppsForSelect.value[0]?.sAppId ?? '').trim()
+    if (firstSettingAppId) return firstSettingAppId
+    return String(appOptionsForSelect.value[0]?.value ?? '').trim()
+  })
+
   watch(
     () => props.filter,
     (v) => {
       draft.value = { ...v }
     },
     { deep: true, immediate: true }
+  )
+
+  watch(
+    [() => draft.value.appId, firstAppId],
+    ([appId, fallbackAppId]) => {
+      if (appId || !fallbackAppId) return
+      patchDraft({ appId: fallbackAppId })
+    },
+    { immediate: true }
   )
 </script>
 

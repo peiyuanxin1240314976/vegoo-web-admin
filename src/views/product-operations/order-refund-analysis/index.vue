@@ -239,7 +239,7 @@
 
 <script setup lang="ts">
   import { Calendar, Flag, Money, RefreshRight, TrendCharts } from '@element-plus/icons-vue'
-  import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
+  import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import * as echarts from 'echarts'
@@ -283,6 +283,7 @@
   const metaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(metaStore)
   const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
+  const firstAppId = computed(() => String(settingAppsForSelect.value[0]?.sAppId ?? '').trim())
 
   /** 单选应用 id ↔ `draftFilters.appIds`（POST `appIds[]`） */
   const draftAppId = computed({
@@ -291,6 +292,20 @@
       draftFilters.appIds = toAppIdsRequestBody(v)
     }
   })
+
+  watch(
+    firstAppId,
+    (appId) => {
+      if (!appId) return
+      if (draftFilters.appIds.length === 0) {
+        draftFilters.appIds = toAppIdsRequestBody(appId)
+      }
+      if (appliedFilters.appIds.length === 0) {
+        appliedFilters.appIds = toAppIdsRequestBody(appId)
+      }
+    },
+    { immediate: true }
+  )
 
   const COMPARE_OPTIONS = [
     { label: '上月同期', value: 'last_month' },

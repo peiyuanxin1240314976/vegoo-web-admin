@@ -2,7 +2,7 @@
   /**
    * 评论与评分监控 — 页面容器（样式对齐广告成效页）
    */
-  import { ref, reactive, computed } from 'vue'
+  import { ref, reactive, computed, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { Iphone, Reading } from '@element-plus/icons-vue'
@@ -45,6 +45,7 @@
   const metaStore = useCockpitMetaFilterStore()
   const { data: cockpitMeta } = storeToRefs(metaStore)
   const settingAppsForSelect = computed(() => cockpitMeta.value?.settingApps ?? [])
+  const firstAppId = computed(() => String(settingAppsForSelect.value[0]?.sAppId ?? '').trim())
 
   /** 单选应用 id ↔ `draftFilters.appIds`（POST `appIds[]`） */
   const draftAppId = computed({
@@ -53,6 +54,20 @@
       draftFilters.appIds = toAppIdsRequestBody(v)
     }
   })
+
+  watch(
+    firstAppId,
+    (appId) => {
+      if (!appId) return
+      if (draftFilters.appIds.length === 0) {
+        draftFilters.appIds = toAppIdsRequestBody(appId)
+      }
+      if (appliedFilters.appIds.length === 0) {
+        appliedFilters.appIds = toAppIdsRequestBody(appId)
+      }
+    },
+    { immediate: true }
+  )
 
   const platformOptions = [
     { label: 'Google Play / App Store', value: '' },

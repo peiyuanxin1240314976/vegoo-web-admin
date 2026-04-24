@@ -100,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted, computed, defineAsyncComponent } from 'vue'
+  import { ref, reactive, onMounted, computed, defineAsyncComponent, watch } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { Top, Bottom, Calendar, Search } from '@element-plus/icons-vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
@@ -140,9 +140,11 @@
         categoryName: '应用'
       }))
   })
+  const firstAppId = computed(() => String(settingAppsForSelect.value[0]?.sAppId ?? '').trim())
 
   const pageData = ref<ComprehensiveAnalysisData | null>(null)
   const loading = ref(false)
+  const hasBootstrappedInitialLoad = ref(false)
 
   const dateRangeLabel = computed(() => {
     const { date_start, date_end } = resolveDateRangeFromPreset(filters.dateRange)
@@ -177,7 +179,26 @@
     }
   }
 
-  onMounted(loadData)
+  watch(
+    [() => filters.s_app_id, firstAppId],
+    async ([appId, fallbackAppId]) => {
+      if (appId) {
+        if (hasBootstrappedInitialLoad.value) return
+        hasBootstrappedInitialLoad.value = true
+        await loadData()
+        return
+      }
+      if (!fallbackAppId) return
+      filters.s_app_id = fallbackAppId
+    },
+    { immediate: true }
+  )
+
+  onMounted(() => {
+    if (!filters.s_app_id && firstAppId.value) {
+      filters.s_app_id = firstAppId.value
+    }
+  })
 </script>
 
 <style scoped lang="scss">
