@@ -213,12 +213,15 @@
 
   function formatRoi(roi: number): string {
     if (!Number.isFinite(roi) || roi <= 0) return '—'
-    return roi.toFixed(2)
+    const pct = roi * 100
+    return pct.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%'
   }
 
   function formatRoiAbs(roi: number): string {
     const v = Math.abs(roi)
-    return Number.isFinite(v) ? v.toFixed(2) : '0.00'
+    if (!Number.isFinite(v)) return '0.00%'
+    const pct = v * 100
+    return pct.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%'
   }
 
   /** ElTable 合计行（按列 prop 动态映射，避免列顺序调整后错位） */
