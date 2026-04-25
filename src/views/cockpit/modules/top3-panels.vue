@@ -183,7 +183,7 @@
   .cockpit-top3-panels {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
   }
 
   .top3-module {
@@ -209,13 +209,13 @@
         color-mix(in srgb, var(--top3-accent-2) 15%, rgb(8 8 12)) 100%
       );
     border: 1px solid color-mix(in srgb, var(--top3-accent) 55%, transparent);
-    border-radius: 14px;
+    border-radius: 18px;
     box-shadow:
-      0 8px 40px rgb(0 0 0 / 52%),
+      0 18px 46px rgb(0 0 0 / 52%),
       0 0 0 1px color-mix(in srgb, var(--top3-accent) 18%, transparent),
       inset 0 1px 0 rgb(255 255 255 / 16%),
-      inset 0 -10px 28px rgb(0 0 0 / 38%),
-      0 0 28px color-mix(in srgb, var(--top3-accent) 12%, transparent);
+      inset 0 -12px 32px rgb(0 0 0 / 34%),
+      0 0 36px color-mix(in srgb, var(--top3-accent) 12%, transparent);
     transition:
       box-shadow 0.4s var(--ease-out),
       border-color 0.28s var(--ease-default);
@@ -242,7 +242,7 @@
       left: 50%;
       z-index: 0;
       width: 80%;
-      height: 2px;
+      height: 3px;
       pointer-events: none;
       content: '';
       background: linear-gradient(
@@ -252,7 +252,7 @@
         var(--top3-accent-2),
         transparent
       );
-      opacity: 0.8;
+      opacity: 0.86;
       transform: translateX(-50%);
     }
 
@@ -266,7 +266,7 @@
       pointer-events: none;
       content: '';
       background: linear-gradient(90deg, transparent, var(--top3-accent), transparent);
-      opacity: 0.45;
+      opacity: 0.32;
       transform: translateX(-50%);
     }
 
@@ -276,9 +276,9 @@
         0 28px 72px rgb(0 0 0 / 55%),
         0 0 0 1px color-mix(in srgb, var(--top3-accent) 40%, transparent),
         inset 0 1px 0 rgb(255 255 255 / 20%),
-        0 0 60px color-mix(in srgb, var(--top3-accent) 35%, transparent),
-        0 0 100px color-mix(in srgb, var(--top3-accent) 18%, transparent),
-        0 0 140px color-mix(in srgb, var(--top3-accent-2) 12%, transparent);
+        0 0 64px color-mix(in srgb, var(--top3-accent) 28%, transparent),
+        0 0 110px color-mix(in srgb, var(--top3-accent) 16%, transparent),
+        0 0 150px color-mix(in srgb, var(--top3-accent-2) 10%, transparent);
     }
 
     &:active {
@@ -319,15 +319,19 @@
       display: flex;
       gap: 8px;
       align-items: center;
-      padding: 12px 14px;
-      border-bottom: 1px solid color-mix(in srgb, var(--top3-accent) 28%, transparent);
+      padding: 13px 15px 11px;
+      background: linear-gradient(180deg, rgb(255 255 255 / 4%), transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--top3-accent) 22%, transparent);
     }
 
     &__icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      width: 24px;
+      height: 24px;
       color: var(--top3-accent);
+      filter: drop-shadow(0 0 14px color-mix(in srgb, var(--top3-accent) 24%, transparent));
     }
 
     &__title {
@@ -335,7 +339,7 @@
       font-size: 14px;
       font-weight: 700;
       color: var(--text-secondary);
-      letter-spacing: 0.02em;
+      letter-spacing: 0.03em;
     }
 
     &__more {
@@ -350,7 +354,7 @@
 
     &__list {
       flex: 1;
-      padding: 8px 12px 12px;
+      padding: 10px 14px 14px;
     }
 
     .top3-empty {
@@ -473,9 +477,10 @@
     display: flex;
     gap: 8px;
     align-items: center;
-    min-height: 36px;
-    padding: 6px 0;
+    min-height: 40px;
+    padding: 7px 0;
     font-size: 13px;
+    border-bottom: 1px solid rgb(255 255 255 / 4%);
 
     &__medal {
       display: inline-flex;
@@ -484,7 +489,7 @@
       justify-content: center;
       // width: 20px;
       // height: 20px;
-      font-size: 22px;
+      font-size: 23px;
       font-style: normal;
       // font-weight: 700;
       // color: #b8860b;
@@ -503,8 +508,14 @@
       font-size: 12px;
       font-weight: bold;
       color: #fff;
-      background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
-      border-radius: 6px;
+      background:
+        linear-gradient(180deg, rgb(94 161 255 / 96%), rgb(60 115 255 / 92%)),
+        linear-gradient(180deg, rgb(255 255 255 / 10%), transparent);
+      border: 1px solid rgb(150 190 255 / 32%);
+      border-radius: 9px;
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 24%),
+        0 10px 18px rgb(2 6 23 / 24%);
 
       &::after {
         content: 'A';
@@ -514,7 +525,9 @@
     &__name {
       flex: 0 1 auto;
       min-width: 0;
+      font-weight: 600;
       color: var(--el-text-color-primary);
+      letter-spacing: 0.01em;
     }
 
     &--name-only &__name {
@@ -523,7 +536,9 @@
 
     &__value {
       margin-left: auto;
+      font-weight: 600;
       color: var(--el-text-color-regular);
+      letter-spacing: 0.01em;
       white-space: nowrap;
     }
 
@@ -531,6 +546,8 @@
       display: inline-flex;
       gap: 2px;
       align-items: center;
+      font-size: 12px;
+      font-weight: 600;
       white-space: nowrap;
 
       &.up {
@@ -540,6 +557,10 @@
       &.down {
         color: var(--el-color-danger);
       }
+    }
+
+    &:last-child {
+      border-bottom: none;
     }
   }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <ElRow v-if="kpiList.length" :gutter="16" class="cockpit-kpi-row">
+  <ElRow v-if="kpiList.length" :gutter="12" class="cockpit-kpi-row">
     <ElCol v-for="(item, index) in kpiList" :key="index" :xs="24" :sm="12" :md="8" :lg="4">
       <div
         class="cockpit-kpi-card cockpit-kpi-card--theme"
@@ -180,10 +180,12 @@
   }
 
   .cockpit-kpi-card {
-    --kpi-card-accent: var(--el-color-primary);
-    --kpi-card-accent-2: var(--el-color-primary);
+    --kpi-card-accent: #60a5fa;
+    --kpi-card-accent-2: #38bdf8;
     --kpi-glass-border: rgb(0 0 0 / 10%);
     --kpi-glass-highlight: rgb(255 255 255 / 28%);
+    --kpi-card-surface: rgb(8 14 28 / 90%);
+    --kpi-card-surface-2: rgb(5 10 22 / 94%);
 
     position: relative;
     box-sizing: border-box;
@@ -191,18 +193,19 @@
     flex: 1;
     flex-direction: column;
     width: 100%;
-    min-height: 164px;
-    padding: 5px 10px;
+    min-height: 158px;
+    padding: 10px 12px 11px;
     overflow: hidden;
     cursor: default;
     isolation: isolate;
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
     border: 1px solid var(--kpi-glass-border);
-    border-radius: 12px;
+    border-radius: 18px;
     box-shadow:
       inset 0 1px 0 0 var(--kpi-glass-highlight),
-      0 4px 16px -4px rgb(0 0 0 / 8%);
+      inset 0 -16px 28px rgb(2 6 23 / 18%),
+      0 16px 34px -20px rgb(0 0 0 / 42%);
     transition:
       box-shadow 0.22s ease,
       border-color 0.22s ease;
@@ -219,8 +222,8 @@
         color-mix(in srgb, var(--kpi-card-accent) 26%, transparent),
         color-mix(in srgb, var(--kpi-card-accent) 52%, transparent)
       );
-      border-radius: 12px;
-      opacity: 0.55;
+      border-radius: 18px;
+      opacity: 0.62;
       mask:
         linear-gradient(#000 0 0) content-box,
         linear-gradient(#000 0 0);
@@ -231,8 +234,8 @@
     &.is-hovered {
       box-shadow:
         inset 0 1px 0 0 var(--kpi-glass-highlight),
-        0 12px 28px -8px rgb(0 0 0 / 18%),
-        0 0 0 1px rgb(0 0 0 / 6%),
+        0 20px 40px -18px rgb(0 0 0 / 55%),
+        0 0 0 1px rgb(255 255 255 / 4%),
         0 0 24px -6px var(--kpi-card-accent);
     }
 
@@ -243,30 +246,38 @@
     /* 右上角装饰：透明圆，仅露出 1/4（3/4 被裁切） */
     .kpi-card-corner-circle {
       position: absolute;
-      top: -48px;
-      right: -48px;
-      width: 96px;
-      height: 96px;
+      top: -52px;
+      right: -46px;
+      width: 104px;
+      height: 104px;
       pointer-events: none;
-      background: rgb(255 255 255 / 4%);
+      background: radial-gradient(
+        circle,
+        rgb(255 255 255 / 16%) 0%,
+        rgb(255 255 255 / 4%) 45%,
+        transparent 72%
+      );
+      filter: blur(1px);
       border-radius: 50%;
     }
 
     .kpi-label {
       position: relative;
       display: inline-flex;
-      gap: 8px;
+      gap: 7px;
       align-items: center;
-      margin-bottom: 4px;
-      font-size: 14px;
+      margin-bottom: 8px;
+      font-size: 12px;
       font-weight: 700;
-      opacity: 0.9;
+      line-height: 1.2;
+      letter-spacing: 0.03em;
+      opacity: 0.86;
     }
 
     .kpi-label__icon {
-      flex: 0 0 14px;
-      width: 14px;
-      height: 14px;
+      flex: 0 0 13px;
+      width: 13px;
+      height: 13px;
       color: var(--kpi-card-accent);
       filter: drop-shadow(0 0 10px color-mix(in srgb, var(--kpi-card-accent) 35%, transparent));
       opacity: 0.95;
@@ -279,7 +290,7 @@
     .kpi-label::after {
       position: absolute;
       right: 0;
-      bottom: -6px;
+      bottom: -5px;
       left: 0;
       height: 2px;
       content: '';
@@ -289,21 +300,22 @@
         color-mix(in srgb, var(--kpi-card-accent) 64%, transparent),
         transparent
       );
-      opacity: 0.7;
+      opacity: 0.78;
       transform: translateY(-1px);
     }
 
     .kpi-value-row {
       position: relative;
-      min-height: 24px;
-      margin-bottom: 2px;
+      min-height: 36px;
     }
 
     .kpi-value {
-      padding: 8px 8px 0 0;
-      font-size: 18px;
-      font-weight: 600;
-      line-height: 1.3;
+      padding: 1px 8px 0 0;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.15;
+      text-shadow: 0 0 16px color-mix(in srgb, var(--kpi-card-accent) 14%, transparent);
+      letter-spacing: 0.01em;
     }
 
     .kpi-sub {
@@ -312,10 +324,11 @@
       right: 0;
       max-width: 60%;
       overflow: hidden;
-      font-size: 12px;
+      font-size: 11px;
       text-overflow: ellipsis;
+      letter-spacing: 0.02em;
       white-space: nowrap;
-      opacity: 0.85;
+      opacity: 0.74;
       transform: translateY(-50%);
     }
 
@@ -324,7 +337,7 @@
       top: 50%;
       right: 0;
       display: inline-flex;
-      gap: 6px;
+      gap: 5px;
       align-items: center;
       max-width: 72%;
       transform: translateY(-50%);
@@ -336,12 +349,12 @@
       align-items: center;
       padding: 4px 8px;
       overflow: hidden;
-      font-size: 12px;
+      font-size: 11px;
       line-height: 1;
       text-overflow: ellipsis;
       white-space: nowrap;
-      background: rgb(0 0 0 / 10%);
-      border: 1px solid rgb(0 0 0 / 10%);
+      background: rgb(7 13 28 / 36%);
+      border: 1px solid rgb(255 255 255 / 8%);
       border-radius: 999px;
 
       &__label {
@@ -372,9 +385,10 @@
     }
 
     .kpi-detail {
-      margin-bottom: 0;
+      margin-bottom: 1px;
       font-size: 12px;
-      opacity: 0.85;
+      line-height: 1.45;
+      opacity: 0.76;
     }
 
     .kpi-detail-change {
@@ -403,7 +417,7 @@
       flex-shrink: 0;
       align-items: center;
       padding: 6px 10px;
-      font-size: 12px;
+      font-size: 11px;
       line-height: 1;
       color: rgb(255 255 255 / 88%);
       white-space: nowrap;
@@ -422,37 +436,42 @@
 
     .kpi-progress {
       flex-shrink: 0;
-      margin: 4px 0;
+      margin: 6px 0 5px;
     }
 
     .kpi-compare {
       flex-shrink: 0;
       margin-top: auto;
       font-size: 12px;
-      line-height: 1.35;
+      line-height: 1.45;
       overflow-wrap: anywhere;
+      opacity: 0.82;
 
       &.up {
         color: inherit;
-        opacity: 0.9;
       }
 
       &.down {
         color: inherit;
-        opacity: 0.9;
       }
     }
 
     .kpi-mini-chart {
       flex-shrink: 0;
       width: 100%;
-      height: 36px;
-      padding: 4px 0;
-      margin: 4px 0;
-      // background: rgb(0 0 0 / 6%);
-      border-radius: 8px;
+      height: 38px;
+      padding: 4px 0 0;
+      margin: 6px 0 8px;
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / 4%), transparent 70%),
+        linear-gradient(90deg, rgb(255 255 255 / 2.5%) 1px, transparent 1px);
+      background-size:
+        auto,
+        16px 16px;
+      border: 1px solid rgb(255 255 255 / 5%);
+      border-radius: 12px;
 
-      --kpi-chart-color: var(--el-color-primary);
+      --kpi-chart-color: var(--kpi-card-accent);
     }
 
     // html.dark & .kpi-mini-chart {
@@ -463,7 +482,7 @@
       display: block;
       width: 100%;
       height: 100%;
-      border-radius: 6px;
+      border-radius: 10px;
     }
 
     .mini-chart-area {
@@ -471,19 +490,20 @@
     }
 
     .mini-chart-line {
-      opacity: 0.9;
+      filter: drop-shadow(0 0 8px color-mix(in srgb, var(--kpi-chart-color) 22%, transparent));
+      opacity: 0.95;
       fill: none;
       stroke: var(--kpi-chart-color);
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-width: 1.5;
+      stroke-width: 1.9;
       vector-effect: non-scaling-stroke;
     }
 
     /* 浅色模式：更实，不透明感强 */
     &--theme.cockpit-kpi-card--income {
-      --kpi-card-accent: var(--art-success);
-      --kpi-card-accent-2: color-mix(in srgb, var(--art-success) 55%, var(--art-primary));
+      --kpi-card-accent: #34d399;
+      --kpi-card-accent-2: #22c55e;
 
       background:
         linear-gradient(135deg, rgb(255 255 255 / 72%) 0%, rgb(255 255 255 / 50%) 100%),
@@ -514,8 +534,8 @@
     }
 
     &--theme.cockpit-kpi-card--paidRevenue {
-      --kpi-card-accent: var(--art-warning);
-      --kpi-card-accent-2: color-mix(in srgb, var(--art-warning) 58%, var(--art-primary));
+      --kpi-card-accent: #f59e0b;
+      --kpi-card-accent-2: #fb923c;
 
       background:
         linear-gradient(135deg, rgb(255 255 255 / 70%) 0%, rgb(255 255 255 / 48%) 100%),
@@ -546,8 +566,8 @@
     }
 
     &--theme.cockpit-kpi-card--adSpend {
-      --kpi-card-accent: var(--art-primary);
-      --kpi-card-accent-2: color-mix(in srgb, var(--art-primary) 62%, var(--art-success));
+      --kpi-card-accent: #4f8cff;
+      --kpi-card-accent-2: #38bdf8;
 
       background:
         linear-gradient(135deg, rgb(255 255 255 / 70%) 0%, rgb(255 255 255 / 48%) 100%),
@@ -578,8 +598,8 @@
     }
 
     &--theme.cockpit-kpi-card--subscriptions {
-      --kpi-card-accent: var(--art-warning);
-      --kpi-card-accent-2: var(--art-primary);
+      --kpi-card-accent: #f59e0b;
+      --kpi-card-accent-2: #fb923c;
 
       background:
         linear-gradient(135deg, rgb(255 255 255 / 70%) 0%, rgb(255 255 255 / 48%) 100%),
@@ -610,8 +630,8 @@
     }
 
     &--theme.cockpit-kpi-card--dau {
-      --kpi-card-accent: var(--art-primary);
-      --kpi-card-accent-2: color-mix(in srgb, var(--art-primary) 55%, var(--art-success));
+      --kpi-card-accent: #4f8cff;
+      --kpi-card-accent-2: #38bdf8;
 
       background:
         linear-gradient(135deg, rgb(255 255 255 / 70%) 0%, rgb(255 255 255 / 48%) 100%),
@@ -642,8 +662,8 @@
     }
 
     &--theme.cockpit-kpi-card--profit {
-      --kpi-card-accent: color-mix(in srgb, var(--art-primary) 65%, var(--art-danger));
-      --kpi-card-accent-2: color-mix(in srgb, var(--art-primary) 55%, var(--art-success));
+      --kpi-card-accent: #a855f7;
+      --kpi-card-accent-2: #7c3aed;
 
       background:
         linear-gradient(135deg, rgb(255 255 255 / 68%) 0%, rgb(255 255 255 / 45%) 100%),
@@ -680,45 +700,35 @@
 
   /* 深色主题：更透 + 渐变玻璃质感 */
   html.dark .cockpit-kpi-card {
-    background-color: color-mix(in srgb, var(--default-bg-color) 86%, black);
+    background-color: var(--kpi-card-surface);
     background-image:
       radial-gradient(
-        ellipse 120% 80% at 50% -18%,
-        color-mix(in srgb, var(--kpi-card-accent) 45%, transparent) 0%,
-        color-mix(in srgb, var(--kpi-card-accent-2) 22%, transparent) 30%,
-        transparent 58%
+        ellipse 122% 82% at 50% -16%,
+        color-mix(in srgb, var(--kpi-card-accent) 24%, transparent) 0%,
+        color-mix(in srgb, var(--kpi-card-accent-2) 10%, transparent) 28%,
+        transparent 56%
+      ),
+      radial-gradient(
+        circle at 86% 14%,
+        color-mix(in srgb, var(--kpi-card-accent) 10%, transparent) 0%,
+        transparent 28%
       ),
       linear-gradient(
         172deg,
-        color-mix(
-            in srgb,
-            var(--kpi-card-accent) 18%,
-            color-mix(in srgb, var(--default-bg-color) 92%, black)
-          )
-          0%,
-        color-mix(
-            in srgb,
-            var(--kpi-card-accent) 28%,
-            color-mix(in srgb, var(--default-bg-color) 92%, black)
-          )
-          60%,
-        color-mix(
-            in srgb,
-            var(--kpi-card-accent-2) 14%,
-            color-mix(in srgb, var(--default-bg-color) 92%, black)
-          )
-          100%
+        color-mix(in srgb, var(--kpi-card-accent) 10%, var(--kpi-card-surface)) 0%,
+        color-mix(in srgb, var(--kpi-card-accent) 16%, var(--kpi-card-surface)) 52%,
+        color-mix(in srgb, var(--kpi-card-accent-2) 8%, var(--kpi-card-surface-2)) 100%
       );
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    border: 1px solid color-mix(in srgb, var(--kpi-card-accent) 55%, transparent);
-    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--kpi-card-accent) 32%, rgb(255 255 255 / 2%));
+    border-radius: 18px;
     box-shadow:
-      0 8px 40px color-mix(in srgb, black 52%, transparent),
-      0 0 0 1px color-mix(in srgb, var(--kpi-card-accent) 18%, transparent),
-      inset 0 1px 0 color-mix(in srgb, white 16%, transparent),
-      inset 0 -10px 28px color-mix(in srgb, black 38%, transparent),
-      0 0 28px color-mix(in srgb, var(--kpi-card-accent) 12%, transparent);
+      0 16px 36px color-mix(in srgb, black 44%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--kpi-card-accent) 9%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
+      inset 0 -14px 28px color-mix(in srgb, black 30%, transparent),
+      0 0 18px color-mix(in srgb, var(--kpi-card-accent) 8%, transparent);
     transition:
       box-shadow 0.4s var(--ease-out),
       border-color 0.28s var(--ease-default);
@@ -729,7 +739,7 @@
     top: 0;
     left: 50%;
     z-index: 0;
-    width: 80%;
+    width: 76%;
     height: 2px;
     pointer-events: none;
     content: '';
@@ -740,7 +750,7 @@
       var(--kpi-card-accent-2),
       transparent
     );
-    opacity: 0.8;
+    opacity: 0.58;
     transform: translateX(-50%);
   }
 
@@ -749,32 +759,30 @@
     bottom: 0;
     left: 50%;
     z-index: 0;
-    width: 60%;
+    width: 52%;
     height: 1px;
     pointer-events: none;
     content: '';
     background: linear-gradient(90deg, transparent, var(--kpi-card-accent), transparent);
-    opacity: 0.45;
+    opacity: 0.24;
     transform: translateX(-50%);
   }
 
   html.dark .cockpit-kpi-card:hover {
-    border-color: color-mix(in srgb, var(--kpi-card-accent) 85%, transparent);
+    border-color: color-mix(in srgb, var(--kpi-card-accent) 48%, rgb(255 255 255 / 4%));
     box-shadow:
-      0 28px 72px color-mix(in srgb, black 55%, transparent),
-      0 0 0 1px color-mix(in srgb, var(--kpi-card-accent) 40%, transparent),
-      inset 0 1px 0 color-mix(in srgb, white 20%, transparent),
-      0 0 60px color-mix(in srgb, var(--kpi-card-accent) 35%, transparent),
-      0 0 100px color-mix(in srgb, var(--kpi-card-accent) 18%, transparent),
-      0 0 140px color-mix(in srgb, var(--kpi-card-accent-2) 12%, transparent);
+      0 22px 42px color-mix(in srgb, black 46%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--kpi-card-accent) 16%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 18%, transparent),
+      0 0 28px color-mix(in srgb, var(--kpi-card-accent) 14%, transparent);
   }
 
   html.dark .cockpit-kpi-card.is-hovered {
     box-shadow:
       inset 0 1px 0 0 var(--kpi-glass-highlight),
-      0 12px 28px -8px rgb(0 0 0 / 35%),
-      0 0 0 1px rgb(255 255 255 / 8%),
-      0 0 24px -6px var(--kpi-card-accent);
+      0 16px 34px -14px rgb(0 0 0 / 42%),
+      0 0 0 1px rgb(255 255 255 / 6%),
+      0 0 18px -6px color-mix(in srgb, var(--kpi-card-accent) 32%, transparent);
   }
 
   /* 深色主题下 KPI 卡片次要文字颜色（与项目 html.dark 一致） */
@@ -796,6 +804,36 @@
   html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--profit .kpi-label,
   html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--profit .kpi-detail,
   html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--profit .kpi-sub {
-    color: rgb(255 255 255 / 82%);
+    color: rgb(226 232 240 / 84%);
+  }
+
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--income {
+    --kpi-card-accent: #34d399;
+    --kpi-card-accent-2: #22c55e;
+    --kpi-chart-color: #6ee7b7;
+  }
+
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--paidRevenue,
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--subscriptions {
+    --kpi-card-accent: #f59e0b;
+    --kpi-card-accent-2: #fb923c;
+    --kpi-chart-color: #fbbf24;
+  }
+
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--adSpend,
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--dau {
+    --kpi-card-accent: #4f8cff;
+    --kpi-card-accent-2: #38bdf8;
+    --kpi-chart-color: #60a5fa;
+  }
+
+  html.dark .cockpit-kpi-card--theme.cockpit-kpi-card--profit {
+    --kpi-card-accent: #a855f7;
+    --kpi-card-accent-2: #7c3aed;
+    --kpi-chart-color: #c084fc;
+  }
+
+  html.dark .cockpit-kpi-card .kpi-value {
+    color: color-mix(in srgb, var(--kpi-card-accent) 82%, white 18%);
   }
 </style>

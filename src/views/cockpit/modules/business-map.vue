@@ -488,29 +488,17 @@
     const height = mapViewportHeight.value || (lite ? 360 : 520)
     const aspect = width / Math.max(height, 1)
 
-    const widthPenalty = width < 1100 ? Math.min((1100 - width) / 320, 1) : 0
-    const extraWidthPenalty = width < 820 ? Math.min((820 - width) / 220, 1) : 0
-    const heightPenalty = height < 440 ? Math.min((440 - height) / 140, 1) : 0
-    const aspectPenalty = aspect < 1.78 ? Math.min((1.78 - aspect) / 0.5, 1) : 0
+    const widthPenalty = width < 1080 ? Math.min((1080 - width) / 340, 1) : 0
+    const heightPenalty = height < 430 ? Math.min((430 - height) / 140, 1) : 0
+    const aspectPenalty = aspect < 1.85 ? Math.min((1.85 - aspect) / 0.55, 1) : 0
+    const shrinkFactor = widthPenalty * 0.35 + heightPenalty * 0.3 + aspectPenalty * 0.35
 
-    const shrinkFactor =
-      widthPenalty * 0.38 + extraWidthPenalty * 0.3 + heightPenalty * 0.26 + aspectPenalty * 0.34
-
-    const layoutSizeBase = lite ? 119 : 128
-    const zoomBase = lite ? 1.08 : 1.15
-    const topBase = lite ? 8 : 4
-    const bottomBase = lite ? 8 : 0
-    const horizontalBase = lite ? 4 : -2
-    const centerYBase = lite ? 54.5 : 55.5
+    const layoutSizeBase = lite ? 111 : 115
+    const centerYBase = lite ? 52.2 : 53
 
     return {
-      layoutCenter: ['50%', `${centerYBase - shrinkFactor * 1.15}%`],
-      layoutSize: `${Math.max(layoutSizeBase - shrinkFactor * 14, lite ? 103 : 111)}%`,
-      zoom: Math.max(zoomBase - shrinkFactor * 0.13, lite ? 0.96 : 1.02),
-      top: Math.round(topBase + shrinkFactor * 5),
-      bottom: Math.round(bottomBase + shrinkFactor * 5),
-      left: Math.round(horizontalBase + shrinkFactor * 4),
-      right: Math.round(horizontalBase + shrinkFactor * 4)
+      layoutCenter: ['50%', `${centerYBase}%`],
+      layoutSize: `${Math.max(layoutSizeBase - shrinkFactor * 7, lite ? 105 : 109)}%`
     }
   }
 
@@ -536,11 +524,11 @@
     // 娣辫壊妯″紡锛氫綆鍊肩鐢ㄨ緝浜壊閬垮厤鈥滃叏榛戔€濓紱娴呰壊妯″紡锛氳竟妗嗘洿娴呫€佷綆鍊?鏃犳暟鎹尯鍩熸洿浜紝閬垮厤鍙戦粦
 
     const visualMapColors = dark
-      ? ['#8e2029', '#ff5c33', '#f0d54f', '#59f57b']
+      ? ['#b92d34', '#ff7a2f', '#f2c94c', '#5ef28a']
       : ['#fca5a5', '#fdba74', '#facc15', '#4ade80']
 
-    const unhighlightedArea = dark ? '#2a3139' : '#edf2f7'
-    const borderColor = dark ? 'rgba(84,97,111,0.58)' : 'rgba(51,65,85,0.14)'
+    const unhighlightedArea = dark ? '#283140' : '#edf2f7'
+    const borderColor = dark ? 'rgba(122,163,214,0.68)' : 'rgba(51,65,85,0.14)'
     const emphasisArea = dark ? 'rgba(102,255,137,0.96)' : '#86efac'
     const emphasisBorder = dark ? 'rgba(199,255,214,0.95)' : '#22c55e'
     const emphasisShadow = dark ? 'rgba(102,255,137,0.42)' : 'rgba(34,197,94,0.25)'
@@ -567,18 +555,13 @@
         roam: !lite,
         layoutCenter: geoLayout.layoutCenter,
         layoutSize: geoLayout.layoutSize,
-        zoom: geoLayout.zoom,
         scaleLimit: { min: 0.6, max: 4 },
-        top: geoLayout.top,
-        bottom: geoLayout.bottom,
-        left: geoLayout.left,
-        right: geoLayout.right,
         itemStyle: {
           areaColor: unhighlightedArea,
           borderColor,
-          borderWidth: dark ? 0.9 : 0.9,
-          shadowBlur: dark ? 5 : 0,
-          shadowColor: dark ? 'rgba(0,0,0,0.42)' : 'transparent'
+          borderWidth: dark ? 1.05 : 0.9,
+          shadowBlur: dark ? 8 : 0,
+          shadowColor: dark ? 'rgba(7,12,24,0.52)' : 'transparent'
         },
         emphasis: {
           itemStyle: {
@@ -896,10 +879,10 @@
     --map-accent: #59c7ff;
     --map-accent-2: #24e3ff;
     --map-glow: rgb(89 199 255 / 10%);
-    --map-glow-2: rgb(36 227 255 / 7%);
+    --map-glow-2: rgb(36 227 255 / 6%);
     --map-spin-a: rgb(89 199 255 / 16%);
-    --map-spin-b: rgb(36 227 255 / 13%);
-    --map-spin-c: rgb(103 232 249 / 10%);
+    --map-spin-b: rgb(36 227 255 / 12%);
+    --map-spin-c: rgb(103 232 249 / 9%);
 
     position: relative;
     display: flex;
@@ -908,21 +891,25 @@
     min-height: 0;
     overflow: hidden;
     background:
-      radial-gradient(circle at 50% -8%, rgb(255 255 255 / 4%), transparent 28%),
-      radial-gradient(circle at 16% 22%, rgb(89 199 255 / 7%), transparent 22%),
-      radial-gradient(circle at 84% 16%, rgb(36 227 255 / 5%), transparent 18%),
-      linear-gradient(180deg, rgb(4 7 10 / 100%) 0%, rgb(8 11 14 / 100%) 100%);
-    border: 1px solid rgb(96 165 250 / 22%);
-    border-radius: 16px;
+      radial-gradient(circle at 50% -8%, rgb(255 255 255 / 3.2%), transparent 28%),
+      radial-gradient(circle at 16% 22%, rgb(89 199 255 / 5.5%), transparent 22%),
+      radial-gradient(circle at 84% 16%, rgb(36 227 255 / 3.5%), transparent 18%),
+      linear-gradient(180deg, rgb(255 255 255 / 3%) 0%, transparent 12%),
+      linear-gradient(180deg, rgb(6 11 22 / 96%) 0%, rgb(6 11 24 / 94%) 52%, rgb(4 8 18 / 97%) 100%);
+    backdrop-filter: blur(16px) saturate(118%);
+    border: 1px solid rgb(96 165 250 / 16%);
+    border-radius: 18px;
     box-shadow:
-      0 18px 48px rgb(0 0 0 / 56%),
-      0 0 0 1px rgb(96 165 250 / 8%),
-      inset 0 1px 0 rgb(255 255 255 / 4%),
-      inset 0 -24px 44px rgb(0 0 0 / 28%),
-      0 0 72px rgb(59 130 246 / 9%);
+      0 18px 40px rgb(2 6 23 / 34%),
+      0 0 0 1px rgb(96 165 250 / 6%),
+      inset 0 1px 0 rgb(255 255 255 / 6%),
+      inset 0 0 0 1px rgb(255 255 255 / 2%),
+      inset 0 -18px 34px rgb(0 0 0 / 18%),
+      0 0 36px rgb(59 130 246 / 6%);
     transition:
       box-shadow 0.3s var(--ease-out),
-      border-color 0.28s var(--ease-default);
+      border-color 0.28s var(--ease-default),
+      background 0.28s var(--ease-default);
 
     > *:not(.map-kpi-border-spin) {
       position: relative;
@@ -938,14 +925,22 @@
         linear-gradient(
           90deg,
           transparent 0%,
-          rgb(125 211 252 / 34%) 18%,
-          rgb(34 211 238 / 18%) 54%,
+          rgb(125 211 252 / 42%) 16%,
+          rgb(34 211 238 / 24%) 54%,
           transparent 100%
         ),
-        radial-gradient(circle at 74% 72%, rgb(255 255 255 / 2.5%), transparent 14%),
-        radial-gradient(circle at 18% 82%, rgb(89 199 255 / 2.8%), transparent 12%),
-        linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 3%) 50%, transparent 100%),
-        linear-gradient(180deg, rgb(255 255 255 / 2%) 0%, transparent 10%);
+        linear-gradient(
+          90deg,
+          transparent 0%,
+          rgb(89 199 255 / 10%) 22%,
+          rgb(255 255 255 / 8%) 48%,
+          rgb(36 227 255 / 9%) 74%,
+          transparent 100%
+        ),
+        radial-gradient(circle at 74% 72%, rgb(255 255 255 / 2.2%), transparent 14%),
+        radial-gradient(circle at 18% 82%, rgb(89 199 255 / 2.5%), transparent 12%),
+        linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 2.6%) 50%, transparent 100%),
+        linear-gradient(180deg, rgb(255 255 255 / 2.2%) 0%, transparent 10%);
       background-repeat: no-repeat;
       background-position:
         top 0 left 0,
@@ -955,34 +950,78 @@
         center;
       background-size:
         100% 1px,
+        140% 100%,
         auto,
         auto,
         auto,
         auto;
-      opacity: 0.72;
+      opacity: 0.68;
     }
 
     &::after {
       position: absolute;
-      inset: 12px;
+      inset: 10px;
       pointer-events: none;
       content: '';
-      border: 1px solid rgb(255 255 255 / 3%);
-      border-radius: 12px;
-      opacity: 0.28;
+      border: 1px solid rgb(255 255 255 / 5%);
+      border-radius: 14px;
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 5%),
+        0 0 0 1px rgb(89 199 255 / 4%);
+      opacity: 0.38;
       mask:
         linear-gradient(#fff 0 0) content-box,
         linear-gradient(#fff 0 0);
     }
 
+    .cockpit-map-panel::before {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        105deg,
+        transparent 16%,
+        rgb(255 255 255 / 0%) 34%,
+        rgb(255 255 255 / 5%) 44%,
+        rgb(125 211 252 / 10%) 50%,
+        rgb(255 255 255 / 5%) 56%,
+        transparent 72%
+      );
+      background-position: 120% 0;
+      background-size: 180% 100%;
+      mix-blend-mode: screen;
+      opacity: 0;
+      transition:
+        opacity 0.28s ease,
+        background-position 0.75s ease;
+    }
+
     &:hover {
-      border-color: rgb(96 165 250 / 42%);
+      border-color: rgb(96 165 250 / 22%);
       box-shadow:
-        0 24px 60px rgb(0 0 0 / 60%),
-        0 0 0 1px rgb(96 165 250 / 18%),
-        inset 0 1px 0 rgb(255 255 255 / 5%),
-        0 0 72px rgb(59 130 246 / 16%),
-        0 0 120px rgb(6 182 212 / 10%);
+        0 22px 48px rgb(2 6 23 / 38%),
+        0 0 0 1px rgb(96 165 250 / 10%),
+        inset 0 1px 0 rgb(255 255 255 / 6%),
+        0 0 44px rgb(59 130 246 / 10%),
+        0 0 88px rgb(6 182 212 / 5%);
+
+      &::before {
+        opacity: 0.8;
+      }
+
+      &::after {
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 7%),
+          0 0 0 1px rgb(89 199 255 / 7%),
+          inset 0 0 26px rgb(89 199 255 / 3%);
+        opacity: 0.46;
+      }
+
+      .cockpit-map-panel::before {
+        background-position: -20% 0;
+        opacity: 1;
+      }
     }
   }
 
@@ -1005,7 +1044,7 @@
     );
     filter: blur(10px);
     border-radius: inherit;
-    opacity: 0.26;
+    opacity: 0.24;
     mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
@@ -1024,6 +1063,7 @@
       radial-gradient(circle at 18% 16%, rgb(74 222 128 / 12%), transparent 24%),
       radial-gradient(circle at 82% 20%, rgb(251 146 60 / 12%), transparent 22%),
       linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    backdrop-filter: blur(14px) saturate(118%);
     border: 1px solid rgb(148 163 184 / 24%);
     box-shadow:
       0 14px 32px rgb(15 23 42 / 10%),
@@ -1046,11 +1086,11 @@
   .map-panel-title {
     font-size: 14px;
     font-weight: 700;
-    color: #e0e0e0;
+    color: #e8f2ff;
     text-shadow:
-      0 0 12px rgb(125 211 252 / 18%),
-      0 0 22px rgb(34 211 238 / 10%);
-    letter-spacing: 0.04em;
+      0 0 10px rgb(125 211 252 / 12%),
+      0 0 22px rgb(34 211 238 / 8%);
+    letter-spacing: 0.05em;
   }
 
   html:not(.dark) .map-panel-title {
@@ -1058,6 +1098,7 @@
   }
 
   .cockpit-map-kpi :deep(.el-card.cockpit-map-panel) {
+    position: relative;
     height: 100%;
     background: transparent !important;
     // border: none !important;
@@ -1069,7 +1110,7 @@
     gap: 16px;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 18px 6px;
+    padding: 14px 18px 10px;
     background: transparent !important;
     border-bottom: none;
   }
@@ -1077,7 +1118,7 @@
   .cockpit-map-kpi :deep(.el-card__body) {
     display: flex;
     flex: 1;
-    padding: 0 10px 10px;
+    padding: 0 12px 12px;
     background: transparent !important;
   }
 
@@ -1085,14 +1126,16 @@
     position: relative;
     display: inline-flex;
     padding: 4px;
-    background: rgb(13 18 25 / 92%);
+    background:
+      linear-gradient(180deg, rgb(8 15 30 / 94%), rgb(6 11 24 / 92%)),
+      radial-gradient(circle at top, rgb(59 130 246 / 9%), transparent 60%);
     border: 1px solid
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 34%, transparent);
-    border-radius: 12px;
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 20%, transparent);
+    border-radius: 13px;
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 6%),
-      0 8px 18px rgb(0 0 0 / 22%),
-      0 0 18px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 16%, transparent);
+      0 10px 24px rgb(0 0 0 / 18%),
+      0 0 16px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 10%, transparent);
   }
 
   html:not(.dark) .map-metric-box {
@@ -1116,16 +1159,16 @@
     pointer-events: none;
     background: linear-gradient(
       180deg,
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 72%, white 28%) 0%,
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 78%, white 22%) 0%,
       var(--theme-color, var(--art-primary, #3b82f6)) 100%
     );
     border: 1px solid
-      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 62%, white 38%);
-    border-radius: 9px;
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 54%, white 22%);
+    border-radius: 10px;
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 16%, transparent),
-      0 0 18px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 28%, transparent),
-      inset 0 1px 0 rgb(255 255 255 / 32%);
+      0 0 0 1px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 10%, transparent),
+      0 0 16px color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 18%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 24%);
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -1134,24 +1177,28 @@
     z-index: 1;
     flex: 1;
     min-width: 56px;
-    padding: 7px 14px;
-    font-size: 13px;
+    padding: 8px 14px;
+    font-size: 12px;
     font-weight: 600;
-    color: rgb(203 213 225 / 88%);
-    letter-spacing: 0.02em;
+    color: rgb(203 213 225 / 72%);
+    letter-spacing: 0.04em;
     cursor: pointer;
     background: transparent;
     border: none;
     border-radius: 9px;
-    transition: color 0.2s ease;
+    transition:
+      color 0.2s ease,
+      text-shadow 0.2s ease;
   }
 
   .map-metric-btn:hover {
-    color: #fff;
+    color: rgb(255 255 255 / 92%);
   }
 
   .map-metric-btn.active {
     color: #fff;
+    text-shadow: 0 0 10px
+      color-mix(in srgb, var(--theme-color, var(--art-primary, #3b82f6)) 22%, transparent);
   }
 
   html:not(.dark) .map-metric-btn {
@@ -1172,16 +1219,27 @@
   .map-wrap {
     position: relative;
     flex: 1;
-    min-height: 0;
+    height: 100%;
+    min-height: clamp(360px, 58vh, 580px);
     background:
-      linear-gradient(180deg, rgb(3 5 8 / 96%) 0%, rgb(3 5 8 / 92%) 100%),
+      radial-gradient(circle at 50% 110%, rgb(255 163 77 / 6%), transparent 28%),
+      radial-gradient(circle at 18% 38%, rgb(67 157 255 / 7%), transparent 24%),
+      radial-gradient(circle at 82% 42%, rgb(42 112 255 / 5%), transparent 22%),
+      linear-gradient(
+        180deg,
+        rgb(3 8 18 / 98%) 0%,
+        rgb(4 10 21 / 96%) 52%,
+        rgb(3 7 16 / 100%) 100%
+      ),
       url('@/assets/images/draw/2.webp') center 100% / cover no-repeat,
-      radial-gradient(circle at 50% 22%, rgb(255 255 255 / 3%), transparent 28%),
-      radial-gradient(circle at 18% 48%, rgb(89 199 255 / 4%), transparent 18%),
-      radial-gradient(circle at 82% 42%, rgb(36 227 255 / 3%), transparent 18%),
-      linear-gradient(180deg, rgb(8 11 14 / 98%) 0%, rgb(6 8 11 / 100%) 100%);
+      linear-gradient(180deg, rgb(7 12 22 / 98%) 0%, rgb(5 8 16 / 100%) 100%);
     isolation: isolate;
-    border-radius: 14px;
+    border: 1px solid rgb(96 165 250 / 11%);
+    border-radius: 16px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 5%),
+      inset 0 0 0 1px rgb(255 255 255 / 2%),
+      0 16px 36px rgb(2 6 23 / 24%);
     contain: paint;
 
     &::before {
@@ -1190,34 +1248,35 @@
       pointer-events: none;
       content: '';
       background:
-        radial-gradient(circle at 76% 56%, rgb(255 255 255 / 2.8%), transparent 18%),
-        radial-gradient(circle at 28% 78%, rgb(77 183 255 / 2.8%), transparent 16%),
-        radial-gradient(circle at 50% 30%, rgb(255 255 255 / 2.8%), transparent 20%),
-        linear-gradient(rgb(148 163 184 / 7.5%) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(148 163 184 / 7.5%) 1px, transparent 1px);
+        radial-gradient(circle at 76% 56%, rgb(255 235 179 / 4%), transparent 16%),
+        radial-gradient(circle at 28% 78%, rgb(255 173 94 / 4%), transparent 16%),
+        radial-gradient(circle at 50% 30%, rgb(255 255 255 / 3.2%), transparent 18%),
+        radial-gradient(circle at 22% 34%, rgb(255 255 255 / 3.6%) 0 1px, transparent 2px),
+        radial-gradient(circle at 71% 42%, rgb(255 216 150 / 3.8%) 0 1px, transparent 2px),
+        radial-gradient(circle at 64% 64%, rgb(255 255 255 / 3.2%) 0 1px, transparent 2px),
+        linear-gradient(rgb(148 163 184 / 6.5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(148 163 184 / 6.5%) 1px, transparent 1px);
       background-size:
         auto,
         auto,
         auto,
-        44px 44px,
-        44px 44px;
-      opacity: 0.9;
-      mask-image: radial-gradient(
-        circle at center,
-        #fff 34%,
-        rgb(255 255 255 / 92%) 62%,
-        transparent 90%
-      );
+        180px 180px,
+        220px 220px,
+        200px 200px,
+        42px 42px,
+        42px 42px;
+      opacity: 0.76;
+      mask-image: linear-gradient(to bottom, rgb(255 255 255 / 86%), rgb(255 255 255 / 72%));
     }
 
     &::after {
       position: absolute;
-      inset: 14px;
+      inset: 12px;
       pointer-events: none;
       content: '';
       border: 1px solid rgb(255 255 255 / 3%);
-      border-radius: 12px;
-      opacity: 0.22;
+      border-radius: 14px;
+      opacity: 0.18;
     }
   }
 
@@ -1245,10 +1304,10 @@
     pointer-events: none;
     content: '';
     background:
-      radial-gradient(circle at 30% 50%, rgb(89 199 255 / 10%), transparent 52%),
-      linear-gradient(90deg, transparent, rgb(255 255 255 / 4%), transparent);
+      radial-gradient(circle at 30% 50%, rgb(89 199 255 / 8%), transparent 52%),
+      linear-gradient(90deg, transparent, rgb(255 255 255 / 3%), transparent);
     filter: blur(24px);
-    opacity: 0.24;
+    opacity: 0.18;
   }
 
   .map-empty {
@@ -1264,11 +1323,12 @@
   .map-chart {
     position: relative;
     width: 100%;
-    height: clamp(360px, 58vh, 580px);
+    height: 100%;
+    min-height: clamp(360px, 58vh, 580px);
     will-change: transform;
 
     @media (width <= 992px) {
-      height: clamp(320px, 50vh, 480px);
+      min-height: clamp(320px, 50vh, 480px);
       will-change: auto;
     }
   }

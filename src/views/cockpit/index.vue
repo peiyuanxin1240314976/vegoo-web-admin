@@ -218,9 +218,25 @@
 
 <style scoped lang="scss">
   .cockpit-page {
+    --cockpit-border: rgb(110 164 255 / 22%);
+    --cockpit-highlight: rgb(255 255 255 / 13%);
+    --cockpit-shadow: 0 22px 54px rgb(2 6 23 / 52%), 0 10px 24px rgb(2 6 23 / 36%);
+
     position: relative;
     min-width: 0;
-    padding: 10px;
+    padding: 14px 14px 18px;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 12% 10%, rgb(23 84 255 / 18%), transparent 26%),
+      radial-gradient(circle at 82% 8%, rgb(94 57 255 / 14%), transparent 24%),
+      radial-gradient(circle at 70% 34%, rgb(18 169 255 / 10%), transparent 24%),
+      linear-gradient(180deg, #040816 0%, #050b18 34%, #030712 100%);
+    border: 1px solid rgb(72 120 255 / 10%);
+    border-radius: 24px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 5%),
+      0 0 0 1px rgb(10 19 43 / 82%),
+      0 28px 90px rgb(2 6 23 / 44%);
 
     &::before {
       position: absolute;
@@ -230,25 +246,26 @@
       content: '';
       background:
         radial-gradient(
-          ellipse 70% 50% at 6% 6%,
-          rgb(16 185 129 / 42%) 0%,
-          rgb(6 182 212 / 20%) 38%,
-          transparent 58%
+          ellipse 66% 42% at 6% 3%,
+          rgb(23 166 255 / 30%) 0%,
+          rgb(80 70 255 / 16%) 36%,
+          transparent 60%
         ),
         radial-gradient(
-          ellipse 55% 42% at 94% 8%,
-          rgb(59 130 246 / 38%) 0%,
-          rgb(139 92 246 / 18%) 38%,
-          transparent 58%
+          ellipse 55% 42% at 98% 4%,
+          rgb(118 92 255 / 26%) 0%,
+          rgb(31 140 255 / 16%) 32%,
+          transparent 60%
         ),
-        radial-gradient(ellipse 40% 35% at 48% 18%, rgb(168 85 247 / 18%) 0%, transparent 55%),
+        radial-gradient(ellipse 42% 28% at 50% 18%, rgb(0 214 255 / 8%) 0%, transparent 56%),
         radial-gradient(
-          ellipse 55% 42% at 76% 4%,
-          rgb(34 211 238 / 22%) 0%,
-          rgb(59 130 246 / 10%) 40%,
-          transparent 58%
+          ellipse 64% 44% at 76% 4%,
+          rgb(255 138 61 / 11%) 0%,
+          rgb(35 125 255 / 10%) 40%,
+          transparent 60%
         );
-      mask-image: linear-gradient(to bottom, black 0%, black 28%, transparent 58%);
+      opacity: 0.9;
+      mask-image: linear-gradient(to bottom, black 0%, black 34%, transparent 72%);
     }
 
     &::after {
@@ -258,14 +275,15 @@
       pointer-events: none;
       content: '';
       background-image:
-        linear-gradient(rgb(186 230 253 / 5%) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(186 230 253 / 5%) 1px, transparent 1px),
-        radial-gradient(circle, rgb(6 182 212 / 8%) 1px, transparent 1px);
+        linear-gradient(rgb(148 163 184 / 4.5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(148 163 184 / 4.5%) 1px, transparent 1px),
+        radial-gradient(circle, rgb(56 189 248 / 7%) 1px, transparent 1px);
       background-size:
-        40px 40px,
-        40px 40px,
-        80px 80px;
-      mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 45%);
+        42px 42px,
+        42px 42px,
+        84px 84px;
+      opacity: 0.8;
+      mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 100%);
     }
 
     > * {
@@ -304,25 +322,30 @@
   }
 
   .cockpit-page__section--header {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
 
   .cockpit-skeleton-card-list {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 10px;
+    gap: 14px;
+    margin-bottom: 12px;
   }
 
   .cockpit-skeleton-block,
   .cockpit-skeleton-panel {
     display: grid;
-    gap: 10px;
-    padding: 10px 12px;
-    margin-bottom: 10px;
-    background: #131d2f;
-    border: 1px solid rgb(148 163 184 / 25%);
-    border-radius: 10px;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    background:
+      linear-gradient(180deg, rgb(13 21 42 / 90%), rgb(8 14 30 / 92%)),
+      radial-gradient(circle at top, rgb(59 130 246 / 12%), transparent 54%);
+    border: 1px solid var(--cockpit-border);
+    border-radius: 18px;
+    box-shadow:
+      inset 0 1px 0 var(--cockpit-highlight),
+      var(--cockpit-shadow);
   }
 
   .cockpit-skeleton-panel {
@@ -353,18 +376,18 @@
   .cockpit-header {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 14px;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 0;
   }
 
   .cockpit-body {
-    margin-bottom: 16px;
+    margin-bottom: 18px;
 
     .cockpit-panel,
     .cockpit-map-kpi {
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
   }
 
@@ -440,7 +463,7 @@
   .cockpit-row-3-stack {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
+    gap: 18px;
   }
 
   .cockpit-row-roi__col {
@@ -460,7 +483,8 @@
 
   @media (width <= 768px) {
     .cockpit-page {
-      padding-bottom: 16px;
+      padding: 12px 12px 16px;
+      border-radius: 18px;
     }
   }
 
@@ -498,7 +522,16 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-radius: 12px;
+    background:
+      linear-gradient(180deg, rgb(8 14 30 / 92%), rgb(5 10 24 / 96%)),
+      radial-gradient(circle at 12% -6%, rgb(37 99 235 / 14%), transparent 34%),
+      radial-gradient(circle at 88% -4%, rgb(168 85 247 / 12%), transparent 28%);
+    border: 1px solid rgb(92 140 255 / 22%);
+    border-radius: 20px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 8%),
+      0 18px 42px rgb(2 6 23 / 44%),
+      0 0 0 1px rgb(30 41 59 / 40%);
 
     @include ap-neon-bg;
     @include ap-card-mesh;
@@ -512,6 +545,18 @@
     &:active {
       transition-duration: var(--duration-fast);
     }
+
+    &::after {
+      position: absolute;
+      inset: 1px;
+      pointer-events: none;
+      content: '';
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / 5%), transparent 16%),
+        radial-gradient(circle at top, rgb(96 165 250 / 10%), transparent 34%);
+      border-radius: inherit;
+      opacity: 0.9;
+    }
   }
 
   html.dark .el-card.cockpit-panel .el-card__header,
@@ -519,7 +564,7 @@
     position: relative;
     z-index: 1;
     background: transparent;
-    border-bottom: 1px solid rgb(96 165 250 / 14%);
+    border-bottom: 1px solid rgb(96 165 250 / 12%);
   }
 
   html.dark .el-card.cockpit-panel .el-card__body,

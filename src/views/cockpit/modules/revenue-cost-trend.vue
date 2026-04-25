@@ -250,14 +250,20 @@
   .channel-roi-panel {
     --ch-accent: #10b981;
     --ch-accent-2: #22d3ee;
-    --ch-glow: rgb(16 185 129 / 45%);
-    --ch-glow-2: rgb(34 211 238 / 22%);
-    --ch-spin-a: rgb(16 185 129 / 62%);
-    --ch-spin-b: rgb(34 211 238 / 48%);
-    --ch-spin-c: rgb(59 130 246 / 38%);
-    --ch-table-bg: color-mix(in srgb, var(--ch-accent) 6%, rgb(8 8 12));
-    --ch-table-header-text: #94a3b8;
+    --ch-glow: rgb(16 185 129 / 28%);
+    --ch-glow-2: rgb(34 211 238 / 14%);
+    --ch-spin-a: rgb(16 185 129 / 42%);
+    --ch-spin-b: rgb(34 211 238 / 34%);
+    --ch-spin-c: rgb(59 130 246 / 24%);
+    --ch-table-bg: color-mix(in srgb, var(--ch-accent) 4%, rgb(7 12 22));
+    --ch-table-bg-soft: rgb(10 20 34 / 76%);
+    --ch-table-header-text: rgb(176 216 224 / 78%);
     --ch-table-text: #e2e8f0;
+    --ch-table-muted: rgb(226 232 240 / 82%);
+    --ch-table-line: rgb(125 211 252 / 10%);
+    --ch-table-line-strong: rgb(45 212 191 / 16%);
+    --ch-table-hover: rgb(16 185 129 / 8%);
+    --ch-table-summary: rgb(20 34 48 / 88%);
 
     position: relative;
     display: flex;
@@ -265,7 +271,7 @@
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    background-color: rgb(8 8 12 / 98%);
+    background-color: rgb(6 12 22 / 96%);
     background-image:
       radial-gradient(
         ellipse 120% 80% at 50% -18%,
@@ -275,18 +281,18 @@
       ),
       linear-gradient(
         172deg,
-        color-mix(in srgb, var(--ch-accent) 22%, rgb(8 8 12)) 0%,
-        color-mix(in srgb, var(--ch-accent) 38%, rgb(8 8 12)) 60%,
-        color-mix(in srgb, var(--ch-accent-2) 15%, rgb(8 8 12)) 100%
+        color-mix(in srgb, var(--ch-accent) 10%, rgb(6 12 22)) 0%,
+        color-mix(in srgb, var(--ch-accent) 14%, rgb(6 12 22)) 54%,
+        color-mix(in srgb, var(--ch-accent-2) 10%, rgb(6 12 22)) 100%
       );
-    border: 1px solid color-mix(in srgb, var(--ch-accent) 55%, transparent);
-    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--ch-accent-2) 28%, transparent);
+    border-radius: 18px;
     box-shadow:
-      0 8px 40px rgb(0 0 0 / 52%),
-      0 0 0 1px color-mix(in srgb, var(--ch-accent) 18%, transparent),
-      inset 0 1px 0 rgb(255 255 255 / 16%),
-      inset 0 -10px 28px rgb(0 0 0 / 38%),
-      0 0 28px color-mix(in srgb, var(--ch-accent) 12%, transparent);
+      0 18px 44px rgb(2 8 23 / 40%),
+      0 0 0 1px color-mix(in srgb, var(--ch-accent) 10%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 9%),
+      inset 0 0 0 1px rgb(255 255 255 / 2%),
+      inset 0 18px 36px rgb(16 185 129 / 4%);
     transition:
       box-shadow 0.4s var(--ease-out),
       border-color 0.28s var(--ease-default);
@@ -312,7 +318,7 @@
         var(--ch-accent-2),
         transparent
       );
-      opacity: 0.8;
+      opacity: 0.56;
       transform: translateX(-50%);
     }
 
@@ -326,19 +332,17 @@
       pointer-events: none;
       content: '';
       background: linear-gradient(90deg, transparent, var(--ch-accent), transparent);
-      opacity: 0.45;
+      opacity: 0.28;
       transform: translateX(-50%);
     }
 
     &:hover {
-      border-color: color-mix(in srgb, var(--ch-accent) 85%, transparent);
+      border-color: color-mix(in srgb, var(--ch-accent-2) 40%, transparent);
       box-shadow:
-        0 28px 72px rgb(0 0 0 / 55%),
-        0 0 0 1px color-mix(in srgb, var(--ch-accent) 40%, transparent),
-        inset 0 1px 0 rgb(255 255 255 / 20%),
-        0 0 60px color-mix(in srgb, var(--ch-accent) 35%, transparent),
-        0 0 100px color-mix(in srgb, var(--ch-accent) 18%, transparent),
-        0 0 140px color-mix(in srgb, var(--ch-accent-2) 12%, transparent);
+        0 22px 54px rgb(2 8 23 / 46%),
+        0 0 0 1px color-mix(in srgb, var(--ch-accent) 16%, transparent),
+        inset 0 1px 0 rgb(255 255 255 / 12%),
+        inset 0 18px 42px rgb(34 211 238 / 5%);
     }
 
     &:active {
@@ -350,7 +354,7 @@
     position: absolute;
     inset: -1px;
     z-index: 2;
-    padding: 1.5px;
+    padding: 1px;
     pointer-events: none;
     background: conic-gradient(
       from var(--channel-roi-border-angle, 0deg) at 50% 50%,
@@ -364,14 +368,14 @@
       var(--ch-spin-c) 340deg,
       transparent 360deg
     );
-    filter: blur(0.3px);
+    filter: blur(0.2px);
     border-radius: inherit;
-    opacity: 0.92;
+    opacity: 0.7;
     mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
     mask-composite: exclude;
-    animation: channel-roi-border-spin 4s linear infinite;
+    animation: channel-roi-border-spin 6s linear infinite;
 
     --channel-roi-border-angle: 0deg;
   }
@@ -386,13 +390,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 12px 16px 11px;
     font-size: 14px;
-    border-bottom: 1px solid color-mix(in srgb, var(--ch-accent) 28%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--ch-accent-2) 14%, transparent);
 
     .panel-title {
       font-weight: 700;
-      color: var(--text-secondary);
+      line-height: 1.2;
+      color: rgb(221 248 244 / 92%);
+      text-shadow: 0 0 18px rgb(45 212 191 / 10%);
       letter-spacing: 0.02em;
     }
 
@@ -433,13 +439,54 @@
       --el-table-bg-color: var(--ch-table-bg);
       --el-table-tr-bg-color: var(--ch-table-bg);
       --el-table-header-bg-color: var(--ch-table-bg);
-      --el-table-border-color: rgb(255 255 255 / 10%);
+      --el-table-border-color: var(--ch-table-line);
       --el-table-text-color: var(--ch-table-text);
       --el-table-header-text-color: var(--ch-table-header-text);
     }
 
+    :deep(.el-table::before) {
+      background-color: transparent;
+    }
+
+    :deep(.el-table th.el-table__cell) {
+      height: 38px;
+      padding: 0;
+      vertical-align: middle;
+      background: linear-gradient(180deg, rgb(14 28 44 / 78%), rgb(9 18 32 / 70%));
+      border-bottom: 1px solid var(--ch-table-line-strong);
+    }
+
     :deep(.el-table__header th) {
       font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    :deep(.el-table__header-wrapper .cell) {
+      display: flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 0 10px;
+      font-size: 12px;
+      line-height: 1.2;
+      color: var(--ch-table-header-text);
+    }
+
+    :deep(.el-table__body tr) {
+      transition:
+        background-color 0.18s ease,
+        box-shadow 0.18s ease;
+    }
+
+    :deep(.el-table__body tr:hover > td.el-table__cell) {
+      background: linear-gradient(90deg, rgb(16 185 129 / 8%), rgb(34 211 238 / 4%));
+    }
+
+    :deep(.el-table__body td.el-table__cell),
+    :deep(.el-table__footer td.el-table__cell) {
+      height: 42px;
+      padding: 0;
+      vertical-align: middle;
+      border-bottom: 1px solid var(--ch-table-line);
     }
 
     :deep(.el-table__body td),
@@ -447,33 +494,51 @@
       color: var(--ch-table-text);
     }
 
+    :deep(.el-table__body .cell),
+    :deep(.el-table__footer .cell) {
+      display: flex;
+      align-items: center;
+      min-height: 42px;
+      padding: 0 10px;
+      line-height: 1.2;
+    }
+
     :deep(.el-table__footer .cell) {
       font-weight: 600;
+      color: rgb(226 232 240 / 90%);
     }
 
     :deep(.el-table__footer-wrapper td.el-table__cell) {
-      background: var(--ch-table-bg) !important;
-      border-top: 1px solid rgb(255 255 255 / 12%);
+      background: linear-gradient(180deg, var(--ch-table-summary), rgb(11 18 30 / 96%)) !important;
+      border-top: 1px solid var(--ch-table-line-strong);
+      border-bottom: 0;
     }
 
     .col-channel {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
+      min-height: 42px;
 
       .channel-icon {
         display: flex;
         flex-shrink: 0;
         align-items: center;
         justify-content: center;
-        width: 24px;
-        height: 24px;
+        width: 26px;
+        height: 26px;
         overflow: hidden;
-        background: color-mix(in srgb, var(--ch-accent) 22%, rgb(30 41 59));
-        border-radius: 6px;
+        background:
+          linear-gradient(180deg, rgb(19 40 56 / 96%), rgb(12 28 42 / 92%)),
+          color-mix(in srgb, var(--ch-accent) 18%, rgb(15 23 42));
+        border: 1px solid rgb(255 255 255 / 8%);
+        border-radius: 8px;
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 6%),
+          0 0 0 1px rgb(45 212 191 / 6%);
 
         &--iconfont {
-          color: var(--text-secondary);
+          color: rgb(226 232 240 / 92%);
         }
 
         & .iconfont {
@@ -485,23 +550,27 @@
           font-size: 11px;
           font-weight: 700;
           line-height: 1;
-          color: var(--text-secondary);
+          color: rgb(226 232 240 / 92%);
         }
       }
 
       .channel-name {
+        line-height: 1.2;
+        color: var(--ch-table-text);
         white-space: nowrap;
       }
     }
 
     .col-number {
+      color: var(--ch-table-muted);
       white-space: nowrap;
     }
 
     .cell-metric {
       display: flex;
-      gap: 6px;
-      align-items: baseline;
+      gap: 8px;
+      align-items: center;
+      min-height: 42px;
       line-height: 1.1;
     }
 
@@ -511,7 +580,8 @@
 
     .cell-delta {
       font-size: 12px;
-      opacity: 0.9;
+      font-weight: 600;
+      opacity: 0.96;
     }
 
     .delta-up {
