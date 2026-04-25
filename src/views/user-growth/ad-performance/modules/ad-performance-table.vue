@@ -703,6 +703,31 @@
     })
   })
 
+  const campaignIdByName = computed(() => {
+    const map = new Map<string, string>()
+    for (const row of props.campaignRows ?? []) {
+      const name = String(row.name ?? '').trim()
+      const campaignId = String(row.campaignId ?? '').trim()
+      if (name && campaignId) map.set(name, campaignId)
+    }
+    return map
+  })
+
+  function resolveCampaignIdFromRow(
+    row: AdPerformanceCampaignRow | AdPerformanceOwnerRow | AdPerformanceAccountRow
+  ) {
+    const directCampaignId = String((row as { campaignId?: string | null }).campaignId ?? '').trim()
+    if (directCampaignId) return directCampaignId
+    const campaignName =
+      'campaignName' in row
+        ? String(row.campaignName ?? '').trim()
+        : 'name' in row
+          ? String(row.name ?? '').trim()
+          : ''
+    if (!campaignName) return ''
+    return campaignIdByName.value.get(campaignName) ?? ''
+  }
+
   const activeTabExtraProps = computed(() => {
     if (props.activeTab !== 'campaign') return {}
     return { childrenMap: campaignChildrenMap.value }
@@ -740,12 +765,11 @@
   function treeChildToCampaignRow(
     row: AdPerformanceOwnerRow | AdPerformanceAccountRow
   ): AdPerformanceCampaignRow {
-    const id =
-      row.campaignId != null && String(row.campaignId).trim() !== ''
-        ? String(row.campaignId)
-        : row.id
+    const campaignId = resolveCampaignIdFromRow(row)
+    const id = campaignId !== '' ? campaignId : row.id
     return {
       id,
+      campaignId: campaignId || undefined,
       appName: '',
       name: row.campaignName ?? '',
       channel: row.channel ?? '',
@@ -769,10 +793,11 @@
     const campaignRow: AdPerformanceCampaignRow = isCampaignTableRow(row)
       ? row
       : treeChildToCampaignRow(row)
-    const campaignId =
-      !isCampaignTableRow(row) && row.campaignId != null && String(row.campaignId).trim() !== ''
-        ? String(row.campaignId)
-        : campaignRow.id
+    const campaignId = resolveCampaignIdFromRow(row)
+    if (campaignId === '') {
+      ElMessage.warning('缺少 campaignId，无法打开系列详情')
+      return
+    }
 
     drawerTab.value = 'campaign'
     drawerRow.value = campaignRow
