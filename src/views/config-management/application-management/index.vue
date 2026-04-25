@@ -146,25 +146,26 @@
             <el-table-column
               prop="id"
               label="ID"
-              min-width="100"
+              min-width="90"
               align="left"
               show-overflow-tooltip
             />
+            -->
             <el-table-column
               prop="appName"
               label="应用名"
-              min-width="100"
+              min-width="90"
               align="left"
               show-overflow-tooltip
             />
-            <el-table-column label="图标" min-width="100" align="center">
+            <el-table-column label="图标" min-width="80" align="center">
               <template #default="{ row }">
                 <div class="app-icon" :style="{ background: row.iconColor }">
                   {{ row.appName.charAt(0) }}
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="平台" min-width="100" align="left">
+            <el-table-column label="平台" min-width="110" align="left">
               <template #default="{ row }">
                 <span
                   :class="[
@@ -180,13 +181,13 @@
                 </span>
               </template>
             </el-table-column>
-            <el-table-column
+            <!-- <el-table-column
               prop="bundleId"
               label="Bundle ID"
               min-width="100"
               align="left"
               show-overflow-tooltip
-            />
+            /> -->
             <el-table-column
               prop="packageId"
               label="软件包ID"
@@ -197,26 +198,26 @@
             <el-table-column
               prop="shortName"
               label="应用简称"
-              min-width="100"
+              min-width="90"
               align="left"
               show-overflow-tooltip
             />
             <el-table-column
               prop="category"
               label="类别"
-              min-width="100"
+              min-width="80"
               align="left"
               show-overflow-tooltip
             />
             <el-table-column
               prop="timezone"
               label="报表时区"
-              min-width="100"
+              min-width="90"
               align="left"
               show-overflow-tooltip
             />
-            <el-table-column prop="priority" label="优先级" min-width="100" align="left" />
-            <el-table-column label="状态" min-width="100" align="center">
+            <el-table-column prop="priority" label="优先级" min-width="80" align="left" />
+            <el-table-column label="状态" min-width="80" align="center">
               <template #default="{ row }">
                 <span
                   :class="[
@@ -231,7 +232,7 @@
             <el-table-column
               prop="creator"
               label="创建人"
-              min-width="100"
+              min-width="80"
               align="left"
               show-overflow-tooltip
             />
@@ -266,7 +267,7 @@
               v-model:page-size="pageSize"
               :total="serverTotal"
               background
-              :page-sizes="[10, 20, 50]"
+              :page-sizes="[10, 20, 50, 9999]"
               layout="total, prev, pager, next, sizes"
               @current-change="handlePageChange"
             />
@@ -356,7 +357,7 @@
   const stats = ref({ total: 0, ios: 0, android: 0, pending: 0 })
 
   const currentPage = ref(1)
-  const pageSize = ref(20)
+  const pageSize = ref(10)
   const jumpPage = ref('')
   const drawerVisible = ref(false)
   const formVisible = ref(false)
