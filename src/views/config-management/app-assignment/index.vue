@@ -54,6 +54,7 @@
                 placeholder="搜索应用名称 / 优化师..."
                 class="filter-search"
                 clearable
+                @keyup.enter="handleQuery"
               >
                 <template #prefix>
                   <el-icon><Search /></el-icon>
@@ -110,6 +111,9 @@
                   <el-option label="已归档" value="已归档" />
                 </el-select>
               </div>
+              <ElButton round type="primary" @click="handleQuery">
+                <ElIcon><Search /></ElIcon>查询
+              </ElButton>
             </div>
 
             <!-- ── 数据表格（与右侧详情同高，内部滚动）────────────────── -->
@@ -121,6 +125,7 @@
                 style="width: 100%"
                 height="100%"
                 :row-class-name="rowClass"
+                :row-style="rowStyle"
                 @row-click="handleRowClick"
               >
                 <el-table-column label="应用名称" min-width="20%" show-overflow-tooltip>
@@ -191,21 +196,13 @@
 
               <!-- 分页 -->
               <div class="pagination-bar">
-                <span class="page-total">共 {{ tableTotal }} 条</span>
-                <el-select
-                  v-model="pageSize"
-                  class="page-size-select"
-                  @change="handlePageSizeChange"
-                >
-                  <el-option label="每页 20 条" :value="20" />
-                  <el-option label="每页 50 条" :value="50" />
-                </el-select>
                 <el-pagination
                   v-model:current-page="currentPage"
-                  :page-size="pageSize"
+                  v-model:page-size="pageSize"
                   :total="tableTotal"
-                  layout="prev, pager, next"
-                  class="app-pagination"
+                  background
+                  :page-sizes="[10, 20, 50, 9999]"
+                  layout="total, prev, pager, next, sizes"
                 />
               </div>
             </div>
@@ -282,9 +279,16 @@
     optimizer: '',
     status: ''
   })
+  const queriedFilter = reactive({
+    keyword: '',
+    platform: '',
+    source: '',
+    optimizer: '',
+    status: ''
+  })
 
   const currentPage = ref(1)
-  const pageSize = ref(20)
+  const pageSize = ref(10)
   const tableLoading = ref(false)
   const tableRecords = ref<AppAssignmentItem[]>([])
   const tableTotal = ref(0)
@@ -378,11 +382,11 @@
       const res = await fetchAppAssignmentTable({
         current: currentPage.value,
         size: pageSize.value,
-        keyword: filterForm.keyword.trim() || undefined,
-        platform: filterForm.platform || undefined,
-        source: filterForm.source || undefined,
-        optimizer: filterForm.optimizer || undefined,
-        status: filterForm.status || undefined
+        keyword: queriedFilter.keyword.trim() || undefined,
+        platform: queriedFilter.platform || undefined,
+        source: queriedFilter.source || undefined,
+        optimizer: queriedFilter.optimizer || undefined,
+        status: queriedFilter.status || undefined
       })
       tableRecords.value = Array.isArray(res.records) ? res.records : []
       tableTotal.value = Number(res.total ?? 0)
@@ -412,19 +416,19 @@
     return fetchAppAssignmentMetaPerformanceVersions({ appId }).then((r) => r.versions ?? [])
   }
 
-  function handlePageSizeChange() {
-    currentPage.value = 1
-  }
-
-  watch(
-    () => ({ ...filterForm }),
-    () => {
-      const wasPage = currentPage.value
+  const handleQuery = () => {
+    queriedFilter.keyword = filterForm.keyword
+    queriedFilter.platform = filterForm.platform
+    queriedFilter.source = filterForm.source
+    queriedFilter.optimizer = filterForm.optimizer
+    queriedFilter.status = filterForm.status
+    void loadOverview()
+    if (currentPage.value !== 1) {
       currentPage.value = 1
-      if (wasPage === 1) void loadTable()
-    },
-    { deep: true }
-  )
+      return
+    }
+    void loadTable()
+  }
 
   watch([currentPage, pageSize], () => {
     void loadTable()
@@ -432,7 +436,8 @@
 
   onMounted(async () => {
     await Promise.all([cockpitMetaFilterStore.ensureLoaded(), loadMeta()])
-    await Promise.all([loadOverview(), loadTable()])
+    await loadOverview()
+    handleQuery()
   })
 
   // ─── 弹窗 / 抽屉状态 ────────────────────────────────────
@@ -446,8 +451,12 @@
   // ─── 样式辅助 ────────────────────────────────────────────
   const rowClass = ({ row }: { row: AppAssignmentItem }) =>
     currentAssignment.value?.id === row.id
-      ? 'assignment-row assignment-row--active'
-      : 'assignment-row'
+      ? 'assignment-row assignment-row--active fx-table-row-enter'
+      : 'assignment-row fx-table-row-enter'
+
+  const rowStyle = ({ rowIndex }: { rowIndex: number }) => ({
+    '--fx-row-idx': String(rowIndex)
+  })
 
   const statusClass = (status: AssignmentStatus) =>
     ({
@@ -524,11 +533,11 @@
   const handleExport = async () => {
     try {
       await exportAppAssignmentList({
-        keyword: filterForm.keyword.trim() || undefined,
-        platform: filterForm.platform || undefined,
-        source: filterForm.source || undefined,
-        optimizer: filterForm.optimizer || undefined,
-        status: filterForm.status || undefined
+        keyword: queriedFilter.keyword.trim() || undefined,
+        platform: queriedFilter.platform || undefined,
+        source: queriedFilter.source || undefined,
+        optimizer: queriedFilter.optimizer || undefined,
+        status: queriedFilter.status || undefined
       })
       ElMessage.success('导出成功')
     } catch (e) {
@@ -1247,41 +1256,6 @@
       background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
       border: 1px solid var(--border) !important;
       box-shadow: none !important;
-    }
-  }
-
-  .app-pagination {
-    :deep(.el-pager li) {
-      min-width: 28px;
-      height: 28px;
-      font-size: 13px;
-      line-height: 28px;
-      color: var(--text-secondary);
-      background: transparent;
-      border-radius: 5px;
-
-      &:hover {
-        color: var(--accent);
-      }
-
-      &.is-active {
-        font-weight: 700;
-        color: #fff;
-        background: var(--accent);
-      }
-    }
-
-    :deep(.btn-prev),
-    :deep(.btn-next) {
-      color: var(--text-secondary) !important;
-      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
-      border: 1px solid var(--border) !important;
-      border-radius: 5px;
-
-      &:hover {
-        color: var(--accent) !important;
-        border-color: var(--accent) !important;
-      }
     }
   }
 
