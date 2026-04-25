@@ -58,11 +58,16 @@
         </template>
       </ElInput>
 
-      <div class="app-platform-search-select__header" :class="`is-${mode}`">
+      <div
+        class="app-platform-search-select__header"
+        :class="[`is-${mode}`, { 'is-multiple-app-header': isMultiAppMode }]"
+      >
         <template v-if="mode !== 'platform'">
           <span>类别</span>
-          <span>{{ mode === 'combined' ? '平台 / APP' : 'APP 名称' }}</span>
+          <span>{{ mode === 'combined' ? '平台 / APP 名称' : 'APP 名称' }}</span>
+          <span>终端</span>
           <span>简称</span>
+          <span v-if="isMultiAppMode" aria-hidden="true"></span>
         </template>
         <template v-else>
           <span>平台</span>
@@ -105,7 +110,12 @@
         >
           <template v-if="mode !== 'platform'">
             <span>{{ item.categoryName || '--' }}</span>
-            <span>{{ item.displayName || '--' }}</span>
+            <span>
+              {{
+                item.selectionType === 'platform' ? item.displayName || '--' : item.appName || '--'
+              }}
+            </span>
+            <span>{{ item.platformName || '--' }}</span>
             <span>{{ item.shortName || '--' }}</span>
           </template>
           <template v-else>
@@ -310,8 +320,7 @@
       const platformName = String(item.platformName ?? '').trim()
       const platformValue = resolvePlatformValue(item.nPlatform, platformName)
       const categoryName = String(item.categoryName ?? '').trim()
-      const displayName =
-        props.showPlatformSuffix && platformName ? `${appName} (${platformName})` : appName
+      const displayName = appName
 
       return {
         key: `${appId}__${String(item.nPlatform ?? '')}`,
@@ -692,14 +701,25 @@
   }
 
   .app-platform-search-select__header {
-    grid-template-columns: 110px minmax(0, 1fr) 88px;
+    grid-template-columns: 90px minmax(0, 1fr) 76px 88px;
     padding: 0 8px;
     font-size: 12px;
     font-weight: 500;
     color: var(--el-text-color-secondary);
 
+    span {
+      display: block;
+      justify-self: start;
+      width: 100%;
+      text-align: left;
+    }
+
     &.is-platform {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    &.is-multiple-app-header {
+      grid-template-columns: 90px minmax(0, 1fr) 76px 88px 22px;
     }
   }
 
@@ -711,7 +731,7 @@
   }
 
   .app-platform-search-select__row {
-    grid-template-columns: 110px minmax(0, 1fr) 88px;
+    grid-template-columns: 90px minmax(0, 1fr) 76px 88px;
     padding: 11px 8px;
     text-align: left;
     cursor: pointer;
@@ -720,8 +740,12 @@
     border-radius: calc(var(--el-border-radius-base, 4px) + 2px);
 
     span {
+      display: block;
+      justify-self: start;
+      width: 100%;
       overflow: hidden;
       color: var(--el-text-color-primary);
+      text-align: left;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -736,7 +760,7 @@
     }
 
     &.is-multiple-app-row {
-      grid-template-columns: 110px minmax(0, 1fr) 88px 22px;
+      grid-template-columns: 90px minmax(0, 1fr) 76px 88px 22px;
       align-items: center;
     }
   }
