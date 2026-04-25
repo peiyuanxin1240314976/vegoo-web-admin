@@ -191,14 +191,13 @@
 
           <!-- 分页 -->
           <div class="pagination-bar">
-            <span class="total-text">共 {{ paginationTotal }} 条</span>
             <el-pagination
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"
               :total="paginationTotal"
               :page-sizes="[10, 20, 50]"
-              layout="prev, pager, next, sizes"
-              class="pc-pagination"
+              background
+              layout="total, prev, pager, next, sizes"
             />
           </div>
         </div>
@@ -1291,7 +1290,7 @@
     flex-shrink: 0;
     gap: 10px;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     padding: 10px 16px;
     border-top: 1px solid var(--border);
   }
@@ -1302,47 +1301,47 @@
     white-space: nowrap;
   }
 
-  .pc-pagination {
-    :deep(.el-pager li) {
-      min-width: 28px;
-      height: 28px;
-      font-size: 13px;
-      line-height: 28px;
-      color: var(--text-secondary);
-      background: transparent;
-      border-radius: 5px;
+  // .pc-pagination {
+  //   :deep(.el-pager li) {
+  //     min-width: 28px;
+  //     height: 28px;
+  //     font-size: 13px;
+  //     line-height: 28px;
+  //     color: var(--text-secondary);
+  //     background: transparent;
+  //     border-radius: 5px;
 
-      &:hover {
-        color: var(--accent);
-      }
+  //     &:hover {
+  //       color: var(--accent);
+  //     }
 
-      &.is-active {
-        font-weight: 700;
-        color: #fff;
-        background: var(--accent);
-      }
-    }
+  //     &.is-active {
+  //       font-weight: 700;
+  //       color: #fff;
+  //       background: var(--accent);
+  //     }
+  //   }
 
-    :deep(.btn-prev),
-    :deep(.btn-next) {
-      color: var(--text-secondary) !important;
-      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
-      border: 1px solid var(--border) !important;
-      border-radius: 5px;
+  //   :deep(.btn-prev),
+  //   :deep(.btn-next) {
+  //     color: var(--text-secondary) !important;
+  //     background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
+  //     border: 1px solid var(--border) !important;
+  //     border-radius: 5px;
 
-      &:hover {
-        color: var(--accent) !important;
-        border-color: var(--accent) !important;
-      }
-    }
+  //     &:hover {
+  //       color: var(--accent) !important;
+  //       border-color: var(--accent) !important;
+  //     }
+  //   }
 
-    :deep(.el-select .el-select__wrapper) {
-      color: var(--text-secondary) !important;
-      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
-      border: 1px solid var(--border) !important;
-      box-shadow: none !important;
-    }
-  }
+  //   :deep(.el-select .el-select__wrapper) {
+  //     color: var(--text-secondary) !important;
+  //     background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
+  //     border: 1px solid var(--border) !important;
+  //     box-shadow: none !important;
+  //   }
+  // }
 
   // ── el-drawer 全局覆盖 ───────────────────────────────────
   .pc-detail-drawer {
