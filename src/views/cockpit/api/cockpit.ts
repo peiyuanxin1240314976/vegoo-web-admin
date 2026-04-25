@@ -687,8 +687,24 @@ export function mapCountryInfoOverallToStatCards(
     const sign = change >= 0 ? '+' : ''
     return `${sign}${Number(change).toFixed(1)}%`
   }
+  /** ROI 与环比：接口为倍数口径（如 1.32），展示为百分比需 *100 */
+  const fmtRoiAsPercent = (roi: number | null | undefined): string => {
+    if (roi == null || !Number.isFinite(Number(roi)) || Number(roi) <= 0) return '—'
+    const pct = Number(roi) * 100
+    return pct.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%'
+  }
+  const fmtRoiChangeAsPercent = (change: number | undefined): string => {
+    if (change == null || !Number.isFinite(change)) return '—'
+    const sign = change >= 0 ? '+' : ''
+    const pct = change * 100
+    return `${sign}${pct.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+  }
   const compareStr = (change: number | undefined, up: boolean): string => {
     const pct = fmtPct(change)
+    return pct === '—' ? `${cycleText}数据` : `${up ? '↑' : '↓'}${pct} vs${cycleText}`
+  }
+  const compareStrRoi = (change: number | undefined, up: boolean): string => {
+    const pct = fmtRoiChangeAsPercent(change)
     return pct === '—' ? `${cycleText}数据` : `${up ? '↑' : '↓'}${pct} vs${cycleText}`
   }
   return [
@@ -708,8 +724,8 @@ export function mapCountryInfoOverallToStatCards(
     },
     {
       label: 'ROI',
-      value: now?.roi != null ? String(Number(now.roi).toFixed(2)) : '0.00',
-      compare: compareStr(data.roiChange, (data.roiChange ?? 0) >= 0),
+      value: fmtRoiAsPercent(now?.roi),
+      compare: compareStrRoi(data.roiChange, (data.roiChange ?? 0) >= 0),
       compareUp: (data.roiChange ?? 0) >= 0,
       bgClass: 'bg-blue'
     },

@@ -24,7 +24,7 @@
       <ArtTable v-else :data="campaignData" :columns="campaignColumns" size="small" height="220">
         <template #roi="{ row }">
           <span class="roi-dot" :class="getRoiClass(row.roi)"></span>
-          <span>{{ Number(row.roi).toFixed(2) }}</span>
+          <span>{{ formatRoiPercent(row.roi) }}</span>
         </template>
       </ArtTable>
     </div>
@@ -82,6 +82,12 @@
     return `$${n.toFixed(2)}`
   }
 
+  function formatRoiPercent(roi: number): string {
+    if (!Number.isFinite(Number(roi))) return '—'
+    const pct = Number(roi) * 100
+    return pct.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%'
+  }
+
   const channelColumns: ColumnOption[] = [
     { prop: 'channel', label: '广告平台', minWidth: 90, showOverflowTooltip: true },
     {
@@ -110,7 +116,7 @@
       label: 'ROI',
       minWidth: 62,
       align: 'left',
-      formatter: (row: ChannelRow) => Number(row.roi).toFixed(2)
+      formatter: (row: ChannelRow) => formatRoiPercent(row.roi)
     },
     // { prop: 'roas', label: 'ROAS', minWidth: 62, align: 'left', showOverflowTooltip: true },
     { prop: 'trend', label: '趋势', width: 60, align: 'center', useSlot: true }
