@@ -33,7 +33,7 @@
         </template>
 
         <template #cell:spend="{ row }">{{ formatMoney(row.spend) }}</template>
-        <template #cell:budget="{ row }">{{ formatMoney(row.budget) }}</template>
+        <template #cell:budget="{ row }">{{ formatMoneyWithWan(row.budget) }}</template>
 
         <template #cell:usageRate="{ row }">
           <div class="ap-usage-cell">
@@ -130,6 +130,7 @@
   import type { AccountDetailRow } from '../types'
   import { Iphone } from '@element-plus/icons-vue'
   import { useRouter } from 'vue-router'
+  import { formatNumberWithWan } from '@/utils'
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
   import ArtVirtualTable from '@/components/core/art-virtual-table/index.vue'
@@ -159,9 +160,9 @@
   }>()
 
   const virtualColumns = computed<ArtVirtualTableColumn[]>(() => [
-    { key: 'name', title: '应用 / 平台 / 账户', width: 320, flexGrow: 1 },
+    { key: 'name', title: '应用 / 平台 / 账户', width: 300, flexGrow: 1 },
     { key: 'spend', title: '广告支出', width: 120, align: 'left' },
-    { key: 'budget', title: '预算', width: 120, align: 'center' },
+    { key: 'budget', title: '预算', width: 140, align: 'center' },
     { key: 'usageRate', title: '使用率', width: 160, align: 'center' },
     { key: 'cpi', title: 'CPI', width: 90, align: 'center' },
     { key: 'installs', title: '买量用户', width: 120, align: 'center' },
@@ -261,6 +262,12 @@
   function formatPercentFixed2OrEmpty(v: unknown): string {
     const n = toFiniteNumber(v)
     return n === null ? EMPTY_TEXT : `${n.toFixed(2)}%`
+  }
+
+  function formatMoneyWithWan(v: unknown): string {
+    const n = toFiniteNumber(v)
+    if (n === null) return EMPTY_TEXT
+    return `$${formatNumberWithWan(n)}`
   }
 
   function getAppInitial(name?: string) {
