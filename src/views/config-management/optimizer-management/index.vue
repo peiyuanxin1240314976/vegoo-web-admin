@@ -65,6 +65,7 @@
             placeholder="搜索名称/代号"
             class="filter-search"
             clearable
+            @keyup.enter="handleQuery"
           >
             <template #prefix>
               <el-icon><Search /></el-icon>
@@ -75,6 +76,9 @@
             <el-option label="在职" value="在职" />
             <el-option label="离职" value="离职" />
           </el-select>
+          <ElButton round type="primary" @click="handleQuery">
+            <ElIcon><Search /></ElIcon>查询
+          </ElButton>
         </div>
 
         <!-- ── 列表卡片 ──────────────────────────────────────────────── -->
@@ -82,9 +86,13 @@
           <div class="table-title">优化师列表</div>
           <el-table
             :data="pagedList"
+            v-loading="tableLoading"
+            element-loading-text="加载中..."
             class="optimizer-table"
             table-layout="fixed"
             :highlight-current-row="true"
+            :row-class-name="getRowClass"
+            :row-style="getRowStyle"
             @row-click="handleRowClick"
           >
             <!-- 序号 -->
@@ -175,21 +183,15 @@
 
           <!-- 分页 -->
           <div class="pagination-bar">
-            <span class="pagination-total">共 {{ total }} 条</span>
             <el-pagination
               v-model:current-page="currentPage"
-              :page-size="pageSize"
+              v-model:page-size="pageSize"
               :total="total"
+              :page-sizes="[10, 20, 50, 9999]"
               :pager-count="5"
-              layout="prev, pager, next"
-              class="app-pagination"
+              layout="total, prev, pager, next, sizes"
+              background
             />
-            <el-select v-model="pageSize" class="page-size-select" @change="currentPage = 1">
-              <el-option label="全部" :value="9999" />
-              <el-option label="每页 10 条" :value="10" />
-              <el-option label="每页 20 条" :value="20" />
-              <el-option label="每页 50 条" :value="50" />
-            </el-select>
           </div>
         </div>
       </div>
@@ -237,11 +239,13 @@
 
   // ─── 筛选 ───────────────────────────────────────────────────────
   const filterForm = reactive({ keyword: '', status: '' })
+  const queriedFilter = reactive({ keyword: '', status: '' })
   const optimizerList = ref<OptimizerItem[]>(cloneOptimizerMockList())
 
   // ─── 分页 ───────────────────────────────────────────────────────
   const currentPage = ref(1)
-  const pageSize = ref(9999)
+  const pageSize = ref(10)
+  const tableLoading = ref(false)
 
   // ─── 弹窗状态 ────────────────────────────────────────────────────
   const drawerVisible = ref(false)
@@ -261,12 +265,13 @@
 
   async function refreshTable() {
     if (!useRemoteTable.value) return
+    tableLoading.value = true
     try {
       const res = await fetchOptimizerTable({
         current: currentPage.value,
         size: tableRequestSize(),
-        keyword: filterForm.keyword.trim() || undefined,
-        status: filterForm.status || undefined
+        keyword: queriedFilter.keyword.trim() || undefined,
+        status: queriedFilter.status || undefined
       })
       optimizerList.value = res.records as OptimizerItem[]
       serverTotal.value = res.total
@@ -276,6 +281,8 @@
       serverTotal.value = 0
       optimizerList.value = cloneOptimizerMockList()
       ElMessage.warning('列表接口不可用，已切换为本地演示数据')
+    } finally {
+      tableLoading.value = false
     }
   }
 
@@ -314,7 +321,7 @@
   // ─── 过滤（仅本地 Mock 模式） ───────────────────────────────────
   const filteredList = computed(() => {
     if (useRemoteTable.value) return optimizerList.value
-    const kw = filterForm.keyword.trim().toLowerCase()
+    const kw = queriedFilter.keyword.trim().toLowerCase()
     return optimizerList.value.filter((item) => {
       if (
         kw &&
@@ -323,7 +330,7 @@
       ) {
         return false
       }
-      if (filterForm.status && item.status !== filterForm.status) return false
+      if (queriedFilter.status && item.status !== queriedFilter.status) return false
       return true
     })
   })
@@ -339,21 +346,22 @@
     return filteredList.value.slice(start, start + pageSize.value)
   })
 
-  watch(
-    () => ({ ...filterForm }),
-    () => {
-      currentPage.value = 1
-      if (useRemoteTable.value) {
-        void refreshTable()
-        void refreshOverview()
-      }
-    },
-    { deep: true }
-  )
-
   watch([currentPage, pageSize], () => {
     if (useRemoteTable.value) void refreshTable()
   })
+
+  const handleQuery = () => {
+    queriedFilter.keyword = filterForm.keyword
+    queriedFilter.status = filterForm.status
+    if (currentPage.value !== 1) {
+      currentPage.value = 1
+      return
+    }
+    if (useRemoteTable.value) {
+      void refreshTable()
+      void refreshOverview()
+    }
+  }
 
   // ─── 统计 ───────────────────────────────────────────────────────
   const stats = computed(() => {
@@ -401,6 +409,12 @@
     currentRow.value = row
     drawerVisible.value = true
   }
+
+  const getRowClass = () => 'fx-table-row-enter'
+
+  const getRowStyle = ({ rowIndex }: { rowIndex: number }) => ({
+    '--fx-row-idx': String(rowIndex)
+  })
 
   const truncateCode = (code: string, keep = 8) => {
     if (code.length <= keep + 2) return code
@@ -450,8 +464,8 @@
     if (useRemoteTable.value) {
       try {
         await exportOptimizerList({
-          keyword: filterForm.keyword.trim() || undefined,
-          status: filterForm.status || undefined
+          keyword: queriedFilter.keyword.trim() || undefined,
+          status: queriedFilter.status || undefined
         })
         ElMessage.success('导出成功')
         return
@@ -1206,41 +1220,6 @@
       background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
       border: 1px solid var(--border) !important;
       box-shadow: none !important;
-    }
-  }
-
-  .app-pagination {
-    :deep(.el-pager li) {
-      min-width: 30px;
-      height: 30px;
-      font-size: 13px;
-      line-height: 30px;
-      color: var(--text-secondary);
-      background: transparent;
-      border-radius: 6px;
-
-      &:hover {
-        color: var(--accent);
-      }
-
-      &.is-active {
-        font-weight: 700;
-        color: #fff;
-        background: var(--accent);
-      }
-    }
-
-    :deep(.btn-prev),
-    :deep(.btn-next) {
-      color: var(--text-secondary) !important;
-      background: color-mix(in srgb, var(--default-box-color) 40%, transparent) !important;
-      border: 1px solid var(--border) !important;
-      border-radius: 6px;
-
-      &:hover {
-        color: var(--accent) !important;
-        border-color: var(--accent) !important;
-      }
     }
   }
 

@@ -97,6 +97,8 @@
           <!-- 表格 -->
           <el-table
             :data="tableRows"
+            v-loading="tableLoading"
+            element-loading-text="加载中..."
             class="pc-table"
             style="width: 100%"
             :row-class-name="getRowClass"
@@ -495,6 +497,7 @@
   const queriedStatus = ref('')
   const currentPage = ref(1)
   const pageSize = ref(20)
+  const tableLoading = ref(false)
   const tableTotal = ref(0)
   const isTableRemote = computed(() => !PerfConfigApiSource[PerfConfigEndpoint.Table])
 
@@ -658,6 +661,7 @@
 
   const loadPerfTable = async () => {
     if (PerfConfigApiSource[PerfConfigEndpoint.Table]) return
+    tableLoading.value = true
     try {
       const res = await fetchPerfTable({
         page: currentPage.value,
@@ -671,6 +675,8 @@
       tableTotal.value = res.total ?? 0
     } catch {
       // keep mock fallback
+    } finally {
+      tableLoading.value = false
     }
   }
 
