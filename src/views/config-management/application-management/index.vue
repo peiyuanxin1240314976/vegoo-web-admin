@@ -39,6 +39,7 @@
             placeholder="搜索应用名称或ID"
             class="filter-search"
             clearable
+            @keyup.enter="handleSearch"
           >
             <template #prefix>
               <el-icon><Search /></el-icon>
@@ -138,7 +139,8 @@
             :data="tableRecords"
             class="app-table"
             table-layout="fixed"
-            row-class-name="app-table-row"
+            :row-class-name="rowClassName"
+            :row-style="rowStyle"
             @row-click="handleRowClick"
           >
             <el-table-column
@@ -259,18 +261,13 @@
 
           <!-- 分页 -->
           <div class="pagination-bar">
-            <span class="pagination-total">共 {{ serverTotal }} 条</span>
-            <el-select v-model="pageSize" class="page-size-select" @change="handlePageSizeChange">
-              <el-option label="每页 10 条" :value="10" />
-              <el-option label="每页 20 条" :value="20" />
-              <el-option label="每页 50 条" :value="50" />
-            </el-select>
             <el-pagination
               v-model:current-page="currentPage"
-              :page-size="pageSize"
+              v-model:page-size="pageSize"
               :total="serverTotal"
-              layout="prev, pager, next"
-              class="app-pagination"
+              background
+              :page-sizes="[10, 20, 50]"
+              layout="total, prev, pager, next, sizes"
               @current-change="handlePageChange"
             />
             <span class="pagination-jumper">
@@ -345,6 +342,13 @@
     status: '',
     creator: ''
   })
+  const queriedFilter = reactive({
+    keyword: '',
+    category: '',
+    platform: '',
+    status: '',
+    creator: ''
+  })
 
   const tableRecords = ref<ApplicationAppItem[]>([])
   const serverTotal = ref(0)
@@ -406,11 +410,11 @@
 
   function tableQueryBase() {
     return {
-      ...(filterForm.keyword.trim() ? { keyword: filterForm.keyword.trim() } : {}),
-      ...(filterForm.category ? { category: filterForm.category } : {}),
-      ...(filterForm.platform ? { platform: filterForm.platform } : {}),
-      ...(filterForm.status ? { status: filterForm.status } : {}),
-      ...(filterForm.creator ? { creator: filterForm.creator } : {})
+      ...(queriedFilter.keyword.trim() ? { keyword: queriedFilter.keyword.trim() } : {}),
+      ...(queriedFilter.category ? { category: queriedFilter.category } : {}),
+      ...(queriedFilter.platform ? { platform: queriedFilter.platform } : {}),
+      ...(queriedFilter.status ? { status: queriedFilter.status } : {}),
+      ...(queriedFilter.creator ? { creator: queriedFilter.creator } : {})
     }
   }
 
@@ -472,18 +476,16 @@
     }
   }
 
-  onMounted(() => {
-    void cockpitMetaFilterStore.ensureLoaded()
-    loadFilterAndFormOptions()
-    loadStats()
-    loadTable()
-  })
-
   watch([currentPage, pageSize], () => {
     loadTable()
   })
 
   const handleSearch = () => {
+    queriedFilter.keyword = filterForm.keyword
+    queriedFilter.category = filterForm.category
+    queriedFilter.platform = filterForm.platform
+    queriedFilter.status = filterForm.status
+    queriedFilter.creator = filterForm.creator
     loadStats()
     if (currentPage.value !== 1) {
       currentPage.value = 1
@@ -517,6 +519,12 @@
     currentApp.value = row
     drawerVisible.value = true
   }
+
+  const rowClassName = () => 'app-table-row fx-table-row-enter'
+
+  const rowStyle = ({ rowIndex }: { rowIndex: number }) => ({
+    '--fx-row-idx': String(rowIndex)
+  })
 
   function csvCell(value: string) {
     if (/[,"\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`
@@ -590,10 +598,6 @@
     currentPage.value = page
   }
 
-  const handlePageSizeChange = () => {
-    currentPage.value = 1
-  }
-
   const handleJump = () => {
     const raw = parseInt(jumpPage.value, 10)
     jumpPage.value = ''
@@ -649,6 +653,12 @@
 
     deleteData.value = null
   }
+
+  onMounted(() => {
+    void cockpitMetaFilterStore.ensureLoaded()
+    void loadFilterAndFormOptions()
+    handleSearch()
+  })
 </script>
 
 <style lang="scss" scoped>
@@ -1455,49 +1465,6 @@
       border: 1px solid var(--am-border) !important;
       border-radius: 8px;
       box-shadow: none !important;
-    }
-  }
-
-  .app-pagination {
-    :deep(.el-pager li) {
-      min-width: 28px;
-      height: 28px;
-      font-size: 13px;
-      line-height: 28px;
-      color: var(--text-secondary);
-      background: transparent;
-      border-radius: 6px;
-      transition:
-        color var(--duration-fast) var(--ease-out),
-        background-color var(--duration-fast) var(--ease-out);
-
-      &:hover {
-        color: var(--el-color-primary);
-      }
-
-      &.is-active {
-        font-weight: 700;
-        color: var(--el-color-white);
-        background: linear-gradient(
-          135deg,
-          color-mix(in srgb, var(--el-color-primary) 94%, black 6%),
-          color-mix(in srgb, var(--el-color-primary) 82%, black 18%)
-        );
-        box-shadow: 0 4px 12px color-mix(in srgb, var(--el-color-primary) 28%, transparent);
-      }
-    }
-
-    :deep(.btn-prev),
-    :deep(.btn-next) {
-      color: var(--text-secondary) !important;
-      background: color-mix(in srgb, var(--default-box-color) 65%, transparent) !important;
-      border: 1px solid var(--am-border) !important;
-      border-radius: 6px;
-
-      &:hover {
-        color: var(--el-color-primary) !important;
-        border-color: color-mix(in srgb, var(--el-color-primary) 45%, transparent) !important;
-      }
     }
   }
 
