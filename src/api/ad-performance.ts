@@ -57,6 +57,7 @@ export const AD_PERFORMANCE_BASE = `${ANALYSIS_API_BASE}${ANALYSIS_API_MIDDLE_PR
 export const AD_PERFORMANCE_CAMPAIGN_DETAIL_BASE = `${AD_PERFORMANCE_BASE}/campaign-detail`
 
 type CompatibleDateRange = 'today' | 'yesterday' | 'last7d' | 'month'
+type CampaignDetailDateFilter = { startDate?: string; endDate?: string }
 
 function resolvePresetRange(key: CompatibleDateRange): { startDate: string; endDate: string } {
   const today = getAppNow()
@@ -359,7 +360,9 @@ export function fetchAdPerformanceAlertAction(body: AdPerformanceAlertActionBody
   })
 }
 
-export function fetchCampaignDetailOverview(body: { campaignId: string }) {
+export function fetchCampaignDetailOverview(
+  body: { campaignId: string } & CampaignDetailDateFilter
+) {
   if (isAdPerformanceCampaignDetailEndpointMock(AdPerformanceCampaignDetailEndpoint.Overview)) {
     return adPerfMock.mockFetchCampaignDetailOverview(body)
   }
@@ -369,10 +372,12 @@ export function fetchCampaignDetailOverview(body: { campaignId: string }) {
   })
 }
 
-export function fetchCampaignDetailAdList(body: {
-  campaignId: string
-  status?: 'all' | 'active' | 'paused' | 'completed'
-}) {
+export function fetchCampaignDetailAdList(
+  body: {
+    campaignId: string
+    status?: 'all' | 'active' | 'paused' | 'completed'
+  } & CampaignDetailDateFilter
+) {
   if (isAdPerformanceCampaignDetailEndpointMock(AdPerformanceCampaignDetailEndpoint.AdList)) {
     return adPerfMock.mockFetchCampaignDetailAdList(body)
   }
@@ -382,7 +387,9 @@ export function fetchCampaignDetailAdList(body: {
   })
 }
 
-export function fetchCampaignDetailCreativeTop5(body: { campaignId: string }) {
+export function fetchCampaignDetailCreativeTop5(
+  body: { campaignId: string } & CampaignDetailDateFilter
+) {
   if (isAdPerformanceCampaignDetailEndpointMock(AdPerformanceCampaignDetailEndpoint.CreativeTop5)) {
     return adPerfMock.mockFetchCampaignDetailCreativeTop5(body)
   }
@@ -392,7 +399,9 @@ export function fetchCampaignDetailCreativeTop5(body: { campaignId: string }) {
   })
 }
 
-export function fetchCampaignDetailAiInsights(body: { campaignId: string }) {
+export function fetchCampaignDetailAiInsights(
+  body: { campaignId: string } & CampaignDetailDateFilter
+) {
   if (isAdPerformanceCampaignDetailEndpointMock(AdPerformanceCampaignDetailEndpoint.AiInsights)) {
     return adPerfMock.mockFetchCampaignDetailAiInsights(body)
   }
