@@ -11,6 +11,7 @@ export interface CockpitMetaOptionItem {
 
 export interface CockpitSettingAppItem {
   sAppId: string
+  sAppStoreId?: string
   nPlatform: number | string
   platformName: string
   sAppName: string

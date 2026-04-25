@@ -67,6 +67,7 @@
           <span>{{ mode === 'combined' ? '平台 / APP 名称' : 'APP 名称' }}</span>
           <span>终端</span>
           <span>简称</span>
+          <span>商店ID</span>
           <span v-if="isMultiAppMode" aria-hidden="true"></span>
         </template>
         <template v-else>
@@ -117,6 +118,7 @@
             </span>
             <span>{{ item.platformName || '--' }}</span>
             <span>{{ item.shortName || '--' }}</span>
+            <span>{{ item.storeId || '--' }}</span>
           </template>
           <template v-else>
             <span>{{ item.displayName || '--' }}</span>
@@ -171,6 +173,7 @@
     displayName: string
     categoryName: string
     shortName: string
+    storeId: string
     selectionType: 'platform' | 'app'
     appId: string
     appName: string
@@ -215,13 +218,13 @@
       mode: 'app',
       multiple: false,
       placeholder: '请选择',
-      searchPlaceholder: '搜索类别/应用名称/应用简称',
+      searchPlaceholder: '搜索类别/应用名称/应用简称/商店ID',
       allLabel: '全部',
       emptySelectionLabel: '不限',
       selectAllLabel: '全部',
       clearable: true,
       disabled: false,
-      panelWidth: 560,
+      panelWidth: 680,
       inputClass: '',
       dropdownClass: '',
       showPlatformSuffix: true,
@@ -300,6 +303,7 @@
         displayName: label,
         categoryName: '平台',
         shortName: '',
+        storeId: '',
         selectionType: 'platform',
         appId: '',
         appName: '',
@@ -315,6 +319,7 @@
   const appOptions = computed<NormalizedOption[]>(() =>
     (props.settingApps ?? []).map((item) => {
       const appId = String(item.sAppId ?? '').trim()
+      const storeId = String(item.sAppStoreId ?? '').trim()
       const appName = String(item.sAppName ?? '').trim()
       const appShortName = String(item.sAppShortName ?? '').trim()
       const platformName = String(item.platformName ?? '').trim()
@@ -333,6 +338,7 @@
         displayName,
         categoryName,
         shortName: appShortName,
+        storeId,
         selectionType: 'app',
         appId,
         appName,
@@ -340,7 +346,7 @@
         platformCode: platformValue || item.nPlatform,
         platformName,
         categoryId: item.nCategory,
-        searchText: [categoryName, appName, appShortName, platformName, appId]
+        searchText: [categoryName, appName, appShortName, platformName, appId, storeId]
           .filter(Boolean)
           .join(' ')
           .toLowerCase()
@@ -472,12 +478,20 @@
     if (!q) return 1
     const appName = item.appName.toLowerCase()
     const shortName = item.appShortName.toLowerCase()
+    const storeId = item.storeId.toLowerCase()
     const categoryName = item.categoryName.toLowerCase()
     const platformName = item.platformName.toLowerCase()
     const appId = item.appId.toLowerCase()
 
-    if (appName === q || shortName === q || categoryName === q || platformName === q) return 120
-    if (appName.startsWith(q) || shortName.startsWith(q)) return 90
+    if (
+      appName === q ||
+      shortName === q ||
+      storeId === q ||
+      categoryName === q ||
+      platformName === q
+    )
+      return 120
+    if (appName.startsWith(q) || shortName.startsWith(q) || storeId.startsWith(q)) return 90
     if (categoryName.startsWith(q) || platformName.startsWith(q)) return 70
     if (appId.startsWith(q)) return 60
     if (item.searchText.includes(q)) return 40
@@ -701,7 +715,7 @@
   }
 
   .app-platform-search-select__header {
-    grid-template-columns: 90px minmax(0, 1fr) 76px 88px;
+    grid-template-columns: 90px minmax(0, 1fr) 76px 88px 120px;
     padding: 0 8px;
     font-size: 12px;
     font-weight: 500;
@@ -719,7 +733,7 @@
     }
 
     &.is-multiple-app-header {
-      grid-template-columns: 90px minmax(0, 1fr) 76px 88px 22px;
+      grid-template-columns: 90px minmax(0, 1fr) 76px 88px 120px 22px;
     }
   }
 
@@ -731,7 +745,7 @@
   }
 
   .app-platform-search-select__row {
-    grid-template-columns: 90px minmax(0, 1fr) 76px 88px;
+    grid-template-columns: 90px minmax(0, 1fr) 76px 88px 120px;
     padding: 11px 8px;
     text-align: left;
     cursor: pointer;
@@ -760,7 +774,7 @@
     }
 
     &.is-multiple-app-row {
-      grid-template-columns: 90px minmax(0, 1fr) 76px 88px 22px;
+      grid-template-columns: 90px minmax(0, 1fr) 76px 88px 120px 22px;
       align-items: center;
     }
   }
