@@ -1084,7 +1084,7 @@
   // }
 
   .map-panel-title {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
     color: #e8f2ff;
     text-shadow:
@@ -1222,17 +1222,12 @@
     height: 100%;
     min-height: clamp(360px, 58vh, 580px);
     background:
-      radial-gradient(circle at 50% 110%, rgb(255 163 77 / 6%), transparent 28%),
-      radial-gradient(circle at 18% 38%, rgb(67 157 255 / 7%), transparent 24%),
-      radial-gradient(circle at 82% 42%, rgb(42 112 255 / 5%), transparent 22%),
-      linear-gradient(
-        180deg,
-        rgb(3 8 18 / 98%) 0%,
-        rgb(4 10 21 / 96%) 52%,
-        rgb(3 7 16 / 100%) 100%
-      ),
+      radial-gradient(circle at 50% 110%, rgb(255 163 77 / 2.2%), transparent 28%),
+      radial-gradient(circle at 18% 38%, rgb(67 157 255 / 2.8%), transparent 24%),
+      radial-gradient(circle at 82% 42%, rgb(42 112 255 / 1.4%), transparent 22%),
+      linear-gradient(180deg, rgb(3 8 18 / 92%) 0%, rgb(4 10 21 / 91%) 52%, rgb(3 7 16 / 96%) 100%),
       url('@/assets/images/draw/2.webp') center 100% / cover no-repeat,
-      linear-gradient(180deg, rgb(7 12 22 / 98%) 0%, rgb(5 8 16 / 100%) 100%);
+      linear-gradient(180deg, rgb(7 12 22 / 96%) 0%, rgb(5 8 16 / 100%) 100%);
     isolation: isolate;
     border: 1px solid rgb(96 165 250 / 11%);
     border-radius: 16px;
@@ -1248,14 +1243,14 @@
       pointer-events: none;
       content: '';
       background:
-        radial-gradient(circle at 76% 56%, rgb(255 235 179 / 4%), transparent 16%),
-        radial-gradient(circle at 28% 78%, rgb(255 173 94 / 4%), transparent 16%),
-        radial-gradient(circle at 50% 30%, rgb(255 255 255 / 3.2%), transparent 18%),
-        radial-gradient(circle at 22% 34%, rgb(255 255 255 / 3.6%) 0 1px, transparent 2px),
-        radial-gradient(circle at 71% 42%, rgb(255 216 150 / 3.8%) 0 1px, transparent 2px),
-        radial-gradient(circle at 64% 64%, rgb(255 255 255 / 3.2%) 0 1px, transparent 2px),
-        linear-gradient(rgb(148 163 184 / 6.5%) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(148 163 184 / 6.5%) 1px, transparent 1px);
+        radial-gradient(circle at 76% 56%, rgb(255 235 179 / 3.2%), transparent 16%),
+        radial-gradient(circle at 28% 78%, rgb(255 173 94 / 3.1%), transparent 16%),
+        radial-gradient(circle at 50% 30%, rgb(255 255 255 / 2.5%), transparent 18%),
+        radial-gradient(circle at 22% 34%, rgb(255 255 255 / 2.8%) 0 1px, transparent 2px),
+        radial-gradient(circle at 71% 42%, rgb(255 216 150 / 3%) 0 1px, transparent 2px),
+        radial-gradient(circle at 64% 64%, rgb(255 255 255 / 2.5%) 0 1px, transparent 2px),
+        linear-gradient(rgb(148 163 184 / 5.2%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(148 163 184 / 5.2%) 1px, transparent 1px);
       background-size:
         auto,
         auto,
@@ -1265,8 +1260,8 @@
         200px 200px,
         42px 42px,
         42px 42px;
-      opacity: 0.76;
-      mask-image: linear-gradient(to bottom, rgb(255 255 255 / 86%), rgb(255 255 255 / 72%));
+      opacity: 0.64;
+      mask-image: linear-gradient(to bottom, rgb(255 255 255 / 82%), rgb(255 255 255 / 66%));
     }
 
     &::after {
@@ -1293,6 +1288,20 @@
   .map-wrap > * {
     position: relative;
     z-index: 2;
+  }
+
+  .map-wrap > .map-chart::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      linear-gradient(180deg, rgb(3 8 18 / 54%) 0%, rgb(3 7 16 / 62%) 100%),
+      url('@/assets/images/draw/2.webp') center 100% / cover no-repeat;
+    filter: blur(14px) saturate(82%);
+    opacity: 0.16;
+    transform: scale(1.04);
   }
 
   .map-wrap > .map-chart::after {

@@ -391,7 +391,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 16px 11px;
-    font-size: 14px;
+    font-size: 12px;
     border-bottom: 1px solid color-mix(in srgb, var(--ch-accent-2) 14%, transparent);
 
     .panel-title {

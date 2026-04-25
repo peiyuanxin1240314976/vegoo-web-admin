@@ -320,7 +320,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 11px 14px;
-    font-size: 14px;
+    font-size: 12px;
     border-bottom: 1px solid color-mix(in srgb, var(--pace-accent) 28%, transparent);
   }
 

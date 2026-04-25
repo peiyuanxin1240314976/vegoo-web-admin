@@ -336,7 +336,7 @@
 
     &__title {
       flex: 1;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--text-secondary);
       letter-spacing: 0.03em;
