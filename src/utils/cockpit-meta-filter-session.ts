@@ -4,7 +4,7 @@
 
 import type { CockpitMetaFilterOptionsData } from '@/types/cockpit-meta-filter'
 
-const SESSION_KEY = 'vegoo-session-cockpit-meta-filter-v3'
+const SESSION_KEY = 'vegoo-session-cockpit-meta-filter-v4'
 
 function isRecord(x: unknown): x is Record<string, unknown> {
   return x !== null && typeof x === 'object' && !Array.isArray(x)

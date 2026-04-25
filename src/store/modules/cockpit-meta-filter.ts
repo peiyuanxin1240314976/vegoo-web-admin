@@ -74,7 +74,9 @@ function normalizeSettingApps(raw: unknown): CockpitSettingAppItem[] {
   for (const item of raw as RawOption[]) {
     if (!item || typeof item !== 'object') continue
 
+    const sAppUUId = toStringValue(item.sAppUUId ?? item.sAppUuid ?? item.appUuid ?? item.uuid)
     const sAppId = toStringValue(item.sAppId ?? item.appId ?? item.value ?? item.id)
+    const sAppStoreId = toStringValue(item.sAppStoreId ?? item.appStoreId ?? item.storeId)
     const platformName = toStringValue(item.platformName ?? item.platform_label ?? item.platform)
     const sAppName = toStringValue(item.sAppName ?? item.appName ?? item.label ?? item.name)
     const sAppShortName = toStringValue(item.sAppShortName ?? item.appShortName ?? item.shortName)
@@ -90,7 +92,9 @@ function normalizeSettingApps(raw: unknown): CockpitSettingAppItem[] {
     if (!sAppId || used.has(uniqueKey)) continue
 
     result.push({
+      sAppUUId,
       sAppId,
+      sAppStoreId,
       nPlatform,
       platformName,
       sAppName,

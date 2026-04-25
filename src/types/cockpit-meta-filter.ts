@@ -10,6 +10,7 @@ export interface CockpitMetaOptionItem {
 }
 
 export interface CockpitSettingAppItem {
+  sAppUUId?: string
   sAppId: string
   sAppStoreId?: string
   nPlatform: number | string
