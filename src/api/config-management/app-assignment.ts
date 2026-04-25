@@ -161,8 +161,7 @@ export function createAppAssignment(data: AssignmentCreatePayload) {
   }
   return request.post<AppAssignmentItem>({
     url: '/api/v1/datacenter/analysis/config-management/app-assignment',
-    data,
-    showErrorMessage: false
+    data
   })
 }
 
@@ -173,8 +172,7 @@ export function updateAppAssignment(data: AssignmentUpdatePayload) {
   }
   return request.post<AppAssignmentItem>({
     url: '/api/v1/datacenter/analysis/config-management/app-assignment/update',
-    data,
-    showErrorMessage: false
+    data
   })
 }
 
