@@ -15,7 +15,7 @@
 | 新增应用 | `02-application-create.json` | `createApplication` |
 | 编辑应用 | `03-application-update.json` | `updateApplication`（当前 **PUT**） |
 | 删除应用 | `04-application-delete.json` | `deleteApplication`（当前 **DELETE**） |
-| 导出 | `05-application-export.json` | `exportApplicationList` + 本地 CSV |
+| 导出 | `05-application-export.json` | `exportApplicationList`（`requestBlob`）+ 失败时本地 CSV |
 
 ## 与方法说明
 

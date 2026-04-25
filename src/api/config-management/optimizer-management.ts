@@ -1,12 +1,60 @@
 /**
  * 配置管理 · 优化师管理 API（与 `views/config-management/optimizer-management` 对齐）
  */
-import request from '@/utils/http'
+import request, { requestBlob } from '@/utils/http'
+import FileSaver from 'file-saver'
+import { getAppNow } from '@/utils/app-now'
 import {
   OptimizerEndpoint,
   isOptimizerEndpointMock
 } from '@/views/config-management/optimizer-management/config/data-source'
 import * as optimizerMock from '@/views/config-management/optimizer-management/mock/optimizer-api-mock'
+
+const OPTIMIZER_EXPORT_URL = '/api/v1/datacenter/analysis/config-management/optimizer/export'
+
+function getFilenameFromContentDisposition(value?: string): string | undefined {
+  if (!value) return
+  const v = String(value)
+  const mStar = v.match(/filename\*\s*=\s*UTF-8''([^;]+)/i)
+  if (mStar?.[1]) {
+    try {
+      return decodeURIComponent(mStar[1].trim().replace(/^"|"$/g, ''))
+    } catch {
+      return mStar[1].trim().replace(/^"|"$/g, '')
+    }
+  }
+  const m = v.match(/filename\s*=\s*("?)([^";]+)\1/i)
+  if (m?.[2]) return m[2].trim()
+}
+
+function inferOptimizerExportExtension(contentType: string): string {
+  const ct = contentType.toLowerCase()
+  if (ct.includes('text/csv') || ct.includes('application/csv')) return 'csv'
+  if (ct.includes('spreadsheetml') || ct.includes('excel')) return 'xlsx'
+  if (ct.includes('application/json')) return 'json'
+  return 'bin'
+}
+
+/** 始终以 blob 落盘；后端 Content-Type / 文件名过渡期不一致时不拦截 */
+async function downloadOptimizerExport(params: Partial<Api.ConfigManagement.Optimizer.TableQuery>) {
+  const res = await requestBlob({
+    url: OPTIMIZER_EXPORT_URL,
+    method: 'POST',
+    data: params,
+    headers: { Accept: '*/*' },
+    showErrorMessage: false
+  })
+
+  const contentType = String(res.headers?.['content-type'] ?? '')
+    .split(';')[0]
+    .trim()
+  const filenameFromHeader = getFilenameFromContentDisposition(res.headers?.['content-disposition'])
+  const ext = inferOptimizerExportExtension(contentType)
+  const fallback = `optimizers_${getAppNow().getTime()}.${ext}`
+  const filename = filenameFromHeader || fallback
+
+  FileSaver.saveAs(res.data, filename)
+}
 
 /** 分页列表（筛选与分页由服务端处理） */
 export function fetchOptimizerTable(params: Api.ConfigManagement.Optimizer.TableQuery) {
@@ -68,14 +116,15 @@ export function updateOptimizer(data: Api.ConfigManagement.Optimizer.FormPayload
   })
 }
 
-/** 导出（联调时若返回文件流需在 http 层单独处理 responseType） */
-export function exportOptimizerList(params: Partial<Api.ConfigManagement.Optimizer.TableQuery>) {
+/**
+ * 导出列表（HTTP 二进制文件流）。
+ * 远程：`@/utils/http` 的 `requestBlob`；Mock：本地生成 CSV 并 `FileSaver.saveAs`。
+ */
+export async function exportOptimizerList(
+  params: Partial<Api.ConfigManagement.Optimizer.TableQuery>
+) {
   if (isOptimizerEndpointMock(OptimizerEndpoint.Export)) {
     return optimizerMock.mockExportOptimizerList(params)
   }
-  return request.post<Api.ConfigManagement.Optimizer.ExportResponse>({
-    url: '/api/v1/datacenter/analysis/config-management/optimizer/export',
-    data: params,
-    showErrorMessage: false
-  })
+  await downloadOptimizerExport(params)
 }

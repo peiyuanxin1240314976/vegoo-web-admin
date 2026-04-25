@@ -453,7 +453,7 @@
           keyword: filterForm.keyword.trim() || undefined,
           status: filterForm.status || undefined
         })
-        ElMessage.success('导出请求已提交')
+        ElMessage.success('导出成功')
         return
       } catch {
         ElMessage.warning('导出接口不可用，已改为导出当前列表（CSV）')

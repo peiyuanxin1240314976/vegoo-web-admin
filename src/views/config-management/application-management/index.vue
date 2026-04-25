@@ -518,7 +518,12 @@
     drawerVisible.value = true
   }
 
-  const handleExport = async () => {
+  function csvCell(value: string) {
+    if (/[,"\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`
+    return value
+  }
+
+  const exportCsvLocal = async () => {
     let rows: ApplicationAppItem[] = []
     try {
       const res = await fetchApplicationTable({
@@ -545,35 +550,40 @@
       'status',
       'creator',
       'createTime'
+    ] as const
+    const lines = [
+      '\uFEFF' + header.join(','),
+      ...rows.map((r) =>
+        header
+          .map((key) => {
+            const v = r[key as keyof ApplicationAppItem]
+            const s = v === undefined || v === null ? '' : String(v)
+            return csvCell(s)
+          })
+          .join(',')
+      )
     ]
-    const lines = [header.join(',')]
-    for (const r of rows) {
-      const cells = header.map((key) => {
-        const v = r[key as keyof ApplicationAppItem]
-        const s = v === undefined || v === null ? '' : String(v)
-        return `"${s.replace(/"/g, '""')}"`
-      })
-      lines.push(cells.join(','))
-    }
-    const bom = '\uFEFF'
-    const blob = new Blob([bom + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = `applications_${Date.now()}.csv`
     a.click()
     URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  }
 
+  const handleExport = async () => {
     try {
       await exportApplicationList({
-        current: currentPage.value,
-        size: pageSize.value,
         ...tableQueryBase()
       })
+      ElMessage.success('导出成功')
+      return
     } catch {
-      /* 远程导出未就绪时仅本地下载 CSV */
+      ElMessage.warning('导出接口不可用，已改为导出当前筛选列表（CSV）')
     }
-    ElMessage.success('导出成功')
+    await exportCsvLocal()
   }
 
   const handlePageChange = (page: number) => {

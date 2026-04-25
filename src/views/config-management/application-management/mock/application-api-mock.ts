@@ -1,6 +1,7 @@
 /**
  * 应用管理 Mock，与 `mock/backend-api` 契约及 `Api.Common.PaginatedResponse` 一致。
  */
+import FileSaver from 'file-saver'
 import { getAppNow } from '@/utils/app-now'
 import type {
   ApplicationAppItem,
@@ -164,12 +165,50 @@ export function mockDeleteApplication(id: string): Promise<unknown> {
   return Promise.resolve({})
 }
 
-export function mockExportApplicationList(
+function csvCell(value: string) {
+  if (/[,"\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`
+  return value
+}
+
+const EXPORT_HEADER = [
+  'id',
+  'appName',
+  'platform',
+  'bundleId',
+  'packageId',
+  'shortName',
+  'category',
+  'timezone',
+  'priority',
+  'status',
+  'creator',
+  'createTime'
+] as const
+
+/** Mock：按列表筛选生成 CSV 并触发下载（模拟文件流） */
+export async function mockExportApplicationList(
   params: Partial<ApplicationTableQuery>
-): Promise<{ downloadUrl: string; fileName: string }> {
-  void params
-  return Promise.resolve({
-    downloadUrl: 'https://example.com/exports/applications-mock.xlsx',
-    fileName: `applications-${getAppNow().getTime()}.xlsx`
-  })
+): Promise<void> {
+  const q: ApplicationTableQuery = {
+    current: 1,
+    size: 10000,
+    keyword: params.keyword ?? '',
+    category: params.category ?? '',
+    platform: params.platform ?? '',
+    status: params.status ?? '',
+    creator: params.creator ?? ''
+  }
+  const rows = filterApps(mockList, q)
+  const lines = [
+    '\uFEFF' + EXPORT_HEADER.join(','),
+    ...rows.map((r) =>
+      EXPORT_HEADER.map((key) => {
+        const v = r[key as keyof ApplicationAppItem]
+        const s = v === undefined || v === null ? '' : String(v)
+        return csvCell(s)
+      }).join(',')
+    )
+  ]
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+  FileSaver.saveAs(blob, `applications-mock_${getAppNow().getTime()}.csv`)
 }
