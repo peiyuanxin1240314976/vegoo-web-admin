@@ -404,6 +404,7 @@ alwaysApply: true
 | `size` | 每页条数（分页）。 |
 | `total` | 符合条件的总条数（分页）。 |
 | `downloadUrl` | 导出/下载类接口返回的短时有效文件 URL。 |
+| `BizIconUploadData` | （TS）公共 **`POST` `/api/v1/datacenter/biz/icon/upload`** 解包后业务体：`contentType`、`downloadUrl`（可访问地址）、`iconName`、**`size`（文件字节，与分页 `size` 不同义）**；`iconKey` 为存储键（可映射为下游 `iconFileKey`）。**Query** `iconKey`：非文件参数，为业务分组（如当前路由 `name`），与 **响应体** `data.iconKey` 同名不同位。见 `src/api/biz-icon-upload.ts`。 |
 | `fileId` | 异步导出任务或生成文件的 ID（与 `downloadUrl` 二选一或并存依模块约定）。 |
 | `expiredAt` | 失效时间类展示（如凭据异常弹窗）；约定格式见各模块契约，可为 `YYYY-MM-DD HH:mm:ss` 或占位符。 |
 | `keyword` | 关键字搜索入参（多列模糊匹配时统一使用该字段名）。 |

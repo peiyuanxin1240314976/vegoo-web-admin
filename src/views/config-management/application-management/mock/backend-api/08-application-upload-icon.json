@@ -1,45 +1,56 @@
 {
-  "_comment": "应用管理 - 图标上传。新增/编辑提交前先上传，返回 fileKey 与 iconUrl。",
+  "_comment": "应用管理 - 图标上传。页面直调 `fetchUploadBizIcon`（`@/api/biz-icon-upload`），query iconKey=当前路由 name；Mock 时走 `mockUploadApplicationIcon`；解包后 iconFileKey←iconKey、iconUrl←downloadUrl。",
   "fieldDescription": {
     "request": {
       "file": {
         "type": "File(multipart/form-data)",
         "required": true,
         "description": "用户在弹窗中上传的图标文件（PNG/JPG）。"
+      },
+      "iconKey": {
+        "type": "string",
+        "required": false,
+        "description": "Query 参数，业务分组；本页与前端路由 `name` 一致（如 ApplicationManagement）。"
       }
     },
     "response": {
       "fileKey": {
         "type": "string",
         "required": true,
-        "description": "文件存储标识，供 create/update 接口入参 iconFileKey 使用。"
+        "description": "由公共接口响应 `data.iconKey` 映射，供 create/update 入参 `iconFileKey` 使用。"
       },
       "iconUrl": {
         "type": "string",
         "required": true,
-        "description": "图标可访问 URL，可用于前端预览。"
+        "description": "由公共接口响应 `data.downloadUrl` 映射，图标可访问 URL。"
       }
     }
   },
   "sampleRequest": {
-    "file": "demo-icon.png"
+    "file": "demo-icon.png",
+    "iconKey": "ApplicationManagement"
   },
   "sampleResponse": {
     "fileKey": "app-icons/20260413/demo-icon.png",
     "iconUrl": "https://cdn.example.com/app-icons/20260413/demo-icon.png"
   },
   "api": {
-    "url": "POST /api/config-management/application/upload-icon",
+    "url": "POST /api/v1/datacenter/biz/icon/upload?iconKey={routeName}（`fetchUploadBizIcon`）",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "multipart/form-data: file",
-    "responseBody": "ApplicationIconUploadResponse"
+    "requestBody": "multipart/form-data: file; query: iconKey?",
+    "responseBody": "先见公共 `BizIconUploadData`，再映射为 ApplicationIconUploadResponse"
+  },
+  "apiSuggestion": {
+    "notes": [
+      "公共接口原样 `data` 为：contentType, downloadUrl, iconKey, iconName, size；与 create/update 契约字段对齐关系：iconFileKey ← data.iconKey，iconUrl 展示/提交 ← data.downloadUrl（与旧 fileKey/iconUrl 语义一致）。"
+    ]
   },
   "interaction": {
     "triggers": [
       {
         "moment": "用户在新增/编辑弹窗点击提交且有新图标文件",
-        "detail": "先调用 uploadApplicationIcon，成功后将 fileKey 注入 create/update 请求体。",
+        "detail": "先调用 fetchUploadBizIcon（或 Mock），成功后将 iconFileKey、iconUrl 注入 create/update 请求体。",
         "prerequisite": "已选择图标文件"
       }
     ],

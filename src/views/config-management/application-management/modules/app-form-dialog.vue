@@ -266,10 +266,13 @@
 
 <script setup lang="ts">
   import { ref, reactive, computed, watch } from 'vue'
+  import { useRoute } from 'vue-router'
   import { Upload } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
-  import { uploadApplicationIcon } from '@/api/config-management/application-management'
+  import { fetchUploadBizIcon } from '@/api/biz-icon-upload'
+  import { ApplicationEndpoint, isApplicationEndpointMock } from '../config/data-source'
+  import { mockUploadApplicationIcon } from '../mock/application-api-mock'
   import { deriveIconColorFromId } from '../types'
   import type { ApplicationFormModel, ApplicationFormPayload, OptionItem } from '../types'
 
@@ -295,6 +298,7 @@
   const iconFile = ref<File | null>(null)
   const submitLoading = ref(false)
 
+  const route = useRoute()
   const isEdit = computed(() => !!props.editData?.id)
   const dialogVisible = computed({
     get: () => props.visible,
@@ -366,6 +370,14 @@
     bundleId: [{ required: true, message: '请输入Bundle ID', trigger: 'blur' }]
   }
 
+  /** 公共 `biz/icon/upload` 的 query `iconKey`：与当前路由 `name` 一致（如 ApplicationManagement） */
+  function bizIconUploadKeyFromRoute() {
+    const n = route.name
+    if (typeof n === 'string' && n.trim()) return n.trim()
+    if (n != null) return String(n)
+    return 'ApplicationManagement'
+  }
+
   // ─── 事件处理 ──────────────────────────────────────────
   const triggerIconUpload = () => iconInputRef.value?.click()
 
@@ -419,9 +431,15 @@
 
     if (iconFile.value) {
       try {
-        const uploadRes = await uploadApplicationIcon(iconFile.value)
-        payload.iconFileKey = uploadRes.fileKey
-        payload.iconUrl = uploadRes.iconUrl
+        if (isApplicationEndpointMock(ApplicationEndpoint.UploadIcon)) {
+          const r = await mockUploadApplicationIcon(iconFile.value)
+          payload.iconFileKey = r.fileKey
+          payload.iconUrl = r.iconUrl
+        } else {
+          const d = await fetchUploadBizIcon(iconFile.value, bizIconUploadKeyFromRoute())
+          payload.iconFileKey = d.iconKey
+          payload.iconUrl = d.downloadUrl
+        }
       } catch {
         ElMessage.error('图标上传失败，请重试')
         submitLoading.value = false

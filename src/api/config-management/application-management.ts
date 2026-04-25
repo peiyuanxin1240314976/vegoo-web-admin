@@ -5,7 +5,6 @@ import request from '@/utils/http'
 import type {
   ApplicationAppItem,
   ApplicationFilterFormOptions,
-  ApplicationIconUploadResponse,
   ApplicationFormPayload,
   ApplicationOverviewStats,
   ApplicationOverviewStatsQuery,
@@ -49,20 +48,6 @@ export function fetchApplicationFilterFormOptions() {
   return request.post<ApplicationFilterFormOptions>({
     url: '/api/v1/datacenter/analysis/config-management/application/filter-form-options',
     data: {},
-    showErrorMessage: false
-  })
-}
-
-/** 上传应用图标（multipart） */
-export function uploadApplicationIcon(file: File) {
-  if (isApplicationEndpointMock(ApplicationEndpoint.UploadIcon)) {
-    return applicationMock.mockUploadApplicationIcon(file)
-  }
-  const formData = new FormData()
-  formData.append('file', file)
-  return request.post<ApplicationIconUploadResponse>({
-    url: '/api/v1/datacenter/analysis/config-management/application/upload-icon',
-    data: formData,
     showErrorMessage: false
   })
 }

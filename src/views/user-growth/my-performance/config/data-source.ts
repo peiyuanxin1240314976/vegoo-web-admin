@@ -36,7 +36,7 @@ export const MY_PERFORMANCE_USE_MOCK: Record<MyPerformanceEndpoint, boolean> = {
   [MyPerformanceEndpoint.SpendProgress]: false,
   [MyPerformanceEndpoint.AppDimensionTable]: false,
   [MyPerformanceEndpoint.AppDimensionTableByDateRange]: false,
-  [MyPerformanceEndpoint.PerformanceHistory]: false
+  [MyPerformanceEndpoint.PerformanceHistory]: true
 }
 
 export function isMyPerformanceEndpointMock(endpoint: MyPerformanceEndpoint): boolean {
