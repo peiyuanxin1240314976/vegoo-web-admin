@@ -81,6 +81,26 @@ export function profitClass(profit: number | null | undefined): string {
     : 'ad-performance-table__profit--down'
 }
 
+/**
+ * 趋势箭头：用于利润/ROI等展示位的“上/下”标记
+ * - 正数：up
+ * - 负数：down
+ * - 0 / null / undefined：flat（不展示箭头时可由样式控制）
+ */
+export function trendDir(n: number | null | undefined): 'up' | 'down' | 'flat' {
+  const v = n ?? 0
+  if (v > 0) return 'up'
+  if (v < 0) return 'down'
+  return 'flat'
+}
+
+export function trendClass(n: number | null | undefined): string {
+  const dir = trendDir(n)
+  if (dir === 'up') return 'is-trend-up'
+  if (dir === 'down') return 'is-trend-down'
+  return 'is-trend-flat'
+}
+
 export function accentColor(channel: string | null | undefined): string {
   return LEVEL_ACCENT_COLORS[String(channel ?? '')] ?? 'var(--art-success)'
 }

@@ -174,7 +174,9 @@
                     </div>
                     <div class="pad-stat-row-item">
                       <span class="pad-stat-label">预估利润</span>
-                      <span class="pad-stat-value tabular-nums">{{ card.profit }}</span>
+                      <ProfitTip :value="profitToNumber(card.profit)">
+                        {{ card.profit }}
+                      </ProfitTip>
                     </div>
                     <div class="pad-stat-row-item">
                       <span class="pad-stat-label">活跃平台</span>
@@ -306,7 +308,9 @@
                   <ElTableColumn prop="roiD7" label="7日ROI" min-width="68" align="left" />
                   <ElTableColumn prop="profit" label="预估利润" min-width="70" align="left">
                     <template #default="{ row }">
-                      <span :class="{ 'profit-neg': row.profitNeg }">{{ row.profit }}</span>
+                      <ProfitTip :value="row.profitNeg ? -1 : profitToNumber(row.profit)">
+                        {{ row.profit }}
+                      </ProfitTip>
                     </template>
                   </ElTableColumn>
                   <ElTableColumn label="走势" min-width="68" align="left">
@@ -363,6 +367,7 @@
   import { storeToRefs } from 'pinia'
   import { useRoute } from 'vue-router'
   import { Top, Bottom, Calendar, Search } from '@element-plus/icons-vue'
+  import ProfitTip from '../components/ProfitTip.vue'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
@@ -382,6 +387,18 @@
   const pageData = ref<PlatformAnalysisDetailData | null>(null)
   const pageLoading = ref(false)
   const matrixTableRef = ref()
+
+  function profitToNumber(text: string | null | undefined): number | null {
+    if (text == null) return null
+    const t = String(text).trim()
+    if (!t) return null
+    // 兼容："+$1,234" / "-$12.3" / "$0" / "—"
+    const sign = t.includes('-') ? -1 : 1
+    const numText = t.replace(/[^0-9.]/g, '')
+    if (!numText) return null
+    const n = Number(numText)
+    return Number.isFinite(n) ? sign * n : null
+  }
 
   const preset7d = resolveDateRangeFromPreset('7d')
   const dateRange = ref<[string, string]>([preset7d.date_start, preset7d.date_end])

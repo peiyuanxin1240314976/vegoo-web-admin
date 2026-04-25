@@ -2,6 +2,7 @@
   import { ref, onBeforeUnmount, watch, nextTick } from 'vue'
   import { echarts } from '@/plugins/echarts'
   import type { AppDetailData } from '../types'
+  import ProfitTip from '../../components/ProfitTip.vue'
 
   export type { AppDetailData, ChannelData } from '../types'
 
@@ -156,9 +157,10 @@
               </div>
               <div class="kpi-cell">
                 <div class="kc-label">预估利润</div>
-                <div class="kc-value profit-val"
-                  >+{{ fmtMoney(appData?.estimatedProfit ?? 0) }}</div
-                >
+                <ProfitTip :value="appData?.estimatedProfit ?? null">
+                  {{ (appData?.estimatedProfit ?? 0) >= 0 ? '+' : ''
+                  }}{{ fmtMoney(appData?.estimatedProfit ?? 0) }}
+                </ProfitTip>
               </div>
             </div>
             <div class="kpi-row kpi-row2">

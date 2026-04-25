@@ -193,16 +193,16 @@
             </ElTableColumn>
             <ElTableColumn label="预估利润" min-width="90" align="left">
               <template #default="{ row }">
-                <span :class="['num', row.estProfit >= 0 ? 'pos' : 'neg']">
+                <ProfitTip :value="row.estProfit">
                   {{ row.estProfit >= 0 ? '+' : '' }}${{ fmt(Math.abs(row.estProfit)) }}
-                </span>
+                </ProfitTip>
               </template>
             </ElTableColumn>
             <ElTableColumn label="最低利润" min-width="90" align="left">
               <template #default="{ row }">
-                <span :class="['num', row.minProfit >= 0 ? 'pos' : 'neg']">
+                <ProfitTip :value="row.minProfit" tone="min">
                   {{ row.minProfit >= 0 ? '+' : '' }}${{ fmt(Math.abs(row.minProfit)) }}
-                </span>
+                </ProfitTip>
               </template>
             </ElTableColumn>
             <ElTableColumn label="得分" min-width="80" align="left">
@@ -313,16 +313,11 @@
               <template #default>
                 <div class="metric-title">团队预估利润</div>
                 <div class="metric-main-row">
-                  <div
-                    :class="[
-                      'metric-val',
-                      overviewMetrics.estProfit >= 0 ? 'pos-text' : 'red-text'
-                    ]"
-                  >
+                  <ProfitTip :value="overviewMetrics.estProfit" class="metric-val">
                     {{ overviewMetrics.estProfit >= 0 ? '+' : '-' }}${{
                       fmt(Math.abs(overviewMetrics.estProfit))
                     }}
-                  </div>
+                  </ProfitTip>
                   <div class="metric-side">
                     <span>周环比</span>
                     <span class="pos-text">+12%</span>
@@ -377,6 +372,7 @@
 </template>
 
 <script setup lang="ts">
+  import ProfitTip from '../components/ProfitTip.vue'
   import { computed, onMounted, ref, watch } from 'vue'
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import { useRouter } from 'vue-router'
