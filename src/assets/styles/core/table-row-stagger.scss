@@ -1,0 +1,38 @@
+/* 
+ * 表格行错峰入场动画（公共）
+ * 使用方式：
+ * 1) 行元素加 class: fx-table-row-enter
+ * 2) 按索引设置 style: { '--fx-row-idx': idx }（可选，默认 0）
+ * 3) 需要调节时可覆盖变量：
+ *    --fx-row-step: 40ms
+ *    --fx-row-duration: 350ms
+ */
+
+.fx-table-row-enter {
+  --fx-row-step: 40ms;
+  --fx-row-duration: 350ms;
+
+  animation-name: fx-table-row-enter;
+  animation-duration: var(--fx-row-duration);
+  animation-timing-function: ease;
+  animation-fill-mode: both;
+  animation-delay: calc(var(--fx-row-idx, 0) * var(--fx-row-step));
+}
+
+@keyframes fx-table-row-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-table-row-enter {
+    animation: none;
+  }
+}

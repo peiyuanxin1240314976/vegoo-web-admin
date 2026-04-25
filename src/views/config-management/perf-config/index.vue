@@ -59,13 +59,13 @@
               placeholder="搜索应用名称..."
               class="filter-search"
               clearable
-              @input="currentPage = 1"
+              @keyup.enter="handleQuery"
             >
               <template #prefix
                 ><ElIcon><Search /></ElIcon
               ></template>
             </el-input>
-            <el-select v-model="filterPlatform" class="filter-select" @change="currentPage = 1">
+            <el-select v-model="filterPlatform" class="filter-select">
               <el-option value="" label="终端平台：全部" />
               <el-option
                 v-for="opt in metaPlatformOptions"
@@ -74,7 +74,7 @@
                 :label="'终端：' + opt.label"
               />
             </el-select>
-            <el-select v-model="filterSource" class="filter-select" @change="currentPage = 1">
+            <el-select v-model="filterSource" class="filter-select">
               <el-option value="" label="广告平台：全部" />
               <el-option
                 v-for="opt in metaSourceOptions"
@@ -83,20 +83,24 @@
                 :label="opt.label"
               />
             </el-select>
-            <el-select v-model="filterStatus" class="filter-select" @change="currentPage = 1">
+            <el-select v-model="filterStatus" class="filter-select">
               <el-option value="" label="状态：全部" />
               <el-option value="published" label="已发布" />
               <el-option value="draft" label="草稿" />
               <el-option value="archived" label="已归档" />
             </el-select>
+            <ElButton round type="primary" @click="handleQuery">
+              <ElIcon><Search /></ElIcon>查询
+            </ElButton>
           </div>
 
           <!-- 表格 -->
           <el-table
-            :data="pagedList"
+            :data="tableRows"
             class="pc-table"
             style="width: 100%"
             :row-class-name="getRowClass"
+            :row-style="getRowStyle"
             highlight-current-row
             @row-click="handleRowClick"
           >
@@ -187,11 +191,11 @@
 
           <!-- 分页 -->
           <div class="pagination-bar">
-            <span class="total-text">共 {{ filteredList.length }} 条</span>
+            <span class="total-text">共 {{ paginationTotal }} 条</span>
             <el-pagination
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"
-              :total="filteredList.length"
+              :total="paginationTotal"
               :page-sizes="[10, 20, 50]"
               layout="prev, pager, next, sizes"
               class="pc-pagination"
@@ -486,8 +490,14 @@
   const filterPlatform = ref('')
   const filterSource = ref('')
   const filterStatus = ref('')
+  const queriedKeyword = ref('')
+  const queriedPlatform = ref('')
+  const queriedSource = ref('')
+  const queriedStatus = ref('')
   const currentPage = ref(1)
   const pageSize = ref(20)
+  const tableTotal = ref(0)
+  const isTableRemote = computed(() => !PerfConfigApiSource[PerfConfigEndpoint.Table])
 
   // ─── KPI（独立接口：与列表同筛选、全量聚合，非当前页） ───────
   const overviewKpi = ref({ total: 0, published: 0, draft: 0, archived: 0 })
@@ -497,10 +507,10 @@
     try {
       overviewKpi.value = await fetchPerfOverviewKpi(
         {
-          keyword: filterKeyword.value || undefined,
-          platform: filterPlatform.value || undefined,
-          source: filterSource.value || undefined,
-          status: filterStatus.value || undefined
+          keyword: queriedKeyword.value || undefined,
+          platform: queriedPlatform.value || undefined,
+          source: queriedSource.value || undefined,
+          status: queriedStatus.value || undefined
         },
         list.value
       )
@@ -509,24 +519,16 @@
     }
   }
 
-  watch(
-    [filterKeyword, filterPlatform, filterSource, filterStatus],
-    () => {
-      void loadOverviewKpi()
-    },
-    { flush: 'post' }
-  )
-
   // ─── 筛选 ───────────────────────────────────────────────
   const filteredList = computed(() =>
     list.value.filter((row) => {
-      const kw = filterKeyword.value.trim().toLowerCase()
+      const kw = queriedKeyword.value.trim().toLowerCase()
       if (kw && !row.appName.toLowerCase().includes(kw) && !row.appId.toLowerCase().includes(kw)) {
         return false
       }
-      if (filterPlatform.value && row.platform !== filterPlatform.value) return false
-      if (filterSource.value && !sourceCodes(row).includes(filterSource.value)) return false
-      if (filterStatus.value && row.activeVersion.status !== filterStatus.value) return false
+      if (queriedPlatform.value && row.platform !== queriedPlatform.value) return false
+      if (queriedSource.value && !sourceCodes(row).includes(queriedSource.value)) return false
+      if (queriedStatus.value && row.activeVersion.status !== queriedStatus.value) return false
       return true
     })
   )
@@ -535,6 +537,11 @@
     const s = (currentPage.value - 1) * pageSize.value
     return filteredList.value.slice(s, s + pageSize.value)
   })
+
+  const tableRows = computed(() => (isTableRemote.value ? list.value : pagedList.value))
+  const paginationTotal = computed(() =>
+    isTableRemote.value ? tableTotal.value : filteredList.value.length
+  )
 
   // ─── 抽屉 ──────────────────────────────────────────────
   const drawerItem = ref<PerfConfigItem | null>(null)
@@ -545,7 +552,11 @@
   })
 
   const getRowClass = ({ row }: { row: PerfConfigItem }) =>
-    drawerItem.value?.id === row.id ? 'row-selected' : ''
+    drawerItem.value?.id === row.id ? 'row-selected fx-table-row-enter' : 'fx-table-row-enter'
+
+  const getRowStyle = ({ rowIndex }: { rowIndex: number }) => ({
+    '--fx-row-idx': String(rowIndex)
+  })
 
   const closeDetailDrawer = () => {
     drawerVisible.value = false
@@ -649,23 +660,45 @@
   const loadPerfTable = async () => {
     if (PerfConfigApiSource[PerfConfigEndpoint.Table]) return
     try {
-      await fetchPerfTable({
+      const res = await fetchPerfTable({
         page: currentPage.value,
         pageSize: pageSize.value,
-        keyword: filterKeyword.value || undefined,
-        platform: filterPlatform.value || undefined,
-        source: filterSource.value || undefined,
-        status: filterStatus.value || undefined
+        keyword: queriedKeyword.value || undefined,
+        platform: queriedPlatform.value || undefined,
+        source: queriedSource.value || undefined,
+        status: queriedStatus.value || undefined
       })
+      list.value = res.records ?? []
+      tableTotal.value = res.total ?? 0
     } catch {
       // keep mock fallback
     }
   }
 
+  const handleQuery = () => {
+    queriedKeyword.value = filterKeyword.value
+    queriedPlatform.value = filterPlatform.value
+    queriedSource.value = filterSource.value
+    queriedStatus.value = filterStatus.value
+    void loadOverviewKpi()
+    if (currentPage.value !== 1) {
+      currentPage.value = 1
+      return
+    }
+    void loadPerfTable()
+  }
+
+  watch(
+    [currentPage, pageSize],
+    () => {
+      void loadPerfTable()
+    },
+    { flush: 'post' }
+  )
+
   onMounted(async () => {
     await cockpitMetaStore.ensureLoaded()
-    void loadOverviewKpi()
-    void loadPerfTable()
+    handleQuery()
   })
 </script>
 
