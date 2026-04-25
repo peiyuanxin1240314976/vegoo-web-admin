@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
   import { echarts } from '@/plugins/echarts'
+  import { formatNumberWithWan } from '@/utils'
 
   defineOptions({ name: 'SummaryTab' })
 
@@ -188,7 +189,7 @@
           symbolSize: 6,
           lineStyle: { color: '#00d4aa', width: 2 },
           itemStyle: { color: '#00d4aa' },
-          label: { show: true, color: '#cbd5e1', fontSize: 11, position: 'top' }
+          label: { show: false }
         },
         {
           name: '预估利润',
@@ -199,7 +200,7 @@
           symbolSize: 6,
           lineStyle: { color: '#10b981', width: 2 },
           itemStyle: { color: '#10b981' },
-          label: { show: true, color: '#cbd5e1', fontSize: 11, position: 'bottom' }
+          label: { show: false }
         },
         {
           name: '首日ROI',
@@ -210,13 +211,7 @@
           symbolSize: 7,
           lineStyle: { color: '#f59e0b', width: 2, type: 'dashed' },
           itemStyle: { color: '#f59e0b' },
-          label: {
-            show: true,
-            color: '#f59e0b',
-            fontSize: 11,
-            position: 'top',
-            formatter: '{c}%'
-          }
+          label: { show: false }
         }
       ]
     })
@@ -434,11 +429,11 @@
           <div class="stat-title">本期广告支出</div>
           <template v-if="spendCard">
             <div class="stat-main" :style="{ color: spendCard.mainColor }">
-              {{ spendCard.main }}
+              {{ formatNumberWithWan(spendCard.main) }}
             </div>
             <div class="stat-row">
               <span class="label-dim">预算</span>
-              <span style="color: #f1f5f9">{{ spendCard.budget }}</span>
+              <span style="color: #f1f5f9">{{ formatNumberWithWan(spendCard.budget) }}</span>
               <span class="sep">|</span>
               <span class="label-dim">差异</span>
               <span :style="{ color: spendCard.diffColor }">{{ spendCard.diff }}</span>
@@ -465,7 +460,7 @@
               <span style="color: #f1f5f9">{{ agencyRatioCard.agency }}</span>
               <span class="sep">/</span>
               <span class="label-dim">直投</span>
-              <span style="color: #f1f5f9">{{ agencyRatioCard.direct }}</span>
+              <span style="color: #f1f5f9">{{ formatNumberWithWan(agencyRatioCard.direct) }}</span>
             </div>
             <div class="stat-row mt4">
               <span class="label-dim">{{ agencyRatioCard.prevLine }}</span>
@@ -505,11 +500,11 @@
           <div class="stat-title">预估利润</div>
           <template v-if="estProfitCard">
             <div class="stat-main" :style="{ color: estProfitCard.mainColor }">
-              {{ estProfitCard.main }}
+              {{ formatNumberWithWan(estProfitCard.main) }}
             </div>
             <div class="stat-row">
               <span class="label-dim">最低利润</span>
-              <span style="color: #f1f5f9">{{ estProfitCard.minProfit }}</span>
+              <span style="color: #f1f5f9">{{ formatNumberWithWan(estProfitCard.minProfit) }}</span>
               <span class="sep">|</span>
               <span class="label-dim">利润率</span>
               <span style="color: #f1f5f9">{{ estProfitCard.margin }}</span>

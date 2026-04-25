@@ -5,6 +5,7 @@
   import PlatformTab from './PlatformTab.vue'
   import CampaignTab from './CampaignTab.vue'
   import { fetchMyAdsPageHeader, fetchMyAdsSummary, fetchMyAdsPlatform } from '@/api/user-growth'
+  import { formatNumberWithWan } from '@/utils'
   import { cloneAppDate, formatYYYYMMDD, getAppNow, getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import type { MyAdsStaffOption, MyAdsUserCardMock, MyAdsMetricStripItem } from '../types'
@@ -287,7 +288,9 @@
           <template v-else>
             <div v-for="m in pageHeaderData.metrics" :key="m.label" class="metric-item">
               <div class="metric-label">{{ m.label }}</div>
-              <div class="metric-value" :style="{ color: m.valueColor }">{{ m.value }}</div>
+              <div class="metric-value" :style="{ color: m.valueColor }">
+                {{ formatNumberWithWan(m.value, { fallback: '无数据' }) }}
+              </div>
               <div class="metric-sub" :style="{ color: m.subColor }">{{ m.sub }}</div>
             </div>
           </template>
