@@ -138,7 +138,7 @@
           <!-- ── 左列 ──────────────────────────────────────────── -->
           <div class="pad-left">
             <!-- 第一行：安卓 / iOS / 合计 三张卡片横排 -->
-            <div class="pad-stat-row">
+            <!-- <div class="pad-stat-row">
               <div
                 v-for="card in pageData?.statCards ?? []"
                 :key="card.label"
@@ -185,7 +185,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </div> -->
 
             <!-- 第二行：CPI 趋势 + ECPM 趋势左右并排 -->
             <div class="pad-charts-row">
@@ -513,11 +513,11 @@
   }
 
   /** 安卓 / iOS / 合计 统计卡主题（对齐广告成效色系） */
-  function padStatCardThemeClass(platform: string | undefined): string {
-    if (platform === 'android') return 'pad-stat-card--android'
-    if (platform === 'ios') return 'pad-stat-card--ios'
-    return 'pad-stat-card--total'
-  }
+  // function padStatCardThemeClass(platform: string | undefined): string {
+  //   if (platform === 'android') return 'pad-stat-card--android'
+  //   if (platform === 'ios') return 'pad-stat-card--ios'
+  //   return 'pad-stat-card--total'
+  // }
 
   /** 优先展示接口回传的 sourceName，避免与钻取名不一致 */
   const sourceName = computed(() => {
