@@ -119,13 +119,12 @@
 
   function getRouteNames(): string[] {
     const tree = treeRef.value as any
-    const checkedKeys = (tree?.getCheckedKeys(false) as string[] | undefined) ?? []
-    const halfCheckedKeys = (tree?.getHalfCheckedKeys() as string[] | undefined) ?? []
-    return Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))
+    // 只提交“叶子页面”节点，避免把半选中的目录节点提交给后端导致回显时整棵子树被重新勾选
+    return ((tree?.getCheckedKeys(true) as string[] | undefined) ?? []).filter(Boolean)
   }
 
   function checkAll() {
-    const allKeys = flattenRouteNames(routeTree.value)
+    const allKeys = flattenLeafRouteNames(routeTree.value)
     treeRef.value?.setCheckedKeys(allKeys)
   }
 
@@ -149,11 +148,11 @@
     })
   }
 
-  function flattenRouteNames(nodes: RolePagePermissionResponse['routeTree']): string[] {
-    return nodes.flatMap((item) => [
-      item.routeName,
-      ...(item.children?.length ? flattenRouteNames(item.children) : [])
-    ])
+  function flattenLeafRouteNames(nodes: RolePagePermissionResponse['routeTree']): string[] {
+    return nodes.flatMap((item) => {
+      if (item.children?.length) return flattenLeafRouteNames(item.children)
+      return item.routeName ? [item.routeName] : []
+    })
   }
 
   function reset() {
