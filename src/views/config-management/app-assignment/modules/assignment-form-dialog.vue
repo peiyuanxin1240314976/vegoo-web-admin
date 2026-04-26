@@ -10,9 +10,9 @@
     <!-- 编辑模式：应用信息锁定条 -->
     <div v-if="isEdit && editData" class="app-lock-bar">
       <div class="app-lock-icon" :style="{ background: editData.iconColor }">
-        {{ editData.appName.charAt(0) }}
+        {{ getAppInitial(editData.appName) }}
       </div>
-      <span class="app-lock-name">{{ editData.appName }}</span>
+      <span class="app-lock-name">{{ getDisplayAppName(editData.appName) }}</span>
       <span class="lock-sep">|</span>
       <span class="app-lock-meta">{{ editData.platform === 'Android' ? '安卓' : 'iOS' }}</span>
       <span class="lock-sep">|</span>
@@ -45,9 +45,9 @@
                   :value="opt.value"
                 >
                   <span class="app-opt-icon" :style="{ background: opt.iconColor }">
-                    {{ opt.appName.charAt(0) }}
+                    {{ getAppInitial(opt.appName) }}
                   </span>
-                  <span class="app-opt-label">{{ opt.appName }}</span>
+                  <span class="app-opt-label">{{ getDisplayAppName(opt.appName) }}</span>
                 </el-option>
               </el-select>
             </el-form-item>
@@ -221,7 +221,7 @@
         </div>
 
         <!-- 已选配置预览 -->
-        <div v-if="selectedVersion" class="config-preview">
+        <!-- <div v-if="selectedVersion" class="config-preview">
           <div class="preview-header">
             <span class="preview-title">已选配置预览：</span>
             <button class="preview-link" type="button">查看完整配置 →</button>
@@ -233,7 +233,7 @@
             <span class="preview-tag">最低：{{ selectedVersion.minRate }}</span>
             <span class="preview-tag">系数：{{ selectedVersion.difficulty }}</span>
           </div>
-        </div>
+        </div> -->
 
         <!-- 草稿版本警告 -->
         <div v-if="selectedVersion?.status === '草稿'" class="draft-warning">
@@ -424,6 +424,9 @@
 
   const verStatusClass = (status: string) =>
     ({ 已发布: 'published', 草稿: 'draft', 已归档: 'archived' })[status] ?? 'published'
+
+  const getDisplayAppName = (appName?: string | null) => (appName?.trim() ? appName : '未命名应用')
+  const getAppInitial = (appName?: string | null) => getDisplayAppName(appName).charAt(0)
 
   // ─── 变更检测（编辑模式） ─────────────────────────────────
   const optimizerChanged = computed(
