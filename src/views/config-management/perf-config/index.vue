@@ -156,7 +156,7 @@
             <el-table-column label="难度系数" min-width="100" align="center">
               <template #default="{ row }">{{ row.activeVersion.difficultyFactor }}</template>
             </el-table-column>
-            <el-table-column label="运行状态" min-width="100" align="center">
+            <!-- <el-table-column label="运行状态" min-width="100" align="center">
               <template #default="{ row }">
                 <span class="run-badge" :style="{ color: RUN_STATUS_CONFIG[row.runStatus].color }">
                   <span
@@ -181,7 +181,7 @@
                   }}
                 </span>
               </template>
-            </el-table-column>
+            </el-table-column> -->
             <el-table-column label="操作" min-width="180" align="center" fixed="right">
               <template #default="{ row }">
                 <button class="action-btn" @click.stop="handleEdit(row)">编辑</button>
@@ -240,9 +240,9 @@
             </div>
           </div>
           <div class="drawer-header-icons">
-            <ElIcon class="drawer-icon-btn" title="编辑" @click="handleEdit(drawerItem)"
+            <!-- <ElIcon class="drawer-icon-btn" title="编辑" @click="handleEdit(drawerItem)"
               ><Edit
-            /></ElIcon>
+            /></ElIcon> -->
             <ElIcon class="drawer-icon-btn" title="关闭" @click="closeDetailDrawer"
               ><Close
             /></ElIcon>
@@ -279,7 +279,7 @@
                 <span class="di-label">广告平台</span>
                 <span class="di-value">{{ sourceCellLabels(drawerItem) }}</span>
               </div>
-              <div class="drawer-item">
+              <!-- <div class="drawer-item">
                 <span class="di-label">运行状态</span>
                 <span
                   class="di-value"
@@ -287,7 +287,7 @@
                 >
                   {{ RUN_STATUS_CONFIG[drawerItem.runStatus].label }}
                 </span>
-              </div>
+              </div> -->
               <div class="drawer-item">
                 <span class="di-label">允许多投</span>
                 <span class="di-value">{{ drawerItem.allowMulti ? '是' : '否' }}</span>
@@ -364,7 +364,7 @@
                     <span v-if="ver.isActive" class="ver-active-tag">当前激活</span>
                   </div>
                   <div class="ver-meta">
-                    {{ STATUS_CONFIG[ver.status].label }} | {{ ver.publishedAt }} |
+                    {{ ver.publishedAt }} |
                     {{ ver.publishedBy }}
                   </div>
                   <div class="ver-stats">
@@ -399,7 +399,7 @@
 
         <!-- 抽屉底部 -->
         <div class="drawer-footer">
-          <ElButton
+          <!-- <ElButton
             type="primary"
             round
             class="account-sub-page__btn-primary drawer-footer__btn"
@@ -413,14 +413,14 @@
             @click="handleExport"
           >
             <ElIcon><Download /></ElIcon>导出
-          </ElButton>
-          <ElButton
+          </ElButton> -->
+          <!-- <ElButton
             round
             class="account-sub-page__btn-secondary drawer-footer__btn"
             @click="closeDetailDrawer"
           >
             <ElIcon><Close /></ElIcon>关闭
-          </ElButton>
+          </ElButton> -->
         </div>
       </div>
     </el-drawer>
@@ -440,7 +440,7 @@
 
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
-  import { Plus, Download, Search, Edit, Close } from '@element-plus/icons-vue'
+  import { Plus, Download, Search, Close } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import {
     fetchPerfOverviewKpi,
@@ -452,7 +452,7 @@
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import { PerfConfigApiSource, PerfConfigEndpoint } from './config/data-source'
-  import { clonePerfList, STATUS_CONFIG, RUN_STATUS_CONFIG } from './mock/data'
+  import { clonePerfList, STATUS_CONFIG } from './mock/data'
   import PerfCreateDialog from './modules/perf-create-dialog.vue'
   import VersionCompareDialog from './modules/version-compare-dialog.vue'
   import type { PerfConfigItem, PerfVersion } from './types'
@@ -650,10 +650,10 @@
   // ─── 新建 ───────────────────────────────────────────────
   const createVisible = ref(false)
 
-  function openCreateDialogFromDrawer() {
-    createVisible.value = true
-    closeDetailDrawer()
-  }
+  // function openCreateDialogFromDrawer() {
+  //   createVisible.value = true
+  //   closeDetailDrawer()
+  // }
 
   const handleCreateSuccess = (item: PerfConfigItem) => {
     if (!PerfConfigApiSource[PerfConfigEndpoint.Create]) {
