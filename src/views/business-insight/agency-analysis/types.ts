@@ -6,6 +6,9 @@ export interface AgencyAnalysisFilterOption {
   value: string
 }
 
+/** 顶部 tabs（可用代投来源，后端不返回“汇总”） */
+export type AgencyAnalysisAvailableSourceItem = AgencyAnalysisFilterOption
+
 export interface AgencyAnalysisFilterOptionsPayload {
   appOptions: AgencyAnalysisFilterOption[]
   agencyOptions: AgencyAnalysisFilterOption[]

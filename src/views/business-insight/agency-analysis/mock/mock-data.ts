@@ -1,6 +1,7 @@
 import type {
   AgencyAnalysisMockPayload,
   AgencyAnalysisCharts,
+  AgencyAnalysisAvailableSourceItem,
   AgencyAnalysisFilterOptionsPayload,
   AgencySubTabAccountSummaryPayload,
   AgencySubTabAccountSummaryRow,
@@ -421,6 +422,14 @@ const FILTER_OPTIONS: AgencyAnalysisFilterOptionsPayload = {
 
 export async function mockFetchAgencyAnalysisFilterOptions(): Promise<AgencyAnalysisFilterOptionsPayload> {
   return { ...FILTER_OPTIONS }
+}
+
+export async function mockFetchAgencyAnalysisAvailableSources(): Promise<
+  AgencyAnalysisAvailableSourceItem[]
+> {
+  return FILTER_OPTIONS.agencyOptions
+    .filter((item) => item.value !== 'all')
+    .map((item) => ({ ...item }))
 }
 
 export async function mockFetchAgencyOverview(): Promise<{ kpiCards: KpiCardItem[] }> {

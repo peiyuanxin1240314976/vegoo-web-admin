@@ -8,6 +8,7 @@
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import {
+    fetchAgencyAnalysisAvailableSources,
     fetchAgencyAnalysisMetaFilterOptions,
     fetchAgencyAnalysisOverview,
     fetchAgencyAnalysisDonutSpendShare,
@@ -19,13 +20,26 @@
     fetchAgencySubTabRecentSummary,
     fetchAgencySubTabAccountSummary
   } from '@/api/agency-analysis'
-  import type { AgencyAnalysisCharts, KpiCardItem } from '../types'
+  import type {
+    AgencyAnalysisAvailableSourceItem,
+    AgencyAnalysisCharts,
+    KpiCardItem
+  } from '../types'
 
   defineOptions({ name: 'AdAgencyAnalysis' })
 
-  /** 顶部 Tab 文案；与接口筛选无关——全页数据仅在「汇总」下展示，请求固定 agency_id=all */
-  const AGENCY_TAB_LABELS = ['汇总', 'GatherOne', '快鸟', '出海者'] as const
-  const AGENCY_TAB_KEYS = ['summary', 'gatherone', 'kuainiao', 'chuhai'] as const
+  type AgencyTabItem = {
+    label: string
+    key: string
+    isSummary: boolean
+  }
+
+  const SUMMARY_TAB: AgencyTabItem = { label: '汇总', key: 'summary', isSummary: true }
+  const FALLBACK_NON_SUMMARY_TABS: AgencyTabItem[] = [
+    { label: 'GatherOne', key: 'gatherone', isSummary: false },
+    { label: '快鸟', key: 'kuainiao', isSummary: false },
+    { label: '出海者', key: 'chuhai', isSummary: false }
+  ]
 
   // ─────────────────── KPI Cards ───────────────────
   const kpiCards = ref<KpiCardItem[]>([])
@@ -310,10 +324,14 @@
   /** 最近一次查询使用的日期区间；仅 handleSearch 写入 */
   const summaryDateApplied = ref<[string, string] | null>(null)
   const cockpitMetaFilterStore = useCockpitMetaFilterStore()
-  /** 当前选中的顶部 Tab：0=汇总（挂载整页）；其余为占位，不改变接口入参 */
+  const tabsLoading = ref(true)
+  const availableTabs = ref<AgencyTabItem[]>([SUMMARY_TAB, ...FALLBACK_NON_SUMMARY_TABS])
   const agencyTabIndex = ref(0)
+  let tabsRequestToken = 0
 
-  const activeAgencyTabKey = computed(() => AGENCY_TAB_KEYS[agencyTabIndex.value] ?? 'summary')
+  const activeTab = computed(() => availableTabs.value[agencyTabIndex.value] ?? SUMMARY_TAB)
+  const activeAgencyTabKey = computed(() => activeTab.value.key)
+  const isSummaryTabActive = computed(() => activeAgencyTabKey.value === SUMMARY_TAB.key)
 
   const subTabLoading = ref(false)
   const subTabError = ref(false)
@@ -332,6 +350,7 @@
   >(null)
 
   function selectAgencyTab(index: number) {
+    if (tabsLoading.value) return
     agencyTabIndex.value = index
   }
 
@@ -340,21 +359,16 @@
   }
 
   function handleSearch() {
-    if (!metaReady.value) return
+    if (!metaReady.value || tabsLoading.value) return
     syncSummaryAppliedRangeFromDraft()
-    if (activeAgencyTabKey.value === 'summary') {
-      hasSummaryQueried.value = true
-      void loadPageData()
-      return
-    }
-    void loadSubTabData()
+    void loadTabsThenActiveContent({ resetToSummary: true, loadSummaryAfterTabs: true })
   }
 
   /** meta 就绪后的默认/刷新拉数：与当前草稿日期、应用一致（渠道固定为全部） */
   async function loadDefaultSummaryData() {
     syncSummaryAppliedRangeFromDraft()
     hasSummaryQueried.value = true
-    await loadPageData()
+    await loadTabsThenActiveContent({ resetToSummary: true, loadSummaryAfterTabs: true })
   }
 
   const screenshotDataDateLabel = computed(() => {
@@ -363,7 +377,7 @@
   })
 
   const screenshotAgencyLabel = computed(() =>
-    agencyTabIndex.value > 0 ? AGENCY_TAB_LABELS[agencyTabIndex.value] : ''
+    isSummaryTabActive.value ? '' : activeTab.value.label
   )
 
   const todayYYYYMMDD = computed(() => getAppTodayYYYYMMDD())
@@ -413,6 +427,70 @@
     }
   }
 
+  function mapAvailableSourceToTab(
+    source: AgencyAnalysisAvailableSourceItem
+  ): AgencyTabItem | null {
+    const rawValue = source.value?.trim()
+    if (!rawValue || rawValue === 'all') return null
+    const normalizedKey = rawValue.startsWith('agency_') ? rawValue.slice(7) : rawValue
+    if (!normalizedKey || normalizedKey === SUMMARY_TAB.key) return null
+    return {
+      label: source.label?.trim() || normalizedKey,
+      key: normalizedKey,
+      isSummary: false
+    }
+  }
+
+  function buildTabsFromAvailableSources(
+    sources: AgencyAnalysisAvailableSourceItem[] | null | undefined
+  ): AgencyTabItem[] {
+    const mapped = (sources ?? [])
+      .map((item) => mapAvailableSourceToTab(item))
+      .filter((item): item is AgencyTabItem => item !== null)
+    const unique = mapped.filter(
+      (item, idx, list) => list.findIndex((x) => x.key === item.key) === idx
+    )
+    if (!unique.length) return [SUMMARY_TAB, ...FALLBACK_NON_SUMMARY_TABS]
+    return [SUMMARY_TAB, ...unique]
+  }
+
+  async function loadAvailableTabs(resetToSummary: boolean) {
+    if (!metaReady.value) return
+    tabsLoading.value = true
+    const currentToken = ++tabsRequestToken
+    const q = filterQuery()
+    if (resetToSummary) agencyTabIndex.value = 0
+    try {
+      const sources = await fetchAgencyAnalysisAvailableSources(q)
+      if (currentToken !== tabsRequestToken) return
+      availableTabs.value = buildTabsFromAvailableSources(sources)
+    } catch {
+      if (currentToken !== tabsRequestToken) return
+      availableTabs.value = [SUMMARY_TAB, ...FALLBACK_NON_SUMMARY_TABS]
+    } finally {
+      if (currentToken === tabsRequestToken) {
+        tabsLoading.value = false
+        if (agencyTabIndex.value >= availableTabs.value.length) {
+          agencyTabIndex.value = 0
+        }
+      }
+    }
+  }
+
+  async function loadTabsThenActiveContent(options: {
+    resetToSummary: boolean
+    loadSummaryAfterTabs: boolean
+  }) {
+    await loadAvailableTabs(options.resetToSummary)
+    if (!metaReady.value || tabsLoading.value) return
+    if (options.loadSummaryAfterTabs || isSummaryTabActive.value) {
+      hasSummaryQueried.value = true
+      await loadPageData()
+      return
+    }
+    await loadSubTabData()
+  }
+
   async function retryMetaOptions() {
     metaReady.value = false
     await loadMetaOptions()
@@ -433,8 +511,8 @@
   }
 
   async function loadSubTabData() {
-    if (!metaReady.value) return
-    if (activeAgencyTabKey.value === 'summary') return
+    if (!metaReady.value || tabsLoading.value) return
+    if (isSummaryTabActive.value) return
     const range = summaryDateApplied.value ?? summaryDateDraft.value
     const endDate = range[1]
     subTabLoading.value = true
@@ -444,7 +522,7 @@
         startDate: range[0],
         endDate: range[1],
         source: 'all',
-        agencyTab: activeAgencyTabKey.value as 'gatherone' | 'kuainiao' | 'chuhai'
+        agencyTab: activeAgencyTabKey.value
       }
       const [k7, kd, recent, acct] = await Promise.all([
         fetchAgencySubTabKpiLast7(qBase),
@@ -468,15 +546,15 @@
   }
 
   async function handleAccountSummarySearch(payload: { startDate: string; endDate: string }) {
-    if (!metaReady.value) return
-    if (activeAgencyTabKey.value === 'summary') return
+    if (!metaReady.value || tabsLoading.value) return
+    if (isSummaryTabActive.value) return
     subTabError.value = false
     try {
       const data = await fetchAgencySubTabAccountSummary({
         startDate: payload.startDate,
         endDate: payload.endDate,
         source: 'all',
-        agencyTab: activeAgencyTabKey.value as 'gatherone' | 'kuainiao' | 'chuhai'
+        agencyTab: activeAgencyTabKey.value
       })
       subTabAccountSummary.value = data
     } catch {
@@ -538,8 +616,8 @@
   /** 离开「汇总」时图表 DOM 被卸载，须 dispose；回到「汇总」后等 DOM 挂载再 init，否则 ECharts 不渲染 */
   watch(
     agencyTabIndex,
-    async (idx) => {
-      if (idx !== 0) {
+    async () => {
+      if (!isSummaryTabActive.value) {
         chartsResizeObserver?.disconnect()
         chartsResizeObserver = null
         disposeCharts()
@@ -603,18 +681,29 @@
       <template v-else>
         <div class="aa-tab-bar-row">
           <div class="aa-agency-tabs" role="tablist" aria-label="代投范围">
-            <button
-              v-for="(label, i) in AGENCY_TAB_LABELS"
-              :key="label"
-              type="button"
-              class="aa-agency-tab"
-              role="tab"
-              :class="{ 'aa-agency-tab--active': agencyTabIndex === i }"
-              :aria-selected="agencyTabIndex === i"
-              @click="selectAgencyTab(i)"
-            >
-              {{ label }}
-            </button>
+            <template v-if="tabsLoading">
+              <span
+                v-for="i in 4"
+                :key="`tab-sk-${i}`"
+                class="aa-agency-tab aa-agency-tab--skeleton"
+                aria-hidden="true"
+              />
+            </template>
+            <template v-else>
+              <button
+                v-for="(tab, i) in availableTabs"
+                :key="tab.key"
+                type="button"
+                class="aa-agency-tab"
+                role="tab"
+                :class="{ 'aa-agency-tab--active': agencyTabIndex === i }"
+                :aria-selected="agencyTabIndex === i"
+                :disabled="tabsLoading"
+                @click="selectAgencyTab(i)"
+              >
+                {{ tab.label }}
+              </button>
+            </template>
           </div>
           <div class="aa-tab-bar-filters" aria-label="筛选与查询">
             <div class="filter-date-wrap filter-date-wrap--tab-inline">
@@ -634,12 +723,23 @@
               />
             </div>
             <div class="aa-tab-bar-filters__actions">
-              <ElButton type="primary" plain round @click="handleSearch" v-ripple> 查询 </ElButton>
               <ElButton
-                v-if="agencyTabIndex !== 0"
                 type="primary"
                 plain
                 round
+                :loading="tabsLoading"
+                :disabled="tabsLoading"
+                @click="handleSearch"
+                v-ripple
+              >
+                查询
+              </ElButton>
+              <ElButton
+                v-if="!isSummaryTabActive"
+                type="primary"
+                plain
+                round
+                :disabled="tabsLoading"
                 @click="openScreenshot()"
               >
                 <svg
@@ -668,7 +768,7 @@
       </template>
     </div>
 
-    <template v-if="agencyTabIndex === 0">
+    <template v-if="isSummaryTabActive">
       <!-- ── KPI Cards ── -->
       <div class="kpi-row aa-entry-2">
         <template v-if="pageLoading">
@@ -1032,6 +1132,11 @@
       outline: 2px solid rgb(52 211 153 / 65%);
       outline-offset: 2px;
     }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
   }
 
   .aa-agency-tab--active {
@@ -1041,6 +1146,32 @@
     box-shadow:
       0 0 0 1px rgb(0 212 180 / 12%),
       0 4px 18px rgb(0 0 0 / 35%);
+  }
+
+  .aa-agency-tab--skeleton {
+    width: 94px;
+    height: 34px;
+    pointer-events: none;
+    cursor: default;
+    background: linear-gradient(
+      90deg,
+      rgb(148 163 184 / 14%) 0%,
+      rgb(148 163 184 / 26%) 50%,
+      rgb(148 163 184 / 14%) 100%
+    );
+    border-color: rgb(148 163 184 / 16%);
+    animation: aa-tab-skeleton-pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes aa-tab-skeleton-pulse {
+    0%,
+    100% {
+      opacity: 0.72;
+    }
+
+    50% {
+      opacity: 1;
+    }
   }
 
   @media (width <= 768px) {

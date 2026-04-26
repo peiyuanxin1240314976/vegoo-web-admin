@@ -9,6 +9,7 @@ import {
   isAgencyAnalysisMock
 } from '@/views/business-insight/agency-analysis/config/data-source'
 import {
+  mockFetchAgencyAnalysisAvailableSources,
   mockFetchAgencyAnalysisFilterOptions,
   mockFetchAgencyOverview,
   mockFetchAgencySubTabKpiLast7,
@@ -30,6 +31,7 @@ import type {
   CampaignRow,
   DailyRow,
   KpiCardItem,
+  AgencyAnalysisAvailableSourceItem,
   AgencyAnalysisFilterOptionsPayload,
   AgencySubTabKpiPayload,
   AgencySubTabRecentSummaryPayload,
@@ -111,6 +113,16 @@ export function fetchAgencyAnalysisMetaFilterOptions() {
   })
 }
 
+export function fetchAgencyAnalysisAvailableSources(params: AgencyAnalysisFilterQuery) {
+  if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.MetaAvailableSources)) {
+    return mockFetchAgencyAnalysisAvailableSources()
+  }
+  return request.post<AgencyAnalysisAvailableSourceItem[]>({
+    url: `${AGENCY_ANALYSIS_BASE}/meta/available-sources`,
+    data: overviewBody(params)
+  })
+}
+
 export function fetchAgencyAnalysisOverview(params: AgencyAnalysisFilterQuery) {
   if (isAgencyAnalysisMock(AgencyAnalysisEndpoint.Overview)) {
     return mockFetchAgencyOverview().then(normalizeOverviewKpiCards)
@@ -177,8 +189,8 @@ export type AgencyAnalysisSubTabFilterQuery = {
   date?: string
   appId?: string | string[]
   source?: string
-  /** 后三个 Tab 的入参维度 */
-  agencyTab: 'gatherone' | 'kuainiao' | 'chuhai'
+  /** 后三个 Tab 的入参维度（后端动态返回） */
+  agencyTab: string
 }
 
 export type AgencyAnalysisSubTabLast7Query = {
@@ -188,8 +200,8 @@ export type AgencyAnalysisSubTabLast7Query = {
   endDate: string
   appId?: string | string[]
   source?: string
-  /** 后三个 Tab 的入参维度 */
-  agencyTab: 'gatherone' | 'kuainiao' | 'chuhai'
+  /** 后三个 Tab 的入参维度（后端动态返回） */
+  agencyTab: string
 }
 
 function subTabBody(q: AgencyAnalysisSubTabFilterQuery) {

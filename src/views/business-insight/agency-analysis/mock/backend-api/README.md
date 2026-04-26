@@ -18,6 +18,7 @@
 
 | 文件 | 说明 | URL（相对父级） | 方法 | 优先级 |
 | --- | --- | --- | --- | --- |
+| `14-meta-available-sources.json` | 顶部 Tabs（仅非汇总代投方） | `/meta/available-sources` | POST | P0 |
 | `09-meta-filter-options.json` | 顶栏筛选项（应用 / 代投方 / 广告平台） | `/meta/filter-options` | POST | P0 |
 | `01-overview.json` | 顶部 KPI 概览 | `/overview` | POST | P0 |
 | `10-subtab-kpi-last7.json` | 非汇总子 Tab：近 7 天 KPI 行 | `/subtab/kpi/last7` | POST | P1 |
@@ -36,6 +37,7 @@
 
 | 场景 | 入口 / 组件 | 接口（逻辑 URL） | 触发时机 | 备注 |
 | --- | --- | --- | --- | --- |
+| 顶部 tabs（非汇总） | `AdAgencyAnalysis.vue` | `POST .../meta/available-sources` | **初始化**与**点击查询**时先请求，完成后才加载下方内容 | 返回仅非汇总项，前端固定拼接 `汇总` 为第一项 |
 | 顶栏下拉选项 | `AdAgencyAnalysis.vue` | `POST .../meta/filter-options` | 页面 **mounted** 时拉取一次 | 真实环境请求体为 `**{}`**（与 `fetchAgencyAnalysisMetaFilterOptions` 一致）；契约 `09` 的 `sampleRequest` 若含 `t_date` 为**文档/历史**口径，联调以 `**src/api/agency-analysis.ts`\*\* 为准 |
 | 汇总数据区（KPI + 五图） | 同上，汇总 Tab | `POST .../overview`、五个 `POST .../chart/*` | **meta 成功后首屏自动**拉取一次；**改筛选项后**需用户点击 **「查询」** 再拉 | 与 `AgencyAnalysisFilterQuery` 一致；空数组/空 series 时 UI 应空态不白屏 |
 | 非汇总子 Tab | `AdAgencyAnalysis.vue` → `AgencySubTabPerformanceMock.vue` | `POST .../subtab/kpi/last7`、`POST .../subtab/kpi/day`、`POST .../subtab/table/recent-summary`、`POST .../subtab/table/account-summary` | **切换后三个 Tab 自动并行请求** | **近期汇总**：`startDate/endDate` 固定为应用当前业务日往前 **3 天**（不使用汇总筛选日期）；**账户汇总**：默认仍跟随汇总筛选区间，且支持区块内独立查询 |

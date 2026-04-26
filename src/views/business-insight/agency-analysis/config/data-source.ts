@@ -2,6 +2,7 @@
  * 代投分析 - 数据源开关（与 `mock/backend-api` 契约 1:1）
  */
 export enum AgencyAnalysisEndpoint {
+  MetaAvailableSources = 'metaAvailableSources',
   MetaFilterOptions = 'metaFilterOptions',
   Overview = 'overview',
   SubTabKpiLast7 = 'subTabKpiLast7',
@@ -19,6 +20,7 @@ export enum AgencyAnalysisEndpoint {
 
 /** 默认走真实接口；单接口调试可改为 true */
 export const AGENCY_ANALYSIS_USE_MOCK: Record<AgencyAnalysisEndpoint, boolean> = {
+  [AgencyAnalysisEndpoint.MetaAvailableSources]: false,
   [AgencyAnalysisEndpoint.MetaFilterOptions]: false,
   [AgencyAnalysisEndpoint.Overview]: false,
   /** 子 Tab 专用接口：后端未就绪前默认走本地 mock（与 `mock/mock-data.ts` 对齐） */
