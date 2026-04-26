@@ -244,8 +244,8 @@
                   <div class="matrix-actions">
                     <ElButton size="small" round plain @click="expandAll">全部展开</ElButton>
                     <ElButton size="small" round plain @click="collapseAll">全部收起</ElButton>
-                    <ElButton size="small" round plain>自定义列</ElButton>
-                    <ElButton size="small" round type="primary" plain>↓ 导出</ElButton>
+                    <!-- <ElButton size="small" round plain>自定义列</ElButton> -->
+                    <!-- <ElButton size="small" round type="primary" plain>↓ 导出</ElButton> -->
                   </div>
                 </div>
               </template>
