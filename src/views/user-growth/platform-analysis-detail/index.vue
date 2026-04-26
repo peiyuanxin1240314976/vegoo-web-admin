@@ -138,55 +138,44 @@
         <div class="pad-body">
           <!-- ── 左列 ──────────────────────────────────────────── -->
           <div class="pad-left">
-            <!-- 第一行：安卓 / iOS / 合计 三张卡片横排 -->
-            <!-- <div class="pad-stat-row">
-              <div
-                v-for="card in pageData?.statCards ?? []"
-                :key="card.label"
-                class="pad-stat-card"
-                :class="padStatCardThemeClass(card.platform)"
-              >
+            <!-- 第一行：仅保留合计卡片 -->
+            <div v-if="totalStatCard" class="pad-stat-row pad-stat-row--single">
+              <div class="pad-stat-card pad-stat-card--total">
                 <div class="pad-stat-card__content">
                   <div class="pad-stat-card__header">
-                    <span class="pad-stat-card__label">{{ card.label }}</span>
-                    <span
-                      v-if="card.platform === 'android'"
-                      class="pad-os-badge pad-os-badge--android"
-                      >安卓</span
-                    >
-                    <span v-else-if="card.platform === 'ios'" class="pad-os-badge pad-os-badge--ios"
-                      >iOS</span
-                    >
+                    <span class="pad-stat-card__label">{{ totalStatCard.label }}</span>
                   </div>
                   <div class="pad-stat-rows">
                     <div class="pad-stat-row-item">
                       <span class="pad-stat-label">广告支出</span>
-                      <span class="pad-stat-value tabular-nums">{{ card.adSpend }}</span>
+                      <span class="pad-stat-value tabular-nums">{{ totalStatCard.adSpend }}</span>
                     </div>
                     <div class="pad-stat-row-item">
                       <span class="pad-stat-label">首日ROI</span>
                       <span class="pad-stat-value pad-stat-value--accent tabular-nums">{{
-                        card.roi
+                        totalStatCard.roi
                       }}</span>
                     </div>
                     <div class="pad-stat-row-item">
                       <span class="pad-stat-label">安装数</span>
-                      <span class="pad-stat-value tabular-nums">{{ card.installs }}</span>
+                      <span class="pad-stat-value tabular-nums">{{ totalStatCard.installs }}</span>
                     </div>
                     <div class="pad-stat-row-item">
                       <span class="pad-stat-label">预估利润</span>
-                      <ProfitTip :value="profitToNumber(card.profit)">
-                        {{ card.profit }}
+                      <ProfitTip :value="profitToNumber(totalStatCard.profit)">
+                        {{ totalStatCard.profit }}
                       </ProfitTip>
                     </div>
                     <div class="pad-stat-row-item">
                       <span class="pad-stat-label">活跃平台</span>
-                      <span class="pad-stat-value tabular-nums">{{ card.activePlatforms }}个</span>
+                      <span class="pad-stat-value tabular-nums"
+                        >{{ totalStatCard.activePlatforms }}个</span
+                      >
                     </div>
                   </div>
                 </div>
               </div>
-            </div> -->
+            </div>
 
             <!-- 第二行：CPI 趋势 + ECPM 趋势左右并排 -->
             <div class="pad-charts-row">
@@ -388,6 +377,12 @@
   const pageData = ref<PlatformAnalysisDetailData | null>(null)
   const pageLoading = ref(false)
   const matrixTableRef = ref()
+  const totalStatCard = computed(() => {
+    const cards = pageData.value?.statCards ?? []
+    return (
+      cards.find((item) => item.platform === 'total') ?? cards.find((item) => item.label === '合计')
+    )
+  })
 
   function profitToNumber(text: string | null | undefined): number | null {
     if (text == null) return null
@@ -1742,6 +1737,10 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
     align-items: stretch;
+
+    &--single {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   .pad-stat-card {
