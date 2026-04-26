@@ -21,6 +21,7 @@
   type CampaignRow = Api.UserGrowth.MyAdsCampaignRowDto
 
   const loading = ref(false)
+  const isInitializing = ref(false)
   const campaignData = ref<Api.UserGrowth.MyAdsCampaignTableDto | null>(null)
   const filterScope = ref<string | undefined>(undefined)
   const filterApp = ref<string | string[]>([])
@@ -132,15 +133,20 @@
 
   onMounted(() => {
     void (async () => {
-      await cockpitMetaStore.ensureLoaded()
-      await loadMetaFilterOptions()
-      if (
-        toAppIdsRequestBody(filterApp.value).length === 0 &&
-        String(filterAppSettingApps.value[0]?.sAppId ?? '').trim()
-      ) {
-        filterApp.value = [String(filterAppSettingApps.value[0].sAppId)]
+      isInitializing.value = true
+      try {
+        await cockpitMetaStore.ensureLoaded()
+        await loadMetaFilterOptions()
+        if (
+          toAppIdsRequestBody(filterApp.value).length === 0 &&
+          String(filterAppSettingApps.value[0]?.sAppId ?? '').trim()
+        ) {
+          filterApp.value = [String(filterAppSettingApps.value[0].sAppId)]
+        }
+        await loadCampaigns()
+      } finally {
+        isInitializing.value = false
       }
-      await loadCampaigns()
     })()
   })
 
@@ -157,6 +163,7 @@
       searchText.value
     ],
     () => {
+      if (isInitializing.value) return
       currentPage.value = 1
       loadCampaigns()
     }
@@ -167,21 +174,21 @@
   })
 
   /* ── 筛选 ── */
-  const scopeOptions = [
-    { value: '全部', label: '全部' },
-    { value: '我负责的', label: '我负责的' }
-  ]
+  // const scopeOptions = [
+  //   { value: '全部', label: '全部' },
+  //   { value: '我负责的', label: '我负责的' }
+  // ]
 
-  const statusOptions = [
-    { value: 'active' as const, label: '激活' },
-    { value: 'warn' as const, label: '超预算' },
-    { value: 'inactive' as const, label: '未启动' }
-  ]
+  // const statusOptions = [
+  //   { value: 'active' as const, label: '激活' },
+  //   { value: 'warn' as const, label: '超预算' },
+  //   { value: 'inactive' as const, label: '未启动' }
+  // ]
 
-  const typeOptions = [
-    { value: 'with_agency' as const, label: '含代投' },
-    { value: 'pure' as const, label: '仅直投' }
-  ]
+  // const typeOptions = [
+  //   { value: 'with_agency' as const, label: '含代投' },
+  //   { value: 'pure' as const, label: '仅直投' }
+  // ]
 
   /** 接口返回當前頁列表 */
   const pagedCampaigns = computed(() => campaigns.value)
@@ -349,7 +356,7 @@
     <!-- ── 筛选栏 ── -->
     <div class="filter-bar">
       <div class="filter-selects">
-        <div class="filter-select-wrap">
+        <!-- <div class="filter-select-wrap">
           <ElSelect
             v-model="filterScope"
             class="filter-el"
@@ -360,7 +367,7 @@
           >
             <ElOption v-for="o in scopeOptions" :key="o.value" :label="o.label" :value="o.value" />
           </ElSelect>
-        </div>
+        </div> -->
         <div class="filter-select-wrap">
           <AppPlatformSearchSelect
             v-model="filterApp"
@@ -412,7 +419,7 @@
             />
           </ElSelect>
         </div>
-        <div class="filter-select-wrap">
+        <!-- <div class="filter-select-wrap">
           <ElSelect
             v-model="filterStatus"
             class="filter-el"
@@ -423,8 +430,8 @@
           >
             <ElOption v-for="o in statusOptions" :key="o.value" :label="o.label" :value="o.value" />
           </ElSelect>
-        </div>
-        <div class="filter-select-wrap">
+        </div> -->
+        <!-- <div class="filter-select-wrap">
           <ElSelect
             v-model="filterType"
             class="filter-el"
@@ -435,7 +442,7 @@
           >
             <ElOption v-for="o in typeOptions" :key="o.value" :label="o.label" :value="o.value" />
           </ElSelect>
-        </div>
+        </div> -->
       </div>
       <div class="filter-right">
         <input v-model="searchText" class="search-input" placeholder="输入广告系列名称搜索" />
