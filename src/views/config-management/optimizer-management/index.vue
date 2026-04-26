@@ -106,9 +106,9 @@
             <el-table-column label="名称" min-width="100" show-overflow-tooltip>
               <template #default="{ row }">
                 <div class="optimizer-name">
-                  <div class="avatar" :style="{ background: row.avatarColor }">
+                  <!-- <div class="avatar" :style="{ background: row.avatarColor }">
                     {{ getUserInitial(row.userName) }}
-                  </div>
+                  </div> -->
                   <span>{{ row.userName }}</span>
                 </div>
               </template>
@@ -421,10 +421,10 @@
     return `${code.slice(0, keep)}...${code.slice(-2)}`
   }
 
-  const getUserInitial = (userName?: string | null) => {
-    const normalized = (userName ?? '').trim()
-    return normalized ? normalized.charAt(0) : '-'
-  }
+  // const getUserInitial = (userName?: string | null) => {
+  //   const normalized = (userName ?? '').trim()
+  //   return normalized ? normalized.charAt(0) : '-'
+  // }
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
