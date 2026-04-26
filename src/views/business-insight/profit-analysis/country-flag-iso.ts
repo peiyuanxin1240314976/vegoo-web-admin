@@ -60,9 +60,28 @@ function normalizeIso2(raw: string | undefined): string {
   return t
 }
 
+/**
+ * 从国旗 emoji（Regional Indicator Symbols）反解 ISO alpha-2。
+ * 例：🇺🇸 -> US，🇨🇬 -> CG。
+ */
+function parseIso2FromFlagEmoji(raw: string | undefined): string {
+  if (!raw) return ''
+  const chars = Array.from(raw.trim())
+  if (chars.length < 2) return ''
+  const lastTwo = chars.slice(-2)
+  const codePoints = lastTwo.map((ch) => ch.codePointAt(0) ?? 0)
+  const isRegional = (cp: number) => cp >= 0x1f1e6 && cp <= 0x1f1ff
+  if (!isRegional(codePoints[0]!) || !isRegional(codePoints[1]!)) return ''
+  const a = String.fromCharCode(65 + (codePoints[0]! - 0x1f1e6))
+  const b = String.fromCharCode(65 + (codePoints[1]! - 0x1f1e6))
+  return normalizeIso2(`${a}${b}`)
+}
+
 export function resolveProfitCountryIso(row: { s_country_code?: string; name?: string }): string {
   const fromApi = normalizeIso2(row.s_country_code)
   if (fromApi) return fromApi
+  const fromFlagEmoji = parseIso2FromFlagEmoji((row as { flag?: string }).flag)
+  if (fromFlagEmoji) return fromFlagEmoji
   const n = row.name?.trim()
   if (n && CN_NAME_TO_ISO[n]) return CN_NAME_TO_ISO[n]
   return ''

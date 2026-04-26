@@ -9,12 +9,7 @@
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
-  import type {
-    ProfitCountryRow,
-    ProfitKpiCard,
-    ProfitMapDataItem,
-    ProfitAppProfitTreeNode
-  } from './types'
+  import type { ProfitCountryRow, ProfitKpiCard, ProfitAppProfitTreeNode } from './types'
   import {
     buildProfitMapScatterChartData,
     normalizeProfitMapDataForEchartsMapSeries,
@@ -33,8 +28,6 @@
     dateShortcuts,
     kpiCards,
     appProfitRoot,
-    mapData,
-    mapScatter,
     countryRows,
     trend30d,
     sankeyNodes,
@@ -408,6 +401,14 @@
     return fiCountryClass(resolveProfitCountryIso(row))
   }
 
+  function parseProfitValueFromDisplayText(valueText: string | undefined): number | null {
+    const raw = String(valueText ?? '').trim()
+    if (!raw) return null
+    const normalized = raw.replace(/[$,%\s,]/g, '')
+    const parsed = Number(normalized)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
   async function ensureWorldGeo() {
     if (mapGeoReady) return
     const res = await fetch('/geo/world.json')
@@ -429,9 +430,17 @@
       const region = raw ? resolveEchartsWorldMapRegionName(raw) : null
       if (region) countryRowLookup.set(region, row)
     }
-    const mapSeriesData = normalizeProfitMapDataForEchartsMapSeries(mapData.value)
-    const rawVals = (mapData.value || [])
-      .map((d: ProfitMapDataItem) => Number(d.value))
+    const mapDataFromCountryRows = (countryRows.value || [])
+      .map((row) => {
+        const name = String(row.name ?? '').trim()
+        const value = parseProfitValueFromDisplayText(row.profit)
+        if (!name || value === null) return null
+        return { name, value }
+      })
+      .filter((item): item is { name: string; value: number } => item !== null)
+    const mapSeriesData = normalizeProfitMapDataForEchartsMapSeries(mapDataFromCountryRows)
+    const rawVals = mapDataFromCountryRows
+      .map((d) => Number(d.value))
       .filter((n: number) => Number.isFinite(n))
 
     function quantile(sorted: number[], q: number): number {
@@ -561,7 +570,7 @@
       ]
       return { type: 'piecewise', show: false, seriesIndex: 0, pieces }
     }
-    const scatterSeriesData = buildProfitMapScatterChartData(mapScatter.value, mapData.value)
+    const scatterSeriesData = buildProfitMapScatterChartData([], mapDataFromCountryRows)
     mapChart.setOption({
       backgroundColor: 'transparent',
       tooltip: {
@@ -839,7 +848,7 @@
   )
 
   watch(
-    () => [pendingCountry.value, mapData.value, mapScatter.value],
+    () => [pendingCountry.value, countryRows.value],
     async () => {
       if (pendingCountry.value) return
       await nextTick()
@@ -1093,7 +1102,7 @@
             </div>
           </div>
         </div>
-        <div class="card-title" style="margin-top: 12px">国家利润详情 Top10</div>
+        <div class="card-title" style="margin-top: 12px">国家利润详情 Top20</div>
         <div class="bi-table-host bi-table-host--country">
           <div v-show="pendingCountry" class="bi-skeleton-block bi-skeleton--fx">
             <ElSkeleton animated :rows="5">
