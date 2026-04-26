@@ -9,8 +9,8 @@
 ## 统计结果（基于 `src/locales/langs/zh.json`）
 
 - `(M)` 菜单总数：16 项
-- 已隐藏：15 项
-- 未隐藏/未定位到可改路由：1 项
+- 已隐藏：16 项
+- 未隐藏/未定位到可改路由：0 项
 
 ## 已隐藏清单（15 项）
 
@@ -22,10 +22,11 @@
 - i18n Key：`menus.accountManagement.title`｜中文：账户管理(M)｜状态：已隐藏（显式 `isHide: true`）｜路由文件：`src/router/modules/account-management.ts`
 - i18n Key：`menus.system.title`｜中文：系统管理(M)｜状态：已隐藏（显式 `isHide: true`）｜路由文件：`src/router/modules/system.ts`
 
-### 二级菜单（10 项，均已隐藏）
+### 二级菜单（11 项，均已隐藏）
 
 - i18n Key：`menus.businessInsight.adPlatformDetail`｜中文：广告平台详情(M)｜状态：已隐藏（原本已隐藏）｜路由文件：`src/router/modules/business-insight.ts`
 - i18n Key：`menus.configManagement.appStoreManagement`｜中文：应用商店管理(M)｜状态：已隐藏（显式 `isHide: true`）｜路由文件：`src/router/modules/config-management.ts`
+- i18n Key：`menus.configManagement.adAccountManagement`｜中文：广告账户管理(弃)｜状态：已隐藏（显式 `isHide: true`）｜路由文件：`src/router/modules/config-management.ts`
 - i18n Key：`menus.configManagement.countryManagement`｜中文：国家管理(M)｜状态：已隐藏（显式 `isHide: true`）｜路由文件：`src/router/modules/config-management.ts`
 - i18n Key：`menus.configManagement.exchangeRateManagement`｜中文：汇率管理(M)｜状态：已隐藏（显式 `isHide: true`）｜路由文件：`src/router/modules/config-management.ts`
 - i18n Key：`menus.configManagement.costCoefficient`｜中文：成本系数管理(M)｜状态：已隐藏（显式 `isHide: true`）｜路由文件：`src/router/modules/config-management.ts`
@@ -35,9 +36,9 @@
 - i18n Key：`menus.userGrowth.performanceAnalysis`｜中文：人员成效(M)｜状态：已隐藏（显式 `isHide: true`）｜路由文件：`src/router/modules/user-growth.ts`
 - i18n Key：`menus.userGrowth.overallRecovery`｜中文：整体回收(M)｜状态：已隐藏（显式 `isHide: true`）｜路由文件：`src/router/modules/user-growth.ts`
 
-## 未隐藏/未定位清单（1 项）
+## 未隐藏/未定位清单（0 项）
 
-- i18n Key：`menus.configManagement.accountManagement`｜中文：账户管理(M)｜状态：未定位到可改路由（在当前 `src/router/modules/config-management.ts` 中没有对应二级路由项）
+- 当前 `(M)` 文案清单对应的路由项均已隐藏。
 
 ## 本次实际修改文件
 

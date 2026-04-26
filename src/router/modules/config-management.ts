@@ -81,6 +81,7 @@ export const configManagementRoutes: AppRouteRecord = {
       component: '/config-management/ad-account-management',
       meta: {
         title: 'menus.configManagement.adAccountManagement',
+        isHide: true,
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
