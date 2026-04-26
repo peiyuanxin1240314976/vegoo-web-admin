@@ -107,7 +107,11 @@
       checkedRouteNames.value = res.checkedRouteNames || []
 
       await nextTick()
-      treeRef.value?.setCheckedKeys(checkedRouteNames.value)
+      // 回显只使用“叶子页面”节点：如果把父级目录 routeName 也 set 进去，
+      // Element Plus 会把整棵子树重新勾选，导致你取消子级后又被“带回去”
+      const leafSet = new Set(flattenLeafRouteNames(routeTree.value))
+      const leafChecked = (checkedRouteNames.value ?? []).filter((key) => leafSet.has(key))
+      treeRef.value?.setCheckedKeys(leafChecked)
     } catch (error) {
       console.error('获取页面权限失败', error)
       routeTree.value = []
@@ -119,8 +123,20 @@
 
   function getRouteNames(): string[] {
     const tree = treeRef.value as any
-    // 只提交“叶子页面”节点，避免把半选中的目录节点提交给后端导致回显时整棵子树被重新勾选
-    return ((tree?.getCheckedKeys(true) as string[] | undefined) ?? []).filter(Boolean)
+    // UI 选择以叶子页面为准，但保存时需要把父级目录一并传递（父级下的未勾选子级要过滤掉）
+    const leafKeys = ((tree?.getCheckedKeys(true) as string[] | undefined) ?? []).filter(Boolean)
+    const parentMap = buildParentMap(routeTree.value)
+    const withParents = new Set<string>(leafKeys)
+    leafKeys.forEach((key) => {
+      let current = key
+      while (parentMap.has(current)) {
+        const parent = parentMap.get(current)
+        if (!parent) break
+        withParents.add(parent)
+        current = parent
+      }
+    })
+    return Array.from(withParents)
   }
 
   function checkAll() {
@@ -153,6 +169,21 @@
       if (item.children?.length) return flattenLeafRouteNames(item.children)
       return item.routeName ? [item.routeName] : []
     })
+  }
+
+  function buildParentMap(
+    nodes: RolePagePermissionResponse['routeTree'],
+    parent?: string
+  ): Map<string, string> {
+    const map = new Map<string, string>()
+    const walk = (list: RolePagePermissionResponse['routeTree'], parentKey?: string) => {
+      list.forEach((node) => {
+        if (parentKey) map.set(node.routeName, parentKey)
+        if (node.children?.length) walk(node.children, node.routeName)
+      })
+    }
+    walk(nodes, parent)
+    return map
   }
 
   function reset() {
