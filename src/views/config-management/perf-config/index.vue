@@ -198,7 +198,7 @@
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"
               :total="paginationTotal"
-              :page-sizes="[10, 20, 50]"
+              :page-sizes="[10, 20, 50, 9999]"
               background
               layout="total, prev, pager, next, sizes"
             />
@@ -564,7 +564,7 @@
   const queriedSource = ref('')
   const queriedStatus = ref('')
   const currentPage = ref(1)
-  const pageSize = ref(20)
+  const pageSize = ref(10)
   const tableLoading = ref(false)
   const tableTotal = ref(0)
   const isTableRemote = computed(() => !PerfConfigApiSource[PerfConfigEndpoint.Table])
