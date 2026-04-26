@@ -257,7 +257,7 @@
       allLabel: '全部',
       emptySelectionLabel: '不限',
       selectAllLabel: '全部',
-      maxDisplayTags: 3,
+      maxDisplayTags: 1,
       autoHeight: false,
       autoMaxRows: 2,
       panelBodyMaxHeight: 320,
