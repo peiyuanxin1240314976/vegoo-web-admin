@@ -420,6 +420,7 @@
     if (appIdSet.size === 0) return settingApps
     return settingApps.filter((item) => appIdSet.has(String(item.sAppId ?? '').trim()))
   })
+  const firstAppId = computed(() => String(filterSettingApps.value[0]?.sAppId ?? '').trim())
 
   function normalizeMetaOptions(list: { label: string; value: string }[]) {
     return list.map((o) => ({
@@ -455,6 +456,10 @@
     return id ? [id] : []
   }
 
+  function hasSelectedApp(value: string | string[]) {
+    return getSelectedAppIds(value).length > 0
+  }
+
   const selectedAppLabel = computed(() => {
     const ids = getSelectedAppIds(filters.appId)
     if (ids.length === 0) return '全部'
@@ -472,12 +477,7 @@
     return v === 'all' || v === '' ? '' : v
   }
 
-  type PlatformAnalysisDetailRequestWithApps = Api.UserGrowth.PlatformAnalysisDetailRequest & {
-    appIds: string[]
-    apps: Array<{ appId: string; platform: number }>
-  }
-
-  function buildRequest(): PlatformAnalysisDetailRequestWithApps {
+  function buildRequest(): Api.UserGrowth.PlatformAnalysisDetailRequest {
     const name = ((route.query.name as string) || '应用').trim()
     const dr = dateRange.value
     const fallback = resolveDateRangeFromPreset('7d')
@@ -488,7 +488,6 @@
       startDate: dr?.[0] ?? fallback.date_start,
       endDate: dr?.[1] ?? fallback.date_end,
       appId: dimensionToApi(normalizedAppId),
-      appIds: appSelection.appIds,
       apps: appSelection.apps,
       source: dimensionToApi(filters.source),
       s_country_code: dimensionToApi(filters.s_country_code)
@@ -726,6 +725,16 @@
   watch(pageData, renderCharts, { deep: true })
 
   watch(cockpitMetaRef, syncMetaOptions, { immediate: true })
+
+  watch(
+    [() => filters.appId, firstAppId],
+    ([selected, fallbackAppId]) => {
+      if (hasSelectedApp(selected)) return
+      if (!fallbackAppId) return
+      filters.appId = [fallbackAppId]
+    },
+    { immediate: true }
+  )
 
   watch(
     () => route.query.name,
