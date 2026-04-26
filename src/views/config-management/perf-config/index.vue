@@ -99,6 +99,7 @@
             :data="tableRows"
             v-loading="tableLoading"
             element-loading-text="加载中..."
+            :empty-text="tableLoading ? '加载中...' : '暂无数据'"
             class="pc-table"
             style="width: 100%"
             :row-class-name="getRowClass"
@@ -192,7 +193,7 @@
           </el-table>
 
           <!-- 分页 -->
-          <div class="pagination-bar">
+          <div v-if="paginationTotal > 0" class="pagination-bar">
             <el-pagination
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"
@@ -485,8 +486,75 @@
     return sourceCodes(row).map((c) => optionLabel(metaSourceOptions.value, c) || c)
   }
 
+  const DEFAULT_VERSION: PerfVersion = {
+    version: 1,
+    status: 'draft',
+    publishedAt: '',
+    publishedBy: '',
+    evalMethod: 'ROI',
+    evalDays: 1,
+    targetRate: 0,
+    minRate: 0,
+    difficultyFactor: 1,
+    minProfit: null,
+    extraCondition: '',
+    isActive: false
+  }
+
+  function normalizeVersion(
+    raw: Partial<PerfVersion> | null | undefined,
+    fallbackVersion = 1
+  ): PerfVersion {
+    return {
+      version: raw?.version ?? fallbackVersion,
+      status:
+        raw?.status === 'published' || raw?.status === 'archived' || raw?.status === 'draft'
+          ? raw.status
+          : 'draft',
+      publishedAt: raw?.publishedAt ?? '',
+      publishedBy: raw?.publishedBy ?? '',
+      evalMethod: raw?.evalMethod === 'CPA' ? 'CPA' : 'ROI',
+      evalDays: raw?.evalDays ?? 1,
+      targetRate: raw?.targetRate ?? 0,
+      minRate: raw?.minRate ?? 0,
+      difficultyFactor: raw?.difficultyFactor ?? 1,
+      minProfit: raw?.minProfit ?? null,
+      extraCondition: raw?.extraCondition ?? '',
+      isActive: Boolean(raw?.isActive)
+    }
+  }
+
+  function normalizeItem(raw: PerfConfigItem): PerfConfigItem {
+    const versions = Array.isArray(raw.versions) ? raw.versions : []
+    const normalizedVersions = versions.map((ver, index) =>
+      normalizeVersion(ver as Partial<PerfVersion>, index + 1)
+    )
+    const activeFromList =
+      normalizedVersions.find((ver) => ver.isActive) ??
+      normalizedVersions.find((ver) => ver.status === 'published') ??
+      normalizedVersions[0]
+    const activeVersion = normalizeVersion(
+      raw.activeVersion as Partial<PerfVersion>,
+      activeFromList?.version ?? 1
+    )
+    const effectiveActiveVersion =
+      raw.activeVersion?.status == null && activeFromList ? activeFromList : activeVersion
+    return {
+      ...raw,
+      sourceList: raw.sourceList?.length ? raw.sourceList : raw.source ? [raw.source] : [],
+      runStatus:
+        raw.runStatus === 'running' || raw.runStatus === 'paused' || raw.runStatus === 'stopped'
+          ? raw.runStatus
+          : 'stopped',
+      activeVersion: effectiveActiveVersion,
+      versions: normalizedVersions.length
+        ? normalizedVersions
+        : [normalizeVersion(DEFAULT_VERSION, 1)]
+    }
+  }
+
   // ─── 数据 ──────────────────────────────────────────────
-  const list = ref<PerfConfigItem[]>(clonePerfList())
+  const list = ref<PerfConfigItem[]>(clonePerfList().map(normalizeItem))
   const filterKeyword = ref('')
   const filterPlatform = ref('')
   const filterSource = ref('')
@@ -507,7 +575,7 @@
 
   const loadOverviewKpi = async () => {
     try {
-      overviewKpi.value = await fetchPerfOverviewKpi(
+      const res = await fetchPerfOverviewKpi(
         {
           keyword: queriedKeyword.value || undefined,
           platform: queriedPlatform.value || undefined,
@@ -516,6 +584,12 @@
         },
         list.value
       )
+      overviewKpi.value = {
+        total: res?.total ?? 0,
+        published: res?.published ?? 0,
+        draft: res?.draft ?? 0,
+        archived: res?.archived ?? 0
+      }
     } catch {
       overviewKpi.value = { total: 0, published: 0, draft: 0, archived: 0 }
     }
@@ -604,7 +678,7 @@
         saveMode: item.activeVersion.status === 'published' ? 'publish' : 'draft'
       }).catch(() => undefined)
     }
-    list.value.unshift(item)
+    list.value.unshift(normalizeItem(item))
     void loadOverviewKpi()
     ElMessage.success('配置已保存')
   }
@@ -671,10 +745,15 @@
         source: queriedSource.value || undefined,
         status: queriedStatus.value || undefined
       })
-      list.value = res.records ?? []
+      list.value = (res.records ?? []).map(normalizeItem)
       tableTotal.value = res.total ?? 0
+      if (list.value.length === 0) {
+        drawerVisible.value = false
+      }
     } catch {
-      // keep mock fallback
+      list.value = []
+      tableTotal.value = 0
+      drawerVisible.value = false
     } finally {
       tableLoading.value = false
     }
