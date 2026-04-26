@@ -42,11 +42,11 @@
             ><span :class="roiClass(row.roiTotal)">{{ row.roiTotal }}%</span></template
           >
         </ElTableColumn>
-        <ElTableColumn label="操作" width="80" align="center" fixed="right">
+        <!-- <ElTableColumn label="操作" width="80" align="center" fixed="right">
           <template #default="{ row }">
-            <ElButton link type="primary" size="small">{{ row.actionText ?? '详情' }}</ElButton>
+            <ElButton link type="primary" size="small">{{ row.actionText ?? '详情11111' }}</ElButton>
           </template>
-        </ElTableColumn>
+        </ElTableColumn> -->
       </ElTable>
     </ElCard>
 

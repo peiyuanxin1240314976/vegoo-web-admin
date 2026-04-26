@@ -15,14 +15,14 @@
           {{ opt.label }}
         </button>
       </div>
-      <ElButton round class="ad-performance-detail-tab__export-btn">导出数据</ElButton>
+      <!-- <ElButton round class="ad-performance-detail-tab__export-btn">导出数据</ElButton> -->
     </div>
 
     <ElCard shadow="never" class="ad-performance-detail-card">
       <template #header>
         <div class="ad-performance-detail-card__header">
           <span>消耗 / 首日ROI 趋势</span>
-          <span class="ad-performance-detail-card__meta">高度 160px</span>
+          <!-- <span class="ad-performance-detail-card__meta">高度 160px</span> -->
         </div>
       </template>
       <div ref="dualAxisRef" class="ad-performance-detail-chart"></div>
@@ -32,7 +32,7 @@
       <template #header>
         <div class="ad-performance-detail-card__header">
           <span>CPI 趋势</span>
-          <span class="ad-performance-detail-card__meta">高度 100px</span>
+          <!-- <span class="ad-performance-detail-card__meta">高度 100px</span> -->
         </div>
       </template>
       <div
@@ -45,7 +45,7 @@
       <template #header>
         <div class="ad-performance-detail-card__header">
           <span>每日明细</span>
-          <span class="ad-performance-detail-card__meta">12px</span>
+          <!-- <span class="ad-performance-detail-card__meta">12px</span> -->
         </div>
       </template>
       <ElTable
