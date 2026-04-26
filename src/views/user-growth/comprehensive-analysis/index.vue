@@ -69,9 +69,27 @@
         </div>
       </header>
 
-      <main v-loading="loading" class="ca-main ca-entry-2">
+      <main class="ca-main ca-entry-2">
         <section class="ca-kpi-grid">
+          <template v-if="kpiLoading">
+            <article
+              v-for="idx in 5"
+              :key="`kpi-skeleton-${idx}`"
+              class="ca-kpi ca-neon-lift-card ca-entry-3"
+            >
+              <ElSkeleton animated>
+                <template #template>
+                  <div class="ca-kpi-skeleton">
+                    <ElSkeletonItem variant="text" class="ca-kpi-skeleton__title" />
+                    <ElSkeletonItem variant="text" class="ca-kpi-skeleton__value" />
+                    <ElSkeletonItem variant="text" class="ca-kpi-skeleton__sub" />
+                  </div>
+                </template>
+              </ElSkeleton>
+            </article>
+          </template>
           <article
+            v-else
             v-for="card in pageData?.kpis ?? []"
             :key="card.id"
             class="ca-kpi ca-neon-lift-card ca-entry-3"
@@ -99,7 +117,60 @@
           </article>
         </section>
 
-        <SectionPlatform :data="pageData" @drill-down="handleDrillDown" />
+        <ElSkeleton :loading="platformLoading" animated>
+          <template #template>
+            <div class="ca-section-skeleton">
+              <div class="ca-section-skeleton__grid ca-section-skeleton__grid--mid">
+                <div v-for="idx in 4" :key="`mid-card-${idx}`" class="ca-section-skeleton-card">
+                  <ElSkeletonItem variant="text" class="ca-section-skeleton-card__title" />
+                  <ElSkeletonItem
+                    variant="text"
+                    class="ca-section-skeleton-card__line ca-section-skeleton-card__line--w60"
+                  />
+                  <ElSkeletonItem
+                    variant="text"
+                    class="ca-section-skeleton-card__line ca-section-skeleton-card__line--w88"
+                  />
+                  <ElSkeletonItem
+                    variant="text"
+                    class="ca-section-skeleton-card__line ca-section-skeleton-card__line--w76"
+                  />
+                  <ElSkeletonItem
+                    variant="text"
+                    class="ca-section-skeleton-card__line ca-section-skeleton-card__line--w92"
+                  />
+                  <ElSkeletonItem
+                    variant="text"
+                    class="ca-section-skeleton-card__line ca-section-skeleton-card__line--w68"
+                  />
+                </div>
+              </div>
+
+              <div class="ca-section-skeleton__grid ca-section-skeleton__grid--bottom">
+                <div v-for="idx in 2" :key="`bottom-card-${idx}`" class="ca-section-skeleton-card">
+                  <ElSkeletonItem variant="text" class="ca-section-skeleton-card__title" />
+                  <ElSkeletonItem
+                    variant="text"
+                    class="ca-section-skeleton-card__line ca-section-skeleton-card__line--w80"
+                  />
+                  <ElSkeletonItem
+                    variant="text"
+                    class="ca-section-skeleton-card__line ca-section-skeleton-card__line--w92"
+                  />
+                  <ElSkeletonItem
+                    variant="text"
+                    class="ca-section-skeleton-card__line ca-section-skeleton-card__line--w74"
+                  />
+                  <ElSkeletonItem
+                    variant="text"
+                    class="ca-section-skeleton-card__line ca-section-skeleton-card__line--w86"
+                  />
+                </div>
+              </div>
+            </div>
+          </template>
+          <SectionPlatform :data="pageData" @drill-down="handleDrillDown" />
+        </ElSkeleton>
       </main>
     </template>
   </div>
@@ -112,10 +183,23 @@
   import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
   import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
-  import type { ComprehensiveAnalysisFilterState, ComprehensiveAnalysisData } from './types'
+  import type {
+    ComprehensiveAnalysisFilterState,
+    ComprehensiveAnalysisData,
+    ComprehensiveAnalysisApiParams
+  } from './types'
   import { useComprehensiveAnalysisFilters } from './composables/useComprehensiveAnalysisFilters'
-  import { fetchComprehensiveAnalysisData } from '@/api/user-growth'
+  import {
+    fetchComprehensiveAnalysisKpi,
+    fetchComprehensiveAnalysisPlatformCpiBar,
+    fetchComprehensiveAnalysisAppCpiRank,
+    fetchComprehensiveAnalysisCountryDistribution,
+    fetchComprehensiveAnalysisAlerts,
+    fetchComprehensiveAnalysisPlatformCpiTrend,
+    fetchComprehensiveAnalysisEcpmAnalysis
+  } from '@/api/user-growth'
   import { resolveDateRangeFromPreset } from './utils/buildApiParams'
+  import { buildComprehensiveAnalysisApiParams } from './utils/buildApiParams'
 
   const SectionPlatform = defineAsyncComponent(() => import('./modules/section-platform.vue'))
 
@@ -153,7 +237,9 @@
   const firstAppId = computed(() => String(settingAppsForSelect.value[0]?.sAppId ?? '').trim())
 
   const pageData = ref<ComprehensiveAnalysisData | null>(null)
-  const loading = ref(false)
+  const kpiLoading = ref(false)
+  const platformLoading = ref(false)
+  const requestSeq = ref(0)
   const hasBootstrappedInitialLoad = ref(false)
 
   const dateRangeValue = computed<[string, string] | null>({
@@ -177,21 +263,73 @@
     })
   }
 
-  async function loadData() {
-    loading.value = true
+  function buildApiParams(): ComprehensiveAnalysisApiParams {
+    return buildComprehensiveAnalysisApiParams({
+      date_start: filters.date_start,
+      date_end: filters.date_end,
+      s_app_id: filters.s_app_id,
+      adPlatform: filters.adPlatform,
+      s_country_code: filters.s_country_code
+    })
+  }
+
+  async function loadKpiData(params: ComprehensiveAnalysisApiParams, requestId: number) {
+    kpiLoading.value = true
     try {
-      pageData.value = await fetchComprehensiveAnalysisData({
-        date_start: filters.date_start,
-        date_end: filters.date_end,
-        s_app_id: filters.s_app_id,
-        adPlatform: filters.adPlatform,
-        s_country_code: filters.s_country_code
-      })
+      const kpis = await fetchComprehensiveAnalysisKpi(params)
+      if (requestId !== requestSeq.value) return
+      pageData.value = {
+        ...(pageData.value ?? ({} as ComprehensiveAnalysisData)),
+        kpis
+      }
     } catch {
       // http 拦截器统一处理错误提示
     } finally {
-      loading.value = false
+      if (requestId === requestSeq.value) kpiLoading.value = false
     }
+  }
+
+  async function loadPlatformData(params: ComprehensiveAnalysisApiParams, requestId: number) {
+    platformLoading.value = true
+    try {
+      const [
+        platformCpiBar,
+        appCpiRank,
+        countryDistribution,
+        alerts,
+        platformCpiTrend,
+        ecpmAnalysis
+      ] = await Promise.all([
+        fetchComprehensiveAnalysisPlatformCpiBar(params),
+        fetchComprehensiveAnalysisAppCpiRank(params),
+        fetchComprehensiveAnalysisCountryDistribution(params),
+        fetchComprehensiveAnalysisAlerts(params),
+        fetchComprehensiveAnalysisPlatformCpiTrend(params),
+        fetchComprehensiveAnalysisEcpmAnalysis(params)
+      ])
+      if (requestId !== requestSeq.value) return
+      pageData.value = {
+        ...(pageData.value ?? ({} as ComprehensiveAnalysisData)),
+        platformCpiBar,
+        appCpiRank,
+        countryCpiMap: countryDistribution?.mapItems ?? [],
+        countryTop8: countryDistribution?.top8 ?? [],
+        alerts,
+        platformCpiTrend,
+        ecpmAnalysis
+      }
+    } catch {
+      // http 拦截器统一处理错误提示
+    } finally {
+      if (requestId === requestSeq.value) platformLoading.value = false
+    }
+  }
+
+  function loadData() {
+    const requestId = requestSeq.value + 1
+    requestSeq.value = requestId
+    const params = buildApiParams()
+    return Promise.allSettled([loadKpiData(params, requestId), loadPlatformData(params, requestId)])
   }
 
   watch(
@@ -554,6 +692,111 @@
       line-height: 1.2;
       white-space: nowrap;
       opacity: 0.95;
+    }
+  }
+
+  .ca-kpi-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    &__title {
+      width: 62%;
+      height: 14px;
+    }
+
+    &__value {
+      width: 48%;
+      height: 30px;
+    }
+
+    &__sub {
+      width: 70%;
+      height: 12px;
+    }
+  }
+
+  .ca-section-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .ca-section-skeleton__grid {
+    display: grid;
+    gap: 14px;
+  }
+
+  .ca-section-skeleton__grid--mid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ca-section-skeleton__grid--bottom {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ca-section-skeleton-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    background: var(--default-box-color);
+    border: 1px solid var(--default-border);
+    border-radius: 12px;
+  }
+
+  .ca-section-skeleton-card__title {
+    width: 42%;
+    height: 14px;
+    margin-bottom: 4px;
+  }
+
+  .ca-section-skeleton-card__line {
+    height: 12px;
+  }
+
+  .ca-section-skeleton-card__line--w60 {
+    width: 60%;
+  }
+
+  .ca-section-skeleton-card__line--w68 {
+    width: 68%;
+  }
+
+  .ca-section-skeleton-card__line--w74 {
+    width: 74%;
+  }
+
+  .ca-section-skeleton-card__line--w76 {
+    width: 76%;
+  }
+
+  .ca-section-skeleton-card__line--w80 {
+    width: 80%;
+  }
+
+  .ca-section-skeleton-card__line--w86 {
+    width: 86%;
+  }
+
+  .ca-section-skeleton-card__line--w88 {
+    width: 88%;
+  }
+
+  .ca-section-skeleton-card__line--w92 {
+    width: 92%;
+  }
+
+  @media (width <= 1536px) {
+    .ca-section-skeleton__grid--mid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (width <= 980px) {
+    .ca-section-skeleton__grid--mid,
+    .ca-section-skeleton__grid--bottom {
+      grid-template-columns: 1fr;
     }
   }
 </style>
