@@ -1,15 +1,19 @@
 <!-- 用户管理 - 右侧面板：用户详情、分配角色、可访问应用、备注 -->
 <template>
   <div class="user-right-panel">
-    <template v-if="user">
+    <template v-if="mode === 'create' || user">
       <ElCard class="panel-section" shadow="never">
         <template #header>
           <span class="section-title">用户信息</span>
         </template>
-        <div class="user-info">
-          <div class="user-name">{{ user.userName }}</div>
-          <div v-if="user.nickName" class="user-nick">昵称：{{ user.nickName }}</div>
-          <div class="user-email">{{ user.userEmail }}</div>
+        <div v-if="mode !== 'create'" class="user-info">
+          <div class="user-name">{{ user!.userName }}</div>
+          <div v-if="user!.nickName" class="user-nick">昵称：{{ user!.nickName }}</div>
+          <div class="user-email">{{ user!.userEmail }}</div>
+        </div>
+        <div v-else class="user-info">
+          <div class="user-name">新建用户</div>
+          <div class="user-email">填写基础信息并分配角色与可访问应用</div>
         </div>
       </ElCard>
 
@@ -18,8 +22,15 @@
           <span class="section-title">基础信息</span>
         </template>
         <ElForm :model="baseForm" label-width="72px">
+          <ElFormItem label="姓名" required>
+            <ElInput v-model="baseForm.nickName" placeholder="请输入姓名" />
+          </ElFormItem>
           <ElFormItem label="用户名" required>
-            <ElInput v-model="baseForm.userName" placeholder="请输入用户名" />
+            <ElInput
+              v-model="baseForm.userName"
+              :disabled="mode !== 'create'"
+              placeholder="请输入用户名（仅支持英文/数字/下划线）"
+            />
           </ElFormItem>
           <ElFormItem label="手机号" required>
             <ElInput v-model="baseForm.userPhone" placeholder="请输入手机号" />
@@ -96,7 +107,9 @@
       <div class="panel-actions">
         <ElButton type="primary" @click="handleSave">保存</ElButton>
         <ElButton @click="handleCancelEdit">取消</ElButton>
-        <ElButton type="danger" plain @click="$emit('disable')">禁用</ElButton>
+        <ElButton v-if="mode !== 'create'" type="danger" plain @click="$emit('disable')"
+          >禁用</ElButton
+        >
       </div>
     </template>
 
@@ -112,18 +125,19 @@
 <script setup lang="ts">
   import { fetchUserAppPermissionsOptions } from '@/api/config-management/user-management'
   import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
-  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
-  import type { UserAppPermissionAppItem } from '../types'
+  import { useCockpitMetaFilterOptions } from '@/composables/use-cockpit-meta-filter'
 
   defineOptions({ name: 'UserRightPanel' })
 
   const props = withDefaults(
     defineProps<{
+      mode?: 'edit' | 'create'
       user?: Api.SystemManage.UserListItem | null
       editing?: boolean
       roleOptions?: { label: string; value: number }[]
     }>(),
     {
+      mode: 'edit',
       editing: false,
       roleOptions: () => [
         { label: '投放经理', value: 3 },
@@ -136,6 +150,7 @@
     (
       e: 'save',
       payload: {
+        nickName: string
         userName: string
         userPhone: string
         userGender: string
@@ -150,6 +165,7 @@
   }>()
 
   const baseForm = ref({
+    nickName: '',
     userName: '',
     userPhone: '',
     userGender: '男'
@@ -170,28 +186,15 @@
     remark: ''
   })
 
-  const appOptions = ref<UserAppPermissionAppItem[]>([])
+  const { cockpitMeta, ensureCockpitMetaLoaded } = useCockpitMetaFilterOptions()
   const appsLoading = ref(false)
-  const appsLoaded = ref(false)
   const appsLoadError = ref('')
-  const loadedUserId = ref<number>(0)
+  const loadedPermittedUserId = ref<number>(0)
 
-  const settingApps = computed<CockpitSettingAppItem[]>(() =>
-    (appOptions.value ?? []).map((a) => {
-      const platformName =
-        a.platform === 0 ? '安卓' : a.platform === 1 ? 'iOS' : a.platform === 2 ? 'Web' : ''
-      return {
-        sAppId: String(a.appUuid ?? ''),
-        sAppName: String(a.appName ?? ''),
-        sAppShortName: '',
-        sAppStoreId: '',
-        nPlatform: a.platform,
-        platformName,
-        nCategory: '',
-        categoryName: ''
-      } as CockpitSettingAppItem
-    })
-  )
+  const cockpitApps = computed(() => cockpitMeta.value?.settingApps ?? [])
+  const settingApps = computed(() => cockpitApps.value)
+
+  const appsLoaded = computed(() => settingApps.value.length > 0)
 
   function normalizeRoleId(input: unknown): number | '' {
     if (input == null) return ''
@@ -201,59 +204,107 @@
   }
 
   watch(
-    () => props.user,
-    (u) => {
+    () => [props.mode, props.user] as const,
+    ([mode, u]) => {
+      if (mode === 'create') {
+        baseForm.value = { nickName: '', userName: '', userPhone: '', userGender: '男' }
+        form.value = { roleId: '' as number | '', apps: [] as string[], remark: '' }
+        appsLoadError.value = ''
+        loadedPermittedUserId.value = 0
+        if (!cockpitApps.value.length && !appsLoading.value) {
+          appsLoading.value = true
+          Promise.resolve()
+            .then(() => ensureCockpitMetaLoaded())
+            .catch(() => {
+              appsLoadError.value = '加载应用列表失败，请稍后重试'
+            })
+            .finally(() => {
+              appsLoading.value = false
+            })
+        }
+        return
+      }
       if (u) {
+        const nameFromTable = String((u as any)?.name ?? '').trim()
         baseForm.value = {
+          nickName: nameFromTable || (u.nickName ?? ''),
           userName: u.userName ?? '',
           userPhone: u.userPhone ?? '',
           userGender: normalizeGender(u.userGender)
         }
         form.value.roleId = normalizeRoleId((u as any)?.userRoles?.[0])
         form.value.remark = u.remark ?? ''
-        if (loadedUserId.value !== u.id || !appsLoaded.value) {
-          void loadAppOptions(u.id, u.accessibleApps ?? [])
-        } else {
-          form.value.apps = [...(u.accessibleApps ?? form.value.apps)]
+        form.value.apps = [...(u.accessibleApps ?? [])]
+
+        // 候选列表兜底：若尚无 appOptions，则确保 cockpit settingApps 已加载（避免选择器被禁用）
+        if (!cockpitApps.value.length && !appsLoading.value) {
+          appsLoading.value = true
+          Promise.resolve()
+            .then(() => ensureCockpitMetaLoaded())
+            .catch(() => {
+              appsLoadError.value = '加载应用列表失败，请稍后重试'
+            })
+            .finally(() => {
+              appsLoading.value = false
+            })
+        }
+
+        // 回显兜底：table 未返回 accessibleApps 或返回空数组时，才去 options 拉 permitted 回显
+        const needFallback =
+          (u.accessibleApps == null ||
+            (Array.isArray(u.accessibleApps) && u.accessibleApps.length === 0)) &&
+          u.id > 0
+        if (needFallback && loadedPermittedUserId.value !== u.id) {
+          void loadPermittedAppsFallback(u.id)
         }
       } else {
-        baseForm.value = { userName: '', userPhone: '', userGender: '男' }
+        baseForm.value = { nickName: '', userName: '', userPhone: '', userGender: '男' }
         form.value = { roleId: '', apps: [], remark: '' }
-        appOptions.value = []
-        appsLoaded.value = false
         appsLoadError.value = ''
-        loadedUserId.value = 0
+        loadedPermittedUserId.value = 0
       }
     },
     { immediate: true }
   )
 
-  async function loadAppOptions(userId: number, accessibleApps: string[]) {
-    if (!(userId > 0)) {
-      appOptions.value = []
-      form.value.apps = [...accessibleApps]
-      appsLoaded.value = false
-      appsLoadError.value = ''
-      return
-    }
-
+  async function loadPermittedAppsFallback(userId: number) {
+    if (!(userId > 0)) return
     appsLoading.value = true
-    appsLoaded.value = false
     appsLoadError.value = ''
-
     try {
-      const data = await fetchUserAppPermissionsOptions(userId)
-      const list = (data.apps ?? []).filter((a) => String(a.appUuid ?? '').trim() !== '')
-      const selected = list.filter((a) => a.permitted).map((a) => a.appUuid)
+      // 先确保 cockpit 应用列表存在，便于做 appUuid/appId → sAppId 的映射
+      if (!cockpitApps.value.length) {
+        await ensureCockpitMetaLoaded()
+      }
 
-      appOptions.value = list
-      form.value.apps = selected.length ? selected : [...accessibleApps]
-      appsLoaded.value = true
-      loadedUserId.value = userId
+      const data = await fetchUserAppPermissionsOptions(userId)
+      const permitted = (data.apps ?? []).filter((a) => a && a.permitted)
+
+      // AppPlatformSearchSelect 多选的 modelValue 需要是 settingApps 的 sAppId
+      const mapped = permitted
+        .map((a) => {
+          const uuid = String((a as any).appUuid ?? '').trim()
+          const appId = String((a as any).appId ?? '').trim()
+          const hitByUuid = uuid
+            ? cockpitApps.value.find((c) => String((c as any).sAppUUId ?? '').trim() === uuid)
+            : undefined
+          if (hitByUuid?.sAppId) return String(hitByUuid.sAppId)
+          const hitByAppId = appId
+            ? cockpitApps.value.find((c) => String(c.sAppId ?? '').trim() === appId)
+            : undefined
+          if (hitByAppId?.sAppId) return String(hitByAppId.sAppId)
+          return appId || uuid
+        })
+        .map((v) => String(v ?? '').trim())
+        .filter(Boolean)
+
+      if (mapped.length) {
+        form.value.apps = Array.from(new Set(mapped))
+      }
+      loadedPermittedUserId.value = userId
     } catch {
-      appOptions.value = []
-      form.value.apps = [...accessibleApps]
-      appsLoadError.value = '加载应用列表失败，请稍后重试'
+      appsLoadError.value = '加载可访问应用回显失败，请稍后重试'
+      loadedPermittedUserId.value = userId
     } finally {
       appsLoading.value = false
     }
@@ -261,6 +312,7 @@
 
   function handleSave() {
     emit('save', {
+      nickName: baseForm.value.nickName,
       userName: baseForm.value.userName,
       userPhone: baseForm.value.userPhone,
       userGender: baseForm.value.userGender,

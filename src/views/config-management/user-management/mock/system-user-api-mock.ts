@@ -14,7 +14,9 @@ import type {
   DisableUserPayload,
   DisableUserResponse,
   UserAppPermissionsOptionsData,
-  SaveUserAppPermissionsPayload
+  SaveUserAppPermissionsPayload,
+  ResetUserPasswordPayload,
+  ResetUserPasswordResponse
 } from '../types'
 
 const MAX_PAGE_SIZE = 10
@@ -236,4 +238,16 @@ export function mockSaveUserAppPermissions(
     accessibleApps: [...payload.allowedAppUuids]
   })
   return Promise.resolve({ success: true })
+}
+
+// ==================== 09-user-reset-password ====================
+
+export function mockResetUserPassword(
+  payload: ResetUserPasswordPayload
+): Promise<ResetUserPasswordResponse> {
+  void payload.operator
+  const now = new Date()
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
+  return Promise.resolve({ success: true, id: payload.id, resetAt: fmt(now) })
 }

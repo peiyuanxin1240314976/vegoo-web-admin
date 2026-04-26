@@ -8,7 +8,7 @@
         :filter-form="filterForm"
         :batch-mode="batchMode"
         :role-options="roleOptions"
-        @add-user="showDialog('add')"
+        @add-user="openCreateDrawer"
         @search="handleSearch"
         @reset="resetSearchParams"
         @toggle-batch="toggleBatchMode"
@@ -44,6 +44,7 @@
       @closed="handleRightDrawerClosed"
     >
       <UserRightPanel
+        :mode="rightPanelMode"
         :user="currentDetailUser"
         :editing="rightPanelEditing"
         :role-options="assignRoleOptions"
@@ -78,7 +79,8 @@
     fetchUserList,
     createUser,
     updateUser,
-    disableUser
+    disableUser,
+    resetUserPassword
   } from '@/api/config-management'
   import UserLeftPanel from './modules/user-left-panel.vue'
   import UserRightPanel from './modules/user-right-panel.vue'
@@ -114,8 +116,10 @@
   const currentDetailUser = ref<UserListItem | null>(null)
   const rightPanelEditing = ref(false)
   const rightDrawerVisible = ref(false)
+  const rightPanelMode = ref<'edit' | 'create'>('edit')
 
   const rightDrawerTitle = computed(() => {
+    if (rightPanelMode.value === 'create') return '新建用户'
     const u = currentDetailUser.value
     if (!u) return '用户详情'
     const name = String(u.userName ?? '').trim()
@@ -300,6 +304,11 @@
                 }
               }),
               h(ArtButtonTable, {
+                icon: 'ri:lock-password-line',
+                iconClass: 'bg-warning/12 text-warning',
+                onClick: () => resetPassword(row)
+              }),
+              h(ArtButtonTable, {
                 type: 'delete',
                 onClick: () => deleteUser(row)
               })
@@ -367,18 +376,6 @@
   }
 
   /**
-   * 显示用户弹窗
-   */
-  const showDialog = (type: DialogType, row?: UserListItem): void => {
-    console.log('打开弹窗:', { type, row })
-    dialogType.value = type
-    currentUserData.value = row || {}
-    nextTick(() => {
-      dialogVisible.value = true
-    })
-  }
-
-  /**
    * 删除用户（禁用）
    */
   const deleteUser = (row: UserListItem): void => {
@@ -395,6 +392,17 @@
       }
       refreshData()
       loadStats()
+    })
+  }
+
+  const resetPassword = (row: UserListItem): void => {
+    ElMessageBox.confirm(`确定要重置用户「${row.userName}」的密码吗？`, '重置密码', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(async () => {
+      await resetUserPassword({ id: row.id, operator: 'current_user' })
+      ElMessage.success('重置成功')
     })
   }
 
@@ -482,6 +490,14 @@
   const handleTableRowClick = (row: UserListItem) => {
     currentDetailUser.value = row
     rightPanelEditing.value = true
+    rightPanelMode.value = 'edit'
+    rightDrawerVisible.value = true
+  }
+
+  const openCreateDrawer = () => {
+    currentDetailUser.value = null
+    rightPanelEditing.value = true
+    rightPanelMode.value = 'create'
     rightDrawerVisible.value = true
   }
 
@@ -493,10 +509,12 @@
   const handleRightDrawerClosed = () => {
     rightPanelEditing.value = false
     currentDetailUser.value = null
+    rightPanelMode.value = 'edit'
   }
 
   /** 右侧面板保存（基础信息 + 权限） */
   const handleRightPanelSave = async (payload: {
+    nickName: string
     userName: string
     userPhone: string
     userGender: string
@@ -504,34 +522,85 @@
     accessibleApps: string[]
     remark: string
   }) => {
-    if (!currentDetailUser.value) return
     try {
-      // 仅走 updateUser：将角色/可访问应用/备注一并提交（去掉 /user/permission-update）
       const nextUserRoles =
         payload.roleId !== '' ? [Number(payload.roleId)].filter((n) => Number.isFinite(n)) : []
-      await updateUser({
-        id: currentDetailUser.value.id,
-        userName: payload.userName,
-        userPhone: payload.userPhone,
-        userGender: payload.userGender,
-        userRoles: nextUserRoles,
-        accessibleApps: payload.accessibleApps,
-        remark: payload.remark
-      } as any)
-      currentDetailUser.value = {
-        ...currentDetailUser.value,
-        userName: payload.userName,
-        userPhone: payload.userPhone,
-        userGender: payload.userGender,
-        accessibleApps: [...payload.accessibleApps],
-        remark: payload.remark,
-        userRoles:
-          payload.roleId !== ''
-            ? [String(payload.roleId)]
-            : [...(currentDetailUser.value.userRoles ?? [])]
+
+      const name = String(payload.nickName ?? '').trim()
+      const userName = String(payload.userName ?? '').trim()
+      const userPhone = String(payload.userPhone ?? '').trim()
+      const userGender = String(payload.userGender ?? '').trim()
+
+      const hasChinese = /[\u4e00-\u9fa5]/.test(userName)
+      const hasSpace = /\s/.test(userName)
+      if (hasChinese || hasSpace) {
+        ElMessage.warning('用户名仅支持英文/数字/下划线，且不能包含中文或空格')
+        return
       }
-      ElMessage.success('保存成功')
-      rightPanelEditing.value = false
+
+      if (!name) {
+        ElMessage.warning('请填写姓名')
+        return
+      }
+      if (!userName) {
+        ElMessage.warning('请填写用户名')
+        return
+      }
+      if (!userPhone) {
+        ElMessage.warning('请填写手机号')
+        return
+      }
+      if (payload.roleId === '' || !nextUserRoles.length) {
+        ElMessage.warning('请选择角色')
+        return
+      }
+
+      if (rightPanelMode.value === 'create') {
+        await createUser({
+          // 以你说的 table 字段为准：name 对应姓名
+          name,
+          // 兼容旧字段：后端若仍用 nickName 也可接
+          nickName: name,
+          userName,
+          userPhone,
+          userGender,
+          userRoles: nextUserRoles,
+          accessibleApps: payload.accessibleApps,
+          remark: payload.remark
+        } as any)
+        ElMessage.success('创建成功')
+        rightDrawerVisible.value = false
+      } else {
+        if (!currentDetailUser.value) return
+        // 仅走 updateUser：将角色/可访问应用/备注一并提交
+        const updatePayload = {
+          id: currentDetailUser.value.id,
+          name,
+          nickName: name,
+          userName,
+          userPhone,
+          userGender,
+          userRoles: nextUserRoles,
+          accessibleApps: payload.accessibleApps,
+          remark: payload.remark
+        } as any
+        await updateUser(updatePayload)
+        currentDetailUser.value = {
+          ...currentDetailUser.value,
+          nickName: name,
+          userName,
+          userPhone,
+          userGender,
+          accessibleApps: [...payload.accessibleApps],
+          remark: payload.remark,
+          userRoles:
+            payload.roleId !== ''
+              ? [String(payload.roleId)]
+              : [...(currentDetailUser.value.userRoles ?? [])]
+        }
+        ElMessage.success('保存成功')
+        rightPanelEditing.value = false
+      }
       refreshData()
       loadStats()
     } catch (error) {

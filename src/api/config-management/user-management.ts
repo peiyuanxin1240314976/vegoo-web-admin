@@ -15,7 +15,9 @@ import type {
   DisableUserResponse,
   SystemUserItem,
   UserAppPermissionsOptionsData,
-  SaveUserAppPermissionsPayload
+  SaveUserAppPermissionsPayload,
+  ResetUserPasswordPayload,
+  ResetUserPasswordResponse
 } from '@/views/config-management/user-management/types'
 import {
   SystemUserEndpoint,
@@ -66,9 +68,14 @@ export function createUser(data: CreateUserPayload) {
   if (isSystemUserEndpointMock(SystemUserEndpoint.Create)) {
     return userManagementMock.mockCreateUser(data)
   }
+  // 兼容后端字段别名：部分实现可能使用 apps 表示可访问应用列表
+  const payload = {
+    ...(data as any),
+    apps: (data as any).apps ?? data.accessibleApps
+  } as any
   return request.post<SystemUserItem>({
     url: `${USER_MANAGEMENT_BASE}/create`,
-    data,
+    data: payload,
     showErrorMessage: false
   })
 }
@@ -78,9 +85,14 @@ export function updateUser(data: UpdateUserPayload) {
   if (isSystemUserEndpointMock(SystemUserEndpoint.Update)) {
     return userManagementMock.mockUpdateUser(data)
   }
+  // 兼容后端字段别名：apps / accessibleApps
+  const payload = {
+    ...(data as any),
+    apps: (data as any).apps ?? data.accessibleApps
+  } as any
   return request.put<{ success: boolean; updatedUser: SystemUserItem }>({
     url: `${USER_MANAGEMENT_BASE}/${data.id}`,
-    data,
+    data: payload,
     showErrorMessage: false
   })
 }
@@ -128,6 +140,18 @@ export function saveUserAppPermissions(data: SaveUserAppPermissionsPayload) {
   }
   return request.post<{ success: boolean }>({
     url: `${USER_MANAGEMENT_BASE}/app-permissions`,
+    data,
+    showErrorMessage: true
+  })
+}
+
+/** 表格操作 · 重置密码 */
+export function resetUserPassword(data: ResetUserPasswordPayload) {
+  if (isSystemUserEndpointMock(SystemUserEndpoint.ResetPassword)) {
+    return userManagementMock.mockResetUserPassword(data)
+  }
+  return request.post<ResetUserPasswordResponse>({
+    url: `${USER_MANAGEMENT_BASE}/${data.id}/reset-password`,
     data,
     showErrorMessage: true
   })

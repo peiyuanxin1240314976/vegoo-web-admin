@@ -25,7 +25,9 @@ export enum SystemUserEndpoint {
   /** 07-user-app-permissions-options：应用权限弹窗选项 */
   AppPermissionsOptions = 'appPermissionsOptions',
   /** 08-user-app-permissions-save：应用权限弹窗保存 */
-  AppPermissionsSave = 'appPermissionsSave'
+  AppPermissionsSave = 'appPermissionsSave',
+  /** 09-user-reset-password：表格操作重置密码 */
+  ResetPassword = 'resetPassword'
 }
 
 const SystemUserApiMockDefaults: Record<SystemUserEndpoint, boolean> = {
@@ -37,7 +39,9 @@ const SystemUserApiMockDefaults: Record<SystemUserEndpoint, boolean> = {
   [SystemUserEndpoint.PermissionUpdate]: false,
   [SystemUserEndpoint.Disable]: false,
   [SystemUserEndpoint.AppPermissionsOptions]: false,
-  [SystemUserEndpoint.AppPermissionsSave]: false
+  [SystemUserEndpoint.AppPermissionsSave]: false,
+  // 已联调：走真实网关接口
+  [SystemUserEndpoint.ResetPassword]: false
 }
 
 export function isSystemUserEndpointMock(endpoint: SystemUserEndpoint): boolean {

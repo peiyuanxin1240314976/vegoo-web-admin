@@ -2,6 +2,7 @@
   "_comment": "配置管理 - 用户管理 - 新建用户。",
   "fieldDescription": {
     "request": {
+      "nickName": { "type": "string", "required": true, "description": "姓名（展示名）。" },
       "userName": {
         "type": "string",
         "required": true,
@@ -20,7 +21,6 @@
         "description": "角色主键数组（字段名 userRoles；元素为 RoleListItem.roleId），至少 1 项。"
       },
       "userEmail": { "type": "string", "required": false, "description": "邮箱，可选。" },
-      "nickName": { "type": "string", "required": false, "description": "昵称，可选。" },
       "accessibleApps": {
         "type": "string[]",
         "required": false,
@@ -56,11 +56,11 @@
   },
   "sampleRequest": {
     "userName": "eva",
+    "nickName": "Eva",
     "userPhone": "13800130005",
     "userGender": "女",
     "userRoles": [3],
     "userEmail": "eva@example.com",
-    "nickName": "Eva",
     "accessibleApps": ["weather5"],
     "remark": "新入职优化师"
   },

@@ -18,6 +18,8 @@ export interface SystemUserItem {
   status: string
   userName: string
   nickName: string
+  /** table 字段：姓名（后端字段名为 name） */
+  name?: string
   userGender: string
   userPhone: string
   userEmail: string
@@ -120,6 +122,19 @@ export interface DisableUserResponse {
   id: number
   status: string
   updateTime: string
+}
+
+/** 重置密码请求体 */
+export interface ResetUserPasswordPayload {
+  id: number
+  operator?: string
+}
+
+/** 重置密码响应体 */
+export interface ResetUserPasswordResponse {
+  success: boolean
+  id: number
+  resetAt: string
 }
 
 /** 应用权限 · 单条应用（options 中 apps 元素） */
