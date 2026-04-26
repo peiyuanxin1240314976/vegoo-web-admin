@@ -30,6 +30,7 @@
             placeholder="全部"
             search-placeholder="搜索类别/应用名称/应用简称"
             mode="app"
+            :force-single="true"
             empty-selection-label="全部"
             select-all-label="全部"
             :setting-apps="filterSettingApps"
@@ -731,7 +732,7 @@
     ([selected, fallbackAppId]) => {
       if (hasSelectedApp(selected)) return
       if (!fallbackAppId) return
-      filters.appId = [fallbackAppId]
+      filters.appId = fallbackAppId
     },
     { immediate: true }
   )

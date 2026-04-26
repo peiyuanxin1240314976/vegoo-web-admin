@@ -94,7 +94,7 @@
 
       <div class="app-platform-search-select__body">
         <button
-          v-if="clearable && hasSelection && !isMultiAppMode"
+          v-if="showClearRow"
           type="button"
           class="app-platform-search-select__row app-platform-search-select__row--clear"
           @click="clearSelection"
@@ -208,6 +208,8 @@
       mode?: SelectMode
       /** 仅 mode=app 时有效：多选应用 ID */
       multiple?: boolean
+      /** 仅 mode=app 时有效：强制单选（忽略路由默认多选规则） */
+      forceSingle?: boolean
       placeholder?: string
       searchPlaceholder?: string
       /** 单选时「清空当前选择」行文案，默认「全部」 */
@@ -252,6 +254,7 @@
       modelValue: '',
       mode: 'app',
       multiple: false,
+      forceSingle: false,
       placeholder: '请选择',
       searchPlaceholder: '搜索类别/应用名称/应用简称/商店ID',
       allLabel: '全部',
@@ -316,9 +319,11 @@
   const isTextManagementRoute = computed(() =>
     String(route.path ?? '').startsWith('/product-operations/text-management')
   )
-  const isMultiAppMode = computed(
-    () => props.mode === 'app' && (props.multiple || !isTextManagementRoute.value)
-  )
+  const isMultiAppMode = computed(() => {
+    if (props.mode !== 'app') return false
+    if (props.forceSingle) return false
+    return props.multiple || !isTextManagementRoute.value
+  })
 
   const rootStyle = computed<Record<string, string>>(() => {
     const style: Record<string, string> = {
@@ -513,6 +518,11 @@
   const clearRowLabel = computed(() =>
     isMultiAppMode.value ? props.emptySelectionLabel : props.allLabel
   )
+  const showClearRow = computed(() => {
+    // 单选 app 模式不展示顶部“全部”行，避免与真实选项混淆
+    const isSingleAppMode = props.mode === 'app' && !isMultiAppMode.value
+    return props.clearable && hasSelection.value && !isMultiAppMode.value && !isSingleAppMode
+  })
 
   const isMultiAppDisplay = computed(() => isMultiAppMode.value)
 
