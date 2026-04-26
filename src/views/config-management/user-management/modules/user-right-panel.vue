@@ -174,6 +174,7 @@
   const appsLoading = ref(false)
   const appsLoaded = ref(false)
   const appsLoadError = ref('')
+  const loadedUserId = ref<number>(0)
 
   const settingApps = computed<CockpitSettingAppItem[]>(() =>
     (appOptions.value ?? []).map((a) => {
@@ -210,13 +211,18 @@
         }
         form.value.roleId = normalizeRoleId((u as any)?.userRoles?.[0])
         form.value.remark = u.remark ?? ''
-        void loadAppOptions(u.id, u.accessibleApps ?? [])
+        if (loadedUserId.value !== u.id || !appsLoaded.value) {
+          void loadAppOptions(u.id, u.accessibleApps ?? [])
+        } else {
+          form.value.apps = [...(u.accessibleApps ?? form.value.apps)]
+        }
       } else {
         baseForm.value = { userName: '', userPhone: '', userGender: '男' }
         form.value = { roleId: '', apps: [], remark: '' }
         appOptions.value = []
         appsLoaded.value = false
         appsLoadError.value = ''
+        loadedUserId.value = 0
       }
     },
     { immediate: true }
@@ -243,6 +249,7 @@
       appOptions.value = list
       form.value.apps = selected.length ? selected : [...accessibleApps]
       appsLoaded.value = true
+      loadedUserId.value = userId
     } catch {
       appOptions.value = []
       form.value.apps = [...accessibleApps]
