@@ -40,6 +40,7 @@
       :title="rightDrawerTitle"
       size="50%"
       :append-to-body="true"
+      :close-on-click-modal="false"
       destroy-on-close
       @closed="handleRightDrawerClosed"
     >
@@ -593,10 +594,9 @@
           userGender,
           accessibleApps: [...payload.accessibleApps],
           remark: payload.remark,
-          userRoles:
-            payload.roleId !== ''
-              ? [String(payload.roleId)]
-              : [...(currentDetailUser.value.userRoles ?? [])]
+          userRoles: nextUserRoles.length
+            ? [String(nextUserRoles[0])]
+            : [...(currentDetailUser.value.userRoles ?? [])]
         }
         ElMessage.success('保存成功')
         rightPanelEditing.value = false
