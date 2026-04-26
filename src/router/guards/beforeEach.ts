@@ -377,9 +377,11 @@ async function handleDynamicRoutes(
 
     // 8. 验证目标路径权限
     const { homePath } = useCommon()
+    const targetPath =
+      to.path === '/' && homePath.value && homePath.value !== '/' ? homePath.value : to.path
     profiler.start('validatePathPermission')
     const { path: validatedPath, hasPermission } = RoutePermissionValidator.validatePath(
-      to.path,
+      targetPath,
       menuList,
       homePath.value || '/'
     )
@@ -405,7 +407,7 @@ async function handleDynamicRoutes(
     } else {
       // 有权限，正常导航
       next({
-        path: to.path,
+        path: targetPath,
         query: to.query,
         hash: to.hash,
         replace: true
