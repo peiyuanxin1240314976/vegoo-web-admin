@@ -96,12 +96,12 @@
 
     <!-- 主体：左侧表格 + 右侧图表 -->
     <ElRow :gutter="16" class="ap-body ac-perf-entry-3">
-      <!-- 左侧：应用×平台×账户明细表（min-width:0 让列可收缩，表格内部横向滚动） -->
+      <!-- 左侧：应用×广告平台×账户明细表（min-width:0 让列可收缩，表格内部横向滚动） -->
       <ElCol :xs="24" :md="16" :lg="17" :xl="17" class="ap-table-col">
         <ElCard class="ap-table-card" shadow="never">
           <template #header>
             <div class="flex items-center">
-              <span class="ap-table-title">应用 × 平台 × 账户明细</span>
+              <span class="ap-table-title">应用 × 广告平台 × 账户明细</span>
               <div class="date-range-box">
                 <div
                   class="date-range-slider"
@@ -350,7 +350,7 @@
   const getNameStyleAny = getNameStyle as any
   const rangeOptions: { value: string; label: string }[] = [
     { value: '应用', label: '应用' },
-    { value: '平台', label: '平台' },
+    { value: '广告平台', label: '广告平台' },
     { value: '账户', label: '账户' }
   ]
 
@@ -362,19 +362,19 @@
   const currentDraftKeys = computed({
     get: () => {
       if (modelValue.value === '应用') return appDraftKeys.value
-      if (modelValue.value === '平台') return platformDraftKeys.value
+      if (modelValue.value === '广告平台') return platformDraftKeys.value
       return accountDraftKeys.value
     },
     set: (value: string) => {
       if (modelValue.value === '应用') appDraftKeys.value = value
-      else if (modelValue.value === '平台') platformDraftKeys.value = value
+      else if (modelValue.value === '广告平台') platformDraftKeys.value = value
       else accountDraftKeys.value = value
     }
   })
 
   const currentSearchPlaceholder = computed(() => {
     if (modelValue.value === '应用') return '搜索应用'
-    if (modelValue.value === '平台') return '搜索平台'
+    if (modelValue.value === '广告平台') return '搜索广告平台'
     return '搜索账户'
   })
 
@@ -391,7 +391,7 @@
       void loadAppTableTree()
       return
     }
-    if (modelValue.value === '平台') {
+    if (modelValue.value === '广告平台') {
       platformAppliedKeys.value = platformDraftKeys.value.trim()
       return
     }
@@ -423,7 +423,7 @@
     await Promise.all(parallel)
   }
 
-  // 应用×平台×账户明细树形表：独立请求 + 局部骨架屏
+  // 应用×广告平台×账户明细树形表：独立请求 + 局部骨架屏
   const appTableTreeFallback = mock.value.tableTree
   const appTableTree = ref<AccountDetailRow[]>(appTableTreeFallback)
   const appTableLoading = ref(false)
@@ -759,7 +759,7 @@
   /** 背景透明度（plain） */
   const ROW_BG_ALPHA_LIGHT = 0.14
   const ROW_BG_ALPHA_DARK = 0.22
-  /** “应用/平台”名称字体透明度（强调） */
+  /** “应用/广告平台”名称字体透明度（强调） */
   const NAME_TEXT_ALPHA_LIGHT = 0.95
   const NAME_TEXT_ALPHA_DARK = 0.92
 
@@ -815,7 +815,7 @@
   const WHITE_VALUE_COLUMNS = new Set(['广告支出', '预算', '使用率', 'CPI', '安装数'])
 
   function getCellStyle({ row, column }: { row: TableRowWithMeta; column: { label?: string } }) {
-    // stripe 的底色在 td 上，使用 cell-style 才能稳定覆盖到二级平台行
+    // stripe 的底色在 td 上，使用 cell-style 才能稳定覆盖到二级广告平台行
     const base = getRowStyle({ row })
     if (row.type === 'account') return base
 
