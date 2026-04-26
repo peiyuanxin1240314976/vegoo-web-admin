@@ -10,7 +10,8 @@ export const productInsightRoutes: AppRouteRecord = {
   meta: {
     title: 'menus.productInsight.title',
     icon: 'ri:lightbulb-flash-line',
-    roles: ['R_SUPER', 'R_ADMIN']
+    roles: ['R_SUPER', 'R_ADMIN'],
+    isHide: true
   },
   children: [
     {

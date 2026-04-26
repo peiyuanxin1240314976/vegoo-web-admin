@@ -10,7 +10,8 @@ export const productOperationsRoutes: AppRouteRecord = {
   meta: {
     title: 'menus.productOperations.title',
     icon: 'ri:store-2-line',
-    roles: ['R_SUPER', 'R_ADMIN']
+    roles: ['R_SUPER', 'R_ADMIN'],
+    isHide: true
   },
   children: [
     {

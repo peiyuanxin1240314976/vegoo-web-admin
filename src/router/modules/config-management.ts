@@ -30,6 +30,7 @@ export const configManagementRoutes: AppRouteRecord = {
       component: '/config-management/app-store-management',
       meta: {
         title: 'menus.configManagement.appStoreManagement',
+        isHide: true,
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
@@ -90,6 +91,7 @@ export const configManagementRoutes: AppRouteRecord = {
       component: '/config-management/country-management',
       meta: {
         title: 'menus.configManagement.countryManagement',
+        isHide: true,
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
@@ -100,6 +102,7 @@ export const configManagementRoutes: AppRouteRecord = {
       component: '/config-management/exchange-rate-management',
       meta: {
         title: 'menus.configManagement.exchangeRateManagement',
+        isHide: true,
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
@@ -110,6 +113,7 @@ export const configManagementRoutes: AppRouteRecord = {
       component: '/config-management/cost-coefficient',
       meta: {
         title: 'menus.configManagement.costCoefficient',
+        isHide: true,
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
@@ -130,6 +134,7 @@ export const configManagementRoutes: AppRouteRecord = {
       component: '/config-management/order-import',
       meta: {
         title: 'menus.configManagement.orderImport',
+        isHide: true,
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }

@@ -92,6 +92,7 @@ export const userGrowthRoutes: AppRouteRecord = {
       component: '/user-growth/conversion-management',
       meta: {
         title: 'menus.userGrowth.conversionManagement',
+        isHide: true,
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
@@ -122,6 +123,7 @@ export const userGrowthRoutes: AppRouteRecord = {
       component: '/user-growth/overall-recovery',
       meta: {
         title: 'menus.userGrowth.overallRecovery',
+        isHide: true,
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
@@ -132,6 +134,7 @@ export const userGrowthRoutes: AppRouteRecord = {
       component: '/user-growth/performance-analysis/PerformanceList',
       meta: {
         title: 'menus.userGrowth.performanceAnalysis',
+        isHide: true,
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }

@@ -10,7 +10,8 @@ export const monetizationRoutes: AppRouteRecord = {
   meta: {
     title: 'menus.monetization.title',
     icon: 'ri:money-dollar-circle-line',
-    roles: ['R_SUPER', 'R_ADMIN']
+    roles: ['R_SUPER', 'R_ADMIN'],
+    isHide: true
   },
   children: [
     {
