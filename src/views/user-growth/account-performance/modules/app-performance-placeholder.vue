@@ -204,7 +204,7 @@
               </template>
             </ElTableColumn>
 
-            <ElTableColumn label="操作" width="88" align="center">
+            <!-- <ElTableColumn label="操作" width="88" align="center">
               <template #default="{ row }">
                 <ElButton
                   round
@@ -217,7 +217,7 @@
                   系列
                 </ElButton>
               </template>
-            </ElTableColumn>
+            </ElTableColumn> -->
           </ElTable>
         </div>
 
@@ -248,7 +248,7 @@
 
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
-  import { useRouter } from 'vue-router'
+  // import { useRouter } from 'vue-router'
   import request from '@/utils/http'
   import { buildAppSelectionRequestBody } from '@/utils/app-id-request'
   import { ACCOUNT_PERFORMANCE_API_BASE } from '@/views/user-growth/account-performance/config/api-base'
@@ -308,7 +308,7 @@
     keys: string
   }>()
 
-  const router = useRouter()
+  // const router = useRouter()
   const currentPage = ref(1)
   const pageSize = ref(10)
   const accountsLoading = ref(true)
@@ -527,21 +527,21 @@
     }))
   )
 
-  function canOpenCampaignDetail(row: TableAccountRow): boolean {
-    return Boolean(row.adAccount?.id?.trim() && row.appId?.trim())
-  }
+  // function canOpenCampaignDetail(row: TableAccountRow): boolean {
+  //   return Boolean(row.adAccount?.id?.trim() && row.appId?.trim())
+  // }
 
-  function goCampaignDetail(row: TableAccountRow) {
-    if (!canOpenCampaignDetail(row)) return
-    router.push({
-      name: 'CampaignDetail',
-      query: {
-        id: String(row.adAccount.id),
-        appId: String(row.appId),
-        appName: row.appName?.trim() || ''
-      }
-    })
-  }
+  // function goCampaignDetail(row: TableAccountRow) {
+  //   if (!canOpenCampaignDetail(row)) return
+  //   router.push({
+  //     name: 'CampaignDetail',
+  //     query: {
+  //       id: String(row.adAccount.id),
+  //       appId: String(row.appId),
+  //       appName: row.appName?.trim() || ''
+  //     }
+  //   })
+  // }
 
   let requestSeq = 0
 

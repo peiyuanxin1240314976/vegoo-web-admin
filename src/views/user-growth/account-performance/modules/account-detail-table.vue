@@ -86,14 +86,14 @@
 
         <template #cell:operation="{ row }">
           <template v-if="row.type === 'account'">
-            <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
-              系列
-            </ElButton>
+            <!-- <ElButton round link type="primary" size="small" @click="goCampaignDetail(row)">
+              系列11
+            </ElButton> -->
           </template>
           <template v-else-if="row.type === 'app'">
-            <ElButton round link type="primary" size="small" @click="goCampaignDetailFromApp(row)">
-              详情
-            </ElButton>
+            <!-- <ElButton round link type="primary" size="small" @click="goCampaignDetailFromApp(row)">
+              详情1222
+            </ElButton> -->
             <ElButton
               v-if="rowHasChildren(row)"
               round
@@ -129,7 +129,7 @@
   import { computed } from 'vue'
   import type { AccountDetailRow } from '../types'
   import { Iphone } from '@element-plus/icons-vue'
-  import { useRouter } from 'vue-router'
+  // import { useRouter } from 'vue-router'
   import { formatNumberWithWan } from '@/utils'
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Vetur 对 <script setup> 的误报：.vue 无 default export
@@ -138,7 +138,7 @@
 
   defineOptions({ name: 'AccountDetailTable' })
 
-  const router = useRouter()
+  // const router = useRouter()
 
   const props = defineProps<{
     tableData: AccountDetailRow[]
@@ -214,28 +214,28 @@
   }
 
   /** 系列详情：与广告成效系列页 query 约定一致（appId / appName） */
-  function goCampaignDetail(row: AccountDetailRow) {
-    router.push({
-      name: 'CampaignDetail',
-      query: {
-        id: String(row.id),
-        appId: String(row.id),
-        appName: row.name
-      }
-    })
-  }
+  // function goCampaignDetail(row: AccountDetailRow) {
+  //   router.push({
+  //     name: 'CampaignDetail',
+  //     query: {
+  //       id: String(row.id),
+  //       appId: String(row.id),
+  //       appName: row.name
+  //     }
+  //   })
+  // }
 
-  function goCampaignDetailFromApp(row: AccountDetailRow) {
-    router.push({
-      name: 'CampaignDetail',
-      query: {
-        // CampaignDetail 页面读取 route.query.id 作为 campaignId
-        id: String(row.id ?? ''),
-        appId: String(row.id ?? ''),
-        appName: String(row.name ?? '')
-      }
-    })
-  }
+  // function goCampaignDetailFromApp(row: AccountDetailRow) {
+  //   router.push({
+  //     name: 'CampaignDetail',
+  //     query: {
+  //       // CampaignDetail 页面读取 route.query.id 作为 campaignId
+  //       id: String(row.id ?? ''),
+  //       appId: String(row.id ?? ''),
+  //       appName: String(row.name ?? '')
+  //     }
+  //   })
+  // }
 
   const EMPTY_TEXT = '无数据'
 
