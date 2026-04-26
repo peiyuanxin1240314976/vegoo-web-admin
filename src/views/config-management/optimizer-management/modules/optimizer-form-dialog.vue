@@ -273,87 +273,99 @@
 
 <style lang="scss" scoped>
   .opt-form {
+    --ofd-text-primary: var(--text-primary);
+    --ofd-text-secondary: var(--text-secondary);
+    --ofd-text-tertiary: var(--text-tertiary);
+    --ofd-surface-soft: color-mix(in srgb, var(--default-box-color) 74%, transparent);
+    --ofd-surface-muted: color-mix(in srgb, var(--default-box-color) 64%, transparent);
+    --ofd-border: color-mix(in srgb, var(--el-color-primary) 24%, transparent);
+    --ofd-border-strong: color-mix(in srgb, var(--el-color-primary) 40%, transparent);
+    --ofd-primary-soft: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+    --ofd-primary-mid: color-mix(in srgb, var(--el-color-primary) 24%, transparent);
+    --ofd-success-soft: color-mix(in srgb, var(--art-success) 22%, transparent);
+    --ofd-danger-soft: color-mix(in srgb, var(--art-danger) 22%, transparent);
+
     :deep(.el-form-item__label) {
       padding-bottom: 6px;
       font-size: 13px;
       line-height: 1.4;
-      color: #94a3b8;
+      color: var(--ofd-text-secondary);
     }
 
     :deep(.el-input__wrapper),
     :deep(.el-textarea__inner) {
-      color: #e2e8f0;
-      background: rgb(255 255 255 / 5%) !important;
-      border: 1px solid rgb(255 255 255 / 10%) !important;
+      color: var(--ofd-text-primary);
+      background: var(--ofd-surface-soft) !important;
+      border: 1px solid var(--ofd-border) !important;
       border-radius: 8px;
       box-shadow: none !important;
 
       &:hover,
       &:focus-within {
-        border-color: rgb(45 212 191 / 50%) !important;
+        border-color: var(--ofd-border-strong) !important;
       }
     }
 
     :deep(.el-input__inner) {
-      color: #e2e8f0;
+      color: var(--ofd-text-primary);
     }
 
     :deep(.el-textarea__inner) {
-      color: #e2e8f0;
+      color: var(--ofd-text-primary);
       resize: none;
     }
 
     :deep(.el-input__prefix) {
-      color: #64748b;
+      color: var(--ofd-text-tertiary);
     }
 
     :deep(.el-input-number__wrapper) {
-      background: rgb(255 255 255 / 5%) !important;
-      border: 1px solid rgb(255 255 255 / 10%) !important;
+      background: var(--ofd-surface-soft) !important;
+      border: 1px solid var(--ofd-border) !important;
       border-radius: 8px;
       box-shadow: none !important;
 
       &:hover {
-        border-color: rgb(45 212 191 / 50%) !important;
+        border-color: var(--ofd-border-strong) !important;
       }
     }
 
     :deep(.el-input-number .el-input__inner) {
-      color: #e2e8f0;
+      color: var(--ofd-text-primary);
     }
 
     /* 右侧步进按钮：覆盖主题默认的偏褐/灰填充，与弹窗冷色背景统一 */
     :deep(.el-input-number__increase),
     :deep(.el-input-number__decrease) {
-      color: #94a3b8 !important;
-      background: rgb(255 255 255 / 6%) !important;
-      border-color: rgb(255 255 255 / 10%) !important;
+      color: var(--ofd-text-secondary) !important;
+      background: var(--ofd-surface-muted) !important;
+      border-color: var(--ofd-border) !important;
 
       .el-icon {
         color: inherit !important;
       }
 
       &:hover:not(.is-disabled) {
-        color: #2dd4bf !important;
-        background: rgb(45 212 191 / 12%) !important;
+        color: var(--el-color-primary) !important;
+        background: var(--ofd-primary-soft) !important;
       }
     }
 
     :deep(.el-input-number__increase.is-disabled),
     :deep(.el-input-number__decrease.is-disabled) {
-      color: #475569 !important;
-      background: rgb(255 255 255 / 4%) !important;
+      color: color-mix(in srgb, var(--ofd-text-tertiary) 70%, transparent) !important;
+      background: color-mix(in srgb, var(--default-box-color) 58%, transparent) !important;
     }
 
     :deep(.el-input-number.is-controls-right .el-input-number__increase),
     :deep(.el-input-number.is-controls-right .el-input-number__decrease) {
-      background-color: rgb(255 255 255 / 6%) !important;
+      background-color: var(--ofd-surface-muted) !important;
       background-image: none !important;
     }
 
     :deep(.el-input__count) {
       font-size: 12px;
-      color: #64748b;
+      color: var(--ofd-text-tertiary);
       background: transparent;
     }
   }
@@ -372,10 +384,6 @@
     flex: 1;
   }
 
-  .form-item--half {
-    // inherits grid cell
-  }
-
   .full-width {
     width: 100%;
   }
@@ -388,7 +396,7 @@
 
   .version-hint {
     font-size: 12px;
-    color: #64748b;
+    color: var(--text-tertiary);
   }
 
   .checkcode-wrap {
@@ -439,7 +447,7 @@
     font-size: 13px;
     font-weight: 500;
     line-height: 1.45;
-    color: #e2e8f0;
+    color: var(--text-primary);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -449,7 +457,7 @@
     overflow: hidden;
     font-size: 12px;
     line-height: 1.45;
-    color: #64748b;
+    color: var(--text-tertiary);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -461,28 +469,28 @@
     align-items: center;
     width: 100%;
     padding: 12px 14px;
-    background: rgb(255 255 255 / 4%);
-    border: 1px dashed rgb(255 255 255 / 15%);
+    background: color-mix(in srgb, var(--default-box-color) 64%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--el-color-primary) 28%, transparent);
     border-radius: 8px;
   }
 
   .lock-icon {
     margin-left: auto;
     font-size: 16px;
-    color: #64748b;
+    color: var(--text-tertiary);
   }
 
   .locked-hint {
     margin-top: 4px;
     font-size: 12px;
-    color: #f59e0b;
+    color: var(--text-warning);
   }
 
   // ─── 状态切换 ────────────────────────────────────────────────────
   .status-toggle {
     display: flex;
     overflow: hidden;
-    border: 1px solid rgb(255 255 255 / 10%);
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 22%, transparent);
     border-radius: 8px;
   }
 
@@ -491,31 +499,33 @@
     padding: 8px 0;
     font-size: 13px;
     font-weight: 500;
-    color: #64748b;
+    color: var(--text-tertiary);
     cursor: pointer;
     background: transparent;
     border: none;
-    transition: all 0.15s;
+    transition:
+      color var(--duration-fast) var(--ease-default),
+      background-color var(--duration-fast) var(--ease-default);
 
     &:hover {
-      color: #e2e8f0;
+      color: var(--text-primary);
     }
 
     &.toggle-btn--active {
-      color: #22c55e;
-      background: rgb(34 197 94 / 20%);
+      color: var(--art-success);
+      background: var(--ofd-success-soft);
     }
 
     &.toggle-btn--inactive {
-      color: #ef4444;
-      background: rgb(239 68 68 / 20%);
+      color: var(--art-danger);
+      background: var(--ofd-danger-soft);
     }
   }
 
   // ─── 代号输入（编辑时高亮） ──────────────────────────────────────
   .input-scode {
     :deep(.el-input__inner) {
-      color: #2dd4bf !important;
+      color: var(--el-color-primary) !important;
     }
   }
 
@@ -523,7 +533,7 @@
   .last-modify-hint {
     margin-top: -8px;
     font-size: 12px;
-    color: #64748b;
+    color: var(--text-tertiary);
   }
 
   // ─── 弹窗底部 ───────────────────────────────────────────────────
@@ -535,27 +545,32 @@
 
   .btn-cancel {
     padding: 8px 20px !important;
-    color: #94a3b8 !important;
+    color: var(--text-secondary) !important;
     background: transparent !important;
-    border: 1px solid rgb(255 255 255 / 12%) !important;
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 26%, transparent) !important;
     border-radius: 8px !important;
 
     &:hover {
-      color: #e2e8f0 !important;
-      border-color: rgb(255 255 255 / 25%) !important;
+      color: var(--text-primary) !important;
+      background: color-mix(in srgb, var(--el-color-primary) 10%, transparent) !important;
+      border-color: color-mix(in srgb, var(--el-color-primary) 44%, transparent) !important;
     }
   }
 
   .btn-save {
     padding: 8px 24px !important;
     font-weight: 600 !important;
-    color: #0b1120 !important;
-    background: #2dd4bf !important;
+    color: var(--el-text-color-primary) !important;
+    background: color-mix(in srgb, var(--el-color-primary) 86%, #fff 14%) !important;
     border: none !important;
     border-radius: 8px !important;
+    transition:
+      filter var(--duration-fast) var(--ease-default),
+      transform var(--duration-fast) var(--ease-default);
 
     &:hover {
       filter: brightness(1.1);
+      transform: translateY(-1px);
     }
   }
 </style>
@@ -612,8 +627,8 @@
 <!-- 下拉弹出层全局样式（不能 scoped） -->
 <style>
   .user-select-popper.el-select__popper {
-    background: #1a2540 !important;
-    border: 1px solid rgb(255 255 255 / 8%) !important;
+    background: color-mix(in srgb, var(--default-box-color) 92%, #000 8%) !important;
+    border: 1px solid color-mix(in srgb, var(--el-color-primary) 22%, transparent) !important;
   }
 
   /* 限制高度，列表过长时内部滚动 */
@@ -632,7 +647,7 @@
   }
 
   .user-select-popper .el-scrollbar__thumb {
-    background-color: rgb(255 255 255 / 28%) !important;
+    background-color: color-mix(in srgb, var(--el-color-primary) 42%, transparent) !important;
   }
 
   /*
@@ -653,10 +668,10 @@
 
   .user-select-popper .el-select-dropdown__item.is-hovering,
   .user-select-popper .el-select-dropdown__item:hover {
-    background: rgb(45 212 191 / 8%) !important;
+    background: color-mix(in srgb, var(--el-color-primary) 12%, transparent) !important;
   }
 
   .user-select-popper .el-select-dropdown__item.is-selected {
-    background: rgb(45 212 191 / 12%) !important;
+    background: color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
   }
 </style>
