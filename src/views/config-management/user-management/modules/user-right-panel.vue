@@ -66,8 +66,13 @@
             search-placeholder="搜索类别/应用名称/应用简称/商店ID"
             :disabled="appsLoading || !appsLoaded"
             :setting-apps="settingApps"
-            :min-width="320"
-            :max-width="420"
+            :max-display-tags="24"
+            :panel-width="920"
+            :panel-body-max-height="520"
+            :height="44"
+            :auto-height="true"
+            :auto-max-rows="6"
+            placement="bottom-end"
             @change="$emit('change')"
           />
           <p v-if="appsLoadError" class="field-hint field-hint--error">{{ appsLoadError }}</p>

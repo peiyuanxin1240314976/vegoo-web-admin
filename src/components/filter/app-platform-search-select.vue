@@ -4,16 +4,21 @@
     :width="panelWidth"
     :disabled="disabled"
     trigger="click"
-    placement="bottom-start"
+    :placement="placement"
     :popper-class="popperClassName"
     :show-arrow="false"
+    :teleported="true"
+    :popper-options="mergedPopperOptions"
     @show="onShow"
     @hide="onHide"
   >
     <template #reference>
       <div
         class="app-platform-search-select"
-        :class="[inputClass, { 'is-disabled': disabled, 'is-open': visible }]"
+        :class="[
+          inputClass,
+          { 'is-disabled': disabled, 'is-open': visible, 'is-auto-height': autoHeight }
+        ]"
         :style="rootStyle"
       >
         <div
@@ -27,10 +32,22 @@
             <span class="app-platform-search-select__text">{{ multipleDisplay.text }}</span>
           </template>
           <template v-else>
-            <span class="app-platform-search-select__tag">{{ multipleDisplay.firstText }}</span>
-            <span v-if="multipleDisplay.more > 0" class="app-platform-search-select__more"
-              >+ {{ multipleDisplay.more }}</span
+            <span
+              v-for="t in multipleDisplay.texts"
+              :key="`${t}-${multipleDisplay.texts.indexOf(t)}`"
+              class="app-platform-search-select__tag"
+              >{{ t }}</span
             >
+            <ElTooltip
+              v-if="multipleDisplay.more > 0"
+              placement="top"
+              effect="dark"
+              :show-after="200"
+              :content="allSelectedTipText"
+              popper-class="app-platform-search-select__more-tip"
+            >
+              <span class="app-platform-search-select__more">+ {{ multipleDisplay.more }}</span>
+            </ElTooltip>
           </template>
         </div>
         <span
@@ -46,7 +63,7 @@
       </div>
     </template>
 
-    <div class="app-platform-search-select__panel">
+    <div class="app-platform-search-select__panel" :style="panelStyle">
       <ElInput
         v-model="keyword"
         clearable
@@ -199,6 +216,24 @@
       emptySelectionLabel?: string
       /** 多选应用时「全选所有应用」行文案，默认「全部」 */
       selectAllLabel?: string
+      /** 多选应用时，输入框最多展示多少个已选 tag；超出用 +N 汇总 */
+      maxDisplayTags?: number
+      /** 输入框高度是否跟随内容自动换行增高（多选展示多行 tag） */
+      autoHeight?: boolean
+      /** autoHeight 时最多展示多少行（超出可滚动）；默认 2 */
+      autoMaxRows?: number
+      /** 面板列表区最大高度（px），用于展示更多行 */
+      panelBodyMaxHeight?: number
+      /** 打开下拉时按视口可用空间自适应高度 */
+      autoFitViewport?: boolean
+      /** autoFitViewport 时：与视口边缘的安全留白（px） */
+      viewportPadding?: number
+      /** autoFitViewport 时：列表区最小高度（px） */
+      minPanelBodyHeight?: number
+      /** Popover 展开方向 */
+      placement?: any
+      /** 透传 Popper.js 配置（少数页面需要更强约束） */
+      popperOptions?: Record<string, any>
       clearable?: boolean
       disabled?: boolean
       panelWidth?: number
@@ -222,6 +257,15 @@
       allLabel: '全部',
       emptySelectionLabel: '不限',
       selectAllLabel: '全部',
+      maxDisplayTags: 3,
+      autoHeight: false,
+      autoMaxRows: 2,
+      panelBodyMaxHeight: 320,
+      autoFitViewport: true,
+      viewportPadding: 12,
+      minPanelBodyHeight: 160,
+      placement: 'bottom-start',
+      popperOptions: undefined,
       clearable: true,
       disabled: false,
       panelWidth: 680,
@@ -229,8 +273,8 @@
       dropdownClass: '',
       showPlatformSuffix: true,
       width: undefined,
-      minWidth: 200,
-      maxWidth: 240,
+      minWidth: undefined,
+      maxWidth: undefined,
       height: 32,
       radius: 'var(--el-border-radius-base, 4px)',
       platformOptions: () => [],
@@ -278,11 +322,22 @@
 
   const rootStyle = computed<Record<string, string>>(() => {
     const style: Record<string, string> = {
-      minHeight: `${props.height}px`,
-      minWidth: `${props.minWidth}px`,
-      maxWidth: `${props.maxWidth}px`,
       borderRadius: typeof props.radius === 'number' ? `${props.radius}px` : String(props.radius)
     }
+
+    if (!props.autoHeight) {
+      style.height = `${props.height}px`
+      style.minHeight = `${props.height}px`
+    } else {
+      style.minHeight = `${props.height}px`
+      const rows = Math.max(1, Number(props.autoMaxRows ?? 2))
+      style['--app-platform-select-max-rows'] = String(rows)
+    }
+
+    const minW = Number(props.minWidth)
+    const maxW = Number(props.maxWidth)
+    if (Number.isFinite(minW)) style.minWidth = `${Math.max(0, minW)}px`
+    if (Number.isFinite(maxW)) style.maxWidth = `${Math.max(0, maxW)}px`
     if (props.width != null) style.width = `${props.width}px`
     return style
   })
@@ -290,6 +345,70 @@
   const popperClassName = computed(() =>
     ['app-platform-search-select__popper', props.dropdownClass].filter(Boolean).join(' ')
   )
+
+  const mergedPopperOptions = computed(() => {
+    const base = {
+      strategy: 'fixed' as const,
+      modifiers: [
+        { name: 'offset', options: { offset: [0, 6] } },
+        {
+          name: 'flip',
+          options: { fallbackPlacements: ['top-start', 'top-end', 'bottom-start', 'bottom-end'] }
+        },
+        { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
+        {
+          name: 'applyViewportMaxHeight',
+          enabled: Boolean(props.autoFitViewport),
+          phase: 'write',
+          fn: ({ state }: any) => {
+            const popperEl = state?.elements?.popper as HTMLElement | undefined
+            if (!popperEl) return
+
+            const placement = String(state.placement ?? '')
+            const refRect = state.rects?.reference
+            if (!refRect) return
+
+            const viewportH = window.innerHeight || 0
+            const padding = Math.max(0, Number(props.viewportPadding ?? 12))
+            const available = placement.startsWith('top')
+              ? Math.max(0, refRect.top - padding)
+              : Math.max(0, viewportH - refRect.bottom - padding)
+
+            const panel = popperEl.querySelector(
+              '.app-platform-search-select__panel'
+            ) as HTMLElement | null
+            const body = popperEl.querySelector(
+              '.app-platform-search-select__body'
+            ) as HTMLElement | null
+
+            // 估算面板除列表区以外的“壳高度”（搜索框 + 表头 + padding）
+            const chromeHeight =
+              panel && body ? Math.max(0, panel.offsetHeight - body.offsetHeight) : 132
+
+            const cap = Number(props.panelBodyMaxHeight)
+            const maxBodyByCap = Number.isFinite(cap) ? Math.max(160, cap) : 320
+            const minBody = Math.max(80, Number(props.minPanelBodyHeight ?? 160))
+            const maxBodyByViewport = Math.max(minBody, available - chromeHeight)
+            const nextBodyMaxRaw = Math.min(maxBodyByCap, maxBodyByViewport)
+            const nextBodyMax = Number.isFinite(nextBodyMaxRaw) ? nextBodyMaxRaw : maxBodyByCap
+
+            popperEl.style.maxHeight = `${Math.max(220, available)}px`
+            popperEl.style.setProperty('--app-platform-select-body-max-height', `${nextBodyMax}px`)
+          }
+        }
+      ]
+    }
+    return (props.popperOptions ? { ...base, ...props.popperOptions } : base) as any
+  })
+
+  const panelStyle = computed<Record<string, string>>(() => {
+    const n = Number(props.panelBodyMaxHeight)
+    return {
+      '--app-platform-select-body-max-height': Number.isFinite(n)
+        ? `${Math.max(160, n)}px`
+        : '320px'
+    }
+  })
 
   const platformOptions = computed<NormalizedOption[]>(() =>
     (props.platformOptions ?? []).map((item) => {
@@ -422,7 +541,7 @@
   type MultiDisplay =
     | { type: 'empty' }
     | { type: 'single'; text: string }
-    | { type: 'multi'; firstText: string; more: number }
+    | { type: 'multi'; texts: string[]; more: number }
 
   const multipleDisplay = computed((): MultiDisplay => {
     if (!isMultiAppMode.value) return { type: 'empty' }
@@ -438,9 +557,28 @@
       const row = appOptions.value.find((o) => o.appId === ids[0])
       return { type: 'single', text: row?.displayName ?? ids[0] }
     }
-    const firstId = ids[0]
-    const row = appOptions.value.find((o) => o.appId === firstId)
-    return { type: 'multi', firstText: row?.displayName ?? firstId, more: n - 1 }
+    const maxTags = Math.max(1, Number(props.maxDisplayTags ?? 3))
+    const displayIds = ids.slice(0, maxTags)
+    const texts = displayIds.map((id) => {
+      const row = appOptions.value.find((o) => o.appId === id)
+      return row?.displayName ?? id
+    })
+    return { type: 'multi', texts, more: Math.max(0, n - texts.length) }
+  })
+
+  const allSelectedTipText = computed(() => {
+    if (!isMultiAppMode.value) return ''
+    const arr = Array.isArray(props.modelValue)
+      ? props.modelValue
+      : typeof props.modelValue === 'string' && props.modelValue.trim()
+        ? [props.modelValue]
+        : []
+    const ids = arr.map((id) => String(id ?? '').trim()).filter(Boolean)
+    const texts = ids.map((id) => {
+      const row = appOptions.value.find((o) => o.appId === id)
+      return row?.displayName ?? id
+    })
+    return texts.join('、')
   })
 
   const selectedLabel = computed(() => {
@@ -654,19 +792,39 @@
   .app-platform-search-select__value--multi {
     display: flex;
     flex: 1;
+    flex-wrap: nowrap;
     gap: 6px;
     align-items: center;
     min-width: 0;
   }
 
+  /* 多行展示：允许 tag 换行并限制最大行数 */
+  .app-platform-search-select.is-auto-height .app-platform-search-select__value--multi {
+    flex-wrap: wrap;
+    row-gap: 6px;
+    align-items: flex-start;
+    max-height: calc(
+      (var(--app-platform-select-max-rows, 2) * 20px) +
+        ((var(--app-platform-select-max-rows, 2) - 1) * 6px)
+    );
+    padding: 6px 0;
+    overflow: auto;
+  }
+
   .app-platform-search-select__tag {
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
+    max-width: 220px;
+    padding: 0 10px;
     overflow: hidden;
     font-size: 14px;
+    line-height: 20px;
     color: var(--el-text-color-primary);
     text-overflow: ellipsis;
     white-space: nowrap;
+    background: color-mix(in srgb, var(--el-fill-color) 70%, transparent);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 9999px;
   }
 
   .app-platform-search-select__more {
@@ -740,7 +898,7 @@
   .app-platform-search-select__body {
     display: flex;
     flex-direction: column;
-    max-height: 320px;
+    max-height: var(--app-platform-select-body-max-height, 320px);
     overflow: auto;
   }
 
@@ -864,5 +1022,11 @@
       var(--theme-color, var(--art-primary, #3b82f6)) 14%,
       transparent
     );
+  }
+
+  :global(.app-platform-search-select__more-tip.el-popper) {
+    max-width: 520px;
+    word-break: break-word;
+    white-space: normal;
   }
 </style>

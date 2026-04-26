@@ -38,7 +38,7 @@
     <ElDrawer
       v-model="rightDrawerVisible"
       :title="rightDrawerTitle"
-      size="420px"
+      size="50%"
       :append-to-body="true"
       destroy-on-close
       @closed="handleRightDrawerClosed"
