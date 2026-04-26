@@ -302,11 +302,11 @@
               h(ArtButtonTable, {
                 type: 'delete',
                 onClick: () => deleteUser(row)
-              }),
-              h(ArtButtonTable, {
-                type: 'view',
-                onClick: () => userRoleList(row)
               })
+              // h(ArtButtonTable, {
+              //   type: 'view',
+              //   onClick: () => userRoleList(row)
+              // })
             ])
         }
       ]
@@ -334,10 +334,10 @@
     roleListStore.loadRoleList({ force: false })
   })
 
-  const userRoleList = (row: UserListItem) => {
-    appPermDialogUserId.value = row.id
-    appPermDialogVisible.value = true
-  }
+  // const userRoleList = (row: UserListItem) => {
+  //   appPermDialogUserId.value = row.id
+  //   appPermDialogVisible.value = true
+  // }
 
   /**
    * 搜索处理
