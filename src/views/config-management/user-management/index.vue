@@ -34,17 +34,24 @@
       </UserLeftPanel>
     </div>
 
-    <!-- 右侧：用户详情 -->
-    <div class="user-page-right min-h-0">
+    <!-- 右侧：抽屉（查看/编辑） -->
+    <ElDrawer
+      v-model="rightDrawerVisible"
+      :title="rightDrawerTitle"
+      size="420px"
+      :append-to-body="true"
+      destroy-on-close
+      @closed="handleRightDrawerClosed"
+    >
       <UserRightPanel
         :user="currentDetailUser"
+        :editing="rightPanelEditing"
         :role-options="assignRoleOptions"
         @save="handleRightPanelSave"
-        @cancel="currentDetailUser = null"
-        @edit="() => currentDetailUser && showDialog('edit', currentDetailUser)"
+        @cancel="handleRightPanelCancel"
         @disable="handleRightPanelDisable"
       />
-    </div>
+    </ElDrawer>
 
     <!-- 用户弹窗 -->
     <UserDialog
@@ -71,7 +78,6 @@
     fetchUserList,
     createUser,
     updateUser,
-    updatePermission,
     disableUser
   } from '@/api/config-management'
   import UserLeftPanel from './modules/user-left-panel.vue'
@@ -106,6 +112,15 @@
 
   // 右侧详情当前选中的用户（点击表格行时设置）
   const currentDetailUser = ref<UserListItem | null>(null)
+  const rightPanelEditing = ref(false)
+  const rightDrawerVisible = ref(false)
+
+  const rightDrawerTitle = computed(() => {
+    const u = currentDetailUser.value
+    if (!u) return '用户详情'
+    const name = String(u.userName ?? '').trim()
+    return name ? `用户：${name}` : '用户详情'
+  })
 
   // 批量选择模式：为 true 时表格显示勾选列，可批量选择
   const batchMode = ref(false)
@@ -278,7 +293,11 @@
             h('div', [
               h(ArtButtonTable, {
                 type: 'edit',
-                onClick: () => showDialog('edit', row)
+                onClick: () => {
+                  currentDetailUser.value = row
+                  rightPanelEditing.value = true
+                  rightDrawerVisible.value = true
+                }
               }),
               h(ArtButtonTable, {
                 type: 'delete',
@@ -462,24 +481,48 @@
   /** 点击表格行：在右侧展示该用户详情 */
   const handleTableRowClick = (row: UserListItem) => {
     currentDetailUser.value = row
+    rightPanelEditing.value = true
+    rightDrawerVisible.value = true
   }
 
-  /** 右侧面板保存（角色、可访问应用、备注） */
+  /** 右侧面板取消：关闭抽屉 */
+  const handleRightPanelCancel = () => {
+    rightDrawerVisible.value = false
+  }
+
+  const handleRightDrawerClosed = () => {
+    rightPanelEditing.value = false
+    currentDetailUser.value = null
+  }
+
+  /** 右侧面板保存（基础信息 + 权限） */
   const handleRightPanelSave = async (payload: {
+    userName: string
+    userPhone: string
+    userGender: string
     roleId: number | ''
     accessibleApps: string[]
     remark: string
   }) => {
     if (!currentDetailUser.value) return
     try {
-      await updatePermission({
+      // 仅走 updateUser：将角色/可访问应用/备注一并提交（去掉 /user/permission-update）
+      const nextUserRoles =
+        payload.roleId !== '' ? [Number(payload.roleId)].filter((n) => Number.isFinite(n)) : []
+      await updateUser({
         id: currentDetailUser.value.id,
-        roleId: payload.roleId,
+        userName: payload.userName,
+        userPhone: payload.userPhone,
+        userGender: payload.userGender,
+        userRoles: nextUserRoles,
         accessibleApps: payload.accessibleApps,
         remark: payload.remark
-      })
+      } as any)
       currentDetailUser.value = {
         ...currentDetailUser.value,
+        userName: payload.userName,
+        userPhone: payload.userPhone,
+        userGender: payload.userGender,
         accessibleApps: [...payload.accessibleApps],
         remark: payload.remark,
         userRoles:
@@ -488,6 +531,7 @@
             : [...(currentDetailUser.value.userRoles ?? [])]
       }
       ElMessage.success('保存成功')
+      rightPanelEditing.value = false
       refreshData()
       loadStats()
     } catch (error) {
@@ -506,6 +550,8 @@
       await disableUser({ id: currentDetailUser.value!.id, operator: 'current_user' })
       ElMessage.success('已禁用')
       currentDetailUser.value = null
+      rightPanelEditing.value = false
+      rightDrawerVisible.value = false
       refreshData()
       loadStats()
     })
@@ -534,24 +580,6 @@
     overflow: hidden;
   }
 
-  .user-page-right {
-    flex-shrink: 0;
-    align-self: stretch;
-    width: 360px;
-    min-width: 320px;
-    max-width: 420px;
-    overflow: auto;
-  }
-
-  /* 中等屏：右侧略收窄 */
-  @media (width <= 1280px) {
-    .user-page-right {
-      width: 320px;
-      min-width: 280px;
-      max-width: 360px;
-    }
-  }
-
   /* 小屏：改为上下布局，右侧占满宽 */
   @media (width <= 1024px) {
     .user-page {
@@ -562,14 +590,6 @@
     .user-page-left {
       flex: none;
       min-height: 400px;
-    }
-
-    .user-page-right {
-      flex-shrink: 0;
-      width: 100%;
-      min-width: 0;
-      max-width: none;
-      min-height: 360px;
     }
   }
 

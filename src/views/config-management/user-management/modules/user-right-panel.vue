@@ -10,19 +10,27 @@
           <div class="user-name">{{ user.userName }}</div>
           <div v-if="user.nickName" class="user-nick">昵称：{{ user.nickName }}</div>
           <div class="user-email">{{ user.userEmail }}</div>
-          <div class="user-meta">
-            <span class="status-dot" :class="statusDotClass"></span>
-            <span class="status-text">{{ statusText }}</span>
-            <span class="meta-sep">|</span>
-            <span class="meta-date">{{ user.createTime || '--' }}</span>
-            <span class="meta-actions">
-              <span class="meta-sep">|</span>
-              <ElLink type="primary" :underline="false" @click="$emit('edit')">编辑</ElLink>
-              <span class="meta-sep">|</span>
-              <ElLink type="danger" :underline="false" @click="$emit('disable')">禁用</ElLink>
-            </span>
-          </div>
         </div>
+      </ElCard>
+
+      <ElCard class="panel-section" shadow="never">
+        <template #header>
+          <span class="section-title">基础信息</span>
+        </template>
+        <ElForm :model="baseForm" label-width="72px">
+          <ElFormItem label="用户名" required>
+            <ElInput v-model="baseForm.userName" placeholder="请输入用户名" />
+          </ElFormItem>
+          <ElFormItem label="手机号" required>
+            <ElInput v-model="baseForm.userPhone" placeholder="请输入手机号" />
+          </ElFormItem>
+          <ElFormItem label="性别" required>
+            <ElSelect v-model="baseForm.userGender" class="full-width">
+              <ElOption label="男" value="男" />
+              <ElOption label="女" value="女" />
+            </ElSelect>
+          </ElFormItem>
+        </ElForm>
       </ElCard>
 
       <ElCard class="panel-section" shadow="never">
@@ -50,27 +58,18 @@
           <span class="section-title">可访问应用</span>
         </template>
         <div v-loading="appsLoading">
-          <ElSelect
+          <AppPlatformSearchSelect
             v-model="form.apps"
-            multiple
-            filterable
-            collapse-tags
-            collapse-tags-tooltip
-            :fit-input-width="false"
-            :popper-options="appPermSelectPopperOptions"
+            mode="app"
+            :multiple="true"
             placeholder="搜索并选择应用"
+            search-placeholder="搜索类别/应用名称/应用简称/商店ID"
             :disabled="appsLoading || !appsLoaded"
-            popper-class="user-app-perm-select-dropdown"
-            class="full-width apps-select dark-select"
+            :setting-apps="settingApps"
+            :min-width="320"
+            :max-width="420"
             @change="$emit('change')"
-          >
-            <ElOption
-              v-for="app in appOptions"
-              :key="app.appUuid"
-              :label="app.appName"
-              :value="app.appUuid"
-            />
-          </ElSelect>
+          />
           <p v-if="appsLoadError" class="field-hint field-hint--error">{{ appsLoadError }}</p>
         </div>
       </ElCard>
@@ -91,7 +90,8 @@
 
       <div class="panel-actions">
         <ElButton type="primary" @click="handleSave">保存</ElButton>
-        <ElButton @click="$emit('cancel')">取消</ElButton>
+        <ElButton @click="handleCancelEdit">取消</ElButton>
+        <ElButton type="danger" plain @click="$emit('disable')">禁用</ElButton>
       </div>
     </template>
 
@@ -106,20 +106,20 @@
 
 <script setup lang="ts">
   import { fetchUserAppPermissionsOptions } from '@/api/config-management/user-management'
+  import AppPlatformSearchSelect from '@/components/filter/app-platform-search-select.vue'
+  import type { CockpitSettingAppItem } from '@/types/cockpit-meta-filter'
   import type { UserAppPermissionAppItem } from '../types'
 
   defineOptions({ name: 'UserRightPanel' })
 
-  const appPermSelectPopperOptions = {
-    modifiers: [{ name: 'computeStyles', options: { adaptive: false, gpuAcceleration: false } }]
-  }
-
   const props = withDefaults(
     defineProps<{
       user?: Api.SystemManage.UserListItem | null
+      editing?: boolean
       roleOptions?: { label: string; value: number }[]
     }>(),
     {
+      editing: false,
       roleOptions: () => [
         { label: '投放经理', value: 3 },
         { label: '超级管理员', value: 1 }
@@ -128,12 +128,36 @@
   )
 
   const emit = defineEmits<{
-    (e: 'save', payload: { roleId: number | ''; accessibleApps: string[]; remark: string }): void
+    (
+      e: 'save',
+      payload: {
+        userName: string
+        userPhone: string
+        userGender: string
+        roleId: number | ''
+        accessibleApps: string[]
+        remark: string
+      }
+    ): void
     (e: 'cancel'): void
-    (e: 'edit'): void
     (e: 'disable'): void
     (e: 'change'): void
   }>()
+
+  const baseForm = ref({
+    userName: '',
+    userPhone: '',
+    userGender: '男'
+  })
+
+  function normalizeGender(input: unknown): '男' | '女' {
+    if (input == null) return '男'
+    const s = String(input).trim()
+    if (!s) return '男'
+    if (s === '男' || s.toLowerCase() === 'm' || s === '1' || s === 'male') return '男'
+    if (s === '女' || s.toLowerCase() === 'f' || s === '2' || s === 'female') return '女'
+    return '男'
+  }
 
   const form = ref({
     roleId: '' as number | '',
@@ -146,18 +170,21 @@
   const appsLoaded = ref(false)
   const appsLoadError = ref('')
 
-  const statusMap: Record<string, { text: string; dot: string }> = {
-    '1': { text: '在线', dot: 'active' },
-    '2': { text: '离线', dot: 'offline' },
-    '3': { text: '异常', dot: 'warning' },
-    '4': { text: '已禁用', dot: 'disabled' }
-  }
-
-  const statusText = computed(() =>
-    props.user ? (statusMap[props.user.status]?.text ?? '未知') : ''
-  )
-  const statusDotClass = computed(() =>
-    props.user ? `status-dot--${statusMap[props.user.status]?.dot ?? 'default'}` : ''
+  const settingApps = computed<CockpitSettingAppItem[]>(() =>
+    (appOptions.value ?? []).map((a) => {
+      const platformName =
+        a.platform === 0 ? '安卓' : a.platform === 1 ? 'iOS' : a.platform === 2 ? 'Web' : ''
+      return {
+        sAppId: String(a.appUuid ?? ''),
+        sAppName: String(a.appName ?? ''),
+        sAppShortName: '',
+        sAppStoreId: '',
+        nPlatform: a.platform,
+        platformName,
+        nCategory: '',
+        categoryName: ''
+      } as CockpitSettingAppItem
+    })
   )
 
   function normalizeRoleId(input: unknown): number | '' {
@@ -171,10 +198,16 @@
     () => props.user,
     (u) => {
       if (u) {
+        baseForm.value = {
+          userName: u.userName ?? '',
+          userPhone: u.userPhone ?? '',
+          userGender: normalizeGender(u.userGender)
+        }
         form.value.roleId = normalizeRoleId((u as any)?.userRoles?.[0])
         form.value.remark = u.remark ?? ''
         void loadAppOptions(u.id, u.accessibleApps ?? [])
       } else {
+        baseForm.value = { userName: '', userPhone: '', userGender: '男' }
         form.value = { roleId: '', apps: [], remark: '' }
         appOptions.value = []
         appsLoaded.value = false
@@ -216,10 +249,17 @@
 
   function handleSave() {
     emit('save', {
+      userName: baseForm.value.userName,
+      userPhone: baseForm.value.userPhone,
+      userGender: baseForm.value.userGender,
       roleId: form.value.roleId,
       accessibleApps: form.value.apps,
       remark: form.value.remark
     })
+  }
+
+  function handleCancelEdit() {
+    emit('cancel')
   }
 </script>
 
@@ -270,71 +310,10 @@
       font-size: 13px;
       color: var(--el-text-color-secondary);
     }
-
-    .user-meta {
-      font-size: 13px;
-      color: var(--el-text-color-secondary);
-
-      .meta-sep {
-        margin: 0 8px;
-        opacity: 0.6;
-      }
-
-      .status-dot {
-        display: inline-block;
-        width: 6px;
-        height: 6px;
-        margin-right: 6px;
-        vertical-align: middle;
-        border-radius: 50%;
-
-        &--active {
-          background: var(--el-color-success);
-        }
-
-        &--offline {
-          background: var(--el-color-info);
-        }
-
-        &--warning {
-          background: var(--el-color-warning);
-        }
-
-        &--disabled {
-          background: var(--el-color-danger);
-        }
-
-        &--default {
-          background: var(--el-text-color-placeholder);
-        }
-      }
-    }
   }
 
   .full-width {
     width: 100%;
-  }
-
-  .apps-select {
-    :deep(.el-select__wrapper) {
-      align-items: flex-start;
-      min-height: 96px !important;
-      padding-top: 8px;
-    }
-  }
-
-  .dark-select {
-    :deep(.el-select__wrapper) {
-      font-size: 13px;
-      background: rgb(255 255 255 / 3%) !important;
-      border: 1px solid rgb(255 255 255 / 8%) !important;
-      border-radius: 8px;
-      box-shadow: none !important;
-
-      &:hover {
-        border-color: rgb(45 212 191 / 30%) !important;
-      }
-    }
   }
 
   .field-hint {

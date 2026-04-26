@@ -485,7 +485,8 @@ export async function mockFetchAgencySpendTrend30d(): Promise<
 type AgencySubTabMockKey = 'gatherone' | 'kuainiao' | 'chuhai'
 
 type AgencySubTabMockQuery = {
-  agencyTab: AgencySubTabMockKey
+  /** 兼容前端入参：后端动态返回的 tab key */
+  agencyTab: AgencySubTabMockKey | string
   /** YYYY-MM-DD */
   date?: string
   startDate?: string
@@ -530,7 +531,7 @@ function ymdToCnLabel(ymd: string | undefined): string {
   return `${m}月${d}日`
 }
 
-function subTabMockVariant(tab: AgencySubTabMockKey) {
+function subTabMockVariant(tab: AgencySubTabMockKey | string) {
   switch (tab) {
     case 'kuainiao':
       return {
