@@ -11,8 +11,7 @@ export const accountManagementRoutes: AppRouteRecord = {
   meta: {
     title: 'menus.accountManagement.title',
     icon: 'ri:bank-card-line',
-    roles: ['R_SUPER', 'R_ADMIN'],
-    isHide: true
+    roles: ['R_SUPER', 'R_ADMIN']
   },
   children: [
     {

@@ -10,8 +10,6 @@ import type {
   ProfitCountryRow,
   ProfitFilterOptions,
   ProfitKpiCard,
-  ProfitMapDataItem,
-  ProfitMapScatterItem,
   ProfitAppProfitTreeNode,
   ProfitSankeyLink,
   ProfitSankeyNode,
@@ -84,8 +82,6 @@ export interface UseProfitAnalysisDashboardReturn {
   dateShortcuts: ComputedRef<ProfitDatePickerShortcut[]>
   kpiCards: Ref<ProfitKpiCard[]>
   appProfitRoot: Ref<ProfitAppProfitTreeNode>
-  mapData: Ref<ProfitMapDataItem[]>
-  mapScatter: Ref<ProfitMapScatterItem[]>
   countryRows: Ref<ProfitCountryRow[]>
   trend30d: Ref<ProfitTrend30d>
   sankeyNodes: Ref<ProfitSankeyNode[]>
@@ -123,8 +119,6 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
 
   const kpiCards = ref<ProfitKpiCard[]>([])
   const appProfitRoot = ref<ProfitAppProfitTreeNode>({ ...EMPTY_APP_PROFIT_ROOT })
-  const mapData = ref<ProfitMapDataItem[]>([])
-  const mapScatter = ref<ProfitMapScatterItem[]>([])
   const countryRows = ref<ProfitCountryRow[]>([])
   const trend30d = ref<ProfitTrend30d>({ ...EMPTY_TREND })
   const sankeyNodes = ref<ProfitSankeyNode[]>([])
@@ -241,8 +235,6 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
         pendingCountry,
         () => fetchProfitOverviewCountryProfit(p),
         (d) => {
-          mapData.value = d.mapData ?? []
-          mapScatter.value = d.mapScatter ?? []
           countryRows.value = d.countryRows ?? []
         }
       ),
@@ -276,8 +268,6 @@ export function useProfitAnalysisDashboard(): UseProfitAnalysisDashboardReturn {
     dateShortcuts,
     kpiCards,
     appProfitRoot,
-    mapData,
-    mapScatter,
     countryRows,
     trend30d,
     sankeyNodes,
