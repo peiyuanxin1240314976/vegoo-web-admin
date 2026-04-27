@@ -65,7 +65,7 @@
                 ><ElIcon><Search /></ElIcon
               ></template>
             </el-input>
-            <el-select v-model="filterPlatform" class="filter-select">
+            <el-select v-model="filterPlatform" class="filter-select" placeholder="终端平台">
               <el-option value="" label="终端平台：全部" />
               <el-option
                 v-for="opt in metaPlatformOptions"
@@ -74,7 +74,7 @@
                 :label="'终端：' + opt.label"
               />
             </el-select>
-            <el-select v-model="filterSource" class="filter-select">
+            <el-select v-model="filterSource" class="filter-select" placeholder="广告平台">
               <el-option value="" label="广告平台：全部" />
               <el-option
                 v-for="opt in metaSourceOptions"
@@ -83,12 +83,12 @@
                 :label="opt.label"
               />
             </el-select>
-            <el-select v-model="filterStatus" class="filter-select">
+            <!-- <el-select v-model="filterStatus" class="filter-select" placeholder="状态">
               <el-option value="" label="状态：全部" />
               <el-option value="published" label="已发布" />
               <el-option value="draft" label="草稿" />
               <el-option value="archived" label="已归档" />
-            </el-select>
+            </el-select> -->
             <ElButton round type="primary" @click="handleQuery">
               <ElIcon><Search /></ElIcon>查询
             </ElButton>
