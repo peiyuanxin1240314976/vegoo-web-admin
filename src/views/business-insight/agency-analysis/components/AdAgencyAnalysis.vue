@@ -4,7 +4,6 @@
   import { echarts } from '@/plugins/echarts'
   import ScreenshotModal from './ScreenshotModal.vue'
   import AgencySubTabPerformanceMock from './AgencySubTabPerformanceMock.vue'
-  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import { dateRangeShortcuts } from '@/utils/form/date-shortcuts'
   import { useCockpitMetaFilterStore } from '@/store/modules/cockpit-meta-filter'
   import {
@@ -380,13 +379,16 @@
     isSummaryTabActive.value ? '' : activeTab.value.label
   )
 
-  const todayYYYYMMDD = computed(() => getAppTodayYYYYMMDD())
-  const todayCNLabel = computed(() => {
-    const v = todayYYYYMMDD.value
-    const m = Number(v.slice(5, 7))
-    const d = Number(v.slice(8, 10))
-    if (!Number.isFinite(m) || !Number.isFinite(d)) return v
+  function formatMonthDayLabel(ymd: string) {
+    const m = Number(ymd.slice(5, 7))
+    const d = Number(ymd.slice(8, 10))
+    if (!Number.isFinite(m) || !Number.isFinite(d)) return ymd
     return `${m}月${d}日`
+  }
+
+  const queriedDateRangeCNLabel = computed(() => {
+    const range = summaryDateApplied.value ?? summaryDateDraft.value
+    return `${formatMonthDayLabel(range[0])}~${formatMonthDayLabel(range[1])}`
   })
 
   /** 筛选项拉取中（须优先于业务数据完成） */
@@ -922,7 +924,7 @@
       <AgencySubTabPerformanceMock
         :loading="subTabLoading"
         :error="subTabError"
-        :current-day-label="todayCNLabel"
+        :current-day-label="queriedDateRangeCNLabel"
         :agency-tab="activeAgencyTabKey"
         :default-account-range="summaryDateDraft"
         :kpi-last7="subTabKpiLast7"
