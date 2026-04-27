@@ -116,16 +116,16 @@
                     <td>{{ DASH }}</td>
                     <td>{{ DASH }}</td>
                     <td>{{ DASH }}</td>
-                    <td class="accent">{{ money(summary.adSpend) }}</td>
-                    <td class="accent">{{ money(summary.calculatedSpend) }}</td>
-                    <td>{{ pct(summary.roi) }}</td>
-                    <td>{{ money(summary.commissionSpend) }}</td>
-                    <td class="profit" :class="profitClass(summary.estimatedProfit)">
-                      {{ money(summary.estimatedProfit) }}
+                    <td class="accent">{{ money(resolvedSummary.adSpend) }}</td>
+                    <td class="accent">{{ money(resolvedSummary.calculatedSpend) }}</td>
+                    <td>{{ pct(resolvedSummary.roi) }}</td>
+                    <td>{{ money(resolvedSummary.commissionSpend) }}</td>
+                    <td class="profit" :class="profitClass(resolvedSummary.estimatedProfit)">
+                      {{ money(resolvedSummary.estimatedProfit) }}
                     </td>
-                    <td>{{ currency(summary.cpa) }}</td>
-                    <td class="score" :class="scoreClass(summary.score)">
-                      {{ score(summary.score) }}
+                    <td>{{ currency(resolvedSummary.cpa) }}</td>
+                    <td class="score" :class="scoreClass(resolvedSummary.score)">
+                      {{ score(resolvedSummary.score) }}
                     </td>
                     <td>{{ DASH }}</td>
                   </tr>
@@ -215,12 +215,27 @@
   const expandedMap = ref<Record<string, boolean>>({})
 
   const loading = computed(() => props.loading)
-  const summary = computed(() => props.summary)
-  const totalApps = computed(() => props.list.length)
+  const safeList = computed<MyPerformanceAppTreeRow[]>(() =>
+    Array.isArray(props.list) ? props.list.filter(Boolean) : []
+  )
+  const resolvedSummary = computed<MyPerformanceAppTableSummary>(() => ({
+    adSpend: typeof props.summary?.adSpend === 'number' ? props.summary.adSpend : 0,
+    calculatedSpend:
+      typeof props.summary?.calculatedSpend === 'number' ? props.summary.calculatedSpend : 0,
+    roi: typeof props.summary?.roi === 'number' ? props.summary.roi : 0,
+    commissionSpend:
+      typeof props.summary?.commissionSpend === 'number' ? props.summary.commissionSpend : 0,
+    estimatedProfit:
+      typeof props.summary?.estimatedProfit === 'number' ? props.summary.estimatedProfit : 0,
+    cpa: typeof props.summary?.cpa === 'number' ? props.summary.cpa : 0,
+    score: typeof props.summary?.score === 'number' ? props.summary.score : 0
+  }))
+
+  const totalApps = computed(() => safeList.value.length)
   const pageCount = computed(() => Math.max(1, Math.ceil(totalApps.value / pageSize)))
   const pagedApps = computed(() => {
     const start = (currentPage.value - 1) * pageSize
-    return props.list.slice(start, start + pageSize)
+    return safeList.value.slice(start, start + pageSize)
   })
 
   const columns = computed(() => [
@@ -255,7 +270,7 @@
   )
 
   watch(
-    () => props.list,
+    () => safeList.value,
     (list) => {
       currentPage.value = 1
       const nextExpanded: Record<string, boolean> = {}

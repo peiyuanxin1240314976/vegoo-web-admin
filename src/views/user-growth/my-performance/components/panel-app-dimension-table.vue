@@ -1,5 +1,9 @@
 <template>
   <div class="panel">
+    <div class="panel__top">
+      <slot name="prepend"></slot>
+    </div>
+
     <ElSkeleton :loading="loading" animated>
       <template #template>
         <div class="panel__header">
@@ -36,8 +40,6 @@
         </div>
 
         <div class="panel__body">
-          <slot name="prepend"></slot>
-
           <div class="dimension-shell">
             <section class="dimension-section">
               <!-- <div class="dimension-section__head">
@@ -200,6 +202,7 @@
     }
   )
 
+  const loading = computed(() => props.loading)
   const resolvedHeaderHint = computed(() => props.headerHint)
 
   const resolvedExcelTables = computed<MyPerformanceExcelTables>(() => {
@@ -338,6 +341,10 @@
     border: 1px solid var(--panel-border);
     border-radius: 18px;
     box-shadow: var(--panel-shadow);
+  }
+
+  .panel__top {
+    padding: 14px 14px 0;
   }
 
   :global(html:not(.dark)) .panel {
