@@ -60,6 +60,42 @@
               </ElInput>
             </ElFormItem>
 
+            <ElFormItem prop="captchaValue" label="验证码">
+              <div class="captcha-row">
+                <ElInput
+                  class="custom-height captcha-input"
+                  placeholder="请输入验证码"
+                  v-model.trim="formData.captchaValue"
+                  maxlength="8"
+                  autocomplete="off"
+                >
+                  <template #prefix>
+                    <ElIcon><Picture /></ElIcon>
+                  </template>
+                </ElInput>
+                <button
+                  class="captcha-image-btn"
+                  type="button"
+                  :disabled="captchaLoading"
+                  title="刷新验证码"
+                  @click="loadCaptcha"
+                >
+                  <span v-if="captchaLoading" class="captcha-placeholder">加载中</span>
+                  <img
+                    v-else-if="captchaImage"
+                    class="captcha-image"
+                    :src="captchaImage"
+                    alt="验证码"
+                    @error="handleCaptchaImageError"
+                  />
+                  <span v-else class="captcha-placeholder">刷新</span>
+                  <ElIcon class="captcha-refresh" :class="{ 'is-loading': captchaLoading }">
+                    <Refresh />
+                  </ElIcon>
+                </button>
+              </div>
+            </ElFormItem>
+
             <!-- 滑块拖动验证（暂时不需要，注释保留） -->
             <!-- <div class="relative pb-5 mt-6">
               <div
@@ -127,9 +163,15 @@
   import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
-  import { fetchLogin } from '@/api/auth'
-  import { ElIcon, ElNotification, type FormInstance, type FormRules } from 'element-plus'
-  import { Lock, User } from '@element-plus/icons-vue'
+  import { fetchCaptcha, fetchLogin } from '@/api/auth'
+  import {
+    ElIcon,
+    ElMessage,
+    ElNotification,
+    type FormInstance,
+    type FormRules
+  } from 'element-plus'
+  import { Lock, Picture, Refresh, User } from '@element-plus/icons-vue'
   defineOptions({ name: 'Login' })
 
   const { t, locale } = useI18n()
@@ -155,15 +197,54 @@
   const formData = reactive({
     username: '',
     password: '',
+    captchaValue: '',
     rememberPassword: true
   })
 
   const rules = computed<FormRules>(() => ({
     username: [{ required: true, message: t('login.placeholder.username'), trigger: 'blur' }],
-    password: [{ required: true, message: t('login.placeholder.password'), trigger: 'blur' }]
+    password: [{ required: true, message: t('login.placeholder.password'), trigger: 'blur' }],
+    captchaValue: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
   }))
 
   const loading = ref(false)
+  const captchaId = ref('')
+  const captchaImage = ref('')
+  const captchaLoading = ref(false)
+
+  const normalizeCaptchaImage = (base64Str: string) => {
+    if (!base64Str) return ''
+    return base64Str.startsWith('data:image') ? base64Str : `data:image/png;base64,${base64Str}`
+  }
+
+  const loadCaptcha = async () => {
+    if (captchaLoading.value) return
+    captchaLoading.value = true
+
+    try {
+      const captcha = await fetchCaptcha()
+      captchaId.value = captcha.id
+      captchaImage.value = normalizeCaptchaImage(captcha.base64Str)
+      formData.captchaValue = ''
+      formRef.value?.clearValidate('captchaValue')
+    } catch (error) {
+      captchaId.value = ''
+      captchaImage.value = ''
+      if (!(error instanceof HttpError)) {
+        console.error('[Login] Captcha load failed:', error)
+      }
+    } finally {
+      captchaLoading.value = false
+    }
+  }
+
+  const handleCaptchaImageError = () => {
+    captchaImage.value = ''
+  }
+
+  onMounted(() => {
+    loadCaptcha()
+  })
 
   // 登录
   const handleSubmit = async () => {
@@ -174,6 +255,11 @@
       const valid = await formRef.value.validate()
       if (!valid) return
 
+      if (!captchaId.value) {
+        ElMessage.warning(captchaLoading.value ? '验证码加载中，请稍后' : '请刷新验证码后再登录')
+        return
+      }
+
       // 拖拽验证（暂时不需要，注释保留）
       // if (!isPassing.value) {
       //   isClickPass.value = true
@@ -183,12 +269,14 @@
       loading.value = true
 
       // 登录请求
-      const { username, password, rememberPassword } = formData
+      const { username, password, rememberPassword, captchaValue } = formData
 
       // 调用真实登录接口，返回 token 字符串
       const token = await fetchLogin({
         username,
         password,
+        captchaId: captchaId.value,
+        captchaValue,
         rememberMe: rememberPassword
       })
 
@@ -213,10 +301,12 @@
       // 处理 HttpError
       if (error instanceof HttpError) {
         // console.log(error.code)
+        loadCaptcha()
       } else {
         // 处理非 HttpError
         // ElMessage.error('登录失败，请稍后重试')
         console.error('[Login] Unexpected error:', error)
+        loadCaptcha()
       }
     } finally {
       loading.value = false

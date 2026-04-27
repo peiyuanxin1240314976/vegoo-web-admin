@@ -66,12 +66,19 @@ declare namespace Api {
     interface LoginParams {
       username: string
       password: string
+      captchaId: string
+      captchaValue: string
       /** 记住我 */
       rememberMe?: boolean
     }
 
     /** 登录响应：后端返回的 token 字符串 */
     type LoginResponse = string
+
+    interface CaptchaResponse {
+      base64Str: string
+      id: string
+    }
 
     interface RoutePermissionsConfig {
       routeNames: string[]
