@@ -554,40 +554,54 @@
   const activeColDim = ref<RevenueDeviationMatrixColDim>('platform')
 
   const MATRIX_DATE_DIM = 'date' as const
+  const MATRIX_PLATFORM_DIM = 'platform' as const
+
+  function isSharedDim(
+    v: RevenueDeviationMatrixRowDim | RevenueDeviationMatrixColDim
+  ): v is RevenueDeviationMatrixColDim {
+    return v === MATRIX_DATE_DIM || v === MATRIX_PLATFORM_DIM
+  }
+
+  function isDimConflict(
+    a: RevenueDeviationMatrixRowDim | RevenueDeviationMatrixColDim,
+    b: RevenueDeviationMatrixRowDim | RevenueDeviationMatrixColDim
+  ) {
+    return isSharedDim(a) && a === b
+  }
 
   const rowDimsUi = computed(() =>
     rowDims.map((d) => ({
       ...d,
-      disabled: d.value === MATRIX_DATE_DIM && activeColDim.value === MATRIX_DATE_DIM
+      disabled: isDimConflict(d.value, activeColDim.value)
     }))
   )
 
   const colDimsUi = computed(() =>
     colDims.map((d) => ({
       ...d,
-      disabled: d.value === MATRIX_DATE_DIM && activeRowDim.value === MATRIX_DATE_DIM
+      disabled: isDimConflict(d.value, activeRowDim.value)
     }))
   )
 
-  function fallbackColDim(): RevenueDeviationMatrixColDim {
-    return colDims.find((d) => d.value !== MATRIX_DATE_DIM)?.value ?? 'platform'
+  function fallbackColDim(exclude?: RevenueDeviationMatrixColDim): RevenueDeviationMatrixColDim {
+    return colDims.find((d) => d.value !== exclude)?.value ?? MATRIX_PLATFORM_DIM
   }
 
   function onRowDimClick(v: RevenueDeviationMatrixRowDim) {
-    if (v === MATRIX_DATE_DIM && activeColDim.value === MATRIX_DATE_DIM) return
+    if (isDimConflict(v, activeColDim.value)) return
     activeRowDim.value = v
   }
 
   function onColDimClick(v: RevenueDeviationMatrixColDim) {
-    if (v === MATRIX_DATE_DIM && activeRowDim.value === MATRIX_DATE_DIM) return
+    if (isDimConflict(v, activeRowDim.value)) return
     activeColDim.value = v
   }
 
   watch(
     [activeRowDim, activeColDim],
     ([r, c]) => {
-      if (r === MATRIX_DATE_DIM && c === MATRIX_DATE_DIM) {
-        activeColDim.value = fallbackColDim()
+      if (isDimConflict(r, c)) {
+        activeColDim.value = fallbackColDim(c)
       }
     },
     { flush: 'sync' }
