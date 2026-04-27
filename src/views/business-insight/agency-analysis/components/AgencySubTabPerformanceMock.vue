@@ -16,7 +16,7 @@
   const props = defineProps<{
     loading?: boolean
     error?: boolean
-    /** 父组件提供的“当前日期”展示文案（如 4月18日）；用于避免固定写死日期 */
+    /** 父组件提供的日期区间展示文案（如 4月18日~4月24日）；用于与顶部筛选保持一致 */
     currentDayLabel?: string
     /** 当前子 Tab key（汇总页不会渲染本组件） */
     agencyTab?: string
@@ -25,7 +25,6 @@
     /** 用于初始化「账户汇总」独立日期区间（默认对齐汇总草稿区间） */
     defaultAccountRange?: [string, string]
     kpiLast7?: AgencySubTabKpiPayload | null
-    kpiDay?: AgencySubTabKpiPayload | null
     recentSummary?: AgencySubTabRecentSummaryPayload | null
     accountSummary?: AgencySubTabAccountSummaryPayload | null
   }>()
@@ -198,9 +197,8 @@
     return m?.value ?? '--'
   }
 
-  const last7PeriodLabel = computed(() => props.kpiLast7?.periodLabel ?? '近7天')
-  const dayPeriodLabel = computed(
-    () => props.currentDayLabel ?? props.kpiDay?.periodLabel ?? '当日'
+  const last7PeriodLabel = computed(
+    () => props.currentDayLabel ?? props.kpiLast7?.periodLabel ?? '近7天'
   )
   const recentRows = computed(() => props.recentSummary?.rows ?? recentRowsFallback)
   const accountRows = computed(() => props.accountSummary?.rows ?? accountRowsFallback)
@@ -306,31 +304,6 @@
           <div class="aa-sub-mock__kpi-label">{{ label }}</div>
           <div class="aa-sub-mock__kpi-value">{{
             metricValue(props.kpiLast7, KPI_KEYS_ORDER[i])
-          }}</div>
-        </div>
-      </template>
-    </div>
-
-    <!-- 单日 KPI 行 -->
-    <div class="aa-sub-mock__toolbar aa-sub-mock__toolbar--plain">
-      <span class="aa-sub-mock__period">{{ dayPeriodLabel }}</span>
-    </div>
-    <div class="aa-sub-mock__kpi-grid">
-      <template v-if="loading">
-        <div v-for="n in METRIC_LABELS.length" :key="`d-sk-${n}`" class="aa-sub-mock__kpi-card">
-          <ElSkeleton animated :rows="1" />
-        </div>
-      </template>
-      <template v-else>
-        <div
-          v-for="(label, i) in METRIC_LABELS"
-          :key="`d-${label}`"
-          class="aa-sub-mock__kpi-card"
-          :class="`aa-sub-mock__kpi-card--${CARD_THEMES[i]}`"
-        >
-          <div class="aa-sub-mock__kpi-label">{{ label }}</div>
-          <div class="aa-sub-mock__kpi-value">{{
-            metricValue(props.kpiDay, KPI_KEYS_ORDER[i])
           }}</div>
         </div>
       </template>

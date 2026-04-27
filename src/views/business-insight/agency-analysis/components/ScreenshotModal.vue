@@ -20,7 +20,6 @@
     dataDate: string
     pageLoading: boolean
     kpiLast7?: AgencySubTabKpiPayload | null
-    kpiDay?: AgencySubTabKpiPayload | null
     recentSummary?: AgencySubTabRecentSummaryPayload | null
     accountSummary?: AgencySubTabAccountSummaryPayload | null
   }
@@ -31,7 +30,6 @@
     dataDate: '',
     pageLoading: true,
     kpiLast7: null,
-    kpiDay: null,
     recentSummary: null,
     accountSummary: null
   })
@@ -125,14 +123,6 @@
           key,
           label: kpiLabels[index],
           value: metricValue(props.kpiLast7, key)
-        }))
-      },
-      {
-        title: props.kpiDay?.periodLabel || '当日',
-        items: kpiKeys.map((key, index) => ({
-          key,
-          label: kpiLabels[index],
-          value: metricValue(props.kpiDay, key)
         }))
       }
     ]

@@ -15,7 +15,6 @@
     fetchAgencyAnalysisCountryTop8,
     fetchAgencyAnalysisSpendTrend30d,
     fetchAgencySubTabKpiLast7,
-    fetchAgencySubTabKpiDay,
     fetchAgencySubTabRecentSummary,
     fetchAgencySubTabAccountSummary
   } from '@/api/agency-analysis'
@@ -320,7 +319,7 @@
   const DEFAULT_END_DATE = '2026-04-24'
   /** 汇总专用：日期选择器绑定（点「查询」后才写入 applied 并请求） */
   const summaryDateDraft = ref<[string, string]>([DEFAULT_START_DATE, DEFAULT_END_DATE])
-  /** 最近一次查询使用的日期区间；仅 handleSearch 写入 */
+  /** 最近一次查询使用的日期区间 */
   const summaryDateApplied = ref<[string, string] | null>(null)
   const cockpitMetaFilterStore = useCockpitMetaFilterStore()
   const tabsLoading = ref(true)
@@ -335,9 +334,6 @@
   const subTabLoading = ref(false)
   const subTabError = ref(false)
   const subTabKpiLast7 = ref<
-    import('@/views/business-insight/agency-analysis/types').AgencySubTabKpiPayload | null
-  >(null)
-  const subTabKpiDay = ref<
     import('@/views/business-insight/agency-analysis/types').AgencySubTabKpiPayload | null
   >(null)
   const subTabRecentSummary = ref<
@@ -516,7 +512,6 @@
     if (!metaReady.value || tabsLoading.value) return
     if (isSummaryTabActive.value) return
     const range = summaryDateApplied.value ?? summaryDateDraft.value
-    const endDate = range[1]
     subTabLoading.value = true
     subTabError.value = false
     try {
@@ -526,20 +521,17 @@
         source: 'all',
         agencyTab: activeAgencyTabKey.value
       }
-      const [k7, kd, recent, acct] = await Promise.all([
+      const [k7, recent, acct] = await Promise.all([
         fetchAgencySubTabKpiLast7(qBase),
-        fetchAgencySubTabKpiDay({ ...qBase, date: endDate }),
         fetchAgencySubTabRecentSummary(qBase),
         fetchAgencySubTabAccountSummary(qBase)
       ])
       subTabKpiLast7.value = k7
-      subTabKpiDay.value = kd
       subTabRecentSummary.value = recent
       subTabAccountSummary.value = acct
     } catch {
       subTabError.value = true
       subTabKpiLast7.value = null
-      subTabKpiDay.value = null
       subTabRecentSummary.value = null
       subTabAccountSummary.value = null
     } finally {
@@ -928,7 +920,6 @@
         :agency-tab="activeAgencyTabKey"
         :default-account-range="summaryDateDraft"
         :kpi-last7="subTabKpiLast7"
-        :kpi-day="subTabKpiDay"
         :recent-summary="subTabRecentSummary"
         :account-summary="subTabAccountSummary"
         @account-summary-search="handleAccountSummarySearch"
@@ -943,7 +934,6 @@
       :data-date="screenshotDataDateLabel"
       :page-loading="subTabLoading"
       :kpi-last7="subTabKpiLast7"
-      :kpi-day="subTabKpiDay"
       :recent-summary="subTabRecentSummary"
       :account-summary="subTabAccountSummary"
     />

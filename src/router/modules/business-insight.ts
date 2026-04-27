@@ -114,7 +114,8 @@ export const businessInsightRoutes: AppRouteRecord = {
       meta: {
         title: 'menus.businessInsight.adPlatformDetail',
         keepAlive: true,
-        roles: ['R_SUPER', 'R_ADMIN']
+        isHide: true,
+        activePath: '/business-insight/revenue-overview'
       }
     },
     {

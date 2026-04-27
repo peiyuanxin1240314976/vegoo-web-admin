@@ -98,7 +98,10 @@
       (k) =>
         !String(k.label ?? '')
           .trim()
-          .includes('综合评分')
+          .includes('综合评分') &&
+        !String(k.label ?? '')
+          .trim()
+          .includes('预估利润')
     )
   )
   const skeletonKpiCount = computed(() => Math.max(visibleKpis.value.length, 4))

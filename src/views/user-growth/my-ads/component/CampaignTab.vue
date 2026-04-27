@@ -254,11 +254,6 @@
     if (v < 0) return { color: '#ef4444' }
     return { color: '#10b981' }
   }
-  function minProfitStyle(v: number | null | undefined) {
-    if (v == null) return { color: '#4b5563' }
-    if (v < 0) return { color: '#ef4444' }
-    return { color: '#a78bfa' }
-  }
 
   function platformColor(p: string) {
     if (p === 'Google') return '#4285f4'
@@ -471,7 +466,6 @@
             <th>代投消耗</th>
             <th>首日ROI</th>
             <th>预估利润</th>
-            <th>最低消耗</th>
             <th>CPI</th>
             <th>趋势</th>
             <th>操作</th>
@@ -568,11 +562,6 @@
               <span :style="profitStyle(c.estProfit)" style="font-weight: 600">
                 {{ fmtNum(c.estProfit) }}
               </span>
-            </td>
-
-            <!-- 最低消耗（API: minSpend） -->
-            <td>
-              <span :style="minProfitStyle(c.minSpend)">{{ fmtNum(c.minSpend) }}</span>
             </td>
 
             <!-- CPI（API 可選） -->
