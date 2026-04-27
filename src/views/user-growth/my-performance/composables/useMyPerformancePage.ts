@@ -176,8 +176,9 @@ const DETAIL_LABELS: Record<string, string> = {
 
 export function useMyPerformancePage() {
   const data = ref<MyPerformancePageData>(emptyPageData())
-  const loading = ref(false)
-  const detailLoading = ref(false)
+  const metaLoading = ref(false)
+  const loadingMap = ref<Record<string, boolean>>({})
+  const requestSeq = ref(0)
 
   const selectedPerson = computed(() => {
     const list = data.value.personOptions
@@ -257,96 +258,112 @@ export function useMyPerformancePage() {
       return
     }
 
-    detailLoading.value = true
-    try {
-      const tasks: Array<{ key: string; run: () => Promise<void> }> = [
-        {
-          key: 'overviewKpi',
-          run: async () => {
-            const response = await fetchMyPerformanceOverviewKpi(body)
-            data.value.topKpis = response.topKpis
-          }
-        },
-        {
-          key: 'kpiAchievement',
-          run: async () => {
-            const response = await fetchMyPerformanceKpiAchievement(body)
-            data.value.kpiAchievement = response.kpiAchievement
-          }
-        },
-        {
-          key: 'roiTrend',
-          run: async () => {
-            const response = await fetchMyPerformanceRoiTrend(body)
-            data.value.roiTrend = { title: response.title, points: response.points }
-          }
-        },
-        {
-          key: 'performanceHistory',
-          run: async () => {
-            const response = await fetchMyPerformancePerformanceHistory(body)
-            data.value.performanceHistory = { title: response.title, list: response.list }
-          }
-        },
-        {
-          key: 'appPeriodTable',
-          run: async () => {
-            const response = await fetchMyPerformanceAppDimensionTable(body)
-            data.value.appDimensionTable = {
-              title: response.title,
-              list: response.list,
-              summary: response.summary
-            }
-          }
-        },
-        {
-          key: 'appDateRangeTable',
-          run: async () => {
-            const response = await fetchMyPerformanceAppDimensionTableByDateRange(dateRangeBody)
-            data.value.appDateRangeTable = {
-              title: response.title,
-              list: response.list,
-              summary: response.summary,
-              excelTables: response.excelTables
-            }
+    const seq = ++requestSeq.value
+
+    const setLoading = (key: string, value: boolean) => {
+      loadingMap.value = { ...loadingMap.value, [key]: value }
+    }
+
+    const runTask = async (key: string, run: () => Promise<void>) => {
+      setLoading(key, true)
+      try {
+        await run()
+      } finally {
+        setLoading(key, false)
+      }
+    }
+
+    const tasks: Array<{ key: string; run: () => Promise<void> }> = [
+      {
+        key: 'overviewKpi',
+        run: async () => {
+          const response = await fetchMyPerformanceOverviewKpi(body)
+          if (seq !== requestSeq.value) return
+          data.value.topKpis = response.topKpis
+        }
+      },
+      {
+        key: 'kpiAchievement',
+        run: async () => {
+          const response = await fetchMyPerformanceKpiAchievement(body)
+          if (seq !== requestSeq.value) return
+          data.value.kpiAchievement = response.kpiAchievement
+        }
+      },
+      {
+        key: 'roiTrend',
+        run: async () => {
+          const response = await fetchMyPerformanceRoiTrend(body)
+          if (seq !== requestSeq.value) return
+          data.value.roiTrend = { title: response.title, points: response.points }
+        }
+      },
+      {
+        key: 'performanceHistory',
+        run: async () => {
+          const response = await fetchMyPerformancePerformanceHistory(body)
+          if (seq !== requestSeq.value) return
+          data.value.performanceHistory = { title: response.title, list: response.list }
+        }
+      },
+      {
+        key: 'appPeriodTable',
+        run: async () => {
+          const response = await fetchMyPerformanceAppDimensionTable(body)
+          if (seq !== requestSeq.value) return
+          data.value.appDimensionTable = {
+            title: response.title,
+            list: response.list,
+            summary: response.summary
           }
         }
-      ]
-
-      if (data.value.periodType === 'month') {
-        tasks.push({
-          key: 'spendProgress',
-          run: async () => {
-            const response = await fetchMyPerformanceSpendProgress(body)
-            data.value.spendProgress = { title: response.title, list: response.list }
+      },
+      {
+        key: 'appDateRangeTable',
+        run: async () => {
+          const response = await fetchMyPerformanceAppDimensionTableByDateRange(dateRangeBody)
+          if (seq !== requestSeq.value) return
+          data.value.appDateRangeTable = {
+            title: response.title,
+            list: response.list,
+            summary: response.summary,
+            excelTables: response.excelTables
           }
-        })
-      } else {
-        data.value.spendProgress = {
-          title: '',
-          list: []
         }
       }
+    ]
 
-      const results = await Promise.allSettled(tasks.map((task) => task.run()))
-      results.forEach((result, index) => {
-        if (result.status === 'rejected') {
-          const key = tasks[index]!.key
-          ElMessage.error(`加载${DETAIL_LABELS[key] ?? key}失败`)
+    if (data.value.periodType === 'month') {
+      tasks.push({
+        key: 'spendProgress',
+        run: async () => {
+          const response = await fetchMyPerformanceSpendProgress(body)
+          data.value.spendProgress = { title: response.title, list: response.list }
         }
       })
-    } finally {
-      detailLoading.value = false
+    } else {
+      data.value.spendProgress = {
+        title: '',
+        list: []
+      }
     }
+
+    const results = await Promise.allSettled(tasks.map((task) => runTask(task.key, task.run)))
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const key = tasks[index]!.key
+        ElMessage.error(`加载${DETAIL_LABELS[key] ?? key}失败`)
+      }
+    })
   }
 
   async function bootstrap() {
-    loading.value = true
+    metaLoading.value = true
     try {
       await loadMeta()
       await loadDetail()
     } finally {
-      loading.value = false
+      metaLoading.value = false
     }
   }
 
@@ -386,8 +403,8 @@ export function useMyPerformancePage() {
 
   return {
     data,
-    loading,
-    detailLoading,
+    metaLoading,
+    loadingMap,
     selectedPerson,
     onPersonChange,
     onPeriodTypeChange,

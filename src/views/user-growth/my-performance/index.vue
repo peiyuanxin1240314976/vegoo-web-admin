@@ -25,7 +25,7 @@
 
     <div class="top-row">
       <MyPerformanceTopCard
-        :loading="cardLoading"
+        :loading="panelLoading.overviewKpi"
         :person="selectedPerson"
         :kpis="data.topKpis"
         :responsible-label="$t('myPerformance.personCard.responsible')"
@@ -46,13 +46,13 @@
             :col-score="$t('myPerformance.kpiTable.col.score')"
           /> -->
           <MyPerformancePanelRoiTrend
-            :loading="cardLoading"
+            :loading="panelLoading.roiTrend"
             :title="data.roiTrend.title"
             :points="data.roiTrend.points"
           />
           <MyPerformancePanelSpendProgress
             v-if="data.periodType === 'month'"
-            :loading="cardLoading"
+            :loading="panelLoading.spendProgress"
             :title="data.spendProgress.title"
             :list="data.spendProgress.list"
             :hint-text="spendAchievementHint"
@@ -69,7 +69,7 @@
         <div class="right-wrap">
           <MyPerformancePanelAppHierarchyTable
             v-if="activeAppTable === 'period'"
-            :loading="cardLoading"
+            :loading="panelLoading.appPeriodTable"
             :list="data.appDimensionTable.list"
             :summary="data.appDimensionTable.summary"
           >
@@ -99,7 +99,7 @@
 
           <MyPerformancePanelAppDimensionTable
             v-else
-            :loading="cardLoading"
+            :loading="panelLoading.appDateRangeTable"
             :list="data.appDateRangeTable.list"
             :summary="data.appDateRangeTable.summary"
             :excel-tables="data.appDateRangeTable.excelTables"
@@ -165,15 +165,20 @@
 
   const {
     data,
-    loading,
-    detailLoading,
+    loadingMap,
     selectedPerson,
     onPersonChange,
     onPeriodTypeChange,
     onPeriodValueChange
   } = useMyPerformancePage()
 
-  const cardLoading = computed(() => loading.value || detailLoading.value)
+  const panelLoading = computed(() => ({
+    overviewKpi: !!loadingMap.value.overviewKpi,
+    roiTrend: !!loadingMap.value.roiTrend,
+    spendProgress: !!loadingMap.value.spendProgress,
+    appPeriodTable: !!loadingMap.value.appPeriodTable,
+    appDateRangeTable: !!loadingMap.value.appDateRangeTable
+  }))
   const currentDateText = computed(() => formatYYYYMMDD(getAppNow()))
   const computeRangeText = computed(() => {
     const end = getAppNow()
