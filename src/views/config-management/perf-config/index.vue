@@ -36,7 +36,7 @@
             <div class="kpi-label">总配置数</div>
             <div class="kpi-value kpi-value--blue">{{ kpi.total }}</div>
           </div>
-          <div class="kpi-card kpi-card--teal">
+          <!-- <div class="kpi-card kpi-card--teal">
             <div class="kpi-label">已发布</div>
             <div class="kpi-value kpi-value--teal">{{ kpi.published }}</div>
           </div>
@@ -47,7 +47,7 @@
           <div class="kpi-card kpi-card--gray">
             <div class="kpi-label">已归档</div>
             <div class="kpi-value kpi-value--gray">{{ kpi.archived }}</div>
-          </div>
+          </div> -->
         </div>
 
         <!-- ── 表格面板 ───────────────────────────────────────── -->
