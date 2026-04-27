@@ -64,7 +64,7 @@
 
     <!-- ========== KPI Cards ========== -->
     <div v-if="loadingKpi" class="rd-kpi-grid rd-entry-2">
-      <div v-for="i in 5" :key="i" class="rd-kpi-card rd-kpi-card--sk">
+      <div v-for="i in 4" :key="i" class="rd-kpi-card rd-kpi-card--sk">
         <ElSkeleton animated :throttle="0">
           <template #template>
             <div class="rd-kpi-sk">
@@ -117,13 +117,13 @@
           }}%
         </div>
       </div>
-      <div class="rd-kpi-card rd-kpi-card--blue">
+      <!-- <div class="rd-kpi-card rd-kpi-card--blue">
         <div class="rd-kpi-card__label">影响ROI估算</div>
         <div class="rd-kpi-card__value rd-kpi-card__value--blue">
           {{ fmtRoiPp(kpiOverview.n_roi_impact_pp) }}
         </div>
         <div class="rd-kpi-card__sub">实际ROI将低于预估 / 需校正ROI计算</div>
-      </div>
+      </div> -->
     </div>
     <div v-else class="rd-kpi-empty-wrap rd-entry-2">
       <div class="rd-card rd-kpi-empty-card">
@@ -762,10 +762,10 @@
     return `${n.toFixed(1)}%`
   }
 
-  function fmtRoiPp(n?: number | null) {
-    if (n === null || n === undefined || Number.isNaN(n)) return '--'
-    return `${n.toFixed(1)}pp`
-  }
+  // function fmtRoiPp(n?: number | null) {
+  //   if (n === null || n === undefined || Number.isNaN(n)) return '--'
+  //   return `${n.toFixed(1)}pp`
+  // }
 
   function formatCountryBarLabel(value: number) {
     if (!Number.isFinite(value)) return '--'
@@ -1473,7 +1473,7 @@
 
   @media (width >= 1600px) {
     .rd-kpi-grid {
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr);
     }
   }
 
