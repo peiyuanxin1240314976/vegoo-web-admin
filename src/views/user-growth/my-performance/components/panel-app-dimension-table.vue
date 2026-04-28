@@ -169,6 +169,14 @@
 
   defineOptions({ name: 'MyPerformancePanelAppDimensionTable' })
 
+  const MY_PERFORMANCE_NOW_OFFSET_DAYS = -2
+
+  function getMyPerformanceNow() {
+    const now = cloneAppDate(getAppNow())
+    now.setDate(now.getDate() + MY_PERFORMANCE_NOW_OFFSET_DAYS)
+    return now
+  }
+
   type DetailDisplayRow = {
     key: string
     app: string
@@ -192,18 +200,18 @@
       headerHint?: string
     }>(),
     {
-      loading: false,
-      headerHint: (() => {
-        const endDate = getAppNow()
-        const startDate = cloneAppDate(endDate)
-        startDate.setDate(startDate.getDate() - 7)
-        return `计算周期：${formatYYYYMMDD(startDate)} 至 ${formatYYYYMMDD(endDate)} | 应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算`
-      })()
+      loading: false
     }
   )
 
   const loading = computed(() => props.loading)
-  const resolvedHeaderHint = computed(() => props.headerHint)
+  const resolvedHeaderHint = computed(() => {
+    if (props.headerHint) return props.headerHint
+    const endDate = getMyPerformanceNow()
+    const startDate = cloneAppDate(endDate)
+    startDate.setDate(startDate.getDate() - 7)
+    return `计算周期：${formatYYYYMMDD(startDate)} 至 ${formatYYYYMMDD(endDate)} | 应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算`
+  })
 
   const resolvedExcelTables = computed<MyPerformanceExcelTables>(() => {
     if (props.excelTables?.dateHeaders?.length) {

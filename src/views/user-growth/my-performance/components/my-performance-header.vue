@@ -63,7 +63,7 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import { WarningFilled } from '@element-plus/icons-vue'
-  import { getAppNow } from '@/utils/app-now'
+  import { cloneAppDate, getAppNow } from '@/utils/app-now'
   import type {
     MyPerformancePeriodOption,
     MyPerformancePeriodType,
@@ -127,8 +127,16 @@
   const leftQuaternary = computed(() => props.leftQuaternary)
   const leftHint = computed(() => props.leftHint)
 
+  const MY_PERFORMANCE_NOW_OFFSET_DAYS = -2
+
+  function getMyPerformanceNow() {
+    const now = cloneAppDate(getAppNow())
+    now.setDate(now.getDate() + MY_PERFORMANCE_NOW_OFFSET_DAYS)
+    return now
+  }
+
   function pickAppNowQuarterLabel(options: MyPerformancePeriodOption[]): string {
-    const now = getAppNow()
+    const now = getMyPerformanceNow()
     const targetYear = now.getFullYear()
     const targetQuarter = Math.floor(now.getMonth() / 3) + 1
     const parseQuarter = (value: string) => {
@@ -164,8 +172,9 @@
     const found = monthOpts.find((o) => o.value === props.periodValue)
     if (props.periodType === 'month') return found?.value ?? ''
 
-    const y = getAppNow().getFullYear()
-    const m = String(getAppNow().getMonth() + 1).padStart(2, '0')
+    const now = getMyPerformanceNow()
+    const y = now.getFullYear()
+    const m = String(now.getMonth() + 1).padStart(2, '0')
     const appNowMonth = `${y}-${m}`
     return monthOpts.find((o) => o.value === appNowMonth)?.value ?? monthOpts[0]?.value ?? ''
   })

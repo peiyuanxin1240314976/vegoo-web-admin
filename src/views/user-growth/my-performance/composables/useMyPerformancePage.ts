@@ -3,7 +3,6 @@ import { ElMessage } from 'element-plus'
 import {
   fetchMyPerformanceAppDimensionTable,
   fetchMyPerformanceAppDimensionTableByDateRange,
-  fetchMyPerformanceKpiAchievement,
   fetchMyPerformanceMetaPeriodOptions,
   fetchMyPerformanceMetaPersonOptions,
   fetchMyPerformanceOverviewKpi,
@@ -22,9 +21,18 @@ import type {
   MyPerformanceQueryBody
 } from '../types'
 
+const MY_PERFORMANCE_NOW_OFFSET_DAYS = -2
+
+function getMyPerformanceNow(): Date {
+  const now = cloneAppDate(getAppNow())
+  now.setDate(now.getDate() + MY_PERFORMANCE_NOW_OFFSET_DAYS)
+  return now
+}
+
 function pickAppNowMonthPeriodValue(monthOptions: MyPerformancePeriodOption[]): string {
-  const y = getAppNow().getFullYear()
-  const m = String(getAppNow().getMonth() + 1).padStart(2, '0')
+  const now = getMyPerformanceNow()
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
   const target = `${y}-${m}`
   if (monthOptions.some((o) => o.value === target)) return target
   const anySameMonth = monthOptions.find((o) => o.value.endsWith(`-${m}`))
@@ -33,7 +41,7 @@ function pickAppNowMonthPeriodValue(monthOptions: MyPerformancePeriodOption[]): 
 }
 
 function pickAppNowQuarterPeriodValue(quarterOptions: MyPerformancePeriodOption[]): string {
-  const now = getAppNow()
+  const now = getMyPerformanceNow()
   const targetYear = now.getFullYear()
   const targetQuarter = Math.floor(now.getMonth() / 3) + 1
   const parseQuarter = (value: string) => {
@@ -166,7 +174,6 @@ function emptyPageData(): MyPerformancePageData {
 
 const DETAIL_LABELS: Record<string, string> = {
   overviewKpi: '顶部 KPI',
-  kpiAchievement: 'KPI 达成',
   roiTrend: 'ROI 趋势',
   spendProgress: '花费达成',
   performanceHistory: '绩效历史',
@@ -184,7 +191,7 @@ export function useMyPerformancePage() {
     periodType: MyPerformancePeriodType,
     periodValue: string
   ): { startDate: string; endDate: string } {
-    const now = getAppNow()
+    const now = getMyPerformanceNow()
 
     const todayYmd = formatYYYYMMDD(now)
 
@@ -295,7 +302,7 @@ export function useMyPerformancePage() {
   function appDateRangeTableQueryBody(): MyPerformanceAppDimensionTableQueryBody | null {
     const { selectedPersonId } = data.value
     if (!selectedPersonId) return null
-    const end = getAppNow()
+    const end = getMyPerformanceNow()
     const start = cloneAppDate(end)
     start.setDate(start.getDate() - 7)
     const startDate = formatYYYYMMDD(start)
@@ -371,14 +378,6 @@ export function useMyPerformancePage() {
           const response = await fetchMyPerformanceOverviewKpi(body)
           if (seq !== requestSeq.value) return
           data.value.topKpis = response.topKpis
-        }
-      },
-      {
-        key: 'kpiAchievement',
-        run: async () => {
-          const response = await fetchMyPerformanceKpiAchievement(body)
-          if (seq !== requestSeq.value) return
-          data.value.kpiAchievement = response.kpiAchievement
         }
       },
       {

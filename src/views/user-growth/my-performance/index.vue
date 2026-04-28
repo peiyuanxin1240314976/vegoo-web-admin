@@ -160,6 +160,14 @@
 
   defineOptions({ name: 'MyPerformance' })
 
+  const MY_PERFORMANCE_NOW_OFFSET_DAYS = -2
+
+  function getMyPerformanceNow() {
+    const now = cloneAppDate(getAppNow())
+    now.setDate(now.getDate() + MY_PERFORMANCE_NOW_OFFSET_DAYS)
+    return now
+  }
+
   const { t } = useI18n()
   const activeAppTable = ref<'period' | 'recent'>('period')
 
@@ -180,7 +188,7 @@
     appPeriodTable: !!loadingMap.value.appPeriodTable,
     appDateRangeTable: !!loadingMap.value.appDateRangeTable
   }))
-  const currentDateText = computed(() => formatYYYYMMDD(getAppNow()))
+  const currentDateText = computed(() => formatYYYYMMDD(getMyPerformanceNow()))
   const leftPrimaryText = computed(() => `当前日期：${currentDateText.value}`)
   const leftSecondaryText = computed(
     () => `计算日期：${globalDateRange.value.startDate} 至 ${globalDateRange.value.endDate}`
@@ -191,7 +199,7 @@
     { key: 'recent' as const, label: t('myPerformance.tableSwitch.recent') }
   ])
   const appTableHintText = computed(() => {
-    const end = getAppNow()
+    const end = getMyPerformanceNow()
     const start = cloneAppDate(end)
     start.setDate(start.getDate() - 7)
     return `计算周期：${formatYYYYMMDD(start)} 至 ${formatYYYYMMDD(end)} | 应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算`
