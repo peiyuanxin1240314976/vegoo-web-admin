@@ -285,8 +285,6 @@
   )
 
   function buildRows(app: MyPerformanceAppTreeRow, pageIndex: number): DisplayRow[] {
-    const allChildren = getSourceChildren(app)
-    const aggregateRow = getAggregateRow(app, allChildren)
     const detailChildren = getDetailChildren(app)
     const canExpand = detailChildren.length > 0
     const expanded = expandedMap.value[app.id] ?? true
@@ -294,7 +292,7 @@
     const appName = cleanAppName(app.name)
 
     const parentRow = mapRow({
-      source: aggregateRow,
+      source: app,
       appId: app.id,
       appDisplayName: appName,
       themeIndex,
@@ -326,51 +324,8 @@
     return (app.children ?? []).filter((item) => item && item.type === 'source')
   }
 
-  function getAggregateChild(children: MyPerformanceAppTreeRow[]) {
-    return children.find((item) => isAllSource(item.name))
-  }
-
-  function getAggregateRow(app: MyPerformanceAppTreeRow, children: MyPerformanceAppTreeRow[]) {
-    const aggregateChild = getAggregateChild(children)
-    if (aggregateChild) {
-      return aggregateChild
-    }
-    if (children.length > 0) {
-      return aggregateSourceRows(children)
-    }
-    return app
-  }
-
   function getDetailChildren(app: MyPerformanceAppTreeRow) {
-    const children = getSourceChildren(app)
-    const aggregateChild = getAggregateChild(children)
-    if (aggregateChild) {
-      return children.filter((child) => child.id !== aggregateChild.id)
-    }
-    return children
-  }
-
-  function aggregateSourceRows(children: MyPerformanceAppTreeRow[]): MyPerformanceAppTreeRow {
-    return {
-      id: `${children[0]?.id ?? 'app'}__aggregate`,
-      type: 'source',
-      name: t('myPerformance.tableSwitch.allLabel'),
-      platform: common(children.map((item) => item.platform)),
-      windowLabel: common(children.map((item) => normalizeDash(item.windowLabel))),
-      reachRate: average(children.map((item) => toNumber(item.reachRate))),
-      minRate: average(children.map((item) => toNumber(item.minRate))),
-      deviationCoef: average(children.map((item) => toNumber(item.deviationCoef))),
-      minProfit: sum(children.map((item) => toNumber(item.minProfit))),
-      adSpend: sum(children.map((item) => toNumber(item.adSpend))),
-      calculatedSpend: sum(children.map((item) => toNumber(item.calculatedSpend))),
-      roi: average(children.map((item) => toNumber(item.roi))),
-      commissionSpend: sum(children.map((item) => toNumber(item.commissionSpend))),
-      estimatedProfit: sum(children.map((item) => toNumber(item.estimatedProfit))),
-      cpa: average(children.map((item) => toNumber(item.cpa))),
-      score: average(children.map((item) => toNumber(item.score))),
-      status: groupStatus(children),
-      statusText: children.find((item) => item.statusText)?.statusText
-    }
+    return getSourceChildren(app)
   }
 
   function mapRow(input: {
@@ -479,13 +434,6 @@
     return normalizeText(value) || t('myPerformance.tableSwitch.allLabel')
   }
 
-  function isAllSource(name?: string | null) {
-    const normalized = String(name ?? '')
-      .trim()
-      .toLowerCase()
-    return normalized === 'all' || normalized === '全部'
-  }
-
   function splitStatus(text?: string) {
     const raw = String(text ?? '').trim()
     if (!raw) {
@@ -510,44 +458,8 @@
     return ''
   }
 
-  function groupStatus(children: MyPerformanceAppTreeRow[]) {
-    if (children.some((item) => item.status === 'warning')) return 'warning'
-    if (children.some((item) => item.status === 'paused')) return 'paused'
-    if (children.some((item) => item.status === 'running')) return 'running'
-    return undefined
-  }
-
   function toNumber(value: unknown) {
     return typeof value === 'number' && Number.isFinite(value) ? value : undefined
-  }
-
-  function sum(values: Array<number | undefined>) {
-    const numbers = values.filter((item): item is number => typeof item === 'number')
-    return numbers.length ? numbers.reduce((total, item) => total + item, 0) : undefined
-  }
-
-  function average(values: Array<number | undefined>) {
-    const numbers = values.filter((item): item is number => typeof item === 'number')
-    return numbers.length
-      ? numbers.reduce((total, item) => total + item, 0) / numbers.length
-      : undefined
-  }
-
-  function common(values: Array<string | undefined>) {
-    const counter = new Map<string, number>()
-    values
-      .filter((item): item is string => !!item)
-      .forEach((item) => counter.set(item, (counter.get(item) ?? 0) + 1))
-
-    let winner = ''
-    let maxCount = 0
-    counter.forEach((count, key) => {
-      if (count > maxCount) {
-        winner = key
-        maxCount = count
-      }
-    })
-    return winner || undefined
   }
 
   function pct(value?: number) {
