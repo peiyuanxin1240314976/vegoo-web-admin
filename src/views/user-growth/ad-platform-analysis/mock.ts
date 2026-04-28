@@ -19,8 +19,8 @@ export interface ChannelKpiCard {
   name: string
   /** 广告平台 / App 图标 URL；为空则前端显示圆角占位块 */
   logo?: string
-  roi: number
-  roiChange: number
+  roi: number | null
+  roiChange: number | null
   roiChangeUp: boolean
   cost: string
   revenue: string
@@ -184,21 +184,21 @@ export interface ChannelMetricRow {
   source?: string
   cost: string
   revenue: string
-  roi: number
+  roi: number | null
   roiTrendUp: boolean
-  roas: number
-  cpi: number
+  roas: number | null
+  cpi: number | null
   cpiTrendUp: boolean
   /** 迷你柱图高度（0–1），5 个点；缺省由前端按 channel 生成 */
   roiSparkline?: number[]
   cpiSparkline?: number[]
   installs: string
-  userQualityD7: number
+  userQualityD7: number | null
   userQualityD7TrendUp: boolean
-  userQualityPay: number
+  userQualityPay: number | null
   userQualityPayTrendUp: boolean
-  ltv7: number
-  ltv30: number
+  ltv7: number | null
+  ltv30: number | null
   status: ChannelStatus
 }
 
@@ -217,9 +217,9 @@ export interface TopCampaignRow {
   /** 应用名称（接口 appName） */
   appName?: string
   /** 花费（美元） */
-  cost: number
-  cpi: number
-  roi: number
+  cost: number | null
+  cpi: number | null
+  roi: number | null
 }
 
 const MOCK_TOP10_ROW_APP = { appId: 's_app_demo', appName: '示例应用 A' } as const

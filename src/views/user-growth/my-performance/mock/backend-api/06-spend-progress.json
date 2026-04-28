@@ -9,7 +9,9 @@
         "enum": ["quarter", "month"],
         "description": "统计口径类型。"
       },
-      "periodValue": { "type": "string", "required": true, "description": "口径值。" }
+      "periodValue": { "type": "string", "required": true, "description": "口径值。" },
+      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" }
     },
     "response": {
       "title": { "type": "string", "required": true, "description": "面板标题。" },
@@ -39,7 +41,13 @@
       }
     }
   },
-  "sampleRequest": { "personId": "u_001", "periodType": "month", "periodValue": "2026-03" },
+  "sampleRequest": {
+    "personId": "u_001",
+    "periodType": "month",
+    "periodValue": "2026-03",
+    "startDate": "2026-03-01",
+    "endDate": "2026-03-30"
+  },
   "sampleResponse": {
     "title": "月度消耗进度",
     "list": [
@@ -61,7 +69,7 @@
     "url": "POST /api/user-growth/my-performance/spend-progress",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "personId, periodType, periodValue",
+    "requestBody": "personId, periodType, periodValue, startDate, endDate",
     "responseBody": "title, list；网关常见包裹为 data.spendProgress"
   }
 }

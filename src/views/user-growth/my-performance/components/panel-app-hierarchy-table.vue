@@ -218,18 +218,19 @@
   const safeList = computed<MyPerformanceAppTreeRow[]>(() =>
     Array.isArray(props.list) ? props.list.filter(Boolean) : []
   )
-  const resolvedSummary = computed<MyPerformanceAppTableSummary>(() => ({
-    adSpend: typeof props.summary?.adSpend === 'number' ? props.summary.adSpend : 0,
-    calculatedSpend:
-      typeof props.summary?.calculatedSpend === 'number' ? props.summary.calculatedSpend : 0,
-    roi: typeof props.summary?.roi === 'number' ? props.summary.roi : 0,
-    commissionSpend:
-      typeof props.summary?.commissionSpend === 'number' ? props.summary.commissionSpend : 0,
-    estimatedProfit:
-      typeof props.summary?.estimatedProfit === 'number' ? props.summary.estimatedProfit : 0,
-    cpa: typeof props.summary?.cpa === 'number' ? props.summary.cpa : 0,
-    score: typeof props.summary?.score === 'number' ? props.summary.score : 0
-  }))
+  const resolvedSummary = computed(() => {
+    const toNumOrUndef = (v: unknown) =>
+      typeof v === 'number' && Number.isFinite(v) ? v : undefined
+    return {
+      adSpend: toNumOrUndef(props.summary?.adSpend),
+      calculatedSpend: toNumOrUndef(props.summary?.calculatedSpend),
+      roi: toNumOrUndef(props.summary?.roi),
+      commissionSpend: toNumOrUndef(props.summary?.commissionSpend),
+      estimatedProfit: toNumOrUndef(props.summary?.estimatedProfit),
+      cpa: toNumOrUndef(props.summary?.cpa),
+      score: toNumOrUndef(props.summary?.score)
+    }
+  })
 
   const totalApps = computed(() => safeList.value.length)
   const pageCount = computed(() => Math.max(1, Math.ceil(totalApps.value / pageSize)))

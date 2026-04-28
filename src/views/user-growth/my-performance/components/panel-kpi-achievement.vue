@@ -68,7 +68,8 @@
 
   defineOptions({ name: 'MyPerformancePanelKpiAchievement' })
 
-  function clampScore(n: number) {
+  function clampScore(n: number | null | undefined) {
+    if (n === null || n === undefined) return 0
     if (!Number.isFinite(n)) return 0
     return Math.min(100, Math.max(0, n))
   }
@@ -96,6 +97,7 @@
 
   const ringColor = computed(() => {
     const v = props.achievement.score
+    if (v === null || v === undefined) return 'var(--text-tertiary)'
     if (v >= 90) return 'var(--art-success)'
     if (v >= 80) return 'var(--art-primary)'
     return 'var(--art-warning)'

@@ -128,13 +128,13 @@ function createEmptyTable() {
     title: '',
     list: [],
     summary: {
-      adSpend: 0,
-      calculatedSpend: 0,
-      roi: 0,
-      commissionSpend: 0,
-      estimatedProfit: 0,
-      cpa: 0,
-      score: 0
+      adSpend: null,
+      calculatedSpend: null,
+      roi: null,
+      commissionSpend: null,
+      estimatedProfit: null,
+      cpa: null,
+      score: null
     },
     excelTables: undefined
   }
@@ -149,7 +149,7 @@ function emptyPageData(): MyPerformancePageData {
     selectedPeriodValue: '',
     topKpis: [],
     kpiAchievement: {
-      score: 0,
+      score: null,
       label: '',
       breakdown: []
     },
@@ -180,6 +180,92 @@ export function useMyPerformancePage() {
   const loadingMap = ref<Record<string, boolean>>({})
   const requestSeq = ref(0)
 
+  function buildGlobalDateRangeFromPeriod(
+    periodType: MyPerformancePeriodType,
+    periodValue: string
+  ): { startDate: string; endDate: string } {
+    const now = getAppNow()
+
+    const todayYmd = formatYYYYMMDD(now)
+
+    const clampEndToToday = (end: Date) => {
+      const endYmd = formatYYYYMMDD(end)
+      return endYmd > todayYmd ? todayYmd : endYmd
+    }
+
+    const fallbackCurrentMonth = () => {
+      const y = now.getFullYear()
+      const m = now.getMonth() // 0-based
+      const start = cloneAppDate(now)
+      start.setFullYear(y, m, 1)
+      start.setHours(0, 0, 0, 0)
+      return { startDate: formatYYYYMMDD(start), endDate: todayYmd }
+    }
+
+    const fallbackCurrentQuarter = () => {
+      const y = now.getFullYear()
+      const q = Math.floor(now.getMonth() / 3) + 1
+      const startMonth = (q - 1) * 3
+      const start = cloneAppDate(now)
+      start.setFullYear(y, startMonth, 1)
+      start.setHours(0, 0, 0, 0)
+      return { startDate: formatYYYYMMDD(start), endDate: todayYmd }
+    }
+
+    if (periodType === 'month') {
+      const m = String(periodValue).match(/^(\d{4})-(\d{2})$/)
+      if (!m) return fallbackCurrentMonth()
+      const year = Number(m[1])
+      const monthIndex = Number(m[2]) - 1
+      if (!Number.isFinite(year) || !Number.isFinite(monthIndex)) return fallbackCurrentMonth()
+
+      const start = cloneAppDate(now)
+      start.setFullYear(year, monthIndex, 1)
+      start.setHours(0, 0, 0, 0)
+
+      const end = cloneAppDate(now)
+      // 该月最后一天：把日期设为下个月第 0 天
+      end.setFullYear(year, monthIndex + 1, 0)
+      end.setHours(0, 0, 0, 0)
+
+      const endDate =
+        year === now.getFullYear() && monthIndex === now.getMonth()
+          ? todayYmd
+          : clampEndToToday(end)
+
+      return { startDate: formatYYYYMMDD(start), endDate }
+    }
+
+    // quarter
+    const q = String(periodValue).match(/^(\d{4})\s*-?\s*[Qq]([1-4])$/)
+    if (!q) return fallbackCurrentQuarter()
+    const year = Number(q[1])
+    const quarter = Number(q[2])
+    if (!Number.isFinite(year) || !Number.isFinite(quarter)) return fallbackCurrentQuarter()
+
+    const startMonth = (quarter - 1) * 3
+    const start = cloneAppDate(now)
+    start.setFullYear(year, startMonth, 1)
+    start.setHours(0, 0, 0, 0)
+
+    const end = cloneAppDate(now)
+    // 季度末月的最后一天
+    end.setFullYear(year, startMonth + 3, 0)
+    end.setHours(0, 0, 0, 0)
+
+    const isCurrentQuarter =
+      year === now.getFullYear() && Math.floor(now.getMonth() / 3) + 1 === quarter
+
+    return {
+      startDate: formatYYYYMMDD(start),
+      endDate: isCurrentQuarter ? todayYmd : clampEndToToday(end)
+    }
+  }
+
+  const globalDateRange = computed(() =>
+    buildGlobalDateRangeFromPeriod(data.value.periodType, data.value.selectedPeriodValue)
+  )
+
   const selectedPerson = computed(() => {
     const list = data.value.personOptions
     const current = list.find((p) => p.id === data.value.selectedPersonId) ?? list[0]
@@ -196,10 +282,13 @@ export function useMyPerformancePage() {
   function queryBody(): MyPerformanceQueryBody | null {
     const { selectedPersonId, periodType, selectedPeriodValue } = data.value
     if (!selectedPersonId || !selectedPeriodValue) return null
+    const { startDate, endDate } = globalDateRange.value
     return {
       personId: selectedPersonId,
       periodType,
-      periodValue: selectedPeriodValue
+      periodValue: selectedPeriodValue,
+      startDate,
+      endDate
     }
   }
 
@@ -209,10 +298,12 @@ export function useMyPerformancePage() {
     const end = getAppNow()
     const start = cloneAppDate(end)
     start.setDate(start.getDate() - 7)
+    const startDate = formatYYYYMMDD(start)
+    const endDate = formatYYYYMMDD(end)
     return {
       personId: selectedPersonId,
-      startDate: formatYYYYMMDD(start),
-      endDate: formatYYYYMMDD(end)
+      startDate,
+      endDate
     }
   }
 
@@ -406,6 +497,7 @@ export function useMyPerformancePage() {
     metaLoading,
     loadingMap,
     selectedPerson,
+    globalDateRange,
     onPersonChange,
     onPeriodTypeChange,
     onPeriodValueChange

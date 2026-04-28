@@ -9,7 +9,9 @@
         "enum": ["quarter", "month"],
         "description": "统计口径类型。"
       },
-      "periodValue": { "type": "string", "required": true, "description": "口径值，如 2026-03。" }
+      "periodValue": { "type": "string", "required": true, "description": "口径值，如 2026-03。" },
+      "startDate": { "type": "string", "required": true, "description": "开始日期，YYYY-MM-DD。" },
+      "endDate": { "type": "string", "required": true, "description": "结束日期，YYYY-MM-DD。" }
     },
     "response": {
       "title": { "type": "string", "required": true, "description": "表格标题。" },
@@ -89,7 +91,13 @@
       "score": { "type": "number", "required": true, "description": "绩效分数汇总/均值。" }
     }
   },
-  "sampleRequest": { "personId": "u_001", "periodType": "month", "periodValue": "2026-03" },
+  "sampleRequest": {
+    "personId": "u_001",
+    "periodType": "month",
+    "periodValue": "2026-03",
+    "startDate": "2026-03-01",
+    "endDate": "2026-03-30"
+  },
   "sampleResponse": {
     "title": "应用维度绩效评估",
     "list": [
@@ -134,7 +142,7 @@
     "url": "POST /api/user-growth/my-performance/app-dimension-table",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "personId, periodType, periodValue",
+    "requestBody": "personId, periodType, periodValue, startDate, endDate",
     "responseBody": "title, list, summary"
   },
   "apiSuggestion": {

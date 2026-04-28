@@ -99,7 +99,11 @@
             <span class="roi-value"
               ><span class="roi-label">ROI</span>{{ formatKpiRoi(card.roi) }}</span
             >
-            <span class="roi-change" :class="card.roiChangeUp ? 'up' : 'down'">
+            <span
+              v-if="card.roiChange !== null && card.roiChange !== undefined"
+              class="roi-change"
+              :class="card.roiChangeUp ? 'up' : 'down'"
+            >
               {{ card.roiChangeUp ? '+' : '' }}{{ formatNum2(card.roiChange) }}%
             </span>
           </div>
@@ -496,18 +500,9 @@
       sourceKey: normalizeChannelKey(source || 'x'),
       ...(appId ? { appId } : {}),
       ...(appName ? { appName } : {}),
-      cost:
-        typeof d?.cost === 'number' && Number.isFinite(d.cost)
-          ? d.cost
-          : Number.parseFloat(String(d?.cost ?? '')) || 0,
-      cpi:
-        typeof d?.cpi === 'number' && Number.isFinite(d.cpi)
-          ? d.cpi
-          : Number.parseFloat(String(d?.cpi ?? '')) || 0,
-      roi:
-        typeof d?.roi === 'number' && Number.isFinite(d.roi)
-          ? d.roi
-          : Number.parseFloat(String(d?.roi ?? '')) || 0
+      cost: parseFiniteNumberOrNull(d?.cost),
+      cpi: parseFiniteNumberOrNull(d?.cpi),
+      roi: parseFiniteNumberOrNull(d?.roi)
     }
   }
 
@@ -538,17 +533,8 @@
     const rawId = String(d.id ?? '').trim()
     const id = rawId || normalizeChannelKey(name) || `kpi-${name.slice(0, 8) || 'unknown'}`
 
-    const roiRaw = d.roi
-    const roi =
-      typeof roiRaw === 'number' && Number.isFinite(roiRaw)
-        ? roiRaw
-        : Number.parseFloat(String(roiRaw ?? '').replace(/,/g, '')) || 0
-
-    const roiChRaw = d.roiChange
-    const roiChange =
-      typeof roiChRaw === 'number' && Number.isFinite(roiChRaw)
-        ? roiChRaw
-        : Number.parseFloat(String(roiChRaw ?? '').replace(/,/g, '')) || 0
+    const roi = parseFiniteNumberOrNull(d?.roi)
+    const roiChange = parseFiniteNumberOrNull(d?.roiChange)
 
     const trend = Array.isArray(d.trendData)
       ? d.trendData.map((v) => Number(v)).filter((n) => Number.isFinite(n))
@@ -564,7 +550,7 @@
       cost: d.cost ?? '',
       revenue: d.revenue ?? '',
       cpi: d.cpi ?? '',
-      trendData: trend.length > 0 ? trend : [roi || 0]
+      trendData: trend.length > 0 ? trend : []
     }
   }
 
@@ -613,7 +599,8 @@
     )
   }
 
-  function formatKpiRoi(roi: number) {
+  function formatKpiRoi(roi: number | null) {
+    if (roi === null || roi === undefined) return '—'
     const text = formatNum2(roi * 100)
     if (text === '—') return text
     return `${text}%`
@@ -674,7 +661,7 @@
     return topCampaigns.value.filter((r) => matchesAdPlatformSourceFilter(sel, r.channel))
   })
 
-  function formatTopCurrency(n: number) {
+  function formatTopCurrency(n: unknown) {
     return formatUsd2(n)
   }
 
@@ -867,10 +854,13 @@
     }
   }
 
-  function parseMetricNum(v: unknown): number {
-    if (typeof v === 'number' && Number.isFinite(v)) return v
-    const n = Number.parseFloat(String(v ?? ''))
-    return Number.isFinite(n) ? n : 0
+  function parseFiniteNumberOrNull(v: unknown): number | null {
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null
+    if (v === null || v === undefined) return null
+    const s = String(v).trim()
+    if (!s) return null
+    const n = Number.parseFloat(s.replace(/,/g, ''))
+    return Number.isFinite(n) ? n : null
   }
 
   function mapMetricsTableRowDto(d: Api.UserGrowth.AdPlatformMetricsTableRowDto): ChannelMetricRow {
@@ -888,18 +878,18 @@
       sourceCode: id || undefined,
       cost: String(d?.cost ?? ''),
       revenue: String(d?.revenue ?? ''),
-      roi: parseMetricNum(d?.roi),
+      roi: parseFiniteNumberOrNull(d?.roi),
       roiTrendUp: Boolean(d?.roiTrendUp),
-      roas: parseMetricNum(d?.roas),
-      cpi: parseMetricNum(d?.cpi),
+      roas: parseFiniteNumberOrNull(d?.roas),
+      cpi: parseFiniteNumberOrNull(d?.cpi),
       cpiTrendUp: Boolean(d?.cpiTrendUp),
       installs: String(d?.installs ?? ''),
-      userQualityD7: parseMetricNum(d?.userQualityD7),
+      userQualityD7: parseFiniteNumberOrNull(d?.userQualityD7),
       userQualityD7TrendUp: Boolean(d?.userQualityD7TrendUp),
-      userQualityPay: parseMetricNum(d?.userQualityPay),
+      userQualityPay: parseFiniteNumberOrNull(d?.userQualityPay),
       userQualityPayTrendUp: Boolean(d?.userQualityPayTrendUp),
-      ltv7: parseMetricNum(d?.ltv7),
-      ltv30: parseMetricNum(d?.ltv30),
+      ltv7: parseFiniteNumberOrNull(d?.ltv7),
+      ltv30: parseFiniteNumberOrNull(d?.ltv30),
       status
     }
   }
@@ -1201,7 +1191,7 @@
       const chart = kpiMiniCharts.get(card.id)
       if (!el || !chart) return
       chart.chartRef!.value = el
-      const td = card.trendData?.length ? card.trendData : [0]
+      const td = card.trendData?.length ? card.trendData : null
       const opt = buildMiniTrendOption(td)
       if (chart.isChartInitialized()) {
         chart.updateChart(opt)
@@ -1211,8 +1201,16 @@
     })
   }
 
-  function buildMiniTrendOption(data: number[]): EChartsOption {
-    const seriesData = data.length > 0 ? data : [0]
+  function buildMiniTrendOption(data: number[] | null): EChartsOption {
+    if (!data || data.length === 0) {
+      return {
+        grid: { left: 2, right: 2, top: 2, bottom: 2 },
+        xAxis: { type: 'category', data: [], show: false },
+        yAxis: { type: 'value', show: false },
+        series: []
+      }
+    }
+    const seriesData = data
     const theme = getChartTheme()
     return {
       grid: { left: 2, right: 2, top: 2, bottom: 2 },

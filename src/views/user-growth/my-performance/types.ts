@@ -9,6 +9,8 @@ export interface MyPerformanceQueryBody {
   personId: string
   periodType: MyPerformancePeriodType
   periodValue: string
+  startDate: string
+  endDate: string
 }
 
 /** 应用维度评估表（按日期范围）请求体 */
@@ -141,7 +143,7 @@ export interface MyPerformanceTopKpiItem {
 
 export interface MyPerformanceKpiAchievement {
   /** 0-100 */
-  score: number
+  score: number | null
   label: string
   /** 评分说明，如 “(28px)” */
   hint?: string
@@ -215,13 +217,13 @@ export interface MyPerformanceAppTreeRow {
 }
 
 export interface MyPerformanceAppTableSummary {
-  adSpend: number
-  calculatedSpend: number
-  roi: number
-  commissionSpend: number
-  estimatedProfit: number
-  cpa: number
-  score: number
+  adSpend: number | null
+  calculatedSpend: number | null
+  roi: number | null
+  commissionSpend: number | null
+  estimatedProfit: number | null
+  cpa: number | null
+  score: number | null
 }
 
 export interface MyPerformancePageData {

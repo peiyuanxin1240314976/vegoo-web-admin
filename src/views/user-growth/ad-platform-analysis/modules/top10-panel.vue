@@ -48,9 +48,13 @@
         </ElTableColumn>
         <ElTableColumn label="ROI" width="auto" align="left">
           <template #default="{ row }">
-            <span class="top10-roi" :class="roiTone(row.roi)"
+            <span
+              v-if="row.roi !== null && row.roi !== undefined"
+              class="top10-roi"
+              :class="roiTone(row.roi)"
               >{{ formatNum2(row.roi * 100) }}%</span
             >
+            <span v-else class="top10-roi val-muted">—</span>
           </template>
         </ElTableColumn>
         <ElTableColumn label="操作" width="auto" align="center">
@@ -70,7 +74,7 @@
     pending: boolean
     rows: TopCampaignRow[]
     rowKey: (row: TopCampaignRow) => string
-    formatTopCurrency: (n: number) => string
+    formatTopCurrency: (n: unknown) => string
     formatNum2: (v: unknown) => string
     sourceBadgeShort: (key: string) => string
     roiTone: (roi: number) => string

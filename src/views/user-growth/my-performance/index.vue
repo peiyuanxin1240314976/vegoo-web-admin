@@ -167,6 +167,7 @@
     data,
     loadingMap,
     selectedPerson,
+    globalDateRange,
     onPersonChange,
     onPeriodTypeChange,
     onPeriodValueChange
@@ -180,14 +181,10 @@
     appDateRangeTable: !!loadingMap.value.appDateRangeTable
   }))
   const currentDateText = computed(() => formatYYYYMMDD(getAppNow()))
-  const computeRangeText = computed(() => {
-    const end = getAppNow()
-    const start = cloneAppDate(end)
-    start.setDate(start.getDate() - 3)
-    return `${formatYYYYMMDD(start)} 至 ${formatYYYYMMDD(end)}`
-  })
   const leftPrimaryText = computed(() => `当前日期：${currentDateText.value}`)
-  const leftSecondaryText = computed(() => `计算日期：${computeRangeText.value}`)
+  const leftSecondaryText = computed(
+    () => `计算日期：${globalDateRange.value.startDate} 至 ${globalDateRange.value.endDate}`
+  )
 
   const tableSwitches = computed(() => [
     { key: 'period' as const, label: t('myPerformance.tableSwitch.period') },

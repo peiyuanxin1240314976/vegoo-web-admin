@@ -57,7 +57,9 @@ function bodyForRemote(body: MyPerformanceQueryBody) {
   return {
     personId: body.personId,
     periodType: body.periodType,
-    periodValue: body.periodValue
+    periodValue: body.periodValue,
+    startDate: body.startDate,
+    endDate: body.endDate
   }
 }
 
