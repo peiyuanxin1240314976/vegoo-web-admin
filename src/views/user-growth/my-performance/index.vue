@@ -92,7 +92,6 @@
                     {{ item.label }}
                   </button>
                 </div>
-                <div class="table-switch__hint">{{ appTableHintText }}</div>
               </div>
             </template>
           </MyPerformancePanelAppHierarchyTable>
@@ -124,7 +123,6 @@
                     {{ item.label }}
                   </button>
                 </div>
-                <div class="table-switch__hint">{{ appTableHintText }}</div>
               </div>
             </template>
           </MyPerformancePanelAppDimensionTable>
@@ -198,12 +196,6 @@
     { key: 'period' as const, label: t('myPerformance.tableSwitch.period') },
     { key: 'recent' as const, label: t('myPerformance.tableSwitch.recent') }
   ])
-  const appTableHintText = computed(() => {
-    const end = getMyPerformanceNow()
-    const start = cloneAppDate(end)
-    start.setDate(start.getDate() - 7)
-    return `计算周期：${formatYYYYMMDD(start)} 至 ${formatYYYYMMDD(end)} | 应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算`
-  })
 
   function parseSpendTotalPair(value: string): { spend: number; target: number } | null {
     const parts = String(value).split(/\s*\/\s*/)

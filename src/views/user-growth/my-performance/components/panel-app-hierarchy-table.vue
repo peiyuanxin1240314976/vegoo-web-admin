@@ -491,7 +491,13 @@
   }
 
   function score(value?: number) {
-    return value === undefined ? DASH : `${Math.round(value)}分`
+    if (value === undefined) return DASH
+    if (value === 0) return '0分'
+    const text = value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+    return `${text}分`
   }
 
   function dash(value?: string) {
