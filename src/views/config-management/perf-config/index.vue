@@ -137,9 +137,10 @@
               <template #default="{ row }">
                 <span class="rate-val rate-val--target">
                   {{
-                    row.activeVersion.evalMethod === 'ROI'
-                      ? row.activeVersion.targetRate + '%'
-                      : '$' + row.activeVersion.targetRate
+                    formatPerfRequirementDisplay(
+                      row.activeVersion.evalMethod,
+                      row.activeVersion.targetRate
+                    )
                   }}
                 </span>
               </template>
@@ -147,9 +148,10 @@
             <el-table-column label="最低要求" min-width="110" align="right">
               <template #default="{ row }">
                 {{
-                  row.activeVersion.evalMethod === 'ROI'
-                    ? row.activeVersion.minRate + '%'
-                    : '$' + row.activeVersion.minRate
+                  formatPerfRequirementDisplay(
+                    row.activeVersion.evalMethod,
+                    row.activeVersion.minRate
+                  )
                 }}
               </template>
             </el-table-column>
@@ -315,9 +317,10 @@
                 <span class="di-label">达标要求</span>
                 <span class="di-value di-value--accent">
                   {{
-                    drawerItem.activeVersion.evalMethod === 'ROI'
-                      ? drawerItem.activeVersion.targetRate + '%'
-                      : '$' + drawerItem.activeVersion.targetRate
+                    formatPerfRequirementDisplay(
+                      drawerItem.activeVersion.evalMethod,
+                      drawerItem.activeVersion.targetRate
+                    )
                   }}
                 </span>
               </div>
@@ -325,9 +328,10 @@
                 <span class="di-label">最低要求</span>
                 <span class="di-value">
                   {{
-                    drawerItem.activeVersion.evalMethod === 'ROI'
-                      ? drawerItem.activeVersion.minRate + '%'
-                      : '$' + drawerItem.activeVersion.minRate
+                    formatPerfRequirementDisplay(
+                      drawerItem.activeVersion.evalMethod,
+                      drawerItem.activeVersion.minRate
+                    )
                   }}
                 </span>
               </div>
@@ -369,10 +373,10 @@
                   </div>
                   <div class="ver-stats">
                     达标{{
-                      ver.evalMethod === 'ROI' ? ver.targetRate + '%' : '$' + ver.targetRate
+                      formatPerfRequirementDisplay(ver.evalMethod, ver.targetRate)
                     }}
                     &nbsp;最低{{
-                      ver.evalMethod === 'ROI' ? ver.minRate + '%' : '$' + ver.minRate
+                      formatPerfRequirementDisplay(ver.evalMethod, ver.minRate)
                     }}
                     &nbsp;系数{{ ver.difficultyFactor }}
                   </div>
@@ -455,7 +459,8 @@
   import { clonePerfList, STATUS_CONFIG } from './mock/data'
   import PerfCreateDialog from './modules/perf-create-dialog.vue'
   import VersionCompareDialog from './modules/version-compare-dialog.vue'
-  import type { PerfConfigItem, PerfVersion } from './types'
+  import type { EvalMethod, PerfConfigItem, PerfVersion } from './types'
+  import { formatPerfRequirementDisplay } from './utils/perf-requirement-display'
 
   defineOptions({ name: 'PerfConfig' })
 
@@ -501,6 +506,19 @@
     isActive: false
   }
 
+  function normalizeEvalMethod(raw: unknown): string {
+    if (typeof raw === 'string') {
+      const s = raw.trim()
+      if (s) return s
+    }
+    return 'ROI'
+  }
+
+  /** 新建弹窗提交的 step2 仍为 ROI | CPA；列表接口可能返回其它文案 */
+  function evalMethodForCreatePayload(m: string): EvalMethod {
+    return m === 'CPA' ? 'CPA' : 'ROI'
+  }
+
   function normalizeVersion(
     raw: Partial<PerfVersion> | null | undefined,
     fallbackVersion = 1
@@ -513,7 +531,7 @@
           : 'draft',
       publishedAt: raw?.publishedAt ?? '',
       publishedBy: raw?.publishedBy ?? '',
-      evalMethod: raw?.evalMethod === 'CPA' ? 'CPA' : 'ROI',
+      evalMethod: normalizeEvalMethod(raw?.evalMethod),
       evalDays: raw?.evalDays ?? 1,
       targetRate: raw?.targetRate ?? 0,
       minRate: raw?.minRate ?? 0,
@@ -667,7 +685,7 @@
           allowMulti: item.allowMulti
         },
         step2: {
-          evalMethod: item.activeVersion.evalMethod,
+          evalMethod: evalMethodForCreatePayload(item.activeVersion.evalMethod),
           evalDays: item.activeVersion.evalDays,
           targetRate: item.activeVersion.targetRate,
           minRate: item.activeVersion.minRate,

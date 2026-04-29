@@ -1,5 +1,6 @@
 import { getAppNow } from '@/utils/app-now'
 import type { PerfConfigItem, PerfConfigOverviewKpi, PerfVersion } from '../types'
+import { formatPerfRequirementDisplay } from '../utils/perf-requirement-display'
 import { STATUS_CONFIG, clonePerfList } from './data'
 
 export type PerfExportParams = {
@@ -121,7 +122,7 @@ export type PerfVersionCompareExportParams = {
 }
 
 function fmtRate(v: PerfVersion, rate: number) {
-  return v.evalMethod === 'ROI' ? `${rate}%` : `$${rate}`
+  return formatPerfRequirementDisplay(v.evalMethod, rate)
 }
 
 function compareRowsForCsv(a: PerfVersion, b: PerfVersion): string[][] {

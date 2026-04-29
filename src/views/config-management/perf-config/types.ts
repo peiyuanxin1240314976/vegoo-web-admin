@@ -7,7 +7,8 @@ export interface PerfVersion {
   status: PerfStatus
   publishedAt: string
   publishedBy: string
-  evalMethod: EvalMethod
+  /** 后端返回原文（如 ROI / CPA / 利润）；可能与新建表单枚举不完全一致 */
+  evalMethod: string
   evalDays: number
   targetRate: number
   minRate: number

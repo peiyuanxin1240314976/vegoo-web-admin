@@ -132,6 +132,7 @@
   import type { CockpitMetaOptionItem } from '@/types/cockpit-meta-filter'
   import { STATUS_CONFIG } from '../mock/data'
   import type { PerfConfigItem, PerfVersion } from '../types'
+  import { formatPerfRequirementDisplay } from '../utils/perf-requirement-display'
 
   defineOptions({ name: 'VersionCompareDialog' })
 
@@ -204,8 +205,7 @@
     changed: boolean
   }
 
-  const fmtRate = (v: PerfVersion, rate: number) =>
-    v.evalMethod === 'ROI' ? `${rate}%` : `$${rate}`
+  const fmtRate = (v: PerfVersion, rate: number) => formatPerfRequirementDisplay(v.evalMethod, rate)
 
   const buildRows = (a: PerfVersion, b: PerfVersion): DiffRow[] => [
     {
