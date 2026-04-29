@@ -12,7 +12,12 @@
       <template #cell:country="{ row }">
         <template v-if="isAggregateRow(row)">
           <span class="ad-performance-table__country" :title="row.country">
-            {{ countryFlag(row.country) }}
+            <span
+              v-if="toFlagCode(row.id)"
+              class="fi ad-performance-table__fi"
+              :class="`fi-${toFlagCode(row.id)}`"
+              aria-hidden="true"
+            ></span>
             <span class="ml-2 text-sm text-g-900">{{ countryLabel(row.country) }}</span>
           </span>
         </template>
@@ -22,9 +27,6 @@
             <span class="ad-performance-country__campaign-app" :title="row.appName">
               {{ row.appName }}
             </span>
-            <span class="ad-performance-country__campaign-name" :title="row.name">
-              {{ row.name }}
-            </span>
             <span
               class="ad-performance-table__channel-icon"
               :class="`ad-performance-table__channel-icon--${row.channel}`"
@@ -32,11 +34,17 @@
             >
               {{ channelShort(row.channel) }}
             </span>
-            <span class="ad-performance-table__country" :title="row.country">
-              {{ countryFlag(row.country) }}
-            </span>
+            <span class="ad-performance-table__country" :title="row.country">-</span>
           </div>
         </template>
+      </template>
+
+      <!-- 广告系列名称 -->
+      <template #cell:campaignName="{ row }">
+        <span v-if="isAggregateRow(row)" class="ad-performance-table__muted">-</span>
+        <span v-else class="ad-performance-country__campaign-name" :title="row.name">
+          {{ row.name }}
+        </span>
       </template>
 
       <!-- 广告支出 -->
@@ -136,6 +144,7 @@
 </template>
 
 <script setup lang="ts">
+  import 'flag-icons/css/flag-icons.min.css'
   import { computed, ref, watch } from 'vue'
   import ArtVirtualTable from '@/components/core/art-virtual-table/index.vue'
   import type { ArtVirtualTableColumn } from '@/components/core/art-virtual-table/index.vue'
@@ -143,7 +152,6 @@
   import { useTabColumnVisibility } from '../../composables/useTabColumnVisibility'
   import {
     channelShort,
-    countryFlag,
     countryLabel,
     formatMoney,
     roiClass,
@@ -168,6 +176,7 @@
   // --- 列可见性 ---
   const ALL_COLUMNS = [
     { key: 'country', label: '国家', required: true },
+    { key: 'campaignName', label: '广告系列名称', required: true },
     { key: 'spend', label: '广告支出', required: true },
     { key: 'spendSharePercent', label: '支出占比' },
     { key: 'cpi', label: 'CPI' },
@@ -195,6 +204,7 @@
   const visibleColumns = computed<ArtVirtualTableColumn[]>(() => {
     const cols: ArtVirtualTableColumn[] = []
     cols.push({ key: 'country', title: '国家', width: 220, flexGrow: 1 })
+    cols.push({ key: 'campaignName', title: '广告系列名称', width: 180, showOverflowTooltip: true })
     cols.push({ key: 'spend', title: '广告支出', width: 110 })
     if (isVisible('spendSharePercent'))
       cols.push({ key: 'spendSharePercent', title: '支出占比', width: 160 })
@@ -224,6 +234,15 @@
 
   function isAggregateRow(row: CountryMixedRow): boolean {
     return aggregateIdSet.value.has(row.id)
+  }
+
+  function toFlagCode(value: string | null | undefined): string {
+    const code = String(value ?? '')
+      .trim()
+      .toLowerCase()
+    if (!code) return ''
+    if (code === 'uk') return 'gb'
+    return code
   }
 
   // --- 过滤数据 ---
@@ -345,5 +364,11 @@
     color: var(--el-text-color-primary);
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .ad-performance-table__fi {
+    margin-right: 4px;
+    font-size: 14px;
+    line-height: 1;
   }
 </style>
