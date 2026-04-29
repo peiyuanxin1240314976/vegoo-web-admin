@@ -275,6 +275,12 @@
     const values = mapData.map((d) => d.value).filter((v) => Number.isFinite(v))
     const dataMin = values.length ? Math.min(...values) : 0
     const dataMax = values.length ? Math.max(...values) : 10
+    const top10NameSet = new Set(
+      [...mapData]
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10)
+        .map((d) => resolveWorldRegionName((d as any).s_country_code ?? d.name))
+    )
 
     return {
       backgroundColor: 'transparent',
@@ -298,7 +304,7 @@
       },
       visualMap: {
         type: 'continuous',
-        show: true,
+        show: false,
         min: dataMin,
         max: dataMax,
         text: ['High', 'Low'],
@@ -347,6 +353,7 @@
             fontSize: 10,
             fontWeight: 500,
             formatter: (params: any) => {
+              if (!top10NameSet.has(params.name)) return ''
               const item = mapData.find(
                 (d) => resolveWorldRegionName((d as any).s_country_code ?? d.name) === params.name
               )
