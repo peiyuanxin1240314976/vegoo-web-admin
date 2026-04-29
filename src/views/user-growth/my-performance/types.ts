@@ -13,13 +13,6 @@ export interface MyPerformanceQueryBody {
   endDate: string
 }
 
-/** 应用维度评估表（按日期范围）请求体 */
-export interface MyPerformanceAppDimensionTableQueryBody {
-  personId: string
-  startDate: string
-  endDate: string
-}
-
 /** GET meta-person-options 响应 */
 export interface MyPerformanceMetaPersonResponse {
   personOptions: MyPerformancePersonOption[]

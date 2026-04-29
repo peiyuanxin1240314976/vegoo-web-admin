@@ -58,7 +58,8 @@ export function buildMyPerformanceMockData(
     appDateRangeTable: {
       title: appDateRangeTable.title,
       list: appDateRangeTable.list,
-      summary: appDateRangeTable.summary
+      summary: appDateRangeTable.summary,
+      excelTables: appDateRangeTable.excelTables
     }
   }
 }

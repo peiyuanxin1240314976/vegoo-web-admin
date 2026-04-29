@@ -1,17 +1,28 @@
 {
-  "_comment": "我的绩效 - 应用维度绩效评估表（固定近 7 天）。对应 types.ts: MyPerformanceAppDimensionTableQueryBody, MyPerformanceAppTreeRow, MyPerformanceAppTableSummary。",
+  "_comment": "我的绩效 - 应用维度绩效评估表（Excel 透视）。请求体与其它业务 POST 一致：MyPerformanceQueryBody；对应 types.ts: MyPerformanceAppTreeRow, MyPerformanceAppTableSummary。",
   "fieldDescription": {
     "request": {
       "personId": { "type": "string", "required": true, "description": "人员 ID。" },
+      "periodType": {
+        "type": "string",
+        "required": true,
+        "enum": ["quarter", "month"],
+        "description": "统计口径类型。"
+      },
+      "periodValue": {
+        "type": "string",
+        "required": true,
+        "description": "口径值，如 2026-03 或 2026-Q1。"
+      },
       "startDate": {
         "type": "string",
         "required": true,
-        "description": "开始日期，YYYY-MM-DD；由前端按应用当前时间往前推 7 天计算。"
+        "description": "开始日期，YYYY-MM-DD；与页面全局计算日期一致。"
       },
       "endDate": {
         "type": "string",
         "required": true,
-        "description": "结束日期，YYYY-MM-DD；由前端按应用当前时间计算“今天”。"
+        "description": "结束日期，YYYY-MM-DD；与页面全局计算日期一致。"
       }
     },
     "response": {
@@ -35,8 +46,10 @@
   },
   "sampleRequest": {
     "personId": "u_001",
-    "startDate": "2026-04-13",
-    "endDate": "2026-04-20"
+    "periodType": "month",
+    "periodValue": "2026-04",
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-26"
   },
   "sampleResponse": {
     "title": "应用维度绩效评估 | 近7天绩效评估",
@@ -464,12 +477,12 @@
     "url": "POST /api/user-growth/my-performance/app-dimension-table-by-date-range",
     "method": "POST",
     "priority": "P0",
-    "requestBody": "personId, startDate, endDate",
+    "requestBody": "personId, periodType, periodValue, startDate, endDate",
     "responseBody": "title, list, summary, excelTables"
   },
   "apiSuggestion": {
     "notes": [
-      "此接口用于替代原 app-dimension-table 的 periodType/periodValue 入参；统计周期由 startDate/endDate 明确指定。",
+      "请求体与其它「我的绩效」业务 POST（overview-kpi、roi-trend、app-dimension-table 等）一致：`personId + periodType + periodValue + startDate + endDate`。",
       "无数据时返回 list: []，summary 保持结构完整（数值字段返回 0），保证页面主流程不阻塞。"
     ]
   }

@@ -102,7 +102,7 @@
             :list="data.appDateRangeTable.list"
             :summary="data.appDateRangeTable.summary"
             :excel-tables="data.appDateRangeTable.excelTables"
-            header-hint=""
+            :header-hint="appExcelTableHint"
           >
             <template #prepend>
               <div class="table-switch-block">
@@ -190,6 +190,11 @@
   const leftPrimaryText = computed(() => `当前日期：${currentDateText.value}`)
   const leftSecondaryText = computed(
     () => `计算日期：${globalDateRange.value.startDate} 至 ${globalDateRange.value.endDate}`
+  )
+
+  const appExcelTableHint = computed(
+    () =>
+      `计算周期：${globalDateRange.value.startDate} 至 ${globalDateRange.value.endDate} | 应用层级预估利润基于真实收入计算，广告平台预估利润基于回收计算`
   )
 
   const tableSwitches = computed(() => [

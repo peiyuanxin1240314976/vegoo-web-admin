@@ -11,7 +11,6 @@ import {
 } from '@/views/user-growth/my-performance/config/data-source'
 import * as myPerformanceMock from '@/views/user-growth/my-performance/mock/my-performance-api-mock'
 import type {
-  MyPerformanceAppDimensionTableQueryBody,
   MyPerformanceAppDimensionTableResponse,
   MyPerformanceKpiAchievementResponse,
   MyPerformanceMetaPeriodResponse,
@@ -58,14 +57,6 @@ function bodyForRemote(body: MyPerformanceQueryBody) {
     personId: body.personId,
     periodType: body.periodType,
     periodValue: body.periodValue,
-    startDate: body.startDate,
-    endDate: body.endDate
-  }
-}
-
-function bodyForAppDimensionTableRemote(body: MyPerformanceAppDimensionTableQueryBody) {
-  return {
-    personId: body.personId,
     startDate: body.startDate,
     endDate: body.endDate
   }
@@ -398,16 +389,14 @@ export function fetchMyPerformanceAppDimensionTable(body: MyPerformanceQueryBody
     .then((raw) => unwrapMyPerformancePayload<MyPerformanceAppDimensionTableResponse>(raw))
 }
 
-export function fetchMyPerformanceAppDimensionTableByDateRange(
-  body: MyPerformanceAppDimensionTableQueryBody
-) {
+export function fetchMyPerformanceAppDimensionTableByDateRange(body: MyPerformanceQueryBody) {
   if (isMyPerformanceEndpointMock(MyPerformanceEndpoint.AppDimensionTableByDateRange)) {
     return myPerformanceMock.mockFetchMyPerformanceAppDimensionTableByDateRange(body)
   }
   return request
     .post({
       url: `${MY_PERFORMANCE_BASE}/app-dimension-table-by-date-range`,
-      data: bodyForAppDimensionTableRemote(body)
+      data: bodyForRemote(body)
     })
     .then((raw) => unwrapMyPerformancePayload<MyPerformanceAppDimensionTableResponse>(raw))
 }

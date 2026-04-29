@@ -21,13 +21,13 @@
 | `06-spend-progress.json` | 消耗进度 | `/spend-progress` | POST | P0 |
 | `07-app-dimension-table.json` | 应用维度绩效评估表 | `/app-dimension-table` | POST | P0 |
 | `08-performance-history.json` | 绩效历史（时间轴） | `/performance-history` | POST | P0 |
-| `09-app-dimension-table-by-date-range.json` | 应用维度绩效评估表（固定近 7 天） | `/app-dimension-table-by-date-range` | POST | P0 |
+| `09-app-dimension-table-by-date-range.json` | 应用维度绩效评估表（Excel 透视） | `/app-dimension-table-by-date-range` | POST | P0 |
 
 ### 说明
 
 - 字段命名遵循项目数据字典：终端平台使用 `platform`，广告平台使用 `source`。
 - 页面“季度/月份”为二选一口径：除 meta 类 GET 外，其它接口统一使用 `personId + periodType + periodValue + startDate + endDate` 作为过滤条件。
-- `app-dimension-table-by-date-range` 使用 `personId + startDate + endDate`，不再传 `periodType/periodValue`。
+- `app-dimension-table-by-date-range` 与其它业务 POST 一致：使用 `personId + periodType + periodValue + startDate + endDate`。
 - `periodValue` 取值格式建议：
   - 月度：`YYYY-MM`（如 `2026-03`）
   - 季度：`YYYY-QN`（如 `2026-Q1`）

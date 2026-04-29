@@ -12,7 +12,6 @@ import {
 } from '@/api/user-growth/my-performance'
 import { cloneAppDate, formatYYYYMMDD, getAppNow } from '@/utils/app-now'
 import type {
-  MyPerformanceAppDimensionTableQueryBody,
   MyPerformanceMetaPersonResponse,
   MyPerformanceMetaPeriodResponse,
   MyPerformancePageData,
@@ -299,21 +298,6 @@ export function useMyPerformancePage() {
     }
   }
 
-  function appDateRangeTableQueryBody(): MyPerformanceAppDimensionTableQueryBody | null {
-    const { selectedPersonId } = data.value
-    if (!selectedPersonId) return null
-    const end = getMyPerformanceNow()
-    const start = cloneAppDate(end)
-    start.setDate(start.getDate() - 7)
-    const startDate = formatYYYYMMDD(start)
-    const endDate = formatYYYYMMDD(end)
-    return {
-      personId: selectedPersonId,
-      startDate,
-      endDate
-    }
-  }
-
   async function loadMeta(personIdOverride?: string) {
     let personOk = false
     try {
@@ -347,8 +331,6 @@ export function useMyPerformancePage() {
 
   async function loadDetail() {
     const body = queryBody()
-    const dateRangeBody = appDateRangeTableQueryBody()
-    if (!dateRangeBody) return
     if (!body) {
       if (data.value.selectedPersonId && !data.value.selectedPeriodValue) {
         ElMessage.warning('当前统计口径暂无可用月份或季度，无法加载绩效详情')
@@ -411,7 +393,7 @@ export function useMyPerformancePage() {
       {
         key: 'appDateRangeTable',
         run: async () => {
-          const response = await fetchMyPerformanceAppDimensionTableByDateRange(dateRangeBody)
+          const response = await fetchMyPerformanceAppDimensionTableByDateRange(body)
           if (seq !== requestSeq.value) return
           data.value.appDateRangeTable = {
             title: response.title,
