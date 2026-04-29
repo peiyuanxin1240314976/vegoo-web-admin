@@ -247,7 +247,7 @@
   }
 
   const tableColumns = computed<ColumnOption[]>(() => [
-    { prop: 's_ad_unit_id', label: '广告单元ID', minWidth: 140 },
+    { prop: 's_ad_unit_id', label: '广告单元ID', minWidth: 140, showOverflowTooltip: true },
     { prop: 'placementName', label: '广告位', minWidth: 120 },
     { prop: 'adTypeName', label: '广告类型', minWidth: 88 },
     { prop: 'sourceName', label: '平台', minWidth: 88 },
