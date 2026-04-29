@@ -23,7 +23,7 @@
         </template>
         <template v-else>
           <div class="ad-performance-country__campaign">
-            <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
+            <!-- <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
             <span class="ad-performance-country__campaign-app" :title="row.appName">
               {{ row.appName }}
             </span>
@@ -33,7 +33,7 @@
               aria-hidden="true"
             >
               {{ channelShort(row.channel) }}
-            </span>
+            </span> -->
             <span class="ad-performance-table__country" :title="row.country">-</span>
           </div>
         </template>
@@ -151,7 +151,7 @@
   import type { AdPerformanceCampaignRow, AdPerformanceCountryRow } from '../../types'
   import { useTabColumnVisibility } from '../../composables/useTabColumnVisibility'
   import {
-    channelShort,
+    // channelShort,
     countryLabel,
     formatMoney,
     roiClass,
