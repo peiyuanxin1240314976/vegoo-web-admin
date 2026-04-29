@@ -2170,6 +2170,8 @@
 
   .bi-table-host--country {
     min-height: 220px;
+    max-height: 325px;
+    overflow-y: auto;
   }
 
   .bi-skeleton-block {
