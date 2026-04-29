@@ -177,7 +177,7 @@
     {
       prop: 'revenueShare',
       label: '占比',
-      minWidth: 60,
+      minWidth: 80,
       formatter: (row: IaaPlatformTableRow) => `${n(row.revenueShare)}%`
     },
     {
@@ -189,7 +189,7 @@
     {
       prop: 'impressionShare',
       label: '展示占比',
-      minWidth: 74,
+      minWidth: 84,
       formatter: (row: IaaPlatformTableRow) => `${n(row.impressionShare)}%`
     },
     {
@@ -201,28 +201,28 @@
     {
       prop: 'userShare',
       label: '用户占比',
-      minWidth: 70,
+      minWidth: 80,
       formatter: (row: IaaPlatformTableRow) => `${n(row.userShare)}%`
     },
     {
       prop: 'ecpmEst',
       label: 'ECPM(预)',
-      minWidth: 80,
+      minWidth: 90,
       formatter: (row: IaaPlatformTableRow) => n(row.ecpmEst).toFixed(2)
     },
     {
       prop: 'ecpmReal',
       label: 'ECPM(真)',
-      minWidth: 80,
+      minWidth: 90,
       formatter: (row: IaaPlatformTableRow) => n(row.ecpmReal).toFixed(2)
     },
-    { prop: 'variance', label: '偏差', minWidth: 68, useSlot: true, slotName: 'variance' },
-    {
-      prop: 'fillRate',
-      label: '充填率',
-      minWidth: 70,
-      formatter: (row: IaaPlatformTableRow) => `${n(row.fillRate)}%`
-    },
+    { prop: 'variance', label: '偏差', minWidth: 88, useSlot: true, slotName: 'variance' },
+    // {
+    //   prop: 'fillRate',
+    //   label: '充填率',
+    //   minWidth: 70,
+    //   formatter: (row: IaaPlatformTableRow) => `${n(row.fillRate)}%`
+    // },
     { prop: 'trend', label: '趋势', minWidth: 56, useSlot: true, slotName: 'trend' }
   ])
 

@@ -447,6 +447,18 @@
     return {
       backgroundColor: 'transparent',
       grid: { left: 72, right: 56, top: 16, bottom: 16 },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9' },
+        formatter: (params: Array<{ name: string; value: number }>) => {
+          const item = params?.[0]
+          if (!item) return ''
+          return `${item.name}<br/>渗透率：${Number(item.value ?? 0).toFixed(2)}%`
+        }
+      },
       xAxis: {
         type: 'value',
         max: 100,
