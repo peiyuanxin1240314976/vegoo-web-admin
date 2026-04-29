@@ -339,7 +339,8 @@
     expanded: boolean
   }): DisplayRow {
     const { source, appId, appDisplayName, themeIndex, kind, showToggle, expanded } = input
-    const sourceName = normalizeSourceName(source.name)
+    const sourceName =
+      kind === 'parent' ? t('myPerformance.tableSwitch.allLabel') : normalizeSourceName(source.name)
     const sourceIcon = getAdPlatformIconDisplay({ name: sourceName })
     const statusText = splitStatus(source.statusText || fallbackStatus(source.status))
 
