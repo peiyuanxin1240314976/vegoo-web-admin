@@ -122,7 +122,11 @@
                       >
                         {{ row.platform }}
                       </td>
-                      <td class="cell-ad-platform cell-strong">
+                      <td
+                        v-if="row.showAdPlatform"
+                        :rowspan="row.adPlatformRowSpan"
+                        class="cell-ad-platform cell-strong"
+                      >
                         {{ row.adPlatform }}
                       </td>
                       <td class="cell-label cell-strong">{{ row.label }}</td>
@@ -187,8 +191,10 @@
     alt: boolean
     showApp: boolean
     showPlatform: boolean
+    showAdPlatform: boolean
     appRowSpan: number
     platformRowSpan: number
+    adPlatformRowSpan: number
   }
 
   const props = withDefaults(
@@ -287,8 +293,10 @@
         alt,
         showApp: !hasRenderedMergedCell,
         showPlatform: !hasRenderedMergedCell,
+        showAdPlatform: index === 0,
         appRowSpan: totalRows,
-        platformRowSpan: totalRows
+        platformRowSpan: totalRows,
+        adPlatformRowSpan: allRows.length
       })
       hasRenderedMergedCell = true
     })
@@ -305,8 +313,10 @@
           alt,
           showApp: !hasRenderedMergedCell,
           showPlatform: !hasRenderedMergedCell,
+          showAdPlatform: rowIndex === 0,
           appRowSpan: totalRows,
-          platformRowSpan: totalRows
+          platformRowSpan: totalRows,
+          adPlatformRowSpan: group.rows.length
         })
         hasRenderedMergedCell = true
       })
