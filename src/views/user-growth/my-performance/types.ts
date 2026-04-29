@@ -90,6 +90,11 @@ export interface MyPerformanceExcelMetricRow {
   values: MyPerformanceExcelDailyValue[]
 }
 
+export interface MyPerformanceExcelSourceRowsGroup {
+  sourceName: string
+  rows: MyPerformanceExcelMetricRow[]
+}
+
 export interface MyPerformanceExcelSummaryRow {
   label: string
   total: MyPerformanceExcelDailyValue
@@ -99,8 +104,8 @@ export interface MyPerformanceExcelSummaryRow {
 export interface MyPerformanceExcelAppBlock {
   app: string
   platform: string
-  allRows: MyPerformanceExcelMetricRow[]
-  googleRows: MyPerformanceExcelMetricRow[]
+  allRows?: MyPerformanceExcelMetricRow[] | null
+  sourceRows: MyPerformanceExcelSourceRowsGroup[]
   alt?: boolean
 }
 

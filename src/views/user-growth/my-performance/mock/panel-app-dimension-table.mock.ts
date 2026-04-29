@@ -14,6 +14,17 @@ export type MetricRow = {
 export type AppBlock = {
   app: string
   platform: string
+  allRows?: MetricRow[] | null
+  sourceRows: Array<{
+    sourceName: string
+    rows: MetricRow[]
+  }>
+  alt?: boolean
+}
+
+type LegacyAppBlock = {
+  app: string
+  platform: string
   allRows: MetricRow[]
   googleRows: MetricRow[]
   alt?: boolean
@@ -70,7 +81,7 @@ export const panelAppDimensionSummaryRows: SummaryRow[] = [
   }
 ]
 
-export const panelAppDimensionAppBlocks: AppBlock[] = [
+const legacyPanelAppDimensionAppBlocks: LegacyAppBlock[] = [
   {
     app: 'Weather8',
     platform: panelAppDimensionText.android,
@@ -268,3 +279,18 @@ export const panelAppDimensionAppBlocks: AppBlock[] = [
     ]
   }
 ]
+
+export const panelAppDimensionAppBlocks: AppBlock[] = legacyPanelAppDimensionAppBlocks.map(
+  (block) => ({
+    app: block.app,
+    platform: block.platform,
+    allRows: block.allRows,
+    sourceRows: [
+      {
+        sourceName: 'Google',
+        rows: block.googleRows
+      }
+    ],
+    alt: block.alt
+  })
+)

@@ -221,7 +221,13 @@
     return {
       dateHeaders: [...panelAppDimensionDateHeaders],
       summaryRows: [...panelAppDimensionSummaryRows],
-      appBlocks: [...panelAppDimensionAppBlocks]
+      appBlocks: panelAppDimensionAppBlocks.map((block) => ({
+        app: block.app,
+        platform: block.platform,
+        allRows: block.allRows ?? null,
+        sourceRows: block.sourceRows,
+        alt: block.alt
+      }))
     }
   })
 
@@ -263,9 +269,12 @@
   ): DetailDisplayRow[] {
     const rows: DetailDisplayRow[] = []
     const allRows = block.allRows ?? []
-    const googleRows = block.googleRows ?? []
-    const totalRows = allRows.length + googleRows.length
+    const sourceRows = block.sourceRows ?? []
+    const sourceRowsTotal = sourceRows.reduce((total, group) => total + group.rows.length, 0)
+    const totalRows = allRows.length + sourceRowsTotal
     const alt = !!block.alt
+
+    let hasRenderedMergedCell = false
 
     allRows.forEach((row, index) => {
       rows.push({
@@ -276,26 +285,30 @@
         label: row.label,
         values: row.values,
         alt,
-        showApp: index === 0,
-        showPlatform: index === 0,
+        showApp: !hasRenderedMergedCell,
+        showPlatform: !hasRenderedMergedCell,
         appRowSpan: totalRows,
         platformRowSpan: totalRows
       })
+      hasRenderedMergedCell = true
     })
 
-    googleRows.forEach((row, index) => {
-      rows.push({
-        key: `${blockIndex}-google-${index}`,
-        app: block.app,
-        platform: block.platform,
-        adPlatform: 'Google',
-        label: row.label,
-        values: row.values,
-        alt,
-        showApp: false,
-        showPlatform: false,
-        appRowSpan: totalRows,
-        platformRowSpan: totalRows
+    sourceRows.forEach((group, groupIndex) => {
+      group.rows.forEach((row, rowIndex) => {
+        rows.push({
+          key: `${blockIndex}-source-${groupIndex}-${rowIndex}`,
+          app: block.app,
+          platform: block.platform,
+          adPlatform: group.sourceName,
+          label: row.label,
+          values: row.values,
+          alt,
+          showApp: !hasRenderedMergedCell,
+          showPlatform: !hasRenderedMergedCell,
+          appRowSpan: totalRows,
+          platformRowSpan: totalRows
+        })
+        hasRenderedMergedCell = true
       })
     })
 
