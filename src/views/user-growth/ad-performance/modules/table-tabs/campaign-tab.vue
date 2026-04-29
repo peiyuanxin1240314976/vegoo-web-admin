@@ -24,20 +24,29 @@
       <!-- 广告系列名称 -->
       <template #cell:name="{ row }">
         <div class="ad-performance-table__dim">
-          <span class="ad-performance-table__dim-main" :title="row.name">{{ row.name }}</span>
+          <span class="ad-performance-table__dim-main" :title="isNestedRow(row) ? '-' : row.name">
+            {{ isNestedRow(row) ? '-' : row.name }}
+          </span>
+        </div>
+      </template>
+
+      <!-- 广告组名称 -->
+      <template #cell:adGroupName="{ row }">
+        <div class="ad-performance-table__dim">
+          <span
+            class="ad-performance-table__dim-main"
+            :title="isNestedRow(row) ? row.adGroupName || '-' : '-'"
+          >
+            {{ isNestedRow(row) ? row.adGroupName || '-' : '-' }}
+          </span>
         </div>
       </template>
 
       <!-- 广告平台 -->
       <template #cell:channel="{ row }">
         <span v-if="isNestedRow(row)" class="ad-performance-table__muted">-</span>
-        <span
-          v-else
-          class="ad-performance-table__channel-icon"
-          :class="`ad-performance-table__channel-icon--${row.channel}`"
-          aria-hidden="true"
-        >
-          {{ channelShort(row.channel) }}
+        <span v-else class="ad-performance-table__dim-main" :title="row.channel">
+          {{ row.channel }}
         </span>
       </template>
 
@@ -141,7 +150,6 @@
   import type { AdPerformanceCampaignRow, CampaignRowStatus } from '../../types'
   import { useTabColumnVisibility } from '../../composables/useTabColumnVisibility'
   import {
-    channelShort,
     countryFlag,
     formatMoney,
     roiClass,
@@ -167,6 +175,7 @@
   const ALL_COLUMNS = [
     { key: 'appName', label: '应用', required: true },
     { key: 'name', label: '广告系列名称', required: true },
+    { key: 'adGroupName', label: '广告组名称', required: true },
     { key: 'channel', label: '广告平台' },
     { key: 'country', label: '国家' },
     { key: 'status', label: '状态' },
@@ -195,8 +204,25 @@
   const visibleColumns = computed<ArtVirtualTableColumn[]>(() => {
     const cols: ArtVirtualTableColumn[] = []
     cols.push({ key: 'appName', title: '应用', width: 120 })
-    cols.push({ key: 'name', title: '广告系列名称', width: 200, flexGrow: 1 })
-    if (isVisible('channel')) cols.push({ key: 'channel', title: '广告平台', width: 100 })
+    cols.push({
+      key: 'name',
+      title: '广告系列名称',
+      width: 120,
+      showOverflowTooltip: true
+    })
+    cols.push({
+      key: 'adGroupName',
+      title: '广告组名称',
+      width: 120,
+      showOverflowTooltip: true
+    })
+    if (isVisible('channel'))
+      cols.push({
+        key: 'channel',
+        title: '广告平台',
+        width: 130,
+        showOverflowTooltip: true
+      })
     if (isVisible('country')) cols.push({ key: 'country', title: '国家', width: 80 })
     if (isVisible('status')) cols.push({ key: 'status', title: '状态', width: 100 })
     if (isVisible('spendBudget')) cols.push({ key: 'spendBudget', title: '花费/预算', width: 160 })
@@ -237,6 +263,8 @@
   }
 
   function isNestedRow(row: AdPerformanceCampaignRow): boolean {
+    const adGroupName = String(row.adGroupName ?? '').trim()
+    if (adGroupName !== '') return true
     return String(row.id ?? '').includes('-') || String(row.name ?? '').startsWith('AdGroup_')
   }
 
@@ -254,6 +282,9 @@
           const match =
             row.appName.toLowerCase().includes(kw) ||
             row.name.toLowerCase().includes(kw) ||
+            String((row as unknown as Record<string, unknown>).adGroupName ?? '')
+              .toLowerCase()
+              .includes(kw) ||
             row.channel.toLowerCase().includes(kw) ||
             row.country.toLowerCase().includes(kw)
           if (match) return row

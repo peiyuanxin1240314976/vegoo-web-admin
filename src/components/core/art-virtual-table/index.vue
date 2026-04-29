@@ -30,6 +30,7 @@
     flexGrow?: number
     fixed?: 'left' | 'right'
     align?: 'left' | 'center' | 'right'
+    showOverflowTooltip?: boolean
   }
 </script>
 
@@ -140,6 +141,7 @@
           : TableV2FixedDir.RIGHT
         : undefined,
       align: col.align ?? 'left',
+      showOverflowTooltip: col.showOverflowTooltip,
       cellRenderer: ({ rowData, rowIndex, cellData, columnIndex }: any) => {
         const slotFn = slots[`cell:${col.key}`]
         if (slotFn) {

@@ -69,6 +69,7 @@ export type CampaignRowStatus = 'active' | 'over_budget' | 'low_efficiency' | 'p
 export interface AdPerformanceCampaignRow {
   id: string
   campaignId?: string
+  adGroupName?: string
   /** 应用 ID */
   appId?: string
   /** 应用名 */
