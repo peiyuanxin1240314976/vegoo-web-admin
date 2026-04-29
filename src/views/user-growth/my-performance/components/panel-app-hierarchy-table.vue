@@ -641,6 +641,31 @@
     border-bottom: 1px solid rgb(255 255 255 / 10%);
   }
 
+  /* Freeze first 3 columns during horizontal scrolling */
+  .hierarchy-table :is(th, td):nth-child(1) {
+    position: sticky;
+    left: 0;
+  }
+
+  .hierarchy-table :is(th, td):nth-child(2) {
+    position: sticky;
+    left: 188px;
+  }
+
+  .hierarchy-table :is(th, td):nth-child(3) {
+    position: sticky;
+    left: 272px;
+  }
+
+  .hierarchy-table thead th:nth-child(-n + 3) {
+    z-index: 6;
+  }
+
+  .hierarchy-table tbody td:nth-child(-n + 3),
+  .hierarchy-table tfoot td:nth-child(-n + 3) {
+    z-index: 3;
+  }
+
   .hierarchy-row {
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 2%);
   }
