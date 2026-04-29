@@ -606,7 +606,12 @@
                     :row-class-name="top5RowClassName"
                   >
                     <template #s_country_name="{ row }">
-                      <span class="rev-flag">{{ flagEmojiByCode(row.s_country_code) }}</span>
+                      <span
+                        v-if="iaaCountryFlagClass(row.s_country_code)"
+                        class="fi rev-flag"
+                        :class="iaaCountryFlagClass(row.s_country_code)"
+                        aria-hidden="true"
+                      />
                       {{ row.s_country_name }}
                     </template>
                   </ArtTable>
@@ -2035,15 +2040,6 @@
     })
     return rows
   })
-
-  function flagEmojiByCode(code: string) {
-    const upper = String(code || '').toUpperCase()
-    if (upper === 'ALL') return '🏳️'
-    if (!/^[A-Z]{2}$/.test(upper)) return '🏳️'
-    const base = 0x1f1e6
-    const chars = [...upper].map((c) => String.fromCodePoint(base + (c.charCodeAt(0) - 65)))
-    return chars.join('')
-  }
 
   function getVar(el: HTMLElement | null, name: string, fallback: string) {
     const root = el ?? document.documentElement
