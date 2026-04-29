@@ -62,6 +62,7 @@
             v-else-if="hasTableData"
             :data="tableData"
             :columns="tableColumns"
+            :max-height="800"
             row-key="placementName"
             :stripe="true"
             :border="false"
