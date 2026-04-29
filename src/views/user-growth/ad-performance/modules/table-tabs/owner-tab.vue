@@ -18,23 +18,16 @@
           </div>
         </template>
         <template v-else>
-          <div class="ad-performance-owner__campaign">
-            <span class="ad-performance-table__app-icon" aria-hidden="true"></span>
-            <span class="ad-performance-owner__campaign-name" :title="row.campaignName ?? ''">
-              {{ row.campaignName }}
-            </span>
-            <span
-              class="ad-performance-table__channel-icon"
-              :class="`ad-performance-table__channel-icon--${row.channel ?? ''}`"
-              aria-hidden="true"
-            >
-              {{ channelShort(row.channel) }}
-            </span>
-            <span class="ad-performance-table__country" :title="row.country ?? ''">
-              {{ countryFlag(row.country) }}
-            </span>
-          </div>
+          <span class="ad-performance-table__muted">-</span>
         </template>
+      </template>
+
+      <!-- 广告系列名称 -->
+      <template #cell:campaignName="{ row }">
+        <span v-if="isOwnerRow(row)" class="ad-performance-table__muted">-</span>
+        <span v-else class="ad-performance-owner__campaign-name" :title="row.campaignName ?? ''">
+          {{ row.campaignName || '-' }}
+        </span>
       </template>
 
       <!-- 职级 -->
@@ -161,8 +154,8 @@
   } from '../../types'
   import { useTabColumnVisibility } from '../../composables/useTabColumnVisibility'
   import {
-    channelShort,
-    countryFlag,
+    // channelShort,
+    // countryFlag,
     formatMoney,
     roiClass,
     profitClass,
@@ -186,6 +179,7 @@
   // --- 列可见性 ---
   const ALL_COLUMNS = [
     { key: 'ownerName', label: '优化师', required: true },
+    { key: 'campaignName', label: '广告系列名称', required: true },
     { key: 'level', label: '职级' },
     { key: 'appCount', label: '负责应用数' },
     { key: 'spend', label: '广告支出', required: true },
@@ -213,6 +207,7 @@
   const visibleColumns = computed<ArtVirtualTableColumn[]>(() => {
     const cols: ArtVirtualTableColumn[] = []
     cols.push({ key: 'ownerName', title: '优化师', width: 240, flexGrow: 1 })
+    cols.push({ key: 'campaignName', title: '广告系列名称', width: 180, showOverflowTooltip: true })
     if (isVisible('level')) cols.push({ key: 'level', title: '职级', width: 120 })
     if (isVisible('appCount')) cols.push({ key: 'appCount', title: '负责应用数', width: 130 })
     cols.push({ key: 'spend', title: '广告支出', width: 110 })
