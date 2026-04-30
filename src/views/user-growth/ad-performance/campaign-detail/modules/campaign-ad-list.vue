@@ -66,14 +66,14 @@
             <button type="button" class="cal__action-btn" title="查看" @click="goToAdDetail(row)">
               <el-icon><View /></el-icon>
             </button>
-            <button
+            <!-- <button
               type="button"
               class="cal__action-btn cal__action-btn--warn"
               title="暂停"
               @click.stop="onPauseAd(row)"
             >
               <el-icon><VideoPause /></el-icon>
-            </button>
+            </button> -->
           </div>
         </template>
       </ElTableColumn>
@@ -84,9 +84,12 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
-  import { ElMessage } from 'element-plus'
-  import { View, VideoPause } from '@element-plus/icons-vue'
-  import { fetchCampaignDetailAdGroupAction } from '@/api/user-growth/ad-performance'
+  // import { ElMessage } from 'element-plus'
+  import {
+    View
+    // VideoPause
+  } from '@element-plus/icons-vue'
+  // import { fetchCampaignDetailAdGroupAction } from '@/api/user-growth/ad-performance'
   import type { CampaignAdRow } from '../types'
 
   defineOptions({ name: 'CampaignAdList' })
@@ -116,25 +119,25 @@
     })
   }
 
-  async function onPauseAd(row: CampaignAdRow) {
-    const cid = props.campaignId
-    if (!cid) {
-      ElMessage.error('缺少广告系列 ID')
-      return
-    }
-    try {
-      const res = await fetchCampaignDetailAdGroupAction({
-        campaignId: cid,
-        adId: row.id,
-        actionType: 'pause'
-      })
-      if (res.message) ElMessage.success(res.message)
-      else ElMessage.success('操作成功')
-      emit('refresh-ad-list')
-    } catch {
-      ElMessage.error('操作失败')
-    }
-  }
+  // async function onPauseAd(row: CampaignAdRow) {
+  //   const cid = props.campaignId
+  //   if (!cid) {
+  //     ElMessage.error('缺少广告系列 ID')
+  //     return
+  //   }
+  //   try {
+  //     const res = await fetchCampaignDetailAdGroupAction({
+  //       campaignId: cid,
+  //       adId: row.id,
+  //       actionType: 'pause'
+  //     })
+  //     if (res.message) ElMessage.success(res.message)
+  //     else ElMessage.success('操作成功')
+  //     emit('refresh-ad-list')
+  //   } catch {
+  //     ElMessage.error('操作失败')
+  //   }
+  // }
 
   const statusTabs: { value: StatusFilter; label: string }[] = [
     { value: 'all', label: '全部' },

@@ -12,7 +12,13 @@
           <el-breadcrumb-item
             :to="{
               path: '/campaign-detail',
-              query: { id: campaignId, appId: route.query.appId, appName: route.query.appName }
+              query: {
+                id: campaignId,
+                appId: route.query.appId,
+                appName: route.query.appName,
+                startDate: filterStartDate,
+                endDate: filterEndDate
+              }
             }"
           >
             {{ loading ? '广告系列详情' : data.campaignName || '广告系列详情' }}
@@ -98,14 +104,23 @@
           </span>
         </div>
         <div class="add-title-row__actions">
-          <ElButton type="primary" size="large" round @click="goToEdit">
+          <AppDatePicker
+            v-model="dateRangeValue"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            class="ap-date-picker"
+          />
+          <!-- <ElButton type="primary" size="large" round @click="goToEdit">
             <el-icon><Edit /></el-icon>
             编辑系列
           </ElButton>
           <ElButton size="large" round class="add-btn-pause" @click="onPauseAd">
             <el-icon><VideoPause /></el-icon>
             暂停
-          </ElButton>
+          </ElButton> -->
         </div>
       </div>
 
@@ -125,14 +140,19 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
+  import { computed, onMounted, reactive, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import { ArrowLeft, Edit, VideoPause } from '@element-plus/icons-vue'
   import {
-    fetchAdDetailOverview,
-    fetchCampaignDetailAdGroupAction
+    ArrowLeft
+    // Edit, VideoPause
+  } from '@element-plus/icons-vue'
+  import {
+    fetchAdDetailOverview
+    // fetchCampaignDetailAdGroupAction
   } from '@/api/user-growth/ad-performance'
+  import AppDatePicker from '@/components/core/forms/AppDatePicker.vue'
+  import { getAppTodayYYYYMMDD } from '@/utils/app-now'
   import AdDetailKpiCards from './modules/ad-detail-kpi-cards.vue'
   import AdDetailTrendChart from './modules/ad-detail-trend-chart.vue'
   import AdDetailTargeting from './modules/ad-detail-targeting.vue'
@@ -151,18 +171,50 @@
   const loading = ref(true)
   const campaignId = ref('')
   const data = reactive<AdDetailData>(createEmptyAdDetail())
+  const queryStartDate = String(route.query.startDate ?? '').trim()
+  const queryEndDate = String(route.query.endDate ?? '').trim()
+  const filterStartDate = ref(queryStartDate || getAppTodayYYYYMMDD())
+  const filterEndDate = ref(queryEndDate || getAppTodayYYYYMMDD())
 
-  function goToEdit() {
-    router.push({
-      path: '/campaign-detail/ad-edit',
-      query: {
-        campaignId: campaignId.value,
-        adId: String(route.query.id ?? ''),
-        appId: route.query.appId,
-        appName: route.query.appName
-      }
+  const dateRangeValue = computed<[string, string]>({
+    get() {
+      return [filterStartDate.value, filterEndDate.value]
+    },
+    set(v) {
+      const nextStart = String(v?.[0] ?? '').trim()
+      const nextEnd = String(v?.[1] ?? '').trim()
+      if (!nextStart || !nextEnd) return
+      filterStartDate.value = nextStart
+      filterEndDate.value = nextEnd
+    }
+  })
+
+  async function loadAdDetail() {
+    const adId = String(route.query.id ?? '')
+    const cid = campaignId.value
+    if (!adId || !cid) return
+    const res = await fetchAdDetailOverview({
+      adId,
+      campaignId: cid,
+      startDate: filterStartDate.value,
+      endDate: filterEndDate.value
     })
+    Object.assign(data, normalizeAdDetailFromApi(res))
   }
+
+  // function goToEdit() {
+  //   router.push({
+  //     path: '/campaign-detail/ad-edit',
+  //     query: {
+  //       campaignId: campaignId.value,
+  //       adId: String(route.query.id ?? ''),
+  //       appId: route.query.appId,
+  //       appName: route.query.appName,
+  //       startDate: filterStartDate.value,
+  //       endDate: filterEndDate.value
+  //     }
+  //   })
+  // }
 
   function statusText(s: AdDetailStatus): string {
     const map: Record<AdDetailStatus, string> = {
@@ -173,26 +225,36 @@
     return map[s] ?? s
   }
 
-  async function onPauseAd() {
-    const adId = String(route.query.id ?? '')
-    const cid = campaignId.value
-    if (!adId || !cid) {
-      ElMessage.error('缺少广告或系列 ID')
-      return
-    }
+  // async function onPauseAd() {
+  //   const adId = String(route.query.id ?? '')
+  //   const cid = campaignId.value
+  //   if (!adId || !cid) {
+  //     ElMessage.error('缺少广告或系列 ID')
+  //     return
+  //   }
+  //   try {
+  //     const res = await fetchCampaignDetailAdGroupAction({
+  //       campaignId: cid,
+  //       adId,
+  //       actionType: 'pause'
+  //     })
+  //     if (res.message) ElMessage.success(res.message)
+  //     else ElMessage.success('操作成功')
+  //     data.status = 'paused'
+  //   } catch {
+  //     ElMessage.error('操作失败')
+  //   }
+  // }
+
+  watch([filterStartDate, filterEndDate], async ([nextStart, nextEnd], [prevStart, prevEnd]) => {
+    if (!nextStart || !nextEnd) return
+    if (nextStart === prevStart && nextEnd === prevEnd) return
     try {
-      const res = await fetchCampaignDetailAdGroupAction({
-        campaignId: cid,
-        adId,
-        actionType: 'pause'
-      })
-      if (res.message) ElMessage.success(res.message)
-      else ElMessage.success('操作成功')
-      data.status = 'paused'
+      await loadAdDetail()
     } catch {
-      ElMessage.error('操作失败')
+      ElMessage.error('按日期刷新广告详情失败')
     }
-  }
+  })
 
   onMounted(async () => {
     const adId = String(route.query.id ?? '')
@@ -205,8 +267,7 @@
     }
 
     try {
-      const res = await fetchAdDetailOverview({ adId, campaignId: campaignId.value })
-      Object.assign(data, normalizeAdDetailFromApi(res))
+      await loadAdDetail()
     } catch {
       ElMessage.error('加载广告详情失败')
     } finally {
@@ -439,6 +500,7 @@
   .add-title-row__actions {
     display: flex;
     flex-shrink: 0;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
   }
@@ -521,6 +583,34 @@
 
     .add-back-btn {
       transition: none;
+    }
+  }
+
+  .ap-date-picker {
+    flex: 0 0 250px;
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
+
+    @media (width <=768px) {
+      flex: 1 1 100%;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
+  }
+
+  .add-title-row__actions :deep(.ap-date-picker.el-date-editor.el-date-editor--daterange) {
+    flex: 0 0 250px !important;
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+
+    @media (width <=768px) {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
     }
   }
 </style>

@@ -436,7 +436,9 @@ export function fetchCampaignDetailAdGroupAction(body: CampaignDetailAdGroupActi
 }
 
 /** 单广告详情页概览（路由：campaign-detail/ad-detail） */
-export function fetchAdDetailOverview(body: { adId: string; campaignId: string }) {
+export function fetchAdDetailOverview(
+  body: { adId: string; campaignId: string } & CampaignDetailDateFilter
+) {
   if (isAdPerformanceAdDetailEndpointMock(AdPerformanceAdDetailEndpoint.Overview)) {
     return adPerfMock.mockFetchAdDetailOverview(body)
   }
