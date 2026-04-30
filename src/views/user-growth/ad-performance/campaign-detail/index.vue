@@ -108,10 +108,10 @@
           </span>
         </div>
         <div class="cd-title-row__actions">
-          <ElButton type="primary" size="small" plain round @click="goToEdit">
+          <!-- <ElButton type="primary" size="small" plain round @click="goToEdit">
             <el-icon><Edit /></el-icon>
             编辑系列
-          </ElButton>
+          </ElButton> -->
           <!-- <ElButton
             size="small"
             plain
@@ -161,8 +161,8 @@
   import { ElMessage } from 'element-plus'
   import {
     ArrowLeft,
-    SuccessFilled,
-    Edit
+    SuccessFilled
+    // Edit
     // VideoPause
   } from '@element-plus/icons-vue'
   import {
@@ -212,16 +212,16 @@
     }
   })
 
-  function goToEdit() {
-    router.push({
-      path: '/campaign-detail/ad-edit',
-      query: {
-        campaignId: String(route.query.id ?? ''),
-        appId: String(route.query.appId ?? ''),
-        appName: String(route.query.appName ?? '')
-      }
-    })
-  }
+  // function goToEdit() {
+  //   router.push({
+  //     path: '/campaign-detail/ad-edit',
+  //     query: {
+  //       campaignId: String(route.query.id ?? ''),
+  //       appId: String(route.query.appId ?? ''),
+  //       appName: String(route.query.appName ?? '')
+  //     }
+  //   })
+  // }
 
   async function loadCampaignDetail() {
     const campaignId = String(route.query.id ?? '')
