@@ -61,7 +61,8 @@ export const MOCK_CAMPAIGN_DETAIL: CampaignDetailData = {
       spend: 45000,
       installs: 28000,
       cpi: 1.61,
-      roi: 142
+      roi1: 138.5,
+      roiTotal: 142
     },
     {
       id: '2',
@@ -70,7 +71,8 @@ export const MOCK_CAMPAIGN_DETAIL: CampaignDetailData = {
       spend: 38000,
       installs: 24000,
       cpi: 1.72,
-      roi: 128
+      roi1: 124,
+      roiTotal: 128
     },
     {
       id: '3',
@@ -79,7 +81,8 @@ export const MOCK_CAMPAIGN_DETAIL: CampaignDetailData = {
       spend: 29000,
       installs: 19000,
       cpi: 1.68,
-      roi: 115
+      roi1: 110.25,
+      roiTotal: 115
     },
     {
       id: '4',
@@ -88,7 +91,8 @@ export const MOCK_CAMPAIGN_DETAIL: CampaignDetailData = {
       spend: 18000,
       installs: 11000,
       cpi: 1.83,
-      roi: 92
+      roi1: 88,
+      roiTotal: 92
     },
     {
       id: '5',
@@ -97,7 +101,8 @@ export const MOCK_CAMPAIGN_DETAIL: CampaignDetailData = {
       spend: 22000,
       installs: 14000,
       cpi: 1.77,
-      roi: 108
+      roi1: 104.5,
+      roiTotal: 108
     },
     {
       id: '6',
@@ -106,7 +111,8 @@ export const MOCK_CAMPAIGN_DETAIL: CampaignDetailData = {
       spend: 31000,
       installs: 20000,
       cpi: 1.65,
-      roi: 135
+      roi1: 130,
+      roiTotal: 135
     }
   ],
 

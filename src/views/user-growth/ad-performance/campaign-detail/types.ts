@@ -55,7 +55,10 @@ export interface CampaignAdRow {
   spend: number
   installs: number
   cpi: number
-  roi: number
+  /** 1 日 ROI，百分比数值（如 93 表示 93%） */
+  roi1: number
+  /** 总 ROI，百分比数值 */
+  roiTotal: number
 }
 
 /** 素材表现 Top5 */

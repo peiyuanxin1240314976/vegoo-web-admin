@@ -48,11 +48,15 @@
         <template #default="{ row }"> ${{ row.cpi.toFixed(2) }} </template>
       </ElTableColumn>
 
-      <ElTableColumn label="ROI" width="80" align="right">
+      <ElTableColumn label="ROI1" width="88" align="right">
         <template #default="{ row }">
-          <span :class="row.roi >= 100 ? 'cal__roi--good' : 'cal__roi--warn'">
-            {{ row.roi }}%
-          </span>
+          <span :class="roiToneClass(row.roi1)">{{ formatRoiPct(row.roi1) }}</span>
+        </template>
+      </ElTableColumn>
+
+      <ElTableColumn label="总ROI" width="88" align="right">
+        <template #default="{ row }">
+          <span :class="roiToneClass(row.roiTotal)">{{ formatRoiPct(row.roiTotal) }}</span>
         </template>
       </ElTableColumn>
 
@@ -161,6 +165,15 @@
 
   function formatK(v: number): string {
     return v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)
+  }
+
+  function formatRoiPct(v: number): string {
+    if (!Number.isFinite(v)) return '—'
+    return `${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
+  }
+
+  function roiToneClass(v: number): string {
+    return Number.isFinite(v) && v >= 100 ? 'cal__roi--good' : 'cal__roi--warn'
   }
 </script>
 

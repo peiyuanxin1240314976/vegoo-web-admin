@@ -510,6 +510,7 @@ alwaysApply: true
 | `ctr` | 点击率（百分比数值，如 3.2 表示 3.2%）。 |
 | `cvr` | 转化率（百分比数值）。 |
 | `roi` | ROI（百分比数值；口径需在模块契约说明）。 |
+| `roiTotal` | 总 ROI（百分比数值；如广告系列详情广告组列表「总 ROI」列）。 |
 | `roiAvg` | ROI 均值（百分比数值）。 |
 | `roiTarget` | ROI 目标/阈值（百分比数值）。 |
 | `roiGood` | ROI 是否达标（用于样式）。 |
